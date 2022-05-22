@@ -118,22 +118,27 @@ object AladinContainer {
       }
       // Memoized svg
       .useMemoBy((p, _, _) => (p.scienceMode, p.obsConf.map(_.posAngle), p.options)) {
-        case (_, _, _) => { case (mode, posAngle, _) =>
-          posAngle
+        case (_, _, _) => { case (mode, posAngle, options) =>
+          val pa = posAngle
             .collect {
               case PosAngle.Fixed(a)               => a
               case PosAngle.AllowFlip(a)           => a
               case PosAngle.ParallacticOverride(a) => a
             }
+
+          val candidatesVisibility =
+            ExploreStyles.GuideStarCandidateVisible.when_(options.agsCandidates.visible)
+
+          val shapes = pa
             .map { posAngle =>
-              visualization
-                .shapesToSvg(
-                  GmosGeometry.shapes(posAngle, mode),
-                  GmosGeometry.pp,
-                  GmosGeometry.ScaleFactor
-                )
+              GmosGeometry.shapesForMode(posAngle, mode) ++
+                GmosGeometry.commonShapes(posAngle, candidatesVisibility)
             }
-            .getOrElse(new Svg())
+            .getOrElse(
+              GmosGeometry.commonShapes(Angle.Angle0, candidatesVisibility)
+            )
+
+          visualization.shapesToSvg(shapes, GmosGeometry.pp, GmosGeometry.ScaleFactor)
         }
       }
       // Ref to the aladin component
@@ -163,6 +168,7 @@ object AladinContainer {
       // Render the visualization, only if current pos, fov or size changes
       .useEffectWithDepsBy((p, baseCoordinates, currentPos, _, _, world2pix, resize) =>
         (p.options.fovAngle,
+         p.options.agsCandidates,
          p.scienceMode,
          p.obsConf.map(_.posAngle),
          currentPos,
@@ -170,7 +176,7 @@ object AladinContainer {
          resize
         )
       ) { (_, _, _, svg, aladinRef, _, _) =>
-        { case (_, _, _, _, off, _) =>
+        { case (_, _, _, _, _, off, _) =>
           off
             .map(off =>
               aladinRef.get.asCBO
@@ -187,35 +193,38 @@ object AladinContainer {
       .useMemoBy((props, _, _, _, _, _, _) =>
         (props.guideStarCandidates,
          props.options.agsCandidates.visible,
+         props.obsConf.isDefined,
          props.obsConf.map(_.obsInstant)
         )
       ) { (_, _, _, _, _, _, _) =>
-        { case (candidates, visible, obsInstant) =>
-          val candidatesVisibility =
-            ExploreStyles.GuideStarCandidateVisible.when_(visible)
+        { case (candidates, visible, confPresent, obsInstant) =>
+          if (confPresent) {
+            val candidatesVisibility =
+              ExploreStyles.GuideStarCandidateVisible.when_(visible)
 
-          obsInstant.foldMap { obsInstant =>
-            candidates.flatMap { g =>
-              val targetEpoch        = g.tracking.epoch.epochYear.round
-              // Approximate to the midddle of the yaer
-              val targetEpochInstant =
-                LocalDate.of(targetEpoch.toInt, 6, 1).atStartOfDay(ZoneId.of("UTC")).toInstant()
+            obsInstant.foldMap { obsInstant =>
+              candidates.flatMap { g =>
+                val targetEpoch        = g.tracking.epoch.epochYear.round
+                // Approximate to the midddle of the yaer
+                val targetEpochInstant =
+                  LocalDate.of(targetEpoch.toInt, 6, 1).atStartOfDay(ZoneId.of("UTC")).toInstant()
 
-              (g.tracking
-                 .at(targetEpochInstant),
-               g.tracking
-                 .at(obsInstant)
-              ).mapN { (source, dest) =>
-                List[SVGTarget](SVGTarget.GuideStarCandidateTarget(dest, candidatesVisibility, 3),
-                                SVGTarget.LineTo(
-                                  source,
-                                  dest,
-                                  ExploreStyles.PMGSCorrectionLine |+| candidatesVisibility
-                                )
-                )
-              }
-            }.flatten
-          }
+                (g.tracking
+                   .at(targetEpochInstant),
+                 g.tracking
+                   .at(obsInstant)
+                ).mapN { (source, dest) =>
+                  List[SVGTarget](SVGTarget.GuideStarCandidateTarget(dest, candidatesVisibility, 3),
+                                  SVGTarget.LineTo(
+                                    source,
+                                    dest,
+                                    ExploreStyles.PMGSCorrectionLine |+| candidatesVisibility
+                                  )
+                  )
+                }
+              }.flatten
+            }
+          } else Nil
         }
       }
       .renderWithReuse {

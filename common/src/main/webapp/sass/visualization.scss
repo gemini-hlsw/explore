@@ -62,6 +62,19 @@
   vector-effect: non-scaling-stroke;
 }
 
+.gmos-candidates-area {
+  display: none;
+  fill-opacity: 0;
+  stroke: lightgreen;
+  stroke-width: 0.4px;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 1.5;
+
+  &.guide-star-candidate-target-visible {
+    display: inline;
+  }
+}
+
 // Shows a border around the whole SVG
 .jts-svg-border {
   display: none;
@@ -108,10 +121,9 @@
 
   .proper-motion-line-gs {
     display: none;
-  }
-  .proper-motion-line-gs.guide-star-candidate-target-visible,
-  .guide-star-candidate-target.guide-star-candidate-target-visible {
-    display: inline;
+    &.guide-star-candidate-target-visible {
+      display: inline;
+    }
   }
 
   .guide-star-candidate-target {
@@ -121,6 +133,10 @@
     fill: red;
     fill-opacity: 0.5;
     isolation: initial;
+
+    &.guide-star-candidate-target-visible {
+      display: inline;
+    }
   }
 
   .guide-star-candidate-target-base {

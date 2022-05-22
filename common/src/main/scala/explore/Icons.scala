@@ -59,11 +59,11 @@ object Icons {
   val faPlus: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-thin-svg-icons", "faPlus")
+  @JSImport("@fortawesome/pro-light-svg-icons", "faPlus")
   val faThinPlus: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-thin-svg-icons", "faHyphen")
+  @JSImport("@fortawesome/pro-light-svg-icons", "faHyphen")
   val faThinMinus: FAIcon = js.native
 
   @js.native

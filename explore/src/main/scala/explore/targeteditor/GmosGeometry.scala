@@ -19,6 +19,7 @@ import lucuma.core.math.Offset
 import lucuma.core.math.syntax.int._
 import lucuma.svgdotjs._
 import react.aladin.visualization.svg._
+import react.common.implicits._
 import react.common.style.Css
 
 /**
@@ -44,8 +45,8 @@ object GmosGeometry {
   // Move to react common
   implicit val cssOrder: Order[Css] = Order.by(_.htmlClass)
 
-  // Shape to display
-  def shapes(posAngle: Angle, mode: Option[ScienceMode]): NonEmptyMap[Css, ShapeExpression] =
+  // Shape to display for a specific mode
+  def shapesForMode(posAngle: Angle, mode: Option[ScienceMode]): NonEmptyMap[Css, ShapeExpression] =
     mode match {
       case Some(ScienceMode.GmosNorthLongSlit(ScienceModeBasic.GmosNorthLongSlit(_, _, fpu), _)) =>
         NonEmptyMap.of(
@@ -62,6 +63,14 @@ object GmosGeometry {
           (Css("gmos-science-ccd"), gmos.scienceArea.imaging ⟲ posAngle)
         )
     }
+
+  // Shape to display always
+  def commonShapes(posAngle: Angle, extraCss: Css): NonEmptyMap[Css, ShapeExpression] =
+    NonEmptyMap.of(
+      (Css("gmos-candidates-area") |+| extraCss,
+       gmos.probeArm.candidatesAreaAt(posAngle, Offset.Zero)
+      )
+    )
 
   // Firefox doesn't properly handle very large coordinates, scale by 1000 at least
   val ScaleFactor = 1000
