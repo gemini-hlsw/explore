@@ -93,7 +93,7 @@ object AladinToolbar {
             Popup(
               content = "Loading catalog stars..",
               position = PopupPosition.TopCenter,
-              trigger = Icons.CircleSmall.copy(beat = true)
+              trigger = Icons.CircleSmall.beat()
             ).when(props.loadingGSCandidates)
           ),
           Label(
