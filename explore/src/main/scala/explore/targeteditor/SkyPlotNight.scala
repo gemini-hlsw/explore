@@ -351,7 +351,7 @@ object SkyPlotNight {
                 .setLabels(YAxisLabelsOptions().setFormat("{value}°")),
               YAxisOptions()
                 .setOpposite(true)
-                .setTitle(YAxisTitleOptions().setText("Sky Brightness [V] (mags/arcsec²)"))
+                .setTitle(YAxisTitleOptions().setText("Sky Brightness [V] (mag/arcsec²)"))
                 .setMin(17)
                 .setMax(22)
                 .setReversed(true)
