@@ -39,12 +39,9 @@ import lucuma.ui.reusability._
 import queries.common.UserPreferencesQueriesGQL._
 import react.aladin.Fov
 import react.common._
-import react.fa.Transform
 import react.semanticui.collections.menu._
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.checkbox.Checkbox
-import react.semanticui.modules.popup.Popup
-import react.semanticui.modules.popup.PopupPosition
 import react.semanticui.sizes._
 
 import scala.concurrent.duration._
@@ -79,13 +76,15 @@ object AladinCell extends ModelOptics {
       // flag to trigger centering. This is a bit brute force but
       // avoids us needing a ref to a Fn component
       .useStateViewWithReuse(false)
-      // GuideStar candidates
-      .useState(List.empty[GuideStarCandidate])
+      // GuideStar candidates (loading, list)
+      .useState((true, List.empty[GuideStarCandidate]))
       // Lisen on web worker for messages with catalog candidates
       .useEffectOnMountBy((props, _, _, _, gs) =>
         props.ctx.worker.stream
           .evalMap(m =>
-            decodeFromTransferable[IO, CatalogResults](m)(gsl => gs.setState(gsl.candidates).to[IO])
+            decodeFromTransferable[IO, CatalogResults](m)(gsl =>
+              gs.setState((false, gsl.candidates)).to[IO]
+            )
           )
           .compile
           .drain
@@ -185,12 +184,12 @@ object AladinCell extends ModelOptics {
             fovSetter.reuseAlways,
             offsetSetter.reuseAlways,
             center,
-            gsc.value
+            gsc.value._2
           ).withKey(aladinKey)
 
         val renderToolbar: TargetVisualOptions => VdomNode =
           (t: TargetVisualOptions) =>
-            AladinToolbar(Fov.square(t.fovAngle), mouseCoords.value): VdomNode
+            AladinToolbar(Fov.square(t.fovAngle), mouseCoords.value, gsc.value._1, center): VdomNode
 
         <.div(
           ExploreStyles.TargetAladinCell,
@@ -219,20 +218,9 @@ object AladinCell extends ModelOptics {
               ).when(openSettings.value)
             ),
             potRender[TargetVisualOptions](renderCell.reuseAlways)(options.get),
-            potRender[TargetVisualOptions](renderToolbar.reuseAlways)(options.get),
-            <.div(
-              ExploreStyles.AladinCenterButton,
-              Popup(
-                content = "Center on target",
-                position = PopupPosition.BottomLeft,
-                trigger = Button(size = Mini, icon = true, onClick = center.set(true))(
-                  Icons.Bullseye
-                    .transform(Transform(size = 24))
-                    .clazz(ExploreStyles.Accented)
-                )
-              )
-            ).when(options.get.toOption.isDefined)
+            potRender[TargetVisualOptions](renderToolbar.reuseAlways)(options.get)
           )
+            .when(options.get.isReady)
         )
       }
 

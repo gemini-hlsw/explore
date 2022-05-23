@@ -1048,12 +1048,12 @@ tfoot {
   height: 100%;
   display: grid;
   grid-template-rows: 1fr min-content;
-  grid-template-columns: max-content 4fr min-content;
+  grid-template-columns: max-content min-content 1fr min-content;
   align-content: stretch;
   position: relative;
   grid-template-areas:
-    'aladin aladin aladin'
-    'fov curr center';
+    'aladin aladin aladin aladin'
+    'fov guidestar curr center';
 }
 
 .aladin-container-body {
@@ -1065,6 +1065,18 @@ tfoot {
   grid-area: fov;
   justify-self: stretch;
   align-self: center;
+}
+
+.aladin-status-gs {
+  grid-area: guidestar;
+  align-self: center;
+  margin-left: 0.5em;
+
+  svg.fa-circle-small {
+    --fa-beat-scale: 1.2;
+
+    color: var(--warning-background-color);
+  }
 }
 
 .aladin-status-current-coordinates {

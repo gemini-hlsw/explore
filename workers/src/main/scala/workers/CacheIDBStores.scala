@@ -53,7 +53,7 @@ object CacheIDBStores {
     import SafePickler.ConstructionHelperImplicits._
 
     //  SafePickler` is defined in webapp-util and provides some additional features.
-    implicit def safePicklerPerson: SafePickler[CatalogResults] =
+    implicit def safePicklerCatalogResults: SafePickler[CatalogResults] =
       picklerCatalogResults
         .asV1(0) // This is v1.0 of our data format.
         // Add some header/footer coming frow webapputil example
