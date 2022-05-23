@@ -200,7 +200,7 @@ object ObsTabContents {
     props:              Props,
     panels:             ReuseView[TwoPanelState],
     defaultLayouts:     LayoutsMap,
-    layouts:            ReuseView[LayoutsMap],
+    layouts:            ReuseView[Pot[LayoutsMap]],
     resize:             UseResizeDetectorReturn,
     obsConf:            ReuseView[ObsConfiguration],
     debouncer:          Reusable[UseSingleEffect[IO]],
@@ -392,21 +392,24 @@ object ObsTabContents {
                 .zoom(atMapWithDefault(obsId, UndoStacks.empty))
             )
 
-          TileController(
-            props.userId.get,
-            coreWidth,
-            defaultLayouts,
-            layouts,
-            List(
-              targetTile,
-              notesTile,
-              skyPlotTile,
-              constraintsTile,
-              configurationTile
-            ),
-            GridLayoutSection.ObservationsLayout,
-            clazz = ExploreStyles.ObservationTiles.some
-          ): VdomNode
+          val rglRender: LayoutsMap => VdomNode = (l: LayoutsMap) =>
+            TileController(
+              props.userId.get,
+              coreWidth,
+              defaultLayouts,
+              l,
+              List(
+                targetTile,
+                notesTile,
+                skyPlotTile,
+                constraintsTile,
+                configurationTile
+              ),
+              GridLayoutSection.ObservationsLayout,
+              clazz = ExploreStyles.ObservationTiles.some
+            )
+
+          potRender[LayoutsMap](rglRender.reuseAlways)(layouts.get)
         }
       ).withKey(obsId.toString)
 
@@ -471,11 +474,11 @@ object ObsTabContents {
       // Measure its sive
       .useResizeDetector()
       // Layout
-      .useStateViewWithReuse(defaultObsLayouts)
+      .useStateViewWithReuse(Pot.pending[LayoutsMap])
       // Keep a record of the initial target layouut
       .useMemo(())(_ => defaultObsLayouts)
       // Restore positions from the db
-      .useEffectWithDepsBy((p, _, _, _, _) => p.focusedObs) {
+      .useEffectWithDepsBy((p, _, _, _, _) => p.userId) {
         (props, panels, _, layout, defaultLayout) =>
           implicit val ctx = props.ctx
           _ =>
@@ -491,7 +494,12 @@ object ObsTabContents {
                   (panels
                     .mod(
                       TwoPanelState.treeWidth.replace(w.toDouble)
-                    ) *> layout.mod(currentLayout => mergeMap(currentLayout, dbLayout)))
+                    ) *> layout.mod(
+                    _.fold(_ => mergeMap(dbLayout, defaultLayout).ready,
+                           _ => mergeMap(dbLayout, defaultLayout).ready,
+                           cur => mergeMap(dbLayout, cur).ready
+                    )
+                  ))
                     .to[IO]
                 case Left(_)              => IO.unit
               }

@@ -155,13 +155,26 @@ object AladinCell extends ModelOptics {
           }
         }
 
-        val offsetSetter = (newOffset: Offset) =>
+        val offsetSetter = (newOffset: Offset) => {
+          val ignore = options.get.fold(
+            _ => true,
+            _ => true,
+            o => {
+              val diffP = newOffset.p.toAngle.difference(o.viewOffset.p.toAngle)
+              val diffQ = newOffset.q.toAngle.difference(o.viewOffset.q.toAngle)
+              // Don't save if the change is less than 1 arcse
+              diffP.toMicroarcseconds < 1e6 && diffQ.toMicroarcseconds < 1e6
+            }
+          )
+
           offsetView.set(newOffset) *>
             UserTargetPreferencesFovUpdate
               .updateViewOffset[IO](props.uid, props.tid, newOffset)
+              .unlessA(ignore)
               .runAsync
               .rateLimit(1.seconds, 1)
               .void
+        }
 
         def candidatesSetter: Callback =
           agsCandidatesView.mod(_.flip) *>
