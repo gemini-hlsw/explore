@@ -159,6 +159,7 @@ object ExploreStyles {
   val AladinContainerColumn: Css = Css("aladin-container-column")
   val AladinContainerBody: Css   = Css("aladin-container-body")
   val AladinFOV: Css             = Css("aladin-status-fov")
+  val AladinGuideStar: Css       = Css("aladin-status-gs")
   val AladinDetailText: Css      = Css("aladin-detail-text")
   val AladinCurrentCoords: Css   = Css("aladin-status-current-coordinates")
   val AladinCenterButton: Css    = Css("aladin-status-center-button")

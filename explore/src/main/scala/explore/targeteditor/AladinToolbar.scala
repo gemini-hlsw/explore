@@ -3,6 +3,7 @@
 
 package explore.targeteditor
 
+import crystal.react.ReuseView
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
@@ -13,15 +14,22 @@ import lucuma.ui.reusability._
 import react.aladin.Fov
 import react.aladin.reusability._
 import react.common.ReactFnProps
+import react.fa.Transform
+import react.semanticui.elements.button.Button
 import react.semanticui.elements.label._
+import react.semanticui.modules.popup.Popup
+import react.semanticui.modules.popup.PopupPosition
 import react.semanticui.shorthand._
 import react.semanticui.sizes.Small
+import react.semanticui.sizes._
 
 import scala.math.rint
 
 final case class AladinToolbar(
-  fov:     Fov,
-  current: Coordinates
+  fov:                 Fov,
+  current:             Coordinates,
+  loadingGSCandidates: Boolean,
+  center:              ReuseView[Boolean]
 ) extends ReactFnProps[AladinToolbar](AladinToolbar.component)
 
 object AladinToolbar {
@@ -80,12 +88,32 @@ object AladinToolbar {
                                    s"${formatFov(props.fov.x)} \u00D7 ${formatFov(props.fov.y)}"
             )
           ),
+          <.div(
+            ExploreStyles.AladinGuideStar,
+            Popup(
+              content = "Loading catalog stars..",
+              position = PopupPosition.TopCenter,
+              trigger = Icons.CircleSmall.copy(beat = true)
+            ).when(props.loadingGSCandidates)
+          ),
           Label(
             icon = Icons.MousePointer.clazz(ExploreStyles.Accented),
             clazz = ExploreStyles.AladinCurrentCoords,
             size = Small,
             detail = LabelDetail(clazz = ExploreStyles.AladinDetailText,
                                  content = formatCoordinates(props.current)
+            )
+          ),
+          <.div(
+            ExploreStyles.AladinCenterButton,
+            Popup(
+              content = "Center on target",
+              position = PopupPosition.BottomLeft,
+              trigger = Button(size = Mini, icon = true, onClick = props.center.set(true))(
+                Icons.Bullseye
+                  .transform(Transform(size = 24))
+                  .clazz(ExploreStyles.Accented)
+              )
             )
           )
         )
