@@ -65,7 +65,7 @@ object WebWorkerF {
       def terminate: F[Unit] =
         Sync[F].delay(worker.terminate())
 
-      def stream: Stream[F, dom.MessageEvent] =
+      lazy val stream: Stream[F, dom.MessageEvent] =
         for {
           channel <- Stream.eval(Channel.unbounded[F, dom.MessageEvent])
           _       <- Stream.eval(
