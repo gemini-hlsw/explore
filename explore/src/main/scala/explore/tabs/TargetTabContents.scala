@@ -37,6 +37,7 @@ import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
+import lucuma.core.model.PosAngle
 import lucuma.core.model.Target
 import lucuma.core.model.Target.Nonsidereal
 import lucuma.core.model.Target.Sidereal
