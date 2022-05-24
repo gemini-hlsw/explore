@@ -16,7 +16,7 @@ import explore.config.ConfigurationPanel
 import explore.implicits._
 import explore.model.ObsConfiguration
 import explore.undo._
-import explore.utils.potRender
+import explore.utils.potRenderWithReuse
 import lucuma.core.model.Observation
 import lucuma.ui.reusability._
 import queries.schemas.itc.implicits._
@@ -35,7 +35,7 @@ object ConfigurationTile {
       canMinimize = true
     )(
       (obsData, obsConf, undoStacks).curryReusing.in((potView, _, undoStacks_, renderInTitle) =>
-        potRender[(String, Option[NonEmptyString], ReuseView[ScienceData])](
+        potRenderWithReuse[(String, Option[NonEmptyString], ReuseView[ScienceData])](
           Reuse.always { case (title, subtitle, scienceData) =>
             ConfigurationPanel(
               obsId,

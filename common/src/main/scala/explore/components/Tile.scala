@@ -112,7 +112,7 @@ object Tile {
         <.div(
           ExploreStyles.Tile |+| ExploreStyles.FadeIn |+| p.tileClass.orEmpty
         )(
-          // Title title, set classes based on size
+          // Tile title, set classes based on size
           ResponsiveComponent(
             widthBreakpoints,
             heightBreakpoints,

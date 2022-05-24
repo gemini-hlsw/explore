@@ -43,7 +43,7 @@ object LiveQuery {
 
       StreamResourceRendererMod(
         props.resource,
-        potRender(props.render)
+        potRenderWithReuse(props.render)
       ).withHoldAfterMod(2.seconds)
     }
 

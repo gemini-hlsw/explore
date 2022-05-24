@@ -71,7 +71,7 @@ object AsterismEditorTile {
          height
         )
       ) { (renderInTitle: Tile.RenderInTitle) =>
-        potRender[(ReuseView[List[TargetWithId]], Option[ScienceMode])](
+        potRenderWithReuse[(ReuseView[List[TargetWithId]], Option[ScienceMode])](
           { (asterismMode: (ReuseView[List[TargetWithId]], Option[ScienceMode])) =>
             val (asterism, scienceMode) = asterismMode
             userId.map(uid =>

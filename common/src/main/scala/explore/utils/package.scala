@@ -9,6 +9,7 @@ import cats.syntax.all._
 import clue.data._
 import clue.data.syntax._
 import crystal.Pot
+import crystal.react.ReuseView
 import crystal.react.reuse._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.ui.ExploreStyles
@@ -62,7 +63,7 @@ package object utils {
     )
   }
 
-  def potRender[A](
+  def potRenderWithReuse[A](
     valueRender:   A ==> VdomNode,
     pendingRender: Long ==> VdomNode = Reuse.always(_ => Loader(active = true)),
     errorRender:   Throwable ==> VdomNode = Reuse.always(t => Message(error = true)(t.getMessage))
@@ -72,12 +73,19 @@ package object utils {
         pot.fold(pendingRender, errorRender, valueRender)
     )
 
-  def potRenderBasic[A](
+  def potRender[A](
     valueRender:   A => VdomNode,
     pendingRender: Long => VdomNode = _ => Loader(active = true),
     errorRender:   Throwable => VdomNode = t => Message(error = true)(t.getMessage)
   ): Pot[A] => VdomNode =
-    (pot: Pot[A]) => pot.fold(pendingRender, errorRender, valueRender)
+    _.fold(pendingRender, errorRender, valueRender)
+
+  def potRenderView[A](
+    valueRender:   A => VdomNode,
+    pendingRender: Long => VdomNode = _ => Loader(active = true),
+    errorRender:   Throwable => VdomNode = t => Message(error = true)(t.getMessage)
+  ): ReuseView[Pot[A]] => VdomNode =
+    _.get.fold(pendingRender, errorRender, valueRender)
 
   def showCount(count: Int, unit: String, plural: String): String =
     if (count == 1) s"$count $unit"

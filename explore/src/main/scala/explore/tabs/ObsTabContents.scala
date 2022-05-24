@@ -163,7 +163,7 @@ object ObsTabContents {
     constraintGroups: ReuseView[ConstraintsList],
     obsView:          Pot[ReuseView[ObservationData]]
   )(implicit ctx:     AppContextIO): VdomNode =
-    potRender[ReuseView[ObservationData]] {
+    potRenderWithReuse[ReuseView[ObservationData]] {
       Reuse.always { vod =>
         val cgOpt: Option[ConstraintGroup] =
           constraintGroups.get.find(_._1.contains(vod.get.id)).map(_._2)
@@ -414,7 +414,7 @@ object ObsTabContents {
               clazz = ExploreStyles.ObservationTiles.some
             )
 
-          potRenderBasic[LayoutsMap](rglRender)(layouts.get)
+          potRenderView[LayoutsMap](rglRender)(layouts)
         }
       ).withKey(obsId.toString)
 

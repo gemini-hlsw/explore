@@ -43,7 +43,7 @@ object GeneratedSequenceViewer {
                 )
               )
             ),
-            potRender((renderFn _).reuseAlways)
+            potRenderWithReuse((renderFn _).reuseAlways)
           )
         }
       )
