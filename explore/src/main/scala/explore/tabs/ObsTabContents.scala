@@ -97,7 +97,7 @@ object ObsTabContents {
   private val ConstraintsMaxHeight: NonNegInt   = 7
   private val ConfigurationMaxHeight: NonNegInt = 10
   private val DefaultWidth: NonNegInt           = 10
-  private val TileMinWidth: NonNegInt           = 5
+  private val TileMinWidth: NonNegInt           = 6
   private val DefaultLargeWidth: NonNegInt      = 12
 
   private val layoutMedium: Layout = Layout(
@@ -169,6 +169,7 @@ object ObsTabContents {
           constraintGroups.get.find(_._1.contains(vod.get.id)).map(_._2)
 
         Select(
+          clazz = ExploreStyles.ConstraintsTileSelector,
           value = cgOpt.map(cg => ObsIdSet.fromString.reverseGet(cg.obsIds)).orEmpty,
           onChange = (p: Dropdown.DropdownProps) => {
             val newCgOpt =
@@ -482,7 +483,7 @@ object ObsTabContents {
       // Keep a record of the initial target layouut
       .useMemo(())(_ => defaultObsLayouts)
       // Restore positions from the db
-      .useEffectWithDepsBy((p, _, _, _, _) => p.userId) {
+      .useEffectWithDepsBy((p, _, _, _, _) => (p.userId, p.focusedObs, p.focusedTarget)) {
         (props, panels, _, layout, defaultLayout) =>
           implicit val ctx = props.ctx
           _ =>

@@ -338,6 +338,11 @@ tfoot {
   margin-bottom: 0;
 }
 
+.ui.selection.dropdown.constraints-tile-selector {
+  font-size: smaller;
+  margin-right: 0.5em;
+}
+
 .constraints-grid {
   padding: 0.5em;
   display: grid;
@@ -1486,6 +1491,13 @@ img.partner-split-flag {
 
   .target-aladin-cell {
     grid-row: span 4;
+  }
+}
+
+// For very small tables make the undo buttons remove the text
+.tile-xs-width {
+  .explore-buttons-undo-label {
+    display: none;
   }
 }
 

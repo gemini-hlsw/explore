@@ -224,6 +224,7 @@ object ExploreStyles {
   val ConstraintsGrid                = Css("constraints-grid")
   val ConstraintsNameField           = Css("constraints-name-field")
   val ConstraintsElevationRangeGroup = Css("constraints-elevation-range")
+  val ConstraintsTileSelector        = Css("constraints-tile-selector")
   val ElevationRangePicker           = Css("elevation-range-picker")
   val ElevationRangeEntry            = Css("elevation-range-entry")
 
@@ -313,6 +314,7 @@ object ExploreStyles {
 
   val ButtonCopy: Css         = Css("explore-button-copy")
   val ButtonsUndo: Css        = Css("explore-buttons-undo")
+  val ButtonsUndoLabel: Css   = Css("explore-buttons-undo-label")
   val ButtonSummary: Css      = Css("explore-button-summary")
   val TitleUndoButtons: Css   = Css("explore-title-undo-buttons")
   val TitleSelectColumns: Css = Css("explore-title-select-columns")

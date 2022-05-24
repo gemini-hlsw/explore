@@ -36,7 +36,8 @@ final case class Tile(
   key:               js.UndefOr[Key] = js.undefined,
   controllerClass:   Option[Css] = None, // applied to wrapping div when in a TileController.
   bodyClass:         Option[Css] = None, // applied to tile body
-  tileClass:         Option[Css] = None  // applied to the tile
+  tileClass:         Option[Css] = None, // applied to the tile
+  tileTitleClass:    Option[Css] = None  // applied to the title
 )(val render:        Tile.RenderInTitle ==> VdomNode)
     extends ReactFnProps[Tile](Tile.component) {
   def showMaximize: Boolean =
@@ -109,29 +110,36 @@ object Tile {
             .runNow()
 
         <.div(
-          ExploreStyles.Tile |+| ExploreStyles.FadeIn |+| p.tileClass.orEmpty,
-          ^.key   := "tile"
+          ExploreStyles.Tile |+| ExploreStyles.FadeIn |+| p.tileClass.orEmpty
         )(
-          <.div(
-            ^.key := "tile",
-            ExploreStyles.TileTitle,
-            p.back.map(b => <.div(ExploreStyles.TileButton, b)),
-            Menu(
-              compact = true,
-              borderless = true,
-              secondary = true,
-              clazz = ExploreStyles.TileTitleMenu
-            )(
-              MenuItem(as = <.a)(p.title)
-            ),
-            p.control.map(b => <.div(ExploreStyles.TileControl, b)),
-            <.span(^.key := "tileTitle", ^.untypedRef(setInfoRef))(
-              ExploreStyles.TileTitleStrip,
-              ExploreStyles.FixedSizeTileTitle.when(!p.canMinimize && !p.canMaximize)
-            ),
-            minimizeButton.when(p.showMinimize),
-            maximizeButton.when(p.showMaximize)
+          // Title title
+          ResponsiveComponent(
+            widthBreakpoints,
+            heightBreakpoints,
+            clazz = ExploreStyles.TileTitle |+| p.tileTitleClass.orEmpty
+          )(
+            React.Fragment(
+              p.back.map(b => <.div(ExploreStyles.TileButton, b)),
+              Menu(
+                compact = true,
+                borderless = true,
+                secondary = true,
+                clazz = ExploreStyles.TileTitleMenu
+              )(
+                MenuItem(as = <.a)(p.title)
+              ),
+              p.control.map(b => <.div(ExploreStyles.TileControl, b)),
+              <.span(^.key := "tileTitle", ^.untypedRef(setInfoRef))(
+                ExploreStyles.TileTitleStrip,
+                ExploreStyles.FixedSizeTileTitle.when(!p.canMinimize && !p.canMaximize)
+              ),
+              <.div(
+                minimizeButton.when(p.showMinimize),
+                maximizeButton.when(p.showMaximize)
+              )
+            )
           ),
+        // Tile body
           infoRef.value
             .map(node =>
               ResponsiveComponent(

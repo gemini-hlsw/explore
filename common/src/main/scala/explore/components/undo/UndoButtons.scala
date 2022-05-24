@@ -8,7 +8,7 @@ import explore.components.ui.ExploreStyles
 import explore.undo.UndoContext
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import react.common.ReactProps
+import react.common.ReactFnProps
 import react.semanticui.elements.button._
 import react.semanticui.shorthand._
 import react.semanticui.sizes._
@@ -17,42 +17,37 @@ final case class UndoButtons[A](
   undoCtx:  UndoContext[A],
   size:     SemanticSize = Tiny,
   disabled: Boolean = false
-) extends ReactProps[UndoButtons[Any]](UndoButtons.component)
+) extends ReactFnProps[UndoButtons[Any]](UndoButtons.component)
 
 object UndoButtons {
   type Props[A] = UndoButtons[A]
 
   protected def componentBuilder[A] =
-    ScalaComponent
-      .builder[Props[A]]
-      .render_P { p =>
-        <.span(
-          ExploreStyles.ButtonsUndo,
-          ButtonGroup(labeled = true, icon = true, compact = true, size = p.size)(
-            Button(
-              onClick = p.undoCtx.undo,
-              size = p.size,
-              disabled = p.undoCtx.isUndoEmpty || p.disabled || p.undoCtx.working,
-              loading = p.undoCtx.working,
-              clazz = ExploreStyles.VeryCompact,
-              icon = Icons.Undo,
-              content = "Undo",
-              labelPosition = LabelPosition.Left
-            ),
-            Button(
-              onClick = p.undoCtx.redo,
-              size = p.size,
-              disabled = p.undoCtx.isRedoEmpty || p.disabled || p.undoCtx.working,
-              loading = p.undoCtx.working,
-              clazz = ExploreStyles.VeryCompact,
-              icon = Icons.Redo,
-              content = "Redo",
-              labelPosition = LabelPosition.Left
-            )
-          )
+    ScalaFnComponent { (p: Props[A]) =>
+      <.div(
+        ExploreStyles.ButtonsUndo,
+        ButtonGroup(labeled = true, icon = true, compact = true, size = p.size)(
+          Button(
+            onClick = p.undoCtx.undo,
+            size = p.size,
+            disabled = p.undoCtx.isUndoEmpty || p.disabled || p.undoCtx.working,
+            loading = p.undoCtx.working,
+            clazz = ExploreStyles.VeryCompact,
+            labelPosition = LabelPosition.Left,
+            icon = true
+          )(Icons.Undo, <.span(ExploreStyles.ButtonsUndoLabel, "Undo")),
+          Button(
+            onClick = p.undoCtx.redo,
+            size = p.size,
+            disabled = p.undoCtx.isRedoEmpty || p.disabled || p.undoCtx.working,
+            loading = p.undoCtx.working,
+            clazz = ExploreStyles.VeryCompact,
+            icon = Icons.Redo,
+            labelPosition = LabelPosition.Left
+          )(Icons.Redo, <.span(ExploreStyles.ButtonsUndoLabel, "Redo"))
         )
-      }
-      .build
+      )
+    }
 
   val component = componentBuilder[Any]
 }

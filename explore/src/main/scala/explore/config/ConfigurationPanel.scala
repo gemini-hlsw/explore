@@ -88,7 +88,7 @@ object ConfigurationPanel {
 
         React.Fragment(
           props.renderInTitle(
-            <.span(ExploreStyles.TitleUndoButtons)(UndoButtons(props.scienceData))
+            <.div(ExploreStyles.TitleUndoButtons)(UndoButtons(props.scienceData))
           ),
           if (!showAdvanced.get)
             BasicConfigurationPanel(
