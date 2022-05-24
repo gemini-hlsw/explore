@@ -162,7 +162,7 @@ object ConstraintsPanel {
               .modCB(mod, _.map(cb).orEmpty)
         )
 
-      <.div(
+      React.Fragment(
         props.renderInTitle(
           <.span(ExploreStyles.TitleUndoButtons)(UndoButtons(undoCtx))
         ),

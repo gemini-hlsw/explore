@@ -363,6 +363,7 @@ tfoot {
     display: flex;
     gap: 0.3em 0.5em;
     align-items: baseline;
+    justify-self: stretch;
     grid-column: 2 / span var(--column-wide-span);
   }
 }
@@ -372,14 +373,24 @@ tfoot {
   .constraints-grid {
     --column-wide-span: 1;
 
-    grid-template-columns: 1fr;
+    grid-template-columns: max-content 1fr;
+
+    .elevation-range-picker {
+      grid-column: -1 / 1;
+    }
 
     .constraints-elevation-range {
       flex-direction: column;
       justify-items: stretch;
+      display: grid;
+      grid-template-columns: max-content 1fr;
 
       .field {
         width: 100%;
+      }
+
+      label:last-child {
+        display: none;
       }
     }
   }

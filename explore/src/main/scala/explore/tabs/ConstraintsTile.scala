@@ -38,11 +38,7 @@ object ConstraintsTile {
     )(
       (csPot, undoStacks).curryReusing.in((csPotView_, undoStacks_, renderInTitle) =>
         potRender[ReuseView[ConstraintSet]](
-          Reuse.always(cs =>
-            <.div(
-              ConstraintsPanel(List(obsId), cs, undoStacks_, renderInTitle)
-            )
-          )
+          Reuse.always(cs => ConstraintsPanel(List(obsId), cs, undoStacks_, renderInTitle))
         )(csPotView_)
       )
     )

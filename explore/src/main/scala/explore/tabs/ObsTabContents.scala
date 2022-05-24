@@ -93,7 +93,8 @@ object ObsTabContents {
   private val TargetMinHeight: NonNegInt        = 15
   private val SkyPlotHeight: NonNegInt          = 9
   private val SkyPlotMinHeight: NonNegInt       = 6
-  private val ConstraintsMaxHeight: NonNegInt   = 6
+  private val ConstraintsMinHeight: NonNegInt   = 3
+  private val ConstraintsMaxHeight: NonNegInt   = 7
   private val ConfigurationMaxHeight: NonNegInt = 10
   private val DefaultWidth: NonNegInt           = 10
   private val TileMinWidth: NonNegInt           = 5
@@ -130,6 +131,9 @@ object ObsTabContents {
         y = (NotesMaxHeight |+| TargetHeight |+| SkyPlotHeight).value,
         w = DefaultWidth.value,
         h = ConstraintsMaxHeight.value,
+        minH = ConstraintsMinHeight.value,
+        maxH = ConstraintsMaxHeight.value,
+        minW = TileMinWidth.value,
         i = ObsTabTiles.ConstraintsId.value
       ),
       LayoutItem(

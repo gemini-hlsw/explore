@@ -236,7 +236,7 @@ object ConstraintSetTabContents {
 
         Tile("constraints", title, backButton.some)(
           (csView, csUndo).curryReusing.in((csView_, csUndo_, renderInTitle) =>
-            <.div(ConstraintsPanel(idsToEdit.toList, csView_, csUndo_, renderInTitle))
+            ConstraintsPanel(idsToEdit.toList, csView_, csUndo_, renderInTitle)
           )
         )
       }
