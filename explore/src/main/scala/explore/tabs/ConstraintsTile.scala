@@ -37,8 +37,8 @@ object ConstraintsTile {
       controllerClass = clazz
     )(
       (csPot, undoStacks).curryReusing.in((csPotView_, undoStacks_, renderInTitle) =>
-        potRender[ReuseView[ConstraintSet]](
-          Reuse.always(cs => ConstraintsPanel(List(obsId), cs, undoStacks_, renderInTitle))
+        potRenderBasic[ReuseView[ConstraintSet]](cs =>
+          ConstraintsPanel(List(obsId), cs, undoStacks_, renderInTitle)
         )(csPotView_)
       )
     )

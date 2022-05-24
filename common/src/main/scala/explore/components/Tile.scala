@@ -112,7 +112,7 @@ object Tile {
         <.div(
           ExploreStyles.Tile |+| ExploreStyles.FadeIn |+| p.tileClass.orEmpty
         )(
-          // Title title
+          // Title title, set classes based on size
           ResponsiveComponent(
             widthBreakpoints,
             heightBreakpoints,
@@ -139,7 +139,7 @@ object Tile {
               )
             )
           ),
-        // Tile body
+          // Tile body
           infoRef.value
             .map(node =>
               ResponsiveComponent(

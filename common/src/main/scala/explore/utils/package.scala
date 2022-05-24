@@ -72,6 +72,13 @@ package object utils {
         pot.fold(pendingRender, errorRender, valueRender)
     )
 
+  def potRenderBasic[A](
+    valueRender:   A => VdomNode,
+    pendingRender: Long => VdomNode = _ => Loader(active = true),
+    errorRender:   Throwable => VdomNode = t => Message(error = true)(t.getMessage)
+  ): Pot[A] => VdomNode =
+    (pot: Pot[A]) => pot.fold(pendingRender, errorRender, valueRender)
+
   def showCount(count: Int, unit: String, plural: String): String =
     if (count == 1) s"$count $unit"
     else s"$count $plural"

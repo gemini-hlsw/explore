@@ -414,7 +414,7 @@ object ObsTabContents {
               clazz = ExploreStyles.ObservationTiles.some
             )
 
-          potRender[LayoutsMap](rglRender.reuseAlways)(layouts.get)
+          potRenderBasic[LayoutsMap](rglRender)(layouts.get)
         }
       ).withKey(obsId.toString)
 
