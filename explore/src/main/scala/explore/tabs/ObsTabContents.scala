@@ -93,10 +93,11 @@ object ObsTabContents {
   private val TargetMinHeight: NonNegInt        = 15
   private val SkyPlotHeight: NonNegInt          = 9
   private val SkyPlotMinHeight: NonNegInt       = 6
-  private val ConstraintsMaxHeight: NonNegInt   = 6
+  private val ConstraintsMinHeight: NonNegInt   = 3
+  private val ConstraintsMaxHeight: NonNegInt   = 7
   private val ConfigurationMaxHeight: NonNegInt = 10
   private val DefaultWidth: NonNegInt           = 10
-  private val TileMinWidth: NonNegInt           = 5
+  private val TileMinWidth: NonNegInt           = 6
   private val DefaultLargeWidth: NonNegInt      = 12
 
   private val layoutMedium: Layout = Layout(
@@ -130,6 +131,9 @@ object ObsTabContents {
         y = (NotesMaxHeight |+| TargetHeight |+| SkyPlotHeight).value,
         w = DefaultWidth.value,
         h = ConstraintsMaxHeight.value,
+        minH = ConstraintsMinHeight.value,
+        maxH = ConstraintsMaxHeight.value,
+        minW = TileMinWidth.value,
         i = ObsTabTiles.ConstraintsId.value
       ),
       LayoutItem(
@@ -159,12 +163,13 @@ object ObsTabContents {
     constraintGroups: ReuseView[ConstraintsList],
     obsView:          Pot[ReuseView[ObservationData]]
   )(implicit ctx:     AppContextIO): VdomNode =
-    potRender[ReuseView[ObservationData]] {
+    potRenderWithReuse[ReuseView[ObservationData]] {
       Reuse.always { vod =>
         val cgOpt: Option[ConstraintGroup] =
           constraintGroups.get.find(_._1.contains(vod.get.id)).map(_._2)
 
         Select(
+          clazz = ExploreStyles.ConstraintsTileSelector,
           value = cgOpt.map(cg => ObsIdSet.fromString.reverseGet(cg.obsIds)).orEmpty,
           onChange = (p: Dropdown.DropdownProps) => {
             val newCgOpt =
@@ -409,7 +414,7 @@ object ObsTabContents {
               clazz = ExploreStyles.ObservationTiles.some
             )
 
-          potRender[LayoutsMap](rglRender.reuseAlways)(layouts.get)
+          potRenderView[LayoutsMap](rglRender)(layouts)
         }
       ).withKey(obsId.toString)
 
@@ -478,7 +483,7 @@ object ObsTabContents {
       // Keep a record of the initial target layouut
       .useMemo(())(_ => defaultObsLayouts)
       // Restore positions from the db
-      .useEffectWithDepsBy((p, _, _, _, _) => p.userId) {
+      .useEffectWithDepsBy((p, _, _, _, _) => (p.userId, p.focusedObs, p.focusedTarget)) {
         (props, panels, _, layout, defaultLayout) =>
           implicit val ctx = props.ctx
           _ =>

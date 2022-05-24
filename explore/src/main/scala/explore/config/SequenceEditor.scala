@@ -42,7 +42,7 @@ object SequenceEditor {
                 )
               )
             ),
-            potRender((renderFn _).reuseAlways)
+            potRenderWithReuse((renderFn _).reuseAlways)
           )
         }
       )

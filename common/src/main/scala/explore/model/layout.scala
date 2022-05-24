@@ -103,7 +103,7 @@ object layout {
     }
 
     implicit val layoutItemSemigroup: Semigroup[LayoutItem] = Semigroup.instance { case (a, b) =>
-      a.copy(w = b.w, h = b.h, x = b.x, y = b.y, minW = b.minW, minH = b.minH)
+      a.copy(w = b.w, h = b.h, x = b.x, y = b.y)
     }
 
     implicit val layoutGroupSemigroup: Semigroup[(Int, Int, Layout)] =

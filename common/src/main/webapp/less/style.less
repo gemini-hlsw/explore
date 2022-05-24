@@ -338,51 +338,9 @@ tfoot {
   margin-bottom: 0;
 }
 
-.constraints-grid {
-  padding: 0.5em;
-  display: grid;
-  align-items: baseline;
-  gap: 0.3em 0.5em;
-
-  --column-wide-span: 3;
-
-  grid-template-columns: [label1] max-content [field1] minmax(20ch, 3fr) [label2] max-content [field2] minmax(
-      20ch,
-      3fr
-    );
-
-  .elevation-range-picker {
-    width: 9em;
-  }
-
-  .elevation-range-entry {
-    width: 8em;
-  }
-
-  .constraints-elevation-range {
-    display: flex;
-    gap: 0.3em 0.5em;
-    align-items: baseline;
-    grid-column: 2 / span var(--column-wide-span);
-  }
-}
-
-.tile-xxs-width,
-.tile-xs-width {
-  .constraints-grid {
-    --column-wide-span: 1;
-
-    grid-template-columns: 1fr;
-
-    .constraints-elevation-range {
-      flex-direction: column;
-      justify-items: stretch;
-
-      .field {
-        width: 100%;
-      }
-    }
-  }
+.ui.selection.dropdown.constraints-tile-selector {
+  font-size: smaller;
+  margin-right: 0.5em;
 }
 
 .ui.menu.explore-tile-title-menu a.item:hover {
@@ -959,10 +917,10 @@ tfoot {
   flex-direction: column;
   background-color: var(--plot-background-color);
   color: var(--plot-text-color);
-}
 
-.sky-plot-section .ui.checkbox + label {
-  color: var(--plot-text-color);
+  .ui.checkbox + label {
+    color: var(--plot-text-color);
+  }
 }
 
 .sky-plot-controls {
@@ -1037,6 +995,64 @@ tfoot {
 
 .plot-toggle.ui.slider.checkbox input:checked ~ label::after {
   left: 1.5rem;
+}
+
+.constraints-grid {
+  padding: 0.5em;
+  display: grid;
+  align-items: baseline;
+  gap: 0.3em 0.5em;
+
+  --column-wide-span: 3;
+
+  grid-template-columns: [label1] max-content [field1] minmax(20ch, 3fr) [label2] max-content [field2] minmax(
+      20ch,
+      3fr
+    );
+
+  .elevation-range-picker {
+    width: 9em;
+  }
+
+  .elevation-range-entry {
+    width: 8em;
+  }
+
+  .constraints-elevation-range {
+    display: flex;
+    gap: 0.3em 0.5em;
+    align-items: baseline;
+    justify-self: stretch;
+    grid-column: 2 / span var(--column-wide-span);
+  }
+}
+
+.tile-xxs-width,
+.tile-xs-width {
+  .constraints-grid {
+    --column-wide-span: 1;
+
+    grid-template-columns: max-content 1fr;
+
+    .elevation-range-picker {
+      grid-column: -1 / 1;
+    }
+
+    .constraints-elevation-range {
+      flex-direction: column;
+      justify-items: stretch;
+      display: grid;
+      grid-template-columns: max-content 1fr;
+
+      .field {
+        width: 100%;
+      }
+
+      label:last-child {
+        display: none;
+      }
+    }
+  }
 }
 
 .ui.grid > .row > .column.aladin-column {
@@ -1480,6 +1496,11 @@ img.partner-split-flag {
 
 // For very small tables hide the headers and add fake "header" to the left of the row
 .tile-xs-width {
+  // For very small tables make the undo buttons remove the text
+  .explore-buttons-undo-label {
+    display: none;
+  }
+
   .target-grid {
     grid-template-areas: 'aladin';
     grid-template-columns: 1fr;

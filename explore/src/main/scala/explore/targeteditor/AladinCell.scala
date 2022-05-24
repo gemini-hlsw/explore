@@ -230,10 +230,9 @@ object AladinCell extends ModelOptics {
                 )
               ).when(openSettings.value)
             ),
-            potRender[TargetVisualOptions](renderCell.reuseAlways)(options.get),
-            potRender[TargetVisualOptions](renderToolbar.reuseAlways)(options.get)
+            potRenderView[TargetVisualOptions](renderCell)(options),
+            potRenderView[TargetVisualOptions](renderToolbar)(options)
           )
-            .when(options.get.isReady)
         )
       }
 
