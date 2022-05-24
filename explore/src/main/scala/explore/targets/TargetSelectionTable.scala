@@ -90,7 +90,7 @@ object TargetSelectionTable {
         )(),
         header = true,
         headerCell = (col: TargetTable.ColumnType) =>
-          TableHeaderCell(clazz = columnClasses.get(col.id.toString).orEmpty)(
+          TableHeaderCell(clazz = columnClasses.get(col.id.toString).orEmpty |+| ExploreStyles.StickyHeader)(
             ^.textTransform.none,
             ^.whiteSpace.nowrap
           ),
