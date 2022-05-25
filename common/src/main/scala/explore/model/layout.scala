@@ -84,6 +84,8 @@ object layout {
   val layoutItemY         = Focus[LayoutItem](_.y)
   val layoutItemResizable = Focus[LayoutItem](_.isResizable)
 
+  val layoutsItemHeight = layoutItems.andThen(layoutItemHeight)
+
   implicit val breakpointNameReuse: Reusability[BreakpointName] = Reusability.byEq
   implicit val layoutItemReuse: Reusability[LayoutItem]         = Reusability.byEq
   implicit val layoutReuse: Reusability[Layout]                 = Reusability.byEq

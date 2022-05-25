@@ -13,6 +13,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Coordinates
 import lucuma.ui.reusability._
 import react.common._
+import react.common.implicits._
 
 object ElevationPlotTile {
 
@@ -31,7 +32,12 @@ object ElevationPlotTile {
         .by(
           (coreWidth, coreHeight, coordinates)
         ) { (_: Tile.RenderInTitle) =>
-          coordinates.fold(EmptyVdom)(c => SkyPlotSection(c): VdomNode)
+          coordinates.fold[VdomNode](
+            <.div(
+              ExploreStyles.FullHeightWidth |+| ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
+              <.div("Select a target")
+            )
+          )(c => SkyPlotSection(c))
         }
         .reuseAlways
     )
