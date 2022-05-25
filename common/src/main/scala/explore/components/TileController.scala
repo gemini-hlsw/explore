@@ -60,8 +60,6 @@ object TileController {
       .submit(UserGridLayoutUpsert.storeLayoutsPreference[IO](userId, section, layouts))
       .runAsyncAndForget
 
-  val itemHeght = layoutItems.andThen(layoutItemHeight)
-
   // Calculate the state out of the height
   def unsafeSizeToState(
     layoutsMap: LayoutsMap,
@@ -93,7 +91,7 @@ object TileController {
     allLayouts
       .andThen(layoutItems)
       .modify {
-        case r if r.h === 1 => r.copy(isResizable = false)
+        case r if r.h === 1 => r.copy(isResizable = false, minH = 1)
         case r              => r
       }(p)
 

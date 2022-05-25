@@ -10,7 +10,6 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common.ReactFnProps
 import react.semanticui.elements.button._
-import react.semanticui.shorthand._
 import react.semanticui.sizes._
 
 final case class UndoButtons[A](
@@ -42,7 +41,7 @@ object UndoButtons {
             disabled = p.undoCtx.isRedoEmpty || p.disabled || p.undoCtx.working,
             loading = p.undoCtx.working,
             clazz = ExploreStyles.VeryCompact,
-            icon = Icons.Redo,
+            icon = true,
             labelPosition = LabelPosition.Left
           )(Icons.Redo, <.span(ExploreStyles.ButtonsUndoLabel, "Redo"))
         )
