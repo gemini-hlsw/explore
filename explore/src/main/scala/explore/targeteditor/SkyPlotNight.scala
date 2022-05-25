@@ -25,7 +25,8 @@ import react.highcharts.Chart
 import react.moon.MoonPhase
 import react.resizeDetector._
 import react.resizeDetector.hooks._
-import shapeless._
+import shapeless.Generic
+import shapeless.HNil
 
 import java.time.Duration
 import java.time.Instant
@@ -50,7 +51,7 @@ object SkyPlotNight {
   type Props = SkyPlotNight
 
   implicit private val propsReuse: Reusability[Props]                    = Reusability.derive
-  // series doesn't trigger rerenders. We keep track of what is shown in case there is a
+  // series don't trigger rerenders. We keep track of what is shown in case there is a
   // rerender due to a change of properties.
   implicit private val stateReuse: Reusability[HashSet[ElevationSeries]] = Reusability.always
 
