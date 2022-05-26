@@ -13,7 +13,6 @@ import explore.model.Page
 import explore.model.Page._
 import explore.model._
 import explore.programs.ProgramsPopup
-// import explore.proposal._
 import explore.tabs._
 import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react.extra.router._
@@ -64,7 +63,7 @@ object Routing {
     AppCtx.using { implicit ctx =>
       val routingInfo = RoutingInfo.from(page)
       ObsTabContents(
-        model.zoom(RootModel.userId),
+        model.zoom(RootModel.userId).get,
         routingInfo.programId,
         routingInfo.focusedObsSet.map(_.head),
         routingInfo.focusedTarget,
@@ -101,11 +100,16 @@ object Routing {
   // }
 
   private def configurationsTab(page: Page): VdomElement =
-    SequenceEditor(RoutingInfo.from(page).programId)
+    AppCtx.using { implicit ctx =>
+      SequenceEditor(RoutingInfo.from(page).programId)
+    }
 
   private def showProgramSelectionPopup(model: ReuseView[RootModel]): VdomElement =
     AppCtx.using { implicit ctx =>
-      ProgramsPopup(currentProgramId = none, undoStacks = model.zoom(RootModel.undoStacks))
+      ProgramsPopup(
+        currentProgramId = none,
+        undoStacks = model.zoom(RootModel.undoStacks)
+      )
     }
 
   def config: RouterWithPropsConfig[Page, ReuseView[RootModel]] =

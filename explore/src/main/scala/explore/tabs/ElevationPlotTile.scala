@@ -22,7 +22,7 @@ object ElevationPlotTile {
     coreHeight:   Int,
     coordinates:  Option[Coordinates]
   )(implicit ctx: AppContextIO) =
-    Tile(ObsTabTiles.PlotId,
+    Tile(ObsTabTilesIds.PlotId,
          "Elevation Plot",
          canMinimize = true,
          bodyClass = ExploreStyles.SkyPlotTileBody.some,

@@ -4,8 +4,8 @@
 package explore.model.syntax
 
 import explore.model.enum.PosAngleOptions
-import lucuma.core.model.PosAngle
 import lucuma.core.math.Angle
+import lucuma.core.model.PosAngle
 
 object all {
 

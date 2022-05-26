@@ -36,7 +36,9 @@ object SequenceEditorPopup {
       .withHooks[Props]
       // isOpen
       .useState(false)
-      .renderWithReuse((props, isOpen) =>
+      .renderWithReuse { (props, isOpen) =>
+        implicit val ctx = props.ctx
+
         React.Fragment(
           props.trigger.value(^.onClick --> isOpen.setState(true)),
           Modal(
@@ -61,5 +63,5 @@ object SequenceEditorPopup {
             )
           )
         )
-      )
+      }
 }

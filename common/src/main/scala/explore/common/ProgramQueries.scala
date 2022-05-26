@@ -4,18 +4,12 @@
 package explore.common
 
 import cats.effect.Async
-import cats.effect.IO
 import cats.implicits._
 import clue.TransactionalClient
 import clue.data.syntax._
-import crystal.react.ReuseView
-import crystal.react.reuse._
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.components.LiveQuery
 import explore.implicits._
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.callback.CallbackCatsEffect._
-import japgolly.scalajs.react.vdom.VdomNode
 import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Enums._
@@ -24,7 +18,6 @@ import lucuma.ui.reusability._
 import monocle.Focus
 import monocle.Lens
 import queries.common.ProgramQueriesGQL._
-import react.common.ReactFnProps
 
 object ProgramQueries {
   final case class ProgramInfo(id: Program.Id, name: Option[NonEmptyString], deleted: Boolean)
@@ -40,34 +33,6 @@ object ProgramQueries {
   implicit class ProgramsQueryDataOps(val self: ProgramsQuery.Data.type) extends AnyVal {
     def asProgramInfoList: ProgramsQuery.Data => List[ProgramInfo] =
       _.programs.nodes.map(p => ProgramInfo(p.id, p.name, p.existence === Existence.Deleted))
-  }
-
-  final case class ProgramsLiveQuery(
-    render:           ReuseView[List[ProgramInfo]] ==> VdomNode,
-    includeDeleted:   Boolean,
-    onNewData:        Reuse[List[ProgramInfo] => IO[Unit]]
-  )(implicit val ctx: AppContextIO)
-      extends ReactFnProps[ProgramsLiveQuery](ProgramsLiveQuery.component)
-
-  object ProgramsLiveQuery {
-    type Props = ProgramsLiveQuery
-
-    implicit val reuseProps: Reusability[Props] = Reusability.derive
-
-    protected val component =
-      ScalaFnComponent.withReuse[Props] { props =>
-        implicit val ctx = props.ctx
-
-        LiveQuery(
-          ProgramsQuery
-            .query(props.includeDeleted)
-            .map(ProgramsQuery.Data.asProgramInfoList)
-            .flatTap(props.onNewData)
-            .reRunOnResourceSignals(
-              ProgramEditSubscription.subscribe[IO]()
-            )
-        )(props.render)
-      }
   }
 
   def createProgram[F[_]: Async](name: Option[NonEmptyString])(implicit

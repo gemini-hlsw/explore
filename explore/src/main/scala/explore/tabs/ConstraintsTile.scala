@@ -30,7 +30,7 @@ object ConstraintsTile {
     clazz:      Option[Css] = None
   ): Tile =
     Tile(
-      ObsTabTiles.ConstraintsId,
+      ObsTabTilesIds.ConstraintsId,
       "Constraints",
       canMinimize = true,
       control = control,

@@ -9,8 +9,8 @@ import crystal.Error
 import crystal.Pending
 import crystal.Pot
 import crystal.Ready
-import crystal.react.reuse._
-import explore.AppCtx
+import crystal.react.hooks._
+import explore._
 import explore.components.ui.ExploreStyles
 import explore.components.ui.ExploreStyles._
 import japgolly.scalajs.react._
@@ -20,7 +20,7 @@ import react.semanticui.elements.icon._
 import react.semanticui.modules.popup._
 import react.semanticui.views.item.Item
 
-final case class ConnectionsStatus()
+final case class ConnectionsStatus()(implicit val ctx: AppContextIO)
     extends ReactFnProps[ConnectionsStatus](ConnectionsStatus.component)
 
 object ConnectionsStatus {
@@ -53,10 +53,8 @@ object ConnectionsStatus {
   }
 
   val component =
-    ScalaFnComponent[Props](_ =>
-      AppCtx.using { ctx =>
-        ctx.clients.ODBConnectionStatus((renderStatus _).reuseCurrying("ODB"))
-      }
-    )
-
+    ScalaFnComponent
+      .withHooks[Props]
+      .useStreamOnMountBy(props => props.ctx.clients.odb.statusStream)
+      .render((_, status) => renderStatus("ODB", status))
 }

@@ -8,20 +8,17 @@ import cats.effect._
 import cats.syntax.all._
 import clue._
 import clue.js.FetchJSBackend
-import crystal.react.StreamRenderer
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.RetryHelpers._
 import explore.common.SSOClient
 import explore.model.ObsIdSet
 import explore.model.enum.AppTab
 import explore.model.enum.ExecutionEnvironment
-import explore.model.reusability._
 import explore.modes.SpectroscopyModesMatrix
 import explore.utils
 import io.circe.Json
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.extra.router.SetRouteVia
-import japgolly.scalajs.react.util.Effect
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
@@ -36,17 +33,11 @@ import workers.WebWorkerF
 
 import scala.concurrent.duration._
 
-case class Clients[F[_]: Async: Parallel: Effect.Dispatch: Logger] protected (
+case class Clients[F[_]: Async: Parallel] protected (
   odb:           WebSocketClient[F, ObservationDB],
   preferencesDB: WebSocketClient[F, UserPreferencesDB],
   itc:           TransactionalClient[F, ITC]
 ) {
-  lazy val PreferencesDBConnectionStatus: StreamRenderer.Component[PersistentClientStatus] =
-    StreamRenderer.build(preferencesDB.statusStream)
-
-  lazy val ODBConnectionStatus: StreamRenderer.Component[PersistentClientStatus] =
-    StreamRenderer.build(odb.statusStream)
-
   def init(payload: Map[String, Json]): F[Unit] =
     (
       preferencesDB.connect() >> preferencesDB.initialize(),
@@ -60,7 +51,7 @@ case class Clients[F[_]: Async: Parallel: Effect.Dispatch: Logger] protected (
     ).sequence.void
 }
 object Clients {
-  def build[F[_]: Async: TransactionalBackend: WebSocketBackend: Parallel: Effect.Dispatch: Logger](
+  def build[F[_]: Async: TransactionalBackend: WebSocketBackend: Parallel: Logger](
     odbURI:               Uri,
     prefsURI:             Uri,
     itcURI:               Uri,
@@ -154,7 +145,7 @@ case class AppContext[F[_]](
 }
 
 object AppContext {
-  def from[F[_]: Async: FetchJSBackend: WebSocketBackend: Parallel: Effect.Dispatch: Logger](
+  def from[F[_]: Async: FetchJSBackend: WebSocketBackend: Parallel: Logger](
     config:               AppConfig,
     reconnectionStrategy: WebSocketReconnectionStrategy,
     pageUrl:              (AppTab, Program.Id, Option[ObsIdSet], Option[Target.Id]) => String,

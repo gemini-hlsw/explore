@@ -26,7 +26,9 @@ import explore.observationtree.ConstraintGroupObsList
 import explore.optics._
 import explore.syntax.ui._
 import explore.undo._
+import explore.utils._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.callback.CallbackCatsEffect._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Program
@@ -34,6 +36,8 @@ import lucuma.core.model.User
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
 import org.scalajs.dom.window
+import queries.common.ConstraintGroupQueriesGQL._
+import queries.common.ObsQueriesGQL
 import queries.common.UserPreferencesQueriesGQL._
 import react.common._
 import react.common.implicits._
@@ -292,12 +296,19 @@ object ConstraintSetTabContents {
           case _                            => Callback.empty
         }
       }
-      .renderWithReuse { (props, state) =>
+      .useStreamResourceViewWithReuseOnMountBy { (props, _) =>
         implicit val ctx = props.ctx
 
-        ConstraintGroupLiveQuery(
-          props.programId,
-          Reuse(renderFn _)(props, state)
-        )
+        ConstraintGroupObsQuery
+          .query(props.programId)
+          .map(ConstraintGroupObsQuery.Data.asConstraintSummWithObs.get)
+          .reRunOnResourceSignals(
+            ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](props.programId)
+          )
+      }
+      .renderWithReuse { (props, state, constraintsWithObs) =>
+        implicit val ctx = props.ctx
+
+        potRender(Reuse(renderFn _)(props, state))(constraintsWithObs)
       }
 }

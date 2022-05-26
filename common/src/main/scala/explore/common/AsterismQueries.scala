@@ -5,23 +5,16 @@ package explore.common
 
 import cats.Order
 import cats.effect.Async
-import cats.effect.IO
 import cats.implicits._
 import clue.TransactionalClient
 import clue.data.syntax._
-import crystal.react.ReuseView
-import crystal.react.reuse._
-import explore.components.LiveQuery
 import explore.implicits._
 import explore.model.AsterismGroup
 import explore.model.ObsIdSet
 import explore.model.ObsSummaryWithConstraintsAndConf
 import explore.model.TargetGroup
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.callback.CallbackCatsEffect._
-import japgolly.scalajs.react.vdom.VdomNode
 import lucuma.core.model.Observation
-import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types._
@@ -29,9 +22,6 @@ import lucuma.ui.reusability._
 import monocle.Focus
 import monocle.Getter
 import queries.common.AsterismQueriesGQL._
-import queries.common.ObsQueriesGQL
-import queries.common.TargetQueriesGQL
-import react.common.ReactFnProps
 
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
@@ -107,33 +97,6 @@ object AsterismQueries {
   implicit class AsterismGroupObsQueryDataOps(val self: AsterismGroupObsQuery.Data.type)
       extends AnyVal {
     def asAsterismGroupWithObs = queryToAsterismGroupWithObsGetter
-  }
-
-  final case class AsterismGroupLiveQuery(
-    programId:        Program.Id,
-    render:           ReuseView[AsterismGroupsWithObs] ==> VdomNode
-  )(implicit val ctx: AppContextIO)
-      extends ReactFnProps[AsterismGroupLiveQuery](AsterismGroupLiveQuery.component)
-
-  object AsterismGroupLiveQuery {
-    type Props = AsterismGroupLiveQuery
-
-    implicit val reuseProps: Reusability[Props] = Reusability.derive
-
-    protected val component =
-      ScalaFnComponent.withReuse[Props] { props =>
-        implicit val ctx = props.ctx
-
-        LiveQuery(
-          AsterismGroupObsQuery
-            .query(props.programId)
-            .map(AsterismGroupObsQuery.Data.asAsterismGroupWithObs.get)
-            .reRunOnResourceSignals(
-              ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](props.programId),
-              TargetQueriesGQL.ProgramTargetEditSubscription.subscribe[IO](props.programId)
-            )
-        )(props.render)
-      }
   }
 
   def replaceAsterism[F[_]: Async](
