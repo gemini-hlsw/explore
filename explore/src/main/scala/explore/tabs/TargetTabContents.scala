@@ -380,7 +380,7 @@ object TargetTabContents {
           props.programId,
           idsToEdit,
           Pot(asterismView, scienceMode),
-          obsConf.asOpt,
+          obsConf.asViewOpt,
           props.focusedTarget,
           Reuse(setCurrentTarget _)(props.programId, idsToEdit),
           Reuse.currying(targetMap, idsToEdit).in(otherObsCount _),

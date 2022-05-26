@@ -360,7 +360,7 @@ object ObsTabContents {
             props.programId,
             ObsIdSet.one(obsId),
             potAsterismMode,
-            obsConf.asOpt,
+            obsConf.asViewOpt,
             props.focusedTarget,
             Reuse(setCurrentTarget _)(props.programId, props.focusedObs),
             Reuse.currying(obsWithConstraints.get.targetMap, obsId).in(otherObsCount _),
