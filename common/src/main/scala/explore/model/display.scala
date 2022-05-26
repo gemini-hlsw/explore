@@ -18,9 +18,6 @@ import java.math.RoundingMode
 import java.text.DecimalFormat
 
 object display {
-  implicit val displayProposalClass: Display[ProposalClass] =
-    Display.byShortName(_.label)
-
   implicit val displayTacGroup: Display[TacGroup] =
     Display.byShortName(_.label)
 

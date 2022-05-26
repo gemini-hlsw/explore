@@ -37,6 +37,7 @@ import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
+import lucuma.core.model.PosAngle
 import lucuma.core.model.Target
 import lucuma.core.model.Target.Nonsidereal
 import lucuma.core.model.Target.Sidereal
@@ -379,7 +380,7 @@ object TargetTabContents {
           props.programId,
           idsToEdit,
           Pot(asterismView, scienceMode),
-          obsConf.asOpt,
+          obsConf.asViewOpt,
           props.focusedTarget,
           Reuse(setCurrentTarget _)(props.programId, idsToEdit),
           Reuse.currying(targetMap, idsToEdit).in(otherObsCount _),

@@ -4,6 +4,7 @@
 package explore.model
 
 import cats.Eq
+import lucuma.core.model.PosAngle
 import monocle.Focus
 import monocle.Lens
 import org.typelevel.cats.time._

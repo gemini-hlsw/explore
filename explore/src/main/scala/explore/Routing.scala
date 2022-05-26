@@ -13,7 +13,7 @@ import explore.model.Page
 import explore.model.Page._
 import explore.model._
 import explore.programs.ProgramsPopup
-import explore.proposal._
+// import explore.proposal._
 import explore.tabs._
 import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react.extra.router._
@@ -95,9 +95,10 @@ object Routing {
     )
 
   private def proposalTab(): VdomElement =
-    AppCtx.using { implicit ctx =>
-      ProposalTabContents()
-    }
+    <.div("Under construction")
+  // AppCtx.using { implicit ctx =>
+  // ProposalTabContents()
+  // }
 
   private def configurationsTab(page: Page): VdomElement =
     SequenceEditor(RoutingInfo.from(page).programId)

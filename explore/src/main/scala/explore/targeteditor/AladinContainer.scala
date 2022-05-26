@@ -11,7 +11,6 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.GuideStarCandidate
 import explore.model.ObsConfiguration
-import explore.model.PosAngle
 import explore.model.ScienceMode
 import explore.model.TargetVisualOptions
 import explore.model.enum.Visible
@@ -24,6 +23,7 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
 import lucuma.core.model.SiderealTracking
+import lucuma.core.model.PosAngle
 import lucuma.svgdotjs.Svg
 import lucuma.ui.reusability._
 import org.scalajs.dom.Element

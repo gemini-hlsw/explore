@@ -21,7 +21,6 @@ import explore.model
 import explore.model.ITCTarget
 import explore.model.ImagingConfigurationOptions
 import explore.model.ObsConfiguration
-import explore.model.PosAngle
 import explore.model.SpectroscopyConfigurationOptions
 import explore.model.TruncatedPA
 import explore.model.display._
@@ -39,6 +38,7 @@ import lucuma.core.math.Wavelength
 import lucuma.core.math.units.Micrometer
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
+import lucuma.core.model.PosAngle
 import lucuma.core.optics.syntax.lens._
 import lucuma.core.syntax.string._
 import lucuma.ui.forms.EnumViewSelect

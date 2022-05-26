@@ -8,6 +8,7 @@ import explore.model.refined._
 import lucuma.core.enum._
 import lucuma.core.model.Partner
 import lucuma.core.model.StandardUser
+import lucuma.core.model.ProposalClass
 import monocle.Focus
 
 final case class ProposalDetails(

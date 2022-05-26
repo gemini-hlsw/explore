@@ -3,8 +3,8 @@
 
 package explore.model.syntax
 
-import explore.model.PosAngle
 import explore.model.enum.PosAngleOptions
+import lucuma.core.model.PosAngle
 import lucuma.core.math.Angle
 
 object all {

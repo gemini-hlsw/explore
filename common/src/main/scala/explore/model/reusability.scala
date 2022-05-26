@@ -11,6 +11,7 @@ import japgolly.scalajs.react.Reusability
 import lucuma.catalog.AngularSize
 import lucuma.catalog.CatalogTargetResult
 import lucuma.core.model.Target
+import lucuma.core.model.PosAngle
 import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.ui.reusability._
 
