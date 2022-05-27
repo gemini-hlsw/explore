@@ -63,8 +63,7 @@ object AladinSettings {
 object AladinCell extends ModelOptics {
   type Props = AladinCell
 
-  implicit protected val propsReuse: Reusability[Props] =
-    Reusability.never // Reusability.derive[Props]
+  implicit protected val propsReuse: Reusability[Props] = Reusability.derive[Props]
 
   protected val component =
     ScalaFnComponent
