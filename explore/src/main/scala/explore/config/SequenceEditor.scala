@@ -27,14 +27,12 @@ object SequenceEditor {
   val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStreamOnMountBy { props =>
+      .useEffectResultOnMountBy { props =>
         implicit val ctx = props.ctx
 
-        fs2.Stream.eval(
-          SequenceSteps
-            .query(props.programId)
-            .map(_.observations.nodes.headOption.flatMap(_.config))
-        )
+        SequenceSteps
+          .query(props.programId)
+          .map(_.observations.nodes.headOption.flatMap(_.config))
       }
       .render((_, config) => potRender(renderFn)(config))
 }

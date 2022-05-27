@@ -28,16 +28,12 @@ object GeneratedSequenceViewer {
   val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStreamOnMountBy { props =>
+      .useEffectResultOnMountBy { props =>
         implicit val ctx = props.ctx
 
-        // TODO A hook that just runs an effect and stores its result in state?
-        // Or are we going to livequery the sequence?
-        fs2.Stream.eval(
-          SequenceSteps
-            .query(props.obsId)
-            .map(_.observation.flatMap(_.execution.config))
-        )
+        SequenceSteps
+          .query(props.obsId)
+          .map(_.observation.flatMap(_.execution.config))
       }
       .render((_, config) => potRender(renderFn)(config))
 }
