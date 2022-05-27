@@ -44,7 +44,6 @@ import lucuma.core.model.Target.Sidereal
 import lucuma.core.model.User
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
-import monocle.Optional
 import org.scalajs.dom.window
 import queries.common.AsterismQueriesGQL._
 import queries.common.ObsQueriesGQL
@@ -64,6 +63,7 @@ import react.semanticui.sizes._
 import java.time.Instant
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._
+import scala.collection.immutable.SortedMap
 
 final case class TargetTabContents(
   userId:            Option[User.Id],
@@ -275,23 +275,23 @@ object TargetTabContents {
       val groupIds  = asterismGroup.obsIds
       val targetIds = asterismGroup.targetIds
 
-      val asterism: List[TargetWithId] =
-        targetIds.toList.map(id => targetMap.get(id).map(_.targetWithId)).flatten
+      val asterism: Option[Asterism] =
+        Asterism.fromTargets(targetIds.toList.flatMap(id => targetMap.get(id).map(_.targetWithId)))
 
-      val getAsterism: AsterismGroupsWithObs => List[TargetWithId] = _ => asterism
+      val getAsterism: AsterismGroupsWithObs => Option[Asterism] = _ => asterism
 
       def modAsterism(
-        mod: List[TargetWithId] => List[TargetWithId]
+        mod: Option[Asterism] => Option[Asterism]
       ): AsterismGroupsWithObs => AsterismGroupsWithObs = agwo => {
         val asterismGroups = agwo.asterismGroups
         val targetGroups   = agwo.targetGroups
         val moddedAsterism = mod(asterism)
-        val newTargetIds   = SortedSet.from(moddedAsterism.map(_.id))
+        val newTargetIds   = SortedSet.from(moddedAsterism.foldMap(_.targets.toList.map(_.id)))
 
         // make sure any added targets are in the map and update modified ones.
         val addedIds  = newTargetIds -- targetIds
         val tgUpdate1 =
-          moddedAsterism.foldRight(targetGroups) { case (twid, groups) =>
+          moddedAsterism.map(_.targets.toList.foldRight(targetGroups) { case (twid, groups) =>
             if (addedIds.contains(twid.id))
               // it's new to this asterism, but the target itself may or may not be new. So we
               // either add a new target group or update the existing one.
@@ -301,12 +301,12 @@ object TargetTabContents {
               )
             else // just update the current target, observations should be the same
               groups.updatedWith(twid.id)(_.map(_.copy(targetWithId = twid)))
-          }
+          })
 
         val removedIds          = targetIds -- newTargetIds
         // If we removed a target, just update the observation ids for that target group
         val updatedTargetGroups = removedIds.foldRight(tgUpdate1) { case (id, groups) =>
-          groups.updatedWith(id)(_.map(_.removeObsIds(idsToEdit)))
+          groups.map(_.updatedWith(id)(_.map(_.removeObsIds(idsToEdit))))
         }
 
         val splitAsterisms =
@@ -333,10 +333,12 @@ object TargetTabContents {
             mergeWithAg._2.addObsIds(groupIds).asObsKeyValue
         }
 
-        agwo.copy(asterismGroups = updatedAsterismGroups, targetGroups = updatedTargetGroups)
+        agwo.copy(asterismGroups = updatedAsterismGroups,
+                  targetGroups = updatedTargetGroups.getOrElse(SortedMap.empty)
+        )
       }
 
-      val asterismView: ReuseView[List[TargetWithId]] =
+      val asterismView: ReuseView[Option[Asterism]] =
         asterismGroupsWithObs.value
           .withOnMod(onModAsterismsWithObs(groupIds, idsToEdit))
           .zoom(getAsterism)(modAsterism)
@@ -349,12 +351,7 @@ object TargetTabContents {
 
       val selectedTarget: Option[ReuseViewOpt[Target]] =
         props.focusedTarget.map { targetId =>
-          val optional =
-            Optional[List[TargetWithId], Target](_.find(_.id === targetId).map(_.target))(target =>
-              _.map(twid => if (twid.id === targetId) TargetWithId(targetId, target) else twid)
-            )
-
-          asterismView.zoom(optional).addReuseBy(targetId)
+          asterismView.zoom(Asterism.targetOptional(targetId)).addReuseBy(targetId)
         }
 
       val scienceMode = idsToEdit.single match {

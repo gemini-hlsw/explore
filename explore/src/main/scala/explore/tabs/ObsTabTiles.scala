@@ -17,6 +17,7 @@ import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.model.Asterism
 import explore.model.ConstraintGroup
 import explore.model.GridLayoutSection
 import explore.model.ModelUndoStacks
@@ -24,7 +25,6 @@ import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.ScienceMode
 import explore.model.TargetSummary
-import explore.model.TargetWithId
 import explore.model.display._
 import explore.model.enum.AppTab
 import explore.model.layout._
@@ -177,13 +177,14 @@ object ObsTabTiles {
         ): Callback =
           ctx.setPageVia(AppTab.Observations, programId, oid.map(ObsIdSet.one(_)), tid, via)
 
-        val potAsterismMode: Pot[(ReuseView[List[TargetWithId]], Option[ScienceMode])] =
+        val potAsterismMode: Pot[(ReuseView[Option[Asterism]], Option[ScienceMode])] =
           obsView.map(rv =>
             (rv.value
                .zoom(
                  ObservationData.targetEnvironment
                    .andThen(ObservationData.TargetEnvironment.asterism)
                )
+               .zoom(Asterism.fromTargetsList.asLens)
                .reuseByValue,
              rv.get.scienceMode
             )

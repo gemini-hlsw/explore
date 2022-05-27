@@ -15,7 +15,6 @@ import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ObsIdSet
 import explore.model.SiderealTargetWithId
-import explore.model.TargetWithId
 import explore.model.reusability._
 import explore.targets.TargetColumns
 import japgolly.scalajs.react._
@@ -37,10 +36,12 @@ import reactST.reactTable._
 import reactST.reactTable.mod.IdType
 
 import scalajs.js.JSConverters._
+import explore.model.Asterism
+import cats.data.NonEmptyList
 
 final case class TargetTable(
   obsIds:           ObsIdSet,
-  targets:          ReuseView[List[TargetWithId]],
+  targets:          ReuseView[Option[Asterism]],
   hiddenColumns:    ReuseView[Set[String]],
   selectedTarget:   ReuseView[Option[Target.Id]],
   renderInTitle:    Tile.RenderInTitle
@@ -95,7 +96,13 @@ object TargetTable {
                 onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
                   e.preventDefaultCB >>
                     e.stopPropagationCB >>
-                    props.targets.mod(_.filter(_.id =!= cell.value.extract)) >>
+                    props.targets.mod { asterism =>
+                      val targets =
+                        NonEmptyList.fromList(
+                          asterism.foldMap(_.targets.filter(_.id =!= cell.value.extract))
+                        )
+                      targets.flatMap(t => asterism.map(Asterism.targets.replace(t)))
+                    } >>
                     deleteSiderealTarget(props.obsIds, cell.value).runAsync
               )
             )
@@ -106,7 +113,7 @@ object TargetTable {
             .allColumns
       }
       // rows
-      .useMemoBy((props, _) => props.targets)((_, _) => _.get.flatMap(_.toSidereal).toList)
+      .useMemoBy((props, _) => props.targets)((_, _) => _.get.foldMap(_.toSidereal))
       .useTableBy((props, cols, rows) =>
         TargetTable(
           cols,

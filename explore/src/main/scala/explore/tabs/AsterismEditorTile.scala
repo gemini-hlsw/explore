@@ -12,10 +12,11 @@ import crystal.react.reuse._
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+
+import explore.model.Asterism
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.ScienceMode
-import explore.model.TargetWithId
 import explore.model.reusability._
 import explore.targeteditor.AsterismEditor
 import explore.undo.UndoStacks
@@ -35,7 +36,7 @@ object AsterismEditorTile {
     userId:          Option[User.Id],
     programId:       Program.Id,
     obsId:           ObsIdSet,
-    potAsterismMode: Pot[(ReuseView[List[TargetWithId]], Option[ScienceMode])],
+    potAsterismMode: Pot[(ReuseView[Option[Asterism]], Option[ScienceMode])],
     obsConf:         ReuseViewOpt[ObsConfiguration],
     currentTarget:   Option[Target.Id],
     setTarget:       (Option[Target.Id], SetRouteVia) ==> Callback,
@@ -71,8 +72,8 @@ object AsterismEditorTile {
          height
         )
       ) { (renderInTitle: Tile.RenderInTitle) =>
-        potRenderWithReuse[(ReuseView[List[TargetWithId]], Option[ScienceMode])](
-          { (asterismMode: (ReuseView[List[TargetWithId]], Option[ScienceMode])) =>
+        potRenderWithReuse[(ReuseView[Option[Asterism]], Option[ScienceMode])](
+          { (asterismMode: (ReuseView[Option[Asterism]], Option[ScienceMode])) =>
             val (asterism, scienceMode) = asterismMode
             userId.map(uid =>
               AsterismEditor(
