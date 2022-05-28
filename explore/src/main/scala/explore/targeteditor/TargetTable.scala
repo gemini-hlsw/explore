@@ -13,9 +13,9 @@ import explore.common.AsterismQueries
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.model.Asterism
 import explore.model.ObsIdSet
 import explore.model.SiderealTargetWithId
-import explore.model.TargetWithId
 import explore.model.reusability._
 import explore.targets.TargetColumns
 import japgolly.scalajs.react._
@@ -40,7 +40,7 @@ import scalajs.js.JSConverters._
 
 final case class TargetTable(
   obsIds:           ObsIdSet,
-  targets:          ReuseView[List[TargetWithId]],
+  targets:          ReuseView[Option[Asterism]],
   hiddenColumns:    ReuseView[Set[String]],
   selectedTarget:   ReuseView[Option[Target.Id]],
   renderInTitle:    Tile.RenderInTitle
@@ -95,7 +95,14 @@ object TargetTable {
                 onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
                   e.preventDefaultCB >>
                     e.stopPropagationCB >>
-                    props.targets.mod(_.filter(_.id =!= cell.value.extract)) >>
+                    props.targets.mod {
+                      _.flatMap(_.remove(cell.value.extract))
+                      // val targets =
+                      //   NonEmptyList.fromList(
+                      //     asterism.foldMap(_.asList.filter(_.id =!= cell.value.extract))
+                      //   )
+                      // targets.flatMap(t => asterism.map(Asterism.isoTargets.reverse.replace(t)))
+                    } >>
                     deleteSiderealTarget(props.obsIds, cell.value).runAsync
               )
             )
@@ -106,7 +113,7 @@ object TargetTable {
             .allColumns
       }
       // rows
-      .useMemoBy((props, _) => props.targets)((_, _) => _.get.flatMap(_.toSidereal).toList)
+      .useMemoBy((props, _) => props.targets)((_, _) => _.get.foldMap(_.toSidereal))
       .useTableBy((props, cols, rows) =>
         TargetTable(
           cols,
@@ -126,7 +133,7 @@ object TargetTable {
           }.reuseCurrying(props.hiddenColumns.get)
         )
       )
-      .renderWithReuse((props, _, _, tableInstance) =>
+      .renderWithReuse((props, _, rows, tableInstance) =>
         React.Fragment(
           props.renderInTitle(
             <.span(ExploreStyles.TitleSelectColumns)(
@@ -159,40 +166,47 @@ object TargetTable {
               )
             )
           ),
-          <.div(ExploreStyles.ExploreTable |+| ExploreStyles.AsterismTable)(
-            TargetTableComponent(
-              table = Table(celled = true,
-                            selectable = true,
-                            striped = true,
-                            compact = TableCompact.Very,
-                            unstackable = true
-              )(),
-              header = true,
-              headerRow = (headerRow: TargetTable.HeaderGroupType) =>
-                TableRow(clazz = columnClasses.get(headerRow.id.toString).orEmpty),
-              headerCell = (col: TargetTable.ColumnType) =>
-                TableHeaderCell(clazz =
-                  columnClasses.get(col.id.toString).orEmpty |+| ExploreStyles.StickyHeader
-                )(
-                  ^.textTransform.none,
-                  ^.whiteSpace.nowrap
-                ),
-              row = (rowData: TargetTable.RowType) =>
-                TableRow(
-                  clazz = ExploreStyles.TableRowSelected.when_(
-                    props.selectedTarget.get.exists(_ === rowData.original.id)
+          if (rows.isEmpty) {
+            <.div(
+              ExploreStyles.FullHeightWidth |+| ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
+              <.div("Add a target")
+            )
+          } else {
+            <.div(ExploreStyles.ExploreTable |+| ExploreStyles.AsterismTable)(
+              TargetTableComponent(
+                table = Table(celled = true,
+                              selectable = true,
+                              striped = true,
+                              compact = TableCompact.Very,
+                              unstackable = true
+                )(),
+                header = true,
+                headerRow = (headerRow: TargetTable.HeaderGroupType) =>
+                  TableRow(clazz = columnClasses.get(headerRow.id.toString).orEmpty),
+                headerCell = (col: TargetTable.ColumnType) =>
+                  TableHeaderCell(clazz =
+                    columnClasses.get(col.id.toString).orEmpty |+| ExploreStyles.StickyHeader
+                  )(
+                    ^.textTransform.none,
+                    ^.whiteSpace.nowrap
+                  ),
+                row = (rowData: TargetTable.RowType) =>
+                  TableRow(
+                    clazz = ExploreStyles.TableRowSelected.when_(
+                      props.selectedTarget.get.exists(_ === rowData.original.id)
+                    )
+                  )(
+                    ^.onClick --> props.selectedTarget
+                      .set(rowData.original.id.some),
+                    props2Attrs(rowData.getRowProps())
+                  ),
+                cell = (cell: TargetTable.CellType[_]) =>
+                  TableCell(clazz = columnClasses.get(cell.column.id.toString).orUndefined)(
+                    ^.whiteSpace.nowrap
                   )
-                )(
-                  ^.onClick --> props.selectedTarget
-                    .set(rowData.original.id.some),
-                  props2Attrs(rowData.getRowProps())
-                ),
-              cell = (cell: TargetTable.CellType[_]) =>
-                TableCell(clazz = columnClasses.get(cell.column.id.toString).orUndefined)(
-                  ^.whiteSpace.nowrap
-                )
-            )(tableInstance)
-          )
+              )(tableInstance)
+            )
+          }
         )
       )
 }

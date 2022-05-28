@@ -25,7 +25,8 @@ import react.highcharts.Chart
 import react.moon.MoonPhase
 import react.resizeDetector._
 import react.resizeDetector.hooks._
-import shapeless._
+import shapeless.Generic
+import shapeless.HNil
 
 import java.time.Duration
 import java.time.Instant

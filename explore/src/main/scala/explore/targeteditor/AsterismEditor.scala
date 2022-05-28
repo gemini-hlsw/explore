@@ -17,6 +17,7 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.config.ObsTimeComponent
 import explore.implicits._
+import explore.model.Asterism
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.ScienceMode
@@ -34,7 +35,6 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
-import monocle.Optional
 import queries.common.TargetQueriesGQL._
 import queries.schemas.implicits._
 import react.common.ReactFnProps
@@ -48,7 +48,7 @@ final case class AsterismEditor(
   userId:           User.Id,
   programId:        Program.Id,
   obsIds:           ObsIdSet,
-  asterism:         ReuseView[List[TargetWithId]],
+  asterism:         ReuseView[Option[Asterism]],
   scienceMode:      Option[ScienceMode],
   obsConf:          ReuseViewOpt[ObsConfiguration],
   currentTarget:    Option[Target.Id],
@@ -69,7 +69,7 @@ object AsterismEditor {
   private def insertSiderealTarget(
     programId:      Program.Id,
     obsIds:         ObsIdSet,
-    asterism:       ReuseView[List[TargetWithId]],
+    asterism:       ReuseView[Option[Asterism]],
     oTargetId:      Option[Target.Id],
     target:         Target.Sidereal,
     selectedTarget: ReuseView[Option[Target.Id]],
@@ -80,21 +80,28 @@ object AsterismEditor {
     )(IO(_))
     adding.async.set(true) >>
       targetId
-        .flatMap(tid =>
-          asterism.async.mod(_ :+ TargetWithId(tid, target))
-            >> selectedTarget.async.set(tid.some) >>
+        .flatMap { tid =>
+          val newTarget   = TargetWithId(tid, target)
+          val asterismAdd = asterism.async.mod {
+            case a @ Some(_) => a.map(_.add(newTarget))
+            case _           => Asterism.one(newTarget).some
+          }
+          asterismAdd >>
+            selectedTarget.async.set(tid.some) >>
             AsterismQueries.addTargetToAsterisms[IO](obsIds.toList, tid)
-        )
+        }
         .guarantee(adding.async.set(false))
   }
 
   private def onCloneTarget(
     id:        Target.Id,
-    asterism:  ReuseView[List[TargetWithId]],
+    asterism:  ReuseView[Option[Asterism]],
     setTarget: (Option[Target.Id], SetRouteVia) ==> Callback,
     newTwid:   TargetWithId
   ): Callback =
-    asterism.mod(_.map(twid => if (twid.id === id) newTwid else twid)) >>
+    asterism
+      .zoom(Asterism.fromTargetsList.reverse.asLens)
+      .mod(_.map(twid => if (twid.id === id) newTwid else twid)) >>
       setTarget(newTwid.id.some, SetRouteVia.HistoryPush)
 
   protected val component =
@@ -110,12 +117,10 @@ object AsterismEditor {
           // Need to replace history here.
           oTargetId match {
             case None                                                   =>
-              asterism.get.headOption.foldMap(twid =>
-                setTarget(twid.id.some, SetRouteVia.HistoryReplace)
-              )
-            case Some(current) if asterism.get.exists(_.id === current) => Callback.empty
+              asterism.get.foldMap(a => setTarget(a.baseTarget.id.some, SetRouteVia.HistoryReplace))
+            case Some(current) if asterism.get.exists(_.hasId(current)) => Callback.empty
             case _                                                      =>
-              setTarget(asterism.get.headOption.map(_.id), SetRouteVia.HistoryReplace)
+              setTarget(asterism.get.map(_.baseTarget.id), SetRouteVia.HistoryReplace)
           }
         }
       )
@@ -180,15 +185,7 @@ object AsterismEditor {
           ),
           props.currentTarget
             .flatMap[VdomElement] { targetId =>
-              val optional =
-                Optional[List[TargetWithId], Target](_.find(_.id === targetId).map(_.target))(
-                  target =>
-                    _.map { twid =>
-                      if (twid.id === targetId) TargetWithId(targetId, target) else twid
-                    }
-                )
-
-              val selectedTargetView = props.asterism.zoom(optional)
+              val selectedTargetView = props.asterism.zoom(Asterism.targetOptional(targetId))
 
               val otherObsCount = props.otherObsCount(targetId)
               val plural        = if (otherObsCount === 1) "" else "s"

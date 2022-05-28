@@ -13,3 +13,4 @@ object all
     with ArbObsSummary
     with ArbConstraintsSummary
     with ArbSpectroscopyConfigurationOptions
+    with ArbAsterism

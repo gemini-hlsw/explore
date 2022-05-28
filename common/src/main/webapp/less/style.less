@@ -302,6 +302,7 @@ tfoot {
 }
 
 .explore-tile-title {
+  flex-grow: 0;
   background-color: var(--tile-title-background);
   display: flex;
   flex-direction: row;
@@ -474,7 +475,7 @@ tfoot {
 }
 
 .explore-tile-body {
-  height: ~'calc(100% - @{minHeight})';
+  flex-grow: 1;
   overflow-y: auto;
   background-color: var(--tile-background);
 }
@@ -482,6 +483,8 @@ tfoot {
 .explore-tile {
   .full-height-width();
 
+  display: flex;
+  flex-direction: column;
   background-color: var(--tile-background);
 }
 
@@ -884,17 +887,15 @@ tfoot {
   background-color: var(--explore-group-dragging) !important;
 }
 
-.sky-plot-tile {
-  background-color: var(--plot-background-color);
-}
-
 .sky-plot-tile-body {
+  position: relative;
   display: flex;
-  justify-content: stretch;
+  flex-direction: column;
 }
 
 .sky-plot {
-  height: 100%;
+  flex-shrink: 1;
+  flex-grow: 1;
 
   .highcharts-xaxis .highcharts-axis-title {
     fill: hsl(0, 87%, 66%);
@@ -902,9 +903,11 @@ tfoot {
 
   > div {
     height: 100%;
+    max-height: 100%;
 
     div[data-highcharts-chart] {
       height: 100%;
+      max-height: 100%;
     }
   }
 }
@@ -912,6 +915,8 @@ tfoot {
 .sky-plot-section {
   min-width: 1px; // Needed to help highcharts recompute width on the fly.
   width: 100%;
+  height: 100%;
+  max-height: 100%;
   position: relative;
   display: flex;
   flex-direction: column;

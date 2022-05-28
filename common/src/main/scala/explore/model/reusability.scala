@@ -5,6 +5,7 @@ package explore.model
 
 import clue.PersistentClientStatus
 import explore.data.KeyedIndexedList
+import explore.model.Asterism
 import explore.undo.UndoStacks
 import japgolly.scalajs.react.ReactCats._
 import japgolly.scalajs.react.Reusability
@@ -37,6 +38,7 @@ object reusability {
   implicit val obsIdSetReuse: Reusability[ObsIdSet]                                   = Reusability.byEq
   implicit val targetIdSetReuse: Reusability[TargetIdSet]                             = Reusability.byEq
   implicit val targetWithIdReuse: Reusability[TargetWithId]                           = Reusability.byEq
+  implicit val asterismReuse: Reusability[Asterism]                                   = Reusability.byEq
   implicit val targetWithOptIdReuse: Reusability[TargetWithOptId]                     = Reusability.byEq
   implicit val targetGroupReuse: Reusability[TargetGroup]                             = Reusability.byEq
   implicit val constraintsSummaryReuse: Reusability[ConstraintsSummary]               = Reusability.byEq
