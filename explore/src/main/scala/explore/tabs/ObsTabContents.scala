@@ -32,7 +32,6 @@ import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.callback.CallbackCatsEffect._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.math.Coordinates
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngle
 import lucuma.core.model.Program
@@ -198,9 +197,6 @@ object ObsTabContents {
         )
       )
 
-    val targetCoords: Option[Coordinates] =
-      props.focusedTarget.flatMap(obsWithConstraints.get.targetMap.get).flatMap(_.coords)
-
     val backButton = Reuse.always[VdomNode](
       Button(
         as = <.a,
@@ -244,7 +240,6 @@ object ObsTabContents {
           props.focusedObs,
           props.focusedTarget,
           obsWithConstraints.get.targetMap,
-          targetCoords,
           props.undoStacks,
           props.searching,
           props.hiddenColumns,
