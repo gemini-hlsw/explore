@@ -101,7 +101,7 @@ object TargetTable {
                         NonEmptyList.fromList(
                           asterism.foldMap(_.targets.filter(_.id =!= cell.value.extract))
                         )
-                      targets.flatMap(t => asterism.map(Asterism.targets.replace(t)))
+                      targets.flatMap(t => asterism.map(Asterism.isoTargets.reverse.replace(t)))
                     } >>
                     deleteSiderealTarget(props.obsIds, cell.value).runAsync
               )

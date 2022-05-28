@@ -23,11 +23,7 @@ object Asterism {
   val isoTargets: Iso[NonEmptyList[TargetWithId], Asterism] =
     Iso[Asterism, NonEmptyList[TargetWithId]](_.targets)(Asterism.apply).reverse
 
-  val targets: Lens[Asterism, NonEmptyList[TargetWithId]] = isoTargets.reverse.asLens
-
-  val fromTargets: Lens[NonEmptyList[TargetWithId], Asterism] = isoTargets.asLens
-
-  val targetsEach: Traversal[Asterism, TargetWithId] = targets.each
+  val targetsEach: Traversal[Asterism, TargetWithId] = isoTargets.reverse.each
 
   val fromTargetsList: Iso[List[TargetWithId], Option[Asterism]] =
     Iso[List[TargetWithId], Option[Asterism]](fromTargets) {
