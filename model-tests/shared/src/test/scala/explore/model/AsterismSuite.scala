@@ -28,8 +28,9 @@ class AsterismSuite extends DisciplineSuite {
       implicit val optAsterism: Arbitrary[Option[Asterism]] =
         Arbitrary(
           Gen.option[Asterism](
-            Gen.oneOf(arbAsterism.arbitrary,
-                      Gen.const(Asterism.of(TargetWithId(id, arbTarget.arbitrary.sample.get)))
+            Gen.oneOf(
+              arbAsterism.arbitrary,
+              arbTarget.arbitrary.map(t => Asterism.one(TargetWithId(id, t)))
             )
           )
         )

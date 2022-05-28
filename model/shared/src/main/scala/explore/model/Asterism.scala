@@ -9,9 +9,22 @@ import cats.syntax.all._
 import lucuma.core.model.Target
 import monocle._
 
-final case class Asterism(targets: NonEmptyList[TargetWithId]) {
+final case class Asterism private (private val targets: NonEmptyList[TargetWithId]) {
   def toSidereal: List[SiderealTargetWithId] =
     targets.traverse(_.toSidereal).foldMap(_.toList)
+
+  def asList: List[TargetWithId] = targets.toList
+
+  def add(t: TargetWithId): Asterism =
+    Asterism.isoTargets.reverse.modify(_ :+ t)(this)
+
+  def ids: NonEmptyList[Target.Id] = targets.map(_.id)
+
+  def remove(id: Target.Id): Option[Asterism] =
+    if (hasId(id)) {
+      val filtered = targets.filter(_.id =!= id)
+      Asterism.fromTargets(filtered)
+    } else this.some
 
   // This should be calculatedd from the other targets or manually overriden
   def baseTarget: TargetWithId = targets.head
@@ -34,8 +47,8 @@ object Asterism {
   def fromTargets(targets: List[TargetWithId]): Option[Asterism] =
     NonEmptyList.fromList(targets).map(Asterism.apply)
 
-  def of(targets: TargetWithId): Asterism =
-    Asterism(NonEmptyList.of(targets))
+  def one(targets: TargetWithId): Asterism =
+    Asterism(NonEmptyList.one(targets))
 
   def targetOptional(targetId: Target.Id): Optional[Option[Asterism], Target] =
     Optional[Option[Asterism], Target](

@@ -83,8 +83,8 @@ object AsterismEditor {
         .flatMap { tid =>
           val newTarget   = TargetWithId(tid, target)
           val asterismAdd = asterism.async.mod {
-            case a @ Some(_) => a.map(a => a.copy(a.targets :+ newTarget))
-            case _           => Asterism.of(newTarget).some
+            case a @ Some(_) => a.map(_.add(newTarget))
+            case _           => Asterism.one(newTarget).some
           }
           asterismAdd >>
             selectedTarget.async.set(tid.some) >>

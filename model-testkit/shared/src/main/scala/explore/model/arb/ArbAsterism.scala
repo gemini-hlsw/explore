@@ -31,7 +31,7 @@ trait ArbAsterism {
   }
 
   implicit val cogenAsterism: Cogen[Asterism] =
-    Cogen[NonEmptyList[TargetWithId]].contramap(_.targets)
+    Cogen[List[TargetWithId]].contramap(_.asList)
 }
 
 object ArbAsterism extends ArbAsterism

@@ -3,7 +3,6 @@
 
 package explore.targeteditor
 
-import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.ReuseView
@@ -96,12 +95,13 @@ object TargetTable {
                 onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
                   e.preventDefaultCB >>
                     e.stopPropagationCB >>
-                    props.targets.mod { asterism =>
-                      val targets =
-                        NonEmptyList.fromList(
-                          asterism.foldMap(_.targets.filter(_.id =!= cell.value.extract))
-                        )
-                      targets.flatMap(t => asterism.map(Asterism.isoTargets.reverse.replace(t)))
+                    props.targets.mod {
+                      _.flatMap(_.remove(cell.value.extract))
+                      // val targets =
+                      //   NonEmptyList.fromList(
+                      //     asterism.foldMap(_.asList.filter(_.id =!= cell.value.extract))
+                      //   )
+                      // targets.flatMap(t => asterism.map(Asterism.isoTargets.reverse.replace(t)))
                     } >>
                     deleteSiderealTarget(props.obsIds, cell.value).runAsync
               )

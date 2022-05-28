@@ -286,12 +286,12 @@ object TargetTabContents {
         val asterismGroups = agwo.asterismGroups
         val targetGroups   = agwo.targetGroups
         val moddedAsterism = mod(asterism)
-        val newTargetIds   = SortedSet.from(moddedAsterism.foldMap(_.targets.toList.map(_.id)))
+        val newTargetIds   = SortedSet.from(moddedAsterism.foldMap(_.ids.toList))
 
         // make sure any added targets are in the map and update modified ones.
         val addedIds  = newTargetIds -- targetIds
         val tgUpdate1 =
-          moddedAsterism.map(_.targets.toList.foldRight(targetGroups) { case (twid, groups) =>
+          moddedAsterism.map(_.asList.foldRight(targetGroups) { case (twid, groups) =>
             if (addedIds.contains(twid.id))
               // it's new to this asterism, but the target itself may or may not be new. So we
               // either add a new target group or update the existing one.
