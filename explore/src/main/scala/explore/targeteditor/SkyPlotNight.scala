@@ -51,7 +51,7 @@ object SkyPlotNight {
   type Props = SkyPlotNight
 
   implicit private val propsReuse: Reusability[Props]                    = Reusability.derive
-  // series don't trigger rerenders. We keep track of what is shown in case there is a
+  // series doesn't trigger rerenders. We keep track of what is shown in case there is a
   // rerender due to a change of properties.
   implicit private val stateReuse: Reusability[HashSet[ElevationSeries]] = Reusability.always
 

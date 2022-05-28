@@ -133,7 +133,7 @@ object TargetTable {
           }.reuseCurrying(props.hiddenColumns.get)
         )
       )
-      .renderWithReuse((props, _, _, tableInstance) =>
+      .renderWithReuse((props, _, rows, tableInstance) =>
         React.Fragment(
           props.renderInTitle(
             <.span(ExploreStyles.TitleSelectColumns)(
@@ -166,40 +166,47 @@ object TargetTable {
               )
             )
           ),
-          <.div(ExploreStyles.ExploreTable |+| ExploreStyles.AsterismTable)(
-            TargetTableComponent(
-              table = Table(celled = true,
-                            selectable = true,
-                            striped = true,
-                            compact = TableCompact.Very,
-                            unstackable = true
-              )(),
-              header = true,
-              headerRow = (headerRow: TargetTable.HeaderGroupType) =>
-                TableRow(clazz = columnClasses.get(headerRow.id.toString).orEmpty),
-              headerCell = (col: TargetTable.ColumnType) =>
-                TableHeaderCell(clazz =
-                  columnClasses.get(col.id.toString).orEmpty |+| ExploreStyles.StickyHeader
-                )(
-                  ^.textTransform.none,
-                  ^.whiteSpace.nowrap
-                ),
-              row = (rowData: TargetTable.RowType) =>
-                TableRow(
-                  clazz = ExploreStyles.TableRowSelected.when_(
-                    props.selectedTarget.get.exists(_ === rowData.original.id)
+          if (rows.isEmpty) {
+            <.div(
+              ExploreStyles.FullHeightWidth |+| ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
+              <.div("Add a target")
+            )
+          } else {
+            <.div(ExploreStyles.ExploreTable |+| ExploreStyles.AsterismTable)(
+              TargetTableComponent(
+                table = Table(celled = true,
+                              selectable = true,
+                              striped = true,
+                              compact = TableCompact.Very,
+                              unstackable = true
+                )(),
+                header = true,
+                headerRow = (headerRow: TargetTable.HeaderGroupType) =>
+                  TableRow(clazz = columnClasses.get(headerRow.id.toString).orEmpty),
+                headerCell = (col: TargetTable.ColumnType) =>
+                  TableHeaderCell(clazz =
+                    columnClasses.get(col.id.toString).orEmpty |+| ExploreStyles.StickyHeader
+                  )(
+                    ^.textTransform.none,
+                    ^.whiteSpace.nowrap
+                  ),
+                row = (rowData: TargetTable.RowType) =>
+                  TableRow(
+                    clazz = ExploreStyles.TableRowSelected.when_(
+                      props.selectedTarget.get.exists(_ === rowData.original.id)
+                    )
+                  )(
+                    ^.onClick --> props.selectedTarget
+                      .set(rowData.original.id.some),
+                    props2Attrs(rowData.getRowProps())
+                  ),
+                cell = (cell: TargetTable.CellType[_]) =>
+                  TableCell(clazz = columnClasses.get(cell.column.id.toString).orUndefined)(
+                    ^.whiteSpace.nowrap
                   )
-                )(
-                  ^.onClick --> props.selectedTarget
-                    .set(rowData.original.id.some),
-                  props2Attrs(rowData.getRowProps())
-                ),
-              cell = (cell: TargetTable.CellType[_]) =>
-                TableCell(clazz = columnClasses.get(cell.column.id.toString).orUndefined)(
-                  ^.whiteSpace.nowrap
-                )
-            )(tableInstance)
-          )
+              )(tableInstance)
+            )
+          }
         )
       )
 }
