@@ -24,13 +24,13 @@ import react.semanticui.elements.button.ButtonGroup
 
 import java.time.ZonedDateTime
 
-final case class SkyPlotSection(
+final case class ElevationPlotSection(
   coords:           Coordinates
 )(implicit val ctx: AppContextIO)
-    extends ReactFnProps[SkyPlotSection](SkyPlotSection.component)
+    extends ReactFnProps[ElevationPlotSection](ElevationPlotSection.component)
 
-object SkyPlotSection {
-  type Props = SkyPlotSection
+object ElevationPlotSection {
+  type Props = ElevationPlotSection
 
   protected sealed trait PlotPeriod
   protected object PlotPeriod {
@@ -53,21 +53,21 @@ object SkyPlotSection {
       .renderWithReuse { (props, site, date, plotPeriod, timeDisplay) =>
         implicit val ctx = props.ctx
 
-        <.div(ExploreStyles.SkyPlotSection)(
+        <.div(ExploreStyles.ElevationPlotSection)(
           HelpIcon("target/main/elevation-plot.md", ExploreStyles.HelpIconFloating),
-          <.div(ExploreStyles.SkyPlot) {
+          <.div(ExploreStyles.ElevationPlot) {
             plotPeriod.value match {
               case PlotPeriod.Night    =>
                 SkyPlotNight(site.value, props.coords, date.value, timeDisplay.value)
               case PlotPeriod.Semester =>
                 val coords   = props.coords
                 val semester = Semester.fromLocalDate(date.value)
-                SkyPlotSemester(site.value, coords, semester).withKey(
+                ElevationPlotSemester(site.value, coords, semester).withKey(
                   s"$site-$coords-$semester"
                 )
             }
           },
-          Form(clazz = ExploreStyles.SkyPlotControls)(
+          Form(clazz = ExploreStyles.ElevationPlotControls)(
             ButtonGroup(compact = true)(
               Button(
                 active = site.value === Site.GN,
@@ -78,18 +78,18 @@ object SkyPlotSection {
                 onClick = site.setState(Site.GS)
               )("GS")
             ),
-            <.div(ExploreStyles.SkyPlotDatePickerControls)(
+            <.div(ExploreStyles.ElevationPlotDatePickerControls)(
               Button(onClick = date.modState(_.minusDays(1)),
-                     clazz = ExploreStyles.SkyPlotDateButton
+                     clazz = ExploreStyles.ElevationPlotDateButton
               )(Icons.ChevronLeftLight),
               Datepicker(
                 onChange = (newValue, _) => date.setState(newValue.toLocalDateOpt.get)
               )
                 .selected(date.value.toJsDate)
                 .dateFormat("yyyy-MM-dd")
-                .className(ExploreStyles.SkyPlotDatePicker.htmlClass),
+                .className(ExploreStyles.ElevationPlotDatePicker.htmlClass),
               Button(onClick = date.modState(_.plusDays(1)),
-                     clazz = ExploreStyles.SkyPlotDateButton
+                     clazz = ExploreStyles.ElevationPlotDateButton
               )(Icons.ChevronRightLight)
             ),
             ButtonGroup(compact = true)(
