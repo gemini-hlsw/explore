@@ -4,7 +4,6 @@
 package explore.model.boopickle
 
 import boopickle.DefaultBasic._
-import cats.Applicative
 import cats.effect._
 import cats.syntax.all._
 import org.scalajs.dom
@@ -28,13 +27,9 @@ trait BoopicklePlatform {
     Either
       .catchNonFatal(Unpickle[A].fromBytes(TypedArrayBuffer.wrap(buffer)))
 
-  def decodeFromTransferable[F[_]: Applicative, A: Pickler](
-    m:    dom.MessageEvent
-  )(next: A => F[Unit]): F[Unit] =
+  def decodeFromTransferable[A: Pickler](m: dom.MessageEvent): Option[A] =
     m.data match {
-      case e: Int8Array =>
-        fromTransferable[A](e).fold(_ => Applicative[F].unit, next)
-      case _            => Applicative[F].unit
+      case e: Int8Array => fromTransferable[A](e).toOption
+      case _            => none
     }
-
 }
