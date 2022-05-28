@@ -12,7 +12,6 @@ import crystal.react.reuse._
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
-
 import explore.model.Asterism
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet

@@ -117,12 +117,10 @@ object AsterismEditor {
           // Need to replace history here.
           oTargetId match {
             case None                                                   =>
-              asterism.get.foldMap(
-                _.baseTarget.foldMap(twid => setTarget(twid.id.some, SetRouteVia.HistoryReplace))
-              )
+              asterism.get.foldMap(a => setTarget(a.baseTarget.id.some, SetRouteVia.HistoryReplace))
             case Some(current) if asterism.get.exists(_.hasId(current)) => Callback.empty
             case _                                                      =>
-              setTarget(asterism.get.flatMap(_.baseTarget.map(_.id)), SetRouteVia.HistoryReplace)
+              setTarget(asterism.get.map(_.baseTarget.id), SetRouteVia.HistoryReplace)
           }
         }
       )

@@ -6,14 +6,15 @@ package explore.model
 import cats.Eq
 import cats.data.NonEmptyList
 import cats.syntax.all._
-import monocle._
 import lucuma.core.model.Target
+import monocle._
 
 final case class Asterism(targets: NonEmptyList[TargetWithId]) {
   def toSidereal: List[SiderealTargetWithId] =
     targets.traverse(_.toSidereal).foldMap(_.toList)
 
-  def baseTarget: Option[TargetWithId] = targets.head.some
+  // This should be calculatedd from the other targets or manually overriden
+  def baseTarget: TargetWithId = targets.head
 
   def hasId(id: Target.Id): Boolean = targets.exists(_.id === id)
 }

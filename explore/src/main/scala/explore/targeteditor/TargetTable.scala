@@ -3,6 +3,7 @@
 
 package explore.targeteditor
 
+import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.ReuseView
@@ -13,6 +14,7 @@ import explore.common.AsterismQueries
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.model.Asterism
 import explore.model.ObsIdSet
 import explore.model.SiderealTargetWithId
 import explore.model.reusability._
@@ -36,8 +38,6 @@ import reactST.reactTable._
 import reactST.reactTable.mod.IdType
 
 import scalajs.js.JSConverters._
-import explore.model.Asterism
-import cats.data.NonEmptyList
 
 final case class TargetTable(
   obsIds:           ObsIdSet,

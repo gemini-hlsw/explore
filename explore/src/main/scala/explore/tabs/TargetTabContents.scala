@@ -61,9 +61,9 @@ import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.sizes._
 
 import java.time.Instant
+import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._
-import scala.collection.immutable.SortedMap
 
 final case class TargetTabContents(
   userId:            Option[User.Id],
