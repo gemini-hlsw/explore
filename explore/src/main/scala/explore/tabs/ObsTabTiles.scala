@@ -60,7 +60,6 @@ final case class ObsTabTiles(
   focusedObs:       Option[Observation.Id],
   focusedTarget:    Option[Target.Id],
   targetMap:        SortedMap[Target.Id, TargetSummary],
-  targetCoords:     Option[Coordinates],
   undoStacks:       ReuseView[ModelUndoStacks[IO]],
   searching:        ReuseView[Set[Target.Id]],
   hiddenColumns:    ReuseView[Set[String]],
@@ -143,6 +142,29 @@ object ObsTabTiles {
           obsViewPot
             .flatMap(view => view.get.map(obs => view.map(_.zoom(_ => obs)(mod => _.map(mod)))))
 
+        val potAsterismMode: Pot[(ReuseView[Option[Asterism]], Option[ScienceMode])] =
+          obsView.map(rv =>
+            (rv.value
+               .zoom(
+                 ObservationData.targetEnvironment
+                   .andThen(ObservationData.TargetEnvironment.asterism)
+               )
+               .zoom(Asterism.fromTargetsList.asLens)
+               .reuseByValue,
+             rv.get.scienceMode
+            )
+          )
+
+        val targetCoords: Option[Coordinates] =
+          // try first the target from the url or else use the asterism base
+          props.focusedTarget.flatMap(props.targetMap.get).flatMap(_.coords).orElse {
+            potAsterismMode.toOption
+              .flatMap(_._1.get.flatMap(_.baseTarget.target match {
+                case Target.Sidereal(_, tracking, _, _) => tracking.baseCoordinates.some
+                case _                                  => none
+              }))
+          }
+
         val notesTile =
           Tile(
             ObsTabTilesIds.NotesId,
@@ -167,7 +189,7 @@ object ObsTabTiles {
           )
 
         val skyPlotTile =
-          ElevationPlotTile.elevationPlotTile(props.coreWidth, props.coreHeight, props.targetCoords)
+          ElevationPlotTile.elevationPlotTile(props.coreWidth, props.coreHeight, targetCoords)
 
         def setCurrentTarget(
           programId: Program.Id,
@@ -176,19 +198,6 @@ object ObsTabTiles {
           via:       SetRouteVia
         ): Callback =
           ctx.setPageVia(AppTab.Observations, programId, oid.map(ObsIdSet.one(_)), tid, via)
-
-        val potAsterismMode: Pot[(ReuseView[Option[Asterism]], Option[ScienceMode])] =
-          obsView.map(rv =>
-            (rv.value
-               .zoom(
-                 ObservationData.targetEnvironment
-                   .andThen(ObservationData.TargetEnvironment.asterism)
-               )
-               .zoom(Asterism.fromTargetsList.asLens)
-               .reuseByValue,
-             rv.get.scienceMode
-            )
-          )
 
         val targetTile = AsterismEditorTile.asterismEditorTile(
           props.userId,
