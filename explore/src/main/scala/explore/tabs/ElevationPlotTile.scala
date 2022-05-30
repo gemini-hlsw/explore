@@ -8,7 +8,7 @@ import crystal.react.reuse._
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
-import explore.targeteditor.SkyPlotSection
+import explore.targeteditor.ElevationPlotSection
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Coordinates
 import lucuma.ui.reusability._
@@ -22,11 +22,12 @@ object ElevationPlotTile {
     coreHeight:   Int,
     coordinates:  Option[Coordinates]
   )(implicit ctx: AppContextIO) =
-    Tile(ObsTabTilesIds.PlotId,
-         "Elevation Plot",
-         canMinimize = true,
-         bodyClass = ExploreStyles.SkyPlotTileBody.some,
-         tileClass = ExploreStyles.SkyPlotTile.some
+    Tile(
+      ObsTabTilesIds.PlotId,
+      "Elevation Plot",
+      canMinimize = true,
+      bodyClass = ExploreStyles.ElevationPlotTileBody.some,
+      tileClass = ExploreStyles.ElevationPlotTile.some
     )(
       Reuse
         .by(
@@ -37,7 +38,7 @@ object ElevationPlotTile {
               ExploreStyles.FullHeightWidth |+| ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
               <.div("Select a target")
             )
-          )(c => SkyPlotSection(c))
+          )(c => ElevationPlotSection(c))
         }
         .reuseAlways
     )

@@ -43,12 +43,12 @@ import scala.scalajs.js
 
 import js.JSConverters._
 
-final case class SkyPlotSemester(
+final case class ElevationPlotSemester(
   site:             Site,
   coords:           Coordinates,
   semester:         Semester
 )(implicit val ctx: AppContextIO)
-    extends ReactFnProps[SkyPlotSemester](SkyPlotSemester.component)
+    extends ReactFnProps[ElevationPlotSemester](ElevationPlotSemester.component)
 
 final case class SemesterPlotCalc(semester: Semester, site: Site) {
   protected val SampleRate: Duration = Duration.ofMinutes(1)
@@ -93,8 +93,8 @@ final case class SemesterPlotCalc(semester: Semester, site: Site) {
   }
 }
 
-object SkyPlotSemester {
-  type Props = SkyPlotSemester
+object ElevationPlotSemester {
+  type Props = ElevationPlotSemester
 
   private val PlotDayRate: Long     = 3
   private val MillisPerHour: Double = 60 * 60 * 1000
