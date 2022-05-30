@@ -20,16 +20,17 @@
   vector-effect: non-scaling-stroke; // Don't scale the stroke, otherwise it becomes invisible
 }
 
-.gmos-probe {
-  display: none;
+.gmos-probe-arm {
   stroke: red;
-  z-index: 1;
   fill-opacity: 0.1;
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
 }
 
 .gmos-patrol-field {
-  display: none;
-  stroke: red;
+  stroke: orange;
+  fill: none;
+  stroke-width: 0.8px;
   stroke-dasharray: 10;
 }
 

@@ -74,9 +74,6 @@ object AladinSettings {
 object AladinCell extends ModelOptics {
   type Props = AladinCell
 
-  implicit val reCand: Reusability[Map[AGSPosition, Vector[(GuideStarCandidate, AgsAnalysis)]]] =
-    Reusability.never
-
   val bestConstraintSet = ConstraintSet(ImageQuality.PointTwo,
                                         CloudExtinction.OnePointFive,
                                         SkyBackground.Darkest,
@@ -85,8 +82,8 @@ object AladinCell extends ModelOptics {
   )
   val wavelength        = Wavelength.fromNanometers(500).get
 
-  val params  = GmosAGSParams(none, PortDisposition.Bottom)
-  val basePos = AGSPosition(Angle.Angle0, Offset.Zero)
+  val params  = AgsParams.GmosAgsParams(none, PortDisposition.Bottom)
+  val basePos = AgsPosition(Angle.Angle0, Offset.Zero)
 
   protected val component =
     ScalaFnComponent
@@ -133,7 +130,7 @@ object AladinCell extends ModelOptics {
                       )
                   case _                         => IO.unit
                 })
-                .as(Map.empty[AGSPosition, Vector[(GuideStarCandidate, AgsAnalysis)]])
+                .as(Map.empty[AgsPosition, Vector[(GuideStarCandidate, AgsAnalysis)]])
             )
       )
       .useEffectOnMountBy((props, _, _, _, _) =>
@@ -256,8 +253,8 @@ object AladinCell extends ModelOptics {
 
         val aladinKey = s"${props.target.get}"
 
-        val rankedGsc: Map[AGSPosition, Vector[(GuideStarCandidate, AgsAnalysis)]] =
-          gsc.toOption.getOrElse(Map.empty[AGSPosition, Vector[(GuideStarCandidate, AgsAnalysis)]])
+        val rankedGsc: Map[AgsPosition, Vector[(GuideStarCandidate, AgsAnalysis)]] =
+          gsc.toOption.getOrElse(Map.empty[AgsPosition, Vector[(GuideStarCandidate, AgsAnalysis)]])
 
         val renderCell: TargetVisualOptions => VdomNode = (t: TargetVisualOptions) =>
           AladinContainer(

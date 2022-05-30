@@ -17,8 +17,8 @@ import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.ui.reusability._
 import lucuma.ags.GuideStarCandidate
 import lucuma.ags.AgsAnalysis
-import lucuma.ags.AGSPosition
-import lucuma.ags.AGSParams
+import lucuma.ags.AgsPosition
+import lucuma.ags.AgsParams
 
 import scala.collection.immutable.TreeSeqMap
 
@@ -83,8 +83,8 @@ object reusability {
   implicit val obsCOnfigurationReuse: Reusability[ObsConfiguration]             = Reusability.byEq
   implicit val guideStarReuse: Reusability[GuideStarCandidate]                  = Reusability.by(_.name.value)
   implicit val catalogResultsReuse: Reusability[CatalogResults]                 = Reusability.by(_.candidates)
-  implicit val agsPositionReuse: Reusability[AGSPosition]                       = Reusability.byEq
-  implicit val agsParamsReuse: Reusability[AGSParams]                           = Reusability.never
+  implicit val agsPositionReuse: Reusability[AgsPosition]                       = Reusability.byEq
+  implicit val agsParamsReuse: Reusability[AgsParams]                           = Reusability.byEq
   implicit val agsAnalysisReuse: Reusability[AgsAnalysis]                       = Reusability.byEq
 
   implicit val existenceReuse: Reusability[Existence] = Reusability.byEq

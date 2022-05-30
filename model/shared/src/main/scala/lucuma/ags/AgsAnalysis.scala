@@ -57,7 +57,7 @@ object AgsAnalysis {
   // }
   //
   final case class NotReachable(
-    position:   AGSPosition,
+    position:   AgsPosition,
     guideProbe: GuideProbe,
     target:     GuideStarCandidate
   ) extends AgsAnalysis {

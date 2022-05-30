@@ -72,6 +72,40 @@ object GmosGeometry {
       )
     )
 
+  // Shape to display always
+  def probeShapes(
+    posAngle:        Angle,
+    guideStarOffset: Offset,
+    offsetPos:       Offset,
+    mode:            Option[ScienceMode],
+    port:            PortDisposition,
+    extraCss:        Css
+  ): NonEmptyMap[Css, ShapeExpression] =
+    mode match {
+      case Some(ScienceMode.GmosNorthLongSlit(ScienceModeBasic.GmosNorthLongSlit(_, _, fpu), _)) =>
+        NonEmptyMap.of(
+          (Css("gmos-probe-arm") |+| extraCss,
+           gmos.probeArm.shapeAt(posAngle, guideStarOffset, offsetPos, fpu.asLeft.some, port)
+          ),
+          (Css("gmos-patrol-field") |+| extraCss,
+           gmos.probeArm.patrolFieldAt(posAngle, offsetPos, fpu.asLeft.some, port)
+          )
+        )
+      case Some(ScienceMode.GmosSouthLongSlit(ScienceModeBasic.GmosSouthLongSlit(_, _, fpu), _)) =>
+        NonEmptyMap.of(
+          (Css("gmos-probe-arm") |+| extraCss,
+           gmos.probeArm.shapeAt(posAngle, guideStarOffset, offsetPos, fpu.asRight.some, port)
+          ),
+          (Css("gmos-patrol-field") |+| extraCss,
+           gmos.probeArm.patrolFieldAt(posAngle, offsetPos, fpu.asRight.some, port)
+          )
+        )
+      case _                                                                                     =>
+        NonEmptyMap.of(
+          (Css("gmos-science-ccd"), gmos.scienceArea.imaging ⟲ posAngle)
+        )
+    }
+
   // Firefox doesn't properly handle very large coordinates, scale by 1000 at least
   val ScaleFactor = 1000
 

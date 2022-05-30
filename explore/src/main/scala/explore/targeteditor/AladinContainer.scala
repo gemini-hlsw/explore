@@ -39,6 +39,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 import scala.concurrent.duration._
 import lucuma.ags.AgsAnalysis
+import lucuma.core.enum.PortDisposition
 
 final case class AladinContainer(
   target:                 View[SiderealTracking],
@@ -124,8 +125,8 @@ object AladinContainer {
         }
       }
       // Memoized svg
-      .useMemoBy((p, _, _, _) => (p.scienceMode, p.obsConf.map(_.posAngle), p.options)) {
-        case (_, _, _, _) => { case (mode, posAngle, options) =>
+      .useMemoBy((p, _, _, gs) => (p.scienceMode, p.obsConf.map(_.posAngle), p.options, gs.value)) {
+        case (_, baseCoordinates, _, _) => { case (mode, posAngle, options, gs) =>
           val pa = posAngle
             .collect {
               case PosAngle.Fixed(a)               => a
@@ -136,10 +137,26 @@ object AladinContainer {
           val candidatesVisibility =
             ExploreStyles.GuideStarCandidateVisible.when_(options.agsCandidates.visible)
 
+          val probeArmShapes = (gs, pa).mapN { case ((c, _), posAngle) =>
+            val gsOffset = baseCoordinates.diff(c.tracking.baseCoordinates).offset
+            GmosGeometry.probeShapes(posAngle,
+                                     gsOffset,
+                                     Offset.Zero,
+                                     mode,
+                                     PortDisposition.Bottom,
+                                     Css.Empty
+            )
+          }
+
           val shapes = pa
             .map { posAngle =>
-              GmosGeometry.shapesForMode(posAngle, mode) ++
+              val baseShapes = GmosGeometry.shapesForMode(posAngle, mode) ++
                 GmosGeometry.commonShapes(posAngle, candidatesVisibility)
+              probeArmShapes
+                .map { probeArm =>
+                  baseShapes ++ probeArm
+                }
+                .getOrElse(baseShapes)
             }
             .getOrElse(
               GmosGeometry.commonShapes(Angle.Angle0, candidatesVisibility)
