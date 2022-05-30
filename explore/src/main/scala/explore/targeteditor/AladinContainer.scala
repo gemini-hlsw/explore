@@ -121,7 +121,7 @@ object AladinContainer {
       // Selected guid star
       .useMemoBy((p, _, _) => (p.guideStarCandidates, p.selectedGuideStarIndex)) {
         case (_, _, _) => { case (candidates, selectedIndex) =>
-          candidates.lift(selectedIndex)
+          candidates.lift(selectedIndex).filter(_._2.isUsable)
         }
       }
       // Memoized svg

@@ -4,12 +4,14 @@
 package lucuma.ags
 
 import cats.Order
+import cats.syntax.all._
 import lucuma.core.enum.GuideSpeed
 import lucuma.core.enum.Band
 import lucuma.core.geom.Area
 
 sealed trait AgsAnalysis {
-  def quality: AgsGuideQuality = AgsGuideQuality.Unusable
+  def quality: AgsGuideQuality  = AgsGuideQuality.Unusable
+  def isUsable: Boolean = quality =!= AgsGuideQuality.Unusable
   def message(withProbe: Boolean): String
 }
 

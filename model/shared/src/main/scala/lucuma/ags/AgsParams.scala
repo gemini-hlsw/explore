@@ -24,7 +24,9 @@ object AgsPosition {
 
 sealed trait AgsParams {
   def probe: GuideProbe
-  def isReachable(gsOffset:    Offset, position:      AgsPosition): Boolean
+
+  def isReachable(gsOffset: Offset, position: AgsPosition): Boolean
+
   def vignettingArea(position: AgsPosition)(gsOffset: Offset): ShapeExpression
 }
 

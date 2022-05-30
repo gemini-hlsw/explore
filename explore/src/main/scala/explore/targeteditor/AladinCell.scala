@@ -34,6 +34,7 @@ import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
+import lucuma.core.model.PosAngle
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.core.model.User
@@ -104,19 +105,38 @@ object AladinCell extends ModelOptics {
             .map(_.candidates)
             // .map(_.map(GuideStarCandidate.siderealTarget.))
             .evalMap { candidates =>
-              Stream
-                .emits[IO, GuideStarCandidate](candidates)
-                .through(
-                  AGS.agsAnalysis[IO](bestConstraintSet,
-                                      wavelength,
-                                      deps._1.baseCoordinates,
-                                      Map(basePos -> params)
+              deps match {
+                case (tracking, obsConf @ Some(_)) =>
+                  val pa = obsConf.map(_.posAngle).collect {
+                    case PosAngle.Fixed(a)               => a
+                    case PosAngle.AllowFlip(a)           => a
+                    case PosAngle.ParallacticOverride(a) => a
+                  }
+                  pa.map { pa =>
+                    val basePos = AgsPosition(pa, Offset.Zero)
+                    Stream
+                      .emits[IO, GuideStarCandidate](candidates)
+                      .through(
+                        AGS.agsAnalysis[IO](bestConstraintSet,
+                                            wavelength,
+                                            deps._1.baseCoordinates,
+                                            Map(basePos -> params)
+                        )
+                      )
+                      .compile
+                      .toList
+                      .map(AGS.sortGuideStarCandidates)
+                      .flatTap(x =>
+                        IO.println(x.headOption.get._1) *>
+                          x.get(x.headOption.get._1).get.traverse { case (x, q) =>
+                            IO.println(s"${x.tracking.baseCoordinates} -> $q")
+                          }
+                      )
+                  }.getOrElse(
+                    IO.pure(Map.empty[AgsPosition, Vector[(GuideStarCandidate, AgsAnalysis)]])
                   )
-                )
-                .compile
-                .toList
-                .map(AGS.sortGuideStarCandidates)
-                .flatTap(x => IO.println(x))
+                case _                             => IO.pure(Map.empty[AgsPosition, Vector[(GuideStarCandidate, AgsAnalysis)]])
+              }
             }
             .merge(
               // Request catalog info for the target
