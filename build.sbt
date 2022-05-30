@@ -55,6 +55,9 @@ lazy val model = crossProject(JVMPlatform, JSPlatform)
   .settings(commonSettings: _*)
   .settings(commonLibSettings: _*)
   .jvmSettings(commonJVMSettings)
+  .settings(
+    libraryDependencies ++= LucumaCatalog.value
+  )
 
 lazy val modelTestkit = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Full)

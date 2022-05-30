@@ -139,6 +139,13 @@
     }
   }
 
+  .guide-star-target {
+    stroke: green;
+    stroke-width: 0.5px;
+    fill: green;
+    fill-opacity: 0.4;
+  }
+
   .guide-star-candidate-target-base {
     display: none;
     stroke: black;
@@ -195,4 +202,3 @@
   top: 10px;
   left: 10px;
 }
-

@@ -13,6 +13,7 @@ import explore.model.arb.ArbCatalogResults._
 import explore.model.boopickle.CatalogPicklers
 import lucuma.core.math._
 import lucuma.core.math.arb.ArbAngle._
+import lucuma.core.math.arb.ArbWavelength._
 import lucuma.core.math.arb.ArbCoordinates._
 import lucuma.core.math.arb.ArbDeclination._
 import lucuma.core.math.arb.ArbEpoch._
@@ -21,7 +22,11 @@ import lucuma.core.math.arb.ArbProperMotion._
 import lucuma.core.math.arb.ArbRadialVelocity._
 import lucuma.core.math.arb.ArbRightAscension._
 import lucuma.core.model.SiderealTracking
+import lucuma.core.model.ConstraintSet
+import lucuma.core.model.ElevationRange
 import lucuma.core.model.arb.ArbSiderealTracking._
+import lucuma.core.model.arb.ArbElevationRange._
+import lucuma.core.model.arb.ArbConstraintSet._
 
 class BoopickleSuite extends munit.DisciplineSuite with CatalogPicklers {
   checkAll("Pickler[Angle]", PicklerTests[Angle].pickler)
@@ -37,4 +42,7 @@ class BoopickleSuite extends munit.DisciplineSuite with CatalogPicklers {
   checkAll("Pickler[SiderealTracking]", PicklerTests[SiderealTracking].pickler)
   checkAll("Pickler[GuideStarCandidate]", PicklerTests[GuideStarCandidate].pickler)
   checkAll("Pickler[CatalogResults]", PicklerTests[CatalogResults].pickler)
+  checkAll("Pickler[ElevationRange]", PicklerTests[ElevationRange].pickler)
+  checkAll("Pickler[ConstraintSet]", PicklerTests[ConstraintSet].pickler)
+  checkAll("Pickler[Wavelengtth]", PicklerTests[Wavelength].pickler)
 }

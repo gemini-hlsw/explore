@@ -8,6 +8,8 @@ import lucuma.core.model.SiderealTracking
 
 import java.time.Instant
 import scala.scalajs.js
+import lucuma.core.model.ConstraintSet
+import lucuma.core.math.Wavelength
 
 package object events {
   object picklers extends CatalogPicklers with EventPicklers
@@ -22,7 +24,12 @@ package object events {
     def value: js.Any // encode whatever value as a String. it can be e.g. json
   }
 
-  final case class CatalogRequest(tracking: SiderealTracking, obsTime: Instant)
+  final case class CatalogRequest(
+    constraints: ConstraintSet,
+    wavelength:  Wavelength,
+    tracking:    SiderealTracking,
+    obsTime:     Instant
+  )
 
   final case class CacheCleanupRequest(elapsedTime: Int)
 

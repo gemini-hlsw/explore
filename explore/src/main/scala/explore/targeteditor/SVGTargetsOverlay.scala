@@ -46,12 +46,25 @@ object SVGTarget {
     title:       Option[String] = None
   ) extends SVGTarget
 
+  final case class GuideStarTarget(
+    coordinates: Coordinates,
+    css:         Css,
+    radius:      Double,
+    title:       Option[String] = None
+  ) extends SVGTarget
+
   implicit val eqSVGTarget: Eq[SVGTarget] = Eq.instance {
-    case (CircleTarget(c1, s1, r1, t1), CircleTarget(c2, s2, r2, t2))       =>
+    case (CircleTarget(c1, s1, r1, t1), CircleTarget(c2, s2, r2, t2))                         =>
       c1 === c2 && s1 === s2 & r1 === r2 && t1 === t2
-    case (CrosshairTarget(c1, s1, r1, t1), CrosshairTarget(c2, s2, r2, t2)) =>
+    case (CrosshairTarget(c1, s1, r1, t1), CrosshairTarget(c2, s2, r2, t2))                   =>
       c1 === c2 && s1 === s2 & r1 === r2 && t1 === t2
-    case _                                                                  => false
+    case (GuideStarCandidateTarget(c1, s1, r1, t1), GuideStarCandidateTarget(c2, s2, r2, t2)) =>
+      c1 === c2 && s1 === s2 & r1 === r2 && t1 === t2
+    case (GuideStarTarget(c1, s1, r1, t1), GuideStarTarget(c2, s2, r2, t2))                   =>
+      c1 === c2 && s1 === s2 & r1 === r2 && t1 === t2
+    case (LineTo(c1, d1, r1, t1), LineTo(c2, d2, r2, t2))                                     =>
+      c1 === c2 && d1 === d2 & r1 === r2 && t1 === t2
+    case _                                                                                    => false
   }
 
   implicit val svgTargetReusability: Reusability[SVGTarget] = Reusability.byEq
@@ -85,6 +98,9 @@ object SVGTargetsOverlay {
                 <.circle(^.cx := x, ^.cy := y, ^.r := radius, pointCss, title.map(<.title(_)))
               case (SVGTarget.GuideStarCandidateTarget(_, css, radius, title), Some((x, y))) =>
                 val pointCss = ExploreStyles.GuideStarCandidateTarget |+| css
+                <.circle(^.cx := x, ^.cy := y, ^.r := radius, pointCss, title.map(<.title(_)))
+              case (SVGTarget.GuideStarTarget(_, css, radius, title), Some((x, y)))          =>
+                val pointCss = ExploreStyles.GuideStarTarget |+| css
                 <.circle(^.cx := x, ^.cy := y, ^.r := radius, pointCss, title.map(<.title(_)))
               case (SVGTarget.CrosshairTarget(_, css, side, title), Some((x, y)))            =>
                 val pointCss = ExploreStyles.CrosshairTarget |+| css

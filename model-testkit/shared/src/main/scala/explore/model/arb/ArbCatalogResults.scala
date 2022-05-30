@@ -10,7 +10,7 @@ import eu.timepit.refined.scalacheck.string._
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Cogen
-import explore.model.GuideStarCandidate
+import lucuma.ags.GuideStarCandidate
 import lucuma.core.model.SiderealTracking
 
 trait ArbCatalogResults {

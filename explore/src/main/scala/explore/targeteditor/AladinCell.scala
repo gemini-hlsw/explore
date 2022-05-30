@@ -24,15 +24,20 @@ import explore.model.ObsConfiguration
 import explore.model.ScienceMode
 import explore.model.TargetVisualOptions
 import explore.model.boopickle._
+import explore.model.reusability._
 import explore.optics.ModelOptics
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ags._
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
+import lucuma.core.math.Wavelength
+import lucuma.core.model.ConstraintSet
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.core.model.User
+import lucuma.core.model.ElevationRange
 import lucuma.ui.reusability._
 import queries.common.UserPreferencesQueriesGQL._
 import react.aladin.Fov
@@ -43,6 +48,13 @@ import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.sizes._
 
 import scala.concurrent.duration._
+import lucuma.core.enum.ImageQuality
+import lucuma.core.enum.CloudExtinction
+import lucuma.core.enum.SkyBackground
+import lucuma.core.enum.WaterVapor
+import lucuma.core.enum.PortDisposition
+import lucuma.core.math.Angle
+import fs2.Stream
 
 final case class AladinCell(
   uid:              User.Id,
@@ -62,6 +74,20 @@ object AladinSettings {
 object AladinCell extends ModelOptics {
   type Props = AladinCell
 
+  implicit val reCand: Reusability[Map[AGSPosition, Vector[(GuideStarCandidate, AgsAnalysis)]]] =
+    Reusability.never
+
+  val bestConstraintSet = ConstraintSet(ImageQuality.PointTwo,
+                                        CloudExtinction.OnePointFive,
+                                        SkyBackground.Darkest,
+                                        WaterVapor.VeryDry,
+                                        ElevationRange.AirMass.Default
+  )
+  val wavelength        = Wavelength.fromNanometers(500).get
+
+  val params  = GmosAGSParams(none, PortDisposition.Bottom)
+  val basePos = AGSPosition(Angle.Angle0, Offset.Zero)
+
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
@@ -73,16 +99,49 @@ object AladinCell extends ModelOptics {
       // avoids us needing a ref to a Fn component
       .useStateView(false)
       // Listen on web worker for messages with catalog candidates
-      .useStreamOnMountBy((props, _, _, _) =>
-        props.ctx.worker.stream
-          .map(decodeFromTransferable[CatalogResults])
-          .unNone
-          .map(_.candidates)
+      .useStreamBy((props, _, _, _) => (props.target.get, props.obsConf))((props, _, _, _) =>
+        deps =>
+          props.ctx.worker.stream
+            .map(decodeFromTransferable[CatalogResults])
+            .unNone
+            .map(_.candidates)
+            // .map(_.map(GuideStarCandidate.siderealTarget.))
+            .evalMap { candidates =>
+              Stream
+                .emits[IO, GuideStarCandidate](candidates)
+                .through(
+                  AGS.agsAnalysis[IO](bestConstraintSet,
+                                      wavelength,
+                                      deps._1.baseCoordinates,
+                                      Map(basePos -> params)
+                  )
+                )
+                .compile
+                .toList
+                .map(AGS.sortGuideStarCandidates)
+                .flatTap(x => IO.println(x))
+            }
+            .merge(
+              // Request catalog info for the target
+              // This is done in a merged stream to guarantee that we don't miss the response before subscribing
+              fs2.Stream
+                .exec(deps match {
+                  case (tracking, Some(obsConf)) =>
+                    props.ctx.worker
+                      .postTransferrable(
+                        CatalogRequest(bestConstraintSet, wavelength, tracking, obsConf.obsInstant)
+                      )
+                  case _                         => IO.unit
+                })
+                .as(Map.empty[AGSPosition, Vector[(GuideStarCandidate, AgsAnalysis)]])
+            )
       )
       .useEffectOnMountBy((props, _, _, _, _) =>
         (props.target.get, props.obsConf) match {
           case (tracking, Some(obsConf)) =>
-            props.ctx.worker.postTransferrable(CatalogRequest(tracking, obsConf.obsInstant))
+            props.ctx.worker.postTransferrable(
+              CatalogRequest(null, null, tracking, obsConf.obsInstant)
+            )
           case _                         => IO.unit
         }
       )
@@ -197,6 +256,9 @@ object AladinCell extends ModelOptics {
 
         val aladinKey = s"${props.target.get}"
 
+        val rankedGsc: Map[AGSPosition, Vector[(GuideStarCandidate, AgsAnalysis)]] =
+          gsc.toOption.getOrElse(Map.empty[AGSPosition, Vector[(GuideStarCandidate, AgsAnalysis)]])
+
         val renderCell: TargetVisualOptions => VdomNode = (t: TargetVisualOptions) =>
           AladinContainer(
             props.target,
@@ -207,7 +269,8 @@ object AladinCell extends ModelOptics {
             fovSetter.reuseAlways,
             offsetSetter.reuseAlways,
             center,
-            gsc.toOption.orEmpty
+            0,
+            rankedGsc.get(basePos).orEmpty
             // gsc.value.toOption.orEmpty // USE THIS FOR ALTERNATE HOOK IMPLEMENTATION
           ).withKey(aladinKey)
 

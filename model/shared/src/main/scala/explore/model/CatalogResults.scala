@@ -4,6 +4,7 @@
 package explore.model
 
 import cats.Eq
+import lucuma.ags._
 
 /**
  * Holds a set of candidate guide stars
