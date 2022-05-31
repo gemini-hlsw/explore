@@ -4,22 +4,22 @@
 package lucuma
 
 import cats.syntax.all._
-import lucuma.core.enum.ImageQuality
-import lucuma.core.math.Wavelength
 import coulomb._
+import coulomb.accepted.ArcSecond
 import coulomb.refined._
+import lucuma.catalog.BandsList
+import lucuma.catalog.BrightnessConstraints
+import lucuma.catalog.FaintnessConstraint
+import lucuma.catalog.SaturationConstraint
+import lucuma.core.enum.CloudExtinction
+import lucuma.core.enum.GuideSpeed
+import lucuma.core.enum.ImageQuality
+import lucuma.core.enum.SkyBackground
+import lucuma.core.math.Wavelength
+import lucuma.core.model.ConstraintSet
+import spire.math.Rational
 
 import scala.math
-import spire.math.Rational
-import coulomb.accepted.ArcSecond
-import lucuma.core.enum.GuideSpeed
-import lucuma.core.enum.SkyBackground
-import lucuma.core.enum.CloudExtinction
-import lucuma.catalog.FaintnessConstraint
-import lucuma.catalog.BrightnessConstraints
-import lucuma.catalog.BandsList
-import lucuma.catalog.SaturationConstraint
-import lucuma.core.model.ConstraintSet
 
 package object ags {
   val baseFwhm = Wavelength.fromNanometers(500).get

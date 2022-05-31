@@ -9,16 +9,16 @@ import explore.model.Asterism
 import explore.undo.UndoStacks
 import japgolly.scalajs.react.ReactCats._
 import japgolly.scalajs.react.Reusability
+import lucuma.ags.AgsAnalysis
+import lucuma.ags.AgsParams
+import lucuma.ags.AgsPosition
+import lucuma.ags.GuideStarCandidate
 import lucuma.catalog.AngularSize
 import lucuma.catalog.CatalogTargetResult
 import lucuma.core.model.PosAngle
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.ui.reusability._
-import lucuma.ags.GuideStarCandidate
-import lucuma.ags.AgsAnalysis
-import lucuma.ags.AgsPosition
-import lucuma.ags.AgsParams
 
 import scala.collection.immutable.TreeSeqMap
 

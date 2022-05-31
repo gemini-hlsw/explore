@@ -31,15 +31,21 @@ import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ags._
+import lucuma.core.enum.CloudExtinction
+import lucuma.core.enum.ImageQuality
+import lucuma.core.enum.PortDisposition
+import lucuma.core.enum.SkyBackground
+import lucuma.core.enum.WaterVapor
+import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
+import lucuma.core.model.ElevationRange
 import lucuma.core.model.PosAngle
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.core.model.User
-import lucuma.core.model.ElevationRange
 import lucuma.ui.reusability._
 import queries.common.UserPreferencesQueriesGQL._
 import react.aladin.Fov
@@ -50,12 +56,6 @@ import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.sizes._
 
 import scala.concurrent.duration._
-import lucuma.core.enum.ImageQuality
-import lucuma.core.enum.CloudExtinction
-import lucuma.core.enum.SkyBackground
-import lucuma.core.enum.WaterVapor
-import lucuma.core.enum.PortDisposition
-import lucuma.core.math.Angle
 
 final case class AladinCell(
   uid:              User.Id,

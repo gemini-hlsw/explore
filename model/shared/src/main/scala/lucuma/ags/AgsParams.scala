@@ -5,16 +5,16 @@ package lucuma.ags
 
 import cats.Eq
 import cats.syntax.all._
-import lucuma.core.enum.PortDisposition
 import lucuma.core.enum.GmosNorthFpu
 import lucuma.core.enum.GmosSouthFpu
+import lucuma.core.enum.PortDisposition
 import lucuma.core.geom.ShapeExpression
-import lucuma.core.geom.syntax.all._
-import lucuma.core.math.Angle
-import lucuma.core.math.Offset
 import lucuma.core.geom.gmos.probeArm
 import lucuma.core.geom.gmos.scienceArea
 import lucuma.core.geom.jts.interpreter._
+import lucuma.core.geom.syntax.all._
+import lucuma.core.math.Angle
+import lucuma.core.math.Offset
 
 final case class AgsPosition(posAngle: Angle, offsetPos: Offset)
 

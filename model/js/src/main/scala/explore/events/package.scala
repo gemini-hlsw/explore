@@ -4,12 +4,12 @@
 package explore
 
 import explore.model.boopickle.CatalogPicklers
+import lucuma.core.math.Wavelength
+import lucuma.core.model.ConstraintSet
 import lucuma.core.model.SiderealTracking
 
 import java.time.Instant
 import scala.scalajs.js
-import lucuma.core.model.ConstraintSet
-import lucuma.core.math.Wavelength
 
 package object events {
   object picklers extends CatalogPicklers with EventPicklers

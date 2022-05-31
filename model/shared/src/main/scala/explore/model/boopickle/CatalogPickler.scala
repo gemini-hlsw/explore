@@ -18,11 +18,11 @@ import lucuma.core.math.Parallax
 import lucuma.core.math.ProperMotion
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.RightAscension
-import lucuma.core.model.SiderealTracking
-import lucuma.core.model.ConstraintSet
-import lucuma.core.util.Enumerated
-import lucuma.core.model.ElevationRange
 import lucuma.core.math.Wavelength
+import lucuma.core.model.ConstraintSet
+import lucuma.core.model.ElevationRange
+import lucuma.core.model.SiderealTracking
+import lucuma.core.util.Enumerated
 
 // Boopicklers for catalog related types
 trait CatalogPicklers {

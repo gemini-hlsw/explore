@@ -4,16 +4,16 @@
 package lucuma.ags
 
 import cats.syntax.all._
-import lucuma.core.enum.GuideSpeed
-import lucuma.core.math.Offset
-import lucuma.core.math.Coordinates
-import lucuma.core.model.ConstraintSet
 import fs2._
 import lucuma.core.enum.Band
+import lucuma.core.enum.GuideSpeed
 import lucuma.core.enum.ImageQuality
 import lucuma.core.geom.Area
 import lucuma.core.geom.jts.interpreter._
+import lucuma.core.math.Coordinates
+import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
+import lucuma.core.model.ConstraintSet
 
 object AGS {
 

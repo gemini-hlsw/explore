@@ -5,8 +5,8 @@ package lucuma.ags
 
 import cats.Order
 import cats.syntax.all._
-import lucuma.core.enum.GuideSpeed
 import lucuma.core.enum.Band
+import lucuma.core.enum.GuideSpeed
 import lucuma.core.geom.Area
 
 sealed trait AgsAnalysis {
@@ -28,11 +28,6 @@ object AgsAnalysis {
     }
   }
 
-  // final case class NoGuideStarForGroup(guideGroup: GuideProbeGroup) extends AgsAnalysis {
-  //   override def message(withProbe: Boolean): String =
-  //     s"No ${guideGroup.getKey} guide star selected."
-  // }
-
   final case class MagnitudeTooFaint(
     guideProbe:     GuideProbe,
     target:         GuideStarCandidate,
@@ -53,11 +48,6 @@ object AgsAnalysis {
     }
   }
 
-  // object NotReachable {
-  //   implicit val order: Order[NotReachable] =
-  //     Order.allEqual
-  // }
-  //
   final case class NotReachable(
     position:   AgsPosition,
     guideProbe: GuideProbe,
@@ -126,15 +116,5 @@ object AgsAnalysis {
     }
 
   implicit val ordering: Ordering[AgsAnalysis] = order.toOrdering
-
-  // def guideProbe(a: AgsAnalysis): Option[GuideProbe] = a match {
-  //   case NoGuideStarForProbe(p)     => Some(p)
-  //   // case NoGuideStarForGroup(_)     => None
-  //   case MagnitudeTooFaint(p, _, _) => Some(p)
-  //   case MagnitudeTooBright(p, _)   => Some(p)
-  //   case NotReachable(p, _)         => Some(p)
-  //   case NoMagnitudeForBand(p, _)   => Some(p)
-  //   case Usable(p, _, _, _)         => Some(p)
-  // }
 
 }

@@ -13,10 +13,13 @@ import explore.model.ScienceMode
 import explore.model.TargetVisualOptions
 import explore.model.enum.Visible
 import explore.model.reusability._
-import japgolly.scalajs.react._
 import japgolly.scalajs.react.Reusability._
+import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ags.AgsAnalysis
+import lucuma.ags.GuideStarCandidate
+import lucuma.core.enum.PortDisposition
 import lucuma.core.geom.jts.interpreter._
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
@@ -25,7 +28,6 @@ import lucuma.core.model.PosAngle
 import lucuma.core.model.SiderealTracking
 import lucuma.svgdotjs.Svg
 import lucuma.ui.reusability._
-import lucuma.ags.GuideStarCandidate
 import org.scalajs.dom.Element
 import org.scalajs.dom.document
 import react.aladin._
@@ -38,8 +40,6 @@ import react.semanticui.sizes._
 import java.time.LocalDate
 import java.time.ZoneId
 import scala.concurrent.duration._
-import lucuma.ags.AgsAnalysis
-import lucuma.core.enum.PortDisposition
 
 final case class AladinContainer(
   target:                 View[SiderealTracking],
