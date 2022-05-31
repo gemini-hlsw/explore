@@ -4,8 +4,6 @@
 package explore
 
 import explore.model.boopickle.CatalogPicklers
-import lucuma.core.math.Wavelength
-import lucuma.core.model.ConstraintSet
 import lucuma.core.model.SiderealTracking
 
 import java.time.Instant
@@ -25,10 +23,8 @@ package object events {
   }
 
   final case class CatalogRequest(
-    constraints: ConstraintSet,
-    wavelength:  Wavelength,
-    tracking:    SiderealTracking,
-    obsTime:     Instant
+    tracking: SiderealTracking,
+    obsTime:  Instant
   )
 
   final case class CacheCleanupRequest(elapsedTime: Int)

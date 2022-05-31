@@ -17,9 +17,7 @@ trait EventPicklers {
     transformPickler(Instant.ofEpochMilli)(_.toEpochMilli())
 
   implicit def picklerCatalogRequest: Pickler[CatalogRequest] =
-    transformPickler(Function.tupled(CatalogRequest.apply _))(x =>
-      (x.constraints, x.wavelength, x.tracking, x.obsTime)
-    )
+    transformPickler(Function.tupled(CatalogRequest.apply _))(x => (x.tracking, x.obsTime))
 
   implicit def picklerCacheCleanupRequestt: Pickler[CacheCleanupRequest] =
     transformPickler(CacheCleanupRequest.apply)(_.elapsedTime)

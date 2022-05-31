@@ -34,7 +34,10 @@ import java.time.temporal.ChronoField
 import java.time.temporal.ChronoUnit
 import spire.math.Bounded
 import explore.events.CatalogRequest
-import lucuma.core.enum.GuideSpeed
+import lucuma.core.enum._
+import lucuma.core.model.ConstraintSet
+import lucuma.core.model.ElevationRange
+import lucuma.core.math.Wavelength
 
 trait CatalogQuerySettings {
   val proxy = uri"https://lucuma-cors-proxy.herokuapp.com"
@@ -74,6 +77,18 @@ trait CatalogCache extends CatalogIDB with AsyncToIO {
       .toList
   }
 
+  // We'll use the same constraints that includes all the AGS queries
+  val constraints = ConstraintSet(
+    ImageQuality.PointOne,         // min image quality
+    CloudExtinction.PointOne,      // min cloud extinction
+    SkyBackground.Dark,            // Not relevant
+    WaterVapor.Wet,                // Not relevant
+    ElevationRange.AirMass.Default // Not relevant
+  )
+
+  // Min relevant wavelength at 300nm
+  val wavelength = Wavelength.fromNanometers(300).get
+
   /**
    * Try to read the gaia query from the cache or else get it from gaia
    */
@@ -85,7 +100,7 @@ trait CatalogCache extends CatalogIDB with AsyncToIO {
     request:    CatalogRequest
   )(implicit L: Logger[IO]): IO[Unit] = {
 
-    val CatalogRequest(constraints, wavelength, tracking, obsTime) = request
+    val CatalogRequest(tracking, obsTime) = request
 
     val brightnessConstraints =
       ags.gaiaBrightnessConstraints(constraints, GuideSpeed.Fast, wavelength)
