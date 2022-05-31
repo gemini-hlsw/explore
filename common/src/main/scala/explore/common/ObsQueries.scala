@@ -7,6 +7,7 @@ import cats.effect.Async
 import cats.implicits._
 import clue.TransactionalClient
 import clue.data.syntax._
+import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.data.KeyedIndexedList
 import explore.implicits._
 import explore.model.ConstraintGroup
@@ -125,25 +126,30 @@ object ObsQueries {
     val createER: ElevationRangeInput = constraints.elevationRange match {
       case ElevationRange.AirMass(min, max)   =>
         ElevationRangeInput(airMass =
-          AirMassRangeInput(min = min.value.assign, max = max.value.assign).assign
+          // TODO: Change AirMassRange in lucuma-core to use refined types
+          AirMassRangeInput(min = PosBigDecimal.unsafeFrom(min.value).assign,
+                            max = PosBigDecimal.unsafeFrom(max.value).assign
+          ).assign
         )
       case ElevationRange.HourAngle(min, max) =>
         ElevationRangeInput(hourAngle =
           HourAngleRangeInput(minHours = min.value.assign, maxHours = max.value.assign).assign
         )
     }
-    val editInput                     = ConstraintSetInput(
-      imageQuality = constraints.imageQuality.assign,
-      cloudExtinction = constraints.cloudExtinction.assign,
-      skyBackground = constraints.skyBackground.assign,
-      waterVapor = constraints.waterVapor.assign,
-      elevationRange = createER.assign
+    val editInput                     = ObservationPropertiesInput(
+      constraintSet = ConstraintSetInput(
+        imageQuality = constraints.imageQuality.assign,
+        cloudExtinction = constraints.cloudExtinction.assign,
+        skyBackground = constraints.skyBackground.assign,
+        waterVapor = constraints.waterVapor.assign,
+        elevationRange = createER.assign
+      ).assign
     )
-    UpdateConstraintSetMutation
+    EditObservationMutation
       .execute[F](
-        BulkEditConstraintSetInput(
-          select = BulkEditSelectInput(observationIds = obsIds.assign),
-          edit = editInput
+        EditObservationInput(
+          select = ObservationSelectInput(observationIds = obsIds.assign),
+          patch = editInput
         )
       )
       .void
@@ -151,18 +157,37 @@ object ObsQueries {
 
   def createObservation[F[_]: Async](programId: Program.Id)(implicit
     c:                                          TransactionalClient[F, ObservationDB]
-  ): F[Option[ObsSummaryWithTitleAndConstraints]] =
+  ): F[ObsSummaryWithTitleAndConstraints] =
     ProgramCreateObservation.execute[F](CreateObservationInput(programId = programId)).map { data =>
-      data.createObservation.map { obs =>
-        ObsSummaryWithTitleAndConstraints(
-          obs.id,
-          obs.title,
-          obs.subtitle,
-          obs.constraintSet,
-          obs.status,
-          obs.activeStatus,
-          obs.plannedTime.execution
-        )
-      }
+      val obs = data.createObservation
+      ObsSummaryWithTitleAndConstraints(
+        obs.id,
+        obs.title,
+        obs.subtitle,
+        obs.constraintSet,
+        obs.status,
+        obs.activeStatus,
+        obs.plannedTime.execution
+      )
     }
+
+  def deleteObservation[F[_]: Async](obsId: Observation.Id)(implicit
+    c:                                      TransactionalClient[F, ObservationDB]
+  ): F[Unit] =
+    ProgramDeleteObservation
+      .execute[F](
+        DeleteObservationInput(select = ObservationSelectInput(observationIds = List(obsId).assign))
+      )
+      .void
+
+  def undeleteObservation[F[_]: Async](obsId: Observation.Id)(implicit
+    c:                                        TransactionalClient[F, ObservationDB]
+  ): F[Unit] =
+    ProgramUndeleteObservation
+      .execute[F](
+        UndeleteObservationInput(select =
+          ObservationSelectInput(observationIds = List(obsId).assign)
+        )
+      )
+      .void
 }

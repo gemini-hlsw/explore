@@ -22,6 +22,7 @@ import lucuma.ui.reusability._
 import monocle.Focus
 import monocle.Getter
 import queries.common.AsterismQueriesGQL._
+import queries.common.ObsQueriesGQL._
 
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
@@ -103,32 +104,34 @@ object AsterismQueries {
     obsIds:     List[Observation.Id],
     targetIds:  List[Target.Id]
   )(implicit c: TransactionalClient[F, ObservationDB]) = {
-    val input = BulkEditTargetEnvironmentInput(
-      select = BulkEditSelectInput(observationIds = obsIds.assign),
-      edit = TargetEnvironmentInput(asterism = targetIds.assign)
+    val input = EditObservationInput(
+      select = ObservationSelectInput(observationIds = obsIds.assign),
+      patch = ObservationPropertiesInput(
+        targetEnvironment = TargetEnvironmentInput(asterism = targetIds.assign).assign
+      )
     )
-    UpdateTargetEnvironmentMutation.execute[F](input).void
+    EditObservationMutation.execute[F](input).void
   }
 
   def addTargetToAsterisms[F[_]: Async](
     obsIds:     List[Observation.Id],
     targetId:   Target.Id
   )(implicit c: TransactionalClient[F, ObservationDB]) = {
-    val input = BulkEditAsterismInput(
-      select = BulkEditSelectInput(observationIds = obsIds.assign),
-      edit = List(EditAsterismInput(add = targetId.assign))
+    val input = EditAsterismInput(
+      select = ObservationSelectInput(observationIds = obsIds.assign),
+      patch = List(EditAsterismPatchInput(add = targetId.assign))
     )
-    UpdateAsterismMutation.execute[F](input).void
+    EditAsterismMutation.execute[F](input).void
   }
 
   def removeTargetFromAsterisms[F[_]: Async](
     obsIds:     List[Observation.Id],
     targetId:   Target.Id
   )(implicit c: TransactionalClient[F, ObservationDB]) = {
-    val input = BulkEditAsterismInput(
-      select = BulkEditSelectInput(observationIds = obsIds.assign),
-      edit = List(EditAsterismInput(delete = targetId.assign))
+    val input = EditAsterismInput(
+      select = ObservationSelectInput(observationIds = obsIds.assign),
+      patch = List(EditAsterismPatchInput(delete = targetId.assign))
     )
-    UpdateAsterismMutation.execute[F](input).void
+    EditAsterismMutation.execute[F](input).void
   }
 }

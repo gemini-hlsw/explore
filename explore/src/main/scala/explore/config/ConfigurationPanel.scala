@@ -67,11 +67,14 @@ object ConfigurationPanel {
             .map(ctx =>
               Aligner(
                 ctx,
-                EditObservationInput(props.obsId),
-                (ObsQueriesGQL.UpdateObservationMutation.execute[IO] _).andThen(_.void)
+                EditObservationInput(
+                  select = ObservationSelectInput(observationIds = List(props.obsId).assign),
+                  patch = ObservationPropertiesInput()
+                ),
+                (ObsQueriesGQL.EditObservationMutation.execute[IO] _).andThen(_.void)
               ).zoom(
                 ScienceData.mode,
-                EditObservationInput.scienceMode.modify
+                EditObservationInput.patch.andThen(ObservationPropertiesInput.scienceMode).modify
               )
             )
 

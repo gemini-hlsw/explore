@@ -6,6 +6,7 @@ package explore.targeteditor
 import cats.Endo
 import cats.effect.IO
 import cats.syntax.all._
+import clue.TransactionalClient
 import clue.data.syntax._
 import crystal.react.ReuseView
 import crystal.react.implicits._
@@ -37,6 +38,7 @@ import lucuma.core.math._
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.Target
 import lucuma.core.model.User
+import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.implicits._
@@ -89,6 +91,14 @@ object SiderealTargetEditor {
     view.zoom(getA)(noModA)
   }
 
+  def cloneTarget(targetId: Target.Id, obsIds: ObsIdSet)(implicit
+    c:                      TransactionalClient[IO, ObservationDB]
+  ): IO[Target.Id] = TargetQueriesGQL.CloneTargetMutation
+    .execute[IO](
+      CloneTargetInput(targetId = targetId, replaceIn = obsIds.toList.assign)
+    )
+    .map(_.cloneTarget.id)
+
   def getRemoteOnMod(
     id:      Target.Id,
     optObs:  Option[ObsIdSet],
@@ -98,16 +108,18 @@ object SiderealTargetEditor {
   )(implicit
     appCtx:  AppContextIO
   ): IO[Unit] =
-    optObs.fold(TargetQueriesGQL.UpdateTargetMutation.execute(input).void) { obsIds =>
+    optObs.fold(TargetQueriesGQL.EditTargetMutation.execute(input).void) { obsIds =>
       cloning.setState(true).to[IO] >>
-        TargetQueriesGQL.CloneTargetMutation
-          .execute(id, obsIds.toList.assign)
-          .flatMap { data =>
-            val newId    = data.cloneTarget.id
-            val newInput = EditTargetInput.targetId.replace(newId)(input)
-            TargetQueriesGQL.UpdateTargetMutationWithResult
+        cloneTarget(id, obsIds)
+          .flatMap { newId =>
+            val newInput = EditTargetInput.select
+              .andThen(TargetSelectInput.targetIds)
+              .replace(List(newId).assign)(input)
+            TargetQueriesGQL.EditTargetMutationWithResult
               .execute(newInput)
-              .flatMap(data => (onClone(data.updateTarget) >> cloning.setState(false)).to[IO])
+              .flatMap(data =>
+                (data.editTarget.headOption.foldMap(onClone) >> cloning.setState(false)).to[IO]
+              )
           }
     }
 
@@ -135,22 +147,28 @@ object SiderealTargetEditor {
             undoCtx.zipMap(reuseRemoteOnMod)((ctx, remoteOnMod) =>
               Aligner(
                 ctx,
-                EditTargetInput(targetId = props.id),
+                EditTargetInput(select = TargetSelectInput(targetIds = List(props.id).assign),
+                                patch = TargetPropertiesInput()
+                ),
                 remoteOnMod
               )
             )
 
+          val nameLens          = EditTargetInput.patch.andThen(TargetPropertiesInput.name)
+          val siderealLens      = EditTargetInput.patch.andThen(TargetPropertiesInput.sidereal)
+          val sourceProfileLens = EditTargetInput.patch.andThen(TargetPropertiesInput.sourceProfile)
+
           val allView: ReuseView[Target.Sidereal] =
             siderealTargetAligner.map(
               _.viewMod(t =>
-                EditTargetInput.name.replace(t.name.assign) >>>
-                  EditTargetInput.sidereal.replace(t.toInput.assign) >>>
-                  EditTargetInput.sourceProfile.replace(t.sourceProfile.toInput.assign)
+                nameLens.replace(t.name.assign) >>>
+                  siderealLens.replace(t.toInput.assign) >>>
+                  sourceProfileLens.replace(t.sourceProfile.toInput.assign)
               )
             )
 
           val siderealToTargetEndo: Endo[SiderealInput] => Endo[EditTargetInput] =
-            forceAssign(EditTargetInput.sidereal.modify)(SiderealInput())
+            forceAssign(siderealLens.modify)(SiderealInput())
 
           val coordsRAView: ReuseView[RightAscension] =
             siderealTargetAligner
@@ -169,7 +187,7 @@ object SiderealTargetEditor {
 
           val nameView: ReuseView[NonEmptyString] =
             siderealTargetAligner
-              .zoom(Target.Sidereal.name, EditTargetInput.name.modify)
+              .zoom(Target.Sidereal.name, nameLens.modify)
               .view(_.assign)
 
           val properMotionRAView: ReuseView[Option[ProperMotion.RA]] =
@@ -219,7 +237,7 @@ object SiderealTargetEditor {
           val sourceProfileAligner: ReuseAligner[SourceProfile, SourceProfileInput] =
             siderealTargetAligner.zoom(
               Target.Sidereal.sourceProfile,
-              forceAssign(EditTargetInput.sourceProfile.modify)(SourceProfileInput())
+              forceAssign(sourceProfileLens.modify)(SourceProfileInput())
             )
 
           def searchAndSet(

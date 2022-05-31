@@ -6,6 +6,7 @@ package explore.observationtree
 import cats.Order._
 import cats.effect.IO
 import cats.syntax.all._
+import clue.data.syntax._
 import clue.TransactionalClient
 import crystal.react.View
 import crystal.react.implicits._
@@ -19,6 +20,7 @@ import explore.undo._
 import japgolly.scalajs.react.callback.Callback
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
+import lucuma.schemas.ObservationDB.Types._
 import queries.common.TargetQueriesGQL
 
 import scala.annotation.unused
@@ -165,6 +167,24 @@ object AsterismGroupObsListActions {
     }
   }
 
+  private def deleteTarget(targetId: Target.Id)(implicit
+    c:                               TransactionalClient[IO, ObservationDB]
+  ): IO[Unit] =
+    TargetQueriesGQL.DeleteTargetMutation
+      .execute[IO](
+        DeleteTargetInput(select = TargetSelectInput(targetIds = List(targetId).assign))
+      )
+      .void
+
+  private def undeleteTarget(targetId: Target.Id)(implicit
+    c:                                 TransactionalClient[IO, ObservationDB]
+  ): IO[Unit] =
+    TargetQueriesGQL.UndeleteTargetMutation
+      .execute[IO](
+        UndeleteTargetInput(select = TargetSelectInput(targetIds = List(targetId).assign))
+      )
+      .void
+
   def dropObservations(
     draggedIds:  ObsIdSet,
     expandedIds: View[SortedSet[ObsIdSet]],
@@ -240,10 +260,10 @@ object AsterismGroupObsListActions {
       onSet = (_, otg) =>
         otg.fold(
           appCtx.logger.error("Creating targets in AsterismGroupObsListActions not yet supported")
-        )(_ => TargetQueriesGQL.DeleteTargetMutation.execute[IO](targetId).void),
+        )(_ => deleteTarget(targetId).void),
       onRestore = (_, otg) =>
-        otg.fold(TargetQueriesGQL.DeleteTargetMutation.execute[IO](targetId).void) { _ =>
-          TargetQueriesGQL.UndeleteTargetMutation.execute[IO](targetId).void
+        otg.fold(deleteTarget(targetId).void) { _ =>
+          undeleteTarget(targetId).void
         }
     )
 }

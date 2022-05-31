@@ -7,6 +7,7 @@ import cats.effect.IO
 import clue.TransactionalClient
 import clue.data.syntax._
 import crystal.react.implicits._
+import explore.common.ObsQueries
 import explore.data.KeyedIndexedList
 import explore.implicits._
 import explore.model.ObsSummaryWithTitleConstraintsAndConf
@@ -41,9 +42,11 @@ object ObsListActions {
     access = obsWithId(obsId).composeOptionLens(ObsSummaryWithTitleConstraintsAndConf.status)
   )(onSet =
     (_, status) =>
-      UpdateObservationMutation
+      EditObservationMutation
         .execute[IO](
-          EditObservationInput(observationId = obsId, status = status.orIgnore)
+          EditObservationInput(select = ObservationSelectInput(observationIds = List(obsId).assign),
+                               patch = ObservationPropertiesInput(status = status.orIgnore)
+          )
         )
         .void
   )
@@ -54,9 +57,12 @@ object ObsListActions {
     access = obsWithId(obsId).composeOptionLens(ObsSummaryWithTitleConstraintsAndConf.subtitle)
   )(onSet =
     (_, subtitleOpt) =>
-      UpdateObservationMutation
+      EditObservationMutation
         .execute[IO](
-          EditObservationInput(observationId = obsId, subtitle = subtitleOpt.flatten.orUnassign)
+          EditObservationInput(
+            select = ObservationSelectInput(observationIds = List(obsId).assign),
+            patch = ObservationPropertiesInput(subtitle = subtitleOpt.flatten.orUnassign)
+          )
         )
         .void
   )
@@ -67,9 +73,12 @@ object ObsListActions {
     access = obsWithId(obsId).composeOptionLens(ObsSummaryWithTitleConstraintsAndConf.activeStatus)
   )(onSet =
     (_, activeStatus) =>
-      UpdateObservationMutation
+      EditObservationMutation
         .execute[IO](
-          EditObservationInput(observationId = obsId, activeStatus = activeStatus.orIgnore)
+          EditObservationInput(
+            select = ObservationSelectInput(observationIds = List(obsId).assign),
+            patch = ObservationPropertiesInput(activeStatus = activeStatus.orIgnore)
+          )
         )
         .void
   )
@@ -82,16 +91,16 @@ object ObsListActions {
     )(
       onSet = (_, elemWithIndexOpt) =>
         elemWithIndexOpt.fold {
-          ProgramDeleteObservation.execute[IO](obsId).void
+          ObsQueries.deleteObservation[IO](obsId)
         } { case (obs, _) =>
           // Not much to do here, the observation must be created before we get here
           setObs(obs.id).to[IO]
         },
       onRestore = (_, elemWithIndexOpt) =>
         elemWithIndexOpt.fold {
-          ProgramDeleteObservation.execute[IO](obsId).void
+          ObsQueries.deleteObservation[IO](obsId)
         } { case (obs, _) =>
-          ProgramUndeleteObservation.execute[IO](obs.id).void >>
+          ObsQueries.undeleteObservation[IO](obs.id) >>
             setObs(obs.id).to[IO]
         }
     )

@@ -40,10 +40,10 @@ object ProgramQueriesGQL {
   }
 
   @GraphQL
-  trait UpdateProgramMutation extends GraphQLOperation[ObservationDB] {
+  trait EditProgramMutation extends GraphQLOperation[ObservationDB] {
     val document: String = """
       mutation($input: EditProgramInput!) {
-        updateProgram(input: $input) {
+        editProgram(input: $input) {
           id
         }
       }
