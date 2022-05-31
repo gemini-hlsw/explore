@@ -213,8 +213,8 @@ object ObsQueriesGQL {
   @GraphQL
   trait ProgramDeleteObservation extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation($oid: ObservationId!) {
-        deleteObservation(observationId: $oid) {
+      mutation($input: DeleteObservationInput!) {
+        deleteObservation(input: $input) {
           id
         }
       }
@@ -224,8 +224,8 @@ object ObsQueriesGQL {
   @GraphQL
   trait ProgramUndeleteObservation extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation($oid: ObservationId!) {
-        undeleteObservation(observationId: $oid) {
+      mutation($input: UndeleteObservationInput!) {
+        undeleteObservation(input: $input) {
           id
         }
       }
@@ -527,47 +527,13 @@ object ObsQueriesGQL {
   }
 
   @GraphQL
-  trait UpdateObservationMutation extends GraphQLOperation[ObservationDB] {
+  trait EditObservationMutation extends GraphQLOperation[ObservationDB] {
     val document = """
       mutation ($input: EditObservationInput!){
-        updateObservation(input: $input) {
+        editObservation(input: $input) {
           id
         }
       }
     """
   }
-
-  @GraphQL
-  trait UpdateConstraintSetMutation extends GraphQLOperation[ObservationDB] {
-    val document = """
-      mutation ($input: BulkEditConstraintSetInput!){
-        bulkEditConstraintSet(input: $input) {
-          id
-        }
-      }
-    """
-  }
-
-  @GraphQL
-  trait UpdateScienceRequirementsMutation extends GraphQLOperation[ObservationDB] {
-    val document = """
-      mutation ($input: BulkEditScienceRequirementsInput!){
-        bulkEditScienceRequirements(input: $input) {
-          id
-        }
-      }
-    """
-  }
-
-  @GraphQL
-  trait UpdateScienceModeMutation extends GraphQLOperation[ObservationDB] {
-    val document = """
-      mutation ($input: BulkEditScienceModeInput!){
-        bulkEditScienceMode(input: $input) {
-          id
-        }
-      }
-    """
-  }
-
 }

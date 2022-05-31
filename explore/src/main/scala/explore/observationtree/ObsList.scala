@@ -74,13 +74,11 @@ object ObsList {
   ): IO[Unit] =
     adding.async.set(true) >>
       createObservation[IO](programId)
-        .flatMap {
-          _.foldMap { obs =>
-            ObsListActions
-              .obsExistence(obs.id, o => setObs(programId, o.some))
-              .mod(undoCtx)(obsListMod.upsert(obs.toTitleAndConstraints, pos))
-              .to[IO]
-          }
+        .flatMap { obs =>
+          ObsListActions
+            .obsExistence(obs.id, o => setObs(programId, o.some))
+            .mod(undoCtx)(obsListMod.upsert(obs.toTitleAndConstraints, pos))
+            .to[IO]
         }
         .guarantee(adding.async.set(false))
 

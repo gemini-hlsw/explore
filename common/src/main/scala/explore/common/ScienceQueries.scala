@@ -4,9 +4,12 @@
 package explore.common
 
 import cats.Endo
+import clue.data.Input
 import clue.data.syntax._
 import crystal.react.View
 import crystal.react.implicits._
+import eu.timepit.refined._
+import eu.timepit.refined.numeric.Positive
 import explore.common.ObsQueries._
 import explore.implicits._
 import explore.model.ScienceMode
@@ -36,11 +39,13 @@ object ScienceQueries {
       scienceRequirementsUndo
         .undoableView(modelGet, modelMod)
         .withOnMod(value =>
-          UpdateScienceRequirementsMutation
+          EditObservationMutation
             .execute(
-              BulkEditScienceRequirementsInput(
-                select = BulkEditSelectInput(observationIds = List(obsId).assign),
-                edit = remoteSet(value)(ScienceRequirementsInput())
+              EditObservationInput(
+                select = ObservationSelectInput(observationIds = List(obsId).assign),
+                patch = ObservationPropertiesInput(scienceRequirements =
+                  remoteSet(value)(ScienceRequirementsInput()).assign
+                )
               )
             )
             .void
@@ -64,9 +69,12 @@ object ScienceQueries {
         .value
 
     def wavelength(w: Wavelength): WavelengthInput =
-      (WavelengthInput.micrometers := Wavelength.decimalMicrometers
-        .reverseGet(w)
-        .assign)
+      (WavelengthInput.micrometers :=
+        // This will always work because Wavelength.toPicometers is refined Positive
+        refineV[Positive](
+          Wavelength.decimalMicrometers
+            .reverseGet(w)
+        ).toOption.orIgnore)
         .runS(WavelengthInput())
         .value
 
@@ -78,13 +86,8 @@ object ScienceQueries {
           _ <- SpectroscopyScienceRequirementsInput.wavelength         := op.wavelength
                  .map(wavelength)
                  .orUnassign
-          _ <-
-            SpectroscopyScienceRequirementsInput.resolution := op.resolution
-              .map(_.value)
-              .orUnassign
-          _ <- SpectroscopyScienceRequirementsInput.signalToNoise      := op.signalToNoise
-                 .map(_.value)
-                 .orUnassign
+          _ <- SpectroscopyScienceRequirementsInput.resolution         := op.resolution.orUnassign
+          _ <- SpectroscopyScienceRequirementsInput.signalToNoise      := op.signalToNoise.orUnassign
           _ <- SpectroscopyScienceRequirementsInput.signalToNoiseAt    := op.signalToNoiseAt
                  .map(wavelength)
                  .orUnassign
@@ -124,9 +127,11 @@ object ScienceQueries {
       extends AnyVal {
     def toInput: GmosNorthLongSlitAdvancedConfigInput =
       GmosNorthLongSlitAdvancedConfigInput(
+        Input.ignore,
         a.overrideGrating.orUnassign,
         a.overrideFilter.orUnassign,
         a.overrideFpu.orUnassign,
+        Input.ignore,
         a.explicitXBin.orUnassign,
         a.explicitYBin.orUnassign,
         a.explicitAmpReadMode.orUnassign,
@@ -141,9 +146,11 @@ object ScienceQueries {
       extends AnyVal {
     def toInput: GmosSouthLongSlitAdvancedConfigInput =
       GmosSouthLongSlitAdvancedConfigInput(
+        Input.ignore,
         a.overrideGrating.orUnassign,
         a.overrideFilter.orUnassign,
         a.overrideFpu.orUnassign,
+        Input.ignore,
         a.explicitXBin.orUnassign,
         a.explicitYBin.orUnassign,
         a.explicitAmpReadMode.orUnassign,

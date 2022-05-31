@@ -204,8 +204,8 @@ object TargetQueriesGQL {
   @GraphQL
   trait CreateTargetMutation extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation($programId: ProgramId! $input: CreateTargetInput!) {
-        createTarget(programId: $programId, input: $input) {
+      mutation($input: CreateTargetInput!) {
+        createTarget(input: $input) {
           id
         }
       }
@@ -215,8 +215,8 @@ object TargetQueriesGQL {
   @GraphQL
   trait DeleteTargetMutation extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation($targetId: TargetId!) {
-        deleteTarget(targetId: $targetId) {
+      mutation($input: DeleteTargetInput!) {
+        deleteTarget(input: $input) {
           id
         }
       }
@@ -226,8 +226,8 @@ object TargetQueriesGQL {
   @GraphQL
   trait UndeleteTargetMutation extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation($targetId: TargetId!) {
-        undeleteTarget(targetId: $targetId) {
+      mutation($input: UndeleteTargetInput!) {
+        undeleteTarget(input: $input) {
           id
         }
       }
@@ -235,10 +235,10 @@ object TargetQueriesGQL {
   }
 
   @GraphQL
-  trait UpdateTargetMutation extends GraphQLOperation[ObservationDB] {
+  trait EditTargetMutation extends GraphQLOperation[ObservationDB] {
     val document = """
       mutation($input: EditTargetInput!) {
-        updateTarget(input: $input) {
+        editTarget(input: $input) {
           id
         }
       }
@@ -246,10 +246,10 @@ object TargetQueriesGQL {
   }
 
   @GraphQL
-  trait UpdateTargetMutationWithResult extends GraphQLOperation[ObservationDB] {
+  trait EditTargetMutationWithResult extends GraphQLOperation[ObservationDB] {
     val document = """
       mutation($input: EditTargetInput!) {
-        updateTarget(input: $input) {
+        editTarget(input: $input) {
           id
           name
           sidereal {
@@ -419,15 +419,15 @@ object TargetQueriesGQL {
     """
 
     object Data {
-      type UpdateTarget = model.TargetWithId
+      type EditTarget = model.TargetWithId
     }
   }
 
   @GraphQL
   trait CloneTargetMutation extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation($existingTargetId: TargetId!, $observationIds: [ObservationId!]) {
-        cloneTarget(existingTargetId: $existingTargetId, observationIds: $observationIds) {
+      mutation($input: CloneTargetInput!) {
+        cloneTarget(input: $input) {
           id
         }
       }

@@ -76,7 +76,7 @@ object AsterismEditor {
     adding:         View[Boolean]
   )(implicit ctx:   AppContextIO): IO[Unit] = {
     val targetId: IO[Target.Id] = oTargetId.fold(
-      CreateTargetMutation.execute(programId, target.toCreateTargetInput()).map(_.createTarget.id)
+      CreateTargetMutation.execute(target.toCreateTargetInput(programId)).map(_.createTarget.id)
     )(IO(_))
     adding.async.set(true) >>
       targetId

@@ -33,7 +33,7 @@ object GeneratedSequenceViewer {
 
         SequenceSteps
           .query(props.obsId)
-          .map(_.observation.flatMap(_.execution.config))
+          .map(_.observation.map(_.execution.config))
       }
       .render((_, config) => potRender(renderFn)(config))
 }

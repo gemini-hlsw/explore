@@ -262,21 +262,10 @@ object AsterismQueriesGQL {
   }
 
   @GraphQL
-  trait UpdateTargetEnvironmentMutation extends GraphQLOperation[ObservationDB] {
+  trait EditAsterismMutation extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation($input: BulkEditTargetEnvironmentInput!) {
-        bulkEditTargetEnvironment(input: $input) {
-          id
-        }
-      }
-    """
-  }
-
-  @GraphQL
-  trait UpdateAsterismMutation extends GraphQLOperation[ObservationDB] {
-    val document = """
-      mutation($input: BulkEditAsterismInput!) {
-        bulkEditAsterism(input: $input) {
+      mutation($input: EditAsterismInput!) {
+        editAsterism(input: $input) {
           id
         }
       }

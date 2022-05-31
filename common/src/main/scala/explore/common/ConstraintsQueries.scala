@@ -7,6 +7,7 @@ import cats.Endo
 import clue.data.syntax._
 import crystal.react.View
 import crystal.react.implicits._
+import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.implicits._
 import explore.undo.UndoContext
 import lucuma.core.enum._
@@ -30,11 +31,13 @@ object ConstraintsQueries {
       undoCtx
         .undoableView(modelGet, modelMod)
         .withOnMod(value =>
-          UpdateConstraintSetMutation
+          EditObservationMutation
             .execute(
-              BulkEditConstraintSetInput(
-                select = BulkEditSelectInput(observationIds = obsIds.assign),
-                edit = remoteSet(value)(ConstraintSetInput())
+              EditObservationInput(
+                select = ObservationSelectInput(observationIds = obsIds.assign),
+                patch = ObservationPropertiesInput(
+                  constraintSet = remoteSet(value)(ConstraintSetInput()).assign
+                )
               )
             )
             .void
@@ -64,8 +67,11 @@ object ConstraintsQueries {
     def elevationRange(er: ElevationRange): Endo[ConstraintSetInput] = {
       val createER: ElevationRangeInput = er match {
         case ElevationRange.AirMass(min, max)   =>
-          ElevationRangeInput(airMass =
-            AirMassRangeInput(min = min.value.assign, max = max.value.assign).assign
+          ElevationRangeInput(
+            // TODO: Change AirMassRange in lucuma-core to use refined types
+            airMass = AirMassRangeInput(min = PosBigDecimal.unsafeFrom(min.value).assign,
+                                        max = PosBigDecimal.unsafeFrom(max.value).assign
+            ).assign
           )
         case ElevationRange.HourAngle(min, max) =>
           ElevationRangeInput(hourAngle =

@@ -39,33 +39,43 @@ object ProgramQueries {
     c:                                 TransactionalClient[F, ObservationDB]
   ): F[Option[ProgramInfo]] =
     CreateProgramMutation
-      .execute[F](CreateProgramInput(name = name.orIgnore))
+      .execute[F](
+        CreateProgramInput(properties = ProgramPropertiesInput(name = name.orIgnore).assign)
+      )
       .map(_.createProgram.map(p => ProgramInfo(p.id, p.name, false)))
 
   def deleteProgram[F[_]: Async](id: Program.Id)(implicit
     c:                               TransactionalClient[F, ObservationDB]
   ): F[Unit] =
-    UpdateProgramMutation
+    EditProgramMutation
       .execute[F](
-        EditProgramInput(programId = id, existence = Existence.Deleted.assign)
+        EditProgramInput(
+          select = ProgramSelectInput(programId = id.assign),
+          patch = ProgramPropertiesInput(existence = Existence.Deleted.assign)
+        )
       )
       .void
 
   def undeleteProgram[F[_]: Async](id: Program.Id)(implicit
     c:                                 TransactionalClient[F, ObservationDB]
   ): F[Unit] =
-    UpdateProgramMutation
+    EditProgramMutation
       .execute[F](
-        EditProgramInput(programId = id, existence = Existence.Present.assign)
+        EditProgramInput(
+          select = ProgramSelectInput(programId = id.assign),
+          patch = ProgramPropertiesInput(existence = Existence.Present.assign)
+        )
       )
       .void
 
   def updateProgramName[F[_]: Async](id: Program.Id, name: Option[NonEmptyString])(implicit
     c:                                   TransactionalClient[F, ObservationDB]
   ): F[Unit] =
-    UpdateProgramMutation
+    EditProgramMutation
       .execute[F](
-        EditProgramInput(programId = id, name = name.orUnassign)
+        EditProgramInput(select = ProgramSelectInput(programId = id.assign),
+                         patch = ProgramPropertiesInput(name = name.orUnassign)
+        )
       )
       .void
 }

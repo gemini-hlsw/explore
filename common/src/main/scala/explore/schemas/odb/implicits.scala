@@ -3,7 +3,6 @@
 
 package queries.schemas
 
-import cats.syntax.all._
 import clue.data.syntax._
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
@@ -28,7 +27,7 @@ object implicits {
 
   implicit class WavelengthOps(val w: Wavelength) extends AnyVal {
     def toInput: WavelengthInput =
-      WavelengthInput(picometers = w.toPicometers.value.value.toLong.assign)
+      WavelengthInput(picometers = w.toPicometers.value.assign)
   }
 
   implicit class CatalogInfoOps(val info: CatalogInfo) extends AnyVal {
@@ -252,12 +251,14 @@ object implicits {
       catalogInfo = sidereal.catalogInfo.map(_.toInput).orIgnore
     )
 
-    def toCreateTargetInput(id: Option[Target.Id] = none): CreateTargetInput =
+    def toCreateTargetInput(programId: Program.Id): CreateTargetInput =
       CreateTargetInput(
-        targetId = id.orIgnore,
-        name = sidereal.name,
-        sidereal = toInput.assign,
-        sourceProfile = sidereal.sourceProfile.toInput
+        programId = programId,
+        properties = TargetPropertiesInput(
+          name = sidereal.name.assign,
+          sidereal = toInput.assign,
+          sourceProfile = sidereal.sourceProfile.toInput.assign
+        )
       )
   }
 
@@ -266,12 +267,14 @@ object implicits {
       key = NonEmptyString.unsafeFrom(nonsidereal.ephemerisKey.asJson.toString).assign
     )
 
-    def toCreateTargetInput(id: Option[Target.Id] = none): CreateTargetInput =
+    def toCreateTargetInput(programId: Program.Id): CreateTargetInput =
       CreateTargetInput(
-        targetId = id.orIgnore,
-        name = nonsidereal.name,
-        nonsidereal = toInput.assign,
-        sourceProfile = nonsidereal.sourceProfile.toInput
+        programId = programId,
+        properties = TargetPropertiesInput(
+          name = nonsidereal.name.assign,
+          nonsidereal = toInput.assign,
+          sourceProfile = nonsidereal.sourceProfile.toInput.assign
+        )
       )
   }
 
