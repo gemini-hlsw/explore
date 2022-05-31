@@ -95,6 +95,7 @@ trait CatalogCache extends CatalogIDB with AsyncToIO {
     val start =
       ldt.`with`(ChronoField.DAY_OF_YEAR, 1L).`with`(ChronoField.NANO_OF_DAY, 0)
     val end   = start.plus(1, ChronoUnit.YEARS)
+
     // Make a time based query for pm over a year
     val query = TimeRangeQueryByADQL(
       tracking,

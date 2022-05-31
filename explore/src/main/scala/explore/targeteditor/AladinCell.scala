@@ -6,6 +6,7 @@ package explore.targeteditor
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.Pot
+import crystal.Ready
 import crystal.implicits._
 import crystal.react.View
 import crystal.react.hooks._
@@ -55,7 +56,6 @@ import lucuma.core.enum.SkyBackground
 import lucuma.core.enum.WaterVapor
 import lucuma.core.enum.PortDisposition
 import lucuma.core.math.Angle
-import fs2.Stream
 
 final case class AladinCell(
   uid:              User.Id,
@@ -76,14 +76,14 @@ object AladinCell extends ModelOptics {
   type Props = AladinCell
 
   val bestConstraintSet = ConstraintSet(ImageQuality.PointTwo,
-                                        CloudExtinction.OnePointFive,
+                                        CloudExtinction.PointOne,
                                         SkyBackground.Darkest,
                                         WaterVapor.VeryDry,
                                         ElevationRange.AirMass.Default
   )
   val wavelength        = Wavelength.fromNanometers(500).get
 
-  val params  = AgsParams.GmosAgsParams(none, PortDisposition.Bottom)
+  val params  = AgsParams.GmosAgsParams(none, PortDisposition.Side)
   val basePos = AgsPosition(Angle.Angle0, Offset.Zero)
 
   protected val component =
@@ -97,61 +97,27 @@ object AladinCell extends ModelOptics {
       // avoids us needing a ref to a Fn component
       .useStateView(false)
       // Listen on web worker for messages with catalog candidates
-      .useStreamBy((props, _, _, _) => (props.target.get, props.obsConf))((props, _, _, _) =>
-        deps =>
-          props.ctx.worker.stream
-            .map(decodeFromTransferable[CatalogResults])
-            .unNone
-            .map(_.candidates)
-            // .map(_.map(GuideStarCandidate.siderealTarget.))
-            .evalMap { candidates =>
-              deps match {
-                case (tracking, obsConf @ Some(_)) =>
-                  val pa = obsConf.map(_.posAngle).collect {
-                    case PosAngle.Fixed(a)               => a
-                    case PosAngle.AllowFlip(a)           => a
-                    case PosAngle.ParallacticOverride(a) => a
-                  }
-                  pa.map { pa =>
-                    val basePos = AgsPosition(pa, Offset.Zero)
-                    Stream
-                      .emits[IO, GuideStarCandidate](candidates)
-                      .through(
-                        AGS.agsAnalysis[IO](bestConstraintSet,
-                                            wavelength,
-                                            deps._1.baseCoordinates,
-                                            Map(basePos -> params)
+      .useStreamBy((props, _, _, _) => (props.target.get, props.obsConf.map(_.obsInstant)))(
+        (props, _, _, _) =>
+          deps =>
+            props.ctx.worker.stream
+              .map(decodeFromTransferable[CatalogResults])
+              .unNone
+              .map(_.candidates)
+              .merge(
+                // Request catalog info for the target
+                // This is done in a merged stream to guarantee that we don't miss the response before subscribing
+                fs2.Stream
+                  .exec(deps match {
+                    case (tracking, Some(obsInstant)) =>
+                      props.ctx.worker
+                        .postTransferrable(
+                          CatalogRequest(bestConstraintSet, wavelength, tracking, obsInstant)
                         )
-                      )
-                      .compile
-                      .toList
-                      .map(AGS.sortGuideStarCandidates)
-                      .flatTap(x =>
-                        IO.println(x.headOption.get._1) *>
-                          x.get(x.headOption.get._1).get.traverse { case (x, q) =>
-                            IO.println(s"${x.tracking.baseCoordinates} -> $q")
-                          }
-                      )
-                  }.getOrElse(
-                    IO.pure(Map.empty[AgsPosition, Vector[(GuideStarCandidate, AgsAnalysis)]])
-                  )
-                case _                             => IO.pure(Map.empty[AgsPosition, Vector[(GuideStarCandidate, AgsAnalysis)]])
-              }
-            }
-            .merge(
-              // Request catalog info for the target
-              // This is done in a merged stream to guarantee that we don't miss the response before subscribing
-              fs2.Stream
-                .exec(deps match {
-                  case (tracking, Some(obsConf)) =>
-                    props.ctx.worker
-                      .postTransferrable(
-                        CatalogRequest(bestConstraintSet, wavelength, tracking, obsConf.obsInstant)
-                      )
-                  case _                         => IO.unit
-                })
-                .as(Map.empty[AgsPosition, Vector[(GuideStarCandidate, AgsAnalysis)]])
-            )
+                    case _                            => IO.unit
+                  })
+                  .as(Nil)
+              )
       )
       .useEffectOnMountBy((props, _, _, _, _) =>
         (props.target.get, props.obsConf) match {
@@ -200,9 +166,37 @@ object AladinCell extends ModelOptics {
           }
           .runAsyncAndForget
       }
+      // analyzed targets
+      .useMemoBy((p, _, _, _, candidates) => (p.target.get, p.obsConf, candidates)) {
+        (_, _, _, _, _) =>
+          {
+            case (tracking, Some(obsConf), Ready(candidates)) =>
+              val pa = obsConf.posAngle match {
+                case PosAngle.Fixed(a)               => a.some
+                case PosAngle.AllowFlip(a)           => a.some
+                case PosAngle.ParallacticOverride(a) => a.some
+                case _                               => none
+              }
+
+              implicit val ordering: Ordering[(GuideStarCandidate, AgsAnalysis)] = Ordering.by(_._2)
+              pa.map { pa =>
+                val basePos = AgsPosition(pa, Offset.Zero)
+                AGS
+                  .agsAnalysis[IO](bestConstraintSet,
+                                   wavelength,
+                                   tracking.baseCoordinates,
+                                   basePos,
+                                   params,
+                                   candidates
+                  )
+                  .sorted
+              }.getOrElse(Nil)
+            case _                                            => Nil
+          }
+      }
       // open settings menu
       .useState(false)
-      .render { (props, mouseCoords, options, center, gsc, openSettings) =>
+      .render { (props, mouseCoords, options, center, gsc, agsResults, openSettings) =>
         implicit val ctx = props.ctx
 
         val agsCandidatesView =
@@ -273,9 +267,6 @@ object AladinCell extends ModelOptics {
 
         val aladinKey = s"${props.target.get}"
 
-        val rankedGsc: Map[AgsPosition, Vector[(GuideStarCandidate, AgsAnalysis)]] =
-          gsc.toOption.getOrElse(Map.empty[AgsPosition, Vector[(GuideStarCandidate, AgsAnalysis)]])
-
         val renderCell: TargetVisualOptions => VdomNode = (t: TargetVisualOptions) =>
           AladinContainer(
             props.target,
@@ -287,7 +278,7 @@ object AladinCell extends ModelOptics {
             offsetSetter.reuseAlways,
             center,
             0,
-            rankedGsc.get(basePos).orEmpty
+            agsResults
             // gsc.value.toOption.orEmpty // USE THIS FOR ALTERNATE HOOK IMPLEMENTATION
           ).withKey(aladinKey)
 

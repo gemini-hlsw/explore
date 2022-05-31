@@ -28,6 +28,7 @@
 }
 
 .gmos-patrol-field {
+  // display: none;
   stroke: orange;
   fill: none;
   stroke-width: 0.8px;
@@ -90,7 +91,7 @@
 }
 
 .jts-svg-center {
-  stroke: green;
+  stroke: pink;
   stroke-width: 2px;
   vector-effect: non-scaling-stroke;
 }

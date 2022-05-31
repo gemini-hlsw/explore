@@ -51,7 +51,7 @@ final case class AladinContainer(
   updateViewOffset:       Offset => Callback,
   centerOnTarget:         View[Boolean],
   selectedGuideStarIndex: Int,
-  guideStarCandidates:    Vector[(GuideStarCandidate, AgsAnalysis)]
+  guideStarCandidates:    List[(GuideStarCandidate, AgsAnalysis)]
 ) extends ReactFnProps[AladinContainer](AladinContainer.component)
 
 object AladinContainer {
@@ -61,13 +61,13 @@ object AladinContainer {
   val DefaultWorld2PixFn: World2PixFn = (_: Coordinates) => None
 
   // This is used for screen coordinates, thus it doesn't need a lot of precission
-  private implicit val doubleReuse = Reusability.double(1.0)
+  implicit val doubleReuse = Reusability.double(1.0)
 
   val AladinComp = Aladin.component
 
   def updateVisualization(svg: Svg, off: (Double, Double))(v: JsAladin): Callback = {
-    val size = Size(v.getParentDiv().clientHeight.toDouble, v.getParentDiv().clientWidth.toDouble)
     val div  = v.getParentDiv()
+    val size = Size(div.clientHeight.toDouble, div.clientWidth.toDouble)
     renderVisualization(svg, off, div, size, v.pixelScale)
   }
 
@@ -118,7 +118,7 @@ object AladinContainer {
       .useStateBy { (p, baseCoordinates) =>
         baseCoordinates.value.offsetBy(Angle.Angle0, p.options.viewOffset)
       }
-      // Selected guid star
+      // Selected guide star
       .useMemoBy((p, _, _) => (p.guideStarCandidates, p.selectedGuideStarIndex)) {
         case (_, _, _) => { case (candidates, selectedIndex) =>
           candidates.lift(selectedIndex).filter(_._2.isUsable)
@@ -143,15 +143,17 @@ object AladinContainer {
                                      gsOffset,
                                      Offset.Zero,
                                      mode,
-                                     PortDisposition.Bottom,
+                                     PortDisposition.Side,
                                      Css.Empty
             )
           }
 
           val shapes = pa
             .map { posAngle =>
-              val baseShapes = GmosGeometry.shapesForMode(posAngle, mode) ++
-                GmosGeometry.commonShapes(posAngle, candidatesVisibility)
+              val baseShapes =
+                GmosGeometry.shapesForMode(posAngle, mode, PortDisposition.Side) ++
+                  GmosGeometry.commonShapes(posAngle, candidatesVisibility)
+
               probeArmShapes
                 .map { probeArm =>
                   baseShapes ++ probeArm
@@ -233,7 +235,6 @@ object AladinContainer {
                 .map { c =>
                   SVGTarget.GuideStarTarget(c, Css.Empty, 5)
                 }
-              println(selectedGSTarget)
 
               candidates
                 .filterNot(x => selectedGS.exists(_._1 === x._1))

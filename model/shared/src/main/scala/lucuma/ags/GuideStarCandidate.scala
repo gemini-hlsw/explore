@@ -8,6 +8,7 @@ import cats.syntax.all._
 import coulomb._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
+import lucuma.catalog.BandsList
 import lucuma.core.enum.Band
 import lucuma.core.enum.StellarLibrarySpectrum
 import lucuma.core.math.BrightnessUnits._
@@ -36,12 +37,22 @@ object GuideStarCandidate {
 
   val siderealTarget: SplitEpi[Target.Sidereal, GuideStarCandidate] =
     SplitEpi(
-      st =>
+      st => {
+        println(st.sourceProfile)
+        val gBrightness = BandsList.GaiaBandsList.bands
+          .flatMap { band =>
+            SourceProfile.integratedBrightnessIn(band).headOption(st.sourceProfile)
+          }
+          .headOption
+          .map(_.value)
+        println(gBrightness)
+
         GuideStarCandidate(
           st.name,
           st.tracking,
-          SourceProfile.integratedBrightnessIn(Band.Gaia).headOption(st.sourceProfile).map(_.value)
-        ),
+          gBrightness
+        )
+      },
       g =>
         Target.Sidereal(
           g.name,

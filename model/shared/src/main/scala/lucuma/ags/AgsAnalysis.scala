@@ -10,8 +10,8 @@ import lucuma.core.enum.Band
 import lucuma.core.geom.Area
 
 sealed trait AgsAnalysis {
-  def quality: AgsGuideQuality  = AgsGuideQuality.Unusable
-  def isUsable: Boolean = quality =!= AgsGuideQuality.Unusable
+  def quality: AgsGuideQuality = AgsGuideQuality.Unusable
+  def isUsable: Boolean        = quality =!= AgsGuideQuality.Unusable
   def message(withProbe: Boolean): String
 }
 
@@ -120,7 +120,9 @@ object AgsAnalysis {
   implicit val order: Order[AgsAnalysis] =
     Order.from {
       case (a: Usable, b: Usable) => Usable.order.compare(a, b)
-      case _                      => -10
+      case (_: Usable, _)         => Int.MinValue
+      case (_, _: Usable)         => Int.MaxValue
+      case _                      => Int.MinValue
     }
 
   implicit val ordering: Ordering[AgsAnalysis] = order.toOrdering

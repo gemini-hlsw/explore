@@ -18,28 +18,25 @@ import lucuma.core.math.Wavelength
 object AGS {
 
   def runAnalysis(
-    conditions:      ConstraintSet,
-    sequenceOffsets: Map[AgsPosition, AgsParams],
-    wavelength:      Wavelength,
-    gsOffset:        Offset,
-    gsc:             GuideStarCandidate
-  ): Map[AgsPosition, AgsAnalysis] =
-    sequenceOffsets.map { case (pos, params) =>
-      val analysis =
-        if (!params.isReachable(gsOffset, pos))
-          AgsAnalysis.NotReachable(pos, params.probe, gsc)
-        else
-          magnitudeAnalysis(
-            conditions,
-            params.probe,
-            gsOffset,
-            gsc,
-            wavelength,
-            // calculate vignetting
-            params.vignettingArea(pos)(_).eval.area
-          )
-      pos -> analysis
-    }
+    conditions: ConstraintSet,
+    wavelength: Wavelength,
+    gsOffset:   Offset,
+    pos:        AgsPosition,
+    params:     AgsParams,
+    gsc:        GuideStarCandidate
+  ): AgsAnalysis =
+    if (!params.isReachable(gsOffset, pos))
+      AgsAnalysis.NotReachable(pos, params.probe, gsc)
+    else
+      magnitudeAnalysis(
+        conditions,
+        params.probe,
+        gsOffset,
+        gsc,
+        wavelength,
+        // calculate vignetting
+        params.vignettingArea(pos)(_).eval.area
+      )
 
   /**
    * Analysis of the suitability of the magnitude of the given guide star regardless of its
@@ -94,17 +91,34 @@ object AGS {
   /**
    * FS2 pipe to convert a stream of Sideral targets to analyzed guidestars
    */
+  def agsAnalysisStream[F[_]](
+    constraints:     ConstraintSet,
+    wavelength:      Wavelength,
+    baseCoordinates: Coordinates,
+    position:        AgsPosition,
+    params:          AgsParams
+  ): Pipe[F, GuideStarCandidate, (GuideStarCandidate, AgsAnalysis)] =
+    in =>
+      in.map { gsc =>
+        val offset = baseCoordinates.diff(gsc.tracking.baseCoordinates).offset
+        gsc -> runAnalysis(constraints, wavelength, offset, position, params, gsc)
+      }
+
+  /**
+   * FS2 pipe to convert a stream of Sideral targets to analyzed guidestars
+   */
   def agsAnalysis[F[_]](
     constraints:     ConstraintSet,
     wavelength:      Wavelength,
     baseCoordinates: Coordinates,
-    sequenceOffsets: Map[AgsPosition, AgsParams]
-  ): Pipe[F, GuideStarCandidate, (GuideStarCandidate, Map[AgsPosition, AgsAnalysis])] =
-    in =>
-      in.map { gsc =>
-        val offset = baseCoordinates.diff(gsc.tracking.baseCoordinates).offset
-        gsc -> runAnalysis(constraints, sequenceOffsets, wavelength, offset, gsc)
-      }
+    position:        AgsPosition,
+    params:          AgsParams,
+    candidates:      List[GuideStarCandidate]
+  ): List[(GuideStarCandidate, AgsAnalysis)] =
+    candidates.map { gsc =>
+      val offset = baseCoordinates.diff(gsc.tracking.baseCoordinates).offset
+      gsc -> runAnalysis(constraints, wavelength, offset, position, params, gsc)
+    }
 
   /**
    * Sort the guidde stars by analysis
