@@ -6,7 +6,7 @@ package explore.components.state
 import cats.effect.IO
 import cats.syntax.all._
 import clue.data.Input
-import crystal.react.ReuseView
+import crystal.react.View
 import crystal.react.reuse._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
@@ -20,15 +20,12 @@ import japgolly.scalajs.react.vdom.html_<^._
 import queries.common.UserPreferencesQueriesGQL._
 import react.common.ReactProps
 
-final case class IfLogged(view: ReuseView[RootModel])(
-  val render:                   (UserVault, IO[Unit]) ==> VdomNode
+final case class IfLogged(view: View[RootModel])(
+  val render:                   (UserVault, IO[Unit]) => VdomNode
 ) extends ReactProps[IfLogged](IfLogged.component)
 
 object IfLogged {
   type Props = IfLogged
-
-  protected implicit val propsReuse: Reusability[Props] =
-    Reusability.by(x => (x.view, x.render))
 
   // Creates a "profile" for user preferences.
   private def createUserPrefs(vault: UserVault)(implicit ctx: AppContextIO): IO[Unit] =
@@ -52,14 +49,11 @@ object IfLogged {
             React.Fragment(
               SSOManager(vault.expiration, vaultSet, messageSet),
               ConnectionManager(vault.token, onConnect = vault.curryReusing.in(createUserPrefs _))(
-                Reuse
-                  .currying(vaultSet, messageSet, p.render.curry(vault))
-                  .in((vaultSet, messageSet, render) => LogoutTracker(vaultSet, messageSet)(render))
+                LogoutTracker(vaultSet, messageSet)(p.render(vault, _))
               )
             )
           }
         }
       }
-      .configure(Reusability.shouldComponentUpdate)
       .build
 }

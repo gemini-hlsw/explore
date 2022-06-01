@@ -3,16 +3,14 @@
 
 package explore.targeteditor
 
-import crystal.react.ReuseView
+import crystal.react.View
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.HourAngle.HMS
 import lucuma.core.math._
-import lucuma.ui.reusability._
 import react.aladin.Fov
-import react.aladin.reusability._
 import react.common.ReactFnProps
 import react.fa.Transform
 import react.semanticui.elements.button.Button
@@ -29,15 +27,11 @@ final case class AladinToolbar(
   fov:                 Fov,
   current:             Coordinates,
   loadingGSCandidates: Boolean,
-  center:              ReuseView[Boolean]
+  center:              View[Boolean]
 ) extends ReactFnProps[AladinToolbar](AladinToolbar.component)
 
 object AladinToolbar {
   type Props = AladinToolbar
-
-  // This is used for fov thus needs to be fairly smal
-  implicit val fovReuse: Reusability[Fov]     = exactFovReuse
-  implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   // TODO: We may want to move these to gsp-math
   def formatHMS(hms: HMS): String =
@@ -76,46 +70,45 @@ object AladinToolbar {
   }
 
   val component =
-    ScalaFnComponent
-      .withReuse[Props] { props =>
-        React.Fragment(
-          Label(
-            icon = Icons.Maximize.clazz(ExploreStyles.Accented),
-            clazz = ExploreStyles.AladinFOV,
-            size = Small,
-            detail = LabelDetail(clazz = ExploreStyles.AladinDetailText,
-                                 content =
-                                   s"${formatFov(props.fov.x)} \u00D7 ${formatFov(props.fov.y)}"
-            )
-          ),
-          <.div(
-            ExploreStyles.AladinGuideStar,
-            Popup(
-              content = "Loading catalog stars..",
-              position = PopupPosition.TopCenter,
-              trigger = Icons.CircleSmall.beat()
-            ).when(props.loadingGSCandidates)
-          ),
-          Label(
-            icon = Icons.MousePointer.clazz(ExploreStyles.Accented),
-            clazz = ExploreStyles.AladinCurrentCoords,
-            size = Small,
-            detail = LabelDetail(clazz = ExploreStyles.AladinDetailText,
-                                 content = formatCoordinates(props.current)
-            )
-          ),
-          <.div(
-            ExploreStyles.AladinCenterButton,
-            Popup(
-              content = "Center on target",
-              position = PopupPosition.BottomLeft,
-              trigger = Button(size = Mini, icon = true, onClick = props.center.set(true))(
-                Icons.Bullseye
-                  .transform(Transform(size = 24))
-                  .clazz(ExploreStyles.Accented)
-              )
+    ScalaFnComponent[Props] { props =>
+      React.Fragment(
+        Label(
+          icon = Icons.Maximize.clazz(ExploreStyles.Accented),
+          clazz = ExploreStyles.AladinFOV,
+          size = Small,
+          detail = LabelDetail(
+            clazz = ExploreStyles.AladinDetailText,
+            content = s"${formatFov(props.fov.x)} \u00D7 ${formatFov(props.fov.y)}"
+          )
+        ),
+        <.div(
+          ExploreStyles.AladinGuideStar,
+          Popup(
+            content = "Loading catalog stars..",
+            position = PopupPosition.TopCenter,
+            trigger = Icons.CircleSmall.beat()
+          ).when(props.loadingGSCandidates)
+        ),
+        Label(
+          icon = Icons.MousePointer.clazz(ExploreStyles.Accented),
+          clazz = ExploreStyles.AladinCurrentCoords,
+          size = Small,
+          detail = LabelDetail(clazz = ExploreStyles.AladinDetailText,
+                               content = formatCoordinates(props.current)
+          )
+        ),
+        <.div(
+          ExploreStyles.AladinCenterButton,
+          Popup(
+            content = "Center on target",
+            position = PopupPosition.BottomLeft,
+            trigger = Button(size = Mini, icon = true, onClick = props.center.set(true))(
+              Icons.Bullseye
+                .transform(Transform(size = 24))
+                .clazz(ExploreStyles.Accented)
             )
           )
         )
-      }
+      )
+    }
 }

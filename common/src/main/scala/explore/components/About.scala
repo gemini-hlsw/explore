@@ -22,12 +22,10 @@ case class About(trigger: Reuse[VdomNode])(implicit val ctx: AppContextIO)
 object About {
   type Props = About
 
-  implicit val propsReuse: Reusability[Props] = Reusability.derive
-
   val component = ScalaFnComponent
     .withHooks[Props]
     .useState(false) // copied
-    .renderWithReuse((props, copied) =>
+    .render((props, copied) =>
       Modal(
         dimmer = Blurring,
         trigger = props.trigger: VdomNode,

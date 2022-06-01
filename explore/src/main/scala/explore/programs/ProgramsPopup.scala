@@ -5,10 +5,9 @@ package explore.programs
 
 import cats.effect.IO
 import cats.syntax.all._
-import crystal.react.ReuseView
+import crystal.react.View
 import crystal.react.hooks._
 import crystal.react.implicits._
-import crystal.react.reuse._
 import explore.Icons
 import explore.common.ProgramQueries
 import explore.common.ProgramQueries._
@@ -20,7 +19,6 @@ import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Program
-import lucuma.ui.reusability._
 import queries.common.ProgramQueriesGQL._
 import react.common.ReactFnProps
 import react.semanticui.elements.button.Button
@@ -34,18 +32,16 @@ import scalajs.js.JSConverters._
 
 final case class ProgramsPopup(
   currentProgramId: Option[Program.Id],
-  undoStacks:       ReuseView[ModelUndoStacks[IO]],
-  onClose:          Reuse[Option[Callback]] = none.reuseAlways
+  undoStacks:       View[ModelUndoStacks[IO]],
+  onClose:          Option[Callback] = none
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[ProgramsPopup](ProgramsPopup.component)
 
 object ProgramsPopup {
   type Props = ProgramsPopup
 
-  implicit val reuseProps: Reusability[Props] = Reusability.derive
-
-  protected def addProgram(programs: ReuseView[List[ProgramInfo]], adding: ReuseView[Boolean])(
-    implicit ctx:                    AppContextIO
+  protected def addProgram(programs: View[List[ProgramInfo]], adding: View[Boolean])(implicit
+    ctx:                             AppContextIO
   ): IO[Unit] =
     adding.async.set(true) >>
       ProgramQueries
@@ -56,11 +52,12 @@ object ProgramsPopup {
         .guarantee(adding.async.set(false))
 
   protected def selectProgram(
-    onClose:      Reuse[Option[Callback]],
-    undoStacks:   ReuseView[ModelUndoStacks[IO]],
+    onClose:      Option[Callback],
+    undoStacks:   View[ModelUndoStacks[IO]]
+  )(
     programId:    Program.Id
   )(implicit ctx: AppContextIO): Callback =
-    onClose.value.orEmpty >>
+    onClose.orEmpty >>
       undoStacks.set(ModelUndoStacks[IO]()) >>
       (if (onClose.isEmpty) ctx.replacePage(AppTab.Overview, programId, none, none)
        else ctx.pushPage(AppTab.Overview, programId, none, none))
@@ -76,9 +73,9 @@ object ProgramsPopup {
 
   protected def showModal(
     props:       Props,
-    adding:      ReuseView[Boolean],
-    showDeleted: ReuseView[Boolean],
-    programs:    ReuseView[List[ProgramInfo]]
+    adding:      View[Boolean],
+    showDeleted: View[Boolean],
+    programs:    View[List[ProgramInfo]]
   ): VdomNode = {
     implicit val ctx = props.ctx
 
@@ -99,19 +96,19 @@ object ProgramsPopup {
       open = true,
       closeOnDimmerClick = props.onClose.isDefined,
       closeOnEscape = props.onClose.isDefined,
-      closeIcon = props.onClose.value
+      closeIcon = props.onClose
         .map(_ => Icons.Close.clazz(ExploreStyles.ModalCloseButton): VdomNode)
         .orUndefined,
       dimmer = Dimmer.Blurring,
       size = ModalSize.Small,
-      onClose = props.onClose.value.orUndefined,
+      onClose = props.onClose.orUndefined,
       header = ModalHeader("Programs"),
       content = ModalContent(
         ProgramTable(
           props.currentProgramId,
           programs,
           showDeleted.get,
-          selectProgram = Reuse.currying(props.onClose, props.undoStacks).in(selectProgram _)
+          selectProgram = selectProgram(props.onClose, props.undoStacks)
         ),
         <.div(
           Button(
@@ -123,7 +120,7 @@ object ProgramsPopup {
             loading = adding.get,
             onClick = addProgram(programs, adding).runAsync
           ),
-          Checkbox(label = "Show deleted", checked = showDeleted.get, onChange = showDeleted.set _)
+          Checkbox(label = "Show deleted", checked = showDeleted.get, onChange = showDeleted.set)
         )
       )
     )
@@ -131,19 +128,19 @@ object ProgramsPopup {
 
   protected val component = ScalaFnComponent
     .withHooks[Props]
-    .useStateViewWithReuse(false) // Adding new program
-    .useStateViewWithReuse(false) // Show deleted
-    .useStreamResourceViewWithReuseBy((_, _, showDeleted) => showDeleted) {
+    .useStateView(false) // Adding new program
+    .useStateView(false) // Show deleted
+    .useStreamResourceViewBy((_, _, showDeleted) => showDeleted.get) {
       (props, _, _) => showDeleted =>
         implicit val ctx = props.ctx
 
         ProgramsQuery
-          .query(showDeleted.get)
+          .query(showDeleted)
           .map(ProgramsQuery.Data.asProgramInfoList)
           .flatTap(programs => onNewData(props.onClose.isEmpty, programs))
           .reRunOnResourceSignals(ProgramEditSubscription.subscribe[IO]())
     }
-    .renderWithReuse((props, adding, showDeleted, programs) =>
+    .render((props, adding, showDeleted, programs) =>
       potRender(p => showModal(props, adding, showDeleted, p))(programs)
     )
 }

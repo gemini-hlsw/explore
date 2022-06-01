@@ -4,9 +4,7 @@
 package explore.targeteditor
 
 import cats.syntax.all._
-import crystal.react.ReuseView
 import crystal.react.View
-import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
@@ -19,7 +17,6 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
 import lucuma.ui.forms._
 import lucuma.ui.optics.ValidFormatInput
-import lucuma.ui.reusability._
 import lucuma.ui.utils.abbreviate
 import monocle.Focus
 import react.common._
@@ -33,8 +30,8 @@ import scalajs.js.JSConverters._
 final case class SearchForm(
   id:          Target.Id,
   name:        NonEmptyString,
-  searching:   ReuseView[Set[Target.Id]],
-  searchAndGo: SearchCallback ==> Callback
+  searching:   View[Set[Target.Id]],
+  searchAndGo: SearchCallback => Callback
 ) extends ReactProps[SearchForm](SearchForm.component) {
   def submit(
     searchTerm: String,
@@ -64,9 +61,6 @@ object SearchForm {
     val searchEnabled = Focus[State](_.searchEnabled)
     val searchTerm    = Focus[State](_.searchTerm)
   }
-
-  implicit val stateReuse                     = Reusability.derive[State]
-  implicit val propsReuse: Reusability[Props] = Reusability.by(x => (x.id, x.name, x.searching))
 
   class Backend($ : BackendScope[Props, State]) {
 
@@ -151,7 +145,6 @@ object SearchForm {
         }
       }
       .renderBackend[Backend]
-      .configure(Reusability.shouldComponentUpdate)
       .build
 
 }

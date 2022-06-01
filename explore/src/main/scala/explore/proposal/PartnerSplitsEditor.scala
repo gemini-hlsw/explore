@@ -4,9 +4,8 @@
 package explore.proposal
 
 import cats.syntax.all._
-import crystal.react.ReuseView
-import crystal.react.ReuseViewOpt
-import crystal.react.reuse._
+import crystal.react.View
+import crystal.react.ViewOpt
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
@@ -16,7 +15,6 @@ import explore.components.ui.PartnerFlags
 import explore.implicits._
 import explore.model._
 import explore.model.refined._
-import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^._
@@ -31,15 +29,13 @@ import react.semanticui.modules.modal._
 
 final case class PartnerSplitsEditor(
   show:    Boolean,
-  splits:  ReuseView[List[PartnerSplit]],
+  splits:  View[List[PartnerSplit]],
   closeMe: Callback,
-  onSave:  List[PartnerSplit] ==> Callback
+  onSave:  List[PartnerSplit] => Callback
 ) extends ReactProps[PartnerSplitsEditor](PartnerSplitsEditor.component)
 
 object PartnerSplitsEditor {
   type Props = PartnerSplitsEditor
-
-  implicit val propsReuse: Reusability[Props] = Reusability.by(p => (p.show, p.splits.get))
 
   private def toolbar(p: Props): ModalActions =
     ModalActions(
@@ -57,7 +53,7 @@ object PartnerSplitsEditor {
 
   private def makeTableRows(p: Props): TagMod =
     p.splits.get.zipWithIndex.toTagMod { case (ps, idx) =>
-      val splitView: ReuseViewOpt[PartnerSplit] =
+      val splitView: ViewOpt[PartnerSplit] =
         p.splits.zoom[PartnerSplit](Index.index[List[PartnerSplit], Int, PartnerSplit](idx))
 
       val id = s"${ps.partner.tag}-percent"
@@ -127,6 +123,5 @@ object PartnerSplitsEditor {
   val component = ScalaComponent
     .builder[Props]
     .render_P(render)
-    .configure(Reusability.shouldComponentUpdate)
     .build
 }

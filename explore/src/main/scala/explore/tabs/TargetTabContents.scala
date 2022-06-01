@@ -70,11 +70,11 @@ final case class TargetTabContents(
   programId:         Program.Id,
   focusedObsSet:     Option[ObsIdSet],
   focusedTarget:     Option[Target.Id],
-  listUndoStacks:    ReuseView[UndoStacks[IO, AsterismGroupsWithObs]],
-  targetsUndoStacks: ReuseView[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
-  searching:         ReuseView[Set[Target.Id]],
-  expandedIds:       ReuseView[SortedSet[ObsIdSet]],
-  hiddenColumns:     ReuseView[Set[String]]
+  listUndoStacks:    View[UndoStacks[IO, AsterismGroupsWithObs]],
+  targetsUndoStacks: View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
+  searching:         View[Set[Target.Id]],
+  expandedIds:       View[SortedSet[ObsIdSet]],
+  hiddenColumns:     View[Set[String]]
 )(implicit val ctx:  AppContextIO)
     extends ReactFnProps[TargetTabContents](TargetTabContents.component)
 
@@ -91,13 +91,14 @@ object TargetTabContents {
 
   val layoutMedium: Layout = Layout(
     List(
-      LayoutItem(i = ObsTabTilesIds.TargetId.value,
-                 x = 0,
-                 y = 0,
-                 w = DefaultWidth.value,
-                 h = TargetHeight.value,
-                 minH = TargetMinHeight.value,
-                 minW = TileMinWidth.value
+      LayoutItem(
+        i = ObsTabTilesIds.TargetId.value,
+        x = 0,
+        y = 0,
+        w = DefaultWidth.value,
+        h = TargetHeight.value,
+        minH = TargetMinHeight.value,
+        minW = TileMinWidth.value
       ),
       LayoutItem(
         i = ObsTabTilesIds.PlotId.value,
@@ -120,24 +121,21 @@ object TargetTabContents {
     )
   )
 
-  implicit val propsReuse: Reusability[Props] = Reusability.derive
-
-  def otherObsCount(
-    targetGroupMap: Reuse[TargetGroupList],
-    obsIds:         ObsIdSet,
-    targetId:       Target.Id
+  def otherObsCount(targetGroupMap: TargetGroupList, obsIds: ObsIdSet)(
+    targetId:                       Target.Id
   ): Int =
     targetGroupMap.get(targetId).fold(0)(tg => (tg.obsIds -- obsIds.toSortedSet).size)
 
   protected def renderFn(
     props:                 Props,
-    panels:                ReuseView[TwoPanelState],
+    panels:                View[TwoPanelState],
     defaultLayouts:        LayoutsMap,
-    layouts:               ReuseView[Pot[LayoutsMap]],
+    layouts:               View[Pot[LayoutsMap]],
     resize:                UseResizeDetectorReturn,
     debouncer:             Reusable[UseSingleEffect[IO]],
-    obsConf:               ReuseView[ObsConfiguration],
-    asterismGroupsWithObs: ReuseView[AsterismGroupsWithObs]
+    obsConf:               View[ObsConfiguration]
+  )(
+    asterismGroupsWithObs: View[AsterismGroupsWithObs]
   )(implicit ctx:          AppContextIO): VdomNode = {
 
     val panelsResize =
@@ -152,24 +150,24 @@ object TargetTabContents {
 
     val treeWidth: Int = panels.get.treeWidth.toInt
 
-    val selectedView: ReuseView[SelectedPanel] = panels.zoom(TwoPanelState.selected)
+    val selectedView: View[SelectedPanel] = panels.zoom(TwoPanelState.selected)
 
-    val targetMap: Reuse[TargetGroupList] = asterismGroupsWithObs.map(_.get.targetGroups)
+    val targetMap: TargetGroupList = asterismGroupsWithObs.get.targetGroups
 
     // Tree area
-    def tree(objectsWithObs: ReuseView[AsterismGroupsWithObs]) =
+    def tree(objectsWithObs: View[AsterismGroupsWithObs]) =
       <.div(^.width := treeWidth.px, ExploreStyles.Tree |+| ExploreStyles.ResizableSinglePanel)(
         treeInner(objectsWithObs)
       )
 
-    def treeInner(objectsWithObs: ReuseView[AsterismGroupsWithObs]) =
+    def treeInner(objectsWithObs: View[AsterismGroupsWithObs]) =
       <.div(ExploreStyles.TreeBody)(
         AsterismGroupObsList(
           objectsWithObs,
           props.programId,
           props.focusedObsSet,
           props.focusedTarget,
-          selectedView.set(SelectedPanel.summary).reuseAlways,
+          selectedView.set(SelectedPanel.summary),
           props.expandedIds,
           props.listUndoStacks
         )
@@ -184,10 +182,9 @@ object TargetTabContents {
     def setPage(obsIds: Option[ObsIdSet], targetId: Option[Target.Id]): Callback =
       props.ctx.pushPage(AppTab.Targets, props.programId, obsIds, targetId)
 
-    def selectObservationAndTarget(
-      expandedIds: ReuseView[SortedSet[ObsIdSet]],
-      obsId:       Observation.Id,
-      targetId:    Target.Id
+    def selectObservationAndTarget(expandedIds: View[SortedSet[ObsIdSet]])(
+      obsId:                                    Observation.Id,
+      targetId:                                 Target.Id
     ): Callback = {
       val obsIdSet = ObsIdSet.one(obsId)
       findAsterismGroup(obsIdSet, asterismGroupsWithObs.get.asterismGroups)
@@ -219,7 +216,7 @@ object TargetTabContents {
           }
       }
 
-    val backButton = Reuse.always[VdomNode](
+    val backButton: VdomNode =
       Button(
         as = <.a,
         size = Mini,
@@ -231,31 +228,19 @@ object TargetTabContents {
             selectedView.set(SelectedPanel.tree)
         )
       )(^.href := ctx.pageUrl(AppTab.Targets, props.programId, none, none), Icons.ChevronLeft)
-    )
 
     /**
      * Render the summary table.
      */
     def renderSummary: VdomNode =
-      Tile("targetSummary", "Target Summary", backButton.some)(
-        Reuse
-          .currying(
-            targetMap,
-            props.hiddenColumns,
-            props.expandedIds
-          )
-          .in((targets, hiddenColumns, expandedIds) =>
-            (renderInTitle: Tile.RenderInTitle) =>
-              TargetSummaryTable(
-                targets,
-                hiddenColumns,
-                Reuse(selectObservationAndTarget _)(
-                  expandedIds
-                ),
-                (selectTarget _).reuseAlways,
-                renderInTitle
-              ): VdomNode
-          )
+      Tile("targetSummary", "Target Summary", backButton.some)(renderInTitle =>
+        TargetSummaryTable(
+          targetMap,
+          props.hiddenColumns,
+          selectObservationAndTarget(props.expandedIds) _,
+          selectTarget _,
+          renderInTitle
+        ): VdomNode
       )
 
     val coreWidth  = resize.width.getOrElse(0) - treeWidth
@@ -338,20 +323,19 @@ object TargetTabContents {
         )
       }
 
-      val asterismView: ReuseView[Option[Asterism]] =
-        asterismGroupsWithObs.value
+      val asterismView: View[Option[Asterism]] =
+        asterismGroupsWithObs
           .withOnMod(onModAsterismsWithObs(groupIds, idsToEdit))
           .zoom(getAsterism)(modAsterism)
-          .reuseByValue
 
       val title = idsToEdit.single match {
         case Some(id) => s"Observation $id"
         case None     => s"Editing ${idsToEdit.size} Asterisms"
       }
 
-      val selectedTarget: Option[ReuseViewOpt[Target]] =
+      val selectedTarget: Option[ViewOpt[Target]] =
         props.focusedTarget.map { targetId =>
-          asterismView.zoom(Asterism.targetOptional(targetId)).addReuseBy(targetId)
+          asterismView.zoom(Asterism.targetOptional(targetId))
         }
 
       val scienceMode = idsToEdit.single match {
@@ -366,11 +350,9 @@ object TargetTabContents {
         case _        => None
       }
 
-      def setCurrentTarget(
-        programId: Program.Id,
-        oids:      ObsIdSet,
-        tid:       Option[Target.Id],
-        via:       SetRouteVia
+      def setCurrentTarget(programId: Program.Id, oids: ObsIdSet)(
+        tid:                          Option[Target.Id],
+        via:                          SetRouteVia
       ): Callback =
         ctx.setPageVia(AppTab.Targets, programId, oids.some, tid, via)
 
@@ -382,15 +364,13 @@ object TargetTabContents {
           Pot(asterismView, scienceMode),
           obsConf.asViewOpt,
           props.focusedTarget,
-          Reuse(setCurrentTarget _)(props.programId, idsToEdit),
-          Reuse.currying(targetMap, idsToEdit).in(otherObsCount _),
+          setCurrentTarget(props.programId, idsToEdit) _,
+          otherObsCount(targetMap, idsToEdit) _,
           props.targetsUndoStacks,
           props.searching,
           title,
           backButton.some,
-          props.hiddenColumns,
-          coreWidth,
-          coreHeight
+          props.hiddenColumns
         )
 
       val selectedCoordinates = selectedTarget
@@ -404,8 +384,7 @@ object TargetTabContents {
           )
         )
 
-      val skyPlotTile =
-        ElevationPlotTile.elevationPlotTile(coreWidth, coreHeight, selectedCoordinates.flatten)
+      val skyPlotTile = ElevationPlotTile.elevationPlotTile(selectedCoordinates.flatten)
 
       val rglRender: LayoutsMap => VdomNode = (l: LayoutsMap) =>
         TileController(
@@ -417,7 +396,7 @@ object TargetTabContents {
           GridLayoutSection.TargetLayout,
           None
         )
-      potRenderWithReuse[LayoutsMap](rglRender.reuseAlways)(layouts.get)
+      potRender[LayoutsMap](rglRender)(layouts.get)
     }
 
     def renderSiderealTargetEditor(targetId: Target.Id, target: Target.Sidereal): VdomNode = {
@@ -427,10 +406,8 @@ object TargetTabContents {
           _.map(TargetGroup.targetWithId.replace(TargetWithId(targetId, mod(target))))
         )
 
-      val targetView: ReuseView[Target.Sidereal] =
-        asterismGroupsWithObs.map(
-          _.zoom(AsterismGroupsWithObs.targetGroups).zoom(getTarget)(modTarget)
-        )
+      val targetView: View[Target.Sidereal] =
+        asterismGroupsWithObs.zoom(AsterismGroupsWithObs.targetGroups).zoom(getTarget)(modTarget)
 
       val title = s"Editing Target ${target.name.value} [$targetId]"
 
@@ -441,16 +418,11 @@ object TargetTabContents {
         props.targetsUndoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
         props.searching,
         title,
-        backButton.some,
-        coreWidth,
-        coreHeight
+        backButton.some
       )
 
       val skyPlotTile =
-        ElevationPlotTile.elevationPlotTile(coreWidth,
-                                            coreHeight,
-                                            Target.Sidereal.baseCoordinates.get(target).some
-        )
+        ElevationPlotTile.elevationPlotTile(Target.Sidereal.baseCoordinates.get(target).some)
 
       val rglRender: LayoutsMap => VdomNode = (l: LayoutsMap) =>
         TileController(props.userId,
@@ -461,7 +433,7 @@ object TargetTabContents {
                        GridLayoutSection.TargetLayout,
                        None
         )
-      potRenderWithReuse[LayoutsMap](rglRender.reuseAlways)(layouts.get)
+      potRender[LayoutsMap](rglRender)(layouts.get)
     }
 
     val selectedPanel = panels.get.selected
@@ -542,12 +514,9 @@ object TargetTabContents {
     ScalaFnComponent
       .withHooks[Props]
       // Two panel state
-      .useStateViewWithReuse(TwoPanelState.initial(SelectedPanel.Uninitialized))
+      .useStateView(TwoPanelState.initial(SelectedPanel.Uninitialized))
       .useEffectWithDepsBy((props, state) =>
-        (props.focusedObsSet,
-         props.focusedTarget,
-         state.zoom(TwoPanelState.selected).value.reuseByValue
-        )
+        (props.focusedObsSet, props.focusedTarget, state.zoom(TwoPanelState.selected).reuseByValue)
       ) { (_, _) => params =>
         val (focusedObsSet, focusedTarget, selected) = params
         (focusedObsSet, focusedTarget, selected.get) match {
@@ -560,7 +529,7 @@ object TargetTabContents {
       // Measure its size
       .useResizeDetector()
       // Initial target layout
-      .useStateViewWithReuse(Pot.pending[LayoutsMap])
+      .useStateView(Pot.pending[LayoutsMap])
       // Keep a record of the initial target layouut
       .useMemo(())(_ => defaultTargetLayouts)
       // Load the config from user prefrences
@@ -595,7 +564,7 @@ object TargetTabContents {
       }
       .useSingleEffect(debounce = 1.second)
       // Shared obs conf (posAngle/obsTime)
-      .useStateViewWithReuse(ObsConfiguration(PosAngle.Default, Instant.now))
+      .useStateView(ObsConfiguration(PosAngle.Default, Instant.now))
       // DELETEME: For demos read from local obs
       .useEffectWithDepsBy((p, _, _, _, _, _, _) => (p.focusedObsSet, p.focusedTarget)) {
         (p, _, _, _, _, _, obsConf) => _ =>
@@ -608,7 +577,7 @@ object TargetTabContents {
                 .getOrElse(IO.unit)
             }
       }
-      .useStreamResourceViewWithReuseOnMountBy { (props, _, _, _, _, _, _) =>
+      .useStreamResourceViewOnMountBy { (props, _, _, _, _, _, _) =>
         implicit val ctx = props.ctx
 
         AsterismGroupObsQuery
@@ -619,7 +588,7 @@ object TargetTabContents {
             TargetQueriesGQL.ProgramTargetEditSubscription.subscribe[IO](props.programId)
           )
       }
-      .renderWithReuse {
+      .render {
         (
           props,
           twoPanelState,
@@ -634,7 +603,7 @@ object TargetTabContents {
 
           <.div(
             potRender(
-              Reuse(renderFn _)(
+              renderFn(
                 props,
                 twoPanelState,
                 defaultLayout,

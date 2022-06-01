@@ -3,7 +3,6 @@
 
 package explore.config
 
-import crystal.react.ReuseView
 import crystal.react.View
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
@@ -14,7 +13,6 @@ import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ScienceModeAdvanced
 import explore.model.ScienceModeBasic
-import explore.model.reusability._
 import explore.optics._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -39,9 +37,9 @@ sealed trait AdvancedConfigurationPanel[T <: ScienceModeAdvanced, S <: ScienceMo
   val obsId: Observation.Id
   val title: String
   val subtitle: Option[NonEmptyString]
-  val scienceModeAdvanced: Reuse[View[T]]
+  val scienceModeAdvanced: View[T]
   val scienceModeBasic: S
-  val onShowBasic: Reuse[Callback]
+  val onShowBasic: Callback
 
   implicit val ctx: AppContextIO
 }
@@ -59,8 +57,6 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
   Gain: Enumerated: Display,
   Roi: Enumerated: Display
 ] {
-  protected implicit val reuseProps: Reusability[Props]
-
   @inline protected val overrideGratingLens: Lens[T, Option[Grating]]
   @inline protected val overrideFilterLens: Lens[T, Option[Filter]]
   @inline protected val overrideFpuLens: Lens[T, Option[Fpu]]
@@ -90,7 +86,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
   val component =
     ScalaFnComponent
       .withHooks[Props]
-      .renderWithReuse { props =>
+      .render { props =>
         implicit val ctx = props.ctx
 
         Form(size = Small)(
@@ -102,21 +98,21 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             ExploreStyles.AdvancedConfigurationCol1
           )(
             <.label("Grating", HelpIcon("configuration/grating.md")),
-            EnumViewOptionalSelect[ReuseView, Grating](
+            EnumViewOptionalSelect(
               id = "override-grating",
               value = props.scienceModeAdvanced.zoom(overrideGratingLens),
               clearable = true,
               placeholder = gratingLens.get(props.scienceModeBasic).shortName
             ),
             <.label("Filter", HelpIcon("configuration/filter.md"), ExploreStyles.SkipToNext),
-            EnumViewOptionalSelect[ReuseView, Filter](
+            EnumViewOptionalSelect(
               id = "override-filter",
               value = props.scienceModeAdvanced.zoom(overrideFilterLens),
               clearable = true,
               placeholder = filterLens.get(props.scienceModeBasic).map(_.shortName).orUndefined
             ),
             <.label("FPU", HelpIcon("configuration/fpu.md"), ExploreStyles.SkipToNext),
-            EnumViewOptionalSelect[ReuseView, Fpu](
+            EnumViewOptionalSelect(
               id = "override-fpu",
               value = props.scienceModeAdvanced.zoom(overrideFpuLens),
               clearable = true,
@@ -125,21 +121,21 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
           ),
           <.div(ExploreStyles.ExploreForm, ExploreStyles.AdvancedConfigurationCol2)(
             <.label("Binning", HelpIcon("configuration/binning.md")),
-            EnumViewOptionalSelect[ReuseView, (XBinning, YBinning)](
+            EnumViewOptionalSelect(
               id = "explicitXBin",
               value =
                 props.scienceModeAdvanced.zoom(unsafeDisjointOptionZip(explicitXBin, explicitYBin)),
               clearable = true
             ),
             <.label("Read Mode", HelpIcon("configuration/read-mode.md"), ExploreStyles.SkipToNext),
-            EnumViewOptionalSelect[ReuseView, (ReadMode, Gain)](
+            EnumViewOptionalSelect(
               id = "explicitReadMode",
               value = props.scienceModeAdvanced
                 .zoom(unsafeDisjointOptionZip(explicitReadMode, explicitGain)),
               clearable = true
             ),
             <.label("ROI", HelpIcon("configuration/roi.md"), ExploreStyles.SkipToNext),
-            EnumViewOptionalSelect[ReuseView, Roi](
+            EnumViewOptionalSelect(
               id = "explicitRoi",
               value = props.scienceModeAdvanced.zoom(explicitRoi),
               clearable = true
@@ -202,9 +198,9 @@ object AdvancedConfigurationPanel {
     obsId:               Observation.Id,
     title:               String,
     subtitle:            Option[NonEmptyString],
-    scienceModeAdvanced: Reuse[View[ScienceModeAdvanced.GmosNorthLongSlit]],
+    scienceModeAdvanced: View[ScienceModeAdvanced.GmosNorthLongSlit],
     scienceModeBasic:    ScienceModeBasic.GmosNorthLongSlit,
-    onShowBasic:         Reuse[Callback]
+    onShowBasic:         Callback
   )(implicit val ctx:    AppContextIO)
       extends ReactFnProps[AdvancedConfigurationPanel.GmosNorthLongSlit](
         AdvancedConfigurationPanel.GmosNorthLongSlit.component
@@ -223,9 +219,6 @@ object AdvancedConfigurationPanel {
         GmosNorthFilter,
         GmosNorthFpu,
       ] {
-    override implicit protected lazy val reuseProps: Reusability[GmosNorthLongSlit] =
-      Reusability.derive
-
     @inline override protected lazy val overrideGratingLens =
       ScienceModeAdvanced.GmosNorthLongSlit.overrideGrating
     @inline override protected lazy val overrideFilterLens  =
@@ -254,9 +247,9 @@ object AdvancedConfigurationPanel {
     obsId:               Observation.Id,
     title:               String,
     subtitle:            Option[NonEmptyString],
-    scienceModeAdvanced: Reuse[View[ScienceModeAdvanced.GmosSouthLongSlit]],
+    scienceModeAdvanced: View[ScienceModeAdvanced.GmosSouthLongSlit],
     scienceModeBasic:    ScienceModeBasic.GmosSouthLongSlit,
-    onShowBasic:         Reuse[Callback]
+    onShowBasic:         Callback
   )(implicit val ctx:    AppContextIO)
       extends ReactFnProps[AdvancedConfigurationPanel.GmosSouthLongSlit](
         AdvancedConfigurationPanel.GmosSouthLongSlit.component
@@ -275,9 +268,6 @@ object AdvancedConfigurationPanel {
         GmosSouthFilter,
         GmosSouthFpu,
       ] {
-    override implicit protected lazy val reuseProps: Reusability[GmosSouthLongSlit] =
-      Reusability.derive
-
     @inline override protected lazy val overrideGratingLens =
       ScienceModeAdvanced.GmosSouthLongSlit.overrideGrating
     @inline override protected lazy val overrideFilterLens  =

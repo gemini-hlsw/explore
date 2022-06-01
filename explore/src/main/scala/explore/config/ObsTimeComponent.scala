@@ -4,7 +4,7 @@
 package explore.config
 
 import cats.syntax.all._
-import crystal.react.ReuseView
+import crystal.react.View
 import eu.timepit.refined.auto._
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
@@ -18,14 +18,12 @@ import java.time.Instant
 import scalajs.js
 import scalajs.js.|
 
-final case class ObsTimeComponent(
-  instant: ReuseView[Instant]
-) extends ReactFnProps[ObsTimeComponent](ObsTimeComponent.component)
+final case class ObsTimeComponent(instant: View[Instant])
+    extends ReactFnProps[ObsTimeComponent](ObsTimeComponent.component)
 
 object ObsTimeComponent {
   type Props = ObsTimeComponent
-  implicit val reuse: Reusability[Props] = Reusability.derive
-  //
+
   // TODO Move these to react-datetime
   implicit class InstantOps(val instant: Instant) extends AnyVal {
     // DatePicker only works in local timezone, so we trick it by adding the timezone offset.
@@ -71,18 +69,17 @@ object ObsTimeComponent {
   }
 
   val component =
-    ScalaFnComponent
-      .withReuse[Props] { p =>
-        <.div(
-          ExploreStyles.ObsConfigurationObsTime,
-          <.label("Observation time", HelpIcon("configuration/obstime.md")),
-          Datepicker(onChange =
-            (newValue, _) => newValue.fromDatePickerToInstantOpt.foldMap(p.instant.set)
-          )
-            .showTimeInput(true)
-            .selected(p.instant.get.toDatePickerJsDate)
-            .dateFormat("yyyy-MM-dd HH:mm"),
-          "UTC"
+    ScalaFnComponent[Props] { p =>
+      <.div(
+        ExploreStyles.ObsConfigurationObsTime,
+        <.label("Observation time", HelpIcon("configuration/obstime.md")),
+        Datepicker(onChange =
+          (newValue, _) => newValue.fromDatePickerToInstantOpt.foldMap(p.instant.set)
         )
-      }
+          .showTimeInput(true)
+          .selected(p.instant.get.toDatePickerJsDate)
+          .dateFormat("yyyy-MM-dd HH:mm"),
+        "UTC"
+      )
+    }
 }

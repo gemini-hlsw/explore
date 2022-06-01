@@ -10,6 +10,8 @@ import cats.effect.kernel.Resource
 import cats.syntax.all._
 import clue._
 import coulomb.Quantity
+import crystal.ViewF
+import crystal.ViewOptF
 import crystal.react.ReuseViewF
 import crystal.react.ReuseViewOptF
 import crystal.react.reuse._
@@ -56,8 +58,8 @@ trait ListImplicits {
     ): Out = hlists.map(_.map(singleton)).combineAll
   }
 
-  implicit class ViewListOps[F[_]: Monad, A](val viewList: ReuseViewF[F, List[A]]) {
-    def toListOfViews: List[ReuseViewF[F, A]] =
+  implicit class ViewListOps[F[_]: Monad, A](val viewList: ViewF[F, List[A]]) {
+    def toListOfViews: List[ViewF[F, A]] =
       // It's safe to "get" since we are only invoking for existing indices.
       viewList.get.indices.toList.map { i =>
         val atIndex = index[List[A], Int, A](i)
@@ -66,8 +68,8 @@ trait ListImplicits {
       }
   }
 
-  implicit class ViewMapOps[F[_]: Monad, K, V](val viewMap: ReuseViewF[F, Map[K, V]]) {
-    def toListOfViews: List[(K, ReuseViewF[F, V])] =
+  implicit class ViewMapOps[F[_]: Monad, K, V](val viewMap: ViewF[F, Map[K, V]]) {
+    def toListOfViews: List[(K, ViewF[F, V])] =
       // It's safe to "get" since we are only invoking for existing keys.
       viewMap.get.keys.toList.map(k =>
         k -> viewMap.zoom(at[Map[K, V], K, Option[V]](k)).zoom(_.get)(f => _.map(f))
@@ -141,9 +143,13 @@ object implicits
   }
 
   // Coulomb implicits
-  implicit class CoulombReuseViewOps[F[_], N, U](val self: ReuseViewF[F, Quantity[N, U]])
+  implicit class CoulombViewOps[F[_], N, U](val self: ViewF[F, Quantity[N, U]]) extends AnyVal {
+    def stripQuantity: ViewF[F, N] = self.as(quantityIso[N, U])
+  }
+
+  implicit class CoulombViewOptOps[F[_], N, U](val self: ViewOptF[F, Quantity[N, U]])
       extends AnyVal {
-    def stripQuantity(implicit F: Monad[F]): ReuseViewF[F, N] = self.as(quantityIso[N, U])
+    def stripQuantity: ViewOptF[F, N] = self.as(quantityIso[N, U])
   }
 
   implicit class CoulombReuseViewOptOps[F[_], N, U](val self: ReuseViewOptF[F, Quantity[N, U]])

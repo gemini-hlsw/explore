@@ -5,7 +5,7 @@ package explore.targeteditor
 
 import cats.effect.IO
 import cats.syntax.all._
-import crystal.react.ReuseView
+import crystal.react.View
 import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.Icons
@@ -40,17 +40,15 @@ import scalajs.js.JSConverters._
 
 final case class TargetTable(
   obsIds:           ObsIdSet,
-  targets:          ReuseView[Option[Asterism]],
-  hiddenColumns:    ReuseView[Set[String]],
-  selectedTarget:   ReuseView[Option[Target.Id]],
+  targets:          View[Option[Asterism]],
+  hiddenColumns:    View[Set[String]],
+  selectedTarget:   View[Option[Target.Id]],
   renderInTitle:    Tile.RenderInTitle
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[TargetTable](TargetTable.component)
 
 object TargetTable {
   type Props = TargetTable
-
-  implicit protected val propsReuse: Reusability[Props] = Reusability.derive
 
   protected val TargetTable = TableDef[SiderealTargetWithId].withSortBy
 
@@ -76,7 +74,7 @@ object TargetTable {
     ScalaFnComponent
       .withHooks[Props]
       // cols
-      .useMemoBy(props => (props.obsIds, props.targets)) { props => _ =>
+      .useMemoBy(props => (props.obsIds, props.targets.get)) { props => _ =>
         implicit val ctx = props.ctx
 
         def column[V](id: String, accessor: SiderealTargetWithId => V) =
@@ -113,7 +111,7 @@ object TargetTable {
             .allColumns
       }
       // rows
-      .useMemoBy((props, _) => props.targets)((_, _) => _.get.foldMap(_.toSidereal))
+      .useMemoBy((props, _) => props.targets.get)((_, _) => _.foldMap(_.toSidereal))
       .useTableBy((props, cols, rows) =>
         TargetTable(
           cols,
@@ -133,7 +131,7 @@ object TargetTable {
           }.reuseCurrying(props.hiddenColumns.get)
         )
       )
-      .renderWithReuse((props, _, rows, tableInstance) =>
+      .render((props, _, rows, tableInstance) =>
         React.Fragment(
           props.renderInTitle(
             <.span(ExploreStyles.TitleSelectColumns)(

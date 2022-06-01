@@ -5,10 +5,9 @@ package explore.config
 
 import cats.implicits._
 import coulomb.Quantity
-import crystal.react.ReuseView
+import crystal.react.View
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
-import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.model.AvailableFilter
@@ -20,14 +19,12 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.FilterType
-import lucuma.core.math.Angle
 import lucuma.core.math.units._
 import lucuma.core.util.Display
 import lucuma.ui.forms.EnumViewOptionalSelect
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.ValidFormatInput
-import lucuma.ui.reusability._
 import react.common._
 import react.semanticui.collections.menu.MenuHeader
 import react.semanticui.modules.dropdown._
@@ -38,17 +35,14 @@ import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
 
 final case class ImagingConfigurationPanel(
-  options: ReuseView[ImagingConfigurationOptions]
+  options: View[ImagingConfigurationOptions]
 ) extends ReactFnProps[ImagingConfigurationPanel](ImagingConfigurationPanel.component)
 
 object ImagingConfigurationPanel {
   type Props         = ImagingConfigurationPanel
   type SectionHeader = String
 
-  implicit val capabDisplay: Display[ImagingCapabilities]             = Display.by(_.label, _.label)
-  implicit val optionsReuse: Reusability[ImagingConfigurationOptions] = Reusability.derive
-  implicit val avalableFiltersReuse: Reusability[AvailableFilter]     = Reusability.by(_.tag)
-  implicit val propsReuse: Reusability[Props]                         = Reusability.derive
+  implicit val capabDisplay: Display[ImagingCapabilities] = Display.by(_.label, _.label)
 
   val byFilterType = ImagingConfigurationOptions.availableOptions.groupBy(_.filterType)
   val broadBand    = byFilterType.getOrElse(FilterType.BroadBand, Nil).sortBy(_.centralWavelength)
@@ -100,64 +94,63 @@ object ImagingConfigurationPanel {
         combination.map(f => f.asRight.some))
 
   protected val component =
-    ScalaFnComponent
-      .withReuse[Props] { p =>
-        val filters       = p.options.zoom(ImagingConfigurationOptions.filters)
-        val fov           = p.options.zoom(ImagingConfigurationOptions.fov)
-        val signalToNoise = p.options.zoom(ImagingConfigurationOptions.signalToNoise)
-        val capabilities  = p.options.zoom(ImagingConfigurationOptions.capabilities)
+    ScalaFnComponent[Props] { p =>
+      val filters       = p.options.zoom(ImagingConfigurationOptions.filters)
+      val fov           = p.options.zoom(ImagingConfigurationOptions.fov)
+      val signalToNoise = p.options.zoom(ImagingConfigurationOptions.signalToNoise)
+      val capabilities  = p.options.zoom(ImagingConfigurationOptions.capabilities)
 
-        ReactFragment(
-          <.label("Filter", HelpIcon("configuration/filter.md"), ExploreStyles.SkipToNext),
-          Dropdown(
-            placeholder = "Filters",
-            clazz = ExploreStyles.ConfigurationFilter,
-            selection = true,
-            multiple = true,
-            search = true,
-            value = filters.get.toList.map(_.tag).toJSArray,
-            options = options.collect { case Some(x) => filterItem(x) },
-            onChange = (ddp: Dropdown.DropdownProps) =>
-              ddp.value.toOption
-                .map(r =>
-                  ((r: Any) match {
-                    case v: js.Array[_] =>
-                      filters.set(valuesToFilters(v.collect { case s: String => s }))
-                    case _              => Callback.empty
-                  })
-                )
-                .getOrEmpty
-          ),
-          <.label("Field of View", HelpIcon("configuration/fov.md"), ExploreStyles.SkipToNext),
-          InputWithUnits[ReuseView, Option[Angle]](
-            id = "configuration-fov",
-            clazz = Css.Empty,
-            inline = true,
-            value = fov,
-            units = "arcsec",
-            validFormat = ValidFormatInput.fromFormat(formatArcsec).optional,
-            changeAuditor = ChangeAuditor.fromFormat(formatArcsec).optional,
-            disabled = false
-          ),
-          <.label("S / N", HelpIcon("configuration/signal_to_noise.md"), ExploreStyles.SkipToNext),
-          FormInputEV[ReuseView, Option[PosBigDecimal]](
-            id = "signal-to-noise",
-            value = signalToNoise,
-            validFormat = ValidFormatInput.forPosBigDecimal().optional,
-            changeAuditor = ChangeAuditor.posBigDecimal().optional
-          ),
-          <.label("Capabilities",
-                  HelpIcon("configuration/capabilities.md"),
-                  ExploreStyles.SkipToNext
-          ),
-          EnumViewOptionalSelect[ReuseView, ImagingCapabilities](
-            id = "imaging-capabilities",
-            clazz = ExploreStyles.ConfigurationCapabilities,
-            clearable = true,
-            upward = true,
-            placeholder = "Extra capablities",
-            value = capabilities
-          )
+      ReactFragment(
+        <.label("Filter", HelpIcon("configuration/filter.md"), ExploreStyles.SkipToNext),
+        Dropdown(
+          placeholder = "Filters",
+          clazz = ExploreStyles.ConfigurationFilter,
+          selection = true,
+          multiple = true,
+          search = true,
+          value = filters.get.toList.map(_.tag).toJSArray,
+          options = options.collect { case Some(x) => filterItem(x) },
+          onChange = (ddp: Dropdown.DropdownProps) =>
+            ddp.value.toOption
+              .map(r =>
+                ((r: Any) match {
+                  case v: js.Array[_] =>
+                    filters.set(valuesToFilters(v.collect { case s: String => s }))
+                  case _              => Callback.empty
+                })
+              )
+              .getOrEmpty
+        ),
+        <.label("Field of View", HelpIcon("configuration/fov.md"), ExploreStyles.SkipToNext),
+        InputWithUnits(
+          id = "configuration-fov",
+          clazz = Css.Empty,
+          inline = true,
+          value = fov,
+          units = "arcsec",
+          validFormat = ValidFormatInput.fromFormat(formatArcsec).optional,
+          changeAuditor = ChangeAuditor.fromFormat(formatArcsec).optional,
+          disabled = false
+        ),
+        <.label("S / N", HelpIcon("configuration/signal_to_noise.md"), ExploreStyles.SkipToNext),
+        FormInputEV(
+          id = "signal-to-noise",
+          value = signalToNoise,
+          validFormat = ValidFormatInput.forPosBigDecimal().optional,
+          changeAuditor = ChangeAuditor.posBigDecimal().optional
+        ),
+        <.label("Capabilities",
+                HelpIcon("configuration/capabilities.md"),
+                ExploreStyles.SkipToNext
+        ),
+        EnumViewOptionalSelect(
+          id = "imaging-capabilities",
+          clazz = ExploreStyles.ConfigurationCapabilities,
+          clearable = true,
+          upward = true,
+          placeholder = "Extra capablities",
+          value = capabilities
         )
-      }
+      )
+    }
 }

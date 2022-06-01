@@ -19,11 +19,9 @@ import lucuma.core.math.Coordinates
 import lucuma.core.math.skycalc.ImprovedSkyCalc
 import lucuma.core.model.ObservingNight
 import lucuma.core.util.Enumerated
-import lucuma.ui.reusability._
 import react.common._
 import react.highcharts.Chart
 import react.moon.MoonPhase
-import react.resizeDetector._
 import react.resizeDetector.hooks._
 import shapeless.Generic
 import shapeless.HNil
@@ -49,11 +47,6 @@ final case class SkyPlotNight(
 
 object SkyPlotNight {
   type Props = SkyPlotNight
-
-  implicit private val propsReuse: Reusability[Props]                    = Reusability.derive
-  // series doesn't trigger rerenders. We keep track of what is shown in case there is a
-  // rerender due to a change of properties.
-  implicit private val stateReuse: Reusability[HashSet[ElevationSeries]] = Reusability.always
 
   sealed trait TimeDisplay
   object TimeDisplay {
@@ -162,15 +155,12 @@ object SkyPlotNight {
     )
   }
 
-  implicit val reusabilityUseResizeDetectorReturn: Reusability[UseResizeDetectorReturn] =
-    Reusability.never
-
   val component =
     ScalaFnComponent
       .withHooks[Props]
       .useState(HashSet.from(Enumerated[ElevationSeries].all))
       .useResizeDetector()
-      .renderWithReuse { (props, shownSeries, resize) =>
+      .render { (props, shownSeries, resize) =>
         def showSeriesCB(series: ElevationSeries, chart: Chart_): Callback =
           shownSeries.modState(_ + series) >>
             Callback {

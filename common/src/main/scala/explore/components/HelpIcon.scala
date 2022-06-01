@@ -24,12 +24,9 @@ object HelpIcon {
 
   type HelpId = NonEmptyFiniteString[20]
 
-  implicit val helpReusability: Reusability[HelpIcon] =
-    Reusability.by(x => (x.id.value, x.clazz.map(_.htmlClass)))
-
   val component = ScalaFnComponent
     .withHooks[Props]
-    .renderWithReuse { p =>
+    .render { p =>
       HelpCtx.usingView { help =>
         val helpMsg = help.zoom(HelpContext.displayedHelp)
         <.span(

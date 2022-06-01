@@ -23,15 +23,13 @@ import reactST.reactTable._
 
 final case class TargetSelectionTable(
   targets:       List[TargetSearchResult],
-  onSelected:    TargetSearchResult ==> Callback,
+  onSelected:    TargetSearchResult => Callback,
   selectedIndex: Option[Int],
-  onClick:       (TargetSearchResult, Int) ==> Callback
+  onClick:       (TargetSearchResult, Int) => Callback
 ) extends ReactFnProps[TargetSelectionTable](TargetSelectionTable.component)
 
 object TargetSelectionTable {
   type Props = TargetSelectionTable
-
-  implicit protected val propsReuse: Reusability[Props] = Reusability.derive
 
   protected val TargetTable = TableDef[TargetSearchResult].withSortBy
 
@@ -79,7 +77,7 @@ object TargetSelectionTable {
       )
     )
     // .useMemo
-    .renderWithReuse((props, _, _, tableInstance) =>
+    .render((props, _, _, tableInstance) =>
       TargetTableComponent(
         table = Table(celled = true,
                       selectable = true,
@@ -102,7 +100,7 @@ object TargetSelectionTable {
               props.selectedIndex.contains_(rowData.index.toInt)
             )
           )(
-            ^.onClick --> props.onClick((rowData.original, rowData.index.toInt)),
+            ^.onClick --> props.onClick(rowData.original, rowData.index.toInt),
             props2Attrs(rowData.getRowProps())
           ),
         cell = (cell: TargetTable.CellType[_]) =>

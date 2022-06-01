@@ -4,9 +4,8 @@
 package explore.targeteditor
 
 import cats.syntax.all._
-import crystal.react.ReuseView
+import crystal.react.View
 import crystal.react.hooks._
-import crystal.react.reuse._
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.GuideStarCandidate
@@ -40,14 +39,14 @@ import java.time.ZoneId
 import scala.concurrent.duration._
 
 final case class AladinContainer(
-  target:                 ReuseView[SiderealTracking],
+  target:                 View[SiderealTracking],
   obsConf:                Option[ObsConfiguration],
   scienceMode:            Option[ScienceMode],
   options:                TargetVisualOptions,
-  updateMouseCoordinates: Coordinates ==> Callback,
-  updateFov:              Fov ==> Callback, // TODO Move the functionality of saving the FOV in ALadincell here
-  updateViewOffset:       Offset ==> Callback,
-  centerOnTarget:         ReuseView[Boolean],
+  updateMouseCoordinates: Coordinates => Callback,
+  updateFov:              Fov => Callback, // TODO Move the functionality of saving the FOV in ALadincell here
+  updateViewOffset:       Offset => Callback,
+  centerOnTarget:         View[Boolean],
   guideStarCandidates:    List[GuideStarCandidate]
 ) extends ReactFnProps[AladinContainer](AladinContainer.component)
 
@@ -58,8 +57,7 @@ object AladinContainer {
   val DefaultWorld2PixFn: World2PixFn = (_: Coordinates) => None
 
   // This is used for screen coordinates, thus it doesn't need a lot of precission
-  private implicit val doubleReuse                      = Reusability.double(1.0)
-  protected implicit val propsReuse: Reusability[Props] = Reusability.derive
+  private implicit val doubleReuse = Reusability.double(1.0)
 
   val AladinComp = Aladin.component
 
@@ -227,102 +225,96 @@ object AladinContainer {
           } else Nil
         }
       }
-      .renderWithReuse {
-        (props, baseCoordinates, currentPos, _, aladinRef, world2pix, resize, candidates) =>
-          /**
-           * Called when the position changes, i.e. aladin pans. We want to offset the visualization
-           * to keep the internal target correct
-           */
-          def onPositionChanged(u: PositionChanged): Callback = {
-            val viewCoords = Coordinates(u.ra, u.dec)
-            val viewOffset = baseCoordinates.value.diff(viewCoords).offset
-            currentPos.setState(Some(viewCoords)) *>
-              props.updateViewOffset(viewOffset) *>
-              props.centerOnTarget.set(false)
-          }
+      .render { (props, baseCoordinates, currentPos, _, aladinRef, world2pix, resize, candidates) =>
+        /**
+         * Called when the position changes, i.e. aladin pans. We want to offset the visualization
+         * to keep the internal target correct
+         */
+        def onPositionChanged(u: PositionChanged): Callback = {
+          val viewCoords = Coordinates(u.ra, u.dec)
+          val viewOffset = baseCoordinates.value.diff(viewCoords).offset
+          currentPos.setState(Some(viewCoords)) *>
+            props.updateViewOffset(viewOffset) *>
+            props.centerOnTarget.set(false)
+        }
 
-          def onZoom = (v: Fov) => props.updateFov(v)
+        def onZoom = (v: Fov) => props.updateFov(v)
 
-          def includeSvg(v: JsAladin): Callback =
-            v.onZoom(onZoom) *> // re render on zoom
-              v.onPositionChanged(onPositionChanged) *>
-              v.onMouseMove(s =>
-                props
-                  .updateMouseCoordinates(Coordinates(s.ra, s.dec))
-                  .rateLimit(200.millis, 1)
-                  .void
-              )
-
-          val baseCoordinatesForAladin: String =
-            currentPos.value
-              .map(Coordinates.fromHmsDms.reverseGet)
-              .getOrElse(Coordinates.fromHmsDms.reverseGet(baseCoordinates.value))
-
-          val showBase = props.obsConf.isDefined
-
-          val overlayTargets = if (showBase) {
-            List(
-              SVGTarget.CrosshairTarget(baseCoordinates.value, ExploreStyles.ScienceTarget, 10),
-              SVGTarget.CircleTarget(props.target.get.baseCoordinates, ExploreStyles.BaseTarget, 3),
-              SVGTarget.LineTo(baseCoordinates.value,
-                               props.target.get.baseCoordinates,
-                               ExploreStyles.PMCorrectionLine
-              )
-            )
-          } else
-            List(
-              SVGTarget.CrosshairTarget(baseCoordinates.value, ExploreStyles.ScienceTarget, 10)
+        def includeSvg(v: JsAladin): Callback =
+          v.onZoom(onZoom) *> // re render on zoom
+            v.onPositionChanged(onPositionChanged) *>
+            v.onMouseMove(s =>
+              props
+                .updateMouseCoordinates(Coordinates(s.ra, s.dec))
+                .rateLimit(200.millis, 1)
+                .void
             )
 
-          <.div(
-            ExploreStyles.AladinContainerBody,
-            // This is a bit tricky. Sometimes the height can be 0 or a very low number.
-            // This happens during a second render. If we let the height to be zero, aladin
-            // will take it as 1. This height ends up being a denominator, which, if low,
-            // will make aladin request a large amount of tiles and end up freeze explore.
-            if (resize.height.exists(_ >= 100)) {
-              ReactFragment(
-                <.div(
-                  ExploreStyles.AladinZoomControl,
-                  Button(size = Small,
-                         icon = true,
-                         onClick = aladinRef.get.asCBO.flatMapCB(_.backend.increaseZoom).toCallback
-                  )(
-                    ExploreStyles.ButtonOnAladin,
-                    Icons.ThinPlus
-                  ),
-                  Button(size = Small,
-                         icon = true,
-                         onClick = aladinRef.get.asCBO.flatMapCB(_.backend.decreaseZoom).toCallback
-                  )(
-                    ExploreStyles.ButtonOnAladin,
-                    Icons.ThinMinus
-                  )
-                ),
-                (resize.width, resize.height)
-                  .mapN(
-                    SVGTargetsOverlay(
-                      _,
-                      _,
-                      world2pix.value,
-                      overlayTargets ++ candidates
-                    )
-                  ),
-                AladinComp.withRef(aladinRef) {
-                  Aladin(
-                    ExploreStyles.TargetAladin,
-                    showReticle = false,
-                    showLayersControl = false,
-                    target = baseCoordinatesForAladin,
-                    fov = props.options.fovAngle,
-                    showGotoControl = false,
-                    showZoomControl = false,
-                    customize = includeSvg _
-                  )
-                }
-              )
-            } else EmptyVdom
+        val baseCoordinatesForAladin: String =
+          currentPos.value
+            .map(Coordinates.fromHmsDms.reverseGet)
+            .getOrElse(Coordinates.fromHmsDms.reverseGet(baseCoordinates.value))
+
+        val showBase = props.obsConf.isDefined
+
+        val overlayTargets = if (showBase) {
+          List(
+            SVGTarget.CrosshairTarget(baseCoordinates.value, ExploreStyles.ScienceTarget, 10),
+            SVGTarget.CircleTarget(props.target.get.baseCoordinates, ExploreStyles.BaseTarget, 3),
+            SVGTarget.LineTo(baseCoordinates.value,
+                             props.target.get.baseCoordinates,
+                             ExploreStyles.PMCorrectionLine
+            )
           )
-            .withRef(resize.ref)
+        } else
+          List(
+            SVGTarget.CrosshairTarget(baseCoordinates.value, ExploreStyles.ScienceTarget, 10)
+          )
+
+        <.div(
+          ExploreStyles.AladinContainerBody,
+          // This is a bit tricky. Sometimes the height can be 0 or a very low number.
+          // This happens during a second render. If we let the height to be zero, aladin
+          // will take it as 1. This height ends up being a denominator, which, if low,
+          // will make aladin request a large amount of tiles and end up freeze explore.
+          if (resize.height.exists(_ >= 100)) {
+            ReactFragment(
+              <.div(
+                ExploreStyles.AladinZoomControl,
+                Button(size = Small,
+                       icon = true,
+                       onClick = aladinRef.get.asCBO.flatMapCB(_.backend.increaseZoom).toCallback
+                )(
+                  ExploreStyles.ButtonOnAladin,
+                  Icons.ThinPlus
+                ),
+                Button(size = Small,
+                       icon = true,
+                       onClick = aladinRef.get.asCBO.flatMapCB(_.backend.decreaseZoom).toCallback
+                )(
+                  ExploreStyles.ButtonOnAladin,
+                  Icons.ThinMinus
+                )
+              ),
+              (resize.width, resize.height)
+                .mapN(
+                  SVGTargetsOverlay(_, _, world2pix.value, overlayTargets ++ candidates)
+                ),
+              AladinComp.withRef(aladinRef) {
+                Aladin(
+                  ExploreStyles.TargetAladin,
+                  showReticle = false,
+                  showLayersControl = false,
+                  target = baseCoordinatesForAladin,
+                  fov = props.options.fovAngle,
+                  showGotoControl = false,
+                  showZoomControl = false,
+                  customize = includeSvg _
+                )
+              }
+            )
+          } else EmptyVdom
+        )
+          .withRef(resize.ref)
       }
 }

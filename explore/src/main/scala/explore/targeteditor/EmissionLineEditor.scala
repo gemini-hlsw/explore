@@ -6,8 +6,10 @@ package explore.targeteditor
 import cats.Order._
 import cats.syntax.all._
 import coulomb._
-import crystal.react.ReuseView
+import crystal.react.View
 import crystal.react.hooks._
+import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.numeric.PosBigDecimal
@@ -41,18 +43,16 @@ import scala.collection.immutable.SortedMap
 import scala.math.BigDecimal.RoundingMode
 
 sealed trait EmissionLineEditor[T] {
-  val emissionLines: ReuseView[SortedMap[Wavelength, EmissionLine[T]]]
+  val emissionLines: View[SortedMap[Wavelength, EmissionLine[T]]]
   val disabled: Boolean
 }
 
 sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T]](implicit
   enumUnits: Enumerated[Units Of LineFlux[T]]
 ) {
-  implicit protected def propsReuse: Reusability[Props] // Abstract
-
   private val defaultLineUnits: Units Of LineFlux[T] = enumUnits.all.head
 
-  private type RowValue = (Wavelength, ReuseView[EmissionLine[T]])
+  private type RowValue = (Wavelength, View[EmissionLine[T]])
 
   private val EmissionLineTableRef = TableDef[RowValue].withSortBy.withFlexLayout
 
@@ -62,7 +62,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
 
   val component = ScalaFnComponent
     .withHooks[Props]
-    .useMemoBy(props => (props.emissionLines, props.disabled)) { _ => // Memo cols
+    .useMemoBy(props => (props.emissionLines.reuseByValue, props.disabled)) { _ => // Memo cols
       { case (emissionLines, disabled) =>
         List(
           EmissionLineTableRef
@@ -85,7 +85,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
             )
             .setHeader("Width (km/s)")
             .setCell(cell =>
-              FormInputEV[ReuseView, PosBigDecimal](
+              FormInputEV[View, PosBigDecimal](
                 id = NonEmptyString.unsafeFrom(s"lineWidth_${cell.row.id}"),
                 value = cell.value,
                 validFormat = ValidFormatInput.forPosBigDecimal(),
@@ -105,7 +105,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
             )
             .setHeader("Brightness")
             .setCell(cell =>
-              FormInputEV[ReuseView, PosBigDecimal](
+              FormInputEV[View, PosBigDecimal](
                 id = NonEmptyString.unsafeFrom(s"lineValue_${cell.row.id}"),
                 value = cell.value,
                 validFormat = ValidFormatInput.forScientificNotationPosBigDecimal(),
@@ -125,7 +125,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
             )
             .setHeader("Units")
             .setCell(cell =>
-              EnumViewSelect[ReuseView, Units Of LineFlux[T]](
+              EnumViewSelect[View, Units Of LineFlux[T]](
                 id = NonEmptyString.unsafeFrom(s"lineUnits_${cell.row.id}"),
                 value = cell.value,
                 compact = true,
@@ -157,23 +157,24 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
       }
     }
     // rows
-    .useMemoBy((props, _) => props.emissionLines)((_, _) =>
-      _.widen[Map[Wavelength, EmissionLine[T]]].toListOfViews
+    .useMemoBy((props, _) => props.emissionLines.get)((props, _) =>
+      _ => props.emissionLines.widen[Map[Wavelength, EmissionLine[T]]].toListOfViews
     )
     .useTableBy((_, cols, rows) =>
-      EmissionLineTableRef(cols,
-                           rows,
-                           ((_: EmissionLineTableRef.OptionsType)
-                             .setRowIdFn(_._1.toPicometers.value.toString)
-                             .setInitialState(tableState))
-                             .reuseAlways
+      EmissionLineTableRef(
+        cols,
+        rows,
+        ((_: EmissionLineTableRef.OptionsType)
+          .setRowIdFn(_._1.toPicometers.value.toString)
+          .setInitialState(tableState))
+          .reuseAlways
       )
     )
     // newWavelength
-    .useStateViewWithReuse(none[Wavelength])
+    .useStateView(none[Wavelength])
     // addDisabled
-    .useStateViewWithReuse(true)
-    .renderWithReuse { (props, _, _, tableInstance, newWavelength, addDisabled) =>
+    .useStateView(true)
+    .render { (props, _, _, tableInstance, newWavelength, addDisabled) =>
       val addLine =
         newWavelength.get.foldMap(wavelength =>
           props.emissionLines.mod(emissionLines =>
@@ -189,7 +190,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
         <.div(
           ExploreStyles.BrightnessesTableFooter,
           "New line λ: ",
-          FormInputEV[ReuseView, Option[Wavelength]](
+          FormInputEV[View, Option[Wavelength]](
             id = "newWavelength",
             value = newWavelength,
             validFormat = ValidFormatInput.fromFormat(formatWavelengthMicron).optional,
@@ -202,11 +203,12 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
             clazz = ExploreStyles.NewEmissionLineWavelength
           ),
           "μm",
-          Button(size = Mini,
-                 compact = true,
-                 onClick = addLine,
-                 clazz = ExploreStyles.BrightnessAddButton,
-                 disabled = props.disabled || addDisabled.get
+          Button(
+            size = Mini,
+            compact = true,
+            onClick = addLine,
+            clazz = ExploreStyles.BrightnessAddButton,
+            disabled = props.disabled || addDisabled.get
           )(
             Icons.New
           )
@@ -215,11 +217,12 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
       <.div(ExploreStyles.ExploreTable |+| ExploreStyles.BrightnessesTableContainer)(
         <.label("Brightness"),
         EmissionLineTable.Component(
-          table = Table(celled = true,
-                        selectable = true,
-                        striped = true,
-                        unstackable = true,
-                        compact = TableCompact.Very
+          table = Table(
+            celled = true,
+            selectable = true,
+            striped = true,
+            unstackable = true,
+            compact = TableCompact.Very
           ),
           header = TableHeader(),
           emptyMessage = "No lines defined"
@@ -231,25 +234,19 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
 }
 
 final case class IntegratedEmissionLineEditor(
-  emissionLines: ReuseView[SortedMap[Wavelength, EmissionLine[Integrated]]],
+  emissionLines: View[SortedMap[Wavelength, EmissionLine[Integrated]]],
   disabled:      Boolean
 ) extends ReactFnProps[IntegratedEmissionLineEditor](IntegratedEmissionLineEditor.component)
     with EmissionLineEditor[Integrated]
 
 object IntegratedEmissionLineEditor
-    extends EmissionLineEditorBuilder[Integrated, IntegratedEmissionLineEditor] {
-  implicit protected lazy val propsReuse: Reusability[IntegratedEmissionLineEditor] =
-    Reusability.derive
-}
+    extends EmissionLineEditorBuilder[Integrated, IntegratedEmissionLineEditor]
 
 final case class SurfaceEmissionLineEditor(
-  emissionLines: ReuseView[SortedMap[Wavelength, EmissionLine[Surface]]],
+  emissionLines: View[SortedMap[Wavelength, EmissionLine[Surface]]],
   disabled:      Boolean
 ) extends ReactFnProps[SurfaceEmissionLineEditor](SurfaceEmissionLineEditor.component)
     with EmissionLineEditor[Surface]
 
 object SurfaceEmissionLineEditor
-    extends EmissionLineEditorBuilder[Surface, SurfaceEmissionLineEditor] {
-  implicit protected lazy val propsReuse: Reusability[SurfaceEmissionLineEditor] =
-    Reusability.derive
-}
+    extends EmissionLineEditorBuilder[Surface, SurfaceEmissionLineEditor]

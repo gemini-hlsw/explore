@@ -5,7 +5,7 @@ package explore.targets
 
 import cats.Order._
 import cats.syntax.all._
-import crystal.react.ReuseView
+import crystal.react.View
 import crystal.react.reuse._
 import explore.common.AsterismQueries._
 import explore.components.Tile
@@ -30,16 +30,14 @@ import scalajs.js.JSConverters._
 
 final case class TargetSummaryTable(
   targetGroupList:   TargetGroupList,
-  hiddenColumns:     ReuseView[Set[String]],
-  selectObservation: (Observation.Id, Target.Id) ==> Callback,
-  selectTarget:      Target.Id ==> Callback,
+  hiddenColumns:     View[Set[String]],
+  selectObservation: (Observation.Id, Target.Id) => Callback,
+  selectTarget:      Target.Id => Callback,
   renderInTitle:     Tile.RenderInTitle
 ) extends ReactFnProps[TargetSummaryTable](TargetSummaryTable.component)
 
 object TargetSummaryTable {
   type Props = TargetSummaryTable
-
-  implicit protected val propsReuse: Reusability[Props] = Reusability.derive
 
   protected val TargetTable = TableDef[TargetGroup].withSortBy
 
@@ -121,12 +119,13 @@ object TargetSummaryTable {
         <.div(
           props.renderInTitle(
             <.span(ExploreStyles.TitleSelectColumns)(
-              Dropdown(item = true,
-                       simple = true,
-                       pointing = Pointing.TopRight,
-                       scrolling = true,
-                       text = "Columns",
-                       clazz = ExploreStyles.SelectColumns
+              Dropdown(
+                item = true,
+                simple = true,
+                pointing = Pointing.TopRight,
+                scrolling = true,
+                text = "Columns",
+                clazz = ExploreStyles.SelectColumns
               )(
                 DropdownMenu()(
                   tableInstance.allColumns

@@ -8,7 +8,6 @@ import clue.data.Input
 import clue.data.syntax._
 import crystal.react._
 import crystal.react.hooks._
-import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.Aligner
@@ -21,14 +20,12 @@ import explore.implicits._
 import explore.model
 import explore.model.ITCTarget
 import explore.model.ObsConfiguration
-import explore.model.reusability._
 import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
 import lucuma.schemas.ObservationDB.Types._
-import lucuma.ui.reusability._
 import monocle.std.option.some
 import queries.common.ObsQueriesGQL
 import react.common._
@@ -37,8 +34,8 @@ final case class ConfigurationPanel(
   obsId:            Observation.Id,
   title:            String,
   subtitle:         Option[NonEmptyString],
-  obsConf:          ReuseView[ObsConfiguration],
-  scienceData:      Reuse[UndoContext[ScienceData]],
+  obsConf:          View[ObsConfiguration],
+  scienceData:      UndoContext[ScienceData],
   constraints:      ConstraintSet,
   itcTargets:       List[ITCTarget],
   renderInTitle:    Tile.RenderInTitle
@@ -48,46 +45,41 @@ final case class ConfigurationPanel(
 object ConfigurationPanel {
   type Props = ConfigurationPanel
 
-  protected implicit val propsReuse: Reusability[Props] = Reusability.derive
-
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStateViewWithReuse(false) // showAdvanced
-      .renderWithReuse { (props, showAdvanced) =>
+      .useStateView(false) // showAdvanced
+      .render { (props, showAdvanced) =>
         implicit val ctx: AppContextIO = props.ctx
 
         implicit val client = ctx.clients.odb // This shouldn't be necessary, but it seems to be
 
-        val requirementsCtx: Reuse[UndoSetter[ScienceRequirementsData]] =
-          props.scienceData.map(_.zoom(ScienceData.requirements))
+        val requirementsCtx: UndoSetter[ScienceRequirementsData] =
+          props.scienceData.zoom(ScienceData.requirements)
 
-        val modeAligner: Reuse[Aligner[Option[model.ScienceMode], Input[ScienceModeInput]]] =
-          props.scienceData
-            .map(ctx =>
-              Aligner(
-                ctx,
-                EditObservationInput(
-                  select = ObservationSelectInput(observationIds = List(props.obsId).assign),
-                  patch = ObservationPropertiesInput()
-                ),
-                (ObsQueriesGQL.EditObservationMutation.execute[IO] _).andThen(_.void)
-              ).zoom(
-                ScienceData.mode,
-                EditObservationInput.patch.andThen(ObservationPropertiesInput.scienceMode).modify
-              )
-            )
+        val modeAligner: Aligner[Option[model.ScienceMode], Input[ScienceModeInput]] =
+          Aligner(
+            props.scienceData,
+            EditObservationInput(
+              select = ObservationSelectInput(observationIds = List(props.obsId).assign),
+              patch = ObservationPropertiesInput()
+            ),
+            (ObsQueriesGQL.EditObservationMutation.execute[IO] _).andThen(_.void)
+          ).zoom(
+            ScienceData.mode,
+            EditObservationInput.patch.andThen(ObservationPropertiesInput.scienceMode).modify
+          )
 
-        val optModeView: ReuseView[Option[model.ScienceMode]] =
-          modeAligner.map(_.view(_.map(_.toInput).orUnassign))
+        val optModeView: View[Option[model.ScienceMode]] =
+          modeAligner.view(_.map(_.toInput).orUnassign)
 
-        val modeViewOpt: ReuseViewOpt[model.ScienceMode] =
+        val modeViewOpt: ViewOpt[model.ScienceMode] =
           optModeView.zoom(some[model.ScienceMode])
 
-        val showBasicCB: Reuse[Callback] = showAdvanced.map(_.set(false))
+        val showBasicCB: Callback = showAdvanced.set(false)
 
-        val showAdvancedCB: Reuse[Option[Callback]] =
-          optModeView.map(_.get.map(_ => showAdvanced.set(true)))
+        val showAdvancedCB: Option[Callback] =
+          optModeView.get.map(_ => showAdvanced.set(true))
 
         React.Fragment(
           props.renderInTitle(

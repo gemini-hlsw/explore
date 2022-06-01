@@ -14,7 +14,6 @@ import explore.model.ObsSummary
 import explore.model.ObsWithConf
 import explore.model.ObsWithConstraints
 import explore.model.ObsWithTitle
-import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
@@ -24,7 +23,6 @@ import lucuma.core.model.Observation
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Gid
 import lucuma.ui.forms.EnumViewSelect
-import lucuma.ui.reusability._
 import react.common._
 import react.common.implicits._
 import react.semanticui.collections.form.FormDropdown
@@ -39,16 +37,14 @@ import react.semanticui.views.card._
 final case class ObsBadge(
   obs:               ObsSummary, // The layout will depend on the mixins of the ObsSummary.
   selected:          Boolean = false,
-  setStatusCB:       Option[ObsStatus ==> Callback] = none,
-  setActiveStatusCB: Option[ObsActiveStatus ==> Callback] = none,
-  setSubtitleCB:     Option[Option[NonEmptyString] ==> Callback] = none,
-  deleteCB:          Option[Reuse[Callback]] = none
+  setStatusCB:       Option[ObsStatus => Callback] = none,
+  setActiveStatusCB: Option[ObsActiveStatus => Callback] = none,
+  setSubtitleCB:     Option[Option[NonEmptyString] => Callback] = none,
+  deleteCB:          Option[Callback] = none
 ) extends ReactProps[ObsBadge](ObsBadge.component)
 
 object ObsBadge {
   type Props = ObsBadge
-
-  protected implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   // TODO Make this a component similar to the one in the docs.
   private def renderEnumProgress[A: Enumerated](value: A): VdomNode = {
@@ -82,7 +78,7 @@ object ObsBadge {
             onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
               e.preventDefaultCB *>
                 e.stopPropagationCB *>
-                props.deleteCB.map(_.value: Callback).getOrEmpty
+                props.deleteCB.getOrEmpty
           )
 
         def titleAndId(title: String) =
@@ -182,6 +178,5 @@ object ObsBadge {
           )
         )
       }
-      .configure(Reusability.shouldComponentUpdate)
       .build
 }

@@ -6,7 +6,6 @@ package explore.observationtree
 import cats.effect.IO
 import cats.syntax.all._
 import clue.TransactionalClient
-import crystal.react.ReuseView
 import crystal.react.View
 import crystal.react.reuse.Reuse
 import explore.Icons
@@ -18,7 +17,6 @@ import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
 import explore.model.display._
 import explore.model.enum.AppTab
-import explore.model.reusability._
 import explore.undo.UndoContext
 import explore.undo._
 import japgolly.scalajs.react._
@@ -27,7 +25,6 @@ import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.syntax.all._
 import lucuma.schemas.ObservationDB
-import lucuma.ui.reusability._
 import monocle.Focus
 import monocle.Lens
 import mouse.boolean._
@@ -43,12 +40,12 @@ import react.semanticui.sizes._
 import scala.collection.immutable.SortedSet
 
 final case class ConstraintGroupObsList(
-  constraintsWithObs: ReuseView[ConstraintSummaryWithObervations],
+  constraintsWithObs: View[ConstraintSummaryWithObervations],
   programId:          Program.Id,
   focusedObsSet:      Option[ObsIdSet],
   setSummaryPanel:    Reuse[Callback],
-  expandedIds:        ReuseView[SortedSet[ObsIdSet]],
-  undoStacks:         ReuseView[UndoStacks[IO, ConstraintGroupList]]
+  expandedIds:        View[SortedSet[ObsIdSet]],
+  undoStacks:         View[UndoStacks[IO, ConstraintGroupList]]
 )(implicit val ctx:   AppContextIO)
     extends ReactProps[ConstraintGroupObsList](ConstraintGroupObsList.component)
     with ViewCommon
@@ -61,14 +58,11 @@ object ConstraintGroupObsList {
     val dragging: Lens[State, Boolean] = Focus[State](_.dragging)
   }
 
-  implicit val propsReuse: Reusability[Props] = Reusability.derive
-  implicit val stateReuse: Reusability[State] = Reusability.derive
-
   class Backend($ : BackendScope[Props, State]) {
 
     def toggleExpanded(
       obsIds:      ObsIdSet,
-      expandedIds: ReuseView[SortedSet[ObsIdSet]]
+      expandedIds: View[SortedSet[ObsIdSet]]
     ): Callback =
       expandedIds.mod { expanded =>
         expanded.exists(_ === obsIds).fold(expanded - obsIds, expanded + obsIds)
@@ -91,7 +85,7 @@ object ConstraintGroupObsList {
 
     def onDragEnd(
       undoCtx:     UndoContext[ConstraintGroupList],
-      expandedIds: ReuseView[SortedSet[ObsIdSet]],
+      expandedIds: View[SortedSet[ObsIdSet]],
       setObsSet:   Option[ObsIdSet] => Callback
     )(implicit
       c:           TransactionalClient[IO, ObservationDB]
@@ -288,6 +282,5 @@ object ConstraintGroupObsList {
         _ <- cleanupExpandedIds
       } yield ()
     }
-    .configure(Reusability.shouldComponentUpdate)
     .build
 }

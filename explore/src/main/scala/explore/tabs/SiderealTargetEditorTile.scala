@@ -5,15 +5,13 @@ package explore.tabs
 
 import cats.effect.IO
 import cats.syntax.all._
-import crystal.react.ReuseView
-import crystal.react.reuse._
+import crystal.react.View
 import explore.components.Tile
 import explore.targeteditor.SiderealTargetEditor
 import explore.undo.UndoStacks
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
 import lucuma.core.model.User
-import lucuma.ui.reusability._
 import react.common._
 
 object SiderealTargetEditorTile {
@@ -21,32 +19,25 @@ object SiderealTargetEditorTile {
   def sideralTargetEditorTile(
     userId:     Option[User.Id],
     targetId:   Target.Id,
-    target:     ReuseView[Target.Sidereal],
-    undoStacks: ReuseView[UndoStacks[IO, Target.Sidereal]],
-    searching:  ReuseView[Set[Target.Id]],
+    target:     View[Target.Sidereal],
+    undoStacks: View[UndoStacks[IO, Target.Sidereal]],
+    searching:  View[Set[Target.Id]],
     title:      String,
-    backButton: Option[Reuse[VdomNode]] = None,
-    width:      Int,
-    height:     Int
+    backButton: Option[VdomNode] = none
   ) =
-    Tile(ObsTabTilesIds.TargetId, title, back = backButton, canMinimize = true)(
-      Reuse
-        .by(
-          (userId, targetId, target, undoStacks, searching, width, height)
-        ) { (renderInTitle: Tile.RenderInTitle) =>
-          userId.map(uid =>
-            SiderealTargetEditor(
-              uid,
-              targetId,
-              target,
-              none,
-              none,
-              undoStacks,
-              searching,
-              renderInTitle = renderInTitle.some
-            )
-          ): VdomNode
-        }
-        .reuseAlways
-    )
+    Tile(ObsTabTilesIds.TargetId, title, back = backButton, canMinimize = true) {
+      (renderInTitle: Tile.RenderInTitle) =>
+        userId.map(uid =>
+          SiderealTargetEditor(
+            uid,
+            targetId,
+            target,
+            none,
+            none,
+            undoStacks,
+            searching,
+            renderInTitle = renderInTitle.some
+          )
+        ): VdomNode
+    }
 }

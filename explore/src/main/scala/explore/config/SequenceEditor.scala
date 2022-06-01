@@ -9,7 +9,6 @@ import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Program
-import lucuma.ui.reusability._
 import queries.common.ManualSequenceGQL._
 import react.common._
 
@@ -18,8 +17,6 @@ final case class SequenceEditor(programId: Program.Id)(implicit val ctx: AppCont
 
 object SequenceEditor {
   type Props = SequenceEditor
-
-  implicit protected val propsReuse: Reusability[Props] = Reusability.derive
 
   private def renderFn(config: Option[SequenceSteps.Data.Observations.Nodes.Config]): VdomNode =
     config.fold[VdomNode](<.div("Default observation not found"))(ManualSequenceTables.apply)

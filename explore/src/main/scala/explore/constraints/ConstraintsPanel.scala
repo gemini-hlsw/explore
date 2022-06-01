@@ -5,7 +5,7 @@ package explore.constraints
 
 import cats.effect.IO
 import cats.syntax.all._
-import crystal.react.ReuseView
+import crystal.react.View
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
@@ -36,7 +36,6 @@ import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.TruncatedRefinedBigDecimal
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.optics.ValidFormatNec
-import lucuma.ui.reusability._
 import monocle.Lens
 import react.common._
 import react.semanticui.collections.form.Form
@@ -44,8 +43,8 @@ import react.semanticui.elements.label.LabelPointing
 
 final case class ConstraintsPanel(
   obsIds:        List[Observation.Id],
-  constraintSet: ReuseView[ConstraintSet],
-  undoStacks:    ReuseView[UndoStacks[IO, ConstraintSet]],
+  constraintSet: View[ConstraintSet],
+  undoStacks:    View[UndoStacks[IO, ConstraintSet]],
   renderInTitle: Tile.RenderInTitle
 ) extends ReactProps[ConstraintsPanel](ConstraintsPanel.component)
 
@@ -80,9 +79,6 @@ object ConstraintsPanel {
     airMass:   ElevationRange.AirMass,
     hourAngle: ElevationRange.HourAngle
   )
-
-  protected implicit val propsReuse: Reusability[Props] = Reusability.derive
-  protected implicit val stateReuse: Reusability[State] = Reusability.derive
 
   def initialState(props: Props): State = props.constraintSet.get.elevationRange match {
     case am @ ElevationRange.AirMass(_, _)   =>
@@ -127,8 +123,8 @@ object ConstraintsPanel {
         )
       }
 
-      val erTypeView: ReuseView[ElevationRangeType] =
-        ReuseView[ElevationRangeType](
+      val erTypeView: View[ElevationRangeType] =
+        View[ElevationRangeType](
           state.rangeType,
           (mod, cb) =>
             erView
@@ -144,8 +140,8 @@ object ConstraintsPanel {
               )
         )
 
-      val airMassView: ReuseView[ElevationRange.AirMass] =
-        ReuseView[ElevationRange.AirMass](
+      val airMassView: View[ElevationRange.AirMass] =
+        View[ElevationRange.AirMass](
           state.airMass,
           (mod, cb) =>
             erView
@@ -153,8 +149,8 @@ object ConstraintsPanel {
               .modCB(mod, _.map(cb).orEmpty)
         )
 
-      val hourAngleView: ReuseView[ElevationRange.HourAngle] =
-        ReuseView[ElevationRange.HourAngle](
+      val hourAngleView: View[ElevationRange.HourAngle] =
+        View[ElevationRange.HourAngle](
           state.hourAngle,
           (mod, cb) =>
             erView
@@ -198,7 +194,7 @@ object ConstraintsPanel {
             ),
             ReactFragment(
               <.label("Min"),
-              FormInputEV[ReuseView, TruncatedRefinedBigDecimal[ElevationRange.AirMass.Value, 1]](
+              FormInputEV[View, TruncatedRefinedBigDecimal[ElevationRange.AirMass.Value, 1]](
                 id = "minam",
                 value = airMassView
                   .zoom(ElevationRange.AirMass.min)
@@ -222,7 +218,7 @@ object ConstraintsPanel {
                 clazz = ExploreStyles.ElevationRangeEntry
               ),
               <.label("Max"),
-              FormInputEV[ReuseView, TruncatedRefinedBigDecimal[ElevationRange.AirMass.Value, 1]](
+              FormInputEV[View, TruncatedRefinedBigDecimal[ElevationRange.AirMass.Value, 1]](
                 id = "maxam",
                 value = airMassView
                   .zoom(ElevationRange.AirMass.max)
@@ -248,7 +244,7 @@ object ConstraintsPanel {
             ).when(state.rangeType === AirMass),
             ReactFragment(
               <.label("Min"),
-              FormInputEV[ReuseView, TruncatedRefinedBigDecimal[ElevationRange.HourAngle.Hour, 1]](
+              FormInputEV[View, TruncatedRefinedBigDecimal[ElevationRange.HourAngle.Hour, 1]](
                 id = "minha",
                 value = hourAngleView
                   .zoom(ElevationRange.HourAngle.minHours)
@@ -273,7 +269,7 @@ object ConstraintsPanel {
                 clazz = ExploreStyles.ElevationRangeEntry
               ),
               <.label("Max"),
-              FormInputEV[ReuseView, TruncatedRefinedBigDecimal[ElevationRange.HourAngle.Hour, 1]](
+              FormInputEV[View, TruncatedRefinedBigDecimal[ElevationRange.HourAngle.Hour, 1]](
                 id = "maxha",
                 value = hourAngleView
                   .zoom(ElevationRange.HourAngle.maxHours)
@@ -319,6 +315,5 @@ object ConstraintsPanel {
         }
       }
       .renderBackend[Backend]
-      .configure(Reusability.shouldComponentUpdate)
       .build
 }

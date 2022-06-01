@@ -5,7 +5,6 @@ package explore.tabs
 
 import cats.effect.IO
 import cats.syntax.all._
-import crystal.react.ReuseView
 import crystal.react.View
 import crystal.react.hooks._
 import crystal.react.implicits._
@@ -55,12 +54,12 @@ final case class ConstraintSetTabContents(
   userId:           Option[User.Id],
   programId:        Program.Id,
   focusedObsSet:    Option[ObsIdSet],
-  expandedIds:      ReuseView[SortedSet[ObsIdSet]],
-  listUndoStacks:   ReuseView[UndoStacks[IO, ConstraintGroupList]],
+  expandedIds:      View[SortedSet[ObsIdSet]],
+  listUndoStacks:   View[UndoStacks[IO, ConstraintGroupList]],
   // TODO: Clean up the groupUndoStack somewhere, somehow?
-  groupUndoStack:   ReuseView[Map[ObsIdSet, UndoStacks[IO, ConstraintSet]]],
-  hiddenColumns:    ReuseView[Set[String]],
-  summarySorting:   ReuseView[List[(String, Boolean)]],
+  groupUndoStack:   View[Map[ObsIdSet, UndoStacks[IO, ConstraintSet]]],
+  hiddenColumns:    View[Set[String]],
+  summarySorting:   View[List[(String, Boolean)]],
   size:             ResizeDetector.Dimensions
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[ConstraintSetTabContents](ConstraintSetTabContents.component)
@@ -68,9 +67,6 @@ final case class ConstraintSetTabContents(
 object ConstraintSetTabContents {
   type Props = ConstraintSetTabContents
   type State = TwoPanelState
-
-  implicit val propsReuse: Reusability[Props] = Reusability.derive
-  implicit val stateReuse: Reusability[State] = Reusability.derive
 
   def readWidthPreference(props: Props, state: View[State]): Callback = {
     implicit val ctx = props.ctx
@@ -82,11 +78,11 @@ object ConstraintSetTabContents {
     ) >>= (w => state.zoom(TwoPanelState.treeWidth).async.set(w.toDouble))).runAsync
   }
 
-  protected def renderFn(
-    props:              Props,
-    state:              ReuseView[State],
-    constraintsWithObs: ReuseView[ConstraintSummaryWithObervations]
-  )(implicit ctx:       AppContextIO): VdomNode = {
+  protected def renderFn(props: Props, state: View[State])(
+    constraintsWithObs:         View[ConstraintSummaryWithObervations]
+  )(implicit
+    ctx:                        AppContextIO
+  ): VdomNode = {
     val treeResize =
       (_: ReactEvent, d: ResizeCallbackData) =>
         (state.zoom(TwoPanelState.treeWidth).set(d.size.width.toDouble).to[IO] *>
@@ -99,12 +95,12 @@ object ConstraintSetTabContents {
 
     val treeWidth = state.get.treeWidth.toInt
 
-    def tree(constraintWithObs: ReuseView[ConstraintSummaryWithObervations]) =
+    def tree(constraintWithObs: View[ConstraintSummaryWithObervations]) =
       <.div(^.width := treeWidth.px, ExploreStyles.Tree |+| ExploreStyles.ResizableSinglePanel)(
         treeInner(constraintWithObs)
       )
 
-    def treeInner(constraintWithObs: ReuseView[ConstraintSummaryWithObervations]) =
+    def treeInner(constraintWithObs: View[ConstraintSummaryWithObervations]) =
       <.div(ExploreStyles.TreeBody)(
         ConstraintGroupObsList(
           constraintWithObs,
@@ -148,7 +144,7 @@ object ConstraintSetTabContents {
       updateExpanded
     }
 
-    val backButton = Reuse.always[VdomNode](
+    val backButton: VdomNode =
       Button(
         as = <.a,
         size = Mini,
@@ -160,7 +156,6 @@ object ConstraintSetTabContents {
             state.zoom(TwoPanelState.selected).set(SelectedPanel.tree)
         )
       )(^.href := ctx.pageUrl(AppTab.Constraints, props.programId, none, none), Icons.ChevronLeft)
-    )
 
     val coreWidth  = props.size.width.getOrElse(0) - treeWidth
     val coreHeight = props.size.height.getOrElse(0)
@@ -171,17 +166,15 @@ object ConstraintSetTabContents {
       )
       .fold[VdomNode] {
         Tile("constraints", "Constraints Summary", backButton.some, key = "constraintsSummary")(
-          Reuse.by((props.programId, constraintsWithObs, props.hiddenColumns))(
-            (renderInTitle: Tile.RenderInTitle) =>
-              ConstraintsSummaryTable(
-                props.programId,
-                constraintsWithObs.get.constraintGroups,
-                props.hiddenColumns,
-                props.summarySorting,
-                props.expandedIds,
-                renderInTitle
-              )
-          )
+          renderInTitle =>
+            ConstraintsSummaryTable(
+              props.programId,
+              constraintsWithObs.get.constraintGroups,
+              props.hiddenColumns,
+              props.summarySorting,
+              props.expandedIds,
+              renderInTitle
+            )
         )
       } { case (idsToEdit, constraintGroup) =>
         val groupObsIds   = constraintGroup.obsIds
@@ -226,11 +219,11 @@ object ConstraintSetTabContents {
               }
               .getOrElse(cgl) // shouldn't happen
 
-        val csView: ReuseView[ConstraintSet] =
+        val csView: View[ConstraintSet] =
           cglView
             .zoom(getCs)(modCs)
 
-        val csUndo: ReuseView[UndoStacks[IO, ConstraintSet]] =
+        val csUndo: View[UndoStacks[IO, ConstraintSet]] =
           props.groupUndoStack.zoom(atMapWithDefault(idsToEdit, UndoStacks.empty))
 
         val title = idsToEdit.single match {
@@ -238,10 +231,8 @@ object ConstraintSetTabContents {
           case None     => s"Editing Constraints for ${idsToEdit.size} Observations"
         }
 
-        Tile("constraints", title, backButton.some)(
-          (csView, csUndo).curryReusing.in((csView_, csUndo_, renderInTitle) =>
-            ConstraintsPanel(idsToEdit.toList, csView_, csUndo_, renderInTitle)
-          )
+        Tile("constraints", title, backButton.some)(renderInTitle =>
+          ConstraintsPanel(idsToEdit.toList, csView, csUndo, renderInTitle)
         )
       }
 
@@ -284,10 +275,10 @@ object ConstraintSetTabContents {
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStateViewWithReuse(TwoPanelState.initial(SelectedPanel.Uninitialized))
+      .useStateView(TwoPanelState.initial(SelectedPanel.Uninitialized))
       .useEffectOnMountBy((props, state) => readWidthPreference(props, state))
       .useEffectWithDepsBy((props, state) =>
-        (props.focusedObsSet, state.zoom(TwoPanelState.selected).value.reuseByValue)
+        (props.focusedObsSet, state.zoom(TwoPanelState.selected).reuseByValue)
       ) { (_, _) => params =>
         val (focusedObsSet, selected) = params
         (focusedObsSet, selected.get) match {
@@ -296,7 +287,7 @@ object ConstraintSetTabContents {
           case _                            => Callback.empty
         }
       }
-      .useStreamResourceViewWithReuseOnMountBy { (props, _) =>
+      .useStreamResourceViewOnMountBy { (props, _) =>
         implicit val ctx = props.ctx
 
         ConstraintGroupObsQuery
@@ -306,9 +297,9 @@ object ConstraintSetTabContents {
             ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](props.programId)
           )
       }
-      .renderWithReuse { (props, state, constraintsWithObs) =>
+      .render { (props, state, constraintsWithObs) =>
         implicit val ctx = props.ctx
 
-        potRender(Reuse(renderFn _)(props, state))(constraintsWithObs)
+        potRender(renderFn(props, state) _)(constraintsWithObs)
       }
 }

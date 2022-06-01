@@ -4,11 +4,10 @@
 package explore.tabs
 
 import cats.effect.IO
+import cats.syntax.all._
 import crystal.Pot
-import crystal.react.ReuseView
-import crystal.react.ReuseViewOpt
-import crystal.react.implicits._
-import crystal.react.reuse._
+import crystal.react.View
+import crystal.react.ViewOpt
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
@@ -16,7 +15,6 @@ import explore.model.Asterism
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.ScienceMode
-import explore.model.reusability._
 import explore.targeteditor.AsterismEditor
 import explore.undo.UndoStacks
 import explore.utils._
@@ -26,7 +24,6 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
-import lucuma.ui.reusability._
 import react.common._
 
 object AsterismEditorTile {
@@ -35,18 +32,16 @@ object AsterismEditorTile {
     userId:          Option[User.Id],
     programId:       Program.Id,
     obsId:           ObsIdSet,
-    potAsterismMode: Pot[(ReuseView[Option[Asterism]], Option[ScienceMode])],
-    obsConf:         ReuseViewOpt[ObsConfiguration],
+    potAsterismMode: Pot[(View[Option[Asterism]], Option[ScienceMode])],
+    obsConf:         ViewOpt[ObsConfiguration],
     currentTarget:   Option[Target.Id],
-    setTarget:       (Option[Target.Id], SetRouteVia) ==> Callback,
-    otherObsCount:   Target.Id ==> Int,
-    undoStacks:      ReuseView[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
-    searching:       ReuseView[Set[Target.Id]],
+    setTarget:       (Option[Target.Id], SetRouteVia) => Callback,
+    otherObsCount:   Target.Id => Int,
+    undoStacks:      View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
+    searching:       View[Set[Target.Id]],
     title:           String,
-    backButton:      Option[Reuse[VdomNode]] = None,
-    hiddenColumns:   ReuseView[Set[String]],
-    width:           Int,
-    height:          Int
+    backButton:      Option[VdomNode] = none,
+    hiddenColumns:   View[Set[String]]
   )(implicit ctx:    AppContextIO) =
     Tile(
       ObsTabTilesIds.TargetId,
@@ -54,48 +49,30 @@ object AsterismEditorTile {
       back = backButton,
       canMinimize = true,
       bodyClass = Some(ExploreStyles.TargetTileBody)
-    )(
-      Reuse.by(
-        (userId,
-         programId,
-         obsId,
-         potAsterismMode,
-         obsConf,
-         currentTarget,
-         setTarget,
-         otherObsCount,
-         undoStacks,
-         searching,
-         hiddenColumns,
-         width,
-         height
-        )
-      ) { (renderInTitle: Tile.RenderInTitle) =>
-        potRenderWithReuse[(ReuseView[Option[Asterism]], Option[ScienceMode])](
-          { (asterismMode: (ReuseView[Option[Asterism]], Option[ScienceMode])) =>
-            val (asterism, scienceMode) = asterismMode
-            userId.map(uid =>
-              AsterismEditor(
-                uid,
-                programId,
-                obsId,
-                asterism,
-                scienceMode,
-                obsConf,
-                currentTarget,
-                setTarget,
-                otherObsCount,
-                undoStacks,
-                searching,
-                hiddenColumns,
-                renderInTitle
-              )
-            ): VdomNode
-          }.reuseAlways
-        )(
-          potAsterismMode
-        )
-      }
+    )((renderInTitle: Tile.RenderInTitle) =>
+      potRender[(View[Option[Asterism]], Option[ScienceMode])] {
+        (asterismMode: (View[Option[Asterism]], Option[ScienceMode])) =>
+          val (asterism, scienceMode) = asterismMode
+          userId.map(uid =>
+            AsterismEditor(
+              uid,
+              programId,
+              obsId,
+              asterism,
+              scienceMode,
+              obsConf,
+              currentTarget,
+              setTarget,
+              otherObsCount,
+              undoStacks,
+              searching,
+              hiddenColumns,
+              renderInTitle
+            )
+          ): VdomNode
+      }(
+        potAsterismMode
+      )
     )
 
 }

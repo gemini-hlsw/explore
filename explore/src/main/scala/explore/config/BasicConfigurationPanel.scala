@@ -9,7 +9,6 @@ import cats.syntax.all._
 import coulomb.Quantity
 import crystal.react._
 import crystal.react.hooks._
-import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.Icons
 import explore.common.ObsQueries._
@@ -26,7 +25,6 @@ import explore.model.TruncatedPA
 import explore.model.display._
 import explore.model.enum.PosAngleOptions
 import explore.model.formats.angleTruncatedPASplitEpi
-import explore.model.reusability._
 import explore.model.syntax.all._
 import explore.targeteditor.InputWithUnits
 import explore.undo._
@@ -44,7 +42,6 @@ import lucuma.core.syntax.string._
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.ValidFormatInput
-import lucuma.ui.reusability._
 import monocle.Iso
 import monocle.Lens
 import react.common._
@@ -59,19 +56,17 @@ import scalajs.js.JSConverters._
 
 final case class BasicConfigurationPanel(
   obsId:            Observation.Id,
-  obsConf:          ReuseView[ObsConfiguration],
-  requirementsCtx:  Reuse[UndoSetter[ScienceRequirementsData]],
-  scienceModeOpt:   ReuseView[Option[model.ScienceMode]],
+  obsConf:          View[ObsConfiguration],
+  requirementsCtx:  UndoSetter[ScienceRequirementsData],
+  scienceModeOpt:   View[Option[model.ScienceMode]],
   constraints:      ConstraintSet,
   itcTargets:       List[ITCTarget],
-  onShowAdvanced:   Reuse[Option[Callback]]
+  onShowAdvanced:   Option[Callback]
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[BasicConfigurationPanel](BasicConfigurationPanel.component)
 
 object BasicConfigurationPanel {
   type Props = BasicConfigurationPanel
-
-  implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   val dataIso: Iso[SpectroscopyRequirementsData, SpectroscopyConfigurationOptions] =
     Iso[SpectroscopyRequirementsData, SpectroscopyConfigurationOptions] { s =>
@@ -145,51 +140,48 @@ object BasicConfigurationPanel {
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStateViewWithReuse[ScienceMode](ScienceMode.Spectroscopy)
-      .useStateViewWithReuse[ImagingConfigurationOptions](ImagingConfigurationOptions.Default)
-      .renderWithReuse { (props, mode, imaging) =>
+      .useStateView[ScienceMode](ScienceMode.Spectroscopy)
+      .useStateView[ImagingConfigurationOptions](ImagingConfigurationOptions.Default)
+      .render { (props, mode, imaging) =>
         implicit val ctx: AppContextIO = props.ctx
 
-        val requirementsViewSet: Reuse[UndoView] =
-          props.requirementsCtx.map(UndoView(props.obsId, _))
+        val requirementsViewSet: UndoView = UndoView(props.obsId, props.requirementsCtx)
 
         val isSpectroscopy: Boolean = mode.get === ScienceMode.Spectroscopy
 
-        val spectroscopy: ReuseView[ScienceRequirementsData.Spectroscopy] =
-          requirementsViewSet.map(
-            _(
-              ScienceRequirementsData.spectroscopy,
-              UpdateScienceRequirements.spectroscopyRequirements
-            )
+        val spectroscopy: View[ScienceRequirementsData.Spectroscopy] =
+          requirementsViewSet(
+            ScienceRequirementsData.spectroscopy,
+            UpdateScienceRequirements.spectroscopyRequirements
           )
 
-        val posAngleOptionsView: ReuseView[PosAngleOptions] =
+        val posAngleOptionsView: View[PosAngleOptions] =
           props.obsConf.zoom(ObsConfiguration.posAngle.andThen(unsafePosOptionsLens))
 
-        val fixedView: ReuseViewOpt[TruncatedPA] =
+        val fixedView: ViewOpt[TruncatedPA] =
           props.obsConf
             .zoom(ObsConfiguration.posAngle)
             .zoom(PosAngle.fixedAnglePrism)
             .zoom(angleTruncatedPASplitEpi.get)(angleTruncatedPASplitEpi.modify _)
 
-        val allowedFlipView: ReuseViewOpt[TruncatedPA] =
+        val allowedFlipView: ViewOpt[TruncatedPA] =
           props.obsConf
             .zoom(ObsConfiguration.posAngle)
             .zoom(PosAngle.allowFlipAnglePrism)
             .zoom(angleTruncatedPASplitEpi.get)(angleTruncatedPASplitEpi.modify _)
 
-        val parallacticOverrideView: ReuseViewOpt[TruncatedPA] =
+        val parallacticOverrideView: ViewOpt[TruncatedPA] =
           props.obsConf
             .zoom(ObsConfiguration.posAngle)
             .zoom(PosAngle.parallacticOverrideAnglePrism)
             .zoom(angleTruncatedPASplitEpi.get)(angleTruncatedPASplitEpi.modify _)
 
-        val obsInstant: ReuseView[Instant] = props.obsConf.zoom(ObsConfiguration.obsInstant)
+        val obsInstant: View[Instant] = props.obsConf.zoom(ObsConfiguration.obsInstant)
 
-        def posAngleEditor(pa: ReuseView[TruncatedPA]) =
+        def posAngleEditor(pa: View[TruncatedPA]) =
           <.div(
             ExploreStyles.SignalToNoiseAt,
-            InputWithUnits[ReuseView, TruncatedPA](
+            InputWithUnits(
               id = "pos-angle-value",
               clazz = Css.Empty,
               value = pa,
@@ -207,7 +199,7 @@ object BasicConfigurationPanel {
             <.div(
               ExploreStyles.ObsConfigurationObsPA,
               <.label("Position Angle", HelpIcon("configuration/positionangle.md")),
-              EnumViewSelect[ReuseView, PosAngleOptions](
+              EnumViewSelect(
                 id = "pos-angle-alternative",
                 value = posAngleOptionsView
               ),
@@ -223,7 +215,7 @@ object BasicConfigurationPanel {
             ExploreStyles.BasicConfigurationForm
           )(
             <.label("Mode", HelpIcon("configuration/mode.md")),
-            EnumViewSelect[ReuseView, ScienceMode](id = "configuration-mode", value = mode),
+            EnumViewSelect(id = "configuration-mode", value = mode),
             SpectroscopyConfigurationPanel(spectroscopy.as(dataIso))
               .when(isSpectroscopy),
             ImagingConfigurationPanel(imaging)
@@ -243,7 +235,7 @@ object BasicConfigurationPanel {
               content = "Advanced Configuration",
               icon = Icons.Gears,
               disabled = props.onShowAdvanced.isEmpty,
-              onClick = props.onShowAdvanced.value.orUndefined
+              onClick = props.onShowAdvanced.orUndefined
             )
           )
         )
