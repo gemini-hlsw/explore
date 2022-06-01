@@ -203,4 +203,17 @@
   @include aladin-button-mixin();
   top: 10px;
   left: 10px;
+
+  .explore-aladin-button {
+    position: absolute;
+  }
+
+  .explore-aladin-settings-menu {
+    position: absolute;
+    left: 30px;
+
+    &.ui.compact.vertical.menu {
+      width: 8rem !important; // in SUI it is important too
+    }
+  }
 }

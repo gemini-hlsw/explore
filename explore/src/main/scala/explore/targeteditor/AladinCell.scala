@@ -112,7 +112,7 @@ object AladinCell extends ModelOptics {
                     case (tracking, Some(obsInstant)) =>
                       props.ctx.worker
                         .postTransferrable(
-                          CatalogRequest(bestConstraintSet, wavelength, tracking, obsInstant)
+                          CatalogRequest(tracking, obsInstant)
                         )
                     case _                            => IO.unit
                   })
@@ -123,7 +123,7 @@ object AladinCell extends ModelOptics {
         (props.target.get, props.obsConf) match {
           case (tracking, Some(obsConf)) =>
             props.ctx.worker.postTransferrable(
-              CatalogRequest(null, null, tracking, obsConf.obsInstant)
+              CatalogRequest(tracking, obsConf.obsInstant)
             )
           case _                         => IO.unit
         }
@@ -155,11 +155,15 @@ object AladinCell extends ModelOptics {
         implicit val ctx = props.ctx
         UserTargetPreferencesQuery
           .queryWithDefault[IO](props.uid, props.tid, Constants.InitialFov)
-          .flatMap { case (fov, viewOffset, agsCandidates) =>
+          .flatMap { case (fov, viewOffset, agsCandidates, agsOverlay) =>
             options
               .set(
                 TargetVisualOptions.Default
-                  .copy(fovAngle = fov, viewOffset = viewOffset, agsCandidates = agsCandidates)
+                  .copy(fovAngle = fov,
+                        viewOffset = viewOffset,
+                        agsCandidates = agsCandidates,
+                        agsOverlay = agsOverlay
+                  )
                   .ready
               )
               .to[IO]
@@ -196,135 +200,161 @@ object AladinCell extends ModelOptics {
       }
       // open settings menu
       .useState(false)
-      .render { (props, mouseCoords, options, center, gsc, agsResults, openSettings) =>
-        implicit val ctx = props.ctx
+      // Selected GS index
+      .useStateViewWithReuse(0)
+      .render {
+        (props, mouseCoords, options, center, gsc, agsResults, openSettings, selectedIndex) =>
+          implicit val ctx = props.ctx
 
-        val agsCandidatesView =
-          options.zoom(Pot.readyPrism.andThen(TargetVisualOptions.agsCandidates))
+          val agsCandidatesView =
+            options.zoom(Pot.readyPrism.andThen(TargetVisualOptions.agsCandidates))
 
-        val fovView =
-          options.zoom(Pot.readyPrism.andThen(TargetVisualOptions.fovAngle))
+          val agsOverlayView =
+            options.zoom(Pot.readyPrism.andThen(TargetVisualOptions.agsOverlay))
 
-        val offsetView =
-          options.zoom(Pot.readyPrism.andThen(TargetVisualOptions.viewOffset))
+          val fovView =
+            options.zoom(Pot.readyPrism.andThen(TargetVisualOptions.fovAngle))
 
-        val agsCandidatesShown: Boolean = agsCandidatesView.get.map(_.visible).getOrElse(false)
+          val offsetView =
+            options.zoom(Pot.readyPrism.andThen(TargetVisualOptions.viewOffset))
 
-        val coordinatesSetter =
-          ((c: Coordinates) => mouseCoords.setState(c)).reuseAlways
+          val agsCandidatesShown: Boolean = agsCandidatesView.get.map(_.visible).getOrElse(false)
 
-        val fovSetter = (newFov: Fov) => {
-          val ignore = options.get.fold(
-            _ => true,
-            _ => true,
-            o =>
-              // Don't save if the change is less than 1 arcse
-              (o.fovAngle.toMicroarcseconds - newFov.x.toMicroarcseconds).abs < 1e6
-          )
-          if (newFov.x.toMicroarcseconds === 0L) Callback.empty
-          else {
-            fovView.set(newFov.x) *>
-              (fovView.get, agsCandidatesView.get).mapN { (_, a) =>
+          val agsOverlayShown: Boolean = agsOverlayView.get.map(_.visible).getOrElse(false)
+
+          val coordinatesSetter =
+            ((c: Coordinates) => mouseCoords.setState(c)).reuseAlways
+
+          val fovSetter = (newFov: Fov) => {
+            val ignore = options.get.fold(
+              _ => true,
+              _ => true,
+              o =>
+                // Don't save if the change is less than 1 arcse
+                (o.fovAngle.toMicroarcseconds - newFov.x.toMicroarcseconds).abs < 1e6
+            )
+            if (newFov.x.toMicroarcseconds === 0L) Callback.empty
+            else {
+              fovView.set(newFov.x) *>
+                (fovView.get, agsCandidatesView.get, agsOverlayView.get).mapN { (_, a, o) =>
+                  UserTargetPreferencesUpsert
+                    .updatePreferences[IO](props.uid, props.tid, newFov.x, a, o)
+                    .unlessA(ignore)
+                    .runAsync
+                    .rateLimit(1.seconds, 1)
+                    .void
+                }.orEmpty
+            }
+          }
+
+          val offsetSetter = (newOffset: Offset) => {
+            val ignore = options.get.fold(
+              _ => true,
+              _ => true,
+              o => {
+                val diffP = newOffset.p.toAngle.difference(o.viewOffset.p.toAngle)
+                val diffQ = newOffset.q.toAngle.difference(o.viewOffset.q.toAngle)
+                // Don't save if the change is less than 1 arcse
+                diffP.toMicroarcseconds < 1e6 && diffQ.toMicroarcseconds < 1e6
+              }
+            )
+
+            offsetView.set(newOffset) *>
+              UserTargetPreferencesFovUpdate
+                .updateViewOffset[IO](props.uid, props.tid, newOffset)
+                .unlessA(ignore)
+                .runAsync
+                .rateLimit(1.seconds, 1)
+                .void
+          }
+
+          def candidatesSetter: Callback =
+            agsCandidatesView.mod(_.flip) *>
+              (fovView.get, agsCandidatesView.get, agsOverlayView.get).mapN { (f, a, o) =>
                 UserTargetPreferencesUpsert
-                  .updatePreferences[IO](props.uid, props.tid, newFov.x, a)
-                  .unlessA(ignore)
+                  .updatePreferences[IO](props.uid, props.tid, f, a.flip, o)
                   .runAsync
-                  .rateLimit(1.seconds, 1)
                   .void
               }.orEmpty
-          }
-        }
 
-        val offsetSetter = (newOffset: Offset) => {
-          val ignore = options.get.fold(
-            _ => true,
-            _ => true,
-            o => {
-              val diffP = newOffset.p.toAngle.difference(o.viewOffset.p.toAngle)
-              val diffQ = newOffset.q.toAngle.difference(o.viewOffset.q.toAngle)
-              // Don't save if the change is less than 1 arcse
-              diffP.toMicroarcseconds < 1e6 && diffQ.toMicroarcseconds < 1e6
-            }
-          )
+          def agsOverlaySetter: Callback =
+            agsOverlayView.mod(_.flip) *>
+              (fovView.get, agsCandidatesView.get, agsOverlayView.get).mapN { (f, a, o) =>
+                UserTargetPreferencesUpsert
+                  .updatePreferences[IO](props.uid, props.tid, f, a, o.flip)
+                  .runAsync
+                  .void
+              }.orEmpty
 
-          offsetView.set(newOffset) *>
-            UserTargetPreferencesFovUpdate
-              .updateViewOffset[IO](props.uid, props.tid, newOffset)
-              .unlessA(ignore)
-              .runAsync
-              .rateLimit(1.seconds, 1)
-              .void
-        }
+          val aladinKey = s"${props.target.get}"
 
-        def candidatesSetter: Callback =
-          agsCandidatesView.mod(_.flip) *>
-            (fovView.get, agsCandidatesView.get).mapN { (f, a) =>
-              UserTargetPreferencesUpsert
-                .updatePreferences[IO](props.uid, props.tid, f, a.flip)
-                .runAsync
-                .void
-            }.orEmpty
+          val renderCell: TargetVisualOptions => VdomNode = (t: TargetVisualOptions) =>
+            AladinContainer(
+              props.target,
+              props.obsConf,
+              props.scienceMode,
+              t,
+              coordinatesSetter,
+              fovSetter.reuseAlways,
+              offsetSetter.reuseAlways,
+              center,
+              selectedIndex.get,
+              // gsc.value.toOption.orEmpty // USE THIS FOR ALTERNATE HOOK IMPLEMENTATION
+              agsResults
+            ).withKey(aladinKey)
+          //
+          // Check whether we are waiting for catalog
+          val catalogLoading                              = props.obsConf.exists(_ => gsc.isPending)
 
-        val aladinKey = s"${props.target.get}"
+          val renderToolbar: TargetVisualOptions => VdomNode =
+            (t: TargetVisualOptions) =>
+              AladinToolbar(
+                Fov.square(t.fovAngle),
+                mouseCoords.value,
+                catalogLoading,
+                // gsc.value.isPending, // USE THIS FOR ALTERNATE HOOK IMPLEMENTATION
+                selectedIndex,
+                agsResults,
+                center
+              ): VdomNode
 
-        val renderCell: TargetVisualOptions => VdomNode = (t: TargetVisualOptions) =>
-          AladinContainer(
-            props.target,
-            props.obsConf,
-            props.scienceMode,
-            t,
-            coordinatesSetter,
-            fovSetter.reuseAlways,
-            offsetSetter.reuseAlways,
-            center,
-            0,
-            agsResults
-            // gsc.value.toOption.orEmpty // USE THIS FOR ALTERNATE HOOK IMPLEMENTATION
-          ).withKey(aladinKey)
-
-        // Check whether we are waiting for catalog
-        val catalogLoading = props.obsConf.exists(_ => gsc.isPending)
-
-        val renderToolbar: TargetVisualOptions => VdomNode =
-          (t: TargetVisualOptions) =>
-            AladinToolbar(
-              Fov.square(t.fovAngle),
-              mouseCoords.value,
-              catalogLoading,
-              // gsc.value.isPending, // USE THIS FOR ALTERNATE HOOK IMPLEMENTATION
-              center
-            ): VdomNode
-
-        <.div(
-          ExploreStyles.TargetAladinCell,
           <.div(
-            ExploreStyles.AladinContainerColumn,
+            ExploreStyles.TargetAladinCell,
             <.div(
-              ExploreStyles.AladinToolbox,
-              Button(size = Small, icon = true, onClick = openSettings.modState(s => !s))(
-                ExploreStyles.ButtonOnAladin,
-                ^.onMouseEnter --> openSettings.setState(true),
-                Icons.ThinSliders
-              ),
-              Menu(vertical = true,
-                   compact = true,
-                   size = Mini,
-                   clazz = ExploreStyles.AladinSettingsMenu
-              )(
-                ^.onMouseLeave --> openSettings.setState(false),
-                MenuItem(
-                  Checkbox(
-                    label = "Show Catalog",
-                    checked = agsCandidatesShown,
-                    onChange = (_: Boolean) => openSettings.setState(false) *> candidatesSetter
+              ExploreStyles.AladinContainerColumn,
+              <.div(
+                ExploreStyles.AladinToolbox,
+                Button(size = Small, icon = true, onClick = openSettings.modState(s => !s))(
+                  ExploreStyles.ButtonOnAladin,
+                  ^.onMouseEnter --> openSettings.setState(true),
+                  Icons.ThinSliders
+                ),
+                Menu(vertical = true,
+                     compact = true,
+                     size = Mini,
+                     clazz = ExploreStyles.AladinSettingsMenu
+                )(
+                  ^.onMouseLeave --> openSettings.setState(false),
+                  MenuItem(
+                    Checkbox(
+                      label = "Show Catalog",
+                      checked = agsCandidatesShown,
+                      onChange = (_: Boolean) => openSettings.setState(false) *> candidatesSetter
+                    )
+                  ),
+                  MenuItem(
+                    Checkbox(
+                      label = "AGS",
+                      checked = agsOverlayShown,
+                      onChange = (_: Boolean) => openSettings.setState(false) *> agsOverlaySetter
+                    )
                   )
-                )
-              ).when(openSettings.value)
-            ),
-            potRenderView[TargetVisualOptions](renderCell)(options),
-            potRenderView[TargetVisualOptions](renderToolbar)(options)
+                ).when(openSettings.value)
+              ),
+              potRenderView[TargetVisualOptions](renderCell)(options),
+              potRenderView[TargetVisualOptions](renderToolbar)(options)
+            )
           )
-        )
       }
 
 }

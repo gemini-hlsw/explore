@@ -22,11 +22,15 @@ import react.semanticui.sizes.Small
 import react.semanticui.sizes._
 
 import scala.math.rint
+import lucuma.ags.GuideStarCandidate
+import lucuma.ags.AgsAnalysis
 
 final case class AladinToolbar(
   fov:                 Fov,
   current:             Coordinates,
   loadingGSCandidates: Boolean,
+  selectedGSIndex:     View[Int],
+  guideStarCandidates: List[(GuideStarCandidate, AgsAnalysis)],
   center:              View[Boolean]
 ) extends ReactFnProps[AladinToolbar](AladinToolbar.component)
 
@@ -71,14 +75,16 @@ object AladinToolbar {
 
   val component =
     ScalaFnComponent[Props] { props =>
+      val selected = props.guideStarCandidates.lift(props.selectedGSIndex.get)
+
       React.Fragment(
         Label(
           icon = Icons.Maximize.clazz(ExploreStyles.Accented),
           clazz = ExploreStyles.AladinFOV,
           size = Small,
-          detail = LabelDetail(
-            clazz = ExploreStyles.AladinDetailText,
-            content = s"${formatFov(props.fov.x)} \u00D7 ${formatFov(props.fov.y)}"
+          detail = LabelDetail(clazz = ExploreStyles.AladinDetailText,
+                               content =
+                                 s"${formatFov(props.fov.x)} \u00D7 ${formatFov(props.fov.y)}"
           )
         ),
         <.div(
@@ -88,6 +94,10 @@ object AladinToolbar {
             position = PopupPosition.TopCenter,
             trigger = Icons.CircleSmall.beat()
           ).when(props.loadingGSCandidates)
+        ),
+        <.div(
+          ExploreStyles.AladinGuideStar,
+          selected.map(r => s"GS: ${r._1.name.value}")
         ),
         Label(
           icon = Icons.MousePointer.clazz(ExploreStyles.Accented),
