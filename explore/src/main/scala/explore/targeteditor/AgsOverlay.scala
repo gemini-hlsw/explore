@@ -5,23 +5,23 @@ package explore.targeteditor
 
 import cats.syntax.all._
 import crystal.react.ReuseView
+import explore.Icons
 import explore.components.ui.ExploreStyles
-import explore.model.reusability._
 import explore.model.formats._
+import explore.model.reusability._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ags.AgsAnalysis
+import lucuma.ags.AgsGuideQuality
+import lucuma.ags.GuideStarCandidate
 import lucuma.ui.reusability._
 import react.common.ReactFnProps
 import react.common.implicits._
-
-import lucuma.ags.GuideStarCandidate
-import lucuma.ags.AgsAnalysis
-import explore.Icons
-import japgolly.scalajs.react.feature.ReactFragment
-import lucuma.ags.AgsGuideQuality
-import scala.math.BigDecimal.RoundingMode
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
+
+import scala.math.BigDecimal.RoundingMode
 
 final case class AgsOverlay(
   selectedGSIndex:     ReuseView[Int],

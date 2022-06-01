@@ -62,13 +62,10 @@ object AGS {
         case GuideSpeed.Fast   =>
           DeliversRequestedIq
         case GuideSpeed.Medium =>
-          // if (worseOrEqual(ImageQuality.PERCENT_70)) DeliversRequestedIq
           if (worseOrEqual(ImageQuality.PointSix)) DeliversRequestedIq
           else PossibleIqDegradation
         case GuideSpeed.Slow   =>
-          // if (worseOrEqual(ImageQuality.PERCENT_85)) DeliversRequestedIq
           if (worseOrEqual(ImageQuality.PointEight)) DeliversRequestedIq
-          // else if (worseOrEqual(ImageQuality.PERCENT_70)) PossibleIqDegradation
           else if (worseOrEqual(ImageQuality.PointSix)) PossibleIqDegradation
           else IqDegradation
       }

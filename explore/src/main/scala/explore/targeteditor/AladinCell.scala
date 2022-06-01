@@ -24,6 +24,7 @@ import explore.model.Constants
 import explore.model.ObsConfiguration
 import explore.model.ScienceMode
 import explore.model.TargetVisualOptions
+import explore.model.enum.Visible
 import explore.model.boopickle._
 import explore.model.reusability._
 import explore.optics.ModelOptics
@@ -268,23 +269,21 @@ object AladinCell extends ModelOptics {
                 .void
           }
 
-          def candidatesSetter: Callback =
-            agsCandidatesView.mod(_.flip) *>
-              (fovView.get, agsCandidatesView.get, agsOverlayView.get).mapN { (f, a, o) =>
-                UserTargetPreferencesUpsert
-                  .updatePreferences[IO](props.uid, props.tid, f, a.flip, o)
-                  .runAsync
-                  .void
-              }.orEmpty
+          def prefsSetter(candidates: Visible => Visible, overlay: Visible => Visible): Callback =
+            (fovView.get, agsCandidatesView.get, agsOverlayView.get).mapN { (f, a, o) =>
+              UserTargetPreferencesUpsert
+                .updatePreferences[IO](props.uid, props.tid, f, candidates(a), overlay(o))
+                .runAsync
+                .void
+            }.orEmpty
 
           def agsOverlaySetter: Callback =
             agsOverlayView.mod(_.flip) *>
-              (fovView.get, agsCandidatesView.get, agsOverlayView.get).mapN { (f, a, o) =>
-                UserTargetPreferencesUpsert
-                  .updatePreferences[IO](props.uid, props.tid, f, a, o.flip)
-                  .runAsync
-                  .void
-              }.orEmpty
+              prefsSetter(identity, _.flip)
+
+          def candidatesSetter: Callback =
+            agsCandidatesView.mod(_.flip) *>
+              prefsSetter(_.flip, identity)
 
           val aladinKey = s"${props.target.get}"
 

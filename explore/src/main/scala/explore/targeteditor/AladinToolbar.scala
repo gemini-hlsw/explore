@@ -53,7 +53,7 @@ object AladinToolbar {
           )
         ),
         <.div(
-          ExploreStyles.AladinGuideStar,
+          ExploreStyles.AladinGuideStarLoading,
           Popup(
             content = "Loading catalog stars..",
             position = PopupPosition.TopCenter,
