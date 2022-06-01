@@ -6,14 +6,12 @@ package explore.components.state
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
-import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.implicits._
 import explore.model.UserVault
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.ui.reusability._
 import monocle.Focus
 import org.typelevel.log4cats.Logger
 import react.common.ReactProps
@@ -22,8 +20,8 @@ import java.time.Instant
 
 final case class SSOManager(
   expiration:       Instant,
-  setVault:         Option[UserVault] ==> Callback,
-  setMessage:       NonEmptyString ==> Callback
+  setVault:         Option[UserVault] => Callback,
+  setMessage:       NonEmptyString => Callback
 )(implicit val ctx: AppContextIO)
     extends ReactProps[SSOManager](SSOManager.component)
 
@@ -35,9 +33,6 @@ object SSOManager {
   object State {
     val cancelToken = Focus[State](_.cancelToken)
   }
-
-  protected implicit val propsReuse: Reusability[Props] = Reusability.by(_.expiration)
-  protected implicit val stateReuse: Reusability[State] = Reusability.never
 
   final class Backend() {
 
@@ -84,6 +79,5 @@ object SSOManager {
         .orEmpty
         .runAsync
     }
-    .configure(Reusability.shouldComponentUpdate)
     .build
 }

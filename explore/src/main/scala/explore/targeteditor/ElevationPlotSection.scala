@@ -15,7 +15,6 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.Site
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Semester
-import lucuma.ui.reusability._
 import react.common.ReactFnProps
 import react.datepicker._
 import react.semanticui.collections.form.Form
@@ -37,11 +36,8 @@ object ElevationPlotSection {
     final case object Night    extends PlotPeriod
     final case object Semester extends PlotPeriod
 
-    implicit val PlotPeriodEq: Eq[PlotPeriod]             = Eq.fromUniversalEquals
-    implicit val PlotPeriodReuse: Reusability[PlotPeriod] = Reusability.byRef
+    implicit val PlotPeriodEq: Eq[PlotPeriod] = Eq.fromUniversalEquals
   }
-
-  implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   val component =
     ScalaFnComponent
@@ -50,7 +46,7 @@ object ElevationPlotSection {
       .useState(ZonedDateTime.now(Site.GS.timezone).toLocalDate.plusDays(1))
       .useState[PlotPeriod](PlotPeriod.Night)
       .useState[TimeDisplay](TimeDisplay.Site)
-      .renderWithReuse { (props, site, date, plotPeriod, timeDisplay) =>
+      .render { (props, site, date, plotPeriod, timeDisplay) =>
         implicit val ctx = props.ctx
 
         <.div(ExploreStyles.ElevationPlotSection)(

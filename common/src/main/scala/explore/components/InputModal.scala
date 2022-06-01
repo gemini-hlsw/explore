@@ -13,7 +13,6 @@ import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.forms.FormInputEV
-import lucuma.ui.reusability._
 import monocle.Focus
 import react.common._
 import react.semanticui.elements.button.Button
@@ -42,9 +41,6 @@ object InputModal {
   object State {
     val inputValue = Focus[State](_.inputValue)
   }
-
-  implicit val propsReuse: Reusability[Props] = Reusability.derive
-  implicit val stateReuse: Reusability[State] = Reusability.derive
 
   protected class Backend($ : BackendScope[Props, State]) {
     def render(props: Props, state: State) = {
@@ -97,6 +93,5 @@ object InputModal {
       .builder[Props]
       .initialStateFromProps(p => State(p.initialValue.fold("")(_.value)))
       .renderBackend[Backend]
-      .configure(Reusability.shouldComponentUpdate)
       .build
 }

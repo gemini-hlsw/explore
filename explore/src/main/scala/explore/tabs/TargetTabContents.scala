@@ -396,7 +396,7 @@ object TargetTabContents {
           GridLayoutSection.TargetLayout,
           None
         )
-      potRenderWithReuse[LayoutsMap](rglRender.reuseAlways)(layouts.get)
+      potRender[LayoutsMap](rglRender)(layouts.get)
     }
 
     def renderSiderealTargetEditor(targetId: Target.Id, target: Target.Sidereal): VdomNode = {
@@ -433,7 +433,7 @@ object TargetTabContents {
                        GridLayoutSection.TargetLayout,
                        None
         )
-      potRenderWithReuse[LayoutsMap](rglRender.reuseAlways)(layouts.get)
+      potRender[LayoutsMap](rglRender)(layouts.get)
     }
 
     val selectedPanel = panels.get.selected

@@ -5,12 +5,10 @@ package explore.targeteditor
 
 import cats.Eq
 import cats.syntax.all._
-import crystal.react.reuse._
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.svg_<^._
 import lucuma.core.math.Coordinates
-import lucuma.ui.reusability._
 import react.common._
 import react.common.implicits._
 
@@ -62,13 +60,12 @@ object SVGTarget {
 final case class SVGTargetsOverlay(
   width:     Int,
   height:    Int,
-  world2pix: Coordinates ==> Option[(Double, Double)],
+  world2pix: Coordinates => Option[(Double, Double)],
   targets:   List[SVGTarget]
 ) extends ReactFnPropsWithChildren[SVGTargetsOverlay](SVGTargetsOverlay.component)
 
 object SVGTargetsOverlay {
   type Props = SVGTargetsOverlay
-  implicit val reuse: Reusability[Props] = Reusability.derive
 
   val canvasWidth  = VdomAttr("width")
   val canvasHeight = VdomAttr("height")

@@ -180,9 +180,6 @@ object SequenceTable {
       .setHeader("S/N")
   )
 
-  // Props are not used directly when computing reusability in render.
-  implicit private val propsReuse: Reusability[Props] = Reusability.always
-
   private def buildLines(
     atoms: List[Atom]
   ): List[StepLine] =
@@ -218,7 +215,7 @@ object SequenceTable {
           Reuse(props.atoms).self.map(buildLines)
         )
       )
-      .renderWithReuse { (_, table) =>
+      .render { (_, table) =>
         val FormattedTable = StepTableComponent(
           Table(celled = true, selectable = true, striped = true, compact = TableCompact.Very),
           header = true,

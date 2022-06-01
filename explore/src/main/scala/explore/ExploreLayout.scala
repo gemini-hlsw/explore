@@ -34,9 +34,6 @@ final case class ExploreLayout(
 object ExploreLayout {
   type Props = ExploreLayout
 
-  implicit val resolutionWithPropsReuse: Reusability[ResolutionWithProps[Page, View[RootModel]]] =
-    Reusability.byRefOr_==
-
   private val component =
     ScalaComponent
       .builder[Props]

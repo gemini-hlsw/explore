@@ -72,12 +72,9 @@ object SpectroscopyModesTable {
 
   type ColId = NonEmptyString
 
-  implicit val matrixProps: Reusability[SpectroscopyModesMatrix] = Reusability.always
-  // implicit val reuseProps: Reusability[Props]                    = Reusability.derive
-  implicit val listRangeReuse: Reusability[ListRange]            =
+  // implicit val matrixProps: Reusability[SpectroscopyModesMatrix] = Reusability.always
+  implicit val listRangeReuse: Reusability[ListRange] =
     Reusability.by(x => (x.startIndex.toInt, x.endIndex.toInt))
-  ///////////////////////////////////////////////////////////////////////////
-  implicit val xxx: Reusability[SpectroscopyRequirementsData]    = Reusability.always
 
   protected val ModesTableDef = TableDef[SpectroscopyModeRow].withSortBy.withBlockLayout
 

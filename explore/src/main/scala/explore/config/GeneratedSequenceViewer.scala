@@ -10,7 +10,6 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.core.model.sequence._
-import lucuma.ui.reusability._
 import queries.common.GeneratedSequenceSQL._
 import react.common._
 
@@ -19,8 +18,6 @@ final case class GeneratedSequenceViewer(obsId: Observation.Id)(implicit val ctx
 
 object GeneratedSequenceViewer {
   type Props = GeneratedSequenceViewer
-
-  implicit protected val propsReuse: Reusability[Props] = Reusability.derive
 
   private def renderFn(config: Option[FutureExecutionConfig]): VdomNode =
     config.fold[VdomNode](<.div("Default observation not found"))(GeneratedSequenceTables.apply)

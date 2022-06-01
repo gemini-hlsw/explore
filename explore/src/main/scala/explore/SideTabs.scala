@@ -9,7 +9,6 @@ import explore.model.RoutingInfo
 import explore.model.enum.AppTab
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.ui.reusability._
 import lucuma.ui.utils._
 import react.common._
 import react.semanticui.elements.button.Button
@@ -27,72 +26,65 @@ final case class SideTabs(
 object SideTabs {
   type Props = SideTabs
 
-  implicit val propsReuse: Reusability[Props] = Reusability.derive
-
   protected val component =
-    ScalaFnComponent
-      .withReuse[Props] { p =>
-        AppCtx.using { implicit ctx =>
-          val focus = p.routingInfo.appTab
-          val ri    = p.routingInfo
+    ScalaFnComponent[Props] { p =>
+      AppCtx.using { implicit ctx =>
+        val focus = p.routingInfo.appTab
+        val ri    = p.routingInfo
 
-          def onClickE[A](tab: AppTab) =
-            linkOverride[A](
-              ctx.pushPage(tab, ri.programId, ri.focusedObsSet, ri.focusedTarget)
-            )
-
-          def tabButton(tab: AppTab): Button =
-            Button(
-              as = <.a,
-              active = tab === focus,
-              clazz = ExploreStyles.SideButton,
-              onClickE = onClickE[ButtonProps](tab)
-            )(^.href := ctx.pageUrl(tab, ri.programId, ri.focusedObsSet, ri.focusedTarget),
-              tab.title
-            )
-
-          def tab(tab: AppTab): Label =
-            Label(
-              as = <.a,
-              active = tab === focus,
-              clazz = ExploreStyles.TabSelector,
-              size = Tiny,
-              onClickE = onClickE[LabelProps](tab)
-            )(^.href := ctx.pageUrl(tab, ri.programId, ri.focusedObsSet, ri.focusedTarget),
-              tab.title
-            )
-
-          def makeButtonSection(tabs: List[AppTab]): TagMod = tabs match {
-            case justOne :: Nil => VerticalSection()(tabButton(justOne))
-            case _              =>
-              VerticalSection()(
-                ButtonGroup(tabs.reverse.map(tabButton).toTagMod)
-              )
-          }
-
-          val verticalButtonsSections: List[TagMod] =
-            AppTab.all.toList
-              .groupBy(_.buttonGroup)
-              .toList
-              .sortBy(_._1)
-              .map(tup => makeButtonSection(tup._2))
-
-          val horizontalButtonsSections: List[TagMod] =
-            AppTab.all.toList
-              .map(tup => tab(tup))
-
-          React.Fragment(
-            <.div(
-              ExploreStyles.SideTabsVertical,
-              verticalButtonsSections.mkTagMod(
-                Divider(hidden = true, clazz = ExploreStyles.SideTabsDivider)
-              )
-            ),
-            <.div(
-              ExploreStyles.SideTabsHorizontal,
-              horizontalButtonsSections.toTagMod
-            )
+        def onClickE[A](tab: AppTab) =
+          linkOverride[A](
+            ctx.pushPage(tab, ri.programId, ri.focusedObsSet, ri.focusedTarget)
           )
+
+        def tabButton(tab: AppTab): Button =
+          Button(
+            as = <.a,
+            active = tab === focus,
+            clazz = ExploreStyles.SideButton,
+            onClickE = onClickE[ButtonProps](tab)
+          )(^.href := ctx.pageUrl(tab, ri.programId, ri.focusedObsSet, ri.focusedTarget), tab.title)
+
+        def tab(tab: AppTab): Label =
+          Label(
+            as = <.a,
+            active = tab === focus,
+            clazz = ExploreStyles.TabSelector,
+            size = Tiny,
+            onClickE = onClickE[LabelProps](tab)
+          )(^.href := ctx.pageUrl(tab, ri.programId, ri.focusedObsSet, ri.focusedTarget), tab.title)
+
+        def makeButtonSection(tabs: List[AppTab]): TagMod = tabs match {
+          case justOne :: Nil => VerticalSection()(tabButton(justOne))
+          case _              =>
+            VerticalSection()(
+              ButtonGroup(tabs.reverse.map(tabButton).toTagMod)
+            )
         }
+
+        val verticalButtonsSections: List[TagMod] =
+          AppTab.all.toList
+            .groupBy(_.buttonGroup)
+            .toList
+            .sortBy(_._1)
+            .map(tup => makeButtonSection(tup._2))
+
+        val horizontalButtonsSections: List[TagMod] =
+          AppTab.all.toList
+            .map(tup => tab(tup))
+
+        React.Fragment(
+          <.div(
+            ExploreStyles.SideTabsVertical,
+            verticalButtonsSections.mkTagMod(
+              Divider(hidden = true, clazz = ExploreStyles.SideTabsDivider)
+            )
+          ),
+          <.div(
+            ExploreStyles.SideTabsHorizontal,
+            horizontalButtonsSections.toTagMod
+          )
+        )
       }
+    }
 }
