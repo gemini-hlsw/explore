@@ -7,7 +7,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.Pot
 import crystal.implicits._
-import crystal.react.ReuseView
+import crystal.react.View
 import crystal.react.hooks._
 import crystal.react.implicits._
 import crystal.react.reuse._
@@ -50,7 +50,7 @@ final case class AladinCell(
   tid:              Target.Id,
   obsConf:          Option[ObsConfiguration],
   scienceMode:      Option[ScienceMode],
-  target:           ReuseView[SiderealTracking]
+  target:           View[SiderealTracking]
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[AladinCell](AladinCell.component)
 
@@ -63,18 +63,16 @@ object AladinSettings {
 object AladinCell extends ModelOptics {
   type Props = AladinCell
 
-  implicit protected val propsReuse: Reusability[Props] = Reusability.derive[Props]
-
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
       // mouse coordinates, starts on the base
       .useStateBy(_.target.get.baseCoordinates)
       // target options, will be read from the user preferences
-      .useStateViewWithReuse(Pot.pending[TargetVisualOptions])
+      .useStateView(Pot.pending[TargetVisualOptions])
       // flag to trigger centering. This is a bit brute force but
       // avoids us needing a ref to a Fn component
-      .useStateViewWithReuse(false)
+      .useStateView(false)
       // Listen on web worker for messages with catalog candidates
       .useStreamOnMountBy((props, _, _, _) =>
         props.ctx.worker.stream
@@ -129,7 +127,7 @@ object AladinCell extends ModelOptics {
       }
       // open settings menu
       .useState(false)
-      .renderWithReuse { (props, mouseCoords, options, center, gsc, openSettings) =>
+      .render { (props, mouseCoords, options, center, gsc, openSettings) =>
         implicit val ctx = props.ctx
 
         val agsCandidatesView =
