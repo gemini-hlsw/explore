@@ -5,12 +5,10 @@ package explore.targeteditor
 
 import cats.effect.IO
 import cats.syntax.all._
-import crystal.react.ReuseView
-import crystal.react.ReuseViewOpt
 import crystal.react.View
+import crystal.react.ViewOpt
 import crystal.react.hooks._
 import crystal.react.implicits._
-import crystal.react.reuse._
 import explore.Icons
 import explore.common.AsterismQueries
 import explore.components.Tile
@@ -23,6 +21,7 @@ import explore.model.ObsIdSet
 import explore.model.ScienceMode
 import explore.model.TargetWithId
 import explore.model.TargetWithOptId
+import explore.model.reusability._
 import explore.optics._
 import explore.targets.TargetSelectionPopup
 import explore.undo.UndoStacks
@@ -47,15 +46,15 @@ final case class AsterismEditor(
   userId:           User.Id,
   programId:        Program.Id,
   obsIds:           ObsIdSet,
-  asterism:         ReuseView[Option[Asterism]],
+  asterism:         View[Option[Asterism]],
   scienceMode:      Option[ScienceMode],
-  obsConf:          ReuseViewOpt[ObsConfiguration],
+  obsConf:          ViewOpt[ObsConfiguration],
   currentTarget:    Option[Target.Id],
-  setTarget:        (Option[Target.Id], SetRouteVia) ==> Callback,
-  otherObsCount:    Target.Id ==> Int,
-  undoStacks:       ReuseView[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
-  searching:        ReuseView[Set[Target.Id]],
-  hiddenColumns:    ReuseView[Set[String]],
+  setTarget:        (Option[Target.Id], SetRouteVia) => Callback,
+  otherObsCount:    Target.Id => Int,
+  undoStacks:       View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
+  searching:        View[Set[Target.Id]],
+  hiddenColumns:    View[Set[String]],
   renderInTitle:    Tile.RenderInTitle
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[AsterismEditor](AsterismEditor.component)
@@ -66,10 +65,10 @@ object AsterismEditor {
   private def insertSiderealTarget(
     programId:      Program.Id,
     obsIds:         ObsIdSet,
-    asterism:       ReuseView[Option[Asterism]],
+    asterism:       View[Option[Asterism]],
     oTargetId:      Option[Target.Id],
     target:         Target.Sidereal,
-    selectedTarget: ReuseView[Option[Target.Id]],
+    selectedTarget: View[Option[Target.Id]],
     adding:         View[Boolean]
   )(implicit ctx:   AppContextIO): IO[Unit] = {
     val targetId: IO[Target.Id] = oTargetId.fold(
@@ -92,8 +91,9 @@ object AsterismEditor {
 
   private def onCloneTarget(
     id:        Target.Id,
-    asterism:  ReuseView[Option[Asterism]],
-    setTarget: (Option[Target.Id], SetRouteVia) ==> Callback,
+    asterism:  View[Option[Asterism]],
+    setTarget: (Option[Target.Id], SetRouteVia) => Callback
+  )(
     newTwid:   TargetWithId
   ): Callback =
     asterism
@@ -108,31 +108,31 @@ object AsterismEditor {
       .useStateView(false)
       // edit target in current obs only (0), or all "instances" of the target (1)
       .useState(0)
-      .useEffectWithDepsBy((props, _, _) => (props.asterism, props.currentTarget, props.setTarget))(
-        (_, _, _) => { case (asterism, oTargetId, setTarget) =>
+      .useEffectWithDepsBy((props, _, _) => (props.asterism.get, props.currentTarget))(
+        (props, _, _) => { case (asterism, oTargetId) =>
           // if the selected targetId is None, or not in the asterism, select the first target (if any)
           // Need to replace history here.
           oTargetId match {
-            case None                                                   =>
-              asterism.get.foldMap(a => setTarget(a.baseTarget.id.some, SetRouteVia.HistoryReplace))
-            case Some(current) if asterism.get.exists(_.hasId(current)) => Callback.empty
-            case _                                                      =>
-              setTarget(asterism.get.map(_.baseTarget.id), SetRouteVia.HistoryReplace)
+            case None                                               =>
+              asterism.foldMap(a =>
+                props.setTarget(a.baseTarget.id.some, SetRouteVia.HistoryReplace)
+              )
+            case Some(current) if asterism.exists(_.hasId(current)) => Callback.empty
+            case _                                                  =>
+              props.setTarget(asterism.map(_.baseTarget.id), SetRouteVia.HistoryReplace)
           }
         }
       )
       .render { (props, adding, editScope) =>
         implicit val ctx = props.ctx
 
-        val targetView: ReuseView[Option[Target.Id]] =
-          Reuse.by(props.currentTarget, props.setTarget)(
-            View[Option[Target.Id]](
-              props.currentTarget,
-              { (f, cb) =>
-                val newValue = f(props.currentTarget)
-                props.setTarget(newValue, SetRouteVia.HistoryPush) >> cb(newValue)
-              }
-            )
+        val targetView: View[Option[Target.Id]] =
+          View[Option[Target.Id]](
+            props.currentTarget,
+            { (f, cb) =>
+              val newValue = f(props.currentTarget)
+              props.setTarget(newValue, SetRouteVia.HistoryPush) >> cb(newValue)
+            }
           )
 
         React.Fragment(
@@ -151,15 +151,17 @@ object AsterismEditor {
               ),
               onSelected = _ match {
                 case TargetWithOptId(oid, t @ Target.Sidereal(_, _, _, _)) =>
-                  insertSiderealTarget(props.programId,
-                                       props.obsIds,
-                                       props.asterism,
-                                       oid,
-                                       t,
-                                       targetView,
-                                       adding
+                  insertSiderealTarget(
+                    props.programId,
+                    props.obsIds,
+                    props.asterism,
+                    oid,
+                    t,
+                    targetView,
+                    adding
                   ).runAsync
-                case _                                                     => Callback.empty
+                case _                                                     =>
+                  Callback.empty
               }
             )
           ),
@@ -201,11 +203,12 @@ object AsterismEditor {
                           checked = editScope.value === 0,
                           onChange = (_: Boolean) => editScope.setState(0)
                         ),
-                        Checkbox(name = "editScope",
-                                 label = "all observations of this target",
-                                 value = 1,
-                                 checked = editScope.value === 1,
-                                 onChange = (_: Boolean) => editScope.setState(1)
+                        Checkbox(
+                          name = "editScope",
+                          label = "all observations of this target",
+                          value = 1,
+                          checked = editScope.value === 1,
+                          onChange = (_: Boolean) => editScope.setState(1)
                         )
                       ).when(otherObsCount > 0),
                       SiderealTargetEditor(
@@ -216,9 +219,7 @@ object AsterismEditor {
                         props.scienceMode,
                         props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
                         props.searching,
-                        onClone = Reuse
-                          .currying(targetId, props.asterism, props.setTarget)
-                          .in(onCloneTarget _),
+                        onClone = onCloneTarget(targetId, props.asterism, props.setTarget) _,
                         obsIdSubset =
                           if (otherObsCount > 0 && editScope.value === 0) props.obsIds.some
                           else none

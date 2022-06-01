@@ -6,9 +6,7 @@ package explore.observationtree
 import cats.effect.IO
 import cats.syntax.all._
 import clue.TransactionalClient
-import crystal.react.ReuseView
 import crystal.react.View
-import crystal.react.reuse.Reuse
 import explore.Icons
 import explore.common.AsterismQueries._
 import explore.components.ui.ExploreStyles
@@ -18,16 +16,13 @@ import explore.model.AsterismGroup
 import explore.model.ObsIdSet
 import explore.model.TargetGroup
 import explore.model.enum.AppTab
-import explore.model.reusability._
 import explore.undo._
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
-import lucuma.ui.reusability._
 import monocle.Focus
 import monocle.Lens
 import mouse.boolean._
@@ -47,13 +42,13 @@ import react.semanticui.views.card._
 import scala.collection.immutable.SortedSet
 
 final case class AsterismGroupObsList(
-  asterismsWithObs: ReuseView[AsterismGroupsWithObs],
+  asterismsWithObs: View[AsterismGroupsWithObs],
   programId:        Program.Id,
   focusedObsSet:    Option[ObsIdSet],
   focusedTarget:    Option[Target.Id],
-  setSummaryPanel:  Reuse[Callback],
-  expandedIds:      ReuseView[SortedSet[ObsIdSet]],
-  undoStacks:       ReuseView[UndoStacks[IO, AsterismGroupsWithObs]]
+  setSummaryPanel:  Callback,
+  expandedIds:      View[SortedSet[ObsIdSet]],
+  undoStacks:       View[UndoStacks[IO, AsterismGroupsWithObs]]
 )(implicit val ctx: AppContextIO)
     extends ReactProps[AsterismGroupObsList](AsterismGroupObsList.component)
     with ViewCommon
@@ -70,14 +65,11 @@ object AsterismGroupObsList {
     val dragging: Lens[State, Boolean] = Focus[State](_.dragging)
   }
 
-  implicit val propsReuse: Reusability[Props] = Reusability.derive
-  implicit val stateReuse: Reusability[State] = Reusability.derive
-
   class Backend($ : BackendScope[Props, State]) {
 
     def toggleExpanded(
       obsIds:      ObsIdSet,
-      expandedIds: ReuseView[SortedSet[ObsIdSet]]
+      expandedIds: View[SortedSet[ObsIdSet]]
     ): Callback =
       expandedIds.mod { expanded =>
         expanded
@@ -111,7 +103,7 @@ object AsterismGroupObsList {
 
     def onDragEnd(
       undoCtx:     UndoContext[AsterismGroupsWithObs],
-      expandedIds: ReuseView[SortedSet[ObsIdSet]]
+      expandedIds: View[SortedSet[ObsIdSet]]
     )(implicit
       c:           TransactionalClient[IO, ObservationDB]
     ): (DropResult, ResponderProvided) => Callback = (result, _) =>
@@ -348,7 +340,7 @@ object AsterismGroupObsList {
           <.div(ExploreStyles.TreeToolbar)(UndoButtons(undoCtx, size = Mini)),
           <.div(
             Button(
-              onClick = clearFocused >> props.setSummaryPanel.value,
+              onClick = clearFocused >> props.setSummaryPanel,
               clazz = ExploreStyles.ButtonSummary
             )(
               Icons.ListIcon.clazz(ExploreStyles.PaddedRightIcon),
@@ -431,6 +423,5 @@ object AsterismGroupObsList {
         _ <- cleanupExpandedIds
       } yield ()
     }
-    .configure(Reusability.shouldComponentUpdate)
     .build
 }

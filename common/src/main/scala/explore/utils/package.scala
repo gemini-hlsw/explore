@@ -9,7 +9,7 @@ import cats.syntax.all._
 import clue.data._
 import clue.data.syntax._
 import crystal.Pot
-import crystal.react.ReuseView
+import crystal.react.View
 import crystal.react.reuse._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.ui.ExploreStyles
@@ -84,7 +84,7 @@ package object utils {
     valueRender:   A => VdomNode,
     pendingRender: Long => VdomNode = _ => Loader(active = true),
     errorRender:   Throwable => VdomNode = t => Message(error = true)(t.getMessage)
-  ): ReuseView[Pot[A]] => VdomNode =
+  ): View[Pot[A]] => VdomNode =
     _.get.fold(pendingRender, errorRender, valueRender)
 
   def showCount(count: Int, unit: String, plural: String): String =

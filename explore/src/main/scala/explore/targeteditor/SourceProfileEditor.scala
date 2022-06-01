@@ -7,7 +7,6 @@ import cats.data.NonEmptyChain
 import cats.data.Validated
 import cats.syntax.all._
 import clue.data.syntax._
-import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.common._
 import explore.components.ui.ExploreStyles
@@ -28,15 +27,13 @@ import queries.schemas.implicits._
 import react.common._
 
 case class SourceProfileEditor(
-  sourceProfile:       ReuseAligner[SourceProfile, SourceProfileInput],
+  sourceProfile:       Aligner[SourceProfile, SourceProfileInput],
   disabled:            Boolean
 )(implicit val appCtx: AppContextIO)
     extends ReactFnProps[SourceProfileEditor](SourceProfileEditor.component)
 
 object SourceProfileEditor {
   type Props = SourceProfileEditor
-
-  protected implicit val reuseProps: Reusability[Props] = Reusability.derive
 
   // We can't define a Format[String, Angle] for arcseconds. Roundtrip laws fail because of rounding.
   private val angleValidFormatInput: ValidFormatInput[Angle] =
@@ -48,11 +45,10 @@ object SourceProfileEditor {
       a => (a.toMicroarcseconds / 1000000.0).toString
     )
 
-  protected val component = ScalaFnComponent[Props] // .withReuse[Props]
-  { props =>
+  protected val component = ScalaFnComponent[Props] { props =>
     implicit val appCtx = props.appCtx
 
-    val gaussianAlignerOpt: Option[ReuseAligner[Gaussian, GaussianInput]] =
+    val gaussianAlignerOpt: Option[Aligner[Gaussian, GaussianInput]] =
       props.sourceProfile.zoomOpt(
         SourceProfile.gaussian,
         forceAssign(SourceProfileInput.gaussian.modify)(GaussianInput())
@@ -60,11 +56,9 @@ object SourceProfileEditor {
 
     React.Fragment(
       <.label("Profile", ExploreStyles.SkipToNext),
-      EnumSelect(
+      EnumSelect[SourceProfileType](
         value = SourceProfileType.fromSourceProfile(props.sourceProfile.get).some,
-        onChange = Reuse.by(props.sourceProfile)((sp: SourceProfileType) =>
-          props.sourceProfile.view(_.toInput).mod(sp.convert)
-        )
+        onChange = sp => props.sourceProfile.view(_.toInput).mod(sp.convert)
       ),
       <.span,
       props.sourceProfile
@@ -95,12 +89,10 @@ object SourceProfileEditor {
               units = "arcsec"
             ),
             IntegratedSpectralDefinitionEditor(
-              gaussianAligner.map(
-                _.zoom(
-                  Gaussian.spectralDefinition,
-                  forceAssign(GaussianInput.spectralDefinition.modify)(
-                    SpectralDefinitionIntegratedInput()
-                  )
+              gaussianAligner.zoom(
+                Gaussian.spectralDefinition,
+                forceAssign(GaussianInput.spectralDefinition.modify)(
+                  SpectralDefinitionIntegratedInput()
                 )
               )
             )

@@ -6,7 +6,7 @@ package explore
 import cats.Order._
 import cats.data.NonEmptySet
 import cats.syntax.all._
-import crystal.react.ReuseView
+import crystal.react.View
 import explore.components.ui.ExploreStyles
 import explore.config.SequenceEditor
 import explore.model.Page
@@ -43,7 +43,7 @@ object Routing {
 
   private def homeTab(): VdomElement = UnderConstruction()
 
-  private def targetTab(page: Page, model: ReuseView[RootModel]): VdomElement =
+  private def targetTab(page: Page, model: View[RootModel]): VdomElement =
     AppCtx.using { implicit ctx =>
       val routingInfo = RoutingInfo.from(page)
       TargetTabContents(
@@ -59,7 +59,7 @@ object Routing {
       )
     }
 
-  private def obsTab(page: Page, model: ReuseView[RootModel]): VdomElement =
+  private def obsTab(page: Page, model: View[RootModel]): VdomElement =
     AppCtx.using { implicit ctx =>
       val routingInfo = RoutingInfo.from(page)
       ObsTabContents(
@@ -73,7 +73,7 @@ object Routing {
       )
     }
 
-  private def constraintSetTab(page: Page, model: ReuseView[RootModel]): VdomElement =
+  private def constraintSetTab(page: Page, model: View[RootModel]): VdomElement =
     withSize(size =>
       AppCtx.using { implicit ctx =>
         val routingInfo = RoutingInfo.from(page)
@@ -104,7 +104,7 @@ object Routing {
       SequenceEditor(RoutingInfo.from(page).programId)
     }
 
-  private def showProgramSelectionPopup(model: ReuseView[RootModel]): VdomElement =
+  private def showProgramSelectionPopup(model: View[RootModel]): VdomElement =
     AppCtx.using { implicit ctx =>
       ProgramsPopup(
         currentProgramId = none,
@@ -112,8 +112,8 @@ object Routing {
       )
     }
 
-  def config: RouterWithPropsConfig[Page, ReuseView[RootModel]] =
-    RouterWithPropsConfigDsl[Page, ReuseView[RootModel]].buildConfig { dsl =>
+  def config: RouterWithPropsConfig[Page, View[RootModel]] =
+    RouterWithPropsConfigDsl[Page, View[RootModel]].buildConfig { dsl =>
       import dsl._
 
       // We can't use gid.regexPattern because capture groups don't work here.
@@ -237,7 +237,7 @@ object Routing {
 
   private def layout(
     c: RouterCtl[Page],
-    r: ResolutionWithProps[Page, ReuseView[RootModel]]
-  ): ReuseView[RootModel] => VdomElement =
+    r: ResolutionWithProps[Page, View[RootModel]]
+  ): View[RootModel] => VdomElement =
     ExploreLayout(c, r)
 }

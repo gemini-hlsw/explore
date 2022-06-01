@@ -24,7 +24,6 @@ import explore.model.ObsConfiguration
 import explore.model.ScienceMode
 import explore.model.TargetVisualOptions
 import explore.model.boopickle._
-import explore.model.reusability._
 import explore.optics.ModelOptics
 import explore.utils._
 import japgolly.scalajs.react._

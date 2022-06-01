@@ -3,7 +3,6 @@
 
 package explore.config
 
-import crystal.react.reuse._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
@@ -11,7 +10,6 @@ import explore.implicits._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
-import lucuma.ui.reusability._
 import react.common.ReactFnProps
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.modal._
@@ -22,25 +20,23 @@ final case class SequenceEditorPopup(
   obsId:            Observation.Id,
   title:            String,
   subtitle:         Option[NonEmptyString],
-  trigger:          Reuse[Button]
+  trigger:          Button
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[SequenceEditorPopup](SequenceEditorPopup.component)
 
 object SequenceEditorPopup {
   type Props = SequenceEditorPopup
 
-  private implicit val propsReuse: Reusability[Props] = Reusability.derive
-
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
       // isOpen
       .useState(false)
-      .renderWithReuse { (props, isOpen) =>
+      .render { (props, isOpen) =>
         implicit val ctx = props.ctx
 
         React.Fragment(
-          props.trigger.value(^.onClick --> isOpen.setState(true)),
+          props.trigger(^.onClick --> isOpen.setState(true)),
           Modal(
             actions = List(
               Button(size = Small, icon = true)(

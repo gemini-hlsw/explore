@@ -25,7 +25,6 @@ import explore.model._
 import explore.model.enum.AppTab
 import explore.model.layout._
 import explore.model.layout.unsafe._
-import explore.model.reusability._
 import explore.observationtree.ObsList
 import explore.syntax.ui._
 import explore.utils._
@@ -61,9 +60,9 @@ final case class ObsTabContents(
   programId:        Program.Id,
   focusedObs:       Option[Observation.Id],
   focusedTarget:    Option[Target.Id],
-  undoStacks:       ReuseView[ModelUndoStacks[IO]],
-  searching:        ReuseView[Set[Target.Id]],
-  hiddenColumns:    ReuseView[Set[String]]
+  undoStacks:       View[ModelUndoStacks[IO]],
+  searching:        View[Set[Target.Id]],
+  hiddenColumns:    View[Set[String]]
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[ObsTabContents](ObsTabContents.component)
 
@@ -77,8 +76,6 @@ object ObsTabTilesIds {
 
 object ObsTabContents {
   type Props = ObsTabContents
-
-  implicit protected val propsReuse: Reusability[Props] = Reusability.derive
 
   private val NotesMaxHeight: NonNegInt         = 3
   private val TargetHeight: NonNegInt           = 18
@@ -94,12 +91,13 @@ object ObsTabContents {
 
   private val layoutMedium: Layout = Layout(
     List(
-      LayoutItem(x = 0,
-                 y = 0,
-                 w = DefaultWidth.value,
-                 h = NotesMaxHeight.value,
-                 i = ObsTabTilesIds.NotesId.value,
-                 isResizable = false
+      LayoutItem(
+        x = 0,
+        y = 0,
+        w = DefaultWidth.value,
+        h = NotesMaxHeight.value,
+        i = ObsTabTilesIds.NotesId.value,
+        isResizable = false
       ),
       LayoutItem(
         x = 0,
@@ -151,13 +149,14 @@ object ObsTabContents {
 
   protected def renderFn(
     props:              Props,
-    panels:             ReuseView[TwoPanelState],
+    panels:             View[TwoPanelState],
     defaultLayouts:     LayoutsMap,
-    layouts:            ReuseView[Pot[LayoutsMap]],
+    layouts:            View[Pot[LayoutsMap]],
     resize:             UseResizeDetectorReturn,
-    obsConf:            ReuseView[ObsConfiguration],
-    debouncer:          Reusable[UseSingleEffect[IO]],
-    obsWithConstraints: ReuseView[ObsSummariesWithConstraints]
+    obsConf:            View[ObsConfiguration],
+    debouncer:          Reusable[UseSingleEffect[IO]]
+  )(
+    obsWithConstraints: View[ObsSummariesWithConstraints]
   )(implicit ctx:       AppContextIO): VdomNode = {
     val observations     = obsWithConstraints.zoom(ObsSummariesWithConstraints.observations)
     val constraintGroups = obsWithConstraints.zoom(ObsSummariesWithConstraints.constraintGroups)
@@ -180,12 +179,12 @@ object ObsTabContents {
     val selectedView = panels.zoom(TwoPanelState.selected)
 
     // Tree area
-    def tree(observations: ReuseView[ObservationList]) =
+    def tree(observations: View[ObservationList]) =
       <.div(^.width := treeWidth.px, ExploreStyles.Tree |+| ExploreStyles.ResizableMultiPanel)(
         treeInner(observations)
       )
 
-    def treeInner(observations: ReuseView[ObservationList]) =
+    def treeInner(observations: View[ObservationList]) =
       <.div(ExploreStyles.TreeBody)(
         ObsList(
           observations,
@@ -197,7 +196,7 @@ object ObsTabContents {
         )
       )
 
-    val backButton = Reuse.always[VdomNode](
+    val backButton: VdomNode =
       Button(
         as = <.a,
         basic = true,
@@ -209,7 +208,6 @@ object ObsTabContents {
             selectedView.set(SelectedPanel.tree)
         )
       )(^.href := ctx.pageUrl(AppTab.Observations, props.programId, none, none), Icons.ChevronLeft)
-    )
 
     val coreWidth =
       if (window.canFitTwoPanels) {
@@ -223,11 +221,11 @@ object ObsTabContents {
     val rightSide: VdomNode =
       props.focusedObs.fold[VdomNode](
         Tile("observations", "Observations Summary", backButton.some, key = "observationsSummary")(
-          Reuse.by(obsWithConstraints)((_: Tile.RenderInTitle) =>
-            <.div(ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
-                  <.div("Select or add an observation")
+          _ =>
+            <.div(
+              ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
+              <.div("Select or add an observation")
             )
-          )
         )
       )(obsId =>
         ObsTabTiles(
@@ -286,9 +284,9 @@ object ObsTabContents {
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStateViewWithReuse(TwoPanelState.initial(SelectedPanel.Uninitialized))
+      .useStateView(TwoPanelState.initial(SelectedPanel.Uninitialized))
       .useEffectWithDepsBy((props, panels) =>
-        (props.focusedObs, panels.zoom(TwoPanelState.selected).value.reuseByValue)
+        (props.focusedObs, panels.zoom(TwoPanelState.selected).reuseByValue)
       ) { (_, _) => params =>
         val (focusedObs, selected) = params
         (focusedObs, selected.get) match {
@@ -300,7 +298,7 @@ object ObsTabContents {
       // Measure its sive
       .useResizeDetector()
       // Layout
-      .useStateViewWithReuse(Pot.pending[LayoutsMap])
+      .useStateView(Pot.pending[LayoutsMap])
       // Keep a record of the initial target layouut
       .useMemo(())(_ => defaultObsLayouts)
       // Restore positions from the db
@@ -333,7 +331,7 @@ object ObsTabContents {
               .runAsync
       }
       // Shared obs conf (posAngle/obsTime)
-      .useStateViewWithReuse(ObsConfiguration(PosAngle.Default, Instant.now))
+      .useStateView(ObsConfiguration(PosAngle.Default, Instant.now))
       // DELETEME: For demos read from local obs
       .useEffectWithDepsBy((p, _, _, _, _, _) => p.focusedObs) { (p, _, _, _, _, obsConf) => _ =>
         obsConf.withOnMod(o => Callback.log(o))
@@ -347,7 +345,7 @@ object ObsTabContents {
           }
       }
       .useSingleEffect(debounce = 1.second)
-      .useStreamResourceViewWithReuseOnMountBy { (props, _, _, _, _, _, _) =>
+      .useStreamResourceViewOnMountBy { (props, _, _, _, _, _, _) =>
         implicit val ctx = props.ctx
 
         ProgramObservationsQuery
@@ -357,7 +355,7 @@ object ObsTabContents {
             ProgramObservationsEditSubscription.subscribe[IO](props.programId)
           )
       }
-      .renderWithReuse {
+      .render {
         (
           props,
           twoPanelState,
@@ -369,9 +367,10 @@ object ObsTabContents {
           obsWithConstraints
         ) =>
           implicit val ctx = props.ctx
+
           <.div(
             potRender(
-              Reuse(renderFn _)(
+              renderFn(
                 props,
                 twoPanelState,
                 defaultLayout,
@@ -386,7 +385,7 @@ object ObsTabContents {
                       .getOrElse(Callback.empty)
                   ),
                 debouncer
-              )
+              ) _
             )(obsWithConstraints)
           ).withRef(resize.ref)
       }

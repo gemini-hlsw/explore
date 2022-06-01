@@ -8,6 +8,7 @@ import cats.syntax.all._
 import crystal.react._
 import crystal.react.hooks._
 import crystal.react.reuse._
+import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
@@ -39,7 +40,7 @@ import scala.collection.immutable.SortedMap
 import scala.util.Try
 
 sealed trait BrightnessesEditor[T] {
-  val brightnesses: ReuseView[SortedMap[Band, BrightnessMeasure[T]]]
+  val brightnesses: View[SortedMap[Band, BrightnessMeasure[T]]]
   val disabled: Boolean
 }
 
@@ -62,13 +63,9 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
 
   protected def defaultBandUnits: Band => Units Of Brightness[T] // Abstract
 
-  implicit protected def propsReuse: Reusability[Props] // Abstract
-  implicit protected val stateReuse: Reusability[State] = Reusability.derive
+  private type RowValue = (Band, View[BrightnessMeasure[T]])
 
-  private type RowValue = (Band, ReuseView[BrightnessMeasure[T]])
-
-  private val BrightnessTableDef =
-    TableDef[RowValue].withSortBy.withFlexLayout
+  private val BrightnessTableDef = TableDef[RowValue].withSortBy.withFlexLayout
 
   private val BrightnessTable = new SUITableVirtuoso(BrightnessTableDef)
 
@@ -83,90 +80,92 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
   val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStateViewWithReuseBy(props => State.fromUsedBrightnesses(props.brightnesses.get))
+      .useStateViewBy(props => State.fromUsedBrightnesses(props.brightnesses.get))
       .useEffectWithDepsBy((props, _) => props.brightnesses.get)((_, state) =>
         brightnesses => state.set(State.fromUsedBrightnesses(brightnesses))
       )
-      .useMemoBy((props, _) => (props.brightnesses, props.disabled)) { (_, _) => // Memo cols
-        { case (brightnesses, disabled) =>
-          List(
-            BrightnessTableDef
-              .Column("band", _._1)
-              .setHeader("Band")
-              .setCell(_.value.shortName)
-              .setWidth(60)
-              .setMinWidth(50)
-              .setMaxWidth(60)
-              .setSortByAuto,
-            BrightnessTableDef
-              .Column("value", _._2.zoom(Measure.valueTagged[BigDecimal, Brightness[T]]))
-              .setHeader("Value")
-              .setCell(cell =>
-                FormInputEV[ReuseView, BigDecimal](
-                  id = NonEmptyString.unsafeFrom(s"brightnessValue_${cell.row.id}"),
-                  value = cell.value,
-                  validFormat = validBrightnessValue,
-                  changeAuditor = ChangeAuditor.bigDecimal(2, 3).allowExp(2),
-                  disabled = disabled
+      .useMemoBy((props, _) => (props.brightnesses.reuseByValue, props.disabled)) {
+        (_, _) => // Memo cols
+          { case (brightnesses, disabled) =>
+            List(
+              BrightnessTableDef
+                .Column("band", _._1)
+                .setHeader("Band")
+                .setCell(_.value.shortName)
+                .setWidth(60)
+                .setMinWidth(50)
+                .setMaxWidth(60)
+                .setSortByAuto,
+              BrightnessTableDef
+                .Column("value", _._2.zoom(Measure.valueTagged[BigDecimal, Brightness[T]]))
+                .setHeader("Value")
+                .setCell(cell =>
+                  FormInputEV[View, BigDecimal](
+                    id = NonEmptyString.unsafeFrom(s"brightnessValue_${cell.row.id}"),
+                    value = cell.value,
+                    validFormat = validBrightnessValue,
+                    changeAuditor = ChangeAuditor.bigDecimal(2, 3).allowExp(2),
+                    disabled = disabled
+                  )
                 )
-              )
-              .setWidth(80)
-              .setMinWidth(60)
-              .setMaxWidth(160),
-            BrightnessTableDef
-              .Column("units", _._2.zoom(Measure.unitsTagged[BigDecimal, Brightness[T]]))
-              .setHeader("Units")
-              .setCell(cell =>
-                EnumViewSelect[ReuseView, Units Of Brightness[T]](
-                  id = NonEmptyString.unsafeFrom(s"brightnessUnits_${cell.row.id}"),
-                  value = cell.value,
-                  compact = true,
-                  disabled = disabled,
-                  clazz = ExploreStyles.BrightnessesTableUnitsDropdown
-                )
-              )
-              .setWidth(100)
-              .setMinWidth(100)
-              .setMaxWidth(160),
-            BrightnessTableDef
-              .Column("delete", _._1)
-              .setCell(cell =>
-                <.div(ExploreStyles.BrightnessesTableDeletButtonWrapper)(
-                  Button(
-                    size = Small,
-                    clazz = ExploreStyles.DeleteButton,
+                .setWidth(80)
+                .setMinWidth(60)
+                .setMaxWidth(160),
+              BrightnessTableDef
+                .Column("units", _._2.zoom(Measure.unitsTagged[BigDecimal, Brightness[T]]))
+                .setHeader("Units")
+                .setCell(cell =>
+                  EnumViewSelect[View, Units Of Brightness[T]](
+                    id = NonEmptyString.unsafeFrom(s"brightnessUnits_${cell.row.id}"),
+                    value = cell.value,
+                    compact = true,
                     disabled = disabled,
-                    onClick = brightnesses.mod(_ - cell.value)
-                  )(Icons.Trash)
+                    clazz = ExploreStyles.BrightnessesTableUnitsDropdown
+                  )
                 )
-              )
-              .setWidth(20)
-              .setMinWidth(20)
-              .setMaxWidth(20)
-              .setDisableSortBy(true)
-          )
-        }
+                .setWidth(100)
+                .setMinWidth(100)
+                .setMaxWidth(160),
+              BrightnessTableDef
+                .Column("delete", _._1)
+                .setCell(cell =>
+                  <.div(ExploreStyles.BrightnessesTableDeletButtonWrapper)(
+                    Button(
+                      size = Small,
+                      clazz = ExploreStyles.DeleteButton,
+                      disabled = disabled,
+                      onClick = brightnesses.mod(_ - cell.value)
+                    )(Icons.Trash)
+                  )
+                )
+                .setWidth(20)
+                .setMinWidth(20)
+                .setMaxWidth(20)
+                .setDisableSortBy(true)
+            )
+          }
       }
       // rows
-      .useMemoBy((props, _, _) => props.brightnesses)((_, _, _) =>
-        _.widen[Map[Band, BrightnessMeasure[T]]].toListOfViews
+      .useMemoBy((props, _, _) => props.brightnesses.get)((props, _, _) =>
+        _ => props.brightnesses.widen[Map[Band, BrightnessMeasure[T]]].toListOfViews
       )
       .useTableBy((_, _, cols, rows) =>
-        BrightnessTableDef(cols,
-                           rows,
-                           ((_: BrightnessTableDef.OptionsType)
-                             .setRowIdFn(_._1.tag)
-                             .setInitialState(tableState))
-                             .reuseAlways
+        BrightnessTableDef(
+          cols,
+          rows,
+          ((_: BrightnessTableDef.OptionsType)
+            .setRowIdFn(_._1.tag)
+            .setInitialState(tableState))
+            .reuseAlways
         )
       )
-      .renderWithReuse { (props, state, _, _, tableInstance) =>
+      .render { (props, state, _, _, tableInstance) =>
         val footer =
           <.div(
             ExploreStyles.BrightnessesTableFooter,
             state
               .zoom(State.newBand)
-              .mapValue { (bandView: ReuseView[Band]) =>
+              .mapValue { (bandView: View[Band]) =>
                 val addBrightness =
                   props.brightnesses.mod(brightnesses =>
                     (brightnesses +
@@ -215,30 +214,26 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
 }
 
 final case class IntegratedBrightnessEditor(
-  brightnesses: ReuseView[SortedMap[Band, BrightnessMeasure[Integrated]]],
+  brightnesses: View[SortedMap[Band, BrightnessMeasure[Integrated]]],
   disabled:     Boolean
 ) extends ReactFnProps[IntegratedBrightnessEditor](IntegratedBrightnessEditor.component)
     with BrightnessesEditor[Integrated]
 
 object IntegratedBrightnessEditor
     extends BrightnessesEditorBuilder[Integrated, IntegratedBrightnessEditor] {
-  protected val label                                                             = "Brightness"
-  protected lazy val defaultBandUnits: Band => Units Of Brightness[Integrated]    =
+  protected val label                                                          = "Brightness"
+  protected lazy val defaultBandUnits: Band => Units Of Brightness[Integrated] =
     _.defaultIntegrated.units
-  implicit protected lazy val propsReuse: Reusability[IntegratedBrightnessEditor] =
-    Reusability.derive
 }
 
 final case class SurfaceBrightnessEditor(
-  brightnesses: ReuseView[SortedMap[Band, BrightnessMeasure[Surface]]],
+  brightnesses: View[SortedMap[Band, BrightnessMeasure[Surface]]],
   disabled:     Boolean
 ) extends ReactFnProps[SurfaceBrightnessEditor](SurfaceBrightnessEditor.component)
     with BrightnessesEditor[Surface]
 
 object SurfaceBrightnessEditor extends BrightnessesEditorBuilder[Surface, SurfaceBrightnessEditor] {
-  protected val label                                                          = "Surface Brightness"
-  protected lazy val defaultBandUnits: Band => Units Of Brightness[Surface]    =
+  protected val label                                                       = "Surface Brightness"
+  protected lazy val defaultBandUnits: Band => Units Of Brightness[Surface] =
     _.defaultSurface.units
-  implicit protected lazy val propsReuse: Reusability[SurfaceBrightnessEditor] =
-    Reusability.derive
 }

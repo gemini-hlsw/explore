@@ -5,10 +5,9 @@ package explore.observationtree
 
 import cats.effect.IO
 import cats.syntax.all._
-import crystal.react.ReuseView
+import crystal.react.View
 import crystal.react.hooks._
 import crystal.react.implicits._
-import crystal.react.reuse._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.ObsQueries
@@ -18,6 +17,7 @@ import explore.implicits._
 import explore.model.ObsIdSet
 import explore.model.ObsSummaryWithTitleConstraintsAndConf
 import explore.model.enum.AppTab
+import explore.model.reusability._
 import explore.observationtree.ObsBadge
 import explore.undo.KIListMod
 import explore.undo.UndoContext
@@ -40,19 +40,17 @@ import react.semanticui.sizes._
 import ObsQueries._
 
 final case class ObsList(
-  observations:     ReuseView[ObservationList],
+  observations:     View[ObservationList],
   programId:        Program.Id,
   focusedObs:       Option[Observation.Id],
   focusedTarget:    Option[Target.Id],
-  setSummaryPanel:  Reuse[Callback],
-  undoStacks:       ReuseView[UndoStacks[IO, ObservationList]]
+  setSummaryPanel:  Callback,
+  undoStacks:       View[UndoStacks[IO, ObservationList]]
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[ObsList](ObsList.component) {}
 
 object ObsList {
   type Props = ObsList
-
-  implicit protected val propsReuse: Reusability[Props] = Reusability.derive
 
   protected val obsListMod =
     KIListMod[ObsSummaryWithTitleConstraintsAndConf, Observation.Id](
@@ -68,7 +66,7 @@ object ObsList {
     programId: Program.Id,
     pos:       Int,
     undoCtx:   UndoContext[ObservationList],
-    adding:    ReuseView[Boolean]
+    adding:    View[Boolean]
   )(implicit
     ctx:       AppContextIO
   ): IO[Unit] =
@@ -87,11 +85,11 @@ object ObsList {
       .withHooks[Props]
       // Saved index into the observation list
       .useState(none[Int])
-      .useEffectWithDepsBy((props, _) => (props.focusedObs, props.observations)) {
+      .useEffectWithDepsBy((props, _) => (props.focusedObs, props.observations.get)) {
         (props, optIndex) => params =>
           implicit val ctx               = props.ctx
           val (focusedObs, observations) = params
-          val obsList                    = observations.get
+          val obsList                    = observations
           focusedObs.fold(optIndex.setState(none)) { obsId =>
             // there is a focused obsId, look for it in the list
             val foundIdx = obsList.getIndex(obsId)
@@ -110,8 +108,8 @@ object ObsList {
           }
       }
       // adding new observation
-      .useStateViewWithReuse(false)
-      .renderWithReuse { (props, _, adding) =>
+      .useStateView(false)
+      .render { (props, _, adding) =>
         implicit val ctx = props.ctx
 
         val undoCtx      = UndoContext(props.undoStacks, props.observations)
@@ -131,8 +129,9 @@ object ObsList {
             UndoButtons(undoCtx, size = Mini, disabled = adding.get)
           ),
           <.div(
-            Button(onClick = setObs(props.programId, none) >> props.setSummaryPanel.value,
-                   clazz = ExploreStyles.ButtonSummary
+            Button(
+              onClick = setObs(props.programId, none) >> props.setSummaryPanel,
+              clazz = ExploreStyles.ButtonSummary
             )(
               Icons.ListIcon.clazz(ExploreStyles.PaddedRightIcon),
               "Observations Summary"
@@ -157,17 +156,16 @@ object ObsList {
                     selected = selected,
                     setStatusCB = (ObsListActions
                       .obsStatus(obs.id)
-                      .set(undoCtx) _).compose((_: ObsStatus).some).reuseAlways.some,
+                      .set(undoCtx) _).compose((_: ObsStatus).some).some,
                     setActiveStatusCB = (ObsListActions
                       .obsActiveStatus(obs.id)
-                      .set(undoCtx) _).compose((_: ObsActiveStatus).some).reuseAlways.some,
+                      .set(undoCtx) _).compose((_: ObsActiveStatus).some).some,
                     setSubtitleCB = (ObsListActions
                       .obsSubtitle(obs.id)
-                      .set(undoCtx) _).compose((_: Option[NonEmptyString]).some).reuseAlways.some,
+                      .set(undoCtx) _).compose((_: Option[NonEmptyString]).some).some,
                     deleteCB = ObsListActions
                       .obsExistence(obs.id, o => setObs(props.programId, o.some))
                       .mod(undoCtx)(obsListMod.delete)
-                      .reuseAlways
                       .some
                   )
                 )

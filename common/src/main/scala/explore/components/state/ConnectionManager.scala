@@ -6,7 +6,6 @@ package explore.components.state
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
-import crystal.react.reuse._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.implicits._
@@ -15,13 +14,12 @@ import io.circe.Json
 import io.circe.syntax._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.ui.reusability._
 import org.typelevel.log4cats.Logger
 import react.common.ReactProps
 import react.semanticui.elements.loader.Loader
 
-final case class ConnectionManager(ssoToken: NonEmptyString, onConnect: Reuse[IO[Unit]])(
-  val render:                                Reuse[VdomNode]
+final case class ConnectionManager(ssoToken: NonEmptyString, onConnect: IO[Unit])(
+  val render:                                VdomNode
 )(implicit val ctx:                          AppContextIO)
     extends ReactProps[ConnectionManager](ConnectionManager.component)
 
@@ -29,10 +27,6 @@ object ConnectionManager {
   type Props = ConnectionManager
 
   protected case class State(initialized: Boolean = false)
-
-  protected implicit val propsReuse: Reusability[Props] =
-    Reusability.derive && Reusability.by(_.render)
-  protected implicit val stateReuse: Reusability[State] = Reusability.derive
 
   final class Backend($ : BackendScope[Props, State]) {
     val payload: IO[Map[String, Json]] =
@@ -78,6 +72,5 @@ object ConnectionManager {
           ctx.clients.close()).runAsync
       else Callback.empty
     }
-    .configure(Reusability.shouldComponentUpdate)
     .build
 }

@@ -8,9 +8,8 @@ import cats.effect.IO
 import cats.syntax.all._
 import clue.TransactionalClient
 import clue.data.syntax._
-import crystal.react.ReuseView
+import crystal.react.View
 import crystal.react.implicits._
-import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string._
 import explore.AppCtx
@@ -25,7 +24,6 @@ import explore.model.ObsIdSet
 import explore.model.ScienceMode
 import explore.model.TargetWithId
 import explore.model.formats._
-import explore.model.reusability._
 import explore.model.util._
 import explore.undo.UndoContext
 import explore.undo.UndoStacks
@@ -46,7 +44,6 @@ import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.TruncatedDec
 import lucuma.ui.optics.TruncatedRA
 import lucuma.ui.optics.ValidFormatInput
-import lucuma.ui.reusability._
 import queries.common.TargetQueriesGQL
 import queries.schemas.implicits._
 import react.common._
@@ -65,13 +62,13 @@ final case class SearchCallback(
 final case class SiderealTargetEditor(
   uid:           User.Id,
   id:            Target.Id,
-  target:        ReuseView[Target.Sidereal],
+  target:        View[Target.Sidereal],
   obsConf:       Option[ObsConfiguration],
   scienceMode:   Option[ScienceMode],
-  undoStacks:    ReuseView[UndoStacks[IO, Target.Sidereal]],
-  searching:     ReuseView[Set[Target.Id]],
+  undoStacks:    View[UndoStacks[IO, Target.Sidereal]],
+  searching:     View[Set[Target.Id]],
   obsIdSubset:   Option[ObsIdSet] = None,
-  onClone:       TargetWithId ==> Callback = ((_: TargetWithId) => Callback.empty).reuseAlways,
+  onClone:       TargetWithId => Callback = _ => Callback.empty,
   renderInTitle: Option[Tile.RenderInTitle] = none
 ) extends ReactFnProps[SiderealTargetEditor](SiderealTargetEditor.component) {
   val baseCoordinates: Coordinates =
@@ -82,7 +79,7 @@ object SiderealTargetEditor {
 
   type Props = SiderealTargetEditor
 
-  def readonlyView[A](view: ReuseView[A]): ReuseView[A] = {
+  def readonlyView[A](view: View[A]): View[A] = {
     val getA: A => A               = identity
     val noModA: (A => A) => A => A = _ => identity
 
@@ -98,14 +95,13 @@ object SiderealTargetEditor {
     .map(_.cloneTarget.id)
 
   def getRemoteOnMod(
-    id:      Target.Id,
-    optObs:  Option[ObsIdSet],
-    cloning: Hooks.UseStateF[DefaultS, Boolean],
-    onClone: TargetWithId ==> Callback,
-    input:   EditTargetInput
-  )(implicit
-    appCtx:  AppContextIO
-  ): IO[Unit] =
+    id:              Target.Id,
+    optObs:          Option[ObsIdSet],
+    cloning:         Hooks.UseStateF[DefaultS, Boolean],
+    onClone:         TargetWithId => Callback
+  )(
+    input:           EditTargetInput
+  )(implicit appCtx: AppContextIO): IO[Unit] =
     optObs.fold(TargetQueriesGQL.EditTargetMutation.execute(input).void) { obsIds =>
       cloning.setState(true).to[IO] >>
         cloneTarget(id, obsIds)
@@ -130,65 +126,63 @@ object SiderealTargetEditor {
         AppCtx.using { implicit appCtx =>
           // If we're going to clone on edit, use readonly views so we don't update the original
           // target in the model or add the API clone to the undo stack for the original target.
-          val (targetView, undoStackView)                  =
+          val (targetView, undoStackView) =
             props.obsIdSubset.fold((props.target, props.undoStacks))(_ =>
               (readonlyView(props.target), readonlyView(props.undoStacks))
             )
-          val undoCtx: Reuse[UndoContext[Target.Sidereal]] =
-            targetView.map(tv => UndoContext(undoStackView, tv))
-          val target: Target.Sidereal                      = props.target.get
 
-          val reuseRemoteOnMod =
-            Reuse(getRemoteOnMod _)(props.id, props.obsIdSubset, cloning, props.onClone)
+          val undoCtx: UndoContext[Target.Sidereal] = UndoContext(undoStackView, targetView)
 
-          val siderealTargetAligner: ReuseAligner[Target.Sidereal, EditTargetInput] =
-            undoCtx.zipMap(reuseRemoteOnMod)((ctx, remoteOnMod) =>
-              Aligner(
-                ctx,
-                EditTargetInput(select = TargetSelectInput(targetIds = List(props.id).assign),
-                                patch = TargetPropertiesInput()
-                ),
-                remoteOnMod
-              )
+          val target: Target.Sidereal = props.target.get
+
+          val remoteOnMod: EditTargetInput => IO[Unit] =
+            getRemoteOnMod(props.id, props.obsIdSubset, cloning, props.onClone) _
+
+          val siderealTargetAligner: Aligner[Target.Sidereal, EditTargetInput] =
+            Aligner(
+              undoCtx,
+              EditTargetInput(
+                select = TargetSelectInput(targetIds = List(props.id).assign),
+                patch = TargetPropertiesInput()
+              ),
+              remoteOnMod
             )
 
           val nameLens          = EditTargetInput.patch.andThen(TargetPropertiesInput.name)
           val siderealLens      = EditTargetInput.patch.andThen(TargetPropertiesInput.sidereal)
           val sourceProfileLens = EditTargetInput.patch.andThen(TargetPropertiesInput.sourceProfile)
 
-          val allView: ReuseView[Target.Sidereal] =
-            siderealTargetAligner.map(
-              _.viewMod(t =>
-                nameLens.replace(t.name.assign) >>>
-                  siderealLens.replace(t.toInput.assign) >>>
-                  sourceProfileLens.replace(t.sourceProfile.toInput.assign)
-              )
+          val allView: View[Target.Sidereal] =
+            siderealTargetAligner.viewMod(t =>
+              nameLens.replace(t.name.assign) >>>
+                siderealLens.replace(t.toInput.assign) >>>
+                sourceProfileLens.replace(t.sourceProfile.toInput.assign)
             )
 
           val siderealToTargetEndo: Endo[SiderealInput] => Endo[EditTargetInput] =
             forceAssign(siderealLens.modify)(SiderealInput())
 
-          val coordsRAView: ReuseView[RightAscension] =
+          val coordsRAView: View[RightAscension] =
             siderealTargetAligner
               .zoom(Target.Sidereal.baseRA, siderealToTargetEndo.compose(SiderealInput.ra.modify))
               .view(_.toInput.assign)
 
-          val coordsDecView: ReuseView[Declination] =
+          val coordsDecView: View[Declination] =
             siderealTargetAligner
               .zoom(Target.Sidereal.baseDec, siderealToTargetEndo.compose(SiderealInput.dec.modify))
               .view(_.toInput.assign)
 
-          val epochView: ReuseView[Epoch] =
+          val epochView: View[Epoch] =
             siderealTargetAligner
               .zoom(Target.Sidereal.epoch, siderealToTargetEndo.compose(SiderealInput.epoch.modify))
               .view((Epoch.fromString.reverseGet _).andThen(_.assign))
 
-          val nameView: ReuseView[NonEmptyString] =
+          val nameView: View[NonEmptyString] =
             siderealTargetAligner
               .zoom(Target.Sidereal.name, nameLens.modify)
               .view(_.assign)
 
-          val properMotionRAView: ReuseView[Option[ProperMotion.RA]] =
+          val properMotionRAView: View[Option[ProperMotion.RA]] =
             siderealTargetAligner
               .zoom(
                 Target.Sidereal.properMotionRA.getOption,
@@ -202,7 +196,7 @@ object SiderealTargetEditor {
                   .orUnassign
               )
 
-          val properMotionDecView: ReuseView[Option[ProperMotion.Dec]] =
+          val properMotionDecView: View[Option[ProperMotion.Dec]] =
             siderealTargetAligner
               .zoom(
                 Target.Sidereal.properMotionDec.getOption,
@@ -216,7 +210,7 @@ object SiderealTargetEditor {
                   .orUnassign
               )
 
-          val parallaxView: ReuseView[Option[Parallax]] =
+          val parallaxView: View[Option[Parallax]] =
             siderealTargetAligner
               .zoom(
                 Target.Sidereal.parallax,
@@ -224,7 +218,7 @@ object SiderealTargetEditor {
               )
               .view(_.map(_.toInput).orUnassign)
 
-          val radialVelocityView: ReuseView[Option[RadialVelocity]] =
+          val radialVelocityView: View[Option[RadialVelocity]] =
             siderealTargetAligner
               .zoom(
                 Target.Sidereal.radialVelocity,
@@ -232,16 +226,14 @@ object SiderealTargetEditor {
               )
               .view(_.map(_.toInput).orUnassign)
 
-          val sourceProfileAligner: ReuseAligner[SourceProfile, SourceProfileInput] =
+          val sourceProfileAligner: Aligner[SourceProfile, SourceProfileInput] =
             siderealTargetAligner.zoom(
               Target.Sidereal.sourceProfile,
               forceAssign(sourceProfileLens.modify)(SourceProfileInput())
             )
 
-          def searchAndSet(
-            allView:  ReuseView[Target.Sidereal],
-            nameView: ReuseView[NonEmptyString],
-            s:        SearchCallback
+          def searchAndSet(allView: View[Target.Sidereal], nameView: View[NonEmptyString])(
+            s:                      SearchCallback
           ): Callback =
             SimbadSearch
               .search[IO](s.searchTerm)
@@ -283,10 +275,10 @@ object SiderealTargetEditor {
                   // a single undo/redo operation.
                   targetView.zoom(Target.Sidereal.name).get,
                   props.searching,
-                  Reuse.currying(allView, nameView).in(searchAndSet _)
+                  searchAndSet(allView, nameView)
                 ),
                 <.label("RA", HelpIcon("target/main/coordinates.md"), ExploreStyles.SkipToNext),
-                FormInputEV[ReuseView, TruncatedRA](
+                FormInputEV(
                   id = "ra",
                   value = coordsRAView.zoomSplitEpi(TruncatedRA.rightAscension),
                   validFormat = ValidFormatInput.truncatedRA,
@@ -297,7 +289,7 @@ object SiderealTargetEditor {
                   disabled = disabled
                 ),
                 <.label("Dec", HelpIcon("target/main/coordinates.md"), ExploreStyles.SkipToNext),
-                FormInputEV[ReuseView, TruncatedDec](
+                FormInputEV(
                   id = "dec",
                   value = coordsDecView.zoomSplitEpi(TruncatedDec.declination),
                   validFormat = ValidFormatInput.truncatedDec,
@@ -314,7 +306,7 @@ object SiderealTargetEditor {
                 ExploreStyles.ExploreForm,
                 ExploreStyles.TargetProperMotionForm,
                 <.label("Epoch", HelpIcon("target/main/epoch.md"), ExploreStyles.SkipToNext),
-                InputWithUnits[ReuseView, Epoch](
+                InputWithUnits(
                   epochView,
                   ValidFormatInput.fromFormat(Epoch.fromStringNoScheme, "Invalid Epoch"),
                   ChangeAuditor.maxLength(8).decimal(3).denyNeg.as[Epoch],
@@ -323,7 +315,7 @@ object SiderealTargetEditor {
                   disabled = disabled
                 ),
                 <.label("µ RA", ExploreStyles.SkipToNext),
-                InputWithUnits[ReuseView, Option[ProperMotion.RA]](
+                InputWithUnits(
                   properMotionRAView,
                   ValidFormatInput.fromFormat(pmRAFormat, "Must be a number").optional,
                   ChangeAuditor.fromFormat(pmRAFormat).decimal(3).optional,
@@ -332,7 +324,7 @@ object SiderealTargetEditor {
                   disabled = disabled
                 ),
                 <.label("µ Dec", ExploreStyles.SkipToNext),
-                InputWithUnits[ReuseView, Option[ProperMotion.Dec]](
+                InputWithUnits(
                   properMotionDecView,
                   ValidFormatInput.fromFormat(pmDecFormat, "Must be a number").optional,
                   ChangeAuditor.fromFormat(pmDecFormat).decimal(3).optional,
@@ -341,7 +333,7 @@ object SiderealTargetEditor {
                   disabled = disabled
                 ),
                 <.label("Parallax", ExploreStyles.SkipToNext),
-                InputWithUnits[ReuseView, Option[Parallax]](
+                InputWithUnits(
                   parallaxView,
                   ValidFormatInput.fromFormat(pxFormat, "Must be a number").optional,
                   ChangeAuditor.fromFormat(pxFormat).decimal(3).optional,

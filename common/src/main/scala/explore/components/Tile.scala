@@ -4,7 +4,6 @@
 package explore.components
 
 import cats.syntax.all._
-import crystal.react.reuse._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
@@ -26,8 +25,8 @@ import scalajs.js.|
 final case class Tile(
   id:                Tile.TileId,
   title:             String,
-  back:              Option[Reuse[VdomNode]] = None,
-  control:           Option[Reuse[VdomNode]] = None,
+  back:              Option[VdomNode] = None,
+  control:           Option[VdomNode] = None,
   canMinimize:       Boolean = false,
   canMaximize:       Boolean = false,
   state:             TileSizeState = TileSizeState.Normal,
@@ -37,7 +36,7 @@ final case class Tile(
   bodyClass:         Option[Css] = None, // applied to tile body
   tileClass:         Option[Css] = None, // applied to the tile
   tileTitleClass:    Option[Css] = None  // applied to the title
-)(val render:        Tile.RenderInTitle ==> VdomNode)
+)(val render:        Tile.RenderInTitle => VdomNode)
     extends ReactFnProps[Tile](Tile.component) {
   def showMaximize: Boolean =
     state === TileSizeState.Minimized || (canMaximize && state === TileSizeState.Normal)

@@ -4,7 +4,6 @@
 package explore.targeteditor
 
 import cats.syntax.all._
-import crystal.react.ReuseView
 import crystal.react.View
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
@@ -14,23 +13,20 @@ import explore.model.conversions._
 import explore.model.formats._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.math.ApparentRadialVelocity
 import lucuma.core.math.RadialVelocity
-import lucuma.core.math.Redshift
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.ValidFormatInput
-import lucuma.ui.reusability._
 import monocle.Focus
 import react.common._
 import react.common.implicits._
 import react.semanticui.elements.label.LabelPointing
 
 final case class RVInput(
-  rv:       ReuseView[Option[RadialVelocity]],
+  rv:       View[Option[RadialVelocity]],
   disabled: Boolean
 ) extends ReactProps[RVInput](RVInput.component)
 
@@ -76,9 +72,6 @@ object RVInput {
     val rvView = Focus[State](_.rvView)
   }
 
-  implicit def propsReuse: Reusability[Props] = Reusability.derive
-  implicit def stateReuse: Reusability[State] = Reusability.derive
-
   class Backend($ : BackendScope[Props, State]) {
     def render(props: Props, state: State) = {
       val rvView   = View.fromState($).zoom(State.rvView)
@@ -88,7 +81,7 @@ object RVInput {
       )
       val input    = state.rvView match {
         case RVView.Z  =>
-          FormInputEV[ReuseView, Option[Redshift]](
+          FormInputEV(
             id = state.rvView.tag,
             value = props.rv.zoom(rvToRedshiftGet)(rvToRedshiftMod),
             errorClazz = errorCss,
@@ -99,7 +92,7 @@ object RVInput {
             disabled = props.disabled
           )
         case RVView.CZ =>
-          FormInputEV[ReuseView, Option[ApparentRadialVelocity]](
+          FormInputEV(
             id = state.rvView.tag,
             value = props.rv.zoom(rvToARVGet)(rvToARVMod),
             errorClazz = errorCss,
@@ -110,7 +103,7 @@ object RVInput {
             disabled = props.disabled
           )
         case RVView.RV =>
-          FormInputEV[ReuseView, Option[RadialVelocity]](
+          FormInputEV(
             id = state.rvView.tag,
             value = props.rv,
             errorClazz = errorCss,
@@ -146,7 +139,6 @@ object RVInput {
       .builder[Props]
       .initialState(State(RVView.RV))
       .renderBackend[Backend]
-      .configure(Reusability.shouldComponentUpdate)
       .build
 
 }

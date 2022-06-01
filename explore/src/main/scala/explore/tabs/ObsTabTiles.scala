@@ -54,17 +54,17 @@ final case class ObsTabTiles(
   userId:           Option[User.Id],
   programId:        Program.Id,
   obsId:            Observation.Id,
-  backButton:       Reuse[VdomNode],
-  constraintGroups: ReuseView[ConstraintsList],
-  obsConf:          ReuseView[ObsConfiguration],
+  backButton:       VdomNode,
+  constraintGroups: View[ConstraintsList],
+  obsConf:          View[ObsConfiguration],
   focusedObs:       Option[Observation.Id],
   focusedTarget:    Option[Target.Id],
   targetMap:        SortedMap[Target.Id, TargetSummary],
-  undoStacks:       ReuseView[ModelUndoStacks[IO]],
-  searching:        ReuseView[Set[Target.Id]],
-  hiddenColumns:    ReuseView[Set[String]],
+  undoStacks:       View[ModelUndoStacks[IO]],
+  searching:        View[Set[Target.Id]],
+  hiddenColumns:    View[Set[String]],
   defaultLayouts:   LayoutsMap,
-  layouts:          ReuseView[Pot[LayoutsMap]],
+  layouts:          View[Pot[LayoutsMap]],
   coreWidth:        Int,
   coreHeight:       Int
 )(implicit
@@ -74,42 +74,38 @@ final case class ObsTabTiles(
 object ObsTabTiles {
   type Props = ObsTabTiles
 
-  implicit protected val propsReuse: Reusability[Props] = Reusability.derive
-
   private def makeConstraintsSelector(
-    constraintGroups: ReuseView[ConstraintsList],
-    obsView:          Pot[ReuseView[ObservationData]]
+    constraintGroups: View[ConstraintsList],
+    obsView:          Pot[View[ObservationData]]
   )(implicit ctx:     AppContextIO): VdomNode =
-    potRenderWithReuse[ReuseView[ObservationData]] {
-      Reuse.always { vod =>
-        val cgOpt: Option[ConstraintGroup] =
-          constraintGroups.get.find(_._1.contains(vod.get.id)).map(_._2)
+    potRender[View[ObservationData]] { vod =>
+      val cgOpt: Option[ConstraintGroup] =
+        constraintGroups.get.find(_._1.contains(vod.get.id)).map(_._2)
 
-        Select(
-          clazz = ExploreStyles.ConstraintsTileSelector,
-          value = cgOpt.map(cg => ObsIdSet.fromString.reverseGet(cg.obsIds)).orEmpty,
-          onChange = (p: Dropdown.DropdownProps) => {
-            val newCgOpt =
-              ObsIdSet.fromString
-                .getOption(p.value.toString)
-                .flatMap(ids => constraintGroups.get.get(ids))
-            newCgOpt.map { cg =>
-              vod.zoom(ObservationData.constraintSet).set(cg.constraintSet) >>
-                ObsQueries
-                  .updateObservationConstraintSet[IO](List(vod.get.id), cg.constraintSet)
-                  .runAsyncAndForget
-            }.getOrEmpty
-          },
-          options = constraintGroups.get
-            .map(kv =>
-              new SelectItem(
-                value = ObsIdSet.fromString.reverseGet(kv._1),
-                text = kv._2.constraintSet.shortName
-              )
+      Select(
+        clazz = ExploreStyles.ConstraintsTileSelector,
+        value = cgOpt.map(cg => ObsIdSet.fromString.reverseGet(cg.obsIds)).orEmpty,
+        onChange = (p: Dropdown.DropdownProps) => {
+          val newCgOpt =
+            ObsIdSet.fromString
+              .getOption(p.value.toString)
+              .flatMap(ids => constraintGroups.get.get(ids))
+          newCgOpt.map { cg =>
+            vod.zoom(ObservationData.constraintSet).set(cg.constraintSet) >>
+              ObsQueries
+                .updateObservationConstraintSet[IO](List(vod.get.id), cg.constraintSet)
+                .runAsyncAndForget
+          }.getOrEmpty
+        },
+        options = constraintGroups.get
+          .map(kv =>
+            new SelectItem(
+              value = ObsIdSet.fromString.reverseGet(kv._1),
+              text = kv._2.constraintSet.shortName
             )
-            .toList
-        )
-      }
+          )
+          .toList
+      )
     }(obsView)
 
   private def otherObsCount(
@@ -122,7 +118,7 @@ object ObsTabTiles {
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStreamResourceViewWithReuseOnMountBy { props =>
+      .useStreamResourceViewOnMountBy { props =>
         implicit val ctx = props.ctx
 
         ObsEditQuery
@@ -135,14 +131,14 @@ object ObsTabTiles {
           )
           .reRunOnResourceSignals(ObservationEditSubscription.subscribe[IO](props.obsId))
       }
-      .renderWithReuse { (props, obsViewPot) =>
+      .render { (props, obsViewPot) =>
         implicit val ctx = props.ctx
 
-        val obsView: Pot[ReuseView[ObservationData]] =
+        val obsView: Pot[View[ObservationData]] =
           obsViewPot
-            .flatMap(view => view.get.map(obs => view.map(_.zoom(_ => obs)(mod => _.map(mod)))))
+            .flatMap(view => view.get.map(obs => view.zoom(_ => obs)(mod => _.map(mod))))
 
-        val potAsterismMode: Pot[(ReuseView[Option[Asterism]], Option[ScienceMode])] =
+        val potAsterismMode: Pot[(View[Option[Asterism]], Option[ScienceMode])] =
           obsView.map(rv =>
             (rv.value
                .zoom(
@@ -171,25 +167,19 @@ object ObsTabTiles {
             s"Note for Observer",
             props.backButton.some,
             canMinimize = true
-          )(
-            Reuse.always(_ =>
+          )(_ =>
+            <.div(
+              ExploreStyles.NotesWrapper,
               <.div(
-                ExploreStyles.NotesWrapper,
-                <.div(
-                  ExploreStyles.ObserverNotes,
-                  "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus maximus hendrerit lacinia. Etiam dapibus blandit ipsum sed rhoncus."
-                )
-              ).reuseAlways
+                ExploreStyles.ObserverNotes,
+                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus maximus hendrerit lacinia. Etiam dapibus blandit ipsum sed rhoncus."
+              )
             )
           )
 
-        val constraintsSelector =
-          Reuse.by((props.constraintGroups, obsView.map(_.get.constraintSet)))(
-            makeConstraintsSelector(props.constraintGroups, obsView)
-          )
+        val constraintsSelector = makeConstraintsSelector(props.constraintGroups, obsView)
 
-        val skyPlotTile =
-          ElevationPlotTile.elevationPlotTile(props.coreWidth, props.coreHeight, targetCoords)
+        val skyPlotTile = ElevationPlotTile.elevationPlotTile(targetCoords)
 
         def setCurrentTarget(
           programId: Program.Id,
@@ -212,9 +202,7 @@ object ObsTabTiles {
           props.searching,
           "Targets",
           none,
-          props.hiddenColumns,
-          props.coreWidth,
-          props.coreHeight
+          props.hiddenColumns
         )
 
         // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper
