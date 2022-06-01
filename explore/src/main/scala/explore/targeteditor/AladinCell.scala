@@ -214,12 +214,15 @@ object AladinCell extends ModelOptics {
             // gsc.value.toOption.orEmpty // USE THIS FOR ALTERNATE HOOK IMPLEMENTATION
           ).withKey(aladinKey)
 
+        // Check whether we are waiting for catalog
+        val catalogLoading = props.obsConf.exists(_ => gsc.isPending)
+
         val renderToolbar: TargetVisualOptions => VdomNode =
           (t: TargetVisualOptions) =>
             AladinToolbar(
               Fov.square(t.fovAngle),
               mouseCoords.value,
-              gsc.isPending,
+              catalogLoading,
               // gsc.value.isPending, // USE THIS FOR ALTERNATE HOOK IMPLEMENTATION
               center
             ): VdomNode
