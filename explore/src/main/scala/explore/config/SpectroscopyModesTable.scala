@@ -8,7 +8,7 @@ import cats.effect._
 import cats.syntax.all._
 import coulomb.Quantity
 import coulomb.refined._
-import crystal.react.ReuseView
+import crystal.react.View
 import crystal.react.hooks._
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
@@ -59,7 +59,7 @@ import java.text.DecimalFormat
 import scalajs.js.|
 
 final case class SpectroscopyModesTable(
-  scienceMode:              ReuseView[Option[ScienceMode]],
+  scienceMode:              View[Option[ScienceMode]],
   spectroscopyRequirements: SpectroscopyRequirementsData,
   constraints:              ConstraintSet,
   targets:                  Option[List[ITCTarget]],
@@ -73,10 +73,11 @@ object SpectroscopyModesTable {
   type ColId = NonEmptyString
 
   implicit val matrixProps: Reusability[SpectroscopyModesMatrix] = Reusability.always
-  implicit val reuseProps: Reusability[Props]                    = Reusability.derive
-
-  implicit val listRangeReuse: Reusability[ListRange] =
+  // implicit val reuseProps: Reusability[Props]                    = Reusability.derive
+  implicit val listRangeReuse: Reusability[ListRange]            =
     Reusability.by(x => (x.startIndex.toInt, x.endIndex.toInt))
+  ///////////////////////////////////////////////////////////////////////////
+  implicit val xxx: Reusability[SpectroscopyRequirementsData]    = Reusability.always
 
   protected val ModesTableDef = TableDef[SpectroscopyModeRow].withSortBy.withBlockLayout
 
@@ -376,6 +377,7 @@ object SpectroscopyModesTable {
       )
       // itc results cache
       .useSerialStateView(
+        // .useState(
         ItcResultsCache(
           Map.empty[ITCRequestParams, EitherNec[ItcQueryProblems, ItcResult]]
         )
@@ -423,9 +425,9 @@ object SpectroscopyModesTable {
       .useStateBy((props, rows, _, _, _, _) => selectedRowIndex(props.scienceMode.get, rows))
       // Recompute state if conf or requirements change.
       .useEffectWithDepsBy((props, _, _, _, _, _, _) =>
-        (props.scienceMode, props.spectroscopyRequirements)
+        (props.scienceMode.get, props.spectroscopyRequirements)
       )((_, rows, _, _, _, _, selectedIndex) => { case (scienceMode, _) =>
-        selectedIndex.setState(selectedRowIndex(scienceMode.get, rows))
+        selectedIndex.setState(selectedRowIndex(scienceMode, rows))
       })
       // tableInstance
       .useTableBy((_, rows, _, _, _, cols, _) => ModesTableDef(cols, rows))
@@ -474,7 +476,7 @@ object SpectroscopyModesTable {
           submitRows((range.value.foldMap(visibleRows(_, sortedRows)) ++ sortedRows).distinct)
         }
       }
-      .renderWithReuse {
+      .render {
         (
           props,
           rows,
