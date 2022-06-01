@@ -46,8 +46,6 @@ final case class TileController(
 object TileController {
   type Props = TileController
 
-  implicit val propsReuse: Reusability[TileController] = Reusability.derive
-
   def storeLayouts(
     userId:    Option[User.Id],
     section:   GridLayoutSection,
@@ -105,7 +103,7 @@ object TileController {
       }
       // Store the current layout
       .useStateViewWithReuseBy((p, _, _) => updateResizableState(p.layoutMap))
-      .renderWithReuse { (p, debouncer, bn, currentLayout) =>
+      .render { (p, debouncer, bn, currentLayout) =>
         def sizeState(id: Tile.TileId, st: TileSizeState): Callback =
           currentLayout
             .zoom(allTiles)

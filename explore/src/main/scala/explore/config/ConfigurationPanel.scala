@@ -21,14 +21,12 @@ import explore.implicits._
 import explore.model
 import explore.model.ITCTarget
 import explore.model.ObsConfiguration
-import explore.model.reusability._
 import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
 import lucuma.schemas.ObservationDB.Types._
-import lucuma.ui.reusability._
 import monocle.std.option.some
 import queries.common.ObsQueriesGQL
 import react.common._
@@ -48,13 +46,11 @@ final case class ConfigurationPanel(
 object ConfigurationPanel {
   type Props = ConfigurationPanel
 
-  protected implicit val propsReuse: Reusability[Props] = Reusability.derive
-
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStateViewWithReuse(false) // showAdvanced
-      .renderWithReuse { (props, showAdvanced) =>
+      .useStateView(false) // showAdvanced
+      .render { (props, showAdvanced) =>
         implicit val ctx: AppContextIO = props.ctx
 
         implicit val client = ctx.clients.odb // This shouldn't be necessary, but it seems to be
@@ -84,10 +80,10 @@ object ConfigurationPanel {
         val modeViewOpt: ReuseViewOpt[model.ScienceMode] =
           optModeView.zoom(some[model.ScienceMode])
 
-        val showBasicCB: Reuse[Callback] = showAdvanced.map(_.set(false))
+        val showBasicCB: Callback = showAdvanced.set(false)
 
-        val showAdvancedCB: Reuse[Option[Callback]] =
-          optModeView.map(_.get.map(_ => showAdvanced.set(true)))
+        val showAdvancedCB: Option[Callback] =
+          optModeView.get.map(_ => showAdvanced.set(true))
 
         React.Fragment(
           props.renderInTitle(

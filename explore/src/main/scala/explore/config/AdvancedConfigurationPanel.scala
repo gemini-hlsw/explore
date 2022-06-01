@@ -14,7 +14,6 @@ import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ScienceModeAdvanced
 import explore.model.ScienceModeBasic
-import explore.model.reusability._
 import explore.optics._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -41,7 +40,7 @@ sealed trait AdvancedConfigurationPanel[T <: ScienceModeAdvanced, S <: ScienceMo
   val subtitle: Option[NonEmptyString]
   val scienceModeAdvanced: Reuse[View[T]]
   val scienceModeBasic: S
-  val onShowBasic: Reuse[Callback]
+  val onShowBasic: Callback
 
   implicit val ctx: AppContextIO
 }
@@ -59,8 +58,6 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
   Gain: Enumerated: Display,
   Roi: Enumerated: Display
 ] {
-  protected implicit val reuseProps: Reusability[Props]
-
   @inline protected val overrideGratingLens: Lens[T, Option[Grating]]
   @inline protected val overrideFilterLens: Lens[T, Option[Filter]]
   @inline protected val overrideFpuLens: Lens[T, Option[Fpu]]
@@ -90,7 +87,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
   val component =
     ScalaFnComponent
       .withHooks[Props]
-      .renderWithReuse { props =>
+      .render { props =>
         implicit val ctx = props.ctx
 
         Form(size = Small)(
@@ -204,7 +201,7 @@ object AdvancedConfigurationPanel {
     subtitle:            Option[NonEmptyString],
     scienceModeAdvanced: Reuse[View[ScienceModeAdvanced.GmosNorthLongSlit]],
     scienceModeBasic:    ScienceModeBasic.GmosNorthLongSlit,
-    onShowBasic:         Reuse[Callback]
+    onShowBasic:         Callback
   )(implicit val ctx:    AppContextIO)
       extends ReactFnProps[AdvancedConfigurationPanel.GmosNorthLongSlit](
         AdvancedConfigurationPanel.GmosNorthLongSlit.component
@@ -223,9 +220,6 @@ object AdvancedConfigurationPanel {
         GmosNorthFilter,
         GmosNorthFpu,
       ] {
-    override implicit protected lazy val reuseProps: Reusability[GmosNorthLongSlit] =
-      Reusability.derive
-
     @inline override protected lazy val overrideGratingLens =
       ScienceModeAdvanced.GmosNorthLongSlit.overrideGrating
     @inline override protected lazy val overrideFilterLens  =
@@ -256,7 +250,7 @@ object AdvancedConfigurationPanel {
     subtitle:            Option[NonEmptyString],
     scienceModeAdvanced: Reuse[View[ScienceModeAdvanced.GmosSouthLongSlit]],
     scienceModeBasic:    ScienceModeBasic.GmosSouthLongSlit,
-    onShowBasic:         Reuse[Callback]
+    onShowBasic:         Callback
   )(implicit val ctx:    AppContextIO)
       extends ReactFnProps[AdvancedConfigurationPanel.GmosSouthLongSlit](
         AdvancedConfigurationPanel.GmosSouthLongSlit.component
@@ -275,9 +269,6 @@ object AdvancedConfigurationPanel {
         GmosSouthFilter,
         GmosSouthFpu,
       ] {
-    override implicit protected lazy val reuseProps: Reusability[GmosSouthLongSlit] =
-      Reusability.derive
-
     @inline override protected lazy val overrideGratingLens =
       ScienceModeAdvanced.GmosSouthLongSlit.overrideGrating
     @inline override protected lazy val overrideFilterLens  =

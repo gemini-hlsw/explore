@@ -64,14 +64,12 @@ final case class BasicConfigurationPanel(
   scienceModeOpt:   ReuseView[Option[model.ScienceMode]],
   constraints:      ConstraintSet,
   itcTargets:       List[ITCTarget],
-  onShowAdvanced:   Reuse[Option[Callback]]
+  onShowAdvanced:   Option[Callback]
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[BasicConfigurationPanel](BasicConfigurationPanel.component)
 
 object BasicConfigurationPanel {
   type Props = BasicConfigurationPanel
-
-  implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   val dataIso: Iso[SpectroscopyRequirementsData, SpectroscopyConfigurationOptions] =
     Iso[SpectroscopyRequirementsData, SpectroscopyConfigurationOptions] { s =>
@@ -147,7 +145,7 @@ object BasicConfigurationPanel {
       .withHooks[Props]
       .useStateViewWithReuse[ScienceMode](ScienceMode.Spectroscopy)
       .useStateViewWithReuse[ImagingConfigurationOptions](ImagingConfigurationOptions.Default)
-      .renderWithReuse { (props, mode, imaging) =>
+      .render { (props, mode, imaging) =>
         implicit val ctx: AppContextIO = props.ctx
 
         val requirementsViewSet: Reuse[UndoView] =
@@ -243,7 +241,7 @@ object BasicConfigurationPanel {
               content = "Advanced Configuration",
               icon = Icons.Gears,
               disabled = props.onShowAdvanced.isEmpty,
-              onClick = props.onShowAdvanced.value.orUndefined
+              onClick = props.onShowAdvanced.orUndefined
             )
           )
         )

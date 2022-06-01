@@ -50,8 +50,6 @@ final case class TargetTable(
 object TargetTable {
   type Props = TargetTable
 
-  implicit protected val propsReuse: Reusability[Props] = Reusability.derive
-
   protected val TargetTable = TableDef[SiderealTargetWithId].withSortBy
 
   protected val TargetTableComponent = new SUITable(TargetTable)
@@ -133,7 +131,7 @@ object TargetTable {
           }.reuseCurrying(props.hiddenColumns.get)
         )
       )
-      .renderWithReuse((props, _, rows, tableInstance) =>
+      .render((props, _, rows, tableInstance) =>
         React.Fragment(
           props.renderInTitle(
             <.span(ExploreStyles.TitleSelectColumns)(

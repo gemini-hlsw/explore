@@ -13,7 +13,6 @@ import explore.model.enum.TileSizeState
 import explore.model.layout
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.ui.reusability._
 import org.scalajs.dom
 import react.common._
 import react.common.implicits._
@@ -32,7 +31,7 @@ final case class Tile(
   canMinimize:       Boolean = false,
   canMaximize:       Boolean = false,
   state:             TileSizeState = TileSizeState.Normal,
-  sizeStateCallback: TileSizeState ==> Callback = Reuse.always(_ => Callback.empty),
+  sizeStateCallback: TileSizeState => Callback = _ => Callback.empty,
   key:               js.UndefOr[Key] = js.undefined,
   controllerClass:   Option[Css] = None, // applied to wrapping div when in a TileController.
   bodyClass:         Option[Css] = None, // applied to tile body
@@ -46,7 +45,7 @@ final case class Tile(
   def showMinimize: Boolean =
     state === TileSizeState.Maximized || (canMinimize && state === TileSizeState.Normal)
 
-  def withState(state: TileSizeState, sizeStateCallback: TileSizeState ==> Callback): Tile =
+  def withState(state: TileSizeState, sizeStateCallback: TileSizeState => Callback): Tile =
     copy(state = state, sizeStateCallback = sizeStateCallback)(render)
 }
 
@@ -54,11 +53,7 @@ object Tile {
   type Props  = Tile
   type TileId = NonEmptyString
 
-  type RenderInTitle = VdomNode ==> VdomNode
-
-  implicit val propsReuse: Reusability[Tile] = Reusability.derive && Reusability.by(_.render)
-
-  implicit val htmlElementReuse: Reusability[dom.html.Element] = Reusability.byRefOr_==
+  type RenderInTitle = VdomNode => VdomNode
 
   val heightBreakpoints =
     List((200, TileXSH), (700 -> TileSMH), (1024 -> TileMDH))
@@ -74,8 +69,8 @@ object Tile {
     ScalaFnComponent
       .withHooks[Props]
       // infoRef - We use state instead of a regular Ref in order to force a rerender when it's set.
-      .useStateWithReuse(none[dom.html.Element])
-      .renderWithReuse { (p, infoRef) =>
+      .useState(none[dom.html.Element])
+      .render { (p, infoRef) =>
         val maximizeButton =
           Button(
             as = <.a,
@@ -104,9 +99,7 @@ object Tile {
 
         def setInfoRef(node: dom.Node | Null): Unit =
           infoRef
-            .modState(
-              _.fold(Option(node.asInstanceOf[dom.html.Element]))(_.some)
-            )
+            .modState(_.fold(Option(node.asInstanceOf[dom.html.Element]))(_.some))
             .runNow()
 
         <.div(
@@ -129,7 +122,7 @@ object Tile {
                 MenuItem(as = <.a)(p.title)
               ),
               p.control.map(b => <.div(ExploreStyles.TileControl, b)),
-              <.span(^.key := "tileTitle", ^.untypedRef(setInfoRef))(
+              <.span(^.key := "tileTitle", ^.untypedRef(setInfoRef).when(infoRef.value.isEmpty))(
                 ExploreStyles.TileTitleStrip,
                 ExploreStyles.FixedSizeTileTitle.when(!p.canMinimize && !p.canMaximize)
               ),
@@ -147,11 +140,7 @@ object Tile {
                 heightBreakpoints,
                 clazz = ExploreStyles.TileBody |+| p.bodyClass.orEmpty
               )(
-                p.render(
-                  Reuse
-                    .currying(node)
-                    .in((mountNode, info: VdomNode) => ReactPortal(info, mountNode))
-                )
+                p.render(info => ReactPortal(info, node))
               ).when(p.state =!= TileSizeState.Minimized)
             )
             .whenDefined

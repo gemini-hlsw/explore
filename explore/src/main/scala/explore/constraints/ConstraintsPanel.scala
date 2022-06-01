@@ -81,9 +81,6 @@ object ConstraintsPanel {
     hourAngle: ElevationRange.HourAngle
   )
 
-  protected implicit val propsReuse: Reusability[Props] = Reusability.derive
-  protected implicit val stateReuse: Reusability[State] = Reusability.derive
-
   def initialState(props: Props): State = props.constraintSet.get.elevationRange match {
     case am @ ElevationRange.AirMass(_, _)   =>
       State(ElevationRangeType.AirMass, am, ElevationRange.HourAngle.Default)
@@ -319,6 +316,5 @@ object ConstraintsPanel {
         }
       }
       .renderBackend[Backend]
-      .configure(Reusability.shouldComponentUpdate)
       .build
 }

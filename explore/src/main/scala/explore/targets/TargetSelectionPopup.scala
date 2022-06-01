@@ -6,7 +6,6 @@ package explore.targets
 import cats.Eq
 import cats.Order._
 import cats.data.NonEmptyList
-import cats.effect.FiberIO
 import cats.effect.IO
 import cats.effect.kernel.Outcome
 import cats.syntax.all._
@@ -46,8 +45,8 @@ import scala.concurrent.duration._
 
 final case class TargetSelectionPopup(
   programId:        Program.Id,
-  trigger:          Reuse[Button],
-  onSelected:       TargetWithOptId ==> Callback
+  trigger:          Button,
+  onSelected:       TargetWithOptId => Callback
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[TargetSelectionPopup](TargetSelectionPopup.component)
 
@@ -66,28 +65,22 @@ object TargetSelectionPopup {
     angularSize: Option[AngularSize]
   )
 
-  protected implicit val reuseProps: Reusability[Props] = Reusability.derive
-
-  protected implicit val reuseSelectedTarget: Reusability[SelectedTarget] = Reusability.derive
-
-  protected implicit val reuseFiber: Reusability[FiberIO[Unit]] = Reusability.byRef
-
   protected val component = ScalaFnComponent
     .withHooks[Props]
     // inputValue
     .useStateViewWithReuse("")
     // results
-    .useStateWithReuse(
+    .useState(
       SortedMap.empty[TargetSource[IO], NonEmptyList[Result]]
     )
     // searching
-    .useStateWithReuse(false)
+    .useState(false)
     // singleEffect
     .useSingleEffect
     // isOpen
-    .useStateWithReuse(false)
+    .useState(false)
     // selectedTarget
-    .useStateWithReuse(none[SelectedTarget])
+    .useState(none[SelectedTarget])
     // targetSources
     .useMemoBy((props, _, _, _, _, _, _) => props.ctx) { (props, _, _, _, _, _, _) => propsCtx =>
       implicit val ctx = propsCtx
@@ -95,7 +88,7 @@ object TargetSelectionPopup {
     }
     // aladinRef
     .useMemo(())(_ => Ref.toScalaComponent(Aladin.component))
-    .renderWithReuse {
+    .render {
       (
         props,
         inputValue,
@@ -162,7 +155,7 @@ object TargetSelectionPopup {
               .orEmpty
 
         React.Fragment(
-          props.trigger.value(^.onClick --> isOpen.setState(true)),
+          props.trigger(^.onClick --> isOpen.setState(true)),
           Modal(
             as = <.form,      // This lets us sumbit on enter
             actions = List(
@@ -236,14 +229,14 @@ object TargetSelectionPopup {
                       <.div(ExploreStyles.TargetSearchResultsSource)(
                         TargetSelectionTable(
                           sourceResults.toList.map(_.target),
-                          onSelected = props.onSelected.map(onSelected =>
-                            t =>
-                              onSelected(t.targetWithOptId) >> isOpen.setState(false) >> cleanState
-                          ),
+                          onSelected = t =>
+                            props.onSelected(t.targetWithOptId) >>
+                              isOpen.setState(false) >>
+                              cleanState,
                           selectedIndex = selectedTarget.value
                             .filter(_.source === source)
                             .map(_.resultIndex),
-                          onClick = Reuse.always { case (result: TargetSearchResult, index: Int) =>
+                          onClick = (result, index) =>
                             selectedTarget.setState(
                               if (
                                 selectedTarget.value
@@ -257,7 +250,6 @@ object TargetSelectionPopup {
                                                result.angularSize
                                 ).some
                             )
-                          }
                         )
                       )
                     )

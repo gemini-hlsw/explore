@@ -53,8 +53,6 @@ object ConstraintsSummaryTable {
 
   protected val ConstraintsTableComponent = new SUITable(ConstraintsTable)
 
-  implicit protected val reuseProps: Reusability[Props] = Reusability.derive
-
   private val columnNames: Map[String, String] = Map(
     "edit"         -> " ",
     "iq"           -> "IQ",

@@ -23,7 +23,6 @@ import explore.model.ObsIdSet
 import explore.model.ScienceMode
 import explore.model.TargetWithId
 import explore.model.TargetWithOptId
-import explore.model.reusability._
 import explore.optics._
 import explore.targets.TargetSelectionPopup
 import explore.undo.UndoStacks
@@ -63,8 +62,6 @@ final case class AsterismEditor(
 
 object AsterismEditor {
   type Props = AsterismEditor
-
-  protected implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   private def insertSiderealTarget(
     programId:      Program.Id,
@@ -108,7 +105,7 @@ object AsterismEditor {
     ScalaFnComponent
       .withHooks[Props]
       // adding
-      .useStateViewWithReuse(false)
+      .useStateView(false)
       // edit target in current obs only (0), or all "instances" of the target (1)
       .useState(0)
       .useEffectWithDepsBy((props, _, _) => (props.asterism, props.currentTarget, props.setTarget))(
@@ -124,7 +121,7 @@ object AsterismEditor {
           }
         }
       )
-      .renderWithReuse { (props, adding, editScope) =>
+      .render { (props, adding, editScope) =>
         implicit val ctx = props.ctx
 
         val targetView: ReuseView[Option[Target.Id]] =
@@ -142,31 +139,28 @@ object AsterismEditor {
           props.renderInTitle(
             TargetSelectionPopup(
               props.programId,
-              trigger = adding.map(a =>
-                Button(
-                  size = Tiny,
-                  compact = true,
-                  clazz = ExploreStyles.VeryCompact,
-                  disabled = a.get,
-                  icon = Icons.New,
-                  loading = a.get,
-                  content = "Add",
-                  labelPosition = LabelPosition.Left
-                )
+              trigger = Button(
+                size = Tiny,
+                compact = true,
+                clazz = ExploreStyles.VeryCompact,
+                disabled = adding.get,
+                icon = Icons.New,
+                loading = adding.get,
+                content = "Add",
+                labelPosition = LabelPosition.Left
               ),
-              onSelected = Reuse
-                .by((props.obsIds, props.asterism, targetView))(_ match {
-                  case TargetWithOptId(oid, t @ Target.Sidereal(_, _, _, _)) =>
-                    insertSiderealTarget(props.programId,
-                                         props.obsIds,
-                                         props.asterism,
-                                         oid,
-                                         t,
-                                         targetView,
-                                         adding
-                    ).runAsync
-                  case _                                                     => Callback.empty
-                })
+              onSelected = _ match {
+                case TargetWithOptId(oid, t @ Target.Sidereal(_, _, _, _)) =>
+                  insertSiderealTarget(props.programId,
+                                       props.obsIds,
+                                       props.asterism,
+                                       oid,
+                                       t,
+                                       targetView,
+                                       adding
+                  ).runAsync
+                case _                                                     => Callback.empty
+              }
             )
           ),
           props.renderInTitle(

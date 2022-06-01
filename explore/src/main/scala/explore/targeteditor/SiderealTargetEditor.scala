@@ -82,8 +82,6 @@ object SiderealTargetEditor {
 
   type Props = SiderealTargetEditor
 
-  implicit val propsReuse: Reusability[Props] = Reusability.derive
-
   def readonlyView[A](view: ReuseView[A]): ReuseView[A] = {
     val getA: A => A               = identity
     val noModA: (A => A) => A => A = _ => identity
@@ -128,7 +126,7 @@ object SiderealTargetEditor {
       .withHooks[Props]
       // cloning
       .useState(false)
-      .renderWithReuse { (props, cloning) =>
+      .render { (props, cloning) =>
         AppCtx.using { implicit appCtx =>
           // If we're going to clone on edit, use readonly views so we don't update the original
           // target in the model or add the API clone to the undo stack for the original target.
