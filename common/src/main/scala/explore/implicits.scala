@@ -10,6 +10,7 @@ import cats.effect.kernel.Resource
 import cats.syntax.all._
 import clue._
 import coulomb.Quantity
+import crystal.ViewF
 import crystal.react.ReuseViewF
 import crystal.react.ReuseViewOptF
 import crystal.react.reuse._
@@ -56,8 +57,8 @@ trait ListImplicits {
     ): Out = hlists.map(_.map(singleton)).combineAll
   }
 
-  implicit class ViewListOps[F[_]: Monad, A](val viewList: ReuseViewF[F, List[A]]) {
-    def toListOfViews: List[ReuseViewF[F, A]] =
+  implicit class ViewListOps[F[_]: Monad, A](val viewList: ViewF[F, List[A]]) {
+    def toListOfViews: List[ViewF[F, A]] =
       // It's safe to "get" since we are only invoking for existing indices.
       viewList.get.indices.toList.map { i =>
         val atIndex = index[List[A], Int, A](i)

@@ -4,13 +4,11 @@
 package explore
 
 import cats.syntax.all._
-import crystal.react.ReuseView
-import crystal.react.reuse._
+import crystal.react.View
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.implicits._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.ui.reusability._
 import org.scalajs.dom
 import react.common.ReactFnProps
 import react.common.style.Css
@@ -23,32 +21,32 @@ import scalajs.js.|
 
 final case class EditableLabel(
   value:            Option[NonEmptyString],
-  mod:              Option[NonEmptyString] ==> Callback,
+  mod:              Option[NonEmptyString] => Callback,
   textClass:        Css = Css.Empty,
   inputClass:       Css = Css.Empty,
-  addButtonLabel:   Reuse[VdomNode] = ("Add": VdomNode).reuseAlways,
+  addButtonLabel:   VdomNode = "Add": VdomNode,
   addButtonClass:   Css = Css.Empty,
   leftButtonClass:  Css = Css.Empty,
   rightButtonClass: Css = Css.Empty,
-  rightButtonIcon:  Reuse[FontAwesomeIcon] = Icons.Eraser.reuseAlways
+  rightButtonIcon:  FontAwesomeIcon = Icons.Eraser
 ) extends ReactFnProps[EditableLabel](EditableLabel.component)
 
 object EditableLabel {
   type Props = EditableLabel
 
   def fromView(
-    value:             ReuseView[Option[NonEmptyString]],
+    value:             View[Option[NonEmptyString]],
     textClass:         Css = Css.Empty,
     inputClass:        Css = Css.Empty,
-    addButtonLabel:    Reuse[VdomNode] = ("Add": VdomNode).reuseAlways,
+    addButtonLabel:    VdomNode = "Add": VdomNode,
     addButtonClass:    Css = Css.Empty,
     editButtonClass:   Css = Css.Empty,
     deleteButtonClass: Css = Css.Empty,
-    deleteButtonIcon:  Reuse[FontAwesomeIcon] = Icons.Eraser.reuseAlways
+    deleteButtonIcon:  FontAwesomeIcon = Icons.Eraser
   ): EditableLabel =
     EditableLabel(
       value.get,
-      value.map(_.set),
+      value.set,
       textClass,
       inputClass,
       addButtonLabel,
@@ -58,14 +56,12 @@ object EditableLabel {
       deleteButtonIcon
     )
 
-  private implicit val reuseProps: Reusability[Props] = Reusability.derive
-
   private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useState(false) // editing
       .useState("")    // displayValue
-      .renderWithReuse { (props, editing, displayValue) =>
+      .render { (props, editing, displayValue) =>
         def editCB(e: ReactMouseEvent): Callback =
           e.stopPropagationCB >> e.preventDefaultCB >>
             displayValue.setState(props.value.map(_.value).orEmpty) >>
@@ -134,7 +130,7 @@ object EditableLabel {
                 clazz = props.rightButtonClass,
                 onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
                   e.stopPropagationCB >> e.preventDefaultCB >> props.mod(none)
-              )(props.rightButtonIcon.value)
+              )(props.rightButtonIcon)
             )
           )
       }

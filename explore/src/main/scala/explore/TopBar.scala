@@ -5,7 +5,7 @@ package explore
 
 import cats.effect.IO
 import cats.syntax.all._
-import crystal.react.ReuseView
+import crystal.react.View
 import crystal.react.implicits._
 import crystal.react.reuse.Reuse
 import crystal.react.reuse._
@@ -28,7 +28,6 @@ import log4cats.loglevel.LogLevelLogger
 import lucuma.core.model.GuestRole
 import lucuma.core.model.Program
 import lucuma.core.model.User
-import lucuma.ui.reusability._
 import org.scalajs.dom
 import org.scalajs.dom.window
 import react.common._
@@ -47,14 +46,12 @@ final case class TopBar(
   user:        User,
   programId:   Option[Program.Id],
   preferences: ExploreLocalPreferences,
-  undoStacks:  ReuseView[ModelUndoStacks[IO]],
+  undoStacks:  View[ModelUndoStacks[IO]],
   onLogout:    IO[Unit]
 ) extends ReactFnProps[TopBar](TopBar.component)
 
 object TopBar {
   type Props = TopBar
-
-  implicit private val propsReuse: Reusability[Props] = Reusability.by(p => (p.user, p.programId))
 
   private def bodyClasses: dom.DOMTokenList = dom.document.body.classList
 
@@ -72,7 +69,7 @@ object TopBar {
       .withHooks[Props]
       .useState(false)        // isProgramsOpen
       .useState(currentTheme) // theme
-      .renderWithReuse { (props, isProgramsOpen, theme) =>
+      .render { (props, isProgramsOpen, theme) =>
         AppCtx.using { implicit appCtx =>
           val role = props.user.role
 

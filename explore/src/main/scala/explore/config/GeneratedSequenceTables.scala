@@ -6,7 +6,6 @@ package explore.config
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.sequence._
-import lucuma.ui.reusability._
 import react.common._
 import react.semanticui.elements.header.Header
 import react.semanticui.elements.segment.Segment
@@ -17,12 +16,10 @@ final case class GeneratedSequenceTables(config: FutureExecutionConfig)
 object GeneratedSequenceTables {
   type Props = GeneratedSequenceTables
 
-  implicit private val propsReuse: Reusability[Props] = Reusability.derive
-
   val component =
     ScalaFnComponent
       .withHooks[Props]
-      .renderWithReuse { props =>
+      .render { props =>
         <.div(^.height := "100%", ^.overflow.auto)(
           Segment()(
             SequenceTable.bracketDef,

@@ -6,7 +6,6 @@ package explore.components.state
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
-import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.events._
@@ -18,19 +17,13 @@ import lucuma.broadcastchannel._
 import react.common.ReactFnProps
 
 final case class LogoutTracker(
-  setVault:   Option[UserVault] ==> Callback,
-  setMessage: NonEmptyString ==> Callback
-)(val render: IO[Unit] ==> VdomNode)(implicit val ctx: AppContextIO)
+  setVault:   Option[UserVault] => Callback,
+  setMessage: NonEmptyString => Callback
+)(val render: IO[Unit] => VdomNode)(implicit val ctx: AppContextIO)
     extends ReactFnProps[LogoutTracker](LogoutTracker.component)
 
 object LogoutTracker {
   type Props = LogoutTracker
-
-  protected implicit val propsReuse: Reusability[Props] =
-    Reusability.derive && Reusability.by(_.render)
-
-  protected implicit val stateReuse: Reusability[BroadcastChannel[ExploreEvent]] =
-    Reusability.always
 
   val component = ScalaFnComponent
     .withHooks[Props]
@@ -53,7 +46,7 @@ object LogoutTracker {
       state
         .setState(bc.some) *> CallbackTo(Callback(bc.close()).attempt)
     }
-    .renderWithReuse { (props, nonce, bc) =>
+    .render { (props, nonce, bc) =>
       bc.value.fold[VdomNode](React.Fragment())(bc =>
         props.render(IO(bc.postMessage(ExploreEvent.LogoutEvent(nonce.value))).attempt.void)
       )
