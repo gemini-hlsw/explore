@@ -384,7 +384,8 @@ object TargetTabContents {
           )
         )
 
-      val skyPlotTile = ElevationPlotTile.elevationPlotTile(selectedCoordinates.flatten)
+      val skyPlotTile =
+        ElevationPlotTile.elevationPlotTile(scienceMode, selectedCoordinates.flatten)
 
       val rglRender: LayoutsMap => VdomNode = (l: LayoutsMap) =>
         TileController(
@@ -422,7 +423,7 @@ object TargetTabContents {
       )
 
       val skyPlotTile =
-        ElevationPlotTile.elevationPlotTile(Target.Sidereal.baseCoordinates.get(target).some)
+        ElevationPlotTile.elevationPlotTile(none, Target.Sidereal.baseCoordinates.get(target).some)
 
       val rglRender: LayoutsMap => VdomNode = (l: LayoutsMap) =>
         TileController(props.userId,

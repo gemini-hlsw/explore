@@ -7,6 +7,7 @@ import cats.syntax.all._
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.model.ScienceMode
 import explore.targeteditor.ElevationPlotSection
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Coordinates
@@ -15,7 +16,9 @@ import react.common.implicits._
 
 object ElevationPlotTile {
 
-  def elevationPlotTile(coordinates: Option[Coordinates])(implicit ctx: AppContextIO) =
+  def elevationPlotTile(scienceMode: Option[ScienceMode], coordinates: Option[Coordinates])(implicit
+    ctx:                             AppContextIO
+  ) =
     Tile(
       ObsTabTilesIds.PlotId,
       "Elevation Plot",
@@ -28,7 +31,7 @@ object ElevationPlotTile {
           ExploreStyles.FullHeightWidth |+| ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
           <.div("Select a target")
         )
-      )(c => ElevationPlotSection(c))
+      )(c => ElevationPlotSection(scienceMode, c))
     }
 
 }

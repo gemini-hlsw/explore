@@ -9,7 +9,9 @@ import eu.timepit.refined.auto._
 import explore._
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
-import explore.targeteditor.SkyPlotNight.TimeDisplay
+import explore.model.ScienceMode
+import explore.model.reusability._
+import explore.targeteditor.ElevationPlotNight.TimeDisplay
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.Site
@@ -25,6 +27,7 @@ import react.semanticui.elements.button.ButtonGroup
 import java.time.ZonedDateTime
 
 final case class ElevationPlotSection(
+  scienceMode:      Option[ScienceMode],
   coords:           Coordinates
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[ElevationPlotSection](ElevationPlotSection.component)
@@ -44,7 +47,14 @@ object ElevationPlotSection {
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   val preferredSiteFor = (c: Props) =>
-    if (c.coords.dec.toAngle.toSignedDoubleDegrees > -5) Site.GN else Site.GS
+    c.scienceMode
+      .map {
+        case ScienceMode.GmosNorthLongSlit(_, _) => Site.GN
+        case ScienceMode.GmosSouthLongSlit(_, _) => Site.GS
+      }
+      .getOrElse {
+        if (c.coords.dec.toAngle.toSignedDoubleDegrees > -5) Site.GN else Site.GS
+      }
 
   val component =
     ScalaFnComponent
@@ -61,7 +71,7 @@ object ElevationPlotSection {
           <.div(ExploreStyles.ElevationPlot) {
             plotPeriod.value match {
               case PlotPeriod.Night    =>
-                SkyPlotNight(site.value, props.coords, date.value, timeDisplay.value)
+                ElevationPlotNight(site.value, props.coords, date.value, timeDisplay.value)
               case PlotPeriod.Semester =>
                 val coords   = props.coords
                 val semester = Semester.fromLocalDate(date.value)
