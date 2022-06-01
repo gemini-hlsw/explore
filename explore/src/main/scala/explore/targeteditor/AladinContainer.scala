@@ -301,10 +301,11 @@ object AladinContainer {
                 ),
                 (resize.width, resize.height)
                   .mapN(
-                    SVGTargetsOverlay(_,
-                                      _,
-                                      world2pix.value.reuseNever,
-                                      overlayTargets ++ candidates
+                    SVGTargetsOverlay(
+                      _,
+                      _,
+                      world2pix.value,
+                      overlayTargets ++ candidates
                     )
                   ),
                 AladinComp.withRef(aladinRef) {

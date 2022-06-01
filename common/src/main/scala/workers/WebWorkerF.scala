@@ -10,11 +10,12 @@ import cats.effect.Sync
 import cats.effect.std.Dispatcher
 import explore.model.boopickle._
 import fs2.Stream
-import fs2.concurrent.Channel
 import org.scalajs.dom
+import cats.syntax.all._
 
 import scala.scalajs.js
 import scala.scalajs.js.typedarray._
+import fs2.concurrent.Channel
 
 /**
  * WebWorker abstraction running on F. it is possible to post messages and get a stream of events
@@ -55,25 +56,26 @@ object WebWorkerF {
     worker:     dom.Worker,
     dispatcher: Dispatcher[F]
   ): Resource[F, WebWorkerF[F]] =
-    Resource.make(Sync[F].delay(new WebWorkerF[F] {
-      def postMessage(message: js.Any): F[Unit] =
-        Sync[F].delay(worker.postMessage(message))
+    for {
+      channel <- Resource.make(Channel.unbounded[F, dom.MessageEvent])(_.close.void)
+      _       <-
+        Resource.eval(
+          Sync[F].delay(worker.onmessage =
+            (e: dom.MessageEvent) => dispatcher.unsafeRunAndForget(channel.send(e))
+          )
+        )
+      workerF <-
+        Resource.make(Sync[F].delay(new WebWorkerF[F] {
+          def postMessage(message: js.Any): F[Unit] =
+            Sync[F].delay(worker.postMessage(message))
 
-      def postTransferrable(buffer: Int8Array): F[Unit] =
-        Sync[F].delay(worker.postMessage(buffer, js.Array(buffer.buffer: dom.Transferable)))
+          def postTransferrable(buffer: Int8Array): F[Unit] =
+            Sync[F].delay(worker.postMessage(buffer, js.Array(buffer.buffer: dom.Transferable)))
 
-      def terminate: F[Unit] =
-        Sync[F].delay(worker.terminate())
+          val terminate: F[Unit] = Sync[F].delay(worker.terminate())
 
-      lazy val stream: Stream[F, dom.MessageEvent] =
-        for {
-          channel <- Stream.eval(Channel.unbounded[F, dom.MessageEvent])
-          _       <- Stream.eval(
-                       Sync[F].delay(worker.onmessage =
-                         (e: dom.MessageEvent) => dispatcher.unsafeRunAndForget(channel.send(e))
-                       )
-                     )
-          stream  <- channel.stream
-        } yield stream
-    }))(w => w.terminate)
+          val stream: Stream[F, dom.MessageEvent] = channel.stream
+        }))(w => w.terminate)
+    } yield workerF
+
 }
