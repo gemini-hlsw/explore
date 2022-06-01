@@ -4,6 +4,7 @@
 package explore.tabs
 
 import cats.effect.IO
+import cats.syntax.all._
 import crystal.Pot
 import crystal.react.View
 import crystal.react.ViewOpt
@@ -24,7 +25,6 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import react.common._
-import cats.syntax.all._
 
 object AsterismEditorTile {
 

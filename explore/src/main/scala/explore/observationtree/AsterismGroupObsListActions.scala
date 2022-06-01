@@ -6,8 +6,8 @@ package explore.observationtree
 import cats.Order._
 import cats.effect.IO
 import cats.syntax.all._
-import clue.data.syntax._
 import clue.TransactionalClient
+import clue.data.syntax._
 import crystal.react.View
 import crystal.react.implicits._
 import explore.common.AsterismQueries

@@ -7,8 +7,8 @@ import cats.Order._
 import cats.syntax.all._
 import crystal.react._
 import crystal.react.hooks._
-import crystal.react.reuse._
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
