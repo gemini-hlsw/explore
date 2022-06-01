@@ -11,6 +11,7 @@ import cats.syntax.all._
 import clue._
 import coulomb.Quantity
 import crystal.ViewF
+import crystal.ViewOptF
 import crystal.react.ReuseViewF
 import crystal.react.ReuseViewOptF
 import crystal.react.reuse._
@@ -142,9 +143,13 @@ object implicits
   }
 
   // Coulomb implicits
-  implicit class CoulombReuseViewOps[F[_], N, U](val self: ViewF[F, Quantity[N, U]])
-      extends AnyVal {
+  implicit class CoulombViewOps[F[_], N, U](val self: ViewF[F, Quantity[N, U]]) extends AnyVal {
     def stripQuantity: ViewF[F, N] = self.as(quantityIso[N, U])
+  }
+
+  implicit class CoulombViewOptOps[F[_], N, U](val self: ViewOptF[F, Quantity[N, U]])
+      extends AnyVal {
+    def stripQuantity: ViewOptF[F, N] = self.as(quantityIso[N, U])
   }
 
   implicit class CoulombReuseViewOptOps[F[_], N, U](val self: ReuseViewOptF[F, Quantity[N, U]])

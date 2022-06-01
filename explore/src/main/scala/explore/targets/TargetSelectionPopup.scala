@@ -9,10 +9,8 @@ import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.effect.kernel.Outcome
 import cats.syntax.all._
-import crystal.react.ReuseView
 import crystal.react.hooks._
 import crystal.react.implicits._
-import crystal.react.reuse._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
@@ -68,7 +66,7 @@ object TargetSelectionPopup {
   protected val component = ScalaFnComponent
     .withHooks[Props]
     // inputValue
-    .useStateViewWithReuse("")
+    .useStateView("")
     // results
     .useState(
       SortedMap.empty[TargetSource[IO], NonEmptyList[Result]]
@@ -175,7 +173,7 @@ object TargetSelectionPopup {
             content = ModalContent(
               <.span(ExploreStyles.TargetSearchTop)(
                 <.span(ExploreStyles.TargetSearchInput)(
-                  FormInputEV[ReuseView, String](
+                  FormInputEV(
                     id = NonEmptyString("name"),
                     value = inputValue,
                     // TODO Investigate if we can replicate SUI's "input with icon" styles (which use <i>) but using <svg>,
