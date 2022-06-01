@@ -306,17 +306,30 @@ object AladinCell extends ModelOptics {
           // Check whether we are waiting for catalog
           val catalogLoading                              = props.obsConf.exists(_ => gsc.isPending)
 
+          val usableGuideStar = agsResults.lift(selectedIndex.get).exists(_._2.isUsable)
+
           val renderToolbar: TargetVisualOptions => VdomNode =
             (t: TargetVisualOptions) =>
-              AladinToolbar(
-                Fov.square(t.fovAngle),
-                mouseCoords.value,
-                catalogLoading,
-                // gsc.value.isPending, // USE THIS FOR ALTERNATE HOOK IMPLEMENTATION
-                selectedIndex,
-                agsResults,
-                center
+              AladinToolbar(Fov.square(t.fovAngle),
+                            mouseCoords.value,
+                            catalogLoading,
+                            selectedIndex,
+                            agsResults,
+                            center,
+                            t.agsOverlay
               ): VdomNode
+
+          val renderAgsOverlay: TargetVisualOptions => VdomNode =
+            (t: TargetVisualOptions) =>
+              if (t.agsOverlay.visible && usableGuideStar) {
+                <.div(
+                  ExploreStyles.AgsOverlay,
+                  AgsOverlay(
+                    selectedIndex,
+                    agsResults
+                  )
+                )
+              } else EmptyVdom
 
           <.div(
             ExploreStyles.TargetAladinCell,
@@ -352,7 +365,8 @@ object AladinCell extends ModelOptics {
                 ).when(openSettings.value)
               ),
               potRenderView[TargetVisualOptions](renderCell)(options),
-              potRenderView[TargetVisualOptions](renderToolbar)(options)
+              potRenderView[TargetVisualOptions](renderToolbar)(options),
+              potRenderView[TargetVisualOptions](renderAgsOverlay)(options)
             )
           )
       }

@@ -9,6 +9,7 @@ import eu.timepit.refined.refineV
 import explore.optics._
 import lucuma.core.math.Parallax
 import lucuma.core.math.ProperMotion.AngularVelocityComponent
+import lucuma.core.math.HourAngle.HMS
 import lucuma.core.math._
 import lucuma.core.math.units._
 import lucuma.core.optics._
@@ -16,6 +17,7 @@ import lucuma.core.syntax.string._
 
 import java.text.NumberFormat
 import java.util.Locale
+import scala.math._
 
 trait formats {
   val pxFormat: Format[String, Parallax] =
@@ -102,6 +104,41 @@ trait formats {
 
   val angleTruncatedPASplitEpi: SplitEpi[Angle, TruncatedPA] =
     SplitEpi[Angle, TruncatedPA](TruncatedPA(_), _.angle)
+
+  def formatHMS(hms: HMS): String =
+    f"${hms.hours}%02d:${hms.minutes}%02d:${hms.seconds}%02d.${hms.milliseconds}%03d"
+
+  val fromStringDMS: Angle => String =
+    dms => {
+      val r = Angle.dms.get(dms)
+      f"${r.degrees}%02d:${r.arcminutes}%02d:${r.arcseconds}%02d.${r.milliarcseconds / 10}%02d"
+    }
+
+  val fromStringSignedDMS: Angle => String =
+    a =>
+      if (Angle.signedMicroarcseconds.get(a) < 0) s"-${fromStringDMS(-a)}"
+      else s"+${fromStringDMS(a)}"
+
+  def formatCoordinates(coords: Coordinates): String = {
+    val ra = HMS(coords.ra.toHourAngle)
+    s"${formatHMS(ra)} ${fromStringSignedDMS(coords.dec.toAngle)}"
+  }
+
+  def formatFov(angle: Angle): String = {
+    val dms        = Angle.DMS(angle)
+    val degrees    = dms.degrees
+    val arcminutes = dms.arcminutes
+    val arcseconds = dms.arcseconds
+    val mas        = rint(dms.milliarcseconds.toDouble / 10).toInt
+    if (degrees >= 45)
+      f"$degrees%02d°"
+    else if (degrees >= 1)
+      f"$degrees%02d°$arcminutes%02d′"
+    else if (arcminutes >= 1)
+      f"$arcminutes%02d′$arcseconds%01d″"
+    else
+      f"$arcseconds%01d.$mas%02d″"
+  }
 
 }
 

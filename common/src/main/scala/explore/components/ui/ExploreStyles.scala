@@ -166,6 +166,15 @@ object ExploreStyles {
   val AladinCenterButton: Css     = Css("aladin-status-center-button")
   val AladinSearchIcon: Css       = Css("aladin-search-icon")
 
+  val AgsOverlay: Css          = Css("ags-overlay")
+  val AgsDescription: Css      = Css("ags-description")
+  val AgsGuideSpeed: Css       = Css("ags-guide-speed")
+  val AgsGoodIQ: Css           = Css("ags-good-iq-color")
+  val AgsGBrightness: Css      = Css("ags-g-brightness")
+  val AgsCoordinates: Css      = Css("ags-coordinates")
+  val AgsNavigationButton: Css = Css("ags-navigation-button")
+  val AgsNavigation: Css       = Css("ags-navigation")
+
   val MoonPhase: Css = Css("moon-phase")
 
   val ProposalDetailsGrid: Css = Css("proposal-details-grid")
