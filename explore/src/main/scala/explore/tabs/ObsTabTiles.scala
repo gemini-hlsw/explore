@@ -138,6 +138,12 @@ object ObsTabTiles {
           obsViewPot
             .flatMap(view => view.get.map(obs => view.zoom(_ => obs)(mod => _.map(mod))))
 
+// <<<<<<< HEAD
+//         val potAsterismMode: Pot[(View[Option[Asterism]], Option[ScienceMode])] =
+// =======
+        val scienceMode: Option[ScienceMode] = obsView.map(_.get.scienceMode).toOption.flatten
+
+        // val potAsterismMode: Pot[(ReuseView[Option[Asterism]], Option[ScienceMode])] =
         val potAsterismMode: Pot[(View[Option[Asterism]], Option[ScienceMode])] =
           obsView.map(rv =>
             (rv.value
@@ -179,7 +185,8 @@ object ObsTabTiles {
 
         val constraintsSelector = makeConstraintsSelector(props.constraintGroups, obsView)
 
-        val skyPlotTile = ElevationPlotTile.elevationPlotTile(targetCoords)
+        val skyPlotTile =
+          ElevationPlotTile.elevationPlotTile(scienceMode, targetCoords)
 
         def setCurrentTarget(
           programId: Program.Id,

@@ -38,15 +38,15 @@ import scala.scalajs.js
 
 import js.JSConverters._
 
-final case class SkyPlotNight(
+final case class ElevationPlotNight(
   site:        Site,
   coords:      Coordinates,
   date:        LocalDate,
-  timeDisplay: SkyPlotNight.TimeDisplay
-) extends ReactFnProps[SkyPlotNight](SkyPlotNight.component)
+  timeDisplay: ElevationPlotNight.TimeDisplay
+) extends ReactFnProps[ElevationPlotNight](ElevationPlotNight.component)
 
-object SkyPlotNight {
-  type Props = SkyPlotNight
+object ElevationPlotNight {
+  type Props = ElevationPlotNight
 
   sealed trait TimeDisplay
   object TimeDisplay {
