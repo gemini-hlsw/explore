@@ -10,6 +10,8 @@ import explore.model.enum.Visible
 import explore.model.formats._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ags.AgsAnalysis
+import lucuma.ags.GuideStarCandidate
 import lucuma.core.math._
 import react.aladin.Fov
 import react.common.ReactFnProps
@@ -21,9 +23,6 @@ import react.semanticui.modules.popup.PopupPosition
 import react.semanticui.shorthand._
 import react.semanticui.sizes.Small
 import react.semanticui.sizes._
-
-import lucuma.ags.GuideStarCandidate
-import lucuma.ags.AgsAnalysis
 
 final case class AladinToolbar(
   fov:                 Fov,
@@ -62,7 +61,7 @@ object AladinToolbar {
         ),
         <.div(
           ExploreStyles.AladinGuideStar,
-          selected.map(r => s"GS: ${r._1.name.value}").unless(props.agsOverlay.visible)
+          selected.map { case (g, _) => s"GS: ${g.name.value}" }.unless(props.agsOverlay.visible)
         ),
         Label(
           icon = Icons.MousePointer.clazz(ExploreStyles.Accented),

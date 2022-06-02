@@ -47,7 +47,7 @@ object AgsOverlay {
             ReactFragment(
               <.div(
                 ExploreStyles.AgsDescription,
-                Icons.ThinBahai,
+                Icons.Bahai,
                 gs.name.value,
                 <.div(
                   ExploreStyles.AgsNavigation,

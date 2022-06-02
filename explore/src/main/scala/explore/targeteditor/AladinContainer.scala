@@ -238,15 +238,15 @@ object AladinContainer {
 
               candidates
                 .filterNot(x => selectedGS.exists(_._1 === x._1))
-                .flatMap { g =>
-                  val targetEpoch        = g._1.tracking.epoch.epochYear.round
+                .flatMap { case (g, _) =>
+                  val targetEpoch        = g.tracking.epoch.epochYear.round
                   // Approximate to the midddle of the yaer
                   val targetEpochInstant =
                     LocalDate.of(targetEpoch.toInt, 6, 1).atStartOfDay(ZoneId.of("UTC")).toInstant()
 
-                  (g._1.tracking
+                  (g.tracking
                      .at(targetEpochInstant),
-                   g._1.tracking
+                   g.tracking
                      .at(obsInstant)
                   ).mapN { (source, dest) =>
                     List[SVGTarget](

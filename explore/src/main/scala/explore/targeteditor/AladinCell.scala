@@ -24,8 +24,8 @@ import explore.model.Constants
 import explore.model.ObsConfiguration
 import explore.model.ScienceMode
 import explore.model.TargetVisualOptions
-import explore.model.enum.Visible
 import explore.model.boopickle._
+import explore.model.enum.Visible
 import explore.model.reusability._
 import explore.optics.ModelOptics
 import explore.utils._
@@ -186,7 +186,7 @@ object AladinCell extends ModelOptics {
               implicit val ordering: Ordering[(GuideStarCandidate, AgsAnalysis)] = Ordering.by(_._2)
               pa.map { pa =>
                 val basePos = AgsPosition(pa, Offset.Zero)
-                AGS
+                Ags
                   .agsAnalysis[IO](bestConstraintSet,
                                    wavelength,
                                    tracking.baseCoordinates,
