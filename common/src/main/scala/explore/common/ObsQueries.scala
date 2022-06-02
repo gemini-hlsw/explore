@@ -126,7 +126,7 @@ object ObsQueries {
     val createER: ElevationRangeInput = constraints.elevationRange match {
       case ElevationRange.AirMass(min, max)   =>
         ElevationRangeInput(airMass =
-          // TODO: Change AirMassRange in lucuma-core to use refined types
+          // These are actually safe, because min and max in the model are refined [1.0 - 3.0]
           AirMassRangeInput(min = PosBigDecimal.unsafeFrom(min.value).assign,
                             max = PosBigDecimal.unsafeFrom(max.value).assign
           ).assign
