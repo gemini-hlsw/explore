@@ -60,10 +60,11 @@ object ElevationPlotSection {
     ScalaFnComponent
       .withHooks[Props]
       .useStateBy[Site](preferredSiteFor)
+      .useEffectWithDepsBy((p, _) => p)((_, s) => p => s.setState(preferredSiteFor(p)))
       .useState(ZonedDateTime.now(Site.GS.timezone).toLocalDate.plusDays(1))
       .useState[PlotPeriod](PlotPeriod.Night)
       .useState[TimeDisplay](TimeDisplay.Site)
-      .renderWithReuse { (props, site, date, plotPeriod, timeDisplay) =>
+      .render { (props, site, date, plotPeriod, timeDisplay) =>
         implicit val ctx = props.ctx
 
         <.div(ExploreStyles.ElevationPlotSection)(
