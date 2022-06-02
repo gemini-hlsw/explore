@@ -98,60 +98,25 @@ object AladinCell extends ModelOptics {
       // avoids us needing a ref to a Fn component
       .useStateView(false)
       // Listen on web worker for messages with catalog candidates
-      .useStreamBy((props, _, _, _) => (props.target.get, props.obsConf.map(_.obsInstant)))(
-        (props, _, _, _) =>
-          deps =>
-            props.ctx.worker.stream
-              .map(decodeFromTransferable[CatalogResults])
-              .unNone
-              .map(_.candidates)
-              .merge(
-                // Request catalog info for the target
-                // This is done in a merged stream to guarantee that we don't miss the response before subscribing
-                fs2.Stream
-                  .exec(deps match {
-                    case (tracking, Some(obsInstant)) =>
-                      props.ctx.worker
-                        .postTransferrable(
-                          CatalogRequest(tracking, obsInstant)
-                        )
-                    case _                            => IO.unit
-                  })
-                  .as(Nil)
-              )
+      .useStreamWithSyncBy((props, _, _, _) => props.tid)((props, _, _, _) =>
+        _ =>
+          props.ctx.worker.stream
+            .map(decodeFromTransferable[CatalogResults])
+            .unNone
+            .map(_.candidates)
       )
-      .useEffectOnMountBy((props, _, _, _, _) =>
-        (props.target.get, props.obsConf) match {
-          case (tracking, Some(obsConf)) =>
-            props.ctx.worker.postTransferrable(
-              CatalogRequest(tracking, obsConf.obsInstant)
-            )
-          case _                         => IO.unit
-        }
+      .useEffectWithDepsBy((_, _, _, _, candidates) => candidates.awaitOpt)((props, _, _, _, _) =>
+        _.value
+          .map(candidatesAwait =>
+            candidatesAwait >>
+              ((props.target.get, props.obsConf) match {
+                case (tracking, Some(obsConf)) =>
+                  props.ctx.worker.postTransferrable(CatalogRequest(tracking, obsConf.obsInstant))
+                case _                         => IO.unit
+              })
+          )
+          .orEmpty
       )
-      // 2022-05-31: ALTERNATE IMPLEMENTATION OF PREVIOUS 2 HOOKS
-      // LET'S EXPLORE USING THIS IF WE EXPERIENCE SYNC ISSUES WITH THE ABOVE
-      // OTHERWISE LET'S DELETE THIS AFTER A WHILE
-      // .useStreamWithSyncOnMountBy( // By((props, _, _, _) => (props.target.get, props.obsConf))(
-      //   (props, _, _, _) =>
-      //     // _ =>
-      //     props.ctx.worker.stream
-      //       .map(decodeFromTransferable[CatalogResults])
-      //       .unNone
-      //       .map(_.candidates)
-      // )
-      // .useEffectWithDepsBy((_, _, _, _, candidates) => candidates.awaitOpt)((props, _, _, _, _) =>
-      //   _.value
-      //     .map(candidatesAwait =>
-      //       candidatesAwait >>
-      //         ((props.target.get, props.obsConf) match {
-      //           case (tracking, Some(obsConf)) =>
-      //             props.ctx.worker.postTransferrable(CatalogRequest(tracking, obsConf.obsInstant))
-      //           case _                         => IO.unit
-      //         })
-      //     )
-      //     .orEmpty
-      // )
       .useEffectWithDepsBy((p, _, _, _, _) => (p.uid, p.tid)) { (props, _, options, _, _) => _ =>
         implicit val ctx = props.ctx
         UserTargetPreferencesQuery
@@ -172,7 +137,7 @@ object AladinCell extends ModelOptics {
           .runAsyncAndForget
       }
       // analyzed targets
-      .useMemoBy((p, _, _, _, candidates) => (p.target.get, p.obsConf, candidates)) {
+      .useMemoBy((p, _, _, _, candidates) => (p.target.get, p.obsConf, candidates.value)) {
         (_, _, _, _, _) =>
           {
             case (tracking, Some(obsConf), Ready(candidates)) =>
@@ -298,12 +263,11 @@ object AladinCell extends ModelOptics {
               offsetSetter.reuseAlways,
               center,
               selectedIndex.get,
-              // gsc.value.toOption.orEmpty // USE THIS FOR ALTERNATE HOOK IMPLEMENTATION
               agsResults
             ).withKey(aladinKey)
-          //
+
           // Check whether we are waiting for catalog
-          val catalogLoading                              = props.obsConf.exists(_ => gsc.isPending)
+          val catalogLoading = props.obsConf.exists(_ => gsc.value.isPending)
 
           val usableGuideStar = agsResults.lift(selectedIndex.get).exists(_._2.isUsable)
 
