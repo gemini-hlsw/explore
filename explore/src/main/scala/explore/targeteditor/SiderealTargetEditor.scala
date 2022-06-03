@@ -30,7 +30,7 @@ import explore.undo.UndoStacks
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.hooks.Hooks
-import japgolly.scalajs.react.util.DefaultEffects.{ Sync => DefaultS }
+import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math._
 import lucuma.core.model.SourceProfile

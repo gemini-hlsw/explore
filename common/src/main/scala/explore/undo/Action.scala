@@ -4,8 +4,8 @@
 package explore.undo
 
 import explore.optics.GetAdjust
-import japgolly.scalajs.react.util.DefaultEffects.{ Async => DefaultA }
-import japgolly.scalajs.react.util.DefaultEffects.{ Sync => DefaultS }
+import japgolly.scalajs.react.util.DefaultEffects.{Async => DefaultA}
+import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
 import monocle.Lens
 
 /*

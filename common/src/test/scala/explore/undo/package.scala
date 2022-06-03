@@ -5,7 +5,7 @@ package explore
 
 import cats.Applicative
 import crystal.ViewF
-import japgolly.scalajs.react.util.DefaultEffects.{ Sync => DefaultS }
+import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
 
 package object undo                           {
   type View[A] = ViewF[DefaultS, A]
