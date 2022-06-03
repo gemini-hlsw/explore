@@ -153,15 +153,23 @@ object ObsTabTiles {
             )
           )
 
-        val targetCoords: Option[Coordinates] =
+        val targetCoords: Option[(Target.Id, Coordinates)] =
           // try first the target from the url or else use the asterism base
-          props.focusedTarget.flatMap(props.targetMap.get).flatMap(_.coords).orElse {
-            potAsterismMode.toOption
-              .flatMap(_._1.get.flatMap(_.baseTarget.target match {
-                case Target.Sidereal(_, tracking, _, _) => tracking.baseCoordinates.some
-                case _                                  => none
-              }))
-          }
+          props.focusedTarget
+            .flatMap(props.targetMap.get)
+            .flatMap(x => x.coords.tupleLeft(x.targetId))
+            .orElse {
+              potAsterismMode.toOption
+                .flatMap(
+                  _._1.get.flatMap(t =>
+                    t.baseTarget.target match {
+                      case Target.Sidereal(_, tracking, _, _) =>
+                        (t.baseTarget.id, tracking.baseCoordinates).some
+                      case _                                  => none
+                    }
+                  )
+                )
+            }
 
         val notesTile =
           Tile(
@@ -182,7 +190,7 @@ object ObsTabTiles {
         val constraintsSelector = makeConstraintsSelector(props.constraintGroups, obsView)
 
         val skyPlotTile =
-          ElevationPlotTile.elevationPlotTile(scienceMode, targetCoords)
+          ElevationPlotTile.elevationPlotTile(props.userId, scienceMode, targetCoords)
 
         def setCurrentTarget(
           programId: Program.Id,

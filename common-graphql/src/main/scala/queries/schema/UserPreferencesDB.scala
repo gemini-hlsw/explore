@@ -14,8 +14,8 @@ trait UserPreferencesDB {
     type BreakpointName     = String
     type GridLayoutArea     = String
     type Site               = lucuma.core.enum.Site
-    type ElevationPlotTime  = String
-    type ElevationPlotRange = String
+    type ElevationPlotRange = explore.model.enum.PlotRange
+    type ElevationPlotTime  = explore.model.enum.TimeDisplay
     type Bigint             = Long
   }
 }

@@ -204,7 +204,7 @@ object AladinCell extends ModelOptics {
               fovView.set(newFov.x) *>
                 (fovView.get, agsCandidatesView.get, agsOverlayView.get).mapN { (_, a, o) =>
                   UserTargetPreferencesUpsert
-                    .updatePreferences[IO](props.uid, props.tid, newFov.x, a, o)
+                    .updateAladinPreferences[IO](props.uid, props.tid, newFov.x, a, o)
                     .unlessA(ignore)
                     .runAsync
                     .rateLimit(1.seconds, 1)
@@ -237,7 +237,7 @@ object AladinCell extends ModelOptics {
           def prefsSetter(candidates: Visible => Visible, overlay: Visible => Visible): Callback =
             (fovView.get, agsCandidatesView.get, agsOverlayView.get).mapN { (f, a, o) =>
               UserTargetPreferencesUpsert
-                .updatePreferences[IO](props.uid, props.tid, f, candidates(a), overlay(o))
+                .updateAladinPreferences[IO](props.uid, props.tid, f, candidates(a), overlay(o))
                 .runAsync
                 .void
             }.orEmpty

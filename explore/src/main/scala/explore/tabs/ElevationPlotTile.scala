@@ -11,13 +11,19 @@ import explore.model.ScienceMode
 import explore.targeteditor.ElevationPlotSection
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Coordinates
+import lucuma.core.model.Target
+import lucuma.core.model.User
 import react.common._
 import react.common.implicits._
 
 object ElevationPlotTile {
 
-  def elevationPlotTile(scienceMode: Option[ScienceMode], coordinates: Option[Coordinates])(implicit
-    ctx:                             AppContextIO
+  def elevationPlotTile(
+    uid:         Option[User.Id],
+    scienceMode: Option[ScienceMode],
+    coordinates: Option[(Target.Id, Coordinates)]
+  )(implicit
+    ctx:         AppContextIO
   ) =
     Tile(
       ObsTabTilesIds.PlotId,
@@ -26,12 +32,16 @@ object ElevationPlotTile {
       bodyClass = ExploreStyles.ElevationPlotTileBody.some,
       tileClass = ExploreStyles.ElevationPlotTile.some
     ) { (_: Tile.RenderInTitle) =>
-      coordinates.fold[VdomNode](
-        <.div(
-          ExploreStyles.FullHeightWidth |+| ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
-          <.div("Select a target")
-        )
-      )(c => ElevationPlotSection(scienceMode, c))
+      (uid, coordinates)
+        .mapN { case (uid, c) =>
+          ElevationPlotSection(uid, c._1, scienceMode, c._2): VdomNode
+        }
+        .getOrElse {
+          <.div(
+            ExploreStyles.FullHeightWidth |+| ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
+            <.div("Select a target")
+          )
+        }
     }
 
 }

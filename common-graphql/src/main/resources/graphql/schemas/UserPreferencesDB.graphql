@@ -1070,6 +1070,42 @@ columns and relationships of "lucuma_target"
 """
 type lucuma_target {
   """An array relationship"""
+  lucuma_elevation_plot_preferences(
+    """distinct select on columns"""
+    distinct_on: [lucuma_elevation_plot_preferences_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [lucuma_elevation_plot_preferences_order_by!]
+
+    """filter the rows returned"""
+    where: lucuma_elevation_plot_preferences_bool_exp
+  ): [lucuma_elevation_plot_preferences!]!
+
+  """An aggregated array relationship"""
+  lucuma_elevation_plot_preferences_aggregate(
+    """distinct select on columns"""
+    distinct_on: [lucuma_elevation_plot_preferences_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [lucuma_elevation_plot_preferences_order_by!]
+
+    """filter the rows returned"""
+    where: lucuma_elevation_plot_preferences_bool_exp
+  ): lucuma_elevation_plot_preferences_aggregate!
+
+  """An array relationship"""
   lucuma_target_preferences(
     """distinct select on columns"""
     distinct_on: [lucuma_target_preferences_select_column!]
@@ -1148,6 +1184,7 @@ input lucuma_target_bool_exp {
   _and: [lucuma_target_bool_exp]
   _not: lucuma_target_bool_exp
   _or: [lucuma_target_bool_exp]
+  lucuma_elevation_plot_preferences: lucuma_elevation_plot_preferences_bool_exp
   lucuma_target_preferences: lucuma_target_preferences_bool_exp
   target_id: String_comparison_exp
 }
@@ -1164,6 +1201,7 @@ enum lucuma_target_constraint {
 input type for inserting data into table "lucuma_target"
 """
 input lucuma_target_insert_input {
+  lucuma_elevation_plot_preferences: lucuma_elevation_plot_preferences_arr_rel_insert_input
   lucuma_target_preferences: lucuma_target_preferences_arr_rel_insert_input
   target_id: String
 }
@@ -1224,6 +1262,7 @@ input lucuma_target_on_conflict {
 ordering options when selecting data from "lucuma_target"
 """
 input lucuma_target_order_by {
+  lucuma_elevation_plot_preferences_aggregate: lucuma_elevation_plot_preferences_aggregate_order_by
   lucuma_target_preferences_aggregate: lucuma_target_preferences_aggregate_order_by
   target_id: order_by
 }

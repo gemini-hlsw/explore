@@ -188,7 +188,7 @@ object AsterismEditor {
 
               selectedTargetView.mapValue(targetView =>
                 targetView.get match {
-                  case t @ Target.Sidereal(_, _, _, _) =>
+                  case TargetWithId(_, t @ Target.Sidereal(_, _, _, _)) =>
                     <.div(
                       ExploreStyles.TargetTileEditor,
                       <.div(
@@ -214,7 +214,7 @@ object AsterismEditor {
                       SiderealTargetEditor(
                         props.userId,
                         targetId,
-                        targetView.unsafeNarrow[Target.Sidereal],
+                        targetView.zoom(TargetWithId.target).unsafeNarrow[Target.Sidereal],
                         props.obsConf.get,
                         props.scienceMode,
                         props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
@@ -225,7 +225,7 @@ object AsterismEditor {
                           else none
                       )
                     )
-                  case _                               =>
+                  case _                                                =>
                     <.div("Non-sidereal targets not supported")
                 }
               )

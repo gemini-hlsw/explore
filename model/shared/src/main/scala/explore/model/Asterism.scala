@@ -50,14 +50,12 @@ object Asterism {
   def one(targets: TargetWithId): Asterism =
     Asterism(NonEmptyList.one(targets))
 
-  def targetOptional(targetId: Target.Id): Optional[Option[Asterism], Target] =
-    Optional[Option[Asterism], Target](
-      _.flatMap(_.targets.find(_.id === targetId).map(_.target))
+  def targetOptional(targetId: Target.Id): Optional[Option[Asterism], TargetWithId] =
+    Optional[Option[Asterism], TargetWithId](
+      _.flatMap(_.targets.find(_.id === targetId))
     )(target =>
       _.map(
-        Asterism.targetsEach.modify(twid =>
-          if (twid.id === targetId) TargetWithId(targetId, target) else twid
-        )
+        Asterism.targetsEach.modify(twid => if (twid.id === targetId) target else twid)
       )
     )
 
