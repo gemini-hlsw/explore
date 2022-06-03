@@ -148,7 +148,6 @@ object AladinCell extends ModelOptics {
                 case _                               => none
               }
 
-              implicit val ordering: Ordering[(GuideStarCandidate, AgsAnalysis)] = Ordering.by(_._2)
               pa.map { pa =>
                 val basePos = AgsPosition(pa, Offset.Zero)
                 Ags
@@ -159,15 +158,16 @@ object AladinCell extends ModelOptics {
                                    params,
                                    candidates
                   )
-                  .sorted
+                  .sortBy(_._2)
+
               }.getOrElse(Nil)
             case _                                            => Nil
           }
       }
       // open settings menu
       .useState(false)
-      // Selected GS index
-      .useStateViewWithReuse(0)
+      // Selected GS index. Should be stored in the db
+      .useStateView(0)
       .render {
         (props, mouseCoords, options, center, gsc, agsResults, openSettings, selectedIndex) =>
           implicit val ctx = props.ctx
