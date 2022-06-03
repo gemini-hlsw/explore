@@ -118,6 +118,7 @@ object UserPreferencesQueriesGQL {
           viewOffsetP
           viewOffsetQ
           agsCandidates
+          agsOverlay
         }
       }
     """

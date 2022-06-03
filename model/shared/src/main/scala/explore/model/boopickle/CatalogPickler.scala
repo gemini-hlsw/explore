@@ -8,7 +8,7 @@ import eu.timepit.refined._
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.CatalogResults
-import explore.model.GuideStarCandidate
+import lucuma.ags.GuideStarCandidate
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
@@ -18,7 +18,11 @@ import lucuma.core.math.Parallax
 import lucuma.core.math.ProperMotion
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.RightAscension
+import lucuma.core.math.Wavelength
+import lucuma.core.model.ConstraintSet
+import lucuma.core.model.ElevationRange
 import lucuma.core.model.SiderealTracking
+import lucuma.core.util.Enumerated
 
 // Boopicklers for catalog related types
 trait CatalogPicklers {
@@ -104,10 +108,52 @@ trait CatalogPicklers {
       (x.baseCoordinates, x.epoch, x.properMotion, x.radialVelocity, x.parallax)
     )
 
-  implicit def picklerGuideStarCandadite: Pickler[GuideStarCandidate] =
+  implicit def picklerGuideStarCandidate: Pickler[GuideStarCandidate] =
     transformPickler(Function.tupled(GuideStarCandidate.apply _))(x =>
       (x.name, x.tracking, x.gBrightness)
     )
+
+  implicit def picklerEnumeration[A: Enumerated]: Pickler[A] =
+    transformPickler((a: String) =>
+      Enumerated[A].fromTag(a).getOrElse(sys.error("Cannot unpickle"))
+    )(
+      Enumerated[A].tag(_)
+    )
+
+  implicit def picklerElevationRangeAirMassDecimalValue
+    : Pickler[ElevationRange.AirMass.DecimalValue] =
+    transformPickler((b: BigDecimal) =>
+      ElevationRange.AirMass.DecimalValue.from(b).getOrElse(sys.error("Cannot unpickle"))
+    )(_.value)
+
+  implicit def picklerElevationRangeHourAngleDecimalHour
+    : Pickler[ElevationRange.HourAngle.DecimalHour] =
+    transformPickler((b: BigDecimal) =>
+      ElevationRange.HourAngle.DecimalHour.from(b).getOrElse(sys.error("Cannot unpickle"))
+    )(_.value)
+
+  implicit def picklerElevationRangeAirMass: Pickler[ElevationRange.AirMass] =
+    transformPickler(ElevationRange.AirMass.fromDecimalValues.get)(x => (x.min, x.max))
+
+  implicit def picklerElevationRangeHourAngle: Pickler[ElevationRange.HourAngle] =
+    transformPickler(ElevationRange.HourAngle.fromDecimalHours.get)(x => (x.minHours, x.maxHours))
+
+  implicit def picklerElevationRange: Pickler[ElevationRange] =
+    compositePickler[ElevationRange]
+      .addConcreteType[ElevationRange.AirMass]
+      .addConcreteType[ElevationRange.HourAngle]
+
+  implicit def picklerConstraintSet: Pickler[ConstraintSet] =
+    transformPickler(Function.tupled(ConstraintSet.apply _))(x =>
+      (x.imageQuality, x.cloudExtinction, x.skyBackground, x.waterVapor, x.elevationRange)
+    )
+
+  implicit def picklerWavelength: Pickler[Wavelength] =
+    transformPickler((i: Int) =>
+      Wavelength.fromPicometers
+        .getOption(i)
+        .getOrElse(sys.error("cannot unpickle"))
+    )(_.toPicometers.value.value)
 
   implicit def picklerCatalogResults: Pickler[CatalogResults] =
     transformPickler(CatalogResults.apply)(_.candidates)

@@ -9,6 +9,10 @@ import explore.model.Asterism
 import explore.undo.UndoStacks
 import japgolly.scalajs.react.ReactCats._
 import japgolly.scalajs.react.Reusability
+import lucuma.ags.AgsAnalysis
+import lucuma.ags.AgsParams
+import lucuma.ags.AgsPosition
+import lucuma.ags.GuideStarCandidate
 import lucuma.catalog.AngularSize
 import lucuma.catalog.CatalogTargetResult
 import lucuma.core.model.PosAngle
@@ -79,6 +83,9 @@ object reusability {
   implicit val obsCOnfigurationReuse: Reusability[ObsConfiguration]             = Reusability.byEq
   implicit val guideStarReuse: Reusability[GuideStarCandidate]                  = Reusability.by(_.name.value)
   implicit val catalogResultsReuse: Reusability[CatalogResults]                 = Reusability.by(_.candidates)
+  implicit val agsPositionReuse: Reusability[AgsPosition]                       = Reusability.byEq
+  implicit val agsParamsReuse: Reusability[AgsParams]                           = Reusability.byEq
+  implicit val agsAnalysisReuse: Reusability[AgsAnalysis]                       = Reusability.byEq
 
   implicit val existenceReuse: Reusability[Existence] = Reusability.byEq
 }

@@ -8,15 +8,18 @@ import crystal.react.View
 import crystal.react.hooks._
 import explore.Icons
 import explore.components.ui.ExploreStyles
-import explore.model.GuideStarCandidate
 import explore.model.ObsConfiguration
 import explore.model.ScienceMode
 import explore.model.TargetVisualOptions
 import explore.model.enum.Visible
 import explore.model.reusability._
+import japgolly.scalajs.react.Reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ags.AgsAnalysis
+import lucuma.ags.GuideStarCandidate
+import lucuma.core.enum.PortDisposition
 import lucuma.core.geom.jts.interpreter._
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
@@ -47,7 +50,8 @@ final case class AladinContainer(
   updateFov:              Fov => Callback, // TODO Move the functionality of saving the FOV in ALadincell here
   updateViewOffset:       Offset => Callback,
   centerOnTarget:         View[Boolean],
-  guideStarCandidates:    List[GuideStarCandidate]
+  selectedGuideStarIndex: Int,
+  guideStarCandidates:    List[(GuideStarCandidate, AgsAnalysis)]
 ) extends ReactFnProps[AladinContainer](AladinContainer.component)
 
 object AladinContainer {
@@ -57,13 +61,13 @@ object AladinContainer {
   val DefaultWorld2PixFn: World2PixFn = (_: Coordinates) => None
 
   // This is used for screen coordinates, thus it doesn't need a lot of precission
-  private implicit val doubleReuse = Reusability.double(1.0)
+  implicit val doubleReuse = Reusability.double(1.0)
 
   val AladinComp = Aladin.component
 
   def updateVisualization(svg: Svg, off: (Double, Double))(v: JsAladin): Callback = {
-    val size = Size(v.getParentDiv().clientHeight.toDouble, v.getParentDiv().clientWidth.toDouble)
     val div  = v.getParentDiv()
+    val size = Size(div.clientHeight.toDouble, div.clientWidth.toDouble)
     renderVisualization(svg, off, div, size, v.pixelScale)
   }
 
@@ -114,9 +118,15 @@ object AladinContainer {
       .useStateBy { (p, baseCoordinates) =>
         baseCoordinates.value.offsetBy(Angle.Angle0, p.options.viewOffset)
       }
+      // Selected guide star
+      .useMemoBy((p, _, _) => (p.guideStarCandidates, p.selectedGuideStarIndex)) {
+        case (_, _, _) => { case (candidates, selectedIndex) =>
+          candidates.lift(selectedIndex).filter(_._2.isUsable)
+        }
+      }
       // Memoized svg
-      .useMemoBy((p, _, _) => (p.scienceMode, p.obsConf.map(_.posAngle), p.options)) {
-        case (_, _, _) => { case (mode, posAngle, options) =>
+      .useMemoBy((p, _, _, gs) => (p.scienceMode, p.obsConf.map(_.posAngle), p.options, gs.value)) {
+        case (_, baseCoordinates, _, _) => { case (mode, posAngle, options, gs) =>
           val pa = posAngle
             .collect {
               case PosAngle.Fixed(a)               => a
@@ -127,10 +137,28 @@ object AladinContainer {
           val candidatesVisibility =
             ExploreStyles.GuideStarCandidateVisible.when_(options.agsCandidates.visible)
 
+          val probeArmShapes = (gs, pa).mapN { case ((c, _), posAngle) =>
+            val gsOffset = baseCoordinates.diff(c.tracking.baseCoordinates).offset
+            GmosGeometry.probeShapes(posAngle,
+                                     gsOffset,
+                                     Offset.Zero,
+                                     mode,
+                                     PortDisposition.Side,
+                                     Css.Empty
+            )
+          }
+
           val shapes = pa
             .map { posAngle =>
-              GmosGeometry.shapesForMode(posAngle, mode) ++
-                GmosGeometry.commonShapes(posAngle, candidatesVisibility)
+              val baseShapes =
+                GmosGeometry.shapesForMode(posAngle, mode, PortDisposition.Side) ++
+                  GmosGeometry.commonShapes(posAngle, candidatesVisibility)
+
+              probeArmShapes
+                .map { probeArm =>
+                  baseShapes ++ probeArm
+                }
+                .getOrElse(baseShapes)
             }
             .getOrElse(
               GmosGeometry.commonShapes(Angle.Angle0, candidatesVisibility)
@@ -142,9 +170,9 @@ object AladinContainer {
       // Ref to the aladin component
       .useRefToScalaComponent(AladinComp)
       // If needed center on target
-      .useEffectWithDepsBy((p, baseCoordinates, _, _, _) =>
+      .useEffectWithDepsBy((p, baseCoordinates, _, _, _, _) =>
         (baseCoordinates.value, p.centerOnTarget.get)
-      )((_, _, _, _, aladinRef) => { case (coords, center) =>
+      )((_, _, _, _, _, aladinRef) => { case (coords, center) =>
         aladinRef.get.asCBO
           .flatMapCB(
             _.backend.gotoRaDec(coords.ra.toAngle.toDoubleDegrees,
@@ -158,13 +186,13 @@ object AladinContainer {
       // resize detector
       .useResizeDetector()
       // Update the world2pix function
-      .useEffectWithDepsBy { (p, _, currentPos, _, aladinRef, _, resize) =>
+      .useEffectWithDepsBy { (p, _, currentPos, _, _, aladinRef, _, resize) =>
         (resize, p.options, currentPos, aladinRef)
-      } { (_, _, _, _, aladinRef, w, _) => _ =>
+      } { (_, _, _, _, _, aladinRef, w, _) => _ =>
         aladinRef.get.asCBO.flatMapCB(_.backend.world2pixFn.flatMap(w.setState))
       }
       // Render the visualization, only if current pos, fov or size changes
-      .useEffectWithDepsBy((p, baseCoordinates, currentPos, _, _, world2pix, resize) =>
+      .useEffectWithDepsBy((p, baseCoordinates, _, currentPos, _, _, world2pix, resize) =>
         (p.options.fovAngle,
          p.options.agsCandidates,
          p.scienceMode,
@@ -173,7 +201,7 @@ object AladinContainer {
          world2pix.value(baseCoordinates.value),
          resize
         )
-      ) { (_, _, _, svg, aladinRef, _, _) =>
+      ) { (_, _, _, _, svg, aladinRef, _, _) =>
         { case (_, _, _, _, _, off, _) =>
           off
             .map(off =>
@@ -188,133 +216,145 @@ object AladinContainer {
         }
       }
       // memoized catalog targets with their proper motions corrected
-      .useMemoBy((props, _, _, _, _, _, _) =>
+      .useMemoBy((props, _, _, selectedGs, _, _, _, _) =>
         (props.guideStarCandidates,
          props.options.agsCandidates.visible,
          props.obsConf.isDefined,
-         props.obsConf.map(_.obsInstant)
+         props.obsConf.map(_.obsInstant),
+         selectedGs
         )
-      ) { (_, _, _, _, _, _, _) =>
-        { case (candidates, visible, confPresent, obsInstant) =>
+      ) { (_, _, _, _, _, _, _, _) =>
+        { case (candidates, visible, confPresent, obsInstant, selectedGS) =>
           if (confPresent) {
             val candidatesVisibility =
               ExploreStyles.GuideStarCandidateVisible.when_(visible)
 
             obsInstant.foldMap { obsInstant =>
-              candidates.flatMap { g =>
-                val targetEpoch        = g.tracking.epoch.epochYear.round
-                // Approximate to the midddle of the yaer
-                val targetEpochInstant =
-                  LocalDate.of(targetEpoch.toInt, 6, 1).atStartOfDay(ZoneId.of("UTC")).toInstant()
-
-                (g.tracking
-                   .at(targetEpochInstant),
-                 g.tracking
-                   .at(obsInstant)
-                ).mapN { (source, dest) =>
-                  List[SVGTarget](SVGTarget.GuideStarCandidateTarget(dest, candidatesVisibility, 3),
-                                  SVGTarget.LineTo(
-                                    source,
-                                    dest,
-                                    ExploreStyles.PMGSCorrectionLine |+| candidatesVisibility
-                                  )
-                  )
+              val selectedGSTarget = selectedGS
+                .flatMap { case (c, _) => c.tracking.at(obsInstant) }
+                .map { c =>
+                  SVGTarget.GuideStarTarget(c, Css.Empty, 5)
                 }
-              }.flatten
+
+              candidates
+                .filterNot(x => selectedGS.exists(_._1 === x._1))
+                .flatMap { case (g, _) =>
+                  val targetEpoch        = g.tracking.epoch.epochYear.round
+                  // Approximate to the midddle of the yaer
+                  val targetEpochInstant =
+                    LocalDate.of(targetEpoch.toInt, 6, 1).atStartOfDay(ZoneId.of("UTC")).toInstant()
+
+                  (g.tracking
+                     .at(targetEpochInstant),
+                   g.tracking
+                     .at(obsInstant)
+                  ).mapN { (source, dest) =>
+                    List[SVGTarget](
+                      SVGTarget.GuideStarCandidateTarget(dest, candidatesVisibility, 3),
+                      SVGTarget.LineTo(
+                        source,
+                        dest,
+                        ExploreStyles.PMGSCorrectionLine |+| candidatesVisibility
+                      )
+                    )
+                  }
+                }
+                .flatten ++ selectedGSTarget.toList
             }
           } else Nil
         }
       }
-      .render { (props, baseCoordinates, currentPos, _, aladinRef, world2pix, resize, candidates) =>
-        /**
-         * Called when the position changes, i.e. aladin pans. We want to offset the visualization
-         * to keep the internal target correct
-         */
-        def onPositionChanged(u: PositionChanged): Callback = {
-          val viewCoords = Coordinates(u.ra, u.dec)
-          val viewOffset = baseCoordinates.value.diff(viewCoords).offset
-          currentPos.setState(Some(viewCoords)) *>
-            props.updateViewOffset(viewOffset) *>
-            props.centerOnTarget.set(false)
-        }
+      .render {
+        (props, baseCoordinates, currentPos, _, _, aladinRef, world2pix, resize, candidates) =>
+          /**
+           * Called when the position changes, i.e. aladin pans. We want to offset the visualization
+           * to keep the internal target correct
+           */
+          def onPositionChanged(u: PositionChanged): Callback = {
+            val viewCoords = Coordinates(u.ra, u.dec)
+            val viewOffset = baseCoordinates.value.diff(viewCoords).offset
+            currentPos.setState(Some(viewCoords)) *>
+              props.updateViewOffset(viewOffset) *>
+              props.centerOnTarget.set(false)
+          }
 
-        def onZoom = (v: Fov) => props.updateFov(v)
+          def onZoom = (v: Fov) => props.updateFov(v)
 
-        def includeSvg(v: JsAladin): Callback =
-          v.onZoom(onZoom) *> // re render on zoom
-            v.onPositionChanged(onPositionChanged) *>
-            v.onMouseMove(s =>
-              props
-                .updateMouseCoordinates(Coordinates(s.ra, s.dec))
-                .rateLimit(200.millis, 1)
-                .void
+          def includeSvg(v: JsAladin): Callback =
+            v.onZoom(onZoom) *> // re render on zoom
+              v.onPositionChanged(onPositionChanged) *>
+              v.onMouseMove(s =>
+                props
+                  .updateMouseCoordinates(Coordinates(s.ra, s.dec))
+                  .rateLimit(200.millis, 1)
+                  .void
+              )
+
+          val baseCoordinatesForAladin: String =
+            currentPos.value
+              .map(Coordinates.fromHmsDms.reverseGet)
+              .getOrElse(Coordinates.fromHmsDms.reverseGet(baseCoordinates.value))
+
+          val showBase = props.obsConf.isDefined
+
+          val overlayTargets = if (showBase) {
+            List(
+              SVGTarget.CrosshairTarget(baseCoordinates.value, ExploreStyles.ScienceTarget, 10),
+              SVGTarget.CircleTarget(props.target.get.baseCoordinates, ExploreStyles.BaseTarget, 3),
+              SVGTarget.LineTo(baseCoordinates.value,
+                               props.target.get.baseCoordinates,
+                               ExploreStyles.PMCorrectionLine
+              )
+            )
+          } else
+            List(
+              SVGTarget.CrosshairTarget(baseCoordinates.value, ExploreStyles.ScienceTarget, 10)
             )
 
-        val baseCoordinatesForAladin: String =
-          currentPos.value
-            .map(Coordinates.fromHmsDms.reverseGet)
-            .getOrElse(Coordinates.fromHmsDms.reverseGet(baseCoordinates.value))
-
-        val showBase = props.obsConf.isDefined
-
-        val overlayTargets = if (showBase) {
-          List(
-            SVGTarget.CrosshairTarget(baseCoordinates.value, ExploreStyles.ScienceTarget, 10),
-            SVGTarget.CircleTarget(props.target.get.baseCoordinates, ExploreStyles.BaseTarget, 3),
-            SVGTarget.LineTo(baseCoordinates.value,
-                             props.target.get.baseCoordinates,
-                             ExploreStyles.PMCorrectionLine
-            )
-          )
-        } else
-          List(
-            SVGTarget.CrosshairTarget(baseCoordinates.value, ExploreStyles.ScienceTarget, 10)
-          )
-
-        <.div(
-          ExploreStyles.AladinContainerBody,
-          // This is a bit tricky. Sometimes the height can be 0 or a very low number.
-          // This happens during a second render. If we let the height to be zero, aladin
-          // will take it as 1. This height ends up being a denominator, which, if low,
-          // will make aladin request a large amount of tiles and end up freeze explore.
-          if (resize.height.exists(_ >= 100)) {
-            ReactFragment(
-              <.div(
-                ExploreStyles.AladinZoomControl,
-                Button(size = Small,
-                       icon = true,
-                       onClick = aladinRef.get.asCBO.flatMapCB(_.backend.increaseZoom).toCallback
-                )(
-                  ExploreStyles.ButtonOnAladin,
-                  Icons.ThinPlus
+          <.div(
+            ExploreStyles.AladinContainerBody,
+            // This is a bit tricky. Sometimes the height can be 0 or a very low number.
+            // This happens during a second render. If we let the height to be zero, aladin
+            // will take it as 1. This height ends up being a denominator, which, if low,
+            // will make aladin request a large amount of tiles and end up freeze explore.
+            if (resize.height.exists(_ >= 100)) {
+              ReactFragment(
+                <.div(
+                  ExploreStyles.AladinZoomControl,
+                  Button(size = Small,
+                         icon = true,
+                         onClick = aladinRef.get.asCBO.flatMapCB(_.backend.increaseZoom).toCallback
+                  )(
+                    ExploreStyles.ButtonOnAladin,
+                    Icons.ThinPlus
+                  ),
+                  Button(size = Small,
+                         icon = true,
+                         onClick = aladinRef.get.asCBO.flatMapCB(_.backend.decreaseZoom).toCallback
+                  )(
+                    ExploreStyles.ButtonOnAladin,
+                    Icons.ThinMinus
+                  )
                 ),
-                Button(size = Small,
-                       icon = true,
-                       onClick = aladinRef.get.asCBO.flatMapCB(_.backend.decreaseZoom).toCallback
-                )(
-                  ExploreStyles.ButtonOnAladin,
-                  Icons.ThinMinus
-                )
-              ),
-              (resize.width, resize.height)
-                .mapN(
-                  SVGTargetsOverlay(_, _, world2pix.value, overlayTargets ++ candidates)
-                ),
-              AladinComp.withRef(aladinRef) {
-                Aladin(
-                  ExploreStyles.TargetAladin,
-                  showReticle = false,
-                  showLayersControl = false,
-                  target = baseCoordinatesForAladin,
-                  fov = props.options.fovAngle,
-                  showGotoControl = false,
-                  showZoomControl = false,
-                  customize = includeSvg _
-                )
-              }
-            )
-          } else EmptyVdom
-        )
-          .withRef(resize.ref)
+                (resize.width, resize.height)
+                  .mapN(
+                    SVGTargetsOverlay(_, _, world2pix.value, overlayTargets ++ candidates)
+                  ),
+                AladinComp.withRef(aladinRef) {
+                  Aladin(
+                    ExploreStyles.TargetAladin,
+                    showReticle = false,
+                    showLayersControl = false,
+                    target = baseCoordinatesForAladin,
+                    fov = props.options.fovAngle,
+                    showGotoControl = false,
+                    showZoomControl = false,
+                    customize = includeSvg _
+                  )
+                }
+              )
+            } else EmptyVdom
+          )
+            .withRef(resize.ref)
       }
 }

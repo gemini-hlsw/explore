@@ -22,7 +22,10 @@ package object events {
     def value: js.Any // encode whatever value as a String. it can be e.g. json
   }
 
-  final case class CatalogRequest(tracking: SiderealTracking, obsTime: Instant)
+  final case class CatalogRequest(
+    tracking: SiderealTracking,
+    obsTime:  Instant
+  )
 
   final case class CacheCleanupRequest(elapsedTime: Int)
 

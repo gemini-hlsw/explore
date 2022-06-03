@@ -1001,6 +1001,7 @@ columns and relationships of "lucuma_target_preferences"
 """
 type lucuma_target_preferences {
   agsCandidates: Boolean!
+  agsOverlay: Boolean!
   fov: bigint!
 
   """An object relationship"""
@@ -1085,6 +1086,7 @@ input lucuma_target_preferences_bool_exp {
   _not: lucuma_target_preferences_bool_exp
   _or: [lucuma_target_preferences_bool_exp]
   agsCandidates: Boolean_comparison_exp
+  agsOverlay: Boolean_comparison_exp
   fov: bigint_comparison_exp
   lucuma_target: lucuma_target_bool_exp
   target_id: String_comparison_exp
@@ -1115,6 +1117,7 @@ input type for inserting data into table "lucuma_target_preferences"
 """
 input lucuma_target_preferences_insert_input {
   agsCandidates: Boolean
+  agsOverlay: Boolean
   fov: bigint
   lucuma_target: lucuma_target_obj_rel_insert_input
   target_id: String
@@ -1196,6 +1199,7 @@ ordering options when selecting data from "lucuma_target_preferences"
 """
 input lucuma_target_preferences_order_by {
   agsCandidates: order_by
+  agsOverlay: order_by
   fov: order_by
   lucuma_target: lucuma_target_order_by
   target_id: order_by
@@ -1220,6 +1224,9 @@ enum lucuma_target_preferences_select_column {
   agsCandidates
 
   """column name"""
+  agsOverlay
+
+  """column name"""
   fov
 
   """column name"""
@@ -1240,6 +1247,7 @@ input type for updating data in table "lucuma_target_preferences"
 """
 input lucuma_target_preferences_set_input {
   agsCandidates: Boolean
+  agsOverlay: Boolean
   fov: bigint
   target_id: String
   user_id: String
@@ -1317,6 +1325,9 @@ update columns of table "lucuma_target_preferences"
 enum lucuma_target_preferences_update_column {
   """column name"""
   agsCandidates
+
+  """column name"""
+  agsOverlay
 
   """column name"""
   fov

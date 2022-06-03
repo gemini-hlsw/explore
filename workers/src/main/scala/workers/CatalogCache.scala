@@ -9,12 +9,12 @@ import cats.effect.Concurrent
 import cats.effect.IO
 import cats.Hash
 import explore.model.CatalogResults
-import explore.model.GuideStarCandidate
+import lucuma.ags.GuideStarCandidate
 import lucuma.core.model.Target
 import explore.events.picklers._
 import lucuma.core.geom.gmos.probeArm
 import japgolly.webapputil.indexeddb._
-import lucuma.core.model.SiderealTracking
+import lucuma.ags
 import lucuma.catalog._
 import fs2.text
 import org.http4s.Method._
@@ -27,22 +27,20 @@ import org.typelevel.log4cats.Logger
 import explore.model.boopickle._
 
 import org.scalajs.dom
-import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.temporal.ChronoField
 import java.time.temporal.ChronoUnit
 import spire.math.Bounded
+import explore.events.CatalogRequest
+import lucuma.core.enum._
+import lucuma.core.model.ConstraintSet
+import lucuma.core.model.ElevationRange
+import lucuma.core.math.Wavelength
 
 trait CatalogQuerySettings {
   val proxy = uri"https://lucuma-cors-proxy.herokuapp.com"
-  // TODO Read this from a table
-  val bc    =
-    BrightnessConstraints(BandsList.GaiaBandsList,
-                          FaintnessConstraint(16),
-                          SaturationConstraint(9).some
-    )
 
   implicit val coordinatesHash: Hash[Coordinates] = Hash.fromUniversalHashCode
   implicit val ci                                 = ADQLInterpreter.nTarget(10000)
@@ -79,6 +77,18 @@ trait CatalogCache extends CatalogIDB with AsyncToIO {
       .toList
   }
 
+  // We'll use the same constraints that includes all the AGS queries
+  val constraints = ConstraintSet(
+    ImageQuality.PointOne,         // min image quality
+    CloudExtinction.PointOne,      // min cloud extinction
+    SkyBackground.Dark,            // Not relevant
+    WaterVapor.Wet,                // Not relevant
+    ElevationRange.AirMass.Default // Not relevant
+  )
+
+  // Min relevant wavelength at 300nm
+  val wavelength = Wavelength.fromNanometers(300).get
+
   /**
    * Try to read the gaia query from the cache or else get it from gaia
    */
@@ -87,9 +97,14 @@ trait CatalogCache extends CatalogIDB with AsyncToIO {
     self:       dom.DedicatedWorkerGlobalScope,
     idb:        IndexedDb.Database,
     stores:     CacheIDBStores,
-    tracking:   SiderealTracking,
-    obsTime:    Instant
+    request:    CatalogRequest
   )(implicit L: Logger[IO]): IO[Unit] = {
+
+    val CatalogRequest(tracking, obsTime) = request
+
+    val brightnessConstraints =
+      ags.gaiaBrightnessConstraints(constraints, GuideSpeed.Fast, wavelength)
+
     val ldt   = LocalDateTime.ofInstant(obsTime, ZoneId.of("UTC"))
     // We consider the query valid from the fist moment of the year to the end
     val start =
@@ -101,7 +116,7 @@ trait CatalogCache extends CatalogIDB with AsyncToIO {
       tracking,
       Bounded(start.toInstant(UTCOffset), end.toInstant(UTCOffset), 0),
       probeArm.candidatesArea,
-      bc.some,
+      brightnessConstraints.some,
       proxy.some
     )
 

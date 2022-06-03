@@ -158,16 +158,23 @@ object UserPreferencesQueries {
     // This is coded to return a default in case
     // there is no data or errors
     def queryWithDefault[F[_]: ApplicativeError[*[_], Throwable]](
-      uid:         User.Id,
-      tid:         Target.Id,
-      defaultFov:  Angle
-    )(implicit cl: TransactionalClient[F, UserPreferencesDB]): F[(Angle, Offset, Visible)] =
+      uid:        User.Id,
+      tid:        Target.Id,
+      defaultFov: Angle
+    )(implicit
+      cl:         TransactionalClient[F, UserPreferencesDB]
+    ): F[(Angle, Offset, Visible, Visible)] =
       for {
         r <-
           query[F](uid.show, tid.show)
             .map { r =>
               r.lucuma_target_preferences_by_pk.map(result =>
-                (result.fov, result.viewOffsetP, result.viewOffsetQ, result.agsCandidates)
+                (result.fov,
+                 result.viewOffsetP,
+                 result.viewOffsetQ,
+                 result.agsCandidates,
+                 result.agsOverlay
+                )
               )
             }
             .handleError(_ => none)
@@ -178,7 +185,8 @@ object UserPreferencesQueries {
           .getOrElse(Offset.Zero)
 
         val agsCandidates = r.map(_._4).map(Visible.boolIso.get).getOrElse(Visible.Hidden)
-        (fov, offset, agsCandidates)
+        val agsOverlay    = r.map(_._5).map(Visible.boolIso.get).getOrElse(Visible.Hidden)
+        (fov, offset, agsCandidates, agsOverlay)
       }
   }
 
@@ -191,7 +199,8 @@ object UserPreferencesQueries {
       uid:           User.Id,
       targetId:      Target.Id,
       fov:           Angle,
-      agsCandidates: Visible
+      agsCandidates: Visible,
+      agsOverlay:    Visible
     )(implicit
       cl:            TransactionalClient[F, UserPreferencesDB]
     ): F[Unit] =
@@ -203,13 +212,15 @@ object UserPreferencesQueries {
               LucumaTargetPreferencesInsertInput(
                 user_id = uid.show.assign,
                 fov = fov.toMicroarcseconds.assign,
-                agsCandidates = Visible.boolIso.reverseGet(agsCandidates).assign
+                agsCandidates = Visible.boolIso.reverseGet(agsCandidates).assign,
+                agsOverlay = Visible.boolIso.reverseGet(agsOverlay).assign
               )
             ),
             on_conflict = LucumaTargetPreferencesOnConflict(
               constraint = LucumaTargetPreferencesConstraint.LucumaTargetPreferencesPkey,
               update_columns = List(LucumaTargetPreferencesUpdateColumn.Fov,
-                                    LucumaTargetPreferencesUpdateColumn.AgsCandidates
+                                    LucumaTargetPreferencesUpdateColumn.AgsCandidates,
+                                    LucumaTargetPreferencesUpdateColumn.AgsOverlay
               )
             ).assign
           ).assign

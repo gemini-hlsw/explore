@@ -20,16 +20,18 @@
   vector-effect: non-scaling-stroke; // Don't scale the stroke, otherwise it becomes invisible
 }
 
-.gmos-probe {
-  display: none;
+.gmos-probe-arm {
   stroke: red;
-  z-index: 1;
   fill-opacity: 0.1;
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
 }
 
 .gmos-patrol-field {
-  display: none;
-  stroke: red;
+  // display: none;
+  stroke: orange;
+  fill: none;
+  stroke-width: 0.8px;
   stroke-dasharray: 10;
 }
 
@@ -89,7 +91,7 @@
 }
 
 .jts-svg-center {
-  stroke: green;
+  stroke: pink;
   stroke-width: 2px;
   vector-effect: non-scaling-stroke;
 }
@@ -137,6 +139,13 @@
     &.guide-star-candidate-target-visible {
       display: inline;
     }
+  }
+
+  .guide-star-target {
+    stroke: green;
+    stroke-width: 0.5px;
+    fill: green;
+    fill-opacity: 0.4;
   }
 
   .guide-star-candidate-target-base {
@@ -194,5 +203,86 @@
   @include aladin-button-mixin();
   top: 10px;
   left: 10px;
+
+  .explore-aladin-button {
+    position: absolute;
+  }
+
+  .explore-aladin-settings-menu {
+    position: absolute;
+    left: 30px;
+
+    &.ui.compact.vertical.menu {
+      width: 8rem !important; // in SUI it is important too
+    }
+  }
 }
 
+.ags-overlay {
+  position: absolute;
+  z-index: 120;
+  margin: 1em;
+  padding: 0.3em 1em;
+  font-size: smaller;
+  bottom: 30px;
+  color: var(--hud-color);
+  border: 1px solid var(--hud-color);
+  border-radius: 3px;
+
+  .fa-bahai {
+    color: var(--ags-icon-color);
+    margin-right: 0.3em;
+  }
+
+  .ags-description {
+    display: flex;
+    gap: 0.1em;
+    align-items: center;
+
+    .ags-navigation {
+      margin-left: 0.5em;
+    }
+
+    .ags-navigation-button {
+      padding: {
+        left: 0.2em !important;
+        right: 0.2em !important;
+      }
+
+      &.ui.basic.button:focus,
+      &.ui.basic.button:active,
+      &.ui.basic.button:hover {
+        background: unset;
+        border-radius: 2px;
+      }
+
+      &.ui.button.compact {
+        svg.svg-inline--fa {
+          width: auto;
+          margin-right: 0;
+        }
+      }
+    }
+
+    .ags-guide-speed {
+      text-transform: capitalize;
+    }
+
+    .ags-g-brightness {
+      margin-left: 0.3em;
+    }
+
+    .ags-coordinates {
+      margin-left: 0.3em;
+      font-weight: bold;
+    }
+
+    .svg-inline--fa {
+      margin-right: 0.3em;
+    }
+  }
+
+  .ags-good-iq-color {
+    color: var(--ags-good-iq-color);
+  }
+}

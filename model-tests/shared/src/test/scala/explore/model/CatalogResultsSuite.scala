@@ -5,6 +5,7 @@ package explore.model
 
 import cats.kernel.laws.discipline.EqTests
 import explore.model.arb.ArbCatalogResults._
+import lucuma.ags.GuideStarCandidate
 import lucuma.core.model.arb.ArbTarget._
 import lucuma.core.optics.laws.discipline.SplitEpiTests
 import munit.DisciplineSuite

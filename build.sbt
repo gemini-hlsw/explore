@@ -185,6 +185,7 @@ lazy val commonLibSettings = Seq(
       Http4sCore.value ++
       LucumaCore.value ++
       LucumaSchemas.value ++
+      LucumaAgs.value ++
       Monocle.value ++
       Mouse.value ++
       PPrint.value ++
