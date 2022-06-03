@@ -332,18 +332,6 @@ object ObsTabContents {
       }
       // Shared obs conf (posAngle/obsTime)
       .useStateView(ObsConfiguration(PosAngle.Default, Instant.now))
-      // DELETEME: For demos read from local obs
-      .useEffectWithDepsBy((p, _, _, _, _, _) => p.focusedObs) { (p, _, _, _, _, obsConf) => _ =>
-        obsConf.withOnMod(o => Callback.log(o))
-        ExploreLocalPreferences
-          .loadPreferences[IO]
-          .flatMap { e =>
-            p.focusedObs
-              .flatMap(o => e.obsConfigurations.get(o))
-              .map(obsConf.set(_).to[IO])
-              .getOrElse(IO.unit)
-          }
-      }
       .useSingleEffect(debounce = 1.second)
       .useStreamResourceViewOnMountBy { (props, _, _, _, _, _, _) =>
         implicit val ctx = props.ctx
@@ -376,14 +364,7 @@ object ObsTabContents {
                 defaultLayout,
                 layouts,
                 resize,
-                obsConf // DELETEME: Only for demos
-                  .withOnMod(conf =>
-                    props.focusedObs
-                      .map(id =>
-                        ExploreLocalPreferences.storeObsConfig[IO](id, conf).runAsyncAndForget
-                      )
-                      .getOrElse(Callback.empty)
-                  ),
+                obsConf,
                 debouncer
               ) _
             )(obsWithConstraints)
