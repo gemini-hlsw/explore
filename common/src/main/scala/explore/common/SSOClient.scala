@@ -25,7 +25,7 @@ import retry._
 
 import java.time.Instant
 import java.time.temporal.ChronoUnit
-import java.{ util => ju }
+import java.{util => ju}
 import scala.concurrent.duration._
 
 final case class JwtOrcidProfile(exp: Long, `lucuma-user`: User)

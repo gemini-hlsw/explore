@@ -5,8 +5,8 @@ package explore.undo
 
 import crystal.react.View
 import crystal.react.implicits._
-import japgolly.scalajs.react.util.DefaultEffects.{ Async => DefaultA }
-import japgolly.scalajs.react.util.DefaultEffects.{ Sync => DefaultS }
+import japgolly.scalajs.react.util.DefaultEffects.{Async => DefaultA}
+import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
 import monocle.Lens
 
 /*

@@ -27,7 +27,7 @@ object CacheEntry {
 }
 
 trait CacheIDBStores {
-  import CacheIDBStores.{ DBVersion, dbName }
+  import CacheIDBStores.{DBVersion, dbName}
 
   // Initialises or upgrades the IndexedDB database
   protected def onUpgradeNeeded(c: IndexedDb.VersionChange): Callback

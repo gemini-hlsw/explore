@@ -9,7 +9,7 @@ import retry.RetryDetails._
 import retry.RetryPolicies._
 import retry._
 
-import java.{ util => ju }
+import java.{util => ju}
 import scala.concurrent.duration._
 
 import ju.concurrent.TimeUnit
