@@ -11,9 +11,9 @@ import crystal.react.hooks._
 import crystal.react.implicits._
 import explore.Icons
 import explore.common.AsterismQueries
+import explore.config.VizTimeEditor
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
-import explore.config.ObsTimeComponent
 import explore.implicits._
 import explore.model.Asterism
 import explore.model.ObsConfiguration
@@ -169,7 +169,7 @@ object AsterismEditor {
             Form(size = Small)(
               ExploreStyles.Compact,
               ExploreStyles.ObsInstantTileTitle,
-              props.obsConf.zoom(ObsConfiguration.obsInstant).mapValue(ObsTimeComponent(_))
+              props.obsConf.zoom(ObsConfiguration.obsInstant).mapValue(VizTimeEditor(_))
             )
           ),
           TargetTable(

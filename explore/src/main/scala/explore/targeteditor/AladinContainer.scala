@@ -111,8 +111,8 @@ object AladinContainer {
     ScalaFnComponent
       .withHooks[Props]
       // Base coordinates with pm correction if possible
-      .useMemoBy(_.obsConf.map(_.obsInstant)) { p => i =>
-        i.flatMap(p.target.get.at).getOrElse(p.target.get.baseCoordinates)
+      .useMemoBy(_.obsConf.flatMap(_.obsInstant)) { p => i =>
+        i.flatMap(t => p.target.get.at(t)).getOrElse(p.target.get.baseCoordinates)
       }
       // View coordinates base coordinates with pm correction if possible + user panning
       .useStateBy { (p, baseCoordinates) =>
@@ -231,9 +231,9 @@ object AladinContainer {
 
             obsInstant.foldMap { obsInstant =>
               val selectedGSTarget = selectedGS
-                .flatMap { case (c, _) => c.tracking.at(obsInstant) }
-                .map { c =>
-                  SVGTarget.GuideStarTarget(c, Css.Empty, 5)
+                .flatMap { case (c, _) => obsInstant.map(c.tracking.at) }
+                .flatMap { c =>
+                  c.map(SVGTarget.GuideStarTarget(_, Css.Empty, 5))
                 }
 
               candidates
@@ -246,8 +246,7 @@ object AladinContainer {
 
                   (g.tracking
                      .at(targetEpochInstant),
-                   g.tracking
-                     .at(obsInstant)
+                   obsInstant.flatMap(g.tracking.at)
                   ).mapN { (source, dest) =>
                     List[SVGTarget](
                       SVGTarget.GuideStarCandidateTarget(dest, candidatesVisibility, 3),

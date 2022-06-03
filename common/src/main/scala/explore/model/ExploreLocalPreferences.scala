@@ -181,28 +181,4 @@ object ExploreLocalPreferences {
     .handleError(_ => ().some)
     .void
 
-//   // DELETEME
-//   def storeObsConfig[F[_]: Sync](id: Observation.Id, conf: ObsConfiguration): F[Unit] = Sync[F]
-//     .delay {
-//       for {
-//         ls <- Option(window.localStorage)
-//         d  <- Option(ls.getItem(StorageKey)).orElse(Some(Default.asJson.spaces2))
-//         p  <- decode[ExploreLocalPreferences](d).toOption
-//         _  <- Option(ls.setItem(StorageKey, p.asJson.spaces2))
-//       } yield ()
-//     }
-//     .handleError { u => println(u); ().some }
-//     .void
-//
-//   // DELETEME
-//   def cleanObsConfig[F[_]: Sync]: F[Unit] = Sync[F]
-//     .delay {
-//       for {
-//         ls <- Option(window.localStorage)
-//         d  <- Option(ls.getItem(StorageKey)).orElse(Some(Default.asJson.spaces2))
-//         p  <- decode[ExploreLocalPreferences](d).toOption
-//       } yield ()
-//     }
-//     .handleError(_ => ().some)
-//     .void
 }

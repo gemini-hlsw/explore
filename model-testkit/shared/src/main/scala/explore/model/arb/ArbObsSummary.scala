@@ -23,6 +23,7 @@ import lucuma.core.arb.ArbTime
 import lucuma.core.util.arb.ArbGid._
 import lucuma.core.util.arb.ArbEnumerated._
 import java.time.Duration
+import java.time.Instant
 
 trait ArbObsSummary {
   import ArbConstraintsSummary._
@@ -102,6 +103,7 @@ trait ArbObsSummary {
         activeStatus <- arbitrary[ObsActiveStatus]
         duration     <- arbitrary[Duration]
         mode         <- arbitrary[Option[ScienceMode]]
+        vizTime      <- arbitrary[Option[Instant]]
       } yield ObsSummaryWithTitleConstraintsAndConf(
         id,
         title,
@@ -110,7 +112,8 @@ trait ArbObsSummary {
         status,
         activeStatus,
         duration,
-        mode
+        mode,
+        vizTime
       )
     }
 

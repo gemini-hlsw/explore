@@ -23,15 +23,15 @@ object ConfigurationTile {
   def configurationTile(
     obsId:        Observation.Id,
     obsConf:      View[ObsConfiguration],
-    obsData:      Pot[(String, Option[NonEmptyString], View[ScienceData])],
-    undoStacks:   View[UndoStacks[IO, ScienceData]]
+    obsData:      Pot[(String, Option[NonEmptyString], View[ObservationData])],
+    undoStacks:   View[UndoStacks[IO, ObservationData]]
   )(implicit ctx: AppContextIO) =
     Tile(
       ObsTabTilesIds.ConfigurationId,
       "Configuration",
       canMinimize = true
     )(renderInTitle =>
-      potRender[(String, Option[NonEmptyString], View[ScienceData])] {
+      potRender[(String, Option[NonEmptyString], View[ObservationData])] {
         case (title, subtitle, scienceData) =>
           ConfigurationPanel(
             obsId,
@@ -39,8 +39,8 @@ object ConfigurationTile {
             subtitle,
             obsConf,
             UndoContext(undoStacks, scienceData),
-            scienceData.get.constraints,
-            scienceData.get.itcTargets,
+            scienceData.zoom(scienceDataForObs).get.constraints,
+            scienceData.zoom(scienceDataForObs).get.itcTargets,
             renderInTitle
           )
       }(obsData)

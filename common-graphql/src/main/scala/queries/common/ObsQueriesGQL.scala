@@ -36,6 +36,7 @@ object ObsQueriesGQL {
             }
             status
             activeStatus
+            visualizationTime
             plannedTime {
               execution {
                 microseconds
@@ -240,6 +241,7 @@ object ObsQueriesGQL {
           id
           title
           subtitle
+          visualizationTime
           targetEnvironment {
             asterism {
               id

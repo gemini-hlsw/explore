@@ -235,9 +235,9 @@ object ObsTabTiles {
           ConfigurationTile.configurationTile(
             props.obsId,
             props.obsConf,
-            obsView.map(obs => (obs.get.title, obs.get.subtitle, obs.zoom(scienceDataForObs))),
+            obsView.map(obs => (obs.get.title, obs.get.subtitle, obs)),
             props.undoStacks
-              .zoom(ModelUndoStacks.forScienceData[IO])
+              .zoom(ModelUndoStacks.forObservationData[IO])
               .zoom(atMapWithDefault(props.obsId, UndoStacks.empty))
           )
 

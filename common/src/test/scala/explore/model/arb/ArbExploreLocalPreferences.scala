@@ -5,8 +5,6 @@ package explore.model.arb
 
 import explore.model.ExploreLocalPreferences
 import explore.model.ExploreLocalPreferences._
-import explore.model.ObsConfiguration
-import lucuma.core.model.Observation
 import lucuma.core.util.arb.ArbEnumerated._
 import lucuma.core.util.arb.ArbGid._
 import org.scalacheck.Arbitrary
@@ -16,18 +14,15 @@ import org.scalacheck.Cogen._
 import typings.loglevel.mod.LogLevelDesc
 
 trait ArbExploreLocalPreferences {
-  import ArbObsConfiguration._
 
   implicit val localPreferencesArb = Arbitrary[ExploreLocalPreferences] {
     for {
       level <- arbitrary[LogLevelDesc]
-      obs   <- arbitrary[Map[Observation.Id, ObsConfiguration]]
-    } yield ExploreLocalPreferences(level, obs)
+    } yield ExploreLocalPreferences(level)
   }
 
   implicit def localPreferencesCogen: Cogen[ExploreLocalPreferences] =
-    Cogen[(String, List[(Observation.Id, ObsConfiguration)])]
-      .contramap(x => (x.level.toString, x.obsConfigurations.toList))
+    Cogen[String].contramap(_.level.toString)
 }
 
 object ArbExploreLocalPreferences extends ArbExploreLocalPreferences

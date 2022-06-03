@@ -33,6 +33,7 @@ import monocle.Lens
 import monocle.macros.GenIso
 import queries.common.ObsQueriesGQL._
 
+import java.time.Instant
 import scala.collection.immutable.SortedMap
 
 object ObsQueries {
@@ -49,10 +50,11 @@ object ObsQueries {
   val SpectroscopyRequirementsData = ObservationData.ScienceRequirements.Spectroscopy
 
   case class ScienceData(
-    requirements: ScienceRequirementsData,
-    mode:         Option[ScienceMode],
-    constraints:  ConstraintSet,
-    targets:      Targets
+    requirements:      ScienceRequirementsData,
+    mode:              Option[ScienceMode],
+    constraints:       ConstraintSet,
+    targets:           Targets,
+    visualizationTime: Option[Instant]
   )
 
   object ScienceData {
@@ -62,6 +64,8 @@ object ObsQueries {
       Focus[ScienceData](_.mode)
     val constraints: Lens[ScienceData, ConstraintSet]            =
       Focus[ScienceData](_.constraints)
+    val visualizationTime: Lens[ScienceData, Option[Instant]]    =
+      Focus[ScienceData](_.visualizationTime)
   }
 
   val scienceDataForObs: Lens[ObservationData, ScienceData] =
@@ -69,7 +73,8 @@ object ObsQueries {
       ObservationData.scienceRequirements,
       ObservationData.scienceMode,
       ObservationData.constraintSet,
-      ObservationData.targetEnvironment
+      ObservationData.targetEnvironment,
+      ObservationData.visualizationTime
     )
       .andThen(GenIso.fields[ScienceData].reverse)
 
@@ -100,7 +105,8 @@ object ObsQueries {
             node.status,
             node.activeStatus,
             node.plannedTime.execution,
-            node.scienceMode
+            node.scienceMode,
+            node.visualizationTime
           )
         ),
         ObsSummaryWithTitleConstraintsAndConf.id.get
@@ -146,6 +152,27 @@ object ObsQueries {
         elevationRange = createER.assign
       ).assign
     )
+    EditObservationMutation
+      .execute[F](
+        EditObservationInput(
+          select = ObservationSelectInput(observationIds = obsIds.assign),
+          patch = editInput
+        )
+      )
+      .void
+  }
+
+  def updateVisualizationTime[F[_]: Async](
+    obsIds:            List[Observation.Id],
+    visualizationTime: Option[Instant]
+  )(implicit
+    c:                 TransactionalClient[F, ObservationDB]
+  ): F[Unit] = {
+
+    val editInput = ObservationPropertiesInput(
+      visualizationTime = visualizationTime.orUnassign
+    )
+
     EditObservationMutation
       .execute[F](
         EditObservationInput(

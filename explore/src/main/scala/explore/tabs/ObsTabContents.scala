@@ -331,7 +331,7 @@ object ObsTabContents {
               .runAsync
       }
       // Shared obs conf (posAngle/obsTime)
-      .useStateView(ObsConfiguration(PosAngle.Default, Instant.now))
+      .useStateView(ObsConfiguration(PosAngle.Default, Instant.now.some))
       .useSingleEffect(debounce = 1.second)
       .useStreamResourceViewOnMountBy { (props, _, _, _, _, _, _) =>
         implicit val ctx = props.ctx

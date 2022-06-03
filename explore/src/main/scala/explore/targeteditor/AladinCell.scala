@@ -58,6 +58,7 @@ import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.sizes._
 
 import scala.concurrent.duration._
+import java.time.Instant
 
 final case class AladinCell(
   uid:              User.Id,
@@ -122,7 +123,9 @@ object AladinCell extends ModelOptics {
             candidatesAwait >>
               ((props.target.get, props.obsConf) match {
                 case (tracking, Some(obsConf)) =>
-                  props.ctx.worker.postTransferrable(CatalogRequest(tracking, obsConf.obsInstant))
+                  props.ctx.worker.postTransferrable(
+                    CatalogRequest(tracking, obsConf.obsInstant.getOrElse(Instant.now()))
+                  )
                 case _                         => IO.unit
               })
           )

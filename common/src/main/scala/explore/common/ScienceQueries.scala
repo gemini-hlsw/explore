@@ -26,8 +26,44 @@ import lucuma.schemas.ObservationDB.Types._
 import monocle.Lens
 import queries.common.ObsQueriesGQL._
 
+import java.time.Instant
+
+object ObsEditQueries {
+  case class ObsUndoView(
+    obsId:           Observation.Id,
+    scienceDataUndo: UndoSetter[ObservationData]
+  )(implicit ctx:    AppContextIO) {
+    def apply[A](
+      modelGet:  ObservationData => A,
+      modelMod:  (A => A) => ObservationData => ObservationData,
+      remoteSet: A => Option[Instant] => Option[Instant]
+    ): View[A] =
+      scienceDataUndo
+        .undoableView(modelGet, modelMod)
+        .withOnMod(value =>
+          EditObservationMutation
+            .execute(
+              EditObservationInput(
+                select = ObservationSelectInput(observationIds = List(obsId).assign),
+                patch =
+                  ObservationPropertiesInput(visualizationTime = remoteSet(value)(None).orUnassign)
+              )
+            )
+            .void
+            .runAsync
+        )
+
+    def apply[A](
+      lens:      Lens[ObservationData, A],
+      remoteSet: A => Option[Instant] => Option[Instant]
+    ): View[A] =
+      apply(lens.get, lens.modify, remoteSet)
+  }
+}
+
 object ScienceQueries {
-  case class UndoView(
+
+  case class ScienceRequirementsUndoView(
     obsId:                   Observation.Id,
     scienceRequirementsUndo: UndoSetter[ScienceRequirementsData]
   )(implicit ctx:            AppContextIO) {

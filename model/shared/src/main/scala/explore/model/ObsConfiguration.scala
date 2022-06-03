@@ -17,7 +17,7 @@ import java.time.Instant
  */
 final case class ObsConfiguration(
   posAngle:   PosAngle,
-  obsInstant: Instant
+  obsInstant: Option[Instant]
 )
 
 object ObsConfiguration {
@@ -27,6 +27,6 @@ object ObsConfiguration {
   val posAngle: Lens[ObsConfiguration, PosAngle] =
     Focus[ObsConfiguration](_.posAngle)
 
-  val obsInstant: Lens[ObsConfiguration, Instant] =
+  val obsInstant: Lens[ObsConfiguration, Option[Instant]] =
     Focus[ObsConfiguration](_.obsInstant)
 }

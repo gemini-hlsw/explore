@@ -535,7 +535,7 @@ object TargetTabContents {
       .useResizeDetector()
       // Initial target layout
       .useStateView(Pot.pending[LayoutsMap])
-      // Keep a record of the initial target layouut
+      // Keep a record of the initial target layout
       .useMemo(())(_ => defaultTargetLayouts)
       // Load the config from user prefrences
       .useEffectWithDepsBy((p, _, _, _, _) => p.userId) {
@@ -569,7 +569,7 @@ object TargetTabContents {
       }
       .useSingleEffect(debounce = 1.second)
       // Shared obs conf (posAngle/obsTime)
-      .useStateView(ObsConfiguration(PosAngle.Default, Instant.now))
+      .useStateView(ObsConfiguration(PosAngle.Default, Instant.now.some))
       .useStreamResourceViewOnMountBy { (props, _, _, _, _, _, _) =>
         implicit val ctx = props.ctx
 

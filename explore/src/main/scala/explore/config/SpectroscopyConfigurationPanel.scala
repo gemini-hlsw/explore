@@ -47,10 +47,8 @@ object SpectroscopyConfigurationPanel {
       val wvChangeAuditor = ChangeAuditor.fromFormat(formatMicron).decimal(3).optional
 
       val wvUnits =
-        <.span(
-          "μm ",
-          requiredForITC.unless(wv.get.isDefined)
-        )
+        <.span("μm ", requiredForITC.unless(wv.get.isDefined))
+
       ReactFragment(
         <.label("Wavelength", HelpIcon("configuration/wavelength.md"), ExploreStyles.SkipToNext),
         InputWithUnits(
