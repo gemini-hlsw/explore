@@ -112,7 +112,7 @@ object UserPreferencesQueriesGQL {
   @GraphQL
   trait UserTargetPreferencesQuery extends GraphQLOperation[UserPreferencesDB] {
     val document = """
-      query elevation_plot_preferences($user_id: String! = "", $targetId: String! = "") {
+      query target_preferences($user_id: String! = "", $targetId: String! = "") {
         lucuma_target_preferences_by_pk(target_id: $targetId, user_id: $user_id) {
           fov
           viewOffsetP

@@ -81,6 +81,8 @@ object ElevationPlotSection {
         .void
     }.getOrEmpty
 
+  val sitePrism = Pot.readyPrism.andThen(ElevationPlotOptions.site)
+
   val component =
     ScalaFnComponent
       .withHooks[Props]
@@ -91,7 +93,7 @@ object ElevationPlotSection {
         p =>
           s.setState(preferredSiteFor(p)) *>
             options.modCB(
-              _.map(_.copy(site = preferredSiteFor(p))),
+              sitePrism.replace(preferredSiteFor(p)),
               _.map(o => prefsSetter(p, options, site = _ => o.site)(p.ctx)).toOption.getOrEmpty
             )
       )
@@ -116,7 +118,7 @@ object ElevationPlotSection {
         implicit val ctx = props.ctx
 
         val siteView =
-          options.zoom(Pot.readyPrism.andThen(ElevationPlotOptions.site))
+          options.zoom(sitePrism)
 
         val timeView =
           options.zoom(Pot.readyPrism.andThen(ElevationPlotOptions.time))
@@ -153,11 +155,11 @@ object ElevationPlotSection {
               Form(clazz = ExploreStyles.ElevationPlotControls)(
                 ButtonGroup(compact = true)(
                   Button(
-                    active = siteView.get.contains(Site.GN),
+                    active = siteView.contains(Site.GN),
                     onClick = setSite(Site.GN)
                   )("GN"),
                   Button(
-                    active = siteView.get.contains(Site.GS),
+                    active = siteView.contains(Site.GS),
                     onClick = setSite(Site.GS)
                   )("GS")
                 ),
@@ -177,28 +179,28 @@ object ElevationPlotSection {
                 ),
                 ButtonGroup(compact = true)(
                   Button(
-                    active = rangeView.get.contains(PlotRange.Night),
+                    active = rangeView.contains(PlotRange.Night),
                     onClick = setRange(PlotRange.Night)
                   )("Night"),
                   Button(
-                    active = rangeView.get.contains(PlotRange.Semester),
+                    active = rangeView.contains(PlotRange.Semester),
                     onClick = setRange(PlotRange.Semester)
                   )("Semester")
                 ),
                 ButtonGroup(compact = true)(
                   Button(
-                    active = timeView.get.contains(TimeDisplay.UT),
+                    active = timeView.contains(TimeDisplay.UT),
                     onClick = setTime(TimeDisplay.UT)
                   )("UT"),
                   Button(
-                    active = timeView.get.contains(TimeDisplay.Sidereal),
+                    active = timeView.contains(TimeDisplay.Sidereal),
                     onClick = setTime(TimeDisplay.Sidereal)
                   )("Sidereal"),
                   Button(
-                    active = timeView.get.contains(TimeDisplay.Site),
+                    active = timeView.contains(TimeDisplay.Site),
                     onClick = setTime(TimeDisplay.Site)
                   )("Site")
-                )((^.visibility.hidden.when(rangeView.get.contains(PlotRange.Semester))))
+                )((^.visibility.hidden.when(rangeView.contains(PlotRange.Semester))))
               )
             )
 
