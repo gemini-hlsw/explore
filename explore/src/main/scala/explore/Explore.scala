@@ -147,7 +147,10 @@ object ExploreMain extends IOApp.Simple {
       def rootComponent(view: ReuseView[RootModel]): VdomElement =
         <.div(
           router(view),
-          ToastContainer()
+          ToastContainer(position = Position.BottomRight,
+                         theme = react.toastify.Theme.Dark,
+                         clazz = ExploreStyles.ExploreToast
+          )
         )
 
       def pageUrl(

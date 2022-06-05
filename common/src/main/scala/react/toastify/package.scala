@@ -9,19 +9,91 @@ import scalajs.js.annotation.JSImport
 import japgolly.scalajs.react.vdom.all._
 import japgolly.scalajs.react.callback.Callback
 import japgolly.scalajs.react.facade.React
-import japgolly.scalajs.react.facade.ReactDOM.DomNode
+import japgolly.scalajs.react._
 import scala.annotation.nowarn
+import react.common._
 
 package toastify {
+  case class ToastContainer(
+    position: js.UndefOr[Position] = js.undefined,
+    theme:    js.UndefOr[Theme] = js.undefined,
+    clazz:    js.UndefOr[Css] = js.undefined
+  ) extends GenericComponentP[ToastContainer.Props] {
+    override protected def cprops    = ToastContainer.props(this)
+    override protected val component = ToastContainer.component
+  }
+
+  object ToastContainer {
+    @js.native
+    @JSImport("react-toastify", "ToastContainer")
+    private object RawComponent extends js.Object
+
+    @js.native
+    trait Props extends js.Object {
+      var position: js.UndefOr[String]
+      var theme: js.UndefOr[String]
+      var className: js.UndefOr[String]
+    }
+
+    protected def props(p: ToastContainer): Props =
+      rawprops(p.position, p.theme, p.clazz)
+
+    protected def rawprops(
+      position: js.UndefOr[Position] = js.undefined,
+      theme:    js.UndefOr[Theme] = js.undefined,
+      clazz:    js.UndefOr[Css] = js.undefined
+    ): Props = {
+      val p = (new js.Object).asInstanceOf[Props]
+      position.foreach(v => p.position = v.toJs)
+      theme.foreach(v => p.theme = v.toJs)
+      clazz.foreach(v => p.className = v.htmlClass)
+      p
+    }
+
+    private val component = JsComponent[Props, Children.None, Null](RawComponent)
+  }
+  import react.common.EnumValue
+
+  sealed trait Position extends Product with Serializable
+  object Position {
+    implicit val enumValue: EnumValue[Position] = EnumValue.instance[Position] {
+
+      case TopRight     => "top-right"
+      case TopCenter    => "top-center"
+      case TopLeft      => "top-left"
+      case BottomRight  => "bottom-right"
+      case BottomCenter => "bottom-center"
+      case BottomLeft   => "bottom-left"
+    }
+
+    case object TopRight     extends Position
+    case object TopCenter    extends Position
+    case object TopLeft      extends Position
+    case object BottomRight  extends Position
+    case object BottomCenter extends Position
+    case object BottomLeft   extends Position
+  }
+
+  sealed trait Theme extends Product with Serializable
+  object Theme {
+    implicit val enumValue: EnumValue[Theme] = EnumValue.toLowerCaseString[Theme]
+
+    case object Light   extends Theme
+    case object Dark    extends Theme
+    case object Colored extends Theme
+  }
+
   @js.native
   @nowarn
   //  https://fkhadra.github.io/react-toastify/api/toast
   trait ToastOptions extends js.Object {
-    var toastId: String             = js.native
-    var autoClose: Boolean | Double = js.native
-    var closeButton: Boolean        = js.native
-    var closeOnClick: Boolean       = js.native
-    var onClose: js.Function0[Unit] = js.native
+    var toastId: String              = js.native
+    var autoClose: Boolean | Double  = js.native
+    var closeButton: Boolean         = js.native
+    var closeOnClick: Boolean        = js.native
+    var onClose: js.Function0[Unit]  = js.native
+    var position: js.UndefOr[String] = js.native
+    var theme: js.UndefOr[String]    = js.native
   }
 
   object ToastOptions {
@@ -29,13 +101,17 @@ package toastify {
       toastId:     js.UndefOr[String] = js.undefined,
       autoClose:   js.UndefOr[Boolean | Double] = js.undefined,
       closeButton: js.UndefOr[Boolean] = js.undefined,
-      onClose:     js.UndefOr[Callback] = js.undefined
+      onClose:     js.UndefOr[Callback] = js.undefined,
+      position:    js.UndefOr[Position] = js.undefined,
+      theme:       js.UndefOr[Theme] = js.undefined
     ): ToastOptions = {
       val p = (new js.Object).asInstanceOf[ToastOptions]
       toastId.foreach(q => p.toastId = q)
       autoClose.foreach(q => p.autoClose = q)
       closeButton.foreach(q => p.closeButton = q)
       onClose.foreach(q => p.onClose = () => q.runNow())
+      position.foreach(v => p.position = v.toJs)
+      theme.foreach(v => p.theme = v.toJs)
       p
     }
   }
@@ -46,7 +122,8 @@ package toastify {
   object toast extends js.Object {
     def apply(text: String): Unit = js.native
 
-    def info(node: React.Element, options: ToastOptions = ToastOptions()): Unit = js.native
+    def info(node: React.Element, options: ToastOptions = ToastOptions()): Unit  = js.native
+    def apply(node: React.Element, options: ToastOptions = ToastOptions()): Unit = js.native
     // def info(node: String, options: ToastOptions = ToastOptions()): Unit = js.native
   }
 }

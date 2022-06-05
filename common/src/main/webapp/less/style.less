@@ -1607,7 +1607,7 @@ img.partner-split-flag {
   background-color: transparent;
   box-shadow: none;
   display: flex;
-    justify-content: center;
+  justify-content: center;
 
   &:hover {
     outline: 1px var(--site-border-color) solid;
@@ -2515,5 +2515,16 @@ input:-webkit-autofill:active {
 body.hide-reusability {
   & > div:not(#root) {
     display: none;
+  }
+}
+
+.explore-toast {
+  .Toastify__toast {
+    border: var(--site-border-color) solid 1px;
+    border-bottom: var(--explore-accent-color) solid 4px;
+  }
+
+  & .svg-inline--fa {
+    margin-right: 0.5em;
   }
 }
