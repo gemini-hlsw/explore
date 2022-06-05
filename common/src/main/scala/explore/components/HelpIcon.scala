@@ -24,20 +24,18 @@ object HelpIcon {
 
   type HelpId = NonEmptyFiniteString[20]
 
-  val component = ScalaFnComponent
-    .withHooks[Props]
-    .render { p =>
-      HelpCtx.usingView { help =>
-        val helpMsg = help.zoom(HelpContext.displayedHelp)
-        <.span(
-          ^.cls :=? p.clazz.map(_.htmlClass),
-          ^.onClick ==> { (e: ReactMouseEvent) =>
-            e.stopPropagationCB *> e.preventDefaultCB *> helpMsg.set(p.id.some)
-          },
-          Icons.Info
-            .fixedWidth()
-            .clazz(ExploreStyles.HelpIcon)
-        )
-      }
+  val component = ScalaFnComponent[Props] { p =>
+    HelpCtx.usingView { help =>
+      val helpMsg = help.zoom(HelpContext.displayedHelp)
+      <.span(
+        ^.cls :=? p.clazz.map(_.htmlClass),
+        ^.onClick ==> { (e: ReactMouseEvent) =>
+          e.stopPropagationCB *> e.preventDefaultCB *> helpMsg.set(p.id.some)
+        },
+        Icons.Info
+          .fixedWidth()
+          .clazz(ExploreStyles.HelpIcon)
+      )
     }
+  }
 }
