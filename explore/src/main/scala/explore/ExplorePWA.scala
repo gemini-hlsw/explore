@@ -3,12 +3,17 @@
 
 package explore
 
-import scala.scalajs.js
-import scala.scalajs.js.annotation._
-import scala.annotation.nowarn
+import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.callback.Callback
 import japgolly.scalajs.react.vdom.html_<^._
+import react.fa.IconSize
+import react.semanticui.elements.button.Button
+import react.semanticui.sizes
 import react.toastify._
+
+import scala.annotation.nowarn
+import scala.scalajs.js
+import scala.scalajs.js.annotation._
 
 @JSExportTopLevel("ExplorePWA")
 object ExplorePWA {
@@ -35,7 +40,7 @@ object ExplorePWA {
       onRegisterError: js.UndefOr[js.Any => Callback] = js.undefined
     ): RegisterSWOptions = {
       val p = (new js.Object).asInstanceOf[RegisterSWOptions]
-      onNeedRefresh.foreach(q => p.onNeedRefresh = () => { println("CAll"); q.runNow() })
+      onNeedRefresh.foreach(q => p.onNeedRefresh = () => q.runNow())
       onOfflineReady.foreach(q => p.onOfflineReady = () => q.runNow())
       onRegisterError.foreach(q => p.onRegisterError = (x: js.Any) => q(x).runNow())
       onRegistered.foreach(q => p.onRegistered = (x: ServiceWorkerRegistration) => q(x).runNow())
@@ -51,41 +56,42 @@ object ExplorePWA {
       options: js.UndefOr[RegisterSWOptions] = js.undefined
     ): js.Function1[js.UndefOr[Boolean], js.Promise[Unit]] = js.native
   }
-  val intervalMS = 2 * 60 * 1000
 
-  def scheduleUpdate(r: ServiceWorkerRegistration): Callback =
-    (Callback.log("abc") *> Callback(r.update()))
-      .delayMs(intervalMS.toDouble)
-      .toCallback
-      .flatMap(_ => scheduleUpdate(r))
+  // Check every 10 min maybe too often but we are doing lots of development
+  val intervalMS = 10 * 60 * 1000
+
+  def scheduleUpdateCheck(r: ServiceWorkerRegistration): Callback =
+    (Callback.log("Update check") *> Callback(r.update())).attempt
+      .setIntervalMs(intervalMS.toDouble)
+      .void
+
+  def showToast(reload: Callback) =
+    toast(
+      <.div(
+        ExploreStyles.ExploreToastGrid,
+        Icons.Info.size(IconSize.LG),
+        "A new version of explore is available",
+        Button(size = sizes.Mini, onClick = reload *> toast.dismissCB("exploreUpdateId"))("Reload")
+      ),
+      ToastOptions("exploreUpdateId", autoClose = false)
+    )
 
   def setupSW(): Callback =
-    Callback.log("Setup service worker 22") *> Callback {
+    Callback {
       lazy val updateSW: js.Function1[js.UndefOr[Boolean], js.Promise[Unit]] =
         registerSW(
           RegisterSWOptions(
-            // onNeedRefresh = Callback(org.scalajs.dom.window.console.log(updateSW(true))),
-            onNeedRefresh = Callback.log("Service worker") /* *> Callback(
-              toast.info(<.div("Update available, reload"),
-                         ToastOptions("exploreUpdateId",
-                                      false,
-                                      onClose = Callback.log("Closeed") *> Callback(updateSW(true))
-                         )
-              )*/
-            ,
+            onNeedRefresh =
+              Callback.log("New version avaiable") *> Callback(showToast(Callback(updateSW(true)))),
             onOfflineReady = Callback.log(s"Offline ready"),
             onRegisterError = (x: js.Any) =>
               Callback.log(s"Error on sw $x") *> Callback(
                 org.scalajs.dom.window.console.log(x)
               ),
             onRegistered = (r: ServiceWorkerRegistration) =>
-              Callback.log(s"Registered sw") *>
-                Callback(r.update()) *>
-                Callback(
-                  org.scalajs.dom.window.console.log(r)
-                ) *> (Callback.log("abc") *> Callback(r.update()))
-                  .delayMs(intervalMS.toDouble)
-                  .toCallback
+              Callback.log(s"Registered service worker") *>
+                Callback(r.update()).delayMs(1000.0).toCallback *> // Inital check
+                scheduleUpdateCheck(r) // Periodic checks
           )
         )
       updateSW

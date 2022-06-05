@@ -3,15 +3,17 @@
 
 package react
 
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.callback.Callback
+import japgolly.scalajs.react.facade.React
+import japgolly.scalajs.react.vdom.all._
+import react.common._
+
+import scala.annotation.nowarn
+
 import scalajs.js
 import scalajs.js.|
 import scalajs.js.annotation.JSImport
-import japgolly.scalajs.react.vdom.all._
-import japgolly.scalajs.react.callback.Callback
-import japgolly.scalajs.react.facade.React
-import japgolly.scalajs.react._
-import scala.annotation.nowarn
-import react.common._
 
 package toastify {
   case class ToastContainer(
@@ -88,29 +90,31 @@ package toastify {
   //  https://fkhadra.github.io/react-toastify/api/toast
   trait ToastOptions extends js.Object {
     var toastId: String              = js.native
+    var position: js.UndefOr[String] = js.native
+    var onClose: js.Function0[Unit]  = js.native
     var autoClose: Boolean | Double  = js.native
     var closeButton: Boolean         = js.native
     var closeOnClick: Boolean        = js.native
-    var onClose: js.Function0[Unit]  = js.native
-    var position: js.UndefOr[String] = js.native
     var theme: js.UndefOr[String]    = js.native
   }
 
   object ToastOptions {
     def apply(
-      toastId:     js.UndefOr[String] = js.undefined,
-      autoClose:   js.UndefOr[Boolean | Double] = js.undefined,
-      closeButton: js.UndefOr[Boolean] = js.undefined,
-      onClose:     js.UndefOr[Callback] = js.undefined,
-      position:    js.UndefOr[Position] = js.undefined,
-      theme:       js.UndefOr[Theme] = js.undefined
+      toastId:      js.UndefOr[String] = js.undefined,
+      position:     js.UndefOr[Position] = js.undefined,
+      onClose:      js.UndefOr[Callback] = js.undefined,
+      autoClose:    js.UndefOr[Boolean | Double] = js.undefined,
+      closeButton:  js.UndefOr[Boolean] = js.undefined,
+      closeOnClick: js.UndefOr[Boolean] = js.undefined,
+      theme:        js.UndefOr[Theme] = js.undefined
     ): ToastOptions = {
       val p = (new js.Object).asInstanceOf[ToastOptions]
       toastId.foreach(q => p.toastId = q)
+      position.foreach(v => p.position = v.toJs)
+      onClose.foreach(q => p.onClose = () => q.runNow())
       autoClose.foreach(q => p.autoClose = q)
       closeButton.foreach(q => p.closeButton = q)
-      onClose.foreach(q => p.onClose = () => q.runNow())
-      position.foreach(v => p.position = v.toJs)
+      closeOnClick.foreach(q => p.closeOnClick = q)
       theme.foreach(v => p.theme = v.toJs)
       p
     }
@@ -119,11 +123,23 @@ package toastify {
   @js.native
   @JSImport("react-toastify", "toast")
   @nowarn
-  object toast extends js.Object {
+  object rawToast extends js.Object {
     def apply(text: String): Unit = js.native
 
     def info(node: React.Element, options: ToastOptions = ToastOptions()): Unit  = js.native
     def apply(node: React.Element, options: ToastOptions = ToastOptions()): Unit = js.native
+    def dismiss(id: String): Unit                                                = js.native
     // def info(node: String, options: ToastOptions = ToastOptions()): Unit = js.native
+  }
+
+  object toast {
+    def apply(node: VdomTag, options: ToastOptions = ToastOptions()): Unit =
+      rawToast(node.rawNode.asInstanceOf[React.Element], options)
+
+    def dismiss(id: String): Unit =
+      rawToast.dismiss(id)
+
+    def dismissCB(id: String): Callback =
+      Callback(rawToast.dismiss(id))
   }
 }

@@ -47,6 +47,7 @@ import org.scalajs.dom.Element
 import org.scalajs.dom.RequestCache
 import org.typelevel.log4cats.Logger
 import react.common.implicits._
+import react.toastify._
 import workers.WebWorkerF
 
 import java.util.concurrent.TimeUnit
@@ -54,7 +55,6 @@ import scala.concurrent.duration._
 import scala.scalajs.js
 
 import js.annotation._
-import react.toastify._
 
 @JSExportTopLevel("Explore")
 object ExploreMain extends IOApp.Simple {
@@ -210,24 +210,12 @@ object ExploreMain extends IOApp.Simple {
           crash[IO](s"There was an error initializing Explore:<br/>${t.getMessage}")
       }
 
-    import japgolly.scalajs.react.callback.Callback
-    import japgolly.scalajs.react.vdom.html_<^._
-    import japgolly.scalajs.react.facade.React
-    import japgolly.scalajs.react._
-
-    def showToast =
-      toast.info(<.div("Update available toast, reload").rawNode.asInstanceOf[React.Element],
-                 ToastOptions("exploreUpdateId", false, onClose = Callback.log("Closeed"))
-      )
-
     (for {
       dispatcher <- Dispatcher[IO]
       worker     <- WebWorkerF[IO](WebWorkers.CacheIDBWorker(), dispatcher)
-      // _          <- Resource.eval(ExplorePWA.setupSW())
       prefs      <- Resource.eval(ExploreLocalPreferences.loadPreferences[IO])
       logger     <- Resource.eval(setupLogger[IO](prefs))
       _          <- Resource.eval(buildPage(dispatcher, worker, prefs)(logger))
-      _          <- Resource.eval(IO(showToast))
     } yield ()).useForever
   }
 
