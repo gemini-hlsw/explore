@@ -19,6 +19,8 @@ import scala.scalajs.js.annotation._
 object ExplorePWA {
   type UpdateSW = Boolean => js.Any
 
+  // Facades for
+  // https://vite-plugin-pwa.netlify.app/
   @js.native
   trait ServiceWorkerRegistration extends js.Object {
     def update(): Unit = js.native
@@ -65,6 +67,7 @@ object ExplorePWA {
       .setIntervalMs(intervalMS.toDouble)
       .void
 
+  // Toast to ask the user if an updates should be reloadedd
   def showToast(reload: Callback) =
     toast(
       <.div(
@@ -76,12 +79,15 @@ object ExplorePWA {
       ToastOptions("exploreUpdateId", autoClose = false)
     )
 
+  // Setup the service worker
   def setupSW(): Callback =
+    //
     Callback {
       lazy val updateSW: js.Function1[js.UndefOr[Boolean], js.Promise[Unit]] =
         registerSW(
           RegisterSWOptions(
             onNeedRefresh =
+              // If a new version is detected ask the usser
               Callback.log("New version avaiable") *> Callback(showToast(Callback(updateSW(true)))),
             onOfflineReady = Callback.log(s"Offline ready"),
             onRegisterError = (x: js.Any) =>
@@ -89,6 +95,7 @@ object ExplorePWA {
                 org.scalajs.dom.window.console.log(x)
               ),
             onRegistered = (r: ServiceWorkerRegistration) =>
+              // https://vite-plugin-pwa.netlify.app/guide/periodic-sw-updates.html
               Callback.log(s"Registered service worker") *>
                 Callback(r.update()).delayMs(1000.0).toCallback *> // Inital check
                 scheduleUpdateCheck(r) // Periodic checks

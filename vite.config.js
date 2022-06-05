@@ -1,11 +1,11 @@
-const { defineConfig } = require('vite')
-const react = require('@vitejs/plugin-react')
-const { visualizer } = require('rollup-plugin-visualizer')
-const path = require('path')
-const fs = require('fs')
-const ViteFonts = require('vite-plugin-fonts')
-const mkcert = require('vite-plugin-mkcert')
-const { VitePWA } = require('vite-plugin-pwa')
+const { defineConfig } = require('vite');
+const react = require('@vitejs/plugin-react');
+const { visualizer } = require('rollup-plugin-visualizer');
+const path = require('path');
+const fs = require('fs');
+const ViteFonts = require('vite-plugin-fonts');
+const mkcert = require('vite-plugin-mkcert');
+const { VitePWA } = require('vite-plugin-pwa');
 
 const fontImport = ViteFonts.Plugin({
   google: {
@@ -18,19 +18,36 @@ const fontImport = ViteFonts.Plugin({
   },
 });
 
+// Configuration to cache aladin images
+const imageCache = ({ name, pattern }) => ({
+  urlPattern: pattern,
+  handler: 'CacheFirst',
+  options: {
+    cacheName: name,
+    expiration: {
+      maxEntries: 2500,
+      maxAgeSeconds: 60 * 60 * 24 * 7, // 1week
+    },
+    cacheableResponse: {
+      statuses: [200],
+    },
+  },
+});
+
 // https://vitejs.dev/config/
 module.exports = ({ command, mode }) => {
   const scalaClassesDir = path.resolve(__dirname, 'explore/target/scala-2.13');
   const isProduction = mode == 'production';
-  const sjs =
-    isProduction
-      ? path.resolve(scalaClassesDir, 'explore-opt')
-      : path.resolve(scalaClassesDir, 'explore-fastopt');
-  const workersScalaClassesDir = path.resolve(__dirname, 'workers/target/scala-2.13');
-  const workersSjs =
-    isProduction
-      ? path.resolve(workersScalaClassesDir, 'workers-opt')
-      : path.resolve(workersScalaClassesDir, 'workers-fastopt');
+  const sjs = isProduction
+    ? path.resolve(scalaClassesDir, 'explore-opt')
+    : path.resolve(scalaClassesDir, 'explore-fastopt');
+  const workersScalaClassesDir = path.resolve(
+    __dirname,
+    'workers/target/scala-2.13'
+  );
+  const workersSjs = isProduction
+    ? path.resolve(workersScalaClassesDir, 'workers-opt')
+    : path.resolve(workersScalaClassesDir, 'workers-fastopt');
   const rollupPlugins = isProduction ? [] : [visualizer()];
   const common = path.resolve(__dirname, 'common/');
   const webappCommon = path.resolve(common, 'src/main/webapp/');
@@ -62,7 +79,7 @@ module.exports = ({ command, mode }) => {
       alias: [
         {
           find: 'process',
-          replacement: 'process/browser'
+          replacement: 'process/browser',
         },
         {
           find: '@sjs',
@@ -97,14 +114,14 @@ module.exports = ({ command, mode }) => {
     css: {
       preprocessorOptions: {
         scss: {
-          charset: false
-        }
-      }
+          charset: false,
+        },
+      },
     },
     server: {
       strictPort: true,
       fsServe: {
-        strict: true
+        strict: true,
       },
       host: '0.0.0.0',
       port: 8080,
@@ -118,7 +135,7 @@ module.exports = ({ command, mode }) => {
               _path.includes('/classes') ||
               _path.endsWith('.tmp');
             return sjsIgnored;
-          }
+          },
         ],
       },
       proxy: {
@@ -153,8 +170,19 @@ module.exports = ({ command, mode }) => {
       fontImport,
       VitePWA({
         workbox: {
-          maximumFileSizeToCacheInBytes: 30000000 // sjs produce large ffiles
-        }
+          maximumFileSizeToCacheInBytes: 30000000, // sjs produce large ffiles
+          // Cache aladin images
+          runtimeCaching: [
+            imageCache({
+              pattern: /^https:\/\/simbad.u-strasbg.fr\/simbad\/sim-id/,
+              name: 'simbad',
+            }),
+            imageCache({
+              pattern: /^https:\/\/alasky.u-strasbg.fr\/DSS/,
+              name: 'aladin-images',
+            }),
+          ],
+        },
       }),
     ],
   };
