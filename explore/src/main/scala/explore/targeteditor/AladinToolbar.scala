@@ -27,7 +27,7 @@ import react.semanticui.sizes._
 final case class AladinToolbar(
   fov:                 Fov,
   current:             Coordinates,
-  loadingGSCandidates: Boolean,
+  loadingGSCandidates: Option[Boolean], // None is an error
   selectedGSIndex:     View[Int],
   guideStarCandidates: List[(GuideStarCandidate, AgsAnalysis)],
   center:              View[Boolean],
@@ -56,8 +56,13 @@ object AladinToolbar {
           Popup(
             content = "Loading catalog stars..",
             position = PopupPosition.TopCenter,
-            trigger = Icons.CircleSmall.beat()
-          ).when(props.loadingGSCandidates)
+            trigger = Icons.CircleSmall.beat().clazz(ExploreStyles.WarningIcon)
+          ).when(props.loadingGSCandidates.exists(identity)),
+          Popup(
+            content = "Error reading catalog..",
+            position = PopupPosition.TopCenter,
+            trigger = Icons.CircleSmall.clazz(ExploreStyles.ErrorIcon)
+          ).when(props.loadingGSCandidates.isEmpty)
         ),
         <.div(
           ExploreStyles.AladinGuideStar,

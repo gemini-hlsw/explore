@@ -19,6 +19,7 @@ import explore.components.ui.ExploreStyles
 import explore.events._
 import explore.events.picklers._
 import explore.implicits._
+import explore.model.CatalogQueryError
 import explore.model.CatalogResults
 import explore.model.Constants
 import explore.model.ObsConfiguration
@@ -101,8 +102,18 @@ object AladinCell extends ModelOptics {
       .useStreamWithSyncBy((props, _, _, _) => props.tid)((props, _, _, _) =>
         _ =>
           props.ctx.worker.stream
-            .map(decodeFromTransferable[CatalogResults])
-            .unNone
+            .flatMap { r =>
+              val resultsOrError = decodeFromTransferable[CatalogResults](r)
+                .map(_.asRight)
+                .orElse(
+                  decodeFromTransferable[CatalogQueryError](r).map(_.asLeft)
+                )
+              resultsOrError match {
+                case Some(Right(r)) => fs2.Stream.emit[IO, CatalogResults](r)
+                case Some(Left(m))  => fs2.Stream.raiseError[IO](new RuntimeException(m.errorMsg))
+                case _              => fs2.Stream.raiseError[IO](new RuntimeException("Unknown worker message"))
+              }
+            }
             .map(_.candidates)
       )
       .useEffectWithDepsBy((_, _, _, _, candidates) => candidates.awaitOpt)((props, _, _, _, _) =>
@@ -267,7 +278,11 @@ object AladinCell extends ModelOptics {
             ).withKey(aladinKey)
 
           // Check whether we are waiting for catalog
-          val catalogLoading = props.obsConf.exists(_ => gsc.value.isPending)
+          val catalogLoading = props.obsConf match {
+            case Some(_) =>
+              gsc.value.fold(_ => true.some, _ => none, _ => false.some)
+            case _       => false.some
+          }
 
           val usableGuideStar = agsResults.lift(selectedIndex.get).exists(_._2.isUsable)
 

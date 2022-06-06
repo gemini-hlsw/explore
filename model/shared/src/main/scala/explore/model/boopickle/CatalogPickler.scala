@@ -7,6 +7,7 @@ import boopickle.DefaultBasic._
 import eu.timepit.refined._
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.model.CatalogQueryError
 import explore.model.CatalogResults
 import lucuma.ags.GuideStarCandidate
 import lucuma.core.math.Angle
@@ -157,6 +158,10 @@ trait CatalogPicklers {
 
   implicit def picklerCatalogResults: Pickler[CatalogResults] =
     transformPickler(CatalogResults.apply)(_.candidates)
+
+  implicit def picklerCatalogQuueryError: Pickler[CatalogQueryError] =
+    transformPickler(CatalogQueryError.apply)(_.errorMsg)
+
 }
 
 object CatalogPicklers extends CatalogPicklers
