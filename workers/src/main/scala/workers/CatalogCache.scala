@@ -9,6 +9,7 @@ import cats.effect.Concurrent
 import cats.effect.IO
 import cats.Hash
 import explore.model.CatalogResults
+import explore.model.CatalogQueryError
 import lucuma.ags.GuideStarCandidate
 import lucuma.core.model.Target
 import explore.events.picklers._
@@ -129,6 +130,7 @@ trait CatalogCache extends CatalogIDB with AsyncToIO {
         _.fold(
           // Not found in the db, re request
           readFromGaia[IO](client, query)
+            .flatTap(IO.println)
             .map(
               _.collect { case Right(s) =>
                 GuideStarCandidate.siderealTarget.get(s)
@@ -139,6 +141,9 @@ trait CatalogCache extends CatalogIDB with AsyncToIO {
                 postAsTransferable[IO, CatalogResults](self, CatalogResults(candidates)) *>
                 storeGuideStarCandidates(idb, stores, query, candidates).toIO
                   .handleError(e => L.error(e)("Error storing guidstar candidates"))
+            }
+            .handleErrorWith { e =>
+              postAsTransferable[IO, CatalogQueryError](self, CatalogQueryError(e.getMessage()))
             }
             .void
         ) { c =>

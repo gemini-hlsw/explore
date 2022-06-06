@@ -18,3 +18,8 @@ object CatalogResults {
     Eq.by(_.candidates)
 
 }
+
+/**
+ * Error produced by the catalog
+ */
+final case class CatalogQueryError(errorMsg: String)
