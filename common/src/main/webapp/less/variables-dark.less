@@ -212,6 +212,54 @@
   --site-highlight-background: hsl(211, 31%, 48%);
 }
 
+.toastify-dark() {
+  // https://github.com/fkhadra/react-toastify/blob/deb681ba363a80fd36982cecfbbf16e5168c62f8/scss/_variables.scss
+  --toastify-color-light: hsl(0, 0%, 100%);
+  --toastify-color-dark: var(--color-background-light-25);
+  --toastify-color-info: hsl(204, 70%, 53%);
+  --toastify-color-success: hsl(122, 93%, 38%);
+  --toastify-color-warning: hsl(48, 89%, 50%);
+  --toastify-color-error: hsl(6, 78%, 57%);
+  --toastify-color-transparent: rgba(255, 255, 255, 0.7);
+  --toastify-icon-color-info: var(--toastify-color-info);
+  --toastify-icon-color-success: var(--toastify-color-success);
+  --toastify-icon-color-warning: var(--toastify-color-warning);
+  --toastify-icon-color-error: var(--toastify-color-error);
+  --toastify-toast-width: 320px;
+  --toastify-toast-background: hsl(0, 0%, 100%);
+  --toastify-toast-min-height: 64px;
+  --toastify-toast-max-height: 800px;
+  --toastify-font-family: 'Lato';
+  --toastify-z-index: 9999;
+  --toastify-text-color-light: hsl(0, 0%, 46%);
+  --toastify-text-color-dark: var(--site-text-color);
+
+  //Used only for colored theme
+  --toastify-text-color-info: hsl(0, 0%, 100%);
+  --toastify-text-color-success: hsl(0, 0%, 100%);
+  --toastify-text-color-warning: hsl(0, 0%, 100%);
+  --toastify-text-color-error: hsl(0, 0%, 100%);
+  --toastify-spinner-color: hsl(0, 0%, 38%);
+  --toastify-spinner-color-empty-area: hsl(0, 0%, 88%);
+
+  // Used when no type is provided
+  --toastify-color-progress-light: linear-gradient(
+    to right,
+    hsl(130, 65%, 57%),
+    hsl(199, 94%, 67%),
+    hsl(211, 100%, 50%),
+    hsl(198, 71%, 53%),
+    hsl(241, 61%, 59%),
+    hsl(349, 100%, 59%)
+  );
+  // Used when no type is provided
+  --toastify-color-progress-dark: hsl(267, 95%, 76%);
+  --toastify-color-progress-info: var(--toastify-color-info);
+  --toastify-color-progress-success: var(--toastify-color-success);
+  --toastify-color-progress-warning: var(--toastify-color-warning);
+  --toastify-color-progress-error: var(--toastify-color-error);
+}
+
 .datepicker-dark() {
   --date-picker-background-color: var(--color-background-light-10);
   --date-picker-header-background-color: var(--color-background-light-20);
@@ -393,4 +441,5 @@
   .header-dark();
   .plot-dark();
   .datepicker-dark();
+  .toastify-dark();
 }

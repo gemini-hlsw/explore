@@ -47,6 +47,7 @@ import org.scalajs.dom.Element
 import org.scalajs.dom.RequestCache
 import org.typelevel.log4cats.Logger
 import react.common.implicits._
+import react.toastify._
 import workers.WebWorkerF
 
 import java.util.concurrent.TimeUnit
@@ -145,7 +146,11 @@ object ExploreMain extends IOApp.Simple {
 
       def rootComponent(view: ReuseView[RootModel]): VdomElement =
         <.div(
-          router(view)
+          router(view),
+          ToastContainer(position = Position.BottomRight,
+                         theme = react.toastify.Theme.Dark,
+                         clazz = ExploreStyles.ExploreToast
+          )
         )
 
       def pageUrl(
@@ -209,8 +214,8 @@ object ExploreMain extends IOApp.Simple {
       dispatcher <- Dispatcher[IO]
       worker     <- WebWorkerF[IO](WebWorkers.CacheIDBWorker(), dispatcher)
       prefs      <- Resource.eval(ExploreLocalPreferences.loadPreferences[IO])
-      l          <- Resource.eval(setupLogger[IO](prefs))
-      _          <- Resource.eval(buildPage(dispatcher, worker, prefs)(l))
+      logger     <- Resource.eval(setupLogger[IO](prefs))
+      _          <- Resource.eval(buildPage(dispatcher, worker, prefs)(logger))
     } yield ()).useForever
   }
 
