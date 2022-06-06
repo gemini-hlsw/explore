@@ -23,6 +23,6 @@ object ElevationPlotOptions {
   val Default =
     ElevationPlotOptions(Site.GS, PlotRange.Night, TimeDisplay.Site)
 
-  implicit val targetVisualOptionsEq: Eq[ElevationPlotOptions] =
+  implicit val elevationPlotOptionsEq: Eq[ElevationPlotOptions] =
     Eq.by(x => (x.site, x.range, x.time))
 }
