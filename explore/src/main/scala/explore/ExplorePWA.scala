@@ -81,7 +81,7 @@ object ExplorePWA {
 
   // Setup the service worker
   def setupSW(): Callback =
-    //
+    // Register the service worker and handle some callbacks
     Callback {
       lazy val updateSW: js.Function1[js.UndefOr[Boolean], js.Promise[Unit]] =
         registerSW(
