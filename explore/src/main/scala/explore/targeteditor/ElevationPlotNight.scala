@@ -3,10 +3,10 @@
 
 package explore.targeteditor
 
-import cats.Eq
 import cats.syntax.all._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.model.enum.TimeDisplay
 import gpp.highcharts.highchartsStrings.line
 import gpp.highcharts.mod.XAxisLabelsOptions
 import gpp.highcharts.mod._
@@ -42,21 +42,11 @@ final case class ElevationPlotNight(
   site:        Site,
   coords:      Coordinates,
   date:        LocalDate,
-  timeDisplay: ElevationPlotNight.TimeDisplay
+  timeDisplay: TimeDisplay
 ) extends ReactFnProps[ElevationPlotNight](ElevationPlotNight.component)
 
 object ElevationPlotNight {
   type Props = ElevationPlotNight
-
-  sealed trait TimeDisplay
-  object TimeDisplay {
-    case object UTC      extends TimeDisplay
-    case object Site     extends TimeDisplay
-    case object Sidereal extends TimeDisplay
-
-    implicit val TimeDisplayEq: Eq[TimeDisplay]             = Eq.fromUniversalEquals
-    implicit val TimeDisplayReuse: Reusability[TimeDisplay] = Reusability.byEq
-  }
 
   private val PlotEvery: Duration   = Duration.ofMinutes(1)
   private val MillisPerHour: Double = 60 * 60 * 1000
@@ -220,7 +210,7 @@ object ElevationPlotNight {
         def instantFormat(instant: Instant): String =
           props.timeDisplay match {
             case TimeDisplay.Site     => timezoneInstantFormat(instant, props.site.timezone)
-            case TimeDisplay.UTC      => timezoneInstantFormat(instant, ZoneOffset.UTC)
+            case TimeDisplay.UT       => timezoneInstantFormat(instant, ZoneOffset.UTC)
             case TimeDisplay.Sidereal =>
               val skycalc = ImprovedSkyCalc(props.site.place)
               val sid     = skycalc.getSiderealTime(instant)
@@ -235,7 +225,7 @@ object ElevationPlotNight {
         val timeDisplay: String =
           props.timeDisplay match {
             case TimeDisplay.Site     => props.site.timezone.getId
-            case TimeDisplay.UTC      => "UTC"
+            case TimeDisplay.UT       => "UTC"
             case TimeDisplay.Sidereal => "Site Sidereal"
           }
 

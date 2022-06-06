@@ -9,10 +9,13 @@ import lucuma.core.model.User
 @GraphQLSchema
 trait UserPreferencesDB {
   object Scalars {
-    type UserId         = User.Id
-    type ResizableArea  = String
-    type BreakpointName = String
-    type GridLayoutArea = String
-    type Bigint         = Long
+    type UserId             = User.Id
+    type ResizableArea      = String
+    type BreakpointName     = String
+    type GridLayoutArea     = String
+    type Site               = lucuma.core.enum.Site
+    type ElevationPlotRange = explore.model.enum.PlotRange
+    type ElevationPlotTime  = explore.model.enum.TimeDisplay
+    type Bigint             = Long
   }
 }

@@ -333,7 +333,7 @@ object TargetTabContents {
         case None     => s"Editing ${idsToEdit.size} Asterisms"
       }
 
-      val selectedTarget: Option[ViewOpt[Target]] =
+      val selectedTarget: Option[ViewOpt[TargetWithId]] =
         props.focusedTarget.map { targetId =>
           asterismView.zoom(Asterism.targetOptional(targetId))
         }
@@ -377,15 +377,15 @@ object TargetTabContents {
         .flatMap(
           _.mapValue(targetView =>
             targetView.get match {
-              case t @ Target.Sidereal(_, _, _, _) =>
-                Target.Sidereal.baseCoordinates.get(t).some
-              case _                               => none
+              case TargetWithId(id, t @ Target.Sidereal(_, _, _, _)) =>
+                Target.Sidereal.baseCoordinates.get(t).some.tupleLeft(id)
+              case _                                                 => none
             }
           )
         )
 
       val skyPlotTile =
-        ElevationPlotTile.elevationPlotTile(scienceMode, selectedCoordinates.flatten)
+        ElevationPlotTile.elevationPlotTile(props.userId, scienceMode, selectedCoordinates.flatten)
 
       val rglRender: LayoutsMap => VdomNode = (l: LayoutsMap) =>
         TileController(
@@ -423,7 +423,11 @@ object TargetTabContents {
       )
 
       val skyPlotTile =
-        ElevationPlotTile.elevationPlotTile(none, Target.Sidereal.baseCoordinates.get(target).some)
+        ElevationPlotTile.elevationPlotTile(
+          props.userId,
+          none,
+          Target.Sidereal.baseCoordinates.get(target).some.tupleLeft(targetId)
+        )
 
       val rglRender: LayoutsMap => VdomNode = (l: LayoutsMap) =>
         TileController(props.userId,

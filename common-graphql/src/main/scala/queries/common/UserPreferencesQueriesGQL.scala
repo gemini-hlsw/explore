@@ -125,6 +125,19 @@ object UserPreferencesQueriesGQL {
   }
 
   @GraphQL
+  trait UserElevationPlotPreferencesQuery extends GraphQLOperation[UserPreferencesDB] {
+    val document = """
+      query target_preferences($user_id: String! = "", $targetId: String! = "") {
+        lucuma_elevation_plot_preferences_by_pk(target_id: $targetId, user_id: $user_id) {
+          site
+          range
+          time
+        }
+      }
+    """
+  }
+
+  @GraphQL
   trait UserTargetPreferencesUpsert extends GraphQLOperation[UserPreferencesDB] {
     val document =
       """mutation target_preferences_upsert($objects: lucuma_target_insert_input! = {}) {

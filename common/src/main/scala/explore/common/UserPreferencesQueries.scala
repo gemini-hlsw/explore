@@ -11,8 +11,11 @@ import clue.TransactionalClient
 import clue.data.syntax._
 import explore.model.GridLayoutSection
 import explore.model.ResizableSection
+import explore.model.enum.PlotRange
+import explore.model.enum.TimeDisplay
 import explore.model.enum.Visible
 import explore.model.layout._
+import lucuma.core.enum.Site
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.model.Target
@@ -190,12 +193,43 @@ object UserPreferencesQueries {
       }
   }
 
+  implicit class UserElevationPlotPreferencesQueryOps(
+    val self: UserElevationPlotPreferencesQuery.type
+  ) extends AnyVal {
+    import self._
+
+    // Gets the prefs for the elevation plot
+    def queryWithDefault[F[_]: ApplicativeError[*[_], Throwable]](
+      uid:         User.Id,
+      tid:         Target.Id,
+      defaultSite: Site
+    )(implicit
+      cl:          TransactionalClient[F, UserPreferencesDB]
+    ): F[(Site, PlotRange, TimeDisplay)] =
+      for {
+        r <-
+          query[F](uid.show, tid.show)
+            .map { r =>
+              r.lucuma_elevation_plot_preferences_by_pk.map(result =>
+                (result.site, result.range, result.time)
+              )
+            }
+            .handleError(_ => none)
+      } yield {
+        val site  = r.map(_._1).getOrElse(defaultSite)
+        val range = r.map(_._2).getOrElse(PlotRange.Night)
+        val time  = r.map(_._3).getOrElse(TimeDisplay.Site)
+
+        (site, range, time)
+      }
+  }
+
   implicit class UserTargetPreferencesUpsertOps(val self: UserTargetPreferencesUpsert.type)
       extends AnyVal {
     import self._
     import UserPreferencesDB.Enums._
 
-    def updatePreferences[F[_]: ApplicativeError[*[_], Throwable]](
+    def updateAladinPreferences[F[_]: ApplicativeError[*[_], Throwable]](
       uid:           User.Id,
       targetId:      Target.Id,
       fov:           Angle,
@@ -221,6 +255,45 @@ object UserPreferencesQueries {
               update_columns = List(LucumaTargetPreferencesUpdateColumn.Fov,
                                     LucumaTargetPreferencesUpdateColumn.AgsCandidates,
                                     LucumaTargetPreferencesUpdateColumn.AgsOverlay
+              )
+            ).assign
+          ).assign
+        )
+      ).attempt.void
+  }
+
+  implicit class UserElevationPlotPreferencesUpsertOps(val self: UserTargetPreferencesUpsert.type)
+      extends AnyVal {
+    import self._
+    import UserPreferencesDB.Enums._
+
+    def updatePlotPreferences[F[_]: ApplicativeError[*[_], Throwable]](
+      uid:      User.Id,
+      targetId: Target.Id,
+      site:     Site,
+      range:    PlotRange,
+      time:     TimeDisplay
+    )(implicit
+      cl:       TransactionalClient[F, UserPreferencesDB]
+    ): F[Unit] =
+      execute[F](
+        LucumaTargetInsertInput(
+          target_id = targetId.show.assign,
+          lucuma_elevation_plot_preferences = LucumaElevationPlotPreferencesArrRelInsertInput(
+            data = List(
+              LucumaElevationPlotPreferencesInsertInput(
+                user_id = uid.show.assign,
+                site = site.assign,
+                range = range.assign,
+                time = time.assign
+              )
+            ),
+            on_conflict = LucumaElevationPlotPreferencesOnConflict(
+              constraint =
+                LucumaElevationPlotPreferencesConstraint.LucumaElevationPlotPreferencesPkey,
+              update_columns = List(LucumaElevationPlotPreferencesUpdateColumn.Site,
+                                    LucumaElevationPlotPreferencesUpdateColumn.Range,
+                                    LucumaElevationPlotPreferencesUpdateColumn.Time
               )
             ).assign
           ).assign

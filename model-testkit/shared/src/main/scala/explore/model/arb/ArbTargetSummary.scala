@@ -14,18 +14,22 @@ import lucuma.core.math.arb.ArbCoordinates._
 import eu.timepit.refined.scalacheck._
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Observation
+import lucuma.core.model.Target
 
 trait ArbTargetSummary {
   implicit val arbTargetSummary =
     Arbitrary[TargetSummary] {
       for {
         obsIds <- arbitrary[Set[Observation.Id]]
+        tid    <- arbitrary[Target.Id]
         coords <- arbitrary[Option[Coordinates]]
-      } yield TargetSummary(obsIds, coords)
+      } yield TargetSummary(obsIds, tid, coords)
     }
 
   implicit val cogenTargetSummary: Cogen[TargetSummary] =
-    Cogen[(List[Observation.Id], Option[Coordinates])].contramap(t => (t.obsIds.toList, t.coords))
+    Cogen[(List[Observation.Id], Target.Id, Option[Coordinates])].contramap(t =>
+      (t.obsIds.toList, t.targetId, t.coords)
+    )
 }
 
 object ArbTargetSummary extends ArbTargetSummary

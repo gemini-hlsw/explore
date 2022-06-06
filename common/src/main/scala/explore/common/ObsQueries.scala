@@ -107,8 +107,9 @@ object ObsQueries {
       ),
       data.constraintSetGroup.nodes.toSortedMap(ConstraintGroup.obsIds.get),
       data.targetGroup.nodes
-        .toSortedMap(_.target.id,
-                     group => TargetSummary(group.observationIds.toSet, group.target.sidereal)
+        .toSortedMap(
+          _.target.id,
+          group => TargetSummary(group.observationIds.toSet, group.target.id, group.target.sidereal)
         )
     )
 
