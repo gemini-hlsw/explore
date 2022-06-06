@@ -106,7 +106,7 @@ object AladinCell extends ModelOptics {
               val resultsOrError = decodeFromTransferable[CatalogResults](r)
                 .map(_.asRight)
                 .orElse(
-                  decodeFromTransferable[CatalogQueryError](r).map { p => println(p); p.asLeft }
+                  decodeFromTransferable[CatalogQueryError](r).map(_.asLeft)
                 )
               resultsOrError match {
                 case Some(Right(r)) => fs2.Stream.emit[IO, CatalogResults](r)
@@ -280,8 +280,8 @@ object AladinCell extends ModelOptics {
           // Check whether we are waiting for catalog
           val catalogLoading = props.obsConf match {
             case Some(_) =>
-              gsc.value.fold(_ => true.asRight, e => e.getMessage.asLeft, _ => false.asRight)
-            case _       => false.asRight
+              gsc.value.fold(_ => true.some, _ => none, _ => false.some)
+            case _       => false.some
           }
 
           val usableGuideStar = agsResults.lift(selectedIndex.get).exists(_._2.isUsable)
