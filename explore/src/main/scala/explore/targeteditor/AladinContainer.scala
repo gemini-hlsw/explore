@@ -38,12 +38,14 @@ import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
 
 import java.time.LocalDate
+import java.time.Instant
 import java.time.ZoneId
 import scala.concurrent.duration._
 
 final case class AladinContainer(
   target:                 View[SiderealTracking],
   obsConf:                Option[ObsConfiguration],
+  vizTime:                Option[Instant],
   scienceMode:            Option[ScienceMode],
   options:                TargetVisualOptions,
   updateMouseCoordinates: Coordinates => Callback,
@@ -111,7 +113,7 @@ object AladinContainer {
     ScalaFnComponent
       .withHooks[Props]
       // Base coordinates with pm correction if possible
-      .useMemoBy(_.obsConf.flatMap(_.obsInstant)) { p => i =>
+      .useMemoBy(_.vizTime) { p => i =>
         i.flatMap(t => p.target.get.at(t)).getOrElse(p.target.get.baseCoordinates)
       }
       // View coordinates base coordinates with pm correction if possible + user panning
@@ -220,7 +222,7 @@ object AladinContainer {
         (props.guideStarCandidates,
          props.options.agsCandidates.visible,
          props.obsConf.isDefined,
-         props.obsConf.map(_.obsInstant),
+         props.vizTime,
          selectedGs
         )
       ) { (_, _, _, _, _, _, _, _) =>
@@ -231,10 +233,8 @@ object AladinContainer {
 
             obsInstant.foldMap { obsInstant =>
               val selectedGSTarget = selectedGS
-                .flatMap { case (c, _) => obsInstant.map(c.tracking.at) }
-                .flatMap { c =>
-                  c.map(SVGTarget.GuideStarTarget(_, Css.Empty, 5))
-                }
+                .flatMap { case (c, _) => c.tracking.at(obsInstant) }
+                .map(c => SVGTarget.GuideStarTarget(c, Css.Empty, 5))
 
               candidates
                 .filterNot(x => selectedGS.exists(_._1 === x._1))
@@ -246,7 +246,7 @@ object AladinContainer {
 
                   (g.tracking
                      .at(targetEpochInstant),
-                   obsInstant.flatMap(g.tracking.at)
+                   g.tracking.at(obsInstant)
                   ).mapN { (source, dest) =>
                     List[SVGTarget](
                       SVGTarget.GuideStarCandidateTarget(dest, candidatesVisibility, 3),

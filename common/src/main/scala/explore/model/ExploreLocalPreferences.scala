@@ -146,12 +146,6 @@ object ExploreLocalPreferences {
 
   implicit val encodePosAngle: Encoder[PosAngle] = deriveEncoder[PosAngle]
 
-  implicit val deConf: Decoder[ObsConfiguration] =
-    Decoder.forProduct2("posAngle", "obsTime")(ObsConfiguration.apply)
-
-  implicit val encConf: Encoder[ObsConfiguration] =
-    Encoder.forProduct2("posAngle", "obsTime")(u => (u.posAngle, u.obsInstant))
-
   implicit val decoder: Decoder[ExploreLocalPreferences] = new Decoder[ExploreLocalPreferences] {
     final def apply(c: HCursor): Decoder.Result[ExploreLocalPreferences] =
       for {

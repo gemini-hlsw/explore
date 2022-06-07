@@ -52,7 +52,6 @@ import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.sizes._
 
-import java.time.Instant
 import scala.concurrent.duration._
 
 final case class ObsTabContents(
@@ -331,7 +330,7 @@ object ObsTabContents {
               .runAsync
       }
       // Shared obs conf (posAngle/obsTime)
-      .useStateView(ObsConfiguration(PosAngle.Default, Instant.now.some))
+      .useStateView(ObsConfiguration(PosAngle.Default))
       .useSingleEffect(debounce = 1.second)
       .useStreamResourceViewOnMountBy { (props, _, _, _, _, _, _) =>
         implicit val ctx = props.ctx

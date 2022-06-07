@@ -50,6 +50,7 @@ import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.label.LabelPointing
 import react.semanticui.sizes.Small
+import java.time.Instant
 
 final case class SearchCallback(
   searchTerm: NonEmptyString,
@@ -63,6 +64,7 @@ final case class SiderealTargetEditor(
   uid:           User.Id,
   id:            Target.Id,
   target:        View[Target.Sidereal],
+  vizTime:       Option[Instant],
   obsConf:       Option[ObsConfiguration],
   scienceMode:   Option[ScienceMode],
   undoStacks:    View[UndoStacks[IO, Target.Sidereal]],
@@ -263,6 +265,7 @@ object SiderealTargetEditor {
                 props.uid,
                 props.id,
                 props.obsConf,
+                props.vizTime,
                 props.scienceMode,
                 targetView.zoom(Target.Sidereal.tracking)
               ),

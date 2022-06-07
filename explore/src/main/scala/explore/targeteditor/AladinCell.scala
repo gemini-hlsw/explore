@@ -64,6 +64,7 @@ final case class AladinCell(
   uid:              User.Id,
   tid:              Target.Id,
   obsConf:          Option[ObsConfiguration],
+  vizTime:          Option[Instant],
   scienceMode:      Option[ScienceMode],
   target:           View[SiderealTracking]
 )(implicit val ctx: AppContextIO)
@@ -121,10 +122,10 @@ object AladinCell extends ModelOptics {
         _.value
           .map(candidatesAwait =>
             candidatesAwait >>
-              ((props.target.get, props.obsConf) match {
-                case (tracking, Some(obsConf)) =>
+              ((props.target.get, props.vizTime) match {
+                case (tracking, Some(obsTime)) =>
                   props.ctx.worker.postTransferrable(
-                    CatalogRequest(tracking, obsConf.obsInstant.getOrElse(Instant.now()))
+                    CatalogRequest(tracking, obsTime)
                   )
                 case _                         => IO.unit
               })
@@ -270,6 +271,7 @@ object AladinCell extends ModelOptics {
             AladinContainer(
               props.target,
               props.obsConf,
+              props.vizTime,
               props.scienceMode,
               t,
               coordinatesSetter,

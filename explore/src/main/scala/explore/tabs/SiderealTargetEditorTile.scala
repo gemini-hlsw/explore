@@ -13,6 +13,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import react.common._
+import java.time.Instant
 
 object SiderealTargetEditorTile {
 
@@ -20,6 +21,7 @@ object SiderealTargetEditorTile {
     userId:     Option[User.Id],
     targetId:   Target.Id,
     target:     View[Target.Sidereal],
+    vizTime:    Option[Instant],
     undoStacks: View[UndoStacks[IO, Target.Sidereal]],
     searching:  View[Set[Target.Id]],
     title:      String,
@@ -32,6 +34,7 @@ object SiderealTargetEditorTile {
             uid,
             targetId,
             target,
+            vizTime,
             none,
             none,
             undoStacks,

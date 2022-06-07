@@ -7,26 +7,20 @@ import cats.Eq
 import lucuma.core.model.PosAngle
 import monocle.Focus
 import monocle.Lens
-import org.typelevel.cats.time._
-
-import java.time.Instant
 
 /**
  * This class is used to transfer properties across tiles, to reduce the latency while waiting for
  * the db subscriptions to arrive
  */
 final case class ObsConfiguration(
-  posAngle:   PosAngle,
-  obsInstant: Option[Instant]
+  posAngle: PosAngle
 )
 
 object ObsConfiguration {
   implicit val eqObsConfiguration: Eq[ObsConfiguration] =
-    Eq.by(x => (x.posAngle, x.obsInstant))
+    Eq.by(_.posAngle)
 
   val posAngle: Lens[ObsConfiguration, PosAngle] =
     Focus[ObsConfiguration](_.posAngle)
 
-  val obsInstant: Lens[ObsConfiguration, Option[Instant]] =
-    Focus[ObsConfiguration](_.obsInstant)
 }

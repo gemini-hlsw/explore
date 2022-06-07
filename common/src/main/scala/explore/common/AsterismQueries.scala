@@ -50,8 +50,6 @@ object AsterismQueries {
     val asterismGroups = Focus[AsterismGroupsWithObs](_.asterismGroups)
     val targetGroups   = Focus[AsterismGroupsWithObs](_.targetGroups)
     val observations   = Focus[AsterismGroupsWithObs](_.observations)
-
-    def obsSummary(id: Observation.Id) = observations.each
   }
 
   // Some helper methods on AsterismGroupList

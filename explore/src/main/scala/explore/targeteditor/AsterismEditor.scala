@@ -42,6 +42,7 @@ import react.semanticui.modules.checkbox._
 import react.semanticui.shorthand._
 import react.semanticui.sizes._
 import java.time.Instant
+import explore.common.ObsQueries
 
 final case class AsterismEditor(
   userId:           User.Id,
@@ -137,6 +138,17 @@ object AsterismEditor {
             }
           )
 
+        val vizTime = props.vizTime.withOnMod { t =>
+          println(s"On modd $t")
+          println(props.obsIds.single)
+          props.obsIds.single
+            .map(i =>
+              Callback.log("TODO") *>
+                (ObsQueries.updateVisualizationTime[IO](List(i), t) *> IO.println("Sent")).runAsync
+            )
+            .getOrEmpty
+        }
+
         React.Fragment(
           props.renderInTitle(
             TargetSelectionPopup(
@@ -171,8 +183,7 @@ object AsterismEditor {
             Form(size = Small)(
               ExploreStyles.Compact,
               ExploreStyles.ObsInstantTileTitle,
-              VizTimeEditor(props.vizTime)
-              // props.obsConf.zoom(ObsConfiguration.obsInstant).mapValue(VizTimeEditor(_))
+              VizTimeEditor(vizTime)
             )
           ),
           TargetTable(
@@ -218,6 +229,7 @@ object AsterismEditor {
                         props.userId,
                         targetId,
                         targetView.zoom(TargetWithId.target).unsafeNarrow[Target.Sidereal],
+                        props.vizTime.get,
                         props.obsConf.get,
                         props.scienceMode,
                         props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),

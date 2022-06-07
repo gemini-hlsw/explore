@@ -64,6 +64,7 @@ import java.time.Instant
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._
+import explore.common.ObsQueries
 
 final case class TargetTabContents(
   userId:            Option[User.Id],
@@ -332,7 +333,17 @@ object TargetTabContents {
 
       def modVizTime(
         mod: Option[Instant] => Option[Instant]
-      ): AsterismGroupsWithObs => AsterismGroupsWithObs = awgo => awgo
+      ): AsterismGroupsWithObs => AsterismGroupsWithObs = awgo => {
+        println("MODD VZ")
+        idsToEdit.single
+          .map(i =>
+            AsterismGroupsWithObs.observations
+              .filterIndex((id: Observation.Id) => id === i)
+              .andThen(ObsSummaryWithConstraintsAndConf.visualizationTime)
+              .modify(mod)(awgo)
+          )
+          .getOrElse(awgo)
+      }
 
       val asterismView: View[Option[Asterism]] =
         asterismGroupsWithObs
@@ -341,8 +352,13 @@ object TargetTabContents {
 
       val vizTimeView: View[Option[Instant]] =
         asterismGroupsWithObs
-          // .withOnMod(onModAsterismsWithObs(groupIds, idsToEdit))
           .zoom(vizTimeLens)(modVizTime)
+      // .withOnMod { t =>
+      //   println("On modd")
+      //   idsToEdit.single
+      //     .map(i => ObsQueries.updateVisualizationTime[IO](List(i), t).runAsync)
+      //     .getOrEmpty
+      // }
 
       val title = idsToEdit.single match {
         case Some(id) => s"Observation $id"
@@ -434,6 +450,7 @@ object TargetTabContents {
         props.userId,
         targetId,
         targetView,
+        none,
         props.targetsUndoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
         props.searching,
         title,
@@ -526,13 +543,6 @@ object TargetTabContents {
     }
   }
 
-  // DELETEME:
-  def firstIdSelected(props: Props): Option[Observation.Id] =
-    (props.focusedObsSet, props.focusedTarget) match {
-      case (a @ Some(_), _) => a.map(_.idSet.head)
-      case _                => none
-    }
-
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
@@ -586,8 +596,8 @@ object TargetTabContents {
           }
       }
       .useSingleEffect(debounce = 1.second)
-      // Shared obs conf (posAngle/obsTime)
-      .useStateView(ObsConfiguration(PosAngle.Default, Instant.now.some))
+      // Shared obs conf (posAngle)
+      .useStateView(ObsConfiguration(PosAngle.Default))
       .useStreamResourceViewOnMountBy { (props, _, _, _, _, _, _) =>
         implicit val ctx = props.ctx
 
