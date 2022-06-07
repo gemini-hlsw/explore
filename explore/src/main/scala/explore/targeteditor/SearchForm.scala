@@ -24,11 +24,15 @@ import react.semanticui.collections.form.Form.FormProps
 import react.semanticui.collections.form._
 import react.semanticui.elements.label.LabelPointing
 import react.semanticui.shorthand._
+import cats.data.ValidatedNec
+import cats.data.Validated.Valid
+import cats.data.Validated.Invalid
 
 import scalajs.js.JSConverters._
 
 final case class SearchForm(
   id:          Target.Id,
+  targetView:  View[Target.Sidereal],
   name:        NonEmptyString,
   searching:   View[Set[Target.Id]],
   searchAndGo: SearchCallback => Callback
@@ -119,6 +123,11 @@ object SearchForm {
           disabled = disabled,
           errorClazz = ExploreStyles.InputErrorTooltipBelow,
           errorPointing = LabelPointing.Above,
+          onBlur = (r: ValidatedNec[NonEmptyString, NonEmptyString]) =>
+            r match {
+              case Valid(name)   => props.targetView.zoom(Target.Sidereal.name).set(name)
+              case Invalid(name) => Callback.log(name)
+            },
           onTextChange = _ => $.setStateL(State.searchError)(none),
           onValidChange = valid => $.setStateL(State.searchEnabled)(valid),
           icon = searchIcon

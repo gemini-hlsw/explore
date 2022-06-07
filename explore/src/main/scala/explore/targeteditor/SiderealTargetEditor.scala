@@ -273,6 +273,7 @@ object SiderealTargetEditor {
                   // SearchForm doesn't edit the name directly. It will set it atomically, together
                   // with coords & magnitudes from the catalog search, so that all 3 fields are
                   // a single undo/redo operation.
+                  allView,
                   targetView.zoom(Target.Sidereal.name).get,
                   props.searching,
                   searchAndSet(allView, nameView)
