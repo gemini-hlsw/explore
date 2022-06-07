@@ -174,23 +174,34 @@ object ObsSummaryWithTitleAndConf {
 }
 
 case class ObsSummaryWithConstraintsAndConf(
-  override val id:           Observation.Id,
-  override val constraints:  ConstraintsSummary,
-  override val status:       ObsStatus,
-  override val activeStatus: ObsActiveStatus,
-  override val duration:     Duration,
-  scienceTargetIds:          Set[Target.Id],
-  override val scienceMode:  Option[ScienceMode]
+  override val id:                Observation.Id,
+  override val constraints:       ConstraintsSummary,
+  override val status:            ObsStatus,
+  override val activeStatus:      ObsActiveStatus,
+  override val duration:          Duration,
+  scienceTargetIds:               Set[Target.Id],
+  override val scienceMode:       Option[ScienceMode],
+  override val visualizationTime: Option[Instant]
 ) extends ObsSummary
     with ObsWithConstraints
+    with ObsWithVizTime
     with ObsWithConf
 
 object ObsSummaryWithConstraintsAndConf {
-  val id            = Focus[ObsSummaryWithConstraintsAndConf](_.id)
-  val configuration = Focus[ObsSummaryWithConstraintsAndConf](_.scienceMode)
+  val id                = Focus[ObsSummaryWithConstraintsAndConf](_.id)
+  val configuration     = Focus[ObsSummaryWithConstraintsAndConf](_.scienceMode)
+  val visualizationTime = Focus[ObsSummaryWithConstraintsAndConf](_.visualizationTime)
 
   implicit val eqObsSummaryWithConstraintsAndConf: Eq[ObsSummaryWithConstraintsAndConf] =
     Eq.by(o =>
-      (o.id, o.constraints, o.status, o.activeStatus, o.duration, o.scienceTargetIds, o.scienceMode)
+      (o.id,
+       o.constraints,
+       o.status,
+       o.activeStatus,
+       o.duration,
+       o.scienceTargetIds,
+       o.scienceMode,
+       o.visualizationTime
+      )
     )
 }

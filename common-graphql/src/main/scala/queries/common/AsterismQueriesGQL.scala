@@ -213,6 +213,7 @@ object AsterismQueriesGQL {
             }
             status
             activeStatus
+            visualizationTime
             plannedTime {
               execution {
                 microseconds

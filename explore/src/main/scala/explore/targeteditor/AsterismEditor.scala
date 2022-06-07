@@ -41,12 +41,14 @@ import react.semanticui.elements.button._
 import react.semanticui.modules.checkbox._
 import react.semanticui.shorthand._
 import react.semanticui.sizes._
+import java.time.Instant
 
 final case class AsterismEditor(
   userId:           User.Id,
   programId:        Program.Id,
   obsIds:           ObsIdSet,
   asterism:         View[Option[Asterism]],
+  vizTime:          View[Option[Instant]],
   scienceMode:      Option[ScienceMode],
   obsConf:          ViewOpt[ObsConfiguration],
   currentTarget:    Option[Target.Id],
@@ -169,7 +171,8 @@ object AsterismEditor {
             Form(size = Small)(
               ExploreStyles.Compact,
               ExploreStyles.ObsInstantTileTitle,
-              props.obsConf.zoom(ObsConfiguration.obsInstant).mapValue(VizTimeEditor(_))
+              VizTimeEditor(props.vizTime)
+              // props.obsConf.zoom(ObsConfiguration.obsInstant).mapValue(VizTimeEditor(_))
             )
           ),
           TargetTable(

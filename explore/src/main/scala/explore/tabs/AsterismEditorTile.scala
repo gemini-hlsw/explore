@@ -25,6 +25,7 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import react.common._
+import java.time.Instant
 
 object AsterismEditorTile {
 
@@ -32,7 +33,7 @@ object AsterismEditorTile {
     userId:          Option[User.Id],
     programId:       Program.Id,
     obsId:           ObsIdSet,
-    potAsterismMode: Pot[(View[Option[Asterism]], Option[ScienceMode])],
+    potAsterismMode: Pot[(View[Option[Asterism]], Option[ScienceMode], View[Option[Instant]])],
     obsConf:         ViewOpt[ObsConfiguration],
     currentTarget:   Option[Target.Id],
     setTarget:       (Option[Target.Id], SetRouteVia) => Callback,
@@ -50,15 +51,16 @@ object AsterismEditorTile {
       canMinimize = true,
       bodyClass = Some(ExploreStyles.TargetTileBody)
     )((renderInTitle: Tile.RenderInTitle) =>
-      potRender[(View[Option[Asterism]], Option[ScienceMode])] {
-        (asterismMode: (View[Option[Asterism]], Option[ScienceMode])) =>
-          val (asterism, scienceMode) = asterismMode
+      potRender[(View[Option[Asterism]], Option[ScienceMode], View[Option[Instant]])] {
+        (asterismMode: (View[Option[Asterism]], Option[ScienceMode], View[Option[Instant]])) =>
+          val (asterism, scienceMode, vizTime) = asterismMode
           userId.map(uid =>
             AsterismEditor(
               uid,
               programId,
               obsId,
               asterism,
+              vizTime,
               scienceMode,
               obsConf,
               currentTarget,

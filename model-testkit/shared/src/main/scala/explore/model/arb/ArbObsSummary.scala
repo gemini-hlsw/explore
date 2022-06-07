@@ -195,6 +195,7 @@ trait ArbObsSummary {
         duration     <- arbitrary[Duration]
         targets      <- arbitrary[Set[Target.Id]]
         mode         <- arbitrary[Option[ScienceMode]]
+        vizTime      <- arbitrary[Option[Instant]]
       } yield ObsSummaryWithConstraintsAndConf(
         id,
         constraints,
@@ -202,7 +203,8 @@ trait ArbObsSummary {
         activeStatus,
         duration,
         targets,
-        mode
+        mode,
+        vizTime
       )
     }
 
@@ -214,7 +216,8 @@ trait ArbObsSummary {
        ObsActiveStatus,
        Duration,
        Option[ScienceMode],
-       List[Target.Id]
+       List[Target.Id],
+       Option[Instant]
       )
     ]
       .contramap(o =>
@@ -224,7 +227,8 @@ trait ArbObsSummary {
          o.activeStatus,
          o.duration,
          o.scienceMode,
-         o.scienceTargetIds.toList
+         o.scienceTargetIds.toList,
+         o.visualizationTime
         )
       )
 

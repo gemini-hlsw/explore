@@ -323,10 +323,26 @@ object TargetTabContents {
         )
       }
 
+      val vizTimeLens: AsterismGroupsWithObs => Option[Instant] = a =>
+        for {
+          id <- idsToEdit.single
+          o  <- a.observations.get(id)
+          t  <- o.visualizationTime
+        } yield t
+
+      def modVizTime(
+        mod: Option[Instant] => Option[Instant]
+      ): AsterismGroupsWithObs => AsterismGroupsWithObs = awgo => awgo
+
       val asterismView: View[Option[Asterism]] =
         asterismGroupsWithObs
           .withOnMod(onModAsterismsWithObs(groupIds, idsToEdit))
           .zoom(getAsterism)(modAsterism)
+
+      val vizTimeView: View[Option[Instant]] =
+        asterismGroupsWithObs
+          // .withOnMod(onModAsterismsWithObs(groupIds, idsToEdit))
+          .zoom(vizTimeLens)(modVizTime)
 
       val title = idsToEdit.single match {
         case Some(id) => s"Observation $id"
@@ -344,7 +360,9 @@ object TargetTabContents {
             .zoom(AsterismGroupsWithObs.observations)
             .get
             .collect {
-              case (k, ObsSummaryWithConstraintsAndConf(_, _, _, _, _, _, Some(v))) if k === id => v
+              case (k, ObsSummaryWithConstraintsAndConf(_, _, _, _, _, _, Some(v), _))
+                  if k === id =>
+                v
             }
             .headOption
         case _        => None
@@ -361,7 +379,7 @@ object TargetTabContents {
           props.userId,
           props.programId,
           idsToEdit,
-          Pot(asterismView, scienceMode),
+          Pot(asterismView, scienceMode, vizTimeView),
           obsConf.asViewOpt,
           props.focusedTarget,
           setCurrentTarget(props.programId, idsToEdit) _,

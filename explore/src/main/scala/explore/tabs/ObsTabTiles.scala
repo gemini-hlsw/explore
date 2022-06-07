@@ -49,6 +49,7 @@ import react.semanticui.addons.select.Select.SelectItem
 import react.semanticui.modules.dropdown.Dropdown
 
 import scala.collection.immutable.SortedMap
+import java.time.Instant
 
 final case class ObsTabTiles(
   userId:           Option[User.Id],
@@ -140,7 +141,8 @@ object ObsTabTiles {
 
         val scienceMode: Option[ScienceMode] = obsView.map(_.get.scienceMode).toOption.flatten
 
-        val potAsterismMode: Pot[(View[Option[Asterism]], Option[ScienceMode])] =
+        val potAsterismMode
+          : Pot[(View[Option[Asterism]], Option[ScienceMode], View[Option[Instant]])] =
           obsView.map(rv =>
             (rv.value
                .zoom(
@@ -149,7 +151,8 @@ object ObsTabTiles {
                )
                .zoom(Asterism.fromTargetsList.asLens)
                .reuseByValue,
-             rv.get.scienceMode
+             rv.get.scienceMode,
+             rv.zoom(ObservationData.visualizationTime)
             )
           )
 

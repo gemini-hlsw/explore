@@ -50,6 +50,8 @@ object AsterismQueries {
     val asterismGroups = Focus[AsterismGroupsWithObs](_.asterismGroups)
     val targetGroups   = Focus[AsterismGroupsWithObs](_.targetGroups)
     val observations   = Focus[AsterismGroupsWithObs](_.observations)
+
+    def obsSummary(id: Observation.Id) = observations.each
   }
 
   // Some helper methods on AsterismGroupList
@@ -72,7 +74,8 @@ object AsterismQueries {
       obsR.activeStatus,
       obsR.plannedTime.execution,
       obsR.targetEnvironment.asterism.map(_.id).toSet,
-      obsR.scienceMode
+      obsR.scienceMode,
+      obsR.visualizationTime
     )
 
   private val queryToAsterismGroupWithObsGetter
