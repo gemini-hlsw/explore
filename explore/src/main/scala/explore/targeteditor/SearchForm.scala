@@ -3,6 +3,9 @@
 
 package explore.targeteditor
 
+import cats.data.Validated.Invalid
+import cats.data.Validated.Valid
+import cats.data.ValidatedNec
 import cats.syntax.all._
 import crystal.react.View
 import eu.timepit.refined.auto._
@@ -24,9 +27,6 @@ import react.semanticui.collections.form.Form.FormProps
 import react.semanticui.collections.form._
 import react.semanticui.elements.label.LabelPointing
 import react.semanticui.shorthand._
-import cats.data.ValidatedNec
-import cats.data.Validated.Valid
-import cats.data.Validated.Invalid
 
 import scalajs.js.JSConverters._
 
