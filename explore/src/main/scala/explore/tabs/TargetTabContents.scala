@@ -351,12 +351,12 @@ object TargetTabContents {
       val vizTimeView: View[Option[Instant]] =
         asterismGroupsWithObs
           .zoom(vizTimeLens)(modVizTime)
-          .withOnMod { t =>
-            println("On modd")
-            idsToEdit.single
-              .map(i => ObsQueries.updateVisualizationTime[IO](List(i), t).runAsync)
-              .getOrEmpty
-          }
+          // .withOnMod { t =>
+          //   println("On modd")
+          //   idsToEdit.single
+          //     .map(i => ObsQueries.updateVisualizationTime[IO](List(i), t).runAsync)
+          //     .getOrEmpty
+          // }
 
       val title = idsToEdit.single match {
         case Some(id) => s"Observation $id"
@@ -394,7 +394,7 @@ object TargetTabContents {
           props.programId,
           idsToEdit,
           Pot(asterismView, scienceMode),
-          vizTimeView,
+          Pot(vizTimeView),
           obsConf.asViewOpt,
           props.focusedTarget,
           setCurrentTarget(props.programId, idsToEdit) _,
@@ -620,6 +620,7 @@ object TargetTabContents {
           asterismGroupsWithObs
         ) =>
           implicit val ctx = props.ctx
+          // val m: Pot[Int] = asterismGroupsWithObs
 
           <.div(
             potRender(

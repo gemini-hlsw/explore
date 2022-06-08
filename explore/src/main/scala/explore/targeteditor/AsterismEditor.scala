@@ -51,7 +51,7 @@ final case class AsterismEditor(
   programId:        Program.Id,
   obsIds:           ObsIdSet,
   asterism:         View[Option[Asterism]],
-  vizTime:          View[Option[Instant]],
+  potVizTime:       Pot[View[Option[Instant]]],
   scienceMode:      Option[ScienceMode],
   obsConf:          ViewOpt[ObsConfiguration],
   currentTarget:    Option[Target.Id],
@@ -140,15 +140,17 @@ object AsterismEditor {
             }
           )
 
-        val vizTime = props.vizTime.withOnMod { t =>
+        // Save the time here. this works for the obs and target tabs
+        val vizTime = props.potVizTime.map(_.withOnMod { t =>
           println(s"On modd $t")
           println(props.obsIds.single)
           props.obsIds.single
-            .map(i => Callback.log(s"TODO $i") // *>
-            // (ObsQueries.updateVisualizationTime[IO](List(i), t) *> IO.println("Sent")).runAsync
+            .map(i =>
+              Callback.log(s"TODO $i") *>
+                (ObsQueries.updateVisualizationTime[IO](List(i), t) *> IO.println("Sent")).runAsync
             )
             .getOrEmpty
-        }
+        })
 
         React.Fragment(
           props.renderInTitle(
@@ -184,7 +186,7 @@ object AsterismEditor {
             Form(size = Small)(
               ExploreStyles.Compact,
               ExploreStyles.ObsInstantTileTitle,
-              VizTimeEditor(vizTime)
+              potRender[View[Option[Instant]]](VizTimeEditor.apply)(vizTime)
             )
           ),
           TargetTable(
@@ -230,7 +232,7 @@ object AsterismEditor {
                         props.userId,
                         targetId,
                         targetView.zoom(TargetWithId.target).unsafeNarrow[Target.Sidereal],
-                        props.vizTime.get,
+                        props.potVizTime.toOption.flatMap(_.get),
                         props.obsConf.get,
                         props.scienceMode,
                         props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),

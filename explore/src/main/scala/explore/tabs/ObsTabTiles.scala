@@ -125,10 +125,10 @@ object ObsTabTiles {
         ObsEditQuery
           .query(props.obsId)
           .map(
-            (ObsEditQuery.Data.observation.get _)
-              .andThen(
-                _.toRight(new Exception(s"Observation [${props.obsId}] not found")).toTry.toPot
-              )
+            (ObsEditQuery.Data.observation.get _).andThen(_.get)
+            // .andThen(
+            //   _.toRight(new Exception(s"Observation [${props.obsId}] not found")).toTry
+            // )
           )
           .reRunOnResourceSignals(ObservationEditSubscription.subscribe[IO](props.obsId))
       }
@@ -157,40 +157,44 @@ object ObsTabTiles {
       //   println(s"new value $vizTimeValue")
       //   vt.set(vizTimeValue)
       // }
-      .useStateView(none[Instant])
-      .useEffectWithDepsBy((_, obsViewPot, _) => obsViewPot) { (_, _, vizTimeView) => obsViewPot =>
-        val m: Int                        = obsViewPot
-        obsViewPot.map(_.
-        val vizTimeValue: Option[Instant] =
-          obsViewPot.fold(_ => none, _ => none, v => v.get.map(_.visualizationTime))
-        vizTimeView.set(vizTimeValue)
-      }
-      .render { (props, obsViewPot, vizTimeView) =>
-        implicit val ctx = props.ctx
+      // .useStateView(none[Instant])
+      // .useEffectWithDepsBy((_, obsViewPot) => obsViewPot) { (_, _, vizTimeView) => obsViewPot =>
+      //   val m: Int                        = obsViewPot
+      //   obsViewPot.map(_.
+      //   val vizTimeValue: Option[Instant] =
+      //     obsViewPot.fold(_ => none, _ => none, v => v.get.map(_.visualizationTime))
+      //   vizTimeView.set(vizTimeValue)
+      // }
+      .render { (props, obsView) =>
+        implicit val ctx                  = props.ctx
+        val i: Pot[View[ObservationData]] = obsView
 
-        val obsView: Pot[View[ObservationData]] =
-          obsViewPot
-            .flatMap(view =>
-              view.get.map(obs =>
-                view.zoom(_ => obs)(mod => _.map(mod)).withOnMod(i => Callback.log(s"change $i"))
-              )
-            )
+        // val obsView: Pot[View[ObservationData]] =
+        //   obsViewPot
+        //     .flatMap(view =>
+        //       view.get.map(obs =>
+        //         view.zoom(_ => obs)(mod => _.map(mod)).withOnMod(i => Callback.log(s"change $i"))
+        //       )
+        //     )
 
-        val scienceMode: Option[ScienceMode] = obsView.map(_.get.scienceMode).toOption.flatten
+        val scienceMode: Option[ScienceMode] =
+          obsView.toOption.flatMap(_.get.scienceMode)
+        // val scienceMode: Option[ScienceMode] =
+        //   obsView.toOptiomap(_.get.flatMap(_.scienceMode)) // .toOption.flatten
 
-        val vizTimeL: ObservationData => Option[Instant] = ObservationData.visualizationTime.get
-
-        def modVizTime(
-          mod: Option[Instant] => Option[Instant]
-        ): ObservationData => ObservationData = od => {
-          println(s"MM ${od.visualizationTime}")
-          println(mod)
-          println(s"MM ${mod(od.visualizationTime)}")
-          println(s"MM2 ${ObservationData.visualizationTime.modify(mod)(od).visualizationTime}")
-          ObservationData.visualizationTime.modify(mod)(od)
-          od
-        }
-
+        // val vizTimeL: ObservationData => Option[Instant] = ObservationData.visualizationTime.get
+        //
+        // def modVizTime(
+        //   mod: Option[Instant] => Option[Instant]
+        // ): ObservationData => ObservationData = od => {
+        //   println(s"MM ${od.visualizationTime}")
+        //   println(mod)
+        //   println(s"MM ${mod(od.visualizationTime)}")
+        //   println(s"MM2 ${ObservationData.visualizationTime.modify(mod)(od).visualizationTime}")
+        //   ObservationData.visualizationTime.modify(mod)(od)
+        //   od
+        // }
+        //
         // val vizTimeView: Pot[View[Option[Instant]]] = obsView
         //   .map { r =>
         //     r.value
@@ -211,20 +215,31 @@ object ObsTabTiles {
         // val vizTimeView: View[Option[Instant]] =
         //   View(vizTime, (mod, _) => Callback.log(s"A ${mod(vizTime)}"))
 
+        val vizTimeView: Pot[View[Option[Instant]]] =
+          obsView.map(_.zoom(ObservationData.visualizationTime))
+
+        // val vizTimeView: View[Option[Instant]] =
         val potAsterismMode: Pot[(View[Option[Asterism]], Option[ScienceMode])] =
-          obsView.map(rv =>
-            (rv.value
-               .zoom(
-                 ObservationData.targetEnvironment
-                   .andThen(ObservationData.TargetEnvironment.asterism)
-               )
-               .zoom(Asterism.fromTargetsList.asLens)
-               .reuseByValue,
-             scienceMode
-             // rv.value.zoom(vizTime)(modVizTime).reuseByValue.withOnMod(t => Callback.log(s"B $t"))
-             // rv.value.zoom(ObservationData.visualizationTime).withOnMod(t => Callback.log(s"B $t"))
+          obsView.map(v =>
+            (
+              v.zoom(
+                ObservationData.targetEnvironment
+                  .andThen(ObservationData.TargetEnvironment.asterism)
+              ).zoom(Asterism.fromTargetsList.asLens),
+              scienceMode
             )
           )
+        // obsView.map(rv =>
+        //   (rv.zoom(
+        //      ObservationData.targetEnvironment
+        //        .andThen(ObservationData.TargetEnvironment.asterism)
+        //    ).zoom(Asterism.fromTargetsList.asLens)
+        //      .reuseByValue,
+        //    scienceMode
+        //    // rv.value.zoom(vizTime)(modVizTime).reuseByValue.withOnMod(t => Callback.log(s"B $t"))
+        //    // rv.value.zoom(ObservationData.visualizationTime).withOnMod(t => Callback.log(s"B $t"))
+        //   )
+        // )
 
         // val asterismView = obsView.map(rv =>
         //   (rv.value

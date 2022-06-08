@@ -34,7 +34,7 @@ object AsterismEditorTile {
     programId:       Program.Id,
     obsId:           ObsIdSet,
     potAsterismMode: Pot[(View[Option[Asterism]], Option[ScienceMode])],
-    potVizTime:      View[Option[Instant]],
+    potVizTime:      Pot[View[Option[Instant]]],
     obsConf:         ViewOpt[ObsConfiguration],
     currentTarget:   Option[Target.Id],
     setTarget:       (Option[Target.Id], SetRouteVia) => Callback,
