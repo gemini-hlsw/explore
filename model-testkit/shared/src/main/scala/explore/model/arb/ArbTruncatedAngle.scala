@@ -3,24 +3,23 @@
 
 package explore.model.arb
 
-import explore.model.TruncatedPA
+import explore.model.TruncatedAngle
 import lucuma.core.math.arb.ArbAngle._
 import lucuma.core.math.Angle
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Cogen
 
-trait ArbTruncatedPA {
+trait ArbTruncatedAngle {
 
-  implicit val truncatedPAArb = Arbitrary[TruncatedPA] {
+  implicit val TruncatedAngleArb = Arbitrary[TruncatedAngle] {
     for {
       a <- arbitrary[Angle]
-    } yield TruncatedPA(a)
+    } yield TruncatedAngle(a)
   }
 
-  implicit def truncatedPACogen: Cogen[TruncatedPA] =
+  implicit def TruncatedAngleCogen: Cogen[TruncatedAngle] =
     Cogen[Angle].contramap(_.angle)
-
 }
 
-object ArbTruncatedPA extends ArbTruncatedPA
+object ArbTruncatedAngle extends ArbTruncatedAngle

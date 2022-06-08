@@ -18,6 +18,9 @@ import monocle.Optional
 import monocle._
 
 import scala.collection.immutable.SortedMap
+import lucuma.core.optics.SplitEpi
+import explore.model.TruncatedAngle
+import lucuma.core.math.Angle
 
 /**
  * Contains a set of useful optics to explore the model
@@ -54,6 +57,8 @@ trait ModelOptics {
         .orElse(SourceProfile.surfaceBrightnesses.getOption(sourceProfile))
     }
 
+  val angleTruncatedAngleSplitEpi: SplitEpi[Angle, TruncatedAngle] =
+    SplitEpi[Angle, TruncatedAngle](TruncatedAngle(_), _.angle)
 }
 
 object ModelOptics extends ModelOptics

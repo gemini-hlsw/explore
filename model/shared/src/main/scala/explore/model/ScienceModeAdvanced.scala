@@ -13,6 +13,9 @@ import monocle.Focus
 import monocle.Lens
 import monocle.Prism
 import monocle.macros.GenPrism
+import eu.timepit.refined.cats._
+import io.circe.refined._
+import cats.data.NonEmptyList
 
 sealed trait ScienceModeAdvanced extends Product with Serializable
 
@@ -33,13 +36,13 @@ object ScienceModeAdvanced {
     explicitAmpReadMode:       Option[GmosAmpReadMode],
     explicitAmpGain:           Option[GmosAmpGain],
     explicitRoi:               Option[GmosRoi],
-    explicitWavelengthDithers: List[Int],
-    explicitSpatialOffsets:    List[Offset.Q]
+    explicitWavelengthDithers: Option[NonEmptyList[DitherNanoMeters]],
+    explicitSpatialOffsets:    Option[NonEmptyList[Offset.Q]]
   ) extends ScienceModeAdvanced
 
   object GmosNorthLongSlit {
     lazy val Empty: GmosNorthLongSlit =
-      GmosNorthLongSlit(none, none, none, none, none, none, none, none, List.empty, List.empty)
+      GmosNorthLongSlit(none, none, none, none, none, none, none, none, none, none)
 
     implicit val gmosNLongSlitEq: Eq[GmosNorthLongSlit] =
       Eq.by(x =>
@@ -68,13 +71,9 @@ object ScienceModeAdvanced {
           explicitAmpGain           <- c.downField("explicitAmpGain").as[Option[GmosAmpGain]]
           explicitRoi               <- c.downField("explicitRoi").as[Option[GmosRoi]]
           explicitWavelengthDithers <-
-            c.downField("explicitWavelengthDithers")
-              .as[Option[List[Int]]]
-              .map(_.getOrElse(List.empty))
+            c.downField("explicitWavelengthDithers").as[Option[NonEmptyList[DitherNanoMeters]]]
           explicitSpatialOffsets    <-
-            c.downField("explicitSpatialOffsets")
-              .as[Option[List[Offset.Q]]]
-              .map(_.getOrElse(List.empty))
+            c.downField("explicitSpatialOffsets").as[Option[NonEmptyList[Offset.Q]]]
         } yield GmosNorthLongSlit(
           overrideGrating,
           overrideFilter,
@@ -113,10 +112,10 @@ object ScienceModeAdvanced {
     val explicitRoi: Lens[GmosNorthLongSlit, Option[GmosRoi]] =
       Focus[GmosNorthLongSlit](_.explicitRoi)
 
-    val explicitWavelengthDithers: Lens[GmosNorthLongSlit, List[Int]] =
+    val explicitWavelengthDithers: Lens[GmosNorthLongSlit, Option[NonEmptyList[DitherNanoMeters]]] =
       Focus[GmosNorthLongSlit](_.explicitWavelengthDithers)
 
-    val explicitSpatialOffsets: Lens[GmosNorthLongSlit, List[Offset.Q]] =
+    val explicitSpatialOffsets: Lens[GmosNorthLongSlit, Option[NonEmptyList[Offset.Q]]] =
       Focus[GmosNorthLongSlit](_.explicitSpatialOffsets)
   }
 
@@ -129,13 +128,13 @@ object ScienceModeAdvanced {
     explicitAmpReadMode:       Option[GmosAmpReadMode],
     explicitAmpGain:           Option[GmosAmpGain],
     explicitRoi:               Option[GmosRoi],
-    explicitWavelengthDithers: List[Int],
-    explicitSpatialOffsets:    List[Offset.Q]
+    explicitWavelengthDithers: Option[NonEmptyList[DitherNanoMeters]],
+    explicitSpatialOffsets:    Option[NonEmptyList[Offset.Q]]
   ) extends ScienceModeAdvanced
 
   object GmosSouthLongSlit {
     lazy val Empty: GmosSouthLongSlit =
-      GmosSouthLongSlit(none, none, none, none, none, none, none, none, List.empty, List.empty)
+      GmosSouthLongSlit(none, none, none, none, none, none, none, none, none, none)
 
     implicit val gmosSLongSlitEq: Eq[GmosSouthLongSlit] =
       Eq.by(x =>
@@ -164,13 +163,9 @@ object ScienceModeAdvanced {
           explicitAmpGain           <- c.downField("explicitAmpGain").as[Option[GmosAmpGain]]
           explicitRoi               <- c.downField("explicitRoi").as[Option[GmosRoi]]
           explicitWavelengthDithers <-
-            c.downField("explicitWavelengthDithers")
-              .as[Option[List[Int]]]
-              .map(_.getOrElse(List.empty))
+            c.downField("explicitWavelengthDithers").as[Option[NonEmptyList[DitherNanoMeters]]]
           explicitSpatialOffsets    <-
-            c.downField("explicitSpatialOffsets")
-              .as[Option[List[Offset.Q]]]
-              .map(_.getOrElse(List.empty))
+            c.downField("explicitSpatialOffsets").as[Option[NonEmptyList[Offset.Q]]]
         } yield GmosSouthLongSlit(
           overrideGrating,
           overrideFilter,
@@ -209,10 +204,10 @@ object ScienceModeAdvanced {
     val explicitRoi: Lens[GmosSouthLongSlit, Option[GmosRoi]] =
       Focus[GmosSouthLongSlit](_.explicitRoi)
 
-    val explicitWavelengthDithers: Lens[GmosSouthLongSlit, List[Int]] =
+    val explicitWavelengthDithers: Lens[GmosSouthLongSlit, Option[NonEmptyList[DitherNanoMeters]]] =
       Focus[GmosSouthLongSlit](_.explicitWavelengthDithers)
 
-    val explicitSpatialOffsets: Lens[GmosSouthLongSlit, List[Offset.Q]] =
+    val explicitSpatialOffsets: Lens[GmosSouthLongSlit, Option[NonEmptyList[Offset.Q]]] =
       Focus[GmosSouthLongSlit](_.explicitSpatialOffsets)
   }
 

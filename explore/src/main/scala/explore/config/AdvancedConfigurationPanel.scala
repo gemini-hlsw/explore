@@ -3,9 +3,9 @@
 
 package explore.config
 
+import explore.model.validators._
 import crystal.react.View
 import crystal.react.reuse._
-import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.HelpIcon
@@ -30,8 +30,15 @@ import react.semanticui.collections.form.Form
 import react.semanticui.elements.button.Button
 import react.semanticui.shorthand._
 import react.semanticui.sizes._
+import explore.model.DitherNanoMeters
 
 import scala.scalajs.js.JSConverters._
+import explore.targeteditor.InputWithUnits
+import eu.timepit.refined.auto._
+import eu.timepit.refined.cats._
+import lucuma.ui.optics.ChangeAuditor
+import cats.data.NonEmptyList
+import lucuma.core.math.Offset
 
 sealed trait AdvancedConfigurationPanel[T <: ScienceModeAdvanced, S <: ScienceModeBasic] {
   val obsId: Observation.Id
@@ -66,6 +73,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
   @inline protected val explicitReadMode: Lens[T, Option[ReadMode]]
   @inline protected val explicitGain: Lens[T, Option[Gain]]
   @inline protected val explicitRoi: Lens[T, Option[Roi]]
+  @inline protected val explicitWavelengthDithers: Lens[T, Option[NonEmptyList[DitherNanoMeters]]]
+  @inline protected val explicitSpatialOffsets: Lens[T, Option[NonEmptyList[Offset.Q]]]
 
   @inline protected val gratingLens: Lens[S, Grating]
   @inline protected val filterLens: Lens[S, Option[Filter]]
@@ -82,6 +91,12 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
       { case (r, g) => s"${r.longName}, ${g.shortName} Gain" },
       { case (r, g) => s"${r.longName}, ${g.longName} Gain" }
     )
+
+  val dithersChangeAuditor: ChangeAuditor[Option[NonEmptyList[DitherNanoMeters]]] =
+    ChangeAuditor.bigDecimal(3, 1).as[DitherNanoMeters].toSequence[NonEmptyList]().optional
+
+  val offsetsChangeAuditor: ChangeAuditor[Option[NonEmptyList[Offset.Q]]] =
+    ChangeAuditor.bigDecimal(3, 2).as[Offset.Q].toSequence[NonEmptyList]().optional
 
   val component =
     ScalaFnComponent
@@ -142,6 +157,22 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             )
           ),
           <.div(ExploreStyles.ExploreForm, ExploreStyles.AdvancedConfigurationCol3)(
+            <.label("λ Dithers", HelpIcon("configuration/lambda-dithers.md")),
+            InputWithUnits(
+              id = "dithers",
+              value = props.scienceModeAdvanced.zoom(explicitWavelengthDithers),
+              validFormat = dithersValidFormat,
+              changeAuditor = dithersChangeAuditor,
+              units = "nm"
+            ),
+            <.label("Spatial Offsets", HelpIcon("configuration/spatial-offsets.md")),
+            InputWithUnits(
+              id = "offsets",
+              value = props.scienceModeAdvanced.zoom(explicitSpatialOffsets),
+              validFormat = offsetQNELValidFormat,
+              changeAuditor = offsetsChangeAuditor,
+              units = "nm"
+            )
           ),
           <.div(ExploreStyles.AdvancedConfigurationButtons)(
             SequenceEditorPopup(
@@ -235,10 +266,15 @@ object AdvancedConfigurationPanel {
       ScienceModeAdvanced.GmosNorthLongSlit.explicitAmpGain
     @inline protected val explicitRoi                       =
       ScienceModeAdvanced.GmosNorthLongSlit.explicitRoi
+    @inline protected val explicitWavelengthDithers         =
+      ScienceModeAdvanced.GmosNorthLongSlit.explicitWavelengthDithers
+    @inline protected val explicitSpatialOffsets            =
+      ScienceModeAdvanced.GmosNorthLongSlit.explicitSpatialOffsets
 
     @inline protected val gratingLens = ScienceModeBasic.GmosNorthLongSlit.grating
     @inline protected val filterLens  = ScienceModeBasic.GmosNorthLongSlit.filter
     @inline protected val fpuLens     = ScienceModeBasic.GmosNorthLongSlit.fpu
+
   }
 
   // Gmos South Long Slit
@@ -284,6 +320,10 @@ object AdvancedConfigurationPanel {
       ScienceModeAdvanced.GmosSouthLongSlit.explicitAmpGain
     @inline protected val explicitRoi                       =
       ScienceModeAdvanced.GmosSouthLongSlit.explicitRoi
+    @inline protected val explicitWavelengthDithers         =
+      ScienceModeAdvanced.GmosSouthLongSlit.explicitWavelengthDithers
+    @inline protected val explicitSpatialOffsets            =
+      ScienceModeAdvanced.GmosSouthLongSlit.explicitSpatialOffsets
 
     @inline protected val gratingLens = ScienceModeBasic.GmosSouthLongSlit.grating
     @inline protected val filterLens  = ScienceModeBasic.GmosSouthLongSlit.filter

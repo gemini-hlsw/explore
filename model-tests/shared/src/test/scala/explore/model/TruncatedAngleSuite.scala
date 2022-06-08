@@ -4,10 +4,10 @@
 package explore.model
 
 import cats.kernel.laws.discipline.EqTests
-import explore.model.TruncatedPA
-import explore.model.arb.ArbTruncatedPA._
+import explore.model.TruncatedAngle
+import explore.model.arb.ArbTruncatedAngle._
 import munit.DisciplineSuite
 
-class TruncatedPASuite extends DisciplineSuite {
-  checkAll("Eq[TruncatedPA]", EqTests[TruncatedPA].eqv)
+class TruncatedAngleSuite extends DisciplineSuite {
+  checkAll("Eq[TruncatedAngle]", EqTests[TruncatedAngle].eqv)
 }
