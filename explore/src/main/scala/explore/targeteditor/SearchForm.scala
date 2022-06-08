@@ -3,9 +3,6 @@
 
 package explore.targeteditor
 
-import cats.data.Validated.Invalid
-import cats.data.Validated.Valid
-import cats.data.ValidatedNec
 import cats.syntax.all._
 import crystal.react.View
 import eu.timepit.refined.auto._
@@ -32,7 +29,7 @@ import scalajs.js.JSConverters._
 
 final case class SearchForm(
   id:          Target.Id,
-  targetView:  View[Target.Sidereal],
+  targetView:  View[NonEmptyString],
   name:        NonEmptyString,
   searching:   View[Set[Target.Id]],
   searchAndGo: SearchCallback => Callback
@@ -116,18 +113,13 @@ object SearchForm {
         <.label("Name", HelpIcon("target/main/search-target.md"), ExploreStyles.SkipToNext),
         FormInputEV(
           id = "search",
-          value = View.fromState($).zoom(State.searchTerm),
+          value = View.fromState($).zoom(State.searchTerm).withOnMod(props.targetView.set),
           validFormat = ValidFormatInput.nonEmptyValidFormat,
           error = state.searchError.orUndefined,
           loading = disabled,
           disabled = disabled,
           errorClazz = ExploreStyles.InputErrorTooltipBelow,
           errorPointing = LabelPointing.Above,
-          onBlur = (r: ValidatedNec[NonEmptyString, NonEmptyString]) =>
-            r match {
-              case Valid(name)   => props.targetView.zoom(Target.Sidereal.name).set(name)
-              case Invalid(name) => Callback.log(name)
-            },
           onTextChange = _ => $.setStateL(State.searchError)(none),
           onValidChange = valid => $.setStateL(State.searchEnabled)(valid),
           icon = searchIcon
