@@ -4,7 +4,6 @@
 package explore.model.arb
 
 import explore.model.ObsConfiguration
-import lucuma.core.arb.ArbTime._
 import lucuma.core.model.PosAngle
 import lucuma.core.model.arb.ArbPosAngle._
 import lucuma.core.util.arb.ArbEnumerated._
@@ -12,21 +11,17 @@ import lucuma.core.util.arb.ArbGid._
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Cogen
-import org.scalacheck.Cogen._
-
-import java.time.Instant
 
 trait ArbObsConfiguration {
 
   implicit val obsConfigurationArb = Arbitrary[ObsConfiguration] {
     for {
       pa <- arbitrary[PosAngle]
-      ot <- arbitrary[Instant]
-    } yield ObsConfiguration(pa, ot)
+    } yield ObsConfiguration(pa)
   }
 
   implicit def obsConfigurationCogen: Cogen[ObsConfiguration] =
-    Cogen[(PosAngle, Instant)].contramap(x => (x.posAngle, x.obsInstant))
+    Cogen[PosAngle].contramap(_.posAngle)
 }
 
 object ArbObsConfiguration extends ArbObsConfiguration

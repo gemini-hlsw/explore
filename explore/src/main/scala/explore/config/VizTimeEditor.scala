@@ -76,7 +76,6 @@ object VizTimeEditor {
         Datepicker(onChange =
           (newValue, _) =>
             newValue.fromDatePickerToInstantOpt.foldMap { i =>
-              println(s"set $i")
               p.instant.set(i.some)
             }
         )

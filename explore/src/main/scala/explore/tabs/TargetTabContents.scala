@@ -64,7 +64,6 @@ import java.time.Instant
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._
-import explore.common.ObsQueries
 
 final case class TargetTabContents(
   userId:            Option[User.Id],
@@ -351,12 +350,6 @@ object TargetTabContents {
       val vizTimeView: View[Option[Instant]] =
         asterismGroupsWithObs
           .zoom(vizTimeLens)(modVizTime)
-          // .withOnMod { t =>
-          //   println("On modd")
-          //   idsToEdit.single
-          //     .map(i => ObsQueries.updateVisualizationTime[IO](List(i), t).runAsync)
-          //     .getOrEmpty
-          // }
 
       val title = idsToEdit.single match {
         case Some(id) => s"Observation $id"

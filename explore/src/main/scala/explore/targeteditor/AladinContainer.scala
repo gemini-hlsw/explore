@@ -37,8 +37,8 @@ import react.resizeDetector.hooks._
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
 
-import java.time.LocalDate
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import scala.concurrent.duration._
 

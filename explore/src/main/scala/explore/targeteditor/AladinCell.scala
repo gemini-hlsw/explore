@@ -57,8 +57,8 @@ import react.semanticui.elements.button.Button
 import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.sizes._
 
-import scala.concurrent.duration._
 import java.time.Instant
+import scala.concurrent.duration._
 
 final case class AladinCell(
   uid:              User.Id,

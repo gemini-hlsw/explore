@@ -7,7 +7,6 @@ import cats.data.NonEmptyChain
 import cats.data.Validated
 import crystal.react._
 import eu.timepit.refined.auto._
-// import explore.common.ObsEditQueries._
 import explore.common.ObsQueries._
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles

@@ -12,9 +12,10 @@ import crystal.react.hooks._
 import crystal.react.implicits._
 import explore.Icons
 import explore.common.AsterismQueries
-import explore.config.VizTimeEditor
+import explore.common.ObsQueries
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
+import explore.config.VizTimeEditor
 import explore.implicits._
 import explore.model.Asterism
 import explore.model.ObsConfiguration
@@ -43,8 +44,8 @@ import react.semanticui.elements.button._
 import react.semanticui.modules.checkbox._
 import react.semanticui.shorthand._
 import react.semanticui.sizes._
+
 import java.time.Instant
-import explore.common.ObsQueries
 
 final case class AsterismEditor(
   userId:           User.Id,
@@ -142,14 +143,7 @@ object AsterismEditor {
 
         // Save the time here. this works for the obs and target tabs
         val vizTime = props.potVizTime.map(_.withOnMod { t =>
-          println(s"On modd $t")
-          println(props.obsIds.single)
-          props.obsIds.single
-            .map(i =>
-              Callback.log(s"TODO $i") *>
-                (ObsQueries.updateVisualizationTime[IO](List(i), t) *> IO.println("Sent")).runAsync
-            )
-            .getOrEmpty
+          ObsQueries.updateVisualizationTime[IO](props.obsIds.toList, t).runAsync
         })
 
         React.Fragment(

@@ -50,6 +50,7 @@ import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.label.LabelPointing
 import react.semanticui.sizes.Small
+
 import java.time.Instant
 
 final case class SearchCallback(
