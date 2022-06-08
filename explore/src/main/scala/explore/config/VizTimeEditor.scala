@@ -75,8 +75,9 @@ object VizTimeEditor {
         <.label("Observation time", HelpIcon("configuration/obstime.md")),
         Datepicker(onChange =
           (newValue, _) =>
-            newValue.fromDatePickerToInstantOpt.foldMap { a =>
-              p.instant.set(a.some)
+            newValue.fromDatePickerToInstantOpt.foldMap { i =>
+              println(s"set $i")
+              p.instant.set(i.some)
             }
         )
           .showTimeInput(true)

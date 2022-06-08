@@ -132,17 +132,86 @@ object ObsTabTiles {
           )
           .reRunOnResourceSignals(ObservationEditSubscription.subscribe[IO](props.obsId))
       }
-      .render { (props, obsViewPot) =>
+      // .useStateViewBy { (_, obsViewPot) =>
+      //   val obsView: Pot[View[ObservationData]] =
+      //     obsViewPot
+      //       .flatMap(view =>
+      //         view.get.map(obs =>
+      //           view.zoom(_ => obs)(mod => _.map(mod)).withOnMod(i => Callback.log(s"change $i"))
+      //         )
+      //       )
+      //   val vizTimeValue: Option[Instant]       =
+      //     obsView.fold(_ => none, _ => none, v => v.get.visualizationTime)
+      //   vizTimeValue
+      // }
+      // .useEffectWithDepsBy((_, obsViewPot, _) => obsViewPot) { (_, _, vt) => obsViewPot =>
+      //   val obsView: Pot[View[ObservationData]] =
+      //     obsViewPot
+      //       .flatMap(view =>
+      //         view.get.map(obs =>
+      //           view.zoom(_ => obs)(mod => _.map(mod)).withOnMod(i => Callback.log(s"change $i"))
+      //         )
+      //       )
+      //   val vizTimeValue: Option[Instant]       =
+      //     obsView.fold(_ => none, _ => none, v => v.get.visualizationTime)
+      //   println(s"new value $vizTimeValue")
+      //   vt.set(vizTimeValue)
+      // }
+      .useStateView(none[Instant])
+      .useEffectWithDepsBy((_, obsViewPot, _) => obsViewPot) { (_, _, vizTimeView) => obsViewPot =>
+        val m: Int                        = obsViewPot
+        obsViewPot.map(_.
+        val vizTimeValue: Option[Instant] =
+          obsViewPot.fold(_ => none, _ => none, v => v.get.map(_.visualizationTime))
+        vizTimeView.set(vizTimeValue)
+      }
+      .render { (props, obsViewPot, vizTimeView) =>
         implicit val ctx = props.ctx
 
         val obsView: Pot[View[ObservationData]] =
           obsViewPot
-            .flatMap(view => view.get.map(obs => view.zoom(_ => obs)(mod => _.map(mod))))
+            .flatMap(view =>
+              view.get.map(obs =>
+                view.zoom(_ => obs)(mod => _.map(mod)).withOnMod(i => Callback.log(s"change $i"))
+              )
+            )
 
         val scienceMode: Option[ScienceMode] = obsView.map(_.get.scienceMode).toOption.flatten
 
-        val potAsterismMode
-          : Pot[(View[Option[Asterism]], Option[ScienceMode], View[Option[Instant]])] =
+        val vizTimeL: ObservationData => Option[Instant] = ObservationData.visualizationTime.get
+
+        def modVizTime(
+          mod: Option[Instant] => Option[Instant]
+        ): ObservationData => ObservationData = od => {
+          println(s"MM ${od.visualizationTime}")
+          println(mod)
+          println(s"MM ${mod(od.visualizationTime)}")
+          println(s"MM2 ${ObservationData.visualizationTime.modify(mod)(od).visualizationTime}")
+          ObservationData.visualizationTime.modify(mod)(od)
+          od
+        }
+
+        // val vizTimeView: Pot[View[Option[Instant]]] = obsView
+        //   .map { r =>
+        //     r.value
+        //       .zoom(ObservationData.visualizationTime)
+        //       .reuseByValue
+        //       .withOnMod { t =>
+        //         println(s"SSennd $t")
+        //         ObsQueries.updateVisualizationTime[IO](List(props.obsId), t).runAsync
+        //       }
+        //   }
+
+        // obsView.z
+        // asterismGroupsWithObs
+        //   .zoom(vizTimeLens)(modVizTime)
+        // val vizTime: Option[Instant] =
+        //   obsView.fold(_ => none, _ => none, v => { println(v.get); v.get.visualizationTime })
+
+        // val vizTimeView: View[Option[Instant]] =
+        //   View(vizTime, (mod, _) => Callback.log(s"A ${mod(vizTime)}"))
+
+        val potAsterismMode: Pot[(View[Option[Asterism]], Option[ScienceMode])] =
           obsView.map(rv =>
             (rv.value
                .zoom(
@@ -151,10 +220,24 @@ object ObsTabTiles {
                )
                .zoom(Asterism.fromTargetsList.asLens)
                .reuseByValue,
-             rv.get.scienceMode,
-             rv.zoom(ObservationData.visualizationTime)
+             scienceMode
+             // rv.value.zoom(vizTime)(modVizTime).reuseByValue.withOnMod(t => Callback.log(s"B $t"))
+             // rv.value.zoom(ObservationData.visualizationTime).withOnMod(t => Callback.log(s"B $t"))
             )
           )
+
+        // val asterismView = obsView.map(rv =>
+        //   (rv.value
+        //     .zoom(
+        //       ObservationData.targetEnvironment
+        //         .andThen(ObservationData.TargetEnvironment.asterism)
+        //     )
+        //     .zoom(Asterism.fromTargetsList.asLens)
+        //     .reuseByValue)
+        // )
+        //
+        // val scienceMode = obsView.map(_.get.scienceMode)
+        //
 
         val targetCoords: Option[(Target.Id, Coordinates)] =
           // try first the target from the url or else use the asterism base
@@ -208,6 +291,7 @@ object ObsTabTiles {
           props.programId,
           ObsIdSet.one(props.obsId),
           potAsterismMode,
+          vizTimeView,
           props.obsConf.asViewOpt,
           props.focusedTarget,
           Reuse(setCurrentTarget _)(props.programId, props.focusedObs),
@@ -251,11 +335,11 @@ object ObsTabTiles {
             props.defaultLayouts,
             l,
             List(
-              targetTile,
-              notesTile,
-              skyPlotTile,
-              constraintsTile,
-              configurationTile
+              targetTile
+              // notesTile,
+              // skyPlotTile,
+              // constraintsTile,
+              // configurationTile
             ),
             GridLayoutSection.ObservationsLayout,
             clazz = ExploreStyles.ObservationTiles.some

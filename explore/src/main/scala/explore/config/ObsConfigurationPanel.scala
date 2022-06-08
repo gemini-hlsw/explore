@@ -7,7 +7,7 @@ import cats.data.NonEmptyChain
 import cats.data.Validated
 import crystal.react._
 import eu.timepit.refined.auto._
-import explore.common.ObsEditQueries._
+// import explore.common.ObsEditQueries._
 import explore.common.ObsQueries._
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
@@ -34,11 +34,9 @@ import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.sizes._
 
-import java.time.Instant
-
 final case class ObsConfigurationPanel(
   obsId:            Observation.Id,
-  obsCtx:           UndoSetter[ObservationData],
+  obsCtx1:          UndoSetter[ObservationData],
   obsConf:          View[ObsConfiguration]
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[ObsConfigurationPanel](ObsConfigurationPanel.component)
@@ -79,15 +77,10 @@ object ObsConfigurationPanel {
     ScalaFnComponent
       .withHooks[Props]
       .render { props =>
-        implicit val ctx: AppContextIO = props.ctx
+        // implicit val ctx: AppContextIO = props.ctx
 
-        val obsUndoView: ObsUndoView = ObsUndoView(props.obsId, props.obsCtx)
-
-        val vizTime: View[Option[Instant]] =
-          obsUndoView(
-            ObservationData.visualizationTime,
-            a => (_ => a)
-          )
+        // Will be used for posAngle
+        // val obsUndoView: ObsUndoView = ObsUndoView(props.obsId, props.obsCtx)
 
         val posAngleOptionsView: View[PosAngleOptions] =
           props.obsConf.zoom(ObsConfiguration.posAngle.andThen(unsafePosOptionsLens))
@@ -138,8 +131,7 @@ object ObsConfigurationPanel {
               fixedView.mapValue(posAngleEditor),
               allowedFlipView.mapValue(posAngleEditor),
               parallacticOverrideView.mapValue(posAngleEditor)
-            ),
-            VizTimeEditor(vizTime)
+            )
           )
         )
       }

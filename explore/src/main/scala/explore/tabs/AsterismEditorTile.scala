@@ -33,7 +33,8 @@ object AsterismEditorTile {
     userId:          Option[User.Id],
     programId:       Program.Id,
     obsId:           ObsIdSet,
-    potAsterismMode: Pot[(View[Option[Asterism]], Option[ScienceMode], View[Option[Instant]])],
+    potAsterismMode: Pot[(View[Option[Asterism]], Option[ScienceMode])],
+    potVizTime:      View[Option[Instant]],
     obsConf:         ViewOpt[ObsConfiguration],
     currentTarget:   Option[Target.Id],
     setTarget:       (Option[Target.Id], SetRouteVia) => Callback,
@@ -51,16 +52,16 @@ object AsterismEditorTile {
       canMinimize = true,
       bodyClass = Some(ExploreStyles.TargetTileBody)
     )((renderInTitle: Tile.RenderInTitle) =>
-      potRender[(View[Option[Asterism]], Option[ScienceMode], View[Option[Instant]])] {
-        (asterismMode: (View[Option[Asterism]], Option[ScienceMode], View[Option[Instant]])) =>
-          val (asterism, scienceMode, vizTime) = asterismMode
+      potRender[(View[Option[Asterism]], Option[ScienceMode])] {
+        (asterismMode: (View[Option[Asterism]], Option[ScienceMode])) =>
+          val (asterism, scienceMode) = asterismMode
           userId.map(uid =>
             AsterismEditor(
               uid,
               programId,
               obsId,
               asterism,
-              vizTime,
+              potVizTime,
               scienceMode,
               obsConf,
               currentTarget,

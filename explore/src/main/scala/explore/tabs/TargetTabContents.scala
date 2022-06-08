@@ -333,8 +333,7 @@ object TargetTabContents {
 
       def modVizTime(
         mod: Option[Instant] => Option[Instant]
-      ): AsterismGroupsWithObs => AsterismGroupsWithObs = awgo => {
-        println("MODD VZ")
+      ): AsterismGroupsWithObs => AsterismGroupsWithObs = awgo =>
         idsToEdit.single
           .map(i =>
             AsterismGroupsWithObs.observations
@@ -343,7 +342,6 @@ object TargetTabContents {
               .modify(mod)(awgo)
           )
           .getOrElse(awgo)
-      }
 
       val asterismView: View[Option[Asterism]] =
         asterismGroupsWithObs
@@ -353,12 +351,12 @@ object TargetTabContents {
       val vizTimeView: View[Option[Instant]] =
         asterismGroupsWithObs
           .zoom(vizTimeLens)(modVizTime)
-      // .withOnMod { t =>
-      //   println("On modd")
-      //   idsToEdit.single
-      //     .map(i => ObsQueries.updateVisualizationTime[IO](List(i), t).runAsync)
-      //     .getOrEmpty
-      // }
+          .withOnMod { t =>
+            println("On modd")
+            idsToEdit.single
+              .map(i => ObsQueries.updateVisualizationTime[IO](List(i), t).runAsync)
+              .getOrEmpty
+          }
 
       val title = idsToEdit.single match {
         case Some(id) => s"Observation $id"
@@ -395,7 +393,8 @@ object TargetTabContents {
           props.userId,
           props.programId,
           idsToEdit,
-          Pot(asterismView, scienceMode, vizTimeView),
+          Pot(asterismView, scienceMode),
+          vizTimeView,
           obsConf.asViewOpt,
           props.focusedTarget,
           setCurrentTarget(props.programId, idsToEdit) _,

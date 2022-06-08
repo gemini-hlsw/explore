@@ -5,6 +5,7 @@ package explore.targeteditor
 
 import cats.effect.IO
 import cats.syntax.all._
+import crystal.Pot
 import crystal.react.View
 import crystal.react.ViewOpt
 import crystal.react.hooks._
@@ -25,6 +26,7 @@ import explore.model.reusability._
 import explore.optics._
 import explore.targets.TargetSelectionPopup
 import explore.undo.UndoStacks
+import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
@@ -142,9 +144,8 @@ object AsterismEditor {
           println(s"On modd $t")
           println(props.obsIds.single)
           props.obsIds.single
-            .map(i =>
-              Callback.log("TODO") *>
-                (ObsQueries.updateVisualizationTime[IO](List(i), t) *> IO.println("Sent")).runAsync
+            .map(i => Callback.log(s"TODO $i") // *>
+            // (ObsQueries.updateVisualizationTime[IO](List(i), t) *> IO.println("Sent")).runAsync
             )
             .getOrEmpty
         }
