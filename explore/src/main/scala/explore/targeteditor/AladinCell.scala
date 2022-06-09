@@ -261,7 +261,7 @@ object AladinCell extends ModelOptics {
             agsCandidatesView.mod(_.flip) *>
               prefsSetter(_.flip, identity)
 
-          val aladinKey = s"${props.target.get}"
+          val aladinKey = s"key-${props.target.get}"
 
           val renderCell: TargetVisualOptions => VdomNode = (t: TargetVisualOptions) =>
             AladinContainer(
