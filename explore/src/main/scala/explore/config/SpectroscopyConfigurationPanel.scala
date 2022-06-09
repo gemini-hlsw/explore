@@ -47,10 +47,8 @@ object SpectroscopyConfigurationPanel {
       val wvChangeAuditor = ChangeAuditor.fromFormat(formatMicron).decimal(3).optional
 
       val wvUnits =
-        <.span(
-          "μm ",
-          requiredForITC.unless(wv.get.isDefined)
-        )
+        <.span("μm ", requiredForITC.unless(wv.get.isDefined))
+
       ReactFragment(
         <.label("Wavelength", HelpIcon("configuration/wavelength.md"), ExploreStyles.SkipToNext),
         InputWithUnits(
@@ -82,7 +80,7 @@ object SpectroscopyConfigurationPanel {
           changeAuditor = ChangeAuditor.posBigDecimal().optional
         ),
         <.div(
-          ExploreStyles.SignalToNoiseAt,
+          ExploreStyles.InputWithLabel,
           requiredForITC.unless(signalToNoise.get.isDefined),
           <.label("at"),
           InputWithUnits(
@@ -118,7 +116,7 @@ object SpectroscopyConfigurationPanel {
           clearable = true
         ),
         <.div(
-          ExploreStyles.SignalToNoiseAt,
+          ExploreStyles.InputWithLabel,
           InputWithUnits(
             id = "spectroscopy-capabilities",
             clazz = Css.Empty,

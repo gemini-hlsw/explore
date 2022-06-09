@@ -57,12 +57,14 @@ import react.semanticui.elements.button.Button
 import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.sizes._
 
+import java.time.Instant
 import scala.concurrent.duration._
 
 final case class AladinCell(
   uid:              User.Id,
   tid:              Target.Id,
   obsConf:          Option[ObsConfiguration],
+  vizTime:          Option[Instant],
   scienceMode:      Option[ScienceMode],
   target:           View[SiderealTracking]
 )(implicit val ctx: AppContextIO)
@@ -120,11 +122,9 @@ object AladinCell extends ModelOptics {
         _.value
           .map(candidatesAwait =>
             candidatesAwait >>
-              ((props.target.get, props.obsConf) match {
-                case (tracking, Some(obsConf)) =>
-                  props.ctx.worker.postTransferrable(CatalogRequest(tracking, obsConf.obsInstant))
-                case _                         => IO.unit
-              })
+              props.ctx.worker.postTransferrable(
+                CatalogRequest(props.target.get, props.vizTime.getOrElse(Instant.now()))
+              )
           )
           .orEmpty
       )
@@ -267,6 +267,7 @@ object AladinCell extends ModelOptics {
             AladinContainer(
               props.target,
               props.obsConf,
+              props.vizTime,
               props.scienceMode,
               t,
               coordinatesSetter,

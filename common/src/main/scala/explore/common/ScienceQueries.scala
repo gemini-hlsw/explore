@@ -27,7 +27,8 @@ import monocle.Lens
 import queries.common.ObsQueriesGQL._
 
 object ScienceQueries {
-  case class UndoView(
+
+  case class ScienceRequirementsUndoView(
     obsId:                   Observation.Id,
     scienceRequirementsUndo: UndoSetter[ScienceRequirementsData]
   )(implicit ctx:            AppContextIO) {

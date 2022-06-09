@@ -6,8 +6,8 @@ package explore.model
 import cats.Eq
 import explore.common.AsterismQueries.AsterismGroupsWithObs
 import explore.common.ConstraintGroupQueries.ConstraintGroupList
+import explore.common.ObsQueries.ObservationData
 import explore.common.ObsQueries.ObservationList
-import explore.common.ObsQueries.ScienceData
 import explore.model.ObsIdSet
 import explore.undo.UndoStacks
 import lucuma.core.model.ConstraintSet
@@ -24,8 +24,8 @@ case class ModelUndoStacks[F[_]](
   forConstraintList:    UndoStacks[F, ConstraintGroupList] = UndoStacks.empty[F, ConstraintGroupList],
   forConstraintGroup:   Map[ObsIdSet, UndoStacks[F, ConstraintSet]] =
     Map.empty[ObsIdSet, UndoStacks[F, ConstraintSet]],
-  forScienceData:       Map[Observation.Id, UndoStacks[F, ScienceData]] =
-    Map.empty[Observation.Id, UndoStacks[F, ScienceData]]
+  forObservationData:   Map[Observation.Id, UndoStacks[F, ObservationData]] =
+    Map.empty[Observation.Id, UndoStacks[F, ObservationData]]
 )
 
 object ModelUndoStacks {
@@ -34,7 +34,7 @@ object ModelUndoStacks {
   def forSiderealTarget[F[_]]    = Focus[ModelUndoStacks[F]](_.forSiderealTarget)
   def forConstraintList[F[_]]    = Focus[ModelUndoStacks[F]](_.forConstraintList)
   def forConstraintGroup[F[_]]   = Focus[ModelUndoStacks[F]](_.forConstraintGroup)
-  def forScienceData[F[_]]       = Focus[ModelUndoStacks[F]](_.forScienceData)
+  def forObservationData[F[_]]   = Focus[ModelUndoStacks[F]](_.forObservationData)
 
   implicit def eqModelUndoStacks[F[_]]: Eq[ModelUndoStacks[F]] =
     Eq.by(u =>
@@ -43,7 +43,7 @@ object ModelUndoStacks {
        u.forSiderealTarget,
        u.forConstraintList,
        u.forConstraintGroup,
-       u.forScienceData
+       u.forObservationData
       )
     )
 }

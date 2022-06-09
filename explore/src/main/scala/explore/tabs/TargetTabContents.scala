@@ -323,10 +323,33 @@ object TargetTabContents {
         )
       }
 
+      val getVizTime: AsterismGroupsWithObs => Option[Instant] = a =>
+        for {
+          id <- idsToEdit.single
+          o  <- a.observations.get(id)
+          t  <- o.visualizationTime
+        } yield t
+
+      def modVizTime(
+        mod: Option[Instant] => Option[Instant]
+      ): AsterismGroupsWithObs => AsterismGroupsWithObs = awgo =>
+        idsToEdit.single
+          .map(i =>
+            AsterismGroupsWithObs.observations
+              .filterIndex((id: Observation.Id) => id === i)
+              .andThen(ObsSummaryWithConstraintsAndConf.visualizationTime)
+              .modify(mod)(awgo)
+          )
+          .getOrElse(awgo)
+
       val asterismView: View[Option[Asterism]] =
         asterismGroupsWithObs
           .withOnMod(onModAsterismsWithObs(groupIds, idsToEdit))
           .zoom(getAsterism)(modAsterism)
+
+      val vizTimeView: View[Option[Instant]] =
+        asterismGroupsWithObs
+          .zoom(getVizTime)(modVizTime)
 
       val title = idsToEdit.single match {
         case Some(id) => s"Observation $id"
@@ -344,7 +367,9 @@ object TargetTabContents {
             .zoom(AsterismGroupsWithObs.observations)
             .get
             .collect {
-              case (k, ObsSummaryWithConstraintsAndConf(_, _, _, _, _, _, Some(v))) if k === id => v
+              case (k, ObsSummaryWithConstraintsAndConf(_, _, _, _, _, _, Some(v), _))
+                  if k === id =>
+                v
             }
             .headOption
         case _        => None
@@ -362,6 +387,7 @@ object TargetTabContents {
           props.programId,
           idsToEdit,
           Pot(asterismView, scienceMode),
+          Pot(vizTimeView),
           obsConf.asViewOpt,
           props.focusedTarget,
           setCurrentTarget(props.programId, idsToEdit) _,
@@ -416,6 +442,7 @@ object TargetTabContents {
         props.userId,
         targetId,
         targetView,
+        none,
         props.targetsUndoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
         props.searching,
         title,
@@ -508,13 +535,6 @@ object TargetTabContents {
     }
   }
 
-  // DELETEME:
-  def firstIdSelected(props: Props): Option[Observation.Id] =
-    (props.focusedObsSet, props.focusedTarget) match {
-      case (a @ Some(_), _) => a.map(_.idSet.head)
-      case _                => none
-    }
-
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
@@ -535,7 +555,7 @@ object TargetTabContents {
       .useResizeDetector()
       // Initial target layout
       .useStateView(Pot.pending[LayoutsMap])
-      // Keep a record of the initial target layouut
+      // Keep a record of the initial target layout
       .useMemo(())(_ => defaultTargetLayouts)
       // Load the config from user prefrences
       .useEffectWithDepsBy((p, _, _, _, _) => p.userId) {
@@ -568,20 +588,8 @@ object TargetTabContents {
           }
       }
       .useSingleEffect(debounce = 1.second)
-      // Shared obs conf (posAngle/obsTime)
-      .useStateView(ObsConfiguration(PosAngle.Default, Instant.now))
-      // DELETEME: For demos read from local obs
-      .useEffectWithDepsBy((p, _, _, _, _, _, _) => (p.focusedObsSet, p.focusedTarget)) {
-        (p, _, _, _, _, _, obsConf) => _ =>
-          ExploreLocalPreferences
-            .loadPreferences[IO]
-            .flatMap { e =>
-              firstIdSelected(p)
-                .flatMap(o => e.obsConfigurations.get(o))
-                .map(obsConf.set(_).to[IO])
-                .getOrElse(IO.unit)
-            }
-      }
+      // Shared obs conf (posAngle)
+      .useStateView(ObsConfiguration(PosAngle.Default))
       .useStreamResourceViewOnMountBy { (props, _, _, _, _, _, _) =>
         implicit val ctx = props.ctx
 
@@ -615,14 +623,7 @@ object TargetTabContents {
                 layout,
                 resize,
                 debouncer,
-                obsConf // DELETEME
-                  .withOnMod(conf =>
-                    firstIdSelected(props)
-                      .map(id =>
-                        ExploreLocalPreferences.storeObsConfig[IO](id, conf).runAsyncAndForget
-                      )
-                      .getOrElse(Callback.empty)
-                  )
+                obsConf
               )
             )(asterismGroupsWithObs)
           ).withRef(resize.ref)

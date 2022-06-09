@@ -35,7 +35,7 @@ final case class ConfigurationPanel(
   title:            String,
   subtitle:         Option[NonEmptyString],
   obsConf:          View[ObsConfiguration],
-  scienceData:      UndoContext[ScienceData],
+  scienceData:      UndoContext[ObservationData],
   constraints:      ConstraintSet,
   itcTargets:       List[ITCTarget],
   renderInTitle:    Tile.RenderInTitle
@@ -55,7 +55,7 @@ object ConfigurationPanel {
         implicit val client = ctx.clients.odb // This shouldn't be necessary, but it seems to be
 
         val requirementsCtx: UndoSetter[ScienceRequirementsData] =
-          props.scienceData.zoom(ScienceData.requirements)
+          props.scienceData.zoom(scienceDataForObs.andThen(ScienceData.requirements))
 
         val modeAligner: Aligner[Option[model.ScienceMode], Input[ScienceModeInput]] =
           Aligner(
@@ -66,7 +66,7 @@ object ConfigurationPanel {
             ),
             (ObsQueriesGQL.EditObservationMutation.execute[IO] _).andThen(_.void)
           ).zoom(
-            ScienceData.mode,
+            scienceDataForObs.andThen(ScienceData.mode),
             EditObservationInput.patch.andThen(ObservationPropertiesInput.scienceMode).modify
           )
 
@@ -86,14 +86,17 @@ object ConfigurationPanel {
             <.div(ExploreStyles.TitleUndoButtons)(UndoButtons(props.scienceData))
           ),
           if (!showAdvanced.get)
-            BasicConfigurationPanel(
-              props.obsId,
-              props.obsConf,
-              requirementsCtx,
-              optModeView,
-              props.constraints,
-              props.itcTargets,
-              showAdvancedCB
+            <.div(ExploreStyles.BasicConfigurationGrid)(
+              ObsConfigurationPanel(props.obsId, props.scienceData, props.obsConf),
+              BasicConfigurationPanel(
+                props.obsId,
+                props.obsConf,
+                requirementsCtx,
+                optModeView,
+                props.constraints,
+                props.itcTargets,
+                showAdvancedCB
+              )
             )
           else
             React.Fragment(

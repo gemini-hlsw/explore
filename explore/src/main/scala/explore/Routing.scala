@@ -95,9 +95,6 @@ object Routing {
 
   private def proposalTab(): VdomElement =
     <.div("Under construction")
-  // AppCtx.using { implicit ctx =>
-  // ProposalTabContents()
-  // }
 
   private def configurationsTab(page: Page): VdomElement =
     AppCtx.using { implicit ctx =>

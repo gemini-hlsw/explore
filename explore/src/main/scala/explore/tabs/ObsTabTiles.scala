@@ -6,7 +6,6 @@ package explore.tabs
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.Pot
-import crystal.implicits._
 import crystal.react._
 import crystal.react.hooks._
 import crystal.react.implicits._
@@ -28,7 +27,6 @@ import explore.model.TargetSummary
 import explore.model.display._
 import explore.model.enum.AppTab
 import explore.model.layout._
-import explore.model.reusability._
 import explore.optics._
 import explore.undo.UndoStacks
 import explore.utils._
@@ -48,6 +46,7 @@ import react.semanticui.addons.select.Select
 import react.semanticui.addons.select.Select.SelectItem
 import react.semanticui.modules.dropdown.Dropdown
 
+import java.time.Instant
 import scala.collection.immutable.SortedMap
 
 final case class ObsTabTiles(
@@ -125,31 +124,26 @@ object ObsTabTiles {
           .query(props.obsId)
           .map(
             (ObsEditQuery.Data.observation.get _)
-              .andThen(
-                _.toRight(new Exception(s"Observation [${props.obsId}] not found")).toTry.toPot
-              )
+              .andThen(_.getOrElse(throw new Exception(s"Observation [${props.obsId}] not found")))
           )
           .reRunOnResourceSignals(ObservationEditSubscription.subscribe[IO](props.obsId))
       }
-      .render { (props, obsViewPot) =>
-        implicit val ctx = props.ctx
+      .render { (props, obsView) =>
+        implicit val ctx                     = props.ctx
+        val scienceMode: Option[ScienceMode] =
+          obsView.toOption.flatMap(_.get.scienceMode)
 
-        val obsView: Pot[View[ObservationData]] =
-          obsViewPot
-            .flatMap(view => view.get.map(obs => view.zoom(_ => obs)(mod => _.map(mod))))
-
-        val scienceMode: Option[ScienceMode] = obsView.map(_.get.scienceMode).toOption.flatten
+        val vizTimeView: Pot[View[Option[Instant]]] =
+          obsView.map(_.zoom(ObservationData.visualizationTime))
 
         val potAsterismMode: Pot[(View[Option[Asterism]], Option[ScienceMode])] =
-          obsView.map(rv =>
-            (rv.value
-               .zoom(
-                 ObservationData.targetEnvironment
-                   .andThen(ObservationData.TargetEnvironment.asterism)
-               )
-               .zoom(Asterism.fromTargetsList.asLens)
-               .reuseByValue,
-             rv.get.scienceMode
+          obsView.map(v =>
+            (
+              v.zoom(
+                ObservationData.targetEnvironment
+                  .andThen(ObservationData.TargetEnvironment.asterism)
+              ).zoom(Asterism.fromTargetsList.asLens),
+              scienceMode
             )
           )
 
@@ -205,6 +199,7 @@ object ObsTabTiles {
           props.programId,
           ObsIdSet.one(props.obsId),
           potAsterismMode,
+          vizTimeView,
           props.obsConf.asViewOpt,
           props.focusedTarget,
           Reuse(setCurrentTarget _)(props.programId, props.focusedObs),
@@ -235,9 +230,9 @@ object ObsTabTiles {
           ConfigurationTile.configurationTile(
             props.obsId,
             props.obsConf,
-            obsView.map(obs => (obs.get.title, obs.get.subtitle, obs.zoom(scienceDataForObs))),
+            obsView.map(obs => (obs.get.title, obs.get.subtitle, obs)),
             props.undoStacks
-              .zoom(ModelUndoStacks.forScienceData[IO])
+              .zoom(ModelUndoStacks.forObservationData[IO])
               .zoom(atMapWithDefault(props.obsId, UndoStacks.empty))
           )
 
@@ -248,8 +243,8 @@ object ObsTabTiles {
             props.defaultLayouts,
             l,
             List(
-              targetTile,
               notesTile,
+              targetTile,
               skyPlotTile,
               constraintsTile,
               configurationTile

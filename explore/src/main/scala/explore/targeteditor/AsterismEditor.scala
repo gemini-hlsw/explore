@@ -5,15 +5,17 @@ package explore.targeteditor
 
 import cats.effect.IO
 import cats.syntax.all._
+import crystal.Pot
 import crystal.react.View
 import crystal.react.ViewOpt
 import crystal.react.hooks._
 import crystal.react.implicits._
 import explore.Icons
 import explore.common.AsterismQueries
+import explore.common.ObsQueries
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
-import explore.config.ObsTimeComponent
+import explore.config.VizTimeEditor
 import explore.implicits._
 import explore.model.Asterism
 import explore.model.ObsConfiguration
@@ -25,6 +27,7 @@ import explore.model.reusability._
 import explore.optics._
 import explore.targets.TargetSelectionPopup
 import explore.undo.UndoStacks
+import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
@@ -42,11 +45,14 @@ import react.semanticui.modules.checkbox._
 import react.semanticui.shorthand._
 import react.semanticui.sizes._
 
+import java.time.Instant
+
 final case class AsterismEditor(
   userId:           User.Id,
   programId:        Program.Id,
   obsIds:           ObsIdSet,
   asterism:         View[Option[Asterism]],
+  potVizTime:       Pot[View[Option[Instant]]],
   scienceMode:      Option[ScienceMode],
   obsConf:          ViewOpt[ObsConfiguration],
   currentTarget:    Option[Target.Id],
@@ -135,6 +141,11 @@ object AsterismEditor {
             }
           )
 
+        // Save the time here. this works for the obs and target tabs
+        val vizTime = props.potVizTime.map(_.withOnMod { t =>
+          ObsQueries.updateVisualizationTime[IO](props.obsIds.toList, t).runAsync
+        })
+
         React.Fragment(
           props.renderInTitle(
             TargetSelectionPopup(
@@ -169,7 +180,7 @@ object AsterismEditor {
             Form(size = Small)(
               ExploreStyles.Compact,
               ExploreStyles.ObsInstantTileTitle,
-              props.obsConf.zoom(ObsConfiguration.obsInstant).mapValue(ObsTimeComponent(_))
+              potRender[View[Option[Instant]]](VizTimeEditor.apply)(vizTime)
             )
           ),
           TargetTable(
@@ -215,6 +226,7 @@ object AsterismEditor {
                         props.userId,
                         targetId,
                         targetView.zoom(TargetWithId.target).unsafeNarrow[Target.Sidereal],
+                        props.potVizTime.toOption.flatMap(_.get),
                         props.obsConf.get,
                         props.scienceMode,
                         props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),

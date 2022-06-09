@@ -16,6 +16,7 @@ import monocle.Focus
 import org.typelevel.cats.time._
 
 import java.time.Duration
+import java.time.Instant
 
 trait ObsSummary {
   val id: Observation.Id
@@ -53,6 +54,10 @@ trait ObsWithConf extends ObsSummary {
     case Some(s @ ScienceMode.GmosSouthLongSlit(_, _)) => s"GMOS-S ${s.grating.shortName}"
     case _                                             => s"-"
   }
+}
+
+trait ObsWithVizTime extends ObsSummary {
+  def visualizationTime: Option[Instant]
 }
 
 trait ObsWithTitle extends ObsSummary {
@@ -97,6 +102,7 @@ case class ObsSummaryWithTitleAndConstraints(
       status,
       activeStatus,
       duration,
+      none,
       none
     )
 }
@@ -113,17 +119,19 @@ object ObsSummaryWithTitleAndConstraints {
 }
 
 case class ObsSummaryWithTitleConstraintsAndConf(
-  override val id:           Observation.Id,
-  override val title:        String,
-  override val subtitle:     Option[NonEmptyString],
-  override val constraints:  ConstraintsSummary,
-  override val status:       ObsStatus,
-  override val activeStatus: ObsActiveStatus,
-  override val duration:     Duration,
-  override val scienceMode:  Option[ScienceMode]
+  override val id:                Observation.Id,
+  override val title:             String,
+  override val subtitle:          Option[NonEmptyString],
+  override val constraints:       ConstraintsSummary,
+  override val status:            ObsStatus,
+  override val activeStatus:      ObsActiveStatus,
+  override val duration:          Duration,
+  override val scienceMode:       Option[ScienceMode],
+  override val visualizationTime: Option[Instant]
 ) extends ObsSummary
     with ObsWithTitle
     with ObsWithConstraints
+    with ObsWithVizTime
     with ObsWithConf
 
 object ObsSummaryWithTitleConstraintsAndConf {
@@ -166,23 +174,34 @@ object ObsSummaryWithTitleAndConf {
 }
 
 case class ObsSummaryWithConstraintsAndConf(
-  override val id:           Observation.Id,
-  override val constraints:  ConstraintsSummary,
-  override val status:       ObsStatus,
-  override val activeStatus: ObsActiveStatus,
-  override val duration:     Duration,
-  scienceTargetIds:          Set[Target.Id],
-  override val scienceMode:  Option[ScienceMode]
+  override val id:                Observation.Id,
+  override val constraints:       ConstraintsSummary,
+  override val status:            ObsStatus,
+  override val activeStatus:      ObsActiveStatus,
+  override val duration:          Duration,
+  scienceTargetIds:               Set[Target.Id],
+  override val scienceMode:       Option[ScienceMode],
+  override val visualizationTime: Option[Instant]
 ) extends ObsSummary
     with ObsWithConstraints
+    with ObsWithVizTime
     with ObsWithConf
 
 object ObsSummaryWithConstraintsAndConf {
-  val id            = Focus[ObsSummaryWithConstraintsAndConf](_.id)
-  val configuration = Focus[ObsSummaryWithConstraintsAndConf](_.scienceMode)
+  val id                = Focus[ObsSummaryWithConstraintsAndConf](_.id)
+  val configuration     = Focus[ObsSummaryWithConstraintsAndConf](_.scienceMode)
+  val visualizationTime = Focus[ObsSummaryWithConstraintsAndConf](_.visualizationTime)
 
   implicit val eqObsSummaryWithConstraintsAndConf: Eq[ObsSummaryWithConstraintsAndConf] =
     Eq.by(o =>
-      (o.id, o.constraints, o.status, o.activeStatus, o.duration, o.scienceTargetIds, o.scienceMode)
+      (o.id,
+       o.constraints,
+       o.status,
+       o.activeStatus,
+       o.duration,
+       o.scienceTargetIds,
+       o.scienceMode,
+       o.visualizationTime
+      )
     )
 }

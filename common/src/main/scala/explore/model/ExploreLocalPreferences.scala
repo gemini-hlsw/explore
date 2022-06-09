@@ -24,11 +24,9 @@ import monocle.Focus
 import org.scalajs.dom.window
 import typings.loglevel.mod.LogLevelDesc
 
-// FIXME: Temporarily store the obsConfiguration per obs
 // Preferences stored at the browser level
 case class ExploreLocalPreferences(
-  level:             LogLevelDesc,
-  obsConfigurations: Map[Observation.Id, ObsConfiguration]
+  level: LogLevelDesc
 )
 
 object ExploreLocalPreferences {
@@ -51,7 +49,7 @@ object ExploreLocalPreferences {
         else "SILENT"
     }
 
-  val Default = ExploreLocalPreferences(LogLevelLogger.Level.INFO, Map.empty)
+  val Default = ExploreLocalPreferences(LogLevelLogger.Level.INFO)
 
   val StorageKey   = "ExplorePreferences"
   val LevelKey     = "logLevel"
@@ -60,7 +58,7 @@ object ExploreLocalPreferences {
   val level = Focus[ExploreLocalPreferences](_.level)
 
   implicit val eqExploreLocalpreferences: Eq[ExploreLocalPreferences] =
-    Eq.by(p => (p.level, p.obsConfigurations))
+    Eq.by(_.level)
 
   implicit class LevelOps(val l: LogLevelDesc) extends AnyVal {
     def value: String =
@@ -83,8 +81,7 @@ object ExploreLocalPreferences {
 
   implicit val encoder: Encoder[ExploreLocalPreferences] = new Encoder[ExploreLocalPreferences] {
     final def apply(a: ExploreLocalPreferences): Json = Json.obj(
-      (LevelKey, Json.fromString(a.level.value)),
-      (ObsConfigKey, (a.obsConfigurations).asJson)
+      (LevelKey, Json.fromString(a.level.value))
     )
   }
 
@@ -149,18 +146,11 @@ object ExploreLocalPreferences {
 
   implicit val encodePosAngle: Encoder[PosAngle] = deriveEncoder[PosAngle]
 
-  implicit val deConf: Decoder[ObsConfiguration] =
-    Decoder.forProduct2("posAngle", "obsTime")(ObsConfiguration.apply)
-
-  implicit val encConf: Encoder[ObsConfiguration] =
-    Encoder.forProduct2("posAngle", "obsTime")(u => (u.posAngle, u.obsInstant))
-
   implicit val decoder: Decoder[ExploreLocalPreferences] = new Decoder[ExploreLocalPreferences] {
     final def apply(c: HCursor): Decoder.Result[ExploreLocalPreferences] =
       for {
         l <- c.downField(LevelKey).as[Option[String]]
-        o <- c.downField(ObsConfigKey).as[Map[Observation.Id, ObsConfiguration]]
-      } yield ExploreLocalPreferences(levelFromString(l.orEmpty), o)
+      } yield ExploreLocalPreferences(levelFromString(l.orEmpty))
   }
 
   // Preferences at the browser level (unlike those stored in heroku)
@@ -185,32 +175,4 @@ object ExploreLocalPreferences {
     .handleError(_ => ().some)
     .void
 
-  // DELETEME
-  def storeObsConfig[F[_]: Sync](id: Observation.Id, conf: ObsConfiguration): F[Unit] = Sync[F]
-    .delay {
-      for {
-        ls <- Option(window.localStorage)
-        d  <- Option(ls.getItem(StorageKey)).orElse(Some(Default.asJson.spaces2))
-        p  <-
-          decode[ExploreLocalPreferences](d).toOption.map(c =>
-            c.copy(obsConfigurations = c.obsConfigurations + (id -> conf))
-          )
-        _  <- Option(ls.setItem(StorageKey, p.asJson.spaces2))
-      } yield ()
-    }
-    .handleError { u => println(u); ().some }
-    .void
-
-  // DELETEME
-  def cleanObsConfig[F[_]: Sync]: F[Unit] = Sync[F]
-    .delay {
-      for {
-        ls <- Option(window.localStorage)
-        d  <- Option(ls.getItem(StorageKey)).orElse(Some(Default.asJson.spaces2))
-        p  <- decode[ExploreLocalPreferences](d).toOption
-        _  <- Option(ls.setItem(StorageKey, p.copy(obsConfigurations = Map.empty).asJson.spaces2))
-      } yield ()
-    }
-    .handleError(_ => ().some)
-    .void
 }

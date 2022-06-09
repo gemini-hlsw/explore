@@ -18,11 +18,11 @@ import java.time.Instant
 import scalajs.js
 import scalajs.js.|
 
-final case class ObsTimeComponent(instant: View[Instant])
-    extends ReactFnProps[ObsTimeComponent](ObsTimeComponent.component)
+final case class VizTimeEditor(instant: View[Option[Instant]])
+    extends ReactFnProps[VizTimeEditor](VizTimeEditor.component)
 
-object ObsTimeComponent {
-  type Props = ObsTimeComponent
+object VizTimeEditor {
+  type Props = VizTimeEditor
 
   // TODO Move these to react-datetime
   implicit class InstantOps(val instant: Instant) extends AnyVal {
@@ -74,10 +74,13 @@ object ObsTimeComponent {
         ExploreStyles.ObsConfigurationObsTime,
         <.label("Observation time", HelpIcon("configuration/obstime.md")),
         Datepicker(onChange =
-          (newValue, _) => newValue.fromDatePickerToInstantOpt.foldMap(p.instant.set)
+          (newValue, _) =>
+            newValue.fromDatePickerToInstantOpt.foldMap { i =>
+              p.instant.set(i.some)
+            }
         )
           .showTimeInput(true)
-          .selected(p.instant.get.toDatePickerJsDate)
+          .selected(p.instant.get.getOrElse(Instant.now).toDatePickerJsDate)
           .dateFormat("yyyy-MM-dd HH:mm"),
         "UTC"
       )

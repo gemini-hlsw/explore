@@ -33,6 +33,7 @@ import monocle.Lens
 import monocle.macros.GenIso
 import queries.common.ObsQueriesGQL._
 
+import java.time.Instant
 import scala.collection.immutable.SortedMap
 
 object ObsQueries {
@@ -100,7 +101,8 @@ object ObsQueries {
             node.status,
             node.activeStatus,
             node.plannedTime.execution,
-            node.scienceMode
+            node.scienceMode,
+            node.visualizationTime
           )
         ),
         ObsSummaryWithTitleConstraintsAndConf.id.get
@@ -146,6 +148,27 @@ object ObsQueries {
         elevationRange = createER.assign
       ).assign
     )
+    EditObservationMutation
+      .execute[F](
+        EditObservationInput(
+          select = ObservationSelectInput(observationIds = obsIds.assign),
+          patch = editInput
+        )
+      )
+      .void
+  }
+
+  def updateVisualizationTime[F[_]: Async](
+    obsIds:            List[Observation.Id],
+    visualizationTime: Option[Instant]
+  )(implicit
+    c:                 TransactionalClient[F, ObservationDB]
+  ): F[Unit] = {
+
+    val editInput = ObservationPropertiesInput(
+      visualizationTime = visualizationTime.orUnassign
+    )
+
     EditObservationMutation
       .execute[F](
         EditObservationInput(

@@ -2035,7 +2035,7 @@ html {
   grid-column: 1;
 }
 
-.explore-configuration-signal-to-noise-at {
+.explore-configuration-input-with-units {
   display: flex;
   margin-left: 0.25em;
   align-items: baseline;
@@ -2237,19 +2237,19 @@ html {
 .explore-obs-configuration-form {
   grid-area: obs-props;
   display: flex;
+  gap: 0.3em;
   align-items: baseline;
-  justify-content: space-between;
   border-bottom: 1px solid var(--site-border-color);
-
-  .react-datepicker-wrapper {
-    .react-datepicker-wrapper();
-  }
 
   .field .ui.selection.dropdown[id='pos-angle-alternative'] {
     min-width: 18ch;
     padding-left: 0.3em;
     padding-right: 0.3em;
   }
+}
+
+.ui.form.explore-obs-configuration-form .field {
+  margin-bottom: 0.5em;
 }
 
 .explore-basic-configuration-buttons {
@@ -2271,11 +2271,6 @@ html {
   .react-datepicker-wrapper {
     .react-datepicker-wrapper();
   }
-}
-
-.explore-obs-configuration-pa {
-  display: flex;
-  align-items: baseline;
 }
 
 .explore-obs-configuration-time {

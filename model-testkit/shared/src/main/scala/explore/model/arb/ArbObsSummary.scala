@@ -23,6 +23,7 @@ import lucuma.core.arb.ArbTime
 import lucuma.core.util.arb.ArbGid._
 import lucuma.core.util.arb.ArbEnumerated._
 import java.time.Duration
+import java.time.Instant
 
 trait ArbObsSummary {
   import ArbConstraintsSummary._
@@ -102,6 +103,7 @@ trait ArbObsSummary {
         activeStatus <- arbitrary[ObsActiveStatus]
         duration     <- arbitrary[Duration]
         mode         <- arbitrary[Option[ScienceMode]]
+        vizTime      <- arbitrary[Option[Instant]]
       } yield ObsSummaryWithTitleConstraintsAndConf(
         id,
         title,
@@ -110,7 +112,8 @@ trait ArbObsSummary {
         status,
         activeStatus,
         duration,
-        mode
+        mode,
+        vizTime
       )
     }
 
@@ -192,6 +195,7 @@ trait ArbObsSummary {
         duration     <- arbitrary[Duration]
         targets      <- arbitrary[Set[Target.Id]]
         mode         <- arbitrary[Option[ScienceMode]]
+        vizTime      <- arbitrary[Option[Instant]]
       } yield ObsSummaryWithConstraintsAndConf(
         id,
         constraints,
@@ -199,7 +203,8 @@ trait ArbObsSummary {
         activeStatus,
         duration,
         targets,
-        mode
+        mode,
+        vizTime
       )
     }
 
@@ -211,7 +216,8 @@ trait ArbObsSummary {
        ObsActiveStatus,
        Duration,
        Option[ScienceMode],
-       List[Target.Id]
+       List[Target.Id],
+       Option[Instant]
       )
     ]
       .contramap(o =>
@@ -221,7 +227,8 @@ trait ArbObsSummary {
          o.activeStatus,
          o.duration,
          o.scienceMode,
-         o.scienceTargetIds.toList
+         o.scienceTargetIds.toList,
+         o.visualizationTime
         )
       )
 

@@ -72,7 +72,8 @@ object AsterismQueries {
       obsR.activeStatus,
       obsR.plannedTime.execution,
       obsR.targetEnvironment.asterism.map(_.id).toSet,
-      obsR.scienceMode
+      obsR.scienceMode,
+      obsR.visualizationTime
     )
 
   private val queryToAsterismGroupWithObsGetter

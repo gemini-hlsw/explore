@@ -142,6 +142,20 @@ package object optics extends ModelOptics {
       (s: S) => l4.replace(abc._4)(l3.replace(abc._3)(l2.replace(abc._2)(l1.replace(abc._1)(s))))
     )
 
+  def disjointZip[S, A, B, C, D, E](
+    l1: Lens[S, A],
+    l2: Lens[S, B],
+    l3: Lens[S, C],
+    l4: Lens[S, D],
+    l5: Lens[S, E]
+  ): Lens[S, (A, B, C, D, E)] =
+    Lens((s: S) => (l1.get(s), l2.get(s), l3.get(s), l4.get(s), l5.get(s)))(
+      (abc: (A, B, C, D, E)) =>
+        (s: S) =>
+          l5.replace(abc._5)(
+            l4.replace(abc._4)(l3.replace(abc._3)(l2.replace(abc._2)(l1.replace(abc._1)(s))))
+          )
+    )
   // This only behaves as a lawful lens as long as A and B are both null or both set.
   def unsafeDisjointOptionZip[S, A, B](
     l1: Lens[S, Option[A]],
