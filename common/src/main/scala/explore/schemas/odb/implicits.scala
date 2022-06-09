@@ -3,6 +3,7 @@
 
 package queries.schemas
 
+import clue.data.Input
 import clue.data.syntax._
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
@@ -13,6 +14,7 @@ import lucuma.core.math._
 import lucuma.core.math.dimensional._
 import lucuma.core.model._
 import lucuma.schemas.ObservationDB.Types._
+import lucuma.schemas.ObservationDB.Enums.PosAngleConstraintType
 import queries.schemas.UserPreferencesDB.Types.ExploreResizableWidthInsertInput
 
 import scala.collection.immutable.SortedMap
@@ -236,6 +238,28 @@ object implicits {
         case SourceProfile.Gaussian(fwhm, definition) =>
           SourceProfileInput(gaussian =
             GaussianInput(fwhm.toInput.assign, definition.toInput.assign).assign
+          )
+      }
+  }
+
+  implicit class PosAngleConstraintOps(val p: PosAngleConstraint) extends AnyVal {
+    def toInput: PosAngleConstraintInput =
+      p match {
+        case PosAngleConstraint.Fixed(angle)               =>
+          PosAngleConstraintInput(constraint = PosAngleConstraintType.Fixed.assign,
+                                  angle = angle.toInput.assign
+          )
+        case PosAngleConstraint.AllowFlip(angle)           =>
+          PosAngleConstraintInput(constraint = PosAngleConstraintType.AllowFlip.assign,
+                                  angle = angle.toInput.assign
+          )
+        case PosAngleConstraint.ParallacticOverride(angle) =>
+          PosAngleConstraintInput(constraint = PosAngleConstraintType.AverageParallactic.assign,
+                                  angle = angle.toInput.assign
+          )
+        case PosAngleConstraint.AverageParallactic         =>
+          PosAngleConstraintInput(constraint = PosAngleConstraintType.AverageParallactic.assign,
+                                  angle = Input.unassign
           )
       }
   }

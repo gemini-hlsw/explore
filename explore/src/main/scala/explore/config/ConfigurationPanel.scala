@@ -25,6 +25,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
+import lucuma.core.model.PosAngleConstraint
 import lucuma.schemas.ObservationDB.Types._
 import monocle.std.option.some
 import queries.common.ObsQueriesGQL
@@ -81,13 +82,16 @@ object ConfigurationPanel {
         val showAdvancedCB: Option[Callback] =
           optModeView.get.map(_ => showAdvanced.set(true))
 
+        val posAngleView: View[Option[PosAngleConstraint]] =
+          props.scienceData.undoableView(ObservationData.posAngleConstraint)
+
         React.Fragment(
           props.renderInTitle(
             <.div(ExploreStyles.TitleUndoButtons)(UndoButtons(props.scienceData))
           ),
           if (!showAdvanced.get)
             <.div(ExploreStyles.BasicConfigurationGrid)(
-              ObsConfigurationPanel(props.obsId, props.scienceData, props.obsConf),
+              ObsConfigurationPanel(props.obsId, posAngleView),
               BasicConfigurationPanel(
                 props.obsId,
                 props.obsConf,

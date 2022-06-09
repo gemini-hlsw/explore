@@ -24,7 +24,7 @@ import lucuma.core.geom.jts.interpreter._
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
-import lucuma.core.model.PosAngle
+import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.SiderealTracking
 import lucuma.svgdotjs.Svg
 import lucuma.ui.reusability._
@@ -131,9 +131,9 @@ object AladinContainer {
         case (_, baseCoordinates, _, _) => { case (mode, posAngle, options, gs) =>
           val pa = posAngle
             .collect {
-              case PosAngle.Fixed(a)               => a
-              case PosAngle.AllowFlip(a)           => a
-              case PosAngle.ParallacticOverride(a) => a
+              case PosAngleConstraint.Fixed(a)               => a
+              case PosAngleConstraint.AllowFlip(a)           => a
+              case PosAngleConstraint.ParallacticOverride(a) => a
             }
 
           val candidatesVisibility =

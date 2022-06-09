@@ -242,6 +242,12 @@ object ObsQueriesGQL {
           title
           subtitle
           visualizationTime
+          posAngleConstraint {
+            constraint
+            angle {
+              microarcseconds
+            }
+          }
           targetEnvironment {
             asterism {
               id
@@ -497,6 +503,8 @@ object ObsQueriesGQL {
 
     object Data {
       object Observation {
+        type PosAngleConstraint = lucuma.core.model.PosAngleConstraint
+
         object TargetEnvironment {
           type Asterism = model.TargetWithId
         }

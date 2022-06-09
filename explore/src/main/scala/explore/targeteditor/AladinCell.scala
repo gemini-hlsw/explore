@@ -44,7 +44,7 @@ import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
-import lucuma.core.model.PosAngle
+import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.core.model.User
@@ -153,10 +153,10 @@ object AladinCell extends ModelOptics {
           {
             case (tracking, Some(obsConf), Ready(candidates)) =>
               val pa = obsConf.posAngle match {
-                case PosAngle.Fixed(a)               => a.some
-                case PosAngle.AllowFlip(a)           => a.some
-                case PosAngle.ParallacticOverride(a) => a.some
-                case _                               => none
+                case PosAngleConstraint.Fixed(a)               => a.some
+                case PosAngleConstraint.AllowFlip(a)           => a.some
+                case PosAngleConstraint.ParallacticOverride(a) => a.some
+                case _                                         => none
               }
 
               pa.map { pa =>

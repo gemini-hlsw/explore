@@ -12,13 +12,11 @@ import io.circe.HCursor
 import io.circe.Json
 import io.circe.KeyDecoder
 import io.circe.KeyEncoder
-import io.circe.generic.semiauto._
 import io.circe.parser.decode
 import io.circe.syntax._
 import log4cats.loglevel.LogLevelLogger
 import lucuma.core.math.Angle
 import lucuma.core.model.Observation
-import lucuma.core.model.PosAngle
 import lucuma.core.util.Enumerated
 import monocle.Focus
 import org.scalajs.dom.window
@@ -104,47 +102,6 @@ object ExploreLocalPreferences {
   implicit val encodeAngle: Encoder[Angle] = new Encoder[Angle] {
     final def apply(a: Angle): Json = Json.obj(("angle", Json.fromLong(a.toMicroarcseconds)))
   }
-
-  implicit val decodePAFixed: Decoder[PosAngle.Fixed] =
-    Decoder.forProduct1("fixed")(PosAngle.Fixed.apply)
-
-  implicit val encodePAFixed: Encoder[PosAngle.Fixed] =
-    Encoder.forProduct1("fixed")(_.angle)
-
-  implicit val decodePAAllowFlip: Decoder[PosAngle.AllowFlip] =
-    Decoder.forProduct1("allowFlip")(PosAngle.AllowFlip.apply)
-
-  implicit val encodePAAllowFlip: Encoder[PosAngle.AllowFlip] =
-    Encoder.forProduct1("allowFlip")(_.angle)
-
-  implicit val decodePAParallacticOverride: Decoder[PosAngle.ParallacticOverride] =
-    Decoder.forProduct1("parallacticOverride")(PosAngle.ParallacticOverride.apply)
-
-  implicit val encodePAParallcticOverride: Encoder[PosAngle.ParallacticOverride] =
-    Encoder.forProduct1("parallacticOverride")(_.angle)
-
-  implicit val encodePAAverageParallactic: Encoder[PosAngle.AverageParallactic.type] =
-    deriveEncoder[PosAngle.AverageParallactic.type]
-
-  implicit val decodePAAverageParallactic: Decoder[PosAngle.AverageParallactic.type] =
-    deriveDecoder[PosAngle.AverageParallactic.type]
-
-  implicit val decodePAUnconstrained: Decoder[PosAngle.Unconstrained.type] =
-    deriveDecoder[PosAngle.Unconstrained.type]
-
-  implicit val encodePAUnconstrained: Encoder[PosAngle.Unconstrained.type] =
-    deriveEncoder[PosAngle.Unconstrained.type]
-
-  implicit val decodePosAngle: Decoder[PosAngle] =
-    List[Decoder[PosAngle]](
-      Decoder[PosAngle.Fixed].widen,
-      Decoder[PosAngle.AllowFlip].widen,
-      Decoder[PosAngle.AverageParallactic.type].widen,
-      Decoder[PosAngle.ParallacticOverride].widen,
-      Decoder[PosAngle.Unconstrained.type].widen
-    ).reduceLeft(_ or _)
-
-  implicit val encodePosAngle: Encoder[PosAngle] = deriveEncoder[PosAngle]
 
   implicit val decoder: Decoder[ExploreLocalPreferences] = new Decoder[ExploreLocalPreferences] {
     final def apply(c: HCursor): Decoder.Result[ExploreLocalPreferences] =

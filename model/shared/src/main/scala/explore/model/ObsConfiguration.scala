@@ -4,7 +4,7 @@
 package explore.model
 
 import cats.Eq
-import lucuma.core.model.PosAngle
+import lucuma.core.model.PosAngleConstraint
 import monocle.Focus
 import monocle.Lens
 
@@ -13,14 +13,14 @@ import monocle.Lens
  * the db subscriptions to arrive
  */
 final case class ObsConfiguration(
-  posAngle: PosAngle
+  posAngle: PosAngleConstraint
 )
 
 object ObsConfiguration {
   implicit val eqObsConfiguration: Eq[ObsConfiguration] =
     Eq.by(_.posAngle)
 
-  val posAngle: Lens[ObsConfiguration, PosAngle] =
+  val posAngle: Lens[ObsConfiguration, PosAngleConstraint] =
     Focus[ObsConfiguration](_.posAngle)
 
 }
