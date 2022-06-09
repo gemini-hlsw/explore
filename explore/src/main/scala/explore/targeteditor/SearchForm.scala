@@ -29,6 +29,7 @@ import scalajs.js.JSConverters._
 
 final case class SearchForm(
   id:          Target.Id,
+  targetView:  View[NonEmptyString],
   name:        NonEmptyString,
   searching:   View[Set[Target.Id]],
   searchAndGo: SearchCallback => Callback
@@ -112,7 +113,7 @@ object SearchForm {
         <.label("Name", HelpIcon("target/main/search-target.md"), ExploreStyles.SkipToNext),
         FormInputEV(
           id = "search",
-          value = View.fromState($).zoom(State.searchTerm),
+          value = View.fromState($).zoom(State.searchTerm).withOnMod(props.targetView.set),
           validFormat = ValidFormatInput.nonEmptyValidFormat,
           error = state.searchError.orUndefined,
           loading = disabled,
