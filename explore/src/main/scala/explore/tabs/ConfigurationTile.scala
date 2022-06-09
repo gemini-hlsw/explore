@@ -22,7 +22,6 @@ import react.common._
 object ConfigurationTile {
   def configurationTile(
     obsId:        Observation.Id,
-    obsConf:      View[ObsConfiguration],
     obsData:      Pot[(String, Option[NonEmptyString], View[ObservationData])],
     undoStacks:   View[UndoStacks[IO, ObservationData]]
   )(implicit ctx: AppContextIO) =
@@ -37,7 +36,6 @@ object ConfigurationTile {
             obsId,
             title,
             subtitle,
-            obsConf,
             UndoContext(undoStacks, scienceData),
             scienceData.zoom(scienceDataForObs).get.constraints,
             scienceData.zoom(scienceDataForObs).get.itcTargets,

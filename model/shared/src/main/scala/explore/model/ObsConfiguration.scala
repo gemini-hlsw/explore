@@ -13,14 +13,14 @@ import monocle.Lens
  * the db subscriptions to arrive
  */
 final case class ObsConfiguration(
-  posAngle: PosAngleConstraint
+  posAngl: PosAngleConstraint
 )
 
 object ObsConfiguration {
   implicit val eqObsConfiguration: Eq[ObsConfiguration] =
-    Eq.by(_.posAngle)
+    Eq.by(_.posAngl)
 
   val posAngle: Lens[ObsConfiguration, PosAngleConstraint] =
-    Focus[ObsConfiguration](_.posAngle)
+    Focus[ObsConfiguration](_.posAngl)
 
 }

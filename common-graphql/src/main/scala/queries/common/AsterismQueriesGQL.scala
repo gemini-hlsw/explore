@@ -214,6 +214,12 @@ object AsterismQueriesGQL {
             status
             activeStatus
             visualizationTime
+            posAngleConstraint {
+              constraint
+              angle {
+                microarcseconds
+              }
+            }
             plannedTime {
               execution {
                 microseconds
@@ -252,6 +258,7 @@ object AsterismQueriesGQL {
 
       object Observations {
         object Nodes {
+          type PosAngleConstraint = lucuma.core.model.PosAngleConstraint
           trait ConstraintSet extends model.ConstraintsSummary
           type ScienceMode = model.ScienceMode
           object PlannedTime {

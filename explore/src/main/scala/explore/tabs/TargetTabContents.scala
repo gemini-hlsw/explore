@@ -367,12 +367,24 @@ object TargetTabContents {
             .zoom(AsterismGroupsWithObs.observations)
             .get
             .collect {
-              case (k, ObsSummaryWithConstraintsAndConf(_, _, _, _, _, _, Some(v), _))
+              case (k, ObsSummaryWithConstraintsAndConf(_, _, _, _, _, _, Some(v), _, _))
                   if k === id =>
                 v
             }
             .headOption
         case _        => None
+      }
+
+      val posAngle = idsToEdit.single.flatMap { id =>
+        asterismGroupsWithObs
+          .zoom(AsterismGroupsWithObs.observations)
+          .get
+          .collect {
+            case (k, ObsSummaryWithConstraintsAndConf(_, _, _, _, _, _, _, _, Some(posAngle)))
+                if k === id =>
+              posAngle
+          }
+          .headOption
       }
 
       def setCurrentTarget(programId: Program.Id, oids: ObsIdSet)(
@@ -388,7 +400,7 @@ object TargetTabContents {
           idsToEdit,
           Pot(asterismView, scienceMode),
           Pot(vizTimeView),
-          obsConf.asViewOpt,
+          posAngle,
           props.focusedTarget,
           setCurrentTarget(props.programId, idsToEdit) _,
           otherObsCount(targetMap, idsToEdit) _,

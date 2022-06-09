@@ -63,7 +63,7 @@ import scala.concurrent.duration._
 final case class AladinCell(
   uid:              User.Id,
   tid:              Target.Id,
-  obsConf:          Option[ObsConfiguration],
+  posAngle:         Option[PosAngleConstraint],
   vizTime:          Option[Instant],
   scienceMode:      Option[ScienceMode],
   target:           View[SiderealTracking]
@@ -148,11 +148,11 @@ object AladinCell extends ModelOptics {
           .runAsyncAndForget
       }
       // analyzed targets
-      .useMemoBy((p, _, _, _, candidates) => (p.target.get, p.obsConf, candidates.value)) {
+      .useMemoBy((p, _, _, _, candidates) => (p.target.get, p.posAngle, candidates.value)) {
         (_, _, _, _, _) =>
           {
-            case (tracking, Some(obsConf), Ready(candidates)) =>
-              val pa = obsConf.posAngle match {
+            case (tracking, Some(posAngle), Ready(candidates)) =>
+              val pa = posAngle match {
                 case PosAngleConstraint.Fixed(a)               => a.some
                 case PosAngleConstraint.AllowFlip(a)           => a.some
                 case PosAngleConstraint.ParallacticOverride(a) => a.some
@@ -172,7 +172,7 @@ object AladinCell extends ModelOptics {
                   .sortBy(_._2)
 
               }.getOrElse(Nil)
-            case _                                            => Nil
+            case _                                             => Nil
           }
       }
       // open settings menu
@@ -266,7 +266,7 @@ object AladinCell extends ModelOptics {
           val renderCell: TargetVisualOptions => VdomNode = (t: TargetVisualOptions) =>
             AladinContainer(
               props.target,
-              props.obsConf,
+              props.posAngle,
               props.vizTime,
               props.scienceMode,
               t,
@@ -279,7 +279,7 @@ object AladinCell extends ModelOptics {
             ).withKey(aladinKey)
 
           // Check whether we are waiting for catalog
-          val catalogLoading = props.obsConf match {
+          val catalogLoading = props.posAngle match {
             case Some(_) =>
               gsc.value.fold(_ => true.some, _ => none, _ => false.some)
             case _       => false.some

@@ -17,6 +17,7 @@ import org.typelevel.cats.time._
 
 import java.time.Duration
 import java.time.Instant
+import lucuma.core.model.PosAngleConstraint
 
 trait ObsSummary {
   val id: Observation.Id
@@ -181,7 +182,8 @@ case class ObsSummaryWithConstraintsAndConf(
   override val duration:          Duration,
   scienceTargetIds:               Set[Target.Id],
   override val scienceMode:       Option[ScienceMode],
-  override val visualizationTime: Option[Instant]
+  override val visualizationTime: Option[Instant],
+  posAngleConstraint:             Option[PosAngleConstraint]
 ) extends ObsSummary
     with ObsWithConstraints
     with ObsWithVizTime
@@ -201,7 +203,8 @@ object ObsSummaryWithConstraintsAndConf {
        o.duration,
        o.scienceTargetIds,
        o.scienceMode,
-       o.visualizationTime
+       o.visualizationTime,
+       o.posAngleConstraint
       )
     )
 }

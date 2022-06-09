@@ -77,9 +77,8 @@ object ObsConfigurationPanel {
     ScalaFnComponent[Props] { props =>
       implicit val ctx: AppContextIO = props.ctx
 
-      val paView = props.posAngleView.withOnMod(c =>
-        Callback.log(s"$c") *> ObsQueries.updatePosAngle[IO](List(props.obsId), c).runAsync
-      )
+      val paView = props.posAngleView
+        .withOnMod(c => ObsQueries.updatePosAngle[IO](List(props.obsId), c).runAsync)
 
       val posAngleOptionsView: View[PosAngleOptions] =
         paView.zoom(unsafePosOptionsLens)

@@ -7,12 +7,10 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.Pot
 import crystal.react.View
-import crystal.react.ViewOpt
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.Asterism
-import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.ScienceMode
 import explore.targeteditor.AsterismEditor
@@ -27,6 +25,7 @@ import lucuma.core.model.User
 import react.common._
 
 import java.time.Instant
+import lucuma.core.model.PosAngleConstraint
 
 object AsterismEditorTile {
 
@@ -36,7 +35,7 @@ object AsterismEditorTile {
     obsId:           ObsIdSet,
     potAsterismMode: Pot[(View[Option[Asterism]], Option[ScienceMode])],
     potVizTime:      Pot[View[Option[Instant]]],
-    obsConf:         ViewOpt[ObsConfiguration],
+    posAngle:        Option[PosAngleConstraint],
     currentTarget:   Option[Target.Id],
     setTarget:       (Option[Target.Id], SetRouteVia) => Callback,
     otherObsCount:   Target.Id => Int,
@@ -64,7 +63,7 @@ object AsterismEditorTile {
               asterism,
               potVizTime,
               scienceMode,
-              obsConf,
+              posAngle,
               currentTarget,
               setTarget,
               otherObsCount,

@@ -35,7 +35,6 @@ final case class ConfigurationPanel(
   obsId:            Observation.Id,
   title:            String,
   subtitle:         Option[NonEmptyString],
-  obsConf:          View[ObsConfiguration],
   scienceData:      UndoContext[ObservationData],
   constraints:      ConstraintSet,
   itcTargets:       List[ITCTarget],
@@ -94,7 +93,6 @@ object ConfigurationPanel {
               ObsConfigurationPanel(props.obsId, posAngleView),
               BasicConfigurationPanel(
                 props.obsId,
-                props.obsConf,
                 requirementsCtx,
                 optModeView,
                 props.constraints,

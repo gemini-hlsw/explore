@@ -46,6 +46,7 @@ import react.semanticui.shorthand._
 import react.semanticui.sizes._
 
 import java.time.Instant
+import lucuma.core.model.PosAngleConstraint
 
 final case class AsterismEditor(
   userId:           User.Id,
@@ -54,7 +55,7 @@ final case class AsterismEditor(
   asterism:         View[Option[Asterism]],
   potVizTime:       Pot[View[Option[Instant]]],
   scienceMode:      Option[ScienceMode],
-  obsConf:          ViewOpt[ObsConfiguration],
+  posAngle:         Option[PosAngleConstraint],
   currentTarget:    Option[Target.Id],
   setTarget:        (Option[Target.Id], SetRouteVia) => Callback,
   otherObsCount:    Target.Id => Int,
@@ -227,7 +228,7 @@ object AsterismEditor {
                         targetId,
                         targetView.zoom(TargetWithId.target).unsafeNarrow[Target.Sidereal],
                         props.potVizTime.toOption.flatMap(_.get),
-                        props.obsConf.get,
+                        props.posAngle,
                         props.scienceMode,
                         props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
                         props.searching,
