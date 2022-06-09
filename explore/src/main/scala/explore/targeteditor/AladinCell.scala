@@ -122,13 +122,9 @@ object AladinCell extends ModelOptics {
         _.value
           .map(candidatesAwait =>
             candidatesAwait >>
-              ((props.target.get, props.vizTime) match {
-                case (tracking, Some(obsTime)) =>
-                  props.ctx.worker.postTransferrable(
-                    CatalogRequest(tracking, obsTime)
-                  )
-                case _                         => IO.unit
-              })
+              props.ctx.worker.postTransferrable(
+                CatalogRequest(props.target.get, props.vizTime.getOrElse(Instant.now()))
+              )
           )
           .orEmpty
       )
