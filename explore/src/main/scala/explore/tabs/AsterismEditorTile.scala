@@ -19,13 +19,13 @@ import explore.utils._
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import react.common._
 
 import java.time.Instant
-import lucuma.core.model.PosAngleConstraint
 
 object AsterismEditorTile {
 

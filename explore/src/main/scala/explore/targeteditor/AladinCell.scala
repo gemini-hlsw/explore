@@ -22,7 +22,6 @@ import explore.implicits._
 import explore.model.CatalogQueryError
 import explore.model.CatalogResults
 import explore.model.Constants
-import explore.model.ObsConfiguration
 import explore.model.ScienceMode
 import explore.model.TargetVisualOptions
 import explore.model.boopickle._

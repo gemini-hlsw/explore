@@ -36,7 +36,6 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
-import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.Target.Nonsidereal
@@ -132,8 +131,7 @@ object TargetTabContents {
     defaultLayouts:        LayoutsMap,
     layouts:               View[Pot[LayoutsMap]],
     resize:                UseResizeDetectorReturn,
-    debouncer:             Reusable[UseSingleEffect[IO]],
-    obsConf:               View[ObsConfiguration]
+    debouncer:             Reusable[UseSingleEffect[IO]]
   )(
     asterismGroupsWithObs: View[AsterismGroupsWithObs]
   )(implicit ctx:          AppContextIO): VdomNode = {
@@ -601,8 +599,7 @@ object TargetTabContents {
       }
       .useSingleEffect(debounce = 1.second)
       // Shared obs conf (posAngle)
-      .useStateView(ObsConfiguration(PosAngleConstraint.Default))
-      .useStreamResourceViewOnMountBy { (props, _, _, _, _, _, _) =>
+      .useStreamResourceViewOnMountBy { (props, _, _, _, _, _) =>
         implicit val ctx = props.ctx
 
         AsterismGroupObsQuery
@@ -621,7 +618,6 @@ object TargetTabContents {
           layout,
           defaultLayout,
           debouncer,
-          obsConf,
           asterismGroupsWithObs
         ) =>
           implicit val ctx = props.ctx
@@ -634,8 +630,7 @@ object TargetTabContents {
                 defaultLayout,
                 layout,
                 resize,
-                debouncer,
-                obsConf
+                debouncer
               )
             )(asterismGroupsWithObs)
           ).withRef(resize.ref)

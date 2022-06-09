@@ -10,7 +10,6 @@ import crystal.react._
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import explore.common.ObsQueries
-import explore.common.ObsQueries._
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.implicits._
@@ -19,7 +18,6 @@ import explore.model.enum.PosAngleOptions
 import explore.model.formats.angleTruncatedPASplitEpi
 import explore.model.syntax.all._
 import explore.targeteditor.InputWithUnits
-import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Angle

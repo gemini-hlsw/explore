@@ -19,7 +19,6 @@ import explore.components.undo.UndoButtons
 import explore.implicits._
 import explore.model
 import explore.model.ITCTarget
-import explore.model.ObsConfiguration
 import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._

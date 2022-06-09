@@ -12,7 +12,6 @@ import explore.common.ObsQueries._
 import explore.components.Tile
 import explore.config.ConfigurationPanel
 import explore.implicits._
-import explore.model.ObsConfiguration
 import explore.undo._
 import explore.utils._
 import lucuma.core.model.Observation

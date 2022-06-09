@@ -20,7 +20,6 @@ import explore.model.Asterism
 import explore.model.ConstraintGroup
 import explore.model.GridLayoutSection
 import explore.model.ModelUndoStacks
-import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.ScienceMode
 import explore.model.TargetSummary
@@ -48,7 +47,6 @@ import react.semanticui.modules.dropdown.Dropdown
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
-import lucuma.core.model.PosAngleConstraint
 
 final case class ObsTabTiles(
   userId:           Option[User.Id],

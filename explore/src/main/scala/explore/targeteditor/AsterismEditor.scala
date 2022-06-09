@@ -7,7 +7,6 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.Pot
 import crystal.react.View
-import crystal.react.ViewOpt
 import crystal.react.hooks._
 import crystal.react.implicits._
 import explore.Icons
@@ -18,7 +17,6 @@ import explore.components.ui.ExploreStyles
 import explore.config.VizTimeEditor
 import explore.implicits._
 import explore.model.Asterism
-import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.ScienceMode
 import explore.model.TargetWithId
@@ -32,6 +30,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
@@ -46,7 +45,6 @@ import react.semanticui.shorthand._
 import react.semanticui.sizes._
 
 import java.time.Instant
-import lucuma.core.model.PosAngleConstraint
 
 final case class AsterismEditor(
   userId:           User.Id,

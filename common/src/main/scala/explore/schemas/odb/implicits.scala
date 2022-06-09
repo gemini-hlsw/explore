@@ -13,8 +13,8 @@ import lucuma.core.math.BrightnessUnits._
 import lucuma.core.math._
 import lucuma.core.math.dimensional._
 import lucuma.core.model._
-import lucuma.schemas.ObservationDB.Types._
 import lucuma.schemas.ObservationDB.Enums.PosAngleConstraintType
+import lucuma.schemas.ObservationDB.Types._
 import queries.schemas.UserPreferencesDB.Types.ExploreResizableWidthInsertInput
 
 import scala.collection.immutable.SortedMap

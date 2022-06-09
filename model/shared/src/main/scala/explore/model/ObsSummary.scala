@@ -11,13 +11,13 @@ import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.enum.ObsActiveStatus
 import lucuma.core.enum.ObsStatus
 import lucuma.core.model.Observation
+import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target
 import monocle.Focus
 import org.typelevel.cats.time._
 
 import java.time.Duration
 import java.time.Instant
-import lucuma.core.model.PosAngleConstraint
 
 trait ObsSummary {
   val id: Observation.Id

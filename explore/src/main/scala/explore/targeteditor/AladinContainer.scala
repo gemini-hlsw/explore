@@ -8,7 +8,6 @@ import crystal.react.View
 import crystal.react.hooks._
 import explore.Icons
 import explore.components.ui.ExploreStyles
-import explore.model.ObsConfiguration
 import explore.model.ScienceMode
 import explore.model.TargetVisualOptions
 import explore.model.enum.Visible
