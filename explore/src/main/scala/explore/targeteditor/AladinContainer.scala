@@ -8,7 +8,6 @@ import crystal.react.View
 import crystal.react.hooks._
 import explore.Icons
 import explore.components.ui.ExploreStyles
-import explore.model.ObsConfiguration
 import explore.model.ScienceMode
 import explore.model.TargetVisualOptions
 import explore.model.enum.Visible
@@ -24,7 +23,7 @@ import lucuma.core.geom.jts.interpreter._
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
-import lucuma.core.model.PosAngle
+import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.SiderealTracking
 import lucuma.svgdotjs.Svg
 import lucuma.ui.reusability._
@@ -44,7 +43,7 @@ import scala.concurrent.duration._
 
 final case class AladinContainer(
   target:                 View[SiderealTracking],
-  obsConf:                Option[ObsConfiguration],
+  posAngle:               Option[PosAngleConstraint],
   vizTime:                Option[Instant],
   scienceMode:            Option[ScienceMode],
   options:                TargetVisualOptions,
@@ -127,13 +126,13 @@ object AladinContainer {
         }
       }
       // Memoized svg
-      .useMemoBy((p, _, _, gs) => (p.scienceMode, p.obsConf.map(_.posAngle), p.options, gs.value)) {
+      .useMemoBy((p, _, _, gs) => (p.scienceMode, p.posAngle, p.options, gs.value)) {
         case (_, baseCoordinates, _, _) => { case (mode, posAngle, options, gs) =>
           val pa = posAngle
             .collect {
-              case PosAngle.Fixed(a)               => a
-              case PosAngle.AllowFlip(a)           => a
-              case PosAngle.ParallacticOverride(a) => a
+              case PosAngleConstraint.Fixed(a)               => a
+              case PosAngleConstraint.AllowFlip(a)           => a
+              case PosAngleConstraint.ParallacticOverride(a) => a
             }
 
           val candidatesVisibility =
@@ -198,7 +197,7 @@ object AladinContainer {
         (p.options.fovAngle,
          p.options.agsCandidates,
          p.scienceMode,
-         p.obsConf.map(_.posAngle),
+         p.posAngle,
          currentPos,
          world2pix.value(baseCoordinates.value),
          resize
@@ -221,7 +220,7 @@ object AladinContainer {
       .useMemoBy((props, _, _, selectedGs, _, _, _, _) =>
         (props.guideStarCandidates,
          props.options.agsCandidates.visible,
-         props.obsConf.isDefined,
+         props.posAngle.isDefined,
          props.vizTime,
          selectedGs
         )
@@ -294,7 +293,7 @@ object AladinContainer {
               .map(Coordinates.fromHmsDms.reverseGet)
               .getOrElse(Coordinates.fromHmsDms.reverseGet(baseCoordinates.value))
 
-          val showBase = props.obsConf.isDefined
+          val showBase = props.posAngle.isDefined
 
           val overlayTargets = if (showBase) {
             List(

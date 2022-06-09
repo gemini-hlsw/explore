@@ -17,7 +17,6 @@ import explore.implicits._
 import explore.model
 import explore.model.ITCTarget
 import explore.model.ImagingConfigurationOptions
-import explore.model.ObsConfiguration
 import explore.model.SpectroscopyConfigurationOptions
 import explore.model.display._
 import explore.undo._
@@ -41,7 +40,6 @@ import scalajs.js.JSConverters._
 
 final case class BasicConfigurationPanel(
   obsId:            Observation.Id,
-  obsConf:          View[ObsConfiguration],
   requirementsCtx:  UndoSetter[ScienceRequirementsData],
   scienceModeOpt:   View[Option[model.ScienceMode]],
   constraints:      ConstraintSet,

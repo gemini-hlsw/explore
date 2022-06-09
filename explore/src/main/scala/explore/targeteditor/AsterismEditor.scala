@@ -7,7 +7,6 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.Pot
 import crystal.react.View
-import crystal.react.ViewOpt
 import crystal.react.hooks._
 import crystal.react.implicits._
 import explore.Icons
@@ -18,7 +17,6 @@ import explore.components.ui.ExploreStyles
 import explore.config.VizTimeEditor
 import explore.implicits._
 import explore.model.Asterism
-import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.ScienceMode
 import explore.model.TargetWithId
@@ -32,6 +30,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
@@ -54,7 +53,7 @@ final case class AsterismEditor(
   asterism:         View[Option[Asterism]],
   potVizTime:       Pot[View[Option[Instant]]],
   scienceMode:      Option[ScienceMode],
-  obsConf:          ViewOpt[ObsConfiguration],
+  posAngle:         Option[PosAngleConstraint],
   currentTarget:    Option[Target.Id],
   setTarget:        (Option[Target.Id], SetRouteVia) => Callback,
   otherObsCount:    Target.Id => Int,
@@ -227,7 +226,7 @@ object AsterismEditor {
                         targetId,
                         targetView.zoom(TargetWithId.target).unsafeNarrow[Target.Sidereal],
                         props.potVizTime.toOption.flatMap(_.get),
-                        props.obsConf.get,
+                        props.posAngle,
                         props.scienceMode,
                         props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
                         props.searching,

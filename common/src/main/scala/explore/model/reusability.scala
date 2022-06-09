@@ -15,7 +15,7 @@ import lucuma.ags.AgsPosition
 import lucuma.ags.GuideStarCandidate
 import lucuma.catalog.AngularSize
 import lucuma.catalog.CatalogTargetResult
-import lucuma.core.model.PosAngle
+import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.ui.reusability._
@@ -51,7 +51,7 @@ object reusability {
   implicit val partnerSplitReuse: Reusability[PartnerSplit]                           = Reusability.byEq
   implicit val obsSummaryReuse: Reusability[ObsSummary]                               = Reusability.byEq
   implicit val localPreferencesReuse: Reusability[ExploreLocalPreferences]            = Reusability.byEq
-  implicit val posAngleReuse: Reusability[PosAngle]                                   = Reusability.byEq
+  implicit val posAngleReuse: Reusability[PosAngleConstraint]                         = Reusability.byEq
   implicit val obsSummaryWithConstraintsReuse: Reusability[ObsSummaryWithConstraints] =
     Reusability.byEq
   implicit val obsSummaryWithTargetsAndConstraintsReuse
@@ -80,7 +80,6 @@ object reusability {
   implicit val scienceModeBasicReuse: Reusability[ScienceModeBasic]             = Reusability.byEq
   implicit val scienceModeAdvancedResultReuse: Reusability[ScienceModeAdvanced] = Reusability.byEq
   implicit val scienceModeResultReuse: Reusability[ScienceMode]                 = Reusability.byEq
-  implicit val obsCOnfigurationReuse: Reusability[ObsConfiguration]             = Reusability.byEq
   implicit val guideStarReuse: Reusability[GuideStarCandidate]                  = Reusability.by(_.name.value)
   implicit val catalogResultsReuse: Reusability[CatalogResults]                 = Reusability.by(_.candidates)
   implicit val agsPositionReuse: Reusability[AgsPosition]                       = Reusability.byEq

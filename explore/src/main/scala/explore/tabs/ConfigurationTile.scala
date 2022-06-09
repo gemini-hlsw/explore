@@ -12,7 +12,6 @@ import explore.common.ObsQueries._
 import explore.components.Tile
 import explore.config.ConfigurationPanel
 import explore.implicits._
-import explore.model.ObsConfiguration
 import explore.undo._
 import explore.utils._
 import lucuma.core.model.Observation
@@ -22,7 +21,6 @@ import react.common._
 object ConfigurationTile {
   def configurationTile(
     obsId:        Observation.Id,
-    obsConf:      View[ObsConfiguration],
     obsData:      Pot[(String, Option[NonEmptyString], View[ObservationData])],
     undoStacks:   View[UndoStacks[IO, ObservationData]]
   )(implicit ctx: AppContextIO) =
@@ -37,7 +35,6 @@ object ConfigurationTile {
             obsId,
             title,
             subtitle,
-            obsConf,
             UndoContext(undoStacks, scienceData),
             scienceData.zoom(scienceDataForObs).get.constraints,
             scienceData.zoom(scienceDataForObs).get.itcTargets,

@@ -36,7 +36,6 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
-import lucuma.core.model.PosAngle
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.Target.Nonsidereal
@@ -132,8 +131,7 @@ object TargetTabContents {
     defaultLayouts:        LayoutsMap,
     layouts:               View[Pot[LayoutsMap]],
     resize:                UseResizeDetectorReturn,
-    debouncer:             Reusable[UseSingleEffect[IO]],
-    obsConf:               View[ObsConfiguration]
+    debouncer:             Reusable[UseSingleEffect[IO]]
   )(
     asterismGroupsWithObs: View[AsterismGroupsWithObs]
   )(implicit ctx:          AppContextIO): VdomNode = {
@@ -367,12 +365,24 @@ object TargetTabContents {
             .zoom(AsterismGroupsWithObs.observations)
             .get
             .collect {
-              case (k, ObsSummaryWithConstraintsAndConf(_, _, _, _, _, _, Some(v), _))
+              case (k, ObsSummaryWithConstraintsAndConf(_, _, _, _, _, _, Some(v), _, _))
                   if k === id =>
                 v
             }
             .headOption
         case _        => None
+      }
+
+      val posAngle = idsToEdit.single.flatMap { id =>
+        asterismGroupsWithObs
+          .zoom(AsterismGroupsWithObs.observations)
+          .get
+          .collect {
+            case (k, ObsSummaryWithConstraintsAndConf(_, _, _, _, _, _, _, _, Some(posAngle)))
+                if k === id =>
+              posAngle
+          }
+          .headOption
       }
 
       def setCurrentTarget(programId: Program.Id, oids: ObsIdSet)(
@@ -388,7 +398,7 @@ object TargetTabContents {
           idsToEdit,
           Pot(asterismView, scienceMode),
           Pot(vizTimeView),
-          obsConf.asViewOpt,
+          posAngle,
           props.focusedTarget,
           setCurrentTarget(props.programId, idsToEdit) _,
           otherObsCount(targetMap, idsToEdit) _,
@@ -589,8 +599,7 @@ object TargetTabContents {
       }
       .useSingleEffect(debounce = 1.second)
       // Shared obs conf (posAngle)
-      .useStateView(ObsConfiguration(PosAngle.Default))
-      .useStreamResourceViewOnMountBy { (props, _, _, _, _, _, _) =>
+      .useStreamResourceViewOnMountBy { (props, _, _, _, _, _) =>
         implicit val ctx = props.ctx
 
         AsterismGroupObsQuery
@@ -609,7 +618,6 @@ object TargetTabContents {
           layout,
           defaultLayout,
           debouncer,
-          obsConf,
           asterismGroupsWithObs
         ) =>
           implicit val ctx = props.ctx
@@ -622,8 +630,7 @@ object TargetTabContents {
                 defaultLayout,
                 layout,
                 resize,
-                debouncer,
-                obsConf
+                debouncer
               )
             )(asterismGroupsWithObs)
           ).withRef(resize.ref)

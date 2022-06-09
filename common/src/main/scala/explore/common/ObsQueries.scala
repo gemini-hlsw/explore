@@ -22,6 +22,7 @@ import japgolly.scalajs.react._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.Observation
+import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
@@ -32,6 +33,7 @@ import monocle.Getter
 import monocle.Lens
 import monocle.macros.GenIso
 import queries.common.ObsQueriesGQL._
+import queries.schemas.implicits._
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
@@ -53,7 +55,8 @@ object ObsQueries {
     requirements: ScienceRequirementsData,
     mode:         Option[ScienceMode],
     constraints:  ConstraintSet,
-    targets:      Targets
+    targets:      Targets,
+    posAngle:     Option[PosAngleConstraint]
   )
 
   object ScienceData {
@@ -63,6 +66,8 @@ object ObsQueries {
       Focus[ScienceData](_.mode)
     val constraints: Lens[ScienceData, ConstraintSet]            =
       Focus[ScienceData](_.constraints)
+    val posAngle: Lens[ScienceData, Option[PosAngleConstraint]]  =
+      Focus[ScienceData](_.posAngle)
   }
 
   val scienceDataForObs: Lens[ObservationData, ScienceData] =
@@ -70,7 +75,8 @@ object ObsQueries {
       ObservationData.scienceRequirements,
       ObservationData.scienceMode,
       ObservationData.constraintSet,
-      ObservationData.targetEnvironment
+      ObservationData.targetEnvironment,
+      ObservationData.posAngleConstraint
     )
       .andThen(GenIso.fields[ScienceData].reverse)
 
@@ -179,6 +185,26 @@ object ObsQueries {
       .void
   }
 
+  def updatePosAngle[F[_]: Async](
+    obsIds:             List[Observation.Id],
+    posAngleConstraint: Option[PosAngleConstraint]
+  )(implicit
+    c:                  TransactionalClient[F, ObservationDB]
+  ): F[Unit] = {
+
+    val editInput = ObservationPropertiesInput(
+      posAngleConstraint = posAngleConstraint.map(_.toInput).orUnassign
+    )
+
+    EditObservationMutation
+      .execute[F](
+        EditObservationInput(
+          select = ObservationSelectInput(observationIds = obsIds.assign),
+          patch = editInput
+        )
+      )
+      .void
+  }
   def createObservation[F[_]: Async](programId: Program.Id)(implicit
     c:                                          TransactionalClient[F, ObservationDB]
   ): F[ObsSummaryWithTitleAndConstraints] =

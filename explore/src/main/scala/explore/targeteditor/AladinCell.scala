@@ -22,7 +22,6 @@ import explore.implicits._
 import explore.model.CatalogQueryError
 import explore.model.CatalogResults
 import explore.model.Constants
-import explore.model.ObsConfiguration
 import explore.model.ScienceMode
 import explore.model.TargetVisualOptions
 import explore.model.boopickle._
@@ -44,7 +43,7 @@ import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
-import lucuma.core.model.PosAngle
+import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.core.model.User
@@ -63,7 +62,7 @@ import scala.concurrent.duration._
 final case class AladinCell(
   uid:              User.Id,
   tid:              Target.Id,
-  obsConf:          Option[ObsConfiguration],
+  posAngle:         Option[PosAngleConstraint],
   vizTime:          Option[Instant],
   scienceMode:      Option[ScienceMode],
   target:           View[SiderealTracking]
@@ -148,15 +147,15 @@ object AladinCell extends ModelOptics {
           .runAsyncAndForget
       }
       // analyzed targets
-      .useMemoBy((p, _, _, _, candidates) => (p.target.get, p.obsConf, candidates.value)) {
+      .useMemoBy((p, _, _, _, candidates) => (p.target.get, p.posAngle, candidates.value)) {
         (_, _, _, _, _) =>
           {
-            case (tracking, Some(obsConf), Ready(candidates)) =>
-              val pa = obsConf.posAngle match {
-                case PosAngle.Fixed(a)               => a.some
-                case PosAngle.AllowFlip(a)           => a.some
-                case PosAngle.ParallacticOverride(a) => a.some
-                case _                               => none
+            case (tracking, Some(posAngle), Ready(candidates)) =>
+              val pa = posAngle match {
+                case PosAngleConstraint.Fixed(a)               => a.some
+                case PosAngleConstraint.AllowFlip(a)           => a.some
+                case PosAngleConstraint.ParallacticOverride(a) => a.some
+                case _                                         => none
               }
 
               pa.map { pa =>
@@ -172,7 +171,7 @@ object AladinCell extends ModelOptics {
                   .sortBy(_._2)
 
               }.getOrElse(Nil)
-            case _                                            => Nil
+            case _                                             => Nil
           }
       }
       // open settings menu
@@ -266,7 +265,7 @@ object AladinCell extends ModelOptics {
           val renderCell: TargetVisualOptions => VdomNode = (t: TargetVisualOptions) =>
             AladinContainer(
               props.target,
-              props.obsConf,
+              props.posAngle,
               props.vizTime,
               props.scienceMode,
               t,
@@ -279,7 +278,7 @@ object AladinCell extends ModelOptics {
             ).withKey(aladinKey)
 
           // Check whether we are waiting for catalog
-          val catalogLoading = props.obsConf match {
+          val catalogLoading = props.posAngle match {
             case Some(_) =>
               gsc.value.fold(_ => true.some, _ => none, _ => false.some)
             case _       => false.some

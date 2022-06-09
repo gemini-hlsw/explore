@@ -20,7 +20,6 @@ import explore.model.Asterism
 import explore.model.ConstraintGroup
 import explore.model.GridLayoutSection
 import explore.model.ModelUndoStacks
-import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.ScienceMode
 import explore.model.TargetSummary
@@ -55,7 +54,6 @@ final case class ObsTabTiles(
   obsId:            Observation.Id,
   backButton:       VdomNode,
   constraintGroups: View[ConstraintsList],
-  obsConf:          View[ObsConfiguration],
   focusedObs:       Option[Observation.Id],
   focusedTarget:    Option[Target.Id],
   targetMap:        SortedMap[Target.Id, TargetSummary],
@@ -133,6 +131,8 @@ object ObsTabTiles {
         val scienceMode: Option[ScienceMode] =
           obsView.toOption.flatMap(_.get.scienceMode)
 
+        val posAngle = obsView.toOption.flatMap(_.get.posAngleConstraint)
+
         val vizTimeView: Pot[View[Option[Instant]]] =
           obsView.map(_.zoom(ObservationData.visualizationTime))
 
@@ -200,7 +200,7 @@ object ObsTabTiles {
           ObsIdSet.one(props.obsId),
           potAsterismMode,
           vizTimeView,
-          props.obsConf.asViewOpt,
+          posAngle,
           props.focusedTarget,
           Reuse(setCurrentTarget _)(props.programId, props.focusedObs),
           Reuse.currying(props.targetMap, props.obsId).in(otherObsCount _),
@@ -229,7 +229,6 @@ object ObsTabTiles {
         val configurationTile =
           ConfigurationTile.configurationTile(
             props.obsId,
-            props.obsConf,
             obsView.map(obs => (obs.get.title, obs.get.subtitle, obs)),
             props.undoStacks
               .zoom(ModelUndoStacks.forObservationData[IO])

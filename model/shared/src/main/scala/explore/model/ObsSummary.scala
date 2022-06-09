@@ -11,6 +11,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.enum.ObsActiveStatus
 import lucuma.core.enum.ObsStatus
 import lucuma.core.model.Observation
+import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target
 import monocle.Focus
 import org.typelevel.cats.time._
@@ -181,7 +182,8 @@ case class ObsSummaryWithConstraintsAndConf(
   override val duration:          Duration,
   scienceTargetIds:               Set[Target.Id],
   override val scienceMode:       Option[ScienceMode],
-  override val visualizationTime: Option[Instant]
+  override val visualizationTime: Option[Instant],
+  posAngleConstraint:             Option[PosAngleConstraint]
 ) extends ObsSummary
     with ObsWithConstraints
     with ObsWithVizTime
@@ -201,7 +203,8 @@ object ObsSummaryWithConstraintsAndConf {
        o.duration,
        o.scienceTargetIds,
        o.scienceMode,
-       o.visualizationTime
+       o.visualizationTime,
+       o.posAngleConstraint
       )
     )
 }

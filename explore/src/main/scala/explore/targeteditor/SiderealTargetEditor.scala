@@ -19,7 +19,6 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
-import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.ScienceMode
 import explore.model.TargetWithId
@@ -66,7 +65,7 @@ final case class SiderealTargetEditor(
   id:            Target.Id,
   target:        View[Target.Sidereal],
   vizTime:       Option[Instant],
-  obsConf:       Option[ObsConfiguration],
+  posAngle:      Option[PosAngleConstraint],
   scienceMode:   Option[ScienceMode],
   undoStacks:    View[UndoStacks[IO, Target.Sidereal]],
   searching:     View[Set[Target.Id]],
@@ -265,7 +264,7 @@ object SiderealTargetEditor {
               AladinCell(
                 props.uid,
                 props.id,
-                props.obsConf,
+                props.posAngle,
                 props.vizTime,
                 props.scienceMode,
                 targetView.zoom(Target.Sidereal.tracking)

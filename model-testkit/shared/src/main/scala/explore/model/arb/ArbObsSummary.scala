@@ -20,10 +20,12 @@ import lucuma.core.enum.ObsStatus
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.arb.ArbTime
+import lucuma.core.model.arb.ArbPosAngleConstraint._
 import lucuma.core.util.arb.ArbGid._
 import lucuma.core.util.arb.ArbEnumerated._
 import java.time.Duration
 import java.time.Instant
+import lucuma.core.model.PosAngleConstraint
 
 trait ArbObsSummary {
   import ArbConstraintsSummary._
@@ -196,6 +198,7 @@ trait ArbObsSummary {
         targets      <- arbitrary[Set[Target.Id]]
         mode         <- arbitrary[Option[ScienceMode]]
         vizTime      <- arbitrary[Option[Instant]]
+        pa           <- arbitrary[Option[PosAngleConstraint]]
       } yield ObsSummaryWithConstraintsAndConf(
         id,
         constraints,
@@ -204,7 +207,8 @@ trait ArbObsSummary {
         duration,
         targets,
         mode,
-        vizTime
+        vizTime,
+        pa
       )
     }
 
