@@ -21,7 +21,7 @@ object all {
   }
 
   implicit class PosAngleOps(val pa: Option[PosAngleConstraint]) extends AnyVal {
-    def toPosAngleOption: PosAngleOptions = pa match {
+    def toPosAngleOptions: PosAngleOptions = pa match {
       case Some(PosAngleConstraint.Fixed(_))               => PosAngleOptions.Fixed
       case Some(PosAngleConstraint.AllowFlip(_))           => PosAngleOptions.AllowFlip
       case Some(PosAngleConstraint.AverageParallactic)     => PosAngleOptions.AverageParallactic

@@ -58,7 +58,7 @@ object ObsConfigurationPanel {
    * lost for Average Parallictic and Unconstrained
    */
   private val unsafePosOptionsLens: Lens[Option[PosAngleConstraint], PosAngleOptions] =
-    Lens[Option[PosAngleConstraint], PosAngleOptions](_.toPosAngleOption)((a: PosAngleOptions) =>
+    Lens[Option[PosAngleConstraint], PosAngleOptions](_.toPosAngleOptions)((a: PosAngleOptions) =>
       (
         (b: Option[PosAngleConstraint]) =>
           a.toPosAngle(b match {
