@@ -59,7 +59,7 @@ object AladinToolbar {
             trigger = Icons.CircleSmall.beat().clazz(ExploreStyles.WarningIcon)
           ).when(props.loadingGSCandidates.exists(identity)),
           Popup(
-            content = "Error reading catalog..",
+            content = "The Catalog isn't responding at the moment - please try again later..",
             position = PopupPosition.TopCenter,
             trigger = Icons.CircleSmall.clazz(ExploreStyles.ErrorIcon)
           ).when(props.loadingGSCandidates.isEmpty)

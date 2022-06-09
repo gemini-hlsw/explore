@@ -278,8 +278,8 @@ lazy val sbtStage = WorkflowStep.Sbt(List("stage"), name = Some("Stage"))
 
 // https://stackoverflow.com/a/55610612
 lazy val npmInstall = WorkflowStep.Run(
-  List("npm install"),
-  name = Some("npm install")
+  List("npm install --force"),
+  name = Some("npm install --force")
 )
 
 lazy val npmBuild = WorkflowStep.Run(

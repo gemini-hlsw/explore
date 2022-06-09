@@ -67,8 +67,8 @@ jobs:
           node-version: 16
           cache: npm
 
-      - name: npm install
-        run: npm install
+      - name: npm install --force
+        run: npm install --force
 
       - name: Check that workflows are up to date
         run: sbt -v -J-Xmx6g 'project ${{ matrix.project }}' '++${{ matrix.scala }}' 'project /' githubWorkflowCheck
@@ -144,8 +144,8 @@ jobs:
       - name: Stage
         run: sbt -v -J-Xmx6g '++${{ matrix.scala }}' stage
 
-      - name: npm install
-        run: npm install
+      - name: npm install --force
+        run: npm install --force
 
       - name: Build application
         env:
@@ -234,8 +234,8 @@ jobs:
       - name: Stage
         run: sbt -v -J-Xmx6g '++${{ matrix.scala }}' stage
 
-      - name: npm install
-        run: npm install
+      - name: npm install --force
+        run: npm install --force
 
       - name: Build application
         env:
@@ -268,8 +268,8 @@ jobs:
           node-version: 16
           cache: npm
 
-      - name: npm install
-        run: npm install
+      - name: npm install --force
+        run: npm install --force
 
       - name: Setup and expand vars dark
         run: |
