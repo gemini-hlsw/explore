@@ -80,7 +80,7 @@ object SpectroscopyConfigurationPanel {
           changeAuditor = ChangeAuditor.posBigDecimal().optional
         ),
         <.div(
-          ExploreStyles.SignalToNoiseAt,
+          ExploreStyles.InputWithLabel,
           requiredForITC.unless(signalToNoise.get.isDefined),
           <.label("at"),
           InputWithUnits(
@@ -116,7 +116,7 @@ object SpectroscopyConfigurationPanel {
           clearable = true
         ),
         <.div(
-          ExploreStyles.SignalToNoiseAt,
+          ExploreStyles.InputWithLabel,
           InputWithUnits(
             id = "spectroscopy-capabilities",
             clazz = Css.Empty,

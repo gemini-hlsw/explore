@@ -323,7 +323,7 @@ object TargetTabContents {
         )
       }
 
-      val vizTimeLens: AsterismGroupsWithObs => Option[Instant] = a =>
+      val getVizTime: AsterismGroupsWithObs => Option[Instant] = a =>
         for {
           id <- idsToEdit.single
           o  <- a.observations.get(id)
@@ -349,7 +349,7 @@ object TargetTabContents {
 
       val vizTimeView: View[Option[Instant]] =
         asterismGroupsWithObs
-          .zoom(vizTimeLens)(modVizTime)
+          .zoom(getVizTime)(modVizTime)
 
       val title = idsToEdit.single match {
         case Some(id) => s"Observation $id"
@@ -613,7 +613,6 @@ object TargetTabContents {
           asterismGroupsWithObs
         ) =>
           implicit val ctx = props.ctx
-          // val m: Pot[Int] = asterismGroupsWithObs
 
           <.div(
             potRender(

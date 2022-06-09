@@ -19,7 +19,6 @@ import explore.model.syntax.all._
 import explore.targeteditor.InputWithUnits
 import explore.undo._
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Angle
 import lucuma.core.model.Observation
@@ -73,66 +72,57 @@ object ObsConfigurationPanel {
     )
 
   protected val component =
-    ScalaFnComponent
-      .withHooks[Props]
-      .render { props =>
-        // implicit val ctx: AppContextIO = props.ctx
+    ScalaFnComponent[Props] { props =>
+      // implicit val ctx: AppContextIO = props.ctx
 
-        // Will be used for posAngle
-        // val obsUndoView: ObsUndoView = ObsUndoView(props.obsId, props.obsCtx)
+      val posAngleOptionsView: View[PosAngleOptions] =
+        props.obsConf.zoom(ObsConfiguration.posAngle.andThen(unsafePosOptionsLens))
 
-        val posAngleOptionsView: View[PosAngleOptions] =
-          props.obsConf.zoom(ObsConfiguration.posAngle.andThen(unsafePosOptionsLens))
+      val fixedView: ViewOpt[TruncatedPA] =
+        props.obsConf
+          .zoom(ObsConfiguration.posAngle)
+          .zoom(PosAngle.fixedAnglePrism)
+          .zoom(angleTruncatedPASplitEpi.get)(angleTruncatedPASplitEpi.modify _)
 
-        val fixedView: ViewOpt[TruncatedPA] =
-          props.obsConf
-            .zoom(ObsConfiguration.posAngle)
-            .zoom(PosAngle.fixedAnglePrism)
-            .zoom(angleTruncatedPASplitEpi.get)(angleTruncatedPASplitEpi.modify _)
+      val allowedFlipView: ViewOpt[TruncatedPA] =
+        props.obsConf
+          .zoom(ObsConfiguration.posAngle)
+          .zoom(PosAngle.allowFlipAnglePrism)
+          .zoom(angleTruncatedPASplitEpi.get)(angleTruncatedPASplitEpi.modify _)
 
-        val allowedFlipView: ViewOpt[TruncatedPA] =
-          props.obsConf
-            .zoom(ObsConfiguration.posAngle)
-            .zoom(PosAngle.allowFlipAnglePrism)
-            .zoom(angleTruncatedPASplitEpi.get)(angleTruncatedPASplitEpi.modify _)
+      val parallacticOverrideView: ViewOpt[TruncatedPA] =
+        props.obsConf
+          .zoom(ObsConfiguration.posAngle)
+          .zoom(PosAngle.parallacticOverrideAnglePrism)
+          .zoom(angleTruncatedPASplitEpi.get)(angleTruncatedPASplitEpi.modify _)
 
-        val parallacticOverrideView: ViewOpt[TruncatedPA] =
-          props.obsConf
-            .zoom(ObsConfiguration.posAngle)
-            .zoom(PosAngle.parallacticOverrideAnglePrism)
-            .zoom(angleTruncatedPASplitEpi.get)(angleTruncatedPASplitEpi.modify _)
-
-        def posAngleEditor(pa: View[TruncatedPA]) =
-          <.div(
-            ExploreStyles.SignalToNoiseAt,
-            InputWithUnits(
-              id = "pos-angle-value",
-              clazz = Css.Empty,
-              value = pa,
-              units = "° E of N",
-              validFormat = truncatedPAAngle,
-              changeAuditor = ChangeAuditor.accept.decimal(2)
-            )
-          )
-
-        ReactFragment(
-          Form(size = Small)(
-            ExploreStyles.Compact,
-            ExploreStyles.ObsConfigurationForm
-          )(
-            <.div(
-              ExploreStyles.ObsConfigurationObsPA,
-              <.label("Position Angle", HelpIcon("configuration/positionangle.md")),
-              EnumViewSelect(
-                id = "pos-angle-alternative",
-                value = posAngleOptionsView
-              ),
-              fixedView.mapValue(posAngleEditor),
-              allowedFlipView.mapValue(posAngleEditor),
-              parallacticOverrideView.mapValue(posAngleEditor)
-            )
+      def posAngleEditor(pa: View[TruncatedPA]) =
+        <.div(
+          ExploreStyles.InputWithLabel,
+          InputWithUnits(
+            id = "pos-angle-value",
+            clazz = Css.Empty,
+            value = pa,
+            units = "° E of N",
+            validFormat = truncatedPAAngle,
+            changeAuditor = ChangeAuditor.accept.decimal(2)
           )
         )
-      }
+
+      Form(size = Small)(
+        ExploreStyles.Compact,
+        ExploreStyles.ObsConfigurationForm
+      )(
+        <.label("Position Angle", HelpIcon("configuration/positionangle.md")),
+        EnumViewSelect(
+          clazz = ExploreStyles.ObsConfigurationObsPA,
+          id = "pos-angle-alternative",
+          value = posAngleOptionsView
+        ),
+        fixedView.mapValue(posAngleEditor),
+        allowedFlipView.mapValue(posAngleEditor),
+        parallacticOverrideView.mapValue(posAngleEditor)
+      )
+    }
 
 }
