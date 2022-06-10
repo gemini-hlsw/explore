@@ -3,26 +3,33 @@
 
 package explore.config
 
-import explore.model.validators._
+import cats.data.NonEmptyList
 import crystal.react.View
 import crystal.react.reuse._
+import eu.timepit.refined.auto._
+import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.model.DitherNanoMeters
 import explore.model.ScienceModeAdvanced
 import explore.model.ScienceModeBasic
+import explore.model.validators._
 import explore.optics._
+import explore.targeteditor.InputWithUnits
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum._
+import lucuma.core.math.Offset
 import lucuma.core.model.Observation
 import lucuma.core.syntax.all._
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.ui.forms.EnumViewOptionalSelect
 import lucuma.ui.implicits._
+import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.reusability._
 import monocle.Lens
 import react.common._
@@ -30,15 +37,8 @@ import react.semanticui.collections.form.Form
 import react.semanticui.elements.button.Button
 import react.semanticui.shorthand._
 import react.semanticui.sizes._
-import explore.model.DitherNanoMeters
 
 import scala.scalajs.js.JSConverters._
-import explore.targeteditor.InputWithUnits
-import eu.timepit.refined.auto._
-import eu.timepit.refined.cats._
-import lucuma.ui.optics.ChangeAuditor
-import cats.data.NonEmptyList
-import lucuma.core.math.Offset
 
 sealed trait AdvancedConfigurationPanel[T <: ScienceModeAdvanced, S <: ScienceModeBasic] {
   val obsId: Observation.Id

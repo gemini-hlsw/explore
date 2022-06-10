@@ -3,22 +3,23 @@
 
 package explore.model
 
-import lucuma.ui.optics.ValidFormatInput
-import cats.data.Validated
 import cats.data.NonEmptyChain
-import explore.model.TruncatedAngle
-import lucuma.core.math.Angle
-import eu.timepit.refined.auto._
 import cats.data.NonEmptyList
-import eu.timepit.refined.types.string.NonEmptyString
+import cats.data.Validated
 import cats.syntax.all._
-import scala.util.Try
-import explore.model.display._
-import lucuma.core.math.Offset
-import lucuma.core.math.Axis
-import explore.optics._
+import eu.timepit.refined.auto._
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.DitherNanoMeters
 import explore.model.DitherNanoMetersRange
+import explore.model.TruncatedAngle
+import explore.model.display._
+import explore.optics._
+import lucuma.core.math.Angle
+import lucuma.core.math.Axis
+import lucuma.core.math.Offset
+import lucuma.ui.optics.ValidFormatInput
+
+import scala.util.Try
 
 object validators {
   val truncatedAngleValidFormat = ValidFormatInput[TruncatedAngle](

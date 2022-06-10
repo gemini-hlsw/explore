@@ -4,8 +4,11 @@
 package explore.model
 
 import cats.Eq
+import cats.data.NonEmptyList
 import cats.syntax.all._
+import eu.timepit.refined.cats._
 import io.circe.Decoder
+import io.circe.refined._
 import lucuma.core.enum._
 import lucuma.core.math.Offset
 import lucuma.schemas.decoders._
@@ -13,9 +16,6 @@ import monocle.Focus
 import monocle.Lens
 import monocle.Prism
 import monocle.macros.GenPrism
-import eu.timepit.refined.cats._
-import io.circe.refined._
-import cats.data.NonEmptyList
 
 sealed trait ScienceModeAdvanced extends Product with Serializable
 

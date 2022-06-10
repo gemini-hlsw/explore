@@ -4,7 +4,9 @@
 package explore.optics
 
 import coulomb._
+import explore.model.TruncatedAngle
 import lucuma.core.enum.Band
+import lucuma.core.math.Angle
 import lucuma.core.math.ApparentRadialVelocity
 import lucuma.core.math.Constants._
 import lucuma.core.math.RadialVelocity
@@ -13,14 +15,12 @@ import lucuma.core.math.dimensional.Measure
 import lucuma.core.math.units._
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.Target
+import lucuma.core.optics.SplitEpi
 import monocle.Getter
 import monocle.Optional
 import monocle._
 
 import scala.collection.immutable.SortedMap
-import lucuma.core.optics.SplitEpi
-import explore.model.TruncatedAngle
-import lucuma.core.math.Angle
 
 /**
  * Contains a set of useful optics to explore the model

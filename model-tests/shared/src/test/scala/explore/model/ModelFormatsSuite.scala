@@ -5,6 +5,7 @@ package explore.model
 
 import explore.model.arb.ArbTruncatedAngle
 import explore.model.formats._
+import explore.optics._
 import lucuma.core.arb._
 import lucuma.core.math.Parallax
 import lucuma.core.math.arb._

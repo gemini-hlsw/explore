@@ -15,8 +15,8 @@ import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.TruncatedAngle
 import explore.model.enum.PosAngleOptions
-import explore.optics._
 import explore.model.syntax.all._
+import explore.optics._
 import explore.targeteditor.InputWithUnits
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -24,8 +24,8 @@ import lucuma.core.math.Angle
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.syntax.string._
-import lucuma.ui.implicits._
 import lucuma.ui.forms.EnumViewSelect
+import lucuma.ui.implicits._
 import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.ValidFormatInput
 import monocle.Lens
