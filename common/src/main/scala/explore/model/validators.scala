@@ -22,6 +22,9 @@ import lucuma.ui.optics.ValidFormatInput
 import scala.util.Try
 
 object validators {
+
+  // TODO TEST ALL THESE!!!!
+
   val truncatedAngleValidFormat = ValidFormatInput[TruncatedAngle](
     s => {
       val ota = s.toDoubleOption

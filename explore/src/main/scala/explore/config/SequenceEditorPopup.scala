@@ -20,6 +20,7 @@ final case class SequenceEditorPopup(
   obsId:            Observation.Id,
   title:            String,
   subtitle:         Option[NonEmptyString],
+  seqGenParameters: VdomElement,
   trigger:          Button
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[SequenceEditorPopup](SequenceEditorPopup.component)
@@ -30,8 +31,7 @@ object SequenceEditorPopup {
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
-      // isOpen
-      .useState(false)
+      .useState(false) // isOpen
       .render { (props, isOpen) =>
         implicit val ctx = props.ctx
 

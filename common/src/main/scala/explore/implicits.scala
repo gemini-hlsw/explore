@@ -12,6 +12,7 @@ import clue._
 import coulomb.Quantity
 import crystal.ViewF
 import crystal.ViewOptF
+import crystal.implicits._
 import crystal.react.ReuseViewF
 import crystal.react.ReuseViewOptF
 import crystal.react.reuse._
@@ -33,6 +34,7 @@ import shapeless._
 import scala.annotation.unused
 import scala.collection.immutable.SortedMap
 import scala.concurrent.duration._
+import crystal.Pot
 
 trait ListImplicits {
 
@@ -173,6 +175,8 @@ object implicits
 
   implicit class EffectOps[F[_], A](val f: F[A]) extends AnyVal {
 
+    def attemptPot(implicit F: MonadThrow[F]): F[Pot[A]] = f.attempt.map(_.toTry.some.toPot)
+
     /**
      * Given an effect producing an A and a signal stream, runs the effect and then re-runs it
      * whenver a signal is received, producing a Stream[A].
@@ -214,6 +218,43 @@ object implicits
       tail:       Resource[F, fs2.Stream[F, _]]*
     )(implicit F: Temporal[F]): Resource[F, fs2.Stream[F, A]] =
       reRunOnResourceSignals(NonEmptyList.of(head, tail: _*), debounce.some)
+  }
 
+  implicit class PotEffectOps[F[_], A](val f: F[Pot[A]]) extends AnyVal {
+    def resetOnSignal(
+      signal:     fs2.Stream[F, Unit],
+      debounce:   Option[FiniteDuration] = 2.seconds.some
+    )(implicit F: Temporal[F]): fs2.Stream[F, Pot[A]] = {
+      val debouncedSignal = debounce.fold(signal)(signal.debounce)
+      fs2.Stream.eval(f) ++ debouncedSignal.flatMap(_ =>
+        fs2.Stream(Pot.pending) ++ fs2.Stream.eval(f)
+      )
+    }
+
+    def resetOnSignals(
+      signals:    NonEmptyList[fs2.Stream[F, Unit]],
+      debounce:   Option[FiniteDuration] = 2.seconds.some
+    )(implicit F: Temporal[F]): fs2.Stream[F, Pot[A]] =
+      resetOnSignal(signals.reduceLeft(_ merge _), debounce)
+
+    def resetOnResourceSignals(
+      subscriptions: NonEmptyList[Resource[F, fs2.Stream[F, _]]],
+      debounce:      Option[FiniteDuration] = 2.seconds.some
+    )(implicit F:    Temporal[F]): Resource[F, fs2.Stream[F, Pot[A]]] =
+      subscriptions.sequence
+        .map(ss => resetOnSignals(ss.map(_.void), debounce))
+
+    def resetOnResourceSignals(
+      head:       Resource[F, fs2.Stream[F, _]],
+      tail:       Resource[F, fs2.Stream[F, _]]*
+    )(implicit F: Temporal[F]): Resource[F, fs2.Stream[F, Pot[A]]] =
+      resetOnResourceSignals(NonEmptyList.of(head, tail: _*))
+
+    def resetOnResourceSignals(
+      debounce:   FiniteDuration,
+      head:       Resource[F, fs2.Stream[F, _]],
+      tail:       Resource[F, fs2.Stream[F, _]]*
+    )(implicit F: Temporal[F]): Resource[F, fs2.Stream[F, Pot[A]]] =
+      resetOnResourceSignals(NonEmptyList.of(head, tail: _*), debounce.some)
   }
 }

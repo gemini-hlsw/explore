@@ -12,6 +12,8 @@ import lucuma.core.model.Observation
 import lucuma.core.model.sequence._
 import queries.common.GeneratedSequenceSQL._
 import react.common._
+import queries.common.ObsQueriesGQL
+import cats.effect.IO
 
 final case class GeneratedSequenceViewer(obsId: Observation.Id)(implicit val ctx: AppContextIO)
     extends ReactFnProps[GeneratedSequenceViewer](GeneratedSequenceViewer.component)
@@ -25,12 +27,16 @@ object GeneratedSequenceViewer {
   val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useEffectResultOnMountBy { props =>
+      .useStreamResourceOnMountBy { props =>
         implicit val ctx = props.ctx
 
         SequenceSteps
           .query(props.obsId)
           .map(_.observation.map(_.execution.config))
+          .attemptPot
+          .resetOnResourceSignals(
+            ObsQueriesGQL.ObservationEditSubscription.subscribe[IO](props.obsId)
+          )
       }
-      .render((_, config) => potRender(renderFn)(config))
+      .render((_, config) => potRender(renderFn)(config.flatten))
 }

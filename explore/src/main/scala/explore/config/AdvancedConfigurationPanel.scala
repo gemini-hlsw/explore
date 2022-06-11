@@ -5,7 +5,6 @@ package explore.config
 
 import cats.data.NonEmptyList
 import crystal.react.View
-import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
@@ -30,7 +29,6 @@ import lucuma.core.util.Enumerated
 import lucuma.ui.forms.EnumViewOptionalSelect
 import lucuma.ui.implicits._
 import lucuma.ui.optics.ChangeAuditor
-import lucuma.ui.reusability._
 import monocle.Lens
 import react.common._
 import react.semanticui.collections.form.Form
@@ -39,6 +37,7 @@ import react.semanticui.shorthand._
 import react.semanticui.sizes._
 
 import scala.scalajs.js.JSConverters._
+import japgolly.scalajs.react.feature.ReactFragment
 
 sealed trait AdvancedConfigurationPanel[T <: ScienceModeAdvanced, S <: ScienceModeBasic] {
   val obsId: Observation.Id
@@ -104,6 +103,30 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
       .render { props =>
         implicit val ctx = props.ctx
 
+        val explicitWavelengthDithersView =
+          props.scienceModeAdvanced.zoom(explicitWavelengthDithers)
+        val explicitSpatialOffsetsView    = props.scienceModeAdvanced.zoom(explicitSpatialOffsets)
+
+        val seqGenParameters: VdomElement =
+          ReactFragment(
+            <.label("λ Dithers", HelpIcon("configuration/lambda-dithers.md")),
+            InputWithUnits(
+              id = "dithers",
+              value = explicitWavelengthDithersView,
+              validFormat = dithersValidFormat,
+              changeAuditor = dithersChangeAuditor,
+              units = "nm"
+            ),
+            <.label("Spatial Offsets", HelpIcon("configuration/spatial-offsets.md")),
+            InputWithUnits(
+              id = "offsets",
+              value = explicitSpatialOffsetsView,
+              validFormat = offsetQNELValidFormat,
+              changeAuditor = offsetsChangeAuditor,
+              units = "nm"
+            )
+          )
+
         Form(size = Small)(
           ExploreStyles.Compact,
           ExploreStyles.AdvancedConfigurationGrid
@@ -157,35 +180,19 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             )
           ),
           <.div(ExploreStyles.ExploreForm, ExploreStyles.AdvancedConfigurationCol3)(
-            <.label("λ Dithers", HelpIcon("configuration/lambda-dithers.md")),
-            InputWithUnits(
-              id = "dithers",
-              value = props.scienceModeAdvanced.zoom(explicitWavelengthDithers),
-              validFormat = dithersValidFormat,
-              changeAuditor = dithersChangeAuditor,
-              units = "nm"
-            ),
-            <.label("Spatial Offsets", HelpIcon("configuration/spatial-offsets.md")),
-            InputWithUnits(
-              id = "offsets",
-              value = props.scienceModeAdvanced.zoom(explicitSpatialOffsets),
-              validFormat = offsetQNELValidFormat,
-              changeAuditor = offsetsChangeAuditor,
-              units = "nm"
-            )
+            seqGenParameters
           ),
           <.div(ExploreStyles.AdvancedConfigurationButtons)(
             SequenceEditorPopup(
               props.obsId,
               props.title,
               props.subtitle,
-              trigger = Reuse.by(props.obsId)(
-                Button(
-                  size = Small,
-                  compact = true,
-                  clazz = ExploreStyles.VeryCompact,
-                  content = "View Sequence"
-                )
+              seqGenParameters,
+              trigger = Button(
+                size = Small,
+                compact = true,
+                clazz = ExploreStyles.VeryCompact,
+                content = "View Sequence"
               )
             ),
             Button(
