@@ -19,6 +19,7 @@ import explore.model.validators._
 import explore.optics._
 import explore.targeteditor.InputWithUnits
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum._
 import lucuma.core.math.Offset
@@ -37,7 +38,6 @@ import react.semanticui.shorthand._
 import react.semanticui.sizes._
 
 import scala.scalajs.js.JSConverters._
-import japgolly.scalajs.react.feature.ReactFragment
 
 sealed trait AdvancedConfigurationPanel[T <: ScienceModeAdvanced, S <: ScienceModeBasic] {
   val obsId: Observation.Id
@@ -107,23 +107,27 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
           props.scienceModeAdvanced.zoom(explicitWavelengthDithers)
         val explicitSpatialOffsetsView    = props.scienceModeAdvanced.zoom(explicitSpatialOffsets)
 
-        val seqGenParameters: VdomElement =
+        def dithersControl(onChange: Callback): VdomElement =
           ReactFragment(
             <.label("λ Dithers", HelpIcon("configuration/lambda-dithers.md")),
             InputWithUnits(
               id = "dithers",
-              value = explicitWavelengthDithersView,
+              value = explicitWavelengthDithersView.withOnMod(_ => onChange),
               validFormat = dithersValidFormat,
               changeAuditor = dithersChangeAuditor,
               units = "nm"
-            ),
+            )
+          )
+
+        def offsetsControl(onChange: Callback): VdomElement =
+          ReactFragment(
             <.label("Spatial Offsets", HelpIcon("configuration/spatial-offsets.md")),
             InputWithUnits(
               id = "offsets",
-              value = explicitSpatialOffsetsView,
+              value = explicitSpatialOffsetsView.withOnMod(_ => onChange),
               validFormat = offsetQNELValidFormat,
               changeAuditor = offsetsChangeAuditor,
-              units = "nm"
+              units = "arcsec"
             )
           )
 
@@ -180,14 +184,16 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             )
           ),
           <.div(ExploreStyles.ExploreForm, ExploreStyles.AdvancedConfigurationCol3)(
-            seqGenParameters
+            dithersControl(Callback.empty),
+            offsetsControl(Callback.empty)
           ),
           <.div(ExploreStyles.AdvancedConfigurationButtons)(
             SequenceEditorPopup(
               props.obsId,
               props.title,
               props.subtitle,
-              seqGenParameters,
+              dithersControl,
+              offsetsControl,
               trigger = Button(
                 size = Small,
                 compact = true,

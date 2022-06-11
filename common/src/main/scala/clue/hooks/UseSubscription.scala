@@ -3,10 +3,10 @@
 
 package clue.hooks
 
+import crystal.Pot
+import crystal.react.hooks._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.hooks.CustomHook
-import crystal.react.hooks._
-import crystal.Pot
 
 // unprotect in crystal so we can reuse it here
 protected[hooks] final case class WithDeps[D, A](deps: D, fromDeps: D => A)

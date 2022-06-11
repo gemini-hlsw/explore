@@ -10,6 +10,7 @@ import cats.effect.kernel.Resource
 import cats.syntax.all._
 import clue._
 import coulomb.Quantity
+import crystal.Pot
 import crystal.ViewF
 import crystal.ViewOptF
 import crystal.implicits._
@@ -34,7 +35,6 @@ import shapeless._
 import scala.annotation.unused
 import scala.collection.immutable.SortedMap
 import scala.concurrent.duration._
-import crystal.Pot
 
 trait ListImplicits {
 

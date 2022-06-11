@@ -3,14 +3,14 @@
 
 package clue
 
-import japgolly.scalajs.react._
-import io.circe.Decoder
-import clue.StreamingClient
-import japgolly.scalajs.react.util.DefaultEffects.{Async => DefaultA}
+import cats.effect.Resource
 import clue.GraphQLOperation
+import clue.StreamingClient
+import io.circe.Decoder
 import io.circe.Encoder
 import io.circe.Json
-import cats.effect.Resource
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.util.DefaultEffects.{Async => DefaultA}
 
 package object hooks extends UseSubscription.HooksApiExt {
   implicit class StringGQLOps(val str: String) extends AnyVal {

@@ -3,7 +3,11 @@
 
 package explore.config
 
+import cats.effect.IO
+import crystal.Pot
+import crystal.react.View
 import crystal.react.hooks._
+import crystal.react.implicits._
 import explore.implicits._
 import explore.utils._
 import japgolly.scalajs.react._
@@ -11,12 +15,12 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.core.model.sequence._
 import queries.common.GeneratedSequenceSQL._
-import react.common._
 import queries.common.ObsQueriesGQL
-import cats.effect.IO
+import react.common._
 
-final case class GeneratedSequenceViewer(obsId: Observation.Id)(implicit val ctx: AppContextIO)
-    extends ReactFnProps[GeneratedSequenceViewer](GeneratedSequenceViewer.component)
+final case class GeneratedSequenceViewer(obsId: Observation.Id, changed: View[Pot[Unit]])(implicit
+  val ctx:                                      AppContextIO
+) extends ReactFnProps[GeneratedSequenceViewer](GeneratedSequenceViewer.component)
 
 object GeneratedSequenceViewer {
   type Props = GeneratedSequenceViewer
@@ -38,5 +42,10 @@ object GeneratedSequenceViewer {
             ObsQueriesGQL.ObservationEditSubscription.subscribe[IO](props.obsId)
           )
       }
-      .render((_, config) => potRender(renderFn)(config.flatten))
+      .useEffectWithDepsBy((_, config) => config.flatten.map(_ => ()))((props, _) =>
+        changedPot => props.changed.set(changedPot)
+      )
+      .render((props, config) =>
+        potRender(renderFn)(props.changed.get.flatMap(_ => config.flatten))
+      )
 }
