@@ -32,6 +32,7 @@ import explore.model.enum.ExecutionEnvironment
 import explore.model.enum.Theme
 import explore.model.reusability._
 import explore.utils._
+import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
@@ -57,6 +58,8 @@ import js.annotation._
 
 @JSExportTopLevel("Explore")
 object ExploreMain extends IOApp.Simple {
+
+  implicit val reuseContext: Reusability[AppContextIO] = Reusability.never
 
   @JSExport
   def resetIOApp(): Unit =
@@ -114,7 +117,8 @@ object ExploreMain extends IOApp.Simple {
 
     def setupReusabilityOverlay(env: ExecutionEnvironment): IO[Unit] =
       if (env === ExecutionEnvironment.Development) {
-        IO(japgolly.scalajs.react.extra.ReusabilityOverlay.overrideGloballyInDev())
+        toggleReusabilityOverlay[IO]() >>
+          IO(japgolly.scalajs.react.extra.ReusabilityOverlay.overrideGloballyInDev())
       } else IO.unit
 
     val reconnectionStrategy: WebSocketReconnectionStrategy =
@@ -173,7 +177,6 @@ object ExploreMain extends IOApp.Simple {
         _                    <- logger.info(s"Config: ${appConfig.show}")
         ctx                  <- AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl, setPageVia, worker)
         _                    <- setupReusabilityOverlay(appConfig.environment)
-        _                    <- toggleReusabilityOverlay[IO]()
         r                    <- (ctx.sso.whoami, setupDOM[IO], showEnvironment[IO](appConfig.environment)).parTupled
         (vault, container, _) = r
       } yield {
