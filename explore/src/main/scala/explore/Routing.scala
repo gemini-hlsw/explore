@@ -13,6 +13,7 @@ import explore.model.Page
 import explore.model.Page._
 import explore.model._
 import explore.programs.ProgramsPopup
+import explore.proposal.ProposalTabContents
 import explore.tabs._
 import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react.extra.router._
@@ -93,8 +94,14 @@ object Routing {
       }
     )
 
-  private def proposalTab(): VdomElement =
-    <.div("Under construction")
+  private def proposalTab(page: Page, model: View[RootModel]): VdomElement =
+    AppCtx.using { implicit ctx =>
+      val routingInfo = RoutingInfo.from(page)
+      ProposalTabContents(routingInfo.programId,
+                          model.zoom(RootModel.user).get,
+                          model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forProposal)
+      )
+    }
 
   private def configurationsTab(page: Page): VdomElement =
     AppCtx.using { implicit ctx =>
@@ -141,7 +148,7 @@ object Routing {
 
           | dynamicRouteCT(
             (root / id[Program.Id] / "proposal").xmapL(ProposalPage.iso)
-          ) ~> dynRenderP { case (_, _) => proposalTab() }
+          ) ~> dynRenderP { case (p, m) => proposalTab(p, m) }
 
           | dynamicRouteCT(
             (root / id[Program.Id] / "observations").xmapL(ObservationsBasePage.iso)

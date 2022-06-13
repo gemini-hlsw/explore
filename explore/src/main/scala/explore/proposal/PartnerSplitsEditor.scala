@@ -12,12 +12,10 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.ui.ExploreStyles
 import explore.components.ui.FomanticStyles
 import explore.components.ui.PartnerFlags
-import explore.implicits._
-import explore.model._
-import explore.model.refined._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.ZeroTo100
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.optics._
 import monocle.function.Index
@@ -73,7 +71,7 @@ object PartnerSplitsEditor {
             <.span(
               FormInputEV(
                 id = NonEmptyString.from(id).getOrElse("SPLIT_ID"),
-                value = splitView.zoom(PartnerSplit.percent).stripQuantity,
+                value = splitView.zoom(PartnerSplit.percent),
                 validFormat = ValidFormatInput.forRefinedInt[ZeroTo100](),
                 changeAuditor = ChangeAuditor.forRefinedInt[ZeroTo100]()
               ).withMods(
@@ -85,11 +83,11 @@ object PartnerSplitsEditor {
       )
     }
 
-  private def total(p: Props)       = p.splits.get.map(_.percent.value.value).sum
+  private def total(p: Props)       = p.splits.get.map(_.percent.value).sum
   private def addsUpTo100(p: Props) = total(p) === 100
 
   def render(p: Props): VdomNode = {
-    def save = if (addsUpTo100(p)) p.onSave(p.splits.get) else Callback.empty
+    def save = if (addsUpTo100(p)) p.onSave(p.splits.get) >> p.closeMe else Callback.empty
 
     Modal(
       size = ModalSize.Mini,

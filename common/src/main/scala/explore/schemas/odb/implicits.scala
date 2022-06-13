@@ -6,13 +6,16 @@ package queries.schemas
 import clue.data.Input
 import clue.data.syntax._
 import eu.timepit.refined.types.numeric.PosBigDecimal
+import eu.timepit.refined.types.numeric.PosLong
 import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.syntax._
 import lucuma.core.enum.Band
 import lucuma.core.math.BrightnessUnits._
 import lucuma.core.math._
 import lucuma.core.math.dimensional._
+import lucuma.core.model.ProposalClass._
 import lucuma.core.model._
+import lucuma.core.syntax.time._
 import lucuma.schemas.ObservationDB.Enums.PosAngleConstraintType
 import lucuma.schemas.ObservationDB.Types._
 import queries.schemas.UserPreferencesDB.Types.ExploreResizableWidthInsertInput
@@ -262,6 +265,60 @@ object implicits {
                                   angle = Input.unassign
           )
       }
+  }
+
+  implicit class NonNegDurationOps(val nnd: NonNegDuration) {
+    def toInput: NonNegDurationInput =
+      NonNegDurationInput(microseconds = PosLong.unsafeFrom(nnd.value.toMicros).assign)
+  }
+
+  implicit class PropocalClassOps(val p: ProposalClass) extends AnyVal {
+    def toInput: ProposalClassInput = p match {
+      case DemoScience(minPercentTime)                                  =>
+        ProposalClassInput(demoScience =
+          DemoScienceInput(minPercentTime = minPercentTime.assign).assign
+        )
+      case Exchange(minPercentTime)                                     =>
+        ProposalClassInput(exchange = ExchangeInput(minPercentTime = minPercentTime.assign).assign)
+      case LargeProgram(minPercentTime, minPercentTotalTime, totalTime) =>
+        ProposalClassInput(largeProgram =
+          LargeProgramInput(
+            minPercentTime = minPercentTime.assign,
+            minPercentTotalTime = minPercentTotalTime.assign,
+            totalTime = totalTime.toInput.assign
+          ).assign
+        )
+      case Queue(minPercentTime)                                        =>
+        ProposalClassInput(queue = QueueInput(minPercentTime = minPercentTime.assign).assign)
+      case FastTurnaround(minPercentTime)                               =>
+        ProposalClassInput(fastTurnaround =
+          FastTurnaroundInput(minPercentTime = minPercentTime.assign).assign
+        )
+      case DirectorsTime(minPercentTime)                                =>
+        ProposalClassInput(directorsTime =
+          DirectorsTimeInput(minPercentTime = minPercentTime.assign).assign
+        )
+      case Intensive(minPercentTime, minPercentTotalTime, totalTime)    =>
+        ProposalClassInput(intensive =
+          IntensiveInput(
+            minPercentTime = minPercentTime.assign,
+            minPercentTotalTime = minPercentTotalTime.assign,
+            totalTime = totalTime.toInput.assign
+          ).assign
+        )
+      case SystemVerification(minPercentTime)                           =>
+        ProposalClassInput(systemVerification =
+          SystemVerificationInput(minPercentTime = minPercentTime.assign).assign
+        )
+      case Classical(minPercentTime)                                    =>
+        ProposalClassInput(classical =
+          ClassicalInput(minPercentTime = minPercentTime.assign).assign
+        )
+      case PoorWeather(minPercentTime)                                  =>
+        ProposalClassInput(poorWeather =
+          PoorWeatherInput(minPercentTime = minPercentTime.assign).assign
+        )
+    }
   }
 
   implicit class SiderealTargetOps(val sidereal: Target.Sidereal) extends AnyVal {
