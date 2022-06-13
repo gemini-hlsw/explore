@@ -14,13 +14,13 @@ import spire.math.Rational
  * @param posAangle
  *   The wrapped Angle. Guaranteed to have no more than 2 decimals of precision.
  */
-sealed abstract case class TruncatedPA private (angle: Angle)
+sealed abstract case class TruncatedAngle private (angle: Angle)
 
-object TruncatedPA {
-  def apply(angle: Angle): TruncatedPA = {
+object TruncatedAngle {
+  def apply(angle: Angle): TruncatedAngle = {
     val microSecs = Rational(angle.toMicroarcseconds, 100).round.toLong * 100
-    new TruncatedPA(Angle.fromMicroarcseconds(microSecs)) {}
+    new TruncatedAngle(Angle.fromMicroarcseconds(microSecs)) {}
   }
 
-  implicit val truncatedPAEq: Eq[TruncatedPA] = Eq.fromUniversalEquals
+  implicit val truncatedAngleEq: Eq[TruncatedAngle] = Eq.fromUniversalEquals
 }

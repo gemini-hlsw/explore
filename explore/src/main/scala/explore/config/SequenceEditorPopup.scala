@@ -3,6 +3,9 @@
 
 package explore.config
 
+import crystal.Pot
+import crystal.implicits._
+import crystal.react.hooks._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
@@ -20,6 +23,8 @@ final case class SequenceEditorPopup(
   obsId:            Observation.Id,
   title:            String,
   subtitle:         Option[NonEmptyString],
+  dithersControl:   Callback => VdomElement,
+  offsetsControl:   Callback => VdomElement,
   trigger:          Button
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[SequenceEditorPopup](SequenceEditorPopup.component)
@@ -30,9 +35,9 @@ object SequenceEditorPopup {
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
-      // isOpen
-      .useState(false)
-      .render { (props, isOpen) =>
+      .useState(false)        // isOpen
+      .useStateView(().ready) // changed - Indicates whether to display sequence or pending.
+      .render { (props, isOpen, changed) =>
         implicit val ctx = props.ctx
 
         React.Fragment(
@@ -55,7 +60,15 @@ object SequenceEditorPopup {
               props.subtitle.map(subtitle => <.div(ExploreStyles.SequenceObsSutitle, subtitle))
             ),
             content = ModalContent(
-              GeneratedSequenceViewer(props.obsId)
+              <.div(ExploreStyles.SeqGenParametersForm)(
+                <.div(ExploreStyles.ExploreForm)(
+                  props.dithersControl(changed.set(Pot.pending))
+                ),
+                <.div(ExploreStyles.ExploreForm)(
+                  props.offsetsControl(changed.set(Pot.pending))
+                )
+              ),
+              GeneratedSequenceViewer(props.obsId, changed)
             )
           )
         )

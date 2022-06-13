@@ -112,7 +112,7 @@ object SequenceTable {
   private def drawBracket(rows: Int): VdomElement =
     svg(^.width   := "1px", ^.height := "15px", ^.overflow.visible)(
       use(
-        transform := s"scale(1, $rows)",
+        transform := s"scale(1, ${math.pow(rows.toDouble, 1.08)})",
         xlinkHref := "#bracket"
       )
     )

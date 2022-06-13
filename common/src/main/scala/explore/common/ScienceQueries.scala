@@ -138,8 +138,10 @@ object ScienceQueries {
         a.explicitAmpReadMode.orUnassign,
         a.explicitAmpGain.orUnassign,
         a.explicitRoi.orUnassign,
-        a.explicitWavelengthDithers.assign,
-        a.explicitSpatialOffsets.map(_.toInput).assign
+        a.explicitWavelengthDithers
+          .map(_.toList.map(_.value.toInt)) // FIXME Remove toInt when the API supports decimals
+          .orUnassign,
+        a.explicitSpatialOffsets.map(_.toList.map(_.toInput)).orUnassign
       )
   }
 
@@ -157,8 +159,10 @@ object ScienceQueries {
         a.explicitAmpReadMode.orUnassign,
         a.explicitAmpGain.orUnassign,
         a.explicitRoi.orUnassign,
-        a.explicitWavelengthDithers.assign,
-        a.explicitSpatialOffsets.map(_.toInput).assign
+        a.explicitWavelengthDithers
+          .map(_.toList.map(_.value.toInt)) // FIXME Remove toInt when the API supports decimals
+          .orUnassign,
+        a.explicitSpatialOffsets.map(_.toList.map(_.toInput)).orUnassign
       )
   }
 
