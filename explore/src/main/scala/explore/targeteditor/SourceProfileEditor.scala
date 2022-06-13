@@ -3,8 +3,6 @@
 
 package explore.targeteditor
 
-import cats.data.NonEmptyChain
-import cats.data.Validated
 import cats.syntax.all._
 import clue.data.syntax._
 import eu.timepit.refined.auto._
@@ -12,16 +10,15 @@ import explore.common._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.enum.SourceProfileType
+import explore.model.validators._
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.math.Angle
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.SourceProfile._
 import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.forms.EnumSelect
 import lucuma.ui.optics.ChangeAuditor
-import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
 import queries.schemas.implicits._
 import react.common._
@@ -34,16 +31,6 @@ case class SourceProfileEditor(
 
 object SourceProfileEditor {
   type Props = SourceProfileEditor
-
-  // We can't define a Format[String, Angle] for arcseconds. Roundtrip laws fail because of rounding.
-  private val angleValidFormatInput: ValidFormatInput[Angle] =
-    ValidFormatInput(
-      s =>
-        Validated.fromOption((s.toDoubleOption.map(Angle.fromDoubleArcseconds)),
-                             NonEmptyChain("Invalid angle")
-        ),
-      a => (a.toMicroarcseconds / 1000000.0).toString
-    )
 
   protected val component = ScalaFnComponent[Props] { props =>
     implicit val appCtx = props.appCtx
@@ -83,8 +70,8 @@ object SourceProfileEditor {
             <.label("FWHM", ExploreStyles.SkipToNext),
             InputWithUnits( // FWHM is positive arcsec accepting decimals
               gaussianAligner.zoom(Gaussian.fwhm, GaussianInput.fwhm.modify).view(_.toInput.assign),
-              angleValidFormatInput,
-              ChangeAuditor.fromValidFormatInput(angleValidFormatInput).denyNeg.allowEmpty,
+              angleValidFormat,
+              ChangeAuditor.fromValidFormatInput(angleValidFormat).denyNeg.allowEmpty,
               id = "fwhm",
               units = "arcsec"
             ),

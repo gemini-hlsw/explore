@@ -14,9 +14,15 @@ import lucuma.core.util.arb.ArbEnumerated._
 import lucuma.core.enum._
 import lucuma.core.math.Offset
 import lucuma.core.math.arb.ArbOffset
+import lucuma.core.math.arb.ArbRefined
+import eu.timepit.refined.scalacheck.numeric._
+import cats.data.NonEmptyList
+import cats.laws.discipline.arbitrary._
+import explore.model.DitherNanoMeters
 
 trait ArbScienceModeAdvanced {
   import ArbOffset._
+  import ArbRefined._
 
   implicit val arbGmosNorthLongSlitAdvanced = Arbitrary[ScienceModeAdvanced.GmosNorthLongSlit](
     for {
@@ -28,8 +34,8 @@ trait ArbScienceModeAdvanced {
       explicitAmpReadMode       <- arbitrary[Option[GmosAmpReadMode]]
       explicitAmpGain           <- arbitrary[Option[GmosAmpGain]]
       explicitRoi               <- arbitrary[Option[GmosRoi]]
-      explicitWavelengthDithers <- arbitrary[List[Int]]
-      explicitSpatialOffsets    <- arbitrary[List[Offset.Q]]
+      explicitWavelengthDithers <- arbitrary[Option[NonEmptyList[DitherNanoMeters]]]
+      explicitSpatialOffsets    <- arbitrary[Option[NonEmptyList[Offset.Q]]]
     } yield ScienceModeAdvanced.GmosNorthLongSlit(
       overrideGrating,
       overrideFilter,
@@ -54,8 +60,8 @@ trait ArbScienceModeAdvanced {
       explicitAmpReadMode       <- arbitrary[Option[GmosAmpReadMode]]
       explicitAmpGain           <- arbitrary[Option[GmosAmpGain]]
       explicitRoi               <- arbitrary[Option[GmosRoi]]
-      explicitWavelengthDithers <- arbitrary[List[Int]]
-      explicitSpatialOffsets    <- arbitrary[List[Offset.Q]]
+      explicitWavelengthDithers <- arbitrary[Option[NonEmptyList[DitherNanoMeters]]]
+      explicitSpatialOffsets    <- arbitrary[Option[NonEmptyList[Offset.Q]]]
     } yield ScienceModeAdvanced.GmosSouthLongSlit(
       overrideGrating,
       overrideFilter,
@@ -87,8 +93,8 @@ trait ArbScienceModeAdvanced {
        Option[GmosAmpReadMode],
        Option[GmosAmpGain],
        Option[GmosRoi],
-       List[Int],
-       List[Offset.Q]
+       Option[NonEmptyList[DitherNanoMeters]],
+       Option[NonEmptyList[Offset.Q]]
       )
     ]
       .contramap(o =>
@@ -115,8 +121,8 @@ trait ArbScienceModeAdvanced {
        Option[GmosAmpReadMode],
        Option[GmosAmpGain],
        Option[GmosRoi],
-       List[Int],
-       List[Offset.Q]
+       Option[NonEmptyList[DitherNanoMeters]],
+       Option[NonEmptyList[Offset.Q]]
       )
     ]
       .contramap(o =>

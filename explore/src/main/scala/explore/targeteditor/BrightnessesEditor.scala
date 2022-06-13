@@ -15,6 +15,7 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.display._
+import explore.model.validators._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -25,7 +26,6 @@ import lucuma.core.util.Enumerated
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.optics.ChangeAuditor
-import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
 import monocle.Focus
 import react.common._
@@ -37,7 +37,6 @@ import reactST.reactTable._
 import reactST.reactTable.mod.SortingRule
 
 import scala.collection.immutable.SortedMap
-import scala.util.Try
 
 sealed trait BrightnessesEditor[T] {
   val brightnesses: View[SortedMap[Band, BrightnessMeasure[T]]]
@@ -71,12 +70,6 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
 
   private val tableState = BrightnessTableDef.State().setSortBy(SortingRule("band"))
 
-  private val validBrightnessValue: ValidFormatInput[BigDecimal] =
-    ValidFormatInput(
-      ValidFormatInput.bigDecimalValidFormat("Invalid brightness value").getValidated,
-      n => Try(displayBrightness.shortName(n)).toOption.orEmpty
-    )
-
   val component =
     ScalaFnComponent
       .withHooks[Props]
@@ -103,7 +96,7 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                   FormInputEV[View, BigDecimal](
                     id = NonEmptyString.unsafeFrom(s"brightnessValue_${cell.row.id}"),
                     value = cell.value,
-                    validFormat = validBrightnessValue,
+                    validFormat = brightnessValidFormat,
                     changeAuditor = ChangeAuditor.bigDecimal(2, 3).allowExp(2),
                     disabled = disabled
                   )

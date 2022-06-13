@@ -3,27 +3,33 @@
 
 package explore.config
 
+import cats.data.NonEmptyList
 import crystal.react.View
-import crystal.react.reuse._
 import eu.timepit.refined.auto._
+import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.model.DitherNanoMeters
 import explore.model.ScienceModeAdvanced
 import explore.model.ScienceModeBasic
+import explore.model.validators._
 import explore.optics._
+import explore.targeteditor.InputWithUnits
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum._
+import lucuma.core.math.Offset
 import lucuma.core.model.Observation
 import lucuma.core.syntax.all._
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.ui.forms.EnumViewOptionalSelect
 import lucuma.ui.implicits._
-import lucuma.ui.reusability._
+import lucuma.ui.optics.ChangeAuditor
 import monocle.Lens
 import react.common._
 import react.semanticui.collections.form.Form
@@ -66,6 +72,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
   @inline protected val explicitReadMode: Lens[T, Option[ReadMode]]
   @inline protected val explicitGain: Lens[T, Option[Gain]]
   @inline protected val explicitRoi: Lens[T, Option[Roi]]
+  @inline protected val explicitWavelengthDithers: Lens[T, Option[NonEmptyList[DitherNanoMeters]]]
+  @inline protected val explicitSpatialOffsets: Lens[T, Option[NonEmptyList[Offset.Q]]]
 
   @inline protected val gratingLens: Lens[S, Grating]
   @inline protected val filterLens: Lens[S, Option[Filter]]
@@ -83,11 +91,45 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
       { case (r, g) => s"${r.longName}, ${g.longName} Gain" }
     )
 
+  val dithersChangeAuditor: ChangeAuditor[Option[NonEmptyList[DitherNanoMeters]]] =
+    ChangeAuditor.bigDecimal(3, 1).as[DitherNanoMeters].toSequence[NonEmptyList]().optional
+
+  val offsetsChangeAuditor: ChangeAuditor[Option[NonEmptyList[Offset.Q]]] =
+    ChangeAuditor.bigDecimal(3, 2).as[Offset.Q].toSequence[NonEmptyList]().optional
+
   val component =
     ScalaFnComponent
       .withHooks[Props]
       .render { props =>
         implicit val ctx = props.ctx
+
+        val explicitWavelengthDithersView =
+          props.scienceModeAdvanced.zoom(explicitWavelengthDithers)
+        val explicitSpatialOffsetsView    = props.scienceModeAdvanced.zoom(explicitSpatialOffsets)
+
+        def dithersControl(onChange: Callback): VdomElement =
+          ReactFragment(
+            <.label("λ Dithers", HelpIcon("configuration/lambda-dithers.md")),
+            InputWithUnits(
+              id = "dithers",
+              value = explicitWavelengthDithersView.withOnMod(_ => onChange),
+              validFormat = dithersValidFormat,
+              changeAuditor = dithersChangeAuditor,
+              units = "nm"
+            )
+          )
+
+        def offsetsControl(onChange: Callback): VdomElement =
+          ReactFragment(
+            <.label("Spatial Offsets", HelpIcon("configuration/spatial-offsets.md")),
+            InputWithUnits(
+              id = "offsets",
+              value = explicitSpatialOffsetsView.withOnMod(_ => onChange),
+              validFormat = offsetQNELValidFormat,
+              changeAuditor = offsetsChangeAuditor,
+              units = "arcsec"
+            )
+          )
 
         Form(size = Small)(
           ExploreStyles.Compact,
@@ -142,19 +184,21 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             )
           ),
           <.div(ExploreStyles.ExploreForm, ExploreStyles.AdvancedConfigurationCol3)(
+            dithersControl(Callback.empty),
+            offsetsControl(Callback.empty)
           ),
           <.div(ExploreStyles.AdvancedConfigurationButtons)(
             SequenceEditorPopup(
               props.obsId,
               props.title,
               props.subtitle,
-              trigger = Reuse.by(props.obsId)(
-                Button(
-                  size = Small,
-                  compact = true,
-                  clazz = ExploreStyles.VeryCompact,
-                  content = "View Sequence"
-                )
+              dithersControl,
+              offsetsControl,
+              trigger = Button(
+                size = Small,
+                compact = true,
+                clazz = ExploreStyles.VeryCompact,
+                content = "View Sequence"
               )
             ),
             Button(
@@ -235,10 +279,15 @@ object AdvancedConfigurationPanel {
       ScienceModeAdvanced.GmosNorthLongSlit.explicitAmpGain
     @inline protected val explicitRoi                       =
       ScienceModeAdvanced.GmosNorthLongSlit.explicitRoi
+    @inline protected val explicitWavelengthDithers         =
+      ScienceModeAdvanced.GmosNorthLongSlit.explicitWavelengthDithers
+    @inline protected val explicitSpatialOffsets            =
+      ScienceModeAdvanced.GmosNorthLongSlit.explicitSpatialOffsets
 
     @inline protected val gratingLens = ScienceModeBasic.GmosNorthLongSlit.grating
     @inline protected val filterLens  = ScienceModeBasic.GmosNorthLongSlit.filter
     @inline protected val fpuLens     = ScienceModeBasic.GmosNorthLongSlit.fpu
+
   }
 
   // Gmos South Long Slit
@@ -284,6 +333,10 @@ object AdvancedConfigurationPanel {
       ScienceModeAdvanced.GmosSouthLongSlit.explicitAmpGain
     @inline protected val explicitRoi                       =
       ScienceModeAdvanced.GmosSouthLongSlit.explicitRoi
+    @inline protected val explicitWavelengthDithers         =
+      ScienceModeAdvanced.GmosSouthLongSlit.explicitWavelengthDithers
+    @inline protected val explicitSpatialOffsets            =
+      ScienceModeAdvanced.GmosSouthLongSlit.explicitSpatialOffsets
 
     @inline protected val gratingLens = ScienceModeBasic.GmosSouthLongSlit.grating
     @inline protected val filterLens  = ScienceModeBasic.GmosSouthLongSlit.filter
