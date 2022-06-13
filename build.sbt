@@ -7,7 +7,6 @@ val FUILess = "2.8.7"
 
 ThisBuild / Test / bspEnabled                                        := false
 ThisBuild / ScalafixConfig / bspEnabled.withRank(KeyRanks.Invisible) := false
-ThisBuild / scalafixDependencies += "com.github.liancheng"           %% "organize-imports" % "0.6.0"
 
 ThisBuild / evictionErrorLevel := Level.Info
 
@@ -18,7 +17,7 @@ addCommandAlias(
 
 addCommandAlias(
   "fixImports",
-  "; scalafix OrganizeImports; Test/scalafix OrganizeImports; scalafmtAll"
+  "; scalafix OrganizeImports; Test/scalafix OrganizeImports"
 )
 
 addCommandAlias(
