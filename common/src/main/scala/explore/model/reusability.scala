@@ -15,11 +15,16 @@ import lucuma.ags.AgsPosition
 import lucuma.ags.GuideStarCandidate
 import lucuma.catalog.AngularSize
 import lucuma.catalog.CatalogTargetResult
+import lucuma.core.model.IntPercent
+import lucuma.core.model.Partner
 import lucuma.core.model.PosAngleConstraint
+import lucuma.core.model.Proposal
+import lucuma.core.model.ProposalClass
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.ui.reusability._
 
+import scala.collection.immutable.SortedMap
 import scala.collection.immutable.TreeSeqMap
 
 /**
@@ -47,8 +52,6 @@ object reusability {
   implicit val targetGroupReuse: Reusability[TargetGroup]                             = Reusability.byEq
   implicit val constraintsSummaryReuse: Reusability[ConstraintsSummary]               = Reusability.byEq
   implicit val constraintGroupReuse: Reusability[ConstraintGroup]                     = Reusability.byEq
-  implicit val proposalDetailsReuse: Reusability[ProposalDetails]                     = Reusability.byEq
-  implicit val partnerSplitReuse: Reusability[PartnerSplit]                           = Reusability.byEq
   implicit val obsSummaryReuse: Reusability[ObsSummary]                               = Reusability.byEq
   implicit val localPreferencesReuse: Reusability[ExploreLocalPreferences]            = Reusability.byEq
   implicit val posAngleReuse: Reusability[PosAngleConstraint]                         = Reusability.byEq
@@ -85,6 +88,11 @@ object reusability {
   implicit val agsPositionReuse: Reusability[AgsPosition]                       = Reusability.byEq
   implicit val agsParamsReuse: Reusability[AgsParams]                           = Reusability.byEq
   implicit val agsAnalysisReuse: Reusability[AgsAnalysis]                       = Reusability.byEq
+
+  implicit val partnerSplitsReuse: Reusability[SortedMap[Partner, IntPercent]] =
+    Reusability.by((_: SortedMap[Partner, IntPercent]).toMap)(Reusability.map)
+  implicit val proposalClassReuse: Reusability[ProposalClass]                  = Reusability.byEq
+  implicit val proposalReuse: Reusability[Proposal]                            = Reusability.byEq
 
   implicit val existenceReuse: Reusability[Existence] = Reusability.byEq
 }

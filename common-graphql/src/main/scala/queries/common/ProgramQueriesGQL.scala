@@ -5,11 +5,13 @@ package queries.common
 
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
+import lucuma.core.model
 import lucuma.schemas.ObservationDB
 
 // gql: import explore.model.reusability._
-// gql: import lucuma.ui.reusability._
 // gql: import io.circe.refined._
+// gql: import lucuma.schemas.decoders._
+// gql: import lucuma.ui.reusability._
 
 object ProgramQueriesGQL {
   @GraphQL
@@ -51,10 +53,60 @@ object ProgramQueriesGQL {
   }
 
   @GraphQL
+  trait ProgramProposalQuery extends GraphQLOperation[ObservationDB] {
+    val document: String = """
+      query($programId: ProgramId!) {
+        program(programId: $programId) {
+          proposal {
+            title
+            proposalClass {
+              __typename
+              minPercentTime
+              ... on LargeProgram {
+                minPercentTotalTime
+                totalTime {
+                  microseconds
+                }
+              } 
+              ... on Intensive {
+                minPercentTotalTime
+                totalTime {
+                  microseconds
+                }
+              }
+            }
+            category
+            toOActivation
+            abstract
+            partnerSplits {
+              partner
+              percent
+            }
+          }
+          plannedTime {
+            execution {
+              microseconds
+            }
+          }
+        }
+      }
+    """
+
+    object Data {
+      object Program {
+        type Proposal = model.Proposal
+        object PlannedTime {
+          type Execution = model.NonNegDuration
+        }
+      }
+    }
+  }
+
+  @GraphQL
   trait ProgramEditSubscription extends GraphQLOperation[ObservationDB] {
     val document: String = """
-      subscription {
-        programEdit {
+      subscription($programId: ProgramId) {
+        programEdit(programId: $programId) {
           id
         }
       }

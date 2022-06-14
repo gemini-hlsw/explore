@@ -16,6 +16,7 @@ import lucuma.core.model.Target
 import lucuma.core.model.User
 import monocle.Focus
 import monocle.Lens
+import monocle.Optional
 
 import scala.collection.immutable.HashSet
 
@@ -55,10 +56,11 @@ object RootModel {
       }
   )
 
-  val userId =
-    RootModel.vault.some
-      .andThen(UserVault.user)
-      .andThen(userUserId)
+  val user: Optional[RootModel, User] =
+    RootModel.vault.some.andThen(UserVault.user)
+
+  val userId: Optional[RootModel, User.Id] =
+    user.andThen(userUserId)
 
   implicit val eqRootModel: Eq[RootModel] =
     Eq.by(m =>

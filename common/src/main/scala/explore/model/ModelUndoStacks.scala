@@ -12,6 +12,7 @@ import explore.model.ObsIdSet
 import explore.undo.UndoStacks
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
+import lucuma.core.model.Proposal
 import lucuma.core.model.Target
 import monocle.Focus
 
@@ -25,7 +26,8 @@ case class ModelUndoStacks[F[_]](
   forConstraintGroup:   Map[ObsIdSet, UndoStacks[F, ConstraintSet]] =
     Map.empty[ObsIdSet, UndoStacks[F, ConstraintSet]],
   forObservationData:   Map[Observation.Id, UndoStacks[F, ObservationData]] =
-    Map.empty[Observation.Id, UndoStacks[F, ObservationData]]
+    Map.empty[Observation.Id, UndoStacks[F, ObservationData]],
+  forProposal:          UndoStacks[F, Proposal] = UndoStacks.empty[F, Proposal]
 )
 
 object ModelUndoStacks {
@@ -35,6 +37,7 @@ object ModelUndoStacks {
   def forConstraintList[F[_]]    = Focus[ModelUndoStacks[F]](_.forConstraintList)
   def forConstraintGroup[F[_]]   = Focus[ModelUndoStacks[F]](_.forConstraintGroup)
   def forObservationData[F[_]]   = Focus[ModelUndoStacks[F]](_.forObservationData)
+  def forProposal[F[_]]          = Focus[ModelUndoStacks[F]](_.forProposal)
 
   implicit def eqModelUndoStacks[F[_]]: Eq[ModelUndoStacks[F]] =
     Eq.by(u =>
@@ -43,7 +46,8 @@ object ModelUndoStacks {
        u.forSiderealTarget,
        u.forConstraintList,
        u.forConstraintGroup,
-       u.forObservationData
+       u.forObservationData,
+       u.forProposal
       )
     )
 }
