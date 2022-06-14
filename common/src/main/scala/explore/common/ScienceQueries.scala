@@ -42,7 +42,7 @@ object ScienceQueries {
         .withOnMod(value =>
           EditObservationMutation
             .execute(
-              EditObservationInput(
+              EditObservationsInput(
                 select = ObservationSelectInput(observationIds = List(obsId).assign),
                 patch = ObservationPropertiesInput(scienceRequirements =
                   remoteSet(value)(ScienceRequirementsInput()).assign
@@ -139,7 +139,7 @@ object ScienceQueries {
         a.explicitAmpGain.orUnassign,
         a.explicitRoi.orUnassign,
         a.explicitWavelengthDithers
-          .map(_.toList.map(_.value.toInt)) // FIXME Remove toInt when the API supports decimals
+          .map(_.toList.map(_.value))
           .orUnassign,
         a.explicitSpatialOffsets.map(_.toList.map(_.toInput)).orUnassign
       )
@@ -160,7 +160,7 @@ object ScienceQueries {
         a.explicitAmpGain.orUnassign,
         a.explicitRoi.orUnassign,
         a.explicitWavelengthDithers
-          .map(_.toList.map(_.value.toInt)) // FIXME Remove toInt when the API supports decimals
+          .map(_.toList.map(_.value))
           .orUnassign,
         a.explicitSpatialOffsets.map(_.toList.map(_.toInput)).orUnassign
       )

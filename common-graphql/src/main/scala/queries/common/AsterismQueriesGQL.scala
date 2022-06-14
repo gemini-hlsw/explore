@@ -270,11 +270,13 @@ object AsterismQueriesGQL {
   }
 
   @GraphQL
-  trait EditAsterismMutation extends GraphQLOperation[ObservationDB] {
+  trait EditAsterismsMutation extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation($input: EditAsterismInput!) {
-        editAsterism(input: $input) {
-          id
+      mutation($input: EditAsterismsInput!) {
+        editAsterisms(input: $input) {
+          observations {
+            id
+          }
         }
       }
     """

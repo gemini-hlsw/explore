@@ -106,7 +106,7 @@ object AsterismQueries {
     obsIds:     List[Observation.Id],
     targetIds:  List[Target.Id]
   )(implicit c: TransactionalClient[F, ObservationDB]) = {
-    val input = EditObservationInput(
+    val input = EditObservationsInput(
       select = ObservationSelectInput(observationIds = obsIds.assign),
       patch = ObservationPropertiesInput(
         targetEnvironment = TargetEnvironmentInput(asterism = targetIds.assign).assign
@@ -119,21 +119,21 @@ object AsterismQueries {
     obsIds:     List[Observation.Id],
     targetId:   Target.Id
   )(implicit c: TransactionalClient[F, ObservationDB]) = {
-    val input = EditAsterismInput(
+    val input = EditAsterismsInput(
       select = ObservationSelectInput(observationIds = obsIds.assign),
-      patch = List(EditAsterismPatchInput(add = targetId.assign))
+      patch = List(EditAsterismsPatchInput(add = targetId.assign))
     )
-    EditAsterismMutation.execute[F](input).void
+    EditAsterismsMutation.execute[F](input).void
   }
 
   def removeTargetFromAsterisms[F[_]: Async](
     obsIds:     List[Observation.Id],
     targetId:   Target.Id
   )(implicit c: TransactionalClient[F, ObservationDB]) = {
-    val input = EditAsterismInput(
+    val input = EditAsterismsInput(
       select = ObservationSelectInput(observationIds = obsIds.assign),
-      patch = List(EditAsterismPatchInput(delete = targetId.assign))
+      patch = List(EditAsterismsPatchInput(delete = targetId.assign))
     )
-    EditAsterismMutation.execute[F](input).void
+    EditAsterismsMutation.execute[F](input).void
   }
 }

@@ -59,14 +59,14 @@ object ConfigurationPanel {
         val modeAligner: Aligner[Option[model.ScienceMode], Input[ScienceModeInput]] =
           Aligner(
             props.scienceData,
-            EditObservationInput(
+            EditObservationsInput(
               select = ObservationSelectInput(observationIds = List(props.obsId).assign),
               patch = ObservationPropertiesInput()
             ),
             (ObsQueriesGQL.EditObservationMutation.execute[IO] _).andThen(_.void)
           ).zoom(
             scienceDataForObs.andThen(ScienceData.mode),
-            EditObservationInput.patch.andThen(ObservationPropertiesInput.scienceMode).modify
+            EditObservationsInput.patch.andThen(ObservationPropertiesInput.scienceMode).modify
           )
 
         val optModeView: View[Option[model.ScienceMode]] =

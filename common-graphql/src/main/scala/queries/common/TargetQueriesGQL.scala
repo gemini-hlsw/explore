@@ -206,210 +206,220 @@ object TargetQueriesGQL {
     val document = """
       mutation($input: CreateTargetInput!) {
         createTarget(input: $input) {
-          id
-        }
-      }
-    """
-  }
-
-  @GraphQL
-  trait DeleteTargetMutation extends GraphQLOperation[ObservationDB] {
-    val document = """
-      mutation($input: DeleteTargetInput!) {
-        deleteTarget(input: $input) {
-          id
-        }
-      }
-    """
-  }
-
-  @GraphQL
-  trait UndeleteTargetMutation extends GraphQLOperation[ObservationDB] {
-    val document = """
-      mutation($input: UndeleteTargetInput!) {
-        undeleteTarget(input: $input) {
-          id
-        }
-      }
-    """
-  }
-
-  @GraphQL
-  trait EditTargetMutation extends GraphQLOperation[ObservationDB] {
-    val document = """
-      mutation($input: EditTargetInput!) {
-        editTarget(input: $input) {
-          id
-        }
-      }
-    """
-  }
-
-  @GraphQL
-  trait EditTargetMutationWithResult extends GraphQLOperation[ObservationDB] {
-    val document = """
-      mutation($input: EditTargetInput!) {
-        editTarget(input: $input) {
-          id
-          name
-          sidereal {
-            ra {
-              microarcseconds
-            }
-            dec {
-              microarcseconds
-            }
-            epoch
-            properMotion {
-              ra {
-                microarcsecondsPerYear
-              }
-              dec {
-                microarcsecondsPerYear
-              }
-            }
-            radialVelocity {
-              centimetersPerSecond
-            }
-            parallax {
-              microarcseconds
-            }
-            catalogInfo {
-              name
-              id
-              objectType
-            }
+          target {
+            id
           }
-          sourceProfile {
-            point {
-              bandNormalized {
-                sed {
-                  stellarLibrary
-                  coolStar
-                  galaxy
-                  planet
-                  quasar
-                  hiiRegion
-                  planetaryNebula
-                  powerLaw
-                  blackBodyTempK
-                  fluxDensities {
-                    wavelength {
-                      picometers
-                    }
-                    density
-                  }
-                }
-                brightnesses {
-                  band
-                  value
-                  units
-                  error
-                }
-              }
-              emissionLines {
-                lines {
-                  wavelength {
-                    picometers
-                  }
-                  lineWidth
-                  lineFlux {
-                    value
-                    units
-                  }
-                }
-                fluxDensityContinuum {
-                  value
-                  units
-                }
-              }
-            }
-            uniform {
-              bandNormalized {
-                sed {
-                  stellarLibrary
-                  coolStar
-                  galaxy
-                  planet
-                  quasar
-                  hiiRegion
-                  planetaryNebula
-                  powerLaw
-                  blackBodyTempK
-                  fluxDensities {
-                    wavelength {
-                      picometers
-                    }
-                    density
-                  }
-                }
-                brightnesses {
-                  band
-                  value
-                  units
-                  error
-                }
-              }
-              emissionLines {
-                lines {
-                  wavelength {
-                    picometers
-                  }
-                  lineWidth
-                  lineFlux {
-                    value
-                    units
-                  }
-                }
-                fluxDensityContinuum {
-                  value
-                  units
-                }
-              }
-            }
-            gaussian {
-              fwhm {
+        }
+      }
+    """
+  }
+
+  @GraphQL
+  trait DeleteTargetsMutation extends GraphQLOperation[ObservationDB] {
+    val document = """
+      mutation($input: DeleteTargetsInput!) {
+        deleteTargets(input: $input) {
+          targets {
+            id
+          }
+        }
+      }
+    """
+  }
+
+  @GraphQL
+  trait UndeleteTargetsMutation extends GraphQLOperation[ObservationDB] {
+    val document = """
+      mutation($input: UndeleteTargetsInput!) {
+        undeleteTargets(input: $input) {
+          targets {
+            id
+          }
+        }
+      }
+    """
+  }
+
+  @GraphQL
+  trait EditTargetsMutation extends GraphQLOperation[ObservationDB] {
+    val document = """
+      mutation($input: EditTargetsInput!) {
+        editTargets(input: $input) {
+          targets {
+            id
+          }
+        }
+      }
+    """
+  }
+
+  @GraphQL
+  trait EditTargetsMutationWithResult extends GraphQLOperation[ObservationDB] {
+    val document = """
+      mutation($input: EditTargetsInput!) {
+        editTargets(input: $input) {
+          targets {
+            id
+            name
+            sidereal {
+              ra {
                 microarcseconds
               }
-              bandNormalized {
-                sed {
-                  stellarLibrary
-                  coolStar
-                  galaxy
-                  planet
-                  quasar
-                  hiiRegion
-                  planetaryNebula
-                  powerLaw
-                  blackBodyTempK
-                  fluxDensities {
+              dec {
+                microarcseconds
+              }
+              epoch
+              properMotion {
+                ra {
+                  microarcsecondsPerYear
+                }
+                dec {
+                  microarcsecondsPerYear
+                }
+              }
+              radialVelocity {
+                centimetersPerSecond
+              }
+              parallax {
+                microarcseconds
+              }
+              catalogInfo {
+                name
+                id
+                objectType
+              }
+            }
+            sourceProfile {
+              point {
+                bandNormalized {
+                  sed {
+                    stellarLibrary
+                    coolStar
+                    galaxy
+                    planet
+                    quasar
+                    hiiRegion
+                    planetaryNebula
+                    powerLaw
+                    blackBodyTempK
+                    fluxDensities {
+                      wavelength {
+                        picometers
+                      }
+                      density
+                    }
+                  }
+                  brightnesses {
+                    band
+                    value
+                    units
+                    error
+                  }
+                }
+                emissionLines {
+                  lines {
                     wavelength {
                       picometers
                     }
-                    density
+                    lineWidth
+                    lineFlux {
+                      value
+                      units
+                    }
                   }
-                }
-                brightnesses {
-                  band
-                  value
-                  units
-                  error
-                }
-              }
-              emissionLines {
-                lines {
-                  wavelength {
-                    picometers
-                  }
-                  lineWidth
-                  lineFlux {
+                  fluxDensityContinuum {
                     value
                     units
                   }
                 }
-                fluxDensityContinuum {
-                  value
-                  units
+              }
+              uniform {
+                bandNormalized {
+                  sed {
+                    stellarLibrary
+                    coolStar
+                    galaxy
+                    planet
+                    quasar
+                    hiiRegion
+                    planetaryNebula
+                    powerLaw
+                    blackBodyTempK
+                    fluxDensities {
+                      wavelength {
+                        picometers
+                      }
+                      density
+                    }
+                  }
+                  brightnesses {
+                    band
+                    value
+                    units
+                    error
+                  }
+                }
+                emissionLines {
+                  lines {
+                    wavelength {
+                      picometers
+                    }
+                    lineWidth
+                    lineFlux {
+                      value
+                      units
+                    }
+                  }
+                  fluxDensityContinuum {
+                    value
+                    units
+                  }
+                }
+              }
+              gaussian {
+                fwhm {
+                  microarcseconds
+                }
+                bandNormalized {
+                  sed {
+                    stellarLibrary
+                    coolStar
+                    galaxy
+                    planet
+                    quasar
+                    hiiRegion
+                    planetaryNebula
+                    powerLaw
+                    blackBodyTempK
+                    fluxDensities {
+                      wavelength {
+                        picometers
+                      }
+                      density
+                    }
+                  }
+                  brightnesses {
+                    band
+                    value
+                    units
+                    error
+                  }
+                }
+                emissionLines {
+                  lines {
+                    wavelength {
+                      picometers
+                    }
+                    lineWidth
+                    lineFlux {
+                      value
+                      units
+                    }
+                  }
+                  fluxDensityContinuum {
+                    value
+                    units
+                  }
                 }
               }
             }
@@ -419,7 +429,9 @@ object TargetQueriesGQL {
     """
 
     object Data {
-      type EditTarget = model.TargetWithId
+      object EditTargets {
+        type Targets = model.TargetWithId
+      }
     }
   }
 
@@ -428,7 +440,9 @@ object TargetQueriesGQL {
     val document = """
       mutation($input: CloneTargetInput!) {
         cloneTarget(input: $input) {
-          id
+          newTarget {
+            id
+          }
         }
       }
     """

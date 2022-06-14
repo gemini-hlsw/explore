@@ -170,18 +170,18 @@ object AsterismGroupObsListActions {
   private def deleteTarget(targetId: Target.Id)(implicit
     c:                               TransactionalClient[IO, ObservationDB]
   ): IO[Unit] =
-    TargetQueriesGQL.DeleteTargetMutation
+    TargetQueriesGQL.DeleteTargetsMutation
       .execute[IO](
-        DeleteTargetInput(select = TargetSelectInput(targetIds = List(targetId).assign))
+        DeleteTargetsInput(select = TargetSelectInput(targetIds = List(targetId).assign))
       )
       .void
 
   private def undeleteTarget(targetId: Target.Id)(implicit
     c:                                 TransactionalClient[IO, ObservationDB]
   ): IO[Unit] =
-    TargetQueriesGQL.UndeleteTargetMutation
+    TargetQueriesGQL.UndeleteTargetsMutation
       .execute[IO](
-        UndeleteTargetInput(select = TargetSelectInput(targetIds = List(targetId).assign))
+        UndeleteTargetsInput(select = TargetSelectInput(targetIds = List(targetId).assign))
       )
       .void
 

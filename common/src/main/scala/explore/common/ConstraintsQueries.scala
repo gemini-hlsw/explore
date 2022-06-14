@@ -33,7 +33,7 @@ object ConstraintsQueries {
         .withOnMod(value =>
           EditObservationMutation
             .execute(
-              EditObservationInput(
+              EditObservationsInput(
                 select = ObservationSelectInput(observationIds = obsIds.assign),
                 patch = ObservationPropertiesInput(
                   constraintSet = remoteSet(value)(ConstraintSetInput()).assign

@@ -46,9 +46,7 @@ object ProgramsPopup {
     adding.async.set(true) >>
       ProgramQueries
         .createProgram[IO](none)
-        .flatMap {
-          _.foldMap(pi => programs.async.mod(_ :+ pi))
-        }
+        .flatMap(pi => programs.async.mod(_ :+ pi))
         .guarantee(adding.async.set(false))
 
   protected def selectProgram(
