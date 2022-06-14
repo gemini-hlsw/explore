@@ -13,10 +13,10 @@ import explore.common.ObsQueries
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.implicits._
-import explore.model.TruncatedPA
+import explore.model.TruncatedAngle
 import explore.model.enum.PosAngleOptions
-import explore.model.formats.angleTruncatedPASplitEpi
 import explore.model.syntax.all._
+import explore.optics._
 import explore.targeteditor.InputWithUnits
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -25,6 +25,7 @@ import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.syntax.string._
 import lucuma.ui.forms.EnumViewSelect
+import lucuma.ui.implicits._
 import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.ValidFormatInput
 import monocle.Lens
@@ -43,11 +44,11 @@ object ObsConfigurationPanel {
   type Props = ObsConfigurationPanel
 
   // Input for an angle in degrees with up to 2 decimals
-  private val truncatedPAAngle = ValidFormatInput[TruncatedPA](
+  private val TruncatedAngleAngle = ValidFormatInput[TruncatedAngle](
     s => {
       val ota = s.parseDoubleOption
         .map(Angle.fromDoubleDegrees)
-        .map(TruncatedPA(_))
+        .map(TruncatedAngle(_))
       Validated.fromOption(ota, NonEmptyChain("Invalid Position Angle"))
     },
     pa => f"${pa.angle.toDoubleDegrees}%.2f"
@@ -81,25 +82,25 @@ object ObsConfigurationPanel {
       val posAngleOptionsView: View[PosAngleOptions] =
         paView.zoom(unsafePosOptionsLens)
 
-      val fixedView: ViewOpt[TruncatedPA] =
+      val fixedView: ViewOpt[TruncatedAngle] =
         paView
           .zoom(option.some[PosAngleConstraint])
           .zoom(PosAngleConstraint.fixedAngle)
-          .zoom(angleTruncatedPASplitEpi.get)(angleTruncatedPASplitEpi.modify _)
+          .zoomSplitEpi(angleTruncatedAngleSplitEpi)
 
-      val allowedFlipView: ViewOpt[TruncatedPA] =
+      val allowedFlipView: ViewOpt[TruncatedAngle] =
         paView
           .zoom(option.some[PosAngleConstraint])
           .zoom(PosAngleConstraint.allowFlipAngle)
-          .zoom(angleTruncatedPASplitEpi.get)(angleTruncatedPASplitEpi.modify _)
+          .zoomSplitEpi(angleTruncatedAngleSplitEpi)
 
-      val parallacticOverrideView: ViewOpt[TruncatedPA] =
+      val parallacticOverrideView: ViewOpt[TruncatedAngle] =
         paView
           .zoom(option.some[PosAngleConstraint])
           .zoom(PosAngleConstraint.parallacticOverrideAngle)
-          .zoom(angleTruncatedPASplitEpi.get)(angleTruncatedPASplitEpi.modify _)
+          .zoomSplitEpi(angleTruncatedAngleSplitEpi)
 
-      def posAngleEditor(pa: View[TruncatedPA]) =
+      def posAngleEditor(pa: View[TruncatedAngle]) =
         <.div(
           ExploreStyles.InputWithLabel,
           InputWithUnits(
@@ -107,8 +108,8 @@ object ObsConfigurationPanel {
             clazz = Css.Empty,
             value = pa,
             units = "° E of N",
-            validFormat = truncatedPAAngle,
-            changeAuditor = ChangeAuditor.accept.decimal(2)
+            validFormat = TruncatedAngleAngle,
+            changeAuditor = ChangeAuditor.bigDecimal(3, 2).as[TruncatedAngle]
           )
         )
 

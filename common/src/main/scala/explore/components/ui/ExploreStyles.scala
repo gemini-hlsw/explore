@@ -288,8 +288,9 @@ object ExploreStyles {
   val StepTableHeader: Css = Css("step-table-header")
   val StepGuided: Css      = Css("step-guided")
 
-  val ExploreForm: Css = Css("explore-form")
-  val SkipToNext: Css  = Css("explore-skip-to-next")
+  val ExploreForm: Css          = Css("explore-form")
+  val SkipToNext: Css           = Css("explore-skip-to-next")
+  val SeqGenParametersForm: Css = Css("seq-gen-parameters-form")
 
   // Configuration tile
   val ObsConfigurationForm: Css         = Css("explore-obs-configuration-form")

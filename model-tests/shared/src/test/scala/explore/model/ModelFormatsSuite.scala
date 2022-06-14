@@ -3,8 +3,9 @@
 
 package explore.model
 
-import explore.model.arb.ArbTruncatedPA
+import explore.model.arb.ArbTruncatedAngle
 import explore.model.formats._
+import explore.optics._
 import lucuma.core.arb._
 import lucuma.core.math.Parallax
 import lucuma.core.math.arb._
@@ -17,7 +18,7 @@ import org.scalacheck.Gen
 class ModelFormatsSuite extends DisciplineSuite {
   import ArbParallax._
   import ArbAngle._
-  import ArbTruncatedPA._
+  import ArbTruncatedAngle._
 
   private val perturbations: List[String => Gen[String]] =
     List(
@@ -31,5 +32,5 @@ class ModelFormatsSuite extends DisciplineSuite {
       .flatMapOneOf(Gen.const, perturbations: _*)
 
   checkAll("pxFormat", FormatTests(pxFormat).formatWith(parallaxMilliArcSecondsGen))
-  checkAll("truncatedPASplitEpi", SplitEpiTests(angleTruncatedPASplitEpi).splitEpi)
+  checkAll("TruncatedAngleSplitEpi", SplitEpiTests(angleTruncatedAngleSplitEpi).splitEpi)
 }
