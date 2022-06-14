@@ -256,7 +256,6 @@ object ProposalEditor {
       )
 
     def openPartnerSplitsEditor: Callback = {
-      // val splits      = proposal.get.partnerSplits
       val allPartners = Partner.EnumeratedPartner.all.map(p =>
         splitsMap
           .get(p)
@@ -371,7 +370,6 @@ object ProposalEditor {
     proposalClassType: View[ProposalClassType],
     showModal:         View[Boolean],
     splitsList:        View[List[PartnerSplit]],
-    // state:         View[State],
     executionTime:     NonNegDuration,
     band3Time:         NonNegDuration
   )(implicit ctx:      AppContextIO) = {

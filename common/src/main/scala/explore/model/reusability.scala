@@ -91,8 +91,8 @@ object reusability {
 
   implicit val partnerSplitsReuse: Reusability[SortedMap[Partner, IntPercent]] =
     Reusability.by((_: SortedMap[Partner, IntPercent]).toMap)(Reusability.map)
-  implicit val proposalClassReuse: Reusability[ProposalClass]                  = Reusability.derive
-  implicit val proposalReuse: Reusability[Proposal]                            = Reusability.derive
+  implicit val proposalClassReuse: Reusability[ProposalClass]                  = Reusability.byEq
+  implicit val proposalReuse: Reusability[Proposal]                            = Reusability.byEq
 
   implicit val existenceReuse: Reusability[Existence] = Reusability.byEq
 }
