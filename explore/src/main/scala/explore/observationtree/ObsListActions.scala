@@ -44,8 +44,9 @@ object ObsListActions {
     (_, status) =>
       EditObservationMutation
         .execute[IO](
-          EditObservationInput(select = ObservationSelectInput(observationIds = List(obsId).assign),
-                               patch = ObservationPropertiesInput(status = status.orIgnore)
+          EditObservationsInput(
+            select = ObservationSelectInput(observationIds = List(obsId).assign),
+            patch = ObservationPropertiesInput(status = status.orIgnore)
           )
         )
         .void
@@ -59,7 +60,7 @@ object ObsListActions {
     (_, subtitleOpt) =>
       EditObservationMutation
         .execute[IO](
-          EditObservationInput(
+          EditObservationsInput(
             select = ObservationSelectInput(observationIds = List(obsId).assign),
             patch = ObservationPropertiesInput(subtitle = subtitleOpt.flatten.orUnassign)
           )
@@ -75,7 +76,7 @@ object ObsListActions {
     (_, activeStatus) =>
       EditObservationMutation
         .execute[IO](
-          EditObservationInput(
+          EditObservationsInput(
             select = ObservationSelectInput(observationIds = List(obsId).assign),
             patch = ObservationPropertiesInput(activeStatus = activeStatus.orIgnore)
           )

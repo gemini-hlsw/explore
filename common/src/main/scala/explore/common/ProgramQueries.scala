@@ -37,12 +37,12 @@ object ProgramQueries {
 
   def createProgram[F[_]: Async](name: Option[NonEmptyString])(implicit
     c:                                 TransactionalClient[F, ObservationDB]
-  ): F[Option[ProgramInfo]] =
+  ): F[ProgramInfo] =
     CreateProgramMutation
       .execute[F](
         CreateProgramInput(properties = ProgramPropertiesInput(name = name.orIgnore).assign)
       )
-      .map(_.createProgram.map(p => ProgramInfo(p.id, p.name, false)))
+      .map(p => ProgramInfo(p.createProgram.program.id, p.createProgram.program.name, false))
 
   def deleteProgram[F[_]: Async](id: Program.Id)(implicit
     c:                               TransactionalClient[F, ObservationDB]

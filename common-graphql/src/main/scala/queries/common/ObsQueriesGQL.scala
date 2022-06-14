@@ -58,7 +58,7 @@ object ObsQueriesGQL {
                   explicitAmpReadMode
                   explicitAmpGain
                   explicitRoi
-                  explicitWavelengthDithers
+                  explicitWavelengthDithersNm
                   explicitSpatialOffsets {
                     microarcseconds
                   }
@@ -79,7 +79,7 @@ object ObsQueriesGQL {
                   explicitAmpReadMode
                   explicitAmpGain
                   explicitRoi
-                  explicitWavelengthDithers
+                  explicitWavelengthDithersNm
                   explicitSpatialOffsets {
                     microarcseconds
                   }
@@ -176,20 +176,22 @@ object ObsQueriesGQL {
     val document = """
       mutation($createObservation: CreateObservationInput!) {
         createObservation(input: $createObservation) {
-          id
-          title
-          subtitle
-          constraintSet {
-            imageQuality
-            cloudExtinction
-            skyBackground
-            waterVapor
-          }
-          status
-          activeStatus
-          plannedTime {
-            execution {
-              microseconds
+          observation {
+            id
+            title
+            subtitle
+            constraintSet {
+              imageQuality
+              cloudExtinction
+              skyBackground
+              waterVapor
+            }
+            status
+            activeStatus
+            plannedTime {
+              execution {
+                microseconds
+              }
             }
           }
         }
@@ -198,36 +200,37 @@ object ObsQueriesGQL {
 
     object Data {
       object CreateObservation {
-        object TargetEnvironment {
-          object Asterism {
-            type Sidereal = lucuma.core.math.Coordinates
+        object Observation {
+          trait ConstraintSet extends ConstraintsSummary
+          object PlannedTime {
+            type Execution = time.Duration
           }
-        }
-        trait ConstraintSet extends ConstraintsSummary
-        object PlannedTime       {
-          type Execution = time.Duration
         }
       }
     }
   }
 
   @GraphQL
-  trait ProgramDeleteObservation extends GraphQLOperation[ObservationDB] {
+  trait ProgramDeleteObservations extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation($input: DeleteObservationInput!) {
-        deleteObservation(input: $input) {
-          id
+      mutation($input: DeleteObservationsInput!) {
+        deleteObservations(input: $input) {
+          observations {
+            id
+          }
         }
       }
     """
   }
 
   @GraphQL
-  trait ProgramUndeleteObservation extends GraphQLOperation[ObservationDB] {
+  trait ProgramUndeleteObservations extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation($input: UndeleteObservationInput!) {
-        undeleteObservation(input: $input) {
-          id
+      mutation($input: UndeleteObservationsInput!) {
+        undeleteObservations(input: $input) {
+          observations {
+            id
+          }
         }
       }
     """
@@ -469,7 +472,7 @@ object ObsQueriesGQL {
                 explicitAmpReadMode
                 explicitAmpGain
                 explicitRoi
-                explicitWavelengthDithers
+                explicitWavelengthDithersNm
                 explicitSpatialOffsets {
                   microarcseconds
                 }
@@ -490,7 +493,7 @@ object ObsQueriesGQL {
                 explicitAmpReadMode
                 explicitAmpGain
                 explicitRoi
-                explicitWavelengthDithers
+                explicitWavelengthDithersNm
                 explicitSpatialOffsets {
                   microarcseconds
                 }
@@ -539,9 +542,11 @@ object ObsQueriesGQL {
   @GraphQL
   trait EditObservationMutation extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation ($input: EditObservationInput!){
-        editObservation(input: $input) {
-          id
+      mutation ($input: EditObservationsInput!){
+        editObservations(input: $input) {
+          observations {
+            id
+          }
         }
       }
     """

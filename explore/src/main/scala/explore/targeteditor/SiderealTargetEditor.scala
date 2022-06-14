@@ -94,7 +94,7 @@ object SiderealTargetEditor {
     .execute[IO](
       CloneTargetInput(targetId = targetId, replaceIn = obsIds.toList.assign)
     )
-    .map(_.cloneTarget.id)
+    .map(_.cloneTarget.newTarget.id)
 
   def getRemoteOnMod(
     id:              Target.Id,
@@ -102,19 +102,20 @@ object SiderealTargetEditor {
     cloning:         Hooks.UseStateF[DefaultS, Boolean],
     onClone:         TargetWithId => Callback
   )(
-    input:           EditTargetInput
+    input:           EditTargetsInput
   )(implicit appCtx: AppContextIO): IO[Unit] =
-    optObs.fold(TargetQueriesGQL.EditTargetMutation.execute(input).void) { obsIds =>
+    optObs.fold(TargetQueriesGQL.EditTargetsMutation.execute(input).void) { obsIds =>
       cloning.setState(true).to[IO] >>
         cloneTarget(id, obsIds)
           .flatMap { newId =>
-            val newInput = EditTargetInput.select
+            val newInput = EditTargetsInput.select
               .andThen(TargetSelectInput.targetIds)
               .replace(List(newId).assign)(input)
-            TargetQueriesGQL.EditTargetMutationWithResult
+            TargetQueriesGQL.EditTargetsMutationWithResult
               .execute(newInput)
               .flatMap(data =>
-                (data.editTarget.headOption.foldMap(onClone) >> cloning.setState(false)).to[IO]
+                (data.editTargets.targets.headOption.foldMap(onClone) >>
+                  cloning.setState(false)).to[IO]
               )
           }
     }
@@ -137,22 +138,23 @@ object SiderealTargetEditor {
 
           val target: Target.Sidereal = props.target.get
 
-          val remoteOnMod: EditTargetInput => IO[Unit] =
+          val remoteOnMod: EditTargetsInput => IO[Unit] =
             getRemoteOnMod(props.id, props.obsIdSubset, cloning, props.onClone) _
 
-          val siderealTargetAligner: Aligner[Target.Sidereal, EditTargetInput] =
+          val siderealTargetAligner: Aligner[Target.Sidereal, EditTargetsInput] =
             Aligner(
               undoCtx,
-              EditTargetInput(
+              EditTargetsInput(
                 select = TargetSelectInput(targetIds = List(props.id).assign),
                 patch = TargetPropertiesInput()
               ),
               remoteOnMod
             )
 
-          val nameLens          = EditTargetInput.patch.andThen(TargetPropertiesInput.name)
-          val siderealLens      = EditTargetInput.patch.andThen(TargetPropertiesInput.sidereal)
-          val sourceProfileLens = EditTargetInput.patch.andThen(TargetPropertiesInput.sourceProfile)
+          val nameLens          = EditTargetsInput.patch.andThen(TargetPropertiesInput.name)
+          val siderealLens      = EditTargetsInput.patch.andThen(TargetPropertiesInput.sidereal)
+          val sourceProfileLens =
+            EditTargetsInput.patch.andThen(TargetPropertiesInput.sourceProfile)
 
           val allView: View[Target.Sidereal] =
             siderealTargetAligner.viewMod(t =>
@@ -161,7 +163,7 @@ object SiderealTargetEditor {
                 sourceProfileLens.replace(t.sourceProfile.toInput.assign)
             )
 
-          val siderealToTargetEndo: Endo[SiderealInput] => Endo[EditTargetInput] =
+          val siderealToTargetEndo: Endo[SiderealInput] => Endo[EditTargetsInput] =
             forceAssign(siderealLens.modify)(SiderealInput())
 
           val coordsRAView: View[RightAscension] =

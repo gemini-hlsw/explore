@@ -34,8 +34,10 @@ object ProgramQueriesGQL {
     val document: String = """
       mutation($input: CreateProgramInput!) {
         createProgram(input: $input) {
-          id
-          name
+          program {
+            id
+            name
+          }
         }
       }
     """
@@ -46,7 +48,9 @@ object ProgramQueriesGQL {
     val document: String = """
       mutation($input: EditProgramInput!) {
         editProgram(input: $input) {
-          id
+          program {
+            id
+          }
         }
       }
     """

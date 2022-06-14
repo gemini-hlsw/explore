@@ -156,7 +156,7 @@ object ObsQueries {
     )
     EditObservationMutation
       .execute[F](
-        EditObservationInput(
+        EditObservationsInput(
           select = ObservationSelectInput(observationIds = obsIds.assign),
           patch = editInput
         )
@@ -177,7 +177,7 @@ object ObsQueries {
 
     EditObservationMutation
       .execute[F](
-        EditObservationInput(
+        EditObservationsInput(
           select = ObservationSelectInput(observationIds = obsIds.assign),
           patch = editInput
         )
@@ -198,7 +198,7 @@ object ObsQueries {
 
     EditObservationMutation
       .execute[F](
-        EditObservationInput(
+        EditObservationsInput(
           select = ObservationSelectInput(observationIds = obsIds.assign),
           patch = editInput
         )
@@ -209,7 +209,7 @@ object ObsQueries {
     c:                                          TransactionalClient[F, ObservationDB]
   ): F[ObsSummaryWithTitleAndConstraints] =
     ProgramCreateObservation.execute[F](CreateObservationInput(programId = programId)).map { data =>
-      val obs = data.createObservation
+      val obs = data.createObservation.observation
       ObsSummaryWithTitleAndConstraints(
         obs.id,
         obs.title,
@@ -224,18 +224,20 @@ object ObsQueries {
   def deleteObservation[F[_]: Async](obsId: Observation.Id)(implicit
     c:                                      TransactionalClient[F, ObservationDB]
   ): F[Unit] =
-    ProgramDeleteObservation
+    ProgramDeleteObservations
       .execute[F](
-        DeleteObservationInput(select = ObservationSelectInput(observationIds = List(obsId).assign))
+        DeleteObservationsInput(select =
+          ObservationSelectInput(observationIds = List(obsId).assign)
+        )
       )
       .void
 
   def undeleteObservation[F[_]: Async](obsId: Observation.Id)(implicit
     c:                                        TransactionalClient[F, ObservationDB]
   ): F[Unit] =
-    ProgramUndeleteObservation
+    ProgramUndeleteObservations
       .execute[F](
-        UndeleteObservationInput(select =
+        UndeleteObservationsInput(select =
           ObservationSelectInput(observationIds = List(obsId).assign)
         )
       )
