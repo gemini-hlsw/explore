@@ -234,7 +234,7 @@ object SiderealTargetEditor {
               forceAssign(sourceProfileLens.modify)(SourceProfileInput())
             )
 
-          def searchAndSet(allView: View[Target.Sidereal], nameView: View[NonEmptyString])(
+          def searchAndSet(allView: View[Target.Sidereal])(
             s:                      SearchCallback
           ): Callback =
             SimbadSearch
@@ -244,9 +244,9 @@ object SiderealTargetEditor {
                 case Right(Some(r)) =>
                   allView.set(r.target) >> s.onComplete(r.target.some)
                 case Right(None)    =>
-                  nameView.set(s.searchTerm) >> s.onComplete(none)
+                  s.onComplete(none)
                 case Left(t)        =>
-                  nameView.set(s.searchTerm) >> s.onError(t)
+                  s.onError(t)
               }
 
           val disabled = props.searching.get.exists(_ === props.id) || cloning.value
@@ -279,7 +279,7 @@ object SiderealTargetEditor {
                   nameView,
                   targetView.zoom(Target.Sidereal.name).get,
                   props.searching,
-                  searchAndSet(allView, nameView)
+                  searchAndSet(allView)
                 ),
                 <.label("RA", HelpIcon("target/main/coordinates.md"), ExploreStyles.SkipToNext),
                 FormInputEV(
