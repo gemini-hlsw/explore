@@ -26,6 +26,7 @@ import explore.components.ui._
 import explore.components.undo.UndoButtons
 import explore.implicits._
 import explore.model.reusability._
+import explore.optics.optionNonEmptyStringIso
 import explore.proposal.ProposalClassType._
 import explore.undo._
 import japgolly.scalajs.react._
@@ -49,7 +50,6 @@ import queries.common.ProgramQueriesGQL
 import queries.schemas.implicits._
 import react.common.ReactFnProps
 import react.common.implicits._
-import react.semanticui.addons.textarea.TextArea
 import react.semanticui.collections.form._
 import react.semanticui.elements.label.Label
 import react.semanticui.modules.dropdown._
@@ -350,13 +350,12 @@ object ProposalEditor {
           )
         ),
         <.div(FomanticStyles.Divider),
-        FormTextArea( // TODO: Every keystroke generates a new Undo....but no blur event
+        FormTextAreaEV(
+          id = "abstract",
           label = "Abstract",
           rows = 10,
-          value = abstractView.get.foldMap(_.value),
-          onChangeE = (_: TextArea.ReactChangeEvent, tap: TextArea.TextAreaProps) =>
-            abstractView.set(NonEmptyString.from(tap.value.asInstanceOf[String]).toOption)
-        ).addModifiers(Seq(^.id := "abstract"))
+          value = abstractView.as(optionNonEmptyStringIso)
+        )
       )
     )
   }
