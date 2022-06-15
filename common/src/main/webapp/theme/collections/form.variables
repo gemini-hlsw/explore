@@ -1,6 +1,6 @@
 @selectColor: @gray-lighter;
 @inputColor: var(--form-input-color);
-@textAreaFocusColor: @gray-darker;
+@textAreaFocusColor: var(--form-input-focus-color);
 @inputFocusColor: var(--form-input-focus-color);
 
 // Use a reduced padding

@@ -49,7 +49,6 @@ import queries.common.ProgramQueriesGQL
 import queries.schemas.implicits._
 import react.common.ReactFnProps
 import react.common.implicits._
-import react.semanticui.addons.textarea.TextArea
 import react.semanticui.collections.form._
 import react.semanticui.elements.label.Label
 import react.semanticui.modules.dropdown._
@@ -211,6 +210,9 @@ object ProposalEditor {
 
     val abstractView = abstractAligner.view(_.orUnassign)
 
+    val NESIso: Iso[Option[NonEmptyString], String] =
+      Iso[Option[NonEmptyString], String](_.foldMap(_.value))(s => NonEmptyString.from(s).toOption)
+
     val totalTimeView   = classView.zoom(ProposalClass.totalTime)
     val totalTime       = totalTimeView.get
     val minimumPct1View = classView.zoom(ProposalClass.minPercentTime)
@@ -350,13 +352,12 @@ object ProposalEditor {
           )
         ),
         <.div(FomanticStyles.Divider),
-        FormTextArea( // TODO: Every keystroke generates a new Undo....but no blur event
+        FormTextAreaEV(
+          id = "abstract",
           label = "Abstract",
           rows = 10,
-          value = abstractView.get.foldMap(_.value),
-          onChangeE = (_: TextArea.ReactChangeEvent, tap: TextArea.TextAreaProps) =>
-            abstractView.set(NonEmptyString.from(tap.value.asInstanceOf[String]).toOption)
-        ).addModifiers(Seq(^.id := "abstract"))
+          value = abstractView.zoom(NESIso.asLens)
+        )
       )
     )
   }
