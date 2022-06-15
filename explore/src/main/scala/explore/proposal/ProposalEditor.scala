@@ -26,6 +26,7 @@ import explore.components.ui._
 import explore.components.undo.UndoButtons
 import explore.implicits._
 import explore.model.reusability._
+import explore.optics.optionNonEmptyStringIso
 import explore.proposal.ProposalClassType._
 import explore.undo._
 import japgolly.scalajs.react._
@@ -210,9 +211,6 @@ object ProposalEditor {
 
     val abstractView = abstractAligner.view(_.orUnassign)
 
-    val NESIso: Iso[Option[NonEmptyString], String] =
-      Iso[Option[NonEmptyString], String](_.foldMap(_.value))(s => NonEmptyString.from(s).toOption)
-
     val totalTimeView   = classView.zoom(ProposalClass.totalTime)
     val totalTime       = totalTimeView.get
     val minimumPct1View = classView.zoom(ProposalClass.minPercentTime)
@@ -356,7 +354,7 @@ object ProposalEditor {
           id = "abstract",
           label = "Abstract",
           rows = 10,
-          value = abstractView.zoom(NESIso.asLens)
+          value = abstractView.as(optionNonEmptyStringIso)
         )
       )
     )

@@ -3,7 +3,9 @@
 
 package explore.optics
 
+import cats.syntax.all._
 import coulomb._
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.TruncatedAngle
 import lucuma.core.enum.Band
 import lucuma.core.math.Angle
@@ -59,6 +61,10 @@ trait ModelOptics {
 
   val angleTruncatedAngleSplitEpi: SplitEpi[Angle, TruncatedAngle] =
     SplitEpi[Angle, TruncatedAngle](TruncatedAngle(_), _.angle)
+
+  // TODO: Move to lucuma-core?
+  val optionNonEmptyStringIso: Iso[Option[NonEmptyString], String] =
+    Iso[Option[NonEmptyString], String](_.foldMap(_.value))(s => NonEmptyString.from(s).toOption)
 }
 
 object ModelOptics extends ModelOptics
