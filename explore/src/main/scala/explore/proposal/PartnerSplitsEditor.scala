@@ -16,8 +16,9 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ZeroTo100
+import lucuma.core.validation._
 import lucuma.ui.forms.FormInputEV
-import lucuma.ui.optics._
+import lucuma.ui.input._
 import monocle.function.Index
 import react.common.ReactProps
 import react.semanticui.collections.form.Form
@@ -72,8 +73,8 @@ object PartnerSplitsEditor {
               FormInputEV(
                 id = NonEmptyString.from(id).getOrElse("SPLIT_ID"),
                 value = splitView.zoom(PartnerSplit.percent),
-                validFormat = ValidFormatInput.forRefinedInt[ZeroTo100](),
-                changeAuditor = ChangeAuditor.forRefinedInt[ZeroTo100]()
+                validFormat = InputValidSplitEpi.refinedInt[ZeroTo100],
+                changeAuditor = ChangeAuditor.refinedInt[ZeroTo100]()
               ).withMods(
                 ^.autoFocus := idx === 0
               )

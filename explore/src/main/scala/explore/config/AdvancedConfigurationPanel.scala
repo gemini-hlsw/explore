@@ -16,9 +16,10 @@ import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.DitherNanoMeters
+import explore.model.ExploreModelValidators
 import explore.model.ScienceModeAdvanced
 import explore.model.ScienceModeBasic
-import explore.model.validators._
+import explore.model.display._
 import explore.optics._
 import explore.targeteditor.InputWithUnits
 import japgolly.scalajs.react._
@@ -32,8 +33,7 @@ import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.forms.EnumViewOptionalSelect
-import lucuma.ui.implicits._
-import lucuma.ui.optics.ChangeAuditor
+import lucuma.ui.input.ChangeAuditor
 import monocle.Lens
 import react.common._
 import react.semanticui.collections.form.Form
@@ -114,12 +114,6 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
       { case (r, g) => s"${r.longName}, ${g.longName} Gain" }
     )
 
-  val dithersChangeAuditor: ChangeAuditor[Option[NonEmptyList[DitherNanoMeters]]] =
-    ChangeAuditor.bigDecimal(3, 1).as[DitherNanoMeters].toSequence[NonEmptyList]().optional
-
-  val offsetsChangeAuditor: ChangeAuditor[Option[NonEmptyList[Offset.Q]]] =
-    ChangeAuditor.bigDecimal(3, 2).as[Offset.Q].toSequence[NonEmptyList]().optional
-
   val component =
     ScalaFnComponent
       .withHooks[Props]
@@ -132,8 +126,9 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             InputWithUnits(
               id = "dithers",
               value = explicitWavelengthDithers(props.scienceModeAdvanced).withOnMod(_ => onChange),
-              validFormat = dithersValidFormat,
-              changeAuditor = dithersChangeAuditor,
+              validFormat = ExploreModelValidators.dithersValidSplitEpi,
+              changeAuditor =
+                ChangeAuditor.bigDecimal(integers = 3, decimals = 1).toSequence().optional,
               units = "nm"
             )
           )
@@ -144,8 +139,9 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             InputWithUnits(
               id = "offsets",
               value = explicitSpatialOffsets(props.scienceModeAdvanced).withOnMod(_ => onChange),
-              validFormat = offsetQNELValidFormat,
-              changeAuditor = offsetsChangeAuditor,
+              validFormat = ExploreModelValidators.offsetQNELValidWedge,
+              changeAuditor =
+                ChangeAuditor.bigDecimal(integers = 3, decimals = 2).toSequence().optional,
               units = "arcsec"
             )
           )
@@ -238,9 +234,9 @@ object AdvancedConfigurationPanel {
     S <: ScienceModeBasic,
     Input,
     Props <: AdvancedConfigurationPanel[T, S, Input],
-    Grating: Enumerated,
-    Filter: Enumerated,
-    Fpu: Enumerated
+    Grating: Enumerated: Display,
+    Filter: Enumerated: Display,
+    Fpu: Enumerated: Display
   ] extends AdvancedConfigurationPanelBuilder[
         T,
         S,

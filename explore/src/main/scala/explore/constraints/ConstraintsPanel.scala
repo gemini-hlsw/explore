@@ -8,7 +8,6 @@ import cats.syntax.all._
 import crystal.react.View
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
-import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
 import explore.common.ConstraintsQueries._
 import explore.components.HelpIcon
@@ -26,16 +25,14 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.Observation
+import lucuma.core.model.validation.ModelValidators
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
+import lucuma.core.validation._
 import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.forms.FormInputEV
-import lucuma.ui.implicits._
-import lucuma.ui.optics.ChangeAuditor
-import lucuma.ui.optics.TruncatedRefinedBigDecimal
-import lucuma.ui.optics.ValidFormatInput
-import lucuma.ui.optics.ValidFormatNec
+import lucuma.ui.input.ChangeAuditor
 import monocle.Lens
 import react.common._
 import react.semanticui.collections.form.Form
@@ -50,13 +47,6 @@ final case class ConstraintsPanel(
 
 object ConstraintsPanel {
   type Props = ConstraintsPanel
-
-  val airMassErrorMsg   = NonEmptyString.unsafeFrom(
-    f"Must be ${ElevationRange.AirMass.MinValue.toDouble}%.1f to ${ElevationRange.AirMass.MaxValue.toDouble}%.1f"
-  )
-  val hourAngleErrorMsg = NonEmptyString.unsafeFrom(
-    f"Must be ${ElevationRange.HourAngle.MinHour.toDouble}%.1f to ${ElevationRange.HourAngle.MaxHour.toDouble}%.1f"
-  )
 
   sealed abstract class ElevationRangeType(val label: String) extends Product with Serializable
 
@@ -194,102 +184,52 @@ object ConstraintsPanel {
             ),
             ReactFragment(
               <.label("Min"),
-              FormInputEV[View, TruncatedRefinedBigDecimal[ElevationRange.AirMass.Value, 1]](
+              FormInputEV(
                 id = "minam",
-                value = airMassView
-                  .zoom(ElevationRange.AirMass.min)
-                  .zoomSplitEpi(
-                    TruncatedRefinedBigDecimal
-                      .unsafeRefinedBigDecimal[ElevationRange.AirMass.Value, 1]
-                  ),
+                value = airMassView.zoom(ElevationRange.AirMass.min),
                 errorClazz = ExploreStyles.InputErrorTooltip,
                 errorPointing = LabelPointing.Below,
-                validFormat = ValidFormatInput
-                  .forRefinedTruncatedBigDecimal[ElevationRange.AirMass.Value, 1](airMassErrorMsg)
-                  .andThen(
-                    ValidFormatNec.lte(
-                      TruncatedRefinedBigDecimal[ElevationRange.AirMass.Value, 1](
-                        state.airMass.max
-                      ).get,
-                      "Must be <= Max"
-                    )
-                  ),
+                validFormat = ModelValidators.airMassElevationRangeValidWedge.andThen(
+                  ValidSplitEpiNec.lte(state.airMass.max, "Must be <= Max")
+                ),
                 changeAuditor = ChangeAuditor.accept.decimal(1),
                 clazz = ExploreStyles.ElevationRangeEntry
               ),
               <.label("Max"),
-              FormInputEV[View, TruncatedRefinedBigDecimal[ElevationRange.AirMass.Value, 1]](
+              FormInputEV(
                 id = "maxam",
-                value = airMassView
-                  .zoom(ElevationRange.AirMass.max)
-                  .zoomSplitEpi(
-                    TruncatedRefinedBigDecimal
-                      .unsafeRefinedBigDecimal[ElevationRange.AirMass.Value, 1]
-                  ),
+                value = airMassView.zoom(ElevationRange.AirMass.max),
                 errorClazz = ExploreStyles.InputErrorTooltip,
                 errorPointing = LabelPointing.Below,
-                validFormat = ValidFormatInput
-                  .forRefinedTruncatedBigDecimal[ElevationRange.AirMass.Value, 1](airMassErrorMsg)
-                  .andThen(
-                    ValidFormatNec.gte(
-                      TruncatedRefinedBigDecimal[ElevationRange.AirMass.Value, 1](
-                        state.airMass.min
-                      ).get,
-                      "Must be >= Min"
-                    )
-                  ),
+                validFormat = ModelValidators.airMassElevationRangeValidWedge.andThen(
+                  ValidSplitEpiNec.gte(state.airMass.min, "Must be >= Min")
+                ),
                 changeAuditor = ChangeAuditor.accept.decimal(1),
                 clazz = ExploreStyles.ElevationRangeEntry
               )
             ).when(state.rangeType === AirMass),
             ReactFragment(
               <.label("Min"),
-              FormInputEV[View, TruncatedRefinedBigDecimal[ElevationRange.HourAngle.Hour, 1]](
+              FormInputEV(
                 id = "minha",
-                value = hourAngleView
-                  .zoom(ElevationRange.HourAngle.minHours)
-                  .zoomSplitEpi(
-                    TruncatedRefinedBigDecimal
-                      .unsafeRefinedBigDecimal[ElevationRange.HourAngle.Hour, 1]
-                  ),
+                value = hourAngleView.zoom(ElevationRange.HourAngle.minHours),
                 errorClazz = ExploreStyles.InputErrorTooltip,
                 errorPointing = LabelPointing.Below,
-                validFormat = ValidFormatInput
-                  .forRefinedTruncatedBigDecimal[ElevationRange.HourAngle.Hour, 1](
-                    hourAngleErrorMsg
-                  )
-                  .andThen(
-                    ValidFormatNec.lte(TruncatedRefinedBigDecimal[ElevationRange.HourAngle.Hour, 1](
-                                         state.hourAngle.maxHours
-                                       ).get,
-                                       "Must be <= Max"
-                    )
-                  ),
+                validFormat = ModelValidators.hourAngleElevationRangeValidWedge.andThen(
+                  ValidSplitEpiNec.lte(state.hourAngle.maxHours, "Must be <= Max")
+                ),
                 changeAuditor = ChangeAuditor.accept.decimal(1),
                 clazz = ExploreStyles.ElevationRangeEntry
               ),
               <.label("Max"),
-              FormInputEV[View, TruncatedRefinedBigDecimal[ElevationRange.HourAngle.Hour, 1]](
+              FormInputEV(
                 id = "maxha",
-                value = hourAngleView
-                  .zoom(ElevationRange.HourAngle.maxHours)
-                  .zoomSplitEpi(
-                    TruncatedRefinedBigDecimal
-                      .unsafeRefinedBigDecimal[ElevationRange.HourAngle.Hour, 1]
-                  ),
+                value = hourAngleView.zoom(ElevationRange.HourAngle.maxHours),
                 errorClazz = ExploreStyles.InputErrorTooltip,
                 errorPointing = LabelPointing.Below,
-                validFormat = ValidFormatInput
-                  .forRefinedTruncatedBigDecimal[ElevationRange.HourAngle.Hour, 1](
-                    hourAngleErrorMsg
-                  )
-                  .andThen(
-                    ValidFormatNec.gte(TruncatedRefinedBigDecimal[ElevationRange.HourAngle.Hour, 1](
-                                         state.hourAngle.minHours
-                                       ).get,
-                                       "Must be >= Min"
-                    )
-                  ),
+                validFormat = ModelValidators.hourAngleElevationRangeValidWedge.andThen(
+                  ValidSplitEpiNec.gte(state.hourAngle.minHours, "Must be >= Min")
+                ),
                 changeAuditor = ChangeAuditor.accept.decimal(1),
                 clazz = ExploreStyles.ElevationRangeEntry
               ),

@@ -11,13 +11,13 @@ import coulomb.si.Kelvin
 import crystal.react.View
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
-import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string
 import explore.common._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.model.display._
 import explore.model.enums.IntegratedSEDType
 import explore.model.enums.IntegratedSEDType._
 import explore.model.enums.SEDType
@@ -43,13 +43,12 @@ import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
+import lucuma.core.validation.InputValidSplitEpi
 import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.forms.EnumSelect
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.forms.FormInputEV
-import lucuma.ui.implicits._
-import lucuma.ui.optics.ChangeAuditor
-import lucuma.ui.optics.ValidFormatInput
+import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.reusability._
 import queries.schemas.implicits._
 import react.common.ReactFnProps
@@ -171,7 +170,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
         )
       )
 
-    def spectrumRow[T: Enumerated](id: string.NonEmptyString, view: View[T]) =
+    def spectrumRow[T: Enumerated: Display](id: string.NonEmptyString, view: View[T]) =
       React.Fragment(
         <.span,
         EnumViewSelect(id, view),
@@ -208,9 +207,8 @@ sealed abstract class SpectralDefinitionEditorBuilder[
             FormInputEV( // Power-law index can be any decimal
               id = "powerLawIndex",
               value = rsu.view(_.assign),
-              validFormat = ValidFormatInput.bigDecimalValidFormat(),
-              changeAuditor =
-                ChangeAuditor.fromValidFormatInput(ValidFormatInput.bigDecimalValidFormat()),
+              validFormat = InputValidSplitEpi.bigDecimal,
+              changeAuditor = ChangeAuditor.fromInputValidSplitEpi(InputValidSplitEpi.bigDecimal),
               errorClazz = ExploreStyles.InputErrorTooltip,
               errorPointing = LabelPointing.Below
             ),
@@ -222,12 +220,12 @@ sealed abstract class SpectralDefinitionEditorBuilder[
           React.Fragment(
             <.label("Temperature", ExploreStyles.SkipToNext),
             InputWithUnits( // Temperature is in K, a positive integer
-              rsu.view(_.value.assign).stripQuantity,
-              ValidFormatInput.forRefinedInt[Positive](),
-              ChangeAuditor
-                .fromValidFormatInput(ValidFormatInput.forRefinedInt[Positive]())
-                .denyNeg,
               id = "bbTempK",
+              value = rsu.view(_.value.assign).stripQuantity,
+              validFormat = InputValidSplitEpi.posInt,
+              changeAuditor = ChangeAuditor
+                .fromInputValidSplitEpi(InputValidSplitEpi.posInt)
+                .denyNeg,
               units = "°K"
             ),
             <.span
@@ -246,7 +244,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
               value = fluxDensityContinuum.zoom(
                 Measure.valueTagged[PosBigDecimal, FluxDensityContinuum[T]]
               ),
-              validFormat = ValidFormatInput.forScientificNotationPosBigDecimal(),
+              validFormat = InputValidSplitEpi.posBigDecimalWithScientificNotation,
               changeAuditor = ChangeAuditor.posScientificNotation()
             ),
             EnumViewSelect(

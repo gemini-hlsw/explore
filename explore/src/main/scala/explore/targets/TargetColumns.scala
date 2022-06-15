@@ -17,10 +17,10 @@ import lucuma.core.enums.Band
 import lucuma.core.math.Epoch
 import lucuma.core.math.Parallax
 import lucuma.core.math.dimensional._
+import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.Target
 import lucuma.core.syntax.display._
 import lucuma.core.util.Display
-import lucuma.ui.optics._
 import reactST.reactTable.Plugin
 import reactST.reactTable.TableDef
 
@@ -87,8 +87,9 @@ object TargetColumns {
 
     /** Display measure without the uncertainty */
     def displayWithoutError[N](measure: Measure[N])(implicit d: Display[N]): VdomNode =
-      <.div(<.span(measure.value.shortName),
-            <.span(ExploreStyles.UnitsTableLabel, measure.units.shortName.replace(" mag", ""))
+      <.div(
+        <.span(measure.value.shortName),
+        <.span(ExploreStyles.UnitsTableLabel, measure.units.shortName.replace(" mag", ""))
       )
 
     val siderealColumns =
@@ -96,14 +97,14 @@ object TargetColumns {
         siderealColumn("ra", Target.Sidereal.baseRA.get)
           .setCell(
             _.value
-              .map(TruncatedRA.rightAscension.get.andThen(ValidFormatInput.truncatedRA.reverseGet))
+              .map(MathValidators.truncatedRA.reverseGet)
               .orEmpty
           )
           .setSortByAuto,
         siderealColumn("dec", Target.Sidereal.baseDec.get)
           .setCell(
             _.value
-              .map(TruncatedDec.declination.get.andThen(ValidFormatInput.truncatedDec.reverseGet))
+              .map(MathValidators.truncatedDec.reverseGet)
               .orEmpty
           )
           .setSortByAuto

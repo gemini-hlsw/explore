@@ -10,15 +10,15 @@ import explore.common._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.enums.SourceProfileType
-import explore.model.validators._
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.SourceProfile._
 import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.forms.EnumSelect
-import lucuma.ui.optics.ChangeAuditor
+import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.reusability._
 import queries.schemas.implicits._
 import react.common._
@@ -68,11 +68,16 @@ object SourceProfileEditor {
         .map(gaussianAligner =>
           React.Fragment(
             <.label("FWHM", ExploreStyles.SkipToNext),
-            InputWithUnits( // FWHM is positive arcsec accepting decimals
-              gaussianAligner.zoom(Gaussian.fwhm, GaussianInput.fwhm.modify).view(_.toInput.assign),
-              angleValidFormat,
-              ChangeAuditor.fromValidFormatInput(angleValidFormat).denyNeg.allowEmpty,
+            InputWithUnits(                             // FWHM is positive arcsec accepting decimals
               id = "fwhm",
+              value = gaussianAligner
+                .zoom(Gaussian.fwhm, GaussianInput.fwhm.modify)
+                .view(_.toInput.assign),
+              validFormat = MathValidators.angleArcSec, // THIS IS ARCSEC AND NOT SIGNED!
+              changeAuditor = ChangeAuditor
+                .fromInputValidSplitEpi(MathValidators.angleArcSec)
+                .denyNeg
+                .allowEmpty,
               units = "arcsec"
             ),
             IntegratedSpectralDefinitionEditor(

@@ -14,8 +14,8 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.model.ExploreModelValidators
 import explore.model.display._
-import explore.model.validators._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -25,7 +25,7 @@ import lucuma.core.math.dimensional._
 import lucuma.core.util.Enumerated
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.forms.FormInputEV
-import lucuma.ui.optics.ChangeAuditor
+import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.reusability._
 import monocle.Focus
 import react.common._
@@ -96,7 +96,7 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                   FormInputEV[View, BigDecimal](
                     id = NonEmptyString.unsafeFrom(s"brightnessValue_${cell.row.id}"),
                     value = cell.value,
-                    validFormat = brightnessValidFormat,
+                    validFormat = ExploreModelValidators.brightnessValidWedge,
                     changeAuditor = ChangeAuditor.bigDecimal(2, 3).allowExp(2),
                     disabled = disabled
                   )
@@ -175,11 +175,12 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                     clazz = ExploreStyles.FlatFormField,
                     disabled = props.disabled
                   ),
-                  Button(size = Mini,
-                         compact = true,
-                         onClick = addBrightness,
-                         clazz = ExploreStyles.BrightnessAddButton,
-                         disabled = props.disabled
+                  Button(
+                    size = Mini,
+                    compact = true,
+                    onClick = addBrightness,
+                    clazz = ExploreStyles.BrightnessAddButton,
+                    disabled = props.disabled
                   )(
                     Icons.New
                   )
@@ -191,11 +192,12 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
         <.div(ExploreStyles.ExploreTable |+| ExploreStyles.BrightnessesTableContainer)(
           <.label(label),
           BrightnessTable.Component(
-            table = Table(celled = true,
-                          selectable = true,
-                          striped = true,
-                          unstackable = true,
-                          compact = TableCompact.Very
+            table = Table(
+              celled = true,
+              selectable = true,
+              striped = true,
+              unstackable = true,
+              compact = TableCompact.Very
             ),
             header = TableHeader(),
             emptyMessage = "No brightnesses defined"

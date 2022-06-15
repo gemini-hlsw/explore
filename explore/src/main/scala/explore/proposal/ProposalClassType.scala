@@ -6,6 +6,7 @@ package explore.proposal
 import lucuma.core.model.IntPercent
 import lucuma.core.model.NonNegDuration
 import lucuma.core.model.ProposalClass
+import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 
 sealed abstract class ProposalClassType(val label: String) extends Product with Serializable {
@@ -55,7 +56,7 @@ object ProposalClassType {
     case ProposalClass.FastTurnaround(_)     => FastTurnaround
   }
 
-  implicit val ProposalClassTypeEnumerated: Enumerated[ProposalClassType] =
+  implicit val enumProposalClassType: Enumerated[ProposalClassType] =
     Enumerated.of(LargeProgram,
                   FastTurnaround,
                   Queue,
@@ -67,4 +68,6 @@ object ProposalClassType {
                   PoorWeather,
                   SystemVerification
     )
+
+  implicit val displayProposalClassType: Display[ProposalClassType] = Display.byTag
 }
