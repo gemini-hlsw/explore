@@ -60,16 +60,14 @@ object ObsConfigurationPanel {
    */
   private val unsafePosOptionsLens: Lens[Option[PosAngleConstraint], PosAngleOptions] =
     Lens[Option[PosAngleConstraint], PosAngleOptions](_.toPosAngleOptions)((a: PosAngleOptions) =>
-      (
-        (b: Option[PosAngleConstraint]) =>
-          a.toPosAngle(b match {
-            case Some(PosAngleConstraint.Fixed(a))               => a
-            case Some(PosAngleConstraint.AllowFlip(a))           => a
-            case Some(PosAngleConstraint.AverageParallactic)     => Angle.Angle0
-            case Some(PosAngleConstraint.ParallacticOverride(a)) => a
-            case None                                            => Angle.Angle0
-          })
-      )
+      (b: Option[PosAngleConstraint]) =>
+        a.toPosAngle(b match {
+          case Some(PosAngleConstraint.Fixed(a))               => a
+          case Some(PosAngleConstraint.AllowFlip(a))           => a
+          case Some(PosAngleConstraint.AverageParallactic)     => Angle.Angle0
+          case Some(PosAngleConstraint.ParallacticOverride(a)) => a
+          case None                                            => Angle.Angle0
+        })
     )
 
   protected val component =

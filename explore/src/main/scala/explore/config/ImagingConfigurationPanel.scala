@@ -113,11 +113,11 @@ object ImagingConfigurationPanel {
           onChange = (ddp: Dropdown.DropdownProps) =>
             ddp.value.toOption
               .map(r =>
-                ((r: Any) match {
+                (r: Any) match {
                   case v: js.Array[_] =>
                     filters.set(valuesToFilters(v.collect { case s: String => s }))
                   case _              => Callback.empty
-                })
+                }
               )
               .getOrEmpty
         ),

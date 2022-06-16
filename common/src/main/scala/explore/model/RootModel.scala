@@ -30,7 +30,7 @@ case class RootModel(
     Set("epoch", "pmra", "pmdec", "z", "cz", "parallax", "morphology", "sed") ++
       Band.all
         .filterNot(_ === Band.V)
-        .map(b => (b.shortName + "mag")),
+        .map(b => b.shortName + "mag"),
   constraintSummaryHiddenColumns: Set[String] = Set("minam", "minha", "maxha"),
   constraintSummarySorting:       List[(String, Boolean)] = List.empty,
   undoStacks:                     ModelUndoStacks[IO] = ModelUndoStacks[IO]()

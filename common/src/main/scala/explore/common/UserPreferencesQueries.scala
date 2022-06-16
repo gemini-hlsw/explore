@@ -84,8 +84,7 @@ object UserPreferencesQueries {
               Layout(
                 g._2.map(p => LayoutItem(p.width, p.height, p.x, p.y, p.tile))
               )
-             )
-      )
+      ))
     }
     // Gets the layout of a section.
     // This is coded to return a default in case

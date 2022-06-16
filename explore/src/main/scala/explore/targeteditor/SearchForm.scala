@@ -74,11 +74,11 @@ object SearchForm {
             state.searchTerm,
             $.setStateL(State.searchError)(none) >> props.searching.mod(_ + props.id),
             t =>
-              searchComplete *> ($.setStateL(State.searchError)(
+              searchComplete *> $.setStateL(State.searchError)(
                 NonEmptyString
                   .unsafeFrom(s"'${abbreviate(state.searchTerm, 10)}' not found")
                   .some
-              )).when_(t.isEmpty),
+              ).when_(t.isEmpty),
             _ =>
               searchComplete *> $.setStateL(State.searchError)(
                 NonEmptyString("Search error...").some

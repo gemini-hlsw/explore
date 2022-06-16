@@ -14,7 +14,7 @@ package object undo                           {
     @inline
     def apply[A](
       value: A,
-      modCB: ((A => A), A => DefaultS[Unit]) => DefaultS[Unit]
+      modCB: (A => A, A => DefaultS[Unit]) => DefaultS[Unit]
     ): ViewF[DefaultS, A] = ViewF[DefaultS, A](value, modCB)
   }
 }

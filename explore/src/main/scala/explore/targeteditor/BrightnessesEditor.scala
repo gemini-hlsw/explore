@@ -161,9 +161,9 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
               .mapValue { (bandView: View[Band]) =>
                 val addBrightness =
                   props.brightnesses.mod(brightnesses =>
-                    (brightnesses +
+                    brightnesses +
                       (bandView.get ->
-                        defaultBandUnits(bandView.get).withValueTagged(BigDecimal(0))))
+                        defaultBandUnits(bandView.get).withValueTagged(BigDecimal(0)))
                   )
 
                 React.Fragment(

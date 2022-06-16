@@ -55,13 +55,13 @@ object Tile {
   type RenderInTitle = VdomNode => VdomNode
 
   val heightBreakpoints =
-    List((200, TileXSH), (700 -> TileSMH), (1024 -> TileMDH))
+    List((200, TileXSH), 700 -> TileSMH, 1024 -> TileMDH)
 
   val widthBreakpoints =
-    List((layout.XtraSmallCutoff -> TileXSW),
-         (layout.SmallCutoff     -> TileSMW),
-         (layout.MediumCutoff    -> TileMDW),
-         (layout.LargeCutoff     -> TileLGW)
+    List(layout.XtraSmallCutoff -> TileXSW,
+         layout.SmallCutoff     -> TileSMW,
+         layout.MediumCutoff    -> TileMDW,
+         layout.LargeCutoff     -> TileLGW
     )
 
   val component =

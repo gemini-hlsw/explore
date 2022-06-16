@@ -234,7 +234,7 @@ object ElevationPlotSemester {
               SeriesLineOptions((), (), line)
                 .setName("Visibility")
                 .setYAxis(0)
-              // .setData(series.toJSArray)
+                // .setData(series.toJSArray)
             )
               .map(_.asInstanceOf[SeriesOptionsType])
               .toJSArray

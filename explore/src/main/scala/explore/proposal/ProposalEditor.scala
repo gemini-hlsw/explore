@@ -392,9 +392,11 @@ object ProposalEditor {
 
     val splitsView: View[SortedMap[Partner, IntPercent]] =
       splitsAligner.view(
-        _.toList.map { case (par, pct) =>
-          PartnerSplitsInput(partner = par.assign, percent = pct.assign)
-        }.assign
+        _.toList
+          .map { case (par, pct) =>
+            PartnerSplitsInput(partner = par.assign, percent = pct.assign)
+          }
+          .assign
       )
 
     <.div(

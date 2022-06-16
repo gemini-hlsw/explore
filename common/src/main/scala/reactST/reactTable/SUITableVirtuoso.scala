@@ -74,11 +74,9 @@ class SUITableVirtuoso[D, Plugins](
       val headerTag: Option[TableHeader] = (props.header: Any) match {
         case true                => TableHeader(as = <.div, clazz = ExploreStyles.THead).some
         case header: TableHeader =>
-          (header
+          header
             .asInstanceOf[TableHeader]
-            .copy(as = <.div,
-                  clazz = addClass(header.className, header.clazz, ExploreStyles.THead)
-            ))
+            .copy(as = <.div, clazz = addClass(header.className, header.clazz, ExploreStyles.THead))
             .some // Can't wait for Scala 3's union types
         case _                   => none
       }
