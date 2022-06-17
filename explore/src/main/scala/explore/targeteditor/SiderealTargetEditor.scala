@@ -267,7 +267,9 @@ object SiderealTargetEditor {
                 props.uid,
                 props.id,
                 props.posAngle,
-                props.vizTime,
+                // This may need to go into a effect but it complicates the code quite a bit, and
+                // we need precission of months/years
+                props.vizTime.getOrElse(Instant.now()),
                 props.scienceMode,
                 targetView.zoom(Target.Sidereal.tracking)
               ),

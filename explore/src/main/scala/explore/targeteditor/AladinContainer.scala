@@ -44,7 +44,7 @@ import scala.concurrent.duration._
 final case class AladinContainer(
   target:                 View[SiderealTracking],
   posAngle:               Option[PosAngleConstraint],
-  vizTime:                Option[Instant],
+  vizTime:                Instant,
   scienceMode:            Option[ScienceMode],
   options:                TargetVisualOptions,
   updateMouseCoordinates: Coordinates => Callback,
@@ -113,7 +113,7 @@ object AladinContainer {
       .withHooks[Props]
       // Base coordinates with pm correction if possible
       .useMemoBy(_.vizTime) { p => i =>
-        i.flatMap(t => p.target.get.at(t)).getOrElse(p.target.get.baseCoordinates)
+        p.target.get.at(i).getOrElse(p.target.get.baseCoordinates)
       }
       // View coordinates base coordinates with pm correction if possible + user panning
       .useStateBy { (p, baseCoordinates) =>
@@ -230,35 +230,33 @@ object AladinContainer {
             val candidatesVisibility =
               ExploreStyles.GuideStarCandidateVisible.when_(visible)
 
-            obsInstant.foldMap { obsInstant =>
-              val selectedGSTarget = selectedGS
-                .flatMap { case (c, _) => c.tracking.at(obsInstant) }
-                .map(c => SVGTarget.GuideStarTarget(c, Css.Empty, 5))
+            val selectedGSTarget = selectedGS
+              .flatMap { case (c, _) => c.tracking.at(obsInstant) }
+              .map(c => SVGTarget.GuideStarTarget(c, Css.Empty, 5))
 
-              candidates
-                .filterNot(x => selectedGS.exists(_._1 === x._1))
-                .flatMap { case (g, _) =>
-                  val targetEpoch        = g.tracking.epoch.epochYear.round
-                  // Approximate to the midddle of the yaer
-                  val targetEpochInstant =
-                    LocalDate.of(targetEpoch.toInt, 6, 1).atStartOfDay(ZoneId.of("UTC")).toInstant()
+            candidates
+              .filterNot(x => selectedGS.exists(_._1 === x._1))
+              .flatMap { case (g, _) =>
+                val targetEpoch        = g.tracking.epoch.epochYear.round
+                // Approximate to the midddle of the yaer
+                val targetEpochInstant =
+                  LocalDate.of(targetEpoch.toInt, 6, 1).atStartOfDay(ZoneId.of("UTC")).toInstant()
 
-                  (g.tracking
-                     .at(targetEpochInstant),
-                   g.tracking.at(obsInstant)
-                  ).mapN { (source, dest) =>
-                    List[SVGTarget](
-                      SVGTarget.GuideStarCandidateTarget(dest, candidatesVisibility, 3),
-                      SVGTarget.LineTo(
-                        source,
-                        dest,
-                        ExploreStyles.PMGSCorrectionLine |+| candidatesVisibility
-                      )
+                (g.tracking
+                   .at(targetEpochInstant),
+                 g.tracking.at(obsInstant)
+                ).mapN { (source, dest) =>
+                  List[SVGTarget](
+                    SVGTarget.GuideStarCandidateTarget(dest, candidatesVisibility, 3),
+                    SVGTarget.LineTo(
+                      source,
+                      dest,
+                      ExploreStyles.PMGSCorrectionLine |+| candidatesVisibility
                     )
-                  }
+                  )
                 }
-                .flatten ++ selectedGSTarget.toList
-            }
+              }
+              .flatten ++ selectedGSTarget.toList
           } else Nil
         }
       }
@@ -347,6 +345,7 @@ object AladinContainer {
                     fov = props.options.fovAngle,
                     showGotoControl = false,
                     showZoomControl = false,
+                    showFullscreenControl = false,
                     customize = includeSvg _
                   )
                 }

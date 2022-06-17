@@ -6,8 +6,8 @@ package explore.model
 import cats.Eq
 import explore.common.AsterismQueries.AsterismGroupsWithObs
 import explore.common.ConstraintGroupQueries.ConstraintGroupList
-import explore.common.ObsQueries.ObservationData
 import explore.common.ObsQueries.ObservationList
+import explore.common.ObsQueries.ScienceData
 import explore.model.ObsIdSet
 import explore.undo.UndoStacks
 import lucuma.core.model.ConstraintSet
@@ -25,8 +25,8 @@ case class ModelUndoStacks[F[_]](
   forConstraintList:    UndoStacks[F, ConstraintGroupList] = UndoStacks.empty[F, ConstraintGroupList],
   forConstraintGroup:   Map[ObsIdSet, UndoStacks[F, ConstraintSet]] =
     Map.empty[ObsIdSet, UndoStacks[F, ConstraintSet]],
-  forObservationData:   Map[Observation.Id, UndoStacks[F, ObservationData]] =
-    Map.empty[Observation.Id, UndoStacks[F, ObservationData]],
+  forObservationData:   Map[Observation.Id, UndoStacks[F, ScienceData]] =
+    Map.empty[Observation.Id, UndoStacks[F, ScienceData]],
   forProposal:          UndoStacks[F, Proposal] = UndoStacks.empty[F, Proposal]
 )
 

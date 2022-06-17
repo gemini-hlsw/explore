@@ -70,7 +70,7 @@ object ObsQueries {
       Focus[ScienceData](_.posAngle)
   }
 
-  val scienceDataForObs: Lens[ObservationData, ScienceData] =
+  val obsScienceDataLens: Lens[ObservationData, ScienceData] =
     disjointZip(
       ObservationData.scienceRequirements,
       ObservationData.scienceMode,
