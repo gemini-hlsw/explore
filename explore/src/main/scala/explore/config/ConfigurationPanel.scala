@@ -34,7 +34,7 @@ final case class ConfigurationPanel(
   obsId:            Observation.Id,
   title:            String,
   subtitle:         Option[NonEmptyString],
-  scienceData:      UndoContext[ObservationData],
+  scienceData:      UndoContext[ScienceData],
   constraints:      ConstraintSet,
   itcTargets:       List[ITCTarget],
   renderInTitle:    Tile.RenderInTitle
@@ -54,7 +54,7 @@ object ConfigurationPanel {
         implicit val client = ctx.clients.odb // This shouldn't be necessary, but it seems to be
 
         val requirementsCtx: UndoSetter[ScienceRequirementsData] =
-          props.scienceData.zoom(scienceDataForObs.andThen(ScienceData.requirements))
+          props.scienceData.zoom(ScienceData.requirements)
 
         val modeAligner: Aligner[Option[model.ScienceMode], Input[ScienceModeInput]] =
           Aligner(
@@ -65,7 +65,7 @@ object ConfigurationPanel {
             ),
             (ObsQueriesGQL.EditObservationMutation.execute[IO] _).andThen(_.void)
           ).zoom(
-            scienceDataForObs.andThen(ScienceData.mode),
+            ScienceData.mode,
             EditObservationsInput.patch.andThen(ObservationPropertiesInput.scienceMode).modify
           )
 
@@ -81,7 +81,7 @@ object ConfigurationPanel {
           optModeView.get.map(_ => showAdvanced.set(true))
 
         val posAngleView: View[Option[PosAngleConstraint]] =
-          props.scienceData.undoableView(ObservationData.posAngleConstraint)
+          props.scienceData.undoableView(ScienceData.posAngle)
 
         React.Fragment(
           props.renderInTitle(

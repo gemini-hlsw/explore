@@ -63,7 +63,7 @@ final case class AladinCell(
   uid:              User.Id,
   tid:              Target.Id,
   posAngle:         Option[PosAngleConstraint],
-  vizTime:          Option[Instant],
+  vizTime:          Instant,
   scienceMode:      Option[ScienceMode],
   target:           View[SiderealTracking]
 )(implicit val ctx: AppContextIO)
@@ -122,7 +122,7 @@ object AladinCell extends ModelOptics {
           .map(candidatesAwait =>
             candidatesAwait >>
               props.ctx.worker.postTransferrable(
-                CatalogRequest(props.target.get, props.vizTime.getOrElse(Instant.now()))
+                CatalogRequest(props.target.get, props.vizTime)
               )
           )
           .orEmpty

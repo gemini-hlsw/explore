@@ -21,23 +21,23 @@ import react.common._
 object ConfigurationTile {
   def configurationTile(
     obsId:        Observation.Id,
-    obsData:      Pot[(String, Option[NonEmptyString], View[ObservationData])],
-    undoStacks:   View[UndoStacks[IO, ObservationData]]
+    obsData:      Pot[(String, Option[NonEmptyString], View[ScienceData])],
+    undoStacks:   View[UndoStacks[IO, ScienceData]]
   )(implicit ctx: AppContextIO) =
     Tile(
       ObsTabTilesIds.ConfigurationId,
       "Configuration",
       canMinimize = true
     )(renderInTitle =>
-      potRender[(String, Option[NonEmptyString], View[ObservationData])] {
+      potRender[(String, Option[NonEmptyString], View[ScienceData])] {
         case (title, subtitle, scienceData) =>
           ConfigurationPanel(
             obsId,
             title,
             subtitle,
             UndoContext(undoStacks, scienceData),
-            scienceData.zoom(scienceDataForObs).get.constraints,
-            scienceData.zoom(scienceDataForObs).get.itcTargets,
+            scienceData.get.constraints,
+            scienceData.get.itcTargets,
             renderInTitle
           )
       }(obsData)
