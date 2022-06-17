@@ -35,13 +35,13 @@ object LogoutTracker {
       val bc = new BroadcastChannel[ExploreEvent]("explore")
       bc.onmessage = (x: ExploreEvent) =>
         // This is coming from the js world, we can't match the type
-        (x.event match {
+        x.event match {
           case ExploreEvent.LogoutEvent.event =>
             (props.setVault(none) >> props.setMessage(
               "You logged out in another instance"
             )).to[IO].whenA(x.value.toString =!= nonce.value.toString)
           case _                              => IO.unit
-        })
+        }
 
       state
         .setState(bc.some) *> CallbackTo(Callback(bc.close()).attempt)

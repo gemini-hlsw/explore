@@ -390,7 +390,7 @@ final case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
           .getOrElse(Rational.zero)
       // Wavelength matche
       val wavelengthScore: Rational = wavelength
-        .map(w => (w.nanometer.value / (w.nanometer.value + deltaWave)))
+        .map(w => w.nanometer.value / (w.nanometer.value + deltaWave))
         .getOrElse(Rational.zero)
       // Resolution match
       val resolutionScore: Rational = resolution

@@ -200,7 +200,7 @@ object ElevationPlotSection {
                     active = timeView.contains(TimeDisplay.Site),
                     onClick = setTime(TimeDisplay.Site)
                   )("Site")
-                )((^.visibility.hidden.when(rangeView.contains(PlotRange.Semester))))
+                )(^.visibility.hidden.when(rangeView.contains(PlotRange.Semester)))
               )
             )
 

@@ -178,11 +178,11 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
       val addLine =
         newWavelength.get.foldMap(wavelength =>
           props.emissionLines.mod(emissionLines =>
-            (emissionLines +
+            emissionLines +
               (wavelength -> EmissionLine(
                 PosBigDecimal(BigDecimal(1)).withUnit[KilometersPerSecond],
                 defaultLineUnits.withValueTagged(BigDecimal(1))
-              )))
+              ))
           ) >> newWavelength.set(none)
         )
 

@@ -40,7 +40,7 @@ object validators {
     ValidFormatInput(
       s =>
         Validated.fromOption(
-          (s.toDoubleOption.map(Angle.fromDoubleArcseconds)),
+          s.toDoubleOption.map(Angle.fromDoubleArcseconds),
           NonEmptyChain("Invalid angle")
         ),
       a => (a.toMicroarcseconds / 1000000.0).toString

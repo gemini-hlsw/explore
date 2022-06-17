@@ -80,7 +80,7 @@ case class SSOClient[F[_]: Async: Logger](config: SSOConfig) {
               .value
               .map(
                 _.flatMap(body =>
-                  (for {
+                  for {
                     k <- Either
                            .catchNonFatal(
                              ju.Base64.getDecoder.decode(body.split('.')(1).replace("-", "+"))
@@ -90,7 +90,7 @@ case class SSOClient[F[_]: Async: Logger](config: SSOConfig) {
                     p <- parse(j).leftMap(_.message)
                     u <- p.as[JwtOrcidProfile].leftMap(_.message)
                     t <- refineV[NonEmpty](body)
-                  } yield UserVault(u.`lucuma-user`, Instant.ofEpochSecond(u.exp), t))
+                  } yield UserVault(u.`lucuma-user`, Instant.ofEpochSecond(u.exp), t)
                 ).fold(msg => throw new RuntimeException(s"Error decoding the token: $msg"), _.some)
               )
           case r                    =>
@@ -105,7 +105,7 @@ case class SSOClient[F[_]: Async: Logger](config: SSOConfig) {
   def refreshToken(expiration: Instant): F[Option[UserVault]] =
     Sync[F].delay(Instant.now).flatMap { n =>
       val sleepTime = config.refreshTimeoutDelta.max(
-        (n.until(expiration, ChronoUnit.SECONDS).seconds - config.refreshTimeoutDelta)
+        n.until(expiration, ChronoUnit.SECONDS).seconds - config.refreshTimeoutDelta
       )
       Temporal[F].sleep(sleepTime / config.refreshIntervalFactor)
     } >> whoami.flatTap(_ => Logger[F].info("User token refreshed"))

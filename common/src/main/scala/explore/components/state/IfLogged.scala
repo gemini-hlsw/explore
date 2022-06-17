@@ -41,7 +41,7 @@ object IfLogged {
           val messageView = p.view.zoom(RootModel.userSelectionMessage)
 
           val vaultSet   = vaultView.set.reuseAlways
-          val messageSet = (messageView.set.compose((s: NonEmptyString) => s.some)).reuseAlways
+          val messageSet = messageView.set.compose((s: NonEmptyString) => s.some).reuseAlways
 
           vaultView.get.fold[VdomElement](
             UserSelectionForm(vaultView, messageView)

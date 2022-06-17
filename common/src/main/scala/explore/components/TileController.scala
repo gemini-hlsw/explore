@@ -64,7 +64,7 @@ object TileController {
     tileId:     Tile.TileId
   ): TileSizeState = {
     val k = allTiles
-      .filter((s => s.i.forall(_ === tileId.value)))
+      .filter(s => s.i.forall(_ === tileId.value))
       .getAll(layoutsMap)
       .headOption
 

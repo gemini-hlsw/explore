@@ -368,7 +368,7 @@ object SpectroscopyModesTable {
                   .map(_.micrometer.toValue[BigDecimal].toRefined[Positive])
               )
           val (enabled, disabled) = rows.partition(enabledRow)
-          (enabled ++ disabled)
+          enabled ++ disabled
         }
       )
       // itc results cache

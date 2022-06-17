@@ -212,18 +212,18 @@ object AsterismGroupObsListActions {
       val oCurrentAg = agl.findContainingObsIds(obsIds)
       oCurrentAg.foldMap { currentAg =>
         // This seems to be the only way to tell if we're doing or undoing?
-        (if (currentAg.targetIds.contains(targetId))
-           // undo
-           expandedIds
-             .mod(undoTargetDropExpandedMod(obsIds, targetId, currentAg, agl) _)
-             .to[IO] >>
-             AsterismQueries.removeTargetFromAsterisms[IO](obsIds.toList, targetId)
-         else
-           // do or redo
-           expandedIds
-             .mod(doTargetDropExpandedMod(obsIds, targetId, currentAg, agl) _)
-             .to[IO] >>
-             AsterismQueries.addTargetToAsterisms[IO](obsIds.toList, targetId))
+        if (currentAg.targetIds.contains(targetId))
+          // undo
+          expandedIds
+            .mod(undoTargetDropExpandedMod(obsIds, targetId, currentAg, agl) _)
+            .to[IO] >>
+            AsterismQueries.removeTargetFromAsterisms[IO](obsIds.toList, targetId)
+        else
+          // do or redo
+          expandedIds
+            .mod(doTargetDropExpandedMod(obsIds, targetId, currentAg, agl) _)
+            .to[IO] >>
+            AsterismQueries.addTargetToAsterisms[IO](obsIds.toList, targetId)
       }
     }
   )

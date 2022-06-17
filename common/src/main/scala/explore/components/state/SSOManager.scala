@@ -75,7 +75,7 @@ object SSOManager {
       implicit val ctx = $.props.ctx
       // Setting vault to none is defensive. This component should actually unmount when vault is none.
       $.state.cancelToken
-        .map(cancel => (cancel >> $.props.setVault(none).to[IO]))
+        .map(cancel => cancel >> $.props.setVault(none).to[IO])
         .orEmpty
         .runAsync
     }

@@ -162,9 +162,9 @@ lazy val explore: Project = project
         ReactResizable.value,
     // Build workers when you build explore
     Compile / fastLinkJS := (Compile / fastLinkJS)
-      .dependsOn((workers / Compile / fastLinkJS))
+      .dependsOn(workers / Compile / fastLinkJS)
       .value,
-    Compile / fullLinkJS := (Compile / fullLinkJS).dependsOn((workers / Compile / fullLinkJS)).value
+    Compile / fullLinkJS := (Compile / fullLinkJS).dependsOn(workers / Compile / fullLinkJS).value
   )
 
 lazy val commonSettings = lucumaGlobalSettings ++ Seq(
