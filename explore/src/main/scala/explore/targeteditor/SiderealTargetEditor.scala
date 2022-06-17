@@ -9,6 +9,7 @@ import cats.syntax.all._
 import clue.TransactionalClient
 import clue.data.syntax._
 import crystal.react.View
+import crystal.react.hooks._
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string._
@@ -125,7 +126,8 @@ object SiderealTargetEditor {
       .withHooks[Props]
       // cloning
       .useState(false)
-      .render { (props, cloning) =>
+      .useEffectResultOnMountBy((p, _) => IO(p.vizTime.getOrElse(Instant.now())))
+      .render { (props, cloning, vizTime) =>
         AppCtx.using { implicit appCtx =>
           // If we're going to clone on edit, use readonly views so we don't update the original
           // target in the model or add the API clone to the undo stack for the original target.
@@ -263,16 +265,16 @@ object SiderealTargetEditor {
                 UndoButtons(undoCtx, disabled = disabled)
                   .when(props.renderInTitle.isEmpty && props.obsIdSubset.isEmpty)
               ),
-              AladinCell(
-                props.uid,
-                props.id,
-                props.posAngle,
-                // This may need to go into a effect but it complicates the code quite a bit, and
-                // we need precission of months/years
-                props.vizTime.getOrElse(Instant.now()),
-                props.scienceMode,
-                targetView.zoom(Target.Sidereal.tracking)
-              ),
+              potRender[Instant](vizTime =>
+                AladinCell(
+                  props.uid,
+                  props.id,
+                  props.posAngle,
+                  vizTime,
+                  props.scienceMode,
+                  targetView.zoom(Target.Sidereal.tracking)
+                )
+              )(vizTime),
               <.div(ExploreStyles.Grid, ExploreStyles.Compact, ExploreStyles.TargetForm)(
                 // Keep the search field and the coords always together
                 SearchForm(
