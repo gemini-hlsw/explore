@@ -22,6 +22,7 @@ import explore.implicits._
 import explore.model.CatalogQueryError
 import explore.model.CatalogResults
 import explore.model.Constants
+import explore.model.ObsConfiguration
 import explore.model.TargetVisualOptions
 import explore.model.boopickle._
 import explore.model.enum.Visible
@@ -31,17 +32,11 @@ import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ags._
-import lucuma.core.enum.CloudExtinction
-import lucuma.core.enum.ImageQuality
 import lucuma.core.enum.PortDisposition
-import lucuma.core.enum.SkyBackground
-import lucuma.core.enum.WaterVapor
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
-import lucuma.core.model.ConstraintSet
-import lucuma.core.model.ElevationRange
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
@@ -56,7 +51,6 @@ import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.sizes._
 
 import scala.concurrent.duration._
-import explore.model.ObsConfiguration
 
 final case class AladinCell(
   uid:              User.Id,
@@ -75,13 +69,7 @@ object AladinSettings {
 object AladinCell extends ModelOptics {
   type Props = AladinCell
 
-  val bestConstraintSet = ConstraintSet(ImageQuality.PointTwo,
-                                        CloudExtinction.PointOne,
-                                        SkyBackground.Darkest,
-                                        WaterVapor.VeryDry,
-                                        ElevationRange.AirMass.Default
-  )
-  val wavelength        = Wavelength.fromNanometers(500).get
+  val wavelength = Wavelength.fromNanometers(500).get
 
   val params  = AgsParams.GmosAgsParams(none, PortDisposition.Side)
   val basePos = AgsPosition(Angle.Angle0, Offset.Zero)
@@ -145,10 +133,10 @@ object AladinCell extends ModelOptics {
       }
       // analyzed targets
       .useMemoBy((p, _, _, _, candidates) =>
-        (p.target.get, p.obsConf.posAngleConstraint, candidates.value)
+        (p.target.get, p.obsConf.posAngleConstraint, p.obsConf.constraints, candidates.value)
       ) { (_, _, _, _, _) =>
         {
-          case (tracking, Some(posAngle), Ready(candidates)) =>
+          case (tracking, Some(posAngle), Some(constraints), Ready(candidates)) =>
             val pa = posAngle match {
               case PosAngleConstraint.Fixed(a)               => a.some
               case PosAngleConstraint.AllowFlip(a)           => a.some
@@ -159,7 +147,7 @@ object AladinCell extends ModelOptics {
             pa.map { pa =>
               val basePos = AgsPosition(pa, Offset.Zero)
               Ags
-                .agsAnalysis[IO](bestConstraintSet,
+                .agsAnalysis[IO](constraints,
                                  wavelength,
                                  tracking.baseCoordinates,
                                  basePos,
@@ -169,7 +157,7 @@ object AladinCell extends ModelOptics {
                 .sortBy(_._2)
 
             }.getOrElse(Nil)
-          case _                                             => Nil
+          case _                                                                => Nil
         }
       }
       // open settings menu

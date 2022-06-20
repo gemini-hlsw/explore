@@ -359,31 +359,33 @@ object TargetTabContents {
           asterismView.zoom(Asterism.targetOptional(targetId))
         }
 
-      val scienceMode = idsToEdit.single match {
+      val obsConf = idsToEdit.single match {
         case Some(id) =>
           asterismGroupsWithObs
             .zoom(AsterismGroupsWithObs.observations)
             .get
             .collect {
-              case (k, ObsSummaryWithConstraintsAndConf(_, _, _, _, _, _, Some(v), _, _))
-                  if k === id =>
-                v
+              case (k,
+                    ObsSummaryWithConstraintsAndConf(_,
+                                                     const,
+                                                     _,
+                                                     _,
+                                                     _,
+                                                     _,
+                                                     Some(sm),
+                                                     _,
+                                                     Some(posAngle)
+                    )
+                  ) if k === id =>
+                (const.withDefaultElevationRange, sm, posAngle)
             }
             .headOption
         case _        => None
       }
 
-      val posAngle = idsToEdit.single.flatMap { id =>
-        asterismGroupsWithObs
-          .zoom(AsterismGroupsWithObs.observations)
-          .get
-          .collect {
-            case (k, ObsSummaryWithConstraintsAndConf(_, _, _, _, _, _, _, _, Some(posAngle)))
-                if k === id =>
-              posAngle
-          }
-          .headOption
-      }
+      val constraints = obsConf.map(_._1)
+      val scienceMode = obsConf.map(_._2)
+      val posAngle    = obsConf.map(_._3)
 
       def setCurrentTarget(programId: Program.Id, oids: ObsIdSet)(
         tid:                          Option[Target.Id],
@@ -399,6 +401,7 @@ object TargetTabContents {
           Pot(asterismView, scienceMode),
           Pot(vizTimeView),
           posAngle,
+          constraints,
           props.focusedTarget,
           setCurrentTarget(props.programId, idsToEdit) _,
           otherObsCount(targetMap, idsToEdit) _,

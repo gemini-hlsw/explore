@@ -8,6 +8,7 @@ import crystal.react.View
 import crystal.react.hooks._
 import explore.Icons
 import explore.components.ui.ExploreStyles
+import explore.model.ObsConfiguration
 import explore.model.TargetVisualOptions
 import explore.model.enum.Visible
 import explore.model.reusability._
@@ -38,7 +39,6 @@ import react.semanticui.sizes._
 import java.time.LocalDate
 import java.time.ZoneId
 import scala.concurrent.duration._
-import explore.model.ObsConfiguration
 
 final case class AladinContainer(
   target:                 View[SiderealTracking],

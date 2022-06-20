@@ -38,6 +38,7 @@ object SiderealTargetEditorTile {
             vizTime,
             none,
             none,
+            none,
             undoStacks,
             searching,
             renderInTitle = renderInTitle.some
