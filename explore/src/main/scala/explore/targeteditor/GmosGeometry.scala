@@ -14,8 +14,6 @@ import lucuma.core.geom.gmos
 import lucuma.core.geom.syntax.shapeexpression._
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
-import lucuma.svgdotjs._
-import react.aladin.visualization.svg._
 import react.common.implicits._
 import react.common.style.Css
 
@@ -91,15 +89,5 @@ object GmosGeometry {
           (Css("gmos-science-ccd"), gmos.scienceArea.imaging ⟲ posAngle)
         )
     }
-
-  // Firefox doesn't properly handle very large coordinates, scale by 1000 at least
-  val ScaleFactor = 1000
-
-  val pp: SvgPostProcessor = {
-    case p: Polygon   => p.addClass("jts-polygon").addClass("jts")
-    case g: Group     => g.addClass("jts-group").addClass("jts")
-    case c: Container => c.addClass("jts")
-    case a            => a
-  }
 
 }

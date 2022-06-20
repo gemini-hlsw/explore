@@ -2,109 +2,103 @@
   overflow: hidden; // Needed to keep the visualization svg inside the component
 }
 
-.jts {
+.aladin-container-body {
+  grid-area: aladin;
   position: relative;
-  pointer-events: none; // let aladin get pointer events
-  z-index: 10; // Needs a z-index to sit on top of the catalog
-}
-
-@media screen and (min-resolution: 2dppx) {
-  svg {
-    shape-rendering: optimizeSpeed;
-  }
-}
-
-.jts-polygon {
-  stroke: gray;
-  stroke-width: 2px;
-  vector-effect: non-scaling-stroke; // Don't scale the stroke, otherwise it becomes invisible
-}
-
-.gmos-probe-arm {
-  stroke: red;
-  fill-opacity: 0.1;
-  stroke-width: 1px;
-  vector-effect: non-scaling-stroke;
-}
-
-.gmos-patrol-field {
-  // display: none;
-  stroke: orange;
-  fill: none;
-  stroke-width: 0.8px;
-  stroke-dasharray: 10;
-}
-
-.gmos-fpu > polygon {
-  stroke: blue;
-  stroke-width: 0.8px;
-  fill: lightgray;
-  fill-opacity: 0.1;
-  vector-effect: non-scaling-stroke;
-}
-
-.gmos-science-area polygon {
-  display: none;
-  stroke: purple;
-  fill: black;
-  fill-opacity: 1;
-}
-
-.gmos-science-ccd-offset polygon {
-  display: none;
-  stroke: yellow;
-  fill-opacity: 0.1;
-}
-
-.gmos-science-ccd > polygon {
-  display: none;
-  stroke: cyan;
-  stroke-width: 1px;
-  fill-opacity: 0.1;
-  vector-effect: non-scaling-stroke;
-}
-
-.gmos-candidates-area {
-  display: none;
-  fill-opacity: 0;
-  stroke: lightgreen;
-  stroke-width: 0.4px;
-  vector-effect: non-scaling-stroke;
-  stroke-dasharray: 1.5;
-
-  &.guide-star-candidate-target-visible {
-    display: inline;
-  }
-}
-
-// Shows a border around the whole SVG
-.jts-svg-border {
-  display: none;
-  stroke: yellow;
-  stroke-width: 2px;
-  vector-effect: non-scaling-stroke;
-  stroke-dasharray: 1;
-}
-
-.jts-svg-reticle {
-  display: none;
-}
-
-.jts-svg-center {
-  stroke: pink;
-  stroke-width: 2px;
-  vector-effect: non-scaling-stroke;
+  margin-bottom: 0.2em;
 }
 
 .visualization-display {
   display: inline !important; // we use this as a toggle thus we need important set
 }
 
+.visualization-overlay-svg {
+  position: absolute;
+  pointer-events: none; // let aladin get pointer events
+  z-index: 30;
+
+  .viz-polygon {
+    stroke: gray;
+    stroke-width: 2px;
+    fill: none;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .gmos-probe-arm {
+    stroke: red;
+    z-index: 1;
+    fill-opacity: 0.1;
+  }
+
+  .gmos-patrol-field {
+    stroke: orange;
+    fill: none;
+    stroke-width: 0.8px;
+    stroke-dasharray: 10;
+  }
+
+  .gmos-fpu > polygon {
+    stroke: blue;
+    stroke-width: 0.8px;
+    fill: lightgray;
+    fill-opacity: 0.1;
+  }
+
+  .gmos-science-area polygon {
+    display: none;
+    stroke: purple;
+    fill: black;
+    fill-opacity: 1;
+  }
+
+  .gmos-science-ccd-offset polygon {
+    display: none;
+    stroke: yellow;
+    fill-opacity: 0.1;
+  }
+
+  .gmos-science-ccd polygon {
+    display: none;
+    stroke: cyan;
+    fill-opacity: 0.1;
+  }
+
+  .gmos-candidates-area {
+    display: none;
+    fill-opacity: 0;
+    stroke: lightgreen;
+    stroke-width: 0.4px;
+    stroke-dasharray: 1.5;
+
+    &.guide-star-candidate-target-visible {
+      display: inline;
+    }
+  }
+
+  .viz-svg-border {
+    stroke: yellow;
+    stroke-width: 2px;
+    vector-effect: non-scaling-stroke;
+    stroke-dasharray: 1;
+  }
+
+  .viz-svg-center {
+    display: none;
+    stroke: green;
+    stroke-width: 2px;
+    vector-effect: non-scaling-stroke;
+  }
+}
+
 .targets-overlay-svg {
   pointer-events: none; // let aladin get pointer events
   position: absolute;
-  z-index: 20;
-  vector-effect: non-scaling-stroke;
+  z-index: 140;
+
+  circle,
+  line {
+    vector-effect: non-scaling-stroke;
+  }
 
   .crosshair-target {
     stroke: hsl(84, 100%, 29.2%);
@@ -156,6 +150,10 @@
     fill-opacity: 0.4;
     isolation: initial;
   }
+}
+
+.viz-guides {
+  display: none;
 }
 
 .ui.vertical.menu.explore-aladin-settings-menu {
