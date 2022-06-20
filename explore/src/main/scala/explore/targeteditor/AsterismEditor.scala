@@ -30,6 +30,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.ConstraintSet
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.Target
@@ -54,6 +55,7 @@ final case class AsterismEditor(
   potVizTime:       Pot[View[Option[Instant]]],
   scienceMode:      Option[ScienceMode],
   posAngle:         Option[PosAngleConstraint],
+  constraints:      Option[ConstraintSet],
   currentTarget:    Option[Target.Id],
   setTarget:        (Option[Target.Id], SetRouteVia) => Callback,
   otherObsCount:    Target.Id => Int,
@@ -230,6 +232,7 @@ object AsterismEditor {
                         props.potVizTime.toOption.flatMap(_.get),
                         props.posAngle,
                         props.scienceMode,
+                        props.constraints,
                         props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
                         props.searching,
                         onClone = onCloneTarget(targetId, props.asterism, props.setTarget) _,

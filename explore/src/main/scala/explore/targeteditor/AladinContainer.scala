@@ -8,7 +8,7 @@ import crystal.react.View
 import crystal.react.hooks._
 import explore.Icons
 import explore.components.ui.ExploreStyles
-import explore.model.ScienceMode
+import explore.model.ObsConfiguration
 import explore.model.TargetVisualOptions
 import explore.model.enum.Visible
 import explore.model.reusability._
@@ -36,16 +36,13 @@ import react.resizeDetector.hooks._
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
 
-import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import scala.concurrent.duration._
 
 final case class AladinContainer(
   target:                 View[SiderealTracking],
-  posAngle:               Option[PosAngleConstraint],
-  vizTime:                Instant,
-  scienceMode:            Option[ScienceMode],
+  obsConf:                ObsConfiguration,
   options:                TargetVisualOptions,
   updateMouseCoordinates: Coordinates => Callback,
   updateFov:              Fov => Callback, // TODO Move the functionality of saving the FOV in ALadincell here
@@ -112,7 +109,7 @@ object AladinContainer {
     ScalaFnComponent
       .withHooks[Props]
       // Base coordinates with pm correction if possible
-      .useMemoBy(_.vizTime) { p => i =>
+      .useMemoBy(_.obsConf.vizTime) { p => i =>
         p.target.get.at(i).getOrElse(p.target.get.baseCoordinates)
       }
       // View coordinates base coordinates with pm correction if possible + user panning
@@ -126,7 +123,9 @@ object AladinContainer {
         }
       }
       // Memoized svg
-      .useMemoBy((p, _, _, gs) => (p.scienceMode, p.posAngle, p.options, gs.value)) {
+      .useMemoBy((p, _, _, gs) =>
+        (p.obsConf.scienceMode, p.obsConf.posAngleConstraint, p.options, gs.value)
+      ) {
         case (_, baseCoordinates, _, _) => { case (mode, posAngle, options, gs) =>
           val pa = posAngle
             .collect {
@@ -196,8 +195,8 @@ object AladinContainer {
       .useEffectWithDepsBy((p, baseCoordinates, _, currentPos, _, _, world2pix, resize) =>
         (p.options.fovAngle,
          p.options.agsCandidates,
-         p.scienceMode,
-         p.posAngle,
+         p.obsConf.scienceMode,
+         p.obsConf.posAngleConstraint,
          currentPos,
          world2pix.value(baseCoordinates.value),
          resize
@@ -220,8 +219,8 @@ object AladinContainer {
       .useMemoBy((props, _, _, selectedGs, _, _, _, _) =>
         (props.guideStarCandidates,
          props.options.agsCandidates.visible,
-         props.posAngle.isDefined,
-         props.vizTime,
+         props.obsConf.hasPosAngleConstraint,
+         props.obsConf.vizTime,
          selectedGs
         )
       ) { (_, _, _, _, _, _, _, _) =>
@@ -291,7 +290,7 @@ object AladinContainer {
               .map(Coordinates.fromHmsDms.reverseGet)
               .getOrElse(Coordinates.fromHmsDms.reverseGet(baseCoordinates.value))
 
-          val showBase = props.posAngle.isDefined
+          val showBase = props.obsConf.hasPosAngleConstraint
 
           val overlayTargets = if (showBase) {
             List(

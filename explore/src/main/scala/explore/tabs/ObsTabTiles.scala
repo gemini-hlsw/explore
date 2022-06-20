@@ -201,6 +201,7 @@ object ObsTabTiles {
           potAsterismMode,
           vizTimeView,
           posAngle,
+          obsView.toOption.map(_.get.constraintSet),
           props.focusedTarget,
           Reuse(setCurrentTarget _)(props.programId, props.focusedObs),
           Reuse.currying(props.targetMap, props.obsId).in(otherObsCount _),

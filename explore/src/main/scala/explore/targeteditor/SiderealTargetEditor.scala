@@ -20,6 +20,7 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
+import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.ScienceMode
 import explore.model.TargetWithId
@@ -33,6 +34,7 @@ import japgolly.scalajs.react.hooks.Hooks
 import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math._
+import lucuma.core.model.ConstraintSet
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.Target
 import lucuma.core.model.User
@@ -68,6 +70,7 @@ final case class SiderealTargetEditor(
   vizTime:       Option[Instant],
   posAngle:      Option[PosAngleConstraint],
   scienceMode:   Option[ScienceMode],
+  constraints:   Option[ConstraintSet],
   undoStacks:    View[UndoStacks[IO, Target.Sidereal]],
   searching:     View[Set[Target.Id]],
   obsIdSubset:   Option[ObsIdSet] = None,
@@ -269,9 +272,7 @@ object SiderealTargetEditor {
                 AladinCell(
                   props.uid,
                   props.id,
-                  props.posAngle,
-                  vizTime,
-                  props.scienceMode,
+                  ObsConfiguration(vizTime, props.scienceMode, props.posAngle, props.constraints),
                   targetView.zoom(Target.Sidereal.tracking)
                 )
               )(vizTime),
