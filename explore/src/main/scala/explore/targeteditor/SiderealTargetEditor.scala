@@ -52,6 +52,7 @@ import react.semanticui.elements.label.LabelPointing
 import react.semanticui.sizes.Small
 
 import java.time.Instant
+import explore.model.ObsConfiguration
 
 final case class SearchCallback(
   searchTerm: NonEmptyString,
@@ -269,9 +270,7 @@ object SiderealTargetEditor {
                 AladinCell(
                   props.uid,
                   props.id,
-                  props.posAngle,
-                  vizTime,
-                  props.scienceMode,
+                  ObsConfiguration(vizTime, props.posAngle, props.scienceMode),
                   targetView.zoom(Target.Sidereal.tracking)
                 )
               )(vizTime),

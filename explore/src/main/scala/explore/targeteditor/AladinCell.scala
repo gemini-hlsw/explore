@@ -22,7 +22,6 @@ import explore.implicits._
 import explore.model.CatalogQueryError
 import explore.model.CatalogResults
 import explore.model.Constants
-import explore.model.ScienceMode
 import explore.model.TargetVisualOptions
 import explore.model.boopickle._
 import explore.model.enum.Visible
@@ -56,15 +55,13 @@ import react.semanticui.elements.button.Button
 import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.sizes._
 
-import java.time.Instant
 import scala.concurrent.duration._
+import explore.model.ObsConfiguration
 
 final case class AladinCell(
   uid:              User.Id,
   tid:              Target.Id,
-  posAngle:         Option[PosAngleConstraint],
-  vizTime:          Instant,
-  scienceMode:      Option[ScienceMode],
+  obsConf:          ObsConfiguration,
   target:           View[SiderealTracking]
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[AladinCell](AladinCell.component)
@@ -122,7 +119,7 @@ object AladinCell extends ModelOptics {
           .map(candidatesAwait =>
             candidatesAwait >>
               props.ctx.worker.postTransferrable(
-                CatalogRequest(props.target.get, props.vizTime)
+                CatalogRequest(props.target.get, props.obsConf.vizTime)
               )
           )
           .orEmpty
@@ -147,32 +144,33 @@ object AladinCell extends ModelOptics {
           .runAsyncAndForget
       }
       // analyzed targets
-      .useMemoBy((p, _, _, _, candidates) => (p.target.get, p.posAngle, candidates.value)) {
-        (_, _, _, _, _) =>
-          {
-            case (tracking, Some(posAngle), Ready(candidates)) =>
-              val pa = posAngle match {
-                case PosAngleConstraint.Fixed(a)               => a.some
-                case PosAngleConstraint.AllowFlip(a)           => a.some
-                case PosAngleConstraint.ParallacticOverride(a) => a.some
-                case _                                         => none
-              }
+      .useMemoBy((p, _, _, _, candidates) =>
+        (p.target.get, p.obsConf.posAngleConstraint, candidates.value)
+      ) { (_, _, _, _, _) =>
+        {
+          case (tracking, Some(posAngle), Ready(candidates)) =>
+            val pa = posAngle match {
+              case PosAngleConstraint.Fixed(a)               => a.some
+              case PosAngleConstraint.AllowFlip(a)           => a.some
+              case PosAngleConstraint.ParallacticOverride(a) => a.some
+              case _                                         => none
+            }
 
-              pa.map { pa =>
-                val basePos = AgsPosition(pa, Offset.Zero)
-                Ags
-                  .agsAnalysis[IO](bestConstraintSet,
-                                   wavelength,
-                                   tracking.baseCoordinates,
-                                   basePos,
-                                   params,
-                                   candidates
-                  )
-                  .sortBy(_._2)
+            pa.map { pa =>
+              val basePos = AgsPosition(pa, Offset.Zero)
+              Ags
+                .agsAnalysis[IO](bestConstraintSet,
+                                 wavelength,
+                                 tracking.baseCoordinates,
+                                 basePos,
+                                 params,
+                                 candidates
+                )
+                .sortBy(_._2)
 
-              }.getOrElse(Nil)
-            case _                                             => Nil
-          }
+            }.getOrElse(Nil)
+          case _                                             => Nil
+        }
       }
       // open settings menu
       .useState(false)
@@ -265,9 +263,7 @@ object AladinCell extends ModelOptics {
           val renderCell: TargetVisualOptions => VdomNode = (t: TargetVisualOptions) =>
             AladinContainer(
               props.target,
-              props.posAngle,
-              props.vizTime,
-              props.scienceMode,
+              props.obsConf,
               t,
               coordinatesSetter,
               fovSetter.reuseAlways,
@@ -278,7 +274,7 @@ object AladinCell extends ModelOptics {
             ).withKey(aladinKey)
 
           // Check whether we are waiting for catalog
-          val catalogLoading = props.posAngle match {
+          val catalogLoading = props.obsConf.posAngleConstraint match {
             case Some(_) =>
               gsc.value.fold(_ => true.some, _ => none, _ => false.some)
             case _       => false.some
