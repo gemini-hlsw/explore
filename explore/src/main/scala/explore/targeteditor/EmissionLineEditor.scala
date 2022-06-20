@@ -197,7 +197,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
             changeAuditor = ChangeAuditor
               .fromFormat(formatWavelengthMicron)
               .decimal(3)
-              .allow(List("0", "0.").contains_)
+              .allow(List("0", "0.").contains)
               .optional,
             onTextChange = s => addDisabled.set(s.isEmpty),
             clazz = ExploreStyles.NewEmissionLineWavelength
