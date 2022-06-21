@@ -12,8 +12,8 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.RetryHelpers._
 import explore.common.SSOClient
 import explore.model.ObsIdSet
-import explore.model.enum.AppTab
-import explore.model.enum.ExecutionEnvironment
+import explore.model.enums.AppTab
+import explore.model.enums.ExecutionEnvironment
 import explore.modes.SpectroscopyModesMatrix
 import explore.utils
 import io.circe.Json

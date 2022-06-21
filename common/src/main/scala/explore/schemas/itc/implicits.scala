@@ -25,8 +25,8 @@ import queries.schemas.ITC.Types._
 // There is a lot of duplication here with the odb.implicits package
 package itc {
 
-  import lucuma.core.enum.GmosNorthFpu
-  import lucuma.core.enum.GmosSouthFpu
+  import lucuma.core.enums.GmosNorthFpu
+  import lucuma.core.enums.GmosSouthFpu
   object implicits {
     implicit class AngleOps(val a: Angle) extends AnyVal {
       def toInput: AngleInput =

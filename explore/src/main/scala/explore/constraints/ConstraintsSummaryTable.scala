@@ -14,7 +14,7 @@ import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
-import explore.model.enum.AppTab
+import explore.model.enums.AppTab
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet

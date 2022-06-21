@@ -7,12 +7,12 @@ import cats.Eq
 import cats.syntax.all._
 import io.circe.Decoder
 import io.circe.generic.semiauto._
-import lucuma.core.enum.GmosNorthFilter
-import lucuma.core.enum.GmosNorthFpu
-import lucuma.core.enum.GmosNorthGrating
-import lucuma.core.enum.GmosSouthFilter
-import lucuma.core.enum.GmosSouthFpu
-import lucuma.core.enum.GmosSouthGrating
+import lucuma.core.enums.GmosNorthFilter
+import lucuma.core.enums.GmosNorthFpu
+import lucuma.core.enums.GmosNorthGrating
+import lucuma.core.enums.GmosSouthFilter
+import lucuma.core.enums.GmosSouthFpu
+import lucuma.core.enums.GmosSouthGrating
 import monocle.Focus
 import monocle.Lens
 

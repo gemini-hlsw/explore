@@ -24,7 +24,7 @@ import explore.model.ObsIdSet
 import explore.model.ScienceMode
 import explore.model.TargetSummary
 import explore.model.display._
-import explore.model.enum.AppTab
+import explore.model.enums.AppTab
 import explore.model.layout._
 import explore.optics._
 import explore.undo.UndoStacks

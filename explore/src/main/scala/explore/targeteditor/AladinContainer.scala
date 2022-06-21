@@ -10,7 +10,7 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.ObsConfiguration
 import explore.model.TargetVisualOptions
-import explore.model.enum.Visible
+import explore.model.enums.Visible
 import explore.model.reusability._
 import japgolly.scalajs.react.Reusability._
 import japgolly.scalajs.react._
@@ -18,7 +18,7 @@ import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ags.AgsAnalysis
 import lucuma.ags.GuideStarCandidate
-import lucuma.core.enum.PortDisposition
+import lucuma.core.enums.PortDisposition
 import lucuma.core.geom.jts.interpreter._
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates

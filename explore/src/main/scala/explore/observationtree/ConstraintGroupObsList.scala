@@ -16,7 +16,7 @@ import explore.implicits._
 import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
 import explore.model.display._
-import explore.model.enum.AppTab
+import explore.model.enums.AppTab
 import explore.undo.UndoContext
 import explore.undo._
 import japgolly.scalajs.react._

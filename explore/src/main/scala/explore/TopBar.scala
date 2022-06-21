@@ -18,8 +18,8 @@ import explore.implicits._
 import explore.model.ExploreLocalPreferences
 import explore.model.ExploreLocalPreferences._
 import explore.model.ModelUndoStacks
-import explore.model.enum.ExecutionEnvironment
-import explore.model.enum.Theme
+import explore.model.enums.ExecutionEnvironment
+import explore.model.enums.Theme
 import explore.programs.ProgramsPopup
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.callback.CallbackCatsEffect._

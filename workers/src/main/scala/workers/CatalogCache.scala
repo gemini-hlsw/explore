@@ -35,7 +35,7 @@ import java.time.temporal.ChronoField
 import java.time.temporal.ChronoUnit
 import spire.math.Bounded
 import explore.events.CatalogRequest
-import lucuma.core.enum._
+import lucuma.core.enums._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.math.Wavelength

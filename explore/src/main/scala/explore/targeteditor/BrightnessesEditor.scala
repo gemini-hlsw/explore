@@ -19,7 +19,7 @@ import explore.model.validators._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.enum.Band
+import lucuma.core.enums.Band
 import lucuma.core.math.BrightnessUnits._
 import lucuma.core.math.dimensional._
 import lucuma.core.util.Enumerated

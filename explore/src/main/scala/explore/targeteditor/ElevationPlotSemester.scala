@@ -15,8 +15,8 @@ import gpp.highcharts.mod.XAxisLabelsOptions
 import gpp.highcharts.mod._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.enum.Site
-import lucuma.core.enum.TwilightType
+import lucuma.core.enums.Site
+import lucuma.core.enums.TwilightType
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.skycalc.solver.ElevationSolver

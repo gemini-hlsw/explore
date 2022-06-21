@@ -14,7 +14,7 @@ import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.TruncatedAngle
-import explore.model.enum.PosAngleOptions
+import explore.model.enums.PosAngleOptions
 import explore.model.syntax.all._
 import explore.optics._
 import explore.targeteditor.InputWithUnits

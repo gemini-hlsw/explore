@@ -11,12 +11,12 @@ import org.scalacheck.Gen
 import explore.model.ScienceModeBasic
 import lucuma.core.util.arb.ArbGid._
 import lucuma.core.util.arb.ArbEnumerated._
-import lucuma.core.enum.GmosNorthFilter
-import lucuma.core.enum.GmosNorthGrating
-import lucuma.core.enum.GmosNorthFpu
-import lucuma.core.enum.GmosSouthFilter
-import lucuma.core.enum.GmosSouthGrating
-import lucuma.core.enum.GmosSouthFpu
+import lucuma.core.enums.GmosNorthFilter
+import lucuma.core.enums.GmosNorthGrating
+import lucuma.core.enums.GmosNorthFpu
+import lucuma.core.enums.GmosSouthFilter
+import lucuma.core.enums.GmosSouthGrating
+import lucuma.core.enums.GmosSouthFpu
 
 trait ArbScienceModeBasic {
 

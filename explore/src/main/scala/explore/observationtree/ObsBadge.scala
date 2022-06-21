@@ -17,8 +17,8 @@ import explore.model.ObsWithTitle
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.enum.ObsActiveStatus
-import lucuma.core.enum.ObsStatus
+import lucuma.core.enums.ObsActiveStatus
+import lucuma.core.enums.ObsStatus
 import lucuma.core.model.Observation
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Gid

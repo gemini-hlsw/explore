@@ -9,8 +9,8 @@ import coulomb.cats.implicits._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
-import lucuma.core.enum.FocalPlane
-import lucuma.core.enum.SpectroscopyCapabilities
+import lucuma.core.enums.FocalPlane
+import lucuma.core.enums.SpectroscopyCapabilities
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units.Micrometer

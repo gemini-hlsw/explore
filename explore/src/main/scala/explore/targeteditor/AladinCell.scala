@@ -25,14 +25,14 @@ import explore.model.Constants
 import explore.model.ObsConfiguration
 import explore.model.TargetVisualOptions
 import explore.model.boopickle._
-import explore.model.enum.Visible
+import explore.model.enums.Visible
 import explore.model.reusability._
 import explore.optics.ModelOptics
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ags._
-import lucuma.core.enum.PortDisposition
+import lucuma.core.enums.PortDisposition
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset

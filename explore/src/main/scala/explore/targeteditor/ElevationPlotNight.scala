@@ -6,14 +6,14 @@ package explore.targeteditor
 import cats.syntax.all._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
-import explore.model.enum.TimeDisplay
+import explore.model.enums.TimeDisplay
 import gpp.highcharts.highchartsStrings.line
 import gpp.highcharts.mod.XAxisLabelsOptions
 import gpp.highcharts.mod._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.enum.Site
-import lucuma.core.enum.TwilightType
+import lucuma.core.enums.Site
+import lucuma.core.enums.TwilightType
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.skycalc.ImprovedSkyCalc

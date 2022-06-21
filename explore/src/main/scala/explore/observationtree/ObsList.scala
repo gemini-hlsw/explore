@@ -16,7 +16,7 @@ import explore.components.undo.UndoButtons
 import explore.implicits._
 import explore.model.ObsIdSet
 import explore.model.ObsSummaryWithTitleConstraintsAndConf
-import explore.model.enum.AppTab
+import explore.model.enums.AppTab
 import explore.model.reusability._
 import explore.observationtree.ObsBadge
 import explore.undo.KIListMod
@@ -24,8 +24,8 @@ import explore.undo.UndoContext
 import explore.undo.UndoStacks
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.enum.ObsActiveStatus
-import lucuma.core.enum.ObsStatus
+import lucuma.core.enums.ObsActiveStatus
+import lucuma.core.enums.ObsStatus
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target

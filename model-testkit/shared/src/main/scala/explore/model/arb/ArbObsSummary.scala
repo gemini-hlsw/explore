@@ -15,8 +15,8 @@ import explore.model.ObsSummaryWithConstraintsAndConf
 import explore.model.ObsSummaryWithTitleConstraintsAndConf
 import explore.model.ObsSummaryWithTitleAndConf
 import explore.model.ScienceMode
-import lucuma.core.enum.ObsActiveStatus
-import lucuma.core.enum.ObsStatus
+import lucuma.core.enums.ObsActiveStatus
+import lucuma.core.enums.ObsStatus
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.arb.ArbTime

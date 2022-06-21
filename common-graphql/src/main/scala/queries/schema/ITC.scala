@@ -9,7 +9,7 @@ import eu.timepit.refined.types.string
 import io.circe.Encoder
 import io.circe.Json
 import io.circe.generic.semiauto._
-import lucuma.core.`enum`
+import lucuma.core.enums
 import lucuma.core.math.BrightnessUnits._
 import lucuma.core.math.dimensional._
 import lucuma.core.model
@@ -89,31 +89,31 @@ trait ITC {
   }
 
   object Enums {
-    type Band                                = enum.Band
+    type Band                                = enums.Band
     type BrightnessIntegratedUnits           = Units Of Brightness[Integrated]
     type BrightnessSurfaceUnits              = Units Of Brightness[Surface]
-    type CoolStarTemperature                 = enum.CoolStarTemperature
+    type CoolStarTemperature                 = enums.CoolStarTemperature
     type FluxDensityContinuumIntegratedUnits = Units Of FluxDensityContinuum[Integrated]
     type FluxDensityContinuumSurfaceUnits    = Units Of FluxDensityContinuum[Surface]
-    type HiiRegionSpectrum                   = enum.HIIRegionSpectrum
-    type GalaxySpectrum                      = enum.GalaxySpectrum
+    type HiiRegionSpectrum                   = enums.HIIRegionSpectrum
+    type GalaxySpectrum                      = enums.GalaxySpectrum
     type LineFluxIntegratedUnits             = Units Of LineFlux[Integrated]
-    type PlanetSpectrum                      = enum.PlanetSpectrum
-    type PlanetaryNebulaSpectrum             = enum.PlanetaryNebulaSpectrum
-    type QuasarSpectrum                      = enum.QuasarSpectrum
+    type PlanetSpectrum                      = enums.PlanetSpectrum
+    type PlanetaryNebulaSpectrum             = enums.PlanetaryNebulaSpectrum
+    type QuasarSpectrum                      = enums.QuasarSpectrum
     type LineFluxSurfaceUnits                = Units Of LineFlux[Surface]
-    type ImageQuality                        = enum.ImageQuality
-    type CloudExtinction                     = enum.CloudExtinction
-    type WaterVapor                          = enum.WaterVapor
-    type SkyBackground                       = enum.SkyBackground
-    type GmosNorthGrating                    = enum.GmosNorthGrating
-    type GmosNorthFilter                     = enum.GmosNorthFilter
-    type GmosNorthBuiltinFpu                 = enum.GmosNorthFpu
-    type GmosSouthGrating                    = enum.GmosSouthGrating
-    type GmosSouthFilter                     = enum.GmosSouthFilter
-    type GmosSouthBuiltinFpu                 = enum.GmosSouthFpu
-    type GmosCustomSlitWidth                 = enum.GmosCustomSlitWidth
-    type StellarLibrarySpectrum              = enum.StellarLibrarySpectrum
+    type ImageQuality                        = enums.ImageQuality
+    type CloudExtinction                     = enums.CloudExtinction
+    type WaterVapor                          = enums.WaterVapor
+    type SkyBackground                       = enums.SkyBackground
+    type GmosNorthGrating                    = enums.GmosNorthGrating
+    type GmosNorthFilter                     = enums.GmosNorthFilter
+    type GmosNorthBuiltinFpu                 = enums.GmosNorthFpu
+    type GmosSouthGrating                    = enums.GmosSouthGrating
+    type GmosSouthFilter                     = enums.GmosSouthFilter
+    type GmosSouthBuiltinFpu                 = enums.GmosSouthFpu
+    type GmosCustomSlitWidth                 = enums.GmosCustomSlitWidth
+    type StellarLibrarySpectrum              = enums.StellarLibrarySpectrum
   }
 
   object Types {

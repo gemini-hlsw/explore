@@ -15,7 +15,7 @@ import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.Constants
 import explore.model.GridLayoutSection
-import explore.model.enum.TileSizeState
+import explore.model.enums.TileSizeState
 import explore.model.layout._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._

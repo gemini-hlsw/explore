@@ -15,7 +15,7 @@ import explore.implicits._
 import explore.model.AsterismGroup
 import explore.model.ObsIdSet
 import explore.model.TargetGroup
-import explore.model.enum.AppTab
+import explore.model.enums.AppTab
 import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._

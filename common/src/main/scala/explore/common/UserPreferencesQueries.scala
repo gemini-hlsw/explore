@@ -11,11 +11,11 @@ import clue.TransactionalClient
 import clue.data.syntax._
 import explore.model.GridLayoutSection
 import explore.model.ResizableSection
-import explore.model.enum.PlotRange
-import explore.model.enum.TimeDisplay
-import explore.model.enum.Visible
+import explore.model.enums.PlotRange
+import explore.model.enums.TimeDisplay
+import explore.model.enums.Visible
 import explore.model.layout._
-import lucuma.core.enum.Site
+import lucuma.core.enums.Site
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.model.Target

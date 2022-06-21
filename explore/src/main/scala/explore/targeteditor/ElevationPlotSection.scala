@@ -18,13 +18,13 @@ import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ElevationPlotOptions
 import explore.model.ScienceMode
-import explore.model.enum.PlotRange
-import explore.model.enum.TimeDisplay
+import explore.model.enums.PlotRange
+import explore.model.enums.TimeDisplay
 import explore.model.reusability._
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.enum.Site
+import lucuma.core.enums.Site
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Semester
 import lucuma.core.model.Target

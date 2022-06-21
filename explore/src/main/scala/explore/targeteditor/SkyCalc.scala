@@ -4,7 +4,7 @@
 package explore.targeteditor
 
 import cats.syntax.all._
-import lucuma.core.enum.Site
+import lucuma.core.enums.Site
 import lucuma.core.math.Coordinates
 import lucuma.core.math.skycalc.ImprovedSkyCalc
 import lucuma.core.math.skycalc.SkyCalcResults

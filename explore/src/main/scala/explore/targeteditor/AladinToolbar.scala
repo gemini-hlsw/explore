@@ -6,7 +6,7 @@ package explore.targeteditor
 import crystal.react.View
 import explore.Icons
 import explore.components.ui.ExploreStyles
-import explore.model.enum.Visible
+import explore.model.enums.Visible
 import explore.model.formats._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._

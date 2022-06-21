@@ -16,7 +16,7 @@ import explore.model.ScienceMode
 import explore.model.ScienceModeAdvanced
 import explore.model.ScienceModeBasic
 import explore.undo.UndoSetter
-import lucuma.core.enum
+import lucuma.core.enums
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
@@ -61,7 +61,7 @@ object ScienceQueries {
   }
 
   object UpdateScienceRequirements {
-    def mode(n: enum.ScienceMode): Endo[ScienceRequirementsInput] =
+    def mode(n: enums.ScienceMode): Endo[ScienceRequirementsInput] =
       ScienceRequirementsInput.mode.replace(n.assign)
 
     def angle(w: Angle): FocalPlaneAngleInput =

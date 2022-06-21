@@ -8,8 +8,8 @@ import cats.syntax.all._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
-import lucuma.core.enum.ObsActiveStatus
-import lucuma.core.enum.ObsStatus
+import lucuma.core.enums.ObsActiveStatus
+import lucuma.core.enums.ObsStatus
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target

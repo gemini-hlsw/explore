@@ -8,7 +8,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.components.ui.ExploreStyles._
-import explore.model.enum.TileSizeState
+import explore.model.enums.TileSizeState
 import explore.model.layout
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._

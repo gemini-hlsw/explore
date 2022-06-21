@@ -8,7 +8,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
-import lucuma.core.enum.Band
+import lucuma.core.enums.Band
 import lucuma.core.model.GuestUser
 import lucuma.core.model.ServiceUser
 import lucuma.core.model.StandardUser

@@ -4,7 +4,7 @@
 package explore.model.arb
 
 import explore.model.TargetVisualOptions
-import explore.model.enum.Visible
+import explore.model.enums.Visible
 import lucuma.core.util.arb.ArbEnumerated._
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset

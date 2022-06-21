@@ -10,7 +10,7 @@ import crystal.react.implicits._
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.implicits._
 import explore.undo.UndoContext
-import lucuma.core.enum._
+import lucuma.core.enums._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.Observation

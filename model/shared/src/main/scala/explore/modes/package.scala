@@ -9,7 +9,7 @@ import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric._
 import fs2.data.csv._
-import lucuma.core.enum.Instrument
+import lucuma.core.enums.Instrument
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import lucuma.core.optics.Wedge

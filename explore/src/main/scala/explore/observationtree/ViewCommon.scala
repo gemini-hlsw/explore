@@ -8,6 +8,7 @@ import explore._
 import explore.components.ui.ExploreStyles
 import explore.model.ObsIdSet
 import explore.model.ObsSummary
+import explore.model.enums.AppTab
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.ReactEvent
 import japgolly.scalajs.react.ReactMouseEvent
@@ -56,11 +57,7 @@ trait ViewCommon {
           }).when(selectable),
           (^.onDoubleClick ==> { e: ReactEvent =>
             e.stopPropagationCB >>
-              ctx.pushPageSingleObs(explore.model.enum.AppTab.Observations,
-                                    programId,
-                                    obs.id.some,
-                                    None
-              )
+              ctx.pushPageSingleObs(AppTab.Observations, programId, obs.id.some, None)
           }).when(linkToObsTab)
         )(<.span(provided.dragHandleProps)(renderObsBadge(obs, highlightSelected, forceHighlight)))
       }

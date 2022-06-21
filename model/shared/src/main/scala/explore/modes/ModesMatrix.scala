@@ -13,7 +13,7 @@ import eu.timepit.refined.cats._
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric._
 import fs2.data.csv._
-import lucuma.core.enum.Instrument
+import lucuma.core.enums.Instrument
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units._

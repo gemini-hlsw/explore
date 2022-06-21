@@ -21,7 +21,7 @@ import explore.targeteditor.InputWithUnits
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.enum._
+import lucuma.core.enums._
 import lucuma.core.math.Offset
 import lucuma.core.model.Observation
 import lucuma.core.syntax.all._
