@@ -321,6 +321,19 @@ object implicits {
     }
   }
 
+  implicit class ProposalOps(val proposal: Proposal) extends AnyVal {
+    def toInput: ProposalInput = ProposalInput(
+      title = proposal.title.orUnassign,
+      proposalClass = proposal.proposalClass.toInput.assign,
+      category = proposal.category.orUnassign,
+      toOActivation = proposal.toOActivation.assign,
+      `abstract` = proposal.abstrakt.orUnassign,
+      partnerSplits = proposal.partnerSplits.toList.map { case (par, pct) =>
+        PartnerSplitsInput(par.assign, pct.assign)
+      }.assign
+    )
+  }
+
   implicit class SiderealTargetOps(val sidereal: Target.Sidereal) extends AnyVal {
     def toInput: SiderealInput = SiderealInput(
       ra = sidereal.tracking.baseCoordinates.ra.toInput.assign,
