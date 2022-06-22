@@ -19,7 +19,7 @@ import explore.constraints.ConstraintsPanel
 import explore.constraints.ConstraintsSummaryTable
 import explore.implicits._
 import explore.model._
-import explore.model.enum.AppTab
+import explore.model.enums.AppTab
 import explore.model.reusability._
 import explore.observationtree.ConstraintGroupObsList
 import explore.optics._

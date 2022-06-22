@@ -7,7 +7,7 @@ import cats.syntax.all._
 import coulomb._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.TruncatedAngle
-import lucuma.core.enum.Band
+import lucuma.core.enums.Band
 import lucuma.core.math.Angle
 import lucuma.core.math.ApparentRadialVelocity
 import lucuma.core.math.Constants._

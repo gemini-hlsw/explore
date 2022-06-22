@@ -9,7 +9,7 @@ import cats.syntax.all._
 import eu.timepit.refined.cats._
 import io.circe.Decoder
 import io.circe.refined._
-import lucuma.core.enum._
+import lucuma.core.enums._
 import lucuma.core.math.Offset
 import lucuma.schemas.decoders._
 import monocle.Focus

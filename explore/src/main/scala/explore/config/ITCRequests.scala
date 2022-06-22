@@ -21,7 +21,7 @@ import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
 import explore.modes.SpectroscopyModeRow
 import japgolly.scalajs.react._
-import lucuma.core.enum.Band
+import lucuma.core.enums.Band
 import lucuma.core.math.BrightnessUnits._
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet

@@ -4,7 +4,7 @@
 package explore.model.syntax
 
 import cats.syntax.all._
-import explore.model.enum.PosAngleOptions
+import explore.model.enums.PosAngleOptions
 import lucuma.core.math.Angle
 import lucuma.core.model.PosAngleConstraint
 

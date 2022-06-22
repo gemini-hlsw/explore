@@ -14,7 +14,7 @@ import explore.common.ProgramQueries._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ModelUndoStacks
-import explore.model.enum.AppTab
+import explore.model.enums.AppTab
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._

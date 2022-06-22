@@ -9,7 +9,7 @@ import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosLong
 import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.syntax._
-import lucuma.core.enum.Band
+import lucuma.core.enums.Band
 import lucuma.core.math.BrightnessUnits._
 import lucuma.core.math._
 import lucuma.core.math.dimensional._

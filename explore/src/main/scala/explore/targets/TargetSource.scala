@@ -11,7 +11,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.SimbadSearch
 import japgolly.scalajs.react.Reusability
 import lucuma.catalog.CatalogTargetResult
-import lucuma.core.enum.CatalogName
+import lucuma.core.enums.CatalogName
 import lucuma.core.model.Program
 import lucuma.core.util.Enumerated
 import lucuma.schemas.ObservationDB

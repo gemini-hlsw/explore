@@ -30,8 +30,8 @@ import explore.model.reusability._
 import explore.modes._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.enum.FocalPlane
-import lucuma.core.enum._
+import lucuma.core.enums.FocalPlane
+import lucuma.core.enums._
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units.Micrometer
 import lucuma.core.model.ConstraintSet

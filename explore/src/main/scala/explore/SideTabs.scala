@@ -6,7 +6,7 @@ package explore
 import cats.syntax.all._
 import explore.components.ui.ExploreStyles
 import explore.model.RoutingInfo
-import explore.model.enum.AppTab
+import explore.model.enums.AppTab
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.utils._

@@ -22,7 +22,7 @@ import explore.model.display._
 import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.enum.ScienceMode
+import lucuma.core.enums.ScienceMode
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units.Micrometer
 import lucuma.core.model.ConstraintSet

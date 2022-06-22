@@ -14,7 +14,7 @@ import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.types.numeric._
 import eu.timepit.refined.types.string._
 import fs2.data.csv._
-import lucuma.core.enum._
+import lucuma.core.enums._
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units._
@@ -102,54 +102,54 @@ final case class GenericSpectroscopyRow(i: Instrument, grating: String, filter: 
 
 object InstrumentRow {
 
-  def decodeEnum[A: Enumerated, B](
+  def decodeEnums[A: Enumerated, B](
     id:       B,
     criteria: (B, A) => Boolean
   ): Either[DecoderError, A] =
     Enumerated[A].all.find(criteria(id, _)).toRight(new DecoderError(s"Unknown enum $id"))
 
-  def decodeOptionalEnum[A: Enumerated](
+  def decodeOptionalenums[A: Enumerated](
     filter:   String,
     criteria: (String, A) => Boolean
   ): Either[DecoderError, Option[A]] =
     if (filter.isEmpty || filter.toLowerCase === "none") none.asRight
-    else decodeEnum[A, String](filter, criteria).map(_.some)
+    else decodeEnums[A, String](filter, criteria).map(_.some)
 
   def decodeGmosSouthFilter(filter: NonEmptyString): Either[DecoderError, Option[GmosSouthFilter]] =
-    decodeOptionalEnum[GmosSouthFilter](filter.value, (i, f) => !f.obsolete && i === f.shortName)
+    decodeOptionalenums[GmosSouthFilter](filter.value, (i, f) => !f.obsolete && i === f.shortName)
 
   def decodeGmosSouthFPU(fpu: NonEmptyString): Either[DecoderError, GmosSouthFpu] =
-    decodeEnum[GmosSouthFpu, String](fpu.value, (i, f) => i === f.shortName)
+    decodeEnums[GmosSouthFpu, String](fpu.value, (i, f) => i === f.shortName)
 
   def decodeGmosSouthGrating(grating: String): Either[DecoderError, GmosSouthGrating] =
-    decodeEnum[GmosSouthGrating, String](grating, (i, f) => !f.obsolete && i === f.shortName)
+    decodeEnums[GmosSouthGrating, String](grating, (i, f) => !f.obsolete && i === f.shortName)
 
   def decodeGmosNorthFilter(filter: NonEmptyString): Either[DecoderError, Option[GmosNorthFilter]] =
-    decodeOptionalEnum[GmosNorthFilter](filter.value, (i, f) => !f.obsolete && i === f.shortName)
+    decodeOptionalenums[GmosNorthFilter](filter.value, (i, f) => !f.obsolete && i === f.shortName)
 
   def decodeGmosNorthGrating(grating: String): Either[DecoderError, GmosNorthGrating] =
-    decodeEnum[GmosNorthGrating, String](grating, (i, f) => !f.obsolete && i === f.shortName)
+    decodeEnums[GmosNorthGrating, String](grating, (i, f) => !f.obsolete && i === f.shortName)
 
   def decodeGmosNorthFPU(fpu: NonEmptyString): Either[DecoderError, GmosNorthFpu] =
-    decodeEnum[GmosNorthFpu, String](fpu.value, (i, f) => i === f.shortName)
+    decodeEnums[GmosNorthFpu, String](fpu.value, (i, f) => i === f.shortName)
 
   def decodeF2Filter(filter: NonEmptyString): Either[DecoderError, F2Filter] =
-    decodeEnum[F2Filter, String](filter.value, (i, f) => !f.obsolete && i === f.shortName)
+    decodeEnums[F2Filter, String](filter.value, (i, f) => !f.obsolete && i === f.shortName)
 
   def decodeF2Disperser(grating: String): Either[DecoderError, F2Disperser] =
-    decodeEnum[F2Disperser, String](grating, _ === _.shortName)
+    decodeEnums[F2Disperser, String](grating, _ === _.shortName)
 
   def decodeGpiFilter(filter: NonEmptyString): Either[DecoderError, GpiFilter] =
-    decodeEnum[GpiFilter, String](filter.value, (i, f) => !f.obsolete && i === f.shortName)
+    decodeEnums[GpiFilter, String](filter.value, (i, f) => !f.obsolete && i === f.shortName)
 
   def decodeGpiDisperser(grating: String): Either[DecoderError, GpiDisperser] =
-    decodeEnum[GpiDisperser, String](grating, _ === _.shortName)
+    decodeEnums[GpiDisperser, String](grating, _ === _.shortName)
 
   def decodeGnirsFilter(filter: NonEmptyString): Either[DecoderError, GnirsFilter] =
-    decodeEnum[GnirsFilter, String](filter.value, _ === _.shortName)
+    decodeEnums[GnirsFilter, String](filter.value, _ === _.shortName)
 
   def decodeGnirsDisperser(grating: String): Either[DecoderError, GnirsDisperser] =
-    decodeEnum[GnirsDisperser, String](grating, _ === _.shortName)
+    decodeEnums[GnirsDisperser, String](grating, _ === _.shortName)
 
   def decode(
     instrument0: Instrument,

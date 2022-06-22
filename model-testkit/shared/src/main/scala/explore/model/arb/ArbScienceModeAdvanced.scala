@@ -11,7 +11,7 @@ import org.scalacheck.Gen
 import explore.model.ScienceModeAdvanced
 import lucuma.core.util.arb.ArbGid._
 import lucuma.core.util.arb.ArbEnumerated._
-import lucuma.core.enum._
+import lucuma.core.enums._
 import lucuma.core.math.Offset
 import lucuma.core.math.arb.ArbOffset
 import lucuma.core.math.arb.ArbRefined

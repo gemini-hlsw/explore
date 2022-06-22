@@ -8,7 +8,7 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.types.numeric.PosLong
 import explore.model.Page
 import explore.model.Page._
-import explore.model.enum.AppTab
+import explore.model.enums.AppTab
 import explore.model.reusability._
 import japgolly.scalajs.react.Reusability
 import lucuma.core.model.Program

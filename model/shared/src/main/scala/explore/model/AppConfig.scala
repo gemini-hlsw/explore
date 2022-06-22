@@ -5,7 +5,7 @@ package explore.model
 
 import cats.Eq
 import cats.Show
-import explore.model.enum.ExecutionEnvironment
+import explore.model.enums.ExecutionEnvironment
 import io.circe._
 import io.circe.generic.semiauto._
 import org.http4s.Uri

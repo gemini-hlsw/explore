@@ -4,7 +4,7 @@
 package explore.model
 
 import cats._
-import explore.model.enum.Visible
+import explore.model.enums.Visible
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import monocle.Focus

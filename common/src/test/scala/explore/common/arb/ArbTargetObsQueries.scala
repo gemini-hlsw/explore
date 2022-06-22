@@ -8,8 +8,8 @@
 // import explore.common.TargetObsQueriesGQL
 // import explore.model.arb.ArbConstraintsSummary
 // import lucuma.core.arb.ArbTime
-// import lucuma.core.enum.ObsActiveStatus
-// import lucuma.core.enum.ObsStatus
+// import lucuma.core.enums.ObsActiveStatus
+// import lucuma.core.enums.ObsStatus
 // import lucuma.core.model.Asterism
 // import lucuma.core.model.Observation
 // import lucuma.core.model.Target

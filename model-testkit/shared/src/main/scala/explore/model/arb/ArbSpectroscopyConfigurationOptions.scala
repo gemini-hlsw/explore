@@ -11,8 +11,8 @@ import lucuma.core.util.arb.ArbEnumerated._
 import lucuma.core.util.arb.ArbGid._
 import lucuma.core.math.Angle
 import lucuma.core.math.units.Micrometer
-import lucuma.core.enum.FocalPlane
-import lucuma.core.enum.SpectroscopyCapabilities
+import lucuma.core.enums.FocalPlane
+import lucuma.core.enums.SpectroscopyCapabilities
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Cogen

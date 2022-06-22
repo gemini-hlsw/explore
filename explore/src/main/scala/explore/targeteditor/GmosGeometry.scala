@@ -8,7 +8,7 @@ import cats.data.NonEmptyMap
 import cats.syntax.all._
 import explore.model.ScienceMode
 import explore.model.ScienceModeBasic
-import lucuma.core.enum.PortDisposition
+import lucuma.core.enums.PortDisposition
 import lucuma.core.geom.ShapeExpression
 import lucuma.core.geom.gmos
 import lucuma.core.geom.syntax.shapeexpression._

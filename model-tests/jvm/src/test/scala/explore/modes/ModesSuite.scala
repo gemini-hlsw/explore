@@ -13,8 +13,8 @@ import eu.timepit.refined._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric._
 import fs2.io.file.Path
-import lucuma.core.enum.FocalPlane
-import lucuma.core.enum.ImageQuality
+import lucuma.core.enums.FocalPlane
+import lucuma.core.enums.ImageQuality
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units._

@@ -4,9 +4,9 @@
 package explore.model
 
 import cats._
-import explore.model.enum.PlotRange
-import explore.model.enum.TimeDisplay
-import lucuma.core.enum.Site
+import explore.model.enums.PlotRange
+import explore.model.enums.TimeDisplay
+import lucuma.core.enums.Site
 import monocle.Focus
 
 final case class ElevationPlotOptions(

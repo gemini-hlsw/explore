@@ -13,7 +13,7 @@ import explore.model.enum.SourceProfileType
 import explore.model.formats._
 import explore.optics.ModelOptics._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.enum.Band
+import lucuma.core.enums.Band
 import lucuma.core.math.Epoch
 import lucuma.core.math.Parallax
 import lucuma.core.math.dimensional._

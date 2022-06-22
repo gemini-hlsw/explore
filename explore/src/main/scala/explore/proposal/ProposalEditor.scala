@@ -31,7 +31,7 @@ import explore.proposal.ProposalClassType._
 import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.enum._
+import lucuma.core.enums._
 import lucuma.core.model.IntPercent
 import lucuma.core.model.NonNegDuration
 import lucuma.core.model.Partner

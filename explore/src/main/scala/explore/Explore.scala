@@ -27,9 +27,9 @@ import explore.model.RootModel
 import explore.model.RoutingInfo
 import explore.model.UserVault
 import explore.model.WebWorkers
-import explore.model.enum.AppTab
-import explore.model.enum.ExecutionEnvironment
-import explore.model.enum.Theme
+import explore.model.enums.AppTab
+import explore.model.enums.ExecutionEnvironment
+import explore.model.enums.Theme
 import explore.model.reusability._
 import explore.utils._
 import japgolly.scalajs.react.Reusability

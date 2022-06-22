@@ -10,7 +10,7 @@ import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.model.ITCTarget
 import explore.modes._
 import japgolly.scalajs.react._
-import lucuma.core.enum._
+import lucuma.core.enums._
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import monocle.Focus

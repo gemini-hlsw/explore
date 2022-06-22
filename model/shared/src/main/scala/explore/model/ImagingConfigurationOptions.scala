@@ -8,10 +8,10 @@ import cats.Order
 import cats.implicits._
 import coulomb.Quantity
 import eu.timepit.refined.types.numeric.PosBigDecimal
-import explore.model.enum.ImagingCapabilities
-import lucuma.core.enum.FilterType
-import lucuma.core.enum.GmosNorthFilter
-import lucuma.core.enum.GmosSouthFilter
+import explore.model.enums.ImagingCapabilities
+import lucuma.core.enums.FilterType
+import lucuma.core.enums.GmosNorthFilter
+import lucuma.core.enums.GmosSouthFilter
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units._

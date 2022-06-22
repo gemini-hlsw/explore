@@ -6,7 +6,7 @@ package explore.model
 import cats.Eq
 import cats.syntax.all._
 import io.circe.Decoder
-import lucuma.core.enum._
+import lucuma.core.enums._
 import monocle.Focus
 import monocle.Lens
 import monocle.Prism

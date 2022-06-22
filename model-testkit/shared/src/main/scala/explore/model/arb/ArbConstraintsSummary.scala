@@ -9,7 +9,7 @@ import org.scalacheck.Arbitrary._
 import org.scalacheck.Cogen
 import org.scalacheck.Cogen._
 import explore.model.ConstraintsSummary
-import lucuma.core.enum._
+import lucuma.core.enums._
 import lucuma.core.util.arb.ArbGid._
 
 trait ArbConstraintsSummary {

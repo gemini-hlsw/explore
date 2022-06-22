@@ -13,9 +13,9 @@ import crystal.react.View
 import crystal.react.reuse._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.ui.ExploreStyles
-import explore.model.enum.ExecutionEnvironment
-import explore.model.enum.ExecutionEnvironment.Development
-import explore.model.enum.Theme
+import explore.model.enums.ExecutionEnvironment
+import explore.model.enums.ExecutionEnvironment.Development
+import explore.model.enums.Theme
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.utils.versionDateFormatter
 import lucuma.ui.utils.versionDateTimeFormatter

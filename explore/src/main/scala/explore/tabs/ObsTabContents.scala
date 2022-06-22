@@ -22,7 +22,7 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model._
-import explore.model.enum.AppTab
+import explore.model.enums.AppTab
 import explore.model.layout._
 import explore.model.layout.unsafe._
 import explore.observationtree.ObsList
