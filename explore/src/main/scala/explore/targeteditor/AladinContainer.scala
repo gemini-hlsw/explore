@@ -11,6 +11,7 @@ import explore.model.ObsConfiguration
 import explore.model.TargetVisualOptions
 import explore.model.enums.Visible
 import explore.model.reusability._
+import explore.visualization._
 import japgolly.scalajs.react.Reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment

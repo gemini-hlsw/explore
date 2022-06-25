@@ -1,7 +1,7 @@
 // Copyright (c) 2016-2022 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.targeteditor
+package explore.visualization
 
 import cats.Eq
 import cats.syntax.all._
@@ -93,66 +93,39 @@ object TargetsOverlay {
   val JtsSvg    = Css("targets-overlay-svg")
   val JtsGuides = Css("viz-guides")
 
-  val scale = (v: Double) => rint(v / 1000)
-
   val canvasWidth  = VdomAttr("width")
   val canvasHeight = VdomAttr("height")
   val component    =
     ScalaFnComponent
       .withReuse[Props] { p =>
+        val pixx = p.fov.x.toMicroarcseconds / p.width
+        val pixy = p.fov.y.toMicroarcseconds / p.height
+        val maxP = max(pixx, pixy)
+
         val (x, y, maxX, maxY) =
           p.targets.foldLeft((Double.MaxValue, Double.MaxValue, Double.MinValue, Double.MinValue)) {
             case ((x, y, w, h), target) =>
-              val offset = target.coordinates.diff(p.baseCoordinates).offset
+              val offset       = target.coordinates.diff(p.baseCoordinates).offset
               // Offset amount
-              val offP   =
-                Offset.P.signedDecimalArcseconds.get(offset.p).toDouble * 1e6
-
-              val offQ =
-                Offset.Q.signedDecimalArcseconds.get(offset.q).toDouble * 1e6
+              val (offP, offQ) = offset.micros
               (x.min(offP), y.min(offQ), w.max(offP), h.max(offQ))
           }
 
         val w = abs(maxX - x)
         val h = abs(maxY - y)
 
-        // Shift factors on x/y, basically the percentage shifted on x/y
-        val px   = abs(x / w) - 0.5
-        val py   = abs(y / h) - 0.5
-        // scaling factors on x/y
-        val sx   = p.fov.x.toMicroarcseconds / w
-        val sy   = p.fov.y.toMicroarcseconds / h
-        val pixx = p.fov.x.toMicroarcseconds / p.width
-        val pixy = p.fov.y.toMicroarcseconds / p.height
-        val maxP = max(pixx, pixy)
+        val viewBox = calculateViewBox(x, y, w, h, p.fov, p.screenOffset)
 
-        // Offset amount
-        val offP =
-          Offset.P.signedDecimalArcseconds.get(p.screenOffset.p).toDouble * 1e6
-
-        val offQ =
-          Offset.Q.signedDecimalArcseconds.get(p.screenOffset.q).toDouble * 1e6
-
-        val viewBoxX = scale(x + px * w) * sx + scale(offP)
-        val viewBoxY = scale(y + py * h) * sy + scale(offQ)
-        val viewBoxW = scale(w) * sx
-        val viewBoxH = scale(h) * sy
-
-        val viewBox = s"$viewBoxX $viewBoxY $viewBoxW $viewBoxH"
-        val svg     = <.svg(
+        val svg = <.svg(
           JtsSvg,
           ^.viewBox    := viewBox,
           canvasWidth  := s"${p.width}px",
           canvasHeight := s"${p.height}px",
           p.targets
             .fmap { t =>
-              val offset = t.coordinates.diff(p.baseCoordinates).offset
+              val offset       = t.coordinates.diff(p.baseCoordinates).offset
               // Offset amount
-              val offP   =
-                Offset.P.signedDecimalArcseconds.get(offset.p).toDouble * 1e6
-
-              val offQ =
-                Offset.Q.signedDecimalArcseconds.get(offset.q).toDouble * 1e6
+              val (offP, offQ) = offset.micros
               (offP, offQ, t)
             }
             .collect {
@@ -217,7 +190,6 @@ object TargetsOverlay {
                        pointCss,
                        title.map(<.title(_))
                 )
-              // case (SVGTarget.GuideStarTarget(_, css, radius, title), Some((x, y)))          =>
             }
             .toTagMod
         )

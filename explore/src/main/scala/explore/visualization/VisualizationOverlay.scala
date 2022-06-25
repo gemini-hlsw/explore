@@ -1,9 +1,8 @@
 // Copyright (c) 2016-2022 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.targeteditor
+package explore.visualization
 
-import cats.Semigroup
 import cats.data.NonEmptyMap
 import cats.syntax.all._
 import japgolly.scalajs.react._
@@ -19,8 +18,6 @@ import react.aladin.Fov
 import react.common._
 import react.common.implicits._
 
-import scala.math._
-
 final case class SVGVisualizationOverlay(
   width:        Int,
   height:       Int,
@@ -32,14 +29,6 @@ final case class SVGVisualizationOverlay(
 
 object SVGVisualizationOverlay {
   type Props = SVGVisualizationOverlay
-
-  val geometryUnionSemigroup: Semigroup[Geometry] =
-    Semigroup.instance(_.union(_))
-
-  // The values on the geometry are in microarcseconds
-  // They are fairly large and break is some browsers
-  // We apply a scaling factor uniformily
-  val scale = (v: Double) => rint(v / 1000)
 
   val JtsPolygon    = Css("viz-polygon")
   val JtsCollection = Css("viz-collecttion")
@@ -84,27 +73,7 @@ object SVGVisualizationOverlay {
       val (x, y, w, h) =
         (envelope.getMinX, envelope.getMinY, envelope.getWidth, envelope.getHeight)
 
-      // Shift factors on x/y, basically the percentage shifted on x/y
-      val px = abs(x / w) - 0.5
-      val py = abs(y / h) - 0.5
-      // scaling factors on x/y
-      val sx = p.fov.x.toMicroarcseconds / w
-      val sy = p.fov.y.toMicroarcseconds / h
-
-      // Offset amount
-      val offP =
-        Offset.P.signedDecimalArcseconds.get(p.screenOffset.p).toDouble * 1e6
-
-      val offQ =
-        Offset.Q.signedDecimalArcseconds.get(p.screenOffset.q).toDouble * 1e6
-
-      // Do the shifting and offseting via viewbox
-      val viewBoxX = scale(x + px * w) * sx + scale(offP)
-      val viewBoxY = scale(y + py * h) * sy + scale(offQ)
-      val viewBoxW = scale(w) * sx
-      val viewBoxH = scale(h) * sy
-
-      val viewBox = s"$viewBoxX $viewBoxY $viewBoxW $viewBoxH"
+      val viewBox = calculateViewBox(x, y, w, h, p.fov, p.screenOffset)
 
       val svg = <.svg(
         JtsSvg |+| p.clazz,
