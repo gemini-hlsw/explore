@@ -102,17 +102,28 @@ object TargetsOverlay {
         val pixy = p.fov.y.toMicroarcseconds / p.height
         val maxP = max(pixx, pixy)
 
-        val (x, y, maxX, maxY) =
-          p.targets.foldLeft((Double.MaxValue, Double.MaxValue, Double.MinValue, Double.MinValue)) {
-            case ((x, y, w, h), target) =>
-              val offset       = target.coordinates.diff(p.baseCoordinates).offset
-              // Offset amount
-              val (offP, offQ) = offset.micros
-              (x.min(offP), y.min(offQ), w.max(offP), h.max(offQ))
+        val (x0, y0, maxX, maxY, minSide) =
+          p.targets.foldLeft(
+            (Double.MaxValue, Double.MaxValue, Double.MinValue, Double.MinValue, 0.0)
+          ) { case ((x, y, w, h, s), target) =>
+            val side         = target match {
+              case SVGTarget.CrosshairTarget(_, _, sidePx, _) =>
+                maxP * sidePx
+              case _                                          =>
+                0.0
+            }
+            val offset       = target.coordinates.diff(p.baseCoordinates).offset
+            // Offset amount
+            val (offP, offQ) = offset.micros
+            (x.min(offP), y.min(offQ), w.max(offP), h.max(offQ), s.max(side))
           }
 
-        val w = abs(maxX - x)
-        val h = abs(maxY - y)
+        val w0 = abs(maxX - x0)
+        val h0 = abs(maxY - y0)
+
+        val (x, y, w, h) =
+          if (w0 == 0 && h0 == 0) (x0 - 2 * minSide, y0 - 2 * minSide, minSide * 2, minSide * 2)
+          else (x0, y0, w0, h0)
 
         val viewBox = calculateViewBox(x, y, w, h, p.fov, p.screenOffset)
 

@@ -15,7 +15,7 @@
 .visualization-overlay-svg {
   position: absolute;
   pointer-events: none; // let aladin get pointer events
-  z-index: 30;
+  z-index: 40;
 
   .viz-polygon {
     stroke: gray;
@@ -93,7 +93,7 @@
 .targets-overlay-svg {
   pointer-events: none; // let aladin get pointer events
   position: absolute;
-  z-index: 140;
+  z-index: 30;
 
   circle,
   line {

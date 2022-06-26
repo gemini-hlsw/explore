@@ -4,10 +4,11 @@
 package explore
 
 import cats.Semigroup
-import org.locationtech.jts.geom.Geometry
-import scala.math._
 import lucuma.core.math.Offset
+import org.locationtech.jts.geom.Geometry
 import react.aladin.Fov
+
+import scala.math._
 
 package object visualization {
   // The values on the geometry are in microarcseconds
