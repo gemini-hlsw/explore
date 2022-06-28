@@ -21,7 +21,7 @@ import react.semanticui.sizes._
 import scala.math.BigDecimal.RoundingMode
 
 final case class AgsOverlay(
-  selectedGSIndex:   View[Int],
+  selectedGSIndex:   View[Option[Int]],
   maxIndex:          Int,
   selectedGuideStar: Option[AgsAnalysis]
 ) extends ReactFnProps[AgsOverlay](AgsOverlay.component)
@@ -47,8 +47,8 @@ object AgsOverlay {
                   size = Mini,
                   basic = true,
                   compact = true,
-                  disabled = selectedIndex <= 0,
-                  onClick = props.selectedGSIndex.mod(_ - 1),
+                  disabled = selectedIndex.exists(_ <= 0),
+                  onClick = props.selectedGSIndex.mod(_.map(_ - 1)),
                   clazz = ExploreStyles.BlendedButton |+| ExploreStyles.AgsNavigationButton
                 )(Icons.ChevronLeft),
                 Button(
@@ -56,8 +56,8 @@ object AgsOverlay {
                   size = Mini,
                   basic = true,
                   compact = true,
-                  disabled = selectedIndex >= props.maxIndex - 1,
-                  onClick = props.selectedGSIndex.mod(_ + 1),
+                  disabled = selectedIndex.exists(_ >= props.maxIndex - 1),
+                  onClick = props.selectedGSIndex.mod(_.map(_ + 1)),
                   clazz = ExploreStyles.BlendedButton |+| ExploreStyles.AgsNavigationButton
                 )(Icons.ChevronRight)
               )

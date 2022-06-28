@@ -44,7 +44,7 @@ final case class AladinContainer(
   updateFov:              Fov => Callback, // TODO Move the functionality of saving the FOV in ALadincell here
   updateViewOffset:       Offset => Callback,
   centerOnTarget:         View[Boolean],
-  selectedGuideStarIndex: Int,
+  selectedGuideStar:      Option[AgsAnalysis],
   guideStarCandidates:    List[AgsAnalysis]
 ) extends ReactFnProps[AladinContainer](AladinContainer.component)
 
@@ -83,19 +83,13 @@ object AladinContainer {
       .useStateBy { (p, baseCoordinates) =>
         baseCoordinates.value.offsetBy(Angle.Angle0, p.options.viewOffset)
       }
-      // Selected guide star
-      .useMemoBy((p, _, _) => (p.guideStarCandidates, p.selectedGuideStarIndex)) {
-        case (_, _, _) => { case (candidates, selectedIndex) =>
-          candidates.lift(selectedIndex).filter(_.isUsable)
-        }
-      }
       // Ref to the aladin component
       .useRefToScalaComponent(AladinComp)
       // Memoized svg
-      .useMemoBy((p, _, _, gs, _) =>
-        (p.obsConf.scienceMode, p.obsConf.posAngleConstraint, p.options, gs.value)
+      .useMemoBy((p, _, _, _) =>
+        (p.obsConf.scienceMode, p.obsConf.posAngleConstraint, p.options, p.selectedGuideStar)
       ) {
-        case (_, baseCoordinates, _, _, _) => { case (mode, posAngle, options, gs) =>
+        case (_, baseCoordinates, _, _) => { case (mode, posAngle, options, gs) =>
           val pa = posAngle
             .collect {
               case PosAngleConstraint.Fixed(a)               => a
@@ -136,9 +130,9 @@ object AladinContainer {
         }
       }
       // If needed center on target
-      .useEffectWithDepsBy((p, baseCoordinates, _, _, _, _) =>
+      .useEffectWithDepsBy((p, baseCoordinates, _, _, _) =>
         (baseCoordinates.value, p.centerOnTarget.get)
-      )((_, _, _, _, aladinRef, _) => { case (coords, center) =>
+      )((_, _, _, aladinRef, _) => { case (coords, center) =>
         aladinRef.get.asCBO
           .flatMapCB(
             _.backend.gotoRaDec(coords.ra.toAngle.toDoubleDegrees,
@@ -150,14 +144,14 @@ object AladinContainer {
       // resize detector
       .useResizeDetector()
       // memoized catalog targets with their proper motions corrected
-      .useMemoBy((props, _, _, selectedGs, _, _, _) =>
+      .useMemoBy((props, _, _, _, _, _) =>
         (props.guideStarCandidates,
          props.options.agsCandidates.visible,
          props.obsConf.hasPosAngleConstraint,
          props.obsConf.vizTime,
-         selectedGs
+         props.selectedGuideStar
         )
-      ) { (_, _, _, _, _, _, _) =>
+      ) { (_, _, _, _, _, _) =>
         { case (candidates, visible, confPresent, obsInstant, selectedGS) =>
           if (confPresent) {
             val candidatesVisibility =
@@ -194,7 +188,7 @@ object AladinContainer {
       // Use fov from aladin
       .useState(none[Fov])
       .render {
-        (props, baseCoordinates, currentPos, _, aladinRef, vizShapes, resize, candidates, fov) =>
+        (props, baseCoordinates, currentPos, aladinRef, vizShapes, resize, candidates, fov) =>
           /**
            * Called when the position changes, i.e. aladin pans. We want to offset the visualization
            * to keep the internal target correct

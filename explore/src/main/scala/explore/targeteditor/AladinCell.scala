@@ -163,9 +163,15 @@ object AladinCell extends ModelOptics {
       // open settings menu
       .useState(false)
       // Selected GS index. Should be stored in the db
-      .useStateView(0)
+      .useStateView(none[Int])
+      .useEffectWithDepsBy((_, _, _, _, _, agsResults, _, _) => agsResults) {
+        (_, _, _, _, _, agsResults, _, selectedIndex) => _ =>
+          Callback.log("Reset seeleection ") *> selectedIndex.set(
+            0.some.filter(_ => agsResults.nonEmpty)
+          )
+      }
       .render {
-        (props, mouseCoords, options, center, gsc, agsResults, openSettings, selectedIndex) =>
+        (props, mouseCoords, options, center, gsc, agsResults, openSettings, selectedGSIndex) =>
           implicit val ctx = props.ctx
 
           val agsCandidatesView =
@@ -248,6 +254,9 @@ object AladinCell extends ModelOptics {
 
           val aladinKey = s"${props.target.get}"
 
+          val selectedGuideStar = selectedGSIndex.get.flatMap(agsResults.lift)
+          val usableGuideStar   = selectedGuideStar.exists(_.isUsable)
+
           val renderCell: TargetVisualOptions => VdomNode = (t: TargetVisualOptions) =>
             AladinContainer(
               props.target,
@@ -257,7 +266,7 @@ object AladinCell extends ModelOptics {
               fovSetter.reuseAlways,
               offsetSetter.reuseAlways,
               center,
-              selectedIndex.get,
+              selectedGuideStar,
               agsResults
             ).withKey(aladinKey)
 
@@ -267,9 +276,6 @@ object AladinCell extends ModelOptics {
               gsc.value.fold(_ => true.some, _ => none, _ => false.some)
             case _       => false.some
           }
-
-          val selectedGuideStar = agsResults.lift(selectedIndex.get)
-          val usableGuideStar   = selectedGuideStar.exists(_.isUsable)
 
           val renderToolbar: TargetVisualOptions => VdomNode =
             (t: TargetVisualOptions) =>
@@ -287,8 +293,8 @@ object AladinCell extends ModelOptics {
                 <.div(
                   ExploreStyles.AgsOverlay,
                   AgsOverlay(
-                    selectedIndex,
-                    agsResults.length,
+                    selectedGSIndex,
+                    agsResults.count(_.isUsable),
                     selectedGuideStar
                   )
                 )
