@@ -17,7 +17,6 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ags.AgsAnalysis
-import lucuma.ags.GuideStarCandidate
 import lucuma.core.enums.PortDisposition
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
@@ -46,7 +45,7 @@ final case class AladinContainer(
   updateViewOffset:       Offset => Callback,
   centerOnTarget:         View[Boolean],
   selectedGuideStarIndex: Int,
-  guideStarCandidates:    List[(GuideStarCandidate, AgsAnalysis)]
+  guideStarCandidates:    List[AgsAnalysis]
 ) extends ReactFnProps[AladinContainer](AladinContainer.component)
 
 object AladinContainer {
@@ -56,7 +55,10 @@ object AladinContainer {
   val DefaultWorld2PixFn: World2PixFn = (_: Coordinates) => None
 
   // This is used for screen coordinates, thus it doesn't need a lot of precission
-  implicit val doubleReuse = Reusability.double(1.0)
+  implicit val doubleReuse: Reusability[Double]                  = Reusability.double(1.0)
+  implicit val selectedGSReuse: Reusability[Option[AgsAnalysis]] =
+    Reusability.by(_.map(_.target.id))
+  implicit val analysisReuse: Reusability[List[AgsAnalysis]]     = Reusability.by(_.length)
 
   val AladinComp = Aladin.component
 
@@ -84,7 +86,7 @@ object AladinContainer {
       // Selected guide star
       .useMemoBy((p, _, _) => (p.guideStarCandidates, p.selectedGuideStarIndex)) {
         case (_, _, _) => { case (candidates, selectedIndex) =>
-          candidates.lift(selectedIndex).filter(_._2.isUsable)
+          candidates.lift(selectedIndex).filter(_.isUsable)
         }
       }
       // Ref to the aladin component
@@ -104,8 +106,8 @@ object AladinContainer {
           val candidatesVisibility =
             ExploreStyles.GuideStarCandidateVisible.when_(options.agsCandidates.visible)
 
-          val probeArmShapes = (gs, pa).mapN { case ((c, _), posAngle) =>
-            val gsOffset = baseCoordinates.diff(c.tracking.baseCoordinates).offset
+          val probeArmShapes = (gs, pa).mapN { case (c, posAngle) =>
+            val gsOffset = baseCoordinates.diff(c.target.tracking.baseCoordinates).offset
             GmosGeometry.probeShapes(posAngle,
                                      gsOffset,
                                      Offset.Zero,
@@ -162,21 +164,19 @@ object AladinContainer {
               ExploreStyles.GuideStarCandidateVisible.when_(visible)
 
             val selectedGSTarget = selectedGS
-              .flatMap { case (c, _) => c.tracking.at(obsInstant) }
+              .flatMap(_.target.tracking.at(obsInstant))
               .map(c => SVGTarget.GuideStarTarget(c, Css.Empty, 5))
 
             candidates
-              .filterNot(x => selectedGS.exists(_._1 === x._1))
-              .flatMap { case (g, _) =>
-                val targetEpoch        = g.tracking.epoch.epochYear.round
+              .filterNot(x => selectedGS.exists(_.target.id === x.target.id))
+              .flatMap { g =>
+                val tracking           = g.target.tracking
+                val targetEpoch        = tracking.epoch.epochYear.round
                 // Approximate to the midddle of the yaer
                 val targetEpochInstant =
                   LocalDate.of(targetEpoch.toInt, 6, 1).atStartOfDay(ZoneId.of("UTC")).toInstant()
 
-                (g.tracking
-                   .at(targetEpochInstant),
-                 g.tracking.at(obsInstant)
-                ).mapN { (source, dest) =>
+                (tracking.at(targetEpochInstant), tracking.at(obsInstant)).mapN { (source, dest) =>
                   List[SVGTarget](
                     SVGTarget.GuideStarCandidateTarget(dest, candidatesVisibility, 3),
                     SVGTarget.LineTo(

@@ -5,8 +5,6 @@ package explore.model.arb
 
 import explore.model.CatalogResults
 import lucuma.core.model.arb._
-import eu.timepit.refined.types.string.NonEmptyString
-import eu.timepit.refined.scalacheck.string._
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Cogen
@@ -18,15 +16,15 @@ trait ArbCatalogResults {
 
   implicit val guideStarCandidateArb = Arbitrary[GuideStarCandidate] {
     for {
-      name        <- arbitrary[NonEmptyString]
+      name        <- arbitrary[Long]
       tracking    <- arbitrary[SiderealTracking]
       gBrightness <- arbitrary[Option[BigDecimal]]
     } yield GuideStarCandidate(name, tracking, gBrightness)
   }
 
   implicit def guideStarCandidateCogen: Cogen[GuideStarCandidate] =
-    Cogen[(String, SiderealTracking, Option[BigDecimal])].contramap(m =>
-      (m.name.value, m.tracking, m.gBrightness)
+    Cogen[(Long, SiderealTracking, Option[BigDecimal])].contramap(m =>
+      (m.id, m.tracking, m.gBrightness)
     )
 
   implicit val catalogResultsArb = Arbitrary[CatalogResults] {

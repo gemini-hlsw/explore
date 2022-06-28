@@ -111,7 +111,7 @@ trait CatalogPicklers {
 
   implicit def picklerGuideStarCandidate: Pickler[GuideStarCandidate] =
     transformPickler(Function.tupled(GuideStarCandidate.apply _))(x =>
-      (x.name, x.tracking, x.gBrightness)
+      (x.id, x.tracking, x.gBrightness)
     )
 
   implicit def picklerEnumeration[A: Enumerated]: Pickler[A] =

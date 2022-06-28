@@ -44,9 +44,11 @@ trait CatalogQuerySettings {
   val proxy = uri"https://lucuma-cors-proxy.herokuapp.com"
 
   implicit val coordinatesHash: Hash[Coordinates] = Hash.fromUniversalHashCode
-  implicit val ci                                 = ADQLInterpreter.nTarget(10000)
+  val MaxCount                                    = 30000
+  implicit val ci                                 = ADQLInterpreter.nTarget(MaxCount)
 
-  def cacheQueryHash: Hash[ADQLQuery] = Hash.by(q => (q.base, q.adqlGeom, q.adqlBrightness))
+  def cacheQueryHash: Hash[ADQLQuery] =
+    Hash.by(q => (CatalogAdapter.Gaia.gaiaDB, MaxCount, q.base, q.adqlGeom, q.adqlBrightness))
 
   val UTC       = ZoneId.of("UTC")
   val UTCOffset = ZoneOffset.UTC
@@ -130,7 +132,6 @@ trait CatalogCache extends CatalogIDB with AsyncToIO {
         _.fold(
           // Not found in the db, re request
           readFromGaia[IO](client, query)
-            .flatTap(IO.println)
             .map(
               _.collect { case Right(s) =>
                 GuideStarCandidate.siderealTarget.get(s)

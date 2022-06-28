@@ -13,7 +13,6 @@ import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ags.AgsAnalysis
 import lucuma.ags.AgsGuideQuality
-import lucuma.ags.GuideStarCandidate
 import react.common.ReactFnProps
 import react.common.implicits._
 import react.semanticui.elements.button.Button
@@ -22,8 +21,9 @@ import react.semanticui.sizes._
 import scala.math.BigDecimal.RoundingMode
 
 final case class AgsOverlay(
-  selectedGSIndex:     View[Int],
-  guideStarCandidates: List[(GuideStarCandidate, AgsAnalysis)]
+  selectedGSIndex:   View[Int],
+  maxIndex:          Int,
+  selectedGuideStar: Option[AgsAnalysis]
 ) extends ReactFnProps[AgsOverlay](AgsOverlay.component)
 
 object AgsOverlay {
@@ -31,18 +31,15 @@ object AgsOverlay {
 
   val component =
     ScalaFnComponent[Props] { props =>
-      val usable        = props.guideStarCandidates.filter(_._2.isUsable)
-      val maxIndex      = usable.length
       val selectedIndex = props.selectedGSIndex.get
-      val selected      = usable.lift(selectedIndex)
 
-      selected
-        .map { case (gs, analysis) =>
+      props.selectedGuideStar
+        .map { case analysis =>
           ReactFragment(
             <.div(
               ExploreStyles.AgsDescription,
               Icons.Bahai,
-              gs.name.value,
+              analysis.target.name.value,
               <.div(
                 ExploreStyles.AgsNavigation,
                 Button(
@@ -59,7 +56,7 @@ object AgsOverlay {
                   size = Mini,
                   basic = true,
                   compact = true,
-                  disabled = selectedIndex >= maxIndex - 1,
+                  disabled = selectedIndex >= props.maxIndex - 1,
                   onClick = props.selectedGSIndex.mod(_ + 1),
                   clazz = ExploreStyles.BlendedButton |+| ExploreStyles.AgsNavigationButton
                 )(Icons.ChevronRight)
@@ -77,12 +74,12 @@ object AgsOverlay {
                   React.Fragment(
                     <.div(ExploreStyles.AgsGuideSpeed, speed.tag),
                     <.div(ExploreStyles.AgsGBrightness,
-                          gs.gBrightness.foldMap(g =>
+                          analysis.target.gBrightness.foldMap(g =>
                             s"G: ${g.setScale(1, RoundingMode.HALF_DOWN).toString()}"
                           )
                     ),
                     <.div(ExploreStyles.AgsCoordinates,
-                          s"(${formatCoordinates(gs.tracking.baseCoordinates)})"
+                          s"(${formatCoordinates(analysis.target.tracking.baseCoordinates)})"
                     )
                   )
                 case _                                           => EmptyVdom

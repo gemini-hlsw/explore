@@ -154,7 +154,7 @@ object AladinCell extends ModelOptics {
                                  params,
                                  candidates
                 )
-                .sortBy(_._2)
+                .sorted(AgsAnalysis.rankingOrdering)
 
             }.getOrElse(Nil)
           case _                                                                => Nil
@@ -268,15 +268,15 @@ object AladinCell extends ModelOptics {
             case _       => false.some
           }
 
-          val usableGuideStar = agsResults.lift(selectedIndex.get).exists(_._2.isUsable)
+          val selectedGuideStar = agsResults.lift(selectedIndex.get)
+          val usableGuideStar   = selectedGuideStar.exists(_.isUsable)
 
           val renderToolbar: TargetVisualOptions => VdomNode =
             (t: TargetVisualOptions) =>
               AladinToolbar(Fov.square(t.fovAngle),
                             mouseCoords.value,
                             catalogLoading,
-                            selectedIndex,
-                            agsResults,
+                            selectedGuideStar.map(_.target),
                             center,
                             t.agsOverlay
               ): VdomNode
@@ -288,7 +288,8 @@ object AladinCell extends ModelOptics {
                   ExploreStyles.AgsOverlay,
                   AgsOverlay(
                     selectedIndex,
-                    agsResults
+                    agsResults.length,
+                    selectedGuideStar
                   )
                 )
               } else EmptyVdom
