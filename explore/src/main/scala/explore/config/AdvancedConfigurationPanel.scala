@@ -4,11 +4,14 @@
 package explore.config
 
 import cats.data.NonEmptyList
+import clue.data.syntax._
 import crystal.react.View
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
+import explore.common.Aligner
+import explore.common.ScienceQueries._
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.implicits._
@@ -27,6 +30,7 @@ import lucuma.core.model.Observation
 import lucuma.core.syntax.all._
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
+import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.forms.EnumViewOptionalSelect
 import lucuma.ui.implicits._
 import lucuma.ui.optics.ChangeAuditor
@@ -39,11 +43,11 @@ import react.semanticui.sizes._
 
 import scala.scalajs.js.JSConverters._
 
-sealed trait AdvancedConfigurationPanel[T <: ScienceModeAdvanced, S <: ScienceModeBasic] {
+sealed trait AdvancedConfigurationPanel[T <: ScienceModeAdvanced, S <: ScienceModeBasic, Input] {
   val obsId: Observation.Id
   val title: String
   val subtitle: Option[NonEmptyString]
-  val scienceModeAdvanced: View[T]
+  val scienceModeAdvanced: Aligner[T, Input]
   val scienceModeBasic: S
   val onShowBasic: Callback
 
@@ -53,7 +57,8 @@ sealed trait AdvancedConfigurationPanel[T <: ScienceModeAdvanced, S <: ScienceMo
 sealed abstract class AdvancedConfigurationPanelBuilder[
   T <: ScienceModeAdvanced,
   S <: ScienceModeBasic,
-  Props <: AdvancedConfigurationPanel[T, S],
+  Input,
+  Props <: AdvancedConfigurationPanel[T, S, Input],
   Grating: Enumerated: Display,
   Filter: Enumerated: Display,
   Fpu: Enumerated: Display,
@@ -63,17 +68,35 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
   Gain: Enumerated: Display,
   Roi: Enumerated: Display
 ] {
-  @inline protected val overrideGratingLens: Lens[T, Option[Grating]]
-  @inline protected val overrideFilterLens: Lens[T, Option[Filter]]
-  @inline protected val overrideFpuLens: Lens[T, Option[Fpu]]
-  // @inline protected val nodAndShuffleLens: Option[Lens[T, Option[GmosNodAndShuffle]]] // Left on purpose
-  @inline protected val explicitXBin: Lens[T, Option[XBinning]]
-  @inline protected val explicitYBin: Lens[T, Option[YBinning]]
-  @inline protected val explicitReadMode: Lens[T, Option[ReadMode]]
-  @inline protected val explicitGain: Lens[T, Option[Gain]]
-  @inline protected val explicitRoi: Lens[T, Option[Roi]]
-  @inline protected val explicitWavelengthDithers: Lens[T, Option[NonEmptyList[DitherNanoMeters]]]
-  @inline protected val explicitSpatialOffsets: Lens[T, Option[NonEmptyList[Offset.Q]]]
+  type AA = Aligner[T, Input]
+
+  @inline protected def overrideGrating(aligner: AA)(implicit
+    ctx:                                         AppContextIO
+  ): View[Option[Grating]]
+
+  @inline protected def overrideFilter(aligner: AA)(implicit
+    ctx:                                        AppContextIO
+  ): View[Option[Filter]]
+
+  @inline protected def overrideFpu(aligner: AA)(implicit ctx: AppContextIO): View[Option[Fpu]]
+
+  @inline protected def explicitBinning(aligner: AA)(implicit
+    ctx:                                         AppContextIO
+  ): View[Option[(XBinning, YBinning)]]
+
+  @inline protected def explicitReadModeGain(aligner: AA)(implicit
+    ctx:                                              AppContextIO
+  ): View[Option[(ReadMode, Gain)]]
+
+  @inline protected def explicitRoi(aligner: AA)(implicit ctx: AppContextIO): View[Option[Roi]]
+
+  @inline protected def explicitWavelengthDithers(aligner: AA)(implicit ctx: AppContextIO): View[
+    Option[NonEmptyList[DitherNanoMeters]]
+  ]
+
+  @inline protected def explicitSpatialOffsets(aligner: AA)(implicit
+    ctx:                                                AppContextIO
+  ): View[Option[NonEmptyList[Offset.Q]]]
 
   @inline protected val gratingLens: Lens[S, Grating]
   @inline protected val filterLens: Lens[S, Option[Filter]]
@@ -103,16 +126,12 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
       .render { props =>
         implicit val ctx = props.ctx
 
-        val explicitWavelengthDithersView =
-          props.scienceModeAdvanced.zoom(explicitWavelengthDithers)
-        val explicitSpatialOffsetsView    = props.scienceModeAdvanced.zoom(explicitSpatialOffsets)
-
         def dithersControl(onChange: Callback): VdomElement =
           ReactFragment(
             <.label("λ Dithers", HelpIcon("configuration/lambda-dithers.md")),
             InputWithUnits(
               id = "dithers",
-              value = explicitWavelengthDithersView.withOnMod(_ => onChange),
+              value = explicitWavelengthDithers(props.scienceModeAdvanced).withOnMod(_ => onChange),
               validFormat = dithersValidFormat,
               changeAuditor = dithersChangeAuditor,
               units = "nm"
@@ -124,7 +143,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             <.label("Spatial Offsets", HelpIcon("configuration/spatial-offsets.md")),
             InputWithUnits(
               id = "offsets",
-              value = explicitSpatialOffsetsView.withOnMod(_ => onChange),
+              value = explicitSpatialOffsets(props.scienceModeAdvanced).withOnMod(_ => onChange),
               validFormat = offsetQNELValidFormat,
               changeAuditor = offsetsChangeAuditor,
               units = "arcsec"
@@ -142,21 +161,21 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             <.label("Grating", HelpIcon("configuration/grating.md")),
             EnumViewOptionalSelect(
               id = "override-grating",
-              value = props.scienceModeAdvanced.zoom(overrideGratingLens),
+              value = overrideGrating(props.scienceModeAdvanced),
               clearable = true,
               placeholder = gratingLens.get(props.scienceModeBasic).shortName
             ),
             <.label("Filter", HelpIcon("configuration/filter.md"), ExploreStyles.SkipToNext),
             EnumViewOptionalSelect(
               id = "override-filter",
-              value = props.scienceModeAdvanced.zoom(overrideFilterLens),
+              value = overrideFilter(props.scienceModeAdvanced),
               clearable = true,
               placeholder = filterLens.get(props.scienceModeBasic).map(_.shortName).orUndefined
             ),
             <.label("FPU", HelpIcon("configuration/fpu.md"), ExploreStyles.SkipToNext),
             EnumViewOptionalSelect(
               id = "override-fpu",
-              value = props.scienceModeAdvanced.zoom(overrideFpuLens),
+              value = overrideFpu(props.scienceModeAdvanced),
               clearable = true,
               placeholder = fpuLens.get(props.scienceModeBasic).shortName
             )
@@ -165,21 +184,19 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             <.label("Binning", HelpIcon("configuration/binning.md")),
             EnumViewOptionalSelect(
               id = "explicitXBin",
-              value =
-                props.scienceModeAdvanced.zoom(unsafeDisjointOptionZip(explicitXBin, explicitYBin)),
+              value = explicitBinning(props.scienceModeAdvanced),
               clearable = true
             ),
             <.label("Read Mode", HelpIcon("configuration/read-mode.md"), ExploreStyles.SkipToNext),
             EnumViewOptionalSelect(
               id = "explicitReadMode",
-              value = props.scienceModeAdvanced
-                .zoom(unsafeDisjointOptionZip(explicitReadMode, explicitGain)),
+              value = explicitReadModeGain(props.scienceModeAdvanced),
               clearable = true
             ),
             <.label("ROI", HelpIcon("configuration/roi.md"), ExploreStyles.SkipToNext),
             EnumViewOptionalSelect(
               id = "explicitRoi",
-              value = props.scienceModeAdvanced.zoom(explicitRoi),
+              value = explicitRoi(props.scienceModeAdvanced),
               clearable = true
             )
           ),
@@ -219,13 +236,15 @@ object AdvancedConfigurationPanel {
   sealed abstract class GmosAdvancedConfigurationPanel[
     T <: ScienceModeAdvanced,
     S <: ScienceModeBasic,
-    Props <: AdvancedConfigurationPanel[T, S],
+    Input,
+    Props <: AdvancedConfigurationPanel[T, S, Input],
     Grating: Enumerated,
     Filter: Enumerated,
     Fpu: Enumerated
   ] extends AdvancedConfigurationPanelBuilder[
         T,
         S,
+        Input,
         Props,
         Grating,
         Filter,
@@ -242,7 +261,9 @@ object AdvancedConfigurationPanel {
     obsId:               Observation.Id,
     title:               String,
     subtitle:            Option[NonEmptyString],
-    scienceModeAdvanced: View[ScienceModeAdvanced.GmosNorthLongSlit],
+    scienceModeAdvanced: Aligner[ScienceModeAdvanced.GmosNorthLongSlit,
+                                 GmosNorthLongSlitAdvancedConfigInput
+    ],
     scienceModeBasic:    ScienceModeBasic.GmosNorthLongSlit,
     onShowBasic:         Callback
   )(implicit val ctx:    AppContextIO)
@@ -251,38 +272,115 @@ object AdvancedConfigurationPanel {
       )
       with AdvancedConfigurationPanel[
         ScienceModeAdvanced.GmosNorthLongSlit,
-        ScienceModeBasic.GmosNorthLongSlit
+        ScienceModeBasic.GmosNorthLongSlit,
+        GmosNorthLongSlitAdvancedConfigInput,
       ]
 
   object GmosNorthLongSlit
       extends GmosAdvancedConfigurationPanel[
         ScienceModeAdvanced.GmosNorthLongSlit,
         ScienceModeBasic.GmosNorthLongSlit,
+        GmosNorthLongSlitAdvancedConfigInput,
         AdvancedConfigurationPanel.GmosNorthLongSlit,
         GmosNorthGrating,
         GmosNorthFilter,
         GmosNorthFpu,
       ] {
-    @inline override protected lazy val overrideGratingLens =
-      ScienceModeAdvanced.GmosNorthLongSlit.overrideGrating
-    @inline override protected lazy val overrideFilterLens  =
-      ScienceModeAdvanced.GmosNorthLongSlit.overrideFilter
-    @inline override protected lazy val overrideFpuLens     =
-      ScienceModeAdvanced.GmosNorthLongSlit.overrideFpu
-    @inline protected val explicitXBin                      =
+    @inline override protected def overrideGrating(
+      aligner:      AA
+    )(implicit ctx: AppContextIO): View[Option[GmosNorthGrating]] =
+      aligner
+        .zoom(ScienceModeAdvanced.GmosNorthLongSlit.overrideGrating,
+              GmosNorthLongSlitAdvancedConfigInput.overrideGrating.modify
+        )
+        .view(_.orUnassign)
+
+    @inline override protected def overrideFilter(aligner: AA)(implicit
+      ctx:                                                 AppContextIO
+    ): View[Option[GmosNorthFilter]] = aligner
+      .zoom(
+        ScienceModeAdvanced.GmosNorthLongSlit.overrideFilter,
+        GmosNorthLongSlitAdvancedConfigInput.overrideFilter.modify
+      )
+      .view(_.orUnassign)
+
+    @inline override protected def overrideFpu(
+      aligner:      AA
+    )(implicit ctx: AppContextIO): View[Option[GmosNorthFpu]] = aligner
+      .zoom(ScienceModeAdvanced.GmosNorthLongSlit.overrideFpu,
+            GmosNorthLongSlitAdvancedConfigInput.overrideFpu.modify
+      )
+      .view(_.orUnassign)
+
+    private val explicitXBin =
       ScienceModeAdvanced.GmosNorthLongSlit.explicitXBin
-    @inline protected val explicitYBin                      =
+    private val explicitYBin =
       ScienceModeAdvanced.GmosNorthLongSlit.explicitYBin
-    @inline protected val explicitReadMode                  =
+
+    private def binningAligner(
+      aligner: AA
+    ): Aligner[Option[(GmosXBinning, GmosYBinning)], GmosNorthLongSlitAdvancedConfigInput] =
+      aligner
+        .zoom(unsafeDisjointOptionZip(explicitXBin, explicitYBin), f => i => f(i))
+
+    @inline override protected def explicitBinning(aligner: AA)(implicit
+      ctx:                                                  AppContextIO
+    ): View[Option[(GmosXBinning, GmosYBinning)]] =
+      binningAligner(aligner)
+        .viewMod { oxy =>
+          val xy = oxy.unzip
+          GmosNorthLongSlitAdvancedConfigInput.explicitXBin
+            .replace(xy._1.orUnassign)
+            .andThen(GmosNorthLongSlitAdvancedConfigInput.explicitYBin.replace(xy._2.orUnassign))
+        }
+
+    private val explicitReadMode =
       ScienceModeAdvanced.GmosNorthLongSlit.explicitAmpReadMode
-    @inline protected val explicitGain                      =
+    private val explicitGain     =
       ScienceModeAdvanced.GmosNorthLongSlit.explicitAmpGain
-    @inline protected val explicitRoi                       =
-      ScienceModeAdvanced.GmosNorthLongSlit.explicitRoi
-    @inline protected val explicitWavelengthDithers         =
-      ScienceModeAdvanced.GmosNorthLongSlit.explicitWavelengthDithers
-    @inline protected val explicitSpatialOffsets            =
-      ScienceModeAdvanced.GmosNorthLongSlit.explicitSpatialOffsets
+
+    private def readGainAligner(
+      aligner: AA
+    ): Aligner[Option[(GmosAmpReadMode, GmosAmpGain)], GmosNorthLongSlitAdvancedConfigInput] =
+      aligner
+        .zoom(unsafeDisjointOptionZip(explicitReadMode, explicitGain), f => i => f(i))
+
+    @inline override protected def explicitReadModeGain(
+      aligner:      AA
+    )(implicit ctx: AppContextIO): View[Option[(GmosAmpReadMode, GmosAmpGain)]] =
+      readGainAligner(aligner)
+        .viewMod { org =>
+          val rg = org.unzip
+          GmosNorthLongSlitAdvancedConfigInput.explicitAmpReadMode
+            .replace(rg._1.orUnassign)
+            .andThen(GmosNorthLongSlitAdvancedConfigInput.explicitAmpGain.replace(rg._2.orUnassign))
+        }
+
+    @inline override protected def explicitRoi(aligner: AA)(implicit
+      ctx:                                              AppContextIO
+    ): View[Option[GmosRoi]] = aligner
+      .zoom(
+        ScienceModeAdvanced.GmosNorthLongSlit.explicitRoi,
+        GmosNorthLongSlitAdvancedConfigInput.explicitRoi.modify
+      )
+      .view(_.orUnassign)
+
+    @inline override protected def explicitWavelengthDithers(
+      aligner:      AA
+    )(implicit ctx: AppContextIO): View[Option[NonEmptyList[DitherNanoMeters]]] = aligner
+      .zoom(ScienceModeAdvanced.GmosNorthLongSlit.explicitWavelengthDithers,
+            GmosNorthLongSlitAdvancedConfigInput.explicitWavelengthDithersNm.modify
+      )
+      .view(_.map(_.map(_.value).toList).orUnassign)
+
+    @inline override protected def explicitSpatialOffsets(
+      aligner:      AA
+    )(implicit ctx: AppContextIO): View[Option[NonEmptyList[Offset.Q]]] = aligner
+      .zoom(
+        ScienceModeAdvanced.GmosNorthLongSlit.explicitSpatialOffsets,
+        GmosNorthLongSlitAdvancedConfigInput.explicitSpatialOffsets.modify _
+      )
+      .view(_.map(_.toList.map(_.toInput)).orUnassign)
 
     @inline protected val gratingLens = ScienceModeBasic.GmosNorthLongSlit.grating
     @inline protected val filterLens  = ScienceModeBasic.GmosNorthLongSlit.filter
@@ -296,7 +394,9 @@ object AdvancedConfigurationPanel {
     obsId:               Observation.Id,
     title:               String,
     subtitle:            Option[NonEmptyString],
-    scienceModeAdvanced: View[ScienceModeAdvanced.GmosSouthLongSlit],
+    scienceModeAdvanced: Aligner[ScienceModeAdvanced.GmosSouthLongSlit,
+                                 GmosSouthLongSlitAdvancedConfigInput
+    ],
     scienceModeBasic:    ScienceModeBasic.GmosSouthLongSlit,
     onShowBasic:         Callback
   )(implicit val ctx:    AppContextIO)
@@ -305,38 +405,116 @@ object AdvancedConfigurationPanel {
       )
       with AdvancedConfigurationPanel[
         ScienceModeAdvanced.GmosSouthLongSlit,
-        ScienceModeBasic.GmosSouthLongSlit
+        ScienceModeBasic.GmosSouthLongSlit,
+        GmosSouthLongSlitAdvancedConfigInput
       ]
 
   object GmosSouthLongSlit
       extends GmosAdvancedConfigurationPanel[
         ScienceModeAdvanced.GmosSouthLongSlit,
         ScienceModeBasic.GmosSouthLongSlit,
+        GmosSouthLongSlitAdvancedConfigInput,
         AdvancedConfigurationPanel.GmosSouthLongSlit,
         GmosSouthGrating,
         GmosSouthFilter,
         GmosSouthFpu,
       ] {
-    @inline override protected lazy val overrideGratingLens =
-      ScienceModeAdvanced.GmosSouthLongSlit.overrideGrating
-    @inline override protected lazy val overrideFilterLens  =
-      ScienceModeAdvanced.GmosSouthLongSlit.overrideFilter
-    @inline override protected lazy val overrideFpuLens     =
-      ScienceModeAdvanced.GmosSouthLongSlit.overrideFpu
-    @inline protected val explicitXBin                      =
+
+    @inline override protected def overrideGrating(
+      aligner:      AA
+    )(implicit ctx: AppContextIO): View[Option[GmosSouthGrating]] =
+      aligner
+        .zoom(ScienceModeAdvanced.GmosSouthLongSlit.overrideGrating,
+              GmosSouthLongSlitAdvancedConfigInput.overrideGrating.modify
+        )
+        .view(_.orUnassign)
+
+    @inline override protected def overrideFilter(aligner: AA)(implicit
+      ctx:                                                 AppContextIO
+    ): View[Option[GmosSouthFilter]] = aligner
+      .zoom(
+        ScienceModeAdvanced.GmosSouthLongSlit.overrideFilter,
+        GmosSouthLongSlitAdvancedConfigInput.overrideFilter.modify
+      )
+      .view(_.orUnassign)
+
+    @inline override protected def overrideFpu(
+      aligner:      AA
+    )(implicit ctx: AppContextIO): View[Option[GmosSouthFpu]] = aligner
+      .zoom(ScienceModeAdvanced.GmosSouthLongSlit.overrideFpu,
+            GmosSouthLongSlitAdvancedConfigInput.overrideFpu.modify
+      )
+      .view(_.orUnassign)
+
+    private val explicitXBin =
       ScienceModeAdvanced.GmosSouthLongSlit.explicitXBin
-    @inline protected val explicitYBin                      =
+    private val explicitYBin =
       ScienceModeAdvanced.GmosSouthLongSlit.explicitYBin
-    @inline protected val explicitReadMode                  =
+
+    private def binningAligner(
+      aligner: AA
+    ): Aligner[Option[(GmosXBinning, GmosYBinning)], GmosSouthLongSlitAdvancedConfigInput] =
+      aligner
+        .zoom(unsafeDisjointOptionZip(explicitXBin, explicitYBin), f => i => f(i))
+
+    @inline override protected def explicitBinning(aligner: AA)(implicit
+      ctx:                                                  AppContextIO
+    ): View[Option[(GmosXBinning, GmosYBinning)]] =
+      binningAligner(aligner)
+        .viewMod { oxy =>
+          val xy = oxy.unzip
+          GmosSouthLongSlitAdvancedConfigInput.explicitXBin
+            .replace(xy._1.orUnassign)
+            .andThen(GmosSouthLongSlitAdvancedConfigInput.explicitYBin.replace(xy._2.orUnassign))
+        }
+
+    private val explicitReadMode =
       ScienceModeAdvanced.GmosSouthLongSlit.explicitAmpReadMode
-    @inline protected val explicitGain                      =
+    private val explicitGain     =
       ScienceModeAdvanced.GmosSouthLongSlit.explicitAmpGain
-    @inline protected val explicitRoi                       =
-      ScienceModeAdvanced.GmosSouthLongSlit.explicitRoi
-    @inline protected val explicitWavelengthDithers         =
-      ScienceModeAdvanced.GmosSouthLongSlit.explicitWavelengthDithers
-    @inline protected val explicitSpatialOffsets            =
-      ScienceModeAdvanced.GmosSouthLongSlit.explicitSpatialOffsets
+
+    private def readGainAligner(
+      aligner: AA
+    ): Aligner[Option[(GmosAmpReadMode, GmosAmpGain)], GmosSouthLongSlitAdvancedConfigInput] =
+      aligner
+        .zoom(unsafeDisjointOptionZip(explicitReadMode, explicitGain), f => i => f(i))
+
+    @inline override protected def explicitReadModeGain(
+      aligner:      AA
+    )(implicit ctx: AppContextIO): View[Option[(GmosAmpReadMode, GmosAmpGain)]] =
+      readGainAligner(aligner)
+        .viewMod { org =>
+          val rg = org.unzip
+          GmosSouthLongSlitAdvancedConfigInput.explicitAmpReadMode
+            .replace(rg._1.orUnassign)
+            .andThen(GmosSouthLongSlitAdvancedConfigInput.explicitAmpGain.replace(rg._2.orUnassign))
+        }
+
+    @inline override protected def explicitRoi(aligner: AA)(implicit
+      ctx:                                              AppContextIO
+    ): View[Option[GmosRoi]] = aligner
+      .zoom(
+        ScienceModeAdvanced.GmosSouthLongSlit.explicitRoi,
+        GmosSouthLongSlitAdvancedConfigInput.explicitRoi.modify
+      )
+      .view(_.orUnassign)
+
+    @inline override protected def explicitWavelengthDithers(
+      aligner:      AA
+    )(implicit ctx: AppContextIO): View[Option[NonEmptyList[DitherNanoMeters]]] = aligner
+      .zoom(ScienceModeAdvanced.GmosSouthLongSlit.explicitWavelengthDithers,
+            GmosSouthLongSlitAdvancedConfigInput.explicitWavelengthDithersNm.modify
+      )
+      .view(_.map(_.map(_.value).toList).orUnassign)
+
+    @inline override protected def explicitSpatialOffsets(
+      aligner:      AA
+    )(implicit ctx: AppContextIO): View[Option[NonEmptyList[Offset.Q]]] = aligner
+      .zoom(
+        ScienceModeAdvanced.GmosSouthLongSlit.explicitSpatialOffsets,
+        GmosSouthLongSlitAdvancedConfigInput.explicitSpatialOffsets.modify _
+      )
+      .view(_.map(_.toList.map(_.toInput)).orUnassign)
 
     @inline protected val gratingLens = ScienceModeBasic.GmosSouthLongSlit.grating
     @inline protected val filterLens  = ScienceModeBasic.GmosSouthLongSlit.filter

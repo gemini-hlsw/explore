@@ -4,6 +4,7 @@
 package explore.config
 
 import cats.effect.IO
+import clue.data.Assign
 import clue.data.Input
 import clue.data.syntax._
 import crystal.react._
@@ -26,7 +27,6 @@ import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.schemas.ObservationDB.Types._
-import monocle.std.option.some
 import queries.common.ObsQueriesGQL
 import react.common._
 
@@ -43,6 +43,52 @@ final case class ConfigurationPanel(
 
 object ConfigurationPanel {
   type Props = ConfigurationPanel
+
+  // TODO: The following few methods could be moved to `clue` if they are appropiate. Before
+  // doing so, I'd like to have the code reviewed and perhaps looked over by `Mr. Clue` so
+  // he can point out a much easier path. :P
+  // The particular problem they solve here is that ScienceModeInput can have either a
+  // gmosNorthLongSlitInput or a gmosSouthLongSlitInput, but not both. And we can't know
+  // until we edit.
+
+  implicit class InputOps[A](input: Input[A]) {
+
+    /**
+     * If the Input is not `Assing[A]`, create a new Input with the parameter and `assign` it.
+     */
+    def orAssign(ifNotAssigned: => A): Input[A] = input match {
+      case Assign(_) => input
+      case _         => ifNotAssigned.assign
+    }
+  }
+
+  /**
+   * Handles the case where `A.Input[B]` not have an assigned value, but it needs to be created for
+   * the `mod` function to work on.
+   */
+  private def mapModOrAssign[A, B](
+    ifNotAssigned: => B
+  )(
+    mod:           (Input[B] => Input[B]) => A => A
+  ): (Input[B] => Input[B]) => Input[A] => Input[A] =
+    f =>
+      _.map(mod { i =>
+        val iassign = i.orAssign(ifNotAssigned)
+        f(iassign)
+      })
+
+  /**
+   * Handles the case where `A.Input[B]` not have an assigned value, but it needs to be created for
+   * the `mod` function to work on.
+   */
+  private def modOrAssignAndMap[A, B](
+    ifNotAssigned: => B
+  )(mod:           (Input[B] => Input[B]) => A => A): (B => B) => Input[A] => Input[A] =
+    f =>
+      _.map(mod { ib =>
+        val bAssign = ib.orAssign(ifNotAssigned)
+        bAssign.map(f)
+      })
 
   protected val component =
     ScalaFnComponent
@@ -61,7 +107,7 @@ object ConfigurationPanel {
             props.scienceData,
             EditObservationsInput(
               select = ObservationSelectInput(observationIds = List(props.obsId).assign),
-              patch = ObservationPropertiesInput()
+              patch = ObservationPropertiesInput(scienceMode = ScienceModeInput().assign)
             ),
             (ObsQueriesGQL.EditObservationMutation.execute[IO] _).andThen(_.void)
           ).zoom(
@@ -72,16 +118,29 @@ object ConfigurationPanel {
         val optModeView: View[Option[model.ScienceMode]] =
           modeAligner.view(_.map(_.toInput).orUnassign)
 
-        val modeViewOpt: ViewOpt[model.ScienceMode] =
-          optModeView.zoom(some[model.ScienceMode])
+        val optModeAligner = modeAligner.toOption
 
         val showBasicCB: Callback = showAdvanced.set(false)
 
         val showAdvancedCB: Option[Callback] =
-          optModeView.get.map(_ => showAdvanced.set(true))
+          optModeAligner.map(_ => showAdvanced.set(true))
 
         val posAngleView: View[Option[PosAngleConstraint]] =
           props.scienceData.undoableView(ScienceData.posAngle)
+
+        val optNorthAligner = optModeAligner.flatMap {
+          _.zoomOpt(
+            model.ScienceMode.gmosNorthLongSlit,
+            mapModOrAssign(GmosNorthLongSlitInput())(ScienceModeInput.gmosNorthLongSlit.modify)
+          )
+        }
+
+        val optSouthAligner = optModeAligner.flatMap {
+          _.zoomOpt(
+            model.ScienceMode.gmosSouthLongSlit,
+            mapModOrAssign(GmosSouthLongSlitInput())(ScienceModeInput.gmosSouthLongSlit.modify)
+          )
+        }
 
         React.Fragment(
           props.renderInTitle(
@@ -102,33 +161,39 @@ object ConfigurationPanel {
           else
             React.Fragment(
               // Gmos North Long Slit
-              modeViewOpt
-                .zoom(model.ScienceMode.gmosNorthLongSlit)
-                .mapValue(view =>
-                  AdvancedConfigurationPanel
-                    .GmosNorthLongSlit(
-                      props.obsId,
-                      props.title,
-                      props.subtitle,
-                      view.zoom(model.ScienceMode.GmosNorthLongSlit.advanced),
-                      view.zoom(model.ScienceMode.GmosNorthLongSlit.basic).get,
-                      showBasicCB
-                    )
-                ),
+              optNorthAligner.map(northAligner =>
+                AdvancedConfigurationPanel
+                  .GmosNorthLongSlit(
+                    props.obsId,
+                    props.title,
+                    props.subtitle,
+                    northAligner.zoom(
+                      model.ScienceMode.GmosNorthLongSlit.advanced,
+                      modOrAssignAndMap(GmosNorthLongSlitAdvancedConfigInput())(
+                        GmosNorthLongSlitInput.advanced.modify
+                      )
+                    ),
+                    northAligner.get.basic,
+                    showBasicCB
+                  )
+              ),
               // Gmos South Long Slit
-              modeViewOpt
-                .zoom(model.ScienceMode.gmosSouthLongSlit)
-                .mapValue(view =>
-                  AdvancedConfigurationPanel
-                    .GmosSouthLongSlit(
-                      props.obsId,
-                      props.title,
-                      props.subtitle,
-                      view.zoom(model.ScienceMode.GmosSouthLongSlit.advanced),
-                      view.zoom(model.ScienceMode.GmosSouthLongSlit.basic).get,
-                      showBasicCB
-                    )
-                )
+              optSouthAligner.map(southAligner =>
+                AdvancedConfigurationPanel
+                  .GmosSouthLongSlit(
+                    props.obsId,
+                    props.title,
+                    props.subtitle,
+                    southAligner.zoom(
+                      model.ScienceMode.GmosSouthLongSlit.advanced,
+                      modOrAssignAndMap(GmosSouthLongSlitAdvancedConfigInput())(
+                        GmosSouthLongSlitInput.advanced.modify
+                      )
+                    ),
+                    southAligner.get.basic,
+                    showBasicCB
+                  )
+              )
             )
         )
       }
