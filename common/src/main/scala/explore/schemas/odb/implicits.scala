@@ -24,6 +24,28 @@ import scala.collection.immutable.SortedMap
 
 // TODO Move to lucuma-schemas
 object implicits {
+  implicit class ObsIdOps(val id: Observation.Id) extends AnyVal {
+    def toWhereObservation: WhereObservation =
+      WhereObservation(id = WhereOrderObservationId(EQ = id.assign).assign)
+  }
+
+  implicit class ObsIdListOps(val ids: List[Observation.Id]) extends AnyVal {
+    def toWhereObservation: WhereObservation =
+      WhereObservation(id = WhereOrderObservationId(IN = ids.assign).assign)
+  }
+
+  implicit class ProgramidOps(val id: Program.Id) extends AnyVal {
+    def toWhereProgram: WhereProgram =
+      WhereProgram(id = WhereOrderProgramId(EQ = id.assign).assign)
+
+    def toWhereObservation: WhereObservation =
+      WhereObservation(programId = WhereOrderProgramId(EQ = id.assign).assign)
+  }
+
+  implicit class TargetIdOps(val id: Target.Id) extends AnyVal {
+    def toWhereTarget: WhereTarget =
+      WhereTarget(id = WhereOrderTargetId(EQ = id.assign).assign)
+  }
 
   implicit class AngleOps(val a: Angle) extends AnyVal {
     def toInput: AngleInput =
@@ -348,11 +370,11 @@ object implicits {
     def toCreateTargetInput(programId: Program.Id): CreateTargetInput =
       CreateTargetInput(
         programId = programId,
-        properties = TargetPropertiesInput(
+        SET = TargetPropertiesInput(
           name = sidereal.name.assign,
           sidereal = toInput.assign,
           sourceProfile = sidereal.sourceProfile.toInput.assign
-        )
+        ).assign
       )
   }
 
@@ -364,11 +386,11 @@ object implicits {
     def toCreateTargetInput(programId: Program.Id): CreateTargetInput =
       CreateTargetInput(
         programId = programId,
-        properties = TargetPropertiesInput(
+        SET = TargetPropertiesInput(
           name = nonsidereal.name.assign,
           nonsidereal = toInput.assign,
           sourceProfile = nonsidereal.sourceProfile.toInput.assign
-        )
+        ).assign
       )
   }
 

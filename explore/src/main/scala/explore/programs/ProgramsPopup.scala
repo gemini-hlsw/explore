@@ -5,6 +5,7 @@ package explore.programs
 
 import cats.effect.IO
 import cats.syntax.all._
+import clue.data.syntax._
 import crystal.react.View
 import crystal.react.hooks._
 import crystal.react.implicits._
@@ -19,6 +20,8 @@ import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Program
+import lucuma.schemas.ObservationDB.Enums.Existence
+import lucuma.schemas.ObservationDB.Types._
 import queries.common.ProgramQueriesGQL._
 import react.common.ReactFnProps
 import react.semanticui.elements.button.Button
@@ -132,8 +135,12 @@ object ProgramsPopup {
       (props, _, _) => showDeleted =>
         implicit val ctx = props.ctx
 
+        val whereExistence =
+          if (showDeleted) WhereEqExistence(IN = List(Existence.Deleted, Existence.Present).assign)
+          else WhereEqExistence(EQ = Existence.Present.assign)
+
         ProgramsQuery
-          .query(showDeleted)
+          .query(WhereProgram(existence = whereExistence.assign))
           .map(ProgramsQuery.Data.asProgramInfoList)
           .flatTap(programs => onNewData(props.onClose.isEmpty, programs))
           .reRunOnResourceSignals(ProgramEditSubscription.subscribe[IO]())

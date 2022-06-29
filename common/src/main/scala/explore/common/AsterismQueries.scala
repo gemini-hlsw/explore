@@ -23,6 +23,7 @@ import monocle.Focus
 import monocle.Getter
 import queries.common.AsterismQueriesGQL._
 import queries.common.ObsQueriesGQL._
+import queries.schemas.implicits._
 
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
@@ -33,8 +34,8 @@ object AsterismQueries {
   // else, we can remove this.
   implicit val orderSortedSet: Order[ObsIdSet] = ObsIdSet.orderObsIdSet
 
-  type ObservationResult = AsterismGroupObsQuery.Data.Observations.Nodes
-  val ObservationResult = AsterismGroupObsQuery.Data.Observations.Nodes
+  type ObservationResult = AsterismGroupObsQuery.Data.Observations.Matches
+  val ObservationResult = AsterismGroupObsQuery.Data.Observations.Matches
 
   type AsterismGroupList = SortedMap[ObsIdSet, AsterismGroup]
   type TargetGroupList   = SortedMap[Target.Id, TargetGroup]
@@ -79,19 +80,19 @@ object AsterismQueries {
 
   private val queryToAsterismGroupWithObsGetter
     : Getter[AsterismGroupObsQuery.Data, AsterismGroupsWithObs] = data => {
-    val asterismGroups = data.asterismGroup.nodes
-      .map { node =>
-        ObsIdSet.fromList(node.observationIds).map { obsIdSet =>
-          AsterismGroup(obsIdSet, SortedSet.from(node.asterism.map(_.id)))
+    val asterismGroups = data.asterismGroup.matches
+      .map { mtch =>
+        ObsIdSet.fromList(mtch.observationIds).map { obsIdSet =>
+          AsterismGroup(obsIdSet, SortedSet.from(mtch.asterism.map(_.id)))
         }
       }
       .flatten
       .toSortedMap(_.obsIds)
-    val targetGroups   = data.targetGroup.nodes.toSortedMap(_.targetWithId.id)
+    val targetGroups   = data.targetGroup.matches.toSortedMap(_.targetWithId.id)
     AsterismGroupsWithObs(
       asterismGroups,
       targetGroups,
-      data.observations.nodes
+      data.observations.matches
         .map(obsResultToSummary)
         .toSortedMap(ObsSummaryWithConstraintsAndConf.id.get)
     )
@@ -106,34 +107,34 @@ object AsterismQueries {
     obsIds:     List[Observation.Id],
     targetIds:  List[Target.Id]
   )(implicit c: TransactionalClient[F, ObservationDB]) = {
-    val input = EditObservationsInput(
-      select = ObservationSelectInput(observationIds = obsIds.assign),
-      patch = ObservationPropertiesInput(
+    val input = UpdateObservationsInput(
+      WHERE = obsIds.toWhereObservation.assign,
+      SET = ObservationPropertiesInput(
         targetEnvironment = TargetEnvironmentInput(asterism = targetIds.assign).assign
       )
     )
-    EditObservationMutation.execute[F](input).void
+    UpdateObservationMutation.execute[F](input).void
   }
 
   def addTargetToAsterisms[F[_]: Async](
     obsIds:     List[Observation.Id],
     targetId:   Target.Id
   )(implicit c: TransactionalClient[F, ObservationDB]) = {
-    val input = EditAsterismsInput(
-      select = ObservationSelectInput(observationIds = obsIds.assign),
-      patch = List(EditAsterismsPatchInput(add = targetId.assign))
+    val input = UpdateAsterismsInput(
+      WHERE = obsIds.toWhereObservation.assign,
+      SET = List(EditAsterismsPatchInput(ADD = targetId.assign))
     )
-    EditAsterismsMutation.execute[F](input).void
+    UpdateAsterismsMutation.execute[F](input).void
   }
 
   def removeTargetFromAsterisms[F[_]: Async](
     obsIds:     List[Observation.Id],
     targetId:   Target.Id
   )(implicit c: TransactionalClient[F, ObservationDB]) = {
-    val input = EditAsterismsInput(
-      select = ObservationSelectInput(observationIds = obsIds.assign),
-      patch = List(EditAsterismsPatchInput(delete = targetId.assign))
+    val input = UpdateAsterismsInput(
+      WHERE = obsIds.toWhereObservation.assign,
+      SET = List(EditAsterismsPatchInput(DELETE = targetId.assign))
     )
-    EditAsterismsMutation.execute[F](input).void
+    UpdateAsterismsMutation.execute[F](input).void
   }
 }

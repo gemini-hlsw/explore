@@ -98,23 +98,23 @@ object ObsQueries {
     : Getter[ProgramObservationsQuery.Data, ObsSummariesWithConstraints] = data =>
     ObsSummariesWithConstraints(
       KeyedIndexedList.fromList(
-        data.observations.nodes.map(node =>
+        data.observations.matches.map(mtch =>
           ObsSummaryWithTitleConstraintsAndConf(
-            node.id,
-            node.title,
-            node.subtitle,
-            node.constraintSet,
-            node.status,
-            node.activeStatus,
-            node.plannedTime.execution,
-            node.scienceMode,
-            node.visualizationTime
+            mtch.id,
+            mtch.title,
+            mtch.subtitle,
+            mtch.constraintSet,
+            mtch.status,
+            mtch.activeStatus,
+            mtch.plannedTime.execution,
+            mtch.scienceMode,
+            mtch.visualizationTime
           )
         ),
         ObsSummaryWithTitleConstraintsAndConf.id.get
       ),
-      data.constraintSetGroup.nodes.toSortedMap(ConstraintGroup.obsIds.get),
-      data.targetGroup.nodes
+      data.constraintSetGroup.matches.toSortedMap(ConstraintGroup.obsIds.get),
+      data.targetGroup.matches
         .toSortedMap(
           _.target.id,
           group => TargetSummary(group.observationIds.toSet, group.target.id, group.target.sidereal)
@@ -154,11 +154,11 @@ object ObsQueries {
         elevationRange = createER.assign
       ).assign
     )
-    EditObservationMutation
+    UpdateObservationMutation
       .execute[F](
-        EditObservationsInput(
-          select = ObservationSelectInput(observationIds = obsIds.assign),
-          patch = editInput
+        UpdateObservationsInput(
+          WHERE = obsIds.toWhereObservation.assign,
+          SET = editInput
         )
       )
       .void
@@ -175,11 +175,11 @@ object ObsQueries {
       visualizationTime = visualizationTime.orUnassign
     )
 
-    EditObservationMutation
+    UpdateObservationMutation
       .execute[F](
-        EditObservationsInput(
-          select = ObservationSelectInput(observationIds = obsIds.assign),
-          patch = editInput
+        UpdateObservationsInput(
+          WHERE = obsIds.toWhereObservation.assign,
+          SET = editInput
         )
       )
       .void
@@ -196,11 +196,11 @@ object ObsQueries {
       posAngleConstraint = posAngleConstraint.map(_.toInput).orUnassign
     )
 
-    EditObservationMutation
+    UpdateObservationMutation
       .execute[F](
-        EditObservationsInput(
-          select = ObservationSelectInput(observationIds = obsIds.assign),
-          patch = editInput
+        UpdateObservationsInput(
+          WHERE = obsIds.toWhereObservation.assign,
+          SET = editInput
         )
       )
       .void
@@ -226,9 +226,7 @@ object ObsQueries {
   ): F[Unit] =
     ProgramDeleteObservations
       .execute[F](
-        DeleteObservationsInput(select =
-          ObservationSelectInput(observationIds = List(obsId).assign)
-        )
+        DeleteObservationsInput(WHERE = obsId.toWhereObservation.assign)
       )
       .void
 
@@ -237,9 +235,7 @@ object ObsQueries {
   ): F[Unit] =
     ProgramUndeleteObservations
       .execute[F](
-        UndeleteObservationsInput(select =
-          ObservationSelectInput(observationIds = List(obsId).assign)
-        )
+        UndeleteObservationsInput(WHERE = obsId.toWhereObservation.assign)
       )
       .void
 }

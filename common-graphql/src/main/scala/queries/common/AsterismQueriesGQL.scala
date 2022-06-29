@@ -22,7 +22,7 @@ object AsterismQueriesGQL {
     val document: String = """
       query($programId: ProgramId!) {
         asterismGroup(programId: $programId) {
-          nodes {
+          matches {
             observationIds
             asterism {
               id
@@ -31,7 +31,7 @@ object AsterismQueriesGQL {
         }
 
         targetGroup(programId: $programId) {
-          nodes {
+          matches {
             observationIds
             target {
               id
@@ -202,8 +202,8 @@ object AsterismQueriesGQL {
           }
         }
 
-        observations(programId: $programId) {
-          nodes {
+        observations(WHERE: {programId: {EQ: $programId}}) {
+          matches {
             id
             constraintSet {
               imageQuality
@@ -253,11 +253,11 @@ object AsterismQueriesGQL {
 
     object Data {
       object TargetGroup {
-        type Nodes = explore.model.TargetGroup
+        type Matches = explore.model.TargetGroup
       }
 
       object Observations {
-        object Nodes {
+        object Matches {
           type PosAngleConstraint = lucuma.core.model.PosAngleConstraint
           trait ConstraintSet extends model.ConstraintsSummary
           type ScienceMode = model.ScienceMode
@@ -270,10 +270,10 @@ object AsterismQueriesGQL {
   }
 
   @GraphQL
-  trait EditAsterismsMutation extends GraphQLOperation[ObservationDB] {
+  trait UpdateAsterismsMutation extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation($input: EditAsterismsInput!) {
-        editAsterisms(input: $input) {
+      mutation($input: UpdateAsterismsInput!) {
+        updateAsterisms(input: $input) {
           observations {
             id
           }

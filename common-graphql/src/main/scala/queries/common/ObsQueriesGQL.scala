@@ -23,8 +23,8 @@ object ObsQueriesGQL {
     // TODO We should do a single observations query and extract the constraint sets and targets from it.
     val document = """
       query($programId: ProgramId!) {
-        observations(programId: $programId) {
-          nodes {
+        observations(WHERE: {programId: {EQ: $programId}}) {
+          matches {
             id
             title
             subtitle
@@ -90,7 +90,7 @@ object ObsQueriesGQL {
         }
 
         constraintSetGroup(programId: $programId) {
-          nodes {
+          matches {
             constraintSet {
               cloudExtinction
               imageQuality
@@ -108,7 +108,7 @@ object ObsQueriesGQL {
               }
             }
             observations {
-              nodes {
+              matches {
                 id
               }
             }
@@ -116,7 +116,7 @@ object ObsQueriesGQL {
         }
 
         targetGroup(programId: $programId) {
-          nodes {
+          matches {
             observationIds
             target {
               id
@@ -136,7 +136,7 @@ object ObsQueriesGQL {
 
     object Data {
       object Observations {
-        object Nodes {
+        object Matches {
           trait ConstraintSet extends ConstraintsSummary
           object PlannedTime {
             type Execution = time.Duration
@@ -146,11 +146,11 @@ object ObsQueriesGQL {
       }
 
       object ConstraintSetGroup {
-        type Nodes = model.ConstraintGroup
+        type Matches = model.ConstraintGroup
       }
 
       object TargetGroup {
-        object Nodes {
+        object Matches {
           object Target {
             type Sidereal = lucuma.core.math.Coordinates
           }
@@ -540,10 +540,10 @@ object ObsQueriesGQL {
   }
 
   @GraphQL
-  trait EditObservationMutation extends GraphQLOperation[ObservationDB] {
+  trait UpdateObservationMutation extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation ($input: EditObservationsInput!){
-        editObservations(input: $input) {
+      mutation ($input: UpdateObservationsInput!){
+        updateObservations(input: $input) {
           observations {
             id
           }

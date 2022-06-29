@@ -20,6 +20,7 @@ import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types._
 import monocle.Focus
 import queries.common.ObsQueriesGQL._
+import queries.schemas.implicits._
 
 object ObsListActions {
   protected val obsListMod =
@@ -42,11 +43,11 @@ object ObsListActions {
     access = obsWithId(obsId).composeOptionLens(ObsSummaryWithTitleConstraintsAndConf.status)
   )(onSet =
     (_, status) =>
-      EditObservationMutation
+      UpdateObservationMutation
         .execute[IO](
-          EditObservationsInput(
-            select = ObservationSelectInput(observationIds = List(obsId).assign),
-            patch = ObservationPropertiesInput(status = status.orIgnore)
+          UpdateObservationsInput(
+            WHERE = obsId.toWhereObservation.assign,
+            SET = ObservationPropertiesInput(status = status.orIgnore)
           )
         )
         .void
@@ -58,11 +59,11 @@ object ObsListActions {
     access = obsWithId(obsId).composeOptionLens(ObsSummaryWithTitleConstraintsAndConf.subtitle)
   )(onSet =
     (_, subtitleOpt) =>
-      EditObservationMutation
+      UpdateObservationMutation
         .execute[IO](
-          EditObservationsInput(
-            select = ObservationSelectInput(observationIds = List(obsId).assign),
-            patch = ObservationPropertiesInput(subtitle = subtitleOpt.flatten.orUnassign)
+          UpdateObservationsInput(
+            WHERE = obsId.toWhereObservation.assign,
+            SET = ObservationPropertiesInput(subtitle = subtitleOpt.flatten.orUnassign)
           )
         )
         .void
@@ -74,11 +75,11 @@ object ObsListActions {
     access = obsWithId(obsId).composeOptionLens(ObsSummaryWithTitleConstraintsAndConf.activeStatus)
   )(onSet =
     (_, activeStatus) =>
-      EditObservationMutation
+      UpdateObservationMutation
         .execute[IO](
-          EditObservationsInput(
-            select = ObservationSelectInput(observationIds = List(obsId).assign),
-            patch = ObservationPropertiesInput(activeStatus = activeStatus.orIgnore)
+          UpdateObservationsInput(
+            WHERE = obsId.toWhereObservation.assign,
+            SET = ObservationPropertiesInput(activeStatus = activeStatus.orIgnore)
           )
         )
         .void

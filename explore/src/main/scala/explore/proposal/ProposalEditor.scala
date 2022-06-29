@@ -378,13 +378,13 @@ object ProposalEditor {
     val aligner: Aligner[Proposal, Input[ProposalInput]] =
       Aligner(
         undoCtx,
-        EditProgramInput(
-          select = ProgramSelectInput(programId = programId.assign),
-          patch = ProgramPropertiesInput(proposal = ProposalInput().assign)
+        UpdateProgramsInput(
+          WHERE = programId.toWhereProgram.assign,
+          SET = ProgramPropertiesInput(proposal = ProposalInput().assign)
         ),
-        (ProgramQueriesGQL.EditProgramMutation.execute[IO] _).andThen(_.void)
+        (ProgramQueriesGQL.UpdateProgramsMutation.execute[IO] _).andThen(_.void)
       ).zoom(Iso.id[Proposal].asLens,
-             EditProgramInput.patch.andThen(ProgramPropertiesInput.proposal).modify
+             UpdateProgramsInput.SET.andThen(ProgramPropertiesInput.proposal).modify
       )
 
     val splitsAligner: Aligner[SortedMap[Partner, IntPercent], Input[List[PartnerSplitsInput]]] =

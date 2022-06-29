@@ -22,6 +22,7 @@ import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types._
 import queries.common.TargetQueriesGQL
+import queries.schemas.implicits._
 
 import scala.annotation.unused
 import scala.collection.immutable.SortedSet
@@ -172,7 +173,7 @@ object AsterismGroupObsListActions {
   ): IO[Unit] =
     TargetQueriesGQL.DeleteTargetsMutation
       .execute[IO](
-        DeleteTargetsInput(select = TargetSelectInput(targetIds = List(targetId).assign))
+        DeleteTargetsInput(WHERE = targetId.toWhereTarget.assign)
       )
       .void
 
@@ -181,7 +182,7 @@ object AsterismGroupObsListActions {
   ): IO[Unit] =
     TargetQueriesGQL.UndeleteTargetsMutation
       .execute[IO](
-        UndeleteTargetsInput(select = TargetSelectInput(targetIds = List(targetId).assign))
+        UndeleteTargetsInput(WHERE = targetId.toWhereTarget.assign)
       )
       .void
 

@@ -20,7 +20,7 @@ object TargetQueriesGQL {
     val document = """
       query($programId: ProgramId!) {
         targetGroup(programId: $programId) {
-          nodes {
+          matches {
             target {
               id
               name
@@ -194,7 +194,7 @@ object TargetQueriesGQL {
 
     object Data {
       object TargetGroup {
-        object Nodes {
+        object Matches {
           type Target = model.TargetWithId
         }
       }
@@ -241,10 +241,10 @@ object TargetQueriesGQL {
   }
 
   @GraphQL
-  trait EditTargetsMutation extends GraphQLOperation[ObservationDB] {
+  trait UpdateTargetsMutation extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation($input: EditTargetsInput!) {
-        editTargets(input: $input) {
+      mutation($input: UpdateTargetsInput!) {
+        updateTargets(input: $input) {
           targets {
             id
           }
@@ -254,10 +254,10 @@ object TargetQueriesGQL {
   }
 
   @GraphQL
-  trait EditTargetsMutationWithResult extends GraphQLOperation[ObservationDB] {
+  trait UpdateTargetsMutationWithResult extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation($input: EditTargetsInput!) {
-        editTargets(input: $input) {
+      mutation($input: UpdateTargetsInput!) {
+        updateTargets(input: $input) {
           targets {
             id
             name
@@ -429,7 +429,7 @@ object TargetQueriesGQL {
     """
 
     object Data {
-      object EditTargets {
+      object UpdateTargets {
         type Targets = model.TargetWithId
       }
     }

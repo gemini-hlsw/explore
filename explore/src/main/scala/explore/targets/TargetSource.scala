@@ -34,8 +34,8 @@ protected object TargetSource {
         TargetQueriesGQL.TargetNameQuery
           .query(programId)
           .map { data =>
-            data.targetGroup.nodes
-              .map(node => TargetSearchResult(node.target.toOptId, none))
+            data.targetGroup.matches
+              .map(mtch => TargetSearchResult(mtch.target.toOptId, none))
               // TODO Remove the filter when the API has a name pattern query
               .filter(_.target.name.value.toLowerCase.startsWith(name.value.toLowerCase))
               .distinct

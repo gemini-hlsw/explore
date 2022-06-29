@@ -22,7 +22,7 @@ object ConstraintGroupQueriesGQL {
     val document = """
       query($programId: ProgramId!) {
         constraintSetGroup(programId: $programId) {
-          nodes {
+          matches {
             constraintSet {
               cloudExtinction
               imageQuality
@@ -40,15 +40,15 @@ object ConstraintGroupQueriesGQL {
               }
             }
             observations {
-              nodes {
+              matches {
                 id
               }
             }
           }
         }
 
-        observations(programId: $programId) {
-          nodes {
+        observations(WHERE: {programId: {EQ: $programId}}) {
+          matches {
             id
             title
             subtitle
@@ -82,11 +82,11 @@ object ConstraintGroupQueriesGQL {
 
     object Data {
       object ConstraintSetGroup {
-        type Nodes = model.ConstraintGroup
+        type Matches = model.ConstraintGroup
       }
 
       object Observations {
-        object Nodes {
+        object Matches {
           object PlannedTime {
             type Execution = time.Duration
           }
