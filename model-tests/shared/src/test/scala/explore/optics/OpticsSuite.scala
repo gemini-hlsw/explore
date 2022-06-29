@@ -7,6 +7,7 @@ import cats.kernel.Eq
 import explore.model.ScienceModeAdvanced.GmosSouthLongSlit
 import explore.model.arb.ArbScienceModeAdvanced._
 import explore.optics._
+import explore.optics.all._
 import lucuma.core.util.arb.ArbEnumerated._
 import monocle.Focus
 import monocle.Lens

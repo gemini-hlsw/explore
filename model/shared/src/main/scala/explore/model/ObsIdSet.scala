@@ -22,7 +22,8 @@ object ObsIdSet {
   val iso: Iso[ObsIdSet, NonEmptySet[Observation.Id]] =
     Iso[ObsIdSet, NonEmptySet[Observation.Id]](_.idSet)(ObsIdSet.apply)
 
-  implicit def nonEmptySetWrapper(ids: ObsIdSet) = NonEmptySetWrapper(ids, iso)
+  implicit def nonEmptySetWrapper(ids: ObsIdSet): NonEmptySetWrapper[ObsIdSet, Observation.Id] =
+    NonEmptySetWrapper(ids, iso)
 
   def fromList(obsIds: List[Observation.Id]): Option[ObsIdSet] =
     NonEmptySet.fromSet(SortedSet.from(obsIds)).map(ObsIdSet.apply)

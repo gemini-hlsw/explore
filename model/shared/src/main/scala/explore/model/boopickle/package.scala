@@ -3,4 +3,4 @@
 
 package explore.model
 
-package object boopickle extends BoopicklePlatform {}
+// object boopickle extends BoopicklePlatform {}

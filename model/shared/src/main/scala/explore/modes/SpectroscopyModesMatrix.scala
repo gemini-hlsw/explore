@@ -6,8 +6,9 @@ package explore.modes
 import cats.data.NonEmptyList
 import cats.syntax.all._
 import coulomb._
-import coulomb.cats.implicits._
-import coulomb.refined._
+import coulomb.syntax.*
+import coulomb.ops.algebra.spire.all.given
+import coulomb.policy.spire.standard.given
 import eu.timepit.refined._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.collection.NonEmpty

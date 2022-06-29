@@ -9,7 +9,7 @@ import cats.syntax.all._
 import lucuma.core.model.Target
 import monocle._
 
-final case class Asterism private (private val targets: NonEmptyList[TargetWithId]) {
+final case class Asterism private[model] (private val targets: NonEmptyList[TargetWithId]) {
   def toSidereal: List[SiderealTargetWithId] =
     targets.traverse(_.toSidereal).foldMap(_.toList)
 

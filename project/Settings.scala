@@ -291,6 +291,11 @@ object Settings {
       deps(
         "edu.gemini" %%% "lucuma-react-common",
         "edu.gemini" %%% "lucuma-react-grid-layout",
+        "edu.gemini" %%% "lucuma-react-semantic-ui",
+        "edu.gemini" %%% "lucuma-react-clipboard",
+        "edu.gemini" %%% "lucuma-react-datepicker",
+        "edu.gemini" %%% "lucuma-react-highcharts",
+        "edu.gemini" %%% "lucuma-react-beautiful-dnd",
         "edu.gemini" %%% "lucuma-react-cats"
       )(lucumaReactVersion)
     )

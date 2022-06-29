@@ -29,8 +29,8 @@ ThisBuild / description                := "Explore"
 Global / onChangedBuildSource          := ReloadOnSourceChanges
 ThisBuild / scalafixDependencies ++= ClueGenerator.value ++ LucumaSchemas.value
 ThisBuild / scalafixScalaBinaryVersion := "2.13"
-ThisBuild / scalaVersion       := "3.1.3"
-ThisBuild / crossScalaVersions := Seq("3.1.3")
+ThisBuild / scalaVersion               := "3.1.3"
+ThisBuild / crossScalaVersions         := Seq("3.1.3")
 ThisBuild / scalacOptions ++= Seq(
   "-language:implicitConversions"
 )
@@ -157,13 +157,7 @@ lazy val explore: Project = project
     libraryDependencies ++=
       GeminiLocales.value ++
         ReactAladin.value ++
-        ReactBeautifulDnD.value ++
-        ReactCommon.value ++
-        ReactDatepicker.value ++
-        ReactGridLayout.value ++
-        ReactHighcharts.value ++
-        ReactHotkeys.value ++
-        ReactResizable.value,
+        LucumaReact.value,
     // Build workers when you build explore
     Compile / fastLinkJS := (Compile / fastLinkJS)
       .dependsOn(workers / Compile / fastLinkJS)
@@ -223,7 +217,6 @@ lazy val commonJsLibSettings = commonLibSettings ++ Seq(
       Http4sDom.value ++
       Log4Cats.value ++
       LucumaUI.value ++
-      ReactSemanticUI.value ++
       ScalaJSReact.value ++
       In(Test)(
         ScalaJSReactTest.value
