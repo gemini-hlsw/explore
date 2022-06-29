@@ -19,6 +19,7 @@ import explore.utils._
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
@@ -38,6 +39,7 @@ object AsterismEditorTile {
     potVizTime:      Pot[View[Option[Instant]]],
     posAngle:        Option[PosAngleConstraint],
     constraints:     Option[ConstraintSet],
+    wavelength:      Option[Wavelength],
     currentTarget:   Option[Target.Id],
     setTarget:       (Option[Target.Id], SetRouteVia) => Callback,
     otherObsCount:   Target.Id => Int,
@@ -67,6 +69,7 @@ object AsterismEditorTile {
               scienceMode,
               posAngle,
               constraints,
+              wavelength,
               currentTarget,
               setTarget,
               otherObsCount,

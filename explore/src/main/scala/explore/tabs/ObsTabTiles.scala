@@ -202,6 +202,7 @@ object ObsTabTiles {
           vizTimeView,
           posAngle,
           obsView.toOption.map(_.get.constraintSet),
+          obsView.toOption.flatMap(_.get.scienceRequirements.spectroscopy.wavelength),
           props.focusedTarget,
           Reuse(setCurrentTarget _)(props.programId, props.focusedObs),
           Reuse.currying(props.targetMap, props.obsId).in(otherObsCount _),

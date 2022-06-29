@@ -71,6 +71,7 @@ final case class SiderealTargetEditor(
   posAngle:      Option[PosAngleConstraint],
   scienceMode:   Option[ScienceMode],
   constraints:   Option[ConstraintSet],
+  wavelength:    Option[Wavelength],
   undoStacks:    View[UndoStacks[IO, Target.Sidereal]],
   searching:     View[Set[Target.Id]],
   obsIdSubset:   Option[ObsIdSet] = None,
@@ -270,7 +271,12 @@ object SiderealTargetEditor {
                 AladinCell(
                   props.uid,
                   props.id,
-                  ObsConfiguration(vizTime, props.scienceMode, props.posAngle, props.constraints),
+                  ObsConfiguration(vizTime,
+                                   props.scienceMode,
+                                   props.posAngle,
+                                   props.constraints,
+                                   props.wavelength
+                  ),
                   targetView.zoom(Target.Sidereal.tracking)
                 )
               )(vizTime),

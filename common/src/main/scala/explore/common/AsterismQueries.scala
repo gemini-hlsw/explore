@@ -75,7 +75,8 @@ object AsterismQueries {
       obsR.targetEnvironment.asterism.map(_.id).toSet,
       obsR.scienceMode,
       obsR.visualizationTime,
-      obsR.posAngleConstraint
+      obsR.posAngleConstraint,
+      obsR.scienceRequirements.spectroscopy.wavelength
     )
 
   private val queryToAsterismGroupWithObsGetter

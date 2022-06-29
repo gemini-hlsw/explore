@@ -36,7 +36,6 @@ import lucuma.core.enums.PortDisposition
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
-import lucuma.core.math.Wavelength
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
@@ -68,8 +67,6 @@ object AladinSettings {
 
 object AladinCell extends ModelOptics {
   type Props = AladinCell
-
-  val wavelength = Wavelength.fromNanometers(500).get
 
   val params  = AgsParams.GmosAgsParams(none, PortDisposition.Side)
   val basePos = AgsPosition(Angle.Angle0, Offset.Zero)
@@ -133,10 +130,15 @@ object AladinCell extends ModelOptics {
       }
       // analyzed targets
       .useMemoBy((p, _, _, _, candidates) =>
-        (p.target.get, p.obsConf.posAngleConstraint, p.obsConf.constraints, candidates.value)
+        (p.target.get,
+         p.obsConf.posAngleConstraint,
+         p.obsConf.constraints,
+         p.obsConf.wavelength,
+         candidates.value
+        )
       ) { (_, _, _, _, _) =>
         {
-          case (tracking, Some(posAngle), Some(constraints), Ready(candidates)) =>
+          case (tracking, Some(posAngle), Some(constraints), Some(wavelength), Ready(candidates)) =>
             val pa = posAngle match {
               case PosAngleConstraint.Fixed(a)               => a.some
               case PosAngleConstraint.AllowFlip(a)           => a.some
@@ -157,7 +159,7 @@ object AladinCell extends ModelOptics {
                 .sorted(AgsAnalysis.rankingOrdering)
 
             }.getOrElse(Nil)
-          case _                                                                => Nil
+          case _                                                                                  => Nil
         }
       }
       // open settings menu
