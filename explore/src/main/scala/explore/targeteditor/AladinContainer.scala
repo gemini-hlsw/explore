@@ -17,8 +17,8 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ags.AgsAnalysis
-import lucuma.core.geom.jts.interpreter._
 import lucuma.core.enums.PortDisposition
+import lucuma.core.geom.jts.interpreter._
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset

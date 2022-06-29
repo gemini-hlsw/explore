@@ -5,13 +5,13 @@ package explore.model
 
 import cats.Eq
 import eu.timepit.refined.cats._
+import lucuma.core.math.Angle
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.PosAngleConstraint
 import monocle.Focus
 import org.typelevel.cats.time.instantInstances
 
 import java.time.Instant
-import lucuma.core.math.Angle
 
 case class ObsConfiguration(
   vizTime:            Instant,
