@@ -25,8 +25,9 @@ object Settings {
     val lucumaBC            = "0.4.0"
     val lucumaCore          = "0.41-8517424-SNAPSHOT"
     val lucumaCatalog       = "0.19.0-8-69469e5-SNAPSHOT"
-    val lucumaUI            = "0.36.6"
+    val lucumaUI            = "0.37-c649a1f-SNAPSHOT"
     val lucumaSchemas       = "0.30.0-1-52f225f-SNAPSHOT"
+    val lucumaReactVersion  = "1.0-7e5ce9c-SNAPSHOT"
     val lucumaSSO           = "0.1.11"
     val monocle             = "3.1.0"
     val mouse               = "1.1.0"
@@ -89,8 +90,7 @@ object Settings {
       deps(
         "io.circe" %%% "circe-core",
         "io.circe" %%% "circe-generic",
-        "io.circe" %%% "circe-parser",
-        "io.circe" %%% "circe-generic-extras"
+        "io.circe" %%% "circe-parser"
       )(circe)
     )
 
@@ -285,6 +285,14 @@ object Settings {
         "io.github.cquiroz.react" %%% "common",
         "io.github.cquiroz.react" %%% "cats"
       )(reactCommon)
+    )
+
+    val LucumaReact = Def.setting(
+      deps(
+        "edu.gemini" %%% "lucuma-react-common",
+        "edu.gemini" %%% "lucuma-react-grid-layout",
+        "edu.gemini" %%% "lucuma-react-cats"
+      )(lucumaReactVersion)
     )
 
     val ReactDatepicker = Def.setting(

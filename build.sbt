@@ -114,11 +114,11 @@ lazy val common = project
       LucumaSSO.value ++
         LucumaBC.value ++
         LucumaCatalog.value ++
-        ReactGridLayout.value ++
-        ReactClipboard.value ++
-        ReactCommon.value ++
-        ReactTable.value ++
-        ReactVirtuoso.value ++
+        LucumaReact.value ++
+        // ReactClipboard.value ++
+        // ReactCommon.value ++
+        // ReactTable.value ++
+        // ReactVirtuoso.value ++
         SecureRandom.value,
     buildInfoKeys    := Seq[BuildInfoKey](
       scalaVersion,
