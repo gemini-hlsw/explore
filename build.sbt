@@ -26,10 +26,14 @@ addCommandAlias(
 )
 
 ThisBuild / description                := "Explore"
-ThisBuild / scalacOptions += "-Ymacro-annotations"
 Global / onChangedBuildSource          := ReloadOnSourceChanges
 ThisBuild / scalafixDependencies ++= ClueGenerator.value ++ LucumaSchemas.value
 ThisBuild / scalafixScalaBinaryVersion := "2.13"
+ThisBuild / scalaVersion       := "3.1.3"
+ThisBuild / crossScalaVersions := Seq("3.1.3")
+ThisBuild / scalacOptions ++= Seq(
+  "-language:implicitConversions"
+)
 
 val stage = taskKey[Unit]("Prepare static files to deploy to Heroku")
 
