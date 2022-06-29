@@ -374,10 +374,11 @@ object TargetTabContents {
                                                      _,
                                                      Some(sm),
                                                      _,
-                                                     Some(posAngle)
+                                                     Some(posAngle),
+                                                     Some(wavelength)
                     )
                   ) if k === id =>
-                (const.withDefaultElevationRange, sm, posAngle)
+                (const.withDefaultElevationRange, sm, posAngle, wavelength)
             }
             .headOption
         case _        => None
@@ -386,6 +387,7 @@ object TargetTabContents {
       val constraints = obsConf.map(_._1)
       val scienceMode = obsConf.map(_._2)
       val posAngle    = obsConf.map(_._3)
+      val wavelength  = obsConf.map(_._4)
 
       def setCurrentTarget(programId: Program.Id, oids: ObsIdSet)(
         tid:                          Option[Target.Id],
@@ -402,6 +404,7 @@ object TargetTabContents {
           Pot(vizTimeView),
           posAngle,
           constraints,
+          wavelength,
           props.focusedTarget,
           setCurrentTarget(props.programId, idsToEdit) _,
           otherObsCount(targetMap, idsToEdit) _,

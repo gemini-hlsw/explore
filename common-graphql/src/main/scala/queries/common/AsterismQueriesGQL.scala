@@ -230,6 +230,13 @@ object AsterismQueriesGQL {
                 id
               }
             }
+            scienceRequirements {
+              spectroscopy {
+                wavelength {
+                  picometers
+                }
+              }
+            }
             scienceMode {
               gmosNorthLongSlit {
                 basic {
@@ -263,6 +270,12 @@ object AsterismQueriesGQL {
           type ScienceMode = model.ScienceMode
           object PlannedTime {
             type Execution = time.Duration
+          }
+
+          object ScienceRequirements {
+            object Spectroscopy {
+              type Wavelength = lucuma.core.math.Wavelength
+            }
           }
         }
       }

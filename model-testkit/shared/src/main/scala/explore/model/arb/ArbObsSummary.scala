@@ -21,11 +21,13 @@ import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.arb.ArbTime
 import lucuma.core.model.arb.ArbPosAngleConstraint._
+import lucuma.core.math.arb.ArbWavelength._
 import lucuma.core.util.arb.ArbGid._
 import lucuma.core.util.arb.ArbEnumerated._
 import java.time.Duration
 import java.time.Instant
 import lucuma.core.model.PosAngleConstraint
+import lucuma.core.math.Wavelength
 
 trait ArbObsSummary {
   import ArbConstraintsSummary._
@@ -199,6 +201,7 @@ trait ArbObsSummary {
         mode         <- arbitrary[Option[ScienceMode]]
         vizTime      <- arbitrary[Option[Instant]]
         pa           <- arbitrary[Option[PosAngleConstraint]]
+        wv           <- arbitrary[Option[Wavelength]]
       } yield ObsSummaryWithConstraintsAndConf(
         id,
         constraints,
@@ -208,7 +211,8 @@ trait ArbObsSummary {
         targets,
         mode,
         vizTime,
-        pa
+        pa,
+        wv
       )
     }
 
@@ -221,7 +225,9 @@ trait ArbObsSummary {
        Duration,
        Option[ScienceMode],
        List[Target.Id],
-       Option[Instant]
+       Option[Instant],
+       Option[PosAngleConstraint],
+       Option[Wavelength]
       )
     ]
       .contramap(o =>
@@ -232,7 +238,9 @@ trait ArbObsSummary {
          o.duration,
          o.scienceMode,
          o.scienceTargetIds.toList,
-         o.visualizationTime
+         o.visualizationTime,
+         o.posAngleConstraint,
+         o.wavelength
         )
       )
 

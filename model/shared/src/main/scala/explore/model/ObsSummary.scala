@@ -10,6 +10,7 @@ import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.enums.ObsActiveStatus
 import lucuma.core.enums.ObsStatus
+import lucuma.core.math.Wavelength
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target
@@ -183,7 +184,8 @@ case class ObsSummaryWithConstraintsAndConf(
   scienceTargetIds:               Set[Target.Id],
   override val scienceMode:       Option[ScienceMode],
   override val visualizationTime: Option[Instant],
-  posAngleConstraint:             Option[PosAngleConstraint]
+  posAngleConstraint:             Option[PosAngleConstraint],
+  wavelength:                     Option[Wavelength]
 ) extends ObsSummary
     with ObsWithConstraints
     with ObsWithVizTime
