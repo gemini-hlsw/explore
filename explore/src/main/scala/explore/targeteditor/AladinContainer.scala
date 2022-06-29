@@ -17,11 +17,11 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ags.AgsAnalysis
+import lucuma.core.geom.jts.interpreter._
 import lucuma.core.enums.PortDisposition
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
-import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.SiderealTracking
 import lucuma.ui.reusability._
 import org.scalajs.dom.Element
@@ -87,20 +87,13 @@ object AladinContainer {
       .useRefToScalaComponent(AladinComp)
       // Memoized svg
       .useMemoBy((p, _, _, _) =>
-        (p.obsConf.scienceMode, p.obsConf.posAngleConstraint, p.options, p.selectedGuideStar)
+        (p.obsConf.scienceMode, p.obsConf.posAngle, p.options, p.selectedGuideStar)
       ) {
         case (_, baseCoordinates, _, _) => { case (mode, posAngle, options, gs) =>
-          val pa = posAngle
-            .collect {
-              case PosAngleConstraint.Fixed(a)               => a
-              case PosAngleConstraint.AllowFlip(a)           => a
-              case PosAngleConstraint.ParallacticOverride(a) => a
-            }
-
           val candidatesVisibility =
             ExploreStyles.GuideStarCandidateVisible.when_(options.agsCandidates.visible)
 
-          val probeArmShapes = (gs, pa).mapN { case (c, posAngle) =>
+          val probeArmShapes = (gs, posAngle).mapN { case (c, posAngle) =>
             val gsOffset = baseCoordinates.diff(c.target.tracking.baseCoordinates).offset
             GmosGeometry.probeShapes(posAngle,
                                      gsOffset,
@@ -111,7 +104,7 @@ object AladinContainer {
             )
           }
 
-          val shapes = pa
+          val shapes = posAngle
             .map { posAngle =>
               val baseShapes =
                 GmosGeometry.shapesForMode(posAngle, mode, PortDisposition.Side) ++
@@ -147,42 +140,68 @@ object AladinContainer {
       .useMemoBy((props, _, _, _, _, _) =>
         (props.guideStarCandidates,
          props.options.agsCandidates.visible,
-         props.obsConf.hasPosAngleConstraint,
+         props.obsConf.posAngle,
          props.obsConf.vizTime,
+         props.obsConf.scienceMode,
          props.selectedGuideStar
         )
-      ) { (_, _, _, _, _, _) =>
-        { case (candidates, visible, confPresent, obsInstant, selectedGS) =>
-          if (confPresent) {
-            val candidatesVisibility =
-              ExploreStyles.GuideStarCandidateVisible.when_(visible)
+      ) { (_, baseCoordinates, _, _, _, _) =>
+        { case (candidates, visible, posAngle, obsInstant, scienceMode, selectedGS) =>
+          posAngle
+            .map { posAngle =>
+              val candidatesVisibility =
+                ExploreStyles.GuideStarCandidateVisible.when_(visible)
 
-            val selectedGSTarget = selectedGS
-              .flatMap(_.target.tracking.at(obsInstant))
-              .map(c => SVGTarget.GuideStarTarget(c, Css.Empty, 5))
+              val selectedGSTarget = selectedGS
+                .flatMap(_.target.tracking.at(obsInstant))
+                .map(c => SVGTarget.GuideStarTarget(c, Css.Empty, 4))
 
-            candidates
-              .filterNot(x => selectedGS.exists(_.target.id === x.target.id))
-              .flatMap { g =>
-                val tracking           = g.target.tracking
-                val targetEpoch        = tracking.epoch.epochYear.round
-                // Approximate to the midddle of the yaer
-                val targetEpochInstant =
-                  LocalDate.of(targetEpoch.toInt, 6, 1).atStartOfDay(ZoneId.of("UTC")).toInstant()
+              val patrolField =
+                GmosGeometry.patrolField(posAngle, scienceMode, PortDisposition.Side).map(_.eval)
 
-                (tracking.at(targetEpochInstant), tracking.at(obsInstant)).mapN { (source, dest) =>
-                  List[SVGTarget](
-                    SVGTarget.GuideStarCandidateTarget(dest, candidatesVisibility, 3),
-                    SVGTarget.LineTo(
-                      source,
-                      dest,
-                      ExploreStyles.PMGSCorrectionLine |+| candidatesVisibility
-                    )
-                  )
+              candidates
+                .filterNot(x => selectedGS.exists(_.target.id === x.target.id))
+                .flatMap { g =>
+                  val tracking           = g.target.tracking
+                  val targetEpoch        = tracking.epoch.epochYear.round
+                  // Approximate to the midddle of the yaer
+                  val targetEpochInstant =
+                    LocalDate.of(targetEpoch.toInt, 6, 1).atStartOfDay(ZoneId.of("UTC")).toInstant()
+
+                  (tracking.at(targetEpochInstant), tracking.at(obsInstant)).mapN {
+                    (source, dest) =>
+                      val offset   = baseCoordinates.diff(dest).offset
+                      val extraCss =
+                        if (patrolField.exists(_.contains(offset)))
+                          ExploreStyles.GuideStarTargetReachable
+                        else Css.Empty
+                      if (candidates.length < 500) {
+                        List[SVGTarget](
+                          SVGTarget.GuideStarCandidateTarget(dest,
+                                                             extraCss |+| candidatesVisibility,
+                                                             3
+                          ),
+                          SVGTarget.LineTo(
+                            source,
+                            dest,
+                            ExploreStyles.PMGSCorrectionLine |+| candidatesVisibility
+                          )
+                        )
+                      } else {
+                        List[SVGTarget](
+                          SVGTarget.GuideStarCandidateTarget(
+                            dest,
+                            ExploreStyles.GuideStarCandidateCrowded |+| extraCss |+| candidatesVisibility,
+                            2
+                          )
+                        )
+                      }
+                  }
                 }
-              }
-              .flatten ++ selectedGSTarget.toList
-          } else Nil
+                .flatten ++ selectedGSTarget.toList
+            }
+            .getOrElse(Nil)
+
         }
       }
       // Use fov from aladin

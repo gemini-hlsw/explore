@@ -11,6 +11,7 @@ import monocle.Focus
 import org.typelevel.cats.time.instantInstances
 
 import java.time.Instant
+import lucuma.core.math.Angle
 
 case class ObsConfiguration(
   vizTime:            Instant,
@@ -19,6 +20,13 @@ case class ObsConfiguration(
   constraints:        Option[ConstraintSet]
 ) {
   def hasPosAngleConstraint: Boolean = posAngleConstraint.isDefined
+  def canSelectGuideStar: Boolean    =
+    hasPosAngleConstraint && scienceMode.isDefined && constraints.isDefined
+  def posAngle: Option[Angle]        = posAngleConstraint.collect {
+    case PosAngleConstraint.Fixed(a)               => a
+    case PosAngleConstraint.AllowFlip(a)           => a
+    case PosAngleConstraint.ParallacticOverride(a) => a
+  }
 }
 
 object ObsConfiguration {

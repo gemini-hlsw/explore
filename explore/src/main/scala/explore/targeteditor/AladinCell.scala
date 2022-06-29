@@ -164,11 +164,10 @@ object AladinCell extends ModelOptics {
       .useState(false)
       // Selected GS index. Should be stored in the db
       .useStateView(none[Int])
-      .useEffectWithDepsBy((_, _, _, _, _, agsResults, _, _) => agsResults) {
-        (_, _, _, _, _, agsResults, _, selectedIndex) => _ =>
-          Callback.log("Reset seeleection ") *> selectedIndex.set(
-            0.some.filter(_ => agsResults.nonEmpty)
-          )
+      // Reset the selected gs if results chage
+      .useEffectWithDepsBy((p, _, _, _, _, agsResults, _, _) => (agsResults, p.obsConf)) {
+        (p, _, _, _, _, agsResults, _, selectedIndex) => _ =>
+          selectedIndex.set(0.some.filter(_ => agsResults.nonEmpty && p.obsConf.canSelectGuideStar))
       }
       .render {
         (props, mouseCoords, options, center, gsc, agsResults, openSettings, selectedGSIndex) =>
