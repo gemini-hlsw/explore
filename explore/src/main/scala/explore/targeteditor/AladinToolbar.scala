@@ -10,7 +10,6 @@ import explore.model.enums.Visible
 import explore.model.formats._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.ags.AgsAnalysis
 import lucuma.ags.GuideStarCandidate
 import lucuma.core.math._
 import react.aladin.Fov
@@ -28,8 +27,7 @@ final case class AladinToolbar(
   fov:                 Fov,
   current:             Coordinates,
   loadingGSCandidates: Option[Boolean], // None is an error
-  selectedGSIndex:     View[Int],
-  guideStarCandidates: List[(GuideStarCandidate, AgsAnalysis)],
+  selectedGuideStar:   Option[GuideStarCandidate],
   center:              View[Boolean],
   agsOverlay:          Visible
 ) extends ReactFnProps[AladinToolbar](AladinToolbar.component)
@@ -39,8 +37,6 @@ object AladinToolbar {
 
   val component =
     ScalaFnComponent[Props] { props =>
-      val selected = props.guideStarCandidates.lift(props.selectedGSIndex.get)
-
       React.Fragment(
         Label(
           icon = Icons.Maximize.clazz(ExploreStyles.Accented),
@@ -66,7 +62,9 @@ object AladinToolbar {
         ),
         <.div(
           ExploreStyles.AladinGuideStar,
-          selected.map { case (g, _) => s"GS: ${g.name.value}" }.unless(props.agsOverlay.visible)
+          props.selectedGuideStar
+            .map { case g => s"GS: ${g.name.value}" }
+            .unless(props.agsOverlay.visible)
         ),
         Label(
           icon = Icons.MousePointer.clazz(ExploreStyles.Accented),

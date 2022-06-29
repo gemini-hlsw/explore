@@ -5,6 +5,7 @@ package explore.model
 
 import cats.Eq
 import eu.timepit.refined.cats._
+import lucuma.core.math.Angle
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.PosAngleConstraint
 import monocle.Focus
@@ -19,6 +20,13 @@ case class ObsConfiguration(
   constraints:        Option[ConstraintSet]
 ) {
   def hasPosAngleConstraint: Boolean = posAngleConstraint.isDefined
+  def canSelectGuideStar: Boolean    =
+    hasPosAngleConstraint && scienceMode.isDefined && constraints.isDefined
+  def posAngle: Option[Angle]        = posAngleConstraint.collect {
+    case PosAngleConstraint.Fixed(a)               => a
+    case PosAngleConstraint.AllowFlip(a)           => a
+    case PosAngleConstraint.ParallacticOverride(a) => a
+  }
 }
 
 object ObsConfiguration {

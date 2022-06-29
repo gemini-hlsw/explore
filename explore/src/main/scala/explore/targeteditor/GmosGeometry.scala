@@ -54,6 +54,21 @@ object GmosGeometry {
         )
     }
 
+  // Shape for the patrol field
+  def patrolField(
+    posAngle: Angle,
+    mode:     Option[ScienceMode],
+    port:     PortDisposition
+  ): Option[ShapeExpression] =
+    mode match {
+      case Some(ScienceMode.GmosNorthLongSlit(ScienceModeBasic.GmosNorthLongSlit(_, _, fpu), _)) =>
+        gmos.probeArm.patrolFieldAt(posAngle, Offset.Zero, fpu.asLeft.some, port).some
+      case Some(ScienceMode.GmosSouthLongSlit(ScienceModeBasic.GmosSouthLongSlit(_, _, fpu), _)) =>
+        gmos.probeArm.patrolFieldAt(posAngle, Offset.Zero, fpu.asRight.some, port).some
+      case _                                                                                     =>
+        none
+    }
+
   // Shape to display always
   def commonShapes(posAngle: Angle, extraCss: Css): NonEmptyMap[Css, ShapeExpression] =
     NonEmptyMap.of(

@@ -9,7 +9,6 @@ import explore.model.Asterism
 import explore.undo.UndoStacks
 import japgolly.scalajs.react.ReactCats._
 import japgolly.scalajs.react.Reusability
-import lucuma.ags.AgsAnalysis
 import lucuma.ags.AgsParams
 import lucuma.ags.AgsPosition
 import lucuma.ags.GuideStarCandidate
@@ -87,12 +86,12 @@ object reusability {
   implicit val catalogResultsReuse: Reusability[CatalogResults]                 = Reusability.by(_.candidates)
   implicit val agsPositionReuse: Reusability[AgsPosition]                       = Reusability.byEq
   implicit val agsParamsReuse: Reusability[AgsParams]                           = Reusability.byEq
-  implicit val agsAnalysisReuse: Reusability[AgsAnalysis]                       = Reusability.byEq
 
   implicit val partnerSplitsReuse: Reusability[SortedMap[Partner, IntPercent]] =
     Reusability.by((_: SortedMap[Partner, IntPercent]).toMap)(Reusability.map)
   implicit val proposalClassReuse: Reusability[ProposalClass]                  = Reusability.byEq
   implicit val proposalReuse: Reusability[Proposal]                            = Reusability.byEq
+  implicit val obsConfReuse: Reusability[ObsConfiguration]                     = Reusability.byEq
 
   implicit val existenceReuse: Reusability[Existence] = Reusability.byEq
 }

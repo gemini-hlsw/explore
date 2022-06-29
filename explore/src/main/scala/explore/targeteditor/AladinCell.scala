@@ -154,7 +154,7 @@ object AladinCell extends ModelOptics {
                                  params,
                                  candidates
                 )
-                .sortBy(_._2)
+                .sorted(AgsAnalysis.rankingOrdering)
 
             }.getOrElse(Nil)
           case _                                                                => Nil
@@ -163,9 +163,14 @@ object AladinCell extends ModelOptics {
       // open settings menu
       .useState(false)
       // Selected GS index. Should be stored in the db
-      .useStateView(0)
+      .useStateView(none[Int])
+      // Reset the selected gs if results chage
+      .useEffectWithDepsBy((p, _, _, _, _, agsResults, _, _) => (agsResults, p.obsConf)) {
+        (p, _, _, _, _, agsResults, _, selectedIndex) => _ =>
+          selectedIndex.set(0.some.filter(_ => agsResults.nonEmpty && p.obsConf.canSelectGuideStar))
+      }
       .render {
-        (props, mouseCoords, options, center, gsc, agsResults, openSettings, selectedIndex) =>
+        (props, mouseCoords, options, center, gsc, agsResults, openSettings, selectedGSIndex) =>
           implicit val ctx = props.ctx
 
           val agsCandidatesView =
@@ -248,6 +253,9 @@ object AladinCell extends ModelOptics {
 
           val aladinKey = s"${props.target.get}"
 
+          val selectedGuideStar = selectedGSIndex.get.flatMap(agsResults.lift)
+          val usableGuideStar   = selectedGuideStar.exists(_.isUsable)
+
           val renderCell: TargetVisualOptions => VdomNode = (t: TargetVisualOptions) =>
             AladinContainer(
               props.target,
@@ -257,7 +265,7 @@ object AladinCell extends ModelOptics {
               fovSetter.reuseAlways,
               offsetSetter.reuseAlways,
               center,
-              selectedIndex.get,
+              selectedGuideStar,
               agsResults
             ).withKey(aladinKey)
 
@@ -268,15 +276,12 @@ object AladinCell extends ModelOptics {
             case _       => false.some
           }
 
-          val usableGuideStar = agsResults.lift(selectedIndex.get).exists(_._2.isUsable)
-
           val renderToolbar: TargetVisualOptions => VdomNode =
             (t: TargetVisualOptions) =>
               AladinToolbar(Fov.square(t.fovAngle),
                             mouseCoords.value,
                             catalogLoading,
-                            selectedIndex,
-                            agsResults,
+                            selectedGuideStar.map(_.target),
                             center,
                             t.agsOverlay
               ): VdomNode
@@ -287,8 +292,9 @@ object AladinCell extends ModelOptics {
                 <.div(
                   ExploreStyles.AgsOverlay,
                   AgsOverlay(
-                    selectedIndex,
-                    agsResults
+                    selectedGSIndex,
+                    agsResults.count(_.isUsable),
+                    selectedGuideStar
                   )
                 )
               } else EmptyVdom
