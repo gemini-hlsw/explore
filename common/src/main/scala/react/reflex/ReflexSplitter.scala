@@ -52,9 +52,9 @@ object ReflexSplitter {
   ): Props = {
     val p = (new js.Object).asInstanceOf[Props]
     propagate.foreach(v => p.propagate = v)
-    onStartResize.toJs.foreach(v => p.onStartResize = v)
-    onStopResize.toJs.foreach(v => p.onStopResize = v)
-    onResize.toJs.foreach(v => p.onResize = v)
+    onStartResize.foreach(_ => p.onStartResize = onStartResize.toJs)
+    onStopResize.foreach(_ => p.onStopResize = onStopResize.toJs)
+    onResize.foreach(_ => p.onResize = onResize.toJs)
     clazz.foreach(v => p.className = v.htmlClass)
     p
   }

@@ -9,7 +9,7 @@ import cats.effect.Resource
 import cats.effect.Sync
 import cats.effect.std.Dispatcher
 import cats.syntax.all._
-import explore.model.boopickle._
+import explore.model.boopickle.Boopickle._
 import fs2.Stream
 import fs2.concurrent.Channel
 import org.scalajs.dom

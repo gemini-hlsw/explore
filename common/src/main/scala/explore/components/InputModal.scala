@@ -19,6 +19,8 @@ import react.semanticui.elements.button.Button
 import react.semanticui.modules.modal._
 import react.semanticui.shorthand._
 import react.semanticui.sizes.Small
+import scala.language.implicitConversions
+import scala.scalajs.js.|
 
 /**
  * Generic component to accept user input
@@ -46,7 +48,7 @@ object InputModal {
     def render(props: Props, state: State) = {
       val valueView = View.fromState($).zoom(State.inputValue)
 
-      val cleanInput = $.setStateL(State.inputValue)("")
+      val cleanInput: Callback | Unit = $.setStateL(State.inputValue)("")
 
       Modal(
         as = <.form,      // This lets us sumbit on enter
@@ -56,9 +58,11 @@ object InputModal {
             primary = true,
             disabled = state.inputValue.isEmpty,
             icon = true,
-            onClick = cleanInput *> props.onComplete(
-              NonEmptyString.from(state.inputValue).getOrElse("------")
-            )
+            onClick = cleanInput
+            /*  > props.onComplete(
+
+              NonEmptyString.from(state.inputValue).getOrElse("------")*/
+            /// )
           )(
             Icons.Checkmark,
             props.okLabel

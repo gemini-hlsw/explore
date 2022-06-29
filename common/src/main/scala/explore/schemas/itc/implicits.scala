@@ -12,7 +12,7 @@ import explore.model.TargetWithId
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
-import explore.optics.ModelOptics._
+import explore.optics.all._
 import lucuma.core.math.BrightnessUnits._
 import lucuma.core.math._
 import lucuma.core.math.dimensional.Measure
