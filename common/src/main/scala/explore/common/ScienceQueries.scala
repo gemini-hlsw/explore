@@ -25,6 +25,7 @@ import lucuma.core.optics.syntax.lens._
 import lucuma.schemas.ObservationDB.Types._
 import monocle.Lens
 import queries.common.ObsQueriesGQL._
+import queries.schemas.implicits._
 
 object ScienceQueries {
 
@@ -40,11 +41,11 @@ object ScienceQueries {
       scienceRequirementsUndo
         .undoableView(modelGet, modelMod)
         .withOnMod(value =>
-          EditObservationMutation
+          UpdateObservationMutation
             .execute(
-              EditObservationsInput(
-                select = ObservationSelectInput(observationIds = List(obsId).assign),
-                patch = ObservationPropertiesInput(scienceRequirements =
+              UpdateObservationsInput(
+                WHERE = obsId.toWhereObservation.assign,
+                SET = ObservationPropertiesInput(scienceRequirements =
                   remoteSet(value)(ScienceRequirementsInput()).assign
                 )
               )

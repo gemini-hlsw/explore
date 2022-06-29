@@ -18,6 +18,7 @@ import lucuma.ui.reusability._
 import monocle.Focus
 import monocle.Lens
 import queries.common.ProgramQueriesGQL._
+import queries.schemas.implicits._
 
 object ProgramQueries {
   final case class ProgramInfo(id: Program.Id, name: Option[NonEmptyString], deleted: Boolean)
@@ -32,7 +33,7 @@ object ProgramQueries {
 
   implicit class ProgramsQueryDataOps(val self: ProgramsQuery.Data.type) extends AnyVal {
     def asProgramInfoList: ProgramsQuery.Data => List[ProgramInfo] =
-      _.programs.nodes.map(p => ProgramInfo(p.id, p.name, p.existence === Existence.Deleted))
+      _.programs.matches.map(p => ProgramInfo(p.id, p.name, p.existence === Existence.Deleted))
   }
 
   def createProgram[F[_]: Async](name: Option[NonEmptyString])(implicit
@@ -40,18 +41,18 @@ object ProgramQueries {
   ): F[ProgramInfo] =
     CreateProgramMutation
       .execute[F](
-        CreateProgramInput(properties = ProgramPropertiesInput(name = name.orIgnore).assign)
+        CreateProgramInput(SET = ProgramPropertiesInput(name = name.orIgnore).assign)
       )
       .map(p => ProgramInfo(p.createProgram.program.id, p.createProgram.program.name, false))
 
   def deleteProgram[F[_]: Async](id: Program.Id)(implicit
     c:                               TransactionalClient[F, ObservationDB]
   ): F[Unit] =
-    EditProgramMutation
+    UpdateProgramsMutation
       .execute[F](
-        EditProgramInput(
-          select = ProgramSelectInput(programId = id.assign),
-          patch = ProgramPropertiesInput(existence = Existence.Deleted.assign)
+        UpdateProgramsInput(
+          WHERE = id.toWhereProgram.assign,
+          SET = ProgramPropertiesInput(existence = Existence.Deleted.assign)
         )
       )
       .void
@@ -59,11 +60,11 @@ object ProgramQueries {
   def undeleteProgram[F[_]: Async](id: Program.Id)(implicit
     c:                                 TransactionalClient[F, ObservationDB]
   ): F[Unit] =
-    EditProgramMutation
+    UpdateProgramsMutation
       .execute[F](
-        EditProgramInput(
-          select = ProgramSelectInput(programId = id.assign),
-          patch = ProgramPropertiesInput(existence = Existence.Present.assign)
+        UpdateProgramsInput(
+          WHERE = id.toWhereProgram.assign,
+          SET = ProgramPropertiesInput(existence = Existence.Present.assign)
         )
       )
       .void
@@ -71,10 +72,11 @@ object ProgramQueries {
   def updateProgramName[F[_]: Async](id: Program.Id, name: Option[NonEmptyString])(implicit
     c:                                   TransactionalClient[F, ObservationDB]
   ): F[Unit] =
-    EditProgramMutation
+    UpdateProgramsMutation
       .execute[F](
-        EditProgramInput(select = ProgramSelectInput(programId = id.assign),
-                         patch = ProgramPropertiesInput(name = name.orUnassign)
+        UpdateProgramsInput(
+          WHERE = id.toWhereProgram.assign,
+          SET = ProgramPropertiesInput(name = name.orUnassign)
         )
       )
       .void

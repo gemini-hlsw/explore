@@ -17,6 +17,7 @@ import lucuma.core.model.Observation
 import lucuma.schemas.ObservationDB.Types._
 import monocle.Lens
 import queries.common.ObsQueriesGQL._
+import queries.schemas.implicits._
 
 object ConstraintsQueries {
   case class UndoView(
@@ -31,11 +32,11 @@ object ConstraintsQueries {
       undoCtx
         .undoableView(modelGet, modelMod)
         .withOnMod(value =>
-          EditObservationMutation
+          UpdateObservationMutation
             .execute(
-              EditObservationsInput(
-                select = ObservationSelectInput(observationIds = obsIds.assign),
-                patch = ObservationPropertiesInput(
+              UpdateObservationsInput(
+                WHERE = obsIds.toWhereObservation.assign,
+                SET = ObservationPropertiesInput(
                   constraintSet = remoteSet(value)(ConstraintSetInput()).assign
                 )
               )

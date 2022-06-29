@@ -28,6 +28,7 @@ import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.schemas.ObservationDB.Types._
 import queries.common.ObsQueriesGQL
+import queries.schemas.implicits._
 import react.common._
 
 final case class ConfigurationPanel(
@@ -105,14 +106,14 @@ object ConfigurationPanel {
         val modeAligner: Aligner[Option[model.ScienceMode], Input[ScienceModeInput]] =
           Aligner(
             props.scienceData,
-            EditObservationsInput(
-              select = ObservationSelectInput(observationIds = List(props.obsId).assign),
-              patch = ObservationPropertiesInput(scienceMode = ScienceModeInput().assign)
+            UpdateObservationsInput(
+              WHERE = props.obsId.toWhereObservation.assign,
+              SET = ObservationPropertiesInput(scienceMode = ScienceModeInput().assign)
             ),
-            (ObsQueriesGQL.EditObservationMutation.execute[IO] _).andThen(_.void)
+            (ObsQueriesGQL.UpdateObservationMutation.execute[IO] _).andThen(_.void)
           ).zoom(
             ScienceData.mode,
-            EditObservationsInput.patch.andThen(ObservationPropertiesInput.scienceMode).modify
+            UpdateObservationsInput.SET.andThen(ObservationPropertiesInput.scienceMode).modify
           )
 
         val optModeView: View[Option[model.ScienceMode]] =

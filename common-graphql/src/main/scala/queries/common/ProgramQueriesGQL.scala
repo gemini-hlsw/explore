@@ -17,9 +17,9 @@ object ProgramQueriesGQL {
   @GraphQL
   trait ProgramsQuery extends GraphQLOperation[ObservationDB] {
     val document: String = """
-      query($includeDeleted: Boolean!) {
-        programs(includeDeleted: $includeDeleted) {
-          nodes {
+      query($whereProgram: WhereProgram!) {
+        programs(WHERE: $whereProgram) {
+          matches {
             id
             name
             existence
@@ -44,11 +44,11 @@ object ProgramQueriesGQL {
   }
 
   @GraphQL
-  trait EditProgramMutation extends GraphQLOperation[ObservationDB] {
+  trait UpdateProgramsMutation extends GraphQLOperation[ObservationDB] {
     val document: String = """
-      mutation($input: EditProgramInput!) {
-        editProgram(input: $input) {
-          program {
+      mutation($input: UpdateProgramsInput!) {
+        updatePrograms(input: $input) {
+          programs {
             id
           }
         }

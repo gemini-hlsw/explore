@@ -19,9 +19,9 @@ object ManualSequenceGQL {
   @GraphQL
   trait SequenceSteps extends GraphQLOperation[ObservationDB] {
     val document = """
-      query($programId: ProgramId!) {
-        observations(programId: $programId, first: 1) {
-          nodes {
+      query($whereObservation: WhereObservation!) {
+        observations(WHERE: $whereObservation, LIMIT: 1) {
+          matches {
             config:manualConfig {
               instrument
               plannedTime {
@@ -260,7 +260,7 @@ object ManualSequenceGQL {
 
     object Data {
       object Observations {
-        object Nodes {
+        object Matches {
           type Config = ManualConfig
         }
       }

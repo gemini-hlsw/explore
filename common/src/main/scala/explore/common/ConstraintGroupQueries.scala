@@ -22,8 +22,8 @@ object ConstraintGroupQueries {
   // The default cats ordering for sorted set sorts by size first, then contents. That's not what we want.
   implicit val orderSortedSet: Order[ObsIdSet] = Order.by(_.toList)
 
-  type ObservationResult = ConstraintGroupObsQuery.Data.Observations.Nodes
-  val ObservationResult = ConstraintGroupObsQuery.Data.Observations.Nodes
+  type ObservationResult = ConstraintGroupObsQuery.Data.Observations.Matches
+  val ObservationResult = ConstraintGroupObsQuery.Data.Observations.Matches
 
   type ConstraintGroupList = SortedMap[ObsIdSet, ConstraintGroup]
   type ObsList             = SortedMap[Observation.Id, ObsSummaryWithTitleAndConf]
@@ -56,9 +56,9 @@ object ConstraintGroupQueries {
     : Getter[ConstraintGroupObsQuery.Data, ConstraintSummaryWithObervations] =
     data =>
       ConstraintSummaryWithObervations(
-        data.constraintSetGroup.nodes
+        data.constraintSetGroup.matches
           .toSortedMap(ConstraintGroup.obsIds.get),
-        data.observations.nodes
+        data.observations.matches
           .map(obsResultToSummary)
           .toSortedMap(ObsSummaryWithTitleAndConf.id.get)
       )

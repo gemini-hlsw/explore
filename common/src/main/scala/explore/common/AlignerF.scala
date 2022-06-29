@@ -134,7 +134,6 @@ trait AlignerF[F[_], B, S] { self =>
   def toOption[C](implicit ev: B =:= Option[C], ev2: Option[C] =:= B): Option[AlignerF[F, C, S]] =
     get.map { _ =>
       val bToC: B => C                 = _.get
-      // val modelMod: (C => C) => B => B = f => b => f.andThen(_.some)(b.get)
       val modelMod: (C => C) => B => B = f => _.map(f)
       zoom(bToC, modelMod, identity[S => S] _)
     }

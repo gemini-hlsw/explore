@@ -51,11 +51,11 @@ object ProposalTabContents {
   )(implicit ctx:    AppContextIO): Callback = {
     val proposal = Proposal.Default
     optProposalView.set(ProposalInfo(proposal.some, executionTime).some) >>
-      EditProgramMutation
+      UpdateProgramsMutation
         .execute[IO](
-          EditProgramInput(
-            select = ProgramSelectInput(programId = programId.assign),
-            patch = ProgramPropertiesInput(proposal = proposal.toInput.assign)
+          UpdateProgramsInput(
+            WHERE = programId.toWhereProgram.assign,
+            SET = ProgramPropertiesInput(proposal = proposal.toInput.assign)
           )
         )
         .void

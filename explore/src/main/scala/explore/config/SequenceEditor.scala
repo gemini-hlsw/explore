@@ -10,6 +10,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Program
 import queries.common.ManualSequenceGQL._
+import queries.schemas.implicits._
 import react.common._
 
 final case class SequenceEditor(programId: Program.Id)(implicit val ctx: AppContextIO)
@@ -18,7 +19,7 @@ final case class SequenceEditor(programId: Program.Id)(implicit val ctx: AppCont
 object SequenceEditor {
   type Props = SequenceEditor
 
-  private def renderFn(config: Option[SequenceSteps.Data.Observations.Nodes.Config]): VdomNode =
+  private def renderFn(config: Option[SequenceSteps.Data.Observations.Matches.Config]): VdomNode =
     config.fold[VdomNode](<.div("Default observation not found"))(ManualSequenceTables.apply)
 
   val component =
@@ -28,8 +29,8 @@ object SequenceEditor {
         implicit val ctx = props.ctx
 
         SequenceSteps
-          .query(props.programId)
-          .map(_.observations.nodes.headOption.flatMap(_.config))
+          .query(props.programId.toWhereObservation)
+          .map(_.observations.matches.headOption.flatMap(_.config))
       }
       .render((_, config) => potRender(renderFn)(config))
 }

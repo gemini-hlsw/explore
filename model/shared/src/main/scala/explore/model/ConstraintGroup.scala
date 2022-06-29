@@ -30,19 +30,19 @@ object ConstraintGroup {
   val constraintSet = Focus[ConstraintGroup](_.constraintSet)
   val obsIds        = Focus[ConstraintGroup](_.obsIds)
 
-  private case class ObsNode(id: Observation.Id)
+  private case class ObsMatch(id: Observation.Id)
   @unused("used but compiler can't figure it out")
-  private implicit val obsNodeDecoder: Decoder[ObsNode] = deriveDecoder
+  private implicit val obsMatchDecoder: Decoder[ObsMatch] = deriveDecoder
 
-  private case class ObsIdNodes(nodes: List[ObsNode])
-  private implicit val obsIdNodesDecoder: Decoder[ObsIdNodes] = deriveDecoder
+  private case class ObsIdMatches(matches: List[ObsMatch])
+  private implicit val obsIdMatchesDecoder: Decoder[ObsIdMatches] = deriveDecoder
 
   implicit val constraintGroupDecoder: Decoder[ConstraintGroup] =
     Decoder.instance(c =>
       for {
         cs     <- c.downField("constraintSet").as[ConstraintSet]
-        obsIds <- c.downField("observations").as[ObsIdNodes].map { o =>
-                    val ids = o.nodes.map(_.id)
+        obsIds <- c.downField("observations").as[ObsIdMatches].map { o =>
+                    val ids = o.matches.map(_.id)
                     ObsIdSet.of(ids.head, ids.tail: _*)
                   }
       } yield ConstraintGroup(cs, obsIds)
