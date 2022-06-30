@@ -53,6 +53,17 @@ object ObsQueriesGQL {
                   overrideGrating
                   overrideFilter
                   overrideFpu
+                  overrideExposureTimeMode {
+                    signalToNoise {
+                      value
+                    }
+                    fixedExposure {
+                      count
+                      time {
+                        microseconds
+                      }
+                    }
+                  }
                   explicitXBin
                   explicitYBin
                   explicitAmpReadMode
@@ -74,6 +85,17 @@ object ObsQueriesGQL {
                   overrideGrating
                   overrideFilter
                   overrideFpu
+                  overrideExposureTimeMode {
+                    signalToNoise {
+                      value
+                    }
+                    fixedExposure {
+                      count
+                      time {
+                        microseconds
+                      }
+                    }
+                  }
                   explicitXBin
                   explicitYBin
                   explicitAmpReadMode
@@ -467,6 +489,17 @@ object ObsQueriesGQL {
                 overrideGrating
                 overrideFilter
                 overrideFpu
+                overrideExposureTimeMode {
+                  signalToNoise {
+                    value
+                  }
+                  fixedExposure {
+                    count
+                    time {
+                      microseconds
+                    }
+                  }
+                }
                 explicitXBin
                 explicitYBin
                 explicitAmpReadMode
@@ -488,6 +521,17 @@ object ObsQueriesGQL {
                 overrideGrating
                 overrideFilter
                 overrideFpu
+                overrideExposureTimeMode {
+                  signalToNoise {
+                    value
+                  }
+                  fixedExposure {
+                    count
+                    time {
+                      microseconds
+                    }
+                  }
+                }
                 explicitXBin
                 explicitYBin
                 explicitAmpReadMode
