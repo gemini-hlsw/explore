@@ -182,7 +182,9 @@ lazy val commonLibSettings = Seq(
       Http4sCore.value ++
       LucumaCore.value ++
       LucumaSchemas.value ++
+      LucumaRefined.value ++
       LucumaAgs.value ++
+      RefinedAlgebra.value ++
       Monocle.value ++
       Mouse.value ++
       PPrint.value ++
@@ -205,10 +207,7 @@ lazy val testkitLibSettings = Seq(
 
 lazy val commonJVMSettings = Seq(
   libraryDependencies ++=
-    FS2IO.value ++
-      In(Test)(
-        CirceGolden.value
-      )
+    FS2IO.value
 )
 
 lazy val commonJsLibSettings = commonLibSettings ++ Seq(

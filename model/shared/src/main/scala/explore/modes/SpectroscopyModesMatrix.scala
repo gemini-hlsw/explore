@@ -4,11 +4,13 @@
 package explore.modes
 
 import cats.data.NonEmptyList
-import cats.syntax.all._
+import cats.implicits._
 import coulomb._
+import coulomb.cats.quantity.ctx_Quantity_Order
 import coulomb.syntax.*
 import coulomb.ops.algebra.spire.all.given
 import coulomb.policy.spire.standard.given
+import coulomb.conversion.spire.*
 import eu.timepit.refined._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.collection.NonEmpty
@@ -25,7 +27,9 @@ import monocle.Lens
 import monocle.macros.GenLens
 import spire.math.Interval
 import spire.math.Rational
-import spire.std.int._
+import _root_.refined.algebra._
+// import spire.std.int._
+// import spire.std.bigDecimal._
 
 sealed trait InstrumentRow {
   def instrument: Instrument

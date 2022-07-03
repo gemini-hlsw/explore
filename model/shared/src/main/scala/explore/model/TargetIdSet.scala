@@ -18,7 +18,8 @@ object TargetIdSet {
   val iso: Iso[TargetIdSet, NonEmptySet[Target.Id]] =
     Iso[TargetIdSet, NonEmptySet[Target.Id]](_.idSet)(TargetIdSet.apply)
 
-  implicit def nonEmptySetWrapper(ids: TargetIdSet) = NonEmptySetWrapper(ids, iso)
+  implicit def nonEmptySetWrapper(ids: TargetIdSet): NonEmptySetWrapper[TargetIdSet, Target.Id] =
+    NonEmptySetWrapper(ids, iso)
 
   def fromTargetIdList(targetIds: List[Target.Id]): Option[TargetIdSet] =
     targetIds match {

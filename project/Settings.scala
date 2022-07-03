@@ -6,50 +6,52 @@ import sbt.librarymanagement._
 object Settings {
 
   object LibraryVersions {
-    val cats                = "2.8.0"
-    val catsEffect          = "3.3.13"
-    val catsRetry           = "3.1.0"
-    val circe               = "0.14.2"
-    val circeGolden         = "0.3.0"
-    val clue                = "0.23.0"
-    val crystal             = "0.29.0"
-    val discipline          = "1.5.1"
-    val disciplineMUnit     = "1.0.9"
-    val fs2                 = "3.2.9"
-    val fs2Data             = "1.4.1"
-    val geminiLocales       = "0.7.0"
-    val http4s              = "0.23.13"
-    val http4sDom           = "0.2.3"
-    val log4Cats            = "2.3.2"
-    val log4CatsLogLevel    = "0.3.1"
-    val lucumaBC            = "0.4.0"
-    val lucumaCore          = "0.41-8517424-SNAPSHOT"
-    val lucumaCatalog       = "0.19.0-8-69469e5-SNAPSHOT"
-    val lucumaUI            = "0.37-c649a1f-SNAPSHOT"
-    val lucumaSchemas       = "0.30.0-1-52f225f-SNAPSHOT"
-    val lucumaReactVersion  = "1.0-7e5ce9c-SNAPSHOT"
-    val lucumaSSO           = "0.1.11"
-    val monocle             = "3.1.0"
-    val mouse               = "1.1.0"
-    val mUnit               = "0.7.29"
-    val mUnitCatsEffect     = "1.0.7"
-    val reactAladin         = "0.22.1"
-    val reactBeautifulDnD   = "0.4.2"
-    val reactClipboard      = "1.5.1"
-    val reactCommon         = "0.17.0"
-    val reactDatepicker     = "0.4.1"
-    val reactGridLayout     = "0.16.1"
-    val reactHighcharts     = "0.4.4"
-    val reactHotkeys        = "0.4.0"
-    val reactResizable      = "0.9.0"
-    val reactSemanticUI     = "0.15.1"
-    val reactTable          = "0.7.4"
-    val reactVirtuoso       = "0.2.2"
-    val scalaJsReact        = "2.1.1"
-    val pprint              = "0.7.3"
-    val scalaJSSecureRandom = "1.0.0"
-    var webAppUtil          = "2.0.0-RC2"
-    var boopickle           = "1.4.0"
+    val cats                      = "2.8.0"
+    val catsEffect                = "3.3.13"
+    val catsRetry                 = "3.1.0"
+    val circe                     = "0.14.2"
+    val circeGolden               = "0.3.0"
+    val clue                      = "0.23.0"
+    val crystal                   = "0.29.0"
+    val discipline                = "1.5.1"
+    val disciplineMUnit           = "1.0.9"
+    val fs2                       = "3.2.8"
+    val fs2Data                   = "1.4.1"
+    val geminiLocales             = "0.7.0"
+    val http4s                    = "0.23.13"
+    val http4sDom                 = "0.2.3"
+    val log4Cats                  = "2.3.2"
+    val log4CatsLogLevel          = "0.3.1"
+    val lucumaBC                  = "0.4.0"
+    val lucumaCore                = "0.41-8517424-SNAPSHOT"
+    val lucumaCatalog             = "0.19.0-8-69469e5-SNAPSHOT"
+    val lucumaUI                  = "0.37-c649a1f-SNAPSHOT"
+    val lucumaSchemas             = "0.30.0-1-52f225f-SNAPSHOT"
+    val lucumaReactVersion        = "1.0-7e5ce9c-SNAPSHOT"
+    lazy val lucumaRefinedVersion = "0.0-21cb1ca-SNAPSHOT"
+    val refinedAlgebraVersion     = "0.0-7d9e39d-SNAPSHOT"
+    val lucumaSSO                 = "0.1.11"
+    val monocle                   = "3.1.0"
+    val mouse                     = "1.1.0"
+    val mUnit                     = "0.7.29"
+    val mUnitCatsEffect           = "1.0.7"
+    val reactAladin               = "0.22.0"
+    val reactBeautifulDnD         = "0.4.2"
+    val reactClipboard            = "1.5.1"
+    val reactCommon               = "0.17.0"
+    val reactDatepicker           = "0.4.1"
+    val reactGridLayout           = "0.16.1"
+    val reactHighcharts           = "0.4.4"
+    val reactHotkeys              = "0.4.0"
+    val reactResizable            = "0.9.0"
+    val reactSemanticUI           = "0.15.1"
+    val reactTable                = "0.7.4"
+    val reactVirtuoso             = "0.2.2"
+    val scalaJsReact              = "2.1.1"
+    val pprint                    = "0.7.3"
+    val scalaJSSecureRandom       = "1.0.0"
+    var webAppUtil                = "2.0.0-RC2"
+    var boopickle                 = "1.4.0"
 
   }
 
@@ -181,6 +183,10 @@ object Settings {
       )
     )
 
+    val RefinedAlgebra = Def.setting(
+      Seq("edu.gemini" %%% "refined-algebra" % refinedAlgebraVersion)
+    )
+
     val LucumaBC = Def.setting(
       deps(
         "edu.gemini" %%% "lucuma-broadcast-channel"
@@ -197,6 +203,12 @@ object Settings {
       deps(
         "edu.gemini" %%% "lucuma-ags"
       )(lucumaCatalog)
+    )
+
+    val LucumaRefined = Def.setting(
+      deps(
+        "edu.gemini" %%% "lucuma-refined"
+      )(lucumaRefinedVersion)
     )
 
     val LucumaCore = Def.setting(

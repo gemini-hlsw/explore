@@ -40,10 +40,12 @@ object AppTab {
 }
 
 sealed trait AppModal[T <: AppTab] extends Product with Serializable
+
 object AppModal {
   case object AdvancedConf extends AppModal[AppTab.Observations.type]
 
   val all = NonEmptyList.of(AdvancedConf)
 
-  implicit val AppModalEnumerated: Enumerated[AppModal[_]] = Enumerated.of(all.head, all.tail: _*)
+  implicit def AppModalEnumerated[T <: AppTab]: Enumerated[AppModal[T]] =
+    Enumerated.of(AdvancedConf: AppModal[T])
 }

@@ -4,8 +4,10 @@
 package explore.model
 
 import cats.Eq
+import cats.syntax.all._
 import coulomb.Quantity
-import coulomb.cats.implicits._
+import coulomb.syntax.*
+import coulomb.cats.quantity.ctx_Quantity_Eq
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
