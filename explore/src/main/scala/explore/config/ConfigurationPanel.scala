@@ -148,7 +148,7 @@ object ConfigurationPanel {
             <.div(ExploreStyles.TitleUndoButtons)(UndoButtons(props.scienceData))
           ),
           if (!showAdvanced.get)
-            <.div(ExploreStyles.BasicConfigurationGrid)(
+            <.div(ExploreStyles.ConfigurationGrid)(
               ObsConfigurationPanel(props.obsId, posAngleView),
               BasicConfigurationPanel(
                 props.obsId,

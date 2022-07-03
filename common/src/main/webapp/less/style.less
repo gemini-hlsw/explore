@@ -1943,19 +1943,25 @@ html {
   color: lightgreen;
 }
 
-.explore-basic-configuration-grid {
+.explore-configuration-grid {
+  display: flex;
+  flex-direction: column;
   padding: 0.5em;
+  gap: 0.5em;
+  height: 100%;
+}
+
+.explore-basic-configuration-grid {
   min-height: 0;
+  height: 100%;
   display: grid;
-  grid-gap: 0.5em;
+  gap: 0.5em;
   grid-template-areas:
-    'obs-props obs-props'
     'form table-header'
     'form table'
     'form buttons';
   grid-template-columns: auto minmax(0, 1fr);
-  grid-template-rows: auto auto 1fr auto;
-  height: 100%;
+  grid-template-rows: auto 1fr auto;
 }
 
 .explore-advanced-configuration-grid {
@@ -1971,17 +1977,6 @@ html {
 .tile-sm-width,
 .tile-xxs-width,
 .tile-xs-width {
-  .explore-basic-configuration-grid {
-    grid-template-areas:
-      'obs-props'
-      'form'
-      'table-header'
-      'table'
-      'buttons';
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto 1fr auto;
-  }
-
   .explore-advanced-configuration-grid {
     grid-template-areas:
       'col1'
@@ -2034,7 +2029,6 @@ html {
   display: flex;
   justify-content: space-around;
 }
-
 
 .explore-configuration-input-with-units {
   display: flex;
@@ -2281,8 +2275,7 @@ html {
 
 .explore-basic-configuration-form {
   grid-area: form;
-  grid-row-start: 2;
-  grid-row-end: span 2;
+  grid-row-end: span 3;
 }
 
 .explore-modes-header {
