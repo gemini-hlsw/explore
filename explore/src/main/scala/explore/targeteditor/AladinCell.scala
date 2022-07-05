@@ -149,12 +149,12 @@ object AladinCell extends ModelOptics {
             pa.map { pa =>
               val basePos = AgsPosition(pa, Offset.Zero)
               Ags
-                .agsAnalysis[IO](constraints,
-                                 wavelength,
-                                 tracking.baseCoordinates,
-                                 basePos,
-                                 params,
-                                 candidates
+                .agsAnalysis(constraints,
+                             wavelength,
+                             tracking.baseCoordinates,
+                             basePos,
+                             params,
+                             candidates
                 )
                 .sorted(AgsAnalysis.rankingOrdering)
 
