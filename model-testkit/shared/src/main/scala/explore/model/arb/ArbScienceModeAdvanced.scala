@@ -27,16 +27,16 @@ trait ArbScienceModeAdvanced {
   implicit val arbGmosNorthLongSlitAdvanced: Arbitrary[ScienceModeAdvanced.GmosNorthLongSlit] =
     Arbitrary[ScienceModeAdvanced.GmosNorthLongSlit](
       for {
-        overrideGrating           <- arbitrary[Option[GmosNorthGrating]]
-        overrideFilter            <- arbitrary[Option[GmosNorthFilter]]
-        overrideFpu               <- arbitrary[Option[GmosNorthFpu]]
-        explicitXBin              <- arbitrary[Option[GmosXBinning]]
-        explicitYBin              <- arbitrary[Option[GmosYBinning]]
-        explicitAmpReadMode       <- arbitrary[Option[GmosAmpReadMode]]
-        explicitAmpGain           <- arbitrary[Option[GmosAmpGain]]
-        explicitRoi               <- arbitrary[Option[GmosRoi]]
-        explicitWavelengthDithers <- arbitrary[Option[NonEmptyList[DitherNanoMeters]]]
-        explicitSpatialOffsets    <- arbitrary[Option[NonEmptyList[Offset.Q]]]
+        overrideGrating        <- arbitrary[Option[GmosNorthGrating]]
+        overrideFilter         <- arbitrary[Option[GmosNorthFilter]]
+        overrideFpu            <- arbitrary[Option[GmosNorthFpu]]
+        explicitXBin           <- arbitrary[Option[GmosXBinning]]
+        explicitYBin           <- arbitrary[Option[GmosYBinning]]
+        explicitAmpReadMode    <- arbitrary[Option[GmosAmpReadMode]]
+        explicitAmpGain        <- arbitrary[Option[GmosAmpGain]]
+        explicitRoi            <- arbitrary[Option[GmosRoi]]
+        // explicitWavelengthDithers <- arbitrary[Option[NonEmptyList[DitherNanoMeters]]]
+        explicitSpatialOffsets <- arbitrary[Option[NonEmptyList[Offset.Q]]]
       } yield ScienceModeAdvanced.GmosNorthLongSlit(
         overrideGrating,
         overrideFilter,
@@ -46,7 +46,7 @@ trait ArbScienceModeAdvanced {
         explicitAmpReadMode,
         explicitAmpGain,
         explicitRoi,
-        explicitWavelengthDithers,
+        None,
         explicitSpatialOffsets
       )
     )
@@ -54,16 +54,16 @@ trait ArbScienceModeAdvanced {
   implicit val arbGmosSouthLongSlitAdvanced: Arbitrary[ScienceModeAdvanced.GmosSouthLongSlit] =
     Arbitrary[ScienceModeAdvanced.GmosSouthLongSlit](
       for {
-        overrideGrating           <- arbitrary[Option[GmosSouthGrating]]
-        overrideFilter            <- arbitrary[Option[GmosSouthFilter]]
-        overrideFpu               <- arbitrary[Option[GmosSouthFpu]]
-        explicitXBin              <- arbitrary[Option[GmosXBinning]]
-        explicitYBin              <- arbitrary[Option[GmosYBinning]]
-        explicitAmpReadMode       <- arbitrary[Option[GmosAmpReadMode]]
-        explicitAmpGain           <- arbitrary[Option[GmosAmpGain]]
-        explicitRoi               <- arbitrary[Option[GmosRoi]]
-        explicitWavelengthDithers <- arbitrary[Option[NonEmptyList[DitherNanoMeters]]]
-        explicitSpatialOffsets    <- arbitrary[Option[NonEmptyList[Offset.Q]]]
+        overrideGrating        <- arbitrary[Option[GmosSouthGrating]]
+        overrideFilter         <- arbitrary[Option[GmosSouthFilter]]
+        overrideFpu            <- arbitrary[Option[GmosSouthFpu]]
+        explicitXBin           <- arbitrary[Option[GmosXBinning]]
+        explicitYBin           <- arbitrary[Option[GmosYBinning]]
+        explicitAmpReadMode    <- arbitrary[Option[GmosAmpReadMode]]
+        explicitAmpGain        <- arbitrary[Option[GmosAmpGain]]
+        explicitRoi            <- arbitrary[Option[GmosRoi]]
+        // explicitWavelengthDithers <- arbitrary[Option[NonEmptyList[DitherNanoMeters]]]
+        explicitSpatialOffsets <- arbitrary[Option[NonEmptyList[Offset.Q]]]
       } yield ScienceModeAdvanced.GmosSouthLongSlit(
         overrideGrating,
         overrideFilter,
@@ -73,7 +73,7 @@ trait ArbScienceModeAdvanced {
         explicitAmpReadMode,
         explicitAmpGain,
         explicitRoi,
-        explicitWavelengthDithers,
+        None, // explicitWavelengthDithers,
         explicitSpatialOffsets
       )
     )

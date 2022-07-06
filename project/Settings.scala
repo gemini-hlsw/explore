@@ -26,11 +26,11 @@ object Settings {
     val lucumaCore            = "0.44-13de521-SNAPSHOT"
     val lucumaCatalog         = "0.21-c8ff397-SNAPSHOT"
     val lucumaUI              = "0.37-c0466b2-SNAPSHOT"
-    val lucumaSchemas         = "0.31-586a0f8-SNAPSHOT"
     val lucumaReactVersion    = "1.0-0f7eb8e-SNAPSHOT"
-    val lucumaRefinedVersion  = "0.0-c2d0e92-SNAPSHOT"
+    val lucumaSchemas         = "0.31-586a0f8-SNAPSHOT"
+    val lucumaRefinedVersion  = "0.0-e39b79d-SNAPSHOT"
     val refinedAlgebraVersion = "0.0-7d9e39d-SNAPSHOT"
-    val lucumaSSO             = "0.1.11"
+    val lucumaSSO             = "0.2-4295426-SNAPSHOT"
     val monocle               = "3.1.0"
     val mouse                 = "1.1.0"
     val mUnit                 = "0.7.29"
@@ -49,9 +49,8 @@ object Settings {
     val reactVirtuoso         = "0.2.2"
     val scalaJsReact          = "2.1.1"
     val pprint                = "0.7.3"
-    val scalaJSSecureRandom   = "1.0.0"
-    var webAppUtil            = "2.0.0-RC2"
-    var boopickle             = "1.4.0"
+    val webAppUtil            = "2.0.0-RC2"
+    val boopickle             = "1.4.0"
 
   }
 
@@ -63,12 +62,6 @@ object Settings {
 
     def In(configuration: Configuration)(dependencies: Seq[ModuleID]): Seq[ModuleID] =
       dependencies.map(_ % configuration)
-
-    val SecureRandom = Def.setting(
-      Seq(
-        "org.scala-js" %%% "scalajs-java-securerandom" % scalaJSSecureRandom
-      )
-    )
 
     val Cats = Def.setting(
       deps(

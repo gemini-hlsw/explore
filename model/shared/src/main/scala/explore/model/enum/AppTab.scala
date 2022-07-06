@@ -46,6 +46,6 @@ object AppModal {
 
   val all = NonEmptyList.of(AdvancedConf)
 
-  implicit def AppModalEnumerated[T <: AppTab]: Enumerated[AppModal[T]] =
-    Enumerated.of(AdvancedConf: AppModal[T])
+  // implicit def AppModalEnumerated[T <: AppTab]: Enumerated[AppModal[T]] =
+  //   Enumerated.of(AdvancedConf: AppModal[T])
 }

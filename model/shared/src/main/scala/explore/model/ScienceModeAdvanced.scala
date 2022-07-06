@@ -62,17 +62,17 @@ object ScienceModeAdvanced {
     implicit val gmosNLongSlitDecoder: Decoder[GmosNorthLongSlit] =
       Decoder.instance(c =>
         for {
-          overrideGrating           <- c.downField("overrideGrating").as[Option[GmosNorthGrating]]
-          overrideFilter            <- c.downField("overrideFilter").as[Option[GmosNorthFilter]]
-          overrideFpu               <- c.downField("overrideFpu").as[Option[GmosNorthFpu]]
-          explicitXBin              <- c.downField("explicitXBin").as[Option[GmosXBinning]]
-          explicitYBin              <- c.downField("explicitYBin").as[Option[GmosYBinning]]
-          explicitAmpReadMode       <- c.downField("explicitAmpReadMode").as[Option[GmosAmpReadMode]]
-          explicitAmpGain           <- c.downField("explicitAmpGain").as[Option[GmosAmpGain]]
-          explicitRoi               <- c.downField("explicitRoi").as[Option[GmosRoi]]
-          explicitWavelengthDithers <-
-            c.downField("explicitWavelengthDithersNm").as[Option[NonEmptyList[DitherNanoMeters]]]
-          explicitSpatialOffsets    <-
+          overrideGrating        <- c.downField("overrideGrating").as[Option[GmosNorthGrating]]
+          overrideFilter         <- c.downField("overrideFilter").as[Option[GmosNorthFilter]]
+          overrideFpu            <- c.downField("overrideFpu").as[Option[GmosNorthFpu]]
+          explicitXBin           <- c.downField("explicitXBin").as[Option[GmosXBinning]]
+          explicitYBin           <- c.downField("explicitYBin").as[Option[GmosYBinning]]
+          explicitAmpReadMode    <- c.downField("explicitAmpReadMode").as[Option[GmosAmpReadMode]]
+          explicitAmpGain        <- c.downField("explicitAmpGain").as[Option[GmosAmpGain]]
+          explicitRoi            <- c.downField("explicitRoi").as[Option[GmosRoi]]
+          // explicitWavelengthDithers <-
+          //   c.downField("explicitWavelengthDithersNm").as[Option[NonEmptyList[DitherNanoMeters]]]
+          explicitSpatialOffsets <-
             c.downField("explicitSpatialOffsets").as[Option[NonEmptyList[Offset.Q]]]
         } yield GmosNorthLongSlit(
           overrideGrating,
@@ -83,7 +83,7 @@ object ScienceModeAdvanced {
           explicitAmpReadMode,
           explicitAmpGain,
           explicitRoi,
-          explicitWavelengthDithers,
+          None, // explicitWavelengthDithers,
           explicitSpatialOffsets
         )
       )
@@ -154,17 +154,17 @@ object ScienceModeAdvanced {
     implicit val gmosSLongSlitDecoder: Decoder[GmosSouthLongSlit] =
       Decoder.instance(c =>
         for {
-          overrideGrating           <- c.downField("overrideGrating").as[Option[GmosSouthGrating]]
-          overrideFilter            <- c.downField("overrideFilter").as[Option[GmosSouthFilter]]
-          overrideFpu               <- c.downField("overrideFpu").as[Option[GmosSouthFpu]]
-          explicitXBin              <- c.downField("explicitXBin").as[Option[GmosXBinning]]
-          explicitYBin              <- c.downField("explicitYBin").as[Option[GmosYBinning]]
-          explicitAmpReadMode       <- c.downField("explicitAmpReadMode").as[Option[GmosAmpReadMode]]
-          explicitAmpGain           <- c.downField("explicitAmpGain").as[Option[GmosAmpGain]]
-          explicitRoi               <- c.downField("explicitRoi").as[Option[GmosRoi]]
-          explicitWavelengthDithers <-
-            c.downField("explicitWavelengthDithersNm").as[Option[NonEmptyList[DitherNanoMeters]]]
-          explicitSpatialOffsets    <-
+          overrideGrating        <- c.downField("overrideGrating").as[Option[GmosSouthGrating]]
+          overrideFilter         <- c.downField("overrideFilter").as[Option[GmosSouthFilter]]
+          overrideFpu            <- c.downField("overrideFpu").as[Option[GmosSouthFpu]]
+          explicitXBin           <- c.downField("explicitXBin").as[Option[GmosXBinning]]
+          explicitYBin           <- c.downField("explicitYBin").as[Option[GmosYBinning]]
+          explicitAmpReadMode    <- c.downField("explicitAmpReadMode").as[Option[GmosAmpReadMode]]
+          explicitAmpGain        <- c.downField("explicitAmpGain").as[Option[GmosAmpGain]]
+          explicitRoi            <- c.downField("explicitRoi").as[Option[GmosRoi]]
+          // explicitWavelengthDithers <-
+          //   c.downField("explicitWavelengthDithersNm").as[Option[NonEmptyList[DitherNanoMeters]]]
+          explicitSpatialOffsets <-
             c.downField("explicitSpatialOffsets").as[Option[NonEmptyList[Offset.Q]]]
         } yield GmosSouthLongSlit(
           overrideGrating,
@@ -175,7 +175,7 @@ object ScienceModeAdvanced {
           explicitAmpReadMode,
           explicitAmpGain,
           explicitRoi,
-          explicitWavelengthDithers,
+          None, // explicitWavelengthDithers,
           explicitSpatialOffsets
         )
       )

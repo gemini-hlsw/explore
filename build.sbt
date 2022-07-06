@@ -9,6 +9,7 @@ ThisBuild / Test / bspEnabled                                        := false
 ThisBuild / ScalafixConfig / bspEnabled.withRank(KeyRanks.Invisible) := false
 
 ThisBuild / evictionErrorLevel := Level.Info
+ThisBuild / resolvers += Resolver.sonatypeRepo("snapshots")
 
 addCommandAlias(
   "quickTest",
@@ -27,12 +28,17 @@ addCommandAlias(
 
 ThisBuild / description                := "Explore"
 Global / onChangedBuildSource          := ReloadOnSourceChanges
-ThisBuild / scalafixDependencies ++= ClueGenerator.value ++ LucumaSchemas.value
+ThisBuild / scalafixDependencies ++= ClueGenerator.value ++ Seq(
+  "edu.gemini" % "lucuma-schemas_3" % Settings.LibraryVersions.lucumaSchemas
+)
 ThisBuild / scalafixScalaBinaryVersion := "2.13"
 ThisBuild / scalaVersion               := "3.1.3"
 ThisBuild / crossScalaVersions         := Seq("3.1.3")
 ThisBuild / scalacOptions ++= Seq(
   "-language:implicitConversions"
+)
+ThisBuild / scalafixResolvers += coursierapi.MavenRepository.of(
+  "https://s01.oss.sonatype.org/content/repositories/snapshots/"
 )
 
 val stage = taskKey[Unit]("Prepare static files to deploy to Heroku")
@@ -114,12 +120,13 @@ lazy val common = project
       LucumaSSO.value ++
         LucumaBC.value ++
         LucumaCatalog.value ++
-        LucumaReact.value ++
-        // ReactClipboard.value ++
-        // ReactCommon.value ++
-        // ReactTable.value ++
-        // ReactVirtuoso.value ++
-        SecureRandom.value,
+        LucumaSchemas.value ++
+        LucumaReact.value,
+    // ReactClipboard.value ++
+    // ReactCommon.value ++
+    // ReactTable.value ++
+    // ReactVirtuoso.value ++
+    // SecureRandom.value,
     buildInfoKeys    := Seq[BuildInfoKey](
       scalaVersion,
       sbtVersion,

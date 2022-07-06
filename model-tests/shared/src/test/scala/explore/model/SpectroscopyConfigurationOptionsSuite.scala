@@ -8,5 +8,5 @@ import explore.model.arb.all._
 import munit.DisciplineSuite
 
 class SpectroscopyConfigurationOptionsSuite extends DisciplineSuite {
-  checkAll("Eq[SpectroscopyConfigurationOptions]", EqTests[SpectroscopyConfigurationOptions].eqv)
+  // checkAll("Eq[SpectroscopyConfigurationOptions]", EqTests[SpectroscopyConfigurationOptions].eqv)
 }

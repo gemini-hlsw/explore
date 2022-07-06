@@ -6,6 +6,11 @@ package explore.model
 import explore.model.arb.ArbTruncatedAngle
 import explore.model.formats._
 import explore.optics.all._
+import coulomb._
+import coulomb.cats.quantity.ctx_Quantity_Order
+import coulomb.syntax.*
+import coulomb.ops.algebra.spire.all.given
+import coulomb.policy.spire.standard.given
 import lucuma.core.arb._
 import lucuma.core.math.Parallax
 import lucuma.core.math.arb._
