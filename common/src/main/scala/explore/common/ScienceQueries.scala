@@ -120,7 +120,7 @@ object ScienceQueries {
       GmosSouthLongSlitBasicConfigInput(b.grating.assign, b.filter.orUnassign, b.fpu.assign)
   }
 
-  implicit class OffsetComponentOps(val o: Offset.Component[_]) extends AnyVal {
+  implicit class OffsetComponentOps[A](val o: Offset.Component[A]) extends AnyVal {
     def toInput: OffsetComponentInput =
       OffsetComponentInput(microarcseconds = o.toAngle.toMicroarcseconds.assign)
   }

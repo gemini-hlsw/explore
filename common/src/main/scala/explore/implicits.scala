@@ -44,7 +44,7 @@ trait ListImplicits {
     def combine(@unused f1: HNil, @unused f2: HNil) = HNil
   }
 
-  implicit def hconsMonoid[H: Monoid, T <: HList: Monoid] =
+  implicit def hconsMonoid[H: Monoid, T <: HList: Monoid]: Monoid[H :: T] =
     new Monoid[H :: T] {
       val empty                           = Monoid[H].empty :: Monoid[T].empty
       def combine(f1: H :: T, f2: H :: T) =
