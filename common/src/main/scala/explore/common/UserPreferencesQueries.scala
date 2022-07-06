@@ -3,8 +3,6 @@
 
 package explore.common
 
-import cats.ApplicativeError
-import cats.MonadError
 import cats.data.OptionT
 import cats.syntax.all._
 import clue.TransactionalClient
@@ -28,13 +26,15 @@ import queries.schemas.implicits._
 import react.gridlayout.{BreakpointName => _, _}
 
 import scala.collection.immutable.SortedMap
+import cats.ApplicativeThrow
+import cats.MonadThrow
 
 object UserPreferencesQueries {
 
   implicit class UserWidthsCreationOps(val self: UserWidthsCreation.type) extends AnyVal {
     import self._
 
-    def storeWidthPreference[F[_]: ApplicativeError[*[_], Throwable]](
+    def storeWidthPreference[F[_]: ApplicativeThrow](
       userId:  Option[User.Id],
       section: ResizableSection,
       width:   Int
@@ -52,7 +52,7 @@ object UserPreferencesQueries {
     // Gets the width of a section.
     // This is coded to return a default in case
     // there is no data or errors
-    def queryWithDefault[F[_]: MonadError[*[_], Throwable]](
+    def queryWithDefault[F[_]: MonadThrow](
       userId:       Option[User.Id],
       area:         ResizableSection,
       defaultValue: Int
@@ -89,7 +89,7 @@ object UserPreferencesQueries {
     // Gets the layout of a section.
     // This is coded to return a default in case
     // there is no data or errors
-    def queryWithDefault[F[_]: MonadError[*[_], Throwable]](
+    def queryWithDefault[F[_]: MonadThrow](
       userId:        Option[User.Id],
       layoutSection: GridLayoutSection,
       resizableArea: ResizableSection,
@@ -124,7 +124,7 @@ object UserPreferencesQueries {
   implicit class UserGridLayoutUpsertOps(val self: UserGridLayoutUpsert.type) extends AnyVal {
     import self._
 
-    def storeLayoutsPreference[F[_]: ApplicativeError[*[_], Throwable]](
+    def storeLayoutsPreference[F[_]: ApplicativeThrow](
       userId:  Option[User.Id],
       section: GridLayoutSection,
       layouts: Layouts
@@ -159,7 +159,7 @@ object UserPreferencesQueries {
     // Gets the layout of a section.
     // This is coded to return a default in case
     // there is no data or errors
-    def queryWithDefault[F[_]: ApplicativeError[*[_], Throwable]](
+    def queryWithDefault[F[_]: ApplicativewThrow](
       uid:        User.Id,
       tid:        Target.Id,
       defaultFov: Angle
@@ -198,7 +198,7 @@ object UserPreferencesQueries {
     import self._
 
     // Gets the prefs for the elevation plot
-    def queryWithDefault[F[_]: ApplicativeError[*[_], Throwable]](
+    def queryWithDefault[F[_]: ApplicativeThrow](
       uid:         User.Id,
       tid:         Target.Id,
       defaultSite: Site
@@ -228,7 +228,7 @@ object UserPreferencesQueries {
     import self._
     import UserPreferencesDB.Enums._
 
-    def updateAladinPreferences[F[_]: ApplicativeError[*[_], Throwable]](
+    def updateAladinPreferences[F[_]: ApplicativeThrow](
       uid:           User.Id,
       targetId:      Target.Id,
       fov:           Angle,
@@ -266,7 +266,7 @@ object UserPreferencesQueries {
     import self._
     import UserPreferencesDB.Enums._
 
-    def updatePlotPreferences[F[_]: ApplicativeError[*[_], Throwable]](
+    def updatePlotPreferences[F[_]: ApplicativeThrow](
       uid:      User.Id,
       targetId: Target.Id,
       site:     Site,
@@ -305,7 +305,7 @@ object UserPreferencesQueries {
   ) extends AnyVal {
     import self._
 
-    def updateViewOffset[F[_]: ApplicativeError[*[_], Throwable]](
+    def updateViewOffset[F[_]: ApplicativeThrow](
       uid:      User.Id,
       targetId: Target.Id,
       offset:   Offset
