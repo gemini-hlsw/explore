@@ -34,16 +34,17 @@ trait ArbObsSummary {
   import ArbTime._
   import ArbScienceMode._
 
-  implicit val arbObsSummaryWithConstraints = Arbitrary[ObsSummaryWithConstraints] {
-    for {
-      id           <- arbitrary[Observation.Id]
-      constraints  <- arbitrary[ConstraintsSummary]
-      status       <- arbitrary[ObsStatus]
-      activeStatus <- arbitrary[ObsActiveStatus]
-      duration     <- arbitrary[Duration]
-      targets      <- arbitrary[Set[Target.Id]]
-    } yield ObsSummaryWithConstraints(id, constraints, status, activeStatus, duration, targets)
-  }
+  implicit val arbObsSummaryWithConstraints: Arbitrary[ObsSummaryWithConstraints] =
+    Arbitrary[ObsSummaryWithConstraints] {
+      for {
+        id           <- arbitrary[Observation.Id]
+        constraints  <- arbitrary[ConstraintsSummary]
+        status       <- arbitrary[ObsStatus]
+        activeStatus <- arbitrary[ObsActiveStatus]
+        duration     <- arbitrary[Duration]
+        targets      <- arbitrary[Set[Target.Id]]
+      } yield ObsSummaryWithConstraints(id, constraints, status, activeStatus, duration, targets)
+    }
 
   implicit val cogenObsSummaryWithConstraints: Cogen[ObsSummaryWithConstraints] =
     Cogen[
@@ -53,7 +54,7 @@ trait ArbObsSummary {
         (o.id, o.constraints, o.status, o.activeStatus, o.duration, o.scienceTargetIds.toList)
       )
 
-  implicit val arbObsSummaryWithTitleAndConstraints =
+  implicit val arbObsSummaryWithTitleAndConstraints: Arbitrary[ObsSummaryWithTitleAndConstraints] =
     Arbitrary[ObsSummaryWithTitleAndConstraints] {
       for {
         id           <- arbitrary[Observation.Id]
@@ -96,7 +97,8 @@ trait ArbObsSummary {
         )
       )
 
-  implicit val arbObsSummaryWithTitleConstraintsAndConf =
+  implicit val arbObsSummaryWithTitleConstraintsAndConf
+    : Arbitrary[ObsSummaryWithTitleConstraintsAndConf] =
     Arbitrary[ObsSummaryWithTitleConstraintsAndConf] {
       for {
         id           <- arbitrary[Observation.Id]
@@ -146,7 +148,7 @@ trait ArbObsSummary {
         )
       )
 
-  implicit val arbObsSummaryWithTitleAndConf =
+  implicit val arbObsSummaryWithTitleAndConf: Arbitrary[ObsSummaryWithTitleAndConf] =
     Arbitrary[ObsSummaryWithTitleAndConf] {
       for {
         id           <- arbitrary[Observation.Id]
@@ -189,7 +191,7 @@ trait ArbObsSummary {
         )
       )
 
-  implicit val arbObsSummaryWithConstraintsAndConf =
+  implicit val arbObsSummaryWithConstraintsAndConf: Arbitrary[ObsSummaryWithConstraintsAndConf] =
     Arbitrary[ObsSummaryWithConstraintsAndConf] {
       for {
         id           <- arbitrary[Observation.Id]

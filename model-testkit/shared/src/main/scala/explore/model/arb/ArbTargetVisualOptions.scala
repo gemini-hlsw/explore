@@ -17,14 +17,15 @@ import org.scalacheck.Cogen._
 
 trait ArbTargetVisualOptions {
 
-  implicit val targetVisualOptionsArb = Arbitrary[TargetVisualOptions] {
-    for {
-      fa <- arbitrary[Angle]
-      vo <- arbitrary[Offset]
-      a  <- arbitrary[Visible]
-      o  <- arbitrary[Visible]
-    } yield TargetVisualOptions(fa, vo, a, o)
-  }
+  implicit val targetVisualOptionsArb: Arbitrary[TargetVisualOptions] =
+    Arbitrary[TargetVisualOptions] {
+      for {
+        fa <- arbitrary[Angle]
+        vo <- arbitrary[Offset]
+        a  <- arbitrary[Visible]
+        o  <- arbitrary[Visible]
+      } yield TargetVisualOptions(fa, vo, a, o)
+    }
 
   implicit val targetVisualOptionsCogen: Cogen[TargetVisualOptions] =
     Cogen[(Angle, Offset, Visible, Visible)].contramap(c =>

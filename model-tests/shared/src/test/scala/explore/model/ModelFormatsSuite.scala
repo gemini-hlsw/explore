@@ -29,7 +29,7 @@ class ModelFormatsSuite extends DisciplineSuite {
   val parallaxMilliArcSecondsGen: Gen[String] =
     arbitrary[Parallax]
       .map(_.mas.toValue[BigDecimal].value.toString)
-      .flatMapOneOf(Gen.const, perturbations: _*)
+      .flatMapOneOf(Gen.const[String], perturbations: _*)
 
   checkAll("pxFormat", FormatTests(pxFormat).formatWith(parallaxMilliArcSecondsGen))
   checkAll("TruncatedAngleSplitEpi", SplitEpiTests(angleTruncatedAngleSplitEpi).splitEpi)

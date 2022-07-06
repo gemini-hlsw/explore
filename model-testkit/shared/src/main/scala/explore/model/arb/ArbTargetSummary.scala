@@ -17,7 +17,7 @@ import lucuma.core.model.Observation
 import lucuma.core.model.Target
 
 trait ArbTargetSummary {
-  implicit val arbTargetSummary =
+  implicit val arbTargetSummary: Arbitrary[TargetSummary] =
     Arbitrary[TargetSummary] {
       for {
         obsIds <- arbitrary[Set[Observation.Id]]

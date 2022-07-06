@@ -32,12 +32,12 @@ class OpticsSuite extends DisciplineSuite {
     implicit def eqOuter[A: Eq]: Eq[Outer[A]] = Eq.by(_.opt)
   }
 
-  implicit def wrapArb[A: Arbitrary] =
+  implicit def wrapArb[A: Arbitrary]: Arbitrary[Inner[A]] =
     Arbitrary[Inner[A]] {
       arbitrary[A].map(Inner.apply)
     }
 
-  implicit def outerArb[A: Arbitrary] =
+  implicit def outerArb[A: Arbitrary]: Arbitrary[Outer[A]] =
     Arbitrary[Outer[A]] {
       arbitrary[Option[Inner[A]]].map(Outer.apply)
     }
