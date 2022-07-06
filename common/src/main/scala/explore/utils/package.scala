@@ -23,6 +23,7 @@ import org.http4s.Uri
 import org.scalajs.dom
 import react.semanticui.collections.message.Message
 import react.semanticui.elements.loader.Loader
+import react.common._
 
 import java.time.Instant
 

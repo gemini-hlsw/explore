@@ -18,6 +18,7 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Axis
 import lucuma.core.math.Offset
 import lucuma.ui.optics.ValidFormatInput
+import lucuma.refined._
 
 import scala.util.Try
 
@@ -30,7 +31,7 @@ object validators {
       val ota = s.toDoubleOption
         .map(Angle.fromDoubleDegrees)
         .map(TruncatedAngle(_))
-      Validated.fromOption(ota, NonEmptyChain("Invalid Position Angle"))
+      Validated.fromOption(ota, NonEmptyChain("Invalid Position Angle".refined))
     },
     pa => f"${pa.angle.toSignedDoubleDegrees}%.2f"
   )
@@ -41,27 +42,27 @@ object validators {
       s =>
         Validated.fromOption(
           s.toDoubleOption.map(Angle.fromDoubleArcseconds),
-          NonEmptyChain("Invalid angle")
+          NonEmptyChain("Invalid angle".refined)
         ),
       a => (a.toMicroarcseconds / 1000000.0).toString
     )
 
   val brightnessValidFormat: ValidFormatInput[BigDecimal] =
     ValidFormatInput(
-      ValidFormatInput.bigDecimalValidFormat("Invalid brightness value").getValidated,
+      ValidFormatInput.bigDecimalValidFormat("Invalid brightness value".refined).getValidated,
       n => Try(displayBrightness.shortName(n)).toOption.orEmpty
     )
 
-  val dithersValidFormat: ValidFormatInput[Option[NonEmptyList[DitherNanoMeters]]] =
-    ValidFormatInput
-      .forRefinedBigDecimal[DitherNanoMetersRange]()
-      .toNel(error = NonEmptyString("Invalid wavelength dither values").some)
-      .optional
-
-  val offsetQNELValidFormat: ValidFormatInput[Option[NonEmptyList[Offset.Q]]] =
-    truncatedAngleValidFormat
-      .andThen(angleTruncatedAngleSplitEpi.reverse)
-      .andThen(Offset.Component.angle[Axis.Q].reverse)
-      .toNel(error = NonEmptyString("Invalid offsets").some)
-      .optional
+  // val dithersValidFormat: ValidFormatInput[Option[NonEmptyList[DitherNanoMeters]]] =
+  //   ValidFormatInput
+  //     .forRefinedBigDecimal[DitherNanoMetersRange]()
+  //     .toNel(error = "Invalid wavelength dither values".refined.some)
+  //     .optional
+  //
+  // val offsetQNELValidFormat: ValidFormatInput[Option[NonEmptyList[Offset.Q]]] =
+  //   truncatedAngleValidFormat
+  //     .andThen(angleTruncatedAngleSplitEpi.reverse)
+  //     .andThen(Offset.Component.angle[Axis.Q].reverse)
+  //     .toNel(error = NonEmptyString("Invalid offsets").some)
+  //     .optional
 }

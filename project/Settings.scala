@@ -301,7 +301,9 @@ object Settings {
         "edu.gemini" %%% "lucuma-react-datepicker",
         "edu.gemini" %%% "lucuma-react-highcharts",
         "edu.gemini" %%% "lucuma-react-beautiful-dnd",
-        "edu.gemini" %%% "lucuma-react-cats"
+        "edu.gemini" %%% "lucuma-react-cats",
+        "edu.gemini" %%% "lucuma-react-table",
+        "edu.gemini" %%% "lucuma-react-virtuoso"
       )(lucumaReactVersion)
     )
 
