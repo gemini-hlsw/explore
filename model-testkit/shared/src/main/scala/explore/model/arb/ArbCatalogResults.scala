@@ -14,20 +14,21 @@ import lucuma.ags.GuideStarCandidate
 trait ArbCatalogResults {
   import ArbSiderealTracking._
 
-  implicit val guideStarCandidateArb = Arbitrary[GuideStarCandidate] {
-    for {
-      name        <- arbitrary[Long]
-      tracking    <- arbitrary[SiderealTracking]
-      gBrightness <- arbitrary[Option[BigDecimal]]
-    } yield GuideStarCandidate(name, tracking, gBrightness)
-  }
+  implicit val guideStarCandidateArb: Arbitrary[GuideStarCandidate] =
+    Arbitrary[GuideStarCandidate] {
+      for {
+        name        <- arbitrary[Long]
+        tracking    <- arbitrary[SiderealTracking]
+        gBrightness <- arbitrary[Option[BigDecimal]]
+      } yield GuideStarCandidate(name, tracking, gBrightness)
+    }
 
   implicit def guideStarCandidateCogen: Cogen[GuideStarCandidate] =
     Cogen[(Long, SiderealTracking, Option[BigDecimal])].contramap(m =>
       (m.id, m.tracking, m.gBrightness)
     )
 
-  implicit val catalogResultsArb = Arbitrary[CatalogResults] {
+  implicit val catalogResultsArb: Arbitrary[CatalogResults] = Arbitrary[CatalogResults] {
     for {
       candidates <- arbitrary[List[GuideStarCandidate]]
     } yield CatalogResults(candidates)

@@ -13,7 +13,7 @@ trait ArbKeyedIndexedList {
   implicit def keyedIndexedListArb[K, A](implicit
     arbA:     Arbitrary[A],
     arbKeyFn: Arbitrary[A => K]
-  ) =
+  ): Arbitrary[KeyedIndexedList[K, A]] =
     Arbitrary[KeyedIndexedList[K, A]] {
       for {
         list   <- arbitrary[List[A]]

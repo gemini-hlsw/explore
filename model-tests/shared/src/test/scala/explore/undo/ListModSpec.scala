@@ -14,14 +14,16 @@ import org.scalacheck.Arbitrary._
 
 class ListModSpec extends DisciplineSuite {
 
-  implicit val idGet = Iso.id[Int].get _
+  val idGet = Iso.id[Int].get _
 
   val listMod = new KIListMod[Int, Int](Iso.id)
 
   val elemWithKey = listMod.withKey(0)
   val posWithKey  = listMod.pos.withKey(0)
 
-  implicit def kiListArb[Key, A: Arbitrary](implicit keyGet: A => Key) =
+  implicit def kiListArb[Key, A: Arbitrary](implicit
+    keyGet: A => Key
+  ): Arbitrary[KeyedIndexedList[Key, A]] =
     Arbitrary[KeyedIndexedList[Key, A]] {
       arbitrary[List[A]].map(list => KeyedIndexedList.fromList(list, keyGet))
     }
@@ -36,7 +38,7 @@ class ListModSpec extends DisciplineSuite {
     def apply(id: Int): V = V(id, id.toString)
   }
 
-  implicit val keyGet = V.id.get _
+  implicit val keyGet: V => Int = V.id.get _
 
   val vlistMod = new KIListMod[V, Int](V.id)
 

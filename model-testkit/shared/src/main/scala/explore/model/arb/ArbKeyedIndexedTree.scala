@@ -16,7 +16,7 @@ trait ArbKeyedIndexedTree {
     eqK:      Eq[K],
     arbKeyFn: Arbitrary[A => K],
     arbTree:  Arbitrary[Tree[A]]
-  ) =
+  ): Arbitrary[KeyedIndexedTree[K, A]] =
     Arbitrary[KeyedIndexedTree[K, A]] {
       for {
         tree   <- arbitrary[Tree[A]]

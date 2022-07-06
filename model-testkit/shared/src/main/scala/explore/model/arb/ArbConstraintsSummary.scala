@@ -29,14 +29,15 @@ trait ArbConstraintsSummary {
     } yield build(iq, ce, sb, wv)
   }
 
-  implicit val constraintsSummaryArb = buildConstraintsSummaryArb((iq, ce, sb, wv) =>
-    new ConstraintsSummary {
-      val imageQuality    = iq
-      val cloudExtinction = ce
-      val skyBackground   = sb
-      val waterVapor      = wv
-    }
-  )
+  implicit val constraintsSummaryArb: Arbitrary[ConstraintsSummary] =
+    buildConstraintsSummaryArb((iq, ce, sb, wv) =>
+      new ConstraintsSummary {
+        val imageQuality    = iq
+        val cloudExtinction = ce
+        val skyBackground   = sb
+        val waterVapor      = wv
+      }
+    )
 
   implicit val constraintsSummaryCogen: Cogen[ConstraintsSummary] =
     Cogen[(ImageQuality, CloudExtinction, SkyBackground, WaterVapor)]
