@@ -61,7 +61,7 @@ object TwoPanelState {
   def initial(sp: SelectedPanel): TwoPanelState =
     TwoPanelState(initialPanelWidth(sp), sp)
 
-  private implicit def doubleReuse = Reusability.double(1.0)
+  private implicit def doubleReuse: Reusability[Double] = Reusability.double(1.0)
 
   implicit val stateReuse: Reusability[TwoPanelState] =
     Reusability.by(tps => (tps.treeWidth, tps.selected))

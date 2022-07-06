@@ -200,22 +200,22 @@ object implicits
       reRunOnSignal(signals.reduceLeft(_ merge _), debounce)
 
     def reRunOnResourceSignals(
-      subscriptions: NonEmptyList[Resource[F, fs2.Stream[F, _]]],
+      subscriptions: NonEmptyList[Resource[F, fs2.Stream[F, A]]],
       debounce:      Option[FiniteDuration] = 2.seconds.some
     )(implicit F:    Temporal[F]): Resource[F, fs2.Stream[F, A]] =
       subscriptions.sequence
         .map(ss => reRunOnSignals(ss.map(_.void), debounce))
 
     def reRunOnResourceSignals(
-      head:       Resource[F, fs2.Stream[F, _]],
-      tail:       Resource[F, fs2.Stream[F, _]]*
+      head:       Resource[F, fs2.Stream[F, A]],
+      tail:       Resource[F, fs2.Stream[F, A]]*
     )(implicit F: Temporal[F]): Resource[F, fs2.Stream[F, A]] =
       reRunOnResourceSignals(NonEmptyList.of(head, tail: _*))
 
     def reRunOnResourceSignals(
       debounce:   FiniteDuration,
-      head:       Resource[F, fs2.Stream[F, _]],
-      tail:       Resource[F, fs2.Stream[F, _]]*
+      head:       Resource[F, fs2.Stream[F, A]],
+      tail:       Resource[F, fs2.Stream[F, A]]*
     )(implicit F: Temporal[F]): Resource[F, fs2.Stream[F, A]] =
       reRunOnResourceSignals(NonEmptyList.of(head, tail: _*), debounce.some)
   }
@@ -238,22 +238,22 @@ object implicits
       resetOnSignal(signals.reduceLeft(_ merge _), debounce)
 
     def resetOnResourceSignals(
-      subscriptions: NonEmptyList[Resource[F, fs2.Stream[F, _]]],
+      subscriptions: NonEmptyList[Resource[F, fs2.Stream[F, A]]],
       debounce:      Option[FiniteDuration] = 2.seconds.some
     )(implicit F:    Temporal[F]): Resource[F, fs2.Stream[F, Pot[A]]] =
       subscriptions.sequence
         .map(ss => resetOnSignals(ss.map(_.void), debounce))
 
     def resetOnResourceSignals(
-      head:       Resource[F, fs2.Stream[F, _]],
-      tail:       Resource[F, fs2.Stream[F, _]]*
+      head:       Resource[F, fs2.Stream[F, A]],
+      tail:       Resource[F, fs2.Stream[F, A]]*
     )(implicit F: Temporal[F]): Resource[F, fs2.Stream[F, Pot[A]]] =
       resetOnResourceSignals(NonEmptyList.of(head, tail: _*))
 
     def resetOnResourceSignals(
       debounce:   FiniteDuration,
-      head:       Resource[F, fs2.Stream[F, _]],
-      tail:       Resource[F, fs2.Stream[F, _]]*
+      head:       Resource[F, fs2.Stream[F, A]],
+      tail:       Resource[F, fs2.Stream[F, A]]*
     )(implicit F: Temporal[F]): Resource[F, fs2.Stream[F, Pot[A]]] =
       resetOnResourceSignals(NonEmptyList.of(head, tail: _*), debounce.some)
   }
