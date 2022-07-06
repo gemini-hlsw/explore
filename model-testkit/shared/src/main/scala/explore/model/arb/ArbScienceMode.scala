@@ -18,21 +18,23 @@ trait ArbScienceMode {
   import ArbScienceModeBasic._
   import ArbScienceModeAdvanced._
 
-  implicit val arbGmosNorthLongSlit = Arbitrary[ScienceMode.GmosNorthLongSlit](
-    for {
-      basic    <- arbitrary[ScienceModeBasic.GmosNorthLongSlit]
-      advanced <- arbitrary[ScienceModeAdvanced.GmosNorthLongSlit]
-    } yield ScienceMode.GmosNorthLongSlit(basic, advanced)
-  )
+  implicit val arbGmosNorthLongSlit: Arbitrary[ScienceMode.GmosNorthLongSlit] =
+    Arbitrary[ScienceMode.GmosNorthLongSlit](
+      for {
+        basic    <- arbitrary[ScienceModeBasic.GmosNorthLongSlit]
+        advanced <- arbitrary[ScienceModeAdvanced.GmosNorthLongSlit]
+      } yield ScienceMode.GmosNorthLongSlit(basic, advanced)
+    )
 
-  implicit val arbGmosSouthLongSlit = Arbitrary[ScienceMode.GmosSouthLongSlit](
-    for {
-      basic    <- arbitrary[ScienceModeBasic.GmosSouthLongSlit]
-      advanced <- arbitrary[ScienceModeAdvanced.GmosSouthLongSlit]
-    } yield ScienceMode.GmosSouthLongSlit(basic, advanced)
-  )
+  implicit val arbGmosSouthLongSlit: Arbitrary[ScienceMode.GmosSouthLongSlit] =
+    Arbitrary[ScienceMode.GmosSouthLongSlit](
+      for {
+        basic    <- arbitrary[ScienceModeBasic.GmosSouthLongSlit]
+        advanced <- arbitrary[ScienceModeAdvanced.GmosSouthLongSlit]
+      } yield ScienceMode.GmosSouthLongSlit(basic, advanced)
+    )
 
-  implicit val arbScienceMode = Arbitrary[ScienceMode](
+  implicit val arbScienceMode: Arbitrary[ScienceMode] = Arbitrary[ScienceMode](
     Gen.oneOf(
       arbitrary[ScienceMode.GmosNorthLongSlit],
       arbitrary[ScienceMode.GmosSouthLongSlit]

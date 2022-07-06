@@ -46,12 +46,12 @@ trait ArbTree {
 
   def genLeaf[A](implicit arbA: Arbitrary[A]): Gen[Node[A]] = arbitrary[A].map(a => Node(a))
 
-  implicit def treeArb[A](implicit arbA: Arbitrary[A]) =
+  implicit def treeArb[A](implicit arbA: Arbitrary[A]): Arbitrary[Tree[A]] =
     Arbitrary[Tree[A]] {
       genTree[A]
     }
 
-  implicit def nodeArb[A](implicit arbA: Arbitrary[A]) =
+  implicit def nodeArb[A](implicit arbA: Arbitrary[A]): Arbitrary[Node[A]] =
     Arbitrary[Node[A]] {
       for {
         depth <- Gen.choose(0, 6) // Limit max depth because of exponential blow

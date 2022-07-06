@@ -12,7 +12,7 @@ import org.scalacheck.Cogen
 
 trait ArbTruncatedAngle {
 
-  implicit val TruncatedAngleArb = Arbitrary[TruncatedAngle] {
+  implicit val truncatedAngleArb: Arbitrary[TruncatedAngle] = Arbitrary[TruncatedAngle] {
     for {
       a <- arbitrary[Angle]
     } yield TruncatedAngle(a)

@@ -18,7 +18,7 @@ trait ArbUserVault {
   import ArbUser._
   import ArbTime._
 
-  implicit val userVaultArb = Arbitrary[UserVault] {
+  implicit val userVaultArb: Arbitrary[UserVault] = Arbitrary[UserVault] {
     for {
       user  <- arbitrary[User]
       exp   <- arbitrary[Instant]
