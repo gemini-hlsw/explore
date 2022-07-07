@@ -44,14 +44,16 @@ trait ListImplicits {
     def combine(@unused f1: HNil, @unused f2: HNil) = HNil
   }
 
-  implicit def hconsMonoid[H: Monoid, T <: HList: Monoid] =
+  implicit def hconsMonoid[H: Monoid, T <: HList: Monoid]: Monoid[H :: T] =
     new Monoid[H :: T] {
       val empty                           = Monoid[H].empty :: Monoid[T].empty
       def combine(f1: H :: T, f2: H :: T) =
         (f1.head |+| f2.head) :: (f1.tail |+| f2.tail)
     }
 
-  private object singleton extends Poly1 { implicit def anything[A] = at[A](List(_)) }
+  private object singleton extends Poly1 {
+    implicit def anything[A]: Case.Aux[A, List[A]] = at[A](List(_))
+  }
 
   implicit class UnzipListOpts[L <: HList](hlists: List[L]) {
     def unzipN[Out <: HList](implicit

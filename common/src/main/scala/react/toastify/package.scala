@@ -89,13 +89,13 @@ package toastify {
   @nowarn
   //  https://fkhadra.github.io/react-toastify/api/toast
   trait ToastOptions extends js.Object {
-    var toastId: String              = js.native
-    var position: js.UndefOr[String] = js.native
-    var onClose: js.Function0[Unit]  = js.native
-    var autoClose: Boolean | Double  = js.native
-    var closeButton: Boolean         = js.native
-    var closeOnClick: Boolean        = js.native
-    var theme: js.UndefOr[String]    = js.native
+    var toastId: String                         = js.native
+    var position: js.UndefOr[String]            = js.native
+    var onClose: js.Function0[Unit]             = js.native
+    var autoClose: js.UndefOr[Boolean | Double] = js.native
+    var closeButton: Boolean                    = js.native
+    var closeOnClick: Boolean                   = js.native
+    var theme: js.UndefOr[String]               = js.native
   }
 
   object ToastOptions {

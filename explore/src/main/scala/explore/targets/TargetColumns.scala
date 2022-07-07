@@ -9,7 +9,7 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.conversions._
 import explore.model.display._
-import explore.model.enum.SourceProfileType
+import explore.model.enums.SourceProfileType
 import explore.model.formats._
 import explore.optics.ModelOptics._
 import japgolly.scalajs.react.vdom.html_<^._
