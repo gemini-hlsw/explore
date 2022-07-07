@@ -17,10 +17,11 @@ import monocle.Focus
 import react.common._
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.modal._
-import react.semanticui.shorthand._
+// import react.semanticui.shorthand._
 import react.semanticui.sizes.Small
 import scala.language.implicitConversions
 import scala.scalajs.js.|
+import lucuma.refined._
 
 /**
  * Generic component to accept user input
@@ -33,7 +34,7 @@ final case class InputModal(
   okLabel:      String,
   trigger:      Reuse[VdomNode],
   onComplete:   NonEmptyString ==> Callback
-) extends ReactProps[InputModal](InputModal.component)
+) extends ReactProps[InputModal, InputModal.State, InputModal.Backend](InputModal.component)
 
 object InputModal {
   type Props = InputModal
@@ -46,12 +47,12 @@ object InputModal {
 
   protected class Backend($ : BackendScope[Props, State]) {
     def render(props: Props, state: State) = {
-      val valueView = View.fromState($).zoom(State.inputValue)
+      // val valueView = View.fromState($).zoom(State.inputValue)
 
       val cleanInput: Callback | Unit = $.setStateL(State.inputValue)("")
 
       Modal(
-        as = <.form,      // This lets us sumbit on enter
+        // as = <.form,      // This lets us sumbit on enter
         actions = List(
           Button(
             size = Small,
@@ -74,20 +75,21 @@ object InputModal {
         ),
         centered = false, // Works better on iOS
         trigger = props.trigger.value,
-        closeIcon = Icons.Close.clazz(ExploreStyles.ModalCloseButton),
+        // closeIcon = Icons.Close.clazz(ExploreStyles.ModalCloseButton),
         dimmer = Dimmer.Blurring,
         size = ModalSize.Small,
         onClose = cleanInput,
         header = ModalHeader(props.title),
-        content = ModalContent(
-          FormInputEV(
-            id = "name",
-            value = valueView,
-            label = props.label,
-            onTextChange = t => $.setStateL(State.inputValue)(t)
-          )
-            .withMods(^.placeholder := props.placeholder, ^.autoFocus := true)
-        )
+        content = <.div()
+        // content = ModalContent(
+        //   FormInputEV(
+        //     id = "name".refined,
+        //     value = valueView,
+        //     label = props.label,
+        //     onTextChange = t => $.setStateL(State.inputValue)(t)
+        //   )
+        //     .withMods(^.placeholder := props.placeholder, ^.autoFocus := true)
+        // )
       )
     }
   }

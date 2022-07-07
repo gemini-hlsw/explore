@@ -15,13 +15,15 @@ import io.circe.syntax._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import org.typelevel.log4cats.Logger
-import react.common.ReactProps
+import react.common._
 import react.semanticui.elements.loader.Loader
 
 final case class ConnectionManager(ssoToken: NonEmptyString, onConnect: IO[Unit])(
   val render:                                VdomNode
 )(implicit val ctx:                          AppContextIO)
-    extends ReactProps[ConnectionManager](ConnectionManager.component)
+    extends ReactProps[ConnectionManager, ConnectionManager.State, ConnectionManager.Backend](
+      ConnectionManager.component
+    )
 
 object ConnectionManager {
   type Props = ConnectionManager

@@ -18,11 +18,11 @@ import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import queries.common.UserPreferencesQueriesGQL._
-import react.common.ReactProps
+import react.common._
 
 final case class IfLogged(view: View[RootModel])(
   val render:                   (UserVault, IO[Unit]) => VdomNode
-) extends ReactProps[IfLogged](IfLogged.component)
+) extends ReactProps[IfLogged, Unit, Unit](IfLogged.component)
 
 object IfLogged {
   type Props = IfLogged

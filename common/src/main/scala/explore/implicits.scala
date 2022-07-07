@@ -56,13 +56,13 @@ trait ListImplicits {
   //   implicit def anything[A]: Aux[List[A], Int, A] = at[A](List(_))
   // }
 
-  implicit class UnzipListOpts[L <: HList](hlists: List[L]) {
-    def unzipN[Out <: HList](implicit
-      mapper: ops.hlist.Mapper.Aux[singleton.type, L, Out],
-      monoid: Monoid[Out]
-    ): Out = hlists.map(_.map(singleton)).combineAll
-  }
-
+  // implicit class UnzipListOpts[L <: HList](hlists: List[L]) {
+  //   def unzipN[Out <: HList](implicit
+  //     mapper: ops.hlist.Mapper.Aux[singleton.type, L, Out],
+  //     monoid: Monoid[Out]
+  //   ): Out = hlists.map(_.map(singleton)).combineAll
+  // }
+  //
   implicit class ViewListOps[F[_]: Monad, A](val viewList: ViewF[F, List[A]]) {
     def toListOfViews: List[ViewF[F, A]] =
       // It's safe to "get" since we are only invoking for existing indices.

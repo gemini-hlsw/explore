@@ -39,7 +39,7 @@ object definitions {
   type RowRender[D, Plugins]   = Row[D, Plugins] => TableRow
   type RowTemplate[D, Plugins] = TableRow | RowRender[D, Plugins]
 
-  type BodyCellRender[D, Plugins] = Cell[D, _, Plugins] => TableCell
+  type BodyCellRender[D, Plugins] = Cell[D, ?, Plugins] => TableCell
   type BodyCell[D, Plugins]       = TableCell | BodyCellRender[D, Plugins]
 }
 import definitions._
@@ -53,7 +53,7 @@ object LayoutDefaultTag        {
   }
 
   implicit object NonTableLayoutDefaultTag extends LayoutDefaultTag[Layout.NonTable] {
-    val tag = <.div
+    val tag = js.undefined // <.div
   }
 }
 

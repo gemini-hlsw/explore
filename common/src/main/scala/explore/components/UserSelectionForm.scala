@@ -32,7 +32,9 @@ import react.semanticui.sizes._
 final case class UserSelectionForm(
   vault:   View[Option[UserVault]],
   message: View[Option[NonEmptyString]]
-) extends ReactProps[UserSelectionForm](UserSelectionForm.component) {
+) extends ReactProps[UserSelectionForm, UserSelectionForm.State, Unit](
+      UserSelectionForm.component
+    ) {
   def guest(implicit ctx: AppContextIO): Callback =
     ctx.sso.guest.flatMap(v => vault.set(v.some).to[IO]).runAsync
   def login(implicit ctx: AppContextIO): Callback =

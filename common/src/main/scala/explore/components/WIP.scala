@@ -6,10 +6,10 @@ package explore.components
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import react.common.ReactProps
+import react.common._
 import react.common.style.Css
 
-final case class WIP(clazz: Css, elem: VdomNode) extends ReactProps[WIP](WIP.component)
+final case class WIP(clazz: Css, elem: VdomNode) extends ReactProps[WIP, Unit, Unit](WIP.component)
 
 object WIP {
   type Props = WIP

@@ -8,7 +8,7 @@ import explore.components.ui.ExploreStyles
 import explore.undo.UndoContext
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import react.common.ReactFnProps
+import react.common._
 import react.semanticui.elements.button._
 import react.semanticui.sizes._
 

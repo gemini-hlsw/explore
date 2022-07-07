@@ -46,8 +46,8 @@ trait CatalogQuerySettings {
   val MaxTargets = 30000
 
   implicit val coordinatesHash: Hash[Coordinates] = Hash.fromUniversalHashCode
-  implicit val catalog                            = CatalogAdapter.Gaia3Lite
-  implicit val ci                                 = ADQLInterpreter.nTarget(MaxTargets)
+  implicit val catalog: CatalogAdapter.Gaia       = CatalogAdapter.Gaia3Lite
+  implicit val ci: ADQLInterpreter                = ADQLInterpreter.nTarget(MaxTargets)
 
   def cacheQueryHash: Hash[ADQLQuery] =
     Hash.by(q => (MaxTargets, catalog.gaiaDB, q.base, q.adqlGeom, q.adqlBrightness))

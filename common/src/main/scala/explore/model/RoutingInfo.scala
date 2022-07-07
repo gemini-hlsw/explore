@@ -4,8 +4,9 @@
 package explore.model
 
 import cats.syntax.all._
-import eu.timepit.refined.auto._
+import eu.timepit.refined._
 import eu.timepit.refined.types.numeric.PosLong
+import eu.timepit.refined.numeric.Positive
 import explore.model.Page
 import explore.model.Page._
 import explore.model.enums.AppTab
@@ -14,6 +15,7 @@ import japgolly.scalajs.react.Reusability
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.ui.reusability._
+import lucuma.refined._
 
 final case class RoutingInfo(
   appTab:        AppTab,
@@ -31,7 +33,8 @@ object RoutingInfo {
 
   // The only Page that doesn't have a program ID is the NoProgramPage, so instead of polluting RoutingInfo with
   // Option[Program.Id], we'll just associate a dummy id with it. NoProgramPage will need special handling, anyways.
-  val dummyProgramId = Program.Id(Long.MaxValue: PosLong)
+  val dummyProgramId =
+    Program.Id(refineV[Positive](Long.MaxValue).getOrElse(sys.error("cannot happen")))
 
   def from(page: Page): RoutingInfo = page match {
     case NoProgramPage                         => RoutingInfo(AppTab.Overview, none, none, none)

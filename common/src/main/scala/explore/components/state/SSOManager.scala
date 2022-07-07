@@ -15,6 +15,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import monocle.Focus
 import org.typelevel.log4cats.Logger
 import react.common.ReactProps
+import lucuma.refined.*
 
 import java.time.Instant
 
@@ -23,7 +24,7 @@ final case class SSOManager(
   setVault:         Option[UserVault] => Callback,
   setMessage:       NonEmptyString => Callback
 )(implicit val ctx: AppContextIO)
-    extends ReactProps[SSOManager](SSOManager.component)
+    extends ReactProps[SSOManager, SSOManager.State, SSOManager.Backend](SSOManager.component)
 
 object SSOManager {
   type Props = SSOManager
@@ -44,7 +45,7 @@ object SSOManager {
       for {
         vaultOpt <- ctx.sso.refreshToken(expiration)
         _        <- setVault(vaultOpt).to[IO]
-        _        <- vaultOpt.fold(setMessage("Your session has expired").to[IO])(vault =>
+        _        <- vaultOpt.fold(setMessage("Your session has expired".refined).to[IO])(vault =>
                       tokenRefresher(vault.expiration, setVault, setMessage)
                     )
       } yield ()
@@ -64,7 +65,9 @@ object SSOManager {
         .onError(t =>
           Logger[IO].error(t)("Error refreshing SSO token") >>
             ($.props.setVault(none) >>
-              $.props.setMessage("There was an error while checking the validity of your session"))
+              $.props.setMessage(
+                "There was an error while checking the validity of your session".refined
+              ))
               .to[IO]
         )
         .start

@@ -8,6 +8,7 @@ import cats.syntax.all._
 import crystal.implicits._
 import crystal.react.View
 import crystal.react.implicits._
+import japgolly.scalajs.react._
 import japgolly.scalajs.react.util.DefaultEffects.{Async => DefaultA}
 import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
 import org.typelevel.log4cats.Logger
@@ -64,7 +65,7 @@ case class UndoContext[M](
                 .to[DefaultA]).runAsyncAndForget
         } yield f
       )
-      .orUnit
+      .getOrEmpty
 
   def set[A](
     getter:    M => A,
