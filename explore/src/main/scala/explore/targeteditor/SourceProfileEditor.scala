@@ -9,7 +9,7 @@ import eu.timepit.refined.auto._
 import explore.common._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
-import explore.model.enum.SourceProfileType
+import explore.model.enums.SourceProfileType
 import explore.model.validators._
 import explore.utils._
 import japgolly.scalajs.react._
