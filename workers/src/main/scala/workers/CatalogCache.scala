@@ -43,12 +43,14 @@ import lucuma.core.math.Wavelength
 trait CatalogQuerySettings {
   val proxy = uri"https://lucuma-cors-proxy.herokuapp.com"
 
+  val MaxTargets = 30000
+
   implicit val coordinatesHash: Hash[Coordinates] = Hash.fromUniversalHashCode
-  val MaxCount                                    = 30000
-  implicit val ci                                 = ADQLInterpreter.nTarget(MaxCount)
+  implicit val catalog                            = CatalogAdapter.Gaia3Lite
+  implicit val ci                                 = ADQLInterpreter.nTarget(MaxTargets)
 
   def cacheQueryHash: Hash[ADQLQuery] =
-    Hash.by(q => (CatalogAdapter.Gaia.gaiaDB, MaxCount, q.base, q.adqlGeom, q.adqlBrightness))
+    Hash.by(q => (MaxTargets, catalog.gaiaDB, q.base, q.adqlGeom, q.adqlBrightness))
 
   val UTC       = ZoneId.of("UTC")
   val UTCOffset = ZoneOffset.UTC
@@ -74,7 +76,7 @@ trait CatalogCache extends CatalogIDB with AsyncToIO {
       .flatMap(
         _.body
           .through(text.utf8.decode)
-          .through(CatalogSearch.guideStars[F](CatalogAdapter.Gaia))
+          .through(CatalogSearch.guideStars[F](CatalogAdapter.Gaia3Lite))
       )
       .compile
       .toList

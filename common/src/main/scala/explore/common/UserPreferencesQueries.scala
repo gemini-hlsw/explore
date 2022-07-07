@@ -3,6 +3,8 @@
 
 package explore.common
 
+import cats.ApplicativeThrow
+import cats.MonadThrow
 import cats.data.OptionT
 import cats.syntax.all._
 import clue.TransactionalClient
@@ -159,7 +161,7 @@ object UserPreferencesQueries {
     // Gets the layout of a section.
     // This is coded to return a default in case
     // there is no data or errors
-    def queryWithDefault[F[_]: ApplicativewThrow](
+    def queryWithDefault[F[_]: ApplicativeThrow](
       uid:        User.Id,
       tid:        Target.Id,
       defaultFov: Angle
