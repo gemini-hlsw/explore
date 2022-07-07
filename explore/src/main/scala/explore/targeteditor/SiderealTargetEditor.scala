@@ -46,6 +46,7 @@ import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.TruncatedDec
 import lucuma.ui.optics.TruncatedRA
 import lucuma.ui.optics.ValidFormatInput
+import lucuma.ui.reusability._
 import queries.common.TargetQueriesGQL
 import queries.schemas.implicits._
 import react.common._
@@ -128,7 +129,10 @@ object SiderealTargetEditor {
       .withHooks[Props]
       // cloning
       .useState(false)
-      .useEffectResultOnMountBy((p, _) => IO(p.vizTime.getOrElse(Instant.now())))
+      // If vizTime is not set, change it to now
+      .useEffectResultWithDepsBy((p, _) => p.vizTime) { (_, _) => vizTime =>
+        IO(vizTime.getOrElse(Instant.now()))
+      }
       .render { (props, cloning, vizTime) =>
         AppCtx.using { implicit appCtx =>
           // If we're going to clone on edit, use readonly views so we don't update the original
