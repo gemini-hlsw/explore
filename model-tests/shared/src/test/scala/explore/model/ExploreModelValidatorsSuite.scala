@@ -10,7 +10,6 @@ import lucuma.core.math.arb._
 import lucuma.core.optics.laws.discipline.ValidSplitEpiTests
 import lucuma.core.optics.laws.discipline.ValidWedgeTests
 import munit.DisciplineSuite
-import org.scalacheck.Arbitrary._
 
 final class ExploreModelValidatorsSuite extends DisciplineSuite {
   import ArbOffset._
