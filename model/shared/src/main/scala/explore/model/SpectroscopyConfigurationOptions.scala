@@ -7,7 +7,7 @@ import cats.Eq
 import cats.syntax.all._
 import coulomb.Quantity
 import coulomb.syntax.*
-import coulomb.cats.quantity.ctx_Quantity_Eq
+import coulomb.ops.algebra.cats.quantity.given
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
