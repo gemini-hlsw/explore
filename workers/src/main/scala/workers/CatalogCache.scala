@@ -30,7 +30,6 @@ import explore.model.boopickle._
 import org.scalajs.dom
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.time.ZoneOffset
 import java.time.temporal.ChronoField
 import java.time.temporal.ChronoUnit
 import spire.math.Bounded
@@ -39,6 +38,7 @@ import lucuma.core.enums._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.math.Wavelength
+import explore.model.Constants
 
 trait CatalogQuerySettings {
   val proxy = uri"https://lucuma-cors-proxy.herokuapp.com"
@@ -52,8 +52,6 @@ trait CatalogQuerySettings {
   def cacheQueryHash: Hash[ADQLQuery] =
     Hash.by(q => (MaxTargets, catalog.gaiaDB, q.base, q.adqlGeom, q.adqlBrightness))
 
-  val UTC       = ZoneId.of("UTC")
-  val UTCOffset = ZoneOffset.UTC
 }
 
 /**
@@ -107,8 +105,7 @@ trait CatalogCache extends CatalogIDB with AsyncToIO {
 
     val CatalogRequest(tracking, obsTime) = request
 
-    val brightnessConstraints =
-      ags.gaiaBrightnessConstraints(constraints, GuideSpeed.Fast, wavelength)
+    val brightnessConstraints = ags.widestConstraints
 
     val ldt   = LocalDateTime.ofInstant(obsTime, ZoneId.of("UTC"))
     // We consider the query valid from the fist moment of the year to the end
@@ -119,7 +116,7 @@ trait CatalogCache extends CatalogIDB with AsyncToIO {
     // Make a time based query for pm over a year
     val query = TimeRangeQueryByADQL(
       tracking,
-      Bounded(start.toInstant(UTCOffset), end.toInstant(UTCOffset), 0),
+      Bounded(start.toInstant(Constants.UTCOffset), end.toInstant(Constants.UTCOffset), 0),
       probeArm.candidatesArea,
       brightnessConstraints.some,
       proxy.some
