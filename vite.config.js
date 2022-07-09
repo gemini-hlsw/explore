@@ -26,6 +26,22 @@ const imageCache = ({ name, pattern }) => ({
     cacheName: name,
     expiration: {
       maxEntries: 2500,
+      maxAgeSeconds: 60 * 60 * 24 * 14, // 1week
+    },
+    cacheableResponse: {
+      statuses: [200],
+    },
+  },
+});
+
+// Configuration for itc
+const itcCache = ({ name, pattern }) => ({
+  urlPattern: pattern,
+  handler: 'CacheFirst',
+  options: {
+    cacheName: name,
+    expiration: {
+      maxEntries: 5000,
       maxAgeSeconds: 60 * 60 * 24 * 7, // 1week
     },
     cacheableResponse: {
@@ -181,6 +197,13 @@ module.exports = ({ command, mode }) => {
               pattern: /^https:\/\/alasky.u-strasbg.fr\/DSS/,
               name: 'aladin-images',
             }),
+            itcCache({
+              pattern: /^https:\/\/(itc-staging.lucuma.xyz|itc.gpp.gemini.edu)\/itc/,
+              name: 'itc-cache',
+            }),
+            itcCache({
+              pattern: /^https:\/\/cors-proxy.(lucuma.xyz|gpp.gemini.edu)\/http:\/\/aladin.unistra.fr\/java\/nph-aladin.*/,
+              name: 'cors-cache',
           ],
         },
       }),

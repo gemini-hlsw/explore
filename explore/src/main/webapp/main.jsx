@@ -15,10 +15,7 @@ import { registerSW } from "virtual:pwa-register";
 
 // Setup the Service Worker
 if ("serviceWorker" in navigator
-  // && !/localhost/.test(window.location) && !/local.lucuma.xyz/.test(window.location)) {
-    // Let's not do this in production yet
-  && !/local.lucumay.xyz/.test(window.location)
-  && !/explore.gemini.edu/.test(window.location) && !/gemini.edu/.test(window.location)) {
+  && !/local.lucumay.xyz/.test(window.location)) {
     ExplorePWA.runServiceWorker();
 }
 
