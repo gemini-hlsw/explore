@@ -81,7 +81,7 @@ trait DisplayImplicits {
     // We don't want scientific notation to kick in for magnitude units: we want to keep 2 integers.
     // We could make the format depend on the units, but that may be confusing for users
     // in case they want to type the value and then change the units.
-    if (x.scale <= 3 && x.precision <= 5)
+    if (0 <= x.scale && x.scale <= 3 && x.precision <= 5)
       x.toString
     else
       InputValidSplitEpi.bigDecimalWithScientificNotation.reverseGet(x)
