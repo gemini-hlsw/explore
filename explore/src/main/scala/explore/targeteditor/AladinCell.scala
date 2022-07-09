@@ -48,6 +48,7 @@ import react.semanticui.elements.button.Button
 import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.sizes._
 
+import java.time.Duration
 import java.time.Instant
 import scala.concurrent.duration._
 
@@ -72,8 +73,8 @@ object AladinCell extends ModelOptics {
   val basePos = AgsPosition(Angle.Angle0, Offset.Zero)
 
   // We want to re render only when the vizTime changes at least a month
-  implicit val instantReuse: Reusability[Instant] = Reusability { case (a, b) =>
-    (a.toEpochMilli() - b.toEpochMilli()).abs < 30 * 24 * 60 * 60 * 1000L
+  implicit val instantReuse: Reusability[Instant] = Reusability {
+    Duration.between(_, _).toDays().abs < 30L
   }
 
   protected val component =
@@ -86,7 +87,7 @@ object AladinCell extends ModelOptics {
       // flag to trigger centering. This is a bit brute force but
       // avoids us needing a ref to a Fn component
       .useStateView(false)
-      // for fast reusabillity checking use a serial state
+      // to get faster reusability use a serial state, rather than check every candidate
       .useSerialState(List.empty[GuideStarCandidate])
       // Listen on web worker for messages with catalog candidates
       .useStreamWithSyncBy((props, _, _, _, _) => props.tid)((props, _, _, _, gs) =>
@@ -111,7 +112,7 @@ object AladinCell extends ModelOptics {
               // conditions change
               gsc.at(props.obsConf.vizTime)
             })
-            .evalMap(r => gs.setState(r).to[IO])
+            .evalMap(r => gs.setStateAsync(r))
       )
       // Request data again if vizTime changes more than a month
       .useEffectWithDepsBy((p, _, _, _, _, candidates) => (candidates.awaitOpt, p.obsConf.vizTime))(
