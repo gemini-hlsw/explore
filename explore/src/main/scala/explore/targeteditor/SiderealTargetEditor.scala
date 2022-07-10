@@ -44,6 +44,7 @@ import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
+import lucuma.ui.reusability._
 import queries.common.TargetQueriesGQL
 import queries.schemas.implicits._
 import react.common._
