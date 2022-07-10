@@ -10,9 +10,21 @@ import lucuma.core.math.arb._
 import lucuma.core.optics.laws.discipline.ValidSplitEpiTests
 import lucuma.core.optics.laws.discipline.ValidWedgeTests
 import munit.DisciplineSuite
+import org.scalacheck.Arbitrary
 
 final class ExploreModelValidatorsSuite extends DisciplineSuite {
   import ArbOffset._
+
+  // Scala.js seems to have trouble formatting BigDecimals with very high absolute scale or precision.
+  // We therefore use these bounded arbitraries.
+  // TODO: This is duplicated in `InputValidSplitEpiInstancesSuite` in lucuma-core.
+  // We should move it to the testkit there and reuse it here.
+  implicit lazy val arbBigDecimalLimitedPrecision: Arbitrary[BigDecimal] =
+    Arbitrary(
+      org.scalacheck.Arbitrary.arbBigDecimal.arbitrary.suchThat(x =>
+        x.scale.abs < 100 && x.precision <= 15
+      )
+    )
 
   checkAll(
     "brightnessValidWedge",
