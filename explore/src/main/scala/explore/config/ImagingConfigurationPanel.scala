@@ -21,10 +21,10 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enums.FilterType
 import lucuma.core.math.units._
 import lucuma.core.util.Display
+import lucuma.core.validation._
 import lucuma.ui.forms.EnumViewOptionalSelect
 import lucuma.ui.forms.FormInputEV
-import lucuma.ui.optics.ChangeAuditor
-import lucuma.ui.optics.ValidFormatInput
+import lucuma.ui.input.ChangeAuditor
 import react.common._
 import react.semanticui.collections.menu.MenuHeader
 import react.semanticui.modules.dropdown._
@@ -128,7 +128,7 @@ object ImagingConfigurationPanel {
           inline = true,
           value = fov,
           units = "arcsec",
-          validFormat = ValidFormatInput.fromFormat(formatArcsec).optional,
+          validFormat = InputValidWedge.fromFormat(formatArcsec).optional,
           changeAuditor = ChangeAuditor.fromFormat(formatArcsec).optional,
           disabled = false
         ),
@@ -136,12 +136,13 @@ object ImagingConfigurationPanel {
         FormInputEV(
           id = "signal-to-noise",
           value = signalToNoise,
-          validFormat = ValidFormatInput.forPosBigDecimal().optional,
+          validFormat = InputValidSplitEpi.posBigDecimal.optional,
           changeAuditor = ChangeAuditor.posBigDecimal().optional
         ),
-        <.label("Capabilities",
-                HelpIcon("configuration/capabilities.md"),
-                ExploreStyles.SkipToNext
+        <.label(
+          "Capabilities",
+          HelpIcon("configuration/capabilities.md"),
+          ExploreStyles.SkipToNext
         ),
         EnumViewOptionalSelect(
           id = "imaging-capabilities",

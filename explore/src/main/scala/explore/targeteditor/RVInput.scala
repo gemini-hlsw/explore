@@ -16,10 +16,10 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.RadialVelocity
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
+import lucuma.core.validation._
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.forms.FormInputEV
-import lucuma.ui.optics.ChangeAuditor
-import lucuma.ui.optics.ValidFormatInput
+import lucuma.ui.input.ChangeAuditor
 import monocle.Focus
 import react.common._
 import react.common.implicits._
@@ -86,7 +86,7 @@ object RVInput {
             value = props.rv.zoom(rvToRedshiftGet)(rvToRedshiftMod),
             errorClazz = errorCss,
             errorPointing = LabelPointing.Below,
-            validFormat = ValidFormatInput.fromFormat(formatZ, "Must be a number").optional,
+            validFormat = InputValidSplitEpi.fromFormat(formatZ, "Must be a number").optional,
             changeAuditor = ChangeAuditor.fromFormat(formatZ).decimal(9).optional,
             clazz = baseCss,
             disabled = props.disabled
@@ -97,7 +97,7 @@ object RVInput {
             value = props.rv.zoom(rvToARVGet)(rvToARVMod),
             errorClazz = errorCss,
             errorPointing = LabelPointing.Below,
-            validFormat = ValidFormatInput.fromFormat(formatCZ, "Must be a number").optional,
+            validFormat = InputValidSplitEpi.fromFormat(formatCZ, "Must be a number").optional,
             changeAuditor = ChangeAuditor.fromFormat(formatCZ).decimal(10).optional,
             clazz = baseCss,
             disabled = props.disabled
@@ -108,7 +108,7 @@ object RVInput {
             value = props.rv,
             errorClazz = errorCss,
             errorPointing = LabelPointing.Below,
-            validFormat = ValidFormatInput.fromFormat(formatRV, "Must be a number").optional,
+            validFormat = InputValidSplitEpi.fromFormat(formatRV, "Must be a number").optional,
             changeAuditor = ChangeAuditor.fromFormat(formatRV).decimal(3).optional,
             clazz = baseCss,
             disabled = props.disabled

@@ -34,18 +34,16 @@ import japgolly.scalajs.react.hooks.Hooks
 import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math._
+import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.Target
 import lucuma.core.model.User
+import lucuma.core.validation._
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.forms.FormInputEV
-import lucuma.ui.implicits._
-import lucuma.ui.optics.ChangeAuditor
-import lucuma.ui.optics.TruncatedDec
-import lucuma.ui.optics.TruncatedRA
-import lucuma.ui.optics.ValidFormatInput
+import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.reusability._
 import queries.common.TargetQueriesGQL
 import queries.schemas.implicits._
@@ -299,8 +297,8 @@ object SiderealTargetEditor {
                 <.label("RA", HelpIcon("target/main/coordinates.md"), ExploreStyles.SkipToNext),
                 FormInputEV(
                   id = "ra",
-                  value = coordsRAView.zoomSplitEpi(TruncatedRA.rightAscension),
-                  validFormat = ValidFormatInput.truncatedRA,
+                  value = coordsRAView,  // .zoomSplitEpi(TruncatedRA.rightAscension),
+                  validFormat = MathValidators.truncatedRA,
                   changeAuditor = ChangeAuditor.truncatedRA,
                   clazz = ExploreStyles.TargetRaDecMinWidth,
                   errorPointing = LabelPointing.Below,
@@ -310,8 +308,8 @@ object SiderealTargetEditor {
                 <.label("Dec", HelpIcon("target/main/coordinates.md"), ExploreStyles.SkipToNext),
                 FormInputEV(
                   id = "dec",
-                  value = coordsDecView.zoomSplitEpi(TruncatedDec.declination),
-                  validFormat = ValidFormatInput.truncatedDec,
+                  value = coordsDecView, // .zoomSplitEpi(TruncatedDec.declination),
+                  validFormat = MathValidators.truncatedDec,
                   changeAuditor = ChangeAuditor.truncatedDec,
                   clazz = ExploreStyles.TargetRaDecMinWidth,
                   errorPointing = LabelPointing.Below,
@@ -326,37 +324,43 @@ object SiderealTargetEditor {
                 ExploreStyles.TargetProperMotionForm,
                 <.label("Epoch", HelpIcon("target/main/epoch.md"), ExploreStyles.SkipToNext),
                 InputWithUnits(
-                  epochView,
-                  ValidFormatInput.fromFormat(Epoch.fromStringNoScheme, "Invalid Epoch"),
-                  ChangeAuditor.maxLength(8).decimal(3).denyNeg.as[Epoch],
                   id = "epoch",
+                  value = epochView,
+                  validFormat = MathValidators.epoch,
+                  changeAuditor = ChangeAuditor.maxLength(8).decimal(3).denyNeg,
                   units = "years",
                   disabled = disabled
                 ),
                 <.label("µ RA", ExploreStyles.SkipToNext),
                 InputWithUnits(
-                  properMotionRAView,
-                  ValidFormatInput.fromFormat(pmRAFormat, "Must be a number").optional,
-                  ChangeAuditor.fromFormat(pmRAFormat).decimal(3).optional,
                   id = "raPM",
+                  value = properMotionRAView,
+                  validFormat = InputValidSplitEpi
+                    .fromFormat(pmRAFormat, "Must be a number")
+                    .optional,
+                  changeAuditor = ChangeAuditor.fromFormat(pmRAFormat).decimal(3).optional,
                   units = "mas/y",
                   disabled = disabled
                 ),
                 <.label("µ Dec", ExploreStyles.SkipToNext),
                 InputWithUnits(
-                  properMotionDecView,
-                  ValidFormatInput.fromFormat(pmDecFormat, "Must be a number").optional,
-                  ChangeAuditor.fromFormat(pmDecFormat).decimal(3).optional,
                   id = "raDec",
+                  value = properMotionDecView,
+                  validFormat = InputValidSplitEpi
+                    .fromFormat(pmDecFormat, "Must be a number")
+                    .optional,
+                  changeAuditor = ChangeAuditor.fromFormat(pmDecFormat).decimal(3).optional,
                   units = "mas/y",
                   disabled = disabled
                 ),
                 <.label("Parallax", ExploreStyles.SkipToNext),
                 InputWithUnits(
-                  parallaxView,
-                  ValidFormatInput.fromFormat(pxFormat, "Must be a number").optional,
-                  ChangeAuditor.fromFormat(pxFormat).decimal(3).optional,
                   id = "parallax",
+                  value = parallaxView,
+                  validFormat = InputValidSplitEpi
+                    .fromFormat(pxFormat, "Must be a number")
+                    .optional,
+                  changeAuditor = ChangeAuditor.fromFormat(pxFormat).decimal(3).optional,
                   units = "mas",
                   disabled = disabled
                 ),

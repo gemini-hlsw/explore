@@ -11,10 +11,10 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.validation.InputValidFormat
 import lucuma.ui.forms.ExternalValue
 import lucuma.ui.forms.FormInputEV
-import lucuma.ui.optics.ChangeAuditor
-import lucuma.ui.optics.ValidFormatInput
+import lucuma.ui.input.ChangeAuditor
 import react.common._
 import react.semanticui._
 import react.semanticui.elements.label.Label
@@ -24,8 +24,8 @@ import scala.scalajs.js
 
 final case class InputWithUnits[EV[_], A](
   value:           EV[A],
-  validFormat:     ValidFormatInput[A],
-  changeAuditor:   ChangeAuditor[A],
+  validFormat:     InputValidFormat[A],
+  changeAuditor:   ChangeAuditor,
   id:              NonEmptyString,
   label:           js.UndefOr[ShorthandS[Label]] = js.undefined,
   units:           TagMod,

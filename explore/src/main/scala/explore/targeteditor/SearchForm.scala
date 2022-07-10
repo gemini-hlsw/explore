@@ -15,8 +15,8 @@ import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
+import lucuma.core.validation.InputValidSplitEpi
 import lucuma.ui.forms._
-import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.utils.abbreviate
 import monocle.Focus
 import react.common._
@@ -114,7 +114,7 @@ object SearchForm {
         FormInputEV(
           id = "search",
           value = View.fromState($).zoom(State.searchTerm).withOnMod(props.targetView.set),
-          validFormat = ValidFormatInput.nonEmptyValidFormat,
+          validFormat = InputValidSplitEpi.nonEmptyString,
           error = state.searchError.orUndefined,
           loading = disabled,
           disabled = disabled,
