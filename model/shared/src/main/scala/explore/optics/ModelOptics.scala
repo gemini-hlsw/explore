@@ -10,9 +10,7 @@ import coulomb.units.constants._
 import coulomb.ops.algebra.spire.all.given
 import coulomb.policy.spire.standard.given
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.model.TruncatedAngle
 import lucuma.core.enums.Band
-import lucuma.core.math.Angle
 import lucuma.core.math.ApparentRadialVelocity
 import lucuma.core.math.Constants._
 import lucuma.core.math.RadialVelocity
@@ -21,7 +19,6 @@ import lucuma.core.math.dimensional.Measure
 import lucuma.core.math.units._
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.Target
-import lucuma.core.optics.SplitEpi
 import monocle.Getter
 import monocle.Optional
 import monocle._
@@ -63,10 +60,6 @@ trait ModelOptics {
         .orElse(SourceProfile.surfaceBrightnesses.getOption(sourceProfile))
     }
 
-  val angleTruncatedAngleSplitEpi: SplitEpi[Angle, TruncatedAngle] =
-    SplitEpi[Angle, TruncatedAngle](TruncatedAngle(_), _.angle)
-
-  // TODO: Move to lucuma-core?
   val optionNonEmptyStringIso: Iso[Option[NonEmptyString], String] =
     Iso[Option[NonEmptyString], String](_.foldMap(_.value))(s => NonEmptyString.from(s).toOption)
 }

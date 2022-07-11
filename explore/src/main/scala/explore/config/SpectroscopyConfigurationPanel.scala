@@ -17,10 +17,10 @@ import explore.targeteditor.InputWithUnits
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.validation._
 import lucuma.ui.forms.EnumViewOptionalSelect
 import lucuma.ui.forms.FormInputEV
-import lucuma.ui.optics.ChangeAuditor
-import lucuma.ui.optics.ValidFormatInput
+import lucuma.ui.input.ChangeAuditor
 import react.common._
 
 final case class SpectroscopyConfigurationPanel(
@@ -43,7 +43,7 @@ object SpectroscopyConfigurationPanel {
       val spectroscopyCapabilities =
         p.options.zoom(SpectroscopyConfigurationOptions.capabilities)
 
-      val wvMicroInput    = ValidFormatInput.fromFormat(formatMicron).optional
+      val wvMicroInput    = InputValidWedge.fromFormat(formatMicron).optional
       val wvChangeAuditor = ChangeAuditor.fromFormat(formatMicron).decimal(3).optional
 
       val wvUnits =
@@ -68,7 +68,7 @@ object SpectroscopyConfigurationPanel {
         FormInputEV(
           id = "configuration-resolution-power",
           value = resolution,
-          validFormat = ValidFormatInput.forPosInt().optional,
+          validFormat = InputValidSplitEpi.posInt.optional,
           changeAuditor = ChangeAuditor.posInt.optional
         ),
         <.label("S / N", HelpIcon("configuration/signal_to_noise.md"), ExploreStyles.SkipToNext),
@@ -76,7 +76,7 @@ object SpectroscopyConfigurationPanel {
           id = "signal-to-noise",
           value = signalToNoise,
           clazz = ExploreStyles.WarningInput.when_(signalToNoise.get.isEmpty),
-          validFormat = ValidFormatInput.forPosBigDecimal().optional,
+          validFormat = InputValidSplitEpi.posBigDecimal.optional,
           changeAuditor = ChangeAuditor.posBigDecimal().optional
         ),
         <.div(
@@ -122,14 +122,15 @@ object SpectroscopyConfigurationPanel {
             clazz = Css.Empty,
             value = focalPlaneAngle,
             units = "arcsec",
-            validFormat = ValidFormatInput.fromFormat(formatArcsec).optional,
+            validFormat = InputValidWedge.fromFormat(formatArcsec).optional,
             changeAuditor = ChangeAuditor.fromFormat(formatArcsec).optional,
             disabled = false
           )
         ),
-        <.label("Capabilities",
-                HelpIcon("configuration/capabilities.md"),
-                ExploreStyles.SkipToNext
+        <.label(
+          "Capabilities",
+          HelpIcon("configuration/capabilities.md"),
+          ExploreStyles.SkipToNext
         ),
         EnumViewOptionalSelect(
           id = "spectroscopy-capabilities",

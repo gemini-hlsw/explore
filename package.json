@@ -60,10 +60,10 @@
     "stylelint-config-prettier": "^9.0.3",
     "stylelint-config-standard": "^22.0.0",
     "terser": "5.14.1",
-    "vite": "2.9.13",
+    "vite": "2.9.14",
     "vite-plugin-fonts": "^0.2.2",
     "vite-plugin-mkcert": "^1.7.2",
-    "vite-plugin-pwa": "^0.12.2"
+    "vite-plugin-pwa": "^0.12.3"
   },
   "scripts": {
     "lint-dark": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/webapp/less/variables-dark.less > vars.css;trap \"rm vars.css\" EXIT;npx stylelint common/src/main/webapp/less",

@@ -26,10 +26,10 @@ import lucuma.core.math.dimensional._
 import lucuma.core.math.units._
 import lucuma.core.model.EmissionLine
 import lucuma.core.util.Enumerated
+import lucuma.core.validation._
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.forms.FormInputEV
-import lucuma.ui.optics.ChangeAuditor
-import lucuma.ui.optics.ValidFormatInput
+import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.reusability._
 import react.common._
 import react.common.implicits._
@@ -88,7 +88,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
               FormInputEV[View, PosBigDecimal](
                 id = NonEmptyString.unsafeFrom(s"lineWidth_${cell.row.id}"),
                 value = cell.value,
-                validFormat = ValidFormatInput.forPosBigDecimal(),
+                validFormat = InputValidSplitEpi.posBigDecimal,
                 changeAuditor = ChangeAuditor.posBigDecimal(3).allowEmpty,
                 disabled = disabled
               )
@@ -108,7 +108,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
               FormInputEV[View, PosBigDecimal](
                 id = NonEmptyString.unsafeFrom(s"lineValue_${cell.row.id}"),
                 value = cell.value,
-                validFormat = ValidFormatInput.forScientificNotationPosBigDecimal(),
+                validFormat = InputValidSplitEpi.posBigDecimalWithScientificNotation,
                 changeAuditor = ChangeAuditor.posScientificNotation(),
                 disabled = disabled
               )
@@ -193,7 +193,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
           FormInputEV[View, Option[Wavelength]](
             id = "newWavelength",
             value = newWavelength,
-            validFormat = ValidFormatInput.fromFormat(formatWavelengthMicron).optional,
+            validFormat = InputValidSplitEpi.fromFormat(formatWavelengthMicron).optional,
             changeAuditor = ChangeAuditor
               .fromFormat(formatWavelengthMicron)
               .decimal(3)

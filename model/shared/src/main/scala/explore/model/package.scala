@@ -4,11 +4,17 @@
 package explore
 
 import eu.timepit.refined.api.Refined
+import eu.timepit.refined.api.RefinedTypeOps
 import eu.timepit.refined.numeric.Interval
 
 package object model {
-  protected val Minus1000 = BigDecimal(-1000)
-  protected val Plus1000  = BigDecimal(1000)
-  type DitherNanoMetersRange = Interval.Closed[Minus1000.type, Plus1000.type]
+  type DitherNanoMetersRange = Interval.Closed[-1000, 1000]
   type DitherNanoMeters      = BigDecimal Refined DitherNanoMetersRange
+
+  val MaxHourValue = BigDecimal(1000)
+  type HourRange = Interval.Closed[0, MaxHourValue.type]
+  type Hours     = BigDecimal Refined HourRange
+  object Hours extends RefinedTypeOps[Hours, BigDecimal] {
+    val Max: Hours = Hours.unsafeFrom(MaxHourValue)
+  }
 }

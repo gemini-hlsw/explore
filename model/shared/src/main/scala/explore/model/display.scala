@@ -12,12 +12,9 @@ import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
 import lucuma.core.syntax.display._
 import lucuma.core.util.Display
-import lucuma.ui.implicits._
+import lucuma.core.validation.InputValidSplitEpi
 
-import java.math.RoundingMode
-import java.text.DecimalFormat
-
-object display {
+trait DisplayImplicits {
   implicit val displayTacGroup: Display[TacGroup] =
     Display.byShortName(_.label)
 
@@ -80,19 +77,17 @@ object display {
   }
 
   // Not implicit. When we have opaque types we may define a BrightnessValue.
-  // Scientific notation only kicks in when more than 3 decimal digits would be needed.
   val displayBrightness: Display[BigDecimal] = Display.byShortName { x =>
-    if (x.scale <= 3 && x.precision <= 5)
+    // We don't want scientific notation to kick in for magnitude units: we want to keep 2 integers.
+    // We could make the format depend on the units, but that may be confusing for users
+    // in case they want to type the value and then change the units.
+    if (0 <= x.scale && x.scale <= 3 && x.precision <= 5)
       x.toString
-    else {
-      // TODO The same scientific notation formatting is also defined in lucuma-ui.
-      // Should we move it to a Format[String, BigDecimal] in lucuma-core?
-      val formatter = new DecimalFormat("0.0E0")
-      formatter.setRoundingMode(RoundingMode.HALF_UP)
-      formatter.setMinimumFractionDigits(if (x.scale > 0) x.precision - 1 else x.scale)
-      formatter.format(x.bigDecimal).stripSuffix("E0").toLowerCase
-    }
+    else
+      InputValidSplitEpi.bigDecimalWithScientificNotation.reverseGet(x)
   }
+
+  implicit val displayLibrarySpectrum: Display[StellarLibrarySpectrum] = Display.byTag
 
   import UnnormalizedSED._
   implicit val displayUnnormalizedSED: Display[UnnormalizedSED] = Display.byShortName {
@@ -112,4 +107,28 @@ object display {
     case SpectralDefinition.BandNormalized(band, _) => band.shortName
     case SpectralDefinition.EmissionLines(_, _)     => "Emission Lines"
   }
+
+  implicit val displayGmosXBinning: Display[GmosXBinning] = Display.byTag
+
+  implicit val displayGmosYBinning: Display[GmosYBinning] = Display.byTag
+
+  implicit val displayGmosNorthGrating: Display[GmosNorthGrating] = Display.byTag
+
+  implicit val displayGmosSouthGrating: Display[GmosSouthGrating] = Display.byTag
+
+  implicit val displayGmosNorthFilter: Display[GmosNorthFilter] = Display.byTag
+
+  implicit val displayGmosSouthFilter: Display[GmosSouthFilter] = Display.byTag
+
+  implicit val displayGmosNorthFpu: Display[GmosNorthFpu] = Display.byTag
+
+  implicit val displayGmosSouthFpu: Display[GmosSouthFpu] = Display.byTag
+
+  implicit val displayGmosAmpReadMode: Display[GmosAmpReadMode] = Display.byTag
+
+  implicit val displayGmosAmpGain: Display[GmosAmpGain] = Display.byTag
+
+  implicit val displayGmosRoi: Display[GmosRoi] = Display.byTag
 }
+
+object display extends DisplayImplicits

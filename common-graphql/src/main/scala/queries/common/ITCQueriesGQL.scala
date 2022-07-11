@@ -5,8 +5,10 @@ package queries.common
 
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
+import eu.timepit.refined.types.string
 import queries.schemas.ITC
 // gql: import lucuma.ui.reusability._
+// gql: import io.circe.refined._
 
 object ITCQueriesGQL {
 
@@ -16,6 +18,7 @@ object ITCQueriesGQL {
       """
       query($input: SpectroscopyModeInput) {
         spectroscopy(input: $input) {
+          serverVersion
           results {
             mode {
               instrument
@@ -35,6 +38,12 @@ object ITCQueriesGQL {
         }
       }
     """
+
+    object Data {
+      object Spectroscopy {
+        type ServerVersion = string.NonEmptyString
+      }
+    }
   }
 
 }

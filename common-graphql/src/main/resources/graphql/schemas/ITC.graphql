@@ -4718,6 +4718,8 @@ type Result {
 }
 
 type SpectroscopyResult {
+  serverVersion: NonEmptyString!
+
   # Search results
   results: [Result!]!
 }

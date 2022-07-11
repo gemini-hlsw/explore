@@ -11,11 +11,8 @@ import clue.data.Input
 import clue.data.syntax._
 import crystal.react.View
 import crystal.react.hooks._
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined.api.RefinedTypeOps
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
-import eu.timepit.refined.numeric.Interval
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.Aligner
@@ -25,6 +22,9 @@ import explore.components.Tile
 import explore.components.ui._
 import explore.components.undo.UndoButtons
 import explore.implicits._
+import explore.model.ExploreModelValidators
+import explore.model.Hours
+import explore.model.display._
 import explore.model.reusability._
 import explore.optics.optionNonEmptyStringIso
 import explore.proposal.ProposalClassType._
@@ -41,10 +41,10 @@ import lucuma.core.model.ProposalClass
 import lucuma.core.model.ZeroTo100
 import lucuma.core.syntax.time._
 import lucuma.core.util.Enumerated
+import lucuma.core.validation._
 import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.forms._
-import lucuma.ui.implicits._
-import lucuma.ui.optics._
+import lucuma.ui.input._
 import monocle.Iso
 import queries.common.ProgramQueriesGQL
 import queries.schemas.implicits._
@@ -71,13 +71,6 @@ final case class ProposalEditor(
 
 object ProposalEditor {
   type Props = ProposalEditor
-
-  val MaxHourValue = BigDecimal(1000)
-  type HourRange = Interval.Closed[0, MaxHourValue.type]
-  type Hours     = BigDecimal Refined HourRange
-  object Hours extends RefinedTypeOps[Hours, BigDecimal] {
-    val Max: Hours = Hours.unsafeFrom(MaxHourValue)
-  }
 
   private val Hours2Micros = BigDecimal(60L * 60L * 1000L * 1000L)
 
@@ -228,8 +221,8 @@ object ProposalEditor {
     def makeMinimumPctInput[A](pctView: View[IntPercent], id: NonEmptyString): TagMod =
       FormInputEV(
         value = pctView,
-        validFormat = ValidFormatInput.forRefinedInt[ZeroTo100](),
-        changeAuditor = ChangeAuditor.forRefinedInt[ZeroTo100](),
+        validFormat = InputValidSplitEpi.refinedInt[ZeroTo100],
+        changeAuditor = ChangeAuditor.refinedInt[ZeroTo100](),
         label = Label("Minimum %", HelpIcon("proposal/main/minimum-pct.md")),
         id = id
       ).withMods(
@@ -240,12 +233,8 @@ object ProposalEditor {
     def totalTimeEntry[A]: Option[VdomNode] =
       totalTime.map(_ =>
         FormInputEV(
-          value = totalHours
-            .zoomSplitEpi(
-              TruncatedRefinedBigDecimal.unsafeRefinedBigDecimal[HourRange, 2]
-            )
-            .withOnMod(h => totalTimeView.set(fromHours(h.value))),
-          validFormat = ValidFormatInput.forRefinedTruncatedBigDecimal[HourRange, 2](),
+          value = totalHours.withOnMod(h => totalTimeView.set(fromHours(h))),
+          validFormat = ExploreModelValidators.hoursValidWedge,
           changeAuditor = ChangeAuditor.accept.decimal(2),
           label = Label("Total", HelpIcon("proposal/main/total-time.md")),
           id = "total-time-entry"
@@ -285,7 +274,7 @@ object ProposalEditor {
             id = "title",
             className = "inverse",
             value = titleView,
-            validFormat = ValidFormatInput.nonEmptyValidFormat.optional,
+            validFormat = InputValidSplitEpi.nonEmptyString.optional,
             label = "Title"
           ).withMods(^.autoFocus := true),
           <.div(
@@ -404,17 +393,18 @@ object ProposalEditor {
         ^.key := "details",
         ExploreStyles.ProposalTile,
         Tile("details", "Details")(
-          renderDetails(aligner,
-                        undoCtx,
-                        totalHours,
-                        minPct2,
-                        proposalClassType,
-                        showModal,
-                        splitsList,
-                        splitsView.get,
-                        executionTime,
-                        band3Time,
-                        _
+          renderDetails(
+            aligner,
+            undoCtx,
+            totalHours,
+            minPct2,
+            proposalClassType,
+            showModal,
+            splitsList,
+            splitsView.get,
+            executionTime,
+            band3Time,
+            _
           )
         )
       ),
@@ -479,16 +469,17 @@ object ProposalEditor {
       )
       .render { (props, totalHours, minPct2, proposalClassType, showModal, splitsList, _) =>
         implicit val ctx = props.ctx
-        renderFn(props.programId,
-                 props.proposal,
-                 props.undoStacks,
-                 totalHours,
-                 minPct2,
-                 proposalClassType,
-                 showModal,
-                 splitsList,
-                 props.executionTime,
-                 props.band3Time
+        renderFn(
+          props.programId,
+          props.proposal,
+          props.undoStacks,
+          totalHours,
+          minPct2,
+          proposalClassType,
+          showModal,
+          splitsList,
+          props.executionTime,
+          props.band3Time
         )
       }
 }
