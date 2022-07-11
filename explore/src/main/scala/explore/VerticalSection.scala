@@ -14,16 +14,16 @@ import react.common._
  * It requires css to work properly
  */
 final case class VerticalSection()
-    extends ReactPropsWithChildren[VerticalSection](VerticalSection.component)
+    extends ReactFnPropsWithChildren[VerticalSection](VerticalSection.component)
 
 object VerticalSection {
   type Props = VerticalSection
 
   private val component =
-    ScalaComponent
-      .builder[Props]
-      .stateless
-      .render_C(c =>
+    ScalaFnComponent
+      .withHooks[Props]
+      .withPropsChildren
+      .render((_, c) =>
         <.div(
           ExploreStyles.RotationWrapperOuter,
           <.div(
@@ -32,5 +32,4 @@ object VerticalSection {
           )
         )
       )
-      .build
 }

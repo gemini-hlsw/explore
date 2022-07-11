@@ -19,7 +19,7 @@ final case class FormStaticData(
   value:     TagMod,
   label:     String,
   modifiers: Seq[TagMod] = Seq.empty
-) extends ReactProps[FormStaticData](FormStaticData.component) {
+) extends ReactFnProps[FormStaticData](FormStaticData.component) {
   def apply(mods: TagMod*): FormStaticData = copy(modifiers = modifiers ++ mods)
 }
 
@@ -27,17 +27,14 @@ object FormStaticData {
   type Props = FormStaticData
 
   val component =
-    ScalaComponent
-      .builder[Props]
-      .render_P { props =>
-        <.div(
-          props.modifiers.toTagMod,
-          ^.cls := "field",
-          <.label(props.label, ^.htmlFor := props.id),
-          <.div(^.cls                    := "ui input",
-                <.data(props.value, ExploreStyles.StaticData, ^.id := props.id, ^.tabIndex := 0)
-          )
+    ScalaFnComponent[Props] { props =>
+      <.div(
+        props.modifiers.toTagMod,
+        ^.cls := "field",
+        <.label(props.label, ^.htmlFor := props.id),
+        <.div(^.cls                    := "ui input",
+              <.data(props.value, ExploreStyles.StaticData, ^.id := props.id, ^.tabIndex := 0)
         )
-      }
-      .build
+      )
+    }
 }

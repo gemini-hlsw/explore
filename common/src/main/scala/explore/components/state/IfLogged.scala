@@ -18,11 +18,11 @@ import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import queries.common.UserPreferencesQueriesGQL._
-import react.common.ReactProps
+import react.common._
 
 final case class IfLogged(view: View[RootModel])(
   val render:                   (UserVault, IO[Unit]) => VdomNode
-) extends ReactProps[IfLogged](IfLogged.component)
+) extends ReactFnProps[IfLogged](IfLogged.component)
 
 object IfLogged {
   type Props = IfLogged
@@ -32,28 +32,24 @@ object IfLogged {
     UserInsertMutation.execute(Input(vault.user.id.toString)).start.void
 
   private val component =
-    ScalaComponent
-      .builder[IfLogged]
-      .stateless
-      .render_P { p =>
-        AppCtx.using { implicit ctx =>
-          val vaultView   = p.view.zoom(RootModel.vault)
-          val messageView = p.view.zoom(RootModel.userSelectionMessage)
+    ScalaFnComponent[IfLogged] { p =>
+      AppCtx.using { implicit ctx =>
+        val vaultView   = p.view.zoom(RootModel.vault)
+        val messageView = p.view.zoom(RootModel.userSelectionMessage)
 
-          val vaultSet   = vaultView.set.reuseAlways
-          val messageSet = messageView.set.compose((s: NonEmptyString) => s.some).reuseAlways
+        val vaultSet   = vaultView.set.reuseAlways
+        val messageSet = messageView.set.compose((s: NonEmptyString) => s.some).reuseAlways
 
-          vaultView.get.fold[VdomElement](
-            UserSelectionForm(vaultView, messageView)
-          ) { vault =>
-            React.Fragment(
-              SSOManager(vault.expiration, vaultSet, messageSet),
-              ConnectionManager(vault.token, onConnect = vault.curryReusing.in(createUserPrefs _))(
-                LogoutTracker(vaultSet, messageSet)(p.render(vault, _))
-              )
+        vaultView.get.fold[VdomElement](
+          UserSelectionForm(vaultView, messageView)
+        ) { vault =>
+          React.Fragment(
+            SSOManager(vault.expiration, vaultSet, messageSet),
+            ConnectionManager(vault.token, onConnect = vault.curryReusing.in(createUserPrefs _))(
+              LogoutTracker(vaultSet, messageSet)(p.render(vault, _))
             )
-          }
+          )
         }
       }
-      .build
+    }
 }
