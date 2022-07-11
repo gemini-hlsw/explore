@@ -14,7 +14,7 @@ import react.common._
  * It requires css to work properly
  */
 final case class VerticalSection()
-    extends ReactPropsWithChildren[VerticalSection](VerticalSection.component)
+    extends ReactPropsWithChildren[VerticalSection, Unit, Unit](VerticalSection.component)
 
 object VerticalSection {
   type Props = VerticalSection

@@ -27,7 +27,7 @@ object Settings {
     val lucumaCatalog         = "0.23-6da8a9d-SNAPSHOT"
     val lucumaUI              = "0.38-414d967-SNAPSHOT"
     val lucumaReactVersion    = "1.0-18d05e8-SNAPSHOT"
-    val lucumaSchemas         = "0.31-586a0f8-SNAPSHOT"
+    val lucumaSchemas         = "0.31-8e1137d-SNAPSHOT"
     val lucumaRefinedVersion  = "0.1.0"
     val refinedAlgebraVersion = "0.0-7d9e39d-SNAPSHOT"
     val lucumaSSO             = "0.2-f341c3f-SNAPSHOT"

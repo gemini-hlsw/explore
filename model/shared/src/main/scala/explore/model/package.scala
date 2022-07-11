@@ -14,7 +14,7 @@ package object model {
   val MaxHourValue = BigDecimal(1000)
   type HourRange = Interval.Closed[0, MaxHourValue.type]
   type Hours     = BigDecimal Refined HourRange
-  object Hours extends RefinedTypeOps[Hours, BigDecimal] {
-    val Max: Hours = Hours.unsafeFrom(MaxHourValue)
-  }
+  // object Hours extends RefinedTypeOps[Hours, BigDecimal] {
+  //   val Max: Hours = Hours.unsafeFrom(MaxHourValue)
+  // }
 }

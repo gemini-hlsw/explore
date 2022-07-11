@@ -7,6 +7,7 @@ import cats.syntax.all._
 import coulomb.Quantity
 import crystal.react._
 import crystal.react.hooks._
+import coulomb.ops.algebra.spire.all.given
 import eu.timepit.refined.auto._
 import explore.Icons
 import explore.common.ObsQueries._
@@ -35,6 +36,7 @@ import react.semanticui.collections.form.Form
 import react.semanticui.elements.button.Button
 import react.semanticui.shorthand._
 import react.semanticui.sizes._
+import lucuma.refined.*
 
 import scalajs.js.JSConverters._
 
@@ -116,7 +118,7 @@ object BasicConfigurationPanel {
             ExploreStyles.ExploreForm,
             ExploreStyles.BasicConfigurationForm
           )(
-            <.label("Mode", HelpIcon("configuration/mode.md")),
+            <.label("Mode", HelpIcon("configuration/mode.md".refined)),
             EnumViewSelect(id = "configuration-mode", value = mode),
             SpectroscopyConfigurationPanel(spectroscopy.as(dataIso))
               .when(isSpectroscopy),

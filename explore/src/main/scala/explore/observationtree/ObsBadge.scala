@@ -41,7 +41,7 @@ final case class ObsBadge(
   setActiveStatusCB: Option[ObsActiveStatus => Callback] = none,
   setSubtitleCB:     Option[Option[NonEmptyString] => Callback] = none,
   deleteCB:          Option[Callback] = none
-) extends ReactProps[ObsBadge](ObsBadge.component)
+) extends ReactProps[ObsBadge, Unit, Unit](ObsBadge.component)
 
 object ObsBadge {
   type Props = ObsBadge
@@ -74,7 +74,7 @@ object ObsBadge {
             size = Small,
             compact = true,
             clazz = ExploreStyles.DeleteButton |+| ExploreStyles.ObsDeleteButton,
-            icon = Icons.Trash,
+            // icon = Icons.Trash,
             onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
               e.preventDefaultCB *>
                 e.stopPropagationCB *>

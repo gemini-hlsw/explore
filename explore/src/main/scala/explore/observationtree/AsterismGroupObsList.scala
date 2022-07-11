@@ -50,7 +50,7 @@ final case class AsterismGroupObsList(
   expandedIds:      View[SortedSet[ObsIdSet]],
   undoStacks:       View[UndoStacks[IO, AsterismGroupsWithObs]]
 )(implicit val ctx: AppContextIO)
-    extends ReactProps[AsterismGroupObsList](AsterismGroupObsList.component)
+    extends ReactProps[AsterismGroupObsList, AsterismGroupObsList.State, AsterismGroupObsList.Backend](AsterismGroupObsList.component)
     with ViewCommon
 
 object AsterismGroupObsList {
@@ -228,7 +228,7 @@ object AsterismGroupObsList {
           .addModifiers(
             Seq(
               ^.cursor.pointer,
-              ^.onClick ==> { e: ReactEvent =>
+              ^.onClick ==> { (e: ReactEvent) =>
                 e.stopPropagationCB >>
                   toggleExpanded(obsIds, props.expandedIds)
                     .asEventDefault(e)

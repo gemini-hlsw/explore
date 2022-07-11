@@ -39,7 +39,7 @@ object SideTabs {
 
         def tabButton(tab: AppTab): Button =
           Button(
-            as = <.a,
+            // as = <.a,
             active = tab === focus,
             clazz = ExploreStyles.SideButton,
             onClickE = onClickE[ButtonProps](tab)
@@ -47,7 +47,7 @@ object SideTabs {
 
         def tab(tab: AppTab): Label =
           Label(
-            as = <.a,
+            // as = <.a,
             active = tab === focus,
             clazz = ExploreStyles.TabSelector,
             size = Tiny,

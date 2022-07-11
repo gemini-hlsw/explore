@@ -40,6 +40,7 @@ import react.semanticui.collections.form.Form
 import react.semanticui.elements.button.Button
 import react.semanticui.shorthand._
 import react.semanticui.sizes._
+import lucuma.refined._
 
 import scala.scalajs.js.JSConverters._
 
@@ -122,22 +123,24 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
 
         def dithersControl(onChange: Callback): VdomElement =
           ReactFragment(
-            <.label("λ Dithers", HelpIcon("configuration/lambda-dithers.md")),
+            <.label("λ Dithers", HelpIcon("configuration/lambda-dithers.md".refined)),
             InputWithUnits(
-              id = "dithers",
+              id = "dithers".refined,
               value = explicitWavelengthDithers(props.scienceModeAdvanced).withOnMod(_ => onChange),
               validFormat = ExploreModelValidators.dithersValidSplitEpi,
-              changeAuditor =
-                ChangeAuditor.bigDecimal(integers = 3, decimals = 1).toSequence().optional,
+              changeAuditor = ChangeAuditor
+                .bigDecimal(integers = 3.refined, decimals = 1.refined)
+                .toSequence()
+                .optional,
               units = "nm"
             )
           )
 
         def offsetsControl(onChange: Callback): VdomElement =
           ReactFragment(
-            <.label("Spatial Offsets", HelpIcon("configuration/spatial-offsets.md")),
+            <.label("Spatial Offsets", HelpIcon("configuration/spatial-offsets.md".refined)),
             InputWithUnits(
-              id = "offsets",
+              id = "offsets".refined,
               value = explicitSpatialOffsets(props.scienceModeAdvanced).withOnMod(_ => onChange),
               validFormat = ExploreModelValidators.offsetQNELValidWedge,
               changeAuditor =
@@ -154,21 +157,24 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             ExploreStyles.ExploreForm,
             ExploreStyles.AdvancedConfigurationCol1
           )(
-            <.label("Grating", HelpIcon("configuration/grating.md")),
+            <.label("Grating", HelpIcon("configuration/grating.md".refined)),
             EnumViewOptionalSelect(
               id = "override-grating",
               value = overrideGrating(props.scienceModeAdvanced),
               clearable = true,
               placeholder = gratingLens.get(props.scienceModeBasic).shortName
             ),
-            <.label("Filter", HelpIcon("configuration/filter.md"), ExploreStyles.SkipToNext),
+            <.label("Filter",
+                    HelpIcon("configuration/filter.md".refined),
+                    ExploreStyles.SkipToNext
+            ),
             EnumViewOptionalSelect(
               id = "override-filter",
               value = overrideFilter(props.scienceModeAdvanced),
               clearable = true,
               placeholder = filterLens.get(props.scienceModeBasic).map(_.shortName).orUndefined
             ),
-            <.label("FPU", HelpIcon("configuration/fpu.md"), ExploreStyles.SkipToNext),
+            <.label("FPU", HelpIcon("configuration/fpu.md".refined), ExploreStyles.SkipToNext),
             EnumViewOptionalSelect(
               id = "override-fpu",
               value = overrideFpu(props.scienceModeAdvanced),
@@ -177,19 +183,22 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             )
           ),
           <.div(ExploreStyles.ExploreForm, ExploreStyles.AdvancedConfigurationCol2)(
-            <.label("Binning", HelpIcon("configuration/binning.md")),
+            <.label("Binning", HelpIcon("configuration/binning.md".refined)),
             EnumViewOptionalSelect(
               id = "explicitXBin",
               value = explicitBinning(props.scienceModeAdvanced),
               clearable = true
             ),
-            <.label("Read Mode", HelpIcon("configuration/read-mode.md"), ExploreStyles.SkipToNext),
+            <.label("Read Mode",
+                    HelpIcon("configuration/read-mode.md".refined),
+                    ExploreStyles.SkipToNext
+            ),
             EnumViewOptionalSelect(
               id = "explicitReadMode",
               value = explicitReadModeGain(props.scienceModeAdvanced),
               clearable = true
             ),
-            <.label("ROI", HelpIcon("configuration/roi.md"), ExploreStyles.SkipToNext),
+            <.label("ROI", HelpIcon("configuration/roi.md".refined), ExploreStyles.SkipToNext),
             EnumViewOptionalSelect(
               id = "explicitRoi",
               value = explicitRoi(props.scienceModeAdvanced),
@@ -219,7 +228,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               compact = true,
               clazz = ExploreStyles.VeryCompact,
               content = "Simple Configuration",
-              icon = Icons.ChevronsLeft,
+              // icon = Icons.ChevronsLeft,
               onClick = props.onShowBasic.value
             )(^.tpe := "button")
           )

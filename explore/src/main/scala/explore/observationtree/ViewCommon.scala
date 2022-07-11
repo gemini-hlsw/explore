@@ -9,13 +9,12 @@ import explore.components.ui.ExploreStyles
 import explore.model.ObsIdSet
 import explore.model.ObsSummary
 import explore.model.enums.AppTab
-import japgolly.scalajs.react.Callback
-import japgolly.scalajs.react.ReactEvent
-import japgolly.scalajs.react.ReactMouseEvent
+import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.TagMod
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
+import react.common._
 import react.beautifuldnd._
 
 trait ViewCommon {
@@ -49,13 +48,13 @@ trait ViewCommon {
           provided.innerRef,
           provided.draggableProps,
           getDraggedStyle(provided.draggableStyle, snapshot),
-          (^.onClick ==> { e: ReactMouseEvent =>
+          (^.onClick ==> { (e: ReactMouseEvent) =>
             e.stopPropagationCB >>
               (if (e.ctrlKey || e.metaKey)
                  onCtrlClick(obs.id)
                else onSelect(obs.id))
           }).when(selectable),
-          (^.onDoubleClick ==> { e: ReactEvent =>
+          (^.onDoubleClick ==> { (e: ReactEvent) =>
             e.stopPropagationCB >>
               ctx.pushPageSingleObs(AppTab.Observations, programId, obs.id.some, None)
           }).when(linkToObsTab)
