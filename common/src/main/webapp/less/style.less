@@ -88,6 +88,7 @@ a {
 
 /*** iPhone and iOS Form Input Zoom Fixes ***/
 @media screen and (device-aspect-ratio: 2/3) {
+
   select,
   textarea,
   input[type='text'],
@@ -106,6 +107,7 @@ a {
 }
 
 @media screen and (device-aspect-ratio: 40/71) {
+
   select,
   textarea,
   input[type='text'],
@@ -124,6 +126,7 @@ a {
 }
 
 @media screen and (device-aspect-ratio: 375/667) {
+
   select,
   textarea,
   input[type='text'],
@@ -143,6 +146,7 @@ a {
 }
 
 @media screen and (device-aspect-ratio: 9/16) {
+
   select,
   textarea,
   input[type='text'],
@@ -170,6 +174,7 @@ body.light-theme {
 }
 
 @media (prefers-color-scheme: dark) {
+
   /* defaults to dark theme */
   body {
     .dark-theme();
@@ -214,8 +219,7 @@ tfoot {
   overflow: hidden;
   grid-template-columns: 1fr;
   grid-template-rows:
-    @topBottom minmax(calc(100% - @topBottom - @topBottom), 1fr)
-    @topBottom;
+    @topBottom minmax(calc(100% - @topBottom - @topBottom), 1fr) @topBottom;
   grid-template-areas:
     'header'
     'body'
@@ -361,7 +365,7 @@ tfoot {
   margin-right: auto;
 }
 
-.main-header > .ui.tabular.menu .item {
+.main-header>.ui.tabular.menu .item {
   color: var(--main-header-color);
 }
 
@@ -371,7 +375,7 @@ tfoot {
   min-width: 100vw;
   background-color: var(--main-header-background-color);
 
-  & > .ui.tabular.menu {
+  &>.ui.tabular.menu {
     border-bottom: none;
   }
 }
@@ -639,7 +643,7 @@ tfoot {
   .full-height-width();
 
   @media (min-width: @target-grid-responsive-cutoff) {
-    width: ~'calc(100% - @{resizeHandleWidth})';
+    width:~'calc(100% - @{resizeHandleWidth})';
   }
 }
 
@@ -853,8 +857,10 @@ tfoot {
   }
 
   .program-table {
+    height: 400px;
+
     .ui.table {
-      height: 400px;
+      height: 100%;
     }
   }
 
@@ -901,7 +907,7 @@ tfoot {
     fill: hsl(0, 87%, 66%);
   }
 
-  > div {
+  >div {
     height: 100%;
     max-height: 100%;
 
@@ -923,7 +929,7 @@ tfoot {
   background-color: var(--plot-background-color);
   color: var(--plot-text-color);
 
-  .ui.checkbox + label {
+  .ui.checkbox+label {
     color: var(--plot-text-color);
   }
 }
@@ -994,11 +1000,11 @@ tfoot {
   top: -0.05rem;
 }
 
-.plot-toggle.ui.slider.checkbox input:focus:checked ~ label::before {
+.plot-toggle.ui.slider.checkbox input:focus:checked~label::before {
   background-color: hsl(0, 0%, 33%) !important;
 }
 
-.plot-toggle.ui.slider.checkbox input:checked ~ label::after {
+.plot-toggle.ui.slider.checkbox input:checked~label::after {
   left: 1.5rem;
 }
 
@@ -1010,10 +1016,8 @@ tfoot {
 
   --column-wide-span: 3;
 
-  grid-template-columns: [label1] max-content [field1] minmax(20ch, 3fr) [label2] max-content [field2] minmax(
-      20ch,
-      3fr
-    );
+  grid-template-columns: [label1] max-content [field1] minmax(20ch, 3fr) [label2] max-content [field2] minmax(20ch,
+      3fr);
 
   .elevation-range-picker {
     width: 9em;
@@ -1060,7 +1064,7 @@ tfoot {
   }
 }
 
-.ui.grid > .row > .column.aladin-column {
+.ui.grid>.row>.column.aladin-column {
   padding-top: 0;
   padding-bottom: 0;
 }
@@ -1196,10 +1200,8 @@ tfoot {
 .target-search-form {
   grid-column: 1 / span 2;
   display: grid;
-  grid-template-columns: [label] minmax(100px, 10%) [field] minmax(
-      calc(100% - 100px - 0.3em),
-      calc(90% - 0.3em)
-    );
+  grid-template-columns: [label] minmax(100px, 10%) [field] minmax(calc(100% - 100px - 0.3em),
+      calc(90% - 0.3em));
   grid-gap: 0.3em;
 
   .field {
@@ -1251,11 +1253,11 @@ tfoot {
   .error-label-mixin();
 }
 
-.ui.form .field > .explore-error-label {
+.ui.form .field>.explore-error-label {
   .error-label-mixin();
 }
 
-.ui.form .field > label {
+.ui.form .field>label {
   margin: 0;
 }
 
@@ -1327,6 +1329,7 @@ tfoot {
 
 // The split edit button and the band totals
 .partner-split-data {
+
   &,
   div& data {
     width: 6em;
@@ -1339,7 +1342,7 @@ tfoot {
   }
 
   // The div containing the flag and percent text.
-  data > div {
+  data>div {
     display: flex;
 
     // The percent text
@@ -1351,6 +1354,7 @@ tfoot {
 }
 
 .version.uncopied {
+
   // CopyToClipboard
   div {
     cursor: pointer;
@@ -1358,12 +1362,13 @@ tfoot {
 }
 
 div.partner-split-total {
+
   &,
-  & > div > data {
+  &>div>data {
     width: 5.5em;
   }
 
-  & > div > data {
+  &>div>data {
     text-align: end;
   }
 }
@@ -1442,7 +1447,7 @@ img.partner-split-flag {
   flex-direction: column;
   border: none;
 
-  > .table {
+  >.table {
     height: 100%;
     margin: 0;
 
@@ -1510,6 +1515,7 @@ img.partner-split-flag {
 
 // For very small tables hide the headers and add fake "header" to the left of the row
 .tile-xs-width {
+
   // For very small tables make the undo buttons remove the text
   .explore-buttons-undo-label {
     display: none;
@@ -1537,6 +1543,7 @@ img.partner-split-flag {
   }
 
   .explore-brightnesses-container {
+
     .ui.table,
     thead,
     tbody,
@@ -1557,9 +1564,10 @@ img.partner-split-flag {
 }
 
 .ui.table.partner-splits-editor-table {
+
   th:last-child,
   td:last-child,
-  td:last-child > span > div {
+  td:last-child>span>div {
     width: 4em;
   }
 
@@ -1621,7 +1629,7 @@ i.icon.user-astronaut::before {
   content: '\f4fb';
 }
 
-.ui.modal.explore-login-box > .content {
+.ui.modal.explore-login-box>.content {
   background-color: var(--modal-background);
 }
 
@@ -1767,9 +1775,7 @@ html {
 }
 
 // https://css-tricks.com/responsive-data-tables/
-.tile-xs-width
-  .explore-brightnesses-container
-  .ui.ui.ui.ui.table:not(.unstackable) {
+.tile-xs-width .explore-brightnesses-container .ui.ui.ui.ui.table:not(.unstackable) {
   tfoot {
     display: block;
   }
@@ -2069,7 +2075,7 @@ html {
 .ui.dropdown.explore-configuration-filter {
   min-width: 100%;
 
-  .menu > .item > .header {
+  .menu>.item>.header {
     text-align: center;
     text-transform: uppercase;
     text-decoration: underline;
@@ -2297,7 +2303,7 @@ html {
 
 svg.padded-right-icon.svg-inline--fa,
 .ui.icon.labeled.button svg.svg-inline--fa,
-.ui.menu .ui.dropdown .menu > .item svg.svg-inline--fa {
+.ui.menu .ui.dropdown .menu>.item svg.svg-inline--fa {
   margin-right: 3px;
 }
 
@@ -2349,20 +2355,15 @@ svg[focusable='false']:focus {
   transform: rotate(270deg) scale(0.6) translate(-100%, 70%);
   width: auto;
 
-  input:checked ~ label::before {
+  input:checked~label::before {
     background-color: var(--checkbox-toggle-checked-background) !important;
   }
 }
 
-.ui.selectable.table > tbody > tr:hover,
-.ui.selectable.table
-  .tbody
-  .tr:not(.disabled):not(.thead > .tr):not(.tfoot > .tr):hover,
+.ui.selectable.table>tbody>tr:hover,
+.ui.selectable.table .tbody .tr:not(.disabled):not(.thead > .tr):not(.tfoot > .tr):hover,
 .ui.table tbody tr td.selectable:hover,
-.ui.table
-  .tbody
-  .tr:not(.disabled)
-  .td.selectable:not(.thead > .tr):not(.tfoot > .tr):hover {
+.ui.table .tbody .tr:not(.disabled) .td.selectable:not(.thead > .tr):not(.tfoot > .tr):hover {
   box-shadow: inset 0 1px 0 0 var(--explore-accent-color),
     inset 0 -1px 0 0 var(--explore-accent-color);
 }
@@ -2429,9 +2430,7 @@ th.sticky-header,
 
 .ui.table tr.explore-table-row-selected td.sticky-column,
 .ui.table tr.explore-table-row-selected .td.sticky-column {
-  background-color: var(
-    --table-selected-background
-  ) !important; // Important overrides regular row background color.
+  background-color: var(--table-selected-background) !important; // Important overrides regular row background color.
 }
 
 .explore-modes-table-itc-header-cell {
@@ -2502,11 +2501,12 @@ input:-webkit-autofill:active {
   -webkit-text-fill-color: var(--input-color);
   border: 1px solid var(--site-border-color) !important;
 }
+
 /* stylelint-enable */
 
 // Reusability overlays.
 body.hide-reusability {
-  & > div:not(#root) {
+  &>div:not(#root) {
     display: none;
   }
 }
