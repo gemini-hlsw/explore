@@ -544,6 +544,13 @@ object ObsQueriesGQL {
               }
             }
           }
+          itc {
+            exposureTime {
+              microseconds
+            }
+            exposures
+            signalToNoise
+          }
         }
       }
     """
@@ -567,6 +574,10 @@ object ObsQueriesGQL {
         }
 
         type ScienceMode = model.ScienceMode
+
+        object Itc {
+          type ExposureTime = lucuma.core.model.NonNegDuration
+        }
       }
     }
 

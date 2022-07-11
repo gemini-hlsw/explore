@@ -4,16 +4,24 @@
 package explore.config
 
 import cats.data.NonEmptyList
+import cats.syntax.all._
 import clue.data.syntax._
+import crystal.Pot
 import crystal.react.View
+import crystal.react.hooks._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
+import eu.timepit.refined.numeric.NonNegative
+import eu.timepit.refined.types.numeric.NonNegInt
+import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.Aligner
+import explore.common.ObsQueries._
 import explore.common.ScienceQueries._
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
+import explore.config.ExposureTimeModeType._
 import explore.implicits._
 import explore.model.DitherNanoMeters
 import explore.model.ExploreModelValidators
@@ -22,25 +30,35 @@ import explore.model.ScienceModeBasic
 import explore.model.display._
 import explore.optics._
 import explore.targeteditor.InputWithUnits
+import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enums._
 import lucuma.core.math.Offset
+import lucuma.core.model.ExposureTimeMode
+import lucuma.core.model.NonNegDuration
 import lucuma.core.model.Observation
 import lucuma.core.syntax.all._
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
+import lucuma.core.validation.InputValidSplitEpi
+import lucuma.core.validation.InputValidWedge
 import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.forms.EnumViewOptionalSelect
+import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
+import lucuma.ui.reusability._
 import monocle.Lens
+import queries.schemas.implicits._
 import react.common._
 import react.semanticui.collections.form.Form
+import react.semanticui.collections.form.FormInput
 import react.semanticui.elements.button.Button
 import react.semanticui.shorthand._
 import react.semanticui.sizes._
 
+import java.time.Duration
 import scala.scalajs.js.JSConverters._
 
 sealed trait AdvancedConfigurationPanel[T <: ScienceModeAdvanced, S <: ScienceModeBasic, Input] {
@@ -49,6 +67,7 @@ sealed trait AdvancedConfigurationPanel[T <: ScienceModeAdvanced, S <: ScienceMo
   val subtitle: Option[NonEmptyString]
   val scienceModeAdvanced: Aligner[T, Input]
   val scienceModeBasic: S
+  val potITC: View[Pot[Option[ITCSuccess]]]
   val onShowBasic: Callback
 
   implicit val ctx: AppContextIO
@@ -79,6 +98,10 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
   ): View[Option[Filter]]
 
   @inline protected def overrideFpu(aligner: AA)(implicit ctx: AppContextIO): View[Option[Fpu]]
+
+  @inline protected def overrideExposureTimeMode(aligner: AA)(implicit
+    ctx:                                                  AppContextIO
+  ): View[Option[ExposureTimeMode]]
 
   @inline protected def explicitBinning(aligner: AA)(implicit
     ctx:                                         AppContextIO
@@ -114,121 +137,295 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
       { case (r, g) => s"${r.longName}, ${g.longName} Gain" }
     )
 
+  // Note: truncates to Int.MaxValue - shouldn't have durations longer than that...
+  private def durationToSeconds(nnd: NonNegDuration): NonNegInt =
+    NonNegInt.unsafeFrom(math.min(nnd.value.toMicros / 1000L / 1000L, Int.MaxValue.toLong).toInt)
+
+  private def secondsToDuration(secs: NonNegInt): NonNegDuration =
+    NonNegDuration.unsafeFrom(secs.value.toLong.seconds)
+
+  private def optExposureTimeModeToExpTimeSecs(oetm: Option[ExposureTimeMode]): Option[NonNegInt] =
+    oetm.flatMap(etm => ExposureTimeMode.exposureTime.getOption(etm)).map(durationToSeconds)
+
+  val itcNoneMsg = "No ITC Results"
+
   val component =
     ScalaFnComponent
       .withHooks[Props]
-      .render { props =>
+      .useStateViewBy { props =>
         implicit val ctx = props.ctx
+        overrideExposureTimeMode(props.scienceModeAdvanced).get
+          .map(ExposureTimeModeType.fromExposureTimeMode)
+      }
+      .useStateViewBy { (props, _) =>
+        implicit val ctx = props.ctx
+        val oetm         = overrideExposureTimeMode(props.scienceModeAdvanced).get
+        optExposureTimeModeToExpTimeSecs(oetm)
+      }
+      .useEffectWithDepsBy { (props, _, _) =>
+        implicit val ctx = props.ctx
+        optExposureTimeModeToExpTimeSecs(overrideExposureTimeMode(props.scienceModeAdvanced).get)
+      }((_, _, expTimeOverride) =>
+        newExpTime =>
+          if (newExpTime === expTimeOverride.get) Callback.empty
+          else expTimeOverride.set(newExpTime)
+      )
+      .render {
+        (
+          props,
+          exposureModeEnum,
+          expTimeOverrideSecs
+        ) =>
+          implicit val ctx = props.ctx
 
-        def dithersControl(onChange: Callback): VdomElement =
-          ReactFragment(
-            <.label("λ Dithers", HelpIcon("configuration/lambda-dithers.md")),
-            InputWithUnits(
-              id = "dithers",
-              value = explicitWavelengthDithers(props.scienceModeAdvanced).withOnMod(_ => onChange),
-              validFormat = ExploreModelValidators.dithersValidSplitEpi,
-              changeAuditor =
-                ChangeAuditor.bigDecimal(integers = 3, decimals = 1).toSequence().optional,
-              units = "nm"
+          val exposureModeView = overrideExposureTimeMode(props.scienceModeAdvanced)
+
+          val exposureCountView: Option[View[NonNegInt]] =
+            exposureModeView
+              .mapValue((v: View[ExposureTimeMode]) =>
+                v.zoom(ExposureTimeMode.exposureCount).asView
+              )
+              .flatten
+
+          val exposureTimeView: Option[View[NonNegDuration]] =
+            exposureModeView
+              .mapValue((v: View[ExposureTimeMode]) => v.zoom(ExposureTimeMode.exposureTime).asView)
+              .flatten
+
+          val signalToNoiseView: Option[View[PosBigDecimal]] =
+            exposureModeView
+              .mapValue((v: View[ExposureTimeMode]) =>
+                v.zoom(ExposureTimeMode.signalToNoiseValue).asView
+              )
+              .flatten
+
+          def dithersControl(onChange: Callback): VdomElement =
+            ReactFragment(
+              <.label("λ Dithers", HelpIcon("configuration/lambda-dithers.md")),
+              InputWithUnits(
+                id = "dithers",
+                value =
+                  explicitWavelengthDithers(props.scienceModeAdvanced).withOnMod(_ => onChange),
+                validFormat = ExploreModelValidators.dithersValidSplitEpi,
+                changeAuditor =
+                  ChangeAuditor.bigDecimal(integers = 3, decimals = 1).toSequence().optional,
+                units = "nm"
+              )
             )
-          )
 
-        def offsetsControl(onChange: Callback): VdomElement =
-          ReactFragment(
-            <.label("Spatial Offsets", HelpIcon("configuration/spatial-offsets.md")),
-            InputWithUnits(
-              id = "offsets",
-              value = explicitSpatialOffsets(props.scienceModeAdvanced).withOnMod(_ => onChange),
-              validFormat = ExploreModelValidators.offsetQNELValidWedge,
-              changeAuditor =
-                ChangeAuditor.bigDecimal(integers = 3, decimals = 2).toSequence().optional,
-              units = "arcsec"
+          def offsetsControl(onChange: Callback): VdomElement =
+            ReactFragment(
+              <.label("Spatial Offsets", HelpIcon("configuration/spatial-offsets.md")),
+              InputWithUnits(
+                id = "offsets",
+                value = explicitSpatialOffsets(props.scienceModeAdvanced).withOnMod(_ => onChange),
+                validFormat = ExploreModelValidators.offsetQNELValidWedge,
+                changeAuditor =
+                  ChangeAuditor.bigDecimal(integers = 3, decimals = 2).toSequence().optional,
+                units = "arcsec"
+              )
             )
-          )
 
-        Form(size = Small)(
-          ExploreStyles.Compact,
-          ExploreStyles.AdvancedConfigurationGrid
-        )(
-          <.div(
-            ExploreStyles.ExploreForm,
-            ExploreStyles.AdvancedConfigurationCol1
+          val invalidateITC: Callback =
+            props.potITC.set(Pot.pending[Option[ITCSuccess]])
+
+          val zeroDuration: NonNegDuration = NonNegDuration.unsafeFrom(Duration.ofMillis(0))
+
+          def onModeMod(modType: Option[ExposureTimeModeType]): Callback = {
+            val optITC: Option[ITCSuccess] = props.potITC.get.toOption.flatten
+            val oetm                       = modType.map {
+              case ExposureTimeModeType.SignalToNoise =>
+                val sn = signalToNoiseView
+                  .map(_.get)
+                  .orElse(optITC.map(_.signalToNoise))
+                  .getOrElse(PosBigDecimal.unsafeFrom(BigDecimal(100)))
+                ExposureTimeMode.SignalToNoise(sn)
+              case ExposureTimeModeType.FixedExposure =>
+                val time  = exposureTimeView
+                  .map(_.get)
+                  .orElse(optITC.map(_.exposureTime))
+                  .getOrElse(zeroDuration)
+                val count = exposureCountView
+                  .map(_.get)
+                  .orElse(optITC.map(_.exposures))
+                  .getOrElse(NonNegInt.unsafeFrom(0))
+                ExposureTimeMode.FixedExposure(count, time)
+            }
+            exposureModeView.set(oetm) >> invalidateITC
+          }
+
+          Form(size = Small)(
+            ExploreStyles.Compact,
+            ExploreStyles.AdvancedConfigurationGrid
           )(
-            <.label("Grating", HelpIcon("configuration/grating.md")),
-            EnumViewOptionalSelect(
-              id = "override-grating",
-              value = overrideGrating(props.scienceModeAdvanced),
-              clearable = true,
-              placeholder = gratingLens.get(props.scienceModeBasic).shortName
+            <.div(
+              ExploreStyles.ExploreForm,
+              ExploreStyles.AdvancedConfigurationCol1
+            )(
+              <.label("Grating", HelpIcon("configuration/grating.md")),
+              EnumViewOptionalSelect(
+                id = "override-grating",
+                value = overrideGrating(props.scienceModeAdvanced),
+                clearable = true,
+                placeholder = gratingLens.get(props.scienceModeBasic).shortName
+              ),
+              <.label("Filter", HelpIcon("configuration/filter.md"), ExploreStyles.SkipToNext),
+              EnumViewOptionalSelect(
+                id = "override-filter",
+                value = overrideFilter(props.scienceModeAdvanced),
+                clearable = true,
+                placeholder = filterLens.get(props.scienceModeBasic).map(_.shortName).orUndefined
+              ),
+              <.label("FPU", HelpIcon("configuration/fpu.md"), ExploreStyles.SkipToNext),
+              EnumViewOptionalSelect(
+                id = "override-fpu",
+                value = overrideFpu(props.scienceModeAdvanced),
+                clearable = true,
+                placeholder = fpuLens.get(props.scienceModeBasic).shortName
+              )
             ),
-            <.label("Filter", HelpIcon("configuration/filter.md"), ExploreStyles.SkipToNext),
-            EnumViewOptionalSelect(
-              id = "override-filter",
-              value = overrideFilter(props.scienceModeAdvanced),
-              clearable = true,
-              placeholder = filterLens.get(props.scienceModeBasic).map(_.shortName).orUndefined
+            <.div(ExploreStyles.ExploreForm, ExploreStyles.AdvancedConfigurationCol2)(
+              <.label("Binning", HelpIcon("configuration/binning.md")),
+              EnumViewOptionalSelect(
+                id = "explicitXBin",
+                value = explicitBinning(props.scienceModeAdvanced),
+                clearable = true
+              ),
+              <.label("Read Mode",
+                      HelpIcon("configuration/read-mode.md"),
+                      ExploreStyles.SkipToNext
+              ),
+              EnumViewOptionalSelect(
+                id = "explicitReadMode",
+                value = explicitReadModeGain(props.scienceModeAdvanced),
+                clearable = true
+              ),
+              <.label("ROI", HelpIcon("configuration/roi.md"), ExploreStyles.SkipToNext),
+              EnumViewOptionalSelect(
+                id = "explicitRoi",
+                value = explicitRoi(props.scienceModeAdvanced),
+                clearable = true
+              )
             ),
-            <.label("FPU", HelpIcon("configuration/fpu.md"), ExploreStyles.SkipToNext),
-            EnumViewOptionalSelect(
-              id = "override-fpu",
-              value = overrideFpu(props.scienceModeAdvanced),
-              clearable = true,
-              placeholder = fpuLens.get(props.scienceModeBasic).shortName
-            )
-          ),
-          <.div(ExploreStyles.ExploreForm, ExploreStyles.AdvancedConfigurationCol2)(
-            <.label("Binning", HelpIcon("configuration/binning.md")),
-            EnumViewOptionalSelect(
-              id = "explicitXBin",
-              value = explicitBinning(props.scienceModeAdvanced),
-              clearable = true
+            <.div(ExploreStyles.ExploreForm, ExploreStyles.AdvancedConfigurationCol3)(
+              dithersControl(Callback.empty),
+              offsetsControl(Callback.empty),
+              <.label("Exposure Mode",
+                      HelpIcon("configuration/exposure-mode.md"),
+                      ExploreStyles.SkipToNext
+              ),
+              EnumViewOptionalSelect(
+                id = "exposureMode",
+                value = exposureModeEnum.withOnMod(onModeMod _),
+                clearable = true
+              ),
+              <.label("S/N",
+                      HelpIcon("configuration/signal-to-noise.md"),
+                      ExploreStyles.SkipToNext
+              ),
+              signalToNoiseView
+                .map(v =>
+                  FormInputEV(
+                    id = "signalToNoise",
+                    value = v.withOnMod(_ => invalidateITC),
+                    validFormat = InputValidWedge.truncatedPosBigDecimal(0),
+                    changeAuditor = ChangeAuditor.posInt
+                  ): VdomNode
+                )
+                .getOrElse(
+                  potRender[Option[PosBigDecimal]](
+                    valueRender = osn => {
+                      val value = osn.fold(itcNoneMsg)(sn =>
+                        InputValidWedge.truncatedPosBigDecimal(0).reverseGet(sn)
+                      )
+                      FormInput(value = value, disabled = true)
+                    },
+                    pendingRender = _ =>
+                      <.div(ExploreStyles.InputReplacementIcon, Icons.Spinner.spin(true)): VdomNode
+                  )(props.potITC.get.map(_.map(_.signalToNoise)))
+                ),
+              <.label("Exposure Time",
+                      HelpIcon("configuration/exposure-time.md"),
+                      ExploreStyles.SkipToNext
+              ),
+              expTimeOverrideSecs
+                .mapValue((v: View[NonNegInt]) =>
+                  InputWithUnits(
+                    id = "exposureTime",
+                    value = v
+                      .withOnMod(secs =>
+                        exposureTimeView.foldMap(_.set(secondsToDuration(secs))) >> invalidateITC
+                      ),
+                    validFormat = InputValidSplitEpi.refinedInt[NonNegative],
+                    changeAuditor = ChangeAuditor.refinedInt[NonNegative](),
+                    units = "sec"
+                  ): TagMod
+                )
+                .getOrElse(
+                  potRender[Option[NonNegDuration]](
+                    valueRender = ot => {
+                      val value =
+                        ot.fold(itcNoneMsg)(t => durationToSeconds(t).toString)
+                      ReactFragment(FormInput(value = value, disabled = true),
+                                    <.span(ExploreStyles.UnitsLabel, "sec")
+                      )
+                    },
+                    pendingRender = _ =>
+                      <.div(ExploreStyles.InputReplacementIcon, Icons.Spinner.spin(true)): VdomNode
+                  )(props.potITC.get.map(_.map(_.exposureTime)))
+                ),
+              <.label("Exposure Count",
+                      HelpIcon("configuration/exposure-count.md"),
+                      ExploreStyles.SkipToNext
+              ),
+              exposureCountView
+                .map(v =>
+                  FormInputEV(
+                    id = "exposureCount",
+                    value = v.withOnMod(_ => invalidateITC),
+                    validFormat = InputValidSplitEpi.refinedInt[NonNegative],
+                    changeAuditor = ChangeAuditor.refinedInt[NonNegative]()
+                  ): TagMod
+                )
+                .getOrElse(
+                  potRender[Option[NonNegInt]](
+                    valueRender = oe => {
+                      val value = oe.fold(itcNoneMsg)(_.toString)
+                      FormInput(value = value, disabled = true)
+                    },
+                    pendingRender = _ =>
+                      <.div(ExploreStyles.InputReplacementIcon, Icons.Spinner.spin(true)): VdomNode
+                  )(props.potITC.get.map(_.map(_.exposures)))
+                )
             ),
-            <.label("Read Mode", HelpIcon("configuration/read-mode.md"), ExploreStyles.SkipToNext),
-            EnumViewOptionalSelect(
-              id = "explicitReadMode",
-              value = explicitReadModeGain(props.scienceModeAdvanced),
-              clearable = true
-            ),
-            <.label("ROI", HelpIcon("configuration/roi.md"), ExploreStyles.SkipToNext),
-            EnumViewOptionalSelect(
-              id = "explicitRoi",
-              value = explicitRoi(props.scienceModeAdvanced),
-              clearable = true
-            )
-          ),
-          <.div(ExploreStyles.ExploreForm, ExploreStyles.AdvancedConfigurationCol3)(
-            dithersControl(Callback.empty),
-            offsetsControl(Callback.empty)
-          ),
-          <.div(ExploreStyles.AdvancedConfigurationButtons)(
-            SequenceEditorPopup(
-              props.obsId,
-              props.title,
-              props.subtitle,
-              dithersControl,
-              offsetsControl,
-              trigger = Button(
+            <.div(ExploreStyles.AdvancedConfigurationButtons)(
+              SequenceEditorPopup(
+                props.obsId,
+                props.title,
+                props.subtitle,
+                dithersControl,
+                offsetsControl,
+                trigger = Button(
+                  size = Small,
+                  compact = true,
+                  clazz = ExploreStyles.VeryCompact,
+                  content = "View Sequence"
+                )
+              ),
+              Button(
                 size = Small,
                 compact = true,
                 clazz = ExploreStyles.VeryCompact,
-                content = "View Sequence"
-              )
-            ),
-            Button(
-              size = Small,
-              compact = true,
-              clazz = ExploreStyles.VeryCompact,
-              content = "Simple Configuration",
-              icon = Icons.ChevronsLeft,
-              onClick = props.onShowBasic.value
-            )(^.tpe := "button")
+                content = "Simple Configuration",
+                icon = Icons.ChevronsLeft,
+                onClick = props.onShowBasic.value
+              )(^.tpe := "button")
+            )
           )
-        )
       }
 }
 
 object AdvancedConfigurationPanel {
-
   sealed abstract class GmosAdvancedConfigurationPanel[
     T <: ScienceModeAdvanced,
     S <: ScienceModeBasic,
@@ -261,6 +458,7 @@ object AdvancedConfigurationPanel {
                                  GmosNorthLongSlitAdvancedConfigInput
     ],
     scienceModeBasic:    ScienceModeBasic.GmosNorthLongSlit,
+    potITC:              View[Pot[Option[ITCSuccess]]],
     onShowBasic:         Callback
   )(implicit val ctx:    AppContextIO)
       extends ReactFnProps[AdvancedConfigurationPanel.GmosNorthLongSlit](
@@ -282,6 +480,7 @@ object AdvancedConfigurationPanel {
         GmosNorthFilter,
         GmosNorthFpu,
       ] {
+
     @inline override protected def overrideGrating(
       aligner:      AA
     )(implicit ctx: AppContextIO): View[Option[GmosNorthGrating]] =
@@ -307,6 +506,14 @@ object AdvancedConfigurationPanel {
             GmosNorthLongSlitAdvancedConfigInput.overrideFpu.modify
       )
       .view(_.orUnassign)
+
+    @inline override protected def overrideExposureTimeMode(aligner: AA)(implicit
+      ctx:                                                           AppContextIO
+    ): View[Option[ExposureTimeMode]] = aligner
+      .zoom(ScienceModeAdvanced.GmosNorthLongSlit.overrideExposureTimeMode,
+            GmosNorthLongSlitAdvancedConfigInput.overrideExposureTimeMode.modify
+      )
+      .view(_.map(_.toInput).orUnassign)
 
     private val explicitXBin =
       ScienceModeAdvanced.GmosNorthLongSlit.explicitXBin
@@ -394,6 +601,7 @@ object AdvancedConfigurationPanel {
                                  GmosSouthLongSlitAdvancedConfigInput
     ],
     scienceModeBasic:    ScienceModeBasic.GmosSouthLongSlit,
+    potITC:              View[Pot[Option[ITCSuccess]]],
     onShowBasic:         Callback
   )(implicit val ctx:    AppContextIO)
       extends ReactFnProps[AdvancedConfigurationPanel.GmosSouthLongSlit](
@@ -441,6 +649,14 @@ object AdvancedConfigurationPanel {
             GmosSouthLongSlitAdvancedConfigInput.overrideFpu.modify
       )
       .view(_.orUnassign)
+
+    @inline override protected def overrideExposureTimeMode(aligner: AA)(implicit
+      ctx:                                                           AppContextIO
+    ): View[Option[ExposureTimeMode]] = aligner
+      .zoom(ScienceModeAdvanced.GmosSouthLongSlit.overrideExposureTimeMode,
+            GmosSouthLongSlitAdvancedConfigInput.overrideExposureTimeMode.modify
+      )
+      .view(_.map(_.toInput).orUnassign)
 
     private val explicitXBin =
       ScienceModeAdvanced.GmosSouthLongSlit.explicitXBin
@@ -515,5 +731,6 @@ object AdvancedConfigurationPanel {
     @inline protected val gratingLens = ScienceModeBasic.GmosSouthLongSlit.grating
     @inline protected val filterLens  = ScienceModeBasic.GmosSouthLongSlit.filter
     @inline protected val fpuLens     = ScienceModeBasic.GmosSouthLongSlit.fpu
+
   }
 }

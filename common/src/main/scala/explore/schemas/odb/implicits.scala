@@ -13,6 +13,7 @@ import lucuma.core.enums.Band
 import lucuma.core.math.BrightnessUnits._
 import lucuma.core.math._
 import lucuma.core.math.dimensional._
+import lucuma.core.model.ExposureTimeMode._
 import lucuma.core.model.ProposalClass._
 import lucuma.core.model._
 import lucuma.core.syntax.time._
@@ -292,6 +293,17 @@ object implicits {
   implicit class NonNegDurationOps(val nnd: NonNegDuration) {
     def toInput: NonNegDurationInput =
       NonNegDurationInput(microseconds = PosLong.unsafeFrom(nnd.value.toMicros).assign)
+  }
+
+  implicit class ExposureTimeModeOps(val etm: ExposureTimeMode) {
+    def toInput: ExposureTimeModeInput = etm match {
+      case FixedExposure(count, time) =>
+        ExposureTimeModeInput(fixedExposure =
+          FixedExposureModeInput(count = count, time = time.toInput).assign
+        )
+      case SignalToNoise(value)       =>
+        ExposureTimeModeInput(signalToNoise = SignalToNoiseModeInput(value = value).assign)
+    }
   }
 
   implicit class PropocalClassOps(val p: ProposalClass) extends AnyVal {

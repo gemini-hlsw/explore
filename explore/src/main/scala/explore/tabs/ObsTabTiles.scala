@@ -73,9 +73,9 @@ object ObsTabTiles {
 
   private def makeConstraintsSelector(
     constraintGroups: View[ConstraintsList],
-    obsView:          Pot[View[ObservationData]]
+    obsView:          Pot[View[ObsEditData]]
   )(implicit ctx:     AppContextIO): VdomNode =
-    potRender[View[ObservationData]] { vod =>
+    potRender[View[ObsEditData]] { vod =>
       val cgOpt: Option[ConstraintGroup] =
         constraintGroups.get.find(_._1.contains(vod.get.id)).map(_._2)
 
@@ -88,7 +88,9 @@ object ObsTabTiles {
               .getOption(p.value.toString)
               .flatMap(ids => constraintGroups.get.get(ids))
           newCgOpt.map { cg =>
-            vod.zoom(ObservationData.constraintSet).set(cg.constraintSet) >>
+            vod
+              .zoom(ObsEditData.scienceData.andThen(ScienceData.constraints))
+              .set(cg.constraintSet) >>
               ObsQueries
                 .updateObservationConstraintSet[IO](List(vod.get.id), cg.constraintSet)
                 .runAsyncAndForget
@@ -121,7 +123,7 @@ object ObsTabTiles {
         ObsEditQuery
           .query(props.obsId)
           .map(
-            (ObsEditQuery.Data.observation.get _)
+            (ObsEditQuery.Data.asObsEditData.get _)
               .andThen(_.getOrElse(throw new Exception(s"Observation [${props.obsId}] not found")))
           )
           .reRunOnResourceSignals(ObservationEditSubscription.subscribe[IO](props.obsId))
@@ -129,18 +131,19 @@ object ObsTabTiles {
       .render { (props, obsView) =>
         implicit val ctx                     = props.ctx
         val scienceMode: Option[ScienceMode] =
-          obsView.toOption.flatMap(_.get.scienceMode)
+          obsView.toOption.flatMap(_.get.scienceData.mode)
 
-        val posAngle = obsView.toOption.flatMap(_.get.posAngleConstraint)
+        val posAngle = obsView.toOption.flatMap(_.get.scienceData.posAngle)
 
         val vizTimeView: Pot[View[Option[Instant]]] =
-          obsView.map(_.zoom(ObservationData.visualizationTime))
+          obsView.map(_.zoom(ObsEditData.visualizationTime))
 
         val potAsterismMode: Pot[(View[Option[Asterism]], Option[ScienceMode])] =
           obsView.map(v =>
             (
               v.zoom(
-                ObservationData.targetEnvironment
+                ObsEditData.scienceData
+                  .andThen(ScienceData.targets)
                   .andThen(ObservationData.TargetEnvironment.asterism)
               ).zoom(Asterism.fromTargetsList.asLens),
               scienceMode
@@ -201,8 +204,8 @@ object ObsTabTiles {
           potAsterismMode,
           vizTimeView,
           posAngle,
-          obsView.toOption.map(_.get.constraintSet),
-          obsView.toOption.flatMap(_.get.scienceRequirements.spectroscopy.wavelength),
+          obsView.toOption.map(_.get.scienceData.constraints),
+          obsView.toOption.flatMap(_.get.scienceData.requirements.spectroscopy.wavelength),
           props.focusedTarget,
           Reuse(setCurrentTarget _)(props.programId, props.focusedObs),
           Reuse.currying(props.targetMap, props.obsId).in(otherObsCount _),
@@ -220,7 +223,7 @@ object ObsTabTiles {
         val constraintsTile =
           ConstraintsTile.constraintsTile(
             props.obsId,
-            obsView.map(_.zoom(ObservationData.constraintSet)),
+            obsView.map(_.zoom(ObsEditData.scienceData.andThen(ScienceData.constraints))),
             props.undoStacks
               .zoom(ModelUndoStacks.forConstraintGroup[IO])
               .zoom(atMapWithDefault(ObsIdSet.one(props.obsId), UndoStacks.empty)),
@@ -231,7 +234,12 @@ object ObsTabTiles {
         val configurationTile =
           ConfigurationTile.configurationTile(
             props.obsId,
-            obsView.map(obs => (obs.get.title, obs.get.subtitle, obs.zoom(obsScienceDataLens))),
+            obsView.map(obsEditData =>
+              (obsEditData.get.title,
+               obsEditData.get.subtitle,
+               obsEditData.zoom(ObsEditData.scienceData)
+              )
+            ),
             props.undoStacks
               .zoom(ModelUndoStacks.forObservationData[IO])
               .zoom(atMapWithDefault(props.obsId, UndoStacks.empty))
