@@ -204,6 +204,7 @@ module.exports = ({ command, mode }) => {
             itcCache({
               pattern: /^https:\/\/cors-proxy.(lucuma.xyz|gpp.gemini.edu)\/http:\/\/aladin.unistra.fr\/java\/nph-aladin.*/,
               name: 'cors-cache',
+            })
           ],
         },
       }),
