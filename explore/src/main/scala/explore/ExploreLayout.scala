@@ -29,75 +29,71 @@ final case class ExploreLayout(
   r:        ResolutionWithProps[Page, View[RootModel]]
 )(
   val view: View[RootModel]
-) extends ReactProps[ExploreLayout](ExploreLayout.component)
+) extends ReactFnProps[ExploreLayout](ExploreLayout.component)
 
 object ExploreLayout {
   type Props = ExploreLayout
 
   private val component =
-    ScalaComponent
-      .builder[Props]
-      .stateless
-      .render_P { props =>
-        IfLogged(props.view)(
-          (
-            vault:    UserVault,
-            onLogout: IO[Unit]
-          ) =>
-            AppCtx.using { implicit ctx =>
-              val routingInfo = RoutingInfo.from(props.r.page)
+    ScalaFnComponent[Props] { props =>
+      IfLogged(props.view)(
+        (
+          vault:    UserVault,
+          onLogout: IO[Unit]
+        ) =>
+          AppCtx.using { implicit ctx =>
+            val routingInfo = RoutingInfo.from(props.r.page)
 
-              HelpCtx.usingView { helpCtx =>
-                val helpView = helpCtx.zoom(HelpContext.displayedHelp)
-                GlobalHotKeys(
-                  keyMap = KeyMap("CLOSE_HELP" -> "ESC"),
-                  handlers = Handlers("CLOSE_HELP" -> helpView.set(none))
-                )(
-                  SidebarPushable(
-                    Sidebar(
-                      width = SidebarWidth.Wide,
-                      direction = SidebarDirection.Right,
-                      animation = SidebarAnimation.Overlay,
-                      visible = helpView.get.isDefined
-                    )(
-                      helpView.get
-                        .map { h =>
-                          // Lazy load the React component for help
-                          val prom = js.dynamicImport {
-                            new HelpLoader().loadHelp(helpCtx.get, h)
-                          }
-                          React.Suspense(<.div("Loading"), AsyncCallback.fromJsPromise(prom))
+            HelpCtx.usingView { helpCtx =>
+              val helpView = helpCtx.zoom(HelpContext.displayedHelp)
+              GlobalHotKeys(
+                keyMap = KeyMap("CLOSE_HELP" -> "ESC"),
+                handlers = Handlers("CLOSE_HELP" -> helpView.set(none))
+              )(
+                SidebarPushable(
+                  Sidebar(
+                    width = SidebarWidth.Wide,
+                    direction = SidebarDirection.Right,
+                    animation = SidebarAnimation.Overlay,
+                    visible = helpView.get.isDefined
+                  )(
+                    helpView.get
+                      .map { h =>
+                        // Lazy load the React component for help
+                        val prom = js.dynamicImport {
+                          new HelpLoader().loadHelp(helpCtx.get, h)
                         }
-                        .when(helpView.get.isDefined)
-                    ),
-                    SidebarPusher(dimmed = helpView.get.isDefined)(
+                        React.Suspense(<.div("Loading"), AsyncCallback.fromJsPromise(prom))
+                      }
+                      .when(helpView.get.isDefined)
+                  ),
+                  SidebarPusher(dimmed = helpView.get.isDefined)(
+                    <.div(
+                      ExploreStyles.MainGrid,
+                      TopBar(
+                        vault.user,
+                        routingInfo.optProgramId,
+                        props.view.zoom(RootModel.localPreferences).get,
+                        props.view.zoom(RootModel.undoStacks),
+                        onLogout >> props.view.zoom(RootModel.vault).set(none).to[IO]
+                      ),
                       <.div(
-                        ExploreStyles.MainGrid,
-                        TopBar(
-                          vault.user,
-                          routingInfo.optProgramId,
-                          props.view.zoom(RootModel.localPreferences).get,
-                          props.view.zoom(RootModel.undoStacks),
-                          onLogout >> props.view.zoom(RootModel.vault).set(none).to[IO]
-                        ),
-                        <.div(
-                          ExploreStyles.SideTabs,
-                          SideTabs(routingInfo)
-                        ),
-                        <.div(
-                          ExploreStyles.MainBody,
-                          props.r.renderP(props.view)
-                        )
+                        ExploreStyles.SideTabs,
+                        SideTabs(routingInfo)
+                      ),
+                      <.div(
+                        ExploreStyles.MainBody,
+                        props.r.renderP(props.view)
                       )
-                    )(
-                      ^.onClick --> helpView.set(none)
                     )
+                  )(
+                    ^.onClick --> helpView.set(none)
                   )
                 )
-              }
-            }: VdomNode
-        )
-      }
-      .build
+              )
+            }
+          }: VdomNode
+      )
+    }
 
 }

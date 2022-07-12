@@ -5,7 +5,9 @@ package explore.targeteditor
 
 import cats.effect.IO
 import cats.syntax.all._
+import crystal.Ready
 import crystal.react.View
+import crystal.react.hooks._
 import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.Icons
@@ -36,6 +38,8 @@ import reactST.reactTable.TableDef
 import reactST.reactTable._
 import reactST.reactTable.mod.IdType
 
+import java.time.Instant
+
 import scalajs.js.JSConverters._
 
 final case class TargetTable(
@@ -43,6 +47,7 @@ final case class TargetTable(
   targets:          View[Option[Asterism]],
   hiddenColumns:    View[Set[String]],
   selectedTarget:   View[Option[Target.Id]],
+  vizTime:          Option[Instant],
   renderInTitle:    Tile.RenderInTitle
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[TargetTable](TargetTable.component)
@@ -93,14 +98,7 @@ object TargetTable {
                 onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
                   e.preventDefaultCB >>
                     e.stopPropagationCB >>
-                    props.targets.mod {
-                      _.flatMap(_.remove(cell.value.extract))
-                      // val targets =
-                      //   NonEmptyList.fromList(
-                      //     asterism.foldMap(_.asList.filter(_.id =!= cell.value.extract))
-                      //   )
-                      // targets.flatMap(t => asterism.map(Asterism.isoTargets.reverse.replace(t)))
-                    } >>
+                    props.targets.mod(_.flatMap(_.remove(cell.value.extract))) >>
                     deleteSiderealTarget(props.obsIds, cell.value).runAsync
               )
             )
@@ -110,9 +108,16 @@ object TargetTable {
             .BaseColumnBuilder(TargetTable)(_.target.some)
             .allColumns
       }
+      // If vizTime is not set, change it to now
+      .useEffectResultWithDepsBy((p, _) => p.vizTime) { (_, _) => vizTime =>
+        IO(vizTime.getOrElse(Instant.now()))
+      }
       // rows
-      .useMemoBy((props, _) => props.targets.get)((_, _) => _.foldMap(_.toSidereal))
-      .useTableBy((props, cols, rows) =>
+      .useMemoBy((props, _, vizTime) => (props.targets.get, vizTime))((_, _, _) => {
+        case (targets, Ready(vizTime)) => targets.foldMap(_.toSidereal(vizTime))
+        case _                         => Nil
+      })
+      .useTableBy((props, cols, _, rows) =>
         TargetTable(
           cols,
           rows,
@@ -131,7 +136,7 @@ object TargetTable {
           }.reuseCurrying(props.hiddenColumns.get)
         )
       )
-      .render((props, _, rows, tableInstance) =>
+      .render((props, _, _, rows, tableInstance) =>
         React.Fragment(
           props.renderInTitle(
             <.span(ExploreStyles.TitleSelectColumns)(

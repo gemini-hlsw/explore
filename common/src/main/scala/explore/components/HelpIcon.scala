@@ -22,7 +22,7 @@ final case class HelpIcon(id: Help.Id, clazz: js.UndefOr[Css] = js.undefined)
 object HelpIcon {
   type Props = HelpIcon
 
-  type HelpId = NonEmptyFiniteString[20]
+  type HelpId = NonEmptyString
 
   val component = ScalaFnComponent[Props] { p =>
     HelpCtx.usingView { help =>
