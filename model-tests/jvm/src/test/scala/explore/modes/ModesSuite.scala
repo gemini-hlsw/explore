@@ -56,7 +56,8 @@ class ModesSuite extends CatsEffectSuite {
           Wavelength.fromNanometers(500),
           refineMV[Positive](1).some,
           BigDecimal(0).withRefinedUnit[NonNegative, Micrometer].some,
-          Angle.fromDoubleArcseconds(1).some
+          Angle.fromDoubleArcseconds(1).some,
+          declination = none
         )
       )
       // .flatTap(_.traverse(IO.println))
