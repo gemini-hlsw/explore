@@ -147,9 +147,11 @@ object AsterismEditor {
           )
 
         // Save the time here. this works for the obs and target tabs
-        val vizTime = props.potVizTime.map(_.withOnMod { t =>
+        val vizTimeView = props.potVizTime.map(_.withOnMod { t =>
           ObsQueries.updateVisualizationTime[IO](props.obsIds.toList, t).runAsync
         })
+
+        val vizTime = props.potVizTime.toOption.flatMap(_.get)
 
         React.Fragment(
           props.renderInTitle(
@@ -185,7 +187,7 @@ object AsterismEditor {
             Form(size = Small)(
               ExploreStyles.Compact,
               ExploreStyles.ObsInstantTileTitle,
-              potRender[View[Option[Instant]]](VizTimeEditor.apply)(vizTime)
+              potRender[View[Option[Instant]]](VizTimeEditor.apply)(vizTimeView)
             )
           ),
           TargetTable(
@@ -193,6 +195,7 @@ object AsterismEditor {
             props.asterism,
             props.hiddenColumns,
             targetView,
+            vizTime,
             props.renderInTitle
           ),
           props.currentTarget
@@ -231,7 +234,7 @@ object AsterismEditor {
                         props.userId,
                         targetId,
                         targetView.zoom(TargetWithId.target).unsafeNarrow[Target.Sidereal],
-                        props.potVizTime.toOption.flatMap(_.get),
+                        vizTime,
                         props.posAngle,
                         props.scienceMode,
                         props.constraints,
