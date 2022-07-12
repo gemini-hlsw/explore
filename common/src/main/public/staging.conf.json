@@ -8,5 +8,5 @@
     "readTimeoutSeconds": 10,
     "refreshTimeoutDeltaSeconds": 10,
     "refreshIntervalFactor": 1
-  }  
+  }
 }
