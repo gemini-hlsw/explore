@@ -1,5 +1,6 @@
 @import 'suithemes/default/globals/site.variables';
 @import 'suithemes/default/modules/dropdown.variables';
+@import 'theme/site/collections/form.variables';
 @import 'theme/site/modules/sidebar.variables';
 @import 'theme/site/globals/site.variables';
 
@@ -1129,11 +1130,17 @@ tfoot {
   margin-left: 0.5em;
 }
 
+.input-replacement-icon {
+  line-height: @inputLineHeight;
+  border: 1px dashed transparent; // the border makes the sizing work.
+  padding: @inputPadding;
+}
+
 .moon-phase {
   position: absolute;
   top: 5px;
   right: 1rem;
-}
+} 
 
 .connection-ok {
   color: greenyellow;
@@ -1966,6 +1973,7 @@ html {
 
 .explore-advanced-configuration-grid {
   display: grid;
+  padding: 0.5em;
   grid-gap: 0.5em;
   grid-template-areas:
     'col1 col2 col3'

@@ -7,7 +7,9 @@ import cats.effect.Async
 import cats.implicits._
 import clue.TransactionalClient
 import clue.data.syntax._
+import crystal.Pot
 import eu.timepit.refined.types.numeric.PosBigDecimal
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.data.KeyedIndexedList
 import explore.implicits._
 import explore.model.ConstraintGroup
@@ -17,7 +19,6 @@ import explore.model.ObsSummaryWithTitleConstraintsAndConf
 import explore.model.ScienceMode
 import explore.model.TargetSummary
 import explore.model.reusability._
-import explore.optics._
 import japgolly.scalajs.react._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
@@ -31,7 +32,6 @@ import lucuma.ui.reusability._
 import monocle.Focus
 import monocle.Getter
 import monocle.Lens
-import monocle.macros.GenIso
 import queries.common.ObsQueriesGQL._
 import queries.schemas.implicits._
 
@@ -51,12 +51,16 @@ object ObsQueries {
   type SpectroscopyRequirementsData = ObservationData.ScienceRequirements.Spectroscopy
   val SpectroscopyRequirementsData = ObservationData.ScienceRequirements.Spectroscopy
 
+  type ITCSuccess = ObservationData.Itc
+  val ITCSuccess = ObservationData.Itc
+
   case class ScienceData(
     requirements: ScienceRequirementsData,
     mode:         Option[ScienceMode],
     constraints:  ConstraintSet,
     targets:      Targets,
-    posAngle:     Option[PosAngleConstraint]
+    posAngle:     Option[PosAngleConstraint],
+    potITC:       Pot[Option[ITCSuccess]]
   )
 
   object ScienceData {
@@ -64,21 +68,54 @@ object ObsQueries {
       Focus[ScienceData](_.requirements)
     val mode: Lens[ScienceData, Option[ScienceMode]]             =
       Focus[ScienceData](_.mode)
+    val targets: Lens[ScienceData, Targets]                      =
+      Focus[ScienceData](_.targets)
     val constraints: Lens[ScienceData, ConstraintSet]            =
       Focus[ScienceData](_.constraints)
     val posAngle: Lens[ScienceData, Option[PosAngleConstraint]]  =
       Focus[ScienceData](_.posAngle)
+    val potITC: Lens[ScienceData, Pot[Option[ITCSuccess]]]       =
+      Focus[ScienceData](_.potITC)
   }
 
-  val obsScienceDataLens: Lens[ObservationData, ScienceData] =
-    disjointZip(
-      ObservationData.scienceRequirements,
-      ObservationData.scienceMode,
-      ObservationData.constraintSet,
-      ObservationData.targetEnvironment,
-      ObservationData.posAngleConstraint
-    )
-      .andThen(GenIso.fields[ScienceData].reverse)
+  case class ObsEditData(
+    id:                Observation.Id,
+    title:             String,
+    subtitle:          Option[NonEmptyString],
+    visualizationTime: Option[Instant],
+    scienceData:       ScienceData
+  )
+
+  object ObsEditData {
+    val title: Lens[ObsEditData, String]                      = Focus[ObsEditData](_.title)
+    val subtitle: Lens[ObsEditData, Option[NonEmptyString]]   = Focus[ObsEditData](_.subtitle)
+    val visualizationTime: Lens[ObsEditData, Option[Instant]] =
+      Focus[ObsEditData](_.visualizationTime)
+    val scienceData: Lens[ObsEditData, ScienceData]           = Focus[ObsEditData](_.scienceData)
+  }
+
+  private val observationDataToObsEditDataGetter: Getter[ObsEditQuery.Data, Option[ObsEditData]] =
+    data =>
+      data.observation.map { obs =>
+        ObsEditData(
+          id = obs.id,
+          title = obs.title,
+          subtitle = obs.subtitle,
+          visualizationTime = obs.visualizationTime,
+          scienceData = ScienceData(
+            requirements = obs.scienceRequirements,
+            mode = obs.scienceMode,
+            constraints = obs.constraintSet,
+            targets = obs.targetEnvironment,
+            posAngle = obs.posAngleConstraint,
+            potITC = Pot(obs.itc)
+          )
+        )
+      }
+
+  implicit class ObservationDataOps(val self: ObsEditQuery.Data.type) extends AnyVal {
+    def asObsEditData = observationDataToObsEditDataGetter
+  }
 
   case class ObsSummariesWithConstraints(
     observations:     ObservationList,

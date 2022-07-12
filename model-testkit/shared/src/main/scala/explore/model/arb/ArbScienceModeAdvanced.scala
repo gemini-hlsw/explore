@@ -15,12 +15,15 @@ import lucuma.core.enums._
 import lucuma.core.math.Offset
 import lucuma.core.math.arb.ArbOffset
 import lucuma.core.math.arb.ArbRefined
+import lucuma.core.model.ExposureTimeMode
+import lucuma.core.model.arb.ArbExposureTimeMode
 import eu.timepit.refined.scalacheck.numeric._
 import cats.data.NonEmptyList
 import cats.laws.discipline.arbitrary._
 import explore.model.DitherNanoMeters
 
 trait ArbScienceModeAdvanced {
+  import ArbExposureTimeMode._
   import ArbOffset._
   import ArbRefined._
 
@@ -30,6 +33,7 @@ trait ArbScienceModeAdvanced {
         overrideGrating           <- arbitrary[Option[GmosNorthGrating]]
         overrideFilter            <- arbitrary[Option[GmosNorthFilter]]
         overrideFpu               <- arbitrary[Option[GmosNorthFpu]]
+        overrideExposureTimeMode  <- arbitrary[Option[ExposureTimeMode]]
         explicitXBin              <- arbitrary[Option[GmosXBinning]]
         explicitYBin              <- arbitrary[Option[GmosYBinning]]
         explicitAmpReadMode       <- arbitrary[Option[GmosAmpReadMode]]
@@ -41,6 +45,7 @@ trait ArbScienceModeAdvanced {
         overrideGrating,
         overrideFilter,
         overrideFpu,
+        overrideExposureTimeMode,
         explicitXBin,
         explicitYBin,
         explicitAmpReadMode,
@@ -57,6 +62,7 @@ trait ArbScienceModeAdvanced {
         overrideGrating           <- arbitrary[Option[GmosSouthGrating]]
         overrideFilter            <- arbitrary[Option[GmosSouthFilter]]
         overrideFpu               <- arbitrary[Option[GmosSouthFpu]]
+        overrideExposureTimeMode  <- arbitrary[Option[ExposureTimeMode]]
         explicitXBin              <- arbitrary[Option[GmosXBinning]]
         explicitYBin              <- arbitrary[Option[GmosYBinning]]
         explicitAmpReadMode       <- arbitrary[Option[GmosAmpReadMode]]
@@ -68,6 +74,7 @@ trait ArbScienceModeAdvanced {
         overrideGrating,
         overrideFilter,
         overrideFpu,
+        overrideExposureTimeMode,
         explicitXBin,
         explicitYBin,
         explicitAmpReadMode,
@@ -91,6 +98,7 @@ trait ArbScienceModeAdvanced {
       (Option[GmosNorthGrating],
        Option[GmosNorthFilter],
        Option[GmosNorthFpu],
+       Option[ExposureTimeMode],
        Option[GmosXBinning],
        Option[GmosYBinning],
        Option[GmosAmpReadMode],
@@ -104,6 +112,7 @@ trait ArbScienceModeAdvanced {
         (o.overrideGrating,
          o.overrideFilter,
          o.overrideFpu,
+         o.overrideExposureTimeMode,
          o.explicitXBin,
          o.explicitYBin,
          o.explicitAmpReadMode,
@@ -119,6 +128,7 @@ trait ArbScienceModeAdvanced {
       (Option[GmosSouthGrating],
        Option[GmosSouthFilter],
        Option[GmosSouthFpu],
+       Option[ExposureTimeMode],
        Option[GmosXBinning],
        Option[GmosYBinning],
        Option[GmosAmpReadMode],
@@ -132,6 +142,7 @@ trait ArbScienceModeAdvanced {
         (o.overrideGrating,
          o.overrideFilter,
          o.overrideFpu,
+         o.overrideExposureTimeMode,
          o.explicitXBin,
          o.explicitYBin,
          o.explicitAmpReadMode,
@@ -145,8 +156,8 @@ trait ArbScienceModeAdvanced {
   implicit val cogenScienceModeAdvanced: Cogen[ScienceModeAdvanced] =
     Cogen[Either[ScienceModeAdvanced.GmosNorthLongSlit, ScienceModeAdvanced.GmosSouthLongSlit]]
       .contramap {
-        case n @ ScienceModeAdvanced.GmosNorthLongSlit(_, _, _, _, _, _, _, _, _, _) => n.asLeft
-        case s @ ScienceModeAdvanced.GmosSouthLongSlit(_, _, _, _, _, _, _, _, _, _) => s.asRight
+        case n @ ScienceModeAdvanced.GmosNorthLongSlit(_, _, _, _, _, _, _, _, _, _, _) => n.asLeft
+        case s @ ScienceModeAdvanced.GmosSouthLongSlit(_, _, _, _, _, _, _, _, _, _, _) => s.asRight
       }
 
 }

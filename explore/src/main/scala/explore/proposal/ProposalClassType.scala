@@ -69,5 +69,6 @@ object ProposalClassType {
                   SystemVerification
     )
 
-  implicit val displayProposalClassType: Display[ProposalClassType] = Display.byTag
+  implicit val displayProposalClassType: Display[ProposalClassType] =
+    Display.by(_.label, _.label)
 }
