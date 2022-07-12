@@ -9,11 +9,9 @@ import cats.syntax.all._
 import clue._
 import clue.js.FetchJSBackend
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.common.RetryHelpers._
 import explore.common.SSOClient
 import explore.model.enums.AppTab
 import explore.model.enums.ExecutionEnvironment
-import explore.modes.SpectroscopyModesMatrix
 import explore.utils
 import io.circe.Json
 import japgolly.scalajs.react.Callback
@@ -21,14 +19,10 @@ import japgolly.scalajs.react.extra.router.SetRouteVia
 import lucuma.core.model.Program
 import lucuma.schemas._
 import org.http4s._
-import org.http4s.dom.FetchClientBuilder
 import org.http4s.implicits._
 import org.typelevel.log4cats.Logger
 import queries.schemas._
-import retry._
 import workers.WebWorkerF
-
-import scala.concurrent.duration._
 
 case class Clients[F[_]: Async: Parallel] protected (
   odb:           WebSocketClient[F, ObservationDB],
@@ -64,6 +58,7 @@ object Clients {
     } yield Clients(odbClient, prefsClient, itcClient)
 }
 
+/*
 case class StaticData protected (spectroscopyMatrix: SpectroscopyModesMatrix)
 object StaticData {
   def build[F[_]: Async: Logger](spectroscopyMatrixUri: Uri): F[StaticData] = {
@@ -86,6 +81,7 @@ object StaticData {
     spectroscopyMatrix.map(matrix => StaticData(matrix))
   }
 }
+ */
 
 case class AppContext[F[_]](
   version:     NonEmptyString,

@@ -24,6 +24,7 @@ import lucuma.core.enums.ScienceMode
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
 import lucuma.core.model.SiderealTracking
+import lucuma.core.optics.syntax.lens._
 import lucuma.ui.forms.EnumViewSelect
 import react.common._
 import react.semanticui.collections.form.Form

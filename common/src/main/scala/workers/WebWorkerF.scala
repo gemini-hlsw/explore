@@ -3,7 +3,7 @@
 
 package workers
 
-import boopickle.Default._
+import boopickle.DefaultBasic._
 import cats.effect.Async
 import cats.effect.Resource
 import cats.effect.Sync
@@ -84,5 +84,12 @@ object WebWorkerF {
             topic.subscribeAwait(10)
         }))(w => w.terminate)
     } yield workerF
+
+  implicit class WebWorkerOps(val worker: dom.DedicatedWorkerGlobalScope) extends AnyVal {
+    def postTransferrable[A: Pickler](a: A): Unit = {
+      val buffer = asTransferable(a)
+      worker.postMessage(buffer, js.Array(buffer.buffer: dom.Transferable))
+    }
+  }
 
 }

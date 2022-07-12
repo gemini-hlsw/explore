@@ -11,6 +11,7 @@ import coulomb.refined._
 import crystal.react.View
 import crystal.react.hooks._
 import crystal.react.implicits._
+import explore.events.EventPicklers._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosBigDecimal
@@ -58,6 +59,9 @@ import spire.math.Interval
 import java.text.DecimalFormat
 
 import scalajs.js.|
+import explore.events.SpectroscopyMatrixRequest
+import explore.events.CacheCleanupRequest
+import java.time.Duration
 
 final case class SpectroscopyModesTable(
   scienceMode:              View[Option[ScienceMode]],
@@ -355,6 +359,8 @@ object SpectroscopyModesTable {
   val component =
     ScalaFnComponent
       .withHooks[Props]
+      .useEffectOnMountBy(_.ctx.worker.postTransferrable(SpectroscopyMatrixRequest("FILE", 99)))
+      .useEffectOnMountBy(_.ctx.worker.postTransferrable(CacheCleanupRequest(Duration.ofDays(3))))
       // rows
       .useMemoBy(p => (p.spectroscopyRequirements, p.baseTracking.map(_.baseCoordinates.dec)))(
         props => { case (s, dec) =>

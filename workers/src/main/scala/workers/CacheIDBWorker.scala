@@ -9,6 +9,7 @@ import cats.effect.unsafe.implicits._
 import cats.syntax.all._
 import explore.events._
 import explore.model.boopickle._
+import explore.model.StaticData
 import japgolly.scalajs.react.callback.CallbackCatsEffect._
 import japgolly.scalajs.react.callback._
 import japgolly.webapputil.indexeddb.IndexedDb
@@ -21,6 +22,7 @@ import typings.loglevel.mod.LogLevelDesc
 import scala.scalajs.js
 
 import js.annotation._
+import java.time.Duration
 
 trait AsyncToIO {
   class AsyncCallbackOps[A](val a: AsyncCallback[A]) {
@@ -46,7 +48,7 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
   }
 
   // Expire the data in 30 days
-  val Expiration: Double = 30 * 24 * 60 * 60 * 1000.0
+  val Expiration: Duration = Duration.ofDays(30)
 
   def run: IO[Unit] =
     for {
@@ -58,20 +60,34 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
       client   = FetchClientBuilder[IO].create
       _       <-
         IO {
-          self.onmessage = (msg: dom.MessageEvent) =>
+          self.onmessage = (msg: dom.MessageEvent) => {
+            println(s"msg ${msg.data}")
             // Decode transferrable events
             decodeFromTransferable[CatalogRequest](msg)
               .map { case req @ CatalogRequest(_, _) =>
-                readFromGaia(client, self, cacheDb, stores, req)(
-                  logger
-                ) *> expireGuideStarCandidates(cacheDb, stores, Expiration).toIO
+                println("REQ")
+                readFromGaia(client, self, cacheDb, stores, req)(logger) *>
+                  expireGuideStarCandidates(cacheDb, stores, Expiration).toIO
               }
-              .orElse(decodeFromTransferable[CacheCleanupRequest](msg).map {
-                case CacheCleanupRequest(expTime) =>
-                  expireGuideStarCandidates(cacheDb, stores, expTime.toDouble).toIO
-              })
+              .orElse(
+                decodeFromTransferable[SpectroscopyMatrixRequest](msg)
+                  .map { case SpectroscopyMatrixRequest(file, _) =>
+                    println(s"RR why $file")
+                    IO.println(file)
+                    StaticData.build[IO](uri"/instrument_spectroscopy_matrix.csv")
+                  }
+              )
+              .orElse(
+                decodeFromTransferable[CacheCleanupRequest](msg)
+                  .map { case CacheCleanupRequest(expTime) =>
+                    println("Cleanup")
+                    expireGuideStarCandidates(cacheDb, stores, expTime).toIO
+                  }
+              )
               .orEmpty
+              .handleError(_.printStackTrace())
               .unsafeRunAndForget()
+          }
         }
     } yield ()
 }
