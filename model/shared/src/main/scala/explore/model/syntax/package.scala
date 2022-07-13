@@ -5,7 +5,9 @@ package explore.model.syntax
 
 import cats.syntax.all._
 import explore.model.enums.PosAngleOptions
+import lucuma.core.enums.Site
 import lucuma.core.math.Angle
+import lucuma.core.math.Declination
 import lucuma.core.model.PosAngleConstraint
 
 object all {
@@ -28,5 +30,15 @@ object all {
       case Some(PosAngleConstraint.ParallacticOverride(_)) => PosAngleOptions.ParallacticOverride
       case _                                               => PosAngleOptions.Unconstrained
     }
+  }
+
+  // TODO Move to core
+  implicit class SiteOps(val site: Site) extends AnyVal {
+    def inPreferredDeclination(d: Declination): Boolean =
+      d.toAngle.toSignedDoubleDegrees match {
+        case d if d < -40.0 => site === Site.GS
+        case d if d > 30.0  => site === Site.GN
+        case _              => true
+      }
   }
 }

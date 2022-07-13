@@ -27,6 +27,8 @@ package itc {
 
   import lucuma.core.enums.GmosNorthFpu
   import lucuma.core.enums.GmosSouthFpu
+  import cats.data.NonEmptyList
+  import explore.model.Asterism
   object implicits {
     implicit class AngleOps(val a: Angle) extends AnyVal {
       def toInput: AngleInput =
@@ -222,6 +224,15 @@ package itc {
         }
         .flatten
         .hashDistinct
+
+      def baseTarget: Option[Target] =
+        NonEmptyList.fromList(s.targets.asterism).map(Asterism(_).baseTarget.target)
+
+      def baseSiderealTracking: Option[SiderealTracking] =
+        baseTarget match {
+          case Some(s: Target.Sidereal) => s.tracking.some
+          case _                        => none
+        }
     }
 
     implicit class ITCInstrumentModesOps(val m: InstrumentRow) extends AnyVal {

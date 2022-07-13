@@ -13,9 +13,11 @@ import eu.timepit.refined.cats._
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.types.numeric._
 import eu.timepit.refined.types.string._
+import explore.model.syntax.all._
 import fs2.data.csv._
 import lucuma.core.enums._
 import lucuma.core.math.Angle
+import lucuma.core.math.Declination
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units._
 import lucuma.core.util.Enumerated
@@ -38,6 +40,8 @@ sealed trait InstrumentRow {
   type Filter
   val filter: Filter
 
+  val site: Site
+
   override def toString(): String = s"Mode: ${instrument.shortName}, $grating, $filter, $fpu"
 }
 
@@ -50,6 +54,7 @@ final case class GmosNorthSpectroscopyRow(
   type Filter  = Option[GmosNorthFilter]
   type FPU     = GmosNorthFpu
   val instrument = Instrument.GmosNorth
+  val site       = Site.GN
 }
 
 final case class GmosSouthSpectroscopyRow(
@@ -61,6 +66,7 @@ final case class GmosSouthSpectroscopyRow(
   type Filter  = Option[GmosSouthFilter]
   type FPU     = GmosSouthFpu
   val instrument = Instrument.GmosSouth
+  val site       = Site.GS
 }
 
 final case class Flamingos2SpectroscopyRow(grating: F2Disperser, filter: F2Filter)
@@ -70,6 +76,7 @@ final case class Flamingos2SpectroscopyRow(grating: F2Disperser, filter: F2Filte
   type FPU     = Unit
   val fpu        = ()
   val instrument = Instrument.Flamingos2
+  val site       = Site.GS
 }
 
 final case class GpiSpectroscopyRow(grating: GpiDisperser, filter: GpiFilter)
@@ -79,6 +86,7 @@ final case class GpiSpectroscopyRow(grating: GpiDisperser, filter: GpiFilter)
   type FPU     = Unit
   val fpu        = ()
   val instrument = Instrument.Gpi
+  val site       = Site.GN
 }
 
 final case class GnirsSpectroscopyRow(grating: GnirsDisperser, filter: GnirsFilter)
@@ -88,6 +96,7 @@ final case class GnirsSpectroscopyRow(grating: GnirsDisperser, filter: GnirsFilt
   type FPU     = Unit
   val fpu        = ()
   val instrument = Instrument.Gnirs
+  val site       = Site.GN
 }
 
 // Used for Instruments not fully defined
@@ -98,6 +107,7 @@ final case class GenericSpectroscopyRow(i: Instrument, grating: String, filter: 
   type FPU     = Unit
   val fpu        = ()
   val instrument = i
+  val site       = Site.GN
 }
 
 object InstrumentRow {
@@ -337,6 +347,7 @@ trait SpectroscopyModesMatrixDecoders extends Decoders {
         SpectroscopyModeRow(row.line.foldMap(_.toInt), i, s, f, c, a, min, max, wo, wr, r, sl, sw)
       )
   }
+
 }
 
 final case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
@@ -350,7 +361,8 @@ final case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
     wavelength:   Option[Wavelength] = None,
     resolution:   Option[PosInt] = None,
     coverage:     Option[Quantity[NonNegBigDecimal, Micrometer]] = None,
-    slitWidth:    Option[Angle] = None
+    slitWidth:    Option[Angle] = None,
+    declination:  Option[Declination] = None
   ): List[SpectroscopyModeRow] = {
     // Criteria to filter the modes
     val filter: SpectroscopyModeRow => Boolean = r =>
@@ -360,7 +372,8 @@ final case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
         wavelength.forall(w => w >= r.minWavelength.w && w <= r.maxWavelength.w) &&
         resolution.forall(_ <= r.resolution) &&
         coverage.forall(_ <= r.wavelengthCoverage) &&
-        slitWidth.forall(_.toMicroarcseconds <= r.slitLength.size.toMicroarcseconds)
+        slitWidth.forall(_.toMicroarcseconds <= r.slitLength.size.toMicroarcseconds) &&
+        declination.forall(r.instrument.site.inPreferredDeclination)
 
     // Calculates a score for each mode for sorting purposes. It is down in Rational space, we may change it to double as we don't really need high precission for this
     val score: SpectroscopyModeRow => Rational = { r =>

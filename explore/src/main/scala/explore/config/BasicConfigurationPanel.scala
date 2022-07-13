@@ -23,6 +23,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enums.ScienceMode
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
+import lucuma.core.model.SiderealTracking
 import lucuma.ui.forms.EnumViewSelect
 import react.common._
 import react.semanticui.collections.form.Form
@@ -38,6 +39,7 @@ final case class BasicConfigurationPanel(
   scienceModeOpt:   View[Option[model.ScienceMode]],
   constraints:      ConstraintSet,
   itcTargets:       List[ITCTarget],
+  baseTracking:     Option[SiderealTracking],
   onShowAdvanced:   Option[Callback]
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[BasicConfigurationPanel](BasicConfigurationPanel.component)
@@ -82,6 +84,7 @@ object BasicConfigurationPanel {
             spectroscopy.get,
             props.constraints,
             if (props.itcTargets.isEmpty) none else props.itcTargets.some,
+            props.baseTracking,
             ctx.staticData.spectroscopyMatrix
           ).when(isSpectroscopy),
           <.div(ExploreStyles.BasicConfigurationButtons)(
