@@ -88,7 +88,6 @@ a {
 
 /*** iPhone and iOS Form Input Zoom Fixes ***/
 @media screen and (device-aspect-ratio: 2/3) {
-
   select,
   textarea,
   input[type='text'],
@@ -107,7 +106,6 @@ a {
 }
 
 @media screen and (device-aspect-ratio: 40/71) {
-
   select,
   textarea,
   input[type='text'],
@@ -126,7 +124,6 @@ a {
 }
 
 @media screen and (device-aspect-ratio: 375/667) {
-
   select,
   textarea,
   input[type='text'],
@@ -145,8 +142,8 @@ a {
   }
 }
 
+/* stylelint-disable */
 @media screen and (device-aspect-ratio: 9/16) {
-
   select,
   textarea,
   input[type='text'],
@@ -164,6 +161,7 @@ a {
     font-size: 16px;
   }
 }
+/* stylelint-enable */
 
 body.dark-theme {
   .dark-theme();
@@ -174,16 +172,17 @@ body.light-theme {
 }
 
 @media (prefers-color-scheme: dark) {
-
   /* defaults to dark theme */
   body {
     .dark-theme();
   }
 
   /* Override dark mode with light mode styles if the user decides to swap */
+  /* stylelint-disable */
   body.light-theme {
     .light-theme();
   }
+  /* stylelint-enable */
 }
 
 // Classes
@@ -356,9 +355,11 @@ tfoot {
 .ui.button.tile-back-button {
   margin-right: 0;
 
+  /* stylelint-disable */
   @media (min-width: @target-grid-responsive-cutoff) {
     display: none;
   }
+  /* stylelint-enable */
 }
 
 .explore-tile-control {
