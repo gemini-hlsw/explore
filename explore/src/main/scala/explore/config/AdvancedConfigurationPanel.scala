@@ -36,14 +36,14 @@ import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enums._
 import lucuma.core.math.Offset
+import lucuma.core.math.Wavelength
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.NonNegDuration
 import lucuma.core.model.Observation
 import lucuma.core.syntax.all._
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
-import lucuma.core.validation.InputValidSplitEpi
-import lucuma.core.validation.InputValidWedge
+import lucuma.core.validation._
 import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.forms.EnumViewOptionalSelect
 import lucuma.ui.forms.FormInputEV
@@ -88,6 +88,10 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
   Roi: Enumerated: Display
 ] {
   type AA = Aligner[T, Input]
+
+  @inline protected def overrideWavelength(aligner: AA)(implicit
+    ctx:                                            AppContextIO
+  ): View[Option[Wavelength]]
 
   @inline protected def overrideGrating(aligner: AA)(implicit
     ctx:                                         AppContextIO
@@ -148,6 +152,12 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
     oetm.flatMap(etm => ExposureTimeMode.exposureTime.getOption(etm)).map(durationToSeconds)
 
   val itcNoneMsg = "No ITC Results"
+
+  val wavelengthChangeAuditor =
+    ChangeAuditor
+      .fromInputValidWedge(ExploreModelValidators.wavelengthValidWedge)
+      .allow(s => s === "0" || s === "0.")
+      .decimal(3)
 
   val component =
     ScalaFnComponent
@@ -275,6 +285,17 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 value = overrideFilter(props.scienceModeAdvanced),
                 clearable = true,
                 placeholder = filterLens.get(props.scienceModeBasic).map(_.shortName).orUndefined
+              ),
+              <.label("Wavelength",
+                      HelpIcon("configuration/wavelength.md"),
+                      ExploreStyles.SkipToNext
+              ),
+              InputWithUnits(
+                id = "override-wavelength",
+                value = overrideWavelength(props.scienceModeAdvanced).withOnMod(_ => invalidateITC),
+                units = "μm",
+                validFormat = ExploreModelValidators.wavelengthValidWedge.optional,
+                changeAuditor = wavelengthChangeAuditor.optional
               ),
               <.label("FPU", HelpIcon("configuration/fpu.md"), ExploreStyles.SkipToNext),
               EnumViewOptionalSelect(
@@ -481,6 +502,15 @@ object AdvancedConfigurationPanel {
         GmosNorthFpu,
       ] {
 
+    @inline protected def overrideWavelength(aligner: AA)(implicit
+      ctx:                                            AppContextIO
+    ): View[Option[Wavelength]] =
+      aligner
+        .zoom(ScienceModeAdvanced.GmosNorthLongSlit.overrideWavelength,
+              GmosNorthLongSlitAdvancedConfigInput.overrideWavelength.modify
+        )
+        .view(_.map(_.toInput).orUnassign)
+
     @inline override protected def overrideGrating(
       aligner:      AA
     )(implicit ctx: AppContextIO): View[Option[GmosNorthGrating]] =
@@ -623,6 +653,15 @@ object AdvancedConfigurationPanel {
         GmosSouthFilter,
         GmosSouthFpu,
       ] {
+
+    @inline protected def overrideWavelength(aligner: AA)(implicit
+      ctx:                                            AppContextIO
+    ): View[Option[Wavelength]] =
+      aligner
+        .zoom(ScienceModeAdvanced.GmosSouthLongSlit.overrideWavelength,
+              GmosSouthLongSlitAdvancedConfigInput.overrideWavelength.modify
+        )
+        .view(_.map(_.toInput).orUnassign)
 
     @inline override protected def overrideGrating(
       aligner:      AA
