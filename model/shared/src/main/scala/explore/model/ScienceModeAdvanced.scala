@@ -11,6 +11,7 @@ import io.circe.Decoder
 import io.circe.refined._
 import lucuma.core.enums._
 import lucuma.core.math.Offset
+import lucuma.core.math.Wavelength
 import lucuma.core.model.ExposureTimeMode
 import lucuma.schemas.decoders._
 import monocle.Focus
@@ -29,6 +30,7 @@ object ScienceModeAdvanced {
     }
 
   final case class GmosNorthLongSlit(
+    overrideWavelength:        Option[Wavelength],
     overrideGrating:           Option[GmosNorthGrating],
     overrideFilter:            Option[GmosNorthFilter],
     overrideFpu:               Option[GmosNorthFpu],
@@ -44,11 +46,12 @@ object ScienceModeAdvanced {
 
   object GmosNorthLongSlit {
     lazy val Empty: GmosNorthLongSlit =
-      GmosNorthLongSlit(none, none, none, none, none, none, none, none, none, none, none)
+      GmosNorthLongSlit(none, none, none, none, none, none, none, none, none, none, none, none)
 
     implicit val gmosNLongSlitEq: Eq[GmosNorthLongSlit] =
       Eq.by(x =>
-        (x.overrideGrating,
+        (x.overrideWavelength,
+         x.overrideGrating,
          x.overrideFilter,
          x.overrideFpu,
          x.overrideExposureTimeMode,
@@ -65,6 +68,7 @@ object ScienceModeAdvanced {
     implicit val gmosNLongSlitDecoder: Decoder[GmosNorthLongSlit] =
       Decoder.instance(c =>
         for {
+          overrideWavelength        <- c.downField("overrideWavelength").as[Option[Wavelength]]
           overrideGrating           <- c.downField("overrideGrating").as[Option[GmosNorthGrating]]
           overrideFilter            <- c.downField("overrideFilter").as[Option[GmosNorthFilter]]
           overrideFpu               <- c.downField("overrideFpu").as[Option[GmosNorthFpu]]
@@ -80,6 +84,7 @@ object ScienceModeAdvanced {
           explicitSpatialOffsets    <-
             c.downField("explicitSpatialOffsets").as[Option[NonEmptyList[Offset.Q]]]
         } yield GmosNorthLongSlit(
+          overrideWavelength,
           overrideGrating,
           overrideFilter,
           overrideFpu,
@@ -93,6 +98,9 @@ object ScienceModeAdvanced {
           explicitSpatialOffsets
         )
       )
+
+    val overrideWavelength: Lens[GmosNorthLongSlit, Option[Wavelength]] =
+      Focus[GmosNorthLongSlit](_.overrideWavelength)
 
     val overrideGrating: Lens[GmosNorthLongSlit, Option[GmosNorthGrating]] =
       Focus[GmosNorthLongSlit](_.overrideGrating)
@@ -129,6 +137,7 @@ object ScienceModeAdvanced {
   }
 
   final case class GmosSouthLongSlit(
+    overrideWavelength:        Option[Wavelength],
     overrideGrating:           Option[GmosSouthGrating],
     overrideFilter:            Option[GmosSouthFilter],
     overrideFpu:               Option[GmosSouthFpu],
@@ -144,11 +153,12 @@ object ScienceModeAdvanced {
 
   object GmosSouthLongSlit {
     lazy val Empty: GmosSouthLongSlit =
-      GmosSouthLongSlit(none, none, none, none, none, none, none, none, none, none, none)
+      GmosSouthLongSlit(none, none, none, none, none, none, none, none, none, none, none, none)
 
     implicit val gmosSLongSlitEq: Eq[GmosSouthLongSlit] =
       Eq.by(x =>
-        (x.overrideGrating,
+        (x.overrideWavelength,
+         x.overrideGrating,
          x.overrideFilter,
          x.overrideFpu,
          x.overrideExposureTimeMode,
@@ -165,6 +175,7 @@ object ScienceModeAdvanced {
     implicit val gmosSLongSlitDecoder: Decoder[GmosSouthLongSlit] =
       Decoder.instance(c =>
         for {
+          overrideWavelength        <- c.downField("overrideWavelength").as[Option[Wavelength]]
           overrideGrating           <- c.downField("overrideGrating").as[Option[GmosSouthGrating]]
           overrideFilter            <- c.downField("overrideFilter").as[Option[GmosSouthFilter]]
           overrideFpu               <- c.downField("overrideFpu").as[Option[GmosSouthFpu]]
@@ -180,6 +191,7 @@ object ScienceModeAdvanced {
           explicitSpatialOffsets    <-
             c.downField("explicitSpatialOffsets").as[Option[NonEmptyList[Offset.Q]]]
         } yield GmosSouthLongSlit(
+          overrideWavelength,
           overrideGrating,
           overrideFilter,
           overrideFpu,
@@ -193,6 +205,9 @@ object ScienceModeAdvanced {
           explicitSpatialOffsets
         )
       )
+
+    val overrideWavelength: Lens[GmosSouthLongSlit, Option[Wavelength]] =
+      Focus[GmosSouthLongSlit](_.overrideWavelength)
 
     val overrideGrating: Lens[GmosSouthLongSlit, Option[GmosSouthGrating]] =
       Focus[GmosSouthLongSlit](_.overrideGrating)

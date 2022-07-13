@@ -486,6 +486,9 @@ object ObsQueriesGQL {
                 fpu
               }
               advanced {
+                overrideWavelength {
+                  picometers
+                }
                 overrideGrating
                 overrideFilter
                 overrideFpu
@@ -518,6 +521,9 @@ object ObsQueriesGQL {
                 fpu
               }
               advanced {
+                overrideWavelength {
+                  picometers
+                }
                 overrideGrating
                 overrideFilter
                 overrideFpu
