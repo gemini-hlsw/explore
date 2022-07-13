@@ -13,6 +13,7 @@ import eu.timepit.refined.cats._
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.types.numeric._
 import eu.timepit.refined.types.string._
+import explore.model.syntax.all._
 import fs2.data.csv._
 import lucuma.core.enums._
 import lucuma.core.math.Angle
@@ -346,6 +347,7 @@ trait SpectroscopyModesMatrixDecoders extends Decoders {
         SpectroscopyModeRow(row.line.foldMap(_.toInt), i, s, f, c, a, min, max, wo, wr, r, sl, sw)
       )
   }
+
 }
 
 final case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
@@ -371,11 +373,7 @@ final case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
         resolution.forall(_ <= r.resolution) &&
         coverage.forall(_ <= r.wavelengthCoverage) &&
         slitWidth.forall(_.toMicroarcseconds <= r.slitLength.size.toMicroarcseconds) &&
-        declination.forall {
-          case d if d.toAngle.toSignedDoubleDegrees < -40.0 => r.instrument.site === Site.GS
-          case d if d.toAngle.toSignedDoubleDegrees > 30.0  => r.instrument.site === Site.GN
-          case _                                            => true
-        }
+        declination.forall(r.instrument.site.inPreferredDeclination)
 
     // Calculates a score for each mode for sorting purposes. It is down in Rational space, we may change it to double as we don't really need high precission for this
     val score: SpectroscopyModeRow => Rational = { r =>
