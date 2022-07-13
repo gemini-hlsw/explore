@@ -3,14 +3,15 @@
 
 package explore.config
 
-import coulomb.cats.implicits._
+import cats.syntax.all._
 import crystal.react.View
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
+import explore.common.ObsQueries.SpectroscopyRequirementsData
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.itc.requiredForITC
-import explore.model.SpectroscopyConfigurationOptions
+import explore.model.ExploreModelValidators
 import explore.model.display._
 import explore.model.formats._
 import explore.targeteditor.InputWithUnits
@@ -24,7 +25,7 @@ import lucuma.ui.input.ChangeAuditor
 import react.common._
 
 final case class SpectroscopyConfigurationPanel(
-  options: View[SpectroscopyConfigurationOptions]
+  options: View[SpectroscopyRequirementsData]
 ) extends ReactFnProps[SpectroscopyConfigurationPanel](SpectroscopyConfigurationPanel.component)
 
 object SpectroscopyConfigurationPanel {
@@ -32,19 +33,23 @@ object SpectroscopyConfigurationPanel {
 
   protected val component =
     ScalaFnComponent[Props] { p =>
-      val wv                       = p.options.zoom(SpectroscopyConfigurationOptions.wavelengthQ)
-      val resolution               = p.options.zoom(SpectroscopyConfigurationOptions.resolution)
-      val signalToNoise            = p.options.zoom(SpectroscopyConfigurationOptions.signalToNoise)
-      val signalToNoiseAt          = p.options.zoom(SpectroscopyConfigurationOptions.signalToNoiseAtQ)
+      val wv                       = p.options.zoom(SpectroscopyRequirementsData.wavelength)
+      val resolution               = p.options.zoom(SpectroscopyRequirementsData.resolution)
+      val signalToNoise            = p.options.zoom(SpectroscopyRequirementsData.signalToNoise)
+      val signalToNoiseAt          = p.options.zoom(SpectroscopyRequirementsData.signalToNoiseAt)
       val wavelengthCoverage       =
-        p.options.zoom(SpectroscopyConfigurationOptions.wavelengthCoverageQ)
-      val focalPlane               = p.options.zoom(SpectroscopyConfigurationOptions.focalPlane)
-      val focalPlaneAngle          = p.options.zoom(SpectroscopyConfigurationOptions.focalPlaneAngle)
+        p.options.zoom(SpectroscopyRequirementsData.wavelengthCoverage)
+      val focalPlane               = p.options.zoom(SpectroscopyRequirementsData.focalPlane)
+      val focalPlaneAngle          = p.options.zoom(SpectroscopyRequirementsData.focalPlaneAngle)
       val spectroscopyCapabilities =
-        p.options.zoom(SpectroscopyConfigurationOptions.capabilities)
+        p.options.zoom(SpectroscopyRequirementsData.capabilities)
 
-      val wvMicroInput    = InputValidWedge.fromFormat(formatMicron).optional
-      val wvChangeAuditor = ChangeAuditor.fromFormat(formatMicron).decimal(3).optional
+      val wvMicroInput    = ExploreModelValidators.wavelengthValidWedge.optional
+      val wvChangeAuditor = ChangeAuditor
+        .fromInputValidWedge(ExploreModelValidators.wavelengthValidWedge)
+        .allow(s => s === "0" || s === "0.")
+        .decimal(3)
+        .optional
 
       val wvUnits =
         <.span("μm ", requiredForITC.unless(wv.get.isDefined))
