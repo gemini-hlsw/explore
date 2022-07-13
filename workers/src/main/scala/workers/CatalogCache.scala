@@ -41,7 +41,7 @@ import lucuma.core.math.Wavelength
 import explore.model.Constants
 
 trait CatalogQuerySettings {
-  val proxy = uri"https://lucuma-cors-proxy.herokuapp.com"
+  val proxy = uri"https://cors-proxy.lucuma.xyz"
 
   val MaxTargets = 30000
 
