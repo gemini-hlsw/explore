@@ -85,6 +85,7 @@ object AsterismEditor {
         .execute(target.toCreateTargetInput(programId))
         .map(_.createTarget.target.id)
     )(IO(_))
+
     adding.async.set(true) >>
       targetId
         .flatMap { tid =>

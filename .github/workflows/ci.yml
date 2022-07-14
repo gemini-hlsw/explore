@@ -9,9 +9,9 @@ name: Continuous Integration
 
 on:
   pull_request:
-    branches: ['**', '!update/**', '!pr/**']
+    branches: ["**", "!update/**", "!pr/**"]
   push:
-    branches: ['**', '!update/**', '!pr/**']
+    branches: ["**", "!update/**", "!pr/**"]
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -92,7 +92,7 @@ jobs:
         run: sbt -v -J-Xmx6g 'project ${{ matrix.project }}' '++${{ matrix.scala }}' coverageReport coverageAggregate
 
       - name: Upload code coverage data
-        run: 'bash <(curl -s https://codecov.io/bash)'
+        run: "bash <(curl -s https://codecov.io/bash)"
 
   full:
     name: full
@@ -149,7 +149,7 @@ jobs:
 
       - name: Build application
         env:
-          NODE_OPTIONS: '--max-old-space-size=6144'
+          NODE_OPTIONS: "--max-old-space-size=6144"
         run: npm run build
 
       - name: override CI_COMMIT_SHA
@@ -195,7 +195,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Heroku - Provision static plugin
-        run: 'heroku plugins:install heroku-cli-static'
+        run: "heroku plugins:install heroku-cli-static"
 
       - name: Download Java (temurin@17)
         id: download-java-temurin-17
@@ -239,7 +239,7 @@ jobs:
 
       - name: Build application
         env:
-          NODE_OPTIONS: '--max-old-space-size=6144'
+          NODE_OPTIONS: "--max-old-space-size=6144"
         run: npm run build
 
       - name: Heroku - Deploy

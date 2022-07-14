@@ -10,7 +10,7 @@ import crystal.react.reuse._
 import explore.common.AsterismQueries._
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
-import explore.model.TargetGroup
+import explore.model.TargetWithIdAndObs
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
@@ -29,7 +29,7 @@ import reactST.reactTable.mod.IdType
 import scalajs.js.JSConverters._
 
 final case class TargetSummaryTable(
-  targetGroupList:   TargetGroupList,
+  targets:           TargetWithObsList,
   hiddenColumns:     View[Set[String]],
   selectObservation: (Observation.Id, Target.Id) => Callback,
   selectTarget:      Target.Id => Callback,
@@ -39,7 +39,7 @@ final case class TargetSummaryTable(
 object TargetSummaryTable {
   type Props = TargetSummaryTable
 
-  protected val TargetTable = TableDef[TargetGroup].withSortBy
+  protected val TargetTable = TableDef[TargetWithIdAndObs].withSortBy
 
   protected val TargetTableComponent = new SUITable(TargetTable)
 
@@ -54,7 +54,7 @@ object TargetSummaryTable {
       .withHooks[Props]
       // cols
       .useMemoBy(_ => ()) { props => _ =>
-        def column[V](id: String, accessor: TargetGroup => V) =
+        def column[V](id: String, accessor: TargetWithIdAndObs => V) =
           TargetTable
             .Column(id, row => accessor(row))
             .setHeader(TargetColumns.allColNames(id))
@@ -62,7 +62,7 @@ object TargetSummaryTable {
         List(
           // TODO: Add a delete button
           TargetTable
-            .Column("id", _.targetWithId.id)
+            .Column("id", _.id)
             .setHeader("id")
             .setCell(cell =>
               <.a(^.onClick ==> (_ => props.selectTarget(cell.value)), cell.value.toString)
@@ -70,7 +70,7 @@ object TargetSummaryTable {
             .setSortByAuto
         ) ++
           TargetColumns
-            .BaseColumnBuilder(TargetTable)(_.targetWithId.target.some)
+            .BaseColumnBuilder(TargetTable)(_.target.some)
             .allColumns ++
           List(
             column("count", _.obsIds.size) // TODO Right align
@@ -82,9 +82,7 @@ object TargetSummaryTable {
                   cell.value
                     .map(obsId =>
                       <.a(
-                        ^.onClick ==> (_ =>
-                          props.selectObservation(obsId, cell.row.original.targetWithId.id)
-                        ),
+                        ^.onClick ==> (_ => props.selectObservation(obsId, cell.row.original.id)),
                         obsId.toString
                       )
                     )
@@ -95,7 +93,9 @@ object TargetSummaryTable {
           )
       }
       // rows
-      .useMemoBy((props, _) => props.targetGroupList)((_, _) => _.values.toList)
+      .useMemoBy((props, _) => props.targets)((_, _) =>
+        _.toList.map { case (id, targetWithObs) => TargetWithIdAndObs(id, targetWithObs) }
+      )
       .useTableBy((props, cols, rows) =>
         TargetTable(
           cols,
@@ -150,12 +150,13 @@ object TargetSummaryTable {
             )
           ),
           TargetTableComponent(
-            table = Table(celled = true,
-                          selectable = true,
-                          striped = true,
-                          compact = TableCompact.Very,
-                          unstackable = true,
-                          clazz = ExploreStyles.ExploreTable
+            table = Table(
+              celled = true,
+              selectable = true,
+              striped = true,
+              compact = TableCompact.Very,
+              unstackable = true,
+              clazz = ExploreStyles.ExploreTable
             )(),
             header = true,
             headerCell = (col: TargetTable.ColumnType) =>

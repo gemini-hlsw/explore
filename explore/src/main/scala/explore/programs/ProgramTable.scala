@@ -18,6 +18,7 @@ import explore.common.ProgramQueries.ProgramInfo
 import explore.common.ProgramQueries._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.model.Focused
 import explore.model.enums.AppTab
 import explore.utils._
 import japgolly.scalajs.react._
@@ -79,7 +80,7 @@ object ProgramTable {
     programs:     List[ProgramInfo]
   )(implicit ctx: AppContextIO): IO[Unit] =
     (isRequired, programs) match {
-      case (true, head :: Nil) => ctx.replacePage(AppTab.Overview, head.id, none, none).to[IO]
+      case (true, head :: Nil) => ctx.replacePage(AppTab.Overview, head.id, Focused.None).to[IO]
       case _                   => IO.unit
     }
 

@@ -14,6 +14,7 @@ import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
 import explore.model.ConstraintGroup
+import explore.model.Focused
 import explore.model.ObsIdSet
 import explore.model.display._
 import explore.model.enums.AppTab
@@ -145,7 +146,7 @@ object ConstraintGroupObsList {
         props.focusedObsSet.exists(_.contains(obsId))
 
       def setObsSet(obsIdSet: Option[ObsIdSet]): Callback =
-        ctx.pushPage(AppTab.Constraints, props.programId, obsIdSet, none)
+        ctx.pushPage(AppTab.Constraints, props.programId, Focused(obsIdSet))
 
       def setObs(obsId: Observation.Id): Callback =
         setObsSet(ObsIdSet.one(obsId).some)
@@ -268,7 +269,7 @@ object ConstraintGroupObsList {
       // Unfocus the group with observations doesn't exist
       val unfocus =
         if ($.props.focusedObsSet.nonEmpty && selectedGroup.isEmpty)
-          $.props.ctx.replacePage(AppTab.Constraints, $.props.programId, none, none)
+          $.props.ctx.replacePage(AppTab.Constraints, $.props.programId, Focused.None)
         else Callback.empty
 
       val expandSelected = selectedGroup.foldMap(cg => expandedIds.mod(_ + cg.obsIds))

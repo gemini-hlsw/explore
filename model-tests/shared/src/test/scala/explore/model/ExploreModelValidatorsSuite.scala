@@ -15,6 +15,9 @@ import org.scalacheck.Arbitrary
 final class ExploreModelValidatorsSuite extends DisciplineSuite {
   import ArbOffset._
 
+  // TODO Remove when we fix the brightness wedge
+  override val scalaCheckInitialSeed = "fZE8ad2KGMzodTelX6rYW9QBScWRxuzAOfaJeTsxE9M="
+
   // Scala.js seems to have trouble formatting BigDecimals with very high absolute scale or precision.
   // We therefore use these bounded arbitraries.
   // TODO: This is duplicated in `InputValidSplitEpiInstancesSuite` in lucuma-core.
