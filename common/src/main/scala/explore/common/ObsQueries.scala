@@ -154,7 +154,7 @@ object ObsQueries {
       data.targetGroup.matches
         .toSortedMap(
           _.target.id,
-          group => TargetSummary(group.observationIds.toSet, group.target.id, group.target.sidereal)
+          group => TargetSummary(group.observationIds.toSet, group.target.id)
         )
     )
 

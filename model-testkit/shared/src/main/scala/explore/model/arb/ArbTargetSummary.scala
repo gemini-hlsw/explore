@@ -10,9 +10,7 @@ import org.scalacheck.Arbitrary._
 import org.scalacheck.Cogen
 import org.scalacheck.Cogen._
 import lucuma.core.util.arb.ArbGid._
-import lucuma.core.math.arb.ArbCoordinates._
 import eu.timepit.refined.scalacheck._
-import lucuma.core.math.Coordinates
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 
@@ -22,14 +20,11 @@ trait ArbTargetSummary {
       for {
         obsIds <- arbitrary[Set[Observation.Id]]
         tid    <- arbitrary[Target.Id]
-        coords <- arbitrary[Option[Coordinates]]
-      } yield TargetSummary(obsIds, tid, coords)
+      } yield TargetSummary(obsIds, tid)
     }
 
   implicit val cogenTargetSummary: Cogen[TargetSummary] =
-    Cogen[(List[Observation.Id], Target.Id, Option[Coordinates])].contramap(t =>
-      (t.obsIds.toList, t.targetId, t.coords)
-    )
+    Cogen[(List[Observation.Id], Target.Id)].contramap(t => (t.obsIds.toList, t.targetId))
 }
 
 object ArbTargetSummary extends ArbTargetSummary
