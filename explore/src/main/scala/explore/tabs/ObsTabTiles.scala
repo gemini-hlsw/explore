@@ -9,7 +9,6 @@ import crystal.Pot
 import crystal.react._
 import crystal.react.hooks._
 import crystal.react.implicits._
-import crystal.react.reuse._
 import explore.common.ObsQueries
 import explore.common.ObsQueries._
 import explore.components.Tile
@@ -38,7 +37,6 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.syntax.all._
-import lucuma.ui.reusability._
 import queries.common.ObsQueriesGQL._
 import react.common._
 import react.semanticui.addons.select.Select
@@ -135,38 +133,32 @@ object ObsTabTiles {
 
         val posAngle = obsView.toOption.flatMap(_.get.scienceData.posAngle)
 
+        val potAsterism: Pot[View[Option[Asterism]]] =
+          obsView.map(v =>
+            v.zoom(
+              ObsEditData.scienceData
+                .andThen(ScienceData.targets)
+                .andThen(ObservationData.TargetEnvironment.asterism)
+            ).zoom(Asterism.fromTargetsList.asLens)
+          )
+
         val vizTimeView: Pot[View[Option[Instant]]] =
           obsView.map(_.zoom(ObsEditData.visualizationTime))
 
         val potAsterismMode: Pot[(View[Option[Asterism]], Option[ScienceMode])] =
-          obsView.map(v =>
-            (
-              v.zoom(
-                ObsEditData.scienceData
-                  .andThen(ScienceData.targets)
-                  .andThen(ObservationData.TargetEnvironment.asterism)
-              ).zoom(Asterism.fromTargetsList.asLens),
-              scienceMode
-            )
-          )
+          potAsterism.map(x => (x, scienceMode))
 
         val targetCoords: Option[(Target.Id, Coordinates)] =
-          // try first the target from the url or else use the asterism base
-          props.focusedTarget
-            .flatMap(props.targetMap.get)
-            .flatMap(x => x.coords.tupleLeft(x.targetId))
-            .orElse {
-              potAsterismMode.toOption
-                .flatMap(
-                  _._1.get.flatMap(t =>
-                    t.baseTarget.target match {
-                      case Target.Sidereal(_, tracking, _, _) =>
-                        (t.baseTarget.id, tracking.baseCoordinates).some
-                      case _                                  => none
-                    }
-                  )
-                )
-            }
+          potAsterism.toOption
+            .flatMap(
+              _.get.flatMap(t =>
+                t.baseTarget.target match {
+                  case Target.Sidereal(_, tracking, _, _) =>
+                    (t.baseTarget.id, tracking.baseCoordinates).some
+                  case _                                  => none
+                }
+              )
+            )
 
         val notesTile =
           Tile(
@@ -189,11 +181,9 @@ object ObsTabTiles {
         val skyPlotTile =
           ElevationPlotTile.elevationPlotTile(props.userId, scienceMode, targetCoords)
 
-        def setCurrentTarget(
-          programId: Program.Id,
-          oid:       Option[Observation.Id],
-          tid:       Option[Target.Id],
-          via:       SetRouteVia
+        def setCurrentTarget(programId: Program.Id, oid: Option[Observation.Id])(
+          tid:                          Option[Target.Id],
+          via:                          SetRouteVia
         ): Callback =
           ctx.setPageVia(AppTab.Observations, programId, oid.map(ObsIdSet.one(_)), tid, via)
 
@@ -207,8 +197,8 @@ object ObsTabTiles {
           obsView.toOption.map(_.get.scienceData.constraints),
           obsView.toOption.flatMap(_.get.scienceData.requirements.spectroscopy.wavelength),
           props.focusedTarget,
-          Reuse(setCurrentTarget _)(props.programId, props.focusedObs),
-          Reuse.currying(props.targetMap, props.obsId).in(otherObsCount _),
+          setCurrentTarget(props.programId, props.focusedObs),
+          otherObsCount(props.targetMap, props.obsId, _),
           props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
           props.searching,
           "Targets",

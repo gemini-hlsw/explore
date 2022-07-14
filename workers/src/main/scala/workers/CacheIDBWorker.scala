@@ -60,17 +60,17 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
         IO {
           self.onmessage = (msg: dom.MessageEvent) =>
             // Decode transferrable events
-            (decodeFromTransferable[CatalogRequest](msg)
+            decodeFromTransferable[CatalogRequest](msg)
               .map { case req @ CatalogRequest(_, _) =>
-                (readFromGaia(client, self, cacheDb, stores, req)(
+                readFromGaia(client, self, cacheDb, stores, req)(
                   logger
-                ) *> expireGuideStarCandidates(cacheDb, stores, Expiration).toIO)
+                ) *> expireGuideStarCandidates(cacheDb, stores, Expiration).toIO
               }
               .orElse(decodeFromTransferable[CacheCleanupRequest](msg).map {
                 case CacheCleanupRequest(expTime) =>
                   expireGuideStarCandidates(cacheDb, stores, expTime.toDouble).toIO
               })
-              .orEmpty)
+              .orEmpty
               .unsafeRunAndForget()
         }
     } yield ()
