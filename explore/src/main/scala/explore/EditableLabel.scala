@@ -10,7 +10,7 @@ import explore.implicits._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import org.scalajs.dom
-import react.common.ReactFnProps
+import react.common._
 import react.common.style.Css
 import react.fa.FontAwesomeIcon
 import react.semanticui.elements.button.Button

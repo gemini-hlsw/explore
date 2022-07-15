@@ -6,6 +6,8 @@ package explore.config
 import cats.implicits._
 import coulomb.Quantity
 import crystal.react.View
+import coulomb.ops.algebra.spire.all.given
+import coulomb.policy.spire.standard.given
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import explore.components.HelpIcon
@@ -33,6 +35,7 @@ import spire.math.Rational
 import scala.collection.immutable.SortedSet
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
+import lucuma.refined.*
 
 final case class ImagingConfigurationPanel(
   options: View[ImagingConfigurationOptions]
@@ -58,9 +61,9 @@ object ImagingConfigurationPanel {
       }.toList: _*
     )
 
-  def formatCentral(r: Quantity[Int, Nanometer]): String =
+  def formatCentral(r: Quantity[Rational, Nanometer]): String =
     if (r.value > 1000)
-      f"${r.to[Rational, Micrometer].value.toDouble}%.3f μm"
+      f"${r.toValue[Double].toUnit[Micrometer].value}%.3f μm"
     else
       s"${r.value.toInt} nm"
 
@@ -101,7 +104,7 @@ object ImagingConfigurationPanel {
       val capabilities  = p.options.zoom(ImagingConfigurationOptions.capabilities)
 
       ReactFragment(
-        <.label("Filter", HelpIcon("configuration/filter.md"), ExploreStyles.SkipToNext),
+        <.label("Filter", HelpIcon("configuration/filter.md".refined), ExploreStyles.SkipToNext),
         Dropdown(
           placeholder = "Filters",
           clazz = ExploreStyles.ConfigurationFilter,
@@ -114,16 +117,19 @@ object ImagingConfigurationPanel {
             ddp.value.toOption
               .map(r =>
                 (r: Any) match {
-                  case v: js.Array[_] =>
+                  case v: js.Array[?] =>
                     filters.set(valuesToFilters(v.collect { case s: String => s }))
                   case _              => Callback.empty
                 }
               )
               .getOrEmpty
         ),
-        <.label("Field of View", HelpIcon("configuration/fov.md"), ExploreStyles.SkipToNext),
+        <.label("Field of View",
+                HelpIcon("configuration/fov.md".refined),
+                ExploreStyles.SkipToNext
+        ),
         InputWithUnits(
-          id = "configuration-fov",
+          id = "configuration-fov".refined,
           clazz = Css.Empty,
           inline = true,
           value = fov,
@@ -132,16 +138,19 @@ object ImagingConfigurationPanel {
           changeAuditor = ChangeAuditor.fromFormat(formatArcsec).optional,
           disabled = false
         ),
-        <.label("S / N", HelpIcon("configuration/signal_to_noise.md"), ExploreStyles.SkipToNext),
+        <.label("S / N",
+                HelpIcon("configuration/signal_to_noise.md".refined),
+                ExploreStyles.SkipToNext
+        ),
         FormInputEV(
-          id = "signal-to-noise",
+          id = "signal-to-noise".refined,
           value = signalToNoise,
           validFormat = InputValidSplitEpi.posBigDecimal.optional,
           changeAuditor = ChangeAuditor.posBigDecimal().optional
         ),
         <.label(
           "Capabilities",
-          HelpIcon("configuration/capabilities.md"),
+          HelpIcon("configuration/capabilities.md".refined),
           ExploreStyles.SkipToNext
         ),
         EnumViewOptionalSelect(

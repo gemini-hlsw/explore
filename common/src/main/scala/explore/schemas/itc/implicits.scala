@@ -226,7 +226,7 @@ package itc {
         .hashDistinct
 
       def baseTarget: Option[Target] =
-        NonEmptyList.fromList(s.targets.asterism).map(Asterism(_).baseTarget.target)
+        NonEmptyList.fromList(s.targets.asterism).map(a => Asterism(a).baseTarget.target)
 
       def baseSiderealTracking: Option[SiderealTracking] =
         baseTarget match {

@@ -57,7 +57,7 @@ import react.semanticui.collections.form.FormInput
 import react.semanticui.elements.button.Button
 import react.semanticui.shorthand._
 import react.semanticui.sizes._
-import lucuma.refined._
+import lucuma.refined.*
 
 import java.time.Duration
 import scala.scalajs.js.JSConverters._
@@ -158,7 +158,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
     ChangeAuditor
       .fromInputValidWedge(ExploreModelValidators.wavelengthValidWedge)
       .allow(s => s === "0" || s === "0.")
-      .decimal(3)
+      .decimal(3.refined)
 
   val component =
     ScalaFnComponent
@@ -212,27 +212,31 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
 
           def dithersControl(onChange: Callback): VdomElement =
             ReactFragment(
-              <.label("λ Dithers", HelpIcon("configuration/lambda-dithers.md")),
+              <.label("λ Dithers", HelpIcon("configuration/lambda-dithers.md".refined)),
               InputWithUnits(
-                id = "dithers",
+                id = "dithers".refined,
                 value =
                   explicitWavelengthDithers(props.scienceModeAdvanced).withOnMod(_ => onChange),
                 validFormat = ExploreModelValidators.dithersValidSplitEpi,
-                changeAuditor =
-                  ChangeAuditor.bigDecimal(integers = 3, decimals = 1).toSequence().optional,
+                changeAuditor = ChangeAuditor
+                  .bigDecimal(integers = 3.refined, decimals = 1.refined)
+                  .toSequence()
+                  .optional,
                 units = "nm"
               )
             )
 
           def offsetsControl(onChange: Callback): VdomElement =
             ReactFragment(
-              <.label("Spatial Offsets", HelpIcon("configuration/spatial-offsets.md")),
+              <.label("Spatial Offsets", HelpIcon("configuration/spatial-offsets.md".refined)),
               InputWithUnits(
-                id = "offsets",
+                id = "offsets".refined,
                 value = explicitSpatialOffsets(props.scienceModeAdvanced).withOnMod(_ => onChange),
                 validFormat = ExploreModelValidators.offsetQNELValidWedge,
-                changeAuditor =
-                  ChangeAuditor.bigDecimal(integers = 3, decimals = 2).toSequence().optional,
+                changeAuditor = ChangeAuditor
+                  .bigDecimal(integers = 3.refined, decimals = 2.refined)
+                  .toSequence()
+                  .optional,
                 units = "arcsec"
               )
             )

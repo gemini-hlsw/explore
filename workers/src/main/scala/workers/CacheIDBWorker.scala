@@ -8,7 +8,7 @@ import cats.effect.kernel.Sync
 import cats.effect.unsafe.implicits._
 import cats.syntax.all._
 import explore.events._
-import explore.model.boopickle._
+import explore.model.boopickle.Boopickle._
 import japgolly.scalajs.react.callback.CallbackCatsEffect._
 import japgolly.scalajs.react.callback._
 import japgolly.webapputil.indexeddb.IndexedDb
@@ -50,13 +50,13 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
 
   def run: IO[Unit] =
     for {
-      logger      <- setupLogger[IO]
-      self        <- IO(dom.DedicatedWorkerGlobalScope.self)
-      idb         <- IO(self.indexedDB.get)
-      stores       = CacheIDBStores()
-      cacheDb     <- stores.open(IndexedDb(idb)).toIO
-      (client, _) <- FetchClientBuilder[IO].allocated
-      _           <-
+      logger  <- setupLogger[IO]
+      self    <- IO(dom.DedicatedWorkerGlobalScope.self)
+      idb     <- IO(self.indexedDB.get)
+      stores   = CacheIDBStores()
+      cacheDb <- stores.open(IndexedDb(idb)).toIO
+      client  <- FetchClientBuilder[IO].allocated.map(_._1)
+      _       <-
         IO {
           self.onmessage = (msg: dom.MessageEvent) =>
             // Decode transferrable events

@@ -26,6 +26,7 @@ import lucuma.core.geom.jts.interpreter._
 import lucuma.core.math.Coordinates
 import org.typelevel.log4cats.Logger
 import explore.model.boopickle._
+import explore.model.boopickle.Boopickle._
 
 import org.scalajs.dom
 import java.time.LocalDateTime
@@ -39,6 +40,9 @@ import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.math.Wavelength
 import explore.model.Constants
+import spire.math.Interval
+import org.typelevel.cats.time._
+import java.time.Instant
 
 trait CatalogQuerySettings {
   val proxy = uri"https://cors-proxy.lucuma.xyz"
@@ -116,7 +120,9 @@ trait CatalogCache extends CatalogIDB with AsyncToIO {
     // Make a time based query for pm over a year
     val query = TimeRangeQueryByADQL(
       tracking,
-      Bounded(start.toInstant(Constants.UTCOffset), end.toInstant(Constants.UTCOffset), 0),
+      Interval
+        .closed(start.toInstant(Constants.UTCOffset), end.toInstant(Constants.UTCOffset))
+        .asInstanceOf[Bounded[Instant]],
       probeArm.candidatesArea,
       brightnessConstraints.some,
       proxy.some

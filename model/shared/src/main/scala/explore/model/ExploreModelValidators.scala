@@ -24,6 +24,9 @@ import scala.util.Try
 import eu.timepit.refined.numeric.Interval
 
 object ExploreModelValidators {
+  val i = ValidSplitEpi
+    .forRefined[String, BigDecimal, HourRange]("Invalid hour value")
+
   val brightnessValidWedge: InputValidWedge[BigDecimal] =
     InputValidWedge(
       InputValidSplitEpi.bigDecimal.withErrorMessage("Invalid brightness value".refined).getValid,
@@ -44,17 +47,9 @@ object ExploreModelValidators {
       .withErrorMessage("Invalid offsets".refined)
       .optional
 
-//   val hoursValidWedge: InputValidWedge[BigDecimal Refined HourRange] =
-//     InputValidWedge
-//       .truncatedBigDecimal(decimals = 2.refined[Interval.Closed[0, 1000]])
-//       .andThen(
-//         ValidSplitEpi
-//           .forRefined[String, BigDecimal, HourRange]("Invalid hour value")
-//           .toErrorsValidSplitEpiUnsafe
-//       )
   val hoursValidWedge: InputValidWedge[BigDecimal Refined HourRange] =
     InputValidWedge
-      .truncatedBigDecimal(decimals = 2)
+      .truncatedBigDecimal(decimals = 2.refined)
       .andThen(
         ValidSplitEpi
           .forRefined[String, BigDecimal, HourRange]("Invalid hour value")
@@ -63,12 +58,10 @@ object ExploreModelValidators {
 
   val wavelengthValidWedge: InputValidWedge[Wavelength] =
     InputValidWedge
-      .truncatedBigDecimal(3)
+      .truncatedBigDecimal(3.refined)
       .andThen(
         ValidWedge
-          .fromFormat(Wavelength.decimalMicrometers,
-                      NonEmptyString.unsafeFrom("Invalid Wavelength")
-          )
+          .fromFormat(Wavelength.decimalMicrometers, "Invalid Wavelength".refined[NonEmpty])
           .toErrorsValidWedge
       )
 }

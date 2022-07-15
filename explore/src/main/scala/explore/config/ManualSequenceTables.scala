@@ -21,7 +21,7 @@ object ManualSequenceTables {
       .withHooks[Props]
       .render { props =>
         <.div(^.height := "100%", ^.overflow.auto)(
-          Segment()(
+          Segment(
             SequenceTable.bracketDef,
             <.div(
               Header("Acquisition"),

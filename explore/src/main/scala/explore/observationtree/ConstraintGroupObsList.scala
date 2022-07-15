@@ -47,7 +47,10 @@ final case class ConstraintGroupObsList(
   expandedIds:        View[SortedSet[ObsIdSet]],
   undoStacks:         View[UndoStacks[IO, ConstraintGroupList]]
 )(implicit val ctx:   AppContextIO)
-    extends ReactProps[ConstraintGroupObsList](ConstraintGroupObsList.component)
+    extends ReactProps[ConstraintGroupObsList,
+                       ConstraintGroupObsList.State,
+                       ConstraintGroupObsList.Backend
+    ](ConstraintGroupObsList.component)
     with ViewCommon
 
 object ConstraintGroupObsList {
@@ -173,7 +176,7 @@ object ConstraintGroupObsList {
           .addModifiers(
             Seq(
               ^.cursor.pointer,
-              ^.onClick ==> { e: ReactEvent =>
+              ^.onClick ==> { (e: ReactEvent) =>
                 e.stopPropagationCB >>
                   toggleExpanded(obsIds, props.expandedIds).asEventDefault(e).void
               }

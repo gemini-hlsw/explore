@@ -7,6 +7,7 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import react.common._
 import react.fa.IconSize
 
 object UnderConstruction {
