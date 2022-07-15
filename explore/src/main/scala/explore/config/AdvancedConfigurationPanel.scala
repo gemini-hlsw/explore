@@ -209,35 +209,43 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               )
               .flatten
 
-          def dithersControl(onChange: Callback): VdomElement =
+          def dithersControl(onChange: Callback): VdomElement = {
+            val view = explicitWavelengthDithers(props.scienceModeAdvanced).withOnMod(_ => onChange)
             ReactFragment(
               <.label("λ Dithers", HelpIcon("configuration/lambda-dithers.md")),
               InputWithUnits(
                 id = "dithers",
-                value =
-                  explicitWavelengthDithers(props.scienceModeAdvanced).withOnMod(_ => onChange),
+                value = view,
                 validFormat = ExploreModelValidators.dithersValidSplitEpi,
                 changeAuditor =
                   ChangeAuditor.bigDecimal(integers = 3, decimals = 1).toSequence().optional,
-                units = "nm"
+                units = "nm",
+                icon = clearInputIcon(view)
               )
             )
+          }
 
-          def offsetsControl(onChange: Callback): VdomElement =
+          def offsetsControl(onChange: Callback): VdomElement = {
+            val view = explicitSpatialOffsets(props.scienceModeAdvanced).withOnMod(_ => onChange)
             ReactFragment(
               <.label("Spatial Offsets", HelpIcon("configuration/spatial-offsets.md")),
               InputWithUnits(
                 id = "offsets",
-                value = explicitSpatialOffsets(props.scienceModeAdvanced).withOnMod(_ => onChange),
+                value = view,
                 validFormat = ExploreModelValidators.offsetQNELValidWedge,
                 changeAuditor =
                   ChangeAuditor.bigDecimal(integers = 3, decimals = 2).toSequence().optional,
-                units = "arcsec"
+                units = "arcsec",
+                icon = clearInputIcon(view)
               )
             )
+          }
 
           val invalidateITC: Callback =
             props.potITC.set(Pot.pending[Option[ITCSuccess]])
+
+          val wavelengthView =
+            overrideWavelength(props.scienceModeAdvanced).withOnMod(_ => invalidateITC)
 
           val zeroDuration: NonNegDuration = NonNegDuration.unsafeFrom(Duration.ofMillis(0))
 
@@ -292,10 +300,11 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               ),
               InputWithUnits(
                 id = "override-wavelength",
-                value = overrideWavelength(props.scienceModeAdvanced).withOnMod(_ => invalidateITC),
+                value = wavelengthView,
                 units = "μm",
                 validFormat = ExploreModelValidators.wavelengthValidWedge.optional,
-                changeAuditor = wavelengthChangeAuditor.optional
+                changeAuditor = wavelengthChangeAuditor.optional,
+                icon = clearInputIcon(wavelengthView)
               ),
               <.label("FPU", HelpIcon("configuration/fpu.md"), ExploreStyles.SkipToNext),
               EnumViewOptionalSelect(

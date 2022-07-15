@@ -1134,12 +1134,6 @@ tfoot {
   margin-left: 0.5em;
 }
 
-.input-replacement-icon {
-  line-height: @inputLineHeight;
-  border: 1px dashed transparent; // the border makes the sizing work.
-  padding: @inputPadding;
-}
-
 .moon-phase {
   position: absolute;
   top: 5px;
@@ -2059,7 +2053,7 @@ html {
   }
 
   .field {
-    width: 8ch;
+    width: 10ch;
   }
 }
 
@@ -2529,3 +2523,43 @@ body.hide-reusability {
     margin-right: 0.5em;
   }
 }
+
+.input-replacement-icon {
+  line-height: @inputLineHeight;
+  border: 1px dashed transparent; // the border makes the sizing work.
+  padding: @inputPadding;
+}
+
+
+.ui.ui.ui.ui.icon.input .clearable-input-icon {
+  // These values were obtained empirically by using the debugger to find
+  // the values used by `.dropdown.icon`. They are being calculated somewhere
+  // in SUI, but I haven't found the location.
+  position: absolute;
+  font-family: "Dropdown";
+  backface-visibility: hidden;
+  font-weight: normal;
+  font-style: normal;
+  text-align: center;
+  float: right;
+  opacity: 0.6;
+  top: 0.35714286em;
+  right: 0.42857143em;
+  z-index: 3;
+  margin: -0.35714286em;
+  padding: 0.41666667em;
+  line-height: 1.21428571em;
+
+  &:before {
+    content: "⨉";
+    top: 0.2em;
+    right: 0.2em;
+    position: absolute;
+    font-size: medium;
+  }
+}
+
+.field.clearable-input-padding-reset>.ui.ui.ui.ui.icon.input>input {
+  padding: @inputPadding;
+}
+

@@ -17,6 +17,8 @@ import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
 import react.common._
 import react.semanticui._
+import react.semanticui.elements.icon.Icon
+import react.semanticui.elements.input.IconPosition
 import react.semanticui.elements.label.Label
 import react.semanticui.elements.label.LabelPointing
 
@@ -26,6 +28,8 @@ final case class InputWithUnits[EV[_], A](
   value:           EV[A],
   validFormat:     InputValidFormat[A],
   changeAuditor:   ChangeAuditor,
+  icon:            js.UndefOr[ShorthandSB[Icon]] = js.undefined,
+  iconPosition:    js.UndefOr[IconPosition] = js.undefined,
   id:              NonEmptyString,
   label:           js.UndefOr[ShorthandS[Label]] = js.undefined,
   units:           TagMod,
@@ -56,7 +60,9 @@ object InputWithUnits {
           errorPointing = LabelPointing.Below,
           disabled = p.disabled,
           size = p.size,
-          inline = p.inline
+          inline = p.inline,
+          icon = p.icon,
+          iconPosition = p.iconPosition
         )(p.ev, p.eq),
         <.span(
           ExploreStyles.UnitsLabel,
