@@ -280,7 +280,7 @@ jobs:
         uses: wearerequired/lint-action@v1.11.1
         with:
           stylelint: true
-          stylelint_extensions: css,less
+          stylelint_extensions: css
           stylelint_args: common/src/main/webapp/less
           github_token: ${{ secrets.GITHUB_TOKEN }}
           stylelint_dir: common/src/main/webapp/less
@@ -294,7 +294,7 @@ jobs:
         uses: wearerequired/lint-action@v1.11.1
         with:
           stylelint: true
-          stylelint_extensions: css,less
+          stylelint_extensions: css
           stylelint_args: common/src/main/webapp/less
           github_token: ${{ secrets.GITHUB_TOKEN }}
           stylelint_dir: common/src/main/webapp/less

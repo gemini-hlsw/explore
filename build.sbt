@@ -359,7 +359,7 @@ def runLinters(mode: String) = WorkflowStep.Use(
     "stylelint"            -> "true",
     "stylelint_args"       -> "common/src/main/webapp/less",
     "stylelint_dir"        -> "common/src/main/webapp/less",
-    "stylelint_extensions" -> "css,less"
+    "stylelint_extensions" -> "css"
   )
 )
 
