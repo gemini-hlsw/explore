@@ -9,20 +9,17 @@ import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
 import react.common.style.Css
 
-final case class WIP(clazz: Css, elem: VdomNode) extends ReactProps[WIP, Unit, Unit](WIP.component)
+final case class WIP(clazz: Css, elem: VdomNode) extends ReactFnProps[WIP](WIP.component)
 
 object WIP {
   type Props = WIP
 
   def apply(elem: VdomNode): WIP = WIP(Css.Empty, elem)
 
-  val component = ScalaComponent
-    .builder[Props]
-    .render_P(p =>
-      <.div(ExploreStyles.WIP, p.clazz)(
-        <.span(ExploreStyles.WIPWarning, "WORK IN PROGRESS"),
-        p.elem
-      )
+  val component = ScalaFnComponent[Props](p =>
+    <.div(ExploreStyles.WIP, p.clazz)(
+      <.span(ExploreStyles.WIPWarning, "WORK IN PROGRESS"),
+      p.elem
     )
-    .build
+  )
 }

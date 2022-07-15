@@ -76,4 +76,3 @@ package explore.model.arb
 //       )
 // }
 //
-// object ArbSpectroscopyConfigurationOptions extends ArbSpectroscopyConfigurationOptions

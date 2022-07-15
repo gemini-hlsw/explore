@@ -95,13 +95,6 @@ trait formats {
            _.micrometer.toUnit[Micrometer].value.toString
     )
 
-  // Note this format operates on Quantity to allow 0 values
-  val formatMicron: Format[String, Quantity[BigDecimal, Micrometer]] =
-    Format[String, Quantity[BigDecimal, Micrometer]](
-      b => b.parseBigDecimalOption.filter(_ >= 0).map(_.withUnit[Micrometer]),
-      w => w.value.toString
-    )
-
   val formatArcsec: Format[String, Angle] =
     Format(_.parseIntOption.map(Angle.arcseconds.reverseGet(_)), Angle.arcseconds.get(_).toString)
 

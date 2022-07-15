@@ -38,6 +38,7 @@ object ConfigurationTile {
             UndoContext(undoStacks, scienceData),
             scienceData.get.constraints,
             scienceData.get.itcTargets,
+            scienceData.get.baseSiderealTracking,
             renderInTitle
           )
       }(obsData)

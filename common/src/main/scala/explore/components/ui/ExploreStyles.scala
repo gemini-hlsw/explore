@@ -165,6 +165,7 @@ object ExploreStyles {
   val AladinCurrentCoords: Css    = Css("aladin-status-current-coordinates")
   val AladinCenterButton: Css     = Css("aladin-status-center-button")
   val AladinSearchIcon: Css       = Css("aladin-search-icon")
+  val InputReplacementIcon: Css   = Css("input-replacement-icon") |+| Css("field")
 
   val AgsOverlay: Css          = Css("ags-overlay")
   val AgsDescription: Css      = Css("ags-description")

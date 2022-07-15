@@ -26,6 +26,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
+import lucuma.core.model.SiderealTracking
 import lucuma.schemas.ObservationDB.Types._
 import queries.common.ObsQueriesGQL
 import queries.schemas.implicits._
@@ -38,6 +39,7 @@ final case class ConfigurationPanel(
   scienceData:      UndoContext[ScienceData],
   constraints:      ConstraintSet,
   itcTargets:       List[ITCTarget],
+  baseTracking:     Option[SiderealTracking],
   renderInTitle:    Tile.RenderInTitle
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[ConfigurationPanel](ConfigurationPanel.component)
@@ -156,6 +158,7 @@ object ConfigurationPanel {
                 optModeView,
                 props.constraints,
                 props.itcTargets,
+                props.baseTracking,
                 showAdvancedCB
               )
             )
@@ -175,6 +178,7 @@ object ConfigurationPanel {
                       )
                     ),
                     northAligner.get.basic,
+                    props.scienceData.model.zoom(ScienceData.potITC),
                     showBasicCB
                   )
               ),
@@ -192,6 +196,7 @@ object ConfigurationPanel {
                       )
                     ),
                     southAligner.get.basic,
+                    props.scienceData.model.zoom(ScienceData.potITC),
                     showBasicCB
                   )
               )

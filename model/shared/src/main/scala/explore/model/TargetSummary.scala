@@ -5,16 +5,14 @@ package explore.model
 
 import cats.Eq
 import eu.timepit.refined.cats._
-import lucuma.core.math.Coordinates
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 
 case class TargetSummary(
   obsIds:   Set[Observation.Id],
-  targetId: Target.Id,
-  coords:   Option[Coordinates]
+  targetId: Target.Id
 )
 
 object TargetSummary {
-  implicit val targetSummaryEq: Eq[TargetSummary] = Eq.by(t => (t.obsIds, t.targetId, t.coords))
+  implicit val targetSummaryEq: Eq[TargetSummary] = Eq.by(t => (t.obsIds, t.targetId))
 }

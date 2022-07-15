@@ -62,7 +62,7 @@ class ModesSuite extends CatsEffectSuite {
           1.refined[Positive].some,
           None,
           // BigDecimal(0).refined[NonNegative].withUnit[Micrometer].some,
-          Angle.fromDoubleArcseconds(1).some
+          Angle.fromDoubleArcseconds(1).some declination = none
         )
       )
       // .flatTap(_.traverse(IO.println))

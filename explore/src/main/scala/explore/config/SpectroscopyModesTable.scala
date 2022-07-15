@@ -35,6 +35,7 @@ import lucuma.core.enums._
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units.Micrometer
 import lucuma.core.model.ConstraintSet
+import lucuma.core.model.SiderealTracking
 import lucuma.core.util.Display
 import lucuma.ui.reusability._
 import react.CircularProgressbar.CircularProgressbar
@@ -63,6 +64,7 @@ final case class SpectroscopyModesTable(
   spectroscopyRequirements: SpectroscopyRequirementsData,
   constraints:              ConstraintSet,
   targets:                  Option[List[ITCTarget]],
+  baseTracking:             Option[SiderealTracking],
   matrix:                   SpectroscopyModesMatrix
 )(implicit val ctx:         AppContextIO)
     extends ReactFnProps[SpectroscopyModesTable](SpectroscopyModesTable.component)
@@ -354,8 +356,8 @@ object SpectroscopyModesTable {
     ScalaFnComponent
       .withHooks[Props]
       // rows
-      .useMemoBy(_.spectroscopyRequirements)(props =>
-        s => {
+      .useMemoBy(p => (p.spectroscopyRequirements, p.baseTracking.map(_.baseCoordinates.dec)))(
+        props => { case (s, dec) =>
           val rows                =
             props.matrix
               .filtered(
@@ -365,7 +367,8 @@ object SpectroscopyModesTable {
                 slitWidth = s.focalPlaneAngle,
                 resolution = s.resolution,
                 coverage = s.wavelengthCoverage
-                  .map(_.micrometer.toValue[BigDecimal].toRefined[Positive])
+                  .map(_.micrometer.toValue[BigDecimal].toRefined[Positive]),
+                declination = dec
               )
           val (enabled, disabled) = rows.partition(enabledRow)
           enabled ++ disabled

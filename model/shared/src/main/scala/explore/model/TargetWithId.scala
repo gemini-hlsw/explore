@@ -10,6 +10,8 @@ import io.circe.Decoder
 import io.circe.Decoder._
 import lucuma.core.enums.Band
 import lucuma.core.math.BrightnessUnits._
+import lucuma.core.math.Epoch
+import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.schemas.decoders._
 import monocle.Focus
@@ -17,11 +19,15 @@ import monocle.Lens
 import monocle.Optional
 import monocle.Prism
 
+import java.time.Instant
+import java.time.LocalDateTime
 import scala.collection.immutable.SortedMap
 
 case class TargetWithId(id: Target.Id, target: Target) {
-  def toOptId: TargetWithOptId                       = TargetWithOptId(id.some, target)
-  def toSidereal: Option[SiderealTargetWithId]       = TargetWithId.sidereal.getOption(this)
+  def toOptId: TargetWithOptId = TargetWithOptId(id.some, target)
+
+  def toSidereal: Option[SiderealTargetWithId] = TargetWithId.sidereal.getOption(this)
+
   def toNonSidereal: Option[NonsiderealTargetWithId] = TargetWithId.nonsidereal.getOption(this)
 }
 
@@ -29,6 +35,19 @@ case class TargetWithOptId(optId: Option[Target.Id], target: Target)
 
 case class SiderealTargetWithId(id: Target.Id, target: Target.Sidereal) {
   def toTargetWithId = TargetWithId(id, target)
+
+  def at(i: Instant): SiderealTargetWithId = {
+
+    val ldt            = LocalDateTime.ofInstant(i, Constants.UTC)
+    val epoch          = Epoch.Julian.fromLocalDateTime(ldt).getOrElse(target.tracking.epoch)
+    val trackingUpdate = (tracking: SiderealTracking) =>
+      tracking.at(i).fold(tracking) { c =>
+        val update = SiderealTracking.baseCoordinates.replace(c) >>> SiderealTracking.epoch
+          .replace(epoch)
+        update(tracking)
+      }
+    copy(target = Target.Sidereal.tracking.modify(trackingUpdate)(target))
+  }
 }
 
 case class NonsiderealTargetWithId(id: Target.Id, target: Target.Nonsidereal) {

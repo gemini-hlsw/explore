@@ -53,6 +53,17 @@ object ObsQueriesGQL {
                   overrideGrating
                   overrideFilter
                   overrideFpu
+                  overrideExposureTimeMode {
+                    signalToNoise {
+                      value
+                    }
+                    fixedExposure {
+                      count
+                      time {
+                        microseconds
+                      }
+                    }
+                  }
                   explicitXBin
                   explicitYBin
                   explicitAmpReadMode
@@ -74,6 +85,17 @@ object ObsQueriesGQL {
                   overrideGrating
                   overrideFilter
                   overrideFpu
+                  overrideExposureTimeMode {
+                    signalToNoise {
+                      value
+                    }
+                    fixedExposure {
+                      count
+                      time {
+                        microseconds
+                      }
+                    }
+                  }
                   explicitXBin
                   explicitYBin
                   explicitAmpReadMode
@@ -464,9 +486,23 @@ object ObsQueriesGQL {
                 fpu
               }
               advanced {
+                overrideWavelength {
+                  picometers
+                }
                 overrideGrating
                 overrideFilter
                 overrideFpu
+                overrideExposureTimeMode {
+                  signalToNoise {
+                    value
+                  }
+                  fixedExposure {
+                    count
+                    time {
+                      microseconds
+                    }
+                  }
+                }
                 explicitXBin
                 explicitYBin
                 explicitAmpReadMode
@@ -485,9 +521,23 @@ object ObsQueriesGQL {
                 fpu
               }
               advanced {
+                overrideWavelength {
+                  picometers
+                }
                 overrideGrating
                 overrideFilter
                 overrideFpu
+                overrideExposureTimeMode {
+                  signalToNoise {
+                    value
+                  }
+                  fixedExposure {
+                    count
+                    time {
+                      microseconds
+                    }
+                  }
+                }
                 explicitXBin
                 explicitYBin
                 explicitAmpReadMode
@@ -499,6 +549,13 @@ object ObsQueriesGQL {
                 }
               }
             }
+          }
+          itc {
+            exposureTime {
+              microseconds
+            }
+            exposures
+            signalToNoise
           }
         }
       }
@@ -523,6 +580,10 @@ object ObsQueriesGQL {
         }
 
         type ScienceMode = model.ScienceMode
+
+        object Itc {
+          type ExposureTime = lucuma.core.model.NonNegDuration
+        }
       }
     }
 

@@ -9,9 +9,11 @@ import cats.syntax.all._
 import lucuma.core.model.Target
 import monocle._
 
+import java.time.Instant
+
 final case class Asterism private[model] (private val targets: NonEmptyList[TargetWithId]) {
-  def toSidereal: List[SiderealTargetWithId] =
-    targets.traverse(_.toSidereal).foldMap(_.toList)
+  def toSidereal(vizTime: Instant): List[SiderealTargetWithId] =
+    targets.traverse(_.toSidereal.map(_.at(vizTime))).foldMap(_.toList)
 
   def asList: List[TargetWithId] = targets.toList
 
