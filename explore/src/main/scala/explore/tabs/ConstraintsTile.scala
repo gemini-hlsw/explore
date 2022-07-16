@@ -30,7 +30,7 @@ object ConstraintsTile {
       ObsTabTilesIds.ConstraintsId,
       "Constraints",
       canMinimize = true,
-      control = control,
+      control = _ => control,
       controllerClass = clazz
     )(renderInTitle =>
       potRender[View[ConstraintSet]](cs =>

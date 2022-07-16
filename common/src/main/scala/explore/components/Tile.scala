@@ -26,7 +26,7 @@ final case class Tile(
   id:                Tile.TileId,
   title:             String,
   back:              Option[VdomNode] = None,
-  control:           Option[VdomNode] = None,
+  control:           TileSizeState => Option[VdomNode] = _ => None,
   canMinimize:       Boolean = false,
   canMaximize:       Boolean = false,
   state:             TileSizeState = TileSizeState.Normal,
@@ -120,7 +120,7 @@ object Tile {
               )(
                 MenuItem(as = <.a)(p.title)
               ),
-              p.control.map(b => <.div(ExploreStyles.TileControl, b)),
+              p.control(p.state).map(b => <.div(ExploreStyles.TileControl, b)),
               <.span(^.key := "tileTitle", ^.untypedRef(setInfoRef).when(infoRef.value.isEmpty))(
                 ExploreStyles.TileTitleStrip,
                 ExploreStyles.FixedSizeTileTitle.when(!p.canMinimize && !p.canMaximize)
@@ -139,7 +139,7 @@ object Tile {
                 heightBreakpoints,
                 clazz = ExploreStyles.TileBody |+| p.bodyClass.orEmpty
               )(
-                p.render(info => ReactPortal(info, node))
+                p.render(info => {println(info);ReactPortal(info, node)})
               ).when(p.state =!= TileSizeState.Minimized)
             )
             .whenDefined
