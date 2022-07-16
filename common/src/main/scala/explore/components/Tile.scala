@@ -139,7 +139,7 @@ object Tile {
                 heightBreakpoints,
                 clazz = ExploreStyles.TileBody |+| p.bodyClass.orEmpty
               )(
-                p.render(info => {println(info);ReactPortal(info, node)})
+                p.render(info => ReactPortal(info, node))
               ).when(p.state =!= TileSizeState.Minimized)
             )
             .whenDefined
