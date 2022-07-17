@@ -7,12 +7,16 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.Pot
 import crystal.react.View
+import crystal.react.implicits._
+import explore.common.ObsQueries
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
+import explore.config.VizTimeEditor
 import explore.implicits._
 import explore.model.Asterism
 import explore.model.ObsIdSet
 import explore.model.ScienceMode
+import explore.model.enums.TileSizeState
 import explore.targeteditor.AsterismEditor
 import explore.undo.UndoStacks
 import explore.utils._
@@ -48,12 +52,21 @@ object AsterismEditorTile {
     title:           String,
     backButton:      Option[VdomNode] = none,
     hiddenColumns:   View[Set[String]]
-  )(implicit ctx:    AppContextIO) =
+  )(implicit ctx:    AppContextIO) = {
+
+    // Save the time here. this works for the obs and target tabs
+    val vizTimeView = potVizTime.map(_.withOnMod { t =>
+      ObsQueries.updateVisualizationTime[IO](obsId.toList, t).runAsync
+    })
+
+    val control: VdomNode = VizTimeEditor(vizTimeView)
+
     Tile(
       ObsTabTilesIds.TargetId,
       title,
       back = backButton,
       canMinimize = true,
+      control = s => control.some.filter(_ => s === TileSizeState.Minimized),
       bodyClass = Some(ExploreStyles.TargetTileBody)
     )((renderInTitle: Tile.RenderInTitle) =>
       potRender[(View[Option[Asterism]], Option[ScienceMode])] {
@@ -83,5 +96,6 @@ object AsterismEditorTile {
         potAsterismMode
       )
     )
+  }
 
 }
