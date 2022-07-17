@@ -35,7 +35,7 @@ final case class InputWithUnits[EV[_], A](
   inline:          js.UndefOr[Boolean] = js.undefined,
   size:            js.UndefOr[SemanticSize] = js.undefined
 )(implicit val ev: ExternalValue[EV], val eq: Eq[A])
-    extends ReactProps[InputWithUnits[Any, Any]](InputWithUnits.component) {}
+    extends ReactFnProps[InputWithUnits[Any, Any]](InputWithUnits.component) {}
 
 object InputWithUnits {
   type Props[F[_], A] = InputWithUnits[F, A]
@@ -43,29 +43,26 @@ object InputWithUnits {
   val component = componentF[Any, Any]
 
   def componentF[F[_], A] =
-    ScalaComponent
-      .builder[Props[F, A]]
-      .render_P { p =>
-        React.Fragment(
-          FormInputEV(
-            id = p.id,
-            label = p.label,
-            value = p.value,
-            validFormat = p.validFormat,
-            changeAuditor = p.changeAuditor,
-            clazz = p.clazz,
-            errorClazz = ExploreStyles.InputErrorTooltip,
-            errorPointing = LabelPointing.Below,
-            disabled = p.disabled,
-            size = p.size,
-            inline = p.inline
-          )(p.ev, p.eq),
-          <.span(
-            ExploreStyles.UnitsLabel,
-            p.units
-          )
+    ScalaFnComponent[Props[F, A]] { p =>
+      React.Fragment(
+        FormInputEV(
+          id = p.id,
+          label = p.label,
+          value = p.value,
+          validFormat = p.validFormat,
+          changeAuditor = p.changeAuditor,
+          clazz = p.clazz,
+          errorClazz = ExploreStyles.InputErrorTooltip,
+          errorPointing = LabelPointing.Below,
+          disabled = p.disabled,
+          size = p.size,
+          inline = p.inline
+        )(p.ev, p.eq),
+        <.span(
+          ExploreStyles.UnitsLabel,
+          p.units
         )
-      }
-      .build
+      )
+    }
 
 }

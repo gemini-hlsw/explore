@@ -4,21 +4,25 @@
 package explore.config
 
 import cats.syntax.all._
+import crystal.Pot
 import crystal.react.View
 import eu.timepit.refined.auto._
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
+import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
 import react.datepicker._
+import react.semanticui.collections.form.Form
+import react.semanticui.sizes._
 
 import java.time.Instant
 
 import scalajs.js
 import scalajs.js.|
 
-final case class VizTimeEditor(instant: View[Option[Instant]])
+final case class VizTimeEditor(vizTimeView: Pot[View[Option[Instant]]])
     extends ReactFnProps[VizTimeEditor](VizTimeEditor.component)
 
 object VizTimeEditor {
@@ -72,17 +76,27 @@ object VizTimeEditor {
     ScalaFnComponent[Props] { p =>
       <.div(
         ExploreStyles.ObsConfigurationObsTime,
-        <.label("Observation time", HelpIcon("configuration/obstime.md")),
-        Datepicker(onChange =
-          (newValue, _) =>
-            newValue.fromDatePickerToInstantOpt.foldMap { i =>
-              p.instant.set(i.some)
-            }
+        Form(size = Small)(
+          ExploreStyles.Compact,
+          ExploreStyles.ObsInstantTileTitle,
+          potRender[View[Option[Instant]]](
+            pendingRender = _ => EmptyVdom,
+            valueRender = instant =>
+              React.Fragment(
+                <.label("Observation time", HelpIcon("configuration/obstime.md")),
+                Datepicker(onChange =
+                  (newValue, _) =>
+                    newValue.fromDatePickerToInstantOpt.foldMap { i =>
+                      instant.set(i.some)
+                    }
+                )
+                  .showTimeInput(true)
+                  .selected(instant.get.getOrElse(Instant.now).toDatePickerJsDate)
+                  .dateFormat("yyyy-MM-dd HH:mm"),
+                "UTC"
+              )
+          )(p.vizTimeView)
         )
-          .showTimeInput(true)
-          .selected(p.instant.get.getOrElse(Instant.now).toDatePickerJsDate)
-          .dateFormat("yyyy-MM-dd HH:mm"),
-        "UTC"
       )
     }
 }

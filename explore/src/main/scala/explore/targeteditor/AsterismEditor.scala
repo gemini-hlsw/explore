@@ -25,7 +25,6 @@ import explore.model.reusability._
 import explore.optics._
 import explore.targets.TargetSelectionPopup
 import explore.undo.UndoStacks
-import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
@@ -40,7 +39,6 @@ import lucuma.ui.reusability._
 import queries.common.TargetQueriesGQL._
 import queries.schemas.implicits._
 import react.common.ReactFnProps
-import react.semanticui.collections.form.Form
 import react.semanticui.elements.button._
 import react.semanticui.modules.checkbox._
 import react.semanticui.shorthand._
@@ -183,13 +181,7 @@ object AsterismEditor {
               }
             )
           ),
-          props.renderInTitle(
-            Form(size = Small)(
-              ExploreStyles.Compact,
-              ExploreStyles.ObsInstantTileTitle,
-              potRender[View[Option[Instant]]](VizTimeEditor.apply)(vizTimeView)
-            )
-          ),
+          props.renderInTitle(VizTimeEditor(vizTimeView)),
           TargetTable(
             props.obsIds,
             props.asterism,

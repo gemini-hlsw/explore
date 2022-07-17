@@ -133,6 +133,9 @@ object TileController {
         ResponsiveReactGridLayout(
           width = p.gridWidth.toDouble,
           autoSize = true,
+          // this has a performance cost but lets controls on the title to work properly
+          // https://github.com/react-grid-layout/react-grid-layout/issues/858#issuecomment-426346399
+          useCSSTransforms = false, // this has a performanco cost but see
           margin = (Constants.GridRowPadding, Constants.GridRowPadding),
           containerPadding = (Constants.GridRowPadding, 0),
           rowHeight = Constants.GridRowHeight,

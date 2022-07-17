@@ -123,7 +123,7 @@ object TargetsOverlay {
         val h0 = abs(maxY - y0)
 
         val (x, y, w, h) =
-          if (w0 == 0 && h0 == 0) (x0 - 2 * minSide, y0 - 2 * minSide, minSide * 2, minSide * 2)
+          if (w0 == 0 || h0 == 0) (x0 - 2 * minSide, y0 - 2 * minSide, minSide * 2, minSide * 2)
           else (x0, y0, w0, h0)
 
         val viewBox = calculateViewBox(x, y, w, h, p.fov, p.screenOffset)
