@@ -343,26 +343,6 @@ lazy val herokuDeploy = WorkflowStep.Run(
   env = Map("HEROKU_API_KEY" -> "${{ secrets.HEROKU_API_KEY }}")
 )
 
-def setupVars(mode: String) = WorkflowStep.Run(
-  List(
-    raw"""sed '/^[[:blank:]]*[\\.\\}\\@]/d;/^[[:blank:]]*\..*/d;/^[[:blank:]]*$$/d;/\/\/.*/d' common/src/main/webapp/less/variables-$mode.less > common/src/main/webapp/less/vars.css""",
-    "cat common/src/main/webapp/less/vars.css"
-  ),
-  name = Some(s"Setup and expand vars $mode")
-)
-
-def runLinters(mode: String) = WorkflowStep.Use(
-  UseRef.Public("wearerequired", "lint-action", "v1.11.1"),
-  name = Some(s"Run linters in $mode mode"),
-  params = Map(
-    "github_token"         -> "${{ secrets.GITHUB_TOKEN }}",
-    "stylelint"            -> "true",
-    "stylelint_args"       -> "common/src/main/webapp/less",
-    "stylelint_dir"        -> "common/src/main/webapp/less",
-    "stylelint_extensions" -> "css,less"
-  )
-)
-
 ThisBuild / githubWorkflowGeneratedUploadSteps := Seq.empty
 ThisBuild / githubWorkflowSbtCommand := "sbt -v -J-Xmx6g"
 ThisBuild / githubWorkflowBuildPreamble ++= Seq(setupNode, npmInstall)
@@ -406,21 +386,4 @@ ThisBuild / githubWorkflowAddedJobs +=
     scalas = List(scalaVersion.value),
     javas = githubWorkflowJavaVersions.value.toList.take(1),
     cond = Some(allConds(pushCond, masterCond, geminiRepoCond))
-  )
-
-ThisBuild / githubWorkflowAddedJobs +=
-  WorkflowJob(
-    "lint",
-    "Run linters",
-    WorkflowStep.Checkout ::
-      setupNode ::
-      npmInstall ::
-      setupVars("dark") ::
-      runLinters("dark") ::
-      setupVars("light") ::
-      runLinters("light") ::
-      Nil,
-    scalas = List(scalaVersion.value),
-    javas = githubWorkflowJavaVersions.value.toList.take(1),
-    cond = Some(allConds(pushCond, geminiRepoCond, notMasterCond, notDependabotCond))
   )
