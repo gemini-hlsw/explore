@@ -50,6 +50,7 @@ import react.resizeDetector.hooks._
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.sizes._
+import lucuma.refined._
 
 import scala.concurrent.duration._
 
@@ -65,27 +66,27 @@ final case class ObsTabContents(
     extends ReactFnProps[ObsTabContents](ObsTabContents.component)
 
 object ObsTabTilesIds {
-  val NotesId: NonEmptyString         = "notes"
-  val TargetId: NonEmptyString        = "target"
-  val PlotId: NonEmptyString          = "elevationPlot"
-  val ConstraintsId: NonEmptyString   = "constraints"
-  val ConfigurationId: NonEmptyString = "configuration"
+  val NotesId: NonEmptyString         = "notes".refined
+  val TargetId: NonEmptyString        = "target".refined
+  val PlotId: NonEmptyString          = "elevationPlot".refined
+  val ConstraintsId: NonEmptyString   = "constraints".refined
+  val ConfigurationId: NonEmptyString = "configuration".refined
 }
 
 object ObsTabContents {
   type Props = ObsTabContents
 
-  private val NotesMaxHeight: NonNegInt         = 3
-  private val TargetHeight: NonNegInt           = 18
-  private val TargetMinHeight: NonNegInt        = 15
-  private val SkyPlotHeight: NonNegInt          = 9
-  private val SkyPlotMinHeight: NonNegInt       = 6
-  private val ConstraintsMinHeight: NonNegInt   = 3
-  private val ConstraintsMaxHeight: NonNegInt   = 7
-  private val ConfigurationMaxHeight: NonNegInt = 10
-  private val DefaultWidth: NonNegInt           = 10
-  private val TileMinWidth: NonNegInt           = 6
-  private val DefaultLargeWidth: NonNegInt      = 12
+  private val NotesMaxHeight: NonNegInt         = 3.refined
+  private val TargetHeight: NonNegInt           = 18.refined
+  private val TargetMinHeight: NonNegInt        = 15.refined
+  private val SkyPlotHeight: NonNegInt          = 9.refined
+  private val SkyPlotMinHeight: NonNegInt       = 6.refined
+  private val ConstraintsMinHeight: NonNegInt   = 3.refined
+  private val ConstraintsMaxHeight: NonNegInt   = 7.refined
+  private val ConfigurationMaxHeight: NonNegInt = 10.refined
+  private val DefaultWidth: NonNegInt           = 10.refined
+  private val TileMinWidth: NonNegInt           = 6.refined
+  private val DefaultLargeWidth: NonNegInt      = 12.refined
 
   private val layoutMedium: Layout = Layout(
     List(
@@ -217,12 +218,15 @@ object ObsTabContents {
 
     val rightSide: VdomNode =
       props.focusedObs.fold[VdomNode](
-        Tile("observations", "Observations Summary", backButton.some, key = "observationsSummary")(
-          _ =>
-            <.div(
-              ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
-              <.div("Select or add an observation")
-            )
+        Tile("observations".refined,
+             "Observations Summary",
+             backButton.some,
+             key = "observationsSummary"
+        )(_ =>
+          <.div(
+            ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
+            <.div("Select or add an observation")
+          )
         )
       )(obsId =>
         ObsTabTiles(

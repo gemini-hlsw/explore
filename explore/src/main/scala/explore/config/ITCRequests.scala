@@ -52,7 +52,7 @@ object ITCRequests {
       ga.parTraverse(a => s.permit.use(_ => f(a)))
     }
 
-  def queryItc[F[_]: Concurrent: Parallel: Logger: TransactionalClient[*[_], ITC]](
+  def queryItc[F[_]: Concurrent: Parallel: Logger](
     wavelength:      Wavelength,
     signalToNoise:   PosBigDecimal,
     constraints:     ConstraintSet,
@@ -60,7 +60,7 @@ object ITCRequests {
     modes:           List[SpectroscopyModeRow],
     cache:           ViewF[F, ItcResultsCache],
     progress:        ViewF[F, Option[Progress]]
-  )(implicit monoid: Monoid[F[Unit]]): F[Unit] = {
+  )(implicit monoid: Monoid[F[Unit]], t: TransactionalClient[F, ITC]): F[Unit] = {
     def itcResults(r: List[ItcResults]): List[EitherNec[ItcQueryProblems, ItcResult]] =
       // Convert to usable types
       r.flatMap(x =>

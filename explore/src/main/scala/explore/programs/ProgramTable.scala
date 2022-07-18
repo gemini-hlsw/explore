@@ -28,7 +28,7 @@ import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.reusability._
 import queries.common.ProgramQueriesGQL._
-import react.common.ReactFnProps
+import react.common._
 import react.common.implicits._
 import react.semanticui.collections.table.TableCompact
 import react.semanticui.collections.table._
@@ -120,7 +120,7 @@ object ProgramTable {
                   content = "Select",
                   size = Mini,
                   compact = true,
-                  icon = Icons.Checkmark,
+                  // icon = Icons.Checkmark,
                   disabled = currentProgramId.exists(_ === programId),
                   onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
                     e.preventDefaultCB >>
@@ -130,7 +130,7 @@ object ProgramTable {
                 Button(
                   size = Mini,
                   compact = true,
-                  icon = Icons.Trash,
+                  // icon = Icons.Trash,
                   // can't delete the current or last one
                   disabled = currentProgramId.exists(_ === programId) || programCount < 2,
                   onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
@@ -142,7 +142,7 @@ object ProgramTable {
                   content = "Undelete",
                   size = Mini,
                   compact = true,
-                  icon = Icons.TrashUndo,
+                  // icon = Icons.TrashUndo,
                   onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
                     e.preventDefaultCB >>
                       e.stopPropagationCB >>

@@ -28,7 +28,7 @@ import react.semanticui.elements.label.LabelPointing
 final case class RVInput(
   rv:       View[Option[RadialVelocity]],
   disabled: Boolean
-) extends ReactProps[RVInput](RVInput.component)
+) extends ReactProps[RVInput, RVInput.State, RVInput.Backend](RVInput.component)
 
 object RVInput {
   type Props = RVInput

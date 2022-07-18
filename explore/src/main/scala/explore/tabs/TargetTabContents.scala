@@ -63,6 +63,7 @@ import java.time.Instant
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._
+import lucuma.refined.*
 
 final case class TargetTabContents(
   userId:            Option[User.Id],
@@ -80,13 +81,13 @@ final case class TargetTabContents(
 object TargetTabContents {
   type Props = TargetTabContents
 
-  private val TargetHeight: NonNegInt      = 18
-  private val TargetMinHeight: NonNegInt   = 15
-  private val SkyPlotHeight: NonNegInt     = 9
-  private val SkyPlotMinHeight: NonNegInt  = 6
-  private val TileMinWidth: NonNegInt      = 5
-  private val DefaultWidth: NonNegInt      = 10
-  private val DefaultLargeWidth: NonNegInt = 12
+  private val TargetHeight: NonNegInt      = 18.refined
+  private val TargetMinHeight: NonNegInt   = 15.refined
+  private val SkyPlotHeight: NonNegInt     = 9.refined
+  private val SkyPlotMinHeight: NonNegInt  = 6.refined
+  private val TileMinWidth: NonNegInt      = 5.refined
+  private val DefaultWidth: NonNegInt      = 10.refined
+  private val DefaultLargeWidth: NonNegInt = 12.refined
 
   val layoutMedium: Layout = Layout(
     List(

@@ -7,9 +7,10 @@ import cats.data._
 import cats.effect._
 import cats.syntax.all._
 import coulomb.Quantity
-import coulomb.refined._
+// import coulomb.refined._
 import crystal.react.View
 import crystal.react.hooks._
+import crystal.react.reuse._
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.Positive
@@ -56,6 +57,7 @@ import spire.math.Bounded
 import spire.math.Interval
 
 import java.text.DecimalFormat
+import lucuma.refined.*
 
 import scalajs.js.|
 
@@ -93,17 +95,17 @@ object SpectroscopyModesTable {
       .Column(id, accessor)
       .setHeader(columnNames.getOrElse(id, id.value): String)
 
-  val SelectedColumnId: ColId    = "selected"
-  val InstrumentColumnId: ColId  = "instrument"
-  val SlitWidthColumnId: ColId   = "slit_width"
-  val SlitLengthColumnId: ColId  = "slit_length"
-  val GratingColumnId: ColId     = "grating"
-  val FilterColumnId: ColId      = "filter"
-  val CoverageColumnId: ColId    = "coverage"
-  val FPUColumnId: ColId         = "fpu"
-  val ResolutionColumnId: ColId  = "resolution"
-  val AvailablityColumnId: ColId = "availability"
-  val TimeColumnId: ColId        = "time"
+  val SelectedColumnId: ColId    = "selected".refined
+  val InstrumentColumnId: ColId  = "instrument".refined
+  val SlitWidthColumnId: ColId   = "slit_width".refined
+  val SlitLengthColumnId: ColId  = "slit_length".refined
+  val GratingColumnId: ColId     = "grating".refined
+  val FilterColumnId: ColId      = "filter".refined
+  val CoverageColumnId: ColId    = "coverage".refined
+  val FPUColumnId: ColId         = "fpu".refined
+  val ResolutionColumnId: ColId  = "resolution".refined
+  val AvailablityColumnId: ColId = "availability".refined
+  val TimeColumnId: ColId        = "time".refined
 
   private val columnNames: Map[ColId, String] =
     Map[NonEmptyString, String](
@@ -169,7 +171,8 @@ object SpectroscopyModesTable {
     val content: TagMod = c match {
       case Left(nel)                        =>
         if (nel.exists(_ == ItcQueryProblems.UnsupportedMode))
-          Popup(content = "Mode not supported", trigger = Icons.Ban.color("red"))
+          Popup(content = "Mode not supported")
+          // Popup(content = "Mode not supported", trigger = Icons.Ban.color("red"))
         else {
           val content = nel.collect {
             case ItcQueryProblems.MissingSignalToNoise => "Set S/N"
@@ -177,7 +180,8 @@ object SpectroscopyModesTable {
             case ItcQueryProblems.MissingTargetInfo    => "Missing target info"
             case ItcQueryProblems.GenericError(e)      => e
           }
-          Popup(content = content.mkString_(", "), trigger = Icons.TriangleSolid)
+          Popup(content = content.mkString_(", ")) // , trigger = Icons.TriangleSolid)
+          // Popup(content = content.mkString_(", "), trigger = Icons.TriangleSolid)
         }
       case Right(r: ItcResult.Result)       =>
         val seconds = r.duration.toSeconds
@@ -190,7 +194,8 @@ object SpectroscopyModesTable {
       case Right(ItcResult.Pending)         =>
         Icons.Spinner.spin(true)
       case Right(ItcResult.SourceTooBright) =>
-        Popup(content = "Source too bright", trigger = Icons.SunBright.color("yellow"))
+        Popup(content = "Source too bright") // , trigger = Icons.SunBright.color("yellow"))
+      // Popup(content = "Source too bright", trigger = Icons.SunBright.color("yellow"))
     }
     <.div(ExploreStyles.ITCCell, content)
   }
@@ -366,8 +371,8 @@ object SpectroscopyModesTable {
                 wavelength = s.wavelength,
                 slitWidth = s.focalPlaneAngle,
                 resolution = s.resolution,
-                coverage = s.wavelengthCoverage
-                  .map(_.micrometer.toValue[BigDecimal].toRefined[Positive]),
+                // coverage = s.wavelengthCoverage
+                //   .map(_.micrometer.toValue[BigDecimal].toRefined[Positive]),
                 declination = dec
               )
           val (enabled, disabled) = rows.partition(enabledRow)
@@ -532,7 +537,7 @@ object SpectroscopyModesTable {
             <.div(ExploreStyles.ModesTableTitle)(
               <.label(
                 s"${rows.length} matching configurations",
-                HelpIcon("configuration/table.md")
+                HelpIcon("configuration/table.md".refined)
               ),
               <.div(
                 errLabel.toTagMod

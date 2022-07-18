@@ -20,18 +20,19 @@ import lucuma.core.validation._
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input._
 import monocle.function.Index
-import react.common.ReactProps
+import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.collections.table._
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.modal._
+import lucuma.refined._
 
 final case class PartnerSplitsEditor(
   show:    Boolean,
   splits:  View[List[PartnerSplit]],
   closeMe: Callback,
   onSave:  List[PartnerSplit] => Callback
-) extends ReactProps[PartnerSplitsEditor](PartnerSplitsEditor.component)
+) extends ReactProps[PartnerSplitsEditor, Unit, Unit](PartnerSplitsEditor.component)
 
 object PartnerSplitsEditor {
   type Props = PartnerSplitsEditor
@@ -42,7 +43,7 @@ object PartnerSplitsEditor {
         ExploreStyles.FlexContainer,
         <.div("Total must be 100.",
               ExploreStyles.PartnerSplitsEditorError,
-              ExploreStyles.FlexGrow(1)
+              ExploreStyles.FlexGrow(1.refined)
         )
           .unless(addsUpTo100(p)),
         Button(onClick = p.closeMe)(^.tpe := "button")("Cancel", ExploreStyles.FlexEnd),
@@ -71,7 +72,7 @@ object PartnerSplitsEditor {
           TableCell(
             <.span(
               FormInputEV(
-                id = NonEmptyString.from(id).getOrElse("SPLIT_ID"),
+                id = NonEmptyString.from(id).getOrElse("SPLIT_ID".refined),
                 value = splitView.zoom(PartnerSplit.percent),
                 validFormat = InputValidSplitEpi.refinedInt[ZeroTo100],
                 changeAuditor = ChangeAuditor.refinedInt[ZeroTo100]()

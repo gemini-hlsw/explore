@@ -18,7 +18,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import org.http4s._
 import org.http4s.dom.FetchClientBuilder
 import react.common._
-import react.hotkeys._
+// import react.hotkeys._
 import react.markdown.ReactMarkdown
 import react.markdown.RehypePlugin
 import react.markdown.RemarkPlugin
@@ -32,14 +32,14 @@ import scala.util.Try
 final case class HelpBody(base: HelpContext, helpId: Help.Id)(implicit val ctx: AppContextIO)
     extends ReactFnProps[HelpBody](HelpBody.component) {
   private val path: Uri.Path = Uri.Path.unsafeFromString(helpId.value)
-  private val rootUrl: Uri   = base.rawUrl / base.user.value / base.project.value
+  private val rootUrl: Uri   = base.rawUrl / base.user / base.project
   private val baseUrl: Uri   =
-    path.segments.init.foldLeft(base.rawUrl / base.user.value / base.project.value / "main")(
-      (uri, segment) => uri / segment.encoded
+    path.segments.init.foldLeft(base.rawUrl / base.user / base.project / "main")((uri, segment) =>
+      uri / segment.encoded
     )
   private val mainUrl        = rootUrl / "main"
   private val url            = mainUrl.addPath(path)
-  private val rootEditUrl    = base.editUrl / base.user.value / base.project.value
+  private val rootEditUrl    = base.editUrl / base.user / base.project
   private val newPage        = (rootEditUrl / "new" / "main")
     .withQueryParam("filename", path.segments.mkString("/"))
     .withQueryParam("value", s"# Title")
@@ -87,9 +87,9 @@ object HelpBody {
           }
           <.div(
             ExploreStyles.HelpSidebar,
-            GlobalHotKeys(keyMap = KeyMap("CLOSE_HELP" -> "ESC"),
-                          handlers = Handlers("CLOSE_HELP" -> helpView.set(none))
-            ),
+            // GlobalHotKeys(keyMap = KeyMap("CLOSE_HELP" -> "ESC"),
+            //               handlers = Handlers("CLOSE_HELP" -> helpView.set(none))
+            // ),
             <.div(
               ExploreStyles.HelpTitle,
               <.h4(ExploreStyles.HelpTitleLabel, "Help"),

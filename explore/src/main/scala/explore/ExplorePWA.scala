@@ -8,6 +8,7 @@ import japgolly.scalajs.react.callback.Callback
 import japgolly.scalajs.react.vdom.html_<^._
 import react.fa.IconSize
 import react.semanticui.elements.button.Button
+import react.common._
 import react.semanticui.sizes
 import react.toastify._
 
@@ -98,7 +99,7 @@ object ExplorePWA {
               // https://vite-plugin-pwa.netlify.app/guide/periodic-sw-updates.html
               Callback.log(s"Registered service worker") *>
                 Callback(r.update()).delayMs(1000.0).toCallback *> // Inital check
-                scheduleUpdateCheck(r) // Periodic checks
+                scheduleUpdateCheck(r)                             // Periodic checks
           )
         )
       updateSW

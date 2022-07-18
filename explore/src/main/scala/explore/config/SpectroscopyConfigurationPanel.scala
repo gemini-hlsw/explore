@@ -23,6 +23,7 @@ import lucuma.ui.forms.EnumViewOptionalSelect
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
 import react.common._
+import lucuma.refined.*
 
 final case class SpectroscopyConfigurationPanel(
   options: View[SpectroscopyRequirementsData]
@@ -48,16 +49,19 @@ object SpectroscopyConfigurationPanel {
       val wvChangeAuditor = ChangeAuditor
         .fromInputValidWedge(ExploreModelValidators.wavelengthValidWedge)
         .allow(s => s === "0" || s === "0.")
-        .decimal(3)
+        .decimal(3.refined)
         .optional
 
       val wvUnits =
         <.span("μm ", requiredForITC.unless(wv.get.isDefined))
 
       ReactFragment(
-        <.label("Wavelength", HelpIcon("configuration/wavelength.md"), ExploreStyles.SkipToNext),
+        <.label("Wavelength",
+                HelpIcon("configuration/wavelength.md".refined),
+                ExploreStyles.SkipToNext
+        ),
         InputWithUnits(
-          id = "configuration-wavelength",
+          id = "configuration-wavelength".refined,
           clazz = ExploreStyles.WarningInput.when_(wv.get.isEmpty),
           inline = true,
           value = wv,
@@ -67,18 +71,21 @@ object SpectroscopyConfigurationPanel {
           disabled = false
         ),
         <.label("λ / Δλ",
-                HelpIcon("configuration/spectral_resolution.md"),
+                HelpIcon("configuration/spectral_resolution.md".refined),
                 ExploreStyles.SkipToNext
         ),
         FormInputEV(
-          id = "configuration-resolution-power",
+          id = "configuration-resolution-power".refined,
           value = resolution,
           validFormat = InputValidSplitEpi.posInt.optional,
           changeAuditor = ChangeAuditor.posInt.optional
         ),
-        <.label("S / N", HelpIcon("configuration/signal_to_noise.md"), ExploreStyles.SkipToNext),
+        <.label("S / N",
+                HelpIcon("configuration/signal_to_noise.md".refined),
+                ExploreStyles.SkipToNext
+        ),
         FormInputEV(
-          id = "signal-to-noise",
+          id = "signal-to-noise".refined,
           value = signalToNoise,
           clazz = ExploreStyles.WarningInput.when_(signalToNoise.get.isEmpty),
           validFormat = InputValidSplitEpi.posBigDecimal.optional,
@@ -89,7 +96,7 @@ object SpectroscopyConfigurationPanel {
           requiredForITC.unless(signalToNoise.get.isDefined),
           <.label("at"),
           InputWithUnits(
-            id = "signal-to-noise-at",
+            id = "signal-to-noise-at".refined,
             clazz = Css.Empty,
             value = signalToNoiseAt,
             units = "μm",
@@ -99,11 +106,11 @@ object SpectroscopyConfigurationPanel {
           )
         ),
         <.label("λ Coverage",
-                HelpIcon("configuration/wavelength_coverage.md"),
+                HelpIcon("configuration/wavelength_coverage.md".refined),
                 ExploreStyles.SkipToNext
         ),
         InputWithUnits(
-          id = "wavelength-coverage",
+          id = "wavelength-coverage".refined,
           clazz = Css.Empty,
           inline = true,
           value = wavelengthCoverage,
@@ -112,7 +119,10 @@ object SpectroscopyConfigurationPanel {
           changeAuditor = wvChangeAuditor,
           disabled = false
         ),
-        <.label("Focal Plane", HelpIcon("configuration/focal_plane.md"), ExploreStyles.SkipToNext),
+        <.label("Focal Plane",
+                HelpIcon("configuration/focal_plane.md".refined),
+                ExploreStyles.SkipToNext
+        ),
         EnumViewOptionalSelect(
           id = "focal-plane",
           placeholder = "Any",
@@ -123,7 +133,7 @@ object SpectroscopyConfigurationPanel {
         <.div(
           ExploreStyles.InputWithLabel,
           InputWithUnits(
-            id = "spectroscopy-capabilities",
+            id = "spectroscopy-capabilities".refined,
             clazz = Css.Empty,
             value = focalPlaneAngle,
             units = "arcsec",
@@ -134,7 +144,7 @@ object SpectroscopyConfigurationPanel {
         ),
         <.label(
           "Capabilities",
-          HelpIcon("configuration/capabilities.md"),
+          HelpIcon("configuration/capabilities.md".refined),
           ExploreStyles.SkipToNext
         ),
         EnumViewOptionalSelect(

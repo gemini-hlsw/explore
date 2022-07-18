@@ -203,23 +203,23 @@ object implicits
       reRunOnSignal(signals.reduceLeft(_ merge _), debounce)
 
     def reRunOnResourceSignals(
-      subscriptions: NonEmptyList[Resource[F, fs2.Stream[F, A]]],
+      subscriptions: NonEmptyList[Resource[F, fs2.Stream[F, ?]]],
       debounce:      Option[FiniteDuration] = 2.seconds.some
-    )(implicit F:    Temporal[F]): Resource[F, fs2.Stream[F, A]] =
+    )(implicit F:    Temporal[F]): Resource[F, fs2.Stream[F, ?]] =
       subscriptions.sequence
         .map(ss => reRunOnSignals(ss.map(_.void), debounce))
 
     def reRunOnResourceSignals(
-      head:       Resource[F, fs2.Stream[F, A]],
-      tail:       Resource[F, fs2.Stream[F, A]]*
-    )(implicit F: Temporal[F]): Resource[F, fs2.Stream[F, A]] =
+      head:       Resource[F, fs2.Stream[F, ?]],
+      tail:       Resource[F, fs2.Stream[F, ?]]*
+    )(implicit F: Temporal[F]): Resource[F, fs2.Stream[F, ?]] =
       reRunOnResourceSignals(NonEmptyList.of(head, tail: _*))
 
     def reRunOnResourceSignals(
       debounce:   FiniteDuration,
-      head:       Resource[F, fs2.Stream[F, A]],
-      tail:       Resource[F, fs2.Stream[F, A]]*
-    )(implicit F: Temporal[F]): Resource[F, fs2.Stream[F, A]] =
+      head:       Resource[F, fs2.Stream[F, ?]],
+      tail:       Resource[F, fs2.Stream[F, ?]]*
+    )(implicit F: Temporal[F]): Resource[F, fs2.Stream[F, ?]] =
       reRunOnResourceSignals(NonEmptyList.of(head, tail: _*), debounce.some)
   }
 

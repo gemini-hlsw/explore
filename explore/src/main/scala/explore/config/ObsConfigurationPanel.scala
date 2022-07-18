@@ -27,6 +27,7 @@ import monocle.std.option
 import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.sizes._
+import lucuma.refined.*
 
 final case class ObsConfigurationPanel(
   obsId:            Observation.Id,
@@ -82,12 +83,12 @@ object ObsConfigurationPanel {
         <.div(
           ExploreStyles.InputWithLabel,
           InputWithUnits(
-            id = "pos-angle-value",
+            id = "pos-angle-value".refined,
             clazz = Css.Empty,
             value = pa,
             units = "° E of N",
             validFormat = MathValidators.truncatedAngleDegrees,
-            changeAuditor = ChangeAuditor.bigDecimal(3, 2)
+            changeAuditor = ChangeAuditor.bigDecimal(3.refined, 2.refined)
           )
         )
 
@@ -95,7 +96,7 @@ object ObsConfigurationPanel {
         ExploreStyles.Compact,
         ExploreStyles.ObsConfigurationForm
       )(
-        <.label("Position Angle", HelpIcon("configuration/positionangle.md")),
+        <.label("Position Angle", HelpIcon("configuration/positionangle.md".refined)),
         EnumViewSelect(
           clazz = ExploreStyles.ObsConfigurationObsPA,
           id = "pos-angle-alternative",

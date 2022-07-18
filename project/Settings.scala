@@ -303,6 +303,10 @@ object Settings {
         "edu.gemini" %%% "lucuma-react-beautiful-dnd",
         "edu.gemini" %%% "lucuma-react-cats",
         "edu.gemini" %%% "lucuma-react-table",
+        "edu.gemini" %%% "lucuma-react-datepicker",
+        "edu.gemini" %%% "lucuma-react-resize-detector",
+        "edu.gemini" %%% "lucuma-react-draggable",
+        // "edu.gemini" %%% "lucuma-react-hotkeys",
         "edu.gemini" %%% "lucuma-react-virtuoso"
       )(lucumaReactVersion)
     )

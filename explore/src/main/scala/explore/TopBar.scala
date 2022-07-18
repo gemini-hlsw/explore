@@ -106,19 +106,19 @@ object TopBar {
                   item = true,
                   simple = true,
                   compact = true,
-                  icon = Icons.Bars,
+                  // icon = Icons.Bars,
                   open = false,
                   clazz = ExploreStyles.MainMenuDropdown
                 )(
                   DropdownMenu(
                     About(
                       Reuse.always(
-                        DropdownItem(text = "About Explore", icon = Icons.Info.fixedWidth())
+                        DropdownItem(text = "About Explore" /*, icon = Icons.Info.fixedWidth()*/ )
                       )
                     ),
                     DropdownItem(
                       text = "Manage Programs",
-                      icon = Icons.ListCheck.fixedWidth(),
+                      // icon = Icons.ListCheck.fixedWidth(),
                       onClick = isProgramsOpen.setState(true)
                     ),
                     TagMod.when(isProgramsOpen.value)(
@@ -139,7 +139,7 @@ object TopBar {
                     ).when(role === GuestRole),
                     DropdownItem(
                       text = "Logout",
-                      icon = Icons.Logout.fixedWidth(),
+                      // icon = Icons.Logout.fixedWidth(),
                       onClick = logout.runAsync
                     ),
                     DropdownItem()(
@@ -164,7 +164,7 @@ object TopBar {
                       .when(appCtx.environment === ExecutionEnvironment.Development),
                     DropdownItem(
                       text = "Toggle Reusability",
-                      icon = Icons.CrystalBall.fixedWidth(),
+                      // icon = Icons.CrystalBall.fixedWidth(),
                       onClick = utils.toggleReusabilityOverlay[CallbackTo]()
                     )
                       .when(appCtx.environment === ExecutionEnvironment.Development)

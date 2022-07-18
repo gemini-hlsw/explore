@@ -26,6 +26,7 @@ import explore.model.display._
 import explore.model.enums.AppTab
 import explore.model.layout._
 import explore.optics._
+import explore.optics.all._
 import explore.undo.UndoStacks
 import explore.utils._
 import japgolly.scalajs.react._

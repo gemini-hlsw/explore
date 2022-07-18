@@ -19,6 +19,7 @@ import react.common._
 import react.semanticui._
 import react.semanticui.elements.label.Label
 import react.semanticui.elements.label.LabelPointing
+import lucuma.refined._
 
 import scala.scalajs.js
 
@@ -29,9 +30,9 @@ final case class InputWithUnits[EV[_], A](
   id:              NonEmptyString,
   label:           js.UndefOr[ShorthandS[Label]] = js.undefined,
   units:           TagMod,
-  clazz:           Css = ExploreStyles.Grow(1),
+  clazz:           Css = ExploreStyles.Grow(1.refined),
   disabled:        Boolean = false,
-  columnSpam:      Int Refined Interval.Closed[1, 16] = 2,
+  columnSpam:      Int Refined Interval.Closed[1, 16] = 2.refined,
   inline:          js.UndefOr[Boolean] = js.undefined,
   size:            js.UndefOr[SemanticSize] = js.undefined
 )(implicit val ev: ExternalValue[EV], val eq: Eq[A])

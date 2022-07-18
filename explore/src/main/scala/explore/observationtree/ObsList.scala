@@ -31,7 +31,7 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
-import react.common.ReactFnProps
+import react.common._
 import react.common.implicits._
 import react.semanticui.elements.button.Button
 import react.semanticui.shorthand._
@@ -120,7 +120,7 @@ object ObsList {
             Button(
               size = Mini,
               compact = true,
-              icon = Icons.New,
+              // icon = Icons.New,
               content = "Obs",
               disabled = adding.get,
               loading = adding.get,

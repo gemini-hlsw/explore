@@ -14,7 +14,7 @@ import explore.model.enums.AppTab
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Program
-import react.common.ReactFnProps
+import react.common._
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.modal.Modal
 import react.semanticui.modules.modal._
@@ -80,6 +80,6 @@ object ProgramsPopup {
             props.onClose.isEmpty
           )
         )
-      )
+      )(): VdomNode
     }
 }

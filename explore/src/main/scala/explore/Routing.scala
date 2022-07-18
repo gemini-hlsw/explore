@@ -24,6 +24,7 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.util.Gid
 import react.resizeDetector.ResizeDetector
+import react.common._
 
 import scala.collection.immutable.SortedSet
 import scala.scalajs.LinkingInfo

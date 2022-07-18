@@ -202,7 +202,7 @@ object ConstraintsSummaryTable {
                        text = "Columns",
                        clazz = ExploreStyles.SelectColumns
               )(
-                DropdownMenu()(
+                DropdownMenu(
                   tableInstance.allColumns
                     .drop(1)
                     .toTagMod { column =>
@@ -238,7 +238,7 @@ object ConstraintsSummaryTable {
                 ^.textTransform.none,
                 ^.whiteSpace.nowrap
               ),
-            cell = (cell: ConstraintsTable.CellType[_]) =>
+            cell = (cell: ConstraintsTable.CellType[?]) =>
               TableCell(clazz = columnClasses.get(cell.column.id.toString).orEmpty)(
                 ^.whiteSpace.nowrap
               )

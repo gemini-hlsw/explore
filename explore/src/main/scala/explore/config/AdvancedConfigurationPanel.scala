@@ -29,6 +29,7 @@ import explore.model.ScienceModeAdvanced
 import explore.model.ScienceModeBasic
 import explore.model.display._
 import explore.optics._
+import explore.optics.all._
 import explore.targeteditor.InputWithUnits
 import explore.utils._
 import japgolly.scalajs.react._
@@ -277,14 +278,17 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               ExploreStyles.ExploreForm,
               ExploreStyles.AdvancedConfigurationCol1
             )(
-              <.label("Grating", HelpIcon("configuration/grating.md")),
+              <.label("Grating", HelpIcon("configuration/grating.md".refined)),
               EnumViewOptionalSelect(
                 id = "override-grating",
                 value = overrideGrating(props.scienceModeAdvanced),
                 clearable = true,
                 placeholder = gratingLens.get(props.scienceModeBasic).shortName
               ),
-              <.label("Filter", HelpIcon("configuration/filter.md"), ExploreStyles.SkipToNext),
+              <.label("Filter",
+                      HelpIcon("configuration/filter.md".refined),
+                      ExploreStyles.SkipToNext
+              ),
               EnumViewOptionalSelect(
                 id = "override-filter",
                 value = overrideFilter(props.scienceModeAdvanced),
@@ -292,17 +296,17 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 placeholder = filterLens.get(props.scienceModeBasic).map(_.shortName).orUndefined
               ),
               <.label("Wavelength",
-                      HelpIcon("configuration/wavelength.md"),
+                      HelpIcon("configuration/wavelength.md".refined),
                       ExploreStyles.SkipToNext
               ),
               InputWithUnits(
-                id = "override-wavelength",
+                id = "override-wavelength".refined,
                 value = overrideWavelength(props.scienceModeAdvanced).withOnMod(_ => invalidateITC),
                 units = "μm",
                 validFormat = ExploreModelValidators.wavelengthValidWedge.optional,
                 changeAuditor = wavelengthChangeAuditor.optional
               ),
-              <.label("FPU", HelpIcon("configuration/fpu.md"), ExploreStyles.SkipToNext),
+              <.label("FPU", HelpIcon("configuration/fpu.md".refined), ExploreStyles.SkipToNext),
               EnumViewOptionalSelect(
                 id = "override-fpu",
                 value = overrideFpu(props.scienceModeAdvanced),
@@ -311,14 +315,14 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               )
             ),
             <.div(ExploreStyles.ExploreForm, ExploreStyles.AdvancedConfigurationCol2)(
-              <.label("Binning", HelpIcon("configuration/binning.md")),
+              <.label("Binning", HelpIcon("configuration/binning.md".refined)),
               EnumViewOptionalSelect(
                 id = "explicitXBin",
                 value = explicitBinning(props.scienceModeAdvanced),
                 clearable = true
               ),
               <.label("Read Mode",
-                      HelpIcon("configuration/read-mode.md"),
+                      HelpIcon("configuration/read-mode.md".refined),
                       ExploreStyles.SkipToNext
               ),
               EnumViewOptionalSelect(
@@ -326,7 +330,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 value = explicitReadModeGain(props.scienceModeAdvanced),
                 clearable = true
               ),
-              <.label("ROI", HelpIcon("configuration/roi.md"), ExploreStyles.SkipToNext),
+              <.label("ROI", HelpIcon("configuration/roi.md".refined), ExploreStyles.SkipToNext),
               EnumViewOptionalSelect(
                 id = "explicitRoi",
                 value = explicitRoi(props.scienceModeAdvanced),
@@ -337,7 +341,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               dithersControl(Callback.empty),
               offsetsControl(Callback.empty),
               <.label("Exposure Mode",
-                      HelpIcon("configuration/exposure-mode.md"),
+                      HelpIcon("configuration/exposure-mode.md".refined),
                       ExploreStyles.SkipToNext
               ),
               EnumViewOptionalSelect(
@@ -346,15 +350,15 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 clearable = true
               ),
               <.label("S/N",
-                      HelpIcon("configuration/signal-to-noise.md"),
+                      HelpIcon("configuration/signal-to-noise.md".refined),
                       ExploreStyles.SkipToNext
               ),
               signalToNoiseView
                 .map(v =>
                   FormInputEV(
-                    id = "signalToNoise",
+                    id = "signalToNoise".refined,
                     value = v.withOnMod(_ => invalidateITC),
-                    validFormat = InputValidWedge.truncatedPosBigDecimal(0),
+                    validFormat = InputValidWedge.truncatedPosBigDecimal(0.refined),
                     changeAuditor = ChangeAuditor.posInt
                   ): VdomNode
                 )
@@ -362,7 +366,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                   potRender[Option[PosBigDecimal]](
                     valueRender = osn => {
                       val value = osn.fold(itcNoneMsg)(sn =>
-                        InputValidWedge.truncatedPosBigDecimal(0).reverseGet(sn)
+                        InputValidWedge.truncatedPosBigDecimal(0.refined).reverseGet(sn)
                       )
                       FormInput(value = value, disabled = true)
                     },
@@ -371,13 +375,13 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                   )(props.potITC.get.map(_.map(_.signalToNoise)))
                 ),
               <.label("Exposure Time",
-                      HelpIcon("configuration/exposure-time.md"),
+                      HelpIcon("configuration/exposure-time.md".refined),
                       ExploreStyles.SkipToNext
               ),
               expTimeOverrideSecs
                 .mapValue((v: View[NonNegInt]) =>
                   InputWithUnits(
-                    id = "exposureTime",
+                    id = "exposureTime".refined,
                     value = v
                       .withOnMod(secs =>
                         exposureTimeView.foldMap(_.set(secondsToDuration(secs))) >> invalidateITC
@@ -401,13 +405,13 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                   )(props.potITC.get.map(_.map(_.exposureTime)))
                 ),
               <.label("Exposure Count",
-                      HelpIcon("configuration/exposure-count.md"),
+                      HelpIcon("configuration/exposure-count.md".refined),
                       ExploreStyles.SkipToNext
               ),
               exposureCountView
                 .map(v =>
                   FormInputEV(
-                    id = "exposureCount",
+                    id = "exposureCount".refined,
                     value = v.withOnMod(_ => invalidateITC),
                     validFormat = InputValidSplitEpi.refinedInt[NonNegative],
                     changeAuditor = ChangeAuditor.refinedInt[NonNegative]()
@@ -442,8 +446,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 size = Small,
                 compact = true,
                 clazz = ExploreStyles.VeryCompact,
-                content = "Simple Configuration",
-                icon = Icons.ChevronsLeft,
+                content = "Simple Configuration".refined,
+                // icon = Icons.ChevronsLeft,
                 onClick = props.onShowBasic.value
               )(^.tpe := "button")
             )

@@ -16,6 +16,7 @@ import react.common._
 import react.datepicker._
 import react.semanticui.collections.form.Form
 import react.semanticui.sizes._
+import lucuma.refined.*
 
 import java.time.Instant
 
@@ -83,7 +84,7 @@ object VizTimeEditor {
             pendingRender = _ => EmptyVdom,
             valueRender = instant =>
               React.Fragment(
-                <.label("Observation time", HelpIcon("configuration/obstime.md")),
+                <.label("Observation time", HelpIcon("configuration/obstime.md".refined)),
                 Datepicker(onChange =
                   (newValue, _) =>
                     newValue.fromDatePickerToInstantOpt.foldMap { i =>
@@ -99,4 +100,5 @@ object VizTimeEditor {
         )
       )
     }
+
 }

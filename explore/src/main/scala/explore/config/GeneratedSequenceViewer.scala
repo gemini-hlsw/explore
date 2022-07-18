@@ -45,7 +45,7 @@ object GeneratedSequenceViewer {
       .useEffectWithDepsBy((_, config) => config.flatten.map(_ => ()))((props, _) =>
         changedPot => props.changed.set(changedPot)
       )
-      .render((props, config) =>
-        potRender(renderFn)(props.changed.get.flatMap(_ => config.flatten))
+      .render((props, config) => <.div()
+      // potRender(renderFn)(props.changed.get.flatMap(_ => config.flatten))
       )
 }

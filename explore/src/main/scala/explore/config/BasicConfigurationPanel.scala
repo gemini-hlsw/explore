@@ -94,7 +94,7 @@ object BasicConfigurationPanel {
               size = Small,
               compact = true,
               content = "Advanced Configuration",
-              icon = Icons.Gears,
+              // icon = Icons.Gears,
               disabled = props.onShowAdvanced.isEmpty,
               onClick = props.onShowAdvanced.orUndefined
             )

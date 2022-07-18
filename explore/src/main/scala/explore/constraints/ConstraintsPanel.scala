@@ -37,13 +37,16 @@ import monocle.Lens
 import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.label.LabelPointing
+import lucuma.refined.*
 
 final case class ConstraintsPanel(
   obsIds:        List[Observation.Id],
   constraintSet: View[ConstraintSet],
   undoStacks:    View[UndoStacks[IO, ConstraintSet]],
   renderInTitle: Tile.RenderInTitle
-) extends ReactProps[ConstraintsPanel](ConstraintsPanel.component)
+) extends ReactProps[ConstraintsPanel, ConstraintsPanel.State, ConstraintsPanel.Backend](
+      ConstraintsPanel.component
+    )
 
 object ConstraintsPanel {
   type Props = ConstraintsPanel
@@ -154,26 +157,26 @@ object ConstraintsPanel {
         ),
         Form(clazz = ExploreStyles.ConstraintsGrid)(
           selectEnum("Image Quality",
-                     "constraints/main/iq.md",
+                     "constraints/main/iq.md".refined,
                      ConstraintSet.imageQuality,
                      UpdateConstraintSet.imageQuality
           ),
           selectEnum("Cloud Extinction",
-                     "constraints/main/ce.md",
+                     "constraints/main/ce.md".refined,
                      ConstraintSet.cloudExtinction,
                      UpdateConstraintSet.cloudExtinction
           ),
           selectEnum("Water Vapor",
-                     "constraints/main/wv.md",
+                     "constraints/main/wv.md".refined,
                      ConstraintSet.waterVapor,
                      UpdateConstraintSet.waterVapor
           ),
           selectEnum("Sky Background",
-                     "constraints/main/sb.md",
+                     "constraints/main/sb.md".refined,
                      ConstraintSet.skyBackground,
                      UpdateConstraintSet.skyBackground
           ),
-          <.label("Elevation Range", HelpIcon("constraints/main/er.md")),
+          <.label("Elevation Range", HelpIcon("constraints/main/er.md".refined)),
           <.div(
             ExploreStyles.ConstraintsElevationRangeGroup,
             EnumViewSelect(
@@ -185,52 +188,52 @@ object ConstraintsPanel {
             ReactFragment(
               <.label("Min"),
               FormInputEV(
-                id = "minam",
+                id = "minam".refined,
                 value = airMassView.zoom(ElevationRange.AirMass.min),
                 errorClazz = ExploreStyles.InputErrorTooltip,
                 errorPointing = LabelPointing.Below,
                 validFormat = ModelValidators.airMassElevationRangeValidWedge.andThen(
-                  ValidSplitEpiNec.lte(state.airMass.max, "Must be <= Max")
+                  ValidSplitEpiNec.lte(state.airMass.max, "Must be <= Max".refined)
                 ),
-                changeAuditor = ChangeAuditor.accept.decimal(1),
+                changeAuditor = ChangeAuditor.accept.decimal(1.refined),
                 clazz = ExploreStyles.ElevationRangeEntry
               ),
               <.label("Max"),
               FormInputEV(
-                id = "maxam",
+                id = "maxam".refined,
                 value = airMassView.zoom(ElevationRange.AirMass.max),
                 errorClazz = ExploreStyles.InputErrorTooltip,
                 errorPointing = LabelPointing.Below,
                 validFormat = ModelValidators.airMassElevationRangeValidWedge.andThen(
-                  ValidSplitEpiNec.gte(state.airMass.min, "Must be >= Min")
+                  ValidSplitEpiNec.gte(state.airMass.min, "Must be >= Min".refined)
                 ),
-                changeAuditor = ChangeAuditor.accept.decimal(1),
+                changeAuditor = ChangeAuditor.accept.decimal(1.refined),
                 clazz = ExploreStyles.ElevationRangeEntry
               )
             ).when(state.rangeType === AirMass),
             ReactFragment(
               <.label("Min"),
               FormInputEV(
-                id = "minha",
+                id = "minha".refined,
                 value = hourAngleView.zoom(ElevationRange.HourAngle.minHours),
                 errorClazz = ExploreStyles.InputErrorTooltip,
                 errorPointing = LabelPointing.Below,
                 validFormat = ModelValidators.hourAngleElevationRangeValidWedge.andThen(
-                  ValidSplitEpiNec.lte(state.hourAngle.maxHours, "Must be <= Max")
+                  ValidSplitEpiNec.lte(state.hourAngle.maxHours, "Must be <= Max".refined)
                 ),
-                changeAuditor = ChangeAuditor.accept.decimal(1),
+                changeAuditor = ChangeAuditor.accept.decimal(1.refined),
                 clazz = ExploreStyles.ElevationRangeEntry
               ),
               <.label("Max"),
               FormInputEV(
-                id = "maxha",
+                id = "maxha".refined,
                 value = hourAngleView.zoom(ElevationRange.HourAngle.maxHours),
                 errorClazz = ExploreStyles.InputErrorTooltip,
                 errorPointing = LabelPointing.Below,
                 validFormat = ModelValidators.hourAngleElevationRangeValidWedge.andThen(
-                  ValidSplitEpiNec.gte(state.hourAngle.minHours, "Must be >= Min")
+                  ValidSplitEpiNec.gte(state.hourAngle.minHours, "Must be >= Min".refined)
                 ),
-                changeAuditor = ChangeAuditor.accept.decimal(1),
+                changeAuditor = ChangeAuditor.accept.decimal(1.refined),
                 clazz = ExploreStyles.ElevationRangeEntry
               ),
               <.label("Hours")

@@ -28,7 +28,7 @@ import monocle.Focus
 import monocle.Lens
 import queries.common.ProgramQueriesGQL._
 import queries.schemas.implicits._
-import react.common.ReactFnProps
+import react.common._
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.image.Image
 import react.semanticui.sizes.Big

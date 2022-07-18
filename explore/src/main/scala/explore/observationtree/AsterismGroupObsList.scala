@@ -296,7 +296,7 @@ object AsterismGroupObsList {
           size = Small,
           compact = true,
           clazz = ExploreStyles.DeleteButton |+| ExploreStyles.ObsDeleteButton,
-          icon = Icons.Trash,
+          // icon = Icons.Trash,
           onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
             e.preventDefaultCB *>
               e.stopPropagationCB *>

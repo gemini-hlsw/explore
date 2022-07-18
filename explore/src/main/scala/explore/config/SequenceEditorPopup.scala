@@ -13,7 +13,7 @@ import explore.implicits._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
-import react.common.ReactFnProps
+import react.common._
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.modal._
 import react.semanticui.shorthand._
@@ -51,7 +51,7 @@ object SequenceEditorPopup {
             ),
             centered = false, // Works better on iOS
             open = isOpen.value,
-            closeIcon = Icons.Close.clazz(ExploreStyles.ModalCloseButton),
+            // closeIcon = Icons.Close.clazz(ExploreStyles.ModalCloseButton),
             dimmer = Dimmer.Blurring,
             size = ModalSize.Small,
             onClose = isOpen.setState(false),

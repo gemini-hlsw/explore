@@ -16,7 +16,7 @@ import clue.js.FetchMethod
 import clue.js.WebSocketJSBackend
 import crystal.react._
 import crystal.react.reuse._
-import eu.timepit.refined.auto._
+import eu.timepit.refined.collection.NonEmpty
 import explore._
 import explore.components.ui.ExploreStyles
 import explore.model.AppConfig
@@ -46,9 +46,11 @@ import org.scalajs.dom
 import org.scalajs.dom.Element
 import org.scalajs.dom.RequestCache
 import org.typelevel.log4cats.Logger
+import react.common._
 import react.common.implicits._
 import react.toastify._
 import workers.WebWorkerF
+import lucuma.refined.*
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration._
@@ -61,10 +63,10 @@ object ExploreMain extends IOApp.Simple {
 
   implicit val reuseContext: Reusability[AppContextIO] = Reusability.never
 
-  @JSExport
-  def resetIOApp(): Unit =
-    // https://github.com/typelevel/cats-effect/pull/2114#issue-687064738
-    cats.effect.unsafe.IORuntime.asInstanceOf[{ def resetGlobal(): Unit }].resetGlobal()
+  // @JSExport
+  // def resetIOApp(): Unit =
+  //   // https://github.com/typelevel/cats-effect/pull/2114#issue-687064738
+  // cats.effect.unsafe.IORuntime.asInstanceOf[{ def resetGlobal(): Unit }].resetGlobal()
 
   @JSExport
   def runIOApp(): Unit = main(Array.empty)

@@ -26,7 +26,7 @@ import explore.model.ExploreModelValidators
 import explore.model.Hours
 import explore.model.display._
 import explore.model.reusability._
-import explore.optics.optionNonEmptyStringIso
+import explore.optics.all._
 import explore.proposal.ProposalClassType._
 import explore.undo._
 import japgolly.scalajs.react._
@@ -48,13 +48,14 @@ import lucuma.ui.input._
 import monocle.Iso
 import queries.common.ProgramQueriesGQL
 import queries.schemas.implicits._
-import react.common.ReactFnProps
+import react.common._
 import react.common.implicits._
 import react.semanticui.collections.form._
 import react.semanticui.elements.label.Label
 import react.semanticui.modules.dropdown._
 import react.semanticui.shorthand._
 import spire.std.any._
+import lucuma.refined.*
 
 import scala.collection.immutable.SortedMap
 
@@ -88,13 +89,13 @@ object ProposalEditor {
       .sortBy(_.percent.value)(Ordering[Int].reverse)
 
   private def partnerSplits(splits: SortedMap[Partner, IntPercent]): TagMod = splits match {
-    case Nil =>
+    case a if a.isEmpty =>
       <.span(
         Icons.ExclamationTriangle,
         "Partner time allocations are required.",
         FomanticStyles.WarningText
       )
-    case _   =>
+    case _              =>
       val ps = sortedSplits(splits)
         .toTagMod(ps => partnerSplit(ps))
       <.div(ps, ExploreStyles.FlexContainer, ExploreStyles.FlexWrap)
@@ -115,15 +116,15 @@ object ProposalEditor {
     val span: TagMod = <.span(data)
 
     FormStaticData(id = id, value = <.div(img, span), label = partner.shortName)(
-      ExploreStyles.FlexShrink(0),
+      ExploreStyles.FlexShrink(0.refined),
       ExploreStyles.PartnerSplitData
     )
   }
 
   private def timeSplits(splits: SortedMap[Partner, IntPercent], total: NonNegDuration): TagMod =
     splits match {
-      case Nil => TagMod.empty
-      case _   =>
+      case a if a.isEmpty => TagMod.empty
+      case _              =>
         val ps = sortedSplits(splits)
           .toTagMod(ps => timeSplit(ps, total))
         <.div(ps, ExploreStyles.FlexContainer, ExploreStyles.FlexWrap)
@@ -223,10 +224,10 @@ object ProposalEditor {
         value = pctView,
         validFormat = InputValidSplitEpi.refinedInt[ZeroTo100],
         changeAuditor = ChangeAuditor.refinedInt[ZeroTo100](),
-        label = Label("Minimum %", HelpIcon("proposal/main/minimum-pct.md")),
+        label = Label("Minimum %", HelpIcon("proposal/main/minimum-pct.md".refined)),
         id = id
       ).withMods(
-        ExploreStyles.FlexShrink(0),
+        ExploreStyles.FlexShrink(0.refined),
         ExploreStyles.MinimumPercent
       )
 
@@ -235,11 +236,11 @@ object ProposalEditor {
         FormInputEV(
           value = totalHours.withOnMod(h => totalTimeView.set(fromHours(h))),
           validFormat = ExploreModelValidators.hoursValidWedge,
-          changeAuditor = ChangeAuditor.accept.decimal(2),
-          label = Label("Total", HelpIcon("proposal/main/total-time.md")),
-          id = "total-time-entry"
+          changeAuditor = ChangeAuditor.accept.decimal(2.refined),
+          label = Label("Total", HelpIcon("proposal/main/total-time.md".refined)),
+          id = "total-time-entry".refined
         ).withMods(
-          ExploreStyles.FlexShrink(0),
+          ExploreStyles.FlexShrink(0.refined),
           ExploreStyles.PartnerSplitTotal
         )
       )
@@ -248,7 +249,7 @@ object ProposalEditor {
       val allPartners = Partner.EnumeratedPartner.all.map(p =>
         splitsMap
           .get(p)
-          .fold(PartnerSplit(p, 0))(pct => PartnerSplit(p, pct))
+          .fold(PartnerSplit(p, 0.refined))(pct => PartnerSplit(p, pct))
       )
       splitsList.set(allPartners) >> showModal.set(true)
     }
@@ -271,7 +272,7 @@ object ProposalEditor {
           ExploreStyles.TwoColumnGrid,
           ExploreStyles.ProposalDetailsGrid,
           FormInputEV(
-            id = "title",
+            id = "title".refined,
             className = "inverse",
             value = titleView,
             validFormat = InputValidSplitEpi.nonEmptyString.optional,
@@ -280,14 +281,14 @@ object ProposalEditor {
           <.div(
             ExploreStyles.FlexContainer,
             FormButton(
-              icon = Icons.Edit,
+              // icon = Icons.Edit,
               label = "Partners",
               tpe = "button",
-              clazz = ExploreStyles.FlexShrink(0) |+| ExploreStyles.PartnerSplitTotal,
+              clazz = ExploreStyles.FlexShrink(0.refined) |+| ExploreStyles.PartnerSplitTotal,
               onClick = openPartnerSplitsEditor
             ),
             partnerSplits(splitsMap),
-            makeMinimumPctInput(minimumPct1View, "min-pct-1").unless(has2Minimums)
+            makeMinimumPctInput(minimumPct1View, "min-pct-1".refined).unless(has2Minimums)
           ),
           <.div(
             ExploreStyles.FlexContainer,
@@ -295,35 +296,35 @@ object ProposalEditor {
                            label = time1Label,
                            id = "time1"
             )(
-              ExploreStyles.FlexShrink(0),
+              ExploreStyles.FlexShrink(0.refined),
               ExploreStyles.PartnerSplitTotal
             ),
             timeSplits(splitsMap, executionTime),
             minimumTime(minimumPct1View.get, executionTime).unless(has2Minimums),
-            makeMinimumPctInput(minimumPct1View, "min-pct-1").when(has2Minimums)
+            makeMinimumPctInput(minimumPct1View, "min-pct-1".refined).when(has2Minimums)
           ),
           secondTime.fold(<.span(): VdomNode) { t2 =>
             <.div(
               ExploreStyles.FlexContainer,
               totalTimeEntry.getOrElse(
                 FormStaticData(value = formatHours(toHours(t2)), label = "Band 3", id = "band-3")(
-                  ExploreStyles.FlexShrink(0),
+                  ExploreStyles.FlexShrink(0.refined),
                   ExploreStyles.PartnerSplitTotal
                 )
               ),
               timeSplits(splitsMap, t2),
               minimumPct2View
-                .mapValue(pctView => makeMinimumPctInput(pctView, "min-pct-2"))
+                .mapValue(pctView => makeMinimumPctInput(pctView, "min-pct-2".refined))
                 .getOrElse(minimumTime(minimumPct1View.get, t2))
             )
           },
           EnumViewSelect(
             id = "proposal-class",
             value = proposalClassType.withOnMod(onClassTypeMod _),
-            label = Label("Class", HelpIcon("proposal/main/class.md"))
+            label = Label("Class", HelpIcon("proposal/main/class.md".refined))
           ),
           FormSelect(
-            label = Label("Category", HelpIcon("proposal/main/category.md")),
+            label = Label("Category", HelpIcon("proposal/main/category.md".refined)),
             value = categoryView.get.map(categoryTag).orUndefined,
             options = categoryOptions,
             onChange = (ddp: FormDropdown.FormDropdownProps) =>
@@ -335,12 +336,12 @@ object ProposalEditor {
           EnumViewSelect(
             id = "too-activation",
             value = activationView,
-            label = Label("ToO Activation", HelpIcon("proposal/main/too-activation.md"))
+            label = Label("ToO Activation", HelpIcon("proposal/main/too-activation.md".refined))
           )
         ),
         <.div(FomanticStyles.Divider),
         FormTextAreaEV(
-          id = "abstract",
+          id = "abstract".refined,
           label = "Abstract",
           rows = 10,
           value = abstractView.as(optionNonEmptyStringIso)
@@ -392,7 +393,7 @@ object ProposalEditor {
       <.div(
         ^.key := "details",
         ExploreStyles.ProposalTile,
-        Tile("details", "Details")(
+        Tile("details".refined, "Details")(
           renderDetails(
             aligner,
             undoCtx,
@@ -411,7 +412,7 @@ object ProposalEditor {
       <.div(
         ^.key := "preview",
         ExploreStyles.ProposalTile,
-        Tile("preview", "Preview")(_ => <.span("Placeholder for PDF preview."))
+        Tile("preview".refined, "Preview")(_ => <.span("Placeholder for PDF preview."))
       ),
       PartnerSplitsEditor(
         showModal.get,

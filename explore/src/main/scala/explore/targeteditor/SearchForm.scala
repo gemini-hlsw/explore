@@ -33,7 +33,7 @@ final case class SearchForm(
   name:        NonEmptyString,
   searching:   View[Set[Target.Id]],
   searchAndGo: SearchCallback => Callback
-) extends ReactProps[SearchForm](SearchForm.component) {
+) extends ReactProps[SearchForm, SearchForm.State, SearchForm.Backend](SearchForm.component) {
   def submit(
     searchTerm: String,
     before:     Callback,
