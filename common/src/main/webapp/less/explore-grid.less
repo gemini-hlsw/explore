@@ -68,7 +68,6 @@
  nature of the grid - they will remain grouped together even
  when the grid goes down to one column.
 */
-/* stylelint-disable */
 .explore-flex-container {
   display: flex;
 
@@ -76,10 +75,11 @@
     flex-wrap: wrap;
   }
 
-  .ui.form & > * + *, /* override SUI */
-    .ui.form.explore-grid & > * + *,
-    .ui.form .explore-grid & > * + *,
-    > * + * {
+  .ui.form &>*+*,
+  /* override SUI */
+  .ui.form.explore-grid &>*+*,
+  .ui.form .explore-grid &>*+*,
+  >*+* {
     margin-left: 0.5em;
   }
 
@@ -88,28 +88,28 @@
      elements in a flex container via the flex grow attribute.
      */
   each(range(0, 4), {
-        .explore-grow-@{value} {
-            flex: @value;
-        }
-    });
+    .explore-grow-@{value} {
+      flex: @value;
+    }
+  });
 
-  /*
+/*
      The explore-shrink-* classes can be used to control the width of 
      elements in a flex container via the flex shrink attribute.
      */
-  each(range(0, 4), {
-        .explore-shrink-@{value} {
-            flex-shrink: @value;
-        }
-    });
+each(range(0, 4), {
+  .explore-shrink-@{value} {
+    flex-shrink: @value;
+  }
+});
 
-  /*
+/*
      Applying to-end to an field will push that field and the ones
      that follow it to the end of the cell wrapper.
      */
-  .ui.form & .explore-flex-end, /* override SUI */
-    .explore-flex-end {
-    margin-left: auto;
-  }
+.ui.form & .explore-flex-end,
+/* override SUI */
+.explore-flex-end {
+  margin-left: auto;
 }
-/* stylelint-enable */
+}

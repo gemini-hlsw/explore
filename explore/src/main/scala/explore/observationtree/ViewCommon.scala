@@ -3,9 +3,9 @@
 
 package explore.observationtree
 
-import cats.syntax.all._
 import explore._
 import explore.components.ui.ExploreStyles
+import explore.model.Focused
 import explore.model.ObsIdSet
 import explore.model.ObsSummary
 import explore.model.enums.AppTab
@@ -57,7 +57,7 @@ trait ViewCommon {
           }).when(selectable),
           (^.onDoubleClick ==> { e: ReactEvent =>
             e.stopPropagationCB >>
-              ctx.pushPageSingleObs(AppTab.Observations, programId, obs.id.some, None)
+              ctx.pushPage(AppTab.Observations, programId, Focused.singleObs(obs.id))
           }).when(linkToObsTab)
         )(<.span(provided.dragHandleProps)(renderObsBadge(obs, highlightSelected, forceHighlight)))
       }

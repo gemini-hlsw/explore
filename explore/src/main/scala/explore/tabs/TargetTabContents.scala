@@ -25,7 +25,6 @@ import explore.model._
 import explore.model.enums.AppTab
 import explore.model.layout._
 import explore.model.layout.unsafe._
-import explore.model.reusability._
 import explore.observationtree.AsterismGroupObsList
 import explore.optics._
 import explore.syntax.ui._
@@ -67,8 +66,7 @@ import scala.concurrent.duration._
 final case class TargetTabContents(
   userId:            Option[User.Id],
   programId:         Program.Id,
-  focusedObsSet:     Option[ObsIdSet],
-  focusedTarget:     Option[Target.Id],
+  focused:           Focused,
   listUndoStacks:    View[UndoStacks[IO, AsterismGroupsWithObs]],
   targetsUndoStacks: View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
   searching:         View[Set[Target.Id]],
@@ -120,10 +118,10 @@ object TargetTabContents {
     )
   )
 
-  def otherObsCount(targetGroupMap: TargetGroupList, obsIds: ObsIdSet)(
-    targetId:                       Target.Id
+  def otherObsCount(targetMap: TargetWithObsList, obsIds: ObsIdSet)(
+    targetId:                  Target.Id
   ): Int =
-    targetGroupMap.get(targetId).fold(0)(tg => (tg.obsIds -- obsIds.toSortedSet).size)
+    targetMap.get(targetId).fold(0)(tg => (tg.obsIds -- obsIds.toSortedSet).size)
 
   protected def renderFn(
     props:                 Props,
@@ -150,7 +148,7 @@ object TargetTabContents {
 
     val selectedView: View[SelectedPanel] = panels.zoom(TwoPanelState.selected)
 
-    val targetMap: TargetGroupList = asterismGroupsWithObs.get.targetGroups
+    val targetMap: TargetWithObsList = asterismGroupsWithObs.get.targetsWithObs
 
     // Tree area
     def tree(objectsWithObs: View[AsterismGroupsWithObs]) =
@@ -163,8 +161,7 @@ object TargetTabContents {
         AsterismGroupObsList(
           objectsWithObs,
           props.programId,
-          props.focusedObsSet,
-          props.focusedTarget,
+          props.focused,
           selectedView.set(SelectedPanel.summary),
           props.expandedIds,
           props.listUndoStacks
@@ -177,8 +174,8 @@ object TargetTabContents {
     ): Option[AsterismGroup] =
       agl.values.find(ag => obsIds.subsetOf(ag.obsIds))
 
-    def setPage(obsIds: Option[ObsIdSet], targetId: Option[Target.Id]): Callback =
-      props.ctx.pushPage(AppTab.Targets, props.programId, obsIds, targetId)
+    def setPage(focused: Focused): Callback =
+      props.ctx.pushPage(AppTab.Targets, props.programId, focused)
 
     def selectObservationAndTarget(expandedIds: View[SortedSet[ObsIdSet]])(
       obsId:                                    Observation.Id,
@@ -188,10 +185,10 @@ object TargetTabContents {
       findAsterismGroup(obsIdSet, asterismGroupsWithObs.get.asterismGroups)
         .map(ag => expandedIds.mod(_ + ag.obsIds))
         .orEmpty >>
-        setPage(obsIdSet.some, targetId.some)
+        setPage(Focused(obsIdSet.some, targetId.some))
     }
 
-    def selectTarget(targetId: Target.Id): Callback = setPage(none, targetId.some)
+    def selectTarget(targetId: Target.Id): Callback = setPage(Focused.target(targetId))
 
     def onModAsterismsWithObs(
       groupIds:  ObsIdSet,
@@ -222,10 +219,10 @@ object TargetTabContents {
         basic = true,
         clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
         onClickE = linkOverride[ButtonProps](
-          ctx.pushPage(AppTab.Targets, props.programId, none, none) >>
+          ctx.pushPage(AppTab.Targets, props.programId, Focused.None) >>
             selectedView.set(SelectedPanel.tree)
         )
-      )(^.href := ctx.pageUrl(AppTab.Targets, props.programId, none, none), Icons.ChevronLeft)
+      )(^.href := ctx.pageUrl(AppTab.Targets, props.programId, Focused.None), Icons.ChevronLeft)
 
     /**
      * Render the summary table.
@@ -259,7 +256,9 @@ object TargetTabContents {
       val targetIds = asterismGroup.targetIds
 
       val asterism: Option[Asterism] =
-        Asterism.fromTargets(targetIds.toList.flatMap(id => targetMap.get(id).map(_.targetWithId)))
+        Asterism.fromTargets(
+          targetIds.toList.flatMap(id => targetMap.get(id).map(two => TargetWithId(id, two.target)))
+        )
 
       val getAsterism: AsterismGroupsWithObs => Option[Asterism] = _ => asterism
 
@@ -267,29 +266,29 @@ object TargetTabContents {
         mod: Option[Asterism] => Option[Asterism]
       ): AsterismGroupsWithObs => AsterismGroupsWithObs = agwo => {
         val asterismGroups = agwo.asterismGroups
-        val targetGroups   = agwo.targetGroups
+        val targetsWithObs = agwo.targetsWithObs
         val moddedAsterism = mod(asterism)
         val newTargetIds   = SortedSet.from(moddedAsterism.foldMap(_.ids.toList))
 
         // make sure any added targets are in the map and update modified ones.
         val addedIds  = newTargetIds -- targetIds
         val tgUpdate1 =
-          moddedAsterism.map(_.asList.foldRight(targetGroups) { case (twid, groups) =>
+          moddedAsterism.map(_.asList.foldRight(targetsWithObs) { case (twid, twobs) =>
             if (addedIds.contains(twid.id))
               // it's new to this asterism, but the target itself may or may not be new. So we
               // either add a new target group or update the existing one.
-              groups.updatedWith(twid.id)(
-                _.map(_.addObsIds(idsToEdit).copy(targetWithId = twid))
-                  .orElse(TargetGroup(idsToEdit.toSortedSet, twid).some)
+              twobs.updatedWith(twid.id)(
+                _.map(_.addObsIds(idsToEdit).copy(target = twid.target))
+                  .orElse(TargetWithObs(twid.target, idsToEdit.toSortedSet).some)
               )
             else // just update the current target, observations should be the same
-              groups.updatedWith(twid.id)(_.map(_.copy(targetWithId = twid)))
+              twobs.updatedWith(twid.id)(_.map(_.copy(target = twid.target)))
           })
 
-        val removedIds          = targetIds -- newTargetIds
+        val removedIds            = targetIds -- newTargetIds
         // If we removed a target, just update the observation ids for that target group
-        val updatedTargetGroups = removedIds.foldRight(tgUpdate1) { case (id, groups) =>
-          groups.map(_.updatedWith(id)(_.map(_.removeObsIds(idsToEdit))))
+        val updatedTargetsWithObs = removedIds.foldRight(tgUpdate1) { case (id, twobs) =>
+          twobs.map(_.updatedWith(id)(_.map(_.removeObsIds(idsToEdit))))
         }
 
         val splitAsterisms =
@@ -316,8 +315,9 @@ object TargetTabContents {
             mergeWithAg._2.addObsIds(groupIds).asObsKeyValue
         }
 
-        agwo.copy(asterismGroups = updatedAsterismGroups,
-                  targetGroups = updatedTargetGroups.getOrElse(SortedMap.empty)
+        agwo.copy(
+          asterismGroups = updatedAsterismGroups,
+          targetsWithObs = updatedTargetsWithObs.getOrElse(SortedMap.empty)
         )
       }
 
@@ -355,7 +355,7 @@ object TargetTabContents {
       }
 
       val selectedTarget: Option[ViewOpt[TargetWithId]] =
-        props.focusedTarget.map { targetId =>
+        props.focused.target.map { targetId =>
           asterismView.zoom(Asterism.targetOptional(targetId))
         }
 
@@ -366,16 +366,17 @@ object TargetTabContents {
             .get
             .collect {
               case (k,
-                    ObsSummaryWithConstraintsAndConf(_,
-                                                     const,
-                                                     _,
-                                                     _,
-                                                     _,
-                                                     _,
-                                                     Some(sm),
-                                                     _,
-                                                     Some(posAngle),
-                                                     Some(wavelength)
+                    ObsSummaryWithConstraintsAndConf(
+                      _,
+                      const,
+                      _,
+                      _,
+                      _,
+                      _,
+                      Some(sm),
+                      _,
+                      Some(posAngle),
+                      Some(wavelength)
                     )
                   ) if k === id =>
                 (const.withDefaultElevationRange, sm, posAngle, wavelength)
@@ -393,7 +394,7 @@ object TargetTabContents {
         tid:                          Option[Target.Id],
         via:                          SetRouteVia
       ): Callback =
-        ctx.setPageVia(AppTab.Targets, programId, oids.some, tid, via)
+        ctx.setPageVia(AppTab.Targets, programId, Focused(oids.some, tid), via)
 
       val asterismEditorTile =
         AsterismEditorTile.asterismEditorTile(
@@ -405,7 +406,7 @@ object TargetTabContents {
           posAngle,
           constraints,
           wavelength,
-          props.focusedTarget,
+          props.focused.target,
           setCurrentTarget(props.programId, idsToEdit) _,
           otherObsCount(targetMap, idsToEdit) _,
           props.targetsUndoStacks,
@@ -443,14 +444,20 @@ object TargetTabContents {
     }
 
     def renderSiderealTargetEditor(targetId: Target.Id, target: Target.Sidereal): VdomNode = {
-      val getTarget: TargetGroupList => Target.Sidereal                                          = _ => target
-      def modTarget(mod: Target.Sidereal => Target.Sidereal): TargetGroupList => TargetGroupList =
+      val getTarget: TargetWithObsList => Target.Sidereal = _ => target
+
+      def modTarget(
+        mod: Target.Sidereal => Target.Sidereal
+      ): TargetWithObsList => TargetWithObsList =
         _.updatedWith(targetId)(
-          _.map(TargetGroup.targetWithId.replace(TargetWithId(targetId, mod(target))))
+          _.map(TargetWithObs.target.modify {
+            case s @ Target.Sidereal(_, _, _, _) => mod(s)
+            case other                           => other
+          })
         )
 
       val targetView: View[Target.Sidereal] =
-        asterismGroupsWithObs.zoom(AsterismGroupsWithObs.targetGroups).zoom(getTarget)(modTarget)
+        asterismGroupsWithObs.zoom(AsterismGroupsWithObs.targetsWithObs).zoom(getTarget)(modTarget)
 
       val title = s"Editing Target ${target.name.value} [$targetId]"
 
@@ -485,10 +492,10 @@ object TargetTabContents {
     }
 
     val selectedPanel = panels.get.selected
-    val optSelected   = (props.focusedObsSet, props.focusedTarget) match {
-      case (Some(obsIdSet), _)    => obsIdSet.asRight.some
-      case (None, Some(targetId)) => targetId.asLeft.some
-      case _                      => none
+    val optSelected   = props.focused match {
+      case Focused(Some(obsIdSet), _)    => obsIdSet.asRight.some
+      case Focused(None, Some(targetId)) => targetId.asLeft.some
+      case _                             => none
     }
 
     val rightSide: VdomNode =
@@ -499,7 +506,7 @@ object TargetTabContents {
               targetMap
                 .get(targetId)
                 .fold(renderSummary)(u =>
-                  u.targetWithId.target match {
+                  u.target match {
                     case Nonsidereal(_, _, _)     =>
                       <.div("Editing of Non-Sidereal targets not supported")
                     case s @ Sidereal(_, _, _, _) =>
@@ -557,14 +564,14 @@ object TargetTabContents {
       // Two panel state
       .useStateView(TwoPanelState.initial(SelectedPanel.Uninitialized))
       .useEffectWithDepsBy((props, state) =>
-        (props.focusedObsSet, props.focusedTarget, state.zoom(TwoPanelState.selected).reuseByValue)
+        (props.focused, state.zoom(TwoPanelState.selected).reuseByValue)
       ) { (_, _) => params =>
-        val (focusedObsSet, focusedTarget, selected) = params
-        (focusedObsSet, focusedTarget, selected.get) match {
-          case (Some(_), _, _)                    => selected.set(SelectedPanel.editor)
-          case (None, Some(_), _)                 => selected.set(SelectedPanel.editor)
-          case (None, None, SelectedPanel.Editor) => selected.set(SelectedPanel.Summary)
-          case _                                  => Callback.empty
+        val (focused, selected) = params
+        (focused, selected.get) match {
+          case (Focused(Some(_), _), _)                    => selected.set(SelectedPanel.editor)
+          case (Focused(None, Some(_)), _)                 => selected.set(SelectedPanel.editor)
+          case (Focused(None, None), SelectedPanel.Editor) => selected.set(SelectedPanel.Summary)
+          case _                                           => Callback.empty
         }
       }
       // Measure its size
@@ -580,10 +587,11 @@ object TargetTabContents {
             implicit val ctx = props.ctx
 
             TabGridPreferencesQuery
-              .queryWithDefault[IO](props.userId,
-                                    GridLayoutSection.TargetLayout,
-                                    ResizableSection.TargetsTree,
-                                    (Constants.InitialTreeWidth.toInt, defaultLayout)
+              .queryWithDefault[IO](
+                props.userId,
+                GridLayoutSection.TargetLayout,
+                ResizableSection.TargetsTree,
+                (Constants.InitialTreeWidth.toInt, defaultLayout)
               )
               .attempt
               .flatMap {

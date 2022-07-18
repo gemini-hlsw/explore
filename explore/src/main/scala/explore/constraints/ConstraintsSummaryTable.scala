@@ -13,6 +13,7 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ConstraintGroup
+import explore.model.Focused
 import explore.model.ObsIdSet
 import explore.model.enums.AppTab
 import japgolly.scalajs.react._
@@ -89,7 +90,7 @@ object ConstraintsSummaryTable {
             .setHeader(columnNames(id))
 
         def setObsSet(obsIdSet: ObsIdSet): Callback =
-          props.ctx.pushPage(AppTab.Constraints, props.programId, obsIdSet.some, none)
+          props.ctx.pushPage(AppTab.Constraints, props.programId, Focused.obsSet(obsIdSet))
 
         List(
           column("edit", ConstraintGroup.obsIds.get)
@@ -152,10 +153,10 @@ object ConstraintsSummaryTable {
                   .map(obsId =>
                     <.a(
                       ^.onClick ==> (_ =>
-                        (props.ctx.pushPageSingleObs(AppTab.Constraints,
-                                                     props.programId,
-                                                     obsId.some,
-                                                     none
+                        (props.ctx.pushPage(
+                          AppTab.Constraints,
+                          props.programId,
+                          Focused.singleObs(obsId)
                         )
                           >> props.expandedIds.mod(_ + cell.value)
                           >> setObsSet(ObsIdSet.one(obsId)))

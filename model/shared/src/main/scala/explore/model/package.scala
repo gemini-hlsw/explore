@@ -3,9 +3,20 @@
 
 package explore
 
+import cats.syntax.all._
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.api.RefinedTypeOps
+import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.Interval
+import lucuma.core.enums.StellarLibrarySpectrum
+import lucuma.core.math.Coordinates
+import lucuma.core.model.SiderealTracking
+import lucuma.core.model.SourceProfile
+import lucuma.core.model.SpectralDefinition
+import lucuma.core.model.Target
+import lucuma.core.model.UnnormalizedSED
+
+import scala.collection.immutable.SortedMap
 
 package object model {
   type DitherNanoMetersRange = Interval.Closed[-1000, 1000]
@@ -17,4 +28,18 @@ package object model {
   object Hours extends RefinedTypeOps[Hours, BigDecimal] {
     val Max: Hours = Hours.unsafeFrom(MaxHourValue)
   }
+
+  // TODO Start with name selected
+  val EmptySiderealTarget =
+    Target.Sidereal(
+      "<New Target>",
+      SiderealTracking.const(Coordinates.Zero),
+      SourceProfile.Point(
+        SpectralDefinition.BandNormalized(
+          UnnormalizedSED.StellarLibrary(StellarLibrarySpectrum.O5V),
+          SortedMap.empty
+        )
+      ),
+      none
+    )
 }

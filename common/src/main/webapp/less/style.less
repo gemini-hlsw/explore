@@ -89,6 +89,7 @@ a {
 
 /*** iPhone and iOS Form Input Zoom Fixes ***/
 @media screen and (device-aspect-ratio: 2/3) {
+
   select,
   textarea,
   input[type='text'],
@@ -107,6 +108,7 @@ a {
 }
 
 @media screen and (device-aspect-ratio: 40/71) {
+
   select,
   textarea,
   input[type='text'],
@@ -125,6 +127,7 @@ a {
 }
 
 @media screen and (device-aspect-ratio: 375/667) {
+
   select,
   textarea,
   input[type='text'],
@@ -143,8 +146,8 @@ a {
   }
 }
 
-/* stylelint-disable */
 @media screen and (device-aspect-ratio: 9/16) {
+
   select,
   textarea,
   input[type='text'],
@@ -162,7 +165,6 @@ a {
     font-size: 16px;
   }
 }
-/* stylelint-enable */
 
 body.dark-theme {
   .dark-theme();
@@ -173,17 +175,16 @@ body.light-theme {
 }
 
 @media (prefers-color-scheme: dark) {
+
   /* defaults to dark theme */
   body {
     .dark-theme();
   }
 
-  /* stylelint-disable */
   /* Override dark mode with light mode styles if the user decides to swap */
   body.light-theme {
     .light-theme();
   }
-  /* stylelint-enable */
 }
 
 // Classes
@@ -356,11 +357,9 @@ tfoot {
 .ui.button.tile-back-button {
   margin-right: 0;
 
-  /* stylelint-disable */
   @media (min-width: @target-grid-responsive-cutoff) {
     display: none;
   }
-  /* stylelint-enable */
 }
 
 .explore-tile-control {
@@ -1145,7 +1144,7 @@ tfoot {
   position: absolute;
   top: 5px;
   right: 1rem;
-} 
+}
 
 .connection-ok {
   color: greenyellow;
@@ -2075,10 +2074,8 @@ html {
   user-select: none;
   margin-top: 2px;
   margin-bottom: 0;
-
-  :not(.obs-count) {
-    text-transform: uppercase;
-  }
+  display: flex;
+  justify-content: space-between;
 }
 
 .ui.dropdown.explore-configuration-filter {
@@ -2488,7 +2485,6 @@ th.sticky-header,
   width: auto;
 }
 
-/* stylelint-disable */
 .ui.form .field.field input:-webkit-autofill,
 .ui.form .field.field input:-webkit-autofill:hover,
 .ui.form .field.field input:-webkit-autofill:focus,
@@ -2510,8 +2506,6 @@ input:-webkit-autofill:active {
   -webkit-text-fill-color: var(--input-color);
   border: 1px solid var(--site-border-color) !important;
 }
-
-/* stylelint-enable */
 
 // Reusability overlays.
 body.hide-reusability {

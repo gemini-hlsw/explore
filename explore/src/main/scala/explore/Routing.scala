@@ -50,8 +50,7 @@ object Routing {
       TargetTabContents(
         model.zoom(RootModel.userId).get,
         routingInfo.programId,
-        routingInfo.focusedObsSet,
-        routingInfo.focusedTarget,
+        routingInfo.focused,
         model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forAsterismGroupList),
         model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forSiderealTarget),
         model.zoom(RootModel.searchingTarget),
@@ -66,8 +65,8 @@ object Routing {
       ObsTabContents(
         model.zoom(RootModel.userId).get,
         routingInfo.programId,
-        routingInfo.focusedObsSet.map(_.head),
-        routingInfo.focusedTarget,
+        routingInfo.focused.obsSet.map(_.head),
+        routingInfo.focused.target,
         model.zoom(RootModel.undoStacks),
         model.zoom(RootModel.searchingTarget),
         model.zoom(RootModel.targetSummaryHiddenColumns)
@@ -81,7 +80,7 @@ object Routing {
         ConstraintSetTabContents(
           model.zoom(RootModel.userId).get,
           routingInfo.programId,
-          routingInfo.focusedObsSet,
+          routingInfo.focused.obsSet,
           model.zoom(
             RootModel.expandedIds.andThen(ExpandedIds.constraintSetObsIds)
           ),
