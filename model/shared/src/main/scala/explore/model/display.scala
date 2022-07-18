@@ -78,11 +78,13 @@ trait DisplayImplicits {
 
   // Not implicit. When we have opaque types we may define a BrightnessValue.
   val displayBrightness: Display[BigDecimal] = Display.byShortName { x =>
-    // We don't want scientific notation to kick in for magnitude units: we want to keep 2 integers.
+    // We don't want scientific notation to kick in for magnitude units.
+    // We assume it's magnitudes when x.abs >= 0.00001, since other units are usually
+    // expressed in the order of e-18 or e-19.
     // We could make the format depend on the units, but that may be confusing for users
     // in case they want to type the value and then change the units.
-    if (0 <= x.scale && x.scale <= 3 && x.precision <= 5)
-      x.toString
+    if (x.abs >= 0.00001)
+      "%.3f".format(x)
     else
       InputValidSplitEpi.bigDecimalWithScientificNotation.reverseGet(x)
   }
