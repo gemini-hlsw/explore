@@ -219,9 +219,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 validFormat = ExploreModelValidators.dithersValidSplitEpi,
                 changeAuditor =
                   ChangeAuditor.bigDecimal(integers = 3, decimals = 1).toSequence().optional,
-                units = "nm",
-                icon = clearInputIcon(view)
-              )
+                units = "nm"
+              ).clearable
             )
           }
 
@@ -235,9 +234,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 validFormat = ExploreModelValidators.offsetQNELValidWedge,
                 changeAuditor =
                   ChangeAuditor.bigDecimal(integers = 3, decimals = 2).toSequence().optional,
-                units = "arcsec",
-                icon = clearInputIcon(view)
-              )
+                units = "arcsec"
+              ).clearable
             )
           }
 
@@ -303,9 +301,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 value = wavelengthView,
                 units = "μm",
                 validFormat = ExploreModelValidators.wavelengthValidWedge.optional,
-                changeAuditor = wavelengthChangeAuditor.optional,
-                icon = clearInputIcon(wavelengthView)
-              ),
+                changeAuditor = wavelengthChangeAuditor.optional
+              ).clearable,
               <.label("FPU", HelpIcon("configuration/fpu.md"), ExploreStyles.SkipToNext),
               EnumViewOptionalSelect(
                 id = "override-fpu",

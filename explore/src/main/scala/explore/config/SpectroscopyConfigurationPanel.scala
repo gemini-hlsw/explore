@@ -24,7 +24,6 @@ import lucuma.ui.forms.EnumViewOptionalSelect
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
 import react.common._
-import react.common.implicits._
 
 final case class SpectroscopyConfigurationPanel(
   options: View[SpectroscopyRequirementsData]
@@ -60,16 +59,14 @@ object SpectroscopyConfigurationPanel {
         <.label("Wavelength", HelpIcon("configuration/wavelength.md"), ExploreStyles.SkipToNext),
         InputWithUnits(
           id = "configuration-wavelength",
-          clazz = ExploreStyles.ClearableInputPaddingReset |+|
-            ExploreStyles.WarningInput.when_(wv.get.isEmpty),
+          clazz = ExploreStyles.WarningInput.when_(wv.get.isEmpty),
           inline = true,
           value = wv,
           units = wvUnits,
           validFormat = wvMicroInput,
           changeAuditor = wvChangeAuditor,
-          disabled = false,
-          icon = clearInputIcon(wv)
-        ),
+          disabled = false
+        ).clearableNoPadding,
         <.label("λ / Δλ",
                 HelpIcon("configuration/spectral_resolution.md"),
                 ExploreStyles.SkipToNext
@@ -78,34 +75,29 @@ object SpectroscopyConfigurationPanel {
           id = "configuration-resolution-power",
           value = resolution,
           validFormat = InputValidSplitEpi.posInt.optional,
-          changeAuditor = ChangeAuditor.posInt.optional,
-          clazz = ExploreStyles.ClearableInputPaddingReset,
-          icon = clearInputIcon(resolution)
-        ),
+          changeAuditor = ChangeAuditor.posInt.optional
+        ).clearableNoPadding,
         <.label("S / N", HelpIcon("configuration/signal_to_noise.md"), ExploreStyles.SkipToNext),
         FormInputEV(
           id = "signal-to-noise",
           value = signalToNoise,
-          clazz = ExploreStyles.ClearableInputPaddingReset |+|
-            ExploreStyles.WarningInput.when_(signalToNoise.get.isEmpty),
+          clazz = ExploreStyles.WarningInput.when_(signalToNoise.get.isEmpty),
           validFormat = InputValidSplitEpi.posBigDecimal.optional,
-          changeAuditor = ChangeAuditor.posBigDecimal().optional,
-          icon = clearInputIcon(signalToNoise)
-        ),
+          changeAuditor = ChangeAuditor.posBigDecimal().optional
+        ).clearableNoPadding,
         <.div(
           ExploreStyles.InputWithLabel,
           requiredForITC.unless(signalToNoise.get.isDefined),
           <.label("at"),
           InputWithUnits(
             id = "signal-to-noise-at",
-            clazz = ExploreStyles.ClearableInputPaddingReset,
+            clazz = Css.Empty,
             value = signalToNoiseAt,
             units = "μm",
             validFormat = wvMicroInput,
             changeAuditor = wvChangeAuditor,
-            disabled = false,
-            icon = clearInputIcon(signalToNoiseAt)
-          )
+            disabled = false
+          ).clearableNoPadding
         ),
         <.label("λ Coverage",
                 HelpIcon("configuration/wavelength_coverage.md"),
@@ -113,15 +105,14 @@ object SpectroscopyConfigurationPanel {
         ),
         InputWithUnits(
           id = "wavelength-coverage",
-          clazz = ExploreStyles.ClearableInputPaddingReset,
+          clazz = Css.Empty,
           inline = true,
           value = wavelengthCoverage,
           units = "μm",
           validFormat = wvMicroInput,
           changeAuditor = wvChangeAuditor,
-          disabled = false,
-          icon = clearInputIcon(wavelengthCoverage)
-        ),
+          disabled = false
+        ).clearableNoPadding,
         <.label("Focal Plane", HelpIcon("configuration/focal_plane.md"), ExploreStyles.SkipToNext),
         EnumViewOptionalSelect(
           id = "focal-plane",
@@ -134,14 +125,13 @@ object SpectroscopyConfigurationPanel {
           ExploreStyles.InputWithLabel,
           InputWithUnits(
             id = "focal-plane-angle",
-            clazz = ExploreStyles.ClearableInputPaddingReset,
+            clazz = Css.Empty,
             value = focalPlaneAngle,
             units = "arcsec",
             validFormat = InputValidWedge.fromFormat(formatArcsec).optional,
             changeAuditor = ChangeAuditor.fromFormat(formatArcsec).optional,
-            disabled = false,
-            icon = clearInputIcon(focalPlaneAngle)
-          )
+            disabled = false
+          ).clearableNoPadding
         ),
         <.label(
           "Capabilities",
