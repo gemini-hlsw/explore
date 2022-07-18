@@ -20,6 +20,7 @@ import explore.common.Aligner
 import explore.common.ObsQueries._
 import explore.common.ScienceQueries._
 import explore.components.HelpIcon
+import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
 import explore.config.ExposureTimeModeType._
 import explore.implicits._
@@ -29,7 +30,7 @@ import explore.model.ScienceModeAdvanced
 import explore.model.ScienceModeBasic
 import explore.model.display._
 import explore.optics._
-import explore.targeteditor.InputWithUnits
+import explore.syntax.ui._
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment

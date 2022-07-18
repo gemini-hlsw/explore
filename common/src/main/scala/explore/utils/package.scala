@@ -4,7 +4,6 @@
 package explore
 
 import cats.Endo
-import cats.Eq
 import cats.effect.Sync
 import cats.syntax.all._
 import clue.data._
@@ -19,19 +18,15 @@ import explore.model.enums.ExecutionEnvironment.Development
 import explore.model.enums.Theme
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.forms.ExternalValue
-import lucuma.ui.forms.FormInputEV
 import lucuma.ui.utils.versionDateFormatter
 import lucuma.ui.utils.versionDateTimeFormatter
 import org.http4s.Uri
 import org.scalajs.dom
-import react.common.Css
-import react.common.implicits._
 import react.semanticui.collections.message.Message
 import react.semanticui.elements.loader.Loader
 
 import java.time.Instant
 import scala.scalajs.js
-import scala.scalajs.js.UndefOr
 import scala.scalajs.js.JSConverters._
 
 package object utils {
@@ -135,20 +130,4 @@ package object utils {
       .flatten
       .map(_ => <.i(ExploreStyles.ClearableInputIcon, ^.onClick --> ev.set(view)(None)))
       .orUndefined
-
-  implicit class FormInputEVOps[EV[_], A, B](val input: FormInputEV[EV, Option[A]]) extends AnyVal {
-    def clearable(implicit ev: ExternalValue[EV], ev3: Eq[A]) =
-      input.copy(icon = clearInputIcon[EV, A](input.value))
-
-    // When an icon is added to a FormInputEV, SUI adds extra padding on the right to make
-    // space for the icon. However, with some layouts this can cause resizing issues, so this
-    // method removes that extra padding. See `clearInputIcon` for more details.
-    def clearableNoPadding(implicit ev: ExternalValue[EV], ev3: Eq[A]) = {
-      val newClazz: UndefOr[Css] =
-        input.clazz.fold(ExploreStyles.ClearableInputPaddingReset)(
-          _ |+| ExploreStyles.ClearableInputPaddingReset
-        )
-      input.copy(icon = clearInputIcon[EV, A](input.value), clazz = newClazz)
-    }
-  }
 }

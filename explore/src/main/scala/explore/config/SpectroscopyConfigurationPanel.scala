@@ -9,13 +9,13 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import explore.common.ObsQueries.SpectroscopyRequirementsData
 import explore.components.HelpIcon
+import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
 import explore.itc.requiredForITC
 import explore.model.ExploreModelValidators
 import explore.model.display._
 import explore.model.formats._
-import explore.targeteditor.InputWithUnits
-import explore.utils._
+import explore.syntax.ui._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._

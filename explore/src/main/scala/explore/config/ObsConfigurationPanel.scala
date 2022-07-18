@@ -9,11 +9,11 @@ import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import explore.common.ObsQueries
 import explore.components.HelpIcon
+import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.enums.PosAngleOptions
 import explore.model.syntax.all._
-import explore.targeteditor.InputWithUnits
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Angle

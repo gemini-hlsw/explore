@@ -1,16 +1,14 @@
 // Copyright (c) 2016-2022 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.targeteditor
+package explore.components
 
 import cats.Eq
-import cats.syntax.all._
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.Interval
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.ui.ExploreStyles
-import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.validation.InputValidFormat
@@ -18,7 +16,6 @@ import lucuma.ui.forms.ExternalValue
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
 import react.common._
-import react.common.implicits._
 import react.semanticui._
 import react.semanticui.elements.icon.Icon
 import react.semanticui.elements.input.IconPosition
@@ -46,20 +43,6 @@ final case class InputWithUnits[EV[_], A](
 
 object InputWithUnits {
   type Props[F[_], A] = InputWithUnits[F, A]
-
-  implicit class InputWithUnitsOps[EV[_], A, B](val input: InputWithUnits[EV, Option[A]])
-      extends AnyVal {
-    def clearable(implicit ev: ExternalValue[EV], ev3: Eq[A]) =
-      input.copy(icon = clearInputIcon[EV, A](input.value))
-
-    // When an icon is added to a FormInputEV, SUI adds extra padding on the right to make
-    // space for the icon. However, with some layouts this can cause resizing issues, so this
-    // method removes that extra padding. See `clearInputIcon` for more details.
-    def clearableNoPadding(implicit ev: ExternalValue[EV], ev3: Eq[A]) = {
-      val newClazz = input.clazz |+| ExploreStyles.ClearableInputPaddingReset
-      input.copy(icon = clearInputIcon[EV, A](input.value), clazz = newClazz)
-    }
-  }
 
   val component = componentF[Any, Any]
 
