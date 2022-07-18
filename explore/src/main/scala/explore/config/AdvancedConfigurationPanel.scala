@@ -20,6 +20,7 @@ import explore.common.Aligner
 import explore.common.ObsQueries._
 import explore.common.ScienceQueries._
 import explore.components.HelpIcon
+import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
 import explore.config.ExposureTimeModeType._
 import explore.implicits._
@@ -29,7 +30,7 @@ import explore.model.ScienceModeAdvanced
 import explore.model.ScienceModeBasic
 import explore.model.display._
 import explore.optics._
-import explore.targeteditor.InputWithUnits
+import explore.syntax.ui._
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
@@ -220,7 +221,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 changeAuditor =
                   ChangeAuditor.bigDecimal(integers = 3, decimals = 1).toSequence().optional,
                 units = "nm"
-              )
+              ).clearable
             )
 
           def offsetsControl(onChange: Callback): VdomElement =
@@ -233,7 +234,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 changeAuditor =
                   ChangeAuditor.bigDecimal(integers = 3, decimals = 2).toSequence().optional,
                 units = "arcsec"
-              )
+              ).clearable
             )
 
           val invalidateITC: Callback =
@@ -296,7 +297,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 units = "μm",
                 validFormat = ExploreModelValidators.wavelengthValidWedge.optional,
                 changeAuditor = wavelengthChangeAuditor.optional
-              ),
+              ).clearable,
               <.label("FPU", HelpIcon("configuration/fpu.md"), ExploreStyles.SkipToNext),
               EnumViewOptionalSelect(
                 id = "override-fpu",

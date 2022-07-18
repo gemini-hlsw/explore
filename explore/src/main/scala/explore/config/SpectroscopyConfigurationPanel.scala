@@ -9,12 +9,13 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import explore.common.ObsQueries.SpectroscopyRequirementsData
 import explore.components.HelpIcon
+import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
 import explore.itc.requiredForITC
 import explore.model.ExploreModelValidators
 import explore.model.display._
 import explore.model.formats._
-import explore.targeteditor.InputWithUnits
+import explore.syntax.ui._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
@@ -65,7 +66,7 @@ object SpectroscopyConfigurationPanel {
           validFormat = wvMicroInput,
           changeAuditor = wvChangeAuditor,
           disabled = false
-        ),
+        ).clearableNoPadding,
         <.label("λ / Δλ",
                 HelpIcon("configuration/spectral_resolution.md"),
                 ExploreStyles.SkipToNext
@@ -75,7 +76,7 @@ object SpectroscopyConfigurationPanel {
           value = resolution,
           validFormat = InputValidSplitEpi.posInt.optional,
           changeAuditor = ChangeAuditor.posInt.optional
-        ),
+        ).clearableNoPadding,
         <.label("S / N", HelpIcon("configuration/signal_to_noise.md"), ExploreStyles.SkipToNext),
         FormInputEV(
           id = "signal-to-noise",
@@ -83,7 +84,7 @@ object SpectroscopyConfigurationPanel {
           clazz = ExploreStyles.WarningInput.when_(signalToNoise.get.isEmpty),
           validFormat = InputValidSplitEpi.posBigDecimal.optional,
           changeAuditor = ChangeAuditor.posBigDecimal().optional
-        ),
+        ).clearableNoPadding,
         <.div(
           ExploreStyles.InputWithLabel,
           requiredForITC.unless(signalToNoise.get.isDefined),
@@ -96,7 +97,7 @@ object SpectroscopyConfigurationPanel {
             validFormat = wvMicroInput,
             changeAuditor = wvChangeAuditor,
             disabled = false
-          )
+          ).clearableNoPadding
         ),
         <.label("λ Coverage",
                 HelpIcon("configuration/wavelength_coverage.md"),
@@ -111,7 +112,7 @@ object SpectroscopyConfigurationPanel {
           validFormat = wvMicroInput,
           changeAuditor = wvChangeAuditor,
           disabled = false
-        ),
+        ).clearableNoPadding,
         <.label("Focal Plane", HelpIcon("configuration/focal_plane.md"), ExploreStyles.SkipToNext),
         EnumViewOptionalSelect(
           id = "focal-plane",
@@ -123,14 +124,14 @@ object SpectroscopyConfigurationPanel {
         <.div(
           ExploreStyles.InputWithLabel,
           InputWithUnits(
-            id = "spectroscopy-capabilities",
+            id = "focal-plane-angle",
             clazz = Css.Empty,
             value = focalPlaneAngle,
             units = "arcsec",
             validFormat = InputValidWedge.fromFormat(formatArcsec).optional,
             changeAuditor = ChangeAuditor.fromFormat(formatArcsec).optional,
             disabled = false
-          )
+          ).clearableNoPadding
         ),
         <.label(
           "Capabilities",

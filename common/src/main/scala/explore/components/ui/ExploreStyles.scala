@@ -165,7 +165,6 @@ object ExploreStyles {
   val AladinCurrentCoords: Css    = Css("aladin-status-current-coordinates")
   val AladinCenterButton: Css     = Css("aladin-status-center-button")
   val AladinSearchIcon: Css       = Css("aladin-search-icon")
-  val InputReplacementIcon: Css   = Css("input-replacement-icon") |+| Css("field")
 
   val AgsOverlay: Css          = Css("ags-overlay")
   val AgsDescription: Css      = Css("ags-description")
@@ -397,4 +396,12 @@ object ExploreStyles {
 
   val ExploreToast     = Css("explore-toast")
   val ExploreToastGrid = Css("explore-toast-grid")
+
+  // For icons that will be show instead of an input during some circumstances.
+  val InputReplacementIcon: Css = Css("input-replacement-icon") |+| Css("field")
+
+  // For making a Input have a "X" icon for clearing, like the dropdowns do.
+  // See `clearInputIcon` in `explore.utils.package`
+  val ClearableInputIcon: Css         = Css("clearable-input-icon")
+  val ClearableInputPaddingReset: Css = Css("clearable-input-padding-reset")
 }

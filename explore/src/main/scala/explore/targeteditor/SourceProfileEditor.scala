@@ -7,6 +7,7 @@ import cats.syntax.all._
 import clue.data.syntax._
 import eu.timepit.refined.auto._
 import explore.common._
+import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.enums.SourceProfileType
