@@ -60,9 +60,9 @@
     "stylelint-config-prettier": "^9.0.3",
     "stylelint-config-standard": "^22.0.0",
     "terser": "5.14.1",
-    "vite": "2.9.14",
+    "vite": "3.0.0",
     "vite-plugin-fonts": "^0.2.2",
-    "vite-plugin-mkcert": "^1.7.2",
+    "vite-plugin-mkcert": "^1.8.1",
     "vite-plugin-pwa": "^0.12.3"
   },
   "scripts": {
