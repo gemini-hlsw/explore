@@ -56,7 +56,8 @@ final case class AladinCell(
   uid:              User.Id,
   tid:              Target.Id,
   obsConf:          ObsConfiguration,
-  target:           View[SiderealTracking]
+  target:           View[SiderealTracking],
+  fullScreen:       View[Boolean]
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[AladinCell](AladinCell.component)
 
@@ -339,11 +340,16 @@ object AladinCell extends ModelOptics {
               ExploreStyles.AladinContainerColumn,
               <.div(
                 ExploreStyles.AladinToolbox,
+                Button(size = Small, icon = true, onClick = props.fullScreen.mod(s => !s))(
+                  ExploreStyles.ButtonOnAladin,
+                  // ^.onMouseEnter --> openSettings.setState(true),
+                  Icons.Gears
+                ),
                 Button(size = Small, icon = true, onClick = openSettings.modState(s => !s))(
                   ExploreStyles.ButtonOnAladin,
                   ^.onMouseEnter --> openSettings.setState(true),
                   Icons.ThinSliders
-                ),
+                ).unless(true),
                 Menu(vertical = true,
                      compact = true,
                      size = Mini,

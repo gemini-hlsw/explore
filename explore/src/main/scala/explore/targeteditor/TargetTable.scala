@@ -48,7 +48,8 @@ final case class TargetTable(
   hiddenColumns:    View[Set[String]],
   selectedTarget:   View[Option[Target.Id]],
   vizTime:          Option[Instant],
-  renderInTitle:    Tile.RenderInTitle
+  renderInTitle:    Tile.RenderInTitle,
+  fullScreen:       Boolean
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[TargetTable](TargetTable.component)
 
@@ -166,7 +167,7 @@ object TargetTable {
                       )
                     }
                 )
-              )
+              ).unless(props.fullScreen)
             )
           ),
           if (rows.isEmpty) {

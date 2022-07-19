@@ -26,6 +26,7 @@ object SiderealTargetEditorTile {
     undoStacks: View[UndoStacks[IO, Target.Sidereal]],
     searching:  View[Set[Target.Id]],
     title:      String,
+    fullScreen: View[Boolean],
     backButton: Option[VdomNode] = none
   ) =
     Tile(ObsTabTilesIds.TargetId, title, back = backButton, canMinimize = true) {
@@ -42,7 +43,8 @@ object SiderealTargetEditorTile {
             none,
             undoStacks,
             searching,
-            renderInTitle = renderInTitle.some
+            renderInTitle = renderInTitle.some,
+            fullScreen = fullScreen
           )
         ): VdomNode
     }
