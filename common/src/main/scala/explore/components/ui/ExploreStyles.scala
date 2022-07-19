@@ -392,6 +392,7 @@ object ExploreStyles {
   val AladinToolbox                = Css("explore-aladin-toolbox-button")
   val AladinZoomControl            = Css("explore-aladin-zoom-control")
   val ButtonOnAladin               = Css("explore-aladin-button")
+  val AladinFullScreenButton       = Css("explore-aladin-fullscreen-button")
   val AladinSettingsMenu           = Css("explore-aladin-settings-menu")
   val BlendedSVG                   = Css("blended-svg")
 

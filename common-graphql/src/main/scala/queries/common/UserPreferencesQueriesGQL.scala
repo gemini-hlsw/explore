@@ -119,6 +119,7 @@ object UserPreferencesQueriesGQL {
           viewOffsetQ
           agsCandidates
           agsOverlay
+          fullScreen
         }
       }
     """

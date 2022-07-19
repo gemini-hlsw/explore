@@ -210,6 +210,20 @@
   flex-direction: column;
 }
 
+.ui.icon.button:not(.animated):not(.compact):not(.labeled).explore-aladin-fullscreen-button {
+  padding: 0.4em;
+  margin: 0;
+  svg.svg-inline--fa {
+    width: auto;
+  }
+}
+
+.explore-aladin-fullscreen-button {
+  @include aladin-button-mixin();
+  right: 5px;
+  top: 10px;
+}
+
 .explore-aladin-toolbox-button {
   @include aladin-button-mixin();
   top: 10px;

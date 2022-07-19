@@ -134,7 +134,7 @@ object AsterismEditor {
         }
       )
       // full screen aladin
-      .useStateView(true)
+      .useStateView(false)
       .render { (props, adding, editScope, fullScreen) =>
         implicit val ctx = props.ctx
 
