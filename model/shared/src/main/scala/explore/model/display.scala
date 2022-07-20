@@ -14,6 +14,8 @@ import lucuma.core.syntax.display._
 import lucuma.core.util.Display
 import lucuma.core.validation.InputValidSplitEpi
 
+import java.text.DecimalFormat
+
 trait DisplayImplicits {
   implicit val displayTacGroup: Display[TacGroup] =
     Display.byShortName(_.label)
@@ -78,13 +80,15 @@ trait DisplayImplicits {
 
   // Not implicit. When we have opaque types we may define a BrightnessValue.
   val displayBrightness: Display[BigDecimal] = Display.byShortName { x =>
+    val f = new DecimalFormat("#.###")
+
     // We don't want scientific notation to kick in for magnitude units.
     // We assume it's magnitudes when x.abs >= 0.00001, since other units are usually
     // expressed in the order of e-18 or e-19.
     // We could make the format depend on the units, but that may be confusing for users
     // in case they want to type the value and then change the units.
     if (x.abs >= 0.00001)
-      "%.3f".format(x)
+      f.format(x).replace("-0", "0")
     else
       InputValidSplitEpi.bigDecimalWithScientificNotation.reverseGet(x)
   }
