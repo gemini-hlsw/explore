@@ -8,6 +8,7 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.api.RefinedTypeOps
 import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.Interval
+import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.enums.StellarLibrarySpectrum
 import lucuma.core.math.Coordinates
 import lucuma.core.model.SiderealTracking
@@ -29,10 +30,11 @@ package object model {
     val Max: Hours = Hours.unsafeFrom(MaxHourValue)
   }
 
-  // TODO Start with name selected
+  val NewTargetName: NonEmptyString = "<New Target>"
+
   val EmptySiderealTarget =
     Target.Sidereal(
-      "<New Target>",
+      NewTargetName,
       SiderealTracking.const(Coordinates.Zero),
       SourceProfile.Point(
         SpectralDefinition.BandNormalized(
