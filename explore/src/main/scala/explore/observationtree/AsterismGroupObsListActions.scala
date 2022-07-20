@@ -20,7 +20,6 @@ import explore.undo._
 import japgolly.scalajs.react.callback.Callback
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
-import lucuma.schemas.ObservationDB.Enums._
 import lucuma.schemas.ObservationDB.Types._
 import queries.common.TargetQueriesGQL
 import queries.schemas.implicits._
@@ -184,13 +183,7 @@ object AsterismGroupObsListActions {
     c:                                 TransactionalClient[IO, ObservationDB]
   ): IO[Unit] =
     TargetQueriesGQL.UndeleteTargetsMutation
-      .execute[IO](
-        UndeleteTargetsInput(WHERE =
-          targetId.toWhereTarget // TODO API seems to require existence for the moment.
-            .copy(existence = WhereEqExistence(EQ = Existence.Deleted.assign).assign)
-            .assign
-        )
-      )
+      .execute[IO](UndeleteTargetsInput(WHERE = targetId.toWhereTarget.assign))
       .void
 
   def dropObservations(

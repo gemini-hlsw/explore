@@ -222,7 +222,7 @@ object AsterismGroupObsList {
             focusedRef.getAsync >>= (currentFocused =>
               newTargetId match { // When deleting, focus away only if focus was on deleted target.
                 case None if !currentFocused.target.contains(targetId) => IO.unit
-                case other                                             => setFocused(currentFocused.withTargetOpt(other)).to[IO]
+                case other                                             => setFocused(Focused(target = other)).to[IO]
               }
             )
 

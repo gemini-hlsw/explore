@@ -17,8 +17,8 @@ object ProgramQueriesGQL {
   @GraphQL
   trait ProgramsQuery extends GraphQLOperation[ObservationDB] {
     val document: String = """
-      query($whereProgram: WhereProgram!) {
-        programs(WHERE: $whereProgram) {
+      query($includeDeleted: Boolean!) {
+        programs(includeDeleted: $includeDeleted) {
           matches {
             id
             name
