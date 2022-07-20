@@ -23,7 +23,7 @@ import explore.model.CatalogResults
 import explore.model.Constants
 import explore.model.ObsConfiguration
 import explore.model.TargetVisualOptions
-import explore.model.boopickle._
+import explore.model.boopickle.Boopickle._
 import explore.model.enums.Visible
 import explore.model.reusability._
 import explore.optics.ModelOptics

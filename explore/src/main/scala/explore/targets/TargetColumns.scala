@@ -11,7 +11,7 @@ import explore.model.conversions._
 import explore.model.display._
 import explore.model.enums.SourceProfileType
 import explore.model.formats._
-import explore.optics.ModelOptics._
+import explore.optics.all._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enums.Band
 import lucuma.core.math.Epoch
@@ -21,8 +21,10 @@ import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.Target
 import lucuma.core.syntax.display._
 import lucuma.core.util.Display
+import react.common._
 import reactST.reactTable.Plugin
 import reactST.reactTable.TableDef
+import eu.timepit.refined.types.string.NonEmptyString
 
 object TargetColumns {
   val baseColNames: Map[String, String] = Map(
@@ -64,10 +66,10 @@ object TargetColumns {
     val baseColumns =
       List(
         baseColumn("type", _ => ())
-          .setCell(_ => Icons.Star)
+          .setCell((_: Unit) => Icons.Star)
           .setWidth(30),
         baseColumn("name", Target.name.get)
-          .setCell(_.value.map(_.toString).orEmpty)
+          .setCell((x: NonEmptyString) => x.value.map(_.toString).orEmpty)
           .setSortByFn(_.toString)
       )
   }

@@ -7,7 +7,7 @@ import cats.syntax.all._
 import clue.data.Input
 import clue.data.syntax._
 import coulomb._
-import coulomb.si.Kelvin
+import coulomb.units.si.Kelvin
 import crystal.react.View
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
@@ -51,8 +51,9 @@ import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.reusability._
 import queries.schemas.implicits._
-import react.common.ReactFnProps
+import react.common._
 import react.semanticui.elements.label.LabelPointing
+import lucuma.refined.*
 
 import scala.collection.immutable.HashSet
 import scala.collection.immutable.SortedMap
@@ -187,25 +188,25 @@ sealed abstract class SpectralDefinitionEditorBuilder[
       ),
       <.span,
       stellarLibrarySpectrumAlignerOpt
-        .map(rsu => spectrumRow("slSpectrum", rsu.view(_.assign))),
+        .map(rsu => spectrumRow("slSpectrum".refined, rsu.view(_.assign))),
       coolStarTemperatureAlignerOpt
-        .map(rsu => spectrumRow("csTemp", rsu.view(_.assign))),
+        .map(rsu => spectrumRow("csTemp".refined, rsu.view(_.assign))),
       galaxySpectrumAlignerOpt
-        .map(rsu => spectrumRow("gSpectrum", rsu.view(_.assign))),
+        .map(rsu => spectrumRow("gSpectrum".refined, rsu.view(_.assign))),
       planetSpectrumAlignerOpt
-        .map(rsu => spectrumRow("pSpectrum", rsu.view(_.assign))),
+        .map(rsu => spectrumRow("pSpectrum".refined, rsu.view(_.assign))),
       quasarSpectrumAlignerOpt
-        .map(rsu => spectrumRow("qSpectrum", rsu.view(_.assign))),
+        .map(rsu => spectrumRow("qSpectrum".refined, rsu.view(_.assign))),
       hiiRegionSpectrumAlignerOpt
-        .map(rsu => spectrumRow("hiirSpectrum", rsu.view(_.assign))),
+        .map(rsu => spectrumRow("hiirSpectrum".refined, rsu.view(_.assign))),
       planetaryNebulaSpectrumAlignerOpt
-        .map(rsu => spectrumRow("pnSpectrum", rsu.view(_.assign))),
+        .map(rsu => spectrumRow("pnSpectrum".refined, rsu.view(_.assign))),
       powerLawIndexAlignerOpt
         .map(rsu =>
           React.Fragment(
             <.label("Index", ExploreStyles.SkipToNext),
             FormInputEV( // Power-law index can be any decimal
-              id = "powerLawIndex",
+              id = "powerLawIndex".refined,
               value = rsu.view(_.assign),
               validFormat = InputValidSplitEpi.bigDecimal,
               changeAuditor = ChangeAuditor.fromInputValidSplitEpi(InputValidSplitEpi.bigDecimal),
@@ -220,7 +221,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
           React.Fragment(
             <.label("Temperature", ExploreStyles.SkipToNext),
             InputWithUnits( // Temperature is in K, a positive integer
-              id = "bbTempK",
+              id = "bbTempK".refined,
               value = rsu.view(_.value.assign).stripQuantity,
               validFormat = InputValidSplitEpi.posInt,
               changeAuditor = ChangeAuditor
@@ -240,7 +241,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
           React.Fragment(
             <.label("Continuum", ExploreStyles.SkipToNext),
             FormInputEV(
-              id = "fluxValue",
+              id = "fluxValue".refined,
               value = fluxDensityContinuum.zoom(
                 Measure.valueTagged[PosBigDecimal, FluxDensityContinuum[T]]
               ),

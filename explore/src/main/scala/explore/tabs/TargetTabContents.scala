@@ -28,6 +28,7 @@ import explore.model.layout.unsafe._
 import explore.model.reusability._
 import explore.observationtree.AsterismGroupObsList
 import explore.optics._
+import explore.optics.all._
 import explore.syntax.ui._
 import explore.targets.TargetSummaryTable
 import explore.undo._
@@ -232,7 +233,7 @@ object TargetTabContents {
      * Render the summary table.
      */
     def renderSummary: VdomNode =
-      Tile("targetSummary", "Target Summary", backButton.some)(renderInTitle =>
+      Tile("targetSummary".refined, "Target Summary", backButton.some)(renderInTitle =>
         TargetSummaryTable(
           targetMap,
           props.hiddenColumns,
@@ -485,12 +486,13 @@ object TargetTabContents {
       potRender[LayoutsMap](rglRender)(layouts.get)
     }
 
-    val selectedPanel = panels.get.selected
-    val optSelected   = (props.focusedObsSet, props.focusedTarget) match {
-      case (Some(obsIdSet), _)    => obsIdSet.asRight.some
-      case (None, Some(targetId)) => targetId.asLeft.some
-      case _                      => none
-    }
+    val selectedPanel                                    = panels.get.selected
+    val optSelected: Option[Either[Target.Id, ObsIdSet]] =
+      (props.focusedObsSet, props.focusedTarget) match {
+        case (Some(obsIdSet), _)    => obsIdSet.asRight.some
+        case (None, Some(targetId)) => targetId.asLeft.some
+        case _                      => none
+      }
 
     val rightSide: VdomNode =
       optSelected

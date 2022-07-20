@@ -31,11 +31,12 @@ import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
 import queries.common.UserPreferencesQueriesGQL._
-import react.common.ReactFnProps
+import react.common._
 import react.datepicker._
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.ButtonGroup
+import lucuma.refined.*
 
 import java.time.ZonedDateTime
 
@@ -138,7 +139,7 @@ object ElevationPlotSection {
         val renderPlot: ElevationPlotOptions => VdomNode =
           (opt: ElevationPlotOptions) =>
             <.div(ExploreStyles.ElevationPlotSection)(
-              HelpIcon("target/main/elevation-plot.md", ExploreStyles.HelpIconFloating),
+              HelpIcon("target/main/elevation-plot.md".refined, ExploreStyles.HelpIconFloating),
               <.div(ExploreStyles.ElevationPlot) {
                 (siteView.get, rangeView.get).mapN[VdomNode] {
                   case (site, PlotRange.Night)    =>

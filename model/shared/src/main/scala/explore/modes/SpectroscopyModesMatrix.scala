@@ -263,7 +263,7 @@ object SpectroscopyModeRow {
   def filter: Getter[SpectroscopyModeRow, InstrumentRow#Filter] =
     instrumentRow.andThen(InstrumentRow.filter)
 
-  val TwoFactor = BigDecimal(2).withUnit[Unitless]
+  val TwoFactor = BigDecimal(2).withUnit[1]
 
   def coverageInterval(
     cw: Option[Wavelength]

@@ -35,6 +35,7 @@ import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
 import reactST.reactTable._
 import reactST.reactTable.mod.SortingRule
+import lucuma.refined.*
 
 import scala.collection.immutable.SortedMap
 
@@ -97,7 +98,8 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                     id = NonEmptyString.unsafeFrom(s"brightnessValue_${cell.row.id}"),
                     value = cell.value,
                     validFormat = ExploreModelValidators.brightnessValidWedge,
-                    changeAuditor = ChangeAuditor.bigDecimal(2, 3).allowExp(2),
+                    changeAuditor =
+                      ChangeAuditor.bigDecimal(2.refined, 3.refined).allowExp(2.refined),
                     disabled = disabled
                   )
                 )

@@ -23,6 +23,7 @@ import explore.model.enums.AppTab
 import explore.model.reusability._
 import explore.observationtree.ConstraintGroupObsList
 import explore.optics._
+import explore.optics.all._
 import explore.syntax.ui._
 import explore.undo._
 import explore.utils._
@@ -39,6 +40,7 @@ import queries.common.ConstraintGroupQueriesGQL._
 import queries.common.ObsQueriesGQL
 import queries.common.UserPreferencesQueriesGQL._
 import react.common._
+import react.fa._
 import react.common.implicits._
 import react.draggable.Axis
 import react.resizable._
@@ -46,6 +48,7 @@ import react.resizeDetector.ResizeDetector
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.sizes._
+import lucuma.refined.*
 
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._
@@ -155,7 +158,13 @@ object ConstraintSetTabContents {
           ctx.pushPage(AppTab.Constraints, props.programId, none, none) >>
             state.zoom(TwoPanelState.selected).set(SelectedPanel.tree)
         )
-      )(^.href := ctx.pageUrl(AppTab.Constraints, props.programId, none, none), Icons.ChevronLeft)
+      )(
+        ^.href := ctx.pageUrl(AppTab.Constraints,
+                              props.programId,
+                              none,
+                              none
+        ) /*, Icons.ChevronLeft*/
+      )
 
     val coreWidth  = props.size.width.getOrElse(0) - treeWidth
     val coreHeight = props.size.height.getOrElse(0)
@@ -165,16 +174,19 @@ object ConstraintSetTabContents {
         findConstraintGroup(ids, constraintsWithObs.get.constraintGroups).map(cg => (ids, cg))
       )
       .fold[VdomNode] {
-        Tile("constraints", "Constraints Summary", backButton.some, key = "constraintsSummary")(
-          renderInTitle =>
-            ConstraintsSummaryTable(
-              props.programId,
-              constraintsWithObs.get.constraintGroups,
-              props.hiddenColumns,
-              props.summarySorting,
-              props.expandedIds,
-              renderInTitle
-            )
+        Tile("constraints".refined,
+             "Constraints Summary",
+             backButton.some,
+             key = "constraintsSummary"
+        )(renderInTitle =>
+          ConstraintsSummaryTable(
+            props.programId,
+            constraintsWithObs.get.constraintGroups,
+            props.hiddenColumns,
+            props.summarySorting,
+            props.expandedIds,
+            renderInTitle
+          )
         )
       } { case (idsToEdit, constraintGroup) =>
         val groupObsIds   = constraintGroup.obsIds
@@ -231,7 +243,7 @@ object ConstraintSetTabContents {
           case None     => s"Editing Constraints for ${idsToEdit.size} Observations"
         }
 
-        Tile("constraints", title, backButton.some)(renderInTitle =>
+        Tile("constraints".refined, title, backButton.some)(renderInTitle =>
           ConstraintsPanel(idsToEdit.toList, csView, csUndo, renderInTitle)
         )
       }
@@ -270,7 +282,7 @@ object ConstraintSetTabContents {
     }
   }
 
-  protected implicit val innerWidthReuse = Reusability.double(2.0)
+  protected implicit val innerWidthReuse: Reusability[Double] = Reusability.double(2.0)
 
   protected val component =
     ScalaFnComponent

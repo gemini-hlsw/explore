@@ -29,7 +29,8 @@ import lucuma.core.model.Target
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.reusability._
 import react.aladin._
-import react.common.ReactFnProps
+import react.fa.given
+import react.common._
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.header.Header
 import react.semanticui.elements.segment.Segment
@@ -37,6 +38,7 @@ import react.semanticui.elements.segment.SegmentGroup
 import react.semanticui.modules.modal._
 import react.semanticui.shorthand._
 import react.semanticui.sizes._
+import lucuma.refined.*
 
 import scala.collection.immutable.SortedMap
 import scala.concurrent.duration._
@@ -174,7 +176,7 @@ object TargetSelectionPopup {
               <.span(ExploreStyles.TargetSearchTop)(
                 <.span(ExploreStyles.TargetSearchInput)(
                   FormInputEV(
-                    id = NonEmptyString("name"),
+                    id = "name".refined,
                     value = inputValue,
                     // TODO Investigate if we can replicate SUI's "input with icon" styles (which use <i>) but using <svg>,
                     // so that they work with fontawesome.

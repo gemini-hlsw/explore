@@ -162,7 +162,7 @@ object TargetSummaryTable {
               TableHeaderCell(clazz =
                 columnClasses.get(col.id.toString).orEmpty |+| ExploreStyles.StickyHeader
               ),
-            cell = (cell: TargetTable.CellType[_]) =>
+            cell = (cell: TargetTable.CellType[?]) =>
               TableCell(clazz = columnClasses.get(cell.column.id.toString).orEmpty)
           )(tableInstance)
         )

@@ -51,6 +51,7 @@ import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.label.LabelPointing
 import react.semanticui.sizes.Small
+import lucuma.refined.*
 
 import java.time.Instant
 
@@ -294,9 +295,12 @@ object SiderealTargetEditor {
                   props.searching,
                   searchAndSet(allView)
                 ),
-                <.label("RA", HelpIcon("target/main/coordinates.md"), ExploreStyles.SkipToNext),
+                <.label("RA",
+                        HelpIcon("target/main/coordinates.md".refined),
+                        ExploreStyles.SkipToNext
+                ),
                 FormInputEV(
-                  id = "ra",
+                  id = "ra".refined,
                   value = coordsRAView,  // .zoomSplitEpi(TruncatedRA.rightAscension),
                   validFormat = MathValidators.truncatedRA,
                   changeAuditor = ChangeAuditor.truncatedRA,
@@ -305,9 +309,12 @@ object SiderealTargetEditor {
                   errorClazz = ExploreStyles.InputErrorTooltip,
                   disabled = disabled
                 ),
-                <.label("Dec", HelpIcon("target/main/coordinates.md"), ExploreStyles.SkipToNext),
+                <.label("Dec",
+                        HelpIcon("target/main/coordinates.md".refined),
+                        ExploreStyles.SkipToNext
+                ),
                 FormInputEV(
-                  id = "dec",
+                  id = "dec".refined,
                   value = coordsDecView, // .zoomSplitEpi(TruncatedDec.declination),
                   validFormat = MathValidators.truncatedDec,
                   changeAuditor = ChangeAuditor.truncatedDec,
@@ -322,45 +329,48 @@ object SiderealTargetEditor {
                 ExploreStyles.Compact,
                 ExploreStyles.ExploreForm,
                 ExploreStyles.TargetProperMotionForm,
-                <.label("Epoch", HelpIcon("target/main/epoch.md"), ExploreStyles.SkipToNext),
+                <.label("Epoch",
+                        HelpIcon("target/main/epoch.md".refined),
+                        ExploreStyles.SkipToNext
+                ),
                 InputWithUnits(
-                  id = "epoch",
+                  id = "epoch".refined,
                   value = epochView,
                   validFormat = MathValidators.epoch,
-                  changeAuditor = ChangeAuditor.maxLength(8).decimal(3).denyNeg,
+                  changeAuditor = ChangeAuditor.maxLength(8.refined).decimal(3.refined).denyNeg,
                   units = "years",
                   disabled = disabled
                 ),
                 <.label("µ RA", ExploreStyles.SkipToNext),
                 InputWithUnits(
-                  id = "raPM",
+                  id = "raPM".refined,
                   value = properMotionRAView,
                   validFormat = InputValidSplitEpi
-                    .fromFormat(pmRAFormat, "Must be a number")
+                    .fromFormat(pmRAFormat, "Must be a number".refined)
                     .optional,
-                  changeAuditor = ChangeAuditor.fromFormat(pmRAFormat).decimal(3).optional,
+                  changeAuditor = ChangeAuditor.fromFormat(pmRAFormat).decimal(3.refined).optional,
                   units = "mas/y",
                   disabled = disabled
                 ),
                 <.label("µ Dec", ExploreStyles.SkipToNext),
                 InputWithUnits(
-                  id = "raDec",
+                  id = "raDec".refined,
                   value = properMotionDecView,
                   validFormat = InputValidSplitEpi
-                    .fromFormat(pmDecFormat, "Must be a number")
+                    .fromFormat(pmDecFormat, "Must be a number".refined)
                     .optional,
-                  changeAuditor = ChangeAuditor.fromFormat(pmDecFormat).decimal(3).optional,
+                  changeAuditor = ChangeAuditor.fromFormat(pmDecFormat).decimal(3.refined).optional,
                   units = "mas/y",
                   disabled = disabled
                 ),
                 <.label("Parallax", ExploreStyles.SkipToNext),
                 InputWithUnits(
-                  id = "parallax",
+                  id = "parallax".refined,
                   value = parallaxView,
                   validFormat = InputValidSplitEpi
-                    .fromFormat(pxFormat, "Must be a number")
+                    .fromFormat(pxFormat, "Must be a number".refined)
                     .optional,
-                  changeAuditor = ChangeAuditor.fromFormat(pxFormat).decimal(3).optional,
+                  changeAuditor = ChangeAuditor.fromFormat(pxFormat).decimal(3.refined).optional,
                   units = "mas",
                   disabled = disabled
                 ),

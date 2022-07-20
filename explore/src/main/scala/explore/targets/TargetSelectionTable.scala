@@ -9,7 +9,7 @@ import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.reusability._
-import react.common.ReactFnProps
+import react.common._
 import react.common.implicits._
 import react.common.style.Css
 import react.semanticui.collections.table.Table
@@ -103,7 +103,7 @@ object TargetSelectionTable {
             ^.onClick --> props.onClick(rowData.original, rowData.index.toInt),
             props2Attrs(rowData.getRowProps())
           ),
-        cell = (cell: TargetTable.CellType[_]) =>
+        cell = (cell: TargetTable.CellType[?]) =>
           TableCell(clazz = columnClasses.get(cell.column.id.toString).orEmpty)(
             ^.whiteSpace.nowrap
           )

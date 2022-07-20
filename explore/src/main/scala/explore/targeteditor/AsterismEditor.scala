@@ -23,6 +23,7 @@ import explore.model.TargetWithId
 import explore.model.TargetWithOptId
 import explore.model.reusability._
 import explore.optics._
+import explore.optics.all._
 import explore.targets.TargetSelectionPopup
 import explore.undo.UndoStacks
 import japgolly.scalajs.react._
@@ -38,7 +39,8 @@ import lucuma.core.model.User
 import lucuma.ui.reusability._
 import queries.common.TargetQueriesGQL._
 import queries.schemas.implicits._
-import react.common.ReactFnProps
+import react.common._
+import react.fa.given
 import react.semanticui.elements.button._
 import react.semanticui.modules.checkbox._
 import react.semanticui.shorthand._

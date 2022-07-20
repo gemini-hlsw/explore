@@ -12,7 +12,7 @@ object Settings {
     val circe                 = "0.14.2"
     val circeGolden           = "0.3.0"
     val clue                  = "0.23.1"
-    val crystal               = "0.0.0+1-1a31d718-SNAPSHOT"
+    val crystal               = "0.0.0+1-734ea040-SNAPSHOT"
     val discipline            = "1.5.1"
     val disciplineMUnit       = "1.0.9"
     val fs2                   = "3.2.10"
@@ -25,7 +25,7 @@ object Settings {
     val lucumaBC              = "0.4.0"
     val lucumaCore            = "0.45-e482287-SNAPSHOT"
     val lucumaCatalog         = "0.23-6da8a9d-SNAPSHOT"
-    val lucumaUI              = "0.38-414d967-SNAPSHOT"
+    val lucumaUI              = "0.38-cd01b04-SNAPSHOT"
     val lucumaReactVersion    = "1.0-6b1a9d9-SNAPSHOT"
     val lucumaSchemas         = "0.31-8e1137d-SNAPSHOT"
     val lucumaRefinedVersion  = "0.1.0"
@@ -35,7 +35,7 @@ object Settings {
     val mouse                 = "1.1.0"
     val mUnit                 = "0.7.29"
     val mUnitCatsEffect       = "1.0.7"
-    val reactAladin           = "0.23-6ee8d6f-SNAPSHOT"
+    val reactAladin           = "0.23-a083582-SNAPSHOT"
     val reactBeautifulDnD     = "0.4.2"
     val reactClipboard        = "1.5.1"
     val reactCommon           = "0.17.0"
@@ -306,7 +306,8 @@ object Settings {
         "edu.gemini" %%% "lucuma-react-datepicker",
         "edu.gemini" %%% "lucuma-react-resize-detector",
         "edu.gemini" %%% "lucuma-react-draggable",
-        // "edu.gemini" %%% "lucuma-react-hotkeys",
+        "edu.gemini" %%% "lucuma-react-hotkeys",
+        "edu.gemini" %%% "lucuma-react-resizable",
         "edu.gemini" %%% "lucuma-react-virtuoso"
       )(lucumaReactVersion)
     )

@@ -5,7 +5,7 @@ package explore.targeteditor
 
 import cats.syntax.all._
 import crystal.react.View
-import eu.timepit.refined.auto._
+import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
@@ -20,10 +20,12 @@ import lucuma.ui.forms._
 import lucuma.ui.utils.abbreviate
 import monocle.Focus
 import react.common._
+import react.fa.given
 import react.semanticui.collections.form.Form.FormProps
 import react.semanticui.collections.form._
 import react.semanticui.elements.label.LabelPointing
 import react.semanticui.shorthand._
+import lucuma.refined.*
 
 import scalajs.js.JSConverters._
 
@@ -71,17 +73,17 @@ object SearchForm {
       val search: Callback =
         props
           .submit(
-            state.searchTerm,
+            state.searchTerm.value,
             $.setStateL(State.searchError)(none) >> props.searching.mod(_ + props.id),
             t =>
               searchComplete *> $.setStateL(State.searchError)(
                 NonEmptyString
-                  .unsafeFrom(s"'${abbreviate(state.searchTerm, 10)}' not found")
+                  .unsafeFrom(s"'${abbreviate(state.searchTerm.value, 10)}' not found")
                   .some
               ).when_(t.isEmpty),
             _ =>
               searchComplete *> $.setStateL(State.searchError)(
-                NonEmptyString("Search error...").some
+                "Search error...".refined[NonEmpty].some
               )
           )
 
@@ -110,9 +112,9 @@ object SearchForm {
       val disabled = props.searching.get.exists(_ === props.id)
 
       Form(clazz = ExploreStyles.SearchForm, onSubmitE = submitForm)(
-        <.label("Name", HelpIcon("target/main/search-target.md"), ExploreStyles.SkipToNext),
+        <.label("Name", HelpIcon("target/main/search-target.md".refined), ExploreStyles.SkipToNext),
         FormInputEV(
-          id = "search",
+          id = "search".refined,
           value = View.fromState($).zoom(State.searchTerm).withOnMod(props.targetView.set),
           validFormat = InputValidSplitEpi.nonEmptyString,
           error = state.searchError.orUndefined,

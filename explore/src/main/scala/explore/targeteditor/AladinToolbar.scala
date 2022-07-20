@@ -13,8 +13,9 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ags.GuideStarCandidate
 import lucuma.core.math._
 import react.aladin.Fov
-import react.common.ReactFnProps
+import react.common._
 import react.fa.Transform
+import react.fa.given
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.label._
 import react.semanticui.modules.popup.Popup
@@ -34,6 +35,17 @@ final case class AladinToolbar(
 
 object AladinToolbar {
   type Props = AladinToolbar
+  //
+  // Conversion to simplify usage with semantic ui
+
+  import react.semanticui.ShorthandS
+  import react.semanticui.elements.icon.Icon
+  import react.fa.FontAwesomeIcon
+
+  import scala.scalajs.js.UndefOr
+
+  given Conversion[FontAwesomeIcon, UndefOr[ShorthandS[Icon]]] = _.render
+  given Conversion[FontAwesomeIcon, VdomNode]                  = _.render
 
   val component =
     ScalaFnComponent[Props] { props =>

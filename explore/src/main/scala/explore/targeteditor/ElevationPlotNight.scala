@@ -237,12 +237,18 @@ object ElevationPlotNight {
 
         val tooltipFormatter: TooltipFormatterCallbackFunction = {
           (ctx: TooltipFormatterContextObject, _: Tooltip) =>
-            val time  = timeFormat(ctx.x)
+            val x     = ctx.x match
+              case x: Double => x
+              case x: String => x.toDouble
+            val y     = ctx.y match
+              case y: Double => y
+              case y: String => y.toDouble
+            val time  = timeFormat(x)
             val value = ctx.series.index match {
               case 0 =>                      // Target elevation with airmass
-                formatAngle(ctx.y) + s"<br/>Airmass: ${"%.3f".format(ctx.point.asInstanceOf[ElevationPointWithAirmass].airmass)}"
+                formatAngle(y) + s"<br/>Airmass: ${"%.3f".format(ctx.point.asInstanceOf[ElevationPointWithAirmass].airmass)}"
               case 2 => "%.2f".format(ctx.y) // Sky Brightness
-              case _ => formatAngle(ctx.y)   // Other elevations
+              case _ => formatAngle(y)       // Other elevations
             }
             s"<strong>$time ($timeDisplay)</strong><br/>${ctx.series.name}: $value"
         }

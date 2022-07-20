@@ -26,6 +26,7 @@ import lucuma.core.model.SiderealTracking
 import lucuma.ui.reusability._
 import org.scalajs.dom.Element
 import react.aladin._
+import react.fa.given
 import react.common._
 import react.common.implicits._
 import react.resizeDetector.hooks._
@@ -40,18 +41,20 @@ final case class AladinContainer(
   target:                 View[SiderealTracking],
   obsConf:                ObsConfiguration,
   options:                TargetVisualOptions,
-  updateMouseCoordinates: Coordinates => Callback,
-  updateFov:              Fov => Callback, // TODO Move the functionality of saving the FOV in ALadincell here
-  updateViewOffset:       Offset => Callback,
-  centerOnTarget:         View[Boolean],
-  selectedGuideStar:      Option[AgsAnalysis],
-  guideStarCandidates:    List[AgsAnalysis]
+  updateMouseCoordinates: Function1[Coordinates, Callback],
+  updateFov:              Function1[Fov,
+                       Callback
+  ], // TODO Move the functionality of saving the FOV in ALadincell here
+  updateViewOffset:    Function1[Offset, Callback],
+  centerOnTarget:      View[Boolean],
+  selectedGuideStar:   Option[AgsAnalysis],
+  guideStarCandidates: List[AgsAnalysis]
 ) extends ReactFnProps[AladinContainer](AladinContainer.component)
 
 object AladinContainer {
 
   type Props       = AladinContainer
-  type World2PixFn = Coordinates => Option[(Double, Double)]
+  type World2PixFn = Function1[Coordinates, Option[(Double, Double)]]
   val DefaultWorld2PixFn: World2PixFn = (_: Coordinates) => None
 
   // This is used for screen coordinates, thus it doesn't need a lot of precission
@@ -224,7 +227,7 @@ object AladinContainer {
 
           def includeSvg(v: JsAladin): Callback =
             v.onZoom(onZoom) *> // re render on zoom
-              v.onPositionChanged(onPositionChanged) *>
+              v.onPositionChanged(u => onPositionChanged(u)) *>
               v.onMouseMove(s =>
                 props
                   .updateMouseCoordinates(Coordinates(s.ra, s.dec))
@@ -261,7 +264,7 @@ object AladinContainer {
                 <.div(
                   ExploreStyles.AladinZoomControl,
                   Button(size = Small,
-                         icon = true,
+                         icon = Icons.ThinPlus,
                          onClick = aladinRef.get.asCBO.flatMapCB(_.backend.increaseZoom).toCallback
                   )(
                     ExploreStyles.ButtonOnAladin,
@@ -305,7 +308,7 @@ object AladinContainer {
                     showGotoControl = false,
                     showZoomControl = false,
                     showFullscreenControl = false,
-                    customize = includeSvg _
+                    customize = (v: JsAladin) => includeSvg(v)
                   )
                 }
               )
