@@ -13,6 +13,7 @@ import lucuma.core.model.UnnormalizedSED
 import lucuma.core.syntax.display._
 import lucuma.core.util.Display
 import lucuma.core.validation.InputValidSplitEpi
+
 import java.text.DecimalFormat
 
 trait DisplayImplicits {
