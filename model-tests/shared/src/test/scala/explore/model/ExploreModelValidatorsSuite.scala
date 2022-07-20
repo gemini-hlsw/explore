@@ -26,11 +26,10 @@ final class ExploreModelValidatorsSuite extends DisciplineSuite {
       )
     )
 
-  // TODO: Restore when it no longer fails...
-  // checkAll(
-  //   "brightnessValidWedge",
-  //   ValidWedgeTests(ExploreModelValidators.brightnessValidWedge).validWedgeLaws
-  // )
+  checkAll(
+    "brightnessValidWedge",
+    ValidWedgeTests(ExploreModelValidators.brightnessValidWedge).validWedgeLaws
+  )
 
   checkAll(
     "dithersValidSplitEpi",
