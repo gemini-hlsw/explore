@@ -165,6 +165,7 @@ object ExploreStyles {
   val AladinCurrentCoords: Css    = Css("aladin-status-current-coordinates")
   val AladinCenterButton: Css     = Css("aladin-status-center-button")
   val AladinSearchIcon: Css       = Css("aladin-search-icon")
+  val AladinFullScreen: Css       = Css("aladin-full-screen")
 
   val AgsOverlay: Css          = Css("ags-overlay")
   val AgsDescription: Css      = Css("ags-description")
@@ -391,6 +392,7 @@ object ExploreStyles {
   val AladinToolbox                = Css("explore-aladin-toolbox-button")
   val AladinZoomControl            = Css("explore-aladin-zoom-control")
   val ButtonOnAladin               = Css("explore-aladin-button")
+  val AladinFullScreenButton       = Css("explore-aladin-fullscreen-button")
   val AladinSettingsMenu           = Css("explore-aladin-settings-menu")
   val BlendedSVG                   = Css("blended-svg")
 

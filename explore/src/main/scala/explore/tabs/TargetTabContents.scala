@@ -129,7 +129,8 @@ object TargetTabContents {
     defaultLayouts:        LayoutsMap,
     layouts:               View[Pot[LayoutsMap]],
     resize:                UseResizeDetectorReturn,
-    debouncer:             Reusable[UseSingleEffect[IO]]
+    debouncer:             Reusable[UseSingleEffect[IO]],
+    fullScreen:            View[Boolean]
   )(
     asterismGroupsWithObs: View[AsterismGroupsWithObs]
   )(implicit ctx:          AppContextIO): VdomNode = {
@@ -443,7 +444,10 @@ object TargetTabContents {
       potRender[LayoutsMap](rglRender)(layouts.get)
     }
 
-    def renderSiderealTargetEditor(targetId: Target.Id, target: Target.Sidereal): VdomNode = {
+    def renderSiderealTargetEditor(
+      targetId: Target.Id,
+      target:   Target.Sidereal
+    ): VdomNode = {
       val getTarget: TargetWithObsList => Target.Sidereal = _ => target
 
       def modTarget(
@@ -469,6 +473,7 @@ object TargetTabContents {
         props.targetsUndoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
         props.searching,
         title,
+        fullScreen,
         backButton.some
       )
 
@@ -624,6 +629,8 @@ object TargetTabContents {
             TargetQueriesGQL.ProgramTargetEditSubscription.subscribe[IO](props.programId)
           )
       }
+      // full screen aladin
+      .useStateView(true)
       .render {
         (
           props,
@@ -632,7 +639,8 @@ object TargetTabContents {
           layout,
           defaultLayout,
           debouncer,
-          asterismGroupsWithObs
+          asterismGroupsWithObs,
+          fullScreen
         ) =>
           implicit val ctx = props.ctx
 
@@ -644,7 +652,8 @@ object TargetTabContents {
                 defaultLayout,
                 layout,
                 resize,
-                debouncer
+                debouncer,
+                fullScreen
               )
             )(asterismGroupsWithObs)
           ).withRef(resize.ref)

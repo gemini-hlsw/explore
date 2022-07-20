@@ -140,13 +140,14 @@ object AladinContainer {
       .useMemoBy((props, _, _, _, _, _) =>
         (props.guideStarCandidates,
          props.options.agsCandidates.visible,
+         props.options.fullScreen,
          props.obsConf.posAngle,
          props.obsConf.vizTime,
          props.obsConf.scienceMode,
          props.selectedGuideStar
         )
       ) { (_, baseCoordinates, _, _, _, _) =>
-        { case (candidates, visible, posAngle, obsInstant, scienceMode, selectedGS) =>
+        { case (candidates, visible, _, posAngle, obsInstant, scienceMode, selectedGS) =>
           posAngle
             .map { posAngle =>
               val candidatesVisibility =
@@ -206,6 +207,15 @@ object AladinContainer {
       }
       // Use fov from aladin
       .useState(none[Fov])
+      // full screen trigger reflow
+      .useEffectWithDepsBy((props, _, _, _, _, _, _, _) => props.options.fullScreen)(
+        (_, _, _, aladinRef, _, _, _, _) =>
+          _ =>
+            aladinRef.get.asCBO
+              .flatMapCB(b => b.backend.fixLayoutDimensions *> b.backend.recalculateView)
+              // We need to do this callback delayed or it miss calculates aladin div size
+              .delayMs(10)
+      )
       .render {
         (props, baseCoordinates, currentPos, aladinRef, vizShapes, resize, candidates, fov) =>
           /**
@@ -220,7 +230,8 @@ object AladinContainer {
               props.centerOnTarget.set(false)
           }
 
-          def onZoom = (v: Fov) => fov.setState(v.some) *> props.updateFov(v)
+          def onZoom =
+            (v: Fov) => fov.setState(v.some) *> props.updateFov(v)
 
           def includeSvg(v: JsAladin): Callback =
             v.onZoom(onZoom) *> // re render on zoom

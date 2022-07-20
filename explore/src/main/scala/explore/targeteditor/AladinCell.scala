@@ -56,7 +56,8 @@ final case class AladinCell(
   uid:              User.Id,
   tid:              Target.Id,
   obsConf:          ObsConfiguration,
-  target:           View[SiderealTracking]
+  target:           View[SiderealTracking],
+  fullScreen:       View[Boolean]
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[AladinCell](AladinCell.component)
 
@@ -132,18 +133,19 @@ object AladinCell extends ModelOptics {
           implicit val ctx = props.ctx
           UserTargetPreferencesQuery
             .queryWithDefault[IO](props.uid, props.tid, Constants.InitialFov)
-            .flatMap { case (fov, viewOffset, agsCandidates, agsOverlay) =>
+            .flatMap { case (fov, viewOffset, agsCandidates, agsOverlay, fullScreen) =>
               options
                 .set(
                   TargetVisualOptions.Default
                     .copy(fovAngle = fov,
                           viewOffset = viewOffset,
                           agsCandidates = agsCandidates,
-                          agsOverlay = agsOverlay
+                          agsOverlay = agsOverlay,
+                          fullScreen = fullScreen
                     )
                     .ready
                 )
-                .to[IO]
+                .to[IO] *> props.fullScreen.set(fullScreen).to[IO]
             }
             .runAsyncAndForget
       }
@@ -219,6 +221,9 @@ object AladinCell extends ModelOptics {
           val offsetView =
             options.zoom(Pot.readyPrism.andThen(TargetVisualOptions.viewOffset))
 
+          val fullScreenView =
+            options.zoom(Pot.readyPrism.andThen(TargetVisualOptions.fullScreen))
+
           val agsCandidatesShown: Boolean = agsCandidatesView.get.map(_.visible).getOrElse(false)
 
           val agsOverlayShown: Boolean = agsOverlayView.get.map(_.visible).getOrElse(false)
@@ -237,13 +242,14 @@ object AladinCell extends ModelOptics {
             if (newFov.x.toMicroarcseconds === 0L) Callback.empty
             else {
               fovView.set(newFov.x) *>
-                (fovView.get, agsCandidatesView.get, agsOverlayView.get).mapN { (_, a, o) =>
-                  UserTargetPreferencesUpsert
-                    .updateAladinPreferences[IO](props.uid, props.tid, newFov.x, a, o)
-                    .unlessA(ignore)
-                    .runAsync
-                    .rateLimit(1.seconds, 1)
-                    .void
+                (fovView.get, agsCandidatesView.get, agsOverlayView.get, fullScreenView.get).mapN {
+                  (_, a, o, f) =>
+                    UserTargetPreferencesUpsert
+                      .updateAladinPreferences[IO](props.uid, props.tid, newFov.x, a, o, f)
+                      .unlessA(ignore)
+                      .runAsync
+                      .rateLimit(1.seconds, 1)
+                      .void
                 }.orEmpty
             }
           }
@@ -269,21 +275,37 @@ object AladinCell extends ModelOptics {
                 .void
           }
 
-          def prefsSetter(candidates: Visible => Visible, overlay: Visible => Visible): Callback =
-            (fovView.get, agsCandidatesView.get, agsOverlayView.get).mapN { (f, a, o) =>
-              UserTargetPreferencesUpsert
-                .updateAladinPreferences[IO](props.uid, props.tid, f, candidates(a), overlay(o))
-                .runAsync
-                .void
+          def prefsSetter(
+            candidates: Visible => Visible,
+            overlay:    Visible => Visible,
+            fullScreen: Boolean => Boolean
+          ): Callback =
+            (fovView.get, agsCandidatesView.get, agsOverlayView.get, fullScreenView.get).mapN {
+              (f, a, o, s) =>
+                UserTargetPreferencesUpsert
+                  .updateAladinPreferences[IO](props.uid,
+                                               props.tid,
+                                               f,
+                                               candidates(a),
+                                               overlay(o),
+                                               fullScreen(s)
+                  )
+                  .runAsync
+                  .void
             }.orEmpty
 
           def agsOverlaySetter: Callback =
             agsOverlayView.mod(_.flip) *>
-              prefsSetter(identity, _.flip)
+              prefsSetter(identity, _.flip, identity)
 
           def candidatesSetter: Callback =
             agsCandidatesView.mod(_.flip) *>
-              prefsSetter(_.flip, identity)
+              prefsSetter(_.flip, identity, identity)
+
+          def fullScreenSetter: Callback =
+            props.fullScreen.mod(!_) *>
+              fullScreenView.mod(!_) *>
+              prefsSetter(identity, identity, !_)
 
           val aladinKey = s"${props.target.get}"
 
@@ -294,7 +316,7 @@ object AladinCell extends ModelOptics {
             AladinContainer(
               props.target,
               props.obsConf,
-              t,
+              t.copy(fullScreen = props.fullScreen.get),
               coordinatesSetter,
               fovSetter.reuseAlways,
               offsetSetter.reuseAlways,
@@ -337,6 +359,11 @@ object AladinCell extends ModelOptics {
             ExploreStyles.TargetAladinCell,
             <.div(
               ExploreStyles.AladinContainerColumn,
+              Button(size = Small, icon = true, onClick = fullScreenSetter)(
+                ExploreStyles.AladinFullScreenButton,
+                Icons.ExpandDiagonal.unless(props.fullScreen.get),
+                Icons.ContractDiagonal.when(props.fullScreen.get)
+              ),
               <.div(
                 ExploreStyles.AladinToolbox,
                 Button(size = Small, icon = true, onClick = openSettings.modState(s => !s))(

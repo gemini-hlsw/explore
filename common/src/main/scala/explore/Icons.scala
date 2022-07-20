@@ -226,6 +226,14 @@ object Icons {
   @JSImport("@fortawesome/pro-solid-svg-icons", "faFileCirclePlus")
   val faFileCirclePlus: FAIcon = js.native
 
+  @js.native
+  @JSImport("@fortawesome/pro-thin-svg-icons", "faArrowUpRightAndArrowDownLeftFromCenter")
+  val faExpandDiagonal: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-thin-svg-icons", "faArrowDownLeftAndArrowUpRightToCenter")
+  val faContractDiagonal: FAIcon = js.native
+
   // This is tedious but lets us do proper tree-shaking
   IconLibrary.add(
     faGears,
@@ -280,7 +288,9 @@ object Icons {
     faThinSliders,
     faCircleSmall,
     faBahai,
-    faFileCirclePlus
+    faFileCirclePlus,
+    faExpandDiagonal,
+    faContractDiagonal
   )
 
   val Bars                = FontAwesomeIcon(faBars)
@@ -336,4 +346,6 @@ object Icons {
   val CircleSmall         = FontAwesomeIcon(faCircleSmall)
   val Bahai               = FontAwesomeIcon(faBahai)
   val FileCirclePlus      = FontAwesomeIcon(faFileCirclePlus)
+  val ExpandDiagonal      = FontAwesomeIcon(faExpandDiagonal)
+  val ContractDiagonal    = FontAwesomeIcon(faContractDiagonal)
 }

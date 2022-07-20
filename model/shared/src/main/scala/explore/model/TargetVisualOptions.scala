@@ -13,7 +13,8 @@ final case class TargetVisualOptions(
   fovAngle:      Angle,
   viewOffset:    Offset,
   agsCandidates: Visible,
-  agsOverlay:    Visible
+  agsOverlay:    Visible,
+  fullScreen:    Boolean
 )
 
 object TargetVisualOptions {
@@ -21,10 +22,11 @@ object TargetVisualOptions {
   val viewOffset    = Focus[TargetVisualOptions](_.viewOffset)
   val agsCandidates = Focus[TargetVisualOptions](_.agsCandidates)
   val agsOverlay    = Focus[TargetVisualOptions](_.agsOverlay)
+  val fullScreen    = Focus[TargetVisualOptions](_.fullScreen)
 
   val Default =
-    TargetVisualOptions(Constants.InitialFov, Offset.Zero, Visible.Hidden, Visible.Hidden)
+    TargetVisualOptions(Constants.InitialFov, Offset.Zero, Visible.Hidden, Visible.Hidden, false)
 
   implicit val targetVisualOptionsEq: Eq[TargetVisualOptions] =
-    Eq.by(x => (x.fovAngle, x.viewOffset, x.agsCandidates, x.agsOverlay))
+    Eq.by(x => (x.fovAngle, x.viewOffset, x.agsCandidates, x.agsOverlay, x.fullScreen))
 }

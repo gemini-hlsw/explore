@@ -613,12 +613,51 @@ tfoot {
 .target-tile-body {
   display: flex;
   flex-direction: column;
+
+  > div {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
 }
 
 .target-tile-editor {
   flex-grow: 2;
   display: flex;
   flex-direction: column;
+}
+
+.expanded-aladin() {
+  grid-template-areas: 'aladin';
+  grid-template-columns: 1fr;
+
+  .explore-title-undo-buttons {
+    display: none;
+  }
+
+  .target-form {
+    display: none;
+  }
+
+  .target-proper-motion-form {
+    display: none;
+  }
+
+  .target-source-profile-editor {
+    display: none;
+  }
+}
+
+.aladin-full-screen {
+  .explore-shared-edit-warning,
+  .target-asterism-table {
+    display: none;
+  }
+
+  > div .target-grid {
+    .expanded-aladin();
+  }
+
 }
 
 .explore-form.target-source-profile-editor {
@@ -1523,24 +1562,7 @@ img.partner-split-flag {
   }
 
   .target-grid {
-    grid-template-areas: 'aladin';
-    grid-template-columns: 1fr;
-
-    .explore-title-undo-buttons {
-      display: none;
-    }
-
-    .target-form {
-      display: none;
-    }
-
-    .target-proper-motion-form {
-      display: none;
-    }
-
-    .target-source-profile-editor {
-      display: none;
-    }
+    .expanded-aladin();
   }
 
   .explore-brightnesses-container {
@@ -1776,7 +1798,9 @@ html {
 }
 
 // https://css-tricks.com/responsive-data-tables/
-.tile-xs-width .explore-brightnesses-container .ui.ui.ui.ui.table:not(.unstackable) {
+.tile-xs-width
+  .explore-brightnesses-container
+  .ui.ui.ui.ui.table:not(.unstackable) {
   tfoot {
     display: block;
   }

@@ -165,7 +165,7 @@ object UserPreferencesQueries {
       defaultFov: Angle
     )(implicit
       cl:         TransactionalClient[F, UserPreferencesDB]
-    ): F[(Angle, Offset, Visible, Visible)] =
+    ): F[(Angle, Offset, Visible, Visible, Boolean)] =
       for {
         r <-
           query[F](uid.show, tid.show)
@@ -175,7 +175,8 @@ object UserPreferencesQueries {
                  result.viewOffsetP,
                  result.viewOffsetQ,
                  result.agsCandidates,
-                 result.agsOverlay
+                 result.agsOverlay,
+                 result.fullScreen
                 )
               )
             }
@@ -188,7 +189,9 @@ object UserPreferencesQueries {
 
         val agsCandidates = r.map(_._4).map(Visible.boolIso.get).getOrElse(Visible.Hidden)
         val agsOverlay    = r.map(_._5).map(Visible.boolIso.get).getOrElse(Visible.Hidden)
-        (fov, offset, agsCandidates, agsOverlay)
+        val fullScreen    = r.map(_._6).getOrElse(false)
+
+        (fov, offset, agsCandidates, agsOverlay, fullScreen)
       }
   }
 
@@ -233,7 +236,8 @@ object UserPreferencesQueries {
       targetId:      Target.Id,
       fov:           Angle,
       agsCandidates: Visible,
-      agsOverlay:    Visible
+      agsOverlay:    Visible,
+      fullScreen:    Boolean
     )(implicit
       cl:            TransactionalClient[F, UserPreferencesDB]
     ): F[Unit] =
@@ -246,14 +250,17 @@ object UserPreferencesQueries {
                 user_id = uid.show.assign,
                 fov = fov.toMicroarcseconds.assign,
                 agsCandidates = Visible.boolIso.reverseGet(agsCandidates).assign,
-                agsOverlay = Visible.boolIso.reverseGet(agsOverlay).assign
+                agsOverlay = Visible.boolIso.reverseGet(agsOverlay).assign,
+                fullScreen = fullScreen.assign
               )
             ),
             on_conflict = LucumaTargetPreferencesOnConflict(
               constraint = LucumaTargetPreferencesConstraint.LucumaTargetPreferencesPkey,
-              update_columns = List(LucumaTargetPreferencesUpdateColumn.Fov,
-                                    LucumaTargetPreferencesUpdateColumn.AgsCandidates,
-                                    LucumaTargetPreferencesUpdateColumn.AgsOverlay
+              update_columns = List(
+                LucumaTargetPreferencesUpdateColumn.Fov,
+                LucumaTargetPreferencesUpdateColumn.AgsCandidates,
+                LucumaTargetPreferencesUpdateColumn.AgsOverlay,
+                LucumaTargetPreferencesUpdateColumn.FullScreen
               )
             ).assign
           ).assign

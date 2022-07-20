@@ -1,6 +1,15 @@
 
+"""whether this query should be cached (Hasura Cloud only)"""
+directive @cached(
+  """measured in seconds"""
+  ttl: Int! = 60
+
+  """refresh the cache entry"""
+  refresh: Boolean! = false
+) on QUERY
+
 """
-expression to compare columns of type Boolean. All fields are combined with logical 'AND'.
+Boolean expression to compare columns of type "Boolean". All fields are combined with logical 'AND'.
 """
 input Boolean_comparison_exp {
   _eq: Boolean
@@ -15,7 +24,7 @@ input Boolean_comparison_exp {
 }
 
 """
-expression to compare columns of type Int. All fields are combined with logical 'AND'.
+Boolean expression to compare columns of type "Int". All fields are combined with logical 'AND'.
 """
 input Int_comparison_exp {
   _eq: Int
@@ -30,30 +39,62 @@ input Int_comparison_exp {
 }
 
 """
-expression to compare columns of type String. All fields are combined with logical 'AND'.
+Boolean expression to compare columns of type "String". All fields are combined with logical 'AND'.
 """
 input String_comparison_exp {
   _eq: String
   _gt: String
   _gte: String
+
+  """does the column match the given case-insensitive pattern"""
   _ilike: String
   _in: [String!]
+
+  """
+  does the column match the given POSIX regular expression, case insensitive
+  """
+  _iregex: String
   _is_null: Boolean
+
+  """does the column match the given pattern"""
   _like: String
   _lt: String
   _lte: String
   _neq: String
+
+  """does the column NOT match the given case-insensitive pattern"""
   _nilike: String
   _nin: [String!]
+
+  """
+  does the column NOT match the given POSIX regular expression, case insensitive
+  """
+  _niregex: String
+
+  """does the column NOT match the given pattern"""
   _nlike: String
+
+  """
+  does the column NOT match the given POSIX regular expression, case sensitive
+  """
+  _nregex: String
+
+  """does the column NOT match the given SQL regular expression"""
   _nsimilar: String
+
+  """
+  does the column match the given POSIX regular expression, case sensitive
+  """
+  _regex: String
+
+  """does the column match the given SQL regular expression"""
   _similar: String
 }
 
 scalar bigint
 
 """
-expression to compare columns of type bigint. All fields are combined with logical 'AND'.
+Boolean expression to compare columns of type "bigint". All fields are combined with logical 'AND'.
 """
 input bigint_comparison_exp {
   _eq: bigint
@@ -70,7 +111,7 @@ input bigint_comparison_exp {
 scalar breakpoint_name
 
 """
-expression to compare columns of type breakpoint_name. All fields are combined with logical 'AND'.
+Boolean expression to compare columns of type "breakpoint_name". All fields are combined with logical 'AND'.
 """
 input breakpoint_name_comparison_exp {
   _eq: breakpoint_name
@@ -87,7 +128,7 @@ input breakpoint_name_comparison_exp {
 scalar elevation_plot_range
 
 """
-expression to compare columns of type elevation_plot_range. All fields are combined with logical 'AND'.
+Boolean expression to compare columns of type "elevation_plot_range". All fields are combined with logical 'AND'.
 """
 input elevation_plot_range_comparison_exp {
   _eq: elevation_plot_range
@@ -104,7 +145,7 @@ input elevation_plot_range_comparison_exp {
 scalar elevation_plot_time
 
 """
-expression to compare columns of type elevation_plot_time. All fields are combined with logical 'AND'.
+Boolean expression to compare columns of type "elevation_plot_time". All fields are combined with logical 'AND'.
 """
 input elevation_plot_time_comparison_exp {
   _eq: elevation_plot_time
@@ -140,7 +181,7 @@ aggregate fields of "explore_resizable_width"
 """
 type explore_resizable_width_aggregate_fields {
   avg: explore_resizable_width_avg_fields
-  count(columns: [explore_resizable_width_select_column!], distinct: Boolean): Int
+  count(columns: [explore_resizable_width_select_column!], distinct: Boolean): Int!
   max: explore_resizable_width_max_fields
   min: explore_resizable_width_min_fields
   stddev: explore_resizable_width_stddev_fields
@@ -152,50 +193,18 @@ type explore_resizable_width_aggregate_fields {
   variance: explore_resizable_width_variance_fields
 }
 
-"""
-order by aggregate values of table "explore_resizable_width"
-"""
-input explore_resizable_width_aggregate_order_by {
-  avg: explore_resizable_width_avg_order_by
-  count: order_by
-  max: explore_resizable_width_max_order_by
-  min: explore_resizable_width_min_order_by
-  stddev: explore_resizable_width_stddev_order_by
-  stddev_pop: explore_resizable_width_stddev_pop_order_by
-  stddev_samp: explore_resizable_width_stddev_samp_order_by
-  sum: explore_resizable_width_sum_order_by
-  var_pop: explore_resizable_width_var_pop_order_by
-  var_samp: explore_resizable_width_var_samp_order_by
-  variance: explore_resizable_width_variance_order_by
-}
-
-"""
-input type for inserting array relation for remote table "explore_resizable_width"
-"""
-input explore_resizable_width_arr_rel_insert_input {
-  data: [explore_resizable_width_insert_input!]!
-  on_conflict: explore_resizable_width_on_conflict
-}
-
 """aggregate avg on columns"""
 type explore_resizable_width_avg_fields {
   width: Float
 }
 
 """
-order by avg() on columns of table "explore_resizable_width"
-"""
-input explore_resizable_width_avg_order_by {
-  width: order_by
-}
-
-"""
 Boolean expression to filter rows from the table "explore_resizable_width". All fields are combined with a logical 'AND'.
 """
 input explore_resizable_width_bool_exp {
-  _and: [explore_resizable_width_bool_exp]
+  _and: [explore_resizable_width_bool_exp!]
   _not: explore_resizable_width_bool_exp
-  _or: [explore_resizable_width_bool_exp]
+  _or: [explore_resizable_width_bool_exp!]
   section: resizable_area_comparison_exp
   user_id: String_comparison_exp
   width: Int_comparison_exp
@@ -205,12 +214,14 @@ input explore_resizable_width_bool_exp {
 unique or primary key constraints on table "explore_resizable_width"
 """
 enum explore_resizable_width_constraint {
-  """unique or primary key constraint"""
+  """
+  unique or primary key constraint on columns "user_id", "section"
+  """
   explore_resizable_width_pkey
 }
 
 """
-input type for incrementing integer column in table "explore_resizable_width"
+input type for incrementing numeric columns in table "explore_resizable_width"
 """
 input explore_resizable_width_inc_input {
   width: Int
@@ -227,72 +238,46 @@ input explore_resizable_width_insert_input {
 
 """aggregate max on columns"""
 type explore_resizable_width_max_fields {
+  section: resizable_area
   user_id: String
   width: Int
-}
-
-"""
-order by max() on columns of table "explore_resizable_width"
-"""
-input explore_resizable_width_max_order_by {
-  user_id: order_by
-  width: order_by
 }
 
 """aggregate min on columns"""
 type explore_resizable_width_min_fields {
+  section: resizable_area
   user_id: String
   width: Int
-}
-
-"""
-order by min() on columns of table "explore_resizable_width"
-"""
-input explore_resizable_width_min_order_by {
-  user_id: order_by
-  width: order_by
 }
 
 """
 response of any mutation on the table "explore_resizable_width"
 """
 type explore_resizable_width_mutation_response {
-  """number of affected rows by the mutation"""
+  """number of rows affected by the mutation"""
   affected_rows: Int!
 
-  """data of the affected rows by the mutation"""
+  """data from the rows affected by the mutation"""
   returning: [explore_resizable_width!]!
 }
 
 """
-input type for inserting object relation for remote table "explore_resizable_width"
-"""
-input explore_resizable_width_obj_rel_insert_input {
-  data: explore_resizable_width_insert_input!
-  on_conflict: explore_resizable_width_on_conflict
-}
-
-"""
-on conflict condition type for table "explore_resizable_width"
+on_conflict condition type for table "explore_resizable_width"
 """
 input explore_resizable_width_on_conflict {
   constraint: explore_resizable_width_constraint!
-  update_columns: [explore_resizable_width_update_column!]!
+  update_columns: [explore_resizable_width_update_column!]! = []
   where: explore_resizable_width_bool_exp
 }
 
-"""
-ordering options when selecting data from "explore_resizable_width"
-"""
+"""Ordering options when selecting data from "explore_resizable_width"."""
 input explore_resizable_width_order_by {
   section: order_by
   user_id: order_by
   width: order_by
 }
 
-"""
-primary key columns input for table: "explore_resizable_width"
-"""
+"""primary key columns input for table: explore_resizable_width"""
 input explore_resizable_width_pk_columns_input {
   section: resizable_area!
   user_id: String!
@@ -326,23 +311,9 @@ type explore_resizable_width_stddev_fields {
   width: Float
 }
 
-"""
-order by stddev() on columns of table "explore_resizable_width"
-"""
-input explore_resizable_width_stddev_order_by {
-  width: order_by
-}
-
 """aggregate stddev_pop on columns"""
 type explore_resizable_width_stddev_pop_fields {
   width: Float
-}
-
-"""
-order by stddev_pop() on columns of table "explore_resizable_width"
-"""
-input explore_resizable_width_stddev_pop_order_by {
-  width: order_by
 }
 
 """aggregate stddev_samp on columns"""
@@ -350,23 +321,9 @@ type explore_resizable_width_stddev_samp_fields {
   width: Float
 }
 
-"""
-order by stddev_samp() on columns of table "explore_resizable_width"
-"""
-input explore_resizable_width_stddev_samp_order_by {
-  width: order_by
-}
-
 """aggregate sum on columns"""
 type explore_resizable_width_sum_fields {
   width: Int
-}
-
-"""
-order by sum() on columns of table "explore_resizable_width"
-"""
-input explore_resizable_width_sum_order_by {
-  width: order_by
 }
 
 """
@@ -388,23 +345,9 @@ type explore_resizable_width_var_pop_fields {
   width: Float
 }
 
-"""
-order by var_pop() on columns of table "explore_resizable_width"
-"""
-input explore_resizable_width_var_pop_order_by {
-  width: order_by
-}
-
 """aggregate var_samp on columns"""
 type explore_resizable_width_var_samp_fields {
   width: Float
-}
-
-"""
-order by var_samp() on columns of table "explore_resizable_width"
-"""
-input explore_resizable_width_var_samp_order_by {
-  width: order_by
 }
 
 """aggregate variance on columns"""
@@ -412,17 +355,10 @@ type explore_resizable_width_variance_fields {
   width: Float
 }
 
-"""
-order by variance() on columns of table "explore_resizable_width"
-"""
-input explore_resizable_width_variance_order_by {
-  width: order_by
-}
-
 scalar grid_layout_area
 
 """
-expression to compare columns of type grid_layout_area. All fields are combined with logical 'AND'.
+Boolean expression to compare columns of type "grid_layout_area". All fields are combined with logical 'AND'.
 """
 input grid_layout_area_comparison_exp {
   _eq: grid_layout_area
@@ -463,7 +399,7 @@ aggregate fields of "grid_layout_positions"
 """
 type grid_layout_positions_aggregate_fields {
   avg: grid_layout_positions_avg_fields
-  count(columns: [grid_layout_positions_select_column!], distinct: Boolean): Int
+  count(columns: [grid_layout_positions_select_column!], distinct: Boolean): Int!
   max: grid_layout_positions_max_fields
   min: grid_layout_positions_min_fields
   stddev: grid_layout_positions_stddev_fields
@@ -475,31 +411,6 @@ type grid_layout_positions_aggregate_fields {
   variance: grid_layout_positions_variance_fields
 }
 
-"""
-order by aggregate values of table "grid_layout_positions"
-"""
-input grid_layout_positions_aggregate_order_by {
-  avg: grid_layout_positions_avg_order_by
-  count: order_by
-  max: grid_layout_positions_max_order_by
-  min: grid_layout_positions_min_order_by
-  stddev: grid_layout_positions_stddev_order_by
-  stddev_pop: grid_layout_positions_stddev_pop_order_by
-  stddev_samp: grid_layout_positions_stddev_samp_order_by
-  sum: grid_layout_positions_sum_order_by
-  var_pop: grid_layout_positions_var_pop_order_by
-  var_samp: grid_layout_positions_var_samp_order_by
-  variance: grid_layout_positions_variance_order_by
-}
-
-"""
-input type for inserting array relation for remote table "grid_layout_positions"
-"""
-input grid_layout_positions_arr_rel_insert_input {
-  data: [grid_layout_positions_insert_input!]!
-  on_conflict: grid_layout_positions_on_conflict
-}
-
 """aggregate avg on columns"""
 type grid_layout_positions_avg_fields {
   height: Float
@@ -509,22 +420,12 @@ type grid_layout_positions_avg_fields {
 }
 
 """
-order by avg() on columns of table "grid_layout_positions"
-"""
-input grid_layout_positions_avg_order_by {
-  height: order_by
-  width: order_by
-  x: order_by
-  y: order_by
-}
-
-"""
 Boolean expression to filter rows from the table "grid_layout_positions". All fields are combined with a logical 'AND'.
 """
 input grid_layout_positions_bool_exp {
-  _and: [grid_layout_positions_bool_exp]
+  _and: [grid_layout_positions_bool_exp!]
   _not: grid_layout_positions_bool_exp
-  _or: [grid_layout_positions_bool_exp]
+  _or: [grid_layout_positions_bool_exp!]
   breakpoint_name: breakpoint_name_comparison_exp
   height: Int_comparison_exp
   section: grid_layout_area_comparison_exp
@@ -539,12 +440,14 @@ input grid_layout_positions_bool_exp {
 unique or primary key constraints on table "grid_layout_positions"
 """
 enum grid_layout_positions_constraint {
-  """unique or primary key constraint"""
+  """
+  unique or primary key constraint on columns "tile", "breakpoint_name", "user_id", "section"
+  """
   grid_layout_positions_pkey
 }
 
 """
-input type for incrementing integer column in table "grid_layout_positions"
+input type for incrementing numeric columns in table "grid_layout_positions"
 """
 input grid_layout_positions_inc_input {
   height: Int
@@ -569,79 +472,49 @@ input grid_layout_positions_insert_input {
 
 """aggregate max on columns"""
 type grid_layout_positions_max_fields {
+  breakpoint_name: breakpoint_name
   height: Int
+  section: grid_layout_area
   tile: String
   user_id: String
   width: Int
   x: Int
   y: Int
-}
-
-"""
-order by max() on columns of table "grid_layout_positions"
-"""
-input grid_layout_positions_max_order_by {
-  height: order_by
-  tile: order_by
-  user_id: order_by
-  width: order_by
-  x: order_by
-  y: order_by
 }
 
 """aggregate min on columns"""
 type grid_layout_positions_min_fields {
+  breakpoint_name: breakpoint_name
   height: Int
+  section: grid_layout_area
   tile: String
   user_id: String
   width: Int
   x: Int
   y: Int
-}
-
-"""
-order by min() on columns of table "grid_layout_positions"
-"""
-input grid_layout_positions_min_order_by {
-  height: order_by
-  tile: order_by
-  user_id: order_by
-  width: order_by
-  x: order_by
-  y: order_by
 }
 
 """
 response of any mutation on the table "grid_layout_positions"
 """
 type grid_layout_positions_mutation_response {
-  """number of affected rows by the mutation"""
+  """number of rows affected by the mutation"""
   affected_rows: Int!
 
-  """data of the affected rows by the mutation"""
+  """data from the rows affected by the mutation"""
   returning: [grid_layout_positions!]!
 }
 
 """
-input type for inserting object relation for remote table "grid_layout_positions"
-"""
-input grid_layout_positions_obj_rel_insert_input {
-  data: grid_layout_positions_insert_input!
-  on_conflict: grid_layout_positions_on_conflict
-}
-
-"""
-on conflict condition type for table "grid_layout_positions"
+on_conflict condition type for table "grid_layout_positions"
 """
 input grid_layout_positions_on_conflict {
   constraint: grid_layout_positions_constraint!
-  update_columns: [grid_layout_positions_update_column!]!
+  update_columns: [grid_layout_positions_update_column!]! = []
   where: grid_layout_positions_bool_exp
 }
 
-"""
-ordering options when selecting data from "grid_layout_positions"
-"""
+"""Ordering options when selecting data from "grid_layout_positions"."""
 input grid_layout_positions_order_by {
   breakpoint_name: order_by
   height: order_by
@@ -653,9 +526,7 @@ input grid_layout_positions_order_by {
   y: order_by
 }
 
-"""
-primary key columns input for table: "grid_layout_positions"
-"""
+"""primary key columns input for table: grid_layout_positions"""
 input grid_layout_positions_pk_columns_input {
   breakpoint_name: breakpoint_name!
   section: grid_layout_area!
@@ -714,32 +585,12 @@ type grid_layout_positions_stddev_fields {
   y: Float
 }
 
-"""
-order by stddev() on columns of table "grid_layout_positions"
-"""
-input grid_layout_positions_stddev_order_by {
-  height: order_by
-  width: order_by
-  x: order_by
-  y: order_by
-}
-
 """aggregate stddev_pop on columns"""
 type grid_layout_positions_stddev_pop_fields {
   height: Float
   width: Float
   x: Float
   y: Float
-}
-
-"""
-order by stddev_pop() on columns of table "grid_layout_positions"
-"""
-input grid_layout_positions_stddev_pop_order_by {
-  height: order_by
-  width: order_by
-  x: order_by
-  y: order_by
 }
 
 """aggregate stddev_samp on columns"""
@@ -750,32 +601,12 @@ type grid_layout_positions_stddev_samp_fields {
   y: Float
 }
 
-"""
-order by stddev_samp() on columns of table "grid_layout_positions"
-"""
-input grid_layout_positions_stddev_samp_order_by {
-  height: order_by
-  width: order_by
-  x: order_by
-  y: order_by
-}
-
 """aggregate sum on columns"""
 type grid_layout_positions_sum_fields {
   height: Int
   width: Int
   x: Int
   y: Int
-}
-
-"""
-order by sum() on columns of table "grid_layout_positions"
-"""
-input grid_layout_positions_sum_order_by {
-  height: order_by
-  width: order_by
-  x: order_by
-  y: order_by
 }
 
 """
@@ -815,16 +646,6 @@ type grid_layout_positions_var_pop_fields {
   y: Float
 }
 
-"""
-order by var_pop() on columns of table "grid_layout_positions"
-"""
-input grid_layout_positions_var_pop_order_by {
-  height: order_by
-  width: order_by
-  x: order_by
-  y: order_by
-}
-
 """aggregate var_samp on columns"""
 type grid_layout_positions_var_samp_fields {
   height: Float
@@ -833,32 +654,12 @@ type grid_layout_positions_var_samp_fields {
   y: Float
 }
 
-"""
-order by var_samp() on columns of table "grid_layout_positions"
-"""
-input grid_layout_positions_var_samp_order_by {
-  height: order_by
-  width: order_by
-  x: order_by
-  y: order_by
-}
-
 """aggregate variance on columns"""
 type grid_layout_positions_variance_fields {
   height: Float
   width: Float
   x: Float
   y: Float
-}
-
-"""
-order by variance() on columns of table "grid_layout_positions"
-"""
-input grid_layout_positions_variance_order_by {
-  height: order_by
-  width: order_by
-  x: order_by
-  y: order_by
 }
 
 """
@@ -884,7 +685,7 @@ type lucuma_elevation_plot_preferences_aggregate {
 aggregate fields of "lucuma_elevation_plot_preferences"
 """
 type lucuma_elevation_plot_preferences_aggregate_fields {
-  count(columns: [lucuma_elevation_plot_preferences_select_column!], distinct: Boolean): Int
+  count(columns: [lucuma_elevation_plot_preferences_select_column!], distinct: Boolean): Int!
   max: lucuma_elevation_plot_preferences_max_fields
   min: lucuma_elevation_plot_preferences_min_fields
 }
@@ -903,6 +704,8 @@ input type for inserting array relation for remote table "lucuma_elevation_plot_
 """
 input lucuma_elevation_plot_preferences_arr_rel_insert_input {
   data: [lucuma_elevation_plot_preferences_insert_input!]!
+
+  """upsert condition"""
   on_conflict: lucuma_elevation_plot_preferences_on_conflict
 }
 
@@ -910,9 +713,9 @@ input lucuma_elevation_plot_preferences_arr_rel_insert_input {
 Boolean expression to filter rows from the table "lucuma_elevation_plot_preferences". All fields are combined with a logical 'AND'.
 """
 input lucuma_elevation_plot_preferences_bool_exp {
-  _and: [lucuma_elevation_plot_preferences_bool_exp]
+  _and: [lucuma_elevation_plot_preferences_bool_exp!]
   _not: lucuma_elevation_plot_preferences_bool_exp
-  _or: [lucuma_elevation_plot_preferences_bool_exp]
+  _or: [lucuma_elevation_plot_preferences_bool_exp!]
   range: elevation_plot_range_comparison_exp
   site: site_comparison_exp
   target_id: String_comparison_exp
@@ -924,7 +727,9 @@ input lucuma_elevation_plot_preferences_bool_exp {
 unique or primary key constraints on table "lucuma_elevation_plot_preferences"
 """
 enum lucuma_elevation_plot_preferences_constraint {
-  """unique or primary key constraint"""
+  """
+  unique or primary key constraint on columns "target_id", "user_id"
+  """
   lucuma_elevation_plot_preferences_pkey
 }
 
@@ -941,7 +746,10 @@ input lucuma_elevation_plot_preferences_insert_input {
 
 """aggregate max on columns"""
 type lucuma_elevation_plot_preferences_max_fields {
+  range: elevation_plot_range
+  site: site
   target_id: String
+  time: elevation_plot_time
   user_id: String
 }
 
@@ -949,13 +757,19 @@ type lucuma_elevation_plot_preferences_max_fields {
 order by max() on columns of table "lucuma_elevation_plot_preferences"
 """
 input lucuma_elevation_plot_preferences_max_order_by {
+  range: order_by
+  site: order_by
   target_id: order_by
+  time: order_by
   user_id: order_by
 }
 
 """aggregate min on columns"""
 type lucuma_elevation_plot_preferences_min_fields {
+  range: elevation_plot_range
+  site: site
   target_id: String
+  time: elevation_plot_time
   user_id: String
 }
 
@@ -963,7 +777,10 @@ type lucuma_elevation_plot_preferences_min_fields {
 order by min() on columns of table "lucuma_elevation_plot_preferences"
 """
 input lucuma_elevation_plot_preferences_min_order_by {
+  range: order_by
+  site: order_by
   target_id: order_by
+  time: order_by
   user_id: order_by
 }
 
@@ -971,32 +788,24 @@ input lucuma_elevation_plot_preferences_min_order_by {
 response of any mutation on the table "lucuma_elevation_plot_preferences"
 """
 type lucuma_elevation_plot_preferences_mutation_response {
-  """number of affected rows by the mutation"""
+  """number of rows affected by the mutation"""
   affected_rows: Int!
 
-  """data of the affected rows by the mutation"""
+  """data from the rows affected by the mutation"""
   returning: [lucuma_elevation_plot_preferences!]!
 }
 
 """
-input type for inserting object relation for remote table "lucuma_elevation_plot_preferences"
-"""
-input lucuma_elevation_plot_preferences_obj_rel_insert_input {
-  data: lucuma_elevation_plot_preferences_insert_input!
-  on_conflict: lucuma_elevation_plot_preferences_on_conflict
-}
-
-"""
-on conflict condition type for table "lucuma_elevation_plot_preferences"
+on_conflict condition type for table "lucuma_elevation_plot_preferences"
 """
 input lucuma_elevation_plot_preferences_on_conflict {
   constraint: lucuma_elevation_plot_preferences_constraint!
-  update_columns: [lucuma_elevation_plot_preferences_update_column!]!
+  update_columns: [lucuma_elevation_plot_preferences_update_column!]! = []
   where: lucuma_elevation_plot_preferences_bool_exp
 }
 
 """
-ordering options when selecting data from "lucuma_elevation_plot_preferences"
+Ordering options when selecting data from "lucuma_elevation_plot_preferences".
 """
 input lucuma_elevation_plot_preferences_order_by {
   range: order_by
@@ -1006,9 +815,7 @@ input lucuma_elevation_plot_preferences_order_by {
   user_id: order_by
 }
 
-"""
-primary key columns input for table: "lucuma_elevation_plot_preferences"
-"""
+"""primary key columns input for table: lucuma_elevation_plot_preferences"""
 input lucuma_elevation_plot_preferences_pk_columns_input {
   target_id: String!
   user_id: String!
@@ -1087,7 +894,7 @@ type lucuma_target {
     where: lucuma_elevation_plot_preferences_bool_exp
   ): [lucuma_elevation_plot_preferences!]!
 
-  """An aggregated array relationship"""
+  """An aggregate relationship"""
   lucuma_elevation_plot_preferences_aggregate(
     """distinct select on columns"""
     distinct_on: [lucuma_elevation_plot_preferences_select_column!]
@@ -1123,7 +930,7 @@ type lucuma_target {
     where: lucuma_target_preferences_bool_exp
   ): [lucuma_target_preferences!]!
 
-  """An aggregated array relationship"""
+  """An aggregate relationship"""
   lucuma_target_preferences_aggregate(
     """distinct select on columns"""
     distinct_on: [lucuma_target_preferences_select_column!]
@@ -1155,35 +962,18 @@ type lucuma_target_aggregate {
 aggregate fields of "lucuma_target"
 """
 type lucuma_target_aggregate_fields {
-  count(columns: [lucuma_target_select_column!], distinct: Boolean): Int
+  count(columns: [lucuma_target_select_column!], distinct: Boolean): Int!
   max: lucuma_target_max_fields
   min: lucuma_target_min_fields
-}
-
-"""
-order by aggregate values of table "lucuma_target"
-"""
-input lucuma_target_aggregate_order_by {
-  count: order_by
-  max: lucuma_target_max_order_by
-  min: lucuma_target_min_order_by
-}
-
-"""
-input type for inserting array relation for remote table "lucuma_target"
-"""
-input lucuma_target_arr_rel_insert_input {
-  data: [lucuma_target_insert_input!]!
-  on_conflict: lucuma_target_on_conflict
 }
 
 """
 Boolean expression to filter rows from the table "lucuma_target". All fields are combined with a logical 'AND'.
 """
 input lucuma_target_bool_exp {
-  _and: [lucuma_target_bool_exp]
+  _and: [lucuma_target_bool_exp!]
   _not: lucuma_target_bool_exp
-  _or: [lucuma_target_bool_exp]
+  _or: [lucuma_target_bool_exp!]
   lucuma_elevation_plot_preferences: lucuma_elevation_plot_preferences_bool_exp
   lucuma_target_preferences: lucuma_target_preferences_bool_exp
   target_id: String_comparison_exp
@@ -1193,7 +983,9 @@ input lucuma_target_bool_exp {
 unique or primary key constraints on table "lucuma_target"
 """
 enum lucuma_target_constraint {
-  """unique or primary key constraint"""
+  """
+  unique or primary key constraint on columns "target_id"
+  """
   lucuma_target_pkey
 }
 
@@ -1211,33 +1003,19 @@ type lucuma_target_max_fields {
   target_id: String
 }
 
-"""
-order by max() on columns of table "lucuma_target"
-"""
-input lucuma_target_max_order_by {
-  target_id: order_by
-}
-
 """aggregate min on columns"""
 type lucuma_target_min_fields {
   target_id: String
 }
 
 """
-order by min() on columns of table "lucuma_target"
-"""
-input lucuma_target_min_order_by {
-  target_id: order_by
-}
-
-"""
 response of any mutation on the table "lucuma_target"
 """
 type lucuma_target_mutation_response {
-  """number of affected rows by the mutation"""
+  """number of rows affected by the mutation"""
   affected_rows: Int!
 
-  """data of the affected rows by the mutation"""
+  """data from the rows affected by the mutation"""
   returning: [lucuma_target!]!
 }
 
@@ -1246,30 +1024,28 @@ input type for inserting object relation for remote table "lucuma_target"
 """
 input lucuma_target_obj_rel_insert_input {
   data: lucuma_target_insert_input!
+
+  """upsert condition"""
   on_conflict: lucuma_target_on_conflict
 }
 
 """
-on conflict condition type for table "lucuma_target"
+on_conflict condition type for table "lucuma_target"
 """
 input lucuma_target_on_conflict {
   constraint: lucuma_target_constraint!
-  update_columns: [lucuma_target_update_column!]!
+  update_columns: [lucuma_target_update_column!]! = []
   where: lucuma_target_bool_exp
 }
 
-"""
-ordering options when selecting data from "lucuma_target"
-"""
+"""Ordering options when selecting data from "lucuma_target"."""
 input lucuma_target_order_by {
   lucuma_elevation_plot_preferences_aggregate: lucuma_elevation_plot_preferences_aggregate_order_by
   lucuma_target_preferences_aggregate: lucuma_target_preferences_aggregate_order_by
   target_id: order_by
 }
 
-"""
-primary key columns input for table: "lucuma_target"
-"""
+"""primary key columns input for table: lucuma_target"""
 input lucuma_target_pk_columns_input {
   target_id: String!
 }
@@ -1281,6 +1057,7 @@ type lucuma_target_preferences {
   agsCandidates: Boolean!
   agsOverlay: Boolean!
   fov: bigint!
+  fullScreen: Boolean!
 
   """An object relationship"""
   lucuma_target: lucuma_target!
@@ -1303,7 +1080,7 @@ aggregate fields of "lucuma_target_preferences"
 """
 type lucuma_target_preferences_aggregate_fields {
   avg: lucuma_target_preferences_avg_fields
-  count(columns: [lucuma_target_preferences_select_column!], distinct: Boolean): Int
+  count(columns: [lucuma_target_preferences_select_column!], distinct: Boolean): Int!
   max: lucuma_target_preferences_max_fields
   min: lucuma_target_preferences_min_fields
   stddev: lucuma_target_preferences_stddev_fields
@@ -1337,6 +1114,8 @@ input type for inserting array relation for remote table "lucuma_target_preferen
 """
 input lucuma_target_preferences_arr_rel_insert_input {
   data: [lucuma_target_preferences_insert_input!]!
+
+  """upsert condition"""
   on_conflict: lucuma_target_preferences_on_conflict
 }
 
@@ -1360,12 +1139,13 @@ input lucuma_target_preferences_avg_order_by {
 Boolean expression to filter rows from the table "lucuma_target_preferences". All fields are combined with a logical 'AND'.
 """
 input lucuma_target_preferences_bool_exp {
-  _and: [lucuma_target_preferences_bool_exp]
+  _and: [lucuma_target_preferences_bool_exp!]
   _not: lucuma_target_preferences_bool_exp
-  _or: [lucuma_target_preferences_bool_exp]
+  _or: [lucuma_target_preferences_bool_exp!]
   agsCandidates: Boolean_comparison_exp
   agsOverlay: Boolean_comparison_exp
   fov: bigint_comparison_exp
+  fullScreen: Boolean_comparison_exp
   lucuma_target: lucuma_target_bool_exp
   target_id: String_comparison_exp
   user_id: String_comparison_exp
@@ -1377,12 +1157,14 @@ input lucuma_target_preferences_bool_exp {
 unique or primary key constraints on table "lucuma_target_preferences"
 """
 enum lucuma_target_preferences_constraint {
-  """unique or primary key constraint"""
+  """
+  unique or primary key constraint on columns "target_id", "user_id"
+  """
   lucuma_target_preferences_pkey
 }
 
 """
-input type for incrementing integer column in table "lucuma_target_preferences"
+input type for incrementing numeric columns in table "lucuma_target_preferences"
 """
 input lucuma_target_preferences_inc_input {
   fov: bigint
@@ -1397,6 +1179,7 @@ input lucuma_target_preferences_insert_input {
   agsCandidates: Boolean
   agsOverlay: Boolean
   fov: bigint
+  fullScreen: Boolean
   lucuma_target: lucuma_target_obj_rel_insert_input
   target_id: String
   user_id: String
@@ -1448,37 +1231,28 @@ input lucuma_target_preferences_min_order_by {
 response of any mutation on the table "lucuma_target_preferences"
 """
 type lucuma_target_preferences_mutation_response {
-  """number of affected rows by the mutation"""
+  """number of rows affected by the mutation"""
   affected_rows: Int!
 
-  """data of the affected rows by the mutation"""
+  """data from the rows affected by the mutation"""
   returning: [lucuma_target_preferences!]!
 }
 
 """
-input type for inserting object relation for remote table "lucuma_target_preferences"
-"""
-input lucuma_target_preferences_obj_rel_insert_input {
-  data: lucuma_target_preferences_insert_input!
-  on_conflict: lucuma_target_preferences_on_conflict
-}
-
-"""
-on conflict condition type for table "lucuma_target_preferences"
+on_conflict condition type for table "lucuma_target_preferences"
 """
 input lucuma_target_preferences_on_conflict {
   constraint: lucuma_target_preferences_constraint!
-  update_columns: [lucuma_target_preferences_update_column!]!
+  update_columns: [lucuma_target_preferences_update_column!]! = []
   where: lucuma_target_preferences_bool_exp
 }
 
-"""
-ordering options when selecting data from "lucuma_target_preferences"
-"""
+"""Ordering options when selecting data from "lucuma_target_preferences"."""
 input lucuma_target_preferences_order_by {
   agsCandidates: order_by
   agsOverlay: order_by
   fov: order_by
+  fullScreen: order_by
   lucuma_target: lucuma_target_order_by
   target_id: order_by
   user_id: order_by
@@ -1486,9 +1260,7 @@ input lucuma_target_preferences_order_by {
   viewOffsetQ: order_by
 }
 
-"""
-primary key columns input for table: "lucuma_target_preferences"
-"""
+"""primary key columns input for table: lucuma_target_preferences"""
 input lucuma_target_preferences_pk_columns_input {
   target_id: String!
   user_id: String!
@@ -1506,6 +1278,9 @@ enum lucuma_target_preferences_select_column {
 
   """column name"""
   fov
+
+  """column name"""
+  fullScreen
 
   """column name"""
   target_id
@@ -1527,6 +1302,7 @@ input lucuma_target_preferences_set_input {
   agsCandidates: Boolean
   agsOverlay: Boolean
   fov: bigint
+  fullScreen: Boolean
   target_id: String
   user_id: String
   viewOffsetP: bigint
@@ -1609,6 +1385,9 @@ enum lucuma_target_preferences_update_column {
 
   """column name"""
   fov
+
+  """column name"""
+  fullScreen
 
   """column name"""
   target_id
@@ -1713,35 +1492,18 @@ type lucuma_user_aggregate {
 aggregate fields of "lucuma_user"
 """
 type lucuma_user_aggregate_fields {
-  count(columns: [lucuma_user_select_column!], distinct: Boolean): Int
+  count(columns: [lucuma_user_select_column!], distinct: Boolean): Int!
   max: lucuma_user_max_fields
   min: lucuma_user_min_fields
-}
-
-"""
-order by aggregate values of table "lucuma_user"
-"""
-input lucuma_user_aggregate_order_by {
-  count: order_by
-  max: lucuma_user_max_order_by
-  min: lucuma_user_min_order_by
-}
-
-"""
-input type for inserting array relation for remote table "lucuma_user"
-"""
-input lucuma_user_arr_rel_insert_input {
-  data: [lucuma_user_insert_input!]!
-  on_conflict: lucuma_user_on_conflict
 }
 
 """
 Boolean expression to filter rows from the table "lucuma_user". All fields are combined with a logical 'AND'.
 """
 input lucuma_user_bool_exp {
-  _and: [lucuma_user_bool_exp]
+  _and: [lucuma_user_bool_exp!]
   _not: lucuma_user_bool_exp
-  _or: [lucuma_user_bool_exp]
+  _or: [lucuma_user_bool_exp!]
   user_id: String_comparison_exp
 }
 
@@ -1749,7 +1511,9 @@ input lucuma_user_bool_exp {
 unique or primary key constraints on table "lucuma_user"
 """
 enum lucuma_user_constraint {
-  """unique or primary key constraint"""
+  """
+  unique or primary key constraint on columns "user_id"
+  """
   lucuma_user_pkey
 }
 
@@ -1765,63 +1529,37 @@ type lucuma_user_max_fields {
   user_id: String
 }
 
-"""
-order by max() on columns of table "lucuma_user"
-"""
-input lucuma_user_max_order_by {
-  user_id: order_by
-}
-
 """aggregate min on columns"""
 type lucuma_user_min_fields {
   user_id: String
 }
 
 """
-order by min() on columns of table "lucuma_user"
-"""
-input lucuma_user_min_order_by {
-  user_id: order_by
-}
-
-"""
 response of any mutation on the table "lucuma_user"
 """
 type lucuma_user_mutation_response {
-  """number of affected rows by the mutation"""
+  """number of rows affected by the mutation"""
   affected_rows: Int!
 
-  """data of the affected rows by the mutation"""
+  """data from the rows affected by the mutation"""
   returning: [lucuma_user!]!
 }
 
 """
-input type for inserting object relation for remote table "lucuma_user"
-"""
-input lucuma_user_obj_rel_insert_input {
-  data: lucuma_user_insert_input!
-  on_conflict: lucuma_user_on_conflict
-}
-
-"""
-on conflict condition type for table "lucuma_user"
+on_conflict condition type for table "lucuma_user"
 """
 input lucuma_user_on_conflict {
   constraint: lucuma_user_constraint!
-  update_columns: [lucuma_user_update_column!]!
+  update_columns: [lucuma_user_update_column!]! = []
   where: lucuma_user_bool_exp
 }
 
-"""
-ordering options when selecting data from "lucuma_user"
-"""
+"""Ordering options when selecting data from "lucuma_user"."""
 input lucuma_user_order_by {
   user_id: order_by
 }
 
-"""
-primary key columns input for table: "lucuma_user"
-"""
+"""primary key columns input for table: lucuma_user"""
 input lucuma_user_pk_columns_input {
   user_id: String!
 }
@@ -1936,7 +1674,7 @@ type Mutation {
     """the rows to be inserted"""
     objects: [explore_resizable_width_insert_input!]!
 
-    """on conflict condition"""
+    """upsert condition"""
     on_conflict: explore_resizable_width_on_conflict
   ): explore_resizable_width_mutation_response
 
@@ -1947,7 +1685,7 @@ type Mutation {
     """the row to be inserted"""
     object: explore_resizable_width_insert_input!
 
-    """on conflict condition"""
+    """upsert condition"""
     on_conflict: explore_resizable_width_on_conflict
   ): explore_resizable_width
 
@@ -1958,7 +1696,7 @@ type Mutation {
     """the rows to be inserted"""
     objects: [grid_layout_positions_insert_input!]!
 
-    """on conflict condition"""
+    """upsert condition"""
     on_conflict: grid_layout_positions_on_conflict
   ): grid_layout_positions_mutation_response
 
@@ -1969,7 +1707,7 @@ type Mutation {
     """the row to be inserted"""
     object: grid_layout_positions_insert_input!
 
-    """on conflict condition"""
+    """upsert condition"""
     on_conflict: grid_layout_positions_on_conflict
   ): grid_layout_positions
 
@@ -1980,7 +1718,7 @@ type Mutation {
     """the rows to be inserted"""
     objects: [lucuma_elevation_plot_preferences_insert_input!]!
 
-    """on conflict condition"""
+    """upsert condition"""
     on_conflict: lucuma_elevation_plot_preferences_on_conflict
   ): lucuma_elevation_plot_preferences_mutation_response
 
@@ -1991,7 +1729,7 @@ type Mutation {
     """the row to be inserted"""
     object: lucuma_elevation_plot_preferences_insert_input!
 
-    """on conflict condition"""
+    """upsert condition"""
     on_conflict: lucuma_elevation_plot_preferences_on_conflict
   ): lucuma_elevation_plot_preferences
 
@@ -2002,7 +1740,7 @@ type Mutation {
     """the rows to be inserted"""
     objects: [lucuma_target_insert_input!]!
 
-    """on conflict condition"""
+    """upsert condition"""
     on_conflict: lucuma_target_on_conflict
   ): lucuma_target_mutation_response
 
@@ -2013,7 +1751,7 @@ type Mutation {
     """the row to be inserted"""
     object: lucuma_target_insert_input!
 
-    """on conflict condition"""
+    """upsert condition"""
     on_conflict: lucuma_target_on_conflict
   ): lucuma_target
 
@@ -2024,7 +1762,7 @@ type Mutation {
     """the rows to be inserted"""
     objects: [lucuma_target_preferences_insert_input!]!
 
-    """on conflict condition"""
+    """upsert condition"""
     on_conflict: lucuma_target_preferences_on_conflict
   ): lucuma_target_preferences_mutation_response
 
@@ -2035,7 +1773,7 @@ type Mutation {
     """the row to be inserted"""
     object: lucuma_target_preferences_insert_input!
 
-    """on conflict condition"""
+    """upsert condition"""
     on_conflict: lucuma_target_preferences_on_conflict
   ): lucuma_target_preferences
 
@@ -2046,7 +1784,7 @@ type Mutation {
     """the rows to be inserted"""
     objects: [lucuma_user_insert_input!]!
 
-    """on conflict condition"""
+    """upsert condition"""
     on_conflict: lucuma_user_on_conflict
   ): lucuma_user_mutation_response
 
@@ -2057,7 +1795,7 @@ type Mutation {
     """the row to be inserted"""
     object: lucuma_user_insert_input!
 
-    """on conflict condition"""
+    """upsert condition"""
     on_conflict: lucuma_user_on_conflict
   ): lucuma_user
 
@@ -2065,7 +1803,7 @@ type Mutation {
   update data of the table: "explore_resizable_width"
   """
   update_explore_resizable_width(
-    """increments the integer columns with given value of the filtered values"""
+    """increments the numeric columns with given value of the filtered values"""
     _inc: explore_resizable_width_inc_input
 
     """sets the columns of the filtered rows to the given values"""
@@ -2079,7 +1817,7 @@ type Mutation {
   update single row of the table: "explore_resizable_width"
   """
   update_explore_resizable_width_by_pk(
-    """increments the integer columns with given value of the filtered values"""
+    """increments the numeric columns with given value of the filtered values"""
     _inc: explore_resizable_width_inc_input
 
     """sets the columns of the filtered rows to the given values"""
@@ -2091,7 +1829,7 @@ type Mutation {
   update data of the table: "grid_layout_positions"
   """
   update_grid_layout_positions(
-    """increments the integer columns with given value of the filtered values"""
+    """increments the numeric columns with given value of the filtered values"""
     _inc: grid_layout_positions_inc_input
 
     """sets the columns of the filtered rows to the given values"""
@@ -2105,7 +1843,7 @@ type Mutation {
   update single row of the table: "grid_layout_positions"
   """
   update_grid_layout_positions_by_pk(
-    """increments the integer columns with given value of the filtered values"""
+    """increments the numeric columns with given value of the filtered values"""
     _inc: grid_layout_positions_inc_input
 
     """sets the columns of the filtered rows to the given values"""
@@ -2157,7 +1895,7 @@ type Mutation {
   update data of the table: "lucuma_target_preferences"
   """
   update_lucuma_target_preferences(
-    """increments the integer columns with given value of the filtered values"""
+    """increments the numeric columns with given value of the filtered values"""
     _inc: lucuma_target_preferences_inc_input
 
     """sets the columns of the filtered rows to the given values"""
@@ -2171,7 +1909,7 @@ type Mutation {
   update single row of the table: "lucuma_target_preferences"
   """
   update_lucuma_target_preferences_by_pk(
-    """increments the integer columns with given value of the filtered values"""
+    """increments the numeric columns with given value of the filtered values"""
     _inc: lucuma_target_preferences_inc_input
 
     """sets the columns of the filtered rows to the given values"""
@@ -2202,26 +1940,25 @@ type Mutation {
 
 """column ordering options"""
 enum order_by {
-  """in the ascending order, nulls last"""
+  """in ascending order, nulls last"""
   asc
 
-  """in the ascending order, nulls first"""
+  """in ascending order, nulls first"""
   asc_nulls_first
 
-  """in the ascending order, nulls last"""
+  """in ascending order, nulls last"""
   asc_nulls_last
 
-  """in the descending order, nulls first"""
+  """in descending order, nulls first"""
   desc
 
-  """in the descending order, nulls first"""
+  """in descending order, nulls first"""
   desc_nulls_first
 
-  """in the descending order, nulls last"""
+  """in descending order, nulls last"""
   desc_nulls_last
 }
 
-"""query root"""
 type Query {
   """
   fetch data from the table: "explore_resizable_width"
@@ -2313,9 +2050,7 @@ type Query {
   """
   grid_layout_positions_by_pk(breakpoint_name: breakpoint_name!, section: grid_layout_area!, tile: String!, user_id: String!): grid_layout_positions
 
-  """
-  fetch data from the table: "lucuma_elevation_plot_preferences"
-  """
+  """An array relationship"""
   lucuma_elevation_plot_preferences(
     """distinct select on columns"""
     distinct_on: [lucuma_elevation_plot_preferences_select_column!]
@@ -2333,9 +2068,7 @@ type Query {
     where: lucuma_elevation_plot_preferences_bool_exp
   ): [lucuma_elevation_plot_preferences!]!
 
-  """
-  fetch aggregated fields from the table: "lucuma_elevation_plot_preferences"
-  """
+  """An aggregate relationship"""
   lucuma_elevation_plot_preferences_aggregate(
     """distinct select on columns"""
     distinct_on: [lucuma_elevation_plot_preferences_select_column!]
@@ -2401,9 +2134,7 @@ type Query {
   """fetch data from the table: "lucuma_target" using primary key columns"""
   lucuma_target_by_pk(target_id: String!): lucuma_target
 
-  """
-  fetch data from the table: "lucuma_target_preferences"
-  """
+  """An array relationship"""
   lucuma_target_preferences(
     """distinct select on columns"""
     distinct_on: [lucuma_target_preferences_select_column!]
@@ -2421,9 +2152,7 @@ type Query {
     where: lucuma_target_preferences_bool_exp
   ): [lucuma_target_preferences!]!
 
-  """
-  fetch aggregated fields from the table: "lucuma_target_preferences"
-  """
+  """An aggregate relationship"""
   lucuma_target_preferences_aggregate(
     """distinct select on columns"""
     distinct_on: [lucuma_target_preferences_select_column!]
@@ -2493,7 +2222,7 @@ type Query {
 scalar resizable_area
 
 """
-expression to compare columns of type resizable_area. All fields are combined with logical 'AND'.
+Boolean expression to compare columns of type "resizable_area". All fields are combined with logical 'AND'.
 """
 input resizable_area_comparison_exp {
   _eq: resizable_area
@@ -2510,7 +2239,7 @@ input resizable_area_comparison_exp {
 scalar site
 
 """
-expression to compare columns of type site. All fields are combined with logical 'AND'.
+Boolean expression to compare columns of type "site". All fields are combined with logical 'AND'.
 """
 input site_comparison_exp {
   _eq: site
@@ -2524,7 +2253,6 @@ input site_comparison_exp {
   _nin: [site!]
 }
 
-"""subscription root"""
 type Subscription {
   """
   fetch data from the table: "explore_resizable_width"
@@ -2616,9 +2344,7 @@ type Subscription {
   """
   grid_layout_positions_by_pk(breakpoint_name: breakpoint_name!, section: grid_layout_area!, tile: String!, user_id: String!): grid_layout_positions
 
-  """
-  fetch data from the table: "lucuma_elevation_plot_preferences"
-  """
+  """An array relationship"""
   lucuma_elevation_plot_preferences(
     """distinct select on columns"""
     distinct_on: [lucuma_elevation_plot_preferences_select_column!]
@@ -2636,9 +2362,7 @@ type Subscription {
     where: lucuma_elevation_plot_preferences_bool_exp
   ): [lucuma_elevation_plot_preferences!]!
 
-  """
-  fetch aggregated fields from the table: "lucuma_elevation_plot_preferences"
-  """
+  """An aggregate relationship"""
   lucuma_elevation_plot_preferences_aggregate(
     """distinct select on columns"""
     distinct_on: [lucuma_elevation_plot_preferences_select_column!]
@@ -2704,9 +2428,7 @@ type Subscription {
   """fetch data from the table: "lucuma_target" using primary key columns"""
   lucuma_target_by_pk(target_id: String!): lucuma_target
 
-  """
-  fetch data from the table: "lucuma_target_preferences"
-  """
+  """An array relationship"""
   lucuma_target_preferences(
     """distinct select on columns"""
     distinct_on: [lucuma_target_preferences_select_column!]
@@ -2724,9 +2446,7 @@ type Subscription {
     where: lucuma_target_preferences_bool_exp
   ): [lucuma_target_preferences!]!
 
-  """
-  fetch aggregated fields from the table: "lucuma_target_preferences"
-  """
+  """An aggregate relationship"""
   lucuma_target_preferences_aggregate(
     """distinct select on columns"""
     distinct_on: [lucuma_target_preferences_select_column!]
