@@ -64,6 +64,7 @@ object ProgramQueries {
       .execute[F](
         UpdateProgramsInput(
           WHERE = id.toWhereProgram.assign,
+          includeDeleted = true.assign,
           SET = ProgramPropertiesInput(existence = Existence.Present.assign)
         )
       )

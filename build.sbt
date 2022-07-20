@@ -22,7 +22,7 @@ addCommandAlias(
 
 addCommandAlias(
   "fix",
-  "; headerCreateAll; fixImports; scalafmtAll; fixCSS"
+  "; headerCreateAll; fixImports; scalafmtAll; fixCSS; githubWorkflowGenerate"
 )
 
 ThisBuild / description                := "Explore"

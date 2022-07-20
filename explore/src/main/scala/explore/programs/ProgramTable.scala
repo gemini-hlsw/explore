@@ -6,7 +6,6 @@ package explore.programs
 import cats.Order._
 import cats.effect.IO
 import cats.syntax.all._
-import clue.data.syntax._
 import crystal.react.View
 import crystal.react.hooks._
 import crystal.react.implicits._
@@ -25,8 +24,6 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Program
-import lucuma.schemas.ObservationDB.Enums.Existence
-import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.reusability._
 import queries.common.ProgramQueriesGQL._
 import react.common.ReactFnProps
@@ -92,12 +89,8 @@ object ProgramTable {
       (props, _, _) => showDeleted =>
         implicit val ctx = props.ctx
 
-        val whereExistence =
-          if (showDeleted) WhereEqExistence(IN = List(Existence.Deleted, Existence.Present).assign)
-          else WhereEqExistence(EQ = Existence.Present.assign)
-
         ProgramsQuery
-          .query(WhereProgram(existence = whereExistence.assign))
+          .query(includeDeleted = showDeleted)
           .map(ProgramsQuery.Data.asProgramInfoList)
           .flatTap(programs => onNewData(props.isRequired, programs))
           .reRunOnResourceSignals(ProgramEditSubscription.subscribe[IO]())
