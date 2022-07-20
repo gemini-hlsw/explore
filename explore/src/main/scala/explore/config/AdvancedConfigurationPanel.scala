@@ -432,7 +432,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                   compact = true,
                   clazz = ExploreStyles.VeryCompact,
                   content = "View Sequence"
-                )
+                )(^.tpe := "button")
               ),
               Button(
                 size = Small,
