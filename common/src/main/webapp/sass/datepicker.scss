@@ -8,6 +8,7 @@
   font-family: inherit;
 }
 
+/* stylelint-disable-next-line selector-class-pattern */
 .react-datepicker__input-container input {
   background: var(--form-input-background);
   color: var(--form-input-color);
