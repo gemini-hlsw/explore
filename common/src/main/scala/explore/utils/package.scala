@@ -66,10 +66,14 @@ package object utils {
     )
   }
 
+  val DefaultPendingRender: Long => VdomNode = _ => Loader(active = true)
+
+  val DefaultErrorRender: Throwable => VdomNode = t => Message(error = true)(t.getMessage)
+
   def potRenderWithReuse[A](
     valueRender:   A ==> VdomNode,
-    pendingRender: Long ==> VdomNode = Reuse.always(_ => Loader(active = true)),
-    errorRender:   Throwable ==> VdomNode = Reuse.always(t => Message(error = true)(t.getMessage))
+    pendingRender: Long ==> VdomNode = Reuse.always(DefaultPendingRender),
+    errorRender:   Throwable ==> VdomNode = Reuse.always(DefaultErrorRender)
   ): Pot[A] ==> VdomNode =
     (pendingRender, errorRender, valueRender).curryReusing.in(
       (pendingRender, errorRender, valueRender, pot: Pot[A]) =>
@@ -78,17 +82,25 @@ package object utils {
 
   def potRender[A](
     valueRender:   A => VdomNode,
-    pendingRender: Long => VdomNode = _ => Loader(active = true),
-    errorRender:   Throwable => VdomNode = t => Message(error = true)(t.getMessage)
+    pendingRender: Long => VdomNode = DefaultPendingRender,
+    errorRender:   Throwable => VdomNode = DefaultErrorRender
   ): Pot[A] => VdomNode =
     _.fold(pendingRender, errorRender, valueRender)
 
   def potRenderView[A](
     valueRender:   A => VdomNode,
-    pendingRender: Long => VdomNode = _ => Loader(active = true),
-    errorRender:   Throwable => VdomNode = t => Message(error = true)(t.getMessage)
+    pendingRender: Long => VdomNode = DefaultPendingRender,
+    errorRender:   Throwable => VdomNode = DefaultErrorRender
   ): View[Pot[A]] => VdomNode =
     _.get.fold(pendingRender, errorRender, valueRender)
+
+  final implicit class PotRenderOps[A](val pot: Pot[A]) extends AnyVal {
+    def render(
+      valueRender:   A => VdomNode,
+      pendingRender: Long => VdomNode = DefaultPendingRender,
+      errorRender:   Throwable => VdomNode = DefaultErrorRender
+    ): VdomNode = potRender(valueRender, pendingRender, errorRender)(pot)
+  }
 
   def showCount(count: Int, unit: String, plural: String): String =
     if (count == 1) s"$count $unit"

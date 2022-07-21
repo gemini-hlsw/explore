@@ -13,14 +13,13 @@ import explore.components.ui.ExploreStyles
 import explore.components.ui.FomanticStyles
 import explore.components.ui.PartnerFlags
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ZeroTo100
 import lucuma.core.validation._
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input._
 import monocle.function.Index
-import react.common.ReactProps
+import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.collections.table._
 import react.semanticui.elements.button.Button
@@ -31,10 +30,10 @@ final case class PartnerSplitsEditor(
   splits:  View[List[PartnerSplit]],
   closeMe: Callback,
   onSave:  List[PartnerSplit] => Callback
-) extends ReactProps[PartnerSplitsEditor](PartnerSplitsEditor.component)
+) extends ReactFnProps[PartnerSplitsEditor](PartnerSplitsEditor.component)
 
 object PartnerSplitsEditor {
-  type Props = PartnerSplitsEditor
+  protected type Props = PartnerSplitsEditor
 
   private def toolbar(p: Props): ModalActions =
     ModalActions(
@@ -87,13 +86,11 @@ object PartnerSplitsEditor {
   private def total(p: Props)       = p.splits.get.map(_.percent.value).sum
   private def addsUpTo100(p: Props) = total(p) === 100
 
-  def render(p: Props): VdomNode = {
-    def save = if (addsUpTo100(p)) p.onSave(p.splits.get) >> p.closeMe else Callback.empty
+  protected val component = ScalaFnComponent[Props] { props =>
+    def save =
+      if (addsUpTo100(props)) props.onSave(props.splits.get) >> props.closeMe else Callback.empty
 
-    Modal(
-      size = ModalSize.Mini,
-      open = p.show
-    )(
+    Modal(size = ModalSize.Mini, open = props.show)(
       ModalHeader("Partner Splits"),
       ModalContent(
         Form(
@@ -108,19 +105,18 @@ object PartnerSplitsEditor {
                 TableHeaderCell("Percent")
               )
             ),
-            TableBody(makeTableRows(p)),
+            TableBody(makeTableRows(props)),
             TableFooter(
-              TableRow(TableCell("Total"), TableCell(s"${total(p)}%"), FomanticStyles.RightAligned)
+              TableRow(
+                TableCell("Total"),
+                TableCell(s"${total(props)}%"),
+                FomanticStyles.RightAligned
+              )
             )
           ),
-          toolbar(p)
+          toolbar(props)
         )
       )
     )
   }
-
-  val component = ScalaComponent
-    .builder[Props]
-    .render_P(render)
-    .build
 }
