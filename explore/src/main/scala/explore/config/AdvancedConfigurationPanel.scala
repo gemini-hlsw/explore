@@ -20,6 +20,7 @@ import explore.common.Aligner
 import explore.common.ObsQueries._
 import explore.common.ScienceQueries._
 import explore.components.HelpIcon
+import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
 import explore.config.ExposureTimeModeType._
 import explore.implicits._
@@ -224,7 +225,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                   .toSequence()
                   .optional,
                 units = "nm"
-              )
+              ).clearable
             )
 
           def offsetsControl(onChange: Callback): VdomElement =
@@ -239,7 +240,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                   .toSequence()
                   .optional,
                 units = "arcsec"
-              )
+              ).clearable
             )
 
           val invalidateITC: Callback =
@@ -305,7 +306,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 units = "μm",
                 validFormat = ExploreModelValidators.wavelengthValidWedge.optional,
                 changeAuditor = wavelengthChangeAuditor.optional
-              ),
+              ).clearable,
               <.label("FPU", HelpIcon("configuration/fpu.md".refined), ExploreStyles.SkipToNext),
               EnumViewOptionalSelect(
                 id = "override-fpu",
@@ -440,7 +441,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                   compact = true,
                   clazz = ExploreStyles.VeryCompact,
                   content = "View Sequence"
-                )
+                )(^.tpe := "button")
               ),
               Button(
                 size = Small,

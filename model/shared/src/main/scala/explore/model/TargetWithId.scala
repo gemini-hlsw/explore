@@ -23,7 +23,7 @@ import java.time.Instant
 import java.time.LocalDateTime
 import scala.collection.immutable.SortedMap
 
-case class TargetWithId(id: Target.Id, target: Target) {
+final case class TargetWithId(id: Target.Id, target: Target) {
   def toOptId: TargetWithOptId = TargetWithOptId(id.some, target)
 
   def toSidereal: Option[SiderealTargetWithId] = TargetWithId.sidereal.getOption(this)
@@ -31,13 +31,12 @@ case class TargetWithId(id: Target.Id, target: Target) {
   def toNonSidereal: Option[NonsiderealTargetWithId] = TargetWithId.nonsidereal.getOption(this)
 }
 
-case class TargetWithOptId(optId: Option[Target.Id], target: Target)
+final case class TargetWithOptId(optId: Option[Target.Id], target: Target)
 
-case class SiderealTargetWithId(id: Target.Id, target: Target.Sidereal) {
+final case class SiderealTargetWithId(id: Target.Id, target: Target.Sidereal) {
   def toTargetWithId = TargetWithId(id, target)
 
   def at(i: Instant): SiderealTargetWithId = {
-
     val ldt            = LocalDateTime.ofInstant(i, Constants.UTC)
     val epoch          = Epoch.Julian.fromLocalDateTime(ldt).getOrElse(target.tracking.epoch)
     val trackingUpdate = (tracking: SiderealTracking) =>
@@ -46,6 +45,7 @@ case class SiderealTargetWithId(id: Target.Id, target: Target.Sidereal) {
           .replace(epoch)
         update(tracking)
       }
+
     copy(target = Target.Sidereal.tracking.modify(trackingUpdate)(target))
   }
 }

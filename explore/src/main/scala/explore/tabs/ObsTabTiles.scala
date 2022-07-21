@@ -17,6 +17,7 @@ import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.Asterism
 import explore.model.ConstraintGroup
+import explore.model.Focused
 import explore.model.GridLayoutSection
 import explore.model.ModelUndoStacks
 import explore.model.ObsIdSet
@@ -186,7 +187,7 @@ object ObsTabTiles {
           tid:                          Option[Target.Id],
           via:                          SetRouteVia
         ): Callback =
-          ctx.setPageVia(AppTab.Observations, programId, oid.map(ObsIdSet.one(_)), tid, via)
+          ctx.setPageVia(AppTab.Observations, programId, Focused(oid.map(ObsIdSet.one), tid), via)
 
         val targetTile = AsterismEditorTile.asterismEditorTile(
           props.userId,

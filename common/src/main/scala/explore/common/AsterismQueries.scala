@@ -12,7 +12,7 @@ import explore.implicits._
 import explore.model.AsterismGroup
 import explore.model.ObsIdSet
 import explore.model.ObsSummaryWithConstraintsAndConf
-import explore.model.TargetGroup
+import explore.model.TargetWithObs
 import japgolly.scalajs.react._
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
@@ -38,18 +38,18 @@ object AsterismQueries {
   val ObservationResult = AsterismGroupObsQuery.Data.Observations.Matches
 
   type AsterismGroupList = SortedMap[ObsIdSet, AsterismGroup]
-  type TargetGroupList   = SortedMap[Target.Id, TargetGroup]
+  type TargetWithObsList = SortedMap[Target.Id, TargetWithObs]
   type ObsList           = SortedMap[Observation.Id, ObsSummaryWithConstraintsAndConf]
 
   case class AsterismGroupsWithObs(
     asterismGroups: AsterismGroupList,
-    targetGroups:   TargetGroupList,
+    targetsWithObs: TargetWithObsList,
     observations:   ObsList
   )
 
   object AsterismGroupsWithObs {
     val asterismGroups = Focus[AsterismGroupsWithObs](_.asterismGroups)
-    val targetGroups   = Focus[AsterismGroupsWithObs](_.targetGroups)
+    val targetsWithObs = Focus[AsterismGroupsWithObs](_.targetsWithObs)
     val observations   = Focus[AsterismGroupsWithObs](_.observations)
   }
 
@@ -89,10 +89,12 @@ object AsterismQueries {
       }
       .flatten
       .toSortedMap(_.obsIds)
-    val targetGroups   = data.targetGroup.matches.toSortedMap(_.targetWithId.id)
+
+    val targetsWithObs = data.targetGroup.matches.toSortedMap(_.id, _.targetWithObs)
+
     AsterismGroupsWithObs(
       asterismGroups,
-      targetGroups,
+      targetsWithObs,
       data.observations.matches
         .map(obsResultToSummary)
         .toSortedMap(ObsSummaryWithConstraintsAndConf.id.get)

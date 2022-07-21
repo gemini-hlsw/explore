@@ -9,6 +9,7 @@ import crystal.react.View
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.model.Focused
 import explore.model.ModelUndoStacks
 import explore.model.enums.AppTab
 import japgolly.scalajs.react._
@@ -41,8 +42,8 @@ object ProgramsPopup {
   )(implicit ctx: AppContextIO): Callback =
     onClose.orEmpty >>
       undoStacks.set(ModelUndoStacks[IO]()) >>
-      (if (onClose.isEmpty) ctx.replacePage(AppTab.Overview, programId, none, none)
-       else ctx.pushPage(AppTab.Overview, programId, none, none))
+      (if (onClose.isEmpty) ctx.replacePage(AppTab.Overview, programId, Focused.None)
+       else ctx.pushPage(AppTab.Overview, programId, Focused.None))
 
   protected val component = ScalaFnComponent
     .withHooks[Props]

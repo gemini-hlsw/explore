@@ -85,6 +85,7 @@ object AsterismEditor {
         .execute(target.toCreateTargetInput(programId))
         .map(_.createTarget.target.id)
     )(IO(_))
+
     adding.async.set(true) >>
       targetId
         .flatMap { tid =>
@@ -134,7 +135,9 @@ object AsterismEditor {
           }
         }
       )
-      .render { (props, adding, editScope) =>
+      // full screen aladin
+      .useStateView(false)
+      .render { (props, adding, editScope, fullScreen) =>
         implicit val ctx = props.ctx
 
         val targetView: View[Option[Target.Id]] =
@@ -153,7 +156,8 @@ object AsterismEditor {
 
         val vizTime = props.potVizTime.toOption.flatMap(_.get)
 
-        React.Fragment(
+        <.div(
+          ExploreStyles.AladinFullScreen.when(fullScreen.get),
           props.renderInTitle(
             TargetSelectionPopup(
               props.programId,
@@ -178,7 +182,8 @@ object AsterismEditor {
                     targetView,
                     adding
                   ).runAsync
-                case _                                                     =>
+
+                case _ =>
                   Callback.empty
               }
             )
@@ -190,7 +195,8 @@ object AsterismEditor {
             props.hiddenColumns,
             targetView,
             vizTime,
-            props.renderInTitle
+            props.renderInTitle,
+            fullScreen.get
           ),
           props.currentTarget
             .flatMap[VdomElement] { targetId =>
@@ -238,7 +244,8 @@ object AsterismEditor {
                         onClone = onCloneTarget(targetId, props.asterism, props.setTarget) _,
                         obsIdSubset =
                           if (otherObsCount > 0 && editScope.value === 0) props.obsIds.some
-                          else none
+                          else none,
+                        fullScreen = fullScreen
                       )
                     )
                   case _                                                =>

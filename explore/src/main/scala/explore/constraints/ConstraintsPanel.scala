@@ -8,7 +8,6 @@ import cats.syntax.all._
 import crystal.react.View
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
-import explore.AppCtx
 import explore.common.ConstraintsQueries._
 import explore.components.HelpIcon
 import explore.components.Tile
@@ -33,6 +32,7 @@ import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
+import lucuma.ui.reusability._
 import monocle.Lens
 import react.common._
 import react.semanticui.collections.form.Form
@@ -40,20 +40,21 @@ import react.semanticui.elements.label.LabelPointing
 import lucuma.refined.*
 
 final case class ConstraintsPanel(
-  obsIds:        List[Observation.Id],
-  constraintSet: View[ConstraintSet],
-  undoStacks:    View[UndoStacks[IO, ConstraintSet]],
-  renderInTitle: Tile.RenderInTitle
-) extends ReactProps[ConstraintsPanel, ConstraintsPanel.State, ConstraintsPanel.Backend](
-      ConstraintsPanel.component
-    )
+  obsIds:           List[Observation.Id],
+  constraintSet:    View[ConstraintSet],
+  undoStacks:       View[UndoStacks[IO, ConstraintSet]],
+  renderInTitle:    Tile.RenderInTitle
+)(implicit val ctx: AppContextIO)
+    extends ReactFnProps[ConstraintsPanel](ConstraintsPanel.component)
 
 object ConstraintsPanel {
-  type Props = ConstraintsPanel
+  protected type Props = ConstraintsPanel
 
-  sealed abstract class ElevationRangeType(val label: String) extends Product with Serializable
+  private sealed abstract class ElevationRangeType(val label: String)
+      extends Product
+      with Serializable
 
-  object ElevationRangeType {
+  private object ElevationRangeType {
     case object AirMass   extends ElevationRangeType("Air Mass")
     case object HourAngle extends ElevationRangeType("Hour Angle")
 
@@ -66,197 +67,196 @@ object ConstraintsPanel {
 
   import ElevationRangeType._
 
-  // State is read-only. Changes are written directly to View received in props, and state is always derived.
-  final case class State(
+  private final case class ElevationRangeOptions(
     rangeType: ElevationRangeType,
     airMass:   ElevationRange.AirMass,
     hourAngle: ElevationRange.HourAngle
-  )
-
-  def initialState(props: Props): State = props.constraintSet.get.elevationRange match {
-    case am @ ElevationRange.AirMass(_, _)   =>
-      State(ElevationRangeType.AirMass, am, ElevationRange.HourAngle.Default)
-    case ha @ ElevationRange.HourAngle(_, _) =>
-      State(ElevationRangeType.HourAngle, ElevationRange.AirMass.Default, ha)
+  ) {
+    def toElevationRange(er: ElevationRange): ElevationRangeOptions =
+      er match {
+        case am @ ElevationRange.AirMass(_, _)   =>
+          copy(rangeType = ElevationRangeType.AirMass, airMass = am)
+        case ha @ ElevationRange.HourAngle(_, _) =>
+          copy(rangeType = ElevationRangeType.HourAngle, hourAngle = ha)
+      }
   }
 
-  def updateState(props: Props, state: State): State =
-    props.constraintSet.get.elevationRange match {
-      case am @ ElevationRange.AirMass(_, _)
-          if state.rangeType =!= ElevationRangeType.AirMass | state.airMass =!= am =>
-        state.copy(rangeType = ElevationRangeType.AirMass, airMass = am)
-      case ha @ ElevationRange.HourAngle(_, _)
-          if state.rangeType =!= ElevationRangeType.HourAngle | state.hourAngle =!= ha =>
-        state.copy(rangeType = ElevationRangeType.HourAngle, hourAngle = ha)
-      case _ => state
-    }
-
-  class Backend() {
-
-    private def renderFn(
-      props:        Props,
-      state:        State,
-      undoCtx:      UndoContext[ConstraintSet]
-    )(implicit ctx: AppContextIO): VdomNode = {
-      val undoViewSet = UndoView(props.obsIds, undoCtx)
-
-      val erView =
-        undoViewSet(ConstraintSet.elevationRange, UpdateConstraintSet.elevationRange)
-
-      def selectEnum[A: Enumerated: Display](
-        label:     String,
-        helpId:    Help.Id,
-        lens:      Lens[ConstraintSet, A],
-        remoteSet: A => ConstraintSetInput => ConstraintSetInput
-      ) = {
-        val id = label.toLowerCase().replaceAll(" ", "-")
-        ReactFragment(
-          <.label(label, HelpIcon(helpId)),
-          EnumViewSelect(id = id, value = undoViewSet(lens, remoteSet))
-        )
-      }
-
-      val erTypeView: View[ElevationRangeType] =
-        View[ElevationRangeType](
-          state.rangeType,
-          (mod, cb) =>
-            erView
-              .setCB(
-                mod(state.rangeType) match {
-                  case AirMass   => state.airMass
-                  case HourAngle => state.hourAngle
-                },
-                _ match {
-                  case ElevationRange.AirMass(_, _)   => cb(AirMass)
-                  case ElevationRange.HourAngle(_, _) => cb(HourAngle)
-                }
-              )
-        )
-
-      val airMassView: View[ElevationRange.AirMass] =
-        View[ElevationRange.AirMass](
-          state.airMass,
-          (mod, cb) =>
-            erView
-              .zoom(ElevationRange.airMass)
-              .modCB(mod, _.map(cb).orEmpty)
-        )
-
-      val hourAngleView: View[ElevationRange.HourAngle] =
-        View[ElevationRange.HourAngle](
-          state.hourAngle,
-          (mod, cb) =>
-            erView
-              .zoom(ElevationRange.hourAngle)
-              .modCB(mod, _.map(cb).orEmpty)
-        )
-
-      React.Fragment(
-        props.renderInTitle(
-          <.span(ExploreStyles.TitleUndoButtons)(UndoButtons(undoCtx))
-        ),
-        Form(clazz = ExploreStyles.ConstraintsGrid)(
-          selectEnum("Image Quality",
-                     "constraints/main/iq.md".refined,
-                     ConstraintSet.imageQuality,
-                     UpdateConstraintSet.imageQuality
-          ),
-          selectEnum("Cloud Extinction",
-                     "constraints/main/ce.md".refined,
-                     ConstraintSet.cloudExtinction,
-                     UpdateConstraintSet.cloudExtinction
-          ),
-          selectEnum("Water Vapor",
-                     "constraints/main/wv.md".refined,
-                     ConstraintSet.waterVapor,
-                     UpdateConstraintSet.waterVapor
-          ),
-          selectEnum("Sky Background",
-                     "constraints/main/sb.md".refined,
-                     ConstraintSet.skyBackground,
-                     UpdateConstraintSet.skyBackground
-          ),
-          <.label("Elevation Range", HelpIcon("constraints/main/er.md".refined)),
-          <.div(
-            ExploreStyles.ConstraintsElevationRangeGroup,
-            EnumViewSelect(
-              id = "ertype",
-              value = erTypeView,
-              upward = true,
-              clazz = ExploreStyles.ElevationRangePicker
-            ),
-            ReactFragment(
-              <.label("Min"),
-              FormInputEV(
-                id = "minam".refined,
-                value = airMassView.zoom(ElevationRange.AirMass.min),
-                errorClazz = ExploreStyles.InputErrorTooltip,
-                errorPointing = LabelPointing.Below,
-                validFormat = ModelValidators.airMassElevationRangeValidWedge.andThen(
-                  ValidSplitEpiNec.lte(state.airMass.max, "Must be <= Max".refined)
-                ),
-                changeAuditor = ChangeAuditor.accept.decimal(1.refined),
-                clazz = ExploreStyles.ElevationRangeEntry
-              ),
-              <.label("Max"),
-              FormInputEV(
-                id = "maxam".refined,
-                value = airMassView.zoom(ElevationRange.AirMass.max),
-                errorClazz = ExploreStyles.InputErrorTooltip,
-                errorPointing = LabelPointing.Below,
-                validFormat = ModelValidators.airMassElevationRangeValidWedge.andThen(
-                  ValidSplitEpiNec.gte(state.airMass.min, "Must be >= Min".refined)
-                ),
-                changeAuditor = ChangeAuditor.accept.decimal(1.refined),
-                clazz = ExploreStyles.ElevationRangeEntry
-              )
-            ).when(state.rangeType === AirMass),
-            ReactFragment(
-              <.label("Min"),
-              FormInputEV(
-                id = "minha".refined,
-                value = hourAngleView.zoom(ElevationRange.HourAngle.minHours),
-                errorClazz = ExploreStyles.InputErrorTooltip,
-                errorPointing = LabelPointing.Below,
-                validFormat = ModelValidators.hourAngleElevationRangeValidWedge.andThen(
-                  ValidSplitEpiNec.lte(state.hourAngle.maxHours, "Must be <= Max".refined)
-                ),
-                changeAuditor = ChangeAuditor.accept.decimal(1.refined),
-                clazz = ExploreStyles.ElevationRangeEntry
-              ),
-              <.label("Max"),
-              FormInputEV(
-                id = "maxha".refined,
-                value = hourAngleView.zoom(ElevationRange.HourAngle.maxHours),
-                errorClazz = ExploreStyles.InputErrorTooltip,
-                errorPointing = LabelPointing.Below,
-                validFormat = ModelValidators.hourAngleElevationRangeValidWedge.andThen(
-                  ValidSplitEpiNec.gte(state.hourAngle.minHours, "Must be >= Min".refined)
-                ),
-                changeAuditor = ChangeAuditor.accept.decimal(1.refined),
-                clazz = ExploreStyles.ElevationRangeEntry
-              ),
-              <.label("Hours")
-            ).when(state.rangeType === HourAngle)
-          )
-        )
-      )
-    }
-
-    def render(props: Props, state: State) = AppCtx.using { implicit appCtx =>
-      renderFn(props, state, UndoContext(props.undoStacks, props.constraintSet))
-    }
+  private object ElevationRangeOptions {
+    def fromElevationRange(er: ElevationRange): ElevationRangeOptions =
+      ElevationRangeOptions(
+        ElevationRangeType.AirMass,
+        ElevationRange.AirMass.Default,
+        ElevationRange.HourAngle.Default
+      ).toElevationRange(er)
   }
 
   protected val component =
-    ScalaComponent
-      .builder[Props]
-      .getDerivedStateFromPropsAndState[State] { (props, stateOpt) =>
-        stateOpt match {
-          case Some(state) => updateState(props, state)
-          case None        => initialState(props)
+    ScalaFnComponent
+      .withHooks[Props]
+      .useStateBy(props =>
+        ElevationRangeOptions.fromElevationRange(props.constraintSet.get.elevationRange)
+      )
+      .useEffectWithDepsBy((props, _) => props.constraintSet.get.elevationRange)(
+        (_, elevationRangeOptions) =>
+          elevationRange => elevationRangeOptions.modState(_.toElevationRange(elevationRange))
+      )
+      .render { (props, elevationRangeOptions) =>
+        implicit val ctx = props.ctx
+
+        val undoCtx: UndoContext[ConstraintSet] = UndoContext(props.undoStacks, props.constraintSet)
+
+        val undoViewSet = UndoView(props.obsIds, undoCtx)
+
+        val erView =
+          undoViewSet(ConstraintSet.elevationRange, UpdateConstraintSet.elevationRange)
+
+        def selectEnum[A: Enumerated: Display](
+          label:     String,
+          helpId:    Help.Id,
+          lens:      Lens[ConstraintSet, A],
+          remoteSet: A => ConstraintSetInput => ConstraintSetInput
+        ) = {
+          val id = label.toLowerCase().replaceAll(" ", "-")
+          ReactFragment(
+            <.label(label, HelpIcon(helpId)),
+            EnumViewSelect(id = id, value = undoViewSet(lens, remoteSet))
+          )
         }
+
+        val erTypeView: View[ElevationRangeType] =
+          View[ElevationRangeType](
+            elevationRangeOptions.value.rangeType,
+            (mod, cb) =>
+              erView
+                .setCB(
+                  mod(elevationRangeOptions.value.rangeType) match {
+                    case AirMass   => elevationRangeOptions.value.airMass
+                    case HourAngle => elevationRangeOptions.value.hourAngle
+                  },
+                  _ match {
+                    case ElevationRange.AirMass(_, _)   => cb(AirMass)
+                    case ElevationRange.HourAngle(_, _) => cb(HourAngle)
+                  }
+                )
+          )
+
+        val airMassView: View[ElevationRange.AirMass] =
+          View[ElevationRange.AirMass](
+            elevationRangeOptions.value.airMass,
+            (mod, cb) =>
+              erView
+                .zoom(ElevationRange.airMass)
+                .modCB(mod, _.map(cb).orEmpty)
+          )
+
+        val hourAngleView: View[ElevationRange.HourAngle] =
+          View[ElevationRange.HourAngle](
+            elevationRangeOptions.value.hourAngle,
+            (mod, cb) =>
+              erView
+                .zoom(ElevationRange.hourAngle)
+                .modCB(mod, _.map(cb).orEmpty)
+          )
+
+        React.Fragment(
+          props.renderInTitle(
+            <.span(ExploreStyles.TitleUndoButtons)(UndoButtons(undoCtx))
+          ),
+          Form(clazz = ExploreStyles.ConstraintsGrid)(
+            selectEnum(
+              "Image Quality",
+              "constraints/main/iq.md",
+              ConstraintSet.imageQuality,
+              UpdateConstraintSet.imageQuality
+            ),
+            selectEnum(
+              "Cloud Extinction",
+              "constraints/main/ce.md",
+              ConstraintSet.cloudExtinction,
+              UpdateConstraintSet.cloudExtinction
+            ),
+            selectEnum(
+              "Water Vapor",
+              "constraints/main/wv.md",
+              ConstraintSet.waterVapor,
+              UpdateConstraintSet.waterVapor
+            ),
+            selectEnum(
+              "Sky Background",
+              "constraints/main/sb.md",
+              ConstraintSet.skyBackground,
+              UpdateConstraintSet.skyBackground
+            ),
+            <.label("Elevation Range", HelpIcon("constraints/main/er.md")),
+            <.div(
+              ExploreStyles.ConstraintsElevationRangeGroup,
+              EnumViewSelect(
+                id = "ertype",
+                value = erTypeView,
+                upward = true,
+                clazz = ExploreStyles.ElevationRangePicker
+              ),
+              ReactFragment(
+                <.label("Min"),
+                FormInputEV(
+                  id = "minam",
+                  value = airMassView.zoom(ElevationRange.AirMass.min),
+                  errorClazz = ExploreStyles.InputErrorTooltip,
+                  errorPointing = LabelPointing.Below,
+                  validFormat = ModelValidators.airMassElevationRangeValidWedge.andThen(
+                    ValidSplitEpiNec.lte(elevationRangeOptions.value.airMass.max, "Must be <= Max")
+                  ),
+                  changeAuditor = ChangeAuditor.accept.decimal(1),
+                  clazz = ExploreStyles.ElevationRangeEntry
+                ),
+                <.label("Max"),
+                FormInputEV(
+                  id = "maxam",
+                  value = airMassView.zoom(ElevationRange.AirMass.max),
+                  errorClazz = ExploreStyles.InputErrorTooltip,
+                  errorPointing = LabelPointing.Below,
+                  validFormat = ModelValidators.airMassElevationRangeValidWedge.andThen(
+                    ValidSplitEpiNec.gte(elevationRangeOptions.value.airMass.min, "Must be >= Min")
+                  ),
+                  changeAuditor = ChangeAuditor.accept.decimal(1),
+                  clazz = ExploreStyles.ElevationRangeEntry
+                )
+              ).when(elevationRangeOptions.value.rangeType === AirMass),
+              ReactFragment(
+                <.label("Min"),
+                FormInputEV(
+                  id = "minha",
+                  value = hourAngleView.zoom(ElevationRange.HourAngle.minHours),
+                  errorClazz = ExploreStyles.InputErrorTooltip,
+                  errorPointing = LabelPointing.Below,
+                  validFormat = ModelValidators.hourAngleElevationRangeValidWedge.andThen(
+                    ValidSplitEpiNec.lte(
+                      elevationRangeOptions.value.hourAngle.maxHours,
+                      "Must be <= Max"
+                    )
+                  ),
+                  changeAuditor = ChangeAuditor.accept.decimal(1),
+                  clazz = ExploreStyles.ElevationRangeEntry
+                ),
+                <.label("Max"),
+                FormInputEV(
+                  id = "maxha",
+                  value = hourAngleView.zoom(ElevationRange.HourAngle.maxHours),
+                  errorClazz = ExploreStyles.InputErrorTooltip,
+                  errorPointing = LabelPointing.Below,
+                  validFormat = ModelValidators.hourAngleElevationRangeValidWedge.andThen(
+                    ValidSplitEpiNec.gte(
+                      elevationRangeOptions.value.hourAngle.minHours,
+                      "Must be >= Min"
+                    )
+                  ),
+                  changeAuditor = ChangeAuditor.accept.decimal(1),
+                  clazz = ExploreStyles.ElevationRangeEntry
+                ),
+                <.label("Hours")
+              ).when(elevationRangeOptions.value.rangeType === HourAngle)
+            )
+          )
+        )
       }
-      .renderBackend[Backend]
-      .build
 }

@@ -28,57 +28,48 @@ See https://github.com/highcharts/highcharts/issues/13320 */
   fill: var(--plot-tooltip-background-color);
 }
 
-.highcharts-legend-item:hover text {
-  fill: var(--plot-text-color-hover);
-}
-
-.highcharts-legend-item-hidden * {
-  fill: var(--plot-text-color-disabled) !important;
-  stroke: var(--plot-text-color-disabled) !important;
-}
-
 /* Target Elevation */
 .highcharts-color-0 {
-  fill: #f45b5b;
-  stroke: #f45b5b;
+  fill: hsl(0deg 87% 66%);
+  stroke: hsl(0deg 87% 66%);
 }
 
 /* Parallactic angle */
 .highcharts-color-1 {
-  fill: #8bbc21;
-  stroke: #8bbc21;
+  fill: hsl(79deg 70% 43%);
+  stroke: hsl(79deg 70% 43%);
 }
 
 /* Sky Brightness */
 .highcharts-color-2,
 .plot-sky-brightness-percentile,
 .highcharts-plot-line-label {
-  fill: #7cb5ec !important;
-  stroke: #7cb5ec;
+  fill: hsl(209deg 75% 71%) !important;
+  stroke: hsl(209deg 75% 71%);
 }
 
 /* Lunar Elevation */
 .highcharts-color-3 {
-  fill: #f7a35c;
-  stroke: #f7a35c;
+  fill: hsl(27deg 91% 66%);
+  stroke: hsl(27deg 91% 66%);
 }
 
 .plot-axis-parallactic-angle {
   stroke-width: 0;
-  fill: #8bbc21;
+  fill: hsl(79deg 70% 43%);
 }
 
 .plot-axis-parallactic-angle text {
-  fill: #8bbc21;
+  fill: hsl(79deg 70% 43%);
 }
 
 .plot-axis-sky-brightness {
   stroke-width: 0;
-  fill: #7cb5ec;
+  fill: hsl(209deg 75% 71%);
 }
 
 .plot-axis-sky-brightness text {
-  fill: #7cb5ec;
+  fill: hsl(209deg 75% 71%);
 }
 
 .plot-band-twilight-nautical {
@@ -91,11 +82,20 @@ See https://github.com/highcharts/highcharts/issues/13320 */
 }
 
 .highcharts-plot-band-label {
-  fill: #666666;
+  fill: hsl(0deg 0% 40%);
 }
 
 .highcharts-xaxis-grid .highcharts-grid-line {
   stroke-width: 1px;
+}
+
+.highcharts-legend-item:hover text {
+  fill: var(--plot-text-color-hover);
+}
+
+.highcharts-legend-item-hidden * {
+  fill: var(--plot-text-color-disabled) !important;
+  stroke: var(--plot-text-color-disabled) !important;
 }
 
 // We force these to override highchart's defaults.
@@ -113,5 +113,5 @@ See https://github.com/highcharts/highcharts/issues/13320 */
 }
 
 .plot-sky-brightness-band-label {
-  fill: #7cb5ec;
+  fill: hsl(209deg 75% 71%);
 }

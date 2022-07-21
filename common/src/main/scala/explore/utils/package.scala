@@ -17,6 +17,7 @@ import explore.model.enums.ExecutionEnvironment
 import explore.model.enums.ExecutionEnvironment.Development
 import explore.model.enums.Theme
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ui.forms.ExternalValue
 import lucuma.ui.utils.versionDateFormatter
 import lucuma.ui.utils.versionDateTimeFormatter
 import org.http4s.Uri
@@ -26,6 +27,8 @@ import react.semanticui.elements.loader.Loader
 import react.common._
 
 import java.time.Instant
+import scala.scalajs.js
+import scala.scalajs.js.JSConverters._
 
 package object utils {
   def setupScheme[F[_]: Sync](theme: Theme): F[Unit] =
@@ -64,10 +67,14 @@ package object utils {
     )
   }
 
+  val DefaultPendingRender: Long => VdomNode = _ => Loader(active = true)
+
+  val DefaultErrorRender: Throwable => VdomNode = t => Message(error = true)(t.getMessage)
+
   def potRenderWithReuse[A](
     valueRender:   A ==> VdomNode,
-    pendingRender: Long ==> VdomNode = Reuse.always(_ => Loader(active = true)),
-    errorRender:   Throwable ==> VdomNode = Reuse.always(t => Message(error = true)(t.getMessage))
+    pendingRender: Long ==> VdomNode = Reuse.always(DefaultPendingRender),
+    errorRender:   Throwable ==> VdomNode = Reuse.always(DefaultErrorRender)
   ): Pot[A] ==> VdomNode =
     (pendingRender, errorRender, valueRender).curryReusing.in(
       (pendingRender, errorRender, valueRender, pot: Pot[A]) =>
@@ -76,17 +83,25 @@ package object utils {
 
   def potRender[A](
     valueRender:   A => VdomNode,
-    pendingRender: Long => VdomNode = _ => Loader(active = true),
-    errorRender:   Throwable => VdomNode = t => Message(error = true)(t.getMessage)
+    pendingRender: Long => VdomNode = DefaultPendingRender,
+    errorRender:   Throwable => VdomNode = DefaultErrorRender
   ): Pot[A] => VdomNode =
     _.fold(pendingRender, errorRender, valueRender)
 
   def potRenderView[A](
     valueRender:   A => VdomNode,
-    pendingRender: Long => VdomNode = _ => Loader(active = true),
-    errorRender:   Throwable => VdomNode = t => Message(error = true)(t.getMessage)
+    pendingRender: Long => VdomNode = DefaultPendingRender,
+    errorRender:   Throwable => VdomNode = DefaultErrorRender
   ): View[Pot[A]] => VdomNode =
     _.get.fold(pendingRender, errorRender, valueRender)
+
+  final implicit class PotRenderOps[A](val pot: Pot[A]) extends AnyVal {
+    def render(
+      valueRender:   A => VdomNode,
+      pendingRender: Long => VdomNode = DefaultPendingRender,
+      errorRender:   Throwable => VdomNode = DefaultErrorRender
+    ): VdomNode = potRender(valueRender, pendingRender, errorRender)(pot)
+  }
 
   def showCount(count: Int, unit: String, plural: String): String =
     if (count == 1) s"$count $unit"
@@ -106,4 +121,26 @@ package object utils {
         case Assign(edit) => modS(edit).assign
         case _            => modS(base).assign
       }
+
+  /**
+   * Creates an `X` icon that clears the data from a `FormInputEV` which uses a `View[Option[A]]` It
+   * should be assigned to the `icon` parameter of `FormInputEV` and use the same `View`. It is
+   * styled to look like the clear icon for the `EnumViewOptionalSelect`s.
+   *
+   * Depending on the layout containing the `FormInputEV`, you may also need to add the
+   * `ExploreStyles.ClearableInputPaddingReset` class. When an icon is added to a FormInput, it
+   * changes the padding for the enclosed `input` to make room for the icon - lots of room - which
+   * can change your layout. The above class resets the padding to the standard for FormInputs
+   * without icons. The downside, of course, is that if your content can extend all the wqy to the
+   * right side of the input, the `X` icon will sit on top of it. Usually this is not a problem.
+   * Note that this will override that for `InputWithUnits` this will override the default `clazz`
+   * of `ExploreStyles.Grow(1), so you may need to add that, too.
+   */
+  def clearInputIcon[EV[_], A](
+    view:        EV[Option[A]]
+  )(implicit ev: ExternalValue[EV]): js.UndefOr[VdomNode] =
+    ev.get(view)
+      .flatten
+      .map(_ => <.i(ExploreStyles.ClearableInputIcon, ^.onClick --> ev.set(view)(None)))
+      .orUndefined
 }

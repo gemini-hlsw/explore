@@ -155,16 +155,10 @@ object ConstraintSetTabContents {
         basic = true,
         clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
         onClickE = linkOverride[ButtonProps](
-          ctx.pushPage(AppTab.Constraints, props.programId, none, none) >>
+          ctx.pushPage(AppTab.Constraints, props.programId, Focused.None) >>
             state.zoom(TwoPanelState.selected).set(SelectedPanel.tree)
         )
-      )(
-        ^.href := ctx.pageUrl(AppTab.Constraints,
-                              props.programId,
-                              none,
-                              none
-        ) /*, Icons.ChevronLeft*/
-      )
+      )(^.href := ctx.pageUrl(AppTab.Constraints, props.programId, Focused.None), Icons.ChevronLeft)
 
     val coreWidth  = props.size.width.getOrElse(0) - treeWidth
     val coreHeight = props.size.height.getOrElse(0)

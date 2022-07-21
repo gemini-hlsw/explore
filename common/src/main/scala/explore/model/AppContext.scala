@@ -11,7 +11,6 @@ import clue.js.FetchJSBackend
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.RetryHelpers._
 import explore.common.SSOClient
-import explore.model.ObsIdSet
 import explore.model.enums.AppTab
 import explore.model.enums.ExecutionEnvironment
 import explore.modes.SpectroscopyModesMatrix
@@ -19,9 +18,7 @@ import explore.utils
 import io.circe.Json
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.extra.router.SetRouteVia
-import lucuma.core.model.Observation
 import lucuma.core.model.Program
-import lucuma.core.model.Target
 import lucuma.schemas._
 import org.http4s._
 import org.http4s.dom.FetchClientBuilder
@@ -90,24 +87,13 @@ object StaticData {
   }
 }
 
-case class Actions[F[_]](
-  // interpreters go here
-)
-
 case class AppContext[F[_]](
   version:     NonEmptyString,
   clients:     Clients[F],
   staticData:  StaticData,
-  actions:     Actions[F],
   sso:         SSOClient[F],
-  pageUrl:     (AppTab, Program.Id, Option[ObsIdSet], Option[Target.Id]) => String,
-  setPageVia:  (
-    AppTab,
-    Program.Id,
-    Option[ObsIdSet],
-    Option[Target.Id],
-    SetRouteVia
-  ) => Callback,
+  pageUrl:     (AppTab, Program.Id, Focused) => String,
+  setPageVia:  (AppTab, Program.Id, Focused, SetRouteVia) => Callback,
   environment: ExecutionEnvironment,
   worker:      WebWorkerF[F] // There will be a few workers in the future
 )(implicit
@@ -115,47 +101,19 @@ case class AppContext[F[_]](
   val logger:  Logger[F],
   val P:       Parallel[F]
 ) {
-  def pushPage(
-    appTab:    AppTab,
-    programId: Program.Id,
-    obsIdSet:  Option[ObsIdSet],
-    targetId:  Option[Target.Id]
-  ): Callback = setPageVia(appTab, programId, obsIdSet, targetId, SetRouteVia.HistoryPush)
+  def pushPage(appTab: AppTab, programId: Program.Id, focused: Focused): Callback =
+    setPageVia(appTab, programId, focused, SetRouteVia.HistoryPush)
 
-  def replacePage(
-    appTab:    AppTab,
-    programId: Program.Id,
-    obsIdSet:  Option[ObsIdSet],
-    targetId:  Option[Target.Id]
-  ): Callback = setPageVia(appTab, programId, obsIdSet, targetId, SetRouteVia.HistoryReplace)
-
-  def pushPageSingleObs(
-    appTab:    AppTab,
-    programId: Program.Id,
-    obsId:     Option[Observation.Id],
-    targetId:  Option[Target.Id]
-  ): Callback = pushPage(appTab, programId, obsId.map(o => ObsIdSet.one(o)), targetId)
-
-  def replacePageSingleObs(
-    appTab:    AppTab,
-    programId: Program.Id,
-    obsId:     Option[Observation.Id],
-    targetId:  Option[Target.Id]
-  ): Callback = replacePage(appTab, programId, obsId.map(o => ObsIdSet.one(o)), targetId)
+  def replacePage(appTab: AppTab, programId: Program.Id, focused: Focused): Callback =
+    setPageVia(appTab, programId, focused, SetRouteVia.HistoryReplace)
 }
 
 object AppContext {
   def from[F[_]: Async: FetchJSBackend: WebSocketBackend: Parallel: Logger](
     config:               AppConfig,
     reconnectionStrategy: WebSocketReconnectionStrategy,
-    pageUrl:              (AppTab, Program.Id, Option[ObsIdSet], Option[Target.Id]) => String,
-    setPageVia:           (
-      AppTab,
-      Program.Id,
-      Option[ObsIdSet],
-      Option[Target.Id],
-      SetRouteVia
-    ) => Callback,
+    pageUrl:              (AppTab, Program.Id, Focused) => String,
+    setPageVia:           (AppTab, Program.Id, Focused, SetRouteVia) => Callback,
     worker:               WebWorkerF[F]
   ): F[AppContext[F]] =
     for {
@@ -164,15 +122,14 @@ object AppContext {
           .build[F](config.odbURI, config.preferencesDBURI, config.itcURI, reconnectionStrategy)
       staticData <- StaticData.build[F](uri"/instrument_spectroscopy_matrix.csv")
       version     = utils.version(config.environment)
-      actions     = Actions[F]()
-    } yield AppContext[F](version,
-                          clients,
-                          staticData,
-                          actions,
-                          SSOClient(config.sso),
-                          pageUrl,
-                          setPageVia,
-                          config.environment,
-                          worker
+    } yield AppContext[F](
+      version,
+      clients,
+      staticData,
+      SSOClient(config.sso),
+      pageUrl,
+      setPageVia,
+      config.environment,
+      worker
     )
 }

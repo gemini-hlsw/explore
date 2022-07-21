@@ -15,6 +15,7 @@ import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string
 import explore.common._
+import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.display._

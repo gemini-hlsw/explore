@@ -202,10 +202,12 @@ object ObsTabContents {
         compact = true,
         clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
         onClickE = linkOverride[ButtonProps](
-          ctx.pushPage(AppTab.Observations, props.programId, none, none) >>
+          ctx.pushPage(AppTab.Observations, props.programId, Focused.None) >>
             selectedView.set(SelectedPanel.tree)
         )
-      )(^.href := ctx.pageUrl(AppTab.Observations, props.programId, none, none), Icons.ChevronLeft)
+      )(^.href := ctx.pageUrl(AppTab.Observations, props.programId, Focused.None),
+        Icons.ChevronLeft
+      )
 
     val coreWidth =
       if (window.canFitTwoPanels) {
@@ -270,10 +272,11 @@ object ObsTabContents {
           resizeHandles = List(ResizeHandleAxis.East),
           content = tree(observations)
         ),
-        <.div(^.key   := "obs-right-side",
-              ^.width := coreWidth.px,
-              ^.left  := treeWidth.px,
-              ExploreStyles.SinglePanelTile
+        <.div(
+          ^.key   := "obs-right-side",
+          ^.width := coreWidth.px,
+          ^.left  := treeWidth.px,
+          ExploreStyles.SinglePanelTile
         )(
           rightSide
         )

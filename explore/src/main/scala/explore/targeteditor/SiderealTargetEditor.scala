@@ -16,6 +16,7 @@ import eu.timepit.refined.types.string._
 import explore.AppCtx
 import explore.common._
 import explore.components.HelpIcon
+import explore.components.InputWithUnits
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
@@ -76,7 +77,8 @@ final case class SiderealTargetEditor(
   searching:     View[Set[Target.Id]],
   obsIdSubset:   Option[ObsIdSet] = None,
   onClone:       TargetWithId => Callback = _ => Callback.empty,
-  renderInTitle: Option[Tile.RenderInTitle] = none
+  renderInTitle: Option[Tile.RenderInTitle] = none,
+  fullScreen:    View[Boolean]
 ) extends ReactFnProps[SiderealTargetEditor](SiderealTargetEditor.component) {
   val baseCoordinates: Coordinates =
     target.zoom(Target.Sidereal.baseCoordinates).get
@@ -280,7 +282,8 @@ object SiderealTargetEditor {
                                    props.constraints,
                                    props.wavelength
                   ),
-                  targetView.zoom(Target.Sidereal.tracking)
+                  targetView.zoom(Target.Sidereal.tracking),
+                  props.fullScreen
                 )
               )(vizTime),
               <.div(ExploreStyles.Grid, ExploreStyles.Compact, ExploreStyles.TargetForm)(

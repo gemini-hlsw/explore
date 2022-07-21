@@ -22,7 +22,7 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppConfig
 import explore.model.AppContext
 import explore.model.ExploreLocalPreferences
-import explore.model.ObsIdSet
+import explore.model.Focused
 import explore.model.RootModel
 import explore.model.RoutingInfo
 import explore.model.UserVault
@@ -38,7 +38,6 @@ import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import log4cats.loglevel.LogLevelLogger
 import lucuma.core.model.Program
-import lucuma.core.model.Target
 import org.http4s.circe._
 import org.http4s.dom.FetchClientBuilder
 import org.http4s.implicits._
@@ -149,28 +148,23 @@ object ExploreMain extends IOApp.Simple {
       def rootComponent(view: ReuseView[RootModel]): VdomElement =
         <.div(
           router(view),
-          ToastContainer(position = Position.BottomRight,
-                         theme = react.toastify.Theme.Dark,
-                         clazz = ExploreStyles.ExploreToast
+          ToastContainer(
+            position = Position.BottomRight,
+            theme = react.toastify.Theme.Dark,
+            clazz = ExploreStyles.ExploreToast
           )
         )
 
-      def pageUrl(
-        tab:           AppTab,
-        programId:     Program.Id,
-        focusedObsSet: Option[ObsIdSet],
-        focusedTarget: Option[Target.Id]
-      ): String =
-        routerCtl.urlFor(RoutingInfo.getPage(tab, programId, focusedObsSet, focusedTarget)).value
+      def pageUrl(tab: AppTab, programId: Program.Id, focused: model.Focused): String =
+        routerCtl.urlFor(RoutingInfo.getPage(tab, programId, focused)).value
 
       def setPageVia(
-        tab:           AppTab,
-        programId:     Program.Id,
-        focusedObsSet: Option[ObsIdSet],
-        focusedTarget: Option[Target.Id],
-        via:           SetRouteVia
+        tab:       AppTab,
+        programId: Program.Id,
+        focused:   Focused,
+        via:       SetRouteVia
       ) =
-        routerCtl.set(RoutingInfo.getPage(tab, programId, focusedObsSet, focusedTarget), via)
+        routerCtl.set(RoutingInfo.getPage(tab, programId, focused), via)
 
       for {
         _                    <- utils.setupScheme[IO](Theme.Dark)

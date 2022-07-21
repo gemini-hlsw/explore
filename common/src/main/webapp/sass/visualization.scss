@@ -25,12 +25,12 @@
   }
 
   .gmos-probe-arm {
-    stroke: hsl(0, 67.9%, 41.6%);
+    stroke: hsl(0deg 67.9% 41.6%);
     outline: 1px solid red;
   }
 
   .gmos-patrol-field {
-    stroke: hsl(120, 100%, 50%);
+    stroke: hsl(120deg 100% 50%);
     fill: none;
     stroke-width: 1px;
     stroke-dasharray: 10;
@@ -100,7 +100,7 @@
   }
 
   .crosshair-target {
-    stroke: hsl(84, 100%, 29.2%);
+    stroke: hsl(84deg 100% 29.2%);
     stroke-width: 2px;
   }
 
@@ -116,6 +116,7 @@
 
   .proper-motion-line-gs {
     display: none;
+
     &.guide-star-candidate-target-visible {
       display: inline;
     }
@@ -129,17 +130,17 @@
     display: none;
     stroke: red;
     stroke-width: 1px;
-    fill: hsl(9, 100%, 63.9%, 0.8);
+    fill: hsl(9deg 100% 63.9% / 80%);
     isolation: initial;
 
     &.guide-star-candidate-target-crowded {
       stroke-width: 0.5px;
-      fill: hsl(9, 100%, 63.9%, 0.5);
+      fill: hsl(9deg 100% 63.9% / 50%);
     }
 
     &.guide-star-candidate-target-reachable {
       stroke-width: 0.5px;
-      fill: hsl(180, 100%, 50%);
+      fill: hsl(180deg 100% 50%);
     }
 
     &.guide-star-candidate-target-visible {
@@ -148,7 +149,7 @@
   }
 
   .guide-star-target {
-    stroke: hsl(120, 100%, 19.6%);
+    stroke: hsl(120deg 100% 19.6%);
     stroke-width: 1px;
     stroke-opacity: 1;
     fill: green;
@@ -189,29 +190,49 @@
   position: absolute;
   z-index: 120;
 
-  .ui.icon.button:not(.animated):not(.compact):not(.labeled) {
-    padding: 0.4em;
-  }
-
   .ui.icon.button {
     margin: 0;
 
+    /* stylelint-disable-next-line selector-class-pattern */
     svg.svg-inline--fa {
       width: auto;
     }
   }
+
+  .ui.icon.button:not(.animated, .compact, .labeled) {
+    padding: 0.4em;
+  }
 }
 
 .explore-aladin-zoom-control {
-  @include aladin-button-mixin();
+  @include aladin-button-mixin;
+
   right: 10px;
   top: 50%;
   display: flex;
   flex-direction: column;
 }
 
+.ui.icon.button:not(.animated, .compact, .labeled).explore-aladin-fullscreen-button {
+  padding: 0.4em;
+  margin: 0;
+
+  /* stylelint-disable-next-line selector-class-pattern */
+  svg.svg-inline--fa {
+    width: auto;
+  }
+}
+
+.explore-aladin-fullscreen-button {
+  @include aladin-button-mixin;
+
+  right: 5px;
+  top: 10px;
+}
+
 .explore-aladin-toolbox-button {
-  @include aladin-button-mixin();
+  @include aladin-button-mixin;
+
   top: 10px;
   left: 10px;
 
@@ -269,6 +290,7 @@
       }
 
       &.ui.button.compact {
+        /* stylelint-disable-next-line selector-class-pattern */
         svg.svg-inline--fa {
           width: auto;
           margin-right: 0;
@@ -289,6 +311,7 @@
       font-weight: bold;
     }
 
+    /* stylelint-disable-next-line selector-class-pattern */
     .svg-inline--fa {
       margin-right: 0.3em;
     }

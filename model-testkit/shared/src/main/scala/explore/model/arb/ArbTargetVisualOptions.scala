@@ -24,12 +24,13 @@ trait ArbTargetVisualOptions {
         vo <- arbitrary[Offset]
         a  <- arbitrary[Visible]
         o  <- arbitrary[Visible]
-      } yield TargetVisualOptions(fa, vo, a, o)
+        f  <- arbitrary[Boolean]
+      } yield TargetVisualOptions(fa, vo, a, o, f)
     }
 
   implicit val targetVisualOptionsCogen: Cogen[TargetVisualOptions] =
-    Cogen[(Angle, Offset, Visible, Visible)].contramap(c =>
-      (c.fovAngle, c.viewOffset, c.agsCandidates, c.agsOverlay)
+    Cogen[(Angle, Offset, Visible, Visible, Boolean)].contramap(c =>
+      (c.fovAngle, c.viewOffset, c.agsCandidates, c.agsOverlay, c.fullScreen)
     )
 }
 

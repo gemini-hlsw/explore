@@ -15,7 +15,7 @@ import explore.common.AsterismQueries._
 import explore.implicits._
 import explore.model.AsterismGroup
 import explore.model.ObsIdSet
-import explore.model.TargetGroup
+import explore.model.TargetWithObs
 import explore.undo._
 import japgolly.scalajs.react.callback.Callback
 import lucuma.core.model.Target
@@ -62,16 +62,18 @@ object AsterismGroupObsListActions {
           }
 
         // remove the dragged ids from all the targets in the src
-        val tempTargetGroups = srcGroup.targetIds.foldRight(agwo.targetGroups) {
-          case (tid, groups) => groups.updatedWith(tid)(_.map(_.removeObsIds(draggedIds)))
+        val tempTargets = srcGroup.targetIds.foldRight(agwo.targetsWithObs) {
+          case (tid, targetWithObs) =>
+            targetWithObs.updatedWith(tid)(_.map(_.removeObsIds(draggedIds)))
         }
 
         // add the dragged ids to all the targets in the destination
-        val updatedTargetGroups = destGroup.targetIds.foldRight(tempTargetGroups) {
-          case (tid, groups) => groups.updatedWith(tid)(_.map(_.addObsIds(draggedIds)))
+        val updatedTargetsWithObs = destGroup.targetIds.foldRight(tempTargets) {
+          case (tid, targetWithObs) =>
+            targetWithObs.updatedWith(tid)(_.map(_.addObsIds(draggedIds)))
         }
 
-        agwo.copy(asterismGroups = updatedGroupList, targetGroups = updatedTargetGroups)
+        agwo.copy(asterismGroups = updatedGroupList, targetsWithObs = updatedTargetsWithObs)
       }
       .getOrElse(agwo)
   }
@@ -112,11 +114,11 @@ object AsterismGroupObsListActions {
             splitAsterismGroups - obsIds - ag.obsIds + ag.addObsIds(obsIds).asObsKeyValue
           }
 
-        val updatedTargetGroups = agwo.targetGroups.updatedWith(targetId)(
+        val updatedTargetsWithObs = agwo.targetsWithObs.updatedWith(targetId)(
           _.map(tg => if (isUndo) tg.removeObsIds(obsIds) else tg.addObsIds(obsIds))
         )
 
-        agwo.copy(asterismGroups = updatedAsterismGroups, targetGroups = updatedTargetGroups)
+        agwo.copy(asterismGroups = updatedAsterismGroups, targetsWithObs = updatedTargetsWithObs)
       }
   }
 
@@ -181,9 +183,7 @@ object AsterismGroupObsListActions {
     c:                                 TransactionalClient[IO, ObservationDB]
   ): IO[Unit] =
     TargetQueriesGQL.UndeleteTargetsMutation
-      .execute[IO](
-        UndeleteTargetsInput(WHERE = targetId.toWhereTarget.assign)
-      )
+      .execute[IO](UndeleteTargetsInput(WHERE = targetId.toWhereTarget.assign))
       .void
 
   def dropObservations(
@@ -229,42 +229,29 @@ object AsterismGroupObsListActions {
     }
   )
 
-  def targetExistence(
-    targetId: Target.Id
-  )(implicit
-    appCtx:   AppContextIO
-  ) = // can switch appCtx to TransactionalClient when logging not required
-    Action[AsterismGroupsWithObs, Option[TargetGroup]](
-      getter = (agwo: AsterismGroupsWithObs) => agwo.targetGroups.get(targetId),
-      setter = (otg: Option[TargetGroup]) =>
-        (agwo: AsterismGroupsWithObs) =>
-          if (agwo.targetGroups.contains(targetId)) {
-            // Delete - don't need to worry about the asterism groups for delete
-            val newGroups = agwo.targetGroups.removed(targetId)
-            agwo.copy(targetGroups = newGroups)
-          } else
-            // Undelete: Should always have a TargetGroup at this point.
-            otg.fold(agwo) { tg =>
-              val newTargetGroups   = agwo.targetGroups.updated(targetId, tg)
-              val obsInTg           = tg.obsIds
-              // update the asterism groups
-              val newAsterismGroups = agwo.asterismGroups
-                .map { case (_, ag) =>
-                  if (ag.obsIds.toSortedSet.intersect(obsInTg).nonEmpty) ag.addTargetId(targetId)
-                  else ag
-                }
-                .toList
-                .toSortedMap(_.obsIds)
-              agwo.copy(targetGroups = newTargetGroups, asterismGroups = newAsterismGroups)
-            }
+  def targetExistence(targetId: Target.Id, setPage: Option[Target.Id] => IO[Unit])(implicit
+    c:                          TransactionalClient[IO, ObservationDB]
+  ): Action[AsterismGroupsWithObs, Option[TargetWithObs]] =
+    // can switch appCtx to TransactionalClient when logging not required
+    Action[AsterismGroupsWithObs, Option[TargetWithObs]](
+      getter = (agwo: AsterismGroupsWithObs) => agwo.targetsWithObs.get(targetId),
+      setter = (otwo: Option[TargetWithObs]) =>
+        otwo.fold(AsterismGroupsWithObs.targetsWithObs.modify(_.removed(targetId))) { tg =>
+          AsterismGroupsWithObs.targetsWithObs.modify(_.updated(targetId, tg)) >>>
+            AsterismGroupsWithObs.asterismGroups.modify(
+              _.map { case (_, ag) =>
+                if (ag.obsIds.toSortedSet.intersect(tg.obsIds).nonEmpty) ag.addTargetId(targetId)
+                else ag
+              }.toList.toSortedMap(_.obsIds)
+            )
+        }
     )(
-      onSet = (_, otg) =>
-        otg.fold(
-          appCtx.logger.error("Creating targets in AsterismGroupObsListActions not yet supported")
-        )(_ => deleteTarget(targetId).void),
+      // DB creation is performed beforehand, in order to get id
+      onSet =
+        (_, otg) => otg.fold(deleteTarget(targetId) >> setPage(none))(_ => setPage(targetId.some)),
       onRestore = (_, otg) =>
-        otg.fold(deleteTarget(targetId).void) { _ =>
-          undeleteTarget(targetId).void
+        otg.fold(deleteTarget(targetId) >> setPage(none)) { _ =>
+          undeleteTarget(targetId) >> setPage(targetId.some)
         }
     )
 }

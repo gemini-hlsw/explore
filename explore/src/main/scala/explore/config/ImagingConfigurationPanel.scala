@@ -11,12 +11,12 @@ import coulomb.policy.spire.standard.given
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import explore.components.HelpIcon
+import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
 import explore.model.AvailableFilter
 import explore.model.ImagingConfigurationOptions
 import explore.model.enums.ImagingCapabilities
 import explore.model.formats._
-import explore.targeteditor.InputWithUnits
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
