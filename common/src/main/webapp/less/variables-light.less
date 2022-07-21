@@ -26,7 +26,16 @@
     calc(var(--color-text-base-l) + 75%)
   );
   --gray: gray;
-  --gray-dark: @color-gray-dark;
+  --gray-dark-h: 210;
+  --gray-dark-s: 7.9%;
+  --gray-dark-l: 24.7%;
+  --gray-dark-a: 1;
+  --gray-dark-hsla: var(--gray-dark-h), var(--gray-dark-s), var(--gray-dark-l),
+    var(--gray-dark-a);
+  --gray-dark: hsla(var(--gray-dark-hsla));
+  --gray-dark-semi-hsla: var(--gray-dark-h), var(--gray-dark-s),
+    var(--gray-dark-l), 75%;
+  --gray-dark-semi: hsla(var(--gray-dark-semi-hsla));
 }
 
 .named-colors-light() {
@@ -62,6 +71,20 @@
   --scrollbar-background: lighten(@lightGrey, 5%);
   --scrollbar-background-thumb: darken(@lightGrey, 15%);
   --scrollbar-background-thumb-hover: darken(@lightGrey, 20%);
+  --hud-color: hsla(
+    var(--color-text-base-h),
+    var(--color-text-base-s),
+    calc(var(--color-text-base-l) - 25%),
+    0.9
+  );
+  --hud-background-color: hsla(
+    var(--color-background-base-h),
+    var(--color-background-base-s),
+    calc(var(--color-background-base-l) - 5%),
+    0.7
+  );
+  --ags-icon-color: hsla(60, 100%, 50%, 80%);
+  --ags-good-iq-color: hsl(120, 60.7%, 33.9%, 80%);
 }
 
 .site-light() {
@@ -120,8 +143,9 @@
   @tertiaryActiveColor: lighten(@tertiaryHoverColor, 20%);
 
   --button-hover-background-color: hsl(220, 2.9%, 79.8%);
-  --button-basic-hover-background-color: ffff;
+  --button-basic-hover-background-color: hsl(0, 0%, 100%);
   --button-background-color: hsl(210, 3%, 88%);
+  --button-background-color-semi: hsla(210, 3%, 88%, 75%);
   --button-text-color: @textColor;
   --button-active-color: @activeColor;
   --button-tertiary-text-color: @textColor;
