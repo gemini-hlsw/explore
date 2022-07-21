@@ -5,16 +5,15 @@ package explore.components.state
 
 import cats.effect.IO
 import cats.syntax.all._
+import crystal.react.hooks._
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.implicits._
 import explore.model.UserVault
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
-import monocle.Focus
 import org.typelevel.log4cats.Logger
-import react.common.ReactProps
+import react.common._
 
 import java.time.Instant
 
@@ -23,61 +22,44 @@ final case class SSOManager(
   setVault:         Option[UserVault] => Callback,
   setMessage:       NonEmptyString => Callback
 )(implicit val ctx: AppContextIO)
-    extends ReactProps[SSOManager](SSOManager.component)
+    extends ReactFnProps[SSOManager](SSOManager.component)
 
 object SSOManager {
-  type Props = SSOManager
+  protected type Props = SSOManager
 
-  case class State(cancelToken: Option[IO[Unit]])
+  private def tokenRefresher(
+    expiration:   Instant,
+    setVault:     Option[UserVault] => Callback,
+    setMessage:   NonEmptyString => Callback
+  )(implicit ctx: AppContextIO): IO[Unit] =
+    for {
+      vaultOpt <- ctx.sso.refreshToken(expiration)
+      _        <- setVault(vaultOpt).to[IO]
+      _        <- vaultOpt.fold(setMessage("Your session has expired").to[IO])(vault =>
+                    tokenRefresher(vault.expiration, setVault, setMessage)
+                  )
+    } yield ()
 
-  object State {
-    val cancelToken = Focus[State](_.cancelToken)
-  }
+  protected val component = ScalaFnComponent
+    .withHooks[Props]
+    .useRef(none[IO[Unit]])             // cancelToken
+    .useAsyncEffectOnMountBy { (props, cancelToken) =>
+      implicit val ctx = props.ctx
 
-  final class Backend() {
-
-    def tokenRefresher(
-      expiration:   Instant,
-      setVault:     Option[UserVault] => Callback,
-      setMessage:   NonEmptyString => Callback
-    )(implicit ctx: AppContextIO): IO[Unit] =
-      for {
-        vaultOpt <- ctx.sso.refreshToken(expiration)
-        _        <- setVault(vaultOpt).to[IO]
-        _        <- vaultOpt.fold(setMessage("Your session has expired").to[IO])(vault =>
-                      tokenRefresher(vault.expiration, setVault, setMessage)
-                    )
-      } yield ()
-
-    // This is a "phantom" component. Doesn't render anything.
-    def render(): VdomNode = React.Fragment()
-  }
-
-  val component = ScalaComponent
-    .builder[Props]
-    .initialState(State(none))
-    .renderBackend[Backend]
-    .componentDidMount { $ =>
-      implicit val ctx = $.props.ctx
-      $.backend
-        .tokenRefresher($.props.expiration, $.props.setVault, $.props.setMessage)
+      tokenRefresher(props.expiration, props.setVault, props.setMessage)
         .onError(t =>
           Logger[IO].error(t)("Error refreshing SSO token") >>
-            ($.props.setVault(none) >>
-              $.props.setMessage("There was an error while checking the validity of your session"))
+            (props.setVault(none) >>
+              props.setMessage("There was an error while checking the validity of your session"))
               .to[IO]
         )
         .start
-        .flatMap(ct => $.modStateIn[IO](State.cancelToken.replace(ct.cancel.some)))
-        .runAsync
+        .flatMap(fiber => cancelToken.setAsync(fiber.cancel.some))
+        .as(
+          cancelToken.getAsync >>= (cancelOpt =>
+            cancelOpt.foldMap(_ >> props.setVault(none).to[IO])
+          )
+        )
     }
-    .componentWillUnmount { $ =>
-      implicit val ctx = $.props.ctx
-      // Setting vault to none is defensive. This component should actually unmount when vault is none.
-      $.state.cancelToken
-        .map(cancel => cancel >> $.props.setVault(none).to[IO])
-        .orEmpty
-        .runAsync
-    }
-    .build
+    .render((_, _) => React.Fragment()) // This is a "phantom" component. Doesn't render anything.
 }

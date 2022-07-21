@@ -7,6 +7,7 @@ import cats.effect.IO
 import crystal.Pot
 import crystal.react.View
 import eu.timepit.refined.auto._
+import explore._
 import explore.components.Tile
 import explore.constraints.ConstraintsPanel
 import explore.undo._
@@ -20,12 +21,12 @@ import react.common.style.Css
 object ConstraintsTile {
 
   def constraintsTile(
-    obsId:      Observation.Id,
-    csPot:      Pot[View[ConstraintSet]],
-    undoStacks: View[UndoStacks[IO, ConstraintSet]],
-    control:    Option[VdomNode] = None,
-    clazz:      Option[Css] = None
-  ): Tile =
+    obsId:        Observation.Id,
+    csPot:        Pot[View[ConstraintSet]],
+    undoStacks:   View[UndoStacks[IO, ConstraintSet]],
+    control:      Option[VdomNode] = None,
+    clazz:        Option[Css] = None
+  )(implicit ctx: AppContextIO): Tile =
     Tile(
       ObsTabTilesIds.ConstraintsId,
       "Constraints",
