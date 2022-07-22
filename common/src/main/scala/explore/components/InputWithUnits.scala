@@ -12,6 +12,7 @@ import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.validation.InputValidFormat
+import lucuma.refined._
 import lucuma.ui.forms.ExternalValue
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
@@ -21,7 +22,6 @@ import react.semanticui.elements.icon.Icon
 import react.semanticui.elements.input.IconPosition
 import react.semanticui.elements.label.Label
 import react.semanticui.elements.label.LabelPointing
-import lucuma.refined._
 
 import scala.scalajs.js
 

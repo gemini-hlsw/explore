@@ -42,6 +42,7 @@ import lucuma.core.model.ZeroTo100
 import lucuma.core.syntax.time._
 import lucuma.core.util.Enumerated
 import lucuma.core.validation._
+import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.forms._
 import lucuma.ui.input._
@@ -55,7 +56,6 @@ import react.semanticui.elements.label.Label
 import react.semanticui.modules.dropdown._
 import react.semanticui.shorthand._
 import spire.std.any._
-import lucuma.refined.*
 
 import scala.collection.immutable.SortedMap
 

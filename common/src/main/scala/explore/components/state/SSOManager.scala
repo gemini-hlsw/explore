@@ -12,9 +12,9 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.implicits._
 import explore.model.UserVault
 import japgolly.scalajs.react._
+import lucuma.refined.*
 import org.typelevel.log4cats.Logger
 import react.common._
-import lucuma.refined.*
 
 import java.time.Instant
 

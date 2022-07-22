@@ -28,6 +28,7 @@ import lucuma.core.model.validation.ModelValidators
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.core.validation._
+import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.forms.FormInputEV
@@ -37,7 +38,6 @@ import monocle.Lens
 import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.label.LabelPointing
-import lucuma.refined.*
 
 final case class ConstraintsPanel(
   obsIds:           List[Observation.Id],

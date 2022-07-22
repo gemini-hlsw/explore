@@ -24,9 +24,9 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
 import lucuma.ui.reusability._
-import react.fa.given
 import react.common._
 import react.common.implicits._
+import react.fa.given
 import react.semanticui.collections.table._
 import react.semanticui.elements.button._
 import react.semanticui.modules.checkbox.Checkbox

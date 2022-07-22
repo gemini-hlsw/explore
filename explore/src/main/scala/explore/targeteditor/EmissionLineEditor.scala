@@ -29,6 +29,7 @@ import lucuma.core.math.units._
 import lucuma.core.model.EmissionLine
 import lucuma.core.util.Enumerated
 import lucuma.core.validation._
+import lucuma.refined.*
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
@@ -40,7 +41,6 @@ import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
 import reactST.reactTable._
 import reactST.reactTable.mod.SortingRule
-import lucuma.refined.*
 
 import scala.collection.immutable.SortedMap
 import scala.math.BigDecimal.RoundingMode

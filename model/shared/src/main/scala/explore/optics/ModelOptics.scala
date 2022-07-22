@@ -5,10 +5,10 @@ package explore.optics
 
 import cats.syntax.all._
 import coulomb._
-import coulomb.syntax._
-import coulomb.units.constants._
 import coulomb.ops.algebra.spire.all.given
 import coulomb.policy.spire.standard.given
+import coulomb.syntax._
+import coulomb.units.constants._
 import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.enums.Band
 import lucuma.core.math.ApparentRadialVelocity

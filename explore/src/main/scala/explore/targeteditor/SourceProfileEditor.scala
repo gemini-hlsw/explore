@@ -17,13 +17,13 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.SourceProfile._
+import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.forms.EnumSelect
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.reusability._
 import queries.schemas.implicits._
 import react.common._
-import lucuma.refined.*
 
 case class SourceProfileEditor(
   sourceProfile:       Aligner[SourceProfile, SourceProfileInput],

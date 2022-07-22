@@ -29,6 +29,7 @@ import lucuma.core.math.Coordinates
 import lucuma.core.model.Semester
 import lucuma.core.model.Target
 import lucuma.core.model.User
+import lucuma.refined.*
 import lucuma.ui.reusability._
 import queries.common.UserPreferencesQueriesGQL._
 import react.common._
@@ -36,7 +37,6 @@ import react.datepicker._
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.ButtonGroup
-import lucuma.refined.*
 
 import java.time.ZonedDateTime
 

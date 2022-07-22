@@ -31,9 +31,8 @@ import explore.model.ScienceModeBasic
 import explore.model.display._
 import explore.optics._
 import explore.optics.all._
-// import explore.targeteditor.InputWithUnits
-import explore.utils._
 import explore.syntax.ui._
+import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
@@ -47,6 +46,7 @@ import lucuma.core.syntax.all._
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.core.validation._
+import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.forms.EnumViewOptionalSelect
 import lucuma.ui.forms.FormInputEV
@@ -60,7 +60,6 @@ import react.semanticui.collections.form.FormInput
 import react.semanticui.elements.button.Button
 import react.semanticui.shorthand._
 import react.semanticui.sizes._
-import lucuma.refined.*
 
 import java.time.Duration
 import scala.scalajs.js.JSConverters._

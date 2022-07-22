@@ -18,13 +18,13 @@ import lucuma.core.math.RadialVelocity
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.core.validation._
+import lucuma.refined.*
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
 import react.common._
 import react.common.implicits._
 import react.semanticui.elements.label.LabelPointing
-import lucuma.refined.*
 
 final case class RVInput(
   rv:       View[Option[RadialVelocity]],

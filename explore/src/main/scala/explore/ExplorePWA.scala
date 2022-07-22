@@ -6,9 +6,9 @@ package explore
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.callback.Callback
 import japgolly.scalajs.react.vdom.html_<^._
+import react.common._
 import react.fa.IconSize
 import react.semanticui.elements.button.Button
-import react.common._
 import react.semanticui.sizes
 import react.toastify._
 

@@ -12,6 +12,7 @@ import coulomb.ops.algebra.spire.all.given
 import coulomb.policy.spire.standard.given
 import coulomb.units.si.*
 import coulomb.units.si.given
+import coulomb.units.si.prefixes.Nano
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.model.enums.ImagingCapabilities
 import lucuma.core.enums.FilterType
@@ -21,11 +22,10 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units._
 import monocle.Focus
+import spire.math.Rational
 import spire.math.interval.ValueBound
 
 import scala.collection.immutable.SortedSet
-import coulomb.units.si.prefixes.Nano
-import spire.math.Rational
 
 sealed abstract class AvailableFilter {
   val tag: String

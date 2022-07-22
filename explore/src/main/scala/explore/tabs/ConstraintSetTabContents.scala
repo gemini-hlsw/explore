@@ -33,6 +33,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Program
 import lucuma.core.model.User
+import lucuma.refined.*
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
 import org.scalajs.dom.window
@@ -40,15 +41,14 @@ import queries.common.ConstraintGroupQueriesGQL._
 import queries.common.ObsQueriesGQL
 import queries.common.UserPreferencesQueriesGQL._
 import react.common._
-import react.fa._
 import react.common.implicits._
 import react.draggable.Axis
+import react.fa._
 import react.resizable._
 import react.resizeDetector.ResizeDetector
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.sizes._
-import lucuma.refined.*
 
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._

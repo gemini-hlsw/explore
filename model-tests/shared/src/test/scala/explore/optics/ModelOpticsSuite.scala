@@ -3,10 +3,10 @@
 
 package explore.optics
 
+import explore.optics.all._
 import lucuma.core.math.arb.ArbRadialVelocity
 import lucuma.core.math.arb.ArbRedshift
 import lucuma.core.model.arb.ArbTarget
-import explore.optics.all._
 import monocle.law.discipline.IsoTests
 import monocle.law.discipline.OptionalTests
 import munit.DisciplineSuite

@@ -18,7 +18,6 @@ import japgolly.scalajs.react.vdom.html_<^._
 import org.http4s._
 import org.http4s.dom.FetchClientBuilder
 import react.common._
-// import react.hotkeys._
 import react.markdown.ReactMarkdown
 import react.markdown.RehypePlugin
 import react.markdown.RemarkPlugin

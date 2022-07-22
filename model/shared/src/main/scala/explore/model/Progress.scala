@@ -5,8 +5,8 @@ package explore.model
 
 import cats.Eq
 import coulomb._
-import coulomb.units.accepted._
 import coulomb.syntax._
+import coulomb.units.accepted._
 import eu.timepit.refined.api._
 import eu.timepit.refined.numeric._
 import eu.timepit.refined.types.numeric.NonNegInt

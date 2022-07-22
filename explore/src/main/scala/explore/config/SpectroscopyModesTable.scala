@@ -7,11 +7,10 @@ import cats.data._
 import cats.effect._
 import cats.syntax.all._
 import coulomb.Quantity
-// import coulomb.refined._
 import crystal.react.View
 import crystal.react.hooks._
-import crystal.react.reuse._
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosBigDecimal
@@ -38,6 +37,7 @@ import lucuma.core.math.units.Micrometer
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.SiderealTracking
 import lucuma.core.util.Display
+import lucuma.refined.*
 import lucuma.ui.reusability._
 import react.CircularProgressbar.CircularProgressbar
 import react.common._
@@ -57,7 +57,6 @@ import spire.math.Bounded
 import spire.math.Interval
 
 import java.text.DecimalFormat
-import lucuma.refined.*
 
 import scalajs.js.|
 

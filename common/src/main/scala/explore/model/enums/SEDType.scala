@@ -8,9 +8,9 @@ import cats.data.NonEmptyMap
 import coulomb.*
 import coulomb.syntax.*
 import coulomb.units.si.Kelvin
+import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
-import eu.timepit.refined.numeric.Positive
 import lucuma.core.enums.CoolStarTemperature
 import lucuma.core.enums.GalaxySpectrum
 import lucuma.core.enums.HIIRegionSpectrum

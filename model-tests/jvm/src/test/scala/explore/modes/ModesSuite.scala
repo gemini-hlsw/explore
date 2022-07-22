@@ -7,12 +7,12 @@ import cats.effect.IO
 import cats.effect.Resource
 import cats.syntax.all._
 import coulomb._
-import coulomb.units.time._
-import coulomb.cats.quantity.ctx_Quantity_Order
-import coulomb.syntax.*
+import coulomb.conversion.spire.*
+import coulomb.ops.algebra.cats.quantity.given
 import coulomb.ops.algebra.spire.all.given
 import coulomb.policy.spire.standard.given
-import coulomb.conversion.spire.*
+import coulomb.syntax.*
+import coulomb.units.time._
 import eu.timepit.refined._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric._
@@ -62,7 +62,8 @@ class ModesSuite extends CatsEffectSuite {
           1.refined[Positive].some,
           None,
           // BigDecimal(0).refined[NonNegative].withUnit[Micrometer].some,
-          Angle.fromDoubleArcseconds(1).some declination = none
+          Angle.fromDoubleArcseconds(1).some,
+          declination = none
         )
       )
       // .flatTap(_.traverse(IO.println))

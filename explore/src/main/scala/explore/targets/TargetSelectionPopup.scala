@@ -26,11 +26,12 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Program
 import lucuma.core.model.Target
+import lucuma.refined.*
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.reusability._
 import react.aladin._
-import react.fa.given
 import react.common._
+import react.fa.given
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.header.Header
 import react.semanticui.elements.segment.Segment
@@ -38,7 +39,6 @@ import react.semanticui.elements.segment.SegmentGroup
 import react.semanticui.modules.modal._
 import react.semanticui.shorthand._
 import react.semanticui.sizes._
-import lucuma.refined.*
 
 import scala.collection.immutable.SortedMap
 import scala.concurrent.duration._

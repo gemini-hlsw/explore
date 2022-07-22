@@ -5,9 +5,9 @@ package explore.targeteditor
 
 import cats.syntax.all._
 import crystal.react.View
-import eu.timepit.refined.collection.NonEmpty
 import crystal.react.hooks._
 import eu.timepit.refined.cats._
+import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.HelpIcon
@@ -17,6 +17,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
 import lucuma.core.validation.InputValidSplitEpi
+import lucuma.refined.*
 import lucuma.ui.forms._
 import lucuma.ui.reusability._
 import lucuma.ui.utils.abbreviate
@@ -27,7 +28,6 @@ import react.semanticui.collections.form.Form.FormProps
 import react.semanticui.collections.form._
 import react.semanticui.elements.label.LabelPointing
 import react.semanticui.shorthand._
-import lucuma.refined.*
 
 import scalajs.js.timers
 import scalajs.js.JSConverters._

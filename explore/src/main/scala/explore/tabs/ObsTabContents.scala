@@ -35,6 +35,7 @@ import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
+import lucuma.refined._
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
 import org.scalajs.dom.window
@@ -50,7 +51,6 @@ import react.resizeDetector.hooks._
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.sizes._
-import lucuma.refined._
 
 import scala.concurrent.duration._
 

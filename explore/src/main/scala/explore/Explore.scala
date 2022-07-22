@@ -38,6 +38,7 @@ import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import log4cats.loglevel.LogLevelLogger
 import lucuma.core.model.Program
+import lucuma.refined.*
 import org.http4s.circe._
 import org.http4s.dom.FetchClientBuilder
 import org.http4s.implicits._
@@ -49,7 +50,6 @@ import react.common._
 import react.common.implicits._
 import react.toastify._
 import workers.WebWorkerF
-import lucuma.refined.*
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration._

@@ -28,8 +28,6 @@ import queries.schemas.implicits._
 import react.gridlayout.{BreakpointName => _, _}
 
 import scala.collection.immutable.SortedMap
-import cats.ApplicativeThrow
-import cats.MonadThrow
 
 object UserPreferencesQueries {
 

@@ -14,7 +14,6 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
-// import react.hotkeys._
 import react.semanticui.modules.sidebar.Sidebar
 import react.semanticui.modules.sidebar.SidebarAnimation
 import react.semanticui.modules.sidebar.SidebarDirection

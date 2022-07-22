@@ -5,6 +5,7 @@ package explore.targets
 
 import cats.Order._
 import cats.syntax.all._
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.conversions._
@@ -14,26 +15,25 @@ import explore.model.formats._
 import explore.optics.all._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enums.Band
+import lucuma.core.math.ApparentRadialVelocity
+import lucuma.core.math.Declination
 import lucuma.core.math.Epoch
 import lucuma.core.math.Parallax
+import lucuma.core.math.ProperMotion.Dec
+import lucuma.core.math.ProperMotion.RA
+import lucuma.core.math.RadialVelocity
+import lucuma.core.math.Redshift
+import lucuma.core.math.RightAscension
 import lucuma.core.math.dimensional._
 import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.Target
 import lucuma.core.syntax.display._
 import lucuma.core.util.Display
 import react.common._
+import reactST.reactTable.ColumnValueOptions
 import reactST.reactTable.Plugin
 import reactST.reactTable.TableDef
-import eu.timepit.refined.types.string.NonEmptyString
-import reactST.reactTable.ColumnValueOptions
 import reactST.reactTable.facade.cell.CellProps
-import lucuma.core.math.RightAscension
-import lucuma.core.math.Declination
-import lucuma.core.math.ProperMotion.Dec
-import lucuma.core.math.ProperMotion.RA
-import lucuma.core.math.RadialVelocity
-import lucuma.core.math.Redshift
-import lucuma.core.math.ApparentRadialVelocity
 
 object TargetColumns {
   val baseColNames: Map[String, String] = Map(

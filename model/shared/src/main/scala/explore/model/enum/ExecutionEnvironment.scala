@@ -5,8 +5,8 @@ package explore.model.enums
 
 import cats.syntax.all._
 import eu.timepit.refined.auto._
-import eu.timepit.refined.types.string.NonEmptyString
 import eu.timepit.refined.collection.NonEmpty
+import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.util.Enumerated
 import lucuma.refined._
 

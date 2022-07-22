@@ -15,11 +15,12 @@ import typings.loglevel.mod.LogLevelDesc
 
 trait ArbExploreLocalPreferences {
 
-  implicit val localPreferencesArb = Arbitrary[ExploreLocalPreferences] {
-    for {
-      level <- arbitrary[LogLevelDesc]
-    } yield ExploreLocalPreferences(level)
-  }
+  implicit val localPreferencesArb: Arbitrary[ExploreLocalPreferences] =
+    Arbitrary[ExploreLocalPreferences] {
+      for {
+        level <- arbitrary[LogLevelDesc]
+      } yield ExploreLocalPreferences(level)
+    }
 
   implicit def localPreferencesCogen: Cogen[ExploreLocalPreferences] =
     Cogen[String].contramap(_.level.toString)

@@ -20,6 +20,7 @@ import lucuma.core.math.Angle
 import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
+import lucuma.refined.*
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.input.ChangeAuditor
 import monocle.Lens
@@ -27,7 +28,6 @@ import monocle.std.option
 import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.sizes._
-import lucuma.refined.*
 
 final case class ObsConfigurationPanel(
   obsId:            Observation.Id,

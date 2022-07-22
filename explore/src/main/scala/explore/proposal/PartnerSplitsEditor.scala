@@ -16,6 +16,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ZeroTo100
 import lucuma.core.validation._
+import lucuma.refined._
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input._
 import monocle.function.Index
@@ -24,7 +25,6 @@ import react.semanticui.collections.form.Form
 import react.semanticui.collections.table._
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.modal._
-import lucuma.refined._
 
 final case class PartnerSplitsEditor(
   show:    Boolean,

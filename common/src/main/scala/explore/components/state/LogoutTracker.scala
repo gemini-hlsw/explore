@@ -14,8 +14,8 @@ import explore.model.UserVault
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.broadcastchannel._
-import react.common._
 import lucuma.refined._
+import react.common._
 
 final case class LogoutTracker(
   setVault:   Option[UserVault] => Callback,

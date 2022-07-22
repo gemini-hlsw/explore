@@ -41,6 +41,7 @@ import lucuma.core.model.SourceProfile
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.validation._
+import lucuma.refined.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.forms.FormInputEV
@@ -52,7 +53,6 @@ import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.label.LabelPointing
 import react.semanticui.sizes.Small
-import lucuma.refined.*
 
 import java.time.Instant
 

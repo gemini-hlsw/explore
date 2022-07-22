@@ -41,6 +41,7 @@ import lucuma.core.model.Target
 import lucuma.core.model.Target.Nonsidereal
 import lucuma.core.model.Target.Sidereal
 import lucuma.core.model.User
+import lucuma.refined.*
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
 import org.scalajs.dom.window
@@ -63,7 +64,6 @@ import java.time.Instant
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._
-import lucuma.refined.*
 
 final case class TargetTabContents(
   userId:            Option[User.Id],

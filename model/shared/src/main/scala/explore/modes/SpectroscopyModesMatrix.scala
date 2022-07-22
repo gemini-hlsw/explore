@@ -3,14 +3,16 @@
 
 package explore.modes
 
+import _root_.refined.algebra._
 import cats.data.NonEmptyList
 import cats.implicits._
 import coulomb._
-import coulomb.syntax.*
-import coulomb.ops.algebra.spire.all.given
-import coulomb.ops.algebra.cats.quantity.given
-import coulomb.policy.spire.standard.given
+import coulomb.conversion.ValueConversion
 import coulomb.conversion.spire.*
+import coulomb.ops.algebra.cats.quantity.given
+import coulomb.ops.algebra.spire.all.given
+import coulomb.policy.spire.standard.given
+import coulomb.syntax.*
 import eu.timepit.refined._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.collection.NonEmpty
@@ -29,8 +31,6 @@ import monocle.Lens
 import monocle.macros.GenLens
 import spire.math.Interval
 import spire.math.Rational
-import _root_.refined.algebra._
-import coulomb.conversion.ValueConversion
 // import spire.std.int._
 // import spire.std.bigDecimal._
 

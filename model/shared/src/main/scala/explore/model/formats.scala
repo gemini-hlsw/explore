@@ -5,9 +5,9 @@ package explore.model
 
 import cats.syntax.all._
 import coulomb._
-import coulomb.syntax._
 import coulomb.ops.algebra.spire.all.given
 import coulomb.policy.spire.standard.given
+import coulomb.syntax._
 import eu.timepit.refined.refineV
 import explore.optics.all._
 import lucuma.core.math.HourAngle.HMS

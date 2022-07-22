@@ -5,9 +5,9 @@ package explore.config
 
 import cats.implicits._
 import coulomb.Quantity
-import crystal.react.View
 import coulomb.ops.algebra.spire.all.given
 import coulomb.policy.spire.standard.given
+import crystal.react.View
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import explore.components.HelpIcon
@@ -24,6 +24,7 @@ import lucuma.core.enums.FilterType
 import lucuma.core.math.units._
 import lucuma.core.util.Display
 import lucuma.core.validation._
+import lucuma.refined.*
 import lucuma.ui.forms.EnumViewOptionalSelect
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
@@ -35,7 +36,6 @@ import spire.math.Rational
 import scala.collection.immutable.SortedSet
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
-import lucuma.refined.*
 
 final case class ImagingConfigurationPanel(
   options: View[ImagingConfigurationOptions]

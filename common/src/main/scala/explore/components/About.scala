@@ -10,8 +10,8 @@ import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.clipboard.CopyToClipboard
-import react.fa.given
 import react.common._
+import react.fa.given
 import react.semanticui.modules.modal.Dimmer.Blurring
 import react.semanticui.modules.modal.Modal
 import react.semanticui.modules.modal.ModalContent

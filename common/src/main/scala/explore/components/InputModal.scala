@@ -11,15 +11,16 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.refined.*
 import lucuma.ui.forms.FormInputEV
-import react.fa.given
 import react.common._
+import react.fa.given
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.modal._
 import react.semanticui.sizes.Small
+
 import scala.language.implicitConversions
 import scala.scalajs.js.|
-import lucuma.refined.*
 
 /**
  * Generic component to accept user input

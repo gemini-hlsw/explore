@@ -7,6 +7,7 @@ import cats.data.NonEmptyList
 import cats.syntax.all._
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.collection.NonEmpty
+import eu.timepit.refined.numeric.Interval
 import explore.model.DitherNanoMeters
 import explore.model.DitherNanoMetersRange
 import explore.model.HourRange
@@ -21,7 +22,6 @@ import lucuma.core.validation._
 import lucuma.refined.*
 
 import scala.util.Try
-import eu.timepit.refined.numeric.Interval
 
 object ExploreModelValidators {
   val i = ValidSplitEpi

@@ -45,6 +45,7 @@ import lucuma.core.model.UnnormalizedSED
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.core.validation.InputValidSplitEpi
+import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.forms.EnumSelect
 import lucuma.ui.forms.EnumViewSelect
@@ -54,7 +55,6 @@ import lucuma.ui.reusability._
 import queries.schemas.implicits._
 import react.common._
 import react.semanticui.elements.label.LabelPointing
-import lucuma.refined.*
 
 import scala.collection.immutable.HashSet
 import scala.collection.immutable.SortedMap

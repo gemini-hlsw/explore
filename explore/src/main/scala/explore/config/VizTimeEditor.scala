@@ -12,11 +12,11 @@ import explore.components.ui.ExploreStyles
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.refined.*
 import react.common._
 import react.datepicker._
 import react.semanticui.collections.form.Form
 import react.semanticui.sizes._
-import lucuma.refined.*
 
 import java.time.Instant
 
