@@ -3,7 +3,6 @@
 
 package explore.config
 
-import cats.Eq
 import cats.data.NonEmptyList
 import cats.syntax.all._
 import clue.data.syntax._
@@ -34,6 +33,7 @@ import explore.model.ExploreModelValidators
 import explore.model.ScienceModeAdvanced
 import explore.model.ScienceModeBasic
 import explore.model.display._
+import explore.model.reusability._
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.SpectroscopyModeRow
@@ -88,7 +88,7 @@ sealed trait AdvancedConfigurationPanel[T <: ScienceModeAdvanced, S <: ScienceMo
 
 sealed abstract class AdvancedConfigurationPanelBuilder[
   T <: ScienceModeAdvanced,
-  S <: ScienceModeBasic: Eq,
+  S <: ScienceModeBasic: Reusability,
   Input,
   Props <: AdvancedConfigurationPanel[T, S, Input],
   Grating: Enumerated: Display,
@@ -171,8 +171,6 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
       .fromInputValidWedge(ExploreModelValidators.wavelengthValidWedge)
       .allow(s => s === "0" || s === "0.")
       .decimal(3)
-
-  implicit val reuseS: Reusability[S] = Reusability.byEq
 
   private case class ReadonlyData(
     coverage:   Interval[Quantity[BigDecimal, Micrometer]],
@@ -600,7 +598,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
 object AdvancedConfigurationPanel {
   sealed abstract class GmosAdvancedConfigurationPanel[
     T <: ScienceModeAdvanced,
-    S <: ScienceModeBasic: Eq,
+    S <: ScienceModeBasic: Reusability,
     Input,
     Props <: AdvancedConfigurationPanel[T, S, Input],
     Grating: Enumerated: Display,
