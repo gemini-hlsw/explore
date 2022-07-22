@@ -3,17 +3,22 @@
 
 package explore.config
 
+import cats.Eq
 import cats.data.NonEmptyList
 import cats.syntax.all._
 import clue.data.syntax._
+import coulomb.Quantity
+import coulomb.refined._
 import crystal.Pot
 import crystal.react.View
 import crystal.react.hooks._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.numeric.NonNegative
+import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosBigDecimal
+import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.Aligner
@@ -29,6 +34,9 @@ import explore.model.ExploreModelValidators
 import explore.model.ScienceModeAdvanced
 import explore.model.ScienceModeBasic
 import explore.model.display._
+import explore.modes.GmosNorthSpectroscopyRow
+import explore.modes.GmosSouthSpectroscopyRow
+import explore.modes.SpectroscopyModeRow
 import explore.optics._
 import explore.syntax.ui._
 import explore.utils._
@@ -38,6 +46,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enums._
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
+import lucuma.core.math.units.Micrometer
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.NonNegDuration
 import lucuma.core.model.Observation
@@ -58,6 +67,8 @@ import react.semanticui.collections.form.FormInput
 import react.semanticui.elements.button.Button
 import react.semanticui.shorthand._
 import react.semanticui.sizes._
+import spire.math.Bounded
+import spire.math.Interval
 
 import java.time.Duration
 import scala.scalajs.js.JSConverters._
@@ -68,6 +79,7 @@ sealed trait AdvancedConfigurationPanel[T <: ScienceModeAdvanced, S <: ScienceMo
   val subtitle: Option[NonEmptyString]
   val scienceModeAdvanced: Aligner[T, Input]
   val scienceModeBasic: S
+  val spectroscopyRequirements: SpectroscopyRequirementsData
   val potITC: View[Pot[Option[ITCSuccess]]]
   val onShowBasic: Callback
 
@@ -75,8 +87,8 @@ sealed trait AdvancedConfigurationPanel[T <: ScienceModeAdvanced, S <: ScienceMo
 }
 
 sealed abstract class AdvancedConfigurationPanelBuilder[
-  T <: ScienceModeAdvanced,
-  S <: ScienceModeBasic,
+  T <: ScienceModeAdvanced: Eq,
+  S <: ScienceModeBasic: Eq,
   Input,
   Props <: AdvancedConfigurationPanel[T, S, Input],
   Grating: Enumerated: Display,
@@ -160,6 +172,94 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
       .allow(s => s === "0" || s === "0.")
       .decimal(3)
 
+  implicit val reuseS: Reusability[S] = Reusability.byEq
+  implicit val reuseT: Reusability[T] = Reusability.byEq
+
+  private case class ReadonlyData(
+    coverage:   Interval[Quantity[BigDecimal, Micrometer]],
+    resolution: PosInt
+  ) {
+    val formattedCoverage: String = this.coverage match {
+      case Bounded(a, b, _) =>
+        List(a, b)
+          .map(q => "%.3f".format(q.value.setScale(3, BigDecimal.RoundingMode.DOWN)))
+          .mkString(" - ")
+      case _                =>
+        "-"
+    }
+  }
+
+  private object ReadonlyData {
+    def build(row: SpectroscopyModeRow, wavelength: Option[Wavelength]): Option[ReadonlyData] =
+      if (wavelength.forall(w => w >= row.minWavelength.w && w <= row.maxWavelength.w))
+        ReadonlyData(SpectroscopyModeRow.coverageInterval(wavelength)(row), row.resolution).some
+      else
+        none
+  }
+
+  private def findMatrixDataFromRow(
+    basic:        S,
+    advanced:     T,
+    requirements: SpectroscopyRequirementsData,
+    row:          SpectroscopyModeRow
+  ): Option[ReadonlyData] = (basic, advanced, row.instrument) match {
+    case (ScienceModeBasic.GmosNorthLongSlit(bGrating, bFilter, bFpu),
+          ScienceModeAdvanced.GmosNorthLongSlit(aWavelength,
+                                                aGrating,
+                                                aFilter,
+                                                aFpu,
+                                                _,
+                                                _,
+                                                _,
+                                                _,
+                                                _,
+                                                _,
+                                                _,
+                                                _
+          ),
+          GmosNorthSpectroscopyRow(rGrating, rFpu, rFilter)
+        ) =>
+      val wavelength = aWavelength.orElse(requirements.wavelength)
+      val grating    = aGrating.getOrElse(bGrating)
+      val filter     = aFilter.orElse(bFilter)
+      val fpu        = aFpu.getOrElse(bFpu)
+      if (grating === rGrating && filter === rFilter && fpu === rFpu)
+        ReadonlyData.build(row, wavelength)
+      else none
+    case (ScienceModeBasic.GmosSouthLongSlit(bGrating, bFilter, bFpu),
+          ScienceModeAdvanced.GmosSouthLongSlit(aWavelength,
+                                                aGrating,
+                                                aFilter,
+                                                aFpu,
+                                                _,
+                                                _,
+                                                _,
+                                                _,
+                                                _,
+                                                _,
+                                                _,
+                                                _
+          ),
+          GmosSouthSpectroscopyRow(rGrating, rFpu, rFilter)
+        ) =>
+      val wavelength = aWavelength.orElse(requirements.wavelength)
+      val grating    = aGrating.getOrElse(bGrating)
+      val filter     = aFilter.orElse(bFilter)
+      val fpu        = aFpu.getOrElse(bFpu)
+      if (grating === rGrating && filter === rFilter && fpu === rFpu)
+        ReadonlyData.build(row, wavelength)
+      else none
+    case _ => None
+  }
+
+  private def findMatrixData(
+    basic:        S,
+    advanced:     T,
+    requirements: SpectroscopyRequirementsData,
+    rows:         List[SpectroscopyModeRow]
+  ): Option[ReadonlyData] =
+    rows.flatMap(row => findMatrixDataFromRow(basic, advanced, requirements, row)).headOption
+
   val component =
     ScalaFnComponent
       .withHooks[Props]
@@ -181,11 +281,42 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
           if (newExpTime === expTimeOverride.get) Callback.empty
           else expTimeOverride.set(newExpTime)
       )
+      // filter the spectroscopy matrix by the requirements that don't get overridden
+      // by the advanced config (wavelength, for example).
+      .useMemoBy((props, _, _) =>
+        (props.spectroscopyRequirements.focalPlane,
+         props.spectroscopyRequirements.capabilities,
+         props.spectroscopyRequirements.focalPlaneAngle,
+         props.spectroscopyRequirements.resolution,
+         props.spectroscopyRequirements.wavelengthCoverage
+        )
+      ) { (props, _, _) =>
+        { case (fp, cap, fpa, res, cov) =>
+          props.ctx.staticData.spectroscopyMatrix.filtered(
+            focalPlane = fp,
+            capabilities = cap,
+            slitWidth = fpa,
+            resolution = res,
+            coverage = cov.map(_.micrometer.toValue[BigDecimal].toRefined[Positive])
+          )
+        }
+      }
+      // Try to find the readonly data from the spectroscopy matrix
+      .useMemoBy { (props, _, _, _) =>
+        // TODO: reuse on rows, not requirements? And narrow advanced comparison?
+        (props.scienceModeBasic, props.scienceModeAdvanced.get, props.spectroscopyRequirements)
+      } { (_, _, _, rows) =>
+        { case (basic, advanced, reqs) =>
+          findMatrixData(basic, advanced, reqs, rows)
+        }
+      }
       .render {
         (
           props,
           exposureModeEnum,
-          expTimeOverrideSecs
+          expTimeOverrideSecs,
+          _,
+          readonlyData
         ) =>
           implicit val ctx = props.ctx
 
@@ -327,6 +458,18 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 id = "explicitRoi",
                 value = explicitRoi(props.scienceModeAdvanced),
                 clearable = true
+              ),
+              <.label("λ / Δλ", ExploreStyles.SkipToNext),
+              FormInput(
+                value = readonlyData.value.fold("Unknown")(_.resolution.toString),
+                disabled = true
+              ),
+              <.label("λ Coverage", ExploreStyles.SkipToNext),
+              ReactFragment(
+                FormInput(value = readonlyData.value.fold("Unknown")(_.formattedCoverage),
+                          disabled = true
+                ),
+                <.span(ExploreStyles.UnitsLabel, "nm")
               )
             ),
             <.div(ExploreStyles.ExploreForm, ExploreStyles.AdvancedConfigurationCol3)(
@@ -449,8 +592,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
 
 object AdvancedConfigurationPanel {
   sealed abstract class GmosAdvancedConfigurationPanel[
-    T <: ScienceModeAdvanced,
-    S <: ScienceModeBasic,
+    T <: ScienceModeAdvanced: Eq,
+    S <: ScienceModeBasic: Eq,
     Input,
     Props <: AdvancedConfigurationPanel[T, S, Input],
     Grating: Enumerated: Display,
@@ -473,16 +616,17 @@ object AdvancedConfigurationPanel {
 
   // Gmos North Long Slit
   final case class GmosNorthLongSlit(
-    obsId:               Observation.Id,
-    title:               String,
-    subtitle:            Option[NonEmptyString],
-    scienceModeAdvanced: Aligner[ScienceModeAdvanced.GmosNorthLongSlit,
+    obsId:                    Observation.Id,
+    title:                    String,
+    subtitle:                 Option[NonEmptyString],
+    scienceModeAdvanced:      Aligner[ScienceModeAdvanced.GmosNorthLongSlit,
                                  GmosNorthLongSlitAdvancedConfigInput
     ],
-    scienceModeBasic:    ScienceModeBasic.GmosNorthLongSlit,
-    potITC:              View[Pot[Option[ITCSuccess]]],
-    onShowBasic:         Callback
-  )(implicit val ctx:    AppContextIO)
+    scienceModeBasic:         ScienceModeBasic.GmosNorthLongSlit,
+    spectroscopyRequirements: SpectroscopyRequirementsData,
+    potITC:                   View[Pot[Option[ITCSuccess]]],
+    onShowBasic:              Callback
+  )(implicit val ctx:         AppContextIO)
       extends ReactFnProps[AdvancedConfigurationPanel.GmosNorthLongSlit](
         AdvancedConfigurationPanel.GmosNorthLongSlit.component
       )
@@ -625,16 +769,17 @@ object AdvancedConfigurationPanel {
   // Gmos South Long Slit
 
   final case class GmosSouthLongSlit(
-    obsId:               Observation.Id,
-    title:               String,
-    subtitle:            Option[NonEmptyString],
-    scienceModeAdvanced: Aligner[ScienceModeAdvanced.GmosSouthLongSlit,
+    obsId:                    Observation.Id,
+    title:                    String,
+    subtitle:                 Option[NonEmptyString],
+    scienceModeAdvanced:      Aligner[ScienceModeAdvanced.GmosSouthLongSlit,
                                  GmosSouthLongSlitAdvancedConfigInput
     ],
-    scienceModeBasic:    ScienceModeBasic.GmosSouthLongSlit,
-    potITC:              View[Pot[Option[ITCSuccess]]],
-    onShowBasic:         Callback
-  )(implicit val ctx:    AppContextIO)
+    scienceModeBasic:         ScienceModeBasic.GmosSouthLongSlit,
+    spectroscopyRequirements: SpectroscopyRequirementsData,
+    potITC:                   View[Pot[Option[ITCSuccess]]],
+    onShowBasic:              Callback
+  )(implicit val ctx:         AppContextIO)
       extends ReactFnProps[AdvancedConfigurationPanel.GmosSouthLongSlit](
         AdvancedConfigurationPanel.GmosSouthLongSlit.component
       )

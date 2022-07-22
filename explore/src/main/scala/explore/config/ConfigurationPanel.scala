@@ -178,6 +178,7 @@ object ConfigurationPanel {
                       )
                     ),
                     northAligner.get.basic,
+                    requirementsCtx.model.get.spectroscopy,
                     props.scienceData.model.zoom(ScienceData.potITC),
                     showBasicCB
                   )
@@ -196,6 +197,7 @@ object ConfigurationPanel {
                       )
                     ),
                     southAligner.get.basic,
+                    requirementsCtx.model.get.spectroscopy,
                     props.scienceData.model.zoom(ScienceData.potITC),
                     showBasicCB
                   )
