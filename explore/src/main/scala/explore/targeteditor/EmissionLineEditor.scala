@@ -129,7 +129,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
             .setHeader("Units")
             .setCell(cell =>
               EnumViewSelect[View, Units Of LineFlux[T]](
-                id = NonEmptyString.unsafeFrom(s"lineUnits_${cell.row.id}"),
+                id = s"lineUnits_${cell.row.id}",
                 value = cell.value,
                 compact = true,
                 disabled = disabled,

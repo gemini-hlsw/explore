@@ -127,7 +127,7 @@ object TargetSummaryTable {
                 text = "Columns",
                 clazz = ExploreStyles.SelectColumns
               )(
-                DropdownMenu()(
+                DropdownMenu(
                   tableInstance.allColumns
                     .drop(2)
                     .toTagMod { column =>

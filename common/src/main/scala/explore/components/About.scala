@@ -10,11 +10,11 @@ import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.clipboard.CopyToClipboard
+import react.fa.given
 import react.common._
 import react.semanticui.modules.modal.Dimmer.Blurring
 import react.semanticui.modules.modal.Modal
 import react.semanticui.modules.modal.ModalContent
-// import react.semanticui.shorthand._
 
 case class About(trigger: Reuse[VdomNode])(implicit val ctx: AppContextIO)
     extends ReactFnProps[About](About.component)
@@ -29,7 +29,7 @@ object About {
       Modal(
         dimmer = Blurring,
         trigger = props.trigger: VdomNode,
-        // closeIcon = Icons.Close.clazz(ExploreStyles.ModalCloseButton): VdomNode,
+        closeIcon = Icons.Close.clazz(ExploreStyles.ModalCloseButton),
         content = ModalContent(
           <.div(
             Logo(),

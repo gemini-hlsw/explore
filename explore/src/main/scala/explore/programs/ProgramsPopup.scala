@@ -60,27 +60,28 @@ object ProgramsPopup {
             )
           )
 
-      Modal(
-        clazz = ExploreStyles.ProgramsPopup,
-        actions = actions,
-        centered = false,
-        open = true,
-        closeOnDimmerClick = props.onClose.isDefined,
-        closeOnEscape = props.onClose.isDefined,
-        closeIcon = props.onClose
-          .map(_ => Icons.Close.clazz(ExploreStyles.ModalCloseButton): VdomNode)
-          .orUndefined,
-        dimmer = Dimmer.Blurring,
-        size = ModalSize.Small,
-        onClose = props.onClose.orUndefined,
-        header = ModalHeader("Programs"),
-        content = ModalContent(
-          ProgramTable(
-            props.currentProgramId,
-            selectProgram = selectProgram(props.onClose, props.undoStacks),
-            props.onClose.isEmpty
-          )
-        )
-      )(): VdomNode
+      <.div()
+      // Modal(
+      //   clazz = ExploreStyles.ProgramsPopup,
+      //   actions = actions,
+      //   centered = false,
+      //   open = true,
+      //   closeOnDimmerClick = props.onClose.isDefined,
+      //   closeOnEscape = props.onClose.isDefined,
+      //   closeIcon = props.onClose
+      //     .map(_ => Icons.Close.clazz(ExploreStyles.ModalCloseButton): VdomNode)
+      //     .orUndefined,
+      //   dimmer = Dimmer.Blurring,
+      //   size = ModalSize.Small,
+      //   onClose = props.onClose.orUndefined,
+      //   header = ModalHeader("Programs"),
+      //   content = ModalContent(
+      //     ProgramTable(
+      //       props.currentProgramId,
+      //       selectProgram = selectProgram(props.onClose, props.undoStacks),
+      //       props.onClose.isEmpty
+      //     )
+      //   )
+      // ): VdomNode
     }
 }

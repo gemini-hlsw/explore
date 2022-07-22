@@ -23,6 +23,7 @@ import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.reusability._
 import queries.schemas.implicits._
 import react.common._
+import lucuma.refined.*
 
 case class SourceProfileEditor(
   sourceProfile:       Aligner[SourceProfile, SourceProfileInput],
@@ -70,7 +71,7 @@ object SourceProfileEditor {
           React.Fragment(
             <.label("FWHM", ExploreStyles.SkipToNext),
             InputWithUnits(                             // FWHM is positive arcsec accepting decimals
-              id = "fwhm",
+              id = "fwhm".refined,
               value = gaussianAligner
                 .zoom(Gaussian.fwhm, GaussianInput.fwhm.modify)
                 .view(_.toInput.assign),

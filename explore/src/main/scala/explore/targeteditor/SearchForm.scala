@@ -83,18 +83,18 @@ object SearchForm {
         val search: Callback =
           props
             .submit(
-              term.get,
+              term.get.value,
               error.setState(none) >> props.searching.mod(_ + props.id),
               t =>
                 searchComplete >>
                   error
                     .setState(
                       NonEmptyString
-                        .unsafeFrom(s"'${abbreviate(term.get, 10)}' not found")
+                        .unsafeFrom(s"'${abbreviate(term.get.value, 10)}' not found")
                         .some
                     )
                     .when_(t.isEmpty),
-              _ => searchComplete >> error.setState(NonEmptyString("Search error...").some)
+              _ => searchComplete >> error.setState("Search error...".refined[NonEmpty].some)
             )
 
         def iconKeyPress(e: ReactKeyboardEvent): Callback =
@@ -118,9 +118,12 @@ object SearchForm {
         val disabled = props.searching.get.exists(_ === props.id)
 
         Form(clazz = ExploreStyles.SearchForm, onSubmitE = submitForm)(
-          <.label("Name", HelpIcon("target/main/search-target.md"), ExploreStyles.SkipToNext),
+          <.label("Name",
+                  HelpIcon("target/main/search-target.md".refined),
+                  ExploreStyles.SkipToNext
+          ),
           FormInputEV(
-            id = "search",
+            id = "search".refined,
             value = term.withOnMod(props.targetView.set),
             validFormat = InputValidSplitEpi.nonEmptyString,
             error = error.value.orUndefined,

@@ -33,6 +33,7 @@ import react.beautifuldnd._
 import react.common._
 import react.common.implicits._
 import react.fa.FontAwesomeIcon
+import react.fa.given
 import react.reflex._
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.header.Header

@@ -26,6 +26,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Program
 import lucuma.ui.reusability._
 import queries.common.ProgramQueriesGQL._
+import react.fa.given
 import react.common._
 import react.common.implicits._
 import react.semanticui.collections.table.TableCompact

@@ -8,6 +8,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.hooks._
 import crystal.react.implicits._
+import crystal.react.reuse._
 import explore.implicits._
 import fs2.Stream
 import gpp.highcharts.highchartsStrings.line
@@ -102,7 +103,8 @@ object ElevationPlotSemester {
 
   val dateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
-  implicit val propsReuse: Reusability[Props]           = Reusability.derive
+  // implicit val propsReuse: Reusability[Props]           = Reusability.derive
+  implicit val propsReuse: Reusability[Props]           = Reusability.never
   implicit val taksReuse: Reusability[Option[IO[Unit]]] = Reusability.always
 
   val component =
@@ -176,8 +178,14 @@ object ElevationPlotSemester {
 
         val tooltipFormatter: TooltipFormatterCallbackFunction = {
           (ctx: TooltipFormatterContextObject, _: Tooltip) =>
-            val date       = dateFormat(ctx.x)
-            val visibility = Duration.ofMillis((ctx.y * MillisPerHour).toLong)
+            val x          = ctx.x match
+              case x: Double => x
+              case x: String => x.toDouble
+            val y          = ctx.y match
+              case y: Double => y
+              case y: String => y.toDouble
+            val date       = dateFormat(x)
+            val visibility = Duration.ofMillis((y * MillisPerHour).toLong)
             val minutes    = visibility.getSeconds / 60
             s"<strong>$date</strong><br/>${ctx.series.name}: ${minutes / 60}h${minutes % 60}m"
         }

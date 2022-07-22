@@ -40,12 +40,13 @@ final case class InputWithUnits[EV[_], A](
   inline:          js.UndefOr[Boolean] = js.undefined,
   size:            js.UndefOr[SemanticSize] = js.undefined
 )(implicit val ev: ExternalValue[EV], val eq: Eq[A])
-    extends ReactFnProps[InputWithUnits[Any, Any]](InputWithUnits.component)
+    extends ReactFnProps[InputWithUnits[InputWithUnits.AnyF, Any]](InputWithUnits.component)
 
 object InputWithUnits {
+  type AnyF[_]        = Any
   type Props[F[_], A] = InputWithUnits[F, A]
 
-  val component = componentF[Any, Any]
+  val component = componentF[AnyF, Any]
 
   def componentF[F[_], A] =
     ScalaFnComponent[Props[F, A]] { p =>

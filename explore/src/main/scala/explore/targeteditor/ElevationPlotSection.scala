@@ -51,7 +51,8 @@ final case class ElevationPlotSection(
 object ElevationPlotSection {
   type Props = ElevationPlotSection
 
-  implicit val propsReuse: Reusability[Props] = Reusability.derive
+  // implicit val propsReuse: Reusability[Props] = Reusability.derive
+  implicit val propsReuse: Reusability[Props] = Reusability.never
 
   val preferredSiteFor = (c: Props) =>
     c.scienceMode
@@ -143,7 +144,8 @@ object ElevationPlotSection {
               <.div(ExploreStyles.ElevationPlot) {
                 (siteView.get, rangeView.get).mapN[VdomNode] {
                   case (site, PlotRange.Night)    =>
-                    ElevationPlotNight(site, props.coords, date.value, opt.time)
+                    <.div()
+                  // ElevationPlotNight(site, props.coords, date.value, opt.time)
                   case (site, PlotRange.Semester) =>
                     val coords   = props.coords
                     val semester = Semester.fromLocalDate(date.value)

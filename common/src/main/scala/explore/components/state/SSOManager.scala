@@ -36,7 +36,7 @@ object SSOManager {
     for {
       vaultOpt <- ctx.sso.refreshToken(expiration)
       _        <- setVault(vaultOpt).to[IO]
-      _        <- vaultOpt.fold(setMessage("Your session has expired").to[IO])(vault =>
+      _        <- vaultOpt.fold(setMessage("Your session has expired".refined).to[IO])(vault =>
                     tokenRefresher(vault.expiration, setVault, setMessage)
                   )
     } yield ()
@@ -51,7 +51,9 @@ object SSOManager {
         .onError(t =>
           Logger[IO].error(t)("Error refreshing SSO token") >>
             (props.setVault(none) >>
-              props.setMessage("There was an error while checking the validity of your session"))
+              props.setMessage(
+                "There was an error while checking the validity of your session".refined
+              ))
               .to[IO]
         )
         .start

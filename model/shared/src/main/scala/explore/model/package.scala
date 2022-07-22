@@ -16,6 +16,7 @@ import lucuma.core.model.SourceProfile
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.Target
 import lucuma.core.model.UnnormalizedSED
+import lucuma.refined.*
 
 import scala.collection.immutable.SortedMap
 
@@ -30,7 +31,7 @@ package object model {
     val Max: Hours = Hours.unsafeFrom(MaxHourValue)
   }
 
-  val NewTargetName: NonEmptyString = "<New Target>"
+  val NewTargetName: NonEmptyString = "<New Target>".refined
 
   val EmptySiderealTarget =
     Target.Sidereal(

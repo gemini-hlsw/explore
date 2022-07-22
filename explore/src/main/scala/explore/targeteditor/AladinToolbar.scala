@@ -35,17 +35,6 @@ final case class AladinToolbar(
 
 object AladinToolbar {
   type Props = AladinToolbar
-  //
-  // Conversion to simplify usage with semantic ui
-
-  import react.semanticui.ShorthandS
-  import react.semanticui.elements.icon.Icon
-  import react.fa.FontAwesomeIcon
-
-  import scala.scalajs.js.UndefOr
-
-  given Conversion[FontAwesomeIcon, UndefOr[ShorthandS[Icon]]] = _.render
-  given Conversion[FontAwesomeIcon, VdomNode]                  = _.render
 
   val component =
     ScalaFnComponent[Props] { props =>
@@ -87,16 +76,16 @@ object AladinToolbar {
           )
         ),
         <.div(
-          ExploreStyles.AladinCenterButton,
-          Popup(
-            content = "Center on target",
-            position = PopupPosition.BottomLeft,
-            trigger = Button(size = Mini, icon = true, onClick = props.center.set(true))(
-              Icons.Bullseye
-                .transform(Transform(size = 24))
-                .clazz(ExploreStyles.Accented)
-            )
-          )
+          ExploreStyles.AladinCenterButton
+            // Popup(
+            //   content = "Center on target",
+            //   position = PopupPosition.BottomLeft,
+            //   trigger = Button(size = Mini, icon = true, onClick = props.center.set(true))(
+            //     Icons.Bullseye
+            //       .transform(Transform(size = 24))
+            //       .clazz(ExploreStyles.Accented)
+            //   )
+            // )
         )
       )
     }

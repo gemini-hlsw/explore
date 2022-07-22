@@ -24,6 +24,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
 import lucuma.ui.reusability._
+import react.fa.given
 import react.common._
 import react.common.implicits._
 import react.semanticui.collections.table._
@@ -148,7 +149,7 @@ object TargetTable {
                        text = "Columns",
                        clazz = ExploreStyles.SelectColumns
               )(
-                DropdownMenu()(
+                DropdownMenu(
                   tableInstance.allColumns
                     .drop(2)
                     .toTagMod { column =>
@@ -204,7 +205,7 @@ object TargetTable {
                       .set(rowData.original.id.some),
                     props2Attrs(rowData.getRowProps())
                   ),
-                cell = (cell: TargetTable.CellType[_]) =>
+                cell = (cell: TargetTable.CellType[?]) =>
                   TableCell(clazz = columnClasses.get(cell.column.id.toString).orUndefined)(
                     ^.whiteSpace.nowrap
                   )

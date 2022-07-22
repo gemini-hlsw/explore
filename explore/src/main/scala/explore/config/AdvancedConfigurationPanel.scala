@@ -31,8 +31,9 @@ import explore.model.ScienceModeBasic
 import explore.model.display._
 import explore.optics._
 import explore.optics.all._
-import explore.targeteditor.InputWithUnits
+// import explore.targeteditor.InputWithUnits
 import explore.utils._
+import explore.syntax.ui._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
@@ -146,7 +147,9 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
 
   // Note: truncates to Int.MaxValue - shouldn't have durations longer than that...
   private def durationToSeconds(nnd: NonNegDuration): NonNegInt =
-    NonNegInt.unsafeFrom(math.min(nnd.value.toMicros / 1000L / 1000L, Int.MaxValue.toLong).toInt)
+    NonNegInt.unsafeFrom(
+      math.min((nnd.value: Duration).toMicros / 1000L / 1000L, Int.MaxValue.toLong).toInt
+    )
 
   private def secondsToDuration(secs: NonNegInt): NonNegDuration =
     NonNegDuration.unsafeFrom(secs.value.toLong.seconds)
@@ -447,7 +450,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 size = Small,
                 compact = true,
                 clazz = ExploreStyles.VeryCompact,
-                content = "Simple Configuration".refined,
+                content = "Simple Configuration",
                 // icon = Icons.ChevronsLeft,
                 onClick = props.onShowBasic.value
               )(^.tpe := "button")
@@ -614,7 +617,7 @@ object AdvancedConfigurationPanel {
       .zoom(ScienceModeAdvanced.GmosNorthLongSlit.explicitWavelengthDithers,
             GmosNorthLongSlitAdvancedConfigInput.explicitWavelengthDithersNm.modify
       )
-      .view(_.map(_.map(_.value).toList).orUnassign)
+      .view(_.map(_.map(_.value: BigDecimal).toList).orUnassign)
 
     @inline override protected def explicitSpatialOffsets(
       aligner:      AA
@@ -766,7 +769,7 @@ object AdvancedConfigurationPanel {
       .zoom(ScienceModeAdvanced.GmosSouthLongSlit.explicitWavelengthDithers,
             GmosSouthLongSlitAdvancedConfigInput.explicitWavelengthDithersNm.modify
       )
-      .view(_.map(_.map(_.value).toList).orUnassign)
+      .view(_.map(_.map(_.value: BigDecimal).toList).orUnassign)
 
     @inline override protected def explicitSpatialOffsets(
       aligner:      AA

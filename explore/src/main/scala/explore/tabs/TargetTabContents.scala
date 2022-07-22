@@ -499,12 +499,11 @@ object TargetTabContents {
     }
 
     val selectedPanel                                    = panels.get.selected
-    val optSelected: Option[Either[Target.Id, ObsIdSet]] =
-      (props.focusedObsSet, props.focusedTarget) match {
-        case (Some(obsIdSet), _)    => obsIdSet.asRight.some
-        case (None, Some(targetId)) => targetId.asLeft.some
-        case _                      => none
-      }
+    val optSelected: Option[Either[Target.Id, ObsIdSet]] = props.focused match {
+      case Focused(Some(obsIdSet), _)    => obsIdSet.asRight.some
+      case Focused(None, Some(targetId)) => targetId.asLeft.some
+      case _                             => none
+    }
 
     val rightSide: VdomNode =
       optSelected
