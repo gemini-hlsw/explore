@@ -87,7 +87,7 @@ sealed trait AdvancedConfigurationPanel[T <: ScienceModeAdvanced, S <: ScienceMo
 }
 
 sealed abstract class AdvancedConfigurationPanelBuilder[
-  T <: ScienceModeAdvanced: Eq,
+  T <: ScienceModeAdvanced,
   S <: ScienceModeBasic: Eq,
   Input,
   Props <: AdvancedConfigurationPanel[T, S, Input],
@@ -173,7 +173,6 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
       .decimal(3)
 
   implicit val reuseS: Reusability[S] = Reusability.byEq
-  implicit val reuseT: Reusability[T] = Reusability.byEq
 
   private case class ReadonlyData(
     coverage:   Interval[Quantity[BigDecimal, Micrometer]],
@@ -198,10 +197,10 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
   }
 
   private def findMatrixDataFromRow(
-    basic:        S,
-    advanced:     T,
-    requirements: SpectroscopyRequirementsData,
-    row:          SpectroscopyModeRow
+    basic:          S,
+    advanced:       T,
+    reqsWavelength: Option[Wavelength],
+    row:            SpectroscopyModeRow
   ): Option[ReadonlyData] = (basic, advanced, row.instrument) match {
     case (ScienceModeBasic.GmosNorthLongSlit(bGrating, bFilter, bFpu),
           ScienceModeAdvanced.GmosNorthLongSlit(aWavelength,
@@ -219,7 +218,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
           ),
           GmosNorthSpectroscopyRow(rGrating, rFpu, rFilter)
         ) =>
-      val wavelength = aWavelength.orElse(requirements.wavelength)
+      val wavelength = aWavelength.orElse(reqsWavelength)
       val grating    = aGrating.getOrElse(bGrating)
       val filter     = aFilter.orElse(bFilter)
       val fpu        = aFpu.getOrElse(bFpu)
@@ -242,7 +241,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
           ),
           GmosSouthSpectroscopyRow(rGrating, rFpu, rFilter)
         ) =>
-      val wavelength = aWavelength.orElse(requirements.wavelength)
+      val wavelength = aWavelength.orElse(reqsWavelength)
       val grating    = aGrating.getOrElse(bGrating)
       val filter     = aFilter.orElse(bFilter)
       val fpu        = aFpu.getOrElse(bFpu)
@@ -253,12 +252,12 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
   }
 
   private def findMatrixData(
-    basic:        S,
-    advanced:     T,
-    requirements: SpectroscopyRequirementsData,
-    rows:         List[SpectroscopyModeRow]
+    basic:          S,
+    advanced:       T,
+    reqsWavelength: Option[Wavelength],
+    rows:           List[SpectroscopyModeRow]
   ): Option[ReadonlyData] =
-    rows.collectFirstSome(row => findMatrixDataFromRow(basic, advanced, requirements, row))
+    rows.collectFirstSome(row => findMatrixDataFromRow(basic, advanced, reqsWavelength, row))
 
   val component =
     ScalaFnComponent
@@ -302,12 +301,20 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
         }
       }
       // Try to find the readonly data from the spectroscopy matrix
-      .useMemoBy { (props, _, _, _) =>
-        // TODO: reuse on rows, not requirements? And narrow advanced comparison?
-        (props.scienceModeBasic, props.scienceModeAdvanced.get, props.spectroscopyRequirements)
-      } { (_, _, _, rows) =>
-        { case (basic, advanced, reqs) =>
-          findMatrixData(basic, advanced, reqs, rows)
+      .useMemoBy { (props, _, _, rows) =>
+        implicit val ctx = props.ctx
+        val advanced     = props.scienceModeAdvanced
+        (props.scienceModeBasic,
+         props.spectroscopyRequirements.wavelength,
+         rows,
+         overrideWavelength(advanced).get,
+         overrideGrating(advanced).get,
+         overrideFilter(advanced).get,
+         overrideFpu(advanced).get
+        )
+      } { (props, _, _, _) =>
+        { case (basic, reqsWavelength, rows, _, _, _, _) =>
+          findMatrixData(basic, props.scienceModeAdvanced.get, reqsWavelength, rows)
         }
       }
       .render {
@@ -592,7 +599,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
 
 object AdvancedConfigurationPanel {
   sealed abstract class GmosAdvancedConfigurationPanel[
-    T <: ScienceModeAdvanced: Eq,
+    T <: ScienceModeAdvanced,
     S <: ScienceModeBasic: Eq,
     Input,
     Props <: AdvancedConfigurationPanel[T, S, Input],
