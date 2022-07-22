@@ -258,7 +258,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
     requirements: SpectroscopyRequirementsData,
     rows:         List[SpectroscopyModeRow]
   ): Option[ReadonlyData] =
-    rows.flatMap(row => findMatrixDataFromRow(basic, advanced, requirements, row)).headOption
+    rows.collectFirstSome(row => findMatrixDataFromRow(basic, advanced, requirements, row))
 
   val component =
     ScalaFnComponent
