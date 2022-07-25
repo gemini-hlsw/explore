@@ -366,6 +366,7 @@ object ExploreStyles {
   val OddRow: Css  = Css("odd-row")
 
   // Target Search Popup
+  val TargetSearchForm: Css          = Css("explore-target-search-form")
   val TargetSearchTop: Css           = Css("explore-target-search-top")
   val TargetSearchInput: Css         = Css("explore-target-search-input")
   val TargetSearchPreview: Css       = Css("explore-target-search-preview")

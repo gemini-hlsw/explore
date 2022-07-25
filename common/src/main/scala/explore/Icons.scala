@@ -59,6 +59,10 @@ object Icons {
   val faPlus: FAIcon = js.native
 
   @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faLink")
+  val faLink: FAIcon = js.native
+
+  @js.native
   @JSImport("@fortawesome/pro-light-svg-icons", "faPlus")
   val faThinPlus: FAIcon = js.native
 
@@ -243,6 +247,7 @@ object Icons {
     faUndo,
     faRedo,
     faPlus,
+    faLink,
     faThinPlus,
     faThinMinus,
     faTrash,
@@ -300,6 +305,7 @@ object Icons {
   val Undo                = FontAwesomeIcon(faUndo)
   val Redo                = FontAwesomeIcon(faRedo)
   val New                 = FontAwesomeIcon(faPlus)
+  val Link                = FontAwesomeIcon(faLink)
   val ThinPlus            = FontAwesomeIcon(faThinPlus)
   val ThinMinus           = FontAwesomeIcon(faThinMinus)
   val Trash               = FontAwesomeIcon(faTrash).clazz(ExploreStyles.TrashIcon)

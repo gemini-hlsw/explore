@@ -323,6 +323,7 @@ tfoot {
   flex-grow: 2;
   display: flex;
   align-items: center;
+  justify-content: space-between;
 }
 
 .explore-fixed-size-tile-title {
@@ -614,7 +615,7 @@ tfoot {
   display: flex;
   flex-direction: column;
 
-  > div {
+  >div {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
@@ -649,12 +650,13 @@ tfoot {
 }
 
 .aladin-full-screen {
+
   .explore-shared-edit-warning,
   .target-asterism-table {
     display: none;
   }
 
-  > div .target-grid {
+  >div .target-grid {
     .expanded-aladin();
   }
 
@@ -1798,9 +1800,7 @@ html {
 }
 
 // https://css-tricks.com/responsive-data-tables/
-.tile-xs-width
-  .explore-brightnesses-container
-  .ui.ui.ui.ui.table:not(.unstackable) {
+.tile-xs-width .explore-brightnesses-container .ui.ui.ui.ui.table:not(.unstackable) {
   tfoot {
     display: block;
   }
@@ -2166,7 +2166,6 @@ html {
 }
 
 .explore-title-select-columns {
-  flex-grow: 2;
   text-align: right;
 }
 
@@ -2188,7 +2187,13 @@ html {
 
 .explore-target-summary-select {
   left: 0;
-  width: 45px;
+  width: 90px;
+
+  .button {
+    width: 75px;
+    display: flex;
+    justify-content: space-evenly;
+  }
 }
 
 .explore-target-summary-id {
@@ -2211,7 +2216,7 @@ html {
   }
 
   &.with-select {
-    left: 66px;
+    left: 95px;
   }
 
   &.with-id {
@@ -2231,7 +2236,7 @@ html {
   }
 
   &.with-select {
-    left: 100px;
+    left: 129px;
   }
 
   &.with-id {
@@ -2403,6 +2408,13 @@ svg[focusable='false']:focus {
 
 .explore-sequence-obs-subtitle {
   font-size: small;
+}
+
+.explore-target-search-form {
+  .actions {
+    display: flex;
+    justify-content: space-between;
+  }
 }
 
 .explore-target-search-top {
@@ -2586,4 +2598,3 @@ body.hide-reusability {
 .field.clearable-input-padding-reset>.ui.ui.ui.ui.icon.input>input {
   padding: @inputPadding;
 }
-
