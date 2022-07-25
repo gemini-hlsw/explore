@@ -26,19 +26,34 @@ trait EventPicklers {
   implicit def picklerUri: Pickler[Uri] =
     transformPickler(Uri.unsafeFromString)(_.toString)
 
-  implicit def picklerCatalogRequest: Pickler[CatalogRequest] =
+  private implicit def picklerCatalogRequest: Pickler[CatalogRequest] =
     transformPickler(Function.tupled(CatalogRequest.apply _))(x => (x.tracking, x.obsTime))
 
-  implicit def picklerCacheCleanupRequestt: Pickler[CacheCleanupRequest] =
+  private implicit def picklerCacheCleanupRequestt: Pickler[CacheCleanupRequest] =
     transformPickler { (r: Duration) => println(s"READ $r"); CacheCleanupRequest(r) } { c =>
       println(c); c.elapsedTime
     }
 
-  implicit def picklerSpectroscopyMatrixRequest: Pickler[SpectroscopyMatrixRequest] =
+  private implicit def picklerSpectroscopyMatrixRequest: Pickler[SpectroscopyMatrixRequest] =
     transformPickler(SpectroscopyMatrixRequest.apply)(_.uri)
 
-  implicit def picklerSpectroscopyMatrixResult: Pickler[SpectroscopyMatrixResults] =
+  private implicit def picklerSpectroscopyMatrixResult: Pickler[SpectroscopyMatrixResults] =
     transformPickler(SpectroscopyMatrixResults.apply)(_.matrix)
+
+  implicit def picklerCatalogResults: Pickler[CatalogResults] =
+    transformPickler(CatalogResults.apply)(_.candidates)
+
+  private implicit def picklerCatalogQueryError: Pickler[CatalogQueryError] =
+    transformPickler(CatalogQueryError.apply)(_.errorMsg)
+
+  implicit val messagePickler: Pickler[WorkerMessage] =
+    compositePickler[WorkerMessage]
+      .addConcreteType[CatalogRequest]
+      .addConcreteType[CacheCleanupRequest]
+      .addConcreteType[SpectroscopyMatrixRequest]
+      .addConcreteType[SpectroscopyMatrixResults]
+      .addConcreteType[CatalogResults]
+      .addConcreteType[CatalogQueryError]
 }
 
 object EventPicklers extends EventPicklers

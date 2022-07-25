@@ -14,6 +14,7 @@ import lucuma.ags.AgsPosition
 import lucuma.ags.GuideStarCandidate
 import lucuma.catalog.AngularSize
 import lucuma.catalog.CatalogTargetResult
+import explore.events.CatalogResults
 import lucuma.core.model.IntPercent
 import lucuma.core.model.Partner
 import lucuma.core.model.PosAngleConstraint

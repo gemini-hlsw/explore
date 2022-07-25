@@ -40,6 +40,7 @@ import explore.events.SpectroscopyMatrixRequest
 import explore.model.boopickle._
 import explore.events.SpectroscopyMatrixResults
 import cats.effect.IO
+import explore.events.WorkerMessage
 
 final case class BasicConfigurationPanel(
   obsId:            Observation.Id,
@@ -64,16 +65,16 @@ object BasicConfigurationPanel {
       .useStreamOnMountBy((props, _, _) =>
         props.ctx.worker.stream
           .flatMap { r =>
-            val resultsOrError = decodeFromTransferable[SpectroscopyMatrixResults](r)
-            resultsOrError match {
-              case Some(r) => fs2.Stream.emit[IO, SpectroscopyModesMatrix](r.matrix)
-              case _       => fs2.Stream.raiseError[IO](new RuntimeException("Unknown worker message"))
+            decodeFromTransferable[WorkerMessage](r) match {
+              case Some(SpectroscopyMatrixResults(r)) =>
+                fs2.Stream.emit[IO, SpectroscopyModesMatrix](r)
+              case _                                  => fs2.Stream.raiseError[IO](new RuntimeException("Unknown worker message"))
             }
           }
       )
       .useEffectOnMountBy((p, _, _, _) =>
         p.ctx.worker
-          .postTransferrable(SpectroscopyMatrixRequest(uri"/instrument_spectroscopy_matrix.csv"))
+          .postWorkerMessage(SpectroscopyMatrixRequest(uri"/instrument_spectroscopy_matrix.csv"))
       )
       .render { (props, mode, imaging, matrix) =>
         implicit val ctx: AppContextIO = props.ctx

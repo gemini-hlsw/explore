@@ -64,34 +64,29 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
       _       <-
         IO {
           self.onmessage = (msg: dom.MessageEvent) => {
-            println(s"msg ${msg.data}")
+            println(s"msg ")
             // Decode transferrable events
-            decodeFromTransferable[CatalogRequest](msg)
-              .map { case req @ CatalogRequest(_, _) =>
-                println("REQ")
-                readFromGaia(client, self, cacheDb, stores, req)(logger) *>
-                  expireGuideStarCandidates(cacheDb, stores, Expiration).toIO
-              }
-              .orElse(
-                decodeFromTransferable[SpectroscopyMatrixRequest](msg)
-                  .map { case SpectroscopyMatrixRequest(uri) =>
-                    implicit val log = logger
-                    StaticData.build[IO](uri).flatMap { m =>
-                      matrix.complete(m) /* *>
+            println(decodeFromTransferable[WorkerMessage](msg))
+            decodeFromTransferable[WorkerMessage](msg)
+              .map(_ match {
+                case req @ CatalogRequest(_, _)     =>
+                  println("REQ")
+                  readFromGaia(client, self, cacheDb, stores, req)(logger) *>
+                    expireGuideStarCandidates(cacheDb, stores, Expiration).toIO
+                case SpectroscopyMatrixRequest(uri) =>
+                  implicit val log = logger
+                  StaticData.build[IO](uri).flatMap { m =>
+                    matrix.complete(m) /* *>
                         postAsTransferable[IO, SpectroscopyMatrixResults](
                           self,
                           SpectroscopyMatrixResults(m)
                         )*/
-                    } *> IO.println(uri)
-                  }
-              )
-              .orElse(
-                decodeFromTransferable[CacheCleanupRequest](msg)
-                  .map { case CacheCleanupRequest(expTime) =>
-                    println("Cleanup")
-                    expireGuideStarCandidates(cacheDb, stores, expTime).toIO
-                  }
-              )
+                  } *> IO.println(uri)
+                case CacheCleanupRequest(expTime)   =>
+                  println("Cleanup")
+                  expireGuideStarCandidates(cacheDb, stores, expTime).toIO
+                case _                              => IO.unit
+              })
               .orEmpty
               .handleError(_.printStackTrace())
               .unsafeRunAndForget()

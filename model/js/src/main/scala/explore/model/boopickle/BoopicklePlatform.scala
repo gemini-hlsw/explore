@@ -10,6 +10,7 @@ import org.scalajs.dom
 
 import scala.scalajs.js
 import scala.scalajs.js.typedarray._
+import explore.events.WorkerMessage
 
 trait BoopicklePlatform {
 
@@ -25,6 +26,14 @@ trait BoopicklePlatform {
     Sync[F].delay {
       val arr = asTransferable(value)
       println(s"POST $value ${arr.length}")
+      self.postMessage(arr, js.Array(arr.buffer: dom.Transferable))
+    }
+
+  def postWorkerMessage[F[_]: Sync](self: dom.DedicatedWorkerGlobalScope, value: WorkerMessage)(
+    implicit p:                           Pickler[WorkerMessage]
+  ) =
+    Sync[F].delay {
+      val arr = asTransferable(value)
       self.postMessage(arr, js.Array(arr.buffer: dom.Transferable))
     }
 

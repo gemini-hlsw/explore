@@ -8,8 +8,6 @@ import coulomb._
 import eu.timepit.refined._
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.api.Validate
-import explore.model.CatalogQueryError
-import explore.model.CatalogResults
 import lucuma.ags.GuideStarCandidate
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
@@ -171,12 +169,6 @@ trait CatalogPicklers extends CommonPicklers {
     transformPickler(Function.tupled(ConstraintSet.apply _))(x =>
       (x.imageQuality, x.cloudExtinction, x.skyBackground, x.waterVapor, x.elevationRange)
     )
-
-  implicit def picklerCatalogResults: Pickler[CatalogResults] =
-    transformPickler(CatalogResults.apply)(_.candidates)
-
-  implicit def picklerCatalogQueryError: Pickler[CatalogQueryError] =
-    transformPickler(CatalogQueryError.apply)(_.errorMsg)
 
 }
 

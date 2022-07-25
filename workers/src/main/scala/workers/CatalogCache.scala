@@ -9,6 +9,10 @@ import cats.effect.Concurrent
 import cats.effect.IO
 import cats.syntax.all._
 import explore.events.CatalogRequest
+import cats.Hash
+import lucuma.ags.GuideStarCandidate
+import lucuma.core.model.Target
+import explore.events._
 import explore.events.picklers._
 import explore.model.CatalogQueryError
 import explore.model.CatalogResults
@@ -138,18 +142,18 @@ trait CatalogCache extends CatalogIDB with AsyncToIO {
             )
             .flatMap { candidates =>
               L.debug(s"Catalog results from remote catalog: ${candidates.length} candidates") *>
-                postAsTransferable[IO, CatalogResults](self, CatalogResults(candidates)) *>
+                postWorkerMessage[IO](self, CatalogResultsMessage(CatalogResults(candidates))) *>
                 storeGuideStarCandidates(idb, stores, query, candidates).toIO
                   .handleError(e => L.error(e)("Error storing guidstar candidates"))
             }
             .handleErrorWith { e =>
-              postAsTransferable[IO, CatalogQueryError](self, CatalogQueryError(e.getMessage()))
+              postWorkerMessage[IO](self, CatalogQueryError(e.getMessage()))
             }
             .void
         ) { c =>
           // Cache hit!
           L.debug(s"Catalog results from cache: ${c.candidates.length} candidates") *>
-            postAsTransferable[IO, CatalogResults](self, c)
+            postWorkerMessage[IO](self, CatalogResultsMessage(c))
         }
       )
   }

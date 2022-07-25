@@ -19,8 +19,7 @@ import explore.components.ui.ExploreStyles
 import explore.events._
 import explore.events.picklers._
 import explore.implicits._
-import explore.model.CatalogQueryError
-import explore.model.CatalogResults
+import explore.events.CatalogResults
 import explore.model.Constants
 import explore.model.ObsConfiguration
 import explore.model.TargetVisualOptions
@@ -96,15 +95,11 @@ object AladinCell extends ModelOptics {
         _ =>
           props.ctx.worker.streamResource.map(
             _.flatMap { r =>
-              val resultsOrError = decodeFromTransferable[CatalogResults](r)
-                .map(_.asRight)
-                .orElse(
-                  decodeFromTransferable[CatalogQueryError](r).map(_.asLeft)
-                )
-              resultsOrError match {
-                case Some(Right(r)) => fs2.Stream.emit[IO, CatalogResults](r)
-                case Some(Left(m))  => fs2.Stream.raiseError[IO](new RuntimeException(m.errorMsg))
-                case _              => fs2.Stream.raiseError[IO](new RuntimeException("Unknown worker message"))
+              decodeFromTransferable[WorkerMessage](r) match {
+                case Some(CatalogResultsMessage(r)) => fs2.Stream.emit[IO, CatalogResults](r)
+                case Some(CatalogQueryError(m))     =>
+                  fs2.Stream.raiseError[IO](new RuntimeException(m))
+                case _                              => fs2.Stream.raiseError[IO](new RuntimeException("Unknown worker message"))
               }
             }
               .map(_.candidates.map { gsc =>
