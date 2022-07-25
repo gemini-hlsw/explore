@@ -78,6 +78,7 @@ lazy val workers = project
   .in(file("workers"))
   .settings(commonSettings: _*)
   .settings(commonJsLibSettings: _*)
+  .settings(commonLibSettings: _*)
   .settings(esModule: _*)
   .settings(
     libraryDependencies ++= LucumaCatalog.value ++

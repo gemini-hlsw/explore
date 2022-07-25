@@ -9,6 +9,8 @@ import lucuma.core.model.SiderealTracking
 import java.time.Instant
 import scala.scalajs.js
 import java.time.Duration
+import org.http4s.Uri
+import explore.modes.SpectroscopyModesMatrix
 
 package object events {
   object picklers extends CatalogPicklers with EventPicklers
@@ -22,7 +24,9 @@ package object events {
 
   final case class CacheCleanupRequest(elapsedTime: Duration)
 
-  final case class SpectroscopyMatrixRequest(fileName: String, i: Int)
+  final case class SpectroscopyMatrixRequest(uri: Uri)
+
+  final case class SpectroscopyMatrixResults(matrix: SpectroscopyModesMatrix)
 
   // These are messages sent across tabs thus they need to be JS compatible
   // We don't need yet more than just an index to  differentiate

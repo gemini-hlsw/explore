@@ -4,7 +4,8 @@
 package workers
 
 import cats.effect.IO
-import cats.effect.kernel.Sync
+import cats.effect.Sync
+import cats.effect.Deferred
 import cats.effect.unsafe.implicits._
 import cats.syntax.all._
 import explore.events._
@@ -23,6 +24,7 @@ import scala.scalajs.js
 
 import js.annotation._
 import java.time.Duration
+import explore.modes.SpectroscopyModesMatrix
 
 trait AsyncToIO {
   class AsyncCallbackOps[A](val a: AsyncCallback[A]) {
@@ -57,6 +59,7 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
       idb     <- IO(self.indexedDB.get)
       stores   = CacheIDBStores()
       cacheDb <- stores.open(IndexedDb(idb)).toIO
+      matrix  <- Deferred[IO, SpectroscopyModesMatrix]
       client   = FetchClientBuilder[IO].create
       _       <-
         IO {
@@ -71,10 +74,15 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
               }
               .orElse(
                 decodeFromTransferable[SpectroscopyMatrixRequest](msg)
-                  .map { case SpectroscopyMatrixRequest(file, _) =>
-                    println(s"RR why $file")
-                    IO.println(file)
-                    StaticData.build[IO](uri"/instrument_spectroscopy_matrix.csv")
+                  .map { case SpectroscopyMatrixRequest(uri) =>
+                    implicit val log = logger
+                    StaticData.build[IO](uri).flatMap { m =>
+                      matrix.complete(m) /* *>
+                        postAsTransferable[IO, SpectroscopyMatrixResults](
+                          self,
+                          SpectroscopyMatrixResults(m)
+                        )*/
+                    } *> IO.println(uri)
                   }
               )
               .orElse(

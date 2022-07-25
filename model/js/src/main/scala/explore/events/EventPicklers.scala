@@ -6,9 +6,12 @@ package explore.events
 import boopickle.DefaultBasic._
 import explore.events._
 import explore.model.boopickle.CatalogPicklers._
+import explore.model.boopickle.ItcPicklers._
 
 import java.time.Instant
 import java.time.Duration
+import org.http4s.Uri
+import explore.events.SpectroscopyMatrixResults
 
 /**
  * Picklers used by web workers
@@ -20,6 +23,9 @@ trait EventPicklers {
   implicit def picklerDuration: Pickler[Duration] =
     transformPickler(Duration.ofMillis)(_.toMillis)
 
+  implicit def picklerUri: Pickler[Uri] =
+    transformPickler(Uri.unsafeFromString)(_.toString)
+
   implicit def picklerCatalogRequest: Pickler[CatalogRequest] =
     transformPickler(Function.tupled(CatalogRequest.apply _))(x => (x.tracking, x.obsTime))
 
@@ -29,8 +35,10 @@ trait EventPicklers {
     }
 
   implicit def picklerSpectroscopyMatrixRequest: Pickler[SpectroscopyMatrixRequest] =
-    transformPickler(Function.tupled(SpectroscopyMatrixRequest.apply _))(x => (x.fileName, x.i))
+    transformPickler(SpectroscopyMatrixRequest.apply)(_.uri)
 
+  implicit def picklerSpectroscopyMatrixResult: Pickler[SpectroscopyMatrixResults] =
+    transformPickler(SpectroscopyMatrixResults.apply)(_.matrix)
 }
 
 object EventPicklers extends EventPicklers

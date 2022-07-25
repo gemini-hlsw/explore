@@ -71,6 +71,8 @@ import spire.math.Bounded
 import spire.math.Interval
 
 import java.time.Duration
+import scala.scalajs.js.JSConverters._
+import explore.modes.SpectroscopyModesMatrix
 
 sealed trait AdvancedConfigurationPanel[T <: ScienceModeAdvanced, S <: ScienceModeBasic, Input] {
   val obsId: Observation.Id
@@ -292,7 +294,14 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
         )
       ) { (props, _, _) =>
         { case (fp, cap, fpa, res, cov) =>
-          props.ctx.staticData.spectroscopyMatrix.filtered(
+          // props.ctx.staticData.spectroscopyMatrix.filtered(
+          //   focalPlane = fp,
+          //   capabilities = cap,
+          //   slitWidth = fpa,
+          //   resolution = res,
+          //   coverage = cov.map(_.micrometer.toValue[BigDecimal].toRefined[Positive])
+          // )
+          SpectroscopyModesMatrix.empty.filtered(
             focalPlane = fp,
             capabilities = cap,
             slitWidth = fpa,

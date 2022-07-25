@@ -13,10 +13,8 @@ import retry._
 import explore.common.RetryHelpers._
 import org.http4s._
 
-case class StaticData protected (spectroscopyMatrix: SpectroscopyModesMatrix)
-
 object StaticData {
-  def build[F[_]: Async: Logger](spectroscopyMatrixUri: Uri): F[StaticData] = {
+  def build[F[_]: Async: Logger](spectroscopyMatrixUri: Uri): F[SpectroscopyModesMatrix] = {
     val client = FetchClientBuilder[F]
       .withRequestTimeout(5.seconds)
       .create
@@ -33,6 +31,6 @@ object StaticData {
             ) >> SpectroscopyModesMatrix.empty.pure[F]
         }
       }
-    spectroscopyMatrix.map(matrix => StaticData(matrix))
+    spectroscopyMatrix
   }
 }
