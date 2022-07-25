@@ -16,10 +16,10 @@ import eu.timepit.refined.auto._
 import explore.Icons
 import explore.common.UserPreferencesQueries._
 import explore.components.ui.ExploreStyles
+import explore.events.CatalogResults
 import explore.events._
 import explore.events.picklers._
 import explore.implicits._
-import explore.events.CatalogResults
 import explore.model.Constants
 import explore.model.ObsConfiguration
 import explore.model.TargetVisualOptions

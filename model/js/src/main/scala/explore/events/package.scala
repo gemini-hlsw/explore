@@ -4,14 +4,14 @@
 package explore
 
 import explore.model.boopickle.CatalogPicklers
-import lucuma.core.model.SiderealTracking
-
-import java.time.Instant
-import scala.scalajs.js
-import java.time.Duration
-import org.http4s.Uri
 import explore.modes.SpectroscopyModesMatrix
 import lucuma.ags.GuideStarCandidate
+import lucuma.core.model.SiderealTracking
+import org.http4s.Uri
+
+import java.time.Duration
+import java.time.Instant
+import scala.scalajs.js
 
 package object events {
   object picklers extends CatalogPicklers with EventPicklers
@@ -23,10 +23,6 @@ package object events {
   final case class CatalogRequest(
     tracking: SiderealTracking,
     obsTime:  Instant
-  ) extends WorkerMessage
-
-  final case class CatalogResultsMessage(
-    results: CatalogResults
   ) extends WorkerMessage
 
   /**

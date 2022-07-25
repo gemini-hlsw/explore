@@ -37,6 +37,7 @@ import explore.model.reusability._
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.SpectroscopyModeRow
+import explore.modes.SpectroscopyModesMatrix
 import explore.optics._
 import explore.syntax.ui._
 import explore.utils._
@@ -72,7 +73,6 @@ import spire.math.Interval
 
 import java.time.Duration
 import scala.scalajs.js.JSConverters._
-import explore.modes.SpectroscopyModesMatrix
 
 sealed trait AdvancedConfigurationPanel[T <: ScienceModeAdvanced, S <: ScienceModeBasic, Input] {
   val obsId: Observation.Id
@@ -292,7 +292,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
          props.spectroscopyRequirements.resolution,
          props.spectroscopyRequirements.wavelengthCoverage
         )
-      ) { (props, _, _) =>
+      ) { (_, _, _) =>
         { case (fp, cap, fpa, res, cov) =>
           // props.ctx.staticData.spectroscopyMatrix.filtered(
           //   focalPlane = fp,

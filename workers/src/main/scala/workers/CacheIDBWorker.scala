@@ -66,24 +66,18 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
           self.onmessage = (msg: dom.MessageEvent) => {
             println(s"msg ")
             // Decode transferrable events
-            println(decodeFromTransferable[WorkerMessage](msg))
             decodeFromTransferable[WorkerMessage](msg)
               .map(_ match {
                 case req @ CatalogRequest(_, _)     =>
-                  println("REQ")
                   readFromGaia(client, self, cacheDb, stores, req)(logger) *>
                     expireGuideStarCandidates(cacheDb, stores, Expiration).toIO
                 case SpectroscopyMatrixRequest(uri) =>
                   implicit val log = logger
                   StaticData.build[IO](uri).flatMap { m =>
-                    matrix.complete(m) /* *>
-                        postAsTransferable[IO, SpectroscopyMatrixResults](
-                          self,
-                          SpectroscopyMatrixResults(m)
-                        )*/
-                  } *> IO.println(uri)
+                    // matrix.complete(m) *>
+                    postWorkerMessage[IO](self, SpectroscopyMatrixResults(m))
+                  }
                 case CacheCleanupRequest(expTime)   =>
-                  println("Cleanup")
                   expireGuideStarCandidates(cacheDb, stores, expTime).toIO
                 case _                              => IO.unit
               })

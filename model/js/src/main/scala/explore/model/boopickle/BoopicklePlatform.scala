@@ -6,11 +6,11 @@ package explore.model.boopickle
 import boopickle.DefaultBasic._
 import cats.effect._
 import cats.syntax.all._
+import explore.events.WorkerMessage
 import org.scalajs.dom
 
 import scala.scalajs.js
 import scala.scalajs.js.typedarray._
-import explore.events.WorkerMessage
 
 trait BoopicklePlatform {
 
@@ -25,7 +25,6 @@ trait BoopicklePlatform {
   def postAsTransferable[F[_]: Sync, A: Pickler](self: dom.DedicatedWorkerGlobalScope, value: A) =
     Sync[F].delay {
       val arr = asTransferable(value)
-      println(s"POST $value ${arr.length}")
       self.postMessage(arr, js.Array(arr.buffer: dom.Transferable))
     }
 
@@ -44,7 +43,6 @@ trait BoopicklePlatform {
   def decodeFromTransferable[A: Pickler](m: dom.MessageEvent): Option[A] =
     m.data match {
       case e: Int8Array =>
-        println(e.byteLength)
         val cp = new Array[Byte](e.byteLength)
         e.copyToArray(cp)
         fromTransferable[A](cp).toOption

@@ -3,21 +3,27 @@
 
 package explore.config
 
+import cats.effect.IO
 import cats.syntax.all._
 import crystal.react._
 import crystal.react.hooks._
 import eu.timepit.refined.auto._
-import org.http4s.syntax.all._
 import explore.Icons
 import explore.common.ObsQueries._
 import explore.common.ScienceQueries._
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
+import explore.events.EventPicklers._
+import explore.events.SpectroscopyMatrixRequest
+import explore.events.SpectroscopyMatrixResults
+import explore.events.WorkerMessage
 import explore.implicits._
 import explore.model
 import explore.model.ITCTarget
 import explore.model.ImagingConfigurationOptions
+import explore.model.boopickle._
 import explore.model.display._
+import explore.modes.SpectroscopyModesMatrix
 import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -25,22 +31,16 @@ import lucuma.core.enums.ScienceMode
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
 import lucuma.core.model.SiderealTracking
-import lucuma.core.optics.syntax.lens._
 import lucuma.ui.forms.EnumViewSelect
+import lucuma.ui.reusability._
+import org.http4s.syntax.all._
 import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.button.Button
 import react.semanticui.shorthand._
 import react.semanticui.sizes._
 
-import explore.events.EventPicklers._
 import scalajs.js.JSConverters._
-import explore.modes.SpectroscopyModesMatrix
-import explore.events.SpectroscopyMatrixRequest
-import explore.model.boopickle._
-import explore.events.SpectroscopyMatrixResults
-import cats.effect.IO
-import explore.events.WorkerMessage
 
 final case class BasicConfigurationPanel(
   obsId:            Observation.Id,
@@ -62,23 +62,32 @@ object BasicConfigurationPanel {
       .useStateView[ScienceMode](ScienceMode.Spectroscopy)
       .useStateView[ImagingConfigurationOptions](ImagingConfigurationOptions.Default)
       // Listen on web worker for messages with catalog candidates
-      .useStreamOnMountBy((props, _, _) =>
-        props.ctx.worker.stream
-          .flatMap { r =>
-            decodeFromTransferable[WorkerMessage](r) match {
-              case Some(SpectroscopyMatrixResults(r)) =>
-                fs2.Stream.emit[IO, SpectroscopyModesMatrix](r)
-              case _                                  => fs2.Stream.raiseError[IO](new RuntimeException("Unknown worker message"))
+      .useStreamWithSyncBy((props, _, _) => props.obsId)((props, _, _) =>
+        _ => {
+          println("Create")
+          props.ctx.worker.stream
+            .evalTap(_ => IO.println("incoming"))
+            .map(decodeFromTransferable[WorkerMessage])
+            .filter {
+              case Some(SpectroscopyMatrixResults(_)) => true
+              case _                                  => false
             }
-          }
+            .collect { case Some(SpectroscopyMatrixResults(r)) =>
+              fs2.Stream.emit[IO, SpectroscopyModesMatrix](r)
+            }
+            .flatten
+        }
       )
-      .useEffectOnMountBy((p, _, _, _) =>
-        p.ctx.worker
-          .postWorkerMessage(SpectroscopyMatrixRequest(uri"/instrument_spectroscopy_matrix.csv"))
-      )
+      // .useEffectOnMountBy((p, _, _, _) =>
+      .useEffectWithDepsBy((_, _, _, i) => i.awaitOpt) { (props, _, _, _) => _ =>
+        props.ctx.worker
+          .postWorkerMessage(
+            SpectroscopyMatrixRequest(uri"/instrument_spectroscopy_matrix.csv")
+          )
+      }
       .render { (props, mode, imaging, matrix) =>
         implicit val ctx: AppContextIO = props.ctx
-        println(matrix)
+        println(matrix.value.toOption.map(_.matrix.length))
 
         val requirementsViewSet: ScienceRequirementsUndoView =
           ScienceRequirementsUndoView(props.obsId, props.requirementsCtx)

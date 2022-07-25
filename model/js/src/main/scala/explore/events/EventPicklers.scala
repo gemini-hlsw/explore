@@ -4,14 +4,14 @@
 package explore.events
 
 import boopickle.DefaultBasic._
+import explore.events.SpectroscopyMatrixResults
 import explore.events._
 import explore.model.boopickle.CatalogPicklers._
 import explore.model.boopickle.ItcPicklers._
-
-import java.time.Instant
-import java.time.Duration
 import org.http4s.Uri
-import explore.events.SpectroscopyMatrixResults
+
+import java.time.Duration
+import java.time.Instant
 
 /**
  * Picklers used by web workers
@@ -30,9 +30,7 @@ trait EventPicklers {
     transformPickler(Function.tupled(CatalogRequest.apply _))(x => (x.tracking, x.obsTime))
 
   private implicit def picklerCacheCleanupRequestt: Pickler[CacheCleanupRequest] =
-    transformPickler { (r: Duration) => println(s"READ $r"); CacheCleanupRequest(r) } { c =>
-      println(c); c.elapsedTime
-    }
+    transformPickler(CacheCleanupRequest.apply)(_.elapsedTime)
 
   private implicit def picklerSpectroscopyMatrixRequest: Pickler[SpectroscopyMatrixRequest] =
     transformPickler(SpectroscopyMatrixRequest.apply)(_.uri)

@@ -58,9 +58,6 @@ import spire.math.Interval
 import java.text.DecimalFormat
 
 import scalajs.js.|
-import explore.events.SpectroscopyMatrixRequest
-import explore.events.CacheCleanupRequest
-import java.time.Duration
 
 final case class SpectroscopyModesTable(
   scienceMode:              View[Option[ScienceMode]],

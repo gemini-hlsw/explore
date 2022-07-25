@@ -142,7 +142,7 @@ trait CatalogCache extends CatalogIDB with AsyncToIO {
             )
             .flatMap { candidates =>
               L.debug(s"Catalog results from remote catalog: ${candidates.length} candidates") *>
-                postWorkerMessage[IO](self, CatalogResultsMessage(CatalogResults(candidates))) *>
+                postWorkerMessage[IO](self, CatalogResults(candidates)) *>
                 storeGuideStarCandidates(idb, stores, query, candidates).toIO
                   .handleError(e => L.error(e)("Error storing guidstar candidates"))
             }
@@ -153,7 +153,7 @@ trait CatalogCache extends CatalogIDB with AsyncToIO {
         ) { c =>
           // Cache hit!
           L.debug(s"Catalog results from cache: ${c.candidates.length} candidates") *>
-            postWorkerMessage[IO](self, CatalogResultsMessage(c))
+            postWorkerMessage[IO](self, c)
         }
       )
   }

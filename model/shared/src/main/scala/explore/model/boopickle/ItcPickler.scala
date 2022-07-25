@@ -14,10 +14,10 @@ import explore.modes.ModeSlitSize
 import explore.modes.ModeWavelength
 import explore.modes.SpectroscopyModeRow
 import explore.modes.SpectroscopyModesMatrix
+import explore.modes._
 import lucuma.core.enums.FocalPlane
 import lucuma.core.enums.SpectroscopyCapabilities
 import lucuma.core.math.units._
-import explore.modes._
 
 // Boopicklers for itc related types
 trait ItcPicklers extends CommonPicklers {

@@ -9,15 +9,15 @@ import cats.effect.Resource
 import cats.effect.Sync
 import cats.effect.std.Dispatcher
 import cats.syntax.all._
-import explore.model.boopickle._
 import explore.events.EventPicklers._
+import explore.events.WorkerMessage
+import explore.model.boopickle._
 import fs2.Stream
 import fs2.concurrent.Topic
 import org.scalajs.dom
 
 import scala.scalajs.js
 import scala.scalajs.js.typedarray._
-import explore.events.WorkerMessage
 
 /**
  * WebWorker abstraction running on F. it is possible to post messages and get a stream of events
@@ -38,7 +38,7 @@ trait WebWorkerF[F[_]] {
   /**
    * Post a boopickle encoded message on effect F
    */
-  def postTransferrable[A: Pickler](a: A): F[Unit] =
+  protected def postTransferrable[A: Pickler](a: A): F[Unit] =
     postTransferrable(asTransferable(a))
 
   def postWorkerMessage(value: WorkerMessage): F[Unit] =
