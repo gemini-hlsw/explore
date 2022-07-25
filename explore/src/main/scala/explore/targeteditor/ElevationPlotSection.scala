@@ -144,8 +144,7 @@ object ElevationPlotSection {
               <.div(ExploreStyles.ElevationPlot) {
                 (siteView.get, rangeView.get).mapN[VdomNode] {
                   case (site, PlotRange.Night)    =>
-                    <.div()
-                  // ElevationPlotNight(site, props.coords, date.value, opt.time)
+                    ElevationPlotNight(site, props.coords, date.value, opt.time)
                   case (site, PlotRange.Semester) =>
                     val coords   = props.coords
                     val semester = Semester.fromLocalDate(date.value)
