@@ -1,43 +1,43 @@
 // Copyright (c) 2016-2022 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.targeteditor
-
-import cats.syntax.all._
-import explore.components.ui.ExploreStyles
-import explore.implicits._
-import explore.model.enums.TimeDisplay
-import gpp.highcharts.highchartsStrings.line
-import gpp.highcharts.mod.XAxisLabelsOptions
-import gpp.highcharts.mod._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.enums.Site
-import lucuma.core.enums.TwilightType
-import lucuma.core.math.Angle
-import lucuma.core.math.Coordinates
-import lucuma.core.math.skycalc.ImprovedSkyCalc
-import lucuma.core.model.ObservingNight
-import lucuma.core.util.Enumerated
-import react.common._
-import react.highcharts.Chart
-import react.moon.MoonPhase
-import react.resizeDetector.hooks._
-import shapeless.Generic
-import shapeless.HNil
-
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-import scala.collection.immutable.HashSet
-import scala.scalajs.js
-
-import js.JSConverters._
-
+// package explore.targeteditor
+//
+// import cats.syntax.all._
+// import explore.components.ui.ExploreStyles
+// import explore.implicits._
+// import explore.model.enums.TimeDisplay
+// import gpp.highcharts.highchartsStrings.line
+// import gpp.highcharts.mod.XAxisLabelsOptions
+// import gpp.highcharts.mod._
+// import japgolly.scalajs.react._
+// import japgolly.scalajs.react.vdom.html_<^._
+// import lucuma.core.enums.Site
+// import lucuma.core.enums.TwilightType
+// import lucuma.core.math.Angle
+// import lucuma.core.math.Coordinates
+// import lucuma.core.math.skycalc.ImprovedSkyCalc
+// import lucuma.core.model.ObservingNight
+// import lucuma.core.util.Enumerated
+// import react.common._
+// import react.highcharts.Chart
+// import react.moon.MoonPhase
+// import react.resizeDetector.hooks._
+// import shapeless.Generic
+// import shapeless.HNil
+//
+// import java.time.Duration
+// import java.time.Instant
+// import java.time.LocalDate
+// import java.time.ZoneId
+// import java.time.ZoneOffset
+// import java.time.ZonedDateTime
+// import java.time.format.DateTimeFormatter
+// import scala.collection.immutable.HashSet
+// import scala.scalajs.js
+//
+// import js.JSConverters._
+//
 // final case class ElevationPlotNight(
 //   site:        Site,
 //   coords:      Coordinates,

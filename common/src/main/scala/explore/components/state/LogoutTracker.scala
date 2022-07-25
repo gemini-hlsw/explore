@@ -32,21 +32,23 @@ object LogoutTracker {
     .useMemo(())(_ => System.currentTimeMillis)
     // Hold the broadcast channel
     .useState(none[BroadcastChannel[ExploreEvent]])
-    // .useEffectOnMountBy { (props, nonce, state) =>
-    //   val bc = new BroadcastChannel[ExploreEvent]("explore")
-    //   bc.onmessage = (x: ExploreEvent) =>
-    //     // This is coming from the js world, we can't match the type
-    //     x.event match {
-    //       case ExploreEvent.LogoutEvent.event =>
-    //         (props.setVault(none) >> props.setMessage(
-    //           "You logged out in another instance".refined
-    //         )).to[IO].whenA(x.value.toString =!= nonce.value.toString)
-    //       case _                              => IO.unit
-    //     }
-    //
-    //   state
-    //     .setState(bc.some) *> CallbackTo(Callback(bc.close()).attempt)
-    // }
+    .useEffectOnMountBy { (props, nonce, state) =>
+      val bc = new BroadcastChannel[ExploreEvent]("explore")
+      bc.onmessage = (
+        (x: ExploreEvent) =>
+          // This is coming from the js world, we can't match the type
+          x.event match {
+            case ExploreEvent.LogoutEvent.event =>
+              (props.setVault(none) >> props.setMessage(
+                "You logged out in another instance".refined
+              )).to[IO].whenA(x.value.toString =!= nonce.value.toString)
+            case _                              => IO.unit
+          }
+      ): (ExploreEvent => IO[Unit]) // Scala 3 infers the return type as Any if we don't ascribe
+
+      state
+        .setState(bc.some) *> CallbackTo(Callback(bc.close()).attempt)
+    }
     .render { (props, nonce, bc) =>
       bc.value.fold[VdomNode](React.Fragment())(bc =>
         props.render(IO(bc.postMessage(ExploreEvent.LogoutEvent(nonce.value))).attempt.void)
