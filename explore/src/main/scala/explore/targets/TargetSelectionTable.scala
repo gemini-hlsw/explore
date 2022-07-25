@@ -5,6 +5,7 @@ package explore.targets
 
 import cats.syntax.all._
 import crystal.react.reuse._
+import explore.Icons
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -49,13 +50,20 @@ object TargetSelectionTable {
         TargetTable
           .Column("select", target => target)
           .setCell(cell =>
-            Button(size = sizes.Tiny,
-                   compact = true,
-                   onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
-                     e.stopPropagationCB >> props.onSelected(cell.value)
+            Button(
+              size = sizes.Tiny,
+              compact = true,
+              positive = true,
+              icon = true,
+              onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
+                e.stopPropagationCB >> props.onSelected(cell.value)
             )(
               ^.tpe := "button"
-            )("Select")
+            )(
+              cell.value.targetWithOptId.optId.fold(React.Fragment(Icons.New, "Create"))(_ =>
+                React.Fragment(Icons.Link, "Link")
+              )
+            )
           )
           .setDisableSortBy(true)
       ) ++

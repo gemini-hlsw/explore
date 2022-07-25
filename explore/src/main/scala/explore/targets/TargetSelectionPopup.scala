@@ -16,6 +16,7 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.Constants
+import explore.model.EmptySiderealTarget
 import explore.model.TargetWithOptId
 import explore.model.reusability._
 import explore.utils._
@@ -156,20 +157,30 @@ object TargetSelectionPopup {
           props.trigger(^.onClick --> isOpen.setState(true)),
           Modal(
             as = <.form,      // This lets us sumbit on enter
+            clazz = ExploreStyles.TargetSearchForm,
             actions = List(
-              Button(size = Small, icon = true)(
+              Button(size = Small, icon = true, negative = true)(
                 Icons.Close,
                 "Cancel"
-              )(^.tpe := "button", ^.key := "input-cancel")
+              )(^.tpe := "button", ^.key := "input-cancel"),
+              Button(
+                size = Small,
+                icon = true,
+                positive = true,
+                onClick = props.onSelected(TargetWithOptId(none, EmptySiderealTarget))
+              )(
+                Icons.New,
+                "Create Empty Sidereal Target"
+              )(^.tpe := "button", ^.key := "input-empty")
             ),
             centered = false, // Works better on iOS
             open = isOpen.value,
             closeIcon = Icons.Close.clazz(ExploreStyles.ModalCloseButton),
             dimmer = Dimmer.Blurring,
-            size = ModalSize.Small,
+            size = ModalSize.Large,
             onOpen = cleanState,
             onClose = singleEffect.cancel.runAsync >> isOpen.setState(false) >> cleanState,
-            header = ModalHeader("Search Target"),
+            header = ModalHeader("Add Target"),
             content = ModalContent(
               <.span(ExploreStyles.TargetSearchTop)(
                 <.span(ExploreStyles.TargetSearchInput)(

@@ -44,8 +44,11 @@ object PartnerSplitsEditor {
               ExploreStyles.FlexGrow(1)
         )
           .unless(addsUpTo100(p)),
-        Button(onClick = p.closeMe)(^.tpe := "button")("Cancel", ExploreStyles.FlexEnd),
-        Button(^.tpe := "submit")("OK", ^.disabled := !addsUpTo100(p))
+        Button(negative = true, onClick = p.closeMe)(^.tpe := "button")(
+          "Cancel",
+          ExploreStyles.FlexEnd
+        ),
+        Button(positive = true)("OK", ^.disabled := !addsUpTo100(p), ^.tpe := "submit")
       )
     )
 
