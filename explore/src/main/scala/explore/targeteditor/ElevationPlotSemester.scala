@@ -181,9 +181,11 @@ object ElevationPlotSemester {
             val x          = ctx.x match
               case x: Double => x
               case x: String => x.toDouble
+              case _         => 0.0
             val y          = ctx.y match
               case y: Double => y
               case y: String => y.toDouble
+              case _         => 0.0
             val date       = dateFormat(x)
             val visibility = Duration.ofMillis((y * MillisPerHour).toLong)
             val minutes    = visibility.getSeconds / 60

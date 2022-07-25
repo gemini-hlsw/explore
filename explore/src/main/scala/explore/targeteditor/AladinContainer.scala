@@ -72,7 +72,7 @@ object AladinContainer {
           e.classList.remove("visualization-display"),
           e.classList.add("visualization-display")
         )
-      case _          => ()
+      case null       => ()
     }
 
   val component =

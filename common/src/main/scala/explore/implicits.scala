@@ -31,38 +31,21 @@ import monocle.function.Index.index
 import org.scalajs.dom
 import org.typelevel.log4cats.Logger
 import queries.schemas._
-import shapeless._
 
 import scala.annotation.unused
 import scala.collection.immutable.SortedMap
 import scala.concurrent.duration._
 
 trait ListImplicits {
-
-  // Adapted from https://stackoverflow.com/a/21444327/5808801
-  implicit object hnilMonoid extends Monoid[HNil] {
-    val empty                                       = HNil
-    def combine(@unused f1: HNil, @unused f2: HNil) = HNil
-  }
-
-  implicit def hconsMonoid[H: Monoid, T <: HList: Monoid]: Monoid[H :: T] =
-    new Monoid[H :: T] {
-      val empty                           = Monoid[H].empty :: Monoid[T].empty
-      def combine(f1: H :: T, f2: H :: T) =
-        (f1.head |+| f2.head) :: (f1.tail |+| f2.tail)
+  // TODO: Tail recursive version
+  def unzip4[A, B, C, D](list: List[(A, B, C, D)]): (List[A], List[B], List[C], List[D]) =
+    list match {
+      case Nil                  => (Nil, Nil, Nil, Nil)
+      case (a, b, c, d) :: tail =>
+        val (as, bs, cd, ds) = unzip4(tail)
+        (a :: as, b :: bs, c :: cd, d :: ds)
     }
 
-  // private object singleton extends Poly1 {
-  //   implicit def anything[A]: Aux[List[A], Int, A] = at[A](List(_))
-  // }
-
-  // implicit class UnzipListOpts[L <: HList](hlists: List[L]) {
-  //   def unzipN[Out <: HList](implicit
-  //     mapper: ops.hlist.Mapper.Aux[singleton.type, L, Out],
-  //     monoid: Monoid[Out]
-  //   ): Out = hlists.map(_.map(singleton)).combineAll
-  // }
-  //
   implicit class ViewListOps[F[_]: Monad, A](val viewList: ViewF[F, List[A]]) {
     def toListOfViews: List[ViewF[F, A]] =
       // It's safe to "get" since we are only invoking for existing indices.
