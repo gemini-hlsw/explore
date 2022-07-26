@@ -168,7 +168,12 @@ lazy val explore: Project = project
     Compile / fastLinkJS := (Compile / fastLinkJS)
       .dependsOn(workers / Compile / fastLinkJS)
       .value,
-    Compile / fullLinkJS := (Compile / fullLinkJS).dependsOn(workers / Compile / fullLinkJS).value
+    Compile / fullLinkJS := (Compile / fullLinkJS).dependsOn(workers / Compile / fullLinkJS).value,
+    Compile / fullLinkJS / scalaJSLinkerConfig ~= {
+      _.withModuleKind(ModuleKind.CommonJSModule)
+        .withSourceMap(false)
+        .withClosureCompilerIfAvailable(true)
+    }
   )
 
 lazy val commonSettings = lucumaGlobalSettings ++ Seq(
