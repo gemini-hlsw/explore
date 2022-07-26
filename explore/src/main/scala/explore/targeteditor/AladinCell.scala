@@ -92,8 +92,23 @@ object AladinCell extends ModelOptics {
       // to get faster reusability use a serial state, rather than check every candidate
       .useSerialState(List.empty[GuideStarCandidate])
       // Listen on web worker for messages with catalog candidates
+      .useEffectWithDepsBy((props, _, _, _, _) => props.tid)((props, _, _, _, gs) =>
+        _ => {
+
+          println("sub 2")
+          props.ctx.worker.stream
+            .map { r =>
+              println("event 2")
+            }
+            .compile
+            .drain
+        }
+      )
+      // Listen on web worker for messages with catalog candidates
       .useStreamBy((props, _, _, _, _) => props.tid)((props, _, _, _, gs) =>
-        _ =>
+        _ => {
+
+          println("sub 1")
           props.ctx.worker.stream
             .flatMap { r =>
               println("event 1")
@@ -116,6 +131,7 @@ object AladinCell extends ModelOptics {
               gsc.at(props.obsConf.vizTime)
             })
             .evalMap(r => gs.setStateAsync(r))
+        }
       )
       // Request data again if vizTime changes more than a month
       .useEffectWithDepsBy((p, _, _, _, _, candidates) => (candidates, p.obsConf.vizTime))(

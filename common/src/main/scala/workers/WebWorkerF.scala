@@ -75,7 +75,7 @@ object WebWorkerF {
 
           val terminate: F[Unit] = Sync[F].delay(worker.terminate())
 
-          val stream: Stream[F, dom.MessageEvent] = channel.subscribe(10)
+          def stream: Stream[F, dom.MessageEvent] = channel.subscribe(10)
         }))(w => w.terminate)
     } yield workerF
 
