@@ -32,8 +32,8 @@ import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import scala.collection.immutable.HashSet
-import scala.scalajs.js
 import scala.deriving.Mirror
+import scala.scalajs.js
 
 import js.JSConverters._
 

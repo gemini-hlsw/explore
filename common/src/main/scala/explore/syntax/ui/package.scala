@@ -9,18 +9,18 @@ import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
 import explore.model.Constants
 import explore.utils._
+import japgolly.scalajs.react.vdom.TagMod.apply
+import japgolly.scalajs.react.vdom.VdomNode
+import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.forms.ExternalValue
 import lucuma.ui.forms.FormInputEV
 import org.scalajs.dom.Window
-import react.common.GenericFnComponentPA
 import react.common.Css
+import react.common.GenericFnComponentPA
 import react.common.implicits._
 
-import scala.scalajs.js.UndefOr
 import scala.scalajs.js
-import japgolly.scalajs.react.vdom.VdomNode
-import japgolly.scalajs.react.vdom.TagMod.apply
-import japgolly.scalajs.react.vdom.html_<^._
+import scala.scalajs.js.UndefOr
 
 package object ui {
   implicit class WindowOps(val self: Window) extends AnyVal {

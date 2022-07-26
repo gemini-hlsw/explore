@@ -16,9 +16,7 @@ import explore.components.ui.ExploreStyles._
 import explore.syntax.ui.given
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import react.common.ReactFnProps
-import react.common.syntax.RenderSyntax
-import react.common.style.StyleSyntax
+import react.common._
 import react.semanticui.elements.icon._
 import react.semanticui.modules.popup._
 import react.semanticui.views.item.Item
@@ -48,8 +46,8 @@ object ConnectionsStatus {
         Popup(
           header = s"$name Connection Status",
           content = message,
-          position = PopupPosition.BottomRight,
-          trigger = Icon(name = "circle", fitted = true, clazz = clazz)
+          position = PopupPosition.BottomRight
+          // trigger = Icon(name = "circle", fitted = true, clazz = clazz)
         )
       ).vdomElement
     } else <.span()

@@ -3,11 +3,11 @@
 
 package explore
 
-import cats.Applicative
-import crystal.ViewF
-import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
+// import cats.Applicative
+// import crystal.ViewF
+// import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
 
-// package object undo                           {
+package object undo {
 //   type View[A] = ViewF[DefaultS, A]
 //
 //   object View {
@@ -38,4 +38,4 @@ import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
 //       def of[A](init: A): VarRef[F, A] = new VarRef(init)
 //     }
 //   }
-// }
+}

@@ -109,8 +109,7 @@ object TileController {
             .zoom(allTiles)
             .mod {
               case l if l.i.forall(_ === id.value) =>
-                if (st === TileSizeState.Minimized)
-                  l.copy(h = 1, minH = 1, isResizable = false)
+                if (st === TileSizeState.Minimized) l.copy(h = 1, minH = 1, isResizable = false)
                 else if (st === TileSizeState.Normal) {
                   val defaultHeight =
                     unsafeTileHeight(id).headOption(p.defaultLayout).getOrElse(1)

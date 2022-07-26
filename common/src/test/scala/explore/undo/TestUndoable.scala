@@ -3,13 +3,14 @@
 
 package explore.undo
 
-import cats.Applicative
-import cats.effect.std.Dispatcher
-import explore.optics.GetAdjust
-import japgolly.scalajs.react.util.DefaultEffects.{Async => DefaultA}
-import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
-import org.typelevel.log4cats.Logger
-
+// import cats.Applicative
+// import cats.effect.std.Dispatcher
+// import explore.optics.GetAdjust
+// import japgolly.scalajs.react.util.DefaultEffects.{Async => DefaultA}
+// import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
+// import org.typelevel.log4cats.Logger
+//
+class TestUndoable[M]()
 // class TestUndoable[M](
 //   val valueRef:   VarRef[DefaultS, M],
 //   stacksRef:      VarRef[DefaultS, UndoStacks[DefaultA, M]]
