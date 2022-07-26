@@ -193,6 +193,12 @@ object Settings {
       )(lucumaCatalog)
     )
 
+    val LucumaCatalogTestKit = Def.setting(
+      deps(
+        "edu.gemini" %%% "lucuma-catalog-testkit"
+      )(lucumaCatalog)
+    )
+
     val LucumaAgs = Def.setting(
       deps(
         "edu.gemini" %%% "lucuma-ags"

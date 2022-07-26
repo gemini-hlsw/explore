@@ -9,7 +9,7 @@ import cats.effect.Resource
 import cats.effect.Sync
 import cats.effect.std.Dispatcher
 import cats.syntax.all._
-import explore.events.EventPicklers._
+import explore.events.picklers._
 import explore.events.WorkerMessage
 import explore.model.boopickle._
 import fs2.Stream

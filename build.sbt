@@ -198,7 +198,6 @@ lazy val commonLibSettings = Seq(
         MUnit.value ++
           Discipline.value ++
           MUnitCatsEffect.value ++
-          LucumaCoreTestKit.value ++
           MonocleLaw.value
       ),
   testFrameworks += new TestFramework("munit.Framework")
@@ -207,7 +206,8 @@ lazy val commonLibSettings = Seq(
 lazy val testkitLibSettings = Seq(
   libraryDependencies ++= Discipline.value ++
     MonocleLaw.value ++
-    LucumaCoreTestKit.value
+    LucumaCoreTestKit.value ++
+    LucumaCatalogTestKit.value
 )
 
 lazy val commonJVMSettings = Seq(

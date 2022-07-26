@@ -3,7 +3,6 @@
 
 package workers
 
-import explore.model.boopickle._
 import japgolly.scalajs.react.callback._
 import japgolly.webapputil.binary._
 import japgolly.webapputil.boopickle._
@@ -13,7 +12,7 @@ import japgolly.webapputil.indexeddb._
 import scala.annotation.nowarn
 import scala.scalajs.js
 import explore.events.CatalogResults
-import explore.events.EventPicklers
+import explore.events.picklers._
 
 @js.native
 @nowarn
@@ -50,7 +49,7 @@ object CacheIDBStores {
   val DBVersion = 1
 
   // Data type picklers
-  object DBPicklers extends CatalogPicklers with EventPicklers {
+  object DBPicklers {
     import SafePickler.ConstructionHelperImplicits._
 
     //  SafePickler` is defined in webapp-util and provides some additional features.
