@@ -142,6 +142,10 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
   @inline protected val filterLens: Lens[S, Option[Filter]]
   @inline protected val fpuLens: Lens[S, Fpu]
 
+  @inline protected val obsoleteGratings: Set[Grating]
+  @inline protected val obsoleteFilters: Set[Filter]
+  @inline protected val obsoleteRois: Set[Roi]
+
   protected implicit val displayBinning: Display[(XBinning, YBinning)] =
     Display.by(
       { case (x, y) => s"${x.shortName} x ${y.shortName}" },
@@ -413,6 +417,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               EnumViewOptionalSelect(
                 id = "override-grating",
                 value = overrideGrating(props.scienceModeAdvanced),
+                exclude = obsoleteGratings,
                 clearable = true,
                 placeholder = gratingLens.get(props.scienceModeBasic).shortName
               ),
@@ -420,6 +425,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               EnumViewOptionalSelect(
                 id = "override-filter",
                 value = overrideFilter(props.scienceModeAdvanced),
+                exclude = obsoleteFilters,
                 clearable = true,
                 placeholder = filterLens.get(props.scienceModeBasic).map(_.shortName).orUndefined
               ),
@@ -462,6 +468,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               EnumViewOptionalSelect(
                 id = "explicitRoi",
                 value = explicitRoi(props.scienceModeAdvanced),
+                exclude = obsoleteRois,
                 clearable = true
               ),
               <.label("λ / Δλ", ExploreStyles.SkipToNext),
@@ -617,7 +624,9 @@ object AdvancedConfigurationPanel {
         GmosAmpReadMode,
         GmosAmpGain,
         GmosRoi
-      ]
+      ] {
+    @inline override protected val obsoleteRois = GmosRoi.all.filter(_.obsolete).toSet
+  }
 
   // Gmos North Long Slit
   final case class GmosNorthLongSlit(
@@ -652,8 +661,8 @@ object AdvancedConfigurationPanel {
         GmosNorthFpu,
       ] {
 
-    @inline protected def overrideWavelength(aligner: AA)(implicit
-      ctx:                                            AppContextIO
+    @inline override protected def overrideWavelength(aligner: AA)(implicit
+      ctx:                                                     AppContextIO
     ): View[Option[Wavelength]] =
       aligner
         .zoom(ScienceModeAdvanced.GmosNorthLongSlit.overrideWavelength,
@@ -765,10 +774,12 @@ object AdvancedConfigurationPanel {
       )
       .view(_.map(_.toList.map(_.toInput)).orUnassign)
 
-    @inline protected val gratingLens = ScienceModeBasic.GmosNorthLongSlit.grating
-    @inline protected val filterLens  = ScienceModeBasic.GmosNorthLongSlit.filter
-    @inline protected val fpuLens     = ScienceModeBasic.GmosNorthLongSlit.fpu
+    @inline override protected val gratingLens = ScienceModeBasic.GmosNorthLongSlit.grating
+    @inline override protected val filterLens  = ScienceModeBasic.GmosNorthLongSlit.filter
+    @inline override protected val fpuLens     = ScienceModeBasic.GmosNorthLongSlit.fpu
 
+    @inline override protected val obsoleteGratings = GmosNorthGrating.all.filter(_.obsolete).toSet
+    @inline override protected val obsoleteFilters  = GmosNorthFilter.all.filter(_.obsolete).toSet
   }
 
   // Gmos South Long Slit
@@ -805,8 +816,8 @@ object AdvancedConfigurationPanel {
         GmosSouthFpu,
       ] {
 
-    @inline protected def overrideWavelength(aligner: AA)(implicit
-      ctx:                                            AppContextIO
+    @inline override def overrideWavelength(aligner: AA)(implicit
+      ctx:                                           AppContextIO
     ): View[Option[Wavelength]] =
       aligner
         .zoom(ScienceModeAdvanced.GmosSouthLongSlit.overrideWavelength,
@@ -918,9 +929,11 @@ object AdvancedConfigurationPanel {
       )
       .view(_.map(_.toList.map(_.toInput)).orUnassign)
 
-    @inline protected val gratingLens = ScienceModeBasic.GmosSouthLongSlit.grating
-    @inline protected val filterLens  = ScienceModeBasic.GmosSouthLongSlit.filter
-    @inline protected val fpuLens     = ScienceModeBasic.GmosSouthLongSlit.fpu
+    @inline override protected val gratingLens = ScienceModeBasic.GmosSouthLongSlit.grating
+    @inline override protected val filterLens  = ScienceModeBasic.GmosSouthLongSlit.filter
+    @inline override protected val fpuLens     = ScienceModeBasic.GmosSouthLongSlit.fpu
 
+    @inline override protected val obsoleteGratings = GmosSouthGrating.all.filter(_.obsolete).toSet
+    @inline override protected val obsoleteFilters  = GmosSouthFilter.all.filter(_.obsolete).toSet
   }
 }
