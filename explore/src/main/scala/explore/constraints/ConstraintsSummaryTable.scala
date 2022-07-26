@@ -195,32 +195,36 @@ object ConstraintsSummaryTable {
       .render((props, _, _, tableInstance) =>
         <.div(
           props.renderInTitle(
-            <.span(ExploreStyles.TitleSelectColumns)(
-              Dropdown(item = true,
-                       simple = true,
-                       pointing = Pointing.TopRight,
-                       scrolling = true,
-                       text = "Columns",
-                       clazz = ExploreStyles.SelectColumns
-              )(
-                DropdownMenu(
-                  tableInstance.allColumns
-                    .drop(1)
-                    .toTagMod { column =>
-                      val colId = column.id.toString
-                      DropdownItem()(^.key := colId)(
-                        <.div(
-                          Checkbox(
-                            label = columnNames(colId),
-                            checked = column.isVisible,
-                            onChange = (value: Boolean) =>
-                              Callback(column.toggleHidden()) >>
-                                props.hiddenColumns
-                                  .mod(cols => if (value) cols - colId else cols + colId)
+            React.Fragment(
+              <.span, // Push column selector to right
+              <.span(ExploreStyles.TitleSelectColumns)(
+                Dropdown(
+                  item = true,
+                  simple = true,
+                  pointing = Pointing.TopRight,
+                  scrolling = true,
+                  text = "Columns",
+                  clazz = ExploreStyles.SelectColumns
+                )(
+                  DropdownMenu()(
+                    tableInstance.allColumns
+                      .drop(1)
+                      .toTagMod { column =>
+                        val colId = column.id.toString
+                        DropdownItem()(^.key := colId)(
+                          <.div(
+                            Checkbox(
+                              label = columnNames(colId),
+                              checked = column.isVisible,
+                              onChange = (value: Boolean) =>
+                                Callback(column.toggleHidden()) >>
+                                  props.hiddenColumns
+                                    .mod(cols => if (value) cols - colId else cols + colId)
+                            )
                           )
                         )
-                      )
-                    }
+                      }
+                  )
                 )
               )
             )

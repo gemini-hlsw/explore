@@ -164,6 +164,7 @@ object AsterismEditor {
               trigger = Button(
                 size = Tiny,
                 compact = true,
+                positive = true,
                 clazz = ExploreStyles.VeryCompact,
                 disabled = adding.get,
                 icon = Icons.New,
@@ -182,8 +183,7 @@ object AsterismEditor {
                     targetView,
                     adding
                   ).runAsync
-
-                case _ =>
+                case _                                                     =>
                   Callback.empty
               }
             )

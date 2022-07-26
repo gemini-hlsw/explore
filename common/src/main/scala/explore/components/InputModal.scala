@@ -51,6 +51,7 @@ object InputModal {
             Button(
               size = Small,
               primary = true,
+              positive = true,
               disabled = inputValue.get.isEmpty,
               icon = true,
               onClick = cleanInput *> props.onComplete(
@@ -60,7 +61,7 @@ object InputModal {
               Icons.Checkmark,
               props.okLabel
             )(^.key := "input-ok"),
-            Button(size = Small, icon = true, onClick = cleanInput)(
+            Button(size = Small, icon = true, negative = true, onClick = cleanInput)(
               Icons.Close,
               "Cancel"
             )(^.key := "input-cancel")

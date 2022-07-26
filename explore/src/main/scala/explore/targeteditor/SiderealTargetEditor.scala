@@ -128,8 +128,7 @@ object SiderealTargetEditor {
   val component =
     ScalaFnComponent
       .withHooks[Props]
-      // cloning
-      .useState(false)
+      .useState(false) // cloning
       // If vizTime is not set, change it to now
       .useEffectResultWithDepsBy((p, _) => p.vizTime) { (_, _) => vizTime =>
         IO(vizTime.getOrElse(Instant.now()))

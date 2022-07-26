@@ -120,7 +120,8 @@ object ObsList {
             Button(
               size = Mini,
               compact = true,
-              // icon = Icons.New,
+              positive = true,
+              icon = Icons.New,
               content = "Obs",
               disabled = adding.get,
               loading = adding.get,

@@ -54,7 +54,7 @@ object ProgramsPopup {
         if (props.onClose.isEmpty) List.empty
         else
           List(
-            Button(size = Small, icon = true)(Icons.Close, "Cancel")(
+            Button(size = Small, icon = true, negative = true)(Icons.Close, "Cancel")(
               ^.tpe := "button",
               ^.key := "input-cancel"
             )

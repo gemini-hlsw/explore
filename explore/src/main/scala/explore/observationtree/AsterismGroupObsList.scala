@@ -434,6 +434,7 @@ object AsterismGroupObsList {
                           Button(
                             size = Mini,
                             compact = true,
+                            positive = true,
                             icon = Icons.New,
                             content = "Sidereal",
                             disabled = adding.get,

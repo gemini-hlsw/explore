@@ -78,15 +78,19 @@ object reusability {
   implicit val optionsReuse: Reusability[ImagingConfigurationOptions] = Reusability.byEq
   implicit val percentageReuse: Reusability[Progress]                 = Reusability.byEq
 
-  implicit val angularSizeReuse: Reusability[AngularSize]                       = Reusability.byEq
-  implicit val catalogTargetReuse: Reusability[CatalogTargetResult]             = Reusability.byEq
-  implicit val scienceModeBasicReuse: Reusability[ScienceModeBasic]             = Reusability.byEq
-  implicit val scienceModeAdvancedResultReuse: Reusability[ScienceModeAdvanced] = Reusability.byEq
-  implicit val scienceModeResultReuse: Reusability[ScienceMode]                 = Reusability.byEq
-  implicit val guideStarReuse: Reusability[GuideStarCandidate]                  = Reusability.by(_.name.value)
-  implicit val catalogResultsReuse: Reusability[CatalogResults]                 = Reusability.by(_.candidates)
-  implicit val agsPositionReuse: Reusability[AgsPosition]                       = Reusability.byEq
-  implicit val agsParamsReuse: Reusability[AgsParams]                           = Reusability.byEq
+  implicit val angularSizeReuse: Reusability[AngularSize]                                   = Reusability.byEq
+  implicit val catalogTargetReuse: Reusability[CatalogTargetResult]                         = Reusability.byEq
+  implicit val scienceModeBasicReuse: Reusability[ScienceModeBasic]                         = Reusability.byEq
+  implicit val scienceModeAdvancedResultReuse: Reusability[ScienceModeAdvanced]             = Reusability.byEq
+  implicit val gmosNorthLongSlitBasicReuse: Reusability[ScienceModeBasic.GmosNorthLongSlit] =
+    Reusability.byEq
+  implicit val gmosSouthLongSlitBasicReuse: Reusability[ScienceModeBasic.GmosSouthLongSlit] =
+    Reusability.byEq
+  implicit val scienceModeResultReuse: Reusability[ScienceMode]                             = Reusability.byEq
+  implicit val guideStarReuse: Reusability[GuideStarCandidate]                              = Reusability.by(_.name.value)
+  implicit val catalogResultsReuse: Reusability[CatalogResults]                             = Reusability.by(_.candidates)
+  implicit val agsPositionReuse: Reusability[AgsPosition]                                   = Reusability.byEq
+  implicit val agsParamsReuse: Reusability[AgsParams]                                       = Reusability.byEq
 
   implicit val partnerSplitsReuse: Reusability[SortedMap[Partner, IntPercent]] =
     Reusability.by((_: SortedMap[Partner, IntPercent]).toMap)(Reusability.map)

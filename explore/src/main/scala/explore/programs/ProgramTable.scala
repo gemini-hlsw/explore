@@ -218,6 +218,7 @@ object ProgramTable {
               Button(
                 clazz = ExploreStyles.ProgramAdd,
                 compact = true,
+                positive = true,
                 icon = Icons.New,
                 content = "Program",
                 disabled = adding.get,
