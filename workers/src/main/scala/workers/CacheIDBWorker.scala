@@ -50,13 +50,13 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
 
   def run: IO[Unit] =
     for {
-      logger      <- setupLogger[IO]
-      self        <- IO(dom.DedicatedWorkerGlobalScope.self)
-      idb         <- IO(self.indexedDB.get)
-      stores       = CacheIDBStores()
-      cacheDb     <- stores.open(IndexedDb(idb)).toIO
-      (client, _) <- FetchClientBuilder[IO].allocated
-      _           <-
+      logger  <- setupLogger[IO]
+      self    <- IO(dom.DedicatedWorkerGlobalScope.self)
+      idb     <- IO(self.indexedDB.get)
+      stores   = CacheIDBStores()
+      cacheDb <- stores.open(IndexedDb(idb)).toIO
+      client   = FetchClientBuilder[IO].create
+      _       <-
         IO {
           self.onmessage = (msg: dom.MessageEvent) =>
             // Decode transferrable events

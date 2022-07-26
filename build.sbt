@@ -45,7 +45,7 @@ stage := {
 }
 
 lazy val root = tlCrossRootProject
-  .aggregate(model, modelTests, graphql, common, explore)
+  .aggregate(model, modelTests, graphql, common, explore, workers)
   .settings(name := "explore-root")
 
 lazy val model = crossProject(JVMPlatform, JSPlatform)
