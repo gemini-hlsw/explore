@@ -21,6 +21,8 @@ import explore.model.ModelUndoStacks
 import explore.model.enums.ExecutionEnvironment
 import explore.model.enums.Theme
 import explore.programs.ProgramsPopup
+import explore.syntax.ui.*
+import explore.syntax.ui.given
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.callback.CallbackCatsEffect._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -30,7 +32,8 @@ import lucuma.core.model.Program
 import lucuma.core.model.User
 import org.scalajs.dom
 import org.scalajs.dom.window
-import react.common._
+import react.common.ReactFnProps
+import react.fa.given
 import react.semanticui.collections.menu._
 import react.semanticui.elements.image.Image
 import react.semanticui.modules.checkbox.Checkbox
@@ -106,19 +109,19 @@ object TopBar {
                   item = true,
                   simple = true,
                   compact = true,
-                  // icon = Icons.Bars,
+                  icon = Icons.Bars,
                   open = false,
                   clazz = ExploreStyles.MainMenuDropdown
                 )(
                   DropdownMenu(
                     About(
                       Reuse.always(
-                        DropdownItem(text = "About Explore" /*, icon = Icons.Info.fixedWidth()*/ )
+                        DropdownItem(text = "About Explore", icon = Icons.Info.fixedWidth())
                       )
                     ),
                     DropdownItem(
                       text = "Manage Programs",
-                      // icon = Icons.ListCheck.fixedWidth(),
+                      icon = Icons.ListCheck.fixedWidth(),
                       onClick = isProgramsOpen.setState(true)
                     ),
                     TagMod.when(isProgramsOpen.value)(
@@ -139,7 +142,7 @@ object TopBar {
                     ).when(role === GuestRole),
                     DropdownItem(
                       text = "Logout",
-                      // icon = Icons.Logout.fixedWidth(),
+                      icon = Icons.Logout.fixedWidth(),
                       onClick = logout.runAsync
                     ),
                     DropdownItem()(
@@ -164,7 +167,7 @@ object TopBar {
                       .when(appCtx.environment === ExecutionEnvironment.Development),
                     DropdownItem(
                       text = "Toggle Reusability",
-                      // icon = Icons.CrystalBall.fixedWidth(),
+                      icon = Icons.CrystalBall.fixedWidth(),
                       onClick = utils.toggleReusabilityOverlay[CallbackTo]()
                     )
                       .when(appCtx.environment === ExecutionEnvironment.Development)

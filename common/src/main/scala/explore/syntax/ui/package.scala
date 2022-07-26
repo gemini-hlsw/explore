@@ -17,6 +17,7 @@ import lucuma.ui.forms.ExternalValue
 import lucuma.ui.forms.FormInputEV
 import org.scalajs.dom.Window
 import react.common.Css
+import react.common.GenericComponentPA
 import react.common.GenericComponentPAC
 import react.common.GenericComponentPACF
 import react.common.GenericComponentPC
@@ -86,8 +87,17 @@ package object ui {
   given Conversion[ClassPC[?], UndefOr[VdomNode]] = _.render.vdomElement
   given Conversion[ClassPC[?], VdomNode]          = _.render.vdomElement
 
+  type ClassPA[P <: js.Object] = GenericComponentPA[P, ?]
+  given Conversion[ClassPA[?], UndefOr[VdomNode]] = _.render.vdomElement
+  given Conversion[ClassPA[?], VdomNode]          = _.render.vdomElement
+
   type ClassPACF[P <: js.Object, F <: js.Object] = GenericComponentPACF[P, ?, F]
   given Conversion[ClassPACF[?, ?], VdomNode] = _.render.vdomElement
+
+  // implicit def GenericComponentPA2VdomNode[P <: js.Object](
+  //   p: GenericComponentPA[P, ?]
+  // ): VdomNode =
+  //   p.render
   //
   // Syntaxis for apply
   extension [P <: js.Object, A](c: GenericFnComponentPC[P, A])

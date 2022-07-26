@@ -5,10 +5,13 @@ package explore
 
 import explore.Icons
 import explore.components.ui.ExploreStyles
+import explore.syntax.ui.*
+import explore.syntax.ui.given
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import react.common._
+import react.fa.Flip
 import react.fa.IconSize
+import react.fa.given
 
 object UnderConstruction {
 
@@ -21,7 +24,11 @@ object UnderConstruction {
           ExploreStyles.HVCenter,
           <.div(
             <.div("Under Construction"),
-            <.div(ExploreStyles.HVCenter, Icons.Gears.size(IconSize.X5).title("Under construction"))
+            <.div(ExploreStyles.HVCenter,
+                  Icons.Gears
+                    .size(IconSize.X5)
+                    .title("Under construction")
+            )
           )
         )
       }

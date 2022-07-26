@@ -7,10 +7,12 @@ import cats.syntax.all._
 import explore.components.ui.ExploreStyles
 import explore.model.RoutingInfo
 import explore.model.enums.AppTab
+import explore.syntax.ui.*
+import explore.syntax.ui.given
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.utils._
-import react.common._
+import react.common.ReactFnProps
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.elements.button.ButtonGroup
@@ -37,7 +39,7 @@ object SideTabs {
 
         def tabButton(tab: AppTab): Button =
           Button(
-            // as = <.a,
+            as = <.a,
             active = tab === focus,
             clazz = ExploreStyles.SideButton,
             onClickE = onClickE[ButtonProps](tab)
@@ -45,7 +47,7 @@ object SideTabs {
 
         def tab(tab: AppTab): Label =
           Label(
-            // as = <.a,
+            as = <.a,
             active = tab === focus,
             clazz = ExploreStyles.TabSelector,
             size = Tiny,
