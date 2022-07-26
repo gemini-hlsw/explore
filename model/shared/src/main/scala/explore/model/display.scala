@@ -114,27 +114,28 @@ trait DisplayImplicits {
     case SpectralDefinition.EmissionLines(_, _)     => "Emission Lines"
   }
 
-  implicit val displayGmosXBinning: Display[GmosXBinning] = Display.byTag
+  implicit val displayGmosXBinning: Display[GmosXBinning] = Display.by(_.shortName, _.longName)
 
-  implicit val displayGmosYBinning: Display[GmosYBinning] = Display.byTag
+  implicit val displayGmosYBinning: Display[GmosYBinning] = Display.by(_.shortName, _.longName)
 
-  implicit val displayGmosNorthGrating: Display[GmosNorthGrating] = Display.byTag
+  implicit val displayGmosNorthGrating: Display[GmosNorthGrating] = Display.byShortName(_.longName)
 
-  implicit val displayGmosSouthGrating: Display[GmosSouthGrating] = Display.byTag
+  implicit val displayGmosSouthGrating: Display[GmosSouthGrating] = Display.byShortName(_.longName)
 
-  implicit val displayGmosNorthFilter: Display[GmosNorthFilter] = Display.byTag
+  implicit val displayGmosNorthFilter: Display[GmosNorthFilter] = Display.byShortName(_.longName)
 
-  implicit val displayGmosSouthFilter: Display[GmosSouthFilter] = Display.byTag
+  implicit val displayGmosSouthFilter: Display[GmosSouthFilter] = Display.byShortName(_.longName)
 
-  implicit val displayGmosNorthFpu: Display[GmosNorthFpu] = Display.byTag
+  implicit val displayGmosNorthFpu: Display[GmosNorthFpu] = Display.byShortName(_.longName)
 
-  implicit val displayGmosSouthFpu: Display[GmosSouthFpu] = Display.byTag
+  implicit val displayGmosSouthFpu: Display[GmosSouthFpu] = Display.byShortName(_.longName)
 
-  implicit val displayGmosAmpReadMode: Display[GmosAmpReadMode] = Display.byTag
+  implicit val displayGmosAmpReadMode: Display[GmosAmpReadMode] =
+    Display.by(_.shortName, _.longName)
 
-  implicit val displayGmosAmpGain: Display[GmosAmpGain] = Display.byTag
+  implicit val displayGmosAmpGain: Display[GmosAmpGain] = Display.by(_.shortName, _.longName)
 
-  implicit val displayGmosRoi: Display[GmosRoi] = Display.byTag
+  implicit val displayGmosRoi: Display[GmosRoi] = Display.byShortName(_.longName)
 }
 
 object display extends DisplayImplicits
