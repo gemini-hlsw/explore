@@ -42,6 +42,7 @@
     "ua-parser-js": "1.0.2"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^22.0.1",
     "@ronilaukkarinen/stylelint-value-no-unknown-custom-properties": "^3.0.1",
     "@vitejs/plugin-react": "^2.0.0",
     "assert": "^2.0.0",

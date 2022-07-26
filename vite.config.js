@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const ViteFonts = require('vite-plugin-fonts');
 const mkcert = require('vite-plugin-mkcert');
+const commonjs = require('@rollup/plugin-commonjs');
 const { VitePWA } = require('vite-plugin-pwa');
 
 const fontImport = ViteFonts.Plugin({
@@ -64,7 +65,9 @@ module.exports = ({ command, mode }) => {
   const workersSjs = isProduction
     ? path.resolve(workersScalaClassesDir, 'workers-opt')
     : path.resolve(workersScalaClassesDir, 'workers-fastopt');
-  const rollupPlugins = isProduction ? [] : [visualizer()];
+  const rollupPlugins = isProduction ? [commonjs({
+    extensions: []
+  })] : [visualizer()];
   const common = path.resolve(__dirname, 'common/');
   const webappCommon = path.resolve(common, 'src/main/webapp/');
   const imagesCommon = path.resolve(webappCommon, 'images');

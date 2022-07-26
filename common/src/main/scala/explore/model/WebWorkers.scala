@@ -6,7 +6,7 @@ package explore.model
 import org.scalajs.dom
 
 import scala.scalajs.js
-import scala.scalajs.js.annotation.JSImport
+import scala.scalajs.js.annotation._
 
 object WebWorkers {
 
@@ -20,9 +20,10 @@ object WebWorkers {
    * inline lets us save some space keeping a single chunk More info see:
    * https://vitejs.dev/guide/features.html#import-with-query-suffixes=
    */
-  @js.native
-  @JSImport("/cacheworker.js?worker", JSImport.Default)
+  // @js.native
+  // @JSImport("/cacheworker.js?worker", JSImport.Default)
   object CacheIDBWorker extends js.Object {
-    def apply(): dom.Worker = js.native
+    @JSName("whatever")
+    def apply(): dom.Worker = ???
   }
 }

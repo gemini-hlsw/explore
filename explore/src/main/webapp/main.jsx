@@ -9,7 +9,7 @@ import "github-markdown-css/github-markdown-light.css";
 import "react-circular-progressbar/dist/styles.css";
 import 'react-toastify/dist/ReactToastify.css';
 
-import { Explore, ExplorePWA } from "@sjs/main.js";
+import { Explore, ExplorePWA } from "@sjs/main.cjs";
 
 import { registerSW } from "virtual:pwa-register";
 
