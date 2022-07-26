@@ -37,14 +37,10 @@ import scala.collection.immutable.SortedMap
 import scala.concurrent.duration._
 
 trait ListImplicits {
-  // TODO: Tail recursive version
   def unzip4[A, B, C, D](list: List[(A, B, C, D)]): (List[A], List[B], List[C], List[D]) =
-    list match {
-      case Nil                  => (Nil, Nil, Nil, Nil)
-      case (a, b, c, d) :: tail =>
-        val (as, bs, cd, ds) = unzip4(tail)
-        (a :: as, b :: bs, c :: cd, d :: ds)
-    }
+    list.foldRight((List.empty[A], List.empty[B], List.empty[C], List.empty[D]))((tuple, accum) =>
+      (tuple._1 :: accum._1, tuple._2 :: accum._2, tuple._3 :: accum._3, tuple._4 :: accum._4)
+    )
 
   implicit class ViewListOps[F[_]: Monad, A](val viewList: ViewF[F, List[A]]) {
     def toListOfViews: List[ViewF[F, A]] =
