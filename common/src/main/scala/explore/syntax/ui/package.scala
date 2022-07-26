@@ -12,10 +12,15 @@ import explore.utils._
 import lucuma.ui.forms.ExternalValue
 import lucuma.ui.forms.FormInputEV
 import org.scalajs.dom.Window
+import react.common.GenericFnComponentPA
 import react.common.Css
 import react.common.implicits._
 
 import scala.scalajs.js.UndefOr
+import scala.scalajs.js
+import japgolly.scalajs.react.vdom.VdomNode
+import japgolly.scalajs.react.vdom.TagMod.apply
+import japgolly.scalajs.react.vdom.html_<^._
 
 package object ui {
   implicit class WindowOps(val self: Window) extends AnyVal {
@@ -52,4 +57,11 @@ package object ui {
       input.copy(icon = clearInputIcon[EV, A](input.value), clazz = newClazz)
     }
   }
+
+  type FnPA[P <: js.Object] = GenericFnComponentPA[P, ?]
+  given Conversion[FnPA[?], UndefOr[VdomNode]] = _.render
+  given Conversion[FnPA[?], VdomNode]          = _.render
+
+  given Conversion[Css, TagMod] =
+    ^.className := _.htmlClass
 }
