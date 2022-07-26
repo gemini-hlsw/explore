@@ -8,6 +8,7 @@ import crystal.react._
 import crystal.react.hooks._
 import eu.timepit.refined.auto._
 import explore.Icons
+import explore.events.picklers._
 import explore.common.ObsQueries._
 import explore.common.ScienceQueries._
 import explore.components.HelpIcon
@@ -17,6 +18,8 @@ import explore.model
 import explore.model.ITCTarget
 import explore.model.ImagingConfigurationOptions
 import explore.model.display._
+import explore.model.boopickle._
+import lucuma.ui.reusability._
 import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -52,7 +55,18 @@ object BasicConfigurationPanel {
       .withHooks[Props]
       .useStateView[ScienceMode](ScienceMode.Spectroscopy)
       .useStateView[ImagingConfigurationOptions](ImagingConfigurationOptions.Default)
-      .render { (props, mode, imaging) =>
+      // Listen on web worker for messages with catalog candidates
+      .useStreamWithSyncBy((props, _, _) => props.obsId)((props, _, _) =>
+        _ =>
+          props.ctx.worker.stream
+            .flatMap { r =>
+              println("event")
+              // val res = decodeFromTransferable[model.CatalogResults](r)
+              // println(res)
+              fs2.Stream.emit[cats.effect.IO, Unit](())
+            }
+      )
+      .render { (props, mode, imaging, _) =>
         implicit val ctx: AppContextIO = props.ctx
 
         val requirementsViewSet: ScienceRequirementsUndoView =

@@ -96,6 +96,7 @@ object AladinCell extends ModelOptics {
         _ =>
           props.ctx.worker.stream
             .flatMap { r =>
+              println("event 1")
               val resultsOrError = decodeFromTransferable[CatalogResults](r)
                 .map(_.asRight)
                 .orElse(

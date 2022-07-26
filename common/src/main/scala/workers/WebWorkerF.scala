@@ -16,6 +16,7 @@ import org.scalajs.dom
 
 import scala.scalajs.js
 import scala.scalajs.js.typedarray._
+import fs2.concurrent.Topic
 
 /**
  * WebWorker abstraction running on F. it is possible to post messages and get a stream of events
@@ -57,11 +58,11 @@ object WebWorkerF {
     dispatcher: Dispatcher[F]
   ): Resource[F, WebWorkerF[F]] =
     for {
-      channel <- Resource.make(Channel.unbounded[F, dom.MessageEvent])(_.close.void)
+      channel <- Resource.make(Topic[F, dom.MessageEvent])(_.close.void)
       _       <-
         Resource.eval(
           Sync[F].delay(worker.onmessage =
-            (e: dom.MessageEvent) => dispatcher.unsafeRunAndForget(channel.send(e))
+            (e: dom.MessageEvent) => dispatcher.unsafeRunAndForget(channel.publish1(e))
           )
         )
       workerF <-
@@ -74,7 +75,7 @@ object WebWorkerF {
 
           val terminate: F[Unit] = Sync[F].delay(worker.terminate())
 
-          val stream: Stream[F, dom.MessageEvent] = channel.stream
+          val stream: Stream[F, dom.MessageEvent] = channel.subscribe(10)
         }))(w => w.terminate)
     } yield workerF
 
