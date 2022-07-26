@@ -15,10 +15,10 @@ import lucuma.ui.forms.ExternalValue
 import lucuma.ui.forms.FormInputEV
 import org.scalajs.dom.Window
 import react.common.Css
-import react.common.GenericFnComponentPA
-import react.common.GenericFnComponentPC
-import react.common.GenericFnComponentPAC
 import react.common.GenericComponentPAC
+import react.common.GenericFnComponentPA
+import react.common.GenericFnComponentPAC
+import react.common.GenericFnComponentPC
 import react.common.implicits._
 
 import scala.scalajs.js

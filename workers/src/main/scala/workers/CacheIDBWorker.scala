@@ -55,7 +55,7 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
       idb     <- IO(self.indexedDB.get)
       stores   = CacheIDBStores()
       cacheDb <- stores.open(IndexedDb(idb)).toIO
-      client  <- FetchClientBuilder[IO].allocated.map(_._1)
+      client   = FetchClientBuilder[IO].create
       _       <-
         IO {
           self.onmessage = (msg: dom.MessageEvent) =>

@@ -55,7 +55,7 @@ stage := {
 }
 
 lazy val root = tlCrossRootProject
-  .aggregate(model, modelTests, graphql, common, explore)
+  .aggregate(model, modelTests, graphql, common, explore, workers)
   .settings(name := "explore-root")
 
 lazy val model = crossProject(JVMPlatform, JSPlatform)
@@ -93,7 +93,11 @@ lazy val workers = project
     libraryDependencies ++= LucumaCatalog.value ++
       Http4sDom.value ++
       Log4Cats.value ++
-      ScalaWebAppUtil.value
+      ScalaWebAppUtil.value,
+    Test / scalaJSLinkerConfig ~= {
+      import org.scalajs.linker.interface.OutputPatterns
+      _.withOutputPatterns(OutputPatterns.fromJSFile("%s.mjs"))
+    }
   )
   .enablePlugins(ScalaJSPlugin)
   .dependsOn(model.js)

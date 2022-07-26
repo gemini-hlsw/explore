@@ -4,9 +4,9 @@
 package workers
 
 import explore.model.CatalogResults
-import lucuma.ags.GuideStarCandidate
 import japgolly.scalajs.react.callback._
 import japgolly.webapputil.indexeddb._
+import lucuma.ags.GuideStarCandidate
 import lucuma.catalog._
 
 /**
