@@ -3,42 +3,42 @@
 
 package workers
 
-import cats.syntax.all._
+import cats.Hash
 import cats.data.EitherNec
 import cats.effect.Concurrent
 import cats.effect.IO
-import cats.Hash
-import explore.model.CatalogResults
-import explore.model.CatalogQueryError
-import lucuma.ags.GuideStarCandidate
-import lucuma.core.model.Target
+import cats.syntax.all._
+import explore.events.CatalogRequest
 import explore.events.picklers._
-import lucuma.core.geom.gmos.probeArm
+import explore.model.CatalogQueryError
+import explore.model.CatalogResults
+import explore.model.Constants
+import explore.model.boopickle._
+import fs2.text
 import japgolly.webapputil.indexeddb._
 import lucuma.ags
+import lucuma.ags.GuideStarCandidate
 import lucuma.catalog._
-import fs2.text
+import lucuma.core.enums._
+import lucuma.core.geom.gmos.probeArm
+import lucuma.core.geom.jts.interpreter._
+import lucuma.core.math.Coordinates
+import lucuma.core.math.Wavelength
+import lucuma.core.model.ConstraintSet
+import lucuma.core.model.ElevationRange
+import lucuma.core.model.Target
 import org.http4s.Method._
 import org.http4s.Request
 import org.http4s.client.Client
 import org.http4s.syntax.all._
-import lucuma.core.geom.jts.interpreter._
-import lucuma.core.math.Coordinates
-import org.typelevel.log4cats.Logger
-import explore.model.boopickle._
-
 import org.scalajs.dom
+import org.typelevel.log4cats.Logger
+import spire.math.Bounded
+
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.temporal.ChronoField
 import java.time.temporal.ChronoUnit
-import spire.math.Bounded
-import explore.events.CatalogRequest
-import lucuma.core.enums._
-import lucuma.core.model.ConstraintSet
-import lucuma.core.model.ElevationRange
-import lucuma.core.math.Wavelength
-import explore.model.Constants
 
 trait CatalogQuerySettings {
   val proxy = uri"https://cors-proxy.lucuma.xyz"
