@@ -10,12 +10,15 @@ import explore.components.ui.ExploreStyles
 import explore.components.ui.ExploreStyles._
 import explore.model.enums.TileSizeState
 import explore.model.layout
+import explore.syntax.ui.*
+import explore.syntax.ui.given
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import org.scalajs.dom
-import react.common._
+import react.common.ReactFnProps
 import react.common.implicits.cssMonoid
 import react.common.style._
+import react.fa.given
 import react.semanticui.collections.menu._
 import react.semanticui.elements.button.Button
 
@@ -72,7 +75,7 @@ object Tile {
       .render { (p, infoRef) =>
         val maximizeButton =
           Button(
-            // as = <.a,
+            as = <.a,
             basic = true,
             compact = true,
             clazz = ExploreStyles.TileStateButton |+| ExploreStyles.BlendedButton,
@@ -85,7 +88,7 @@ object Tile {
 
         val minimizeButton =
           Button(
-            // as = <.a,
+            as = <.a,
             basic = true,
             compact = true,
             clazz = ExploreStyles.TileStateButton |+| ExploreStyles.BlendedButton,
@@ -94,7 +97,7 @@ object Tile {
               .when_(p.state === TileSizeState.Maximized) *> p
               .sizeStateCallback(TileSizeState.Minimized)
               .when_(p.state === TileSizeState.Normal)
-          ) // (Icons.Minimize)
+          )(Icons.Minimize)
 
         def setInfoRef(node: dom.Node | Null): Unit =
           infoRef
@@ -118,7 +121,7 @@ object Tile {
                 secondary = true,
                 clazz = ExploreStyles.TileTitleMenu
               )(
-                // MenuItem(as = <.a)(p.title)
+                MenuItem(as = <.a)(p.title)
               ),
               p.control(p.state).map(b => <.div(ExploreStyles.TileControl, b)),
               <.span(^.key := "tileTitle", ^.untypedRef(setInfoRef).when(infoRef.value.isEmpty))(

@@ -12,16 +12,18 @@ import crystal.react.hooks._
 import crystal.react.implicits._
 import explore.components.ui.ExploreStyles
 import explore.model.Help
+import explore.syntax.ui.*
+import explore.syntax.ui.given
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import org.http4s._
 import org.http4s.dom.FetchClientBuilder
-import react.common._
+import react.common.ReactFnProps
+import react.hotkeys._
 import react.markdown.ReactMarkdown
 import react.markdown.RehypePlugin
 import react.markdown.RemarkPlugin
-import react.semanticui._
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
 
@@ -86,9 +88,9 @@ object HelpBody {
           }
           <.div(
             ExploreStyles.HelpSidebar,
-            // GlobalHotKeys(keyMap = KeyMap("CLOSE_HELP" -> "ESC"),
-            //               handlers = Handlers("CLOSE_HELP" -> helpView.set(none))
-            // ),
+            GlobalHotKeys(keyMap = KeyMap("CLOSE_HELP" -> "ESC"),
+                          handlers = Handlers("CLOSE_HELP" -> helpView.set(none))
+            ),
             <.div(
               ExploreStyles.HelpTitle,
               <.h4(ExploreStyles.HelpTitleLabel, "Help"),

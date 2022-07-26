@@ -6,12 +6,13 @@ package reactST.reactTable
 import cats.syntax.all._
 import explore.Icons
 import explore.components.ui.ExploreStyles
+import explore.syntax.ui.*
+import explore.syntax.ui.given
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.JsFn
 import japgolly.scalajs.react.internal.Box
 import japgolly.scalajs.react.vdom.html_<^._
-import react.common._
-import react.common.implicits._
+import react.common.implicits.cssMonoid
 import react.common.style.Css
 import react.semanticui.AsC
 import react.semanticui.collections.table._
@@ -53,7 +54,7 @@ object LayoutDefaultTag        {
   }
 
   implicit object NonTableLayoutDefaultTag extends LayoutDefaultTag[Layout.NonTable] {
-    val tag = js.undefined // <.div
+    val tag = <.div
   }
 }
 
@@ -190,7 +191,7 @@ class SUITable[D, Plugins, Layout](
         }
       )(^.key := "body")
 
-    def standardFooter(footerTag: TableFooter) =
+    def standardFooter(footerTag: TableFooter): VdomNode =
       footerTag(tableInstance.footerGroups.toTagMod { footerRowData =>
         props.footerRow(footerRowData.getFooterGroupProps())(
           footerRowData.headers.toTagMod((col: tableDef.ColumnType) =>
@@ -200,9 +201,9 @@ class SUITable[D, Plugins, Layout](
       })(^.key := "footer")
 
     val footerElement: Option[VdomNode] = (props.footer: Any) match {
-      case true                     => standardFooter(TableFooter()).vdomElement.some
+      case true                     => standardFooter(TableFooter()).some
       case false                    => none
-      case otherFooter: TableFooter => standardFooter(otherFooter).vdomElement.some
+      case otherFooter: TableFooter => standardFooter(otherFooter).some
       case otherElement: VdomNode   => otherElement.some
       case _                        => ??? // Can't wait for Scala 3's union types
     }
@@ -211,7 +212,7 @@ class SUITable[D, Plugins, Layout](
       headerElement,
       bodyElement,
       footerElement
-    ).vdomElement
+    )
   }
 
   type Props = SUITableProps[D, Plugins]

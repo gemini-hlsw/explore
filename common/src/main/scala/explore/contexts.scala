@@ -19,8 +19,8 @@ object AppCtx extends Ctx[CallbackTo, AppContextIO]
 case class HelpContext(
   rawUrl:        Uri,
   editUrl:       Uri,
-  user:          String, // Refined MatchesRegex["[\\w-_]+"],
-  project:       String, // Refined MatchesRegex["[\\w-_]+"],
+  user:          String,
+  project:       String,
   displayedHelp: Option[Help.Id] = none
 )
 

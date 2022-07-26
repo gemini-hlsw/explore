@@ -14,7 +14,7 @@ import explore.model.UserVault
 import japgolly.scalajs.react._
 import lucuma.refined.*
 import org.typelevel.log4cats.Logger
-import react.common._
+import react.common.ReactFnProps
 
 import java.time.Instant
 

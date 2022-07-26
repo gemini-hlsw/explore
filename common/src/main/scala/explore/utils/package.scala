@@ -16,13 +16,14 @@ import explore.components.ui.ExploreStyles
 import explore.model.enums.ExecutionEnvironment
 import explore.model.enums.ExecutionEnvironment.Development
 import explore.model.enums.Theme
+import explore.syntax.ui.*
+import explore.syntax.ui.given
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.forms.ExternalValue
 import lucuma.ui.utils.versionDateFormatter
 import lucuma.ui.utils.versionDateTimeFormatter
 import org.http4s.Uri
 import org.scalajs.dom
-import react.common._
 import react.semanticui.collections.message.Message
 import react.semanticui.elements.loader.Loader
 

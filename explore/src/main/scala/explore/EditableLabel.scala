@@ -7,10 +7,12 @@ import cats.syntax.all._
 import crystal.react.View
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.implicits._
+import explore.syntax.ui.*
+import explore.syntax.ui.given
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import org.scalajs.dom
-import react.common._
+import react.common.ReactFnProps
 import react.common.style.Css
 import react.fa.FontAwesomeIcon
 import react.semanticui.elements.button.Button

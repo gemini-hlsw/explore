@@ -9,6 +9,8 @@ import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
 import explore.model.Constants
 import explore.utils._
+import japgolly.scalajs.react.CtorType
+import japgolly.scalajs.react.component.ScalaFn
 import japgolly.scalajs.react.vdom._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.forms.ExternalValue
@@ -16,9 +18,12 @@ import lucuma.ui.forms.FormInputEV
 import org.scalajs.dom.Window
 import react.common.Css
 import react.common.GenericComponentPAC
+import react.common.GenericComponentPACF
+import react.common.GenericComponentPC
 import react.common.GenericFnComponentPA
 import react.common.GenericFnComponentPAC
 import react.common.GenericFnComponentPC
+import react.common.ReactRender
 import react.common.implicits._
 
 import scala.scalajs.js
@@ -77,6 +82,13 @@ package object ui {
   given Conversion[ClassPAC[?], UndefOr[VdomNode]] = _.render.vdomElement
   given Conversion[ClassPAC[?], VdomNode]          = _.render.vdomElement
 
+  type ClassPC[P <: js.Object] = GenericComponentPC[P, ?]
+  given Conversion[ClassPC[?], UndefOr[VdomNode]] = _.render.vdomElement
+  given Conversion[ClassPC[?], VdomNode]          = _.render.vdomElement
+
+  type ClassPACF[P <: js.Object, F <: js.Object] = GenericComponentPACF[P, ?, F]
+  given Conversion[ClassPACF[?, ?], VdomNode] = _.render.vdomElement
+  //
   // Syntaxis for apply
   extension [P <: js.Object, A](c: GenericFnComponentPC[P, A])
     def apply(children: VdomNode*): A = c.withChildren(children)
@@ -86,4 +98,20 @@ package object ui {
 
   extension [P <: js.Object, A](c: GenericFnComponentPAC[P, A])
     def apply(modifiers: TagMod*): A = c.addModifiers(modifiers)
+
+  extension [P <: js.Object, A](c: GenericComponentPAC[P, A])
+    def apply(modifiers: TagMod*): A = c.addModifiers(modifiers)
+
+    ////
+  // @inline implicit def fnProps2Component[Props, CT[-p, +u] <: CtorType[p, u]](
+  //   p: ReactRender[Props, CT, ScalaFn.Unmounted[Props]]
+  // ): VdomElement =
+  //   p.toUnmounted
+  // type FnReactRender[P] = // , CT[-p, +u] <: CtorType[p, u]] =
+  //   ReactRender[P, ?, ScalaFn.Unmounted[P]]
+  // given Conversion[FnReactRender[?], VdomNode] = _.toUnmounted
+  @inline implicit def fnProps2Component[Props, CT[-p, +u] <: CtorType[p, u]](
+    p: ReactRender[Props, CT, ScalaFn.Unmounted[Props]]
+  ): VdomElement =
+    p.toUnmounted
 }

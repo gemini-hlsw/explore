@@ -5,10 +5,12 @@ package reactST.reactTable
 
 import cats.syntax.all._
 import explore.components.ui.ExploreStyles
+import explore.syntax.ui.*
+import explore.syntax.ui.given
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import react.common._
-import react.common.implicits._
+import react.common.ReactPropsForwardRef
+import react.common.implicits.cssMonoid
 import react.common.style.Css
 import react.semanticui.collections.table._
 import react.virtuoso._
@@ -61,16 +63,14 @@ class SUITableVirtuoso[D, Plugins](
       val tableRender: TableRender[D, Plugins] = (props.table: Any) match {
         case table: Table =>
           tableInstance =>
-            table.copy( // as = <.div,
-              clazz = addClass(table.className, table.clazz, ExploreStyles.Table)
+            table.copy(as = <.div,
+                       clazz = addClass(table.className, table.clazz, ExploreStyles.Table)
             )(tableInstance.getTableProps())
         case fn           =>
           tableInstance =>
             val table = fn.asInstanceOf[TableRender[D, Plugins]](tableInstance)
             table
-              .copy(/*as = <.div,*/ clazz =
-                addClass(table.className, table.clazz, ExploreStyles.Table)
-              )
+              .copy(as = <.div, clazz = addClass(table.className, table.clazz, ExploreStyles.Table))
       }
 
       val headerTag: Option[TableHeader] = (props.header: Any) match {
@@ -78,16 +78,14 @@ class SUITableVirtuoso[D, Plugins](
         case header: TableHeader =>
           header
             .asInstanceOf[TableHeader]
-            .copy(/*as = <.div,*/ clazz =
-              addClass(header.className, header.clazz, ExploreStyles.THead)
-            )
+            .copy(as = <.div, clazz = addClass(header.className, header.clazz, ExploreStyles.THead))
             .some // Can't wait for Scala 3's union types
         case _                   => none
       }
 
       val headerRowTag: TableRow = props.headerRow.copy(
-        // as = <.div,
-        // cellAs = <.div,
+        as = <.div,
+        cellAs = <.div,
         clazz = addClass(props.headerRow.className, props.headerRow.clazz, ExploreStyles.TR)
       )
 
@@ -96,7 +94,7 @@ class SUITableVirtuoso[D, Plugins](
           case headerCell: TableHeaderCell =>
             _ =>
               headerCell.copy(
-                // as = <.div,
+                as = <.div,
                 clazz = addClass(headerCell.className, headerCell.clazz, ExploreStyles.TH)
               )
           case fn                          =>
@@ -104,7 +102,7 @@ class SUITableVirtuoso[D, Plugins](
               val headerCell =
                 fn.asInstanceOf[HeaderCellRender[D, Plugins]](colInstance)
               headerCell.copy(
-                // as = <.div,
+                as = <.div,
                 clazz = addClass(headerCell.className, headerCell.clazz, ExploreStyles.TH)
               )
         }
@@ -118,30 +116,30 @@ class SUITableVirtuoso[D, Plugins](
       val rowRender: RowRender[D, Plugins] = (props.row: Any) match {
         case row: TableRow =>
           rowData =>
-            row.copy( // as = <.div,
-              // cellAs = <.div,
-              clazz = addClass(row.className, row.clazz, rowIndexCss(rowData.index.toInt))
+            row.copy(as = <.div,
+                     cellAs = <.div,
+                     clazz = addClass(row.className, row.clazz, rowIndexCss(rowData.index.toInt))
             )(rowData.getRowProps())
         case fn            =>
           rowData =>
             val row = fn.asInstanceOf[RowRender[D, Plugins]](rowData)
-            row.copy( // as = <.div,
-              // cellAs = <.div,
-              clazz = addClass(row.className, row.clazz, rowIndexCss(rowData.index.toInt))
+            row.copy(as = <.div,
+                     cellAs = <.div,
+                     clazz = addClass(row.className, row.clazz, rowIndexCss(rowData.index.toInt))
             )
       }
 
       val bodyCellRender: BodyCellRender[D, Plugins] = (props.cell: Any) match {
         case bodyCell: TableCell =>
           _ =>
-            bodyCell.copy( // as = <.div,
-              clazz = addClass(bodyCell.className, bodyCell.clazz, ExploreStyles.TD)
+            bodyCell.copy(as = <.div,
+                          clazz = addClass(bodyCell.className, bodyCell.clazz, ExploreStyles.TD)
             )
         case fn                  =>
           cell =>
             val bodyCell = fn.asInstanceOf[BodyCellRender[D, Plugins]](cell)
-            bodyCell.copy( // as = <.div,
-              clazz = addClass(bodyCell.className, bodyCell.clazz, ExploreStyles.TD)
+            bodyCell.copy(as = <.div,
+                          clazz = addClass(bodyCell.className, bodyCell.clazz, ExploreStyles.TD)
             )
       }
 
@@ -150,7 +148,7 @@ class SUITableVirtuoso[D, Plugins](
           case footerCell: TableHeaderCell =>
             _ =>
               footerCell.copy(
-                // as = <.div,
+                as = <.div,
                 clazz = addClass(footerCell.className, footerCell.clazz, ExploreStyles.TH)
               )
           case fn                          =>
@@ -158,7 +156,7 @@ class SUITableVirtuoso[D, Plugins](
               val footerCell =
                 fn.asInstanceOf[HeaderCellRender[D, Plugins]](colInstance)
               footerCell.copy(
-                // as = <.div,
+                as = <.div,
                 clazz = addClass(footerCell.className, footerCell.clazz, ExploreStyles.TH)
               )
         }
@@ -186,13 +184,12 @@ class SUITableVirtuoso[D, Plugins](
       }
 
       val bodyElement: TableBody =
-        props.body /*.copy(as = <.div)*/ (tableInstance.getTableBodyProps())(
+        props.body.copy(as = <.div)(tableInstance.getTableBodyProps())(
           TagMod.when(tableInstance.rows.nonEmpty)(
             GroupedVirtuoso(
               itemContent = renderRow,
               groupCounts = List(tableInstance.rows.length),
-              groupContent =
-                headerElement.map(header => (_: Int) => header.vdomElement).orUndefined,
+              groupContent = headerElement.map(header => (_: Int) => header: VdomNode).orUndefined,
               initialTopMostItemIndex = props.initialIndex.orUndefined,
               rangeChanged = props.rangeChanged.orUndefined,
               atTopStateChange = props.atTopChange.orUndefined,
@@ -202,12 +199,12 @@ class SUITableVirtuoso[D, Plugins](
           TagMod.when(tableInstance.rows.isEmpty)(props.emptyMessage)
         )
 
-      def standardFooter(footerTag: TableFooter) =
-        footerTag.copy( // as = <.div,
-          clazz = addClass(footerTag.className, footerTag.clazz, ExploreStyles.TR)
+      def standardFooter(footerTag: TableFooter): VdomNode =
+        footerTag.copy(as = <.div,
+                       clazz = addClass(footerTag.className, footerTag.clazz, ExploreStyles.TR)
         )
       tableInstance.footerGroups.toTagMod { footerRowData =>
-        props.footerRow.copy( /*as = <.div, cellAs = <.div*/ )(footerRowData.getFooterGroupProps())(
+        props.footerRow.copy(as = <.div, cellAs = <.div)(footerRowData.getFooterGroupProps())(
           footerRowData.headers.toTagMod((col: tableDef.ColumnType) =>
             footerCellRender(col)(col.getFooterProps())(col.renderFooter)
           )
@@ -215,9 +212,9 @@ class SUITableVirtuoso[D, Plugins](
       }
 
       val footerElement: Option[VdomNode] = (props.footer: Any) match {
-        case true                   => standardFooter(TableFooter()).vdomElement.some
+        case true                   => standardFooter(TableFooter()).some
         case false                  => none
-        case footer: TableFooter    => standardFooter(footer).vdomElement.some
+        case footer: TableFooter    => standardFooter(footer).some
         case otherElement: VdomNode => otherElement.some
         case _                      => ??? // Can't wait for Scala 3's union types
       }
@@ -225,6 +222,6 @@ class SUITableVirtuoso[D, Plugins](
       tableRender(tableInstance)(
         bodyElement,
         footerElement
-      ).vdomElement
+      )
     }
 }

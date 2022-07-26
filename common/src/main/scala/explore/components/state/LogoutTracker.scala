@@ -15,7 +15,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.broadcastchannel._
 import lucuma.refined._
-import react.common._
+import react.common.ReactFnProps
 
 final case class LogoutTracker(
   setVault:   Option[UserVault] => Callback,
