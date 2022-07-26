@@ -9,7 +9,7 @@ ThisBuild / Test / bspEnabled                                        := false
 ThisBuild / ScalafixConfig / bspEnabled.withRank(KeyRanks.Invisible) := false
 
 ThisBuild / evictionErrorLevel := Level.Info
-ThisBuild / resolvers += Resolver.sonatypeRepo("snapshots")
+ThisBuild / resolvers ++= Resolver.sonatypeOssRepos("snapshots")
 
 addCommandAlias(
   "quickTest",
@@ -122,11 +122,6 @@ lazy val common = project
         LucumaCatalog.value ++
         LucumaSchemas.value ++
         LucumaReact.value,
-    // ReactClipboard.value ++
-    // ReactCommon.value ++
-    // ReactTable.value ++
-    // ReactVirtuoso.value ++
-    // SecureRandom.value,
     buildInfoKeys    := Seq[BuildInfoKey](
       scalaVersion,
       sbtVersion,

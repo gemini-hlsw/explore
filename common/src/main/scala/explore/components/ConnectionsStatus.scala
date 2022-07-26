@@ -42,9 +42,7 @@ object ConnectionsStatus {
         )
     }
 
-    val show1 = true
-
-    if (show1) {
+    if (show) {
       Item(clazz = ExploreStyles.ConnectionIcon)(
         Popup(
           header = s"$name Connection Status",
