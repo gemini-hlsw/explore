@@ -13,10 +13,11 @@ import crystal.react.hooks._
 import explore._
 import explore.components.ui.ExploreStyles
 import explore.components.ui.ExploreStyles._
+import explore.syntax.ui.*
 import explore.syntax.ui.given
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import react.common._
+import react.common.ReactFnProps
 import react.semanticui.elements.icon._
 import react.semanticui.modules.popup._
 import react.semanticui.views.item.Item
@@ -41,15 +42,17 @@ object ConnectionsStatus {
         )
     }
 
-    if (show) {
+    val show1 = true
+
+    if (show1) {
       Item(clazz = ExploreStyles.ConnectionIcon)(
         Popup(
           header = s"$name Connection Status",
           content = message,
-          position = PopupPosition.BottomRight
-          // trigger = Icon(name = "circle", fitted = true, clazz = clazz)
+          position = PopupPosition.BottomRight,
+          trigger = Icons.CircleSmall.clazz(clazz)
         )
-      ).vdomElement
+      )
     } else <.span()
   }
 

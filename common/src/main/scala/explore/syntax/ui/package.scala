@@ -9,14 +9,16 @@ import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
 import explore.model.Constants
 import explore.utils._
-import japgolly.scalajs.react.vdom.TagMod.apply
-import japgolly.scalajs.react.vdom.VdomNode
+import japgolly.scalajs.react.vdom._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.forms.ExternalValue
 import lucuma.ui.forms.FormInputEV
 import org.scalajs.dom.Window
 import react.common.Css
 import react.common.GenericFnComponentPA
+import react.common.GenericFnComponentPC
+import react.common.GenericFnComponentPAC
+import react.common.GenericComponentPAC
 import react.common.implicits._
 
 import scala.scalajs.js
@@ -58,10 +60,30 @@ package object ui {
     }
   }
 
+  // Conversion of common components to VdomNode
   type FnPA[P <: js.Object] = GenericFnComponentPA[P, ?]
   given Conversion[FnPA[?], UndefOr[VdomNode]] = _.render
   given Conversion[FnPA[?], VdomNode]          = _.render
 
+  type FnPAC[P <: js.Object] = GenericFnComponentPAC[P, ?]
+  given Conversion[FnPAC[?], UndefOr[VdomNode]] = _.render
+  given Conversion[FnPAC[?], VdomNode]          = _.render
+
   given Conversion[Css, TagMod] =
     ^.className := _.htmlClass
+
+  type ClassPAC[P <: js.Object] = GenericComponentPAC[P, ?]
+  // Without the explicit `vdomElement` this produces a compiler exception
+  given Conversion[ClassPAC[?], UndefOr[VdomNode]] = _.render.vdomElement
+  given Conversion[ClassPAC[?], VdomNode]          = _.render.vdomElement
+
+  // Syntaxis for apply
+  extension [P <: js.Object, A](c: GenericFnComponentPC[P, A])
+    def apply(children: VdomNode*): A = c.withChildren(children)
+
+  extension [P <: js.Object, A](c: GenericFnComponentPA[P, A])
+    def apply(modifiers: TagMod*): A = c.addModifiers(modifiers)
+
+  extension [P <: js.Object, A](c: GenericFnComponentPAC[P, A])
+    def apply(modifiers: TagMod*): A = c.addModifiers(modifiers)
 }
