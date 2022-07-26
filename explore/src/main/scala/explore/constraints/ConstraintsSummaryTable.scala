@@ -206,7 +206,7 @@ object ConstraintsSummaryTable {
                   text = "Columns",
                   clazz = ExploreStyles.SelectColumns
                 )(
-                  DropdownMenu()(
+                  DropdownMenu(
                     tableInstance.allColumns
                       .drop(1)
                       .toTagMod { column =>

@@ -7,7 +7,8 @@ import cats.data.NonEmptyList
 import cats.syntax.all._
 import clue.data.syntax._
 import coulomb.Quantity
-import coulomb.refined._
+import coulomb.ops.algebra.spire.all.given
+import coulomb.policy.spire.standard.given
 import crystal.Pot
 import crystal.react.View
 import crystal.react.hooks._
@@ -183,7 +184,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
     val formattedCoverage: String = this.coverage match {
       case Bounded(a, b, _) =>
         List(a, b)
-          .map(q => "%.3f".format(q.value.setScale(3, BigDecimal.RoundingMode.DOWN)))
+          .map(q => q.toString)
+          // .map(q => "%.3f".format(q.setScale(3, BigDecimal.RoundingMode.DOWN)))
           .mkString(" - ")
       case _                =>
         "-"
@@ -297,8 +299,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             focalPlane = fp,
             capabilities = cap,
             slitWidth = fpa,
-            resolution = res,
-            coverage = cov.map(_.micrometer.toValue[BigDecimal].toRefined[Positive])
+            resolution = res
+            // coverage = cov.map(_.micrometer.toValue[BigDecimal])
           )
         }
       }
