@@ -169,11 +169,16 @@ object AladinContainer {
                   val targetEpochInstant =
                     LocalDate.of(targetEpoch.toInt, 6, 1).atStartOfDay(ZoneId.of("UTC")).toInstant()
 
+                  val vignettesScience = g match {
+                    case AgsAnalysis.VignettesScience(_) => true
+                    case _                               => false
+                  }
+
                   (tracking.at(targetEpochInstant), tracking.at(obsInstant)).mapN {
                     (source, dest) =>
                       val offset   = baseCoordinates.diff(dest).offset
                       val extraCss =
-                        if (patrolField.exists(_.contains(offset)))
+                        if (!vignettesScience && patrolField.exists(_.contains(offset)))
                           ExploreStyles.GuideStarTargetReachable
                         else Css.Empty
                       if (candidates.length < 500) {
