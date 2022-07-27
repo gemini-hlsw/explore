@@ -168,7 +168,14 @@ module.exports = ({ command, mode }) => {
     build: {
       emptyOutDir: true,
       chunkSizeWarningLimit: 20000,
-      minify: 'esbuild',
+      terserOptions: {
+        sourceMap: false,
+        compress: {
+          passes: 2,
+          toplevel: true,
+          ecma: 2015,
+        },
+      },
       rollupOptions: {
         plugins: rollupPlugins,
       },
