@@ -328,7 +328,7 @@ object SiderealTargetEditor {
                 InputWithUnits(
                   id = "epoch",
                   value = epochView,
-                  validFormat = MathValidators.epoch,
+                  validFormat = MathValidators.epochNoScheme,
                   changeAuditor = ChangeAuditor.maxLength(8).decimal(3).denyNeg,
                   units = "years",
                   disabled = disabled
