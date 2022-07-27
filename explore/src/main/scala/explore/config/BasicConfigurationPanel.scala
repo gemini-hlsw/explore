@@ -56,18 +56,19 @@ object BasicConfigurationPanel {
       .useStateView[ScienceMode](ScienceMode.Spectroscopy)
       .useStateView[ImagingConfigurationOptions](ImagingConfigurationOptions.Default)
       // Listen on web worker for messages with catalog candidates
-      .useEffectWithDepsBy((props, _, _) => props.obsId)((props, _, _) =>
-        _ =>
-          props.ctx.worker.stream
-            .flatMap { r =>
-              println("event")
-              // val res = decodeFromTransferable[model.CatalogResults](r)
-              // println(res)
-              fs2.Stream.emit[cats.effect.IO, Unit](())
-            }
-            .compile
-            .drain
-      )
+      // .useStreamBy((props, _, _) => props.obsId)((props, _, _) =>
+      //   _ =>
+      //     props.ctx.worker.stream
+      //       .flatMap { r =>
+      //         println("event")
+      //         // val res = decodeFromTransferable[model.CatalogResults](r)
+      //         // println(res)
+      //         fs2.Stream.emit[cats.effect.IO, Unit](())
+      //       }
+      // // .compile
+      // // .drain
+      // )
+      // .render { (props, mode, imaging, _) =>
       .render { (props, mode, imaging) =>
         implicit val ctx: AppContextIO = props.ctx
 

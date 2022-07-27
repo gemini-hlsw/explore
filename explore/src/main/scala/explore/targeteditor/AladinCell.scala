@@ -93,25 +93,21 @@ object AladinCell extends ModelOptics {
       .useSerialState(List.empty[GuideStarCandidate])
       // Listen on web worker for messages with catalog candidates
       .useEffectWithDepsBy((props, _, _, _, _) => props.tid)((props, _, _, _, gs) =>
-        _ => {
-
-          println("sub 2")
-          props.ctx.worker.stream
-            .map { r =>
-              println("event 2")
-            }
-            .compile
-            .drain
-        }
+        _ =>
+          IO.println("sub 2") >>
+            props.ctx.worker.stream
+              .evalTap(_ => IO.println("event 2"))
+              .compile
+              .drain
       )
       // Listen on web worker for messages with catalog candidates
       .useStreamBy((props, _, _, _, _) => props.tid)((props, _, _, _, gs) =>
         _ => {
 
-          println("sub 1")
+          // println("sub 1")
           props.ctx.worker.stream
+            .evalTap(_ => IO.println("event 1"))
             .flatMap { r =>
-              println("event 1")
               val resultsOrError = decodeFromTransferable[CatalogResults](r)
                 .map(_.asRight)
                 .orElse(
@@ -131,7 +127,6 @@ object AladinCell extends ModelOptics {
               gsc.at(props.obsConf.vizTime)
             })
             .evalMap(r => gs.setStateAsync(r))
-        }
       )
       // Request data again if vizTime changes more than a month
       .useEffectWithDepsBy((p, _, _, _, _, candidates) => (candidates, p.obsConf.vizTime))(
