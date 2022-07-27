@@ -5,7 +5,7 @@ package explore.targeteditor
 
 import cats.effect.IO
 import cats.syntax.all._
-import crystal.Ready
+import crystal.Pot
 import crystal.react.View
 import crystal.react.hooks._
 import crystal.react.implicits._
@@ -115,8 +115,8 @@ object TargetTable {
       }
       // rows
       .useMemoBy((props, _, vizTime) => (props.targets.get, vizTime))((_, _, _) => {
-        case (targets, Ready(vizTime)) => targets.foldMap(_.toSidereal(vizTime))
-        case _                         => Nil
+        case (targets, Pot.Ready(vizTime)) => targets.foldMap(_.toSidereal(vizTime))
+        case _                             => Nil
       })
       .useTableBy((props, cols, _, rows) =>
         TargetTable(

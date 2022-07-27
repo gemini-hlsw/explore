@@ -300,6 +300,6 @@ object ConstraintSetTabContents {
       .render { (props, state, constraintsWithObs) =>
         implicit val ctx = props.ctx
 
-        potRender(renderFn(props, state) _)(constraintsWithObs)
+        constraintsWithObs.render(renderFn(props, state) _)
       }
 }

@@ -5,9 +5,7 @@ package explore
 
 import cats.effect._
 import cats.syntax.all._
-import crystal.Pending
 import crystal.Pot
-import crystal.Ready
 import crystal.react.hooks._
 import crystal.react.implicits._
 import explore.components.ui.ExploreStyles
@@ -82,9 +80,10 @@ object HelpBody {
         HelpCtx.usingView { helpCtx =>
           val helpView = helpCtx.zoom(HelpContext.displayedHelp)
           val editUrl  = state.get match {
-            case Ready(_) => props.editPage
-            case _        => props.newPage
+            case Pot.Ready(_) => props.editPage
+            case _            => props.newPage
           }
+
           <.div(
             ExploreStyles.HelpSidebar,
             GlobalHotKeys(keyMap = KeyMap("CLOSE_HELP" -> "ESC"),
@@ -105,7 +104,7 @@ object HelpBody {
             <.div(
               ExploreStyles.HelpBody,
               state.get match {
-                case Ready(a)                                         =>
+                case Pot.Ready(a)                                 =>
                   ReactMarkdown(
                     content = a,
                     clazz = ExploreStyles.HelpMarkdownBody,
@@ -114,14 +113,14 @@ object HelpBody {
                     remarkPlugins = List(RemarkPlugin.RemarkMath, RemarkPlugin.RemarkGFM),
                     rehypePlugins = List(RehypePlugin.RehypeKatex)
                   ): VdomNode
-                case Pending(_)                                       => <.div(ExploreStyles.HelpMarkdownBody, "Loading...")
-                case crystal.Error(o) if o.getMessage.contains("404") =>
+                case Pot.Pending                                  => <.div(ExploreStyles.HelpMarkdownBody, "Loading...")
+                case Pot.Error(o) if o.getMessage.contains("404") =>
                   <.div(
                     ExploreStyles.HelpMarkdownBody,
                     "Not found, maybe you want to create it ",
                     <.a(^.href := props.newPage.toString(), ^.target := "_blank", Icons.Edit)
                   )
-                case crystal.Error(_)                                 =>
+                case Pot.Error(_)                                 =>
                   <.div(
                     ExploreStyles.HelpMarkdownBody,
                     "We encountered an error trying to read the help file"
