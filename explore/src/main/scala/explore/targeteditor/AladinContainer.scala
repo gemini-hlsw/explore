@@ -162,6 +162,10 @@ object AladinContainer {
 
               candidates
                 .filterNot(x => selectedGS.exists(_.target.id === x.target.id))
+                .filter {
+                  case AgsAnalysis.VignettesScience(_) => false
+                  case _                               => true
+                }
                 .flatMap { g =>
                   val tracking           = g.target.tracking
                   val targetEpoch        = tracking.epoch.epochYear.round
