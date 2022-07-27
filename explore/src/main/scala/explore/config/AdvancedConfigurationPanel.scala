@@ -71,7 +71,6 @@ import spire.math.Bounded
 import spire.math.Interval
 
 import java.time.Duration
-import scala.scalajs.js.JSConverters._
 
 sealed trait AdvancedConfigurationPanel[T <: ScienceModeAdvanced, S <: ScienceModeBasic, Input] {
   val obsId: Observation.Id
@@ -427,7 +426,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 value = overrideFilter(props.scienceModeAdvanced),
                 exclude = obsoleteFilters,
                 clearable = true,
-                placeholder = filterLens.get(props.scienceModeBasic).map(_.shortName).orUndefined
+                placeholder = filterLens.get(props.scienceModeBasic).fold("None")(_.shortName)
               ),
               <.label("Wavelength",
                       HelpIcon("configuration/wavelength.md"),
@@ -438,7 +437,10 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 value = overrideWavelength(props.scienceModeAdvanced).withOnMod(_ => invalidateITC),
                 units = "μm",
                 validFormat = ExploreModelValidators.wavelengthValidWedge.optional,
-                changeAuditor = wavelengthChangeAuditor.optional
+                changeAuditor = wavelengthChangeAuditor.optional,
+                placeholder = props.spectroscopyRequirements.wavelength.fold("None")(w =>
+                  f"${Wavelength.decimalMicrometers.reverseGet(w)}%.3f"
+                )
               ).clearable,
               <.label("FPU", HelpIcon("configuration/fpu.md"), ExploreStyles.SkipToNext),
               EnumViewOptionalSelect(

@@ -37,7 +37,8 @@ final case class InputWithUnits[EV[_], A](
   disabled:        Boolean = false,
   columnSpam:      Int Refined Interval.Closed[1, 16] = 2,
   inline:          js.UndefOr[Boolean] = js.undefined,
-  size:            js.UndefOr[SemanticSize] = js.undefined
+  size:            js.UndefOr[SemanticSize] = js.undefined,
+  placeholder:     js.UndefOr[String] = js.undefined
 )(implicit val ev: ExternalValue[EV], val eq: Eq[A])
     extends ReactFnProps[InputWithUnits[Any, Any]](InputWithUnits.component)
 
@@ -62,7 +63,8 @@ object InputWithUnits {
           size = p.size,
           inline = p.inline,
           icon = p.icon,
-          iconPosition = p.iconPosition
+          iconPosition = p.iconPosition,
+          placeholder = p.placeholder
         )(p.ev, p.eq),
         <.span(
           ExploreStyles.UnitsLabel,
