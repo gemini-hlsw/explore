@@ -519,7 +519,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                       )
                       FormInput(value = value, disabled = true)
                     },
-                    pendingRender = _ =>
+                    pendingRender =
                       <.div(ExploreStyles.InputReplacementIcon, Icons.Spinner.spin(true)): VdomNode
                   )(props.potITC.get.map(_.map(_.signalToNoise)))
                 ),
@@ -549,7 +549,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                                     <.span(ExploreStyles.UnitsLabel, "sec")
                       )
                     },
-                    pendingRender = _ =>
+                    pendingRender =
                       <.div(ExploreStyles.InputReplacementIcon, Icons.Spinner.spin(true)): VdomNode
                   )(props.potITC.get.map(_.map(_.exposureTime)))
                 ),
@@ -572,7 +572,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                       val value = oe.fold(itcNoneMsg)(_.toString)
                       FormInput(value = value, disabled = true)
                     },
-                    pendingRender = _ =>
+                    pendingRender =
                       <.div(ExploreStyles.InputReplacementIcon, Icons.Spinner.spin(true)): VdomNode
                   )(props.potITC.get.map(_.map(_.exposures)))
                 )

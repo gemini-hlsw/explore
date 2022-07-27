@@ -301,10 +301,11 @@ object ObsTabContents {
       // Keep a record of the initial target layouut
       .useMemo(())(_ => defaultObsLayouts)
       // Restore positions from the db
-      .useEffectWithDepsBy((p, _, _, _, _) => (p.userId, p.focusedObs, p.focusedTarget)) {
+      .useEffectWithDepsBy((p, _, _, _, _) => (p.userId, p.focusedObs, p.focusedTarget))(
         (props, panels, _, layout, defaultLayout) =>
-          implicit val ctx = props.ctx
-          _ =>
+          _ => {
+            implicit val ctx = props.ctx
+
             TabGridPreferencesQuery
               .queryWithDefault[IO](
                 props.userId,
@@ -316,19 +317,19 @@ object ObsTabContents {
               .flatMap {
                 case Right((w, dbLayout)) =>
                   (panels
-                    .mod(
-                      TwoPanelState.treeWidth.replace(w.toDouble)
-                    ) *> layout.mod(
-                    _.fold(_ => mergeMap(dbLayout, defaultLayout).ready,
-                           _ => mergeMap(dbLayout, defaultLayout).ready,
-                           cur => mergeMap(dbLayout, cur).ready
-                    )
-                  ))
+                    .mod(TwoPanelState.treeWidth.replace(w.toDouble)) >>
+                    layout.mod(
+                      _.fold(
+                        mergeMap(dbLayout, defaultLayout).ready,
+                        _ => mergeMap(dbLayout, defaultLayout).ready,
+                        cur => mergeMap(dbLayout, cur).ready
+                      )
+                    ))
                     .to[IO]
                 case Left(_)              => IO.unit
               }
-              .runAsync
-      }
+          }
+      )
       .useSingleEffect(debounce = 1.second)
       .useStreamResourceViewOnMountBy { (props, _, _, _, _, _) =>
         implicit val ctx = props.ctx
@@ -353,7 +354,7 @@ object ObsTabContents {
           implicit val ctx = props.ctx
 
           <.div(
-            potRender(
+            obsWithConstraints.render(
               renderFn(
                 props,
                 twoPanelState,
@@ -362,7 +363,7 @@ object ObsTabContents {
                 resize,
                 debouncer
               ) _
-            )(obsWithConstraints)
+            )
           ).withRef(resize.ref)
       }
 
