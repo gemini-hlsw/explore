@@ -61,9 +61,17 @@ object WebWorkerF {
       channel <- Resource.make(Topic[F, dom.MessageEvent])(_.close.void)
       _       <-
         Resource.eval(
-          Sync[F].delay(worker.onmessage =
-            (e: dom.MessageEvent) => dispatcher.unsafeRunAndForget(channel.publish1(e))
-          )
+          Sync[F].delay(worker.onmessage = { (e: dom.MessageEvent) =>
+            println(e)
+            js.timers.setTimeout(500)(
+              dispatcher.unsafeRunAndForget(
+                channel
+                  .publish1(e)
+                  .flatMap(result => Sync[F].delay(println(result)))
+                  .handleErrorWith(e => Sync[F].delay(println(s"ERROR!!!!! $e")))
+              )
+            )
+          })
         )
       workerF <-
         Resource.make(Sync[F].delay(new WebWorkerF[F] {
