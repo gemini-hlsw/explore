@@ -90,62 +90,67 @@ object AladinCell extends ModelOptics {
       // avoids us needing a ref to a Fn component
       .useStateView(false)
       // to get faster reusability use a serial state, rather than check every candidate
-      // .useSerialState(List.empty[GuideStarCandidate])
+      .useSerialState(List.empty[GuideStarCandidate])
+
       // Listen on web worker for messages with catalog candidates
-      // .useEffectWithDepsBy((props, _, _, _) => props.tid)((props, _, _, _) =>
-      //   _ =>
-      //     IO.println("sub 2") >>
-      //       props.ctx.worker.stream
-      //         .evalTap(_ => IO.println("event 2"))
-      //         .compile
-      //         .drain
-      // )
-      // Listen on web worker for messages with catalog candidates
-      .useStreamBy((props, _, _, _) => props.tid)((props, _, _, _) =>
+      .useEffectWithDepsBy((props, _, _, _, _) => props.tid)((props, _, _, _, _) =>
         _ =>
-          // println("sub 1")
-          // fs2.Stream.eval(IO.println(s"STREAM RUNNING FOR [${props.tid}]").as(List.empty)) ++
-          fs2.Stream
-            .bracket(IO.println(s"STREAM RUNNING FOR [${props.tid}]"))(_ =>
-              IO.println(s"STREAM ENDING FOR [${props.tid}]")
-            )
-            .flatMap(_ =>
-              props.ctx.worker.stream
-                .evalTap(_ => IO.println("event 1"))
-                .flatMap { r =>
-                  println("DECODING 1")
-                  val resultsOrError = decodeFromTransferable[CatalogResults](r)
-                    .map(_.asRight)
-                    .orElse(
-                      decodeFromTransferable[CatalogQueryError](r).map(_.asLeft)
-                    )
-                  resultsOrError match {
-                    case Some(Right(r)) => fs2.Stream.emit[IO, CatalogResults](r)
-                    case Some(Left(m))  =>
-                      fs2.Stream.raiseError[IO](new RuntimeException(m.errorMsg))
-                    case _              =>
-                      fs2.Stream.raiseError[IO](new RuntimeException("Unknown worker message"))
-                  }
-                }
-                .map(_.candidates.map { gsc =>
-                  // We keep locally the data already pm corrected for the viz time
-                  // If it changes over a month we'll request the data again and recalculate
-                  // This way we avoid recalculatinng pm for example if only pos angle or
-                  // conditions change
-                  gsc.at(props.obsConf.vizTime)
-                })
-            )
-      // .evalMap(r => gs.setStateAsync(r))
-      )
-      // Request data again if vizTime changes more than a month
-      .useEffectWithDepsBy((p, _, _, _, candidates) => (candidates, p.obsConf.vizTime))(
-        (props, _, _, _, _) => { case (candidates, vizTime) =>
-          (IO.println(s"SUBSCIBING FOR [${props.tid}]") >>
+          IO.println("sub 2") >>
+            props.ctx.worker.stream
+              .evalTap(_ => IO.println("event 2"))
+              .compile
+              .drain
+              .start >>
             props.ctx.worker
-              .postTransferrable(CatalogRequest(props.target.get, vizTime)))
-            .whenA(candidates === PotOption.ReadyNone)
-        }
+              .postTransferrable(CatalogRequest(props.target.get, props.obsConf.vizTime))
       )
+      // Listen on web worker for messages with catalog candidates
+      // .useStreamBy((props, _, _, _) => props.tid)((props, _, _, _) =>
+      //   _ =>
+      //     // println("sub 1")
+      //     // fs2.Stream.eval(IO.println(s"STREAM RUNNING FOR [${props.tid}]").as(List.empty)) ++
+      //     fs2.Stream
+      //       .bracket(IO.println(s"STREAM RUNNING FOR [${props.tid}]"))(_ =>
+      //         IO.println(s"STREAM ENDING FOR [${props.tid}]")
+      //       )
+      //       .flatMap(_ =>
+      //         props.ctx.worker.stream
+      //           .as(List.empty[GuideStarCandidate])
+      //           .evalTap(_ => IO.println("event 1"))
+      //       // .evalTap(_ => IO.println("event 1"))
+      //       // .flatMap { r =>
+      //       //   println("DECODING 1")
+      //       //   val resultsOrError = decodeFromTransferable[CatalogResults](r)
+      //       //     .map(_.asRight)
+      //       //     .orElse(
+      //       //       decodeFromTransferable[CatalogQueryError](r).map(_.asLeft)
+      //       //     )
+      //       //   resultsOrError match {
+      //       //     case Some(Right(r)) => fs2.Stream.emit[IO, CatalogResults](r)
+      //       //     case Some(Left(m))  =>
+      //       //       fs2.Stream.raiseError[IO](new RuntimeException(m.errorMsg))
+      //       //     case _              =>
+      //       //       fs2.Stream.raiseError[IO](new RuntimeException("Unknown worker message"))
+      //       //   }
+      //       // }
+      //       // .map(_.candidates.map { gsc =>
+      //       //   // We keep locally the data already pm corrected for the viz time
+      //       //   // If it changes over a month we'll request the data again and recalculate
+      //       //   // This way we avoid recalculatinng pm for example if only pos angle or
+      //       //   // conditions change
+      //       //   gsc.at(props.obsConf.vizTime)
+      //       // })
+      //       )
+      // )
+      // Request data again if vizTime changes more than a month
+      // .useEffectWithDepsBy((p, _, _, _, candidates) => (candidates, p.obsConf.vizTime))(
+      //   (props, _, _, _, _) => { case (candidates, vizTime) =>
+      //     (IO.println(s"SUBSCIBING FOR [${props.tid}]") >>
+      //       props.ctx.worker
+      //         .postTransferrable(CatalogRequest(props.target.get, vizTime)))
+      //       .whenA(candidates === PotOption.ReadyNone)
+      //   }
+      // )
       .useEffectWithDepsBy((p, _, _, _, _) => (p.uid, p.tid)) { (props, _, options, _, _) => _ =>
         implicit val ctx = props.ctx
 
@@ -174,7 +179,8 @@ object AladinCell extends ModelOptics {
          p.obsConf.constraints,
          p.obsConf.wavelength,
          p.obsConf.vizTime,
-         candidates.toOption.orEmpty
+         //  candidates.toOption.orEmpty
+         candidates.value
         )
       ) { (_, _, _, _, _) =>
         {
@@ -345,8 +351,8 @@ object AladinCell extends ModelOptics {
 
           // Check whether we are waiting for catalog
           val catalogLoading = props.obsConf.posAngleConstraint match {
-            case Some(_) => gsc.toPot.fold(true.some, _ => none, _ => false.some)
-            case _       => false.some
+            // case Some(_) => gsc.toPot.fold(true.some, _ => none, _ => false.some)
+            case _ => false.some
           }
 
           val renderToolbar: TargetVisualOptions => VdomNode =
