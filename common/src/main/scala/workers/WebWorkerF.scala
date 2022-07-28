@@ -11,7 +11,7 @@ import cats.effect.std.Dispatcher
 import cats.syntax.all._
 import explore.model.boopickle._
 import fs2.Stream
-import fs2.concurrent.Channel
+import fs2.concurrent.Topic
 import org.scalajs.dom
 
 import scala.scalajs.js
@@ -45,9 +45,9 @@ trait WebWorkerF[F[_]] {
   def terminate: F[Unit]
 
   /**
-   * Streams of events from the worker
+   * Resource with Stream of events from the worker
    */
-  def stream: Stream[F, dom.MessageEvent]
+  def streamResource: Resource[F, Stream[F, dom.MessageEvent]]
 }
 
 object WebWorkerF {
@@ -57,24 +57,31 @@ object WebWorkerF {
     dispatcher: Dispatcher[F]
   ): Resource[F, WebWorkerF[F]] =
     for {
-      channel <- Resource.make(Channel.unbounded[F, dom.MessageEvent])(_.close.void)
+      topic   <- Resource.make(Topic[F, dom.MessageEvent])(_.close.void)
       _       <-
         Resource.eval(
-          Sync[F].delay(worker.onmessage =
-            (e: dom.MessageEvent) => dispatcher.unsafeRunAndForget(channel.send(e))
+          Sync[F].delay(
+            worker.onmessage =
+              (e: dom.MessageEvent) => dispatcher.unsafeRunAndForget(topic.publish1(e))
           )
         )
       workerF <-
         Resource.make(Sync[F].delay(new WebWorkerF[F] {
-          def postMessage(message: js.Any): F[Unit] =
+          override def postMessage(message: js.Any): F[Unit] =
             Sync[F].delay(worker.postMessage(message))
 
-          def postTransferrable(buffer: Int8Array): F[Unit] =
+          override def postTransferrable(buffer: Int8Array): F[Unit] =
             Sync[F].delay(worker.postMessage(buffer, js.Array(buffer.buffer: dom.Transferable)))
 
-          val terminate: F[Unit] = Sync[F].delay(worker.terminate())
+          override val terminate: F[Unit] = Sync[F].delay(worker.terminate())
 
-          val stream: Stream[F, dom.MessageEvent] = channel.stream
+          // We want to use `subscribeAwait` instead of `subscribe`:
+          // We usually want to send a query to the worker, which must be done once the subscription has
+          // been initialized, so that the response is not lost.
+          // `subscribe` performs the initialization within the `Stream` execution, so it provides no way to
+          // synchronize at a point where we have a guarantee that it is actually reading new `Topic` messages.
+          override val streamResource: Resource[F, Stream[F, dom.MessageEvent]] =
+            topic.subscribeAwait(10)
         }))(w => w.terminate)
     } yield workerF
 

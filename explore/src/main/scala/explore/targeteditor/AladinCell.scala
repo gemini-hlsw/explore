@@ -92,10 +92,10 @@ object AladinCell extends ModelOptics {
       // to get faster reusability use a serial state, rather than check every candidate
       .useSerialState(List.empty[GuideStarCandidate])
       // Listen on web worker for messages with catalog candidates
-      .useStreamBy((props, _, _, _, _) => props.tid)((props, _, _, _, gs) =>
+      .useStreamResourceBy((props, _, _, _, _) => props.tid)((props, _, _, _, gs) =>
         _ =>
-          props.ctx.worker.stream
-            .flatMap { r =>
+          props.ctx.worker.streamResource.map(
+            _.flatMap { r =>
               val resultsOrError = decodeFromTransferable[CatalogResults](r)
                 .map(_.asRight)
                 .orElse(
@@ -107,14 +107,15 @@ object AladinCell extends ModelOptics {
                 case _              => fs2.Stream.raiseError[IO](new RuntimeException("Unknown worker message"))
               }
             }
-            .map(_.candidates.map { gsc =>
-              // We keep locally the data already pm corrected for the viz time
-              // If it changes over a month we'll request the data again and recalculate
-              // This way we avoid recalculatinng pm for example if only pos angle or
-              // conditions change
-              gsc.at(props.obsConf.vizTime)
-            })
-            .evalMap(r => gs.setStateAsync(r))
+              .map(_.candidates.map { gsc =>
+                // We keep locally the data already pm corrected for the viz time
+                // If it changes over a month we'll request the data again and recalculate
+                // This way we avoid recalculatinng pm for example if only pos angle or
+                // conditions change
+                gsc.at(props.obsConf.vizTime)
+              })
+              .evalMap(r => gs.setStateAsync(r))
+          )
       )
       // Request data again if vizTime changes more than a month
       .useEffectWithDepsBy((p, _, _, _, _, candidates) => (candidates, p.obsConf.vizTime))(
@@ -144,7 +145,6 @@ object AladinCell extends ModelOptics {
                 )
                 .to[IO] *> props.fullScreen.set(fullScreen).to[IO]
             }
-            .runAsyncAndForget
       }
       // analyzed targets
       .useMemoBy((p, _, _, _, candidates, _) =>
@@ -177,7 +177,6 @@ object AladinCell extends ModelOptics {
                 Ags
                   .agsAnalysis(constraints, wavelength, base, basePos, params, candidates)
                   .sorted(AgsAnalysis.rankingOrdering)
-
               }
               .getOrElse(Nil)
           case _ => Nil
