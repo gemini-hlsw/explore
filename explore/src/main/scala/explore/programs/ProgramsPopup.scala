@@ -68,7 +68,7 @@ object ProgramsPopup {
         centered = false,
         open = true,
         closeOnDimmerClick = props.onClose.isDefined,
-        // closeOnEscape = props.onClose.isDefined
+        closeOnEscape = props.onClose.isDefined,
         closeIcon = props.onClose
           .map(_ => Icons.Close.clazz(ExploreStyles.ModalCloseButton): VdomNode)
           .orUndefined,

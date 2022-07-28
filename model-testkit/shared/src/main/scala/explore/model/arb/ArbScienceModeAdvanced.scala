@@ -56,7 +56,7 @@ trait ArbScienceModeAdvanced {
         explicitAmpReadMode,
         explicitAmpGain,
         explicitRoi,
-        None,
+        explicitWavelengthDithers,
         explicitSpatialOffsets
       )
     )
@@ -87,7 +87,7 @@ trait ArbScienceModeAdvanced {
         explicitAmpReadMode,
         explicitAmpGain,
         explicitRoi,
-        None, // explicitWavelengthDithers,
+        explicitWavelengthDithers,
         explicitSpatialOffsets
       )
     )

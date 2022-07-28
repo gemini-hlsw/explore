@@ -94,7 +94,7 @@ object ScienceModeAdvanced {
           explicitAmpReadMode,
           explicitAmpGain,
           explicitRoi,
-          None, // explicitWavelengthDithers,
+          explicitWavelengthDithers,
           explicitSpatialOffsets
         )
       )
@@ -201,7 +201,7 @@ object ScienceModeAdvanced {
           explicitAmpReadMode,
           explicitAmpGain,
           explicitRoi,
-          None, // explicitWavelengthDithers,
+          explicitWavelengthDithers,
           explicitSpatialOffsets
         )
       )

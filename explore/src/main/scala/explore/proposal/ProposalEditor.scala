@@ -282,7 +282,7 @@ object ProposalEditor {
           <.div(
             ExploreStyles.FlexContainer,
             FormButton(
-              // icon = Icons.Edit,
+              icon = Icons.Edit,
               label = "Partners",
               tpe = "button",
               clazz = ExploreStyles.FlexShrink(0.refined) |+| ExploreStyles.PartnerSplitTotal,
