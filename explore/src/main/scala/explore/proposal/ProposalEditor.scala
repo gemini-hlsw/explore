@@ -29,6 +29,8 @@ import explore.model.reusability._
 import explore.optics.all._
 import explore.proposal.ProposalClassType._
 import explore.undo._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enums._
@@ -49,8 +51,8 @@ import lucuma.ui.input._
 import monocle.Iso
 import queries.common.ProgramQueriesGQL
 import queries.schemas.implicits._
-import react.common._
-import react.common.implicits._
+import react.common.ReactFnProps
+import react.common.implicits.cssMonoid
 import react.semanticui.collections.form._
 import react.semanticui.elements.label.Label
 import react.semanticui.modules.dropdown._

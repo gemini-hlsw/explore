@@ -33,7 +33,7 @@ import lucuma.core.model.User
 import org.scalajs.dom
 import org.scalajs.dom.window
 import react.common.ReactFnProps
-import react.fa.given
+// import react.fa.given
 import react.semanticui.collections.menu._
 import react.semanticui.elements.image.Image
 import react.semanticui.modules.checkbox.Checkbox

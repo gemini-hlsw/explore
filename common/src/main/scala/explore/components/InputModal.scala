@@ -14,7 +14,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.refined.*
 import lucuma.ui.forms.FormInputEV
 import react.common._
-import react.fa.given
+import lucuma.ui.syntax.all.given
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.modal._
 import react.semanticui.sizes.Small

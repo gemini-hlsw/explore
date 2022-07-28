@@ -11,6 +11,7 @@ import explore.model.Constants
 import explore.utils._
 import japgolly.scalajs.react.CtorType
 import japgolly.scalajs.react.component.ScalaFn
+import japgolly.scalajs.react.component.ScalaForwardRef
 import japgolly.scalajs.react.vdom._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.forms.ExternalValue
@@ -94,11 +95,6 @@ package object ui {
   type ClassPACF[P <: js.Object, F <: js.Object] = GenericComponentPACF[P, ?, F]
   given Conversion[ClassPACF[?, ?], VdomNode] = _.render.vdomElement
 
-  // implicit def GenericComponentPA2VdomNode[P <: js.Object](
-  //   p: GenericComponentPA[P, ?]
-  // ): VdomNode =
-  //   p.render
-  //
   // Syntaxis for apply
   extension [P <: js.Object, A](c: GenericFnComponentPC[P, A])
     def apply(children: VdomNode*): A = c.withChildren(children)
@@ -112,16 +108,11 @@ package object ui {
   extension [P <: js.Object, A](c: GenericComponentPAC[P, A])
     def apply(modifiers: TagMod*): A = c.addModifiers(modifiers)
 
-    ////
-  // @inline implicit def fnProps2Component[Props, CT[-p, +u] <: CtorType[p, u]](
-  //   p: ReactRender[Props, CT, ScalaFn.Unmounted[Props]]
-  // ): VdomElement =
-  //   p.toUnmounted
-  // type FnReactRender[P] = // , CT[-p, +u] <: CtorType[p, u]] =
-  //   ReactRender[P, ?, ScalaFn.Unmounted[P]]
-  // given Conversion[FnReactRender[?], VdomNode] = _.toUnmounted
-  @inline implicit def fnProps2Component[Props, CT[-p, +u] <: CtorType[p, u]](
-    p: ReactRender[Props, CT, ScalaFn.Unmounted[Props]]
-  ): VdomElement =
-    p.toUnmounted
+  given propsForwardRef2Component[Props, R, CT[-p, +u] <: CtorType[p, u]]
+    : Conversion[ReactRender[Props, CT, ScalaForwardRef.Unmounted[Props, R]], VdomNode] =
+    _.toUnmounted
+
+  given fnProps2Component[Props, CT[-p, +u] <: CtorType[p, u]]
+    : Conversion[ReactRender[Props, CT, ScalaFn.Unmounted[Props]], VdomElement] =
+    _.toUnmounted
 }

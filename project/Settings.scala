@@ -12,7 +12,7 @@ object Settings {
     val circe                 = "0.14.2"
     val circeGolden           = "0.3.0"
     val clue                  = "0.23.1"
-    val crystal               = "0.0.0+1-1a49e864-SNAPSHOT"
+    val crystal               = "0.0.0+1-3bdffbb2-SNAPSHOT"
     val discipline            = "1.5.1"
     val disciplineMUnit       = "1.0.9"
     val fs2                   = "3.2.11"
@@ -23,19 +23,19 @@ object Settings {
     val log4Cats              = "2.4.0"
     val log4CatsLogLevel      = "0.3.1"
     val lucumaBC              = "0.4.0"
-    val lucumaCore            = "0.45-e482287-SNAPSHOT"
-    val lucumaCatalog         = "0.23-6da8a9d-SNAPSHOT"
-    val lucumaUI              = "0.39-0e0ab77-SNAPSHOT"
-    val lucumaReactVersion    = "1.0-30e8e44-SNAPSHOT"
-    val lucumaSchemas         = "0.33-5f9d87f-SNAPSHOT"
+    val lucumaCore            = "0.46-3e17ca5-SNAPSHOT"
+    val lucumaCatalog         = "0.25-6172779-SNAPSHOT"
+    val lucumaUI              = "0.40-4a05a5a-SNAPSHOT"
+    val lucumaReactVersion    = "1.0-9b30bcf-SNAPSHOT"
+    val lucumaSchemas         = "0.34-2640339-SNAPSHOT"
     val lucumaRefinedVersion  = "0.1.0"
     val refinedAlgebraVersion = "0.0-7d9e39d-SNAPSHOT"
-    val lucumaSSO             = "0.2-add6655-SNAPSHOT"
+    val lucumaSSO             = "0.2-5419bed-SNAPSHOT"
     val monocle               = "3.1.0"
     val mouse                 = "1.1.0"
     val mUnit                 = "0.7.29"
     val mUnitCatsEffect       = "1.0.7"
-    val reactAladin           = "0.23-f1d8612-SNAPSHOT"
+    val reactAladin           = "0.24-314b165-SNAPSHOT"
     val reactBeautifulDnD     = "0.4.2"
     val reactClipboard        = "1.5.1"
     val reactCommon           = "0.17.0"
@@ -301,7 +301,7 @@ object Settings {
         "edu.gemini" %%% "lucuma-react-datepicker",
         "edu.gemini" %%% "lucuma-react-highcharts",
         "edu.gemini" %%% "lucuma-react-beautiful-dnd",
-        "edu.gemini" %%% "lucuma-react-cats",
+        "edu.gemini" %%% "lucuma-react-font-awesome",
         "edu.gemini" %%% "lucuma-react-table",
         "edu.gemini" %%% "lucuma-react-datepicker",
         "edu.gemini" %%% "lucuma-react-resize-detector",

@@ -23,6 +23,8 @@ import lucuma.core.model.Observation
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Gid
 import lucuma.ui.forms.EnumViewSelect
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import react.common._
 import react.common.implicits._
 import react.semanticui.collections.form.FormDropdown
@@ -72,7 +74,7 @@ object ObsBadge {
           size = Small,
           compact = true,
           clazz = ExploreStyles.DeleteButton |+| ExploreStyles.ObsDeleteButton,
-          // icon = Icons.Trash,
+          icon = Icons.Trash,
           onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
             e.preventDefaultCB *>
               e.stopPropagationCB *>
@@ -136,16 +138,16 @@ object ObsBadge {
                   content = obs.activeStatus match {
                     case ObsActiveStatus.Active   => "Observation is active"
                     case ObsActiveStatus.Inactive => "Observation is not active"
-                  }
-                  // trigger = Checkbox(
-                  //   toggle = true,
-                  //   checked = obs.activeStatus.toBoolean,
-                  //   onClickE = (e: ReactEvent, _: Checkbox.CheckboxProps) =>
-                  //     e.preventDefaultCB >> e.stopPropagationCB >> setActiveStatus(
-                  //       ObsActiveStatus.FromBoolean.get(!obs.activeStatus.toBoolean)
-                  //     ),
-                  //   clazz = ExploreStyles.ObsActiveStatusToggle
-                  // )
+                  },
+                  trigger = Checkbox(
+                    toggle = true,
+                    checked = obs.activeStatus.toBoolean,
+                    onClickE = (e: ReactEvent, _: Checkbox.CheckboxProps) =>
+                      e.preventDefaultCB >> e.stopPropagationCB >> setActiveStatus(
+                        ObsActiveStatus.FromBoolean.get(!obs.activeStatus.toBoolean)
+                      ),
+                    clazz = ExploreStyles.ObsActiveStatusToggle
+                  )
                 )
               )
             ),

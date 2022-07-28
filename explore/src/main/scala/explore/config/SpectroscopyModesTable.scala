@@ -39,6 +39,8 @@ import lucuma.core.model.SiderealTracking
 import lucuma.core.util.Display
 import lucuma.refined.*
 import lucuma.ui.reusability._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import react.CircularProgressbar.CircularProgressbar
 import react.common._
 import react.common.implicits._
@@ -170,8 +172,7 @@ object SpectroscopyModesTable {
     val content: TagMod = c match {
       case Left(nel)                        =>
         if (nel.exists(_ == ItcQueryProblems.UnsupportedMode))
-          Popup(content = "Mode not supported")
-          // Popup(content = "Mode not supported", trigger = Icons.Ban.color("red"))
+          Popup(content = "Mode not supported", trigger = Icons.Ban.color("red"))
         else {
           val content = nel.collect {
             case ItcQueryProblems.MissingSignalToNoise => "Set S/N"
@@ -179,8 +180,7 @@ object SpectroscopyModesTable {
             case ItcQueryProblems.MissingTargetInfo    => "Missing target info"
             case ItcQueryProblems.GenericError(e)      => e
           }
-          Popup(content = content.mkString_(", ")) // , trigger = Icons.TriangleSolid)
-          // Popup(content = content.mkString_(", "), trigger = Icons.TriangleSolid)
+          Popup(content = content.mkString_(", "), trigger = Icons.TriangleSolid)
         }
       case Right(r: ItcResult.Result)       =>
         val seconds = r.duration.toSeconds
@@ -193,8 +193,7 @@ object SpectroscopyModesTable {
       case Right(ItcResult.Pending)         =>
         Icons.Spinner.spin(true)
       case Right(ItcResult.SourceTooBright) =>
-        Popup(content = "Source too bright") // , trigger = Icons.SunBright.color("yellow"))
-      // Popup(content = "Source too bright", trigger = Icons.SunBright.color("yellow"))
+        Popup(content = "Source too bright", trigger = Icons.SunBright.color("yellow"))
     }
     <.div(ExploreStyles.ITCCell, content)
   }

@@ -31,8 +31,6 @@ import monocle.Lens
 import monocle.macros.GenLens
 import spire.math.Interval
 import spire.math.Rational
-// import spire.std.int._
-// import spire.std.bigDecimal._
 
 sealed trait InstrumentRow {
   def instrument: Instrument

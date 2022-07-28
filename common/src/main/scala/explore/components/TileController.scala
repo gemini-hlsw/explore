@@ -24,7 +24,7 @@ import lucuma.ui.reusability._
 import monocle.Traversal
 import queries.common.UserPreferencesQueriesGQL._
 import react.common._
-import react.common.implicits._
+import react.common.implicits.given
 import react.common.style.Css
 import react.gridlayout._
 
