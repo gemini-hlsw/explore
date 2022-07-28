@@ -6,6 +6,7 @@ package explore.targeteditor
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.Pot
+import crystal.PotOption
 import crystal.implicits._
 import crystal.react.View
 import crystal.react.hooks._
@@ -91,7 +92,7 @@ object AladinCell extends ModelOptics {
       // to get faster reusability use a serial state, rather than check every candidate
       .useSerialState(List.empty[GuideStarCandidate])
       // Listen on web worker for messages with catalog candidates
-      .useStreamWithSyncBy((props, _, _, _, _) => props.tid)((props, _, _, _, gs) =>
+      .useStreamBy((props, _, _, _, _) => props.tid)((props, _, _, _, gs) =>
         _ =>
           props.ctx.worker.stream
             .flatMap { r =>
@@ -116,21 +117,17 @@ object AladinCell extends ModelOptics {
             .evalMap(r => gs.setStateAsync(r))
       )
       // Request data again if vizTime changes more than a month
-      .useEffectWithDepsBy((p, _, _, _, _, candidates) => (candidates.awaitOpt, p.obsConf.vizTime))(
-        (props, _, _, _, _, _) => { case (c, _) =>
-          c.value
-            .map(candidatesAwait =>
-              candidatesAwait >>
-                props.ctx.worker.postTransferrable(
-                  CatalogRequest(props.target.get, props.obsConf.vizTime)
-                )
-            )
-            .orEmpty
+      .useEffectWithDepsBy((p, _, _, _, _, candidates) => (candidates, p.obsConf.vizTime))(
+        (props, _, _, _, _, _) => { case (candidates, vizTime) =>
+          props.ctx.worker
+            .postTransferrable(CatalogRequest(props.target.get, vizTime))
+            .whenA(candidates === PotOption.ReadyNone)
         }
       )
       .useEffectWithDepsBy((p, _, _, _, _, _) => (p.uid, p.tid)) {
         (props, _, options, _, _, _) => _ =>
           implicit val ctx = props.ctx
+
           UserTargetPreferencesQuery
             .queryWithDefault[IO](props.uid, props.tid, Constants.InitialFov)
             .flatMap { case (fov, viewOffset, agsCandidates, agsOverlay, fullScreen) =>
@@ -233,7 +230,7 @@ object AladinCell extends ModelOptics {
 
           val fovSetter = (newFov: Fov) => {
             val ignore = options.get.fold(
-              _ => true,
+              true,
               _ => true,
               o =>
                 // Don't save if the change is less than 1 arcse
@@ -256,7 +253,7 @@ object AladinCell extends ModelOptics {
 
           val offsetSetter = (newOffset: Offset) => {
             val ignore = options.get.fold(
-              _ => true,
+              true,
               _ => true,
               o => {
                 val diffP = newOffset.p.toAngle.difference(o.viewOffset.p.toAngle)
@@ -283,12 +280,13 @@ object AladinCell extends ModelOptics {
             (fovView.get, agsCandidatesView.get, agsOverlayView.get, fullScreenView.get).mapN {
               (f, a, o, s) =>
                 UserTargetPreferencesUpsert
-                  .updateAladinPreferences[IO](props.uid,
-                                               props.tid,
-                                               f,
-                                               candidates(a),
-                                               overlay(o),
-                                               fullScreen(s)
+                  .updateAladinPreferences[IO](
+                    props.uid,
+                    props.tid,
+                    f,
+                    candidates(a),
+                    overlay(o),
+                    fullScreen(s)
                   )
                   .runAsync
                   .void
@@ -327,8 +325,7 @@ object AladinCell extends ModelOptics {
 
           // Check whether we are waiting for catalog
           val catalogLoading = props.obsConf.posAngleConstraint match {
-            case Some(_) =>
-              gsc.value.fold(_ => true.some, _ => none, _ => false.some)
+            case Some(_) => gsc.toPot.fold(true.some, _ => none, _ => false.some)
             case _       => false.some
           }
 

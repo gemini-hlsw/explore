@@ -101,7 +101,7 @@ object ProgramTable {
     }
     // Columns
     .useMemoBy((props, _, _, programs) =>
-      (props.currentProgramId, programs.map(_.get.length).toOption.orEmpty)
+      (props.currentProgramId, programs.toOption.map(_.get.length).orEmpty)
     ) { (props, _, _, _) =>
       { case (currentProgramId, programCount) =>
         implicit val ctx = props.ctx
@@ -201,11 +201,11 @@ object ProgramTable {
         ((options: ProgsTableDef.OptionsType) => options.setAutoResetSortBy(false)).reuseAlways
       )
     )
-    .render { (props, adding, showDeleted, programs, _, _, tableInstance) =>
+    .render { (props, adding, showDeleted, programsPot, _, _, tableInstance) =>
       implicit val ctx = props.ctx
 
       <.div(ExploreStyles.ProgramTable)(
-        potRender((programs: View[List[ProgramInfo]]) =>
+        programsPot.render(programs =>
           React.Fragment(
             ProgsTable.Component(
               table = Table(
@@ -235,7 +235,7 @@ object ProgramTable {
               )
             )
           )
-        )(programs)
+        )
       )
     }
 }

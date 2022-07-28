@@ -129,14 +129,17 @@ object ObsTabTiles {
           .reRunOnResourceSignals(ObservationEditSubscription.subscribe[IO](props.obsId))
       }
       .render { (props, obsView) =>
-        implicit val ctx                     = props.ctx
+        implicit val ctx = props.ctx
+
+        val obsViewPot = obsView.toPot
+
         val scienceMode: Option[ScienceMode] =
           obsView.toOption.flatMap(_.get.scienceData.mode)
 
         val posAngle = obsView.toOption.flatMap(_.get.scienceData.posAngle)
 
         val potAsterism: Pot[View[Option[Asterism]]] =
-          obsView.map(v =>
+          obsViewPot.map(v =>
             v.zoom(
               ObsEditData.scienceData
                 .andThen(ScienceData.targets)
@@ -145,7 +148,7 @@ object ObsTabTiles {
           )
 
         val vizTimeView: Pot[View[Option[Instant]]] =
-          obsView.map(_.zoom(ObsEditData.visualizationTime))
+          obsViewPot.map(_.zoom(ObsEditData.visualizationTime))
 
         val potAsterismMode: Pot[(View[Option[Asterism]], Option[ScienceMode])] =
           potAsterism.map(x => (x, scienceMode))
@@ -178,7 +181,7 @@ object ObsTabTiles {
             )
           )
 
-        val constraintsSelector = makeConstraintsSelector(props.constraintGroups, obsView)
+        val constraintsSelector = makeConstraintsSelector(props.constraintGroups, obsViewPot)
 
         val skyPlotTile =
           ElevationPlotTile.elevationPlotTile(props.userId, scienceMode, targetCoords)
@@ -215,7 +218,7 @@ object ObsTabTiles {
         val constraintsTile =
           ConstraintsTile.constraintsTile(
             props.obsId,
-            obsView.map(_.zoom(ObsEditData.scienceData.andThen(ScienceData.constraints))),
+            obsViewPot.map(_.zoom(ObsEditData.scienceData.andThen(ScienceData.constraints))),
             props.undoStacks
               .zoom(ModelUndoStacks.forConstraintGroup[IO])
               .zoom(atMapWithDefault(ObsIdSet.one(props.obsId), UndoStacks.empty)),
@@ -226,7 +229,7 @@ object ObsTabTiles {
         val configurationTile =
           ConfigurationTile.configurationTile(
             props.obsId,
-            obsView.map(obsEditData =>
+            obsViewPot.map(obsEditData =>
               (obsEditData.get.title,
                obsEditData.get.subtitle,
                obsEditData.zoom(ObsEditData.scienceData)

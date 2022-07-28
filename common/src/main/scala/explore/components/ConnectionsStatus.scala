@@ -5,10 +5,7 @@ package explore.components
 
 import clue.PersistentClientStatus
 import clue.PersistentClientStatus._
-import crystal.Error
-import crystal.Pending
 import crystal.Pot
-import crystal.Ready
 import crystal.react.hooks._
 import explore._
 import explore.components.ui.ExploreStyles
@@ -30,9 +27,9 @@ object ConnectionsStatus {
 
   private def renderStatus(name: String, status: Pot[PersistentClientStatus]): VdomNode = {
     val (message, (clazz, show)) = status match {
-      case Error(t)     => (t.getMessage, (ConnectionError, true))
-      case Pending(_)   => ("Mounting...", (ConnectionWarning, true))
-      case Ready(value) =>
+      case Pot.Pending      => ("Mounting...", (ConnectionWarning, true))
+      case Pot.Error(t)     => (t.getMessage, (ConnectionError, true))
+      case Pot.Ready(value) =>
         (value.toString,
          value match {
            case Connecting                             => (ConnectionWarning, true)
@@ -58,5 +55,5 @@ object ConnectionsStatus {
     ScalaFnComponent
       .withHooks[Props]
       .useStreamOnMountBy(props => props.ctx.clients.odb.statusStream)
-      .render((_, status) => renderStatus("ODB", status))
+      .render((_, status) => renderStatus("ODB", status.toPot))
 }

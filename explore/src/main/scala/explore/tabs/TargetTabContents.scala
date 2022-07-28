@@ -607,9 +607,10 @@ object TargetTabContents {
                     .mod(
                       TwoPanelState.treeWidth.replace(w.toDouble)
                     ) *> layout.mod(
-                    _.fold(_ => mergeMap(dbLayout, defaultLayout).ready,
-                           _ => mergeMap(dbLayout, defaultLayout).ready,
-                           cur => mergeMap(dbLayout, cur).ready
+                    _.fold(
+                      mergeMap(dbLayout, defaultLayout).ready,
+                      _ => mergeMap(dbLayout, defaultLayout).ready,
+                      cur => mergeMap(dbLayout, cur).ready
                     )
                   ))
                     .to[IO]
@@ -647,7 +648,7 @@ object TargetTabContents {
           implicit val ctx = props.ctx
 
           <.div(
-            potRender(
+            asterismGroupsWithObs.render(
               renderFn(
                 props,
                 twoPanelState,
@@ -657,7 +658,7 @@ object TargetTabContents {
                 debouncer,
                 fullScreen
               )
-            )(asterismGroupsWithObs)
+            )
           ).withRef(resize.ref)
       }
 

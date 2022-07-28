@@ -74,7 +74,6 @@ import spire.math.Bounded
 import spire.math.Interval
 
 import java.time.Duration
-import scala.scalajs.js.JSConverters._
 
 sealed trait AdvancedConfigurationPanel[T <: ScienceModeAdvanced, S <: ScienceModeBasic, Input] {
   val obsId: Observation.Id
@@ -440,7 +439,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 value = overrideFilter(props.scienceModeAdvanced),
                 exclude = obsoleteFilters,
                 clearable = true,
-                placeholder = filterLens.get(props.scienceModeBasic).map(_.shortName).orUndefined
+                placeholder = filterLens.get(props.scienceModeBasic).fold("None")(_.shortName)
               ),
               <.label("Wavelength",
                       HelpIcon("configuration/wavelength.md".refined),
@@ -451,7 +450,10 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 value = overrideWavelength(props.scienceModeAdvanced).withOnMod(_ => invalidateITC),
                 units = "μm",
                 validFormat = ExploreModelValidators.wavelengthValidWedge.optional,
-                changeAuditor = wavelengthChangeAuditor.optional
+                changeAuditor = wavelengthChangeAuditor.optional,
+                placeholder = props.spectroscopyRequirements.wavelength.fold("None")(w =>
+                  f"${Wavelength.decimalMicrometers.reverseGet(w)}%.3f"
+                )
               ).clearable,
               <.label("FPU", HelpIcon("configuration/fpu.md".refined), ExploreStyles.SkipToNext),
               EnumViewOptionalSelect(
@@ -530,7 +532,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                       )
                       FormInput(value = value, disabled = true)
                     },
-                    pendingRender = _ =>
+                    pendingRender =
                       <.div(ExploreStyles.InputReplacementIcon, Icons.Spinner.spin(true)): VdomNode
                   )(props.potITC.get.map(_.map(_.signalToNoise)))
                 ),
@@ -560,7 +562,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                                     <.span(ExploreStyles.UnitsLabel, "sec")
                       )
                     },
-                    pendingRender = _ =>
+                    pendingRender =
                       <.div(ExploreStyles.InputReplacementIcon, Icons.Spinner.spin(true)): VdomNode
                   )(props.potITC.get.map(_.map(_.exposureTime)))
                 ),
@@ -583,7 +585,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                       val value = oe.fold(itcNoneMsg)(_.toString)
                       FormInput(value = value, disabled = true)
                     },
-                    pendingRender = _ =>
+                    pendingRender =
                       <.div(ExploreStyles.InputReplacementIcon, Icons.Spinner.spin(true)): VdomNode
                   )(props.potITC.get.map(_.map(_.exposures)))
                 )

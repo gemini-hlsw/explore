@@ -129,7 +129,8 @@ object ProposalTabContents {
     }
     .render { (props, optPropInfo) =>
       implicit val ctx = props.ctx
-      potRender(renderFn(props.programId, props.user, props.undoStacks) _)(optPropInfo)
+
+      optPropInfo.render(renderFn(props.programId, props.user, props.undoStacks) _)
     }
 }
 

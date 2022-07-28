@@ -13,7 +13,6 @@ import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
-import lucuma.core.model.sequence._
 import queries.common.GeneratedSequenceSQL._
 import queries.common.ObsQueriesGQL
 import react.common._
@@ -24,9 +23,6 @@ final case class GeneratedSequenceViewer(obsId: Observation.Id, changed: View[Po
 
 object GeneratedSequenceViewer {
   type Props = GeneratedSequenceViewer
-
-  private def renderFn(config: Option[FutureExecutionConfig]): VdomNode =
-    config.fold[VdomNode](<.div("Default observation not found"))(GeneratedSequenceTables.apply)
 
   val component =
     ScalaFnComponent
@@ -42,10 +38,14 @@ object GeneratedSequenceViewer {
             ObsQueriesGQL.ObservationEditSubscription.subscribe[IO](props.obsId)
           )
       }
-      .useEffectWithDepsBy((_, config) => config.flatten.map(_ => ()))((props, _) =>
+      .useEffectWithDepsBy((_, config) => config.toPot.void)((props, _) =>
         changedPot => props.changed.set(changedPot)
       )
-      .render((props, config) => <.div()
-      // potRender(renderFn)(props.changed.get.flatMap(_ => config.flatten))
+      .render((props, config) =>
+        props.changed.get
+          .flatMap(_ => config.toPot.flatten)
+          .render(
+            _.fold[VdomNode](<.div("Default observation not found"))(GeneratedSequenceTables.apply)
+          )
       )
 }

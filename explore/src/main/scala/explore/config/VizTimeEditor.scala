@@ -81,7 +81,7 @@ object VizTimeEditor {
           ExploreStyles.Compact,
           ExploreStyles.ObsInstantTileTitle,
           potRender[View[Option[Instant]]](
-            pendingRender = _ => EmptyVdom,
+            pendingRender = EmptyVdom,
             valueRender = instant =>
               React.Fragment(
                 <.label("Observation time", HelpIcon("configuration/obstime.md".refined)),
