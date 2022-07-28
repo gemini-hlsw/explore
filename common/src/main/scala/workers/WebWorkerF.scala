@@ -49,6 +49,8 @@ trait WebWorkerF[F[_]] {
    * Streams of events from the worker
    */
   def stream: Stream[F, dom.MessageEvent]
+
+  def streamAwait: Resource[F, Stream[F, dom.MessageEvent]]
 }
 
 object WebWorkerF {
@@ -84,6 +86,8 @@ object WebWorkerF {
           val terminate: F[Unit] = Sync[F].delay(worker.terminate())
 
           def stream: Stream[F, dom.MessageEvent] = channel.subscribe(10)
+
+          def streamAwait: Resource[F, Stream[F, dom.MessageEvent]] = channel.subscribeAwait(10)
         }))(w => w.terminate)
     } yield workerF
 
