@@ -30,10 +30,11 @@ import log4cats.loglevel.LogLevelLogger
 import lucuma.core.model.GuestRole
 import lucuma.core.model.Program
 import lucuma.core.model.User
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import org.scalajs.dom
 import org.scalajs.dom.window
 import react.common.ReactFnProps
-// import react.fa.given
 import react.semanticui.collections.menu._
 import react.semanticui.elements.image.Image
 import react.semanticui.modules.checkbox.Checkbox

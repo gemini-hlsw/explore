@@ -12,7 +12,8 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.JsFn
 import japgolly.scalajs.react.internal.Box
 import japgolly.scalajs.react.vdom.html_<^._
-import react.common.implicits.cssMonoid
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import react.common.style.Css
 import react.semanticui.AsC
 import react.semanticui.collections.table._

@@ -30,6 +30,8 @@ import lucuma.core.model.Target
 import lucuma.refined.*
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.reusability._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import react.aladin._
 import react.common._
 import react.fa.given

@@ -9,8 +9,9 @@ import explore.syntax.ui.*
 import explore.syntax.ui.given
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import react.common.ReactPropsForwardRef
-import react.common.implicits.cssMonoid
 import react.common.style.Css
 import react.semanticui.collections.table._
 import react.virtuoso._
@@ -74,7 +75,7 @@ class SUITableVirtuoso[D, Plugins](
       }
 
       val headerTag: Option[TableHeader] = (props.header: Any) match {
-        case true                => TableHeader( /*as = <.div,*/ clazz = ExploreStyles.THead).some
+        case true                => TableHeader(as = <.div, clazz = ExploreStyles.THead).some
         case header: TableHeader =>
           header
             .asInstanceOf[TableHeader]

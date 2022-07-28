@@ -37,6 +37,8 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import queries.common.TargetQueriesGQL._
 import queries.schemas.implicits._
 import react.common._

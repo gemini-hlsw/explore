@@ -15,6 +15,8 @@ import explore.syntax.ui.given
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import org.http4s._
 import org.http4s.dom.FetchClientBuilder
 import react.common.ReactFnProps

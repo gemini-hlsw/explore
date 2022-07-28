@@ -20,10 +20,11 @@ import lucuma.core.validation.InputValidSplitEpi
 import lucuma.refined.*
 import lucuma.ui.forms._
 import lucuma.ui.reusability._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.abbreviate
 import org.scalajs.dom
 import react.common._
-import react.fa.given
 import react.semanticui.collections.form.Form.FormProps
 import react.semanticui.collections.form._
 import react.semanticui.elements.label.LabelPointing

@@ -9,9 +9,9 @@ import explore._
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ui.syntax.all.given
 import react.clipboard.CopyToClipboard
 import react.common._
-import lucuma.ui.syntax.all.given
 import react.semanticui.modules.modal.Dimmer.Blurring
 import react.semanticui.modules.modal.Modal
 import react.semanticui.modules.modal.ModalContent

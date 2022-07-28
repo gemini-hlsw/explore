@@ -14,9 +14,10 @@ import explore.syntax.ui.*
 import explore.syntax.ui.given
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import org.scalajs.dom
 import react.common.ReactFnProps
-import react.common.implicits.cssMonoid
 import react.common.style._
 import react.fa.given
 import react.semanticui.collections.menu._

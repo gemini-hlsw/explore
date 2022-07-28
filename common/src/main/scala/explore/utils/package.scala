@@ -17,10 +17,10 @@ import explore.components.ui.ExploreStyles
 import explore.model.enums.ExecutionEnvironment
 import explore.model.enums.ExecutionEnvironment.Development
 import explore.model.enums.Theme
-import explore.syntax.ui.*
-import explore.syntax.ui.given
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.forms.ExternalValue
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.versionDateFormatter
 import lucuma.ui.utils.versionDateTimeFormatter
 import org.http4s.Uri

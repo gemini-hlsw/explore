@@ -19,18 +19,17 @@ import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.Focused
 import explore.model.enums.AppTab
-import explore.utils._
 import explore.syntax.ui.given
+import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Program
 import lucuma.ui.reusability._
-import queries.common.ProgramQueriesGQL._
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import queries.common.ProgramQueriesGQL._
 import react.common.ReactFnProps
-import react.common.implicits.cssMonoid
 import react.semanticui.collections.table.TableCompact
 import react.semanticui.collections.table._
 import react.semanticui.elements.button._
@@ -38,7 +37,6 @@ import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.shorthand._
 import react.semanticui.sizes._
 import reactST.reactTable._
-
 
 final case class ProgramTable(
   currentProgramId: Option[Program.Id],
