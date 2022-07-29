@@ -60,8 +60,7 @@ class ModesSuite extends CatsEffectSuite {
           Some(ImageQuality.PointThree),
           Wavelength.fromNanometers(500),
           1.refined[Positive].some,
-          None,
-          // BigDecimal(0).refined[NonNegative].withUnit[Micrometer].some,
+          BigDecimal(0).refined[NonNegative].withUnit[Micrometer].some,
           Angle.fromDoubleArcseconds(1).some,
           declination = none
         )

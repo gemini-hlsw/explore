@@ -16,21 +16,21 @@ import munit.DisciplineSuite
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
 
+case class Inner[A](a: A)
+object Inner {
+  def a[A]: Lens[Inner[A], A] = Focus[Inner[A]](_.a)
+
+  implicit def eqInner[A: Eq]: Eq[Inner[A]] = Eq.by(_.a)
+}
+
+case class Outer[A](opt: Option[Inner[A]])
+object Outer {
+  def opt[A]: Lens[Outer[A], Option[Inner[A]]] = Focus[Outer[A]](_.opt)
+
+  implicit def eqOuter[A: Eq]: Eq[Outer[A]] = Eq.by(_.opt)
+}
+
 class OpticsSuite extends DisciplineSuite {
-
-  case class Inner[A](a: A)
-  object Inner {
-    // def a[A]: Lens[Inner[A], A] = Focus[Inner[A]](_.a)
-
-    implicit def eqInner[A: Eq]: Eq[Inner[A]] = Eq.by(_.a)
-  }
-
-  case class Outer[A](opt: Option[Inner[A]])
-  object Outer {
-    // def opt[A]: Lens[Outer[A], Option[Inner[A]]] = Focus[Outer[A]](_.opt)
-
-    implicit def eqOuter[A: Eq]: Eq[Outer[A]] = Eq.by(_.opt)
-  }
 
   implicit def wrapArb[A: Arbitrary]: Arbitrary[Inner[A]] =
     Arbitrary[Inner[A]] {
@@ -42,12 +42,12 @@ class OpticsSuite extends DisciplineSuite {
       arbitrary[Option[Inner[A]]].map(Outer.apply)
     }
 
-  // def adjuster[A]: Adjuster[Outer[A], Option[A]] =
-  //   Outer.opt[A].asAdjuster.composeOptionLens(Inner.a[A])
-  //
-  // val adjusterInt = adjuster[Int]
-  //
-  // checkAll("Adjuster.composeOptionLens", AdjusterTests(adjusterInt))
+  def adjuster[A]: Adjuster[Outer[A], Option[A]] =
+    Outer.opt[A].asAdjuster.composeOptionLens(Inner.a[A])
+
+  val adjusterInt = adjuster[Int]
+
+  checkAll("Adjuster.composeOptionLens", AdjusterTests(adjusterInt))
 
   val disjointZip2 =
     disjointZip(
