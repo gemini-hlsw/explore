@@ -9,13 +9,8 @@ import cats.effect.Concurrent
 import cats.effect.IO
 import cats.syntax.all._
 import explore.events.CatalogRequest
-import cats.Hash
-import lucuma.ags.GuideStarCandidate
-import lucuma.core.model.Target
 import explore.events._
 import explore.events.picklers._
-import explore.model.CatalogQueryError
-import explore.model.CatalogResults
 import explore.model.Constants
 import explore.model.boopickle._
 import fs2.text

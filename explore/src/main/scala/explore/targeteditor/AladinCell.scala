@@ -96,10 +96,10 @@ object AladinCell extends ModelOptics {
           props.ctx.worker.streamResource.map(
             _.flatMap { r =>
               decodeFromTransferable[WorkerMessage](r) match {
-                case Some(CatalogResultsMessage(r)) => fs2.Stream.emit[IO, CatalogResults](r)
-                case Some(CatalogQueryError(m))     =>
+                case Some(r @ CatalogResults(_)) => fs2.Stream.emit[IO, CatalogResults](r)
+                case Some(CatalogQueryError(m))  =>
                   fs2.Stream.raiseError[IO](new RuntimeException(m))
-                case _                              => fs2.Stream.raiseError[IO](new RuntimeException("Unknown worker message"))
+                case _                           => fs2.Stream.raiseError[IO](new RuntimeException("Unknown worker message"))
               }
             }
               .map(_.candidates.map { gsc =>
@@ -116,7 +116,7 @@ object AladinCell extends ModelOptics {
       .useEffectWithDepsBy((p, _, _, _, _, candidates) => (candidates, p.obsConf.vizTime))(
         (props, _, _, _, _, _) => { case (candidates, vizTime) =>
           props.ctx.worker
-            .postTransferrable(CatalogRequest(props.target.get, vizTime))
+            .postWorkerMessage(CatalogRequest(props.target.get, vizTime))
             .whenA(candidates === PotOption.ReadyNone)
         }
       )

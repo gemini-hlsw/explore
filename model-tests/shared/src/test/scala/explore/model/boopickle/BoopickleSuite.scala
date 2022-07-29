@@ -4,15 +4,17 @@
 package explore.model.boopickle
 
 import boopickle.DefaultBasic._
+import eu.timepit.refined.cats._
+import eu.timepit.refined.scalacheck.all._
+import eu.timepit.refined.types.numeric.PosInt
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.boopickle.PicklerTests
+import explore.events._
+import explore.model.arb.ArbCatalogResults._
 import explore.model.boopickle.CatalogPicklers
 import explore.model.boopickle.CommonPicklers
-import explore.model.arb.ArbCatalogResults._
-import explore.events._
-import eu.timepit.refined.types.string.NonEmptyString
-import eu.timepit.refined.types.numeric.PosInt
-import eu.timepit.refined.scalacheck.all._
-import eu.timepit.refined.cats._
+import lucuma.ags.GuideStarCandidate
+import lucuma.ags.arb.ArbGuideStarCandidate._
 import lucuma.core.math._
 import lucuma.core.math.arb.ArbAngle._
 import lucuma.core.math.arb.ArbCoordinates._
@@ -23,8 +25,6 @@ import lucuma.core.math.arb.ArbProperMotion._
 import lucuma.core.math.arb.ArbRadialVelocity._
 import lucuma.core.math.arb.ArbRightAscension._
 import lucuma.core.math.arb.ArbWavelength._
-import lucuma.ags.GuideStarCandidate
-import lucuma.ags.arb.ArbGuideStarCandidate._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.SiderealTracking

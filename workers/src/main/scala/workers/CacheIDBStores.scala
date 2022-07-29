@@ -3,6 +3,8 @@
 
 package workers
 
+import explore.events.CatalogResults
+import explore.events.picklers._
 import japgolly.scalajs.react.callback._
 import japgolly.webapputil.binary._
 import japgolly.webapputil.boopickle._
@@ -11,8 +13,6 @@ import japgolly.webapputil.indexeddb._
 
 import scala.annotation.nowarn
 import scala.scalajs.js
-import explore.events.CatalogResults
-import explore.events.picklers._
 
 @js.native
 @nowarn

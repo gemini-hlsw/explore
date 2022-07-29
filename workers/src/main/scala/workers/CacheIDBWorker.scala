@@ -3,14 +3,15 @@
 
 package workers
 
+import cats.effect.Deferred
 import cats.effect.IO
 import cats.effect.Sync
-import cats.effect.Deferred
 import cats.effect.unsafe.implicits._
 import cats.syntax.all._
 import explore.events._
-import explore.model.boopickle._
 import explore.model.StaticData
+import explore.model.boopickle._
+import explore.modes.SpectroscopyModesMatrix
 import japgolly.scalajs.react.callback.CallbackCatsEffect._
 import japgolly.scalajs.react.callback._
 import japgolly.webapputil.indexeddb.IndexedDb
@@ -20,11 +21,10 @@ import org.scalajs.dom
 import org.typelevel.log4cats.Logger
 import typings.loglevel.mod.LogLevelDesc
 
+import java.time.Duration
 import scala.scalajs.js
 
 import js.annotation._
-import java.time.Duration
-import explore.modes.SpectroscopyModesMatrix
 
 trait AsyncToIO {
   class AsyncCallbackOps[A](val a: AsyncCallback[A]) {
@@ -64,7 +64,6 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
       _       <-
         IO {
           self.onmessage = (msg: dom.MessageEvent) => {
-            println(s"msg ")
             // Decode transferrable events
             decodeFromTransferable[WorkerMessage](msg)
               .map(_ match {
@@ -73,9 +72,14 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
                     expireGuideStarCandidates(cacheDb, stores, Expiration).toIO
                 case SpectroscopyMatrixRequest(uri) =>
                   implicit val log = logger
-                  StaticData.build[IO](uri).flatMap { m =>
-                    // matrix.complete(m) *>
-                    postWorkerMessage[IO](self, SpectroscopyMatrixResults(m))
+                  matrix.tryGet.flatMap {
+                    case Some(m) =>
+                      postWorkerMessage[IO](self, SpectroscopyMatrixResults(m))
+                    case _       =>
+                      StaticData.build[IO](uri).flatMap { m =>
+                        matrix.complete(m) *>
+                          postWorkerMessage[IO](self, SpectroscopyMatrixResults(m))
+                      }
                   }
                 case CacheCleanupRequest(expTime)   =>
                   expireGuideStarCandidates(cacheDb, stores, expTime).toIO

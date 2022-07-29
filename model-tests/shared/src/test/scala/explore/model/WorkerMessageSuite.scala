@@ -4,8 +4,8 @@
 package explore.model
 
 import cats.kernel.laws.discipline.EqTests
-import explore.model.arb.ArbCatalogResults._
 import explore.events.CatalogResults
+import explore.model.arb.ArbCatalogResults._
 import munit.DisciplineSuite
 
 class WorkerMessageSuite extends DisciplineSuite {

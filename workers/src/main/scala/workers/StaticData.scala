@@ -5,13 +5,14 @@ package explore.model
 
 import cats.effect._
 import cats.syntax.all._
-import explore.modes.SpectroscopyModesMatrix
-import org.typelevel.log4cats.Logger
-import org.http4s.dom.FetchClientBuilder
-import scala.concurrent.duration._
-import retry._
 import explore.common.RetryHelpers._
+import explore.modes.SpectroscopyModesMatrix
 import org.http4s._
+import org.http4s.dom.FetchClientBuilder
+import org.typelevel.log4cats.Logger
+import retry._
+
+import scala.concurrent.duration._
 
 object StaticData {
   def build[F[_]: Async: Logger](spectroscopyMatrixUri: Uri): F[SpectroscopyModesMatrix] = {

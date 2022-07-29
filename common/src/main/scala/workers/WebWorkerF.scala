@@ -9,8 +9,8 @@ import cats.effect.Resource
 import cats.effect.Sync
 import cats.effect.std.Dispatcher
 import cats.syntax.all._
-import explore.events.picklers._
 import explore.events.WorkerMessage
+import explore.events.picklers._
 import explore.model.boopickle._
 import fs2.Stream
 import fs2.concurrent.Topic

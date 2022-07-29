@@ -3,10 +3,14 @@
 
 package explore.config
 
+import cats.Eq
 import cats.effect.IO
 import cats.syntax.all._
+import crystal.PotOption
+import crystal.implicits._
 import crystal.react._
 import crystal.react.hooks._
+import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import explore.Icons
 import explore.common.ObsQueries._
@@ -56,38 +60,42 @@ final case class BasicConfigurationPanel(
 object BasicConfigurationPanel {
   type Props = BasicConfigurationPanel
 
+  private implicit val matrixEq: Eq[SpectroscopyModesMatrix] = Eq.by(_.matrix.length)
+
+  private implicit val matrixReusability: Reusability[SpectroscopyModesMatrix] =
+    Reusability.byEq
+
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
       .useStateView[ScienceMode](ScienceMode.Spectroscopy)
       .useStateView[ImagingConfigurationOptions](ImagingConfigurationOptions.Default)
       // Listen on web worker for messages with catalog candidates
-      .useStreamWithSyncBy((props, _, _) => props.obsId)((props, _, _) =>
+      .useStreamResourceBy((props, _, _) => props.obsId)((props, _, _) =>
         _ => {
           println("Create")
-          props.ctx.worker.stream
-            .evalTap(_ => IO.println("incoming"))
-            .map(decodeFromTransferable[WorkerMessage])
-            .filter {
-              case Some(SpectroscopyMatrixResults(_)) => true
-              case _                                  => false
-            }
-            .collect { case Some(SpectroscopyMatrixResults(r)) =>
-              fs2.Stream.emit[IO, SpectroscopyModesMatrix](r)
-            }
-            .flatten
+          props.ctx.worker.streamResource.map {
+            _.map(decodeFromTransferable[WorkerMessage])
+              .filter {
+                case Some(SpectroscopyMatrixResults(_)) => true
+                case _                                  => false
+              }
+              .collect { case Some(SpectroscopyMatrixResults(r)) =>
+                fs2.Stream.emit[IO, SpectroscopyModesMatrix](r)
+              }
+              .flatten
+          }
         }
       )
-      // .useEffectOnMountBy((p, _, _, _) =>
-      .useEffectWithDepsBy((_, _, _, i) => i.awaitOpt) { (props, _, _, _) => _ =>
+      .useEffectWithDepsBy((_, _, _, i) => i) { (props, _, _, _) => mx =>
         props.ctx.worker
           .postWorkerMessage(
             SpectroscopyMatrixRequest(uri"/instrument_spectroscopy_matrix.csv")
           )
+          .whenA(mx === PotOption.ReadyNone)
       }
       .render { (props, mode, imaging, matrix) =>
         implicit val ctx: AppContextIO = props.ctx
-        println(matrix.value.toOption.map(_.matrix.length))
 
         val requirementsViewSet: ScienceRequirementsUndoView =
           ScienceRequirementsUndoView(props.obsId, props.requirementsCtx)
@@ -119,8 +127,7 @@ object BasicConfigurationPanel {
             props.constraints,
             if (props.itcTargets.isEmpty) none else props.itcTargets.some,
             props.baseTracking,
-            // ctx.staticData.spectroscopyMatrix
-            SpectroscopyModesMatrix.empty
+            matrix.toOption.getOrElse(SpectroscopyModesMatrix.empty)
           ).when(isSpectroscopy),
           <.div(ExploreStyles.BasicConfigurationButtons)(
             Button(

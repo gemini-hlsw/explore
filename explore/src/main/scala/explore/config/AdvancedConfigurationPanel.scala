@@ -72,7 +72,6 @@ import spire.math.Bounded
 import spire.math.Interval
 
 import java.time.Duration
-import scala.scalajs.js.JSConverters._
 
 sealed trait AdvancedConfigurationPanel[T <: ScienceModeAdvanced, S <: ScienceModeBasic, Input] {
   val obsId: Observation.Id
