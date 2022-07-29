@@ -90,11 +90,4 @@ object WebWorkerF {
         }))(w => w.terminate)
     } yield workerF
 
-  implicit class WebWorkerOps(val worker: dom.DedicatedWorkerGlobalScope) extends AnyVal {
-    def postTransferrable[A: Pickler](a: A): Unit = {
-      val buffer = asTransferable(a)
-      worker.postMessage(buffer, js.Array(buffer.buffer: dom.Transferable))
-    }
-  }
-
 }

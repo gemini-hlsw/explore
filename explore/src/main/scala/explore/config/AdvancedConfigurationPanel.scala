@@ -82,6 +82,7 @@ sealed trait AdvancedConfigurationPanel[T <: ScienceModeAdvanced, S <: ScienceMo
   val spectroscopyRequirements: SpectroscopyRequirementsData
   val potITC: View[Pot[Option[ITCSuccess]]]
   val onShowBasic: Callback
+  val confMatrix: SpectroscopyModesMatrix
 
   implicit val ctx: AppContextIO
 }
@@ -291,16 +292,9 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
          props.spectroscopyRequirements.resolution,
          props.spectroscopyRequirements.wavelengthCoverage
         )
-      ) { (_, _, _) =>
+      ) { (props, _, _) =>
         { case (fp, cap, fpa, res, cov) =>
-          // props.ctx.staticData.spectroscopyMatrix.filtered(
-          //   focalPlane = fp,
-          //   capabilities = cap,
-          //   slitWidth = fpa,
-          //   resolution = res,
-          //   coverage = cov.map(_.micrometer.toValue[BigDecimal].toRefined[Positive])
-          // )
-          SpectroscopyModesMatrix.empty.filtered(
+          props.confMatrix.filtered(
             focalPlane = fp,
             capabilities = cap,
             slitWidth = fpa,
@@ -649,7 +643,8 @@ object AdvancedConfigurationPanel {
     scienceModeBasic:         ScienceModeBasic.GmosNorthLongSlit,
     spectroscopyRequirements: SpectroscopyRequirementsData,
     potITC:                   View[Pot[Option[ITCSuccess]]],
-    onShowBasic:              Callback
+    onShowBasic:              Callback,
+    confMatrix:               SpectroscopyModesMatrix
   )(implicit val ctx:         AppContextIO)
       extends ReactFnProps[AdvancedConfigurationPanel.GmosNorthLongSlit](
         AdvancedConfigurationPanel.GmosNorthLongSlit.component
@@ -804,7 +799,8 @@ object AdvancedConfigurationPanel {
     scienceModeBasic:         ScienceModeBasic.GmosSouthLongSlit,
     spectroscopyRequirements: SpectroscopyRequirementsData,
     potITC:                   View[Pot[Option[ITCSuccess]]],
-    onShowBasic:              Callback
+    onShowBasic:              Callback,
+    confMatrix:               SpectroscopyModesMatrix
   )(implicit val ctx:         AppContextIO)
       extends ReactFnProps[AdvancedConfigurationPanel.GmosSouthLongSlit](
         AdvancedConfigurationPanel.GmosSouthLongSlit.component

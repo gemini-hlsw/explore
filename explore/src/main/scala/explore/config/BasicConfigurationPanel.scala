@@ -3,29 +3,19 @@
 
 package explore.config
 
-import cats.Eq
-import cats.effect.IO
 import cats.syntax.all._
-import crystal.PotOption
-import crystal.implicits._
 import crystal.react._
 import crystal.react.hooks._
-import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import explore.Icons
 import explore.common.ObsQueries._
 import explore.common.ScienceQueries._
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
-import explore.events.EventPicklers._
-import explore.events.SpectroscopyMatrixRequest
-import explore.events.SpectroscopyMatrixResults
-import explore.events.WorkerMessage
 import explore.implicits._
 import explore.model
 import explore.model.ITCTarget
 import explore.model.ImagingConfigurationOptions
-import explore.model.boopickle._
 import explore.model.display._
 import explore.modes.SpectroscopyModesMatrix
 import explore.undo._
@@ -36,8 +26,6 @@ import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
 import lucuma.core.model.SiderealTracking
 import lucuma.ui.forms.EnumViewSelect
-import lucuma.ui.reusability._
-import org.http4s.syntax.all._
 import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.button.Button
@@ -53,48 +41,20 @@ final case class BasicConfigurationPanel(
   constraints:      ConstraintSet,
   itcTargets:       List[ITCTarget],
   baseTracking:     Option[SiderealTracking],
-  onShowAdvanced:   Option[Callback]
+  onShowAdvanced:   Option[Callback],
+  confMatrix:       SpectroscopyModesMatrix
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[BasicConfigurationPanel](BasicConfigurationPanel.component)
 
 object BasicConfigurationPanel {
   type Props = BasicConfigurationPanel
 
-  private implicit val matrixEq: Eq[SpectroscopyModesMatrix] = Eq.by(_.matrix.length)
-
-  private implicit val matrixReusability: Reusability[SpectroscopyModesMatrix] =
-    Reusability.byEq
-
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
       .useStateView[ScienceMode](ScienceMode.Spectroscopy)
       .useStateView[ImagingConfigurationOptions](ImagingConfigurationOptions.Default)
-      // Listen on web worker for messages with catalog candidates
-      .useStreamResourceBy((props, _, _) => props.obsId)((props, _, _) =>
-        _ => {
-          println("Create")
-          props.ctx.worker.streamResource.map {
-            _.map(decodeFromTransferable[WorkerMessage])
-              .filter {
-                case Some(SpectroscopyMatrixResults(_)) => true
-                case _                                  => false
-              }
-              .collect { case Some(SpectroscopyMatrixResults(r)) =>
-                fs2.Stream.emit[IO, SpectroscopyModesMatrix](r)
-              }
-              .flatten
-          }
-        }
-      )
-      .useEffectWithDepsBy((_, _, _, i) => i) { (props, _, _, _) => mx =>
-        props.ctx.worker
-          .postWorkerMessage(
-            SpectroscopyMatrixRequest(uri"/instrument_spectroscopy_matrix.csv")
-          )
-          .whenA(mx === PotOption.ReadyNone)
-      }
-      .render { (props, mode, imaging, matrix) =>
+      .render { (props, mode, imaging) =>
         implicit val ctx: AppContextIO = props.ctx
 
         val requirementsViewSet: ScienceRequirementsUndoView =
@@ -127,7 +87,7 @@ object BasicConfigurationPanel {
             props.constraints,
             if (props.itcTargets.isEmpty) none else props.itcTargets.some,
             props.baseTracking,
-            matrix.toOption.getOrElse(SpectroscopyModesMatrix.empty)
+            props.confMatrix
           ).when(isSpectroscopy),
           <.div(ExploreStyles.BasicConfigurationButtons)(
             Button(

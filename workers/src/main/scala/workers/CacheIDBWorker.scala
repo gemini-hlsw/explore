@@ -63,7 +63,7 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
       client   = FetchClientBuilder[IO].create
       _       <-
         IO {
-          self.onmessage = (msg: dom.MessageEvent) => {
+          self.onmessage = (msg: dom.MessageEvent) =>
             // Decode transferrable events
             decodeFromTransferable[WorkerMessage](msg)
               .map(_ match {
@@ -88,7 +88,6 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
               .orEmpty
               .handleError(_.printStackTrace())
               .unsafeRunAndForget()
-          }
         }
     } yield ()
 }
