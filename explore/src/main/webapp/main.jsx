@@ -16,10 +16,10 @@ import { registerSW } from "virtual:pwa-register";
 // Setup the Service Worker
 if ("serviceWorker" in navigator
   && !/local.lucuma.xyz/.test(window.location)) {
-    ExplorePWA.runServiceWorker();
+  ExplorePWA.runServiceWorker();
 }
 
-  // Setting this here shouldn't be necessary if we get `vite-plugin-environment` to work.
+// Setting this here shouldn't be necessary if we get `vite-plugin-environment` to work.
 // but for now we can survive setting this only on dev
 if (!process) {
   process = {
@@ -34,8 +34,8 @@ Explore.runIOApp();
 
 if (import.meta.hot) {
   import.meta.hot.accept();
-  // import.meta.hot.dispose((_) => {
-  //   // Reset the IO runtime
-  //   Explore.resetIOApp();
-  // });
+  import.meta.hot.dispose((_) => {
+    // Reset the IO runtime
+    Explore.resetIOApp();
+  });
 }

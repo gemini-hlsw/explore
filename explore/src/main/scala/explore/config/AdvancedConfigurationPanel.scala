@@ -12,10 +12,10 @@ import coulomb.policy.spire.standard.given
 import crystal.Pot
 import crystal.react.View
 import crystal.react.hooks._
+import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.numeric.NonNegative
-import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
@@ -187,8 +187,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
     val formattedCoverage: String = this.coverage match {
       case Bounded(a, b, _) =>
         List(a, b)
-          .map(q => q.toString)
-          // .map(q => "%.3f".format(q.setScale(3, BigDecimal.RoundingMode.DOWN)))
+          .map(q => "%.3f".format(q.value.setScale(3, BigDecimal.RoundingMode.DOWN)))
           .mkString(" - ")
       case _                =>
         "-"
@@ -302,8 +301,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             focalPlane = fp,
             capabilities = cap,
             slitWidth = fpa,
-            resolution = res
-            // coverage = cov.map(_.micrometer.toValue[BigDecimal])
+            resolution = res,
+            coverage = cov.flatMap(_.micrometer.toValue[BigDecimal].toRefined[NonNegative].toOption)
           )
         }
       }
@@ -610,7 +609,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 clazz = ExploreStyles.VeryCompact,
                 content = "Simple Configuration",
                 // icon = Icons.ChevronsLeft,
-                onClick = props.onShowBasic.value
+                onClick = props.onShowBasic
               )(^.tpe := "button")
             )
           )

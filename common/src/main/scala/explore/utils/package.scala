@@ -27,10 +27,14 @@ import org.http4s.Uri
 import org.scalajs.dom
 import react.semanticui.collections.message.Message
 import react.semanticui.elements.loader.Loader
+import coulomb._
+import coulomb.syntax._
 
 import java.time.Instant
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
+import eu.timepit.refined.api._
+import eu.timepit.refined._
 
 package object utils {
   def setupScheme[F[_]: Sync](theme: Theme): F[Unit] =
@@ -156,4 +160,12 @@ package object utils {
       .flatten
       .map(_ => <.i(ExploreStyles.ClearableInputIcon, ^.onClick --> ev.set(view)(None)))
       .orUndefined
+
+  // We can remove this if there's ever a coulomb-refined for Scala 3
+  implicit class EnhanceWithToRefined[V, U](q: Quantity[V, U]) {
+    @inline def toRefined[P](implicit
+      vv: Validate[V, P]
+    ): Either[String, Quantity[Refined[V, P], U]] =
+      refineV[P](q.value).map(_.withUnit[U])
+  }
 }

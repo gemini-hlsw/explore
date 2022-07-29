@@ -113,7 +113,7 @@ package toastify {
       toastId.foreach(q => p.toastId = q)
       position.foreach(v => p.position = v.undefToJs)
       onClose.foreach(q => p.onClose = () => q.runNow())
-      // autoClose.foreach(q => p.autoClose = q.undefToJs)
+      autoClose.foreach((q: Boolean | Double) => p.autoClose = q)
       closeButton.foreach(q => p.closeButton = q)
       closeOnClick.foreach(q => p.closeOnClick = q)
       theme.foreach(v => p.theme = v.undefToJs)

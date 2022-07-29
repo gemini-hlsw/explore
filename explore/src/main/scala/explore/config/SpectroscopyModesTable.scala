@@ -12,7 +12,7 @@ import crystal.react.hooks._
 import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
-import eu.timepit.refined.numeric.Positive
+import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
@@ -28,6 +28,7 @@ import explore.model.ScienceModeAdvanced
 import explore.model.ScienceModeBasic
 import explore.model.reusability._
 import explore.modes._
+import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enums.FocalPlane
@@ -57,6 +58,7 @@ import reactST.reactTable.mod.SortByFn
 import reactST.reactTable.mod.UseTableRowProps
 import spire.math.Bounded
 import spire.math.Interval
+import coulomb.policy.spire.standard.given
 
 import java.text.DecimalFormat
 
@@ -369,8 +371,9 @@ object SpectroscopyModesTable {
                 wavelength = s.wavelength,
                 slitWidth = s.focalPlaneAngle,
                 resolution = s.resolution,
-                // coverage = s.wavelengthCoverage
-                //   .map(_.micrometer.toValue[BigDecimal].toRefined[Positive]),
+                coverage = s.wavelengthCoverage.flatMap(
+                  _.micrometer.toValue[BigDecimal].toRefined[NonNegative].toOption
+                ),
                 declination = dec
               )
           val (enabled, disabled) = rows.partition(enabledRow)
