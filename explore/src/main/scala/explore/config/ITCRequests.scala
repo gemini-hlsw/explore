@@ -77,23 +77,25 @@ object ITCRequests {
       sourceProfile: SourceProfile,
       wavelength:    Wavelength
     ): Option[Band] =
-      None
-      // SourceProfile.integratedBandNormalizedSpectralDefinition
-      //   .andThen(
-      //     SpectralDefinition.BandNormalized.brightnesses[Integrated]
-      //   )
-      //   .getOption(sourceProfile)
-      //   .orElse {
-      //     SourceProfile.surfaceBandNormalizedSpectralDefinition
-      //       .andThen(
-      //         SpectralDefinition.BandNormalized.brightnesses[Surface]
-      //       )
-      //       .getOption(sourceProfile)
-      //   }
-      //   .traverse(_.minByOption { case (band, _) =>
-      //     (band.center.toPicometers.value.value - wavelength.toPicometers.value.value).abs
-      //   }.map(_._1))
-      //   .collect { case Some(b) => b }
+      SourceProfile.integratedBandNormalizedSpectralDefinition
+        .andThen(
+          SpectralDefinition.BandNormalized.brightnesses[Integrated]
+        )
+        .getOption(sourceProfile)
+        .orElse {
+          SourceProfile.surfaceBandNormalizedSpectralDefinition
+            .andThen(
+              SpectralDefinition.BandNormalized.brightnesses[Surface]
+            )
+            .getOption(sourceProfile)
+        }
+        .map(_.keys)
+        .traverse(
+          _.minByOption((band: Band) =>
+            (band.center.toPicometers.value.value - wavelength.toPicometers.value.value).abs
+          )
+        )
+        .collect { case Some(b) => b }
 
     def doRequest(
       request:  ITCRequestParams,
