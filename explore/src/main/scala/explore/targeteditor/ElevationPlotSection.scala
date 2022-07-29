@@ -51,8 +51,8 @@ final case class ElevationPlotSection(
 object ElevationPlotSection {
   type Props = ElevationPlotSection
 
-  // implicit val propsReuse: Reusability[Props] = Reusability.derive
-  implicit val propsReuse: Reusability[Props] = Reusability.never
+  implicit val propsReuse: Reusability[Props] =
+    Reusability.by(x => (x.uid, x.tid, x.scienceMode, x.coords))
 
   val preferredSiteFor = (c: Props) =>
     c.scienceMode

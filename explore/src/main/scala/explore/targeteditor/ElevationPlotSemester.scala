@@ -103,8 +103,7 @@ object ElevationPlotSemester {
 
   val dateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
-  // implicit val propsReuse: Reusability[Props]           = Reusability.derive
-  implicit val propsReuse: Reusability[Props]           = Reusability.never
+  implicit val propsReuse: Reusability[Props]           = Reusability.by(x => (x.site, x.coords, x.semester))
   implicit val taksReuse: Reusability[Option[IO[Unit]]] = Reusability.always
 
   val component =
