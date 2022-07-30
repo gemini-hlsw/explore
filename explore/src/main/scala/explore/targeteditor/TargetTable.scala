@@ -26,8 +26,8 @@ import lucuma.core.model.Target
 import lucuma.ui.reusability._
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import react.common._
-import react.common.implicits._
+import react.common.Css
+import react.common.ReactFnProps
 import react.semanticui.collections.table._
 import react.semanticui.elements.button._
 import react.semanticui.modules.checkbox.Checkbox

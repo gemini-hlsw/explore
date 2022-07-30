@@ -83,6 +83,6 @@ object ProgramsPopup {
             props.onClose.isEmpty
           )
         )
-      ): VdomNode
+      )
     }
 }

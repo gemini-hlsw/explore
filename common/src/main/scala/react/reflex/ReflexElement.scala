@@ -3,9 +3,11 @@
 
 package react.reflex
 
+import explore.syntax.ui.*
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.TagMod
-import react.common._
+import react.common.Css
+import react.common.GenericComponentPAC
 
 import scala.scalajs.js.annotation.JSImport
 

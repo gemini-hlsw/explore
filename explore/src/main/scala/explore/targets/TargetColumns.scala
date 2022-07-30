@@ -29,7 +29,7 @@ import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.Target
 import lucuma.core.syntax.display._
 import lucuma.core.util.Display
-import react.common._
+import lucuma.ui.syntax.all.given
 import reactST.reactTable._
 import reactST.reactTable.facade.cell.CellProps
 

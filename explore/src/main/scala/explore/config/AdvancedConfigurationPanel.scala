@@ -62,9 +62,11 @@ import lucuma.ui.forms.EnumViewOptionalSelect
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.reusability._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import monocle.Lens
 import queries.schemas.implicits._
-import react.common._
+import react.common.ReactFnProps
 import react.semanticui.collections.form.Form
 import react.semanticui.collections.form.FormInput
 import react.semanticui.elements.button.Button
@@ -608,7 +610,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 compact = true,
                 clazz = ExploreStyles.VeryCompact,
                 content = "Simple Configuration",
-                // icon = Icons.ChevronsLeft,
+                icon = Icons.ChevronsLeft,
                 onClick = props.onShowBasic
               )(^.tpe := "button")
             )

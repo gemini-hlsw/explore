@@ -27,7 +27,9 @@ import lucuma.core.model.Observation
 import lucuma.core.model.SiderealTracking
 import lucuma.refined.*
 import lucuma.ui.forms.EnumViewSelect
-import react.common._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
+import react.common.ReactFnProps
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.button.Button
 import react.semanticui.shorthand._
@@ -94,7 +96,7 @@ object BasicConfigurationPanel {
               size = Small,
               compact = true,
               content = "Advanced Configuration",
-              // icon = Icons.Gears,
+              icon = Icons.Gears,
               disabled = props.onShowAdvanced.isEmpty,
               onClick = props.onShowAdvanced.orUndefined
             )

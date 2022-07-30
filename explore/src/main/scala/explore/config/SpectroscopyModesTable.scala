@@ -7,6 +7,7 @@ import cats.data._
 import cats.effect._
 import cats.syntax.all._
 import coulomb.Quantity
+import coulomb.policy.spire.standard.given
 import crystal.react.View
 import crystal.react.hooks._
 import crystal.react.implicits._
@@ -28,6 +29,8 @@ import explore.model.ScienceModeAdvanced
 import explore.model.ScienceModeBasic
 import explore.model.reusability._
 import explore.modes._
+import explore.syntax.ui.*
+import explore.syntax.ui.given
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -43,8 +46,8 @@ import lucuma.ui.reusability._
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.CircularProgressbar.CircularProgressbar
-import react.common._
-import react.common.implicits._
+import react.common.Css
+import react.common.ReactFnProps
 import react.semanticui._
 import react.semanticui.collections.table._
 import react.semanticui.elements.button.Button
@@ -58,7 +61,6 @@ import reactST.reactTable.mod.SortByFn
 import reactST.reactTable.mod.UseTableRowProps
 import spire.math.Bounded
 import spire.math.Interval
-import coulomb.policy.spire.standard.given
 
 import java.text.DecimalFormat
 

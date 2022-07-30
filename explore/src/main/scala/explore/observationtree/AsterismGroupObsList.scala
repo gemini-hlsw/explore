@@ -32,8 +32,7 @@ import mouse.boolean._
 import queries.common.TargetQueriesGQL
 import queries.schemas.implicits._
 import react.beautifuldnd._
-import react.common._
-import react.common.implicits._
+import react.common.ReactFnProps
 import react.fa.FontAwesomeIcon
 import react.reflex._
 import react.semanticui.elements.button.Button

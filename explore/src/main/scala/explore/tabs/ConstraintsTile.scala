@@ -15,7 +15,8 @@ import explore.utils._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
-import react.common._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import react.common.style.Css
 
 object ConstraintsTile {

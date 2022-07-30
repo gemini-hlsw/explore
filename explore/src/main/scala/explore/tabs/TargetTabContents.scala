@@ -43,14 +43,15 @@ import lucuma.core.model.Target.Sidereal
 import lucuma.core.model.User
 import lucuma.refined.*
 import lucuma.ui.reusability._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import lucuma.ui.utils._
 import org.scalajs.dom.window
 import queries.common.AsterismQueriesGQL._
 import queries.common.ObsQueriesGQL
 import queries.common.TargetQueriesGQL
 import queries.common.UserPreferencesQueriesGQL._
-import react.common._
-import react.common.implicits._
+import react.common.ReactFnProps
 import react.draggable.Axis
 import react.gridlayout._
 import react.resizable._

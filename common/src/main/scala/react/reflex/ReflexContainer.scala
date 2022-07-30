@@ -6,7 +6,8 @@ package react.reflex
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.TagMod
 import lucuma.ui.implicits._
-import react.common._
+import react.common.Css
+import react.common.GenericComponentPAC
 
 import scala.scalajs.js.annotation.JSImport
 

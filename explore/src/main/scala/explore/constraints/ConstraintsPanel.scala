@@ -34,8 +34,10 @@ import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.reusability._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import monocle.Lens
-import react.common._
+import react.common.ReactFnProps
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.label.LabelPointing
 

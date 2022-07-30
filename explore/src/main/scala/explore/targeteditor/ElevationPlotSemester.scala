@@ -10,6 +10,9 @@ import crystal.react.hooks._
 import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.implicits._
+import explore.syntax.*
+import explore.syntax.given
+import explore.syntax.ui.given
 import fs2.Stream
 import gpp.highcharts.highchartsStrings.line
 import gpp.highcharts.mod.XAxisLabelsOptions
@@ -27,8 +30,11 @@ import lucuma.core.model.TwilightBoundedNight
 import lucuma.core.syntax.boundedInterval._
 import lucuma.core.syntax.time._
 import lucuma.ui.reusability._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import org.typelevel.cats.time._
-import react.common._
+import react.common.GenericComponentPAF2VdomNode
+import react.common.ReactFnProps
 import react.highcharts.Chart
 import react.resizeDetector.hooks._
 import spire.math.Bounded

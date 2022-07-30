@@ -39,8 +39,10 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.syntax.all._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import queries.common.ObsQueriesGQL._
-import react.common._
+import react.common.ReactFnProps
 import react.semanticui.addons.select.Select
 import react.semanticui.addons.select.Select.SelectItem
 import react.semanticui.modules.dropdown.Dropdown

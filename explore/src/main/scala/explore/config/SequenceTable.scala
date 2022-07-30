@@ -15,7 +15,8 @@ import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
 import lucuma.core.model.sequence._
 import lucuma.ui.reusability._
-import react.common._
+import lucuma.ui.syntax.all.given
+import react.common.ReactFnProps
 import react.semanticui.collections.table._
 import reactST.reactTable._
 

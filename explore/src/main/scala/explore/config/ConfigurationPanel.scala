@@ -28,9 +28,11 @@ import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.SiderealTracking
 import lucuma.schemas.ObservationDB.Types._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import queries.common.ObsQueriesGQL
 import queries.schemas.implicits._
-import react.common._
+import react.common.ReactFnProps
 
 final case class ConfigurationPanel(
   obsId:            Observation.Id,

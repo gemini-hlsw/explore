@@ -35,13 +35,14 @@ import lucuma.core.model.Program
 import lucuma.core.model.User
 import lucuma.refined.*
 import lucuma.ui.reusability._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import lucuma.ui.utils._
 import org.scalajs.dom.window
 import queries.common.ConstraintGroupQueriesGQL._
 import queries.common.ObsQueriesGQL
 import queries.common.UserPreferencesQueriesGQL._
-import react.common._
-import react.common.implicits._
+import react.common.ReactFnProps
 import react.draggable.Axis
 import react.fa._
 import react.resizable._

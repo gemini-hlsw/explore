@@ -33,8 +33,7 @@ import lucuma.ui.reusability._
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils._
-import react.common._
-import react.common.implicits._
+import react.common.ReactFnProps
 import react.semanticui.elements.button.Button
 import react.semanticui.shorthand._
 import react.semanticui.sizes._

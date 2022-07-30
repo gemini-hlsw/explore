@@ -15,8 +15,9 @@ import explore.implicits._
 import explore.undo._
 import explore.utils._
 import lucuma.core.model.Observation
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import queries.schemas.itc.implicits._
-import react.common._
 
 object ConfigurationTile {
   def configurationTile(

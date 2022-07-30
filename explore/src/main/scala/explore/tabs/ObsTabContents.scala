@@ -37,12 +37,13 @@ import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.refined._
 import lucuma.ui.reusability._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import lucuma.ui.utils._
 import org.scalajs.dom.window
 import queries.common.ObsQueriesGQL._
 import queries.common.UserPreferencesQueriesGQL._
-import react.common._
-import react.common.implicits._
+import react.common.ReactFnProps
 import react.draggable.Axis
 import react.gridlayout._
 import react.resizable._

@@ -19,8 +19,10 @@ import lucuma.core.validation._
 import lucuma.refined._
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import monocle.function.Index
-import react.common._
+import react.common.ReactFnProps
 import react.semanticui.collections.form.Form
 import react.semanticui.collections.table._
 import react.semanticui.elements.button.Button

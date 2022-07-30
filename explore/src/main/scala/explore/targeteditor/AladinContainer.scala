@@ -28,8 +28,8 @@ import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import org.scalajs.dom.Element
 import react.aladin._
-import react.common._
-import react.common.implicits._
+import react.common.Css
+import react.common.ReactFnProps
 import react.resizeDetector.hooks._
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._

@@ -13,7 +13,9 @@ import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.refined.*
-import react.common._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
+import react.common.ReactFnProps
 import react.datepicker._
 import react.semanticui.collections.form.Form
 import react.semanticui.sizes._

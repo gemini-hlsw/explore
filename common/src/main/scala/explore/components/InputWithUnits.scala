@@ -16,7 +16,9 @@ import lucuma.refined._
 import lucuma.ui.forms.ExternalValue
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
-import react.common._
+import lucuma.ui.syntax.all.given
+import react.common.Css
+import react.common.ReactFnProps
 import react.semanticui._
 import react.semanticui.elements.icon.Icon
 import react.semanticui.elements.input.IconPosition

@@ -8,7 +8,8 @@ import japgolly.scalajs.react.callback.Callback
 import japgolly.scalajs.react.facade.React
 import japgolly.scalajs.react.vdom.all._
 import lucuma.ui.implicits._
-import react.common._
+import react.common.Css
+import react.common.GenericComponentP
 
 import scala.annotation.nowarn
 

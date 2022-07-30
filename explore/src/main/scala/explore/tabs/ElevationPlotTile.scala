@@ -13,8 +13,8 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Target
 import lucuma.core.model.User
-import react.common._
-import react.common.implicits._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 
 object ElevationPlotTile {
 

@@ -23,9 +23,12 @@ import lucuma.core.model.PosAngleConstraint
 import lucuma.refined.*
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.input.ChangeAuditor
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import monocle.Lens
 import monocle.std.option
-import react.common._
+import react.common.Css
+import react.common.ReactFnProps
 import react.semanticui.collections.form.Form
 import react.semanticui.sizes._
 

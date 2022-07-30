@@ -8,10 +8,14 @@ import cats.effect.Sync
 import cats.syntax.all._
 import clue.data._
 import clue.data.syntax._
+import coulomb._
+import coulomb.syntax._
 import crystal.Pot
 import crystal.PotOption
 import crystal.react.View
 import crystal.react.reuse._
+import eu.timepit.refined._
+import eu.timepit.refined.api._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.ui.ExploreStyles
 import explore.model.enums.ExecutionEnvironment
@@ -27,14 +31,10 @@ import org.http4s.Uri
 import org.scalajs.dom
 import react.semanticui.collections.message.Message
 import react.semanticui.elements.loader.Loader
-import coulomb._
-import coulomb.syntax._
 
 import java.time.Instant
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
-import eu.timepit.refined.api._
-import eu.timepit.refined._
 
 package object utils {
   def setupScheme[F[_]: Sync](theme: Theme): F[Unit] =

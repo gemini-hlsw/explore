@@ -31,8 +31,10 @@ import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.refined.*
 import lucuma.ui.reusability._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import queries.common.UserPreferencesQueriesGQL._
-import react.common._
+import react.common.ReactFnProps
 import react.datepicker._
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.button.Button

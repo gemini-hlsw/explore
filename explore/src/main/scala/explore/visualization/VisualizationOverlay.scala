@@ -11,12 +11,13 @@ import lucuma.core.geom.ShapeExpression
 import lucuma.core.geom.jts.JtsShape
 import lucuma.core.geom.jts.interpreter._
 import lucuma.core.math.Offset
+import lucuma.ui.syntax.all.given
 import org.locationtech.jts.geom.Geometry
 import org.locationtech.jts.geom.GeometryCollection
 import org.locationtech.jts.geom.Polygon
 import react.aladin.Fov
-import react.common._
-import react.common.implicits._
+import react.common.Css
+import react.common.ReactFnProps
 
 final case class SVGVisualizationOverlay(
   width:        Int,

@@ -4,7 +4,8 @@
 package react.moon
 
 import japgolly.scalajs.react._
-import react.common._
+import react.common.GenericFnComponentP
+import react.common.RenderFn
 
 import scala.annotation.nowarn
 

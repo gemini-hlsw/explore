@@ -52,8 +52,9 @@ import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.reusability._
+import lucuma.ui.syntax.all.given
 import queries.schemas.implicits._
-import react.common._
+import react.common.ReactFnProps
 import react.semanticui.elements.label.LabelPointing
 
 import scala.collection.immutable.HashSet

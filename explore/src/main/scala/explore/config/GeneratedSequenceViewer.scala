@@ -13,9 +13,11 @@ import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import queries.common.GeneratedSequenceSQL._
 import queries.common.ObsQueriesGQL
-import react.common._
+import react.common.ReactFnProps
 
 final case class GeneratedSequenceViewer(obsId: Observation.Id, changed: View[Pot[Unit]])(implicit
   val ctx:                                      AppContextIO

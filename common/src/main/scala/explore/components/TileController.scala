@@ -21,9 +21,11 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.User
 import lucuma.ui.reusability._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import monocle.Traversal
 import queries.common.UserPreferencesQueriesGQL._
-import react.common._
+import react.common.ReactFnProps
 import react.common.implicits.given
 import react.common.style.Css
 import react.gridlayout._

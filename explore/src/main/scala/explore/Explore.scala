@@ -31,6 +31,7 @@ import explore.model.enums.AppTab
 import explore.model.enums.ExecutionEnvironment
 import explore.model.enums.Theme
 import explore.model.reusability._
+import explore.syntax.ui.given
 import explore.utils._
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.extra.router._
@@ -39,6 +40,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import log4cats.loglevel.LogLevelLogger
 import lucuma.core.model.Program
 import lucuma.refined.*
+import lucuma.ui.syntax.all.*
 import org.http4s.circe._
 import org.http4s.dom.FetchClientBuilder
 import org.http4s.implicits._
@@ -46,8 +48,6 @@ import org.scalajs.dom
 import org.scalajs.dom.Element
 import org.scalajs.dom.RequestCache
 import org.typelevel.log4cats.Logger
-import react.common._
-import react.common.implicits._
 import react.toastify._
 import workers.WebWorkerF
 

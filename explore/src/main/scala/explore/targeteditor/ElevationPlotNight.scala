@@ -7,6 +7,8 @@ import cats.syntax.all._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.enums.TimeDisplay
+import explore.syntax.ui.*
+import explore.syntax.ui.given
 import gpp.highcharts.highchartsStrings.line
 import gpp.highcharts.mod.XAxisLabelsOptions
 import gpp.highcharts.mod._
@@ -19,7 +21,9 @@ import lucuma.core.math.Coordinates
 import lucuma.core.math.skycalc.ImprovedSkyCalc
 import lucuma.core.model.ObservingNight
 import lucuma.core.util.Enumerated
-import react.common._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
+import react.common.ReactFnProps
 import react.highcharts.Chart
 import react.moon.MoonPhase
 import react.resizeDetector.hooks._

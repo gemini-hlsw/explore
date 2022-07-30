@@ -28,7 +28,9 @@ import lucuma.refined.*
 import lucuma.ui.forms.EnumViewOptionalSelect
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
-import react.common._
+import lucuma.ui.syntax.all.given
+import react.common.Css
+import react.common.ReactFnProps
 import react.semanticui.collections.menu.MenuHeader
 import react.semanticui.modules.dropdown._
 import spire.math.Rational

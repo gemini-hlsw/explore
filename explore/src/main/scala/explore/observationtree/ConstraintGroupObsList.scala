@@ -26,10 +26,11 @@ import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.syntax.all._
 import lucuma.schemas.ObservationDB
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import mouse.boolean._
 import react.beautifuldnd._
-import react.common._
-import react.common.implicits._
+import react.common.ReactFnProps
 import react.fa.FontAwesomeIcon
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.segment.Segment

@@ -41,9 +41,11 @@ import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import queries.common.UserPreferencesQueriesGQL._
 import react.aladin.Fov
-import react.common._
+import react.common.ReactFnProps
 import react.semanticui.collections.menu._
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.checkbox.Checkbox

@@ -4,7 +4,7 @@
 package react.CircularProgressbar
 
 import japgolly.scalajs.react._
-import react.common._
+import react.common.GenericComponentP
 
 import scalajs.js
 import scalajs.js.annotation.JSImport

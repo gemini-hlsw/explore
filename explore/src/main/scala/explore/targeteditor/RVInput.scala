@@ -22,8 +22,8 @@ import lucuma.refined.*
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
-import react.common._
-import react.common.implicits._
+import lucuma.ui.syntax.all.given
+import react.common.ReactFnProps
 import react.semanticui.elements.label.LabelPointing
 
 final case class RVInput(

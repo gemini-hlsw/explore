@@ -33,8 +33,7 @@ import lucuma.ui.reusability._
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.aladin._
-import react.common._
-import react.fa.given
+import react.common.ReactFnProps
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.header.Header
 import react.semanticui.elements.segment.Segment

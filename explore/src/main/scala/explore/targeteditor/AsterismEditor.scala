@@ -41,8 +41,7 @@ import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import queries.common.TargetQueriesGQL._
 import queries.schemas.implicits._
-import react.common._
-import react.fa.given
+import react.common.ReactFnProps
 import react.semanticui.elements.button._
 import react.semanticui.modules.checkbox._
 import react.semanticui.shorthand._
