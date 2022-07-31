@@ -12,6 +12,12 @@ import org.http4s.Uri
 
 import java.time.Duration
 import java.time.Instant
+import lucuma.core.math.Wavelength
+import lucuma.core.model.ConstraintSet
+import lucuma.ags.AgsPosition
+import lucuma.core.math.Coordinates
+import lucuma.ags.AgsParams
+import lucuma.ags.AgsAnalysis
 
 object picklers extends CatalogPicklers with EventPicklers
 
@@ -41,3 +47,14 @@ final case class CacheCleanupRequest(elapsedTime: Duration) extends WorkerMessag
 final case class SpectroscopyMatrixRequest(uri: Uri) extends WorkerMessage
 
 final case class SpectroscopyMatrixResults(matrix: SpectroscopyModesMatrix) extends WorkerMessage
+
+final case class AgsRequest(
+  constraints:     ConstraintSet,
+  wavelength:      Wavelength,
+  baseCoordinates: Coordinates,
+  position:        AgsPosition,
+  params:          AgsParams,
+  candidates:      List[GuideStarCandidate]
+) extends WorkerMessage
+
+final case class AgsResult(results: List[AgsAnalysis]) extends WorkerMessage

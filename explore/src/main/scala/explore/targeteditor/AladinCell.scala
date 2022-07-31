@@ -92,41 +92,46 @@ object AladinCell extends ModelOptics {
       .useStateView(false)
       // to get faster reusability use a serial state, rather than check every candidate
       .useSerialState(List.empty[GuideStarCandidate])
+      // Analysis results
+      .useSerialState(List.empty[AgsAnalysis])
       // Listen on web worker for messages with catalog candidates
-      .useStreamResourceBy((props, _, _, _, _) => props.tid)((props, _, _, _, gs) =>
+      .useStreamResourceBy((props, _, _, _, _, _) => props.tid)((props, _, _, _, gs, ags) =>
         _ =>
           props.ctx.worker.streamResource.map(
             _.map(decodeFromTransferable[WorkerMessage])
               .filter {
-                case Some(CatalogResults(_) | CatalogQueryError(_)) => true
-                case _                                              => false
+                case Some(CatalogResults(_) | CatalogQueryError(_) | AgsResult(_)) => true
+                case _                                                             => false
               }
-              .collect {
-                case Some(r @ CatalogResults(_)) => fs2.Stream.emit[IO, CatalogResults](r)
-                case Some(CatalogQueryError(m))  =>
-                  fs2.Stream.raiseError[IO](new RuntimeException(m))
+              .evalMap {
+                case Some(CatalogResults(candidates)) =>
+                  val r = candidates.map { gsc =>
+                    // We keep locally the data already pm corrected for the viz time
+                    // If it changes over a month we'll request the data again and recalculate
+                    // This way we avoid recalculating pm for example if only pos angle or
+                    // conditions change
+                    gsc.at(props.obsConf.vizTime)
+                  }
+                  gs.setStateAsync(r)
+                case Some(AgsResult(r))               =>
+                  ags.setStateAsync(r)
+                case Some(CatalogQueryError(m))       =>
+                  IO.raiseError(new RuntimeException(m))
+                case _                                =>
+                  IO.unit
               }
-              .flatten
-              .map(_.candidates.map { gsc =>
-                // We keep locally the data already pm corrected for the viz time
-                // If it changes over a month we'll request the data again and recalculate
-                // This way we avoid recalculatinng pm for example if only pos angle or
-                // conditions change
-                gsc.at(props.obsConf.vizTime)
-              })
-              .evalMap(r => gs.setStateAsync(r))
           )
       )
       // Request data again if vizTime changes more than a month
-      .useEffectWithDepsBy((p, _, _, _, _, candidates) => (candidates, p.obsConf.vizTime))(
-        (props, _, _, _, _, _) => { case (candidates, vizTime) =>
+      .useEffectWithDepsBy((p, _, _, _, _, _, candidates) => (candidates, p.obsConf.vizTime))(
+        (props, _, _, _, _, _, _) => { case (candidates, vizTime) =>
           props.ctx.worker
             .postWorkerMessage(CatalogRequest(props.target.get, vizTime))
             .whenA(candidates === PotOption.ReadyNone)
         }
       )
-      .useEffectWithDepsBy((p, _, _, _, _, _) => (p.uid, p.tid)) {
-        (props, _, options, _, _, _) => _ =>
+      .useEffectWithDepsBy((p, _, _, _, _, _, _) => (p.uid, p.tid)) {
+        (props, _, options, _, _, _, _) => _ =>
           implicit val ctx = props.ctx
 
           UserTargetPreferencesQuery
@@ -146,8 +151,7 @@ object AladinCell extends ModelOptics {
                 .to[IO] *> props.fullScreen.set(fullScreen).to[IO]
             }
       }
-      // analyzed targets
-      .useMemoBy((p, _, _, _, candidates, _) =>
+      .useEffectWithDepsBy((p, _, _, _, candidates, _, _) =>
         (p.target.get,
          p.obsConf.posAngleConstraint,
          p.obsConf.constraints,
@@ -155,7 +159,7 @@ object AladinCell extends ModelOptics {
          p.obsConf.vizTime,
          candidates.value
         )
-      ) { (_, _, _, _, _, _) =>
+      ) { (props, _, _, _, _, _, _) =>
         {
           case (tracking,
                 Some(posAngle),
@@ -174,12 +178,14 @@ object AladinCell extends ModelOptics {
             (tracking.at(vizTime), pa)
               .mapN { (base, pa) =>
                 val basePos = AgsPosition(pa, Offset.Zero)
-                Ags
-                  .agsAnalysis(constraints, wavelength, base, basePos, params, candidates)
-                  .sorted(AgsAnalysis.rankingOrdering)
+                props.ctx.worker
+                  .postWorkerMessage(
+                    AgsRequest(constraints, wavelength, base, basePos, params, candidates)
+                  )
+              // .whenA(lock.isDefined) // === PotOption.ReadyNone)
               }
-              .getOrElse(Nil)
-          case _ => Nil
+              .getOrElse(IO.unit)
+          case _ => IO.unit
         }
       }
       // open settings menu
@@ -188,8 +194,12 @@ object AladinCell extends ModelOptics {
       .useStateView(none[Int])
       // Reset the selected gs if results chage
       .useEffectWithDepsBy((p, _, _, _, _, agsResults, _, _, _) => (agsResults, p.obsConf)) {
-        (p, _, _, _, _, _, agsResults, _, selectedIndex) => _ =>
-          selectedIndex.set(0.some.filter(_ => agsResults.nonEmpty && p.obsConf.canSelectGuideStar))
+        (p, _, _, _, _, agsResults, _, _, selectedIndex) => _ =>
+          {
+            selectedIndex.set(
+              0.some.filter(_ => agsResults.value.nonEmpty && p.obsConf.canSelectGuideStar)
+            )
+          }
       }
       .render {
         (
@@ -198,8 +208,8 @@ object AladinCell extends ModelOptics {
           options,
           center,
           _,
-          gsc,
           agsResults,
+          gsc,
           openSettings,
           selectedGSIndex
         ) =>
@@ -306,7 +316,8 @@ object AladinCell extends ModelOptics {
 
           val aladinKey = s"${props.target.get}"
 
-          val selectedGuideStar = selectedGSIndex.get.flatMap(agsResults.lift)
+          val selectedGuideStar = selectedGSIndex.get.flatMap(agsResults.value.lift)
+          println(selectedGuideStar)
           val usableGuideStar   = selectedGuideStar.exists(_.isUsable)
 
           val renderCell: TargetVisualOptions => VdomNode = (t: TargetVisualOptions) =>
@@ -319,7 +330,7 @@ object AladinCell extends ModelOptics {
               offsetSetter.reuseAlways,
               center,
               selectedGuideStar,
-              agsResults
+              agsResults.value
             ).withKey(aladinKey)
 
           // Check whether we are waiting for catalog
@@ -345,7 +356,7 @@ object AladinCell extends ModelOptics {
                   ExploreStyles.AgsOverlay,
                   AgsOverlay(
                     selectedGSIndex,
-                    agsResults.count(_.isUsable),
+                    agsResults.value.count(_.isUsable),
                     selectedGuideStar
                   )
                 )

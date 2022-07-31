@@ -24,6 +24,12 @@ import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.SiderealTracking
 import lucuma.core.util.Enumerated
+import lucuma.ags.AgsPosition
+import lucuma.ags.AgsParams
+import lucuma.core.math.Offset
+import lucuma.core.math.Axis
+import lucuma.ags.AgsAnalysis
+import lucuma.core.geom.Area
 
 trait CommonPicklers {
   implicit def picklerRefined[A: Pickler, B](implicit v: Validate[A, B]): Pickler[A Refined B] =
@@ -67,11 +73,6 @@ trait CommonPicklers {
   implicit def picklerAngle: Pickler[Angle] =
     transformPickler(Angle.fromMicroarcseconds)(_.toMicroarcseconds)
 
-}
-
-// Boopicklers for catalog related types
-trait CatalogPicklers extends CommonPicklers {
-
   implicit def picklerHourAngle: Pickler[HourAngle] =
     transformPickler(HourAngle.fromMicroseconds)(_.toMicroseconds)
 
@@ -92,6 +93,17 @@ trait CatalogPicklers extends CommonPicklers {
 
   implicit def picklerCoordinates: Pickler[Coordinates] =
     transformPickler(Function.tupled(Coordinates.apply _))(x => (x.ra, x.dec))
+
+  implicit def picklerOffset: Pickler[Offset] =
+    transformPickler((x: (Angle, Angle)) =>
+      Offset(Offset.Component.angle[Axis.P].reverseGet(x._1),
+             Offset.Component.angle[Axis.Q].reverseGet(x._2)
+      )
+    )(x => (x.p.toAngle, x.q.toAngle))
+}
+
+// Boopicklers for catalog related types
+trait CatalogPicklers extends CommonPicklers {
 
   implicit def picklerEpoch: Pickler[Epoch] =
     new Pickler[Epoch] {
@@ -171,6 +183,69 @@ trait CatalogPicklers extends CommonPicklers {
       (x.imageQuality, x.cloudExtinction, x.skyBackground, x.waterVapor, x.elevationRange)
     )
 
+  implicit def picklerAgsPosition: Pickler[AgsPosition] =
+    transformPickler(Function.tupled(AgsPosition.apply _))(x => (x.posAngle, x.offsetPos))
+
+  implicit def picklerAgsParamsGmos: Pickler[AgsParams.GmosAgsParams] =
+    transformPickler(Function.tupled(AgsParams.GmosAgsParams.apply _))(x => (x.fpu, x.port))
+
+  implicit def picklerAgsParams: Pickler[AgsParams] =
+    compositePickler[AgsParams]
+      .addConcreteType[AgsParams.GmosAgsParams]
+
+  implicit def picklerProperMotionNotAvailable: Pickler[AgsAnalysis.ProperMotionNotAvailable] =
+    transformPickler(AgsAnalysis.ProperMotionNotAvailable.apply)(_.target)
+
+  implicit def picklerVignettesScience: Pickler[AgsAnalysis.VignettesScience] =
+    transformPickler(AgsAnalysis.VignettesScience.apply)(_.target)
+
+  implicit def picklerNoGuideStarForProbe: Pickler[AgsAnalysis.NoGuideStarForProbe] =
+    transformPickler(Function.tupled(AgsAnalysis.NoGuideStarForProbe.apply _))(x =>
+      (x.guideProbe, x.target)
+    )
+
+  implicit def picklerMagnitudeTooFaint: Pickler[AgsAnalysis.MagnitudeTooFaint] =
+    transformPickler(Function.tupled(AgsAnalysis.MagnitudeTooFaint.apply _))(x =>
+      (x.guideProbe, x.target, x.showGuideSpeed)
+    )
+
+  implicit def picklerMagnitudeTooBright: Pickler[AgsAnalysis.MagnitudeTooBright] =
+    transformPickler(Function.tupled(AgsAnalysis.MagnitudeTooBright.apply _))(x =>
+      (x.guideProbe, x.target)
+    )
+
+  implicit def picklerNotReachable: Pickler[AgsAnalysis.NotReachable] =
+    transformPickler(Function.tupled(AgsAnalysis.NotReachable.apply _))(x =>
+      (x.position, x.guideProbe, x.target)
+    )
+
+  implicit def picklerNoMagnitudeForBand: Pickler[AgsAnalysis.NoMagnitudeForBand] =
+    transformPickler(Function.tupled(AgsAnalysis.NoMagnitudeForBand.apply _))(x =>
+      (x.guideProbe, x.target)
+    )
+
+  implicit def picklerArea: Pickler[Area] =
+    transformPickler((x: Long) =>
+      Area.fromMicroarcsecondsSquared.getOption(x).getOrElse(sys.error("Cannot unpickle"))
+    )(
+      _.toMicroarcsecondsSquared
+    )
+
+  implicit def picklerUsable: Pickler[AgsAnalysis.Usable] =
+    transformPickler(Function.tupled(AgsAnalysis.Usable.apply _))(x =>
+      (x.guideProbe, x.target, x.guideSpeed, x.quality, x.vignettingArea)
+    )
+
+  implicit def picklerAgsAnalysis: Pickler[AgsAnalysis] =
+    compositePickler[AgsAnalysis]
+      .addConcreteType[AgsAnalysis.ProperMotionNotAvailable]
+      .addConcreteType[AgsAnalysis.VignettesScience]
+      .addConcreteType[AgsAnalysis.NoGuideStarForProbe]
+      .addConcreteType[AgsAnalysis.MagnitudeTooFaint]
+      .addConcreteType[AgsAnalysis.MagnitudeTooBright]
+      .addConcreteType[AgsAnalysis.NotReachable]
+      .addConcreteType[AgsAnalysis.NoMagnitudeForBand]
+      .addConcreteType[AgsAnalysis.Usable]
 }
 
 object CatalogPicklers extends CatalogPicklers
