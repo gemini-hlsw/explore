@@ -8,6 +8,7 @@ import explore.data.KeyedIndexedList
 import explore.events.CatalogResults
 import explore.model.Asterism
 import explore.undo.UndoStacks
+import explore.common.ObsQueries.SpectroscopyRequirementsData
 import japgolly.scalajs.react.ReactCats._
 import japgolly.scalajs.react.Reusability
 import lucuma.ags.AgsParams
@@ -99,5 +100,6 @@ object reusability {
   implicit val proposalReuse: Reusability[Proposal]                            = Reusability.byEq
   implicit val obsConfReuse: Reusability[ObsConfiguration]                     = Reusability.byEq
 
-  implicit val existenceReuse: Reusability[Existence] = Reusability.byEq
+  implicit val existenceReuse: Reusability[Existence]                       = Reusability.byEq
+  implicit val requirementsReuse: Reusability[SpectroscopyRequirementsData] = Reusability.byEq
 }
