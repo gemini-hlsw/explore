@@ -80,19 +80,19 @@ trait ItcPicklers extends CommonPicklers {
       ]) =>
         x match {
           case (
-                id: Int, // Give them a local id to simplify reusability
-                instrument: InstrumentRow,
-                config: NonEmptyString,
-                focalPlane: FocalPlane,
-                capabilities: Option[SpectroscopyCapabilities],
-                ao: ModeAO,
-                minWavelength: ModeWavelength,
-                maxWavelength: ModeWavelength,
-                optimalWavelength: ModeWavelength,
-                wavelengthCoverage: Quantity[NonNegBigDecimal, Micrometer],
-                resolution: PosInt,
-                slitLength: ModeSlitSize,
-                slitWidth: ModeSlitSize
+                id,
+                instrument,
+                config,
+                focalPlane,
+                capabilities,
+                ao,
+                minWavelength,
+                maxWavelength,
+                optimalWavelength,
+                wavelengthCoverage,
+                resolution,
+                slitLength,
+                slitWidth
               ) =>
             SpectroscopyModeRow(id,
                                 instrument,
