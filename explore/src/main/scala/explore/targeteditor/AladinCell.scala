@@ -94,14 +94,17 @@ object AladinCell extends ModelOptics {
       .useStreamResourceBy((props, _, _, _, _) => props.tid)((props, _, _, _, gs) =>
         _ =>
           props.ctx.worker.streamResource.map(
-            _.flatMap { r =>
-              decodeFromTransferable[WorkerMessage](r) match {
+            _.map(decodeFromTransferable[WorkerMessage])
+              .filter {
+                case Some(CatalogResults(_) | CatalogQueryError(_)) => true
+                case _                                              => false
+              }
+              .collect {
                 case Some(r @ CatalogResults(_)) => fs2.Stream.emit[IO, CatalogResults](r)
                 case Some(CatalogQueryError(m))  =>
                   fs2.Stream.raiseError[IO](new RuntimeException(m))
-                case _                           => fs2.Stream.raiseError[IO](new RuntimeException("Unknown worker message"))
               }
-            }
+              .flatten
               .map(_.candidates.map { gsc =>
                 // We keep locally the data already pm corrected for the viz time
                 // If it changes over a month we'll request the data again and recalculate
