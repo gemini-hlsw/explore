@@ -78,6 +78,7 @@ lazy val workers = project
   .in(file("workers"))
   .settings(commonSettings: _*)
   .settings(commonJsLibSettings: _*)
+  .settings(commonLibSettings: _*)
   .settings(esModule: _*)
   .settings(
     libraryDependencies ++= LucumaCatalog.value ++
@@ -197,7 +198,6 @@ lazy val commonLibSettings = Seq(
         MUnit.value ++
           Discipline.value ++
           MUnitCatsEffect.value ++
-          LucumaCoreTestKit.value ++
           MonocleLaw.value
       ),
   testFrameworks += new TestFramework("munit.Framework")
@@ -206,7 +206,8 @@ lazy val commonLibSettings = Seq(
 lazy val testkitLibSettings = Seq(
   libraryDependencies ++= Discipline.value ++
     MonocleLaw.value ++
-    LucumaCoreTestKit.value
+    LucumaCoreTestKit.value ++
+    LucumaCatalogTestKit.value
 )
 
 lazy val commonJVMSettings = Seq(

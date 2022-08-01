@@ -17,6 +17,7 @@ import explore.model
 import explore.model.ITCTarget
 import explore.model.ImagingConfigurationOptions
 import explore.model.display._
+import explore.modes.SpectroscopyModesMatrix
 import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -40,7 +41,8 @@ final case class BasicConfigurationPanel(
   constraints:      ConstraintSet,
   itcTargets:       List[ITCTarget],
   baseTracking:     Option[SiderealTracking],
-  onShowAdvanced:   Option[Callback]
+  onShowAdvanced:   Option[Callback],
+  confMatrix:       SpectroscopyModesMatrix
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[BasicConfigurationPanel](BasicConfigurationPanel.component)
 
@@ -85,7 +87,7 @@ object BasicConfigurationPanel {
             props.constraints,
             if (props.itcTargets.isEmpty) none else props.itcTargets.some,
             props.baseTracking,
-            ctx.staticData.spectroscopyMatrix
+            props.confMatrix
           ).when(isSpectroscopy),
           <.div(ExploreStyles.BasicConfigurationButtons)(
             Button(

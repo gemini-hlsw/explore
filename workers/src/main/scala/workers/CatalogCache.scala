@@ -9,9 +9,8 @@ import cats.effect.Concurrent
 import cats.effect.IO
 import cats.syntax.all._
 import explore.events.CatalogRequest
+import explore.events._
 import explore.events.picklers._
-import explore.model.CatalogQueryError
-import explore.model.CatalogResults
 import explore.model.Constants
 import explore.model.boopickle._
 import fs2.text
@@ -138,18 +137,18 @@ trait CatalogCache extends CatalogIDB with AsyncToIO {
             )
             .flatMap { candidates =>
               L.debug(s"Catalog results from remote catalog: ${candidates.length} candidates") *>
-                postAsTransferable[IO, CatalogResults](self, CatalogResults(candidates)) *>
+                postWorkerMessage[IO](self, CatalogResults(candidates)) *>
                 storeGuideStarCandidates(idb, stores, query, candidates).toIO
                   .handleError(e => L.error(e)("Error storing guidstar candidates"))
             }
             .handleErrorWith { e =>
-              postAsTransferable[IO, CatalogQueryError](self, CatalogQueryError(e.getMessage()))
+              postWorkerMessage[IO](self, CatalogQueryError(e.getMessage()))
             }
             .void
         ) { c =>
           // Cache hit!
           L.debug(s"Catalog results from cache: ${c.candidates.length} candidates") *>
-            postAsTransferable[IO, CatalogResults](self, c)
+            postWorkerMessage[IO](self, c)
         }
       )
   }

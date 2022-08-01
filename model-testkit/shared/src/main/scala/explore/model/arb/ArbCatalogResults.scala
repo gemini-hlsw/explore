@@ -3,30 +3,14 @@
 
 package explore.model.arb
 
-import explore.model.CatalogResults
-import lucuma.core.model.arb._
+import explore.events.CatalogResults
+import lucuma.ags.arb.ArbGuideStarCandidate._
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Cogen
-import lucuma.core.model.SiderealTracking
 import lucuma.ags.GuideStarCandidate
 
 trait ArbCatalogResults {
-  import ArbSiderealTracking._
-
-  implicit val guideStarCandidateArb: Arbitrary[GuideStarCandidate] =
-    Arbitrary[GuideStarCandidate] {
-      for {
-        name        <- arbitrary[Long]
-        tracking    <- arbitrary[SiderealTracking]
-        gBrightness <- arbitrary[Option[BigDecimal]]
-      } yield GuideStarCandidate(name, tracking, gBrightness)
-    }
-
-  implicit def guideStarCandidateCogen: Cogen[GuideStarCandidate] =
-    Cogen[(Long, SiderealTracking, Option[BigDecimal])].contramap(m =>
-      (m.id, m.tracking, m.gBrightness)
-    )
 
   implicit val catalogResultsArb: Arbitrary[CatalogResults] = Arbitrary[CatalogResults] {
     for {

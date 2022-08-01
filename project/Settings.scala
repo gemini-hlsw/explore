@@ -27,7 +27,7 @@ object Settings {
     val lucumaCatalog       = "0.24.0"
     val lucumaUI            = "0.39.0"
     val lucumaSchemas       = "0.33.0"
-    val lucumaSSO           = "0.1.13"
+    val lucumaSSO           = "0.1.14"
     val monocle             = "3.1.0"
     val mouse               = "1.1.0"
     val mUnit               = "0.7.29"
@@ -190,6 +190,12 @@ object Settings {
     val LucumaCatalog = Def.setting(
       deps(
         "edu.gemini" %%% "lucuma-catalog"
+      )(lucumaCatalog)
+    )
+
+    val LucumaCatalogTestKit = Def.setting(
+      deps(
+        "edu.gemini" %%% "lucuma-catalog-testkit"
       )(lucumaCatalog)
     )
 

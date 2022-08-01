@@ -5,6 +5,7 @@ package explore.model
 
 import clue.PersistentClientStatus
 import explore.data.KeyedIndexedList
+import explore.events.CatalogResults
 import explore.model.Asterism
 import explore.undo.UndoStacks
 import japgolly.scalajs.react.ReactCats._

@@ -37,6 +37,7 @@ import explore.model.reusability._
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.SpectroscopyModeRow
+import explore.modes.SpectroscopyModesMatrix
 import explore.optics._
 import explore.syntax.ui._
 import explore.utils._
@@ -81,6 +82,7 @@ sealed trait AdvancedConfigurationPanel[T <: ScienceModeAdvanced, S <: ScienceMo
   val spectroscopyRequirements: SpectroscopyRequirementsData
   val potITC: View[Pot[Option[ITCSuccess]]]
   val onShowBasic: Callback
+  val confMatrix: SpectroscopyModesMatrix
 
   implicit val ctx: AppContextIO
 }
@@ -292,7 +294,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
         )
       ) { (props, _, _) =>
         { case (fp, cap, fpa, res, cov) =>
-          props.ctx.staticData.spectroscopyMatrix.filtered(
+          props.confMatrix.filtered(
             focalPlane = fp,
             capabilities = cap,
             slitWidth = fpa,
@@ -641,7 +643,8 @@ object AdvancedConfigurationPanel {
     scienceModeBasic:         ScienceModeBasic.GmosNorthLongSlit,
     spectroscopyRequirements: SpectroscopyRequirementsData,
     potITC:                   View[Pot[Option[ITCSuccess]]],
-    onShowBasic:              Callback
+    onShowBasic:              Callback,
+    confMatrix:               SpectroscopyModesMatrix
   )(implicit val ctx:         AppContextIO)
       extends ReactFnProps[AdvancedConfigurationPanel.GmosNorthLongSlit](
         AdvancedConfigurationPanel.GmosNorthLongSlit.component
@@ -796,7 +799,8 @@ object AdvancedConfigurationPanel {
     scienceModeBasic:         ScienceModeBasic.GmosSouthLongSlit,
     spectroscopyRequirements: SpectroscopyRequirementsData,
     potITC:                   View[Pot[Option[ITCSuccess]]],
-    onShowBasic:              Callback
+    onShowBasic:              Callback,
+    confMatrix:               SpectroscopyModesMatrix
   )(implicit val ctx:         AppContextIO)
       extends ReactFnProps[AdvancedConfigurationPanel.GmosSouthLongSlit](
         AdvancedConfigurationPanel.GmosSouthLongSlit.component
