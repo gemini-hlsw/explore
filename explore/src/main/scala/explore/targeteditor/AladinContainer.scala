@@ -280,16 +280,16 @@ object AladinContainer {
               ReactFragment(
                 <.div(
                   ExploreStyles.AladinZoomControl,
-                  Button(size = Small,
-                         icon = Icons.ThinPlus,
-                         onClick = aladinRef.get.asCBO.flatMapCB(_.backend.increaseZoom).toCallback
+                  Button(
+                    size = Small,
+                    onClick = aladinRef.get.asCBO.flatMapCB(_.backend.increaseZoom).toCallback
                   )(
                     ExploreStyles.ButtonOnAladin,
                     Icons.ThinPlus
                   ),
-                  Button(size = Small,
-                         icon = true,
-                         onClick = aladinRef.get.asCBO.flatMapCB(_.backend.decreaseZoom).toCallback
+                  Button(
+                    size = Small,
+                    onClick = aladinRef.get.asCBO.flatMapCB(_.backend.decreaseZoom).toCallback
                   )(
                     ExploreStyles.ButtonOnAladin,
                     Icons.ThinMinus
