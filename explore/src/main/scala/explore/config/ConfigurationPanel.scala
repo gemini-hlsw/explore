@@ -104,7 +104,7 @@ object ConfigurationPanel {
         bAssign.map(f)
       })
 
-  private implicit val matrixEq: Eq[SpectroscopyModesMatrix] = Eq.by(_.matrix.length)
+  private implicit val matrixEq: Eq[SpectroscopyModesMatrix] = Eq.by(_.matrix.isEmpty)
 
   private implicit val matrixReusability: Reusability[SpectroscopyModesMatrix] =
     Reusability.byEq
