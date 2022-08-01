@@ -60,16 +60,10 @@ import js.annotation._
 @JSExportTopLevel("Explore")
 object ExploreMain extends IOApp.Simple {
 
-  implicit val reuseContext: Reusability[AppContextIO] = Reusability.never
-
-  private trait IORuntimeResetable {
-    def resetGlobal(): Unit // Expose IORuntime's private method
-  }
-
   @JSExport
   def resetIOApp(): Unit =
     // https://github.com/typelevel/cats-effect/pull/2114#issue-687064738
-    cats.effect.unsafe.IORuntime.asInstanceOf[IORuntimeResetable].resetGlobal()
+    cats.effect.unsafe.JSPlatform.resetRuntime()
 
   @JSExport
   def runIOApp(): Unit = main(Array.empty)

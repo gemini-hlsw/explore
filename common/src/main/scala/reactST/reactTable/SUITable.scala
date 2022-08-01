@@ -168,16 +168,18 @@ class SUITable[D, Plugins, Layout](
     }
 
     val headerElement: Option[TableHeader] =
-      headerTag.map(_(tableInstance.headerGroups.toTagMod { headerRowData =>
-        headerRowRender(headerRowData)(
-          headerRowData.headers.toTagMod((col: tableDef.ColumnType) =>
-            headerCellRender(col)(col.getHeaderProps(), sortElements.props(col))(
-              col.renderHeader,
-              sortElements.indicator(col)
+      headerTag.map(
+        _(tableInstance.headerGroups.toTagMod { headerRowData =>
+          headerRowRender(headerRowData)(
+            headerRowData.headers.toTagMod((col: tableDef.ColumnType) =>
+              headerCellRender(col)(col.getHeaderProps(), sortElements.props(col))(
+                col.renderHeader,
+                sortElements.indicator(col)
+              )
             )
           )
-        )
-      })(^.key := "header"))
+        })(^.key := "header")
+      )
 
     val bodyElement: TableBody =
       props.body(tableInstance.getTableBodyProps())(

@@ -76,13 +76,13 @@ object TargetColumns {
     val baseColumns =
       List(
         baseColumn("type", _ => ())
-          .setCell((_: CellProps[D, Option[Unit], Plugins]) => Icons.Star)
+          .setCell((_: CellProps[D, Option[Unit], Plugins]) => Icons.Star: VdomNode)
           .setWidth(30),
         baseColumn("name", Target.name.get)
           .setCell((x: CellProps[D, Option[NonEmptyString], Plugins]) =>
             x.value.map(_.toString).orEmpty
           )
-        // .setSortByFn(_.toString)
+          .setSortByFn(_.toString)
       )
   }
 

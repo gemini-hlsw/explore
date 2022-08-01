@@ -75,7 +75,7 @@ object ProgramsPopup {
         dimmer = Dimmer.Blurring,
         size = ModalSize.Small,
         onClose = props.onClose.orUndefined,
-        header = ModalHeader("Programs"),
+        header = ModalHeader(content = "Programs"),
         content = ModalContent(
           ProgramTable(
             props.currentProgramId,

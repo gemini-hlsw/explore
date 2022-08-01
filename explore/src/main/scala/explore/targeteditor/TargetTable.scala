@@ -180,15 +180,14 @@ object TargetTable {
           } else {
             <.div(ExploreStyles.ExploreTable |+| ExploreStyles.AsterismTable)(
               TargetTableComponent(
-                table = Table(celled = true,
-                              selectable = true,
-                              striped = true,
-                              compact = TableCompact.Very,
-                              unstackable = true
+                table = Table(
+                  celled = true,
+                  selectable = true,
+                  striped = true,
+                  compact = TableCompact.Very,
+                  unstackable = true
                 )(),
                 header = true,
-                headerRow = (headerRow: TargetTable.HeaderGroupType) =>
-                  TableRow(clazz = columnClasses.get(headerRow.id.toString).orEmpty),
                 headerCell = (col: TargetTable.ColumnType) =>
                   TableHeaderCell(clazz =
                     columnClasses.get(col.id.toString).orEmpty |+| ExploreStyles.StickyHeader
