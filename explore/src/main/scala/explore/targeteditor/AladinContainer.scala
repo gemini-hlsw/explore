@@ -169,7 +169,7 @@ object AladinContainer {
                 .flatMap { g =>
                   val tracking           = g.target.tracking
                   val targetEpoch        = tracking.epoch.epochYear.round
-                  // Approximate to the midddle of the yaer
+                  // Approximate to the midddle of the year
                   val targetEpochInstant =
                     LocalDate.of(targetEpoch.toInt, 6, 1).atStartOfDay(ZoneId.of("UTC")).toInstant()
 

@@ -30,6 +30,7 @@ import lucuma.core.math.Offset
 import lucuma.core.math.Axis
 import lucuma.ags.AgsAnalysis
 import lucuma.core.geom.Area
+import lucuma.core.model.Target
 
 trait CommonPicklers {
   implicit def picklerRefined[A: Pickler, B](implicit v: Validate[A, B]): Pickler[A Refined B] =
@@ -62,6 +63,9 @@ trait CommonPicklers {
     )(
       Enumerated[A].tag(_)
     )
+
+  implicit def picklerWithGid: Pickler[Target.Id] =
+    transformPickler(Target.Id.apply)(_.value)
 
   implicit def picklerWavelength: Pickler[Wavelength] =
     transformPickler((i: Int) =>

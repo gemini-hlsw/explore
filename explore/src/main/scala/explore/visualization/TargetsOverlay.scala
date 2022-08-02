@@ -98,118 +98,118 @@ object TargetsOverlay {
 
   val canvasWidth  = VdomAttr("width")
   val canvasHeight = VdomAttr("height")
-  val component    =
-    ScalaFnComponent
-      .withReuse[Props] { p =>
-        val pixx = p.fov.x.toMicroarcseconds / p.width
-        val pixy = p.fov.y.toMicroarcseconds / p.height
-        val maxP = max(pixx, pixy)
 
-        val (x0, y0, maxX, maxY, minSide) =
-          p.targets.foldLeft(
-            (Double.MaxValue, Double.MaxValue, Double.MinValue, Double.MinValue, 0.0)
-          ) { case ((x, y, w, h, s), target) =>
-            val side         = target match {
-              case SVGTarget.CrosshairTarget(_, _, sidePx, _) =>
-                maxP * sidePx
-              case _                                          =>
-                0.0
-            }
-            val offset       = target.coordinates.diff(p.baseCoordinates).offset
-            // Offset amount
-            val (offP, offQ) = offset.micros
-            (x.min(offP), y.min(offQ), w.max(offP), h.max(offQ), s.max(side))
+  val component =
+    ScalaFnComponent[Props] { p =>
+      val pixx = p.fov.x.toMicroarcseconds / p.width
+      val pixy = p.fov.y.toMicroarcseconds / p.height
+      val maxP = max(pixx, pixy)
+
+      val (x0, y0, maxX, maxY, minSide) =
+        p.targets.foldLeft(
+          (Double.MaxValue, Double.MaxValue, Double.MinValue, Double.MinValue, 0.0)
+        ) { case ((x, y, w, h, s), target) =>
+          val side         = target match {
+            case SVGTarget.CrosshairTarget(_, _, sidePx, _) =>
+              maxP * sidePx
+            case _                                          =>
+              0.0
           }
+          val offset       = target.coordinates.diff(p.baseCoordinates).offset
+          // Offset amount
+          val (offP, offQ) = offset.micros
+          (x.min(offP), y.min(offQ), w.max(offP), h.max(offQ), s.max(side))
+        }
 
-        val w0 = abs(maxX - x0)
-        val h0 = abs(maxY - y0)
+      val w0 = abs(maxX - x0)
+      val h0 = abs(maxY - y0)
 
-        val (x, y, w, h) =
-          if (w0 == 0 || h0 == 0) (x0 - 2 * minSide, y0 - 2 * minSide, minSide * 2, minSide * 2)
-          else (x0, y0, w0, h0)
+      val (x, y, w, h) =
+        if (w0 == 0 || h0 == 0) (x0 - 2 * minSide, y0 - 2 * minSide, minSide * 2, minSide * 2)
+        else (x0, y0, w0, h0)
 
-        val viewBox = calculateViewBox(x, y, w, h, p.fov, p.screenOffset)
+      val viewBox = calculateViewBox(x, y, w, h, p.fov, p.screenOffset)
 
-        val svg = <.svg(
-          JtsSvg,
-          ^.viewBox    := viewBox,
-          canvasWidth  := s"${p.width}px",
-          canvasHeight := s"${p.height}px",
-          <.g(
-            JtsTargets,
-            p.targets
-              .fmap { t =>
-                val offset       = t.coordinates.diff(p.baseCoordinates).offset
-                // Offset amount
-                val (offP, offQ) = offset.micros
-                (offP, offQ, t)
-              }
-              .collect {
-                case (offP, offQ, SVGTarget.CircleTarget(_, css, radius, title))             =>
-                  val pointCss = ExploreStyles.CircleTarget |+| css
+      val svg = <.svg(
+        JtsSvg,
+        ^.viewBox    := viewBox,
+        canvasWidth  := s"${p.width}px",
+        canvasHeight := s"${p.height}px",
+        <.g(
+          JtsTargets,
+          p.targets
+            .fmap { t =>
+              val offset       = t.coordinates.diff(p.baseCoordinates).offset
+              // Offset amount
+              val (offP, offQ) = offset.micros
+              (offP, offQ, t)
+            }
+            .collect {
+              case (offP, offQ, SVGTarget.CircleTarget(_, css, radius, title))             =>
+                val pointCss = ExploreStyles.CircleTarget |+| css
 
-                  <.circle(^.cx := scale(offP),
-                           ^.cy := scale(offQ),
-                           ^.r  := scale(maxP * radius),
-                           pointCss,
-                           title.map(<.title(_))
-                  )
-                case (offP, offQ, SVGTarget.CrosshairTarget(_, css, sidePx, title))          =>
-                  val pointCss = ExploreStyles.CrosshairTarget |+| css
-
-                  val side = scale(maxP * sidePx)
-                  <.g(
-                    <.line(^.x1 := scale(offP) - side,
-                           ^.x2 := scale(offP) + side,
-                           ^.y1 := scale(offQ),
-                           ^.y2 := scale(offQ),
-                           pointCss
-                    ),
-                    <.line(^.x1 := scale(offP),
-                           ^.x2 := scale(offP),
-                           ^.y1 := scale(offQ) - side,
-                           ^.y2 := scale(offQ) + side,
-                           pointCss
-                    ),
-                    title.map(<.title(_))
-                  )
-                case (offP, offQ, SVGTarget.GuideStarCandidateTarget(_, css, radius, title)) =>
-                  val pointCss = ExploreStyles.GuideStarCandidateTarget |+| css
-                  <.circle(^.cx := scale(offP),
-                           ^.cy := scale(offQ),
-                           ^.r  := scale(maxP * radius),
-                           pointCss,
-                           title.map(<.title(_))
-                  )
-                case (offP, offQ, SVGTarget.GuideStarTarget(_, css, radius, title))          =>
-                  val pointCss = ExploreStyles.GuideStarTarget |+| css
-                  <.circle(^.cx := scale(offP),
-                           ^.cy := scale(offQ),
-                           ^.r  := scale(maxP * radius),
-                           pointCss,
-                           title.map(<.title(_))
-                  )
-                case (offP, offQ, SVGTarget.LineTo(_, d, css, title))                        =>
-                  val destOffset = d.diff(p.baseCoordinates).offset
-                  // Offset amount
-                  val destP      =
-                    Offset.P.signedDecimalArcseconds.get(destOffset.p).toDouble * 1e6
-
-                  val destQ =
-                    Offset.Q.signedDecimalArcseconds.get(destOffset.q).toDouble * 1e6
-
-                  val pointCss = ExploreStyles.ArrowBetweenTargets |+| css
-                  <.line(^.x1 := scale(offP),
-                         ^.x2 := scale(destP),
-                         ^.y1 := scale(offQ),
-                         ^.y2 := scale(destQ),
+                <.circle(^.cx := scale(offP),
+                         ^.cy := scale(offQ),
+                         ^.r  := scale(maxP * radius),
                          pointCss,
                          title.map(<.title(_))
-                  )
-              }
-              .toTagMod
-          )
+                )
+              case (offP, offQ, SVGTarget.CrosshairTarget(_, css, sidePx, title))          =>
+                val pointCss = ExploreStyles.CrosshairTarget |+| css
+
+                val side = scale(maxP * sidePx)
+                <.g(
+                  <.line(^.x1 := scale(offP) - side,
+                         ^.x2 := scale(offP) + side,
+                         ^.y1 := scale(offQ),
+                         ^.y2 := scale(offQ),
+                         pointCss
+                  ),
+                  <.line(^.x1 := scale(offP),
+                         ^.x2 := scale(offP),
+                         ^.y1 := scale(offQ) - side,
+                         ^.y2 := scale(offQ) + side,
+                         pointCss
+                  ),
+                  title.map(<.title(_))
+                )
+              case (offP, offQ, SVGTarget.GuideStarCandidateTarget(_, css, radius, title)) =>
+                val pointCss = ExploreStyles.GuideStarCandidateTarget |+| css
+                <.circle(^.cx := scale(offP),
+                         ^.cy := scale(offQ),
+                         ^.r  := scale(maxP * radius),
+                         pointCss,
+                         title.map(<.title(_))
+                )
+              case (offP, offQ, SVGTarget.GuideStarTarget(_, css, radius, title))          =>
+                val pointCss = ExploreStyles.GuideStarTarget |+| css
+                <.circle(^.cx := scale(offP),
+                         ^.cy := scale(offQ),
+                         ^.r  := scale(maxP * radius),
+                         pointCss,
+                         title.map(<.title(_))
+                )
+              case (offP, offQ, SVGTarget.LineTo(_, d, css, title))                        =>
+                val destOffset = d.diff(p.baseCoordinates).offset
+                // Offset amount
+                val destP      =
+                  Offset.P.signedDecimalArcseconds.get(destOffset.p).toDouble * 1e6
+
+                val destQ =
+                  Offset.Q.signedDecimalArcseconds.get(destOffset.q).toDouble * 1e6
+
+                val pointCss = ExploreStyles.ArrowBetweenTargets |+| css
+                <.line(^.x1 := scale(offP),
+                       ^.x2 := scale(destP),
+                       ^.y1 := scale(offQ),
+                       ^.y2 := scale(destQ),
+                       pointCss,
+                       title.map(<.title(_))
+                )
+            }
+            .toTagMod
         )
-        svg
-      }
+      )
+      svg
+    }
 }

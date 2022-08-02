@@ -18,6 +18,7 @@ import lucuma.ags.AgsPosition
 import lucuma.core.math.Coordinates
 import lucuma.ags.AgsParams
 import lucuma.ags.AgsAnalysis
+import lucuma.core.model.Target
 
 object picklers extends CatalogPicklers with EventPicklers
 
@@ -25,7 +26,7 @@ sealed trait WorkerMessage
 
 final case class CatalogRequest(
   tracking: SiderealTracking,
-  obsTime:  Instant
+  vizTime:  Instant
 ) extends WorkerMessage
 
 /**
@@ -49,6 +50,7 @@ final case class SpectroscopyMatrixRequest(uri: Uri) extends WorkerMessage
 final case class SpectroscopyMatrixResults(matrix: SpectroscopyModesMatrix) extends WorkerMessage
 
 final case class AgsRequest(
+  id:              Target.Id,
   constraints:     ConstraintSet,
   wavelength:      Wavelength,
   baseCoordinates: Coordinates,

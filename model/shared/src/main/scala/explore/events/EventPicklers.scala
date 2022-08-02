@@ -18,6 +18,7 @@ import org.http4s.Uri
 
 import java.time.Duration
 import java.time.Instant
+import lucuma.core.model.Target
 
 /**
  * Picklers used by web workers
@@ -33,7 +34,7 @@ trait EventPicklers extends CatalogPicklers {
     transformPickler(Uri.unsafeFromString)(_.toString)
 
   private implicit def picklerCatalogRequest: Pickler[CatalogRequest] =
-    transformPickler(Function.tupled(CatalogRequest.apply _))(x => (x.tracking, x.obsTime))
+    transformPickler(Function.tupled(CatalogRequest.apply _))(x => (x.tracking, x.vizTime))
 
   private implicit def picklerCacheCleanupRequestt: Pickler[CacheCleanupRequest] =
     transformPickler(CacheCleanupRequest.apply)(_.elapsedTime)
@@ -52,7 +53,8 @@ trait EventPicklers extends CatalogPicklers {
 
   private implicit def picklerAgsRequest: Pickler[AgsRequest] =
     transformPickler(
-      (x: Tuple6[
+      (x: Tuple7[
+        Target.Id,
         ConstraintSet,
         Wavelength,
         Coordinates,
@@ -62,6 +64,7 @@ trait EventPicklers extends CatalogPicklers {
       ]) =>
         x match {
           case (
+                id,
                 constraints,
                 wavelength,
                 baseCoordinates,
@@ -69,10 +72,11 @@ trait EventPicklers extends CatalogPicklers {
                 params,
                 candidates
               ) =>
-            AgsRequest(constraints, wavelength, baseCoordinates, position, params, candidates)
+            AgsRequest(id, constraints, wavelength, baseCoordinates, position, params, candidates)
         }
     )(x =>
       (
+        x.id,
         x.constraints,
         x.wavelength,
         x.baseCoordinates,

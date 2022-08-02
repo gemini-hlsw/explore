@@ -108,15 +108,8 @@ object AladinCell extends ModelOptics {
                 }
                 .evalMap {
                   case Some(CatalogResults(candidates)) =>
-                    val r = candidates.map { gsc =>
-                      // We keep locally the data already pm corrected for the viz time
-                      // If it changes over a month we'll request the data again and recalculate
-                      // This way we avoid recalculating pm for example if only pos angle or
-                      // conditions change
-                      gsc.at(props.obsConf.vizTime)
-                    }
                     agsState.setState(AgsState.Idle).to[IO] *> IO.println("CAT result") *> gs
-                      .setStateAsync(r)
+                      .setStateAsync(candidates)
                   case Some(AgsResult(r))               =>
                     agsState.setState(AgsState.Idle).to[IO] *> IO.println("AGS result") *> ags
                       .setStateAsync(r)
@@ -187,7 +180,7 @@ object AladinCell extends ModelOptics {
                 (agsState.setState(AgsState.Calculating).to[IO] *>
                   props.ctx.worker
                     .postWorkerMessage(
-                      AgsRequest(constraints, wavelength, base, basePos, params, candidates)
+                      AgsRequest(props.tid, constraints, wavelength, base, basePos, params, candidates)
                     ))
                   .unlessA(candidates.isEmpty) // === PotOption.ReadyNone)
               }
@@ -215,7 +208,7 @@ object AladinCell extends ModelOptics {
           _,
           agsResults,
           agsState,
-          gsc,
+          _,
           openSettings,
           selectedGSIndex
         ) =>

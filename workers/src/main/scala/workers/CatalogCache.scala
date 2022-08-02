@@ -144,7 +144,13 @@ trait CatalogCache extends CatalogIDB with AsyncToIO {
                 .map(
                   _.collect { case Right(s) =>
                     GuideStarCandidate.siderealTarget.get(s)
-                  }
+                  }.map(gsc =>
+                    // We keep locally the data already pm corrected for the viz time
+                    // If it changes over a month we'll request the data again and recalculate
+                    // This way we avoid recalculating pm for example if only pos angle or
+                    // conditions change
+                    gsc.at(request.vizTime)
+                  )
                 )
                 .flatMap { candidates =>
                   L.debug(
