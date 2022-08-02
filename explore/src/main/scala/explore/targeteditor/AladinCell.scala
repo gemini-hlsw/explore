@@ -94,44 +94,50 @@ object AladinCell extends ModelOptics {
       .useSerialState(List.empty[GuideStarCandidate])
       // Analysis results
       .useSerialState(List.empty[AgsAnalysis])
+      // Ags state
+      .useState[AgsState](AgsState.Idle)
       // Listen on web worker for messages with catalog candidates
-      .useStreamResourceBy((props, _, _, _, _, _) => props.tid)((props, _, _, _, gs, ags) =>
-        _ =>
-          props.ctx.worker.streamResource.map(
-            _.map(decodeFromTransferable[WorkerMessage])
-              .filter {
-                case Some(CatalogResults(_) | CatalogQueryError(_) | AgsResult(_)) => true
-                case _                                                             => false
-              }
-              .evalMap {
-                case Some(CatalogResults(candidates)) =>
-                  val r = candidates.map { gsc =>
-                    // We keep locally the data already pm corrected for the viz time
-                    // If it changes over a month we'll request the data again and recalculate
-                    // This way we avoid recalculating pm for example if only pos angle or
-                    // conditions change
-                    gsc.at(props.obsConf.vizTime)
-                  }
-                  gs.setStateAsync(r)
-                case Some(AgsResult(r))               =>
-                  ags.setStateAsync(r)
-                case Some(CatalogQueryError(m))       =>
-                  IO.raiseError(new RuntimeException(m))
-                case _                                =>
-                  IO.unit
-              }
-          )
+      .useStreamResourceBy((props, _, _, _, _, _, _) => props.tid)(
+        (props, _, _, _, gs, ags, agsState) =>
+          _ =>
+            props.ctx.worker.streamResource.map(
+              _.map(decodeFromTransferable[WorkerMessage])
+                .filter {
+                  case Some(CatalogResults(_) | CatalogQueryError(_) | AgsResult(_)) => true
+                  case _                                                             => false
+                }
+                .evalMap {
+                  case Some(CatalogResults(candidates)) =>
+                    val r = candidates.map { gsc =>
+                      // We keep locally the data already pm corrected for the viz time
+                      // If it changes over a month we'll request the data again and recalculate
+                      // This way we avoid recalculating pm for example if only pos angle or
+                      // conditions change
+                      gsc.at(props.obsConf.vizTime)
+                    }
+                    agsState.setState(AgsState.Idle).to[IO] *> IO.println("CAT result") *> gs
+                      .setStateAsync(r)
+                  case Some(AgsResult(r))               =>
+                    agsState.setState(AgsState.Idle).to[IO] *> IO.println("AGS result") *> ags
+                      .setStateAsync(r)
+                  case Some(CatalogQueryError(m))       =>
+                    IO.raiseError(new RuntimeException(m))
+                  case _                                =>
+                    IO.unit
+                }
+            )
       )
       // Request data again if vizTime changes more than a month
-      .useEffectWithDepsBy((p, _, _, _, _, _, candidates) => (candidates, p.obsConf.vizTime))(
-        (props, _, _, _, _, _, _) => { case (candidates, vizTime) =>
-          props.ctx.worker
-            .postWorkerMessage(CatalogRequest(props.target.get, vizTime))
-            .whenA(candidates === PotOption.ReadyNone)
+      .useEffectWithDepsBy((p, _, _, _, _, _, _, lock) => (lock, p.obsConf.vizTime))(
+        (props, _, _, _, _, _, agsState, _) => { case (lock, vizTime) =>
+          (agsState.setState(AgsState.LoadingCandidates).to[IO] *>
+            props.ctx.worker
+              .postWorkerMessage(CatalogRequest(props.target.get, vizTime)))
+            .whenA(lock === PotOption.ReadyNone)
         }
       )
-      .useEffectWithDepsBy((p, _, _, _, _, _, _) => (p.uid, p.tid)) {
-        (props, _, options, _, _, _, _) => _ =>
+      .useEffectWithDepsBy((p, _, _, _, _, _, _, _) => (p.uid, p.tid)) {
+        (props, _, options, _, _, _, _, _) => _ =>
           implicit val ctx = props.ctx
 
           UserTargetPreferencesQuery
@@ -151,7 +157,7 @@ object AladinCell extends ModelOptics {
                 .to[IO] *> props.fullScreen.set(fullScreen).to[IO]
             }
       }
-      .useEffectWithDepsBy((p, _, _, _, candidates, _, _) =>
+      .useEffectWithDepsBy((p, _, _, _, candidates, _, _, _) =>
         (p.target.get,
          p.obsConf.posAngleConstraint,
          p.obsConf.constraints,
@@ -159,7 +165,7 @@ object AladinCell extends ModelOptics {
          p.obsConf.vizTime,
          candidates.value
         )
-      ) { (props, _, _, _, _, _, _) =>
+      ) { (props, _, _, _, _, _, agsState, _) =>
         {
           case (tracking,
                 Some(posAngle),
@@ -178,11 +184,12 @@ object AladinCell extends ModelOptics {
             (tracking.at(vizTime), pa)
               .mapN { (base, pa) =>
                 val basePos = AgsPosition(pa, Offset.Zero)
-                props.ctx.worker
-                  .postWorkerMessage(
-                    AgsRequest(constraints, wavelength, base, basePos, params, candidates)
-                  )
-              // .whenA(lock.isDefined) // === PotOption.ReadyNone)
+                (agsState.setState(AgsState.Calculating).to[IO] *>
+                  props.ctx.worker
+                    .postWorkerMessage(
+                      AgsRequest(constraints, wavelength, base, basePos, params, candidates)
+                    ))
+                  .unlessA(candidates.isEmpty) // === PotOption.ReadyNone)
               }
               .getOrElse(IO.unit)
           case _ => IO.unit
@@ -193,13 +200,11 @@ object AladinCell extends ModelOptics {
       // Selected GS index. Should be stored in the db
       .useStateView(none[Int])
       // Reset the selected gs if results chage
-      .useEffectWithDepsBy((p, _, _, _, _, agsResults, _, _, _) => (agsResults, p.obsConf)) {
-        (p, _, _, _, _, agsResults, _, _, selectedIndex) => _ =>
-          {
-            selectedIndex.set(
-              0.some.filter(_ => agsResults.value.nonEmpty && p.obsConf.canSelectGuideStar)
-            )
-          }
+      .useEffectWithDepsBy((p, _, _, _, _, agsResults, _, _, _, _) => (agsResults, p.obsConf)) {
+        (p, _, _, _, _, agsResults, _, _, _, selectedIndex) => _ =>
+          selectedIndex.set(
+            0.some.filter(_ => agsResults.value.nonEmpty && p.obsConf.canSelectGuideStar)
+          )
       }
       .render {
         (
@@ -209,6 +214,7 @@ object AladinCell extends ModelOptics {
           center,
           _,
           agsResults,
+          agsState,
           gsc,
           openSettings,
           selectedGSIndex
@@ -317,7 +323,6 @@ object AladinCell extends ModelOptics {
           val aladinKey = s"${props.target.get}"
 
           val selectedGuideStar = selectedGSIndex.get.flatMap(agsResults.value.lift)
-          println(selectedGuideStar)
           val usableGuideStar   = selectedGuideStar.exists(_.isUsable)
 
           val renderCell: TargetVisualOptions => VdomNode = (t: TargetVisualOptions) =>
@@ -333,17 +338,11 @@ object AladinCell extends ModelOptics {
               agsResults.value
             ).withKey(aladinKey)
 
-          // Check whether we are waiting for catalog
-          val catalogLoading = props.obsConf.posAngleConstraint match {
-            case Some(_) => gsc.toPot.fold(true.some, _ => none, _ => false.some)
-            case _       => false.some
-          }
-
           val renderToolbar: TargetVisualOptions => VdomNode =
             (t: TargetVisualOptions) =>
               AladinToolbar(Fov.square(t.fovAngle),
                             mouseCoords.value,
-                            catalogLoading,
+                            agsState.value,
                             selectedGuideStar.map(_.target),
                             center,
                             t.agsOverlay

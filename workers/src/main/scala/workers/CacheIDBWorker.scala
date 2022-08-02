@@ -86,12 +86,12 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
                 case CacheCleanupRequest(expTime)                                           =>
                   expireGuideStarCandidates(cacheDb, stores, expTime).toIO
                 case AgsRequest(constraints, wavelength, base, basePos, params, candidates) =>
-                  IO.println(basePos) *>
+                  IO.println(s"AGS request ${candidates.length}") *>
                     IO.delay(
                       Ags
                         .agsAnalysis(constraints, wavelength, base, basePos, params, candidates)
                         .sorted(AgsAnalysis.rankingOrdering)
-                    ).flatMap(r => postWorkerMessage[IO](self, AgsResult(r)))
+                      ).flatMap(r => IO.println("AGS response") *> postWorkerMessage[IO](self, AgsResult(r)))
                 case _                                                                      => IO.unit
               })
               .orEmpty
