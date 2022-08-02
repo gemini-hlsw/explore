@@ -3,12 +3,14 @@
 
 package workers
 
-import boopickle.Default._
+import boopickle.DefaultBasic._
 import cats.effect.Async
 import cats.effect.Resource
 import cats.effect.Sync
 import cats.effect.std.Dispatcher
 import cats.syntax.all._
+import explore.events.WorkerMessage
+import explore.events.picklers._
 import explore.model.boopickle.Boopickle._
 import fs2.Stream
 import fs2.concurrent.Topic
@@ -36,8 +38,11 @@ trait WebWorkerF[F[_]] {
   /**
    * Post a boopickle encoded message on effect F
    */
-  def postTransferrable[A: Pickler](a: A): F[Unit] =
+  protected def postTransferrable[A: Pickler](a: A): F[Unit] =
     postTransferrable(asTransferable(a))
+
+  def postWorkerMessage(value: WorkerMessage): F[Unit] =
+    postTransferrable(asTransferable(value))
 
   /**
    * Terminate the web worker

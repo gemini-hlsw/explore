@@ -4,11 +4,10 @@
 package explore.model.boopickle
 
 import boopickle.DefaultBasic._
+import coulomb._
 import eu.timepit.refined._
-import eu.timepit.refined.collection.NonEmpty
-import eu.timepit.refined.types.string.NonEmptyString
-import explore.model.CatalogQueryError
-import explore.model.CatalogResults
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.api.Validate
 import lucuma.ags.GuideStarCandidate
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
@@ -25,23 +24,52 @@ import lucuma.core.model.ElevationRange
 import lucuma.core.model.SiderealTracking
 import lucuma.core.util.Enumerated
 
-// Boopicklers for catalog related types
-trait CatalogPicklers {
-
-  implicit def picklerNonEmptyString: Pickler[NonEmptyString] =
-    new Pickler[NonEmptyString] {
-      override def pickle(a: NonEmptyString)(implicit state: PickleState): Unit = {
+trait CommonPicklers {
+  implicit def picklerRefined[A: Pickler, B](implicit v: Validate[A, B]): Pickler[A Refined B] =
+    new Pickler[A Refined B] {
+      override def pickle(a: A Refined B)(implicit state: PickleState): Unit = {
         state.pickle(a.value)
         ()
       }
-      override def unpickle(implicit state: UnpickleState): NonEmptyString      = {
-        val str = state.unpickle[String]
-        refineV[NonEmpty](str).getOrElse(sys.error("Cannot unpickle"))
+      override def unpickle(implicit state: UnpickleState): A Refined B      = {
+        val value = state.unpickle[A]
+        refineV[B](value).getOrElse(sys.error("Cannot unpickle"))
       }
     }
 
+  implicit def picklerQuantity[A: Pickler, B]: Pickler[Quantity[A, B]] =
+    new Pickler[Quantity[A, B]] {
+      override def pickle(a: Quantity[A, B])(implicit state: PickleState): Unit = {
+        state.pickle(a.value)
+        ()
+      }
+      override def unpickle(implicit state: UnpickleState): Quantity[A, B]      = {
+        val value = state.unpickle[A]
+        value.withUnit[B]
+      }
+    }
+
+  implicit def picklerEnumeration[A: Enumerated]: Pickler[A] =
+    transformPickler((a: String) =>
+      Enumerated[A].fromTag(a).getOrElse(sys.error("Cannot unpickle"))
+    )(
+      Enumerated[A].tag(_)
+    )
+
+  implicit def picklerWavelength: Pickler[Wavelength] =
+    transformPickler((i: Int) =>
+      Wavelength.fromPicometers
+        .getOption(i)
+        .getOrElse(sys.error("cannot unpickle"))
+    )(_.toPicometers.value.value)
+
   implicit def picklerAngle: Pickler[Angle] =
     transformPickler(Angle.fromMicroarcseconds)(_.toMicroarcseconds)
+
+}
+
+// Boopicklers for catalog related types
+trait CatalogPicklers extends CommonPicklers {
 
   implicit def picklerHourAngle: Pickler[HourAngle] =
     transformPickler(HourAngle.fromMicroseconds)(_.toMicroseconds)
@@ -114,13 +142,6 @@ trait CatalogPicklers {
       (x.id, x.tracking, x.gBrightness)
     )
 
-  implicit def picklerEnumeration[A: Enumerated]: Pickler[A] =
-    transformPickler((a: String) =>
-      Enumerated[A].fromTag(a).getOrElse(sys.error("Cannot unpickle"))
-    )(
-      Enumerated[A].tag(_)
-    )
-
   implicit def picklerElevationRangeAirMassDecimalValue
     : Pickler[ElevationRange.AirMass.DecimalValue] =
     transformPickler((b: BigDecimal) =>
@@ -148,19 +169,6 @@ trait CatalogPicklers {
     transformPickler(Function.tupled(ConstraintSet.apply _))(x =>
       (x.imageQuality, x.cloudExtinction, x.skyBackground, x.waterVapor, x.elevationRange)
     )
-
-  implicit def picklerWavelength: Pickler[Wavelength] =
-    transformPickler((i: Int) =>
-      Wavelength.fromPicometers
-        .getOption(i)
-        .getOrElse(sys.error("cannot unpickle"))
-    )(_.toPicometers.value.value)
-
-  implicit def picklerCatalogResults: Pickler[CatalogResults] =
-    transformPickler(CatalogResults.apply)(_.candidates)
-
-  implicit def picklerCatalogQuueryError: Pickler[CatalogQueryError] =
-    transformPickler(CatalogQueryError.apply)(_.errorMsg)
 
 }
 

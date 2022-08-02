@@ -3,8 +3,8 @@
 
 package workers
 
-import explore.model.CatalogResults
-import explore.model.boopickle._
+import explore.events.CatalogResults
+import explore.events.picklers._
 import japgolly.scalajs.react.callback._
 import japgolly.webapputil.binary._
 import japgolly.webapputil.boopickle._
@@ -49,7 +49,7 @@ object CacheIDBStores {
   val DBVersion = 1
 
   // Data type picklers
-  object DBPicklers extends CatalogPicklers {
+  object DBPicklers {
     import SafePickler.ConstructionHelperImplicits._
 
     //  SafePickler` is defined in webapp-util and provides some additional features.

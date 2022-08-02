@@ -16,11 +16,10 @@ import eu.timepit.refined.auto._
 import explore.Icons
 import explore.common.UserPreferencesQueries._
 import explore.components.ui.ExploreStyles
+import explore.events.CatalogResults
 import explore.events._
 import explore.events.picklers._
 import explore.implicits._
-import explore.model.CatalogQueryError
-import explore.model.CatalogResults
 import explore.model.Constants
 import explore.model.ObsConfiguration
 import explore.model.TargetVisualOptions
@@ -97,18 +96,17 @@ object AladinCell extends ModelOptics {
       .useStreamResourceBy((props, _, _, _, _) => props.tid)((props, _, _, _, gs) =>
         _ =>
           props.ctx.worker.streamResource.map(
-            _.flatMap { r =>
-              val resultsOrError = decodeFromTransferable[CatalogResults](r)
-                .map(_.asRight)
-                .orElse(
-                  decodeFromTransferable[CatalogQueryError](r).map(_.asLeft)
-                )
-              resultsOrError match {
-                case Some(Right(r)) => fs2.Stream.emit[IO, CatalogResults](r)
-                case Some(Left(m))  => fs2.Stream.raiseError[IO](new RuntimeException(m.errorMsg))
-                case _              => fs2.Stream.raiseError[IO](new RuntimeException("Unknown worker message"))
+            _.map(decodeFromTransferable[WorkerMessage])
+              .filter {
+                case Some(CatalogResults(_) | CatalogQueryError(_)) => true
+                case _                                              => false
               }
-            }
+              .collect {
+                case Some(r @ CatalogResults(_)) => fs2.Stream.emit[IO, CatalogResults](r)
+                case Some(CatalogQueryError(m))  =>
+                  fs2.Stream.raiseError[IO](new RuntimeException(m))
+              }
+              .flatten
               .map(_.candidates.map { gsc =>
                 // We keep locally the data already pm corrected for the viz time
                 // If it changes over a month we'll request the data again and recalculate
@@ -123,7 +121,7 @@ object AladinCell extends ModelOptics {
       .useEffectWithDepsBy((p, _, _, _, _, candidates) => (candidates, p.obsConf.vizTime))(
         (props, _, _, _, _, _) => { case (candidates, vizTime) =>
           props.ctx.worker
-            .postTransferrable(CatalogRequest(props.target.get, vizTime))
+            .postWorkerMessage(CatalogRequest(props.target.get, vizTime))
             .whenA(candidates === PotOption.ReadyNone)
         }
       )

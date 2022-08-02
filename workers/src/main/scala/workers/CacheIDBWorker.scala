@@ -3,12 +3,15 @@
 
 package workers
 
+import cats.effect.Deferred
 import cats.effect.IO
-import cats.effect.kernel.Sync
+import cats.effect.Sync
 import cats.effect.unsafe.implicits._
 import cats.syntax.all._
 import explore.events._
+import explore.model.StaticData
 import explore.model.boopickle.Boopickle._
+import explore.modes.SpectroscopyModesMatrix
 import japgolly.scalajs.react.callback.CallbackCatsEffect._
 import japgolly.scalajs.react.callback._
 import japgolly.webapputil.indexeddb.IndexedDb
@@ -18,6 +21,7 @@ import org.scalajs.dom
 import org.typelevel.log4cats.Logger
 import typings.loglevel.mod.LogLevelDesc
 
+import java.time.Duration
 import scala.scalajs.js
 
 import js.annotation._
@@ -46,7 +50,7 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
   }
 
   // Expire the data in 30 days
-  val Expiration: Double = 30 * 24 * 60 * 60 * 1000.0
+  val Expiration: Duration = Duration.ofDays(30)
 
   def run: IO[Unit] =
     for {
@@ -55,22 +59,34 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
       idb     <- IO(self.indexedDB.get)
       stores   = CacheIDBStores()
       cacheDb <- stores.open(IndexedDb(idb)).toIO
+      matrix  <- Deferred[IO, SpectroscopyModesMatrix]
       client   = FetchClientBuilder[IO].create
       _       <-
         IO {
           self.onmessage = (msg: dom.MessageEvent) =>
             // Decode transferrable events
-            decodeFromTransferable[CatalogRequest](msg)
-              .map { case req @ CatalogRequest(_, _) =>
-                readFromGaia(client, self, cacheDb, stores, req)(
-                  logger
-                ) *> expireGuideStarCandidates(cacheDb, stores, Expiration).toIO
-              }
-              .orElse(decodeFromTransferable[CacheCleanupRequest](msg).map {
-                case CacheCleanupRequest(expTime) =>
-                  expireGuideStarCandidates(cacheDb, stores, expTime.toDouble).toIO
+            decodeFromTransferable[WorkerMessage](msg)
+              .map(_ match {
+                case req @ CatalogRequest(_, _)     =>
+                  readFromGaia(client, self, cacheDb, stores, req)(logger) *>
+                    expireGuideStarCandidates(cacheDb, stores, Expiration).toIO
+                case SpectroscopyMatrixRequest(uri) =>
+                  implicit val log = logger
+                  matrix.tryGet.flatMap {
+                    case Some(m) =>
+                      postWorkerMessage[IO](self, SpectroscopyMatrixResults(m))
+                    case _       =>
+                      StaticData.build[IO](uri).flatMap { m =>
+                        matrix.complete(m) *>
+                          postWorkerMessage[IO](self, SpectroscopyMatrixResults(m))
+                      }
+                  }
+                case CacheCleanupRequest(expTime)   =>
+                  expireGuideStarCandidates(cacheDb, stores, expTime).toIO
+                case _                              => IO.unit
               })
               .orEmpty
+              .handleError(_.printStackTrace())
               .unsafeRunAndForget()
         }
     } yield ()

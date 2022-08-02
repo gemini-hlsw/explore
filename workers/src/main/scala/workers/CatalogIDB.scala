@@ -3,11 +3,13 @@
 
 package workers
 
-import explore.model.CatalogResults
+import explore.events.CatalogResults
 import japgolly.scalajs.react.callback._
 import japgolly.webapputil.indexeddb._
 import lucuma.ags.GuideStarCandidate
 import lucuma.catalog._
+
+import java.time.Duration
 
 /**
  * Functions to read and write catalog info from the database. This runs in Callback-land
@@ -43,7 +45,7 @@ trait CatalogIDB extends CatalogQuerySettings {
   def expireGuideStarCandidates(
     idb:        IndexedDb.Database,
     stores:     CacheIDBStores,
-    expiration: Double
+    expiration: Duration
   ): AsyncCallback[Unit] =
     for {
       ts   <- CallbackTo.currentTimeMillis.asAsyncCallback
@@ -56,7 +58,7 @@ trait CatalogIDB extends CatalogQuerySettings {
               u.fold(AsyncCallback.unit)(t =>
                 (idb.delete(stores.cacheStore)(x) *>
                   idb.delete(stores.candidatesStore)(t.key.toInt))
-                  .when((ts - t.timestamp) > expiration)
+                  .when((ts - t.timestamp) > expiration.toMillis())
                   .void
               )
             )

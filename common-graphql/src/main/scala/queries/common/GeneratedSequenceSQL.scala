@@ -12,8 +12,6 @@ import lucuma.core.model.sequence._
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.decoders._
 
-// gql: import lucuma.ui.reusability._
-
 object GeneratedSequenceSQL {
 
   @GraphQL

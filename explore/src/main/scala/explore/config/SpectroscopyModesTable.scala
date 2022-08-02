@@ -84,6 +84,9 @@ object SpectroscopyModesTable {
   implicit val listRangeReuse: Reusability[ListRange] =
     Reusability.by(x => (x.startIndex.toInt, x.endIndex.toInt))
 
+  implicit val matrixReusability: Reusability[SpectroscopyModesMatrix] =
+    Reusability.by(_.matrix.length)
+
   protected val ModesTableDef = TableDef[SpectroscopyModeRow].withSortBy.withBlockLayout
 
   protected val ModesTable = new SUITableVirtuoso(ModesTableDef)
@@ -363,25 +366,25 @@ object SpectroscopyModesTable {
     ScalaFnComponent
       .withHooks[Props]
       // rows
-      .useMemoBy(p => (p.spectroscopyRequirements, p.baseTracking.map(_.baseCoordinates.dec)))(
-        props => { case (s, dec) =>
-          val rows                =
-            props.matrix
-              .filtered(
-                focalPlane = s.focalPlane,
-                capabilities = s.capabilities,
-                wavelength = s.wavelength,
-                slitWidth = s.focalPlaneAngle,
-                resolution = s.resolution,
-                coverage = s.wavelengthCoverage.flatMap(
-                  _.micrometer.toValue[BigDecimal].toRefined[NonNegative].toOption
-                ),
-                declination = dec
-              )
-          val (enabled, disabled) = rows.partition(enabledRow)
-          enabled ++ disabled
-        }
-      )
+      .useMemoBy(p =>
+        (p.props.matrix, p.spectroscopyRequirements, p.baseTracking.map(_.baseCoordinates.dec))
+      )(_ => { case (matrix, s, dec) =>
+        val rows                =
+          matrix
+            .filtered(
+              focalPlane = s.focalPlane,
+              capabilities = s.capabilities,
+              wavelength = s.wavelength,
+              slitWidth = s.focalPlaneAngle,
+              resolution = s.resolution,
+              coverage = s.wavelengthCoverage.flatMap(
+                _.micrometer.toValue[BigDecimal].toRefined[NonNegative].toOption
+              ),
+              declination = dec
+            )
+        val (enabled, disabled) = rows.partition(enabledRow)
+        enabled ++ disabled
+      })
       // itc results cache
       .useSerialStateView(
         // .useState(

@@ -3,17 +3,10 @@
 
 package explore
 
-import explore.model.boopickle.CatalogPicklers
-import lucuma.core.model.SiderealTracking
-
-import java.time.Instant
 import scala.scalajs.js
 
 package object events {
-  object picklers extends CatalogPicklers with EventPicklers
-
-  val LogoutEventId         = 1
-  val CatalogRequestEventId = 2
+  val LogoutEventId = 1
 
   // These are messages sent across tabs thus they need to be JS compatible
   // We don't need yet more than just an index to  differentiate
@@ -21,13 +14,6 @@ package object events {
     def event: Int
     def value: js.Any // encode whatever value as a String. it can be e.g. json
   }
-
-  final case class CatalogRequest(
-    tracking: SiderealTracking,
-    obsTime:  Instant
-  )
-
-  final case class CacheCleanupRequest(elapsedTime: Int)
 
   object ExploreEvent {
     class LogoutEvent(val nonce: Long) extends ExploreEvent {
@@ -42,4 +28,5 @@ package object events {
     }
 
   }
+
 }

@@ -3,12 +3,17 @@
 
 package explore.config
 
+import cats.Eq
 import cats.effect.IO
+import cats.syntax.all._
 import clue.data.Assign
 import clue.data.Input
 import clue.data.syntax._
+import crystal.PotOption
+import crystal.implicits._
 import crystal.react._
 import crystal.react.hooks._
+import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.Aligner
@@ -17,9 +22,13 @@ import explore.common.ScienceQueries._
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
+import explore.events.EventPicklers._
+import explore.events._
 import explore.implicits._
 import explore.model
 import explore.model.ITCTarget
+import explore.model.boopickle._
+import explore.modes.SpectroscopyModesMatrix
 import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -30,6 +39,7 @@ import lucuma.core.model.SiderealTracking
 import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import org.http4s.syntax.all._
 import queries.common.ObsQueriesGQL
 import queries.schemas.implicits._
 import react.common.ReactFnProps
@@ -95,11 +105,38 @@ object ConfigurationPanel {
         bAssign.map(f)
       })
 
+  private implicit val matrixEq: Eq[SpectroscopyModesMatrix] = Eq.by(_.matrix.isEmpty)
+
+  private implicit val matrixReusability: Reusability[SpectroscopyModesMatrix] =
+    Reusability.byEq
+
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
       .useStateView(false) // showAdvanced
-      .render { (props, showAdvanced) =>
+      // Listen on web worker for messages with catalog candidates
+      .useStreamResourceBy((props, _) => props.obsId)((props, _) =>
+        _ =>
+          props.ctx.worker.streamResource.map {
+            _.map(decodeFromTransferable[WorkerMessage])
+              .filter {
+                case Some(SpectroscopyMatrixResults(_)) => true
+                case _                                  => false
+              }
+              .collect { case Some(SpectroscopyMatrixResults(r)) =>
+                fs2.Stream.emit[IO, SpectroscopyModesMatrix](r)
+              }
+              .flatten
+          }
+      )
+      .useEffectWithDepsBy((_, _, i) => i) { (props, _, _) => mx =>
+        props.ctx.worker
+          .postWorkerMessage(
+            SpectroscopyMatrixRequest(uri"/instrument_spectroscopy_matrix.csv")
+          )
+          .whenA(mx === PotOption.ReadyNone)
+      }
+      .render { (props, showAdvanced, matrix) =>
         implicit val ctx: AppContextIO = props.ctx
 
         implicit val client = ctx.clients.odb // This shouldn't be necessary, but it seems to be
@@ -146,6 +183,7 @@ object ConfigurationPanel {
             mapModOrAssign(GmosSouthLongSlitInput())(ScienceModeInput.gmosSouthLongSlit.modify)
           )
         }
+        val confMatrix      = matrix.toOption.getOrElse(SpectroscopyModesMatrix.empty)
 
         React.Fragment(
           props.renderInTitle(
@@ -161,7 +199,8 @@ object ConfigurationPanel {
                 props.constraints,
                 props.itcTargets,
                 props.baseTracking,
-                showAdvancedCB
+                showAdvancedCB,
+                confMatrix
               )
             )
           else
@@ -182,7 +221,8 @@ object ConfigurationPanel {
                     northAligner.get.basic,
                     requirementsCtx.model.get.spectroscopy,
                     props.scienceData.model.zoom(ScienceData.potITC),
-                    showBasicCB
+                    showBasicCB,
+                    confMatrix
                   )
               ),
               // Gmos South Long Slit
@@ -201,7 +241,8 @@ object ConfigurationPanel {
                     southAligner.get.basic,
                     requirementsCtx.model.get.spectroscopy,
                     props.scienceData.model.zoom(ScienceData.potITC),
-                    showBasicCB
+                    showBasicCB,
+                    confMatrix
                   )
               )
             )
