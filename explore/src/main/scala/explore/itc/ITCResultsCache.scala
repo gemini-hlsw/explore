@@ -7,8 +7,8 @@ import cats.data._
 import cats.syntax.all._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.numeric.PosBigDecimal
-import explore.model.ITCTarget
 import explore.modes._
+import explore.model.itc._
 import japgolly.scalajs.react._
 import lucuma.core.enums._
 import lucuma.core.math.Wavelength
@@ -31,7 +31,7 @@ final case class ItcResultsCache(
                       NonEmptyChain.of(ItcQueryProblems.UnsupportedMode)
     )
 
-  def targets(r: Option[List[ITCTarget]]): EitherNec[ItcQueryProblems, NonEmptyList[ITCTarget]] =
+  def targets(r: Option[List[ItcTarget]]): EitherNec[ItcQueryProblems, NonEmptyList[ItcTarget]] =
     Either.fromOption(r.flatMap(NonEmptyList.fromList),
                       NonEmptyChain.of(ItcQueryProblems.MissingTargetInfo)
     )
@@ -41,7 +41,7 @@ final case class ItcResultsCache(
     w:  Option[Wavelength],
     sn: Option[PosBigDecimal],
     c:  ConstraintSet,
-    t:  Option[List[ITCTarget]],
+    t:  Option[List[ItcTarget]],
     r:  SpectroscopyModeRow
   ): EitherNec[ItcQueryProblems, ItcResult] =
     (wavelength(w), signalToNoise(sn), mode(r), targets(t)).parMapN { (w, sn, im, t) =>

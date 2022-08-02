@@ -22,8 +22,8 @@ import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.itc._
-import explore.model.ITCTarget
 import explore.model.Progress
+import explore.model.itc._
 import explore.model.ScienceMode
 import explore.model.ScienceModeAdvanced
 import explore.model.ScienceModeBasic
@@ -70,7 +70,7 @@ final case class SpectroscopyModesTable(
   scienceMode:              View[Option[ScienceMode]],
   spectroscopyRequirements: SpectroscopyRequirementsData,
   constraints:              ConstraintSet,
-  targets:                  Option[List[ITCTarget]],
+  targets:                  Option[List[ItcTarget]],
   baseTracking:             Option[SiderealTracking],
   matrix:                   SpectroscopyModesMatrix,
   onSelect:                 Callback
@@ -214,7 +214,7 @@ object SpectroscopyModesTable {
     cw:          Option[Wavelength],
     sn:          Option[PosBigDecimal],
     constraints: ConstraintSet,
-    target:      Option[List[ITCTarget]]
+    target:      Option[List[ItcTarget]]
   ): SortByFn[SpectroscopyModeRow] =
     (
       rowA: UseTableRowProps[SpectroscopyModeRow],
@@ -244,7 +244,7 @@ object SpectroscopyModesTable {
     fpu:         Option[FocalPlane],
     sn:          Option[PosBigDecimal],
     constraints: ConstraintSet,
-    target:      Option[List[ITCTarget]],
+    target:      Option[List[ItcTarget]],
     itc:         ItcResultsCache,
     progress:    Option[Progress]
   ) =

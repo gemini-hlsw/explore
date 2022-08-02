@@ -14,7 +14,7 @@ import crystal.ViewF
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.model.Constants
-import explore.model.ITCTarget
+import explore.model.itc._
 import explore.model.Progress
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
@@ -38,7 +38,7 @@ final case class ITCRequestParams(
   wavelength:    Wavelength,
   signalToNoise: PosBigDecimal,
   constraints:   ConstraintSet,
-  target:        NonEmptyList[ITCTarget],
+  target:        NonEmptyList[ItcTarget],
   mode:          InstrumentRow
 )
 
@@ -56,7 +56,7 @@ object ITCRequests {
     wavelength:      Wavelength,
     signalToNoise:   PosBigDecimal,
     constraints:     ConstraintSet,
-    targets:         NonEmptyList[ITCTarget],
+    targets:         NonEmptyList[ItcTarget],
     modes:           List[SpectroscopyModeRow],
     cache:           ViewF[F, ItcResultsCache],
     progress:        ViewF[F, Option[Progress]]

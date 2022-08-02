@@ -26,9 +26,9 @@ import explore.events.EventPicklers._
 import explore.events._
 import explore.implicits._
 import explore.model
-import explore.model.ITCTarget
 import explore.model.boopickle.Boopickle._
 import explore.model.reusability._
+import explore.model.itc.ItcTarget
 import explore.modes.SpectroscopyModesMatrix
 import explore.undo._
 import japgolly.scalajs.react._
@@ -52,7 +52,7 @@ final case class ConfigurationPanel(
   subtitle:         Option[NonEmptyString],
   scienceData:      UndoContext[ScienceData],
   constraints:      ConstraintSet,
-  itcTargets:       List[ITCTarget],
+  itcTargets:       List[ItcTarget],
   baseTracking:     Option[SiderealTracking],
   renderInTitle:    Tile.RenderInTitle
 )(implicit val ctx: AppContextIO)
