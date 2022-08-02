@@ -97,7 +97,7 @@ object PartnerSplitsEditor {
       if (addsUpTo100(props)) props.onSave(props.splits.get) >> props.closeMe else Callback.empty
 
     Modal(size = ModalSize.Mini, open = props.show)(
-      ModalHeader("Partner Splits"),
+      ModalHeader(content = "Partner Splits"),
       ModalContent(
         Form(
           action = "#",

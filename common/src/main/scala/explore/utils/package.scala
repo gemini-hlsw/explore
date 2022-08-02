@@ -4,6 +4,7 @@
 package explore
 
 import cats.Endo
+import cats.Monoid
 import cats.effect.Sync
 import cats.syntax.all._
 import clue.data._
@@ -21,6 +22,7 @@ import explore.components.ui.ExploreStyles
 import explore.model.enums.ExecutionEnvironment
 import explore.model.enums.ExecutionEnvironment.Development
 import explore.model.enums.Theme
+import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.forms.ExternalValue
 import lucuma.ui.syntax.all.*
@@ -35,6 +37,7 @@ import react.semanticui.elements.loader.Loader
 import java.time.Instant
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
+import japgolly.scalajs.react.vdom.html_<^
 
 package object utils {
   def setupScheme[F[_]: Sync](theme: Theme): F[Unit] =
@@ -167,5 +170,11 @@ package object utils {
       vv: Validate[V, P]
     ): Either[String, Quantity[Refined[V, P], U]] =
       refineV[P](q.value).map(_.withUnit[U])
+  }
+
+  implicit val MonoidVdomNode: Monoid[VdomNode] = new Monoid[VdomNode] {
+    val empty: VdomNode = EmptyVdom
+
+    def combine(x: VdomNode, y: VdomNode): VdomNode = React.Fragment(x, y)
   }
 }

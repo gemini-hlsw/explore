@@ -183,7 +183,7 @@ object TargetSelectionPopup {
             size = ModalSize.Large,
             onOpen = cleanState,
             onClose = singleEffect.cancel.runAsync >> isOpen.setState(false) >> cleanState,
-            header = ModalHeader("Add Target"),
+            header = ModalHeader(content = "Add Target"),
             content = ModalContent(
               <.span(ExploreStyles.TargetSearchTop)(
                 <.span(ExploreStyles.TargetSearchInput)(
@@ -256,10 +256,11 @@ object TargetSelectionPopup {
                               )
                                 none
                               else
-                                SelectedTarget(result.target,
-                                               source,
-                                               index,
-                                               result.angularSize
+                                SelectedTarget(
+                                  result.target,
+                                  source,
+                                  index,
+                                  result.angularSize
                                 ).some
                             )
                         )

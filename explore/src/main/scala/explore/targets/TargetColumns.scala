@@ -13,6 +13,7 @@ import explore.model.display._
 import explore.model.enums.SourceProfileType
 import explore.model.formats._
 import explore.optics.all._
+import explore.utils._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enums.Band
 import lucuma.core.math.ApparentRadialVelocity
@@ -128,16 +129,13 @@ object TargetColumns {
               .orEmpty
           )
           .setSortByAuto
-        // siderealColumn("priority", _ => "").setCell(_ =>
-        //   ""
-        // ) // TODO IS this a property of the target, or a property of the target in the observation???
       ) ++
         Band.all.map(band =>
           siderealColumnOpt(
             band.tag + "mag",
             t => targetBrightnesses.get(t).flatMap(_.get(band))
           )
-            .setCell(_.value.map(displayWithoutError(_)(displayBrightness)))
+            .setCell(_.value.map(displayWithoutError(_)(displayBrightness)).orEmpty)
             .setDisableSortBy(true) // We cannot sort since there may be different units.
         ) ++
         List(
@@ -194,8 +192,9 @@ object TargetColumns {
                 .getOption(t)
                 .map(_.shortName)
                 .orElse(Target.Sidereal.surfaceSpectralDefinition.getOption(t).map(_.shortName))
+                .orEmpty
           )
-            .setCell((x: CellProps[D, Option[Option[String]], Plugins]) => x.value.orEmpty)
+            .setCell((x: CellProps[D, Option[String], Plugins]) => x.value.orEmpty)
         )
   }
 
