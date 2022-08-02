@@ -6,19 +6,19 @@ package explore.events
 import cats.Eq
 import explore.model.boopickle.CatalogPicklers
 import explore.modes.SpectroscopyModesMatrix
+import lucuma.ags.AgsAnalysis
+import lucuma.ags.AgsParams
+import lucuma.ags.AgsPosition
 import lucuma.ags.GuideStarCandidate
+import lucuma.core.math.Coordinates
+import lucuma.core.math.Wavelength
+import lucuma.core.model.ConstraintSet
 import lucuma.core.model.SiderealTracking
+import lucuma.core.model.Target
 import org.http4s.Uri
 
 import java.time.Duration
 import java.time.Instant
-import lucuma.core.math.Wavelength
-import lucuma.core.model.ConstraintSet
-import lucuma.ags.AgsPosition
-import lucuma.core.math.Coordinates
-import lucuma.ags.AgsParams
-import lucuma.ags.AgsAnalysis
-import lucuma.core.model.Target
 
 object picklers extends CatalogPicklers with EventPicklers
 

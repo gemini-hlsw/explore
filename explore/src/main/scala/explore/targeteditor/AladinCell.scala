@@ -24,6 +24,8 @@ import explore.model.Constants
 import explore.model.ObsConfiguration
 import explore.model.TargetVisualOptions
 import explore.model.boopickle.Boopickle._
+import explore.model.boopickle._
+import explore.model.enums.AgsState
 import explore.model.enums.Visible
 import explore.model.reusability._
 import explore.optics.ModelOptics
@@ -76,6 +78,10 @@ object AladinCell extends ModelOptics {
   val basePos = AgsPosition(Angle.Angle0, Offset.Zero)
 
   // We want to re render only when the vizTime changes at least a month
+  // We keep the candidates data pm corrected for the viz time
+  // If it changes over a month we'll request the data again and recalculate
+  // This way we avoid recalculating pm for example if only pos angle or
+  // conditions change
   implicit val instantReuse: Reusability[Instant] = Reusability {
     Duration.between(_, _).toDays().abs < 30L
   }
@@ -108,11 +114,9 @@ object AladinCell extends ModelOptics {
                 }
                 .evalMap {
                   case Some(CatalogResults(candidates)) =>
-                    agsState.setState(AgsState.Idle).to[IO] *> IO.println("CAT result") *> gs
-                      .setStateAsync(candidates)
+                    agsState.setState(AgsState.Idle).to[IO] *> gs.setStateAsync(candidates)
                   case Some(AgsResult(r))               =>
-                    agsState.setState(AgsState.Idle).to[IO] *> IO.println("AGS result") *> ags
-                      .setStateAsync(r)
+                    agsState.setState(AgsState.Idle).to[IO] *> ags.setStateAsync(r)
                   case Some(CatalogQueryError(m))       =>
                     IO.raiseError(new RuntimeException(m))
                   case _                                =>
@@ -152,7 +156,7 @@ object AladinCell extends ModelOptics {
       }
       // Selected GS index. Should be stored in the db
       .useStateView(none[Int])
-      // Request ags calcuulation
+      // Request ags calculation
       .useEffectWithDepsBy((p, _, _, _, candidates, _, _, _, _) =>
         (p.target.get,
          p.obsConf.posAngleConstraint,
@@ -192,7 +196,7 @@ object AladinCell extends ModelOptics {
                                  candidates
                       )
                     )
-                    .unlessA(candidates.isEmpty) // === PotOption.ReadyNone)
+                    .unlessA(candidates.isEmpty)
               }
               .getOrElse(IO.unit)
           case _ => IO.unit
@@ -207,7 +211,7 @@ object AladinCell extends ModelOptics {
             .set(
               0.some.filter(_ => agsResults.value.nonEmpty && p.obsConf.canSelectGuideStar)
             )
-            .unless_(agsState.value == AgsState.Calculating)
+            .unless_(agsState.value === AgsState.Calculating)
       }
       .render {
         (
@@ -223,7 +227,6 @@ object AladinCell extends ModelOptics {
           openSettings
         ) =>
           implicit val ctx = props.ctx
-          println(selectedGSIndex.get)
 
           val agsCandidatesView =
             options.zoom(Pot.readyPrism.andThen(TargetVisualOptions.agsCandidates))

@@ -3,9 +3,11 @@
 
 package explore.targeteditor
 
+import cats.syntax.all._
 import crystal.react.View
 import explore.Icons
 import explore.components.ui.ExploreStyles
+import explore.model.enums.AgsState
 import explore.model.enums.Visible
 import explore.model.formats._
 import japgolly.scalajs.react._
@@ -24,16 +26,6 @@ import react.semanticui.modules.popup.PopupPosition
 import react.semanticui.shorthand._
 import react.semanticui.sizes.Small
 import react.semanticui.sizes._
-
-sealed trait AgsState extends Product with Serializable
-
-object AgsState {
-  case object Idle              extends AgsState
-  case object LoadingCandidates extends AgsState
-  case object Calculating       extends AgsState
-  case object Error             extends AgsState
-
-}
 
 final case class AladinToolbar(
   fov:               Fov,
@@ -65,24 +57,24 @@ object AladinToolbar {
             content = "Loading catalog stars..",
             position = PopupPosition.TopCenter,
             trigger = Icons.CircleSmall.beat().clazz(ExploreStyles.WarningIcon)
-          ).when(props.agsState == AgsState.LoadingCandidates),
+          ).when(props.agsState === AgsState.LoadingCandidates),
           Popup(
             content = "Calculating guide star..",
             position = PopupPosition.TopCenter,
             trigger = Icons.CircleSmall.beat().clazz(ExploreStyles.WarningIcon)
-          ).when(props.agsState == AgsState.Calculating),
+          ).when(props.agsState === AgsState.Calculating),
           Popup(
             content = "The Catalog isn't responding at the moment - please try again later..",
             position = PopupPosition.TopCenter,
             trigger = Icons.CircleSmall.clazz(ExploreStyles.ErrorIcon)
-          ).when(props.agsState == AgsState.Error)
+          ).when(props.agsState === AgsState.Error)
         ),
         <.div(
           ExploreStyles.AladinGuideStar,
           props.selectedGuideStar
             .map { case g => s"GS: ${g.name.value}" }
             .unless(props.agsOverlay.visible),
-          "Calculating...".when(props.agsState == AgsState.Calculating)
+          "Calculating...".when(props.agsState === AgsState.Calculating)
         ),
         Label(
           icon = Icons.MousePointer.clazz(ExploreStyles.Accented),

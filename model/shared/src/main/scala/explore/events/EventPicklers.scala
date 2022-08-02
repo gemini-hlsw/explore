@@ -14,11 +14,11 @@ import lucuma.ags.GuideStarCandidate
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
+import lucuma.core.model.Target
 import org.http4s.Uri
 
 import java.time.Duration
 import java.time.Instant
-import lucuma.core.model.Target
 
 /**
  * Picklers used by web workers

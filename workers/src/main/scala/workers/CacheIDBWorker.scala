@@ -16,6 +16,8 @@ import japgolly.scalajs.react.callback.CallbackCatsEffect._
 import japgolly.scalajs.react.callback._
 import japgolly.webapputil.indexeddb.IndexedDb
 import log4cats.loglevel.LogLevelLogger
+import lucuma.ags.Ags
+import lucuma.ags.AgsAnalysis
 import org.http4s.dom.FetchClientBuilder
 import org.scalajs.dom
 import org.typelevel.log4cats.Logger
@@ -25,8 +27,6 @@ import java.time.Duration
 import scala.scalajs.js
 
 import js.annotation._
-import lucuma.ags.Ags
-import lucuma.ags.AgsAnalysis
 
 trait AsyncToIO {
   class AsyncCallbackOps[A](val a: AsyncCallback[A]) {

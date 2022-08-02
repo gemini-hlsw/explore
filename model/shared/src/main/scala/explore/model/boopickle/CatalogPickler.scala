@@ -9,12 +9,18 @@ import coulomb.syntax.*
 import eu.timepit.refined._
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.api.Validate
+import lucuma.ags.AgsAnalysis
+import lucuma.ags.AgsParams
+import lucuma.ags.AgsPosition
 import lucuma.ags.GuideStarCandidate
+import lucuma.core.geom.Area
 import lucuma.core.math.Angle
+import lucuma.core.math.Axis
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.Epoch
 import lucuma.core.math.HourAngle
+import lucuma.core.math.Offset
 import lucuma.core.math.Parallax
 import lucuma.core.math.ProperMotion
 import lucuma.core.math.RadialVelocity
@@ -23,14 +29,8 @@ import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.SiderealTracking
-import lucuma.core.util.Enumerated
-import lucuma.ags.AgsPosition
-import lucuma.ags.AgsParams
-import lucuma.core.math.Offset
-import lucuma.core.math.Axis
-import lucuma.ags.AgsAnalysis
-import lucuma.core.geom.Area
 import lucuma.core.model.Target
+import lucuma.core.util.Enumerated
 
 trait CommonPicklers {
   implicit def picklerRefined[A: Pickler, B](implicit v: Validate[A, B]): Pickler[A Refined B] =
