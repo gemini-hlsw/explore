@@ -63,7 +63,7 @@ object Icons {
   val faLink: FAIcon = js.native
 
   @js.native
-  @JSImport("/icons", "faPlus")
+  @JSImport("/icons", "faThinPlus")
   val faThinPlus: FAIcon = js.native
 
   @js.native
@@ -115,7 +115,7 @@ object Icons {
   val faUserAstronaut: FAIcon = js.native
 
   @js.native
-  @JSImport("/icons", "faTriangleExclamation")
+  @JSImport("/icons", "faExclamationTriangle")
   val faExclamationTriangle: FAIcon = js.native
 
   @js.native
@@ -143,7 +143,7 @@ object Icons {
   val faChevronRight: FAIcon = js.native
 
   @js.native
-  @JSImport("/icons", "faChevronRight")
+  @JSImport("/icons", "faChevronRightLight")
   val faChevronRightLight: FAIcon = js.native
 
   @js.native
@@ -151,7 +151,7 @@ object Icons {
   val faChevronLeft: FAIcon = js.native
 
   @js.native
-  @JSImport("/icons", "faChevronLeft")
+  @JSImport("/icons", "faChevronLeftLight")
   val faChevronLeftLight: FAIcon = js.native
 
   @js.native
