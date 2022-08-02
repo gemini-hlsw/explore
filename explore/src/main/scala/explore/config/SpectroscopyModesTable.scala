@@ -367,7 +367,7 @@ object SpectroscopyModesTable {
       .withHooks[Props]
       // rows
       .useMemoBy(p =>
-        (p.props.matrix, p.spectroscopyRequirements, p.baseTracking.map(_.baseCoordinates.dec))
+        (p.matrix, p.spectroscopyRequirements, p.baseTracking.map(_.baseCoordinates.dec))
       )(_ => { case (matrix, s, dec) =>
         val rows                =
           matrix

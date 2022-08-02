@@ -5,6 +5,7 @@ package explore.model.boopickle
 
 import boopickle.DefaultBasic._
 import coulomb._
+import coulomb.syntax.*
 import eu.timepit.refined._
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.api.Validate
