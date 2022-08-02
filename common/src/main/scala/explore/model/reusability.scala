@@ -4,6 +4,7 @@
 package explore.model
 
 import clue.PersistentClientStatus
+import explore.common.ObsQueries.SpectroscopyRequirementsData
 import explore.data.KeyedIndexedList
 import explore.events.CatalogResults
 import explore.model.Asterism
@@ -99,5 +100,6 @@ object reusability {
   implicit val proposalReuse: Reusability[Proposal]                            = Reusability.byEq
   implicit val obsConfReuse: Reusability[ObsConfiguration]                     = Reusability.byEq
 
-  implicit val existenceReuse: Reusability[Existence] = Reusability.byEq
+  implicit val existenceReuse: Reusability[Existence]                       = Reusability.byEq
+  implicit val requirementsReuse: Reusability[SpectroscopyRequirementsData] = Reusability.byEq
 }
