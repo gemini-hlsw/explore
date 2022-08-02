@@ -74,7 +74,7 @@ object InputModal {
           dimmer = Dimmer.Blurring,
           size = ModalSize.Small,
           onClose = cleanInput,
-          header = ModalHeader(props.title),
+          header = ModalHeader(content = props.title),
           content = ModalContent(
             FormInputEV(id = "name".refined, value = inputValue, label = props.label)
               .withMods(^.placeholder := props.placeholder, ^.autoFocus := true)
