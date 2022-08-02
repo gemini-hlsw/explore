@@ -173,7 +173,6 @@ module.exports = ({ command, mode }) => {
         plugins: rollupPlugins,
       },
       outDir: path.resolve(__dirname, 'heroku/static'),
-      sourcemap: true,
     },
     plugins: [
       isProduction

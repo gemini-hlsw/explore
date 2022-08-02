@@ -172,7 +172,7 @@ lazy val explore: Project = project
     Compile / fullLinkJS / scalaJSLinkerConfig ~= {
       import org.scalajs.linker.interface.OutputPatterns
       _.withModuleKind(ModuleKind.CommonJSModule)
-        .withSourceMap(true)
+        .withSourceMap(false)
         .withClosureCompilerIfAvailable(true)
         .withOutputPatterns(OutputPatterns.fromJSFile("%s.cjs"))
     }
