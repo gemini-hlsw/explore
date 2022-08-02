@@ -4,11 +4,11 @@
 package explore.model
 
 import clue.PersistentClientStatus
+import explore.common.ObsQueries.SpectroscopyRequirementsData
 import explore.data.KeyedIndexedList
 import explore.events.CatalogResults
 import explore.model.Asterism
 import explore.undo.UndoStacks
-import explore.common.ObsQueries.SpectroscopyRequirementsData
 import japgolly.scalajs.react.ReactCats._
 import japgolly.scalajs.react.Reusability
 import lucuma.ags.AgsParams
