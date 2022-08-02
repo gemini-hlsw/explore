@@ -150,7 +150,10 @@ object AladinCell extends ModelOptics {
                 .to[IO] *> props.fullScreen.set(fullScreen).to[IO]
             }
       }
-      .useEffectWithDepsBy((p, _, _, _, candidates, _, _, _) =>
+      // Selected GS index. Should be stored in the db
+      .useStateView(none[Int])
+      // Request ags calcuulation
+      .useEffectWithDepsBy((p, _, _, _, candidates, _, _, _, _) =>
         (p.target.get,
          p.obsConf.posAngleConstraint,
          p.obsConf.constraints,
@@ -158,7 +161,7 @@ object AladinCell extends ModelOptics {
          p.obsConf.vizTime,
          candidates.value
         )
-      ) { (props, _, _, _, _, _, agsState, _) =>
+      ) { (props, _, _, _, _, _, agsState, _, selectedIndex) =>
         {
           case (tracking,
                 Some(posAngle),
@@ -177,12 +180,19 @@ object AladinCell extends ModelOptics {
             (tracking.at(vizTime), pa)
               .mapN { (base, pa) =>
                 val basePos = AgsPosition(pa, Offset.Zero)
-                (agsState.setState(AgsState.Calculating).to[IO] *>
+                (selectedIndex.set(none) *> agsState.setState(AgsState.Calculating)).to[IO] *>
                   props.ctx.worker
                     .postWorkerMessage(
-                      AgsRequest(props.tid, constraints, wavelength, base, basePos, params, candidates)
-                    ))
-                  .unlessA(candidates.isEmpty) // === PotOption.ReadyNone)
+                      AgsRequest(props.tid,
+                                 constraints,
+                                 wavelength,
+                                 base,
+                                 basePos,
+                                 params,
+                                 candidates
+                      )
+                    )
+                    .unlessA(candidates.isEmpty) // === PotOption.ReadyNone)
               }
               .getOrElse(IO.unit)
           case _ => IO.unit
@@ -190,14 +200,14 @@ object AladinCell extends ModelOptics {
       }
       // open settings menu
       .useState(false)
-      // Selected GS index. Should be stored in the db
-      .useStateView(none[Int])
       // Reset the selected gs if results chage
       .useEffectWithDepsBy((p, _, _, _, _, agsResults, _, _, _, _) => (agsResults, p.obsConf)) {
-        (p, _, _, _, _, agsResults, _, _, _, selectedIndex) => _ =>
-          selectedIndex.set(
-            0.some.filter(_ => agsResults.value.nonEmpty && p.obsConf.canSelectGuideStar)
-          )
+        (p, _, _, _, _, agsResults, agsState, _, selectedIndex, _) => _ =>
+          selectedIndex
+            .set(
+              0.some.filter(_ => agsResults.value.nonEmpty && p.obsConf.canSelectGuideStar)
+            )
+            .unless_(agsState.value == AgsState.Calculating)
       }
       .render {
         (
@@ -209,10 +219,11 @@ object AladinCell extends ModelOptics {
           agsResults,
           agsState,
           _,
-          openSettings,
-          selectedGSIndex
+          selectedGSIndex,
+          openSettings
         ) =>
           implicit val ctx = props.ctx
+          println(selectedGSIndex.get)
 
           val agsCandidatesView =
             options.zoom(Pot.readyPrism.andThen(TargetVisualOptions.agsCandidates))
