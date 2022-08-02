@@ -15,227 +15,227 @@ import scala.scalajs.js.annotation._
 @nowarn
 object Icons {
   @js.native
-  @JSImport("@fortawesome/pro-duotone-svg-icons", "faGears")
+  @JSImport("icons", "faGears")
   val faGears: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faArrowRotateLeft")
+  @JSImport("icons", "faArrowRotateLeft")
   val faUndo: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faArrowRotateRight")
+  @JSImport("icons", "faArrowRotateRight")
   val faRedo: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-light-svg-icons", "faBars")
+  @JSImport("icons", "faBars")
   val faBars: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-light-svg-icons", "faBarcodeRead")
+  @JSImport("icons", "faBarcodeRead")
   val faBarCodeRead: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faStarExclamation")
+  @JSImport("icons", "faStarExclamation")
   val faStarExclamation: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faTrashCan")
+  @JSImport("icons", "faTrashCan")
   val faTrash: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faTrashCanUndo")
+  @JSImport("icons", "faTrashCanUndo")
   val faTrashUndo: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faCrosshairs")
+  @JSImport("icons", "faCrosshairs")
   val faCrosshairs: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-light-svg-icons", "faBullseye")
+  @JSImport("icons", "faBullseye")
   val faBullseye: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faPlus")
+  @JSImport("icons", "faPlus")
   val faPlus: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faLink")
+  @JSImport("icons", "faLink")
   val faLink: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-light-svg-icons", "faPlus")
+  @JSImport("icons", "faPlus")
   val faThinPlus: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-light-svg-icons", "faHyphen")
+  @JSImport("icons", "faHyphen")
   val faThinMinus: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faPenToSquare")
+  @JSImport("icons", "faPenToSquare")
   val faEdit: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faEraser")
+  @JSImport("icons", "faEraser")
   val faEraser: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faMagnifyingGlass")
+  @JSImport("icons", "faMagnifyingGlass")
   val faSearch: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faBan")
+  @JSImport("icons", "faBan")
   val faBan: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faArrowPointer")
+  @JSImport("icons", "faArrowPointer")
   val faMousePointer: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faRightFromBracket")
+  @JSImport("icons", "faRightFromBracket")
   val faSignOutAlt: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faCircleInfo")
+  @JSImport("icons", "faCircleInfo")
   val faInfoCircle: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-light-svg-icons", "faClipboard")
+  @JSImport("icons", "faClipboard")
   val faClipboard: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-light-svg-icons", "faClipboardCheck")
+  @JSImport("icons", "faClipboardCheck")
   val faClipboardCheck: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faXmark")
+  @JSImport("icons", "faXmark")
   val faTimes: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faUserAstronaut")
+  @JSImport("icons", "faUserAstronaut")
   val faUserAstronaut: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faTriangleExclamation")
+  @JSImport("icons", "faTriangleExclamation")
   val faExclamationTriangle: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faSkullCrossbones")
+  @JSImport("icons", "faSkullCrossbones")
   val faSkullCrossbones: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faCheck")
+  @JSImport("icons", "faCheck")
   val faCheck: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faSort")
+  @JSImport("icons", "faSort")
   val faSort: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faSortUp")
+  @JSImport("icons", "faSortUp")
   val faSortUp: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faSortDown")
+  @JSImport("icons", "faSortDown")
   val faSortDown: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faChevronRight")
+  @JSImport("icons", "faChevronRight")
   val faChevronRight: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-light-svg-icons", "faChevronRight")
+  @JSImport("icons", "faChevronRight")
   val faChevronRightLight: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faChevronLeft")
+  @JSImport("icons", "faChevronLeft")
   val faChevronLeft: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-light-svg-icons", "faChevronLeft")
+  @JSImport("icons", "faChevronLeft")
   val faChevronLeftLight: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faChevronsLeft")
+  @JSImport("icons", "faChevronsLeft")
   val faChevronsLeft: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faChevronDown")
+  @JSImport("icons", "faChevronDown")
   val faChevronDown: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-regular-svg-icons", "faChevronsUp")
+  @JSImport("icons", "faChevronsUp")
   val faChevronDoubleUp: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-regular-svg-icons", "faChevronsDown")
+  @JSImport("icons", "faChevronsDown")
   val faChevronDoubleDown: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-light-svg-icons", "faRectangleList")
+  @JSImport("icons", "faRectangleList")
   val faListAlt: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faListCheck")
+  @JSImport("icons", "faListCheck")
   val faListCheck: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-light-svg-icons", "faCompress")
+  @JSImport("icons", "faCompress")
   val faCompress: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-light-svg-icons", "faExpand")
+  @JSImport("icons", "faExpand")
   val faExpand: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faStar")
+  @JSImport("icons", "faStar")
   val faStar: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faStars")
+  @JSImport("icons", "faStars")
   val faStars: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faSpinner")
+  @JSImport("icons", "faSpinner")
   val faSpinner: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faThumbtack")
+  @JSImport("icons", "faThumbtack")
   val faThumbtack: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faSun")
+  @JSImport("icons", "faSun")
   val faSunBright: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faTriangleExclamation")
+  @JSImport("icons", "faTriangleExclamation")
   val faTriangleSolid: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faCrystalBall")
+  @JSImport("icons", "faCrystalBall")
   val faCrystalBall: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-thin-svg-icons", "faSliders")
+  @JSImport("icons", "faSliders")
   val faThinSliders: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faCircleSmall")
+  @JSImport("icons", "faCircleSmall")
   val faCircleSmall: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faBahai")
+  @JSImport("icons", "faBahai")
   val faBahai: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faFileCirclePlus")
+  @JSImport("icons", "faFileCirclePlus")
   val faFileCirclePlus: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-thin-svg-icons", "faArrowUpRightAndArrowDownLeftFromCenter")
+  @JSImport("icons", "faArrowUpRightAndArrowDownLeftFromCenter")
   val faExpandDiagonal: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-thin-svg-icons", "faArrowDownLeftAndArrowUpRightToCenter")
+  @JSImport("icons", "faArrowDownLeftAndArrowUpRightToCenter")
   val faContractDiagonal: FAIcon = js.native
 
   // This is tedious but lets us do proper tree-shaking
