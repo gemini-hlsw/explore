@@ -1,14 +1,14 @@
 {
   "dependencies": {
     "@cquiroz/aladin-lite": "0.7.6",
-    "@fortawesome/fontawesome-pro": "^6.0.0",
-    "@fortawesome/fontawesome-svg-core": "^6.1.0",
+    "@fortawesome/fontawesome-pro": "^6.1.2",
+    "@fortawesome/fontawesome-svg-core": "^6.1.2",
     "@fortawesome/pro-duotone-svg-icons": "^6.1.2",
     "@fortawesome/pro-light-svg-icons": "^6.1.2",
     "@fortawesome/pro-regular-svg-icons": "^6.1.2",
     "@fortawesome/pro-solid-svg-icons": "^6.1.2",
     "@fortawesome/pro-thin-svg-icons": "^6.1.2",
-    "@fortawesome/react-fontawesome": "^0.2.0",
+    "@fortawesome/react-fontawesome": "^0.1.18",
     "broadcast-channel": "4.14.0",
     "copy-to-clipboard": "3.3.1",
     "fomantic-ui-less": "2.8.8",
