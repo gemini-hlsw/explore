@@ -12,7 +12,14 @@ import monocle.Lens
 import monocle.Prism
 import monocle.macros.GenPrism
 
-sealed abstract class ScienceMode(val instrument: Instrument) extends Product with Serializable
+sealed abstract class ScienceMode(val instrument: Instrument) extends Product with Serializable {
+  def isCustomized: Boolean = this match {
+    case ScienceMode.GmosNorthLongSlit(_, advanced) =>
+      advanced =!= ScienceModeAdvanced.GmosNorthLongSlit.Empty
+    case ScienceMode.GmosSouthLongSlit(_, advanced) =>
+      advanced =!= ScienceModeAdvanced.GmosSouthLongSlit.Empty
+  }
+}
 
 object ScienceMode {
   implicit val scienceModeEq: Eq[ScienceMode] = Eq.instance {

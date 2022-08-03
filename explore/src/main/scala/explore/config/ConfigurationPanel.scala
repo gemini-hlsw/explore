@@ -28,6 +28,7 @@ import explore.implicits._
 import explore.model
 import explore.model.ITCTarget
 import explore.model.boopickle.Boopickle._
+import explore.model.reusability._
 import explore.modes.SpectroscopyModesMatrix
 import explore.undo._
 import japgolly.scalajs.react._
@@ -114,7 +115,22 @@ object ConfigurationPanel {
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStateView(false) // showAdvanced
+      .useStateViewBy(props =>
+        props.scienceData.model.get.mode.fold(ConfigEditState.TableView)(_ =>
+          ConfigEditState.DetailsView
+        )
+      )
+      .useEffectWithDepsBy((props, _) => props.scienceData.model.get.mode) {
+        (_, editState) => oScienceMode =>
+          // In case a undo/redo creates a customization, they can't be on the basic panel.
+          oScienceMode
+            .map(m =>
+              if (m.isCustomized && editState.get === ConfigEditState.TableView)
+                editState.set(ConfigEditState.DetailsView)
+              else Callback.empty
+            )
+            .orEmpty
+      }
       // Listen on web worker for messages with catalog candidates
       .useStreamResourceBy((props, _) => props.obsId)((props, _) =>
         _ =>
@@ -137,7 +153,7 @@ object ConfigurationPanel {
           )
           .whenA(mx === PotOption.ReadyNone)
       }
-      .render { (props, showAdvanced, matrix) =>
+      .render { (props, editState, matrix) =>
         implicit val ctx: AppContextIO = props.ctx
 
         implicit val client = ctx.clients.odb // This shouldn't be necessary, but it seems to be
@@ -163,10 +179,8 @@ object ConfigurationPanel {
 
         val optModeAligner = modeAligner.toOption
 
-        val showBasicCB: Callback = showAdvanced.set(false)
-
-        val showAdvancedCB: Option[Callback] =
-          optModeAligner.map(_ => showAdvanced.set(true))
+        val showDetailsCB: Option[Callback] =
+          optModeAligner.map(_ => editState.set(ConfigEditState.DetailsView))
 
         val posAngleView: View[Option[PosAngleConstraint]] =
           props.scienceData.undoableView(ScienceData.posAngle)
@@ -190,9 +204,9 @@ object ConfigurationPanel {
           props.renderInTitle(
             <.div(ExploreStyles.TitleUndoButtons)(UndoButtons(props.scienceData))
           ),
-          if (!showAdvanced.get)
-            <.div(ExploreStyles.ConfigurationGrid)(
-              ObsConfigurationPanel(props.obsId, posAngleView),
+          <.div(ExploreStyles.ConfigurationGrid)(
+            ObsConfigurationPanel(props.obsId, posAngleView),
+            if (editState.get === ConfigEditState.TableView)
               BasicConfigurationPanel(
                 props.obsId,
                 requirementsCtx,
@@ -200,53 +214,53 @@ object ConfigurationPanel {
                 props.constraints,
                 props.itcTargets,
                 props.baseTracking,
-                showAdvancedCB,
+                showDetailsCB,
                 confMatrix
               )
-            )
-          else
-            React.Fragment(
-              // Gmos North Long Slit
-              optNorthAligner.map(northAligner =>
-                AdvancedConfigurationPanel
-                  .GmosNorthLongSlit(
-                    props.obsId,
-                    props.title,
-                    props.subtitle,
-                    northAligner.zoom(
-                      model.ScienceMode.GmosNorthLongSlit.advanced,
-                      modOrAssignAndMap(GmosNorthLongSlitAdvancedConfigInput())(
-                        GmosNorthLongSlitInput.advanced.modify
-                      )
-                    ),
-                    northAligner.get.basic,
-                    requirementsCtx.model.get.spectroscopy,
-                    props.scienceData.model.zoom(ScienceData.potITC),
-                    showBasicCB,
-                    confMatrix
-                  )
-              ),
-              // Gmos South Long Slit
-              optSouthAligner.map(southAligner =>
-                AdvancedConfigurationPanel
-                  .GmosSouthLongSlit(
-                    props.obsId,
-                    props.title,
-                    props.subtitle,
-                    southAligner.zoom(
-                      model.ScienceMode.GmosSouthLongSlit.advanced,
-                      modOrAssignAndMap(GmosSouthLongSlitAdvancedConfigInput())(
-                        GmosSouthLongSlitInput.advanced.modify
-                      )
-                    ),
-                    southAligner.get.basic,
-                    requirementsCtx.model.get.spectroscopy,
-                    props.scienceData.model.zoom(ScienceData.potITC),
-                    showBasicCB,
-                    confMatrix
-                  )
+            else
+              React.Fragment(
+                // Gmos North Long Slit
+                optNorthAligner.map(northAligner =>
+                  AdvancedConfigurationPanel
+                    .GmosNorthLongSlit(
+                      props.obsId,
+                      props.title,
+                      props.subtitle,
+                      northAligner.zoom(
+                        model.ScienceMode.GmosNorthLongSlit.advanced,
+                        modOrAssignAndMap(GmosNorthLongSlitAdvancedConfigInput())(
+                          GmosNorthLongSlitInput.advanced.modify
+                        )
+                      ),
+                      northAligner.get.basic,
+                      requirementsCtx.model.get.spectroscopy,
+                      props.scienceData.model.zoom(ScienceData.potITC),
+                      editState,
+                      confMatrix
+                    )
+                ),
+                // Gmos South Long Slit
+                optSouthAligner.map(southAligner =>
+                  AdvancedConfigurationPanel
+                    .GmosSouthLongSlit(
+                      props.obsId,
+                      props.title,
+                      props.subtitle,
+                      southAligner.zoom(
+                        model.ScienceMode.GmosSouthLongSlit.advanced,
+                        modOrAssignAndMap(GmosSouthLongSlitAdvancedConfigInput())(
+                          GmosSouthLongSlitInput.advanced.modify
+                        )
+                      ),
+                      southAligner.get.basic,
+                      requirementsCtx.model.get.spectroscopy,
+                      props.scienceData.model.zoom(ScienceData.potITC),
+                      editState,
+                      confMatrix
+                    )
+                )
               )
-            )
+          )
         )
       }
 

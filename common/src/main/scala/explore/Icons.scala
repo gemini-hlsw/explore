@@ -119,6 +119,10 @@ object Icons {
   val faExclamationTriangle: FAIcon = js.native
 
   @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faDiamondExclamation")
+  val faExclamationDiamond: FAIcon = js.native
+
+  @js.native
   @JSImport("@fortawesome/pro-solid-svg-icons", "faSkullCrossbones")
   val faSkullCrossbones: FAIcon = js.native
 
@@ -266,6 +270,7 @@ object Icons {
     faTimes,
     faUserAstronaut,
     faExclamationTriangle,
+    faExclamationDiamond,
     faSkullCrossbones,
     faCheck,
     faSort,
@@ -308,7 +313,8 @@ object Icons {
   val Link                = FontAwesomeIcon(faLink)
   val ThinPlus            = FontAwesomeIcon(faThinPlus)
   val ThinMinus           = FontAwesomeIcon(faThinMinus)
-  val Trash               = FontAwesomeIcon(faTrash).clazz(ExploreStyles.TrashIcon)
+  val TrashUnstyled       = FontAwesomeIcon(faTrash)
+  val Trash               = TrashUnstyled.clazz(ExploreStyles.TrashIcon)
   val TrashUndo           = FontAwesomeIcon(faTrashUndo)
   val Bullseye            = FontAwesomeIcon(faBullseye)
   val Crosshairs          = FontAwesomeIcon(faCrosshairs)
@@ -328,6 +334,7 @@ object Icons {
   val SortDown            = FontAwesomeIcon(faSortDown)
   val SortUp              = FontAwesomeIcon(faSortUp)
   val ExclamationTriangle = FontAwesomeIcon(faExclamationTriangle)
+  val ExclamationDiamond  = FontAwesomeIcon(faExclamationDiamond)
   val UserAstronaut       = FontAwesomeIcon(faUserAstronaut)
   val Logout              = FontAwesomeIcon(faSignOutAlt)
   val SkullCrossBones     = FontAwesomeIcon(faSkullCrossbones)

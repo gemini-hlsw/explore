@@ -4,7 +4,6 @@
 package explore.common
 
 import cats.Endo
-import clue.data.Input
 import clue.data.syntax._
 import crystal.react.View
 import crystal.react.implicits._
@@ -129,11 +128,11 @@ object ScienceQueries {
       extends AnyVal {
     def toInput: GmosNorthLongSlitAdvancedConfigInput =
       GmosNorthLongSlitAdvancedConfigInput(
-        Input.ignore,
+        a.overrideWavelength.map(_.toInput).orUnassign,
         a.overrideGrating.orUnassign,
         a.overrideFilter.orUnassign,
         a.overrideFpu.orUnassign,
-        Input.ignore,
+        a.overrideExposureTimeMode.map(_.toInput).orUnassign,
         a.explicitXBin.orUnassign,
         a.explicitYBin.orUnassign,
         a.explicitAmpReadMode.orUnassign,
@@ -150,11 +149,11 @@ object ScienceQueries {
       extends AnyVal {
     def toInput: GmosSouthLongSlitAdvancedConfigInput =
       GmosSouthLongSlitAdvancedConfigInput(
-        Input.ignore,
+        a.overrideWavelength.map(_.toInput).orUnassign,
         a.overrideGrating.orUnassign,
         a.overrideFilter.orUnassign,
         a.overrideFpu.orUnassign,
-        Input.ignore,
+        a.overrideExposureTimeMode.map(_.toInput).orUnassign,
         a.explicitXBin.orUnassign,
         a.explicitYBin.orUnassign,
         a.explicitAmpReadMode.orUnassign,
