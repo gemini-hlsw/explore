@@ -18,7 +18,6 @@ import explore.model.itc._
 import explore.model.Progress
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
-import explore.modes.InstrumentRow
 import explore.modes.SpectroscopyModeRow
 import japgolly.scalajs.react._
 import lucuma.core.enums.Band
@@ -33,14 +32,6 @@ import queries.schemas.ITC
 import queries.schemas.itc.implicits._
 
 import scala.concurrent.duration._
-
-final case class ITCRequestParams(
-  wavelength:    Wavelength,
-  signalToNoise: PosBigDecimal,
-  constraints:   ConstraintSet,
-  target:        NonEmptyList[ItcTarget],
-  mode:          InstrumentRow
-)
 
 object ITCRequests {
   // Copied from https://gist.github.com/gvolpe/44e2263f9068efe298a1f30390de6d22

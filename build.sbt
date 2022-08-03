@@ -98,7 +98,43 @@ lazy val workers = project
     Test / scalaJSLinkerConfig ~= {
       import org.scalajs.linker.interface.OutputPatterns
       _.withOutputPatterns(OutputPatterns.fromJSFile("%s.mjs"))
-    },
+    }
+    // Compile / sourceGenerators += Def.taskDyn {
+    //   val root    = (ThisBuild / baseDirectory).value.toURI.toString
+    //   val from    = (graphql / Compile / sourceDirectory).value
+    //   val to      = (Compile / sourceManaged).value
+    //   val outFrom = from.toURI.toString.stripSuffix("/").stripPrefix(root)
+    //   val outTo   = to.toURI.toString.stripSuffix("/").stripPrefix(root)
+    //   Def.task {
+    //     (graphql / Compile / scalafix)
+    //       .toTask(s" GraphQLGen --out-from=$outFrom --out-to=$outTo")
+    //       .value
+    //     (to ** "*.scala").get
+    //   }
+    // }.taskValue
+  )
+  .enablePlugins(ScalaJSPlugin)
+  .dependsOn(model.js, queries)
+
+lazy val graphql = project
+  .in(file("common-graphql"))
+  .dependsOn(model.jvm)
+  .settings(commonSettings: _*)
+  .settings(commonJsLibSettings: _*)
+  .settings(
+    libraryDependencies ++=
+      LucumaSchemas.value
+  )
+  .enablePlugins(ScalaJSPlugin)
+
+lazy val queries = project
+  .in(file("common-queries"))
+  .dependsOn(model.jvm)
+  .settings(commonSettings: _*)
+  .settings(commonJsLibSettings: _*)
+  .settings(
+    libraryDependencies ++=
+      LucumaSchemas.value,
     Compile / sourceGenerators += Def.taskDyn {
       val root    = (ThisBuild / baseDirectory).value.toURI.toString
       val from    = (graphql / Compile / sourceDirectory).value
@@ -114,22 +150,10 @@ lazy val workers = project
     }.taskValue
   )
   .enablePlugins(ScalaJSPlugin)
-  .dependsOn(model.js)
-
-lazy val graphql = project
-  .in(file("common-graphql"))
-  .dependsOn(model.jvm)
-  .settings(commonSettings: _*)
-  .settings(commonJsLibSettings: _*)
-  .settings(
-    libraryDependencies ++=
-      LucumaSchemas.value
-  )
-  .enablePlugins(ScalaJSPlugin)
 
 lazy val common = project
   .in(file("common"))
-  .dependsOn(modelTestkit.js)
+  .dependsOn(modelTestkit.js, queries)
   .settings(commonSettings: _*)
   .settings(commonJsLibSettings: _*)
   .settings(commonModuleTest: _*)
@@ -147,20 +171,20 @@ lazy val common = project
       "herokuSourceVersion" -> sys.env.get("SOURCE_VERSION"),
       "buildDateTime"       -> System.currentTimeMillis()
     ),
-    buildInfoPackage := "explore",
-    Compile / sourceGenerators += Def.taskDyn {
-      val root    = (ThisBuild / baseDirectory).value.toURI.toString
-      val from    = (graphql / Compile / sourceDirectory).value
-      val to      = (Compile / sourceManaged).value
-      val outFrom = from.toURI.toString.stripSuffix("/").stripPrefix(root)
-      val outTo   = to.toURI.toString.stripSuffix("/").stripPrefix(root)
-      Def.task {
-        (graphql / Compile / scalafix)
-          .toTask(s" GraphQLGen --out-from=$outFrom --out-to=$outTo")
-          .value
-        (to ** "*.scala").get
-      }
-    }.taskValue
+    buildInfoPackage := "explore"
+    // Compile / sourceGenerators += Def.taskDyn {
+    //   val root    = (ThisBuild / baseDirectory).value.toURI.toString
+    //   val from    = (graphql / Compile / sourceDirectory).value
+    //   val to      = (Compile / sourceManaged).value
+    //   val outFrom = from.toURI.toString.stripSuffix("/").stripPrefix(root)
+    //   val outTo   = to.toURI.toString.stripSuffix("/").stripPrefix(root)
+    //   Def.task {
+    //     (graphql / Compile / scalafix)
+    //       .toTask(s" GraphQLGen --out-from=$outFrom --out-to=$outTo")
+    //       .value
+    //     (to ** "*.scala").get
+    //   }
+    // }.taskValue
   )
   .enablePlugins(ScalaJSPlugin, BuildInfoPlugin)
 

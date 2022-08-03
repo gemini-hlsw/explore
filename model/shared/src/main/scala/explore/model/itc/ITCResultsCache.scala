@@ -9,7 +9,6 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.modes._
 import explore.model.itc._
-import japgolly.scalajs.react._
 import lucuma.core.enums._
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet

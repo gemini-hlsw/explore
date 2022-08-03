@@ -8,6 +8,7 @@ import clue.data.syntax._
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosLong
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.model.ResizableSection
 import io.circe.syntax._
 import lucuma.core.enums.Band
 import lucuma.core.math.BrightnessUnits._
@@ -22,6 +23,8 @@ import lucuma.schemas.ObservationDB.Types._
 import queries.schemas.UserPreferencesDB.Types.ExploreResizableWidthInsertInput
 
 import scala.collection.immutable.SortedMap
+
+final case class WidthUpsertInput(user: User.Id, section: ResizableSection, width: Int)
 
 // TODO Move to lucuma-schemas
 object implicits {
