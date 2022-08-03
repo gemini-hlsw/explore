@@ -5,6 +5,7 @@ package explore.model.boopickle
 
 import boopickle.DefaultBasic._
 import coulomb.Quantity
+import cats.data.NonEmptyMap
 import eu.timepit.refined.types.numeric.NonNegBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string.NonEmptyString
@@ -18,6 +19,18 @@ import explore.modes._
 import lucuma.core.enums.FocalPlane
 import lucuma.core.enums.SpectroscopyCapabilities
 import lucuma.core.math.units._
+import explore.model.itc.ItcTarget
+import lucuma.core.math.RadialVelocity
+import lucuma.core.model.SourceProfile
+import lucuma.core.model.SpectralDefinition
+import lucuma.core.math.BrightnessUnits
+import lucuma.core.math.dimensional._
+import lucuma.core.model.UnnormalizedSED
+import lucuma.core.math.BrightnessUnits.Brightness
+import lucuma.core.math.BrightnessUnits.LineFlux
+import lucuma.core.math.BrightnessUnits.FluxDensityContinuum
+import lucuma.core.math.Wavelength
+import lucuma.core.model.EmissionLine
 
 // Boopicklers for itc related types
 trait ItcPicklers extends CommonPicklers {
@@ -126,8 +139,93 @@ trait ItcPicklers extends CommonPicklers {
       )
     )
 
-  implicit val matrixPickler: Pickler[SpectroscopyModesMatrix] =
-    transformPickler(SpectroscopyModesMatrix.apply)(_.matrix)
+  given Pickler[SpectroscopyModesMatrix] = generatePickler
+
+  given Pickler[UnnormalizedSED.StellarLibrary] = generatePickler
+
+  given Pickler[UnnormalizedSED.CoolStarModel] =
+    transformPickler(UnnormalizedSED.CoolStarModel.apply)(_.temperature)
+
+  implicit val sedGalaxyPickler: Pickler[UnnormalizedSED.Galaxy] =
+    transformPickler(UnnormalizedSED.Galaxy.apply)(_.galaxySpectrum)
+
+  implicit val sedPlanetPickler: Pickler[UnnormalizedSED.Planet] =
+    transformPickler(UnnormalizedSED.Planet.apply)(_.planetSpectrum)
+
+  implicit val sedPQuasarPickler: Pickler[UnnormalizedSED.Quasar] =
+    transformPickler(UnnormalizedSED.Quasar.apply)(_.quasarSpectrum)
+
+  implicit val sedHIIRegionPickler: Pickler[UnnormalizedSED.HIIRegion] =
+    transformPickler(UnnormalizedSED.HIIRegion.apply)(_.hiiRegionSpectrum)
+
+  implicit val sedPNPickler: Pickler[UnnormalizedSED.PlanetaryNebula] =
+    transformPickler(UnnormalizedSED.PlanetaryNebula.apply)(_.planetaryNebulaSpectrum)
+
+  implicit val sedPLPNPickler: Pickler[UnnormalizedSED.PowerLaw] =
+    transformPickler(UnnormalizedSED.PowerLaw.apply)(_.index)
+
+  implicit val sedBBPickler: Pickler[UnnormalizedSED.BlackBody] =
+    transformPickler(UnnormalizedSED.BlackBody.apply)(_.temperature)
+
+  implicit val sedUDPickler: Pickler[UnnormalizedSED.UserDefined] =
+    transformPickler(UnnormalizedSED.UserDefined.apply)(_.fluxDensities)
+
+  implicit def sedPickler[A]: Pickler[UnnormalizedSED] =
+    compositePickler[UnnormalizedSED]
+      .addConcreteType[UnnormalizedSED.StellarLibrary]
+      .addConcreteType[UnnormalizedSED.CoolStarModel]
+      .addConcreteType[UnnormalizedSED.Galaxy]
+      .addConcreteType[UnnormalizedSED.Planet]
+      .addConcreteType[UnnormalizedSED.Quasar]
+      .addConcreteType[UnnormalizedSED.HIIRegion]
+      .addConcreteType[UnnormalizedSED.PlanetaryNebula]
+      .addConcreteType[UnnormalizedSED.PowerLaw]
+      .addConcreteType[UnnormalizedSED.BlackBody]
+      .addConcreteType[UnnormalizedSED.UserDefined]
+
+  given taggedMeasurePickler[N: Pickler, T](using Pickler[Units Of T]): Pickler[Measure[N] Of T] =
+    transformPickler((x: (Units Of T, N)) => x._1.withValueTagged(x._2))(x =>
+      (Measure.unitsTagged.get(x), x.value)
+    )
+
+  // given brightessMeasurePickler[A]: Pickler[BrightnessUnits.BrightnessMeasure[A]] =
+  //   ???
+  //   ???
+  // transformPickler(Function.tupled(Measure.apply[A] _))(x => (x.value, x.units, x.error))
+
+  given bandNormalizerPickler[A](using
+    Pickler[Units Of Brightness[A]]
+  ): Pickler[SpectralDefinition.BandNormalized[A]] =
+    transformPickler(Function.tupled(SpectralDefinition.BandNormalized.apply[A] _))(x =>
+      (x.sed, x.brightnesses)
+    )
+
+  given bandNormalizerPickler[A](using
+    Pickler[Units Of LineFlux[A]],
+    Pickler[Units Of FluxDensityContinuum[A]]
+  ): Pickler[SpectralDefinition.EmissionLines[A]] =
+    transformPickler((x: (List[(Wavelength, EmissionLine[A])], FluxDensityContinuum[A])) =>
+      SpectralDefinition.EmissionLines(x._1, x._2)
+    )(x => (x.lines.toList, x.fluxDensityContinuum))
+
+  given spectralDefinitionPickler[A](using
+    Pickler[Units Of Brightness[A]]
+  ): Pickler[SpectralDefinition[A]] =
+    compositePickler[SpectralDefinition[A]]
+      .addConcreteType[SpectralDefinition.BandNormalized[A]]
+      .addConcreteType[SpectralDefinition.EmissionLines[A]]
+  //
+  // implicit val sourceProfilePointPickler: Pickler[SourceProfile.Point] =
+  //   transformPickler(SourceProfile.Point.apply)(_.spectralDefinition)
+  //
+  // implicit val sourceProfilePickler: Pickler[SourceProfile] =
+  //   compositePickler[SourceProfile]
+  //     .addConcreteType[SourceProfile.Point]
+  //     .addConcreteType[SourceProfile.Uniform]
+  //     .addConcreteType[SourceProfile.Gaussian]
+  //
+  // implicit val picklerItcTarge: Pickler[ItcTarget] =
+  //   transformPickler(Function.tupled(ItcTarget.apply _))(x => (x.profile, x.rv))
 }
 
 object ItcPicklers extends ItcPicklers

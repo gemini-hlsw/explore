@@ -4,6 +4,9 @@
 package explore.model.boopickle
 
 import boopickle.DefaultBasic._
+import cats.Order
+import cats.data.NonEmptyMap
+import cats.data.NonEmptyList
 import coulomb._
 import coulomb.syntax.*
 import eu.timepit.refined._
@@ -64,26 +67,41 @@ trait CommonPicklers {
       Enumerated[A].tag(_)
     )
 
-  implicit def picklerWithGid: Pickler[Target.Id] =
+  given Pickler[Target.Id] =
     transformPickler(Target.Id.apply)(_.value)
 
-  implicit def picklerWavelength: Pickler[Wavelength] =
+  given picklerNonEmptyList[A: Pickler]: Pickler[NonEmptyList[A]] =
+    transformPickler(NonEmptyList.fromListUnsafe[A])(_.toList)
+
+  given picklerNonEmptyMap[A: Order: Pickler, B: Pickler]: Pickler[NonEmptyMap[A, B]] =
+    transformPickler((a: NonEmptyList[(A, B)]) => NonEmptyMap.of(a.head, a.tail: _*))(
+      _.toNel
+    )
+
+  given Pickler[Wavelength] =
     transformPickler((i: Int) =>
       Wavelength.fromPicometers
         .getOption(i)
         .getOrElse(sys.error("cannot unpickle"))
     )(_.toPicometers.value.value)
 
-  implicit def picklerAngle: Pickler[Angle] =
+  given Pickler[Angle] =
     transformPickler(Angle.fromMicroarcseconds)(_.toMicroarcseconds)
 
-  implicit def picklerHourAngle: Pickler[HourAngle] =
+  given Pickler[RadialVelocity] =
+    transformPickler((x: BigDecimal) =>
+      RadialVelocity.fromMetersPerSecond
+        .getOption(x)
+        .getOrElse(sys.error("Cannot unpickle"))
+    )(RadialVelocity.fromMetersPerSecond.reverseGet)
+
+  given Pickler[HourAngle] =
     transformPickler(HourAngle.fromMicroseconds)(_.toMicroseconds)
 
-  implicit def picklerRA: Pickler[RightAscension] =
+  given Pickler[RightAscension] =
     transformPickler(RightAscension.apply)(_.toHourAngle)
 
-  implicit def picklerDec: Pickler[Declination] =
+  given Pickler[Declination] =
     new Pickler[Declination] {
       override def pickle(a: Declination)(implicit state: PickleState): Unit = {
         state.pickle(Declination.fromAngle.reverseGet(a))
@@ -95,10 +113,10 @@ trait CommonPicklers {
       }
     }
 
-  implicit def picklerCoordinates: Pickler[Coordinates] =
+  given Pickler[Coordinates] =
     transformPickler(Function.tupled(Coordinates.apply _))(x => (x.ra, x.dec))
 
-  implicit def picklerOffset: Pickler[Offset] =
+  given Pickler[Offset] =
     transformPickler((x: (Angle, Angle)) =>
       Offset(Offset.Component.angle[Axis.P].reverseGet(x._1),
              Offset.Component.angle[Axis.Q].reverseGet(x._2)
@@ -138,13 +156,6 @@ trait CatalogPicklers extends CommonPicklers {
     )
   implicit def picklerProperMotion: Pickler[ProperMotion]           =
     transformPickler(Function.tupled(ProperMotion.apply _))(x => (x.ra, x.dec))
-
-  implicit def picklerRadialVelocity: Pickler[RadialVelocity] =
-    transformPickler((x: BigDecimal) =>
-      RadialVelocity.fromMetersPerSecond
-        .getOption(x)
-        .getOrElse(sys.error("Cannot unpickle"))
-    )(RadialVelocity.fromMetersPerSecond.reverseGet)
 
   implicit def picklerParallax: Pickler[Parallax] =
     transformPickler(Parallax.fromMicroarcseconds)(_.μas.value.value)

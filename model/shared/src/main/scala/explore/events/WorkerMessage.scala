@@ -19,6 +19,12 @@ import org.http4s.Uri
 
 import java.time.Duration
 import java.time.Instant
+import lucuma.core.math.Wavelength
+import eu.timepit.refined.types.numeric.PosBigDecimal
+import lucuma.core.model.ConstraintSet
+import cats.data.NonEmptyList
+import explore.modes.SpectroscopyModeRow
+import explore.model.itc.ItcTarget
 
 object picklers extends CatalogPicklers with EventPicklers
 
@@ -60,3 +66,11 @@ final case class AgsRequest(
 ) extends WorkerMessage
 
 final case class AgsResult(results: List[AgsAnalysis]) extends WorkerMessage
+
+final case class ItcQuery(
+  wavelength:    Wavelength,
+  signalToNoise: PosBigDecimal,
+  constraints:   ConstraintSet,
+  targets:       NonEmptyList[ItcTarget],
+  modes:         List[SpectroscopyModeRow]
+) extends WorkerMessage
