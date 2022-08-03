@@ -115,51 +115,58 @@ trait CatalogCache extends CatalogIDB with AsyncToIO {
 
     val ldt   = LocalDateTime.ofInstant(obsTime, ZoneId.of("UTC"))
     // We consider the query valid from the fist moment of the year to the end
-    val start =
-      ldt.`with`(ChronoField.DAY_OF_YEAR, 1L).`with`(ChronoField.NANO_OF_DAY, 0)
+    val start = ldt.`with`(ChronoField.DAY_OF_YEAR, 1L).`with`(ChronoField.NANO_OF_DAY, 0)
     val end   = start.plus(1, ChronoUnit.YEARS)
 
-    // Make a time based query for pm over a year
-    val query = TimeRangeQueryByADQL(
-      tracking,
-      Interval
-        .closed(start.toInstant(Constants.UTCOffset), end.toInstant(Constants.UTCOffset))
-        .asInstanceOf[Bounded[Instant]],
-      probeArm.candidatesArea,
-      brightnessConstraints.some,
-      proxy.some
-    )
+    Interval.closed(
+      start.toInstant(Constants.UTCOffset),
+      end.toInstant(Constants.UTCOffset)
+    ) match {
+      case yearInterval @ Bounded(_, _, _) =>
+        // Make a time based query for pm over a year
+        val query = TimeRangeQueryByADQL(
+          tracking,
+          yearInterval,
+          probeArm.candidatesArea,
+          brightnessConstraints.some,
+          proxy.some
+        )
 
-    (L.debug(s"Requested catalog $query ${cacheQueryHash.hash(query)}") *>
-      // Try to find it in the db
-      readGuideStarCandidates(idb, stores, query).toIO.handleError(_ =>
-        none
-      )) // Try to find it in the db
-      .flatMap(
-        _.fold(
-          // Not found in the db, re request
-          readFromGaia[IO](client, query)
-            .map(
-              _.collect { case Right(s) =>
-                GuideStarCandidate.siderealTarget.get(s)
-              }
-            )
-            .flatMap { candidates =>
-              L.debug(s"Catalog results from remote catalog: ${candidates.length} candidates") *>
-                postWorkerMessage[IO](self, CatalogResults(candidates)) *>
-                storeGuideStarCandidates(idb, stores, query, candidates).toIO
-                  .handleError(e => L.error(e)("Error storing guidstar candidates"))
+        (L.debug(s"Requested catalog $query ${cacheQueryHash.hash(query)}") *>
+          // Try to find it in the db
+          readGuideStarCandidates(idb, stores, query).toIO.handleError(_ =>
+            none
+          )) // Try to find it in the db
+          .flatMap(
+            _.fold(
+              // Not found in the db, re request
+              readFromGaia[IO](client, query)
+                .map(
+                  _.collect { case Right(s) =>
+                    GuideStarCandidate.siderealTarget.get(s)
+                  }
+                )
+                .flatMap { candidates =>
+                  L.debug(
+                    s"Catalog results from remote catalog: ${candidates.length} candidates"
+                  ) *>
+                    postWorkerMessage[IO](self, CatalogResults(candidates)) *>
+                    storeGuideStarCandidates(idb, stores, query, candidates).toIO
+                      .handleError(e => L.error(e)("Error storing guidstar candidates"))
+                }
+                .handleErrorWith { e =>
+                  postWorkerMessage[IO](self, CatalogQueryError(e.getMessage()))
+                }
+                .void
+            ) { c =>
+              // Cache hit!
+              L.debug(s"Catalog results from cache: ${c.candidates.length} candidates") *>
+                postWorkerMessage[IO](self, c)
             }
-            .handleErrorWith { e =>
-              postWorkerMessage[IO](self, CatalogQueryError(e.getMessage()))
-            }
-            .void
-        ) { c =>
-          // Cache hit!
-          L.debug(s"Catalog results from cache: ${c.candidates.length} candidates") *>
-            postWorkerMessage[IO](self, c)
-        }
-      )
+          )
+      case _                               =>
+        L.error("Unexpected error in CatalogCage: A year is not a Bounded Interval.")
+    }
   }
 
 }

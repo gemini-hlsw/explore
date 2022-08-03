@@ -25,6 +25,7 @@ import explore.model.enums.Theme
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.math.units._
 import lucuma.ui.forms.ExternalValue
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -164,12 +165,12 @@ package object utils {
       .map(_ => <.i(ExploreStyles.ClearableInputIcon, ^.onClick --> ev.set(view)(None)))
       .orUndefined
 
-  // We can remove this if there's ever a coulomb-refined for Scala 3
+  // We should move this to lucuma-core, or remove it if there's ever a coulomb-refined for Scala 3
   implicit class EnhanceWithToRefined[V, U](q: Quantity[V, U]) {
     @inline def toRefined[P](implicit
       vv: Validate[V, P]
-    ): Either[String, Quantity[Refined[V, P], U]] =
-      refineV[P](q.value).map(_.withUnit[U])
+    ): Either[String, Quantity[V Refined P, U]] =
+      refineQV[P](q)
   }
 
   implicit val MonoidVdomNode: Monoid[VdomNode] = new Monoid[VdomNode] {

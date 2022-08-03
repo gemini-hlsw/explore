@@ -26,8 +26,7 @@ object RoutingInfo {
 
   // The only Page that doesn't have a program ID is the NoProgramPage, so instead of polluting RoutingInfo with
   // Option[Program.Id], we'll just associate a dummy id with it. NoProgramPage will need special handling, anyways.
-  val dummyProgramId =
-    Program.Id(refineV[Positive](Long.MaxValue).getOrElse(sys.error("cannot happen")))
+  val dummyProgramId = Program.Id(Long.MaxValue.refined)
 
   def from(page: Page): RoutingInfo = page match {
     case NoProgramPage                         => RoutingInfo(AppTab.Overview, none, Focused.None)
