@@ -107,14 +107,17 @@ object ObsBadge {
                   props.setSubtitleCB
                     .map(setCB =>
                       EditableLabel(
-                        withTitle.subtitle,
-                        setCB,
-                        ExploreStyles.ObsBadgeSubtitle,
-                        ExploreStyles.ObsBadgeSubtitleInput,
-                        ("Add description": VdomNode).reuseAlways,
-                        ExploreStyles.ObsBadgeSubtitleAdd,
-                        ExploreStyles.BlendedButton |+| ExploreStyles.ObsBadgeSubtitleEdit,
-                        ExploreStyles.BlendedButton |+| ExploreStyles.ObsBadgeSubtitleDelete
+                        value = withTitle.subtitle,
+                        mod = setCB,
+                        editOnClick = false,
+                        textClass = ExploreStyles.ObsBadgeSubtitle,
+                        inputClass = ExploreStyles.ObsBadgeSubtitleInput,
+                        addButtonLabel = "Add description",
+                        addButtonClass = ExploreStyles.ObsBadgeSubtitleAdd,
+                        leftButtonClass =
+                          ExploreStyles.BlendedButton |+| ExploreStyles.ObsBadgeSubtitleEdit,
+                        rightButtonClass =
+                          ExploreStyles.BlendedButton |+| ExploreStyles.ObsBadgeSubtitleDelete
                       )
                     )
                     .whenDefined
