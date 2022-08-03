@@ -272,7 +272,13 @@ object TargetSelectionPopup {
             )
           )(
             ^.autoComplete.off,
-            ^.onSubmit ==> (e => e.preventDefaultCB >> search(inputValue.get).runAsync)
+            ^.onSubmit ==> (e =>
+              e.preventDefaultCB >>
+                singleEffect
+                  .submit(search(inputValue.get))
+                  .runAsync
+                  .whenA(!searching.value)
+            )
           )
         )
     }
