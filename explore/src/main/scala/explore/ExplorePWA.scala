@@ -6,6 +6,8 @@ package explore
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.callback.Callback
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import react.fa.IconSize
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes
@@ -98,7 +100,7 @@ object ExplorePWA {
               // https://vite-plugin-pwa.netlify.app/guide/periodic-sw-updates.html
               Callback.log(s"Registered service worker") *>
                 Callback(r.update()).delayMs(1000.0).toCallback *> // Inital check
-                scheduleUpdateCheck(r) // Periodic checks
+                scheduleUpdateCheck(r)                             // Periodic checks
           )
         )
       updateSW

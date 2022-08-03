@@ -12,7 +12,10 @@ import explore.components.ui.ExploreStyles
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import react.common._
+import lucuma.refined.*
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
+import react.common.ReactFnProps
 import react.datepicker._
 import react.semanticui.collections.form.Form
 import react.semanticui.sizes._
@@ -83,7 +86,7 @@ object VizTimeEditor {
             pendingRender = EmptyVdom,
             valueRender = instant =>
               React.Fragment(
-                <.label("Observation time", HelpIcon("configuration/obstime.md")),
+                <.label("Observation time", HelpIcon("configuration/obstime.md".refined)),
                 Datepicker(onChange =
                   (newValue, _) =>
                     newValue.fromDatePickerToInstantOpt.foldMap { i =>
@@ -99,4 +102,5 @@ object VizTimeEditor {
         )
       )
     }
+
 }

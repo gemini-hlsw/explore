@@ -21,6 +21,8 @@ import explore.model.ModelUndoStacks
 import explore.model.enums.ExecutionEnvironment
 import explore.model.enums.Theme
 import explore.programs.ProgramsPopup
+import explore.syntax.ui.*
+import explore.syntax.ui.given
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.callback.CallbackCatsEffect._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -28,9 +30,11 @@ import log4cats.loglevel.LogLevelLogger
 import lucuma.core.model.GuestRole
 import lucuma.core.model.Program
 import lucuma.core.model.User
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import org.scalajs.dom
 import org.scalajs.dom.window
-import react.common._
+import react.common.ReactFnProps
 import react.semanticui.collections.menu._
 import react.semanticui.elements.image.Image
 import react.semanticui.modules.checkbox.Checkbox

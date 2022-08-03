@@ -3,6 +3,7 @@
 
 package explore.optics
 
+import explore.optics.all._
 import lucuma.core.math.arb.ArbRadialVelocity
 import lucuma.core.math.arb.ArbRedshift
 import lucuma.core.model.arb.ArbTarget

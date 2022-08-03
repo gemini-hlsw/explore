@@ -7,6 +7,7 @@ import cats.kernel.Eq
 import explore.model.ScienceModeAdvanced.GmosSouthLongSlit
 import explore.model.arb.ArbScienceModeAdvanced._
 import explore.optics._
+import explore.optics.all._
 import lucuma.core.util.arb.ArbEnumerated._
 import monocle.Focus
 import monocle.Lens
@@ -15,21 +16,21 @@ import munit.DisciplineSuite
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
 
+case class Inner[A](a: A)
+object Inner {
+  def a[A]: Lens[Inner[A], A] = Focus[Inner[A]](_.a)
+
+  implicit def eqInner[A: Eq]: Eq[Inner[A]] = Eq.by(_.a)
+}
+
+case class Outer[A](opt: Option[Inner[A]])
+object Outer {
+  def opt[A]: Lens[Outer[A], Option[Inner[A]]] = Focus[Outer[A]](_.opt)
+
+  implicit def eqOuter[A: Eq]: Eq[Outer[A]] = Eq.by(_.opt)
+}
+
 class OpticsSuite extends DisciplineSuite {
-
-  case class Inner[A](a: A)
-  object Inner {
-    def a[A]: Lens[Inner[A], A] = Focus[Inner[A]](_.a)
-
-    implicit def eqInner[A: Eq]: Eq[Inner[A]] = Eq.by(_.a)
-  }
-
-  case class Outer[A](opt: Option[Inner[A]])
-  object Outer {
-    def opt[A]: Lens[Outer[A], Option[Inner[A]]] = Focus[Outer[A]](_.opt)
-
-    implicit def eqOuter[A: Eq]: Eq[Outer[A]] = Eq.by(_.opt)
-  }
 
   implicit def wrapArb[A: Arbitrary]: Arbitrary[Inner[A]] =
     Arbitrary[Inner[A]] {

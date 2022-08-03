@@ -17,10 +17,11 @@ import explore.model.UserVault
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.UAParser
 import org.scalajs.dom
-import react.common._
-import react.common.implicits._
+import react.common.ReactFnProps
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.image.Image
 import react.semanticui.elements.label.Label

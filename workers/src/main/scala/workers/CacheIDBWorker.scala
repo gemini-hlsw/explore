@@ -10,7 +10,7 @@ import cats.effect.unsafe.implicits._
 import cats.syntax.all._
 import explore.events._
 import explore.model.StaticData
-import explore.model.boopickle._
+import explore.model.boopickle.Boopickle._
 import explore.modes.SpectroscopyModesMatrix
 import japgolly.scalajs.react.callback.CallbackCatsEffect._
 import japgolly.scalajs.react.callback._

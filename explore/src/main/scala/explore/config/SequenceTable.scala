@@ -15,7 +15,8 @@ import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
 import lucuma.core.model.sequence._
 import lucuma.ui.reusability._
-import react.common._
+import lucuma.ui.syntax.all.given
+import react.common.ReactFnProps
 import react.semanticui.collections.table._
 import reactST.reactTable._
 
@@ -42,7 +43,6 @@ object SequenceTable {
       step.instrumentConfig match {
         case DynamicConfig.GmosNorth(exposure, _, _, _, _, _, _) => exposure.getSeconds
         case DynamicConfig.GmosSouth(exposure, _, _, _, _, _, _) => exposure.getSeconds
-        case _                                                   => 0L
       }
     // TODO Not in model yet, we are just simulating
     lazy val guided: Boolean                  =
@@ -59,7 +59,6 @@ object SequenceTable {
       (step.instrumentConfig match {
         case DynamicConfig.GmosNorth(_, _, _, _, grating, _, _) => grating.map(_.wavelength)
         case DynamicConfig.GmosSouth(_, _, _, _, grating, _, _) => grating.map(_.wavelength)
-        case _                                                  => none
       }).map(Wavelength.decimalNanometers.reverseGet)
     lazy val gratingName: Option[String]      =
       step.instrumentConfig match {
@@ -67,8 +66,6 @@ object SequenceTable {
           grating.map(_.grating.shortName)
         case DynamicConfig.GmosSouth(_, _, _, _, grating, _, _) =>
           grating.map(_.grating.shortName)
-        case _                                                  =>
-          none
       }
     lazy val fpuName: Option[String]          =
       step.instrumentConfig match {
@@ -83,25 +80,21 @@ object SequenceTable {
       step.instrumentConfig match {
         case DynamicConfig.GmosNorth(_, _, _, _, _, filter, _) => filter.map(_.shortName)
         case DynamicConfig.GmosSouth(_, _, _, _, _, filter, _) => filter.map(_.shortName)
-        case _                                                 => none
       }
     lazy val readoutXBin: Option[String]      =
       step.instrumentConfig match {
         case DynamicConfig.GmosNorth(_, readout, _, _, _, _, _) => readout.xBin.shortName.some
         case DynamicConfig.GmosSouth(_, readout, _, _, _, _, _) => readout.xBin.shortName.some
-        case _                                                  => none
       }
     lazy val readoutYBin: Option[String]      =
       step.instrumentConfig match {
         case DynamicConfig.GmosNorth(_, readout, _, _, _, _, _) => readout.yBin.shortName.some
         case DynamicConfig.GmosSouth(_, readout, _, _, _, _, _) => readout.yBin.shortName.some
-        case _                                                  => none
       }
     lazy val roi: Option[String]              =
       step.instrumentConfig match {
         case DynamicConfig.GmosNorth(_, _, _, roi, _, _, _) => roi.shortName.some
         case DynamicConfig.GmosSouth(_, _, _, roi, _, _, _) => roi.shortName.some
-        case _                                              => none
       }
   }
 

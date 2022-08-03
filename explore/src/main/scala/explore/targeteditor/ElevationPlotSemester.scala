@@ -8,7 +8,11 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.hooks._
 import crystal.react.implicits._
+import crystal.react.reuse._
 import explore.implicits._
+import explore.syntax.*
+import explore.syntax.given
+import explore.syntax.ui.given
 import fs2.Stream
 import gpp.highcharts.highchartsStrings.line
 import gpp.highcharts.mod.XAxisLabelsOptions
@@ -26,8 +30,11 @@ import lucuma.core.model.TwilightBoundedNight
 import lucuma.core.syntax.boundedInterval._
 import lucuma.core.syntax.time._
 import lucuma.ui.reusability._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import org.typelevel.cats.time._
-import react.common._
+import react.common.GenericComponentPAF2VdomNode
+import react.common.ReactFnProps
 import react.highcharts.Chart
 import react.resizeDetector.hooks._
 import spire.math.Bounded
@@ -102,7 +109,7 @@ object ElevationPlotSemester {
 
   val dateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
-  implicit val propsReuse: Reusability[Props]           = Reusability.derive
+  implicit val propsReuse: Reusability[Props]           = Reusability.by(x => (x.site, x.coords, x.semester))
   implicit val taksReuse: Reusability[Option[IO[Unit]]] = Reusability.always
 
   val component =
@@ -176,8 +183,16 @@ object ElevationPlotSemester {
 
         val tooltipFormatter: TooltipFormatterCallbackFunction = {
           (ctx: TooltipFormatterContextObject, _: Tooltip) =>
-            val date       = dateFormat(ctx.x)
-            val visibility = Duration.ofMillis((ctx.y * MillisPerHour).toLong)
+            val x          = ctx.x match
+              case x: Double => x
+              case x: String => x.toDouble
+              case _         => 0.0
+            val y          = ctx.y match
+              case y: Double => y
+              case y: String => y.toDouble
+              case _         => 0.0
+            val date       = dateFormat(x)
+            val visibility = Duration.ofMillis((y * MillisPerHour).toLong)
             val minutes    = visibility.getSeconds / 60
             s"<strong>$date</strong><br/>${ctx.series.name}: ${minutes / 60}h${minutes % 60}m"
         }

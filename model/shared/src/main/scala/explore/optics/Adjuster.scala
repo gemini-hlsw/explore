@@ -3,6 +3,7 @@
 
 package explore.optics
 
+import explore.optics.all._
 import monocle._
 
 // An Adjuster is just like a Setter, but less strict: it does not abide by the "compose modify" law.

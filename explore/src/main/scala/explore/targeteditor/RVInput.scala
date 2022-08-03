@@ -18,11 +18,12 @@ import lucuma.core.math.RadialVelocity
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.core.validation._
+import lucuma.refined.*
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
-import react.common._
-import react.common.implicits._
+import lucuma.ui.syntax.all.given
+import react.common.ReactFnProps
 import react.semanticui.elements.label.LabelPointing
 
 final case class RVInput(
@@ -39,13 +40,13 @@ object RVInput {
 
   private object RVView {
     case object RV extends RVView {
-      override val tag = "RV"
+      override val tag = "RV".refined
     }
     case object Z  extends RVView {
-      override val tag = "z"
+      override val tag = "z".refined
     }
     case object CZ extends RVView {
-      override val tag = "cz"
+      override val tag = "cz".refined
     }
 
     implicit val rvViewEnumeration: Enumerated[RVView] =
@@ -68,7 +69,7 @@ object RVInput {
       .render { (props, rvView) =>
         val errorCss = ExploreStyles.InputErrorTooltip
 
-        val baseCss = ExploreStyles.Grow(1) |+| ExploreStyles.WarningInput.when_(
+        val baseCss = ExploreStyles.Grow(1.refined) |+| ExploreStyles.WarningInput.when_(
           props.rv.get.isEmpty
         )
 
@@ -79,8 +80,9 @@ object RVInput {
               value = props.rv.zoom(rvToRedshiftGet)(rvToRedshiftMod),
               errorClazz = errorCss,
               errorPointing = LabelPointing.Below,
-              validFormat = InputValidSplitEpi.fromFormat(formatZ, "Must be a number").optional,
-              changeAuditor = ChangeAuditor.fromFormat(formatZ).decimal(9).optional,
+              validFormat =
+                InputValidSplitEpi.fromFormat(formatZ, "Must be a number".refined).optional,
+              changeAuditor = ChangeAuditor.fromFormat(formatZ).decimal(9.refined).optional,
               clazz = baseCss,
               disabled = props.disabled
             )
@@ -90,8 +92,9 @@ object RVInput {
               value = props.rv.zoom(rvToARVGet)(rvToARVMod),
               errorClazz = errorCss,
               errorPointing = LabelPointing.Below,
-              validFormat = InputValidSplitEpi.fromFormat(formatCZ, "Must be a number").optional,
-              changeAuditor = ChangeAuditor.fromFormat(formatCZ).decimal(10).optional,
+              validFormat =
+                InputValidSplitEpi.fromFormat(formatCZ, "Must be a number".refined).optional,
+              changeAuditor = ChangeAuditor.fromFormat(formatCZ).decimal(10.refined).optional,
               clazz = baseCss,
               disabled = props.disabled
             )
@@ -101,8 +104,9 @@ object RVInput {
               value = props.rv,
               errorClazz = errorCss,
               errorPointing = LabelPointing.Below,
-              validFormat = InputValidSplitEpi.fromFormat(formatRV, "Must be a number").optional,
-              changeAuditor = ChangeAuditor.fromFormat(formatRV).decimal(3).optional,
+              validFormat =
+                InputValidSplitEpi.fromFormat(formatRV, "Must be a number".refined).optional,
+              changeAuditor = ChangeAuditor.fromFormat(formatRV).decimal(3.refined).optional,
               clazz = baseCss,
               disabled = props.disabled
             )

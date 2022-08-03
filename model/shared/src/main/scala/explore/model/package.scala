@@ -16,6 +16,7 @@ import lucuma.core.model.SourceProfile
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.Target
 import lucuma.core.model.UnnormalizedSED
+import lucuma.refined.*
 
 import scala.collection.immutable.SortedMap
 
@@ -24,13 +25,13 @@ package object model {
   type DitherNanoMeters      = BigDecimal Refined DitherNanoMetersRange
 
   val MaxHourValue = BigDecimal(1000)
-  type HourRange = Interval.Closed[0, MaxHourValue.type]
+  type HourRange = Interval.Closed[0, 1000]
   type Hours     = BigDecimal Refined HourRange
   object Hours extends RefinedTypeOps[Hours, BigDecimal] {
     val Max: Hours = Hours.unsafeFrom(MaxHourValue)
   }
 
-  val NewTargetName: NonEmptyString = "<New Target>"
+  val NewTargetName: NonEmptyString = "<New Target>".refined
 
   val EmptySiderealTarget =
     Target.Sidereal(

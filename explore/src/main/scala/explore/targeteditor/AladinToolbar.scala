@@ -12,6 +12,8 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ags.GuideStarCandidate
 import lucuma.core.math._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import react.aladin.Fov
 import react.common.ReactFnProps
 import react.fa.Transform

@@ -17,12 +17,14 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.SourceProfile._
+import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.forms.EnumSelect
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.reusability._
+import lucuma.ui.syntax.all.given
 import queries.schemas.implicits._
-import react.common._
+import react.common.ReactFnProps
 
 case class SourceProfileEditor(
   sourceProfile:       Aligner[SourceProfile, SourceProfileInput],
@@ -70,7 +72,7 @@ object SourceProfileEditor {
           React.Fragment(
             <.label("FWHM", ExploreStyles.SkipToNext),
             InputWithUnits(                             // FWHM is positive arcsec accepting decimals
-              id = "fwhm",
+              id = "fwhm".refined,
               value = gaussianAligner
                 .zoom(Gaussian.fwhm, GaussianInput.fwhm.modify)
                 .view(_.toInput.assign),

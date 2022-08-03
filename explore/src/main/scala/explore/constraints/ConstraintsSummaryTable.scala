@@ -22,8 +22,10 @@ import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.Program
 import lucuma.ui.reusability._
-import react.common._
-import react.common.implicits._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
+import react.common.Css
+import react.common.ReactFnProps
 import react.semanticui.collections.table._
 import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.modules.dropdown.DropdownItem
@@ -206,7 +208,7 @@ object ConstraintsSummaryTable {
                   text = "Columns",
                   clazz = ExploreStyles.SelectColumns
                 )(
-                  DropdownMenu()(
+                  DropdownMenu(
                     tableInstance.allColumns
                       .drop(1)
                       .toTagMod { column =>
@@ -243,7 +245,7 @@ object ConstraintsSummaryTable {
                 ^.textTransform.none,
                 ^.whiteSpace.nowrap
               ),
-            cell = (cell: ConstraintsTable.CellType[_]) =>
+            cell = (cell: ConstraintsTable.CellType[?]) =>
               TableCell(clazz = columnClasses.get(cell.column.id.toString).orEmpty)(
                 ^.whiteSpace.nowrap
               )

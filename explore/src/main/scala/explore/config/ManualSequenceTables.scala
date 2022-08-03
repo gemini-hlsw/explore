@@ -6,7 +6,9 @@ package explore.config
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.sequence._
-import react.common._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
+import react.common.ReactFnProps
 import react.semanticui.elements.header.Header
 import react.semanticui.elements.segment.Segment
 
@@ -21,7 +23,7 @@ object ManualSequenceTables {
       .withHooks[Props]
       .render { props =>
         <.div(^.height := "100%", ^.overflow.auto)(
-          Segment()(
+          Segment(
             SequenceTable.bracketDef,
             <.div(
               Header("Acquisition"),

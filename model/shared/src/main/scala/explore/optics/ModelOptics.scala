@@ -5,6 +5,10 @@ package explore.optics
 
 import cats.syntax.all._
 import coulomb._
+import coulomb.ops.algebra.spire.all.given
+import coulomb.policy.spire.standard.given
+import coulomb.syntax._
+import coulomb.units.constants._
 import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.enums.Band
 import lucuma.core.math.ApparentRadialVelocity
@@ -28,7 +32,7 @@ trait ModelOptics {
 
   val fromKilometersPerSecondCZ: Iso[BigDecimal, ApparentRadialVelocity] =
     Iso[BigDecimal, ApparentRadialVelocity](b =>
-      ApparentRadialVelocity(b.withUnit[KilometersPerSecond])
+      ApparentRadialVelocity(b.withUnit[KilometersPerSecond].toUnit[MetersPerSecond])
     )(cz => cz.cz.toUnit[KilometersPerSecond].value)
 
   val redshiftBigDecimalIso: Iso[BigDecimal, Redshift] = Iso(Redshift.apply)(_.z)
@@ -36,7 +40,7 @@ trait ModelOptics {
   val fromKilometersPerSecondRV: Prism[BigDecimal, RadialVelocity] =
     Prism[BigDecimal, RadialVelocity](b =>
       Some(b)
-        .filter(_.abs <= SpeedOfLight.to[BigDecimal, KilometersPerSecond].value)
+        .filter(_.abs <= SpeedOfLight.tToUnit[KilometersPerSecond].value)
         .flatMap(v => RadialVelocity(v.withUnit[KilometersPerSecond]))
     )(rv => rv.rv.toUnit[KilometersPerSecond].value)
 
@@ -59,5 +63,3 @@ trait ModelOptics {
   val optionNonEmptyStringIso: Iso[Option[NonEmptyString], String] =
     Iso[Option[NonEmptyString], String](_.foldMap(_.value))(s => NonEmptyString.from(s).toOption)
 }
-
-object ModelOptics extends ModelOptics

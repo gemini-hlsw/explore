@@ -49,3 +49,5 @@ trait BoopicklePlatform {
       case _            => none
     }
 }
+
+object Boopickle extends BoopicklePlatform

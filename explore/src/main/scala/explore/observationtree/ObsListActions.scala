@@ -12,6 +12,7 @@ import explore.data.KeyedIndexedList
 import explore.implicits._
 import explore.model.ObsSummaryWithTitleConstraintsAndConf
 import explore.optics.GetAdjust
+import explore.optics.all._
 import explore.undo.Action
 import explore.undo.KIListMod
 import japgolly.scalajs.react.Callback

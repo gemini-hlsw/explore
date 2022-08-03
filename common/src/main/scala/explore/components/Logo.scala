@@ -4,8 +4,11 @@
 package explore.components
 
 import explore.components.ui.ExploreStyles
+import explore.syntax.ui.given
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 
 object Logo {
   def apply() = component()

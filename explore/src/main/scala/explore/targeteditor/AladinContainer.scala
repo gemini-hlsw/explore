@@ -24,10 +24,12 @@ import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
 import lucuma.core.model.SiderealTracking
 import lucuma.ui.reusability._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import org.scalajs.dom.Element
 import react.aladin._
-import react.common._
-import react.common.implicits._
+import react.common.Css
+import react.common.ReactFnProps
 import react.resizeDetector.hooks._
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
@@ -40,18 +42,20 @@ final case class AladinContainer(
   target:                 View[SiderealTracking],
   obsConf:                ObsConfiguration,
   options:                TargetVisualOptions,
-  updateMouseCoordinates: Coordinates => Callback,
-  updateFov:              Fov => Callback, // TODO Move the functionality of saving the FOV in ALadincell here
-  updateViewOffset:       Offset => Callback,
-  centerOnTarget:         View[Boolean],
-  selectedGuideStar:      Option[AgsAnalysis],
-  guideStarCandidates:    List[AgsAnalysis]
+  updateMouseCoordinates: Function1[Coordinates, Callback],
+  updateFov:              Function1[Fov,
+                       Callback
+  ], // TODO Move the functionality of saving the FOV in ALadincell here
+  updateViewOffset:    Function1[Offset, Callback],
+  centerOnTarget:      View[Boolean],
+  selectedGuideStar:   Option[AgsAnalysis],
+  guideStarCandidates: List[AgsAnalysis]
 ) extends ReactFnProps[AladinContainer](AladinContainer.component)
 
 object AladinContainer {
 
   type Props       = AladinContainer
-  type World2PixFn = Coordinates => Option[(Double, Double)]
+  type World2PixFn = Function1[Coordinates, Option[(Double, Double)]]
   val DefaultWorld2PixFn: World2PixFn = (_: Coordinates) => None
 
   // This is used for screen coordinates, thus it doesn't need a lot of precission
@@ -69,7 +73,7 @@ object AladinContainer {
           e.classList.remove("visualization-display"),
           e.classList.add("visualization-display")
         )
-      case _          => ()
+      case null       => ()
     }
 
   val component =
@@ -240,7 +244,7 @@ object AladinContainer {
 
           def includeSvg(v: JsAladin): Callback =
             v.onZoom(onZoom) *> // re render on zoom
-              v.onPositionChanged(onPositionChanged) *>
+              v.onPositionChanged(u => onPositionChanged(u)) *>
               v.onMouseMove(s =>
                 props
                   .updateMouseCoordinates(Coordinates(s.ra, s.dec))
@@ -276,16 +280,16 @@ object AladinContainer {
               ReactFragment(
                 <.div(
                   ExploreStyles.AladinZoomControl,
-                  Button(size = Small,
-                         icon = true,
-                         onClick = aladinRef.get.asCBO.flatMapCB(_.backend.increaseZoom).toCallback
+                  Button(
+                    size = Small,
+                    onClick = aladinRef.get.asCBO.flatMapCB(_.backend.increaseZoom).toCallback
                   )(
                     ExploreStyles.ButtonOnAladin,
                     Icons.ThinPlus
                   ),
-                  Button(size = Small,
-                         icon = true,
-                         onClick = aladinRef.get.asCBO.flatMapCB(_.backend.decreaseZoom).toCallback
+                  Button(
+                    size = Small,
+                    onClick = aladinRef.get.asCBO.flatMapCB(_.backend.decreaseZoom).toCallback
                   )(
                     ExploreStyles.ButtonOnAladin,
                     Icons.ThinMinus
@@ -321,7 +325,7 @@ object AladinContainer {
                     showGotoControl = false,
                     showZoomControl = false,
                     showFullscreenControl = false,
-                    customize = includeSvg _
+                    customize = (v: JsAladin) => includeSvg(v)
                   )
                 }
               )

@@ -16,8 +16,10 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.ui.reusability._
-import react.common._
-import react.common.implicits._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
+import react.common.Css
+import react.common.ReactFnProps
 import react.semanticui.collections.table._
 import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.modules.dropdown.DropdownItem
@@ -129,7 +131,7 @@ object TargetSummaryTable {
                   text = "Columns",
                   clazz = ExploreStyles.SelectColumns
                 )(
-                  DropdownMenu()(
+                  DropdownMenu(
                     tableInstance.allColumns
                       .drop(2)
                       .toTagMod { column =>
@@ -166,7 +168,7 @@ object TargetSummaryTable {
               TableHeaderCell(clazz =
                 columnClasses.get(col.id.toString).orEmpty |+| ExploreStyles.StickyHeader
               ),
-            cell = (cell: TargetTable.CellType[_]) =>
+            cell = (cell: TargetTable.CellType[?]) =>
               TableCell(clazz = columnClasses.get(cell.column.id.toString).orEmpty)
           )(tableInstance)
         )

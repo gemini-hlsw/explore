@@ -5,8 +5,10 @@ package explore.model.enums
 
 import cats.Order._
 import cats.data.NonEmptyMap
-import coulomb._
-import coulomb.si.Kelvin
+import coulomb.*
+import coulomb.syntax.*
+import coulomb.units.si.Kelvin
+import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
 import lucuma.core.enums.CoolStarTemperature
@@ -24,6 +26,7 @@ import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
+import lucuma.refined._
 
 import scala.collection.immutable.SortedMap
 
@@ -70,12 +73,12 @@ sealed abstract class SEDTypeEnum[T](implicit
         _ =>
           EmissionLines[T](
             SortedMap.empty,
-            enumFDCUnits.all.head.withValueTagged(PosBigDecimal(BigDecimal(1)))
+            enumFDCUnits.all.head.withValueTagged(BigDecimal(1).refined[Positive])
           )
       )
   case object PowerLawType extends BandNormalizedSED("Power Law", PowerLaw(BigDecimal(0)))
   case object BlackBodyType
-      extends BandNormalizedSED("Black Body", BlackBody(PosInt(1000).withUnit[Kelvin]))
+      extends BandNormalizedSED("Black Body", BlackBody(1000.refined[Positive].withUnit[Kelvin]))
   case object UserDefinedType
       extends BandNormalizedSED(
         "User Defined",

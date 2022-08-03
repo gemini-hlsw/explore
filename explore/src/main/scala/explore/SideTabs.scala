@@ -7,10 +7,14 @@ import cats.syntax.all._
 import explore.components.ui.ExploreStyles
 import explore.model.RoutingInfo
 import explore.model.enums.AppTab
+import explore.syntax.ui.*
+import explore.syntax.ui.given
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import lucuma.ui.utils._
-import react.common._
+import react.common.ReactFnProps
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.elements.button.ButtonGroup

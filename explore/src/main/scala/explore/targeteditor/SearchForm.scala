@@ -6,8 +6,8 @@ package explore.targeteditor
 import cats.syntax.all._
 import crystal.react.View
 import crystal.react.hooks._
-import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
+import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.HelpIcon
@@ -17,11 +17,15 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
 import lucuma.core.validation.InputValidSplitEpi
+import lucuma.refined.*
 import lucuma.ui.forms._
 import lucuma.ui.reusability._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
+import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.abbreviate
 import org.scalajs.dom
-import react.common._
+import react.common.ReactFnProps
 import react.semanticui.collections.form.Form.FormProps
 import react.semanticui.collections.form._
 import react.semanticui.elements.label.LabelPointing
@@ -81,18 +85,18 @@ object SearchForm {
         val search: Callback =
           props
             .submit(
-              term.get,
+              term.get.value,
               error.setState(none) >> props.searching.mod(_ + props.id),
               t =>
                 searchComplete >>
                   error
                     .setState(
                       NonEmptyString
-                        .unsafeFrom(s"'${abbreviate(term.get, 10)}' not found")
+                        .unsafeFrom(s"'${abbreviate(term.get.value, 10)}' not found")
                         .some
                     )
                     .when_(t.isEmpty),
-              _ => searchComplete >> error.setState(NonEmptyString("Search error...").some)
+              _ => searchComplete >> error.setState("Search error...".refined[NonEmpty].some)
             )
 
         def iconKeyPress(e: ReactKeyboardEvent): Callback =
@@ -116,9 +120,12 @@ object SearchForm {
         val disabled = props.searching.get.exists(_ === props.id)
 
         Form(clazz = ExploreStyles.SearchForm, onSubmitE = submitForm)(
-          <.label("Name", HelpIcon("target/main/search-target.md"), ExploreStyles.SkipToNext),
+          <.label("Name",
+                  HelpIcon("target/main/search-target.md".refined),
+                  ExploreStyles.SkipToNext
+          ),
           FormInputEV(
-            id = "search",
+            id = "search".refined,
             value = term.withOnMod(props.targetView.set),
             validFormat = InputValidSplitEpi.nonEmptyString,
             error = error.value.orUndefined,

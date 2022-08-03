@@ -4,21 +4,31 @@
 package explore
 
 import cats.Endo
+import cats.Monoid
 import cats.effect.Sync
 import cats.syntax.all._
 import clue.data._
 import clue.data.syntax._
+import coulomb._
+import coulomb.syntax._
 import crystal.Pot
 import crystal.PotOption
 import crystal.react.View
 import crystal.react.reuse._
+import eu.timepit.refined._
+import eu.timepit.refined.api._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.ui.ExploreStyles
 import explore.model.enums.ExecutionEnvironment
 import explore.model.enums.ExecutionEnvironment.Development
 import explore.model.enums.Theme
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.html_<^
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.math.units._
 import lucuma.ui.forms.ExternalValue
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.versionDateFormatter
 import lucuma.ui.utils.versionDateTimeFormatter
 import org.http4s.Uri
@@ -154,4 +164,18 @@ package object utils {
       .flatten
       .map(_ => <.i(ExploreStyles.ClearableInputIcon, ^.onClick --> ev.set(view)(None)))
       .orUndefined
+
+  // We should move this to lucuma-core, or remove it if there's ever a coulomb-refined for Scala 3
+  implicit class EnhanceWithToRefined[V, U](q: Quantity[V, U]) {
+    @inline def toRefined[P](implicit
+      vv: Validate[V, P]
+    ): Either[String, Quantity[V Refined P, U]] =
+      refineQV[P](q)
+  }
+
+  implicit val MonoidVdomNode: Monoid[VdomNode] = new Monoid[VdomNode] {
+    val empty: VdomNode = EmptyVdom
+
+    def combine(x: VdomNode, y: VdomNode): VdomNode = React.Fragment(x, y)
+  }
 }

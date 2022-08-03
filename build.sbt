@@ -9,6 +9,7 @@ ThisBuild / Test / bspEnabled                                        := false
 ThisBuild / ScalafixConfig / bspEnabled.withRank(KeyRanks.Invisible) := false
 
 ThisBuild / evictionErrorLevel := Level.Info
+ThisBuild / resolvers ++= Resolver.sonatypeOssRepos("snapshots")
 
 addCommandAlias(
   "quickTest",
@@ -26,10 +27,19 @@ addCommandAlias(
 )
 
 ThisBuild / description                := "Explore"
-ThisBuild / scalacOptions += "-Ymacro-annotations"
 Global / onChangedBuildSource          := ReloadOnSourceChanges
-ThisBuild / scalafixDependencies ++= ClueGenerator.value ++ LucumaSchemas.value
+ThisBuild / scalafixDependencies ++= ClueGenerator.value ++ Seq(
+  "edu.gemini" % "lucuma-schemas_3" % Settings.LibraryVersions.lucumaSchemas
+)
 ThisBuild / scalafixScalaBinaryVersion := "2.13"
+ThisBuild / scalaVersion               := "3.1.3"
+ThisBuild / crossScalaVersions         := Seq("3.1.3")
+ThisBuild / scalacOptions ++= Seq(
+  "-language:implicitConversions"
+)
+ThisBuild / scalafixResolvers += coursierapi.MavenRepository.of(
+  "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+)
 
 val stage = taskKey[Unit]("Prepare static files to deploy to Heroku")
 
@@ -115,12 +125,8 @@ lazy val common = project
       LucumaSSO.value ++
         LucumaBC.value ++
         LucumaCatalog.value ++
-        ReactGridLayout.value ++
-        ReactClipboard.value ++
-        ReactCommon.value ++
-        ReactTable.value ++
-        ReactVirtuoso.value ++
-        SecureRandom.value,
+        LucumaSchemas.value ++
+        LucumaReact.value,
     buildInfoKeys    := Seq[BuildInfoKey](
       scalaVersion,
       sbtVersion,
@@ -158,13 +164,7 @@ lazy val explore: Project = project
     libraryDependencies ++=
       GeminiLocales.value ++
         ReactAladin.value ++
-        ReactBeautifulDnD.value ++
-        ReactCommon.value ++
-        ReactDatepicker.value ++
-        ReactGridLayout.value ++
-        ReactHighcharts.value ++
-        ReactHotkeys.value ++
-        ReactResizable.value,
+        LucumaReact.value,
     // Build workers when you build explore
     Compile / fastLinkJS := (Compile / fastLinkJS)
       .dependsOn(workers / Compile / fastLinkJS)
@@ -189,7 +189,9 @@ lazy val commonLibSettings = Seq(
       Http4sCore.value ++
       LucumaCore.value ++
       LucumaSchemas.value ++
+      LucumaRefined.value ++
       LucumaAgs.value ++
+      RefinedAlgebra.value ++
       Monocle.value ++
       Mouse.value ++
       PPrint.value ++
@@ -212,10 +214,7 @@ lazy val testkitLibSettings = Seq(
 
 lazy val commonJVMSettings = Seq(
   libraryDependencies ++=
-    FS2IO.value ++
-      In(Test)(
-        CirceGolden.value
-      )
+    FS2IO.value
 )
 
 lazy val commonJsLibSettings = commonLibSettings ++ Seq(
@@ -224,7 +223,6 @@ lazy val commonJsLibSettings = commonLibSettings ++ Seq(
       Http4sDom.value ++
       Log4Cats.value ++
       LucumaUI.value ++
-      ReactSemanticUI.value ++
       ScalaJSReact.value ++
       In(Test)(
         ScalaJSReactTest.value

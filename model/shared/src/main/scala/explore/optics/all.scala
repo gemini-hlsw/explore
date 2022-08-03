@@ -1,7 +1,7 @@
 // Copyright (c) 2016-2022 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore
+package explore.optics
 
 import cats.syntax.all._
 import monocle._
@@ -12,7 +12,8 @@ import monocle.function.Index.fromAt
 
 import scala.collection.immutable.TreeSeqMap
 
-package object optics extends ModelOptics {
+object all extends ModelOptics {
+
   implicit class IsoOps[From, To](val self: Iso[From, To]) extends AnyVal {
     def andThen[X](other: Adjuster[To, X]): Adjuster[From, X] =
       asAdjuster.andThen(other)
@@ -111,7 +112,7 @@ package object optics extends ModelOptics {
       composeOptionGetAdjust(other.asGetAdjust)
 
     def composeOptionGetAdjust[B](other: GetAdjust[A, B]): Adjuster[S, Option[B]] =
-      Adjuster { modOptB: (Option[B] => Option[B]) =>
+      Adjuster { (modOptB: (Option[B] => Option[B])) =>
         setter.modify { optA =>
           optA.flatMap[A] { a =>
             modOptB(other.get(a).some).map(b => other.set(b)(a))

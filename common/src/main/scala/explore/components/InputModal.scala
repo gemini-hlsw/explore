@@ -11,12 +11,18 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.refined.*
 import lucuma.ui.forms.FormInputEV
-import react.common._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
+import react.common.Css
+import react.common.ReactFnProps
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.modal._
-import react.semanticui.shorthand._
 import react.semanticui.sizes.Small
+
+import scala.language.implicitConversions
+import scala.scalajs.js.|
 
 /**
  * Generic component to accept user input
@@ -51,7 +57,7 @@ object InputModal {
               disabled = inputValue.get.isEmpty,
               icon = true,
               onClick = cleanInput *> props.onComplete(
-                NonEmptyString.from(inputValue.get).getOrElse("------")
+                NonEmptyString.from(inputValue.get).getOrElse("------".refined)
               )
             )(
               Icons.Checkmark,
@@ -68,9 +74,9 @@ object InputModal {
           dimmer = Dimmer.Blurring,
           size = ModalSize.Small,
           onClose = cleanInput,
-          header = ModalHeader(props.title),
+          header = ModalHeader(content = props.title),
           content = ModalContent(
-            FormInputEV(id = "name", value = inputValue, label = props.label)
+            FormInputEV(id = "name".refined, value = inputValue, label = props.label)
               .withMods(^.placeholder := props.placeholder, ^.autoFocus := true)
           )
         )

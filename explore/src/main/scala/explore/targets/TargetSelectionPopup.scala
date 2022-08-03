@@ -27,8 +27,11 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Program
 import lucuma.core.model.Target
+import lucuma.refined.*
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.reusability._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import react.aladin._
 import react.common.ReactFnProps
 import react.semanticui.elements.button.Button
@@ -180,12 +183,12 @@ object TargetSelectionPopup {
             size = ModalSize.Large,
             onOpen = cleanState,
             onClose = singleEffect.cancel.runAsync >> isOpen.setState(false) >> cleanState,
-            header = ModalHeader("Add Target"),
+            header = ModalHeader(content = "Add Target"),
             content = ModalContent(
               <.span(ExploreStyles.TargetSearchTop)(
                 <.span(ExploreStyles.TargetSearchInput)(
                   FormInputEV(
-                    id = NonEmptyString("name"),
+                    id = "name".refined,
                     value = inputValue,
                     // TODO Investigate if we can replicate SUI's "input with icon" styles (which use <i>) but using <svg>,
                     // so that they work with fontawesome.
@@ -253,10 +256,11 @@ object TargetSelectionPopup {
                               )
                                 none
                               else
-                                SelectedTarget(result.target,
-                                               source,
-                                               index,
-                                               result.angularSize
+                                SelectedTarget(
+                                  result.target,
+                                  source,
+                                  index,
+                                  result.angularSize
                                 ).some
                             )
                         )

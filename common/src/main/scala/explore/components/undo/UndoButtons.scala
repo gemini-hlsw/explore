@@ -5,9 +5,13 @@ package explore.components.undo
 
 import explore.Icons
 import explore.components.ui.ExploreStyles
+import explore.syntax.ui.*
+import explore.syntax.ui.given
 import explore.undo.UndoContext
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.semanticui.elements.button._
 import react.semanticui.sizes._

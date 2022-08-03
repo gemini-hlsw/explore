@@ -27,7 +27,7 @@ import explore.events._
 import explore.implicits._
 import explore.model
 import explore.model.ITCTarget
-import explore.model.boopickle._
+import explore.model.boopickle.Boopickle._
 import explore.modes.SpectroscopyModesMatrix
 import explore.undo._
 import japgolly.scalajs.react._
@@ -38,10 +38,12 @@ import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.SiderealTracking
 import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.reusability._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import org.http4s.syntax.all._
 import queries.common.ObsQueriesGQL
 import queries.schemas.implicits._
-import react.common._
+import react.common.ReactFnProps
 
 final case class ConfigurationPanel(
   obsId:            Observation.Id,

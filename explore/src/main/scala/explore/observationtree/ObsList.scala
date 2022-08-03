@@ -30,9 +30,10 @@ import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.ui.reusability._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import lucuma.ui.utils._
 import react.common.ReactFnProps
-import react.common.implicits._
 import react.semanticui.elements.button.Button
 import react.semanticui.shorthand._
 import react.semanticui.sizes._

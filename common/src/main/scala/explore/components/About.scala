@@ -9,12 +9,12 @@ import explore._
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ui.syntax.all.given
 import react.clipboard.CopyToClipboard
 import react.common.ReactFnProps
 import react.semanticui.modules.modal.Dimmer.Blurring
 import react.semanticui.modules.modal.Modal
 import react.semanticui.modules.modal.ModalContent
-import react.semanticui.shorthand._
 
 case class About(trigger: Reuse[VdomNode])(implicit val ctx: AppContextIO)
     extends ReactFnProps[About](About.component)

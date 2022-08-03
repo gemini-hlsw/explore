@@ -6,6 +6,7 @@ package explore.undo
 import cats.Applicative
 import cats.effect.std.Dispatcher
 import explore.optics.GetAdjust
+import japgolly.scalajs.react.ReactCats._
 import japgolly.scalajs.react.util.DefaultEffects.{Async => DefaultA}
 import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
 import org.typelevel.log4cats.Logger
@@ -55,8 +56,9 @@ object TestUndoable {
     logger:     Logger[DefaultA]
   ): DefaultS[TestUndoable[M]] =
     DefaultS.pure(
-      new TestUndoable(VarRef[DefaultS].of(initValue),
-                       VarRef[DefaultS].of(UndoStacks.empty[DefaultA, M])
+      new TestUndoable(
+        VarRef[DefaultS].of(initValue),
+        VarRef[DefaultS].of(UndoStacks.empty[DefaultA, M])
       )
     )
 }

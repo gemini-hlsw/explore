@@ -23,8 +23,9 @@ import lucuma.core.model.Observation
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Gid
 import lucuma.ui.forms.EnumViewSelect
-import react.common._
-import react.common.implicits._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
+import react.common.ReactFnProps
 import react.semanticui.collections.form.FormDropdown
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.checkbox.Checkbox
@@ -121,7 +122,7 @@ object ObsBadge {
               },
               renderEnumProgress(obs.status)
             ),
-            CardDescription()(ExploreStyles.ObsBadgeDescription)(
+            CardDescription(ExploreStyles.ObsBadgeDescription)(
               obs match {
                 case _: ObsWithTitle                     =>
                   ReactFragment(List(conf, constraints).flatten: _*)

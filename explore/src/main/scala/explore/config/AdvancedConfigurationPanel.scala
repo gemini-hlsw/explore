@@ -7,14 +7,15 @@ import cats.data.NonEmptyList
 import cats.syntax.all._
 import clue.data.syntax._
 import coulomb.Quantity
-import coulomb.refined._
+import coulomb.ops.algebra.spire.all.given
+import coulomb.policy.spire.standard.given
 import crystal.Pot
 import crystal.react.View
 import crystal.react.hooks._
+import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.numeric.NonNegative
-import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
@@ -39,6 +40,7 @@ import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.SpectroscopyModeRow
 import explore.modes.SpectroscopyModesMatrix
 import explore.optics._
+import explore.optics.all._
 import explore.syntax.ui._
 import explore.utils._
 import japgolly.scalajs.react._
@@ -55,14 +57,17 @@ import lucuma.core.syntax.all._
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.core.validation._
+import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.forms.EnumViewOptionalSelect
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.reusability._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import monocle.Lens
 import queries.schemas.implicits._
-import react.common._
+import react.common.ReactFnProps
 import react.semanticui.collections.form.Form
 import react.semanticui.collections.form.FormInput
 import react.semanticui.elements.button.Button
@@ -161,7 +166,9 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
 
   // Note: truncates to Int.MaxValue - shouldn't have durations longer than that...
   private def durationToSeconds(nnd: NonNegDuration): NonNegInt =
-    NonNegInt.unsafeFrom(math.min(nnd.value.toMicros / 1000L / 1000L, Int.MaxValue.toLong).toInt)
+    NonNegInt.unsafeFrom(
+      math.min((nnd.value: Duration).toMicros / 1000L / 1000L, Int.MaxValue.toLong).toInt
+    )
 
   private def secondsToDuration(secs: NonNegInt): NonNegDuration =
     NonNegDuration.unsafeFrom(secs.value.toLong.seconds)
@@ -175,7 +182,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
     ChangeAuditor
       .fromInputValidWedge(ExploreModelValidators.wavelengthValidWedge)
       .allow(s => s === "0" || s === "0.")
-      .decimal(3)
+      .decimal(3.refined)
 
   private case class ReadonlyData(
     coverage:   Interval[Quantity[BigDecimal, Micrometer]],
@@ -299,7 +306,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             capabilities = cap,
             slitWidth = fpa,
             resolution = res,
-            coverage = cov.map(_.micrometer.toValue[BigDecimal].toRefined[Positive])
+            coverage = cov.flatMap(_.micrometer.toValue[BigDecimal].toRefined[NonNegative].toOption)
           )
         }
       }
@@ -353,27 +360,31 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
 
           def dithersControl(onChange: Callback): VdomElement =
             ReactFragment(
-              <.label("λ Dithers", HelpIcon("configuration/lambda-dithers.md")),
+              <.label("λ Dithers", HelpIcon("configuration/lambda-dithers.md".refined)),
               InputWithUnits(
-                id = "dithers",
+                id = "dithers".refined,
                 value =
                   explicitWavelengthDithers(props.scienceModeAdvanced).withOnMod(_ => onChange),
                 validFormat = ExploreModelValidators.dithersValidSplitEpi,
-                changeAuditor =
-                  ChangeAuditor.bigDecimal(integers = 3, decimals = 1).toSequence().optional,
+                changeAuditor = ChangeAuditor
+                  .bigDecimal(integers = 3.refined, decimals = 1.refined)
+                  .toSequence()
+                  .optional,
                 units = "nm"
               ).clearable
             )
 
           def offsetsControl(onChange: Callback): VdomElement =
             ReactFragment(
-              <.label("Spatial Offsets", HelpIcon("configuration/spatial-offsets.md")),
+              <.label("Spatial Offsets", HelpIcon("configuration/spatial-offsets.md".refined)),
               InputWithUnits(
-                id = "offsets",
+                id = "offsets".refined,
                 value = explicitSpatialOffsets(props.scienceModeAdvanced).withOnMod(_ => onChange),
                 validFormat = ExploreModelValidators.offsetQNELValidWedge,
-                changeAuditor =
-                  ChangeAuditor.bigDecimal(integers = 3, decimals = 2).toSequence().optional,
+                changeAuditor = ChangeAuditor
+                  .bigDecimal(integers = 3.refined, decimals = 2.refined)
+                  .toSequence()
+                  .optional,
                 units = "arcsec"
               ).clearable
             )
@@ -414,7 +425,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               ExploreStyles.ExploreForm,
               ExploreStyles.AdvancedConfigurationCol1
             )(
-              <.label("Grating", HelpIcon("configuration/grating.md")),
+              <.label("Grating", HelpIcon("configuration/grating.md".refined)),
               EnumViewOptionalSelect(
                 id = "override-grating",
                 value = overrideGrating(props.scienceModeAdvanced),
@@ -422,7 +433,10 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 clearable = true,
                 placeholder = gratingLens.get(props.scienceModeBasic).shortName
               ),
-              <.label("Filter", HelpIcon("configuration/filter.md"), ExploreStyles.SkipToNext),
+              <.label("Filter",
+                      HelpIcon("configuration/filter.md".refined),
+                      ExploreStyles.SkipToNext
+              ),
               EnumViewOptionalSelect(
                 id = "override-filter",
                 value = overrideFilter(props.scienceModeAdvanced),
@@ -431,11 +445,11 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 placeholder = filterLens.get(props.scienceModeBasic).fold("None")(_.shortName)
               ),
               <.label("Wavelength",
-                      HelpIcon("configuration/wavelength.md"),
+                      HelpIcon("configuration/wavelength.md".refined),
                       ExploreStyles.SkipToNext
               ),
               InputWithUnits(
-                id = "override-wavelength",
+                id = "override-wavelength".refined,
                 value = overrideWavelength(props.scienceModeAdvanced).withOnMod(_ => invalidateITC),
                 units = "μm",
                 validFormat = ExploreModelValidators.wavelengthValidWedge.optional,
@@ -444,7 +458,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                   f"${Wavelength.decimalMicrometers.reverseGet(w)}%.3f"
                 )
               ).clearable,
-              <.label("FPU", HelpIcon("configuration/fpu.md"), ExploreStyles.SkipToNext),
+              <.label("FPU", HelpIcon("configuration/fpu.md".refined), ExploreStyles.SkipToNext),
               EnumViewOptionalSelect(
                 id = "override-fpu",
                 value = overrideFpu(props.scienceModeAdvanced),
@@ -453,14 +467,14 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               )
             ),
             <.div(ExploreStyles.ExploreForm, ExploreStyles.AdvancedConfigurationCol2)(
-              <.label("Binning", HelpIcon("configuration/binning.md")),
+              <.label("Binning", HelpIcon("configuration/binning.md".refined)),
               EnumViewOptionalSelect(
                 id = "explicitXBin",
                 value = explicitBinning(props.scienceModeAdvanced),
                 clearable = true
               ),
               <.label("Read Mode",
-                      HelpIcon("configuration/read-mode.md"),
+                      HelpIcon("configuration/read-mode.md".refined),
                       ExploreStyles.SkipToNext
               ),
               EnumViewOptionalSelect(
@@ -468,7 +482,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 value = explicitReadModeGain(props.scienceModeAdvanced),
                 clearable = true
               ),
-              <.label("ROI", HelpIcon("configuration/roi.md"), ExploreStyles.SkipToNext),
+              <.label("ROI", HelpIcon("configuration/roi.md".refined), ExploreStyles.SkipToNext),
               EnumViewOptionalSelect(
                 id = "explicitRoi",
                 value = explicitRoi(props.scienceModeAdvanced),
@@ -492,7 +506,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               dithersControl(Callback.empty),
               offsetsControl(Callback.empty),
               <.label("Exposure Mode",
-                      HelpIcon("configuration/exposure-mode.md"),
+                      HelpIcon("configuration/exposure-mode.md".refined),
                       ExploreStyles.SkipToNext
               ),
               EnumViewOptionalSelect(
@@ -501,15 +515,15 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 clearable = true
               ),
               <.label("S/N",
-                      HelpIcon("configuration/signal-to-noise.md"),
+                      HelpIcon("configuration/signal-to-noise.md".refined),
                       ExploreStyles.SkipToNext
               ),
               signalToNoiseView
                 .map(v =>
                   FormInputEV(
-                    id = "signalToNoise",
+                    id = "signalToNoise".refined,
                     value = v.withOnMod(_ => invalidateITC),
-                    validFormat = InputValidWedge.truncatedPosBigDecimal(0),
+                    validFormat = InputValidWedge.truncatedPosBigDecimal(0.refined),
                     changeAuditor = ChangeAuditor.posInt
                   ): VdomNode
                 )
@@ -517,7 +531,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                   potRender[Option[PosBigDecimal]](
                     valueRender = osn => {
                       val value = osn.fold(itcNoneMsg)(sn =>
-                        InputValidWedge.truncatedPosBigDecimal(0).reverseGet(sn)
+                        InputValidWedge.truncatedPosBigDecimal(0.refined).reverseGet(sn)
                       )
                       FormInput(value = value, disabled = true)
                     },
@@ -526,13 +540,13 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                   )(props.potITC.get.map(_.map(_.signalToNoise)))
                 ),
               <.label("Exposure Time",
-                      HelpIcon("configuration/exposure-time.md"),
+                      HelpIcon("configuration/exposure-time.md".refined),
                       ExploreStyles.SkipToNext
               ),
               expTimeOverrideSecs
                 .mapValue((v: View[NonNegInt]) =>
                   InputWithUnits(
-                    id = "exposureTime",
+                    id = "exposureTime".refined,
                     value = v
                       .withOnMod(secs =>
                         exposureTimeView.foldMap(_.set(secondsToDuration(secs))) >> invalidateITC
@@ -556,13 +570,13 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                   )(props.potITC.get.map(_.map(_.exposureTime)))
                 ),
               <.label("Exposure Count",
-                      HelpIcon("configuration/exposure-count.md"),
+                      HelpIcon("configuration/exposure-count.md".refined),
                       ExploreStyles.SkipToNext
               ),
               exposureCountView
                 .map(v =>
                   FormInputEV(
-                    id = "exposureCount",
+                    id = "exposureCount".refined,
                     value = v.withOnMod(_ => invalidateITC),
                     validFormat = InputValidSplitEpi.refinedInt[NonNegative],
                     changeAuditor = ChangeAuditor.refinedInt[NonNegative]()
@@ -599,7 +613,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 clazz = ExploreStyles.VeryCompact,
                 content = "Simple Configuration",
                 icon = Icons.ChevronsLeft,
-                onClick = props.onShowBasic.value
+                onClick = props.onShowBasic
               )(^.tpe := "button")
             )
           )
@@ -768,7 +782,7 @@ object AdvancedConfigurationPanel {
       .zoom(ScienceModeAdvanced.GmosNorthLongSlit.explicitWavelengthDithers,
             GmosNorthLongSlitAdvancedConfigInput.explicitWavelengthDithersNm.modify
       )
-      .view(_.map(_.map(_.value).toList).orUnassign)
+      .view(_.map(_.map(_.value: BigDecimal).toList).orUnassign)
 
     @inline override protected def explicitSpatialOffsets(
       aligner:      AA
@@ -924,7 +938,7 @@ object AdvancedConfigurationPanel {
       .zoom(ScienceModeAdvanced.GmosSouthLongSlit.explicitWavelengthDithers,
             GmosSouthLongSlitAdvancedConfigInput.explicitWavelengthDithersNm.modify
       )
-      .view(_.map(_.map(_.value).toList).orUnassign)
+      .view(_.map(_.map(_.value: BigDecimal).toList).orUnassign)
 
     @inline override protected def explicitSpatialOffsets(
       aligner:      AA

@@ -16,10 +16,13 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ZeroTo100
 import lucuma.core.validation._
+import lucuma.refined._
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import monocle.function.Index
-import react.common._
+import react.common.ReactFnProps
 import react.semanticui.collections.form.Form
 import react.semanticui.collections.table._
 import react.semanticui.elements.button.Button
@@ -41,7 +44,7 @@ object PartnerSplitsEditor {
         ExploreStyles.FlexContainer,
         <.div("Total must be 100.",
               ExploreStyles.PartnerSplitsEditorError,
-              ExploreStyles.FlexGrow(1)
+              ExploreStyles.FlexGrow(1.refined)
         )
           .unless(addsUpTo100(p)),
         Button(negative = true, onClick = p.closeMe)(^.tpe := "button")(
@@ -73,7 +76,7 @@ object PartnerSplitsEditor {
           TableCell(
             <.span(
               FormInputEV(
-                id = NonEmptyString.from(id).getOrElse("SPLIT_ID"),
+                id = NonEmptyString.from(id).getOrElse("SPLIT_ID".refined),
                 value = splitView.zoom(PartnerSplit.percent),
                 validFormat = InputValidSplitEpi.refinedInt[ZeroTo100],
                 changeAuditor = ChangeAuditor.refinedInt[ZeroTo100]()
@@ -94,7 +97,7 @@ object PartnerSplitsEditor {
       if (addsUpTo100(props)) props.onSave(props.splits.get) >> props.closeMe else Callback.empty
 
     Modal(size = ModalSize.Mini, open = props.show)(
-      ModalHeader("Partner Splits"),
+      ModalHeader(content = "Partner Splits"),
       ModalContent(
         Form(
           action = "#",

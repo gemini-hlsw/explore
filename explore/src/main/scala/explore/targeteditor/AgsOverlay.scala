@@ -13,8 +13,9 @@ import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ags.AgsAnalysis
 import lucuma.ags.AgsGuideQuality
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
-import react.common.implicits._
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
 
@@ -74,7 +75,7 @@ object AgsOverlay {
                   React.Fragment(
                     <.div(ExploreStyles.AgsGuideSpeed, speed.tag),
                     <.div(ExploreStyles.AgsGBrightness,
-                          analysis.target.gBrightness.foldMap(g =>
+                          analysis.target.gBrightness.map(g =>
                             s"G: ${g.setScale(1, RoundingMode.HALF_DOWN).toString()}"
                           )
                     ),

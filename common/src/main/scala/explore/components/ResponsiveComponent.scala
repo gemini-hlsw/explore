@@ -6,8 +6,10 @@ package explore.components
 import cats.syntax.all._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import react.common._
-import react.common.implicits._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
+import react.common.Css
+import react.common.ReactFnPropsWithChildren
 import react.resizeDetector.hooks._
 
 final case class ResponsiveComponent(

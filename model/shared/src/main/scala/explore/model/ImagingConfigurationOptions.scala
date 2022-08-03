@@ -3,10 +3,16 @@
 
 package explore.model
 
+import algebra.instances.all.given
 import cats.Eq
 import cats.Order
 import cats.implicits._
-import coulomb.Quantity
+import coulomb.*
+import coulomb.ops.algebra.spire.all.given
+import coulomb.policy.spire.standard.given
+import coulomb.units.si.*
+import coulomb.units.si.given
+import coulomb.units.si.prefixes.Nano
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.model.enums.ImagingCapabilities
 import lucuma.core.enums.FilterType
@@ -16,6 +22,7 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units._
 import monocle.Focus
+import spire.math.Rational
 import spire.math.interval.ValueBound
 
 import scala.collection.immutable.SortedSet
@@ -59,7 +66,10 @@ object ImagingConfigurationOptions {
         val tag               = f.tag
         val shortName         = f.shortName
         val centralWavelength = f.wavelength
-        val range             = (u, l).mapN(_.nanometer - _.nanometer)
+        val range             = (u, l).mapN { (a, b) =>
+          val q: Quantity[Rational, Nanometer] = a.nanometer - b.nanometer
+          q.tToValue[Int]
+        }
       }
     }
 
@@ -75,7 +85,9 @@ object ImagingConfigurationOptions {
         val tag               = f.tag
         val shortName: String = f.shortName
         val centralWavelength = f.wavelength
-        val range             = (u, l).mapN(_.nanometer - _.nanometer)
+        val range             = (u, l).mapN { (a, b) =>
+          (a.nanometer - b.nanometer).tToValue[Int]
+        }
       }
     }
 

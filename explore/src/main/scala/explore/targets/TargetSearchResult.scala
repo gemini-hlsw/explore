@@ -6,6 +6,7 @@ package explore.targets
 import cats.Eq
 import cats.syntax.all._
 import explore.model.TargetWithOptId
+import japgolly.scalajs.react.ReactCats._
 import japgolly.scalajs.react.Reusability
 import lucuma.catalog.AngularSize
 import lucuma.catalog.CatalogTargetResult

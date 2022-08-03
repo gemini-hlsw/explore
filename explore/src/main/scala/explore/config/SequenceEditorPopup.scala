@@ -13,6 +13,8 @@ import explore.implicits._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.modal._
@@ -55,9 +57,11 @@ object SequenceEditorPopup {
             dimmer = Dimmer.Blurring,
             size = ModalSize.Small,
             onClose = isOpen.setState(false),
-            header = ModalHeader(
-              <.div(s"${props.obsId}: ${props.title}"),
-              props.subtitle.map(subtitle => <.div(ExploreStyles.SequenceObsSutitle, subtitle))
+            header = ModalHeader(content =
+              React.Fragment(
+                <.div(s"${props.obsId}: ${props.title}"),
+                props.subtitle.map(subtitle => <.div(ExploreStyles.SequenceObsSutitle, subtitle))
+              )
             ),
             content = ModalContent(
               <.div(ExploreStyles.SeqGenParametersForm)(

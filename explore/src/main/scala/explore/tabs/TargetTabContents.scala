@@ -27,6 +27,7 @@ import explore.model.layout._
 import explore.model.layout.unsafe._
 import explore.observationtree.AsterismGroupObsList
 import explore.optics._
+import explore.optics.all._
 import explore.syntax.ui._
 import explore.targets.TargetSummaryTable
 import explore.undo._
@@ -40,15 +41,17 @@ import lucuma.core.model.Target
 import lucuma.core.model.Target.Nonsidereal
 import lucuma.core.model.Target.Sidereal
 import lucuma.core.model.User
+import lucuma.refined.*
 import lucuma.ui.reusability._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import lucuma.ui.utils._
 import org.scalajs.dom.window
 import queries.common.AsterismQueriesGQL._
 import queries.common.ObsQueriesGQL
 import queries.common.TargetQueriesGQL
 import queries.common.UserPreferencesQueriesGQL._
-import react.common._
-import react.common.implicits._
+import react.common.ReactFnProps
 import react.draggable.Axis
 import react.gridlayout._
 import react.resizable._
@@ -78,13 +81,13 @@ final case class TargetTabContents(
 object TargetTabContents {
   type Props = TargetTabContents
 
-  private val TargetHeight: NonNegInt      = 18
-  private val TargetMinHeight: NonNegInt   = 15
-  private val SkyPlotHeight: NonNegInt     = 9
-  private val SkyPlotMinHeight: NonNegInt  = 6
-  private val TileMinWidth: NonNegInt      = 5
-  private val DefaultWidth: NonNegInt      = 10
-  private val DefaultLargeWidth: NonNegInt = 12
+  private val TargetHeight: NonNegInt      = 18.refined
+  private val TargetMinHeight: NonNegInt   = 15.refined
+  private val SkyPlotHeight: NonNegInt     = 9.refined
+  private val SkyPlotMinHeight: NonNegInt  = 6.refined
+  private val TileMinWidth: NonNegInt      = 5.refined
+  private val DefaultWidth: NonNegInt      = 10.refined
+  private val DefaultLargeWidth: NonNegInt = 12.refined
 
   val layoutMedium: Layout = Layout(
     List(
@@ -229,7 +232,7 @@ object TargetTabContents {
      * Render the summary table.
      */
     def renderSummary: VdomNode =
-      Tile("targetSummary", "Target Summary", backButton.some)(renderInTitle =>
+      Tile("targetSummary".refined, "Target Summary", backButton.some)(renderInTitle =>
         TargetSummaryTable(
           targetMap,
           props.hiddenColumns,
@@ -496,8 +499,8 @@ object TargetTabContents {
       potRender[LayoutsMap](rglRender)(layouts.get)
     }
 
-    val selectedPanel = panels.get.selected
-    val optSelected   = props.focused match {
+    val selectedPanel                                    = panels.get.selected
+    val optSelected: Option[Either[Target.Id, ObsIdSet]] = props.focused match {
       case Focused(Some(obsIdSet), _)    => obsIdSet.asRight.some
       case Focused(None, Some(targetId)) => targetId.asLeft.some
       case _                             => none

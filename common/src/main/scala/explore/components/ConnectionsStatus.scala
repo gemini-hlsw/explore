@@ -10,8 +10,12 @@ import crystal.react.hooks._
 import explore._
 import explore.components.ui.ExploreStyles
 import explore.components.ui.ExploreStyles._
+import explore.syntax.ui.*
+import explore.syntax.ui.given
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.semanticui.elements.icon._
 import react.semanticui.modules.popup._
@@ -43,9 +47,9 @@ object ConnectionsStatus {
           header = s"$name Connection Status",
           content = message,
           position = PopupPosition.BottomRight,
-          trigger = Icon(name = "circle", fitted = true, clazz = clazz)
+          trigger = Icons.CircleSmall.clazz(clazz)
         )
-      ).vdomElement
+      )
     } else <.span()
   }
 

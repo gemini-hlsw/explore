@@ -17,8 +17,10 @@ import explore.model.UserVault
 import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import queries.common.UserPreferencesQueriesGQL._
-import react.common._
+import react.common.ReactFnProps
 
 final case class IfLogged(view: View[RootModel])(
   val render:                   (UserVault, IO[Unit]) => VdomNode

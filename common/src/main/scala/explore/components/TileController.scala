@@ -21,10 +21,12 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.User
 import lucuma.ui.reusability._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import monocle.Traversal
 import queries.common.UserPreferencesQueriesGQL._
-import react.common._
-import react.common.implicits._
+import react.common.ReactFnProps
+import react.common.implicits.given
 import react.common.style.Css
 import react.gridlayout._
 
@@ -109,8 +111,7 @@ object TileController {
             .zoom(allTiles)
             .mod {
               case l if l.i.forall(_ === id.value) =>
-                if (st === TileSizeState.Minimized)
-                  l.copy(h = 1, minH = 1, isResizable = false)
+                if (st === TileSizeState.Minimized) l.copy(h = 1, minH = 1, isResizable = false)
                 else if (st === TileSizeState.Normal) {
                   val defaultHeight =
                     unsafeTileHeight(id).headOption(p.defaultLayout).getOrElse(1)

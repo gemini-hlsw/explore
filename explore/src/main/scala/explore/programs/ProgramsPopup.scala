@@ -15,6 +15,8 @@ import explore.model.enums.AppTab
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Program
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.modal.Modal
@@ -73,7 +75,7 @@ object ProgramsPopup {
         dimmer = Dimmer.Blurring,
         size = ModalSize.Small,
         onClose = props.onClose.orUndefined,
-        header = ModalHeader("Programs"),
+        header = ModalHeader(content = "Programs"),
         content = ModalContent(
           ProgramTable(
             props.currentProgramId,

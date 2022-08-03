@@ -18,7 +18,7 @@ import org.scalacheck.Gen
 trait ArbRootModel {
   import explore.model.arb.ArbExploreLocalPreferences._
 
-  implicit val rootModelArb = Arbitrary[RootModel] {
+  implicit val rootModelArb: Arbitrary[RootModel] = Arbitrary[RootModel] {
     for {
       vault <- Gen.option(arbitrary[UserVault])
       lp    <- arbitrary[ExploreLocalPreferences]

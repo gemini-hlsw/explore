@@ -6,11 +6,14 @@ package reactST.reactTable
 import cats.syntax.all._
 import explore.Icons
 import explore.components.ui.ExploreStyles
+import explore.syntax.ui.*
+import explore.syntax.ui.given
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.JsFn
 import japgolly.scalajs.react.internal.Box
 import japgolly.scalajs.react.vdom.html_<^._
-import react.common.implicits._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import react.common.style.Css
 import react.semanticui.AsC
 import react.semanticui.collections.table._
@@ -38,7 +41,7 @@ object definitions {
   type RowRender[D, Plugins]   = Row[D, Plugins] => TableRow
   type RowTemplate[D, Plugins] = TableRow | RowRender[D, Plugins]
 
-  type BodyCellRender[D, Plugins] = Cell[D, _, Plugins] => TableCell
+  type BodyCellRender[D, Plugins] = Cell[D, ?, Plugins] => TableCell
   type BodyCell[D, Plugins]       = TableCell | BodyCellRender[D, Plugins]
 }
 import definitions._
@@ -165,16 +168,18 @@ class SUITable[D, Plugins, Layout](
     }
 
     val headerElement: Option[TableHeader] =
-      headerTag.map(_(tableInstance.headerGroups.toTagMod { headerRowData =>
-        headerRowRender(headerRowData)(
-          headerRowData.headers.toTagMod((col: tableDef.ColumnType) =>
-            headerCellRender(col)(col.getHeaderProps(), sortElements.props(col))(
-              col.renderHeader,
-              sortElements.indicator(col)
+      headerTag.map(
+        _(tableInstance.headerGroups.toTagMod { headerRowData =>
+          headerRowRender(headerRowData)(
+            headerRowData.headers.toTagMod((col: tableDef.ColumnType) =>
+              headerCellRender(col)(col.getHeaderProps(), sortElements.props(col))(
+                col.renderHeader,
+                sortElements.indicator(col)
+              )
             )
           )
-        )
-      })(^.key := "header"))
+        })(^.key := "header")
+      )
 
     val bodyElement: TableBody =
       props.body(tableInstance.getTableBodyProps())(
@@ -189,7 +194,7 @@ class SUITable[D, Plugins, Layout](
         }
       )(^.key := "body")
 
-    def standardFooter(footerTag: TableFooter) =
+    def standardFooter(footerTag: TableFooter): VdomNode =
       footerTag(tableInstance.footerGroups.toTagMod { footerRowData =>
         props.footerRow(footerRowData.getFooterGroupProps())(
           footerRowData.headers.toTagMod((col: tableDef.ColumnType) =>
@@ -199,9 +204,9 @@ class SUITable[D, Plugins, Layout](
       })(^.key := "footer")
 
     val footerElement: Option[VdomNode] = (props.footer: Any) match {
-      case true                     => standardFooter(TableFooter()).vdomElement.some
+      case true                     => standardFooter(TableFooter()).some
       case false                    => none
-      case otherFooter: TableFooter => standardFooter(otherFooter).vdomElement.some
+      case otherFooter: TableFooter => standardFooter(otherFooter).some
       case otherElement: VdomNode   => otherElement.some
       case _                        => ??? // Can't wait for Scala 3's union types
     }
@@ -210,7 +215,7 @@ class SUITable[D, Plugins, Layout](
       headerElement,
       bodyElement,
       footerElement
-    ).vdomElement
+    )
   }
 
   type Props = SUITableProps[D, Plugins]

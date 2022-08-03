@@ -12,7 +12,7 @@ import explore.model.TargetWithId
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
-import explore.optics.ModelOptics._
+import explore.optics.all._
 import lucuma.core.math.BrightnessUnits._
 import lucuma.core.math._
 import lucuma.core.math.dimensional.Measure
@@ -226,7 +226,7 @@ package itc {
         .hashDistinct
 
       def baseTarget: Option[Target] =
-        NonEmptyList.fromList(s.targets.asterism).map(Asterism(_).baseTarget.target)
+        NonEmptyList.fromList(s.targets.asterism).map(a => Asterism(a).baseTarget.target)
 
       def baseSiderealTracking: Option[SiderealTracking] =
         baseTarget match {

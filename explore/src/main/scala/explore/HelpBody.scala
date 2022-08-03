@@ -10,17 +10,20 @@ import crystal.react.hooks._
 import crystal.react.implicits._
 import explore.components.ui.ExploreStyles
 import explore.model.Help
+import explore.syntax.ui.*
+import explore.syntax.ui.given
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import org.http4s._
 import org.http4s.dom.FetchClientBuilder
-import react.common._
+import react.common.ReactFnProps
 import react.hotkeys._
 import react.markdown.ReactMarkdown
 import react.markdown.RehypePlugin
 import react.markdown.RemarkPlugin
-import react.semanticui._
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
 
@@ -30,14 +33,14 @@ import scala.util.Try
 final case class HelpBody(base: HelpContext, helpId: Help.Id)(implicit val ctx: AppContextIO)
     extends ReactFnProps[HelpBody](HelpBody.component) {
   private val path: Uri.Path = Uri.Path.unsafeFromString(helpId.value)
-  private val rootUrl: Uri   = base.rawUrl / base.user.value / base.project.value
+  private val rootUrl: Uri   = base.rawUrl / base.user / base.project
   private val baseUrl: Uri   =
-    path.segments.init.foldLeft(base.rawUrl / base.user.value / base.project.value / "main")(
-      (uri, segment) => uri / segment.encoded
+    path.segments.init.foldLeft(base.rawUrl / base.user / base.project / "main")((uri, segment) =>
+      uri / segment.encoded
     )
   private val mainUrl        = rootUrl / "main"
   private val url            = mainUrl.addPath(path)
-  private val rootEditUrl    = base.editUrl / base.user.value / base.project.value
+  private val rootEditUrl    = base.editUrl / base.user / base.project
   private val newPage        = (rootEditUrl / "new" / "main")
     .withQueryParam("filename", path.segments.mkString("/"))
     .withQueryParam("value", s"# Title")

@@ -5,8 +5,11 @@ package explore.model
 
 import cats.syntax.all._
 import coulomb._
+import coulomb.ops.algebra.spire.all.given
+import coulomb.policy.spire.standard.given
+import coulomb.syntax._
 import eu.timepit.refined.refineV
-import explore.optics._
+import explore.optics.all._
 import lucuma.core.math.HourAngle.HMS
 import lucuma.core.math.Parallax
 import lucuma.core.math.ProperMotion.AngularVelocityComponent
@@ -30,14 +33,14 @@ trait formats {
         }
         .flatMap(l => refineV[Parallax.Parallaxμas](l).toOption)
         .map(μas => Parallax(μas.withUnit[MicroArcSecond])),
-      _.mas.to[BigDecimal, MilliArcSecond].value.toString
+      _.mas.toUnit[MilliArcSecond].value.toString
     )
 
   private def angularVelocityFormat[A](
     reverseGet: BigDecimal => AngularVelocityComponent[A]
   ): Format[String, AngularVelocityComponent[A]] =
     Format(_.parseBigDecimalOption.map(reverseGet),
-           _.masy.to[BigDecimal, MilliArcSecondPerYear].value.toString
+           _.masy.toUnit[MilliArcSecondPerYear].value.toString
     )
 
   val pmRAFormat: Format[String, ProperMotion.RA] = angularVelocityFormat(
@@ -89,7 +92,7 @@ trait formats {
 
   val formatWavelengthMicron: Format[String, Wavelength] =
     Format(_.parseBigDecimalOption.flatMap(Wavelength.decimalMicrometers.getOption),
-           _.micrometer.to[BigDecimal, Micrometer].value.toString
+           _.micrometer.toUnit[Micrometer].value.toString
     )
 
   val formatArcsec: Format[String, Angle] =

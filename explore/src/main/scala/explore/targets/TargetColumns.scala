@@ -5,24 +5,34 @@ package explore.targets
 
 import cats.Order._
 import cats.syntax.all._
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.conversions._
 import explore.model.display._
 import explore.model.enums.SourceProfileType
 import explore.model.formats._
-import explore.optics.ModelOptics._
+import explore.optics.all._
+import explore.utils._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enums.Band
+import lucuma.core.math.ApparentRadialVelocity
+import lucuma.core.math.Declination
 import lucuma.core.math.Epoch
 import lucuma.core.math.Parallax
+import lucuma.core.math.ProperMotion.Dec
+import lucuma.core.math.ProperMotion.RA
+import lucuma.core.math.RadialVelocity
+import lucuma.core.math.Redshift
+import lucuma.core.math.RightAscension
 import lucuma.core.math.dimensional._
 import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.Target
 import lucuma.core.syntax.display._
 import lucuma.core.util.Display
-import reactST.reactTable.Plugin
-import reactST.reactTable.TableDef
+import lucuma.ui.syntax.all.given
+import reactST.reactTable._
+import reactST.reactTable.facade.cell.CellProps
 
 object TargetColumns {
   val baseColNames: Map[String, String] = Map(
@@ -56,7 +66,10 @@ object TargetColumns {
     val getTarget: D => Option[Target]
     implicit val sortByEv: Plugins <:< Plugin.SortBy.Tag
 
-    def baseColumn[V](id: String, accessor: Target => V) =
+    def baseColumn[V](
+      id:       String,
+      accessor: Target => V
+    ): ColumnValueOptions[D, Option[V], Plugins] =
       tableDef
         .Column(id, getTarget.andThen(_.map(accessor)))
         .setHeader(baseColNames(id))
@@ -64,10 +77,12 @@ object TargetColumns {
     val baseColumns =
       List(
         baseColumn("type", _ => ())
-          .setCell(_ => Icons.Star)
+          .setCell((_: CellProps[D, Option[Unit], Plugins]) => Icons.Star: VdomNode)
           .setWidth(30),
         baseColumn("name", Target.name.get)
-          .setCell(_.value.map(_.toString).orEmpty)
+          .setCell((x: CellProps[D, Option[NonEmptyString], Plugins]) =>
+            x.value.map(_.toString).orEmpty
+          )
           .setSortByFn(_.toString)
       )
   }
@@ -77,12 +92,18 @@ object TargetColumns {
     val getSiderealTarget: D => Option[Target.Sidereal]
     implicit val sortByEv: Plugins <:< Plugin.SortBy.Tag
 
-    def siderealColumnOpt[V](id: String, accessor: Target.Sidereal => Option[V]) =
+    def siderealColumnOpt[V](
+      id:       String,
+      accessor: Target.Sidereal => Option[V]
+    ): ColumnValueOptions[D, Option[V], Plugins] =
       tableDef
         .Column(id, getSiderealTarget.andThen(_.flatMap(accessor)))
         .setHeader(siderealColNames(id))
 
-    def siderealColumn[V](id: String, accessor: Target.Sidereal => V) =
+    def siderealColumn[V](
+      id:       String,
+      accessor: Target.Sidereal => V
+    ): ColumnValueOptions[D, Option[V], Plugins] =
       siderealColumnOpt(id, accessor.andThen(_.some))
 
     /** Display measure without the uncertainty */
@@ -95,35 +116,32 @@ object TargetColumns {
     val siderealColumns =
       List(
         siderealColumn("ra", Target.Sidereal.baseRA.get)
-          .setCell(
-            _.value
+          .setCell((x: CellProps[D, Option[RightAscension], Plugins]) =>
+            x.value
               .map(MathValidators.truncatedRA.reverseGet)
               .orEmpty
           )
           .setSortByAuto,
         siderealColumn("dec", Target.Sidereal.baseDec.get)
-          .setCell(
-            _.value
+          .setCell((x: CellProps[D, Option[Declination], Plugins]) =>
+            x.value
               .map(MathValidators.truncatedDec.reverseGet)
               .orEmpty
           )
           .setSortByAuto
-        // siderealColumn("priority", _ => "").setCell(_ =>
-        //   ""
-        // ) // TODO IS this a property of the target, or a property of the target in the observation???
       ) ++
         Band.all.map(band =>
           siderealColumnOpt(
             band.tag + "mag",
             t => targetBrightnesses.get(t).flatMap(_.get(band))
           )
-            .setCell(_.value.map(displayWithoutError(_)(displayBrightness)))
+            .setCell(_.value.map(displayWithoutError(_)(displayBrightness)).orEmpty)
             .setDisableSortBy(true) // We cannot sort since there may be different units.
         ) ++
         List(
           siderealColumn("epoch", Target.Sidereal.epoch.get)
-            .setCell(
-              _.value
+            .setCell((x: CellProps[D, Option[Epoch], Plugins]) =>
+              x.value
                 .map(value =>
                   s"${value.scheme.prefix}${Epoch.fromStringNoScheme.reverseGet(value)}"
                 )
@@ -131,29 +149,42 @@ object TargetColumns {
             )
             .setSortByAuto,
           siderealColumnOpt("pmra", Target.Sidereal.properMotionRA.getOption)
-            .setCell(
-              _.value.map(pmRAFormat.reverseGet).orEmpty
+            .setCell((x: CellProps[D, Option[RA], Plugins]) =>
+              x.value.map(pmRAFormat.reverseGet).orEmpty
             )
             .setSortByAuto,
           siderealColumnOpt("pmdec", Target.Sidereal.properMotionDec.getOption)
-            .setCell(_.value.map(pmDecFormat.reverseGet).orEmpty)
+            .setCell((x: CellProps[D, Option[Dec], Plugins]) =>
+              x.value.map(pmDecFormat.reverseGet).orEmpty
+            )
             .setSortByAuto,
           siderealColumnOpt("rv", Target.Sidereal.radialVelocity.get)
-            .setCell(_.value.map(formatRV.reverseGet).orEmpty)
+            .setCell((x: CellProps[D, Option[RadialVelocity], Plugins]) =>
+              x.value.map(formatRV.reverseGet).orEmpty
+            )
             .setSortByAuto,
           siderealColumnOpt("z", (Target.Sidereal.radialVelocity.get _).andThen(rvToRedshiftGet))
-            .setCell(_.value.map(formatZ.reverseGet).orEmpty)
+            .setCell((x: CellProps[D, Option[Redshift], Plugins]) =>
+              x.value.map(formatZ.reverseGet).orEmpty
+            )
             .setSortByAuto,
           siderealColumnOpt("cz", (Target.Sidereal.radialVelocity.get _).andThen(rvToARVGet))
-            .setCell(_.value.map(formatCZ.reverseGet).orEmpty)
+            .setCell((x: CellProps[D, Option[ApparentRadialVelocity], Plugins]) =>
+              x.value.map(formatCZ.reverseGet).orEmpty
+            )
             .setSortByAuto,
           siderealColumnOpt("parallax", Target.Sidereal.parallax.get)
-            .setCell(_.value.map(Parallax.milliarcseconds.get).map(_.toString).orEmpty)
+            .setCell((x: CellProps[D, Option[Parallax], Plugins]) =>
+              x.value.map(Parallax.milliarcseconds.get).map(_.toString).orEmpty
+            )
             .setSortByAuto,
           siderealColumn(
             "morphology",
             (Target.Sidereal.sourceProfile.get _).andThen(SourceProfileType.fromSourceProfile)
-          ).setCell(_.value.map(_.shortName).orEmpty),
+          )
+            .setCell((x: CellProps[D, Option[SourceProfileType], Plugins]) =>
+              x.value.map(_.shortName).orEmpty
+            ),
           siderealColumn(
             "sed",
             t =>
@@ -161,7 +192,9 @@ object TargetColumns {
                 .getOption(t)
                 .map(_.shortName)
                 .orElse(Target.Sidereal.surfaceSpectralDefinition.getOption(t).map(_.shortName))
-          ).setCell(_.value.orEmpty)
+                .orEmpty
+          )
+            .setCell((x: CellProps[D, Option[String], Plugins]) => x.value.orEmpty)
         )
   }
 

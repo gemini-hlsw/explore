@@ -19,8 +19,8 @@ object AppCtx extends Ctx[CallbackTo, AppContextIO]
 case class HelpContext(
   rawUrl:        Uri,
   editUrl:       Uri,
-  user:          String Refined MatchesRegex["[\\w-_]+"],
-  project:       String Refined MatchesRegex["[\\w-_]+"],
+  user:          String,
+  project:       String,
   displayedHelp: Option[Help.Id] = none
 )
 
@@ -30,7 +30,7 @@ object HelpContext {
   implicit val helpIdReuse: Reusability[Help.Id]          = Reusability.by(_.value)
   implicit val uriReuse: Reusability[Uri]                 = Reusability.by(_.toString)
   implicit val helpContextReuse: Reusability[HelpContext] =
-    Reusability.by(x => (x.rawUrl, x.editUrl, x.user.value, x.project.value, x.displayedHelp))
+    Reusability.by(x => (x.rawUrl, x.editUrl, x.user, x.project, x.displayedHelp))
 }
 
 object HelpCtx extends Ctx[CallbackTo, HelpContext]

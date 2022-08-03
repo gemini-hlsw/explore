@@ -6,8 +6,10 @@ package explore.modes
 import cats.Order
 import cats.syntax.all._
 import coulomb._
-import coulomb.refined._
-import coulomb.si.Second
+import coulomb.ops.algebra.spire.all.given
+import coulomb.policy.spire.standard.given
+import coulomb.syntax.*
+import coulomb.units.si.Second
 import eu.timepit.refined._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.numeric.Positive

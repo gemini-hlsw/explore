@@ -11,7 +11,7 @@ import monocle._
 
 import java.time.Instant
 
-final case class Asterism private (private val targets: NonEmptyList[TargetWithId]) {
+final case class Asterism(private val targets: NonEmptyList[TargetWithId]) {
   def toSidereal(vizTime: Instant): List[SiderealTargetWithId] =
     targets.traverse(_.toSidereal.map(_.at(vizTime))).foldMap(_.toList)
 

@@ -12,7 +12,8 @@ import explore.undo.UndoStacks
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
 import lucuma.core.model.User
-import react.common._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 
 import java.time.Instant
 

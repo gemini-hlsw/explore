@@ -14,6 +14,7 @@ import explore.model.UserVault
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.broadcastchannel._
+import lucuma.refined._
 import react.common.ReactFnProps
 
 final case class LogoutTracker(
@@ -33,15 +34,17 @@ object LogoutTracker {
     .useState(none[BroadcastChannel[ExploreEvent]])
     .useEffectOnMountBy { (props, nonce, state) =>
       val bc = new BroadcastChannel[ExploreEvent]("explore")
-      bc.onmessage = (x: ExploreEvent) =>
-        // This is coming from the js world, we can't match the type
-        x.event match {
-          case ExploreEvent.LogoutEvent.event =>
-            (props.setVault(none) >> props.setMessage(
-              "You logged out in another instance"
-            )).to[IO].whenA(x.value.toString =!= nonce.value.toString)
-          case _                              => IO.unit
-        }
+      bc.onmessage = (
+        (x: ExploreEvent) =>
+          // This is coming from the js world, we can't match the type
+          x.event match {
+            case ExploreEvent.LogoutEvent.event =>
+              (props.setVault(none) >> props.setMessage(
+                "You logged out in another instance".refined
+              )).to[IO].whenA(x.value.toString =!= nonce.value.toString)
+            case _                              => IO.unit
+          }
+      ): (ExploreEvent => IO[Unit]) // Scala 3 infers the return type as Any if we don't ascribe
 
       state
         .setState(bc.some) *> CallbackTo(Callback(bc.close()).attempt)

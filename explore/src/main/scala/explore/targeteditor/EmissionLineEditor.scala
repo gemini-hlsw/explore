@@ -6,12 +6,14 @@ package explore.targeteditor
 import cats.Order._
 import cats.syntax.all._
 import coulomb._
+import coulomb.syntax.*
 import crystal.react.View
 import crystal.react.hooks._
 import crystal.react.implicits._
 import crystal.react.reuse._
-import eu.timepit.refined.auto._
+import eu.timepit.refined._
 import eu.timepit.refined.cats._
+import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
@@ -27,12 +29,14 @@ import lucuma.core.math.units._
 import lucuma.core.model.EmissionLine
 import lucuma.core.util.Enumerated
 import lucuma.core.validation._
+import lucuma.refined.*
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.reusability._
-import react.common._
-import react.common.implicits._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
+import react.common.ReactFnProps
 import react.semanticui.collections.table._
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
@@ -89,7 +93,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
                 id = NonEmptyString.unsafeFrom(s"lineWidth_${cell.row.id}"),
                 value = cell.value,
                 validFormat = InputValidSplitEpi.posBigDecimal,
-                changeAuditor = ChangeAuditor.posBigDecimal(3).allowEmpty,
+                changeAuditor = ChangeAuditor.posBigDecimal(3.refined).allowEmpty,
                 disabled = disabled
               )
             )
@@ -126,7 +130,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
             .setHeader("Units")
             .setCell(cell =>
               EnumViewSelect[View, Units Of LineFlux[T]](
-                id = NonEmptyString.unsafeFrom(s"lineUnits_${cell.row.id}"),
+                id = s"lineUnits_${cell.row.id}",
                 value = cell.value,
                 compact = true,
                 disabled = disabled,
@@ -175,13 +179,15 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
     // addDisabled
     .useStateView(true)
     .render { (props, _, _, tableInstance, newWavelength, addDisabled) =>
+      val bd1 = refineV[Positive](BigDecimal(1)).getOrElse(sys.error("Cannot happen"))
+
       val addLine =
         newWavelength.get.foldMap(wavelength =>
           props.emissionLines.mod(emissionLines =>
             emissionLines +
               (wavelength -> EmissionLine(
-                PosBigDecimal(BigDecimal(1)).withUnit[KilometersPerSecond],
-                defaultLineUnits.withValueTagged(BigDecimal(1))
+                bd1.withUnit[KilometersPerSecond],
+                defaultLineUnits.withValueTagged(bd1)
               ))
           ) >> newWavelength.set(none)
         )
@@ -191,12 +197,12 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
           ExploreStyles.BrightnessesTableFooter,
           "New line λ: ",
           FormInputEV[View, Option[Wavelength]](
-            id = "newWavelength",
+            id = "newWavelength".refined,
             value = newWavelength,
             validFormat = InputValidSplitEpi.fromFormat(formatWavelengthMicron).optional,
             changeAuditor = ChangeAuditor
               .fromFormat(formatWavelengthMicron)
-              .decimal(3)
+              .decimal(3.refined)
               .allow(List("0", "0.").contains)
               .optional,
             onTextChange = s => addDisabled.set(s.isEmpty),

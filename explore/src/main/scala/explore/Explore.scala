@@ -16,7 +16,7 @@ import clue.js.FetchMethod
 import clue.js.WebSocketJSBackend
 import crystal.react._
 import crystal.react.reuse._
-import eu.timepit.refined.auto._
+import eu.timepit.refined.collection.NonEmpty
 import explore._
 import explore.components.ui.ExploreStyles
 import explore.model.AppConfig
@@ -31,6 +31,7 @@ import explore.model.enums.AppTab
 import explore.model.enums.ExecutionEnvironment
 import explore.model.enums.Theme
 import explore.model.reusability._
+import explore.syntax.ui.given
 import explore.utils._
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.extra.router._
@@ -38,6 +39,8 @@ import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import log4cats.loglevel.LogLevelLogger
 import lucuma.core.model.Program
+import lucuma.refined.*
+import lucuma.ui.syntax.all.*
 import org.http4s.circe._
 import org.http4s.dom.FetchClientBuilder
 import org.http4s.implicits._
@@ -45,7 +48,6 @@ import org.scalajs.dom
 import org.scalajs.dom.Element
 import org.scalajs.dom.RequestCache
 import org.typelevel.log4cats.Logger
-import react.common.implicits._
 import react.toastify._
 import workers.WebWorkerF
 
@@ -58,12 +60,10 @@ import js.annotation._
 @JSExportTopLevel("Explore")
 object ExploreMain extends IOApp.Simple {
 
-  implicit val reuseContext: Reusability[AppContextIO] = Reusability.never
-
   @JSExport
   def resetIOApp(): Unit =
     // https://github.com/typelevel/cats-effect/pull/2114#issue-687064738
-    cats.effect.unsafe.IORuntime.asInstanceOf[{ def resetGlobal(): Unit }].resetGlobal()
+    cats.effect.unsafe.JSPlatform.resetRuntime()
 
   @JSExport
   def runIOApp(): Unit = main(Array.empty)

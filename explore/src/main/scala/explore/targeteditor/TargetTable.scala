@@ -24,8 +24,10 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
 import lucuma.ui.reusability._
-import react.common._
-import react.common.implicits._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
+import react.common.Css
+import react.common.ReactFnProps
 import react.semanticui.collections.table._
 import react.semanticui.elements.button._
 import react.semanticui.modules.checkbox.Checkbox
@@ -148,7 +150,7 @@ object TargetTable {
                        text = "Columns",
                        clazz = ExploreStyles.SelectColumns
               )(
-                DropdownMenu()(
+                DropdownMenu(
                   tableInstance.allColumns
                     .drop(2)
                     .toTagMod { column =>
@@ -178,15 +180,14 @@ object TargetTable {
           } else {
             <.div(ExploreStyles.ExploreTable |+| ExploreStyles.AsterismTable)(
               TargetTableComponent(
-                table = Table(celled = true,
-                              selectable = true,
-                              striped = true,
-                              compact = TableCompact.Very,
-                              unstackable = true
+                table = Table(
+                  celled = true,
+                  selectable = true,
+                  striped = true,
+                  compact = TableCompact.Very,
+                  unstackable = true
                 )(),
                 header = true,
-                headerRow = (headerRow: TargetTable.HeaderGroupType) =>
-                  TableRow(clazz = columnClasses.get(headerRow.id.toString).orEmpty),
                 headerCell = (col: TargetTable.ColumnType) =>
                   TableHeaderCell(clazz =
                     columnClasses.get(col.id.toString).orEmpty |+| ExploreStyles.StickyHeader
@@ -204,7 +205,7 @@ object TargetTable {
                       .set(rowData.original.id.some),
                     props2Attrs(rowData.getRowProps())
                   ),
-                cell = (cell: TargetTable.CellType[_]) =>
+                cell = (cell: TargetTable.CellType[?]) =>
                   TableCell(clazz = columnClasses.get(cell.column.id.toString).orUndefined)(
                     ^.whiteSpace.nowrap
                   )

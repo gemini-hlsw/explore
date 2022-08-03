@@ -25,42 +25,22 @@ import japgolly.scalajs.react.vdom._
 import lucuma.core.optics._
 import lucuma.core.util.Enumerated
 import lucuma.schemas._
+import monocle.function.At
 import monocle.function.At.at
 import monocle.function.Index.index
 import org.scalajs.dom
 import org.typelevel.log4cats.Logger
 import queries.schemas._
-import shapeless._
 
 import scala.annotation.unused
 import scala.collection.immutable.SortedMap
 import scala.concurrent.duration._
 
 trait ListImplicits {
-
-  // Adapted from https://stackoverflow.com/a/21444327/5808801
-  implicit object hnilMonoid extends Monoid[HNil] {
-    val empty                                       = HNil
-    def combine(@unused f1: HNil, @unused f2: HNil) = HNil
-  }
-
-  implicit def hconsMonoid[H: Monoid, T <: HList: Monoid]: Monoid[H :: T] =
-    new Monoid[H :: T] {
-      val empty                           = Monoid[H].empty :: Monoid[T].empty
-      def combine(f1: H :: T, f2: H :: T) =
-        (f1.head |+| f2.head) :: (f1.tail |+| f2.tail)
-    }
-
-  private object singleton extends Poly1 {
-    implicit def anything[A]: Case.Aux[A, List[A]] = at[A](List(_))
-  }
-
-  implicit class UnzipListOpts[L <: HList](hlists: List[L]) {
-    def unzipN[Out <: HList](implicit
-      mapper: ops.hlist.Mapper.Aux[singleton.type, L, Out],
-      monoid: Monoid[Out]
-    ): Out = hlists.map(_.map(singleton)).combineAll
-  }
+  def unzip4[A, B, C, D](list: List[(A, B, C, D)]): (List[A], List[B], List[C], List[D]) =
+    list.foldRight((List.empty[A], List.empty[B], List.empty[C], List.empty[D]))((tuple, accum) =>
+      (tuple._1 :: accum._1, tuple._2 :: accum._2, tuple._3 :: accum._3, tuple._4 :: accum._4)
+    )
 
   implicit class ViewListOps[F[_]: Monad, A](val viewList: ViewF[F, List[A]]) {
     def toListOfViews: List[ViewF[F, A]] =
@@ -202,22 +182,22 @@ object implicits
       reRunOnSignal(signals.reduceLeft(_ merge _), debounce)
 
     def reRunOnResourceSignals(
-      subscriptions: NonEmptyList[Resource[F, fs2.Stream[F, _]]],
+      subscriptions: NonEmptyList[Resource[F, fs2.Stream[F, ?]]],
       debounce:      Option[FiniteDuration] = 2.seconds.some
     )(implicit F:    Temporal[F]): Resource[F, fs2.Stream[F, A]] =
       subscriptions.sequence
         .map(ss => reRunOnSignals(ss.map(_.void), debounce))
 
     def reRunOnResourceSignals(
-      head:       Resource[F, fs2.Stream[F, _]],
-      tail:       Resource[F, fs2.Stream[F, _]]*
+      head:       Resource[F, fs2.Stream[F, ?]],
+      tail:       Resource[F, fs2.Stream[F, ?]]*
     )(implicit F: Temporal[F]): Resource[F, fs2.Stream[F, A]] =
       reRunOnResourceSignals(NonEmptyList.of(head, tail: _*))
 
     def reRunOnResourceSignals(
       debounce:   FiniteDuration,
-      head:       Resource[F, fs2.Stream[F, _]],
-      tail:       Resource[F, fs2.Stream[F, _]]*
+      head:       Resource[F, fs2.Stream[F, ?]],
+      tail:       Resource[F, fs2.Stream[F, ?]]*
     )(implicit F: Temporal[F]): Resource[F, fs2.Stream[F, A]] =
       reRunOnResourceSignals(NonEmptyList.of(head, tail: _*), debounce.some)
   }
@@ -239,24 +219,24 @@ object implicits
     )(implicit F: Temporal[F]): fs2.Stream[F, Pot[A]] =
       resetOnSignal(signals.reduceLeft(_ merge _), debounce)
 
-    def resetOnResourceSignals(
-      subscriptions: NonEmptyList[Resource[F, fs2.Stream[F, _]]],
+    private def resetOnResourceSignalsB(
+      subscriptions: NonEmptyList[Resource[F, fs2.Stream[F, ?]]],
       debounce:      Option[FiniteDuration] = 2.seconds.some
     )(implicit F:    Temporal[F]): Resource[F, fs2.Stream[F, Pot[A]]] =
       subscriptions.sequence
         .map(ss => resetOnSignals(ss.map(_.void), debounce))
 
     def resetOnResourceSignals(
-      head:       Resource[F, fs2.Stream[F, _]],
-      tail:       Resource[F, fs2.Stream[F, _]]*
+      head:       Resource[F, fs2.Stream[F, ?]],
+      tail:       Resource[F, fs2.Stream[F, ?]]*
     )(implicit F: Temporal[F]): Resource[F, fs2.Stream[F, Pot[A]]] =
-      resetOnResourceSignals(NonEmptyList.of(head, tail: _*))
+      resetOnResourceSignalsB(NonEmptyList.of(head, tail: _*))
 
     def resetOnResourceSignals(
       debounce:   FiniteDuration,
-      head:       Resource[F, fs2.Stream[F, _]],
-      tail:       Resource[F, fs2.Stream[F, _]]*
+      head:       Resource[F, fs2.Stream[F, ?]],
+      tail:       Resource[F, fs2.Stream[F, ?]]*
     )(implicit F: Temporal[F]): Resource[F, fs2.Stream[F, Pot[A]]] =
-      resetOnResourceSignals(NonEmptyList.of(head, tail: _*), debounce.some)
+      resetOnResourceSignalsB(NonEmptyList.of(head, tail: _*), debounce.some)
   }
 }

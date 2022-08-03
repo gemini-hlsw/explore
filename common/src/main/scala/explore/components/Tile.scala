@@ -10,12 +10,16 @@ import explore.components.ui.ExploreStyles
 import explore.components.ui.ExploreStyles._
 import explore.model.enums.TileSizeState
 import explore.model.layout
+import explore.syntax.ui.*
+import explore.syntax.ui.given
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import org.scalajs.dom
-import react.common._
-import react.common.implicits._
+import react.common.ReactFnProps
 import react.common.style._
+import react.fa.given
 import react.semanticui.collections.menu._
 import react.semanticui.elements.button.Button
 

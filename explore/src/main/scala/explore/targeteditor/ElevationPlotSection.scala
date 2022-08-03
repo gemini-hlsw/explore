@@ -29,7 +29,10 @@ import lucuma.core.math.Coordinates
 import lucuma.core.model.Semester
 import lucuma.core.model.Target
 import lucuma.core.model.User
+import lucuma.refined.*
 import lucuma.ui.reusability._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import queries.common.UserPreferencesQueriesGQL._
 import react.common.ReactFnProps
 import react.datepicker._
@@ -50,7 +53,8 @@ final case class ElevationPlotSection(
 object ElevationPlotSection {
   type Props = ElevationPlotSection
 
-  implicit val propsReuse: Reusability[Props] = Reusability.derive
+  implicit val propsReuse: Reusability[Props] =
+    Reusability.by(x => (x.uid, x.tid, x.scienceMode, x.coords))
 
   val preferredSiteFor = (c: Props) =>
     c.scienceMode
@@ -138,7 +142,7 @@ object ElevationPlotSection {
         val renderPlot: ElevationPlotOptions => VdomNode =
           (opt: ElevationPlotOptions) =>
             <.div(ExploreStyles.ElevationPlotSection)(
-              HelpIcon("target/main/elevation-plot.md", ExploreStyles.HelpIconFloating),
+              HelpIcon("target/main/elevation-plot.md".refined, ExploreStyles.HelpIconFloating),
               <.div(ExploreStyles.ElevationPlot) {
                 (siteView.get, rangeView.get).mapN[VdomNode] {
                   case (site, PlotRange.Night)    =>

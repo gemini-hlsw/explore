@@ -5,7 +5,9 @@ package react.reflex
 
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.TagMod
-import react.common._
+import lucuma.ui.implicits._
+import react.common.Css
+import react.common.GenericComponentPAC
 
 import scala.scalajs.js.annotation.JSImport
 
@@ -48,7 +50,7 @@ object ReflexContainer {
     clazz:             js.UndefOr[Css] = js.undefined
   ): Props = {
     val p = (new js.Object).asInstanceOf[Props]
-    orientation.foreach(v => p.orientation = v.toJs)
+    orientation.foreach(v => p.orientation = v.undefToJs)
     maxRecDepth.foreach(v => p.maxRecDepth = v)
     windowResizeAware.foreach(v => p.windowResizeAware = v)
     clazz.foreach(v => p.className = v.htmlClass)

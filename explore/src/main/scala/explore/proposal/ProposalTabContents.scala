@@ -24,6 +24,7 @@ import lucuma.core.model.Proposal
 import lucuma.core.model.StandardUser
 import lucuma.core.model.User
 import lucuma.schemas.ObservationDB.Types._
+import lucuma.ui.syntax.all.given
 import monocle.Focus
 import monocle.Lens
 import queries.common.ProgramQueriesGQL._

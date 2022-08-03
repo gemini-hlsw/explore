@@ -20,11 +20,15 @@ import lucuma.core.math.Angle
 import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
+import lucuma.refined.*
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.input.ChangeAuditor
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import monocle.Lens
 import monocle.std.option
-import react.common._
+import react.common.Css
+import react.common.ReactFnProps
 import react.semanticui.collections.form.Form
 import react.semanticui.sizes._
 
@@ -82,12 +86,12 @@ object ObsConfigurationPanel {
         <.div(
           ExploreStyles.InputWithLabel,
           InputWithUnits(
-            id = "pos-angle-value",
+            id = "pos-angle-value".refined,
             clazz = Css.Empty,
             value = pa,
             units = "° E of N",
             validFormat = MathValidators.truncatedAngleDegrees,
-            changeAuditor = ChangeAuditor.bigDecimal(3, 2)
+            changeAuditor = ChangeAuditor.bigDecimal(3.refined, 2.refined)
           )
         )
 
@@ -95,7 +99,7 @@ object ObsConfigurationPanel {
         ExploreStyles.Compact,
         ExploreStyles.ObsConfigurationForm
       )(
-        <.label("Position Angle", HelpIcon("configuration/positionangle.md")),
+        <.label("Position Angle", HelpIcon("configuration/positionangle.md".refined)),
         EnumViewSelect(
           clazz = ExploreStyles.ObsConfigurationObsPA,
           id = "pos-angle-alternative",

@@ -12,7 +12,10 @@ import explore.components.ui.ExploreStyles
 import explore.model.Help
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import react.common._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
+import react.common.Css
+import react.common.ReactFnProps
 
 import scala.scalajs.js
 

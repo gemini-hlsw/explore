@@ -19,6 +19,7 @@ import explore.model.ObsSummaryWithTitleConstraintsAndConf
 import explore.model.ScienceMode
 import explore.model.TargetSummary
 import explore.model.reusability._
+import explore.optics.all._
 import japgolly.scalajs.react._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange

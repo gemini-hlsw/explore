@@ -4,6 +4,7 @@
 package explore.config
 
 import cats.syntax.all._
+import coulomb.ops.algebra.spire.all.given
 import crystal.react._
 import crystal.react.hooks._
 import eu.timepit.refined.auto._
@@ -25,8 +26,11 @@ import lucuma.core.enums.ScienceMode
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
 import lucuma.core.model.SiderealTracking
+import lucuma.refined.*
 import lucuma.ui.forms.EnumViewSelect
-import react.common._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
+import react.common.ReactFnProps
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.button.Button
 import react.semanticui.shorthand._
@@ -74,7 +78,7 @@ object BasicConfigurationPanel {
             ExploreStyles.ExploreForm,
             ExploreStyles.BasicConfigurationForm
           )(
-            <.label("Mode", HelpIcon("configuration/mode.md")),
+            <.label("Mode", HelpIcon("configuration/mode.md".refined)),
             EnumViewSelect(id = "configuration-mode", value = mode),
             SpectroscopyConfigurationPanel(spectroscopy)
               .when(isSpectroscopy),

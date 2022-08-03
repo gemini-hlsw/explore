@@ -23,13 +23,15 @@ import lucuma.core.enums.Band
 import lucuma.core.math.BrightnessUnits._
 import lucuma.core.math.dimensional._
 import lucuma.core.util.Enumerated
+import lucuma.refined.*
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.reusability._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import monocle.Focus
-import react.common._
-import react.common.implicits._
+import react.common.ReactFnProps
 import react.semanticui.collections.table._
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
@@ -97,7 +99,8 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                     id = NonEmptyString.unsafeFrom(s"brightnessValue_${cell.row.id}"),
                     value = cell.value,
                     validFormat = ExploreModelValidators.brightnessValidWedge,
-                    changeAuditor = ChangeAuditor.bigDecimal(2, 3).allowExp(2),
+                    changeAuditor =
+                      ChangeAuditor.bigDecimal(2.refined, 3.refined).allowExp(2.refined),
                     disabled = disabled
                   )
                 )

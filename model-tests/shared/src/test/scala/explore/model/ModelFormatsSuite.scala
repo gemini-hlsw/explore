@@ -3,6 +3,7 @@
 
 package explore.model
 
+import coulomb.policy.spire.standard.given
 import explore.model.formats._
 import lucuma.core.arb._
 import lucuma.core.math.Parallax

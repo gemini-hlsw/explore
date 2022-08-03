@@ -7,7 +7,9 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.callback.Callback
 import japgolly.scalajs.react.facade.React
 import japgolly.scalajs.react.vdom.all._
-import react.common._
+import lucuma.ui.implicits._
+import react.common.Css
+import react.common.GenericComponentP
 
 import scala.annotation.nowarn
 
@@ -46,8 +48,8 @@ package toastify {
       clazz:    js.UndefOr[Css] = js.undefined
     ): Props = {
       val p = (new js.Object).asInstanceOf[Props]
-      position.foreach(v => p.position = v.toJs)
-      theme.foreach(v => p.theme = v.toJs)
+      position.foreach(v => p.position = v.undefToJs)
+      theme.foreach(v => p.theme = v.undefToJs)
       clazz.foreach(v => p.className = v.htmlClass)
       p
     }
@@ -110,12 +112,12 @@ package toastify {
     ): ToastOptions = {
       val p = (new js.Object).asInstanceOf[ToastOptions]
       toastId.foreach(q => p.toastId = q)
-      position.foreach(v => p.position = v.toJs)
+      position.foreach(v => p.position = v.undefToJs)
       onClose.foreach(q => p.onClose = () => q.runNow())
-      autoClose.foreach(q => p.autoClose = q)
+      autoClose.foreach((q: Boolean | Double) => p.autoClose = q)
       closeButton.foreach(q => p.closeButton = q)
       closeOnClick.foreach(q => p.closeOnClick = q)
-      theme.foreach(v => p.theme = v.toJs)
+      theme.foreach(v => p.theme = v.undefToJs)
       p
     }
   }

@@ -5,6 +5,7 @@ package explore.optics
 
 import eu.timepit.refined.cats._
 import eu.timepit.refined.scalacheck.all._
+import explore.optics.all._
 import monocle.law.discipline.IsoTests
 import munit.DisciplineSuite
 

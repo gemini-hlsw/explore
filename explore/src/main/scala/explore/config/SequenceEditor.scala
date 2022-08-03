@@ -9,9 +9,10 @@ import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Program
+import lucuma.ui.syntax.all.given
 import queries.common.ManualSequenceGQL._
 import queries.schemas.implicits._
-import react.common._
+import react.common.ReactFnProps
 
 final case class SequenceEditor(programId: Program.Id)(implicit val ctx: AppContextIO)
     extends ReactFnProps[SequenceEditor](SequenceEditor.component)

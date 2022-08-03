@@ -23,6 +23,7 @@ import explore.model.enums.AppTab
 import explore.model.reusability._
 import explore.observationtree.ConstraintGroupObsList
 import explore.optics._
+import explore.optics.all._
 import explore.syntax.ui._
 import explore.undo._
 import explore.utils._
@@ -32,15 +33,18 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Program
 import lucuma.core.model.User
+import lucuma.refined.*
 import lucuma.ui.reusability._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
 import lucuma.ui.utils._
 import org.scalajs.dom.window
 import queries.common.ConstraintGroupQueriesGQL._
 import queries.common.ObsQueriesGQL
 import queries.common.UserPreferencesQueriesGQL._
-import react.common._
-import react.common.implicits._
+import react.common.ReactFnProps
 import react.draggable.Axis
+import react.fa._
 import react.resizable._
 import react.resizeDetector.ResizeDetector
 import react.semanticui.elements.button.Button
@@ -165,16 +169,19 @@ object ConstraintSetTabContents {
         findConstraintGroup(ids, constraintsWithObs.get.constraintGroups).map(cg => (ids, cg))
       )
       .fold[VdomNode] {
-        Tile("constraints", "Constraints Summary", backButton.some, key = "constraintsSummary")(
-          renderInTitle =>
-            ConstraintsSummaryTable(
-              props.programId,
-              constraintsWithObs.get.constraintGroups,
-              props.hiddenColumns,
-              props.summarySorting,
-              props.expandedIds,
-              renderInTitle
-            )
+        Tile("constraints".refined,
+             "Constraints Summary",
+             backButton.some,
+             key = "constraintsSummary"
+        )(renderInTitle =>
+          ConstraintsSummaryTable(
+            props.programId,
+            constraintsWithObs.get.constraintGroups,
+            props.hiddenColumns,
+            props.summarySorting,
+            props.expandedIds,
+            renderInTitle
+          )
         )
       } { case (idsToEdit, constraintGroup) =>
         val groupObsIds   = constraintGroup.obsIds
@@ -231,7 +238,7 @@ object ConstraintSetTabContents {
           case None     => s"Editing Constraints for ${idsToEdit.size} Observations"
         }
 
-        Tile("constraints", title, backButton.some)(renderInTitle =>
+        Tile("constraints".refined, title, backButton.some)(renderInTitle =>
           ConstraintsPanel(idsToEdit.toList, csView, csUndo, renderInTitle)
         )
       }
@@ -270,7 +277,7 @@ object ConstraintSetTabContents {
     }
   }
 
-  protected implicit val innerWidthReuse = Reusability.double(2.0)
+  protected implicit val innerWidthReuse: Reusability[Double] = Reusability.double(2.0)
 
   protected val component =
     ScalaFnComponent

@@ -5,10 +5,13 @@ package reactST.reactTable
 
 import cats.syntax.all._
 import explore.components.ui.ExploreStyles
+import explore.syntax.ui.*
+import explore.syntax.ui.given
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import react.common._
-import react.common.implicits._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
+import react.common.ReactPropsForwardRef
 import react.common.style.Css
 import react.semanticui.collections.table._
 import react.virtuoso._
@@ -34,7 +37,7 @@ class SUITableVirtuoso[D, Plugins](
     header:             Boolean | TableHeader = false,
     headerRow:          TableRow = TableRow(),
     headerCell:         HeaderCell[D, Plugins] = TableHeaderCell(): HeaderCell[D, Plugins],
-    body:               TableBody = TableBody()(^.height := "100%"),
+    body:               TableBody = TableBody(^.height := "100%"),
     row:                RowTemplate[D, Plugins] = TableRow(): RowTemplate[D, Plugins],
     cell:               BodyCell[D, Plugins] = TableCell(): BodyCell[D, Plugins],
     footer:             Boolean | TableFooter | VdomNode = false,
@@ -187,8 +190,7 @@ class SUITableVirtuoso[D, Plugins](
             GroupedVirtuoso(
               itemContent = renderRow,
               groupCounts = List(tableInstance.rows.length),
-              groupContent =
-                headerElement.map(header => (_: Int) => header.vdomElement).orUndefined,
+              groupContent = headerElement.map(header => (_: Int) => header: VdomNode).orUndefined,
               initialTopMostItemIndex = props.initialIndex.orUndefined,
               rangeChanged = props.rangeChanged.orUndefined,
               atTopStateChange = props.atTopChange.orUndefined,
@@ -198,7 +200,7 @@ class SUITableVirtuoso[D, Plugins](
           TagMod.when(tableInstance.rows.isEmpty)(props.emptyMessage)
         )
 
-      def standardFooter(footerTag: TableFooter) =
+      def standardFooter(footerTag: TableFooter): VdomNode =
         footerTag.copy(as = <.div,
                        clazz = addClass(footerTag.className, footerTag.clazz, ExploreStyles.TR)
         )
@@ -211,9 +213,9 @@ class SUITableVirtuoso[D, Plugins](
       }
 
       val footerElement: Option[VdomNode] = (props.footer: Any) match {
-        case true                   => standardFooter(TableFooter()).vdomElement.some
+        case true                   => standardFooter(TableFooter()).some
         case false                  => none
-        case footer: TableFooter    => standardFooter(footer).vdomElement.some
+        case footer: TableFooter    => standardFooter(footer).some
         case otherElement: VdomNode => otherElement.some
         case _                      => ??? // Can't wait for Scala 3's union types
       }
@@ -221,6 +223,6 @@ class SUITableVirtuoso[D, Plugins](
       tableRender(tableInstance)(
         bodyElement,
         footerElement
-      ).vdomElement
+      )
     }
 }

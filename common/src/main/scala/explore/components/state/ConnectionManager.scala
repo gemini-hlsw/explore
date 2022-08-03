@@ -13,8 +13,9 @@ import io.circe.Json
 import io.circe.syntax._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
-import react.common._
+import react.common.ReactFnProps
 import react.semanticui.elements.loader.Loader
 
 final case class ConnectionManager(ssoToken: NonEmptyString, onConnect: IO[Unit])(

@@ -7,6 +7,8 @@ import cats.syntax.all._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.enums.TimeDisplay
+import explore.syntax.ui.*
+import explore.syntax.ui.given
 import gpp.highcharts.highchartsStrings.line
 import gpp.highcharts.mod.XAxisLabelsOptions
 import gpp.highcharts.mod._
@@ -19,12 +21,12 @@ import lucuma.core.math.Coordinates
 import lucuma.core.math.skycalc.ImprovedSkyCalc
 import lucuma.core.model.ObservingNight
 import lucuma.core.util.Enumerated
-import react.common._
+import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.all.given
+import react.common.ReactFnProps
 import react.highcharts.Chart
 import react.moon.MoonPhase
 import react.resizeDetector.hooks._
-import shapeless.Generic
-import shapeless.HNil
 
 import java.time.Duration
 import java.time.Instant
@@ -34,6 +36,7 @@ import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import scala.collection.immutable.HashSet
+import scala.deriving.Mirror
 import scala.scalajs.js
 
 import js.JSConverters._
@@ -93,8 +96,6 @@ object ElevationPlotNight {
     implicit val ElevationSeriesEnumerated: Enumerated[ElevationSeries] =
       Enumerated.of(Elevation, ParallacticAngle, SkyBrightness, LunarElevation)
   }
-
-  private val seriesDataGen = Generic[SeriesData]
 
   private val dateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
@@ -193,14 +194,14 @@ object ElevationPlotNight {
             def pointWithAirmass(value: Double, airmass: Double): Chart.Data =
               point(value).asInstanceOf[PointOptionsWithAirmass].setAirMass(airmass)
 
-            pointWithAirmass(results.altitude.toAngle.toSignedDoubleDegrees, results.airmass) ::
-              point(results.totalSkyBrightness) ::
-              point(results.parallacticAngle.toSignedDoubleDegrees) ::
-              point(results.lunarElevation.toAngle.toSignedDoubleDegrees) ::
-              HNil
+            (pointWithAirmass(results.altitude.toAngle.toSignedDoubleDegrees, results.airmass),
+             point(results.totalSkyBrightness),
+             point(results.parallacticAngle.toSignedDoubleDegrees),
+             point(results.lunarElevation.toAngle.toSignedDoubleDegrees)
+            )
           }
 
-        val seriesData = seriesDataGen.from(series.unzipN)
+        val seriesData = summon[Mirror.Of[SeriesData]].fromProduct(unzip4(series))
 
         def timezoneInstantFormat(instant: Instant, zoneId: ZoneId): String =
           ZonedDateTime
@@ -237,12 +238,20 @@ object ElevationPlotNight {
 
         val tooltipFormatter: TooltipFormatterCallbackFunction = {
           (ctx: TooltipFormatterContextObject, _: Tooltip) =>
-            val time  = timeFormat(ctx.x)
+            val x     = ctx.x match
+              case x: Double => x
+              case x: String => x.toDouble
+              case _         => 0.0
+            val y     = ctx.y match
+              case y: Double => y
+              case y: String => y.toDouble
+              case _         => 0.0
+            val time  = timeFormat(x)
             val value = ctx.series.index match {
               case 0 =>                      // Target elevation with airmass
-                formatAngle(ctx.y) + s"<br/>Airmass: ${"%.3f".format(ctx.point.asInstanceOf[ElevationPointWithAirmass].airmass)}"
+                formatAngle(y) + s"<br/>Airmass: ${"%.3f".format(ctx.point.asInstanceOf[ElevationPointWithAirmass].airmass)}"
               case 2 => "%.2f".format(ctx.y) // Sky Brightness
-              case _ => formatAngle(ctx.y)   // Other elevations
+              case _ => formatAngle(y)       // Other elevations
             }
             s"<strong>$time ($timeDisplay)</strong><br/>${ctx.series.name}: $value"
         }

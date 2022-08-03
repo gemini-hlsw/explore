@@ -4,3 +4,5 @@
 package explore.model
 
 trait BoopicklePlatform
+
+object Boopickle extends BoopicklePlatform

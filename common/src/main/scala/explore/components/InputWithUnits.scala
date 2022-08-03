@@ -12,10 +12,13 @@ import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.validation.InputValidFormat
+import lucuma.refined._
 import lucuma.ui.forms.ExternalValue
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
-import react.common._
+import lucuma.ui.syntax.all.given
+import react.common.Css
+import react.common.ReactFnProps
 import react.semanticui._
 import react.semanticui.elements.icon.Icon
 import react.semanticui.elements.input.IconPosition
@@ -33,19 +36,20 @@ final case class InputWithUnits[EV[_], A](
   id:              NonEmptyString,
   label:           js.UndefOr[ShorthandS[Label]] = js.undefined,
   units:           TagMod,
-  clazz:           Css = ExploreStyles.Grow(1),
+  clazz:           Css = ExploreStyles.Grow(1.refined),
   disabled:        Boolean = false,
-  columnSpam:      Int Refined Interval.Closed[1, 16] = 2,
+  columnSpam:      Int Refined Interval.Closed[1, 16] = 2.refined,
   inline:          js.UndefOr[Boolean] = js.undefined,
   size:            js.UndefOr[SemanticSize] = js.undefined,
   placeholder:     js.UndefOr[String] = js.undefined
 )(implicit val ev: ExternalValue[EV], val eq: Eq[A])
-    extends ReactFnProps[InputWithUnits[Any, Any]](InputWithUnits.component)
+    extends ReactFnProps[InputWithUnits[InputWithUnits.AnyF, Any]](InputWithUnits.component)
 
 object InputWithUnits {
+  type AnyF[_]        = Any
   type Props[F[_], A] = InputWithUnits[F, A]
 
-  val component = componentF[Any, Any]
+  val component = componentF[AnyF, Any]
 
   def componentF[F[_], A] =
     ScalaFnComponent[Props[F, A]] { p =>
