@@ -14,8 +14,8 @@ import crystal.ViewF
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.model.Constants
-import explore.model.itc._
 import explore.model.Progress
+import explore.model.itc._
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.SpectroscopyModeRow
@@ -89,7 +89,7 @@ object ITCRequests {
         .collect { case Some(b) => b }
 
     def doRequest(
-      request:  ITCRequestParams,
+      request:  ItcRequestParams,
       callback: List[ItcResults] => F[Unit]
     ): F[Unit] =
       Logger[F].debug(
@@ -129,9 +129,9 @@ object ITCRequests {
       // Only handle known modes
       .collect {
         case m: GmosNorthSpectroscopyRow =>
-          ITCRequestParams(wavelength, signalToNoise, constraints, targets, m)
+          ItcRequestParams(wavelength, signalToNoise, constraints, targets, m)
         case m: GmosSouthSpectroscopyRow =>
-          ITCRequestParams(wavelength, signalToNoise, constraints, targets, m)
+          ItcRequestParams(wavelength, signalToNoise, constraints, targets, m)
       }
       // Discard values in the cache
       .filterNot { case params =>

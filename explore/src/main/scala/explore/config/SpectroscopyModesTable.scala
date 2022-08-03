@@ -23,10 +23,10 @@ import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.itc._
 import explore.model.Progress
-import explore.model.itc._
 import explore.model.ScienceMode
 import explore.model.ScienceModeAdvanced
 import explore.model.ScienceModeBasic
+import explore.model.itc._
 import explore.model.reusability._
 import explore.modes._
 import explore.syntax.ui.*
@@ -390,7 +390,7 @@ object SpectroscopyModesTable {
       .useSerialStateView(
         // .useState(
         ItcResultsCache(
-          Map.empty[ITCRequestParams, EitherNec[ItcQueryProblems, ItcResult]]
+          Map.empty[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]
         )
       )
       .useMemoBy { (props, rows, itc) => // Calculate the common errors

@@ -15,9 +15,9 @@ import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model
-import explore.model.itc.ItcTarget
 import explore.model.ImagingConfigurationOptions
 import explore.model.display._
+import explore.model.itc.ItcTarget
 import explore.modes.SpectroscopyModesMatrix
 import explore.undo._
 import japgolly.scalajs.react._

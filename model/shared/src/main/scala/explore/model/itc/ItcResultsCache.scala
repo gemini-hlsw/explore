@@ -1,14 +1,14 @@
 // Copyright (c) 2016-2022 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.itc
+package explore.model.itc
 
 import cats.data._
 import cats.syntax.all._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.numeric.PosBigDecimal
-import explore.modes._
 import explore.model.itc._
+import explore.modes._
 import lucuma.core.enums._
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
@@ -17,7 +17,7 @@ import mouse.boolean._
 
 // Simple cache of the remotely calculated values
 final case class ItcResultsCache(
-  cache: Map[ITCRequestParams, EitherNec[ItcQueryProblems, ItcResult]]
+  cache: Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]
 ) {
   def wavelength(w: Option[Wavelength]): EitherNec[ItcQueryProblems, Wavelength] =
     Either.fromOption(w, NonEmptyChain.of(ItcQueryProblems.MissingWavelength))
@@ -45,7 +45,7 @@ final case class ItcResultsCache(
   ): EitherNec[ItcQueryProblems, ItcResult] =
     (wavelength(w), signalToNoise(sn), mode(r), targets(t)).parMapN { (w, sn, im, t) =>
       cache
-        .get(ITCRequestParams(w, sn, c, t, im))
+        .get(ItcRequestParams(w, sn, c, t, im))
         .getOrElse(ItcResult.Pending.rightNec[ItcQueryProblems])
     }.flatten
 
