@@ -26,6 +26,7 @@ import scalajs.js.|
 final case class EditableLabel(
   value:            Option[NonEmptyString],
   mod:              Option[NonEmptyString] => Callback,
+  editOnClick:      Boolean = false,
   textClass:        Css = Css.Empty,
   inputClass:       Css = Css.Empty,
   addButtonLabel:   VdomNode = "Add": VdomNode,
@@ -40,6 +41,7 @@ object EditableLabel {
 
   def fromView(
     value:             View[Option[NonEmptyString]],
+    editOnClick:       Boolean = false,
     textClass:         Css = Css.Empty,
     inputClass:        Css = Css.Empty,
     addButtonLabel:    VdomNode = "Add": VdomNode,
@@ -51,6 +53,7 @@ object EditableLabel {
     EditableLabel(
       value.get,
       value.set,
+      editOnClick,
       textClass,
       inputClass,
       addButtonLabel,
@@ -87,7 +90,6 @@ object EditableLabel {
               focus = true,
               clazz = props.inputClass
             )(
-              // ^.onBlur --> submitCB,
               ^.onKeyUp ==> (e =>
                 if (e.key === "Enter") submitCB
                 else if (e.key === "Escape") editing.setState(false)
@@ -121,7 +123,11 @@ object EditableLabel {
             )(props.addButtonLabel)
           )(text =>
             <.div(^.width := "100%", ^.display.flex)(
-              <.span(props.textClass, ^.onClick ==> editCB, text),
+              <.span(
+                props.textClass,
+                ^.onClick ==> (v => editCB(v).whenA(props.editOnClick)),
+                text
+              ),
               Button(
                 size = Mini,
                 compact = true,
