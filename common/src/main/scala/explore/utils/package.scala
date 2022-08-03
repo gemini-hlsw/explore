@@ -23,6 +23,7 @@ import explore.model.enums.ExecutionEnvironment
 import explore.model.enums.ExecutionEnvironment.Development
 import explore.model.enums.Theme
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.html_<^
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.forms.ExternalValue
 import lucuma.ui.syntax.all.*
@@ -37,7 +38,6 @@ import react.semanticui.elements.loader.Loader
 import java.time.Instant
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
-import japgolly.scalajs.react.vdom.html_<^
 
 package object utils {
   def setupScheme[F[_]: Sync](theme: Theme): F[Unit] =
