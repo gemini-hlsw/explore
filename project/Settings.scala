@@ -6,6 +6,7 @@ import sbt.librarymanagement._
 object Settings {
 
   object LibraryVersions {
+    val boopickle             = "1.4.0"
     val cats                  = "2.8.0"
     val catsEffect            = "3.3.14"
     val catsRetry             = "3.1.0"
@@ -25,33 +26,20 @@ object Settings {
     val lucumaBC              = "0.4.0"
     val lucumaCore            = "0.51.0"
     val lucumaCatalog         = "0.26.0"
-    val lucumaUI              = "0.40.0"
-    val lucumaReactVersion    = "0.10"
-    val lucumaSchemas         = "0.35.0"
+    val lucumaReactVersion    = "0.1.0"
     val lucumaRefinedVersion  = "0.1.1"
-    val refinedAlgebraVersion = "0.1.0"
-    val lucumaSSO             = "0.2-ef82ce0-SNAPSHOT"
+    val lucumaSchemas         = "0.35.0"
+    val lucumaSSO             = "0.3.0"
+    val lucumaUI              = "0.40.0"
     val monocle               = "3.1.0"
     val mouse                 = "1.1.0"
     val mUnit                 = "0.7.29"
     val mUnitCatsEffect       = "1.0.7"
-    val reactAladin           = "0.24.0"
-    val reactBeautifulDnD     = "0.4.2"
-    val reactClipboard        = "1.5.1"
-    val reactCommon           = "0.17.0"
-    val reactDatepicker       = "0.4.1"
-    val reactGridLayout       = "0.16.1"
-    val reactHighcharts       = "0.4.4"
-    val reactHotkeys          = "0.4.0"
-    val reactResizable        = "0.9.0"
-    val reactSemanticUI       = "0.15.1"
-    val reactTable            = "0.7.4"
-    val reactVirtuoso         = "0.2.2"
-    val scalaJsReact          = "2.1.1"
     val pprint                = "0.7.3"
+    val reactAladin           = "0.24.0"
+    val refinedAlgebraVersion = "0.1.0"
+    val scalaJsReact          = "2.1.1"
     val webAppUtil            = "2.0.0-RC2"
-    val boopickle             = "1.4.0"
-
   }
 
   object Libraries {
@@ -62,6 +50,12 @@ object Settings {
 
     def In(configuration: Configuration)(dependencies: Seq[ModuleID]): Seq[ModuleID] =
       dependencies.map(_ % configuration)
+
+      val Boopickle = Def.setting(
+        deps(
+          "io.suzaku" %%% "boopickle"
+        )(boopickle)
+      )
 
     val Cats = Def.setting(
       deps(
@@ -176,8 +170,10 @@ object Settings {
       )
     )
 
-    val RefinedAlgebra = Def.setting(
-      Seq("edu.gemini" %%% "refined-algebra" % refinedAlgebraVersion)
+    val LucumaAgs = Def.setting(
+      deps(
+        "edu.gemini" %%% "lucuma-ags"
+      )(lucumaCatalog)
     )
 
     val LucumaBC = Def.setting(
@@ -198,18 +194,6 @@ object Settings {
       )(lucumaCatalog)
     )
 
-    val LucumaAgs = Def.setting(
-      deps(
-        "edu.gemini" %%% "lucuma-ags"
-      )(lucumaCatalog)
-    )
-
-    val LucumaRefined = Def.setting(
-      deps(
-        "edu.gemini" %%% "lucuma-refined"
-      )(lucumaRefinedVersion)
-    )
-
     val LucumaCore = Def.setting(
       deps(
         "edu.gemini" %%% "lucuma-core"
@@ -222,22 +206,48 @@ object Settings {
       )(lucumaCore)
     )
 
+    val LucumaReact = Def.setting(
+      deps(
+        "edu.gemini" %%% "lucuma-react-common",
+        "edu.gemini" %%% "lucuma-react-grid-layout",
+        "edu.gemini" %%% "lucuma-react-semantic-ui",
+        "edu.gemini" %%% "lucuma-react-clipboard",
+        "edu.gemini" %%% "lucuma-react-datepicker",
+        "edu.gemini" %%% "lucuma-react-highcharts",
+        "edu.gemini" %%% "lucuma-react-beautiful-dnd",
+        "edu.gemini" %%% "lucuma-react-font-awesome",
+        "edu.gemini" %%% "lucuma-react-table",
+        "edu.gemini" %%% "lucuma-react-datepicker",
+        "edu.gemini" %%% "lucuma-react-resize-detector",
+        "edu.gemini" %%% "lucuma-react-draggable",
+        "edu.gemini" %%% "lucuma-react-hotkeys",
+        "edu.gemini" %%% "lucuma-react-resizable",
+        "edu.gemini" %%% "lucuma-react-virtuoso"
+      )(lucumaReactVersion)
+    )
+
+    val LucumaRefined = Def.setting(
+      deps(
+        "edu.gemini" %%% "lucuma-refined"
+      )(lucumaRefinedVersion)
+    )
+
     val LucumaSchemas = Def.setting(
       deps(
         "edu.gemini" %%% "lucuma-schemas"
       )(lucumaSchemas)
     )
 
-    val LucumaUI = Def.setting(
-      deps(
-        "edu.gemini" %%% "lucuma-ui"
-      )(lucumaUI)
-    )
-
     val LucumaSSO = Def.setting(
       deps(
         "edu.gemini" %%% "lucuma-sso-frontend-client"
       )(lucumaSSO)
+    )
+
+    val LucumaUI = Def.setting(
+      deps(
+        "edu.gemini" %%% "lucuma-ui"
+      )(lucumaUI)
     )
 
     val Monocle = Def.setting(
@@ -273,97 +283,20 @@ object Settings {
       )(mUnitCatsEffect)
     )
 
+    val PPrint = Def.setting(
+      deps(
+        "com.lihaoyi" %%% "pprint"
+      )(pprint)
+    )
+
     val ReactAladin = Def.setting(
       deps(
         "edu.gemini" %%% "react-aladin"
       )(reactAladin)
     )
 
-    val ReactBeautifulDnD = Def.setting(
-      deps(
-        "com.rpiaggio" %%% "scalajs-react-beautiful-dnd"
-      )(reactBeautifulDnD)
-    )
-
-    val ReactClipboard = Def.setting(
-      deps(
-        "io.github.cquiroz.react" %%% "react-clipboard"
-      )(reactClipboard)
-    )
-
-    val ReactCommon = Def.setting(
-      deps(
-        "io.github.cquiroz.react" %%% "common",
-        "io.github.cquiroz.react" %%% "cats"
-      )(reactCommon)
-    )
-
-    val LucumaReact = Def.setting(
-      deps(
-        "edu.gemini" %%% "lucuma-react-common",
-        "edu.gemini" %%% "lucuma-react-grid-layout",
-        "edu.gemini" %%% "lucuma-react-semantic-ui",
-        "edu.gemini" %%% "lucuma-react-clipboard",
-        "edu.gemini" %%% "lucuma-react-datepicker",
-        "edu.gemini" %%% "lucuma-react-highcharts",
-        "edu.gemini" %%% "lucuma-react-beautiful-dnd",
-        "edu.gemini" %%% "lucuma-react-font-awesome",
-        "edu.gemini" %%% "lucuma-react-table",
-        "edu.gemini" %%% "lucuma-react-datepicker",
-        "edu.gemini" %%% "lucuma-react-resize-detector",
-        "edu.gemini" %%% "lucuma-react-draggable",
-        "edu.gemini" %%% "lucuma-react-hotkeys",
-        "edu.gemini" %%% "lucuma-react-resizable",
-        "edu.gemini" %%% "lucuma-react-virtuoso"
-      )(lucumaReactVersion)
-    )
-
-    val ReactDatepicker = Def.setting(
-      deps(
-        "com.rpiaggio" %%% "scalajs-react-datepicker"
-      )(reactDatepicker)
-    )
-
-    val ReactGridLayout = Def.setting(
-      deps(
-        "io.github.cquiroz.react" %%% "react-grid-layout"
-      )(reactGridLayout)
-    )
-
-    val ReactHighcharts = Def.setting(
-      deps(
-        "com.rpiaggio" %%% "scalajs-react-highcharts"
-      )(reactHighcharts)
-    )
-
-    val ReactHotkeys = Def.setting(
-      deps(
-        "com.rpiaggio" %%% "scalajs-react-hotkeys"
-      )(reactHotkeys)
-    )
-
-    val ReactResizable = Def.setting(
-      deps(
-        "io.github.cquiroz.react" %%% "react-resizable"
-      )(reactResizable)
-    )
-
-    val ReactSemanticUI = Def.setting(
-      deps(
-        "io.github.cquiroz.react" %%% "react-semantic-ui"
-      )(reactSemanticUI)
-    )
-
-    val ReactTable = Def.setting(
-      deps(
-        "io.github.toddburnside" %%% "scalajs-react-table"
-      )(reactTable)
-    )
-
-    val ReactVirtuoso = Def.setting(
-      deps(
-        "io.github.toddburnside" %%% "scalajs-react-virtuoso"
-      )(reactVirtuoso)
+    val RefinedAlgebra = Def.setting(
+      Seq("edu.gemini" %%% "refined-algebra" % refinedAlgebraVersion)
     )
 
     val ScalaJSReact = Def.setting(
@@ -381,23 +314,11 @@ object Settings {
       )(scalaJsReact)
     )
 
-    val PPrint = Def.setting(
-      deps(
-        "com.lihaoyi" %%% "pprint"
-      )(pprint)
-    )
-
     val ScalaWebAppUtil = Def.setting(
       deps(
         "com.github.japgolly.webapp-util" %%% "core",
         "com.github.japgolly.webapp-util" %%% "core-boopickle"
       )(webAppUtil)
-    )
-
-    val Boopickle = Def.setting(
-      deps(
-        "io.suzaku" %%% "boopickle"
-      )(boopickle)
     )
   }
 }
