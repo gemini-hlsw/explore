@@ -51,6 +51,7 @@ import workers.WebWorkerF
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration._
+import scala.scalajs.LinkingInfo
 import scala.scalajs.js
 
 import js.annotation._
@@ -206,7 +207,12 @@ object ExploreMain extends IOApp.Simple {
 
     (for {
       dispatcher <- Dispatcher[IO]
-      worker     <- WebWorkerF[IO](WebWorkers.CacheIDBWorker(), dispatcher)
+      worker     <- WebWorkerF[IO](if (LinkingInfo.developmentMode)
+                                     WebWorkers.CacheIDBWorkerDevelopment()
+                                   else
+                                     WebWorkers.CacheIDBWorkerProduction(),
+                                   dispatcher
+                    )
       prefs      <- Resource.eval(ExploreLocalPreferences.loadPreferences[IO])
       logger     <- Resource.eval(setupLogger[IO](prefs))
       _          <- Resource.eval(buildPage(dispatcher, worker, prefs)(logger))
