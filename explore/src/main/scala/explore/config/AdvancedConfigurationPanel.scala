@@ -468,11 +468,11 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             val optITC: Option[ITCSuccess] = props.potITC.get.toOption.flatten
             val oetm                       = modType.map {
               case ExposureTimeModeType.SignalToNoise =>
-                val sn = signalToNoiseView
+                val sn: PosBigDecimal = signalToNoiseView
                   .map(_.get)
                   .orElse(props.spectroscopyRequirements.signalToNoise)
                   .orElse(optITC.map(_.signalToNoise))
-                  .getOrElse(PosBigDecimal.unsafeFrom(BigDecimal(100)))
+                  .getOrElse(BigDecimal(100).refined)
                 ExposureTimeMode.SignalToNoise(sn)
               case ExposureTimeModeType.FixedExposure =>
                 val time  = exposureTimeView
