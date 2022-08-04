@@ -1998,12 +1998,16 @@ html {
 .explore-advanced-configuration-grid {
   display: grid;
   padding: 0.5em;
-  grid-gap: 0.5em;
+  grid-gap: 1em;
   grid-template-areas:
     'col1 col2 col3'
     'col1 buttons buttons';
   grid-template-columns: 1fr 1fr 1fr;
   grid-template-rows: auto auto;
+
+  label.explore-indent-label {
+    text-indent: 2em;
+  }
 }
 
 .tile-sm-width,

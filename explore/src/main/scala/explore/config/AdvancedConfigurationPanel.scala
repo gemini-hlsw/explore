@@ -428,7 +428,10 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
           def offsetsControl(onChange: Callback): VdomElement = {
             val view = explicitSpatialOffsets(props.scienceModeAdvanced)
             ReactFragment(
-              <.label("Spatial Offsets", HelpIcon("configuration/spatial-offsets.md".refined)),
+              <.label("Spatial Offsets",
+                      HelpIcon("configuration/spatial-offsets.md".refined),
+                      ExploreStyles.SkipToNext
+              ),
               InputWithUnits(
                 id = "offsets".refined,
                 value = view.withOnMod(_ => onChange),
@@ -511,6 +514,16 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 disabled = disableAdvancedEdit,
                 exclude = obsoleteFilters
               ),
+              <.label("FPU", HelpIcon("configuration/fpu.md".refined), ExploreStyles.SkipToNext),
+              customizableEnumSelect(
+                id = "override-fpu",
+                view = overrideFpu(props.scienceModeAdvanced),
+                original = fpuLens.get(props.scienceModeBasic).some,
+                disabled = disableAdvancedEdit
+              ),
+              offsetsControl(Callback.empty)
+            ),
+            <.div(ExploreStyles.ExploreForm, ExploreStyles.AdvancedConfigurationCol2)(
               <.label("Wavelength",
                       HelpIcon("configuration/wavelength.md".refined),
                       ExploreStyles.SkipToNext
@@ -525,15 +538,103 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 disabled = disableSimpleEdit,
                 clazz = ExploreStyles.WarningInput.when_(wavelengthView.get.isDefined)
               ).clearable,
-              <.label("FPU", HelpIcon("configuration/fpu.md".refined), ExploreStyles.SkipToNext),
-              customizableEnumSelect(
-                id = "override-fpu",
-                view = overrideFpu(props.scienceModeAdvanced),
-                original = fpuLens.get(props.scienceModeBasic).some,
-                disabled = disableAdvancedEdit
-              )
+              dithersControl(Callback.empty),
+              <.label("Exposure Mode",
+                      HelpIcon("configuration/exposure-mode.md".refined),
+                      ExploreStyles.SkipToNext
+              ),
+              EnumViewOptionalSelect(
+                id = "exposureMode",
+                value = exposureModeEnum.withOnMod(onModeMod _),
+                disabled = disableSimpleEdit,
+                clearable = true,
+                placeholder = originalSignalToNoiseText,
+                clazz = ExploreStyles.WarningInput.when_(exposureModeEnum.get.isDefined)
+              ),
+              exposureModeEnum.get.map(_ => customized(originalSignalToNoiseText)),
+              <.label("S/N",
+                      HelpIcon("configuration/signal-to-noise.md".refined),
+                      ExploreStyles.SkipToNext |+| ExploreStyles.IndentLabel
+              ),
+              signalToNoiseView
+                .map(v =>
+                  FormInputEV(
+                    id = "signalToNoise".refined,
+                    value = v.withOnMod(_ => invalidateITC),
+                    validFormat = InputValidWedge.truncatedPosBigDecimal(0.refined),
+                    changeAuditor = ChangeAuditor.posInt,
+                    disabled = disableSimpleEdit
+                  ): VdomNode
+                )
+                .getOrElse(
+                  potRender[Option[PosBigDecimal]](
+                    valueRender = osn => {
+                      val value = osn.fold(itcNoneMsg)(sn =>
+                        InputValidWedge.truncatedPosBigDecimal(0.refined).reverseGet(sn)
+                      )
+                      FormInput(value = value, disabled = true)
+                    },
+                    pendingRender =
+                      <.div(ExploreStyles.InputReplacementIcon, Icons.Spinner.spin(true)): VdomNode
+                  )(props.potITC.get.map(_.map(_.signalToNoise)))
+                ),
+              <.label("Exp Time",
+                      HelpIcon("configuration/exposure-time.md".refined),
+                      ExploreStyles.SkipToNext |+| ExploreStyles.IndentLabel
+              ),
+              expTimeOverrideSecs
+                .mapValue((v: View[NonNegInt]) =>
+                  InputWithUnits(
+                    id = "exposureTime".refined,
+                    value = v
+                      .withOnMod(secs =>
+                        exposureTimeView.foldMap(_.set(secondsToDuration(secs))) >> invalidateITC
+                      ),
+                    validFormat = InputValidSplitEpi.refinedInt[NonNegative],
+                    changeAuditor = ChangeAuditor.refinedInt[NonNegative](),
+                    units = "sec",
+                    disabled = disableSimpleEdit
+                  ): TagMod
+                )
+                .getOrElse(
+                  potRender[Option[NonNegDuration]](
+                    valueRender = ot => {
+                      val value =
+                        ot.fold(itcNoneMsg)(t => durationToSeconds(t).toString)
+                      ReactFragment(FormInput(value = value, disabled = true),
+                                    <.span(ExploreStyles.UnitsLabel, "sec")
+                      )
+                    },
+                    pendingRender =
+                      <.div(ExploreStyles.InputReplacementIcon, Icons.Spinner.spin(true)): VdomNode
+                  )(props.potITC.get.map(_.map(_.exposureTime)))
+                ),
+              <.label("Exp Count",
+                      HelpIcon("configuration/exposure-count.md".refined),
+                      ExploreStyles.SkipToNext |+| ExploreStyles.IndentLabel
+              ),
+              exposureCountView
+                .map(v =>
+                  FormInputEV(
+                    id = "exposureCount".refined,
+                    value = v.withOnMod(_ => invalidateITC),
+                    validFormat = InputValidSplitEpi.refinedInt[NonNegative],
+                    changeAuditor = ChangeAuditor.refinedInt[NonNegative](),
+                    disabled = disableSimpleEdit
+                  ): TagMod
+                )
+                .getOrElse(
+                  potRender[Option[NonNegInt]](
+                    valueRender = oe => {
+                      val value = oe.fold(itcNoneMsg)(_.toString)
+                      FormInput(value = value, disabled = true)
+                    },
+                    pendingRender =
+                      <.div(ExploreStyles.InputReplacementIcon, Icons.Spinner.spin(true)): VdomNode
+                  )(props.potITC.get.map(_.map(_.exposures)))
+                )
             ),
-            <.div(ExploreStyles.ExploreForm, ExploreStyles.AdvancedConfigurationCol2)(
+            <.div(ExploreStyles.ExploreForm, ExploreStyles.AdvancedConfigurationCol3)(
               <.label("Binning", HelpIcon("configuration/binning.md".refined)),
               customizableEnumSelect(
                 id = "explicitXBin",
@@ -574,104 +675,6 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 ),
                 <.span(ExploreStyles.UnitsLabel, "nm")
               )
-            ),
-            <.div(ExploreStyles.ExploreForm, ExploreStyles.AdvancedConfigurationCol3)(
-              dithersControl(Callback.empty),
-              offsetsControl(Callback.empty),
-              <.label("Exposure Mode",
-                      HelpIcon("configuration/exposure-mode.md".refined),
-                      ExploreStyles.SkipToNext
-              ),
-              EnumViewOptionalSelect(
-                id = "exposureMode",
-                value = exposureModeEnum.withOnMod(onModeMod _),
-                disabled = disableSimpleEdit,
-                clearable = true,
-                placeholder = originalSignalToNoiseText,
-                clazz = ExploreStyles.WarningInput.when_(exposureModeEnum.get.isDefined)
-              ),
-              exposureModeEnum.get.map(_ => customized(originalSignalToNoiseText)),
-              <.label("S/N",
-                      HelpIcon("configuration/signal-to-noise.md".refined),
-                      ExploreStyles.SkipToNext
-              ),
-              signalToNoiseView
-                .map(v =>
-                  FormInputEV(
-                    id = "signalToNoise".refined,
-                    value = v.withOnMod(_ => invalidateITC),
-                    validFormat = InputValidWedge.truncatedPosBigDecimal(0.refined),
-                    changeAuditor = ChangeAuditor.posInt,
-                    disabled = disableSimpleEdit
-                  ): VdomNode
-                )
-                .getOrElse(
-                  potRender[Option[PosBigDecimal]](
-                    valueRender = osn => {
-                      val value = osn.fold(itcNoneMsg)(sn =>
-                        InputValidWedge.truncatedPosBigDecimal(0.refined).reverseGet(sn)
-                      )
-                      FormInput(value = value, disabled = true)
-                    },
-                    pendingRender =
-                      <.div(ExploreStyles.InputReplacementIcon, Icons.Spinner.spin(true)): VdomNode
-                  )(props.potITC.get.map(_.map(_.signalToNoise)))
-                ),
-              <.label("Exposure Time",
-                      HelpIcon("configuration/exposure-time.md".refined),
-                      ExploreStyles.SkipToNext
-              ),
-              expTimeOverrideSecs
-                .mapValue((v: View[NonNegInt]) =>
-                  InputWithUnits(
-                    id = "exposureTime".refined,
-                    value = v
-                      .withOnMod(secs =>
-                        exposureTimeView.foldMap(_.set(secondsToDuration(secs))) >> invalidateITC
-                      ),
-                    validFormat = InputValidSplitEpi.refinedInt[NonNegative],
-                    changeAuditor = ChangeAuditor.refinedInt[NonNegative](),
-                    units = "sec",
-                    disabled = disableSimpleEdit
-                  ): TagMod
-                )
-                .getOrElse(
-                  potRender[Option[NonNegDuration]](
-                    valueRender = ot => {
-                      val value =
-                        ot.fold(itcNoneMsg)(t => durationToSeconds(t).toString)
-                      ReactFragment(FormInput(value = value, disabled = true),
-                                    <.span(ExploreStyles.UnitsLabel, "sec")
-                      )
-                    },
-                    pendingRender =
-                      <.div(ExploreStyles.InputReplacementIcon, Icons.Spinner.spin(true)): VdomNode
-                  )(props.potITC.get.map(_.map(_.exposureTime)))
-                ),
-              <.label("Exposure Count",
-                      HelpIcon("configuration/exposure-count.md".refined),
-                      ExploreStyles.SkipToNext
-              ),
-              exposureCountView
-                .map(v =>
-                  FormInputEV(
-                    id = "exposureCount".refined,
-                    value = v.withOnMod(_ => invalidateITC),
-                    validFormat = InputValidSplitEpi.refinedInt[NonNegative],
-                    changeAuditor = ChangeAuditor.refinedInt[NonNegative](),
-                    disabled = disableSimpleEdit
-                  ): TagMod
-                )
-                .getOrElse(
-                  potRender[Option[NonNegInt]](
-                    valueRender = oe => {
-                      val value = oe.fold(itcNoneMsg)(_.toString)
-                      FormInput(value = value, disabled = true)
-                    },
-                    pendingRender =
-                      <.div(ExploreStyles.InputReplacementIcon, Icons.Spinner.spin(true)): VdomNode
-                  )(props.potITC.get.map(_.map(_.exposures)))
-                )
             ),
             <.div(ExploreStyles.AdvancedConfigurationButtons)(
               SequenceEditorPopup(
