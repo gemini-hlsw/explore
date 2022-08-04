@@ -4,17 +4,8 @@
 package explore.config
 
 import cats.Eq
+import cats.derived.*
 
-enum ConfigEditState {
+enum ConfigEditState derives Eq {
   case TableView, DetailsView, SimpleEdit, AdvancedEdit
-}
-
-object ConfigEditState {
-  implicit val eqConfigEditState: Eq[ConfigEditState] = Eq.instance {
-    case (TableView, TableView)       => true
-    case (DetailsView, DetailsView)   => true
-    case (SimpleEdit, SimpleEdit)     => true
-    case (AdvancedEdit, AdvancedEdit) => true
-    case _                            => false
-  }
 }
