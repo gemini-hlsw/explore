@@ -73,7 +73,7 @@ final case class SpectroscopyModesTable(
   targets:                  Option[List[ITCTarget]],
   baseTracking:             Option[SiderealTracking],
   matrix:                   SpectroscopyModesMatrix,
-  onSelect:                 Option[Callback]
+  onSelect:                 Callback
 )(implicit val ctx:         AppContextIO)
     extends ReactFnProps[SpectroscopyModesTable](SpectroscopyModesTable.component)
 
@@ -577,8 +577,7 @@ object SpectroscopyModesTable {
                     )(
                       ^.onClick --> (
                         props.scienceMode.set(toggleRow(rowData.original)) >>
-                          selectedIndex
-                            .setState(rowData.index.toInt.some) >> props.onSelect.orEmpty
+                          selectedIndex.setState(rowData.index.toInt.some) >> props.onSelect
                       ),
                       props2Attrs(rowData.getRowProps())
                     ),

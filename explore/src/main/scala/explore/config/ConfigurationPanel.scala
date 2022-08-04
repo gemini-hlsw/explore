@@ -122,14 +122,13 @@ object ConfigurationPanel {
       )
       .useEffectWithDepsBy((props, _) => props.scienceData.model.get.mode) {
         (_, editState) => oScienceMode =>
-          // In case a undo/redo creates a customization, they can't be on the basic panel.
-          oScienceMode
-            .map(m =>
-              if (m.isCustomized && editState.get === ConfigEditState.TableView)
-                editState.set(ConfigEditState.DetailsView)
-              else Callback.empty
-            )
-            .orEmpty
+          // In case a undo/redo creates a customization, they can't be on the table panel.
+          // If undo removes the config entirely, they have to be on the table panel
+          oScienceMode.fold(editState.set(ConfigEditState.TableView))(m =>
+            if (m.isCustomized && editState.get === ConfigEditState.TableView)
+              editState.set(ConfigEditState.DetailsView)
+            else Callback.empty
+          )
       }
       // Listen on web worker for messages with catalog candidates
       .useStreamResourceBy((props, _) => props.obsId)((props, _) =>
@@ -179,8 +178,7 @@ object ConfigurationPanel {
 
         val optModeAligner = modeAligner.toOption
 
-        val showDetailsCB: Option[Callback] =
-          optModeAligner.map(_ => editState.set(ConfigEditState.DetailsView))
+        val showDetailsCB: Callback = editState.set(ConfigEditState.DetailsView)
 
         val posAngleView: View[Option[PosAngleConstraint]] =
           props.scienceData.undoableView(ScienceData.posAngle)
