@@ -3,9 +3,11 @@
 
 package explore.targeteditor
 
+import cats.syntax.all._
 import crystal.react.View
 import explore.Icons
 import explore.components.ui.ExploreStyles
+import explore.model.enums.AgsState
 import explore.model.enums.Visible
 import explore.model.formats._
 import japgolly.scalajs.react._
@@ -26,12 +28,12 @@ import react.semanticui.sizes.Small
 import react.semanticui.sizes._
 
 final case class AladinToolbar(
-  fov:                 Fov,
-  current:             Coordinates,
-  loadingGSCandidates: Option[Boolean], // None is an error
-  selectedGuideStar:   Option[GuideStarCandidate],
-  center:              View[Boolean],
-  agsOverlay:          Visible
+  fov:               Fov,
+  current:           Coordinates,
+  agsState:          AgsState,
+  selectedGuideStar: Option[GuideStarCandidate],
+  center:            View[Boolean],
+  agsOverlay:        Visible
 ) extends ReactFnProps[AladinToolbar](AladinToolbar.component)
 
 object AladinToolbar {
@@ -55,18 +57,24 @@ object AladinToolbar {
             content = "Loading catalog stars..",
             position = PopupPosition.TopCenter,
             trigger = Icons.CircleSmall.beat().clazz(ExploreStyles.WarningIcon)
-          ).when(props.loadingGSCandidates.exists(identity)),
+          ).when(props.agsState === AgsState.LoadingCandidates),
+          Popup(
+            content = "Calculating guide star..",
+            position = PopupPosition.TopCenter,
+            trigger = Icons.CircleSmall.beat().clazz(ExploreStyles.WarningIcon)
+          ).when(props.agsState === AgsState.Calculating),
           Popup(
             content = "The Catalog isn't responding at the moment - please try again later..",
             position = PopupPosition.TopCenter,
             trigger = Icons.CircleSmall.clazz(ExploreStyles.ErrorIcon)
-          ).when(props.loadingGSCandidates.isEmpty)
+          ).when(props.agsState === AgsState.Error)
         ),
         <.div(
           ExploreStyles.AladinGuideStar,
           props.selectedGuideStar
             .map { case g => s"GS: ${g.name.value}" }
-            .unless(props.agsOverlay.visible)
+            .unless(props.agsOverlay.visible),
+          "Calculating...".when(props.agsState === AgsState.Calculating)
         ),
         Label(
           icon = Icons.MousePointer.clazz(ExploreStyles.Accented),

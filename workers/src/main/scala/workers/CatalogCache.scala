@@ -144,7 +144,10 @@ trait CatalogCache extends CatalogIDB with AsyncToIO {
                 .map(
                   _.collect { case Right(s) =>
                     GuideStarCandidate.siderealTarget.get(s)
-                  }
+                  }.map(gsc =>
+                    // Do PM correction
+                    gsc.at(request.vizTime)
+                  )
                 )
                 .flatMap { candidates =>
                   L.debug(
