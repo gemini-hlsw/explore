@@ -80,6 +80,7 @@ import spire.math.Bounded
 import spire.math.Interval
 
 import java.time.Duration
+
 import scalajs.js
 
 sealed trait AdvancedConfigurationPanel[T <: ScienceModeAdvanced, S <: ScienceModeBasic, Input] {
