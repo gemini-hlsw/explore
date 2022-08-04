@@ -20,6 +20,7 @@ import explore.Icons
 import explore.common.ObsQueries._
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
+import explore.events.ItcQuery
 import explore.implicits._
 import explore.itc._
 import explore.model.Progress
@@ -82,10 +83,12 @@ object SpectroscopyModesTable {
 
   type ColId = NonEmptyString
 
-  implicit val listRangeReuse: Reusability[ListRange] =
+  given Reusability[ListRange] =
     Reusability.by(x => (x.startIndex.toInt, x.endIndex.toInt))
 
-  implicit val matrixReusability: Reusability[SpectroscopyModesMatrix] =
+  extension (r: ListRange) def isDefined: Boolean = !(r.startIndex === 0 && r.endIndex === 0)
+
+  given Reusability[SpectroscopyModesMatrix] =
     Reusability.by(_.matrix.length)
 
   protected val ModesTableDef = TableDef[SpectroscopyModeRow].withSortBy.withBlockLayout
@@ -460,32 +463,50 @@ object SpectroscopyModesTable {
           props.targets,
           range
         )
-      ) { (props, _, itcResults, _, itcProgress, _, _, ti, _, _, _, singleEffect) =>
-        { case (wavelength, signalToNoise, constraints, targets, range) =>
-          implicit val ctx = props.ctx
-          val sortedRows   = ti.value.preSortedRows.map(_.original).toList
+      ) {
+        (props, _, itcResults, _, itcProgress, _, _, ti, _, _, _, singleEffect) =>
+          (wavelength, signalToNoise, constraints, targets, range) =>
+            implicit val ctx = props.ctx
 
-          def submitRows(rows: List[SpectroscopyModeRow]): IO[Unit] =
-            singleEffect
-              .submit(
-                (wavelength, signalToNoise, targets.flatMap(NonEmptyList.fromList))
-                  .mapN { (w, sn, t) =>
-                    ITCRequests
-                      .queryItc[IO](w,
-                                    sn,
-                                    constraints,
-                                    t,
-                                    rows,
-                                    itcResults.async,
-                                    itcProgress.async
-                      )
-                  }
-                  .getOrElse(IO.unit)
-              )
+            val sortedRows = ti.value.preSortedRows.map(_.original).toList
 
-          // Send the visible rows first
-          submitRows((range.value.foldMap(visibleRows(_, sortedRows)) ++ sortedRows).distinct)
-        }
+            val modes = (range.value.foldMap(visibleRows(_, sortedRows)) ++ sortedRows).distinct
+
+            val u: IO[Unit] =
+              (wavelength, signalToNoise, targets.flatMap(NonEmptyList.fromList)).mapN {
+                (w, sn, t) =>
+                  IO.println(wavelength) *>
+                    IO.println(signalToNoise) *>
+                    IO.println(constraints) *>
+                    IO.println(targets.map(_.length)) *>
+                    IO.println(range.value.map(_.startIndex)) *>
+                    IO.println(range.value.map(_.endIndex)) *>
+                    IO.println(range.value.map(_.isDefined)) *> ctx.worker
+                      .postWorkerMessage(ItcQuery(w, sn, constraints, t, modes))
+                      .whenA(modes.nonEmpty && range.value.exists(_.isDefined))
+              }.orEmpty
+            u
+
+        // def submitRows(rows: List[SpectroscopyModeRow]): IO[Unit] =
+        //   singleEffect
+        //     .submit(
+        //       (wavelength, signalToNoise, targets.flatMap(NonEmptyList.fromList))
+        //         .mapN { (w, sn, t) =>
+        //           ITCRequests
+        //             .queryItc[IO](w,
+        //                           sn,
+        //                           constraints,
+        //                           t,
+        //                           rows,
+        //                           itcResults.async,
+        //                           itcProgress.async
+        //             )
+        //         }
+        //         .getOrElse(IO.unit)
+        //     )
+        //
+        // // Send the visible rows first
+        // submitRows((range.value.foldMap(visibleRows(_, sortedRows)) ++ sortedRows).distinct)
       }
       .render {
         (

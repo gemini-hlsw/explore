@@ -27,9 +27,9 @@ import explore.events._
 import explore.implicits._
 import explore.model
 import explore.model.boopickle.Boopickle._
-import explore.model.reusability._
-import explore.model.itc.ItcTarget
 import explore.model.boopickle._
+import explore.model.itc.ItcTarget
+import explore.model.reusability._
 import explore.modes.SpectroscopyModesMatrix
 import explore.undo._
 import japgolly.scalajs.react._

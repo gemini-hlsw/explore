@@ -13,6 +13,7 @@ import explore.events._
 import explore.model.arb.ArbCatalogResults._
 import explore.model.boopickle.CatalogPicklers
 import explore.model.boopickle.CommonPicklers
+import explore.model.boopickle.ItcPicklers
 import lucuma.ags.GuideStarCandidate
 import lucuma.ags.arb.ArbGuideStarCandidate._
 import lucuma.core.math._
@@ -28,14 +29,17 @@ import lucuma.core.math.arb.ArbWavelength._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.SiderealTracking
+import lucuma.core.model.UnnormalizedSED
 import lucuma.core.model.arb.ArbConstraintSet._
 import lucuma.core.model.arb.ArbElevationRange._
 import lucuma.core.model.arb.ArbSiderealTracking._
+import lucuma.core.model.arb.ArbUnnormalizedSED._
 
 class BoopickleSuite
     extends munit.DisciplineSuite
     with CatalogPicklers
     with CommonPicklers
+    with ItcPicklers
     with EventPicklers {
   checkAll("Pickler[Angle]", PicklerTests[Angle].pickler)
   checkAll("Pickler[HourAngle]", PicklerTests[HourAngle].pickler)
@@ -53,6 +57,8 @@ class BoopickleSuite
   checkAll("Pickler[ElevationRange]", PicklerTests[ElevationRange].pickler)
   checkAll("Pickler[ConstraintSet]", PicklerTests[ConstraintSet].pickler)
   checkAll("Pickler[Wavelengtth]", PicklerTests[Wavelength].pickler)
+
+  checkAll("Pickler[UnnormalizedSED]", PicklerTests[UnnormalizedSED].pickler)
 
   // Events
   checkAll("Pickler[CatalogResults]", PicklerTests[CatalogResults].pickler)

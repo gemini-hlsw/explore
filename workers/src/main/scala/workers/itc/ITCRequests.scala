@@ -1,7 +1,7 @@
 // Copyright (c) 2016-2022 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package workers.itc
+package explore.itc
 
 import cats._
 import cats.data._
@@ -43,15 +43,15 @@ object ITCRequests {
       ga.parTraverse(a => s.permit.use(_ => f(a)))
     }
 
-  def queryItc[F[_]: Concurrent: Parallel: Logger: TransactionalClient[*[_], ITC]](
-    wavelength:      Wavelength,
-    signalToNoise:   PosBigDecimal,
-    constraints:     ConstraintSet,
-    targets:         NonEmptyList[ItcTarget],
-    modes:           List[SpectroscopyModeRow],
-    cache:           ViewF[F, ItcResultsCache],
-    progress:        ViewF[F, Option[Progress]]
-  )(implicit monoid: Monoid[F[Unit]]): F[Unit] = {
+  def queryItc[F[_]: Concurrent: Parallel: Logger](
+    wavelength:    Wavelength,
+    signalToNoise: PosBigDecimal,
+    constraints:   ConstraintSet,
+    targets:       NonEmptyList[ItcTarget],
+    modes:         List[SpectroscopyModeRow]
+    // cache:           ViewF[F, ItcResultsCache],
+    // progress:        ViewF[F, Option[Progress]]
+  )(using Monoid[F[Unit]], TransactionalClient[F, ITC]): F[Unit] = {
     def itcResults(r: List[ItcResults]): List[EitherNec[ItcQueryProblems, ItcResult]] =
       // Convert to usable types
       r.flatMap(x =>
@@ -80,9 +80,12 @@ object ITCRequests {
             )
             .getOption(sourceProfile)
         }
-        .traverse(_.minByOption { case (band, _) =>
-          (band.center.toPicometers.value.value - wavelength.toPicometers.value.value).abs
-        }.map(_._1))
+        .map(_.keys)
+        .traverse(
+          _.minByOption((band: Band) =>
+            (band.center.toPicometers.value.value - wavelength.toPicometers.value.value).abs
+          )
+        )
         .collect { case Some(b) => b }
 
     def doRequest(
@@ -130,37 +133,38 @@ object ITCRequests {
         case m: GmosSouthSpectroscopyRow =>
           ItcRequestParams(wavelength, signalToNoise, constraints, targets, m)
       }
-      // Discard values in the cache
-      .filterNot { case params =>
-        cache.get.cache.contains(params)
-      }
+    // Discard values in the cache
+    // .filterNot { case params =>
+    //   cache.get.cache.contains(params)
+    // }
 
-    progress.set(Progress.initial(NonNegInt.unsafeFrom(itcRowsParams.length)).some) >>
-      parTraverseN(
-        Constants.MaxConcurrentItcRequests.toLong,
-        itcRowsParams.reverse
-      ) { params =>
-        // ITC supports sending many modes at once, but sending them one by one
-        // maximizes cache hits
-        doRequest(
-          params,
-          { r =>
-            // Convert to usable types and update the cache
-            val update: Option[EitherNec[ItcQueryProblems, ItcResult]] =
-              // There maybe multiple targets, take the one with the max time
-              itcResults(r) match {
-                case Nil => none
-                case l   =>
-                  l.maxBy {
-                    case Right(ItcResult.Result(exposureTime, _)) => exposureTime.toMicros
-                    case _                                        => Long.MinValue
-                  }.some
-              }
-            // Put the results in the cache
-            update.foldMap(u => cache.mod(ItcResultsCache.cache.modify(_ + (params -> u))))
-          }
-        ) >> progress.mod(_.map(_.increment()))
-      } >> progress.set(none)
+    // progress.set(Progress.initial(NonNegInt.unsafeFrom(itcRowsParams.length)).some) >>
+    parTraverseN(
+      Constants.MaxConcurrentItcRequests.toLong,
+      itcRowsParams.reverse
+    ) { params =>
+      // ITC supports sending many modes at once, but sending them one by one
+      // maximizes cache hits
+      doRequest(
+        params,
+        { r =>
+          // Convert to usable types and update the cache
+          val update: Option[EitherNec[ItcQueryProblems, ItcResult]] =
+            // There maybe multiple targets, take the one with the max time
+            itcResults(r) match {
+              case Nil => none
+              case l   =>
+                l.maxBy {
+                  case Right(ItcResult.Result(exposureTime, _)) => exposureTime.toMicros
+                  case _                                        => Long.MinValue
+                }.some
+            }
+          // Put the results in the cache
+          // update.foldMap(u => cache.mod(ItcResultsCache.cache.modify(_ + (params -> u))))
+          Applicative[F].unit
+        }
+      ) // >> progress.mod(_.map(_.increment()))
+    }.void // >> progress.set(none)
   }
 
 }

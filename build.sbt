@@ -99,19 +99,6 @@ lazy val workers = project
       import org.scalajs.linker.interface.OutputPatterns
       _.withOutputPatterns(OutputPatterns.fromJSFile("%s.mjs"))
     }
-    // Compile / sourceGenerators += Def.taskDyn {
-    //   val root    = (ThisBuild / baseDirectory).value.toURI.toString
-    //   val from    = (graphql / Compile / sourceDirectory).value
-    //   val to      = (Compile / sourceManaged).value
-    //   val outFrom = from.toURI.toString.stripSuffix("/").stripPrefix(root)
-    //   val outTo   = to.toURI.toString.stripSuffix("/").stripPrefix(root)
-    //   Def.task {
-    //     (graphql / Compile / scalafix)
-    //       .toTask(s" GraphQLGen --out-from=$outFrom --out-to=$outTo")
-    //       .value
-    //     (to ** "*.scala").get
-    //   }
-    // }.taskValue
   )
   .enablePlugins(ScalaJSPlugin)
   .dependsOn(model.js, queries)
@@ -172,19 +159,6 @@ lazy val common = project
       "buildDateTime"       -> System.currentTimeMillis()
     ),
     buildInfoPackage := "explore"
-    // Compile / sourceGenerators += Def.taskDyn {
-    //   val root    = (ThisBuild / baseDirectory).value.toURI.toString
-    //   val from    = (graphql / Compile / sourceDirectory).value
-    //   val to      = (Compile / sourceManaged).value
-    //   val outFrom = from.toURI.toString.stripSuffix("/").stripPrefix(root)
-    //   val outTo   = to.toURI.toString.stripSuffix("/").stripPrefix(root)
-    //   Def.task {
-    //     (graphql / Compile / scalafix)
-    //       .toTask(s" GraphQLGen --out-from=$outFrom --out-to=$outTo")
-    //       .value
-    //     (to ** "*.scala").get
-    //   }
-    // }.taskValue
   )
   .enablePlugins(ScalaJSPlugin, BuildInfoPlugin)
 

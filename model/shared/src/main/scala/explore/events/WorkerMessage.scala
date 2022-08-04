@@ -4,7 +4,11 @@
 package explore.events
 
 import cats.Eq
+import cats.data.NonEmptyList
+import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.model.boopickle.CatalogPicklers
+import explore.model.itc.ItcTarget
+import explore.modes.SpectroscopyModeRow
 import explore.modes.SpectroscopyModesMatrix
 import lucuma.ags.AgsAnalysis
 import lucuma.ags.AgsParams
@@ -19,12 +23,6 @@ import org.http4s.Uri
 
 import java.time.Duration
 import java.time.Instant
-import lucuma.core.math.Wavelength
-import eu.timepit.refined.types.numeric.PosBigDecimal
-import lucuma.core.model.ConstraintSet
-import cats.data.NonEmptyList
-import explore.modes.SpectroscopyModeRow
-import explore.model.itc.ItcTarget
 
 object picklers extends CatalogPicklers with EventPicklers
 

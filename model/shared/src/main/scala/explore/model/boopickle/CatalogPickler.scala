@@ -5,8 +5,8 @@ package explore.model.boopickle
 
 import boopickle.DefaultBasic._
 import cats.Order
-import cats.data.NonEmptyMap
 import cats.data.NonEmptyList
+import cats.data.NonEmptyMap
 import coulomb._
 import coulomb.syntax.*
 import eu.timepit.refined._

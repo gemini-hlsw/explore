@@ -159,7 +159,8 @@ object Settings {
     val Http4sCore = Def.setting(
       deps(
         "org.http4s" %%% "http4s-core",
-        "org.http4s" %%% "http4s-circe"
+        "org.http4s" %%% "http4s-circe",
+        "org.http4s" %%% "http4s-client"
       )(http4s)
     )
 
