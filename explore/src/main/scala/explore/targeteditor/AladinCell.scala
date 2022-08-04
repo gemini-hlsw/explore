@@ -108,20 +108,15 @@ object AladinCell extends ModelOptics {
           _ =>
             props.ctx.worker.streamResource.map(
               _.map(decodeFromTransferable[WorkerMessage])
-                .filter {
-                  case Some(CatalogResults(_) | CatalogQueryError(_) | AgsResult(_)) => true
-                  case _                                                             => false
-                }
-                .evalMap {
+                .collect {
                   case Some(CatalogResults(candidates)) =>
                     agsState.setState(AgsState.Idle).to[IO] *> gs.setStateAsync(candidates)
                   case Some(AgsResult(r))               =>
                     agsState.setState(AgsState.Idle).to[IO] *> ags.setStateAsync(r)
                   case Some(CatalogQueryError(m))       =>
                     IO.raiseError(new RuntimeException(m))
-                  case _                                =>
-                    IO.unit
                 }
+                .evalMap(identity)
             )
       )
       // Request data again if vizTime changes more than a month
@@ -181,24 +176,22 @@ object AladinCell extends ModelOptics {
               case _                                         => none
             }
 
-            (tracking.at(vizTime), pa)
-              .mapN { (base, pa) =>
-                val basePos = AgsPosition(pa, Offset.Zero)
-                (selectedIndex.set(none) *> agsState.setState(AgsState.Calculating)).to[IO] *>
-                  props.ctx.worker
-                    .postWorkerMessage(
-                      AgsRequest(props.tid,
-                                 constraints,
-                                 wavelength,
-                                 base,
-                                 basePos,
-                                 params,
-                                 candidates
-                      )
+            (tracking.at(vizTime), pa).mapN { (base, pa) =>
+              val basePos = AgsPosition(pa, Offset.Zero)
+              (selectedIndex.set(none) *> agsState.setState(AgsState.Calculating)).to[IO] *>
+                props.ctx.worker
+                  .postWorkerMessage(
+                    AgsRequest(props.tid,
+                               constraints,
+                               wavelength,
+                               base,
+                               basePos,
+                               params,
+                               candidates
                     )
-                    .unlessA(candidates.isEmpty)
-              }
-              .getOrElse(IO.unit)
+                  )
+                  .unlessA(candidates.isEmpty)
+            }.orEmpty
           case _ => IO.unit
         }
       }
