@@ -261,6 +261,7 @@ object ExploreStyles {
   val WarningIcon: Css  = Css("explore-warning-icon")
   val WarningInput: Css = Css("explore-warning-input")
   val ErrorIcon: Css    = Css("explore-error-icon")
+  val IndentLabel: Css  = Css("explore-indent-label")
 
   // Version with copy icon
   val Version: Css         = Css("version")

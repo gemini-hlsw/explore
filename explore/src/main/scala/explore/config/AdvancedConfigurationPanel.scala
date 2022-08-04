@@ -66,17 +66,22 @@ import lucuma.ui.reusability._
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.Lens
+import mouse.boolean._
 import queries.schemas.implicits._
 import react.common.ReactFnProps
+import react.fa.IconSize
 import react.semanticui.collections.form.Form
 import react.semanticui.collections.form.FormInput
 import react.semanticui.elements.button.Button
+import react.semanticui.modules.popup.Popup
 import react.semanticui.shorthand._
 import react.semanticui.sizes._
 import spire.math.Bounded
 import spire.math.Interval
 
 import java.time.Duration
+
+import scalajs.js
 
 sealed trait AdvancedConfigurationPanel[T <: ScienceModeAdvanced, S <: ScienceModeBasic, Input] {
   val obsId: Observation.Id
@@ -86,7 +91,7 @@ sealed trait AdvancedConfigurationPanel[T <: ScienceModeAdvanced, S <: ScienceMo
   val scienceModeBasic: S
   val spectroscopyRequirements: SpectroscopyRequirementsData
   val potITC: View[Pot[Option[ITCSuccess]]]
-  val onShowBasic: Callback
+  val editState: View[ConfigEditState]
   val confMatrix: SpectroscopyModesMatrix
 
   implicit val ctx: AppContextIO
@@ -107,6 +112,9 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
   Roi: Enumerated: Display
 ] {
   type AA = Aligner[T, Input]
+
+  @inline protected def isCustomized(aligner:         AA)(implicit ctx: AppContextIO): Boolean
+  @inline protected def revertCustomizations(aligner: AA)(implicit ctx: AppContextIO): Callback
 
   @inline protected def overrideWavelength(aligner: AA)(implicit
     ctx:                                            AppContextIO
@@ -269,6 +277,43 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
   ): Option[ReadonlyData] =
     rows.collectFirstSome(row => findMatrixDataFromRow(basic, advanced, reqsWavelength, row))
 
+  private def customized(original: String): VdomNode =
+    Popup(
+      trigger = <.span(
+        ^.cls := "fa-layers fa-fw",
+        Icons.ExclamationDiamond
+          .clazz(ExploreStyles.WarningIcon)
+          .size(IconSize.X1)
+      )
+    )(s"Customized! Orginal: $original")
+
+  private def customizedUnit(units: String, original: String, isCustom: Boolean): VdomNode =
+    if (isCustom) <.span(units, customized(original)) else units
+
+  private def customizableEnumSelect[A: Enumerated: Display](
+    id:             String,
+    view:           View[Option[A]],
+    original:       Option[A],
+    disabled:       Boolean,
+    exclude:        Set[A] = Set.empty[A],
+    unknownDefault: Boolean =
+      false // TODO: Remove and simplify when we get all of the default values from the server
+  ) = {
+    val originalText = original.map(_.shortName).getOrElse(unknownDefault.fold("Unknown", "None"))
+    ReactFragment(
+      EnumViewOptionalSelect(
+        id = id,
+        value = view,
+        exclude = exclude,
+        clearable = true,
+        placeholder = unknownDefault.fold(js.undefined, originalText),
+        disabled = disabled,
+        clazz = ExploreStyles.WarningInput.when_(view.get.isDefined)
+      ),
+      view.get.map(_ => customized(originalText))
+    )
+  }
+
   val component =
     ScalaFnComponent
       .withHooks[Props]
@@ -358,50 +403,76 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               )
               .flatten
 
-          def dithersControl(onChange: Callback): VdomElement =
+          val disableAdvancedEdit = props.editState.get =!= ConfigEditState.AdvancedEdit
+          val disableSimpleEdit   =
+            disableAdvancedEdit && props.editState.get =!= ConfigEditState.SimpleEdit
+
+          def dithersControl(onChange: Callback): VdomElement = {
+            val view = explicitWavelengthDithers(props.scienceModeAdvanced)
             ReactFragment(
               <.label("λ Dithers", HelpIcon("configuration/lambda-dithers.md".refined)),
               InputWithUnits(
                 id = "dithers".refined,
-                value =
-                  explicitWavelengthDithers(props.scienceModeAdvanced).withOnMod(_ => onChange),
+                value = view.withOnMod(_ => onChange),
                 validFormat = ExploreModelValidators.dithersValidSplitEpi,
                 changeAuditor = ChangeAuditor
                   .bigDecimal(integers = 3.refined, decimals = 1.refined)
                   .toSequence()
                   .optional,
-                units = "nm"
+                units = customizedUnit("nm", "Uknown", view.get.isDefined),
+                disabled = disableSimpleEdit,
+                clazz = ExploreStyles.WarningInput.when_(view.get.isDefined)
               ).clearable
             )
+          }
 
-          def offsetsControl(onChange: Callback): VdomElement =
+          def offsetsControl(onChange: Callback): VdomElement = {
+            val view = explicitSpatialOffsets(props.scienceModeAdvanced)
             ReactFragment(
-              <.label("Spatial Offsets", HelpIcon("configuration/spatial-offsets.md".refined)),
+              <.label("Spatial Offsets",
+                      HelpIcon("configuration/spatial-offsets.md".refined),
+                      ExploreStyles.SkipToNext
+              ),
               InputWithUnits(
                 id = "offsets".refined,
-                value = explicitSpatialOffsets(props.scienceModeAdvanced).withOnMod(_ => onChange),
+                value = view.withOnMod(_ => onChange),
                 validFormat = ExploreModelValidators.offsetQNELValidWedge,
                 changeAuditor = ChangeAuditor
                   .bigDecimal(integers = 3.refined, decimals = 2.refined)
                   .toSequence()
                   .optional,
-                units = "arcsec"
+                units = customizedUnit("arcsec", "Uknown", view.get.isDefined),
+                disabled = disableSimpleEdit,
+                clazz = ExploreStyles.WarningInput.when_(view.get.isDefined)
               ).clearable
             )
+          }
 
           val invalidateITC: Callback =
             props.potITC.set(Pot.pending[Option[ITCSuccess]])
 
           val zeroDuration: NonNegDuration = NonNegDuration.unsafeFrom(Duration.ofMillis(0))
 
+          val wavelengthView         = overrideWavelength(props.scienceModeAdvanced)
+          val originalWavelengthText =
+            props.spectroscopyRequirements.wavelength.fold("None")(w =>
+              f"${Wavelength.decimalMicrometers.reverseGet(w)}%.3f"
+            )
+
+          val originalSignalToNoiseText =
+            props.spectroscopyRequirements.signalToNoise.fold("None")(sn =>
+              s"S/N ${InputValidWedge.truncatedPosBigDecimal(0.refined).reverseGet(sn)}"
+            )
+
           def onModeMod(modType: Option[ExposureTimeModeType]): Callback = {
             val optITC: Option[ITCSuccess] = props.potITC.get.toOption.flatten
             val oetm                       = modType.map {
               case ExposureTimeModeType.SignalToNoise =>
-                val sn = signalToNoiseView
+                val sn: PosBigDecimal = signalToNoiseView
                   .map(_.get)
+                  .orElse(props.spectroscopyRequirements.signalToNoise)
                   .orElse(optITC.map(_.signalToNoise))
-                  .getOrElse(PosBigDecimal.unsafeFrom(BigDecimal(100)))
+                  .getOrElse(BigDecimal(100).refined)
                 ExposureTimeMode.SignalToNoise(sn)
               case ExposureTimeModeType.FixedExposure =>
                 val time  = exposureTimeView
@@ -426,85 +497,49 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               ExploreStyles.AdvancedConfigurationCol1
             )(
               <.label("Grating", HelpIcon("configuration/grating.md".refined)),
-              EnumViewOptionalSelect(
+              customizableEnumSelect(
                 id = "override-grating",
-                value = overrideGrating(props.scienceModeAdvanced),
-                exclude = obsoleteGratings,
-                clearable = true,
-                placeholder = gratingLens.get(props.scienceModeBasic).shortName
+                view = overrideGrating(props.scienceModeAdvanced),
+                original = gratingLens.get(props.scienceModeBasic).some,
+                disabled = disableAdvancedEdit,
+                exclude = obsoleteGratings
               ),
               <.label("Filter",
                       HelpIcon("configuration/filter.md".refined),
                       ExploreStyles.SkipToNext
               ),
-              EnumViewOptionalSelect(
+              customizableEnumSelect(
                 id = "override-filter",
-                value = overrideFilter(props.scienceModeAdvanced),
-                exclude = obsoleteFilters,
-                clearable = true,
-                placeholder = filterLens.get(props.scienceModeBasic).fold("None")(_.shortName)
+                view = overrideFilter(props.scienceModeAdvanced),
+                original = filterLens.get(props.scienceModeBasic),
+                disabled = disableAdvancedEdit,
+                exclude = obsoleteFilters
               ),
+              <.label("FPU", HelpIcon("configuration/fpu.md".refined), ExploreStyles.SkipToNext),
+              customizableEnumSelect(
+                id = "override-fpu",
+                view = overrideFpu(props.scienceModeAdvanced),
+                original = fpuLens.get(props.scienceModeBasic).some,
+                disabled = disableAdvancedEdit
+              ),
+              offsetsControl(Callback.empty)
+            ),
+            <.div(ExploreStyles.ExploreForm, ExploreStyles.AdvancedConfigurationCol2)(
               <.label("Wavelength",
                       HelpIcon("configuration/wavelength.md".refined),
                       ExploreStyles.SkipToNext
               ),
               InputWithUnits(
                 id = "override-wavelength".refined,
-                value = overrideWavelength(props.scienceModeAdvanced).withOnMod(_ => invalidateITC),
-                units = "μm",
+                value = wavelengthView.withOnMod(_ => invalidateITC),
+                units = customizedUnit("μm", originalWavelengthText, wavelengthView.get.isDefined),
                 validFormat = ExploreModelValidators.wavelengthValidWedge.optional,
                 changeAuditor = wavelengthChangeAuditor.optional,
-                placeholder = props.spectroscopyRequirements.wavelength.fold("None")(w =>
-                  f"${Wavelength.decimalMicrometers.reverseGet(w)}%.3f"
-                )
+                placeholder = originalWavelengthText,
+                disabled = disableSimpleEdit,
+                clazz = ExploreStyles.WarningInput.when_(wavelengthView.get.isDefined)
               ).clearable,
-              <.label("FPU", HelpIcon("configuration/fpu.md".refined), ExploreStyles.SkipToNext),
-              EnumViewOptionalSelect(
-                id = "override-fpu",
-                value = overrideFpu(props.scienceModeAdvanced),
-                clearable = true,
-                placeholder = fpuLens.get(props.scienceModeBasic).shortName
-              )
-            ),
-            <.div(ExploreStyles.ExploreForm, ExploreStyles.AdvancedConfigurationCol2)(
-              <.label("Binning", HelpIcon("configuration/binning.md".refined)),
-              EnumViewOptionalSelect(
-                id = "explicitXBin",
-                value = explicitBinning(props.scienceModeAdvanced),
-                clearable = true
-              ),
-              <.label("Read Mode",
-                      HelpIcon("configuration/read-mode.md".refined),
-                      ExploreStyles.SkipToNext
-              ),
-              EnumViewOptionalSelect(
-                id = "explicitReadMode",
-                value = explicitReadModeGain(props.scienceModeAdvanced),
-                clearable = true
-              ),
-              <.label("ROI", HelpIcon("configuration/roi.md".refined), ExploreStyles.SkipToNext),
-              EnumViewOptionalSelect(
-                id = "explicitRoi",
-                value = explicitRoi(props.scienceModeAdvanced),
-                exclude = obsoleteRois,
-                clearable = true
-              ),
-              <.label("λ / Δλ", ExploreStyles.SkipToNext),
-              FormInput(
-                value = readonlyData.value.fold("Unknown")(_.resolution.toString),
-                disabled = true
-              ),
-              <.label("λ Coverage", ExploreStyles.SkipToNext),
-              ReactFragment(
-                FormInput(value = readonlyData.value.fold("Unknown")(_.formattedCoverage),
-                          disabled = true
-                ),
-                <.span(ExploreStyles.UnitsLabel, "nm")
-              )
-            ),
-            <.div(ExploreStyles.ExploreForm, ExploreStyles.AdvancedConfigurationCol3)(
               dithersControl(Callback.empty),
-              offsetsControl(Callback.empty),
               <.label("Exposure Mode",
                       HelpIcon("configuration/exposure-mode.md".refined),
                       ExploreStyles.SkipToNext
@@ -512,11 +547,15 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               EnumViewOptionalSelect(
                 id = "exposureMode",
                 value = exposureModeEnum.withOnMod(onModeMod _),
-                clearable = true
+                disabled = disableSimpleEdit,
+                clearable = true,
+                placeholder = originalSignalToNoiseText,
+                clazz = ExploreStyles.WarningInput.when_(exposureModeEnum.get.isDefined)
               ),
+              exposureModeEnum.get.map(_ => customized(originalSignalToNoiseText)),
               <.label("S/N",
                       HelpIcon("configuration/signal-to-noise.md".refined),
-                      ExploreStyles.SkipToNext
+                      ExploreStyles.SkipToNext |+| ExploreStyles.IndentLabel
               ),
               signalToNoiseView
                 .map(v =>
@@ -524,7 +563,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                     id = "signalToNoise".refined,
                     value = v.withOnMod(_ => invalidateITC),
                     validFormat = InputValidWedge.truncatedPosBigDecimal(0.refined),
-                    changeAuditor = ChangeAuditor.posInt
+                    changeAuditor = ChangeAuditor.posInt,
+                    disabled = disableSimpleEdit
                   ): VdomNode
                 )
                 .getOrElse(
@@ -539,9 +579,9 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                       <.div(ExploreStyles.InputReplacementIcon, Icons.Spinner.spin(true)): VdomNode
                   )(props.potITC.get.map(_.map(_.signalToNoise)))
                 ),
-              <.label("Exposure Time",
+              <.label("Exp Time",
                       HelpIcon("configuration/exposure-time.md".refined),
-                      ExploreStyles.SkipToNext
+                      ExploreStyles.SkipToNext |+| ExploreStyles.IndentLabel
               ),
               expTimeOverrideSecs
                 .mapValue((v: View[NonNegInt]) =>
@@ -553,7 +593,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                       ),
                     validFormat = InputValidSplitEpi.refinedInt[NonNegative],
                     changeAuditor = ChangeAuditor.refinedInt[NonNegative](),
-                    units = "sec"
+                    units = "sec",
+                    disabled = disableSimpleEdit
                   ): TagMod
                 )
                 .getOrElse(
@@ -569,9 +610,9 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                       <.div(ExploreStyles.InputReplacementIcon, Icons.Spinner.spin(true)): VdomNode
                   )(props.potITC.get.map(_.map(_.exposureTime)))
                 ),
-              <.label("Exposure Count",
+              <.label("Exp Count",
                       HelpIcon("configuration/exposure-count.md".refined),
-                      ExploreStyles.SkipToNext
+                      ExploreStyles.SkipToNext |+| ExploreStyles.IndentLabel
               ),
               exposureCountView
                 .map(v =>
@@ -579,7 +620,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                     id = "exposureCount".refined,
                     value = v.withOnMod(_ => invalidateITC),
                     validFormat = InputValidSplitEpi.refinedInt[NonNegative],
-                    changeAuditor = ChangeAuditor.refinedInt[NonNegative]()
+                    changeAuditor = ChangeAuditor.refinedInt[NonNegative](),
+                    disabled = disableSimpleEdit
                   ): TagMod
                 )
                 .getOrElse(
@@ -592,6 +634,48 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                       <.div(ExploreStyles.InputReplacementIcon, Icons.Spinner.spin(true)): VdomNode
                   )(props.potITC.get.map(_.map(_.exposures)))
                 )
+            ),
+            <.div(ExploreStyles.ExploreForm, ExploreStyles.AdvancedConfigurationCol3)(
+              <.label("Binning", HelpIcon("configuration/binning.md".refined)),
+              customizableEnumSelect(
+                id = "explicitXBin",
+                view = explicitBinning(props.scienceModeAdvanced),
+                original = none,
+                disabled = disableAdvancedEdit,
+                unknownDefault = true
+              ),
+              <.label("Read Mode",
+                      HelpIcon("configuration/read-mode.md".refined),
+                      ExploreStyles.SkipToNext
+              ),
+              customizableEnumSelect(
+                id = "explicitReadMode",
+                view = explicitReadModeGain(props.scienceModeAdvanced),
+                original = none,
+                disabled = disableAdvancedEdit,
+                unknownDefault = true
+              ),
+              <.label("ROI", HelpIcon("configuration/roi.md".refined), ExploreStyles.SkipToNext),
+              customizableEnumSelect(
+                id = "explicitRoi",
+                view = explicitRoi(props.scienceModeAdvanced),
+                original = none,
+                disabled = disableAdvancedEdit,
+                exclude = obsoleteRois,
+                unknownDefault = true
+              ),
+              <.label("λ / Δλ", ExploreStyles.SkipToNext),
+              FormInput(
+                value = readonlyData.value.fold("Unknown")(_.resolution.toString),
+                disabled = true
+              ),
+              <.label("λ Coverage", ExploreStyles.SkipToNext),
+              ReactFragment(
+                FormInput(value = readonlyData.value.fold("Unknown")(_.formattedCoverage),
+                          disabled = true
+                ),
+                <.span(ExploreStyles.UnitsLabel, "nm")
+              )
             ),
             <.div(ExploreStyles.AdvancedConfigurationButtons)(
               SequenceEditorPopup(
@@ -611,10 +695,37 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 size = Small,
                 compact = true,
                 clazz = ExploreStyles.VeryCompact,
-                content = "Simple Configuration",
-                icon = Icons.ChevronsLeft,
-                onClick = props.onShowBasic
+                content = "View Suggested Configs",
+                icon = Icons.ListIcon,
+                onClick = props.editState.set(ConfigEditState.TableView)
               )(^.tpe := "button")
+                .unless(isCustomized(props.scienceModeAdvanced)),
+              Button(
+                size = Small,
+                compact = true,
+                clazz = ExploreStyles.VeryCompact,
+                content = "Revert Customizations",
+                icon = Icons.TrashUnstyled,
+                negative = true,
+                onClick = props.editState.set(ConfigEditState.DetailsView) >>
+                  revertCustomizations(props.scienceModeAdvanced)
+              )(^.tpe := "button").when(isCustomized(props.scienceModeAdvanced)),
+              Button(
+                size = Small,
+                compact = true,
+                clazz = ExploreStyles.VeryCompact,
+                content = "Customize",
+                icon = Icons.Edit,
+                onClick = props.editState.set(ConfigEditState.SimpleEdit)
+              )(^.tpe := "button").when(props.editState.get === ConfigEditState.DetailsView),
+              Button(
+                size = Small,
+                compact = true,
+                clazz = ExploreStyles.VeryCompact,
+                content = "Advanced Customization",
+                icon = Icons.ExclamationTriangle.clazz(ExploreStyles.WarningIcon),
+                onClick = props.editState.set(ConfigEditState.AdvancedEdit)
+              )(^.tpe := "button").when(props.editState.get === ConfigEditState.SimpleEdit)
             )
           )
       }
@@ -657,7 +768,7 @@ object AdvancedConfigurationPanel {
     scienceModeBasic:         ScienceModeBasic.GmosNorthLongSlit,
     spectroscopyRequirements: SpectroscopyRequirementsData,
     potITC:                   View[Pot[Option[ITCSuccess]]],
-    onShowBasic:              Callback,
+    editState:                View[ConfigEditState],
     confMatrix:               SpectroscopyModesMatrix
   )(implicit val ctx:         AppContextIO)
       extends ReactFnProps[AdvancedConfigurationPanel.GmosNorthLongSlit](
@@ -679,6 +790,14 @@ object AdvancedConfigurationPanel {
         GmosNorthFilter,
         GmosNorthFpu,
       ] {
+
+    @inline override protected def isCustomized(aligner: AA)(implicit ctx: AppContextIO): Boolean =
+      aligner.get =!= ScienceModeAdvanced.GmosNorthLongSlit.Empty
+
+    @inline override protected def revertCustomizations(aligner: AA)(implicit
+      ctx:                                                       AppContextIO
+    ): Callback =
+      aligner.view(_.toInput).set(ScienceModeAdvanced.GmosNorthLongSlit.Empty)
 
     @inline override protected def overrideWavelength(aligner: AA)(implicit
       ctx:                                                     AppContextIO
@@ -813,7 +932,7 @@ object AdvancedConfigurationPanel {
     scienceModeBasic:         ScienceModeBasic.GmosSouthLongSlit,
     spectroscopyRequirements: SpectroscopyRequirementsData,
     potITC:                   View[Pot[Option[ITCSuccess]]],
-    onShowBasic:              Callback,
+    editState:                View[ConfigEditState],
     confMatrix:               SpectroscopyModesMatrix
   )(implicit val ctx:         AppContextIO)
       extends ReactFnProps[AdvancedConfigurationPanel.GmosSouthLongSlit](
@@ -835,6 +954,14 @@ object AdvancedConfigurationPanel {
         GmosSouthFilter,
         GmosSouthFpu,
       ] {
+
+    @inline override protected def isCustomized(aligner: AA)(implicit ctx: AppContextIO): Boolean =
+      aligner.get =!= ScienceModeAdvanced.GmosSouthLongSlit.Empty
+
+    @inline override protected def revertCustomizations(aligner: AA)(implicit
+      ctx:                                                       AppContextIO
+    ): Callback =
+      aligner.view(_.toInput).set(ScienceModeAdvanced.GmosSouthLongSlit.Empty)
 
     @inline override def overrideWavelength(aligner: AA)(implicit
       ctx:                                           AppContextIO
