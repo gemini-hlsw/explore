@@ -29,8 +29,8 @@ import queries.schemas.ITC
 import typings.loglevel.mod.LogLevelDesc
 
 import java.time.Duration
-import scala.scalajs.js
 import scala.concurrent.duration._
+import scala.scalajs.js
 
 import js.annotation._
 
