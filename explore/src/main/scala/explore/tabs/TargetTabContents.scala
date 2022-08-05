@@ -28,7 +28,8 @@ import explore.model.layout.unsafe._
 import explore.observationtree.AsterismGroupObsList
 import explore.optics._
 import explore.optics.all._
-import explore.syntax.ui._
+import explore.syntax.ui.*
+import explore.syntax.ui.given
 import explore.targets.TargetSummaryTable
 import explore.undo._
 import explore.utils._

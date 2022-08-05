@@ -230,9 +230,13 @@ trait ItcPicklers extends CommonPicklers {
   given Pickler[SourceProfile.Point] =
     transformPickler(SourceProfile.Point.apply)(_.spectralDefinition)
 
-  given Pickler[SourceProfile.Uniform] = generatePickler
+  given Pickler[SourceProfile.Uniform] =
+    transformPickler(SourceProfile.Uniform.apply)(_.spectralDefinition)
 
-  given Pickler[SourceProfile.Gaussian] = generatePickler
+  given Pickler[SourceProfile.Gaussian] =
+    transformPickler(Function.tupled(SourceProfile.Gaussian.apply _))(x =>
+      (x.fwhm, x.spectralDefinition)
+    )
 
   given Pickler[SourceProfile] =
     compositePickler[SourceProfile]
@@ -245,7 +249,8 @@ trait ItcPicklers extends CommonPicklers {
 
   given Pickler[ItcResult.SourceTooBright.type] = generatePickler
   given Pickler[ItcResult.Pending.type]         = generatePickler
-  given Pickler[ItcResult.Result]               = generatePickler
+  given Pickler[ItcResult.Result]               =
+    transformPickler(Function.tupled(ItcResult.Result.apply _))(x => (x.duration, x.exposures))
 
   given Pickler[ItcResult] =
     compositePickler[ItcResult]
@@ -257,7 +262,8 @@ trait ItcPicklers extends CommonPicklers {
   given Pickler[ItcQueryProblems.MissingWavelength.type]    = generatePickler
   given Pickler[ItcQueryProblems.MissingSignalToNoise.type] = generatePickler
   given Pickler[ItcQueryProblems.MissingTargetInfo.type]    = generatePickler
-  given Pickler[ItcQueryProblems.GenericError]              = generatePickler
+  given Pickler[ItcQueryProblems.GenericError]              =
+    transformPickler(ItcQueryProblems.GenericError.apply)(_.msg)
 
   given Pickler[ItcQueryProblems] =
     compositePickler[ItcQueryProblems]
