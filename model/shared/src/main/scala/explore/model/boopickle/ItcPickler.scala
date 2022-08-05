@@ -146,38 +146,27 @@ trait ItcPicklers extends CommonPicklers {
       )
     )
 
-  given Pickler[SpectroscopyModesMatrix] =
-    transformPickler(SpectroscopyModesMatrix.apply)(_.matrix)
+  given Pickler[SpectroscopyModesMatrix] = generatePickler
 
-  given Pickler[UnnormalizedSED.StellarLibrary] =
-    transformPickler(UnnormalizedSED.StellarLibrary.apply)(_.librarySpectrum)
+  given Pickler[UnnormalizedSED.StellarLibrary] = generatePickler
 
-  given Pickler[UnnormalizedSED.CoolStarModel] =
-    transformPickler(UnnormalizedSED.CoolStarModel.apply)(_.temperature)
+  given Pickler[UnnormalizedSED.CoolStarModel] = generatePickler
 
-  given Pickler[UnnormalizedSED.Galaxy] =
-    transformPickler(UnnormalizedSED.Galaxy.apply)(_.galaxySpectrum)
+  given Pickler[UnnormalizedSED.Galaxy] = generatePickler
 
-  given Pickler[UnnormalizedSED.Planet] =
-    transformPickler(UnnormalizedSED.Planet.apply)(_.planetSpectrum)
+  given Pickler[UnnormalizedSED.Planet] = generatePickler
 
-  given Pickler[UnnormalizedSED.Quasar] =
-    transformPickler(UnnormalizedSED.Quasar.apply)(_.quasarSpectrum)
+  given Pickler[UnnormalizedSED.Quasar] = generatePickler
 
-  given Pickler[UnnormalizedSED.HIIRegion] =
-    transformPickler(UnnormalizedSED.HIIRegion.apply)(_.hiiRegionSpectrum)
+  given Pickler[UnnormalizedSED.HIIRegion] = generatePickler
 
-  given Pickler[UnnormalizedSED.PlanetaryNebula] =
-    transformPickler(UnnormalizedSED.PlanetaryNebula.apply)(_.planetaryNebulaSpectrum)
+  given Pickler[UnnormalizedSED.PlanetaryNebula] = generatePickler
 
-  given Pickler[UnnormalizedSED.PowerLaw] =
-    transformPickler(UnnormalizedSED.PowerLaw.apply)(_.index)
+  given Pickler[UnnormalizedSED.PowerLaw] = generatePickler
 
-  given Pickler[UnnormalizedSED.BlackBody] =
-    transformPickler(UnnormalizedSED.BlackBody.apply)(_.temperature)
+  given Pickler[UnnormalizedSED.BlackBody] = generatePickler
 
-  given Pickler[UnnormalizedSED.UserDefined] =
-    transformPickler(UnnormalizedSED.UserDefined.apply)(_.fluxDensities)
+  given Pickler[UnnormalizedSED.UserDefined] = generatePickler
 
   given Pickler[UnnormalizedSED] =
     compositePickler[UnnormalizedSED]
@@ -227,16 +216,11 @@ trait ItcPicklers extends CommonPicklers {
       .addConcreteType[SpectralDefinition.BandNormalized[A]]
       .addConcreteType[SpectralDefinition.EmissionLines[A]]
 
-  given Pickler[SourceProfile.Point] =
-    transformPickler(SourceProfile.Point.apply)(_.spectralDefinition)
+  given Pickler[SourceProfile.Point] = generatePickler
 
-  given Pickler[SourceProfile.Uniform] =
-    transformPickler(SourceProfile.Uniform.apply)(_.spectralDefinition)
+  given Pickler[SourceProfile.Uniform] = generatePickler
 
-  given Pickler[SourceProfile.Gaussian] =
-    transformPickler(Function.tupled(SourceProfile.Gaussian.apply _))(x =>
-      (x.fwhm, x.spectralDefinition)
-    )
+  given Pickler[SourceProfile.Gaussian] = generatePickler
 
   given Pickler[SourceProfile] =
     compositePickler[SourceProfile]
@@ -244,13 +228,11 @@ trait ItcPicklers extends CommonPicklers {
       .addConcreteType[SourceProfile.Uniform]
       .addConcreteType[SourceProfile.Gaussian]
 
-  given Pickler[ItcTarget] =
-    transformPickler(Function.tupled(ItcTarget.apply _))(x => (x.rv, x.profile))
+  given Pickler[ItcTarget] = generatePickler
 
   given Pickler[ItcResult.SourceTooBright.type] = generatePickler
   given Pickler[ItcResult.Pending.type]         = generatePickler
-  given Pickler[ItcResult.Result]               =
-    transformPickler(Function.tupled(ItcResult.Result.apply _))(x => (x.duration, x.exposures))
+  given Pickler[ItcResult.Result]               = generatePickler
 
   given Pickler[ItcResult] =
     compositePickler[ItcResult]
@@ -262,8 +244,7 @@ trait ItcPicklers extends CommonPicklers {
   given Pickler[ItcQueryProblems.MissingWavelength.type]    = generatePickler
   given Pickler[ItcQueryProblems.MissingSignalToNoise.type] = generatePickler
   given Pickler[ItcQueryProblems.MissingTargetInfo.type]    = generatePickler
-  given Pickler[ItcQueryProblems.GenericError]              =
-    transformPickler(ItcQueryProblems.GenericError.apply)(_.msg)
+  given Pickler[ItcQueryProblems.GenericError]              = generatePickler
 
   given Pickler[ItcQueryProblems] =
     compositePickler[ItcQueryProblems]
