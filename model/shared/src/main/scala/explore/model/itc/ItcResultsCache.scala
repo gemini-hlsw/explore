@@ -35,6 +35,11 @@ final case class ItcResultsCache(
                       NonEmptyChain.of(ItcQueryProblems.MissingTargetInfo)
     )
 
+  def update(
+    newEntries: Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]
+  ): ItcResultsCache =
+    copy(cache ++ newEntries)
+
   // Read the cache value or a default
   def forRow(
     w:  Option[Wavelength],

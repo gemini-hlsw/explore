@@ -63,32 +63,31 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
 
   def run: IO[Unit] =
     for {
-      logger  <- setupLogger[IO]
-      self    <- IO(dom.DedicatedWorkerGlobalScope.self)
-      idb     <- IO(self.indexedDB.get)
-      stores   = CacheIDBStores()
-      cacheDb <- stores.open(IndexedDb(idb)).toIO
-      matrix  <- Deferred[IO, SpectroscopyModesMatrix]
-      client   = FetchClientBuilder[IO].create
-      config  <- AppConfig.fetchConfig(client)
-      itc     <- {
-        given Logger[IO]               = logger
+      given Logger[IO]                   <- setupLogger[IO]
+      self                               <- IO(dom.DedicatedWorkerGlobalScope.self)
+      idb                                <- IO(self.indexedDB.get)
+      stores                              = CacheIDBStores()
+      cacheDb                            <- stores.open(IndexedDb(idb)).toIO
+      matrix                             <- Deferred[IO, SpectroscopyModesMatrix]
+      client                              = FetchClientBuilder[IO].create
+      config                             <- AppConfig.fetchConfig(client)
+      given TransactionalClient[IO, ITC] <- {
         given TransactionalBackend[IO] = FetchJSBackend[IO](FetchMethod.GET)
         TransactionalClient.of[IO, ITC](config.itcURI, "ITC")
       }
-      _       <-
+      _                                  <-
         IO {
-          given Logger[IO]                   = logger
-          given TransactionalClient[IO, ITC] = itc
+          val logger = summon[Logger[IO]]
 
           self.onmessage = (msg: dom.MessageEvent) =>
             // Decode transferrable events
             decodeFromTransferable[WorkerMessage](msg)
               .map(_ match {
-                case req @ CatalogRequest(_, _)                                                 =>
+                case req @ CatalogRequest(_, _) =>
                   readFromGaia(client, self, cacheDb, stores, req)(logger) *>
                     expireGuideStarCandidates(cacheDb, stores, Expiration).toIO
-                case SpectroscopyMatrixRequest(uri)                                             =>
+
+                case SpectroscopyMatrixRequest(uri) =>
                   matrix.tryGet.flatMap {
                     case Some(m) =>
                       logger.debug("ITC matrix load from memory") *>
@@ -100,8 +99,10 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
                             postWorkerMessage[IO](self, SpectroscopyMatrixResults(m))
                         }
                   }
-                case CacheCleanupRequest(expTime)                                               =>
+
+                case CacheCleanupRequest(expTime) =>
                   expireGuideStarCandidates(cacheDb, stores, expTime).toIO
+
                 case AgsRequest(id, constraints, wavelength, base, basePos, params, candidates) =>
                   logger.debug(s"AGS request for $id") *>
                     IO.delay(
@@ -112,16 +113,16 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
                       logger.debug(s"AGS response for $id") *>
                         postWorkerMessage[IO](self, AgsResult(r))
                     )
-                case ItcQuery(w, sn, constraint, t, rows)                                       =>
-                  logger.debug("ITC query") *>
+
+                case ItcQuery(wavelength, signalToNoise, constraint, targets, rows) =>
+                  logger.debug(s"ITC query ${rows.length}") *>
                     ITCRequests
-                      .queryItc[IO](w,
-                                    sn,
-                                    constraints,
-                                    t,
-                                    rows
-                                    // itcResults.async,
-                                    // itcProgress.async
+                      .queryItc[IO](wavelength,
+                                    signalToNoise,
+                                    constraint,
+                                    targets,
+                                    rows,
+                                    r => postWorkerMessage[IO](self, ItcQueryResult(r))
                       )
 
                 case _ => IO.unit

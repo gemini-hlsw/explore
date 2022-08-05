@@ -21,12 +21,16 @@ import explore.common.ObsQueries._
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.events.ItcQuery
+import explore.events._
+import explore.events.picklers._
 import explore.implicits._
 import explore.itc._
 import explore.model.Progress
 import explore.model.ScienceMode
 import explore.model.ScienceModeAdvanced
 import explore.model.ScienceModeBasic
+import explore.model.boopickle.Boopickle._
+import explore.model.boopickle._
 import explore.model.itc._
 import explore.model.reusability._
 import explore.modes._
@@ -88,8 +92,11 @@ object SpectroscopyModesTable {
 
   extension (r: ListRange) def isDefined: Boolean = !(r.startIndex === 0 && r.endIndex === 0)
 
-  given Reusability[SpectroscopyModesMatrix] =
-    Reusability.by(_.matrix.length)
+  given Reusability[EitherNec[ItcQueryProblems, ItcResult]] = Reusability.byEq
+
+  given Reusability[SpectroscopyModesMatrix] = Reusability.by(_.matrix.length)
+
+  given Reusability[ItcResultsCache] = Reusability.by(_.cache.size)
 
   protected val ModesTableDef = TableDef[SpectroscopyModeRow].withSortBy.withBlockLayout
 
@@ -141,37 +148,33 @@ object SpectroscopyModesTable {
   val formatSlitLength: ModeSlitSize => String = ss =>
     f"${ModeSlitSize.milliarcseconds.get(ss.size).setScale(0, BigDecimal.RoundingMode.DOWN)}%1.0f"
 
-  def formatGrating(grating: InstrumentRow#Grating): String = grating match {
+  def formatGrating(grating: InstrumentRow#Grating): String = grating match
     case f: GmosSouthGrating => f.shortName
     case f: GmosNorthGrating => f.shortName
     case f: F2Disperser      => f.shortName
     case f: GpiDisperser     => f.shortName
     case f: GnirsDisperser   => f.shortName
     case r                   => r.toString
-  }
 
-  def formatFilter(filter: InstrumentRow#Filter): String = filter match {
+  def formatFilter(filter: InstrumentRow#Filter): String = filter match
     case Some(f: GmosSouthFilter) => f.shortName
     case Some(f: GmosNorthFilter) => f.shortName
     case f: F2Filter              => f.shortName
     case f: GnirsFilter           => f.shortName
     case _: None.type             => "none"
     case r                        => r.toString
-  }
 
-  def formatWavelengthCoverage(r: Interval[Quantity[BigDecimal, Micrometer]]): String = r match {
+  def formatWavelengthCoverage(r: Interval[Quantity[BigDecimal, Micrometer]]): String = r match
     case Bounded(a, b, _) =>
       List(a, b)
         .map(q => decFormat.format(q.value.setScale(3, BigDecimal.RoundingMode.DOWN)))
         .mkString(" - ")
     case _                =>
       "-"
-  }
 
-  def formatInstrument(r: (Instrument, NonEmptyString)): String = r match {
+  def formatInstrument(r: (Instrument, NonEmptyString)): String = r match
     case (i @ Instrument.Gnirs, m) => s"${i.longName} $m"
     case (i, _)                    => i.longName
-  }
 
   def formatFPU(r: FocalPlane): String = r match {
     case FocalPlane.SingleSlit   => "Single"
@@ -208,9 +211,6 @@ object SpectroscopyModesTable {
     }
     <.div(ExploreStyles.ITCCell, content)
   }
-
-  implicit val reuseQueryResponse: Reusability[EitherNec[ItcQueryProblems, ItcResult]] =
-    Reusability.byEq
 
   def sortItcFun(
     itc:         ItcResultsCache,
@@ -372,7 +372,7 @@ object SpectroscopyModesTable {
       // rows
       .useMemoBy(p =>
         (p.matrix, p.spectroscopyRequirements, p.baseTracking.map(_.baseCoordinates.dec))
-      )(_ => { case (matrix, s, dec) =>
+      ) { _ => (matrix, s, dec) =>
         val rows                =
           matrix
             .filtered(
@@ -388,15 +388,25 @@ object SpectroscopyModesTable {
             )
         val (enabled, disabled) = rows.partition(enabledRow)
         enabled ++ disabled
-      })
+      }
       // itc results cache
-      .useSerialStateView(
-        // .useState(
+      .useState {
         ItcResultsCache(
           Map.empty[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]
         )
+      }
+      // Listen on web worker for messages with catalog candidates
+      .useStreamResourceBy((props, _, _) => props.targets)((props, _, itcCache) =>
+        _ =>
+          props.ctx.worker.streamResource.map(
+            _.map(decodeFromTransferable[WorkerMessage])
+              .collect { case Some(ItcQueryResult(m)) =>
+                itcCache.modState(_.update(m)).to[IO]
+              }
+              .evalMap(identity)
+          )
       )
-      .useMemoBy { (props, rows, itc) => // Calculate the common errors
+      .useMemoBy { (props, rows, itc, _) => // Calculate the common errors
         (props.spectroscopyRequirements.wavelength,
          props.spectroscopyRequirements.signalToNoise,
          props.targets,
@@ -404,10 +414,10 @@ object SpectroscopyModesTable {
          rows,
          itc
         )
-      }((_, _, _) => { case (wavelength, sn, targets, constraints, rows, itc) =>
+      } { (_, _, _, _) => (wavelength, sn, targets, constraints, rows, itc) =>
         rows.value
           .map(
-            itc.get.forRow(wavelength, sn, constraints, targets, _)
+            itc.value.forRow(wavelength, sn, constraints, targets, _)
           )
           .collect { case Left(p) =>
             p.toList.filter {
@@ -418,11 +428,11 @@ object SpectroscopyModesTable {
           .flatten
           .toList
           .distinct
-      })
+      }
       // itcProgress
       .useStateViewWithReuse(none[Progress])
       // cols
-      .useMemoBy { (props, _, itc, _, itcProgress) => // Memo Cols
+      .useMemoBy { (props, _, itc, _, _, itcProgress) => // Memo Cols
         (props.spectroscopyRequirements.wavelength,
          props.spectroscopyRequirements.focalPlane,
          props.spectroscopyRequirements.signalToNoise,
@@ -431,20 +441,21 @@ object SpectroscopyModesTable {
          itc,
          itcProgress
         )
-      }((_, _, _, _, _) => {
-        case (wavelength, focalPlane, sn, targets, constraints, itc, itcProgress) =>
-          columns(wavelength, focalPlane, sn, constraints, targets, itc.get, itcProgress.get)
-      })
+      } {
+        (_, _, _, _, _, _) =>
+          (wavelength, focalPlane, sn, targets, constraints, itc, itcProgress) =>
+            columns(wavelength, focalPlane, sn, constraints, targets, itc.value, itcProgress.get)
+      }
       // selectedIndex
-      .useStateBy((props, rows, _, _, _, _) => selectedRowIndex(props.scienceMode.get, rows))
+      .useStateBy((props, rows, _, _, _, _, _) => selectedRowIndex(props.scienceMode.get, rows))
       // Recompute state if conf or requirements change.
-      .useEffectWithDepsBy((props, _, _, _, _, _, _) =>
+      .useEffectWithDepsBy((props, _, _, _, _, _, _, _) =>
         (props.scienceMode.get, props.spectroscopyRequirements)
-      )((_, rows, _, _, _, _, selectedIndex) => { case (scienceMode, _) =>
+      ) { (_, rows, _, _, _, _, _, selectedIndex) => (scienceMode, _) =>
         selectedIndex.setState(selectedRowIndex(scienceMode, rows))
-      })
+      }
       // tableInstance
-      .useTableBy((_, rows, _, _, _, cols, _) => ModesTableDef(cols, rows))
+      .useTableBy((_, rows, _, _, _, _, cols, _) => ModesTableDef(cols, rows))
       // virtuosoRef
       // This useMemo may be deceptive: it actually memoizes the ref, which is a wrapper to a mutable value.
       .useMemo(())(_ => ModesTable.createRef)
@@ -455,7 +466,7 @@ object SpectroscopyModesTable {
       // singleEffect
       .useSingleEffect
       // Recalculate ITC values if the wv or sn change or if the rows get modified
-      .useEffectWithDepsBy((props, _, _, _, _, _, _, _, _, range, _, _) =>
+      .useEffectWithDepsBy((props, _, _, _, _, _, _, _, _, _, range, _, _) =>
         (
           props.spectroscopyRequirements.wavelength,
           props.spectroscopyRequirements.signalToNoise,
@@ -464,54 +475,43 @@ object SpectroscopyModesTable {
           range
         )
       ) {
-        (props, _, itcResults, _, itcProgress, _, _, ti, _, _, _, singleEffect) =>
+        (props, _, itcResults, _, _, itcProgress, _, _, ti, _, range, _, singleEffect) =>
           (wavelength, signalToNoise, constraints, targets, range) =>
             implicit val ctx = props.ctx
 
             val sortedRows = ti.value.preSortedRows.map(_.original).toList
 
-            val modes = (range.value.foldMap(visibleRows(_, sortedRows)) ++ sortedRows).distinct
+            (wavelength, signalToNoise, targets.flatMap(NonEmptyList.fromList)).mapN { (w, sn, t) =>
+              // Discard modes already in the cache
+              val modes =
+                (range.value.foldMap(visibleRows(_, sortedRows)) ++ sortedRows).distinct.filterNot {
+                  row =>
+                    val cache = itcResults.value.cache
+                    row.instrument match
+                      case m: GmosNorthSpectroscopyRow =>
+                        cache.contains(
+                          ItcRequestParams(w, sn, constraints, t, m)
+                        )
+                      case m: GmosSouthSpectroscopyRow =>
+                        cache.contains(
+                          ItcRequestParams(w, sn, constraints, t, m)
+                        )
+                      case _                           => true
+                }
 
-            val u: IO[Unit] =
-              (wavelength, signalToNoise, targets.flatMap(NonEmptyList.fromList)).mapN {
-                (w, sn, t) =>
-                  IO.println(wavelength) *>
-                    IO.println(signalToNoise) *>
-                    IO.println(constraints) *>
-                    IO.println(targets.map(_.length)) *>
-                    IO.println(range.value.map(_.startIndex)) *>
-                    IO.println(range.value.map(_.endIndex)) *>
-                    IO.println(range.value.map(_.isDefined)) *> ctx.worker
-                      .postWorkerMessage(ItcQuery(w, sn, constraints, t, modes))
-                      .whenA(modes.nonEmpty && range.value.exists(_.isDefined))
-              }.orEmpty
-            u
+              val queryable =
+                modes.length === 1 || (modes.length > 1 && range.value.exists(_.isDefined))
 
-        // def submitRows(rows: List[SpectroscopyModeRow]): IO[Unit] =
-        //   singleEffect
-        //     .submit(
-        //       (wavelength, signalToNoise, targets.flatMap(NonEmptyList.fromList))
-        //         .mapN { (w, sn, t) =>
-        //           ITCRequests
-        //             .queryItc[IO](w,
-        //                           sn,
-        //                           constraints,
-        //                           t,
-        //                           rows,
-        //                           itcResults.async,
-        //                           itcProgress.async
-        //             )
-        //         }
-        //         .getOrElse(IO.unit)
-        //     )
-        //
-        // // Send the visible rows first
-        // submitRows((range.value.foldMap(visibleRows(_, sortedRows)) ++ sortedRows).distinct)
+              ctx.worker
+                .postWorkerMessage(ItcQuery(w, sn, constraints, t, modes))
+                .whenA(queryable)
+            }.orEmpty
       }
       .render {
         (
           props,
           rows,
+          _,
           _,
           errs,
           _,
@@ -598,7 +598,8 @@ object SpectroscopyModesTable {
                     )(
                       ^.onClick --> (
                         props.scienceMode.set(toggleRow(rowData.original)) >>
-                          selectedIndex.setState(rowData.index.toInt.some) >> props.onSelect
+                          selectedIndex.setState(rowData.index.toInt.some) >>
+                          props.onSelect
                       ),
                       props2Attrs(rowData.getRowProps())
                     ),

@@ -11,6 +11,9 @@ import eu.timepit.refined.types.numeric.NonNegBigDecimal
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.model.itc.ItcQueryProblems
+import explore.model.itc.ItcRequestParams
+import explore.model.itc.ItcResult
 import explore.model.itc.ItcTarget
 import explore.modes.InstrumentRow
 import explore.modes.ModeAO
@@ -190,9 +193,10 @@ trait ItcPicklers extends CommonPicklers {
       .addConcreteType[UnnormalizedSED.UserDefined]
 
   given taggedMeasurePickler[N: Pickler, T](using Pickler[Units Of T]): Pickler[Measure[N] Of T] =
-    transformPickler((x: (Units Of T, N)) => x._1.withValueTagged(x._2))(x =>
-      (Measure.unitsTagged.get(x), x.value)
-    )
+    transformPickler { (x: (Units Of T, N, Option[N])) =>
+      val base = x._1.withValueTagged(x._2)
+      x._3.map(base.withError).getOrElse(base)
+    }(x => (Measure.unitsTagged.get(x), x.value, x.error))
 
   given bandNormalizedPickler[A](using
     Pickler[Units Of Brightness[A]]
@@ -238,6 +242,33 @@ trait ItcPicklers extends CommonPicklers {
 
   given Pickler[ItcTarget] =
     transformPickler(Function.tupled(ItcTarget.apply _))(x => (x.rv, x.profile))
+
+  given Pickler[ItcResult.SourceTooBright.type] = generatePickler
+  given Pickler[ItcResult.Pending.type]         = generatePickler
+  given Pickler[ItcResult.Result]               = generatePickler
+
+  given Pickler[ItcResult] =
+    compositePickler[ItcResult]
+      .addConcreteType[ItcResult.SourceTooBright.type]
+      .addConcreteType[ItcResult.Pending.type]
+      .addConcreteType[ItcResult.Result]
+
+  given Pickler[ItcQueryProblems.UnsupportedMode.type]      = generatePickler
+  given Pickler[ItcQueryProblems.MissingWavelength.type]    = generatePickler
+  given Pickler[ItcQueryProblems.MissingSignalToNoise.type] = generatePickler
+  given Pickler[ItcQueryProblems.MissingTargetInfo.type]    = generatePickler
+  given Pickler[ItcQueryProblems.GenericError]              = generatePickler
+
+  given Pickler[ItcQueryProblems] =
+    compositePickler[ItcQueryProblems]
+      .addConcreteType[ItcQueryProblems.UnsupportedMode.type]
+      .addConcreteType[ItcQueryProblems.MissingWavelength.type]
+      .addConcreteType[ItcQueryProblems.MissingSignalToNoise.type]
+      .addConcreteType[ItcQueryProblems.MissingTargetInfo.type]
+      .addConcreteType[ItcQueryProblems.GenericError]
+
+  given Pickler[ItcRequestParams] = generatePickler
+
 }
 
 object ItcPicklers extends ItcPicklers

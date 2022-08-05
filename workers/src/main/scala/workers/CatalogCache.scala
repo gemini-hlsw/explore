@@ -86,18 +86,6 @@ trait CatalogCache extends CatalogIDB with AsyncToIO {
       .toList
   }
 
-  // We'll use the same constraints that includes all the AGS queries
-  val constraints = ConstraintSet(
-    ImageQuality.PointOne,         // min image quality
-    CloudExtinction.PointOne,      // min cloud extinction
-    SkyBackground.Dark,            // Not relevant
-    WaterVapor.Wet,                // Not relevant
-    ElevationRange.AirMass.Default // Not relevant
-  )
-
-  // Min relevant wavelength at 300nm
-  val wavelength = Wavelength.fromNanometers(300).get
-
   /**
    * Try to read the gaia query from the cache or else get it from gaia
    */

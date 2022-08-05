@@ -4,9 +4,12 @@
 package explore.events
 
 import cats.Eq
-import cats.data.NonEmptyList
+import cats.data._
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.model.boopickle.CatalogPicklers
+import explore.model.itc.ItcQueryProblems
+import explore.model.itc.ItcRequestParams
+import explore.model.itc.ItcResult
 import explore.model.itc.ItcTarget
 import explore.modes.SpectroscopyModeRow
 import explore.modes.SpectroscopyModesMatrix
@@ -71,4 +74,8 @@ final case class ItcQuery(
   constraints:   ConstraintSet,
   targets:       NonEmptyList[ItcTarget],
   modes:         List[SpectroscopyModeRow]
+) extends WorkerMessage
+
+final case class ItcQueryResult(
+  results: Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]
 ) extends WorkerMessage

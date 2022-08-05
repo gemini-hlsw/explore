@@ -19,13 +19,13 @@ import explore.model.itc._
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.SpectroscopyModeRow
-import japgolly.scalajs.react._
 import lucuma.core.enums.Band
 import lucuma.core.math.BrightnessUnits._
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.SpectralDefinition
+import org.scalajs.dom
 import org.typelevel.log4cats.Logger
 import queries.common.ITCQueriesGQL._
 import queries.schemas.ITC
@@ -48,9 +48,8 @@ object ITCRequests {
     signalToNoise: PosBigDecimal,
     constraints:   ConstraintSet,
     targets:       NonEmptyList[ItcTarget],
-    modes:         List[SpectroscopyModeRow]
-    // cache:           ViewF[F, ItcResultsCache],
-    // progress:        ViewF[F, Option[Progress]]
+    modes:         List[SpectroscopyModeRow],
+    callback:      Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]] => F[Unit]
   )(using Monoid[F[Unit]], TransactionalClient[F, ITC]): F[Unit] = {
     def itcResults(r: List[ItcResults]): List[EitherNec[ItcQueryProblems, ItcResult]] =
       // Convert to usable types
@@ -124,6 +123,7 @@ object ITCRequests {
             })
           }
           .flatMap(callback)
+
     val itcRowsParams = modes
       .map(_.instrument)
       // Only handle known modes
@@ -133,10 +133,6 @@ object ITCRequests {
         case m: GmosSouthSpectroscopyRow =>
           ItcRequestParams(wavelength, signalToNoise, constraints, targets, m)
       }
-    // Discard values in the cache
-    // .filterNot { case params =>
-    //   cache.get.cache.contains(params)
-    // }
 
     // progress.set(Progress.initial(NonNegInt.unsafeFrom(itcRowsParams.length)).some) >>
     parTraverseN(
@@ -159,9 +155,11 @@ object ITCRequests {
                   case _                                        => Long.MinValue
                 }.some
             }
-          // Put the results in the cache
-          // update.foldMap(u => cache.mod(ItcResultsCache.cache.modify(_ + (params -> u))))
-          Applicative[F].unit
+          // Send the request to the front
+          update
+            .map(r => callback(Map(params -> r)))
+            .getOrElse(Applicative[F].unit)
+
         }
       ) // >> progress.mod(_.map(_.increment()))
     }.void // >> progress.set(none)

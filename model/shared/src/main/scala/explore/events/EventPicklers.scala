@@ -25,7 +25,7 @@ import java.time.Instant
 /**
  * Picklers used by web workers
  */
-trait EventPicklers extends CatalogPicklers with ItcPicklers {
+trait EventPicklers extends CatalogPicklers with ItcPicklers:
   implicit def picklerInstant: Pickler[Instant] =
     transformPickler(Instant.ofEpochMilli)(_.toEpochMilli())
 
@@ -96,6 +96,9 @@ trait EventPicklers extends CatalogPicklers with ItcPicklers {
       (x.wavelength, x.signalToNoise, x.constraints, x.targets, x.modes)
     )
 
+  given Pickler[ItcQueryResult] =
+    transformPickler(ItcQueryResult.apply)(_.results)
+
   implicit val messagePickler: Pickler[WorkerMessage] =
     compositePickler[WorkerMessage]
       .addConcreteType[CatalogRequest]
@@ -107,6 +110,6 @@ trait EventPicklers extends CatalogPicklers with ItcPicklers {
       .addConcreteType[AgsRequest]
       .addConcreteType[AgsResult]
       .addConcreteType[ItcQuery]
-}
+      .addConcreteType[ItcQueryResult]
 
 object EventPicklers extends EventPicklers

@@ -35,95 +35,6 @@ import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.core.util.Enumerated
 
-trait CommonPicklers {
-  implicit def picklerRefined[A: Pickler, B](implicit v: Validate[A, B]): Pickler[A Refined B] =
-    new Pickler[A Refined B] {
-      override def pickle(a: A Refined B)(implicit state: PickleState): Unit = {
-        state.pickle(a.value)
-        ()
-      }
-      override def unpickle(implicit state: UnpickleState): A Refined B      = {
-        val value = state.unpickle[A]
-        refineV[B](value).getOrElse(sys.error("Cannot unpickle"))
-      }
-    }
-
-  implicit def picklerQuantity[A: Pickler, B]: Pickler[Quantity[A, B]] =
-    new Pickler[Quantity[A, B]] {
-      override def pickle(a: Quantity[A, B])(implicit state: PickleState): Unit = {
-        state.pickle(a.value)
-        ()
-      }
-      override def unpickle(implicit state: UnpickleState): Quantity[A, B]      = {
-        val value = state.unpickle[A]
-        value.withUnit[B]
-      }
-    }
-
-  implicit def picklerEnumeration[A: Enumerated]: Pickler[A] =
-    transformPickler((a: String) =>
-      Enumerated[A].fromTag(a).getOrElse(sys.error("Cannot unpickle"))
-    )(
-      Enumerated[A].tag(_)
-    )
-
-  given Pickler[Target.Id] =
-    transformPickler(Target.Id.apply)(_.value)
-
-  given picklerNonEmptyList[A: Pickler]: Pickler[NonEmptyList[A]] =
-    transformPickler(NonEmptyList.fromListUnsafe[A])(_.toList)
-
-  given picklerNonEmptyMap[A: Order: Pickler, B: Pickler]: Pickler[NonEmptyMap[A, B]] =
-    transformPickler((a: NonEmptyList[(A, B)]) => NonEmptyMap.of(a.head, a.tail: _*))(
-      _.toNel
-    )
-
-  given Pickler[Wavelength] =
-    transformPickler((i: Int) =>
-      Wavelength.fromPicometers
-        .getOption(i)
-        .getOrElse(sys.error("cannot unpickle"))
-    )(_.toPicometers.value.value)
-
-  given Pickler[Angle] =
-    transformPickler(Angle.fromMicroarcseconds)(_.toMicroarcseconds)
-
-  given Pickler[RadialVelocity] =
-    transformPickler((x: BigDecimal) =>
-      RadialVelocity.fromMetersPerSecond
-        .getOption(x)
-        .getOrElse(sys.error("Cannot unpickle"))
-    )(RadialVelocity.fromMetersPerSecond.reverseGet)
-
-  given Pickler[HourAngle] =
-    transformPickler(HourAngle.fromMicroseconds)(_.toMicroseconds)
-
-  given Pickler[RightAscension] =
-    transformPickler(RightAscension.apply)(_.toHourAngle)
-
-  given Pickler[Declination] =
-    new Pickler[Declination] {
-      override def pickle(a: Declination)(implicit state: PickleState): Unit = {
-        state.pickle(Declination.fromAngle.reverseGet(a))
-        ()
-      }
-      override def unpickle(implicit state: UnpickleState): Declination      = {
-        val angle = state.unpickle[Angle]
-        Declination.fromAngle.getOption(angle).getOrElse(sys.error("Cannot unpickle"))
-      }
-    }
-
-  given Pickler[Coordinates] =
-    transformPickler(Function.tupled(Coordinates.apply _))(x => (x.ra, x.dec))
-
-  given Pickler[Offset] =
-    transformPickler((x: (Angle, Angle)) =>
-      Offset(Offset.Component.angle[Axis.P].reverseGet(x._1),
-             Offset.Component.angle[Axis.Q].reverseGet(x._2)
-      )
-    )(x => (x.p.toAngle, x.q.toAngle))
-}
-
 // Boopicklers for catalog related types
 trait CatalogPicklers extends CommonPicklers {
 
@@ -168,34 +79,6 @@ trait CatalogPicklers extends CommonPicklers {
   implicit def picklerGuideStarCandidate: Pickler[GuideStarCandidate] =
     transformPickler(Function.tupled(GuideStarCandidate.apply _))(x =>
       (x.id, x.tracking, x.gBrightness)
-    )
-
-  implicit def picklerElevationRangeAirMassDecimalValue
-    : Pickler[ElevationRange.AirMass.DecimalValue] =
-    transformPickler((b: BigDecimal) =>
-      ElevationRange.AirMass.DecimalValue.from(b).getOrElse(sys.error("Cannot unpickle"))
-    )(_.value)
-
-  implicit def picklerElevationRangeHourAngleDecimalHour
-    : Pickler[ElevationRange.HourAngle.DecimalHour] =
-    transformPickler((b: BigDecimal) =>
-      ElevationRange.HourAngle.DecimalHour.from(b).getOrElse(sys.error("Cannot unpickle"))
-    )(_.value)
-
-  implicit def picklerElevationRangeAirMass: Pickler[ElevationRange.AirMass] =
-    transformPickler(ElevationRange.AirMass.fromDecimalValues.get)(x => (x.min, x.max))
-
-  implicit def picklerElevationRangeHourAngle: Pickler[ElevationRange.HourAngle] =
-    transformPickler(ElevationRange.HourAngle.fromDecimalHours.get)(x => (x.minHours, x.maxHours))
-
-  implicit def picklerElevationRange: Pickler[ElevationRange] =
-    compositePickler[ElevationRange]
-      .addConcreteType[ElevationRange.AirMass]
-      .addConcreteType[ElevationRange.HourAngle]
-
-  implicit def picklerConstraintSet: Pickler[ConstraintSet] =
-    transformPickler(Function.tupled(ConstraintSet.apply _))(x =>
-      (x.imageQuality, x.cloudExtinction, x.skyBackground, x.waterVapor, x.elevationRange)
     )
 
   implicit def picklerAgsPosition: Pickler[AgsPosition] =
