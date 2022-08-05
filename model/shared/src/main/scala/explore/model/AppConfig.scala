@@ -55,11 +55,6 @@ object AppConfig {
   implicit val decoderAppConfig: Decoder[AppConfig] = deriveDecoder[AppConfig]
 
   def fetchConfig[F[_]: Async](client: Client[F]): F[AppConfig] =
-    // We want to avoid caching the static server redirect and the config files (they are not fingerprinted by vite).
-    // FetchClientBuilder[F]
-    //   .withRequestTimeout(5.seconds)
-    //   .withCache(RequestCache.`no-store`)
-    //   .create
     client
       .get(uri"/conf.json")(_.decodeJson[AppConfig])
       .adaptError { case t =>

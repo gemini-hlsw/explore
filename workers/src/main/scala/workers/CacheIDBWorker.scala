@@ -3,9 +3,7 @@
 
 package workers
 
-import cats.effect.Deferred
-import cats.effect.IO
-import cats.effect.Sync
+import cats.effect._
 import cats.effect.unsafe.implicits._
 import cats.syntax.all._
 import clue.TransactionalClient
@@ -32,6 +30,7 @@ import typings.loglevel.mod.LogLevelDesc
 
 import java.time.Duration
 import scala.scalajs.js
+import scala.concurrent.duration._
 
 import js.annotation._
 
@@ -61,6 +60,15 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
   // Expire the data in 30 days
   val Expiration: Duration = Duration.ofDays(30)
 
+  def fetchConfig[F[_]: Async]: F[AppConfig] =
+    // We want to avoid caching the static server redirect and the config files (they are not fingerprinted by vite).
+    AppConfig.fetchConfig(
+      FetchClientBuilder[F]
+        .withRequestTimeout(5.seconds)
+        .withCache(dom.RequestCache.`no-store`)
+        .create
+    )
+
   def run: IO[Unit] =
     for {
       given Logger[IO]                   <- setupLogger[IO]
@@ -70,7 +78,7 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
       cacheDb                            <- stores.open(IndexedDb(idb)).toIO
       matrix                             <- Deferred[IO, SpectroscopyModesMatrix]
       client                              = FetchClientBuilder[IO].create
-      config                             <- AppConfig.fetchConfig(client)
+      config                             <- fetchConfig[IO]
       given TransactionalClient[IO, ITC] <- {
         given TransactionalBackend[IO] = FetchJSBackend[IO](FetchMethod.GET)
         TransactionalClient.of[IO, ITC](config.itcURI, "ITC")

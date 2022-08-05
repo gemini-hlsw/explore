@@ -11,7 +11,6 @@ import crystal.Pot
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.data.KeyedIndexedList
-// import explore.implicits._
 import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
 import explore.model.ObsSummaryWithTitleAndConstraints
@@ -28,7 +27,6 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types._
-// import lucuma.ui.reusability._
 import monocle.Focus
 import monocle.Getter
 import monocle.Lens
@@ -130,9 +128,6 @@ object ObsQueries {
   object ObsSummariesWithConstraints {
     val observations     = Focus[ObsSummariesWithConstraints](_.observations)
     val constraintGroups = Focus[ObsSummariesWithConstraints](_.constraintGroups)
-
-    // implicit val reusabilityObsSummaryWithConstraints: Reusability[ObsSummariesWithConstraints] =
-    //   Reusability.derive
   }
 
   private val queryToObsSummariesWithConstraintsGetter
