@@ -134,7 +134,6 @@ object ITCRequests {
           ItcRequestParams(wavelength, signalToNoise, constraints, targets, m)
       }
 
-    // progress.set(Progress.initial(NonNegInt.unsafeFrom(itcRowsParams.length)).some) >>
     parTraverseN(
       Constants.MaxConcurrentItcRequests.toLong,
       itcRowsParams.reverse
@@ -161,8 +160,8 @@ object ITCRequests {
             .getOrElse(Applicative[F].unit)
 
         }
-      ) // >> progress.mod(_.map(_.increment()))
-    }.void // >> progress.set(none)
+      )
+    }.void
   }
 
 }

@@ -4,20 +4,23 @@
 package explore.model
 
 import cats.Eq
-import coulomb._
-import coulomb.syntax._
-import coulomb.units.accepted._
-import eu.timepit.refined.api._
-import eu.timepit.refined.numeric._
+import cats.syntax.all.*
+import coulomb.*
+import coulomb.syntax.*
+import coulomb.units.accepted.*
+import eu.timepit.refined.api.*
+import eu.timepit.refined.numeric.*
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosInt
-import lucuma.refined._
+import lucuma.refined.*
 
 case class Progress private (current: NonNegInt, total: NonNegInt) {
   lazy val percentage: Quantity[Progress.PercentRange, Percent] =
     Progress.PercentRange
       .unsafeFrom(current.value * 100.0 / total.value)
       .withUnit[Percent]
+
+  def nextToComplete: Boolean = current.value === (total.value - 1)
 
   def increment(steps: PosInt = 1.refined): Progress =
     if (current.value + steps.value > total.value)
@@ -33,5 +36,5 @@ object Progress {
   def initial(total: NonNegInt): Progress =
     Progress(0.refined, total)
 
-  implicit val eqProgress: Eq[Progress] = Eq.fromUniversalEquals
+  given Eq[Progress] = Eq.fromUniversalEquals
 }
