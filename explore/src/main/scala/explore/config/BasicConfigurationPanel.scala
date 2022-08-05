@@ -45,7 +45,7 @@ final case class BasicConfigurationPanel(
   constraints:      ConstraintSet,
   itcTargets:       List[ITCTarget],
   baseTracking:     Option[SiderealTracking],
-  onShowDetails:    Option[Callback],
+  onShowDetails:    Callback,
   confMatrix:       SpectroscopyModesMatrix
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[BasicConfigurationPanel](BasicConfigurationPanel.component)
@@ -100,8 +100,8 @@ object BasicConfigurationPanel {
               compact = true,
               content = "View Details",
               icon = Icons.Gears,
-              disabled = props.onShowDetails.isEmpty,
-              onClick = props.onShowDetails.orUndefined
+              disabled = props.scienceModeOpt.get.isEmpty,
+              onClick = props.onShowDetails
             )
           )
         )
