@@ -205,11 +205,11 @@ object ExploreMain extends IOApp.Simple {
       }
 
     (for {
-      dispatcher <- Dispatcher[IO]
-      worker     <- WebWorkerF[IO](WebWorkers.CacheIDBWorker(), dispatcher)
-      prefs      <- Resource.eval(ExploreLocalPreferences.loadPreferences[IO])
-      logger     <- Resource.eval(setupLogger[IO](prefs))
-      _          <- Resource.eval(buildPage(dispatcher, worker, prefs)(logger))
+      dispatcher       <- Dispatcher[IO]
+      worker           <- WebWorkerF[IO](WebWorkers.CacheIDBWorker(), dispatcher)
+      prefs            <- Resource.eval(ExploreLocalPreferences.loadPreferences[IO])
+      given Logger[IO] <- Resource.eval(setupLogger[IO](prefs))
+      _                <- Resource.eval(buildPage(dispatcher, worker, prefs))
     } yield ()).useForever
   }
 
