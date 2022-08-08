@@ -16,6 +16,7 @@ import explore.implicits._
 import explore.model.AsterismGroup
 import explore.model.ObsIdSet
 import explore.model.TargetWithObs
+import explore.model.syntax.all._
 import explore.undo._
 import japgolly.scalajs.react.callback.Callback
 import lucuma.core.model.Target

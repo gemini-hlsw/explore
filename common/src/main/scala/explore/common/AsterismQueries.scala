@@ -13,6 +13,7 @@ import explore.model.AsterismGroup
 import explore.model.ObsIdSet
 import explore.model.ObsSummaryWithConstraintsAndConf
 import explore.model.TargetWithObs
+import explore.model.syntax.all._
 import japgolly.scalajs.react._
 import lucuma.core.model.Observation
 import lucuma.core.model.Target

@@ -60,10 +60,6 @@ trait ListImplicits {
       )
   }
 
-  implicit class ListOps[A](val list: List[A]) {
-    def toSortedMap[K: Ordering, V](getKey: A => K, getValue: A => V = identity[A](_)) =
-      SortedMap.from(list.map(a => (getKey(a), getValue(a))))
-  }
 }
 
 trait ContextImplicits {

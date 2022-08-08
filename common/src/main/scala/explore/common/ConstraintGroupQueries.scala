@@ -9,6 +9,7 @@ import explore.implicits._
 import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
 import explore.model.ObsSummaryWithTitleAndConf
+import explore.model.syntax.all._
 import japgolly.scalajs.react._
 import lucuma.core.model.Observation
 import lucuma.ui.reusability._

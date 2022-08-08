@@ -10,35 +10,34 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Declination
 import lucuma.core.model.PosAngleConstraint
 
-object all {
+import scala.collection.immutable.SortedMap
 
-  implicit class PosAngleOptionsOps(val pa: PosAngleOptions) extends AnyVal {
-    def toPosAngle(a: Angle): Option[PosAngleConstraint] = pa match {
+object all:
+
+  extension (pa: PosAngleOptions)
+    def toPosAngle(a: Angle): Option[PosAngleConstraint] = pa match
       case PosAngleOptions.Fixed               => PosAngleConstraint.Fixed(a).some
       case PosAngleOptions.AllowFlip           => PosAngleConstraint.AllowFlip(a).some
       case PosAngleOptions.AverageParallactic  => PosAngleConstraint.AverageParallactic.some
       case PosAngleOptions.ParallacticOverride => PosAngleConstraint.ParallacticOverride(a).some
       case PosAngleOptions.Unconstrained       => none
-    }
-  }
 
-  implicit class PosAngleOps(val pa: Option[PosAngleConstraint]) extends AnyVal {
-    def toPosAngleOptions: PosAngleOptions = pa match {
+  extension (pa: Option[PosAngleConstraint])
+    def toPosAngleOptions: PosAngleOptions = pa match
       case Some(PosAngleConstraint.Fixed(_))               => PosAngleOptions.Fixed
       case Some(PosAngleConstraint.AllowFlip(_))           => PosAngleOptions.AllowFlip
       case Some(PosAngleConstraint.AverageParallactic)     => PosAngleOptions.AverageParallactic
       case Some(PosAngleConstraint.ParallacticOverride(_)) => PosAngleOptions.ParallacticOverride
       case _                                               => PosAngleOptions.Unconstrained
-    }
-  }
+
+  extension [A](list: List[A])
+    def toSortedMap[K: Ordering, V](getKey: A => K, getValue: A => V = identity[A](_)) =
+      SortedMap.from(list.map(a => (getKey(a), getValue(a))))
 
   // TODO Move to core
-  implicit class SiteOps(val site: Site) extends AnyVal {
+  extension (site: Site)
     def inPreferredDeclination(d: Declination): Boolean =
-      d.toAngle.toSignedDoubleDegrees match {
+      d.toAngle.toSignedDoubleDegrees match
         case d if d < -40.0 => site === Site.GS
         case d if d > 30.0  => site === Site.GN
         case _              => true
-      }
-  }
-}

@@ -18,6 +18,7 @@ import explore.model.ObsSummaryWithTitleConstraintsAndConf
 import explore.model.ScienceMode
 import explore.model.TargetSummary
 import explore.optics.all._
+import explore.model.syntax.all._
 import japgolly.scalajs.react._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
@@ -37,11 +38,6 @@ import java.time.Instant
 import scala.collection.immutable.SortedMap
 
 object ObsQueries {
-  implicit class ListOps[A](val list: List[A]) {
-    def toSortedMap[K: Ordering, V](getKey: A => K, getValue: A => V = identity[A](_)) =
-      SortedMap.from(list.map(a => (getKey(a), getValue(a))))
-  }
-
   type ObservationList = KeyedIndexedList[Observation.Id, ObsSummaryWithTitleConstraintsAndConf]
   type ConstraintsList = SortedMap[ObsIdSet, ConstraintGroup]
 
