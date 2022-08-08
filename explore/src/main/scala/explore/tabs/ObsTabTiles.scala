@@ -120,7 +120,7 @@ object ObsTabTiles {
     ScalaFnComponent
       .withHooks[Props]
       .useStreamResourceViewOnMountBy { props =>
-        implicit val ctx = props.ctx
+        given AppContextIO = props.ctx
 
         ObsEditQuery
           .query(props.obsId)
@@ -169,9 +169,25 @@ object ObsTabTiles {
 
         val notesTile =
           Tile(
-            ObsTabTilesIds.NotesId,
+            ObsTabTilesIds.NotesId.id,
             s"Note for Observer",
             props.backButton.some,
+            canMinimize = true
+          )(_ =>
+            <.div(
+              ExploreStyles.NotesWrapper,
+              <.div(
+                ExploreStyles.ObserverNotes,
+                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus maximus hendrerit lacinia. Etiam dapibus blandit ipsum sed rhoncus."
+              )
+            )
+          )
+
+        val itcTile =
+          Tile(
+            ObsTabTilesIds.ItcId.id,
+            s"ITC",
+            // props.backButton.some,
             canMinimize = true
           )(_ =>
             <.div(
@@ -253,7 +269,8 @@ object ObsTabTiles {
               targetTile,
               skyPlotTile,
               constraintsTile,
-              configurationTile
+              configurationTile,
+              itcTile
             ),
             GridLayoutSection.ObservationsLayout,
             clazz = ExploreStyles.ObservationTiles.some

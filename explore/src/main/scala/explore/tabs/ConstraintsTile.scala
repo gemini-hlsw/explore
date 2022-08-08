@@ -29,7 +29,7 @@ object ConstraintsTile {
     clazz:        Option[Css] = None
   )(implicit ctx: AppContextIO): Tile =
     Tile(
-      ObsTabTilesIds.ConstraintsId,
+      ObsTabTilesIds.ConstraintsId.id,
       "Constraints",
       canMinimize = true,
       control = _ => control,

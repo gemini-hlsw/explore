@@ -66,13 +66,16 @@ final case class ObsTabContents(
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[ObsTabContents](ObsTabContents.component)
 
-object ObsTabTilesIds {
-  val NotesId: NonEmptyString         = "notes".refined
-  val TargetId: NonEmptyString        = "target".refined
-  val PlotId: NonEmptyString          = "elevationPlot".refined
-  val ConstraintsId: NonEmptyString   = "constraints".refined
-  val ConfigurationId: NonEmptyString = "configuration".refined
-}
+enum ObsTabTilesIds:
+  case NotesId, TargetId, PlotId, ConstraintsId, ConfigurationId, ItcId
+
+  def id: NonEmptyString = this match
+    case NotesId         => "notes".refined
+    case TargetId        => "target".refined
+    case PlotId          => "elevationPlot".refined
+    case ConstraintsId   => "constraints".refined
+    case ConfigurationId => "configuration".refined
+    case ItcId           => "itc".refined
 
 object ObsTabContents {
   type Props = ObsTabContents
@@ -85,6 +88,8 @@ object ObsTabContents {
   private val ConstraintsMinHeight: NonNegInt   = 3.refined
   private val ConstraintsMaxHeight: NonNegInt   = 7.refined
   private val ConfigurationMaxHeight: NonNegInt = 10.refined
+  private val ItcMinHeight: NonNegInt           = 3.refined
+  private val ItcMaxHeight: NonNegInt           = 7.refined
   private val DefaultWidth: NonNegInt           = 10.refined
   private val TileMinWidth: NonNegInt           = 6.refined
   private val DefaultLargeWidth: NonNegInt      = 12.refined
@@ -96,7 +101,7 @@ object ObsTabContents {
         y = 0,
         w = DefaultWidth.value,
         h = NotesMaxHeight.value,
-        i = ObsTabTilesIds.NotesId.value,
+        i = ObsTabTilesIds.NotesId.id.value,
         isResizable = false
       ),
       LayoutItem(
@@ -106,7 +111,7 @@ object ObsTabContents {
         h = TargetHeight.value,
         minH = TargetMinHeight.value,
         minW = TileMinWidth.value,
-        i = ObsTabTilesIds.TargetId.value
+        i = ObsTabTilesIds.TargetId.id.value
       ),
       LayoutItem(
         x = 0,
@@ -115,7 +120,7 @@ object ObsTabContents {
         h = SkyPlotHeight.value,
         minH = SkyPlotMinHeight.value,
         minW = TileMinWidth.value,
-        i = ObsTabTilesIds.PlotId.value
+        i = ObsTabTilesIds.PlotId.id.value
       ),
       LayoutItem(
         x = 0,
@@ -125,14 +130,22 @@ object ObsTabContents {
         minH = ConstraintsMinHeight.value,
         maxH = ConstraintsMaxHeight.value,
         minW = TileMinWidth.value,
-        i = ObsTabTilesIds.ConstraintsId.value
+        i = ObsTabTilesIds.ConstraintsId.id.value
       ),
       LayoutItem(
         x = 0,
         y = (NotesMaxHeight |+| TargetHeight |+| SkyPlotHeight |+| ConstraintsMaxHeight).value,
         w = DefaultWidth.value,
         h = ConfigurationMaxHeight.value,
-        i = ObsTabTilesIds.ConfigurationId.value
+        i = ObsTabTilesIds.ConfigurationId.id.value
+      ),
+      LayoutItem(
+        x = 0,
+        y =
+          (NotesMaxHeight |+| TargetHeight |+| SkyPlotHeight |+| ConstraintsMaxHeight |+| ConfigurationMaxHeight).value,
+        w = DefaultWidth.value,
+        h = ItcMaxHeight.value,
+        i = ObsTabTilesIds.ItcId.id.value
       )
     )
   )

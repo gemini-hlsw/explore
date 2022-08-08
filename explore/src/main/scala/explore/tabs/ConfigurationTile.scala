@@ -26,7 +26,7 @@ object ConfigurationTile {
     undoStacks:   View[UndoStacks[IO, ScienceData]]
   )(implicit ctx: AppContextIO) =
     Tile(
-      ObsTabTilesIds.ConfigurationId,
+      ObsTabTilesIds.ConfigurationId.id,
       "Configuration",
       canMinimize = true
     )(renderInTitle =>

@@ -64,7 +64,7 @@ object AsterismEditorTile {
     val control: VdomNode = VizTimeEditor(vizTimeView)
 
     Tile(
-      ObsTabTilesIds.TargetId,
+      ObsTabTilesIds.TargetId.id,
       title,
       back = backButton,
       canMinimize = true,
