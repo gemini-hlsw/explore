@@ -82,7 +82,7 @@ object AladinCell extends ModelOptics {
   // If it changes over a month we'll request the data again and recalculate
   // This way we avoid recalculating pm for example if only pos angle or
   // conditions change
-  implicit val instantReuse: Reusability[Instant] = Reusability {
+  given Reusability[Instant] = Reusability {
     Duration.between(_, _).toDays().abs < 30L
   }
 
@@ -120,21 +120,20 @@ object AladinCell extends ModelOptics {
             )
       )
       // Request data again if vizTime changes more than a month
-      .useEffectWithDepsBy((p, _, _, _, _, _, _, lock) => (lock, p.obsConf.vizTime))(
-        (props, _, _, _, _, _, agsState, _) => { case (lock, vizTime) =>
+      .useEffectWithDepsBy((p, _, _, _, _, _, _, lock) => (lock, p.obsConf.vizTime)) {
+        (props, _, _, _, _, _, agsState, _) => (lock, vizTime) =>
           (agsState.setState(AgsState.LoadingCandidates).to[IO] *>
             props.ctx.worker
               .postWorkerMessage(CatalogRequest(props.target.get, vizTime)))
             .whenA(lock === PotOption.ReadyNone)
-        }
-      )
+      }
       .useEffectWithDepsBy((p, _, _, _, _, _, _, _) => (p.uid, p.tid)) {
         (props, _, options, _, _, _, _, _) => _ =>
           implicit val ctx = props.ctx
 
           UserTargetPreferencesQuery
             .queryWithDefault[IO](props.uid, props.tid, Constants.InitialFov)
-            .flatMap { case (fov, viewOffset, agsCandidates, agsOverlay, fullScreen) =>
+            .flatMap { (fov, viewOffset, agsCandidates, agsOverlay, fullScreen) =>
               options
                 .set(
                   TargetVisualOptions.Default
@@ -372,7 +371,7 @@ object AladinCell extends ModelOptics {
               ),
               <.div(
                 ExploreStyles.AladinToolbox,
-                Button(size = Small, icon = true, onClick = openSettings.modState(s => !s))(
+                Button(size = Small, icon = true, onClick = openSettings.modState(!_))(
                   ExploreStyles.ButtonOnAladin,
                   ^.onMouseEnter --> openSettings.setState(true),
                   Icons.ThinSliders

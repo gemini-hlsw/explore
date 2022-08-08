@@ -7,7 +7,7 @@ import cats.syntax.all._
 import clue.data.Input
 import clue.data.syntax._
 import explore.common.ObsQueries
-import explore.model.ITCTarget
+import explore.model.itc.ItcTarget
 import explore.model.TargetWithId
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
@@ -218,9 +218,9 @@ package itc {
 
     implicit class ScienceDataOps(val s: ObsQueries.ScienceData) extends AnyVal {
       // From the list of targets selects the ones relevant for ITC
-      def itcTargets: List[ITCTarget] = s.targets.asterism
+      def itcTargets: List[ItcTarget] = s.targets.asterism
         .map { case TargetWithId(_, target) =>
-          targetRV.getOption(target).map(r => ITCTarget(r, Target.sourceProfile.get(target)))
+          targetRV.getOption(target).map(r => ItcTarget(r, Target.sourceProfile.get(target)))
         }
         .flatten
         .hashDistinct

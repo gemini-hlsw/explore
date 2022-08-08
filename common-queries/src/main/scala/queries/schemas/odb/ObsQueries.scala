@@ -11,15 +11,14 @@ import crystal.Pot
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.data.KeyedIndexedList
-import explore.implicits._
 import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
 import explore.model.ObsSummaryWithTitleAndConstraints
 import explore.model.ObsSummaryWithTitleConstraintsAndConf
 import explore.model.ScienceMode
 import explore.model.TargetSummary
-import explore.model.reusability._
 import explore.optics.all._
+import explore.model.syntax.all._
 import japgolly.scalajs.react._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
@@ -29,7 +28,6 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types._
-import lucuma.ui.reusability._
 import monocle.Focus
 import monocle.Getter
 import monocle.Lens
@@ -40,7 +38,6 @@ import java.time.Instant
 import scala.collection.immutable.SortedMap
 
 object ObsQueries {
-
   type ObservationList = KeyedIndexedList[Observation.Id, ObsSummaryWithTitleConstraintsAndConf]
   type ConstraintsList = SortedMap[ObsIdSet, ConstraintGroup]
 
@@ -127,9 +124,6 @@ object ObsQueries {
   object ObsSummariesWithConstraints {
     val observations     = Focus[ObsSummariesWithConstraints](_.observations)
     val constraintGroups = Focus[ObsSummariesWithConstraints](_.constraintGroups)
-
-    implicit val reusabilityObsSummaryWithConstraints: Reusability[ObsSummariesWithConstraints] =
-      Reusability.derive
   }
 
   private val queryToObsSummariesWithConstraintsGetter

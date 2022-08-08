@@ -3,12 +3,16 @@
 
 package workers
 
-import cats.effect.Deferred
-import cats.effect.IO
-import cats.effect.Sync
+import cats.effect._
 import cats.effect.unsafe.implicits._
 import cats.syntax.all._
+import clue.TransactionalClient
+import clue._
+import clue.js.FetchJSBackend
+import clue.js.FetchMethod
 import explore.events._
+import explore.itc.ITCRequests
+import explore.model.AppConfig
 import explore.model.StaticData
 import explore.model.boopickle.Boopickle._
 import explore.modes.SpectroscopyModesMatrix
@@ -21,9 +25,11 @@ import lucuma.ags.AgsAnalysis
 import org.http4s.dom.FetchClientBuilder
 import org.scalajs.dom
 import org.typelevel.log4cats.Logger
+import queries.schemas.ITC
 import typings.loglevel.mod.LogLevelDesc
 
 import java.time.Duration
+import scala.concurrent.duration._
 import scala.scalajs.js
 
 import js.annotation._
@@ -54,26 +60,42 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
   // Expire the data in 30 days
   val Expiration: Duration = Duration.ofDays(30)
 
+  def fetchConfig[F[_]: Async]: F[AppConfig] =
+    // We want to avoid caching the static server redirect and the config files (they are not fingerprinted by vite).
+    AppConfig.fetchConfig(
+      FetchClientBuilder[F]
+        .withRequestTimeout(5.seconds)
+        .withCache(dom.RequestCache.`no-store`)
+        .create
+    )
+
   def run: IO[Unit] =
     for {
-      logger  <- setupLogger[IO]
-      self    <- IO(dom.DedicatedWorkerGlobalScope.self)
-      idb     <- IO(self.indexedDB.get)
-      stores   = CacheIDBStores()
-      cacheDb <- stores.open(IndexedDb(idb)).toIO
-      matrix  <- Deferred[IO, SpectroscopyModesMatrix]
-      client   = FetchClientBuilder[IO].create
-      _       <-
+      given Logger[IO]                   <- setupLogger[IO]
+      self                               <- IO(dom.DedicatedWorkerGlobalScope.self)
+      idb                                <- IO(self.indexedDB.get)
+      stores                              = CacheIDBStores()
+      cacheDb                            <- stores.open(IndexedDb(idb)).toIO
+      matrix                             <- Deferred[IO, SpectroscopyModesMatrix]
+      client                              = FetchClientBuilder[IO].create
+      config                             <- fetchConfig[IO]
+      given TransactionalClient[IO, ITC] <- {
+        given TransactionalBackend[IO] = FetchJSBackend[IO](FetchMethod.GET)
+        TransactionalClient.of[IO, ITC](config.itcURI, "ITC")
+      }
+      _                                  <-
         IO {
+          val logger = summon[Logger[IO]]
+
           self.onmessage = (msg: dom.MessageEvent) =>
             // Decode transferrable events
             decodeFromTransferable[WorkerMessage](msg)
               .map(_ match {
-                case req @ CatalogRequest(_, _)                                                 =>
+                case req @ CatalogRequest(_, _) =>
                   readFromGaia(client, self, cacheDb, stores, req)(logger) *>
                     expireGuideStarCandidates(cacheDb, stores, Expiration).toIO
-                case SpectroscopyMatrixRequest(uri)                                             =>
-                  implicit val log = logger
+
+                case SpectroscopyMatrixRequest(uri) =>
                   matrix.tryGet.flatMap {
                     case Some(m) =>
                       logger.debug("ITC matrix load from memory") *>
@@ -85,8 +107,10 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
                             postWorkerMessage[IO](self, SpectroscopyMatrixResults(m))
                         }
                   }
-                case CacheCleanupRequest(expTime)                                               =>
+
+                case CacheCleanupRequest(expTime) =>
                   expireGuideStarCandidates(cacheDb, stores, expTime).toIO
+
                 case AgsRequest(id, constraints, wavelength, base, basePos, params, candidates) =>
                   logger.debug(s"AGS request for $id") *>
                     IO.delay(
@@ -97,7 +121,19 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
                       logger.debug(s"AGS response for $id") *>
                         postWorkerMessage[IO](self, AgsResult(r))
                     )
-                case _                                                                          => IO.unit
+
+                case ItcQuery(id, wavelength, signalToNoise, constraint, targets, rows) =>
+                  logger.debug(s"ITC query ${rows.length}") *>
+                    ITCRequests
+                      .queryItc[IO](wavelength,
+                                    signalToNoise,
+                                    constraint,
+                                    targets,
+                                    rows,
+                                    r => postWorkerMessage[IO](self, ItcQueryResult(id, r))
+                      )
+
+                case _ => IO.unit
               })
               .orEmpty
               .handleError(_.printStackTrace())

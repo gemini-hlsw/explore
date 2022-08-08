@@ -75,14 +75,12 @@ object ExploreMain extends IOApp.Simple {
 
   def fetchConfig[F[_]: Async]: F[AppConfig] =
     // We want to avoid caching the static server redirect and the config files (they are not fingerprinted by vite).
-    FetchClientBuilder[F]
-      .withRequestTimeout(5.seconds)
-      .withCache(RequestCache.`no-store`)
-      .create
-      .get(uri"/conf.json")(_.decodeJson[AppConfig])
-      .adaptError { case t =>
-        new Exception("Could not retrieve configuration.", t)
-      }
+    AppConfig.fetchConfig(
+      FetchClientBuilder[F]
+        .withRequestTimeout(5.seconds)
+        .withCache(RequestCache.`no-store`)
+        .create
+    )
 
   def initialModel(vault: Option[UserVault], pref: ExploreLocalPreferences) =
     RootModel(vault = vault, localPreferences = pref)

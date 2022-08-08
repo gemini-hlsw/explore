@@ -1,15 +1,14 @@
 // Copyright (c) 2016-2022 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.itc
+package explore.model.itc
 
 import cats.data._
 import cats.syntax.all._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.numeric.PosBigDecimal
-import explore.model.ITCTarget
+import explore.model.itc._
 import explore.modes._
-import japgolly.scalajs.react._
 import lucuma.core.enums._
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
@@ -18,7 +17,7 @@ import mouse.boolean._
 
 // Simple cache of the remotely calculated values
 final case class ItcResultsCache(
-  cache: Map[ITCRequestParams, EitherNec[ItcQueryProblems, ItcResult]]
+  cache: Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]
 ) {
   def wavelength(w: Option[Wavelength]): EitherNec[ItcQueryProblems, Wavelength] =
     Either.fromOption(w, NonEmptyChain.of(ItcQueryProblems.MissingWavelength))
@@ -31,22 +30,27 @@ final case class ItcResultsCache(
                       NonEmptyChain.of(ItcQueryProblems.UnsupportedMode)
     )
 
-  def targets(r: Option[List[ITCTarget]]): EitherNec[ItcQueryProblems, NonEmptyList[ITCTarget]] =
+  def targets(r: Option[List[ItcTarget]]): EitherNec[ItcQueryProblems, NonEmptyList[ItcTarget]] =
     Either.fromOption(r.flatMap(NonEmptyList.fromList),
                       NonEmptyChain.of(ItcQueryProblems.MissingTargetInfo)
     )
+
+  def update(
+    newEntries: Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]
+  ): ItcResultsCache =
+    copy(cache ++ newEntries)
 
   // Read the cache value or a default
   def forRow(
     w:  Option[Wavelength],
     sn: Option[PosBigDecimal],
     c:  ConstraintSet,
-    t:  Option[List[ITCTarget]],
+    t:  Option[List[ItcTarget]],
     r:  SpectroscopyModeRow
   ): EitherNec[ItcQueryProblems, ItcResult] =
     (wavelength(w), signalToNoise(sn), mode(r), targets(t)).parMapN { (w, sn, im, t) =>
       cache
-        .get(ITCRequestParams(w, sn, c, t, im))
+        .get(ItcRequestParams(w, sn, c, t, im))
         .getOrElse(ItcResult.Pending.rightNec[ItcQueryProblems])
     }.flatten
 

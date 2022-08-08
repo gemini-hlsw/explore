@@ -8,6 +8,7 @@ import explore.common.ObsQueries.SpectroscopyRequirementsData
 import explore.data.KeyedIndexedList
 import explore.events.CatalogResults
 import explore.model.Asterism
+import explore.model.itc.ItcTarget
 import explore.undo.UndoStacks
 import japgolly.scalajs.react.ReactCats._
 import japgolly.scalajs.react.Reusability
@@ -33,7 +34,7 @@ import scala.collection.immutable.TreeSeqMap
  */
 object reusability {
   // Model
-  implicit val itcTargetProps: Reusability[ITCTarget]                                = Reusability.byEq
+  implicit val itcTargetProps: Reusability[ItcTarget]                                = Reusability.byEq
   implicit def appContextReuse[F[_]]: Reusability[AppContext[F]]                     = Reusability.always
   implicit val statusReuse: Reusability[PersistentClientStatus]                      = Reusability.byEq
   implicit val targetOptionsReuse: Reusability[TargetVisualOptions]                  = Reusability.byEq

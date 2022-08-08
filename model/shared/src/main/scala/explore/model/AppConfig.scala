@@ -5,11 +5,15 @@ package explore.model
 
 import cats.Eq
 import cats.Show
+import cats.effect.Async
+import cats.syntax.all._
 import explore.model.enums.ExecutionEnvironment
 import io.circe._
 import io.circe.generic.semiauto._
 import org.http4s.Uri
 import org.http4s.circe._
+import org.http4s.client.Client
+import org.http4s.syntax.all._
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.FiniteDuration
@@ -49,4 +53,11 @@ object AppConfig {
 
   implicit val encoderAppConfig: Encoder[AppConfig] = deriveEncoder[AppConfig]
   implicit val decoderAppConfig: Decoder[AppConfig] = deriveDecoder[AppConfig]
+
+  def fetchConfig[F[_]: Async](client: Client[F]): F[AppConfig] =
+    client
+      .get(uri"/conf.json")(_.decodeJson[AppConfig])
+      .adaptError { case t =>
+        new Exception("Could not retrieve configuration.", t)
+      }
 }

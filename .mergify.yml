@@ -32,6 +32,14 @@ pull_request_rules:
       add:
       - common-graphql
       remove: []
+- name: Label common-queries PRs
+  conditions:
+  - files~=^common-queries/
+  actions:
+    label:
+      add:
+      - common-queries
+      remove: []
 - name: Label explore PRs
   conditions:
   - files~=^explore/

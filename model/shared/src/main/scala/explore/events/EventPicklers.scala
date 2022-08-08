@@ -7,7 +7,9 @@ import boopickle.DefaultBasic._
 import explore.events.SpectroscopyMatrixResults
 import explore.events._
 import explore.model.boopickle.CatalogPicklers
+import explore.model.boopickle.ItcPicklers
 import explore.model.boopickle.ItcPicklers._
+import explore.model.itc.ItcTarget
 import lucuma.ags.AgsParams
 import lucuma.ags.AgsPosition
 import lucuma.ags.GuideStarCandidate
@@ -23,7 +25,7 @@ import java.time.Instant
 /**
  * Picklers used by web workers
  */
-trait EventPicklers extends CatalogPicklers {
+trait EventPicklers extends CatalogPicklers with ItcPicklers:
   implicit def picklerInstant: Pickler[Instant] =
     transformPickler(Instant.ofEpochMilli)(_.toEpochMilli())
 
@@ -36,7 +38,7 @@ trait EventPicklers extends CatalogPicklers {
   private implicit def picklerCatalogRequest: Pickler[CatalogRequest] =
     transformPickler(Function.tupled(CatalogRequest.apply _))(x => (x.tracking, x.vizTime))
 
-  private implicit def picklerCacheCleanupRequestt: Pickler[CacheCleanupRequest] =
+  private implicit def picklerCacheCleanupRequest: Pickler[CacheCleanupRequest] =
     transformPickler(CacheCleanupRequest.apply)(_.elapsedTime)
 
   private implicit def picklerSpectroscopyMatrixRequest: Pickler[SpectroscopyMatrixRequest] =
@@ -52,42 +54,20 @@ trait EventPicklers extends CatalogPicklers {
     transformPickler(CatalogQueryError.apply)(_.errorMsg)
 
   private implicit def picklerAgsRequest: Pickler[AgsRequest] =
-    transformPickler(
-      (x: Tuple7[
-        Target.Id,
-        ConstraintSet,
-        Wavelength,
-        Coordinates,
-        AgsPosition,
-        AgsParams,
-        List[GuideStarCandidate],
-      ]) =>
-        x match {
-          case (
-                id,
-                constraints,
-                wavelength,
-                baseCoordinates,
-                position,
-                params,
-                candidates
-              ) =>
-            AgsRequest(id, constraints, wavelength, baseCoordinates, position, params, candidates)
-        }
-    )(x =>
-      (
-        x.id,
-        x.constraints,
-        x.wavelength,
-        x.baseCoordinates,
-        x.position,
-        x.params,
-        x.candidates
-      )
+    transformPickler(AgsRequest.apply.tupled)(x =>
+      (x.id, x.constraints, x.wavelength, x.baseCoordinates, x.position, x.params, x.candidates)
     )
 
-  private implicit def picklerAgsResult: Pickler[AgsResult] =
+  given Pickler[AgsResult] =
     transformPickler(AgsResult.apply)(_.results)
+
+  given Pickler[ItcQuery] =
+    transformPickler(ItcQuery.apply.tupled)(x =>
+      (x.id, x.wavelength, x.signalToNoise, x.constraints, x.targets, x.modes)
+    )
+
+  given Pickler[ItcQueryResult] =
+    transformPickler(ItcQueryResult.apply.tupled)(x => (x.id, x.results))
 
   implicit val messagePickler: Pickler[WorkerMessage] =
     compositePickler[WorkerMessage]
@@ -99,6 +79,7 @@ trait EventPicklers extends CatalogPicklers {
       .addConcreteType[CatalogQueryError]
       .addConcreteType[AgsRequest]
       .addConcreteType[AgsResult]
-}
+      .addConcreteType[ItcQuery]
+      .addConcreteType[ItcQueryResult]
 
 object EventPicklers extends EventPicklers

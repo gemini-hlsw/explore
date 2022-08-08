@@ -15,9 +15,9 @@ import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model
-import explore.model.ITCTarget
 import explore.model.ImagingConfigurationOptions
 import explore.model.display._
+import explore.model.itc.ItcTarget
 import explore.modes.SpectroscopyModesMatrix
 import explore.undo._
 import japgolly.scalajs.react._
@@ -43,7 +43,7 @@ final case class BasicConfigurationPanel(
   requirementsCtx:  UndoSetter[ScienceRequirementsData],
   scienceModeOpt:   View[Option[model.ScienceMode]],
   constraints:      ConstraintSet,
-  itcTargets:       List[ITCTarget],
+  itcTargets:       List[ItcTarget],
   baseTracking:     Option[SiderealTracking],
   onShowDetails:    Callback,
   confMatrix:       SpectroscopyModesMatrix

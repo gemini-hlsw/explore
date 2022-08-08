@@ -14,33 +14,25 @@ import crystal.ViewF
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.model.Constants
-import explore.model.ITCTarget
 import explore.model.Progress
+import explore.model.itc._
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
-import explore.modes.InstrumentRow
 import explore.modes.SpectroscopyModeRow
-import japgolly.scalajs.react._
 import lucuma.core.enums.Band
 import lucuma.core.math.BrightnessUnits._
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.SpectralDefinition
+import org.scalajs.dom
 import org.typelevel.log4cats.Logger
 import queries.common.ITCQueriesGQL._
 import queries.schemas.ITC
 import queries.schemas.itc.implicits._
 
+import java.util.UUID
 import scala.concurrent.duration._
-
-final case class ITCRequestParams(
-  wavelength:    Wavelength,
-  signalToNoise: PosBigDecimal,
-  constraints:   ConstraintSet,
-  target:        NonEmptyList[ITCTarget],
-  mode:          InstrumentRow
-)
 
 object ITCRequests {
   // Copied from https://gist.github.com/gvolpe/44e2263f9068efe298a1f30390de6d22
@@ -53,14 +45,13 @@ object ITCRequests {
     }
 
   def queryItc[F[_]: Concurrent: Parallel: Logger](
-    wavelength:      Wavelength,
-    signalToNoise:   PosBigDecimal,
-    constraints:     ConstraintSet,
-    targets:         NonEmptyList[ITCTarget],
-    modes:           List[SpectroscopyModeRow],
-    cache:           ViewF[F, ItcResultsCache],
-    progress:        ViewF[F, Option[Progress]]
-  )(implicit monoid: Monoid[F[Unit]], t: TransactionalClient[F, ITC]): F[Unit] = {
+    wavelength:    Wavelength,
+    signalToNoise: PosBigDecimal,
+    constraints:   ConstraintSet,
+    targets:       NonEmptyList[ItcTarget],
+    modes:         List[SpectroscopyModeRow],
+    callback:      Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]] => F[Unit]
+  )(using Monoid[F[Unit]], TransactionalClient[F, ITC]): F[Unit] = {
     def itcResults(r: List[ItcResults]): List[EitherNec[ItcQueryProblems, ItcResult]] =
       // Convert to usable types
       r.flatMap(x =>
@@ -98,7 +89,7 @@ object ITCRequests {
         .collect { case Some(b) => b }
 
     def doRequest(
-      request:  ITCRequestParams,
+      request:  ItcRequestParams,
       callback: List[ItcResults] => F[Unit]
     ): F[Unit] =
       Logger[F].debug(
@@ -133,46 +124,45 @@ object ITCRequests {
             })
           }
           .flatMap(callback)
+
     val itcRowsParams = modes
       .map(_.instrument)
       // Only handle known modes
       .collect {
         case m: GmosNorthSpectroscopyRow =>
-          ITCRequestParams(wavelength, signalToNoise, constraints, targets, m)
+          ItcRequestParams(wavelength, signalToNoise, constraints, targets, m)
         case m: GmosSouthSpectroscopyRow =>
-          ITCRequestParams(wavelength, signalToNoise, constraints, targets, m)
-      }
-      // Discard values in the cache
-      .filterNot { case params =>
-        cache.get.cache.contains(params)
+          ItcRequestParams(wavelength, signalToNoise, constraints, targets, m)
       }
 
-    progress.set(Progress.initial(NonNegInt.unsafeFrom(itcRowsParams.length)).some) >>
-      parTraverseN(
-        Constants.MaxConcurrentItcRequests.toLong,
-        itcRowsParams.reverse
-      ) { params =>
-        // ITC supports sending many modes at once, but sending them one by one
-        // maximizes cache hits
-        doRequest(
-          params,
-          { r =>
-            // Convert to usable types and update the cache
-            val update: Option[EitherNec[ItcQueryProblems, ItcResult]] =
-              // There maybe multiple targets, take the one with the max time
-              itcResults(r) match {
-                case Nil => none
-                case l   =>
-                  l.maxBy {
-                    case Right(ItcResult.Result(exposureTime, _)) => exposureTime.toMicros
-                    case _                                        => Long.MinValue
-                  }.some
-              }
-            // Put the results in the cache
-            update.foldMap(u => cache.mod(ItcResultsCache.cache.modify(_ + (params -> u))))
-          }
-        ) >> progress.mod(_.map(_.increment()))
-      } >> progress.set(none)
+    parTraverseN(
+      Constants.MaxConcurrentItcRequests.toLong,
+      itcRowsParams.reverse
+    ) { params =>
+      // ITC supports sending many modes at once, but sending them one by one
+      // maximizes cache hits
+      doRequest(
+        params,
+        { r =>
+          // Convert to usable types and update the cache
+          val update: Option[EitherNec[ItcQueryProblems, ItcResult]] =
+            // There maybe multiple targets, take the one with the max time
+            itcResults(r) match {
+              case Nil => none
+              case l   =>
+                l.maxBy {
+                  case Right(ItcResult.Result(exposureTime, _)) => exposureTime.toMicros
+                  case _                                        => Long.MinValue
+                }.some
+            }
+          // Send the request to the front
+          update
+            .map(r => callback(Map(params -> r)))
+            .getOrElse(Applicative[F].unit)
+
+        }
+      )
+    }.void
   }
 
 }
