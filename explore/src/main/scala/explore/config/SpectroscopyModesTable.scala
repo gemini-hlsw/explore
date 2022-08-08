@@ -5,6 +5,7 @@ package explore.config
 
 import cats.data._
 import cats.effect._
+import cats.effect.std.UUIDGen
 import cats.syntax.all._
 import coulomb.Quantity
 import coulomb.policy.spire.standard.given
@@ -69,6 +70,7 @@ import spire.math.Bounded
 import spire.math.Interval
 
 import java.text.DecimalFormat
+import java.util.UUID
 
 import scalajs.js.|
 
@@ -183,7 +185,7 @@ object SpectroscopyModesTable {
     case FocalPlane.IFU          => "IFU"
   }
 
-  private def itcCell(c: EitherNec[ItcQueryProblems, ItcResult]): VdomElement = {
+  private def itcCell(c: EitherNec[ItcQueryProblems, ItcResult]): VdomElement =
     val content: TagMod = c match {
       case Left(nel)                        =>
         if (nel.exists(_ == ItcQueryProblems.UnsupportedMode))
@@ -211,7 +213,6 @@ object SpectroscopyModesTable {
         Popup(content = "Source too bright", trigger = Icons.SunBright.color("yellow"))
     }
     <.div(ExploreStyles.ITCCell, content)
-  }
 
   def sortItcFun(
     itc:         ItcResultsCache,
@@ -398,28 +399,32 @@ object SpectroscopyModesTable {
       }
       // itcProgress
       .useState(none[Progress])
+      // itc requests id
+      .useState(none[UUID])
       // Listen on web worker for messages with itc results candidates
-      .useStreamResourceBy((props, _, _, _) => props.targets)((props, _, itcCache, itcProgress) =>
-        _ =>
-          props.ctx.worker.streamResource.map(
-            _.map(decodeFromTransferable[WorkerMessage])
-              .collect { case Some(ItcQueryResult(m)) =>
-                // Increment progress
-                itcProgress
-                  .modState {
-                    // Remove progress when one left to complete
-                    case Some(p) if p.nextToComplete => none
-                    case Some(p)                     => Some(p.increment())
-                    case _                           => none
-                  }
-                  .to[IO] *>
-                  // Update the cache
-                  itcCache.modState(_.update(m)).to[IO]
-              }
-              .evalMap(identity)
-          )
+      .useStreamResourceBy((props, _, _, _, uuid) => (props.targets, uuid))(
+        (props, _, itcCache, itcProgress, _) =>
+          (_, uuid) =>
+            props.ctx.worker.streamResource.map(
+              _.map(decodeFromTransferable[WorkerMessage])
+                .collect {
+                  case Some(ItcQueryResult(id, m)) if uuid.value.exists(_ === id) =>
+                    // Increment progress
+                    itcProgress
+                      .modState {
+                        // Remove progress when one left to complete
+                        case Some(p) if p.nextToComplete => none
+                        case Some(p)                     => Some(p.increment())
+                        case _                           => none
+                      }
+                      .to[IO] *>
+                      // Update the cache
+                      itcCache.modState(_.update(m)).to[IO]
+                }
+                .evalMap(identity)
+            )
       )
-      .useMemoBy { (props, rows, itc, _, _) => // Calculate the common errors
+      .useMemoBy { (props, rows, itc, _, _, _) => // Calculate the common errors
         (props.spectroscopyRequirements.wavelength,
          props.spectroscopyRequirements.signalToNoise,
          props.targets,
@@ -427,7 +432,7 @@ object SpectroscopyModesTable {
          rows,
          itc
         )
-      } { (_, _, _, _, _) => (wavelength, sn, targets, constraints, rows, itc) =>
+      } { (_, _, _, _, _, _) => (wavelength, sn, targets, constraints, rows, itc) =>
         rows.value
           .map(
             itc.value.forRow(wavelength, sn, constraints, targets, _)
@@ -442,7 +447,7 @@ object SpectroscopyModesTable {
           .toList
           .distinct
       }
-      .useMemoBy { (props, _, itc, itcProgress, _, _) => // Memo Cols
+      .useMemoBy { (props, _, itc, itcProgress, _, _, _) => // Memo Cols
         (props.spectroscopyRequirements.wavelength,
          props.spectroscopyRequirements.focalPlane,
          props.spectroscopyRequirements.signalToNoise,
@@ -452,20 +457,20 @@ object SpectroscopyModesTable {
          itcProgress
         )
       } {
-        (_, _, _, _, _, _) =>
+        (_, _, _, _, _, _, _) =>
           (wavelength, focalPlane, sn, targets, constraints, itc, itcProgress) =>
             columns(wavelength, focalPlane, sn, constraints, targets, itc.value, itcProgress.value)
       }
       // selectedIndex
-      .useStateBy((props, rows, _, _, _, _, _) => selectedRowIndex(props.scienceMode.get, rows))
+      .useStateBy((props, rows, _, _, _, _, _, _) => selectedRowIndex(props.scienceMode.get, rows))
       // Recompute state if conf or requirements change.
-      .useEffectWithDepsBy((props, _, _, _, _, _, _, _) =>
+      .useEffectWithDepsBy((props, _, _, _, _, _, _, _, _) =>
         (props.scienceMode.get, props.spectroscopyRequirements)
-      ) { (_, rows, _, _, _, _, _, selectedIndex) => (scienceMode, _) =>
+      ) { (_, rows, _, _, _, _, _, _, selectedIndex) => (scienceMode, _) =>
         selectedIndex.setState(selectedRowIndex(scienceMode, rows))
       }
       // tableInstance
-      .useTableBy((_, rows, _, _, _, _, cols, _) => ModesTableDef(cols, rows))
+      .useTableBy((_, rows, _, _, _, _, _, cols, _) => ModesTableDef(cols, rows))
       // virtuosoRef
       // This useMemo may be deceptive: it actually memoizes the ref, which is a wrapper to a mutable value.
       .useMemo(())(_ => ModesTable.createRef)
@@ -474,7 +479,7 @@ object SpectroscopyModesTable {
       // atTop
       .useState(false)
       // Recalculate ITC values if the wv or sn change or if the rows get modified
-      .useEffectWithDepsBy((props, _, _, _, _, _, _, _, _, _, range, _) =>
+      .useEffectWithDepsBy((props, _, _, _, _, _, _, _, _, _, _, range, _) =>
         (
           props.spectroscopyRequirements.wavelength,
           props.spectroscopyRequirements.signalToNoise,
@@ -483,9 +488,9 @@ object SpectroscopyModesTable {
           range
         )
       ) {
-        (props, _, itcResults, itcProgress, _, _, _, _, ti, _, range, _) =>
+        (props, _, itcResults, itcProgress, queryId, _, _, _, _, ti, _, range, _) =>
           (wavelength, signalToNoise, constraints, targets, range) =>
-            implicit val ctx = props.ctx
+            given AppContextIO = props.ctx
 
             val sortedRows = ti.value.preSortedRows.map(_.original).toList
 
@@ -511,16 +516,21 @@ object SpectroscopyModesTable {
                 modes.length === 1 || (modes.length > 1 && range.value.exists(_.isDefined))
 
               val progress = Progress.initial(NonNegInt.unsafeFrom(modes.length)).some
-              (itcProgress.setState(progress).to[IO] *>
-                ctx.worker
-                  .postWorkerMessage(ItcQuery(w, sn, constraints, t, modes)))
-                .whenA(queryable)
+              // new request ID, we are inside the effect
+              (for
+                uuid <- UUIDGen.fromSync[IO].randomUUID
+                _    <- itcProgress.setState(progress).to[IO]
+                _    <- queryId.setState(uuid.some).to[IO]
+                _    <-
+                  props.ctx.worker.postWorkerMessage(ItcQuery(uuid, w, sn, constraints, t, modes))
+              yield ()).whenA(queryable)
             }.orEmpty
       }
       .render {
         (
           props,
           rows,
+          _,
           _,
           _,
           _,
@@ -561,13 +571,9 @@ object SpectroscopyModesTable {
             case ItcQueryProblems.MissingWavelength    =>
               Label(clazz = ExploreStyles.WarningLabel, size = sizes.Small)("Set Wav..")
             case ItcQueryProblems.MissingSignalToNoise =>
-              Label(clazz = ExploreStyles.WarningLabel, size = sizes.Small)(
-                "Set S/N"
-              )
+              Label(clazz = ExploreStyles.WarningLabel, size = sizes.Small)("Set S/N")
             case ItcQueryProblems.MissingTargetInfo    =>
-              Label(clazz = ExploreStyles.WarningLabel, size = sizes.Small)(
-                "Missing Target Info"
-              )
+              Label(clazz = ExploreStyles.WarningLabel, size = sizes.Small)("Missing Target Info")
           }
 
           React.Fragment(

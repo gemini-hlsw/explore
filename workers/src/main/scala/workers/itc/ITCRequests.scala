@@ -31,6 +31,7 @@ import queries.common.ITCQueriesGQL._
 import queries.schemas.ITC
 import queries.schemas.itc.implicits._
 
+import java.util.UUID
 import scala.concurrent.duration._
 
 object ITCRequests {

@@ -81,55 +81,8 @@ trait ItcPicklers extends CommonPicklers {
   implicit val msPickler: Pickler[ModeSlitSize] =
     transformPickler(ModeSlitSize.apply)(_.size)
 
-  implicit val rowPickler: Pickler[SpectroscopyModeRow] =
-    transformPickler(
-      (x: Tuple13[
-        Int,
-        InstrumentRow,
-        NonEmptyString,
-        FocalPlane,
-        Option[SpectroscopyCapabilities],
-        ModeAO,
-        ModeWavelength,
-        ModeWavelength,
-        ModeWavelength,
-        Quantity[NonNegBigDecimal, Micrometer],
-        PosInt,
-        ModeSlitSize,
-        ModeSlitSize
-      ]) =>
-        x match {
-          case (
-                id,
-                instrument,
-                config,
-                focalPlane,
-                capabilities,
-                ao,
-                minWavelength,
-                maxWavelength,
-                optimalWavelength,
-                wavelengthCoverage,
-                resolution,
-                slitLength,
-                slitWidth
-              ) =>
-            SpectroscopyModeRow(id,
-                                instrument,
-                                config,
-                                focalPlane,
-                                capabilities,
-                                ao,
-                                minWavelength,
-                                maxWavelength,
-                                optimalWavelength,
-                                wavelengthCoverage,
-                                resolution,
-                                slitLength,
-                                slitWidth
-            )
-        }
-    )(x =>
+  given Pickler[SpectroscopyModeRow] =
+    transformPickler(SpectroscopyModeRow.apply.tupled)(x =>
       (x.id,
        x.instrument,
        x.config,

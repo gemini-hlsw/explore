@@ -122,7 +122,7 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
                         postWorkerMessage[IO](self, AgsResult(r))
                     )
 
-                case ItcQuery(wavelength, signalToNoise, constraint, targets, rows) =>
+                case ItcQuery(id, wavelength, signalToNoise, constraint, targets, rows) =>
                   logger.debug(s"ITC query ${rows.length}") *>
                     ITCRequests
                       .queryItc[IO](wavelength,
@@ -130,7 +130,7 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
                                     constraint,
                                     targets,
                                     rows,
-                                    r => postWorkerMessage[IO](self, ItcQueryResult(r))
+                                    r => postWorkerMessage[IO](self, ItcQueryResult(id, r))
                       )
 
                 case _ => IO.unit

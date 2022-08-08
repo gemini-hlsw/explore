@@ -26,6 +26,7 @@ import org.http4s.Uri
 
 import java.time.Duration
 import java.time.Instant
+import java.util.UUID
 
 object picklers extends CatalogPicklers with EventPicklers
 
@@ -69,6 +70,7 @@ final case class AgsRequest(
 final case class AgsResult(results: List[AgsAnalysis]) extends WorkerMessage
 
 final case class ItcQuery(
+  id:            UUID,
   wavelength:    Wavelength,
   signalToNoise: PosBigDecimal,
   constraints:   ConstraintSet,
@@ -77,5 +79,6 @@ final case class ItcQuery(
 ) extends WorkerMessage
 
 final case class ItcQueryResult(
+  id:      UUID,
   results: Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]
 ) extends WorkerMessage
