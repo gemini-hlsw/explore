@@ -30,7 +30,7 @@ object SiderealTargetEditorTile {
     fullScreen: View[Boolean],
     backButton: Option[VdomNode] = none
   ) =
-    Tile(ObsTabTilesIds.TargetId, title, back = backButton, canMinimize = true) {
+    Tile(ObsTabTilesIds.TargetId.id, title, back = backButton, canMinimize = true) {
       (renderInTitle: Tile.RenderInTitle) =>
         userId.map(uid =>
           SiderealTargetEditor(

@@ -169,7 +169,7 @@ object ObsTabTiles {
 
         val notesTile =
           Tile(
-            ObsTabTilesIds.NotesId,
+            ObsTabTilesIds.NotesId.id,
             s"Note for Observer",
             props.backButton.some,
             canMinimize = true
