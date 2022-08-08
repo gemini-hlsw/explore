@@ -43,26 +43,22 @@ final case class AladinContainer(
   obsConf:                ObsConfiguration,
   options:                TargetVisualOptions,
   updateMouseCoordinates: Function1[Coordinates, Callback],
-  updateFov:              Function1[Fov,
-                       Callback
-  ], // TODO Move the functionality of saving the FOV in ALadincell here
-  updateViewOffset:    Function1[Offset, Callback],
-  centerOnTarget:      View[Boolean],
-  selectedGuideStar:   Option[AgsAnalysis],
-  guideStarCandidates: List[AgsAnalysis]
+  // TODO Move the functionality of saving the FOV in ALadincell here
+  updateFov:              Function1[Fov, Callback],
+  updateViewOffset:       Function1[Offset, Callback],
+  centerOnTarget:         View[Boolean],
+  selectedGuideStar:      Option[AgsAnalysis],
+  guideStarCandidates:    List[AgsAnalysis]
 ) extends ReactFnProps[AladinContainer](AladinContainer.component)
 
 object AladinContainer {
 
-  type Props       = AladinContainer
-  type World2PixFn = Function1[Coordinates, Option[(Double, Double)]]
-  val DefaultWorld2PixFn: World2PixFn = (_: Coordinates) => None
+  type Props = AladinContainer
 
   // This is used for screen coordinates, thus it doesn't need a lot of precission
-  implicit val doubleReuse: Reusability[Double]                  = Reusability.double(1.0)
-  implicit val selectedGSReuse: Reusability[Option[AgsAnalysis]] =
-    Reusability.by(_.map(_.target.id))
-  implicit val analysisReuse: Reusability[List[AgsAnalysis]]     = Reusability.by(_.length)
+  given Reusability[Double]              = Reusability.double(1.0)
+  given Reusability[Option[AgsAnalysis]] = Reusability.by(_.map(_.target.id))
+  given Reusability[List[AgsAnalysis]]   = Reusability.by(_.length)
 
   val AladinComp = Aladin.component
 
@@ -92,8 +88,8 @@ object AladinContainer {
       // Memoized svg
       .useMemoBy((p, _, _, _) =>
         (p.obsConf.scienceMode, p.obsConf.posAngle, p.options, p.selectedGuideStar)
-      ) {
-        case (_, baseCoordinates, _, _) => { case (mode, posAngle, options, gs) =>
+      ) { (_, baseCoordinates, _, _) =>
+        { case (mode, posAngle, options, gs) =>
           val candidatesVisibility =
             ExploreStyles.GuideStarCandidateVisible.when_(options.agsCandidates.visible)
 
@@ -129,7 +125,7 @@ object AladinContainer {
       // If needed center on target
       .useEffectWithDepsBy((p, baseCoordinates, _, _, _) =>
         (baseCoordinates.value, p.centerOnTarget.get)
-      )((_, _, _, aladinRef, _) => { case (coords, center) =>
+      ) { (_, _, _, aladinRef, _) => (coords, center) =>
         aladinRef.get.asCBO
           .flatMapCB(
             _.backend.gotoRaDec(coords.ra.toAngle.toDoubleDegrees,
@@ -137,7 +133,7 @@ object AladinContainer {
             )
           )
           .when(center)
-      })
+      }
       // resize detector
       .useResizeDetector()
       // memoized catalog targets with their proper motions corrected
@@ -150,69 +146,72 @@ object AladinContainer {
          props.obsConf.scienceMode,
          props.selectedGuideStar
         )
-      ) { (_, baseCoordinates, _, _, _, _) =>
-        { case (candidates, visible, _, posAngle, obsInstant, scienceMode, selectedGS) =>
-          posAngle
-            .map { posAngle =>
-              val candidatesVisibility =
-                ExploreStyles.GuideStarCandidateVisible.when_(visible)
+      ) {
+        (_, baseCoordinates, _, _, _, _) =>
+          (candidates, visible, _, posAngle, obsInstant, scienceMode, selectedGS) =>
+            posAngle
+              .map { posAngle =>
+                val candidatesVisibility =
+                  ExploreStyles.GuideStarCandidateVisible.when_(visible)
 
-              val selectedGSTarget = selectedGS
-                .flatMap(_.target.tracking.at(obsInstant))
-                .map(c => SVGTarget.GuideStarTarget(c, Css.Empty, 4))
+                val selectedGSTarget = selectedGS
+                  .flatMap(_.target.tracking.at(obsInstant))
+                  .map(c => SVGTarget.GuideStarTarget(c, Css.Empty, 4))
 
-              val patrolField =
-                GmosGeometry.patrolField(posAngle, scienceMode, PortDisposition.Side).map(_.eval)
+                val patrolField =
+                  GmosGeometry.patrolField(posAngle, scienceMode, PortDisposition.Side).map(_.eval)
 
-              candidates
-                .filterNot(x => selectedGS.exists(_.target.id === x.target.id))
-                .flatMap { g =>
-                  val tracking           = g.target.tracking
-                  val targetEpoch        = tracking.epoch.epochYear.round
-                  // Approximate to the midddle of the year
-                  val targetEpochInstant =
-                    LocalDate.of(targetEpoch.toInt, 6, 1).atStartOfDay(ZoneId.of("UTC")).toInstant()
+                candidates
+                  .filterNot(x => selectedGS.exists(_.target.id === x.target.id))
+                  .flatMap { g =>
+                    val tracking           = g.target.tracking
+                    val targetEpoch        = tracking.epoch.epochYear.round
+                    // Approximate to the midddle of the year
+                    val targetEpochInstant =
+                      LocalDate
+                        .of(targetEpoch.toInt, 6, 1)
+                        .atStartOfDay(ZoneId.of("UTC"))
+                        .toInstant()
 
-                  val vignettesScience = g match {
-                    case AgsAnalysis.VignettesScience(_) => true
-                    case _                               => false
-                  }
+                    val vignettesScience = g match {
+                      case AgsAnalysis.VignettesScience(_) => true
+                      case _                               => false
+                    }
 
-                  (tracking.at(targetEpochInstant), tracking.at(obsInstant)).mapN {
-                    (source, dest) =>
-                      val offset   = baseCoordinates.diff(dest).offset
-                      val extraCss =
-                        if (!vignettesScience && patrolField.exists(_.contains(offset)))
-                          ExploreStyles.GuideStarTargetReachable
-                        else Css.Empty
-                      if (candidates.length < 500) {
-                        List[SVGTarget](
-                          SVGTarget.GuideStarCandidateTarget(dest,
-                                                             extraCss |+| candidatesVisibility,
-                                                             3
-                          ),
-                          SVGTarget.LineTo(
-                            source,
-                            dest,
-                            ExploreStyles.PMGSCorrectionLine |+| candidatesVisibility
+                    (tracking.at(targetEpochInstant), tracking.at(obsInstant)).mapN {
+                      (source, dest) =>
+                        val offset   = baseCoordinates.diff(dest).offset
+                        val extraCss =
+                          if (!vignettesScience && patrolField.exists(_.contains(offset)))
+                            ExploreStyles.GuideStarTargetReachable
+                          else Css.Empty
+                        if (candidates.length < 500) {
+                          List[SVGTarget](
+                            SVGTarget.GuideStarCandidateTarget(dest,
+                                                               extraCss |+| candidatesVisibility,
+                                                               3
+                            ),
+                            SVGTarget.LineTo(
+                              source,
+                              dest,
+                              ExploreStyles.PMGSCorrectionLine |+| candidatesVisibility
+                            )
                           )
-                        )
-                      } else {
-                        List[SVGTarget](
-                          SVGTarget.GuideStarCandidateTarget(
-                            dest,
-                            ExploreStyles.GuideStarCandidateCrowded |+| extraCss |+| candidatesVisibility,
-                            2
+                        } else {
+                          List[SVGTarget](
+                            SVGTarget.GuideStarCandidateTarget(
+                              dest,
+                              ExploreStyles.GuideStarCandidateCrowded |+| extraCss |+| candidatesVisibility,
+                              2
+                            )
                           )
-                        )
-                      }
+                        }
+                    }
                   }
-                }
-                .flatten ++ selectedGSTarget.toList
-            }
-            .getOrElse(Nil)
+                  .flatten ++ selectedGSTarget.toList
+              }
+              .getOrElse(Nil)
 
-        }
       }
       // Use fov from aladin
       .useState(none[Fov])
@@ -282,6 +281,7 @@ object AladinContainer {
                   ExploreStyles.AladinZoomControl,
                   Button(
                     size = Small,
+                    icon = true,
                     onClick = aladinRef.get.asCBO.flatMapCB(_.backend.increaseZoom).toCallback
                   )(
                     ExploreStyles.ButtonOnAladin,
@@ -289,6 +289,7 @@ object AladinContainer {
                   ),
                   Button(
                     size = Small,
+                    icon = true,
                     onClick = aladinRef.get.asCBO.flatMapCB(_.backend.decreaseZoom).toCallback
                   )(
                     ExploreStyles.ButtonOnAladin,
