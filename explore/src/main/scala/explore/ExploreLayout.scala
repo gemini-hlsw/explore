@@ -13,7 +13,7 @@ import explore.model._
 import explore.syntax.ui.*
 import explore.syntax.ui.given
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.extra.router._
+import japgolly.scalajs.react.extra.router.ResolutionWithProps
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -27,12 +27,12 @@ import react.semanticui.modules.sidebar.SidebarPusher
 import react.semanticui.modules.sidebar.SidebarWidth
 
 import scala.scalajs.js
+import scala.scalajs.js.annotation.JSExportTopLevel
 
 final case class ExploreLayout(
-  c:        RouterCtl[Page],
-  r:        ResolutionWithProps[Page, View[RootModel]]
+  resolution: ResolutionWithProps[Page, View[RootModel]]
 )(
-  val view: View[RootModel]
+  val view:   View[RootModel]
 ) extends ReactFnProps[ExploreLayout](ExploreLayout.component)
 
 object ExploreLayout {
@@ -46,7 +46,7 @@ object ExploreLayout {
           onLogout: IO[Unit]
         ) =>
           AppCtx.using { implicit ctx =>
-            val routingInfo = RoutingInfo.from(props.r.page)
+            val routingInfo = RoutingInfo.from(props.resolution.page)
 
             HelpCtx.usingView { helpCtx =>
               val helpView = helpCtx.zoom(HelpContext.displayedHelp)
@@ -63,11 +63,7 @@ object ExploreLayout {
                   )(
                     helpView.get
                       .map { h =>
-                        // Lazy load the React component for help
-                        val prom = js.dynamicImport {
-                          new HelpLoader().loadHelp(helpCtx.get, h)
-                        }
-                        React.Suspense(<.div("Loading"), AsyncCallback.fromJsPromise(prom))
+                        HelpBody(helpCtx.get, h)
                       }
                       .when(helpView.get.isDefined)
                   ),
@@ -87,7 +83,7 @@ object ExploreLayout {
                       ),
                       <.div(
                         ExploreStyles.MainBody,
-                        props.r.renderP(props.view)
+                        props.resolution.renderP(props.view)
                       )
                     )
                   )(
@@ -96,7 +92,7 @@ object ExploreLayout {
                 )
               )
             }
-          }: VdomNode
+          }
       )
     }
 

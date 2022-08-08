@@ -22,7 +22,7 @@ import scala.scalajs.js
 final case class HelpIcon(id: Help.Id, clazz: js.UndefOr[Css] = js.undefined)
     extends ReactFnProps[HelpIcon](HelpIcon.component)
 
-object HelpIcon {
+object HelpIcon:
   type Props = HelpIcon
 
   type HelpId = NonEmptyString
@@ -41,4 +41,3 @@ object HelpIcon {
       )
     }
   }
-}
