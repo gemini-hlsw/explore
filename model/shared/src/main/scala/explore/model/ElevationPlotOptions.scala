@@ -4,6 +4,7 @@
 package explore.model
 
 import cats._
+import cats.derived.*
 import explore.model.enums.PlotRange
 import explore.model.enums.TimeDisplay
 import lucuma.core.enums.Site
@@ -13,7 +14,7 @@ final case class ElevationPlotOptions(
   site:  Site,
   range: PlotRange,
   time:  TimeDisplay
-)
+) derives Eq
 
 object ElevationPlotOptions {
   val site  = Focus[ElevationPlotOptions](_.site)
@@ -23,6 +24,4 @@ object ElevationPlotOptions {
   val Default =
     ElevationPlotOptions(Site.GS, PlotRange.Night, TimeDisplay.Site)
 
-  implicit val elevationPlotOptionsEq: Eq[ElevationPlotOptions] =
-    Eq.by(x => (x.site, x.range, x.time))
 }

@@ -8,6 +8,4 @@ import eu.timepit.refined.types.string
 
 object Help {
   type Id = string.NonEmptyString
-
-  implicit val eqId: Eq[Id] = Eq.by(_.value)
 }

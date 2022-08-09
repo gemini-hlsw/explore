@@ -4,6 +4,7 @@
 package explore.model
 
 import cats.Eq
+import cats.derived.*
 import io.circe.Decoder
 import io.circe.generic.semiauto._
 import lucuma.core.model.ConstraintSet
@@ -13,7 +14,7 @@ import monocle.Focus
 
 import scala.annotation.unused
 
-final case class ConstraintGroup(constraintSet: ConstraintSet, obsIds: ObsIdSet) {
+final case class ConstraintGroup(constraintSet: ConstraintSet, obsIds: ObsIdSet) derives Eq {
   def addObsId(obsId: Observation.Id): ConstraintGroup =
     ConstraintGroup.obsIds.modify(_.add(obsId))(this)
 
@@ -48,5 +49,4 @@ object ConstraintGroup {
       } yield ConstraintGroup(cs, obsIds)
     )
 
-  implicit val constraintGroupEq: Eq[ConstraintGroup] = Eq.by(cg => (cg.constraintSet, cg.obsIds))
 }
