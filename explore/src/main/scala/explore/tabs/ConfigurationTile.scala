@@ -21,17 +21,17 @@ import queries.schemas.itc.implicits._
 
 object ConfigurationTile {
   def configurationTile(
-    obsId:        Observation.Id,
-    obsData:      Pot[(String, Option[NonEmptyString], View[ScienceData])],
-    undoStacks:   View[UndoStacks[IO, ScienceData]]
-  )(implicit ctx: AppContextIO) =
+    obsId:      Observation.Id,
+    obsData:    Pot[(String, Option[NonEmptyString], View[ScienceData])],
+    undoStacks: View[UndoStacks[IO, ScienceData]]
+  )(using AppContextIO) =
     Tile(
       ObsTabTilesIds.ConfigurationId.id,
       "Configuration",
       canMinimize = true
     )(renderInTitle =>
       potRender[(String, Option[NonEmptyString], View[ScienceData])] {
-        case (title, subtitle, scienceData) =>
+        (title, subtitle, scienceData) =>
           ConfigurationPanel(
             obsId,
             title,

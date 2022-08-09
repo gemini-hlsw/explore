@@ -24,6 +24,7 @@ import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.reusability._
 import lucuma.ui.syntax.all.given
 import queries.schemas.implicits._
+import queries.schemas.*
 import react.common.ReactFnProps
 
 case class SourceProfileEditor(

@@ -167,6 +167,9 @@ object ObsTabTiles {
               )
             )
 
+        val spectroscopyReqs: Option[ScienceRequirementsData] =
+          obsView.toOption.map(_.get.scienceData.requirements)
+
         val notesTile =
           Tile(
             ObsTabTilesIds.NotesId.id,
@@ -183,21 +186,30 @@ object ObsTabTiles {
             )
           )
 
+        val constraints =
+          obsViewPot.map(_.zoom(ObsEditData.scienceData.andThen(ScienceData.constraints)))
+
+        val scienceData = obsViewPot.toOption.map(a => ObsEditData.scienceData.get(a.get))
+
         val itcTile =
-          Tile(
-            ObsTabTilesIds.ItcId.id,
-            s"ITC",
-            // props.backButton.some,
-            canMinimize = true
-          )(_ =>
-            <.div(
-              ExploreStyles.NotesWrapper,
-              <.div(
-                ExploreStyles.ObserverNotes,
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus maximus hendrerit lacinia. Etiam dapibus blandit ipsum sed rhoncus."
-              )
-            )
+          ItcTile.itcTile(scienceMode,
+                          obsView.toOption.map(_.get.scienceData.requirements.spectroscopy),
+                          scienceData
           )
+          // Tile(
+          //   ObsTabTilesIds.ItcId.id,
+          //   s"ITC",
+          //   // props.backButton.some,
+          //   canMinimize = true
+          // )(_ =>
+          //   <.div(
+          //     ExploreStyles.NotesWrapper,
+          //     <.div(
+          //       ExploreStyles.ObserverNotes,
+          //       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus maximus hendrerit lacinia. Etiam dapibus blandit ipsum sed rhoncus."
+          //     )
+          //   )
+          // )
 
         val constraintsSelector = makeConstraintsSelector(props.constraintGroups, obsViewPot)
 
@@ -236,7 +248,7 @@ object ObsTabTiles {
         val constraintsTile =
           ConstraintsTile.constraintsTile(
             props.obsId,
-            obsViewPot.map(_.zoom(ObsEditData.scienceData.andThen(ScienceData.constraints))),
+            constraints,
             props.undoStacks
               .zoom(ModelUndoStacks.forConstraintGroup[IO])
               .zoom(atMapWithDefault(ObsIdSet.one(props.obsId), UndoStacks.empty)),

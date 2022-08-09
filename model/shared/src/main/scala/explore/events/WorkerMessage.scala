@@ -78,6 +78,15 @@ final case class ItcQuery(
   modes:         List[SpectroscopyModeRow]
 ) extends WorkerMessage
 
+final case class ItcGraphQuery(
+  id:            UUID,
+  wavelength:    Wavelength,
+  signalToNoise: PosBigDecimal,
+  constraints:   ConstraintSet,
+  targets:       NonEmptyList[ItcTarget],
+  modes:         SpectroscopyModeRow
+) extends WorkerMessage
+
 final case class ItcQueryResult(
   id:      UUID,
   results: Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]

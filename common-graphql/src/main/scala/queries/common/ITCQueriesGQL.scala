@@ -45,4 +45,28 @@ object ITCQueriesGQL {
     }
   }
 
+  @GraphQL
+  trait SpectroscopyGraphITCQuery extends GraphQLOperation[ITC] {
+    val document =
+      """
+      query($input: SpectroscopyGraphModeInput) {
+        spectroscopyGraph(input: $input) {
+          serverVersion
+          charts {
+            series {
+              title
+              dataType
+              data
+            }
+          }
+        }
+      }
+    """
+
+    object Data {
+      object SpectroscopyGraph {
+        type ServerVersion = string.NonEmptyString
+      }
+    }
+  }
 }
