@@ -65,6 +65,7 @@ import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.reusability._
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import lucuma.utils._
 import monocle.Lens
 import mouse.boolean._
 import queries.schemas.implicits._

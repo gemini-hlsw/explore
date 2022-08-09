@@ -178,10 +178,11 @@ module.exports = ({ command, mode }) => {
       },
       outDir: path.resolve(__dirname, 'heroku/static'),
     },
+    worker: {
+      format: 'es'
+    },
     plugins: [
-      isProduction
-        ? null
-        : mkcert.default({ hosts: ['localhost', 'local.lucuma.xyz'] }),
+      mkcert.default({ hosts: ['localhost', 'local.lucuma.xyz'] }),
       react(),
       fontImport,
       VitePWA({

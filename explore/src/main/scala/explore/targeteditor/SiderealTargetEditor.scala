@@ -49,6 +49,7 @@ import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.reusability._
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import lucuma.utils._
 import queries.common.TargetQueriesGQL
 import queries.schemas.implicits._
 import react.common.ReactFnProps
@@ -87,25 +88,24 @@ final case class SiderealTargetEditor(
 }
 
 object SiderealTargetEditor {
+  protected type Props = SiderealTargetEditor
 
-  type Props = SiderealTargetEditor
-
-  def readonlyView[A](view: View[A]): View[A] = {
+  private def readonlyView[A](view: View[A]): View[A] = {
     val getA: A => A               = identity
     val noModA: (A => A) => A => A = _ => identity
 
     view.zoom(getA)(noModA)
   }
 
-  def cloneTarget(targetId: Target.Id, obsIds: ObsIdSet)(implicit
-    c:                      TransactionalClient[IO, ObservationDB]
+  private def cloneTarget(targetId: Target.Id, obsIds: ObsIdSet)(implicit
+    c:                              TransactionalClient[IO, ObservationDB]
   ): IO[Target.Id] = TargetQueriesGQL.CloneTargetMutation
     .execute[IO](
       CloneTargetInput(targetId = targetId, REPLACE_IN = obsIds.toList.assign)
     )
     .map(_.cloneTarget.newTarget.id)
 
-  def getRemoteOnMod(
+  private def getRemoteOnMod(
     id:              Target.Id,
     optObs:          Option[ObsIdSet],
     cloning:         Hooks.UseStateF[DefaultS, Boolean],
@@ -127,7 +127,14 @@ object SiderealTargetEditor {
           }
     }
 
-  val component =
+  private def buildProperMotion(
+    ra:  Option[ProperMotion.RA],
+    dec: Option[ProperMotion.Dec]
+  ): Option[ProperMotion] =
+    attemptCombine(ra, dec)
+      .map((ProperMotion.apply _).tupled)
+
+  protected val component =
     ScalaFnComponent
       .withHooks[Props]
       .useState(false) // cloning

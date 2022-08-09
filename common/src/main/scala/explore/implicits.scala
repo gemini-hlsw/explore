@@ -18,6 +18,7 @@ import crystal.react.ReuseViewF
 import crystal.react.ReuseViewOptF
 import crystal.react.reuse._
 import eu.timepit.refined.api.Refined
+import explore.events.*
 import explore.model.AppContext
 import explore.optics._
 import japgolly.scalajs.react._
@@ -31,6 +32,7 @@ import monocle.function.Index.index
 import org.scalajs.dom
 import org.typelevel.log4cats.Logger
 import queries.schemas._
+import workers.WorkerClient
 
 import scala.annotation.unused
 import scala.collection.immutable.SortedMap
@@ -79,6 +81,18 @@ trait ContextImplicits {
     ctx: AppContext[F]
   ): TransactionalClient[F, ITC] =
     ctx.clients.itc
+  implicit def appContext2ItcWorker[F[_]](implicit
+    ctx: AppContext[F]
+  ): WorkerClient[F, ItcMessage.Request] =
+    ctx.workerClients.itc
+  implicit def appContext2CatalogWorker[F[_]](implicit
+    ctx: AppContext[F]
+  ): WorkerClient[F, CatalogMessage.Request] =
+    ctx.workerClients.catalog
+  implicit def appContext2AgsWorker[F[_]](implicit
+    ctx: AppContext[F]
+  ): WorkerClient[F, AgsMessage.Request] =
+    ctx.workerClients.ags
 }
 
 trait RefinedImplicits {

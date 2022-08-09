@@ -11,6 +11,7 @@ import eu.timepit.refined.types.numeric.NonNegBigDecimal
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.model.itc.ItcChart
 import explore.model.itc.ItcQueryProblems
 import explore.model.itc.ItcRequestParams
 import explore.model.itc.ItcResult
@@ -209,6 +210,7 @@ trait ItcPicklers extends CommonPicklers {
 
   given Pickler[ItcRequestParams] = generatePickler
 
+  given Pickler[ItcChart] = generatePickler
 }
 
 object ItcPicklers extends ItcPicklers

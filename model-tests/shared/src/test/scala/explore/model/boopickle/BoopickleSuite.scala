@@ -10,7 +10,6 @@ import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.boopickle.PicklerTests
 import explore.events._
-import explore.model.arb.ArbCatalogResults._
 import explore.model.boopickle.CatalogPicklers
 import explore.model.boopickle.CommonPicklers
 import explore.model.boopickle.ItcPicklers
@@ -39,8 +38,7 @@ class BoopickleSuite
     extends munit.DisciplineSuite
     with CatalogPicklers
     with CommonPicklers
-    with ItcPicklers
-    with EventPicklers {
+    with ItcPicklers {
   checkAll("Pickler[Angle]", PicklerTests[Angle].pickler)
   checkAll("Pickler[HourAngle]", PicklerTests[HourAngle].pickler)
   checkAll("Pickler[RightAscension]", PicklerTests[RightAscension].pickler)
@@ -59,7 +57,4 @@ class BoopickleSuite
   checkAll("Pickler[Wavelengtth]", PicklerTests[Wavelength].pickler)
 
   checkAll("Pickler[UnnormalizedSED]", PicklerTests[UnnormalizedSED].pickler)
-
-  // Events
-  checkAll("Pickler[CatalogResults]", PicklerTests[CatalogResults].pickler)
 }

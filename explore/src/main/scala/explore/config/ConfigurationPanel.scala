@@ -22,11 +22,12 @@ import explore.common.ScienceQueries._
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
-import explore.events.EventPicklers._
 import explore.events._
 import explore.implicits._
 import explore.model
+import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle._
+import explore.model.boopickle.ItcPicklers.given
 import explore.model.boopickle._
 import explore.model.itc.ItcTarget
 import explore.model.reusability._
@@ -131,32 +132,18 @@ object ConfigurationPanel {
             else Callback.empty
           )
       }
-      // Listen on web worker for messages with catalog candidates
-      .useStreamResourceBy((props, _) => props.obsId)((props, _) =>
-        _ =>
-          props.ctx.worker.streamResource.map {
-            _.map(decodeFromTransferable[WorkerMessage])
-              .filter {
-                case Some(SpectroscopyMatrixResults(_)) => true
-                case _                                  => false
-              }
-              .collect { case Some(SpectroscopyMatrixResults(r)) =>
-                fs2.Stream.emit[IO, SpectroscopyModesMatrix](r)
-              }
-              .flatten
-          }
-      )
-      .useEffectWithDepsBy((_, _, i) => i) { (props, _, _) => mx =>
-        props.ctx.worker
-          .postWorkerMessage(
-            SpectroscopyMatrixRequest(uri"/instrument_spectroscopy_matrix.csv")
+      .useEffectResultOnMountBy { (props, _) =>
+        given AppContextIO = props.ctx
+
+        ItcClient[IO]
+          .requestSingle(
+            ItcMessage.SpectroscopyMatrixRequest(uri"/instrument_spectroscopy_matrix.csv")
           )
-          .whenA(mx === PotOption.ReadyNone)
       }
       .render { (props, editState, matrix) =>
         implicit val ctx: AppContextIO = props.ctx
 
-        implicit val client = ctx.clients.odb // This shouldn't be necessary, but it seems to be
+        // implicit val client = ctx.clients.odb // This shouldn't be necessary, but it seems to be
 
         val requirementsCtx: UndoSetter[ScienceRequirementsData] =
           props.scienceData.zoom(ScienceData.requirements)
@@ -197,7 +184,7 @@ object ConfigurationPanel {
             mapModOrAssign(GmosSouthLongSlitInput())(ScienceModeInput.gmosSouthLongSlit.modify)
           )
         }
-        val confMatrix      = matrix.toOption.getOrElse(SpectroscopyModesMatrix.empty)
+        val confMatrix      = matrix.toOption.flatten.getOrElse(SpectroscopyModesMatrix.empty)
 
         React.Fragment(
           props.renderInTitle(
