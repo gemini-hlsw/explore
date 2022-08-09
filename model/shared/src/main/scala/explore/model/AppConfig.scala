@@ -33,8 +33,6 @@ object SSOConfig {
   implicit val eqSSOConfig: Eq[SSOConfig]     = Eq.fromUniversalEquals
   implicit val showSSOConfig: Show[SSOConfig] = Show.fromToString
 
-  implicitly[Decoder[Uri]]
-
   implicit val encoderSSOConfig: Encoder[SSOConfig] = deriveEncoder[SSOConfig]
   implicit val decoderSSOConfig: Decoder[SSOConfig] = deriveDecoder[SSOConfig]
 }

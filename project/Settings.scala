@@ -21,6 +21,7 @@ object Settings {
     val geminiLocales         = "0.7.0"
     val http4s                = "0.23.14"
     val http4sDom             = "0.2.3"
+    val kittens               = "3.0.0-M4"
     val log4Cats              = "2.4.0"
     val log4CatsLogLevel      = "0.3.1"
     val lucumaBC              = "0.4.0"
@@ -162,6 +163,12 @@ object Settings {
         "org.http4s" %%% "http4s-circe",
         "org.http4s" %%% "http4s-client"
       )(http4s)
+    )
+
+    val Kittens = Def.setting(
+      deps(
+        "org.typelevel" %%% "kittens"
+      )(kittens)
     )
 
     val Log4Cats = Def.setting(

@@ -5,13 +5,14 @@ package explore.model
 
 import cats.Eq
 import cats.data.NonEmptySet
+import cats.derived.*
 import cats.syntax.all._
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import monocle.Iso
 
-sealed trait Page extends Product with Serializable
+sealed trait Page extends Product with Serializable derives Eq
 
 object Page {
   case object NoProgramPage                                                   extends Page
@@ -29,25 +30,6 @@ object Page {
   final case class ConfigurationsPage(programId: Program.Id)                  extends Page
   final case class ConstraintsBasePage(programId: Program.Id)                 extends Page
   final case class ConstraintsObsPage(programId: Program.Id, obsId: ObsIdSet) extends Page
-
-  implicit val eqPage: Eq[Page] = Eq.instance {
-    case (NoProgramPage, NoProgramPage)                                 => true
-    case (HomePage(p1), HomePage(p2))                                   => p1 === p2
-    case (ProposalPage(p1), ProposalPage(p2))                           => p1 === p2
-    case (ObservationsBasePage(p1), ObservationsBasePage(p2))           => p1 === p2
-    case (ObsPage(p1, o1), ObsPage(p2, o2))                             => p1 === p2 && o1 === o2
-    case (ObsTargetPage(p1, o1, t1), ObsTargetPage(p2, o2, t2))         =>
-      p1 === p2 && o1 === o2 && t1 === t2
-    case (TargetsBasePage(p1), TargetsBasePage(p2))                     => p1 === p2
-    case (TargetsObsPage(p1, o1), TargetsObsPage(p2, o2))               => p1 === p2 && o1 === o2
-    case (TargetPage(p1, t1), TargetPage(p2, t2))                       => p1 === p2 && t1 === t2
-    case (TargetWithObsPage(p1, o1, t1), TargetWithObsPage(p2, o2, t2)) =>
-      p1 === p2 && o1 === o2 && t1 === t2
-    case (ConfigurationsPage(p1), ConfigurationsPage(p2))               => p1 === p2
-    case (ConstraintsBasePage(p1), ConstraintsBasePage(p2))             => p1 === p2
-    case (ConstraintsObsPage(p1, o1), ConstraintsObsPage(p2, o2))       => p1 === p2 && o1 === o2
-    case _                                                              => false
-  }
 
   object HomePage {
     final val iso: Iso[Program.Id, HomePage] =

@@ -198,6 +198,7 @@ lazy val commonLibSettings = Seq(
       FS2.value ++
       FS2Data.value ++
       Http4sCore.value ++
+      Kittens.value ++
       LucumaCore.value ++
       LucumaSchemas.value ++
       LucumaRefined.value ++

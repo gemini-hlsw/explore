@@ -4,6 +4,7 @@
 package explore.model
 
 import cats.Eq
+import cats.derived.*
 import eu.timepit.refined.cats._
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
@@ -11,8 +12,4 @@ import lucuma.core.model.Target
 case class TargetSummary(
   obsIds:   Set[Observation.Id],
   targetId: Target.Id
-)
-
-object TargetSummary {
-  implicit val targetSummaryEq: Eq[TargetSummary] = Eq.by(t => (t.obsIds, t.targetId))
-}
+) derives Eq

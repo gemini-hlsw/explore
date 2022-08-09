@@ -4,6 +4,7 @@
 package explore.model
 
 import cats.Eq
+import cats.derived.*
 import cats.syntax.all._
 import io.circe.Decoder
 import lucuma.core.enums._
@@ -12,7 +13,8 @@ import monocle.Lens
 import monocle.Prism
 import monocle.macros.GenPrism
 
-sealed abstract class ScienceMode(val instrument: Instrument) extends Product with Serializable {
+sealed abstract class ScienceMode(val instrument: Instrument) extends Product with Serializable
+    derives Eq {
   def isCustomized: Boolean = this match {
     case ScienceMode.GmosNorthLongSlit(_, advanced) =>
       advanced =!= ScienceModeAdvanced.GmosNorthLongSlit.Empty
@@ -22,12 +24,6 @@ sealed abstract class ScienceMode(val instrument: Instrument) extends Product wi
 }
 
 object ScienceMode {
-  implicit val scienceModeEq: Eq[ScienceMode] = Eq.instance {
-    case (a: GmosNorthLongSlit, b: GmosNorthLongSlit) => a === b
-    case (a: GmosSouthLongSlit, b: GmosSouthLongSlit) => a === b
-    case _                                            => false
-  }
-
   implicit val scienceModeDecoder: Decoder[ScienceMode] =
     Decoder
       .instance(c =>
@@ -41,7 +37,8 @@ object ScienceMode {
   final case class GmosNorthLongSlit(
     basic:    ScienceModeBasic.GmosNorthLongSlit,
     advanced: ScienceModeAdvanced.GmosNorthLongSlit
-  ) extends ScienceMode(Instrument.GmosNorth) {
+  ) extends ScienceMode(Instrument.GmosNorth)
+      derives Eq {
     lazy val grating: GmosNorthGrating = advanced.overrideGrating.getOrElse(basic.grating)
 
     lazy val filter: Option[GmosNorthFilter] = advanced.overrideFilter.orElse(basic.filter)
@@ -50,8 +47,6 @@ object ScienceMode {
   }
 
   object GmosNorthLongSlit {
-    implicit val gmosNLongSlitEq: Eq[GmosNorthLongSlit] = Eq.by(x => (x.basic, x.advanced))
-
     implicit val gmosNLongSlitDecoder: Decoder[GmosNorthLongSlit] = Decoder.instance { c =>
       for {
         basic    <- c.downField("basic").as[ScienceModeBasic.GmosNorthLongSlit]
@@ -73,7 +68,8 @@ object ScienceMode {
   final case class GmosSouthLongSlit(
     basic:    ScienceModeBasic.GmosSouthLongSlit,
     advanced: ScienceModeAdvanced.GmosSouthLongSlit
-  ) extends ScienceMode(Instrument.GmosSouth) {
+  ) extends ScienceMode(Instrument.GmosSouth)
+      derives Eq {
     lazy val grating: GmosSouthGrating = advanced.overrideGrating.getOrElse(basic.grating)
 
     lazy val filter: Option[GmosSouthFilter] = advanced.overrideFilter.orElse(basic.filter)
@@ -82,8 +78,6 @@ object ScienceMode {
   }
 
   object GmosSouthLongSlit {
-    implicit val gmosSLongSlitEq: Eq[GmosSouthLongSlit] = Eq.by(x => (x.basic, x.advanced))
-
     implicit val gmosSLongSlitDecoder: Decoder[GmosSouthLongSlit] = Decoder.instance { c =>
       for {
         basic    <- c.downField("basic").as[ScienceModeBasic.GmosSouthLongSlit]

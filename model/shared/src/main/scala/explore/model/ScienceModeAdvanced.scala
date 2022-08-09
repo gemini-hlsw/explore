@@ -5,6 +5,7 @@ package explore.model
 
 import cats.Eq
 import cats.data.NonEmptyList
+import cats.derived.*
 import cats.syntax.all._
 import eu.timepit.refined.cats._
 import io.circe.Decoder
@@ -19,16 +20,9 @@ import monocle.Lens
 import monocle.Prism
 import monocle.macros.GenPrism
 
-sealed trait ScienceModeAdvanced extends Product with Serializable
+sealed trait ScienceModeAdvanced extends Product with Serializable derives Eq
 
 object ScienceModeAdvanced {
-  implicit val scienceModeAdvancedEq: Eq[ScienceModeAdvanced] =
-    Eq.instance {
-      case (a: GmosNorthLongSlit, b: GmosNorthLongSlit) => a === b
-      case (a: GmosSouthLongSlit, b: GmosSouthLongSlit) => a === b
-      case _                                            => false
-    }
-
   final case class GmosNorthLongSlit(
     overrideWavelength:        Option[Wavelength],
     overrideGrating:           Option[GmosNorthGrating],
@@ -43,27 +37,11 @@ object ScienceModeAdvanced {
     explicitWavelengthDithers: Option[NonEmptyList[DitherNanoMeters]],
     explicitSpatialOffsets:    Option[NonEmptyList[Offset.Q]]
   ) extends ScienceModeAdvanced
+      derives Eq
 
   object GmosNorthLongSlit {
     lazy val Empty: GmosNorthLongSlit =
       GmosNorthLongSlit(none, none, none, none, none, none, none, none, none, none, none, none)
-
-    implicit val gmosNLongSlitEq: Eq[GmosNorthLongSlit] =
-      Eq.by(x =>
-        (x.overrideWavelength,
-         x.overrideGrating,
-         x.overrideFilter,
-         x.overrideFpu,
-         x.overrideExposureTimeMode,
-         x.explicitXBin,
-         x.explicitYBin,
-         x.explicitAmpReadMode,
-         x.explicitAmpGain,
-         x.explicitRoi,
-         x.explicitWavelengthDithers,
-         x.explicitSpatialOffsets
-        )
-      )
 
     implicit val gmosNLongSlitDecoder: Decoder[GmosNorthLongSlit] =
       Decoder.instance(c =>
@@ -150,27 +128,11 @@ object ScienceModeAdvanced {
     explicitWavelengthDithers: Option[NonEmptyList[DitherNanoMeters]],
     explicitSpatialOffsets:    Option[NonEmptyList[Offset.Q]]
   ) extends ScienceModeAdvanced
+      derives Eq
 
   object GmosSouthLongSlit {
     lazy val Empty: GmosSouthLongSlit =
       GmosSouthLongSlit(none, none, none, none, none, none, none, none, none, none, none, none)
-
-    implicit val gmosSLongSlitEq: Eq[GmosSouthLongSlit] =
-      Eq.by(x =>
-        (x.overrideWavelength,
-         x.overrideGrating,
-         x.overrideFilter,
-         x.overrideFpu,
-         x.overrideExposureTimeMode,
-         x.explicitXBin,
-         x.explicitYBin,
-         x.explicitAmpReadMode,
-         x.explicitAmpGain,
-         x.explicitRoi,
-         x.explicitWavelengthDithers,
-         x.explicitSpatialOffsets
-        )
-      )
 
     implicit val gmosSLongSlitDecoder: Decoder[GmosSouthLongSlit] =
       Decoder.instance(c =>
