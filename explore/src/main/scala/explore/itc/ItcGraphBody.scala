@@ -66,6 +66,12 @@ import eu.timepit.refined.types.numeric.PosBigDecimal
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.ConstraintSet
 import queries.schemas.itc.implicits._
+import explore.modes.InstrumentRow
+import explore.modes.GmosSouthSpectroscopyRow
+import explore.modes.GmosNorthSpectroscopyRow
+import cats.data.OptionT
+import explore.events.ItcGraphQuery
+import cats.data.NonEmptyList
 // import react.semanticui._
 // import react.semanticui.collections.table._
 // import react.semanticui.elements.button.Button
@@ -117,6 +123,28 @@ final case class ItcGraphBody(
         .orElse(spectroscopyRequirements.flatMap(_.signalToNoise))
     case _                                                                                  =>
       spectroscopyRequirements.flatMap(_.signalToNoise)
+
+  def instrumentRow: Option[InstrumentRow] = scienceMode match
+    case Some(
+          ScienceMode.GmosNorthLongSlit(basic: ScienceModeBasic.GmosNorthLongSlit,
+                                        adv: ScienceModeAdvanced.GmosNorthLongSlit
+          )
+        ) =>
+      val grating = adv.overrideGrating.getOrElse(basic.grating)
+      val filter  = adv.overrideFilter.orElse(basic.filter)
+      val fpu     = adv.overrideFpu.getOrElse(basic.fpu)
+      GmosNorthSpectroscopyRow(grating, fpu, filter).some
+    case Some(
+          ScienceMode.GmosSouthLongSlit(basic: ScienceModeBasic.GmosSouthLongSlit,
+                                        adv: ScienceModeAdvanced.GmosSouthLongSlit
+          )
+        ) =>
+      val grating = adv.overrideGrating.getOrElse(basic.grating)
+      val filter  = adv.overrideFilter.orElse(basic.filter)
+      val fpu     = adv.overrideFpu.getOrElse(basic.fpu)
+      GmosSouthSpectroscopyRow(grating, fpu, filter).some
+    case _ =>
+      none
 }
 
 // sealed trait ItcPanel[T <: ScienceModeAdvanced, S <: ScienceModeBasic] {
@@ -188,17 +216,27 @@ object ItcGraphBody {
       //       )
       // )
       // Request ITC graph data
-      .useEffectWithDepsBy((props, _) => props.scienceMode) { (props, _) => sciencMode =>
+      .useEffectWithDepsBy((props, _) => props.scienceMode) { (props, _) => _ =>
         given AppContextIO = props.ctx
 
-        for
-          uuid <- UUIDGen.fromSync[IO].randomUUID
-          _    <- IO.println(props.wavelength)
-          _    <- IO.println(props.signalToNoise)
-          _    <- IO.println(props.scienceData.map(_.constraints))
-          _    <- IO.println(props.scienceData.map(_.itcTargets))
-        // props.ctx.worker.postWorkerMessage(ItcGraphQuery(uuid, w, sn, constraints, t, modes))
-        yield ()
+        (for
+          uuid        <- OptionT.liftF(UUIDGen.fromSync[IO].randomUUID.map(_.some))
+          w           <- OptionT.fromOption(props.wavelength)
+          sn          <- OptionT.fromOption(props.signalToNoise)
+          constraints <- OptionT.fromOption(props.scienceData.map(_.constraints))
+          t           <-
+            OptionT.fromOption(props.scienceData.flatMap(r => NonEmptyList.fromList(r.itcTargets)))
+          mode        <- OptionT.fromOption(props.instrumentRow)
+        yield {
+          println(mode)
+          println(uuid)
+          uuid
+            .map(u =>
+              IO.println("CALL") *> props.ctx.worker
+                .postWorkerMessage(ItcGraphQuery(u, w, sn, constraints, t, mode))
+            )
+            .orEmpty
+        }).getOrElse(IO.unit).flatten
       }
       //   println("scienceMode")
       //   Callback.log("Run")

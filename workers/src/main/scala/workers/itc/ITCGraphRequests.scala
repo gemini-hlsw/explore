@@ -33,6 +33,7 @@ import queries.schemas.itc.implicits.*
 
 import java.util.UUID
 import scala.concurrent.duration._
+import explore.modes.InstrumentRow
 
 object ITCGraphRequests {
   // Copied from https://gist.github.com/gvolpe/44e2263f9068efe298a1f30390de6d22
@@ -49,8 +50,8 @@ object ITCGraphRequests {
     signalToNoise: PosBigDecimal,
     constraints:   ConstraintSet,
     targets:       NonEmptyList[ItcTarget],
-    mode:          SpectroscopyModeRow,
-    callback:      Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcGraphResult]] => F[Unit]
+    mode:          InstrumentRow
+    // callback:      Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcGraphResult]] => F[Unit]
   )(using Monoid[F[Unit]], TransactionalClient[F, ITC]): F[Unit] = {
     // def itcResults(r: List[ItcGraphResults]): List[EitherNec[ItcQueryProblems, ItcGraphResult]] =
     //   // Convert to usable types
@@ -124,7 +125,7 @@ object ITCGraphRequests {
     // }
     // .flatMap(callback)
 
-    val itcRowsParams = mode.instrument match // Only handle known modes
+    val itcRowsParams = mode match // Only handle known modes
       case m: GmosNorthSpectroscopyRow =>
         ItcRequestParams(wavelength, signalToNoise, constraints, targets, m).some
       case m: GmosSouthSpectroscopyRow =>

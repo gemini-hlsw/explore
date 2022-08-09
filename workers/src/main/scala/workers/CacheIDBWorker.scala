@@ -33,6 +33,7 @@ import scala.concurrent.duration._
 import scala.scalajs.js
 
 import js.annotation._
+import explore.itc.ITCGraphRequests
 
 trait AsyncToIO {
   class AsyncCallbackOps[A](val a: AsyncCallback[A]) {
@@ -53,7 +54,7 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
   def runWorker(): Unit = run.handleError(t => t.printStackTrace()).unsafeRunAndForget()
 
   def setupLogger[F[_]: Sync]: F[Logger[F]] = Sync[F].delay {
-    LogLevelLogger.setLevel(LogLevelDesc.INFO)
+    LogLevelLogger.setLevel(LogLevelDesc.DEBUG)
     LogLevelLogger.createForRoot[F]
   }
 
@@ -88,6 +89,7 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
           val logger = summon[Logger[IO]]
 
           self.onmessage = (msg: dom.MessageEvent) =>
+            println(msg)
             // Decode transferrable events
             decodeFromTransferable[WorkerMessage](msg)
               .map(_ match {
@@ -131,6 +133,17 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
                                     targets,
                                     rows,
                                     r => postWorkerMessage[IO](self, ItcQueryResult(id, r))
+                      )
+
+                case ItcGraphQuery(id, wavelength, signalToNoise, constraint, targets, mode) =>
+                  logger.debug(s"ITC graph query ${mode}") *>
+                    ITCGraphRequests
+                      .queryItc[IO](wavelength,
+                                    signalToNoise,
+                                    constraint,
+                                    targets,
+                                    mode
+                                    // r => postWorkerMessage[IO](self, ItcQueryResult(id, r))
                       )
 
                 case _ => IO.unit

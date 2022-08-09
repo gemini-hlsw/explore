@@ -27,6 +27,7 @@ import org.http4s.Uri
 import java.time.Duration
 import java.time.Instant
 import java.util.UUID
+import explore.modes.InstrumentRow
 
 object picklers extends CatalogPicklers with EventPicklers
 
@@ -84,10 +85,15 @@ final case class ItcGraphQuery(
   signalToNoise: PosBigDecimal,
   constraints:   ConstraintSet,
   targets:       NonEmptyList[ItcTarget],
-  modes:         SpectroscopyModeRow
+  modes:         InstrumentRow
 ) extends WorkerMessage
 
 final case class ItcQueryResult(
+  id:      UUID,
+  results: Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]
+) extends WorkerMessage
+
+final case class ItcGraphResult(
   id:      UUID,
   results: Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]
 ) extends WorkerMessage
