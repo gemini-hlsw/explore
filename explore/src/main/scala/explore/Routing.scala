@@ -197,7 +197,7 @@ object Routing {
       val configuration =
         rules
           .notFound(redirectToPage(NoProgramPage)(SetRouteVia.HistoryPush))
-          .renderWithP(layout)
+          .renderWithP((_, resolution) => ExploreLayout(resolution))
       // .logToConsole
 
       // Only link and run this in dev mode. Works since calling `verify` trigger verification immediately.
@@ -239,9 +239,4 @@ object Routing {
       configuration
     }
 
-  private def layout(
-    c: RouterCtl[Page],
-    r: ResolutionWithProps[Page, View[RootModel]]
-  ): View[RootModel] => VdomElement =
-    ExploreLayout(c, r)
 }
