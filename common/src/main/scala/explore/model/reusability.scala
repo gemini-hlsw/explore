@@ -4,7 +4,6 @@
 package explore.model
 
 import clue.PersistentClientStatus
-import explore.common.ObsQueries.ScienceData
 import explore.common.ObsQueries.SpectroscopyRequirementsData
 import explore.data.KeyedIndexedList
 import explore.events.CatalogResults
@@ -104,6 +103,4 @@ object reusability {
 
   implicit val existenceReuse: Reusability[Existence]                       = Reusability.byEq
   implicit val requirementsReuse: Reusability[SpectroscopyRequirementsData] = Reusability.byEq
-
-  // given Reusability[ScienceData] = Reusability.byEq
 }

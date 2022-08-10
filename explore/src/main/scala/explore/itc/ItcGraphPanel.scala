@@ -37,12 +37,12 @@ import react.common.ReactFnProps
 
 import java.util.UUID
 
-final case class ItcGraphBody(
+final case class ItcGraphPanel(
   scienceMode:              Option[ScienceMode],
   spectroscopyRequirements: Option[SpectroscopyRequirementsData],
   scienceData:              Option[ScienceData]
 )(implicit val ctx:         AppContextIO)
-    extends ReactFnProps[ItcGraphBody](ItcGraphBody.component) {
+    extends ReactFnProps[ItcGraphPanel](ItcGraphPanel.component) {
   def wavelength: Option[Wavelength] = scienceMode match
     case Some(ScienceMode.GmosNorthLongSlit(_, adv: ScienceModeAdvanced.GmosNorthLongSlit)) =>
       adv.overrideWavelength.orElse(spectroscopyRequirements.flatMap(_.wavelength))
@@ -91,8 +91,8 @@ final case class ItcGraphBody(
       none
 }
 
-object ItcGraphBody {
-  type Props = ItcGraphBody
+object ItcGraphPanel {
+  type Props = ItcGraphPanel
 
   val component =
     ScalaFnComponent

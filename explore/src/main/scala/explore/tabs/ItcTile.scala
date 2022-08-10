@@ -6,7 +6,7 @@ package explore.tabs
 import explore.common.ObsQueries._
 import explore.components.Tile
 import explore.implicits._
-import explore.itc.ItcGraphBody
+import explore.itc.ItcGraphPanel
 import explore.model.ScienceMode
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.syntax.all.given
@@ -21,6 +21,5 @@ object ItcTile:
     Tile(
       ObsTabTilesIds.ItcId.id,
       s"ITC",
-      // props.backButton.some,
       canMinimize = true
-    )(_ => ItcGraphBody(scienceMode, spectroscopyRequirements, scienceData))
+    )(_ => ItcGraphPanel(scienceMode, spectroscopyRequirements, scienceData))

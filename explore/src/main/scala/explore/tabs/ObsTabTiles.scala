@@ -196,20 +196,6 @@ object ObsTabTiles {
                           obsView.toOption.map(_.get.scienceData.requirements.spectroscopy),
                           scienceData
           )
-          // Tile(
-          //   ObsTabTilesIds.ItcId.id,
-          //   s"ITC",
-          //   // props.backButton.some,
-          //   canMinimize = true
-          // )(_ =>
-          //   <.div(
-          //     ExploreStyles.NotesWrapper,
-          //     <.div(
-          //       ExploreStyles.ObserverNotes,
-          //       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus maximus hendrerit lacinia. Etiam dapibus blandit ipsum sed rhoncus."
-          //     )
-          //   )
-          // )
 
         val constraintsSelector = makeConstraintsSelector(props.constraintGroups, obsViewPot)
 
