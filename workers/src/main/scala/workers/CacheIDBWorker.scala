@@ -54,7 +54,7 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
   def runWorker(): Unit = run.handleError(t => t.printStackTrace()).unsafeRunAndForget()
 
   def setupLogger[F[_]: Sync]: F[Logger[F]] = Sync[F].delay {
-    LogLevelLogger.setLevel(LogLevelDesc.DEBUG)
+    LogLevelLogger.setLevel(LogLevelDesc.INFO)
     LogLevelLogger.createForRoot[F]
   }
 

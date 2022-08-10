@@ -44,44 +44,40 @@ final case class ItcGraphPanel(
 )(implicit val ctx:         AppContextIO)
     extends ReactFnProps[ItcGraphPanel](ItcGraphPanel.component) {
   def wavelength: Option[Wavelength] = scienceMode match
-    case Some(ScienceMode.GmosNorthLongSlit(_, adv: ScienceModeAdvanced.GmosNorthLongSlit)) =>
+    case Some(ScienceMode.GmosNorthLongSlit(_, adv)) =>
       adv.overrideWavelength.orElse(spectroscopyRequirements.flatMap(_.wavelength))
-    case Some(ScienceMode.GmosSouthLongSlit(_, adv: ScienceModeAdvanced.GmosSouthLongSlit)) =>
+    case Some(ScienceMode.GmosSouthLongSlit(_, adv)) =>
       adv.overrideWavelength.orElse(spectroscopyRequirements.flatMap(_.wavelength))
-    case _                                                                                  => none
+    case _                                           => none
 
   def signalToNoise: Option[PosBigDecimal] = scienceMode match
-    case Some(ScienceMode.GmosNorthLongSlit(_, adv: ScienceModeAdvanced.GmosNorthLongSlit)) =>
+    case Some(ScienceMode.GmosNorthLongSlit(_, adv)) =>
       ScienceModeAdvanced.GmosNorthLongSlit.overrideExposureTimeMode.some
         .andThen(
           ExposureTimeMode.signalToNoiseValue
         )
         .getOption(adv)
         .orElse(spectroscopyRequirements.flatMap(_.signalToNoise))
-    case Some(ScienceMode.GmosSouthLongSlit(_, adv: ScienceModeAdvanced.GmosSouthLongSlit)) =>
+    case Some(ScienceMode.GmosSouthLongSlit(_, adv)) =>
       ScienceModeAdvanced.GmosSouthLongSlit.overrideExposureTimeMode.some
         .andThen(
           ExposureTimeMode.signalToNoiseValue
         )
         .getOption(adv)
         .orElse(spectroscopyRequirements.flatMap(_.signalToNoise))
-    case _                                                                                  =>
+    case _                                           =>
       spectroscopyRequirements.flatMap(_.signalToNoise)
 
   def instrumentRow: Option[InstrumentRow] = scienceMode match
     case Some(
-          ScienceMode.GmosNorthLongSlit(basic: ScienceModeBasic.GmosNorthLongSlit,
-                                        adv: ScienceModeAdvanced.GmosNorthLongSlit
-          )
+          ScienceMode.GmosNorthLongSlit(basic, adv)
         ) =>
       val grating = adv.overrideGrating.getOrElse(basic.grating)
       val filter  = adv.overrideFilter.orElse(basic.filter)
       val fpu     = adv.overrideFpu.getOrElse(basic.fpu)
       GmosNorthSpectroscopyRow(grating, fpu, filter).some
     case Some(
-          ScienceMode.GmosSouthLongSlit(basic: ScienceModeBasic.GmosSouthLongSlit,
-                                        adv: ScienceModeAdvanced.GmosSouthLongSlit
-          )
+          ScienceMode.GmosSouthLongSlit(basic, adv)
         ) =>
       val grating = adv.overrideGrating.getOrElse(basic.grating)
       val filter  = adv.overrideFilter.orElse(basic.filter)
@@ -121,10 +117,7 @@ object ItcGraphPanel {
             w           <- OptionT.fromOption(props.wavelength)
             sn          <- OptionT.fromOption(props.signalToNoise)
             constraints <- OptionT.fromOption(props.scienceData.map(_.constraints))
-            t           <-
-              OptionT.fromOption(
-                props.scienceData.flatMap(r => NonEmptyList.fromList(r.itcTargets))
-              )
+            t           <- OptionT.fromOption(props.scienceData.flatMap(_.itcTargets.toNel))
             mode        <- OptionT.fromOption(props.instrumentRow)
           yield uuid
             .map(u =>
