@@ -6,6 +6,7 @@ package explore.model.itc
 import cats.Eq
 import cats.syntax.all._
 import eu.timepit.refined.auto._
+import io.circe.Decoder
 
 import scala.concurrent.duration._
 
@@ -44,3 +45,5 @@ object ItcResult {
     case _                                  => false
   }
 }
+
+final case class ItcChart(title: String, dataType: String) derives Decoder

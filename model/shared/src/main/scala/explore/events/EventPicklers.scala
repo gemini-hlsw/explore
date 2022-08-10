@@ -9,6 +9,7 @@ import explore.events._
 import explore.model.boopickle.CatalogPicklers
 import explore.model.boopickle.ItcPicklers
 import explore.model.boopickle.ItcPicklers._
+import explore.model.itc.ItcChart
 import explore.model.itc.ItcTarget
 import lucuma.ags.AgsParams
 import lucuma.ags.AgsPosition
@@ -56,6 +57,10 @@ trait EventPicklers extends CatalogPicklers with ItcPicklers:
 
   given Pickler[ItcGraphQuery] = generatePickler
 
+  given Pickler[ItcChart] = generatePickler
+
+  given Pickler[ItcGraphResult] = generatePickler
+
   given Pickler[ItcQueryResult] = generatePickler
 
   implicit val messagePickler: Pickler[WorkerMessage] =
@@ -70,6 +75,7 @@ trait EventPicklers extends CatalogPicklers with ItcPicklers:
       .addConcreteType[AgsResult]
       .addConcreteType[ItcQuery]
       .addConcreteType[ItcGraphQuery]
+      .addConcreteType[ItcGraphResult]
       .addConcreteType[ItcQueryResult]
 
 object EventPicklers extends EventPicklers

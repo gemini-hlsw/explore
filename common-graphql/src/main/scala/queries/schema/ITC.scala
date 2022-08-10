@@ -18,13 +18,13 @@ import lucuma.core.model.sequence._
 
 @GraphQLSchema
 trait ITC {
-  implicit val piEncoder: Encoder[numeric.PosInt] =
+  given Encoder[numeric.PosInt] =
     Encoder.encodeInt.contramap[numeric.PosInt](_.value)
 
-  implicit val pdEncoder: Encoder[numeric.PosBigDecimal] =
+  given Encoder[numeric.PosBigDecimal] =
     Encoder.encodeBigDecimal.contramap[numeric.PosBigDecimal](_.value)
 
-  implicit val spEncoder: Encoder[model.SourceProfile] = new Encoder[model.SourceProfile] {
+  given Encoder[model.SourceProfile] = new Encoder[model.SourceProfile] {
     final def apply(a: model.SourceProfile): Json = Json.obj(
       ("sourceType",
        Json.fromString(a match {
@@ -43,7 +43,7 @@ trait ITC {
     )
   }
 
-  implicit val erEncoder: Encoder[ElevationRange] = Encoder.instance {
+  given Encoder[ElevationRange] = Encoder.instance {
     case ElevationRange.AirMass(mi, ma)   =>
       Json.obj(
         ("airMass",
@@ -60,7 +60,7 @@ trait ITC {
       )
   }
 
-  implicit val csEncoder: Encoder[ConstraintSet] = deriveEncoder
+  given Encoder[ConstraintSet] = deriveEncoder
 
   object Scalars {
     // Ids

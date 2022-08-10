@@ -11,6 +11,7 @@ import clue._
 import clue.js.FetchJSBackend
 import clue.js.FetchMethod
 import explore.events._
+import explore.itc.ITCGraphRequests
 import explore.itc.ITCRequests
 import explore.model.AppConfig
 import explore.model.StaticData
@@ -33,7 +34,6 @@ import scala.concurrent.duration._
 import scala.scalajs.js
 
 import js.annotation._
-import explore.itc.ITCGraphRequests
 
 trait AsyncToIO {
   class AsyncCallbackOps[A](val a: AsyncCallback[A]) {
@@ -89,7 +89,6 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
           val logger = summon[Logger[IO]]
 
           self.onmessage = (msg: dom.MessageEvent) =>
-            println(msg)
             // Decode transferrable events
             decodeFromTransferable[WorkerMessage](msg)
               .map(_ match {
@@ -142,8 +141,8 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
                                     signalToNoise,
                                     constraint,
                                     targets,
-                                    mode
-                                    // r => postWorkerMessage[IO](self, ItcQueryResult(id, r))
+                                    mode,
+                                    r => postWorkerMessage[IO](self, ItcGraphResult(id, r))
                       )
 
                 case _ => IO.unit

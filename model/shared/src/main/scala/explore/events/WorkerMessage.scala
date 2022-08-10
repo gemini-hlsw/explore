@@ -7,10 +7,12 @@ import cats.Eq
 import cats.data._
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.model.boopickle.CatalogPicklers
+import explore.model.itc.ItcChart
 import explore.model.itc.ItcQueryProblems
 import explore.model.itc.ItcRequestParams
 import explore.model.itc.ItcResult
 import explore.model.itc.ItcTarget
+import explore.modes.InstrumentRow
 import explore.modes.SpectroscopyModeRow
 import explore.modes.SpectroscopyModesMatrix
 import lucuma.ags.AgsAnalysis
@@ -27,7 +29,6 @@ import org.http4s.Uri
 import java.time.Duration
 import java.time.Instant
 import java.util.UUID
-import explore.modes.InstrumentRow
 
 object picklers extends CatalogPicklers with EventPicklers
 
@@ -95,5 +96,5 @@ final case class ItcQueryResult(
 
 final case class ItcGraphResult(
   id:      UUID,
-  results: Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]
+  results: List[ItcChart]
 ) extends WorkerMessage

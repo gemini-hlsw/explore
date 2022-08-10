@@ -3,13 +3,13 @@
 
 package explore.tabs
 
+import explore.common.ObsQueries._
 import explore.components.Tile
 import explore.implicits._
+import explore.itc.ItcGraphBody
 import explore.model.ScienceMode
-import explore.common.ObsQueries._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.syntax.all.given
-import explore.itc.ItcGraphBody
 
 object ItcTile:
 
