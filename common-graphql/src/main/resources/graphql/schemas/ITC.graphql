@@ -1,28 +1,3 @@
-"""DatasetEvent creation parameters"""
-input AddDatasetEventInput {
-  observationId: ObservationId!
-  visitId: VisitId!
-  stepId: StepId!
-  datasetIndex: Int!
-  filename: DatasetFilename
-  stageType: DatasetStage!
-}
-
-"""SequenceEvent creation parameters"""
-input AddSequenceEventInput {
-  observationId: ObservationId!
-  visitId: VisitId!
-  command: SequenceCommand!
-}
-
-"""StepEvent creation parameters"""
-input AddStepEventInput {
-  observationId: ObservationId!
-  visitId: VisitId!
-  stepId: StepId!
-  sequenceType: SequenceType!
-  stage: StepStage!
-}
 
 """Air mass range creation and edit parameters"""
 input AirMassRangeInput {

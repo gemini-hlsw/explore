@@ -9,6 +9,7 @@ import explore.data.KeyedIndexedList
 import explore.events.CatalogResults
 import explore.model.Asterism
 import explore.model.itc.ItcTarget
+import explore.modes.InstrumentRow
 import explore.undo.UndoStacks
 import japgolly.scalajs.react.ReactCats._
 import japgolly.scalajs.react.Reusability
@@ -103,4 +104,6 @@ object reusability {
 
   implicit val existenceReuse: Reusability[Existence]                       = Reusability.byEq
   implicit val requirementsReuse: Reusability[SpectroscopyRequirementsData] = Reusability.byEq
+
+  given Reusability[InstrumentRow] = Reusability.byEq
 }
