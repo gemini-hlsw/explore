@@ -26,7 +26,7 @@ object ElevationPlotTile {
     ctx:         AppContextIO
   ) =
     Tile(
-      ObsTabTilesIds.PlotId,
+      ObsTabTilesIds.PlotId.id,
       "Elevation Plot",
       canMinimize = true,
       bodyClass = ExploreStyles.ElevationPlotTileBody.some,

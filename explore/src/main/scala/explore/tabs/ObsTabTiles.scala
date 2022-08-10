@@ -120,7 +120,7 @@ object ObsTabTiles {
     ScalaFnComponent
       .withHooks[Props]
       .useStreamResourceViewOnMountBy { props =>
-        implicit val ctx = props.ctx
+        given AppContextIO = props.ctx
 
         ObsEditQuery
           .query(props.obsId)
@@ -167,9 +167,12 @@ object ObsTabTiles {
               )
             )
 
+        val spectroscopyReqs: Option[ScienceRequirementsData] =
+          obsView.toOption.map(_.get.scienceData.requirements)
+
         val notesTile =
           Tile(
-            ObsTabTilesIds.NotesId,
+            ObsTabTilesIds.NotesId.id,
             s"Note for Observer",
             props.backButton.some,
             canMinimize = true
@@ -181,6 +184,17 @@ object ObsTabTiles {
                 "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus maximus hendrerit lacinia. Etiam dapibus blandit ipsum sed rhoncus."
               )
             )
+          )
+
+        val constraints =
+          obsViewPot.map(_.zoom(ObsEditData.scienceData.andThen(ScienceData.constraints)))
+
+        val scienceData = obsViewPot.toOption.map(a => ObsEditData.scienceData.get(a.get))
+
+        val itcTile =
+          ItcTile.itcTile(scienceMode,
+                          obsView.toOption.map(_.get.scienceData.requirements.spectroscopy),
+                          scienceData
           )
 
         val constraintsSelector = makeConstraintsSelector(props.constraintGroups, obsViewPot)
@@ -220,7 +234,7 @@ object ObsTabTiles {
         val constraintsTile =
           ConstraintsTile.constraintsTile(
             props.obsId,
-            obsViewPot.map(_.zoom(ObsEditData.scienceData.andThen(ScienceData.constraints))),
+            constraints,
             props.undoStacks
               .zoom(ModelUndoStacks.forConstraintGroup[IO])
               .zoom(atMapWithDefault(ObsIdSet.one(props.obsId), UndoStacks.empty)),
@@ -253,7 +267,8 @@ object ObsTabTiles {
               targetTile,
               skyPlotTile,
               constraintsTile,
-              configurationTile
+              configurationTile,
+              itcTile
             ),
             GridLayoutSection.ObservationsLayout,
             clazz = ExploreStyles.ObservationTiles.some

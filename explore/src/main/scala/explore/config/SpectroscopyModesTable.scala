@@ -502,13 +502,9 @@ object SpectroscopyModesTable {
                     val cache = itcResults.value.cache
                     row.instrument match
                       case m: GmosNorthSpectroscopyRow =>
-                        cache.contains(
-                          ItcRequestParams(w, sn, constraints, t, m)
-                        )
+                        cache.contains(ItcRequestParams(w, sn, constraints, t, m))
                       case m: GmosSouthSpectroscopyRow =>
-                        cache.contains(
-                          ItcRequestParams(w, sn, constraints, t, m)
-                        )
+                        cache.contains(ItcRequestParams(w, sn, constraints, t, m))
                       case _                           => true
                 }
 

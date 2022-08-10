@@ -23,6 +23,7 @@ import lucuma.ui.forms.EnumSelect
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.reusability._
 import lucuma.ui.syntax.all.given
+import queries.schemas.*
 import queries.schemas.implicits._
 import react.common.ReactFnProps
 

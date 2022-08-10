@@ -7,10 +7,12 @@ import cats.Eq
 import cats.data._
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.model.boopickle.CatalogPicklers
+import explore.model.itc.ItcChart
 import explore.model.itc.ItcQueryProblems
 import explore.model.itc.ItcRequestParams
 import explore.model.itc.ItcResult
 import explore.model.itc.ItcTarget
+import explore.modes.InstrumentRow
 import explore.modes.SpectroscopyModeRow
 import explore.modes.SpectroscopyModesMatrix
 import lucuma.ags.AgsAnalysis
@@ -78,7 +80,21 @@ final case class ItcQuery(
   modes:         List[SpectroscopyModeRow]
 ) extends WorkerMessage
 
+final case class ItcGraphQuery(
+  id:            UUID,
+  wavelength:    Wavelength,
+  signalToNoise: PosBigDecimal,
+  constraints:   ConstraintSet,
+  targets:       NonEmptyList[ItcTarget],
+  modes:         InstrumentRow
+) extends WorkerMessage
+
 final case class ItcQueryResult(
   id:      UUID,
   results: Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]
+) extends WorkerMessage
+
+final case class ItcGraphResult(
+  id:      UUID,
+  results: List[ItcChart]
 ) extends WorkerMessage

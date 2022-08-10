@@ -9,6 +9,7 @@ import explore.events._
 import explore.model.boopickle.CatalogPicklers
 import explore.model.boopickle.ItcPicklers
 import explore.model.boopickle.ItcPicklers._
+import explore.model.itc.ItcChart
 import explore.model.itc.ItcTarget
 import lucuma.ags.AgsParams
 import lucuma.ags.AgsPosition
@@ -35,39 +36,32 @@ trait EventPicklers extends CatalogPicklers with ItcPicklers:
   implicit def picklerUri: Pickler[Uri] =
     transformPickler(Uri.unsafeFromString)(_.toString)
 
-  private implicit def picklerCatalogRequest: Pickler[CatalogRequest] =
-    transformPickler(Function.tupled(CatalogRequest.apply _))(x => (x.tracking, x.vizTime))
+  private given Pickler[CatalogRequest] = generatePickler
 
-  private implicit def picklerCacheCleanupRequest: Pickler[CacheCleanupRequest] =
-    transformPickler(CacheCleanupRequest.apply)(_.elapsedTime)
+  private given Pickler[CacheCleanupRequest] = generatePickler
 
-  private implicit def picklerSpectroscopyMatrixRequest: Pickler[SpectroscopyMatrixRequest] =
-    transformPickler(SpectroscopyMatrixRequest.apply)(_.uri)
+  private given Pickler[SpectroscopyMatrixRequest] = generatePickler
 
-  private implicit def picklerSpectroscopyMatrixResult: Pickler[SpectroscopyMatrixResults] =
-    transformPickler(SpectroscopyMatrixResults.apply)(_.matrix)
+  private given Pickler[SpectroscopyMatrixResults] = generatePickler
 
   implicit def picklerCatalogResults: Pickler[CatalogResults] =
     transformPickler(CatalogResults.apply)(_.candidates)
 
-  private implicit def picklerCatalogQueryError: Pickler[CatalogQueryError] =
-    transformPickler(CatalogQueryError.apply)(_.errorMsg)
+  private given Pickler[CatalogQueryError] = generatePickler
 
-  private implicit def picklerAgsRequest: Pickler[AgsRequest] =
-    transformPickler(AgsRequest.apply.tupled)(x =>
-      (x.id, x.constraints, x.wavelength, x.baseCoordinates, x.position, x.params, x.candidates)
-    )
+  private given Pickler[AgsRequest] = generatePickler
 
-  given Pickler[AgsResult] =
-    transformPickler(AgsResult.apply)(_.results)
+  given Pickler[AgsResult] = generatePickler
 
-  given Pickler[ItcQuery] =
-    transformPickler(ItcQuery.apply.tupled)(x =>
-      (x.id, x.wavelength, x.signalToNoise, x.constraints, x.targets, x.modes)
-    )
+  given Pickler[ItcQuery] = generatePickler
 
-  given Pickler[ItcQueryResult] =
-    transformPickler(ItcQueryResult.apply.tupled)(x => (x.id, x.results))
+  given Pickler[ItcGraphQuery] = generatePickler
+
+  given Pickler[ItcChart] = generatePickler
+
+  given Pickler[ItcGraphResult] = generatePickler
+
+  given Pickler[ItcQueryResult] = generatePickler
 
   implicit val messagePickler: Pickler[WorkerMessage] =
     compositePickler[WorkerMessage]
@@ -80,6 +74,8 @@ trait EventPicklers extends CatalogPicklers with ItcPicklers:
       .addConcreteType[AgsRequest]
       .addConcreteType[AgsResult]
       .addConcreteType[ItcQuery]
+      .addConcreteType[ItcGraphQuery]
+      .addConcreteType[ItcGraphResult]
       .addConcreteType[ItcQueryResult]
 
 object EventPicklers extends EventPicklers

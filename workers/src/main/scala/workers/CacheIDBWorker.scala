@@ -11,6 +11,7 @@ import clue._
 import clue.js.FetchJSBackend
 import clue.js.FetchMethod
 import explore.events._
+import explore.itc.ITCGraphRequests
 import explore.itc.ITCRequests
 import explore.model.AppConfig
 import explore.model.StaticData
@@ -131,6 +132,17 @@ object CacheIDBWorker extends CatalogCache with EventPicklers with AsyncToIO {
                                     targets,
                                     rows,
                                     r => postWorkerMessage[IO](self, ItcQueryResult(id, r))
+                      )
+
+                case ItcGraphQuery(id, wavelength, signalToNoise, constraint, targets, mode) =>
+                  logger.debug(s"ITC graph query ${mode}") *>
+                    ITCGraphRequests
+                      .queryItc[IO](wavelength,
+                                    signalToNoise,
+                                    constraint,
+                                    targets,
+                                    mode,
+                                    r => postWorkerMessage[IO](self, ItcGraphResult(id, r))
                       )
 
                 case _ => IO.unit

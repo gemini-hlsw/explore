@@ -6,6 +6,7 @@ package queries.common
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import eu.timepit.refined.types.string
+import explore.model.itc.ItcChart
 import queries.schemas.ITC
 // gql: import io.circe.refined._
 
@@ -45,4 +46,31 @@ object ITCQueriesGQL {
     }
   }
 
+  @GraphQL
+  trait SpectroscopyGraphITCQuery extends GraphQLOperation[ITC] {
+    val document =
+      """
+      query($input: SpectroscopyGraphModeInput) {
+        spectroscopyGraph(input: $input) {
+          serverVersion
+          charts {
+            series {
+              title
+              dataType
+              data
+            }
+          }
+        }
+      }
+    """
+
+    object Data {
+      object SpectroscopyGraph {
+        type ServerVersion = string.NonEmptyString
+        object Charts {
+          type Series = ItcChart
+        }
+      }
+    }
+  }
 }

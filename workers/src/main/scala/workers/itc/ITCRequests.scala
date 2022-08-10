@@ -63,31 +63,6 @@ object ITCRequests {
         }
       )
 
-    // Find the magnitude closest to the requested wavelength
-    def selectedBrightness(
-      sourceProfile: SourceProfile,
-      wavelength:    Wavelength
-    ): Option[Band] =
-      SourceProfile.integratedBandNormalizedSpectralDefinition
-        .andThen(
-          SpectralDefinition.BandNormalized.brightnesses[Integrated]
-        )
-        .getOption(sourceProfile)
-        .orElse {
-          SourceProfile.surfaceBandNormalizedSpectralDefinition
-            .andThen(
-              SpectralDefinition.BandNormalized.brightnesses[Surface]
-            )
-            .getOption(sourceProfile)
-        }
-        .map(_.keys)
-        .traverse(
-          _.minByOption((band: Band) =>
-            (band.center.toPicometers.value.value - wavelength.toPicometers.value.value).abs
-          )
-        )
-        .collect { case Some(b) => b }
-
     def doRequest(
       request:  ItcRequestParams,
       callback: List[ItcResults] => F[Unit]

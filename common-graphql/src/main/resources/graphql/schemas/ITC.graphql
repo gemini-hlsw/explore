@@ -4626,6 +4626,10 @@ type Query {
     # Query multiple modes in spectroscopy mode
     input: SpectroscopyModeInput!
   ): [SpectroscopyResult!]!
+
+  spectroscopyGraph(
+    input: SpectroscopyGraphModeInput!
+  ): SpectroscopyGraphResult!
 }
 
 type GmosSITCParams {
@@ -4709,6 +4713,30 @@ input SpectroscopyModeInput {
   modes: [InstrumentModesInput]!
 }
 
+# Configuration alternatives query
+input SpectroscopyGraphModeInput {
+  # Observing wavelength.
+  wavelength: WavelengthInput!
+
+  # Minimum desired signal-to-noise ratio.
+  signalToNoise: PosBigDecimal!
+
+  # Spatial profile PointSource/UniformSource/GaussianSource.
+  sourceProfile: SourceProfileInput!
+
+  # Observing Band
+  band: Band!
+
+  # Target radial velocity
+  radialVelocity: RadialVelocityInput!
+
+  # Conditions
+  constraints: ConstraintSetInput!
+
+  # Instrument modes
+  mode: InstrumentModesInput!
+}
+
 type Result {
   # Spectroscopy mode
   mode: ObservingModeSpectroscopy!
@@ -4718,9 +4746,32 @@ type Result {
 }
 
 type SpectroscopyResult {
-  serverVersion: NonEmptyString!
+
+  serverVersion: String!
 
   # Search results
   results: [Result!]!
+}
+
+type ItcSeries {
+  title: String!
+
+  # Data type: alternatives SignalData, BackgroundData, SingleS2NData, FinalS2NData, PixSigData, PixBackData
+  dataType: String!
+
+  # Data series in the form of pairs (x, y)
+  data: [[Float!]!]!
+}
+
+type ItcChart {
+  series: [ItcSeries!]!
+}
+
+type SpectroscopyGraphResult {
+
+  serverVersion: String!
+
+  charts: [ItcChart!]!
+
 }
 

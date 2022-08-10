@@ -93,7 +93,7 @@ object TargetTabContents {
   val layoutMedium: Layout = Layout(
     List(
       LayoutItem(
-        i = ObsTabTilesIds.TargetId.value,
+        i = ObsTabTilesIds.TargetId.id.value,
         x = 0,
         y = 0,
         w = DefaultWidth.value,
@@ -102,7 +102,7 @@ object TargetTabContents {
         minW = TileMinWidth.value
       ),
       LayoutItem(
-        i = ObsTabTilesIds.PlotId.value,
+        i = ObsTabTilesIds.PlotId.id.value,
         x = 0,
         y = TargetHeight.value,
         w = DefaultWidth.value,
