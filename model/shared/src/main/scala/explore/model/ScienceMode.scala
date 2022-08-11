@@ -24,7 +24,7 @@ sealed abstract class ScienceMode(val instrument: Instrument) extends Product wi
 }
 
 object ScienceMode {
-  implicit val scienceModeDecoder: Decoder[ScienceMode] =
+  given Decoder[ScienceMode] =
     Decoder
       .instance(c =>
         c.downField("gmosNorthLongSlit")
@@ -47,14 +47,13 @@ object ScienceMode {
   }
 
   object GmosNorthLongSlit {
-    implicit val gmosNLongSlitDecoder: Decoder[GmosNorthLongSlit] = Decoder.instance { c =>
+    given Decoder[GmosNorthLongSlit] = Decoder.instance { c =>
       for {
         basic    <- c.downField("basic").as[ScienceModeBasic.GmosNorthLongSlit]
-        advanced <- (c.keys.exists(_.exists(_ === "advanced")) match {
-                      case true  =>
-                        c.downField("advanced").as[Option[ScienceModeAdvanced.GmosNorthLongSlit]]
-                      case false => none.asRight
-                    }).map(_.getOrElse(ScienceModeAdvanced.GmosNorthLongSlit.Empty))
+        advanced <- (if (c.keys.exists(_.exists(_ === "advanced")))
+                       c.downField("advanced").as[Option[ScienceModeAdvanced.GmosNorthLongSlit]]
+                     else
+                       none.asRight).map(_.getOrElse(ScienceModeAdvanced.GmosNorthLongSlit.Empty))
       } yield GmosNorthLongSlit(basic, advanced)
     }
 
@@ -78,14 +77,13 @@ object ScienceMode {
   }
 
   object GmosSouthLongSlit {
-    implicit val gmosSLongSlitDecoder: Decoder[GmosSouthLongSlit] = Decoder.instance { c =>
+    given Decoder[GmosSouthLongSlit] = Decoder.instance { c =>
       for {
         basic    <- c.downField("basic").as[ScienceModeBasic.GmosSouthLongSlit]
-        advanced <- (c.keys.exists(_.exists(_ === "advanced")) match {
-                      case true  =>
-                        c.downField("advanced").as[Option[ScienceModeAdvanced.GmosSouthLongSlit]]
-                      case false => none.asRight
-                    }).map(_.getOrElse(ScienceModeAdvanced.GmosSouthLongSlit.Empty))
+        advanced <- (if (c.keys.exists(_.exists(_ === "advanced")))
+                       c.downField("advanced").as[Option[ScienceModeAdvanced.GmosSouthLongSlit]]
+                     else
+                       none.asRight).map(_.getOrElse(ScienceModeAdvanced.GmosSouthLongSlit.Empty))
       } yield GmosSouthLongSlit(basic, advanced)
     }
 

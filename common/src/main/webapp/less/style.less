@@ -960,7 +960,7 @@ tfoot {
   }
 }
 
-.elevation-plot-section {
+.plot-section {
   min-width: 1px; // Needed to help highcharts recompute width on the fly.
   width: 100%;
   height: 100%;
@@ -970,10 +970,18 @@ tfoot {
   flex-direction: column;
   background-color: var(--plot-background-color);
   color: var(--plot-text-color);
+}
+
+.elevation-plot-section {
+  .plot-section();
 
   .ui.checkbox+label {
     color: var(--plot-text-color);
   }
+}
+
+.itc-plot-section {
+  .plot-section();
 }
 
 .elevation-plot-controls {

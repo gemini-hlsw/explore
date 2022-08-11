@@ -3,8 +3,9 @@
 
 package explore.modes
 
-import _root_.refined.algebra._
+import cats.Eq
 import cats.data.NonEmptyList
+import cats.derived.*
 import cats.implicits._
 import coulomb._
 import coulomb.conversion.ValueConversion
@@ -32,7 +33,7 @@ import monocle.macros.GenLens
 import spire.math.Interval
 import spire.math.Rational
 
-sealed trait InstrumentRow {
+sealed trait InstrumentRow derives Eq {
   def instrument: Instrument
 
   type Grating
