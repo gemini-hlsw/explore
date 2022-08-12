@@ -1787,16 +1787,6 @@ enum MosPreImaging {
   IS_NOT_MOS_PRE_IMAGING
 }
 
-"""Event sent when a new object is created or updated"""
-type ObservationEdit implements Event {
-  """Type of edit"""
-  editType: EditType!
-
-  """Edited object"""
-  value: Observation!
-  id: Long!
-}
-
 type Offset {
   """Offset in p"""
   p: p!
@@ -4728,11 +4718,26 @@ type SpectroscopyResult {
   results: [Result!]!
 }
 
+"""Chart data types"""
+enum ItcChartDataType {
+  SIGNAL_DATA
+
+  BACKGROUND_DATA
+
+  SINGLE_S2_NDATA
+
+  FINAL_S2_NDATA
+
+  PIX_SIG_DATA
+
+  PIX_BACK_DATA
+}
+
 type ItcSeries {
   title: String!
 
   # Data type: alternatives SignalData, BackgroundData, SingleS2NData, FinalS2NData, PixSigData, PixBackData
-  dataType: String!
+  dataType: ItcChartDataType!
 
   # Data series in the form of pairs (x, y)
   data: [[Float!]!]!
