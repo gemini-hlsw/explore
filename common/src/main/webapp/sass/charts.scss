@@ -120,3 +120,17 @@ See https://github.com/highcharts/highcharts/issues/13320 */
   background-color: unset;
   opacity: 0.6;
 }
+
+.itc-plot-loading {
+  svg.highcharts-root {
+    opacity: 0.3;
+  }
+}
+
+.itc-plot-chart {
+  .highcharts-reset-zoom {
+    fill: var(--button-background-color-semi);
+    stroke: var(--site-border-color);
+  }
+}
+
