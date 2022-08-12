@@ -7,7 +7,9 @@ import cats.Eq
 import cats.derived.*
 import cats.syntax.all._
 import eu.timepit.refined.auto._
+import explore.model.enums.ItcSeriesDataType
 import io.circe.Decoder
+import lucuma.core.util.Enumerated
 
 import scala.concurrent.duration._
 
@@ -31,4 +33,5 @@ object ItcResult {
   }
 }
 
-final case class ItcChart(title: String, dataType: String, data: List[List[Double]]) derives Decoder
+final case class ItcChart(title: String, dataType: ItcSeriesDataType, data: List[List[Double]])
+    derives Decoder
