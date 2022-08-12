@@ -11,6 +11,7 @@ import explore.model.itc.ItcChart
 import explore.model.itc.YAxis
 import explore.syntax.ui.*
 import explore.syntax.ui.given
+import explore.utils.*
 import gpp.highcharts.highchartsStrings.line
 import gpp.highcharts.mod.XAxisLabelsOptions
 import gpp.highcharts.mod._
@@ -22,12 +23,13 @@ import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.highcharts.Chart
 import react.resizeDetector.hooks._
+import react.semanticui.elements.loader.Loader
 
 import scala.collection.immutable.HashSet
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
 
-final case class ItcSpectroscopyPlot(charts: Pot[List[ItcChart]])
+final case class ItcSpectroscopyPlot(loading: PlotLoading, charts: Pot[List[ItcChart]])
     extends ReactFnProps[ItcSpectroscopyPlot](ItcSpectroscopyPlot.component)
 
 object ItcSpectroscopyPlot {
@@ -39,13 +41,12 @@ object ItcSpectroscopyPlot {
     .withHooks[Props]
     .useResizeDetector()
     .render { (props, resize) =>
-      val seriesData: List[js.Array[Chart.Data]] =
-        props.charts.toOption.foldMap(
-          _.map(_.data.map(p => (p(0), p(1)): Chart.Data).toJSArray)
-        )
+      potRender[List[ItcChart]] { charts =>
+        val seriesData: List[js.Array[Chart.Data]] =
+          charts.map(_.data.map(p => (p(0), p(1)): Chart.Data).toJSArray)
 
-      val series =
-        props.charts.toOption.foldMap(_.map(chart => ItcSeries(chart.title, 0)))
+        val series =
+          props.charts.toOption.foldMap(_.map(chart => ItcSeries(chart.title, 0)))
 
       val yAxes = props.charts.toOption
         .map(_.foldLeft(YAxis.Empty)(_ ∪ _.yAxis))
@@ -68,6 +69,7 @@ object ItcSpectroscopyPlot {
             .setHeight(resize.height.getOrElse(1).toDouble)
             .setStyledMode(true)
             .setAlignTicks(false)
+            .setClassName(ExploreStyles.ItcPlotLoading.when_(props.loading.boolValue).htmlClass)
         )
         .setTitle(TitleOptions().setTextUndefined)
         .setCredits(CreditsOptions().setEnabled(false))
@@ -104,8 +106,10 @@ object ItcSpectroscopyPlot {
       <.div(
         ExploreStyles.ElevationPlotSection,
         // Include the size in the key
+        Loader(active = true).when(props.loading.boolValue),
         Chart(options).withKey(s"$props-$resize").when(resize.height.isDefined)
       )
         .withRef(resize.ref)
+      }(props.charts)
     }
 }

@@ -22,3 +22,10 @@ def requiredForITC: TagMod =
       <.span(^.cls := "fa-layers-text fa-inverse", "ITC")
     )
   )("Required for ITC")
+
+opaque type PlotLoading = Boolean
+
+object PlotLoading:
+  def apply(b: Boolean): PlotLoading = b
+
+extension (p: PlotLoading) def boolValue: Boolean = p

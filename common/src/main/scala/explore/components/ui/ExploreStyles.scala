@@ -157,6 +157,7 @@ object ExploreStyles {
   val PlotToggle: Css                      = Css("plot-toggle")
 
   val ItcPlotSection: Css = Css("itc-plot-section")
+  val ItcPlotLoading: Css = Css("itc-plot-loading")
 
   val AladinContainerColumn: Css  = Css("aladin-container-column")
   val AladinContainerBody: Css    = Css("aladin-container-body")
