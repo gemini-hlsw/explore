@@ -54,7 +54,7 @@
     "prettier": "^2.7.1",
     "process": "^0.11.10",
     "rollup-plugin-visualizer": "^5.7.1",
-    "sass": "^1.54.3",
+    "sass": "^1.54.4",
     "stylelint": "^14.9.1",
     "stylelint-color-format": "^1.1.0",
     "stylelint-config-prettier": "^9.0.3",
