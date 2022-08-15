@@ -42,6 +42,8 @@ object implicits {
 
   type SpectroscopyGraphModeInput = ITC.Types.SpectroscopyGraphModeInput
   val SpectroscopyGraphModeInput = ITC.Types.SpectroscopyGraphModeInput
+  type SignificantFiguresInput = ITC.Types.SignificantFiguresInput
+  val SignificantFiguresInput = ITC.Types.SignificantFiguresInput
   type ItcGraphResults = ITCQueriesGQL.SpectroscopyGraphITCQuery.Data
 
   extension (a: Angle)

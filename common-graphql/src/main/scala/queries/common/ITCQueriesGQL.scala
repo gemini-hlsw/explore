@@ -6,7 +6,7 @@ package queries.common
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import eu.timepit.refined.types.string
-import explore.model.itc.ItcChart
+import explore.model.itc.remote.ItcChartRemote
 import queries.schemas.ITC
 // gql: import io.circe.refined._
 
@@ -57,7 +57,12 @@ object ITCQueriesGQL {
             series {
               title
               dataType
-              data
+              dataY
+              xAxis {
+                start
+                end
+                count
+              }
             }
           }
         }
@@ -68,7 +73,7 @@ object ITCQueriesGQL {
       object SpectroscopyGraph {
         type ServerVersion = string.NonEmptyString
         object Charts {
-          type Series = ItcChart
+          type Series = ItcChartRemote
         }
       }
     }

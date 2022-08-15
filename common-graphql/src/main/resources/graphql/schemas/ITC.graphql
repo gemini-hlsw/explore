@@ -4678,6 +4678,15 @@ input SpectroscopyModeInput {
   modes: [InstrumentModesInput]!
 }
 
+# Params for significant figures on each axis
+input SignificantFiguresInput {
+  # Significant figures for xAxis
+  xAxis: PosInt
+
+  # Significant figures for yAxis
+  yAxis: PosInt
+}
+
 # Configuration alternatives query
 input SpectroscopyGraphModeInput {
   # Observing wavelength.
@@ -4700,6 +4709,9 @@ input SpectroscopyGraphModeInput {
 
   # Instrument modes
   mode: InstrumentModesInput!
+
+  # Significant figures, truncates the amount of significant value
+  significantFigures: SignificantFiguresInput
 }
 
 type Result {
@@ -4733,14 +4745,43 @@ enum ItcChartDataType {
   PIX_BACK_DATA
 }
 
+type ChartAxis {
+  # First value of the axis
+  start: Float!
+
+  # Last value of the axis
+  end: Float!
+
+  # Max value of the axis
+  max: Float!
+
+  # Min value of the axis
+  min: Float!
+
+  # How many values for the axis
+  count: PosInt!
+}
+
 type ItcSeries {
   title: String!
 
   # Data type: alternatives SignalData, BackgroundData, SingleS2NData, FinalS2NData, PixSigData, PixBackData
   dataType: ItcChartDataType!
 
+  # Values for the x axis
+  xAxis: ChartAxis
+
+  # Values for the x axis
+  yAxis: ChartAxis
+
   # Data series in the form of pairs (x, y)
   data: [[Float!]!]!
+
+  # Data series for the X axis
+  dataX: [Float!]!
+
+  # Data series for the Y axis
+  dataY: [Float!]!
 }
 
 type ItcChart {

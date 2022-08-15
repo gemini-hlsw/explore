@@ -11,6 +11,7 @@ import cats.syntax.all._
 import clue.TransactionalClient
 import clue.data.syntax._
 import crystal.ViewF
+import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.model.Constants
@@ -26,6 +27,7 @@ import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.SpectralDefinition
+import lucuma.refined.*
 import org.scalajs.dom
 import org.typelevel.log4cats.Logger
 import queries.common.ITCQueriesGQL._
@@ -61,6 +63,8 @@ def selectedBrightness(
     .collect { case Some(b) => b }
 
 object ITCGraphRequests {
+  private val significantFigures =
+    SignificantFiguresInput(4.refined[Positive].assign, 4.refined[Positive].assign).assign
 
   def queryItc[F[_]: Concurrent: Parallel: Logger](
     wavelength:    Wavelength,
@@ -69,7 +73,7 @@ object ITCGraphRequests {
     targets:       NonEmptyList[ItcTarget],
     mode:          InstrumentRow,
     callback:      List[ItcChart] => F[Unit]
-  )(using Monoid[F[Unit]], TransactionalClient[F, ITC]): F[Unit] = {
+  )(using Monoid[F[Unit]], TransactionalClient[F, ITC]): F[Unit] =
 
     val itcRowsParams = mode match // Only handle known modes
       case m: GmosNorthSpectroscopyRow =>
@@ -85,23 +89,27 @@ object ITCGraphRequests {
         request.target
           .fproduct(t => selectedBrightness(t.profile, request.wavelength))
           .collect { case (t, Some(brightness)) =>
-            SpectroscopyGraphITCQuery
-              .query(
-                SpectroscopyGraphModeInput(
-                  request.wavelength.toInput,
-                  request.signalToNoise,
-                  t.profile.toInput,
-                  brightness,
-                  t.rv.toITCInput,
-                  request.constraints,
-                  request.mode.toITCInput.getOrElse(null)
-                ).assign
-              )
-              .flatMap(r => callback(r.spectroscopyGraph.charts.flatMap(_.series)))
+            request.mode.toITCInput.map { mode =>
+              SpectroscopyGraphITCQuery
+                .query(
+                  SpectroscopyGraphModeInput(
+                    request.wavelength.toInput,
+                    request.signalToNoise,
+                    t.profile.toInput,
+                    brightness,
+                    t.rv.toITCInput,
+                    request.constraints,
+                    mode,
+                    significantFigures
+                  ).assign
+                )
+                .flatMap(r =>
+                  callback(r.spectroscopyGraph.charts.flatMap(_.series.map(_.toItcChart)))
+                )
+            }.orEmpty
           }
           .sequence
           .void
     }.orEmpty
-  }
 
 }
