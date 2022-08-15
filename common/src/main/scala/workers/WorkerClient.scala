@@ -57,9 +57,13 @@ class WorkerClient[F[_]: Concurrent: UUIDGen, R: Pickler](worker: WebWorkerF[F])
   ): F[Option[requestMessage.ResponseType]] = // TODO Should we implement a timeout here? Retry?
     request(requestMessage).use(_.head.compile.last)
 
-  given Pickler[Nothing] = ??? // Intentionally left unimplemented, should never be called
+  given Pickler[Nothing] =
+    summon[Pickler[Unit]]
+      .xmap(_ => throw new Exception("Attempted to unpickle Nothing"))(_ =>
+        throw new Exception("Attempted to pickle Nothing")
+      )
 
-  def invoke[T <: R & WorkerRequest](requestMessage: T)(using
+  def requestAndForget[T <: R & WorkerRequest](requestMessage: T)(using
     requestMessage.ResponseType =:= Nothing,
     Pickler[requestMessage.ResponseType]
   ): F[Unit] =

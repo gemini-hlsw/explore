@@ -179,7 +179,7 @@ module.exports = ({ command, mode }) => {
       outDir: path.resolve(__dirname, 'heroku/static'),
     },
     worker: {
-      format: 'es'
+      format: 'es' // We need this for workers to be able to do dynamic imports.
     },
     plugins: [
       mkcert.default({ hosts: ['localhost', 'local.lucuma.xyz'] }),

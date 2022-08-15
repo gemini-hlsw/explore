@@ -30,8 +30,10 @@ object WorkerClients {
    * rather than just doing a direct consructor call.
    *
    * Doing the import with the "worker" param gives a constructor for the worker which we can wrap
-   * inline lets us save some space keeping a single chunk More info see:
-   * https://vitejs.dev/guide/features.html#import-with-query-suffixes=
+   * inline and lets us save some space keeping a single chunk. More info see:
+   * https://vitejs.dev/guide/features.html#import-with-query-suffixes
+   *
+   * Note that we don't use "&inline" since it increases the output size significantly.
    */
   @js.native
   @JSImport("/itcworker.js?worker", JSImport.Default)

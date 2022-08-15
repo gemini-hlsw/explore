@@ -141,9 +141,7 @@ object ConfigurationPanel {
           )
       }
       .render { (props, editState, matrix) =>
-        implicit val ctx: AppContextIO = props.ctx
-
-        // implicit val client = ctx.clients.odb // This shouldn't be necessary, but it seems to be
+        given AppContextIO = props.ctx
 
         val requirementsCtx: UndoSetter[ScienceRequirementsData] =
           props.scienceData.zoom(ScienceData.requirements)

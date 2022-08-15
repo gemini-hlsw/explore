@@ -17,6 +17,5 @@ trait WorkerClientBuilder[R: Pickler](worker: dom.Worker) {
       client <- Resource.pure(new WorkerClient[F, R](worker))
     } yield client
 
-  @inline
-  def apply[F[_]](using ev: WorkerClient[F, R]): WorkerClient[F, R] = ev
+  inline def apply[F[_]](using ev: WorkerClient[F, R]): WorkerClient[F, R] = ev
 }
