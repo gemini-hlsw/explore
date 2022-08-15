@@ -63,6 +63,10 @@ object ITCQueriesGQL {
                 end
                 count
               }
+              yAxis {
+                min
+                max
+              }
             }
           }
         }

@@ -16,6 +16,7 @@ import explore.model.itc.ItcQueryProblems
 import explore.model.itc.ItcRequestParams
 import explore.model.itc.ItcResult
 import explore.model.itc.ItcTarget
+import explore.model.itc.YAxis
 import explore.modes.InstrumentRow
 import explore.modes.ModeAO
 import explore.modes.ModeSlitSize
@@ -43,31 +44,19 @@ import scala.collection.immutable.SortedMap
 // Boopicklers for itc related types
 trait ItcPicklers extends CommonPicklers {
 
-  implicit val gmosNPickler: Pickler[GmosNorthSpectroscopyRow] =
-    transformPickler(Function.tupled(GmosNorthSpectroscopyRow.apply _))(x =>
-      (x.grating, x.fpu, x.filter)
-    )
+  given Pickler[GmosNorthSpectroscopyRow] = generatePickler
 
-  implicit val gmosSPickler: Pickler[GmosSouthSpectroscopyRow] =
-    transformPickler(Function.tupled(GmosSouthSpectroscopyRow.apply _))(x =>
-      (x.grating, x.fpu, x.filter)
-    )
+  given Pickler[GmosSouthSpectroscopyRow] = generatePickler
 
-  implicit val f2Pickler: Pickler[Flamingos2SpectroscopyRow] =
-    transformPickler(Function.tupled(Flamingos2SpectroscopyRow.apply _))(x => (x.grating, x.filter))
+  given Pickler[Flamingos2SpectroscopyRow] = generatePickler
 
-  implicit val gpiPickler: Pickler[GpiSpectroscopyRow] =
-    transformPickler(Function.tupled(GpiSpectroscopyRow.apply _))(x => (x.grating, x.filter))
+  given Pickler[GpiSpectroscopyRow] = generatePickler
 
-  implicit val gnirsPickler: Pickler[GnirsSpectroscopyRow] =
-    transformPickler(Function.tupled(GnirsSpectroscopyRow.apply _))(x => (x.grating, x.filter))
+  given Pickler[GnirsSpectroscopyRow] = generatePickler
 
-  implicit val genericRowPickler: Pickler[GenericSpectroscopyRow] =
-    transformPickler(Function.tupled(GenericSpectroscopyRow.apply _))(x =>
-      (x.i, x.grating, x.filter)
-    )
+  given Pickler[GenericSpectroscopyRow] = generatePickler
 
-  implicit val instRowPickler: Pickler[InstrumentRow] =
+  given Pickler[InstrumentRow] =
     compositePickler[InstrumentRow]
       .addConcreteType[GmosNorthSpectroscopyRow]
       .addConcreteType[GmosSouthSpectroscopyRow]
@@ -76,29 +65,11 @@ trait ItcPicklers extends CommonPicklers {
       .addConcreteType[GnirsSpectroscopyRow]
       .addConcreteType[GenericSpectroscopyRow]
 
-  implicit val mwPickler: Pickler[ModeWavelength] =
-    transformPickler(ModeWavelength.apply)(_.w)
+  given Pickler[ModeWavelength] = generatePickler
 
-  implicit val msPickler: Pickler[ModeSlitSize] =
-    transformPickler(ModeSlitSize.apply)(_.size)
+  given Pickler[ModeSlitSize] = generatePickler
 
-  given Pickler[SpectroscopyModeRow] =
-    transformPickler(SpectroscopyModeRow.apply.tupled)(x =>
-      (x.id,
-       x.instrument,
-       x.config,
-       x.focalPlane,
-       x.capabilities,
-       x.ao,
-       x.minWavelength,
-       x.maxWavelength,
-       x.optimalWavelength,
-       x.wavelengthCoverage,
-       x.resolution,
-       x.slitLength,
-       x.slitWidth
-      )
-    )
+  given Pickler[SpectroscopyModeRow] = generatePickler
 
   given Pickler[SpectroscopyModesMatrix] = generatePickler
 
@@ -144,12 +115,10 @@ trait ItcPicklers extends CommonPicklers {
   given bandNormalizedPickler[A](using
     Pickler[Units Of Brightness[A]]
   ): Pickler[SpectralDefinition.BandNormalized[A]] =
-    transformPickler(Function.tupled(SpectralDefinition.BandNormalized.apply[A] _))(x =>
-      (x.sed, x.brightnesses)
-    )
+    generatePickler
 
   given emissionLinesPickler[A](using Pickler[Units Of LineFlux[A]]): Pickler[EmissionLine[A]] =
-    transformPickler(Function.tupled(EmissionLine.apply[A] _))(x => (x.lineWidth, x.lineFlux))
+    generatePickler
 
   given spectralEmissionLinesPickler[A](using
     Pickler[Units Of LineFlux[A]],
@@ -209,6 +178,8 @@ trait ItcPicklers extends CommonPicklers {
       .addConcreteType[ItcQueryProblems.GenericError]
 
   given Pickler[ItcRequestParams] = generatePickler
+
+  given Pickler[YAxis] = generatePickler
 
   given Pickler[ItcChart] = generatePickler
 }
