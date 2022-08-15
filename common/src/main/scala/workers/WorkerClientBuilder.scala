@@ -9,9 +9,12 @@ import cats.effect.Resource
 import cats.effect.std.Dispatcher
 import cats.effect.std.UUIDGen
 import org.scalajs.dom
+import org.typelevel.log4cats.Logger
 
 trait WorkerClientBuilder[R: Pickler](worker: dom.Worker) {
-  def build[F[_]: Async: UUIDGen](dispatcher: Dispatcher[F]): Resource[F, WorkerClient[F, R]] =
+  def build[F[_]: Async: UUIDGen: Logger](
+    dispatcher: Dispatcher[F]
+  ): Resource[F, WorkerClient[F, R]] =
     for {
       worker <- WebWorkerF[F](worker, dispatcher)
       client <- Resource.pure(new WorkerClient[F, R](worker))

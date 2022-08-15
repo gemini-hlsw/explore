@@ -211,8 +211,8 @@ object ExploreMain extends IOApp.Simple {
     (for {
       dispatcher       <- Dispatcher[IO]
       prefs            <- Resource.eval(ExploreLocalPreferences.loadPreferences[IO])
-      workerClients    <- WorkerClients.build[IO](dispatcher)
       given Logger[IO] <- Resource.eval(setupLogger[IO](prefs))
+      workerClients    <- WorkerClients.build[IO](dispatcher)
       _                <- Resource.eval(buildPage(dispatcher, workerClients, prefs))
     } yield ()).useForever
   }

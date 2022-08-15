@@ -9,6 +9,7 @@ import cats.effect.std.Dispatcher
 import cats.syntax.all._
 import explore.events.*
 import org.scalajs.dom
+import org.typelevel.log4cats.Logger
 import workers.WorkerClient
 import workers.WorkerClientBuilder
 
@@ -18,7 +19,8 @@ import scala.scalajs.js.annotation.JSImport
 case class WorkerClients[F[_]](
   itc:     WorkerClient[F, ItcMessage.Request],
   catalog: WorkerClient[F, CatalogMessage.Request],
-  ags:     WorkerClient[F, AgsMessage.Request]
+  ags:     WorkerClient[F, AgsMessage.Request],
+  plot:    WorkerClient[F, PlotMessage.Request]
 )
 
 object WorkerClients {
@@ -59,9 +61,18 @@ object WorkerClients {
 
   object CatalogClient extends WorkerClientBuilder[CatalogMessage.Request](CatalogWorker())
 
-  def build[F[_]: Async](dispatcher: Dispatcher[F]): Resource[F, WorkerClients[F]] =
+  @js.native
+  @JSImport("/plotworker.js?worker", JSImport.Default)
+  private object PlotWorker extends js.Object {
+    def apply(): dom.Worker = js.native
+  }
+
+  object PlotClient extends WorkerClientBuilder[PlotMessage.Request](PlotWorker())
+
+  def build[F[_]: Async: Logger](dispatcher: Dispatcher[F]): Resource[F, WorkerClients[F]] =
     (ItcClient.build[F](dispatcher),
      CatalogClient.build[F](dispatcher),
-     AgsClient.build[F](dispatcher)
+     AgsClient.build[F](dispatcher),
+     PlotClient.build[F](dispatcher)
     ).mapN(WorkerClients.apply)
 }

@@ -43,17 +43,17 @@ import react.semanticui.elements.button.ButtonGroup
 import java.time.ZonedDateTime
 
 final case class ElevationPlotSection(
-  uid:              User.Id,
-  tid:              Target.Id,
-  scienceMode:      Option[ScienceMode],
-  coords:           Coordinates
-)(implicit val ctx: AppContextIO)
+  uid:           User.Id,
+  tid:           Target.Id,
+  scienceMode:   Option[ScienceMode],
+  coords:        Coordinates
+)(using val ctx: AppContextIO)
     extends ReactFnProps[ElevationPlotSection](ElevationPlotSection.component)
 
 object ElevationPlotSection {
   type Props = ElevationPlotSection
 
-  implicit val propsReuse: Reusability[Props] =
+  given Reusability[Props] =
     Reusability.by(x => (x.uid, x.tid, x.scienceMode, x.coords))
 
   val preferredSiteFor = (c: Props) =>
@@ -67,12 +67,12 @@ object ElevationPlotSection {
       }
 
   def prefsSetter(
-    props:        Props,
-    options:      View[Pot[ElevationPlotOptions]],
-    site:         Site => Site = identity,
-    range:        PlotRange => PlotRange = identity,
-    time:         TimeDisplay => TimeDisplay = identity
-  )(implicit ctx: AppContextIO): Callback =
+    props:   Props,
+    options: View[Pot[ElevationPlotOptions]],
+    site:    Site => Site = identity,
+    range:   PlotRange => PlotRange = identity,
+    time:    TimeDisplay => TimeDisplay = identity
+  )(using AppContextIO): Callback =
     options.get.toOption.map { opts =>
       UserTargetPreferencesUpsert
         .updatePlotPreferences[IO](props.uid,
@@ -93,16 +93,19 @@ object ElevationPlotSection {
       .useStateBy[Site](preferredSiteFor)
       // plot options, will be read from the user preferences
       .useStateView(Pot.pending[ElevationPlotOptions])
-      .useEffectWithDepsBy((p, _, _) => p)((_, s, options) =>
-        p =>
-          s.setState(preferredSiteFor(p)) *>
+      .useEffectWithDepsBy((props, _, _) => props)((_, s, options) =>
+        props =>
+          import props.given
+
+          s.setState(preferredSiteFor(props)) >>
             options.modCB(
-              sitePrism.replace(preferredSiteFor(p)),
-              _.map(o => prefsSetter(p, options, site = _ => o.site)(p.ctx)).toOption.getOrEmpty
+              sitePrism.replace(preferredSiteFor(props)),
+              _.map(o => prefsSetter(props, options, site = _ => o.site)).toOption.getOrEmpty
             )
       )
-      .useEffectWithDepsBy((p, _, _) => (p.uid, p.tid)) { (props, site, options) => _ =>
-        implicit val ctx = props.ctx
+      .useEffectWithDepsBy((props, _, _) => (props.uid, props.tid)) { (props, site, options) => _ =>
+        import props.given
+
         UserElevationPlotPreferencesQuery
           .queryWithDefault[IO](props.uid, props.tid, site.value)
           .flatMap { case (site, range, time) =>
@@ -119,7 +122,7 @@ object ElevationPlotSection {
       // Actual date
       .useState(ZonedDateTime.now(Site.GS.timezone).toLocalDate.plusDays(1))
       .render { (props, _, options, date) =>
-        implicit val ctx = props.ctx
+        import props.given
 
         val siteView =
           options.zoom(sitePrism)

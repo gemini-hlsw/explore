@@ -3,13 +3,16 @@
 
 package explore.targeteditor
 
-import cats.Eval
 import cats.effect.IO
+import cats.effect.Resource
 import cats.syntax.all._
 import crystal.react.hooks._
 import crystal.react.implicits._
 import crystal.react.reuse._
+import explore.events.PlotMessage.*
 import explore.implicits._
+import explore.model.WorkerClients.PlotClient
+import explore.model.boopickle.CommonPicklers.given
 import explore.syntax.*
 import explore.syntax.given
 import explore.syntax.ui.given
@@ -20,19 +23,12 @@ import gpp.highcharts.mod._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enums.Site
-import lucuma.core.enums.TwilightType
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
-import lucuma.core.math.skycalc.solver.ElevationSolver
-import lucuma.core.math.skycalc.solver.Samples
 import lucuma.core.model.Semester
-import lucuma.core.model.TwilightBoundedNight
-import lucuma.core.syntax.boundedInterval._
 import lucuma.core.syntax.time._
 import lucuma.ui.reusability._
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import org.typelevel.cats.time._
 import react.common.GenericComponentPAF2VdomNode
 import react.common.ReactFnProps
 import react.highcharts.Chart
@@ -57,49 +53,6 @@ final case class ElevationPlotSemester(
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[ElevationPlotSemester](ElevationPlotSemester.component)
 
-final case class SemesterPlotCalc(semester: Semester, site: Site) {
-  protected val SampleRate: Duration = Duration.ofMinutes(1)
-
-  protected val MinTargetElevation = Declination.fromDoubleDegrees(30.0).get
-
-  val interval: Bounded[Instant] =
-    Bounded.unsafeOpenUpper(semester.start.atSite(site).toInstant,
-                            semester.end.atSite(site).toInstant
-    )
-
-  def samples(coordsForInstant: Instant => Coordinates, dayRate: Long): Samples[Duration] = {
-    val results = Samples
-      .atFixedRate(
-        Bounded.unsafeOpenUpper(
-          semester.start.atSite(site).toInstant,
-          semester.end.atSite(site).toInstant
-        ),
-        SampleRate
-      )(coordsForInstant)
-      .toSkyCalResultsAt(site.place)
-
-    val targetVisible = ElevationSolver(MinTargetElevation, Declination.Max).solve(results) _
-
-    Samples.fromMap(
-      Iterator
-        .iterate(semester.start.localDate)(_.plusDays(dayRate))
-        .takeWhile(_ <= semester.end.localDate)
-        .map { date =>
-          val instant = date.atTime(LocalTime.MIDNIGHT).atZone(site.timezone).toInstant
-          instant -> Eval.later {
-            // We could increment a progress bar here.
-            // Better yet, let's do a "point producer" that runs an effect for each produced point, which could be to add it to the chart.
-            val night     = TwilightBoundedNight
-              .fromTwilightTypeAndSiteAndLocalDateUnsafe(TwilightType.Nautical, site, date)
-            val intervals = targetVisible(night.interval)
-            intervals.duration
-          }
-        }
-        .to(TreeMap)
-    )
-  }
-}
-
 object ElevationPlotSemester {
   type Props = ElevationPlotSemester
 
@@ -107,59 +60,64 @@ object ElevationPlotSemester {
   private val MillisPerHour: Double = 60 * 60 * 1000
   private val MillisPerDay: Double  = MillisPerHour * 24
 
-  val dateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-
-  implicit val propsReuse: Reusability[Props]           = Reusability.by(x => (x.site, x.coords, x.semester))
-  implicit val taksReuse: Reusability[Option[IO[Unit]]] = Reusability.always
+  private val dateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
   val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStateViewWithReuse(none[IO[Unit]])
       .useResizeDetector()
-      // This component can't be updated, it must be rerendered. Don't add reuse
-      .renderWithReuse { (props, cancel, resize) =>
-        implicit val ct = props.ctx
+      .useSerialState(none[Chart_])
+      .useStreamResourceBy((_, _, chartOpt) => chartOpt)((props, _, _) =>
+        chartOpt =>
+          chartOpt.value.value
+            .map { chart =>
+              given AppContextIO = props.ctx
 
-        val plotter = SemesterPlotCalc(props.semester, props.site)
+              val series = chart.series(0)
+              val xAxis  = chart.xAxis(0)
 
-        def renderPoints(chart: Chart_): IO[IO[Unit]] = {
-          val series = chart.series(0)
-          val xAxis  = chart.xAxis(0)
-          Stream
-            .fromIterator[IO](plotter.samples(_ => props.coords, PlotDayRate).iterator, 1)
-            .evalMap { case (instant, visibilityDuration) =>
-              val value = instant.toEpochMilli.toDouble
-              IO(
-                xAxis.addPlotLine(
-                  AxisPlotLinesOptions
-                    .XAxisPlotLinesOptions()
-                    .setId("progress")
-                    .setValue(value - PlotDayRate * MillisPerDay) // Draw line on last drawn point.
-                    .setZIndex(1000)
-                    .setClassName("plot-plot-line-progress")
+              PlotClient[IO]
+                .request(
+                  RequestSemesterSidereal(props.semester, props.site, props.coords, PlotDayRate)
                 )
-              ) >>
-                IO.cede >>
-                IO {
-                  val visibility = visibilityDuration.toMillis
-                  series.addPoint(
-                    PointOptionsObject(accessibility = js.undefined)
-                      .setX(value)
-                      // Trick to leave small values out of the plot
-                      .setY(if (visibility > 0.1) visibility / MillisPerHour else -1),
-                    redraw = true,
-                    shift = false,
-                    animation = false
-                  )
-                } >>
-                IO(xAxis.removePlotLine("progress"))
+                .map(
+                  _.evalMap { case SemesterPoint(instant, visibility) =>
+                    val value = instant.toDouble
+                    IO(xAxis.removePlotLine("progress")) >>
+                      IO(
+                        xAxis.addPlotLine(
+                          AxisPlotLinesOptions
+                            .XAxisPlotLinesOptions()
+                            .setId("progress")
+                            .setValue(value)
+                            .setZIndex(1000)
+                            .setClassName("plot-plot-line-progress")
+                        )
+                      ) >>
+                      IO {
+                        series.addPoint(
+                          PointOptionsObject(accessibility = js.undefined)
+                            .setX(value)
+                            // Trick to leave small values out of the plot
+                            .setY(if (visibility > 0.2) visibility / MillisPerHour else -1),
+                          redraw = true,
+                          shift = false,
+                          animation = false
+                        )
+                      }
+                  } ++ fs2.Stream(xAxis.removePlotLine("progress"))
+                )
             }
-            .compile
-            .drain
-            .start
-            .map(_.cancel)
-        }
+            .getOrElse(Resource.pure(fs2.Stream()))
+      )
+      .useEffectWithDepsBy((_, resize, _, _) => resize)((_, _, chartOpt, _) =>
+        resize =>
+          (resize.height, resize.width, chartOpt.value.value)
+            .mapN((height, width, chart) => Callback(chart.setSize(width, height)))
+            .orEmpty
+      )
+      .render { (props, resize, chartOpt, _) =>
+        implicit val ct = props.ctx
 
         def timeFormat(value: Double): String =
           ZonedDateTime
@@ -217,8 +175,8 @@ object ElevationPlotSemester {
               .setLabels(XAxisLabelsOptions().setFormatter(tickFormatter))
               .setTickInterval(MillisPerDay * 10)
               .setMinorTickInterval(MillisPerDay * 5)
-              .setMin(plotter.interval.lower.toEpochMilli.toDouble)
-              .setMax(plotter.interval.upper.toEpochMilli.toDouble)
+              .setMin(props.semester.start.atSite(props.site).toInstant.toEpochMilli.toDouble)
+              .setMax(props.semester.end.atSite(props.site).toInstant.toEpochMilli.toDouble)
           )
           .setYAxis(
             List(
@@ -249,23 +207,15 @@ object ElevationPlotSemester {
               SeriesLineOptions((), (), line)
                 .setName("Visibility")
                 .setYAxis(0)
-                // .setData(series.toJSArray)
             )
               .map(_.asInstanceOf[SeriesOptionsType])
               .toJSArray
           )
 
         <.div(
-          Chart(
-            options,
-            chart =>
-              (renderPoints(chart) >>= (cancelToken =>
-                cancel.set(cancelToken.some).to[IO]
-              )).runAsync
-          )
-            .withKey(s"$props-$resize")
+          Chart(options, c => chartOpt.setState(c.some))
+            .withKey(s"$props")
             .when(resize.height.isDefined)
-        )
-          .withRef(resize.ref)
+        ).withRef(resize.ref)
       }
 }

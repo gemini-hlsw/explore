@@ -32,6 +32,7 @@ import lucuma.core.math.RightAscension
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
+import lucuma.core.model.Semester
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.core.util.Enumerated
@@ -39,6 +40,7 @@ import org.http4s.Uri
 
 import java.time.Duration
 import java.time.Instant
+import java.time.Year
 
 trait CommonPicklers {
   given picklerRefined[A: Pickler, B](using Validate[A, B]): Pickler[A Refined B] =
@@ -155,13 +157,20 @@ trait CommonPicklers {
   given Pickler[ConstraintSet] = generatePickler
 
   given Pickler[Instant] =
-    transformPickler(Instant.ofEpochMilli)(_.toEpochMilli())
+    transformPickler[Instant, (Long, Long)]((epochSecond: Long, nanoOfSecond: Long) =>
+      Instant.ofEpochSecond(epochSecond, nanoOfSecond)
+    )(i => (i.getEpochSecond, i.getNano))
 
   given Pickler[Duration] =
     transformPickler(Duration.ofMillis)(_.toMillis)
 
+  given Pickler[Year] =
+    transformPickler(Year.of)(_.getValue)
+
   given Pickler[Uri] =
     transformPickler(Uri.unsafeFromString)(_.toString)
+
+  given Pickler[Semester] = generatePickler
 }
 
 object CommonPicklers extends CommonPicklers
