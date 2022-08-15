@@ -19,6 +19,7 @@ import crystal.react.reuse._
 import eu.timepit.refined.collection.NonEmpty
 import explore._
 import explore.components.ui.ExploreStyles
+import explore.events.*
 import explore.model.AppConfig
 import explore.model.AppContext
 import explore.model.ExploreLocalPreferences
@@ -26,7 +27,7 @@ import explore.model.Focused
 import explore.model.RootModel
 import explore.model.RoutingInfo
 import explore.model.UserVault
-import explore.model.WebWorkers
+import explore.model.WorkerClients
 import explore.model.enums.AppTab
 import explore.model.enums.ExecutionEnvironment
 import explore.model.enums.Theme
@@ -49,7 +50,6 @@ import org.scalajs.dom.Element
 import org.scalajs.dom.RequestCache
 import org.typelevel.log4cats.Logger
 import react.toastify._
-import workers.WebWorkerF
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration._
@@ -131,12 +131,11 @@ object ExploreMain extends IOApp.Simple {
 
     def buildPage(
       dispatcher:       Dispatcher[IO],
-      worker:           WebWorkerF[IO],
+      workerClients:    WorkerClients[IO],
       localPreferences: ExploreLocalPreferences
-    )(implicit logger:  Logger[IO]): IO[Unit] = {
-      implicit val FetchBackend: FetchJSBackend[IO]            = FetchJSBackend[IO](FetchMethod.GET)
-      implicit val gqlStreamingBackend: WebSocketJSBackend[IO] =
-        WebSocketJSBackend[IO](dispatcher)
+    )(using Logger[IO]): IO[Unit] = {
+      given FetchJSBackend[IO]     = FetchJSBackend[IO](FetchMethod.GET)
+      given WebSocketJSBackend[IO] = WebSocketJSBackend[IO](dispatcher)
 
       val (router, routerCtl) =
         RouterWithProps.componentAndCtl(BaseUrl.fromWindowOrigin, Routing.config)
@@ -165,9 +164,16 @@ object ExploreMain extends IOApp.Simple {
       for {
         _                    <- utils.setupScheme[IO](Theme.Dark)
         appConfig            <- fetchConfig[IO]
-        _                    <- logger.info(s"Git Commit: [${utils.gitHash.getOrElse("NONE")}]")
-        _                    <- logger.info(s"Config: ${appConfig.show}")
-        ctx                  <- AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl, setPageVia, worker)
+        _                    <- Logger[IO].info(s"Git Commit: [${utils.gitHash.getOrElse("NONE")}]")
+        _                    <- Logger[IO].info(s"Config: ${appConfig.show}")
+        ctx                  <-
+          AppContext.from[IO](
+            appConfig,
+            reconnectionStrategy,
+            pageUrl,
+            setPageVia,
+            workerClients
+          )
         _                    <- setupReusabilityOverlay(appConfig.environment)
         r                    <- (ctx.sso.whoami, setupDOM[IO], showEnvironment[IO](appConfig.environment)).parTupled
         (vault, container, _) = r
@@ -204,10 +210,10 @@ object ExploreMain extends IOApp.Simple {
 
     (for {
       dispatcher       <- Dispatcher[IO]
-      worker           <- WebWorkerF[IO](WebWorkers.CacheIDBWorker(), dispatcher)
       prefs            <- Resource.eval(ExploreLocalPreferences.loadPreferences[IO])
+      workerClients    <- WorkerClients.build[IO](dispatcher)
       given Logger[IO] <- Resource.eval(setupLogger[IO](prefs))
-      _                <- Resource.eval(buildPage(dispatcher, worker, prefs))
+      _                <- Resource.eval(buildPage(dispatcher, workerClients, prefs))
     } yield ()).useForever
   }
 

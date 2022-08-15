@@ -6,7 +6,7 @@ package explore.model
 import clue.PersistentClientStatus
 import explore.common.ObsQueries.SpectroscopyRequirementsData
 import explore.data.KeyedIndexedList
-import explore.events.CatalogResults
+import explore.events.CatalogMessage
 import explore.model.Asterism
 import explore.model.itc.ItcTarget
 import explore.modes.InstrumentRow
@@ -92,7 +92,6 @@ object reusability {
     Reusability.byEq
   implicit val scienceModeResultReuse: Reusability[ScienceMode]                             = Reusability.byEq
   implicit val guideStarReuse: Reusability[GuideStarCandidate]                              = Reusability.by(_.name.value)
-  implicit val catalogResultsReuse: Reusability[CatalogResults]                             = Reusability.by(_.candidates)
   implicit val agsPositionReuse: Reusability[AgsPosition]                                   = Reusability.byEq
   implicit val agsParamsReuse: Reusability[AgsParams]                                       = Reusability.byEq
 

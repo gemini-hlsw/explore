@@ -9,8 +9,6 @@ import cats.effect.Resource
 import cats.effect.Sync
 import cats.effect.std.Dispatcher
 import cats.syntax.all._
-import explore.events.WorkerMessage
-import explore.events.picklers._
 import explore.model.boopickle.Boopickle._
 import fs2.Stream
 import fs2.concurrent.Topic
@@ -31,18 +29,15 @@ trait WebWorkerF[F[_]] {
   def postMessage(message: js.Any): F[Unit]
 
   /**
-   * Post a transferrable message on effect F
+   * Post a transferable message on effect F
    */
-  def postTransferrable(buffer: Int8Array): F[Unit]
+  def postTransferable(buffer: Int8Array): F[Unit]
 
   /**
    * Post a boopickle encoded message on effect F
    */
-  protected def postTransferrable[A: Pickler](a: A): F[Unit] =
-    postTransferrable(asTransferable(a))
-
-  def postWorkerMessage(value: WorkerMessage): F[Unit] =
-    postTransferrable(asTransferable(value))
+  def postTransferable[A: Pickler](a: A): F[Unit] =
+    postTransferable(asTypedArray(a))
 
   /**
    * Terminate the web worker
@@ -75,7 +70,7 @@ object WebWorkerF {
           override def postMessage(message: js.Any): F[Unit] =
             Sync[F].delay(worker.postMessage(message))
 
-          override def postTransferrable(buffer: Int8Array): F[Unit] =
+          override def postTransferable(buffer: Int8Array): F[Unit] =
             Sync[F].delay(worker.postMessage(buffer, js.Array(buffer.buffer: dom.Transferable)))
 
           override val terminate: F[Unit] = Sync[F].delay(worker.terminate())

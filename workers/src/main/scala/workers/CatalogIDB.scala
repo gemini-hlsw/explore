@@ -3,7 +3,7 @@
 
 package workers
 
-import explore.events.CatalogResults
+import explore.events.CatalogMessage
 import japgolly.scalajs.react.callback._
 import japgolly.webapputil.indexeddb._
 import lucuma.ags.GuideStarCandidate
@@ -20,7 +20,7 @@ trait CatalogIDB extends CatalogQuerySettings {
     idb:    IndexedDb.Database,
     stores: CacheIDBStores,
     query:  ADQLQuery
-  ): AsyncCallback[Option[CatalogResults]] =
+  ): AsyncCallback[Option[List[GuideStarCandidate]]] =
     idb.get(stores.candidatesStore)(cacheQueryHash.hash(query))
 
   def storeGuideStarCandidates(
@@ -38,7 +38,7 @@ trait CatalogIDB extends CatalogQuerySettings {
         idb.put(stores.cacheStore)(s"gs-candidate-$hash", CacheEntry(ts, hash.toString))
       // Store the results
       _  <-
-        idb.put(stores.candidatesStore)(cacheQueryHash.hash(query), CatalogResults(targets))
+        idb.put(stores.candidatesStore)(cacheQueryHash.hash(query), targets)
     } yield ()
   }
 

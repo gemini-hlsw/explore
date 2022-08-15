@@ -8,9 +8,7 @@ import cats.data.EitherNec
 import cats.effect.Concurrent
 import cats.effect.IO
 import cats.syntax.all._
-import explore.events.CatalogRequest
 import explore.events._
-import explore.events.picklers._
 import explore.model.Constants
 import explore.model.boopickle.Boopickle._
 import explore.model.boopickle._
@@ -90,14 +88,13 @@ trait CatalogCache extends CatalogIDB with AsyncToIO {
    * Try to read the gaia query from the cache or else get it from gaia
    */
   def readFromGaia(
-    client:     Client[IO],
-    self:       dom.DedicatedWorkerGlobalScope,
-    idb:        IndexedDb.Database,
-    stores:     CacheIDBStores,
-    request:    CatalogRequest
-  )(implicit L: Logger[IO]): IO[Unit] = {
-
-    val CatalogRequest(tracking, obsTime) = request
+    client:  Client[IO],
+    idb:     IndexedDb.Database,
+    stores:  CacheIDBStores,
+    request: CatalogMessage.GSRequest,
+    respond: List[GuideStarCandidate] => IO[Unit]
+  )(using Logger[IO]): IO[Unit] = {
+    val CatalogMessage.GSRequest(tracking, obsTime) = request
 
     val brightnessConstraints = ags.widestConstraints
 
@@ -120,7 +117,7 @@ trait CatalogCache extends CatalogIDB with AsyncToIO {
           proxy.some
         )
 
-        (L.debug(s"Requested catalog $query ${cacheQueryHash.hash(query)}") *>
+        (Logger[IO].debug(s"Requested catalog $query ${cacheQueryHash.hash(query)}") *>
           // Try to find it in the db
           readGuideStarCandidates(idb, stores, query).toIO.handleError(_ =>
             none
@@ -138,26 +135,22 @@ trait CatalogCache extends CatalogIDB with AsyncToIO {
                   )
                 )
                 .flatMap { candidates =>
-                  L.debug(
+                  Logger[IO].debug(
                     s"Catalog results from remote catalog: ${candidates.length} candidates"
                   ) *>
-                    postWorkerMessage[IO](self, CatalogResults(candidates)) *>
+                    respond(candidates) *>
                     storeGuideStarCandidates(idb, stores, query, candidates).toIO
-                      .handleError(e => L.error(e)("Error storing guidstar candidates"))
-                }
-                .handleErrorWith { e =>
-                  postWorkerMessage[IO](self, CatalogQueryError(e.getMessage()))
+                      .handleError(e => Logger[IO].error(e)("Error storing guidstar candidates"))
                 }
                 .void
             ) { c =>
               // Cache hit!
-              L.debug(s"Catalog results from cache: ${c.candidates.length} candidates") *>
-                postWorkerMessage[IO](self, c)
+              Logger[IO].debug(s"Catalog results from cache: ${c.length} candidates") *>
+                respond(c)
             }
           )
       case _                               =>
-        L.error("Unexpected error in CatalogCage: A year is not a Bounded Interval.")
+        Logger[IO].error("Unexpected error in CatalogCage: A year is not a Bounded Interval.")
     }
   }
-
 }

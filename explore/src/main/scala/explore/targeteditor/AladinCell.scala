@@ -3,6 +3,7 @@
 
 package explore.targeteditor
 
+import boopickle.DefaultBasic.*
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.Pot
@@ -16,14 +17,14 @@ import eu.timepit.refined.auto._
 import explore.Icons
 import explore.common.UserPreferencesQueries._
 import explore.components.ui.ExploreStyles
-import explore.events.CatalogResults
 import explore.events._
-import explore.events.picklers._
 import explore.implicits._
 import explore.model.Constants
 import explore.model.ObsConfiguration
 import explore.model.TargetVisualOptions
+import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle._
+import explore.model.boopickle.CatalogPicklers.given
 import explore.model.boopickle._
 import explore.model.enums.AgsState
 import explore.model.enums.Visible
@@ -44,6 +45,7 @@ import lucuma.core.model.User
 import lucuma.ui.reusability._
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import org.typelevel.log4cats.Logger
 import queries.common.UserPreferencesQueriesGQL._
 import react.aladin.Fov
 import react.common.ReactFnProps
@@ -102,33 +104,19 @@ object AladinCell extends ModelOptics {
       .useSerialState(List.empty[AgsAnalysis])
       // Ags state
       .useState[AgsState](AgsState.Idle)
-      // Listen on web worker for messages with catalog candidates
-      .useStreamResourceBy((props, _, _, _, _, _, _) => props.tid)(
-        (props, _, _, _, gs, ags, agsState) =>
-          _ =>
-            props.ctx.worker.streamResource.map(
-              _.map(decodeFromTransferable[WorkerMessage])
-                .collect {
-                  case Some(CatalogResults(candidates)) =>
-                    agsState.setState(AgsState.Idle).to[IO] *> gs.setStateAsync(candidates)
-                  case Some(AgsResult(r))               =>
-                    agsState.setState(AgsState.Idle).to[IO] *> ags.setStateAsync(r)
-                  case Some(CatalogQueryError(m))       =>
-                    IO.raiseError(new RuntimeException(m))
-                }
-                .evalMap(identity)
-            )
-      )
       // Request data again if vizTime changes more than a month
-      .useEffectWithDepsBy((p, _, _, _, _, _, _, lock) => (lock, p.obsConf.vizTime)) {
-        (props, _, _, _, _, _, agsState, _) => (lock, vizTime) =>
-          (agsState.setState(AgsState.LoadingCandidates).to[IO] *>
-            props.ctx.worker
-              .postWorkerMessage(CatalogRequest(props.target.get, vizTime)))
-            .whenA(lock === PotOption.ReadyNone)
+      .useEffectWithDepsBy((p, _, _, _, _, _, _) => p.obsConf.vizTime) {
+        (props, _, _, _, gs, _, agsState) => vizTime =>
+          implicit val ctx = props.ctx
+
+          agsState.setStateAsync(AgsState.LoadingCandidates) >>
+            CatalogClient[IO].requestSingle(CatalogMessage.GSRequest(props.target.get, vizTime)) >>=
+            (_.map(candidates =>
+              agsState.setState(AgsState.Idle).to[IO] >> gs.setStateAsync(candidates)
+            ).orEmpty)
       }
-      .useEffectWithDepsBy((p, _, _, _, _, _, _, _) => (p.uid, p.tid)) {
-        (props, _, options, _, _, _, _, _) => _ =>
+      .useEffectWithDepsBy((p, _, _, _, _, _, _) => (p.uid, p.tid)) {
+        (props, _, options, _, _, _, _) => _ =>
           implicit val ctx = props.ctx
 
           UserTargetPreferencesQuery
@@ -151,7 +139,7 @@ object AladinCell extends ModelOptics {
       // Selected GS index. Should be stored in the db
       .useStateView(none[Int])
       // Request ags calculation
-      .useEffectWithDepsBy((p, _, _, _, candidates, _, _, _, _) =>
+      .useEffectWithDepsBy((p, _, _, _, candidates, _, _, _) =>
         (p.target.get,
          p.obsConf.posAngleConstraint,
          p.obsConf.constraints,
@@ -159,7 +147,7 @@ object AladinCell extends ModelOptics {
          p.obsConf.vizTime,
          candidates.value
         )
-      ) { (props, _, _, _, _, _, agsState, _, selectedIndex) =>
+      ) { (props, _, _, _, _, ags, agsState, selectedIndex) =>
         {
           case (tracking,
                 Some(posAngle),
@@ -168,6 +156,8 @@ object AladinCell extends ModelOptics {
                 vizTime,
                 candidates
               ) =>
+            implicit val ctx = props.ctx
+
             val pa = posAngle match {
               case PosAngleConstraint.Fixed(a)               => a.some
               case PosAngleConstraint.AllowFlip(a)           => a.some
@@ -177,19 +167,29 @@ object AladinCell extends ModelOptics {
 
             (tracking.at(vizTime), pa).mapN { (base, pa) =>
               val basePos = AgsPosition(pa, Offset.Zero)
-              (selectedIndex.set(none) *> agsState.setState(AgsState.Calculating)).to[IO] *>
-                props.ctx.worker
-                  .postWorkerMessage(
-                    AgsRequest(props.tid,
-                               constraints,
-                               wavelength,
-                               base,
-                               basePos,
-                               params,
-                               candidates
-                    )
-                  )
-                  .unlessA(candidates.isEmpty)
+
+              for {
+                _ <- selectedIndex.async.set(none)
+                _ <- agsState.setStateAsync(AgsState.Calculating)
+                _ <- AgsClient[IO]
+                       .requestSingle(
+                         AgsMessage.Request(props.tid,
+                                            constraints,
+                                            wavelength,
+                                            base,
+                                            basePos,
+                                            params,
+                                            candidates
+                         )
+                       )
+                       .flatMap(
+                         _.map(r =>
+                           agsState.setStateAsync(AgsState.Idle) *> ags.setStateAsync(r)
+                         ).orEmpty
+                       )
+                       .unlessA(candidates.isEmpty)
+                       .handleErrorWith(t => Logger[IO].error(t)("ERROR IN AGS REQUEST"))
+              } yield ()
             }.orEmpty
           case _ => IO.unit
         }
@@ -197,8 +197,8 @@ object AladinCell extends ModelOptics {
       // open settings menu
       .useState(false)
       // Reset the selected gs if results chage
-      .useEffectWithDepsBy((p, _, _, _, _, agsResults, _, _, _, _) => (agsResults, p.obsConf)) {
-        (p, _, _, _, _, agsResults, agsState, _, selectedIndex, _) => _ =>
+      .useEffectWithDepsBy((p, _, _, _, _, agsResults, _, _, _) => (agsResults, p.obsConf)) {
+        (p, _, _, _, _, agsResults, agsState, selectedIndex, _) => _ =>
           selectedIndex
             .set(
               0.some.filter(_ => agsResults.value.nonEmpty && p.obsConf.canSelectGuideStar)
@@ -214,7 +214,6 @@ object AladinCell extends ModelOptics {
           _,
           agsResults,
           agsState,
-          _,
           selectedGSIndex,
           openSettings
         ) =>

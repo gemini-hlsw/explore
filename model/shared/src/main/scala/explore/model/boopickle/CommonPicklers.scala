@@ -35,6 +35,10 @@ import lucuma.core.model.ElevationRange
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.core.util.Enumerated
+import org.http4s.Uri
+
+import java.time.Duration
+import java.time.Instant
 
 trait CommonPicklers {
   given picklerRefined[A: Pickler, B](using Validate[A, B]): Pickler[A Refined B] =
@@ -148,9 +152,16 @@ trait CommonPicklers {
       .addConcreteType[ElevationRange.AirMass]
       .addConcreteType[ElevationRange.HourAngle]
 
-  given Pickler[ConstraintSet] =
-    transformPickler(Function.tupled(ConstraintSet.apply _))(x =>
-      (x.imageQuality, x.cloudExtinction, x.skyBackground, x.waterVapor, x.elevationRange)
-    )
+  given Pickler[ConstraintSet] = generatePickler
 
+  given Pickler[Instant] =
+    transformPickler(Instant.ofEpochMilli)(_.toEpochMilli())
+
+  given Pickler[Duration] =
+    transformPickler(Duration.ofMillis)(_.toMillis)
+
+  given Pickler[Uri] =
+    transformPickler(Uri.unsafeFromString)(_.toString)
 }
+
+object CommonPicklers extends CommonPicklers

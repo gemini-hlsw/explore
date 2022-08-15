@@ -6,48 +6,49 @@ package explore.model.boopickle
 import boopickle.DefaultBasic._
 import cats.effect._
 import cats.syntax.all._
-import explore.events.WorkerMessage
+import fs2.Chunk.ByteBuffer.apply
 import org.scalajs.dom
 
+import java.nio.ByteBuffer
 import scala.scalajs.js
 import scala.scalajs.js.typedarray._
 
 trait BoopicklePlatform {
 
-  def asTransferable[A: Pickler](value: A): Int8Array = {
+  def asBytes[A: Pickler](value: A): Array[Byte] = {
     // Save some space on small requests
     val byteBuffer = Pickle.intoBytes(value)
-    val bytes      = new Array[Byte](byteBuffer.limit())
+    val bytes      = new Array[Byte](byteBuffer.limit)
     byteBuffer.get(bytes, 0, byteBuffer.limit)
-    bytes.toTypedArray
+    bytes
   }
+
+  def asTypedArray[A: Pickler](value: A): Int8Array =
+    asBytes(value).toTypedArray
 
   def postAsTransferable[F[_]: Sync, A: Pickler](self: dom.DedicatedWorkerGlobalScope, value: A) =
     Sync[F].delay {
-      val arr = asTransferable(value)
+      val arr = asTypedArray(value)
       self.postMessage(arr, js.Array(arr.buffer: dom.Transferable))
     }
 
-  def postWorkerMessage[F[_]: Sync](self: dom.DedicatedWorkerGlobalScope, value: WorkerMessage)(
-    implicit p:                           Pickler[WorkerMessage]
-  ) =
-    Sync[F].delay {
-      val arr = asTransferable(value)
-      self.postMessage(arr, js.Array(arr.buffer: dom.Transferable))
-    }
+  def fromBytes[A: Pickler](bytes: Array[Byte]): Either[Throwable, A] =
+    Either.catchNonFatal(Unpickle[A].fromBytes(ByteBuffer.wrap(bytes)))
 
-  def fromTransferable[A: Pickler](buffer: Array[Byte]): Either[Throwable, A] =
-    Either
-      .catchNonFatal(Unpickle[A].fromBytes(TypedArrayBuffer.wrap(buffer.toTypedArray)))
+  def fromTypedArray[A: Pickler](m: Int8Array): Either[Throwable, A] = {
+    val cp = new Array[Byte](m.byteLength)
+    m.copyToArray(cp)
+    fromBytes[A](cp)
+  }
+
+  def decodeFromTransferableEither[A: Pickler](m: dom.MessageEvent): Either[Throwable, A] =
+    m.data match {
+      case e: Int8Array => fromTypedArray(e)
+      case _            => new Exception("Non-transferable message received on worker").asLeft
+    }
 
   def decodeFromTransferable[A: Pickler](m: dom.MessageEvent): Option[A] =
-    m.data match {
-      case e: Int8Array =>
-        val cp = new Array[Byte](e.byteLength)
-        e.copyToArray(cp)
-        fromTransferable[A](cp).toOption
-      case _            => none
-    }
+    decodeFromTransferableEither(m).toOption
 }
 
 object Boopickle extends BoopicklePlatform

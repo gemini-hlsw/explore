@@ -3,13 +3,16 @@
 
 package workers
 
-import explore.events.CatalogResults
-import explore.events.picklers._
+import boopickle.DefaultBasic.*
+import boopickle.Pickler
+import explore.events.CatalogMessage
+import explore.model.boopickle.CatalogPicklers.given
 import japgolly.scalajs.react.callback._
 import japgolly.webapputil.binary._
 import japgolly.webapputil.boopickle._
 import japgolly.webapputil.indexeddb.IndexedDb.DatabaseName
 import japgolly.webapputil.indexeddb._
+import lucuma.ags.GuideStarCandidate
 
 import scala.annotation.nowarn
 import scala.scalajs.js
@@ -34,7 +37,7 @@ trait CacheIDBStores {
 
   // object-store to store catalog results indexed by the hash of the query
   // Async as it is binary
-  val candidatesStore: ObjectStoreDef.Async[Int, CatalogResults]
+  val candidatesStore: ObjectStoreDef.Async[Int, List[GuideStarCandidate]]
 
   // object-store for storing the cache indexes and expiration date
   val cacheStore: ObjectStoreDef.Sync[String, CacheEntry]
@@ -53,8 +56,8 @@ object CacheIDBStores {
     import SafePickler.ConstructionHelperImplicits._
 
     //  SafePickler` is defined in webapp-util and provides some additional features.
-    implicit def safePicklerCatalogResults: SafePickler[CatalogResults] =
-      picklerCatalogResults
+    implicit def safePicklerCatalogResults: SafePickler[List[GuideStarCandidate]] =
+      summon[Pickler[List[GuideStarCandidate]]]
         .asV1(0) // This is v1.0 of our data format.
         // Add some header/footer coming frow webapputil example
         .withMagicNumbers(0x8cf0655b, 0x5a8218eb)
@@ -72,17 +75,17 @@ object CacheIDBStores {
       )
 
     // ObjectStore for storing our guide star candidates
-    override val candidatesStore: ObjectStoreDef.Async[Int, CatalogResults] = {
+    override val candidatesStore: ObjectStoreDef.Async[Int, List[GuideStarCandidate]] = {
 
-      def valueFormat: BinaryFormat[CatalogResults] =
+      def valueFormat: BinaryFormat[List[GuideStarCandidate]] =
         // Declare that we want to support binary format evolution.
         BinaryFormat.versioned(
           // v1.0: Use implicit SafePickler[CatalogResults]
-          BinaryFormat.id.pickle[CatalogResults]
+          BinaryFormat.id.pickle[List[GuideStarCandidate]]
           // Our hypothetical future v1.1 protocol would be here
         )
 
-      def valueCodec: ValueCodec.Async[CatalogResults] =
+      def valueCodec: ValueCodec.Async[List[GuideStarCandidate]] =
         ValueCodec.Async.binary(valueFormat)
 
       ObjectStoreDef.Async("gs-candidates", KeyCodec.int, valueCodec)
