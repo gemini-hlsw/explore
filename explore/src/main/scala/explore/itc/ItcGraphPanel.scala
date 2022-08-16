@@ -51,9 +51,11 @@ final case class ItcGraphPanel(
   def wavelength: Option[Wavelength] = scienceMode match
     case Some(ScienceMode.GmosNorthLongSlit(_, adv)) =>
       adv.overrideWavelength.orElse(spectroscopyRequirements.flatMap(_.wavelength))
+
     case Some(ScienceMode.GmosSouthLongSlit(_, adv)) =>
       adv.overrideWavelength.orElse(spectroscopyRequirements.flatMap(_.wavelength))
-    case _                                           => none
+
+    case _ => none
 
   def signalToNoise: Option[PosBigDecimal] = scienceMode match
     case Some(ScienceMode.GmosNorthLongSlit(_, adv)) =>
@@ -63,6 +65,7 @@ final case class ItcGraphPanel(
         )
         .getOption(adv)
         .orElse(spectroscopyRequirements.flatMap(_.signalToNoise))
+
     case Some(ScienceMode.GmosSouthLongSlit(_, adv)) =>
       ScienceModeAdvanced.GmosSouthLongSlit.overrideExposureTimeMode.some
         .andThen(
@@ -70,24 +73,23 @@ final case class ItcGraphPanel(
         )
         .getOption(adv)
         .orElse(spectroscopyRequirements.flatMap(_.signalToNoise))
-    case _                                           =>
+
+    case _ =>
       spectroscopyRequirements.flatMap(_.signalToNoise)
 
   def instrumentRow: Option[InstrumentRow] = scienceMode match
-    case Some(
-          ScienceMode.GmosNorthLongSlit(basic, adv)
-        ) =>
+    case Some(ScienceMode.GmosNorthLongSlit(basic, adv)) =>
       val grating = adv.overrideGrating.getOrElse(basic.grating)
       val filter  = adv.overrideFilter.orElse(basic.filter)
       val fpu     = adv.overrideFpu.getOrElse(basic.fpu)
       GmosNorthSpectroscopyRow(grating, fpu, filter).some
-    case Some(
-          ScienceMode.GmosSouthLongSlit(basic, adv)
-        ) =>
+
+    case Some(ScienceMode.GmosSouthLongSlit(basic, adv)) =>
       val grating = adv.overrideGrating.getOrElse(basic.grating)
       val filter  = adv.overrideFilter.orElse(basic.filter)
       val fpu     = adv.overrideFpu.getOrElse(basic.fpu)
       GmosSouthSpectroscopyRow(grating, fpu, filter).some
+
     case _ =>
       none
 }

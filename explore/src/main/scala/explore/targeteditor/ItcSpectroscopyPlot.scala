@@ -8,6 +8,7 @@ import crystal.Pot
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.itc.ItcChart
+import explore.model.itc.YAxis
 import explore.syntax.ui.*
 import explore.syntax.ui.given
 import gpp.highcharts.highchartsStrings.line
@@ -47,17 +48,18 @@ object ItcSpectroscopyPlot {
         props.charts.toOption.foldMap(_.map(chart => ItcSeries(chart.title, 0)))
 
       val yAxes = props.charts.toOption
-        .foldMap(
-          _.map(chart =>
-            YAxisOptions()
-              .setTitle(YAxisTitleOptions().setText(chart.title))
-              .setAllowDecimals(false)
-              .setTickInterval(10)
-              .setMinorTickInterval(5)
-              .setLabels(YAxisLabelsOptions().setFormat("{value}"))
-          )
-        )
-        .headOption
+        .map(_.foldLeft(YAxis.Empty)(_ ∪ _.yAxis))
+        .map { yAxis =>
+          val (min, max, tick) = yAxis.ticks(10)
+          YAxisOptions()
+            .setTitle(YAxisTitleOptions().setText("e- per exposure per spectral pixel"))
+            .setAllowDecimals(false)
+            .setTickInterval(tick)
+            .setMin(min)
+            .setMax(max)
+            .setMinorTickInterval(tick / 3)
+            .setLabels(YAxisLabelsOptions().setFormat("{value}"))
+        }
         .toList
 
       val options = Options()
