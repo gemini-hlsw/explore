@@ -6,13 +6,14 @@ package explore.itc
 import cats.syntax.all._
 import crystal.Pot
 import explore.components.ui.ExploreStyles
+import explore.highcharts.*
 import explore.implicits._
 import explore.model.itc.ItcChart
 import explore.model.itc.YAxis
 import explore.syntax.ui.*
 import explore.syntax.ui.given
+import explore.utils.*
 import gpp.highcharts.highchartsStrings.line
-import gpp.highcharts.mod.XAxisLabelsOptions
 import gpp.highcharts.mod._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -27,25 +28,20 @@ import scala.collection.immutable.HashSet
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
 
-final case class ItcSpectroscopyPlot(charts: Pot[List[ItcChart]])
+case class ItcSpectroscopyPlot(loading: PlotLoading, charts: Pot[List[ItcChart]])
     extends ReactFnProps[ItcSpectroscopyPlot](ItcSpectroscopyPlot.component)
 
 object ItcSpectroscopyPlot {
   type Props = ItcSpectroscopyPlot
 
-  final case class ItcSeries(name: String, yAxis: Int) extends Product with Serializable
-
   val component = ScalaFnComponent
     .withHooks[Props]
     .useResizeDetector()
     .render { (props, resize) =>
-      val seriesData: List[js.Array[Chart.Data]] =
-        props.charts.toOption.foldMap(
-          _.map(_.data.map(p => (p(0), p(1)): Chart.Data).toJSArray)
-        )
+      val loading = props.charts.isPending || props.loading.boolValue
 
       val series =
-        props.charts.toOption.foldMap(_.map(chart => ItcSeries(chart.title, 0)))
+        props.charts.toOption.filterNot(_ => loading).orEmpty
 
       val yAxes = props.charts.toOption
         .map(_.foldLeft(YAxis.Empty)(_ ∪ _.yAxis))
@@ -68,6 +64,7 @@ object ItcSpectroscopyPlot {
             .setHeight(resize.height.getOrElse(1).toDouble)
             .setStyledMode(true)
             .setAlignTicks(false)
+            .setClassName(ExploreStyles.ItcPlotLoading.when_(props.loading.boolValue).htmlClass)
         )
         .setTitle(TitleOptions().setTextUndefined)
         .setCredits(CreditsOptions().setEnabled(false))
@@ -88,13 +85,14 @@ object ItcSpectroscopyPlot {
                 )
             )
         )
+        .setLoading(LoadingOptions())
         .setSeries(
-          series.zipWithIndex
-            .map((series, i) =>
+          series
+            .map(series =>
               SeriesLineOptions((), (), line)
-                .setName(series.name)
-                .setYAxis(series.yAxis)
-                .setData(seriesData.lift(i).getOrElse(js.Array()))
+                .setName(series.title)
+                .setYAxis(0)
+                .setData(series.data.map(p => (p(0), p(1)): Chart.Data).toJSArray)
                 .setLineWidth(0.1)
             )
             .map(_.asInstanceOf[SeriesOptionsType])
@@ -103,8 +101,9 @@ object ItcSpectroscopyPlot {
 
       <.div(
         ExploreStyles.ElevationPlotSection,
-        // Include the size in the key
-        Chart(options).withKey(s"$props-$resize").when(resize.height.isDefined)
+        Chart(options, onCreate = _.showLoadingCB.when_(loading))
+          .withKey(s"$props-$resize")
+          .when(resize.height.isDefined)
       )
         .withRef(resize.ref)
     }

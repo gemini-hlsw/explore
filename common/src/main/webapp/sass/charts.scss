@@ -115,3 +115,8 @@ See https://github.com/highcharts/highcharts/issues/13320 */
 .plot-sky-brightness-band-label {
   fill: hsl(209deg 75% 71%);
 }
+
+.highcharts-loading {
+  background-color: unset;
+  opacity: 0.6;
+}

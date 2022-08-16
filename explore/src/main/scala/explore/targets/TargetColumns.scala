@@ -13,7 +13,7 @@ import explore.model.display._
 import explore.model.enums.SourceProfileType
 import explore.model.formats._
 import explore.optics.all._
-import explore.utils._
+import explore.utils.given
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enums.Band
 import lucuma.core.math.ApparentRadialVelocity

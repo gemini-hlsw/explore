@@ -101,30 +101,39 @@ object ItcGraphPanel {
     ScalaFnComponent
       .withHooks[Props]
       .useState(Pot.pending[List[ItcChart]])
+      // loading
+      .useState(PlotLoading.Done)
       // Request ITC graph data
-      .useEffectWithDepsBy((props, _) =>
+      .useEffectWithDepsBy((props, _, _) =>
         (props.wavelength,
          props.signalToNoise,
          props.scienceData.map(_.constraints),
          props.scienceData.flatMap(_.itcTargets.toNel),
          props.instrumentRow
         )
-      ) { (props, charts) => (wavelength, signalToNoise, constraints, itcTargets, instrumentRow) =>
-        given AppContextIO = props.ctx
+      ) {
+        (props, charts, loading) =>
+          (wavelength, signalToNoise, constraints, itcTargets, instrumentRow) =>
+            given AppContextIO = props.ctx
 
-        (for
-          w           <- OptionT.fromOption[IO](wavelength)
-          sn          <- OptionT.fromOption[IO](signalToNoise)
-          constraints <- OptionT.fromOption[IO](constraints)
-          t           <- OptionT.fromOption[IO](itcTargets)
-          mode        <- OptionT.fromOption[IO](instrumentRow)
-        yield ItcClient[IO]
-          .requestSingle(ItcMessage.GraphQuery(w, sn, constraints, t, mode))
-          .flatMap(_.map(m => charts.setStateAsync(Pot.Ready(m))).orEmpty))
-          .getOrElse(IO.unit)
-          .flatten
+            (for
+              w           <- OptionT.fromOption[IO](wavelength)
+              sn          <- OptionT.fromOption[IO](signalToNoise)
+              constraints <- OptionT.fromOption[IO](constraints)
+              t           <- OptionT.fromOption[IO](itcTargets)
+              mode        <- OptionT.fromOption[IO](instrumentRow)
+            yield loading.setState(PlotLoading.Loading).to[IO] *> ItcClient[IO]
+              .requestSingle(ItcMessage.GraphQuery(w, sn, constraints, t, mode))
+              .flatMap(
+                _.map(m =>
+                  charts.setStateAsync(Pot.Ready(m)) *>
+                    loading.setState(PlotLoading.Done).to[IO]
+                ).orEmpty
+              ))
+              .getOrElse(IO.unit)
+              .flatten
       }
-      .render { (_, charts) =>
-        ItcSpectroscopyPlot(charts.value)
+      .render { (_, charts, loading) =>
+        ItcSpectroscopyPlot(loading.value, charts.value)
       }
 }
