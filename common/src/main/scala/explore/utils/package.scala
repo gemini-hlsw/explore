@@ -162,8 +162,6 @@ def clearInputIcon[EV[_], A](
     .map(_ => <.i(ExploreStyles.ClearableInputIcon, ^.onClick --> ev.set(view)(None)))
     .orUndefined
 
-implicit val MonoidVdomNode: Monoid[VdomNode] = new Monoid[VdomNode] {
-  val empty: VdomNode = EmptyVdom
-
+given Monoid[VdomNode] = new Monoid[VdomNode]:
+  val empty: VdomNode                             = EmptyVdom
   def combine(x: VdomNode, y: VdomNode): VdomNode = React.Fragment(x, y)
-}

@@ -26,6 +26,9 @@ def requiredForITC: TagMod =
 opaque type PlotLoading = Boolean
 
 object PlotLoading:
-  def apply(b: Boolean): PlotLoading = b
+  val Loading: PlotLoading = true
+  val Done: PlotLoading    = false
 
-extension (p: PlotLoading) def boolValue: Boolean = p
+  inline def apply(b: Boolean): PlotLoading = b
+
+extension (p: PlotLoading) inline def boolValue: Boolean = p
