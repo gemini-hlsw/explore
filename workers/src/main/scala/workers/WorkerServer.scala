@@ -81,7 +81,8 @@ trait WorkerServer[F[_]: Async, T: Pickler](using Monoid[F[Unit]]) {
                             postAsTransferable[F, FromServer](
                               self,
                               FromServer.Data(id, pickled)
-                            ) >> F.cede
+                            ) >>
+                              F.cede // This is important so that long-running processes don't hog the scheduler
                         )
                       ) >>
                         postAsTransferable[F, FromServer](self, FromServer.Complete(id))

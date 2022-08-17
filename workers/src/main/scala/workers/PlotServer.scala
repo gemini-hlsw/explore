@@ -32,11 +32,10 @@ import scala.scalajs.js.annotation.JSExport
 import scala.scalajs.js.annotation.JSExportTopLevel
 
 @JSExportTopLevel("PlotServer", moduleID = "exploreworkers")
-object PlotServer extends WorkerServer[IO, PlotMessage.Request] with IOApp.Simple {
+object PlotServer extends WorkerServer[IO, PlotMessage.Request] {
 
   @JSExport
-  def runWorker(): Unit = // run.unsafeRunAndForget()
-    main(Array.empty)
+  def runWorker(): Unit = run.unsafeRunAndForget()
 
   private val SampleRate: Duration = Duration.ofMinutes(1)
 
