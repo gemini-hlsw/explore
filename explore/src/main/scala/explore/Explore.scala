@@ -113,6 +113,8 @@ object ExploreMain extends IOApp.Simple {
   // To setup the accessibility module we need to call the modules
   // This needs to be done in the right order
   def setupHighCharts[F[_]: Sync]: F[Unit] = Sync[F].delay {
+    // This may seem like a no-op but it is in fact triggering the npm import
+    // Order is important you need to import Highcharts first
     react.highcharts.Highcharts
     explore.highcharts.HighchartsAccesibility
   }
