@@ -93,6 +93,10 @@ trait ContextImplicits {
     ctx: AppContext[F]
   ): WorkerClient[F, AgsMessage.Request] =
     ctx.workerClients.ags
+  implicit def appContext2PlotWorker[F[_]](implicit
+    ctx: AppContext[F]
+  ): WorkerClient[F, PlotMessage.Request] =
+    ctx.workerClients.plot
 }
 
 trait RefinedImplicits {

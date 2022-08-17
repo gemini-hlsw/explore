@@ -6,6 +6,7 @@ package workers
 import boopickle.Pickler
 import cats.effect.IO
 import cats.effect.kernel.Async
+import cats.effect.kernel.Fiber
 import cats.effect.kernel.Ref
 import cats.effect.kernel.Resource
 import cats.effect.kernel.Sync
@@ -69,26 +70,35 @@ trait WorkerServer[F[_]: Async, T: Pickler](using Monoid[F[Unit]]) {
           decodeFromTransferable[FromClient](msg)
             .map {
               case FromClient.Start(id, payload) =>
-                (
-                  for {
-                    data <- F.delay(fromBytes[T](payload.value)).rethrow
-                    _    <- handlerFn(
-                              Invocation(
-                                data,
-                                pickled =>
-                                  postAsTransferable[F, FromServer](self, FromServer.Data(id, pickled))
-                              )
-                            )
-                    _    <- postAsTransferable[F, FromServer](self, FromServer.Complete(id))
-                  } yield ()
-                ).handleErrorWith(t =>
-                  postAsTransferable[F, FromServer](
-                    self,
-                    FromServer.Error(id, WorkerException.fromThrowable(t))
+                F.delay(fromBytes[T](payload.value))
+                  .rethrow
+                  .flatMap(data =>
+                    (
+                      handlerFn(
+                        Invocation(
+                          data,
+                          pickled =>
+                            postAsTransferable[F, FromServer](
+                              self,
+                              FromServer.Data(id, pickled)
+                            ) >>
+                              F.cede // This is important so that long-running processes don't hog the scheduler
+                        )
+                      ) >>
+                        postAsTransferable[F, FromServer](self, FromServer.Complete(id))
+                    )
+                      .handleErrorWith(t =>
+                        postAsTransferable[F, FromServer](
+                          self,
+                          FromServer.Error(id, WorkerException.fromThrowable(t))
+                        )
+                      )
+                      .guarantee(cancelTokens.update(_ - id))
+                      .start
+                      .flatMap((fiber: Fiber[F, Throwable, Unit]) =>
+                        cancelTokens.update(_ + (id -> fiber.cancel))
+                      )
                   )
-                ).guarantee(cancelTokens.update(_ - id))
-                  .start >>=
-                  (fiber => cancelTokens.update(_ + (id -> fiber.cancel)))
               case FromClient.End(id)            =>
                 cancelTokens.modify { tokenMap =>
                   val token = tokenMap.get(id).orEmpty

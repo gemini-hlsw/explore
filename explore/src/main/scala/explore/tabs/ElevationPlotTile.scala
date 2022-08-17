@@ -9,6 +9,7 @@ import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ScienceMode
 import explore.targeteditor.ElevationPlotSection
+import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Target
