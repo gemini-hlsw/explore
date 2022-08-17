@@ -110,6 +110,13 @@ object ExploreMain extends IOApp.Simple {
       element.innerHTML = msg
     }
 
+  // To setup the accessibility module we need to call the modules
+  // This needs to be done in the right order
+  def setupHighCharts[F[_]: Sync]: F[Unit] = Sync[F].delay {
+    react.highcharts.Highcharts
+    explore.highcharts.HighchartsAccesibility
+  }
+
   override final def run: IO[Unit] = {
 
     def setupReusabilityOverlay(env: ExecutionEnvironment): IO[Unit] =
@@ -210,6 +217,7 @@ object ExploreMain extends IOApp.Simple {
 
     (for {
       dispatcher       <- Dispatcher[IO]
+      _                <- Resource.eval(setupHighCharts[IO])
       prefs            <- Resource.eval(ExploreLocalPreferences.loadPreferences[IO])
       given Logger[IO] <- Resource.eval(setupLogger[IO](prefs))
       workerClients    <- WorkerClients.build[IO](dispatcher)
