@@ -104,8 +104,7 @@ def potRenderView[A](
   _.get.fold(pendingRender, errorRender, valueRender)
 
 final implicit class PotRenderOps[A](val pot: Pot[A]) extends AnyVal {
-  @inline
-  def render(
+  inline def render(
     valueRender:   A => VdomNode,
     pendingRender: => VdomNode = DefaultPendingRender,
     errorRender:   Throwable => VdomNode = DefaultErrorRender
@@ -113,19 +112,18 @@ final implicit class PotRenderOps[A](val pot: Pot[A]) extends AnyVal {
 }
 
 final implicit class PotOptionRenderOps[A](val po: PotOption[A]) extends AnyVal {
-  @inline
-  def render(
+  inline def render(
     valueRender:   A => VdomNode,
     pendingRender: => VdomNode = DefaultPendingRender,
     errorRender:   Throwable => VdomNode = DefaultErrorRender
   ): VdomNode = po.toPot.render(valueRender, pendingRender, errorRender)
 }
 
-def showCount(count: Int, unit: String, plural: String): String =
+inline def showCount(count: Int, unit: String, plural: String): String =
   if (count == 1) s"$count $unit"
   else s"$count $plural"
 
-@inline def showCount(count: Int, unit: String): String =
+inline def showCount(count: Int, unit: String): String =
   showCount(count, unit, unit + "s")
 
 implicit class Http4sUriOps(val uri: Uri) extends AnyVal {
