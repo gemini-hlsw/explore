@@ -31,8 +31,7 @@ object ElevationPlotTile {
       "Elevation Plot",
       canMinimize = true,
       bodyClass = ExploreStyles.ElevationPlotTileBody.some,
-      tileClass = ExploreStyles.ElevationPlotTile.some,
-      sizeStateCallback = s => Callback.log(s)
+      tileClass = ExploreStyles.ElevationPlotTile.some
     ) { (_: Tile.RenderInTitle) =>
       (uid, coordinates)
         .mapN { case (uid, c) =>
