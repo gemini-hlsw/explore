@@ -3,6 +3,7 @@
 
 package explore.model
 
+import cats.Order._
 import cats._
 import cats.syntax.all._
 import eu.timepit.refined.cats._
@@ -43,7 +44,7 @@ object layout {
     pprint.copy(
       additionalHandlers = { case layout: LayoutItem =>
         pprint.Tree.Literal(
-          s"LayoutItem(id = ${layout.i}, x = ${layout.x}, y = ${layout.y}, w = ${layout.w}, h = ${layout.h}"
+          s"LayoutItem(id = ${layout.i}, x = ${layout.x}, y = ${layout.y}, w = ${layout.w}, h = ${layout.h})"
         )
       }
     )
@@ -62,9 +63,7 @@ object layout {
   def breakpointCols(b: BreakpointName): Int =
     breakpoints.get(b).foldMap(_._2)
 
-  implicit val nes: Ordering[NonEmptyString]                    = Order[NonEmptyString].toOrdering
-  implicit val breakpointNameOrder: Order[BreakpointName]       = Order.by(_.name)
-  implicit val breakpointNameOrdering: Ordering[BreakpointName] = breakpointNameOrder.toOrdering
+  given Order[BreakpointName] = Order.by(_.name)
 
   val allLayouts: Traversal[LayoutsMap, Layout] =
     each[LayoutsMap, LayoutEntry].andThen(Focus[LayoutEntry](_._3))
@@ -86,13 +85,8 @@ object layout {
 
   val layoutsItemHeight = layoutItems.andThen(layoutItemHeight)
 
-  implicit val breakpointNameReuse: Reusability[BreakpointName] = Reusability.byEq
-  implicit val layoutItemReuse: Reusability[LayoutItem]         = Reusability.byEq
-  implicit val layoutReuse: Reusability[Layout]                 = Reusability.byEq
-  implicit val layoutsMapReuse: Reusability[LayoutsMap]         = Reusability.byEq
-
   object unsafe {
-    implicit val layoutSemigroup: Semigroup[Layout] = Semigroup.instance { case (a, b) =>
+    given Semigroup[Layout] = Semigroup.instance { case (a, b) =>
       val result = a.l.foldLeft(List.empty[LayoutItem]) { case (l, la) =>
         b.l
           .find(_.i.exists(_ === la.i.get))
@@ -104,11 +98,11 @@ object layout {
       Layout(result)
     }
 
-    implicit val layoutItemSemigroup: Semigroup[LayoutItem] = Semigroup.instance { case (a, b) =>
+    given Semigroup[LayoutItem] = Semigroup.instance { case (a, b) =>
       a.copy(w = b.w, h = b.h, x = b.x, y = b.y)
     }
 
-    implicit val layoutGroupSemigroup: Semigroup[(Int, Int, Layout)] =
+    given Semigroup[(Int, Int, Layout)] =
       Semigroup.instance { case ((a, b, c), (_, _, d)) =>
         (a, b, c |+| d)
       }

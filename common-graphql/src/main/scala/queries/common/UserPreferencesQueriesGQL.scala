@@ -73,7 +73,7 @@ object UserPreferencesQueriesGQL {
    * Read the grid layout for a given section
    */
   @GraphQL
-  trait TabGridPreferencesQuery extends GraphQLOperation[UserPreferencesDB] {
+  trait UserGridLayoutQuery extends GraphQLOperation[UserPreferencesDB] {
     val document = """
       query
         obs_tab_preferences($user_id: String!, $criteria: grid_layout_positions_bool_exp!, $section: resizable_area!) {

@@ -5,6 +5,7 @@ package explore.common
 
 import cats.ApplicativeThrow
 import cats.MonadThrow
+import cats.Order._
 import cats.data.OptionT
 import cats.syntax.all._
 import clue.TransactionalClient
@@ -14,7 +15,7 @@ import explore.model.ResizableSection
 import explore.model.enums.PlotRange
 import explore.model.enums.TimeDisplay
 import explore.model.enums.Visible
-import explore.model.layout._
+import explore.model.layout.{_, given}
 import lucuma.core.enums.Site
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
@@ -22,6 +23,8 @@ import lucuma.core.model.Target
 import lucuma.core.model.User
 import queries.common.UserPreferencesQueriesGQL._
 import queries.schemas.UserPreferencesDB
+import queries.schemas.UserPreferencesDB.Enums._
+import queries.schemas.UserPreferencesDB.Scalars._
 import queries.schemas.UserPreferencesDB.Types._
 import queries.schemas.WidthUpsertInput
 import queries.schemas.implicits._
@@ -71,13 +74,10 @@ object UserPreferencesQueries {
       } yield w).value.map(_.flatten.getOrElse(defaultValue))
   }
 
-  implicit class TabGridPreferencesQueryOps(val self: TabGridPreferencesQuery.type) extends AnyVal {
-    import self._
-    import UserPreferencesDB.Scalars._
-
+  extension (self: UserGridLayoutQuery.type)
     def positions2LayoutMap(
-      g: (BreakpointName, List[Data.GridLayoutPositions])
-    ): (react.gridlayout.BreakpointName, (Int, Int, Layout)) = {
+      g: (BreakpointName, List[UserGridLayoutQuery.Data.GridLayoutPositions])
+    ): (react.gridlayout.BreakpointName, (Int, Int, Layout)) =
       val bn = breakpointNameFromString(g._1)
       bn -> ((breakpointWidth(bn),
               breakpointCols(bn),
@@ -85,16 +85,15 @@ object UserPreferencesQueries {
                 g._2.map(p => LayoutItem(p.width, p.height, p.x, p.y, p.tile))
               )
       ))
-    }
+
     // Gets the layout of a section.
-    // This is coded to return a default in case
-    // there is no data or errors
+    // This will return a default in case there is no data or errors
     def queryWithDefault[F[_]: MonadThrow](
       userId:        Option[User.Id],
       layoutSection: GridLayoutSection,
       resizableArea: ResizableSection,
       defaultValue:  (Int, LayoutsMap)
-    )(implicit cl:   TransactionalClient[F, UserPreferencesDB]): F[(Int, LayoutsMap)] =
+    )(using TransactionalClient[F, UserPreferencesDB]): F[(Int, LayoutsMap)] =
       (for {
         uid <- OptionT.fromOption[F](userId)
         c   <-
@@ -107,7 +106,7 @@ object UserPreferencesQueries {
         r   <-
           OptionT
             .liftF[F, (Int, SortedMap[react.gridlayout.BreakpointName, (Int, Int, Layout)])] {
-              query[F](uid.show, c, resizableArea.value).map { r =>
+              UserGridLayoutQuery.query[F](uid.show, c, resizableArea.value).map { r =>
                 (r.explore_resizable_width_by_pk.map(_.width), r.grid_layout_positions) match {
                   case (w, l) if l.isEmpty => (w.getOrElse(defaultValue._1), defaultValue._2)
                   case (w, l)              =>
@@ -119,7 +118,6 @@ object UserPreferencesQueries {
             }
             .handleErrorWith(_ => OptionT.none)
       } yield r).getOrElse(defaultValue)
-  }
 
   implicit class UserGridLayoutUpsertOps(val self: UserGridLayoutUpsert.type) extends AnyVal {
     import self._
@@ -128,9 +126,7 @@ object UserPreferencesQueries {
       userId:  Option[User.Id],
       section: GridLayoutSection,
       layouts: Layouts
-    )(implicit
-      cl:      TransactionalClient[F, UserPreferencesDB]
-    ): F[Unit] =
+    )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
       userId.traverse { uid =>
         execute[F](
           layouts.layouts.flatMap { bl =>
@@ -229,7 +225,6 @@ object UserPreferencesQueries {
   implicit class UserTargetPreferencesUpsertOps(val self: UserTargetPreferencesUpsert.type)
       extends AnyVal {
     import self._
-    import UserPreferencesDB.Enums._
 
     def updateAladinPreferences[F[_]: ApplicativeThrow](
       uid:           User.Id,
@@ -271,7 +266,6 @@ object UserPreferencesQueries {
   implicit class UserElevationPlotPreferencesUpsertOps(val self: UserTargetPreferencesUpsert.type)
       extends AnyVal {
     import self._
-    import UserPreferencesDB.Enums._
 
     def updatePlotPreferences[F[_]: ApplicativeThrow](
       uid:      User.Id,
