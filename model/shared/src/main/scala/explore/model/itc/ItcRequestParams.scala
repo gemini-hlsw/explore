@@ -5,10 +5,12 @@ package explore.model.itc
 
 import cats.data._
 import eu.timepit.refined.types.numeric.PosBigDecimal
+import eu.timepit.refined.types.numeric.PosInt
 import explore.model.itc._
 import explore.modes.InstrumentRow
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
+import lucuma.core.model.NonNegDuration
 
 final case class ItcRequestParams(
   wavelength:    Wavelength,
@@ -16,4 +18,13 @@ final case class ItcRequestParams(
   constraints:   ConstraintSet,
   target:        NonEmptyList[ItcTarget],
   mode:          InstrumentRow
+)
+
+final case class ItcGraphRequestParams(
+  wavelength:   Wavelength,
+  exposureTime: NonNegDuration,
+  exposures:    PosInt,
+  constraints:  ConstraintSet,
+  target:       NonEmptyList[ItcTarget],
+  mode:         InstrumentRow
 )

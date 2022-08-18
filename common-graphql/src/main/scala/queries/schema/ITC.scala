@@ -24,24 +24,28 @@ trait ITC {
   given Encoder[numeric.PosBigDecimal] =
     Encoder.encodeBigDecimal.contramap[numeric.PosBigDecimal](_.value)
 
-  given Encoder[model.SourceProfile] = new Encoder[model.SourceProfile] {
-    final def apply(a: model.SourceProfile): Json = Json.obj(
+  given Encoder[numeric.PosLong] =
+    Encoder.encodeLong.contramap[numeric.PosLong](_.value)
+
+  given Encoder[numeric.NonNegBigDecimal] =
+    Encoder.encodeBigDecimal.contramap[numeric.NonNegBigDecimal](_.value)
+
+  given Encoder[model.SourceProfile] = (a: model.SourceProfile) =>
+    Json.obj(
       ("sourceType",
-       Json.fromString(a match {
+       Json.fromString(a match
          case model.SourceProfile.Point(_)       => "POINT_SOURCE"
          case model.SourceProfile.Uniform(_)     => "UNIFORM_SOURCE"
          case model.SourceProfile.Gaussian(_, _) => "GAUSSIAN_SOURCE"
-       })
+       )
       ),
       ("fwhm",
-       a match {
+       a match
          case model.SourceProfile.Gaussian(f, _) =>
            Json.obj(("microarcseconds", Json.fromString(f.toMicroarcseconds.toString)))
          case _                                  => Json.Null
-       }
       )
     )
-  }
 
   given Encoder[ElevationRange] = Encoder.instance {
     case ElevationRange.AirMass(mi, ma)   =>
@@ -84,7 +88,9 @@ trait ITC {
     // Refined
     type NonEmptyString   = string.NonEmptyString
     type PosInt           = numeric.PosInt
+    type PosLong          = numeric.PosLong
     type PosBigDecimal    = numeric.PosBigDecimal
+    type NonNegBigDecimal = numeric.NonNegBigDecimal
   }
 
   object Enums {

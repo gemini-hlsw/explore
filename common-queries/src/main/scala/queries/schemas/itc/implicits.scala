@@ -25,6 +25,8 @@ import lucuma.core.enums.GmosNorthFpu
 import lucuma.core.enums.GmosSouthFpu
 import cats.data.NonEmptyList
 import explore.model.Asterism
+import eu.timepit.refined.types.numeric.PosLong
+import eu.timepit.refined.types.numeric.NonNegBigDecimal
 
 // There is a lot of duplication here with the odb.implicits package
 object implicits {
@@ -57,6 +59,10 @@ object implicits {
         .assign)
         .runS(WavelengthInput())
         .value
+
+  extension (nnd: NonNegDuration)
+    def toInput: NonNegDurationInput =
+      NonNegDurationInput(milliseconds = NonNegBigDecimal.unsafeFrom(nnd.value.toMillis).assign)
 
   // These are copied from the odb side
   extension (u: UnnormalizedSED)

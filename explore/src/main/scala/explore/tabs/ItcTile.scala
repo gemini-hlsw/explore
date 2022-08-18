@@ -8,6 +8,7 @@ import explore.components.Tile
 import explore.implicits._
 import explore.itc.ItcGraphPanel
 import explore.model.ScienceMode
+import explore.model.itc.ItcChartExposureTime
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.syntax.all.given
 
@@ -16,10 +17,11 @@ object ItcTile:
   def itcTile(
     scienceMode:              Option[ScienceMode],
     spectroscopyRequirements: Option[SpectroscopyRequirementsData],
-    scienceData:              Option[ScienceData]
+    scienceData:              Option[ScienceData],
+    itcExposureTime:          Option[ItcChartExposureTime]
   )(using AppContextIO) =
     Tile(
       ObsTabTilesIds.ItcId.id,
       s"ITC",
       canMinimize = true
-    )(_ => ItcGraphPanel(scienceMode, spectroscopyRequirements, scienceData))
+    )(_ => ItcGraphPanel(scienceMode, spectroscopyRequirements, scienceData, itcExposureTime))

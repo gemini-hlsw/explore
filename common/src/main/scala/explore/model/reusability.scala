@@ -8,6 +8,7 @@ import explore.common.ObsQueries.SpectroscopyRequirementsData
 import explore.data.KeyedIndexedList
 import explore.events.CatalogMessage
 import explore.model.Asterism
+import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.ItcTarget
 import explore.modes.InstrumentRow
 import explore.undo.UndoStacks
@@ -18,6 +19,7 @@ import lucuma.ags.AgsPosition
 import lucuma.ags.GuideStarCandidate
 import lucuma.catalog.AngularSize
 import lucuma.catalog.CatalogTargetResult
+import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.IntPercent
 import lucuma.core.model.Partner
 import lucuma.core.model.PosAngleConstraint
@@ -103,6 +105,8 @@ object reusability {
 
   implicit val existenceReuse: Reusability[Existence]                       = Reusability.byEq
   implicit val requirementsReuse: Reusability[SpectroscopyRequirementsData] = Reusability.byEq
+
+  given Reusability[ItcChartExposureTime] = Reusability.byEq
 
   given Reusability[InstrumentRow] = Reusability.byEq
 }

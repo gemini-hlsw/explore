@@ -127,6 +127,35 @@ See https://github.com/highcharts/highcharts/issues/13320 */
   }
 }
 
+.itc-plot-section {
+  background-color: var(--tile-background);
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+.itc-plot-wrapper {
+  flex-grow: 2;
+}
+
+.itc-plot-description {
+  display: grid;
+  gap: 0.5em;
+  padding: 0.5em;
+  grid-template-columns: 1fr 1fr;
+  background-color: var(--tile-background);
+
+  label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  span {
+    font-size: smaller;
+    font-weight: lighter;
+  }
+}
+
 .itc-plot-chart {
   .highcharts-reset-zoom {
     fill: var(--button-background-color-semi);
