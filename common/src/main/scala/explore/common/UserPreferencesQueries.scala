@@ -15,7 +15,8 @@ import explore.model.ResizableSection
 import explore.model.enums.PlotRange
 import explore.model.enums.TimeDisplay
 import explore.model.enums.Visible
-import explore.model.layout.{_, given}
+import explore.model.layout.*
+import explore.model.layout.given
 import lucuma.core.enums.Site
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset

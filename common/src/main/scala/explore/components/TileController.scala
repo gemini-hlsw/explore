@@ -18,7 +18,8 @@ import explore.implicits._
 import explore.model.Constants
 import explore.model.GridLayoutSection
 import explore.model.enums.TileSizeState
-import explore.model.layout.{_, given}
+import explore.model.layout.*
+import explore.model.layout.given
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.User
