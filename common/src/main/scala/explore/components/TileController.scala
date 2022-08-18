@@ -4,8 +4,10 @@
 package explore.components
 
 import cats.Eq
+import cats.Order._
 import cats.effect.IO
 import cats.syntax.all._
+import crystal.react.hooks.UseStateView
 import crystal.react.hooks._
 import crystal.react.implicits._
 import crystal.react.reuse._
@@ -16,7 +18,8 @@ import explore.implicits._
 import explore.model.Constants
 import explore.model.GridLayoutSection
 import explore.model.enums.TileSizeState
-import explore.model.layout._
+import explore.model.layout.*
+import explore.model.layout.given
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.User
@@ -104,9 +107,13 @@ object TileController {
         getBreakpointFromWidth(p.layoutMap.map { case (x, (w, _, _)) => x -> w }, p.gridWidth)
       }
       // Store the current layout
-      .useStateViewWithReuseBy((p, _, _) => updateResizableState(p.layoutMap))
+      .useStateViewBy((p, _, _) => updateResizableState(p.layoutMap))
+      // Update the current layout if it changes upstream
+      .useEffectWithDepsBy((p, _, _, _) => p.layoutMap)((_, _, _, current) =>
+        layout => current.set(updateResizableState(layout))
+      )
       .render { (p, debouncer, bn, currentLayout) =>
-        def sizeState(id: Tile.TileId, st: TileSizeState): Callback =
+        def sizeState(id: Tile.TileId) = (st: TileSizeState) =>
           currentLayout
             .zoom(allTiles)
             .mod {
@@ -126,10 +133,6 @@ object TileController {
                 } else l
               case l                               => l
             }
-
-        // This is an unsafe eq that only cares about what's stored in the db
-        implicit val unsafeEeqLayoutItem: Eq[LayoutItem] =
-          Eq.by(x => (x.w, x.h, x.x, x.y, x.i))
 
         ResponsiveReactGridLayout(
           width = p.gridWidth.toDouble,
@@ -198,7 +201,7 @@ object TileController {
                 }
                 .getOrElse(EmptyVdom),
               t.controllerClass.orEmpty,
-              t.withState(unsafeSizeToState(currentLayout.get, t.id), Reuse(sizeState _)(t.id))
+              t.withState(unsafeSizeToState(currentLayout.get, t.id), sizeState(t.id))
             )
           }.toVdomArray
         )

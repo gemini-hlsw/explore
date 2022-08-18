@@ -24,7 +24,7 @@ import explore.implicits._
 import explore.model._
 import explore.model.enums.AppTab
 import explore.model.layout._
-import explore.model.layout.unsafe._
+import explore.model.layout.unsafe.given
 import explore.observationtree.ObsList
 import explore.syntax.ui._
 import explore.utils._
@@ -322,9 +322,9 @@ object ObsTabContents {
       .useEffectWithDepsBy((p, _, _, _, _) => (p.userId, p.focusedObs, p.focusedTarget))(
         (props, panels, _, layout, defaultLayout) =>
           _ => {
-            implicit val ctx = props.ctx
+            import props.given
 
-            TabGridPreferencesQuery
+            UserGridLayoutQuery
               .queryWithDefault[IO](
                 props.userId,
                 GridLayoutSection.ObservationsLayout,
@@ -350,7 +350,7 @@ object ObsTabContents {
       )
       .useSingleEffect(debounce = 1.second)
       .useStreamResourceViewOnMountBy { (props, _, _, _, _, _) =>
-        implicit val ctx = props.ctx
+        import props.given
 
         ProgramObservationsQuery
           .query(props.programId)
@@ -369,7 +369,7 @@ object ObsTabContents {
           debouncer,
           obsWithConstraints
         ) =>
-          implicit val ctx = props.ctx
+          import props.given
 
           <.div(
             obsWithConstraints.render(

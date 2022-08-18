@@ -24,7 +24,7 @@ import explore.implicits._
 import explore.model._
 import explore.model.enums.AppTab
 import explore.model.layout._
-import explore.model.layout.unsafe._
+import explore.model.layout.unsafe.given
 import explore.observationtree.AsterismGroupObsList
 import explore.optics._
 import explore.optics.all._
@@ -595,7 +595,7 @@ object TargetTabContents {
           {
             implicit val ctx = props.ctx
 
-            TabGridPreferencesQuery
+            UserGridLayoutQuery
               .queryWithDefault[IO](
                 props.userId,
                 GridLayoutSection.TargetLayout,
