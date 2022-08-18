@@ -23,6 +23,7 @@ import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.highcharts.Chart
 import react.resizeDetector.hooks._
+import react.semanticui.elements.loader.Loader
 
 import scala.collection.immutable.HashSet
 import scala.scalajs.js
@@ -64,7 +65,16 @@ object ItcSpectroscopyPlot {
             .setHeight(resize.height.getOrElse(1).toDouble)
             .setStyledMode(true)
             .setAlignTicks(false)
-            .setClassName(ExploreStyles.ItcPlotLoading.when_(props.loading.boolValue).htmlClass)
+            .clazz(
+              ExploreStyles.ItcPlotChart |+|
+                ExploreStyles.ItcPlotLoading.when_(props.loading.boolValue)
+            )
+            .setZoomType(OptionsZoomTypeValue.xy)
+            .setPanning(ChartPanningOptions().setEnabled(true))
+            .setPanKey(OptionsPanKeyValue.shift)
+            .setAnimation(false)
+            // Will be used in the future to persist the soom
+            // .selectionCB(s => Callback.log(s"selection ${s.xAxis(0).min}"))
         )
         .setTitle(TitleOptions().setTextUndefined)
         .setCredits(CreditsOptions().setEnabled(false))
@@ -85,7 +95,6 @@ object ItcSpectroscopyPlot {
                 )
             )
         )
-        .setLoading(LoadingOptions())
         .setSeries(
           series
             .map(series =>
@@ -100,7 +109,7 @@ object ItcSpectroscopyPlot {
         )
 
       <.div(
-        ExploreStyles.ElevationPlotSection,
+        ExploreStyles.ItcPlotSection,
         Chart(options, onCreate = _.showLoadingCB.when_(loading))
           .withKey(s"$props-$resize")
           .when(resize.height.isDefined)
