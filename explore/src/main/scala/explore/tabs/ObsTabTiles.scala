@@ -26,6 +26,7 @@ import explore.model.TargetSummary
 import explore.model.display._
 import explore.model.enums.AppTab
 import explore.model.itc.ItcChartExposureTime
+import explore.model.itc.OverridenExposureTime
 import explore.model.layout._
 import explore.optics._
 import explore.optics.all._
@@ -198,7 +199,10 @@ object ObsTabTiles {
             obsView.toOption.map(_.get.scienceData.requirements.spectroscopy),
             scienceData,
             obsView.toOption
-              .flatMap(_.get.itcExposureTime.map(r => ItcChartExposureTime(false, r.time, r.count)))
+              .flatMap(
+                _.get.itcExposureTime
+                  .map(r => ItcChartExposureTime(OverridenExposureTime.FromItc, r.time, r.count))
+              )
           )
 
         val constraintsSelector = makeConstraintsSelector(props.constraintGroups, obsViewPot)

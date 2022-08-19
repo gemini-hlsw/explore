@@ -30,6 +30,7 @@ import explore.model.boopickle.Boopickle._
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.ItcChart
 import explore.model.itc.ItcChartExposureTime
+import explore.model.itc.OverridenExposureTime
 import explore.model.reusability._
 import explore.model.reusability.given
 import explore.modes.GmosNorthSpectroscopyRow
@@ -106,8 +107,10 @@ final case class ItcGraphPanel(
           ExposureTimeMode.fixedExposure
         )
         .getOption(adv)
-        .map(r => ItcChartExposureTime(true, r.time, r.count))
-        .orElse(exposure.map(r => ItcChartExposureTime(false, r.time, r.count)))
+        .map(r => ItcChartExposureTime(OverridenExposureTime.FromItc, r.time, r.count))
+        .orElse(
+          exposure.map(r => ItcChartExposureTime(OverridenExposureTime.Overriden, r.time, r.count))
+        )
 
     case Some(ScienceMode.GmosSouthLongSlit(_, adv)) =>
       ScienceModeAdvanced.GmosSouthLongSlit.overrideExposureTimeMode.some
@@ -115,8 +118,10 @@ final case class ItcGraphPanel(
           ExposureTimeMode.fixedExposure
         )
         .getOption(adv)
-        .map(r => ItcChartExposureTime(true, r.time, r.count))
-        .orElse(exposure.map(r => ItcChartExposureTime(false, r.time, r.count)))
+        .map(r => ItcChartExposureTime(OverridenExposureTime.FromItc, r.time, r.count))
+        .orElse(
+          exposure.map(r => ItcChartExposureTime(OverridenExposureTime.Overriden, r.time, r.count))
+        )
 
     case _ =>
       exposure

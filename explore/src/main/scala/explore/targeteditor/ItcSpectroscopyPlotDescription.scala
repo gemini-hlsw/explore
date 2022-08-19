@@ -6,6 +6,7 @@ package explore.itc
 import eu.timepit.refined.types.numeric.NonNegInt
 import explore.components.ui.ExploreStyles
 import explore.model.itc.ItcChartExposureTime
+import explore.model.itc.OverridenExposureTime
 import explore.syntax.ui.*
 import explore.syntax.ui.given
 import japgolly.scalajs.react._
@@ -33,9 +34,9 @@ object ItcSpectroscopyPlotDescription {
         <.label("Integration Time:"),
         <.span(
           props.exposureTime.fold("-") {
-            case ItcChartExposureTime(true, time, count) =>
+            case ItcChartExposureTime(OverridenExposureTime.Overriden, time, count) =>
               s"${format(time, count)} *"
-            case ItcChartExposureTime(_, time, count)    =>
+            case ItcChartExposureTime(_, time, count)                               =>
               format(time, count)
           }
         )
