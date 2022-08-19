@@ -88,7 +88,7 @@ object ItcSpectroscopyPlot {
             .setSeries(
               PlotSeriesOptions()
                 .setLineWidth(4)
-                .setMarker(PointMarkerOptionsObject().setEnabled(false))
+                .setMarker(PointMarkerOptionsObject().setEnabled(false).setRadius(0))
                 .setStates(
                   SeriesStatesOptionsObject()
                     .setHover(SeriesStatesHoverOptionsObject().setEnabled(false))
