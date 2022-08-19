@@ -32,7 +32,7 @@
     "react-resize-detector": "7.1.2",
     "react-table": "7.8.0",
     "react-toastify": "^9.0.8",
-    "react-virtuoso": "2.17.1",
+    "react-virtuoso": "2.17.2",
     "rehype-katex": "^6.0.2",
     "remark-gfm": "^3.0.1",
     "remark-math": "^5.1.1",
