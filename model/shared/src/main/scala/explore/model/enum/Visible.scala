@@ -10,7 +10,9 @@ import monocle.Iso
 /**
  * Enum to indicate visibility of an item, roughly equivalent to css display
  */
-sealed trait Visible extends Product with Serializable {
+enum Visible:
+  case Hidden, Inline
+
   def fold[A](hidden: => A, inline: => A): A =
     this match {
       case Visible.Hidden => hidden
@@ -20,11 +22,8 @@ sealed trait Visible extends Product with Serializable {
   def visible: Boolean = fold(false, true)
 
   def flip: Visible = fold(Visible.Inline, Visible.Hidden)
-}
 
-object Visible {
-  case object Hidden extends Visible
-  case object Inline extends Visible
+object Visible:
 
   val boolIso: Iso[Boolean, Visible] = Iso[Boolean, Visible] { b =>
     if (b) Inline else Hidden
@@ -33,11 +32,6 @@ object Visible {
     case Inline => true
   }
 
-  val boolReverseIso: Iso[Visible, Boolean] = boolIso.reverse
-
-  val all = NonEmptyList.of(Hidden, Inline)
-
   /** @group Typeclass Instances */
-  implicit val DisplayEnumerated: Enumerated[Visible] =
-    Enumerated.of(all.head, all.tail: _*)
-}
+  given Enumerated[Visible] =
+    Enumerated.from(Hidden, Inline).withTag(_.visible.toString)
