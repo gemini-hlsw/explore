@@ -3,12 +3,9 @@
 
 package explore.model.enums
 
+import cats.Eq
+import cats.derived.*
 import lucuma.core.util.Enumerated
 
-enum AgsState:
+enum AgsState derives Eq:
   case Idle, LoadingCandidates, Calculating, Error
-
-object AgsState:
-  /** @group Typeclass Instances */
-  implicit val AgsStateEnumerated: Enumerated[AgsState] =
-    Enumerated.of(Idle, LoadingCandidates, Calculating, Error)
