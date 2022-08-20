@@ -3,25 +3,7 @@
 
 package explore.model
 
-import lucuma.core.util.Enumerated
-
-sealed trait ResizableSection extends Product with Serializable {
-  def value: String
-}
-
-object ResizableSection {
-  case object TargetsTree      extends ResizableSection {
-    val value = "targets_tree"
-  }
-  case object ObservationsTree extends ResizableSection {
-    val value = "observations_tree"
-  }
-
-  case object ConstraintSetsTree extends ResizableSection {
-    val value = "constraintsets_tree"
-  }
-
-  /** @group Typeclass Instances */
-  implicit val ResizableSectionEnumerated: Enumerated[ResizableSection] =
-    Enumerated.of(TargetsTree, ObservationsTree, ConstraintSetsTree)
-}
+enum ResizableSection(val value: String):
+  case TargetsTree        extends ResizableSection("targets_tree")
+  case ObservationsTree   extends ResizableSection("observations_tree")
+  case ConstraintSetsTree extends ResizableSection("constraintsets_tree")
