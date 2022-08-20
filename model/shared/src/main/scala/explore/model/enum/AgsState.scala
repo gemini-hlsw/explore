@@ -3,6 +3,7 @@
 
 package explore.model.enums
 
+import cats.Eq
 import lucuma.core.util.Enumerated
 
 enum AgsState:
@@ -10,5 +11,4 @@ enum AgsState:
 
 object AgsState:
   /** @group Typeclass Instances */
-  given Enumerated[AgsState] =
-    Enumerated.of(Idle, LoadingCandidates, Calculating, Error)
+  given Eq[AgsState] = Eq.fromUniversalEquals
