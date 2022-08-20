@@ -10,15 +10,12 @@ import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.util.Enumerated
 import lucuma.refined._
 
-sealed abstract class ExecutionEnvironment(val suffix: Option[NonEmptyString])
-    extends Product
-    with Serializable
-object ExecutionEnvironment {
-  case object Development extends ExecutionEnvironment("DEV".refined[NonEmpty].some)
-  case object Staging     extends ExecutionEnvironment("STG".refined[NonEmpty].some)
-  case object Production  extends ExecutionEnvironment(none)
+enum ExecutionEnvironment(val suffix: Option[NonEmptyString]):
+  case Development extends ExecutionEnvironment("DEV".refined[NonEmpty].some)
+  case Staging     extends ExecutionEnvironment("STG".refined[NonEmpty].some)
+  case Production  extends ExecutionEnvironment(none)
 
+object ExecutionEnvironment:
   /** @group Typeclass Instances */
-  implicit val ExecutionEnvironmentEnumerated: Enumerated[ExecutionEnvironment] =
-    Enumerated.of(Development, Staging, Production)
-}
+  given Enumerated[ExecutionEnvironment] =
+    Enumerated.from(Development, Staging, Production).withTag(_.suffix.foldMap(_.value))
