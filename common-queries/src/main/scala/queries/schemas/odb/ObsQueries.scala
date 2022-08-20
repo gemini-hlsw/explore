@@ -36,6 +36,7 @@ import queries.schemas.implicits._
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
+import lucuma.core.model.ExposureTimeMode.FixedExposure
 
 object ObsQueries {
   type ObservationList = KeyedIndexedList[Observation.Id, ObsSummaryWithTitleConstraintsAndConf]
@@ -81,7 +82,8 @@ object ObsQueries {
     title:             String,
     subtitle:          Option[NonEmptyString],
     visualizationTime: Option[Instant],
-    scienceData:       ScienceData
+    scienceData:       ScienceData,
+    itcExposureTime:   Option[FixedExposure]
   )
 
   object ObsEditData {
@@ -90,29 +92,6 @@ object ObsQueries {
     val visualizationTime: Lens[ObsEditData, Option[Instant]] =
       Focus[ObsEditData](_.visualizationTime)
     val scienceData: Lens[ObsEditData, ScienceData]           = Focus[ObsEditData](_.scienceData)
-  }
-
-  private val observationDataToObsEditDataGetter: Getter[ObsEditQuery.Data, Option[ObsEditData]] =
-    data =>
-      data.observation.map { obs =>
-        ObsEditData(
-          id = obs.id,
-          title = obs.title,
-          subtitle = obs.subtitle,
-          visualizationTime = obs.visualizationTime,
-          scienceData = ScienceData(
-            requirements = obs.scienceRequirements,
-            mode = obs.scienceMode,
-            constraints = obs.constraintSet,
-            targets = obs.targetEnvironment,
-            posAngle = obs.posAngleConstraint,
-            potITC = Pot(obs.itc)
-          )
-        )
-      }
-
-  implicit class ObservationDataOps(val self: ObsEditQuery.Data.type) extends AnyVal {
-    def asObsEditData = observationDataToObsEditDataGetter
   }
 
   case class ObsSummariesWithConstraints(
@@ -126,37 +105,55 @@ object ObsQueries {
     val constraintGroups = Focus[ObsSummariesWithConstraints](_.constraintGroups)
   }
 
-  private val queryToObsSummariesWithConstraintsGetter
-    : Getter[ProgramObservationsQuery.Data, ObsSummariesWithConstraints] = data =>
-    ObsSummariesWithConstraints(
-      KeyedIndexedList.fromList(
-        data.observations.matches.map(mtch =>
-          ObsSummaryWithTitleConstraintsAndConf(
-            mtch.id,
-            mtch.title,
-            mtch.subtitle,
-            mtch.constraintSet,
-            mtch.status,
-            mtch.activeStatus,
-            mtch.plannedTime.execution,
-            mtch.scienceMode,
-            mtch.visualizationTime
+  extension (data: ObsEditQuery.Data)
+    def asObsEditData: Option[ObsEditData] =
+      data.observation.map { obs =>
+        ObsEditData(
+          id = obs.id,
+          title = obs.title,
+          subtitle = obs.subtitle,
+          visualizationTime = obs.visualizationTime,
+          itcExposureTime = obs.itc.map(_.asFixedExposureTime),
+          scienceData = ScienceData(
+            requirements = obs.scienceRequirements,
+            mode = obs.scienceMode,
+            constraints = obs.constraintSet,
+            targets = obs.targetEnvironment,
+            posAngle = obs.posAngleConstraint,
+            potITC = Pot(obs.itc)
           )
-        ),
-        ObsSummaryWithTitleConstraintsAndConf.id.get
-      ),
-      data.constraintSetGroup.matches.toSortedMap(ConstraintGroup.obsIds.get),
-      data.targetGroup.matches
-        .toSortedMap(
-          _.target.id,
-          group => TargetSummary(group.observationIds.toSet, group.target.id)
         )
-    )
+      }
 
-  implicit class ProgramObservationsQueryDataOps(val self: ProgramObservationsQuery.Data.type)
-      extends AnyVal {
-    def asObsSummariesWithConstraints = queryToObsSummariesWithConstraintsGetter
-  }
+  extension (self: ITCSuccess)
+    def asFixedExposureTime = FixedExposure(self.exposures, self.exposureTime)
+
+  extension (data: ProgramObservationsQuery.Data)
+    def asObsSummariesWithConstraints: ObsSummariesWithConstraints =
+      ObsSummariesWithConstraints(
+        KeyedIndexedList.fromList(
+          data.observations.matches.map(mtch =>
+            ObsSummaryWithTitleConstraintsAndConf(
+              mtch.id,
+              mtch.title,
+              mtch.subtitle,
+              mtch.constraintSet,
+              mtch.status,
+              mtch.activeStatus,
+              mtch.plannedTime.execution,
+              mtch.scienceMode,
+              mtch.visualizationTime
+            )
+          ),
+          ObsSummaryWithTitleConstraintsAndConf.id.get
+        ),
+        data.constraintSetGroup.matches.toSortedMap(ConstraintGroup.obsIds.get),
+        data.targetGroup.matches
+          .toSortedMap(
+            _.target.id,
+            group => TargetSummary(group.observationIds.toSet, group.target.id)
+          )
+      )
 
   def updateObservationConstraintSet[F[_]: Async](
     obsIds:      List[Observation.Id],
@@ -164,7 +161,7 @@ object ObsQueries {
   )(implicit
     c:           TransactionalClient[F, ObservationDB]
   ): F[Unit] = {
-    val createER: ElevationRangeInput = constraints.elevationRange match {
+    val createER: ElevationRangeInput = constraints.elevationRange match
       case ElevationRange.AirMass(min, max)   =>
         ElevationRangeInput(airMass =
           // These are actually safe, because min and max in the model are refined [1.0 - 3.0]
@@ -176,8 +173,8 @@ object ObsQueries {
         ElevationRangeInput(hourAngle =
           HourAngleRangeInput(minHours = min.value.assign, maxHours = max.value.assign).assign
         )
-    }
-    val editInput                     = ObservationPropertiesInput(
+
+    val editInput = ObservationPropertiesInput(
       constraintSet = ConstraintSetInput(
         imageQuality = constraints.imageQuality.assign,
         cloudExtinction = constraints.cloudExtinction.assign,
@@ -199,13 +196,9 @@ object ObsQueries {
   def updateVisualizationTime[F[_]: Async](
     obsIds:            List[Observation.Id],
     visualizationTime: Option[Instant]
-  )(implicit
-    c:                 TransactionalClient[F, ObservationDB]
-  ): F[Unit] = {
+  )(using TransactionalClient[F, ObservationDB]): F[Unit] = {
 
-    val editInput = ObservationPropertiesInput(
-      visualizationTime = visualizationTime.orUnassign
-    )
+    val editInput = ObservationPropertiesInput(visualizationTime = visualizationTime.orUnassign)
 
     UpdateObservationMutation
       .execute[F](
@@ -220,13 +213,10 @@ object ObsQueries {
   def updatePosAngle[F[_]: Async](
     obsIds:             List[Observation.Id],
     posAngleConstraint: Option[PosAngleConstraint]
-  )(implicit
-    c:                  TransactionalClient[F, ObservationDB]
-  ): F[Unit] = {
+  )(using TransactionalClient[F, ObservationDB]): F[Unit] = {
 
-    val editInput = ObservationPropertiesInput(
-      posAngleConstraint = posAngleConstraint.map(_.toInput).orUnassign
-    )
+    val editInput =
+      ObservationPropertiesInput(posAngleConstraint = posAngleConstraint.map(_.toInput).orUnassign)
 
     UpdateObservationMutation
       .execute[F](
@@ -237,9 +227,9 @@ object ObsQueries {
       )
       .void
   }
-  def createObservation[F[_]: Async](programId: Program.Id)(implicit
-    c:                                          TransactionalClient[F, ObservationDB]
-  ): F[ObsSummaryWithTitleAndConstraints] =
+  def createObservation[F[_]: Async](
+    programId: Program.Id
+  )(using TransactionalClient[F, ObservationDB]): F[ObsSummaryWithTitleAndConstraints] =
     ProgramCreateObservation.execute[F](CreateObservationInput(programId = programId)).map { data =>
       val obs = data.createObservation.observation
       ObsSummaryWithTitleAndConstraints(
@@ -253,18 +243,18 @@ object ObsQueries {
       )
     }
 
-  def deleteObservation[F[_]: Async](obsId: Observation.Id)(implicit
-    c:                                      TransactionalClient[F, ObservationDB]
-  ): F[Unit] =
+  def deleteObservation[F[_]: Async](
+    obsId: Observation.Id
+  )(using TransactionalClient[F, ObservationDB]): F[Unit] =
     ProgramDeleteObservations
       .execute[F](
         DeleteObservationsInput(WHERE = obsId.toWhereObservation.assign)
       )
       .void
 
-  def undeleteObservation[F[_]: Async](obsId: Observation.Id)(implicit
-    c:                                        TransactionalClient[F, ObservationDB]
-  ): F[Unit] =
+  def undeleteObservation[F[_]: Async](
+    obsId: Observation.Id
+  )(using TransactionalClient[F, ObservationDB]): F[Unit] =
     ProgramUndeleteObservations
       .execute[F](
         UndeleteObservationsInput(WHERE = obsId.toWhereObservation.assign)

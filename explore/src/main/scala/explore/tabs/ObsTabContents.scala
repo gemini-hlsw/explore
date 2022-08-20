@@ -354,7 +354,7 @@ object ObsTabContents {
 
         ProgramObservationsQuery
           .query(props.programId)
-          .map(ProgramObservationsQuery.Data.asObsSummariesWithConstraints.get)
+          .map(_.asObsSummariesWithConstraints)
           .reRunOnResourceSignals(
             ProgramObservationsEditSubscription.subscribe[IO](props.programId)
           )

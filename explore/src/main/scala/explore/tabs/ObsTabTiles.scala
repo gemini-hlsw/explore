@@ -25,6 +25,8 @@ import explore.model.ScienceMode
 import explore.model.TargetSummary
 import explore.model.display._
 import explore.model.enums.AppTab
+import explore.model.itc.ItcChartExposureTime
+import explore.model.itc.OverridenExposureTime
 import explore.model.layout._
 import explore.optics._
 import explore.optics.all._
@@ -120,18 +122,18 @@ object ObsTabTiles {
     ScalaFnComponent
       .withHooks[Props]
       .useStreamResourceViewOnMountBy { props =>
-        given AppContextIO = props.ctx
+        import props.given
 
         ObsEditQuery
           .query(props.obsId)
           .map(
-            (ObsEditQuery.Data.asObsEditData.get _)
-              .andThen(_.getOrElse(throw new Exception(s"Observation [${props.obsId}] not found")))
+            _.asObsEditData
+              .getOrElse(throw new Exception(s"Observation [${props.obsId}] not found"))
           )
           .reRunOnResourceSignals(ObservationEditSubscription.subscribe[IO](props.obsId))
       }
       .render { (props, obsView) =>
-        implicit val ctx = props.ctx
+        import props.given
 
         val obsViewPot = obsView.toPot
 
@@ -192,9 +194,15 @@ object ObsTabTiles {
         val scienceData = obsViewPot.toOption.map(a => ObsEditData.scienceData.get(a.get))
 
         val itcTile =
-          ItcTile.itcTile(scienceMode,
-                          obsView.toOption.map(_.get.scienceData.requirements.spectroscopy),
-                          scienceData
+          ItcTile.itcTile(
+            scienceMode,
+            obsView.toOption.map(_.get.scienceData.requirements.spectroscopy),
+            scienceData,
+            obsView.toOption
+              .flatMap(
+                _.get.itcExposureTime
+                  .map(r => ItcChartExposureTime(OverridenExposureTime.FromItc, r.time, r.count))
+              )
           )
 
         val constraintsSelector = makeConstraintsSelector(props.constraintGroups, obsViewPot)
@@ -206,7 +214,11 @@ object ObsTabTiles {
           tid:                          Option[Target.Id],
           via:                          SetRouteVia
         ): Callback =
-          ctx.setPageVia(AppTab.Observations, programId, Focused(oid.map(ObsIdSet.one), tid), via)
+          props.ctx.setPageVia(AppTab.Observations,
+                               programId,
+                               Focused(oid.map(ObsIdSet.one), tid),
+                               via
+          )
 
         val targetTile = AsterismEditorTile.asterismEditorTile(
           props.userId,

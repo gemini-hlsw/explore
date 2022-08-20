@@ -6,11 +6,15 @@ package explore.model.itc
 import cats.Eq
 import cats.derived.*
 import cats.syntax.all._
-import eu.timepit.refined.auto._
+import eu.timepit.refined.cats.refTypeEq
+import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosInt
 import explore.model.enums.ItcSeriesDataType
 import io.circe.Decoder
+import lucuma.core.model.NonNegDuration
+import lucuma.core.model.implicits.*
 import lucuma.core.util.Enumerated
+import lucuma.utils.NewType
 
 import scala.concurrent.duration._
 import scala.math._
@@ -51,6 +55,20 @@ end YAxis
 
 object YAxis:
   val Empty: YAxis = YAxis(0, 0)
+
+opaque type OverridenExposureTime = Boolean
+
+object OverridenExposureTime:
+  val Overriden: OverridenExposureTime = true
+  val FromItc: OverridenExposureTime   = false
+
+  given Eq[OverridenExposureTime] = Eq.catsKernelInstancesForBoolean
+
+case class ItcChartExposureTime(
+  overriden: OverridenExposureTime,
+  time:      NonNegDuration,
+  count:     NonNegInt
+) derives Eq
 
 case class ItcChart(
   title:    String,

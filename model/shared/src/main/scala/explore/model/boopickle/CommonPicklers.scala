@@ -13,6 +13,7 @@ import coulomb.syntax.*
 import eu.timepit.refined._
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.api.Validate
+import eu.timepit.refined.numeric.NonNegative
 import lucuma.ags.AgsAnalysis
 import lucuma.ags.AgsParams
 import lucuma.ags.AgsPosition
@@ -32,9 +33,11 @@ import lucuma.core.math.RightAscension
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
+import lucuma.core.model.NonNegDuration
 import lucuma.core.model.Semester
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
+import lucuma.core.model.nonNegDurationValidate
 import lucuma.core.util.Enumerated
 import org.http4s.Uri
 
@@ -163,6 +166,9 @@ trait CommonPicklers {
 
   given Pickler[Duration] =
     transformPickler(Duration.ofMillis)(_.toMillis)
+
+  given Pickler[NonNegDuration] =
+    picklerRefined[Duration, NonNegative]
 
   given Pickler[Year] =
     transformPickler(Year.of)(_.getValue)

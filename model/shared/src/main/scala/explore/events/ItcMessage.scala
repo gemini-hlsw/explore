@@ -6,8 +6,11 @@ package explore.events
 import boopickle.DefaultBasic._
 import cats.Eq
 import cats.data._
+import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosBigDecimal
+import eu.timepit.refined.types.numeric.PosInt
 import explore.model.boopickle.CatalogPicklers
+import explore.model.boopickle.CommonPicklers
 import explore.model.boopickle.ItcPicklers
 import explore.model.itc.ItcChart
 import explore.model.itc.ItcQueryProblems
@@ -24,6 +27,8 @@ import lucuma.ags.GuideStarCandidate
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
+import lucuma.core.model.ExposureTimeMode.FixedExposure
+import lucuma.core.model.NonNegDuration
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import org.http4s.Uri
@@ -36,13 +41,11 @@ import java.util.UUID
 object ItcMessage extends ItcPicklers {
   sealed trait Request extends WorkerRequest
 
-  final case class SpectroscopyMatrixRequest(uri: Uri) extends Request {
+  case class SpectroscopyMatrixRequest(uri: Uri) extends Request {
     type ResponseType = SpectroscopyModesMatrix
   }
 
-  // final case class SpectroscopyMatrixResults(matrix: SpectroscopyModesMatrix)
-
-  final case class Query(
+  case class Query(
     wavelength:    Wavelength,
     signalToNoise: PosBigDecimal,
     constraints:   ConstraintSet,
@@ -52,12 +55,13 @@ object ItcMessage extends ItcPicklers {
     type ResponseType = Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]
   }
 
-  final case class GraphQuery(
-    wavelength:    Wavelength,
-    signalToNoise: PosBigDecimal,
-    constraints:   ConstraintSet,
-    targets:       NonEmptyList[ItcTarget],
-    modes:         InstrumentRow
+  case class GraphQuery(
+    wavelength:   Wavelength,
+    exposureTime: NonNegDuration,
+    exposures:    PosInt,
+    constraints:  ConstraintSet,
+    targets:      NonEmptyList[ItcTarget],
+    modes:        InstrumentRow
   ) extends Request {
     type ResponseType = List[ItcChart]
   }
@@ -65,6 +69,8 @@ object ItcMessage extends ItcPicklers {
   private given Pickler[SpectroscopyMatrixRequest] = generatePickler
 
   private given Pickler[Query] = generatePickler
+
+  private given Pickler[FixedExposure] = generatePickler
 
   private given Pickler[GraphQuery] = generatePickler
 

@@ -109,7 +109,7 @@ object ItcSpectroscopyPlot {
         )
 
       <.div(
-        ExploreStyles.ItcPlotSection,
+        ExploreStyles.ItcPlotWrapper,
         Chart(options, onCreate = _.showLoadingCB.when_(loading))
           .withKey(s"$props-$resize")
           .when(resize.height.isDefined)

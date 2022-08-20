@@ -51,7 +51,7 @@ object ITCQueriesGQL {
     val document =
       """
       query($input: SpectroscopyGraphModeInput) {
-        spectroscopyGraph(input: $input) {
+        spectroscopyGraphBeta(input: $input) {
           serverVersion
           charts {
             series {
@@ -74,7 +74,7 @@ object ITCQueriesGQL {
     """
 
     object Data {
-      object SpectroscopyGraph {
+      object SpectroscopyGraphBeta {
         type ServerVersion = string.NonEmptyString
         object Charts {
           type Series = ItcChartRemote

@@ -14,6 +14,8 @@ import crystal.ViewF
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosBigDecimal
+import eu.timepit.refined.types.numeric.PosInt
+import eu.timepit.refined.types.numeric.PosLong
 import explore.model.Constants
 import explore.model.Progress
 import explore.model.itc._
@@ -25,6 +27,8 @@ import lucuma.core.enums.Band
 import lucuma.core.math.BrightnessUnits._
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
+import lucuma.core.model.ExposureTimeMode.FixedExposure
+import lucuma.core.model.NonNegDuration
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.SpectralDefinition
 import lucuma.refined.*
@@ -67,20 +71,22 @@ object ITCGraphRequests {
     SignificantFiguresInput(4.refined[Positive].assign, 4.refined[Positive].assign).assign
 
   def queryItc[F[_]: Concurrent: Parallel: Logger](
-    wavelength:    Wavelength,
-    signalToNoise: PosBigDecimal,
-    constraints:   ConstraintSet,
-    targets:       NonEmptyList[ItcTarget],
-    mode:          InstrumentRow,
-    callback:      List[ItcChart] => F[Unit]
+    wavelength:   Wavelength,
+    exposureTime: NonNegDuration,
+    exposures:    PosInt,
+    constraints:  ConstraintSet,
+    targets:      NonEmptyList[ItcTarget],
+    mode:         InstrumentRow,
+    callback:     List[ItcChart] => F[Unit]
   )(using Monoid[F[Unit]], TransactionalClient[F, ITC]): F[Unit] =
 
     val itcRowsParams = mode match // Only handle known modes
       case m: GmosNorthSpectroscopyRow =>
-        ItcRequestParams(wavelength, signalToNoise, constraints, targets, m).some
+        ItcGraphRequestParams(wavelength, exposureTime, exposures, constraints, targets, m).some
       case m: GmosSouthSpectroscopyRow =>
-        ItcRequestParams(wavelength, signalToNoise, constraints, targets, m).some
-      case _                           => none
+        ItcGraphRequestParams(wavelength, exposureTime, exposures, constraints, targets, m).some
+      case _                           =>
+        none
 
     itcRowsParams.map { request =>
       Logger[F].debug(
@@ -94,7 +100,8 @@ object ITCGraphRequests {
                 .query(
                   SpectroscopyGraphModeInput(
                     request.wavelength.toInput,
-                    request.signalToNoise,
+                    request.exposureTime.toInput,
+                    request.exposures,
                     t.profile.toInput,
                     brightness,
                     t.rv.toITCInput,
@@ -104,7 +111,7 @@ object ITCGraphRequests {
                   ).assign
                 )
                 .flatMap(r =>
-                  callback(r.spectroscopyGraph.charts.flatMap(_.series.map(_.toItcChart)))
+                  callback(r.spectroscopyGraphBeta.charts.flatMap(_.series.map(_.toItcChart)))
                 )
             }.orEmpty
           }

@@ -326,6 +326,23 @@ input DurationInput {
   hours: BigDecimal
 }
 
+input NonNegDurationInput {
+  """Time duration in µs"""
+  microseconds: PosLong
+
+  """Time duration in ms"""
+  milliseconds: NonNegBigDecimal
+
+  """Time duration in seconds"""
+  seconds: NonNegBigDecimal
+
+  """Time duration in minutes"""
+  minutes: NonNegBigDecimal
+
+  """Time duration in hours"""
+  hours: NonNegBigDecimal
+}
+
 """Add or delete targets in an asterism"""
 input EditAsterismInput {
   add: TargetId
@@ -4538,6 +4555,11 @@ The `Long` scalar type represents non-fractional signed whole numeric values. Lo
 """
 scalar Long
 
+"""A `BigDecimal` greater than or equal to 0"""
+scalar NonNegBigDecimal
+
+"""An `Long` in the range from 1 to 9223372036854775807"""
+scalar PosLong
 
 ##############
 # ITC schema
@@ -4592,7 +4614,7 @@ type Query {
     input: SpectroscopyModeInput!
   ): [SpectroscopyResult!]!
 
-  spectroscopyGraph(
+  spectroscopyGraphBeta(
     input: SpectroscopyGraphModeInput!
   ): SpectroscopyGraphResult!
 }
@@ -4692,8 +4714,11 @@ input SpectroscopyGraphModeInput {
   # Observing wavelength.
   wavelength: WavelengthInput!
 
-  # Minimum desired signal-to-noise ratio.
-  signalToNoise: PosBigDecimal!
+  # Exposure time duration
+  exposureTime: NonNegDurationInput!
+
+  # Exposures
+  exposures: PosInt!
 
   # Spatial profile PointSource/UniformSource/GaussianSource.
   sourceProfile: SourceProfileInput!

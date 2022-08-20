@@ -293,10 +293,9 @@ object implicits {
       }
   }
 
-  implicit class NonNegDurationOps(val nnd: NonNegDuration) {
+  extension(nnd: NonNegDuration)
     def toInput: NonNegDurationInput =
       NonNegDurationInput(microseconds = PosLong.unsafeFrom(nnd.value.toMicros).assign)
-  }
 
   implicit class ExposureTimeModeOps(val etm: ExposureTimeMode) extends AnyVal {
     def toInput: ExposureTimeModeInput = etm match {
