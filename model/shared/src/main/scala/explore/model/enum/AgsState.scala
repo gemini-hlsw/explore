@@ -5,15 +5,10 @@ package explore.model.enums
 
 import lucuma.core.util.Enumerated
 
-sealed trait AgsState extends Product with Serializable
+enum AgsState:
+  case Idle, LoadingCandidates, Calculating, Error
 
-object AgsState {
-  case object Idle              extends AgsState
-  case object LoadingCandidates extends AgsState
-  case object Calculating       extends AgsState
-  case object Error             extends AgsState
-
+object AgsState:
   /** @group Typeclass Instances */
   implicit val AgsStateEnumerated: Enumerated[AgsState] =
     Enumerated.of(Idle, LoadingCandidates, Calculating, Error)
-}
