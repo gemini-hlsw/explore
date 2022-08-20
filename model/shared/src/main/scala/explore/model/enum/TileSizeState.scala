@@ -3,15 +3,12 @@
 
 package explore.model.enums
 
-import lucuma.core.util.Enumerated
+import cats.Eq
 
-sealed abstract class TileSizeState extends Product with Serializable
-object TileSizeState {
-  case object Maximized extends TileSizeState
-  case object Minimized extends TileSizeState
-  case object Normal    extends TileSizeState
+enum TileSizeState:
+  case Maximized extends TileSizeState
+  case Minimized extends TileSizeState
+  case Normal    extends TileSizeState
 
-  /** @group Typeclass Instances */
-  implicit val ExecutionEnvironmentEnumerated: Enumerated[TileSizeState] =
-    Enumerated.of(Maximized, Minimized, Normal)
-}
+object TileSizeState:
+  given Eq[TileSizeState] = Eq.fromUniversalEquals
