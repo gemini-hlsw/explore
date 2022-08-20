@@ -127,8 +127,8 @@ object ObsTabTiles {
         ObsEditQuery
           .query(props.obsId)
           .map(
-            (ObsEditQuery.Data.asObsEditData.get _)
-              .andThen(_.getOrElse(throw new Exception(s"Observation [${props.obsId}] not found")))
+            _.asObsEditData
+              .getOrElse(throw new Exception(s"Observation [${props.obsId}] not found"))
           )
           .reRunOnResourceSignals(ObservationEditSubscription.subscribe[IO](props.obsId))
       }

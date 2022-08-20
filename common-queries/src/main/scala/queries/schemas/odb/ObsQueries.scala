@@ -105,58 +105,55 @@ object ObsQueries {
     val constraintGroups = Focus[ObsSummariesWithConstraints](_.constraintGroups)
   }
 
-  extension (self: ObsEditQuery.Data.type)
-    def asObsEditData: Getter[ObsEditQuery.Data, Option[ObsEditData]] =
-      data =>
-        data.observation.map { obs =>
-          ObsEditData(
-            id = obs.id,
-            title = obs.title,
-            subtitle = obs.subtitle,
-            visualizationTime = obs.visualizationTime,
-            itcExposureTime = obs.itc.map(_.asFixedExposureTime),
-            scienceData = ScienceData(
-              requirements = obs.scienceRequirements,
-              mode = obs.scienceMode,
-              constraints = obs.constraintSet,
-              targets = obs.targetEnvironment,
-              posAngle = obs.posAngleConstraint,
-              potITC = Pot(obs.itc)
-            )
+  extension (data: ObsEditQuery.Data)
+    def asObsEditData: Option[ObsEditData] =
+      data.observation.map { obs =>
+        ObsEditData(
+          id = obs.id,
+          title = obs.title,
+          subtitle = obs.subtitle,
+          visualizationTime = obs.visualizationTime,
+          itcExposureTime = obs.itc.map(_.asFixedExposureTime),
+          scienceData = ScienceData(
+            requirements = obs.scienceRequirements,
+            mode = obs.scienceMode,
+            constraints = obs.constraintSet,
+            targets = obs.targetEnvironment,
+            posAngle = obs.posAngleConstraint,
+            potITC = Pot(obs.itc)
           )
-        }
+        )
+      }
 
   extension (self: ITCSuccess)
     def asFixedExposureTime = FixedExposure(self.exposures, self.exposureTime)
 
-  extension (self: ProgramObservationsQuery.Data.type)
-    def asObsSummariesWithConstraints
-      : Getter[ProgramObservationsQuery.Data, ObsSummariesWithConstraints] =
-      data =>
-        ObsSummariesWithConstraints(
-          KeyedIndexedList.fromList(
-            data.observations.matches.map(mtch =>
-              ObsSummaryWithTitleConstraintsAndConf(
-                mtch.id,
-                mtch.title,
-                mtch.subtitle,
-                mtch.constraintSet,
-                mtch.status,
-                mtch.activeStatus,
-                mtch.plannedTime.execution,
-                mtch.scienceMode,
-                mtch.visualizationTime
-              )
-            ),
-            ObsSummaryWithTitleConstraintsAndConf.id.get
-          ),
-          data.constraintSetGroup.matches.toSortedMap(ConstraintGroup.obsIds.get),
-          data.targetGroup.matches
-            .toSortedMap(
-              _.target.id,
-              group => TargetSummary(group.observationIds.toSet, group.target.id)
+  extension (data: ProgramObservationsQuery.Data)
+    def asObsSummariesWithConstraints: ObsSummariesWithConstraints =
+      ObsSummariesWithConstraints(
+        KeyedIndexedList.fromList(
+          data.observations.matches.map(mtch =>
+            ObsSummaryWithTitleConstraintsAndConf(
+              mtch.id,
+              mtch.title,
+              mtch.subtitle,
+              mtch.constraintSet,
+              mtch.status,
+              mtch.activeStatus,
+              mtch.plannedTime.execution,
+              mtch.scienceMode,
+              mtch.visualizationTime
             )
-        )
+          ),
+          ObsSummaryWithTitleConstraintsAndConf.id.get
+        ),
+        data.constraintSetGroup.matches.toSortedMap(ConstraintGroup.obsIds.get),
+        data.targetGroup.matches
+          .toSortedMap(
+            _.target.id,
+            group => TargetSummary(group.observationIds.toSet, group.target.id)
+          )
+      )
 
   def updateObservationConstraintSet[F[_]: Async](
     obsIds:      List[Observation.Id],
