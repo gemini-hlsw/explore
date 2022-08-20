@@ -3,14 +3,5 @@
 
 package explore.model.enums
 
-import lucuma.core.util.Enumerated
-
-sealed abstract class ConfigurationMode(val label: String) extends Product with Serializable
-
-object ConfigurationMode {
-  case object Imaging      extends ConfigurationMode("Imaging")
-  case object Spectroscopy extends ConfigurationMode("Spectroscopy")
-
-  implicit val ConfigurationModeEnumerated: Enumerated[ConfigurationMode] =
-    Enumerated.of(Imaging, Spectroscopy)
-}
+enum ConfigurationMode:
+  case Imaging, Spectroscopy
