@@ -9,39 +9,24 @@ import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.refined._
 
-sealed trait PosAngleOptions extends Product with Serializable {
-  def tag: NonEmptyString
-  def longName: NonEmptyString = tag
-}
+enum PosAngleOptions(val tag: NonEmptyString, val longName: NonEmptyString):
+  case Fixed extends PosAngleOptions("Fixed".refined, "Fixed".refined)
 
-object PosAngleOptions {
-  case object Fixed extends PosAngleOptions {
-    override val tag = "Fixed".refined
-  }
+  case AllowFlip extends PosAngleOptions("AllowFlip".refined, "Allow 180° flip".refined)
 
-  case object AllowFlip extends PosAngleOptions {
-    override val tag      = "AllowFlip".refined
-    override val longName = "Allow 180° flip".refined
-  }
+  case AverageParallactic
+      extends PosAngleOptions("AverageParallactic".refined, "Average Parallactic".refined)
 
-  case object AverageParallactic extends PosAngleOptions {
-    override val tag      = "AverageParallactic".refined
-    override val longName = "Average Parallactic".refined
-  }
+  case ParallacticOverride
+      extends PosAngleOptions("ParallacticOverride".refined, "Parallactic Override".refined)
 
-  case object ParallacticOverride extends PosAngleOptions {
-    override val tag      = "ParallacticOverride".refined
-    override val longName = "Parallactic Override".refined
-  }
+  case Unconstrained extends PosAngleOptions("Unconstrained".refined, "Unconstrained".refined)
 
-  case object Unconstrained extends PosAngleOptions {
-    override val tag = "Unconstrained".refined
-  }
+object PosAngleOptions:
+  given Enumerated[PosAngleOptions] =
+    Enumerated
+      .from(Fixed, AllowFlip, AverageParallactic, ParallacticOverride, Unconstrained)
+      .withTag(_.tag)
 
-  implicit val posAngleOptionsEnumeration: Enumerated[PosAngleOptions] =
-    Enumerated.of(Fixed, AllowFlip, AverageParallactic, ParallacticOverride, Unconstrained)
-
-  implicit val posAngleOptionsDisplay: Display[PosAngleOptions] =
+  given Display[PosAngleOptions] =
     Display.by(_.longName.value, _.longName.value)
-
-}
