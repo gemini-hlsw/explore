@@ -3,26 +3,31 @@
 
 package explore.optics
 
-import cats.syntax.all._
-import coulomb._
+import cats.syntax.all.*
+import coulomb.*
 import coulomb.ops.algebra.spire.all.given
 import coulomb.policy.spire.standard.given
-import coulomb.syntax._
-import coulomb.units.constants._
+import coulomb.syntax.*
+import coulomb.units.constants.*
+import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.enums.Band
 import lucuma.core.math.ApparentRadialVelocity
-import lucuma.core.math.Constants._
+import lucuma.core.math.Constants.*
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.Redshift
 import lucuma.core.math.dimensional.Measure
-import lucuma.core.math.units._
+import lucuma.core.math.units.*
+import lucuma.core.model.NonNegDuration
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.Target
+import lucuma.core.optics.SplitEpi
+import lucuma.core.syntax.time.*
 import monocle.Getter
 import monocle.Optional
-import monocle._
+import monocle.*
 
+import java.time.Duration
 import scala.collection.immutable.SortedMap
 
 /**
@@ -62,4 +67,13 @@ trait ModelOptics {
 
   val optionNonEmptyStringIso: Iso[Option[NonEmptyString], String] =
     Iso[Option[NonEmptyString], String](_.foldMap(_.value))(s => NonEmptyString.from(s).toOption)
+
+  // Note: truncates to Int.MaxValue - shouldn't have durations longer than that...
+  val nonNegDurationSecondsSplitEpi: SplitEpi[NonNegDuration, NonNegInt] = SplitEpi(
+    nnd =>
+      NonNegInt.unsafeFrom(
+        math.min((nnd.value: Duration).toMicros / 1000L / 1000L, Int.MaxValue.toLong).toInt
+      ),
+    secs => NonNegDuration.unsafeFrom(secs.value.toLong.seconds)
+  )
 }
