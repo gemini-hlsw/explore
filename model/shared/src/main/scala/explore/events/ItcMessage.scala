@@ -13,6 +13,7 @@ import explore.model.boopickle.CatalogPicklers
 import explore.model.boopickle.CommonPicklers
 import explore.model.boopickle.ItcPicklers
 import explore.model.itc.ItcChart
+import explore.model.itc.ItcChartResult
 import explore.model.itc.ItcQueryProblems
 import explore.model.itc.ItcRequestParams
 import explore.model.itc.ItcResult
@@ -63,7 +64,7 @@ object ItcMessage extends ItcPicklers {
     targets:      NonEmptyList[ItcTarget],
     modes:        InstrumentRow
   ) extends Request {
-    type ResponseType = List[ItcChart]
+    type ResponseType = ItcChartResult
   }
 
   private given Pickler[SpectroscopyMatrixRequest] = generatePickler

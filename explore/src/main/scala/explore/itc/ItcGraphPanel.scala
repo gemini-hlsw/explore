@@ -30,6 +30,7 @@ import explore.model.boopickle.Boopickle._
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.ItcChart
 import explore.model.itc.ItcChartExposureTime
+import explore.model.itc.ItcChartResult
 import explore.model.itc.OverridenExposureTime
 import explore.model.reusability._
 import explore.model.reusability.given
@@ -133,7 +134,7 @@ object ItcGraphPanel {
   val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useState(Pot.pending[List[ItcChart]])
+      .useState(Pot.pending[ItcChartResult])
       // loading
       .useState(PlotLoading.Done)
       // Request ITC graph data
@@ -170,11 +171,11 @@ object ItcGraphPanel {
               .getOrElse(IO.unit)
               .flatten
       }
-      .render { (props, charts, loading) =>
+      .render { (props, results, loading) =>
         <.div(
           ExploreStyles.ItcPlotSection,
-          ItcSpectroscopyPlotDescription(props.chartExposureTime),
-          ItcSpectroscopyPlot(loading.value, charts.value)
+          ItcSpectroscopyPlotDescription(props.chartExposureTime, results.value.map(_.ccds)),
+          ItcSpectroscopyPlot(loading.value, results.value.map(_.charts))
         )
       }
 }
