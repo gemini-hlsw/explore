@@ -4,17 +4,17 @@
 package explore.config
 
 import cats.data.NonEmptyList
-import cats.syntax.all._
-import clue.data.syntax._
+import cats.syntax.all.*
+import clue.data.syntax.*
 import coulomb.Quantity
 import coulomb.ops.algebra.spire.all.given
 import coulomb.policy.spire.standard.given
 import crystal.Pot
 import crystal.react.View
-import crystal.react.hooks._
+import crystal.react.hooks.*
 import eu.timepit.refined.api.Refined
-import eu.timepit.refined.auto._
-import eu.timepit.refined.cats._
+import eu.timepit.refined.auto.*
+import eu.timepit.refined.cats.*
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosBigDecimal
@@ -22,61 +22,62 @@ import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.Aligner
-import explore.common.ObsQueries._
-import explore.common.ScienceQueries._
+import explore.common.ObsQueries.*
+import explore.common.ScienceQueries.*
 import explore.components.HelpIcon
 import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
-import explore.config.ExposureTimeModeType._
-import explore.implicits._
+import explore.config.ExposureTimeModeType.*
+import explore.implicits.*
 import explore.model.DitherNanoMeters
 import explore.model.ExploreModelValidators
 import explore.model.ScienceModeAdvanced
 import explore.model.ScienceModeBasic
-import explore.model.display._
-import explore.model.reusability._
+import explore.model.display.*
+import explore.model.reusability.*
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.SpectroscopyModeRow
 import explore.modes.SpectroscopyModesMatrix
-import explore.optics._
-import explore.optics.all._
-import explore.syntax.ui._
-import explore.utils._
-import japgolly.scalajs.react._
+import explore.optics.*
+import explore.optics.all.*
+import explore.syntax.ui.*
+import explore.utils.*
+import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
-import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.enums._
+import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.*
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units.Micrometer
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.NonNegDuration
 import lucuma.core.model.Observation
-import lucuma.core.syntax.all._
+import lucuma.core.syntax.all.*
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
-import lucuma.core.validation._
+import lucuma.core.validation.*
 import lucuma.refined.*
-import lucuma.schemas.ObservationDB.Types._
+import lucuma.schemas.ObservationDB.Types.*
 import lucuma.ui.forms.EnumViewOptionalSelect
 import lucuma.ui.forms.FormInputEV
+import lucuma.ui.implicits.*
 import lucuma.ui.input.ChangeAuditor
-import lucuma.ui.reusability._
+import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import lucuma.utils._
+import lucuma.utils.*
 import monocle.Lens
-import mouse.boolean._
-import queries.schemas.implicits._
+import mouse.boolean.*
+import queries.schemas.implicits.*
 import react.common.ReactFnProps
 import react.fa.IconSize
 import react.semanticui.collections.form.Form
 import react.semanticui.collections.form.FormInput
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.popup.Popup
-import react.semanticui.shorthand._
-import react.semanticui.sizes._
+import react.semanticui.shorthand.*
+import react.semanticui.sizes.*
 import spire.math.Bounded
 import spire.math.Interval
 
@@ -172,18 +173,6 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
       { case (r, g) => s"${r.longName}, ${g.shortName} Gain" },
       { case (r, g) => s"${r.longName}, ${g.longName} Gain" }
     )
-
-  // Note: truncates to Int.MaxValue - shouldn't have durations longer than that...
-  private def durationToSeconds(nnd: NonNegDuration): NonNegInt =
-    NonNegInt.unsafeFrom(
-      math.min((nnd.value: Duration).toMicros / 1000L / 1000L, Int.MaxValue.toLong).toInt
-    )
-
-  private def secondsToDuration(secs: NonNegInt): NonNegDuration =
-    NonNegDuration.unsafeFrom(secs.value.toLong.seconds)
-
-  private def optExposureTimeModeToExpTimeSecs(oetm: Option[ExposureTimeMode]): Option[NonNegInt] =
-    oetm.flatMap(etm => ExposureTimeMode.exposureTime.getOption(etm)).map(durationToSeconds)
 
   val itcNoneMsg = "No ITC Results"
 
@@ -323,29 +312,16 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
         overrideExposureTimeMode(props.scienceModeAdvanced).get
           .map(ExposureTimeModeType.fromExposureTimeMode)
       }
-      .useStateViewBy { (props, _) =>
-        implicit val ctx = props.ctx
-        val oetm         = overrideExposureTimeMode(props.scienceModeAdvanced).get
-        optExposureTimeModeToExpTimeSecs(oetm)
-      }
-      .useEffectWithDepsBy { (props, _, _) =>
-        implicit val ctx = props.ctx
-        optExposureTimeModeToExpTimeSecs(overrideExposureTimeMode(props.scienceModeAdvanced).get)
-      }((_, _, expTimeOverride) =>
-        newExpTime =>
-          if (newExpTime === expTimeOverride.get) Callback.empty
-          else expTimeOverride.set(newExpTime)
-      )
       // filter the spectroscopy matrix by the requirements that don't get overridden
       // by the advanced config (wavelength, for example).
-      .useMemoBy((props, _, _) =>
+      .useMemoBy((props, _) =>
         (props.spectroscopyRequirements.focalPlane,
          props.spectroscopyRequirements.capabilities,
          props.spectroscopyRequirements.focalPlaneAngle,
          props.spectroscopyRequirements.resolution,
          props.spectroscopyRequirements.wavelengthCoverage
         )
-      ) { (props, _, _) =>
+      ) { (props, _) =>
         { case (fp, cap, fpa, res, cov) =>
           props.confMatrix.filtered(
             focalPlane = fp,
@@ -357,7 +333,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
         }
       }
       // Try to find the readonly data from the spectroscopy matrix
-      .useMemoBy { (props, _, _, rows) =>
+      .useMemoBy { (props, _, rows) =>
         implicit val ctx = props.ctx
         val advanced     = props.scienceModeAdvanced
         (props.scienceModeBasic,
@@ -368,7 +344,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
          overrideFilter(advanced).get,
          overrideFpu(advanced).get
         )
-      } { (props, _, _, _) =>
+      } { (props, _, _) =>
         { case (basic, reqsWavelength, rows, _, _, _, _) =>
           findMatrixData(basic, props.scienceModeAdvanced.get, reqsWavelength, rows)
         }
@@ -377,7 +353,6 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
         (
           props,
           exposureModeEnum,
-          expTimeOverrideSecs,
           _,
           readonlyData
         ) =>
@@ -584,14 +559,13 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                       HelpIcon("configuration/exposure-time.md".refined),
                       ExploreStyles.SkipToNext |+| ExploreStyles.IndentLabel
               ),
-              expTimeOverrideSecs
-                .mapValue((v: View[NonNegInt]) =>
+              exposureTimeView
+                .map(v =>
                   InputWithUnits(
                     id = "exposureTime".refined,
                     value = v
-                      .withOnMod(secs =>
-                        exposureTimeView.foldMap(_.set(secondsToDuration(secs))) >> invalidateITC
-                      ),
+                      .zoomSplitEpi[NonNegInt](nonNegDurationSecondsSplitEpi)
+                      .withOnMod(_ => invalidateITC),
                     validFormat = InputValidSplitEpi.refinedInt[NonNegative],
                     changeAuditor = ChangeAuditor.refinedInt[NonNegative](),
                     units = "sec",
@@ -602,7 +576,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                   potRender[Option[NonNegDuration]](
                     valueRender = ot => {
                       val value =
-                        ot.fold(itcNoneMsg)(t => durationToSeconds(t).toString)
+                        ot.fold(itcNoneMsg)(t => nonNegDurationSecondsSplitEpi.get(t).toString)
                       ReactFragment(FormInput(value = value, disabled = true),
                                     <.span(ExploreStyles.UnitsLabel, "sec")
                       )
