@@ -68,7 +68,10 @@ def selectedBrightness(
 
 object ITCGraphRequests {
   private val significantFigures =
-    SignificantFiguresInput(4.refined[Positive].assign, 4.refined[Positive].assign).assign
+    SignificantFiguresInput(4.refined[Positive].assign,
+                            4.refined[Positive].assign,
+                            3.refined[Positive].assign
+    ).assign
 
   def queryItc[F[_]: Concurrent: Parallel: Logger](
     wavelength:   Wavelength,
@@ -77,7 +80,7 @@ object ITCGraphRequests {
     constraints:  ConstraintSet,
     targets:      NonEmptyList[ItcTarget],
     mode:         InstrumentRow,
-    callback:     List[ItcChart] => F[Unit]
+    callback:     ItcChartResult => F[Unit]
   )(using Monoid[F[Unit]], TransactionalClient[F, ITC]): F[Unit] =
 
     val itcRowsParams = mode match // Only handle known modes
@@ -110,9 +113,11 @@ object ITCGraphRequests {
                     significantFigures
                   ).assign
                 )
-                .flatMap(r =>
-                  callback(r.spectroscopyGraphBeta.charts.flatMap(_.series.map(_.toItcChart)))
-                )
+                .flatMap { r =>
+                  val charts = r.spectroscopyGraphBeta.charts.flatMap(_.series.map(_.toItcChart))
+                  val ccds   = r.spectroscopyGraphBeta.ccds
+                  (ccds.toNel, charts.toNel).mapN(ItcChartResult.apply).map(callback).orEmpty
+                }
             }.orEmpty
           }
           .sequence

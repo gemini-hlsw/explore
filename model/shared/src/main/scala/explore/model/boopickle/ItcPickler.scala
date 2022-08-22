@@ -40,6 +40,8 @@ import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
 
 import scala.collection.immutable.SortedMap
+import explore.model.itc.ItcChartResult
+import explore.model.itc.ItcCcd
 
 // Boopicklers for itc related types
 trait ItcPicklers extends CommonPicklers {
@@ -182,6 +184,10 @@ trait ItcPicklers extends CommonPicklers {
   given Pickler[YAxis] = generatePickler
 
   given Pickler[ItcChart] = generatePickler
+
+  given Pickler[ItcCcd] = generatePickler
+
+  given Pickler[ItcChartResult] = generatePickler
 }
 
 object ItcPicklers extends ItcPicklers

@@ -37,6 +37,7 @@ import workers.WorkerRequest
 import java.time.Duration
 import java.time.Instant
 import java.util.UUID
+import explore.model.itc.ItcChartResult
 
 object ItcMessage extends ItcPicklers {
   sealed trait Request extends WorkerRequest
@@ -63,7 +64,7 @@ object ItcMessage extends ItcPicklers {
     targets:      NonEmptyList[ItcTarget],
     modes:        InstrumentRow
   ) extends Request {
-    type ResponseType = List[ItcChart]
+    type ResponseType = ItcChartResult
   }
 
   private given Pickler[SpectroscopyMatrixRequest] = generatePickler

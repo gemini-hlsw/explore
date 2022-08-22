@@ -18,6 +18,7 @@ import lucuma.utils.NewType
 
 import scala.concurrent.duration._
 import scala.math._
+import cats.data.NonEmptyList
 
 sealed trait ItcQueryProblems extends Product with Serializable derives Eq
 
@@ -70,6 +71,12 @@ case class ItcChartExposureTime(
   count:     NonNegInt
 ) derives Eq
 
+case class ItcCcd(
+  singleSNRatio: Double, // the final SN ratio for a single image
+  totalSNRatio:  Double, // the total SN ratio for all images
+  peakPixelFlux: Double  // the highest e- count for all pixels on the CCD
+) derives Decoder
+
 case class ItcChart(
   title:    String,
   dataType: ItcSeriesDataType,
@@ -77,7 +84,13 @@ case class ItcChart(
   yAxis:    YAxis
 )
 
+case class ItcChartResult(ccds: NonEmptyList[ItcCcd], charts: NonEmptyList[ItcChart])
+
 object math:
+  extension (ccds: NonEmptyList[ItcCcd])
+    def maxPeakPixelFlux: Int    = ccds.maximumBy(_.peakPixelFlux).peakPixelFlux.toInt
+    def maxSingleSNRatio: Double = ccds.maximumBy(_.singleSNRatio).singleSNRatio
+    def maxTotalSNRatio: Double  = ccds.maximumBy(_.totalSNRatio).totalSNRatio
 
   def roundToSignificantFigures(num: Double, n: Int): Double =
     if num == 0 then 0

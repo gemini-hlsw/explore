@@ -28,8 +28,9 @@ import react.semanticui.elements.loader.Loader
 import scala.collection.immutable.HashSet
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
+import cats.data.NonEmptyList
 
-case class ItcSpectroscopyPlot(loading: PlotLoading, charts: Pot[List[ItcChart]])
+case class ItcSpectroscopyPlot(loading: PlotLoading, charts: Pot[NonEmptyList[ItcChart]])
     extends ReactFnProps[ItcSpectroscopyPlot](ItcSpectroscopyPlot.component)
 
 object ItcSpectroscopyPlot {
@@ -42,14 +43,14 @@ object ItcSpectroscopyPlot {
       val loading = props.charts.isPending || props.loading.boolValue
 
       val series =
-        props.charts.toOption.filterNot(_ => loading).orEmpty
+        props.charts.toOption.filterNot(_ => loading).map(_.toList).orEmpty
 
       val yAxes = props.charts.toOption
         .map(_.foldLeft(YAxis.Empty)(_ ∪ _.yAxis))
         .map { yAxis =>
           val (min, max, tick) = yAxis.ticks(10)
           YAxisOptions()
-            .setTitle(YAxisTitleOptions().setText("e- per exposure per spectral pixel"))
+            .setTitle(YAxisTitleOptions().setText("e⁻ per exposure per spectral pixel"))
             .setAllowDecimals(false)
             .setTickInterval(tick)
             .setMin(min)

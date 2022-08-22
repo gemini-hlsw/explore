@@ -94,7 +94,6 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers w
                 targets,
                 rows,
                 r => invocation.respond(r)
-                // r => invocation.respond(ItcMessage.QueryResult(id, r))
               )
 
         case ItcMessage.GraphQuery(wavelength,
@@ -114,7 +113,6 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers w
                 targets,
                 mode,
                 r => invocation.respond(r)
-                // r => invocation.respond(ItcMessage.GraphResult(r))
               )
       }
     }

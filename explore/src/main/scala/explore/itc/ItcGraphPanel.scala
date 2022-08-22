@@ -47,6 +47,7 @@ import queries.schemas.itc.implicits._
 import react.common.ReactFnProps
 
 import java.util.UUID
+import explore.model.itc.ItcChartResult
 
 final case class ItcGraphPanel(
   scienceMode:              Option[ScienceMode],
@@ -133,7 +134,7 @@ object ItcGraphPanel {
   val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useState(Pot.pending[List[ItcChart]])
+      .useState(Pot.pending[ItcChartResult])
       // loading
       .useState(PlotLoading.Done)
       // Request ITC graph data
@@ -170,11 +171,11 @@ object ItcGraphPanel {
               .getOrElse(IO.unit)
               .flatten
       }
-      .render { (props, charts, loading) =>
+      .render { (props, results, loading) =>
         <.div(
           ExploreStyles.ItcPlotSection,
-          ItcSpectroscopyPlotDescription(props.chartExposureTime),
-          ItcSpectroscopyPlot(loading.value, charts.value)
+          ItcSpectroscopyPlotDescription(props.chartExposureTime, results.value.map(_.ccds)),
+          ItcSpectroscopyPlot(loading.value, results.value.map(_.charts))
         )
       }
 }

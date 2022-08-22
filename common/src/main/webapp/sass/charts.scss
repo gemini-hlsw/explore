@@ -141,12 +141,15 @@ See https://github.com/highcharts/highcharts/issues/13320 */
 
 .itc-plot-description {
   display: grid;
-  gap: 0.5em;
+  column-gap: 0.5em;
   padding: 0.5em;
   grid-template-columns: minmax(100px, 1fr) 1fr;
   background-color: var(--tile-background);
+  align-content: start;
 
   label {
+    font-size: smaller;
+    font-weight: bold;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
