@@ -85,6 +85,7 @@ object AladinContainer {
         val science = p.asterism.toSidereal
           .map(t =>
             (t.id === p.asterism.focus.id,
+             t.target.name,
              t.target.tracking.at(i),
              t.target.tracking.baseCoordinates
             )
@@ -292,14 +293,18 @@ object AladinContainer {
 
           val sciencePositions =
             if (scienceTargets.length > 1)
-              scienceTargets.flatMap { (selected, pm, base) =>
+              scienceTargets.flatMap { (selected, name, pm, base) =>
                 pm.foldMap { pm =>
                   List(
-                    SVGTarget.CircleTarget(pm, ExploreStyles.ScienceTarget, 4),
+                    SVGTarget.ScienceTarget(pm,
+                                            ExploreStyles.ScienceTarget,
+                                            ExploreStyles.ScienceSelectedTarget,
+                                            3,
+                                            selected,
+                                            name.value.some
+                    ),
                     SVGTarget.LineTo(pm, base, ExploreStyles.PMCorrectionLine)
-                  ) ++ (if (selected)
-                          List(SVGTarget.CrossTarget(pm, ExploreStyles.ScienceSelectedTarget, 5))
-                        else Nil)
+                  )
                 }
               }
             else Nil

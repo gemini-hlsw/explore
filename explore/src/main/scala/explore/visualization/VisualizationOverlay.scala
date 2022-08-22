@@ -19,14 +19,14 @@ import react.aladin.Fov
 import react.common.Css
 import react.common.ReactFnProps
 
-final case class SVGVisualizationOverlay(
+case class SVGVisualizationOverlay(
   width:        Int,
   height:       Int,
   fov:          Fov,
   screenOffset: Offset,
   shapes:       NonEmptyMap[Css, ShapeExpression],
   clazz:        Css = Css.Empty
-) extends ReactFnProps[SVGVisualizationOverlay](SVGVisualizationOverlay.component)
+) extends ReactFnProps(SVGVisualizationOverlay.component)
 
 object SVGVisualizationOverlay {
   type Props = SVGVisualizationOverlay
@@ -74,11 +74,12 @@ object SVGVisualizationOverlay {
       val (x, y, w, h) =
         (envelope.getMinX, envelope.getMinY, envelope.getWidth, envelope.getHeight)
 
-      val viewBox = calculateViewBox(x, y, w, h, p.fov, p.screenOffset)
+      val (viewBoxX, viewBoxY, viewBoxW, viewBoxH) =
+        calculateViewBox(x, y, w, h, p.fov, p.screenOffset)
 
       val svg = <.svg(
         JtsSvg |+| p.clazz,
-        ^.viewBox    := viewBox,
+        ^.viewBox    := s"$viewBoxX $viewBoxY $viewBoxW $viewBoxH",
         canvasWidth  := s"${p.width}px",
         canvasHeight := s"${p.height}px",
         <.g(

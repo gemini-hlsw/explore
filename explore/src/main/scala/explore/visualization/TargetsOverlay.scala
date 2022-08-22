@@ -4,6 +4,7 @@
 package explore.visualization
 
 import cats.Eq
+import cats.derived.*
 import cats.syntax.all.*
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.*
@@ -11,15 +12,15 @@ import japgolly.scalajs.react.vdom.svg_<^.*
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
 import lucuma.ui.reusability.*
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import org.scalajs.dom.svg.SVG
 import react.aladin.Fov
 import react.common.Css
 import react.common.ReactFnProps
 
 import scala.math.*
 
-sealed trait SVGTarget {
+sealed trait SVGTarget derives Eq {
   def coordinates: Coordinates
   def css: Css
 }
@@ -31,6 +32,7 @@ object SVGTarget {
     radius:      Double,
     title:       Option[String] = None
   ) extends SVGTarget
+      derives Eq
 
   case class CrosshairTarget(
     coordinates: Coordinates,
@@ -38,13 +40,17 @@ object SVGTarget {
     side:        Double,
     title:       Option[String] = None
   ) extends SVGTarget
+      derives Eq
 
-  case class CrossTarget(
+  case class ScienceTarget(
     coordinates: Coordinates,
     css:         Css,
+    selectedCss: Css,
     side:        Double,
+    selected:    Boolean,
     title:       Option[String] = None
   ) extends SVGTarget
+      derives Eq
 
   case class LineTo(
     coordinates: Coordinates,
@@ -52,6 +58,7 @@ object SVGTarget {
     css:         Css,
     title:       Option[String] = None
   ) extends SVGTarget
+      derives Eq
 
   case class GuideStarCandidateTarget(
     coordinates: Coordinates,
@@ -59,6 +66,7 @@ object SVGTarget {
     radius:      Double,
     title:       Option[String] = None
   ) extends SVGTarget
+      derives Eq
 
   case class GuideStarTarget(
     coordinates: Coordinates,
@@ -66,22 +74,7 @@ object SVGTarget {
     radius:      Double,
     title:       Option[String] = None
   ) extends SVGTarget
-
-  given Eq[SVGTarget] = Eq.instance {
-    case (CircleTarget(c1, s1, r1, t1), CircleTarget(c2, s2, r2, t2))                         =>
-      c1 === c2 && s1 === s2 & r1 === r2 && t1 === t2
-    case (CrosshairTarget(c1, s1, r1, t1), CrosshairTarget(c2, s2, r2, t2))                   =>
-      c1 === c2 && s1 === s2 & r1 === r2 && t1 === t2
-    case (CrossTarget(c1, s1, r1, t1), CrossTarget(c2, s2, r2, t2))                           =>
-      c1 === c2 && s1 === s2 & r1 === r2 && t1 === t2
-    case (GuideStarCandidateTarget(c1, s1, r1, t1), GuideStarCandidateTarget(c2, s2, r2, t2)) =>
-      c1 === c2 && s1 === s2 & r1 === r2 && t1 === t2
-    case (GuideStarTarget(c1, s1, r1, t1), GuideStarTarget(c2, s2, r2, t2))                   =>
-      c1 === c2 && s1 === s2 & r1 === r2 && t1 === t2
-    case (LineTo(c1, d1, r1, t1), LineTo(c2, d2, r2, t2))                                     =>
-      c1 === c2 && d1 === d2 & r1 === r2 && t1 === t2
-    case _                                                                                    => false
-  }
+      derives Eq
 
   given Reusability[SVGTarget] = Reusability.byEq
 }
@@ -109,7 +102,9 @@ object TargetsOverlay {
   val canvasHeight = VdomAttr("height")
   val component    =
     ScalaFnComponent
-      .withReuse[Props] { p =>
+      .withHooks[Props]
+      .useRefToVdom[SVG] // svg
+      .render { (p, svgRef) =>
         val pixx = p.fov.x.toMicroarcseconds / p.width
         val pixy = p.fov.y.toMicroarcseconds / p.height
         val maxP = max(pixx, pixy)
@@ -137,11 +132,16 @@ object TargetsOverlay {
           if (w0 == 0 || h0 == 0) (x0 - 2 * minSide, y0 - 2 * minSide, minSide * 2, minSide * 2)
           else (x0, y0, w0, h0)
 
-        val viewBox = calculateViewBox(x, y, w, h, p.fov, p.screenOffset)
+        val (viewBoxX, viewBoxY, viewBoxW, viewBoxH) =
+          calculateViewBox(x, y, w, h, p.fov, p.screenOffset)
+
+        val sx = p.width / (viewBoxW - viewBoxX)
+        val sy = p.height / (viewBoxH - viewBoxY)
 
         val svg = <.svg(
           JtsSvg,
-          ^.viewBox    := viewBox,
+          ^.untypedRef := svgRef,
+          ^.viewBox    := s"$viewBoxX $viewBoxY $viewBoxW $viewBoxH",
           canvasWidth  := s"${p.width}px",
           canvasHeight := s"${p.height}px",
           <.g(
@@ -154,7 +154,7 @@ object TargetsOverlay {
                 (offP, offQ, t)
               }
               .collect {
-                case (offP, offQ, SVGTarget.CircleTarget(_, css, radius, title))             =>
+                case (offP, offQ, SVGTarget.CircleTarget(_, css, radius, title))    =>
                   val pointCss = ExploreStyles.CircleTarget |+| css
 
                   <.circle(^.cx := scale(offP),
@@ -163,7 +163,7 @@ object TargetsOverlay {
                            pointCss,
                            title.map(<.title(_))
                   )
-                case (offP, offQ, SVGTarget.CrosshairTarget(_, css, sidePx, title))          =>
+                case (offP, offQ, SVGTarget.CrosshairTarget(_, css, sidePx, title)) =>
                   val pointCss = ExploreStyles.CrosshairTarget |+| css
 
                   val side = scale(maxP * sidePx)
@@ -182,25 +182,24 @@ object TargetsOverlay {
                     ),
                     title.map(<.title(_))
                   )
-                case (offP, offQ, SVGTarget.CrossTarget(_, css, sidePx, title))              =>
+                case (offP,
+                      offQ,
+                      SVGTarget.ScienceTarget(_, css, selectedCss, sidePx, title, selected)
+                    ) =>
                   val pointCss = ExploreStyles.CrosshairTarget |+| css
+                  CrossTarget(Option(svgRef.raw.current).map(_.asInstanceOf[SVG]),
+                              offP,
+                              offQ,
+                              maxP,
+                              sidePx,
+                              pointCss,
+                              selectedCss,
+                              sx,
+                              sy,
+                              title,
+                              selected
+                  ): VdomNode
 
-                  val side = scale(maxP * sidePx)
-                  <.g(
-                    <.line(^.x1 := scale(offP) - side,
-                           ^.x2 := scale(offP) + side,
-                           ^.y1 := scale(offQ) - side,
-                           ^.y2 := scale(offQ) + side,
-                           pointCss
-                    ),
-                    <.line(^.x1 := scale(offP) + side,
-                           ^.x2 := scale(offP) - side,
-                           ^.y1 := scale(offQ) - side,
-                           ^.y2 := scale(offQ) + side,
-                           pointCss
-                    ),
-                    title.map(<.title(_))
-                  )
                 case (offP, offQ, SVGTarget.GuideStarCandidateTarget(_, css, radius, title)) =>
                   val pointCss = ExploreStyles.GuideStarCandidateTarget |+| css
                   <.circle(^.cx := scale(offP),
@@ -209,7 +208,8 @@ object TargetsOverlay {
                            pointCss,
                            title.map(<.title(_))
                   )
-                case (offP, offQ, SVGTarget.GuideStarTarget(_, css, radius, title))          =>
+
+                case (offP, offQ, SVGTarget.GuideStarTarget(_, css, radius, title)) =>
                   val pointCss = ExploreStyles.GuideStarTarget |+| css
                   <.circle(^.cx := scale(offP),
                            ^.cy := scale(offQ),
@@ -217,7 +217,7 @@ object TargetsOverlay {
                            pointCss,
                            title.map(<.title(_))
                   )
-                case (offP, offQ, SVGTarget.LineTo(_, d, css, title))                        =>
+                case (offP, offQ, SVGTarget.LineTo(_, d, css, title))               =>
                   val destOffset = d.diff(p.baseCoordinates).offset
                   // Offset amount
                   val destP      =

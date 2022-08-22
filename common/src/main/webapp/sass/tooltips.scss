@@ -36,3 +36,26 @@
   height: 8px;
   transform: rotate(45deg);
 }
+
+.svg-target-tooltip-area {
+  pointer-events: bounding-box;
+  fill: none;
+}
+
+.svg-target-tooltip {
+  @include common-tooltip;
+
+  fill: var(--tooltip-viz-background-color);
+  font-size: var(--tooltip-font-size);
+
+  path {
+    stroke: var(--tooltip-viz-text-color);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+
+  text {
+    fill: var(--tooltip-viz-text-color);
+    font-size: var(--tooltip-font-size);
+  }
+}

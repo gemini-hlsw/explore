@@ -17,6 +17,12 @@
     var(--color-background-base-s),
     calc(var(--color-background-base-l) + 3%)
   );
+  --color-background-light-3-a: hsl(
+    var(--color-background-base-h),
+    var(--color-background-base-s),
+    calc(var(--color-background-base-l) + 3%),
+    0.7
+  );
   --color-background-light-5: hsl(
     var(--color-background-base-h),
     var(--color-background-base-s),
@@ -201,9 +207,12 @@
   --ags-icon-color: hsla(60, 100%, 50%, 80%);
   --ags-good-iq-color: hsl(120, 60.7%, 33.9%, 80%);
   --tooltip-background-color: var(--color-background-light-3);
+  --tooltip-viz-background-color: var(--color-background-light-3-a);
   --tooltip-border-color: var(--color-background-light-50);
+  --tooltip-viz-text-color: var(--color-background-light-75);
   --tooltip-border-width: 1px;
   --tooltip-z-index: 150;
+  --tooltip-font-size: 8px;
 }
 
 .site-dark() {
