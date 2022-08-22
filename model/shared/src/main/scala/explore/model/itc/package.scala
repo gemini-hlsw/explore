@@ -74,8 +74,11 @@ case class ItcChartExposureTime(
 case class ItcCcd(
   singleSNRatio: Double, // the final SN ratio for a single image
   totalSNRatio:  Double, // the total SN ratio for all images
-  peakPixelFlux: Double  // the highest e- count for all pixels on the CCD
-) derives Decoder
+  peakPixelFlux: Double, // the highest e- count for all pixels on the CCD
+  ampGain:       Double  // the amplifier gain for this CCD (used to calculate ADU)
+) derives Decoder {
+  val adu: Int = (peakPixelFlux / ampGain).toInt // the ADU value
+}
 
 case class ItcChart(
   title:    String,
@@ -91,6 +94,7 @@ object math:
     def maxPeakPixelFlux: Int    = ccds.maximumBy(_.peakPixelFlux).peakPixelFlux.toInt
     def maxSingleSNRatio: Double = ccds.maximumBy(_.singleSNRatio).singleSNRatio
     def maxTotalSNRatio: Double  = ccds.maximumBy(_.totalSNRatio).totalSNRatio
+    def maxADU: Int              = ccds.maximumBy(_.adu).adu
 
   def roundToSignificantFigures(num: Double, n: Int): Double =
     if num == 0 then 0

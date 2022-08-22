@@ -58,6 +58,7 @@ object ITCQueriesGQL {
             singleSNRatio
             totalSNRatio
             peakPixelFlux
+            ampGain
           }
           charts {
             series {

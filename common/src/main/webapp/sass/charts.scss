@@ -171,38 +171,46 @@ See https://github.com/highcharts/highcharts/issues/13320 */
 }
 
 .itc-plot-chart {
+  --itc-plot-blue: hsl(207, 54%, 46.9%);
+  --itc-plot-lightblue: hsl(187, 54%, 66.9%);
+  --itc-plot-green: hsl(118, 40.6%, 48.8%);
+  --itc-plot-lightgreen: hsl(98, 40.6%, 68.8%);
+  --itc-plot-red: hsl(359, 79.5%, 49.8%);
+  --itc-plot-lightred: hsl(339, 79.5%, 69.8%);
+
   .highcharts-reset-zoom {
     fill: var(--button-background-color-semi);
     stroke: var(--site-border-color);
   }
 
   .highcharts-color-0 {
-    fill: #e41a1c;
-    stroke: #e41a1c;
+    fill: var(--itc-plot-blue);
+    stroke: var(--itc-plot-blue);
   }
+
   .highcharts-color-1 {
-    fill: #984ea3;
-    stroke: #984ea3;
+    fill: var(--itc-plot-lightblue);
+    stroke: var(--itc-plot-lightblue);
   }
 
   .highcharts-color-2 {
-    fill: #377eb8;
-    stroke: #377eb8;
+    fill: var(--itc-plot-green);
+    stroke: var(--itc-plot-green);
   }
 
   .highcharts-color-3 {
-    fill: #ff7f00;
-    stroke: #ff7f00;
+    fill: var(--itc-plot-lightgreen);
+    stroke: var(--itc-plot-lightgreen);
   }
 
   .highcharts-color-4 {
-    fill: #4daf4a;
-    stroke: #4daf4a;
+    fill: var(--itc-plot-red);
+    stroke: var(--itc-plot-red);
   }
 
   .highcharts-color-5 {
-    fill: #ffff33;
-    stroke: #ffff33;
+    fill: var(--itc-plot-lightred);
+    stroke: var(--itc-plot-lightred);
   }
 
 }
