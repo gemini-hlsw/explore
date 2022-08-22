@@ -13,7 +13,7 @@ object Settings {
     val circe                 = "0.14.2"
     val circeGolden           = "0.3.0"
     val clue                  = "0.23.1"
-    val crystal               = "0.31.0"
+    val crystal               = "0.31.1"
     val discipline            = "1.5.1"
     val disciplineMUnit       = "1.0.9"
     val fs2                   = "3.2.12"
@@ -27,17 +27,17 @@ object Settings {
     val lucumaBC              = "0.4.0"
     val lucumaCore            = "0.51.0"
     val lucumaCatalog         = "0.26.0"
-    val lucumaReactVersion    = "0.1.0"
+    val lucumaReactVersion    = "0.2.0"
     val lucumaRefinedVersion  = "0.1.1"
     val lucumaSchemas         = "0.35.0"
     val lucumaSSO             = "0.3.0"
-    val lucumaUI              = "0.40.0"
+    val lucumaUI              = "0.41.0"
     val monocle               = "3.1.0"
     val mouse                 = "1.1.0"
     val mUnit                 = "0.7.29"
     val mUnitCatsEffect       = "1.0.7"
     val pprint                = "0.7.3"
-    val reactAladin           = "0.24.0"
+    val reactAladin           = "0.24.1"
     val refinedAlgebraVersion = "0.1.0"
     val scalaJsReact          = "2.1.1"
     val webAppUtil            = "2.0.0-RC2"
@@ -219,6 +219,7 @@ object Settings {
         "edu.gemini" %%% "lucuma-react-beautiful-dnd",
         "edu.gemini" %%% "lucuma-react-clipboard",
         "edu.gemini" %%% "lucuma-react-common",
+        "edu.gemini" %%% "lucuma-react-circular-progressbar",
         "edu.gemini" %%% "lucuma-react-datepicker",
         "edu.gemini" %%% "lucuma-react-draggable",
         "edu.gemini" %%% "lucuma-react-font-awesome",
@@ -229,7 +230,8 @@ object Settings {
         "edu.gemini" %%% "lucuma-react-resize-detector",
         "edu.gemini" %%% "lucuma-react-semantic-ui",
         "edu.gemini" %%% "lucuma-react-table",
-        "edu.gemini" %%% "lucuma-react-virtuoso"
+        "edu.gemini" %%% "lucuma-react-virtuoso",
+        "edu.gemini" %%% "lucuma-react-moon"
       )(lucumaReactVersion)
     )
 

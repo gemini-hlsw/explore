@@ -54,7 +54,7 @@ import lucuma.ui.reusability._
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.utils._
-import react.CircularProgressbar.CircularProgressbar
+import react.circularprogressbar.CircularProgressbar
 import react.common.Css
 import react.common.ReactFnProps
 import react.semanticui._
