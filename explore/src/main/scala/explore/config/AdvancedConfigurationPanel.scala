@@ -353,7 +353,6 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
         (
           props,
           exposureModeEnum,
-          // expTimeOverrideSecs,
           _,
           readonlyData
         ) =>
