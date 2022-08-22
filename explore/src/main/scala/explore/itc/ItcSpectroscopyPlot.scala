@@ -3,6 +3,7 @@
 
 package explore.itc
 
+import cats.data.NonEmptyList
 import cats.syntax.all._
 import crystal.Pot
 import explore.components.ui.ExploreStyles
@@ -28,7 +29,6 @@ import react.semanticui.elements.loader.Loader
 import scala.collection.immutable.HashSet
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
-import cats.data.NonEmptyList
 
 case class ItcSpectroscopyPlot(loading: PlotLoading, charts: Pot[NonEmptyList[ItcChart]])
     extends ReactFnProps[ItcSpectroscopyPlot](ItcSpectroscopyPlot.component)

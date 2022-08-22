@@ -4,6 +4,7 @@
 package explore.model.itc
 
 import cats.Eq
+import cats.data.NonEmptyList
 import cats.derived.*
 import cats.syntax.all._
 import eu.timepit.refined.cats.refTypeEq
@@ -18,7 +19,6 @@ import lucuma.utils.NewType
 
 import scala.concurrent.duration._
 import scala.math._
-import cats.data.NonEmptyList
 
 sealed trait ItcQueryProblems extends Product with Serializable derives Eq
 

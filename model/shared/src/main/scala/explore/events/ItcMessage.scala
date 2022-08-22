@@ -13,6 +13,7 @@ import explore.model.boopickle.CatalogPicklers
 import explore.model.boopickle.CommonPicklers
 import explore.model.boopickle.ItcPicklers
 import explore.model.itc.ItcChart
+import explore.model.itc.ItcChartResult
 import explore.model.itc.ItcQueryProblems
 import explore.model.itc.ItcRequestParams
 import explore.model.itc.ItcResult
@@ -37,7 +38,6 @@ import workers.WorkerRequest
 import java.time.Duration
 import java.time.Instant
 import java.util.UUID
-import explore.model.itc.ItcChartResult
 
 object ItcMessage extends ItcPicklers {
   sealed trait Request extends WorkerRequest

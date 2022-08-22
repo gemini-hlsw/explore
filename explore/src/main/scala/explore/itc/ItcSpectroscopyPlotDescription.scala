@@ -3,10 +3,14 @@
 
 package explore.itc
 
+import cats.data.NonEmptyList
+import crystal.Pot
 import eu.timepit.refined.types.numeric.NonNegInt
 import explore.components.ui.ExploreStyles
+import explore.model.itc.ItcCcd
 import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.OverridenExposureTime
+import explore.model.itc.math.*
 import explore.syntax.ui.*
 import explore.syntax.ui.given
 import japgolly.scalajs.react._
@@ -17,10 +21,6 @@ import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.semanticui.collections.form.Form
 import react.semanticui.sizes._
-import explore.model.itc.ItcCcd
-import explore.model.itc.math.*
-import cats.data.NonEmptyList
-import crystal.Pot
 
 case class ItcSpectroscopyPlotDescription(
   exposureTime: Option[ItcChartExposureTime],

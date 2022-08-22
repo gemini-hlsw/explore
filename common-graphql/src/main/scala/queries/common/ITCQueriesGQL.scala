@@ -6,9 +6,9 @@ package queries.common
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import eu.timepit.refined.types.string
+import explore.model.itc.ItcCcd
 import explore.model.itc.remote.ItcChartRemote
 import queries.schemas.ITC
-import explore.model.itc.ItcCcd
 // gql: import io.circe.refined._
 
 object ITCQueriesGQL {

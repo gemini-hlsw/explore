@@ -30,6 +30,7 @@ import explore.model.boopickle.Boopickle._
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.ItcChart
 import explore.model.itc.ItcChartExposureTime
+import explore.model.itc.ItcChartResult
 import explore.model.itc.OverridenExposureTime
 import explore.model.reusability._
 import explore.model.reusability.given
@@ -47,7 +48,6 @@ import queries.schemas.itc.implicits._
 import react.common.ReactFnProps
 
 import java.util.UUID
-import explore.model.itc.ItcChartResult
 
 final case class ItcGraphPanel(
   scienceMode:              Option[ScienceMode],
