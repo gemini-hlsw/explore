@@ -22,8 +22,6 @@ final case class RoutingInfo(appTab: AppTab, optProgramId: Option[Program.Id], f
 }
 
 object RoutingInfo {
-  implicit val reuseRoutingInfo: Reusability[RoutingInfo] = Reusability.derive
-
   // The only Page that doesn't have a program ID is the NoProgramPage, so instead of polluting RoutingInfo with
   // Option[Program.Id], we'll just associate a dummy id with it. NoProgramPage will need special handling, anyways.
   val dummyProgramId = Program.Id(Long.MaxValue.refined)

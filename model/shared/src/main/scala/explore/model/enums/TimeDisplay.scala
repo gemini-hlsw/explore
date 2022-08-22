@@ -3,13 +3,16 @@
 
 package explore.model.enums
 
-import cats.data.NonEmptyList
 import lucuma.core.util.Enumerated
 
 /**
  * Enum to indicate a plot's time system
  */
-sealed trait TimeDisplay extends Product with Serializable {
+enum TimeDisplay(val tag: String):
+  case UT       extends TimeDisplay("ut")
+  case Sidereal extends TimeDisplay("sidereal")
+  case Site     extends TimeDisplay("site")
+
   def fold[A](ut: => A, sidereal: => A, local: => A): A =
     this match {
       case TimeDisplay.UT       => ut
@@ -17,16 +20,8 @@ sealed trait TimeDisplay extends Product with Serializable {
       case TimeDisplay.Site     => local
     }
 
-}
-
-object TimeDisplay {
-  case object UT       extends TimeDisplay
-  case object Sidereal extends TimeDisplay
-  case object Site     extends TimeDisplay
-
-  val all = NonEmptyList.of(UT, Sidereal, Site)
+object TimeDisplay:
 
   /** @group Typeclass Instances */
-  implicit val DisplayEnumerated: Enumerated[TimeDisplay] =
-    Enumerated.of(all.head, all.tail: _*)
-}
+  given Enumerated[TimeDisplay] =
+    Enumerated.from(UT, Sidereal, Site).withTag(_.tag)

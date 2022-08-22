@@ -3,16 +3,12 @@
 
 package explore.model.enums
 
+import cats.Eq
 import lucuma.core.util.Enumerated
 
-sealed abstract class TargetType extends Product with Serializable
+enum AgsState:
+  case Idle, LoadingCandidates, Calculating, Error
 
-object TargetType {
-
-  case object Sidereal extends TargetType
-
+object AgsState:
   /** @group Typeclass Instances */
-  implicit val TargetTypeEnumerated: Enumerated[TargetType] =
-    Enumerated.of(Sidereal)
-
-}
+  given Eq[AgsState] = Eq.fromUniversalEquals
