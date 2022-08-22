@@ -143,17 +143,27 @@ See https://github.com/highcharts/highcharts/issues/13320 */
   display: grid;
   gap: 0.5em;
   padding: 0.5em;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(100px, 1fr) 1fr;
   background-color: var(--tile-background);
 
   label {
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   span {
     font-size: smaller;
     font-weight: lighter;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+}
+
+.tile-xs-width {
+  .itc-plot-description {
+    display: none
   }
 }
 
@@ -162,5 +172,35 @@ See https://github.com/highcharts/highcharts/issues/13320 */
     fill: var(--button-background-color-semi);
     stroke: var(--site-border-color);
   }
+
+  .highcharts-color-0 {
+    fill: #e41a1c;
+    stroke: #e41a1c;
+  }
+  .highcharts-color-1 {
+    fill: #984ea3;
+    stroke: #984ea3;
+  }
+
+  .highcharts-color-2 {
+    fill: #377eb8;
+    stroke: #377eb8;
+  }
+
+  .highcharts-color-3 {
+    fill: #ff7f00;
+    stroke: #ff7f00;
+  }
+
+  .highcharts-color-4 {
+    fill: #4daf4a;
+    stroke: #4daf4a;
+  }
+
+  .highcharts-color-5 {
+    fill: #ffff33;
+    stroke: #ffff33;
+  }
+
 }
 
