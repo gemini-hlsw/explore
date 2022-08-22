@@ -308,10 +308,20 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
     ScalaFnComponent
       .withHooks[Props]
       .useStateViewBy { props =>
-        implicit val ctx = props.ctx
+        import props.given
         overrideExposureTimeMode(props.scienceModeAdvanced).get
           .map(ExposureTimeModeType.fromExposureTimeMode)
       }
+      .useEffectWithDepsBy { (props, _) =>
+        import props.given
+        overrideExposureTimeMode(props.scienceModeAdvanced).get.map(
+          ExposureTimeModeType.fromExposureTimeMode
+        )
+      }((_, exposureModeEnum) =>
+        newExpModeEnum =>
+          if (exposureModeEnum.get =!= newExpModeEnum) exposureModeEnum.set(newExpModeEnum)
+          else Callback.empty
+      )
       // filter the spectroscopy matrix by the requirements that don't get overridden
       // by the advanced config (wavelength, for example).
       .useMemoBy((props, _) =>
@@ -334,8 +344,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
       }
       // Try to find the readonly data from the spectroscopy matrix
       .useMemoBy { (props, _, rows) =>
-        implicit val ctx = props.ctx
-        val advanced     = props.scienceModeAdvanced
+        import props.given
+        val advanced = props.scienceModeAdvanced
         (props.scienceModeBasic,
          props.spectroscopyRequirements.wavelength,
          rows,
@@ -356,7 +366,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
           _,
           readonlyData
         ) =>
-          implicit val ctx = props.ctx
+          import props.given
 
           val exposureModeView = overrideExposureTimeMode(props.scienceModeAdvanced)
 
@@ -683,6 +693,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 icon = Icons.TrashUnstyled,
                 negative = true,
                 onClick = props.editState.set(ConfigEditState.DetailsView) >>
+                  exposureModeEnum.set(none) >>
+                  invalidateITC >>
                   revertCustomizations(props.scienceModeAdvanced)
               )(^.tpe := "button").when(isCustomized(props.scienceModeAdvanced)),
               Button(
