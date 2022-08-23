@@ -1,0 +1,38 @@
+
+@keyframes append-animate {
+	from {
+		opacity: 0;
+	}
+
+	to {
+		opacity: 1;
+	}
+}
+
+@mixin common-tooltip {
+  position: absolute;
+  background-color: var(--tooltip-background-color);
+  z-index: var(--tooltip-z-index);
+	animation: append-animate 180ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tooltip {
+  @include common-tooltip;
+
+  border: var(--tooltip-border-width) solid var(--tooltip-border-color);
+  border-radius: 3px;
+  padding: 0.7em;
+  font-size: smaller;
+  display: inline;
+  min-width: 100px;
+  max-width: 300px;
+}
+
+.arrow {
+  @include common-tooltip;
+
+  border: 0 solid var(--tooltip-border-color);
+  width: 8px;
+  height: 8px;
+  transform: rotate(45deg);
+}

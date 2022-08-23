@@ -17,11 +17,11 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
+import react.floatingui.*
 import react.semanticui.elements.icon._
-import react.semanticui.modules.popup._
 import react.semanticui.views.item.Item
 
-final case class ConnectionsStatus()(implicit val ctx: AppContextIO)
+case class ConnectionsStatus()(using val ctx: AppContextIO)
     extends ReactFnProps[ConnectionsStatus](ConnectionsStatus.component)
 
 object ConnectionsStatus {
@@ -43,11 +43,10 @@ object ConnectionsStatus {
 
     if (show) {
       Item(clazz = ExploreStyles.ConnectionIcon)(
-        Popup(
-          header = s"$name Connection Status",
-          content = message,
-          position = PopupPosition.BottomRight,
-          trigger = Icons.CircleSmall.clazz(clazz)
+        Tooltip(
+          tooltip = message,
+          placement = Placement.Bottom,
+          trigger = <.span(Icons.CircleSmall.clazz(clazz))
         )
       )
     } else <.span()

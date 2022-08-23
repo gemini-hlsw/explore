@@ -19,10 +19,9 @@ import lucuma.ui.syntax.all.given
 import react.aladin.Fov
 import react.common.ReactFnProps
 import react.fa.Transform
+import react.floatingui.*
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.label._
-import react.semanticui.modules.popup.Popup
-import react.semanticui.modules.popup.PopupPosition
 import react.semanticui.shorthand._
 import react.semanticui.sizes.Small
 import react.semanticui.sizes._
@@ -53,20 +52,17 @@ object AladinToolbar {
         ),
         <.div(
           ExploreStyles.AladinGuideStarLoading,
-          Popup(
-            content = "Loading catalog stars..",
-            position = PopupPosition.TopCenter,
-            trigger = Icons.CircleSmall.beat().clazz(ExploreStyles.WarningIcon)
+          Tooltip(
+            trigger = <.span(Icons.CircleSmall.beat().clazz(ExploreStyles.WarningIcon)),
+            tooltip = "Loading catalog stars.."
           ).when(props.agsState === AgsState.LoadingCandidates),
-          Popup(
-            content = "Calculating guide star..",
-            position = PopupPosition.TopCenter,
-            trigger = Icons.CircleSmall.beat().clazz(ExploreStyles.WarningIcon)
+          Tooltip(
+            trigger = <.span(Icons.CircleSmall.beat().clazz(ExploreStyles.WarningIcon)),
+            tooltip = "Calculating guide star.."
           ).when(props.agsState === AgsState.Calculating),
-          Popup(
-            content = "The Catalog isn't responding at the moment - please try again later..",
-            position = PopupPosition.TopCenter,
-            trigger = Icons.CircleSmall.clazz(ExploreStyles.ErrorIcon)
+          Tooltip(
+            trigger = <.span(Icons.CircleSmall.clazz(ExploreStyles.ErrorIcon)),
+            tooltip = "The Catalog isn't responding at the moment - please try again later.."
           ).when(props.agsState === AgsState.Error)
         ),
         <.div(
@@ -86,14 +82,16 @@ object AladinToolbar {
         ),
         <.div(
           ExploreStyles.AladinCenterButton,
-          Popup(
-            content = "Center on target",
-            position = PopupPosition.BottomLeft,
-            trigger = Button(size = Mini, icon = true, onClick = props.center.set(true))(
-              Icons.Bullseye
-                .transform(Transform(size = 24))
-                .clazz(ExploreStyles.Accented)
-            )
+          Tooltip(
+            trigger = <.span(
+              Button(size = Mini, icon = true, onClick = props.center.set(true))(
+                Icons.Bullseye
+                  .transform(Transform(size = 24))
+                  .clazz(ExploreStyles.Accented)
+              )
+            ),
+            tooltip = "Center on target",
+            placement = Placement.BottomEnd
           )
         )
       )

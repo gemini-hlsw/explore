@@ -55,7 +55,7 @@ trait WorkerServer[F[_]: Async, T: Pickler](using Monoid[F[Unit]]):
   private val F = summon[Sync[F]]
 
   protected def setupLogger: F[Logger[F]] = Sync[F].delay {
-    LogLevelLogger.setLevel(LogLevelDesc.INFO)
+    LogLevelLogger.setLevel(LogLevelDesc.DEBUG)
     LogLevelLogger.createForRoot[F]
   }
 
