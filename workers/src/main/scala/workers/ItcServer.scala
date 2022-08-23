@@ -36,20 +36,13 @@ import scala.scalajs.js
 
 import js.annotation._
 
-trait AsyncToIO {
-  class AsyncCallbackOps[A](val a: AsyncCallback[A]) {
-    def toIO: IO[A] = asyncCallbackToIO.apply(a)
-  }
-
-  implicit def AsyncTo[A](a: AsyncCallback[A]): AsyncCallbackOps[A] =
-    new AsyncCallbackOps(a)
-}
+extension [A](a: AsyncCallback[A]) def toIO: IO[A] = asyncCallbackToIO.apply(a)
 
 /**
  * Web worker that can query gaia and store results locally
  */
 @JSExportTopLevel("ItcServer", moduleID = "exploreworkers")
-object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers with AsyncToIO {
+object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
   @JSExport
   def runWorker(): Unit = run.unsafeRunAndForget()
 
