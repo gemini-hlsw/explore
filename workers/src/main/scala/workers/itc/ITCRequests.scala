@@ -64,31 +64,31 @@ object ITCRequests {
       )
 
     def doRequest(
-      request:  ItcRequestParams,
-      callback: List[ItcResults] => F[Unit]
+      params:        ItcRequestParams,
+      innerCallback: List[ItcResults] => F[Unit]
     ): F[Unit] =
       Logger[F].debug(
-        s"ITC: Request for mode ${request.mode} and target count: ${request.target.length}"
+        s"ITC: Request for mode ${params.mode} and target count: ${params.target.length}"
       ) *>
-        request.target
-          .fproduct(t => selectedBrightness(t.profile, request.wavelength))
+        params.target
+          .fproduct(t => selectedBrightness(t.profile, params.wavelength))
           .collect { case (t, Some(brightness)) =>
             SpectroscopyITCQuery
               .query(
                 SpectroscopyModeInput(
-                  request.wavelength.toInput,
-                  request.signalToNoise,
+                  params.wavelength.toInput,
+                  params.signalToNoise,
                   t.profile.toInput,
                   brightness,
                   t.rv.toITCInput,
-                  request.constraints,
-                  request.mode.toITCInput.map(_.assign).toList
+                  params.constraints,
+                  params.mode.toITCInput.map(_.assign).toList
                 ).assign
               )
           }
           .parSequence
           .flatTap { r =>
-            val prefix = s"ITC: Result for mode ${request.mode}:"
+            val prefix = s"ITC: Result for mode ${params.mode}:"
             itcResults(r).traverse(_ match {
               case Left(errors)                                     =>
                 Logger[F].error(s"$prefix ERRORS: $errors")
@@ -98,7 +98,12 @@ object ITCRequests {
                 Logger[F].debug(s"$prefix $other")
             })
           }
-          .flatMap(callback)
+          .flatMap(innerCallback)
+          .handleErrorWith(e =>
+            callback(
+              Map(params -> ItcQueryProblems.GenericError("Error calling ITC service").leftNec)
+            )
+          )
 
     val itcRowsParams = modes
       .map(_.instrument)

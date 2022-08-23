@@ -30,8 +30,11 @@ import scala.collection.immutable.HashSet
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
 
-case class ItcSpectroscopyPlot(loading: PlotLoading, charts: Pot[NonEmptyList[ItcChart]])
-    extends ReactFnProps[ItcSpectroscopyPlot](ItcSpectroscopyPlot.component)
+case class ItcSpectroscopyPlot(
+  loading: PlotLoading,
+  charts:  Pot[NonEmptyList[ItcChart]],
+  error:   Option[String]
+) extends ReactFnProps[ItcSpectroscopyPlot](ItcSpectroscopyPlot.component)
 
 object ItcSpectroscopyPlot {
   type Props = ItcSpectroscopyPlot
@@ -111,7 +114,13 @@ object ItcSpectroscopyPlot {
 
       <.div(
         ExploreStyles.ItcPlotWrapper,
-        Chart(options, onCreate = _.showLoadingCB.when_(loading))
+        Chart(options,
+              onCreate = c =>
+                c.showLoadingCB.when_(loading) *>
+                  props.error
+                    .map(e => c.showLoadingCB(e).unless_(loading))
+                    .orEmpty
+        )
           .withKey(s"$props-$resize")
           .when(resize.height.isDefined)
       )

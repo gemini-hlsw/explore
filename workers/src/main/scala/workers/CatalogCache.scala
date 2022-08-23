@@ -49,9 +49,9 @@ trait CatalogQuerySettings {
 
   val MaxTargets = 30000
 
-  implicit val coordinatesHash: Hash[Coordinates] = Hash.fromUniversalHashCode
-  implicit val catalog: CatalogAdapter.Gaia       = CatalogAdapter.Gaia3Lite
-  implicit val ci: ADQLInterpreter                = ADQLInterpreter.nTarget(MaxTargets)
+  given Hash[Coordinates]            = Hash.fromUniversalHashCode
+  given catalog: CatalogAdapter.Gaia = CatalogAdapter.Gaia3Lite
+  given ci: ADQLInterpreter          = ADQLInterpreter.nTarget(MaxTargets)
 
   def cacheQueryHash: Hash[ADQLQuery] =
     Hash.by(q => (MaxTargets, catalog.gaiaDB, q.base, q.adqlGeom, q.adqlBrightness))
@@ -62,7 +62,7 @@ trait CatalogQuerySettings {
  * Handles the catalog cache, it tries to use the local db and if not it goes to gaia to get the
  * data
  */
-trait CatalogCache extends CatalogIDB with AsyncToIO {
+trait CatalogCache extends CatalogIDB {
 
   /**
    * Request and parse data from Gaia

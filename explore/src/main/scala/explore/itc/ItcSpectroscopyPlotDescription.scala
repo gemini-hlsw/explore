@@ -52,7 +52,7 @@ object ItcSpectroscopyPlotDescription {
       <.label("Total S/N:"),
       <.span(formatCcds(props.ccds, _.maxTotalSNRatio.toString)),
       <.label("Peak (signal + background):"),
-      <.span(formatCcds(props.ccds, ccds => s"${ccds.maxTotalSNRatio} e⁻ (${ccds.maxADU} ADU)"))
+      <.span(formatCcds(props.ccds, ccds => s"${ccds.maxPeakPixelFlux} e⁻ (${ccds.maxADU} ADU)"))
     )
   }
 }
