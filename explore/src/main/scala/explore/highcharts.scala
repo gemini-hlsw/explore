@@ -11,7 +11,9 @@ import scala.scalajs.js
 import scala.scalajs.js.annotation._
 import scala.scalajs.js.annotation._
 
-extension (c: Chart_) inline def showLoadingCB = CallbackTo(c.showLoading())
+extension (c: Chart_)
+  inline def showLoadingCB = CallbackTo(c.showLoading())
+  inline def showLoadingCB(str: String) = CallbackTo(c.showLoading(str))
 
 type ChartSelection = ChartSelectionContextObject
 

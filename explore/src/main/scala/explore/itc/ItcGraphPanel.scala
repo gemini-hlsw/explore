@@ -150,32 +150,39 @@ object ItcGraphPanel {
           (wavelength, constraints, itcTargets, instrumentRow, exposureTime) =>
             import props.given
 
-            (for
-              w           <- OptionT.fromOption[IO](wavelength)
-              ex          <- OptionT.fromOption[IO](exposureTime)
-              exposures   <- OptionT.fromOption(refineV[Positive](ex.count.value).toOption)
-              constraints <- OptionT.fromOption[IO](constraints)
-              t           <- OptionT.fromOption[IO](itcTargets)
-              mode        <- OptionT.fromOption[IO](instrumentRow)
-            yield loading.setState(PlotLoading.Loading).to[IO] *>
-              ItcClient[IO]
-                .requestSingle(
-                  ItcMessage.GraphQuery(w, ex.time, exposures, constraints, t, mode)
-                )
-                .flatMap(
-                  _.map(m =>
-                    charts.setStateAsync(Pot.Ready(m)) *>
-                      loading.setState(PlotLoading.Done).to[IO]
-                  ).orEmpty
-                ))
-              .getOrElse(IO.unit)
-              .flatten
+            val action: Option[IO[Unit]] =
+              for
+                w           <- wavelength
+                ex          <- exposureTime
+                exposures   <- refineV[Positive](ex.count.value).toOption
+                constraints <- constraints
+                t           <- itcTargets
+                mode        <- instrumentRow
+              yield loading.setState(PlotLoading.Loading).to[IO] *>
+                ItcClient[IO]
+                  .requestSingle(
+                    ItcMessage.GraphQuery(w, ex.time, exposures, constraints, t, mode)
+                  )
+                  .flatMap(
+                    _.map(m =>
+                      charts.setStateAsync(Pot.Ready(m)) *>
+                        loading.setState(PlotLoading.Done).to[IO]
+                    ).orEmpty
+                  )
+            action.getOrElse(
+              (charts
+                .setState(Pot.error(new RuntimeException("Not enough information to call ITC"))) *>
+                loading
+                  .setState(PlotLoading.Done))
+                .to[IO]
+            )
       }
       .render { (props, results, loading) =>
+        val error: Option[String] = results.value.fold(none, _.getMessage.some, _ => none)
         <.div(
           ExploreStyles.ItcPlotSection,
           ItcSpectroscopyPlotDescription(props.chartExposureTime, results.value.map(_.ccds)),
-          ItcSpectroscopyPlot(loading.value, results.value.map(_.charts))
+          ItcSpectroscopyPlot(loading.value, results.value.map(_.charts), error)
         )
       }
 }
