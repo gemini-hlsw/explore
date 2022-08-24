@@ -39,4 +39,3 @@ object ItcChartType:
         ItcChartType.S2NChart
       )
       .withTag(_.tag)
-

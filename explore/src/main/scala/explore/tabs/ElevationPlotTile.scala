@@ -17,24 +17,21 @@ import lucuma.core.model.User
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 
-object ElevationPlotTile {
+object ElevationPlotTile:
 
   def elevationPlotTile(
     uid:         Option[User.Id],
     scienceMode: Option[ScienceMode],
     coordinates: Option[(Target.Id, Coordinates)]
-  )(implicit
-    ctx:         AppContextIO
-  ) =
+  )(using AppContextIO) =
     Tile(
       ObsTabTilesIds.PlotId.id,
       "Elevation Plot",
       canMinimize = true,
-      bodyClass = ExploreStyles.ElevationPlotTileBody.some,
-      tileClass = ExploreStyles.ElevationPlotTile.some
-    ) { (_: Tile.RenderInTitle) =>
+      bodyClass = ExploreStyles.ElevationPlotTileBody.some
+    ) { _ =>
       (uid, coordinates)
-        .mapN { case (uid, c) =>
+        .mapN { (uid, c) =>
           ElevationPlotSection(uid, c._1, scienceMode, c._2): VdomNode
         }
         .getOrElse {
@@ -44,5 +41,3 @@ object ElevationPlotTile {
           )
         }
     }
-
-}

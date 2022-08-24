@@ -10,8 +10,8 @@ import cats.syntax.all._
 import eu.timepit.refined.cats.refTypeEq
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosInt
-import explore.model.enums.ItcSeriesType
 import explore.model.enums.ItcChartType
+import explore.model.enums.ItcSeriesType
 import io.circe.Decoder
 import lucuma.core.model.NonNegDuration
 import lucuma.core.model.implicits.*

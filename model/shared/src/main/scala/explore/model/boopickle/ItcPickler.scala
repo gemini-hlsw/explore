@@ -12,11 +12,12 @@ import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.itc.ItcCcd
-import explore.model.itc.ItcSeries
+import explore.model.itc.ItcChart
 import explore.model.itc.ItcChartResult
 import explore.model.itc.ItcQueryProblems
 import explore.model.itc.ItcRequestParams
 import explore.model.itc.ItcResult
+import explore.model.itc.ItcSeries
 import explore.model.itc.ItcTarget
 import explore.model.itc.YAxis
 import explore.modes.InstrumentRow
@@ -42,7 +43,6 @@ import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
 
 import scala.collection.immutable.SortedMap
-import explore.model.itc.ItcChart
 
 // Boopicklers for itc related types
 trait ItcPicklers extends CommonPicklers {

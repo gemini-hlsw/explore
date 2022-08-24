@@ -145,7 +145,6 @@ object ExploreStyles {
   val TargetSourceProfileEditor: Css = Css("target-source-profile-editor")
   val Gaussian: Css                  = Css("gaussian")
 
-  val ElevationPlotTile: Css               = Css("elevation-plot-tile")
   val ElevationPlotTileBody: Css           = Css("elevation-plot-tile-body")
   val ElevationPlot: Css                   = Css("elevation-plot")
   val ElevationPlotSection: Css            = Css("elevation-plot-section")

@@ -8,11 +8,11 @@ import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import lucuma.utils.NewType
 import react.fa.IconSize
 import react.semanticui.modules.popup.Popup
 
 import java.time.Duration
-import lucuma.utils.NewType
 
 // Icon to indicate a field is required to do ITC calculations
 def requiredForITC: TagMod =
