@@ -129,19 +129,9 @@ See https://github.com/highcharts/highcharts/issues/13320 */
 
 .itc-plot-section {
   display: grid;
-  grid-template-columns: minmax(min-content, 1fr) 3fr;
-  grid-template-rows: 1fr;
-  grid-template-areas:
-    'description plot'
-    'description plot-controls';
-}
-
-.itc-plot-details-hidden {
-  grid-template-columns: 0px 3fr;
-
-  .itc-plot-description {
-    display: none;
-  }
+  grid-template:
+    'description plot' 1fr
+    'description plot-controls' / minmax(min-content, 1fr) 3fr;
 }
 
 .itc-plot-body {
@@ -184,6 +174,14 @@ See https://github.com/highcharts/highcharts/issues/13320 */
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+  }
+}
+
+.itc-plot-details-hidden {
+  grid-template-columns: 0 3fr;
+
+  .itc-plot-description {
+    display: none;
   }
 }
 
