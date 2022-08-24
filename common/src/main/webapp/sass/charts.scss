@@ -128,32 +128,41 @@ See https://github.com/highcharts/highcharts/issues/13320 */
 }
 
 .itc-plot-section {
-  background-color: var(--tile-background);
-  display: flex;
-  flex-direction: row;
-  max-height: 100%;
+  display: grid;
+  grid-template-columns: minmax(min-content, 1fr) 3fr;
+  grid-template-rows: 1fr;
+  grid-template-areas:
+    'description plot'
+    'description plot-controls';
 }
 
-.itc-plot-wrapper {
-  flex-grow: 2;
-  flex-shrink: 2;
-  display: flex;
-  flex-direction: column;
+.itc-plot-details-hidden {
+  grid-template-columns: 0px 3fr;
+
+  .itc-plot-description {
+    display: none;
+  }
 }
 
 .itc-plot-body {
-  flex-grow: 2;
+  grid-area: plot;
+  align-self: stretch;
   background-color: var(--plot-background-color);
 }
 
 .itc-plot-controls {
+  align-self: end;
+  grid-area: plot-controls;
   background-color: var(--plot-background-color);
   padding: 0.2em;
   display: flex;
-  justify-content: center;
+  padding-right: 1em;
+  padding-left: 1em;
+  justify-content: space-between;
 }
 
 .itc-plot-description {
+  grid-area: description;
   display: grid;
   column-gap: 0.5em;
   padding: 0.5em;
@@ -182,13 +191,6 @@ See https://github.com/highcharts/highcharts/issues/13320 */
   .itc-plot-description {
     display: none
   }
-}
-
-.itc-plot-selector {
-  // position: absolute;
-  // z-index: 200;
-  // left: 80px;
-  // top: 10px;
 }
 
 .itc-plot-chart {

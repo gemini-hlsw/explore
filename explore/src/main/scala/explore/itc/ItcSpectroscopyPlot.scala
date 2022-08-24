@@ -37,9 +37,11 @@ import react.semanticui.sizes._
 import react.semanticui.collections.form.Form
 
 case class ItcSpectroscopyPlot(
-  loading: PlotLoading,
-  charts:  Pot[NonEmptyList[ItcChart]],
-  error:   Option[String]
+  loading:   PlotLoading,
+  charts:    Pot[NonEmptyList[ItcChart]],
+  error:     Option[String],
+  chartType: ItcChartType,
+  details:   PlotDetails // Used only as part of the key
 ) extends ReactFnProps[ItcSpectroscopyPlot](ItcSpectroscopyPlot.component)
 
 object ItcSpectroscopyPlot {
@@ -48,8 +50,7 @@ object ItcSpectroscopyPlot {
   val component = ScalaFnComponent
     .withHooks[Props]
     .useResizeDetector()
-    .useState(ItcChartType.SignalChart)
-    .render { (props, resize, chartType) =>
+    .render { (props, resize) =>
       val loading = props.charts.isPending || props.loading.boolValue
 
       val series: List[ItcChart] =
@@ -58,8 +59,6 @@ object ItcSpectroscopyPlot {
       val chartOptions = series.map { chart =>
 
         val yAxis            = chart.series.foldLeft(YAxis.Empty)(_ ∪ _.yAxis)
-        println(yAxis)
-        println(chart.chartType)
         val title            = chart.chartType match
           case ItcChartType.SignalChart => "e⁻ per exposure per spectral pixel"
           case ItcChartType.S2NChart    => "S/N per spectral pixel"
@@ -125,44 +124,22 @@ object ItcSpectroscopyPlot {
         chart.chartType -> options
       }.toMap
 
-      println(chartOptions)
-      println(chartType.value)
-      chartOptions
-        .get(chartType.value)
-        .foreach(a => org.scalajs.dom.window.console.log(a))
-
       <.div(
-        ExploreStyles.ItcPlotWrapper,
-        <.div(
-          ExploreStyles.ItcPlotBody,
-          chartOptions
-            .get(chartType.value)
-            .map { opt =>
-              Chart(opt,
-                    onCreate = c =>
-                      c.showLoadingCB.when_(loading) *>
-                        props.error
-                          .map(e => c.showLoadingCB(e).unless_(loading))
-                          .orEmpty
-              )
-                .withKey(s"$props-$resize-$chartType")
-                .when(resize.height.isDefined)
-            }
-            .getOrElse(EmptyVdom)
-        ).withRef(resize.ref),
-        <.div(
-          ExploreStyles.ItcPlotControls,
-          ButtonGroup(compact = true, size = Tiny, clazz = ExploreStyles.ItcPlotSelector)(
-            Button(
-              active = chartType.value === ItcChartType.SignalChart,
-              onClick = chartType.setState(ItcChartType.SignalChart)
-            )("Signal"),
-            Button(
-              active = chartType.value === ItcChartType.S2NChart,
-              onClick = chartType.setState(ItcChartType.S2NChart)
-            )("S/N")
-          )
-        )
-      )
+        ExploreStyles.ItcPlotBody,
+        chartOptions
+          .get(props.chartType)
+          .map { opt =>
+            Chart(opt,
+                  onCreate = c =>
+                    c.showLoadingCB.when_(loading) *>
+                      props.error
+                        .map(e => c.showLoadingCB(e).unless_(loading))
+                        .orEmpty
+            )
+              .withKey(s"$props-$resize")
+              .when(resize.height.isDefined)
+          }
+          .getOrElse(EmptyVdom)
+      ).withRef(resize.ref)
     }
 }

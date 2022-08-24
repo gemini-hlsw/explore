@@ -12,6 +12,7 @@ import react.fa.IconSize
 import react.semanticui.modules.popup.Popup
 
 import java.time.Duration
+import lucuma.utils.NewType
 
 // Icon to indicate a field is required to do ITC calculations
 def requiredForITC: TagMod =
@@ -34,6 +35,12 @@ object PlotLoading:
   inline def apply(b: Boolean): PlotLoading = b
 
 extension (p: PlotLoading) inline def boolValue: Boolean = p
+
+object PlotDetails extends NewType[Boolean]:
+  val Shown: PlotDetails  = PlotDetails(true)
+  val Hidden: PlotDetails = PlotDetails(false)
+
+type PlotDetails = PlotDetails.Type
 
 def formatDuration(seconds: Long): String =
   if (seconds < 60)
