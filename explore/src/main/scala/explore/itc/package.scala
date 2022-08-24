@@ -8,6 +8,7 @@ import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import lucuma.utils.NewType
 import react.fa.IconSize
 import react.semanticui.modules.popup.Popup
 
@@ -34,6 +35,12 @@ object PlotLoading:
   inline def apply(b: Boolean): PlotLoading = b
 
 extension (p: PlotLoading) inline def boolValue: Boolean = p
+
+object PlotDetails extends NewType[Boolean]:
+  val Shown: PlotDetails  = PlotDetails(true)
+  val Hidden: PlotDetails = PlotDetails(false)
+
+type PlotDetails = PlotDetails.Type
 
 def formatDuration(seconds: Long): String =
   if (seconds < 60)

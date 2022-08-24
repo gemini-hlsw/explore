@@ -28,9 +28,10 @@ import explore.model.ScienceModeBasic
 import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle._
 import explore.model.boopickle.ItcPicklers.given
-import explore.model.itc.ItcChart
+import explore.model.enums.ItcChartType
 import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.ItcChartResult
+import explore.model.itc.ItcSeries
 import explore.model.itc.OverridenExposureTime
 import explore.model.reusability._
 import explore.model.reusability.given
@@ -137,6 +138,7 @@ object ItcGraphPanel {
       .useState(Pot.pending[ItcChartResult])
       // loading
       .useState(PlotLoading.Done)
+      // show description
       // Request ITC graph data
       .useEffectWithDepsBy((props, _, _) =>
         (props.wavelength,
@@ -177,12 +179,21 @@ object ItcGraphPanel {
                 .to[IO]
             )
       }
-      .render { (props, results, loading) =>
+      .useStateView(ItcChartType.SignalChart)
+      .useStateView(PlotDetails.Shown)
+      .render { (props, results, loading, chartType, details) =>
         val error: Option[String] = results.value.fold(none, _.getMessage.some, _ => none)
         <.div(
           ExploreStyles.ItcPlotSection,
+          ExploreStyles.ItcPlotDetailsHidden.unless(details.when(_.value)),
           ItcSpectroscopyPlotDescription(props.chartExposureTime, results.value.map(_.ccds)),
-          ItcSpectroscopyPlot(loading.value, results.value.map(_.charts), error)
+          ItcSpectroscopyPlot(loading.value,
+                              results.value.map(_.charts),
+                              error,
+                              chartType.get,
+                              details.get
+          ),
+          ItcPlotControl(chartType, details)
         )
       }
 }

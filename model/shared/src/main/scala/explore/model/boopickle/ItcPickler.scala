@@ -17,6 +17,7 @@ import explore.model.itc.ItcChartResult
 import explore.model.itc.ItcQueryProblems
 import explore.model.itc.ItcRequestParams
 import explore.model.itc.ItcResult
+import explore.model.itc.ItcSeries
 import explore.model.itc.ItcTarget
 import explore.model.itc.YAxis
 import explore.modes.InstrumentRow
@@ -183,9 +184,11 @@ trait ItcPicklers extends CommonPicklers {
 
   given Pickler[YAxis] = generatePickler
 
-  given Pickler[ItcChart] = generatePickler
+  given Pickler[ItcSeries] = generatePickler
 
   given Pickler[ItcCcd] = generatePickler
+
+  given Pickler[ItcChart] = generatePickler
 
   given Pickler[ItcChartResult] = generatePickler
 }

@@ -145,7 +145,6 @@ object ExploreStyles {
   val TargetSourceProfileEditor: Css = Css("target-source-profile-editor")
   val Gaussian: Css                  = Css("gaussian")
 
-  val ElevationPlotTile: Css               = Css("elevation-plot-tile")
   val ElevationPlotTileBody: Css           = Css("elevation-plot-tile-body")
   val ElevationPlot: Css                   = Css("elevation-plot")
   val ElevationPlotSection: Css            = Css("elevation-plot-section")
@@ -156,11 +155,14 @@ object ExploreStyles {
   val PlotToggleCheckbox: Css              = Css("plot-toggle-checkbox")
   val PlotToggle: Css                      = Css("plot-toggle")
 
-  val ItcPlotSection: Css     = Css("itc-plot-section")
-  val ItcPlotLoading: Css     = Css("itc-plot-loading")
-  val ItcPlotChart: Css       = Css("itc-plot-chart")
-  val ItcPlotDescription: Css = Css("itc-plot-description")
-  val ItcPlotWrapper: Css     = Css("itc-plot-wrapper")
+  val ItcPlotSelector: Css      = Css("itc-plot-selector")
+  val ItcPlotSection: Css       = Css("itc-plot-section")
+  val ItcPlotDetailsHidden: Css = Css("itc-plot-details-hidden")
+  val ItcPlotLoading: Css       = Css("itc-plot-loading")
+  val ItcPlotChart: Css         = Css("itc-plot-chart")
+  val ItcPlotDescription: Css   = Css("itc-plot-description")
+  val ItcPlotBody: Css          = Css("itc-plot-body")
+  val ItcPlotControls: Css      = Css("itc-plot-controls")
 
   val AladinContainerColumn: Css  = Css("aladin-container-column")
   val AladinContainerBody: Css    = Css("aladin-container-body")

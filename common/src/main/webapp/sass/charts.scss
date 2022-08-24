@@ -128,18 +128,31 @@ See https://github.com/highcharts/highcharts/issues/13320 */
 }
 
 .itc-plot-section {
-  background-color: var(--tile-background);
-  display: flex;
-  flex-direction: row;
-  align-items: stretch;
-  justify-content: stretch;
+  display: grid;
+  grid-template:
+    'description plot' 1fr
+    'description plot-controls' / minmax(min-content, 1fr) 3fr;
 }
 
-.itc-plot-wrapper {
-  flex-grow: 2;
+.itc-plot-body {
+  grid-area: plot;
+  align-self: stretch;
+  background-color: var(--plot-background-color);
+}
+
+.itc-plot-controls {
+  align-self: end;
+  grid-area: plot-controls;
+  background-color: var(--plot-background-color);
+  padding: 0.2em;
+  display: flex;
+  padding-right: 1em;
+  padding-left: 1em;
+  justify-content: space-between;
 }
 
 .itc-plot-description {
+  grid-area: description;
   display: grid;
   column-gap: 0.5em;
   padding: 0.5em;
@@ -164,6 +177,14 @@ See https://github.com/highcharts/highcharts/issues/13320 */
   }
 }
 
+.itc-plot-details-hidden {
+  grid-template-columns: 0 3fr;
+
+  .itc-plot-description {
+    display: none;
+  }
+}
+
 .tile-xs-width {
   .itc-plot-description {
     display: none
@@ -177,6 +198,10 @@ See https://github.com/highcharts/highcharts/issues/13320 */
   --itc-plot-lightgreen: hsl(98deg 40.6% 68.8%);
   --itc-plot-red: hsl(359deg 79.5% 49.8%);
   --itc-plot-lightred: hsl(339deg 79.5% 69.8%);
+
+  .highcharts-legend-item {
+    font-size: 10px;
+  }
 
   .highcharts-reset-zoom {
     fill: var(--button-background-color-semi);

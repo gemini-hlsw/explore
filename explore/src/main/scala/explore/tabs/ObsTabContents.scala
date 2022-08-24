@@ -88,8 +88,8 @@ object ObsTabContents {
   private val ConstraintsMinHeight: NonNegInt   = 3.refined
   private val ConstraintsMaxHeight: NonNegInt   = 7.refined
   private val ConfigurationMaxHeight: NonNegInt = 10.refined
-  private val ItcMinHeight: NonNegInt           = 3.refined
-  private val ItcMaxHeight: NonNegInt           = 7.refined
+  private val ItcMinHeight: NonNegInt           = 6.refined
+  private val ItcMaxHeight: NonNegInt           = 9.refined
   private val DefaultWidth: NonNegInt           = 10.refined
   private val TileMinWidth: NonNegInt           = 6.refined
   private val DefaultLargeWidth: NonNegInt      = 12.refined
@@ -340,7 +340,7 @@ object ObsTabContents {
                       _.fold(
                         mergeMap(dbLayout, defaultLayout).ready,
                         _ => mergeMap(dbLayout, defaultLayout).ready,
-                        cur => mergeMap(dbLayout, cur).ready
+                        _ => mergeMap(dbLayout, defaultLayout).ready
                       )
                     ))
                     .to[IO]

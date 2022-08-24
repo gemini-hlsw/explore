@@ -10,7 +10,8 @@ import cats.syntax.all._
 import eu.timepit.refined.cats.refTypeEq
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosInt
-import explore.model.enums.ItcSeriesDataType
+import explore.model.enums.ItcChartType
+import explore.model.enums.ItcSeriesType
 import io.circe.Decoder
 import lucuma.core.model.NonNegDuration
 import lucuma.core.model.implicits.*
@@ -80,11 +81,16 @@ case class ItcCcd(
   val adu: Int = (peakPixelFlux / ampGain).toInt // the ADU value
 }
 
+case class ItcSeries(
+  title:      String,
+  seriesType: ItcSeriesType,
+  data:       List[(Double, Double)],
+  yAxis:      YAxis
+)
+
 case class ItcChart(
-  title:    String,
-  dataType: ItcSeriesDataType,
-  data:     List[(Double, Double)],
-  yAxis:    YAxis
+  chartType: ItcChartType,
+  series:    List[ItcSeries]
 )
 
 case class ItcChartResult(ccds: NonEmptyList[ItcCcd], charts: NonEmptyList[ItcChart])
@@ -134,15 +140,19 @@ object remote:
   case class XAxis(start: Double, end: Double, count: Int) derives Decoder:
     val step = (end - start) / (count - 1)
 
-  final case class ItcChartRemote(
-    title:    String,
-    dataType: ItcSeriesDataType,
-    xAxis:    XAxis,
-    yAxis:    YAxis,
-    dataY:    List[Double]
+  case class ItcChartGroupRemote(chartType: ItcChartType, series: List[ItcChartRemote])
+      derives Decoder:
+    def toItcChart: ItcChart = ItcChart(chartType, series.map(_.toItcSeries))
+
+  case class ItcChartRemote(
+    title:      String,
+    seriesType: ItcSeriesType,
+    xAxis:      XAxis,
+    yAxis:      YAxis,
+    dataY:      List[Double]
   ) derives Decoder:
-    def toItcChart: ItcChart =
+    def toItcSeries: ItcSeries =
       val genData = dataY.zipWithIndex.map((y, i) =>
         (math.roundToSignificantFigures(xAxis.step * i + xAxis.start, 4), y)
       )
-      ItcChart(title, dataType, genData, yAxis)
+      ItcSeries(title, seriesType, genData, yAxis)
