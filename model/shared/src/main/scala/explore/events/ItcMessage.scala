@@ -12,7 +12,7 @@ import eu.timepit.refined.types.numeric.PosInt
 import explore.model.boopickle.CatalogPicklers
 import explore.model.boopickle.CommonPicklers
 import explore.model.boopickle.ItcPicklers
-import explore.model.itc.ItcChart
+import explore.model.itc.ItcSeries
 import explore.model.itc.ItcChartResult
 import explore.model.itc.ItcQueryProblems
 import explore.model.itc.ItcRequestParams

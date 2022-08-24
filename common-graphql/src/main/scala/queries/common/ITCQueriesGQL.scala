@@ -7,7 +7,7 @@ import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import eu.timepit.refined.types.string
 import explore.model.itc.ItcCcd
-import explore.model.itc.remote.ItcChartRemote
+import explore.model.itc.remote.ItcChartGroupRemote
 import queries.schemas.ITC
 // gql: import io.circe.refined._
 
@@ -61,9 +61,10 @@ object ITCQueriesGQL {
             ampGain
           }
           charts {
+            chartType
             series {
               title
-              dataType
+              seriesType
               dataY
               xAxis {
                 start
@@ -84,9 +85,7 @@ object ITCQueriesGQL {
       object SpectroscopyGraphBeta {
         type ServerVersion = string.NonEmptyString
         type Ccds          = ItcCcd
-        object Charts {
-          type Series = ItcChartRemote
-        }
+        type Charts        = ItcChartGroupRemote
       }
     }
   }

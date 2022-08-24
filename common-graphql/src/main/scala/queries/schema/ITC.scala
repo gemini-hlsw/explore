@@ -119,7 +119,8 @@ trait ITC {
     type GmosSouthBuiltinFpu                 = enums.GmosSouthFpu
     type GmosCustomSlitWidth                 = enums.GmosCustomSlitWidth
     type StellarLibrarySpectrum              = enums.StellarLibrarySpectrum
-    type ItcChartDataType                    = explore.model.enums.ItcSeriesDataType
+    type ItcSeriesType                       = explore.model.enums.ItcSeriesType
+    type ItcChartType                        = explore.model.enums.ItcChartType
   }
 
   object Types {

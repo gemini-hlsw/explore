@@ -4763,7 +4763,7 @@ type SpectroscopyResult {
 }
 
 """Chart data types"""
-enum ItcChartDataType {
+enum ItcSeriesType {
   SIGNAL_DATA
 
   BACKGROUND_DATA
@@ -4775,6 +4775,13 @@ enum ItcChartDataType {
   PIX_SIG_DATA
 
   PIX_BACK_DATA
+}
+
+"""Chart data types"""
+enum ItcChartType {
+  SIGNAL_CHART
+
+  S2N_CHART
 }
 
 type ChartAxis {
@@ -4798,7 +4805,7 @@ type ItcSeries {
   title: String!
 
   # Data type: alternatives SignalData, BackgroundData, SingleS2NData, FinalS2NData, PixSigData, PixBackData
-  dataType: ItcChartDataType!
+  seriesType: ItcSeriesType!
 
   # Values for the x axis
   xAxis: ChartAxis
@@ -4817,6 +4824,9 @@ type ItcSeries {
 }
 
 type ItcChart {
+  # Data type: alternatives SignalChart, S2NChart
+  chartType: ItcChartType!
+
   series: [ItcSeries!]!
 }
 

@@ -114,7 +114,7 @@ object ITCGraphRequests {
                   ).assign
                 )
                 .flatMap { r =>
-                  val charts = r.spectroscopyGraphBeta.charts.flatMap(_.series.map(_.toItcChart))
+                  val charts = r.spectroscopyGraphBeta.charts.map(_.toItcChart)
                   val ccds   = r.spectroscopyGraphBeta.ccds
                   (ccds.toNel, charts.toNel).mapN(ItcChartResult.apply).map(callback).orEmpty
                 }

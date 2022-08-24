@@ -156,11 +156,14 @@ object ExploreStyles {
   val PlotToggleCheckbox: Css              = Css("plot-toggle-checkbox")
   val PlotToggle: Css                      = Css("plot-toggle")
 
+  val ItcPlotSelector: Css    = Css("itc-plot-selector")
   val ItcPlotSection: Css     = Css("itc-plot-section")
   val ItcPlotLoading: Css     = Css("itc-plot-loading")
   val ItcPlotChart: Css       = Css("itc-plot-chart")
   val ItcPlotDescription: Css = Css("itc-plot-description")
   val ItcPlotWrapper: Css     = Css("itc-plot-wrapper")
+  val ItcPlotControls: Css    = Css("itc-plot-controls")
+  val ItcPlotBody: Css        = Css("itc-plot-body")
 
   val AladinContainerColumn: Css  = Css("aladin-container-column")
   val AladinContainerBody: Css    = Css("aladin-container-body")

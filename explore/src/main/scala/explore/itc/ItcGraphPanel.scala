@@ -28,7 +28,7 @@ import explore.model.ScienceModeBasic
 import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle._
 import explore.model.boopickle.ItcPicklers.given
-import explore.model.itc.ItcChart
+import explore.model.itc.ItcSeries
 import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.ItcChartResult
 import explore.model.itc.OverridenExposureTime

@@ -40,11 +40,8 @@ object ItcSpectroscopyPlotDescription {
     Form(size = Small, clazz = ExploreStyles.ItcPlotDescription)(
       <.label("Integration Time:"),
       <.span(
-        props.exposureTime.fold("-") {
-          case ItcChartExposureTime(OverridenExposureTime.Overriden, time, count) =>
-            s"${format(time, count)} *"
-          case ItcChartExposureTime(_, time, count)                               =>
-            format(time, count)
+        props.exposureTime.fold("-") { case ItcChartExposureTime(_, time, count) =>
+          format(time, count)
         }
       ),
       <.label("S/N per exposure:"),

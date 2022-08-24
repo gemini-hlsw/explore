@@ -22,7 +22,7 @@ import scala.scalajs.js.annotation.JSExport
 import scala.scalajs.js.annotation.JSExportTopLevel
 
 @JSExportTopLevel("CatalogServer", moduleID = "exploreworkers")
-object CatalogServer extends WorkerServer[IO, CatalogMessage.Request] with CatalogCache {
+object CatalogServer extends WorkerServer[IO, CatalogMessage.Request] with CatalogCache:
   @JSExport
   def runWorker(): Unit = run.unsafeRunAndForget()
 
@@ -30,20 +30,17 @@ object CatalogServer extends WorkerServer[IO, CatalogMessage.Request] with Catal
   private val Expiration: Duration = Duration.ofDays(30)
 
   protected val handler: Logger[IO] ?=> IO[Invocation => IO[Unit]] =
-    for {
+    for
       self    <- IO(dom.DedicatedWorkerGlobalScope.self)
       idb     <- IO(self.indexedDB.get)
       stores   = CacheIDBStores()
       cacheDb <- stores.open(IndexedDb(idb)).toIO
       client   = FetchClientBuilder[IO].create
-    } yield { invocation =>
-      invocation.data match {
+    yield invocation =>
+      invocation.data match
         case req @ CatalogMessage.GSRequest(_, _) =>
           readFromGaia(client, cacheDb, stores, req, c => invocation.respond(c)) *>
             expireGuideStarCandidates(cacheDb, stores, Expiration).toIO
 
         case CatalogMessage.GSCacheCleanupRequest(expTime) =>
           expireGuideStarCandidates(cacheDb, stores, expTime).toIO
-      }
-    }
-}
