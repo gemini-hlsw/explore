@@ -64,13 +64,11 @@ object ElevationPlotNight {
     var airmass: Double
   }
 
-  protected implicit class PointOptionsWithAirmassOps(val x: PointOptionsWithAirmass)
-      extends AnyVal     {
+  extension(x: PointOptionsWithAirmass)
     def setAirMass(value: Double): PointOptionsWithAirmass = {
       x.airmass = value
       x
     }
-  }
 
   protected case class SeriesData(
     targetAltitude:   List[Chart.Data],
@@ -93,8 +91,8 @@ object ElevationPlotNight {
 
     def tag(a: ElevationSeries) = a.name
 
-    implicit val ElevationSeriesEnumerated: Enumerated[ElevationSeries] =
-      Enumerated.of(Elevation, ParallacticAngle, SkyBrightness, LunarElevation)
+    given Enumerated[ElevationSeries] =
+      Enumerated.from(Elevation, ParallacticAngle, SkyBrightness, LunarElevation).withTag(_.name)
   }
 
   private val dateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")

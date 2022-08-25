@@ -3,8 +3,6 @@
 
 package explore.model
 
-import lucuma.core.util.Enumerated
-
 sealed trait GridLayoutSection extends Product with Serializable {
   def value: String
 }
@@ -17,7 +15,4 @@ object GridLayoutSection {
     val value = "targets"
   }
 
-  /** @group Typeclass Instances */
-  implicit val GridLayoutSectionEnumerated: Enumerated[GridLayoutSection] =
-    Enumerated.of(ObservationsLayout, TargetLayout)
 }

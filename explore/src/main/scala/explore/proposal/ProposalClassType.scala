@@ -57,18 +57,20 @@ object ProposalClassType {
   }
 
   implicit val enumProposalClassType: Enumerated[ProposalClassType] =
-    Enumerated.of(LargeProgram,
-                  FastTurnaround,
-                  Queue,
-                  Classical,
-                  Exchange,
-                  Intensive,
-                  DemoScience,
-                  DirectorsTime,
-                  PoorWeather,
-                  SystemVerification
-    )
+    Enumerated
+      .from(LargeProgram,
+            FastTurnaround,
+            Queue,
+            Classical,
+            Exchange,
+            Intensive,
+            DemoScience,
+            DirectorsTime,
+            PoorWeather,
+            SystemVerification
+      )
+      .withTag(_.label)
 
-  implicit val displayProposalClassType: Display[ProposalClassType] =
+  given Display[ProposalClassType] =
     Display.by(_.label, _.label)
 }

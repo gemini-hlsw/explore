@@ -23,7 +23,7 @@ import explore.model.ModelUndoStacks
 import explore.model.ObsIdSet
 import explore.model.ScienceMode
 import explore.model.TargetSummary
-import explore.model.display._
+import explore.model.display.given
 import explore.model.enums.AppTab
 import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.OverridenExposureTime

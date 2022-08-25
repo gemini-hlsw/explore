@@ -18,7 +18,7 @@ import explore.common._
 import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
 import explore.implicits._
-import explore.model.display._
+import explore.model.display.given
 import explore.model.enums.IntegratedSEDType
 import explore.model.enums.IntegratedSEDType._
 import explore.model.enums.SEDType

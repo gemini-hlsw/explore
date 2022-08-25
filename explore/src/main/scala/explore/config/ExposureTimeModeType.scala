@@ -4,8 +4,6 @@
 package explore.config
 
 import eu.timepit.refined.types.string.NonEmptyString
-import japgolly.scalajs.react.ReactCats._
-import japgolly.scalajs.react.Reusability
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
@@ -24,11 +22,10 @@ object ExposureTimeModeType {
     case ExposureTimeMode.FixedExposure(_, _) => FixedExposure
   }
 
-  implicit val enumExposureTimeModeType: Enumerated[ExposureTimeModeType] =
-    Enumerated.of(SignalToNoise, FixedExposure)
+  given Enumerated[ExposureTimeModeType] =
+    Enumerated.from(SignalToNoise, FixedExposure).withTag(_.label.value)
 
-  implicit val displayExposureTimeModeType: Display[ExposureTimeModeType] =
+  given Display[ExposureTimeModeType] =
     Display.byShortName(_.label.value)
 
-  implicit val reuseExposureTimeModeType: Reusability[ExposureTimeModeType] = Reusability.byEq
 }

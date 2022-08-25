@@ -3,7 +3,7 @@
 
 package explore.model.enums
 
-import lucuma.core.util.Enumerated
+import cats.Eq
 import react.common.style.Css
 
 sealed trait Theme extends Product with Serializable {
@@ -19,6 +19,5 @@ object Theme {
   }
 
   /** @group Typeclass Instances */
-  implicit val ThemeEnumerated: Enumerated[Theme] =
-    Enumerated.of(Dark, Light)
+  given Eq[Theme] = Eq.by(_.clazz)
 }

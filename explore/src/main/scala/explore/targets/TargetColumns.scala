@@ -9,7 +9,8 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.conversions._
-import explore.model.display._
+import explore.model.display.*
+import explore.model.display.given
 import explore.model.enums.SourceProfileType
 import explore.model.formats._
 import explore.optics.all._
@@ -28,7 +29,7 @@ import lucuma.core.math.RightAscension
 import lucuma.core.math.dimensional._
 import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.Target
-import lucuma.core.syntax.display._
+import lucuma.core.syntax.display.*
 import lucuma.core.util.Display
 import lucuma.ui.syntax.all.given
 import reactST.reactTable._

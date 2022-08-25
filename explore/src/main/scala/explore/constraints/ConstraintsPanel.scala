@@ -46,26 +46,22 @@ final case class ConstraintsPanel(
   constraintSet:    View[ConstraintSet],
   undoStacks:       View[UndoStacks[IO, ConstraintSet]],
   renderInTitle:    Tile.RenderInTitle
-)(implicit val ctx: AppContextIO)
+)(using val ctx: AppContextIO)
     extends ReactFnProps[ConstraintsPanel](ConstraintsPanel.component)
 
 object ConstraintsPanel {
-  protected type Props = ConstraintsPanel
+  type Props = ConstraintsPanel
 
-  private sealed abstract class ElevationRangeType(val label: String)
-      extends Product
-      with Serializable
+  enum ElevationRangeType(val label: String):
+    case AirMass   extends ElevationRangeType("Air Mass")
+    case HourAngle extends ElevationRangeType("Hour Angle")
 
-  private object ElevationRangeType {
-    case object AirMass   extends ElevationRangeType("Air Mass")
-    case object HourAngle extends ElevationRangeType("Hour Angle")
+  object ElevationRangeType:
+    given Enumerated[ElevationRangeType] =
+      Enumerated.from(AirMass, HourAngle).withTag(_.label)
 
-    implicit val enumeratedElevationRangeType: Enumerated[ElevationRangeType] =
-      Enumerated.of(AirMass, HourAngle)
-
-    implicit val displayElevationRangeType: Display[ElevationRangeType] =
+    given Display[ElevationRangeType] =
       Display.byShortName(_.label)
-  }
 
   import ElevationRangeType._
 
@@ -103,7 +99,7 @@ object ConstraintsPanel {
           elevationRange => elevationRangeOptions.modState(_.toElevationRange(elevationRange))
       )
       .render { (props, elevationRangeOptions) =>
-        implicit val ctx = props.ctx
+        import props.given
 
         val undoCtx: UndoContext[ConstraintSet] = UndoContext(props.undoStacks, props.constraintSet)
 
