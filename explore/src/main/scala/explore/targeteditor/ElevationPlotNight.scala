@@ -26,7 +26,7 @@ import lucuma.core.util.Enumerated
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
-import react.highcharts.Chart
+import react.highcharts.ResizingChart
 import react.moon.MoonPhase
 import react.resizeDetector.hooks._
 
@@ -73,16 +73,16 @@ object ElevationPlotNight {
     }
 
   protected case class SeriesData(
-    targetAltitude:   List[Chart.Data],
-    skyBrightness:    List[Chart.Data],
-    parallacticAngle: List[Chart.Data],
-    moonAltitude:     List[Chart.Data]
+    targetAltitude:   List[ResizingChart.Data],
+    skyBrightness:    List[ResizingChart.Data],
+    parallacticAngle: List[ResizingChart.Data],
+    moonAltitude:     List[ResizingChart.Data]
   )
 
   private enum ElevationSeries(
     val name:  String,
     val yAxis: Int,
-    val data:  SeriesData => List[Chart.Data]
+    val data:  SeriesData => List[ResizingChart.Data]
   ) derives Eq:
     case Elevation        extends ElevationSeries("Elevation", 0, _.targetAltitude)
     case ParallacticAngle extends ElevationSeries("Parallactic Angle", 1, _.parallacticAngle)
@@ -178,12 +178,12 @@ object ElevationPlotNight {
           .map { case (instant, results) =>
             val millisSinceEpoch = instant.toEpochMilli.toDouble
 
-            def point(value: Double): Chart.Data =
+            def point(value: Double): ResizingChart.Data =
               PointOptionsObject(js.undefined)
                 .setX(millisSinceEpoch)
                 .setY(value)
 
-            def pointWithAirmass(value: Double, airmass: Double): Chart.Data =
+            def pointWithAirmass(value: Double, airmass: Double): ResizingChart.Data =
               point(value).asInstanceOf[PointOptionsWithAirmass].setAirMass(airmass)
 
             (pointWithAirmass(results.altitude.toAngle.toSignedDoubleDegrees, results.airmass),
@@ -391,7 +391,7 @@ object ElevationPlotNight {
 
         <.div(
           // Include the size in the key
-          Chart(options).withKey(s"$props-$resize").when(resize.height.isDefined),
+          ResizingChart(options).withKey(s"$props-$resize").when(resize.height.isDefined),
           <.div(ExploreStyles.MoonPhase)(
             <.span(
               MoonPhase(phase = moonPhase,

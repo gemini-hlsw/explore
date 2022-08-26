@@ -26,7 +26,7 @@ import react.semanticui.elements.button.Button
 import scalajs.js
 import scalajs.js.|
 
-final case class Tile(
+case class Tile(
   id:                Tile.TileId,
   title:             String,
   back:              Option[VdomNode] = None,

@@ -37,15 +37,15 @@ import scala.concurrent.duration._
 import scala.scalajs.js.JSConverters._
 import scala.scalajs.js.|
 
-final case class TileController(
-  userId:           Option[User.Id],
-  gridWidth:        Int,
-  defaultLayout:    LayoutsMap,
-  layoutMap:        LayoutsMap,
-  tiles:            List[Tile],
-  section:          GridLayoutSection,
-  clazz:            Option[Css] = None
-)(implicit val ctx: AppContextIO)
+case class TileController(
+  userId:        Option[User.Id],
+  gridWidth:     Int,
+  defaultLayout: LayoutsMap,
+  layoutMap:     LayoutsMap,
+  tiles:         List[Tile],
+  section:       GridLayoutSection,
+  clazz:         Option[Css] = None
+)(using val ctx: AppContextIO)
     extends ReactFnProps[TileController](TileController.component)
 
 object TileController {
@@ -74,7 +74,7 @@ object TileController {
       .headOption
 
     val h = k.map(layoutItemHeight.get)
-    if (h === Some(1)) TileSizeState.Minimized else TileSizeState.Normal
+    if (h.exists(_ === 1)) TileSizeState.Minimized else TileSizeState.Normal
   }
 
   val allTiles: Traversal[LayoutsMap, LayoutItem] =
