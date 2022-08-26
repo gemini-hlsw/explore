@@ -3,6 +3,7 @@
 
 package workers
 
+import cats.syntax.all.*
 import explore.events.CatalogMessage
 import japgolly.scalajs.react.callback._
 import japgolly.webapputil.indexeddb._
@@ -14,21 +15,23 @@ import java.time.Duration
 /**
  * Functions to read and write catalog info from the database. This runs in Callback-land
  */
-trait CatalogIDB extends CatalogQuerySettings {
+trait CatalogIDB extends CatalogQuerySettings:
 
   def readGuideStarCandidates(
-    idb:    IndexedDb.Database,
+    idb:    Option[IndexedDb.Database],
     stores: CacheIDBStores,
     query:  ADQLQuery
   ): AsyncCallback[Option[List[GuideStarCandidate]]] =
-    idb.get(stores.candidatesStore)(cacheQueryHash.hash(query))
+    idb
+      .map(_.get(stores.candidatesStore)(cacheQueryHash.hash(query)))
+      .getOrElse(AsyncCallback.pure(none))
 
-  def storeGuideStarCandidates(
+  private def storeGuideStarCandidates(
     idb:     IndexedDb.Database,
     stores:  CacheIDBStores,
     query:   ADQLQuery,
     targets: List[GuideStarCandidate]
-  ): AsyncCallback[Unit] = {
+  ): AsyncCallback[Unit] =
     val hash = cacheQueryHash.hash(query)
 
     for {
@@ -40,9 +43,18 @@ trait CatalogIDB extends CatalogQuerySettings {
       _  <-
         idb.put(stores.candidatesStore)(cacheQueryHash.hash(query), targets)
     } yield ()
-  }
 
-  def expireGuideStarCandidates(
+  def storeGuideStarCandidates(
+    idb:     Option[IndexedDb.Database],
+    stores:  CacheIDBStores,
+    query:   ADQLQuery,
+    targets: List[GuideStarCandidate]
+  ): AsyncCallback[Unit] =
+    idb
+      .map(storeGuideStarCandidates(_, stores, query, targets))
+      .getOrElse(AsyncCallback.pure(()))
+
+  private def expireGuideStarCandidates(
     idb:        IndexedDb.Database,
     stores:     CacheIDBStores,
     expiration: Duration
@@ -65,4 +77,11 @@ trait CatalogIDB extends CatalogQuerySettings {
         )
     } yield ()
 
-}
+  def expireGuideStarCandidates(
+    idb:        Option[IndexedDb.Database],
+    stores:     CacheIDBStores,
+    expiration: Duration
+  ): AsyncCallback[Unit] =
+    idb
+      .map(expireGuideStarCandidates(_, stores, expiration))
+      .getOrElse(AsyncCallback.pure(()))
