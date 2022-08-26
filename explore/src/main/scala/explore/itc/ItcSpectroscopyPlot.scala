@@ -60,6 +60,7 @@ object ItcSpectroscopyPlot {
       .setMin(min)
       .setMax(max)
       .setMinorTickInterval(tick / 3)
+      .setLineWidth(1)
       .setLabels(YAxisLabelsOptions().setFormat("{value}"))
 
     Options()
@@ -85,6 +86,7 @@ object ItcSpectroscopyPlot {
       .setXAxis(
         XAxisOptions()
           .setType(AxisTypeValue.linear)
+          .setTitle(XAxisTitleOptions().setText("Wavelength nm"))
       )
       .setYAxis(List(yAxes).toJSArray)
       .setPlotOptions(
@@ -106,7 +108,7 @@ object ItcSpectroscopyPlot {
               .setName(series.title)
               .setYAxis(0)
               .setData(series.data.map(p => (p(0), p(1)): Chart.Data).toJSArray)
-              .setLineWidth(0.1)
+              .setLineWidth(1)
           )
           .map(_.asInstanceOf[SeriesOptionsType])
           .toJSArray
