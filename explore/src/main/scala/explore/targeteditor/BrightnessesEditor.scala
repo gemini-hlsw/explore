@@ -15,7 +15,7 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ExploreModelValidators
-import explore.model.display._
+import explore.model.display.given
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.vdom.html_<^._

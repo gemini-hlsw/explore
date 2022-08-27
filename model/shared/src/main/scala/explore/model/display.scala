@@ -17,45 +17,45 @@ import lucuma.core.validation.InputValidSplitEpi
 import java.text.DecimalFormat
 
 trait DisplayImplicits {
-  implicit val displayTacGroup: Display[TacGroup] =
+  given Display[TacGroup] =
     Display.byShortName(_.label)
 
-  implicit val displayTacCategory: Display[TacCategory] =
+  given Display[TacCategory] =
     Display.byShortName(_.label)
 
-  implicit val displayToOActivation: Display[ToOActivation] =
+  given Display[ToOActivation] =
     Display.byShortName(_.label)
 
-  implicit val displayBand: Display[Band] =
+  given Display[Band] =
     Display.by(_.shortName, _.longName)
 
-  implicit val spectroscopyCapabilitiesDisplay: Display[SpectroscopyCapabilities] =
+  given Display[SpectroscopyCapabilities] =
     Display.byShortName {
       case SpectroscopyCapabilities.NodAndShuffle => "Nod & Shuffle"
       case SpectroscopyCapabilities.Polarimetry   => "Polarimetry"
       case SpectroscopyCapabilities.Coronagraphy  => "Coronagraphy"
     }
 
-  implicit val focaLPlaneDisplay: Display[FocalPlane] = Display.byShortName {
+  given Display[FocalPlane] = Display.byShortName {
     case FocalPlane.SingleSlit   => "Single Slit"
     case FocalPlane.MultipleSlit => "Multiple Slits"
     case FocalPlane.IFU          => "IFU"
   }
 
-  implicit val scienceModeDisplay: Display[ScienceMode] = Display.byShortName {
+  given Display[ScienceMode] = Display.byShortName {
     case ScienceMode.Imaging      => "Imaging"
     case ScienceMode.Spectroscopy => "Spectroscopy"
   }
 
-  implicit val displayImageQuality: Display[ImageQuality] = Display.byShortName(_.label)
+  given Display[ImageQuality] = Display.byShortName(_.label)
 
-  implicit val displayCloudExtinction: Display[CloudExtinction] = Display.byShortName(_.label)
+  given Display[CloudExtinction] = Display.byShortName(_.label)
 
-  implicit val displayWaterVapor: Display[WaterVapor] = Display.byShortName(_.label)
+  given Display[WaterVapor] = Display.byShortName(_.label)
 
-  implicit val displaySkyBackground: Display[SkyBackground] = Display.byShortName(_.label)
+  given Display[SkyBackground] = Display.byShortName(_.label)
 
-  implicit val displayConstraintSet: Display[ConstraintSet] = Display.byShortName { cs =>
+  given Display[ConstraintSet] = Display.byShortName { cs =>
     val wv = if (cs.waterVapor === WaterVapor.Wet) "" else s" ${cs.waterVapor.label}"
     val er = cs.elevationRange match {
       case ElevationRange.AirMass(min, max)
@@ -93,11 +93,10 @@ trait DisplayImplicits {
       InputValidSplitEpi.bigDecimalWithScientificNotation.reverseGet(x)
   }
 
-  implicit val displayLibrarySpectrum: Display[StellarLibrarySpectrum] =
-    Display.byShortName(_.sedSpectrum)
+  given Display[StellarLibrarySpectrum] = Display.byShortName(_.sedSpectrum)
 
   import UnnormalizedSED._
-  implicit val displayUnnormalizedSED: Display[UnnormalizedSED] = Display.byShortName {
+  given Display[UnnormalizedSED] = Display.byShortName {
     case StellarLibrary(librarySpectrum)          => librarySpectrum.shortName
     case CoolStarModel(temperature)               => s"Cool Star (${temperature.temperature.value} °K)"
     case Galaxy(galaxySpectrum)                   => galaxySpectrum.shortName
@@ -110,33 +109,33 @@ trait DisplayImplicits {
     case UserDefined(_)                           => "User Defined"
   }
 
-  implicit def displaySpectralDefinition[T]: Display[SpectralDefinition[T]] = Display.byShortName {
+  given displaySpectralDefinition[T]: Display[SpectralDefinition[T]] = Display.byShortName {
     case SpectralDefinition.BandNormalized(band, _) => band.shortName
     case SpectralDefinition.EmissionLines(_, _)     => "Emission Lines"
   }
 
-  implicit val displayGmosXBinning: Display[GmosXBinning] = Display.by(_.shortName, _.longName)
+  given Display[GmosXBinning] = Display.by(_.shortName, _.longName)
 
-  implicit val displayGmosYBinning: Display[GmosYBinning] = Display.by(_.shortName, _.longName)
+  given Display[GmosYBinning] = Display.by(_.shortName, _.longName)
 
-  implicit val displayGmosNorthGrating: Display[GmosNorthGrating] = Display.byShortName(_.longName)
+  given Display[GmosNorthGrating] = Display.byShortName(_.longName)
 
-  implicit val displayGmosSouthGrating: Display[GmosSouthGrating] = Display.byShortName(_.longName)
+  given Display[GmosSouthGrating] = Display.byShortName(_.longName)
 
-  implicit val displayGmosNorthFilter: Display[GmosNorthFilter] = Display.byShortName(_.longName)
+  given Display[GmosNorthFilter] = Display.byShortName(_.longName)
 
-  implicit val displayGmosSouthFilter: Display[GmosSouthFilter] = Display.byShortName(_.longName)
+  given Display[GmosSouthFilter] = Display.byShortName(_.longName)
 
-  implicit val displayGmosNorthFpu: Display[GmosNorthFpu] = Display.byShortName(_.longName)
+  given Display[GmosNorthFpu] = Display.byShortName(_.longName)
 
-  implicit val displayGmosSouthFpu: Display[GmosSouthFpu] = Display.byShortName(_.longName)
+  given Display[GmosSouthFpu] = Display.byShortName(_.longName)
 
-  implicit val displayGmosAmpReadMode: Display[GmosAmpReadMode] =
+  given Display[GmosAmpReadMode] =
     Display.by(_.shortName, _.longName)
 
-  implicit val displayGmosAmpGain: Display[GmosAmpGain] = Display.by(_.shortName, _.longName)
+  given Display[GmosAmpGain] = Display.by(_.shortName, _.longName)
 
-  implicit val displayGmosRoi: Display[GmosRoi] = Display.byShortName(_.longName)
+  given Display[GmosRoi] = Display.byShortName(_.longName)
 }
 
 object display extends DisplayImplicits

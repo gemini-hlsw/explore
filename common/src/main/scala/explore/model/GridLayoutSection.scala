@@ -5,10 +5,8 @@ package explore.model
 
 import lucuma.core.util.Enumerated
 
-enum GridLayoutSection(val value: String):
+enum GridLayoutSection(val value: String) derives Enumerated:
   case ObservationsLayout extends GridLayoutSection("observations")
   case TargetLayout       extends GridLayoutSection("targets")
 
-object GridLayoutSection:
-  given Enumerated[GridLayoutSection] =
-    Enumerated.from(ObservationsLayout, TargetLayout).withTag(_.value)
+  private val tag = value

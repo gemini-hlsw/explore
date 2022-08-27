@@ -66,13 +66,11 @@ object ElevationPlotNight {
     var airmass: Double
   }
 
-  protected implicit class PointOptionsWithAirmassOps(val x: PointOptionsWithAirmass)
-      extends AnyVal {
+  extension (x: PointOptionsWithAirmass)
     def setAirMass(value: Double): PointOptionsWithAirmass = {
       x.airmass = value
       x
     }
-  }
 
   protected case class SeriesData(
     targetAltitude:   List[Chart.Data],

@@ -9,7 +9,7 @@ import lucuma.core.model.ProposalClass
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 
-enum ProposalClassType(val label: String):
+enum ProposalClassType(val label: String) derives Enumerated:
   case LargeProgram       extends ProposalClassType("Large Program Observing at Gemini")
   case FastTurnaround     extends ProposalClassType("Fast Turnaround Observing at Gemini")
   case Queue              extends ProposalClassType("Queue Observing at Gemini")
@@ -20,6 +20,8 @@ enum ProposalClassType(val label: String):
   case DirectorsTime      extends ProposalClassType("Directors Time")
   case PoorWeather        extends ProposalClassType("Poor Weather")
   case SystemVerification extends ProposalClassType("System Verification")
+
+  private val tag = label
 
   def toProposalClass(
     minPctTime:      IntPercent,
@@ -54,20 +56,5 @@ object ProposalClassType:
     case ProposalClass.Queue(_)              => Queue
     case ProposalClass.FastTurnaround(_)     => FastTurnaround
   }
-
-  given Enumerated[ProposalClassType] =
-    Enumerated
-      .from(LargeProgram,
-            FastTurnaround,
-            Queue,
-            Classical,
-            Exchange,
-            Intensive,
-            DemoScience,
-            DirectorsTime,
-            PoorWeather,
-            SystemVerification
-      )
-      .withTag(_.label)
 
   given Display[ProposalClassType] = Display.byShortName(_.label)

@@ -42,15 +42,15 @@ import react.semanticui.collections.form.Form
 import react.semanticui.elements.label.LabelPointing
 
 final case class ConstraintsPanel(
-  obsIds:           List[Observation.Id],
-  constraintSet:    View[ConstraintSet],
-  undoStacks:       View[UndoStacks[IO, ConstraintSet]],
-  renderInTitle:    Tile.RenderInTitle
-)(implicit val ctx: AppContextIO)
+  obsIds:        List[Observation.Id],
+  constraintSet: View[ConstraintSet],
+  undoStacks:    View[UndoStacks[IO, ConstraintSet]],
+  renderInTitle: Tile.RenderInTitle
+)(using val ctx: AppContextIO)
     extends ReactFnProps[ConstraintsPanel](ConstraintsPanel.component)
 
 object ConstraintsPanel {
-  protected type Props = ConstraintsPanel
+  type Props = ConstraintsPanel
 
   private enum ElevationRangeType(val label: String):
     case AirMass   extends ElevationRangeType("Air Mass")
@@ -96,7 +96,7 @@ object ConstraintsPanel {
           elevationRange => elevationRangeOptions.modState(_.toElevationRange(elevationRange))
       )
       .render { (props, elevationRangeOptions) =>
-        implicit val ctx = props.ctx
+        import props.given
 
         val undoCtx: UndoContext[ConstraintSet] = UndoContext(props.undoStacks, props.constraintSet)
 

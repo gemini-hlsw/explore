@@ -13,7 +13,7 @@ import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
 import explore.itc.requiredForITC
 import explore.model.ExploreModelValidators
-import explore.model.display._
+import explore.model.display.given
 import explore.model.formats._
 import explore.syntax.ui._
 import japgolly.scalajs.react._

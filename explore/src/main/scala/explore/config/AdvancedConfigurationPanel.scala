@@ -33,7 +33,7 @@ import explore.model.DitherNanoMeters
 import explore.model.ExploreModelValidators
 import explore.model.ScienceModeAdvanced
 import explore.model.ScienceModeBasic
-import explore.model.display.*
+import explore.model.display.given
 import explore.model.reusability.*
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow

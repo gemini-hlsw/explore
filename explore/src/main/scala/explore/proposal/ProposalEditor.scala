@@ -24,7 +24,7 @@ import explore.components.undo.UndoButtons
 import explore.implicits._
 import explore.model.ExploreModelValidators
 import explore.model.Hours
-import explore.model.display._
+import explore.model.display.given
 import explore.model.reusability._
 import explore.optics.all._
 import explore.proposal.ProposalClassType._
@@ -68,7 +68,7 @@ final case class ProposalEditor(
   undoStacks:       View[UndoStacks[IO, Proposal]],
   executionTime:    NonNegDuration,
   band3Time:        NonNegDuration
-)(implicit val ctx: AppContextIO)
+)(using val ctx: AppContextIO)
     extends ReactFnProps[ProposalEditor](ProposalEditor.component)
 
 object ProposalEditor {
@@ -470,7 +470,7 @@ object ProposalEditor {
           }
       )
       .render { (props, totalHours, minPct2, proposalClassType, showModal, splitsList, _) =>
-        implicit val ctx = props.ctx
+        import props.given
         renderFn(
           props.programId,
           props.proposal,

@@ -3,8 +3,8 @@
 
 package explore.modes
 
+import cats.Eq
 import cats.Order
-import cats.derived.*
 import cats.syntax.all._
 import coulomb._
 import coulomb.ops.algebra.spire.all.given
@@ -33,7 +33,7 @@ case class ModeIQ(iq: Angle) {
 }
 
 object ModeIQ {
-  implicit val orderModeIQ: Order[ModeIQ] = Order.by(_.iq.toMicroarcseconds)
+  given Order[ModeIQ] = Order.by(_.iq.toMicroarcseconds)
 }
 
 case class ModeFov(fov: Angle) {
@@ -41,7 +41,7 @@ case class ModeFov(fov: Angle) {
 }
 
 object ModeFov {
-  implicit val orderModeFov: Order[ModeFov] = Order.by(_.fov.toMicroarcseconds)
+  given Order[ModeFov] = Order.by(_.fov.toMicroarcseconds)
 }
 
 case class ModeBandWidth(w: Quantity[Rational, Micrometer]) {
@@ -53,7 +53,7 @@ case class ModeGratingMinWavelength(w: Wavelength) {
 }
 
 object ModeGratingMinWavelength {
-  implicit val orderModeGratingMinWavelength: Order[ModeGratingMinWavelength] = Order.by(_.w)
+  given Order[ModeGratingMinWavelength] = Order.by(_.w)
 }
 
 case class ModeGratingMaxWavelength(w: Wavelength) {
@@ -61,14 +61,15 @@ case class ModeGratingMaxWavelength(w: Wavelength) {
 }
 
 object ModeGratingMaxWavelength {
-  implicit val orderModeGratingMaxWavelength: Order[ModeGratingMaxWavelength] = Order.by(_.w)
+  given Order[ModeGratingMaxWavelength] = Order.by(_.w)
 }
 
 enum ModeFilter derives Order:
+  // At the moment we only care about the presence of filter
   case NoFilter, SomeFilter
 
 enum ModeGrating derives Order:
-  // At the moment we only care about the presence of filter
+  // At the moment we only care about the presence of grating
   case NoGrating                extends ModeGrating
   case SomeGrating(tag: String) extends ModeGrating
 
@@ -113,7 +114,7 @@ object ModeRow {
 
 trait ModesMatrixDecoders extends Decoders {
 
-  implicit val instModeDecoder: CellDecoder[ObservationMode] =
+  given CellDecoder[ObservationMode] =
     CellDecoder.stringDecoder
       .emap {
         case "spec"        => ObservationMode.Spectroscopy.asRight
@@ -122,36 +123,36 @@ trait ModesMatrixDecoders extends Decoders {
         case x             => new DecoderError(s"Unknown instrument mode $x").asLeft
       }
 
-  implicit val iqDecoder: CellDecoder[ModeIQ] =
+  given CellDecoder[ModeIQ] =
     arcsecDecoder.map(ModeIQ.apply)
 
-  implicit val fovDecoder: CellDecoder[ModeFov] =
+  given CellDecoder[ModeFov] =
     arcsecDecoder.map(ModeFov.apply)
 
-  implicit val bandWidth: CellDecoder[ModeBandWidth] =
+  given CellDecoder[ModeBandWidth] =
     micrometerDecoder.map(w => ModeBandWidth(w.nanometer))
 
-  implicit val gratingMinWv: CellDecoder[ModeGratingMinWavelength] =
+  given CellDecoder[ModeGratingMinWavelength] =
     micrometerDecoder.map(ModeGratingMinWavelength.apply)
 
-  implicit val gratingMaxWv: CellDecoder[ModeGratingMaxWavelength] =
+  given CellDecoder[ModeGratingMaxWavelength] =
     micrometerDecoder.map(ModeGratingMaxWavelength.apply)
 
-  implicit val modeFilter: CellDecoder[ModeFilter] =
+  given CellDecoder[ModeFilter] =
     CellDecoder.stringDecoder
       .map {
         case "none" => ModeFilter.NoFilter
         case _      => ModeFilter.SomeFilter
       }
 
-  implicit val modeGrating: CellDecoder[ModeGrating] =
+  given CellDecoder[ModeGrating] =
     CellDecoder.stringDecoder
       .map {
         case "none" => ModeGrating.NoGrating
         case x      => ModeGrating.SomeGrating(x)
       }
 
-  implicit val modeSpatialDimensionDecoder: CellDecoder[ModeSpatialDimension] =
+  given CellDecoder[ModeSpatialDimension] =
     CellDecoder.intDecoder
       .emap {
         case 1 => ModeSpatialDimension.One.asRight
@@ -159,14 +160,14 @@ trait ModesMatrixDecoders extends Decoders {
         case x => new DecoderError(s"Unsupported spatial dimensions $x").asLeft
       }
 
-  implicit val modeCoronagraphDecoder: CellDecoder[ModeCoronagraph] =
+  given CellDecoder[ModeCoronagraph] =
     CellDecoder.stringDecoder
       .map {
         case "yes" => ModeCoronagraph.Coronagraph
         case _     => ModeCoronagraph.NoCoronagraph
       }
 
-  implicit val modeSkysubDecoder: CellDecoder[ModeSkysub] =
+  given CellDecoder[ModeSkysub] =
     CellDecoder.stringDecoder
       .emap {
         case "normal" => ModeSkysub.Normal.asRight
@@ -174,43 +175,41 @@ trait ModesMatrixDecoders extends Decoders {
         case x        => new DecoderError(s"Unknwon mos mode $x").asLeft
       }
 
-  implicit val modeMOSDecoder: CellDecoder[ModeMOS] =
+  given CellDecoder[ModeMOS] =
     CellDecoder.stringDecoder
       .map {
         case "yes" => ModeMOS.MOS
         case _     => ModeMOS.NoMOS
       }
 
-  implicit val modeMinExpDecoder: CellDecoder[Quantity[PosBigDecimal, Second]] =
+  given CellDecoder[Quantity[PosBigDecimal, Second]] =
     CellDecoder.bigDecimalDecoder
       .emap { x =>
         refineV[Positive](x).bimap(s => new DecoderError(s), _.withUnit[Second])
       }
 
-  implicit object ModeRowDecoder extends CsvRowDecoder[ModeRow, String] {
-    def apply(row: CsvRow[String]): DecoderResult[ModeRow] =
-      for {
-        i    <- row.as[Instrument]("instrument")
-        m    <- row.as[ObservationMode]("mode")
-        f    <- row.as[ModeFov]("fov")
-        im   <- row.as[ModeIQ]("iq_min")
-        ix   <- row.as[ModeIQ]("iq_max")
-        r    <- row.as[PosBigDecimal]("resolution")
-        w    <- row.as[ModeWavelength]("wavelength")
-        b    <- row.as[ModeBandWidth]("band_width")
-        gmin <- row.as[ModeGratingMinWavelength]("grcwlen_min")
-        gmax <- row.as[ModeGratingMaxWavelength]("grcwlen_max")
-        mf   <- row.as[ModeFilter]("filter")
-        di   <- row.as[ModeGrating]("disperser")
-        sw   <- row.as[ModeSlitSize]("slit_width")
-        ao   <- row.as[ModeAO]("ao")
-        sd   <- row.as[ModeSpatialDimension]("spatial_dims")
-        c    <- row.as[ModeCoronagraph]("coronagraph")
-        ss   <- row.as[ModeSkysub]("skysub")
-        mo   <- row.as[ModeMOS]("mos")
-        me   <- row.as[Quantity[PosBigDecimal, Second]]("minexp")
-      } yield ModeRow(i, m, f, im, ix, r, w, b, gmin, gmax, mf, di, sw, ao, sd, c, ss, mo, me)
-  }
+  given CsvRowDecoder[ModeRow, String] = (row: CsvRow[String]) =>
+    for {
+      i    <- row.as[Instrument]("instrument")
+      m    <- row.as[ObservationMode]("mode")
+      f    <- row.as[ModeFov]("fov")
+      im   <- row.as[ModeIQ]("iq_min")
+      ix   <- row.as[ModeIQ]("iq_max")
+      r    <- row.as[PosBigDecimal]("resolution")
+      w    <- row.as[ModeWavelength]("wavelength")
+      b    <- row.as[ModeBandWidth]("band_width")
+      gmin <- row.as[ModeGratingMinWavelength]("grcwlen_min")
+      gmax <- row.as[ModeGratingMaxWavelength]("grcwlen_max")
+      mf   <- row.as[ModeFilter]("filter")
+      di   <- row.as[ModeGrating]("disperser")
+      sw   <- row.as[ModeSlitSize]("slit_width")
+      ao   <- row.as[ModeAO]("ao")
+      sd   <- row.as[ModeSpatialDimension]("spatial_dims")
+      c    <- row.as[ModeCoronagraph]("coronagraph")
+      ss   <- row.as[ModeSkysub]("skysub")
+      mo   <- row.as[ModeMOS]("mos")
+      me   <- row.as[Quantity[PosBigDecimal, Second]]("minexp")
+    } yield ModeRow(i, m, f, im, ix, r, w, b, gmin, gmax, mf, di, sw, ao, sd, c, ss, mo, me)
 }
 
 final case class ModesMatrix(matrix: List[ModeRow]) {

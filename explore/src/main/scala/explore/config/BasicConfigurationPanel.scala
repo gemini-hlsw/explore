@@ -16,7 +16,7 @@ import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model
 import explore.model.ImagingConfigurationOptions
-import explore.model.display._
+import explore.model.display.given
 import explore.model.itc.ItcTarget
 import explore.modes.SpectroscopyModesMatrix
 import explore.undo._
@@ -39,15 +39,15 @@ import react.semanticui.sizes._
 import scalajs.js.JSConverters._
 
 final case class BasicConfigurationPanel(
-  obsId:            Observation.Id,
-  requirementsCtx:  UndoSetter[ScienceRequirementsData],
-  scienceModeOpt:   View[Option[model.ScienceMode]],
-  constraints:      ConstraintSet,
-  itcTargets:       List[ItcTarget],
-  baseTracking:     Option[SiderealTracking],
-  onShowDetails:    Callback,
-  confMatrix:       SpectroscopyModesMatrix
-)(implicit val ctx: AppContextIO)
+  obsId:           Observation.Id,
+  requirementsCtx: UndoSetter[ScienceRequirementsData],
+  scienceModeOpt:  View[Option[model.ScienceMode]],
+  constraints:     ConstraintSet,
+  itcTargets:      List[ItcTarget],
+  baseTracking:    Option[SiderealTracking],
+  onShowDetails:   Callback,
+  confMatrix:      SpectroscopyModesMatrix
+)(using val ctx:   AppContextIO)
     extends ReactFnProps[BasicConfigurationPanel](BasicConfigurationPanel.component)
 
 object BasicConfigurationPanel {
@@ -59,7 +59,7 @@ object BasicConfigurationPanel {
       .useStateView[ScienceMode](ScienceMode.Spectroscopy)
       .useStateView[ImagingConfigurationOptions](ImagingConfigurationOptions.Default)
       .render { (props, mode, imaging) =>
-        implicit val ctx: AppContextIO = props.ctx
+        import props.given
 
         val requirementsViewSet: ScienceRequirementsUndoView =
           ScienceRequirementsUndoView(props.obsId, props.requirementsCtx)
