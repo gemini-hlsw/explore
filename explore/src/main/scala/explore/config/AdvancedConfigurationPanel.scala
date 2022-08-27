@@ -33,7 +33,7 @@ import explore.model.DitherNanoMeters
 import explore.model.ExploreModelValidators
 import explore.model.ScienceModeAdvanced
 import explore.model.ScienceModeBasic
-import explore.model.display.*
+import explore.model.display.given
 import explore.model.reusability.*
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
@@ -61,7 +61,6 @@ import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.ui.forms.EnumViewOptionalSelect
 import lucuma.ui.forms.FormInputEV
-import lucuma.ui.implicits.*
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*

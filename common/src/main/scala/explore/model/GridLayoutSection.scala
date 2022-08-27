@@ -5,19 +5,8 @@ package explore.model
 
 import lucuma.core.util.Enumerated
 
-sealed trait GridLayoutSection extends Product with Serializable {
-  def value: String
-}
+enum GridLayoutSection(val value: String) derives Enumerated:
+  case ObservationsLayout extends GridLayoutSection("observations")
+  case TargetLayout       extends GridLayoutSection("targets")
 
-object GridLayoutSection {
-  case object ObservationsLayout extends GridLayoutSection {
-    val value = "observations"
-  }
-  case object TargetLayout       extends GridLayoutSection {
-    val value = "targets"
-  }
-
-  /** @group Typeclass Instances */
-  implicit val GridLayoutSectionEnumerated: Enumerated[GridLayoutSection] =
-    Enumerated.of(ObservationsLayout, TargetLayout)
-}
+  private val tag = value

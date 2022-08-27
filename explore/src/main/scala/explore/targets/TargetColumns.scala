@@ -3,18 +3,19 @@
 
 package explore.targets
 
-import cats.Order._
-import cats.syntax.all._
+import cats.Order.*
+import cats.syntax.all.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
-import explore.model.conversions._
-import explore.model.display._
+import explore.model.conversions.*
+import explore.model.display.*
+import explore.model.display.given
 import explore.model.enums.SourceProfileType
-import explore.model.formats._
-import explore.optics.all._
+import explore.model.formats.*
+import explore.optics.all.*
 import explore.utils.given
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Band
 import lucuma.core.math.ApparentRadialVelocity
 import lucuma.core.math.Declination
@@ -25,13 +26,13 @@ import lucuma.core.math.ProperMotion.RA
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.Redshift
 import lucuma.core.math.RightAscension
-import lucuma.core.math.dimensional._
+import lucuma.core.math.dimensional.*
 import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.Target
-import lucuma.core.syntax.display._
+import lucuma.core.syntax.display.*
 import lucuma.core.util.Display
 import lucuma.ui.syntax.all.given
-import reactST.reactTable._
+import reactST.reactTable.*
 import reactST.reactTable.facade.cell.CellProps
 
 object TargetColumns {

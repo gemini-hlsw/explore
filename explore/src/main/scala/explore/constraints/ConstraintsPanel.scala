@@ -42,30 +42,23 @@ import react.semanticui.collections.form.Form
 import react.semanticui.elements.label.LabelPointing
 
 final case class ConstraintsPanel(
-  obsIds:           List[Observation.Id],
-  constraintSet:    View[ConstraintSet],
-  undoStacks:       View[UndoStacks[IO, ConstraintSet]],
-  renderInTitle:    Tile.RenderInTitle
-)(implicit val ctx: AppContextIO)
+  obsIds:        List[Observation.Id],
+  constraintSet: View[ConstraintSet],
+  undoStacks:    View[UndoStacks[IO, ConstraintSet]],
+  renderInTitle: Tile.RenderInTitle
+)(using val ctx: AppContextIO)
     extends ReactFnProps[ConstraintsPanel](ConstraintsPanel.component)
 
 object ConstraintsPanel {
-  protected type Props = ConstraintsPanel
+  type Props = ConstraintsPanel
 
-  private sealed abstract class ElevationRangeType(val label: String)
-      extends Product
-      with Serializable
+  private enum ElevationRangeType(val label: String):
+    case AirMass   extends ElevationRangeType("Air Mass")
+    case HourAngle extends ElevationRangeType("Hour Angle")
 
-  private object ElevationRangeType {
-    case object AirMass   extends ElevationRangeType("Air Mass")
-    case object HourAngle extends ElevationRangeType("Hour Angle")
-
-    implicit val enumeratedElevationRangeType: Enumerated[ElevationRangeType] =
-      Enumerated.of(AirMass, HourAngle)
-
-    implicit val displayElevationRangeType: Display[ElevationRangeType] =
-      Display.byShortName(_.label)
-  }
+  private object ElevationRangeType:
+    given Enumerated[ElevationRangeType] = Enumerated.from(AirMass, HourAngle).withTag(_.label)
+    given Display[ElevationRangeType]    = Display.byShortName(_.label)
 
   import ElevationRangeType._
 
@@ -103,7 +96,7 @@ object ConstraintsPanel {
           elevationRange => elevationRangeOptions.modState(_.toElevationRange(elevationRange))
       )
       .render { (props, elevationRangeOptions) =>
-        implicit val ctx = props.ctx
+        import props.given
 
         val undoCtx: UndoContext[ConstraintSet] = UndoContext(props.undoStacks, props.constraintSet)
 

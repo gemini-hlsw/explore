@@ -16,8 +16,11 @@ import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Gen
 import org.scalacheck.Prop._
+import org.scalacheck.Test
 
 class AsterismSuite extends DisciplineSuite {
+  override val scalaCheckTestParameters = Test.Parameters.default.withMaxSize(10)
+
   checkAll("Eq[AsterismSuite]", EqTests[Asterism].eqv)
   checkAll("Asterism.isoTargets", IsoTests(Asterism.isoTargets))
   checkAll("Asterism.fromTargetsList", IsoTests(Asterism.fromTargetsList))

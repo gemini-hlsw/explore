@@ -30,7 +30,6 @@ import explore.model.UserVault
 import explore.model.WorkerClients
 import explore.model.enums.AppTab
 import explore.model.enums.ExecutionEnvironment
-import explore.model.enums.Theme
 import explore.model.reusability._
 import explore.syntax.ui.given
 import explore.utils._
@@ -41,6 +40,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import log4cats.loglevel.LogLevelLogger
 import lucuma.core.model.Program
 import lucuma.refined.*
+import lucuma.ui.enums.Theme
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import org.http4s.circe._
@@ -172,7 +172,7 @@ object ExploreMain extends IOApp.Simple {
         routerCtl.set(RoutingInfo.getPage(tab, programId, focused), via)
 
       for {
-        _                    <- utils.setupScheme[IO](Theme.Dark)
+        _                    <- Theme.init[IO]
         appConfig            <- fetchConfig[IO]
         _                    <- Logger[IO].info(s"Git Commit: [${utils.gitHash.getOrElse("NONE")}]")
         _                    <- Logger[IO].info(s"Config: ${appConfig.show}")

@@ -6,6 +6,7 @@ package explore
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.View
+import crystal.react.hooks._
 import crystal.react.implicits._
 import crystal.react.reuse.Reuse
 import crystal.react.reuse._
@@ -19,7 +20,6 @@ import explore.model.ExploreLocalPreferences
 import explore.model.ExploreLocalPreferences._
 import explore.model.ModelUndoStacks
 import explore.model.enums.ExecutionEnvironment
-import explore.model.enums.Theme
 import explore.programs.ProgramsPopup
 import explore.syntax.ui.*
 import explore.syntax.ui.given
@@ -30,6 +30,7 @@ import log4cats.loglevel.LogLevelLogger
 import lucuma.core.model.GuestRole
 import lucuma.core.model.Program
 import lucuma.core.model.User
+import lucuma.ui.enums.Theme
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import org.scalajs.dom
@@ -57,23 +58,13 @@ final case class TopBar(
 object TopBar {
   type Props = TopBar
 
-  private def bodyClasses: dom.DOMTokenList = dom.document.body.classList
-
-  private def currentTheme: Theme =
-    if (bodyClasses.contains(Theme.Light.clazz.htmlClass))
-      Theme.Light
-    else
-      Theme.Dark
-
-  private def flipTheme(theme: Theme): Theme =
-    if (theme === Theme.Dark) Theme.Light else Theme.Dark
-
   private val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useState(false)        // isProgramsOpen
-      .useState(currentTheme) // theme
-      .render { (props, isProgramsOpen, theme) =>
+      .useState(false) // isProgramsOpen
+      .useState(false) // just to force rerenders
+      .useEffectResultWithDepsBy((_, _, toggle) => toggle.value)((_, _, _) => _ => Theme.current)
+      .render { (props, isProgramsOpen, toggle, themePot) =>
         AppCtx.using { implicit appCtx =>
           val role = props.user.role
 
@@ -158,14 +149,18 @@ object TopBar {
                         )
                       )
                     ).when(appCtx.environment =!= ExecutionEnvironment.Production),
-                    DropdownItem(
-                      onClick = utils.setupScheme[CallbackTo](
-                        if (theme.value === Theme.Dark) Theme.Light else Theme.Dark
-                      ) *> theme.modState(flipTheme)
-                    )(
-                      Checkbox(label = "Dark/Light", checked = currentTheme === Theme.Dark)
-                    )
-                      .when(appCtx.environment === ExecutionEnvironment.Development),
+                    themePot
+                      .map(currentTheme =>
+                        DropdownItem(
+                          onClick =
+                            (if (currentTheme === Theme.Light) Theme.Dark.setup[CallbackTo]
+                             else Theme.Light.setup[CallbackTo]) >> toggle.setState(!toggle.value)
+                        )(
+                          Checkbox(label = "Dark/Light", checked = currentTheme === Theme.Dark)
+                        ).when(appCtx.environment === ExecutionEnvironment.Development)
+                      )
+                      .toOption
+                      .whenDefined,
                     DropdownItem(
                       text = "Toggle Reusability",
                       icon = Icons.CrystalBall.fixedWidth(),

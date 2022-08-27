@@ -9,7 +9,20 @@ import lucuma.core.model.ProposalClass
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 
-sealed abstract class ProposalClassType(val label: String) extends Product with Serializable {
+enum ProposalClassType(val label: String) derives Enumerated:
+  case LargeProgram       extends ProposalClassType("Large Program Observing at Gemini")
+  case FastTurnaround     extends ProposalClassType("Fast Turnaround Observing at Gemini")
+  case Queue              extends ProposalClassType("Queue Observing at Gemini")
+  case Classical          extends ProposalClassType("Classical Observing at Gemini")
+  case Exchange           extends ProposalClassType("Exchange Observing at Keck/Subaru")
+  case Intensive          extends ProposalClassType("Intensive Program Observing at Subaru")
+  case DemoScience        extends ProposalClassType("Demo Science")
+  case DirectorsTime      extends ProposalClassType("Directors Time")
+  case PoorWeather        extends ProposalClassType("Poor Weather")
+  case SystemVerification extends ProposalClassType("System Verification")
+
+  private val tag = label
+
   def toProposalClass(
     minPctTime:      IntPercent,
     minPctTotalTime: IntPercent,
@@ -29,20 +42,8 @@ sealed abstract class ProposalClassType(val label: String) extends Product with 
       case SystemVerification => ProposalClass.SystemVerification(minPctTime)
     }
   }
-}
 
-object ProposalClassType {
-  case object LargeProgram       extends ProposalClassType("Large Program Observing at Gemini")
-  case object FastTurnaround     extends ProposalClassType("Fast Turnaround Observing at Gemini")
-  case object Queue              extends ProposalClassType("Queue Observing at Gemini")
-  case object Classical          extends ProposalClassType("Classical Observing at Gemini")
-  case object Exchange           extends ProposalClassType("Exchange Observing at Keck/Subaru")
-  case object Intensive          extends ProposalClassType("Intensive Program Observing at Subaru")
-  case object DemoScience        extends ProposalClassType("Demo Science")
-  case object DirectorsTime      extends ProposalClassType("Directors Time")
-  case object PoorWeather        extends ProposalClassType("Poor Weather")
-  case object SystemVerification extends ProposalClassType("System Verification")
-
+object ProposalClassType:
   def fromProposalClass(proposalClass: ProposalClass): ProposalClassType = proposalClass match {
     case ProposalClass.Intensive(_, _, _)    => Intensive
     case ProposalClass.PoorWeather(_)        => PoorWeather
@@ -56,19 +57,4 @@ object ProposalClassType {
     case ProposalClass.FastTurnaround(_)     => FastTurnaround
   }
 
-  implicit val enumProposalClassType: Enumerated[ProposalClassType] =
-    Enumerated.of(LargeProgram,
-                  FastTurnaround,
-                  Queue,
-                  Classical,
-                  Exchange,
-                  Intensive,
-                  DemoScience,
-                  DirectorsTime,
-                  PoorWeather,
-                  SystemVerification
-    )
-
-  implicit val displayProposalClassType: Display[ProposalClassType] =
-    Display.by(_.label, _.label)
-}
+  given Display[ProposalClassType] = Display.byShortName(_.label)

@@ -19,6 +19,7 @@ import cats.syntax.all._
 import explore.model.boopickle.Boopickle._
 import log4cats.loglevel.LogLevelLogger
 import org.scalajs.dom
+import org.scalajs.dom.DedicatedWorkerGlobalScope
 import org.typelevel.log4cats.Logger
 import typings.loglevel.mod.LogLevelDesc
 
@@ -30,7 +31,7 @@ import WorkerMessage._
  * Implements the server side of a simple client/server protocol that provides a somewhat more
  * functional/effecful way of communicating with workers.
  */
-trait WorkerServer[F[_]: Async, T: Pickler](using Monoid[F[Unit]]) {
+trait WorkerServer[F[_]: Async, T: Pickler](using Monoid[F[Unit]]):
   val run: F[Unit] =
     (for {
       dispatcher      <- Dispatcher[F]
@@ -58,13 +59,13 @@ trait WorkerServer[F[_]: Async, T: Pickler](using Monoid[F[Unit]]) {
     LogLevelLogger.createForRoot[F]
   }
 
-  protected def runInternal(dispatcher: Dispatcher[F])(using Logger[F]): F[Unit] =
-    (
-      for {
-        self         <- F.delay(dom.DedicatedWorkerGlobalScope.self)
-        handlerFn    <- handler
-        cancelTokens <- Ref[F].of(Map.empty[WorkerProcessId, F[Unit]])
-      } yield self.onmessage = (msg: dom.MessageEvent) =>
+  protected def mount(
+    self:         DedicatedWorkerGlobalScope,
+    handlerFn:    Invocation => F[Unit],
+    cancelTokens: Ref[F, Map[WorkerProcessId, F[Unit]]]
+  )(dispatcher:   Dispatcher[F])(using Logger[F]): F[Unit] =
+    F.delay(
+      self.onmessage = (msg: dom.MessageEvent) =>
         dispatcher.unsafeRunAndForget(
           // Decode transferable events
           decodeFromTransferable[FromClient](msg)
@@ -109,4 +110,15 @@ trait WorkerServer[F[_]: Async, T: Pickler](using Monoid[F[Unit]]) {
             .handleErrorWith(e => Logger[F].error(e)("Error processing message in worker"))
         )
     ).handleErrorWith(e => Logger[F].error(e)("Error initializing worker"))
-}
+
+  protected def runInternal(dispatcher: Dispatcher[F])(using Logger[F]): F[Unit] =
+    for {
+      self         <- F.delay(dom.DedicatedWorkerGlobalScope.self)
+      handlerFn    <- handler
+      cancelTokens <- Ref[F].of(Map.empty[WorkerProcessId, F[Unit]])
+      _            <- Logger[F].debug("Mounting")
+      _            <- mount(self, handlerFn, cancelTokens)(dispatcher)
+      _            <- Logger[F].debug("Mounted, sending ready")
+      _            <- postAsTransferable[F, FromServer](self, FromServer.Ready)
+      _            <- Logger[F].debug("Ready sent!")
+    } yield ()

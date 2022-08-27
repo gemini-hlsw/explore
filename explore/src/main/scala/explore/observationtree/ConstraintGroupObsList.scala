@@ -16,7 +16,7 @@ import explore.implicits._
 import explore.model.ConstraintGroup
 import explore.model.Focused
 import explore.model.ObsIdSet
-import explore.model.display._
+import explore.model.display.given
 import explore.model.enums.AppTab
 import explore.undo.UndoContext
 import explore.undo._
@@ -46,7 +46,7 @@ final case class ConstraintGroupObsList(
   setSummaryPanel:    Reuse[Callback],
   expandedIds:        View[SortedSet[ObsIdSet]],
   undoStacks:         View[UndoStacks[IO, ConstraintGroupList]]
-)(implicit val ctx:   AppContextIO)
+)(using val ctx:      AppContextIO)
     extends ReactFnProps[ConstraintGroupObsList](ConstraintGroupObsList.component)
     with ViewCommon
 
@@ -128,7 +128,7 @@ object ConstraintGroupObsList {
       } yield ()
     }
     .render { (props, dragging) =>
-      implicit val ctx = props.ctx
+      import props.given
 
       val observations = props.constraintsWithObs.get.observations
 

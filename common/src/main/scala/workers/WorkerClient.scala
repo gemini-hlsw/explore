@@ -3,13 +3,15 @@
 
 package workers
 
-import boopickle.DefaultBasic._
+import boopickle.DefaultBasic.*
 import cats.effect.Concurrent
+import cats.effect.Deferred
 import cats.effect.Resource
 import cats.effect.Sync
 import cats.effect.std.UUIDGen
-import cats.syntax.all._
-import explore.model.boopickle.Boopickle._
+import cats.effect.syntax.all.*
+import cats.syntax.all.*
+import explore.model.boopickle.Boopickle.*
 import fs2.RaiseThrowable
 import org.typelevel.log4cats.Logger
 
@@ -19,7 +21,24 @@ import WorkerMessage._
  * Implements the client side of a simple client/server protocol that provides a somewhat more
  * functional/effecful way of communicating with workers.
  */
-class WorkerClient[F[_]: Concurrent: UUIDGen: Logger, R: Pickler](worker: WebWorkerF[F]) {
+class WorkerClient[F[_]: Concurrent: UUIDGen: Logger, R: Pickler] private (
+  worker:    WebWorkerF[F],
+  initLatch: Deferred[F, Unit]
+):
+  private val waitForServer: F[Unit] =
+    worker.streamResource
+      .use(
+        _.map(decodeFromTransferableEither[FromServer]).rethrow
+          .collectFirst { case FromServer.Ready =>
+            ()
+          }
+          .evalTap(_ => initLatch.complete(()))
+          .compile
+          .drain
+      )
+      .handleErrorWith(t => Logger[F].error(t)("Error initializing worker client"))
+      .start
+      .void
 
   /**
    * Make a request to the underlying worker and receive responses as a `Stream`.
@@ -28,6 +47,7 @@ class WorkerClient[F[_]: Concurrent: UUIDGen: Logger, R: Pickler](worker: WebWor
     Pickler[requestMessage.ResponseType]
   ): Resource[F, fs2.Stream[F, requestMessage.ResponseType]] =
     for {
+      _      <- Resource.eval(initLatch.get) // Ensure server is initialized
       id     <- Resource.eval(UUIDGen.randomUUID).map(WorkerProcessId.apply)
       _      <- Resource.make(
                   Logger[F].debug(s">>> Starting request with id [$id]") >>
@@ -76,4 +96,12 @@ class WorkerClient[F[_]: Concurrent: UUIDGen: Logger, R: Pickler](worker: WebWor
     Pickler[requestMessage.ResponseType]
   ): F[Unit] =
     request(requestMessage).use(_.compile.drain)
-}
+
+object WorkerClient:
+  def fromWorker[F[_]: Concurrent: UUIDGen: Logger, R: Pickler](
+    worker: WebWorkerF[F]
+  ): Resource[F, WorkerClient[F, R]] =
+    for {
+      latch  <- Resource.eval(Deferred[F, Unit])
+      client <- Resource.pure(new WorkerClient[F, R](worker, latch)).evalTap(_.waitForServer)
+    } yield client

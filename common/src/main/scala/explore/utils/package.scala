@@ -19,10 +19,9 @@ import explore.BuildInfo
 import explore.components.ui.ExploreStyles
 import explore.model.enums.ExecutionEnvironment
 import explore.model.enums.ExecutionEnvironment.Development
-import explore.model.enums.Theme
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ui.enums.Theme
 import lucuma.ui.forms.ExternalValue
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -36,17 +35,6 @@ import react.semanticui.elements.loader.Loader
 import java.time.Instant
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
-
-def setupScheme[F[_]: Sync](theme: Theme): F[Unit] =
-  Sync[F].delay {
-    if (theme === Theme.Dark) {
-      dom.document.body.classList.add(Theme.Dark.clazz.htmlClass)
-      dom.document.body.classList.remove(Theme.Light.clazz.htmlClass)
-    } else {
-      dom.document.body.classList.add(Theme.Light.clazz.htmlClass)
-      dom.document.body.classList.remove(Theme.Dark.clazz.htmlClass)
-    }
-  }
 
 def toggleReusabilityOverlay[F[_]: Sync](): F[Unit] =
   Sync[F]
@@ -159,7 +147,3 @@ def clearInputIcon[EV[_], A](
     .flatten
     .map(_ => <.i(ExploreStyles.ClearableInputIcon, ^.onClick --> ev.set(view)(None)))
     .orUndefined
-
-given Monoid[VdomNode] = new Monoid[VdomNode]:
-  val empty: VdomNode                             = EmptyVdom
-  def combine(x: VdomNode, y: VdomNode): VdomNode = React.Fragment(x, y)
