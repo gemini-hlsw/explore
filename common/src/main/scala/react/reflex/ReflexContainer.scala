@@ -3,9 +3,9 @@
 
 package react.reflex
 
-import japgolly.scalajs.react._
+import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.TagMod
-import lucuma.ui.implicits._
+import lucuma.ui.syntax.all.*
 import react.common.Css
 import react.common.GenericComponentPAC
 

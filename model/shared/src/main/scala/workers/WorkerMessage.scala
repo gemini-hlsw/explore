@@ -16,19 +16,18 @@ private object Pickled extends NewType[Array[Byte]]
 private type Pickled = Pickled.Type
 
 // Low-level protocol messages, not to be used by clients or servers
-private object WorkerMessage {
+private object WorkerMessage:
   sealed trait FromClient
-  object FromClient {
-    final case class Start(id: WorkerProcessId, payload: Pickled) extends FromClient
-    final case class End(id: WorkerProcessId)                     extends FromClient
-  }
+  object FromClient:
+    case class Start(id: WorkerProcessId, payload: Pickled) extends FromClient
+    case class End(id: WorkerProcessId)                     extends FromClient
 
   sealed trait FromServer
-  object FromServer {
-    final case class Data(id: WorkerProcessId, payload: Pickled)        extends FromServer
-    final case class Complete(id: WorkerProcessId)                      extends FromServer
-    final case class Error(id: WorkerProcessId, error: WorkerException) extends FromServer
-  }
+  object FromServer:
+    case object Ready                                             extends FromServer
+    case class Data(id: WorkerProcessId, payload: Pickled)        extends FromServer
+    case class Complete(id: WorkerProcessId)                      extends FromServer
+    case class Error(id: WorkerProcessId, error: WorkerException) extends FromServer
 
   private given Pickler[WorkerProcessId] = transformPickler(WorkerProcessId.apply)(_.value)
 
@@ -40,6 +39,8 @@ private object WorkerMessage {
 
   given Pickler[FromClient] = generatePickler
 
+  private given Pickler[FromServer.Ready.type] = generatePickler
+
   private given Pickler[FromServer.Data] = generatePickler
 
   private given Pickler[FromServer.Complete] = generatePickler
@@ -47,4 +48,3 @@ private object WorkerMessage {
   private given Pickler[FromServer.Error] = generatePickler
 
   given Pickler[FromServer] = generatePickler
-}

@@ -52,20 +52,13 @@ final case class ConstraintsPanel(
 object ConstraintsPanel {
   protected type Props = ConstraintsPanel
 
-  private sealed abstract class ElevationRangeType(val label: String)
-      extends Product
-      with Serializable
+  private enum ElevationRangeType(val label: String):
+    case AirMass   extends ElevationRangeType("Air Mass")
+    case HourAngle extends ElevationRangeType("Hour Angle")
 
-  private object ElevationRangeType {
-    case object AirMass   extends ElevationRangeType("Air Mass")
-    case object HourAngle extends ElevationRangeType("Hour Angle")
-
-    implicit val enumeratedElevationRangeType: Enumerated[ElevationRangeType] =
-      Enumerated.of(AirMass, HourAngle)
-
-    implicit val displayElevationRangeType: Display[ElevationRangeType] =
-      Display.byShortName(_.label)
-  }
+  private object ElevationRangeType:
+    given Enumerated[ElevationRangeType] = Enumerated.from(AirMass, HourAngle).withTag(_.label)
+    given Display[ElevationRangeType]    = Display.byShortName(_.label)
 
   import ElevationRangeType._
 

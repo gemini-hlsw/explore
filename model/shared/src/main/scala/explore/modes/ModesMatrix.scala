@@ -4,6 +4,7 @@
 package explore.modes
 
 import cats.Order
+import cats.derived.*
 import cats.syntax.all._
 import coulomb._
 import coulomb.ops.algebra.spire.all.given
@@ -24,17 +25,8 @@ import monocle.Lens
 import monocle.macros.GenLens
 import spire.math.Rational
 
-sealed trait ObservationMode extends Product with Serializable
-
-object ObservationMode {
-  case object Spectroscopy extends ObservationMode
-  case object Imaging      extends ObservationMode
-  case object Polarimetry  extends ObservationMode
-
-  /** @group Typeclass Instances */
-  implicit val ObservationModeEnumerated: Enumerated[ObservationMode] =
-    Enumerated.of(Spectroscopy, Imaging, Polarimetry)
-}
+enum ObservationMode derives Order:
+  case Spectroscopy, Imaging, Polarimetry
 
 case class ModeIQ(iq: Angle) {
   override def toString: String = s"iq(${Angle.milliarcseconds.get(iq)})"
@@ -72,69 +64,25 @@ object ModeGratingMaxWavelength {
   implicit val orderModeGratingMaxWavelength: Order[ModeGratingMaxWavelength] = Order.by(_.w)
 }
 
-sealed trait ModeFilter extends Product with Serializable
+enum ModeFilter derives Order:
+  case NoFilter, SomeFilter
 
-object ModeFilter {
+enum ModeGrating derives Order:
   // At the moment we only care about the presence of filter
-  case object NoFilter   extends ModeFilter
-  case object SomeFilter extends ModeFilter
+  case NoGrating                extends ModeGrating
+  case SomeGrating(tag: String) extends ModeGrating
 
-  /** @group Typeclass Instances */
-  implicit val ModeFilterEnumerated: Enumerated[ModeFilter] =
-    Enumerated.of(NoFilter, SomeFilter)
-}
+enum ModeSpatialDimension derives Order:
+  case One, Two
 
-sealed trait ModeGrating extends Product with Serializable
+enum ModeCoronagraph derives Order:
+  case NoCoronagraph, Coronagraph
 
-object ModeGrating {
-  // At the moment we only care about the presence of filter
-  case object NoGrating               extends ModeGrating
-  case class SomeGrating(tag: String) extends ModeGrating
-}
+enum ModeSkysub derives Order:
+  case Normal, High
 
-sealed trait ModeSpatialDimension extends Product with Serializable
-
-object ModeSpatialDimension {
-  case object One extends ModeSpatialDimension
-  case object Two extends ModeSpatialDimension
-
-  /** @group Typeclass Instances */
-  implicit val ModeSpatialDimensionEnumerated: Enumerated[ModeSpatialDimension] =
-    Enumerated.of(One, Two)
-}
-
-sealed trait ModeCoronagraph extends Product with Serializable
-
-object ModeCoronagraph {
-  case object NoCoronagraph extends ModeCoronagraph
-  case object Coronagraph   extends ModeCoronagraph
-
-  /** @group Typeclass Instances */
-  implicit val ModeCoronagraphEnumerated: Enumerated[ModeCoronagraph] =
-    Enumerated.of(NoCoronagraph, Coronagraph)
-}
-
-sealed trait ModeSkysub extends Product with Serializable
-
-object ModeSkysub {
-  case object Normal extends ModeSkysub
-  case object High   extends ModeSkysub
-
-  /** @group Typeclass Instances */
-  implicit val ModeSkysubEnumerated: Enumerated[ModeSkysub] =
-    Enumerated.of(Normal, High)
-}
-
-sealed trait ModeMOS extends Product with Serializable
-
-object ModeMOS {
-  case object NoMOS extends ModeMOS
-  case object MOS   extends ModeMOS
-
-  /** @group Typeclass Instances */
-  implicit val ModeMOSEnumerated: Enumerated[ModeMOS] =
-    Enumerated.of(NoMOS, MOS)
-}
+enum ModeMOS derives Order:
+  case NoMOS, MOS
 
 case class ModeRow(
   instrument:           Instrument,

@@ -3,6 +3,8 @@
 
 package explore.targeteditor
 
+import cats.Eq
+import cats.derived.*
 import cats.syntax.all._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
@@ -65,7 +67,7 @@ object ElevationPlotNight {
   }
 
   protected implicit class PointOptionsWithAirmassOps(val x: PointOptionsWithAirmass)
-      extends AnyVal     {
+      extends AnyVal {
     def setAirMass(value: Double): PointOptionsWithAirmass = {
       x.airmass = value
       x
@@ -79,23 +81,15 @@ object ElevationPlotNight {
     moonAltitude:     List[Chart.Data]
   )
 
-  sealed abstract class ElevationSeries(
+  private enum ElevationSeries(
     val name:  String,
     val yAxis: Int,
     val data:  SeriesData => List[Chart.Data]
-  ) extends Product
-      with Serializable
-  object ElevationSeries {
-    case object Elevation        extends ElevationSeries("Elevation", 0, _.targetAltitude)
-    case object ParallacticAngle extends ElevationSeries("Parallactic Angle", 1, _.parallacticAngle)
-    case object SkyBrightness    extends ElevationSeries("Sky Brightness", 2, _.skyBrightness)
-    case object LunarElevation   extends ElevationSeries("Lunar Elevation", 0, _.moonAltitude)
-
-    def tag(a: ElevationSeries) = a.name
-
-    implicit val ElevationSeriesEnumerated: Enumerated[ElevationSeries] =
-      Enumerated.of(Elevation, ParallacticAngle, SkyBrightness, LunarElevation)
-  }
+  ) derives Eq:
+    case Elevation        extends ElevationSeries("Elevation", 0, _.targetAltitude)
+    case ParallacticAngle extends ElevationSeries("Parallactic Angle", 1, _.parallacticAngle)
+    case SkyBrightness    extends ElevationSeries("Sky Brightness", 2, _.skyBrightness)
+    case LunarElevation   extends ElevationSeries("Lunar Elevation", 0, _.moonAltitude)
 
   private val dateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
@@ -149,7 +143,7 @@ object ElevationPlotNight {
   val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useState(HashSet.from(Enumerated[ElevationSeries].all))
+      .useState(HashSet.from(ElevationSeries.values))
       .useResizeDetector()
       .render { (props, shownSeries, resize) =>
         def showSeriesCB(series: ElevationSeries, chart: Chart_): Callback =
@@ -376,7 +370,7 @@ object ElevationPlotNight {
               )
           )
           .setSeries(
-            Enumerated[ElevationSeries].all
+            ElevationSeries.values
               .map(series =>
                 SeriesLineOptions((), (), line)
                   .setName(series.name)

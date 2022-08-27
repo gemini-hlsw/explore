@@ -74,5 +74,5 @@ object WorkerClients {
      CatalogClient.build[F](dispatcher),
      AgsClient.build[F](dispatcher),
      PlotClient.build[F](dispatcher)
-    ).mapN(WorkerClients.apply)
+    ).parMapN(WorkerClients.apply)
 }

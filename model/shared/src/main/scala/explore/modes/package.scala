@@ -3,12 +3,14 @@
 
 package explore
 
-import cats.syntax.all._
-import eu.timepit.refined._
+import cats.Eq
+import cats.derived.*
+import cats.syntax.all.*
+import eu.timepit.refined.*
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.numeric.Positive
-import eu.timepit.refined.types.numeric._
-import fs2.data.csv._
+import eu.timepit.refined.types.numeric.*
+import fs2.data.csv.*
 import lucuma.core.enums.Instrument
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
@@ -37,16 +39,13 @@ package modes {
         )
   }
 
-  sealed trait ModeAO extends Product with Serializable
+  enum ModeAO(val tag: String):
+    case NoAO extends ModeAO("noao")
+    case AO   extends ModeAO("ao")
 
-  object ModeAO {
-    case object NoAO extends ModeAO
-    case object AO   extends ModeAO
-
-    /** @group Typeclass Instances */
-    implicit val ModeAOEnumerated: Enumerated[ModeAO] =
-      Enumerated.of(NoAO, AO)
-  }
+  object ModeAO:
+    given Enumerated[ModeAO] =
+      Enumerated.from(NoAO, AO).withTag(_.tag)
 
   trait Decoders {
     implicit val posIntDecoder: CellDecoder[PosInt] =

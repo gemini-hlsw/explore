@@ -61,7 +61,6 @@ import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.ui.forms.EnumViewOptionalSelect
 import lucuma.ui.forms.FormInputEV
-import lucuma.ui.implicits.*
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*

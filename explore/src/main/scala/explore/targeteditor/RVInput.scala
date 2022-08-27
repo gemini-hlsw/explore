@@ -34,26 +34,14 @@ final case class RVInput(
 object RVInput {
   protected type Props = RVInput
 
-  private sealed trait RVView extends Product with Serializable {
-    def tag: NonEmptyString
-  }
+  private enum RVView(val tag: NonEmptyString):
+    case RV extends RVView("RV".refined)
+    case Z  extends RVView("z".refined)
+    case CZ extends RVView("cz".refined)
 
-  private object RVView {
-    case object RV extends RVView {
-      override val tag = "RV".refined
-    }
-    case object Z  extends RVView {
-      override val tag = "z".refined
-    }
-    case object CZ extends RVView {
-      override val tag = "cz".refined
-    }
-
-    implicit val rvViewEnumeration: Enumerated[RVView] =
-      Enumerated.of(RV, Z, CZ)
-
-    implicit val rvDisplay: Display[RVView] = Display.by(_.tag.value, _.tag.value)
-  }
+  private object RVView:
+    given Enumerated[RVView] = Enumerated.from(RVView.RV, RVView.Z, RVView.CZ).withTag(_.tag)
+    given Display[RVView]    = Display.byShortName(_.tag.value)
 
   private def units(rvView: RVView, v: Option[RadialVelocity]) = rvView match {
     case RVView.Z              =>

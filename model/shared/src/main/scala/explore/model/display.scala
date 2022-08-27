@@ -93,7 +93,8 @@ trait DisplayImplicits {
       InputValidSplitEpi.bigDecimalWithScientificNotation.reverseGet(x)
   }
 
-  implicit val displayLibrarySpectrum: Display[StellarLibrarySpectrum] = Display.byTag
+  implicit val displayLibrarySpectrum: Display[StellarLibrarySpectrum] =
+    Display.byShortName(_.sedSpectrum)
 
   import UnnormalizedSED._
   implicit val displayUnnormalizedSED: Display[UnnormalizedSED] = Display.byShortName {
