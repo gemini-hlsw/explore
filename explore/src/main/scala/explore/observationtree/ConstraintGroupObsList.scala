@@ -46,7 +46,7 @@ final case class ConstraintGroupObsList(
   setSummaryPanel:    Reuse[Callback],
   expandedIds:        View[SortedSet[ObsIdSet]],
   undoStacks:         View[UndoStacks[IO, ConstraintGroupList]]
-)(using val ctx:   AppContextIO)
+)(using val ctx:      AppContextIO)
     extends ReactFnProps[ConstraintGroupObsList](ConstraintGroupObsList.component)
     with ViewCommon
 

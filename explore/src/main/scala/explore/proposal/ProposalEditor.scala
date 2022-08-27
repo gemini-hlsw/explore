@@ -63,11 +63,11 @@ import scala.collection.immutable.SortedMap
 import scalajs.js.JSConverters._
 
 final case class ProposalEditor(
-  programId:        Program.Id,
-  proposal:         View[Proposal],
-  undoStacks:       View[UndoStacks[IO, Proposal]],
-  executionTime:    NonNegDuration,
-  band3Time:        NonNegDuration
+  programId:     Program.Id,
+  proposal:      View[Proposal],
+  undoStacks:    View[UndoStacks[IO, Proposal]],
+  executionTime: NonNegDuration,
+  band3Time:     NonNegDuration
 )(using val ctx: AppContextIO)
     extends ReactFnProps[ProposalEditor](ProposalEditor.component)
 

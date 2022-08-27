@@ -10,6 +10,7 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.conversions.*
 import explore.model.display.*
+import explore.model.display.given
 import explore.model.enums.SourceProfileType
 import explore.model.formats.*
 import explore.optics.all.*

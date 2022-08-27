@@ -4,6 +4,7 @@
 package explore.config
 
 import eu.timepit.refined.types.string.NonEmptyString
+import japgolly.scalajs.react.*
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated

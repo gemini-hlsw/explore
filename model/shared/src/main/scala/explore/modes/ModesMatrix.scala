@@ -5,6 +5,7 @@ package explore.modes
 
 import cats.Eq
 import cats.Order
+import cats.derived.*
 import cats.syntax.all._
 import coulomb._
 import coulomb.ops.algebra.spire.all.given
