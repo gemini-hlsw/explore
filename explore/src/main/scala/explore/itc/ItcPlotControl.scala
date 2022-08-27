@@ -48,7 +48,7 @@ object ItcPlotControl:
           Button(
             active = props.chartType.when(_ === ItcChartType.SignalChart),
             onClick = props.chartType.set(ItcChartType.SignalChart)
-          )("Signal"),
+          )("Signal")
         )
       )
     }
