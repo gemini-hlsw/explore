@@ -41,11 +41,13 @@ See https://github.com/highcharts/highcharts/issues/13320 */
 }
 
 /* Sky Brightness */
-.highcharts-color-2,
-.plot-sky-brightness-percentile,
-.highcharts-plot-line-label {
-  fill: hsl(209deg 75% 71%) !important;
-  stroke: hsl(209deg 75% 71%);
+.elevation-plot {
+  .highcharts-color-2,
+  .plot-sky-brightness-percentile,
+  .highcharts-plot-line-label {
+    fill: hsl(209deg 75% 71%) !important;
+    stroke: hsl(209deg 75% 71%);
+  }
 }
 
 /* Lunar Elevation */
