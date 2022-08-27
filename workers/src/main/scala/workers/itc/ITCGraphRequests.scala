@@ -91,37 +91,49 @@ object ITCGraphRequests {
       case _                           =>
         none
 
-    itcRowsParams.map { request =>
-      Logger[F].debug(
-        s"ITC: Request for mode ${request.mode} and target count: ${request.target.length}"
-      ) *>
-        request.target
-          .fproduct(t => selectedBrightness(t.profile, request.wavelength))
-          .collect { case (t, Some(brightness)) =>
-            request.mode.toITCInput.map { mode =>
-              SpectroscopyGraphITCQuery
-                .query(
-                  SpectroscopyGraphModeInput(
-                    request.wavelength.toInput,
-                    request.exposureTime.toInput,
-                    request.exposures,
-                    t.profile.toInput,
-                    brightness,
-                    t.rv.toITCInput,
-                    request.constraints,
-                    mode,
-                    significantFigures
-                  ).assign
-                )
-                .flatMap { r =>
-                  val charts = r.spectroscopyGraphBeta.charts.map(_.toItcChart)
-                  val ccds   = r.spectroscopyGraphBeta.ccds
-                  (ccds.toNel, charts.toNel).mapN(ItcChartResult.apply).map(callback).orEmpty
-                }
-            }.orEmpty
-          }
-          .sequence
-          .void
-    }.orEmpty
+    Logger[F].info(itcRowsParams.toString) *>
+      itcRowsParams.map { request =>
+        Logger[F].debug(
+          s"ITC: Graph request for mode ${request.mode} and target count: ${request.target.length}"
+        ) *>
+          request.target
+            .fproduct(t => selectedBrightness(t.profile, request.wavelength))
+            .collect { case (t, Some(brightness)) =>
+              // Logger[F].info("ABC")
+              request.mode.toITCInput.map { mode =>
+                SpectroscopyGraphITCQuery
+                  .query(
+                    SpectroscopyGraphModeInput(
+                      request.wavelength.toInput,
+                      request.exposureTime.toInput,
+                      request.exposures,
+                      t.profile.toInput,
+                      brightness,
+                      t.rv.toITCInput,
+                      request.constraints,
+                      mode,
+                      significantFigures
+                    ).assign
+                  )
+                  // .void
+                  // .handleErrorWith(e => Logger[F].error(e)("Loading graoph"))
+                  .flatMap { r =>
+                    // println("AHA")
+                    val charts = r.spectroscopyGraphBeta.charts.map(_.toItcChart)
+                    val ccds   = r.spectroscopyGraphBeta.ccds
+                    // println(ccds.toNel.isDefined)
+                    // println(charts.toNel.isDefined)
+                    (ccds.toNel, charts.toNel)
+                      .mapN(ItcChartResult.apply)
+                      .map(callback)
+                      .orEmpty
+                      .handleErrorWith(e => Logger[F].error(e)("Serialize "))
+                  }
+                  .handleErrorWith(e => Logger[F].error(e)("Loading graoph"))
+              }.orEmpty
+            }
+            .sequence
+            .void
+      }.orEmpty
 
 }
