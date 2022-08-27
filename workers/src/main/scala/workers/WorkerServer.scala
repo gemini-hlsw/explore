@@ -116,6 +116,9 @@ trait WorkerServer[F[_]: Async, T: Pickler](using Monoid[F[Unit]]):
       self         <- F.delay(dom.DedicatedWorkerGlobalScope.self)
       handlerFn    <- handler
       cancelTokens <- Ref[F].of(Map.empty[WorkerProcessId, F[Unit]])
+      _            <- Logger[F].debug("Mounting")
       _            <- mount(self, handlerFn, cancelTokens)(dispatcher)
+      _            <- Logger[F].debug("Mounted, sending ready")
       _            <- postAsTransferable[F, FromServer](self, FromServer.Ready)
+      _            <- Logger[F].debug("Ready sent!")
     } yield ()

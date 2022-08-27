@@ -37,6 +37,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math._
 import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.ConstraintSet
+import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.Target
 import lucuma.core.model.User

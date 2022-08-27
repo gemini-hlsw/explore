@@ -15,6 +15,7 @@ import eu.timepit.refined.api.Validate
 import lucuma.ags.AgsAnalysis
 import lucuma.ags.AgsParams
 import lucuma.ags.AgsPosition
+import lucuma.ags.GuideProbe
 import lucuma.ags.GuideStarCandidate
 import lucuma.core.geom.Area
 import lucuma.core.math.Angle
