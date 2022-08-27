@@ -153,6 +153,6 @@ object remote:
   ) derives Decoder:
     def toItcSeries: ItcSeries =
       val genData = dataY.zipWithIndex.map((y, i) =>
-        (math.roundToSignificantFigures(xAxis.step * i + xAxis.start, 4), y)
+        (math.roundToSignificantFigures(xAxis.step * i + xAxis.start, 6), y)
       )
       ItcSeries(title, seriesType, genData, yAxis)

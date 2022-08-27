@@ -68,8 +68,8 @@ def selectedBrightness(
 
 object ITCGraphRequests {
   private val significantFigures =
-    SignificantFiguresInput(4.refined[Positive].assign,
-                            4.refined[Positive].assign,
+    SignificantFiguresInput(6.refined[Positive].assign,
+                            6.refined[Positive].assign,
                             3.refined[Positive].assign
     ).assign
 

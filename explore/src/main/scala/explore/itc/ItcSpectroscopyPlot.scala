@@ -13,6 +13,7 @@ import explore.model.enums.ItcChartType
 import explore.model.itc.ItcChart
 import explore.model.itc.ItcSeries
 import explore.model.itc.YAxis
+import explore.model.itc.math.roundToSignificantFigures
 import explore.syntax.ui.*
 import explore.syntax.ui.given
 import explore.utils.*
@@ -63,6 +64,20 @@ object ItcSpectroscopyPlot {
       .setLineWidth(1)
       .setLabels(YAxisLabelsOptions().setFormat("{value}"))
 
+    val chartClassName = chart.chartType.toString.toLowerCase()
+
+    def rounded(x: js.UndefOr[Double | String]): String =
+      x.toOption.fold("-") {
+        case x: Double => roundToSignificantFigures(x, 4).toString
+        case x: String => x
+      }
+
+    val tooltipFormatter: TooltipFormatterCallbackFunction =
+      (ctx: TooltipFormatterContextObject, t: Tooltip) =>
+        val x = rounded(ctx.x)
+        val y = rounded(ctx.y)
+        s"""<strong>$x nm</strong><br/><span class="$chartClassName highcharts-color-${ctx.colorIndex.toInt}">●</span> ${ctx.series.name}: <strong>$y</strong>"""
+
     Options()
       .setChart(
         ChartOptions()
@@ -83,10 +98,11 @@ object ItcSpectroscopyPlot {
       .setTitle(TitleOptions().setTextUndefined)
       .setCredits(CreditsOptions().setEnabled(false))
       .setLegend(LegendOptions().setMargin(0))
+      .setTooltip(TooltipOptions().setFormatter(tooltipFormatter).setClassName(chartClassName))
       .setXAxis(
         XAxisOptions()
           .setType(AxisTypeValue.linear)
-          .setTitle(XAxisTitleOptions().setText("Wavelength nm"))
+          .setTitle(XAxisTitleOptions().setText("Wavelength (nm)"))
       )
       .setYAxis(List(yAxes).toJSArray)
       .setPlotOptions(
@@ -107,7 +123,12 @@ object ItcSpectroscopyPlot {
             SeriesLineOptions((), (), line)
               .setName(series.title)
               .setYAxis(0)
-              .setData(series.data.map(p => (p(0), p(1)): Chart.Data).toJSArray)
+              .setData(
+                series.data
+                  .map(p => (p(0), p(1)): Chart.Data)
+                  .toJSArray
+              )
+              .setClassName(chartClassName)
               .setLineWidth(1)
           )
           .map(_.asInstanceOf[SeriesOptionsType])
