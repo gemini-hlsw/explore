@@ -208,34 +208,68 @@ See https://github.com/highcharts/highcharts/issues/13320 */
     stroke: var(--site-border-color);
   }
 
-  .highcharts-color-0 {
-    fill: var(--itc-plot-blue);
-    stroke: var(--itc-plot-blue);
+  .s2nchart {
+    &.highcharts-color-0 {
+      fill: var(--itc-plot-lightblue);
+      stroke: var(--itc-plot-lightblue);
+    }
+
+    &.highcharts-color-1 {
+      fill: var(--itc-plot-blue);
+      stroke: var(--itc-plot-blue);
+    }
+
+    &.highcharts-color-2 {
+      fill: var(--itc-plot-lightgreen);
+      stroke: var(--itc-plot-lightgreen);
+    }
+
+    &.highcharts-color-3 {
+      fill: var(--itc-plot-green);
+      stroke: var(--itc-plot-green);
+    }
+
+    &.highcharts-color-4 {
+      fill: var(--itc-plot-lightred);
+      stroke: var(--itc-plot-lightred);
+    }
+
+    &.highcharts-color-5 {
+      fill: var(--itc-plot-red);
+      stroke: var(--itc-plot-red);
+    }
   }
 
-  .highcharts-color-1 {
-    fill: var(--itc-plot-lightblue);
-    stroke: var(--itc-plot-lightblue);
-  }
+  .signalchart {
+    &.highcharts-color-0 {
+      fill: var(--itc-plot-blue);
+      stroke: var(--itc-plot-blue);
+    }
 
-  .highcharts-color-2 {
-    fill: var(--itc-plot-green);
-    stroke: var(--itc-plot-green);
-  }
+    &.highcharts-color-1 {
+      fill: var(--itc-plot-lightblue);
+      stroke: var(--itc-plot-lightblue);
+    }
 
-  .highcharts-color-3 {
-    fill: var(--itc-plot-lightgreen);
-    stroke: var(--itc-plot-lightgreen);
-  }
+    &.highcharts-color-2 {
+      fill: var(--itc-plot-green);
+      stroke: var(--itc-plot-green);
+    }
 
-  .highcharts-color-4 {
-    fill: var(--itc-plot-red);
-    stroke: var(--itc-plot-red);
-  }
+    &.highcharts-color-3 {
+      fill: var(--itc-plot-lightgreen);
+      stroke: var(--itc-plot-lightgreen);
+    }
 
-  .highcharts-color-5 {
-    fill: var(--itc-plot-lightred);
-    stroke: var(--itc-plot-lightred);
+    &.highcharts-color-4 {
+      fill: var(--itc-plot-red);
+      stroke: var(--itc-plot-red);
+    }
+
+    &.highcharts-color-5 {
+      fill: var(--itc-plot-lightred);
+      stroke: var(--itc-plot-lightred);
+    }
   }
 
 }

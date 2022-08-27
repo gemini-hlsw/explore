@@ -86,7 +86,7 @@ object ItcSpectroscopyPlot {
       .setXAxis(
         XAxisOptions()
           .setType(AxisTypeValue.linear)
-          .setTitle(XAxisTitleOptions().setText("Wavelength nm"))
+          .setTitle(XAxisTitleOptions().setText("Wavelength (nm)"))
       )
       .setYAxis(List(yAxes).toJSArray)
       .setPlotOptions(
@@ -108,6 +108,7 @@ object ItcSpectroscopyPlot {
               .setName(series.title)
               .setYAxis(0)
               .setData(series.data.map(p => (p(0), p(1)): Chart.Data).toJSArray)
+              .setClassName(chart.chartType.toString.toLowerCase())
               .setLineWidth(1)
           )
           .map(_.asInstanceOf[SeriesOptionsType])

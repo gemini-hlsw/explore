@@ -42,13 +42,13 @@ object ItcPlotControl:
         )(descText),
         ButtonGroup(compact = true, size = Tiny, clazz = ExploreStyles.ItcPlotSelector)(
           Button(
+            active = props.chartType.when(_ === ItcChartType.S2NChart),
+            onClick = props.chartType.set(ItcChartType.S2NChart)
+          )("S/N"),
+          Button(
             active = props.chartType.when(_ === ItcChartType.SignalChart),
             onClick = props.chartType.set(ItcChartType.SignalChart)
           )("Signal"),
-          Button(
-            active = props.chartType.when(_ === ItcChartType.S2NChart),
-            onClick = props.chartType.set(ItcChartType.S2NChart)
-          )("S/N")
         )
       )
     }

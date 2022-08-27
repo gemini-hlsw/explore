@@ -138,7 +138,6 @@ object ItcGraphPanel {
       .useState(Pot.pending[ItcChartResult])
       // loading
       .useState(PlotLoading.Done)
-      // show description
       // Request ITC graph data
       .useEffectWithDepsBy((props, _, _) =>
         (props.wavelength,
@@ -179,7 +178,9 @@ object ItcGraphPanel {
                 .to[IO]
             )
       }
-      .useStateView(ItcChartType.SignalChart)
+      // Default selected chart
+      .useStateView(ItcChartType.S2NChart)
+      // show description
       .useStateView(PlotDetails.Shown)
       .render { (props, results, loading, chartType, details) =>
         val error: Option[String] = results.value.fold(none, _.getMessage.some, _ => none)

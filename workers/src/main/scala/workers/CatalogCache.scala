@@ -98,7 +98,7 @@ trait CatalogCache extends CatalogIDB {
 
     val brightnessConstraints = ags.widestConstraints
 
-    val ldt   = LocalDateTime.ofInstant(obsTime, ZoneId.of("UTC"))
+    val ldt   = LocalDateTime.ofInstant(obsTime, Constants.UTC)
     // We consider the query valid from the fist moment of the year to the end
     val start = ldt.`with`(ChronoField.DAY_OF_YEAR, 1L).`with`(ChronoField.NANO_OF_DAY, 0)
     val end   = start.plus(1, ChronoUnit.YEARS)
