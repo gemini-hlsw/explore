@@ -29,7 +29,7 @@ object Settings {
     val lucumaCatalog         = "0.26.0"
     val lucumaReactVersion    = "0.2.0"
     val lucumaRefinedVersion  = "0.1.1"
-    val lucumaSchemas         = "0.35.0"
+    val lucumaSchemas         = "0.37.1"
     val lucumaSSO             = "0.3.0"
     val lucumaUI              = "0.41.0"
     val monocle               = "3.1.0"
