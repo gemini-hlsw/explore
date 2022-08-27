@@ -5,7 +5,8 @@ package workers
 
 import boopickle.DefaultBasic.*
 import cats.effect.IO
-import cats.effect.unsafe.implicits._
+import cats.effect.unsafe.implicits.*
+import cats.syntax.all.*
 import explore.events.AgsMessage
 import explore.events.CatalogMessage
 import explore.model.boopickle.CatalogPicklers.given
@@ -32,15 +33,17 @@ object CatalogServer extends WorkerServer[IO, CatalogMessage.Request] with Catal
   protected val handler: Logger[IO] ?=> IO[Invocation => IO[Unit]] =
     for
       self    <- IO(dom.DedicatedWorkerGlobalScope.self)
-      idb     <- IO(self.indexedDB.get)
+      idb     <- IO(self.indexedDB.toOption)
       stores   = CacheIDBStores()
-      cacheDb <- stores.open(IndexedDb(idb)).toIO
+      cacheDb <- idb.traverse(idb => stores.open(IndexedDb(idb)).toIO)
       client   = FetchClientBuilder[IO].create
     yield invocation =>
       invocation.data match
         case req @ CatalogMessage.GSRequest(_, _) =>
           readFromGaia(client, cacheDb, stores, req, c => invocation.respond(c)) *>
             expireGuideStarCandidates(cacheDb, stores, Expiration).toIO
+              .handleErrorWith(e => Logger[IO].error(e)("Error expiring guidestar candidates"))
 
         case CatalogMessage.GSCacheCleanupRequest(expTime) =>
           expireGuideStarCandidates(cacheDb, stores, expTime).toIO
+            .handleErrorWith(e => Logger[IO].error(e)("Error expiring guidestar candidates"))

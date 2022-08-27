@@ -70,7 +70,7 @@ trait CatalogCache extends CatalogIDB {
   def readFromGaia[F[_]: Concurrent](
     client: Client[F],
     query:  ADQLQuery
-  ): F[List[EitherNec[CatalogProblem, Target.Sidereal]]] = {
+  ): F[List[EitherNec[CatalogProblem, Target.Sidereal]]] =
     val queryUri = CatalogSearch.gaiaSearchUri(query)
     val request  = Request[F](GET, queryUri)
     client
@@ -82,14 +82,13 @@ trait CatalogCache extends CatalogIDB {
       )
       .compile
       .toList
-  }
 
   /**
    * Try to read the gaia query from the cache or else get it from gaia
    */
   def readFromGaia(
     client:  Client[IO],
-    idb:     IndexedDb.Database,
+    idb:     Option[IndexedDb.Database],
     stores:  CacheIDBStores,
     request: CatalogMessage.GSRequest,
     respond: List[GuideStarCandidate] => IO[Unit]
@@ -98,7 +97,7 @@ trait CatalogCache extends CatalogIDB {
 
     val brightnessConstraints = ags.widestConstraints
 
-    val ldt   = LocalDateTime.ofInstant(obsTime, ZoneId.of("UTC"))
+    val ldt   = LocalDateTime.ofInstant(obsTime, Constants.UTC)
     // We consider the query valid from the fist moment of the year to the end
     val start = ldt.`with`(ChronoField.DAY_OF_YEAR, 1L).`with`(ChronoField.NANO_OF_DAY, 0)
     val end   = start.plus(1, ChronoUnit.YEARS)
@@ -119,9 +118,8 @@ trait CatalogCache extends CatalogIDB {
 
         (Logger[IO].debug(s"Requested catalog $query ${cacheQueryHash.hash(query)}") *>
           // Try to find it in the db
-          readGuideStarCandidates(idb, stores, query).toIO.handleError(_ =>
-            none
-          )) // Try to find it in the db
+          readGuideStarCandidates(idb, stores, query).toIO
+            .handleError(_ => none)) // Try to find it in the db
           .flatMap(
             _.fold(
               // Not found in the db, re request
@@ -140,7 +138,7 @@ trait CatalogCache extends CatalogIDB {
                   ) *>
                     respond(candidates) *>
                     storeGuideStarCandidates(idb, stores, query, candidates).toIO
-                      .handleError(e => Logger[IO].error(e)("Error storing guidstar candidates"))
+                      .handleError(e => Logger[IO].error(e)("Error storing guidestar candidates"))
                 }
                 .void
             ) { c =>
