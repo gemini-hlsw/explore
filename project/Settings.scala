@@ -37,7 +37,7 @@ object Settings {
     val mUnit                 = "0.7.29"
     val mUnitCatsEffect       = "1.0.7"
     val pprint                = "0.7.3"
-    val reactAladin           = "0.24.1"
+    val reactAladin           = "0.25.1"
     val refinedAlgebraVersion = "0.1.0"
     val scalaJsReact          = "2.1.1"
     val webAppUtil            = "2.0.0-RC4"
