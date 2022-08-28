@@ -70,6 +70,8 @@ trait WorkerServer[F[_]: Async, T: Pickler](using Monoid[F[Unit]]):
           // Decode transferable events
           decodeFromTransferable[FromClient](msg)
             .map {
+              case FromClient.ClientReady        =>
+                postAsTransferable[F, FromServer](self, FromServer.ServerReady)
               case FromClient.Start(id, payload) =>
                 F.delay(fromBytes[T](payload.value))
                   .rethrow
@@ -119,6 +121,11 @@ trait WorkerServer[F[_]: Async, T: Pickler](using Monoid[F[Unit]]):
       _            <- Logger[F].debug("Mounting")
       _            <- mount(self, handlerFn, cancelTokens)(dispatcher)
       _            <- Logger[F].debug("Mounted, sending ready")
-      _            <- postAsTransferable[F, FromServer](self, FromServer.Ready)
+      // Because of racing conditions, the server may have missed the client's ClientReady
+      // message by the time it initializes. So, we force send a ServerReady here just in case.
+      // This assures that the client will get at least one ServerReady. We cannot just send
+      // this one since the client may not be ready yet, so we must also send the one in
+      // response to ClientReady above.
+      _            <- postAsTransferable[F, FromServer](self, FromServer.ServerReady)
       _            <- Logger[F].debug("Ready sent!")
     } yield ()

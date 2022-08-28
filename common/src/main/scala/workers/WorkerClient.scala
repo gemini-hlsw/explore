@@ -29,16 +29,16 @@ class WorkerClient[F[_]: Concurrent: UUIDGen: Logger, R: Pickler] private (
     worker.streamResource
       .use(
         _.map(decodeFromTransferableEither[FromServer]).rethrow
-          .collectFirst { case FromServer.Ready =>
-            ()
+          .collectFirst { case FromServer.ServerReady =>
+            initLatch.complete(())
           }
-          .evalTap(_ => initLatch.complete(()))
+          .evalMap(identity)
           .compile
           .drain
       )
-      .handleErrorWith(t => Logger[F].error(t)("Error initializing worker client"))
       .start
-      .void
+      .void >>
+      worker.postTransferable(asTypedArray[FromClient](FromClient.ClientReady))
 
   /**
    * Make a request to the underlying worker and receive responses as a `Stream`.
