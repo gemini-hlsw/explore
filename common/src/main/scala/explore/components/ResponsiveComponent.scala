@@ -12,7 +12,7 @@ import react.common.Css
 import react.common.ReactFnPropsWithChildren
 import react.resizeDetector.hooks._
 
-final case class ResponsiveComponent(
+case class ResponsiveComponent(
   widthBreakpoints:  List[(Int, Css)],
   heightBreakpoints: List[(Int, Css)] = Nil,
   clazz:             Css = Css.Empty

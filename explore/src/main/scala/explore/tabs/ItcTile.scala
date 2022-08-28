@@ -3,8 +3,10 @@
 
 package explore.tabs
 
+import cats.syntax.all.*
 import explore.common.ObsQueries._
 import explore.components.Tile
+import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.itc.ItcGraphPanel
 import explore.model.ScienceMode
@@ -23,5 +25,6 @@ object ItcTile:
     Tile(
       ObsTabTilesIds.ItcId.id,
       s"ITC",
-      canMinimize = true
+      canMinimize = true,
+      bodyClass = ExploreStyles.ItcTileBody.some
     )(_ => ItcGraphPanel(scienceMode, spectroscopyRequirements, scienceData, itcExposureTime))

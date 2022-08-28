@@ -163,6 +163,8 @@ object ExploreStyles {
   val ItcPlotDescription: Css   = Css("itc-plot-description")
   val ItcPlotBody: Css          = Css("itc-plot-body")
   val ItcPlotControls: Css      = Css("itc-plot-controls")
+  val ItcPlotWrapper: Css       = Css("itc-plot-wrapper")
+  val ItcTileBody: Css          = Css("explore-itc-tile-body")
 
   val AladinContainerColumn: Css  = Css("aladin-container-column")
   val AladinContainerBody: Css    = Css("aladin-container-body")

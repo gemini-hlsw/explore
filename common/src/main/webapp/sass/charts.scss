@@ -129,16 +129,25 @@ See https://github.com/highcharts/highcharts/issues/13320 */
   }
 }
 
+.explore-itc-tile-body {
+  display: flex;
+}
+
 .itc-plot-section {
+  background-color: var(--plot-background-color);
+  color: var(--plot-text-color);
   display: grid;
+  width: 100%;
+  overflow: hidden;
+  min-height: 0;
   grid-template:
-    'description plot' 1fr
-    'description plot-controls' / minmax(min-content, 1fr) 3fr;
+    'description plot' minmax(0, 1fr) // minmax is required to properly shrink
+    'description plot-controls' / minmax(min-content, 1fr) minmax(0, 3fr);
 }
 
 .itc-plot-body {
   grid-area: plot;
-  align-self: stretch;
+  width: 100%;
   background-color: var(--plot-background-color);
 }
 

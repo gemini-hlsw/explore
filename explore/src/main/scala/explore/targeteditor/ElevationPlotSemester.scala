@@ -31,7 +31,7 @@ import lucuma.ui.reusability._
 import lucuma.ui.syntax.all.given
 import react.common.GenericComponentPAF2VdomNode
 import react.common.ReactFnProps
-import react.highcharts.Chart
+import react.highcharts.ResizingChart
 import react.resizeDetector.hooks._
 import spire.math.Bounded
 
@@ -213,7 +213,7 @@ object ElevationPlotSemester {
           )
 
         <.div(
-          Chart(options, c => chartOpt.setState(c.some))
+          ResizingChart(options, c => chartOpt.setState(c.some))
             .withKey(s"$props")
             .when(resize.height.isDefined)
         ).withRef(resize.ref)

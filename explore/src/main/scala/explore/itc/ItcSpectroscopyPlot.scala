@@ -25,7 +25,7 @@ import lucuma.core.util.Enumerated
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
-import react.highcharts.Chart
+import react.highcharts.ResizingChart
 import react.resizeDetector.hooks._
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.button.Button
@@ -125,7 +125,7 @@ object ItcSpectroscopyPlot {
               .setYAxis(0)
               .setData(
                 series.data
-                  .map(p => (p(0), p(1)): Chart.Data)
+                  .map(p => (p(0), p(1)): ResizingChart.Data)
                   .toJSArray
               )
               .setClassName(chartClassName)
@@ -195,27 +195,31 @@ object ItcSpectroscopyPlot {
         itcChartOptions
           .get(props.chartType)
           .map { opt =>
-            Chart(opt,
-                  onCreate = c =>
-                    c.showLoadingCB.when_(loading) *>
-                      props.error
-                        .map(e => c.showLoadingCB(e).unless_(loading))
-                        .orEmpty
+            ResizingChart(
+              opt,
+              onCreate = c =>
+                Callback(c.reflow()) *>
+                  c.showLoadingCB.when_(loading) *>
+                  props.error
+                    .map(e => c.showLoadingCB(e).unless_(loading))
+                    .orEmpty,
+              wrapperCss = ExploreStyles.ItcPlotWrapper
             )
               .withKey(s"$props-$resize")
               .when(resize.height.isDefined)
           }
           .getOrElse(
-            Chart(emptyChartOptions(height),
-                  onCreate = c =>
-                    c.showLoadingCB.when_(loading) *>
-                      props.error
-                        .map(e => c.showLoadingCB(e).unless_(loading))
-                        .orEmpty
+            ResizingChart(emptyChartOptions(height),
+                          onCreate = c =>
+                            c.showLoadingCB.when_(loading) *>
+                              props.error
+                                .map(e => c.showLoadingCB(e).unless_(loading))
+                                .orEmpty
             )
               .withKey(s"$props-$resize")
               .when(resize.height.isDefined)
           )
-      ).withRef(resize.ref)
+      )
+        .withRef(resize.ref)
     }
 }
