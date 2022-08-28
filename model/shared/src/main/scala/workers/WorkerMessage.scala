@@ -19,12 +19,13 @@ private type Pickled = Pickled.Type
 private object WorkerMessage:
   sealed trait FromClient
   object FromClient:
+    case object ClientReady                                 extends FromClient
     case class Start(id: WorkerProcessId, payload: Pickled) extends FromClient
     case class End(id: WorkerProcessId)                     extends FromClient
 
   sealed trait FromServer
   object FromServer:
-    case object Ready                                             extends FromServer
+    case object ServerReady                                       extends FromServer
     case class Data(id: WorkerProcessId, payload: Pickled)        extends FromServer
     case class Complete(id: WorkerProcessId)                      extends FromServer
     case class Error(id: WorkerProcessId, error: WorkerException) extends FromServer
@@ -33,13 +34,15 @@ private object WorkerMessage:
 
   private given Pickler[Pickled] = transformPickler(Pickled.apply)(_.value)
 
+  private given Pickler[FromClient.ClientReady.type] = generatePickler
+
   private given Pickler[FromClient.Start] = generatePickler
 
   private given Pickler[FromClient.End] = generatePickler
 
   given Pickler[FromClient] = generatePickler
 
-  private given Pickler[FromServer.Ready.type] = generatePickler
+  private given Pickler[FromServer.ServerReady.type] = generatePickler
 
   private given Pickler[FromServer.Data] = generatePickler
 
