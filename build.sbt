@@ -235,6 +235,7 @@ lazy val commonJsLibSettings = commonLibSettings ++ Seq(
       Http4sDom.value ++
       Log4Cats.value ++
       LucumaUI.value ++
+      ScalaJSDom.value ++
       ScalaJSReact.value ++
       In(Test)(
         ScalaJSReactTest.value

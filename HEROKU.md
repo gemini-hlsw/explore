@@ -6,7 +6,7 @@ Since the runtime application consists only of static files, we use https://gith
 
 Originally, we were running the build Heroku, which then served the output assets with said buildpack. (Description of this process is detailed below in case we resume it in the future).
 
-Currently, we are *not* performing builds in Heroku though. This is because Heroku always runs builds in a `performance-m` dyno, which provisions 2.5Gb of memory, which is not enough in our case. We are building in GitHub actions instead (which provide 7Gb of memory) and then deploying the result to Heroku (all this is in `heroku.yml`). This works, but we lose the ability to deploy review apps, at least with the press of a button in the Heroku pipeline.
+Currently, we are *not* performing builds in Heroku though. This is because Heroku always runs builds in a `performance-m` dyno, which provisions 2.5Gb of memory, which is not enough in our case. We are building in GitHub actions instead (which provide 7Gb of memory) and then deploying the result to Heroku (all this is in `ci.yml`). This works, but we lose the ability to deploy review apps, at least with the press of a button in the Heroku pipeline.
 
 In this setup, none of these Heroku configuration files mentioned below are being used: `/system.properties`, `/package.json`, `/static.json` (there's one being used in `/explore/.../resources/static`). In `app.json`, the `environments/test` section is used since we still run CI in Heroku, but the rest of the file is ignored.
 

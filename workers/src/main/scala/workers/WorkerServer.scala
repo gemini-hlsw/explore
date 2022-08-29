@@ -4,19 +4,19 @@
 package workers
 
 import boopickle.Pickler
+import cats.Monoid
+import cats.effect.Async
+import cats.effect.Fiber
 import cats.effect.IO
-import cats.effect.kernel.Async
-import cats.effect.kernel.Fiber
-import cats.effect.kernel.Ref
-import cats.effect.kernel.Resource
-import cats.effect.kernel.Sync
+import cats.effect.Ref
+import cats.effect.Resource
+import cats.effect.Sync
 import cats.effect.std.Dispatcher
 import cats.effect.std.Dispatcher.apply
-import cats.effect.syntax.all._
-import cats.effect.unsafe.implicits._
-import cats.kernel.Monoid
-import cats.syntax.all._
-import explore.model.boopickle.Boopickle._
+import cats.effect.syntax.all.*
+import cats.effect.unsafe.implicits.*
+import cats.syntax.all.*
+import explore.model.boopickle.Boopickle.*
 import log4cats.loglevel.LogLevelLogger
 import org.scalajs.dom
 import org.scalajs.dom.DedicatedWorkerGlobalScope
@@ -25,14 +25,14 @@ import typings.loglevel.mod.LogLevelDesc
 
 import scala.scalajs.js.annotation.JSExport
 
-import WorkerMessage._
+import WorkerMessage.*
 
 /**
  * Implements the server side of a simple client/server protocol that provides a somewhat more
  * functional/effecful way of communicating with workers.
  */
 trait WorkerServer[F[_]: Async, T: Pickler](using Monoid[F[Unit]]):
-  val run: F[Unit] =
+  protected val run: F[Unit] =
     (for {
       dispatcher      <- Dispatcher[F]
       given Logger[F] <- Resource.eval(setupLogger)
@@ -43,7 +43,7 @@ trait WorkerServer[F[_]: Async, T: Pickler](using Monoid[F[Unit]]):
      * Provide an interface to handlers with an incoming message and a method to send responses
      * (which can be invoked multiple times; the client will receive a `Stream` of responses).
      */
-  protected final case class Invocation(data: T, protected val respondRaw: Pickled => F[Unit]) {
+  protected case class Invocation(data: T, rawData: Pickled, respondRaw: Pickled => F[Unit]) {
     def respond[S: Pickler](value: S): F[Unit] = respondRaw(Pickled(asBytes(value)))
   }
 
@@ -52,7 +52,7 @@ trait WorkerServer[F[_]: Async, T: Pickler](using Monoid[F[Unit]]):
    */
   protected def handler: Logger[F] ?=> F[Invocation => F[Unit]]
 
-  private val F = summon[Sync[F]]
+  protected val F = summon[Sync[F]]
 
   protected def setupLogger: F[Logger[F]] = Sync[F].delay {
     LogLevelLogger.setLevel(LogLevelDesc.DEBUG)
@@ -80,6 +80,7 @@ trait WorkerServer[F[_]: Async, T: Pickler](using Monoid[F[Unit]]):
                       handlerFn(
                         Invocation(
                           data,
+                          payload,
                           pickled =>
                             postAsTransferable[F, FromServer](
                               self,
@@ -116,7 +117,7 @@ trait WorkerServer[F[_]: Async, T: Pickler](using Monoid[F[Unit]]):
   protected def runInternal(dispatcher: Dispatcher[F])(using Logger[F]): F[Unit] =
     for {
       self         <- F.delay(dom.DedicatedWorkerGlobalScope.self)
-      handlerFn    <- handler
+      handlerFn    <- handler(self)
       cancelTokens <- Ref[F].of(Map.empty[WorkerProcessId, F[Unit]])
       _            <- Logger[F].debug("Mounting")
       _            <- mount(self, handlerFn, cancelTokens)(dispatcher)
