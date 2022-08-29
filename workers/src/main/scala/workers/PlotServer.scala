@@ -32,7 +32,7 @@ import scala.scalajs.js.annotation.JSExport
 import scala.scalajs.js.annotation.JSExportTopLevel
 
 @JSExportTopLevel("PlotServer", moduleID = "exploreworkers")
-object PlotServer extends WorkerServer[IO, PlotMessage.Request] {
+object PlotServer extends CachingWorkerServer[IO, PlotMessage.Request]("explore-plots") {
 
   @JSExport
   def runWorker(): Unit = run.unsafeRunAndForget()

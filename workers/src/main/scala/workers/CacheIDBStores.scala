@@ -17,6 +17,7 @@ import lucuma.ags.GuideStarCandidate
 import scala.annotation.nowarn
 import scala.scalajs.js
 
+// TODO Try to make this a native class?
 @js.native
 @nowarn
 trait CacheEntry extends js.Object {
