@@ -115,14 +115,10 @@ object ITCGraphRequests {
                       significantFigures
                     ).assign
                   )
-                  // .void
-                  // .handleErrorWith(e => Logger[F].error(e)("Loading graoph"))
                   .flatMap { r =>
-                    // println("AHA")
+                    println("After cb(Right)")
                     val charts = r.spectroscopyGraphBeta.charts.map(_.toItcChart)
                     val ccds   = r.spectroscopyGraphBeta.ccds
-                    // println(ccds.toNel.isDefined)
-                    // println(charts.toNel.isDefined)
                     (ccds.toNel, charts.toNel)
                       .mapN(ItcChartResult.apply)
                       .map(callback)

@@ -55,16 +55,6 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
         .create
     )
 
-  extension [A](ioa: IO[A])
-    def myreplicateA_(n: Int): IO[Unit] = IO.println(s"Rep $n") *> {
-      if (n <= 0)
-        IO.unit
-      else
-        ioa.flatMap { _ =>
-          println(n); myreplicateA_(n - 1)
-        }
-    }
-
   protected val handler: Logger[IO] ?=> IO[Invocation => IO[Unit]] =
     for {
       matrix                             <- Deferred[IO, SpectroscopyModesMatrix]
@@ -108,21 +98,18 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
             ) =>
           Logger[IO].debug(
             s"ITC graph query $wavelength, $exposures x $exposureTime, $constraint, ${targets.length} targets, $mode"
-          ) *> {
-            (0 to 5).toList.traverse { n =>
-              // IO.println(s"req $n") *>
-              ITCGraphRequests
-                .queryItc[IO](
-                  wavelength,
-                  exposureTime,
-                  exposures,
-                  constraint,
-                  targets,
-                  mode,
-                  r => invocation.respond(r)
-                )
-            }.void
-          }
+          ) *>
+            ITCGraphRequests
+              .queryItc[IO](
+                wavelength,
+                exposureTime,
+                exposures,
+                constraint,
+                targets,
+                mode,
+                r => { println("callback"); invocation.respond(r) }
+              )
+              .replicateA(5).void
       }
     }
 }
