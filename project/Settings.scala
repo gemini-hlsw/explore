@@ -40,7 +40,7 @@ object Settings {
     val reactAladin           = "0.25.1"
     val refinedAlgebraVersion = "0.1.0"
     val scalaJsReact          = "2.1.1"
-    val webAppUtil            = "2.0.0-RC5"
+    val webAppUtil            = "2.0.0-RC7"
   }
 
   object Libraries {
