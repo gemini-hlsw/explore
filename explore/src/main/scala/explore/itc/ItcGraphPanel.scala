@@ -3,52 +3,53 @@
 
 package explore.itc
 
-import boopickle.DefaultBasic._
+import boopickle.DefaultBasic.*
 import cats.data.NonEmptyList
 import cats.data.OptionT
 import cats.effect.IO
 import cats.effect.std.UUIDGen
 import cats.syntax.all.*
 import crystal.Pot
-import crystal.react.hooks._
-import crystal.react.implicits._
+import crystal.react.hooks.*
+import crystal.react.implicits.*
 import eu.timepit.refined.*
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.UnderConstruction
-import explore.common.ObsQueries._
+import explore.common.ObsQueries.*
 import explore.components.WIP
 import explore.components.ui.ExploreStyles
 import explore.config.ExposureTimeModeType.FixedExposure
 import explore.events._
-import explore.implicits._
+import explore.implicits.*
 import explore.model.ScienceMode
 import explore.model.ScienceModeAdvanced
 import explore.model.ScienceModeBasic
 import explore.model.WorkerClients.*
-import explore.model.boopickle.Boopickle._
+import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.enums.ItcChartType
 import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.ItcChartResult
 import explore.model.itc.ItcSeries
 import explore.model.itc.OverridenExposureTime
-import explore.model.reusability._
+import explore.model.reusability.*
 import explore.model.reusability.given
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ExposureTimeMode
-import lucuma.ui.reusability._
+import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.given
-import queries.schemas.itc.implicits._
+import queries.schemas.itc.implicits.*
 import react.common.ReactFnProps
 
 import java.util.UUID
+import explore.model.itc.ItcTarget
 
 final case class ItcGraphPanel(
   scienceMode:              Option[ScienceMode],
@@ -135,7 +136,7 @@ object ItcGraphPanel {
   val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useState(Pot.pending[ItcChartResult])
+      .useState(Pot.pending[Map[ItcTarget, ItcChartResult]])
       // loading
       .useState(PlotLoading.Done)
       // Request ITC graph data
@@ -161,14 +162,16 @@ object ItcGraphPanel {
                 mode        <- instrumentRow
               yield loading.setState(PlotLoading.Loading).to[IO] *>
                 ItcClient[IO]
-                  .requestSingle(
+                  .request(
                     ItcMessage.GraphQuery(w, ex.time, exposures, constraints, t, mode)
                   )
-                  .flatMap(
-                    _.map(m =>
-                      charts.setStateAsync(Pot.Ready(m)) *>
-                        loading.setState(PlotLoading.Done).to[IO]
-                    ).orEmpty
+                  .use(
+                    _.evalMap(m =>
+                      charts.modStateAsync {
+                        case Pot.Ready(r) => Pot.Ready(r + (m.target -> m))
+                        case u            => Pot.Ready(Map(m.target -> m))
+                      } *> loading.setState(PlotLoading.Done).to[IO]
+                    ).compile.drain
                   )
             action.getOrElse(
               (charts
@@ -182,14 +185,27 @@ object ItcGraphPanel {
       .useStateView(ItcChartType.S2NChart)
       // show description
       .useStateView(PlotDetails.Shown)
-      .render { (props, results, loading, chartType, details) =>
+      // selected target
+      .useStateView(none[ItcTarget])
+      .useEffectWithDepsBy((props, _, _, _, _, _) =>
+        props.scienceData.foldMap(_.itcTargets).headOption
+      )((_, _, _, _, _, selected) => t => selected.set(t))
+      .render { (props, results, loading, chartType, details, selectedTarget) =>
         val error: Option[String] = results.value.fold(none, _.getMessage.some, _ => none)
+
+        val selectedResult: Option[ItcChartResult] =
+          selectedTarget.get.flatMap(t => results.value.toOption.flatMap(_.get(t)))
+
         <.div(
           ExploreStyles.ItcPlotSection,
           ExploreStyles.ItcPlotDetailsHidden.unless(details.when(_.value)),
-          ItcSpectroscopyPlotDescription(props.chartExposureTime, results.value.map(_.ccds)),
+          ItcSpectroscopyPlotDescription(selectedTarget,
+                                         props.scienceData.foldMap(_.itcTargets),
+                                         props.chartExposureTime,
+                                         selectedResult.map(_.ccds)
+          ),
           ItcSpectroscopyPlot(loading.value,
-                              results.value.map(_.charts),
+                              selectedResult.map(_.charts),
                               error,
                               chartType.get,
                               details.get

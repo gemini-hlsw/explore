@@ -11,6 +11,7 @@ import lucuma.core.enums.Band
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.Wavelength
 import lucuma.core.model.SourceProfile
+import eu.timepit.refined.types.string.NonEmptyString
 
 case class ItcTarget(
   name:    NonEmptyString,

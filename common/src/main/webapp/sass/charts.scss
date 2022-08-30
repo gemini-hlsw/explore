@@ -142,7 +142,7 @@ See https://github.com/highcharts/highcharts/issues/13320 */
   min-height: 0;
   grid-template:
     'description plot' minmax(0, 1fr) // minmax is required to properly shrink
-    'description plot-controls' / minmax(min-content, 1fr) minmax(0, 3fr);
+    'description plot-controls' / minmax(min-content, 2fr) minmax(0, 5fr);
 }
 
 .itc-plot-body {
@@ -162,6 +162,18 @@ See https://github.com/highcharts/highcharts/issues/13320 */
   justify-content: space-between;
 }
 
+$description-column-count: 2;
+
+@mixin first-row {
+  &:nth-child(-n+#{$description-column-count}) {
+    @content;
+  }
+}
+
+.itc-plot-description-first-test-row {
+  padding-top: 2em;
+}
+
 .itc-plot-description {
   grid-area: description;
   display: grid;
@@ -170,21 +182,23 @@ See https://github.com/highcharts/highcharts/issues/13320 */
   grid-template-columns: minmax(100px, 1fr) 1fr;
   background-color: var(--tile-background);
   align-content: start;
+  align-items: baseline;
 
+  .text,
+  span,
   label {
     font-size: smaller;
-    font-weight: bold;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
+  label {
+    font-weight: bold;
+  }
+
   span {
-    font-size: smaller;
     font-weight: lighter;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
   }
 }
 
