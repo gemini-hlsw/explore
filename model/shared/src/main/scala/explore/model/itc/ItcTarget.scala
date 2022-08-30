@@ -5,12 +5,12 @@ package explore.model.itc
 
 import cats.Hash
 import coulomb.syntax.*
+import eu.timepit.refined.types.string.NonEmptyString
+import explore.model.itc.math.*
 import lucuma.core.enums.Band
 import lucuma.core.math.RadialVelocity
-import lucuma.core.model.SourceProfile
-import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.math.Wavelength
-import explore.model.itc.math.*
+import lucuma.core.model.SourceProfile
 
 case class ItcTarget(
   name:    NonEmptyString,
