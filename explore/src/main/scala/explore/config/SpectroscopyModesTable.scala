@@ -84,8 +84,14 @@ final case class SpectroscopyModesTable(
   baseTracking:             Option[SiderealTracking],
   matrix:                   SpectroscopyModesMatrix,
   onSelect:                 Callback
-)(implicit val ctx:         AppContextIO)
-    extends ReactFnProps[SpectroscopyModesTable](SpectroscopyModesTable.component)
+)(using val ctx:            AppContextIO)
+    extends ReactFnProps[SpectroscopyModesTable](SpectroscopyModesTable.component) {
+  val brightestTarget: Option[ItcTarget] =
+    spectroscopyRequirements.wavelength.flatMap(brightestAt)
+
+  def brightestAt(wv: Wavelength): Option[ItcTarget] =
+    targets.flatMap(_.minByOption(_.brightnessNearestTo(wv).map(_._2)))
+}
 
 object SpectroscopyModesTable {
   type Props = SpectroscopyModesTable
@@ -215,7 +221,7 @@ object SpectroscopyModesTable {
     cw:          Option[Wavelength],
     sn:          Option[PosBigDecimal],
     constraints: ConstraintSet,
-    target:      Option[List[ItcTarget]]
+    target:      Option[ItcTarget]
   ): SortByFn[SpectroscopyModeRow] =
     (
       rowA: UseTableRowProps[SpectroscopyModeRow],
@@ -245,7 +251,7 @@ object SpectroscopyModesTable {
     fpu:         Option[FocalPlane],
     sn:          Option[PosBigDecimal],
     constraints: ConstraintSet,
-    target:      Option[List[ItcTarget]],
+    target:      Option[ItcTarget],
     itc:         ItcResultsCache,
     progress:    Option[Progress]
   ) =
@@ -399,7 +405,7 @@ object SpectroscopyModesTable {
       .useMemoBy { (props, rows, itc, _) => // Calculate the common errors
         (props.spectroscopyRequirements.wavelength,
          props.spectroscopyRequirements.signalToNoise,
-         props.targets,
+         props.brightestTarget,
          props.constraints,
          rows,
          itc
@@ -423,7 +429,7 @@ object SpectroscopyModesTable {
         (props.spectroscopyRequirements.wavelength,
          props.spectroscopyRequirements.focalPlane,
          props.spectroscopyRequirements.signalToNoise,
-         props.targets,
+         props.brightestTarget,
          props.constraints,
          itc,
          itcProgress
@@ -449,23 +455,22 @@ object SpectroscopyModesTable {
       // atTop
       .useState(false)
       // Recalculate ITC values if the wv or sn change or if the rows get modified
-      // .useEffectWithDepsBy((props, _, _, _, _, _, _, _, _, _, _, range, _) =>
       .useStreamResourceBy((props, _, _, _, _, _, _, _, _, range, _) =>
         (
           props.spectroscopyRequirements.wavelength,
           props.spectroscopyRequirements.signalToNoise,
           props.constraints,
-          props.targets,
+          props.brightestTarget,
           range
         )
       ) {
         (props, _, itcResults, itcProgress, _, _, _, ti, _, range, _) =>
-          (wavelength, signalToNoise, constraints, targets, range) =>
-            given AppContextIO = props.ctx
+          (wavelength, signalToNoise, constraints, brightestTarget, range) =>
+            import props.given
 
             val sortedRows = ti.value.preSortedRows.map(_.original).toList
 
-            (wavelength, signalToNoise, targets.flatMap(NonEmptyList.fromList))
+            (wavelength, signalToNoise, brightestTarget)
               .mapN { (w, sn, t) =>
                 // Discard modes already in the cache
                 val modes =
@@ -555,14 +560,27 @@ object SpectroscopyModesTable {
               Label(clazz = ExploreStyles.WarningLabel, size = sizes.Small)("Missing Target Info")
           }
 
+          val selectedTarget =
+            for
+              w <- props.spectroscopyRequirements.wavelength
+              t <- props.brightestTarget
+              if props.targets.exists(_.length > 1)
+              if errLabel.isEmpty
+            yield Label(size = sizes.Small, clazz = ExploreStyles.ModesTableTarget)(
+              s"on ${t.name.value}"
+            ).some
+
           React.Fragment(
             <.div(ExploreStyles.ModesTableTitle)(
               <.label(
+                ExploreStyles.ModesTableCount,
                 s"${rows.length} matching configurations",
                 HelpIcon("configuration/table.md".refined)
               ),
               <.div(
-                errLabel.toTagMod
+                ExploreStyles.ModesTableInfo,
+                errLabel.toTagMod,
+                selectedTarget
               )
             ),
             <.div(ExploreStyles.ExploreTable, ExploreStyles.ModesTable)(

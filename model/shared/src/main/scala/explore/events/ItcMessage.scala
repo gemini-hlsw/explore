@@ -50,7 +50,7 @@ object ItcMessage extends ItcPicklers {
     wavelength:    Wavelength,
     signalToNoise: PosBigDecimal,
     constraints:   ConstraintSet,
-    targets:       NonEmptyList[ItcTarget],
+    targets:       ItcTarget,
     modes:         List[SpectroscopyModeRow]
   ) extends Request {
     type ResponseType = Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]
