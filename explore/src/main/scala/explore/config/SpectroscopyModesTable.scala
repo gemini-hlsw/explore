@@ -57,11 +57,11 @@ import lucuma.utils._
 import react.circularprogressbar.CircularProgressbar
 import react.common.Css
 import react.common.ReactFnProps
+import react.floatingui.*
 import react.semanticui._
 import react.semanticui.collections.table._
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.label.Label
-import react.semanticui.modules.popup.Popup
 import react.virtuoso._
 import react.virtuoso.raw.ListRange
 import reactST.reactTable._
@@ -198,22 +198,33 @@ object SpectroscopyModesTable {
     val content: TagMod = c match {
       case Left(nel)                        =>
         if (nel.exists(_ == ItcQueryProblems.UnsupportedMode))
-          Popup(content = "Mode not supported", trigger = Icons.Ban.color("red"))
+          Tooltip(tooltip = "Mode not supported",
+                  placement = Placement.RightStart,
+                  trigger = <.span(Icons.Ban.color("red"))
+          )
         else {
           val content = nel.collect {
-            case ItcQueryProblems.MissingSignalToNoise => "Set S/N"
-            case ItcQueryProblems.MissingWavelength    => "Set Wavelength"
-            case ItcQueryProblems.MissingTargetInfo    => "Missing target info"
-            case ItcQueryProblems.GenericError(e)      => e
-          }
-          Popup(content = content.mkString_(", "), trigger = Icons.TriangleSolid)
+            case ItcQueryProblems.MissingSignalToNoise => <.span("Set S/N")
+            case ItcQueryProblems.MissingWavelength    => <.span("Set Wavelength")
+            case ItcQueryProblems.MissingTargetInfo    => <.span("Missing target info")
+            case ItcQueryProblems.GenericError(e)      => e.split("\\.").mkTagMod(<.br)
+          }.toList
+
+          Tooltip(tooltip = <.div(content.mkTagMod(<.span)),
+                  placement = Placement.RightEnd,
+                  trigger = <.span(Icons.TriangleSolid)
+          )
         }
       case Right(r: ItcResult.Result)       =>
-        formatDuration(r.duration.toSeconds)
+        Tooltip(
+          trigger = <.span(formatDuration(r.duration.toSeconds)),
+          placement = Placement.RightStart,
+          tooltip = s"${r.exposures} × ${formatDuration(r.exposureTime.toSeconds)}"
+        )
       case Right(ItcResult.Pending)         =>
         Icons.Spinner.spin(true)
       case Right(ItcResult.SourceTooBright) =>
-        Popup(content = "Source too bright", trigger = Icons.SunBright.color("yellow"))
+        Tooltip(tooltip = "Source too bright", trigger = <.span(Icons.SunBright.color("yellow")))
     }
     <.div(ExploreStyles.ITCCell, content)
 

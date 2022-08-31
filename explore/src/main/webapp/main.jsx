@@ -1,6 +1,7 @@
 import "/common/theme/semantic.less";
 import "/common/less/style.less";
 import "/common/sass/visualization.scss";
+import "/common/sass/tooltips.scss";
 import "/common/less/vendor/aladin.less";
 import "/common/sass/charts.scss";
 import "/common/sass/datepicker.scss";

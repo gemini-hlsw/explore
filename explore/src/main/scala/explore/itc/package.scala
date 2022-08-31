@@ -10,21 +10,22 @@ import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.utils.NewType
 import react.fa.IconSize
-import react.semanticui.modules.popup.Popup
+import react.floatingui.Tooltip
 
 import java.time.Duration
 
 // Icon to indicate a field is required to do ITC calculations
 def requiredForITC: TagMod =
-  Popup(
+  Tooltip(
     trigger = <.span(
       ^.cls := "fa-layers fa-fw",
       Icons.StarExclamation
         .clazz(ExploreStyles.WarningIcon)
         .size(IconSize.X1),
       <.span(^.cls := "fa-layers-text fa-inverse", "ITC")
-    )
-  )("Required for ITC")
+    ),
+    tooltip = "Required for ITC"
+  )
 
 opaque type PlotLoading = Boolean
 

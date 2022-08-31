@@ -26,16 +26,16 @@ import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
+import react.floatingui.*
 import react.semanticui.collections.form.FormDropdown
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.modules.dropdown.Dropdown
-import react.semanticui.modules.popup.Popup
 import react.semanticui.shorthand._
 import react.semanticui.sizes._
 import react.semanticui.views.card._
 
-final case class ObsBadge(
+case class ObsBadge(
   obs:               ObsSummary, // The layout will depend on the mixins of the ObsSummary.
   selected:          Boolean = false,
   setStatusCB:       Option[ObsStatus => Callback] = none,
@@ -49,7 +49,7 @@ object ObsBadge {
 
   // TODO Make this a component similar to the one in the docs.
   private def renderEnumProgress[A: Enumerated](value: A): VdomNode = {
-    val all = implicitly[Enumerated[A]].all
+    val all = summon[Enumerated[A]].all
     <.progress(^.width := "100%", ^.max := all.length - 1, ^.value := all.indexOf(value))
   }
 
@@ -135,20 +135,22 @@ object ObsBadge {
                   ReactFragment(obs.id.toString)
               },
               props.setActiveStatusCB.map(setActiveStatus =>
-                Popup(
-                  clazz = ExploreStyles.Compact,
-                  content = obs.activeStatus match {
+                Tooltip(
+                  placement = Placement.TopEnd,
+                  tooltip = obs.activeStatus match
                     case ObsActiveStatus.Active   => "Observation is active"
                     case ObsActiveStatus.Inactive => "Observation is not active"
-                  },
-                  trigger = Checkbox(
-                    toggle = true,
-                    checked = obs.activeStatus.toBoolean,
-                    onClickE = (e: ReactEvent, _: Checkbox.CheckboxProps) =>
-                      e.preventDefaultCB >> e.stopPropagationCB >> setActiveStatus(
-                        ObsActiveStatus.FromBoolean.get(!obs.activeStatus.toBoolean)
-                      ),
-                    clazz = ExploreStyles.ObsActiveStatusToggle
+                  ,
+                  trigger = <.span(
+                    Checkbox(
+                      toggle = true,
+                      checked = obs.activeStatus.toBoolean,
+                      onClickE = (e: ReactEvent, _: Checkbox.CheckboxProps) =>
+                        e.preventDefaultCB >> e.stopPropagationCB >> setActiveStatus(
+                          ObsActiveStatus.FromBoolean.get(!obs.activeStatus.toBoolean)
+                        ),
+                      clazz = ExploreStyles.ObsActiveStatusToggle
+                    )
                   )
                 )
               )

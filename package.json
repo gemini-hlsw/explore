@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@cquiroz/aladin-lite": "0.7.6",
+    "@floating-ui/react-dom-interactions": "^0.9.3",
     "@fortawesome/fontawesome-pro": "^6.1.2",
     "@fortawesome/fontawesome-svg-core": "^6.1.2",
     "@fortawesome/pro-duotone-svg-icons": "^6.1.2",
