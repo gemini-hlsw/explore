@@ -5,10 +5,12 @@ package explore.itc
 
 import cats.data.NonEmptyList
 import cats.syntax.all.*
+import crystal.react.View
 import eu.timepit.refined.types.numeric.NonNegInt
 import explore.components.ui.ExploreStyles
 import explore.model.itc.ItcCcd
 import explore.model.itc.ItcChartExposureTime
+import explore.model.itc.ItcTarget
 import explore.model.itc.OverridenExposureTime
 import explore.model.itc.math.*
 import explore.syntax.ui.*
@@ -19,16 +21,14 @@ import lucuma.core.model.NonNegDuration
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
-import react.semanticui.collections.form.Form
-import react.semanticui.sizes._
-import explore.model.itc.ItcTarget
 import react.semanticui.addons.select.Select
 import react.semanticui.addons.select.Select.SelectItem
+import react.semanticui.collections.form.Form
+import react.semanticui.modules.dropdown.Dropdown.DropdownProps
+import react.semanticui.sizes._
 import react.semanticui.sizes.*
-import crystal.react.View
 
 import scala.scalajs.js.JSConverters._
-import react.semanticui.modules.dropdown.Dropdown.DropdownProps
 case class ItcSpectroscopyPlotDescription(
   selectedTarget: View[Option[ItcTarget]],
   targets:        List[ItcTarget],
