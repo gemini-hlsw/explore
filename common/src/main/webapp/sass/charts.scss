@@ -146,6 +146,7 @@ See https://github.com/highcharts/highcharts/issues/13320 */
 }
 
 .itc-plot-body {
+  position: relative;
   grid-area: plot;
   width: 100%;
   background-color: var(--plot-background-color);
@@ -223,6 +224,14 @@ $description-column-count: 2;
   --itc-plot-lightgreen: hsl(98deg 40.6% 68.8%);
   --itc-plot-red: hsl(359deg 79.5% 49.8%);
   --itc-plot-lightred: hsl(339deg 79.5% 69.8%);
+
+  .highcharts-title {
+    font-size: 14px;
+  }
+
+  .highcharts-subtitle {
+    font-size: 10px;
+  }
 
   .highcharts-legend-item {
     font-size: 10px;

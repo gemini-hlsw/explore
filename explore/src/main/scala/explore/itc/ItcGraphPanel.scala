@@ -209,11 +209,13 @@ object ItcGraphPanel {
                                          props.chartExposureTime,
                                          selectedResult.map(_.ccds)
           ),
-          ItcSpectroscopyPlot(loading.value,
-                              selectedResult.map(_.charts),
-                              error,
-                              chartType.get,
-                              details.get
+          ItcSpectroscopyPlot(
+            selectedResult.map(_.charts),
+            error,
+            chartType.get,
+            selectedTarget.get.map(_.name.value),
+            loading.value,
+            details.get
           ),
           ItcPlotControl(chartType, details)
         )
