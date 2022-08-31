@@ -15,7 +15,8 @@ import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.model.Constants
 import explore.model.Progress
-import explore.model.itc._
+import explore.model.itc.*
+import explore.model.itc.math.*
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.SpectroscopyModeRow
@@ -48,62 +49,59 @@ object ITCRequests {
     wavelength:    Wavelength,
     signalToNoise: PosBigDecimal,
     constraints:   ConstraintSet,
-    targets:       NonEmptyList[ItcTarget],
+    targets:       ItcTarget,
     modes:         List[SpectroscopyModeRow],
     callback:      Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]] => F[Unit]
   )(using Monoid[F[Unit]], TransactionalClient[F, ITC]): F[Unit] = {
-    def itcResults(r: List[ItcResults]): List[EitherNec[ItcQueryProblems, ItcResult]] =
+    def itcResults(r: ItcResults): List[EitherNec[ItcQueryProblems, ItcResult]] =
       // Convert to usable types
-      r.flatMap(x =>
-        x.spectroscopy.flatMap(_.results).map { r =>
-          r.itc match {
-            case ItcError(m)      => ItcQueryProblems.GenericError(m).leftNec
-            case ItcSuccess(e, t) => ItcResult.Result(t.microseconds.microseconds, e).rightNec
-          }
+      r.spectroscopy.flatMap(_.results).map { r =>
+        r.itc match {
+          case ItcError(m)      => ItcQueryProblems.GenericError(m).leftNec
+          case ItcSuccess(e, t) => ItcResult.Result(t.microseconds.microseconds, e).rightNec
         }
-      )
+      }
 
     def doRequest(
       params:        ItcRequestParams,
-      innerCallback: List[ItcResults] => F[Unit]
+      innerCallback: ItcResults => F[Unit]
     ): F[Unit] =
-      Logger[F].debug(
-        s"ITC: Request for mode ${params.mode} and target count: ${params.target.length}"
-      ) *>
-        params.target
-          .fproduct(t => selectedBrightness(t.profile, params.wavelength))
-          .collect { case (t, Some(brightness)) =>
-            SpectroscopyITCQuery
-              .query(
-                SpectroscopyModeInput(
-                  params.wavelength.toInput,
-                  params.signalToNoise,
-                  t.profile.toInput,
-                  brightness,
-                  t.rv.toITCInput,
-                  params.constraints,
-                  params.mode.toITCInput.map(_.assign).toList
-                ).assign
-              )
-          }
-          .parSequence
-          .flatTap { r =>
-            val prefix = s"ITC: Result for mode ${params.mode}:"
-            itcResults(r).traverse(_ match {
-              case Left(errors)                                     =>
-                Logger[F].error(s"$prefix ERRORS: $errors")
-              case Right(ItcResult.Result(exposureTime, exposures)) =>
-                Logger[F].debug(s"$prefix $exposures x ${exposureTime.toSeconds}")
-              case Right(other)                                     =>
-                Logger[F].debug(s"$prefix $other")
-            })
-          }
-          .flatMap(innerCallback)
-          .handleErrorWith(e =>
-            callback(
-              Map(params -> ItcQueryProblems.GenericError("Error calling ITC service").leftNec)
+      Logger[F]
+        .debug(
+          s"ITC: Request for mode ${params.mode} and target count: ${params.target.name.value}"
+        ) *> selectedBrightness(params.target.profile, params.wavelength)
+        .map { brightness =>
+          SpectroscopyITCQuery
+            .query(
+              SpectroscopyModeInput(
+                params.wavelength.toInput,
+                params.signalToNoise,
+                params.target.profile.toInput,
+                brightness,
+                params.target.rv.toITCInput,
+                params.constraints,
+                params.mode.toITCInput.map(_.assign).toList
+              ).assign
             )
-          )
+            .flatTap { r =>
+              val prefix = s"ITC: Result for mode ${params.mode}:"
+              itcResults(r).traverse(_ match {
+                case Left(errors)                                     =>
+                  Logger[F].error(s"$prefix ERRORS: $errors")
+                case Right(ItcResult.Result(exposureTime, exposures)) =>
+                  Logger[F].debug(s"$prefix $exposures x ${exposureTime.toSeconds}")
+                case Right(other)                                     =>
+                  Logger[F].debug(s"$prefix $other")
+              })
+            }
+            .flatMap(innerCallback)
+            .handleErrorWith(e =>
+              callback(
+                Map(params -> ItcQueryProblems.GenericError("Error calling ITC service").leftNec)
+              )
+            )
+        }
+        .getOrElse(Applicative[F].unit)
 
     val itcRowsParams = modes
       .map(_.instrument)

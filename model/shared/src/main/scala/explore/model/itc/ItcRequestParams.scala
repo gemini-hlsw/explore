@@ -12,15 +12,15 @@ import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.NonNegDuration
 
-final case class ItcRequestParams(
+case class ItcRequestParams(
   wavelength:    Wavelength,
   signalToNoise: PosBigDecimal,
   constraints:   ConstraintSet,
-  target:        NonEmptyList[ItcTarget],
+  target:        ItcTarget,
   mode:          InstrumentRow
 )
 
-final case class ItcGraphRequestParams(
+case class ItcGraphRequestParams(
   wavelength:   Wavelength,
   exposureTime: NonNegDuration,
   exposures:    PosInt,

@@ -2257,9 +2257,27 @@ html {
   padding-left: 10px;
 }
 
+.ui.label.explore-modes-table-target {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.explore-modes-table-count {
+  flex-shrink: 0;
+}
+
+.explore-modes-table-info {
+  flex-grow: 0;
+  overflow: hidden;
+  justify-self: flex-end;
+}
+
 .explore-modes-table-title {
   grid-area: table-header;
   display: flex;
+  gap: 0.5em;
   justify-content: space-between;
 }
 

@@ -30,10 +30,8 @@ final case class ItcResultsCache(
                       NonEmptyChain.of(ItcQueryProblems.UnsupportedMode)
     )
 
-  def targets(r: Option[List[ItcTarget]]): EitherNec[ItcQueryProblems, NonEmptyList[ItcTarget]] =
-    Either.fromOption(r.flatMap(NonEmptyList.fromList),
-                      NonEmptyChain.of(ItcQueryProblems.MissingTargetInfo)
-    )
+  def targets(r: Option[ItcTarget]): EitherNec[ItcQueryProblems, ItcTarget] =
+    Either.fromOption(r, NonEmptyChain.of(ItcQueryProblems.MissingTargetInfo))
 
   def update(
     newEntries: Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]
@@ -45,7 +43,7 @@ final case class ItcResultsCache(
     w:  Option[Wavelength],
     sn: Option[PosBigDecimal],
     c:  ConstraintSet,
-    t:  Option[List[ItcTarget]],
+    t:  Option[ItcTarget],
     r:  SpectroscopyModeRow
   ): EitherNec[ItcQueryProblems, ItcResult] =
     (wavelength(w), signalToNoise(sn), mode(r), targets(t)).parMapN { (w, sn, im, t) =>

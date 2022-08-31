@@ -3,69 +3,31 @@
 
 package explore.itc
 
-import cats._
-import cats.data._
-import cats.effect._
-import cats.effect.std.Semaphore
-import cats.syntax.all._
+import cats.*
+import cats.data.*
+import cats.effect.*
+import cats.syntax.all.*
 import clue.TransactionalClient
 import clue.data.syntax._
-import crystal.ViewF
 import eu.timepit.refined.numeric.Positive
-import eu.timepit.refined.types.numeric.NonNegInt
-import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
-import eu.timepit.refined.types.numeric.PosLong
-import explore.model.Constants
-import explore.model.Progress
-import explore.model.itc._
+import explore.model.itc.*
+import explore.model.itc.math.*
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
-import explore.modes.SpectroscopyModeRow
-import lucuma.core.enums.Band
-import lucuma.core.math.BrightnessUnits._
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
-import lucuma.core.model.ExposureTimeMode.FixedExposure
 import lucuma.core.model.NonNegDuration
-import lucuma.core.model.SourceProfile
-import lucuma.core.model.SpectralDefinition
 import lucuma.refined.*
-import org.scalajs.dom
 import org.typelevel.log4cats.Logger
-import queries.common.ITCQueriesGQL._
+import queries.common.ITCQueriesGQL.*
 import queries.schemas.ITC
 import queries.schemas.itc.implicits.*
 
 import java.util.UUID
 import scala.concurrent.duration._
 //
-// Find the magnitude closest to the requested wavelength
-def selectedBrightness(
-  sourceProfile: SourceProfile,
-  wavelength:    Wavelength
-): Option[Band] =
-  SourceProfile.integratedBandNormalizedSpectralDefinition
-    .andThen(
-      SpectralDefinition.BandNormalized.brightnesses[Integrated]
-    )
-    .getOption(sourceProfile)
-    .orElse {
-      SourceProfile.surfaceBandNormalizedSpectralDefinition
-        .andThen(
-          SpectralDefinition.BandNormalized.brightnesses[Surface]
-        )
-        .getOption(sourceProfile)
-    }
-    .map(_.keys)
-    .traverse(
-      _.minByOption((band: Band) =>
-        (band.center.toPicometers.value.value - wavelength.toPicometers.value.value).abs
-      )
-    )
-    .collect { case Some(b) => b }
-
 object ITCGraphRequests {
   private val significantFigures =
     SignificantFiguresInput(6.refined[Positive].assign,

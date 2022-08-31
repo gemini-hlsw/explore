@@ -95,47 +95,6 @@ case class ItcChart(
 
 case class ItcChartResult(ccds: NonEmptyList[ItcCcd], charts: NonEmptyList[ItcChart])
 
-object math:
-  extension (ccds: NonEmptyList[ItcCcd])
-    def maxPeakPixelFlux: Int    = ccds.maximumBy(_.peakPixelFlux).peakPixelFlux.toInt
-    def maxSingleSNRatio: Double = ccds.maximumBy(_.singleSNRatio).singleSNRatio
-    def maxTotalSNRatio: Double  = ccds.maximumBy(_.totalSNRatio).totalSNRatio
-    def maxADU: Int              = ccds.maximumBy(_.adu).adu
-
-  def roundToSignificantFigures(num: Double, n: Int): Double =
-    if num == 0 then 0
-    else
-      val d     = ceil(log10(abs(num)))
-      val power = n - d.toInt
-
-      val magnitude = pow(10, power)
-      val shifted   = round(num * magnitude)
-      shifted / magnitude
-
-  /**
-   * Returns a "nice" number approximately equal to range Rounds the number if round = true Takes
-   * the ceiling if round = false.
-   */
-  def niceNum(range: Double, round: Boolean): Double =
-    val exponent = floor(log10(range))
-    val fraction = range / pow(10, exponent)
-
-    val niceFraction =
-      if round then
-        fraction match
-          case f if f < 1.5 => 1
-          case f if f < 3   => 2
-          case f if f < 7   => 5
-          case _            => 10
-      else
-        fraction match
-          case f if f <= 1 => 1
-          case f if f <= 2 => 2
-          case f if f <= 5 => 5
-          case _           => 10
-
-    niceFraction * pow(10, exponent)
-
 object remote:
   case class XAxis(start: Double, end: Double, count: Int) derives Decoder:
     val step = (end - start) / (count - 1)

@@ -51,7 +51,7 @@ object ItcSpectroscopyPlot {
   def chartOptions(chart: ItcChart, loading: PlotLoading, height: Double) = {
     val yAxis            = chart.series.foldLeft(YAxis.Empty)(_ ∪ _.yAxis)
     val title            = chart.chartType match
-      case ItcChartType.SignalChart => "e⁻ per exposure per spectral pixel"
+      case ItcChartType.SignalChart => "𝐞⁻ per exposure per spectral pixel"
       case ItcChartType.S2NChart    => "S/N per spectral pixel"
     val (min, max, tick) = yAxis.ticks(10)
     val yAxes            = YAxisOptions()
@@ -74,9 +74,10 @@ object ItcSpectroscopyPlot {
 
     val tooltipFormatter: TooltipFormatterCallbackFunction =
       (ctx: TooltipFormatterContextObject, t: Tooltip) =>
-        val x = rounded(ctx.x)
-        val y = rounded(ctx.y)
-        s"""<strong>$x nm</strong><br/><span class="$chartClassName highcharts-color-${ctx.colorIndex.toInt}">●</span> ${ctx.series.name}: <strong>$y</strong>"""
+        val x        = rounded(ctx.x)
+        val y        = rounded(ctx.y)
+        val measUnit = if (chart.chartType === ItcChartType.SignalChart) " 𝐞⁻" else ""
+        s"""<strong>$x nm</strong><br/><span class="$chartClassName highcharts-color-${ctx.colorIndex.toInt}">●</span> ${ctx.series.name}: <strong>$y$measUnit</strong>"""
 
     Options()
       .setChart(

@@ -209,7 +209,9 @@ object implicits {
     // From the list of targets selects the ones relevant for ITC
     def itcTargets: List[ItcTarget] = s.targets.asterism
       .map { case TargetWithId(_, target) =>
-        targetRV.getOption(target).map(r => ItcTarget(r, Target.sourceProfile.get(target)))
+        targetRV
+          .getOption(target)
+          .map(r => ItcTarget(target.name, r, Target.sourceProfile.get(target)))
       }
       .flatten
       .hashDistinct
