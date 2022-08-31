@@ -4,6 +4,7 @@
 package explore.model.itc
 
 import cats.Hash
+import cats.syntax.all.*
 import coulomb.syntax.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.itc.math.*
@@ -34,6 +35,10 @@ object ItcTarget:
         }
         .map((b, v) => (b, v.value))
       integrated.orElse(surface)
+
+  extension (targets: List[ItcTarget])
+    def brightestAt(wv: Wavelength): Option[ItcTarget] =
+      targets.minByOption(_.brightnessNearestTo(wv).map(_._2))
 
   // We may consider adjusting this to consider small variations of RV identical for the
   // purpose of doing ITC calculations

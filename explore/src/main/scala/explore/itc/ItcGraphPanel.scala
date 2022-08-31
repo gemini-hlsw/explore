@@ -57,7 +57,7 @@ final case class ItcGraphPanel(
   scienceData:              Option[ScienceData],
   exposure:                 Option[ItcChartExposureTime]
 )(using val ctx:            AppContextIO)
-    extends ReactFnProps[ItcGraphPanel](ItcGraphPanel.component) {
+    extends ReactFnProps(ItcGraphPanel.component) {
   def wavelength: Option[Wavelength] = scienceMode match
     case Some(ScienceMode.GmosNorthLongSlit(_, adv)) =>
       adv.overrideWavelength.orElse(spectroscopyRequirements.flatMap(_.wavelength))
@@ -131,9 +131,9 @@ final case class ItcGraphPanel(
 }
 
 object ItcGraphPanel {
-  type Props = ItcGraphPanel
+  private type Props = ItcGraphPanel
 
-  val component =
+  private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useState(Pot.pending[Map[ItcTarget, ItcChartResult]])
@@ -188,7 +188,12 @@ object ItcGraphPanel {
       // selected target
       .useStateView(none[ItcTarget])
       .useEffectWithDepsBy((props, _, _, _, _, _) =>
-        props.scienceData.foldMap(_.itcTargets).headOption
+        for
+          w <- props.wavelength
+          s <- props.scienceData
+          t  = s.itcTargets
+          b <- t.brightestAt(w)
+        yield b
       )((_, _, _, _, _, selected) => t => selected.set(t))
       .render { (props, results, loading, chartType, details, selectedTarget) =>
         val error: Option[String] = results.value.fold(none, _.getMessage.some, _ => none)
