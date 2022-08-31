@@ -117,7 +117,7 @@ trait WorkerServer[F[_]: Async, T: Pickler](using Monoid[F[Unit]]):
   protected def runInternal(dispatcher: Dispatcher[F])(using Logger[F]): F[Unit] =
     for {
       self         <- F.delay(dom.DedicatedWorkerGlobalScope.self)
-      handlerFn    <- handler(self)
+      handlerFn    <- handler
       cancelTokens <- Ref[F].of(Map.empty[WorkerProcessId, F[Unit]])
       _            <- Logger[F].debug("Mounting")
       _            <- mount(self, handlerFn, cancelTokens)(dispatcher)
