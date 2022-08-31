@@ -26,12 +26,12 @@ import js.annotation._
  * Tooltip base on floating ui see: https://floating-ui.com/docs/react-dom
  */
 case class Tooltip(trigger: VdomTag, tooltip: VdomNode, placement: Placement = Placement.Top)
-    extends ReactFnProps[Tooltip](Tooltip.component)
+    extends ReactFnProps(Tooltip.component)
 
 object Tooltip {
-  type Props = Tooltip
+  private type Props = Tooltip
 
-  val component =
+  private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useState(false) // isOpen

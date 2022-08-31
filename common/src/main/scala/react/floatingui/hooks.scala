@@ -15,13 +15,13 @@ trait ElementProps extends js.Object
 type ElementPropsList = List[ElementProps]
 
 object HooksApiExt {
-  val floatingHook =
+  private val floatingHook =
     CustomHook[UseFloatingProps]
       .buildReturning { pos =>
         use.useFloating(pos)
       }
 
-  val interactionsHook =
+  private val interactionsHook =
     CustomHook[ElementPropsList]
       .buildReturning { ctx =>
         use.useInteractions(ctx.toJSArray)
