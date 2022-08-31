@@ -6,6 +6,7 @@ package explore.itc
 import cats.data.NonEmptyList
 import cats.syntax.all._
 import crystal.Pot
+import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.highcharts.*
 import explore.implicits._
@@ -22,6 +23,7 @@ import gpp.highcharts.mod._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.util.Enumerated
+import lucuma.refined.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
@@ -38,17 +40,24 @@ import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
 
 case class ItcSpectroscopyPlot(
-  loading:   PlotLoading,
-  charts:    Option[NonEmptyList[ItcChart]],
-  error:     Option[String],
-  chartType: ItcChartType,
-  details:   PlotDetails // Used only as part of the key
+  charts:     Option[NonEmptyList[ItcChart]],
+  error:      Option[String],
+  chartType:  ItcChartType,
+  targetName: Option[String],
+  loading:    PlotLoading,
+  details:    PlotDetails
 ) extends ReactFnProps[ItcSpectroscopyPlot](ItcSpectroscopyPlot.component)
 
 object ItcSpectroscopyPlot {
   type Props = ItcSpectroscopyPlot
 
-  def chartOptions(chart: ItcChart, loading: PlotLoading, height: Double) = {
+  def chartOptions(
+    chart:      ItcChart,
+    targetName: Option[String],
+    loading:    PlotLoading,
+    details:    PlotDetails,
+    height:     Double
+  ) = {
     val yAxis            = chart.series.foldLeft(YAxis.Empty)(_ ∪ _.yAxis)
     val title            = chart.chartType match
       case ItcChartType.SignalChart => "𝐞⁻ per exposure per spectral pixel"
@@ -79,6 +88,14 @@ object ItcSpectroscopyPlot {
         val measUnit = if (chart.chartType === ItcChartType.SignalChart) " 𝐞⁻" else ""
         s"""<strong>$x nm</strong><br/><span class="$chartClassName highcharts-color-${ctx.colorIndex.toInt}">●</span> ${ctx.series.name}: <strong>$y$measUnit</strong>"""
 
+    val chartTitle = chart.chartType match
+      case ItcChartType.SignalChart => "Signal in 1-pixel"
+      case ItcChartType.S2NChart    => "Signal / Noise"
+
+    val chartSubtitle = details match
+      case PlotDetails.Hidden => targetName.map(t => s"Target: $t")
+      case PlotDetails.Shown  => none
+
     Options()
       .setChart(
         ChartOptions()
@@ -96,7 +113,10 @@ object ItcSpectroscopyPlot {
           // Will be used in the future to persist the soom
           // .selectionCB(s => Callback.log(s"selection ${s.xAxis(0).min}"))
       )
-      .setTitle(TitleOptions().setTextUndefined)
+      .setTitle(TitleOptions().setText(chartTitle))
+      .setSubtitle(
+        chartSubtitle.fold(SubtitleOptions().setTextUndefined)(t => SubtitleOptions().setText(t))
+      )
       .setCredits(CreditsOptions().setEnabled(false))
       .setLegend(LegendOptions().setMargin(0))
       .setTooltip(TooltipOptions().setFormatter(tooltipFormatter).setClassName(chartClassName))
@@ -188,11 +208,17 @@ object ItcSpectroscopyPlot {
 
       val height          = resize.height.getOrElse(1).toDouble
       val itcChartOptions = series.map { chart =>
-        chart.chartType -> chartOptions(chart, props.loading, height)
+        chart.chartType -> chartOptions(chart,
+                                        props.targetName,
+                                        props.loading,
+                                        props.details,
+                                        height
+        )
       }.toMap
 
       <.div(
         ExploreStyles.ItcPlotBody,
+        HelpIcon("target/main/itc-spectroscopy-plot.md".refined, ExploreStyles.HelpIconFloating),
         itcChartOptions
           .get(props.chartType)
           .map { opt =>
