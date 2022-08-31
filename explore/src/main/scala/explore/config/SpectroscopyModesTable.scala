@@ -25,7 +25,7 @@ import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.events._
 import explore.implicits._
-import explore.itc._
+import explore.itc.*
 import explore.model.Progress
 import explore.model.ScienceMode
 import explore.model.ScienceModeAdvanced
@@ -33,9 +33,9 @@ import explore.model.ScienceModeBasic
 import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle._
 import explore.model.boopickle.ItcPicklers.given
-import explore.model.boopickle._
-import explore.model.itc._
-import explore.model.reusability._
+import explore.model.boopickle.*
+import explore.model.itc.*
+import explore.model.reusability.*
 import explore.modes._
 import explore.syntax.ui.*
 import explore.syntax.ui.given
@@ -87,10 +87,11 @@ final case class SpectroscopyModesTable(
 )(using val ctx:            AppContextIO)
     extends ReactFnProps[SpectroscopyModesTable](SpectroscopyModesTable.component) {
   val brightestTarget: Option[ItcTarget] =
-    spectroscopyRequirements.wavelength.flatMap(brightestAt)
-
-  def brightestAt(wv: Wavelength): Option[ItcTarget] =
-    targets.flatMap(_.minByOption(_.brightnessNearestTo(wv).map(_._2)))
+    for
+      w  <- spectroscopyRequirements.wavelength
+      tg <- targets
+      b  <- tg.brightestAt(w)
+    yield b
 }
 
 object SpectroscopyModesTable {

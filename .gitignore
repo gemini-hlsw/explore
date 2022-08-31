@@ -45,3 +45,4 @@ stats.html
 # Firebase
 .firebase/
 .direnv
+.jvmopts

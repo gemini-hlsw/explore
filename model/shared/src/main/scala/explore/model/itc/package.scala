@@ -93,7 +93,11 @@ case class ItcChart(
   series:    List[ItcSeries]
 )
 
-case class ItcChartResult(ccds: NonEmptyList[ItcCcd], charts: NonEmptyList[ItcChart])
+case class ItcChartResult(
+  target: ItcTarget,
+  ccds:   NonEmptyList[ItcCcd],
+  charts: NonEmptyList[ItcChart]
+)
 
 object remote:
   case class XAxis(start: Double, end: Double, count: Int) derives Decoder:

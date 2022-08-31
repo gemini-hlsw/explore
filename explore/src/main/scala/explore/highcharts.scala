@@ -12,8 +12,9 @@ import scala.scalajs.js.annotation._
 import scala.scalajs.js.annotation._
 
 extension (c: Chart_)
-  inline def showLoadingCB              = CallbackTo(c.showLoading())
-  inline def showLoadingCB(str: String) = CallbackTo(c.showLoading(str))
+  inline def showLoadingCB: Callback              = CallbackTo(c.showLoading())
+  inline def showLoadingCB(str: String): Callback = CallbackTo(c.showLoading(str))
+  inline def reflowCB: Callback                   = Callback(c.reflow())
 
 type ChartSelection = ChartSelectionContextObject
 

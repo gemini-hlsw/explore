@@ -39,7 +39,7 @@ import scala.scalajs.js.JSConverters._
 
 case class ItcSpectroscopyPlot(
   loading:   PlotLoading,
-  charts:    Pot[NonEmptyList[ItcChart]],
+  charts:    Option[NonEmptyList[ItcChart]],
   error:     Option[String],
   chartType: ItcChartType,
   details:   PlotDetails // Used only as part of the key
@@ -181,10 +181,10 @@ object ItcSpectroscopyPlot {
     .withHooks[Props]
     .useResizeDetector()
     .render { (props, resize) =>
-      val loading = props.charts.isPending || props.loading.boolValue
+      val loading = props.loading.boolValue
 
       val series: List[ItcChart] =
-        props.charts.toOption.filterNot(_ => loading).map(_.toList).orEmpty
+        props.charts.filterNot(_ => loading).foldMap(_.toList)
 
       val height          = resize.height.getOrElse(1).toDouble
       val itcChartOptions = series.map { chart =>
@@ -199,7 +199,7 @@ object ItcSpectroscopyPlot {
             ResizingChart(
               opt,
               onCreate = c =>
-                Callback(c.reflow()) *>
+                c.reflowCB *>
                   c.showLoadingCB.when_(loading) *>
                   props.error
                     .map(e => c.showLoadingCB(e).unless_(loading))
