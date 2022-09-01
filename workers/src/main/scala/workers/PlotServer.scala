@@ -58,11 +58,11 @@ object PlotServer extends WorkerServer[IO, PlotMessage.Request] {
 
   private val CacheVersion: Int = 1
 
+  private val CacheRetention: Duration = Duration.ofDays(30)
+
   private given Pickler[SkyCalcResults] = generatePickler
 
-  private final case class SemesterPlotCalc(semester: Semester, site: Site, cache: Cache[IO])(using
-    Logger[IO]
-  ) {
+  private final case class SemesterPlotCalc(semester: Semester, site: Site, cache: Cache[IO]) {
 
     def siderealVisibility(
       skyCalcSamples: Samples[SkyCalcResults]
@@ -117,12 +117,11 @@ object PlotServer extends WorkerServer[IO, PlotMessage.Request] {
   override protected val handler: Logger[IO] ?=> IO[Invocation => IO[Unit]] =
     for
       self  <- IO(dom.DedicatedWorkerGlobalScope.self)
-      cache <- Cache.withJsCache[IO](self.caches.toOption, "explore-plots")
-    // cache <- Cache.withIDB[IO](self.indexedDB.toOption, "explore-plots")
+      cache <- Cache.withIDB[IO](self.indexedDB.toOption, "explore-plots")
     yield invocation =>
       invocation.data match {
         case PlotMessage.RequestSemesterSidereal(semester, site, coords, dayRate) =>
-          Logger[IO].info("HELLO!") >>
+          (IO(Instant.now) >>= (now => cache.evict(now.minus(CacheRetention)).start)) >>
             SemesterPlotCalc(semester, site, cache)
               .siderealSamples(coords, dayRate)
               .evalMap { case (instant, visibilityDuration) =>
@@ -132,7 +131,6 @@ object PlotServer extends WorkerServer[IO, PlotMessage.Request] {
               }
               .compile
               .drain
-              .handleErrorWith(t => Logger[IO].error(t)("ERROR!!!"))
       }
 
 }
