@@ -39,6 +39,7 @@ object Settings {
     val pprint                = "0.7.3"
     val reactAladin           = "0.25.1"
     val refinedAlgebraVersion = "0.1.0"
+    val scalaJsDom            = "2.3.0"
     val scalaJsReact          = "2.1.1"
     val webAppUtil            = "2.0.0-RC7"
   }
@@ -306,6 +307,12 @@ object Settings {
 
     val RefinedAlgebra = Def.setting(
       Seq("edu.gemini" %%% "refined-algebra" % refinedAlgebraVersion)
+    )
+
+    val ScalaJSDom = Def.setting(
+      deps(
+        "org.scala-js" %%% "scalajs-dom"
+      )(scalaJsDom)
     )
 
     val ScalaJSReact = Def.setting(

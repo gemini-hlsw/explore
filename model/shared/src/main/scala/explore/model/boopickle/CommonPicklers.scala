@@ -27,6 +27,7 @@ import lucuma.core.math.Epoch
 import lucuma.core.math.HourAngle
 import lucuma.core.math.Offset
 import lucuma.core.math.Parallax
+import lucuma.core.math.Place
 import lucuma.core.math.ProperMotion
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.RightAscension
@@ -43,7 +44,9 @@ import org.http4s.Uri
 
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalDate
 import java.time.Year
+import java.time.ZoneId
 
 trait CommonPicklers {
   given picklerRefined[A: Pickler, B](using Validate[A, B]): Pickler[A Refined B] =
@@ -159,8 +162,13 @@ trait CommonPicklers {
 
   given Pickler[ConstraintSet] = generatePickler
 
+  given Pickler[LocalDate] =
+    transformPickler[LocalDate, (Int, Int, Int)]((year, month, dayOfMonth) =>
+      LocalDate.of(year, month, dayOfMonth)
+    )(d => (d.getYear, d.getMonthValue, d.getDayOfMonth))
+
   given Pickler[Instant] =
-    transformPickler[Instant, (Long, Long)]((epochSecond: Long, nanoOfSecond: Long) =>
+    transformPickler[Instant, (Long, Long)]((epochSecond, nanoOfSecond) =>
       Instant.ofEpochSecond(epochSecond, nanoOfSecond)
     )(i => (i.getEpochSecond, i.getNano))
 
@@ -173,10 +181,15 @@ trait CommonPicklers {
   given Pickler[Year] =
     transformPickler(Year.of)(_.getValue)
 
+  given Pickler[ZoneId] =
+    transformPickler(ZoneId.of)(_.getId)
+
   given Pickler[Uri] =
     transformPickler(Uri.unsafeFromString)(_.toString)
 
   given Pickler[Semester] = generatePickler
+
+  given Pickler[Place] = generatePickler
 }
 
 object CommonPicklers extends CommonPicklers
