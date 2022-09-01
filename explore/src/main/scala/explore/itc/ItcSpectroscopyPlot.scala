@@ -19,9 +19,9 @@ import explore.syntax.ui.*
 import explore.syntax.ui.given
 import explore.utils.*
 import gpp.highcharts.highchartsStrings.line
-import gpp.highcharts.mod._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import gpp.highcharts.mod.*
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.util.Enumerated
 import lucuma.refined.*
 import lucuma.ui.syntax.all.*
@@ -106,7 +106,7 @@ object ItcSpectroscopyPlot {
             ExploreStyles.ItcPlotChart |+|
               ExploreStyles.ItcPlotLoading.when_(loading.boolValue)
           )
-          .setZoomType(OptionsZoomTypeValue.xy)
+          .setZooming(ChartZoomingOptions().setType(OptionsTypeValue.xy))
           .setPanning(ChartPanningOptions().setEnabled(true))
           .setPanKey(OptionsPanKeyValue.shift)
           .setAnimation(false)
