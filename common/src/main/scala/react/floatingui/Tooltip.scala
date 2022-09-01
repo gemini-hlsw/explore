@@ -94,24 +94,24 @@ object Tooltip {
         val placementStyle: Map[String, String | Int] =
           Placement.fromString(floating.placement) match {
             case Some(Placement.Top) | Some(Placement.TopStart) | Some(Placement.TopEnd)          =>
-              Map("bottom"              -> arrowShift,
-                  "border-right-width"  -> arrowBorder,
-                  "border-bottom-width" -> arrowBorder
+              Map("bottom"            -> arrowShift,
+                  "borderRightWidth"  -> arrowBorder,
+                  "borderBottomWidth" -> arrowBorder
               )
             case Some(Placement.Bottom) | Some(Placement.BottomStart) | Some(Placement.BottomEnd) =>
-              Map("top"               -> arrowShift,
-                  "border-left-width" -> arrowBorder,
-                  "border-top-width"  -> arrowBorder
+              Map("top"             -> arrowShift,
+                  "borderLeftWidth" -> arrowBorder,
+                  "borderTopWidth"  -> arrowBorder
               )
             case Some(Placement.Left) | Some(Placement.LeftStart) | Some(Placement.LeftEnd)       =>
-              Map("right"              -> arrowShift,
-                  "border-right-width" -> arrowBorder,
-                  "border-top-width"   -> arrowBorder
+              Map("right"            -> arrowShift,
+                  "borderRightWidth" -> arrowBorder,
+                  "borderTopWidth"   -> arrowBorder
               )
             case Some(Placement.Right) | Some(Placement.RightStart) | Some(Placement.RightEnd)    =>
-              Map("left"                -> arrowShift,
-                  "border-left-width"   -> arrowBorder,
-                  "border-bottom-width" -> arrowBorder
+              Map("left"              -> arrowShift,
+                  "borderLeftWidth"   -> arrowBorder,
+                  "borderBottomWidth" -> arrowBorder
               )
             case _                                                                                => Map.empty
           }
