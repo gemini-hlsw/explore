@@ -5,6 +5,7 @@ package workers
 
 import boopickle.DefaultBasic.*
 import boopickle.Pickler
+import cats.Applicative
 import cats.effect.kernel.Async
 import cats.effect.kernel.Sync
 import cats.syntax.all.*
@@ -23,10 +24,10 @@ import org.scalajs.dom.{Cache => JsCache}
 
 import java.time.Instant
 import java.util.Base64
-import scala.scalajs.js.typedarray.Int8Array
 
 import scalajs.js
 import scalajs.js.JSConverters.*
+import scalajs.js.typedarray.Int8Array
 
 /**
  * Cacheable computation.
@@ -38,31 +39,35 @@ case class Cacheable[F[_], I, O](name: String, version: Int, invoke: I => F[O])
  */
 sealed trait Cache[F[_]]:
   def eval[I: Pickler, O: Pickler](computation: Cacheable[F, I, O]): I => F[O]
+  def evict(until:                              Instant): F[Unit]
 
 /**
  * `NoCache` is used when, for some reason, a cache could not be initialized.
  */
-case class NoCache[F[_]]() extends Cache[F]:
-  def eval[I: Pickler, O: Pickler](computation: Cacheable[F, I, O]): I => F[O] =
+case class NoCache[F[_]]()(using F: Applicative[F]) extends Cache[F]:
+  override def eval[I: Pickler, O: Pickler](computation: Cacheable[F, I, O]): I => F[O] =
     computation.invoke
+
+  override def evict(until: Instant): F[Unit] = F.unit
 
 /**
  * Cache backed up by an Indexed DB store.
  */
 case class IDBCache[F[_]](
-  cacheDB: IndexedDb.Database,
-  store:   ObjectStoreDef.Sync[Pickled, Pickled]
+  cacheDB:   IndexedDb.Database,
+  store:     ObjectStoreDef.Sync[Pickled, Pickled],
+  dbFactory: IDBFactory, // Only needed for low-level access for eviction
+  dbName:    String,     // Only needed for low-level access for eviction
+  dbVersion: Int         // Only needed for low-level access for eviction
 )(using
-  F:       Async[F]
+  F:         Async[F]
 ) extends Cache[F]:
   override def eval[I: Pickler, O: Pickler](computation: Cacheable[F, I, O]): I => F[O] = { input =>
     val pickledInput: Pickled = Pickled(asBytes((computation.name, computation.version, input)))
 
-    // F.delay(println(s"CACHED EVAL $input")) >>
     cacheDB
       .get(store)(pickledInput)
       .toF
-      // .flatTap(pickled => F.delay(println(pickled.fold("CACHE MISS")(_ => "CACHE HIT"))))
       .flatMap(
         _.fold(
           computation
@@ -70,8 +75,40 @@ case class IDBCache[F[_]](
             .flatTap(output => cacheDB.put(store)(pickledInput, Pickled(asBytes(output))).toF)
         )(pickledOutput => F.pure(fromBytes[O](pickledOutput.value)).rethrow)
       )
-    // .flatTap(o => F.delay(println(s"CACHED RESULT $o")))
   }
+
+  override def evict(until: Instant): F[Unit] =
+    F.async_ { cb =>
+      val dbReq = dbFactory.open(dbName, dbVersion)
+
+      dbReq.onerror = e => cb((new Exception(e.message)).asLeft)
+      dbReq.onsuccess = { e =>
+        val db = e.target.result
+
+        val transaction = db.transaction(js.Array(store.name), dom.IDBTransactionMode.readwrite)
+        val objectStore = transaction.objectStore(store.name)
+
+        val cursorReq = objectStore.openCursor() // Iterate through all entries
+
+        cursorReq.onerror = e => cb((new Exception(e.message)).asLeft)
+        cursorReq.onsuccess = { e =>
+          val cursor = e.target.result
+
+          if (cursor != null) {
+            val value     = cursor.value.asInstanceOf[js.Tuple3[js.Array[Byte], Int, Int]]
+            val timestamp = Instant.ofEpochSecond(value._2, value._3)
+
+            if (timestamp.isBefore(until))
+              objectStore.delete(cursor.key)
+
+            cursor.continue()
+          } else {
+            db.close()
+            cb(().asRight)
+          }
+        }
+      }
+    }
 
 /**
  * Cache backed up by a JS `Cache`.
@@ -85,7 +122,6 @@ case class JsCacheCache[F[_]: PromiseConverter](cache: JsCache)(using F: Sync[F]
 
     PromiseConverter[F]
       .convert(cache.`match`(stringInput))
-      // .flatTap(pickled => F.delay(println(pickled.fold("CACHE MISS")(_ => "CACHE HIT"))))
       .flatMap(
         _.fold(
           computation
@@ -102,6 +138,8 @@ case class JsCacheCache[F[_]: PromiseConverter](cache: JsCache)(using F: Sync[F]
         )
       )
   }
+
+  override def evict(until: Instant): F[Unit] = F.unit
 
 object Cache:
   def withIDB[F[_]: Async](dbFactory: Option[IDBFactory], dbName: String): F[Cache[F]] =
@@ -126,13 +164,13 @@ object Cache:
       )
 
       IndexedDb(factory)
-        .open(IndexedDb.DatabaseName(storeName), DBVersion)(
+        .open(IndexedDb.DatabaseName(dbName), DBVersion)(
           IndexedDb.OpenCallbacks(upgradeNeeded =
             _.createObjectStore(store, createdInDbVer = DBVersion)
           )
         )
         .toF
-        .map(db => IDBCache[F](db, store))
+        .map(db => IDBCache[F](db, store, factory, dbName, DBVersion))
     }
 
   def withJsCache[F[_]: Async: PromiseConverter](
