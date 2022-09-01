@@ -277,7 +277,7 @@ jobs:
           cat vars.css
 
       - name: Run linters in dark mode
-        uses: wearerequired/lint-action@v1.11.1
+        uses: wearerequired/lint-action@v2.1.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           stylelint: true
@@ -290,7 +290,7 @@ jobs:
           cat vars.css
 
       - name: Run linters in light mode
-        uses: wearerequired/lint-action@v1.11.1
+        uses: wearerequired/lint-action@v2.1.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           stylelint: true
