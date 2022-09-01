@@ -92,10 +92,6 @@ object ItcSpectroscopyPlot {
       case ItcChartType.SignalChart => "Signal in 1-pixel"
       case ItcChartType.S2NChart    => "Signal / Noise"
 
-    val chartSubtitle = details match
-      case PlotDetails.Hidden => targetName.map(t => s"Target: $t")
-      case PlotDetails.Shown  => none
-
     Options()
       .setChart(
         ChartOptions()
@@ -115,7 +111,7 @@ object ItcSpectroscopyPlot {
       )
       .setTitle(TitleOptions().setText(chartTitle))
       .setSubtitle(
-        chartSubtitle.fold(SubtitleOptions().setTextUndefined)(t => SubtitleOptions().setText(t))
+        targetName.fold(SubtitleOptions().setTextUndefined)(t => SubtitleOptions().setText(t))
       )
       .setCredits(CreditsOptions().setEnabled(false))
       .setLegend(LegendOptions().setMargin(0))

@@ -3,11 +3,7 @@
 
 package explore.itc
 
-import boopickle.DefaultBasic.*
-import cats.data.NonEmptyList
-import cats.data.OptionT
 import cats.effect.IO
-import cats.effect.std.UUIDGen
 import cats.syntax.all.*
 import crystal.Pot
 import crystal.react.View
@@ -15,59 +11,56 @@ import crystal.react.hooks.*
 import crystal.react.implicits.*
 import eu.timepit.refined.*
 import eu.timepit.refined.numeric.Positive
-import eu.timepit.refined.types.numeric.PosBigDecimal
-import explore.UnderConstruction
 import explore.common.ObsQueries.*
-import explore.components.WIP
 import explore.components.ui.ExploreStyles
-import explore.config.ExposureTimeModeType.FixedExposure
-import explore.events._
+import explore.events.*
 import explore.implicits.*
 import explore.model.ScienceMode
-import explore.model.ScienceModeAdvanced
-import explore.model.ScienceModeBasic
 import explore.model.WorkerClients.*
-import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.ItcPicklers.given
-import explore.model.enums.ItcChartType
 import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.ItcChartResult
-import explore.model.itc.ItcSeries
 import explore.model.itc.ItcTarget
-import explore.model.itc.OverridenExposureTime
+import explore.model.itc.math.*
 import explore.model.reusability.*
 import explore.model.reusability.given
-import explore.modes.GmosNorthSpectroscopyRow
-import explore.modes.GmosSouthSpectroscopyRow
-import explore.modes.InstrumentRow
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.math.Wavelength
-import lucuma.core.model.ConstraintSet
-import lucuma.core.model.ExposureTimeMode
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.given
 import queries.schemas.itc.implicits.*
 import react.common.ReactFnProps
+import react.semanticui.addons.select.Select
+import react.semanticui.addons.select.Select.SelectItem
+import react.semanticui.modules.dropdown.Dropdown.DropdownProps
 
-import java.util.UUID
+import scala.scalajs.js.JSConverters._
 
-case class ItcGraphPanel(
+case class ItcPanelTitle(
   scienceMode:              Option[ScienceMode],
   spectroscopyRequirements: Option[SpectroscopyRequirementsData],
   scienceData:              Option[ScienceData],
   exposure:                 Option[ItcChartExposureTime],
   selectedTarget:           View[Option[ItcTarget]]
 )(using val ctx:            AppContextIO)
-    extends ReactFnProps(ItcGraphPanel.component)
+    extends ReactFnProps(ItcPanelTitle.component)
     with ItcPanelProps(scienceMode, spectroscopyRequirements, scienceData, exposure)
 
-object ItcGraphPanel {
-  private type Props = ItcGraphPanel with ItcPanelProps
+object ItcPanelTitle:
+  private type Props = ItcPanelTitle with ItcPanelProps
 
   private val component =
     ScalaFnComponent
       .withHooks[Props]
+      .useEffectWithDepsBy { props =>
+        val r = for
+          w <- props.wavelength
+          s <- props.scienceData
+          t  = s.itcTargets
+          b <- t.brightestAt(w)
+        yield b
+        r.orElse(props.scienceData.flatMap(_.itcTargets.headOption))
+      }(props => t => props.selectedTarget.set(t))
       .useState(Pot.pending[Map[ItcTarget, ItcChartResult]])
       // loading
       .useState(PlotLoading.Done)
@@ -113,29 +106,40 @@ object ItcGraphPanel {
                 .to[IO]
             )
       }
-      // Default selected chart
-      .useStateView(ItcChartType.S2NChart)
-      // show description
-      .useStateView(PlotDetails.Shown)
-      .render { (props, results, loading, chartType, details) =>
-        val error: Option[String] = results.value.fold(none, _.getMessage.some, _ => none)
+      .render { (props, results, loading) =>
+        def newSelected(p: DropdownProps): Option[ItcTarget] =
+          props.targets.find(t => p.value.toOption.exists(_.toString === t.name.value))
 
         val selectedResult: Option[ItcChartResult] =
           props.selectedTarget.get.flatMap(t => results.value.toOption.flatMap(_.get(t)))
 
+        val selected = props.selectedTarget.get.map(_.name.value)
+
+        val itcTargets = props.itcTargets.foldMap(_.toList)
+        val ccds       = selectedResult.map(_._2)
+        val singleSN   = formatCcds(ccds, _.maxSingleSNRatio.toString)
+        val totalSN    = formatCcds(ccds, _.maxTotalSNRatio.toString)
+
         <.div(
-          ExploreStyles.ItcPlotSection,
-          ExploreStyles.ItcPlotDetailsHidden.unless(details.when(_.value)),
-          ItcSpectroscopyPlotDescription(props.chartExposureTime, selectedResult.map(_.ccds)),
-          ItcSpectroscopyPlot(
-            selectedResult.map(_.charts),
-            error,
-            chartType.get,
-            props.selectedTarget.get.map(_.name.value),
-            loading.value,
-            details.get
-          ),
-          ItcPlotControl(chartType, details)
+          ExploreStyles.ItcTileTitle,
+          <.label(s"Target:"),
+          Select(
+            clazz = ExploreStyles.ItcTileTargetSelector,
+            compact = true,
+            value = selected.orUndefined,
+            onChange = e => props.selectedTarget.set(newSelected(e)),
+            options = itcTargets.map(t =>
+              new SelectItem(text = t.name.value,
+                             value = t.name.value,
+                             selected = props.selectedTarget.get.exists(_ === t)
+              )
+            )
+          ).when(itcTargets.length > 1),
+          <.span(props.selectedTarget.get.map(_.name.value).getOrElse("-"))
+            .when(itcTargets.length === 1),
+          <.label(s"S/N per exposure:"),
+          <.span(singleSN),
+          <.label(s"S/N Total:"),
+          <.span(totalSN)
         )
       }
-}

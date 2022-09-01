@@ -4,17 +4,17 @@
 package explore.tabs
 
 import cats.effect.IO
-import cats.syntax.all._
+import cats.syntax.all.*
 import crystal.Pot
-import crystal.react._
-import crystal.react.hooks._
-import crystal.react.implicits._
+import crystal.react.*
+import crystal.react.hooks.*
+import crystal.react.implicits.*
 import explore.common.ObsQueries
-import explore.common.ObsQueries._
+import explore.common.ObsQueries.*
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
-import explore.implicits._
+import explore.implicits.*
 import explore.model.Asterism
 import explore.model.ConstraintGroup
 import explore.model.Focused
@@ -26,24 +26,25 @@ import explore.model.TargetSummary
 import explore.model.display.given
 import explore.model.enums.AppTab
 import explore.model.itc.ItcChartExposureTime
+import explore.model.itc.ItcTarget
 import explore.model.itc.OverridenExposureTime
-import explore.model.layout._
+import explore.model.layout.*
 import explore.optics._
-import explore.optics.all._
+import explore.optics.all.*
 import explore.undo.UndoStacks
-import explore.utils._
-import japgolly.scalajs.react._
+import explore.utils.*
+import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
-import lucuma.core.syntax.all._
+import lucuma.core.syntax.all.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import queries.common.ObsQueriesGQL._
+import queries.common.ObsQueriesGQL.*
 import react.common.ReactFnProps
 import react.semanticui.addons.select.Select
 import react.semanticui.addons.select.Select.SelectItem
@@ -132,7 +133,9 @@ object ObsTabTiles {
           )
           .reRunOnResourceSignals(ObservationEditSubscription.subscribe[IO](props.obsId))
       }
-      .render { (props, obsView) =>
+      // ITC selected target. Here to be shared by the ITC tile body and title
+      .useStateView(none[ItcTarget])
+      .render { (props, obsView, itcTarget) =>
         import props.given
 
         val obsViewPot = obsView.toPot
@@ -202,7 +205,8 @@ object ObsTabTiles {
               .flatMap(
                 _.get.itcExposureTime
                   .map(r => ItcChartExposureTime(OverridenExposureTime.FromItc, r.time, r.count))
-              )
+              ),
+            itcTarget
           )
 
         val constraintsSelector = makeConstraintsSelector(props.constraintGroups, obsViewPot)
