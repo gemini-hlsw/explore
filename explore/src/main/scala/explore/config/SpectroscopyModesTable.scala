@@ -73,6 +73,7 @@ import spire.math.Interval
 
 import java.text.DecimalFormat
 import java.util.UUID
+import scala.concurrent.duration.*
 
 import scalajs.js.|
 
@@ -499,24 +500,23 @@ object SpectroscopyModesTable {
 
                 if (modes.length === 1 || (modes.length > 1 && range.value.exists(_.isDefined))) {
                   val progressZero = Progress.initial(NonNegInt.unsafeFrom(modes.length)).some
-                  // new request ID, we are inside the effect
                   (for
                     _       <- Resource.eval(itcProgress.setStateAsync(progressZero))
-                    request <- ItcClient[IO]
-                                 .request(ItcMessage.Query(w, sn, constraints, t, modes))
-                                 .map(
-                                   _.evalTap(itcResponse =>
-                                     itcProgress
-                                       .modStateAsync {
-                                         // Remove progress when one left to complete
-                                         case Some(p) if p.nextToComplete => none
-                                         case Some(p)                     => Some(p.increment())
-                                         case _                           => none
-                                       } >>
-                                       // Update the cache
-                                       itcResults.modStateAsync(_.update(itcResponse))
-                                   )
-                                 )
+                    request <-
+                      ItcClient[IO]
+                        .request(ItcMessage.Query(w, sn, constraints, t, modes))
+                        .map(
+                          // Avoid intermediate rerenders. They are slow.
+                          _.groupWithin(100, 500.millis).evalTap(itcResponseChunk =>
+                            itcProgress
+                              .modStateAsync(
+                                _.map(_.increment(NonNegInt.unsafeFrom(itcResponseChunk.size)))
+                                  .filterNot(_.complete)
+                              ) >>
+                              // Update the cache
+                              itcResults.modStateAsync(_.updateN(itcResponseChunk.toList))
+                          )
+                        )
                   yield request).some
                 } else none
               }

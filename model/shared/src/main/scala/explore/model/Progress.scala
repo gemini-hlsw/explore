@@ -11,7 +11,6 @@ import coulomb.units.accepted.*
 import eu.timepit.refined.api.*
 import eu.timepit.refined.numeric.*
 import eu.timepit.refined.types.numeric.NonNegInt
-import eu.timepit.refined.types.numeric.PosInt
 import lucuma.refined.*
 
 case class Progress private (current: NonNegInt, total: NonNegInt) {
@@ -20,11 +19,11 @@ case class Progress private (current: NonNegInt, total: NonNegInt) {
       .unsafeFrom(current.value * 100.0 / total.value)
       .withUnit[Percent]
 
-  def nextToComplete: Boolean = current.value === (total.value - 1)
+  val complete: Boolean = current.value === total.value
 
-  def increment(steps: PosInt = 1.refined): Progress =
+  def increment(steps: NonNegInt = 1.refined): Progress =
     if (current.value + steps.value > total.value)
-      this
+      Progress(NonNegInt.unsafeFrom(total.value), total)
     else
       Progress(NonNegInt.unsafeFrom(current.value + steps.value), total)
 }

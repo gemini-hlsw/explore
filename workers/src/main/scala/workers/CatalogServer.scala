@@ -35,15 +35,17 @@ object CatalogServer extends WorkerServer[IO, CatalogMessage.Request] with Catal
       self    <- IO(dom.DedicatedWorkerGlobalScope.self)
       idb     <- IO(self.indexedDB.toOption)
       stores   = CacheIDBStores()
-      cacheDb <- idb.traverse(idb => stores.open(IndexedDb(idb)).toIO)
+      cacheDb <- idb.traverse(idb => stores.open(IndexedDb(idb)).toF[IO])
       client   = FetchClientBuilder[IO].create
     yield invocation =>
       invocation.data match
         case req @ CatalogMessage.GSRequest(_, _) =>
           readFromGaia(client, cacheDb, stores, req, c => invocation.respond(c)) *>
-            expireGuideStarCandidates(cacheDb, stores, Expiration).toIO
+            expireGuideStarCandidates(cacheDb, stores, Expiration)
+              .toF[IO]
               .handleErrorWith(e => Logger[IO].error(e)("Error expiring guidestar candidates"))
 
         case CatalogMessage.GSCacheCleanupRequest(expTime) =>
-          expireGuideStarCandidates(cacheDb, stores, expTime).toIO
+          expireGuideStarCandidates(cacheDb, stores, expTime)
+            .toF[IO]
             .handleErrorWith(e => Logger[IO].error(e)("Error expiring guidestar candidates"))

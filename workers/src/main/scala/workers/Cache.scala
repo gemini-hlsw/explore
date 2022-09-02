@@ -17,11 +17,13 @@ import japgolly.webapputil.indexeddb.IndexedDbKey
 import japgolly.webapputil.indexeddb.KeyCodec
 import japgolly.webapputil.indexeddb.ObjectStoreDef
 import japgolly.webapputil.indexeddb.ValueCodec
+import lucuma.utils.NewType
 import org.scalajs.dom
 import org.scalajs.dom.CacheStorage
 import org.scalajs.dom.IDBFactory
 import org.scalajs.dom.{Cache => JsCache}
 
+import java.time.Duration
 import java.time.Instant
 import java.util.Base64
 
@@ -29,22 +31,30 @@ import scalajs.js
 import scalajs.js.JSConverters.*
 import scalajs.js.typedarray.Int8Array
 
+object CacheName extends NewType[String]
+type CacheName = CacheName.Type
+
+object CacheVersion extends NewType[Int]
+type CacheVersion = CacheVersion.Type
+
 /**
  * Cacheable computation.
  */
-case class Cacheable[F[_], I, O](name: String, version: Int, invoke: I => F[O])
+case class Cacheable[F[_], I, O](name: CacheName, version: CacheVersion, invoke: I => F[O])
 
 /**
  * Generic cache interface.
  */
-sealed trait Cache[F[_]]:
+sealed trait Cache[F[_]](using F: Sync[F]):
   def eval[I: Pickler, O: Pickler](computation: Cacheable[F, I, O]): I => F[O]
   def evict(until:                              Instant): F[Unit]
+  def evict(retention: Duration): F[Unit] =
+    F.delay(Instant.now) >>= (now => evict(now.minus(retention)))
 
 /**
  * `NoCache` is used when, for some reason, a cache could not be initialized.
  */
-case class NoCache[F[_]]()(using F: Applicative[F]) extends Cache[F]:
+case class NoCache[F[_]]()(using F: Sync[F]) extends Cache[F]:
   override def eval[I: Pickler, O: Pickler](computation: Cacheable[F, I, O]): I => F[O] =
     computation.invoke
 
@@ -63,7 +73,9 @@ case class IDBCache[F[_]](
   F:         Async[F]
 ) extends Cache[F]:
   override def eval[I: Pickler, O: Pickler](computation: Cacheable[F, I, O]): I => F[O] = { input =>
-    val pickledInput: Pickled = Pickled(asBytes((computation.name, computation.version, input)))
+    val pickledInput: Pickled = Pickled(
+      asBytes((computation.name.value, computation.version.value, input))
+    )
 
     cacheDB
       .get(store)(pickledInput)
@@ -75,6 +87,9 @@ case class IDBCache[F[_]](
             .flatTap(output => cacheDB.put(store)(pickledInput, Pickled(asBytes(output))).toF)
         )(pickledOutput => F.pure(fromBytes[O](pickledOutput.value)).rethrow)
       )
+      .handleErrorWith { t =>
+        F.delay(t.printStackTrace); throw t
+      }
   }
 
   override def evict(until: Instant): F[Unit] =

@@ -38,6 +38,11 @@ final case class ItcResultsCache(
   ): ItcResultsCache =
     copy(cache ++ newEntries)
 
+  def updateN(
+    newEntries: List[Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]]
+  ): ItcResultsCache =
+    newEntries.foldLeft(this)(_.update(_))
+
   // Read the cache value or a default
   def forRow(
     w:  Option[Wavelength],
