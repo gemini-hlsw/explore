@@ -10,13 +10,13 @@ import crystal.react.hooks._
 import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.events.PlotMessage.*
+import explore.highcharts.*
 import explore.implicits._
 import explore.model.WorkerClients.PlotClient
 import explore.model.boopickle.CommonPicklers.given
 import explore.syntax.*
 import explore.syntax.given
 import explore.syntax.ui.given
-import explore.highcharts.*
 import fs2.Stream
 import gpp.highcharts.highchartsStrings.line
 import gpp.highcharts.mod.XAxisLabelsOptions
