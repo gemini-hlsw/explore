@@ -228,6 +228,11 @@ $description-column-count: 2;
   }
 }
 
+.highcharts-reset-zoom {
+  fill: var(--button-background-color-semi);
+  stroke: var(--site-border-color);
+}
+
 .itc-plot-chart {
   --itc-plot-blue: hsl(207deg 54% 46.9%);
   --itc-plot-lightblue: hsl(187deg 54% 66.9%);
@@ -246,11 +251,6 @@ $description-column-count: 2;
 
   .highcharts-legend-item {
     font-size: 10px;
-  }
-
-  .highcharts-reset-zoom {
-    fill: var(--button-background-color-semi);
-    stroke: var(--site-border-color);
   }
 
   .s2nchart {

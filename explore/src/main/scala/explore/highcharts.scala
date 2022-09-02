@@ -21,3 +21,11 @@ extension (c: ChartOptions)
     c.setEvents(
       ChartEventsOptions().setSelection((_, s) => cb(s).runNow())
     )
+
+def commonOptions: ChartOptions =
+  ChartOptions()
+    .setStyledMode(true)
+    .setAlignTicks(false)
+    .setZooming(ChartZoomingOptions().setType(OptionsTypeValue.xy))
+    .setPanning(ChartPanningOptions().setEnabled(true))
+    .setPanKey(OptionsPanKeyValue.shift)
