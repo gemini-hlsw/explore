@@ -5,6 +5,7 @@ package explore.targeteditor
 
 import cats.effect.IO
 import cats.effect.Resource
+import cats.syntax.all.*
 import cats.syntax.all._
 import crystal.react.hooks._
 import crystal.react.implicits._
@@ -19,8 +20,7 @@ import explore.syntax.given
 import explore.syntax.ui.given
 import fs2.Stream
 import gpp.highcharts.highchartsStrings.line
-import gpp.highcharts.mod.XAxisLabelsOptions
-import gpp.highcharts.mod._
+import gpp.highcharts.mod.*
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enums.Site
@@ -43,6 +43,7 @@ import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import scala.collection.immutable.TreeMap
+import scala.concurrent.duration.*
 import scala.scalajs.js
 
 import js.JSConverters._
@@ -60,6 +61,7 @@ object ElevationPlotSemester {
   private val PlotDayRate: Long     = 3
   private val MillisPerHour: Double = 60 * 60 * 1000
   private val MillisPerDay: Double  = MillisPerHour * 24
+  private val MinVisibility: Double = 0.2 // 12 minutes
 
   private val dateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
@@ -82,31 +84,58 @@ object ElevationPlotSemester {
                   RequestSemesterSidereal(props.semester, props.site, props.coords, PlotDayRate)
                 )
                 .map(
-                  _.evalMap { case SemesterPoint(instant, visibility) =>
-                    val value = instant.toDouble
-                    IO(xAxis.removePlotLine("progress")) >>
-                      IO(
-                        xAxis.addPlotLine(
-                          AxisPlotLinesOptions
-                            .XAxisPlotLinesOptions()
-                            .setId("progress")
-                            .setValue(value)
-                            .setZIndex(1000)
-                            .setClassName("plot-plot-line-progress")
+                  _.groupWithin(100, 1500.millis)
+                    .evalMap { chunk =>
+                      IO(xAxis.removePlotLine("progress")) >>
+                        IO {
+                          chunk.toList
+                            .map { case SemesterPoint(instant, visibility) =>
+                              val instantD: Double    = instant.toDouble
+                              val visibilityD: Double = visibility / MillisPerHour
+
+                              series.addPoint(
+                                PointOptionsObject(accessibility = js.undefined)
+                                  .setX(instantD)
+                                  // Trick to leave small values out of the plot
+                                  .setY(if (visibilityD > MinVisibility) visibilityD else -1),
+                                redraw = true,
+                                shift = false,
+                                animation = false
+                              )
+
+                              (instantD, visibilityD)
+                            }
+                            .foldLeft((0.0, 0.0)) {
+                              case ((maxInstantD, maxVisibilityD), (instantD, visibilityD)) =>
+                                (instantD.max(maxInstantD), visibilityD.max(maxVisibilityD))
+                            }
+                        }
+                          .flatTap { case (maxInstant, _) =>
+                            IO(
+                              xAxis.addPlotLine(
+                                AxisPlotLinesOptions
+                                  .XAxisPlotLinesOptions()
+                                  .setId("progress")
+                                  .setValue(maxInstant)
+                                  .setZIndex(1000)
+                                  .setClassName("plot-plot-line-progress")
+                              )
+                            ).void
+                          }
+                          .map { case (_, maxVisibility) => maxVisibility }
+                    }
+                    .scan1(math.max)
+                    .last
+                    .evalMap(
+                      _.filterNot(_ > MinVisibility)
+                        .map(_ =>
+                          IO(
+                            xAxis.setTitle(XAxisTitleOptions().setText("Target is below horizon"))
+                          ).void
                         )
-                      ) >>
-                      IO {
-                        series.addPoint(
-                          PointOptionsObject(accessibility = js.undefined)
-                            .setX(value)
-                            // Trick to leave small values out of the plot
-                            .setY(if (visibility > 0.2) visibility / MillisPerHour else -1),
-                          redraw = true,
-                          shift = false,
-                          animation = false
-                        )
-                      }
-                  } ++ fs2.Stream(xAxis.removePlotLine("progress"))
+                        .orEmpty
+                    ) ++
+                    fs2.Stream(xAxis.removePlotLine("progress"))
                 )
             }
             .getOrElse(Resource.pure(fs2.Stream()))
