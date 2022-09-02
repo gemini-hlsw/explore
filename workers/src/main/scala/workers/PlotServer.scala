@@ -56,8 +56,6 @@ object PlotServer extends WorkerServer[IO, PlotMessage.Request] {
   private val skyCalcForSite: Map[Site, ImprovedSkyCalc] =
     Enumerated[Site].all.map(s => s -> ImprovedSkyCalc(s.place)).toMap
 
-  private val CacheVersion: Int = 1
-
   private val CacheRetention: Duration = Duration.ofDays(30)
 
   private given Pickler[SkyCalcResults] = generatePickler
@@ -71,8 +69,8 @@ object PlotServer extends WorkerServer[IO, PlotMessage.Request] {
         ElevationSolver(MinTargetElevation, Declination.Max).solve(skyCalcSamples) _
 
       Cacheable(
-        "siderealVisibility",
-        CacheVersion,
+        CacheName("siderealVisibility"),
+        CacheVersion(1),
         (site, date, _) =>
           IO {
             val instant = date.atTime(LocalTime.MIDNIGHT).atZone(site.timezone).toInstant
@@ -118,19 +116,19 @@ object PlotServer extends WorkerServer[IO, PlotMessage.Request] {
     for
       self  <- IO(dom.DedicatedWorkerGlobalScope.self)
       cache <- Cache.withIDB[IO](self.indexedDB.toOption, "explore-plots")
+      _     <- cache.evict(CacheRetention).start
     yield invocation =>
       invocation.data match {
         case PlotMessage.RequestSemesterSidereal(semester, site, coords, dayRate) =>
-          (IO(Instant.now) >>= (now => cache.evict(now.minus(CacheRetention)).start)) >>
-            SemesterPlotCalc(semester, site, cache)
-              .siderealSamples(coords, dayRate)
-              .evalMap { case (instant, visibilityDuration) =>
-                invocation.respond(
-                  PlotMessage.SemesterPoint(instant.toEpochMilli, visibilityDuration.toMillis)
-                )
-              }
-              .compile
-              .drain
+          SemesterPlotCalc(semester, site, cache)
+            .siderealSamples(coords, dayRate)
+            .evalMap { case (instant, visibilityDuration) =>
+              invocation.respond(
+                PlotMessage.SemesterPoint(instant.toEpochMilli, visibilityDuration.toMillis)
+              )
+            }
+            .compile
+            .drain
       }
 
 }

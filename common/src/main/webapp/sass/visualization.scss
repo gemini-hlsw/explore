@@ -36,35 +36,35 @@
     stroke-dasharray: 10;
   }
 
-  .gmos-fpu > polygon {
+  .gmos-fpu>polygon {
     stroke: blue;
     stroke-width: 0.8px;
     fill: lightgray;
-    fill-opacity: 0.1;
+    fill-opacity: 10%;
   }
 
   .gmos-science-area polygon {
     display: none;
     stroke: purple;
     fill: black;
-    fill-opacity: 1;
+    fill-opacity: 100%;
   }
 
   .gmos-science-ccd-offset polygon {
     display: none;
     stroke: yellow;
-    fill-opacity: 0.1;
+    fill-opacity: 10%;
   }
 
   .gmos-science-ccd polygon {
     display: none;
     stroke: cyan;
-    fill-opacity: 0.1;
+    fill-opacity: 10%;
   }
 
   .gmos-candidates-area {
     display: none;
-    fill-opacity: 0;
+    fill-opacity: 0%;
     stroke: lightgreen;
     stroke-width: 0.4px;
     stroke-dasharray: 1.5;
@@ -151,9 +151,9 @@
   .guide-star-target {
     stroke: hsl(120deg 100% 19.6%);
     stroke-width: 1px;
-    stroke-opacity: 1;
+    stroke-opacity: 100%;
     fill: green;
-    fill-opacity: 0.6;
+    fill-opacity: 60%;
   }
 
   .guide-star-candidate-target-base {
@@ -161,7 +161,7 @@
     stroke: black;
     stroke-width: 0.5px;
     fill: yellow;
-    fill-opacity: 0.4;
+    fill-opacity: 40%;
     isolation: initial;
   }
 }
@@ -290,6 +290,7 @@
       }
 
       &.ui.button.compact {
+
         /* stylelint-disable-next-line selector-class-pattern */
         svg.svg-inline--fa {
           width: auto;
@@ -321,4 +322,3 @@
     color: var(--ags-good-iq-color);
   }
 }
-

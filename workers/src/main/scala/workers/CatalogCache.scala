@@ -118,7 +118,8 @@ trait CatalogCache extends CatalogIDB {
 
         (Logger[IO].debug(s"Requested catalog $query ${cacheQueryHash.hash(query)}") *>
           // Try to find it in the db
-          readGuideStarCandidates(idb, stores, query).toIO
+          readGuideStarCandidates(idb, stores, query)
+            .toF[IO]
             .handleError(_ => none)) // Try to find it in the db
           .flatMap(
             _.fold(
@@ -137,7 +138,8 @@ trait CatalogCache extends CatalogIDB {
                     s"Catalog results from remote catalog: ${candidates.length} candidates"
                   ) *>
                     respond(candidates) *>
-                    storeGuideStarCandidates(idb, stores, query, candidates).toIO
+                    storeGuideStarCandidates(idb, stores, query, candidates)
+                      .toF[IO]
                       .handleError(e => Logger[IO].error(e)("Error storing guidestar candidates"))
                 }
                 .void

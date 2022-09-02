@@ -3,6 +3,7 @@
 
 package explore.itc
 
+import boopickle.DefaultBasic.*
 import cats._
 import cats.data._
 import cats.effect._
@@ -15,6 +16,7 @@ import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.model.Constants
 import explore.model.Progress
+import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.*
 import explore.model.itc.math.*
 import explore.modes.GmosNorthSpectroscopyRow
@@ -31,6 +33,7 @@ import org.typelevel.log4cats.Logger
 import queries.common.ITCQueriesGQL._
 import queries.schemas.ITC
 import queries.schemas.itc.implicits._
+import workers.*
 
 import java.util.UUID
 import scala.concurrent.duration._
@@ -51,6 +54,7 @@ object ITCRequests {
     constraints:   ConstraintSet,
     targets:       ItcTarget,
     modes:         List[SpectroscopyModeRow],
+    cache:         Cache[F],
     callback:      Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]] => F[Unit]
   )(using Monoid[F[Unit]], TransactionalClient[F, ITC]): F[Unit] = {
     def itcResults(r: ItcResults): List[EitherNec[ItcQueryProblems, ItcResult]] =
@@ -63,9 +67,8 @@ object ITCRequests {
       }
 
     def doRequest(
-      params:        ItcRequestParams,
-      innerCallback: ItcResults => F[Unit]
-    ): F[Unit] =
+      params: ItcRequestParams
+    ): F[Option[Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]]] =
       Logger[F]
         .debug(
           s"ITC: Request for mode ${params.mode} and target count: ${params.target.name.value}"
@@ -94,14 +97,31 @@ object ITCRequests {
                   Logger[F].debug(s"$prefix $other")
               })
             }
-            .flatMap(innerCallback)
+            .map(r =>
+              itcResults(r) match {
+                case Nil => none
+                case l   =>
+                  Map(
+                    params ->
+                      l.maxBy {
+                        case Right(ItcResult.Result(exposureTime, _)) => exposureTime.toMicros
+                        case _                                        => Long.MinValue
+                      }
+                  ).some
+              }
+            )
             .handleErrorWith(e =>
-              callback(
-                Map(params -> ItcQueryProblems.GenericError("Error calling ITC service").leftNec)
-              )
+              Map(
+                params -> (ItcQueryProblems
+                  .GenericError("Error calling ITC service"): ItcQueryProblems)
+                  .leftNec[ItcResult]
+              ).some.pure[F]
             )
         }
-        .getOrElse(Applicative[F].unit)
+        .sequence
+        .map(_.flatten)
+
+    val cacheableRequest = Cacheable(CacheName("itcQuery"), CacheVersion(1), doRequest)
 
     val itcRowsParams = modes
       .map(_.instrument)
@@ -119,27 +139,7 @@ object ITCRequests {
     ) { params =>
       // ITC supports sending many modes at once, but sending them one by one
       // maximizes cache hits
-      doRequest(
-        params,
-        { r =>
-          // Convert to usable types and update the cache
-          val update: Option[EitherNec[ItcQueryProblems, ItcResult]] =
-            // There maybe multiple targets, take the one with the max time
-            itcResults(r) match {
-              case Nil => none
-              case l   =>
-                l.maxBy {
-                  case Right(ItcResult.Result(exposureTime, _)) => exposureTime.toMicros
-                  case _                                        => Long.MinValue
-                }.some
-            }
-          // Send the request to the front
-          update
-            .map(r => callback(Map(params -> r)))
-            .getOrElse(Applicative[F].unit)
-
-        }
-      )
+      cache.eval(cacheableRequest).apply(params).flatMap(_.map(callback).orEmpty)
     }.void
   }
 

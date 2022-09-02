@@ -36,8 +36,6 @@ import scala.scalajs.js
 
 import js.annotation._
 
-extension [A](a: AsyncCallback[A]) def toIO: IO[A] = asyncCallbackToIO.apply(a)
-
 /**
  * Web worker that can query gaia and store results locally
  */
@@ -45,6 +43,8 @@ extension [A](a: AsyncCallback[A]) def toIO: IO[A] = asyncCallbackToIO.apply(a)
 object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
   @JSExport
   def runWorker(): Unit = run.unsafeRunAndForget()
+
+  private val CacheRetention: Duration = Duration.ofDays(30)
 
   private def fetchConfig[F[_]: Async]: F[AppConfig] =
     // We want to avoid caching the static server redirect and the config files (they are not fingerprinted by vite).
@@ -57,6 +57,9 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
 
   protected val handler: Logger[IO] ?=> IO[Invocation => IO[Unit]] =
     for {
+      self                               <- IO(dom.DedicatedWorkerGlobalScope.self)
+      cache                              <- Cache.withIDB[IO](self.indexedDB.toOption, "explore-itc")
+      _                                  <- cache.evict(CacheRetention).start
       matrix                             <- Deferred[IO, SpectroscopyModesMatrix]
       config                             <- fetchConfig[IO]
       given TransactionalClient[IO, ITC] <- {
@@ -86,6 +89,7 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
                 constraint,
                 targets,
                 rows,
+                cache,
                 r => invocation.respond(r)
               )
 
