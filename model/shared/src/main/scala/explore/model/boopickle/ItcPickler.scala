@@ -14,12 +14,16 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.itc.ItcCcd
 import explore.model.itc.ItcChart
 import explore.model.itc.ItcChartResult
+import explore.model.itc.ItcGraphRequestParams
 import explore.model.itc.ItcQueryProblems
 import explore.model.itc.ItcRequestParams
 import explore.model.itc.ItcResult
 import explore.model.itc.ItcSeries
 import explore.model.itc.ItcTarget
 import explore.model.itc.YAxis
+import explore.model.itc.remote.ItcChartGroupRemote
+import explore.model.itc.remote.ItcChartRemote
+import explore.model.itc.remote.XAxis
 import explore.modes.InstrumentRow
 import explore.modes.ModeAO
 import explore.modes.ModeSlitSize
@@ -191,6 +195,14 @@ trait ItcPicklers extends CommonPicklers {
   given Pickler[ItcChart] = generatePickler
 
   given Pickler[ItcChartResult] = generatePickler
+
+  given Pickler[ItcGraphRequestParams] = generatePickler
+
+  given Pickler[XAxis] = generatePickler
+
+  given Pickler[ItcChartRemote] = generatePickler
+
+  given Pickler[ItcChartGroupRemote] = generatePickler
 }
 
 object ItcPicklers extends ItcPicklers

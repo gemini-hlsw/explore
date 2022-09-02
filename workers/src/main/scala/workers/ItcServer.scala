@@ -109,6 +109,7 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
                 constraint,
                 targets,
                 mode,
+                cache,
                 r => invocation.respond(r)
               )
       }
