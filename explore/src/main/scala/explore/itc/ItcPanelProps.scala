@@ -4,13 +4,21 @@
 package explore.itc
 
 import cats.data.NonEmptyList
+import cats.effect.IO
 import cats.syntax.all.*
+import eu.timepit.refined.*
+import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.common.ObsQueries.*
+import explore.events.ItcMessage
+import explore.implicits.*
 import explore.model.ScienceMode
 import explore.model.ScienceModeAdvanced
 import explore.model.ScienceModeBasic
+import explore.model.WorkerClients.ItcClient
+import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.ItcChartExposureTime
+import explore.model.itc.ItcChartResult
 import explore.model.itc.ItcTarget
 import explore.model.itc.OverridenExposureTime
 import explore.modes.GmosNorthSpectroscopyRow
@@ -27,7 +35,7 @@ trait ItcPanelProps(
   scienceData:              Option[ScienceData],
   exposure:                 Option[ItcChartExposureTime]
 ) {
-  def wavelength: Option[Wavelength] = scienceMode match
+  val wavelength: Option[Wavelength] = scienceMode match
     case Some(ScienceMode.GmosNorthLongSlit(_, adv)) =>
       adv.overrideWavelength.orElse(spectroscopyRequirements.flatMap(_.wavelength))
 
@@ -36,7 +44,7 @@ trait ItcPanelProps(
 
     case _ => none
 
-  def signalToNoise: Option[PosBigDecimal] = scienceMode match
+  val signalToNoise: Option[PosBigDecimal] = scienceMode match
     case Some(ScienceMode.GmosNorthLongSlit(_, adv)) =>
       ScienceModeAdvanced.GmosNorthLongSlit.overrideExposureTimeMode.some
         .andThen(
@@ -56,7 +64,7 @@ trait ItcPanelProps(
     case _ =>
       spectroscopyRequirements.flatMap(_.signalToNoise)
 
-  def instrumentRow: Option[InstrumentRow] = scienceMode match
+  val instrumentRow: Option[InstrumentRow] = scienceMode match
     case Some(ScienceMode.GmosNorthLongSlit(basic, adv)) =>
       val grating = adv.overrideGrating.getOrElse(basic.grating)
       val filter  = adv.overrideFilter.orElse(basic.filter)
@@ -72,7 +80,7 @@ trait ItcPanelProps(
     case _ =>
       none
 
-  def chartExposureTime: Option[ItcChartExposureTime] = scienceMode match
+  val chartExposureTime: Option[ItcChartExposureTime] = scienceMode match
     case Some(ScienceMode.GmosNorthLongSlit(basic, adv)) =>
       ScienceModeAdvanced.GmosNorthLongSlit.overrideExposureTimeMode.some
         .andThen(
@@ -98,7 +106,31 @@ trait ItcPanelProps(
     case _ =>
       exposure
 
-  def itcTargets: Option[NonEmptyList[ItcTarget]] = scienceData.flatMap(_.itcTargets.toNel)
+  val itcTargets: Option[NonEmptyList[ItcTarget]] = scienceData.flatMap(_.itcTargets.toNel)
 
-  def targets: List[ItcTarget] = itcTargets.foldMap(_.toList)
+  val targets: List[ItcTarget] = itcTargets.foldMap(_.toList)
+
+  val queryProps =
+    (wavelength, scienceData.map(_.constraints), itcTargets, instrumentRow, chartExposureTime)
+
+  def requestITCData(
+    onComplete:  ItcChartResult => IO[Unit],
+    orElse:      IO[Unit],
+    beforeStart: IO[Unit]
+  )(using AppContextIO): IO[Unit] =
+    val action: Option[IO[Unit]] =
+      for
+        w           <- wavelength
+        ex          <- chartExposureTime
+        exposures   <- refineV[Positive](ex.count.value).toOption
+        constraints <- scienceData.map(_.constraints)
+        t           <- itcTargets
+        mode        <- instrumentRow
+      yield beforeStart *>
+        ItcClient[IO]
+          .request(
+            ItcMessage.GraphQuery(w, ex.time, exposures, constraints, t, mode)
+          )
+          .use(_.evalMap(onComplete).compile.drain)
+    action.getOrElse(orElse)
 }

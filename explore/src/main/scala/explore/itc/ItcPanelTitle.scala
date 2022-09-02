@@ -62,51 +62,22 @@ object ItcPanelTitle:
         r.orElse(props.scienceData.flatMap(_.itcTargets.headOption))
       }(props => t => props.selectedTarget.set(t))
       .useState(Pot.pending[Map[ItcTarget, ItcChartResult]])
-      // loading
-      .useState(PlotLoading.Done)
-      // Request ITC graph data
-      .useEffectWithDepsBy((props, _, _) =>
-        (props.wavelength,
-         props.scienceData.map(_.constraints),
-         props.itcTargets,
-         props.instrumentRow,
-         props.chartExposureTime
+      // Request ITC graph data and extract ccds info from there
+      .useEffectWithDepsBy((props, _) => props.queryProps) { (props, charts) => _ =>
+        import props.given
+        props.requestITCData(
+          m =>
+            charts.modStateAsync {
+              case Pot.Ready(r) => Pot.Ready(r + (m.target -> m))
+              case u            => Pot.Ready(Map(m.target -> m))
+            },
+          charts
+            .setState(Pot.error(new RuntimeException("Not enough information to call ITC")))
+            .to[IO],
+          IO.unit
         )
-      ) {
-        (props, charts, loading) =>
-          (wavelength, constraints, itcTargets, instrumentRow, exposureTime) =>
-            import props.given
-
-            val action: Option[IO[Unit]] =
-              for
-                w           <- wavelength
-                ex          <- exposureTime
-                exposures   <- refineV[Positive](ex.count.value).toOption
-                constraints <- constraints
-                t           <- itcTargets
-                mode        <- instrumentRow
-              yield loading.setState(PlotLoading.Loading).to[IO] *>
-                ItcClient[IO]
-                  .request(
-                    ItcMessage.GraphQuery(w, ex.time, exposures, constraints, t, mode)
-                  )
-                  .use(
-                    _.evalMap(m =>
-                      charts.modStateAsync {
-                        case Pot.Ready(r) => Pot.Ready(r + (m.target -> m))
-                        case u            => Pot.Ready(Map(m.target -> m))
-                      } *> loading.setState(PlotLoading.Done).to[IO]
-                    ).compile.drain
-                  )
-            action.getOrElse(
-              (charts
-                .setState(Pot.error(new RuntimeException("Not enough information to call ITC"))) *>
-                loading
-                  .setState(PlotLoading.Done))
-                .to[IO]
-            )
       }
-      .render { (props, results, loading) =>
+      .render { (props, results) =>
         def newSelected(p: DropdownProps): Option[ItcTarget] =
           props.targets.find(t => p.value.toOption.exists(_.toString === t.name.value))
 
