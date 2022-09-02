@@ -3,50 +3,52 @@
 
 package explore.programs
 
-import cats.Order._
+import cats.Order.*
 import cats.effect.IO
-import cats.syntax.all._
+import cats.syntax.all.*
 import crystal.react.View
-import crystal.react.hooks._
-import crystal.react.implicits._
-import crystal.react.reuse._
+import crystal.react.hooks.*
+import crystal.react.implicits.*
+import crystal.react.reuse.*
 import explore.EditableLabel
 import explore.Icons
 import explore.common.ProgramQueries
 import explore.common.ProgramQueries.ProgramInfo
-import explore.common.ProgramQueries._
+import explore.common.ProgramQueries.*
 import explore.components.ui.ExploreStyles
-import explore.implicits._
+import explore.implicits.*
 import explore.model.Focused
 import explore.model.enums.AppTab
 import explore.syntax.ui.given
-import explore.utils._
-import japgolly.scalajs.react._
+import explore.utils.*
+import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.VdomNode
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
-import lucuma.ui.reusability._
+import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import queries.common.ProgramQueriesGQL._
+import queries.common.ProgramQueriesGQL.*
 import react.common.ReactFnProps
+import react.floatingui.Placement
+import react.floatingui.Tooltip
 import react.semanticui.collections.table.TableCompact
-import react.semanticui.collections.table._
-import react.semanticui.elements.button._
+import react.semanticui.collections.table.*
+import react.semanticui.elements.button.*
 import react.semanticui.modules.checkbox.Checkbox
-import react.semanticui.shorthand._
-import react.semanticui.sizes._
-import reactST.reactTable._
+import react.semanticui.shorthand.*
+import react.semanticui.sizes.*
+import reactST.reactTable.*
 
-final case class ProgramTable(
+case class ProgramTable(
   currentProgramId: Option[Program.Id],
   selectProgram:    Program.Id => Callback,
   isRequired:       Boolean
-)(implicit val ctx: AppContextIO)
-    extends ReactFnProps[ProgramTable](ProgramTable.component)
+)(using val ctx:    AppContextIO)
+    extends ReactFnProps(ProgramTable.component)
 
 object ProgramTable {
-  type Props = ProgramTable
+  private type Props = ProgramTable
 
   protected val ProgsTableDef = TableDef[View[ProgramInfo]].withSortBy.withFlexLayout
 
@@ -83,13 +85,13 @@ object ProgramTable {
       case _                   => IO.unit
     }
 
-  val component = ScalaFnComponent
+  private val component = ScalaFnComponent
     .withHooks[Props]
     .useStateView(false) // Adding new program
     .useStateView(false) // Show deleted
     .useStreamResourceViewBy((_, _, showDeleted) => showDeleted.get) {
       (props, _, _) => showDeleted =>
-        implicit val ctx = props.ctx
+        import props.given
 
         ProgramsQuery
           .query(includeDeleted = showDeleted)
@@ -100,97 +102,109 @@ object ProgramTable {
     // Columns
     .useMemoBy((props, _, _, programs) =>
       (props.currentProgramId, programs.toOption.map(_.get.length).orEmpty)
-    ) { (props, _, _, _) =>
-      { case (currentProgramId, programCount) =>
-        implicit val ctx = props.ctx
+    ) { (props, _, _, _) => (currentProgramId, programCount) =>
+      import props.given
 
-        List(
-          ProgsTableDef
-            .Column("actions", identity[View[ProgramInfo]] _)
-            .setHeader("Actions")
-            .setCell { cell =>
-              val programId = cell.value.get.id
-              val isDeleted = cell.value.get.deleted
-              <.div(
-                Button(
-                  content = "Select",
-                  size = Mini,
-                  compact = true,
-                  icon = Icons.Checkmark,
-                  disabled = currentProgramId.exists(_ === programId),
-                  onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
-                    e.preventDefaultCB >>
-                      e.stopPropagationCB >>
-                      props.selectProgram(programId)
-                ).unless(cell.row.original.get.deleted),
-                Button(
-                  size = Mini,
-                  compact = true,
-                  icon = Icons.Trash,
-                  // can't delete the current or last one
-                  disabled = currentProgramId.exists(_ === programId) || programCount < 2,
-                  onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
-                    e.preventDefaultCB >>
-                      e.stopPropagationCB >>
-                      deleteProgram(cell.value).runAsync
-                ).unless(isDeleted),
-                Button(
-                  content = "Undelete",
-                  size = Mini,
-                  compact = true,
-                  icon = Icons.TrashUndo,
-                  onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
-                    e.preventDefaultCB >>
-                      e.stopPropagationCB >>
-                      undeleteProgram(cell.value).runAsync
-                ).when(isDeleted)
-              )
-            }
-            .setWidth(0)
-            .setMinWidth(120)
-            .setMaxWidth(0)
-            .setSortByFn(_.get.deleted),
-          ProgsTableDef
-            .Column("id", _.get.id)
-            .setHeader("Id")
-            .setCell(_.value.toString)
-            .setWidth(0)
-            .setMinWidth(50)
-            .setMaxWidth(0)
-            .setSortByAuto,
-          ProgsTableDef
-            .Column("name", _.withOnMod(onModName).zoom(ProgramInfo.name))
-            .setHeader("Name")
-            .setCell(cell =>
-              EditableLabel.fromView(
-                value = cell.value,
-                addButtonLabel = ("Add program name": VdomNode).reuseAlways,
-                textClass = ExploreStyles.ProgramName,
-                inputClass = ExploreStyles.ProgramNameInput,
-                editButtonClass = ExploreStyles.BlendedButton |+| ExploreStyles.ProgramNameEdit,
-                deleteButtonClass = ExploreStyles.BlendedButton |+| ExploreStyles.ProgramNameDelete
-              )
+      List(
+        ProgsTableDef
+          .Column("actions", identity[View[ProgramInfo]] _)
+          .setHeader("Actions")
+          .setCell { cell =>
+            val programId = cell.value.get.id
+            val isDeleted = cell.value.get.deleted
+            <.div(
+              Button(
+                content = "Select",
+                size = Mini,
+                compact = true,
+                icon = Icons.Checkmark,
+                disabled = currentProgramId.exists(_ === programId),
+                onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
+                  e.preventDefaultCB >>
+                    e.stopPropagationCB >>
+                    props.selectProgram(programId)
+              ).unless(cell.row.original.get.deleted),
+              Tooltip(
+                trigger = <.span(
+                  Button(
+                    size = Mini,
+                    compact = true,
+                    icon = Icons.Trash,
+                    // can't delete the current or last one
+                    disabled = currentProgramId.exists(_ === programId) || programCount < 2,
+                    onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
+                      e.preventDefaultCB >>
+                        e.stopPropagationCB >>
+                        deleteProgram(cell.value).runAsync
+                  )
+                ),
+                placement = Placement.Right,
+                tooltip = "Delete program"
+              ).unless(isDeleted),
+              Tooltip(
+                trigger = <.span(
+                  Button(
+                    content = "Undelete",
+                    size = Mini,
+                    compact = true,
+                    icon = Icons.TrashUndo,
+                    onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
+                      e.preventDefaultCB >>
+                        e.stopPropagationCB >>
+                        undeleteProgram(cell.value).runAsync
+                  )
+                ),
+                placement = Placement.Right,
+                tooltip = "Undelete program"
+              ).when(isDeleted)
             )
-            .setWidth(1)
-            .setMinWidth(200)
-            .setMaxWidth(1000)
-            .setSortByFn(_.get.foldMap(_.value))
-        )
-      }
+          }
+          .setWidth(0)
+          .setMinWidth(120)
+          .setMaxWidth(0)
+          .setSortByFn(_.get.deleted),
+        ProgsTableDef
+          .Column("id", _.get.id)
+          .setHeader("Id")
+          .setCell(_.value.toString)
+          .setWidth(0)
+          .setMinWidth(50)
+          .setMaxWidth(0)
+          .setSortByAuto,
+        ProgsTableDef
+          .Column("name", _.withOnMod(onModName).zoom(ProgramInfo.name))
+          .setHeader("Name")
+          .setCell(cell =>
+            EditableLabel.fromView(
+              value = cell.value,
+              addButtonLabel = ("Add program name": VdomNode).reuseAlways,
+              textClass = ExploreStyles.ProgramName,
+              inputClass = ExploreStyles.ProgramNameInput,
+              editButtonClass = ExploreStyles.BlendedButton |+| ExploreStyles.ProgramNameEdit,
+              editButtonTooltip = "Edit program name".some,
+              deleteButtonClass = ExploreStyles.BlendedButton |+| ExploreStyles.ProgramNameDelete,
+              deleteButtonTooltip = "Delete program name".some,
+              okButtonTooltip = "Accept".some,
+              discardButtonTooltip = "Discard".some
+            )
+          )
+          .setWidth(1)
+          .setMinWidth(200)
+          .setMaxWidth(1000)
+          .setSortByFn(_.get.foldMap(_.value))
+      )
     }
     // Rows
     .useMemoBy((_, _, showDeleted, programs, _) =>
       (programs.toOption.map(_.reuseByValue), showDeleted.get)
-    ) { (_, _, _, _, _) =>
-      { case (programs, showDeleted) =>
-        programs
-          .map(
-            _.value.toListOfViews
-              .filter(vpi => showDeleted || !vpi.get.deleted)
-              .sortBy(_.get.id)
-          )
-          .orEmpty
-      }
+    ) { (_, _, _, _, _) => (programs, showDeleted) =>
+      programs
+        .map(
+          _.value.toListOfViews
+            .filter(vpi => showDeleted || !vpi.get.deleted)
+            .sortBy(_.get.id)
+        )
+        .orEmpty
     }
     .useTableBy((_, _, _, _, cols, rows) =>
       ProgsTableDef(
@@ -200,7 +214,7 @@ object ProgramTable {
       )
     )
     .render { (props, adding, showDeleted, programsPot, _, _, tableInstance) =>
-      implicit val ctx = props.ctx
+      import props.given
 
       <.div(ExploreStyles.ProgramTable)(
         programsPot.render(programs =>
