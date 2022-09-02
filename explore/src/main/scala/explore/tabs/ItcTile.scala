@@ -4,15 +4,26 @@
 package explore.tabs
 
 import cats.syntax.all.*
-import explore.common.ObsQueries._
+import crystal.react.View
+import explore.common.ObsQueries.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
-import explore.implicits._
+import explore.implicits.*
 import explore.itc.ItcGraphPanel
+import explore.itc.ItcPanelProps
+import explore.itc.ItcPanelTitle
 import explore.model.ScienceMode
 import explore.model.itc.ItcChartExposureTime
-import japgolly.scalajs.react.vdom.html_<^._
+import explore.model.itc.ItcTarget
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.syntax.all.given
+
+case class ItcTile(
+  scienceMode:              Option[ScienceMode],
+  spectroscopyRequirements: Option[SpectroscopyRequirementsData],
+  scienceData:              Option[ScienceData],
+  itcExposureTime:          Option[ItcChartExposureTime]
+) extends ItcPanelProps(scienceMode, spectroscopyRequirements, scienceData, itcExposureTime)
 
 object ItcTile:
 
@@ -20,11 +31,26 @@ object ItcTile:
     scienceMode:              Option[ScienceMode],
     spectroscopyRequirements: Option[SpectroscopyRequirementsData],
     scienceData:              Option[ScienceData],
-    itcExposureTime:          Option[ItcChartExposureTime]
+    itcExposureTime:          Option[ItcChartExposureTime],
+    selectedTarget:           View[Option[ItcTarget]]
   )(using AppContextIO) =
     Tile(
       ObsTabTilesIds.ItcId.id,
       s"ITC",
       canMinimize = true,
+      control = _ =>
+        (ItcPanelTitle(scienceMode,
+                       spectroscopyRequirements,
+                       scienceData,
+                       itcExposureTime,
+                       selectedTarget
+        ): VdomNode).some,
       bodyClass = ExploreStyles.ItcTileBody.some
-    )(_ => ItcGraphPanel(scienceMode, spectroscopyRequirements, scienceData, itcExposureTime))
+    )(_ =>
+      ItcGraphPanel(scienceMode,
+                    spectroscopyRequirements,
+                    scienceData,
+                    itcExposureTime,
+                    selectedTarget
+      )
+    )
