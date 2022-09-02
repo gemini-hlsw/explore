@@ -117,7 +117,7 @@ object ExploreMain extends IOApp.Simple {
     // This may seem like a no-op but it is in fact triggering the npm import
     // Order is important you need to import Highcharts first
     react.highcharts.Highcharts
-    explore.highcharts.HighchartsAccesibility
+    react.highcharts.HighchartsAccesibility
   }
 
   override final def run: IO[Unit] = {

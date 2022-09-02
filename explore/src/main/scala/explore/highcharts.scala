@@ -7,10 +7,6 @@ import gpp.highcharts.mod._
 import japgolly.scalajs.react._
 import react.common.style.Css
 
-import scala.scalajs.js
-import scala.scalajs.js.annotation._
-import scala.scalajs.js.annotation._
-
 extension (c: Chart_)
   inline def showLoadingCB: Callback              = CallbackTo(c.showLoading())
   inline def showLoadingCB(str: String): Callback = CallbackTo(c.showLoading(str))
@@ -25,7 +21,3 @@ extension (c: ChartOptions)
     c.setEvents(
       ChartEventsOptions().setSelection((_, s) => cb(s).runNow())
     )
-
-@js.native
-@JSImport("highcharts/es-modules/masters/modules/accessibility.src.js", JSImport.Default)
-object HighchartsAccesibility extends js.Object
