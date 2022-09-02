@@ -52,7 +52,6 @@ object AgsServer extends WorkerServer[IO, AgsMessage.Request] {
         case req @ AgsMessage.Request(_, _, _, _, _, _, _) =>
           val cacheableRequest =
             Cacheable(CacheName("ags"), CacheVersion(AgsCacheVersion), agsCalculation)
-          (IO.now() >>= (now => cache.evict(now.minus(CacheRetention)).start)) >>
-            cache.eval(cacheableRequest).apply(req).flatMap(m => invocation.respond(m))
+          cache.eval(cacheableRequest).apply(req).flatMap(m => invocation.respond(m))
       }
 }
