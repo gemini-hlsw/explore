@@ -7,6 +7,7 @@ import cats.syntax.all._
 import crystal.react.View
 import explore.components.ui.ExploreStyles
 import explore.model.enums.ItcChartType
+import explore.model.itc.PlotDetails
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.syntax.all.*

@@ -41,12 +41,6 @@ object PlotLoading:
 
 extension (p: PlotLoading) inline def boolValue: Boolean = p
 
-object PlotDetails extends NewType[Boolean]:
-  val Shown: PlotDetails  = PlotDetails(true)
-  val Hidden: PlotDetails = PlotDetails(false)
-
-type PlotDetails = PlotDetails.Type
-
 def formatDuration(seconds: Long): String =
   if (seconds < 60)
     s"$seconds sec"

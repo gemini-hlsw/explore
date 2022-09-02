@@ -75,7 +75,7 @@ object ElevationPlotSection {
     time:    TimeDisplay => TimeDisplay = identity
   )(using AppContextIO): Callback =
     options.get.toOption.map { opts =>
-      UserTargetPreferencesUpsert
+      ElevationPlotPreference
         .updatePlotPreferences[IO](props.uid,
                                    props.tid,
                                    site(opts.site),
@@ -112,7 +112,7 @@ object ElevationPlotSection {
       .useEffectWithDepsBy((props, _, _) => (props.uid, props.tid)) { (props, site, options) => _ =>
         import props.given
 
-        UserElevationPlotPreferencesQuery
+        ElevationPlotPreference
           .queryWithDefault[IO](props.uid, props.tid, site.value)
           .flatMap { case (site, range, time) =>
             options

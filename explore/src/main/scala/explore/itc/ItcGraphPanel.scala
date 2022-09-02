@@ -18,6 +18,7 @@ import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.UnderConstruction
 import explore.common.ObsQueries.*
+import explore.common.UserPreferencesQueries.*
 import explore.components.WIP
 import explore.components.ui.ExploreStyles
 import explore.config.ExposureTimeModeType.FixedExposure
@@ -35,6 +36,7 @@ import explore.model.itc.ItcChartResult
 import explore.model.itc.ItcSeries
 import explore.model.itc.ItcTarget
 import explore.model.itc.OverridenExposureTime
+import explore.model.itc.PlotDetails
 import explore.model.reusability.*
 import explore.model.reusability.given
 import explore.modes.GmosNorthSpectroscopyRow
@@ -45,14 +47,19 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ExposureTimeMode
+import lucuma.core.model.Observation
+import lucuma.core.model.User
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.given
+import queries.common.UserPreferencesQueriesGQL._
 import queries.schemas.itc.implicits.*
 import react.common.ReactFnProps
 
 import java.util.UUID
 
 case class ItcGraphPanel(
+  uid:                      User.Id,
+  oid:                      Observation.Id,
   scienceMode:              Option[ScienceMode],
   spectroscopyRequirements: Option[SpectroscopyRequirementsData],
   scienceData:              Option[ScienceData],
@@ -64,6 +71,8 @@ case class ItcGraphPanel(
 
 object ItcGraphPanel {
   private type Props = ItcGraphPanel with ItcPanelProps
+
+  given Reusability[PlotDetails] = Reusability.byEq
 
   private val component =
     ScalaFnComponent
@@ -90,6 +99,27 @@ object ItcGraphPanel {
       .useStateView(ItcChartType.S2NChart)
       // show description
       .useStateView(PlotDetails.Shown)
+      // Read preferences
+      .useEffectWithDepsBy((props, _, _, _, _) => (props.uid, props.oid)) {
+        (props, _, _, chartType, details) => _ =>
+          import props.given
+
+          ItcPlotPreferences
+            .queryWithDefault[IO](props.uid, props.oid)
+            .flatMap { (plotType, showDetails) =>
+              (chartType.set(plotType) *> details.set(showDetails)).to[IO]
+            }
+            .runAsyncAndForget
+      }
+      // Write preferences
+      .useEffectWithDepsBy((_, _, _, chart, details) => (chart.get, details.get)) {
+        (props, _, _, _, _) => (chart, details) =>
+          import props.given
+
+          ItcPlotPreferences
+            .updatePlotPreferences[IO](props.uid, props.oid, chart, details)
+            .runAsyncAndForget
+      }
       .render { (props, results, loading, chartType, details) =>
         val error: Option[String] = results.value.fold(none, _.getMessage.some, _ => none)
 

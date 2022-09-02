@@ -4,11 +4,12 @@
 package queries.schemas
 
 import clue.annotation.GraphQLSchema
+import explore.model.enums
 import lucuma.core.model.User
 
 @GraphQLSchema
-trait UserPreferencesDB {
-  object Scalars {
+trait UserPreferencesDB:
+  object Scalars:
     type UserId             = User.Id
     type ResizableArea      = String
     type BreakpointName     = String
@@ -17,5 +18,6 @@ trait UserPreferencesDB {
     type ElevationPlotRange = explore.model.enums.PlotRange
     type ElevationPlotTime  = explore.model.enums.TimeDisplay
     type Bigint             = Long
-  }
-}
+
+  object Enums:
+    type ItcChartType = enums.ItcChartType
