@@ -10,6 +10,7 @@ import crystal.react.hooks._
 import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.events.PlotMessage.*
+import explore.highcharts.*
 import explore.implicits._
 import explore.model.WorkerClients.PlotClient
 import explore.model.boopickle.CommonPicklers.given
@@ -46,15 +47,15 @@ import scala.scalajs.js
 
 import js.JSConverters._
 
-final case class ElevationPlotSemester(
+case class ElevationPlotSemester(
   site:             Site,
   coords:           Coordinates,
   semester:         Semester
 )(implicit val ctx: AppContextIO)
-    extends ReactFnProps[ElevationPlotSemester](ElevationPlotSemester.component)
+    extends ReactFnProps(ElevationPlotSemester.component)
 
 object ElevationPlotSemester {
-  type Props = ElevationPlotSemester
+  private type Props = ElevationPlotSemester
 
   private val PlotDayRate: Long     = 3
   private val MillisPerHour: Double = 60 * 60 * 1000
@@ -62,7 +63,7 @@ object ElevationPlotSemester {
 
   private val dateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
-  val component =
+  private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useResizeDetector()
@@ -157,10 +158,8 @@ object ElevationPlotSemester {
 
         val options = Options()
           .setChart(
-            ChartOptions()
+            commonOptions
               .setHeight(resize.height.getOrElse(1).toDouble)
-              .setStyledMode(true)
-              .setAlignTicks(false)
           )
           .setTitle(
             TitleOptions().setText(

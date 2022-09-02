@@ -20,8 +20,8 @@ import explore.syntax.ui.given
 import explore.utils.*
 import gpp.highcharts.highchartsStrings.line
 import gpp.highcharts.mod.*
-import japgolly.scalajs.react.*
-import japgolly.scalajs.react.vdom.html_<^.*
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.util.Enumerated
 import lucuma.refined.*
 import lucuma.ui.syntax.all.*
@@ -46,10 +46,10 @@ case class ItcSpectroscopyPlot(
   targetName: Option[String],
   loading:    PlotLoading,
   details:    PlotDetails
-) extends ReactFnProps[ItcSpectroscopyPlot](ItcSpectroscopyPlot.component)
+) extends ReactFnProps(ItcSpectroscopyPlot.component)
 
 object ItcSpectroscopyPlot {
-  type Props = ItcSpectroscopyPlot
+  private type Props = ItcSpectroscopyPlot
 
   def chartOptions(
     chart:      ItcChart,
@@ -94,20 +94,12 @@ object ItcSpectroscopyPlot {
 
     Options()
       .setChart(
-        ChartOptions()
+        commonOptions
           .setHeight(height)
-          .setStyledMode(true)
-          .setAlignTicks(false)
           .clazz(
             ExploreStyles.ItcPlotChart |+|
               ExploreStyles.ItcPlotLoading.when_(loading.boolValue)
           )
-          .setZooming(ChartZoomingOptions().setType(OptionsTypeValue.xy))
-          .setPanning(ChartPanningOptions().setEnabled(true))
-          .setPanKey(OptionsPanKeyValue.shift)
-          .setAnimation(false)
-          // Will be used in the future to persist the soom
-          // .selectionCB(s => Callback.log(s"selection ${s.xAxis(0).min}"))
       )
       .setTitle(TitleOptions().setText(chartTitle))
       .setSubtitle(
@@ -193,7 +185,7 @@ object ItcSpectroscopyPlot {
       )
   }
 
-  val component = ScalaFnComponent
+  private val component = ScalaFnComponent
     .withHooks[Props]
     .useResizeDetector()
     .render { (props, resize) =>

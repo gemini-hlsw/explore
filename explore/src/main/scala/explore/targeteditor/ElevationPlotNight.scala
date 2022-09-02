@@ -7,6 +7,7 @@ import cats.Eq
 import cats.derived.*
 import cats.syntax.all._
 import explore.components.ui.ExploreStyles
+import explore.highcharts.*
 import explore.implicits._
 import explore.model.enums.TimeDisplay
 import explore.syntax.ui.*
@@ -43,15 +44,15 @@ import scala.scalajs.js
 
 import js.JSConverters._
 
-final case class ElevationPlotNight(
+case class ElevationPlotNight(
   site:        Site,
   coords:      Coordinates,
   date:        LocalDate,
   timeDisplay: TimeDisplay
-) extends ReactFnProps[ElevationPlotNight](ElevationPlotNight.component)
+) extends ReactFnProps(ElevationPlotNight.component)
 
 object ElevationPlotNight {
-  type Props = ElevationPlotNight
+  private type Props = ElevationPlotNight
 
   private val PlotEvery: Duration   = Duration.ofMinutes(1)
   private val MillisPerHour: Double = 60 * 60 * 1000
@@ -138,7 +139,7 @@ object ElevationPlotNight {
     )
   }
 
-  val component =
+  private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useState(HashSet.from(ElevationSeries.values))
@@ -258,10 +259,8 @@ object ElevationPlotNight {
 
         val options = Options()
           .setChart(
-            ChartOptions()
+            commonOptions
               .setHeight(resize.height.getOrElse(1).toDouble)
-              .setStyledMode(true)
-              .setAlignTicks(false)
           )
           .setTitle(
             TitleOptions().setText(
