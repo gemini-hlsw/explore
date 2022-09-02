@@ -3,69 +3,42 @@
 
 package explore.model
 
-import cats.syntax.all._
-import coulomb._
+import cats.syntax.all.*
+import coulomb.*
 import coulomb.ops.algebra.spire.all.given
 import coulomb.policy.spire.standard.given
-import coulomb.syntax._
+import coulomb.syntax.*
 import eu.timepit.refined.refineV
-import explore.optics.all._
+import explore.optics.all.*
 import lucuma.core.math.HourAngle.HMS
 import lucuma.core.math.Parallax
 import lucuma.core.math.ProperMotion.AngularVelocityComponent
-import lucuma.core.math._
-import lucuma.core.math.units._
-import lucuma.core.optics._
-import lucuma.core.syntax.string._
+import lucuma.core.math.*
+import lucuma.core.math.units.*
+import lucuma.core.optics.*
+import lucuma.core.syntax.string.*
+import spire.math.Rational
 
 import java.text.NumberFormat
 import java.util.Locale
 import scala.math._
 
-trait formats {
-  val pxFormat: Format[String, Parallax] =
-    Format(
-      _.parseRationalOption
-        .flatMap { r =>
-          val micro = r * 1000L
-          // isValidLong will also make sure there aren't too many decimals
-          if (micro.isValidLong) micro.toLong.some else none
-        }
-        .flatMap(l => refineV[Parallax.Parallaxμas](l).toOption)
-        .map(μas => Parallax(μas.withUnit[MicroArcSecond])),
-      _.mas.toUnit[MilliArcSecond].value.toString
-    )
-
-  private def angularVelocityFormat[A](
-    reverseGet: BigDecimal => AngularVelocityComponent[A]
-  ): Format[String, AngularVelocityComponent[A]] =
-    Format(_.parseBigDecimalOption.map(reverseGet),
-           _.masy.toUnit[MilliArcSecondPerYear].value.toString
-    )
-
-  val pmRAFormat: Format[String, ProperMotion.RA] = angularVelocityFormat(
-    ProperMotion.RA.milliarcsecondsPerYear.reverseGet
-  )
-
-  val pmDecFormat: Format[String, ProperMotion.Dec] = angularVelocityFormat(
-    ProperMotion.Dec.milliarcsecondsPerYear.reverseGet
-  )
-
-  def formatterZ(dig: Int) = {
+trait formats:
+  private def formatterZ(dig: Int): NumberFormat = {
     val fmt = NumberFormat.getInstance(Locale.US)
     fmt.setGroupingUsed(false)
     fmt.setMaximumFractionDigits(scala.math.max(3, dig + 3))
     fmt
   }
 
-  val formatterRV = {
+  private val formatterRV: NumberFormat = {
     val fmt = NumberFormat.getInstance(Locale.US)
     fmt.setGroupingUsed(false)
     fmt.setMaximumFractionDigits(3)
     fmt
   }
 
-  val formatterCZ = {
+  private val formatterCZ: NumberFormat = {
     val fmt = NumberFormat.getInstance(Locale.US)
     fmt.setGroupingUsed(false)
     fmt.setMaximumFractionDigits(3)
@@ -98,16 +71,16 @@ trait formats {
   val formatArcsec: Format[String, Angle] =
     Format(_.parseIntOption.map(Angle.arcseconds.reverseGet(_)), Angle.arcseconds.get(_).toString)
 
-  def formatHMS(hms: HMS): String =
+  private def formatHMS(hms: HMS): String =
     f"${hms.hours}%02d:${hms.minutes}%02d:${hms.seconds}%02d.${hms.milliseconds}%03d"
 
-  val fromStringDMS: Angle => String =
+  private val fromStringDMS: Angle => String =
     dms => {
       val r = Angle.dms.get(dms)
       f"${r.degrees}%02d:${r.arcminutes}%02d:${r.arcseconds}%02d.${r.milliarcseconds / 10}%02d"
     }
 
-  val fromStringSignedDMS: Angle => String =
+  private val fromStringSignedDMS: Angle => String =
     a =>
       if (Angle.signedMicroarcseconds.get(a) < 0) s"-${fromStringDMS(-a)}"
       else s"+${fromStringDMS(a)}"
@@ -132,7 +105,5 @@ trait formats {
     else
       f"$arcseconds%01d.$mas%02d″"
   }
-
-}
 
 object formats extends formats

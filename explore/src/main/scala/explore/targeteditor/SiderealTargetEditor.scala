@@ -21,6 +21,7 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
+import explore.model.ExploreModelValidators
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.ScienceMode
@@ -209,7 +210,12 @@ object SiderealTargetEditor {
               .zoom(
                 Target.Sidereal.properMotionRA.getOption,
                 (f: Endo[Option[ProperMotion.RA]]) =>
-                  Target.Sidereal.properMotionRA.modify(unsafeOptionFnUnlift(f)),
+                  Target.Sidereal.properMotion.modify(pmOpt =>
+                    buildProperMotion(
+                      f(pmOpt.map(ProperMotion.ra.get)),
+                      pmOpt.map(ProperMotion.dec.get)
+                    )
+                  ),
                 siderealToTargetEndo.compose(SiderealInput.properMotion.modify)
               )
               .view((pmRA: Option[ProperMotion.RA]) =>
@@ -223,7 +229,12 @@ object SiderealTargetEditor {
               .zoom(
                 Target.Sidereal.properMotionDec.getOption,
                 (f: Endo[Option[ProperMotion.Dec]]) =>
-                  Target.Sidereal.properMotionDec.modify(unsafeOptionFnUnlift(f)),
+                  Target.Sidereal.properMotion.modify(pmOpt =>
+                    buildProperMotion(
+                      pmOpt.map(ProperMotion.ra.get),
+                      f(pmOpt.map(ProperMotion.dec.get))
+                    )
+                  ),
                 siderealToTargetEndo.compose(SiderealInput.properMotion.modify)
               )
               .view((pmDec: Option[ProperMotion.Dec]) =>
@@ -285,11 +296,12 @@ object SiderealTargetEditor {
                 AladinCell(
                   props.uid,
                   props.id,
-                  ObsConfiguration(vizTime,
-                                   props.scienceMode,
-                                   props.posAngle,
-                                   props.constraints,
-                                   props.wavelength
+                  ObsConfiguration(
+                    vizTime,
+                    props.scienceMode,
+                    props.posAngle,
+                    props.constraints,
+                    props.wavelength
                   ),
                   targetView.zoom(Target.Sidereal.tracking),
                   props.fullScreen
@@ -357,10 +369,8 @@ object SiderealTargetEditor {
                 InputWithUnits(
                   id = "raPM".refined,
                   value = properMotionRAView,
-                  validFormat = InputValidSplitEpi
-                    .fromFormat(pmRAFormat, "Must be a number".refined)
-                    .optional,
-                  changeAuditor = ChangeAuditor.fromFormat(pmRAFormat).decimal(3.refined).optional,
+                  validFormat = ExploreModelValidators.pmRAValidWedge.optional,
+                  changeAuditor = ChangeAuditor.bigDecimal(3.refined).optional,
                   units = "mas/y",
                   disabled = disabled
                 ),
@@ -368,10 +378,8 @@ object SiderealTargetEditor {
                 InputWithUnits(
                   id = "raDec".refined,
                   value = properMotionDecView,
-                  validFormat = InputValidSplitEpi
-                    .fromFormat(pmDecFormat, "Must be a number".refined)
-                    .optional,
-                  changeAuditor = ChangeAuditor.fromFormat(pmDecFormat).decimal(3.refined).optional,
+                  validFormat = ExploreModelValidators.pmDecValidWedge.optional,
+                  changeAuditor = ChangeAuditor.bigDecimal(3.refined).optional,
                   units = "mas/y",
                   disabled = disabled
                 ),
@@ -379,10 +387,8 @@ object SiderealTargetEditor {
                 InputWithUnits(
                   id = "parallax".refined,
                   value = parallaxView,
-                  validFormat = InputValidSplitEpi
-                    .fromFormat(pxFormat, "Must be a number".refined)
-                    .optional,
-                  changeAuditor = ChangeAuditor.fromFormat(pxFormat).decimal(3.refined).optional,
+                  validFormat = ExploreModelValidators.pxValidWedge.optional,
+                  changeAuditor = ChangeAuditor.bigDecimal(3.refined).optional,
                   units = "mas",
                   disabled = disabled
                 ),

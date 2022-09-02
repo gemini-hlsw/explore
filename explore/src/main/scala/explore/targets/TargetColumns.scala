@@ -8,6 +8,7 @@ import cats.syntax.all.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
+import explore.model.ExploreModelValidators.*
 import explore.model.conversions.*
 import explore.model.display.*
 import explore.model.display.given
@@ -151,12 +152,12 @@ object TargetColumns {
             .setSortByAuto,
           siderealColumnOpt("pmra", Target.Sidereal.properMotionRA.getOption)
             .setCell((x: CellProps[D, Option[RA], Plugins]) =>
-              x.value.map(pmRAFormat.reverseGet).orEmpty
+              x.value.map(pmRAValidWedge.reverseGet).orEmpty
             )
             .setSortByAuto,
           siderealColumnOpt("pmdec", Target.Sidereal.properMotionDec.getOption)
             .setCell((x: CellProps[D, Option[Dec], Plugins]) =>
-              x.value.map(pmDecFormat.reverseGet).orEmpty
+              x.value.map(pmDecValidWedge.reverseGet).orEmpty
             )
             .setSortByAuto,
           siderealColumnOpt("rv", Target.Sidereal.radialVelocity.get)

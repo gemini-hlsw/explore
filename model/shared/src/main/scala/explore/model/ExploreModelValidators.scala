@@ -3,27 +3,33 @@
 
 package explore.model
 
+import cats.data.NonEmptyChain
 import cats.data.NonEmptyList
 import cats.syntax.all._
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.numeric.Interval
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.DitherNanoMeters
 import explore.model.DitherNanoMetersRange
 import explore.model.HourRange
 import explore.model.display._
 import lucuma.core.math.Axis
 import lucuma.core.math.Offset
+import lucuma.core.math.Parallax
+import lucuma.core.math.ProperMotion
 import lucuma.core.math.Wavelength
 import lucuma.core.math.validation.MathValidators
+import lucuma.core.optics.Format
 import lucuma.core.optics.ValidSplitEpi
 import lucuma.core.optics.ValidWedge
 import lucuma.core.validation._
 import lucuma.refined.*
+import lucuma.utils.*
 
 import scala.util.Try
 
-object ExploreModelValidators {
+object ExploreModelValidators:
   val i = ValidSplitEpi
     .forRefined[String, BigDecimal, HourRange]("Invalid hour value")
 
@@ -64,4 +70,45 @@ object ExploreModelValidators {
           .fromFormat(Wavelength.decimalMicrometers, "Invalid Wavelength".refined[NonEmpty])
           .toErrorsValidWedge
       )
-}
+
+  // Strips non-significant zeros on `reverseGet`
+  val compactDecimalString: Format[String, String] =
+    Format(
+      _.some,
+      s =>
+        try BigDecimal(s).bigDecimal.stripTrailingZeros.toPlainString
+        catch { case _ => s }
+    )
+
+  val compactDecimalStringValidWedge: InputValidWedge[String] =
+    InputValidWedge.fromFormat(compactDecimalString)
+
+  val pxValidWedge: InputValidWedge[Parallax] =
+    compactDecimalStringValidWedge.andThen(
+      InputValidWedge
+        .truncatedBigDecimal(3.refined)
+        .andThen(
+          Parallax.milliarcseconds.reverse,
+          NonEmptyChain(NonEmptyString.unsafeFrom("Invalid parallax"))
+        )
+    )
+
+  val pmRAValidWedge: InputValidWedge[ProperMotion.RA] =
+    compactDecimalStringValidWedge.andThen(
+      InputValidWedge
+        .truncatedBigDecimal(3.refined)
+        .andThen(
+          ProperMotion.RA.milliarcsecondsPerYear.reverse,
+          NonEmptyChain(NonEmptyString.unsafeFrom("Invalid right ascencion velocity"))
+        )
+    )
+
+  val pmDecValidWedge: InputValidWedge[ProperMotion.Dec] =
+    compactDecimalStringValidWedge.andThen(
+      InputValidWedge
+        .truncatedBigDecimal(3.refined)
+        .andThen(
+          ProperMotion.Dec.milliarcsecondsPerYear.reverse,
+          NonEmptyChain(NonEmptyString.unsafeFrom("Invalid declination velocity"))
+        )
+    )
