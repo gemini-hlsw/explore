@@ -39,7 +39,7 @@ import lucuma.core.util.Enumerated
 // Boopicklers for catalog related types
 trait CatalogPicklers extends CommonPicklers {
 
-  implicit def picklerEpoch: Pickler[Epoch] =
+  given Pickler[Epoch] =
     new Pickler[Epoch] {
       override def pickle(a: Epoch)(implicit state: PickleState): Unit = {
         state.pickle(a.scheme.prefix)
@@ -57,85 +57,86 @@ trait CatalogPicklers extends CommonPicklers {
       }
     }
 
-  implicit def picklerAngularVelocityRA: Pickler[ProperMotion.RA] =
+  given Pickler[ProperMotion.RA] =
     transformPickler(ProperMotion.RA.microarcsecondsPerYear.reverseGet)(
       ProperMotion.RA.microarcsecondsPerYear.get
     )
 
-  implicit def picklerAngularVelocityDec: Pickler[ProperMotion.Dec] =
+  given Pickler[ProperMotion.Dec] =
     transformPickler(ProperMotion.Dec.microarcsecondsPerYear.reverseGet)(
       ProperMotion.Dec.microarcsecondsPerYear.get
     )
-  implicit def picklerProperMotion: Pickler[ProperMotion]           =
+
+  given Pickler[ProperMotion] =
     transformPickler(Function.tupled(ProperMotion.apply _))(x => (x.ra, x.dec))
 
-  implicit def picklerParallax: Pickler[Parallax] =
+  given Pickler[Parallax] =
     transformPickler(Parallax.fromMicroarcseconds)(_.μas.value.value)
 
-  implicit def picklerSiderealTracking: Pickler[SiderealTracking] =
+  given Pickler[SiderealTracking] =
     transformPickler(Function.tupled(SiderealTracking.apply _))(x =>
       (x.baseCoordinates, x.epoch, x.properMotion, x.radialVelocity, x.parallax)
     )
 
-  implicit def picklerGuideStarCandidate: Pickler[GuideStarCandidate] =
+  given Pickler[GuideStarCandidate] =
     transformPickler(Function.tupled(GuideStarCandidate.apply _))(x =>
       (x.id, x.tracking, x.gBrightness)
     )
 
-  implicit def picklerAgsPosition: Pickler[AgsPosition] =
+  given Pickler[AgsPosition] =
     transformPickler(Function.tupled(AgsPosition.apply _))(x => (x.posAngle, x.offsetPos))
 
-  implicit def picklerAgsParamsGmos: Pickler[AgsParams.GmosAgsParams] =
+  given Pickler[AgsParams.GmosAgsParams] =
     transformPickler(Function.tupled(AgsParams.GmosAgsParams.apply _))(x => (x.fpu, x.port))
 
-  implicit def picklerAgsParams: Pickler[AgsParams] =
+  given Pickler[AgsParams] =
     compositePickler[AgsParams]
       .addConcreteType[AgsParams.GmosAgsParams]
 
-  implicit def picklerProperMotionNotAvailable: Pickler[AgsAnalysis.ProperMotionNotAvailable] =
+  given Pickler[AgsAnalysis.ProperMotionNotAvailable] =
     transformPickler(AgsAnalysis.ProperMotionNotAvailable.apply)(_.target)
 
-  implicit def picklerVignettesScience: Pickler[AgsAnalysis.VignettesScience] =
+  given Pickler[AgsAnalysis.VignettesScience] =
     transformPickler(AgsAnalysis.VignettesScience.apply)(_.target)
 
-  implicit def picklerNoGuideStarForProbe: Pickler[AgsAnalysis.NoGuideStarForProbe] =
+  given Pickler[AgsAnalysis.NoGuideStarForProbe] =
     transformPickler(Function.tupled(AgsAnalysis.NoGuideStarForProbe.apply _))(x =>
       (x.guideProbe, x.target)
     )
 
-  implicit def picklerMagnitudeTooFaint: Pickler[AgsAnalysis.MagnitudeTooFaint] =
+  given Pickler[AgsAnalysis.MagnitudeTooFaint] =
     transformPickler(Function.tupled(AgsAnalysis.MagnitudeTooFaint.apply _))(x =>
       (x.guideProbe, x.target, x.showGuideSpeed)
     )
 
-  implicit def picklerMagnitudeTooBright: Pickler[AgsAnalysis.MagnitudeTooBright] =
+  given Pickler[AgsAnalysis.MagnitudeTooBright] =
     transformPickler(Function.tupled(AgsAnalysis.MagnitudeTooBright.apply _))(x =>
       (x.guideProbe, x.target)
     )
 
-  implicit def picklerNotReachable: Pickler[AgsAnalysis.NotReachable] =
+  given Pickler[AgsAnalysis.NotReachable] =
     transformPickler(Function.tupled(AgsAnalysis.NotReachable.apply _))(x =>
       (x.position, x.guideProbe, x.target)
     )
 
-  implicit def picklerNoMagnitudeForBand: Pickler[AgsAnalysis.NoMagnitudeForBand] =
+  given Pickler[AgsAnalysis.NoMagnitudeForBand] =
     transformPickler(Function.tupled(AgsAnalysis.NoMagnitudeForBand.apply _))(x =>
       (x.guideProbe, x.target)
     )
 
-  implicit def picklerArea: Pickler[Area] =
+  given Pickler[Area] =
     transformPickler((x: Long) =>
       Area.fromMicroarcsecondsSquared.getOption(x).getOrElse(sys.error("Cannot unpickle"))
     )(
       _.toMicroarcsecondsSquared
     )
 
-  implicit def picklerUsable: Pickler[AgsAnalysis.Usable] =
+  given Pickler[AgsAnalysis.Usable] =
     transformPickler(Function.tupled(AgsAnalysis.Usable.apply _))(x =>
       (x.guideProbe, x.target, x.guideSpeed, x.quality, x.vignettingArea)
     )
 
-  implicit def picklerAgsAnalysis: Pickler[AgsAnalysis] =
+  given Pickler[AgsAnalysis] =
     compositePickler[AgsAnalysis]
       .addConcreteType[AgsAnalysis.ProperMotionNotAvailable]
       .addConcreteType[AgsAnalysis.VignettesScience]

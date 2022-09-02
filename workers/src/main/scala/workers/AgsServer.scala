@@ -5,13 +5,18 @@ package workers
 
 import boopickle.DefaultBasic.*
 import cats.effect.IO
-import cats.effect.unsafe.implicits._
+import cats.effect.unsafe.implicits.*
+import cats.syntax.all.*
 import explore.events.AgsMessage
 import explore.model.boopickle.CatalogPicklers.given
 import lucuma.ags.Ags
 import lucuma.ags.AgsAnalysis
+import org.scalajs.dom
 import org.typelevel.log4cats.Logger
+import workers.*
 
+import java.time.Duration
+import java.time.Instant
 import scala.scalajs.js.annotation.JSExport
 import scala.scalajs.js.annotation.JSExportTopLevel
 
@@ -20,18 +25,34 @@ object AgsServer extends WorkerServer[IO, AgsMessage.Request] {
   @JSExport
   def runWorker(): Unit = run.unsafeRunAndForget()
 
-  protected val handler: Logger[IO] ?=> IO[Invocation => IO[Unit]] = IO { invocation =>
-    invocation.data match {
-      case AgsMessage.Request(id, constraints, wavelength, base, basePos, params, candidates) =>
-        Logger[IO].debug(s"AGS request for $id") >>
-          IO.delay(
-            Ags
-              .agsAnalysis(constraints, wavelength, base, basePos, params, candidates)
-              .sorted(AgsAnalysis.rankingOrdering)
-          ).flatMap(r =>
-            Logger[IO].debug(s"AGS response for $id") >>
-              invocation.respond(r)
-          )
-    }
-  }
+  private val AgsCacheVersion: Int = 1
+
+  private val CacheRetention: Duration = Duration.ofDays(60)
+
+  def agsCalculation(r: AgsMessage.Request): IO[List[AgsAnalysis]] =
+    IO.delay(
+      Ags
+        .agsAnalysis(r.constraints,
+                     r.wavelength,
+                     r.baseCoordinates,
+                     r.position,
+                     r.params,
+                     r.candidates
+        )
+        .sorted(AgsAnalysis.rankingOrdering)
+    )
+
+  protected val handler: Logger[IO] ?=> IO[Invocation => IO[Unit]] =
+    for
+      self  <- IO(dom.DedicatedWorkerGlobalScope.self)
+      cache <- Cache.withIDB[IO](self.indexedDB.toOption, "ags")
+      _     <- cache.evict(CacheRetention).start
+    yield invocation =>
+      invocation.data match {
+        case req @ AgsMessage.Request(_, _, _, _, _, _, _) =>
+          val cacheableRequest =
+            Cacheable(CacheName("ags"), CacheVersion(AgsCacheVersion), agsCalculation)
+          (IO.now() >>= (now => cache.evict(now.minus(CacheRetention)).start)) >>
+            cache.eval(cacheableRequest).apply(req).flatMap(m => invocation.respond(m))
+      }
 }
