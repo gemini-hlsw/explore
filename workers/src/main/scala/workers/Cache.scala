@@ -80,16 +80,20 @@ case class IDBCache[F[_]](
     cacheDB
       .get(store)(pickledInput)
       .toF
+      .attempt
+      .map(_.toOption.flatten) // Treat errors as cache misses
       .flatMap(
         _.fold(
           computation
             .invoke(input)
-            .flatTap(output => cacheDB.put(store)(pickledInput, Pickled(asBytes(output))).toF)
+            .flatTap(output =>
+              cacheDB
+                .put(store)(pickledInput, Pickled(asBytes(output)))
+                .toF
+                .handleError(_ => ()) // Ignore errors
+            )
         )(pickledOutput => F.pure(fromBytes[O](pickledOutput.value)).rethrow)
       )
-      .handleErrorWith { t =>
-        F.delay(t.printStackTrace); throw t
-      }
   }
 
   override def evict(until: Instant): F[Unit] =
