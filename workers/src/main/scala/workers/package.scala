@@ -9,6 +9,8 @@ import cats.~>
 import japgolly.scalajs.react.callback.AsyncCallback
 import japgolly.scalajs.react.callback.Callback
 
+import java.time.Instant
+
 import scalajs.js
 
 // Copied and generalized from CallbackCatsEffect
@@ -40,3 +42,5 @@ object PromiseConverter:
 given PromiseConverter[IO] = new PromiseConverter[IO] {
   inline def convert[A](promise: => js.Promise[A]): IO[A] = IO.fromPromise(IO(promise))
 }
+
+extension (t: IO.type) def now(): IO[Instant] = IO(Instant.now)
