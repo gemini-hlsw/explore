@@ -46,6 +46,7 @@ See https://github.com/highcharts/highcharts/issues/13320 */
 
 /* Sky Brightness */
 .elevation-plot {
+
   .highcharts-color-2,
   .plot-sky-brightness-percentile,
   .highcharts-plot-line-label {
@@ -84,7 +85,7 @@ See https://github.com/highcharts/highcharts/issues/13320 */
 }
 
 .plot-band-twilight-nautical-end {
-  fill-opacity: 0;
+  fill-opacity: 0%;
 }
 
 .highcharts-plot-band-label {
@@ -307,4 +308,3 @@ $description-column-count: 2;
   }
 
 }
-
