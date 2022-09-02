@@ -301,7 +301,7 @@ lazy val npmBuild = WorkflowStep.Run(
   List("npm run build"),
   name = Some("Build application"),
   env = Map(
-    "NODE_OPTIONS" -> "--max-old-space-size=6144"
+    "NODE_OPTIONS" -> "--max-old-space-size=8192"
   )
 )
 
