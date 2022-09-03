@@ -67,62 +67,36 @@ trait CatalogPicklers extends CommonPicklers {
       ProperMotion.Dec.microarcsecondsPerYear.get
     )
 
-  given Pickler[ProperMotion] =
-    transformPickler(Function.tupled(ProperMotion.apply _))(x => (x.ra, x.dec))
+  given Pickler[ProperMotion] = generatePickler
 
   given Pickler[Parallax] =
     transformPickler(Parallax.fromMicroarcseconds)(_.μas.value.value)
 
-  given Pickler[SiderealTracking] =
-    transformPickler(Function.tupled(SiderealTracking.apply _))(x =>
-      (x.baseCoordinates, x.epoch, x.properMotion, x.radialVelocity, x.parallax)
-    )
+  given Pickler[SiderealTracking] = generatePickler
 
-  given Pickler[GuideStarCandidate] =
-    transformPickler(Function.tupled(GuideStarCandidate.apply _))(x =>
-      (x.id, x.tracking, x.gBrightness)
-    )
+  given Pickler[GuideStarCandidate] = generatePickler
 
-  given Pickler[AgsPosition] =
-    transformPickler(Function.tupled(AgsPosition.apply _))(x => (x.posAngle, x.offsetPos))
+  given Pickler[AgsPosition] = generatePickler
 
-  given Pickler[AgsParams.GmosAgsParams] =
-    transformPickler(Function.tupled(AgsParams.GmosAgsParams.apply _))(x => (x.fpu, x.port))
+  given Pickler[AgsParams.GmosAgsParams] = generatePickler
 
   given Pickler[AgsParams] =
     compositePickler[AgsParams]
       .addConcreteType[AgsParams.GmosAgsParams]
 
-  given Pickler[AgsAnalysis.ProperMotionNotAvailable] =
-    transformPickler(AgsAnalysis.ProperMotionNotAvailable.apply)(_.target)
+  given Pickler[AgsAnalysis.ProperMotionNotAvailable] = generatePickler
 
-  given Pickler[AgsAnalysis.VignettesScience] =
-    transformPickler(AgsAnalysis.VignettesScience.apply)(_.target)
+  given Pickler[AgsAnalysis.VignettesScience] = generatePickler
 
-  given Pickler[AgsAnalysis.NoGuideStarForProbe] =
-    transformPickler(Function.tupled(AgsAnalysis.NoGuideStarForProbe.apply _))(x =>
-      (x.guideProbe, x.target)
-    )
+  given Pickler[AgsAnalysis.NoGuideStarForProbe] = generatePickler
 
-  given Pickler[AgsAnalysis.MagnitudeTooFaint] =
-    transformPickler(Function.tupled(AgsAnalysis.MagnitudeTooFaint.apply _))(x =>
-      (x.guideProbe, x.target, x.showGuideSpeed)
-    )
+  given Pickler[AgsAnalysis.MagnitudeTooFaint] = generatePickler
 
-  given Pickler[AgsAnalysis.MagnitudeTooBright] =
-    transformPickler(Function.tupled(AgsAnalysis.MagnitudeTooBright.apply _))(x =>
-      (x.guideProbe, x.target)
-    )
+  given Pickler[AgsAnalysis.MagnitudeTooBright] = generatePickler
 
-  given Pickler[AgsAnalysis.NotReachable] =
-    transformPickler(Function.tupled(AgsAnalysis.NotReachable.apply _))(x =>
-      (x.position, x.guideProbe, x.target)
-    )
+  given Pickler[AgsAnalysis.NotReachable] = generatePickler
 
-  given Pickler[AgsAnalysis.NoMagnitudeForBand] =
-    transformPickler(Function.tupled(AgsAnalysis.NoMagnitudeForBand.apply _))(x =>
-      (x.guideProbe, x.target)
-    )
+  given Pickler[AgsAnalysis.NoMagnitudeForBand] = generatePickler
 
   given Pickler[Area] =
     transformPickler((x: Long) =>
@@ -131,10 +105,7 @@ trait CatalogPicklers extends CommonPicklers {
       _.toMicroarcsecondsSquared
     )
 
-  given Pickler[AgsAnalysis.Usable] =
-    transformPickler(Function.tupled(AgsAnalysis.Usable.apply _))(x =>
-      (x.guideProbe, x.target, x.guideSpeed, x.quality, x.vignettingArea)
-    )
+  given Pickler[AgsAnalysis.Usable] = generatePickler
 
   given Pickler[AgsAnalysis] =
     compositePickler[AgsAnalysis]
