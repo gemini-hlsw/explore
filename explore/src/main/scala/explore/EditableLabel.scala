@@ -18,7 +18,7 @@ import org.scalajs.dom
 import react.common.ReactFnProps
 import react.common.style.Css
 import react.fa.FontAwesomeIcon
-import react.floatingui.Tooltip
+import react.floatingui.syntax.*
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.input.Input
 import react.semanticui.sizes.*
@@ -151,12 +151,8 @@ object EditableLabel {
               ^.onClick ==> (e => e.stopPropagationCB >> e.preventDefaultCB),
               ^.untypedRef(focus)
             ),
-            props.okButtonTooltip
-              .map(t => Tooltip(trigger = <.span(acceptButton), tooltip = t): VdomNode)
-              .getOrElse(acceptButton),
-            props.discardButtonTooltip
-              .map(t => Tooltip(trigger = <.span(discardButton), tooltip = t): VdomNode)
-              .getOrElse(discardButton)
+            acceptButton.withOptionalTooltip(props.okButtonTooltip),
+            discardButton.withOptionalTooltip(props.discardButtonTooltip)
           )
         else
           props.value.fold[VdomNode](
@@ -173,12 +169,8 @@ object EditableLabel {
                 ^.onClick ==> (v => editCB(v).whenA(props.editOnClick)),
                 text
               ),
-              props.leftButtonTooltip
-                .map(t => Tooltip(trigger = <.span(leftButton), tooltip = t): VdomNode)
-                .getOrElse(leftButton),
-              props.rightButtonTooltip
-                .map(t => Tooltip(trigger = <.span(rightButton), tooltip = t): VdomNode)
-                .getOrElse(rightButton)
+              leftButton.withOptionalTooltip(props.leftButtonTooltip),
+              rightButton.withOptionalTooltip(props.rightButtonTooltip)
             )
           )
       }
