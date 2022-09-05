@@ -4,7 +4,7 @@
 package explore.itc
 
 import cats.syntax.all._
-import crystal.react.View
+import crystal.react.ViewOpt
 import explore.components.ui.ExploreStyles
 import explore.model.enums.ItcChartType
 import explore.model.itc.PlotDetails
@@ -18,8 +18,8 @@ import react.semanticui.elements.button.ButtonGroup
 import react.semanticui.sizes._
 
 case class ItcPlotControl(
-  chartType:   View[ItcChartType],
-  showDetails: View[PlotDetails]
+  chartType:   ViewOpt[ItcChartType],
+  showDetails: ViewOpt[PlotDetails]
 ) extends ReactFnProps[ItcPlotControl](ItcPlotControl.component)
 
 object ItcPlotControl:
@@ -28,7 +28,7 @@ object ItcPlotControl:
   val component = ScalaFnComponent
     .withHooks[Props]
     .render { props =>
-      val descText = if (props.showDetails.get.value) "Hide details" else "Show details"
+      val descText = if (props.showDetails.get.exists(_.value)) "Hide details" else "Show details"
 
       <.div(
         ExploreStyles.ItcPlotControls,
@@ -43,11 +43,11 @@ object ItcPlotControl:
         )(descText),
         ButtonGroup(compact = true, size = Tiny, clazz = ExploreStyles.ItcPlotSelector)(
           Button(
-            active = props.chartType.when(_ === ItcChartType.S2NChart),
+            active = props.chartType.get.exists(_ === ItcChartType.S2NChart),
             onClick = props.chartType.set(ItcChartType.S2NChart)
           )("S/N"),
           Button(
-            active = props.chartType.when(_ === ItcChartType.SignalChart),
+            active = props.chartType.get.exists(_ === ItcChartType.SignalChart),
             onClick = props.chartType.set(ItcChartType.SignalChart)
           )("Signal")
         )
