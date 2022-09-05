@@ -86,11 +86,13 @@ object AladinToolbar {
         ),
         <.div(
           ExploreStyles.AladinCenterButton,
-          Button(size = Mini, icon = true, onClick = props.center.set(true))(
-            Icons.Bullseye
-              .transform(Transform(size = 24))
-              .clazz(ExploreStyles.Accented)
-          ).componentWithTooltip(
+          <.span(
+            Button(size = Mini, icon = true, onClick = props.center.set(true))(
+              Icons.Bullseye
+                .transform(Transform(size = 24))
+                .clazz(ExploreStyles.Accented)
+            )
+          ).withTooltip(
             tooltip = "Center on target",
             placement = Placement.BottomEnd
           )

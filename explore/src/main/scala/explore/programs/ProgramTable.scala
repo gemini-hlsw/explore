@@ -124,28 +124,32 @@ object ProgramTable {
                     e.stopPropagationCB >>
                     props.selectProgram(programId)
               ).unless(cell.row.original.get.deleted),
-              Button(
-                size = Mini,
-                compact = true,
-                icon = Icons.Trash,
-                // can't delete the current or last one
-                disabled = currentProgramId.exists(_ === programId) || programCount < 2,
-                onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
-                  e.preventDefaultCB >>
-                    e.stopPropagationCB >>
-                    deleteProgram(cell.value).runAsync
-              ).componentWithTooltip(tooltip = "Delete program", placement = Placement.Right)
+              <.span(
+                Button(
+                  size = Mini,
+                  compact = true,
+                  icon = Icons.Trash,
+                  // can't delete the current or last one
+                  disabled = currentProgramId.exists(_ === programId) || programCount < 2,
+                  onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
+                    e.preventDefaultCB >>
+                      e.stopPropagationCB >>
+                      deleteProgram(cell.value).runAsync
+                )
+              ).withTooltip(tooltip = "Delete program", placement = Placement.Right)
                 .unless(isDeleted),
-              Button(
-                content = "Undelete",
-                size = Mini,
-                compact = true,
-                icon = Icons.TrashUndo,
-                onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
-                  e.preventDefaultCB >>
-                    e.stopPropagationCB >>
-                    undeleteProgram(cell.value).runAsync
-              ).componentWithTooltip(
+              <.span(
+                Button(
+                  content = "Undelete",
+                  size = Mini,
+                  compact = true,
+                  icon = Icons.TrashUndo,
+                  onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
+                    e.preventDefaultCB >>
+                      e.stopPropagationCB >>
+                      undeleteProgram(cell.value).runAsync
+                )
+              ).withTooltip(
                 tooltip = "Undelete program",
                 placement = Placement.Right
               ).when(isDeleted)

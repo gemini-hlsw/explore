@@ -136,15 +136,17 @@ object ObsBadge {
                   ReactFragment(obs.id.toString)
               },
               props.setActiveStatusCB.map(setActiveStatus =>
-                Checkbox(
-                  toggle = true,
-                  checked = obs.activeStatus.toBoolean,
-                  onClickE = (e: ReactEvent, _: Checkbox.CheckboxProps) =>
-                    e.preventDefaultCB >> e.stopPropagationCB >> setActiveStatus(
-                      ObsActiveStatus.FromBoolean.get(!obs.activeStatus.toBoolean)
-                    ),
-                  clazz = ExploreStyles.ObsActiveStatusToggle
-                ).componentWithTooltip(
+                <.span(
+                  Checkbox(
+                    toggle = true,
+                    checked = obs.activeStatus.toBoolean,
+                    onClickE = (e: ReactEvent, _: Checkbox.CheckboxProps) =>
+                      e.preventDefaultCB >> e.stopPropagationCB >> setActiveStatus(
+                        ObsActiveStatus.FromBoolean.get(!obs.activeStatus.toBoolean)
+                      ),
+                    clazz = ExploreStyles.ObsActiveStatusToggle
+                  )
+                ).withTooltip(
                   placement = Placement.TopEnd,
                   tooltip = obs.activeStatus match
                     case ObsActiveStatus.Active   => "Observation is active"
