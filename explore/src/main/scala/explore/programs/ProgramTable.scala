@@ -134,7 +134,7 @@ object ProgramTable {
                   e.preventDefaultCB >>
                     e.stopPropagationCB >>
                     deleteProgram(cell.value).runAsync
-              ).withTooltip(placement = Placement.Right, tooltip = "Delete program")
+              ).componentWithTooltip(tooltip = "Delete program", placement = Placement.Right)
                 .unless(isDeleted),
               Button(
                 content = "Undelete",
@@ -145,9 +145,9 @@ object ProgramTable {
                   e.preventDefaultCB >>
                     e.stopPropagationCB >>
                     undeleteProgram(cell.value).runAsync
-              ).withTooltip(
-                placement = Placement.Right,
-                tooltip = "Undelete program"
+              ).componentWithTooltip(
+                tooltip = "Undelete program",
+                placement = Placement.Right
               ).when(isDeleted)
             )
           }

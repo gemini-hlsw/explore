@@ -57,7 +57,8 @@ import lucuma.utils._
 import react.circularprogressbar.CircularProgressbar
 import react.common.Css
 import react.common.ReactFnProps
-import react.floatingui.*
+import react.floatingui.Placement
+import react.floatingui.syntax._
 import react.semanticui._
 import react.semanticui.collections.table._
 import react.semanticui.elements.button.Button
@@ -199,10 +200,8 @@ object SpectroscopyModesTable {
     val content: TagMod = c match {
       case Left(nel)                        =>
         if (nel.exists(_ == ItcQueryProblems.UnsupportedMode))
-          Tooltip(tooltip = "Mode not supported",
-                  placement = Placement.RightStart,
-                  trigger = <.span(Icons.Ban.color("red"))
-          )
+          <.span(Icons.Ban.color("red"))
+            .withTooltip(tooltip = "Mode not supported", placement = Placement.RightStart)
         else {
           val content = nel.collect {
             case ItcQueryProblems.MissingSignalToNoise => <.span("Set S/N")
@@ -211,21 +210,20 @@ object SpectroscopyModesTable {
             case ItcQueryProblems.GenericError(e)      => e.split("\\.").mkTagMod(<.br)
           }.toList
 
-          Tooltip(tooltip = <.div(content.mkTagMod(<.span)),
-                  placement = Placement.RightEnd,
-                  trigger = <.span(Icons.TriangleSolid)
-          )
+          <.span(Icons.TriangleSolid)
+            .withTooltip(tooltip = <.div(content.mkTagMod(<.span)), placement = Placement.RightEnd)
         }
       case Right(r: ItcResult.Result)       =>
-        Tooltip(
-          trigger = <.span(formatDuration(r.duration.toSeconds)),
-          placement = Placement.RightStart,
-          tooltip = s"${r.exposures} × ${formatDuration(r.exposureTime.toSeconds)}"
-        )
+        <.span(formatDuration(r.duration.toSeconds))
+          .withTooltip(
+            placement = Placement.RightStart,
+            tooltip = s"${r.exposures} × ${formatDuration(r.exposureTime.toSeconds)}"
+          )
       case Right(ItcResult.Pending)         =>
         Icons.Spinner.spin(true)
       case Right(ItcResult.SourceTooBright) =>
-        Tooltip(tooltip = "Source too bright", trigger = <.span(Icons.SunBright.color("yellow")))
+        <.span(Icons.SunBright.color("yellow"))
+          .withTooltip(tooltip = "Source too bright")
     }
     <.div(ExploreStyles.ITCCell, content)
 

@@ -19,7 +19,8 @@ import lucuma.ui.syntax.all.given
 import react.aladin.Fov
 import react.common.ReactFnProps
 import react.fa.Transform
-import react.floatingui.*
+import react.floatingui.Placement
+import react.floatingui.syntax.*
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.label._
 import react.semanticui.shorthand._
@@ -52,18 +53,21 @@ object AladinToolbar {
         ),
         <.div(
           ExploreStyles.AladinGuideStarLoading,
-          Tooltip(
-            trigger = <.span(Icons.CircleSmall.beat().clazz(ExploreStyles.WarningIcon)),
-            tooltip = "Loading catalog stars.."
-          ).when(props.agsState === AgsState.LoadingCandidates),
-          Tooltip(
-            trigger = <.span(Icons.CircleSmall.beat().clazz(ExploreStyles.WarningIcon)),
-            tooltip = "Calculating guide star.."
-          ).when(props.agsState === AgsState.Calculating),
-          Tooltip(
-            trigger = <.span(Icons.CircleSmall.clazz(ExploreStyles.ErrorIcon)),
-            tooltip = "The Catalog isn't responding at the moment - please try again later.."
-          ).when(props.agsState === AgsState.Error)
+          <.span(Icons.CircleSmall.beat().clazz(ExploreStyles.WarningIcon))
+            .withTooltip(
+              tooltip = "Loading catalog stars.."
+            )
+            .when(props.agsState === AgsState.LoadingCandidates),
+          <.span(Icons.CircleSmall.beat().clazz(ExploreStyles.WarningIcon))
+            .withTooltip(
+              tooltip = "Calculating guide star.."
+            )
+            .when(props.agsState === AgsState.Calculating),
+          <.span(Icons.CircleSmall.clazz(ExploreStyles.ErrorIcon))
+            .withTooltip(
+              tooltip = "The Catalog isn't responding at the moment - please try again later.."
+            )
+            .when(props.agsState === AgsState.Error)
         ),
         <.div(
           ExploreStyles.AladinGuideStar,
@@ -82,14 +86,11 @@ object AladinToolbar {
         ),
         <.div(
           ExploreStyles.AladinCenterButton,
-          Tooltip(
-            trigger = <.span(
-              Button(size = Mini, icon = true, onClick = props.center.set(true))(
-                Icons.Bullseye
-                  .transform(Transform(size = 24))
-                  .clazz(ExploreStyles.Accented)
-              )
-            ),
+          Button(size = Mini, icon = true, onClick = props.center.set(true))(
+            Icons.Bullseye
+              .transform(Transform(size = 24))
+              .clazz(ExploreStyles.Accented)
+          ).componentWithTooltip(
             tooltip = "Center on target",
             placement = Placement.BottomEnd
           )

@@ -26,7 +26,8 @@ import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
-import react.floatingui.*
+import react.floatingui.Placement
+import react.floatingui.syntax._
 import react.semanticui.collections.form.FormDropdown
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.checkbox.Checkbox
@@ -135,23 +136,19 @@ object ObsBadge {
                   ReactFragment(obs.id.toString)
               },
               props.setActiveStatusCB.map(setActiveStatus =>
-                Tooltip(
+                Checkbox(
+                  toggle = true,
+                  checked = obs.activeStatus.toBoolean,
+                  onClickE = (e: ReactEvent, _: Checkbox.CheckboxProps) =>
+                    e.preventDefaultCB >> e.stopPropagationCB >> setActiveStatus(
+                      ObsActiveStatus.FromBoolean.get(!obs.activeStatus.toBoolean)
+                    ),
+                  clazz = ExploreStyles.ObsActiveStatusToggle
+                ).componentWithTooltip(
                   placement = Placement.TopEnd,
                   tooltip = obs.activeStatus match
                     case ObsActiveStatus.Active   => "Observation is active"
                     case ObsActiveStatus.Inactive => "Observation is not active"
-                  ,
-                  trigger = <.span(
-                    Checkbox(
-                      toggle = true,
-                      checked = obs.activeStatus.toBoolean,
-                      onClickE = (e: ReactEvent, _: Checkbox.CheckboxProps) =>
-                        e.preventDefaultCB >> e.stopPropagationCB >> setActiveStatus(
-                          ObsActiveStatus.FromBoolean.get(!obs.activeStatus.toBoolean)
-                        ),
-                      clazz = ExploreStyles.ObsActiveStatusToggle
-                    )
-                  )
                 )
               )
             ),

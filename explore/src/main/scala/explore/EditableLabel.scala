@@ -151,8 +151,8 @@ object EditableLabel {
               ^.onClick ==> (e => e.stopPropagationCB >> e.preventDefaultCB),
               ^.untypedRef(focus)
             ),
-            acceptButton.withOptionalTooltip(props.okButtonTooltip),
-            discardButton.withOptionalTooltip(props.discardButtonTooltip)
+            acceptButton.componentWithTooltip(props.okButtonTooltip),
+            discardButton.componentWithTooltip(props.discardButtonTooltip)
           )
         else
           props.value.fold[VdomNode](
@@ -169,8 +169,8 @@ object EditableLabel {
                 ^.onClick ==> (v => editCB(v).whenA(props.editOnClick)),
                 text
               ),
-              leftButton.withOptionalTooltip(props.leftButtonTooltip),
-              rightButton.withOptionalTooltip(props.rightButtonTooltip)
+              leftButton.componentWithTooltip(props.leftButtonTooltip),
+              rightButton.componentWithTooltip(props.rightButtonTooltip)
             )
           )
       }
