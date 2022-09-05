@@ -4,15 +4,16 @@
 package explore.itc
 
 import cats.data.NonEmptyList
-import cats.syntax.all._
+import cats.syntax.all.*
 import crystal.Pot
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.highcharts.*
-import explore.implicits._
+import explore.implicits.*
 import explore.model.enums.ItcChartType
 import explore.model.itc.ItcChart
 import explore.model.itc.ItcSeries
+import explore.model.itc.PlotDetails
 import explore.model.itc.YAxis
 import explore.model.itc.math.roundToSignificantFigures
 import explore.syntax.ui.*
@@ -28,16 +29,16 @@ import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.highcharts.ResizingChart
-import react.resizeDetector.hooks._
+import react.resizeDetector.hooks.*
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.ButtonGroup
 import react.semanticui.elements.loader.Loader
-import react.semanticui.sizes._
+import react.semanticui.sizes.*
 
 import scala.collection.immutable.HashSet
 import scala.scalajs.js
-import scala.scalajs.js.JSConverters._
+import scala.scalajs.js.JSConverters.*
 
 case class ItcSpectroscopyPlot(
   charts:     Option[NonEmptyList[ItcChart]],

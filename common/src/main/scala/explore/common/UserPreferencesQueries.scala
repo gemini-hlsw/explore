@@ -5,30 +5,36 @@ package explore.common
 
 import cats.ApplicativeThrow
 import cats.MonadThrow
-import cats.Order._
+import cats.Order.*
 import cats.data.OptionT
-import cats.syntax.all._
+import cats.syntax.all.*
 import clue.TransactionalClient
-import clue.data.syntax._
+import clue.data.syntax.*
 import explore.model.GridLayoutSection
 import explore.model.ResizableSection
+import explore.model.enums.ItcChartType
 import explore.model.enums.PlotRange
 import explore.model.enums.TimeDisplay
 import explore.model.enums.Visible
+import explore.model.itc.PlotDetails
+import explore.model.itc.*
 import explore.model.layout.*
 import explore.model.layout.given
+import gpp.highcharts.highchartsStrings.chart_
 import lucuma.core.enums.Site
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
+import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.model.User
-import queries.common.UserPreferencesQueriesGQL._
+import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.UserPreferencesDB
-import queries.schemas.UserPreferencesDB.Enums._
-import queries.schemas.UserPreferencesDB.Scalars._
-import queries.schemas.UserPreferencesDB.Types._
+import queries.schemas.UserPreferencesDB.Enums.*
+import queries.schemas.UserPreferencesDB.Scalars.*
+import queries.schemas.UserPreferencesDB.Types.LucumaObservationInsertInput
+import queries.schemas.UserPreferencesDB.Types.*
 import queries.schemas.WidthUpsertInput
-import queries.schemas.implicits._
+import queries.schemas.implicits.*
 import react.gridlayout.{BreakpointName => _, _}
 
 import scala.collection.immutable.SortedMap
@@ -36,7 +42,7 @@ import scala.collection.immutable.SortedMap
 object UserPreferencesQueries {
 
   implicit class UserWidthsCreationOps(val self: UserWidthsCreation.type) extends AnyVal {
-    import self._
+    import self.*
 
     def storeWidthPreference[F[_]: ApplicativeThrow](
       userId:  Option[User.Id],
@@ -50,9 +56,7 @@ object UserPreferencesQueries {
       }.void
   }
 
-  implicit class UserAreaWidthsOps(val self: UserAreaWidths.type) extends AnyVal {
-    import self._
-
+  extension (self: UserAreaWidths.type)
     // Gets the width of a section.
     // This is coded to return a default in case
     // there is no data or errors
@@ -60,7 +64,8 @@ object UserPreferencesQueries {
       userId:       Option[User.Id],
       area:         ResizableSection,
       defaultValue: Int
-    )(implicit cl:  TransactionalClient[F, UserPreferencesDB]): F[Int] =
+    )(using TransactionalClient[F, UserPreferencesDB]): F[Int] =
+      import self.*
       (for {
         uid <- OptionT.fromOption[F](userId)
         w   <-
@@ -73,7 +78,6 @@ object UserPreferencesQueries {
                 .recover(_ => none)
             }
       } yield w).value.map(_.flatten.getOrElse(defaultValue))
-  }
 
   extension (self: UserGridLayoutQuery.type)
     def positions2LayoutMap(
@@ -121,7 +125,7 @@ object UserPreferencesQueries {
       } yield r).getOrElse(defaultValue)
 
   implicit class UserGridLayoutUpsertOps(val self: UserGridLayoutUpsert.type) extends AnyVal {
-    import self._
+    import self.*
 
     def storeLayoutsPreference[F[_]: ApplicativeThrow](
       userId:  Option[User.Id],
@@ -151,7 +155,7 @@ object UserPreferencesQueries {
 
   implicit class UserTargetPreferencesQueryOps(val self: UserTargetPreferencesQuery.type)
       extends AnyVal {
-    import self._
+    import self.*
 
     // Gets the layout of a section.
     // This is coded to return a default in case
@@ -192,41 +196,57 @@ object UserPreferencesQueries {
       }
   }
 
-  implicit class UserElevationPlotPreferencesQueryOps(
-    val self: UserElevationPlotPreferencesQuery.type
-  ) extends AnyVal {
-    import self._
-
-    // Gets the prefs for the elevation plot
+  object ItcPlotPreferences:
+    // Gets the prefs for the itc plot
     def queryWithDefault[F[_]: ApplicativeThrow](
-      uid:         User.Id,
-      tid:         Target.Id,
-      defaultSite: Site
-    )(implicit
-      cl:          TransactionalClient[F, UserPreferencesDB]
-    ): F[(Site, PlotRange, TimeDisplay)] =
-      for {
-        r <-
-          query[F](uid.show, tid.show)
+      uid: User.Id,
+      oid: Observation.Id
+    )(using TransactionalClient[F, UserPreferencesDB]): F[(ItcChartType, PlotDetails)] =
+      import ItcPlotPreferencesQuery.*
+
+      for r <-
+          query[F](uid.show, oid.show)
             .map { r =>
-              r.lucuma_elevation_plot_preferences_by_pk.map(result =>
-                (result.site, result.range, result.time)
+              r.lucuma_itc_plot_preferences_by_pk.map(result =>
+                (result.chart_type, result.details_open)
               )
             }
             .handleError(_ => none)
-      } yield {
-        val site  = r.map(_._1).getOrElse(defaultSite)
-        val range = r.map(_._2).getOrElse(PlotRange.Night)
-        val time  = r.map(_._3).getOrElse(TimeDisplay.Site)
+      yield
+        val chartType = r.map(_._1).getOrElse(ItcChartType.S2NChart)
+        val details   = r.map(x => PlotDetails(x._2)).getOrElse(PlotDetails.Shown)
 
-        (site, range, time)
-      }
-  }
+        (chartType, details)
 
-  implicit class UserTargetPreferencesUpsertOps(val self: UserTargetPreferencesUpsert.type)
-      extends AnyVal {
-    import self._
+    def updatePlotPreferences[F[_]: ApplicativeThrow](
+      uid:       User.Id,
+      oid:       Observation.Id,
+      chartType: ItcChartType,
+      details:   PlotDetails
+    )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
+      import ItcPlotObservationUpsert.*
+      execute[F](
+        LucumaObservationInsertInput(
+          observation_id = oid.show.assign,
+          lucuma_itc_plot_preferences = LucumaItcPlotPreferencesArrRelInsertInput(
+            data = List(
+              LucumaItcPlotPreferencesInsertInput(
+                user_id = uid.show.assign,
+                chart_type = chartType.assign,
+                details_open = details.value.assign
+              )
+            ),
+            on_conflict = LucumaItcPlotPreferencesOnConflict(
+              constraint = LucumaItcPlotPreferencesConstraint.LucumaItcPlotPreferencesPkey,
+              update_columns = List(LucumaItcPlotPreferencesUpdateColumn.ChartType,
+                                    LucumaItcPlotPreferencesUpdateColumn.DetailsOpen
+              )
+            ).assign
+          ).assign
+        )
+      ).attempt.void
 
+  extension (self: UserTargetPreferencesUpsert.type)
     def updateAladinPreferences[F[_]: ApplicativeThrow](
       uid:           User.Id,
       targetId:      Target.Id,
@@ -234,9 +254,8 @@ object UserPreferencesQueries {
       agsCandidates: Visible,
       agsOverlay:    Visible,
       fullScreen:    Boolean
-    )(implicit
-      cl:            TransactionalClient[F, UserPreferencesDB]
-    ): F[Unit] =
+    )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
+      import self.*
       execute[F](
         LucumaTargetInsertInput(
           target_id = targetId.show.assign,
@@ -262,21 +281,16 @@ object UserPreferencesQueries {
           ).assign
         )
       ).attempt.void
-  }
 
-  implicit class UserElevationPlotPreferencesUpsertOps(val self: UserTargetPreferencesUpsert.type)
-      extends AnyVal {
-    import self._
-
+  object ElevationPlotPreference:
     def updatePlotPreferences[F[_]: ApplicativeThrow](
       uid:      User.Id,
       targetId: Target.Id,
       site:     Site,
       range:    PlotRange,
       time:     TimeDisplay
-    )(implicit
-      cl:       TransactionalClient[F, UserPreferencesDB]
-    ): F[Unit] =
+    )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
+      import UserTargetPreferencesUpsert.*
       execute[F](
         LucumaTargetInsertInput(
           target_id = targetId.show.assign,
@@ -300,12 +314,33 @@ object UserPreferencesQueries {
           ).assign
         )
       ).attempt.void
-  }
+
+    // Gets the prefs for the elevation plot
+    def queryWithDefault[F[_]: ApplicativeThrow](
+      uid:         User.Id,
+      tid:         Target.Id,
+      defaultSite: Site
+    )(using TransactionalClient[F, UserPreferencesDB]): F[(Site, PlotRange, TimeDisplay)] =
+      import UserElevationPlotPreferencesQuery.*
+      for r <-
+          query[F](uid.show, tid.show)
+            .map { r =>
+              r.lucuma_elevation_plot_preferences_by_pk.map(result =>
+                (result.site, result.range, result.time)
+              )
+            }
+            .handleError(_ => none)
+      yield
+        val site  = r.map(_._1).getOrElse(defaultSite)
+        val range = r.map(_._2).getOrElse(PlotRange.Night)
+        val time  = r.map(_._3).getOrElse(TimeDisplay.Site)
+
+        (site, range, time)
 
   implicit class UserTargetPreferencesUpdateOps(
     val self: UserTargetPreferencesFovUpdate.type
   ) extends AnyVal {
-    import self._
+    import self.*
 
     def updateViewOffset[F[_]: ApplicativeThrow](
       uid:      User.Id,

@@ -165,4 +165,27 @@ object UserPreferencesQueriesGQL {
         }
       }"""
   }
+
+  @GraphQL
+  trait ItcPlotPreferencesQuery extends GraphQLOperation[UserPreferencesDB] {
+    val document = """
+      query itc_plot_preferences($user_id: String! = "", $observation_id: String! = "") {
+        lucuma_itc_plot_preferences_by_pk(observation_id: $observation_id, user_id: $user_id) {
+          chart_type
+          details_open
+        }
+      }
+    """
+  }
+
+  @GraphQL
+  trait ItcPlotObservationUpsert extends GraphQLOperation[UserPreferencesDB] {
+    val document =
+      """mutation observation_preferences_upsert($objects: lucuma_observation_insert_input! = {}) {
+        insert_lucuma_observation(objects: [$objects], on_conflict: {constraint: lucuma_observation_pkey, update_columns: observation_id}) {
+          affected_rows
+        }
+      }"""
+  }
+
 }

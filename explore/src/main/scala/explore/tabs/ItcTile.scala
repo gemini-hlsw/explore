@@ -16,18 +16,15 @@ import explore.model.ScienceMode
 import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.ItcTarget
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.model.Observation
+import lucuma.core.model.User
 import lucuma.ui.syntax.all.given
-
-case class ItcTile(
-  scienceMode:              Option[ScienceMode],
-  spectroscopyRequirements: Option[SpectroscopyRequirementsData],
-  scienceData:              Option[ScienceData],
-  itcExposureTime:          Option[ItcChartExposureTime]
-) extends ItcPanelProps(scienceMode, spectroscopyRequirements, scienceData, itcExposureTime)
 
 object ItcTile:
 
   def itcTile(
+    uid:                      Option[User.Id],
+    oid:                      Observation.Id,
     scienceMode:              Option[ScienceMode],
     spectroscopyRequirements: Option[SpectroscopyRequirementsData],
     scienceData:              Option[ScienceData],
@@ -47,10 +44,14 @@ object ItcTile:
         ): VdomNode).some,
       bodyClass = ExploreStyles.ItcTileBody.some
     )(_ =>
-      ItcGraphPanel(scienceMode,
-                    spectroscopyRequirements,
-                    scienceData,
-                    itcExposureTime,
-                    selectedTarget
+      uid.map(
+        ItcGraphPanel(_,
+                      oid,
+                      scienceMode,
+                      spectroscopyRequirements,
+                      scienceData,
+                      itcExposureTime,
+                      selectedTarget
+        )
       )
     )

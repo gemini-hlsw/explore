@@ -197,6 +197,8 @@ object ObsTabTiles {
 
         val itcTile =
           ItcTile.itcTile(
+            props.userId,
+            props.obsId,
             scienceMode,
             obsView.toOption.map(_.get.scienceData.requirements.spectroscopy),
             scienceData,
