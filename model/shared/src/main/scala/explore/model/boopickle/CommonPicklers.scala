@@ -80,8 +80,7 @@ trait CommonPicklers {
       Enumerated[A].tag(_)
     )
 
-  given Pickler[Target.Id] =
-    transformPickler(Target.Id.apply)(_.value)
+  given Pickler[Target.Id] = generatePickler
 
   given picklerNonEmptyList[A: Pickler]: Pickler[NonEmptyList[A]] =
     transformPickler(NonEmptyList.fromListUnsafe[A])(_.toList)
@@ -129,8 +128,7 @@ trait CommonPicklers {
       }
     }
 
-  given Pickler[Coordinates] =
-    transformPickler(Function.tupled(Coordinates.apply _))(x => (x.ra, x.dec))
+  given Pickler[Coordinates] = generatePickler
 
   given Pickler[Offset] =
     transformPickler((x: (Angle, Angle)) =>

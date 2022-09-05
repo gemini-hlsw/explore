@@ -72,46 +72,19 @@ object ItcGraphPanel {
       // loading
       .useState(PlotLoading.Done)
       // Request ITC graph data
-      .useEffectWithDepsBy((props, _, _) =>
-        (props.wavelength,
-         props.scienceData.map(_.constraints),
-         props.itcTargets,
-         props.instrumentRow,
-         props.chartExposureTime
+      .useEffectWithDepsBy((props, _, _) => props.queryProps) { (props, charts, loading) => _ =>
+        import props.given
+        props.requestITCData(
+          m =>
+            charts.modStateAsync {
+              case Pot.Ready(r) => Pot.Ready(r + (m.target -> m))
+              case u            => Pot.Ready(Map(m.target -> m))
+            } *> loading.setState(PlotLoading.Done).to[IO],
+          (charts.setState(
+            Pot.error(new RuntimeException("Not enough information to call ITC"))
+          ) *> loading.setState(PlotLoading.Done)).to[IO],
+          loading.setState(PlotLoading.Loading).to[IO]
         )
-      ) {
-        (props, charts, loading) =>
-          (wavelength, constraints, itcTargets, instrumentRow, exposureTime) =>
-            import props.given
-
-            val action: Option[IO[Unit]] =
-              for
-                w           <- wavelength
-                ex          <- exposureTime
-                exposures   <- refineV[Positive](ex.count.value).toOption
-                constraints <- constraints
-                t           <- itcTargets
-                mode        <- instrumentRow
-              yield loading.setState(PlotLoading.Loading).to[IO] *>
-                ItcClient[IO]
-                  .request(
-                    ItcMessage.GraphQuery(w, ex.time, exposures, constraints, t, mode)
-                  )
-                  .use(
-                    _.evalMap(m =>
-                      charts.modStateAsync {
-                        case Pot.Ready(r) => Pot.Ready(r + (m.target -> m))
-                        case u            => Pot.Ready(Map(m.target -> m))
-                      } *> loading.setState(PlotLoading.Done).to[IO]
-                    ).compile.drain
-                  )
-            action.getOrElse(
-              (charts
-                .setState(Pot.error(new RuntimeException("Not enough information to call ITC"))) *>
-                loading
-                  .setState(PlotLoading.Done))
-                .to[IO]
-            )
       }
       // Default selected chart
       .useStateView(ItcChartType.S2NChart)

@@ -149,7 +149,7 @@ jobs:
 
       - name: Build application
         env:
-          NODE_OPTIONS: '--max-old-space-size=6144'
+          NODE_OPTIONS: '--max-old-space-size=8192'
         run: npm run build
 
       - name: override CI_COMMIT_SHA
@@ -239,7 +239,7 @@ jobs:
 
       - name: Build application
         env:
-          NODE_OPTIONS: '--max-old-space-size=6144'
+          NODE_OPTIONS: '--max-old-space-size=8192'
         run: npm run build
 
       - name: Heroku - Deploy
