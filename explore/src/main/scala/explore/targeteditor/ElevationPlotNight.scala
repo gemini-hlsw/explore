@@ -67,11 +67,10 @@ object ElevationPlotNight {
     var airmass: Double
   }
 
-  extension (x: PointOptionsWithAirmass)
-    inline def setAirMass(value: Double): PointOptionsWithAirmass = {
-      x.airmass = value
-      x
-    }
+  inline def setAirMass(x: PointOptionsWithAirmass, value: Double): PointOptionsWithAirmass = {
+    x.airmass = value
+    x
+  }
 
   protected case class SeriesData(
     targetAltitude:   List[ResizingChart.Data],
@@ -176,7 +175,7 @@ object ElevationPlotNight {
         val skyCalcResults =
           SkyCalc.forInterval(props.site, start, end, PlotEvery, _ => props.coords)
         val series         = skyCalcResults
-          .map { case (instant, results) =>
+          .map { (instant, results) =>
             val millisSinceEpoch = instant.toEpochMilli.toDouble
 
             def point(value: Double): ResizingChart.Data =
@@ -185,9 +184,10 @@ object ElevationPlotNight {
                 .setY(value)
 
             def pointWithAirmass(value: Double, airmass: Double): ResizingChart.Data =
-              point(value)
-                .asInstanceOf[PointOptionsWithAirmass]
-                .setAirMass(airmass)
+              setAirMass(point(value)
+                           .asInstanceOf[PointOptionsWithAirmass],
+                         airmass
+              )
 
             (pointWithAirmass(results.altitude.toAngle.toSignedDoubleDegrees, results.airmass),
              point(results.totalSkyBrightness),
