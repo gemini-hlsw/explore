@@ -53,7 +53,7 @@ import react.semanticui.modules.dropdown.Dropdown
 import java.time.Instant
 import scala.collection.immutable.SortedMap
 
-final case class ObsTabTiles(
+case class ObsTabTiles(
   userId:           Option[User.Id],
   programId:        Program.Id,
   obsId:            Observation.Id,
@@ -69,17 +69,16 @@ final case class ObsTabTiles(
   layouts:          View[Pot[LayoutsMap]],
   coreWidth:        Int,
   coreHeight:       Int
-)(implicit
-  val ctx:          AppContextIO
-) extends ReactFnProps[ObsTabTiles](ObsTabTiles.component)
+)(using val ctx:    AppContextIO)
+    extends ReactFnProps(ObsTabTiles.component)
 
 object ObsTabTiles {
-  type Props = ObsTabTiles
+  private type Props = ObsTabTiles
 
   private def makeConstraintsSelector(
     constraintGroups: View[ConstraintsList],
     obsView:          Pot[View[ObsEditData]]
-  )(implicit ctx:     AppContextIO): VdomNode =
+  )(using AppContextIO): VdomNode =
     potRender[View[ObsEditData]] { vod =>
       val cgOpt: Option[ConstraintGroup] =
         constraintGroups.get.find(_._1.contains(vod.get.id)).map(_._2)
@@ -119,7 +118,7 @@ object ObsTabTiles {
   ): Int =
     targetObsMap.get(targetId).fold(0)(summary => (summary.obsIds - obsId).size)
 
-  protected val component =
+  private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useStreamResourceViewOnMountBy { props =>
@@ -212,7 +211,11 @@ object ObsTabTiles {
         val constraintsSelector = makeConstraintsSelector(props.constraintGroups, obsViewPot)
 
         val skyPlotTile =
-          ElevationPlotTile.elevationPlotTile(props.userId, scienceMode, targetCoords)
+          ElevationPlotTile.elevationPlotTile(props.userId,
+                                              scienceMode,
+                                              targetCoords,
+                                              vizTimeView.toOption.flatMap(_.get)
+          )
 
         def setCurrentTarget(programId: Program.Id, oid: Option[Observation.Id])(
           tid:                          Option[Target.Id],

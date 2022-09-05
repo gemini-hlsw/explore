@@ -34,7 +34,7 @@ object ScienceMode {
           )
       )
 
-  final case class GmosNorthLongSlit(
+  case class GmosNorthLongSlit(
     basic:    ScienceModeBasic.GmosNorthLongSlit,
     advanced: ScienceModeAdvanced.GmosNorthLongSlit
   ) extends ScienceMode(Instrument.GmosNorth)
@@ -64,7 +64,7 @@ object ScienceMode {
       Focus[GmosNorthLongSlit](_.advanced)
   }
 
-  final case class GmosSouthLongSlit(
+  case class GmosSouthLongSlit(
     basic:    ScienceModeBasic.GmosSouthLongSlit,
     advanced: ScienceModeAdvanced.GmosSouthLongSlit
   ) extends ScienceMode(Instrument.GmosSouth)
