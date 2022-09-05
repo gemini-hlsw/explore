@@ -10,6 +10,7 @@ import crystal.react.hooks.*
 import crystal.react.implicits.given
 import crystal.react.reuse.*
 import explore.events.PlotMessage.*
+import explore.highcharts.*
 import explore.implicits.*
 import explore.model.WorkerClients.PlotClient
 import explore.model.boopickle.CommonPicklers.given
