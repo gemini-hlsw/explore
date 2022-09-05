@@ -68,7 +68,7 @@ object ElevationPlotNight {
   }
 
   extension (x: PointOptionsWithAirmass)
-    def setAirMass(value: Double): PointOptionsWithAirmass = {
+    inline def setAirMass(value: Double): PointOptionsWithAirmass = {
       x.airmass = value
       x
     }
@@ -185,7 +185,9 @@ object ElevationPlotNight {
                 .setY(value)
 
             def pointWithAirmass(value: Double, airmass: Double): ResizingChart.Data =
-              point(value).asInstanceOf[PointOptionsWithAirmass].setAirMass(airmass)
+              point(value)
+                .asInstanceOf[PointOptionsWithAirmass]
+                .setAirMass(airmass)
 
             (pointWithAirmass(results.altitude.toAngle.toSignedDoubleDegrees, results.airmass),
              point(results.totalSkyBrightness),

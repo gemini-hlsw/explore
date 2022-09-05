@@ -3,26 +3,29 @@
 
 package explore.tabs
 
-import cats.syntax.all._
+import cats.syntax.all.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
-import explore.implicits._
+import explore.implicits.*
 import explore.model.ScienceMode
 import explore.targeteditor.ElevationPlotSection
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 
+import java.time.Instant
+
 object ElevationPlotTile:
 
   def elevationPlotTile(
     uid:         Option[User.Id],
     scienceMode: Option[ScienceMode],
-    coordinates: Option[(Target.Id, Coordinates)]
+    coordinates: Option[(Target.Id, Coordinates)],
+    vizTime:     Option[Instant]
   )(using AppContextIO) =
     Tile(
       ObsTabTilesIds.PlotId.id,
@@ -31,8 +34,8 @@ object ElevationPlotTile:
       bodyClass = ExploreStyles.ElevationPlotTileBody.some
     ) { _ =>
       (uid, coordinates)
-        .mapN { (uid, c) =>
-          ElevationPlotSection(uid, c._1, scienceMode, c._2): VdomNode
+        .mapN { case (uid, (targetId, coordinates)) =>
+          ElevationPlotSection(uid, targetId, scienceMode, vizTime, coordinates): VdomNode
         }
         .getOrElse {
           <.div(

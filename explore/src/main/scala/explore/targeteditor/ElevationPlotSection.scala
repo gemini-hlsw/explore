@@ -4,57 +4,58 @@
 package explore.targeteditor
 
 import cats.effect.IO
-import cats.syntax.all._
+import cats.syntax.all.*
 import crystal.Pot
-import crystal.implicits._
+import crystal.implicits.*
 import crystal.react.View
-import crystal.react.hooks._
-import crystal.react.implicits._
-import eu.timepit.refined.auto._
-import explore._
-import explore.common.UserPreferencesQueries._
+import crystal.react.hooks.*
+import crystal.react.implicits.*
+import eu.timepit.refined.auto.*
+import explore.*
+import explore.common.UserPreferencesQueries.*
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
-import explore.implicits._
+import explore.implicits.*
 import explore.model.ElevationPlotOptions
 import explore.model.ScienceMode
 import explore.model.enums.PlotRange
 import explore.model.enums.TimeDisplay
-import explore.model.reusability._
-import explore.utils._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import explore.model.reusability.*
+import explore.utils.*
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Site
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Semester
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.refined.*
-import lucuma.ui.reusability._
+import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import queries.common.UserPreferencesQueriesGQL._
+import queries.common.UserPreferencesQueriesGQL.*
 import react.common.ReactFnProps
-import react.datepicker._
+import react.datepicker.*
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.ButtonGroup
 
-import java.time.ZonedDateTime
+import java.time.*
 
-final case class ElevationPlotSection(
-  uid:           User.Id,
-  tid:           Target.Id,
-  scienceMode:   Option[ScienceMode],
-  coords:        Coordinates
-)(using val ctx: AppContextIO)
-    extends ReactFnProps[ElevationPlotSection](ElevationPlotSection.component)
+case class ElevationPlotSection(
+  uid:               User.Id,
+  tid:               Target.Id,
+  scienceMode:       Option[ScienceMode],
+  visualizationTime: Option[Instant],
+  coords:            Coordinates
+)(using val ctx:     AppContextIO)
+    extends ReactFnProps(ElevationPlotSection.component)
 
 object ElevationPlotSection {
-  type Props = ElevationPlotSection
+  private type Props = ElevationPlotSection
 
   given Reusability[Props] =
-    Reusability.by(x => (x.uid, x.tid, x.scienceMode, x.coords))
+    Reusability.by(x => (x.uid, x.tid, x.scienceMode, x.visualizationTime, x.coords))
 
   val preferredSiteFor = (c: Props) =>
     c.scienceMode
@@ -87,7 +88,12 @@ object ElevationPlotSection {
 
   val sitePrism = Pot.readyPrism.andThen(ElevationPlotOptions.site)
 
-  val component =
+  inline def calcTime(visualizationTime: Option[Instant], site: Site): LocalDate =
+    visualizationTime
+      .map(LocalDateTime.ofInstant(_, site.timezone).toLocalDate)
+      .getOrElse(ZonedDateTime.now(site.timezone).toLocalDate.plusDays(1))
+
+  private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useStateBy[Site](preferredSiteFor)
@@ -120,7 +126,11 @@ object ElevationPlotSection {
           .runAsyncAndForget
       }
       // Actual date
-      .useState(ZonedDateTime.now(Site.GS.timezone).toLocalDate.plusDays(1))
+      .useStateBy((props, site, _) => calcTime(props.visualizationTime, site.value))
+      // Update date if props change
+      .useEffectWithDepsBy((props, site, _, _) => (props.visualizationTime, site.value)) {
+        (_, _, _, date) => (vizTime, site) => date.setState(calcTime(vizTime, site))
+      }
       .render { (props, _, options, date) =>
         import props.given
 
