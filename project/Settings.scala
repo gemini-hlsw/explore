@@ -41,7 +41,7 @@ object Settings {
     val refinedAlgebraVersion = "0.1.0"
     val scalaJsDom            = "2.3.0"
     val scalaJsReact          = "2.1.1"
-    val webAppUtil            = "2.0.0-RC7"
+    val webAppUtil            = "2.0.0-RC9"
   }
 
   object Libraries {
