@@ -31,7 +31,7 @@ import lucuma.ui.syntax.all.given
 import queries.common.ProgramQueriesGQL.*
 import react.common.ReactFnProps
 import react.floatingui.Placement
-import react.floatingui.Tooltip
+import react.floatingui.syntax.*
 import react.semanticui.collections.table.TableCompact
 import react.semanticui.collections.table.*
 import react.semanticui.elements.button.*
@@ -124,38 +124,34 @@ object ProgramTable {
                     e.stopPropagationCB >>
                     props.selectProgram(programId)
               ).unless(cell.row.original.get.deleted),
-              Tooltip(
-                trigger = <.span(
-                  Button(
-                    size = Mini,
-                    compact = true,
-                    icon = Icons.Trash,
-                    // can't delete the current or last one
-                    disabled = currentProgramId.exists(_ === programId) || programCount < 2,
-                    onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
-                      e.preventDefaultCB >>
-                        e.stopPropagationCB >>
-                        deleteProgram(cell.value).runAsync
-                  )
-                ),
-                placement = Placement.Right,
-                tooltip = "Delete program"
-              ).unless(isDeleted),
-              Tooltip(
-                trigger = <.span(
-                  Button(
-                    content = "Undelete",
-                    size = Mini,
-                    compact = true,
-                    icon = Icons.TrashUndo,
-                    onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
-                      e.preventDefaultCB >>
-                        e.stopPropagationCB >>
-                        undeleteProgram(cell.value).runAsync
-                  )
-                ),
-                placement = Placement.Right,
-                tooltip = "Undelete program"
+              <.span(
+                Button(
+                  size = Mini,
+                  compact = true,
+                  icon = Icons.Trash,
+                  // can't delete the current or last one
+                  disabled = currentProgramId.exists(_ === programId) || programCount < 2,
+                  onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
+                    e.preventDefaultCB >>
+                      e.stopPropagationCB >>
+                      deleteProgram(cell.value).runAsync
+                )
+              ).withTooltip(tooltip = "Delete program", placement = Placement.Right)
+                .unless(isDeleted),
+              <.span(
+                Button(
+                  content = "Undelete",
+                  size = Mini,
+                  compact = true,
+                  icon = Icons.TrashUndo,
+                  onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
+                    e.preventDefaultCB >>
+                      e.stopPropagationCB >>
+                      undeleteProgram(cell.value).runAsync
+                )
+              ).withTooltip(
+                tooltip = "Undelete program",
+                placement = Placement.Right
               ).when(isDeleted)
             )
           }

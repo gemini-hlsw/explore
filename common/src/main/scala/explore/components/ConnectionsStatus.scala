@@ -6,19 +6,20 @@ package explore.components
 import clue.PersistentClientStatus
 import clue.PersistentClientStatus._
 import crystal.Pot
-import crystal.react.hooks._
-import explore._
+import crystal.react.hooks.*
+import explore.*
 import explore.components.ui.ExploreStyles
-import explore.components.ui.ExploreStyles._
+import explore.components.ui.ExploreStyles.*
 import explore.syntax.ui.*
 import explore.syntax.ui.given
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
-import react.floatingui.*
-import react.semanticui.elements.icon._
+import react.floatingui.Placement
+import react.floatingui.syntax.*
+import react.semanticui.elements.icon.*
 import react.semanticui.views.item.Item
 
 case class ConnectionsStatus()(using val ctx: AppContextIO)
@@ -43,10 +44,9 @@ object ConnectionsStatus {
 
     if (show) {
       Item(clazz = ExploreStyles.ConnectionIcon)(
-        Tooltip(
+        <.span(Icons.CircleSmall.clazz(clazz)).withTooltip(
           tooltip = message,
-          placement = Placement.Bottom,
-          trigger = <.span(Icons.CircleSmall.clazz(clazz))
+          placement = Placement.Bottom
         )
       )
     } else <.span()

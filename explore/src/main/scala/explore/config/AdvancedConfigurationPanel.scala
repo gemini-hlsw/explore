@@ -71,7 +71,7 @@ import mouse.boolean.*
 import queries.schemas.implicits.*
 import react.common.ReactFnProps
 import react.fa.IconSize
-import react.floatingui.Tooltip
+import react.floatingui.syntax.*
 import react.semanticui.collections.form.Form
 import react.semanticui.collections.form.FormInput
 import react.semanticui.elements.button.Button
@@ -267,15 +267,12 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
     rows.collectFirstSome(row => findMatrixDataFromRow(basic, advanced, reqsWavelength, row))
 
   private def customized(original: String): VdomNode =
-    Tooltip(
-      trigger = <.span(
-        ^.cls := "fa-layers fa-fw",
-        Icons.ExclamationDiamond
-          .clazz(ExploreStyles.WarningIcon)
-          .size(IconSize.X1)
-      ),
-      tooltip = <.div("Customized!", <.br, s"Orginal: $original")
-    )
+    <.span(
+      ^.cls := "fa-layers fa-fw",
+      Icons.ExclamationDiamond
+        .clazz(ExploreStyles.WarningIcon)
+        .size(IconSize.X1)
+    ).withTooltip(tooltip = <.div("Customized!", <.br, s"Orginal: $original"))
 
   private def customizedUnit(units: String, original: String, isCustom: Boolean): VdomNode =
     if (isCustom) <.span(units, customized(original)) else units
