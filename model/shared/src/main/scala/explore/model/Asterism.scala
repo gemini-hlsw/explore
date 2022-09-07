@@ -11,6 +11,7 @@ import lucuma.core.model.Target
 import monocle.*
 
 import java.time.Instant
+import lucuma.core.math.Coordinates
 
 case class Asterism(private val targets: NonEmptyList[TargetWithId]) derives Eq {
   def toSidereal(vizTime: Instant): List[SiderealTargetWithId] =
@@ -31,6 +32,10 @@ case class Asterism(private val targets: NonEmptyList[TargetWithId]) derives Eq 
 
   // This should be calculatedd from the other targets or manually overriden
   def baseTarget: TargetWithId = targets.head
+
+  def baseCoordinatesAt(i: Instant): Option[Coordinates] = none
+
+  def baseCoordinates: Coordinates = ???
 
   def hasId(id: Target.Id): Boolean = targets.exists(_.id === id)
 }

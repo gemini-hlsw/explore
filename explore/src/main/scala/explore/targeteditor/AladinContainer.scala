@@ -37,9 +37,10 @@ import react.semanticui.sizes.*
 import java.time.LocalDate
 import java.time.ZoneId
 import scala.concurrent.duration.*
+import explore.model.Asterism
 
 case class AladinContainer(
-  target:                 SiderealTracking,
+  asterism:               Asterism,
   obsConf:                ObsConfiguration,
   options:                TargetVisualOptions,
   updateMouseCoordinates: Function1[Coordinates, Callback],
@@ -77,7 +78,7 @@ object AladinContainer {
       .withHooks[Props]
       // Base coordinates with pm correction if possible
       .useMemoBy(_.obsConf.vizTime) { p => i =>
-        p.target.at(i).getOrElse(p.target.baseCoordinates)
+        p.asterism.baseCoordinatesAt(i).getOrElse(p.asterism.baseCoordinates)
       }
       // View coordinates base coordinates with pm correction + user panning
       .useStateBy { (p, baseCoordinates) =>
@@ -262,9 +263,9 @@ object AladinContainer {
           val baseTargets =
             List(
               SVGTarget.CrosshairTarget(baseCoordinates.value, ExploreStyles.ScienceTarget, 10),
-              SVGTarget.CircleTarget(props.target.baseCoordinates, ExploreStyles.BaseTarget, 3),
+              SVGTarget.CircleTarget(props.asterism.baseCoordinates, ExploreStyles.BaseTarget, 3),
               SVGTarget.LineTo(baseCoordinates.value,
-                               props.target.baseCoordinates,
+                               props.asterism.baseCoordinates,
                                ExploreStyles.PMCorrectionLine
               )
             )

@@ -58,23 +58,23 @@ import java.time.Duration
 import java.time.Instant
 import scala.concurrent.duration.*
 
-final case class AladinCell(
-  uid:              User.Id,
-  tid:              Target.Id,
-  obsConf:          ObsConfiguration,
-  target:           View[SiderealTracking],
-  fullScreen:       View[Boolean]
-)(implicit val ctx: AppContextIO)
-    extends ReactFnProps[AladinCell](AladinCell.component)
+case class AladinCell(
+  uid:           User.Id,
+  tid:           Target.Id,
+  obsConf:       ObsConfiguration,
+  target:        SiderealTracking,
+  fullScreen:    View[Boolean]
+)(using val ctx: AppContextIO)
+    extends ReactFnProps(AladinCell.component)
 
-final case class AladinSettings(showMenu: Boolean, showCatalog: Boolean)
+case class AladinSettings(showMenu: Boolean, showCatalog: Boolean)
 
 object AladinSettings {
   val Default = AladinSettings(false, false)
 }
 
 object AladinCell extends ModelOptics {
-  type Props = AladinCell
+  private type Props = AladinCell
 
   val params  = AgsParams.GmosAgsParams(none, PortDisposition.Side)
   val basePos = AgsPosition(Angle.Angle0, Offset.Zero)
@@ -88,11 +88,11 @@ object AladinCell extends ModelOptics {
     Duration.between(_, _).toDays().abs < 30L
   }
 
-  protected val component =
+  private val component =
     ScalaFnComponent
       .withHooks[Props]
       // mouse coordinates, starts on the base
-      .useStateBy(_.target.get.baseCoordinates)
+      .useStateBy(_.target.baseCoordinates)
       // target options, will be read from the user preferences
       .useStateView(Pot.pending[TargetVisualOptions])
       // flag to trigger centering. This is a bit brute force but
@@ -107,17 +107,17 @@ object AladinCell extends ModelOptics {
       // Request data again if vizTime changes more than a month
       .useEffectWithDepsBy((p, _, _, _, _, _, _) => p.obsConf.vizTime) {
         (props, _, _, _, gs, _, agsState) => vizTime =>
-          implicit val ctx = props.ctx
+          import props.given
 
           agsState.setStateAsync(AgsState.LoadingCandidates) >>
-            CatalogClient[IO].requestSingle(CatalogMessage.GSRequest(props.target.get, vizTime)) >>=
+            CatalogClient[IO].requestSingle(CatalogMessage.GSRequest(props.target, vizTime)) >>=
             (_.map(candidates =>
               agsState.setState(AgsState.Idle).to[IO] >> gs.setStateAsync(candidates)
             ).orEmpty)
       }
       .useEffectWithDepsBy((p, _, _, _, _, _, _) => (p.uid, p.tid)) {
         (props, _, options, _, _, _, _) => _ =>
-          implicit val ctx = props.ctx
+          import props.given
 
           UserTargetPreferencesQuery
             .queryWithDefault[IO](props.uid, props.tid, Constants.InitialFov)
@@ -140,7 +140,7 @@ object AladinCell extends ModelOptics {
       .useStateView(none[Int])
       // Request ags calculation
       .useEffectWithDepsBy((p, _, _, _, candidates, _, _, _) =>
-        (p.target.get,
+        (p.target,
          p.obsConf.posAngleConstraint,
          p.obsConf.constraints,
          p.obsConf.wavelength,
@@ -156,7 +156,7 @@ object AladinCell extends ModelOptics {
                 vizTime,
                 candidates
               ) =>
-            implicit val ctx = props.ctx
+            import props.given
 
             val pa = posAngle match {
               case PosAngleConstraint.Fixed(a)               => a.some
@@ -218,7 +218,7 @@ object AladinCell extends ModelOptics {
           selectedGSIndex,
           openSettings
         ) =>
-          implicit val ctx = props.ctx
+          import props.given
 
           val agsCandidatesView =
             options.zoom(Pot.readyPrism.andThen(TargetVisualOptions.agsCandidates))
@@ -319,23 +319,24 @@ object AladinCell extends ModelOptics {
               fullScreenView.mod(!_) *>
               prefsSetter(identity, identity, !_)
 
-          val aladinKey = s"${props.target.get}"
+          val aladinKey = s"${props.target}"
 
           val selectedGuideStar = selectedGSIndex.get.flatMap(agsResults.value.lift)
           val usableGuideStar   = selectedGuideStar.exists(_.isUsable)
 
           val renderCell: TargetVisualOptions => VdomNode = (t: TargetVisualOptions) =>
-            AladinContainer(
-              props.target.get,
-              props.obsConf,
-              t.copy(fullScreen = props.fullScreen.get),
-              coordinatesSetter,
-              fovSetter.reuseAlways,
-              offsetSetter.reuseAlways,
-              center,
-              selectedGuideStar,
-              agsResults.value
-            ).withKey(aladinKey)
+            <.div()
+            // AladinContainer(
+            //   props.target,
+            //   props.obsConf,
+            //   t.copy(fullScreen = props.fullScreen.get),
+            //   coordinatesSetter,
+            //   fovSetter.reuseAlways,
+            //   offsetSetter.reuseAlways,
+            //   center,
+            //   selectedGuideStar,
+            //   agsResults.value
+            // ).withKey(aladinKey)
 
           val renderToolbar: TargetVisualOptions => VdomNode =
             (t: TargetVisualOptions) =>

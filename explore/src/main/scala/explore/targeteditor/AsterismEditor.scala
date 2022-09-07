@@ -49,7 +49,7 @@ import react.semanticui.sizes._
 
 import java.time.Instant
 
-final case class AsterismEditor(
+case class AsterismEditor(
   userId:           User.Id,
   programId:        Program.Id,
   obsIds:           ObsIdSet,
@@ -66,11 +66,11 @@ final case class AsterismEditor(
   searching:        View[Set[Target.Id]],
   hiddenColumns:    View[Set[String]],
   renderInTitle:    Tile.RenderInTitle
-)(implicit val ctx: AppContextIO)
-    extends ReactFnProps[AsterismEditor](AsterismEditor.component)
+)(using val ctx: AppContextIO)
+    extends ReactFnProps(AsterismEditor.component)
 
 object AsterismEditor {
-  type Props = AsterismEditor
+  private type Props = AsterismEditor
 
   private def insertSiderealTarget(
     programId:      Program.Id,
@@ -80,7 +80,7 @@ object AsterismEditor {
     target:         Target.Sidereal,
     selectedTarget: View[Option[Target.Id]],
     adding:         View[Boolean]
-  )(implicit ctx:   AppContextIO): IO[Unit] = {
+  )(using AppContextIO): IO[Unit] = {
     val targetId: IO[Target.Id] = oTargetId.fold(
       CreateTargetMutation
         .execute(target.toCreateTargetInput(programId))
@@ -114,7 +114,7 @@ object AsterismEditor {
       .mod(_.map(twid => if (twid.id === id) newTwid else twid)) >>
       setTarget(newTwid.id.some, SetRouteVia.HistoryPush)
 
-  protected val component =
+  private val component =
     ScalaFnComponent
       .withHooks[Props]
       // adding
@@ -122,7 +122,7 @@ object AsterismEditor {
       // edit target in current obs only (0), or all "instances" of the target (1)
       .useState(0)
       .useEffectWithDepsBy((props, _, _) => (props.asterism.get, props.currentTarget))(
-        (props, _, _) => { case (asterism, oTargetId) =>
+        (props, _, _) => { (asterism, oTargetId) =>
           // if the selected targetId is None, or not in the asterism, select the first target (if any)
           // Need to replace history here.
           oTargetId match {
@@ -139,7 +139,7 @@ object AsterismEditor {
       // full screen aladin
       .useStateView(false)
       .render { (props, adding, editScope, fullScreen) =>
-        implicit val ctx = props.ctx
+        import props.given
 
         val targetView: View[Option[Target.Id]] =
           View[Option[Target.Id]](

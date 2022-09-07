@@ -61,7 +61,7 @@ import react.semanticui.sizes.Small
 
 import java.time.Instant
 
-final case class SearchCallback(
+case class SearchCallback(
   searchTerm: NonEmptyString,
   onComplete: Option[Target] => Callback,
   onError:    Throwable => Callback
@@ -69,9 +69,9 @@ final case class SearchCallback(
   def run: Callback = Callback.empty
 }
 
-final case class SiderealTargetEditor(
+case class SiderealTargetEditor(
   uid:           User.Id,
-  id:            Target.Id,
+  tid:           Target.Id,
   target:        View[Target.Sidereal],
   vizTime:       Option[Instant],
   posAngle:      Option[PosAngleConstraint],
@@ -84,13 +84,13 @@ final case class SiderealTargetEditor(
   onClone:       TargetWithId => Callback = _ => Callback.empty,
   renderInTitle: Option[Tile.RenderInTitle] = none,
   fullScreen:    View[Boolean]
-) extends ReactFnProps[SiderealTargetEditor](SiderealTargetEditor.component) {
+) extends ReactFnProps(SiderealTargetEditor.component) {
   val baseCoordinates: Coordinates =
     target.zoom(Target.Sidereal.baseCoordinates).get
 }
 
 object SiderealTargetEditor {
-  protected type Props = SiderealTargetEditor
+  private type Props = SiderealTargetEditor
 
   private def readonlyView[A](view: View[A]): View[A] = {
     val getA: A => A               = identity
@@ -99,8 +99,8 @@ object SiderealTargetEditor {
     view.zoom(getA)(noModA)
   }
 
-  private def cloneTarget(targetId: Target.Id, obsIds: ObsIdSet)(implicit
-    c:                              TransactionalClient[IO, ObservationDB]
+  private def cloneTarget(targetId: Target.Id, obsIds: ObsIdSet)(using
+    TransactionalClient[IO, ObservationDB]
   ): IO[Target.Id] = TargetQueriesGQL.CloneTargetMutation
     .execute[IO](
       CloneTargetInput(targetId = targetId, REPLACE_IN = obsIds.toList.assign)
@@ -108,13 +108,13 @@ object SiderealTargetEditor {
     .map(_.cloneTarget.newTarget.id)
 
   private def getRemoteOnMod(
-    id:              Target.Id,
-    optObs:          Option[ObsIdSet],
-    cloning:         Hooks.UseStateF[DefaultS, Boolean],
-    onClone:         TargetWithId => Callback
+    id:      Target.Id,
+    optObs:  Option[ObsIdSet],
+    cloning: Hooks.UseStateF[DefaultS, Boolean],
+    onClone: TargetWithId => Callback
   )(
-    input:           UpdateTargetsInput
-  )(implicit appCtx: AppContextIO): IO[Unit] =
+    input:   UpdateTargetsInput
+  )(using AppContextIO): IO[Unit] =
     optObs.fold(TargetQueriesGQL.UpdateTargetsMutation.execute(input).void) { obsIds =>
       cloning.setState(true).to[IO] >>
         cloneTarget(id, obsIds)
@@ -136,7 +136,7 @@ object SiderealTargetEditor {
     attemptCombine(ra, dec)
       .map((ProperMotion.apply _).tupled)
 
-  protected val component =
+  private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useState(false) // cloning
@@ -158,13 +158,13 @@ object SiderealTargetEditor {
           val target: Target.Sidereal = props.target.get
 
           val remoteOnMod: UpdateTargetsInput => IO[Unit] =
-            getRemoteOnMod(props.id, props.obsIdSubset, cloning, props.onClone) _
+            getRemoteOnMod(props.tid, props.obsIdSubset, cloning, props.onClone) _
 
           val siderealTargetAligner: Aligner[Target.Sidereal, UpdateTargetsInput] =
             Aligner(
               undoCtx,
               UpdateTargetsInput(
-                WHERE = props.id.toWhereTarget.assign,
+                WHERE = props.tid.toWhereTarget.assign,
                 SET = TargetPropertiesInput()
               ),
               remoteOnMod
@@ -280,7 +280,7 @@ object SiderealTargetEditor {
                   s.onError(t)
               }
 
-          val disabled = props.searching.get.exists(_ === props.id) || cloning.value
+          val disabled = props.searching.get.exists(_ === props.tid) || cloning.value
 
           React.Fragment(
             props.renderInTitle
@@ -295,7 +295,7 @@ object SiderealTargetEditor {
               potRender[Instant](vizTime =>
                 AladinCell(
                   props.uid,
-                  props.id,
+                  props.tid,
                   ObsConfiguration(
                     vizTime,
                     props.scienceMode,
@@ -303,14 +303,14 @@ object SiderealTargetEditor {
                     props.constraints,
                     props.wavelength
                   ),
-                  targetView.zoom(Target.Sidereal.tracking),
+                  targetView.zoom(Target.Sidereal.tracking).get,
                   props.fullScreen
                 )
               )(vizTime),
               <.div(ExploreStyles.Grid, ExploreStyles.Compact, ExploreStyles.TargetForm)(
                 // Keep the search field and the coords always together
                 SearchForm(
-                  props.id,
+                  props.tid,
                   // SearchForm doesn't edit the name directly. It will set it atomically, together
                   // with coords & magnitudes from the catalog search, so that all 3 fields are
                   // a single undo/redo operation.
@@ -325,7 +325,7 @@ object SiderealTargetEditor {
                 ),
                 FormInputEV(
                   id = "ra".refined,
-                  value = coordsRAView,  // .zoomSplitEpi(TruncatedRA.rightAscension),
+                  value = coordsRAView,
                   validFormat = MathValidators.truncatedRA,
                   changeAuditor = ChangeAuditor.truncatedRA,
                   clazz = ExploreStyles.TargetRaDecMinWidth,
@@ -339,7 +339,7 @@ object SiderealTargetEditor {
                 ),
                 FormInputEV(
                   id = "dec".refined,
-                  value = coordsDecView, // .zoomSplitEpi(TruncatedDec.declination),
+                  value = coordsDecView,
                   validFormat = MathValidators.truncatedDec,
                   changeAuditor = ChangeAuditor.truncatedDec,
                   clazz = ExploreStyles.TargetRaDecMinWidth,
