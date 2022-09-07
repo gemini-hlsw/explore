@@ -3,24 +3,24 @@
 
 package explore.common
 
-import cats.effect._
-import cats.syntax.all._
+import cats.effect.*
+import cats.syntax.all.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.Constants
-import lucuma.catalog.CatalogAdapter
-import lucuma.catalog.CatalogSearch
 import lucuma.catalog.CatalogTargetResult
-import org.http4s._
+import lucuma.catalog.votable.CatalogAdapter
+import lucuma.catalog.votable.CatalogSearch
+import org.http4s.*
 import org.http4s.dom.FetchClientBuilder
-import org.http4s.implicits._
+import org.http4s.implicits.*
 import org.typelevel.log4cats.Logger
-import retry._
+import retry.*
 
 import java.util.concurrent.TimeoutException
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 object SimbadSearch {
-  import RetryHelpers._
+  import RetryHelpers.*
 
   def search[F[_]](
     term:       NonEmptyString,

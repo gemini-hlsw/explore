@@ -177,6 +177,7 @@ object AladinCell extends ModelOptics {
                                             constraints,
                                             wavelength,
                                             base,
+                                            List(base),
                                             basePos,
                                             params,
                                             candidates

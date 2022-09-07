@@ -5,10 +5,10 @@ package workers
 
 import cats.syntax.all.*
 import explore.events.CatalogMessage
-import japgolly.scalajs.react.callback._
-import japgolly.webapputil.indexeddb._
+import japgolly.scalajs.react.callback.*
+import japgolly.webapputil.indexeddb.*
 import lucuma.ags.GuideStarCandidate
-import lucuma.catalog._
+import lucuma.catalog.votable.*
 
 import java.time.Duration
 

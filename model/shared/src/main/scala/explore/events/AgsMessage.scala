@@ -17,14 +17,15 @@ import lucuma.core.model.Target
 import workers.WorkerRequest
 
 object AgsMessage {
-  final case class Request(
-    id:              Target.Id,
-    constraints:     ConstraintSet,
-    wavelength:      Wavelength,
-    baseCoordinates: Coordinates,
-    position:        AgsPosition,
-    params:          AgsParams,
-    candidates:      List[GuideStarCandidate]
+  case class Request(
+    id:                 Target.Id,
+    constraints:        ConstraintSet,
+    wavelength:         Wavelength,
+    baseCoordinates:    Coordinates,
+    scienceCoordinates: List[Coordinates],
+    position:           AgsPosition,
+    params:             AgsParams,
+    candidates:         List[GuideStarCandidate]
   ) extends WorkerRequest {
     type ResponseType = List[AgsAnalysis]
   }
