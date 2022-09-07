@@ -35,6 +35,7 @@ object AgsServer extends WorkerServer[IO, AgsMessage.Request] {
         .agsAnalysis(r.constraints,
                      r.wavelength,
                      r.baseCoordinates,
+                     r.scienceCoordinates,
                      r.position,
                      r.params,
                      r.candidates
@@ -49,7 +50,7 @@ object AgsServer extends WorkerServer[IO, AgsMessage.Request] {
       _     <- cache.evict(CacheRetention).start
     yield invocation =>
       invocation.data match {
-        case req @ AgsMessage.Request(_, _, _, _, _, _, _) =>
+        case req @ AgsMessage.Request(_, _, _, _, _, _, _, _) =>
           val cacheableRequest =
             Cacheable(CacheName("ags"), CacheVersion(AgsCacheVersion), agsCalculation)
           cache.eval(cacheableRequest).apply(req).flatMap(m => invocation.respond(m))
