@@ -5,35 +5,35 @@ package explore.targeteditor
 
 import boopickle.DefaultBasic.*
 import cats.effect.IO
-import cats.syntax.all._
+import cats.syntax.all.*
 import crystal.Pot
 import crystal.PotOption
-import crystal.implicits._
+import crystal.implicits.*
 import crystal.react.View
-import crystal.react.hooks._
-import crystal.react.implicits._
-import crystal.react.reuse._
-import eu.timepit.refined.auto._
+import crystal.react.hooks.*
+import crystal.react.implicits.*
+import crystal.react.reuse.*
+import eu.timepit.refined.auto.*
 import explore.Icons
-import explore.common.UserPreferencesQueries._
+import explore.common.UserPreferencesQueries.*
 import explore.components.ui.ExploreStyles
-import explore.events._
-import explore.implicits._
+import explore.events.*
+import explore.implicits.*
 import explore.model.Constants
 import explore.model.ObsConfiguration
 import explore.model.TargetVisualOptions
 import explore.model.WorkerClients.*
-import explore.model.boopickle.Boopickle._
+import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.CatalogPicklers.given
-import explore.model.boopickle._
+import explore.model.boopickle.*
 import explore.model.enums.AgsState
 import explore.model.enums.Visible
-import explore.model.reusability._
+import explore.model.reusability.*
 import explore.optics.ModelOptics
-import explore.utils._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.ags._
+import explore.utils.*
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.ags.*
 import lucuma.core.enums.PortDisposition
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
@@ -42,21 +42,21 @@ import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.core.model.User
-import lucuma.ui.reusability._
+import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
-import queries.common.UserPreferencesQueriesGQL._
+import queries.common.UserPreferencesQueriesGQL.*
 import react.aladin.Fov
 import react.common.ReactFnProps
-import react.semanticui.collections.menu._
+import react.semanticui.collections.menu.*
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.checkbox.Checkbox
-import react.semanticui.sizes._
+import react.semanticui.sizes.*
 
 import java.time.Duration
 import java.time.Instant
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 final case class AladinCell(
   uid:              User.Id,
@@ -326,7 +326,7 @@ object AladinCell extends ModelOptics {
 
           val renderCell: TargetVisualOptions => VdomNode = (t: TargetVisualOptions) =>
             AladinContainer(
-              props.target,
+              props.target.get,
               props.obsConf,
               t.copy(fullScreen = props.fullScreen.get),
               coordinatesSetter,

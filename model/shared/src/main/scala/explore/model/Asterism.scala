@@ -4,14 +4,15 @@
 package explore.model
 
 import cats.Eq
+import cats.derived.*
 import cats.data.NonEmptyList
-import cats.syntax.all._
+import cats.syntax.all.*
 import lucuma.core.model.Target
-import monocle._
+import monocle.*
 
 import java.time.Instant
 
-final case class Asterism(private val targets: NonEmptyList[TargetWithId]) {
+case class Asterism(private val targets: NonEmptyList[TargetWithId]) derives Eq {
   def toSidereal(vizTime: Instant): List[SiderealTargetWithId] =
     targets.traverse(_.toSidereal.map(_.at(vizTime))).foldMap(_.toList)
 
@@ -61,5 +62,4 @@ object Asterism {
       )
     )
 
-  implicit val eqAsterism: Eq[Asterism] = Eq.by(_.targets)
 }

@@ -4,16 +4,17 @@
 package explore.model
 
 import cats.Eq
-import cats.syntax.all._
+import cats.derived.*
+import cats.syntax.all.*
 import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.Decoder
-import io.circe.Decoder._
+import io.circe.Decoder.*
 import lucuma.core.enums.Band
-import lucuma.core.math.BrightnessUnits._
+import lucuma.core.math.BrightnessUnits.*
 import lucuma.core.math.Epoch
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
-import lucuma.schemas.decoders._
+import lucuma.schemas.decoders.*
 import monocle.Focus
 import monocle.Lens
 import monocle.Optional
@@ -23,7 +24,7 @@ import java.time.Instant
 import java.time.LocalDateTime
 import scala.collection.immutable.SortedMap
 
-final case class TargetWithId(id: Target.Id, target: Target) {
+case class TargetWithId(id: Target.Id, target: Target) derives Eq {
   def toOptId: TargetWithOptId = TargetWithOptId(id.some, target)
 
   def toSidereal: Option[SiderealTargetWithId] = TargetWithId.sidereal.getOption(this)
@@ -31,9 +32,9 @@ final case class TargetWithId(id: Target.Id, target: Target) {
   def toNonSidereal: Option[NonsiderealTargetWithId] = TargetWithId.nonsidereal.getOption(this)
 }
 
-final case class TargetWithOptId(optId: Option[Target.Id], target: Target)
+case class TargetWithOptId(optId: Option[Target.Id], target: Target) derives Eq
 
-final case class SiderealTargetWithId(id: Target.Id, target: Target.Sidereal) {
+case class SiderealTargetWithId(id: Target.Id, target: Target.Sidereal) derives Eq {
   def toTargetWithId = TargetWithId(id, target)
 
   def at(i: Instant): SiderealTargetWithId = {
@@ -62,6 +63,7 @@ object TargetWithId {
   val integratedBrightnesses
     : Optional[TargetWithId, SortedMap[Band, BrightnessMeasure[Integrated]]] =
     target.andThen(Target.integratedBrightnesses)
+
   val surfaceBrightnesses: Optional[TargetWithId, SortedMap[Band, BrightnessMeasure[Surface]]] =
     target.andThen(Target.surfaceBrightnesses)
 
@@ -77,16 +79,11 @@ object TargetWithId {
         NonsiderealTargetWithId(id, t)
     }(_.toTargetWithId)
 
-  implicit val targetWithIdDecoder: Decoder[TargetWithId] = Decoder.instance(c =>
+  given Decoder[TargetWithId] = Decoder.instance(c =>
     for {
       id     <- c.get[Target.Id]("id")
       target <- c.as[Target]
     } yield TargetWithId(id, target)
   )
 
-  implicit val eqTargetWithId: Eq[TargetWithId] = Eq.by(x => (x.id, x.target))
-}
-
-object TargetWithOptId {
-  implicit val eqTargetWithOptId: Eq[TargetWithOptId] = Eq.by(x => (x.optId, x.target))
 }
