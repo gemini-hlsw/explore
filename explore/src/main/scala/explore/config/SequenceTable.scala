@@ -53,7 +53,7 @@ object SequenceTable {
     lazy val (p, q): (BigDecimal, BigDecimal) =
       step.stepConfig match {
         case StepConfig.Science(Offset(p, q)) => (p, q).bimap(componentToArcSec, componentToArcSec)
-        case _                                => (0, 0)
+        case _                                => (BigDecimal(0), BigDecimal(0))
       }
     lazy val wavelength: Option[BigDecimal]   =
       (step.instrumentConfig match {
