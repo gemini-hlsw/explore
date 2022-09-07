@@ -32,8 +32,8 @@ ThisBuild / scalafixDependencies ++= ClueGenerator.value ++ Seq(
   "edu.gemini" % "lucuma-schemas_3" % Settings.LibraryVersions.lucumaSchemas
 )
 ThisBuild / scalafixScalaBinaryVersion := "2.13"
-ThisBuild / scalaVersion               := "3.1.3"
-ThisBuild / crossScalaVersions         := Seq("3.1.3")
+ThisBuild / scalaVersion               := "3.2.0"
+ThisBuild / crossScalaVersions         := Seq("3.2.0")
 ThisBuild / scalacOptions ++= Seq(
   "-language:implicitConversions"
 )

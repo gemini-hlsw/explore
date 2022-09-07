@@ -52,14 +52,14 @@ const itcCache = ({ name, pattern }) => ({
 
 // https://vitejs.dev/config/
 module.exports = ({ command, mode }) => {
-  const scalaClassesDir = path.resolve(__dirname, 'explore/target/scala-3.1.3');
+  const scalaClassesDir = path.resolve(__dirname, 'explore/target/scala-3.2.0');
   const isProduction = mode == 'production';
   const sjs = isProduction
     ? path.resolve(scalaClassesDir, 'explore-opt')
     : path.resolve(scalaClassesDir, 'explore-fastopt');
   const workersScalaClassesDir = path.resolve(
     __dirname,
-    'workers/target/scala-3.1.3'
+    'workers/target/scala-3.2.0'
   );
   const workersSjs = isProduction
     ? path.resolve(workersScalaClassesDir, 'workers-opt')
