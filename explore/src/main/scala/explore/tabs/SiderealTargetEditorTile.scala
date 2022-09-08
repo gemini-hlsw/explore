@@ -6,6 +6,7 @@ package explore.tabs
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.View
+import explore.implicits.*
 import explore.components.Tile
 import explore.targeteditor.SiderealTargetEditor
 import explore.undo.UndoStacks
@@ -14,8 +15,11 @@ import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import explore.model.util.*
 
 import java.time.Instant
+import monocle.std.option.some
+import explore.model.Asterism
 
 object SiderealTargetEditorTile {
 
@@ -32,21 +36,23 @@ object SiderealTargetEditorTile {
   ) =
     Tile(ObsTabTilesIds.TargetId.id, title, back = backButton, canMinimize = true) {
       (renderInTitle: Tile.RenderInTitle) =>
-        userId.map(uid =>
-          SiderealTargetEditor(
-            uid,
-            targetId,
-            target,
-            vizTime,
-            none,
-            none,
-            none,
-            none,
-            undoStacks,
-            searching,
-            renderInTitle = renderInTitle.some,
-            fullScreen = fullScreen
-          )
-        ): VdomNode
+        val asterism = target.widen[Target].zoom(Asterism.oneTarget(targetId).reverse.asLens)
+        asterism.zoom(Asterism.toZipperLens(targetId).andThen(some)).asView.flatMap { zipperView =>
+          userId.map(uid =>
+            SiderealTargetEditor(
+              uid,
+              vizTime,
+              zipperView,
+              none,
+              none,
+              none,
+              none,
+              undoStacks,
+              searching,
+              renderInTitle = renderInTitle.some,
+              fullScreen = fullScreen
+            )
+          ): VdomNode
+        }
     }
 }

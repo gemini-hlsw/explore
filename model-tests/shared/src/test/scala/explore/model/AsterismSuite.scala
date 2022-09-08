@@ -29,6 +29,12 @@ class AsterismSuite extends DisciplineSuite:
   checkAll("Asterism.targetsEach", TraversalTests(Asterism.targetsEach))
   checkAll("Asterism.siderealTargetsEach", TraversalTests(Asterism.siderealTargetsEach))
 
+  test("oneTarget") {
+    forAll { (id: Target.Id) =>
+      checkAll("Asterism.oneTarget", IsoTests(Asterism.oneTarget(id)))
+    }
+  }
+
   test("targetOptional") {
     forAll { (id: Target.Id) =>
       given Arbitrary[Option[Asterism]] = gen.optAsterism(id)

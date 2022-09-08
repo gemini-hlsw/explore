@@ -208,10 +208,10 @@ object AsterismEditor {
               val targetInAsterism   = Asterism.targetOptional(targetId)
               val selectedTargetView = props.asterism.zoom(targetInAsterism)
 
-              val toZipperLens: Lens[Asterism, Option[Zipper[SiderealTargetWithId]]] = ???
-
-              val p: Option[View[Zipper[SiderealTargetWithId]]] =
-                props.asterism.zoom(some.andThen(toZipperLens).andThen(some)).asView
+              val p: Option[View[Zipper[TargetWithId]]] =
+                props.asterism
+                  .zoom(some.andThen(Asterism.toZipperLens(targetId)).andThen(some))
+                  .asView
 
               val otherObsCount = props.otherObsCount(targetId)
               val plural        = if (otherObsCount === 1) "" else "s"

@@ -31,19 +31,17 @@ case class Asterism(private val targets: NonEmptyList[TargetWithId]) derives Eq 
       Asterism.fromTargets(filtered)
     } else this.some
 
-  def baseCoordinatesAt(i: Instant): Option[Coordinates] = none
-
-  def baseCoordinates: Coordinates = ???
-
   def toZipper(id: Target.Id): Option[Zipper[TargetWithId]] =
     Zipper.fromNel(targets).findFocus(_.id === id)
 
   // This should be calculatedd from the other targets or manually overriden
   def baseTarget: TargetWithId = targets.head
 
-  def baseCoordinatesAt(i: Instant): Option[Coordinates] = none
+  def baseCoordinatesAt(i: Instant): Option[Coordinates] =
+    targets.head.toSidereal.flatMap(_.target.tracking.at(i))
 
-  def baseCoordinates: Coordinates = ???
+  def baseCoordinates: Coordinates =
+    targets.head.toSidereal.map(_.target.tracking.baseCoordinates).get
 
   def hasId(id: Target.Id): Boolean = targets.exists(_.id === id)
 }
@@ -51,6 +49,9 @@ case class Asterism(private val targets: NonEmptyList[TargetWithId]) derives Eq 
 object Asterism {
   val isoTargets: Iso[NonEmptyList[TargetWithId], Asterism] =
     Iso[Asterism, NonEmptyList[TargetWithId]](_.targets)(Asterism.apply).reverse
+
+  def oneTarget(id: Target.Id): Iso[Asterism, Target] =
+    Iso[Asterism, Target](_.targets.head.target)(t => Asterism.one(TargetWithId(id, t)))
 
   val targetsEach: Traversal[Asterism, TargetWithId] = isoTargets.reverse.each
 
