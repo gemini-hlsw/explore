@@ -3,41 +3,42 @@
 
 package explore.targeteditor
 
-import cats.syntax.all._
-import clue.data.syntax._
-import eu.timepit.refined.auto._
-import explore.common._
+import cats.syntax.all.*
+import clue.data.syntax.*
+import eu.timepit.refined.auto.*
+import explore.common.*
+import explore.components.HelpIcon
 import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
-import explore.implicits._
+import explore.implicits.*
 import explore.model.enums.SourceProfileType
-import explore.utils._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import explore.utils.*
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.SourceProfile
-import lucuma.core.model.SourceProfile._
+import lucuma.core.model.SourceProfile.*
 import lucuma.refined.*
-import lucuma.schemas.ObservationDB.Types._
+import lucuma.schemas.ObservationDB.Types.*
 import lucuma.ui.forms.EnumSelect
 import lucuma.ui.input.ChangeAuditor
-import lucuma.ui.reusability._
+import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.given
 import queries.schemas.*
-import queries.schemas.implicits._
+import queries.schemas.implicits.*
 import react.common.ReactFnProps
 
 case class SourceProfileEditor(
-  sourceProfile:       Aligner[SourceProfile, SourceProfileInput],
-  disabled:            Boolean
-)(implicit val appCtx: AppContextIO)
-    extends ReactFnProps[SourceProfileEditor](SourceProfileEditor.component)
+  sourceProfile: Aligner[SourceProfile, SourceProfileInput],
+  disabled:      Boolean
+)(using val ctx: AppContextIO)
+    extends ReactFnProps(SourceProfileEditor.component)
 
 object SourceProfileEditor {
-  type Props = SourceProfileEditor
+  private type Props = SourceProfileEditor
 
-  protected val component = ScalaFnComponent[Props] { props =>
-    implicit val appCtx = props.appCtx
+  private val component = ScalaFnComponent[Props] { props =>
+    import props.given
 
     val gaussianAlignerOpt: Option[Aligner[Gaussian, GaussianInput]] =
       props.sourceProfile.zoomOpt(
@@ -46,7 +47,10 @@ object SourceProfileEditor {
       )
 
     React.Fragment(
-      <.label("Profile", ExploreStyles.SkipToNext),
+      <.label("Profile",
+              HelpIcon("target/main/target-profile.md".refined),
+              ExploreStyles.SkipToNext
+      ),
       EnumSelect[SourceProfileType](
         value = SourceProfileType.fromSourceProfile(props.sourceProfile.get).some,
         onChange = sp => props.sourceProfile.view(_.toInput).mod(sp.convert)
