@@ -4,25 +4,25 @@
 package explore.tabs
 
 import cats.effect.IO
-import cats.syntax.all._
+import cats.syntax.all.*
 import crystal.Pot
 import crystal.react.View
-import crystal.react.implicits._
+import crystal.react.implicits.*
 import explore.common.ObsQueries
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.config.VizTimeEditor
-import explore.implicits._
+import explore.implicits.*
 import explore.model.Asterism
 import explore.model.ObsIdSet
 import explore.model.ScienceMode
 import explore.model.enums.TileSizeState
 import explore.targeteditor.AsterismEditor
 import explore.undo.UndoStacks
-import explore.utils._
+import explore.utils.*
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.extra.router.SetRouteVia
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.PosAngleConstraint
@@ -54,7 +54,7 @@ object AsterismEditorTile {
     title:           String,
     backButton:      Option[VdomNode] = none,
     hiddenColumns:   View[Set[String]]
-  )(implicit ctx:    AppContextIO) = {
+  )(using AppContextIO) = {
 
     // Save the time here. this works for the obs and target tabs
     val vizTimeView = potVizTime.map(_.withOnMod { t =>

@@ -9,12 +9,13 @@ import cats.data.NonEmptyList
 import cats.syntax.all.*
 import lucuma.core.model.Target
 import monocle.*
+import lucuma.core.math.Coordinates
+import lucuma.core.data.Zipper
 
 import java.time.Instant
-import lucuma.core.math.Coordinates
 
 case class Asterism(private val targets: NonEmptyList[TargetWithId]) derives Eq {
-  def toSidereal(vizTime: Instant): List[SiderealTargetWithId] =
+  def toSiderealAt(vizTime: Instant): List[SiderealTargetWithId] =
     targets.traverse(_.toSidereal.map(_.at(vizTime))).foldMap(_.toList)
 
   def asList: List[TargetWithId] = targets.toList
@@ -51,6 +52,10 @@ object Asterism {
       case Some(Asterism(targets)) => targets.toList
       case _                       => Nil
     }
+
+  // val toZipperLens: Lens[Asterism, Option[Zipper[SiderealTargetWithId]]] =
+  //   new Lens[Asterism, Option[Zipper[SiderealTargetWithId]]]()()
+  // def apply[S, A](get: S => A)(replace: A => S => S): Lens[S, A] =
 
   def fromTargets(targets: List[TargetWithId]): Option[Asterism] =
     NonEmptyList.fromList(targets).map(Asterism.apply)

@@ -4,68 +4,72 @@
 package explore.targeteditor
 
 import cats.effect.IO
-import cats.syntax.all._
+import cats.syntax.all.*
 import crystal.Pot
 import crystal.react.View
-import crystal.react.hooks._
-import crystal.react.implicits._
+import crystal.react.hooks.*
+import crystal.react.implicits.*
 import explore.Icons
 import explore.common.AsterismQueries
 import explore.common.ObsQueries
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.config.VizTimeEditor
-import explore.implicits._
+import explore.implicits.*
 import explore.model.Asterism
 import explore.model.ObsIdSet
 import explore.model.ScienceMode
 import explore.model.TargetWithId
 import explore.model.TargetWithOptId
-import explore.model.reusability._
-import explore.optics._
-import explore.optics.all._
+import explore.model.reusability.*
+import explore.optics.*
+import explore.optics.all.*
 import explore.targets.TargetSelectionPopup
 import explore.undo.UndoStacks
-import japgolly.scalajs.react._
+import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
-import lucuma.ui.reusability._
+import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import queries.common.TargetQueriesGQL._
-import queries.schemas.implicits._
+import queries.common.TargetQueriesGQL.*
+import queries.schemas.implicits.*
 import react.common.ReactFnProps
-import react.semanticui.elements.button._
-import react.semanticui.modules.checkbox._
-import react.semanticui.shorthand._
-import react.semanticui.sizes._
+import react.semanticui.elements.button.*
+import react.semanticui.modules.checkbox.*
+import react.semanticui.shorthand.*
+import react.semanticui.sizes.*
 
 import java.time.Instant
+import monocle.Lens
+import monocle.std.option.some
+import lucuma.core.data.Zipper
+import explore.model.SiderealTargetWithId
 
 case class AsterismEditor(
-  userId:           User.Id,
-  programId:        Program.Id,
-  obsIds:           ObsIdSet,
-  asterism:         View[Option[Asterism]],
-  potVizTime:       Pot[View[Option[Instant]]],
-  scienceMode:      Option[ScienceMode],
-  posAngle:         Option[PosAngleConstraint],
-  constraints:      Option[ConstraintSet],
-  wavelength:       Option[Wavelength],
-  currentTarget:    Option[Target.Id],
-  setTarget:        (Option[Target.Id], SetRouteVia) => Callback,
-  otherObsCount:    Target.Id => Int,
-  undoStacks:       View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
-  searching:        View[Set[Target.Id]],
-  hiddenColumns:    View[Set[String]],
-  renderInTitle:    Tile.RenderInTitle
+  userId:        User.Id,
+  programId:     Program.Id,
+  obsIds:        ObsIdSet,
+  asterism:      View[Option[Asterism]],
+  potVizTime:    Pot[View[Option[Instant]]],
+  scienceMode:   Option[ScienceMode],
+  posAngle:      Option[PosAngleConstraint],
+  constraints:   Option[ConstraintSet],
+  wavelength:    Option[Wavelength],
+  currentTarget: Option[Target.Id],
+  setTarget:     (Option[Target.Id], SetRouteVia) => Callback,
+  otherObsCount: Target.Id => Int,
+  undoStacks:    View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
+  searching:     View[Set[Target.Id]],
+  hiddenColumns: View[Set[String]],
+  renderInTitle: Tile.RenderInTitle
 )(using val ctx: AppContextIO)
     extends ReactFnProps(AsterismEditor.component)
 
@@ -121,8 +125,8 @@ object AsterismEditor {
       .useStateView(false)
       // edit target in current obs only (0), or all "instances" of the target (1)
       .useState(0)
-      .useEffectWithDepsBy((props, _, _) => (props.asterism.get, props.currentTarget))(
-        (props, _, _) => { (asterism, oTargetId) =>
+      .useEffectWithDepsBy((props, _, _) => (props.asterism.get, props.currentTarget)) {
+        (props, _, _) => (asterism, oTargetId) =>
           // if the selected targetId is None, or not in the asterism, select the first target (if any)
           // Need to replace history here.
           oTargetId match {
@@ -134,8 +138,7 @@ object AsterismEditor {
             case _                                                  =>
               props.setTarget(asterism.map(_.baseTarget.id), SetRouteVia.HistoryReplace)
           }
-        }
-      )
+      }
       // full screen aladin
       .useStateView(false)
       .render { (props, adding, editScope, fullScreen) =>
@@ -184,7 +187,8 @@ object AsterismEditor {
                     targetView,
                     adding
                   ).runAsync
-                case _                                                     =>
+
+                case _ =>
                   Callback.empty
               }
             )
@@ -201,7 +205,13 @@ object AsterismEditor {
           ),
           props.currentTarget
             .flatMap[VdomElement] { targetId =>
-              val selectedTargetView = props.asterism.zoom(Asterism.targetOptional(targetId))
+              val targetInAsterism   = Asterism.targetOptional(targetId)
+              val selectedTargetView = props.asterism.zoom(targetInAsterism)
+
+              val toZipperLens: Lens[Asterism, Option[Zipper[SiderealTargetWithId]]] = ???
+
+              val p: Option[View[Zipper[SiderealTargetWithId]]] =
+                props.asterism.zoom(some.andThen(toZipperLens).andThen(some)).asView
 
               val otherObsCount = props.otherObsCount(targetId)
               val plural        = if (otherObsCount === 1) "" else "s"
@@ -231,23 +241,27 @@ object AsterismEditor {
                           onChange = (_: Boolean) => editScope.setState(1)
                         )
                       ).when(otherObsCount > 0),
-                      SiderealTargetEditor(
-                        props.userId,
-                        targetId,
-                        targetView.zoom(TargetWithId.target).unsafeNarrow[Target.Sidereal],
-                        vizTime,
-                        props.posAngle,
-                        props.scienceMode,
-                        props.constraints,
-                        props.wavelength,
-                        props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
-                        props.searching,
-                        onClone = onCloneTarget(targetId, props.asterism, props.setTarget) _,
-                        obsIdSubset =
-                          if (otherObsCount > 0 && editScope.value === 0) props.obsIds.some
-                          else none,
-                        fullScreen = fullScreen
-                      )
+                      p.flatMap { ast =>
+                        props.asterism.get.map(a =>
+                          SiderealTargetEditor(
+                            props.userId,
+                            a.baseCoordinates,
+                            ast,
+                            vizTime,
+                            props.posAngle,
+                            props.scienceMode,
+                            props.constraints,
+                            props.wavelength,
+                            props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
+                            props.searching,
+                            onClone = onCloneTarget(targetId, props.asterism, props.setTarget) _,
+                            obsIdSubset =
+                              if (otherObsCount > 0 && editScope.value === 0) props.obsIds.some
+                              else none,
+                            fullScreen = fullScreen
+                          )
+                        )
+                      }
                     )
                   case _                                                =>
                     <.div("Non-sidereal targets not supported")

@@ -6,6 +6,7 @@ package explore.model
 import cats.Eq
 import cats.derived.*
 import cats.syntax.all.*
+>>>>>>> 2f40684a7 (TargetWithId refactoring)
 import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.Decoder
 import io.circe.Decoder.*
@@ -23,36 +24,20 @@ import monocle.Prism
 import java.time.Instant
 import java.time.LocalDateTime
 import scala.collection.immutable.SortedMap
+import lucuma.core.util.Gid
+import lucuma.core.util.WithGid
 
-case class TargetWithId(id: Target.Id, target: Target) derives Eq {
+trait WithId[A <: Target] {
+  def id: Target.Id
+  def target: A
+}
+
+case class TargetWithId(id: Target.Id, target: Target) extends WithId[Target] derives Eq {
   def toOptId: TargetWithOptId = TargetWithOptId(id.some, target)
 
   def toSidereal: Option[SiderealTargetWithId] = TargetWithId.sidereal.getOption(this)
 
   def toNonSidereal: Option[NonsiderealTargetWithId] = TargetWithId.nonsidereal.getOption(this)
-}
-
-case class TargetWithOptId(optId: Option[Target.Id], target: Target) derives Eq
-
-case class SiderealTargetWithId(id: Target.Id, target: Target.Sidereal) derives Eq {
-  def toTargetWithId = TargetWithId(id, target)
-
-  def at(i: Instant): SiderealTargetWithId = {
-    val ldt            = LocalDateTime.ofInstant(i, Constants.UTC)
-    val epoch          = Epoch.Julian.fromLocalDateTime(ldt).getOrElse(target.tracking.epoch)
-    val trackingUpdate = (tracking: SiderealTracking) =>
-      tracking.at(i).fold(tracking) { c =>
-        val update = SiderealTracking.baseCoordinates.replace(c) >>> SiderealTracking.epoch
-          .replace(epoch)
-        update(tracking)
-      }
-
-    copy(target = Target.Sidereal.tracking.modify(trackingUpdate)(target))
-  }
-}
-
-case class NonsiderealTargetWithId(id: Target.Id, target: Target.Nonsidereal) {
-  def toTargetWithId = TargetWithId(id, target)
 }
 
 object TargetWithId {
@@ -86,4 +71,32 @@ object TargetWithId {
     } yield TargetWithId(id, target)
   )
 
+}
+
+case class TargetWithOptId(optId: Option[Target.Id], target: Target) derives Eq
+
+case class SiderealTargetWithId(id: Target.Id, target: Target.Sidereal)
+    extends WithId[Target.Sidereal] derives Eq {
+  def toTargetWithId = TargetWithId(id, target)
+
+  def at(i: Instant): SiderealTargetWithId = {
+    val ldt            = LocalDateTime.ofInstant(i, Constants.UTC)
+    val epoch          = Epoch.Julian.fromLocalDateTime(ldt).getOrElse(target.tracking.epoch)
+    val trackingUpdate = (tracking: SiderealTracking) =>
+      tracking.at(i).fold(tracking) { c =>
+        val update = SiderealTracking.baseCoordinates.replace(c) >>> SiderealTracking.epoch
+          .replace(epoch)
+        update(tracking)
+      }
+
+    copy(target = Target.Sidereal.tracking.modify(trackingUpdate)(target))
+  }
+}
+
+object SiderealTargetWithId:
+  val id: Lens[SiderealTargetWithId, Target.Id]           = Focus[SiderealTargetWithId](_.id)
+  val target: Lens[SiderealTargetWithId, Target.Sidereal] = Focus[SiderealTargetWithId](_.target)
+
+case class NonsiderealTargetWithId(id: Target.Id, target: Target.Nonsidereal) {
+  def toTargetWithId = TargetWithId(id, target)
 }

@@ -117,7 +117,7 @@ object TargetTable {
       }
       // rows
       .useMemoBy((props, _, vizTime) => (props.targets.get, vizTime))((_, _, _) => {
-        case (targets, Pot.Ready(vizTime)) => targets.foldMap(_.toSidereal(vizTime))
+        case (targets, Pot.Ready(vizTime)) => targets.foldMap(_.toSiderealAt(vizTime))
         case _                             => Nil
       })
       .useTableBy((props, cols, _, rows) =>

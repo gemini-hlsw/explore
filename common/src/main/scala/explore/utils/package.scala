@@ -6,21 +6,21 @@ package explore.utils
 import cats.Endo
 import cats.Monoid
 import cats.effect.Sync
-import cats.syntax.all._
-import clue.data._
-import clue.data.syntax._
+import cats.syntax.all.*
+import clue.data.*
+import clue.data.syntax.*
 import crystal.Pot
 import crystal.PotOption
 import crystal.react.View
-import crystal.react.reuse._
-import eu.timepit.refined._
+import crystal.react.reuse.*
+import eu.timepit.refined.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.BuildInfo
 import explore.components.ui.ExploreStyles
 import explore.model.enums.ExecutionEnvironment
 import explore.model.enums.ExecutionEnvironment.Development
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.enums.Theme
 import lucuma.ui.forms.ExternalValue
 import lucuma.ui.syntax.all.*
@@ -34,7 +34,7 @@ import react.semanticui.elements.loader.Loader
 
 import java.time.Instant
 import scala.scalajs.js
-import scala.scalajs.js.JSConverters._
+import scala.scalajs.js.JSConverters.*
 
 def toggleReusabilityOverlay[F[_]: Sync](): F[Unit] =
   Sync[F]
@@ -114,10 +114,9 @@ inline def showCount(count: Int, unit: String, plural: String): String =
 inline def showCount(count: Int, unit: String): String =
   showCount(count, unit, unit + "s")
 
-implicit class Http4sUriOps(val uri: Uri) extends AnyVal {
+extension (uri: Uri)
   def addPath(p: Uri.Path): Uri =
     uri.withPath(uri.path.concat(p))
-}
 
 def forceAssign[T, S](mod: Endo[Input[S]] => Endo[T])(base: S): Endo[S] => Endo[T] =
   modS =>

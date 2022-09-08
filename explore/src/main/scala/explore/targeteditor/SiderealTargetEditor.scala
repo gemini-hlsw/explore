@@ -5,61 +5,63 @@ package explore.targeteditor
 
 import cats.Endo
 import cats.effect.IO
-import cats.syntax.all._
+import cats.syntax.all.*
 import clue.TransactionalClient
-import clue.data.syntax._
+import clue.data.syntax.*
 import crystal.react.View
-import crystal.react.hooks._
-import crystal.react.implicits._
-import eu.timepit.refined.auto._
-import eu.timepit.refined.types.string._
+import crystal.react.hooks.*
+import crystal.react.implicits.*
+import eu.timepit.refined.auto.*
+import eu.timepit.refined.types.string.*
 import explore.AppCtx
-import explore.common._
+import explore.common.*
 import explore.components.HelpIcon
 import explore.components.InputWithUnits
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
-import explore.implicits._
+import explore.implicits.*
 import explore.model.ExploreModelValidators
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.ScienceMode
 import explore.model.TargetWithId
-import explore.model.formats._
-import explore.model.util._
+import explore.model.formats.*
+import explore.model.util.*
 import explore.undo.UndoContext
 import explore.undo.UndoStacks
-import explore.utils._
-import japgolly.scalajs.react._
+import explore.utils.*
+import japgolly.scalajs.react.*
 import japgolly.scalajs.react.hooks.Hooks
 import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
-import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.math._
+import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.math.*
 import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.Target
 import lucuma.core.model.User
-import lucuma.core.validation._
+import lucuma.core.validation.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB
-import lucuma.schemas.ObservationDB.Types._
+import lucuma.schemas.ObservationDB.Types.*
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
-import lucuma.ui.reusability._
+import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import lucuma.utils._
+import lucuma.utils.*
 import queries.common.TargetQueriesGQL
-import queries.schemas.implicits._
+import queries.schemas.implicits.*
 import react.common.ReactFnProps
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.label.LabelPointing
 import react.semanticui.sizes.Small
 
 import java.time.Instant
+import lucuma.core.data.Zipper
+import explore.model.SiderealTargetWithId
 
 case class SearchCallback(
   searchTerm: NonEmptyString,
@@ -70,23 +72,25 @@ case class SearchCallback(
 }
 
 case class SiderealTargetEditor(
-  uid:           User.Id,
-  tid:           Target.Id,
-  target:        View[Target.Sidereal],
-  vizTime:       Option[Instant],
-  posAngle:      Option[PosAngleConstraint],
-  scienceMode:   Option[ScienceMode],
-  constraints:   Option[ConstraintSet],
-  wavelength:    Option[Wavelength],
-  undoStacks:    View[UndoStacks[IO, Target.Sidereal]],
-  searching:     View[Set[Target.Id]],
-  obsIdSubset:   Option[ObsIdSet] = None,
-  onClone:       TargetWithId => Callback = _ => Callback.empty,
-  renderInTitle: Option[Tile.RenderInTitle] = none,
-  fullScreen:    View[Boolean]
+  uid:             User.Id,
+  // tid:           Target.Id, // selected target in the asterism
+  baseCoordinates: Coordinates,
+  asterism:        View[Zipper[SiderealTargetWithId]],
+  vizTime:         Option[Instant],
+  posAngle:        Option[PosAngleConstraint],
+  scienceMode:     Option[ScienceMode],
+  constraints:     Option[ConstraintSet],
+  wavelength:      Option[Wavelength],
+  undoStacks:      View[UndoStacks[IO, Target.Sidereal]],
+  searching:       View[Set[Target.Id]],
+  obsIdSubset:     Option[ObsIdSet] = None,
+  onClone:         TargetWithId => Callback = _ => Callback.empty,
+  renderInTitle:   Option[Tile.RenderInTitle] = none,
+  fullScreen:      View[Boolean]
 ) extends ReactFnProps(SiderealTargetEditor.component) {
-  val baseCoordinates: Coordinates =
-    target.zoom(Target.Sidereal.baseCoordinates).get
+  val tid: Target.Id = asterism.get.focus.id
+  // val baseCoordinates: Coordinates =
+  //   asterism.zoom(Target.Sidereal.baseCoordinates).get
 }
 
 object SiderealTargetEditor {
@@ -146,16 +150,21 @@ object SiderealTargetEditor {
       }
       .render { (props, cloning, vizTime) =>
         AppCtx.using { implicit appCtx =>
+          val selectedTargetView: View[Target.Sidereal] =
+            props.asterism.zoom(
+              Zipper.focus.andThen(SiderealTargetWithId.target)
+            )
+
           // If we're going to clone on edit, use readonly views so we don't update the original
           // target in the model or add the API clone to the undo stack for the original target.
           val (targetView, undoStackView) =
-            props.obsIdSubset.fold((props.target, props.undoStacks))(_ =>
-              (readonlyView(props.target), readonlyView(props.undoStacks))
+            props.obsIdSubset.fold((selectedTargetView, props.undoStacks))(_ =>
+              (readonlyView(selectedTargetView), readonlyView(props.undoStacks))
             )
 
           val undoCtx: UndoContext[Target.Sidereal] = UndoContext(undoStackView, targetView)
 
-          val target: Target.Sidereal = props.target.get
+          val target: Target.Sidereal = selectedTargetView.get
 
           val remoteOnMod: UpdateTargetsInput => IO[Unit] =
             getRemoteOnMod(props.tid, props.obsIdSubset, cloning, props.onClone) _
