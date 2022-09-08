@@ -3,30 +3,31 @@
 
 package explore.targeteditor
 
-import cats.syntax.all._
+import cats.syntax.all.*
 import clue.data.Input
-import clue.data.syntax._
-import coulomb._
+import clue.data.syntax.*
+import coulomb.*
 import coulomb.units.si.Kelvin
 import crystal.react.View
-import eu.timepit.refined.auto._
-import eu.timepit.refined.cats._
+import eu.timepit.refined.auto.*
+import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string
-import explore.common._
+import explore.common.*
+import explore.components.HelpIcon
 import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
-import explore.implicits._
+import explore.implicits.*
 import explore.model.display.given
 import explore.model.enums.IntegratedSEDType
-import explore.model.enums.IntegratedSEDType._
+import explore.model.enums.IntegratedSEDType.*
 import explore.model.enums.SEDType
 import explore.model.enums.SurfaceSEDType
-import explore.model.enums.SurfaceSEDType._
-import explore.utils._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import explore.model.enums.SurfaceSEDType.*
+import explore.utils.*
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Band
 import lucuma.core.enums.CoolStarTemperature
 import lucuma.core.enums.GalaxySpectrum
@@ -35,10 +36,10 @@ import lucuma.core.enums.PlanetSpectrum
 import lucuma.core.enums.PlanetaryNebulaSpectrum
 import lucuma.core.enums.QuasarSpectrum
 import lucuma.core.enums.StellarLibrarySpectrum
-import lucuma.core.math.BrightnessUnits._
+import lucuma.core.math.BrightnessUnits.*
 import lucuma.core.math.Wavelength
-import lucuma.core.math.dimensional.Units._
-import lucuma.core.math.dimensional._
+import lucuma.core.math.dimensional.Units.*
+import lucuma.core.math.dimensional.*
 import lucuma.core.model.EmissionLine
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
@@ -46,14 +47,14 @@ import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.core.validation.InputValidSplitEpi
 import lucuma.refined.*
-import lucuma.schemas.ObservationDB.Types._
+import lucuma.schemas.ObservationDB.Types.*
 import lucuma.ui.forms.EnumSelect
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
-import lucuma.ui.reusability._
+import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.given
-import queries.schemas.implicits._
+import queries.schemas.implicits.*
 import react.common.ReactFnProps
 import react.semanticui.elements.label.LabelPointing
 
@@ -80,7 +81,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
   T,
   S,
   Props <: SpectralDefinitionEditor[T, S]
-](implicit
+](using
   sedTypeEnum:    Enumerated[SEDType[T]],
   sedTypeDisplay: Display[SEDType[T]],
   enumFDCUnits:   Enumerated[Units Of FluxDensityContinuum[T]]
@@ -92,7 +93,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
   protected val disabledItems: HashSet[SEDType[T]]
 
   val component = ScalaFnComponent[Props] { props =>
-    import props._
+    import props.given
 
     val stellarLibrarySpectrumAlignerOpt
       : Option[Aligner[StellarLibrarySpectrum, Input[StellarLibrarySpectrum]]] =
@@ -181,7 +182,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
       )
 
     React.Fragment(
-      <.label("SED", ExploreStyles.SkipToNext),
+      <.label("SED", HelpIcon("target/main/target-sed.md".refined), ExploreStyles.SkipToNext),
       EnumSelect[SEDType[T]](
         label = "",
         value = currentType(props.spectralDefinition.get).some,
