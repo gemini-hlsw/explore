@@ -31,6 +31,13 @@ case class Asterism(private val targets: NonEmptyList[TargetWithId]) derives Eq 
       Asterism.fromTargets(filtered)
     } else this.some
 
+  def baseCoordinatesAt(i: Instant): Option[Coordinates] = none
+
+  def baseCoordinates: Coordinates = ???
+
+  def toZipper(id: Target.Id): Option[Zipper[TargetWithId]] =
+    Zipper.fromNel(targets).findFocus(_.id === id)
+
   // This should be calculatedd from the other targets or manually overriden
   def baseTarget: TargetWithId = targets.head
 
@@ -47,15 +54,19 @@ object Asterism {
 
   val targetsEach: Traversal[Asterism, TargetWithId] = isoTargets.reverse.each
 
+  val siderealTargetsEach: Traversal[Asterism, SiderealTargetWithId] =
+    targetsEach.andThen(TargetWithId.sidereal)
+
   val fromTargetsList: Iso[List[TargetWithId], Option[Asterism]] =
     Iso[List[TargetWithId], Option[Asterism]](fromTargets) {
       case Some(Asterism(targets)) => targets.toList
       case _                       => Nil
     }
 
-  // val toZipperLens: Lens[Asterism, Option[Zipper[SiderealTargetWithId]]] =
-  //   new Lens[Asterism, Option[Zipper[SiderealTargetWithId]]]()()
-  // def apply[S, A](get: S => A)(replace: A => S => S): Lens[S, A] =
+  def toZipperLens(id: Target.Id): Lens[Asterism, Option[Zipper[TargetWithId]]] =
+    Lens[Asterism, Option[Zipper[TargetWithId]]](_.toZipper(id))(z =>
+      a => z.map(z => Asterism(z.toNel)).getOrElse(a)
+    )
 
   def fromTargets(targets: List[TargetWithId]): Option[Asterism] =
     NonEmptyList.fromList(targets).map(Asterism.apply)

@@ -6,7 +6,6 @@ package explore.model
 import cats.Eq
 import cats.derived.*
 import cats.syntax.all.*
->>>>>>> 2f40684a7 (TargetWithId refactoring)
 import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.Decoder
 import io.circe.Decoder.*
@@ -97,6 +96,7 @@ object SiderealTargetWithId:
   val id: Lens[SiderealTargetWithId, Target.Id]           = Focus[SiderealTargetWithId](_.id)
   val target: Lens[SiderealTargetWithId, Target.Sidereal] = Focus[SiderealTargetWithId](_.target)
 
-case class NonsiderealTargetWithId(id: Target.Id, target: Target.Nonsidereal) {
+case class NonsiderealTargetWithId(id: Target.Id, target: Target.Nonsidereal)
+    extends WithId[Target.Nonsidereal] derives Eq {
   def toTargetWithId = TargetWithId(id, target)
 }

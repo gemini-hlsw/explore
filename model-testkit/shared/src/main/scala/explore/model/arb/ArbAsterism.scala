@@ -14,6 +14,7 @@ import lucuma.core.util.arb.ArbGid.*
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.*
 import org.scalacheck.Cogen
+import explore.model.NonsiderealTargetWithId
 
 trait ArbAsterism {
 
@@ -36,6 +37,16 @@ trait ArbAsterism {
 
   given Cogen[SiderealTargetWithId] =
     Cogen[(Target.Id, Target.Sidereal)].contramap(x => (x.id, x.target))
+
+  given Arbitrary[NonsiderealTargetWithId] = Arbitrary {
+    for {
+      id <- arbitrary[Target.Id]
+      t  <- arbitrary[Target.Nonsidereal]
+    } yield NonsiderealTargetWithId(id, t)
+  }
+
+  given Cogen[NonsiderealTargetWithId] =
+    Cogen[(Target.Id, Target.Nonsidereal)].contramap(x => (x.id, x.target))
 
   given arbAsterism: Arbitrary[Asterism] = Arbitrary {
     arbitrary[NonEmptyList[TargetWithId]].map(Asterism.apply)

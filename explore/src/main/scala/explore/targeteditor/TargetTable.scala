@@ -4,47 +4,47 @@
 package explore.targeteditor
 
 import cats.effect.IO
-import cats.syntax.all._
+import cats.syntax.all.*
 import crystal.Pot
 import crystal.react.View
-import crystal.react.hooks._
-import crystal.react.implicits._
-import crystal.react.reuse._
+import crystal.react.hooks.*
+import crystal.react.implicits.*
+import crystal.react.reuse.*
 import explore.Icons
 import explore.common.AsterismQueries
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
-import explore.implicits._
+import explore.implicits.*
 import explore.model.Asterism
 import explore.model.ObsIdSet
 import explore.model.SiderealTargetWithId
-import explore.model.reusability._
+import explore.model.reusability.*
 import explore.targets.TargetColumns
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Target
-import lucuma.ui.reusability._
+import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.Css
 import react.common.ReactFnProps
-import react.semanticui.collections.table._
-import react.semanticui.elements.button._
+import react.semanticui.collections.table.*
+import react.semanticui.elements.button.*
 import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.modules.dropdown.DropdownItem
-import react.semanticui.modules.dropdown._
-import react.semanticui.shorthand._
-import react.semanticui.sizes._
+import react.semanticui.modules.dropdown.*
+import react.semanticui.shorthand.*
+import react.semanticui.sizes.*
 import reactST.reactTable.SUITable
 import reactST.reactTable.TableDef
-import reactST.reactTable._
+import reactST.reactTable.*
 import reactST.reactTable.mod.IdType
 
 import java.time.Instant
 
-import scalajs.js.JSConverters._
+import scalajs.js.JSConverters.*
 
-final case class TargetTable(
+case class TargetTable(
   obsIds:           ObsIdSet,
   targets:          View[Option[Asterism]],
   hiddenColumns:    View[Set[String]],
@@ -52,11 +52,11 @@ final case class TargetTable(
   vizTime:          Option[Instant],
   renderInTitle:    Tile.RenderInTitle,
   fullScreen:       Boolean
-)(implicit val ctx: AppContextIO)
-    extends ReactFnProps[TargetTable](TargetTable.component)
+)(using val ctx: AppContextIO)
+    extends ReactFnProps(TargetTable.component)
 
 object TargetTable {
-  type Props = TargetTable
+  private type Props = TargetTable
 
   protected val TargetTable = TableDef[SiderealTargetWithId].withSortBy
 
@@ -83,7 +83,7 @@ object TargetTable {
       .withHooks[Props]
       // cols
       .useMemoBy(props => (props.obsIds, props.targets.get)) { props => _ =>
-        implicit val ctx = props.ctx
+        import props.given
 
         def column[V](id: String, accessor: SiderealTargetWithId => V) =
           TargetTable

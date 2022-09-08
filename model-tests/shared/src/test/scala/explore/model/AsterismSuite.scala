@@ -11,6 +11,7 @@ import lucuma.core.model.Target
 import lucuma.core.model.arb.ArbTarget.*
 import lucuma.core.util.arb.ArbEnumerated.*
 import lucuma.core.util.arb.ArbGid.*
+import lucuma.core.data.arb.ArbZipper.*
 import monocle.law.discipline.*
 import munit.DisciplineSuite
 import org.scalacheck.Arbitrary
@@ -26,6 +27,7 @@ class AsterismSuite extends DisciplineSuite:
   checkAll("Asterism.isoTargets", IsoTests(Asterism.isoTargets))
   checkAll("Asterism.fromTargetsList", IsoTests(Asterism.fromTargetsList))
   checkAll("Asterism.targetsEach", TraversalTests(Asterism.targetsEach))
+  checkAll("Asterism.siderealTargetsEach", TraversalTests(Asterism.siderealTargetsEach))
 
   test("targetOptional") {
     forAll { (id: Target.Id) =>
@@ -34,14 +36,30 @@ class AsterismSuite extends DisciplineSuite:
     }
   }
 
+  test("toZipperLens") {
+    forAll { (id: Target.Id) =>
+      given Arbitrary[Asterism] = gen.asterism(id)
+      checkAll("Asterism.toZipperLens", LensTests(Asterism.toZipperLens(id)))
+    }
+  }
+
   object gen:
     // Sometimes the asterisms includes target id
     def optAsterism(id: Target.Id): Arbitrary[Option[Asterism]] =
       Arbitrary(
-        Gen.option[Asterism](
+        Gen.option[Asterism](asterism(id).arbitrary)
+      )
+
+    def asterism(id: Target.Id): Arbitrary[Asterism] =
+      Arbitrary(
+        Gen.oneOf(
+          arbAsterism.arbitrary,
           Gen.oneOf(
             arbAsterism.arbitrary,
-            arbTarget.arbitrary.map(t => Asterism.one(TargetWithId(id, t)))
+            for
+              ast    <- arbAsterism.arbitrary
+              target <- arbTarget.arbitrary.map(t => TargetWithId(id, t))
+            yield ast.add(target)
           )
         )
       )
