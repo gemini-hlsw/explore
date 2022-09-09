@@ -27,7 +27,7 @@ final case class SequenceEditorPopup(
   subtitle:         Option[NonEmptyString],
   dithersControl:   Callback => VdomElement,
   offsetsControl:   Callback => VdomElement,
-  trigger:          Button
+  trigger:          VdomElement
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[SequenceEditorPopup](SequenceEditorPopup.component)
 
@@ -43,7 +43,7 @@ object SequenceEditorPopup {
         implicit val ctx = props.ctx
 
         React.Fragment(
-          props.trigger(^.onClick --> isOpen.setState(true)),
+          <.span(^.onClick --> isOpen.setState(true), props.trigger),
           Modal(
             actions = List(
               Button(size = Small, icon = true)(

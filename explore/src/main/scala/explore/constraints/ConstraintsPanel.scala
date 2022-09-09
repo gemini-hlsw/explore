@@ -8,9 +8,13 @@ import cats.syntax.all._
 import crystal.react.View
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.ConstraintsQueries._
 import explore.components.HelpIcon
 import explore.components.Tile
+import explore.components.primereact.EnumDropdownView
+import explore.components.primereact.FormInputTextView
+import explore.components.primereact.FormLabel
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
@@ -19,7 +23,6 @@ import explore.model.display._
 import explore.undo.UndoContext
 import explore.undo._
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
@@ -38,6 +41,7 @@ import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.Lens
 import react.common.ReactFnProps
+import react.primereact.PrimeStyles
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.label.LabelPointing
 
@@ -106,16 +110,16 @@ object ConstraintsPanel {
           undoViewSet(ConstraintSet.elevationRange, UpdateConstraintSet.elevationRange)
 
         def selectEnum[A: Enumerated: Display](
-          label:     String,
+          label:     NonEmptyString,
           helpId:    Help.Id,
           lens:      Lens[ConstraintSet, A],
           remoteSet: A => ConstraintSetInput => ConstraintSetInput
         ) = {
-          val id = label.toLowerCase().replaceAll(" ", "-")
-          ReactFragment(
-            <.label(label, HelpIcon(helpId)),
-            EnumViewSelect(id = id, value = undoViewSet(lens, remoteSet))
+          val id = NonEmptyString.unsafeFrom(label.value.toLowerCase().replaceAll(" ", "-"))
+          React.Fragment(FormLabel(htmlFor = id)(label, HelpIcon(helpId)),
+                         EnumDropdownView(id = id, value = undoViewSet(lens, remoteSet))
           )
+
         }
 
         val erTypeView: View[ElevationRangeType] =
@@ -157,103 +161,101 @@ object ConstraintsPanel {
           props.renderInTitle(
             <.span(ExploreStyles.TitleUndoButtons)(UndoButtons(undoCtx))
           ),
-          Form(clazz = ExploreStyles.ConstraintsGrid)(
+          <.div(ExploreStyles.ConstraintsGrid)(
             selectEnum(
-              "Image Quality",
+              "Image Quality".refined,
               "constraints/main/iq.md".refined,
               ConstraintSet.imageQuality,
               UpdateConstraintSet.imageQuality
             ),
             selectEnum(
-              "Cloud Extinction",
+              "Cloud Extinction".refined,
               "constraints/main/ce.md".refined,
               ConstraintSet.cloudExtinction,
               UpdateConstraintSet.cloudExtinction
             ),
             selectEnum(
-              "Water Vapor",
+              "Water Vapor".refined,
               "constraints/main/wv.md".refined,
               ConstraintSet.waterVapor,
               UpdateConstraintSet.waterVapor
             ),
             selectEnum(
-              "Sky Background",
+              "Sky Background".refined,
               "constraints/main/sb.md".refined,
               ConstraintSet.skyBackground,
               UpdateConstraintSet.skyBackground
             ),
-            <.label("Elevation Range", HelpIcon("constraints/main/er.md".refined)),
+            FormLabel("ertype".refined)(
+              "Elevation Range",
+              HelpIcon("constraints/main/er.md".refined)
+            ),
             <.div(
               ExploreStyles.ConstraintsElevationRangeGroup,
-              EnumViewSelect(
-                id = "ertype",
+              EnumDropdownView(
+                id = "ertype".refined,
                 value = erTypeView,
-                upward = true,
                 clazz = ExploreStyles.ElevationRangePicker
               ),
-              ReactFragment(
-                <.label("Min"),
-                FormInputEV(
-                  id = "minam".refined,
-                  value = airMassView.zoom(ElevationRange.AirMass.min),
-                  errorClazz = ExploreStyles.InputErrorTooltip,
-                  errorPointing = LabelPointing.Below,
-                  validFormat = ModelValidators.airMassElevationRangeValidWedge.andThen(
-                    ValidSplitEpiNec.lte(elevationRangeOptions.value.airMass.max,
-                                         "Must be <= Max".refined
-                    )
+              React
+                .Fragment(
+                  <.label("Min"),
+                  FormInputTextView(
+                    id = "minam".refined,
+                    value = airMassView.zoom(ElevationRange.AirMass.min),
+                    validFormat = ModelValidators.airMassElevationRangeValidWedge.andThen(
+                      ValidSplitEpiNec.lte(elevationRangeOptions.value.airMass.max,
+                                           "Must be <= Max".refined
+                      )
+                    ),
+                    changeAuditor = ChangeAuditor.accept.decimal(1.refined),
+                    groupClass = ExploreStyles.ElevationRangeEntry
                   ),
-                  changeAuditor = ChangeAuditor.accept.decimal(1.refined),
-                  clazz = ExploreStyles.ElevationRangeEntry
-                ),
-                <.label("Max"),
-                FormInputEV(
-                  id = "maxam".refined,
-                  value = airMassView.zoom(ElevationRange.AirMass.max),
-                  errorClazz = ExploreStyles.InputErrorTooltip,
-                  errorPointing = LabelPointing.Below,
-                  validFormat = ModelValidators.airMassElevationRangeValidWedge.andThen(
-                    ValidSplitEpiNec.gte(elevationRangeOptions.value.airMass.min,
-                                         "Must be >= Min".refined
-                    )
-                  ),
-                  changeAuditor = ChangeAuditor.accept.decimal(1.refined),
-                  clazz = ExploreStyles.ElevationRangeEntry
+                  <.label("Max"),
+                  FormInputTextView(
+                    id = "maxam".refined,
+                    value = airMassView.zoom(ElevationRange.AirMass.max),
+                    validFormat = ModelValidators.airMassElevationRangeValidWedge.andThen(
+                      ValidSplitEpiNec.gte(elevationRangeOptions.value.airMass.min,
+                                           "Must be >= Min".refined
+                      )
+                    ),
+                    changeAuditor = ChangeAuditor.accept.decimal(1.refined),
+                    groupClass = ExploreStyles.ElevationRangeEntry
+                  )
                 )
-              ).when(elevationRangeOptions.value.rangeType === AirMass),
-              ReactFragment(
-                <.label("Min"),
-                FormInputEV(
-                  id = "minha".refined,
-                  value = hourAngleView.zoom(ElevationRange.HourAngle.minHours),
-                  errorClazz = ExploreStyles.InputErrorTooltip,
-                  errorPointing = LabelPointing.Below,
-                  validFormat = ModelValidators.hourAngleElevationRangeValidWedge.andThen(
-                    ValidSplitEpiNec.lte(
-                      elevationRangeOptions.value.hourAngle.maxHours,
-                      "Must be <= Max".refined
-                    )
+                .when(elevationRangeOptions.value.rangeType === AirMass),
+              React
+                .Fragment(
+                  <.label("Min"),
+                  FormInputTextView(
+                    id = "minha".refined,
+                    value = hourAngleView.zoom(ElevationRange.HourAngle.minHours),
+                    validFormat = ModelValidators.hourAngleElevationRangeValidWedge.andThen(
+                      ValidSplitEpiNec.lte(
+                        elevationRangeOptions.value.hourAngle.maxHours,
+                        "Must be <= Max".refined
+                      )
+                    ),
+                    changeAuditor = ChangeAuditor.accept.decimal(1.refined),
+                    groupClass = ExploreStyles.ElevationRangeEntry
                   ),
-                  changeAuditor = ChangeAuditor.accept.decimal(1.refined),
-                  clazz = ExploreStyles.ElevationRangeEntry
-                ),
-                <.label("Max"),
-                FormInputEV(
-                  id = "maxha".refined,
-                  value = hourAngleView.zoom(ElevationRange.HourAngle.maxHours),
-                  errorClazz = ExploreStyles.InputErrorTooltip,
-                  errorPointing = LabelPointing.Below,
-                  validFormat = ModelValidators.hourAngleElevationRangeValidWedge.andThen(
-                    ValidSplitEpiNec.gte(
-                      elevationRangeOptions.value.hourAngle.minHours,
-                      "Must be >= Min".refined
-                    )
+                  <.label("Max"),
+                  FormInputTextView(
+                    id = "maxha".refined,
+                    value = hourAngleView.zoom(ElevationRange.HourAngle.maxHours),
+                    validFormat = ModelValidators.hourAngleElevationRangeValidWedge.andThen(
+                      ValidSplitEpiNec.gte(
+                        elevationRangeOptions.value.hourAngle.minHours,
+                        "Must be >= Min".refined
+                      )
+                    ),
+                    changeAuditor = ChangeAuditor.accept.decimal(1.refined),
+                    groupClass = ExploreStyles.ElevationRangeEntry
                   ),
-                  changeAuditor = ChangeAuditor.accept.decimal(1.refined),
-                  clazz = ExploreStyles.ElevationRangeEntry
-                ),
-                <.label("Hours")
-              ).when(elevationRangeOptions.value.rangeType === HourAngle)
+                  <.label("Hours")
+                )
+                .when(elevationRangeOptions.value.rangeType === HourAngle)
             )
           )
         )

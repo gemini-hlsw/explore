@@ -1,0 +1,58 @@
+body {
+  /* stylelint-disable no-invalid-position-at-import-rule */
+  &.light-theme {
+    @import "/common/primereact/themes/saga/saga-blue/theme";
+  }
+
+  &.dark-theme {
+    @import "/common/primereact/themes/arya/arya-blue/theme";
+  }
+  /* stylelint-enable no-invalid-position-at-import-rule */
+}
+
+// For laying out controls. The "Form*" compoents utilize this, too.
+.form-column {
+  display: grid;
+  justify-items: start;
+  align-items: baseline;
+  align-self: start;
+  grid-template-columns: [label] auto [field] 1fr;
+  row-gap: 1em;
+  column-gap: 1em;
+
+  &.compact {
+    row-gap: 0.5em;
+  }
+
+  &.very-compact {
+    row-gap: 0.25em;
+  }
+
+  .form-field-label {
+    grid-column: 1;
+  }
+
+  .form-field {
+    grid-column: 2;
+    justify-self: stretch;
+    margin: 0;
+  }
+}
+
+// For styling of buttons in primereact for different "compactness"
+button.p-component.p-button {
+  margin-right: .25em; // this is what the current css does for SUI. Might want to improve.
+
+  // Probably will need to 'specialize' for small and large buttons, and compact vs very compact
+  &.compact,
+  &.very-compact {
+    padding: .4em .5em;
+  }
+}
+
+// specific to Explore
+.constraints-tile .explore-tile-body,
+.explore-advanced-configuration-grid {
+  /* stylelint-disable-next-line */
+  background-color: var(--surface-card);
+}

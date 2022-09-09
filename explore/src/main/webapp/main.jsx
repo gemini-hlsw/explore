@@ -1,4 +1,7 @@
 import "/common/theme/semantic.less";
+import "/common/sass/explore-primereact.scss";
+import "primereact/resources/primereact.min.css"
+import "primeicons/primeicons.css"
 import "/common/less/style.less";
 import "/common/sass/visualization.scss";
 import "/common/sass/tooltips.scss";

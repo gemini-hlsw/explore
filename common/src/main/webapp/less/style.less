@@ -1084,6 +1084,10 @@ tfoot {
 
   .elevation-range-entry {
     width: 8em;
+
+    input {
+      width: 100%;
+    }
   }
 
   .constraints-elevation-range {
@@ -2480,7 +2484,7 @@ input:-webkit-autofill:active {
 
 // Reusability overlays.
 body.hide-reusability {
-  &>div:not(#root) {
+  &>div:not(#root):not(.p-component) {
     display: none;
   }
 }
