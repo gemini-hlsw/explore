@@ -7,11 +7,11 @@ import cats.kernel.laws.discipline.*
 import cats.laws.discipline.arbitrary.*
 import explore.model.arb.all.*
 import explore.model.arb.all.given
+import lucuma.core.data.arb.ArbZipper.*
 import lucuma.core.model.Target
 import lucuma.core.model.arb.ArbTarget.*
 import lucuma.core.util.arb.ArbEnumerated.*
 import lucuma.core.util.arb.ArbGid.*
-import lucuma.core.data.arb.ArbZipper.*
 import monocle.law.discipline.*
 import munit.DisciplineSuite
 import org.scalacheck.Arbitrary

@@ -45,14 +45,14 @@ import java.time.Instant
 import scalajs.js.JSConverters.*
 
 case class TargetTable(
-  obsIds:           ObsIdSet,
-  targets:          View[Option[Asterism]],
-  hiddenColumns:    View[Set[String]],
-  selectedTarget:   View[Option[Target.Id]],
-  vizTime:          Option[Instant],
-  renderInTitle:    Tile.RenderInTitle,
-  fullScreen:       Boolean
-)(using val ctx: AppContextIO)
+  obsIds:         ObsIdSet,
+  targets:        View[Option[Asterism]],
+  hiddenColumns:  View[Set[String]],
+  selectedTarget: View[Option[Target.Id]],
+  vizTime:        Option[Instant],
+  renderInTitle:  Tile.RenderInTitle,
+  fullScreen:     Boolean
+)(using val ctx:  AppContextIO)
     extends ReactFnProps(TargetTable.component)
 
 object TargetTable {

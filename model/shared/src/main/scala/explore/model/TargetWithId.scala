@@ -14,6 +14,8 @@ import lucuma.core.math.BrightnessUnits.*
 import lucuma.core.math.Epoch
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
+import lucuma.core.util.Gid
+import lucuma.core.util.WithGid
 import lucuma.schemas.decoders.*
 import monocle.Focus
 import monocle.Lens
@@ -23,8 +25,6 @@ import monocle.Prism
 import java.time.Instant
 import java.time.LocalDateTime
 import scala.collection.immutable.SortedMap
-import lucuma.core.util.Gid
-import lucuma.core.util.WithGid
 
 trait WithId[A <: Target] {
   def id: Target.Id

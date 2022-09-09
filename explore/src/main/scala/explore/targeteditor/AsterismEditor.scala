@@ -19,6 +19,7 @@ import explore.implicits.*
 import explore.model.Asterism
 import explore.model.ObsIdSet
 import explore.model.ScienceMode
+import explore.model.SiderealTargetWithId
 import explore.model.TargetWithId
 import explore.model.TargetWithOptId
 import explore.model.reusability.*
@@ -30,6 +31,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.data.Zipper
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.PosAngleConstraint
@@ -39,6 +41,8 @@ import lucuma.core.model.User
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import monocle.Lens
+import monocle.std.option.some
 import queries.common.TargetQueriesGQL.*
 import queries.schemas.implicits.*
 import react.common.ReactFnProps
@@ -48,10 +52,6 @@ import react.semanticui.shorthand.*
 import react.semanticui.sizes.*
 
 import java.time.Instant
-import monocle.Lens
-import monocle.std.option.some
-import lucuma.core.data.Zipper
-import explore.model.SiderealTargetWithId
 
 case class AsterismEditor(
   userId:        User.Id,
@@ -241,25 +241,22 @@ object AsterismEditor {
                           onChange = (_: Boolean) => editScope.setState(1)
                         )
                       ).when(otherObsCount > 0),
-                      p.flatMap { ast =>
-                        props.asterism.get.map(a =>
-                          SiderealTargetEditor(
-                            props.userId,
-                            a.baseCoordinates,
-                            ast,
-                            vizTime,
-                            props.posAngle,
-                            props.scienceMode,
-                            props.constraints,
-                            props.wavelength,
-                            props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
-                            props.searching,
-                            onClone = onCloneTarget(targetId, props.asterism, props.setTarget) _,
-                            obsIdSubset =
-                              if (otherObsCount > 0 && editScope.value === 0) props.obsIds.some
-                              else none,
-                            fullScreen = fullScreen
-                          )
+                      p.map { ast =>
+                        SiderealTargetEditor(
+                          props.userId,
+                          ast,
+                          vizTime,
+                          props.posAngle,
+                          props.scienceMode,
+                          props.constraints,
+                          props.wavelength,
+                          props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
+                          props.searching,
+                          onClone = onCloneTarget(targetId, props.asterism, props.setTarget) _,
+                          obsIdSubset =
+                            if (otherObsCount > 0 && editScope.value === 0) props.obsIds.some
+                            else none,
+                          fullScreen = fullScreen
                         )
                       }
                     )

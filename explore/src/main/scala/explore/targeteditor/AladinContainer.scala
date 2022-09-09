@@ -7,6 +7,7 @@ import cats.syntax.all.*
 import crystal.react.View
 import explore.Icons
 import explore.components.ui.ExploreStyles
+import explore.model.Asterism
 import explore.model.ObsConfiguration
 import explore.model.TargetVisualOptions
 import explore.model.enums.Visible
@@ -37,7 +38,6 @@ import react.semanticui.sizes.*
 import java.time.LocalDate
 import java.time.ZoneId
 import scala.concurrent.duration.*
-import explore.model.Asterism
 
 case class AladinContainer(
   asterism:               Asterism,

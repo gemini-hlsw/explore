@@ -4,13 +4,13 @@
 package explore.model
 
 import cats.Eq
-import cats.derived.*
 import cats.data.NonEmptyList
+import cats.derived.*
 import cats.syntax.all.*
+import lucuma.core.data.Zipper
+import lucuma.core.math.Coordinates
 import lucuma.core.model.Target
 import monocle.*
-import lucuma.core.math.Coordinates
-import lucuma.core.data.Zipper
 
 import java.time.Instant
 

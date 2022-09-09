@@ -6,20 +6,20 @@ package explore.tabs
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.View
-import explore.implicits.*
 import explore.components.Tile
+import explore.model.Asterism
+import explore.model.util.*
 import explore.targeteditor.SiderealTargetEditor
 import explore.undo.UndoStacks
+import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import explore.model.util.*
+import monocle.std.option.some
 
 import java.time.Instant
-import monocle.std.option.some
-import explore.model.Asterism
 
 object SiderealTargetEditorTile {
 
@@ -41,8 +41,8 @@ object SiderealTargetEditorTile {
           userId.map(uid =>
             SiderealTargetEditor(
               uid,
-              vizTime,
               zipperView,
+              vizTime,
               none,
               none,
               none,
@@ -52,7 +52,7 @@ object SiderealTargetEditorTile {
               renderInTitle = renderInTitle.some,
               fullScreen = fullScreen
             )
-          ): VdomNode
+          )
         }
     }
 }

@@ -26,6 +26,7 @@ import explore.model.ExploreModelValidators
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.ScienceMode
+import explore.model.SiderealTargetWithId
 import explore.model.TargetWithId
 import explore.model.formats.*
 import explore.model.util.*
@@ -36,6 +37,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.hooks.Hooks
 import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.data.Zipper
 import lucuma.core.math.*
 import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.ConstraintSet
@@ -61,8 +63,6 @@ import react.semanticui.elements.label.LabelPointing
 import react.semanticui.sizes.Small
 
 import java.time.Instant
-import lucuma.core.data.Zipper
-import explore.model.SiderealTargetWithId
 
 case class SearchCallback(
   searchTerm: NonEmptyString,
@@ -147,12 +147,20 @@ object SiderealTargetEditor {
       }
       .render { (props, cloning, vizTime) =>
         AppCtx.using { implicit appCtx =>
+          println(
+            props.asterism
+              .zoom(
+                Zipper.focus.andThen(TargetWithId.sidereal).andThen(SiderealTargetWithId.target)
+              )
+              .get
+          )
           props.asterism
             .zoom(
               Zipper.focus.andThen(TargetWithId.sidereal).andThen(SiderealTargetWithId.target)
             )
             .asView
             .map { selectedTargetView =>
+              println(selectedTargetView.get)
 
               // If we're going to clone on edit, use readonly views so we don't update the original
               // target in the model or add the API clone to the undo stack for the original target.
