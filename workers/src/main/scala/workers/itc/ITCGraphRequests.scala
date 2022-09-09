@@ -33,11 +33,11 @@ import scala.concurrent.duration._
 //
 object ITCGraphRequests {
   // Picklers for generated types not in the model.
-  private given Pickler[SpectroscopyGraphITCQuery.Data.SpectroscopyGraphBeta.Ccds]   = generatePickler
-  private given Pickler[SpectroscopyGraphITCQuery.Data.SpectroscopyGraphBeta.Charts] =
+  private given Pickler[SpectroscopyGraphITCQuery.Data.SpectroscopyGraph.Ccds]   = generatePickler
+  private given Pickler[SpectroscopyGraphITCQuery.Data.SpectroscopyGraph.Charts] =
     generatePickler
-  private given Pickler[SpectroscopyGraphITCQuery.Data.SpectroscopyGraphBeta]        = generatePickler
-  private given Pickler[SpectroscopyGraphITCQuery.Data]                              = generatePickler
+  private given Pickler[SpectroscopyGraphITCQuery.Data.SpectroscopyGraph]        = generatePickler
+  private given Pickler[SpectroscopyGraphITCQuery.Data]                          = generatePickler
 
   private val significantFigures =
     SignificantFiguresInput(
@@ -105,8 +105,8 @@ object ITCGraphRequests {
           .apply(request)
           .flatMap {
             _.map { case (t, r) =>
-              val charts = r.spectroscopyGraphBeta.charts.map(_.toItcChart)
-              val ccds   = r.spectroscopyGraphBeta.ccds
+              val charts = r.spectroscopyGraph.charts.map(_.toItcChart)
+              val ccds   = r.spectroscopyGraph.ccds
 
               (ccds.toNel, charts.toNel)
                 .mapN((ccds, charts) => ItcChartResult(t, ccds, charts))

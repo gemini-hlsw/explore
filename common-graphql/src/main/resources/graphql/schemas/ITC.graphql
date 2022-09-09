@@ -4608,15 +4608,25 @@ type ObservingModeSpectroscopy {
   instrument: InstrumentType
 }
 
+type ItcVersions {
+  # id of the backend server
+  serverVersion: String!
+
+  # token for the itc data version, can be null
+  dataVersion: String
+}
+
 type Query {
   spectroscopy(
     # Query multiple modes in spectroscopy mode
     input: SpectroscopyModeInput!
   ): [SpectroscopyResult!]!
 
-  spectroscopyGraphBeta(
+  spectroscopyGraph(
     input: SpectroscopyGraphModeInput!
   ): SpectroscopyGraphResult!
+
+  versions: ItcVersions
 }
 
 type GmosSITCParams {
@@ -4856,8 +4866,10 @@ type SpectroscopyGraphResult {
   # token for the itc data version, can be null
   dataVersion: String
 
+  # Results for each CCD
   ccds: [ItcCcd!]!
 
+  # Chart data
   charts: [ItcChart!]!
 
 }
