@@ -3,27 +3,27 @@
 
 package explore.config
 
-import cats.implicits._
+import cats.implicits.*
 import coulomb.Quantity
 import coulomb.ops.algebra.spire.all.given
 import coulomb.policy.spire.standard.given
 import crystal.react.View
-import eu.timepit.refined.auto._
-import eu.timepit.refined.cats._
+import eu.timepit.refined.auto.*
+import eu.timepit.refined.cats.*
 import explore.components.HelpIcon
 import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
 import explore.model.AvailableFilter
 import explore.model.ImagingConfigurationOptions
 import explore.model.enums.ImagingCapabilities
-import explore.model.formats._
-import japgolly.scalajs.react._
+import explore.model.formats.*
+import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.FilterType
-import lucuma.core.math.units._
+import lucuma.core.math.units.*
 import lucuma.core.util.Display
-import lucuma.core.validation._
+import lucuma.core.validation.*
 import lucuma.refined.*
 import lucuma.ui.forms.EnumViewOptionalSelect
 import lucuma.ui.forms.FormInputEV
@@ -32,22 +32,22 @@ import lucuma.ui.syntax.all.given
 import react.common.Css
 import react.common.ReactFnProps
 import react.semanticui.collections.menu.MenuHeader
-import react.semanticui.modules.dropdown._
+import react.semanticui.modules.dropdown.*
 import spire.math.Rational
 
 import scala.collection.immutable.SortedSet
 import scala.scalajs.js
-import scala.scalajs.js.JSConverters._
+import scala.scalajs.js.JSConverters.*
 
-final case class ImagingConfigurationPanel(
+case class ImagingConfigurationPanel(
   options: View[ImagingConfigurationOptions]
-) extends ReactFnProps[ImagingConfigurationPanel](ImagingConfigurationPanel.component)
+) extends ReactFnProps(ImagingConfigurationPanel.component)
 
 object ImagingConfigurationPanel {
-  type Props         = ImagingConfigurationPanel
+  private type Props = ImagingConfigurationPanel
   type SectionHeader = String
 
-  implicit val capabDisplay: Display[ImagingCapabilities] = Display.by(_.label, _.label)
+  given Display[ImagingCapabilities] = Display.by(_.label, _.label)
 
   val byFilterType = ImagingConfigurationOptions.availableOptions.groupBy(_.filterType)
   val broadBand    = byFilterType.getOrElse(FilterType.BroadBand, Nil).sortBy(_.centralWavelength)
@@ -78,7 +78,7 @@ object ImagingConfigurationPanel {
       text = f.fold(identity, _.shortName),
       content = f match {
         case Left(f)  =>
-          MenuHeader(f): VdomNode
+          MenuHeader(content = f): VdomNode
         case Right(f) =>
           <.div(
             ExploreStyles.ConfigurationFilterItem,
