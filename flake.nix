@@ -31,6 +31,12 @@
             nodejs.enable = true;
             jdk.package = pkgs.jdk17;
           };
+          env = [
+            {
+              name = "NODE_OPTIONS";
+              value = "--max-old-space-size=8192";
+            }
+          ];
         };
       }
 
