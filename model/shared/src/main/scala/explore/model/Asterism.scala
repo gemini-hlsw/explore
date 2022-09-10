@@ -13,6 +13,7 @@ import lucuma.core.model.Target
 import monocle.*
 
 import java.time.Instant
+import lucuma.core.model.SiderealTracking
 
 case class Asterism(private val targets: NonEmptyList[TargetWithId]) derives Eq {
   def toSiderealAt(vizTime: Instant): List[SiderealTargetWithId] =
@@ -42,6 +43,9 @@ case class Asterism(private val targets: NonEmptyList[TargetWithId]) derives Eq 
 
   def baseCoordinates: Coordinates =
     targets.head.toSidereal.map(_.target.tracking.baseCoordinates).get
+
+  // Eventually this need to be generalized for non-sidereals
+  def tracking: SiderealTracking = SiderealTracking.const(baseCoordinates)
 
   def hasId(id: Target.Id): Boolean = targets.exists(_.id === id)
 }

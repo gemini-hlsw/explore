@@ -75,6 +75,7 @@ case class SearchCallback(
 case class SiderealTargetEditor(
   uid:           User.Id,
   asterism:      View[Zipper[TargetWithId]],
+  asterism:      View[Zipper[TargetWithId]],
   vizTime:       Option[Instant],
   posAngle:      Option[PosAngleConstraint],
   scienceMode:   Option[ScienceMode],

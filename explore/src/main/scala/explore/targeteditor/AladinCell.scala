@@ -57,12 +57,13 @@ import react.semanticui.sizes.*
 import java.time.Duration
 import java.time.Instant
 import scala.concurrent.duration.*
+import explore.model.Asterism
 
 case class AladinCell(
   uid:           User.Id,
   tid:           Target.Id,
   obsConf:       ObsConfiguration,
-  target:        SiderealTracking,
+  asterism:      Asterism,
   fullScreen:    View[Boolean]
 )(using val ctx: AppContextIO)
     extends ReactFnProps(AladinCell.component)
@@ -92,7 +93,7 @@ object AladinCell extends ModelOptics {
     ScalaFnComponent
       .withHooks[Props]
       // mouse coordinates, starts on the base
-      .useStateBy(_.target.baseCoordinates)
+      .useStateBy(_.asterism.baseCoordinates)
       // target options, will be read from the user preferences
       .useStateView(Pot.pending[TargetVisualOptions])
       // flag to trigger centering. This is a bit brute force but
@@ -110,7 +111,9 @@ object AladinCell extends ModelOptics {
           import props.given
 
           agsState.setStateAsync(AgsState.LoadingCandidates) >>
-            CatalogClient[IO].requestSingle(CatalogMessage.GSRequest(props.target, vizTime)) >>=
+            CatalogClient[IO].requestSingle(
+              CatalogMessage.GSRequest(props.asterism.tracking, vizTime)
+            ) >>=
             (_.map(candidates =>
               agsState.setState(AgsState.Idle).to[IO] >> gs.setStateAsync(candidates)
             ).orEmpty)
@@ -140,7 +143,7 @@ object AladinCell extends ModelOptics {
       .useStateView(none[Int])
       // Request ags calculation
       .useEffectWithDepsBy((p, _, _, _, candidates, _, _, _) =>
-        (p.target,
+        (p.asterism.tracking,
          p.obsConf.posAngleConstraint,
          p.obsConf.constraints,
          p.obsConf.wavelength,
@@ -168,6 +171,14 @@ object AladinCell extends ModelOptics {
             (tracking.at(vizTime), pa).mapN { (base, pa) =>
               val basePos = AgsPosition(pa, Offset.Zero)
 
+              val sciencePositions =
+                props.asterism.asList
+                  .map(_.toSidereal)
+                  .collect { case Some(t @ SiderealTracking(_, _, _, _, _)) =>
+                    t.at(vizTime)
+                  }
+                  .flattenOption
+
               for {
                 _ <- selectedIndex.async.set(none)
                 _ <- agsState.setStateAsync(AgsState.Calculating)
@@ -177,7 +188,7 @@ object AladinCell extends ModelOptics {
                                             constraints,
                                             wavelength,
                                             base,
-                                            List(base),
+                                            sciencePositions,
                                             basePos,
                                             params,
                                             candidates
@@ -319,24 +330,23 @@ object AladinCell extends ModelOptics {
               fullScreenView.mod(!_) *>
               prefsSetter(identity, identity, !_)
 
-          val aladinKey = s"${props.target}"
+          val aladinKey = s"${props.asterism}"
 
           val selectedGuideStar = selectedGSIndex.get.flatMap(agsResults.value.lift)
           val usableGuideStar   = selectedGuideStar.exists(_.isUsable)
 
           val renderCell: TargetVisualOptions => VdomNode = (t: TargetVisualOptions) =>
-            <.div()
-            // AladinContainer(
-            //   props.target,
-            //   props.obsConf,
-            //   t.copy(fullScreen = props.fullScreen.get),
-            //   coordinatesSetter,
-            //   fovSetter.reuseAlways,
-            //   offsetSetter.reuseAlways,
-            //   center,
-            //   selectedGuideStar,
-            //   agsResults.value
-            // ).withKey(aladinKey)
+            AladinContainer(
+              props.asterism,
+              props.obsConf,
+              t.copy(fullScreen = props.fullScreen.get),
+              coordinatesSetter,
+              fovSetter.reuseAlways,
+              offsetSetter.reuseAlways,
+              center,
+              selectedGuideStar,
+              agsResults.value
+            ).withKey(aladinKey)
 
           val renderToolbar: TargetVisualOptions => VdomNode =
             (t: TargetVisualOptions) =>
