@@ -244,6 +244,7 @@ object AsterismEditor {
                       p.map { ast =>
                         SiderealTargetEditor(
                           props.userId,
+                          props.asterism.get.get,
                           ast,
                           vizTime,
                           props.posAngle,

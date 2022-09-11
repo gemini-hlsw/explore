@@ -63,6 +63,7 @@ import react.semanticui.elements.label.LabelPointing
 import react.semanticui.sizes.Small
 
 import java.time.Instant
+import explore.model.Asterism
 
 case class SearchCallback(
   searchTerm: NonEmptyString,
@@ -74,8 +75,8 @@ case class SearchCallback(
 
 case class SiderealTargetEditor(
   uid:           User.Id,
-  asterism:      View[Zipper[TargetWithId]],
-  asterism:      View[Zipper[TargetWithId]],
+  asterism:      Asterism,
+  targetsZipper: View[Zipper[TargetWithId]],
   vizTime:       Option[Instant],
   posAngle:      Option[PosAngleConstraint],
   scienceMode:   Option[ScienceMode],
@@ -88,7 +89,7 @@ case class SiderealTargetEditor(
   renderInTitle: Option[Tile.RenderInTitle] = none,
   fullScreen:    View[Boolean]
 ) extends ReactFnProps(SiderealTargetEditor.component) {
-  val tid: Target.Id = asterism.get.focus.id
+  val tid: Target.Id = targetsZipper.get.focus.id
 }
 
 object SiderealTargetEditor {
@@ -149,13 +150,13 @@ object SiderealTargetEditor {
       .render { (props, cloning, vizTime) =>
         AppCtx.using { implicit appCtx =>
           println(
-            props.asterism
+            props.targetsZipper
               .zoom(
                 Zipper.focus.andThen(TargetWithId.sidereal).andThen(SiderealTargetWithId.target)
               )
               .get
           )
-          props.asterism
+          props.targetsZipper
             .zoom(
               Zipper.focus.andThen(TargetWithId.sidereal).andThen(SiderealTargetWithId.target)
             )
@@ -326,7 +327,7 @@ object SiderealTargetEditor {
                         props.constraints,
                         props.wavelength
                       ),
-                      targetView.zoom(Target.Sidereal.tracking).get,
+                      props.asterism,
                       props.fullScreen
                     )
                   )(vizTime),

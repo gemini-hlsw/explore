@@ -173,11 +173,12 @@ object AladinCell extends ModelOptics {
 
               val sciencePositions =
                 props.asterism.asList
-                  .map(_.toSidereal)
-                  .collect { case Some(t @ SiderealTracking(_, _, _, _, _)) =>
-                    t.at(vizTime)
-                  }
-                  .flattenOption
+                  .flatMap(_.toSidereal)
+                  .flatMap(_.target.tracking.at(vizTime))
+                // .collect { case t @ SiderealTracking(_, _, _, _, _) =>
+                //   t.at(vizTime)
+                // }
+                // .flattenOption
 
               for {
                 _ <- selectedIndex.async.set(none)

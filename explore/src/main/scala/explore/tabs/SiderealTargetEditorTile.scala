@@ -41,6 +41,7 @@ object SiderealTargetEditorTile {
           userId.map(uid =>
             SiderealTargetEditor(
               uid,
+              asterism.get,
               zipperView,
               vizTime,
               none,
