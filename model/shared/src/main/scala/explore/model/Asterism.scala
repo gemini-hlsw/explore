@@ -10,10 +10,12 @@ import cats.syntax.all.*
 import lucuma.core.data.Zipper
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Target
+import lucuma.refined.*
 import monocle.*
 
 import java.time.Instant
 import lucuma.core.model.SiderealTracking
+import lucuma.core.math.Epoch
 
 case class Asterism(private val targets: NonEmptyList[TargetWithId]) derives Eq {
   def toSiderealAt(vizTime: Instant): List[SiderealTargetWithId] =
@@ -36,13 +38,20 @@ case class Asterism(private val targets: NonEmptyList[TargetWithId]) derives Eq 
     Zipper.fromNel(targets).findFocus(_.id === id)
 
   // This should be calculatedd from the other targets or manually overriden
-  def baseTarget: TargetWithId = targets.head
+  def baseTarget: Target.Sidereal =
+    if (targets.length > 1) {
+      val t1 = targets.head
+      val t2 = targets.last
+      val c1 = t1.toSidereal.get.target.tracking.baseCoordinates
+      val c2 = t2.toSidereal.get.target.tracking.baseCoordinates
+      Target.Sidereal("base".refined, SiderealTracking(c1.interpolate(c2, 0.5), Epoch.J2000, none, none, none)
+    } else targets.head.toSidereal.get.target
 
   def baseCoordinatesAt(i: Instant): Option[Coordinates] =
-    targets.head.toSidereal.flatMap(_.target.tracking.at(i))
+    baseTarget.tracking.at(i)
 
   def baseCoordinates: Coordinates =
-    targets.head.toSidereal.map(_.target.tracking.baseCoordinates).get
+    baseTarget.tracking.baseCoordinates
 
   // Eventually this need to be generalized for non-sidereals
   def tracking: SiderealTracking = SiderealTracking.const(baseCoordinates)
