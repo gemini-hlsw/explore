@@ -71,13 +71,13 @@ object ITCRequests {
     ): F[Option[Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]]] =
       Logger[F]
         .debug(
-          s"ITC: Request for mode ${params.mode} and target count: ${params.target.name.value}"
-        ) *> selectedBrightness(params.target.profile, params.wavelength)
+          s"ITC: Request for mode ${params.mode} ${params.wavelength}  target count: ${params.target.name.value}"
+        ) *> selectedBrightness(params.target.profile, params.wavelength.value)
         .map { brightness =>
           SpectroscopyITCQuery
             .query(
               SpectroscopyModeInput(
-                params.wavelength.toInput,
+                params.wavelength.value.toInput,
                 params.signalToNoise,
                 params.target.profile.toInput,
                 brightness,
@@ -124,13 +124,18 @@ object ITCRequests {
     val cacheableRequest = Cacheable(CacheName("itcQuery"), CacheVersion(1), doRequest)
 
     val itcRowsParams = modes
-      .map(_.instrument)
+      .map(x => (x.coverageCenter(wavelength), x.instrument))
       // Only handle known modes
       .collect {
-        case m: GmosNorthSpectroscopyRow =>
+        case (Some(wavelength), m: GmosNorthSpectroscopyRow) =>
+          // row.coverageCenter(wavelength).map { wavelength =>
+          println(s"On north $wavelength")
           ItcRequestParams(wavelength, signalToNoise, constraints, targets, m)
-        case m: GmosSouthSpectroscopyRow =>
+        // }
+        case (Some(wavelength), m: GmosSouthSpectroscopyRow) =>
+          // row.coverageCenter(wavelength).map { wavelength =>
           ItcRequestParams(wavelength, signalToNoise, constraints, targets, m)
+        // }
       }
 
     parTraverseN(

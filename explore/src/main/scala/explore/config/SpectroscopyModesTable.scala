@@ -372,13 +372,13 @@ object SpectroscopyModesTable {
   ): Option[Int] =
     scienceMode
       .map(selected => rows.indexWhere(_.equalsConf(selected)))
-      .filterNot(_ == -1)
+      .filterNot(_ === -1)
 
   protected def visibleRows(visibleRange: ListRange, rows: List[SpectroscopyModeRow]) = {
     val s = visibleRange.startIndex.toInt
     val e = visibleRange.endIndex.toInt
 
-    (for { i <- s to e } yield rows.lift(i)).collect { case Some(m) => m }.toList
+    (for { i <- s to e } yield rows.lift(i)).toList.flattenOption
   }
 
   given Reusability[Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]] =
@@ -488,11 +488,12 @@ object SpectroscopyModesTable {
                   (range.value.foldMap(visibleRows(_, sortedRows)) ++ sortedRows).distinct
                     .filterNot { row =>
                       val cache = itcResults.value.cache
+                      val cw    = row.coverageCenter(w)
                       row.instrument match
                         case m: GmosNorthSpectroscopyRow =>
-                          cache.contains(ItcRequestParams(w, sn, constraints, t, m))
+                          cw.exists(w => cache.contains(ItcRequestParams(w, sn, constraints, t, m)))
                         case m: GmosSouthSpectroscopyRow =>
-                          cache.contains(ItcRequestParams(w, sn, constraints, t, m))
+                          cw.exists(w => cache.contains(ItcRequestParams(w, sn, constraints, t, m)))
                         case _                           => true
                     }
 

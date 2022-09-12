@@ -11,6 +11,7 @@ import eu.timepit.refined.types.numeric.NonNegBigDecimal
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.model.itc.CoverageCenterWavelength
 import explore.model.itc.ItcCcd
 import explore.model.itc.ItcChart
 import explore.model.itc.ItcChartResult
@@ -183,6 +184,8 @@ trait ItcPicklers extends CommonPicklers {
       .addConcreteType[ItcQueryProblems.MissingSignalToNoise.type]
       .addConcreteType[ItcQueryProblems.MissingTargetInfo.type]
       .addConcreteType[ItcQueryProblems.GenericError]
+
+  given Pickler[CoverageCenterWavelength] = picklerNewType(CoverageCenterWavelength)
 
   given Pickler[ItcRequestParams] = generatePickler
 
