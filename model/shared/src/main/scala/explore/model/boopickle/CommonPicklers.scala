@@ -50,7 +50,7 @@ import java.time.Year
 import java.time.ZoneId
 
 trait CommonPicklers {
-  given x[W, T <: NewType[W]#Type](using pickler: Pickler[W]): Pickler[T] =
+  given picklerNewType[W, T <: NewType[W]#Type](using pickler: Pickler[W]): Pickler[T] =
     pickler.asInstanceOf[Pickler[T]]
 
   given picklerRefined[A: Pickler, B](using Validate[A, B]): Pickler[A Refined B] =
