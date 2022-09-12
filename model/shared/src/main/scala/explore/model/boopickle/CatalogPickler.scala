@@ -35,6 +35,8 @@ import lucuma.core.model.ElevationRange
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.core.util.Enumerated
+import explore.model.ObjectTracking
+import lucuma.core.model.CatalogInfo.apply
 
 // Boopicklers for catalog related types
 trait CatalogPicklers extends CommonPicklers {
@@ -117,6 +119,26 @@ trait CatalogPicklers extends CommonPicklers {
       .addConcreteType[AgsAnalysis.NotReachable]
       .addConcreteType[AgsAnalysis.NoMagnitudeForBand]
       .addConcreteType[AgsAnalysis.Usable]
+
+  // given Pickler[CatalogInfo] = generatePickler
+  //
+  // given Pickler[Target.Sidereal] = generatePickler
+  //
+  // given Pickler[Target.Nonsidereal] = generatePickler
+  //
+  // given Pickler[Target] =
+  //   compositePickler[Target]
+  //     .addConcreteType[Target.Sidereal]
+  //     .addConcreteType[Target.Nonsidereal]
+
+  given Pickler[ObjectTracking.ConstantTracking] = generatePickler
+
+  given Pickler[ObjectTracking.SiderealObjectTracking] = generatePickler
+
+  given Pickler[ObjectTracking] =
+    compositePickler[ObjectTracking]
+      .addConcreteType[ObjectTracking.ConstantTracking]
+      .addConcreteType[ObjectTracking.SiderealObjectTracking]
 }
 
 object CatalogPicklers extends CatalogPicklers

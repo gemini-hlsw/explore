@@ -29,6 +29,7 @@ import explore.model.boopickle.*
 import explore.model.enums.AgsState
 import explore.model.enums.Visible
 import explore.model.reusability.*
+import explore.model.reusability.given
 import explore.optics.ModelOptics
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -93,7 +94,7 @@ object AladinCell extends ModelOptics {
     ScalaFnComponent
       .withHooks[Props]
       // mouse coordinates, starts on the base
-      .useStateBy(_.asterism.baseCoordinates)
+      .useStateBy(_.asterism.baseTarget.baseCoordinates)
       // target options, will be read from the user preferences
       .useStateView(Pot.pending[TargetVisualOptions])
       // flag to trigger centering. This is a bit brute force but
@@ -112,7 +113,7 @@ object AladinCell extends ModelOptics {
 
           agsState.setStateAsync(AgsState.LoadingCandidates) >>
             CatalogClient[IO].requestSingle(
-              CatalogMessage.GSRequest(props.asterism.tracking, vizTime)
+              CatalogMessage.GSRequest(props.asterism.baseTarget, vizTime)
             ) >>=
             (_.map(candidates =>
               agsState.setState(AgsState.Idle).to[IO] >> gs.setStateAsync(candidates)
@@ -143,7 +144,7 @@ object AladinCell extends ModelOptics {
       .useStateView(none[Int])
       // Request ags calculation
       .useEffectWithDepsBy((p, _, _, _, candidates, _, _, _) =>
-        (p.asterism.tracking,
+        (p.asterism.baseTarget,
          p.obsConf.posAngleConstraint,
          p.obsConf.constraints,
          p.obsConf.wavelength,

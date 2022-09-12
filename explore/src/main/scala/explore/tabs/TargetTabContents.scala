@@ -425,15 +425,16 @@ object TargetTabContents {
         .flatMap(
           _.mapValue(targetView =>
             targetView.get match {
-              case TargetWithId(id, t @ Target.Sidereal(_, _, _, _)) =>
-                Target.Sidereal.baseCoordinates.get(t).some.tupleLeft(id)
-              case _                                                 => none
+              case TargetWithId(_, t @ Target.Sidereal(_, _, _, _)) =>
+                Target.Sidereal.baseCoordinates.get(t).some
+              case _                                                => none
             }
           )
         )
 
       val skyPlotTile =
         ElevationPlotTile.elevationPlotTile(props.userId,
+                                            props.focused.target,
                                             scienceMode,
                                             selectedCoordinates.flatten,
                                             vizTimeView.get
@@ -488,8 +489,9 @@ object TargetTabContents {
       val skyPlotTile =
         ElevationPlotTile.elevationPlotTile(
           props.userId,
+          targetId.some,
           none,
-          Target.Sidereal.baseCoordinates.get(target).some.tupleLeft(targetId),
+          Target.Sidereal.baseCoordinates.get(target).some,
           none
         )
 

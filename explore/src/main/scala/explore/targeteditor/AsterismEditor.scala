@@ -125,20 +125,20 @@ object AsterismEditor {
       .useStateView(false)
       // edit target in current obs only (0), or all "instances" of the target (1)
       .useState(0)
-      .useEffectWithDepsBy((props, _, _) => (props.asterism.get, props.currentTarget)) {
-        (props, _, _) => (asterism, oTargetId) =>
-          // if the selected targetId is None, or not in the asterism, select the first target (if any)
-          // Need to replace history here.
-          oTargetId match {
-            case None                                               =>
-              asterism.foldMap(a =>
-                props.setTarget(a.baseTarget.id.some, SetRouteVia.HistoryReplace)
-              )
-            case Some(current) if asterism.exists(_.hasId(current)) => Callback.empty
-            case _                                                  =>
-              props.setTarget(asterism.map(_.baseTarget.id), SetRouteVia.HistoryReplace)
-          }
-      }
+      // .useEffectWithDepsBy((props, _, _) => (props.asterism.get, props.currentTarget)) {
+      //   (props, _, _) => (asterism, oTargetId) =>
+      //     // if the selected targetId is None, or not in the asterism, select the first target (if any)
+      //     // Need to replace history here.
+      //     oTargetId match {
+      //       case None                                               =>
+      //         asterism.foldMap(a =>
+      //           props.setTarget(a.baseTarget.id.some, SetRouteVia.HistoryReplace)
+      //         )
+      //       case Some(current) if asterism.exists(_.hasId(current)) => Callback.empty
+      //       case _                                                  =>
+      //         props.setTarget(asterism.map(_.baseTarget.id), SetRouteVia.HistoryReplace)
+      //     }
+      // }
       // full screen aladin
       .useStateView(false)
       .render { (props, adding, editScope, fullScreen) =>

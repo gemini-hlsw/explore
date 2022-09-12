@@ -159,16 +159,10 @@ object ObsTabTiles {
         val potAsterismMode: Pot[(View[Option[Asterism]], Option[ScienceMode])] =
           potAsterism.map(x => (x, scienceMode))
 
-        val targetCoords: Option[(Target.Id, Coordinates)] =
+        val targetCoords: Option[Coordinates] =
           potAsterism.toOption
             .flatMap(
-              _.get.flatMap(t =>
-                t.baseTarget.target match {
-                  case Target.Sidereal(_, tracking, _, _) =>
-                    (t.baseTarget.id, tracking.baseCoordinates).some
-                  case _                                  => none
-                }
-              )
+              _.get.map(_.baseTarget.baseCoordinates)
             )
 
         val spectroscopyReqs: Option[ScienceRequirementsData] =
@@ -214,6 +208,7 @@ object ObsTabTiles {
 
         val skyPlotTile =
           ElevationPlotTile.elevationPlotTile(props.userId,
+                                              props.focusedTarget,
                                               scienceMode,
                                               targetCoords,
                                               vizTimeView.toOption.flatMap(_.get)

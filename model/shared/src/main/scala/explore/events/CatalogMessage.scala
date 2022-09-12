@@ -3,21 +3,21 @@
 
 package explore.events
 
-import boopickle.DefaultBasic._
+import boopickle.DefaultBasic.*
 import boopickle.Pickler
 import explore.model.boopickle.CatalogPicklers
 import lucuma.ags.GuideStarCandidate
-import lucuma.core.model.SiderealTracking
 import workers.WorkerRequest
 
 import java.time.Duration
 import java.time.Instant
+import explore.model.ObjectTracking
 
 object CatalogMessage extends CatalogPicklers {
   sealed trait Request extends WorkerRequest
 
   final case class GSRequest(
-    tracking: SiderealTracking,
+    tracking: ObjectTracking,
     vizTime:  Instant
   ) extends Request {
     type ResponseType = List[GuideStarCandidate]

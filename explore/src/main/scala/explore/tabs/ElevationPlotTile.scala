@@ -23,8 +23,9 @@ object ElevationPlotTile:
 
   def elevationPlotTile(
     uid:         Option[User.Id],
+    tid:         Option[Target.Id],
     scienceMode: Option[ScienceMode],
-    coordinates: Option[(Target.Id, Coordinates)],
+    coordinates: Option[Coordinates],
     vizTime:     Option[Instant]
   )(using AppContextIO) =
     Tile(
@@ -33,8 +34,8 @@ object ElevationPlotTile:
       canMinimize = true,
       bodyClass = ExploreStyles.ElevationPlotTileBody.some
     ) { _ =>
-      (uid, coordinates)
-        .mapN { case (uid, (targetId, coordinates)) =>
+      (uid, tid, coordinates)
+        .mapN { (uid, targetId, coordinates) =>
           ElevationPlotSection(uid, targetId, scienceMode, vizTime, coordinates): VdomNode
         }
         .getOrElse {

@@ -12,6 +12,7 @@ import explore.model.itc.CoverageCenterWavelength
 import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.ItcTarget
 import explore.modes.InstrumentRow
+import explore.model.ObjectTracking
 import explore.undo.UndoStacks
 import japgolly.scalajs.react.ReactCats._
 import japgolly.scalajs.react.Reusability
@@ -112,4 +113,6 @@ object reusability {
   given Reusability[InstrumentRow] = Reusability.byEq
 
   given Reusability[CoverageCenterWavelength] = Reusability.byEq
+
+  given Reusability[ObjectTracking] = Reusability.byEq
 }

@@ -78,10 +78,11 @@ object AladinContainer {
       .withHooks[Props]
       // Base coordinates with pm correction if possible
       .useMemoBy(_.obsConf.vizTime) { p => i =>
-        p.asterism.baseCoordinatesAt(i).getOrElse(p.asterism.baseCoordinates)
+        p.asterism.baseTarget.at(i).getOrElse(p.asterism.baseTarget.baseCoordinates)
       }
       // View coordinates base coordinates with pm correction + user panning
       .useStateBy { (p, baseCoordinates) =>
+        println(baseCoordinates.value)
         baseCoordinates.value.offsetBy(Angle.Angle0, p.options.viewOffset)
       }
       // Ref to the aladin component
@@ -245,6 +246,8 @@ object AladinContainer {
           def onZoom =
             (v: Fov) => fov.setState(v.some) *> props.updateFov(v)
 
+          val vizTime = props.obsConf.vizTime
+
           def includeSvg(v: JsAladin): Callback =
             v.onZoom(onZoom) *> // re render on zoom
               v.onPositionChanged(u => onPositionChanged(u)) *>
@@ -263,9 +266,9 @@ object AladinContainer {
           val baseTargets =
             List(
               SVGTarget.CrosshairTarget(baseCoordinates.value, ExploreStyles.ScienceTarget, 10),
-              SVGTarget.CircleTarget(props.asterism.baseCoordinates, ExploreStyles.BaseTarget, 3),
+              SVGTarget.CircleTarget(baseCoordinates.value, ExploreStyles.BaseTarget, 3),
               SVGTarget.LineTo(baseCoordinates.value,
-                               props.asterism.baseCoordinates,
+                               props.asterism.baseTarget.baseCoordinates,
                                ExploreStyles.PMCorrectionLine
               )
             )

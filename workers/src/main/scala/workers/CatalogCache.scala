@@ -44,6 +44,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.temporal.ChronoField
 import java.time.temporal.ChronoUnit
+import cats.data.NonEmptyList
 
 trait CatalogQuerySettings {
   val proxy = uri"https://cors-proxy.lucuma.xyz"
@@ -103,15 +104,10 @@ trait CatalogCache extends CatalogIDB {
     val start = ldt.`with`(ChronoField.DAY_OF_YEAR, 1L).`with`(ChronoField.NANO_OF_DAY, 0)
     val end   = start.plus(1, ChronoUnit.YEARS)
 
-    Interval.closed(
-      start.toInstant(Constants.UTCOffset),
-      end.toInstant(Constants.UTCOffset)
-    ) match {
-      case yearInterval @ Bounded(_, _, _) =>
+    (tracking.at(start.toInstant(Constants.UTCOffset)), tracking.at(end.toInstant(Constants.UTCOffset))).mapN { (a, b) =>
         // Make a time based query for pm over a year
-        val query = TimeRangeQueryByADQL(
-          tracking,
-          yearInterval,
+        val query = CoordinatesRangeQueryByADQL(
+          NonEmptyList.of(a, b),
           probeArm.candidatesArea,
           brightnessConstraints.some,
           proxy.some
@@ -150,8 +146,6 @@ trait CatalogCache extends CatalogIDB {
                 respond(c)
             }
           )
-      case _                               =>
-        Logger[IO].error("Unexpected error in CatalogCage: A year is not a Bounded Interval.")
-    }
+    }.getOrElse(IO.unit)
   }
 }

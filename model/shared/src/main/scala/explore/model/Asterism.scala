@@ -17,6 +17,32 @@ import java.time.Instant
 import lucuma.core.model.SiderealTracking
 import lucuma.core.math.Epoch
 
+sealed trait ObjectTracking derives Eq {
+  def at(i: Instant): Option[Coordinates]
+  def baseCoordinates: Coordinates
+}
+
+object ObjectTracking {
+  case class ConstantTracking(coord: Coordinates) extends ObjectTracking derives Eq {
+    def at(i: Instant): Option[Coordinates] = coord.some
+    def baseCoordinates: Coordinates        = coord
+  }
+
+  case class SiderealObjectTracking(tracking: SiderealTracking) extends ObjectTracking derives Eq {
+    def at(i: Instant): Option[Coordinates] = tracking.at(i)
+
+    def baseCoordinates: Coordinates = tracking.baseCoordinates
+  }
+
+  def const(coord: Coordinates): ObjectTracking = ConstantTracking(coord)
+
+  def fromTarget(target: Target): ObjectTracking = target match {
+    case t: Target.Sidereal => SiderealObjectTracking(t.tracking)
+    case _                  => sys.error("Only sidereal targets supported")
+  }
+
+}
+
 case class Asterism(private val targets: NonEmptyList[TargetWithId]) derives Eq {
   def toSiderealAt(vizTime: Instant): List[SiderealTargetWithId] =
     targets.traverse(_.toSidereal.map(_.at(vizTime))).foldMap(_.toList)
@@ -38,23 +64,23 @@ case class Asterism(private val targets: NonEmptyList[TargetWithId]) derives Eq 
     Zipper.fromNel(targets).findFocus(_.id === id)
 
   // This should be calculatedd from the other targets or manually overriden
-  def baseTarget: Target.Sidereal =
+  def baseTarget: ObjectTracking =
     if (targets.length > 1) {
       val t1 = targets.head
       val t2 = targets.last
       val c1 = t1.toSidereal.get.target.tracking.baseCoordinates
       val c2 = t2.toSidereal.get.target.tracking.baseCoordinates
-      Target.Sidereal("base".refined, SiderealTracking(c1.interpolate(c2, 0.5), Epoch.J2000, none, none, none)
-    } else targets.head.toSidereal.get.target
+      ObjectTracking.const(c1.interpolate(c2, 0.5))
+    } else ObjectTracking.fromTarget(targets.head.target)
 
-  def baseCoordinatesAt(i: Instant): Option[Coordinates] =
-    baseTarget.tracking.at(i)
-
-  def baseCoordinates: Coordinates =
-    baseTarget.tracking.baseCoordinates
+  // def baseCoordinatesAt(i: Instant): Option[Coordinates] =
+  //   baseTarget.tracking.at(i)
+  //
+  // def baseCoordinates: Coordinates =
+  //   baseTarget.tracking.baseCoordinates
 
   // Eventually this need to be generalized for non-sidereals
-  def tracking: SiderealTracking = SiderealTracking.const(baseCoordinates)
+  // def baseTracking: SiderealTracking = SiderealTracking.const(baseCoordinates)
 
   def hasId(id: Target.Id): Boolean = targets.exists(_.id === id)
 }
