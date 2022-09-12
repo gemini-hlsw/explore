@@ -78,7 +78,7 @@ import scala.concurrent.duration.*
 
 import scalajs.js.|
 
-final case class SpectroscopyModesTable(
+case class SpectroscopyModesTable(
   scienceMode:              View[Option[ScienceMode]],
   spectroscopyRequirements: SpectroscopyRequirementsData,
   constraints:              ConstraintSet,
@@ -87,7 +87,7 @@ final case class SpectroscopyModesTable(
   matrix:                   SpectroscopyModesMatrix,
   onSelect:                 Callback
 )(using val ctx:            AppContextIO)
-    extends ReactFnProps[SpectroscopyModesTable](SpectroscopyModesTable.component) {
+    extends ReactFnProps(SpectroscopyModesTable.component) {
   val brightestTarget: Option[ItcTarget] =
     for
       w  <- spectroscopyRequirements.wavelength
@@ -96,7 +96,7 @@ final case class SpectroscopyModesTable(
     yield b
 }
 
-object SpectroscopyModesTable {
+private object SpectroscopyModesTable {
   type Props = SpectroscopyModesTable
 
   type ColId = NonEmptyString
@@ -112,9 +112,12 @@ object SpectroscopyModesTable {
 
   given Reusability[ItcResultsCache] = Reusability.by(_.cache.size)
 
-  protected val ModesTableDef = TableDef[SpectroscopyModeRow].withSortBy.withBlockLayout
+  given Reusability[Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]] =
+    Reusability.never
 
-  protected val ModesTable = new SUITableVirtuoso(ModesTableDef)
+  val ModesTableDef = TableDef[SpectroscopyModeRow].withSortBy.withBlockLayout
+
+  val ModesTable = new SUITableVirtuoso(ModesTableDef)
 
   val decFormat = new DecimalFormat("0.###")
 
@@ -190,13 +193,12 @@ object SpectroscopyModesTable {
     case (i @ Instrument.Gnirs, m) => s"${i.longName} $m"
     case (i, _)                    => i.longName
 
-  def formatFPU(r: FocalPlane): String = r match {
+  def formatFPU(r: FocalPlane): String = r match
     case FocalPlane.SingleSlit   => "Single"
     case FocalPlane.MultipleSlit => "Multi"
     case FocalPlane.IFU          => "IFU"
-  }
 
-  private def itcCell(c: EitherNec[ItcQueryProblems, ItcResult]): VdomElement =
+  def itcCell(c: EitherNec[ItcQueryProblems, ItcResult]): VdomElement =
     val content: TagMod = c match {
       case Left(nel)                        =>
         if (nel.exists(_ == ItcQueryProblems.UnsupportedMode))
@@ -338,51 +340,49 @@ object SpectroscopyModesTable {
         .setSortType(DefaultSortTypes.number)
     ).filter { case c => (c.id.toString) != FPUColumnId.value || fpu.isEmpty }
 
-  protected def rowToConf(row: SpectroscopyModeRow): Option[ScienceMode] =
-    row.instrument match {
-      case GmosNorthSpectroscopyRow(grating, fpu, filter)
-          if row.focalPlane === FocalPlane.SingleSlit =>
-        ScienceMode
-          .GmosNorthLongSlit(
-            basic = ScienceModeBasic.GmosNorthLongSlit(grating, filter, fpu),
-            advanced = ScienceModeAdvanced.GmosNorthLongSlit.Empty
-          )
-          .some
-      case GmosSouthSpectroscopyRow(grating, fpu, filter)
-          if row.focalPlane === FocalPlane.SingleSlit =>
-        ScienceMode
-          .GmosSouthLongSlit(
-            basic = ScienceModeBasic.GmosSouthLongSlit(grating, filter, fpu),
-            advanced = ScienceModeAdvanced.GmosSouthLongSlit.Empty
-          )
-          .some
-      case _ => none
-    }
+  extension (row: SpectroscopyModeRow)
+    def rowToConf: Option[ScienceMode] =
+      row.instrument match {
+        case GmosNorthSpectroscopyRow(grating, fpu, filter)
+            if row.focalPlane === FocalPlane.SingleSlit =>
+          ScienceMode
+            .GmosNorthLongSlit(
+              basic = ScienceModeBasic.GmosNorthLongSlit(grating, filter, fpu),
+              advanced = ScienceModeAdvanced.GmosNorthLongSlit.Empty
+            )
+            .some
+        case GmosSouthSpectroscopyRow(grating, fpu, filter)
+            if row.focalPlane === FocalPlane.SingleSlit =>
+          ScienceMode
+            .GmosSouthLongSlit(
+              basic = ScienceModeBasic.GmosSouthLongSlit(grating, filter, fpu),
+              advanced = ScienceModeAdvanced.GmosSouthLongSlit.Empty
+            )
+            .some
+        case _ => none
+      }
 
-  protected def equalsConf(row: SpectroscopyModeRow, conf: ScienceMode): Boolean =
-    rowToConf(row).exists(_ === conf)
+    def equalsConf(conf: ScienceMode): Boolean =
+      rowToConf.exists(_ === conf)
 
-  protected def enabledRow(row: SpectroscopyModeRow): Boolean =
-    List(Instrument.GmosNorth, Instrument.GmosSouth).contains_(row.instrument.instrument) &&
-      row.focalPlane === FocalPlane.SingleSlit
+    def enabledRow: Boolean =
+      List(Instrument.GmosNorth, Instrument.GmosSouth).contains_(row.instrument.instrument) &&
+        row.focalPlane === FocalPlane.SingleSlit
 
-  protected def selectedRowIndex(
+  def selectedRowIndex(
     scienceMode: Option[ScienceMode],
     rows:        List[SpectroscopyModeRow]
   ): Option[Int] =
     scienceMode
-      .map(selected => rows.indexWhere(row => equalsConf(row, selected)))
-      .filterNot(_ == -1)
+      .map(selected => rows.indexWhere(_.equalsConf(selected)))
+      .filterNot(_ === -1)
 
-  protected def visibleRows(visibleRange: ListRange, rows: List[SpectroscopyModeRow]) = {
+  def visibleRows(visibleRange: ListRange, rows: List[SpectroscopyModeRow]) = {
     val s = visibleRange.startIndex.toInt
     val e = visibleRange.endIndex.toInt
 
-    (for { i <- s to e } yield rows.lift(i)).collect { case Some(m) => m }.toList
+    (for { i <- s to e } yield rows.lift(i)).toList.flattenOption
   }
-
-  given Reusability[Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]] =
-    Reusability.never
 
   val component =
     ScalaFnComponent
@@ -488,11 +488,12 @@ object SpectroscopyModesTable {
                   (range.value.foldMap(visibleRows(_, sortedRows)) ++ sortedRows).distinct
                     .filterNot { row =>
                       val cache = itcResults.value.cache
+                      val cw    = row.coverageCenter(w)
                       row.instrument match
                         case m: GmosNorthSpectroscopyRow =>
-                          cache.contains(ItcRequestParams(w, sn, constraints, t, m))
+                          cw.exists(w => cache.contains(ItcRequestParams(w, sn, constraints, t, m)))
                         case m: GmosSouthSpectroscopyRow =>
-                          cache.contains(ItcRequestParams(w, sn, constraints, t, m))
+                          cw.exists(w => cache.contains(ItcRequestParams(w, sn, constraints, t, m)))
                         case _                           => true
                     }
 

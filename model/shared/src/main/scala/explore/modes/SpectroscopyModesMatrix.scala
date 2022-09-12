@@ -3,6 +3,7 @@
 
 package explore.modes
 
+import algebra.instances.all.given
 import cats.Eq
 import cats.data.NonEmptyList
 import cats.derived.*
@@ -19,6 +20,7 @@ import eu.timepit.refined.cats._
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.types.numeric._
 import eu.timepit.refined.types.string._
+import explore.model.itc.CoverageCenterWavelength
 import explore.model.syntax.all._
 import fs2.data.csv._
 import lucuma.core.enums._
@@ -30,7 +32,9 @@ import lucuma.core.util.Enumerated
 import monocle.Getter
 import monocle.Lens
 import monocle.macros.GenLens
+import spire.math.Bounded
 import spire.math.Interval
+import spire.math.Point
 import spire.math.Rational
 
 sealed trait InstrumentRow derives Eq {
@@ -47,6 +51,8 @@ sealed trait InstrumentRow derives Eq {
 
   val site: Site
 
+  def hasFilter: Boolean
+
   override def toString(): String = s"Mode: ${instrument.shortName}, $grating, $filter, $fpu"
 }
 
@@ -60,6 +66,7 @@ final case class GmosNorthSpectroscopyRow(
   type FPU     = GmosNorthFpu
   val instrument = Instrument.GmosNorth
   val site       = Site.GN
+  val hasFilter  = filter.isDefined
 }
 
 final case class GmosSouthSpectroscopyRow(
@@ -72,6 +79,7 @@ final case class GmosSouthSpectroscopyRow(
   type FPU     = GmosSouthFpu
   val instrument = Instrument.GmosSouth
   val site       = Site.GS
+  val hasFilter  = filter.isDefined
 }
 
 final case class Flamingos2SpectroscopyRow(grating: F2Disperser, filter: F2Filter)
@@ -82,6 +90,7 @@ final case class Flamingos2SpectroscopyRow(grating: F2Disperser, filter: F2Filte
   val fpu        = ()
   val instrument = Instrument.Flamingos2
   val site       = Site.GS
+  val hasFilter  = true
 }
 
 final case class GpiSpectroscopyRow(grating: GpiDisperser, filter: GpiFilter)
@@ -92,6 +101,7 @@ final case class GpiSpectroscopyRow(grating: GpiDisperser, filter: GpiFilter)
   val fpu        = ()
   val instrument = Instrument.Gpi
   val site       = Site.GN
+  val hasFilter  = true
 }
 
 final case class GnirsSpectroscopyRow(grating: GnirsDisperser, filter: GnirsFilter)
@@ -102,6 +112,7 @@ final case class GnirsSpectroscopyRow(grating: GnirsDisperser, filter: GnirsFilt
   val fpu        = ()
   val instrument = Instrument.Gnirs
   val site       = Site.GN
+  val hasFilter  = true
 }
 
 // Used for Instruments not fully defined
@@ -113,6 +124,7 @@ final case class GenericSpectroscopyRow(i: Instrument, grating: String, filter: 
   val fpu        = ()
   val instrument = i
   val site       = Site.GN
+  val hasFilter  = true
 }
 
 object InstrumentRow {
@@ -222,11 +234,19 @@ case class SpectroscopyModeRow(
   slitLength:         ModeSlitSize,
   slitWidth:          ModeSlitSize
 ) {
-  def calculatedCoverage: Quantity[NonNegBigDecimal, Micrometer] = wavelengthCoverage
+  inline def calculatedCoverage: Quantity[NonNegBigDecimal, Micrometer] = wavelengthCoverage
 
-  val hasFilter: Boolean = instrument.filter match {
-    case _: None.type => false
-    case _            => true
+  inline def hasFilter: Boolean = instrument.hasFilter
+
+  def coverageCenter(cw: Wavelength): Option[CoverageCenterWavelength] = {
+    val micros = SpectroscopyModeRow.coverageInterval(cw.some)(this) match
+      case b: Bounded[Quantity[BigDecimal, Micrometer]] =>
+        (b.lowerBound.a + ((b.upperBound.a - b.lowerBound.a) / SpectroscopyModeRow.TwoFactor)).some
+      case b: Point[Quantity[BigDecimal, Micrometer]]   => b.value.some
+      case _                                            => none
+    micros
+      .flatMap(m => Wavelength.fromPicometers.getOption(m.toUnit[Picometer].value.toInt))
+      .map(CoverageCenterWavelength.apply)
   }
 
 }
@@ -299,13 +319,13 @@ object SpectroscopyModeRow {
 }
 
 trait SpectroscopyModesMatrixDecoders extends Decoders {
-  implicit val nonEmptyStringDecoder: CellDecoder[NonEmptyString] =
+  given CellDecoder[NonEmptyString] =
     CellDecoder.stringDecoder
       .emap { x =>
         refineV[NonEmpty](x).leftMap(s => new DecoderError(s))
       }
 
-  implicit val focalPlaneDecoder: CellDecoder[NonEmptyList[FocalPlane]] =
+  given CellDecoder[NonEmptyList[FocalPlane]] =
     CellDecoder.stringDecoder
       .emap { r =>
         r.toLowerCase
@@ -323,7 +343,7 @@ trait SpectroscopyModesMatrixDecoders extends Decoders {
         }
       }
 
-  implicit val capabilitiesDecoder: CellDecoder[Option[SpectroscopyCapabilities]] =
+  given CellDecoder[Option[SpectroscopyCapabilities]] =
     CellDecoder.stringDecoder
       .map {
         case "Nod&Shuffle" => SpectroscopyCapabilities.NodAndShuffle.some
@@ -331,33 +351,30 @@ trait SpectroscopyModesMatrixDecoders extends Decoders {
         case _             => none
       }
 
-  implicit object SpectroscopySpectroscopyModeRowDecoder
-      extends CsvRowDecoder[NonEmptyList[SpectroscopyModeRow], String] {
-    def apply(row: CsvRow[String]): DecoderResult[NonEmptyList[SpectroscopyModeRow]] =
-      for {
-        di  <- row.as[String]("disperser")
-        fi  <- row.as[NonEmptyString]("filter")
-        fu  <- row.as[NonEmptyString]("fpu")
-        i   <- row.as[Instrument]("instrument").flatMap(InstrumentRow.decode(_, di, fi, fu))
-        s   <- row.as[NonEmptyString]("Config")
-        fs  <- row.as[NonEmptyList[FocalPlane]]("Focal Plane")
-        c   <- row.as[Option[SpectroscopyCapabilities]]("capabilities")
-        a   <- row.as[ModeAO]("AO")
-        min <- row.as[ModeWavelength]("wave min")
-        max <- row.as[ModeWavelength]("wave max")
-        wo  <- row.as[ModeWavelength]("wave optimal")
-        wr  <- row.as[NonNegBigDecimal]("wave coverage").map(_.withUnit[Micrometer])
-        r   <- row.as[PosInt]("resolution")
-        sl  <- row.as[ModeSlitSize]("slit length")
-        sw  <- row.as[ModeSlitSize]("slit width")
-      } yield fs.map(f =>
-        SpectroscopyModeRow(row.line.foldMap(_.toInt), i, s, f, c, a, min, max, wo, wr, r, sl, sw)
-      )
-  }
+  given CsvRowDecoder[NonEmptyList[SpectroscopyModeRow], String] = (row: CsvRow[String]) =>
+    for {
+      di  <- row.as[String]("disperser")
+      fi  <- row.as[NonEmptyString]("filter")
+      fu  <- row.as[NonEmptyString]("fpu")
+      i   <- row.as[Instrument]("instrument").flatMap(InstrumentRow.decode(_, di, fi, fu))
+      s   <- row.as[NonEmptyString]("Config")
+      fs  <- row.as[NonEmptyList[FocalPlane]]("Focal Plane")
+      c   <- row.as[Option[SpectroscopyCapabilities]]("capabilities")
+      a   <- row.as[ModeAO]("AO")
+      min <- row.as[ModeWavelength]("wave min")
+      max <- row.as[ModeWavelength]("wave max")
+      wo  <- row.as[ModeWavelength]("wave optimal")
+      wr  <- row.as[NonNegBigDecimal]("wave coverage").map(_.withUnit[Micrometer])
+      r   <- row.as[PosInt]("resolution")
+      sl  <- row.as[ModeSlitSize]("slit length")
+      sw  <- row.as[ModeSlitSize]("slit width")
+    } yield fs.map(f =>
+      SpectroscopyModeRow(row.line.foldMap(_.toInt), i, s, f, c, a, min, max, wo, wr, r, sl, sw)
+    )
 
 }
 
-final case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
+case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
   val ScoreBump   = Rational(1, 2)
   val FilterLimit = Wavelength.fromNanometers(650)
 

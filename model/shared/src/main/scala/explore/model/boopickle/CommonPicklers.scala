@@ -40,6 +40,7 @@ import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.core.model.nonNegDurationValidate
 import lucuma.core.util.Enumerated
+import lucuma.utils.NewType
 import org.http4s.Uri
 
 import java.time.Duration
@@ -49,6 +50,9 @@ import java.time.Year
 import java.time.ZoneId
 
 trait CommonPicklers {
+  given picklerNewType[W, T <: NewType[W]#Type](using pickler: Pickler[W]): Pickler[T] =
+    pickler.asInstanceOf[Pickler[T]]
+
   given picklerRefined[A: Pickler, B](using Validate[A, B]): Pickler[A Refined B] =
     new Pickler[A Refined B] {
       override def pickle(a: A Refined B)(using state: PickleState): Unit = {
@@ -79,6 +83,9 @@ trait CommonPicklers {
     )(
       Enumerated[A].tag(_)
     )
+
+  def picklerNewType[A: Pickler](nt: NewType[A]): Pickler[nt.Type] =
+    transformPickler(nt(_))(_.value)
 
   given Pickler[Target.Id] = generatePickler
 

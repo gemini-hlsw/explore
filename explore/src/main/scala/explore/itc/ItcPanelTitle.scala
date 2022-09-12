@@ -57,7 +57,7 @@ object ItcPanelTitle:
           w <- props.wavelength
           s <- props.scienceData
           t  = s.itcTargets
-          b <- t.brightestAt(w)
+          b <- t.brightestAt(w.value)
         yield b
         r.orElse(props.scienceData.flatMap(_.itcTargets.headOption))
       }(props => t => props.selectedTarget.set(t))

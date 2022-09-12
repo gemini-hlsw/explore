@@ -16,11 +16,16 @@ import monocle.Focus
 import mouse.boolean._
 
 // Simple cache of the remotely calculated values
-final case class ItcResultsCache(
+case class ItcResultsCache(
   cache: Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]
 ) {
-  def wavelength(w: Option[Wavelength]): EitherNec[ItcQueryProblems, Wavelength] =
-    Either.fromOption(w, NonEmptyChain.of(ItcQueryProblems.MissingWavelength))
+  def wavelength(
+    w: Option[Wavelength],
+    r: SpectroscopyModeRow
+  ): EitherNec[ItcQueryProblems, CoverageCenterWavelength] =
+    Either.fromOption(w.flatMap(r.coverageCenter),
+                      NonEmptyChain.of(ItcQueryProblems.MissingWavelength)
+    )
 
   def signalToNoise(w: Option[PosBigDecimal]): EitherNec[ItcQueryProblems, PosBigDecimal] =
     Either.fromOption(w, NonEmptyChain.of(ItcQueryProblems.MissingSignalToNoise))
@@ -51,7 +56,7 @@ final case class ItcResultsCache(
     t:  Option[ItcTarget],
     r:  SpectroscopyModeRow
   ): EitherNec[ItcQueryProblems, ItcResult] =
-    (wavelength(w), signalToNoise(sn), mode(r), targets(t)).parMapN { (w, sn, im, t) =>
+    (wavelength(w, r), signalToNoise(sn), mode(r), targets(t)).parMapN { (w, sn, im, t) =>
       cache
         .get(ItcRequestParams(w, sn, c, t, im))
         .getOrElse(ItcResult.Pending.rightNec[ItcQueryProblems])
