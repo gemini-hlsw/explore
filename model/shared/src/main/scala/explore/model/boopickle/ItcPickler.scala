@@ -185,8 +185,6 @@ trait ItcPicklers extends CommonPicklers {
       .addConcreteType[ItcQueryProblems.MissingTargetInfo.type]
       .addConcreteType[ItcQueryProblems.GenericError]
 
-  given Pickler[CoverageCenterWavelength] = picklerNewType(CoverageCenterWavelength)
-
   given Pickler[ItcRequestParams] = generatePickler
 
   given Pickler[YAxis] = generatePickler

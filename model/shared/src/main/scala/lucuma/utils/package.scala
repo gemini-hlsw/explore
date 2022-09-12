@@ -24,9 +24,9 @@ extension [V, U](q: Quantity[V, U]) {
     refineQV[P](q)
 }
 
-abstract class NewType[Wrapped](using eq: Eq[Wrapped]):
+abstract class NewType[Wrapped]:
   opaque type Type = Wrapped
   def apply(w: Wrapped): Type = w
   extension (t: Type) def value: Wrapped = t
   given (using CanEqual[Wrapped, Wrapped]): CanEqual[Type, Type] = CanEqual.derived
-  given Eq[Type]                                                 = eq
+  given (using eq: Eq[Wrapped]): Eq[Type]                        = eq
