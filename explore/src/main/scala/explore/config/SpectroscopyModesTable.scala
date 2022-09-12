@@ -96,8 +96,8 @@ case class SpectroscopyModesTable(
     yield b
 }
 
-object SpectroscopyModesTable {
-  private type Props = SpectroscopyModesTable
+private object SpectroscopyModesTable {
+  type Props = SpectroscopyModesTable
 
   type ColId = NonEmptyString
 
@@ -112,9 +112,12 @@ object SpectroscopyModesTable {
 
   given Reusability[ItcResultsCache] = Reusability.by(_.cache.size)
 
-  protected val ModesTableDef = TableDef[SpectroscopyModeRow].withSortBy.withBlockLayout
+  given Reusability[Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]] =
+    Reusability.never
 
-  protected val ModesTable = new SUITableVirtuoso(ModesTableDef)
+  val ModesTableDef = TableDef[SpectroscopyModeRow].withSortBy.withBlockLayout
+
+  val ModesTable = new SUITableVirtuoso(ModesTableDef)
 
   val decFormat = new DecimalFormat("0.###")
 
@@ -195,7 +198,7 @@ object SpectroscopyModesTable {
     case FocalPlane.MultipleSlit => "Multi"
     case FocalPlane.IFU          => "IFU"
 
-  private def itcCell(c: EitherNec[ItcQueryProblems, ItcResult]): VdomElement =
+  def itcCell(c: EitherNec[ItcQueryProblems, ItcResult]): VdomElement =
     val content: TagMod = c match {
       case Left(nel)                        =>
         if (nel.exists(_ == ItcQueryProblems.UnsupportedMode))
@@ -366,7 +369,7 @@ object SpectroscopyModesTable {
       List(Instrument.GmosNorth, Instrument.GmosSouth).contains_(row.instrument.instrument) &&
         row.focalPlane === FocalPlane.SingleSlit
 
-  protected def selectedRowIndex(
+  def selectedRowIndex(
     scienceMode: Option[ScienceMode],
     rows:        List[SpectroscopyModeRow]
   ): Option[Int] =
@@ -374,17 +377,14 @@ object SpectroscopyModesTable {
       .map(selected => rows.indexWhere(_.equalsConf(selected)))
       .filterNot(_ === -1)
 
-  protected def visibleRows(visibleRange: ListRange, rows: List[SpectroscopyModeRow]) = {
+  def visibleRows(visibleRange: ListRange, rows: List[SpectroscopyModeRow]) = {
     val s = visibleRange.startIndex.toInt
     val e = visibleRange.endIndex.toInt
 
     (for { i <- s to e } yield rows.lift(i)).toList.flattenOption
   }
 
-  given Reusability[Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]] =
-    Reusability.never
-
-  private val component =
+  val component =
     ScalaFnComponent
       .withHooks[Props]
       // rows
