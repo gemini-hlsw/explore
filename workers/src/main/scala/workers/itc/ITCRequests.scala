@@ -71,7 +71,7 @@ object ITCRequests {
     ): F[Option[Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]]] =
       Logger[F]
         .debug(
-          s"ITC: Request for mode ${params.mode} ${params.wavelength}  target count: ${params.target.name.value}"
+          s"ITC: Request for mode: ${params.mode}, centralWavelength: ${params.wavelength} and target count: ${params.target.name.value}"
         ) *> selectedBrightness(params.target.profile, params.wavelength.value)
         .map { brightness =>
           SpectroscopyITCQuery
@@ -128,14 +128,9 @@ object ITCRequests {
       // Only handle known modes
       .collect {
         case (Some(wavelength), m: GmosNorthSpectroscopyRow) =>
-          // row.coverageCenter(wavelength).map { wavelength =>
-          println(s"On north $wavelength")
           ItcRequestParams(wavelength, signalToNoise, constraints, targets, m)
-        // }
         case (Some(wavelength), m: GmosSouthSpectroscopyRow) =>
-          // row.coverageCenter(wavelength).map { wavelength =>
           ItcRequestParams(wavelength, signalToNoise, constraints, targets, m)
-        // }
       }
 
     parTraverseN(
