@@ -299,13 +299,13 @@ object SpectroscopyModeRow {
 }
 
 trait SpectroscopyModesMatrixDecoders extends Decoders {
-  implicit val nonEmptyStringDecoder: CellDecoder[NonEmptyString] =
+  given CellDecoder[NonEmptyString] =
     CellDecoder.stringDecoder
       .emap { x =>
         refineV[NonEmpty](x).leftMap(s => new DecoderError(s))
       }
 
-  implicit val focalPlaneDecoder: CellDecoder[NonEmptyList[FocalPlane]] =
+  given CellDecoder[NonEmptyList[FocalPlane]] =
     CellDecoder.stringDecoder
       .emap { r =>
         r.toLowerCase
@@ -323,7 +323,7 @@ trait SpectroscopyModesMatrixDecoders extends Decoders {
         }
       }
 
-  implicit val capabilitiesDecoder: CellDecoder[Option[SpectroscopyCapabilities]] =
+  given CellDecoder[Option[SpectroscopyCapabilities]] =
     CellDecoder.stringDecoder
       .map {
         case "Nod&Shuffle" => SpectroscopyCapabilities.NodAndShuffle.some
@@ -331,33 +331,30 @@ trait SpectroscopyModesMatrixDecoders extends Decoders {
         case _             => none
       }
 
-  implicit object SpectroscopySpectroscopyModeRowDecoder
-      extends CsvRowDecoder[NonEmptyList[SpectroscopyModeRow], String] {
-    def apply(row: CsvRow[String]): DecoderResult[NonEmptyList[SpectroscopyModeRow]] =
-      for {
-        di  <- row.as[String]("disperser")
-        fi  <- row.as[NonEmptyString]("filter")
-        fu  <- row.as[NonEmptyString]("fpu")
-        i   <- row.as[Instrument]("instrument").flatMap(InstrumentRow.decode(_, di, fi, fu))
-        s   <- row.as[NonEmptyString]("Config")
-        fs  <- row.as[NonEmptyList[FocalPlane]]("Focal Plane")
-        c   <- row.as[Option[SpectroscopyCapabilities]]("capabilities")
-        a   <- row.as[ModeAO]("AO")
-        min <- row.as[ModeWavelength]("wave min")
-        max <- row.as[ModeWavelength]("wave max")
-        wo  <- row.as[ModeWavelength]("wave optimal")
-        wr  <- row.as[NonNegBigDecimal]("wave coverage").map(_.withUnit[Micrometer])
-        r   <- row.as[PosInt]("resolution")
-        sl  <- row.as[ModeSlitSize]("slit length")
-        sw  <- row.as[ModeSlitSize]("slit width")
-      } yield fs.map(f =>
-        SpectroscopyModeRow(row.line.foldMap(_.toInt), i, s, f, c, a, min, max, wo, wr, r, sl, sw)
-      )
-  }
+  given CsvRowDecoder[NonEmptyList[SpectroscopyModeRow], String] = (row: CsvRow[String]) =>
+    for {
+      di  <- row.as[String]("disperser")
+      fi  <- row.as[NonEmptyString]("filter")
+      fu  <- row.as[NonEmptyString]("fpu")
+      i   <- row.as[Instrument]("instrument").flatMap(InstrumentRow.decode(_, di, fi, fu))
+      s   <- row.as[NonEmptyString]("Config")
+      fs  <- row.as[NonEmptyList[FocalPlane]]("Focal Plane")
+      c   <- row.as[Option[SpectroscopyCapabilities]]("capabilities")
+      a   <- row.as[ModeAO]("AO")
+      min <- row.as[ModeWavelength]("wave min")
+      max <- row.as[ModeWavelength]("wave max")
+      wo  <- row.as[ModeWavelength]("wave optimal")
+      wr  <- row.as[NonNegBigDecimal]("wave coverage").map(_.withUnit[Micrometer])
+      r   <- row.as[PosInt]("resolution")
+      sl  <- row.as[ModeSlitSize]("slit length")
+      sw  <- row.as[ModeSlitSize]("slit width")
+    } yield fs.map(f =>
+      SpectroscopyModeRow(row.line.foldMap(_.toInt), i, s, f, c, a, min, max, wo, wr, r, sl, sw)
+    )
 
 }
 
-final case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
+case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
   val ScoreBump   = Rational(1, 2)
   val FilterLimit = Wavelength.fromNanometers(650)
 
