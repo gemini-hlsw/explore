@@ -47,7 +47,7 @@ object ITCGraphRequests {
     ).assign
 
   def queryItc[F[_]: Concurrent: Parallel: Logger](
-    wavelength:   Wavelength,
+    wavelength:   CoverageCenterWavelength,
     exposureTime: NonNegDuration,
     exposures:    PosInt,
     constraints:  ConstraintSet,
@@ -69,14 +69,14 @@ object ITCGraphRequests {
       request: ItcGraphRequestParams
     ): F[List[(ItcTarget, SpectroscopyGraphITCQuery.Data)]] =
       request.target
-        .fproduct(t => selectedBrightness(t.profile, request.wavelength))
+        .fproduct(t => selectedBrightness(t.profile, request.wavelength.value))
         .collect { case (t, Some(brightness)) =>
           request.mode.toITCInput
             .map(mode =>
               SpectroscopyGraphITCQuery
                 .query(
                   SpectroscopyGraphModeInput(
-                    request.wavelength.toInput,
+                    request.wavelength.value.toInput,
                     request.exposureTime.toInput,
                     request.exposures,
                     t.profile.toInput,

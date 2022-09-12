@@ -8,6 +8,7 @@ import explore.common.ObsQueries.SpectroscopyRequirementsData
 import explore.data.KeyedIndexedList
 import explore.events.CatalogMessage
 import explore.model.Asterism
+import explore.model.itc.CoverageCenterWavelength
 import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.ItcTarget
 import explore.modes.InstrumentRow
@@ -109,4 +110,6 @@ object reusability {
   given Reusability[ItcChartExposureTime] = Reusability.byEq
 
   given Reusability[InstrumentRow] = Reusability.byEq
+
+  given Reusability[CoverageCenterWavelength] = Reusability.byEq
 }

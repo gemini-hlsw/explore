@@ -25,7 +25,7 @@ case class ItcRequestParams(
 )
 
 case class ItcGraphRequestParams(
-  wavelength:   Wavelength,
+  wavelength:   CoverageCenterWavelength,
   exposureTime: NonNegDuration,
   exposures:    PosInt,
   constraints:  ConstraintSet,

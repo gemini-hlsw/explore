@@ -17,6 +17,7 @@ import explore.model.ScienceModeAdvanced
 import explore.model.ScienceModeBasic
 import explore.model.WorkerClients.ItcClient
 import explore.model.boopickle.ItcPicklers.given
+import explore.model.itc.CoverageCenterWavelength
 import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.ItcChartResult
 import explore.model.itc.ItcTarget
@@ -35,12 +36,14 @@ trait ItcPanelProps(
   scienceData:              Option[ScienceData],
   exposure:                 Option[ItcChartExposureTime]
 ) {
-  val wavelength: Option[Wavelength] = scienceMode match
+  val coverageCenterWavelength: Option[CoverageCenterWavelength] = none
+
+  val wavelength: Option[CoverageCenterWavelength] = scienceMode match
     case Some(ScienceMode.GmosNorthLongSlit(_, adv)) =>
-      adv.overrideWavelength.orElse(spectroscopyRequirements.flatMap(_.wavelength))
+      adv.overrideWavelength.map(CoverageCenterWavelength.apply).orElse(coverageCenterWavelength)
 
     case Some(ScienceMode.GmosSouthLongSlit(_, adv)) =>
-      adv.overrideWavelength.orElse(spectroscopyRequirements.flatMap(_.wavelength))
+      adv.overrideWavelength.map(CoverageCenterWavelength.apply).orElse(coverageCenterWavelength)
 
     case _ => none
 

@@ -20,8 +20,8 @@ import eu.timepit.refined.cats._
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.types.numeric._
 import eu.timepit.refined.types.string._
-import explore.model.itc.CoverageCenterWavelength
 import explore.model.syntax.all._
+import explore.model.itc.CoverageCenterWavelength
 import fs2.data.csv._
 import lucuma.core.enums._
 import lucuma.core.math.Angle
@@ -32,10 +32,10 @@ import lucuma.core.util.Enumerated
 import monocle.Getter
 import monocle.Lens
 import monocle.macros.GenLens
-import spire.math.Bounded
 import spire.math.Interval
-import spire.math.Point
 import spire.math.Rational
+import spire.math.Bounded
+import spire.math.Point
 
 sealed trait InstrumentRow derives Eq {
   def instrument: Instrument
