@@ -36,7 +36,10 @@ trait ItcPanelProps(
   scienceData:              Option[ScienceData],
   exposure:                 Option[ItcChartExposureTime]
 ) {
-  val coverageCenterWavelength: Option[CoverageCenterWavelength] = none
+  // This will not match the coverage center as used in the table
+  // Will be fixed in a future PR
+  val coverageCenterWavelength: Option[CoverageCenterWavelength] =
+    spectroscopyRequirements.flatMap(_.wavelength).map(CoverageCenterWavelength.apply)
 
   val wavelength: Option[CoverageCenterWavelength] = scienceMode match
     case Some(ScienceMode.GmosNorthLongSlit(_, adv)) =>
