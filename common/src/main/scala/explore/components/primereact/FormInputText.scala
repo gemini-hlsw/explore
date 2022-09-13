@@ -22,6 +22,7 @@ import scalajs.js
 final case class FormInputText(
   id:               NonEmptyString,
   value:            js.UndefOr[String] = js.undefined,
+  label:            js.UndefOr[TagMod] = js.undefined,
   preAddons:        List[TagMod | CButton.Builder] = List.empty,
   postAddons:       List[TagMod | CButton.Builder] = List.empty,
   groupClass:       js.UndefOr[Css] = js.undefined,
@@ -65,6 +66,11 @@ object FormInputText {
       )
     )
 
-    props.tooltip.fold(group)(tt => group.withTooltip(tt, props.tooltipPlacement))
+    val input = props.tooltip.fold(group)(tt => group.withTooltip(tt, props.tooltipPlacement))
+
+    React.Fragment(
+      props.label.map(l => FormLabel(htmlFor = props.id)(l)),
+      input
+    )
   }
 }

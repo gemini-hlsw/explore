@@ -35,6 +35,7 @@ import scalajs.js.JSConverters._
  */
 final case class FormInputTextView[A](
   id:            NonEmptyString,
+  label:         js.UndefOr[TagMod] = js.undefined,
   preAddons:     List[TagMod | CButton.Builder] = List.empty,
   postAddons:    List[TagMod | CButton.Builder] = List.empty,
   groupClass:    js.UndefOr[Css] = js.undefined,
@@ -199,6 +200,7 @@ object FormInputTextView {
 
         FormInputText(
           id = props.id,
+          label = props.label,
           groupClass = props.groupClass,
           inputClass =
             error.map(_ => PrimeStyles.Invalid).orEmpty |+| props.inputClass.toOption.orEmpty,

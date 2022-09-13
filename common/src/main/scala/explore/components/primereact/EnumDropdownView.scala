@@ -18,7 +18,7 @@ import scalajs.js.JSConverters.*
 
 object EnumDropdownView:
   def apply[A](
-    id:              js.UndefOr[NonEmptyString] = js.undefined,
+    id:              NonEmptyString,
     value:           View[A],
     exclude:         Set[A] = Set.empty[A],
     className:       js.UndefOr[String] = js.undefined,
@@ -36,7 +36,7 @@ object EnumDropdownView:
       options = enumerated.all
         .filter(v => !exclude.contains(v))
         .map(e => SelectItem(label = display.shortName(e), value = e)),
-      id = id.map(_.value),
+      id = id.value,
       className = className,
       clazz = clazz,
       filter = filter,

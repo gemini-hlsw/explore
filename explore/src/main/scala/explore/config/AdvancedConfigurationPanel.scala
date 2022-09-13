@@ -308,6 +308,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
     value:         View[Option[A]],
     validFormat:   InputValidFormat[Option[A]],
     changeAuditor: ChangeAuditor,
+    label:         TagMod,
     originalText:  Option[String] = None,
     units:         Option[String] = None,
     disabled:      Boolean = false
@@ -317,6 +318,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
     FormInputTextView(
       id = id,
       value = value,
+      label = label,
       postAddons = List(unitAddon, customAddon).flatten,
       validFormat = validFormat,
       changeAuditor = changeAuditor,
@@ -416,43 +418,36 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
 
           def dithersControl(onChange: Callback): VdomElement = {
             val view = explicitWavelengthDithers(props.scienceModeAdvanced)
-            ReactFragment(
-              FormLabel(htmlFor = "dithers".refined)(
-                "λ Dithers",
-                HelpIcon("configuration/lambda-dithers.md".refined)
-              ),
-              customizableInputText(
-                id = "dithers".refined,
-                value = view.withOnMod(_ => onChange),
-                validFormat = ExploreModelValidators.dithersValidSplitEpi,
-                changeAuditor = ChangeAuditor
-                  .bigDecimal(integers = 3.refined, decimals = 1.refined)
-                  .toSequence()
-                  .optional,
-                units = "nm".some,
-                disabled = disableSimpleEdit
-              )
+            customizableInputText(
+              id = "dithers".refined,
+              value = view.withOnMod(_ => onChange),
+              label =
+                React.Fragment("λ Dithers", HelpIcon("configuration/lambda-dithers.md".refined)),
+              validFormat = ExploreModelValidators.dithersValidSplitEpi,
+              changeAuditor = ChangeAuditor
+                .bigDecimal(integers = 3.refined, decimals = 1.refined)
+                .toSequence()
+                .optional,
+              units = "nm".some,
+              disabled = disableSimpleEdit
             )
           }
 
           def offsetsControl(onChange: Callback): VdomElement = {
             val view = explicitSpatialOffsets(props.scienceModeAdvanced)
-            ReactFragment(
-              FormLabel(htmlFor = "offsets".refined)(
-                "Spatial Offsets",
-                HelpIcon("configuration/spatial-offsets.md".refined)
+            customizableInputText(
+              id = "offsets".refined,
+              value = view.withOnMod(_ => onChange),
+              label = React.Fragment("Spatial Offsets",
+                                     HelpIcon("configuration/spatial-offsets.md".refined)
               ),
-              customizableInputText(
-                id = "offsets".refined,
-                value = view.withOnMod(_ => onChange),
-                validFormat = ExploreModelValidators.offsetQNELValidWedge,
-                changeAuditor = ChangeAuditor
-                  .bigDecimal(integers = 3.refined, decimals = 2.refined)
-                  .toSequence()
-                  .optional,
-                units = "arcsec".some,
-                disabled = disableSimpleEdit
-              )
+              validFormat = ExploreModelValidators.offsetQNELValidWedge,
+              changeAuditor = ChangeAuditor
+                .bigDecimal(integers = 3.refined, decimals = 2.refined)
+                .toSequence()
+                .optional,
+              units = "arcsec".some,
+              disabled = disableSimpleEdit
             )
           }
 
@@ -538,13 +533,11 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               offsetsControl(Callback.empty)
             ),
             <.div(PrimeStyles.FormColumnCompact, ExploreStyles.AdvancedConfigurationCol2)(
-              FormLabel(htmlFor = "override-wavelength".refined)(
-                "Wavelength",
-                HelpIcon("configuration/wavelength.md".refined)
-              ),
               customizableInputText(
                 id = "override-wavelength".refined,
                 value = wavelengthView.withOnMod(_ => invalidateITC),
+                label =
+                  React.Fragment("Wavelength", HelpIcon("configuration/wavelength.md".refined)),
                 validFormat = ExploreModelValidators.wavelengthValidWedge.optional,
                 changeAuditor = wavelengthChangeAuditor.optional,
                 units = "μm".some,
@@ -688,10 +681,10 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 exclude = obsoleteRois,
                 unknownDefault = true
               ),
-              FormLabel(htmlFor = "lambda".refined)("λ / Δλ"),
               FormInputText(
                 id = "lambda".refined,
                 value = readonlyData.value.fold("Unknown")(_.resolution.toString),
+                label = "λ / Δλ",
                 disabled = true
               ),
               FormLabel(htmlFor = "lambdaCoverage".refined)("λ Coverage"),
