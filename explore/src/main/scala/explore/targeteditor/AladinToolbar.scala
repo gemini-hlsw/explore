@@ -12,6 +12,7 @@ import explore.model.enums.Visible
 import explore.model.formats._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ags.AgsAnalysis
 import lucuma.ags.GuideStarCandidate
 import lucuma.core.math._
 import lucuma.ui.syntax.all.*
@@ -31,7 +32,7 @@ final case class AladinToolbar(
   fov:               Fov,
   current:           Coordinates,
   agsState:          AgsState,
-  selectedGuideStar: Option[GuideStarCandidate],
+  selectedGuideStar: Option[AgsAnalysis],
   center:            View[Boolean],
   agsOverlay:        Visible
 ) extends ReactFnProps[AladinToolbar](AladinToolbar.component)
@@ -41,6 +42,7 @@ object AladinToolbar {
 
   val component =
     ScalaFnComponent[Props] { props =>
+      val usableGuideStar = props.selectedGuideStar.exists(_.isUsable)
       React.Fragment(
         Label(
           icon = Icons.Maximize.clazz(ExploreStyles.Accented),
@@ -72,8 +74,9 @@ object AladinToolbar {
         <.div(
           ExploreStyles.AladinGuideStar,
           props.selectedGuideStar
-            .map { case g => s"GS: ${g.name.value}" }
-            .unless(props.agsOverlay.visible),
+            .map { case g => s"GS: ${g.target.name.value}" }
+            .unless(props.agsOverlay.visible || !usableGuideStar),
+          "No guidestar available".when(!usableGuideStar && props.agsState === AgsState.Idle),
           "Calculating...".when(props.agsState === AgsState.Calculating)
         ),
         Label(
