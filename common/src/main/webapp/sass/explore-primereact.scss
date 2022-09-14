@@ -1,11 +1,11 @@
 body {
   /* stylelint-disable no-invalid-position-at-import-rule */
   &.light-theme {
-    @import "/common/primereact/saga-blue";
+    @import "/common/primereact/light-theme";
   }
 
   &.dark-theme {
-    @import "/common/primereact/arya-blue";
+    @import "/common/primereact/dark-theme";
   }
   /* stylelint-enable no-invalid-position-at-import-rule */
 }
