@@ -197,7 +197,7 @@ object AladinCell extends ModelOptics {
       }
       // open settings menu
       .useState(false)
-      // Reset the selected gs if results chage
+      // Reset the selected gs if results change
       .useEffectWithDepsBy((p, _, _, _, _, agsResults, _, _, _) => (agsResults, p.obsConf)) {
         (p, _, _, _, _, agsResults, agsState, selectedIndex, _) => _ =>
           selectedIndex
@@ -342,7 +342,7 @@ object AladinCell extends ModelOptics {
               AladinToolbar(Fov.square(t.fovAngle),
                             mouseCoords.value,
                             agsState.value,
-                            selectedGuideStar.map(_.target),
+                            selectedGuideStar,
                             center,
                             t.agsOverlay
               ): VdomNode

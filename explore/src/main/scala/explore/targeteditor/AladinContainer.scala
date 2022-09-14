@@ -104,6 +104,8 @@ object AladinContainer {
             )
           }
 
+          val usableGuideStar = gs.exists(_.isUsable)
+
           val shapes = posAngle
             .map { posAngle =>
               val baseShapes =
@@ -111,6 +113,7 @@ object AladinContainer {
                   GmosGeometry.commonShapes(posAngle, candidatesVisibility)
 
               probeArmShapes
+                .filter(_ => usableGuideStar) // Don't show the probe if there is no usable GS
                 .map { probeArm =>
                   baseShapes ++ probeArm
                 }
