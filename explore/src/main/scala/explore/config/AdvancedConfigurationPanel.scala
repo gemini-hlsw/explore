@@ -67,6 +67,7 @@ import lucuma.schemas.ObservationDB.Types.*
 import lucuma.ui.forms.EnumViewOptionalSelect
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
+import lucuma.ui.primereact.LucumaStyles
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -290,7 +291,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
   ) = {
     val originalText = original.map(_.shortName).getOrElse(unknownDefault.fold("Unknown", "None"))
     <.span(
-      PrimeStyles.FormField,
+      LucumaStyles.FormField,
       PrimeStyles.InputGroup,
       EnumOptionalDropdownView(
         id = id,
@@ -495,7 +496,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             ExploreStyles.AdvancedConfigurationGrid
           )(
             <.div(
-              PrimeStyles.FormColumnCompact,
+              LucumaStyles.FormColumnCompact,
               ExploreStyles.AdvancedConfigurationCol1
             )(
               FormLabel(htmlFor = "override-grating".refined)(
@@ -532,7 +533,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               ),
               offsetsControl(Callback.empty)
             ),
-            <.div(PrimeStyles.FormColumnCompact, ExploreStyles.AdvancedConfigurationCol2)(
+            <.div(LucumaStyles.FormColumnCompact, ExploreStyles.AdvancedConfigurationCol2)(
               customizableInputText(
                 id = "override-wavelength".refined,
                 value = wavelengthView.withOnMod(_ => invalidateITC),
@@ -550,14 +551,13 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 HelpIcon("configuration/exposure-mode.md".refined)
               ),
               <.span(
-                PrimeStyles.FormField,
+                LucumaStyles.FormField,
                 PrimeStyles.InputGroup,
                 EnumOptionalDropdownView(
                   id = "exposureMode".refined,
                   value = exposureModeEnum.withOnMod(onModeMod _),
                   disabled = disableSimpleEdit,
-                  placeholder = originalSignalToNoiseText,
-                  clazz = PrimeStyles.FormField
+                  placeholder = originalSignalToNoiseText
                 ),
                 exposureModeEnum.get.map(_ => customized(originalSignalToNoiseText))
               ),
@@ -647,7 +647,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                   )(props.potITC.get.map(_.map(_.exposures)))
                 )
             ),
-            <.div(PrimeStyles.FormColumnCompact, ExploreStyles.AdvancedConfigurationCol3)(
+            <.div(LucumaStyles.FormColumnCompact, ExploreStyles.AdvancedConfigurationCol3)(
               FormLabel(htmlFor = "explicitXBin".refined)(
                 "Binning",
                 HelpIcon("configuration/binning.md".refined)
