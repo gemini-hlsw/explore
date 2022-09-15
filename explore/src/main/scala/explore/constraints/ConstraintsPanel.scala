@@ -12,9 +12,9 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.ConstraintsQueries._
 import explore.components.HelpIcon
 import explore.components.Tile
-import explore.components.primereact.EnumDropdownView
-import explore.components.primereact.FormInputTextView
-import explore.components.primereact.FormLabel
+import lucuma.ui.primereact.EnumDropdownView
+import lucuma.ui.primereact.FormInputTextView
+import lucuma.ui.primereact.FormLabel
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._

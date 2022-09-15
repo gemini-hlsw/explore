@@ -27,10 +27,10 @@ import explore.common.ObsQueries.*
 import explore.common.ScienceQueries.*
 import explore.components.HelpIcon
 import explore.components.InputWithUnits
-import explore.components.primereact.EnumOptionalDropdownView
-import explore.components.primereact.FormInputText
-import explore.components.primereact.FormInputTextView
-import explore.components.primereact.FormLabel
+import lucuma.ui.primereact.EnumOptionalDropdownView
+import lucuma.ui.primereact.FormInputText
+import lucuma.ui.primereact.FormInputTextView
+import lucuma.ui.primereact.FormLabel
 import explore.components.ui.ExploreStyles
 import explore.config.ExposureTimeModeType.*
 import explore.implicits.*

@@ -170,7 +170,7 @@ lazy val explore: Project = project
   .settings(commonSettings: _*)
   .settings(commonJsLibSettings: _*)
   .settings(esModule: _*)
-  .enablePlugins(ScalaJSPlugin)
+  .enablePlugins(ScalaJSPlugin, LucumaCssPlugin)
   .settings(
     Test / test          := {},
     coverageEnabled      := false,

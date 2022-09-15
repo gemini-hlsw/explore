@@ -76,6 +76,7 @@ export default defineConfig(({ command, mode }) => {
   const suithemes = path.resolve(webappCommon, 'suithemes');
   const publicDirProd = path.resolve(common, 'src/main/public');
   const publicDirDev = path.resolve(common, 'src/main/publicdev');
+  const lucumaCss = path.resolve(__dirname, 'explore/target/lucuma-css')
   fs.mkdir(publicDirDev, (err) => {
     fs.copyFileSync(
       path.resolve(publicDirProd, 'development.conf.json'),
@@ -127,6 +128,10 @@ export default defineConfig(({ command, mode }) => {
         {
           find: 'suithemes',
           replacement: suithemes,
+        },
+        {
+          find: '/lucuma-css',
+          replacement: lucumaCss,
         },
       ],
     },
