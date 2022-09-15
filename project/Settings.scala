@@ -13,7 +13,7 @@ object Settings {
     val circe                 = "0.14.2"
     val circeGolden           = "0.3.0"
     val clue                  = "0.23.1"
-    val crystal               = "0.31.2"
+    val crystal               = "0.31.3"
     val discipline            = "1.5.1"
     val disciplineMUnit       = "1.0.9"
     val fs2                   = "3.3.0"
@@ -27,11 +27,11 @@ object Settings {
     val lucumaBC              = "0.4.0"
     val lucumaCore            = "0.55.1"
     val lucumaCatalog         = "0.29.2"
-    val lucumaReactVersion    = "0.3.0"
+    val lucumaReactVersion    = "0.4.0"
     val lucumaRefinedVersion  = "0.1.1"
     val lucumaSchemas         = "0.37.3"
     val lucumaSSO             = "0.4.1"
-    val lucumaUI              = "0.44.1"
+    val lucumaUI              = "0.44.2"
     val monocle               = "3.1.0"
     val mouse                 = "1.1.0"
     val mUnit                 = "0.7.29"
@@ -223,6 +223,7 @@ object Settings {
         "edu.gemini" %%% "lucuma-react-circular-progressbar",
         "edu.gemini" %%% "lucuma-react-datepicker",
         "edu.gemini" %%% "lucuma-react-draggable",
+        "edu.gemini" %%% "lucuma-react-floatingui",
         "edu.gemini" %%% "lucuma-react-font-awesome",
         "edu.gemini" %%% "lucuma-react-grid-layout",
         "edu.gemini" %%% "lucuma-react-highcharts",
