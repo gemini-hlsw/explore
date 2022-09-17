@@ -71,29 +71,28 @@ object AsterismEditorTile {
       control = s => control.some.filter(_ => s === TileSizeState.Minimized),
       bodyClass = Some(ExploreStyles.TargetTileBody)
     )((renderInTitle: Tile.RenderInTitle) =>
-      potRender[(View[Option[Asterism]], Option[ScienceMode])] {
-        (asterismMode: (View[Option[Asterism]], Option[ScienceMode])) =>
-          val (asterism, scienceMode) = asterismMode
-          userId.map(uid =>
-            AsterismEditor(
-              uid,
-              programId,
-              obsId,
-              asterism,
-              potVizTime,
-              scienceMode,
-              posAngle,
-              constraints,
-              wavelength,
-              currentTarget,
-              setTarget,
-              otherObsCount,
-              undoStacks,
-              searching,
-              hiddenColumns,
-              renderInTitle
-            )
-          ): VdomNode
+      potRender[(View[Option[Asterism]], Option[ScienceMode])] { case (asterism, scienceMode) =>
+        // val focusedAsterism
+        userId.map(uid =>
+          AsterismEditor(
+            uid,
+            programId,
+            obsId,
+            asterism,
+            potVizTime,
+            scienceMode,
+            posAngle,
+            constraints,
+            wavelength,
+            currentTarget,
+            setTarget,
+            otherObsCount,
+            undoStacks,
+            searching,
+            hiddenColumns,
+            renderInTitle
+          )
+        )
       }(
         potAsterismMode
       )

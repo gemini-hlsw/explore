@@ -107,7 +107,7 @@ trait CatalogCache extends CatalogIDB {
     (tracking.at(start.toInstant(Constants.UTCOffset)),
      tracking.at(end.toInstant(Constants.UTCOffset))
     ).mapN { (a, b) =>
-      // Make a time based query for pm over a year
+      // Make a query based on two coordinates of the base of an asterism over a year
       val query = CoordinatesRangeQueryByADQL(
         NonEmptyList.of(a, b),
         probeArm.candidatesArea,

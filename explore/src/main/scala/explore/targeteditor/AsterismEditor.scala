@@ -130,11 +130,11 @@ object AsterismEditor {
           // if the selected targetId is None, or not in the asterism, select the first target (if any)
           // Need to replace history here.
           oTargetId match {
-            case None                                               =>
-              asterism.foldMap(a => props.setTarget(a.head.id.some, SetRouteVia.HistoryReplace))
-            case Some(current) if asterism.exists(_.hasId(current)) => Callback.empty
-            case _                                                  =>
-              props.setTarget(asterism.map(_.head.id), SetRouteVia.HistoryReplace)
+            case None                                                     =>
+              asterism.foldMap(a => props.setTarget(a.focus.id.some, SetRouteVia.HistoryReplace))
+            case Some(current) if asterism.exists(_.focus.id === current) => Callback.empty
+            case current @ Some(_)                                        =>
+              props.setTarget(current, SetRouteVia.HistoryReplace)
           }
       }
       // full screen aladin
@@ -206,11 +206,6 @@ object AsterismEditor {
               val targetInAsterism   = Asterism.targetOptional(targetId)
               val selectedTargetView = props.asterism.zoom(targetInAsterism)
 
-              val p: Option[View[Zipper[TargetWithId]]] =
-                props.asterism
-                  .zoom(some.andThen(Asterism.toZipperLens(targetId)).andThen(some))
-                  .asView
-
               val otherObsCount = props.otherObsCount(targetId)
               val plural        = if (otherObsCount === 1) "" else "s"
 
@@ -239,11 +234,10 @@ object AsterismEditor {
                           onChange = (_: Boolean) => editScope.setState(1)
                         )
                       ).when(otherObsCount > 0),
-                      p.map { ast =>
+                      props.asterism.mapValue(asterism =>
                         SiderealTargetEditor(
                           props.userId,
-                          props.asterism.get.get,
-                          ast,
+                          asterism,
                           vizTime,
                           props.posAngle,
                           props.scienceMode,
@@ -257,7 +251,7 @@ object AsterismEditor {
                             else none,
                           fullScreen = fullScreen
                         )
-                      }
+                      )
                     )
                   case _                                                =>
                     <.div("Non-sidereal targets not supported")

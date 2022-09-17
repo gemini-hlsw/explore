@@ -42,13 +42,6 @@ class AsterismSuite extends DisciplineSuite:
     }
   }
 
-  test("toZipperLens") {
-    forAll { (id: Target.Id) =>
-      given Arbitrary[Asterism] = gen.asterism(id)
-      checkAll("Asterism.toZipperLens", LensTests(Asterism.toZipperLens(id)))
-    }
-  }
-
   object gen:
     // Sometimes the asterisms includes target id
     def optAsterism(id: Target.Id): Arbitrary[Option[Asterism]] =

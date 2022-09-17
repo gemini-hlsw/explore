@@ -82,7 +82,6 @@ object AladinContainer {
       }
       // View coordinates base coordinates with pm correction + user panning
       .useStateBy { (p, baseCoordinates) =>
-        println(baseCoordinates.value)
         baseCoordinates.value.offsetBy(Angle.Angle0, p.options.viewOffset)
       }
       // Ref to the aladin component

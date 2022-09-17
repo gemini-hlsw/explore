@@ -17,36 +17,6 @@ import monocle.*
 
 import java.time.Instant
 
-/**
- * Generic representation to track an object. It is generalization of SiderealTracking but allows
- * tracking "virtual" objects like the center of an asterism
- */
-sealed trait ObjectTracking derives Eq {
-  def at(i: Instant): Option[Coordinates]
-  def baseCoordinates: Coordinates
-}
-
-object ObjectTracking {
-  case class ConstantTracking(coord: Coordinates) extends ObjectTracking derives Eq {
-    def at(i: Instant): Option[Coordinates] = coord.some
-    def baseCoordinates: Coordinates        = coord
-  }
-
-  case class SiderealObjectTracking(tracking: SiderealTracking) extends ObjectTracking derives Eq {
-    def at(i: Instant): Option[Coordinates] = tracking.at(i)
-
-    def baseCoordinates: Coordinates = tracking.baseCoordinates
-  }
-
-  def const(coord: Coordinates): ObjectTracking = ConstantTracking(coord)
-
-  def fromTarget(target: Target): ObjectTracking = target match {
-    case t: Target.Sidereal => SiderealObjectTracking(t.tracking)
-    case _                  => sys.error("Only sidereal targets supported")
-  }
-
-}
-
 extension (a: NonEmptyList[TargetWithId])
   def centerOf: Coordinates =
     val coords = a.map(_.toSidereal).collect { case Some(x) =>
@@ -54,7 +24,10 @@ extension (a: NonEmptyList[TargetWithId])
     }
     Coordinates.centerOf(coords)
 
-case class Asterism(private val targets: NonEmptyList[TargetWithId]) derives Eq {
+/**
+ * Contains a list of targets focused on the selected one on the UI
+ */
+case class Asterism(private val targets: Zipper[TargetWithId]) derives Eq {
   def toSiderealAt(vizTime: Instant): List[SiderealTargetWithId] =
     targets.traverse(_.toSidereal.map(_.at(vizTime))).foldMap(_.toList)
 
@@ -63,35 +36,41 @@ case class Asterism(private val targets: NonEmptyList[TargetWithId]) derives Eq 
   def add(t: TargetWithId): Asterism =
     Asterism.isoTargets.reverse.modify(_ :+ t)(this)
 
-  def ids: NonEmptyList[Target.Id] = targets.map(_.id)
+  def ids: NonEmptyList[Target.Id] = targets.toNel.map(_.id)
 
   def remove(id: Target.Id): Option[Asterism] =
     if (hasId(id)) {
-      val filtered = targets.filter(_.id =!= id)
+      val filtered = targets.toNel.filter(_.id =!= id)
       Asterism.fromTargets(filtered)
     } else this.some
 
-  def head = targets.head
+  def focus = targets.focus
 
-  def toZipper(id: Target.Id): Option[Zipper[TargetWithId]] =
-    Zipper.fromNel(targets).findFocus(_.id === id)
+  def focusOn(tid: Target.Id): Asterism =
+    targets.findFocus(_.id === tid).map(Asterism.apply).getOrElse(this)
 
   def baseTracking: ObjectTracking =
     if (targets.length > 1)
-      ObjectTracking.const(targets.centerOf)
-    else ObjectTracking.fromTarget(targets.head.target)
+      ObjectTracking.const(targets.toNel.centerOf)
+    else ObjectTracking.fromTarget(targets.focus.target)
 
   def hasId(id: Target.Id): Boolean = targets.exists(_.id === id)
 }
 
 object Asterism {
   val isoTargets: Iso[NonEmptyList[TargetWithId], Asterism] =
-    Iso[Asterism, NonEmptyList[TargetWithId]](_.targets)(Asterism.apply).reverse
+    Iso[Asterism, NonEmptyList[TargetWithId]](_.targets.toNel)(s =>
+      Asterism(Zipper.fromNel(s))
+    ).reverse
 
   def oneTarget(id: Target.Id): Iso[Asterism, Target] =
-    Iso[Asterism, Target](_.targets.head.target)(t => Asterism.one(TargetWithId(id, t)))
+    Iso[Asterism, Target](_.targets.focus.target)(t => Asterism.one(TargetWithId(id, t)))
 
   val targetsEach: Traversal[Asterism, TargetWithId] = isoTargets.reverse.each
+
+  val targets: Lens[Asterism, Zipper[TargetWithId]] = Focus[Asterism](_.targets)
+
+  val focus: Lens[Asterism, TargetWithId] = targets.andThen(Zipper.focus)
 
   val siderealTargetsEach: Traversal[Asterism, SiderealTargetWithId] =
     targetsEach.andThen(TargetWithId.sidereal)
@@ -102,16 +81,11 @@ object Asterism {
       case _                       => Nil
     }
 
-  def toZipperLens(id: Target.Id): Lens[Asterism, Option[Zipper[TargetWithId]]] =
-    Lens[Asterism, Option[Zipper[TargetWithId]]](_.toZipper(id))(z =>
-      a => z.map(z => Asterism(z.toNel)).getOrElse(a)
-    )
-
   def fromTargets(targets: List[TargetWithId]): Option[Asterism] =
-    NonEmptyList.fromList(targets).map(Asterism.apply)
+    NonEmptyList.fromList(targets).map(s => Asterism(Zipper.fromNel(s)))
 
   def one(targets: TargetWithId): Asterism =
-    Asterism(NonEmptyList.one(targets))
+    Asterism(Zipper.of(targets))
 
   def targetOptional(targetId: Target.Id): Optional[Option[Asterism], TargetWithId] =
     Optional[Option[Asterism], TargetWithId](

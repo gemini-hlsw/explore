@@ -37,23 +37,20 @@ object SiderealTargetEditorTile {
     Tile(ObsTabTilesIds.TargetId.id, title, back = backButton, canMinimize = true) {
       (renderInTitle: Tile.RenderInTitle) =>
         val asterism = target.widen[Target].zoom(Asterism.oneTarget(targetId).reverse.asLens)
-        asterism.zoom(Asterism.toZipperLens(targetId).andThen(some)).asView.flatMap { zipperView =>
-          userId.map(uid =>
-            SiderealTargetEditor(
-              uid,
-              asterism.get,
-              zipperView,
-              vizTime,
-              none,
-              none,
-              none,
-              none,
-              undoStacks,
-              searching,
-              renderInTitle = renderInTitle.some,
-              fullScreen = fullScreen
-            )
+        userId.map(uid =>
+          SiderealTargetEditor(
+            uid,
+            asterism,
+            vizTime,
+            none,
+            none,
+            none,
+            none,
+            undoStacks,
+            searching,
+            renderInTitle = renderInTitle.some,
+            fullScreen = fullScreen
           )
-        }
+        )
     }
 }

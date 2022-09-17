@@ -218,11 +218,14 @@ object ObsTabTiles {
           tid:                          Option[Target.Id],
           via:                          SetRouteVia
         ): Callback =
-          props.ctx.setPageVia(AppTab.Observations,
-                               programId,
-                               Focused(oid.map(ObsIdSet.one), tid),
-                               via
-          )
+          (potAsterism.toOption, tid)
+            .mapN((pot, tid) => pot.mod(_.map(_.focusOn(tid))))
+            .getOrEmpty *>
+            props.ctx.setPageVia(AppTab.Observations,
+                                 programId,
+                                 Focused(oid.map(ObsIdSet.one), tid),
+                                 via
+            )
 
         val targetTile = AsterismEditorTile.asterismEditorTile(
           props.userId,

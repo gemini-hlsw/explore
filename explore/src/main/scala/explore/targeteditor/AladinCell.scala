@@ -176,10 +176,6 @@ object AladinCell extends ModelOptics {
                 props.asterism.asList
                   .flatMap(_.toSidereal)
                   .flatMap(_.target.tracking.at(vizTime))
-                // .collect { case t @ SiderealTracking(_, _, _, _, _) =>
-                //   t.at(vizTime)
-                // }
-                // .flattenOption
 
               for {
                 _ <- selectedIndex.async.set(none)
