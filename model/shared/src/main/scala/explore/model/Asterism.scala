@@ -9,18 +9,18 @@ import cats.derived.*
 import cats.syntax.all.*
 import lucuma.core.data.Zipper
 import lucuma.core.math.Coordinates
+import lucuma.core.math.Epoch
+import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.refined.*
 import monocle.*
 
 import java.time.Instant
-import lucuma.core.model.SiderealTracking
-import lucuma.core.math.Epoch
 
 /**
-  * Generic representation to track an object. It is generalization of SiderealTracking
-  * but allows tracking "virtual" objects like the center of an asterism
-  */
+ * Generic representation to track an object. It is generalization of SiderealTracking but allows
+ * tracking "virtual" objects like the center of an asterism
+ */
 sealed trait ObjectTracking derives Eq {
   def at(i: Instant): Option[Coordinates]
   def baseCoordinates: Coordinates

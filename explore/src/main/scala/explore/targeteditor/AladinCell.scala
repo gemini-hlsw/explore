@@ -19,6 +19,7 @@ import explore.common.UserPreferencesQueries.*
 import explore.components.ui.ExploreStyles
 import explore.events.*
 import explore.implicits.*
+import explore.model.Asterism
 import explore.model.Constants
 import explore.model.ObsConfiguration
 import explore.model.TargetVisualOptions
@@ -58,7 +59,6 @@ import react.semanticui.sizes.*
 import java.time.Duration
 import java.time.Instant
 import scala.concurrent.duration.*
-import explore.model.Asterism
 
 case class AladinCell(
   uid:           User.Id,

@@ -12,6 +12,7 @@ import coulomb.syntax.*
 import eu.timepit.refined._
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.api.Validate
+import explore.model.ObjectTracking
 import lucuma.ags.AgsAnalysis
 import lucuma.ags.AgsParams
 import lucuma.ags.AgsPosition
@@ -30,13 +31,12 @@ import lucuma.core.math.ProperMotion
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.RightAscension
 import lucuma.core.math.Wavelength
+import lucuma.core.model.CatalogInfo.apply
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.core.util.Enumerated
-import explore.model.ObjectTracking
-import lucuma.core.model.CatalogInfo.apply
 
 // Boopicklers for catalog related types
 trait CatalogPicklers extends CommonPicklers {

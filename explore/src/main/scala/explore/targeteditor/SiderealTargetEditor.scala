@@ -22,6 +22,7 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits.*
+import explore.model.Asterism
 import explore.model.ExploreModelValidators
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
@@ -63,7 +64,6 @@ import react.semanticui.elements.label.LabelPointing
 import react.semanticui.sizes.Small
 
 import java.time.Instant
-import explore.model.Asterism
 
 case class SearchCallback(
   searchTerm: NonEmptyString,
@@ -75,7 +75,7 @@ case class SearchCallback(
 
 case class SiderealTargetEditor(
   uid:           User.Id,
-  asteris:       Asterism,
+  asterism:      Asterism,
   targetsZipper: View[Zipper[TargetWithId]],
   vizTime:       Option[Instant],
   posAngle:      Option[PosAngleConstraint],

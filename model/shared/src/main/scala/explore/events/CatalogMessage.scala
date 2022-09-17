@@ -5,13 +5,13 @@ package explore.events
 
 import boopickle.DefaultBasic.*
 import boopickle.Pickler
+import explore.model.ObjectTracking
 import explore.model.boopickle.CatalogPicklers
 import lucuma.ags.GuideStarCandidate
 import workers.WorkerRequest
 
 import java.time.Duration
 import java.time.Instant
-import explore.model.ObjectTracking
 
 object CatalogMessage extends CatalogPicklers {
   sealed trait Request extends WorkerRequest
