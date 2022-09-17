@@ -17,6 +17,10 @@ import java.time.Instant
 import lucuma.core.model.SiderealTracking
 import lucuma.core.math.Epoch
 
+/**
+  * Generic representation to track an object. It is generalization of SiderealTracking
+  * but allows tracking "virtual" objects like the center of an asterism
+  */
 sealed trait ObjectTracking derives Eq {
   def at(i: Instant): Option[Coordinates]
   def baseCoordinates: Coordinates
@@ -43,6 +47,13 @@ object ObjectTracking {
 
 }
 
+extension (a: NonEmptyList[TargetWithId])
+  def centerOf: Coordinates =
+    val coords = a.map(_.toSidereal).collect { case Some(x) =>
+      x.target.tracking.baseCoordinates
+    }
+    Coordinates.centerOf(coords)
+
 case class Asterism(private val targets: NonEmptyList[TargetWithId]) derives Eq {
   def toSiderealAt(vizTime: Instant): List[SiderealTargetWithId] =
     targets.traverse(_.toSidereal.map(_.at(vizTime))).foldMap(_.toList)
@@ -60,27 +71,15 @@ case class Asterism(private val targets: NonEmptyList[TargetWithId]) derives Eq 
       Asterism.fromTargets(filtered)
     } else this.some
 
+  def head = targets.head
+
   def toZipper(id: Target.Id): Option[Zipper[TargetWithId]] =
     Zipper.fromNel(targets).findFocus(_.id === id)
 
-  // This should be calculatedd from the other targets or manually overriden
-  def baseTarget: ObjectTracking =
-    if (targets.length > 1) {
-      val t1 = targets.head
-      val t2 = targets.last
-      val c1 = t1.toSidereal.get.target.tracking.baseCoordinates
-      val c2 = t2.toSidereal.get.target.tracking.baseCoordinates
-      ObjectTracking.const(c1.interpolate(c2, 0.5))
-    } else ObjectTracking.fromTarget(targets.head.target)
-
-  // def baseCoordinatesAt(i: Instant): Option[Coordinates] =
-  //   baseTarget.tracking.at(i)
-  //
-  // def baseCoordinates: Coordinates =
-  //   baseTarget.tracking.baseCoordinates
-
-  // Eventually this need to be generalized for non-sidereals
-  // def baseTracking: SiderealTracking = SiderealTracking.const(baseCoordinates)
+  def baseTracking: ObjectTracking =
+    if (targets.length > 1)
+      ObjectTracking.const(targets.centerOf)
+    else ObjectTracking.fromTarget(targets.head.target)
 
   def hasId(id: Target.Id): Boolean = targets.exists(_.id === id)
 }

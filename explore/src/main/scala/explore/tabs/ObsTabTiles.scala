@@ -162,7 +162,7 @@ object ObsTabTiles {
         val targetCoords: Option[Coordinates] =
           potAsterism.toOption
             .flatMap(
-              _.get.map(_.baseTarget.baseCoordinates)
+              _.get.map(_.baseTracking.baseCoordinates)
             )
 
         val spectroscopyReqs: Option[ScienceRequirementsData] =

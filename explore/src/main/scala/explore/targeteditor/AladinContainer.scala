@@ -78,7 +78,7 @@ object AladinContainer {
       .withHooks[Props]
       // Base coordinates with pm correction if possible
       .useMemoBy(_.obsConf.vizTime) { p => i =>
-        p.asterism.baseTarget.at(i).getOrElse(p.asterism.baseTarget.baseCoordinates)
+        p.asterism.baseTracking.at(i).getOrElse(p.asterism.baseTracking.baseCoordinates)
       }
       // View coordinates base coordinates with pm correction + user panning
       .useStateBy { (p, baseCoordinates) =>
@@ -268,7 +268,7 @@ object AladinContainer {
               SVGTarget.CrosshairTarget(baseCoordinates.value, ExploreStyles.ScienceTarget, 10),
               SVGTarget.CircleTarget(baseCoordinates.value, ExploreStyles.BaseTarget, 3),
               SVGTarget.LineTo(baseCoordinates.value,
-                               props.asterism.baseTarget.baseCoordinates,
+                               props.asterism.baseTracking.baseCoordinates,
                                ExploreStyles.PMCorrectionLine
               )
             )

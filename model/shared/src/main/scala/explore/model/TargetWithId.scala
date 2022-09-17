@@ -26,12 +26,7 @@ import java.time.Instant
 import java.time.LocalDateTime
 import scala.collection.immutable.SortedMap
 
-trait WithId[A <: Target] {
-  def id: Target.Id
-  def target: A
-}
-
-case class TargetWithId(id: Target.Id, target: Target) extends WithId[Target] derives Eq {
+case class TargetWithId(id: Target.Id, target: Target) derives Eq {
   def toOptId: TargetWithOptId = TargetWithOptId(id.some, target)
 
   def toSidereal: Option[SiderealTargetWithId] = TargetWithId.sidereal.getOption(this)
@@ -74,8 +69,7 @@ object TargetWithId {
 
 case class TargetWithOptId(optId: Option[Target.Id], target: Target) derives Eq
 
-case class SiderealTargetWithId(id: Target.Id, target: Target.Sidereal)
-    extends WithId[Target.Sidereal] derives Eq {
+case class SiderealTargetWithId(id: Target.Id, target: Target.Sidereal) derives Eq {
   def toTargetWithId = TargetWithId(id, target)
 
   def at(i: Instant): SiderealTargetWithId = {
@@ -96,7 +90,6 @@ object SiderealTargetWithId:
   val id: Lens[SiderealTargetWithId, Target.Id]           = Focus[SiderealTargetWithId](_.id)
   val target: Lens[SiderealTargetWithId, Target.Sidereal] = Focus[SiderealTargetWithId](_.target)
 
-case class NonsiderealTargetWithId(id: Target.Id, target: Target.Nonsidereal)
-    extends WithId[Target.Nonsidereal] derives Eq {
+case class NonsiderealTargetWithId(id: Target.Id, target: Target.Nonsidereal) derives Eq {
   def toTargetWithId = TargetWithId(id, target)
 }

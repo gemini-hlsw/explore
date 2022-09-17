@@ -120,17 +120,6 @@ trait CatalogPicklers extends CommonPicklers {
       .addConcreteType[AgsAnalysis.NoMagnitudeForBand]
       .addConcreteType[AgsAnalysis.Usable]
 
-  // given Pickler[CatalogInfo] = generatePickler
-  //
-  // given Pickler[Target.Sidereal] = generatePickler
-  //
-  // given Pickler[Target.Nonsidereal] = generatePickler
-  //
-  // given Pickler[Target] =
-  //   compositePickler[Target]
-  //     .addConcreteType[Target.Sidereal]
-  //     .addConcreteType[Target.Nonsidereal]
-
   given Pickler[ObjectTracking.ConstantTracking] = generatePickler
 
   given Pickler[ObjectTracking.SiderealObjectTracking] = generatePickler
