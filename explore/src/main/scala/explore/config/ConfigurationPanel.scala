@@ -131,7 +131,7 @@ object ConfigurationPanel {
           )
       }
       .useEffectResultOnMountBy { (props, _) =>
-        given AppContextIO = props.ctx
+        import props.given
 
         ItcClient[IO]
           .requestSingle(
@@ -139,7 +139,7 @@ object ConfigurationPanel {
           )
       }
       .render { (props, editState, matrix) =>
-        given AppContextIO = props.ctx
+        import props.given
 
         val requirementsCtx: UndoSetter[ScienceRequirementsData] =
           props.scienceData.zoom(ScienceData.requirements)

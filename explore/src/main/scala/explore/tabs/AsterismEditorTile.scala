@@ -72,7 +72,6 @@ object AsterismEditorTile {
       bodyClass = Some(ExploreStyles.TargetTileBody)
     )((renderInTitle: Tile.RenderInTitle) =>
       potRender[(View[Option[Asterism]], Option[ScienceMode])] { case (asterism, scienceMode) =>
-        // val focusedAsterism
         userId.map(uid =>
           AsterismEditor(
             uid,

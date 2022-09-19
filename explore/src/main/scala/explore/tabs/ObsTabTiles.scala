@@ -221,8 +221,10 @@ object ObsTabTiles {
           via:                          SetRouteVia
         ): Callback =
           (potAsterism.toOption, tid)
+            // When selecting the current target focus the asterism zipper
             .mapN((pot, tid) => pot.mod(_.map(_.focusOn(tid))))
             .getOrEmpty *>
+            // Set the route base on the selected target
             props.ctx.setPageVia(AppTab.Observations,
                                  programId,
                                  Focused(oid.map(ObsIdSet.one), tid),
