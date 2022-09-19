@@ -159,11 +159,13 @@ object ObsTabTiles {
         val potAsterismMode: Pot[(View[Option[Asterism]], Option[ScienceMode])] =
           potAsterism.map(x => (x, scienceMode))
 
+        val vizTime = vizTimeView.toOption.flatMap(_.get)
+
+        // base coordinates corrected to vizTime
         val targetCoords: Option[Coordinates] =
-          potAsterism.toOption
-            .flatMap(
-              _.get.map(_.baseTracking.baseCoordinates)
-            )
+          (vizTime, potAsterism.toOption)
+            .mapN((instant, asterism) => asterism.get.flatMap(_.baseTracking.at(instant)))
+            .flatten
 
         val spectroscopyReqs: Option[ScienceRequirementsData] =
           obsView.toOption.map(_.get.scienceData.requirements)
@@ -272,7 +274,8 @@ object ObsTabTiles {
             ),
             props.undoStacks
               .zoom(ModelUndoStacks.forObservationData[IO])
-              .zoom(atMapWithDefault(props.obsId, UndoStacks.empty))
+              .zoom(atMapWithDefault(props.obsId, UndoStacks.empty)),
+            targetCoords
           )
 
         val rglRender: LayoutsMap => VdomNode = (l: LayoutsMap) =>
