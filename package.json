@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "@cquiroz/aladin-lite": "0.7.6",
-    "@floating-ui/react-dom-interactions": "^0.9.3",
+    "@floating-ui/react-dom-interactions": "^0.10.1",
     "@fortawesome/fontawesome-pro": "^6.1.2",
     "@fortawesome/fontawesome-svg-core": "^6.1.2",
     "@fortawesome/pro-duotone-svg-icons": "^6.1.2",
@@ -33,7 +33,7 @@
     "react-resize-detector": "7.1.2",
     "react-table": "7.8.0",
     "react-toastify": "^9.0.8",
-    "react-virtuoso": "2.18.0",
+    "react-virtuoso": "2.19.0",
     "rehype-katex": "^6.0.2",
     "remark-gfm": "^3.0.1",
     "remark-math": "^5.1.1",
@@ -64,7 +64,7 @@
     "vite": "3.1.0",
     "vite-plugin-fonts": "^0.2.2",
     "vite-plugin-mkcert": "^1.8.1",
-    "vite-plugin-pwa": "^0.12.7"
+    "vite-plugin-pwa": "^0.12.8"
   },
   "scripts": {
     "lint-dark": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/webapp/less/variables-dark.less > vars.css;trap \"rm vars.css\" EXIT;npx stylelint common/src/main/webapp/sass",
