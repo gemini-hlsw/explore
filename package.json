@@ -33,7 +33,7 @@
     "react-resize-detector": "7.1.2",
     "react-table": "7.8.0",
     "react-toastify": "^9.0.8",
-    "react-virtuoso": "2.18.0",
+    "react-virtuoso": "2.19.0",
     "rehype-katex": "^6.0.2",
     "remark-gfm": "^3.0.1",
     "remark-math": "^5.1.1",
@@ -61,10 +61,10 @@
     "stylelint-config-prettier": "^9.0.3",
     "stylelint-config-standard-scss": "^5.0.0",
     "terser": "5.15.0",
-    "vite": "3.1.0",
+    "vite": "3.1.3",
     "vite-plugin-fonts": "^0.2.2",
     "vite-plugin-mkcert": "^1.8.1",
-    "vite-plugin-pwa": "^0.12.7"
+    "vite-plugin-pwa": "^0.12.8"
   },
   "scripts": {
     "lint-dark": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/webapp/less/variables-dark.less > vars.css;trap \"rm vars.css\" EXIT;npx stylelint common/src/main/webapp/sass",
