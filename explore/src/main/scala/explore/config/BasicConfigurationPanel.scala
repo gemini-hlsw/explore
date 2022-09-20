@@ -16,6 +16,7 @@ import explore.components.ui.ExploreStyles
 import explore.implicits.*
 import explore.model
 import explore.model.ImagingConfigurationOptions
+import explore.model.PMCoordinates
 import explore.model.display.given
 import explore.model.itc.ItcTarget
 import explore.modes.SpectroscopyModesMatrix
@@ -45,7 +46,7 @@ case class BasicConfigurationPanel(
   scienceModeOpt:  View[Option[model.ScienceMode]],
   constraints:     ConstraintSet,
   itcTargets:      List[ItcTarget],
-  baseCoordinates: Option[Coordinates],
+  baseCoordinates: Option[PMCoordinates],
   onShowDetails:   Callback,
   confMatrix:      SpectroscopyModesMatrix
 )(using val ctx:   AppContextIO)

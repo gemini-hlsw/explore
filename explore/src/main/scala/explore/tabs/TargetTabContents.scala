@@ -407,12 +407,7 @@ object TargetTabContents {
         tid:                          Option[Target.Id],
         via:                          SetRouteVia
       ): Callback =
-        Callback
-          .log(s"qq $tid") *> ctx.setPageVia(AppTab.Targets,
-                                             programId,
-                                             Focused(oids.some, tid),
-                                             via
-        )
+        ctx.setPageVia(AppTab.Targets, programId, Focused(oids.some, tid), via)
 
       val asterismEditorTile =
         AsterismEditorTile.asterismEditorTile(
@@ -439,6 +434,7 @@ object TargetTabContents {
           _.mapValue(targetView =>
             targetView.get match {
               case TargetWithId(_, t @ Target.Sidereal(_, _, _, _)) =>
+                // TODO PM correction
                 Target.Sidereal.baseCoordinates.get(t).some
               case _                                                => none
             }
@@ -449,7 +445,7 @@ object TargetTabContents {
         ElevationPlotTile.elevationPlotTile(props.userId,
                                             props.focused.target,
                                             scienceMode,
-                                            selectedCoordinates.flatten,
+                                            selectedCoordinates.flatten.map(PMCoordinates.apply),
                                             vizTimeView.get
         )
 
@@ -504,7 +500,8 @@ object TargetTabContents {
           props.userId,
           targetId.some,
           none,
-          Target.Sidereal.baseCoordinates.get(target).some,
+          // TODO PM correct the coordinates
+          PMCoordinates(Target.Sidereal.baseCoordinates.get(target)).some,
           none
         )
 

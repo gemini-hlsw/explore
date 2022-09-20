@@ -12,6 +12,7 @@ import crystal.react.reuse.*
 import explore.events.PlotMessage.*
 import explore.highcharts.*
 import explore.implicits.*
+import explore.model.PMCoordinates
 import explore.model.WorkerClients.PlotClient
 import explore.model.boopickle.CommonPicklers.given
 import explore.syntax.*
@@ -49,7 +50,7 @@ import js.JSConverters._
 
 case class ElevationPlotSemester(
   site:             Site,
-  coords:           Coordinates,
+  coords:           PMCoordinates,
   semester:         Semester
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps(ElevationPlotSemester.component)
@@ -80,7 +81,11 @@ object ElevationPlotSemester {
 
               PlotClient[IO]
                 .request(
-                  RequestSemesterSidereal(props.semester, props.site, props.coords, PlotDayRate)
+                  RequestSemesterSidereal(props.semester,
+                                          props.site,
+                                          props.coords.value,
+                                          PlotDayRate
+                  )
                 )
                 .map(
                   _.groupWithin(100, 1500.millis)

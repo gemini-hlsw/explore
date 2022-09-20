@@ -21,6 +21,7 @@ import explore.model.Focused
 import explore.model.GridLayoutSection
 import explore.model.ModelUndoStacks
 import explore.model.ObsIdSet
+import explore.model.PMCoordinates
 import explore.model.ScienceMode
 import explore.model.TargetSummary
 import explore.model.display.given
@@ -162,10 +163,11 @@ object ObsTabTiles {
         val vizTime = vizTimeView.toOption.flatMap(_.get)
 
         // base coordinates corrected to vizTime
-        val targetCoords: Option[Coordinates] =
+        val targetCoords: Option[PMCoordinates] =
           (vizTime, potAsterism.toOption)
             .mapN((instant, asterism) => asterism.get.flatMap(_.baseTracking.at(instant)))
             .flatten
+            .map(PMCoordinates.apply)
 
         val spectroscopyReqs: Option[ScienceRequirementsData] =
           obsView.toOption.map(_.get.scienceData.requirements)

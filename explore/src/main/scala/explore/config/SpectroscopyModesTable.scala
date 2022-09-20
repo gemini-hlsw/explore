@@ -26,6 +26,7 @@ import explore.components.ui.ExploreStyles
 import explore.events.*
 import explore.implicits.*
 import explore.itc.*
+import explore.model.PMCoordinates
 import explore.model.Progress
 import explore.model.ScienceMode
 import explore.model.ScienceModeAdvanced
@@ -84,7 +85,7 @@ case class SpectroscopyModesTable(
   spectroscopyRequirements: SpectroscopyRequirementsData,
   constraints:              ConstraintSet,
   targets:                  Option[List[ItcTarget]],
-  baseCoordinates:          Option[Coordinates],
+  baseCoordinates:          Option[PMCoordinates],
   matrix:                   SpectroscopyModesMatrix,
   onSelect:                 Callback
 )(using val ctx:            AppContextIO)
@@ -389,7 +390,7 @@ private object SpectroscopyModesTable {
     ScalaFnComponent
       .withHooks[Props]
       // rows
-      .useMemoBy(p => (p.matrix, p.spectroscopyRequirements, p.baseCoordinates.map(_.dec))) {
+      .useMemoBy(p => (p.matrix, p.spectroscopyRequirements, p.baseCoordinates.map(_.value.dec))) {
         _ => (matrix, s, dec) =>
           val rows                =
             matrix

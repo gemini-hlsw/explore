@@ -7,6 +7,7 @@ import cats.syntax.all.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits.*
+import explore.model.PMCoordinates
 import explore.model.ScienceMode
 import explore.targeteditor.ElevationPlotSection
 import japgolly.scalajs.react.*
@@ -25,7 +26,7 @@ object ElevationPlotTile:
     uid:         Option[User.Id],
     tid:         Option[Target.Id],
     scienceMode: Option[ScienceMode],
-    coordinates: Option[Coordinates],
+    coordinates: Option[PMCoordinates],
     vizTime:     Option[Instant]
   )(using AppContextIO) =
     Tile(

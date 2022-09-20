@@ -30,6 +30,7 @@ import lucuma.core.model.ProposalClass
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.ui.reusability._
+import lucuma.utils.NewType
 
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.TreeSeqMap
@@ -115,4 +116,9 @@ object reusability {
   given Reusability[CoverageCenterWavelength] = Reusability.byEq
 
   given Reusability[ObjectTracking] = Reusability.byEq
+
+  given reusabilityNewType[W, T <: NewType[W]#Type](using
+    reusability: Reusability[W]
+  ): Reusability[T] =
+    reusability.asInstanceOf[Reusability[T]]
 }
