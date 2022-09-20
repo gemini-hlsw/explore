@@ -17,11 +17,11 @@ import explore.components.ui.ExploreStyles
 import explore.implicits.*
 import explore.model.Asterism
 import explore.model.ConstraintGroup
+import explore.model.CoordinatesAtVizTime
 import explore.model.Focused
 import explore.model.GridLayoutSection
 import explore.model.ModelUndoStacks
 import explore.model.ObsIdSet
-import explore.model.PMCoordinates
 import explore.model.ScienceMode
 import explore.model.TargetSummary
 import explore.model.display.given
@@ -163,7 +163,7 @@ object ObsTabTiles {
         val vizTime = vizTimeView.toOption.flatMap(_.get)
 
         // base coordinates corrected to vizTime
-        val targetCoords: Option[PMCoordinates] =
+        val targetCoords: Option[CoordinatesAtVizTime] =
           (vizTime, potAsterism.toOption)
             .mapN((instant, asterism) => asterism.get.flatMap(_.baseTracking.at(instant)))
             .flatten

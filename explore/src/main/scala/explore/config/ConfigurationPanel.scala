@@ -25,7 +25,7 @@ import explore.components.undo.UndoButtons
 import explore.events.*
 import explore.implicits.*
 import explore.model
-import explore.model.PMCoordinates
+import explore.model.CoordinatesAtVizTime
 import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.ItcPicklers.given
@@ -57,7 +57,7 @@ case class ConfigurationPanel(
   scienceData:     UndoContext[ScienceData],
   constraints:     ConstraintSet,
   itcTargets:      List[ItcTarget],
-  baseCoordinates: Option[PMCoordinates],
+  baseCoordinates: Option[CoordinatesAtVizTime],
   renderInTitle:   Tile.RenderInTitle
 )(using val ctx:   AppContextIO)
     extends ReactFnProps(ConfigurationPanel.component)

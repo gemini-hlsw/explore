@@ -26,7 +26,7 @@ import explore.components.ui.ExploreStyles
 import explore.events.*
 import explore.implicits.*
 import explore.itc.*
-import explore.model.PMCoordinates
+import explore.model.CoordinatesAtVizTime
 import explore.model.Progress
 import explore.model.ScienceMode
 import explore.model.ScienceModeAdvanced
@@ -85,7 +85,7 @@ case class SpectroscopyModesTable(
   spectroscopyRequirements: SpectroscopyRequirementsData,
   constraints:              ConstraintSet,
   targets:                  Option[List[ItcTarget]],
-  baseCoordinates:          Option[PMCoordinates],
+  baseCoordinates:          Option[CoordinatesAtVizTime],
   matrix:                   SpectroscopyModesMatrix,
   onSelect:                 Callback
 )(using val ctx:            AppContextIO)

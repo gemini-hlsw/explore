@@ -442,11 +442,12 @@ object TargetTabContents {
         )
 
       val skyPlotTile =
-        ElevationPlotTile.elevationPlotTile(props.userId,
-                                            props.focused.target,
-                                            scienceMode,
-                                            selectedCoordinates.flatten.map(PMCoordinates.apply),
-                                            vizTimeView.get
+        ElevationPlotTile.elevationPlotTile(
+          props.userId,
+          props.focused.target,
+          scienceMode,
+          selectedCoordinates.flatten.map(CoordinatesAtVizTime.apply),
+          vizTimeView.get
         )
 
       val rglRender: LayoutsMap => VdomNode = (l: LayoutsMap) =>
@@ -501,7 +502,7 @@ object TargetTabContents {
           targetId.some,
           none,
           // TODO PM correct the coordinates
-          PMCoordinates(Target.Sidereal.baseCoordinates.get(target)).some,
+          CoordinatesAtVizTime(Target.Sidereal.baseCoordinates.get(target)).some,
           none
         )
 

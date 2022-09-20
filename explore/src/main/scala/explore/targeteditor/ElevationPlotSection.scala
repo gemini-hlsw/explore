@@ -16,8 +16,8 @@ import explore.common.UserPreferencesQueries.*
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.implicits.*
+import explore.model.CoordinatesAtVizTime
 import explore.model.ElevationPlotOptions
-import explore.model.PMCoordinates
 import explore.model.ScienceMode
 import explore.model.enums.PlotRange
 import explore.model.enums.TimeDisplay
@@ -48,7 +48,7 @@ case class ElevationPlotSection(
   tid:               Target.Id,
   scienceMode:       Option[ScienceMode],
   visualizationTime: Option[Instant],
-  coords:            PMCoordinates
+  coords:            CoordinatesAtVizTime
 )(using val ctx:     AppContextIO)
     extends ReactFnProps(ElevationPlotSection.component)
 

@@ -12,7 +12,7 @@ import explore.common.ObsQueries.*
 import explore.components.Tile
 import explore.config.ConfigurationPanel
 import explore.implicits.*
-import explore.model.PMCoordinates
+import explore.model.CoordinatesAtVizTime
 import explore.undo.*
 import explore.utils.*
 import lucuma.core.math.Coordinates
@@ -26,7 +26,7 @@ object ConfigurationTile {
     obsId:           Observation.Id,
     obsData:         Pot[(String, Option[NonEmptyString], View[ScienceData])],
     undoStacks:      View[UndoStacks[IO, ScienceData]],
-    baseCoordinates: Option[PMCoordinates]
+    baseCoordinates: Option[CoordinatesAtVizTime]
   )(using AppContextIO) =
     Tile(
       ObsTabTilesIds.ConfigurationId.id,

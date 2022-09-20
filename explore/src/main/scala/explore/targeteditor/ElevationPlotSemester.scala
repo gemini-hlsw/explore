@@ -12,7 +12,7 @@ import crystal.react.reuse.*
 import explore.events.PlotMessage.*
 import explore.highcharts.*
 import explore.implicits.*
-import explore.model.PMCoordinates
+import explore.model.CoordinatesAtVizTime
 import explore.model.WorkerClients.PlotClient
 import explore.model.boopickle.CommonPicklers.given
 import explore.syntax.*
@@ -50,7 +50,7 @@ import js.JSConverters._
 
 case class ElevationPlotSemester(
   site:             Site,
-  coords:           PMCoordinates,
+  coords:           CoordinatesAtVizTime,
   semester:         Semester
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps(ElevationPlotSemester.component)

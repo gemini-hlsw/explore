@@ -9,7 +9,7 @@ import cats.syntax.all._
 import explore.components.ui.ExploreStyles
 import explore.highcharts.*
 import explore.implicits._
-import explore.model.PMCoordinates
+import explore.model.CoordinatesAtVizTime
 import explore.model.enums.TimeDisplay
 import explore.syntax.ui.*
 import explore.syntax.ui.given
@@ -47,7 +47,7 @@ import js.JSConverters._
 
 case class ElevationPlotNight(
   site:        Site,
-  coords:      PMCoordinates,
+  coords:      CoordinatesAtVizTime,
   date:        LocalDate,
   timeDisplay: TimeDisplay
 ) extends ReactFnProps(ElevationPlotNight.component)
