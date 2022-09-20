@@ -42,6 +42,13 @@ class AsterismSuite extends DisciplineSuite:
     }
   }
 
+  test("fromTargetsListOn") {
+    forAll { (id: Target.Id) =>
+      given Arbitrary[Option[Asterism]] = gen.optAsterism(id)
+      checkAll("Asterism.fromTargetsListOn", IsoTests(Asterism.fromTargetsListOn(Some(id))))
+    }
+  }
+
   object gen:
     // Sometimes the asterisms includes target id
     def optAsterism(id: Target.Id): Arbitrary[Option[Asterism]] =

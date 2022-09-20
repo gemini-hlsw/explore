@@ -151,7 +151,7 @@ object ObsTabTiles {
               ObsEditData.scienceData
                 .andThen(ScienceData.targets)
                 .andThen(ObservationData.TargetEnvironment.asterism)
-            ).zoom(Asterism.fromTargetsList.asLens)
+            ).zoom(Asterism.fromTargetsListOn(props.focusedTarget).asLens)
           )
 
         val vizTimeView: Pot[View[Option[Instant]]] =

@@ -75,6 +75,9 @@ object Asterism {
 
   val focus: Lens[Asterism, TargetWithId] = targets.andThen(Zipper.focus)
 
+  def fromTargets(targets: List[TargetWithId]): Option[Asterism] =
+    NonEmptyList.fromList(targets).map(s => Asterism(Zipper.fromNel(s)))
+
   val siderealTargetsEach: Traversal[Asterism, SiderealTargetWithId] =
     targetsEach.andThen(TargetWithId.sidereal)
 
@@ -84,8 +87,13 @@ object Asterism {
       case _                       => Nil
     }
 
-  def fromTargets(targets: List[TargetWithId]): Option[Asterism] =
-    NonEmptyList.fromList(targets).map(s => Asterism(Zipper.fromNel(s)))
+  def fromTargetsListOn(id: Option[Target.Id]): Iso[List[TargetWithId], Option[Asterism]] =
+    Iso[List[TargetWithId], Option[Asterism]]((tl: List[TargetWithId]) =>
+      fromTargets(tl).flatMap(a => id.map(a.focusOn).orElse(a.some))
+    ) {
+      case Some(Asterism(targets)) => targets.toList
+      case _                       => Nil
+    }
 
   def one(targets: TargetWithId): Asterism =
     Asterism(Zipper.of(targets))
