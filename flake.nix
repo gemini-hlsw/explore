@@ -23,6 +23,7 @@
         devShell = pkgs.devshell.mkShell {
           imports = [ typelevel-nix.typelevelShell ];
           packages = [
+            pkgs.nodePackages.typescript-language-server
             pkgs.nodePackages.vscode-langservers-extracted
             pkgs.nodePackages.prettier
             pkgs.nodePackages.graphqurl
@@ -31,6 +32,12 @@
             nodejs.enable = true;
             jdk.package = pkgs.jdk17;
           };
+          env = [
+            {
+              name = "NODE_OPTIONS";
+              value = "--max-old-space-size=8192";
+            }
+          ];
         };
       }
 
