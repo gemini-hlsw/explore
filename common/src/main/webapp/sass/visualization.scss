@@ -108,6 +108,11 @@
     display: none;
   }
 
+  .science-target {
+    display: inline;
+    fill: hsl(240deg, 100.0%, 60.2%)
+  }
+
   .arrow-between-targets {
     stroke: darkblue;
     stroke-width: 2px;

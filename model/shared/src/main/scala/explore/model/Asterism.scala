@@ -31,6 +31,9 @@ case class Asterism(private val targets: Zipper[TargetWithId]) derives Eq {
   def toSiderealAt(vizTime: Instant): List[SiderealTargetWithId] =
     targets.traverse(_.toSidereal.map(_.at(vizTime))).foldMap(_.toList)
 
+  def toSidereal: List[SiderealTargetWithId] =
+    targets.traverse(_.toSidereal).foldMap(_.toList)
+
   def asList: List[TargetWithId] = targets.toList
 
   def add(t: TargetWithId): Asterism =

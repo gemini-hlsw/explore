@@ -137,7 +137,7 @@ object AladinCell extends ModelOptics {
                     )
                     .ready
                 )
-                .to[IO] *> props.fullScreen.set(fullScreen).to[IO]
+                .to[IO]
             }
       }
       // Selected GS index. Should be stored in the db
@@ -185,7 +185,7 @@ object AladinCell extends ModelOptics {
                          AgsMessage.Request(props.tid,
                                             constraints,
                                             wavelength,
-                                            base,
+                                            base.value,
                                             sciencePositions,
                                             basePos,
                                             params,

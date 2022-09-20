@@ -17,6 +17,7 @@ import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.Target
 import lucuma.core.model.UnnormalizedSED
 import lucuma.refined.*
+import lucuma.utils.NewType
 
 import scala.collection.immutable.SortedMap
 
@@ -45,4 +46,8 @@ package object model {
       ),
       none
     )
+
+// Tag to indicate the coordinates have been corrected for proper motion
+  object PMCoordinates extends NewType[Coordinates]
+  type PMCoordinates = PMCoordinates.Type
 }

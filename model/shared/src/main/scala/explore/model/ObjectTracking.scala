@@ -17,18 +17,18 @@ import java.time.Instant
  * tracking "virtual" objects like the center of an asterism
  */
 sealed trait ObjectTracking derives Eq {
-  def at(i: Instant): Option[Coordinates]
+  def at(i: Instant): Option[PMCoordinates]
   def baseCoordinates: Coordinates
 }
 
 object ObjectTracking {
   case class ConstantTracking(coord: Coordinates) extends ObjectTracking derives Eq {
-    def at(i: Instant): Option[Coordinates] = coord.some
-    def baseCoordinates: Coordinates        = coord
+    def at(i: Instant): Option[PMCoordinates] = PMCoordinates(coord).some
+    def baseCoordinates: Coordinates          = coord
   }
 
   case class SiderealObjectTracking(tracking: SiderealTracking) extends ObjectTracking derives Eq {
-    def at(i: Instant): Option[Coordinates] = tracking.at(i)
+    def at(i: Instant): Option[PMCoordinates] = tracking.at(i).map(PMCoordinates.apply)
 
     def baseCoordinates: Coordinates = tracking.baseCoordinates
   }

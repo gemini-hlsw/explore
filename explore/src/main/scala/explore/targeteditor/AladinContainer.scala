@@ -76,13 +76,19 @@ object AladinContainer {
   private val component =
     ScalaFnComponent
       .withHooks[Props]
-      // Base coordinates with pm correction if possible
+      // Base coordinates and science targets with pm correction if possible
       .useMemoBy(_.obsConf.vizTime) { p => i =>
-        p.asterism.baseTracking.at(i).getOrElse(p.asterism.baseTracking.baseCoordinates)
+        val base    = p.asterism.baseTracking
+          .at(i)
+          .map(_.value)
+          .getOrElse(p.asterism.baseTracking.baseCoordinates)
+        val science = p.asterism.toSidereal
+          .map(t => (t.target.tracking.at(i), t.target.tracking.baseCoordinates))
+        (base, science)
       }
       // View coordinates base coordinates with pm correction + user panning
       .useStateBy { (p, baseCoordinates) =>
-        baseCoordinates.value.offsetBy(Angle.Angle0, p.options.viewOffset)
+        baseCoordinates.value._1.offsetBy(Angle.Angle0, p.options.viewOffset)
       }
       // Ref to the aladin component
       .useRefToScalaComponent(AladinComp)
@@ -95,7 +101,7 @@ object AladinContainer {
             ExploreStyles.GuideStarCandidateVisible.when_(options.agsCandidates.visible)
 
           val probeArmShapes = (gs, posAngle).mapN { case (c, posAngle) =>
-            val gsOffset = baseCoordinates.diff(c.target.tracking.baseCoordinates).offset
+            val gsOffset = baseCoordinates._1.diff(c.target.tracking.baseCoordinates).offset
             GmosGeometry.probeShapes(posAngle,
                                      gsOffset,
                                      Offset.Zero,
@@ -129,14 +135,16 @@ object AladinContainer {
       // If needed center on target
       .useEffectWithDepsBy((p, baseCoordinates, _, _, _) =>
         (baseCoordinates.value, p.centerOnTarget.get)
-      ) { (_, _, _, aladinRef, _) => (coords, center) =>
-        aladinRef.get.asCBO
-          .flatMapCB(
-            _.backend.gotoRaDec(coords.ra.toAngle.toDoubleDegrees,
-                                coords.dec.toAngle.toSignedDoubleDegrees
+      ) { (_, _, _, aladinRef, _) =>
+        { case ((coords, _), center) =>
+          aladinRef.get.asCBO
+            .flatMapCB(
+              _.backend.gotoRaDec(coords.ra.toAngle.toDoubleDegrees,
+                                  coords.dec.toAngle.toSignedDoubleDegrees
+              )
             )
-          )
-          .when(center)
+            .when(center)
+        }
       }
       // resize detector
       .useResizeDetector()
@@ -150,71 +158,74 @@ object AladinContainer {
          props.obsConf.scienceMode,
          props.selectedGuideStar
         )
-      ) {
-        (_, baseCoordinates, _, _, _, _) =>
-          (candidates, visible, _, posAngle, obsInstant, scienceMode, selectedGS) =>
-            posAngle
-              .map { posAngle =>
-                val candidatesVisibility =
-                  ExploreStyles.GuideStarCandidateVisible.when_(visible)
+      ) { case (_, allCoordinates, _, _, _, _) =>
+        (candidates, visible, _, posAngle, obsInstant, scienceMode, selectedGS) =>
+          posAngle
+            .map { posAngle =>
+              val (baseCoordinates, scienceTargets) = allCoordinates.value
 
-                val selectedGSTarget = selectedGS
-                  .flatMap(_.target.tracking.at(obsInstant))
-                  .map(c => SVGTarget.GuideStarTarget(c, Css.Empty, 4))
+              val candidatesVisibility =
+                ExploreStyles.GuideStarCandidateVisible.when_(visible)
 
-                val patrolField =
-                  GmosGeometry.patrolField(posAngle, scienceMode, PortDisposition.Side).map(_.eval)
+              val selectedGSTarget = selectedGS
+                .flatMap(_.target.tracking.at(obsInstant))
+                .map(c => SVGTarget.GuideStarTarget(c, Css.Empty, 4))
 
-                candidates
-                  .filterNot(x => selectedGS.exists(_.target.id === x.target.id))
-                  .flatMap { g =>
-                    val tracking           = g.target.tracking
-                    val targetEpoch        = tracking.epoch.epochYear.round
-                    // Approximate to the midddle of the year
-                    val targetEpochInstant =
-                      LocalDate
-                        .of(targetEpoch.toInt, 6, 1)
-                        .atStartOfDay(ZoneId.of("UTC"))
-                        .toInstant()
+              val patrolField =
+                GmosGeometry.patrolField(posAngle, scienceMode, PortDisposition.Side).map(_.eval)
 
-                    val vignettesScience = g match {
-                      case AgsAnalysis.VignettesScience(_) => true
-                      case _                               => false
-                    }
+              candidates
+                .filterNot(x => selectedGS.exists(_.target.id === x.target.id))
+                // TODO This should be done in AGS proper
+                .filterNot(x => scienceTargets.contains(x.target.tracking.baseCoordinates))
+                .flatMap { g =>
+                  val tracking           = g.target.tracking
+                  val targetEpoch        = tracking.epoch.epochYear.round
+                  // Approximate to the midddle of the year
+                  val targetEpochInstant =
+                    LocalDate
+                      .of(targetEpoch.toInt, 6, 1)
+                      .atStartOfDay(ZoneId.of("UTC"))
+                      .toInstant()
 
-                    (tracking.at(targetEpochInstant), tracking.at(obsInstant)).mapN {
-                      (source, dest) =>
-                        val offset   = baseCoordinates.diff(dest).offset
-                        val extraCss =
-                          if (!vignettesScience && patrolField.exists(_.contains(offset)))
-                            ExploreStyles.GuideStarTargetReachable
-                          else Css.Empty
-                        if (candidates.length < 500) {
-                          List[SVGTarget](
-                            SVGTarget.GuideStarCandidateTarget(dest,
-                                                               extraCss |+| candidatesVisibility,
-                                                               3
-                            ),
-                            SVGTarget.LineTo(
-                              source,
-                              dest,
-                              ExploreStyles.PMGSCorrectionLine |+| candidatesVisibility
-                            )
-                          )
-                        } else {
-                          List[SVGTarget](
-                            SVGTarget.GuideStarCandidateTarget(
-                              dest,
-                              ExploreStyles.GuideStarCandidateCrowded |+| extraCss |+| candidatesVisibility,
-                              2
-                            )
-                          )
-                        }
-                    }
+                  val vignettesScience = g match {
+                    case AgsAnalysis.VignettesScience(_) => true
+                    case _                               => false
                   }
-                  .flatten ++ selectedGSTarget.toList
-              }
-              .getOrElse(Nil)
+
+                  (tracking.at(targetEpochInstant), tracking.at(obsInstant)).mapN {
+                    (source, dest) =>
+                      val offset   = baseCoordinates.diff(dest).offset
+                      val extraCss =
+                        if (!vignettesScience && patrolField.exists(_.contains(offset)))
+                          ExploreStyles.GuideStarTargetReachable
+                        else Css.Empty
+                      if (candidates.length < 500) {
+                        List[SVGTarget](
+                          SVGTarget.GuideStarCandidateTarget(dest,
+                                                             extraCss |+| candidatesVisibility,
+                                                             3
+                          ),
+                          SVGTarget.LineTo(
+                            source,
+                            dest,
+                            ExploreStyles.PMGSCorrectionLine |+| candidatesVisibility
+                          )
+                        )
+                      } else {
+                        List[SVGTarget](
+                          SVGTarget.GuideStarCandidateTarget(
+                            dest,
+                            ExploreStyles.GuideStarCandidateCrowded |+| extraCss |+| candidatesVisibility,
+                            2
+                          )
+                        )
+                      }
+                  }
+                }
+                .flatten ++ selectedGSTarget.toList
+            }
+            .getOrElse(Nil)
 
       }
       // Use fov from aladin
@@ -229,14 +240,16 @@ object AladinContainer {
               .delayMs(10)
       )
       .render {
-        (props, baseCoordinates, currentPos, aladinRef, vizShapes, resize, candidates, fov) =>
+        (props, allCoordinates, currentPos, aladinRef, vizShapes, resize, candidates, fov) =>
+          val (baseCoordinates, scienceTargets) = allCoordinates.value
+
           /**
            * Called when the position changes, i.e. aladin pans. We want to offset the visualization
            * to keep the internal target correct
            */
           def onPositionChanged(u: PositionChanged): Callback = {
             val viewCoords = Coordinates(u.ra, u.dec)
-            val viewOffset = baseCoordinates.value.diff(viewCoords).offset
+            val viewOffset = baseCoordinates.diff(viewCoords).offset
             currentPos.setState(Some(viewCoords)) *>
               props.updateViewOffset(viewOffset) *>
               props.centerOnTarget.set(false)
@@ -260,17 +273,29 @@ object AladinContainer {
           val baseCoordinatesForAladin: String =
             currentPos.value
               .map(Coordinates.fromHmsDms.reverseGet)
-              .getOrElse(Coordinates.fromHmsDms.reverseGet(baseCoordinates.value))
+              .getOrElse(Coordinates.fromHmsDms.reverseGet(baseCoordinates))
 
-          val baseTargets =
+          val basePosition =
             List(
-              SVGTarget.CrosshairTarget(baseCoordinates.value, ExploreStyles.ScienceTarget, 10),
-              SVGTarget.CircleTarget(baseCoordinates.value, ExploreStyles.BaseTarget, 3),
-              SVGTarget.LineTo(baseCoordinates.value,
+              SVGTarget.CrosshairTarget(baseCoordinates, Css.Empty, 10),
+              SVGTarget.CircleTarget(baseCoordinates, ExploreStyles.BaseTarget, 3),
+              SVGTarget.LineTo(baseCoordinates,
                                props.asterism.baseTracking.baseCoordinates,
                                ExploreStyles.PMCorrectionLine
               )
             )
+
+          val sciencePositions =
+            if (scienceTargets.length > 1)
+              scienceTargets.flatMap { (pm, base) =>
+                pm.foldMap { pm =>
+                  List(
+                    SVGTarget.CircleTarget(pm, ExploreStyles.ScienceTarget, 5),
+                    SVGTarget.LineTo(pm, base, ExploreStyles.PMCorrectionLine)
+                  )
+                }
+              }
+            else Nil
 
           val screenOffset =
             currentPos.value.map(_.diff(baseCoordinates).offset).getOrElse(Offset.Zero)
@@ -309,7 +334,8 @@ object AladinContainer {
                                    _,
                                    screenOffset,
                                    baseCoordinates,
-                                   baseTargets ++ candidates
+                                   // Order matters
+                                   basePosition ++ candidates ++ sciencePositions
                     )
                   ),
                 (resize.width, resize.height, fov.value)

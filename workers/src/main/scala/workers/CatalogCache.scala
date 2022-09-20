@@ -109,7 +109,7 @@ trait CatalogCache extends CatalogIDB {
     ).mapN { (a, b) =>
       // Make a query based on two coordinates of the base of an asterism over a year
       val query = CoordinatesRangeQueryByADQL(
-        NonEmptyList.of(a, b),
+        NonEmptyList.of(a.value, b.value),
         probeArm.candidatesArea,
         brightnessConstraints.some,
         proxy.some

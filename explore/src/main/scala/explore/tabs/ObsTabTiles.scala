@@ -167,7 +167,6 @@ object ObsTabTiles {
           (vizTime, potAsterism.toOption)
             .mapN((instant, asterism) => asterism.get.flatMap(_.baseTracking.at(instant)))
             .flatten
-            .map(PMCoordinates.apply)
 
         val spectroscopyReqs: Option[ScienceRequirementsData] =
           obsView.toOption.map(_.get.scienceData.requirements)

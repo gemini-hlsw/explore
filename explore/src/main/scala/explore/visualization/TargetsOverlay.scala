@@ -4,20 +4,20 @@
 package explore.visualization
 
 import cats.Eq
-import cats.syntax.all._
+import cats.syntax.all.*
 import explore.components.ui.ExploreStyles
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.svg_<^._
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.svg_<^.*
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
-import lucuma.ui.reusability._
+import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.aladin.Fov
 import react.common.Css
 import react.common.ReactFnProps
 
-import scala.math._
+import scala.math.*
 
 sealed trait SVGTarget {
   def coordinates: Coordinates
@@ -25,42 +25,42 @@ sealed trait SVGTarget {
 }
 
 object SVGTarget {
-  final case class CircleTarget(
+  case class CircleTarget(
     coordinates: Coordinates,
     css:         Css,
     radius:      Double,
     title:       Option[String] = None
   ) extends SVGTarget
 
-  final case class CrosshairTarget(
+  case class CrosshairTarget(
     coordinates: Coordinates,
     css:         Css,
     side:        Double,
     title:       Option[String] = None
   ) extends SVGTarget
 
-  final case class LineTo(
+  case class LineTo(
     coordinates: Coordinates,
     destination: Coordinates,
     css:         Css,
     title:       Option[String] = None
   ) extends SVGTarget
 
-  final case class GuideStarCandidateTarget(
+  case class GuideStarCandidateTarget(
     coordinates: Coordinates,
     css:         Css,
     radius:      Double,
     title:       Option[String] = None
   ) extends SVGTarget
 
-  final case class GuideStarTarget(
+  case class GuideStarTarget(
     coordinates: Coordinates,
     css:         Css,
     radius:      Double,
     title:       Option[String] = None
   ) extends SVGTarget
 
-  implicit val eqSVGTarget: Eq[SVGTarget] = Eq.instance {
+  given Eq[SVGTarget] = Eq.instance {
     case (CircleTarget(c1, s1, r1, t1), CircleTarget(c2, s2, r2, t2))                         =>
       c1 === c2 && s1 === s2 & r1 === r2 && t1 === t2
     case (CrosshairTarget(c1, s1, r1, t1), CrosshairTarget(c2, s2, r2, t2))                   =>
@@ -74,23 +74,23 @@ object SVGTarget {
     case _                                                                                    => false
   }
 
-  implicit val svgTargetReusability: Reusability[SVGTarget] = Reusability.byEq
+  given Reusability[SVGTarget] = Reusability.byEq
 }
 
-final case class TargetsOverlay(
+case class TargetsOverlay(
   width:           Int,
   height:          Int,
   fov:             Fov,
   screenOffset:    Offset,
   baseCoordinates: Coordinates,
   targets:         List[SVGTarget]
-) extends ReactFnProps[TargetsOverlay](TargetsOverlay.component)
+) extends ReactFnProps(TargetsOverlay.component)
 
 object TargetsOverlay {
   type Props = TargetsOverlay
-  implicit val doubleReuse: Reusability[Double] = Reusability.double(1)
-  implicit val exactFovReuse: Reusability[Fov]  = Reusability.derive
-  implicit val reuse: Reusability[Props]        = Reusability.derive
+  given Reusability[Double] = Reusability.double(1)
+  given Reusability[Fov]    = Reusability.derive
+  given Reusability[Props]  = Reusability.derive
 
   val JtsSvg     = Css("targets-overlay-svg")
   val JtsTargets = Css("overlay-all-targets")
