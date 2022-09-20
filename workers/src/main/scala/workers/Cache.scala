@@ -17,7 +17,7 @@ import japgolly.webapputil.indexeddb.IndexedDbKey
 import japgolly.webapputil.indexeddb.KeyCodec
 import japgolly.webapputil.indexeddb.ObjectStoreDef
 import japgolly.webapputil.indexeddb.ValueCodec
-import lucuma.utils.NewType
+import lucuma.core.util.NewType
 import org.scalajs.dom
 import org.scalajs.dom.CacheStorage
 import org.scalajs.dom.IDBFactory

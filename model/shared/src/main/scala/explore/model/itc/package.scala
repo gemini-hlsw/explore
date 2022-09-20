@@ -16,7 +16,7 @@ import io.circe.Decoder
 import lucuma.core.model.NonNegDuration
 import lucuma.core.model.implicits.*
 import lucuma.core.util.Enumerated
-import lucuma.utils.NewType
+import lucuma.core.util.NewType
 
 import scala.concurrent.duration._
 import scala.math._
