@@ -23,10 +23,3 @@ extension [V, U](q: Quantity[V, U]) {
   @inline def toRefined[P](using Validate[V, P]): Either[String, Quantity[V Refined P, U]] =
     refineQV[P](q)
 }
-
-abstract class NewType[Wrapped]:
-  opaque type Type = Wrapped
-  def apply(w: Wrapped): Type = w
-  extension (t: Type) def value: Wrapped = t
-  given (using CanEqual[Wrapped, Wrapped]): CanEqual[Type, Type] = CanEqual.derived
-  given (using eq: Eq[Wrapped]): Eq[Type]                        = eq

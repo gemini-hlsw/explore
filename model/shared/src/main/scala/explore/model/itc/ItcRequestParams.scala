@@ -11,7 +11,7 @@ import explore.modes.InstrumentRow
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.NonNegDuration
-import lucuma.utils.NewType
+import lucuma.core.util.NewType
 
 object CoverageCenterWavelength extends NewType[Wavelength]
 type CoverageCenterWavelength = CoverageCenterWavelength.Type

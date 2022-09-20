@@ -40,7 +40,7 @@ import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.core.model.nonNegDurationValidate
 import lucuma.core.util.Enumerated
-import lucuma.utils.NewType
+import lucuma.core.util.NewType
 import org.http4s.Uri
 
 import java.time.Duration

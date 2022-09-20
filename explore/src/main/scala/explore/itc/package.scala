@@ -10,9 +10,9 @@ import explore.components.ui.ExploreStyles
 import explore.model.itc.ItcCcd
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.NonNegDuration
+import lucuma.core.util.NewType
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import lucuma.utils.NewType
 import react.fa.IconSize
 import react.floatingui.syntax.*
 

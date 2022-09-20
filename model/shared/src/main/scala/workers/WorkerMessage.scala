@@ -5,7 +5,7 @@ package workers
 
 import algebra.instances.array.*
 import boopickle.DefaultBasic.*
-import lucuma.utils.*
+import lucuma.core.util.NewType
 
 import java.util.UUID
 
