@@ -28,9 +28,9 @@ import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Proposal
 import lucuma.core.model.ProposalClass
 import lucuma.core.model.Target
+import lucuma.core.util.NewType
 import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.ui.reusability._
-import lucuma.utils.NewType
 
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.TreeSeqMap

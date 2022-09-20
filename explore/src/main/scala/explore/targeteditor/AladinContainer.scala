@@ -83,7 +83,12 @@ object AladinContainer {
           .map(_.value)
           .getOrElse(p.asterism.baseTracking.baseCoordinates)
         val science = p.asterism.toSidereal
-          .map(t => (t.target.tracking.at(i), t.target.tracking.baseCoordinates))
+          .map(t =>
+            (t.id === p.asterism.focus.id,
+             t.target.tracking.at(i),
+             t.target.tracking.baseCoordinates
+            )
+          )
         (base, science)
       }
       // View coordinates base coordinates with pm correction + user panning
@@ -287,12 +292,14 @@ object AladinContainer {
 
           val sciencePositions =
             if (scienceTargets.length > 1)
-              scienceTargets.flatMap { (pm, base) =>
+              scienceTargets.flatMap { (selected, pm, base) =>
                 pm.foldMap { pm =>
                   List(
-                    SVGTarget.CircleTarget(pm, ExploreStyles.ScienceTarget, 5),
+                    SVGTarget.CircleTarget(pm, ExploreStyles.ScienceTarget, 4),
                     SVGTarget.LineTo(pm, base, ExploreStyles.PMCorrectionLine)
-                  )
+                  ) ++ (if (selected)
+                          List(SVGTarget.CrossTarget(pm, ExploreStyles.ScienceSelectedTarget, 5))
+                        else Nil)
                 }
               }
             else Nil

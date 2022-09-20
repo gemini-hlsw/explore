@@ -16,8 +16,8 @@ import lucuma.core.model.SourceProfile
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.Target
 import lucuma.core.model.UnnormalizedSED
+import lucuma.core.util.NewType
 import lucuma.refined.*
-import lucuma.utils.NewType
 
 import scala.collection.immutable.SortedMap
 

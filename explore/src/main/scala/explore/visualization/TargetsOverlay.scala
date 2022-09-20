@@ -39,6 +39,13 @@ object SVGTarget {
     title:       Option[String] = None
   ) extends SVGTarget
 
+  case class CrossTarget(
+    coordinates: Coordinates,
+    css:         Css,
+    side:        Double,
+    title:       Option[String] = None
+  ) extends SVGTarget
+
   case class LineTo(
     coordinates: Coordinates,
     destination: Coordinates,
@@ -64,6 +71,8 @@ object SVGTarget {
     case (CircleTarget(c1, s1, r1, t1), CircleTarget(c2, s2, r2, t2))                         =>
       c1 === c2 && s1 === s2 & r1 === r2 && t1 === t2
     case (CrosshairTarget(c1, s1, r1, t1), CrosshairTarget(c2, s2, r2, t2))                   =>
+      c1 === c2 && s1 === s2 & r1 === r2 && t1 === t2
+    case (CrossTarget(c1, s1, r1, t1), CrossTarget(c2, s2, r2, t2))                           =>
       c1 === c2 && s1 === s2 & r1 === r2 && t1 === t2
     case (GuideStarCandidateTarget(c1, s1, r1, t1), GuideStarCandidateTarget(c2, s2, r2, t2)) =>
       c1 === c2 && s1 === s2 & r1 === r2 && t1 === t2
@@ -167,6 +176,25 @@ object TargetsOverlay {
                     ),
                     <.line(^.x1 := scale(offP),
                            ^.x2 := scale(offP),
+                           ^.y1 := scale(offQ) - side,
+                           ^.y2 := scale(offQ) + side,
+                           pointCss
+                    ),
+                    title.map(<.title(_))
+                  )
+                case (offP, offQ, SVGTarget.CrossTarget(_, css, sidePx, title))              =>
+                  val pointCss = ExploreStyles.CrosshairTarget |+| css
+
+                  val side = scale(maxP * sidePx)
+                  <.g(
+                    <.line(^.x1 := scale(offP) - side,
+                           ^.x2 := scale(offP) + side,
+                           ^.y1 := scale(offQ) - side,
+                           ^.y2 := scale(offQ) + side,
+                           pointCss
+                    ),
+                    <.line(^.x1 := scale(offP) + side,
+                           ^.x2 := scale(offP) - side,
                            ^.y1 := scale(offQ) - side,
                            ^.y2 := scale(offQ) + side,
                            pointCss
