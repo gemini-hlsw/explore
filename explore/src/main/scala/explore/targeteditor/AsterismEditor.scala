@@ -134,7 +134,11 @@ object AsterismEditor {
               asterism.foldMap(a => props.setTarget(a.focus.id.some, SetRouteVia.HistoryReplace))
             case Some(current) if asterism.exists(_.focus.id === current) => Callback.empty
             case current @ Some(_)                                        =>
-              props.setTarget(current, SetRouteVia.HistoryReplace)
+              val inAsterism = current.exists(id => props.asterism.get.exists(_.hasId(id)))
+              val focus      = props.asterism.get.map(_.focus.id)
+              if (!inAsterism)
+                props.setTarget(focus, SetRouteVia.HistoryReplace)
+              else props.setTarget(current, SetRouteVia.HistoryReplace)
           }
       }
       // full screen aladin

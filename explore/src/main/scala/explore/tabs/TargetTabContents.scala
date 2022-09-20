@@ -267,10 +267,11 @@ object TargetTabContents {
               targetMap.get(id).map(two => TargetWithId(id, two.target))
             )
           )
-          .flatMap(a => props.focused.target.map(a.focusOn))
-      println("---------")
-      println(props.focused.target)
-      println(asterism.map(_.focus))
+
+      val a = Asterism
+        .fromTargets(
+          targetIds.toList.flatMap(id => targetMap.get(id).map(two => TargetWithId(id, two.target)))
+        )
 
       val getAsterism: AsterismGroupsWithObs => Option[Asterism] = _ => asterism
 
@@ -406,8 +407,12 @@ object TargetTabContents {
         tid:                          Option[Target.Id],
         via:                          SetRouteVia
       ): Callback =
-        Callback.log(s"Set target $tid") *>
-          ctx.setPageVia(AppTab.Targets, programId, Focused(oids.some, tid), via)
+        Callback
+          .log(s"qq $tid") *> ctx.setPageVia(AppTab.Targets,
+                                             programId,
+                                             Focused(oids.some, tid),
+                                             via
+        )
 
       val asterismEditorTile =
         AsterismEditorTile.asterismEditorTile(

@@ -3,56 +3,56 @@
 
 package explore.observationtree
 
-import cats.Order._
+import cats.Order.*
 import cats.effect.IO
-import cats.syntax.all._
+import cats.syntax.all.*
 import crystal.react.View
-import crystal.react.hooks._
-import crystal.react.implicits._
+import crystal.react.hooks.*
+import crystal.react.implicits.*
 import explore.Icons
-import explore.common.AsterismQueries._
+import explore.common.AsterismQueries.*
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
-import explore.implicits._
+import explore.implicits.*
 import explore.model.AsterismGroup
 import explore.model.EmptySiderealTarget
 import explore.model.Focused
 import explore.model.ObsIdSet
 import explore.model.TargetWithObs
 import explore.model.enums.AppTab
-import explore.undo._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import explore.undo.*
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import mouse.boolean._
+import mouse.boolean.*
 import queries.common.TargetQueriesGQL
-import queries.schemas.implicits._
-import react.beautifuldnd._
+import queries.schemas.implicits.*
+import react.beautifuldnd.*
 import react.common.ReactFnProps
 import react.fa.FontAwesomeIcon
-import react.reflex._
+import react.reflex.*
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.header.Header
 import react.semanticui.elements.segment.Segment
 import react.semanticui.elements.segment.SegmentGroup
-import react.semanticui.shorthand._
-import react.semanticui.sizes._
-import react.semanticui.views.card._
+import react.semanticui.shorthand.*
+import react.semanticui.sizes.*
+import react.semanticui.views.card.*
 
 import scala.collection.immutable.SortedSet
 
-final case class AsterismGroupObsList(
+case class AsterismGroupObsList(
   asterismsWithObs: View[AsterismGroupsWithObs],
   programId:        Program.Id,
   focused:          Focused,
   setSummaryPanel:  Callback,
   expandedIds:      View[SortedSet[ObsIdSet]],
   undoStacks:       View[UndoStacks[IO, AsterismGroupsWithObs]]
-)(implicit val ctx: AppContextIO)
+)(using val ctx:    AppContextIO)
     extends ReactFnProps[AsterismGroupObsList](AsterismGroupObsList.component)
     with ViewCommon {
   override val focusedObsSet: Option[ObsIdSet] = focused.obsSet
@@ -102,7 +102,7 @@ object AsterismGroupObsList {
     props:   Props,
     undoCtx: UndoContext[AsterismGroupsWithObs]
   ): (DropResult, ResponderProvided) => Callback = { (result, _) =>
-    implicit val ctx = props.ctx
+    import props.given
 
     val oData = for {
       destination <- result.destination.toOption
@@ -136,9 +136,7 @@ object AsterismGroupObsList {
     undoCtx:       UndoContext[AsterismGroupsWithObs],
     adding:        View[Boolean],
     setTargetPage: Target.Id => Option[Target.Id] => IO[Unit]
-  )(implicit
-    ctx:           AppContextIO
-  ): IO[Unit] =
+  )(using AppContextIO): IO[Unit] =
     adding.async.set(true) >>
       TargetQueriesGQL.CreateTargetMutation
         .execute(EmptySiderealTarget.toCreateTargetInput(programId))
@@ -200,7 +198,7 @@ object AsterismGroupObsList {
       } yield ()
     }
     .render { (props, dragging, adding, focusedRef) =>
-      implicit val ctx = props.ctx
+      import props.given
 
       val observations     = props.asterismsWithObs.get.observations
       val asterismGroups   = props.asterismsWithObs.get.asterismGroups.map(_._2)
@@ -351,9 +349,7 @@ object AsterismGroupObsList {
         targetWithObs: TargetWithObs,
         setPage:       Option[Target.Id] => IO[Unit],
         index:         Int
-      )(implicit
-        ctx:           AppContextIO
-      ): VdomNode = {
+      )(using AppContextIO): VdomNode = {
         val deleteButton = Button(
           size = Small,
           compact = true,
