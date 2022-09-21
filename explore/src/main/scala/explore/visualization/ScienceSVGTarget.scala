@@ -127,7 +127,7 @@ object CrossTarget {
              )
             )
           case _                                                                       =>
-            (scale(p.q),
+            (scale(p.q) + tooltipOffset,
              (1 + heightPaddingFactor) * (tooltipHeight - tooltipOffset) / 2,
              bottomTooltipPath(widthPaddingFactor * tooltipWidth,
                                heightPaddingFactor * tooltipHeight,
