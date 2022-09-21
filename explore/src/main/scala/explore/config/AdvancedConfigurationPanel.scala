@@ -27,10 +27,6 @@ import explore.common.ObsQueries.*
 import explore.common.ScienceQueries.*
 import explore.components.HelpIcon
 import explore.components.InputWithUnits
-import lucuma.ui.primereact.EnumOptionalDropdownView
-import lucuma.ui.primereact.FormInputText
-import lucuma.ui.primereact.FormInputTextView
-import lucuma.ui.primereact.FormLabel
 import explore.components.ui.ExploreStyles
 import explore.config.ExposureTimeModeType.*
 import explore.implicits.*
@@ -64,10 +60,13 @@ import lucuma.core.util.Enumerated
 import lucuma.core.validation.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
-import lucuma.ui.forms.EnumViewOptionalSelect
-import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
+import lucuma.ui.primereact.FormEnumDropdownOptionalView
+import lucuma.ui.primereact.FormInputText
+import lucuma.ui.primereact.FormInputTextView
+import lucuma.ui.primereact.FormLabel
 import lucuma.ui.primereact.LucumaStyles
+import lucuma.ui.primereact.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -80,7 +79,6 @@ import react.common.ReactFnProps
 import react.fa.IconSize
 import react.floatingui.syntax.*
 import react.primereact.Button
-import react.primereact.Padding
 import react.primereact.PrimeStyles
 import spire.math.Bounded
 import spire.math.Interval
@@ -293,7 +291,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
     <.span(
       LucumaStyles.FormField,
       PrimeStyles.InputGroup,
-      EnumOptionalDropdownView(
+      FormEnumDropdownOptionalView(
         id = id,
         value = view,
         exclude = exclude,
@@ -553,7 +551,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               <.span(
                 LucumaStyles.FormField,
                 PrimeStyles.InputGroup,
-                EnumOptionalDropdownView(
+                FormEnumDropdownOptionalView(
                   id = "exposureMode".refined,
                   value = exposureModeEnum.withOnMod(onModeMod _),
                   disabled = disableSimpleEdit,
@@ -705,43 +703,41 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 trigger = Button(
                   size = Button.Size.Small,
                   severity = Button.Severity.Secondary,
-                  padding = Padding.Compact
-                )("View Sequence")
+                  outlined = true
+                ).compact("View Sequence")
               ),
               Button(
                 size = Button.Size.Small,
                 severity = Button.Severity.Secondary,
-                padding = Padding.Compact,
+                outlined = true,
                 onClick = props.editState.set(ConfigEditState.TableView)
-              )(Icons.ListIcon, "View Suggested Configs")(^.tpe := "button")
+              ).compact(Icons.ListIcon, "View Suggested Configs")
                 .unless(isCustomized(props.scienceModeAdvanced)),
               Button(
                 size = Button.Size.Small,
                 severity = Button.Severity.Danger,
-                padding = Padding.Compact,
                 onClick = props.editState.set(ConfigEditState.DetailsView) >>
                   exposureModeEnum.set(none) >>
                   invalidateITC >>
                   revertCustomizations(props.scienceModeAdvanced)
-              )(Icons.TrashUnstyled, "Revert Customizations")
+              ).compact(Icons.TrashUnstyled, "Revert Customizations")
                 .when(isCustomized(props.scienceModeAdvanced)),
               Button(
                 size = Button.Size.Small,
                 severity = Button.Severity.Secondary,
-                padding = Padding.Compact,
+                outlined = true,
                 onClick = props.editState.set(ConfigEditState.SimpleEdit)
-              )(Icons.Edit, "Customize")
+              ).compact(Icons.Edit, "Customize")
                 .when(props.editState.get === ConfigEditState.DetailsView),
               Button(
                 size = Button.Size.Small,
                 severity = Button.Severity.Secondary,
-                padding = Padding.Compact,
+                outlined = true,
                 onClick = props.editState.set(ConfigEditState.AdvancedEdit)
-              )(
+              ).compact(
                 Icons.ExclamationTriangle.clazz(ExploreStyles.WarningIcon),
                 "Advanced Customization"
-              )
-                .when(props.editState.get === ConfigEditState.SimpleEdit)
+              ).when(props.editState.get === ConfigEditState.SimpleEdit)
             )
           )
       }
