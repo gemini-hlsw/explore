@@ -3,20 +3,20 @@
 
 package explore.observationtree
 
-import explore._
+import explore.*
 import explore.components.ui.ExploreStyles
 import explore.model.Focused
 import explore.model.ObsIdSet
 import explore.model.ObsSummary
 import explore.model.enums.AppTab
-import japgolly.scalajs.react._
+import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.TagMod
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import react.beautifuldnd._
+import react.beautifuldnd.*
 
 trait ViewCommon {
   def programId: Program.Id
@@ -42,7 +42,7 @@ trait ViewCommon {
   )(
     obs:               ObsSummary,
     idx:               Int
-  )(implicit ctx:      AppContextIO): TagMod =
+  )(using ctx:         AppContextIO): TagMod =
     <.div(ExploreStyles.ObsTreeItem)(
       Draggable(obs.id.toString, idx) { case (provided, snapshot, _) =>
         <.div(

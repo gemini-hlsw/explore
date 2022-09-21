@@ -12,6 +12,7 @@ import coulomb.syntax.*
 import eu.timepit.refined._
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.api.Validate
+import explore.model.ObjectTracking
 import lucuma.ags.AgsAnalysis
 import lucuma.ags.AgsParams
 import lucuma.ags.AgsPosition
@@ -30,6 +31,7 @@ import lucuma.core.math.ProperMotion
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.RightAscension
 import lucuma.core.math.Wavelength
+import lucuma.core.model.CatalogInfo.apply
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.SiderealTracking
@@ -117,6 +119,15 @@ trait CatalogPicklers extends CommonPicklers {
       .addConcreteType[AgsAnalysis.NotReachable]
       .addConcreteType[AgsAnalysis.NoMagnitudeForBand]
       .addConcreteType[AgsAnalysis.Usable]
+
+  given Pickler[ObjectTracking.ConstantTracking] = generatePickler
+
+  given Pickler[ObjectTracking.SiderealObjectTracking] = generatePickler
+
+  given Pickler[ObjectTracking] =
+    compositePickler[ObjectTracking]
+      .addConcreteType[ObjectTracking.ConstantTracking]
+      .addConcreteType[ObjectTracking.SiderealObjectTracking]
 }
 
 object CatalogPicklers extends CatalogPicklers

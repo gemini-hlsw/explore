@@ -8,6 +8,7 @@ import explore.common.ObsQueries.SpectroscopyRequirementsData
 import explore.data.KeyedIndexedList
 import explore.events.CatalogMessage
 import explore.model.Asterism
+import explore.model.ObjectTracking
 import explore.model.itc.CoverageCenterWavelength
 import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.ItcTarget
@@ -27,6 +28,7 @@ import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Proposal
 import lucuma.core.model.ProposalClass
 import lucuma.core.model.Target
+import lucuma.core.util.NewType
 import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.ui.reusability._
 
@@ -112,4 +114,11 @@ object reusability {
   given Reusability[InstrumentRow] = Reusability.byEq
 
   given Reusability[CoverageCenterWavelength] = Reusability.byEq
+
+  given Reusability[ObjectTracking] = Reusability.byEq
+
+  given reusabilityNewType[W, T <: NewType[W]#Type](using
+    reusability: Reusability[W]
+  ): Reusability[T] =
+    reusability.asInstanceOf[Reusability[T]]
 }

@@ -216,14 +216,6 @@ object implicits {
       .flatten
       .hashDistinct
 
-    def baseTarget: Option[Target] =
-      NonEmptyList.fromList(s.targets.asterism).map(a => Asterism(a).baseTarget.target)
-
-    def baseSiderealTracking: Option[SiderealTracking] =
-      baseTarget match
-        case Some(s: Target.Sidereal) => s.tracking.some
-        case _                        => none
-
   extension (m: InstrumentRow)
     def toITCInput: Option[InstrumentModesInput] = m match
       case r: GmosNorthSpectroscopyRow =>

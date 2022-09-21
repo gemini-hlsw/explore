@@ -7,6 +7,7 @@ import cats.syntax.all.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits.*
+import explore.model.CoordinatesAtVizTime
 import explore.model.ScienceMode
 import explore.targeteditor.ElevationPlotSection
 import japgolly.scalajs.react.*
@@ -23,8 +24,9 @@ object ElevationPlotTile:
 
   def elevationPlotTile(
     uid:         Option[User.Id],
+    tid:         Option[Target.Id],
     scienceMode: Option[ScienceMode],
-    coordinates: Option[(Target.Id, Coordinates)],
+    coordinates: Option[CoordinatesAtVizTime],
     vizTime:     Option[Instant]
   )(using AppContextIO) =
     Tile(
@@ -33,8 +35,8 @@ object ElevationPlotTile:
       canMinimize = true,
       bodyClass = ExploreStyles.ElevationPlotTileBody.some
     ) { _ =>
-      (uid, coordinates)
-        .mapN { case (uid, (targetId, coordinates)) =>
+      (uid, tid, coordinates)
+        .mapN { (uid, targetId, coordinates) =>
           ElevationPlotSection(uid, targetId, scienceMode, vizTime, coordinates): VdomNode
         }
         .getOrElse {

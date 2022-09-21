@@ -108,6 +108,20 @@
     display: none;
   }
 
+  .science-target {
+    display: inline;
+    fill: hsl(240deg 100.0% 60.2%);
+    stroke: hsl(240deg 100.0% 80.2%);
+    stroke-width: 1px;
+  }
+
+  .science-selected-target {
+    display: inline;
+    fill: hsl(240deg 100.0% 60.2%);
+    stroke: hsl(260deg 100.0% 70.2%);
+    stroke-width: 1px;
+  }
+
   .arrow-between-targets {
     stroke: darkblue;
     stroke-width: 2px;

@@ -3,39 +3,39 @@
 
 package explore.tabs
 
-import cats.Order._
+import cats.Order.*
 import cats.effect.IO
-import cats.syntax.all._
+import cats.syntax.all.*
 import crystal.Pot
-import crystal.implicits._
-import crystal.react._
-import crystal.react.hooks._
-import crystal.react.implicits._
-import crystal.react.reuse._
-import eu.timepit.refined.auto._
+import crystal.implicits.*
+import crystal.react.*
+import crystal.react.hooks.*
+import crystal.react.implicits.*
+import crystal.react.reuse.*
+import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.numeric.NonNegInt
 import explore.Icons
-import explore.common.AsterismQueries._
-import explore.common.UserPreferencesQueries._
+import explore.common.AsterismQueries.*
+import explore.common.UserPreferencesQueries.*
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
-import explore.implicits._
-import explore.model._
+import explore.implicits.*
+import explore.model.*
 import explore.model.enums.AppTab
-import explore.model.layout._
+import explore.model.layout.*
 import explore.model.layout.unsafe.given
 import explore.observationtree.AsterismGroupObsList
-import explore.optics._
-import explore.optics.all._
+import explore.optics.*
+import explore.optics.all.*
 import explore.syntax.ui.*
 import explore.syntax.ui.given
 import explore.targets.TargetSummaryTable
-import explore.undo._
-import explore.utils._
-import japgolly.scalajs.react._
+import explore.undo.*
+import explore.utils.*
+import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
@@ -43,31 +43,31 @@ import lucuma.core.model.Target.Nonsidereal
 import lucuma.core.model.Target.Sidereal
 import lucuma.core.model.User
 import lucuma.refined.*
-import lucuma.ui.reusability._
+import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import lucuma.ui.utils._
+import lucuma.ui.utils.*
 import org.scalajs.dom.window
-import queries.common.AsterismQueriesGQL._
+import queries.common.AsterismQueriesGQL.*
 import queries.common.ObsQueriesGQL
 import queries.common.TargetQueriesGQL
-import queries.common.UserPreferencesQueriesGQL._
+import queries.common.UserPreferencesQueriesGQL.*
 import react.common.ReactFnProps
 import react.draggable.Axis
-import react.gridlayout._
-import react.resizable._
-import react.resizeDetector._
-import react.resizeDetector.hooks._
+import react.gridlayout.*
+import react.resizable.*
+import react.resizeDetector.*
+import react.resizeDetector.hooks.*
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
-import react.semanticui.sizes._
+import react.semanticui.sizes.*
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
-final case class TargetTabContents(
+case class TargetTabContents(
   userId:            Option[User.Id],
   programId:         Program.Id,
   focused:           Focused,
@@ -76,8 +76,8 @@ final case class TargetTabContents(
   searching:         View[Set[Target.Id]],
   expandedIds:       View[SortedSet[ObsIdSet]],
   hiddenColumns:     View[Set[String]]
-)(implicit val ctx:  AppContextIO)
-    extends ReactFnProps[TargetTabContents](TargetTabContents.component)
+)(using val ctx:     AppContextIO)
+    extends ReactFnProps(TargetTabContents.component)
 
 object TargetTabContents {
   type Props = TargetTabContents
@@ -137,7 +137,7 @@ object TargetTabContents {
     fullScreen:            View[Boolean]
   )(
     asterismGroupsWithObs: View[AsterismGroupsWithObs]
-  )(implicit ctx:          AppContextIO): VdomNode = {
+  )(using ctx:             AppContextIO): VdomNode = {
 
     val panelsResize =
       (_: ReactEvent, d: ResizeCallbackData) =>
@@ -261,7 +261,15 @@ object TargetTabContents {
       val targetIds = asterismGroup.targetIds
 
       val asterism: Option[Asterism] =
-        Asterism.fromTargets(
+        Asterism
+          .fromTargets(
+            targetIds.toList.flatMap(id =>
+              targetMap.get(id).map(two => TargetWithId(id, two.target))
+            )
+          )
+
+      val a = Asterism
+        .fromTargets(
           targetIds.toList.flatMap(id => targetMap.get(id).map(two => TargetWithId(id, two.target)))
         )
 
@@ -425,18 +433,21 @@ object TargetTabContents {
         .flatMap(
           _.mapValue(targetView =>
             targetView.get match {
-              case TargetWithId(id, t @ Target.Sidereal(_, _, _, _)) =>
-                Target.Sidereal.baseCoordinates.get(t).some.tupleLeft(id)
-              case _                                                 => none
+              case TargetWithId(_, t @ Target.Sidereal(_, _, _, _)) =>
+                // TODO PM correction
+                Target.Sidereal.baseCoordinates.get(t).some
+              case _                                                => none
             }
           )
         )
 
       val skyPlotTile =
-        ElevationPlotTile.elevationPlotTile(props.userId,
-                                            scienceMode,
-                                            selectedCoordinates.flatten,
-                                            vizTimeView.get
+        ElevationPlotTile.elevationPlotTile(
+          props.userId,
+          props.focused.target,
+          scienceMode,
+          selectedCoordinates.flatten.map(CoordinatesAtVizTime.apply),
+          vizTimeView.get
         )
 
       val rglRender: LayoutsMap => VdomNode = (l: LayoutsMap) =>
@@ -488,8 +499,10 @@ object TargetTabContents {
       val skyPlotTile =
         ElevationPlotTile.elevationPlotTile(
           props.userId,
+          targetId.some,
           none,
-          Target.Sidereal.baseCoordinates.get(target).some.tupleLeft(targetId),
+          // TODO PM correct the coordinates
+          CoordinatesAtVizTime(Target.Sidereal.baseCoordinates.get(target)).some,
           none
         )
 
@@ -505,7 +518,8 @@ object TargetTabContents {
       potRender[LayoutsMap](rglRender)(layouts.get)
     }
 
-    val selectedPanel                                    = panels.get.selected
+    val selectedPanel = panels.get.selected
+
     val optSelected: Option[Either[Target.Id, ObsIdSet]] = props.focused match {
       case Focused(Some(obsIdSet), _)    => obsIdSet.asRight.some
       case Focused(None, Some(targetId)) => targetId.asLeft.some
@@ -598,7 +612,7 @@ object TargetTabContents {
       .useEffectWithDepsBy((p, _, _, _, _) => p.userId) {
         (props, panels, _, layout, defaultLayout) => _ =>
           {
-            implicit val ctx = props.ctx
+            import props.given
 
             UserGridLayoutQuery
               .queryWithDefault[IO](
@@ -629,7 +643,7 @@ object TargetTabContents {
       .useSingleEffect(debounce = 1.second)
       // Shared obs conf (posAngle)
       .useStreamResourceViewOnMountBy { (props, _, _, _, _, _) =>
-        implicit val ctx = props.ctx
+        import props.given
 
         AsterismGroupObsQuery
           .query(props.programId)
@@ -652,7 +666,7 @@ object TargetTabContents {
           asterismGroupsWithObs,
           fullScreen
         ) =>
-          implicit val ctx = props.ctx
+          import props.given
 
           <.div(
             asterismGroupsWithObs.render(

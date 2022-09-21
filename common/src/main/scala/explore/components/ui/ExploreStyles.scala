@@ -394,6 +394,7 @@ object ExploreStyles {
 
   // Aladin Target classes
   val ScienceTarget: Css           = Css("science-target")
+  val ScienceSelectedTarget: Css   = Css("science-selected-target")
   val CircleTarget: Css            = Css("circle-target")
   val BaseTarget                   = Css("base-target")
   val CrosshairTarget              = Css("crosshair-target")

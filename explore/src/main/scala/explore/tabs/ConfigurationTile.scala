@@ -6,24 +6,27 @@ package explore.tabs
 import cats.effect.IO
 import crystal.Pot
 import crystal.react.View
-import eu.timepit.refined.auto._
+import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.common.ObsQueries._
+import explore.common.ObsQueries.*
 import explore.components.Tile
 import explore.config.ConfigurationPanel
-import explore.implicits._
-import explore.undo._
-import explore.utils._
+import explore.implicits.*
+import explore.model.CoordinatesAtVizTime
+import explore.undo.*
+import explore.utils.*
+import lucuma.core.math.Coordinates
 import lucuma.core.model.Observation
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import queries.schemas.itc.implicits._
+import queries.schemas.itc.implicits.*
 
 object ConfigurationTile {
   def configurationTile(
-    obsId:      Observation.Id,
-    obsData:    Pot[(String, Option[NonEmptyString], View[ScienceData])],
-    undoStacks: View[UndoStacks[IO, ScienceData]]
+    obsId:           Observation.Id,
+    obsData:         Pot[(String, Option[NonEmptyString], View[ScienceData])],
+    undoStacks:      View[UndoStacks[IO, ScienceData]],
+    baseCoordinates: Option[CoordinatesAtVizTime]
   )(using AppContextIO) =
     Tile(
       ObsTabTilesIds.ConfigurationId.id,
@@ -39,7 +42,7 @@ object ConfigurationTile {
             UndoContext(undoStacks, scienceData),
             scienceData.get.constraints,
             scienceData.get.itcTargets,
-            scienceData.get.baseSiderealTracking,
+            baseCoordinates,
             renderInTitle
           )
       }(obsData)

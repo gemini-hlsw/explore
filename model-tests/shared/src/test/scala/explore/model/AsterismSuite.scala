@@ -3,43 +3,69 @@
 
 package explore.model
 
-import cats.kernel.laws.discipline._
-import cats.laws.discipline.arbitrary._
-import explore.model.arb.all._
+import cats.kernel.laws.discipline.*
+import cats.laws.discipline.arbitrary.*
+import explore.model.arb.all.*
+import explore.model.arb.all.given
+import lucuma.core.data.arb.ArbZipper.*
 import lucuma.core.model.Target
-import lucuma.core.model.arb.ArbTarget._
-import lucuma.core.util.arb.ArbEnumerated._
-import lucuma.core.util.arb.ArbGid._
-import monocle.law.discipline._
+import lucuma.core.model.arb.ArbTarget.*
+import lucuma.core.util.arb.ArbEnumerated.*
+import lucuma.core.util.arb.ArbGid.*
+import monocle.law.discipline.*
 import munit.DisciplineSuite
 import org.scalacheck.Arbitrary
-import org.scalacheck.Arbitrary._
+import org.scalacheck.Arbitrary.*
 import org.scalacheck.Gen
-import org.scalacheck.Prop._
+import org.scalacheck.Prop.*
 import org.scalacheck.Test
 
-class AsterismSuite extends DisciplineSuite {
+class AsterismSuite extends DisciplineSuite:
   override val scalaCheckTestParameters = Test.Parameters.default.withMaxSize(10)
 
   checkAll("Eq[AsterismSuite]", EqTests[Asterism].eqv)
   checkAll("Asterism.isoTargets", IsoTests(Asterism.isoTargets))
   checkAll("Asterism.fromTargetsList", IsoTests(Asterism.fromTargetsList))
+  checkAll("Asterism.targetsEach", TraversalTests(Asterism.targetsEach))
+  checkAll("Asterism.siderealTargetsEach", TraversalTests(Asterism.siderealTargetsEach))
+
+  test("oneTarget") {
+    forAll { (id: Target.Id) =>
+      checkAll("Asterism.oneTarget", IsoTests(Asterism.oneTarget(id)))
+    }
+  }
 
   test("targetOptional") {
     forAll { (id: Target.Id) =>
-      // Sometimes the asterisms includes target id
-      implicit val optAsterism: Arbitrary[Option[Asterism]] =
-        Arbitrary(
-          Gen.option[Asterism](
-            Gen.oneOf(
-              arbAsterism.arbitrary,
-              arbTarget.arbitrary.map(t => Asterism.one(TargetWithId(id, t)))
-            )
-          )
-        )
-
+      given Arbitrary[Option[Asterism]] = gen.optAsterism(id)
       checkAll("Asterism.targetOptional", OptionalTests(Asterism.targetOptional(id)))
     }
   }
 
-}
+  test("fromTargetsListOn") {
+    forAll { (id: Target.Id) =>
+      given Arbitrary[Option[Asterism]] = gen.optAsterism(id)
+      checkAll("Asterism.fromTargetsListOn", IsoTests(Asterism.fromTargetsListOn(Some(id))))
+    }
+  }
+
+  object gen:
+    // Sometimes the asterisms includes target id
+    def optAsterism(id: Target.Id): Arbitrary[Option[Asterism]] =
+      Arbitrary(
+        Gen.option[Asterism](asterism(id).arbitrary)
+      )
+
+    def asterism(id: Target.Id): Arbitrary[Asterism] =
+      Arbitrary(
+        Gen.oneOf(
+          arbAsterism.arbitrary,
+          Gen.oneOf(
+            arbAsterism.arbitrary,
+            for
+              ast    <- arbAsterism.arbitrary
+              target <- arbTarget.arbitrary.map(t => TargetWithId(id, t))
+            yield ast.add(target)
+          )
+        )
+      )

@@ -16,6 +16,7 @@ import explore.common.UserPreferencesQueries.*
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.implicits.*
+import explore.model.CoordinatesAtVizTime
 import explore.model.ElevationPlotOptions
 import explore.model.ScienceMode
 import explore.model.enums.PlotRange
@@ -47,7 +48,7 @@ case class ElevationPlotSection(
   tid:               Target.Id,
   scienceMode:       Option[ScienceMode],
   visualizationTime: Option[Instant],
-  coords:            Coordinates
+  coords:            CoordinatesAtVizTime
 )(using val ctx:     AppContextIO)
     extends ReactFnProps(ElevationPlotSection.component)
 
@@ -55,7 +56,7 @@ object ElevationPlotSection {
   private type Props = ElevationPlotSection
 
   given Reusability[Props] =
-    Reusability.by(x => (x.uid, x.tid, x.scienceMode, x.visualizationTime, x.coords))
+    Reusability.by(x => (x.uid, x.tid, x.scienceMode, x.visualizationTime, x.coords.value))
 
   val preferredSiteFor = (c: Props) =>
     c.scienceMode
@@ -64,7 +65,7 @@ object ElevationPlotSection {
         case ScienceMode.GmosSouthLongSlit(_, _) => Site.GS
       }
       .getOrElse {
-        if (c.coords.dec.toAngle.toSignedDoubleDegrees > -5) Site.GN else Site.GS
+        if (c.coords.value.dec.toAngle.toSignedDoubleDegrees > -5) Site.GN else Site.GS
       }
 
   def prefsSetter(

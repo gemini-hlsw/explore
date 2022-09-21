@@ -42,7 +42,8 @@ object AladinToolbar {
 
   val component =
     ScalaFnComponent[Props] { props =>
-      val usableGuideStar = props.selectedGuideStar.exists(_.isUsable)
+      val usableGuideStar = props.selectedGuideStar.forall(_.isUsable)
+
       React.Fragment(
         Label(
           icon = Icons.Maximize.clazz(ExploreStyles.Accented),

@@ -5,6 +5,7 @@ package workers
 
 import cats.Hash
 import cats.data.EitherNec
+import cats.data.NonEmptyList
 import cats.effect.Concurrent
 import cats.effect.IO
 import cats.syntax.all.*
@@ -103,55 +104,50 @@ trait CatalogCache extends CatalogIDB {
     val start = ldt.`with`(ChronoField.DAY_OF_YEAR, 1L).`with`(ChronoField.NANO_OF_DAY, 0)
     val end   = start.plus(1, ChronoUnit.YEARS)
 
-    Interval.closed(
-      start.toInstant(Constants.UTCOffset),
-      end.toInstant(Constants.UTCOffset)
-    ) match {
-      case yearInterval @ Bounded(_, _, _) =>
-        // Make a time based query for pm over a year
-        val query = TimeRangeQueryByADQL(
-          tracking,
-          yearInterval,
-          probeArm.candidatesArea,
-          brightnessConstraints.some,
-          proxy.some
-        )
+    (tracking.at(start.toInstant(Constants.UTCOffset)),
+     tracking.at(end.toInstant(Constants.UTCOffset))
+    ).mapN { (a, b) =>
+      // Make a query based on two coordinates of the base of an asterism over a year
+      val query = CoordinatesRangeQueryByADQL(
+        NonEmptyList.of(a.value, b.value),
+        probeArm.candidatesArea,
+        brightnessConstraints.some,
+        proxy.some
+      )
 
-        (Logger[IO].debug(s"Requested catalog $query ${cacheQueryHash.hash(query)}") *>
-          // Try to find it in the db
-          readGuideStarCandidates(idb, stores, query)
-            .toF[IO]
-            .handleError(_ => none)) // Try to find it in the db
-          .flatMap(
-            _.fold(
-              // Not found in the db, re request
-              readFromGaia[IO](client, query)
-                .map(
-                  _.collect { case Right(s) =>
-                    GuideStarCandidate.siderealTarget.get(s)
-                  }.map(gsc =>
-                    // Do PM correction
-                    gsc.at(request.vizTime)
-                  )
+      (Logger[IO].debug(s"Requested catalog $query ${cacheQueryHash.hash(query)}") *>
+        // Try to find it in the db
+        readGuideStarCandidates(idb, stores, query)
+          .toF[IO]
+          .handleError(_ => none)) // Try to find it in the db
+        .flatMap(
+          _.fold(
+            // Not found in the db, re request
+            readFromGaia[IO](client, query)
+              .map(
+                _.collect { case Right(s) =>
+                  GuideStarCandidate.siderealTarget.get(s)
+                }.map(gsc =>
+                  // Do PM correction
+                  gsc.at(request.vizTime)
                 )
-                .flatMap { candidates =>
-                  Logger[IO].debug(
-                    s"Catalog results from remote catalog: ${candidates.length} candidates"
-                  ) *>
-                    respond(candidates) *>
-                    storeGuideStarCandidates(idb, stores, query, candidates)
-                      .toF[IO]
-                      .handleError(e => Logger[IO].error(e)("Error storing guidestar candidates"))
-                }
-                .void
-            ) { c =>
-              // Cache hit!
-              Logger[IO].debug(s"Catalog results from cache: ${c.length} candidates") *>
-                respond(c)
-            }
-          )
-      case _                               =>
-        Logger[IO].error("Unexpected error in CatalogCage: A year is not a Bounded Interval.")
-    }
+              )
+              .flatMap { candidates =>
+                Logger[IO].debug(
+                  s"Catalog results from remote catalog: ${candidates.length} candidates"
+                ) *>
+                  respond(candidates) *>
+                  storeGuideStarCandidates(idb, stores, query, candidates)
+                    .toF[IO]
+                    .handleError(e => Logger[IO].error(e)("Error storing guidestar candidates"))
+              }
+              .void
+          ) { c =>
+            // Cache hit!
+            Logger[IO].debug(s"Catalog results from cache: ${c.length} candidates") *>
+              respond(c)
+          }
+        )
+    }.getOrElse(IO.unit)
   }
 }

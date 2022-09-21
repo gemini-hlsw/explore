@@ -17,6 +17,7 @@ import explore.components.ui.ExploreStyles
 import explore.implicits.*
 import explore.model.Asterism
 import explore.model.ConstraintGroup
+import explore.model.CoordinatesAtVizTime
 import explore.model.Focused
 import explore.model.GridLayoutSection
 import explore.model.ModelUndoStacks
@@ -150,7 +151,7 @@ object ObsTabTiles {
               ObsEditData.scienceData
                 .andThen(ScienceData.targets)
                 .andThen(ObservationData.TargetEnvironment.asterism)
-            ).zoom(Asterism.fromTargetsList.asLens)
+            ).zoom(Asterism.fromTargetsListOn(props.focusedTarget).asLens)
           )
 
         val vizTimeView: Pot[View[Option[Instant]]] =
@@ -159,17 +160,13 @@ object ObsTabTiles {
         val potAsterismMode: Pot[(View[Option[Asterism]], Option[ScienceMode])] =
           potAsterism.map(x => (x, scienceMode))
 
-        val targetCoords: Option[(Target.Id, Coordinates)] =
-          potAsterism.toOption
-            .flatMap(
-              _.get.flatMap(t =>
-                t.baseTarget.target match {
-                  case Target.Sidereal(_, tracking, _, _) =>
-                    (t.baseTarget.id, tracking.baseCoordinates).some
-                  case _                                  => none
-                }
-              )
-            )
+        val vizTime = vizTimeView.toOption.flatMap(_.get)
+
+        // base coordinates corrected to vizTime
+        val targetCoords: Option[CoordinatesAtVizTime] =
+          (vizTime, potAsterism.toOption)
+            .mapN((instant, asterism) => asterism.get.flatMap(_.baseTracking.at(instant)))
+            .flatten
 
         val spectroscopyReqs: Option[ScienceRequirementsData] =
           obsView.toOption.map(_.get.scienceData.requirements)
@@ -214,6 +211,7 @@ object ObsTabTiles {
 
         val skyPlotTile =
           ElevationPlotTile.elevationPlotTile(props.userId,
+                                              props.focusedTarget,
                                               scienceMode,
                                               targetCoords,
                                               vizTimeView.toOption.flatMap(_.get)
@@ -223,11 +221,16 @@ object ObsTabTiles {
           tid:                          Option[Target.Id],
           via:                          SetRouteVia
         ): Callback =
-          props.ctx.setPageVia(AppTab.Observations,
-                               programId,
-                               Focused(oid.map(ObsIdSet.one), tid),
-                               via
-          )
+          (potAsterism.toOption, tid)
+            // When selecting the current target focus the asterism zipper
+            .mapN((pot, tid) => pot.mod(_.map(_.focusOn(tid))))
+            .getOrEmpty *>
+            // Set the route base on the selected target
+            props.ctx.setPageVia(AppTab.Observations,
+                                 programId,
+                                 Focused(oid.map(ObsIdSet.one), tid),
+                                 via
+            )
 
         val targetTile = AsterismEditorTile.asterismEditorTile(
           props.userId,
@@ -274,7 +277,8 @@ object ObsTabTiles {
             ),
             props.undoStacks
               .zoom(ModelUndoStacks.forObservationData[IO])
-              .zoom(atMapWithDefault(props.obsId, UndoStacks.empty))
+              .zoom(atMapWithDefault(props.obsId, UndoStacks.empty)),
+            targetCoords
           )
 
         val rglRender: LayoutsMap => VdomNode = (l: LayoutsMap) =>

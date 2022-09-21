@@ -3,26 +3,28 @@
 
 package explore.config
 
-import cats.syntax.all._
+import cats.syntax.all.*
 import coulomb.ops.algebra.spire.all.given
-import crystal.react._
-import crystal.react.hooks._
-import eu.timepit.refined.auto._
+import crystal.react.*
+import crystal.react.hooks.*
+import eu.timepit.refined.auto.*
 import explore.Icons
-import explore.common.ObsQueries._
-import explore.common.ScienceQueries._
+import explore.common.ObsQueries.*
+import explore.common.ScienceQueries.*
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
-import explore.implicits._
+import explore.implicits.*
 import explore.model
+import explore.model.CoordinatesAtVizTime
 import explore.model.ImagingConfigurationOptions
 import explore.model.display.given
 import explore.model.itc.ItcTarget
 import explore.modes.SpectroscopyModesMatrix
-import explore.undo._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import explore.undo.*
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ScienceMode
+import lucuma.core.math.Coordinates
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
 import lucuma.core.model.SiderealTracking
@@ -33,27 +35,27 @@ import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.button.Button
-import react.semanticui.shorthand._
-import react.semanticui.sizes._
+import react.semanticui.shorthand.*
+import react.semanticui.sizes.*
 
-import scalajs.js.JSConverters._
+import scalajs.js.JSConverters.*
 
-final case class BasicConfigurationPanel(
+case class BasicConfigurationPanel(
   obsId:           Observation.Id,
   requirementsCtx: UndoSetter[ScienceRequirementsData],
   scienceModeOpt:  View[Option[model.ScienceMode]],
   constraints:     ConstraintSet,
   itcTargets:      List[ItcTarget],
-  baseTracking:    Option[SiderealTracking],
+  baseCoordinates: Option[CoordinatesAtVizTime],
   onShowDetails:   Callback,
   confMatrix:      SpectroscopyModesMatrix
 )(using val ctx:   AppContextIO)
-    extends ReactFnProps[BasicConfigurationPanel](BasicConfigurationPanel.component)
+    extends ReactFnProps(BasicConfigurationPanel.component)
 
-object BasicConfigurationPanel {
-  type Props = BasicConfigurationPanel
+private object BasicConfigurationPanel {
+  private type Props = BasicConfigurationPanel
 
-  protected val component =
+  private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useStateView[ScienceMode](ScienceMode.Spectroscopy)
@@ -90,7 +92,7 @@ object BasicConfigurationPanel {
             spectroscopy.get,
             props.constraints,
             if (props.itcTargets.isEmpty) none else props.itcTargets.some,
-            props.baseTracking,
+            props.baseCoordinates,
             props.confMatrix,
             props.onShowDetails
           ).when(isSpectroscopy),

@@ -4,16 +4,16 @@
 package explore.model
 
 import cats.Eq
-import cats.syntax.all._
+import cats.syntax.all.*
 import explore.model.ObsIdSet
-import japgolly.scalajs.react.ReactCats._
+import japgolly.scalajs.react.ReactCats.*
 import japgolly.scalajs.react.Reusability
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import monocle.Focus
 import monocle.Lens
 
-final case class Focused(obsSet: Option[ObsIdSet] = none, target: Option[Target.Id] = none) {
+case class Focused(obsSet: Option[ObsIdSet] = none, target: Option[Target.Id] = none) {
   def withObsSetOpt(obsSet: Option[ObsIdSet]): Focused = Focused.obsSet.replace(obsSet)(this)
 
   def withObsSet(obsSet: ObsIdSet): Focused = withObsSetOpt(obsSet.some)

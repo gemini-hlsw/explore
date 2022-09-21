@@ -5,35 +5,37 @@ package explore.targeteditor
 
 import boopickle.DefaultBasic.*
 import cats.effect.IO
-import cats.syntax.all._
+import cats.syntax.all.*
 import crystal.Pot
 import crystal.PotOption
-import crystal.implicits._
+import crystal.implicits.*
 import crystal.react.View
-import crystal.react.hooks._
-import crystal.react.implicits._
-import crystal.react.reuse._
-import eu.timepit.refined.auto._
+import crystal.react.hooks.*
+import crystal.react.implicits.*
+import crystal.react.reuse.*
+import eu.timepit.refined.auto.*
 import explore.Icons
-import explore.common.UserPreferencesQueries._
+import explore.common.UserPreferencesQueries.*
 import explore.components.ui.ExploreStyles
-import explore.events._
-import explore.implicits._
+import explore.events.*
+import explore.implicits.*
+import explore.model.Asterism
 import explore.model.Constants
 import explore.model.ObsConfiguration
 import explore.model.TargetVisualOptions
 import explore.model.WorkerClients.*
-import explore.model.boopickle.Boopickle._
+import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.CatalogPicklers.given
-import explore.model.boopickle._
+import explore.model.boopickle.*
 import explore.model.enums.AgsState
 import explore.model.enums.Visible
-import explore.model.reusability._
+import explore.model.reusability.*
+import explore.model.reusability.given
 import explore.optics.ModelOptics
-import explore.utils._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.ags._
+import explore.utils.*
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.ags.*
 import lucuma.core.enums.PortDisposition
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
@@ -42,39 +44,39 @@ import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.core.model.User
-import lucuma.ui.reusability._
+import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
-import queries.common.UserPreferencesQueriesGQL._
+import queries.common.UserPreferencesQueriesGQL.*
 import react.aladin.Fov
 import react.common.ReactFnProps
-import react.semanticui.collections.menu._
+import react.semanticui.collections.menu.*
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.checkbox.Checkbox
-import react.semanticui.sizes._
+import react.semanticui.sizes.*
 
 import java.time.Duration
 import java.time.Instant
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
-final case class AladinCell(
-  uid:              User.Id,
-  tid:              Target.Id,
-  obsConf:          ObsConfiguration,
-  target:           View[SiderealTracking],
-  fullScreen:       View[Boolean]
-)(implicit val ctx: AppContextIO)
-    extends ReactFnProps[AladinCell](AladinCell.component)
+case class AladinCell(
+  uid:           User.Id,
+  tid:           Target.Id,
+  obsConf:       ObsConfiguration,
+  asterism:      Asterism,
+  fullScreen:    View[Boolean]
+)(using val ctx: AppContextIO)
+    extends ReactFnProps(AladinCell.component)
 
-final case class AladinSettings(showMenu: Boolean, showCatalog: Boolean)
+case class AladinSettings(showMenu: Boolean, showCatalog: Boolean)
 
 object AladinSettings {
   val Default = AladinSettings(false, false)
 }
 
 object AladinCell extends ModelOptics {
-  type Props = AladinCell
+  private type Props = AladinCell
 
   val params  = AgsParams.GmosAgsParams(none, PortDisposition.Side)
   val basePos = AgsPosition(Angle.Angle0, Offset.Zero)
@@ -88,11 +90,11 @@ object AladinCell extends ModelOptics {
     Duration.between(_, _).toDays().abs < 30L
   }
 
-  protected val component =
+  private val component =
     ScalaFnComponent
       .withHooks[Props]
       // mouse coordinates, starts on the base
-      .useStateBy(_.target.get.baseCoordinates)
+      .useStateBy(_.asterism.baseTracking.baseCoordinates)
       // target options, will be read from the user preferences
       .useStateView(Pot.pending[TargetVisualOptions])
       // flag to trigger centering. This is a bit brute force but
@@ -107,17 +109,19 @@ object AladinCell extends ModelOptics {
       // Request data again if vizTime changes more than a month
       .useEffectWithDepsBy((p, _, _, _, _, _, _) => p.obsConf.vizTime) {
         (props, _, _, _, gs, _, agsState) => vizTime =>
-          implicit val ctx = props.ctx
+          import props.given
 
           agsState.setStateAsync(AgsState.LoadingCandidates) >>
-            CatalogClient[IO].requestSingle(CatalogMessage.GSRequest(props.target.get, vizTime)) >>=
+            CatalogClient[IO].requestSingle(
+              CatalogMessage.GSRequest(props.asterism.baseTracking, vizTime)
+            ) >>=
             (_.map(candidates =>
               agsState.setState(AgsState.Idle).to[IO] >> gs.setStateAsync(candidates)
             ).orEmpty)
       }
       .useEffectWithDepsBy((p, _, _, _, _, _, _) => (p.uid, p.tid)) {
         (props, _, options, _, _, _, _) => _ =>
-          implicit val ctx = props.ctx
+          import props.given
 
           UserTargetPreferencesQuery
             .queryWithDefault[IO](props.uid, props.tid, Constants.InitialFov)
@@ -133,14 +137,14 @@ object AladinCell extends ModelOptics {
                     )
                     .ready
                 )
-                .to[IO] *> props.fullScreen.set(fullScreen).to[IO]
+                .to[IO]
             }
       }
       // Selected GS index. Should be stored in the db
       .useStateView(none[Int])
       // Request ags calculation
       .useEffectWithDepsBy((p, _, _, _, candidates, _, _, _) =>
-        (p.target.get,
+        (p.asterism.baseTracking,
          p.obsConf.posAngleConstraint,
          p.obsConf.constraints,
          p.obsConf.wavelength,
@@ -156,7 +160,7 @@ object AladinCell extends ModelOptics {
                 vizTime,
                 candidates
               ) =>
-            implicit val ctx = props.ctx
+            import props.given
 
             val pa = posAngle match {
               case PosAngleConstraint.Fixed(a)               => a.some
@@ -168,6 +172,11 @@ object AladinCell extends ModelOptics {
             (tracking.at(vizTime), pa).mapN { (base, pa) =>
               val basePos = AgsPosition(pa, Offset.Zero)
 
+              val sciencePositions =
+                props.asterism.asList
+                  .flatMap(_.toSidereal)
+                  .flatMap(_.target.tracking.at(vizTime))
+
               for {
                 _ <- selectedIndex.async.set(none)
                 _ <- agsState.setStateAsync(AgsState.Calculating)
@@ -176,8 +185,8 @@ object AladinCell extends ModelOptics {
                          AgsMessage.Request(props.tid,
                                             constraints,
                                             wavelength,
-                                            base,
-                                            List(base),
+                                            base.value,
+                                            sciencePositions,
                                             basePos,
                                             params,
                                             candidates
@@ -218,7 +227,7 @@ object AladinCell extends ModelOptics {
           selectedGSIndex,
           openSettings
         ) =>
-          implicit val ctx = props.ctx
+          import props.given
 
           val agsCandidatesView =
             options.zoom(Pot.readyPrism.andThen(TargetVisualOptions.agsCandidates))
@@ -319,14 +328,14 @@ object AladinCell extends ModelOptics {
               fullScreenView.mod(!_) *>
               prefsSetter(identity, identity, !_)
 
-          val aladinKey = s"${props.target.get}"
+          val aladinKey = s"${props.asterism}"
 
           val selectedGuideStar = selectedGSIndex.get.flatMap(agsResults.value.lift)
           val usableGuideStar   = selectedGuideStar.exists(_.isUsable)
 
           val renderCell: TargetVisualOptions => VdomNode = (t: TargetVisualOptions) =>
             AladinContainer(
-              props.target,
+              props.asterism,
               props.obsConf,
               t.copy(fullScreen = props.fullScreen.get),
               coordinatesSetter,

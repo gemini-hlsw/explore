@@ -9,6 +9,7 @@ import cats.syntax.all._
 import explore.components.ui.ExploreStyles
 import explore.highcharts.*
 import explore.implicits._
+import explore.model.CoordinatesAtVizTime
 import explore.model.enums.TimeDisplay
 import explore.syntax.ui.*
 import explore.syntax.ui.given
@@ -46,7 +47,7 @@ import js.JSConverters._
 
 case class ElevationPlotNight(
   site:        Site,
-  coords:      Coordinates,
+  coords:      CoordinatesAtVizTime,
   date:        LocalDate,
   timeDisplay: TimeDisplay
 ) extends ReactFnProps(ElevationPlotNight.component)
@@ -173,7 +174,7 @@ object ElevationPlotNight {
         val start          = tbOfficialNight.start
         val end            = tbOfficialNight.end
         val skyCalcResults =
-          SkyCalc.forInterval(props.site, start, end, PlotEvery, _ => props.coords)
+          SkyCalc.forInterval(props.site, start, end, PlotEvery, _ => props.coords.value)
         val series         = skyCalcResults
           .map { (instant, results) =>
             val millisSinceEpoch = instant.toEpochMilli.toDouble

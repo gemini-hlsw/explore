@@ -3,69 +3,71 @@
 
 package explore.config
 
-import boopickle.DefaultBasic._
-import cats.data._
-import cats.effect._
+import boopickle.DefaultBasic.*
+import cats.data.*
+import cats.effect.*
 import cats.effect.std.UUIDGen
-import cats.syntax.all._
+import cats.syntax.all.*
 import coulomb.Quantity
 import coulomb.policy.spire.standard.given
 import crystal.react.View
-import crystal.react.hooks._
-import crystal.react.implicits._
-import crystal.react.reuse._
-import eu.timepit.refined.auto._
+import crystal.react.hooks.*
+import crystal.react.implicits.*
+import crystal.react.reuse.*
+import eu.timepit.refined.auto.*
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
-import explore.common.ObsQueries._
+import explore.common.ObsQueries.*
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
-import explore.events._
-import explore.implicits._
+import explore.events.*
+import explore.implicits.*
 import explore.itc.*
+import explore.model.CoordinatesAtVizTime
 import explore.model.Progress
 import explore.model.ScienceMode
 import explore.model.ScienceModeAdvanced
 import explore.model.ScienceModeBasic
 import explore.model.WorkerClients.*
-import explore.model.boopickle.Boopickle._
+import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.boopickle.*
 import explore.model.itc.*
 import explore.model.reusability.*
-import explore.modes._
+import explore.modes.*
 import explore.syntax.ui.*
 import explore.syntax.ui.given
-import explore.utils._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import explore.utils.*
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.FocalPlane
-import lucuma.core.enums._
+import lucuma.core.enums.*
+import lucuma.core.math.Coordinates
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units.Micrometer
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.SiderealTracking
 import lucuma.core.util.Display
 import lucuma.refined.*
-import lucuma.ui.reusability._
+import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import lucuma.utils._
+import lucuma.utils.*
 import react.circularprogressbar.CircularProgressbar
 import react.common.Css
 import react.common.ReactFnProps
 import react.floatingui.Placement
-import react.floatingui.syntax._
-import react.semanticui._
-import react.semanticui.collections.table._
+import react.floatingui.syntax.*
+import react.semanticui.*
+import react.semanticui.collections.table.*
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.label.Label
-import react.virtuoso._
+import react.virtuoso.*
 import react.virtuoso.raw.ListRange
-import reactST.reactTable._
+import reactST.reactTable.*
 import reactST.reactTable.mod.DefaultSortTypes
 import reactST.reactTable.mod.SortByFn
 import reactST.reactTable.mod.UseTableRowProps
@@ -83,7 +85,7 @@ case class SpectroscopyModesTable(
   spectroscopyRequirements: SpectroscopyRequirementsData,
   constraints:              ConstraintSet,
   targets:                  Option[List[ItcTarget]],
-  baseTracking:             Option[SiderealTracking],
+  baseCoordinates:          Option[CoordinatesAtVizTime],
   matrix:                   SpectroscopyModesMatrix,
   onSelect:                 Callback
 )(using val ctx:            AppContextIO)
@@ -388,24 +390,23 @@ private object SpectroscopyModesTable {
     ScalaFnComponent
       .withHooks[Props]
       // rows
-      .useMemoBy(p =>
-        (p.matrix, p.spectroscopyRequirements, p.baseTracking.map(_.baseCoordinates.dec))
-      ) { _ => (matrix, s, dec) =>
-        val rows                =
-          matrix
-            .filtered(
-              focalPlane = s.focalPlane,
-              capabilities = s.capabilities,
-              wavelength = s.wavelength,
-              slitWidth = s.focalPlaneAngle,
-              resolution = s.resolution,
-              coverage = s.wavelengthCoverage.flatMap(
-                _.micrometer.toValue[BigDecimal].toRefined[NonNegative].toOption
-              ),
-              declination = dec
-            )
-        val (enabled, disabled) = rows.partition(enabledRow)
-        enabled ++ disabled
+      .useMemoBy(p => (p.matrix, p.spectroscopyRequirements, p.baseCoordinates.map(_.value.dec))) {
+        _ => (matrix, s, dec) =>
+          val rows                =
+            matrix
+              .filtered(
+                focalPlane = s.focalPlane,
+                capabilities = s.capabilities,
+                wavelength = s.wavelength,
+                slitWidth = s.focalPlaneAngle,
+                resolution = s.resolution,
+                coverage = s.wavelengthCoverage.flatMap(
+                  _.micrometer.toValue[BigDecimal].toRefined[NonNegative].toOption
+                ),
+                declination = dec
+              )
+          val (enabled, disabled) = rows.partition(enabledRow)
+          enabled ++ disabled
       }
       // itc results cache
       .useState(

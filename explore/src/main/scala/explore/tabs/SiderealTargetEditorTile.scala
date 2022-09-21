@@ -7,13 +7,17 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.View
 import explore.components.Tile
+import explore.model.Asterism
+import explore.model.util.*
 import explore.targeteditor.SiderealTargetEditor
 import explore.undo.UndoStacks
+import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import monocle.std.option.some
 
 import java.time.Instant
 
@@ -32,11 +36,11 @@ object SiderealTargetEditorTile {
   ) =
     Tile(ObsTabTilesIds.TargetId.id, title, back = backButton, canMinimize = true) {
       (renderInTitle: Tile.RenderInTitle) =>
+        val asterism = target.widen[Target].zoom(Asterism.oneTarget(targetId).reverse.asLens)
         userId.map(uid =>
           SiderealTargetEditor(
             uid,
-            targetId,
-            target,
+            asterism,
             vizTime,
             none,
             none,
@@ -47,6 +51,6 @@ object SiderealTargetEditorTile {
             renderInTitle = renderInTitle.some,
             fullScreen = fullScreen
           )
-        ): VdomNode
+        )
     }
 }

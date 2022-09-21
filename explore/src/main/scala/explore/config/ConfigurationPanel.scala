@@ -5,63 +5,65 @@ package explore.config
 
 import cats.Eq
 import cats.effect.IO
-import cats.syntax.all._
+import cats.syntax.all.*
 import clue.data.Assign
 import clue.data.Input
-import clue.data.syntax._
+import clue.data.syntax.*
 import crystal.PotOption
-import crystal.implicits._
-import crystal.react._
-import crystal.react.hooks._
-import crystal.react.implicits._
-import eu.timepit.refined.auto._
+import crystal.implicits.*
+import crystal.react.*
+import crystal.react.hooks.*
+import crystal.react.implicits.*
+import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.Aligner
-import explore.common.ObsQueries._
-import explore.common.ScienceQueries._
+import explore.common.ObsQueries.*
+import explore.common.ScienceQueries.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
-import explore.events._
-import explore.implicits._
+import explore.events.*
+import explore.implicits.*
 import explore.model
+import explore.model.CoordinatesAtVizTime
 import explore.model.WorkerClients.*
-import explore.model.boopickle.Boopickle._
+import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.ItcPicklers.given
-import explore.model.boopickle._
+import explore.model.boopickle.*
 import explore.model.itc.ItcTarget
-import explore.model.reusability._
+import explore.model.reusability.*
 import explore.modes.SpectroscopyModesMatrix
-import explore.undo._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import explore.undo.*
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.math.Coordinates
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.SiderealTracking
-import lucuma.schemas.ObservationDB.Types._
-import lucuma.ui.reusability._
+import lucuma.schemas.ObservationDB.Types.*
+import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import org.http4s.syntax.all._
+import org.http4s.syntax.all.*
 import queries.common.ObsQueriesGQL
-import queries.schemas.implicits._
+import queries.schemas.implicits.*
 import react.common.ReactFnProps
 
-final case class ConfigurationPanel(
-  obsId:            Observation.Id,
-  title:            String,
-  subtitle:         Option[NonEmptyString],
-  scienceData:      UndoContext[ScienceData],
-  constraints:      ConstraintSet,
-  itcTargets:       List[ItcTarget],
-  baseTracking:     Option[SiderealTracking],
-  renderInTitle:    Tile.RenderInTitle
-)(implicit val ctx: AppContextIO)
-    extends ReactFnProps[ConfigurationPanel](ConfigurationPanel.component)
+case class ConfigurationPanel(
+  obsId:           Observation.Id,
+  title:           String,
+  subtitle:        Option[NonEmptyString],
+  scienceData:     UndoContext[ScienceData],
+  constraints:     ConstraintSet,
+  itcTargets:      List[ItcTarget],
+  baseCoordinates: Option[CoordinatesAtVizTime],
+  renderInTitle:   Tile.RenderInTitle
+)(using val ctx:   AppContextIO)
+    extends ReactFnProps(ConfigurationPanel.component)
 
 object ConfigurationPanel {
-  type Props = ConfigurationPanel
+  private type Props = ConfigurationPanel
 
   // TODO: The following few methods could be moved to `clue` if they are appropiate. Before
   // doing so, I'd like to have the code reviewed and perhaps looked over by `Mr. Clue` so
@@ -70,8 +72,7 @@ object ConfigurationPanel {
   // gmosNorthLongSlitInput or a gmosSouthLongSlitInput, but not both. And we can't know
   // until we edit.
 
-  implicit class InputOps[A](input: Input[A]) {
-
+  extension [A](input: Input[A])
     /**
      * If the Input is not `Assing[A]`, create a new Input with the parameter and `assign` it.
      */
@@ -79,7 +80,6 @@ object ConfigurationPanel {
       case Assign(_) => input
       case _         => ifNotAssigned.assign
     }
-  }
 
   /**
    * Handles the case where `A.Input[B]` not have an assigned value, but it needs to be created for
@@ -109,12 +109,11 @@ object ConfigurationPanel {
         bAssign.map(f)
       })
 
-  private implicit val matrixEq: Eq[SpectroscopyModesMatrix] = Eq.by(_.matrix.isEmpty)
+  private given Eq[SpectroscopyModesMatrix] = Eq.by(_.matrix.isEmpty)
 
-  private implicit val matrixReusability: Reusability[SpectroscopyModesMatrix] =
-    Reusability.byEq
+  private given Reusability[SpectroscopyModesMatrix] = Reusability.byEq
 
-  protected val component =
+  private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useStateViewBy(props =>
@@ -133,7 +132,7 @@ object ConfigurationPanel {
           )
       }
       .useEffectResultOnMountBy { (props, _) =>
-        given AppContextIO = props.ctx
+        import props.given
 
         ItcClient[IO]
           .requestSingle(
@@ -141,7 +140,7 @@ object ConfigurationPanel {
           )
       }
       .render { (props, editState, matrix) =>
-        given AppContextIO = props.ctx
+        import props.given
 
         val requirementsCtx: UndoSetter[ScienceRequirementsData] =
           props.scienceData.zoom(ScienceData.requirements)
@@ -197,7 +196,7 @@ object ConfigurationPanel {
                 optModeView,
                 props.constraints,
                 props.itcTargets,
-                props.baseTracking,
+                props.baseCoordinates,
                 showDetailsCB,
                 confMatrix
               )
