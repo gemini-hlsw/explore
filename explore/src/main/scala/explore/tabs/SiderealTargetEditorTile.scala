@@ -7,6 +7,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.View
 import explore.components.Tile
+import explore.components.ui.ExploreStyles
 import explore.model.Asterism
 import explore.model.util.*
 import explore.targeteditor.SiderealTargetEditor
@@ -34,23 +35,33 @@ object SiderealTargetEditorTile {
     fullScreen: View[Boolean],
     backButton: Option[VdomNode] = none
   ) =
-    Tile(ObsTabTilesIds.TargetId.id, title, back = backButton, canMinimize = true) {
-      (renderInTitle: Tile.RenderInTitle) =>
-        val asterism = target.widen[Target].zoom(Asterism.oneTarget(targetId).reverse.asLens)
-        userId.map(uid =>
-          SiderealTargetEditor(
-            uid,
-            asterism,
-            vizTime,
-            none,
-            none,
-            none,
-            none,
-            undoStacks,
-            searching,
-            renderInTitle = renderInTitle.some,
-            fullScreen = fullScreen
+    Tile(ObsTabTilesIds.TargetId.id,
+         title,
+         back = backButton,
+         canMinimize = true,
+         bodyClass = Some(ExploreStyles.TargetTileBody)
+    ) { (renderInTitle: Tile.RenderInTitle) =>
+      val asterism = target.widen[Target].zoom(Asterism.oneTarget(targetId).reverse.asLens)
+      <.div(
+        ExploreStyles.AladinFullScreen.when(fullScreen.get),
+        <.div(
+          ExploreStyles.TargetTileEditor,
+          userId.map(uid =>
+            SiderealTargetEditor(
+              uid,
+              asterism,
+              vizTime,
+              none,
+              none,
+              none,
+              none,
+              undoStacks,
+              searching,
+              renderInTitle = renderInTitle.some,
+              fullScreen = fullScreen
+            )
           )
         )
+      )
     }
 }
