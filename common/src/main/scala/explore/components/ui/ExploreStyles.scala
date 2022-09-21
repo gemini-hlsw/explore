@@ -396,6 +396,8 @@ object ExploreStyles {
   val ScienceTarget: Css           = Css("science-target")
   val ScienceSelectedTarget: Css   = Css("science-selected-target")
   val CircleTarget: Css            = Css("circle-target")
+  val TargetTooltip: Css           = Css("svg-target-tooltip")
+  val TargetTooltipArea: Css       = Css("svg-target-tooltip-area")
   val BaseTarget                   = Css("base-target")
   val CrosshairTarget              = Css("crosshair-target")
   val ArrowBetweenTargets          = Css("arrow-between-targets")
