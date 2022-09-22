@@ -154,19 +154,24 @@ object ObsTabTiles {
             ).zoom(Asterism.fromTargetsListOn(props.focusedTarget).asLens)
           )
 
-        val vizTimeView: Pot[View[Option[Instant]]] =
-          obsViewPot.map(_.zoom(ObsEditData.visualizationTime))
-
         val potAsterismMode: Pot[(View[Option[Asterism]], Option[ScienceMode])] =
           potAsterism.map(x => (x, scienceMode))
 
+        val vizTimeView: Pot[View[Option[Instant]]] =
+          obsViewPot.map(_.zoom(ObsEditData.visualizationTime))
+
         val vizTime = vizTimeView.toOption.flatMap(_.get)
 
-        // base coordinates corrected to vizTime
+        // asterism base coordinates at viz time or default to base coordinates
         val targetCoords: Option[CoordinatesAtVizTime] =
           (vizTime, potAsterism.toOption)
             .mapN((instant, asterism) => asterism.get.flatMap(_.baseTracking.at(instant)))
             .flatten
+            .orElse(
+              // If e.g. vizTime isn't defined default to the asterism base coordinates
+              potAsterism.toOption
+                .flatMap(_.get.map(x => CoordinatesAtVizTime(x.baseTracking.baseCoordinates)))
+            )
 
         val spectroscopyReqs: Option[ScienceRequirementsData] =
           obsView.toOption.map(_.get.scienceData.requirements)
@@ -214,7 +219,7 @@ object ObsTabTiles {
                                               props.focusedTarget,
                                               scienceMode,
                                               targetCoords,
-                                              vizTimeView.toOption.flatMap(_.get)
+                                              vizTime
           )
 
         def setCurrentTarget(programId: Program.Id, oid: Option[Observation.Id])(
