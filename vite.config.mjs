@@ -6,6 +6,8 @@ import fs from 'fs';
 import mkcert from 'vite-plugin-mkcert';
 import { VitePluginFonts } from 'vite-plugin-fonts';
 import { VitePWA } from 'vite-plugin-pwa';
+import wasm from "vite-plugin-wasm";
+import topLevelAwait from "vite-plugin-top-level-await";
 
 const fixCssRoot = (opts = {}) => {
   return {
@@ -217,6 +219,8 @@ export default defineConfig(({ command, mode }) => {
       format: 'es', // We need this for workers to be able to do dynamic imports.
     },
     plugins: [
+      wasm(),
+      topLevelAwait(),
       mkcert({ hosts: ['localhost', 'local.lucuma.xyz'] }),
       react(),
       fontImport,
