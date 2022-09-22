@@ -4,16 +4,16 @@
 package explore.targets
 
 import cats.Eq
-import cats.syntax.all._
+import cats.syntax.all.*
 import explore.model.TargetWithOptId
-import japgolly.scalajs.react.ReactCats._
+import japgolly.scalajs.react.ReactCats.*
 import japgolly.scalajs.react.Reusability
 import lucuma.catalog.AngularSize
 import lucuma.catalog.CatalogTargetResult
 import lucuma.core.model.CatalogInfo
 import lucuma.core.model.Target
 
-final case class TargetSearchResult(
+case class TargetSearchResult(
   targetWithOptId: TargetWithOptId,
   angularSize:     Option[AngularSize]
 ) {
@@ -25,7 +25,7 @@ object TargetSearchResult {
   def fromCatalogTargetResult(r: CatalogTargetResult): TargetSearchResult =
     TargetSearchResult(TargetWithOptId(none, r.target), r.angularSize)
 
-  implicit val EqTargetSearchResult: Eq[TargetSearchResult] =
+  given Eq[TargetSearchResult] =
     Eq.by(t =>
       Target.catalogInfo
         .getOption(t.target)
@@ -36,6 +36,6 @@ object TargetSearchResult {
         .getOrElse(Target.name.get(t.target).value)
     )
 
-  implicit val reuseTargetSearchResult: Reusability[TargetSearchResult] =
+  given Reusability[TargetSearchResult] =
     Reusability.byEq
 }

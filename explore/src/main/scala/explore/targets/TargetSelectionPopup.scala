@@ -4,24 +4,24 @@
 package explore.targets
 
 import cats.Eq
-import cats.Order._
+import cats.Order.*
 import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.effect.kernel.Outcome
-import cats.syntax.all._
-import crystal.react.hooks._
-import crystal.react.implicits._
+import cats.syntax.all.*
+import crystal.react.hooks.*
+import crystal.react.implicits.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
-import explore.implicits._
+import explore.implicits.*
 import explore.model.Constants
 import explore.model.EmptySiderealTarget
 import explore.model.TargetWithOptId
-import explore.model.reusability._
-import explore.utils._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import explore.model.reusability.*
+import explore.utils.*
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.catalog.AngularSize
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
@@ -29,45 +29,45 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.refined.*
 import lucuma.ui.forms.FormInputEV
-import lucuma.ui.reusability._
+import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import react.aladin._
+import react.aladin.*
 import react.common.ReactFnProps
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.header.Header
 import react.semanticui.elements.segment.Segment
 import react.semanticui.elements.segment.SegmentGroup
-import react.semanticui.modules.modal._
-import react.semanticui.shorthand._
-import react.semanticui.sizes._
+import react.semanticui.modules.modal.*
+import react.semanticui.shorthand.*
+import react.semanticui.sizes.*
 
 import scala.collection.immutable.SortedMap
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
-final case class TargetSelectionPopup(
-  programId:        Program.Id,
-  trigger:          Button,
-  onSelected:       TargetWithOptId => Callback
-)(implicit val ctx: AppContextIO)
-    extends ReactFnProps[TargetSelectionPopup](TargetSelectionPopup.component)
+case class TargetSelectionPopup(
+  programId:     Program.Id,
+  trigger:       Button,
+  onSelected:    TargetWithOptId => Callback
+)(using val ctx: AppContextIO)
+    extends ReactFnProps(TargetSelectionPopup.component)
 
 object TargetSelectionPopup {
-  type Props = TargetSelectionPopup
+  private type Props = TargetSelectionPopup
 
-  protected final case class Result(target: TargetSearchResult, priority: Int)
-  protected object Result {
-    implicit val eqResult: Eq[Result] = Eq.fromUniversalEquals
+  private final case class Result(target: TargetSearchResult, priority: Int)
+  private object Result {
+    given Eq[Result] = Eq.fromUniversalEquals
   }
 
-  protected final case class SelectedTarget(
+  private final case class SelectedTarget(
     target:      Target,
     source:      TargetSource[IO],
     resultIndex: Int,
     angularSize: Option[AngularSize]
   )
 
-  protected val component = ScalaFnComponent
+  private val component = ScalaFnComponent
     .withHooks[Props]
     // inputValue
     .useStateView("")
@@ -85,7 +85,7 @@ object TargetSelectionPopup {
     .useState(none[SelectedTarget])
     // targetSources
     .useMemoBy((props, _, _, _, _, _, _) => props.ctx) { (props, _, _, _, _, _, _) => propsCtx =>
-      implicit val ctx = propsCtx
+      import props.given
       TargetSource.FromProgram[IO](props.programId) :: TargetSource.forAllCatalogs[IO]
     }
     // aladinRef
@@ -102,7 +102,7 @@ object TargetSelectionPopup {
         targetSources,
         aladinRef
       ) =>
-        implicit val ctx = props.ctx
+        import props.given
 
         val cleanResults = selectedTarget.setState(none) >> results.setState(SortedMap.empty)
 
