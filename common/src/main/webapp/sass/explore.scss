@@ -85,3 +85,67 @@ $mobile-responsive-cutoff: 670px;
 
 }
 
+// -------------
+// Toolbar of the aladin display
+// -------------
+.aladin-status-fov {
+  grid-area: fov;
+  justify-self: stretch;
+  align-self: center;
+}
+
+@mixin aladin-gs-status {
+  display: none;
+  margin-left: 0.5em;
+
+  @media (min-width: $mobile-responsive-cutoff) {
+    display: block;
+  }
+}
+
+.aladin-status-gs {
+  @include aladin-gs-status;
+
+  grid-area: guidestar;
+  align-self: center;
+  font-size: smaller;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+}
+
+.aladin-status-gs-loading {
+  @include aladin-gs-status;
+
+  grid-area: agsstatus;
+  align-self: center;
+
+  svg.fa-circle-small.explore-warning-icon {
+    --fa-beat-scale: 1.2;
+
+    color: var(--warning-background-color);
+  }
+
+  svg.fa-circle-small.explore-error-icon {
+    color: var(--error-background-color);
+  }
+}
+
+.aladin-status-current-coordinates {
+  grid-area: curr;
+  justify-self: end;
+  align-self: center;
+  white-space: nowrap;
+}
+
+.aladin-status-center-button {
+  grid-area: center;
+  align-self: center;
+}
+
+.aladin-detail-text {
+  color: white;
+  white-space: nowrap;
+}
+
