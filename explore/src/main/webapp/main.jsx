@@ -5,6 +5,7 @@ import "/common/sass/tooltips.scss";
 import "/common/less/vendor/aladin.less";
 import "/common/sass/charts.scss";
 import "/common/sass/datepicker.scss";
+import "/common/sass/explore.scss";
 import "/common/less/vendor/react-reflex.less";
 import "github-markdown-css/github-markdown-light.css";
 import "react-circular-progressbar/dist/styles.css";

@@ -217,17 +217,6 @@ $description-column-count: 2;
   font-size: smaller;
 }
 
-.explore-itc-tile-title {
-  display: flex;
-  gap: 1em;
-  font-size: 0.92em;
-  align-items: baseline;
-
-  label {
-    font-weight: bold;
-  }
-}
-
 .highcharts-reset-zoom {
   fill: var(--button-background-color-semi);
   stroke: var(--site-border-color);
