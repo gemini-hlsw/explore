@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@cquiroz/aladin-lite": "0.7.6",
+    "@cquiroz/react-moon": "2.0.2",
     "@floating-ui/react-dom-interactions": "^0.10.1",
     "@fortawesome/fontawesome-pro": "^6.1.2",
     "@fortawesome/fontawesome-svg-core": "^6.1.2",
@@ -27,7 +28,6 @@
     "react-hotkeys": "^2.0.0",
     "react-is": "17.0.2",
     "react-markdown": "^8.0.3",
-    "react-moon": "2.0.2",
     "react-reflex": "4.0.9",
     "react-resizable": "3.0.4",
     "react-resize-detector": "7.1.2",

@@ -19,8 +19,6 @@ import explore.model.itc.math.roundToSignificantFigures
 import explore.syntax.ui.*
 import explore.syntax.ui.given
 import explore.utils.*
-import gpp.highcharts.highchartsStrings.line
-import gpp.highcharts.mod.*
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.util.Enumerated
@@ -35,6 +33,8 @@ import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.ButtonGroup
 import react.semanticui.elements.loader.Loader
 import react.semanticui.sizes.*
+import reactST.highcharts.highchartsStrings.line
+import reactST.highcharts.mod.*
 
 import scala.collection.immutable.HashSet
 import scala.scalajs.js

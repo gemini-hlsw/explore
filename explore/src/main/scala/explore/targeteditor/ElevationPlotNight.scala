@@ -13,9 +13,6 @@ import explore.model.CoordinatesAtVizTime
 import explore.model.enums.TimeDisplay
 import explore.syntax.ui.*
 import explore.syntax.ui.given
-import gpp.highcharts.highchartsStrings.line
-import gpp.highcharts.mod.XAxisLabelsOptions
-import gpp.highcharts.mod._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enums.Site
@@ -31,6 +28,9 @@ import react.common.ReactFnProps
 import react.highcharts.ResizingChart
 import react.moon.MoonPhase
 import react.resizeDetector.hooks._
+import reactST.highcharts.highchartsStrings.line
+import reactST.highcharts.mod.XAxisLabelsOptions
+import reactST.highcharts.mod._
 
 import java.time.Duration
 import java.time.Instant
