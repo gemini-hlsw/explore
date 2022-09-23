@@ -20,7 +20,6 @@ import explore.model.itc.PlotDetails
 import explore.model.itc.*
 import explore.model.layout.*
 import explore.model.layout.given
-import gpp.highcharts.highchartsStrings.chart_
 import lucuma.core.enums.Site
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
@@ -36,6 +35,7 @@ import queries.schemas.UserPreferencesDB.Types.*
 import queries.schemas.WidthUpsertInput
 import queries.schemas.implicits.*
 import react.gridlayout.{BreakpointName => _, _}
+import reactST.highcharts.highchartsStrings.chart_
 
 import scala.collection.immutable.SortedMap
 

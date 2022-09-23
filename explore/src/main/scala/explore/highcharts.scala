@@ -3,9 +3,9 @@
 
 package explore.highcharts
 
-import gpp.highcharts.mod._
 import japgolly.scalajs.react._
 import react.common.style.Css
+import reactST.highcharts.mod._
 
 extension (c: Chart_)
   inline def showLoadingCB: Callback              = CallbackTo(c.showLoading())

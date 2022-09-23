@@ -19,8 +19,6 @@ import explore.syntax.*
 import explore.syntax.given
 import explore.syntax.ui.given
 import fs2.Stream
-import gpp.highcharts.highchartsStrings.line
-import gpp.highcharts.mod.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Site
@@ -34,6 +32,8 @@ import react.common.GenericComponentPAF2VdomNode
 import react.common.ReactFnProps
 import react.highcharts.ResizingChart
 import react.resizeDetector.hooks.*
+import reactST.highcharts.highchartsStrings.line
+import reactST.highcharts.mod.*
 import spire.math.Bounded
 
 import java.time.Duration
