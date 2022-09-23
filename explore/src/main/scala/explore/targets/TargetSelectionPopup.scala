@@ -5,8 +5,8 @@ package explore.targets
 
 import cats.Eq
 import cats.Order.*
-import cats.derived.*
 import cats.data.NonEmptyList
+import cats.derived.*
 import cats.effect.IO
 import cats.effect.kernel.Outcome
 import cats.syntax.all.*
@@ -65,7 +65,7 @@ object TargetSelectionPopup {
     angularSize: Option[AngularSize]
   ) derives Eq
 
-  private given Reusability[SelectedTarget] = Reusability.by(_.resultIndex)
+  private given Reusability[SelectedTarget] = Reusability.byEq
 
   private val component = ScalaFnComponent
     .withHooks[Props]
@@ -86,6 +86,7 @@ object TargetSelectionPopup {
     // targetSources
     .useMemoBy((props, _, _, _, _, _, _) => props.ctx) { (props, _, _, _, _, _, _) => propsCtx =>
       import props.given
+
       TargetSource.FromProgram[IO](props.programId) :: TargetSource.forAllCatalogs[IO]
     }
     // aladinRef
@@ -94,11 +95,10 @@ object TargetSelectionPopup {
     .useEffectWithDepsBy((_, _, _, _, _, _, selectedTarget, _, _) => selectedTarget.value)(
       (_, _, _, _, _, _, _, _, aladinRef) =>
         sel =>
-          Callback.log(s"Redraw $sel").asAsyncCallback *>
-            aladinRef.get.asCBO
-              .flatMapCB(b => b.backend.fixLayoutDimensions *> b.backend.recalculateView)
-              // We need to do this callback delayed or it miss calculates aladin div size
-              .delayMs(10)
+          aladinRef.get.asCBO
+            .flatMapCB(b => b.backend.fixLayoutDimensions *> b.backend.recalculateView)
+            // We need to do this callback delayed or it miss calculates aladin div size
+            .delayMs(10)
     )
     .render {
       (
@@ -140,7 +140,17 @@ object TargetSelectionPopup {
                       }
                       .sortBy(r => (r.priority, r.target.target.name.value)))
                 }
-              )
+              ) *> selectedTarget
+                .modStateAsync(s =>
+                  s.orElse(
+                    SelectedTarget(
+                      nel.head.target.target,
+                      source,
+                      0,
+                      nel.head.target.angularSize
+                    ).some
+                  )
+                )
             )
             .orEmpty
 
@@ -242,15 +252,12 @@ object TargetSelectionPopup {
                   }
                   .getOrElse(<.div(ExploreStyles.TargetSearchPreviewPlaceholder, "Preview"))
               ),
-              // <.div(
-              //   ExploreStyles.TargetSearchResults,
               results.value.map { case (source, sourceResults) =>
-                <.div(
-                  ExploreStyles.TargetSearchResults,
+                React.Fragment(
                   Header(size = Small)(
                     s"${source.name} (${showCount(sourceResults.length, "result")})"
                   ),
-                  <.div(ExploreStyles.TargetSearchResultsSource)(
+                  <.div(ExploreStyles.TargetSearchResults)(
                     TargetSelectionTable(
                       sourceResults.toList.map(_.target),
                       onSelected = t =>
@@ -279,7 +286,6 @@ object TargetSelectionPopup {
                   )
                 )
               }.toTagMod
-              // ).when(results.value.nonEmpty)
             )
           )(
             ^.autoComplete.off,

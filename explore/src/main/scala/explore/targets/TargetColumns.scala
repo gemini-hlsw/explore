@@ -199,7 +199,6 @@ object TargetColumns {
             .setCell((x: CellProps[D, Option[String], Plugins]) => x.value.orEmpty)
         )
 
-    val siderealCoordsColumns = siderealColumns.take(2) // just ra/dec
   }
 
   trait TargetColumnBuilder[D] {
@@ -219,8 +218,7 @@ object TargetColumns {
       with BaseColBuilder[D, Plugins, Layout]
       with SiderealColBuilder[D, Plugins, Layout] {
     // with NonsiderealColBuilder[D, Plugins, Layout] {
-    lazy val allColumns   = baseColumns ++ siderealColumns
-    lazy val basicColumns = baseColumns ++ siderealCoordsColumns
+    lazy val allColumns = baseColumns ++ siderealColumns
   }
 
   case class NonBaseSiderealColumnBuilder[D, Plugins, Layout](
