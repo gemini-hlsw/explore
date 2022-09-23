@@ -107,12 +107,14 @@ object CrossTarget {
         }
 
         val tooltip             = p.title.getOrElse("<>")
-        val heightPaddingFactor = 1
+        val heightPaddingFactor = 1.05
         val widthPaddingFactor  = 1.2
 
+        val pf = p.sx.min(p.sy).min(0.04)
+
         val (textWidth, textHeight) = textDomSize(tooltip)
-        val tooltipWidth            = textWidth / p.sx
-        val tooltipHeight           = textHeight / p.sy
+        val tooltipWidth            = textWidth / pf
+        val tooltipHeight           = textHeight / pf
         val tooltipOffset           = tooltipHeight * 0.1;
 
         val translateTextX                        = -tooltipWidth / 2
@@ -123,7 +125,7 @@ object CrossTarget {
              topTooltipPath(widthPaddingFactor * tooltipWidth,
                             heightPaddingFactor * tooltipHeight,
                             tooltipOffset,
-                            3000
+                            tooltipWidth / 15
              )
             )
           case _                                                                       =>
@@ -132,7 +134,7 @@ object CrossTarget {
              bottomTooltipPath(widthPaddingFactor * tooltipWidth,
                                heightPaddingFactor * tooltipHeight,
                                tooltipOffset,
-                               3000
+                               tooltipWidth / 15
              )
             )
 
@@ -147,7 +149,7 @@ object CrossTarget {
                 ^.d          := path
               ),
               <.text(
-                ^.transform  := s"translate($translateTextX, $translateTextY) scale(${1 / p.sx}, ${1 / p.sy})",
+                ^.transform  := s"translate($translateTextX, $translateTextY) scale(${1 / pf}, ${1 / pf})",
                 tooltip
               )
             )
