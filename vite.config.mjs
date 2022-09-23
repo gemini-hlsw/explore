@@ -4,7 +4,7 @@ import { visualizer } from 'rollup-plugin-visualizer';
 import path from 'path';
 import fs from 'fs';
 import mkcert from 'vite-plugin-mkcert';
-import { VitePluginFonts } from 'vite-plugin-fonts'
+import { VitePluginFonts } from 'vite-plugin-fonts';
 import { VitePWA } from 'vite-plugin-pwa';
 
 const fontImport = VitePluginFonts({
@@ -52,7 +52,10 @@ const itcCache = ({ name, pattern }) => ({
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
-  const scalaClassesDir = path.resolve(__dirname, 'explore/target/scala-3.2.1-RC2');
+  const scalaClassesDir = path.resolve(
+    __dirname,
+    'explore/target/scala-3.2.1-RC2'
+  );
   const isProduction = mode == 'production';
   const sjs = isProduction
     ? path.resolve(scalaClassesDir, 'explore-opt')
@@ -179,7 +182,7 @@ export default defineConfig(({ command, mode }) => {
       outDir: path.resolve(__dirname, 'heroku/static'),
     },
     worker: {
-      format: 'es' // We need this for workers to be able to do dynamic imports.
+      format: 'es', // We need this for workers to be able to do dynamic imports.
     },
     plugins: [
       mkcert({ hosts: ['localhost', 'local.lucuma.xyz'] }),
@@ -199,13 +202,15 @@ export default defineConfig(({ command, mode }) => {
               name: 'aladin-images',
             }),
             itcCache({
-              pattern: /^https:\/\/(itc-staging.lucuma.xyz|itc.gpp.gemini.edu)\/itc/,
+              pattern:
+                /^https:\/\/(itc-staging.lucuma.xyz|itc.gpp.gemini.edu)\/itc/,
               name: 'itc-cache',
             }),
             itcCache({
-              pattern: /^https:\/\/cors-proxy.(lucuma.xyz|gpp.gemini.edu)\/http:\/\/aladin.unistra.fr\/java\/nph-aladin.*/,
+              pattern:
+                /^https:\/\/cors-proxy.(lucuma.xyz|gpp.gemini.edu)\/http:\/\/aladin.unistra.fr\/java\/nph-aladin.*/,
               name: 'cors-cache',
-            })
+            }),
           ],
         },
       }),
