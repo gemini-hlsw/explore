@@ -61,7 +61,7 @@ object AsterismEditorTile {
       ObsQueries.updateVisualizationTime[IO](obsId.toList, t).runAsync
     })
 
-    val control: VdomNode = VizTimeEditor(vizTimeView)
+    def control: VdomNode = <.div(VizTimeEditor(vizTimeView))
 
     Tile(
       ObsTabTilesIds.TargetId.id,

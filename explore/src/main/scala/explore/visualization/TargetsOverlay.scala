@@ -7,6 +7,7 @@ import cats.Eq
 import cats.derived.*
 import cats.syntax.all.*
 import explore.components.ui.ExploreStyles
+import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.svg_<^.*
 import lucuma.core.math.Coordinates
@@ -98,9 +99,7 @@ object TargetsOverlay {
   val JtsTargets = Css("overlay-all-targets")
   val JtsGuides  = Css("viz-guides")
 
-  val canvasWidth  = VdomAttr("width")
-  val canvasHeight = VdomAttr("height")
-  val component    =
+  val component =
     ScalaFnComponent
       .withHooks[Props]
       .useRefToVdom[SVG] // svg

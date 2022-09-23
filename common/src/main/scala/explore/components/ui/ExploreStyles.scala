@@ -310,7 +310,6 @@ object ExploreStyles {
   val ObsConfigurationForm: Css         = Css("explore-obs-configuration-form")
   val ObsInstantTileTitle: Css          = Css("explore-obs-instant-tile-title")
   val ObsConfigurationObsPA: Css        = Css("explore-obs-configuration-pa")
-  val ObsConfigurationObsTime: Css      = Css("explore-obs-configuration-time")
   val ConfigurationGrid: Css            = Css("explore-configuration-grid")
   val BasicConfigurationGrid: Css       = Css("explore-basic-configuration-grid")
   val BasicConfigurationForm: Css       = Css("explore-basic-configuration-form")

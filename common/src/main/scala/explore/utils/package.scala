@@ -36,6 +36,10 @@ import java.time.Instant
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters.*
 
+val canvasWidth  = VdomAttr("width")
+val canvasHeight = VdomAttr("height")
+val dataAbbrv    = VdomAttr("data-abbrv")
+
 def toggleReusabilityOverlay[F[_]: Sync](): F[Unit] =
   Sync[F]
     .delay(

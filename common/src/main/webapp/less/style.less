@@ -17,6 +17,10 @@
 @minHeight: 2.85714286em; // TODO: Calculate this on less
 @resizeHandleWidth: 5px; // Width of the tree resize handle
 
+// media queries cutoff
+@tablet-responsive-cutoff: 992px;
+@mobile-responsive-cutoff: 670px;
+
 // Full viewport settings taken from https://dev.to/lennythedev/css-gotcha-how-to-fill-page-with-a-div-270j
 
 html,
@@ -226,7 +230,7 @@ tfoot {
     'body'
     'sidebar';
 
-  @media (min-width: @target-grid-responsive-cutoff) {
+  @media (min-width: @tablet-responsive-cutoff) {
     grid-template-columns: 50px auto;
     grid-template-rows: @topBottom minmax(calc(100% - @topBottom), 1fr);
     grid-template-areas:
@@ -358,13 +362,14 @@ tfoot {
 .ui.button.tile-back-button {
   margin-right: 0;
 
-  @media (min-width: @target-grid-responsive-cutoff) {
+  @media (min-width: @tablet-responsive-cutoff) {
     display: none;
   }
 }
 
 .explore-tile-control {
   margin-right: auto;
+  flex-grow: 3;
 }
 
 .main-header>.ui.tabular.menu .item {
@@ -391,7 +396,7 @@ tfoot {
 .sidetabs-divider {
   display: none;
 
-  @media (min-width: @target-grid-responsive-cutoff) {
+  @media (min-width: @tablet-responsive-cutoff) {
     display: block;
   }
 }
@@ -400,7 +405,7 @@ tfoot {
 .sidetabs-body {
   display: flex;
 
-  @media (min-width: @target-grid-responsive-cutoff) {
+  @media (min-width: @tablet-responsive-cutoff) {
     height: 100%;
     display: block;
     overflow: hidden;
@@ -411,7 +416,7 @@ tfoot {
   height: 100%;
   display: none;
 
-  @media (min-width: @target-grid-responsive-cutoff) {
+  @media (min-width: @tablet-responsive-cutoff) {
     display: inherit;
   }
 }
@@ -684,7 +689,7 @@ tfoot {
 .tree-body {
   .full-height-width();
 
-  @media (min-width: @target-grid-responsive-cutoff) {
+  @media (min-width: @tablet-responsive-cutoff) {
     width:~'calc(100% - @{resizeHandleWidth})';
   }
 }
@@ -1234,10 +1239,6 @@ tfoot {
   z-index: 2000;
   width: 100%;
 }
-
-// The Target Position layout
-@target-grid-responsive-cutoff: 992px;
-@mobile-responsive-cutoff: 670px;
 
 .target-form {
   grid-template-columns: [label] minmax(100px, 10%) [field] 1fr;
@@ -2176,6 +2177,13 @@ html {
 
 .explore-title-select-columns {
   text-align: right;
+  display: none;
+}
+
+@media (min-width: @mobile-responsive-cutoff) {
+  .explore-title-select-columns {
+    display: inline;
+  }
 }
 
 .explore-select-columns {
@@ -2285,12 +2293,6 @@ html {
   grid-area: table;
 }
 
-.react-datepicker-wrapper() {
-  width: unset;
-  padding-left: 0.3em;
-  padding-right: 0.3em;
-}
-
 .explore-obs-configuration-form {
   grid-area: obs-props;
   display: flex;
@@ -2317,22 +2319,6 @@ html {
 .explore-advanced-configuration-buttons {
   grid-area: buttons;
   justify-self: end;
-}
-
-.explore-obs-instant-tile-title {
-  display: flex;
-  justify-self: center;
-  justify-content: end;
-  flex-grow: 3;
-
-  .react-datepicker-wrapper {
-    .react-datepicker-wrapper();
-  }
-}
-
-.explore-obs-configuration-time {
-  display: flex;
-  align-items: center;
 }
 
 .explore-basic-configuration-form {
