@@ -1,11 +1,16 @@
-const path = require("path")
-const fs = require("fs")
-const process = require("process")
-const { build } = require("vite")
-const { minify } = require("terser")
-const humanFormat = require("human-format")
-const brotliSize = require("brotli-size")
-const config = require("./vite.config.js")
+import path from "path"
+import { fileURLToPath } from 'url';
+import fs from "fs"
+import process from "process"
+import { build } from "vite"
+import { minify } from "terser"
+import humanFormat from "human-format"
+import brotliSize from "brotli-size"
+import config from "./vite.config.mjs"
+
+const __filename = fileURLToPath(import.meta.url);
+
+const __dirname = path.dirname(__filename);
 
 const outDir = path.resolve(__dirname, "heroku/static")
 const terserOptions =  {

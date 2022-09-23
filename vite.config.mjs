@@ -1,13 +1,13 @@
-const { defineConfig } = require('vite');
-const react = require('@vitejs/plugin-react');
-const { visualizer } = require('rollup-plugin-visualizer');
-const path = require('path');
-const fs = require('fs');
-const ViteFonts = require('vite-plugin-fonts');
-const mkcert = require('vite-plugin-mkcert');
-const { VitePWA } = require('vite-plugin-pwa');
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { visualizer } from 'rollup-plugin-visualizer';
+import path from 'path';
+import fs from 'fs';
+import mkcert from 'vite-plugin-mkcert';
+import { VitePluginFonts } from 'vite-plugin-fonts'
+import { VitePWA } from 'vite-plugin-pwa';
 
-const fontImport = ViteFonts.Plugin({
+const fontImport = VitePluginFonts({
   google: {
     families: [
       {
@@ -51,7 +51,7 @@ const itcCache = ({ name, pattern }) => ({
 });
 
 // https://vitejs.dev/config/
-module.exports = ({ command, mode }) => {
+export default defineConfig(({ command, mode }) => {
   const scalaClassesDir = path.resolve(__dirname, 'explore/target/scala-3.2.1-RC2');
   const isProduction = mode == 'production';
   const sjs = isProduction
@@ -182,7 +182,7 @@ module.exports = ({ command, mode }) => {
       format: 'es' // We need this for workers to be able to do dynamic imports.
     },
     plugins: [
-      mkcert.default({ hosts: ['localhost', 'local.lucuma.xyz'] }),
+      mkcert({ hosts: ['localhost', 'local.lucuma.xyz'] }),
       react(),
       fontImport,
       VitePWA({
@@ -211,4 +211,4 @@ module.exports = ({ command, mode }) => {
       }),
     ],
   };
-};
+});
