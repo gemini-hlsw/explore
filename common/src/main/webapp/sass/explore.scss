@@ -17,6 +17,9 @@ $mobile-responsive-cutoff: 670px;
   @include small-tile-title;
 }
 
+// ------
+// Obs time editor
+// ------
 @mixin react-datepicker-wrapper {
   width: unset;
   padding-left: 0.3em;
@@ -85,6 +88,62 @@ $mobile-responsive-cutoff: 670px;
 
 }
 
+// ------
+// Target search popup styles
+// ------
+.explore-target-search-form {
+  max-height: 75vh; // Don't let the form grow too large
+
+  .actions {
+    display: flex;
+    justify-content: space-between;
+  }
+}
+
+.explore-target-search-top {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.explore-target-search-input {
+  flex-grow: 2;
+  margin-right: 1em;
+}
+
+@mixin target-search-preview {
+  min-width: 200px;
+  height: 200px;
+  margin-top: 0.3em;
+  margin-bottom: 0.1em;
+
+  border: 1px solid var(--site-border-color);
+}
+
+.explore-target-search-preview {
+  @include target-search-preview;
+}
+
+.explore-target-search-preview-placeholder {
+  @include target-search-preview;
+
+  border-radius: 0.28rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.explore-target-search-results {
+  max-height: 75vh;
+  overflow-y: auto;
+}
+
+.explore-target-search-results-source {
+  max-height: 30vh;
+  overflow-x: auto;
+  overflow-y: auto;
+}
+
 // -------------
 // Toolbar of the aladin display
 // -------------
@@ -148,4 +207,3 @@ $mobile-responsive-cutoff: 670px;
   color: white;
   white-space: nowrap;
 }
-

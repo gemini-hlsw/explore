@@ -381,13 +381,14 @@ object ExploreStyles {
   val OddRow: Css  = Css("odd-row")
 
   // Target Search Popup
-  val TargetSearchForm: Css          = Css("explore-target-search-form")
-  val TargetSearchTop: Css           = Css("explore-target-search-top")
-  val TargetSearchInput: Css         = Css("explore-target-search-input")
-  val TargetSearchPreview: Css       = Css("explore-target-search-preview")
-  val TargetSearchAladin: Css        = Css("aladin-search-target")
-  val TargetSearchResults: Css       = Css("explore-target-search-results")
-  val TargetSearchResultsSource: Css = Css("explore-target-search-results-source")
+  val TargetSearchForm: Css               = Css("explore-target-search-form")
+  val TargetSearchTop: Css                = Css("explore-target-search-top")
+  val TargetSearchInput: Css              = Css("explore-target-search-input")
+  val TargetSearchPreview: Css            = Css("explore-target-search-preview")
+  val TargetSearchAladin: Css             = Css("aladin-search-target")
+  val TargetSearchPreviewPlaceholder: Css = Css("explore-target-search-preview-placeholder")
+  val TargetSearchResults: Css            = Css("explore-target-search-results")
+  val TargetSearchResultsSource: Css      = Css("explore-target-search-results-source")
 
   val NewEmissionLineWavelength: Css = Css("explore-new-emissionline-wavelength")
 

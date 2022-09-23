@@ -207,14 +207,14 @@ object TargetSelectionPopup {
                       case SelectedTarget(Target.Sidereal(_, tracking, _, _), _, _, angSize) =>
                         (tracking.baseCoordinates, angSize)
                     }
-                    .map { case (coordinates, angSize) =>
+                    .map[VdomNode] { case (coordinates, angSize) =>
                       Aladin.component
                         .withRef(aladinRef)
                         .withKey(
                           selectedTarget.value.foldMap(t => s"${t.source}-${t.resultIndex}")
                         )(
                           Aladin(
-                            ExploreStyles.TargetSearchAladin,
+                            ExploreStyles.TargetSearchAladin, // required placeholder
                             showReticle = false,
                             showLayersControl = false,
                             target = Coordinates.fromHmsDms.reverseGet(coordinates),
@@ -228,7 +228,7 @@ object TargetSelectionPopup {
                           )
                         )
                     }
-                    .whenDefined
+                    .getOrElse(<.div(ExploreStyles.TargetSearchPreviewPlaceholder, "Preview"))
                 )
               ),
               SegmentGroup(raised = true, clazz = ExploreStyles.TargetSearchResults)(

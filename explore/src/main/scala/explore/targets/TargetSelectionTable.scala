@@ -70,7 +70,7 @@ object TargetSelectionTable {
       ) ++
         TargetColumns
           .BaseColumnBuilder(TargetTable)(_.target.some)
-          .allColumns
+          .basicColumns
     }
     // rows
     .useMemoBy((props, _) => props.targets)((_, _) => identity)
