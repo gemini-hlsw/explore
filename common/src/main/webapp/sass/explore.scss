@@ -91,8 +91,17 @@ $mobile-responsive-cutoff: 670px;
 // ------
 // Target search popup styles
 // ------
+.visible.transition.explore-target-search-form {
+  display: flex !important;
+  flex-direction: column;
+}
+
 .explore-target-search-form {
-  max-height: 75vh; // Don't let the form grow too large
+  max-height: 85vh; // Don't let the form grow too large
+
+  .content {
+    flex-shrink: 1;
+  }
 
   .actions {
     display: flex;
@@ -100,24 +109,34 @@ $mobile-responsive-cutoff: 670px;
   }
 }
 
-.explore-target-search-top {
-  display: flex;
-  flex-direction: column;
+.explore-target-search-content {
+  display: grid !important;
+  max-height: 80vh; // Don't let the form grow too large
+  gap: 0.3em;
   align-items: stretch;
+  // max-width: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+  grid-template-columns: 1fr;
+  // grid-template-rows: min-content min-content min-content;
+}
+
+.explore-target-search-top {
+
+  @media (min-width: $tablet-responsive-cutoff) {
+    gap: 0.3em;
+  }
+
 }
 
 .explore-target-search-input {
-  flex-grow: 2;
-  margin-right: 1em;
+  // flex-grow: 2;
+  margin-bottom: 0.5em;
 }
 
 @mixin target-search-preview {
-  min-width: 200px;
-  height: 200px;
-  margin-top: 0.3em;
-  margin-bottom: 0.1em;
-
-  border: 1px solid var(--site-border-color);
+  min-width: 150px;
+  height: 150px;
 }
 
 .explore-target-search-preview {
@@ -126,6 +145,15 @@ $mobile-responsive-cutoff: 670px;
 
 .explore-target-search-preview-placeholder {
   @include target-search-preview;
+  border: 1px solid var(--site-border-color);
+
+  background: repeating-linear-gradient(
+    -45deg,
+    black,
+    black 10px,
+    var(--site-border-color) 10px,
+    var(--site-border-color) 11px
+  );
 
   border-radius: 0.28rem;
   display: flex;
@@ -134,7 +162,7 @@ $mobile-responsive-cutoff: 670px;
 }
 
 .explore-target-search-results {
-  max-height: 75vh;
+  max-height: 40vh; // Don't let the form grow too large
   overflow-y: auto;
 }
 

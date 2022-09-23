@@ -5,6 +5,7 @@ package explore.targets
 
 import cats.Eq
 import cats.Order.*
+import cats.derived.*
 import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.effect.kernel.Outcome
@@ -55,17 +56,16 @@ case class TargetSelectionPopup(
 object TargetSelectionPopup {
   private type Props = TargetSelectionPopup
 
-  private final case class Result(target: TargetSearchResult, priority: Int)
-  private object Result {
-    given Eq[Result] = Eq.fromUniversalEquals
-  }
+  private case class Result(target: TargetSearchResult, priority: Int) derives Eq
 
-  private final case class SelectedTarget(
+  private case class SelectedTarget(
     target:      Target,
     source:      TargetSource[IO],
     resultIndex: Int,
     angularSize: Option[AngularSize]
-  )
+  ) derives Eq
+
+  private given Reusability[SelectedTarget] = Reusability.by(_.resultIndex)
 
   private val component = ScalaFnComponent
     .withHooks[Props]
@@ -90,6 +90,16 @@ object TargetSelectionPopup {
     }
     // aladinRef
     .useMemo(())(_ => Ref.toScalaComponent(Aladin.component))
+    // re render when selected changes
+    .useEffectWithDepsBy((_, _, _, _, _, _, selectedTarget, _, _) => selectedTarget.value)(
+      (_, _, _, _, _, _, _, _, aladinRef) =>
+        sel =>
+          Callback.log(s"Redraw $sel").asAsyncCallback *>
+            aladinRef.get.asCBO
+              .flatMapCB(b => b.backend.fixLayoutDimensions *> b.backend.recalculateView)
+              // We need to do this callback delayed or it miss calculates aladin div size
+              .delayMs(10)
+    )
     .render {
       (
         props,
@@ -185,6 +195,7 @@ object TargetSelectionPopup {
             onClose = singleEffect.cancel.runAsync >> isOpen.setState(false) >> cleanState,
             header = ModalHeader(content = "Add Target"),
             content = ModalContent(
+              ExploreStyles.TargetSearchContent,
               <.span(ExploreStyles.TargetSearchTop)(
                 <.span(ExploreStyles.TargetSearchInput)(
                   FormInputEV(
@@ -200,75 +211,75 @@ object TargetSelectionPopup {
                     loading = searching.value
                   )
                     .withMods(^.placeholder := "Name", ^.autoFocus := true)
-                ),
-                <.div(ExploreStyles.TargetSearchPreview)(
-                  selectedTarget.value
-                    .collect {
-                      case SelectedTarget(Target.Sidereal(_, tracking, _, _), _, _, angSize) =>
-                        (tracking.baseCoordinates, angSize)
-                    }
-                    .map[VdomNode] { case (coordinates, angSize) =>
-                      Aladin.component
-                        .withRef(aladinRef)
-                        .withKey(
-                          selectedTarget.value.foldMap(t => s"${t.source}-${t.resultIndex}")
-                        )(
-                          Aladin(
-                            ExploreStyles.TargetSearchAladin, // required placeholder
-                            showReticle = false,
-                            showLayersControl = false,
-                            target = Coordinates.fromHmsDms.reverseGet(coordinates),
-                            fov = angSize
-                              .map(m =>
-                                Angle.microarcseconds
-                                  .modify(Constants.AngleSizeFovFactor)(m.majorAxis)
-                              )
-                              .getOrElse(Constants.InitialFov): Angle,
-                            showGotoControl = false
-                          )
-                        )
-                    }
-                    .getOrElse(<.div(ExploreStyles.TargetSearchPreviewPlaceholder, "Preview"))
                 )
               ),
-              SegmentGroup(raised = true, clazz = ExploreStyles.TargetSearchResults)(
-                results.value.map { case (source, sourceResults) =>
-                  Segment(
-                    <.div(
-                      Header(size = Small)(
-                        s"${source.name} (${showCount(sourceResults.length, "result")})"
-                      ),
-                      <.div(ExploreStyles.TargetSearchResultsSource)(
-                        TargetSelectionTable(
-                          sourceResults.toList.map(_.target),
-                          onSelected = t =>
-                            props.onSelected(t.targetWithOptId) >>
-                              isOpen.setState(false) >>
-                              cleanState,
-                          selectedIndex = selectedTarget.value
-                            .filter(_.source === source)
-                            .map(_.resultIndex),
-                          onClick = (result, index) =>
-                            selectedTarget.setState(
-                              if (
-                                selectedTarget.value
-                                  .exists(st => st.source === source && st.resultIndex === index)
-                              )
-                                none
-                              else
-                                SelectedTarget(
-                                  result.target,
-                                  source,
-                                  index,
-                                  result.angularSize
-                                ).some
+              <.div(ExploreStyles.TargetSearchPreview)(
+                selectedTarget.value
+                  .collect {
+                    case SelectedTarget(Target.Sidereal(_, tracking, _, _), _, _, angSize) =>
+                      (tracking.baseCoordinates, angSize)
+                  }
+                  .map[VdomNode] { case (coordinates, angSize) =>
+                    Aladin.component
+                      .withRef(aladinRef)
+                      .withKey(
+                        selectedTarget.value.foldMap(t => s"${t.source}-${t.resultIndex}")
+                      )(
+                        Aladin(
+                          ExploreStyles.TargetSearchAladin, // required placeholder
+                          showReticle = false,
+                          showLayersControl = false,
+                          target = Coordinates.fromHmsDms.reverseGet(coordinates),
+                          fov = angSize
+                            .map(m =>
+                              Angle.microarcseconds
+                                .modify(Constants.AngleSizeFovFactor)(m.majorAxis)
                             )
+                            .getOrElse(Constants.InitialFov): Angle,
+                          showGotoControl = false
                         )
                       )
+                  }
+                  .getOrElse(<.div(ExploreStyles.TargetSearchPreviewPlaceholder, "Preview"))
+              ),
+              // <.div(
+              //   ExploreStyles.TargetSearchResults,
+              results.value.map { case (source, sourceResults) =>
+                <.div(
+                  ExploreStyles.TargetSearchResults,
+                  Header(size = Small)(
+                    s"${source.name} (${showCount(sourceResults.length, "result")})"
+                  ),
+                  <.div(ExploreStyles.TargetSearchResultsSource)(
+                    TargetSelectionTable(
+                      sourceResults.toList.map(_.target),
+                      onSelected = t =>
+                        props.onSelected(t.targetWithOptId) >>
+                          isOpen.setState(false) >>
+                          cleanState,
+                      selectedIndex = selectedTarget.value
+                        .filter(_.source === source)
+                        .map(_.resultIndex),
+                      onClick = (result, index) =>
+                        selectedTarget.setState(
+                          if (
+                            selectedTarget.value
+                              .exists(st => st.source === source && st.resultIndex === index)
+                          )
+                            none
+                          else
+                            SelectedTarget(
+                              result.target,
+                              source,
+                              index,
+                              result.angularSize
+                            ).some
+                        )
                     )
                   )
-                }.toTagMod
-              ).when(results.value.nonEmpty)
+                )
+              }.toTagMod
+              // ).when(results.value.nonEmpty)
             )
           )(
             ^.autoComplete.off,
