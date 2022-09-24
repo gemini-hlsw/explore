@@ -153,9 +153,8 @@ object UserPreferencesQueries {
       }.void
   }
 
-  implicit class UserTargetPreferencesQueryOps(val self: UserTargetPreferencesQuery.type)
-      extends AnyVal {
-    import self.*
+  object TargetPreferences:
+    import UserTargetPreferencesQuery.*
 
     // Gets the layout of a section.
     // This is coded to return a default in case
@@ -166,13 +165,14 @@ object UserPreferencesQueries {
       defaultFov: Angle
     )(implicit
       cl:         TransactionalClient[F, UserPreferencesDB]
-    ): F[(Angle, Offset, Visible, Visible, Boolean)] =
+    ): F[(Angle, Angle, Offset, Visible, Visible, Boolean)] =
       for {
         r <-
           query[F](uid.show, tid.show)
             .map { r =>
               r.lucuma_target_preferences_by_pk.map(result =>
-                (result.fov,
+                (result.fovRA,
+                 result.fovDec,
                  result.viewOffsetP,
                  result.viewOffsetQ,
                  result.agsCandidates,
@@ -183,18 +183,18 @@ object UserPreferencesQueries {
             }
             .handleError(_ => none)
       } yield {
-        val fov    = r.map(u => Angle.fromMicroarcseconds(u._1)).getOrElse(defaultFov)
+        val fovRA  = r.map(u => Angle.fromMicroarcseconds(u._1)).getOrElse(defaultFov)
+        val fovDec = r.map(u => Angle.fromMicroarcseconds(u._2)).getOrElse(defaultFov)
         val offset = r
-          .map(u => Offset(Angle.fromMicroarcseconds(u._2).p, Angle.fromMicroarcseconds(u._3).q))
+          .map(u => Offset(Angle.fromMicroarcseconds(u._3).p, Angle.fromMicroarcseconds(u._4).q))
           .getOrElse(Offset.Zero)
 
-        val agsCandidates = r.map(_._4).map(Visible.boolIso.get).getOrElse(Visible.Hidden)
-        val agsOverlay    = r.map(_._5).map(Visible.boolIso.get).getOrElse(Visible.Hidden)
-        val fullScreen    = r.map(_._6).getOrElse(false)
+        val agsCandidates = r.map(_._5).map(Visible.boolIso.get).getOrElse(Visible.Hidden)
+        val agsOverlay    = r.map(_._6).map(Visible.boolIso.get).getOrElse(Visible.Hidden)
+        val fullScreen    = r.map(_._7).getOrElse(false)
 
-        (fov, offset, agsCandidates, agsOverlay, fullScreen)
+        (fovRA, fovDec, offset, agsCandidates, agsOverlay, fullScreen)
       }
-  }
 
   object ItcPlotPreferences:
     // Gets the prefs for the itc plot
@@ -250,7 +250,8 @@ object UserPreferencesQueries {
     def updateAladinPreferences[F[_]: ApplicativeThrow](
       uid:           User.Id,
       targetId:      Target.Id,
-      fov:           Angle,
+      fovRA:         Angle,
+      fovDec:        Angle,
       agsCandidates: Visible,
       agsOverlay:    Visible,
       fullScreen:    Boolean
@@ -263,7 +264,8 @@ object UserPreferencesQueries {
             data = List(
               LucumaTargetPreferencesInsertInput(
                 user_id = uid.show.assign,
-                fov = fov.toMicroarcseconds.assign,
+                fovRA = fovRA.toMicroarcseconds.assign,
+                fovDec = fovDec.toMicroarcseconds.assign,
                 agsCandidates = Visible.boolIso.reverseGet(agsCandidates).assign,
                 agsOverlay = Visible.boolIso.reverseGet(agsOverlay).assign,
                 fullScreen = fullScreen.assign
@@ -272,7 +274,8 @@ object UserPreferencesQueries {
             on_conflict = LucumaTargetPreferencesOnConflict(
               constraint = LucumaTargetPreferencesConstraint.LucumaTargetPreferencesPkey,
               update_columns = List(
-                LucumaTargetPreferencesUpdateColumn.Fov,
+                LucumaTargetPreferencesUpdateColumn.FovRA,
+                LucumaTargetPreferencesUpdateColumn.FovDec,
                 LucumaTargetPreferencesUpdateColumn.AgsCandidates,
                 LucumaTargetPreferencesUpdateColumn.AgsOverlay,
                 LucumaTargetPreferencesUpdateColumn.FullScreen

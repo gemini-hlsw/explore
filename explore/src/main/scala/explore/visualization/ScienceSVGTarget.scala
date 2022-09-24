@@ -110,7 +110,7 @@ object CrossTarget {
         val heightPaddingFactor = 1.05
         val widthPaddingFactor  = 1.2
 
-        val pf = p.sx.min(p.sy).min(0.04)
+        val pf = p.sx.max(p.sy)
 
         val (textWidth, textHeight) = textDomSize(tooltip)
         val tooltipWidth            = textWidth / pf

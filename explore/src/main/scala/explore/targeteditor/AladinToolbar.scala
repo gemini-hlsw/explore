@@ -28,19 +28,19 @@ import react.semanticui.shorthand._
 import react.semanticui.sizes.Small
 import react.semanticui.sizes._
 
-final case class AladinToolbar(
+case class AladinToolbar(
   fov:               Fov,
   current:           Coordinates,
   agsState:          AgsState,
   selectedGuideStar: Option[AgsAnalysis],
   center:            View[Boolean],
   agsOverlay:        Visible
-) extends ReactFnProps[AladinToolbar](AladinToolbar.component)
+) extends ReactFnProps(AladinToolbar.component)
 
 object AladinToolbar {
-  type Props = AladinToolbar
+  private type Props = AladinToolbar
 
-  val component =
+  private val component =
     ScalaFnComponent[Props] { props =>
       val usableGuideStar = props.selectedGuideStar.forall(_.isUsable)
 

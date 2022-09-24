@@ -3,15 +3,14 @@
 
 package explore.model
 
-import cats.kernel.laws.discipline._
-import explore.model.arb.all._
+import cats.kernel.laws.discipline.*
+import explore.model.arb.all.*
+import explore.model.arb.all.given
 import explore.model.enums.AppTab
-import lucuma.core.util.arb.ArbEnumerated._
+import lucuma.core.util.arb.ArbEnumerated.*
 import munit.DisciplineSuite
 
-class ModelSuite extends DisciplineSuite {
+class ModelSuite extends DisciplineSuite:
   checkAll("Eq[TargetVisualOptions]", EqTests[TargetVisualOptions].eqv)
   checkAll("Eq[SideButton]", EqTests[AppTab].eqv)
   checkAll("Eq[UserVault]", EqTests[UserVault].eqv)
-
-}
