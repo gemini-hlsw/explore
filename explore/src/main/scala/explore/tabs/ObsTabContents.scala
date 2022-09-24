@@ -4,56 +4,56 @@
 package explore.tabs
 
 import cats.effect.IO
-import cats.syntax.all._
+import cats.syntax.all.*
 import crystal.Pot
-import crystal.implicits._
-import crystal.react._
-import crystal.react.hooks._
-import crystal.react.implicits._
-import crystal.react.reuse._
-import eu.timepit.refined.auto._
-import eu.timepit.refined.cats._
+import crystal.implicits.*
+import crystal.react.*
+import crystal.react.hooks.*
+import crystal.react.implicits.*
+import crystal.react.reuse.*
+import eu.timepit.refined.auto.*
+import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
-import explore.common.ObsQueries._
-import explore.common.UserPreferencesQueries._
+import explore.common.ObsQueries.*
+import explore.common.UserPreferencesQueries.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
-import explore.implicits._
-import explore.model._
+import explore.implicits.*
+import explore.model.*
 import explore.model.enums.AppTab
-import explore.model.layout._
+import explore.model.layout.*
 import explore.model.layout.unsafe.given
 import explore.observationtree.ObsList
-import explore.syntax.ui._
-import explore.utils._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.callback.CallbackCatsEffect._
-import japgolly.scalajs.react.vdom.html_<^._
+import explore.syntax.ui.*
+import explore.utils.*
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.callback.CallbackCatsEffect.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
-import lucuma.refined._
-import lucuma.ui.reusability._
+import lucuma.refined.*
+import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import lucuma.ui.utils._
+import lucuma.ui.utils.*
 import org.scalajs.dom.window
-import queries.common.ObsQueriesGQL._
-import queries.common.UserPreferencesQueriesGQL._
+import queries.common.ObsQueriesGQL.*
+import queries.common.UserPreferencesQueriesGQL.*
 import react.common.ReactFnProps
 import react.draggable.Axis
-import react.gridlayout._
-import react.resizable._
-import react.resizeDetector._
-import react.resizeDetector.hooks._
+import react.gridlayout.*
+import react.resizable.*
+import react.resizeDetector.*
+import react.resizeDetector.hooks.*
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
-import react.semanticui.sizes._
+import react.semanticui.sizes.*
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 final case class ObsTabContents(
   userId:           Option[User.Id],
@@ -77,7 +77,7 @@ enum ObsTabTilesIds:
     case ConfigurationId => "configuration".refined
     case ItcId           => "itc".refined
 
-object ObsTabContents {
+object ObsTabContents extends TwoResizablePanels {
   type Props = ObsTabContents
 
   private val NotesMaxHeight: NonNegInt         = 3.refined
@@ -173,64 +173,23 @@ object ObsTabContents {
     val observations     = obsWithConstraints.zoom(ObsSummariesWithConstraints.observations)
     val constraintGroups = obsWithConstraints.zoom(ObsSummariesWithConstraints.constraintGroups)
 
-    val panelsResize =
-      (_: ReactEvent, d: ResizeCallbackData) =>
-        panels.zoom(TwoPanelState.treeWidth).set(d.size.width.toDouble) *>
-          debouncer
-            .submit(
-              UserWidthsCreation
-                .storeWidthPreference[IO](
-                  props.userId,
-                  ResizableSection.ObservationsTree,
-                  d.size.width
-                )
-            )
-            .runAsync
-
     val treeWidth    = panels.get.treeWidth.toInt
     val selectedView = panels.zoom(TwoPanelState.selected)
 
-    // Tree area
-    def tree(observations: View[ObservationList]) =
-      <.div(^.width := treeWidth.px, ExploreStyles.Tree |+| ExploreStyles.ResizableMultiPanel)(
-        treeInner(observations)
-      )
-
-    def treeInner(observations: View[ObservationList]) =
-      <.div(ExploreStyles.TreeBody)(
-        ObsList(
-          observations,
-          props.programId,
-          props.focusedObs,
-          props.focusedTarget,
-          selectedView.set(SelectedPanel.summary).reuseAlways,
-          props.undoStacks.zoom(ModelUndoStacks.forObsList)
-        )
+    def observationsTree(observations: View[ObservationList]) =
+      ObsList(
+        observations,
+        props.programId,
+        props.focusedObs,
+        props.focusedTarget,
+        selectedView.set(SelectedPanel.summary).reuseAlways,
+        props.undoStacks.zoom(ModelUndoStacks.forObsList)
       )
 
     val backButton: VdomNode =
-      Button(
-        as = <.a,
-        basic = true,
-        size = Mini,
-        compact = true,
-        clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
-        onClickE = linkOverride[ButtonProps](
-          ctx.pushPage(AppTab.Observations, props.programId, Focused.None) >>
-            selectedView.set(SelectedPanel.tree)
-        )
-      )(^.href := ctx.pageUrl(AppTab.Observations, props.programId, Focused.None),
-        Icons.ChevronLeft
-      )
+      makeBackButton(props.programId, AppTab.Observations, ctx, selectedView)
 
-    val coreWidth =
-      if (window.canFitTwoPanels) {
-        resize.width.getOrElse(0)
-      } else {
-        resize.width.getOrElse(0) - treeWidth
-      }
-
-    val coreHeight = resize.height.getOrElse(0)
+    val (coreWidth, coreHeight) = coreDimensions(resize, treeWidth)
 
     val rightSide: VdomNode =
       props.focusedObs.fold[VdomNode](
@@ -264,38 +223,20 @@ object ObsTabContents {
         ).withKey(obsId.toString)
       )
 
-    if (window.canFitTwoPanels) {
-      <.div(
-        ExploreStyles.TreeRGL,
-        <.div(ExploreStyles.Tree, treeInner(observations))
-          .when(panels.get.selected.leftPanelVisible),
-        <.div(^.key := "obs-right-side", ExploreStyles.SinglePanelTile)(
-          rightSide
-        ).when(panels.get.selected.rightPanelVisible)
+    makeOneOrTwoPanels(
+      treeWidth,
+      coreHeight,
+      coreWidth,
+      panels,
+      observationsTree(observations),
+      rightSide,
+      RightSideCardinality.Multi,
+      treeResize(props.userId,
+                 panels.zoom(TwoPanelState.treeWidth),
+                 ResizableSection.ObservationsTree,
+                 debouncer
       )
-    } else {
-      <.div(
-        ExploreStyles.TreeRGL,
-        Resizable(
-          axis = Axis.X,
-          width = treeWidth.toDouble,
-          height = coreHeight.toDouble,
-          minConstraints = (Constants.MinLeftPanelWidth.toInt, 0),
-          maxConstraints = (resize.width.getOrElse(0) / 2, 0),
-          onResize = panelsResize,
-          resizeHandles = List(ResizeHandleAxis.East),
-          content = tree(observations)
-        ),
-        <.div(
-          ^.key   := "obs-right-side",
-          ^.width := coreWidth.px,
-          ^.left  := treeWidth.px,
-          ExploreStyles.SinglePanelTile
-        )(
-          rightSide
-        )
-      )
-    }
+    )
   }
 
   protected val component =
@@ -312,7 +253,7 @@ object ObsTabContents {
           case _                            => Callback.empty
         }
       }
-      // Measure its sive
+      // Measure its size
       .useResizeDetector()
       // Layout
       .useStateView(Pot.pending[LayoutsMap])
