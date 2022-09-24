@@ -11,6 +11,8 @@ ThisBuild / ScalafixConfig / bspEnabled.withRank(KeyRanks.Invisible) := false
 ThisBuild / evictionErrorLevel := Level.Info
 ThisBuild / resolvers ++= Resolver.sonatypeOssRepos("snapshots")
 
+ThisBuild / coverageEnabled    := false
+
 addCommandAlias(
   "quickTest",
   "modelTestsJVM/test"
