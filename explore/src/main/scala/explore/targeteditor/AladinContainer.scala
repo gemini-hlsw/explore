@@ -7,6 +7,7 @@ import cats.syntax.all.*
 import crystal.react.View
 import explore.Icons
 import explore.components.ui.ExploreStyles
+import explore.model.AladinMouseScroll
 import explore.model.Asterism
 import explore.model.ObsConfiguration
 import explore.model.TargetVisualOptions
@@ -42,6 +43,7 @@ import scala.concurrent.duration.*
 case class AladinContainer(
   asterism:               Asterism,
   obsConf:                ObsConfiguration,
+  allowMouseScroll:       AladinMouseScroll,
   options:                TargetVisualOptions,
   updateMouseCoordinates: Function1[Coordinates, Callback],
   // TODO Move the functionality of saving the FOV in ALadincell here
@@ -60,6 +62,7 @@ object AladinContainer {
   given Reusability[Double]              = Reusability.double(1.0)
   given Reusability[Option[AgsAnalysis]] = Reusability.by(_.map(_.target.id))
   given Reusability[List[AgsAnalysis]]   = Reusability.by(_.length)
+  given Reusability[AladinMouseScroll]   = Reusability.by(_.value)
 
   private val AladinComp = Aladin.component
 
@@ -314,6 +317,7 @@ object AladinContainer {
 
           <.div(
             ExploreStyles.AladinContainerBody,
+            ^.key := s"aladin-${props.allowMouseScroll.value}",
             // This is a bit tricky. Sometimes the height can be 0 or a very low number.
             // This happens during a second render. If we let the height to be zero, aladin
             // will take it as 1. This height ends up being a denominator, which, if low,
@@ -360,19 +364,21 @@ object AladinContainer {
                       vizShapes
                     )
                   ),
-                AladinComp.withRef(aladinRef) {
-                  Aladin(
-                    ExploreStyles.TargetAladin,
-                    showReticle = false,
-                    showLayersControl = false,
-                    target = baseCoordinatesForAladin,
-                    fov = props.options.fovDec,
-                    showGotoControl = false,
-                    showZoomControl = false,
-                    showFullscreenControl = false,
-                    customize = (v: JsAladin) => includeSvg(v)
-                  )
-                }
+                AladinComp
+                  .withRef(aladinRef) {
+                    Aladin(
+                      ExploreStyles.TargetAladin |+| ExploreStyles.TargetAladinDisableMouse
+                        .unless_(props.allowMouseScroll.value),
+                      showReticle = false,
+                      showLayersControl = false,
+                      target = baseCoordinatesForAladin,
+                      fov = props.options.fovDec,
+                      showGotoControl = false,
+                      showZoomControl = false,
+                      showFullscreenControl = false,
+                      customize = (v: JsAladin) => includeSvg(v)
+                    )
+                  }
               )
             } else EmptyVdom
           )

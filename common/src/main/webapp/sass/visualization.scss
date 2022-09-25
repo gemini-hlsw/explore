@@ -1,6 +1,21 @@
+$tablet-responsive-cutoff: 992px;
+$mobile-responsive-cutoff: 670px;
+
 .aladin-container {
   overflow: hidden; // Needed to keep the visualization svg inside the component
   outline: none;
+}
+
+.aladin-container {
+  pointer-events: none;
+
+  @media (min-width: $mobile-responsive-cutoff) {
+    pointer-events: initial;
+  }
+}
+
+.aladin-target-disable-mouse {
+  pointer-events: none;
 }
 
 .aladin-container-body {
@@ -255,10 +270,10 @@
 
   .explore-aladin-settings-menu {
     position: absolute;
-    left: 30px;
+    left: 35px;
 
     &.ui.compact.vertical.menu {
-      width: 8rem !important; // in SUI it is important too
+      width: 14em !important; // in SUI it is important too
     }
   }
 }

@@ -1572,7 +1572,7 @@ columns and relationships of "lucuma_target_preferences"
 type lucuma_target_preferences {
   agsCandidates: Boolean!
   agsOverlay: Boolean!
-  fov: bigint!
+  fov: bigint
   fovDec: bigint!
   fovRA: bigint!
   fullScreen: Boolean!
@@ -2182,6 +2182,16 @@ type lucuma_user_mutation_response {
 }
 
 """
+input type for inserting object relation for remote table "lucuma_user"
+"""
+input lucuma_user_obj_rel_insert_input {
+  data: lucuma_user_insert_input!
+
+  """upsert condition"""
+  on_conflict: lucuma_user_on_conflict
+}
+
+"""
 on_conflict condition type for table "lucuma_user"
 """
 input lucuma_user_on_conflict {
@@ -2198,6 +2208,160 @@ input lucuma_user_order_by {
 """primary key columns input for table: lucuma_user"""
 input lucuma_user_pk_columns_input {
   user_id: String!
+}
+
+"""
+columns and relationships of "lucuma_user_preferences"
+"""
+type lucuma_user_preferences {
+  aladinMouseScroll: Boolean!
+
+  """An object relationship"""
+  lucuma_user: lucuma_user!
+  user_id: String!
+}
+
+"""
+aggregated selection of "lucuma_user_preferences"
+"""
+type lucuma_user_preferences_aggregate {
+  aggregate: lucuma_user_preferences_aggregate_fields
+  nodes: [lucuma_user_preferences!]!
+}
+
+"""
+aggregate fields of "lucuma_user_preferences"
+"""
+type lucuma_user_preferences_aggregate_fields {
+  count(columns: [lucuma_user_preferences_select_column!], distinct: Boolean): Int!
+  max: lucuma_user_preferences_max_fields
+  min: lucuma_user_preferences_min_fields
+}
+
+"""
+Boolean expression to filter rows from the table "lucuma_user_preferences". All fields are combined with a logical 'AND'.
+"""
+input lucuma_user_preferences_bool_exp {
+  _and: [lucuma_user_preferences_bool_exp!]
+  _not: lucuma_user_preferences_bool_exp
+  _or: [lucuma_user_preferences_bool_exp!]
+  aladinMouseScroll: Boolean_comparison_exp
+  lucuma_user: lucuma_user_bool_exp
+  user_id: String_comparison_exp
+}
+
+"""
+unique or primary key constraints on table "lucuma_user_preferences"
+"""
+enum lucuma_user_preferences_constraint {
+  """
+  unique or primary key constraint on columns "user_id"
+  """
+  lucuma_user_preferences_pkey
+}
+
+"""
+input type for inserting data into table "lucuma_user_preferences"
+"""
+input lucuma_user_preferences_insert_input {
+  aladinMouseScroll: Boolean
+  lucuma_user: lucuma_user_obj_rel_insert_input
+  user_id: String
+}
+
+"""aggregate max on columns"""
+type lucuma_user_preferences_max_fields {
+  user_id: String
+}
+
+"""aggregate min on columns"""
+type lucuma_user_preferences_min_fields {
+  user_id: String
+}
+
+"""
+response of any mutation on the table "lucuma_user_preferences"
+"""
+type lucuma_user_preferences_mutation_response {
+  """number of rows affected by the mutation"""
+  affected_rows: Int!
+
+  """data from the rows affected by the mutation"""
+  returning: [lucuma_user_preferences!]!
+}
+
+"""
+on_conflict condition type for table "lucuma_user_preferences"
+"""
+input lucuma_user_preferences_on_conflict {
+  constraint: lucuma_user_preferences_constraint!
+  update_columns: [lucuma_user_preferences_update_column!]! = []
+  where: lucuma_user_preferences_bool_exp
+}
+
+"""Ordering options when selecting data from "lucuma_user_preferences"."""
+input lucuma_user_preferences_order_by {
+  aladinMouseScroll: order_by
+  lucuma_user: lucuma_user_order_by
+  user_id: order_by
+}
+
+"""primary key columns input for table: lucuma_user_preferences"""
+input lucuma_user_preferences_pk_columns_input {
+  user_id: String!
+}
+
+"""
+select columns of table "lucuma_user_preferences"
+"""
+enum lucuma_user_preferences_select_column {
+  """column name"""
+  aladinMouseScroll
+
+  """column name"""
+  user_id
+}
+
+"""
+input type for updating data in table "lucuma_user_preferences"
+"""
+input lucuma_user_preferences_set_input {
+  aladinMouseScroll: Boolean
+  user_id: String
+}
+
+"""
+Streaming cursor of the table "lucuma_user_preferences"
+"""
+input lucuma_user_preferences_stream_cursor_input {
+  """Stream column input with initial value"""
+  initial_value: lucuma_user_preferences_stream_cursor_value_input!
+
+  """cursor ordering"""
+  ordering: cursor_ordering
+}
+
+"""Initial value of the column from where the streaming should start"""
+input lucuma_user_preferences_stream_cursor_value_input {
+  aladinMouseScroll: Boolean
+  user_id: String
+}
+
+"""
+update columns of table "lucuma_user_preferences"
+"""
+enum lucuma_user_preferences_update_column {
+  """column name"""
+  aladinMouseScroll
+
+  """column name"""
+  user_id
+}
+
+input lucuma_user_preferences_updates {
+  """sets the columns of the filtered rows to the given values"""
+  _set: lucuma_user_preferences_set_input
+  where: lucuma_user_preferences_bool_exp!
 }
 
 """
@@ -2350,6 +2514,19 @@ type Mutation {
   delete single row from the table: "lucuma_user"
   """
   delete_lucuma_user_by_pk(user_id: String!): lucuma_user
+
+  """
+  delete data from the table: "lucuma_user_preferences"
+  """
+  delete_lucuma_user_preferences(
+    """filter the rows which have to be deleted"""
+    where: lucuma_user_preferences_bool_exp!
+  ): lucuma_user_preferences_mutation_response
+
+  """
+  delete single row from the table: "lucuma_user_preferences"
+  """
+  delete_lucuma_user_preferences_by_pk(user_id: String!): lucuma_user_preferences
 
   """
   insert data into the table: "explore_resizable_width"
@@ -2526,6 +2703,28 @@ type Mutation {
     """upsert condition"""
     on_conflict: lucuma_user_on_conflict
   ): lucuma_user
+
+  """
+  insert data into the table: "lucuma_user_preferences"
+  """
+  insert_lucuma_user_preferences(
+    """the rows to be inserted"""
+    objects: [lucuma_user_preferences_insert_input!]!
+
+    """upsert condition"""
+    on_conflict: lucuma_user_preferences_on_conflict
+  ): lucuma_user_preferences_mutation_response
+
+  """
+  insert a single row into the table: "lucuma_user_preferences"
+  """
+  insert_lucuma_user_preferences_one(
+    """the row to be inserted"""
+    object: lucuma_user_preferences_insert_input!
+
+    """upsert condition"""
+    on_conflict: lucuma_user_preferences_on_conflict
+  ): lucuma_user_preferences
 
   """
   update data of the table: "explore_resizable_width"
@@ -2768,6 +2967,34 @@ type Mutation {
     """updates to execute, in order"""
     updates: [lucuma_user_updates!]!
   ): [lucuma_user_mutation_response]
+
+  """
+  update data of the table: "lucuma_user_preferences"
+  """
+  update_lucuma_user_preferences(
+    """sets the columns of the filtered rows to the given values"""
+    _set: lucuma_user_preferences_set_input
+
+    """filter the rows which have to be updated"""
+    where: lucuma_user_preferences_bool_exp!
+  ): lucuma_user_preferences_mutation_response
+
+  """
+  update single row of the table: "lucuma_user_preferences"
+  """
+  update_lucuma_user_preferences_by_pk(
+    """sets the columns of the filtered rows to the given values"""
+    _set: lucuma_user_preferences_set_input
+    pk_columns: lucuma_user_preferences_pk_columns_input!
+  ): lucuma_user_preferences
+
+  """
+  update multiples rows of table: "lucuma_user_preferences"
+  """
+  update_lucuma_user_preferences_many(
+    """updates to execute, in order"""
+    updates: [lucuma_user_preferences_updates!]!
+  ): [lucuma_user_preferences_mutation_response]
 }
 
 """column ordering options"""
@@ -3135,6 +3362,51 @@ type Query {
 
   """fetch data from the table: "lucuma_user" using primary key columns"""
   lucuma_user_by_pk(user_id: String!): lucuma_user
+
+  """
+  fetch data from the table: "lucuma_user_preferences"
+  """
+  lucuma_user_preferences(
+    """distinct select on columns"""
+    distinct_on: [lucuma_user_preferences_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [lucuma_user_preferences_order_by!]
+
+    """filter the rows returned"""
+    where: lucuma_user_preferences_bool_exp
+  ): [lucuma_user_preferences!]!
+
+  """
+  fetch aggregated fields from the table: "lucuma_user_preferences"
+  """
+  lucuma_user_preferences_aggregate(
+    """distinct select on columns"""
+    distinct_on: [lucuma_user_preferences_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [lucuma_user_preferences_order_by!]
+
+    """filter the rows returned"""
+    where: lucuma_user_preferences_bool_exp
+  ): lucuma_user_preferences_aggregate!
+
+  """
+  fetch data from the table: "lucuma_user_preferences" using primary key columns
+  """
+  lucuma_user_preferences_by_pk(user_id: String!): lucuma_user_preferences
 }
 
 scalar resizable_area
@@ -3613,6 +3885,65 @@ type Subscription {
 
   """fetch data from the table: "lucuma_user" using primary key columns"""
   lucuma_user_by_pk(user_id: String!): lucuma_user
+
+  """
+  fetch data from the table: "lucuma_user_preferences"
+  """
+  lucuma_user_preferences(
+    """distinct select on columns"""
+    distinct_on: [lucuma_user_preferences_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [lucuma_user_preferences_order_by!]
+
+    """filter the rows returned"""
+    where: lucuma_user_preferences_bool_exp
+  ): [lucuma_user_preferences!]!
+
+  """
+  fetch aggregated fields from the table: "lucuma_user_preferences"
+  """
+  lucuma_user_preferences_aggregate(
+    """distinct select on columns"""
+    distinct_on: [lucuma_user_preferences_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [lucuma_user_preferences_order_by!]
+
+    """filter the rows returned"""
+    where: lucuma_user_preferences_bool_exp
+  ): lucuma_user_preferences_aggregate!
+
+  """
+  fetch data from the table: "lucuma_user_preferences" using primary key columns
+  """
+  lucuma_user_preferences_by_pk(user_id: String!): lucuma_user_preferences
+
+  """
+  fetch data from the table in a streaming manner : "lucuma_user_preferences"
+  """
+  lucuma_user_preferences_stream(
+    """maximum number of rows returned in a single batch"""
+    batch_size: Int!
+
+    """cursor to stream the results returned by the query"""
+    cursor: [lucuma_user_preferences_stream_cursor_input]!
+
+    """filter the rows returned"""
+    where: lucuma_user_preferences_bool_exp
+  ): [lucuma_user_preferences!]!
 
   """
   fetch data from the table in a streaming manner : "lucuma_user"
