@@ -11,6 +11,8 @@ ThisBuild / ScalafixConfig / bspEnabled.withRank(KeyRanks.Invisible) := false
 ThisBuild / evictionErrorLevel := Level.Info
 ThisBuild / resolvers ++= Resolver.sonatypeOssRepos("snapshots")
 
+ThisBuild / coverageEnabled    := false
+
 addCommandAlias(
   "quickTest",
   "modelTestsJVM/test"
@@ -293,8 +295,8 @@ lazy val sbtStage = WorkflowStep.Sbt(List("stage"), name = Some("Stage"))
 
 // https://stackoverflow.com/a/55610612
 lazy val npmInstall = WorkflowStep.Run(
-  List("npm install --force"),
-  name = Some("npm install --force")
+  List("npm install"),
+  name = Some("npm install")
 )
 
 lazy val npmBuild = WorkflowStep.Run(
