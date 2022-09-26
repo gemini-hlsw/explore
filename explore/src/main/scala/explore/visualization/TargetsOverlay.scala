@@ -134,9 +134,6 @@ object TargetsOverlay {
         val (viewBoxX, viewBoxY, viewBoxW, viewBoxH) =
           calculateViewBox(x, y, w, h, p.fov, p.screenOffset)
 
-        val sx = p.width / (viewBoxW - viewBoxX)
-        val sy = p.height / (viewBoxH - viewBoxY)
-
         val svg = <.svg(
           JtsSvg,
           ^.untypedRef := svgRef,
@@ -186,6 +183,9 @@ object TargetsOverlay {
                       SVGTarget.ScienceTarget(_, css, selectedCss, sidePx, title, selected)
                     ) =>
                   val pointCss = ExploreStyles.CrosshairTarget |+| css
+                  val sx       = p.width / (viewBoxW - viewBoxX).abs
+                  val sy       = p.height / (viewBoxH - viewBoxY).abs
+
                   CrossTarget(Option(svgRef.raw.current).map(_.asInstanceOf[SVG]),
                               offP,
                               offQ,

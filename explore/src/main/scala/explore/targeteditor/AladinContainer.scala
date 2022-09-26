@@ -366,7 +366,7 @@ object AladinContainer {
                     showReticle = false,
                     showLayersControl = false,
                     target = baseCoordinatesForAladin,
-                    fov = props.options.fovAngle,
+                    fov = props.options.fovDec,
                     showGotoControl = false,
                     showZoomControl = false,
                     showFullscreenControl = false,

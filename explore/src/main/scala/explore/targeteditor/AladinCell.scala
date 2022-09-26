@@ -47,6 +47,7 @@ import lucuma.core.model.User
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import monocle.Lens
 import org.typelevel.log4cats.Logger
 import queries.common.UserPreferencesQueriesGQL.*
 import react.aladin.Fov
@@ -90,6 +91,11 @@ object AladinCell extends ModelOptics {
     Duration.between(_, _).toDays().abs < 30L
   }
 
+  val fovLens: Lens[TargetVisualOptions, Fov] =
+    Lens[TargetVisualOptions, Fov](t => Fov(t.fovRA, t.fovDec))(f =>
+      t => t.copy(fovRA = f.x, fovDec = f.y)
+    )
+
   private val component =
     ScalaFnComponent
       .withHooks[Props]
@@ -123,13 +129,14 @@ object AladinCell extends ModelOptics {
         (props, _, options, _, _, _, _) => _ =>
           import props.given
 
-          UserTargetPreferencesQuery
+          TargetPreferences
             .queryWithDefault[IO](props.uid, props.tid, Constants.InitialFov)
-            .flatMap { (fov, viewOffset, agsCandidates, agsOverlay, fullScreen) =>
+            .flatMap { (fovRA, fovDec, viewOffset, agsCandidates, agsOverlay, fullScreen) =>
               options
                 .set(
                   TargetVisualOptions.Default
-                    .copy(fovAngle = fov,
+                    .copy(fovRA = fovRA,
+                          fovDec = fovDec,
                           viewOffset = viewOffset,
                           agsCandidates = agsCandidates,
                           agsOverlay = agsOverlay,
@@ -236,7 +243,7 @@ object AladinCell extends ModelOptics {
             options.zoom(Pot.readyPrism.andThen(TargetVisualOptions.agsOverlay))
 
           val fovView =
-            options.zoom(Pot.readyPrism.andThen(TargetVisualOptions.fovAngle))
+            options.zoom(Pot.readyPrism.andThen(fovLens))
 
           val offsetView =
             options.zoom(Pot.readyPrism.andThen(TargetVisualOptions.viewOffset))
@@ -257,15 +264,23 @@ object AladinCell extends ModelOptics {
               _ => true,
               o =>
                 // Don't save if the change is less than 1 arcse
-                (o.fovAngle.toMicroarcseconds - newFov.x.toMicroarcseconds).abs < 1e6
+                (o.fovRA.toMicroarcseconds - newFov.x.toMicroarcseconds).abs < 1e6 &&
+                  (o.fovDec.toMicroarcseconds - newFov.y.toMicroarcseconds).abs < 1e6
             )
             if (newFov.x.toMicroarcseconds === 0L) Callback.empty
             else {
-              fovView.set(newFov.x) *>
+              fovView.set(newFov) *>
                 (fovView.get, agsCandidatesView.get, agsOverlayView.get, fullScreenView.get).mapN {
                   (_, a, o, f) =>
                     UserTargetPreferencesUpsert
-                      .updateAladinPreferences[IO](props.uid, props.tid, newFov.x, a, o, f)
+                      .updateAladinPreferences[IO](props.uid,
+                                                   props.tid,
+                                                   newFov.x,
+                                                   newFov.y,
+                                                   a,
+                                                   o,
+                                                   f
+                      )
                       .unlessA(ignore)
                       .runAsync
                       .rateLimit(1.seconds, 1)
@@ -306,7 +321,8 @@ object AladinCell extends ModelOptics {
                   .updateAladinPreferences[IO](
                     props.uid,
                     props.tid,
-                    f,
+                    f.x,
+                    f.y,
                     candidates(a),
                     overlay(o),
                     fullScreen(s)
@@ -348,7 +364,7 @@ object AladinCell extends ModelOptics {
 
           val renderToolbar: TargetVisualOptions => VdomNode =
             (t: TargetVisualOptions) =>
-              AladinToolbar(Fov.square(t.fovAngle),
+              AladinToolbar(Fov(t.fovRA, t.fovDec),
                             mouseCoords.value,
                             agsState.value,
                             selectedGuideStar,
