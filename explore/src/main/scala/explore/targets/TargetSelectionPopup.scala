@@ -55,14 +55,14 @@ case class TargetSelectionPopup(
     extends ReactFnProps(TargetSelectionPopup.component)
 
 object SearchingState extends NewType[Boolean]:
-  val Searching: SearchingState = SearchingState(true)
-  val Idle: SearchingState      = SearchingState(false)
+  inline def Searching: SearchingState = SearchingState(true)
+  inline def Idle: SearchingState      = SearchingState(false)
 
 type SearchingState = SearchingState.Type
 
 object PopupState extends NewType[Boolean]:
-  val Open: PopupState   = PopupState(true)
-  val Closed: PopupState = PopupState(false)
+  inline def Open: PopupState   = PopupState(true)
+  inline def Closed: PopupState = PopupState(false)
 
 type PopupState = PopupState.Type
 
