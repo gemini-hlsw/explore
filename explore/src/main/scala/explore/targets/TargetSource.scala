@@ -21,14 +21,17 @@ import queries.common.TargetQueriesGQL
 
 protected sealed trait TargetSource[F[_]] {
   def name: String
+  def existing: Boolean
   def searches(name: NonEmptyString): List[F[List[TargetSearchResult]]]
 }
 
 protected object TargetSource {
-  case class FromProgram[F[_]: Async](programId: Program.Id)(implicit
-    client:                                      TransactionalClient[F, ObservationDB]
+  case class FromProgram[F[_]: Async](programId: Program.Id)(using
+    TransactionalClient[F, ObservationDB]
   ) extends TargetSource[F] {
     val name: String = s"Program $programId"
+
+    val existing: Boolean = true
 
     override def searches(name: NonEmptyString): List[F[List[TargetSearchResult]]] =
       List(
@@ -47,7 +50,9 @@ protected object TargetSource {
   }
 
   case class FromCatalog[F[_]: Async: Logger](catalogName: CatalogName) extends TargetSource[F] {
-    val name: String = Enumerated[CatalogName].tag(catalogName)
+    val name: String = Enumerated[CatalogName].tag(catalogName).capitalize
+
+    val existing: Boolean = false
 
     override def searches(name: NonEmptyString): List[F[List[TargetSearchResult]]] =
       catalogName match {
@@ -82,12 +87,12 @@ protected object TargetSource {
     Enumerated[CatalogName].all.map(source => TargetSource.FromCatalog(source))
 
   // TODO Test
-  implicit def orderTargetSource[F[_]]: Order[TargetSource[F]] = Order.from {
+  given orderTargetSource[F[_]]: Order[TargetSource[F]] = Order.from {
     case (TargetSource.FromProgram(pidA), TargetSource.FromProgram(pidB)) => pidA.compare(pidB)
     case (TargetSource.FromProgram(_), _)                                 => -1
     case (_, TargetSource.FromProgram(_))                                 => 1
     case (TargetSource.FromCatalog(cnA), TargetSource.FromCatalog(cnB))   => cnA.compare(cnB)
   }
 
-  implicit def reuseTargetSource[F[_]]: Reusability[TargetSource[F]] = Reusability.byEq
+  given reuseTargetSource[F[_]]: Reusability[TargetSource[F]] = Reusability.byEq
 }

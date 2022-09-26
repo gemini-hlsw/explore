@@ -28,6 +28,7 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Program
 import lucuma.core.model.Target
+import lucuma.core.util.NewType
 import lucuma.refined.*
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.reusability.*
@@ -53,6 +54,18 @@ case class TargetSelectionPopup(
 )(using val ctx: AppContextIO)
     extends ReactFnProps(TargetSelectionPopup.component)
 
+object SearchingState extends NewType[Boolean]:
+  inline def Searching: SearchingState = SearchingState(true)
+  inline def Idle: SearchingState      = SearchingState(false)
+
+type SearchingState = SearchingState.Type
+
+object PopupState extends NewType[Boolean]:
+  inline def Open: PopupState   = PopupState(true)
+  inline def Closed: PopupState = PopupState(false)
+
+type PopupState = PopupState.Type
+
 object TargetSelectionPopup {
   private type Props = TargetSelectionPopup
 
@@ -76,11 +89,11 @@ object TargetSelectionPopup {
       SortedMap.empty[TargetSource[IO], NonEmptyList[Result]]
     )
     // searching
-    .useState(false)
+    .useState(SearchingState.Idle)
     // singleEffect
     .useSingleEffect
     // isOpen
-    .useState(false)
+    .useState(PopupState.Closed)
     // selectedTarget
     .useState(none[SelectedTarget])
     // targetSources
@@ -117,7 +130,7 @@ object TargetSelectionPopup {
         val cleanResults = selectedTarget.setState(none) >> results.setState(SortedMap.empty)
 
         val cleanState =
-          inputValue.set("") >> searching.setState(false) >> cleanResults
+          inputValue.set("") >> searching.setState(SearchingState.Idle) >> cleanResults
 
         def addResults(source: TargetSource[IO], priority: Int)(
           targets:             List[TargetSearchResult]
@@ -160,7 +173,7 @@ object TargetSelectionPopup {
               .from(name)
               .toOption
               .map(nonEmptyName =>
-                searching.setStateAsync(true) >>
+                searching.setStateAsync(SearchingState.Searching) >>
                   targetSources.value
                     .flatMap(source =>
                       source.searches(nonEmptyName).zipWithIndex.map { case (search, priority) =>
@@ -171,13 +184,13 @@ object TargetSelectionPopup {
                     .guaranteeCase {
                       // If it gets canceled, it's because another search has started
                       case Outcome.Canceled() => IO.unit
-                      case _                  => searching.setStateAsync(false)
+                      case _                  => searching.setStateAsync(SearchingState.Idle)
                     }
               )
               .orEmpty
 
         React.Fragment(
-          props.trigger(^.onClick --> isOpen.setState(true)),
+          props.trigger(^.onClick --> isOpen.setState(PopupState.Open)),
           Modal(
             as = <.form,      // This lets us sumbit on enter
             clazz = ExploreStyles.TargetSearchForm,
@@ -197,12 +210,13 @@ object TargetSelectionPopup {
               )(^.tpe := "button", ^.key := "input-empty")
             ),
             centered = false, // Works better on iOS
-            open = isOpen.value,
+            open = isOpen.value.value,
             closeIcon = Icons.Close.clazz(ExploreStyles.ModalCloseButton),
             dimmer = Dimmer.Blurring,
             size = ModalSize.Large,
             onOpen = cleanState,
-            onClose = singleEffect.cancel.runAsync >> isOpen.setState(false) >> cleanState,
+            onClose =
+              singleEffect.cancel.runAsync >> isOpen.setState(PopupState.Closed) >> cleanState,
             header = ModalHeader(content = "Add Target"),
             content = ModalContent(
               ExploreStyles.TargetSearchContent,
@@ -218,7 +232,7 @@ object TargetSelectionPopup {
                     onTextChange = t =>
                       inputValue.set(t) >>
                         singleEffect.submit(IO.sleep(700.milliseconds) >> search(t)).runAsync,
-                    loading = searching.value
+                    loading = searching.value.value
                   )
                     .withMods(^.placeholder := "Name", ^.autoFocus := true)
                 )
@@ -253,16 +267,19 @@ object TargetSelectionPopup {
                   .getOrElse(<.div(ExploreStyles.TargetSearchPreviewPlaceholder, "Preview"))
               ),
               results.value.map { case (source, sourceResults) =>
+                val fmtdCount = s"(${showCount(sourceResults.length, "result")})"
+                val header    =
+                  if (source.existing) s"Link an existing target $fmtdCount"
+                  else
+                    s"Add a new target from ${source.name} (${showCount(sourceResults.length, "result")})"
                 React.Fragment(
-                  Header(size = Small)(
-                    s"${source.name} (${showCount(sourceResults.length, "result")})"
-                  ),
+                  Header(size = Small)(header),
                   <.div(ExploreStyles.TargetSearchResults)(
                     TargetSelectionTable(
                       sourceResults.toList.map(_.target),
                       onSelected = t =>
                         props.onSelected(t.targetWithOptId) >>
-                          isOpen.setState(false) >>
+                          isOpen.setState(PopupState.Closed) >>
                           cleanState,
                       selectedIndex = selectedTarget.value
                         .filter(_.source === source)
@@ -294,7 +311,7 @@ object TargetSelectionPopup {
                 singleEffect
                   .submit(search(inputValue.get))
                   .runAsync
-                  .whenA(!searching.value)
+                  .whenA(searching.value == SearchingState.Searching)
             )
           )
         )
