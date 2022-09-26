@@ -17,6 +17,9 @@ $mobile-responsive-cutoff: 670px;
   @include small-tile-title;
 }
 
+// ------
+// Obs time editor
+// ------
 @mixin react-datepicker-wrapper {
   width: unset;
   padding-left: 0.3em;
@@ -48,7 +51,7 @@ $mobile-responsive-cutoff: 670px;
     content: attr(data-abbrv);
   }
 
-  label[data-abbrv] > span{
+  label[data-abbrv] > span {
     display: none;
   }
 
@@ -58,10 +61,10 @@ $mobile-responsive-cutoff: 670px;
     }
 
     label[data-abbrv]::after {
-      content: "";
+      content: '';
     }
 
-    label[data-abbrv] > span{
+    label[data-abbrv] > span {
       display: unset;
     }
 
@@ -82,7 +85,115 @@ $mobile-responsive-cutoff: 670px;
     font-weight: unset;
     font-size: smaller;
   }
+}
 
+// ------
+// Target search popup styles
+// ------
+
+.explore-target-search-form {
+  max-height: 85vh; // Don't let the form grow too large
+
+  .content {
+    flex-shrink: 1;
+  }
+
+  .actions {
+    display: flex;
+    justify-content: space-between;
+  }
+}
+
+.visible.transition.explore-target-search-form {
+  display: grid !important;
+  flex-direction: column;
+}
+
+$search-preview-height-mobile: 150px;
+$search-preview-width: 250px;
+$search-preview-margin: 5px;
+
+.explore-target-search-content {
+  position: relative;
+  display: grid !important;
+  min-height: $search-preview-height-mobile;
+  max-height: 80vh; // Don't let the form grow too large
+  gap: 0.3em;
+  align-items: stretch;
+  overflow-x: auto;
+  overflow-y: auto;
+  grid-template-columns: 1fr;
+  grid-auto-rows: fit-content;
+
+  .header {
+    padding: 0.2em;
+    margin: 0;
+    margin-bottom: 0.2em;
+  }
+
+  @media (min-width: $tablet-responsive-cutoff) {
+    min-height: calc($search-preview-width + 2 * $search-preview-margin);
+    padding-right: calc(
+      $search-preview-width + 3 * $search-preview-margin
+    ) !important;
+    padding-bottom: $search-preview-margin;
+    grid-template-rows: min-content min-content;
+  }
+}
+
+.explore-target-search-top {
+  @media (min-width: $tablet-responsive-cutoff) {
+    gap: 0.3em;
+  }
+}
+
+.explore-target-search-input {
+  margin-bottom: 0.5em;
+}
+
+@mixin target-search-preview {
+  min-width: $search-preview-width;
+  min-height: $search-preview-height-mobile;
+
+  @media (min-width: $tablet-responsive-cutoff) {
+    position: absolute;
+    right: 0;
+    margin-right: $search-preview-margin;
+    height: calc($search-preview-width + $search-preview-margin);
+  }
+}
+
+.explore-target-search-preview {
+  @include target-search-preview;
+
+  .aladin-container {
+    border: 1px solid var(--site-border-color);
+    border-radius: 0.28rem;
+  }
+}
+
+.explore-target-search-preview-placeholder {
+  @include target-search-preview;
+
+  display: flex;
+  border: 1px solid var(--site-border-color);
+  border-radius: 0.28rem;
+  justify-content: center;
+  align-items: center;
+  background: repeating-linear-gradient(
+    -45deg,
+    black,
+    black 10px,
+    var(--site-border-color) 10px,
+    var(--site-border-color) 11px
+  );
+}
+
+.explore-target-search-results {
+  border: 1px solid var(--site-border-color);
+  border-radius: 0.28rem;
+  overflow-y: auto;
+  overflow-x: auto;
 }
 
 // -------------
@@ -112,7 +223,6 @@ $mobile-responsive-cutoff: 670px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-
 }
 
 .aladin-status-gs-loading {
@@ -148,4 +258,3 @@ $mobile-responsive-cutoff: 670px;
   color: white;
   white-space: nowrap;
 }
-

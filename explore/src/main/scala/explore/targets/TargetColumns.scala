@@ -198,6 +198,7 @@ object TargetColumns {
           )
             .setCell((x: CellProps[D, Option[String], Plugins]) => x.value.orEmpty)
         )
+
   }
 
   trait TargetColumnBuilder[D] {

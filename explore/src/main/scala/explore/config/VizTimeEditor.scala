@@ -17,6 +17,7 @@ import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.datepicker.*
+import react.semanticui.collections.form.Form
 import react.semanticui.sizes.*
 
 import java.time.Instant

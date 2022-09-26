@@ -3,13 +3,13 @@
 
 package explore.targets
 
-import cats.syntax.all._
-import crystal.react.reuse._
+import cats.syntax.all.*
+import crystal.react.reuse.*
 import explore.Icons
 import explore.components.ui.ExploreStyles
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.ui.reusability._
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.Css
@@ -21,21 +21,21 @@ import react.semanticui.collections.table.TableHeaderCell
 import react.semanticui.collections.table.TableRow
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes
-import reactST.reactTable._
+import reactST.reactTable.*
 
-final case class TargetSelectionTable(
+case class TargetSelectionTable(
   targets:       List[TargetSearchResult],
   onSelected:    TargetSearchResult => Callback,
   selectedIndex: Option[Int],
   onClick:       (TargetSearchResult, Int) => Callback
-) extends ReactFnProps[TargetSelectionTable](TargetSelectionTable.component)
+) extends ReactFnProps(TargetSelectionTable.component)
 
 object TargetSelectionTable {
-  type Props = TargetSelectionTable
+  private type Props = TargetSelectionTable
 
-  protected val TargetTable = TableDef[TargetSearchResult].withSortBy
+  private val TargetTable = TableDef[TargetSearchResult].withSortBy
 
-  protected val TargetTableComponent = new SUITable(TargetTable)
+  private val TargetTableComponent = new SUITable(TargetTable)
 
   private val columnClasses: Map[String, Css] = Map(
     "select" -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummarySelect),
@@ -43,7 +43,7 @@ object TargetSelectionTable {
     "name"   -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryName |+| ExploreStyles.WithSelect)
   )
 
-  protected val component = ScalaFnComponent
+  private val component = ScalaFnComponent
     .withHooks[Props]
     // cols
     .useMemoBy(_ => ()) { props => _ =>
@@ -61,7 +61,7 @@ object TargetSelectionTable {
             )(
               ^.tpe := "button"
             )(
-              cell.value.targetWithOptId.optId.fold(React.Fragment(Icons.New, "Create"))(_ =>
+              cell.value.targetWithOptId.optId.fold(React.Fragment(Icons.New, "Add"))(_ =>
                 React.Fragment(Icons.Link, "Link")
               )
             )
