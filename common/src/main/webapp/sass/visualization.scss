@@ -4,9 +4,6 @@ $mobile-responsive-cutoff: 670px;
 .aladin-container {
   overflow: hidden; // Needed to keep the visualization svg inside the component
   outline: none;
-}
-
-.aladin-container {
   pointer-events: none;
 
   @media (min-width: $mobile-responsive-cutoff) {

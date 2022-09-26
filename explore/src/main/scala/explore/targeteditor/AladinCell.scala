@@ -75,15 +75,9 @@ case class AladinCell(
 )(using val ctx: AppContextIO)
     extends ReactFnProps(AladinCell.component)
 
-// case class AladinSettings(showMenu: Boolean, showCatalog: Boolean)
-//
-// object AladinSettings {
-//   val Default = AladinSettings(false, false)
-// }
-//
 object SettingsMenuState extends NewType[Boolean]:
-  val Open: SettingsMenuState   = SettingsMenuState(true)
-  val Closed: SettingsMenuState = SettingsMenuState(false)
+  inline def Open: SettingsMenuState   = SettingsMenuState(true)
+  inline def Closed: SettingsMenuState = SettingsMenuState(false)
   extension (s: SettingsMenuState)
     def flip: SettingsMenuState = if (s.value) SettingsMenuState.Closed else SettingsMenuState.Open
 
