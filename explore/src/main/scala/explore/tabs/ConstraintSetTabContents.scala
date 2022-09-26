@@ -4,76 +4,76 @@
 package explore.tabs
 
 import cats.effect.IO
-import cats.syntax.all._
+import cats.syntax.all.*
 import crystal.react.View
-import crystal.react.hooks._
-import crystal.react.implicits._
-import crystal.react.reuse._
-import eu.timepit.refined.auto._
+import crystal.react.hooks.*
+import crystal.react.implicits.*
+import crystal.react.reuse.*
+import eu.timepit.refined.auto.*
 import explore.Icons
-import explore.common.ConstraintGroupQueries._
-import explore.common.UserPreferencesQueries._
+import explore.common.ConstraintGroupQueries.*
+import explore.common.UserPreferencesQueries.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.constraints.ConstraintsPanel
 import explore.constraints.ConstraintsSummaryTable
-import explore.implicits._
-import explore.model._
+import explore.implicits.*
+import explore.model.*
 import explore.model.enums.AppTab
-import explore.model.reusability._
+import explore.model.reusability.*
 import explore.observationtree.ConstraintGroupObsList
-import explore.optics._
-import explore.optics.all._
-import explore.syntax.ui._
-import explore.undo._
-import explore.utils._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.callback.CallbackCatsEffect._
-import japgolly.scalajs.react.vdom.html_<^._
+import explore.optics.*
+import explore.optics.all.*
+import explore.syntax.ui.*
+import explore.undo.*
+import explore.utils.*
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.callback.CallbackCatsEffect.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Program
 import lucuma.core.model.User
 import lucuma.refined.*
-import lucuma.ui.reusability._
+import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import lucuma.ui.utils._
+import lucuma.ui.utils.*
 import org.scalajs.dom.window
-import queries.common.ConstraintGroupQueriesGQL._
+import queries.common.ConstraintGroupQueriesGQL.*
 import queries.common.ObsQueriesGQL
-import queries.common.UserPreferencesQueriesGQL._
+import queries.common.UserPreferencesQueriesGQL.*
 import react.common.ReactFnProps
 import react.draggable.Axis
-import react.fa._
-import react.resizable._
-import react.resizeDetector.ResizeDetector
+import react.fa.*
+import react.resizable.*
+import react.resizeDetector.*
+import react.resizeDetector.hooks.*
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
-import react.semanticui.sizes._
+import react.semanticui.sizes.*
 
 import scala.collection.immutable.SortedSet
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
-final case class ConstraintSetTabContents(
-  userId:           Option[User.Id],
-  programId:        Program.Id,
-  focusedObsSet:    Option[ObsIdSet],
-  expandedIds:      View[SortedSet[ObsIdSet]],
-  listUndoStacks:   View[UndoStacks[IO, ConstraintGroupList]],
+case class ConstraintSetTabContents(
+  userId:         Option[User.Id],
+  programId:      Program.Id,
+  focusedObsSet:  Option[ObsIdSet],
+  expandedIds:    View[SortedSet[ObsIdSet]],
+  listUndoStacks: View[UndoStacks[IO, ConstraintGroupList]],
   // TODO: Clean up the groupUndoStack somewhere, somehow?
-  groupUndoStack:   View[Map[ObsIdSet, UndoStacks[IO, ConstraintSet]]],
-  hiddenColumns:    View[Set[String]],
-  summarySorting:   View[List[(String, Boolean)]],
-  size:             ResizeDetector.Dimensions
-)(implicit val ctx: AppContextIO)
-    extends ReactFnProps[ConstraintSetTabContents](ConstraintSetTabContents.component)
+  groupUndoStack: View[Map[ObsIdSet, UndoStacks[IO, ConstraintSet]]],
+  hiddenColumns:  View[Set[String]],
+  summarySorting: View[List[(String, Boolean)]]
+)(using val ctx:  AppContextIO)
+    extends ReactFnProps(ConstraintSetTabContents.component)
 
-object ConstraintSetTabContents {
-  type Props = ConstraintSetTabContents
-  type State = TwoPanelState
+object ConstraintSetTabContents extends TwoResizablePanels {
+  private type Props = ConstraintSetTabContents
+  given Reusability[Double] = Reusability.double(2.0)
 
-  def readWidthPreference(props: Props, state: View[State]): Callback = {
-    implicit val ctx = props.ctx
+  def readWidthPreference(props: Props, state: View[TwoPanelState]): Callback = {
+    import props.given
 
     (UserAreaWidths.queryWithDefault[IO](
       props.userId,
@@ -82,38 +82,25 @@ object ConstraintSetTabContents {
     ) >>= (w => state.zoom(TwoPanelState.treeWidth).async.set(w.toDouble))).runAsync
   }
 
-  protected def renderFn(props: Props, state: View[State])(
-    constraintsWithObs:         View[ConstraintSummaryWithObervations]
-  )(implicit
-    ctx:                        AppContextIO
-  ): VdomNode = {
-    val treeResize =
-      (_: ReactEvent, d: ResizeCallbackData) =>
-        (state.zoom(TwoPanelState.treeWidth).set(d.size.width.toDouble).to[IO] *>
-          UserWidthsCreation
-            .storeWidthPreference[IO](props.userId,
-                                      ResizableSection.ConstraintSetsTree,
-                                      d.size.width
-            )).runAsync
-          .debounce(1.second)
+  private def renderFn(
+    props:              Props,
+    state:              View[TwoPanelState],
+    resize:             UseResizeDetectorReturn,
+    debouncer:          Reusable[UseSingleEffect[IO]]
+  )(
+    constraintsWithObs: View[ConstraintSummaryWithObervations]
+  )(using ctx:          AppContextIO): VdomNode = {
 
     val treeWidth = state.get.treeWidth.toInt
 
-    def tree(constraintWithObs: View[ConstraintSummaryWithObervations]) =
-      <.div(^.width := treeWidth.px, ExploreStyles.Tree |+| ExploreStyles.ResizableSinglePanel)(
-        treeInner(constraintWithObs)
-      )
-
-    def treeInner(constraintWithObs: View[ConstraintSummaryWithObervations]) =
-      <.div(ExploreStyles.TreeBody)(
-        ConstraintGroupObsList(
-          constraintWithObs,
-          props.programId,
-          props.focusedObsSet,
-          state.zoom(TwoPanelState.selected).set(SelectedPanel.summary).reuseAlways,
-          props.expandedIds,
-          props.listUndoStacks
-        )
+    def constraintsTree(constraintWithObs: View[ConstraintSummaryWithObervations]) =
+      ConstraintGroupObsList(
+        constraintWithObs,
+        props.programId,
+        props.focusedObsSet,
+        state.zoom(TwoPanelState.selected).set(SelectedPanel.summary).reuseAlways,
+        props.expandedIds,
+        props.listUndoStacks
       )
 
     def findConstraintGroup(
@@ -149,20 +136,9 @@ object ConstraintSetTabContents {
     }
 
     val backButton: VdomNode =
-      Button(
-        as = <.a,
-        size = Mini,
-        compact = true,
-        basic = true,
-        clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
-        onClickE = linkOverride[ButtonProps](
-          ctx.pushPage(AppTab.Constraints, props.programId, Focused.None) >>
-            state.zoom(TwoPanelState.selected).set(SelectedPanel.tree)
-        )
-      )(^.href := ctx.pageUrl(AppTab.Constraints, props.programId, Focused.None), Icons.ChevronLeft)
+      makeBackButton(props.programId, AppTab.Constraints, ctx, state.zoom(TwoPanelState.selected))
 
-    val coreWidth  = props.size.width.getOrElse(0) - treeWidth
-    val coreHeight = props.size.height.getOrElse(0)
+    val (coreWidth, coreHeight) = coreDimensions(resize, treeWidth)
 
     val rightSide = props.focusedObsSet
       .flatMap(ids =>
@@ -233,53 +209,32 @@ object ConstraintSetTabContents {
         val csUndo: View[UndoStacks[IO, ConstraintSet]] =
           props.groupUndoStack.zoom(atMapWithDefault(idsToEdit, UndoStacks.empty))
 
-        val title = idsToEdit.single match {
+        val title = idsToEdit.single match
           case Some(id) => s"Observation $id"
           case None     => s"Editing Constraints for ${idsToEdit.size} Observations"
-        }
 
         Tile("constraints".refined, title, backButton.some)(renderInTitle =>
           ConstraintsPanel(idsToEdit.toList, csView, csUndo, renderInTitle)
         )
       }
 
-    if (window.canFitTwoPanels) {
-      <.div(^.key := "constraints-base")(
-        ExploreStyles.TreeRGL,
-        <.div(ExploreStyles.Tree, tree(constraintsWithObs))
-          .when(state.get.selected.leftPanelVisible),
-        <.div(^.key := "constraintset-right-side", ExploreStyles.SinglePanelTile)(
-          rightSide
-        ).when(state.get.selected.rightPanelVisible)
+    makeOneOrTwoPanels(
+      treeWidth,
+      coreHeight,
+      coreWidth,
+      state,
+      constraintsTree(constraintsWithObs),
+      rightSide,
+      RightSideCardinality.Single,
+      treeResize(props.userId,
+                 state.zoom(TwoPanelState.treeWidth),
+                 ResizableSection.ConstraintSetsTree,
+                 debouncer
       )
-    } else {
-      <.div(
-        ExploreStyles.TreeRGL,
-        Resizable(
-          axis = Axis.X,
-          width = treeWidth.toDouble,
-          height = coreHeight.toDouble,
-          minConstraints = (Constants.MinLeftPanelWidth.toInt, 0),
-          maxConstraints = (props.size.width.getOrElse(0) / 2, 0),
-          onResize = treeResize,
-          resizeHandles = List(ResizeHandleAxis.East),
-          content = tree(constraintsWithObs),
-          clazz = ExploreStyles.ResizableSeparator
-        ),
-        <.div(^.key   := "constraintset-right-side",
-              ExploreStyles.SinglePanelTile,
-              ^.width := coreWidth.px,
-              ^.left  := treeWidth.px
-        )(
-          rightSide
-        )
-      )
-    }
+    )
   }
 
-  protected implicit val innerWidthReuse: Reusability[Double] = Reusability.double(2.0)
-
-  protected val component =
+  private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useStateView(TwoPanelState.initial(SelectedPanel.Uninitialized))
@@ -295,7 +250,7 @@ object ConstraintSetTabContents {
         }
       }
       .useStreamResourceViewOnMountBy { (props, _) =>
-        implicit val ctx = props.ctx
+        import props.given
 
         ConstraintGroupObsQuery
           .query(props.programId)
@@ -304,9 +259,14 @@ object ConstraintSetTabContents {
             ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](props.programId)
           )
       }
-      .render { (props, state, constraintsWithObs) =>
-        implicit val ctx = props.ctx
+      // Measure its size
+      .useResizeDetector()
+      .useSingleEffect(debounce = 1.second)
+      .render { (props, state, constraintsWithObs, resize, debouncer) =>
+        import props.given
 
-        constraintsWithObs.render(renderFn(props, state) _)
+        <.div(
+          constraintsWithObs.render(renderFn(props, state, resize, debouncer) _)
+        ).withRef(resize.ref)
       }
 }

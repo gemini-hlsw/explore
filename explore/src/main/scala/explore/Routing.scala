@@ -75,24 +75,21 @@ object Routing {
     }
 
   private def constraintSetTab(page: Page, model: View[RootModel]): VdomElement =
-    withSize(size =>
-      AppCtx.using { implicit ctx =>
-        val routingInfo = RoutingInfo.from(page)
-        ConstraintSetTabContents(
-          model.zoom(RootModel.userId).get,
-          routingInfo.programId,
-          routingInfo.focused.obsSet,
-          model.zoom(
-            RootModel.expandedIds.andThen(ExpandedIds.constraintSetObsIds)
-          ),
-          model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forConstraintList),
-          model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forConstraintGroup),
-          model.zoom(RootModel.constraintSummaryHiddenColumns),
-          model.zoom(RootModel.constraintSummarySorting),
-          size
-        )
-      }
-    )
+    AppCtx.using { implicit ctx =>
+      val routingInfo = RoutingInfo.from(page)
+      ConstraintSetTabContents(
+        model.zoom(RootModel.userId).get,
+        routingInfo.programId,
+        routingInfo.focused.obsSet,
+        model.zoom(
+          RootModel.expandedIds.andThen(ExpandedIds.constraintSetObsIds)
+        ),
+        model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forConstraintList),
+        model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forConstraintGroup),
+        model.zoom(RootModel.constraintSummaryHiddenColumns),
+        model.zoom(RootModel.constraintSummarySorting)
+      )
+    }
 
   private def proposalTab(page: Page, model: View[RootModel]): VdomElement =
     AppCtx.using { implicit ctx =>

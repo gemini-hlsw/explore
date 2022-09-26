@@ -4,20 +4,21 @@
 package explore.model
 
 import cats.Eq
-import japgolly.scalajs.react.ReactCats._
+import cats.derived.*
+import japgolly.scalajs.react.ReactCats.*
 import japgolly.scalajs.react.Reusability
-import lucuma.ui.reusability._
+import lucuma.ui.reusability.*
 import monocle.Focus
 import org.scalajs.dom.window
 
-sealed abstract class SelectedPanel extends Product with Serializable {
-  import SelectedPanel._
-  def rightPanelVisible: Boolean = this match {
+sealed abstract class SelectedPanel extends Product with Serializable derives Eq {
+  import SelectedPanel.*
+
+  def rightPanelVisible: Boolean = this match
     case Uninitialized => false
     case Tree          => false
     case Summary       => true
     case Editor        => true
-  }
 
   def leftPanelVisible: Boolean = !rightPanelVisible
 }
@@ -33,18 +34,10 @@ object SelectedPanel {
   def summary: SelectedPanel     = Summary
   def editor: SelectedPanel      = Editor
 
-  implicit def eqSelectedPanel: Eq[SelectedPanel] = Eq.instance {
-    case (Uninitialized, Uninitialized) => true
-    case (Tree, Tree)                   => true
-    case (Summary, Summary)             => true
-    case (Editor, Editor)               => true
-    case _                              => false
-  }
-
-  implicit val reuseSelectedPanel: Reusability[SelectedPanel] = Reusability.byEq
+  given Reusability[SelectedPanel] = Reusability.byEq
 }
 
-final case class TwoPanelState(treeWidth: Double, selected: SelectedPanel)
+case class TwoPanelState(treeWidth: Double, selected: SelectedPanel)
 
 object TwoPanelState {
   val selected  = Focus[TwoPanelState](_.selected)
@@ -61,8 +54,8 @@ object TwoPanelState {
   def initial(sp: SelectedPanel): TwoPanelState =
     TwoPanelState(initialPanelWidth(sp), sp)
 
-  private implicit def doubleReuse: Reusability[Double] = Reusability.double(1.0)
+  private given Reusability[Double] = Reusability.double(1.0)
 
-  implicit val stateReuse: Reusability[TwoPanelState] =
+  given Reusability[TwoPanelState] =
     Reusability.by(tps => (tps.treeWidth, tps.selected))
 }
