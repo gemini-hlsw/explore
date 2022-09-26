@@ -48,7 +48,7 @@ class WorkerClient[F[_]: Concurrent: UUIDGen: Logger, R: Pickler] private (
   ): Resource[F, fs2.Stream[F, requestMessage.ResponseType]] =
     for {
       _      <- Resource.eval(initLatch.get) // Ensure server is initialized
-      id     <- Resource.eval(UUIDGen.randomUUID).map(WorkerProcessId.apply)
+      id     <- Resource.eval(UUIDGen.randomUUID).map(WorkerProcessId(_))
       _      <- Resource.make(
                   Logger[F].debug(s">>> Starting request with id [$id]") >>
                     worker.postTransferable(

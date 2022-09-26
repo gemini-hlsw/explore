@@ -78,10 +78,9 @@ object EditableLabel {
     )
 
   type Editing = Editing.Type
-  object Editing extends NewType[Boolean] {
-    val NotEditing = Editing(false)
-    val InEdition  = Editing(true)
-  }
+  object Editing extends NewType[Boolean]:
+    inline def NotEditing = Editing(false)
+    inline def InEdition  = Editing(true)
 
   import Editing.*
 

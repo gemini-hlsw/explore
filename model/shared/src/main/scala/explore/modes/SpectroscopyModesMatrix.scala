@@ -246,7 +246,7 @@ case class SpectroscopyModeRow(
       case _                                            => none
     micros
       .flatMap(m => Wavelength.fromPicometers.getOption(m.toUnit[Picometer].value.toInt))
-      .map(CoverageCenterWavelength.apply)
+      .map(CoverageCenterWavelength(_))
   }
 
 }
