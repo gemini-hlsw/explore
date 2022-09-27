@@ -7,6 +7,20 @@ import mkcert from 'vite-plugin-mkcert';
 import { VitePluginFonts } from 'vite-plugin-fonts';
 import { VitePWA } from 'vite-plugin-pwa';
 
+const fixCssRoot = (opts = {}) => {
+  return {
+    postcssPlugin: 'postcss-fix-nested-root',
+    Once(root, { result }) {
+      root.walkRules(rule => {
+        if (rule.selector.includes(' :root')) {
+          rule.selector = rule.selector.replace(' :root', '');
+        }
+      });
+    }
+  }
+}
+fixCssRoot.postcss = true;
+
 const fontImport = VitePluginFonts({
   google: {
     families: [
@@ -76,6 +90,7 @@ export default defineConfig(({ command, mode }) => {
   const suithemes = path.resolve(webappCommon, 'suithemes');
   const publicDirProd = path.resolve(common, 'src/main/public');
   const publicDirDev = path.resolve(common, 'src/main/publicdev');
+  const lucumaCss = path.resolve(__dirname, 'explore/target/lucuma-css')
   fs.mkdir(publicDirDev, (err) => {
     fs.copyFileSync(
       path.resolve(publicDirProd, 'development.conf.json'),
@@ -128,6 +143,10 @@ export default defineConfig(({ command, mode }) => {
           find: 'suithemes',
           replacement: suithemes,
         },
+        {
+          find: '/lucuma-css',
+          replacement: lucumaCss,
+        },
       ],
     },
     css: {
@@ -135,6 +154,9 @@ export default defineConfig(({ command, mode }) => {
         scss: {
           charset: false,
         },
+      },
+      postcss: {
+        plugins: [fixCssRoot]
       },
     },
     server: {

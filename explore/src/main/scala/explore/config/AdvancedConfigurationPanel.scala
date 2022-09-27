@@ -3,6 +3,7 @@
 
 package explore.config
 
+import cats.Eq
 import cats.data.NonEmptyList
 import cats.syntax.all.*
 import clue.data.syntax.*
@@ -59,9 +60,13 @@ import lucuma.core.util.Enumerated
 import lucuma.core.validation.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
-import lucuma.ui.forms.EnumViewOptionalSelect
-import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
+import lucuma.ui.primereact.FormEnumDropdownOptionalView
+import lucuma.ui.primereact.FormInputText
+import lucuma.ui.primereact.FormInputTextView
+import lucuma.ui.primereact.FormLabel
+import lucuma.ui.primereact.LucumaStyles
+import lucuma.ui.primereact.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -69,20 +74,19 @@ import lucuma.utils.*
 import monocle.Lens
 import mouse.boolean.*
 import queries.schemas.implicits.*
+import react.common.Css
 import react.common.ReactFnProps
 import react.fa.IconSize
 import react.floatingui.syntax.*
-import react.semanticui.collections.form.Form
-import react.semanticui.collections.form.FormInput
-import react.semanticui.elements.button.Button
-import react.semanticui.shorthand.*
-import react.semanticui.sizes.*
+import react.primereact.Button
+import react.primereact.PrimeStyles
 import spire.math.Bounded
 import spire.math.Interval
 
 import java.time.Duration
 
 import scalajs.js
+import scalajs.js.JSConverters.*
 
 sealed trait AdvancedConfigurationPanel[T <: ScienceModeAdvanced, S <: ScienceModeBasic, Input] {
   val obsId: Observation.Id
@@ -274,11 +278,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
         .size(IconSize.X1)
     ).withTooltip(tooltip = <.div("Customized!", <.br, s"Orginal: $original"))
 
-  private def customizedUnit(units: String, original: String, isCustom: Boolean): VdomNode =
-    if (isCustom) <.span(units, customized(original)) else units
-
   private def customizableEnumSelect[A: Enumerated: Display](
-    id:             String,
+    id:             NonEmptyString,
     view:           View[Option[A]],
     original:       Option[A],
     disabled:       Boolean,
@@ -287,17 +288,41 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
       false // TODO: Remove and simplify when we get all of the default values from the server
   ) = {
     val originalText = original.map(_.shortName).getOrElse(unknownDefault.fold("Unknown", "None"))
-    ReactFragment(
-      EnumViewOptionalSelect(
+    <.span(
+      LucumaStyles.FormField,
+      PrimeStyles.InputGroup,
+      FormEnumDropdownOptionalView(
         id = id,
         value = view,
         exclude = exclude,
-        clearable = true,
         placeholder = unknownDefault.fold(js.undefined, originalText),
-        disabled = disabled,
-        clazz = ExploreStyles.WarningInput.when_(view.get.isDefined)
+        disabled = disabled
       ),
       view.get.map(_ => customized(originalText))
+    )
+  }
+
+  private def customizableInputText[A: Eq](
+    id:            NonEmptyString,
+    value:         View[Option[A]],
+    validFormat:   InputValidFormat[Option[A]],
+    changeAuditor: ChangeAuditor,
+    label:         TagMod,
+    originalText:  Option[String] = None,
+    units:         Option[String] = None,
+    disabled:      Boolean = false
+  ) = {
+    val unitAddon   = units.map(u => u: TagMod)
+    val customAddon = value.get.map(_ => customized(originalText.getOrElse("Unknown")))
+    FormInputTextView(
+      id = id,
+      value = value,
+      label = label,
+      postAddons = List(unitAddon, customAddon).flatten,
+      validFormat = validFormat,
+      changeAuditor = changeAuditor,
+      placeholder = originalText.orUndefined,
+      disabled = disabled
     )
   }
 
@@ -392,42 +417,36 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
 
           def dithersControl(onChange: Callback): VdomElement = {
             val view = explicitWavelengthDithers(props.scienceModeAdvanced)
-            ReactFragment(
-              <.label("λ Dithers", HelpIcon("configuration/lambda-dithers.md".refined)),
-              InputWithUnits(
-                id = "dithers".refined,
-                value = view.withOnMod(_ => onChange),
-                validFormat = ExploreModelValidators.dithersValidSplitEpi,
-                changeAuditor = ChangeAuditor
-                  .bigDecimal(integers = 3.refined, decimals = 1.refined)
-                  .toSequence()
-                  .optional,
-                units = customizedUnit("nm", "Uknown", view.get.isDefined),
-                disabled = disableSimpleEdit,
-                clazz = ExploreStyles.WarningInput.when_(view.get.isDefined)
-              ).clearable
+            customizableInputText(
+              id = "dithers".refined,
+              value = view.withOnMod(_ => onChange),
+              label =
+                React.Fragment("λ Dithers", HelpIcon("configuration/lambda-dithers.md".refined)),
+              validFormat = ExploreModelValidators.dithersValidSplitEpi,
+              changeAuditor = ChangeAuditor
+                .bigDecimal(integers = 3.refined, decimals = 1.refined)
+                .toSequence()
+                .optional,
+              units = "nm".some,
+              disabled = disableSimpleEdit
             )
           }
 
           def offsetsControl(onChange: Callback): VdomElement = {
             val view = explicitSpatialOffsets(props.scienceModeAdvanced)
-            ReactFragment(
-              <.label("Spatial Offsets",
-                      HelpIcon("configuration/spatial-offsets.md".refined),
-                      ExploreStyles.SkipToNext
+            customizableInputText(
+              id = "offsets".refined,
+              value = view.withOnMod(_ => onChange),
+              label = React.Fragment("Spatial Offsets",
+                                     HelpIcon("configuration/spatial-offsets.md".refined)
               ),
-              InputWithUnits(
-                id = "offsets".refined,
-                value = view.withOnMod(_ => onChange),
-                validFormat = ExploreModelValidators.offsetQNELValidWedge,
-                changeAuditor = ChangeAuditor
-                  .bigDecimal(integers = 3.refined, decimals = 2.refined)
-                  .toSequence()
-                  .optional,
-                units = customizedUnit("arcsec", "Uknown", view.get.isDefined),
-                disabled = disableSimpleEdit,
-                clazz = ExploreStyles.WarningInput.when_(view.get.isDefined)
-              ).clearable
+              validFormat = ExploreModelValidators.offsetQNELValidWedge,
+              changeAuditor = ChangeAuditor
+                .bigDecimal(integers = 3.refined, decimals = 2.refined)
+                .toSequence()
+                .optional,
+              units = "arcsec".some,
+              disabled = disableSimpleEdit
             )
           }
 
@@ -471,78 +490,83 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             exposureModeView.set(oetm) >> invalidateITC
           }
 
-          Form(size = Small)(
-            ExploreStyles.Compact,
+          <.div(
             ExploreStyles.AdvancedConfigurationGrid
           )(
             <.div(
-              ExploreStyles.ExploreForm,
+              LucumaStyles.FormColumnCompact,
               ExploreStyles.AdvancedConfigurationCol1
             )(
-              <.label("Grating", HelpIcon("configuration/grating.md".refined)),
+              FormLabel(htmlFor = "override-grating".refined)(
+                "Grating",
+                HelpIcon("configuration/grating.md".refined)
+              ),
               customizableEnumSelect(
-                id = "override-grating",
+                id = "override-grating".refined,
                 view = overrideGrating(props.scienceModeAdvanced),
                 original = gratingLens.get(props.scienceModeBasic).some,
                 disabled = disableAdvancedEdit,
                 exclude = obsoleteGratings
               ),
-              <.label("Filter",
-                      HelpIcon("configuration/filter.md".refined),
-                      ExploreStyles.SkipToNext
+              FormLabel(htmlFor = "override-filter".refined)(
+                "Filter",
+                HelpIcon("configuration/filter.md".refined)
               ),
               customizableEnumSelect(
-                id = "override-filter",
+                id = "override-filter".refined,
                 view = overrideFilter(props.scienceModeAdvanced),
                 original = filterLens.get(props.scienceModeBasic),
                 disabled = disableAdvancedEdit,
                 exclude = obsoleteFilters
               ),
-              <.label("FPU", HelpIcon("configuration/fpu.md".refined), ExploreStyles.SkipToNext),
+              FormLabel(htmlFor = "override-fpu".refined)(
+                "FPU",
+                HelpIcon("configuration/fpu.md".refined)
+              ),
               customizableEnumSelect(
-                id = "override-fpu",
+                id = "override-fpu".refined,
                 view = overrideFpu(props.scienceModeAdvanced),
                 original = fpuLens.get(props.scienceModeBasic).some,
                 disabled = disableAdvancedEdit
               ),
               offsetsControl(Callback.empty)
             ),
-            <.div(ExploreStyles.ExploreForm, ExploreStyles.AdvancedConfigurationCol2)(
-              <.label("Wavelength",
-                      HelpIcon("configuration/wavelength.md".refined),
-                      ExploreStyles.SkipToNext
-              ),
-              InputWithUnits(
+            <.div(LucumaStyles.FormColumnCompact, ExploreStyles.AdvancedConfigurationCol2)(
+              customizableInputText(
                 id = "override-wavelength".refined,
                 value = wavelengthView.withOnMod(_ => invalidateITC),
-                units = customizedUnit("μm", originalWavelengthText, wavelengthView.get.isDefined),
+                label =
+                  React.Fragment("Wavelength", HelpIcon("configuration/wavelength.md".refined)),
                 validFormat = ExploreModelValidators.wavelengthValidWedge.optional,
                 changeAuditor = wavelengthChangeAuditor.optional,
-                placeholder = originalWavelengthText,
-                disabled = disableSimpleEdit,
-                clazz = ExploreStyles.WarningInput.when_(wavelengthView.get.isDefined)
-              ).clearable,
+                units = "μm".some,
+                originalText = originalWavelengthText.some,
+                disabled = disableSimpleEdit
+              ),
               dithersControl(Callback.empty),
-              <.label("Exposure Mode",
-                      HelpIcon("configuration/exposure-mode.md".refined),
-                      ExploreStyles.SkipToNext
+              FormLabel(htmlFor = "exposureMode".refined)(
+                "Exposure Mode",
+                HelpIcon("configuration/exposure-mode.md".refined)
               ),
-              EnumViewOptionalSelect(
-                id = "exposureMode",
-                value = exposureModeEnum.withOnMod(onModeMod _),
-                disabled = disableSimpleEdit,
-                clearable = true,
-                placeholder = originalSignalToNoiseText,
-                clazz = ExploreStyles.WarningInput.when_(exposureModeEnum.get.isDefined)
+              <.span(
+                LucumaStyles.FormField,
+                PrimeStyles.InputGroup,
+                FormEnumDropdownOptionalView(
+                  id = "exposureMode".refined,
+                  value = exposureModeEnum.withOnMod(onModeMod _),
+                  disabled = disableSimpleEdit,
+                  placeholder = originalSignalToNoiseText
+                ),
+                exposureModeEnum.get.map(_ => customized(originalSignalToNoiseText))
               ),
-              exposureModeEnum.get.map(_ => customized(originalSignalToNoiseText)),
-              <.label("S/N",
-                      HelpIcon("configuration/signal-to-noise.md".refined),
-                      ExploreStyles.SkipToNext |+| ExploreStyles.IndentLabel
+              FormLabel(htmlFor = "signalToNoise".refined)(
+                "S/N",
+                HelpIcon("configuration/signal-to-noise.md".refined),
+                ExploreStyles.IndentLabel
               ),
               signalToNoiseView
                 .map(v =>
-                  FormInputEV(
+                  FormInputTextView(
                     id = "signalToNoise".refined,
                     value = v.withOnMod(_ => invalidateITC),
                     validFormat = InputValidWedge.truncatedPosBigDecimal(0.refined),
@@ -556,26 +580,27 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                       val value = osn.fold(itcNoneMsg)(sn =>
                         InputValidWedge.truncatedPosBigDecimal(0.refined).reverseGet(sn)
                       )
-                      FormInput(value = value, disabled = true)
+                      FormInputText(id = "signalToNoise".refined, value = value, disabled = true)
                     },
                     pendingRender =
                       <.div(ExploreStyles.InputReplacementIcon, Icons.Spinner.spin(true)): VdomNode
                   )(props.potITC.get.map(_.map(_.signalToNoise)))
                 ),
-              <.label("Exp Time",
-                      HelpIcon("configuration/exposure-time.md".refined),
-                      ExploreStyles.SkipToNext |+| ExploreStyles.IndentLabel
+              FormLabel(htmlFor = "exposureTime".refined)(
+                "Exp Time",
+                HelpIcon("configuration/exposure-time.md".refined),
+                ExploreStyles.IndentLabel
               ),
               exposureTimeView
                 .map(v =>
-                  InputWithUnits(
+                  FormInputTextView(
                     id = "exposureTime".refined,
                     value = v
                       .zoomSplitEpi[NonNegInt](nonNegDurationSecondsSplitEpi)
                       .withOnMod(_ => invalidateITC),
                     validFormat = InputValidSplitEpi.refinedInt[NonNegative],
                     changeAuditor = ChangeAuditor.refinedInt[NonNegative](),
-                    units = "sec",
+                    postAddons = List("sec"),
                     disabled = disableSimpleEdit
                   ): TagMod
                 )
@@ -584,21 +609,24 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                     valueRender = ot => {
                       val value =
                         ot.fold(itcNoneMsg)(t => nonNegDurationSecondsSplitEpi.get(t).toString)
-                      ReactFragment(FormInput(value = value, disabled = true),
-                                    <.span(ExploreStyles.UnitsLabel, "sec")
+                      FormInputText(id = "exposureTime".refined,
+                                    value = value,
+                                    disabled = true,
+                                    postAddons = List("sec")
                       )
                     },
                     pendingRender =
                       <.div(ExploreStyles.InputReplacementIcon, Icons.Spinner.spin(true)): VdomNode
                   )(props.potITC.get.map(_.map(_.exposureTime)))
                 ),
-              <.label("Exp Count",
-                      HelpIcon("configuration/exposure-count.md".refined),
-                      ExploreStyles.SkipToNext |+| ExploreStyles.IndentLabel
+              FormLabel(htmlFor = "exposureCount".refined)(
+                "Exp Count",
+                HelpIcon("configuration/exposure-count.md".refined),
+                ExploreStyles.IndentLabel
               ),
               exposureCountView
                 .map(v =>
-                  FormInputEV(
+                  FormInputTextView(
                     id = "exposureCount".refined,
                     value = v.withOnMod(_ => invalidateITC),
                     validFormat = InputValidSplitEpi.refinedInt[NonNegative],
@@ -610,53 +638,59 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                   potRender[Option[NonNegInt]](
                     valueRender = oe => {
                       val value = oe.fold(itcNoneMsg)(_.toString)
-                      FormInput(value = value, disabled = true)
+                      FormInputText(id = "exposureCount".refined, value = value, disabled = true)
                     },
                     pendingRender =
                       <.div(ExploreStyles.InputReplacementIcon, Icons.Spinner.spin(true)): VdomNode
                   )(props.potITC.get.map(_.map(_.exposures)))
                 )
             ),
-            <.div(ExploreStyles.ExploreForm, ExploreStyles.AdvancedConfigurationCol3)(
-              <.label("Binning", HelpIcon("configuration/binning.md".refined)),
+            <.div(LucumaStyles.FormColumnCompact, ExploreStyles.AdvancedConfigurationCol3)(
+              FormLabel(htmlFor = "explicitXBin".refined)(
+                "Binning",
+                HelpIcon("configuration/binning.md".refined)
+              ),
               customizableEnumSelect(
-                id = "explicitXBin",
+                id = "explicitXBin".refined,
                 view = explicitBinning(props.scienceModeAdvanced),
                 original = none,
                 disabled = disableAdvancedEdit,
                 unknownDefault = true
               ),
-              <.label("Read Mode",
-                      HelpIcon("configuration/read-mode.md".refined),
-                      ExploreStyles.SkipToNext
+              FormLabel(htmlFor = "explicitReadMode".refined)(
+                "Read Mode",
+                HelpIcon("configuration/read-mode.md".refined)
               ),
               customizableEnumSelect(
-                id = "explicitReadMode",
+                id = "explicitReadMode".refined,
                 view = explicitReadModeGain(props.scienceModeAdvanced),
                 original = none,
                 disabled = disableAdvancedEdit,
                 unknownDefault = true
               ),
-              <.label("ROI", HelpIcon("configuration/roi.md".refined), ExploreStyles.SkipToNext),
+              FormLabel(htmlFor = "explicitRoi".refined)("ROI",
+                                                         HelpIcon("configuration/roi.md".refined)
+              ),
               customizableEnumSelect(
-                id = "explicitRoi",
+                id = "explicitRoi".refined,
                 view = explicitRoi(props.scienceModeAdvanced),
                 original = none,
                 disabled = disableAdvancedEdit,
                 exclude = obsoleteRois,
                 unknownDefault = true
               ),
-              <.label("λ / Δλ", ExploreStyles.SkipToNext),
-              FormInput(
+              FormInputText(
+                id = "lambda".refined,
                 value = readonlyData.value.fold("Unknown")(_.resolution.toString),
+                label = "λ / Δλ",
                 disabled = true
               ),
-              <.label("λ Coverage", ExploreStyles.SkipToNext),
-              ReactFragment(
-                FormInput(value = readonlyData.value.fold("Unknown")(_.formattedCoverage),
-                          disabled = true
-                ),
-                <.span(ExploreStyles.UnitsLabel, "nm")
+              FormLabel(htmlFor = "lambdaCoverage".refined)("λ Coverage"),
+              FormInputText(
+                id = "lambdaCoverage".refined,
+                value = readonlyData.value.fold("Unknown")(_.formattedCoverage),
+                disabled = true,
+                postAddons = List("nm")
               )
             ),
             <.div(ExploreStyles.AdvancedConfigurationButtons)(
@@ -667,49 +701,43 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 dithersControl,
                 offsetsControl,
                 trigger = Button(
-                  size = Small,
-                  compact = true,
-                  clazz = ExploreStyles.VeryCompact,
-                  content = "View Sequence"
-                )(^.tpe := "button")
+                  size = Button.Size.Small,
+                  severity = Button.Severity.Secondary,
+                  outlined = true
+                ).compact("View Sequence")
               ),
               Button(
-                size = Small,
-                compact = true,
-                clazz = ExploreStyles.VeryCompact,
-                content = "View Suggested Configs",
-                icon = Icons.ListIcon,
+                size = Button.Size.Small,
+                severity = Button.Severity.Secondary,
+                outlined = true,
                 onClick = props.editState.set(ConfigEditState.TableView)
-              )(^.tpe := "button")
+              ).compact(Icons.ListIcon, "View Suggested Configs")
                 .unless(isCustomized(props.scienceModeAdvanced)),
               Button(
-                size = Small,
-                compact = true,
-                clazz = ExploreStyles.VeryCompact,
-                content = "Revert Customizations",
-                icon = Icons.TrashUnstyled,
-                negative = true,
+                size = Button.Size.Small,
+                severity = Button.Severity.Danger,
                 onClick = props.editState.set(ConfigEditState.DetailsView) >>
                   exposureModeEnum.set(none) >>
                   invalidateITC >>
                   revertCustomizations(props.scienceModeAdvanced)
-              )(^.tpe := "button").when(isCustomized(props.scienceModeAdvanced)),
+              ).compact(Icons.TrashUnstyled, "Revert Customizations")
+                .when(isCustomized(props.scienceModeAdvanced)),
               Button(
-                size = Small,
-                compact = true,
-                clazz = ExploreStyles.VeryCompact,
-                content = "Customize",
-                icon = Icons.Edit,
+                size = Button.Size.Small,
+                severity = Button.Severity.Secondary,
+                outlined = true,
                 onClick = props.editState.set(ConfigEditState.SimpleEdit)
-              )(^.tpe := "button").when(props.editState.get === ConfigEditState.DetailsView),
+              ).compact(Icons.Edit, "Customize")
+                .when(props.editState.get === ConfigEditState.DetailsView),
               Button(
-                size = Small,
-                compact = true,
-                clazz = ExploreStyles.VeryCompact,
-                content = "Advanced Customization",
-                icon = Icons.ExclamationTriangle.clazz(ExploreStyles.WarningIcon),
+                size = Button.Size.Small,
+                severity = Button.Severity.Secondary,
+                outlined = true,
                 onClick = props.editState.set(ConfigEditState.AdvancedEdit)
-              )(^.tpe := "button").when(props.editState.get === ConfigEditState.SimpleEdit)
+              ).compact(
+                Icons.ExclamationTriangle.clazz(ExploreStyles.WarningIcon),
+                "Advanced Customization"
+              ).when(props.editState.get === ConfigEditState.SimpleEdit)
             )
           )
       }

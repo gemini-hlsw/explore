@@ -170,7 +170,7 @@ lazy val explore: Project = project
   .settings(commonSettings: _*)
   .settings(commonJsLibSettings: _*)
   .settings(esModule: _*)
-  .enablePlugins(ScalaJSPlugin)
+  .enablePlugins(ScalaJSPlugin, LucumaCssPlugin)
   .settings(
     Test / test          := {},
     coverageEnabled      := false,
@@ -293,6 +293,8 @@ lazy val setupNode = WorkflowStep.Use(
 
 lazy val sbtStage = WorkflowStep.Sbt(List("stage"), name = Some("Stage"))
 
+lazy val lucumaCssStep = WorkflowStep.Sbt(List("lucumaCss"), name = Some("Extract CSS files"))
+
 // https://stackoverflow.com/a/55610612
 lazy val npmInstall = WorkflowStep.Run(
   List("npm install"),
@@ -366,7 +368,8 @@ def setupVars(mode: String) = WorkflowStep.Run(
     raw"""sed '/^[[:blank:]]*[\\.\\}\\@]/d;/^[[:blank:]]*\..*/d;/^[[:blank:]]*$$/d;/\/\/.*/d' common/src/main/webapp/less/variables-$mode.less > vars.css""",
     "cat vars.css"
   ),
-  name = Some(s"Setup and expand vars $mode")
+  name = Some(s"Setup and expand vars $mode"),
+  cond = if (mode == "dark") None else Some("github.event_name != 'pull_request'")
 )
 
 def runLinters(mode: String) = WorkflowStep.Use(
@@ -377,7 +380,8 @@ def runLinters(mode: String) = WorkflowStep.Use(
     "stylelint"            -> "true",
     "stylelint_args"       -> "common/src/main/webapp/sass",
     "stylelint_extensions" -> "css,sass,scss"
-  )
+  ),
+  cond = if (mode == "dark") None else Some("github.event_name != 'pull_request'")
 )
 
 ThisBuild / githubWorkflowGeneratedUploadSteps := Seq.empty
@@ -432,6 +436,7 @@ ThisBuild / githubWorkflowAddedJobs +=
     WorkflowStep.Checkout ::
       setupNode ::
       npmInstall ::
+      lucumaCssStep ::
       setupVars("dark") ::
       runLinters("dark") ::
       setupVars("light") ::
@@ -439,5 +444,5 @@ ThisBuild / githubWorkflowAddedJobs +=
       Nil,
     scalas = List(scalaVersion.value),
     javas = githubWorkflowJavaVersions.value.toList.take(1),
-    cond = Some(allConds(pushCond, geminiRepoCond, notMasterCond, notDependabotCond))
+    cond = Some(allConds(anyConds(masterCond, prCond), geminiRepoCond, notDependabotCond))
   )
