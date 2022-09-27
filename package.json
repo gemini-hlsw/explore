@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@cquiroz/aladin-lite": "0.7.6",
+    "@cquiroz/aladin-lite": "0.7.7",
     "@cquiroz/react-moon": "2.0.2",
     "@floating-ui/react-dom-interactions": "^0.10.1",
     "@fortawesome/fontawesome-pro": "^6.1.2",
