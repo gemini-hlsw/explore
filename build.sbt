@@ -368,7 +368,8 @@ def setupVars(mode: String) = WorkflowStep.Run(
     raw"""sed '/^[[:blank:]]*[\\.\\}\\@]/d;/^[[:blank:]]*\..*/d;/^[[:blank:]]*$$/d;/\/\/.*/d' common/src/main/webapp/less/variables-$mode.less > vars.css""",
     "cat vars.css"
   ),
-  name = Some(s"Setup and expand vars $mode")
+  name = Some(s"Setup and expand vars $mode"),
+  cond = if (mode == "dark") None else Some("github.event_name != 'pull_request'")
 )
 
 def runLinters(mode: String) = WorkflowStep.Use(
@@ -379,7 +380,8 @@ def runLinters(mode: String) = WorkflowStep.Use(
     "stylelint"            -> "true",
     "stylelint_args"       -> "common/src/main/webapp/sass",
     "stylelint_extensions" -> "css,sass,scss"
-  )
+  ),
+  cond = if (mode == "dark") None else Some("github.event_name != 'pull_request'")
 )
 
 ThisBuild / githubWorkflowGeneratedUploadSteps := Seq.empty

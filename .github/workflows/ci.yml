@@ -71,7 +71,7 @@ jobs:
         run: npm install
 
       - name: Check that workflows are up to date
-        run: sbt -v -J-Xmx6g 'project ${{ matrix.project }}' '++${{ matrix.scala }}' 'project /' githubWorkflowCheck
+        run: sbt -v -J-Xmx6g githubWorkflowCheck
 
       - name: Check headers and formatting
         if: matrix.java == 'temurin@17'
@@ -288,11 +288,13 @@ jobs:
           stylelint_extensions: css,sass,scss
 
       - name: Setup and expand vars light
+        if: github.event_name != 'pull_request'
         run: |
           sed '/^[[:blank:]]*[\\.\\}\\@]/d;/^[[:blank:]]*\..*/d;/^[[:blank:]]*$/d;/\/\/.*/d' common/src/main/webapp/less/variables-light.less > vars.css
           cat vars.css
 
       - name: Run linters in light mode
+        if: github.event_name != 'pull_request'
         uses: wearerequired/lint-action@v1.11.1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
