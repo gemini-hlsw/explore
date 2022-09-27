@@ -442,5 +442,5 @@ ThisBuild / githubWorkflowAddedJobs +=
       Nil,
     scalas = List(scalaVersion.value),
     javas = githubWorkflowJavaVersions.value.toList.take(1),
-    cond = Some(allConds(pushCond, geminiRepoCond, notMasterCond, notDependabotCond))
+    cond = Some(allConds(anyConds(masterCond, prCond), geminiRepoCond, notDependabotCond))
   )
