@@ -293,6 +293,8 @@ lazy val setupNode = WorkflowStep.Use(
 
 lazy val sbtStage = WorkflowStep.Sbt(List("stage"), name = Some("Stage"))
 
+lazy val lucumaCss = WorkflowStep.Sbt(List("lucumaCss"), name = Some("Extract CSS files"))
+
 // https://stackoverflow.com/a/55610612
 lazy val npmInstall = WorkflowStep.Run(
   List("npm install"),
@@ -432,6 +434,7 @@ ThisBuild / githubWorkflowAddedJobs +=
     WorkflowStep.Checkout ::
       setupNode ::
       npmInstall ::
+      lucumaCss ::
       setupVars("dark") ::
       runLinters("dark") ::
       setupVars("light") ::

@@ -271,6 +271,9 @@ jobs:
       - name: npm install
         run: npm install
 
+      - name: Extract CSS files
+        run: sbt -v -J-Xmx6g '++${{ matrix.scala }}' lucumaCss
+
       - name: Setup and expand vars dark
         run: |
           sed '/^[[:blank:]]*[\\.\\}\\@]/d;/^[[:blank:]]*\..*/d;/^[[:blank:]]*$/d;/\/\/.*/d' common/src/main/webapp/less/variables-dark.less > vars.css
