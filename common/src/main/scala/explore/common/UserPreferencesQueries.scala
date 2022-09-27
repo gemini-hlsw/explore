@@ -169,18 +169,55 @@ object UserPreferencesQueries {
   }
 
   object TargetPreferences:
-    import UserTargetPreferencesQuery.*
+    def updateAladinPreferences[F[_]: ApplicativeThrow](
+      uid:           User.Id,
+      targetId:      Target.Id,
+      fovRA:         Angle,
+      fovDec:        Angle,
+      agsCandidates: Visible,
+      agsOverlay:    Visible,
+      fullScreen:    Boolean
+    )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
+      import UserTargetPreferencesUpsert.*
 
-    // Gets the layout of a section.
-    // This is coded to return a default in case
-    // there is no data or errors
+      execute[F](
+        LucumaTargetInsertInput(
+          target_id = targetId.show.assign,
+          lucuma_target_preferences = LucumaTargetPreferencesArrRelInsertInput(
+            data = List(
+              LucumaTargetPreferencesInsertInput(
+                user_id = uid.show.assign,
+                fovRA = fovRA.toMicroarcseconds.assign,
+                fovDec = fovDec.toMicroarcseconds.assign,
+                agsCandidates = Visible.boolIso.reverseGet(agsCandidates).assign,
+                agsOverlay = Visible.boolIso.reverseGet(agsOverlay).assign,
+                fullScreen = fullScreen.assign
+              )
+            ),
+            on_conflict = LucumaTargetPreferencesOnConflict(
+              constraint = LucumaTargetPreferencesConstraint.LucumaTargetPreferencesPkey,
+              update_columns = List(
+                LucumaTargetPreferencesUpdateColumn.FovRA,
+                LucumaTargetPreferencesUpdateColumn.FovDec,
+                LucumaTargetPreferencesUpdateColumn.AgsCandidates,
+                LucumaTargetPreferencesUpdateColumn.AgsOverlay,
+                LucumaTargetPreferencesUpdateColumn.FullScreen
+              )
+            ).assign
+          ).assign
+        )
+      ).attempt.void
+
+    // Gets the target properties
     def queryWithDefault[F[_]: ApplicativeThrow](
       uid:        User.Id,
       tid:        Target.Id,
       defaultFov: Angle
-    )(implicit
-      cl:         TransactionalClient[F, UserPreferencesDB]
+    )(using
+      TransactionalClient[F, UserPreferencesDB]
     ): F[(UserGlobalPreferences, TargetVisualOptions)] =
+      import UserTargetPreferencesQuery.*
+
       for {
         r <-
           query[F](uid.show, tid.show)
@@ -217,6 +254,21 @@ object UserPreferencesQueries {
         }
         (userPrefs, targetPrefs)
       }
+
+    def updateViewOffset[F[_]: ApplicativeThrow](
+      uid:      User.Id,
+      targetId: Target.Id,
+      offset:   Offset
+    )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
+      import UserTargetPreferencesViewOffsetUpdate.*
+      execute[F](
+        user_id = uid.show,
+        target_id = targetId.show,
+        viewOffsetP = offset.p.toAngle.toMicroarcseconds,
+        viewOffsetQ = offset.q.toAngle.toMicroarcseconds
+      ).attempt.void
+
+  end TargetPreferences
 
   object ItcPlotPreferences:
     // Gets the prefs for the itc plot
@@ -262,45 +314,6 @@ object UserPreferencesQueries {
               constraint = LucumaItcPlotPreferencesConstraint.LucumaItcPlotPreferencesPkey,
               update_columns = List(LucumaItcPlotPreferencesUpdateColumn.ChartType,
                                     LucumaItcPlotPreferencesUpdateColumn.DetailsOpen
-              )
-            ).assign
-          ).assign
-        )
-      ).attempt.void
-
-  extension (self: UserTargetPreferencesUpsert.type)
-    def updateAladinPreferences[F[_]: ApplicativeThrow](
-      uid:           User.Id,
-      targetId:      Target.Id,
-      fovRA:         Angle,
-      fovDec:        Angle,
-      agsCandidates: Visible,
-      agsOverlay:    Visible,
-      fullScreen:    Boolean
-    )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
-      import self.*
-      execute[F](
-        LucumaTargetInsertInput(
-          target_id = targetId.show.assign,
-          lucuma_target_preferences = LucumaTargetPreferencesArrRelInsertInput(
-            data = List(
-              LucumaTargetPreferencesInsertInput(
-                user_id = uid.show.assign,
-                fovRA = fovRA.toMicroarcseconds.assign,
-                fovDec = fovDec.toMicroarcseconds.assign,
-                agsCandidates = Visible.boolIso.reverseGet(agsCandidates).assign,
-                agsOverlay = Visible.boolIso.reverseGet(agsOverlay).assign,
-                fullScreen = fullScreen.assign
-              )
-            ),
-            on_conflict = LucumaTargetPreferencesOnConflict(
-              constraint = LucumaTargetPreferencesConstraint.LucumaTargetPreferencesPkey,
-              update_columns = List(
-                LucumaTargetPreferencesUpdateColumn.FovRA,
-                LucumaTargetPreferencesUpdateColumn.FovDec,
-                LucumaTargetPreferencesUpdateColumn.AgsCandidates,
-                LucumaTargetPreferencesUpdateColumn.AgsOverlay,
-                LucumaTargetPreferencesUpdateColumn.FullScreen
               )
             ).assign
           ).assign

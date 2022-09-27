@@ -283,15 +283,15 @@ object AladinCell extends ModelOptics {
               _ => true,
               o =>
                 // Don't save if the change is less than 1 arcse
-                (o._2.fovRA.toMicroarcseconds - newFov.x.toMicroarcseconds).abs < 1e6 &&
-                  (o._2.fovDec.toMicroarcseconds - newFov.y.toMicroarcseconds).abs < 1e6
+                (o.fovRA.toMicroarcseconds - newFov.x.toMicroarcseconds).abs < 1e7 ||
+                  (o.fovDec.toMicroarcseconds - newFov.y.toMicroarcseconds).abs < 1e7
             )
             if (newFov.x.toMicroarcseconds === 0L) Callback.empty
             else {
               fovView.set(newFov) *>
                 (fovView.get, agsCandidatesView.get, agsOverlayView.get, fullScreenView.get).mapN {
                   (_, a, o, f) =>
-                    UserTargetPreferencesUpsert
+                    TargetPreferences
                       .updateAladinPreferences[IO](props.uid,
                                                    props.tid,
                                                    newFov.x,
@@ -336,7 +336,7 @@ object AladinCell extends ModelOptics {
           ): Callback =
             (fovView.get, agsCandidatesView.get, agsOverlayView.get, fullScreenView.get).mapN {
               (f, a, o, s) =>
-                UserTargetPreferencesUpsert
+                TargetPreferences
                   .updateAladinPreferences[IO](
                     props.uid,
                     props.tid,
