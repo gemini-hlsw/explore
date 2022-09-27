@@ -10,8 +10,11 @@ import cats.data.OptionT
 import cats.syntax.all.*
 import clue.TransactionalClient
 import clue.data.syntax.*
+import explore.model.AladinMouseScroll
 import explore.model.GridLayoutSection
 import explore.model.ResizableSection
+import explore.model.TargetVisualOptions
+import explore.model.UserGlobalPreferences
 import explore.model.enums.ItcChartType
 import explore.model.enums.PlotRange
 import explore.model.enums.TimeDisplay
@@ -55,6 +58,18 @@ object UserPreferencesQueries {
         execute[F](WidthUpsertInput(i, section, width)).attempt
       }.void
   }
+
+  object UserPreferences:
+    def storePreferences[F[_]: ApplicativeThrow](
+      userId:            User.Id,
+      aladinMouseScroll: AladinMouseScroll
+    )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
+      import UserPreferencesUpdateQuery.*
+
+      execute[F](
+        user_id = userId.show.assign,
+        aladinMouseScroll = aladinMouseScroll.value.assign
+      ).attempt.void
 
   extension (self: UserAreaWidths.type)
     // Gets the width of a section.
@@ -165,12 +180,14 @@ object UserPreferencesQueries {
       defaultFov: Angle
     )(implicit
       cl:         TransactionalClient[F, UserPreferencesDB]
-    ): F[(Angle, Angle, Offset, Visible, Visible, Boolean)] =
+    ): F[(UserGlobalPreferences, TargetVisualOptions)] =
       for {
         r <-
           query[F](uid.show, tid.show)
             .map { r =>
-              r.lucuma_target_preferences_by_pk.map(result =>
+              val userPrefs   =
+                r.lucuma_user_preferences_by_pk.map(result => result.aladinMouseScroll)
+              val targetPrefs = r.lucuma_target_preferences_by_pk.map(result =>
                 (result.fovRA,
                  result.fovDec,
                  result.viewOffsetP,
@@ -180,20 +197,25 @@ object UserPreferencesQueries {
                  result.fullScreen
                 )
               )
+              (userPrefs, targetPrefs)
             }
-            .handleError(_ => none)
+            .handleError(_ => (none, none))
       } yield {
-        val fovRA  = r.map(u => Angle.fromMicroarcseconds(u._1)).getOrElse(defaultFov)
-        val fovDec = r.map(u => Angle.fromMicroarcseconds(u._2)).getOrElse(defaultFov)
-        val offset = r
-          .map(u => Offset(Angle.fromMicroarcseconds(u._3).p, Angle.fromMicroarcseconds(u._4).q))
-          .getOrElse(Offset.Zero)
+        val userPrefs   = UserGlobalPreferences(AladinMouseScroll(r._1.getOrElse(true)))
+        val targetPrefs = {
+          val fovRA  = r._2.map(u => Angle.fromMicroarcseconds(u._1)).getOrElse(defaultFov)
+          val fovDec = r._2.map(u => Angle.fromMicroarcseconds(u._2)).getOrElse(defaultFov)
+          val offset = r._2
+            .map(u => Offset(Angle.fromMicroarcseconds(u._3).p, Angle.fromMicroarcseconds(u._4).q))
+            .getOrElse(Offset.Zero)
 
-        val agsCandidates = r.map(_._5).map(Visible.boolIso.get).getOrElse(Visible.Hidden)
-        val agsOverlay    = r.map(_._6).map(Visible.boolIso.get).getOrElse(Visible.Hidden)
-        val fullScreen    = r.map(_._7).getOrElse(false)
+          val agsCandidates = r._2.map(_._5).map(Visible.boolIso.get).getOrElse(Visible.Hidden)
+          val agsOverlay    = r._2.map(_._6).map(Visible.boolIso.get).getOrElse(Visible.Hidden)
+          val fullScreen    = r._2.map(_._7).getOrElse(false)
 
-        (fovRA, fovDec, offset, agsCandidates, agsOverlay, fullScreen)
+          TargetVisualOptions(fovRA, fovDec, offset, agsCandidates, agsOverlay, fullScreen)
+        }
+        (userPrefs, targetPrefs)
       }
 
   object ItcPlotPreferences:
@@ -340,23 +362,18 @@ object UserPreferencesQueries {
 
         (site, range, time)
 
-  implicit class UserTargetPreferencesUpdateOps(
-    val self: UserTargetPreferencesFovUpdate.type
-  ) extends AnyVal {
-    import self.*
+  object UserTargetOffsetUpdate:
+    import UserTargetOffsetUpdateQuery.*
 
     def updateViewOffset[F[_]: ApplicativeThrow](
       uid:      User.Id,
       targetId: Target.Id,
       offset:   Offset
-    )(implicit
-      cl:       TransactionalClient[F, UserPreferencesDB]
-    ): F[Unit] =
+    )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
       execute[F](
         user_id = uid.show,
         target_id = targetId.show,
         viewOffsetP = offset.p.toAngle.toMicroarcseconds,
         viewOffsetQ = offset.q.toAngle.toMicroarcseconds
       ).attempt.void
-  }
 }

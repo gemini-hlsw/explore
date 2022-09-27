@@ -121,6 +121,9 @@ object UserPreferencesQueriesGQL {
           agsOverlay
           fullScreen
         }
+        lucuma_user_preferences_by_pk(user_id: $user_id) {
+          aladinMouseScroll
+        }
       }
     """
   }
@@ -139,6 +142,26 @@ object UserPreferencesQueriesGQL {
   }
 
   @GraphQL
+  trait UserPreferencesUpdateQuery extends GraphQLOperation[UserPreferencesDB] {
+    val document = """
+      mutation user_preferences_upsert($aladinMouseScroll: Boolean = false, $user_id: String = "") {
+        insert_lucuma_user_preferences_one(
+          object: {
+            user_id: $user_id,
+            aladinMouseScroll: $aladinMouseScroll
+          },
+          on_conflict: {
+            constraint: lucuma_user_preferences_pkey,
+            update_columns: aladinMouseScroll
+          }
+        ) {
+          user_id
+        }
+      }
+    """
+  }
+
+  @GraphQL
   trait UserTargetPreferencesUpsert extends GraphQLOperation[UserPreferencesDB] {
     val document =
       """mutation target_preferences_upsert($objects: lucuma_target_insert_input! = {}) {
@@ -149,7 +172,7 @@ object UserPreferencesQueriesGQL {
   }
 
   @GraphQL
-  trait UserTargetPreferencesFovUpdate extends GraphQLOperation[UserPreferencesDB] {
+  trait UserTargetOffsetUpdateQuery extends GraphQLOperation[UserPreferencesDB] {
     val document =
       """ mutation update_target_fov($user_id: String!, $target_id: String!, $viewOffsetP: bigint!, $viewOffsetQ: bigint!) {
         update_lucuma_target_preferences_by_pk(

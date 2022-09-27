@@ -19,10 +19,12 @@ import explore.common.UserPreferencesQueries.*
 import explore.components.ui.ExploreStyles
 import explore.events.*
 import explore.implicits.*
+import explore.model.AladinMouseScroll
 import explore.model.Asterism
 import explore.model.Constants
 import explore.model.ObsConfiguration
 import explore.model.TargetVisualOptions
+import explore.model.UserGlobalPreferences
 import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.CatalogPicklers.given
@@ -44,9 +46,11 @@ import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.core.model.User
+import lucuma.core.util.NewType
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import monocle.Focus
 import monocle.Lens
 import org.typelevel.log4cats.Logger
 import queries.common.UserPreferencesQueriesGQL.*
@@ -54,6 +58,7 @@ import react.aladin.Fov
 import react.common.ReactFnProps
 import react.semanticui.collections.menu.*
 import react.semanticui.elements.button.Button
+import react.semanticui.elements.divider.Divider
 import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.sizes.*
 
@@ -70,11 +75,13 @@ case class AladinCell(
 )(using val ctx: AppContextIO)
     extends ReactFnProps(AladinCell.component)
 
-case class AladinSettings(showMenu: Boolean, showCatalog: Boolean)
+object SettingsMenuState extends NewType[Boolean]:
+  inline def Open: SettingsMenuState   = SettingsMenuState(true)
+  inline def Closed: SettingsMenuState = SettingsMenuState(false)
+  extension (s: SettingsMenuState)
+    def flip: SettingsMenuState = if (s.value) SettingsMenuState.Closed else SettingsMenuState.Open
 
-object AladinSettings {
-  val Default = AladinSettings(false, false)
-}
+type SettingsMenuState = SettingsMenuState.Type
 
 object AladinCell extends ModelOptics {
   private type Props = AladinCell
@@ -96,13 +103,19 @@ object AladinCell extends ModelOptics {
       t => t.copy(fovRA = f.x, fovDec = f.y)
     )
 
+  val targetPrefs: Lens[(UserGlobalPreferences, TargetVisualOptions), TargetVisualOptions] =
+    Focus[(UserGlobalPreferences, TargetVisualOptions)](_._2)
+
+  val userPrefs: Lens[(UserGlobalPreferences, TargetVisualOptions), UserGlobalPreferences] =
+    Focus[(UserGlobalPreferences, TargetVisualOptions)](_._1)
+
   private val component =
     ScalaFnComponent
       .withHooks[Props]
       // mouse coordinates, starts on the base
       .useStateBy(_.asterism.baseTracking.baseCoordinates)
       // target options, will be read from the user preferences
-      .useStateView(Pot.pending[TargetVisualOptions])
+      .useStateView(Pot.pending[(UserGlobalPreferences, TargetVisualOptions)])
       // flag to trigger centering. This is a bit brute force but
       // avoids us needing a ref to a Fn component
       .useStateView(false)
@@ -131,19 +144,9 @@ object AladinCell extends ModelOptics {
 
           TargetPreferences
             .queryWithDefault[IO](props.uid, props.tid, Constants.InitialFov)
-            .flatMap { (fovRA, fovDec, viewOffset, agsCandidates, agsOverlay, fullScreen) =>
+            .flatMap { (up, tp) =>
               options
-                .set(
-                  TargetVisualOptions.Default
-                    .copy(fovRA = fovRA,
-                          fovDec = fovDec,
-                          viewOffset = viewOffset,
-                          agsCandidates = agsCandidates,
-                          agsOverlay = agsOverlay,
-                          fullScreen = fullScreen
-                    )
-                    .ready
-                )
+                .set((up, tp).ready)
                 .to[IO]
             }
       }
@@ -212,7 +215,7 @@ object AladinCell extends ModelOptics {
         }
       }
       // open settings menu
-      .useState(false)
+      .useState(SettingsMenuState.Closed)
       // Reset the selected gs if results change
       .useEffectWithDepsBy((p, _, _, _, _, agsResults, _, _, _) => (agsResults, p.obsConf)) {
         (p, _, _, _, _, agsResults, agsState, selectedIndex, _) => _ =>
@@ -237,23 +240,39 @@ object AladinCell extends ModelOptics {
           import props.given
 
           val agsCandidatesView =
-            options.zoom(Pot.readyPrism.andThen(TargetVisualOptions.agsCandidates))
+            options.zoom(
+              Pot.readyPrism.andThen(targetPrefs).andThen(TargetVisualOptions.agsCandidates)
+            )
 
           val agsOverlayView =
-            options.zoom(Pot.readyPrism.andThen(TargetVisualOptions.agsOverlay))
+            options.zoom(
+              Pot.readyPrism.andThen(targetPrefs).andThen(TargetVisualOptions.agsOverlay)
+            )
 
           val fovView =
-            options.zoom(Pot.readyPrism.andThen(fovLens))
+            options.zoom(Pot.readyPrism.andThen(targetPrefs).andThen(fovLens))
 
           val offsetView =
-            options.zoom(Pot.readyPrism.andThen(TargetVisualOptions.viewOffset))
+            options.zoom(
+              Pot.readyPrism.andThen(targetPrefs).andThen(TargetVisualOptions.viewOffset)
+            )
 
           val fullScreenView =
-            options.zoom(Pot.readyPrism.andThen(TargetVisualOptions.fullScreen))
+            options.zoom(
+              Pot.readyPrism.andThen(targetPrefs).andThen(TargetVisualOptions.fullScreen)
+            )
+
+          val allowMouseZoomView =
+            options.zoom(
+              Pot.readyPrism.andThen(userPrefs).andThen(UserGlobalPreferences.aladinMouseScroll)
+            )
 
           val agsCandidatesShown: Boolean = agsCandidatesView.get.map(_.visible).getOrElse(false)
 
           val agsOverlayShown: Boolean = agsOverlayView.get.map(_.visible).getOrElse(false)
+
+          val allowMouseZoom: AladinMouseScroll =
+            allowMouseZoomView.get.getOrElse(AladinMouseScroll.Allowed)
 
           val coordinatesSetter =
             ((c: Coordinates) => mouseCoords.setState(c)).reuseAlways
@@ -264,8 +283,8 @@ object AladinCell extends ModelOptics {
               _ => true,
               o =>
                 // Don't save if the change is less than 1 arcse
-                (o.fovRA.toMicroarcseconds - newFov.x.toMicroarcseconds).abs < 1e6 &&
-                  (o.fovDec.toMicroarcseconds - newFov.y.toMicroarcseconds).abs < 1e6
+                (o._2.fovRA.toMicroarcseconds - newFov.x.toMicroarcseconds).abs < 1e6 &&
+                  (o._2.fovDec.toMicroarcseconds - newFov.y.toMicroarcseconds).abs < 1e6
             )
             if (newFov.x.toMicroarcseconds === 0L) Callback.empty
             else {
@@ -294,15 +313,15 @@ object AladinCell extends ModelOptics {
               true,
               _ => true,
               o => {
-                val diffP = newOffset.p.toAngle.difference(o.viewOffset.p.toAngle)
-                val diffQ = newOffset.q.toAngle.difference(o.viewOffset.q.toAngle)
+                val diffP = newOffset.p.toAngle.difference(o._2.viewOffset.p.toAngle)
+                val diffQ = newOffset.q.toAngle.difference(o._2.viewOffset.q.toAngle)
                 // Don't save if the change is less than 1 arcse
                 diffP.toMicroarcseconds < 1e6 && diffQ.toMicroarcseconds < 1e6
               }
             )
 
             offsetView.set(newOffset) *>
-              UserTargetPreferencesFovUpdate
+              UserTargetOffsetUpdate
                 .updateViewOffset[IO](props.uid, props.tid, newOffset)
                 .unlessA(ignore)
                 .runAsync
@@ -344,26 +363,32 @@ object AladinCell extends ModelOptics {
               fullScreenView.mod(!_) *>
               prefsSetter(identity, identity, !_)
 
+          def mouseScrollSetter: Callback =
+            allowMouseZoomView.mod(_.flip) *>
+              UserPreferences.storePreferences[IO](props.uid, allowMouseZoom.flip).runAsync
+
           val aladinKey = s"${props.asterism}"
 
           val selectedGuideStar = selectedGSIndex.get.flatMap(agsResults.value.lift)
           val usableGuideStar   = selectedGuideStar.exists(_.isUsable)
 
-          val renderCell: TargetVisualOptions => VdomNode = (t: TargetVisualOptions) =>
-            AladinContainer(
-              props.asterism,
-              props.obsConf,
-              t.copy(fullScreen = props.fullScreen.get),
-              coordinatesSetter,
-              fovSetter.reuseAlways,
-              offsetSetter.reuseAlways,
-              center,
-              selectedGuideStar,
-              agsResults.value
-            ).withKey(aladinKey)
+          val renderCell: ((UserGlobalPreferences, TargetVisualOptions)) => VdomNode =
+            case (u: UserGlobalPreferences, t: TargetVisualOptions) =>
+              AladinContainer(
+                props.asterism,
+                props.obsConf,
+                u.aladinMouseScroll,
+                t.copy(fullScreen = props.fullScreen.get),
+                coordinatesSetter,
+                fovSetter.reuseAlways,
+                offsetSetter.reuseAlways,
+                center,
+                selectedGuideStar,
+                agsResults.value
+              ).withKey(aladinKey)
 
-          val renderToolbar: TargetVisualOptions => VdomNode =
-            (t: TargetVisualOptions) =>
+          val renderToolbar: ((UserGlobalPreferences, TargetVisualOptions)) => VdomNode =
+            case (_: UserGlobalPreferences, t: TargetVisualOptions) =>
               AladinToolbar(Fov(t.fovRA, t.fovDec),
                             mouseCoords.value,
                             agsState.value,
@@ -372,8 +397,8 @@ object AladinCell extends ModelOptics {
                             t.agsOverlay
               ): VdomNode
 
-          val renderAgsOverlay: TargetVisualOptions => VdomNode =
-            (t: TargetVisualOptions) =>
+          val renderAgsOverlay: ((UserGlobalPreferences, TargetVisualOptions)) => VdomNode =
+            case (u: UserGlobalPreferences, t: TargetVisualOptions) =>
               if (t.agsOverlay.visible && usableGuideStar) {
                 <.div(
                   ExploreStyles.AgsOverlay,
@@ -396,9 +421,9 @@ object AladinCell extends ModelOptics {
               ),
               <.div(
                 ExploreStyles.AladinToolbox,
-                Button(size = Small, icon = true, onClick = openSettings.modState(!_))(
+                Button(size = Small, icon = true, onClick = openSettings.modState(_.flip))(
                   ExploreStyles.ButtonOnAladin,
-                  ^.onMouseEnter --> openSettings.setState(true),
+                  ^.onMouseEnter --> openSettings.setState(SettingsMenuState.Open),
                   Icons.ThinSliders
                 ),
                 Menu(vertical = true,
@@ -406,26 +431,37 @@ object AladinCell extends ModelOptics {
                      size = Mini,
                      clazz = ExploreStyles.AladinSettingsMenu
                 )(
-                  ^.onMouseLeave --> openSettings.setState(false),
+                  ^.onMouseLeave --> openSettings.setState(SettingsMenuState.Closed),
                   MenuItem(
                     Checkbox(
                       label = "Show Catalog",
                       checked = agsCandidatesShown,
-                      onChange = (_: Boolean) => openSettings.setState(false) *> candidatesSetter
+                      onChange = (_: Boolean) =>
+                        openSettings.setState(SettingsMenuState.Closed) *> candidatesSetter
                     )
                   ),
                   MenuItem(
                     Checkbox(
                       label = "AGS",
                       checked = agsOverlayShown,
-                      onChange = (_: Boolean) => openSettings.setState(false) *> agsOverlaySetter
+                      onChange = (_: Boolean) =>
+                        openSettings.setState(SettingsMenuState.Closed) *> agsOverlaySetter
+                    )
+                  ),
+                  Divider(fitted = true),
+                  MenuItem(
+                    Checkbox(
+                      label = "Scroll to zoom",
+                      checked = allowMouseZoom.value,
+                      onChange = (_: Boolean) =>
+                        openSettings.setState(SettingsMenuState.Closed) *> mouseScrollSetter
                     )
                   )
-                ).when(openSettings.value)
+                ).when(openSettings.value.value)
               ),
-              potRenderView[TargetVisualOptions](renderCell)(options),
-              potRenderView[TargetVisualOptions](renderToolbar)(options),
-              potRenderView[TargetVisualOptions](renderAgsOverlay)(options)
+              potRenderView[(UserGlobalPreferences, TargetVisualOptions)](renderCell)(options),
+              potRenderView[(UserGlobalPreferences, TargetVisualOptions)](renderToolbar)(options),
+              potRenderView[(UserGlobalPreferences, TargetVisualOptions)](renderAgsOverlay)(options)
             )
           )
       }
