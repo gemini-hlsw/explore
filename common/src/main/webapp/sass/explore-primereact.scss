@@ -25,7 +25,7 @@
   display: grid;
   padding: 0.5em;
   grid-gap: 1em;
-  grid-template-areas:
+  grid-template:
     'col1 col2 col3' auto
     'col1 buttons buttons' auto
     / 1fr 1fr 1fr;
@@ -39,7 +39,7 @@
 .tile-xxs-width,
 .tile-xs-width {
   .explore-advanced-configuration-grid {
-    grid-template-areas:
+    grid-template:
       'col1' auto
       'col2' auto
       'col3' auto
