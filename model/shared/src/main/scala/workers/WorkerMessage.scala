@@ -30,9 +30,9 @@ private object WorkerMessage:
     case class Complete(id: WorkerProcessId)                      extends FromServer
     case class Error(id: WorkerProcessId, error: WorkerException) extends FromServer
 
-  private given Pickler[WorkerProcessId] = transformPickler(WorkerProcessId.apply)(_.value)
+  private given Pickler[WorkerProcessId] = transformPickler(WorkerProcessId(_))(_.value)
 
-  private given Pickler[Pickled] = transformPickler(Pickled.apply)(_.value)
+  private given Pickler[Pickled] = transformPickler(Pickled(_))(_.value)
 
   private given Pickler[FromClient.ClientReady.type] = generatePickler
 

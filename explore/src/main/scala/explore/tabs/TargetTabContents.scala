@@ -446,7 +446,7 @@ object TargetTabContents {
           props.userId,
           props.focused.target,
           scienceMode,
-          selectedCoordinates.flatten.map(CoordinatesAtVizTime.apply),
+          selectedCoordinates.flatten.map(CoordinatesAtVizTime(_)),
           vizTimeView.get
         )
 

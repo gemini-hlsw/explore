@@ -27,7 +27,7 @@ object ObjectTracking:
 
   case class SiderealObjectTracking(tracking: SiderealTracking) extends ObjectTracking derives Eq:
     def at(i: Instant): Option[CoordinatesAtVizTime] =
-      tracking.at(i).map(CoordinatesAtVizTime.apply)
+      tracking.at(i).map(CoordinatesAtVizTime(_))
     def baseCoordinates: Coordinates                 = tracking.baseCoordinates
 
   def const(coord: Coordinates): ObjectTracking = ConstantTracking(coord)
