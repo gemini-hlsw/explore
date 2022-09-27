@@ -1,3 +1,5 @@
+@import "/lucuma-css/lucuma-ui";
+
 /* stylelint-disable no-invalid-position-at-import-rule */
 .light-theme {
   @import "/lucuma-css/light-theme";
@@ -8,13 +10,10 @@
 }
 /* stylelint-enable no-invalid-position-at-import-rule */
 
-@import "/lucuma-css/lucuma-ui";
-
 // specific to Explore
 .constraints-tile .explore-tile-body,
 .explore-advanced-configuration-grid {
-  /* stylelint-disable-next-line */
-  background-color: var(--surface-card); // need to make variables visible for style linting.
+  background-color: var(--surface-card);
 }
 
 .explore-advanced-configuration-buttons {
@@ -27,10 +26,9 @@
   padding: 0.5em;
   grid-gap: 1em;
   grid-template-areas:
-    'col1 col2 col3'
-    'col1 buttons buttons';
-  grid-template-columns: 1fr 1fr 1fr;
-  grid-template-rows: auto auto;
+    'col1 col2 col3' auto
+    'col1 buttons buttons' auto
+    / 1fr 1fr 1fr;
 
   label.explore-indent-label {
     text-indent: 2em;
@@ -42,12 +40,11 @@
 .tile-xs-width {
   .explore-advanced-configuration-grid {
     grid-template-areas:
-      'col1'
-      'col2'
-      'col3'
-      'buttons';
-    grid-template-columns: auto;
-    grid-template-rows: auto auto auto auto;
+      'col1' auto
+      'col2' auto
+      'col3' auto
+      'buttons' auto
+      / auto;
   }
 }
 

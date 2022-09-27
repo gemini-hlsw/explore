@@ -14,7 +14,7 @@
     "csstools/value-no-unknown-custom-properties": [
       true,
       {
-        "importFrom": ["vars.css"]
+        "importFrom": ["vars.css", "explore/target/lucuma-css/dark-theme.css"]
       }
     ]
   }
