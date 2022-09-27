@@ -260,7 +260,7 @@ object UserPreferencesQueries {
       targetId: Target.Id,
       offset:   Offset
     )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
-      import UserTargetPreferencesViewOffsetUpdate.*
+      import UserTargetViewOffsetUpdate.*
       execute[F](
         user_id = uid.show,
         target_id = targetId.show,
@@ -375,18 +375,4 @@ object UserPreferencesQueries {
 
         (site, range, time)
 
-  object UserTargetOffsetUpdate:
-    import UserTargetOffsetUpdateQuery.*
-
-    def updateViewOffset[F[_]: ApplicativeThrow](
-      uid:      User.Id,
-      targetId: Target.Id,
-      offset:   Offset
-    )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
-      execute[F](
-        user_id = uid.show,
-        target_id = targetId.show,
-        viewOffsetP = offset.p.toAngle.toMicroarcseconds,
-        viewOffsetQ = offset.q.toAngle.toMicroarcseconds
-      ).attempt.void
 }

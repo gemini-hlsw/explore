@@ -265,7 +265,11 @@ object AladinContainer {
           }
 
           def onZoom =
-            (v: Fov) => fov.setState(v.some) *> props.updateFov(v)
+            (v: Fov) => {
+              // Sometimes get 0 fov, ignore those
+              val ignore = v.x === Angle.Angle0 && v.y === Angle.Angle0
+              (fov.setState(v.some) *> props.updateFov(v)).unless_(ignore)
+            }
 
           val vizTime = props.obsConf.vizTime
 
@@ -315,9 +319,11 @@ object AladinContainer {
           val screenOffset =
             currentPos.value.map(_.diff(baseCoordinates).offset).getOrElse(Offset.Zero)
 
+          val key = s"aladin-${resize.width}-${resize.height}-${props.allowMouseScroll.value}"
+
           <.div(
             ExploreStyles.AladinContainerBody,
-            ^.key := s"aladin-${props.allowMouseScroll.value}",
+            ^.key := key,
             // This is a bit tricky. Sometimes the height can be 0 or a very low number.
             // This happens during a second render. If we let the height to be zero, aladin
             // will take it as 1. This height ends up being a denominator, which, if low,

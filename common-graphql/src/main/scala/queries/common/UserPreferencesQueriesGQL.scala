@@ -171,7 +171,8 @@ object UserPreferencesQueriesGQL {
       }"""
   }
 
-  trait UserTargetOffsetUpdateQuery extends GraphQLOperation[UserPreferencesDB] {
+  @GraphQL
+  trait UserTargetViewOffsetUpdate extends GraphQLOperation[UserPreferencesDB] {
     val document =
       """ mutation update_target_view_offsetv($user_id: String!, $target_id: String!, $viewOffsetP: bigint!, $viewOffsetQ: bigint!) {
         update_lucuma_target_preferences_by_pk(
@@ -190,7 +191,7 @@ object UserPreferencesQueriesGQL {
   }
 
   @GraphQL
-  trait UserTargetPreferencesFovViewOffsetUpdate extends GraphQLOperation[UserPreferencesDB] {
+  trait UserTargetPreferencesFovUpdat extends GraphQLOperation[UserPreferencesDB] {
     val document =
       """ mutation update_target_fov($user_id: String!, $target_id: String!, $fovRA: bigint!, $fovDec: bigint!) {
         update_lucuma_target_preferences_by_pk(
@@ -208,7 +209,7 @@ object UserPreferencesQueriesGQL {
       }"""
   }
   @GraphQL
-  trait ItcPlotPreferencesQuery                  extends GraphQLOperation[UserPreferencesDB] {
+  trait ItcPlotPreferencesQuery       extends GraphQLOperation[UserPreferencesDB] {
     val document = """
       query itc_plot_preferences($user_id: String! = "", $observation_id: String! = "") {
         lucuma_itc_plot_preferences_by_pk(observation_id: $observation_id, user_id: $user_id) {
