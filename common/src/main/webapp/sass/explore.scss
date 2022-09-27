@@ -1,6 +1,4 @@
-// media queries cutoff
-$tablet-responsive-cutoff: 992px;
-$mobile-responsive-cutoff: 670px;
+@use 'common.scss';
 
 @mixin small-tile-title {
   display: flex;
@@ -55,7 +53,7 @@ $mobile-responsive-cutoff: 670px;
     display: none;
   }
 
-  @media (min-width: $tablet-responsive-cutoff) {
+  @media (min-width: common.$tablet-responsive-cutoff) {
     label:first-child {
       max-width: unset;
     }
@@ -73,7 +71,7 @@ $mobile-responsive-cutoff: 670px;
     }
   }
 
-  @media (min-width: $mobile-responsive-cutoff) {
+  @media (min-width: common.$mobile-responsive-cutoff) {
     label:first-child {
       display: unset;
     }
@@ -131,7 +129,7 @@ $search-preview-margin: 5px;
     margin-bottom: 0.2em;
   }
 
-  @media (min-width: $tablet-responsive-cutoff) {
+  @media (min-width: common.$tablet-responsive-cutoff) {
     min-height: calc($search-preview-width + 2 * $search-preview-margin);
     padding-right: calc(
       $search-preview-width + 3 * $search-preview-margin
@@ -142,7 +140,7 @@ $search-preview-margin: 5px;
 }
 
 .explore-target-search-top {
-  @media (min-width: $tablet-responsive-cutoff) {
+  @media (min-width: common.$tablet-responsive-cutoff) {
     gap: 0.3em;
   }
 }
@@ -155,7 +153,7 @@ $search-preview-margin: 5px;
   min-width: $search-preview-width;
   min-height: $search-preview-height-mobile;
 
-  @media (min-width: $tablet-responsive-cutoff) {
+  @media (min-width: common.$tablet-responsive-cutoff) {
     position: absolute;
     right: 0;
     margin-right: $search-preview-margin;
@@ -209,7 +207,7 @@ $search-preview-margin: 5px;
   display: none;
   margin-left: 0.5em;
 
-  @media (min-width: $mobile-responsive-cutoff) {
+  @media (min-width: common.$mobile-responsive-cutoff) {
     display: block;
   }
 }
