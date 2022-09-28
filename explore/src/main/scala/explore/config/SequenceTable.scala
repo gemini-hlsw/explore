@@ -3,36 +3,35 @@
 
 package explore.config
 
-import cats.syntax.all._
-import crystal.react.reuse._
+import cats.syntax.all.*
+import crystal.react.reuse.*
 import explore.Icons
 import explore.components.ui.ExploreStyles
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.all.svg._
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.all.svg.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
-import lucuma.core.model.sequence._
-import lucuma.ui.reusability._
+import lucuma.core.model.sequence.*
+import lucuma.react.table.*
+import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.given
+import lucuma.ui.table.*
 import react.common.ReactFnProps
-import react.semanticui.collections.table._
-import reactST.reactTable._
+// import react.semanticui.collections.table._
+// import reactST.reactTable._
+import reactST.{tanstackTableCore => raw}
 
 import java.text.DecimalFormat
 
 final case class SequenceTable(atoms: List[Atom])
     extends ReactFnProps[SequenceTable](SequenceTable.component)
 
-object SequenceTable {
-  type Props = SequenceTable
+object SequenceTable:
+  private type Props = SequenceTable
 
-  private case class StepLine(
-    atomId:  Atom.Id,
-    step:    Step,
-    firstOf: Option[Int]
-  ) {
+  private case class StepLine(atomId: Atom.Id, step: Step, firstOf: Option[Int]):
     private def componentToArcSec[A]: Offset.Component[A] => BigDecimal =
       ((c: Offset.Component[A]) => c.toAngle)
         .andThen(Angle.signedDecimalArcseconds.get)
@@ -96,11 +95,11 @@ object SequenceTable {
         case DynamicConfig.GmosNorth(_, _, _, roi, _, _, _) => roi.shortName.some
         case DynamicConfig.GmosSouth(_, _, _, roi, _, _, _) => roi.shortName.some
       }
-  }
 
   private val offsetFormat = new DecimalFormat("#.0")
 
-  private val StepTable = TableDef[StepLine]
+  // private val StepTable = TableDef[StepLine]
+  private val ColDef = ColumnDef[StepLine]
 
   private def drawBracket(rows: Int): VdomElement =
     svg(^.width   := "1px", ^.height := "15px", ^.overflow.visible)(
@@ -114,63 +113,55 @@ object SequenceTable {
     <.div(^.textAlign.right)(value.toString)
 
   private val columns = List(
-    StepTable
-      .Column("atomSteps", _.firstOf)
-      .setHeader(" ")
-      .setCell(_.value.map(drawBracket)),
-    StepTable
-      .Column("stepType", _.step.stepConfig.stepType)
-      .setHeader("Type")
-      .setCell(_.value.toString),
-    StepTable
-      .Column("exposure", _.exposureSecs)
-      .setHeader(rightAligned("Exp (sec)").rawElement)
-      .setCell(cell => rightAligned(cell.value)),
-    StepTable
-      .Column("guide", _.guided)
-      .setHeader("")
-      .setCell(cell =>
+    ColDef("atomSteps", _.firstOf, header = " ", cell = _.value.map(drawBracket)),
+    ColDef("stepType", _.step.stepConfig.stepType, header = "Type", cell = _.value.toString),
+    ColDef(
+      "exposure",
+      _.exposureSecs,
+      header = _ => rightAligned("Exp (sec)"),
+      cell = cell => rightAligned(cell.value)
+    ),
+    ColDef(
+      "guide",
+      _.guided,
+      cell = cell =>
         if (cell.value) Icons.Crosshairs.copy(clazz = ExploreStyles.StepGuided) else EmptyVdom
-      ),
-    StepTable
-      .Column("p", _.p)
-      .setHeader(rightAligned("p").rawElement)
-      .setCell(cell => rightAligned(offsetFormat.format(cell.value))),
-    StepTable
-      .Column("q", _.q)
-      .setHeader(rightAligned("q").rawElement)
-      .setCell(cell => rightAligned(offsetFormat.format(cell.value))),
-    StepTable
-      .Column("lambda", _.wavelength)
-      .setHeader(rightAligned("λ (nm)").rawElement)
-      .setCell(_.value.map((rightAligned _).compose(_.toInt))),
-    StepTable
-      .Column("fpu", _.fpuName)
-      .setHeader(rightAligned("FPU").rawElement)
-      .setCell(_.value.map(rightAligned)),
-    StepTable
-      .Column("grating", _.gratingName)
-      .setHeader("Grating")
-      .setCell(_.value.orEmpty),
-    StepTable
-      .Column("filter", _.filterName)
-      .setHeader("Filter")
-      .setCell(_.value.orEmpty),
-    StepTable
-      .Column("xbin", _.readoutXBin)
-      .setHeader(rightAligned("Xbin").rawElement)
-      .setCell(cell => rightAligned(cell.value.orEmpty)),
-    StepTable
-      .Column("ybin", _.readoutYBin)
-      .setHeader(rightAligned("Ybin").rawElement)
-      .setCell(cell => rightAligned(cell.value.orEmpty)),
-    StepTable
-      .Column("roi", _.roi)
-      .setHeader("ROI")
-      .setCell(_.value.orEmpty),
-    StepTable
-      .Column("sn", _ => "")
-      .setHeader("S/N")
+    ),
+    ColDef(
+      "p",
+      _.p,
+      header = _ => rightAligned("p"),
+      cell = cell => rightAligned(offsetFormat.format(cell.value))
+    ),
+    ColDef(
+      "q",
+      _.q,
+      header = _ => rightAligned("q"),
+      cell = cell => rightAligned(offsetFormat.format(cell.value))
+    ),
+    ColDef(
+      "lambda",
+      _.wavelength,
+      header = _ => rightAligned("λ (nm)"),
+      cell = _.value.map((rightAligned _).compose(_.toInt))
+    ),
+    ColDef("fpu", _.fpuName, header = _ => rightAligned("FPU"), cell = _.value.map(rightAligned)),
+    ColDef("grating", _.gratingName, header = "Grating", cell = _.value.orEmpty),
+    ColDef("filter", _.filterName, header = "Filter", cell = _.value.orEmpty),
+    ColDef(
+      "xbin",
+      _.readoutXBin,
+      header = _ => rightAligned("Xbin"),
+      cell = cell => rightAligned(cell.value.orEmpty)
+    ),
+    ColDef(
+      "ybin",
+      _.readoutYBin,
+      header = _ => rightAligned("Ybin"),
+      cell = cell => rightAligned(cell.value.orEmpty)
+    ),
+    ColDef("roi", _.roi, header = "ROI", cell = _.value.orEmpty),
+    ColDef("sn", _ => "", header = "S/N")
   )
 
   private def buildLines(
@@ -184,7 +175,7 @@ object SequenceTable {
       )
       .flatten
 
-  private val StepTableComponent = new SUITable(StepTable)
+  // private val StepTableComponent = new SUITable(StepTable)
 
   val bracketDef =
     svg(^.width := "0", ^.height := "0")(
@@ -199,22 +190,22 @@ object SequenceTable {
       )
     )
 
-  val component =
+  private val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useTableBy(props =>
-        StepTable(
+      .useReactTableBy(props =>
+        TableOptions(
           columns.reuseAlways,
           Reuse(props.atoms).self.map(buildLines)
         )
       )
       .render { (_, table) =>
-        val FormattedTable = StepTableComponent(
-          Table(celled = true, selectable = true, striped = true, compact = TableCompact.Very),
-          header = true,
-          headerCell = TableHeaderCell(clazz = ExploreStyles.StepTableHeader)
-        )
+        PrimeVirtualizedTable(table, estimateRowHeightPx = _ => 28)
+      // val FormattedTable = StepTableComponent(
+      //   Table(celled = true, selectable = true, striped = true, compact = TableCompact.Very),
+      //   header = true,
+      //   headerCell = TableHeaderCell(clazz = ExploreStyles.StepTableHeader)
+      // )
 
-        FormattedTable(table)
+      // FormattedTable(table)
       }
-}
