@@ -142,13 +142,14 @@ object AladinCell extends ModelOptics {
         (props, _, options, _, _, _, _) => _ =>
           import props.given
 
-          TargetPreferences
-            .queryWithDefault[IO](props.uid, props.tid, Constants.InitialFov)
-            .flatMap { (up, tp) =>
-              options
-                .set((up, tp).ready)
-                .to[IO]
-            }
+          IO.println(Constants.InitialFov.toMicroarcseconds) *>
+            TargetPreferences
+              .queryWithDefault[IO](props.uid, props.tid, Constants.InitialFov)
+              .flatMap { (up, tp) =>
+                options
+                  .set((up, tp).ready)
+                  .to[IO]
+              }
       }
       // Selected GS index. Should be stored in the db
       .useStateView(none[Int])
@@ -289,22 +290,12 @@ object AladinCell extends ModelOptics {
             if (newFov.x.toMicroarcseconds === 0L) Callback.empty
             else {
               fovView.set(newFov) *>
-                (fovView.get, agsCandidatesView.get, agsOverlayView.get, fullScreenView.get).mapN {
-                  (_, a, o, f) =>
-                    TargetPreferences
-                      .updateAladinPreferences[IO](props.uid,
-                                                   props.tid,
-                                                   newFov.x,
-                                                   newFov.y,
-                                                   a,
-                                                   o,
-                                                   f
-                      )
-                      .unlessA(ignore)
-                      .runAsync
-                      .rateLimit(1.seconds, 1)
-                      .void
-                }.orEmpty
+                TargetPreferences
+                  .updateAladinPreferences[IO](props.uid, props.tid, newFov.x.some, newFov.y.some)
+                  .unlessA(ignore)
+                  .runAsync
+                  .rateLimit(1.seconds, 1)
+                  .void
             }
           }
 
@@ -334,17 +325,15 @@ object AladinCell extends ModelOptics {
             overlay:    Visible => Visible,
             fullScreen: Boolean => Boolean
           ): Callback =
-            (fovView.get, agsCandidatesView.get, agsOverlayView.get, fullScreenView.get).mapN {
-              (f, a, o, s) =>
+            (agsCandidatesView.get, agsOverlayView.get, fullScreenView.get).mapN { (a, o, s) =>
+              Callback.log("Set prefs") *>
                 TargetPreferences
                   .updateAladinPreferences[IO](
                     props.uid,
                     props.tid,
-                    f.x,
-                    f.y,
-                    candidates(a),
-                    overlay(o),
-                    fullScreen(s)
+                    agsCandidates = candidates(a).some,
+                    agsOverlay = overlay(o).some,
+                    fullScreen = fullScreen(s).some
                   )
                   .runAsync
                   .void

@@ -1,3 +1,4 @@
+
 """whether this query should be cached (Hasura Cloud only)"""
 directive @cached(
   """measured in seconds"""
@@ -1570,19 +1571,18 @@ input lucuma_target_pk_columns_input {
 columns and relationships of "lucuma_target_preferences"
 """
 type lucuma_target_preferences {
-  agsCandidates: Boolean!
-  agsOverlay: Boolean!
-  fov: bigint
-  fovDec: bigint!
-  fovRA: bigint!
-  fullScreen: Boolean!
+  agsCandidates: Boolean
+  agsOverlay: Boolean
+  fovDec: bigint
+  fovRA: bigint
+  fullScreen: Boolean
 
   """An object relationship"""
   lucuma_target: lucuma_target!
   target_id: String!
   user_id: String!
-  viewOffsetP: bigint!
-  viewOffsetQ: bigint!
+  viewOffsetP: bigint
+  viewOffsetQ: bigint
 }
 
 """
@@ -1639,7 +1639,6 @@ input lucuma_target_preferences_arr_rel_insert_input {
 
 """aggregate avg on columns"""
 type lucuma_target_preferences_avg_fields {
-  fov: Float
   fovDec: Float
   fovRA: Float
   viewOffsetP: Float
@@ -1650,7 +1649,6 @@ type lucuma_target_preferences_avg_fields {
 order by avg() on columns of table "lucuma_target_preferences"
 """
 input lucuma_target_preferences_avg_order_by {
-  fov: order_by
   fovDec: order_by
   fovRA: order_by
   viewOffsetP: order_by
@@ -1666,7 +1664,6 @@ input lucuma_target_preferences_bool_exp {
   _or: [lucuma_target_preferences_bool_exp!]
   agsCandidates: Boolean_comparison_exp
   agsOverlay: Boolean_comparison_exp
-  fov: bigint_comparison_exp
   fovDec: bigint_comparison_exp
   fovRA: bigint_comparison_exp
   fullScreen: Boolean_comparison_exp
@@ -1691,7 +1688,6 @@ enum lucuma_target_preferences_constraint {
 input type for incrementing numeric columns in table "lucuma_target_preferences"
 """
 input lucuma_target_preferences_inc_input {
-  fov: bigint
   fovDec: bigint
   fovRA: bigint
   viewOffsetP: bigint
@@ -1704,7 +1700,6 @@ input type for inserting data into table "lucuma_target_preferences"
 input lucuma_target_preferences_insert_input {
   agsCandidates: Boolean
   agsOverlay: Boolean
-  fov: bigint
   fovDec: bigint
   fovRA: bigint
   fullScreen: Boolean
@@ -1717,7 +1712,6 @@ input lucuma_target_preferences_insert_input {
 
 """aggregate max on columns"""
 type lucuma_target_preferences_max_fields {
-  fov: bigint
   fovDec: bigint
   fovRA: bigint
   target_id: String
@@ -1730,7 +1724,6 @@ type lucuma_target_preferences_max_fields {
 order by max() on columns of table "lucuma_target_preferences"
 """
 input lucuma_target_preferences_max_order_by {
-  fov: order_by
   fovDec: order_by
   fovRA: order_by
   target_id: order_by
@@ -1741,7 +1734,6 @@ input lucuma_target_preferences_max_order_by {
 
 """aggregate min on columns"""
 type lucuma_target_preferences_min_fields {
-  fov: bigint
   fovDec: bigint
   fovRA: bigint
   target_id: String
@@ -1754,7 +1746,6 @@ type lucuma_target_preferences_min_fields {
 order by min() on columns of table "lucuma_target_preferences"
 """
 input lucuma_target_preferences_min_order_by {
-  fov: order_by
   fovDec: order_by
   fovRA: order_by
   target_id: order_by
@@ -1787,7 +1778,6 @@ input lucuma_target_preferences_on_conflict {
 input lucuma_target_preferences_order_by {
   agsCandidates: order_by
   agsOverlay: order_by
-  fov: order_by
   fovDec: order_by
   fovRA: order_by
   fullScreen: order_by
@@ -1813,9 +1803,6 @@ enum lucuma_target_preferences_select_column {
 
   """column name"""
   agsOverlay
-
-  """column name"""
-  fov
 
   """column name"""
   fovDec
@@ -1845,7 +1832,6 @@ input type for updating data in table "lucuma_target_preferences"
 input lucuma_target_preferences_set_input {
   agsCandidates: Boolean
   agsOverlay: Boolean
-  fov: bigint
   fovDec: bigint
   fovRA: bigint
   fullScreen: Boolean
@@ -1857,7 +1843,6 @@ input lucuma_target_preferences_set_input {
 
 """aggregate stddev on columns"""
 type lucuma_target_preferences_stddev_fields {
-  fov: Float
   fovDec: Float
   fovRA: Float
   viewOffsetP: Float
@@ -1868,7 +1853,6 @@ type lucuma_target_preferences_stddev_fields {
 order by stddev() on columns of table "lucuma_target_preferences"
 """
 input lucuma_target_preferences_stddev_order_by {
-  fov: order_by
   fovDec: order_by
   fovRA: order_by
   viewOffsetP: order_by
@@ -1877,7 +1861,6 @@ input lucuma_target_preferences_stddev_order_by {
 
 """aggregate stddev_pop on columns"""
 type lucuma_target_preferences_stddev_pop_fields {
-  fov: Float
   fovDec: Float
   fovRA: Float
   viewOffsetP: Float
@@ -1888,7 +1871,6 @@ type lucuma_target_preferences_stddev_pop_fields {
 order by stddev_pop() on columns of table "lucuma_target_preferences"
 """
 input lucuma_target_preferences_stddev_pop_order_by {
-  fov: order_by
   fovDec: order_by
   fovRA: order_by
   viewOffsetP: order_by
@@ -1897,7 +1879,6 @@ input lucuma_target_preferences_stddev_pop_order_by {
 
 """aggregate stddev_samp on columns"""
 type lucuma_target_preferences_stddev_samp_fields {
-  fov: Float
   fovDec: Float
   fovRA: Float
   viewOffsetP: Float
@@ -1908,7 +1889,6 @@ type lucuma_target_preferences_stddev_samp_fields {
 order by stddev_samp() on columns of table "lucuma_target_preferences"
 """
 input lucuma_target_preferences_stddev_samp_order_by {
-  fov: order_by
   fovDec: order_by
   fovRA: order_by
   viewOffsetP: order_by
@@ -1930,7 +1910,6 @@ input lucuma_target_preferences_stream_cursor_input {
 input lucuma_target_preferences_stream_cursor_value_input {
   agsCandidates: Boolean
   agsOverlay: Boolean
-  fov: bigint
   fovDec: bigint
   fovRA: bigint
   fullScreen: Boolean
@@ -1942,7 +1921,6 @@ input lucuma_target_preferences_stream_cursor_value_input {
 
 """aggregate sum on columns"""
 type lucuma_target_preferences_sum_fields {
-  fov: bigint
   fovDec: bigint
   fovRA: bigint
   viewOffsetP: bigint
@@ -1953,7 +1931,6 @@ type lucuma_target_preferences_sum_fields {
 order by sum() on columns of table "lucuma_target_preferences"
 """
 input lucuma_target_preferences_sum_order_by {
-  fov: order_by
   fovDec: order_by
   fovRA: order_by
   viewOffsetP: order_by
@@ -1969,9 +1946,6 @@ enum lucuma_target_preferences_update_column {
 
   """column name"""
   agsOverlay
-
-  """column name"""
-  fov
 
   """column name"""
   fovDec
@@ -2006,7 +1980,6 @@ input lucuma_target_preferences_updates {
 
 """aggregate var_pop on columns"""
 type lucuma_target_preferences_var_pop_fields {
-  fov: Float
   fovDec: Float
   fovRA: Float
   viewOffsetP: Float
@@ -2017,7 +1990,6 @@ type lucuma_target_preferences_var_pop_fields {
 order by var_pop() on columns of table "lucuma_target_preferences"
 """
 input lucuma_target_preferences_var_pop_order_by {
-  fov: order_by
   fovDec: order_by
   fovRA: order_by
   viewOffsetP: order_by
@@ -2026,7 +1998,6 @@ input lucuma_target_preferences_var_pop_order_by {
 
 """aggregate var_samp on columns"""
 type lucuma_target_preferences_var_samp_fields {
-  fov: Float
   fovDec: Float
   fovRA: Float
   viewOffsetP: Float
@@ -2037,7 +2008,6 @@ type lucuma_target_preferences_var_samp_fields {
 order by var_samp() on columns of table "lucuma_target_preferences"
 """
 input lucuma_target_preferences_var_samp_order_by {
-  fov: order_by
   fovDec: order_by
   fovRA: order_by
   viewOffsetP: order_by
@@ -2046,7 +2016,6 @@ input lucuma_target_preferences_var_samp_order_by {
 
 """aggregate variance on columns"""
 type lucuma_target_preferences_variance_fields {
-  fov: Float
   fovDec: Float
   fovRA: Float
   viewOffsetP: Float
@@ -2057,7 +2026,6 @@ type lucuma_target_preferences_variance_fields {
 order by variance() on columns of table "lucuma_target_preferences"
 """
 input lucuma_target_preferences_variance_order_by {
-  fov: order_by
   fovDec: order_by
   fovRA: order_by
   viewOffsetP: order_by
