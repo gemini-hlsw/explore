@@ -18,6 +18,7 @@ import lucuma.react.table.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
+import react.common.Css
 import react.common.ReactFnProps
 // import react.semanticui.collections.table._
 // import reactST.reactTable._
@@ -124,6 +125,7 @@ object SequenceTable:
     ColDef(
       "guide",
       _.guided,
+      header = "",
       cell = cell =>
         if (cell.value) Icons.Crosshairs.copy(clazz = ExploreStyles.StepGuided) else EmptyVdom
     ),
@@ -196,11 +198,16 @@ object SequenceTable:
       .useReactTableBy(props =>
         TableOptions(
           columns.reuseAlways,
-          Reuse(props.atoms).self.map(buildLines)
+          Reuse(props.atoms).self.map(buildLines),
+          enableColumnResizing = false
         )
       )
       .render { (_, table) =>
-        PrimeVirtualizedTable(table, estimateRowHeightPx = _ => 28)
+        PrimeVirtualizedTable(
+          table,
+          estimateRowHeightPx = _ => 28,
+          tableClass = Css("pl-very-compact") // TODO make a table property
+        )
       // val FormattedTable = StepTableComponent(
       //   Table(celled = true, selectable = true, striped = true, compact = TableCompact.Very),
       //   header = true,

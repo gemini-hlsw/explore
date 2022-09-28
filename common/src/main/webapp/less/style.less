@@ -2437,3 +2437,26 @@ body.hide-reusability {
 .field.clearable-input-padding-reset>.ui.ui.ui.ui.icon.input>input {
   padding: @inputPadding;
 }
+
+// TODO REWORK NEXT
+
+body,
+body .p-component {
+  // margin: 0;
+  font-family: 'Lato' !important;
+  // background-color: var(--surface-f);
+  // color: var(--text-color);
+}
+
+.pl-react-table {
+
+  &.pl-very-compact .p-datatable-thead>tr>th {
+    padding: 0.25em 0.6em;
+    white-space: nowrap;
+  }
+
+  &.pl-very-compact .p-datatable-tbody>tr>td {
+    padding: 0.4em 0.6em;
+    white-space: nowrap;
+  }
+}
