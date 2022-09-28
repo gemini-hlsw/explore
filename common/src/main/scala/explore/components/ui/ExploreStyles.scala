@@ -128,13 +128,14 @@ object ExploreStyles {
   val TrashIcon: Css              = Css("trash-icon")
   val EraserIcon: Css             = Css("eraser-icon")
 
-  val ProgramsPopup     = Css("programs-popup")
-  val ProgramTable      = Css("program-table")
-  val ProgramAdd        = Css("program-add")
-  val ProgramName       = Css("program-name")
-  val ProgramNameInput  = Css("program-name-input")
-  val ProgramNameEdit   = Css("program-name-edit")
-  val ProgramNameDelete = Css("program-name-delete")
+  val ProgramsPopup                       = Css("programs-popup")
+  val ProgramTable                        = Css("program-table")
+  val ProgramAdd                          = Css("program-add")
+  val ProgramName                         = Css("program-name")
+  val ProgramNameInput                    = Css("program-name-input")
+  val ProgramNameEdit                     = Css("program-name-edit")
+  val ProgramNameDelete                   = Css("program-name-delete")
+  val ProgramsPopupAdditionalActions: Css = Css("explore-programs-popup-additional-actions")
 
   val ObserverNotes: Css = Css("observer-notes")
   val NotesWrapper: Css  = Css("observer-notes-wrapper")
@@ -283,7 +284,7 @@ object ExploreStyles {
   val VersionUncopied: Css = Css("uncopied")
 
   val BrightnessesTableWrapper: Css            = Css("explore-brightnesses-wrapper")
-  val BrightnessesTableContainer: Css          = Css("explore-brightnesses-container")
+  val BrightnessesContainer: Css               = Css("explore-brightnesses-container")
   val BrightnessesTableFooter: Css             = Css("explore-brightnesses-footer")
   val BrightnessesTableUnitsDropdown: Css      = Css("explore-brightnesses-units-dropdown")
   val BrightnessesTableDeletButtonWrapper: Css = Css("explore-brightnesses-delete-button-wrapper")
@@ -302,8 +303,7 @@ object ExploreStyles {
   val HelpBody: Css         = Css("explore-help-body")
   val HelpMarkdownBody: Css = Css("markdown-body")
 
-  val StepTableHeader: Css = Css("step-table-header")
-  val StepGuided: Css      = Css("step-guided")
+  val StepGuided: Css = Css("step-guided")
 
   val ExploreForm: Css          = Css("explore-form")
   val SkipToNext: Css           = Css("explore-skip-to-next")
@@ -328,7 +328,6 @@ object ExploreStyles {
   val ConfigurationFilter: Css          = Css("explore-configuration-filter") |+| Css("field")
   val ConfigurationFilterItem: Css      = Css("explore-configuration-filter-item")
   val ExploreTable: Css                 = Css("explore-table")
-  val Virtualized: Css                  = Css("virtualized")
   val TableRowSelected: Css             = Css("explore-table-row-selected")
   val ModesTableTitle: Css              = Css("explore-modes-table-title")
   val ModesTableTarget: Css             = Css("explore-modes-table-target")
@@ -342,6 +341,8 @@ object ExploreStyles {
   val ITCHeaderCell: Css                = Css("explore-modes-table-itc-header-cell")
   val ITCCell: Css                      = Css("explore-modes-table-itc-cell")
   val SequenceObsSutitle                = Css("explore-sequence-obs-subtitle")
+  val SequencesPanel                    = Css("explore-sequences-panel")
+  val CellHideBorder                    = Css("explore-table-cell-hide-border")
 
   val ButtonCopy: Css         = Css("explore-button-copy")
   val ButtonsUndo: Css        = Css("explore-buttons-undo")

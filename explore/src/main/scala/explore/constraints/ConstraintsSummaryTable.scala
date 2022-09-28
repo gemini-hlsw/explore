@@ -21,23 +21,21 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.Program
+import lucuma.react.table.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import lucuma.ui.table.*
+import org.scalablytyped.runtime.StringDictionary
 import react.common.Css
 import react.common.ReactFnProps
 import react.semanticui.collections.table.*
-import react.semanticui.modules.checkbox.Checkbox
-import react.semanticui.modules.dropdown.DropdownItem
-import react.semanticui.modules.dropdown.*
-import reactST.reactTable.*
-import reactST.reactTable.mod.DefaultSortTypes
-import reactST.reactTable.mod.IdType
-import reactST.reactTable.mod.SortingRule
+import reactST.{tanstackTableCore => raw}
 
 import scala.collection.immutable.SortedSet
 
 import scalajs.js.JSConverters.*
+import scalajs.js
 
 case class ConstraintsSummaryTable(
   programId:      Program.Id,
@@ -51,9 +49,7 @@ case class ConstraintsSummaryTable(
 object ConstraintsSummaryTable:
   private type Props = ConstraintsSummaryTable
 
-  private val ConstraintsTable = TableDef[ConstraintGroup].withSortBy
-
-  private val ConstraintsTableComponent = new SUITable(ConstraintsTable)
+  private val ColDef = ColumnDef[ConstraintGroup]
 
   private val columnNames: Map[String, String] = Map(
     "edit"         -> " ",
@@ -73,13 +69,11 @@ object ConstraintsSummaryTable:
     "edit" -> (ExploreStyles.StickyColumn |+| ExploreStyles.ConstraintsSummaryEdit)
   )
 
-  private def toSortingRules(tuples: List[(String, Boolean)]) = tuples.map { case (id, b) =>
-    SortingRule[ConstraintGroup](id).setDesc(b)
-  }
+  private def toSortingRules(tuples: List[(String, Boolean)]): js.Array[raw.mod.ColumnSort] =
+    tuples.map { case (id, b) => raw.mod.ColumnSort(b, id) }.toJSArray
 
-  private def fromTableState(state: ConstraintsTable.TableStateType): List[(String, Boolean)] =
-    state.sortBy.toList
-      .map(sr => (sr.id.toString, sr.desc.toOption.getOrElse(false)))
+  private def fromTableState(state: raw.mod.TableState): List[(String, Boolean)] =
+    state.sorting.toList.map(sr => (sr.id.toString, sr.desc))
 
   private val component =
     ScalaFnComponent
@@ -88,168 +82,133 @@ object ConstraintsSummaryTable:
       .useMemoBy((_, _) => ()) { // Cols never changes, but needs access to props
         (props, ctx) => _ =>
           def column[V](id: String, accessor: ConstraintGroup => V) =
-            ConstraintsTable
-              .Column(id, accessor)
-              .setHeader(columnNames(id))
+            ColDef(id, accessor, columnNames(id))
 
           def setObsSet(obsIdSet: ObsIdSet): Callback =
             ctx.pushPage(AppTab.Constraints, props.programId, Focused.obsSet(obsIdSet))
 
           List(
             column("edit", ConstraintGroup.obsIds.get)
-              .setCell(cell => <.a(^.onClick ==> (_ => setObsSet(cell.value)), Icons.Edit))
-              .setDisableSortBy(true),
+              .copy(
+                cell = cell => <.a(^.onClick ==> (_ => setObsSet(cell.value)), Icons.Edit),
+                enableSorting = false
+              ),
             column("iq", ConstraintGroup.constraintSet.andThen(ConstraintSet.imageQuality).get)
-              .setCell(_.value.label)
-              .setSortByFn(_.label),
+              .copy(cell = _.value.label)
+              .sortableBy(_.label),
             column("cc", ConstraintGroup.constraintSet.andThen(ConstraintSet.cloudExtinction).get)
-              .setCell(_.value.label)
-              .setSortByFn(_.label),
+              .copy(cell = _.value.label)
+              .sortableBy(_.label),
             column("bg", ConstraintGroup.constraintSet.andThen(ConstraintSet.skyBackground).get)
-              .setCell(_.value.label)
-              .setSortByFn(_.label),
+              .copy(cell = _.value.label)
+              .sortableBy(_.label),
             column("wv", ConstraintGroup.constraintSet.andThen(ConstraintSet.waterVapor).get)
-              .setCell(_.value.label)
-              .setSortByFn(_.label),
+              .copy(cell = _.value.label)
+              .sortableBy(_.label),
             column("minam", ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get)
-              .setCell(_.value match {
+              .copy(cell = _.value match
                 case ElevationRange.AirMass(min, _) => f"${min.value}%.1f"
                 case ElevationRange.HourAngle(_, _) => ""
-              })
-              .setSortByFn(_ match {
+              )
+              .sortableBy(_ match
                 case ElevationRange.AirMass(min, _) => min.value
                 case ElevationRange.HourAngle(_, _) => ElevationRange.AirMass.MinValue - 1
-              }),
+              ),
             column("maxam", ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get)
-              .setCell(_.value match {
+              .copy(cell = _.value match
                 case ElevationRange.AirMass(_, max) => f"${max.value}%.1f"
                 case ElevationRange.HourAngle(_, _) => ""
-              })
-              .setSortByFn(_ match {
+              )
+              .sortableBy(_ match
                 case ElevationRange.AirMass(_, max) => max.value
                 case ElevationRange.HourAngle(_, _) => ElevationRange.AirMass.MinValue - 1
-              }),
+              ),
             column("minha", ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get)
-              .setCell(_.value match {
+              .copy(cell = _.value match
                 case ElevationRange.AirMass(_, _)     => ""
                 case ElevationRange.HourAngle(min, _) => f"${min.value}%.1f"
-              })
-              .setSortByFn(_ match {
+              )
+              .sortableBy(_ match
                 case ElevationRange.AirMass(_, _)     => ElevationRange.HourAngle.MinHour - 1
                 case ElevationRange.HourAngle(min, _) => min.value
-              }),
+              ),
             column("maxha", ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get)
-              .setCell(_.value match {
+              .copy(cell = _.value match
                 case ElevationRange.AirMass(_, _)     => ""
                 case ElevationRange.HourAngle(_, max) => f"${max.value}%.1f"
-              })
-              .setSortByFn(_ match {
+              )
+              .sortableBy(_ match
                 case ElevationRange.AirMass(_, _)     => ElevationRange.HourAngle.MinHour - 1
                 case ElevationRange.HourAngle(_, max) => max.value
-              }),
-            column("count", _.obsIds.length)
-              .setSortType(DefaultSortTypes.number),
+              ),
+            column("count", _.obsIds.length),
             column("observations", ConstraintGroup.obsIds.get)
-              .setCell(cell =>
-                <.span(
-                  cell.value.toSortedSet.toList
-                    .map(obsId =>
-                      <.a(
-                        ^.onClick ==> (_ =>
-                          (ctx.pushPage(
-                            AppTab.Constraints,
-                            props.programId,
-                            Focused.singleObs(obsId)
-                          )
-                            >> props.expandedIds.mod(_ + cell.value)
-                            >> setObsSet(ObsIdSet.one(obsId)))
-                        ),
-                        obsId.toString
+              .copy(
+                cell = cell =>
+                  <.span(
+                    cell.value.toSortedSet.toList
+                      .map(obsId =>
+                        <.a(
+                          ^.onClick ==> (_ =>
+                            (ctx.pushPage(
+                              AppTab.Constraints,
+                              props.programId,
+                              Focused.singleObs(obsId)
+                            )
+                              >> props.expandedIds.mod(_ + cell.value)
+                              >> setObsSet(ObsIdSet.one(obsId)))
+                          ),
+                          obsId.toString
+                        )
                       )
-                    )
-                    .mkReactFragment(", ")
-                )
+                      .mkReactFragment(", ")
+                  ),
+                enableSorting = false
               )
-              .setDisableSortBy(true)
           )
       }
       .useMemoBy((props, _, _) => props.constraintList)((_, _, _) => _.values.toList) // Memo rows
-      .useTableBy((props, _, cols, rows) =>
-        ConstraintsTable(
+      .useReactTableBy((props, _, cols, rows) =>
+        TableOptions(
           cols,
           rows,
-          { (hiddenColumns: Set[String], options: ConstraintsTable.OptionsType) =>
-            options
-              .setAutoResetSortBy(false)
-              .setInitialState(
-                ConstraintsTable
-                  .State()
-                  .setHiddenColumns(
-                    hiddenColumns.toList.map(col => col: IdType[ConstraintGroup]).toJSArray
-                  )
-                  .setSortBy(toSortingRules(props.summarySorting.get): _*)
+          getRowId = (row, _, _) => row.constraintSet.toString,
+          enableSorting = true,
+          enableColumnResizing = true,
+          columnResizeMode = raw.mod.ColumnResizeMode.onChange,
+          initialState = raw.mod
+            .InitialTableState()
+            .setColumnVisibility(
+              StringDictionary(
+                props.hiddenColumns.get.toList.map(col => col -> false): _*
               )
-          }.reuseCurrying(props.hiddenColumns.get)
+            )
+            .setSorting(toSortingRules(props.summarySorting.get))
         )
       )
-      .useEffectWithDepsBy((_, _, _, _, tableInstance) => fromTableState(tableInstance.state))(
+      .useEffectWithDepsBy((_, _, _, _, table) => fromTableState(table.getState()))(
         (props, _, _, _, _) => rules => props.summarySorting.set(rules)
       )
-      .render((props, _, _, _, tableInstance) =>
+      .render((props, _, _, _, table) =>
         <.div(
           props.renderInTitle(
             React.Fragment(
               <.span, // Push column selector to right
               <.span(ExploreStyles.TitleSelectColumns)(
-                Dropdown(
-                  item = true,
-                  simple = true,
-                  pointing = Pointing.TopRight,
-                  scrolling = true,
-                  text = "Columns",
-                  clazz = ExploreStyles.SelectColumns
-                )(
-                  DropdownMenu(
-                    tableInstance.allColumns
-                      .drop(1)
-                      .toTagMod { column =>
-                        val colId = column.id.toString
-                        DropdownItem()(^.key := colId)(
-                          <.div(
-                            Checkbox(
-                              label = columnNames(colId),
-                              checked = column.isVisible,
-                              onChange = (value: Boolean) =>
-                                Callback(column.toggleHidden()) >>
-                                  props.hiddenColumns
-                                    .mod(cols => if (value) cols - colId else cols + colId)
-                            )
-                          )
-                        )
-                      }
-                  )
-                )
+                ColumnSelector(table, columnNames, props.hiddenColumns, ExploreStyles.SelectColumns)
               )
             )
           ),
-          ConstraintsTableComponent(
-            table = Table(celled = true,
-                          selectable = true,
-                          striped = true,
-                          compact = TableCompact.Very
-            )(),
-            header = true,
-            headerCell = (col: ConstraintsTable.ColumnType) =>
-              TableHeaderCell(clazz =
-                columnClasses.get(col.id.toString).orEmpty |+| ExploreStyles.StickyHeader
-              )(
-                ^.textTransform.none,
-                ^.whiteSpace.nowrap
-              ),
-            cell = (cell: ConstraintsTable.CellType[?]) =>
-              TableCell(clazz = columnClasses.get(cell.column.id.toString).orEmpty)(
-                ^.whiteSpace.nowrap
-              )
-          )(tableInstance)
+          PrimeTable(
+            table,
+            striped = true,
+            compact = Compact.Very,
+            tableMod = ExploreStyles.ExploreTable,
+            headerCellMod = headerCell =>
+              columnClasses
+                .get(headerCell.column.id)
+                .orEmpty |+| ExploreStyles.StickyHeader,
+            cellMod = cell => columnClasses.get(cell.column.id).orEmpty
+          )
         )
       )

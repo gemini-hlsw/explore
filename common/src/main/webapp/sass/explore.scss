@@ -36,7 +36,10 @@
   font-size: smaller;
   grid-template-columns: repeat(3, minmax(fit-content, 1fr));
   grid-template-rows: repeat(2, min-content);
-  *:nth-child(2n) { grid-row: 2}
+
+  *:nth-child(2n) {
+    grid-row: 2
+  }
 
   label {
     @include common.text-ellipsis;
@@ -54,7 +57,8 @@
     grid-template-rows: 1fr;
     grid-template-columns: repeat(6, min-content);
 
-    *, *:nth-child(2n) {
+    *,
+    *:nth-child(2n) {
       grid-row: 1;
     }
   }
@@ -93,7 +97,7 @@
     content: attr(data-abbrv);
   }
 
-  label[data-abbrv] > span {
+  label[data-abbrv]>span {
     display: none;
   }
 
@@ -106,7 +110,7 @@
       content: '';
     }
 
-    label[data-abbrv] > span {
+    label[data-abbrv]>span {
       display: unset;
     }
 
@@ -175,9 +179,7 @@ $search-preview-margin: 5px;
 
   @media (min-width: common.$tablet-responsive-cutoff) {
     min-height: calc($search-preview-width + 2 * $search-preview-margin);
-    padding-right: calc(
-      $search-preview-width + 3 * $search-preview-margin
-    ) !important;
+    padding-right: calc($search-preview-width + 3 * $search-preview-margin ) !important;
     padding-bottom: $search-preview-margin;
     grid-template-rows: min-content min-content;
   }
@@ -222,19 +224,21 @@ $search-preview-margin: 5px;
   border-radius: 0.28rem;
   justify-content: center;
   align-items: center;
-  background: repeating-linear-gradient(
-    -45deg,
-    black,
-    black 10px,
-    var(--site-border-color) 10px,
-    var(--site-border-color) 11px
-  );
+  background: repeating-linear-gradient(-45deg,
+      black,
+      black 10px,
+      var(--site-border-color) 10px,
+      var(--site-border-color) 11px);
 }
 
 .explore-target-search-results {
   border: 1px solid var(--site-border-color);
   border-radius: 0.28rem;
   overflow-y: auto;
+  overflow-x: auto;
+}
+
+.explore-sequences-panel {
   overflow-x: auto;
 }
 
@@ -320,10 +324,19 @@ $search-preview-margin: 5px;
   }
 }
 
+.explore-programs-popup-additional-actions {
+  margin-top: 1em;
+}
+
+.pl-react-table.pl-celled-table {
+  .p-datatable-tbody>tr>td.explore-table-cell-hide-border {
+    border-left-width: 0;
+  }
+}
+
 // ------
 // Icons
 // ------
 .explore-warning-icon {
   color: var(--warning-background-color);
 }
-

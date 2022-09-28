@@ -22,7 +22,6 @@ import react.semanticui.modules.modal.*
 import react.semanticui.sizes.Small
 
 import scala.language.implicitConversions
-import scala.scalajs.js.|
 
 /**
  * Generic component to accept user input

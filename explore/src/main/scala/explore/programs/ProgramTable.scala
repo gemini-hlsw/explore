@@ -27,10 +27,12 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
+import lucuma.react.table.*
 import lucuma.schemas.ObservationDB
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import lucuma.ui.table.*
 import org.typelevel.log4cats.Logger
 import queries.common.ProgramQueriesGQL.*
 import react.common.ReactFnProps
@@ -42,7 +44,7 @@ import react.semanticui.elements.button.*
 import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.shorthand.*
 import react.semanticui.sizes.*
-import reactST.reactTable.*
+import reactST.{tanstackTableCore => raw}
 
 case class ProgramTable(
   currentProgramId: Option[Program.Id],
@@ -53,9 +55,7 @@ case class ProgramTable(
 object ProgramTable:
   private type Props = ProgramTable
 
-  private val ProgsTableDef = TableDef[View[ProgramInfo]].withSortBy.withFlexLayout
-
-  private val ProgsTable = new SUITableVirtuoso(ProgsTableDef)
+  private val ColDef = ColumnDef[View[ProgramInfo]]
 
   private def addProgram(programs: View[List[ProgramInfo]], adding: View[Boolean])(using
     TransactionalClient[IO, ObservationDB],
@@ -117,10 +117,11 @@ object ProgramTable:
       import ctx.given
 
       List(
-        ProgsTableDef
-          .Column("actions", identity[View[ProgramInfo]] _)
-          .setHeader("Actions")
-          .setCell { cell =>
+        ColDef(
+          "actions",
+          identity[View[ProgramInfo]] _,
+          "Actions",
+          cell = { cell =>
             val programId = cell.value.get.id
             val isDeleted = cell.value.get.deleted
             <.div(
@@ -165,40 +166,42 @@ object ProgramTable:
                 placement = Placement.Right
               ).when(isDeleted)
             )
-          }
-          .setWidth(0)
-          .setMinWidth(120)
-          .setMaxWidth(0)
-          .setSortByFn(_.get.deleted),
-        ProgsTableDef
-          .Column("id", _.get.id)
-          .setHeader("Id")
-          .setCell(_.value.toString)
-          .setWidth(0)
-          .setMinWidth(50)
-          .setMaxWidth(0)
-          .setSortByAuto,
-        ProgsTableDef
-          .Column("name", _.withOnMod(onModName).zoom(ProgramInfo.name))
-          .setHeader("Name")
-          .setCell(cell =>
-            EditableLabel.fromView(
-              value = cell.value,
-              addButtonLabel = ("Add program name": VdomNode).reuseAlways,
-              textClass = ExploreStyles.ProgramName,
-              inputClass = ExploreStyles.ProgramNameInput,
-              editButtonClass = ExploreStyles.BlendedButton |+| ExploreStyles.ProgramNameEdit,
-              editButtonTooltip = "Edit program name".some,
-              deleteButtonClass = ExploreStyles.BlendedButton |+| ExploreStyles.ProgramNameDelete,
-              deleteButtonTooltip = "Delete program name".some,
-              okButtonTooltip = "Accept".some,
-              discardButtonTooltip = "Discard".some
-            )
-          )
-          .setWidth(1)
-          .setMinWidth(200)
-          .setMaxWidth(1000)
-          .setSortByFn(_.get.foldMap(_.value))
+          },
+          size = 100,
+          minSize = 100,
+          maxSize = 120
+        ).sortableBy(_.get.deleted),
+        ColDef(
+          "id",
+          _.get.id,
+          "Id",
+          _.value.toString,
+          size = 50,
+          minSize = 50,
+          maxSize = 70
+        ).sortable,
+        ColDef(
+          "name",
+          _.withOnMod(onModName).zoom(ProgramInfo.name),
+          "Name",
+          cell =>
+            EditableLabel
+              .fromView(
+                value = cell.value,
+                addButtonLabel = ("Add program name": VdomNode).reuseAlways,
+                textClass = ExploreStyles.ProgramName,
+                inputClass = ExploreStyles.ProgramNameInput,
+                editButtonClass = ExploreStyles.BlendedButton |+| ExploreStyles.ProgramNameEdit,
+                editButtonTooltip = "Edit program name".some,
+                deleteButtonClass = ExploreStyles.BlendedButton |+| ExploreStyles.ProgramNameDelete,
+                deleteButtonTooltip = "Delete program name".some,
+                okButtonTooltip = "Accept".some,
+                discardButtonTooltip = "Discard".some
+              ),
+          size = 500,
+          minSize = 200,
+          maxSize = 1000
+        ).sortableBy(_.get.foldMap(_.value))
       )
     }
     // Rows
@@ -213,30 +216,24 @@ object ProgramTable:
         )
         .orEmpty
     }
-    .useTableBy((_, _, _, _, _, cols, rows) =>
-      ProgsTableDef(
-        cols,
-        rows,
-        ((options: ProgsTableDef.OptionsType) => options.setAutoResetSortBy(false)).reuseAlways
-      )
+    .useReactTableBy((_, _, _, _, _, cols, rows) =>
+      TableOptions(cols, rows, enableSorting = true, enableColumnResizing = false)
     )
-    .render { (props, ctx, adding, showDeleted, programsPot, _, _, tableInstance) =>
+    .render { (props, ctx, adding, showDeleted, programsPot, _, _, table) =>
       import ctx.given
 
       <.div(ExploreStyles.ProgramTable)(
         programsPot.render(programs =>
           React.Fragment(
-            ProgsTable.Component(
-              table = Table(
-                celled = true,
-                striped = true,
-                unstackable = true,
-                compact = TableCompact.Very
-              ),
-              header = TableHeader(),
+            PrimeAutoHeightVirtualizedTable(
+              table,
+              estimateRowHeightPx = _ => 32,
+              striped = true,
+              compact = Compact.Very,
+              tableMod = ExploreStyles.ExploreTable,
               emptyMessage = "No programs available"
-            )(tableInstance),
-            <.div(
+            ),
+            <.div(ExploreStyles.ProgramsPopupAdditionalActions)(
               Button(
                 clazz = ExploreStyles.ProgramAdd,
                 compact = true,

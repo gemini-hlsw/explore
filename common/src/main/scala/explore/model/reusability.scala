@@ -39,7 +39,7 @@ import scala.collection.immutable.TreeSeqMap
 /**
  * Reusability instances for model classes
  */
-object reusability {
+object reusability:
   // Model
   implicit val itcTargetProps: Reusability[ItcTarget]                                = Reusability.byEq
   implicit val statusReuse: Reusability[PersistentClientStatus]                      = Reusability.byEq
@@ -127,4 +127,5 @@ object reusability {
   given Reusability[UserGlobalPreferences] = Reusability.byEq
 
   given Reusability[ObsSummariesWithConstraints] = Reusability.byEq
-}
+
+  given Reusability[Range.Inclusive] = Reusability.by(x => (x.start, x.end, x.step))

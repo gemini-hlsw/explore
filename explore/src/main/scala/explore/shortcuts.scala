@@ -10,8 +10,6 @@ import lucuma.refined.*
 import react.hotkeys.HotkeysCallback
 import react.hotkeys.HotkeysEvent
 
-import scala.scalajs.js.|
-
 object Shortcut extends NewType[String]
 type Shortcut = Shortcut.Type
 

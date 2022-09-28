@@ -8,7 +8,6 @@ import org.scalajs.dom
 import react.common.EnumValue
 
 import scalajs.js
-import scalajs.js.|
 
 @js.native
 trait ResizeEvent extends js.Object {

@@ -37,7 +37,6 @@ import react.gridlayout.*
 
 import scala.concurrent.duration.*
 import scala.scalajs.js.JSConverters.*
-import scala.scalajs.js.|
 
 case class TileController(
   userId:        Option[User.Id],

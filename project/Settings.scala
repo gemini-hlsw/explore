@@ -6,42 +6,42 @@ import sbt.librarymanagement.*
 object Settings {
 
   object LibraryVersions {
-    val boopickle             = "1.4.0"
-    val cats                  = "2.8.0"
-    val catsEffect            = "3.3.14"
-    val catsRetry             = "3.1.0"
-    val circe                 = "0.14.3"
-    val circeGolden           = "0.3.0"
-    val clue                  = "0.23.1"
-    val crystal               = "0.31.6"
-    val discipline            = "1.5.1"
-    val disciplineMUnit       = "1.0.9"
-    val fs2                   = "3.3.0"
-    val fs2Data               = "1.5.1"
-    val geminiLocales         = "0.7.0"
-    val http4s                = "0.23.16"
-    val http4sDom             = "0.2.3"
-    val kittens               = "3.0.0"
-    val log4Cats              = "2.5.0"
-    val log4CatsLogLevel      = "0.3.1"
-    val lucumaBC              = "0.4.0"
-    val lucumaCore            = "0.57.0"
-    val lucumaCatalog         = "0.29.4"
-    val lucumaReactVersion    = "0.8.0"
-    val lucumaRefinedVersion  = "0.1.1"
-    val lucumaSchemas         = "0.37.4"
-    val lucumaSSO             = "0.4.2"
-    val lucumaUI              = "0.44.5"
-    val monocle               = "3.1.0"
-    val mouse                 = "1.2.0"
-    val mUnit                 = "0.7.29"
-    val mUnitCatsEffect       = "1.0.7"
-    val pprint                = "0.8.0"
-    val reactAladin           = "0.26.4"
-    val refinedAlgebraVersion = "0.1.0"
-    val scalaJsDom            = "2.3.0"
-    val scalaJsReact          = "2.1.1"
-    val webAppUtil            = "2.0.0-RC12"
+    val boopickle        = "1.4.0"
+    val cats             = "2.8.0"
+    val catsEffect       = "3.3.14"
+    val catsRetry        = "3.1.0"
+    val circe            = "0.14.3"
+    val circeGolden      = "0.3.0"
+    val clue             = "0.23.1"
+    val crystal          = "0.32.1"
+    val discipline       = "1.5.1"
+    val disciplineMUnit  = "1.0.9"
+    val fs2              = "3.3.0"
+    val fs2Data          = "1.5.1"
+    val geminiLocales    = "0.7.0"
+    val http4s           = "0.23.16"
+    val http4sDom        = "0.2.3"
+    val kittens          = "3.0.0"
+    val log4Cats         = "2.5.0"
+    val log4CatsLogLevel = "0.3.1"
+    val lucumaBC         = "0.4.0"
+    val lucumaCore       = "0.57.0"
+    val lucumaCatalog    = "0.29.4"
+    val lucumaReact      = "0.10.0"
+    val lucumaRefined    = "0.1.1"
+    val lucumaSchemas    = "0.37.4"
+    val lucumaSSO        = "0.4.2"
+    val lucumaUI         = "0.46.0"
+    val monocle          = "3.1.0"
+    val mouse            = "1.2.0"
+    val mUnit            = "0.7.29"
+    val mUnitCatsEffect  = "1.0.7"
+    val pprint           = "0.8.0"
+    val reactAladin      = "0.26.5"
+    val refinedAlgebra   = "0.1.0"
+    val scalaJsDom       = "2.3.0"
+    val scalaJsReact     = "2.1.1"
+    val webAppUtil       = "2.0.0-RC12"
   }
 
   object Libraries {
@@ -217,15 +217,15 @@ object Settings {
 
     val LucumaReact = Def.setting(
       deps(
-        "edu.gemini" %%% "lucuma-react-table",
+        "edu.gemini" %%% "lucuma-react-common",
+        "edu.gemini" %%% "lucuma-react-tanstack-table",
         "edu.gemini" %%% "lucuma-react-beautiful-dnd",
         "edu.gemini" %%% "lucuma-react-clipboard",
-        "edu.gemini" %%% "lucuma-react-common",
         "edu.gemini" %%% "lucuma-react-circular-progressbar",
         "edu.gemini" %%% "lucuma-react-datepicker",
         "edu.gemini" %%% "lucuma-react-draggable",
-        "edu.gemini" %%% "lucuma-react-floatingui",
         "edu.gemini" %%% "lucuma-react-font-awesome",
+        "edu.gemini" %%% "lucuma-react-floatingui",
         "edu.gemini" %%% "lucuma-react-grid-layout",
         "edu.gemini" %%% "lucuma-react-highcharts",
         "edu.gemini" %%% "lucuma-react-hotkeys",
@@ -233,14 +233,14 @@ object Settings {
         "edu.gemini" %%% "lucuma-react-resize-detector",
         "edu.gemini" %%% "lucuma-react-semantic-ui",
         "edu.gemini" %%% "lucuma-react-moon",
-        "edu.gemini" %%% "lucuma-react-virtuoso"
-      )(lucumaReactVersion)
+        "edu.gemini" %%% "lucuma-react-prime-react"
+      )(lucumaReact)
     )
 
     val LucumaRefined = Def.setting(
       deps(
         "edu.gemini" %%% "lucuma-refined"
-      )(lucumaRefinedVersion)
+      )(lucumaRefined)
     )
 
     val LucumaSchemas = Def.setting(
@@ -307,7 +307,7 @@ object Settings {
     )
 
     val RefinedAlgebra = Def.setting(
-      Seq("edu.gemini" %%% "refined-algebra" % refinedAlgebraVersion)
+      Seq("edu.gemini" %%% "refined-algebra" % refinedAlgebra)
     )
 
     val ScalaJSDom = Def.setting(
