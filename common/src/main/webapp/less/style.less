@@ -1876,10 +1876,6 @@ html {
   overflow: hidden !important;
 }
 
-.step-table-header {
-  text-transform: unset !important;
-}
-
 .step-guided {
   color: lightgreen;
 }
@@ -2449,14 +2445,57 @@ body .p-component {
 }
 
 .pl-react-table {
+  --table-rounding: 5px;
 
-  &.pl-very-compact .p-datatable-thead>tr>th {
-    padding: 0.25em 0.6em;
-    white-space: nowrap;
+  .p-datatable-thead {
+    tr:first-of-type {
+      th:first-of-type {
+        border-top-left-radius: var(--table-rounding);
+      }
+
+      th:last-of-type {
+        border-top-right-radius: var(--table-rounding);
+      }
+    }
   }
 
-  &.pl-very-compact .p-datatable-tbody>tr>td {
-    padding: 0.4em 0.6em;
-    white-space: nowrap;
+  .p-datatable-tbody {
+    tr:last-of-type {
+      td {
+        border-bottom: none;
+
+        &:first-of-type {
+          border-bottom-left-radius: var(--table-rounding);
+        }
+
+        &:last-of-type {
+          border-bottom-right-radius: var(--table-rounding);
+        }
+      }
+    }
+  }
+
+  &.pl-very-compact {
+    .p-datatable-thead>tr>th {
+      padding: 0.25em 0.6em;
+      white-space: nowrap;
+    }
+
+    .p-datatable-tbody>tr>td {
+      padding: 0.4em 0.6em;
+      white-space: nowrap;
+    }
+  }
+
+  &.p-datatable-hoverable-rows {
+    .p-datatable-tbody>tr:hover {
+      box-shadow: inset 0 1px 0 0 var(--green-500), inset 0 -1px 0 0 var(--green-500);
+    }
+  }
+
+  &.pl-celled-table {
+    .p-datatable-tbody>tr>td:not(:first-of-type) {
+      border-left-width: 1px;
+    }
   }
 }

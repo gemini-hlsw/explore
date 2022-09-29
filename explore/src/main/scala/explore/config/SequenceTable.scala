@@ -206,13 +206,11 @@ object SequenceTable:
         PrimeVirtualizedTable(
           table,
           estimateRowHeightPx = _ => 28,
-          tableClass = Css("pl-very-compact") // TODO make a table property
+          tableClass = Css("pl-very-compact") |+| Css(
+            "p-datatable-hoverable-rows"
+          ) |+| Css("pl-celled-table") // TODO make table properties
         )
       // val FormattedTable = StepTableComponent(
       //   Table(celled = true, selectable = true, striped = true, compact = TableCompact.Very),
-      //   header = true,
-      //   headerCell = TableHeaderCell(clazz = ExploreStyles.StepTableHeader)
       // )
-
-      // FormattedTable(table)
       }

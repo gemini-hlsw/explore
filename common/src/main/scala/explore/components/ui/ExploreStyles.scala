@@ -300,8 +300,7 @@ object ExploreStyles {
   val HelpBody: Css         = Css("explore-help-body")
   val HelpMarkdownBody: Css = Css("markdown-body")
 
-  val StepTableHeader: Css = Css("step-table-header")
-  val StepGuided: Css      = Css("step-guided")
+  val StepGuided: Css = Css("step-guided")
 
   val ExploreForm: Css          = Css("explore-form")
   val SkipToNext: Css           = Css("explore-skip-to-next")
