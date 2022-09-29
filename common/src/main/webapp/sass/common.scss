@@ -1,3 +1,9 @@
 // media queries cutoff
 $tablet-responsive-cutoff: 992px;
 $mobile-responsive-cutoff: 670px;
+
+@mixin text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

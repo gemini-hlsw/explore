@@ -120,6 +120,7 @@ object ExploreStyles {
   val ObsBadgeDescription: Css    = Css("obs-badge-description")
   val ObsBadgeExtra: Css          = Css("obs-badge-extra")
   val ObsDeleteButton: Css        = Css("obs-delete-button")
+  val ObsCloneButton: Css         = Css("obs-clone-button")
   val ObsStatusSelect: Css        = Css("obs-status-select")
   val ObsActiveStatusToggle: Css  = Css("obs-active-status-toggle")
   val SelectedObsItem: Css        = Css("selected-obs-item")

@@ -5,25 +5,26 @@ package explore.observationtree
 
 import cats.effect.IO
 import clue.TransactionalClient
-import clue.data.syntax._
-import crystal.react.implicits._
+import clue.data.syntax.*
+import crystal.react.implicits.*
 import explore.common.ObsQueries
 import explore.data.KeyedIndexedList
-import explore.implicits._
+import explore.implicits.*
 import explore.model.ObsSummaryWithTitleConstraintsAndConf
 import explore.optics.GetAdjust
-import explore.optics.all._
+import explore.optics.all.*
 import explore.undo.Action
 import explore.undo.KIListMod
 import japgolly.scalajs.react.Callback
 import lucuma.core.model.Observation
 import lucuma.schemas.ObservationDB
-import lucuma.schemas.ObservationDB.Types._
+import lucuma.schemas.ObservationDB.Types.*
 import monocle.Focus
-import queries.common.ObsQueriesGQL._
-import queries.schemas.implicits._
+import monocle.Iso
+import queries.common.ObsQueriesGQL.*
+import queries.schemas.implicits.*
 
-object ObsListActions {
+trait ObsListActions {
   protected val obsListMod =
     KIListMod[ObsSummaryWithTitleConstraintsAndConf, Observation.Id](
       ObsSummaryWithTitleConstraintsAndConf.id
@@ -38,9 +39,7 @@ object ObsListActions {
       .withKey(obsId)
       .composeOptionLens(Focus[(ObsSummaryWithTitleConstraintsAndConf, Int)](_._1))
 
-  def obsStatus(obsId: Observation.Id)(implicit
-    c:                 TransactionalClient[IO, ObservationDB]
-  ) = Action(
+  def obsEditStatus(obsId: Observation.Id)(using TransactionalClient[IO, ObservationDB]) = Action(
     access = obsWithId(obsId).composeOptionLens(ObsSummaryWithTitleConstraintsAndConf.status)
   )(onSet =
     (_, status) =>
@@ -54,9 +53,7 @@ object ObsListActions {
         .void
   )
 
-  def obsSubtitle(obsId: Observation.Id)(implicit
-    c:                   TransactionalClient[IO, ObservationDB]
-  ) = Action(
+  def obsEditSubtitle(obsId: Observation.Id)(using TransactionalClient[IO, ObservationDB]) = Action(
     access = obsWithId(obsId).composeOptionLens(ObsSummaryWithTitleConstraintsAndConf.subtitle)
   )(onSet =
     (_, subtitleOpt) =>
@@ -70,9 +67,7 @@ object ObsListActions {
         .void
   )
 
-  def obsActiveStatus(obsId: Observation.Id)(implicit
-    c:                       TransactionalClient[IO, ObservationDB]
-  ) = Action(
+  def obsActiveStatus(obsId: Observation.Id)(using TransactionalClient[IO, ObservationDB]) = Action(
     access = obsWithId(obsId).composeOptionLens(ObsSummaryWithTitleConstraintsAndConf.activeStatus)
   )(onSet =
     (_, activeStatus) =>
@@ -86,8 +81,8 @@ object ObsListActions {
         .void
   )
 
-  def obsExistence(obsId: Observation.Id, setObs: Observation.Id => Callback)(implicit
-    c:                    TransactionalClient[IO, ObservationDB]
+  def obsExistence(obsId: Observation.Id, setObs: Observation.Id => Callback)(using
+    TransactionalClient[IO, ObservationDB]
   ) =
     Action(
       access = obsListMod.withKey(obsId)
@@ -108,3 +103,5 @@ object ObsListActions {
         }
     )
 }
+
+object ObsListActions extends ObsListActions

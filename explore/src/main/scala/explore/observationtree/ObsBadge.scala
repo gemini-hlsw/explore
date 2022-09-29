@@ -3,9 +3,9 @@
 
 package explore.observationtree
 
-import cats.syntax.all._
+import cats.syntax.all.*
 import crystal.react.View
-import crystal.react.reuse._
+import crystal.react.reuse.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.EditableLabel
 import explore.Icons
@@ -14,9 +14,9 @@ import explore.model.ObsSummary
 import explore.model.ObsWithConf
 import explore.model.ObsWithConstraints
 import explore.model.ObsWithTitle
-import japgolly.scalajs.react._
+import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ObsActiveStatus
 import lucuma.core.enums.ObsStatus
 import lucuma.core.model.Observation
@@ -27,14 +27,14 @@ import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.floatingui.Placement
-import react.floatingui.syntax._
+import react.floatingui.syntax.*
 import react.semanticui.collections.form.FormDropdown
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.modules.dropdown.Dropdown
-import react.semanticui.shorthand._
-import react.semanticui.sizes._
-import react.semanticui.views.card._
+import react.semanticui.shorthand.*
+import react.semanticui.sizes.*
+import react.semanticui.views.card.*
 
 case class ObsBadge(
   obs:               ObsSummary, // The layout will depend on the mixins of the ObsSummary.
@@ -42,11 +42,12 @@ case class ObsBadge(
   setStatusCB:       Option[ObsStatus => Callback] = none,
   setActiveStatusCB: Option[ObsActiveStatus => Callback] = none,
   setSubtitleCB:     Option[Option[NonEmptyString] => Callback] = none,
-  deleteCB:          Option[Callback] = none
-) extends ReactFnProps[ObsBadge](ObsBadge.component)
+  deleteCB:          Option[Callback] = none,
+  cloneCB:           Option[Callback] = none
+) extends ReactFnProps(ObsBadge.component)
 
 object ObsBadge {
-  type Props = ObsBadge
+  private type Props = ObsBadge
 
   // TODO Make this a component similar to the one in the docs.
   private def renderEnumProgress[A: Enumerated](value: A): VdomNode = {
@@ -56,7 +57,7 @@ object ObsBadge {
 
   private val idIso = Gid[Observation.Id].isoPosLong
 
-  protected val component =
+  private val component =
     ScalaFnComponent[Props] { props =>
       val obs         = props.obs
       val conf        = obs match {
@@ -74,11 +75,23 @@ object ObsBadge {
           size = Small,
           compact = true,
           clazz = ExploreStyles.DeleteButton |+| ExploreStyles.ObsDeleteButton,
-          icon = Icons.Trash,
+          icon = <.span(Icons.Trash).withTooltip("Delete"),
           onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
             e.preventDefaultCB *>
               e.stopPropagationCB *>
               props.deleteCB.getOrEmpty
+        )
+
+      val duplicateButton =
+        Button(
+          size = Small,
+          compact = true,
+          clazz = ExploreStyles.ObsCloneButton,
+          icon = <.span(Icons.Clone).withTooltip("Duplicate"),
+          onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
+            e.preventDefaultCB *>
+              e.stopPropagationCB *>
+              props.cloneCB.getOrEmpty
         )
 
       def titleAndId(title: String) =
@@ -99,6 +112,7 @@ object ObsBadge {
                   case withConf: ObsWithConf   => withConf.conf
                   case _                       => titleAndId("")
                 },
+                props.cloneCB.whenDefined(_ => duplicateButton),
                 props.deleteCB.whenDefined(_ => deleteButton)
               )
             ),

@@ -243,6 +243,24 @@ object ObsQueries {
       )
     }
 
+  def cloneObservation[F[_]: Async](
+    obsId: Observation.Id
+  )(using TransactionalClient[F, ObservationDB]): F[ObsSummaryWithTitleAndConstraints] =
+    CloneObservationMutation
+      .execute[F](CloneObservationInput(observationId = obsId))
+      .map { o =>
+        val newObs = o.cloneObservation.newObservation
+        ObsSummaryWithTitleAndConstraints(
+          newObs.id,
+          newObs.title,
+          newObs.subtitle,
+          newObs.constraintSet,
+          newObs.status,
+          newObs.activeStatus,
+          newObs.plannedTime.execution
+        )
+      }
+
   def deleteObservation[F[_]: Async](
     obsId: Observation.Id
   )(using TransactionalClient[F, ObservationDB]): F[Unit] =
