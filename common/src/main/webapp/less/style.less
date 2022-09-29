@@ -2436,12 +2436,12 @@ body.hide-reusability {
 
 // TODO REWORK NEXT
 
-body,
-body .p-component {
-  // margin: 0;
-  font-family: 'Lato' !important;
-  // background-color: var(--surface-f);
-  // color: var(--text-color);
+.dark-theme .p-component {
+  font-family: inherit; // Don't force theme font, inherit from page.
+}
+
+.light-theme .p-component {
+  font-family: inherit; // Don't force theme font, inherit from page.
 }
 
 .pl-react-table {
@@ -2497,5 +2497,11 @@ body .p-component {
     .p-datatable-tbody>tr>td:not(:first-of-type) {
       border-left-width: 1px;
     }
+  }
+}
+
+.pl-react-table.pl-celled-table {
+  .p-datatable-tbody>tr>td.explore-table-cell-hide-border {
+    border-left-width: 0;
   }
 }
