@@ -1,0 +1,18 @@
+table:
+  name: lucuma_target
+  schema: public
+array_relationships:
+- name: lucuma_elevation_plot_preferences
+  using:
+    foreign_key_constraint_on:
+      column: target_id
+      table:
+        name: lucuma_elevation_plot_preferences
+        schema: public
+- name: lucuma_target_preferences
+  using:
+    foreign_key_constraint_on:
+      column: target_id
+      table:
+        name: lucuma_target_preferences
+        schema: public

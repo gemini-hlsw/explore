@@ -40,8 +40,9 @@ https://git.heroku.com/user-prefs-staging.git
 then push this via git to the url of each environment
 
 ## Migrations
-Migrations are being handled via hasura tools at this repo
-https://github.com/gemini-hlsw/gpp-user-prefs
+Migrations are being handled via hasura tools with the migration and metadata files at
+
+[hasura](hasura/user-prefs)
 
 Changes should be first tested on user-prefs-master to be later applied to
 * user-prefs-development
