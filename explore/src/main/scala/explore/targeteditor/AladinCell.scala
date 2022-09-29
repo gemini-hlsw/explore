@@ -142,14 +142,13 @@ object AladinCell extends ModelOptics {
         (props, _, options, _, _, _, _) => _ =>
           import props.given
 
-          IO.println(Constants.InitialFov.toMicroarcseconds) *>
-            TargetPreferences
-              .queryWithDefault[IO](props.uid, props.tid, Constants.InitialFov)
-              .flatMap { (up, tp) =>
-                options
-                  .set((up, tp).ready)
-                  .to[IO]
-              }
+          TargetPreferences
+            .queryWithDefault[IO](props.uid, props.tid, Constants.InitialFov)
+            .flatMap { (up, tp) =>
+              options
+                .set((up, tp).ready)
+                .to[IO]
+            }
       }
       // Selected GS index. Should be stored in the db
       .useStateView(none[Int])
@@ -326,17 +325,16 @@ object AladinCell extends ModelOptics {
             fullScreen: Boolean => Boolean
           ): Callback =
             (agsCandidatesView.get, agsOverlayView.get, fullScreenView.get).mapN { (a, o, s) =>
-              Callback.log("Set prefs") *>
-                TargetPreferences
-                  .updateAladinPreferences[IO](
-                    props.uid,
-                    props.tid,
-                    agsCandidates = candidates(a).some,
-                    agsOverlay = overlay(o).some,
-                    fullScreen = fullScreen(s).some
-                  )
-                  .runAsync
-                  .void
+              TargetPreferences
+                .updateAladinPreferences[IO](
+                  props.uid,
+                  props.tid,
+                  agsCandidates = candidates(a).some,
+                  agsOverlay = overlay(o).some,
+                  fullScreen = fullScreen(s).some
+                )
+                .runAsync
+                .void
             }.orEmpty
 
           def agsOverlaySetter: Callback =
