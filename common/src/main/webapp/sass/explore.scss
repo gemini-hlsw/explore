@@ -35,10 +35,9 @@
   }
 
   label:first-child {
+    @include common.text-ellipsis;
+
     max-width: 5ch;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    white-space: nowrap;
   }
 
   label:last-child {
@@ -212,15 +211,14 @@ $search-preview-margin: 5px;
   }
 }
 
+
 .aladin-status-gs {
   @include aladin-gs-status;
+  @include common.text-ellipsis;
 
   grid-area: guidestar;
   align-self: center;
   font-size: smaller;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .aladin-status-gs-loading {
@@ -256,3 +254,24 @@ $search-preview-margin: 5px;
   color: white;
   white-space: nowrap;
 }
+
+// ------
+// Obs badge
+// ------
+
+.ui.button.obs-clone-button,
+.ui.button.delete-button.obs-delete-button {
+  border: none;
+  background-color: transparent;
+  margin: 0;
+  padding: 0 !important;
+
+  &:hover {
+    outline: 1px var(--site-border-color) solid;
+  }
+
+  svg {
+    margin: 0 !important;
+  }
+}
+

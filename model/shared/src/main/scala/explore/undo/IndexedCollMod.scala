@@ -3,13 +3,13 @@
 
 package explore.undo
 
-import cats.syntax.all._
+import cats.syntax.all.*
 import explore.optics.Adjuster
 import explore.optics.GetAdjust
 import monocle.Focus
-import monocle._
+import monocle.*
 import monocle.std.option.some
-import mouse.boolean._
+import mouse.boolean.*
 
 trait IndexedCollMod[Coll[_, _], Idx, A, N[_], K] { // N = Type of internal Node containing A. Can be Id for just A.
   protected val keyLens: Lens[A, K]
