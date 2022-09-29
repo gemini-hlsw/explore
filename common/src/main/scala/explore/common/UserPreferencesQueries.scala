@@ -172,11 +172,11 @@ object UserPreferencesQueries {
     def updateAladinPreferences[F[_]: ApplicativeThrow](
       uid:           User.Id,
       targetId:      Target.Id,
-      fovRA:         Angle,
-      fovDec:        Angle,
-      agsCandidates: Visible,
-      agsOverlay:    Visible,
-      fullScreen:    Boolean
+      fovRA:         Option[Angle] = None,
+      fovDec:        Option[Angle] = None,
+      agsCandidates: Option[Visible] = None,
+      agsOverlay:    Option[Visible] = None,
+      fullScreen:    Option[Boolean] = None
     )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
       import UserTargetPreferencesUpsert.*
 
@@ -187,22 +187,28 @@ object UserPreferencesQueries {
             data = List(
               LucumaTargetPreferencesInsertInput(
                 user_id = uid.show.assign,
-                fovRA = fovRA.toMicroarcseconds.assign,
-                fovDec = fovDec.toMicroarcseconds.assign,
-                agsCandidates = Visible.boolIso.reverseGet(agsCandidates).assign,
-                agsOverlay = Visible.boolIso.reverseGet(agsOverlay).assign,
-                fullScreen = fullScreen.assign
+                fovRA = fovRA.map(_.toMicroarcseconds).orIgnore,
+                fovDec = fovDec.map(_.toMicroarcseconds).orIgnore,
+                agsCandidates = agsCandidates.map(Visible.boolIso.reverseGet).orIgnore,
+                agsOverlay = agsOverlay.map(Visible.boolIso.reverseGet).orIgnore,
+                fullScreen = fullScreen.orIgnore
               )
             ),
             on_conflict = LucumaTargetPreferencesOnConflict(
               constraint = LucumaTargetPreferencesConstraint.LucumaTargetPreferencesPkey,
               update_columns = List(
-                LucumaTargetPreferencesUpdateColumn.FovRA,
-                LucumaTargetPreferencesUpdateColumn.FovDec,
-                LucumaTargetPreferencesUpdateColumn.AgsCandidates,
-                LucumaTargetPreferencesUpdateColumn.AgsOverlay,
-                LucumaTargetPreferencesUpdateColumn.FullScreen
-              )
+                LucumaTargetPreferencesUpdateColumn.FovRA.some.filter(_ => fovRA.isDefined),
+                LucumaTargetPreferencesUpdateColumn.FovDec.some.filter(_ => fovDec.isDefined),
+                LucumaTargetPreferencesUpdateColumn.AgsCandidates.some.filter(_ =>
+                  agsCandidates.isDefined
+                ),
+                LucumaTargetPreferencesUpdateColumn.AgsOverlay.some.filter(_ =>
+                  agsCandidates.isDefined
+                ),
+                LucumaTargetPreferencesUpdateColumn.FullScreen.some.filter(_ =>
+                  agsCandidates.isDefined
+                )
+              ).flattenOption
             ).assign
           ).assign
         )
@@ -240,15 +246,18 @@ object UserPreferencesQueries {
       } yield {
         val userPrefs   = UserGlobalPreferences(AladinMouseScroll(r._1.getOrElse(true)))
         val targetPrefs = {
-          val fovRA  = r._2.map(u => Angle.fromMicroarcseconds(u._1)).getOrElse(defaultFov)
-          val fovDec = r._2.map(u => Angle.fromMicroarcseconds(u._2)).getOrElse(defaultFov)
+          val fovRA  = r._2.flatMap(_._1.map(Angle.fromMicroarcseconds)).getOrElse(defaultFov)
+          val fovDec = r._2.flatMap(_._2.map(Angle.fromMicroarcseconds)).getOrElse(defaultFov)
           val offset = r._2
-            .map(u => Offset(Angle.fromMicroarcseconds(u._3).p, Angle.fromMicroarcseconds(u._4).q))
+            .flatMap(u =>
+              (u._3.map(Angle.fromMicroarcseconds(_).p), u._4.map(Angle.fromMicroarcseconds(_).q))
+                .mapN(Offset.apply)
+            )
             .getOrElse(Offset.Zero)
 
-          val agsCandidates = r._2.map(_._5).map(Visible.boolIso.get).getOrElse(Visible.Hidden)
-          val agsOverlay    = r._2.map(_._6).map(Visible.boolIso.get).getOrElse(Visible.Hidden)
-          val fullScreen    = r._2.map(_._7).getOrElse(false)
+          val agsCandidates = r._2.flatMap(_._5).map(Visible.boolIso.get).getOrElse(Visible.Hidden)
+          val agsOverlay    = r._2.flatMap(_._6).map(Visible.boolIso.get).getOrElse(Visible.Hidden)
+          val fullScreen    = r._2.flatMap(_._7).getOrElse(false)
 
           TargetVisualOptions(fovRA, fovDec, offset, agsCandidates, agsOverlay, fullScreen)
         }

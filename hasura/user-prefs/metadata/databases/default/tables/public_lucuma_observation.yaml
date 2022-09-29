@@ -1,0 +1,11 @@
+table:
+  name: lucuma_observation
+  schema: public
+array_relationships:
+- name: lucuma_itc_plot_preferences
+  using:
+    foreign_key_constraint_on:
+      column: observation_id
+      table:
+        name: lucuma_itc_plot_preferences
+        schema: public

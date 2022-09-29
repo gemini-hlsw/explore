@@ -289,22 +289,12 @@ object AladinCell extends ModelOptics {
             if (newFov.x.toMicroarcseconds === 0L) Callback.empty
             else {
               fovView.set(newFov) *>
-                (fovView.get, agsCandidatesView.get, agsOverlayView.get, fullScreenView.get).mapN {
-                  (_, a, o, f) =>
-                    TargetPreferences
-                      .updateAladinPreferences[IO](props.uid,
-                                                   props.tid,
-                                                   newFov.x,
-                                                   newFov.y,
-                                                   a,
-                                                   o,
-                                                   f
-                      )
-                      .unlessA(ignore)
-                      .runAsync
-                      .rateLimit(1.seconds, 1)
-                      .void
-                }.orEmpty
+                TargetPreferences
+                  .updateAladinPreferences[IO](props.uid, props.tid, newFov.x.some, newFov.y.some)
+                  .unlessA(ignore)
+                  .runAsync
+                  .rateLimit(1.seconds, 1)
+                  .void
             }
           }
 
@@ -334,20 +324,17 @@ object AladinCell extends ModelOptics {
             overlay:    Visible => Visible,
             fullScreen: Boolean => Boolean
           ): Callback =
-            (fovView.get, agsCandidatesView.get, agsOverlayView.get, fullScreenView.get).mapN {
-              (f, a, o, s) =>
-                TargetPreferences
-                  .updateAladinPreferences[IO](
-                    props.uid,
-                    props.tid,
-                    f.x,
-                    f.y,
-                    candidates(a),
-                    overlay(o),
-                    fullScreen(s)
-                  )
-                  .runAsync
-                  .void
+            (agsCandidatesView.get, agsOverlayView.get, fullScreenView.get).mapN { (a, o, s) =>
+              TargetPreferences
+                .updateAladinPreferences[IO](
+                  props.uid,
+                  props.tid,
+                  agsCandidates = candidates(a).some,
+                  agsOverlay = overlay(o).some,
+                  fullScreen = fullScreen(s).some
+                )
+                .runAsync
+                .void
             }.orEmpty
 
           def agsOverlaySetter: Callback =

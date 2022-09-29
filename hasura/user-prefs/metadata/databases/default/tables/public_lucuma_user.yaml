@@ -1,0 +1,3 @@
+table:
+  name: lucuma_user
+  schema: public
