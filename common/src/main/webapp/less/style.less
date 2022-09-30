@@ -2434,16 +2434,6 @@ body.hide-reusability {
   padding: @inputPadding;
 }
 
-// TODO REWORK NEXT
-
-.dark-theme .p-component {
-  font-family: inherit; // Don't force theme font, inherit from page.
-}
-
-.light-theme .p-component {
-  font-family: inherit; // Don't force theme font, inherit from page.
-}
-
 .pl-react-table {
   --table-rounding: 5px;
 
@@ -2489,6 +2479,7 @@ body.hide-reusability {
 
   &.p-datatable-hoverable-rows {
     .p-datatable-tbody>tr:hover {
+      background-color: var(--surface-100) !important;
       box-shadow: inset 0 1px 0 0 var(--green-500), inset 0 -1px 0 0 var(--green-500);
     }
   }
@@ -2497,6 +2488,10 @@ body.hide-reusability {
     .p-datatable-tbody>tr>td:not(:first-of-type) {
       border-left-width: 1px;
     }
+  }
+
+  .p-datatable-tbody>tr.row-even {
+    background-color: var(--surface-50);
   }
 }
 

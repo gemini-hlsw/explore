@@ -31,7 +31,7 @@ object Settings {
     val lucumaRefined    = "0.1.1"
     val lucumaSchemas    = "0.37.3"
     val lucumaSSO        = "0.4.1"
-    val lucumaUI         = "0.44.3-12-192f52a-20220929T015121Z-SNAPSHOT"
+    val lucumaUI         = "0.44.4-7-78a1e8d-20220930T220914Z-SNAPSHOT"
     val monocle          = "3.1.0"
     val mouse            = "1.1.0"
     val mUnit            = "0.7.29"
@@ -217,7 +217,7 @@ object Settings {
 
     val LucumaReact = Def.setting(
       deps(
-        // "edu.gemini" %%% "lucuma-react-common",
+        "edu.gemini" %%% "lucuma-react-common",
         // "edu.gemini" %%% "lucuma-react-table",
         "edu.gemini" %%% "lucuma-react-tanstack-table",
         "edu.gemini" %%% "lucuma-react-beautiful-dnd",
@@ -225,17 +225,17 @@ object Settings {
         "edu.gemini" %%% "lucuma-react-circular-progressbar",
         "edu.gemini" %%% "lucuma-react-datepicker",
         "edu.gemini" %%% "lucuma-react-draggable",
-        // "edu.gemini" %%% "lucuma-react-font-awesome",
-        // "edu.gemini" %%% "lucuma-react-floatingui",
+        "edu.gemini" %%% "lucuma-react-font-awesome",
+        "edu.gemini" %%% "lucuma-react-floatingui",
         "edu.gemini" %%% "lucuma-react-grid-layout",
         "edu.gemini" %%% "lucuma-react-highcharts",
         "edu.gemini" %%% "lucuma-react-hotkeys",
         "edu.gemini" %%% "lucuma-react-resizable",
-        // "edu.gemini" %%% "lucuma-react-resize-detector",
-        // "edu.gemini" %%% "lucuma-react-semantic-ui",
+        "edu.gemini" %%% "lucuma-react-resize-detector",
+        "edu.gemini" %%% "lucuma-react-semantic-ui",
         "edu.gemini" %%% "lucuma-react-moon",
-        "edu.gemini" %%% "lucuma-react-virtuoso"
-        // "edu.gemini" %%% "lucuma-react-prime-react"
+        "edu.gemini" %%% "lucuma-react-virtuoso",
+        "edu.gemini" %%% "lucuma-react-prime-react"
       )(lucumaReact)
     )
 

@@ -1,5 +1,3 @@
-@import "/lucuma-css/lucuma-ui";
-
 /* stylelint-disable no-invalid-position-at-import-rule */
 .light-theme {
   @import "/lucuma-css/light-theme";
@@ -8,7 +6,10 @@
 .dark-theme {
   @import "/lucuma-css/dark-theme";
 }
+
 /* stylelint-enable no-invalid-position-at-import-rule */
+
+@import "/lucuma-css/lucuma-ui";
 
 // specific to Explore
 .constraints-tile .explore-tile-body,
@@ -26,9 +27,7 @@
   padding: 0.5em;
   grid-gap: 1em;
   grid-template-areas:
-    'col1 col2 col3' auto
-    'col1 buttons buttons' auto
-    / 1fr 1fr 1fr;
+    'col1 col2 col3' auto 'col1 buttons buttons' auto / 1fr 1fr 1fr;
 
   label.explore-indent-label {
     text-indent: 2em;
@@ -40,11 +39,7 @@
 .tile-xs-width {
   .explore-advanced-configuration-grid {
     grid-template-areas:
-      'col1' auto
-      'col2' auto
-      'col3' auto
-      'buttons' auto
-      / auto;
+      'col1' auto 'col2' auto 'col3' auto 'buttons' auto / auto;
   }
 }
 
