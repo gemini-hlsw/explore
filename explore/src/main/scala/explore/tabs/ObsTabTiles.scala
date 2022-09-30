@@ -214,9 +214,14 @@ object ObsTabTiles {
 
         val constraintsSelector = makeConstraintsSelector(props.constraintGroups, obsViewPot)
 
+        // first target of the obs. We can use it in case there is no target focus
+        val firstTarget = props.targetMap.collect {
+          case (tid, ts) if props.focusedObs.forall(o => ts.obsIds.contains(o)) => tid
+        }.headOption
+
         val skyPlotTile =
           ElevationPlotTile.elevationPlotTile(props.userId,
-                                              props.focusedTarget,
+                                              props.focusedTarget.orElse(firstTarget),
                                               scienceMode,
                                               targetCoords,
                                               vizTime
