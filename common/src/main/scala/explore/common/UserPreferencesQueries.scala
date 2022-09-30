@@ -51,9 +51,7 @@ object UserPreferencesQueries {
       userId:  Option[User.Id],
       section: ResizableSection,
       width:   Int
-    )(implicit
-      cl:      TransactionalClient[F, UserPreferencesDB]
-    ): F[Unit] =
+    )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
       userId.traverse { i =>
         execute[F](WidthUpsertInput(i, section, width)).attempt
       }.void
@@ -64,11 +62,11 @@ object UserPreferencesQueries {
       userId:            User.Id,
       aladinMouseScroll: AladinMouseScroll
     )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
-      import UserPreferencesUpdateQuery.*
+      import UserPreferencesAladinUpdate.*
 
       execute[F](
         user_id = userId.show.assign,
-        aladinMouseScroll = aladinMouseScroll.value.assign
+        aladin_mouse_scroll = aladinMouseScroll.value.assign
       ).attempt.void
 
   extension (self: UserAreaWidths.type)
@@ -229,7 +227,7 @@ object UserPreferencesQueries {
           query[F](uid.show, tid.show)
             .map { r =>
               val userPrefs   =
-                r.lucuma_user_preferences_by_pk.map(result => result.aladinMouseScroll)
+                r.lucuma_user_preferences_by_pk.flatMap(result => result.aladin_mouse_scroll)
               val targetPrefs = r.lucuma_target_preferences_by_pk.map(result =>
                 (result.fovRA,
                  result.fovDec,
@@ -244,7 +242,7 @@ object UserPreferencesQueries {
             }
             .handleError(_ => (none, none))
       } yield {
-        val userPrefs   = UserGlobalPreferences(AladinMouseScroll(r._1.getOrElse(true)))
+        val userPrefs   = UserGlobalPreferences(AladinMouseScroll(r._1.getOrElse(false)))
         val targetPrefs = {
           val fovRA  = r._2.flatMap(_._1.map(Angle.fromMicroarcseconds)).getOrElse(defaultFov)
           val fovDec = r._2.flatMap(_._2.map(Angle.fromMicroarcseconds)).getOrElse(defaultFov)
@@ -331,56 +329,41 @@ object UserPreferencesQueries {
 
   object ElevationPlotPreference:
     def updatePlotPreferences[F[_]: ApplicativeThrow](
-      uid:      User.Id,
-      targetId: Target.Id,
-      site:     Site,
-      range:    PlotRange,
-      time:     TimeDisplay
+      userId: User.Id,
+      site:   Site,
+      range:  PlotRange,
+      time:   TimeDisplay
     )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
-      import UserTargetPreferencesUpsert.*
+      import UserPreferencesElevPlotUpdate.*
+
       execute[F](
-        LucumaTargetInsertInput(
-          target_id = targetId.show.assign,
-          lucuma_elevation_plot_preferences = LucumaElevationPlotPreferencesArrRelInsertInput(
-            data = List(
-              LucumaElevationPlotPreferencesInsertInput(
-                user_id = uid.show.assign,
-                site = site.assign,
-                range = range.assign,
-                time = time.assign
-              )
-            ),
-            on_conflict = LucumaElevationPlotPreferencesOnConflict(
-              constraint =
-                LucumaElevationPlotPreferencesConstraint.LucumaElevationPlotPreferencesPkey,
-              update_columns = List(LucumaElevationPlotPreferencesUpdateColumn.Site,
-                                    LucumaElevationPlotPreferencesUpdateColumn.Range,
-                                    LucumaElevationPlotPreferencesUpdateColumn.Time
-              )
-            ).assign
-          ).assign
-        )
+        user_id = userId.show.assign,
+        elevationPlotSite = site.assign,
+        elevationPlotRange = range.assign,
+        elevationPlotTime = time.assign
       ).attempt.void
 
     // Gets the prefs for the elevation plot
     def queryWithDefault[F[_]: ApplicativeThrow](
       uid:         User.Id,
-      tid:         Target.Id,
       defaultSite: Site
     )(using TransactionalClient[F, UserPreferencesDB]): F[(Site, PlotRange, TimeDisplay)] =
       import UserElevationPlotPreferencesQuery.*
       for r <-
-          query[F](uid.show, tid.show)
+          query[F](uid.show)
             .map { r =>
-              r.lucuma_elevation_plot_preferences_by_pk.map(result =>
-                (result.site, result.range, result.time)
+              r.lucuma_user_preferences_by_pk.map(result =>
+                (result.elevation_plot_site,
+                 result.elevation_plot_range,
+                 result.elevation_plot_time
+                )
               )
             }
             .handleError(_ => none)
       yield
-        val site  = r.map(_._1).getOrElse(defaultSite)
-        val range = r.map(_._2).getOrElse(PlotRange.Night)
-        val time  = r.map(_._3).getOrElse(TimeDisplay.Site)
+        val site  = r.flatMap(_._1).getOrElse(defaultSite)
+        val range = r.flatMap(_._2).getOrElse(PlotRange.Night)
+        val time  = r.flatMap(_._3).getOrElse(TimeDisplay.Site)
 
         (site, range, time)
 

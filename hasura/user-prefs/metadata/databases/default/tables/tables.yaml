@@ -1,6 +1,5 @@
 - "!include public_explore_resizable_width.yaml"
 - "!include public_grid_layout_positions.yaml"
-- "!include public_lucuma_elevation_plot_preferences.yaml"
 - "!include public_lucuma_itc_plot_preferences.yaml"
 - "!include public_lucuma_observation.yaml"
 - "!include public_lucuma_target.yaml"

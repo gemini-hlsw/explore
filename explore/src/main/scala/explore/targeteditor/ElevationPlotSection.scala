@@ -77,12 +77,7 @@ object ElevationPlotSection {
   )(using AppContextIO): Callback =
     options.get.toOption.map { opts =>
       ElevationPlotPreference
-        .updatePlotPreferences[IO](props.uid,
-                                   props.tid,
-                                   site(opts.site),
-                                   range(opts.range),
-                                   time(opts.time)
-        )
+        .updatePlotPreferences[IO](props.uid, site(opts.site), range(opts.range), time(opts.time))
         .runAsync
         .void
     }.getOrEmpty
@@ -114,7 +109,7 @@ object ElevationPlotSection {
         import props.given
 
         ElevationPlotPreference
-          .queryWithDefault[IO](props.uid, props.tid, site.value)
+          .queryWithDefault[IO](props.uid, site.value)
           .flatMap { case (site, range, time) =>
             options
               .set(
