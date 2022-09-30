@@ -129,10 +129,6 @@ See https://github.com/highcharts/highcharts/issues/13320 */
   }
 }
 
-.explore-itc-tile-body {
-  display: flex;
-}
-
 .itc-plot-section {
   background-color: var(--plot-background-color);
   color: var(--plot-text-color);
@@ -213,9 +209,6 @@ $description-column-count: 2;
   }
 }
 
-.ui.dropdown.explore-itc-tile-target-selector {
-  font-size: smaller;
-}
 
 .highcharts-reset-zoom {
   fill: var(--button-background-color-semi);

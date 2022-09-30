@@ -30,9 +30,8 @@ import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.given
 import queries.schemas.itc.implicits.*
 import react.common.ReactFnProps
-import react.semanticui.addons.select.Select
-import react.semanticui.addons.select.Select.SelectItem
-import react.semanticui.modules.dropdown.Dropdown.DropdownProps
+import react.primereact.Dropdown
+import react.primereact.SelectItem
 
 import scala.scalajs.js.JSConverters._
 
@@ -78,8 +77,8 @@ object ItcPanelTitle:
         )
       }
       .render { (props, results) =>
-        def newSelected(p: DropdownProps): Option[ItcTarget] =
-          props.targets.find(t => p.value.toOption.exists(_.toString === t.name.value))
+        def newSelected(p: ItcTarget): Option[ItcTarget] =
+          props.targets.find(_ === p)
 
         val selectedResult: Option[ItcChartResult] =
           props.selectedTarget.get.flatMap(t => results.value.toOption.flatMap(_.get(t)))
@@ -94,17 +93,14 @@ object ItcPanelTitle:
         <.div(
           ExploreStyles.ItcTileTitle,
           <.label(s"Target:"),
-          Select(
+          Dropdown(
             clazz = ExploreStyles.ItcTileTargetSelector,
-            compact = true,
-            value = selected.orUndefined,
-            onChange = e => props.selectedTarget.set(newSelected(e)),
-            options = itcTargets.map(t =>
-              new SelectItem(text = t.name.value,
-                             value = t.name.value,
-                             selected = props.selectedTarget.get.exists(_ === t)
-              )
-            )
+            value = props.selectedTarget.get.orUndefined,
+            onChange = {
+              case t @ ItcTarget(_, _, _) => props.selectedTarget.set(newSelected(t))
+              case _                      => Callback.empty
+            },
+            options = itcTargets.map(t => SelectItem(label = t.name.value, value = t))
           ).when(itcTargets.length > 1),
           <.span(props.selectedTarget.get.map(_.name.value).getOrElse("-"))
             .when(itcTargets.length === 1),

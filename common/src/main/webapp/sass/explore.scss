@@ -11,8 +11,53 @@
   }
 }
 
+// -------------
+// Itc tile title
+// -------------
+.explore-itc-tile-target-selector {
+  .p-dropdown-label {
+    padding: 0 0.25rem;
+  }
+
+  .p-inputtext {
+    font-size: smaller;
+    white-space: nowrap;
+  }
+}
+
+.explore-itc-tile-body {
+  display: flex;
+}
+
 .explore-itc-tile-title {
-  @include small-tile-title;
+  display: grid;
+  column-gap: 0.5em;
+  row-gap: 0;
+  font-size: smaller;
+  grid-template-columns: repeat(3, minmax(fit-content, 1fr));
+  grid-template-rows: repeat(2, min-content);
+  *:nth-child(2n) { grid-row: 2}
+
+  label {
+    @include common.text-ellipsis;
+  }
+
+  span {
+    @include common.text-ellipsis;
+  }
+
+  @media (min-width: common.$mobile-responsive-cutoff) {
+    @include small-tile-title;
+
+    display: grid;
+    justify-content: end;
+    grid-template-rows: 1fr;
+    grid-template-columns: repeat(6, min-content);
+
+    *, *:nth-child(2n) {
+      grid-row: 1;
+    }
+  }
 }
 
 // ------
