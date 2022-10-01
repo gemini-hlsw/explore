@@ -20,8 +20,6 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import react.common.Css
 import react.common.ReactFnProps
-// import react.semanticui.collections.table._
-// import reactST.reactTable._
 import reactST.{tanstackTableCore => raw}
 
 import java.text.DecimalFormat
@@ -212,7 +210,4 @@ object SequenceTable:
           cellClassFn = (_, col, _) =>
             if (col === "stepType") Css("explore-table-cell-hide-border") else Css.Empty
         )
-      // val FormattedTable = StepTableComponent(
-      //   Table(celled = true, selectable = true, striped = true, compact = TableCompact.Very),
-      // )
       }
