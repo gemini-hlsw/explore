@@ -51,9 +51,7 @@ object UserPreferencesQueries {
       userId:  Option[User.Id],
       section: ResizableSection,
       width:   Int
-    )(implicit
-      cl:      TransactionalClient[F, UserPreferencesDB]
-    ): F[Unit] =
+    )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
       userId.traverse { i =>
         execute[F](WidthUpsertInput(i, section, width)).attempt
       }.void
@@ -64,11 +62,11 @@ object UserPreferencesQueries {
       userId:            User.Id,
       aladinMouseScroll: AladinMouseScroll
     )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
-      import UserPreferencesUpdateQuery.*
+      import UserPreferencesAladinUpdate.*
 
       execute[F](
         user_id = userId.show.assign,
-        aladinMouseScroll = aladinMouseScroll.value.assign
+        aladin_mouse_scroll = aladinMouseScroll.value.assign
       ).attempt.void
 
   extension (self: UserAreaWidths.type)
@@ -172,11 +170,11 @@ object UserPreferencesQueries {
     def updateAladinPreferences[F[_]: ApplicativeThrow](
       uid:           User.Id,
       targetId:      Target.Id,
-      fovRA:         Angle,
-      fovDec:        Angle,
-      agsCandidates: Visible,
-      agsOverlay:    Visible,
-      fullScreen:    Boolean
+      fovRA:         Option[Angle] = None,
+      fovDec:        Option[Angle] = None,
+      agsCandidates: Option[Visible] = None,
+      agsOverlay:    Option[Visible] = None,
+      fullScreen:    Option[Boolean] = None
     )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
       import UserTargetPreferencesUpsert.*
 
@@ -187,22 +185,28 @@ object UserPreferencesQueries {
             data = List(
               LucumaTargetPreferencesInsertInput(
                 user_id = uid.show.assign,
-                fovRA = fovRA.toMicroarcseconds.assign,
-                fovDec = fovDec.toMicroarcseconds.assign,
-                agsCandidates = Visible.boolIso.reverseGet(agsCandidates).assign,
-                agsOverlay = Visible.boolIso.reverseGet(agsOverlay).assign,
-                fullScreen = fullScreen.assign
+                fovRA = fovRA.map(_.toMicroarcseconds).orIgnore,
+                fovDec = fovDec.map(_.toMicroarcseconds).orIgnore,
+                agsCandidates = agsCandidates.map(Visible.boolIso.reverseGet).orIgnore,
+                agsOverlay = agsOverlay.map(Visible.boolIso.reverseGet).orIgnore,
+                fullScreen = fullScreen.orIgnore
               )
             ),
             on_conflict = LucumaTargetPreferencesOnConflict(
               constraint = LucumaTargetPreferencesConstraint.LucumaTargetPreferencesPkey,
               update_columns = List(
-                LucumaTargetPreferencesUpdateColumn.FovRA,
-                LucumaTargetPreferencesUpdateColumn.FovDec,
-                LucumaTargetPreferencesUpdateColumn.AgsCandidates,
-                LucumaTargetPreferencesUpdateColumn.AgsOverlay,
-                LucumaTargetPreferencesUpdateColumn.FullScreen
-              )
+                LucumaTargetPreferencesUpdateColumn.FovRA.some.filter(_ => fovRA.isDefined),
+                LucumaTargetPreferencesUpdateColumn.FovDec.some.filter(_ => fovDec.isDefined),
+                LucumaTargetPreferencesUpdateColumn.AgsCandidates.some.filter(_ =>
+                  agsCandidates.isDefined
+                ),
+                LucumaTargetPreferencesUpdateColumn.AgsOverlay.some.filter(_ =>
+                  agsCandidates.isDefined
+                ),
+                LucumaTargetPreferencesUpdateColumn.FullScreen.some.filter(_ =>
+                  agsCandidates.isDefined
+                )
+              ).flattenOption
             ).assign
           ).assign
         )
@@ -223,7 +227,7 @@ object UserPreferencesQueries {
           query[F](uid.show, tid.show)
             .map { r =>
               val userPrefs   =
-                r.lucuma_user_preferences_by_pk.map(result => result.aladinMouseScroll)
+                r.lucuma_user_preferences_by_pk.flatMap(result => result.aladin_mouse_scroll)
               val targetPrefs = r.lucuma_target_preferences_by_pk.map(result =>
                 (result.fovRA,
                  result.fovDec,
@@ -238,17 +242,20 @@ object UserPreferencesQueries {
             }
             .handleError(_ => (none, none))
       } yield {
-        val userPrefs   = UserGlobalPreferences(AladinMouseScroll(r._1.getOrElse(true)))
+        val userPrefs   = UserGlobalPreferences(AladinMouseScroll(r._1.getOrElse(false)))
         val targetPrefs = {
-          val fovRA  = r._2.map(u => Angle.fromMicroarcseconds(u._1)).getOrElse(defaultFov)
-          val fovDec = r._2.map(u => Angle.fromMicroarcseconds(u._2)).getOrElse(defaultFov)
+          val fovRA  = r._2.flatMap(_._1.map(Angle.fromMicroarcseconds)).getOrElse(defaultFov)
+          val fovDec = r._2.flatMap(_._2.map(Angle.fromMicroarcseconds)).getOrElse(defaultFov)
           val offset = r._2
-            .map(u => Offset(Angle.fromMicroarcseconds(u._3).p, Angle.fromMicroarcseconds(u._4).q))
+            .flatMap(u =>
+              (u._3.map(Angle.fromMicroarcseconds(_).p), u._4.map(Angle.fromMicroarcseconds(_).q))
+                .mapN(Offset.apply)
+            )
             .getOrElse(Offset.Zero)
 
-          val agsCandidates = r._2.map(_._5).map(Visible.boolIso.get).getOrElse(Visible.Hidden)
-          val agsOverlay    = r._2.map(_._6).map(Visible.boolIso.get).getOrElse(Visible.Hidden)
-          val fullScreen    = r._2.map(_._7).getOrElse(false)
+          val agsCandidates = r._2.flatMap(_._5).map(Visible.boolIso.get).getOrElse(Visible.Hidden)
+          val agsOverlay    = r._2.flatMap(_._6).map(Visible.boolIso.get).getOrElse(Visible.Hidden)
+          val fullScreen    = r._2.flatMap(_._7).getOrElse(false)
 
           TargetVisualOptions(fovRA, fovDec, offset, agsCandidates, agsOverlay, fullScreen)
         }
@@ -322,57 +329,35 @@ object UserPreferencesQueries {
 
   object ElevationPlotPreference:
     def updatePlotPreferences[F[_]: ApplicativeThrow](
-      uid:      User.Id,
-      targetId: Target.Id,
-      site:     Site,
-      range:    PlotRange,
-      time:     TimeDisplay
+      userId: User.Id,
+      range:  PlotRange,
+      time:   TimeDisplay
     )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
-      import UserTargetPreferencesUpsert.*
+      import UserPreferencesElevPlotUpdate.*
+
       execute[F](
-        LucumaTargetInsertInput(
-          target_id = targetId.show.assign,
-          lucuma_elevation_plot_preferences = LucumaElevationPlotPreferencesArrRelInsertInput(
-            data = List(
-              LucumaElevationPlotPreferencesInsertInput(
-                user_id = uid.show.assign,
-                site = site.assign,
-                range = range.assign,
-                time = time.assign
-              )
-            ),
-            on_conflict = LucumaElevationPlotPreferencesOnConflict(
-              constraint =
-                LucumaElevationPlotPreferencesConstraint.LucumaElevationPlotPreferencesPkey,
-              update_columns = List(LucumaElevationPlotPreferencesUpdateColumn.Site,
-                                    LucumaElevationPlotPreferencesUpdateColumn.Range,
-                                    LucumaElevationPlotPreferencesUpdateColumn.Time
-              )
-            ).assign
-          ).assign
-        )
+        user_id = userId.show.assign,
+        elevationPlotRange = range.assign,
+        elevationPlotTime = time.assign
       ).attempt.void
 
     // Gets the prefs for the elevation plot
-    def queryWithDefault[F[_]: ApplicativeThrow](
-      uid:         User.Id,
-      tid:         Target.Id,
-      defaultSite: Site
-    )(using TransactionalClient[F, UserPreferencesDB]): F[(Site, PlotRange, TimeDisplay)] =
+    def queryWithDefault[F[_]: ApplicativeThrow](uid: User.Id)(using
+      TransactionalClient[F, UserPreferencesDB]
+    ): F[(PlotRange, TimeDisplay)] =
       import UserElevationPlotPreferencesQuery.*
       for r <-
-          query[F](uid.show, tid.show)
+          query[F](uid.show)
             .map { r =>
-              r.lucuma_elevation_plot_preferences_by_pk.map(result =>
-                (result.site, result.range, result.time)
+              r.lucuma_user_preferences_by_pk.map(result =>
+                (result.elevation_plot_range, result.elevation_plot_time)
               )
             }
             .handleError(_ => none)
       yield
-        val site  = r.map(_._1).getOrElse(defaultSite)
-        val range = r.map(_._2).getOrElse(PlotRange.Night)
-        val time  = r.map(_._3).getOrElse(TimeDisplay.Site)
+        val range = r.flatMap(_._1).getOrElse(PlotRange.Night)
+        val time  = r.flatMap(_._2).getOrElse(TimeDisplay.Site)
 
-        (site, range, time)
+        (range, time)
 
 }

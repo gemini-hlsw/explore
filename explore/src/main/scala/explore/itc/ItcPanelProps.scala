@@ -41,6 +41,8 @@ trait ItcPanelProps(
   val coverageCenterWavelength: Option[CoverageCenterWavelength] =
     spectroscopyRequirements.flatMap(_.wavelength).map(CoverageCenterWavelength(_))
 
+  val signalToNoiseAt: Option[Wavelength] = spectroscopyRequirements.flatMap(_.signalToNoiseAt)
+
   val wavelength: Option[CoverageCenterWavelength] = scienceMode match
     case Some(ScienceMode.GmosNorthLongSlit(_, adv)) =>
       adv.overrideWavelength.map(CoverageCenterWavelength(_)).orElse(coverageCenterWavelength)

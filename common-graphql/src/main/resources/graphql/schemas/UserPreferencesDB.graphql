@@ -1,3 +1,9 @@
+schema {
+  query: query_root
+  mutation: mutation_root
+  subscription: subscription_root
+}
+
 """whether this query should be cached (Hasura Cloud only)"""
 directive @cached(
   """measured in seconds"""
@@ -747,242 +753,6 @@ input itc_chart_type_comparison_exp {
 }
 
 """
-columns and relationships of "lucuma_elevation_plot_preferences"
-"""
-type lucuma_elevation_plot_preferences {
-  range: elevation_plot_range!
-  site: site!
-  target_id: String!
-  time: elevation_plot_time!
-  user_id: String!
-}
-
-"""
-aggregated selection of "lucuma_elevation_plot_preferences"
-"""
-type lucuma_elevation_plot_preferences_aggregate {
-  aggregate: lucuma_elevation_plot_preferences_aggregate_fields
-  nodes: [lucuma_elevation_plot_preferences!]!
-}
-
-"""
-aggregate fields of "lucuma_elevation_plot_preferences"
-"""
-type lucuma_elevation_plot_preferences_aggregate_fields {
-  count(columns: [lucuma_elevation_plot_preferences_select_column!], distinct: Boolean): Int!
-  max: lucuma_elevation_plot_preferences_max_fields
-  min: lucuma_elevation_plot_preferences_min_fields
-}
-
-"""
-order by aggregate values of table "lucuma_elevation_plot_preferences"
-"""
-input lucuma_elevation_plot_preferences_aggregate_order_by {
-  count: order_by
-  max: lucuma_elevation_plot_preferences_max_order_by
-  min: lucuma_elevation_plot_preferences_min_order_by
-}
-
-"""
-input type for inserting array relation for remote table "lucuma_elevation_plot_preferences"
-"""
-input lucuma_elevation_plot_preferences_arr_rel_insert_input {
-  data: [lucuma_elevation_plot_preferences_insert_input!]!
-
-  """upsert condition"""
-  on_conflict: lucuma_elevation_plot_preferences_on_conflict
-}
-
-"""
-Boolean expression to filter rows from the table "lucuma_elevation_plot_preferences". All fields are combined with a logical 'AND'.
-"""
-input lucuma_elevation_plot_preferences_bool_exp {
-  _and: [lucuma_elevation_plot_preferences_bool_exp!]
-  _not: lucuma_elevation_plot_preferences_bool_exp
-  _or: [lucuma_elevation_plot_preferences_bool_exp!]
-  range: elevation_plot_range_comparison_exp
-  site: site_comparison_exp
-  target_id: String_comparison_exp
-  time: elevation_plot_time_comparison_exp
-  user_id: String_comparison_exp
-}
-
-"""
-unique or primary key constraints on table "lucuma_elevation_plot_preferences"
-"""
-enum lucuma_elevation_plot_preferences_constraint {
-  """
-  unique or primary key constraint on columns "user_id", "target_id"
-  """
-  lucuma_elevation_plot_preferences_pkey
-}
-
-"""
-input type for inserting data into table "lucuma_elevation_plot_preferences"
-"""
-input lucuma_elevation_plot_preferences_insert_input {
-  range: elevation_plot_range
-  site: site
-  target_id: String
-  time: elevation_plot_time
-  user_id: String
-}
-
-"""aggregate max on columns"""
-type lucuma_elevation_plot_preferences_max_fields {
-  range: elevation_plot_range
-  site: site
-  target_id: String
-  time: elevation_plot_time
-  user_id: String
-}
-
-"""
-order by max() on columns of table "lucuma_elevation_plot_preferences"
-"""
-input lucuma_elevation_plot_preferences_max_order_by {
-  range: order_by
-  site: order_by
-  target_id: order_by
-  time: order_by
-  user_id: order_by
-}
-
-"""aggregate min on columns"""
-type lucuma_elevation_plot_preferences_min_fields {
-  range: elevation_plot_range
-  site: site
-  target_id: String
-  time: elevation_plot_time
-  user_id: String
-}
-
-"""
-order by min() on columns of table "lucuma_elevation_plot_preferences"
-"""
-input lucuma_elevation_plot_preferences_min_order_by {
-  range: order_by
-  site: order_by
-  target_id: order_by
-  time: order_by
-  user_id: order_by
-}
-
-"""
-response of any mutation on the table "lucuma_elevation_plot_preferences"
-"""
-type lucuma_elevation_plot_preferences_mutation_response {
-  """number of rows affected by the mutation"""
-  affected_rows: Int!
-
-  """data from the rows affected by the mutation"""
-  returning: [lucuma_elevation_plot_preferences!]!
-}
-
-"""
-on_conflict condition type for table "lucuma_elevation_plot_preferences"
-"""
-input lucuma_elevation_plot_preferences_on_conflict {
-  constraint: lucuma_elevation_plot_preferences_constraint!
-  update_columns: [lucuma_elevation_plot_preferences_update_column!]! = []
-  where: lucuma_elevation_plot_preferences_bool_exp
-}
-
-"""
-Ordering options when selecting data from "lucuma_elevation_plot_preferences".
-"""
-input lucuma_elevation_plot_preferences_order_by {
-  range: order_by
-  site: order_by
-  target_id: order_by
-  time: order_by
-  user_id: order_by
-}
-
-"""primary key columns input for table: lucuma_elevation_plot_preferences"""
-input lucuma_elevation_plot_preferences_pk_columns_input {
-  target_id: String!
-  user_id: String!
-}
-
-"""
-select columns of table "lucuma_elevation_plot_preferences"
-"""
-enum lucuma_elevation_plot_preferences_select_column {
-  """column name"""
-  range
-
-  """column name"""
-  site
-
-  """column name"""
-  target_id
-
-  """column name"""
-  time
-
-  """column name"""
-  user_id
-}
-
-"""
-input type for updating data in table "lucuma_elevation_plot_preferences"
-"""
-input lucuma_elevation_plot_preferences_set_input {
-  range: elevation_plot_range
-  site: site
-  target_id: String
-  time: elevation_plot_time
-  user_id: String
-}
-
-"""
-Streaming cursor of the table "lucuma_elevation_plot_preferences"
-"""
-input lucuma_elevation_plot_preferences_stream_cursor_input {
-  """Stream column input with initial value"""
-  initial_value: lucuma_elevation_plot_preferences_stream_cursor_value_input!
-
-  """cursor ordering"""
-  ordering: cursor_ordering
-}
-
-"""Initial value of the column from where the streaming should start"""
-input lucuma_elevation_plot_preferences_stream_cursor_value_input {
-  range: elevation_plot_range
-  site: site
-  target_id: String
-  time: elevation_plot_time
-  user_id: String
-}
-
-"""
-update columns of table "lucuma_elevation_plot_preferences"
-"""
-enum lucuma_elevation_plot_preferences_update_column {
-  """column name"""
-  range
-
-  """column name"""
-  site
-
-  """column name"""
-  target_id
-
-  """column name"""
-  time
-
-  """column name"""
-  user_id
-}
-
-input lucuma_elevation_plot_preferences_updates {
-  """sets the columns of the filtered rows to the given values"""
-  _set: lucuma_elevation_plot_preferences_set_input
-  where: lucuma_elevation_plot_preferences_bool_exp!
-}
-
-"""
 columns and relationships of "lucuma_itc_plot_preferences"
 """
 type lucuma_itc_plot_preferences {
@@ -1393,42 +1163,6 @@ columns and relationships of "lucuma_target"
 """
 type lucuma_target {
   """An array relationship"""
-  lucuma_elevation_plot_preferences(
-    """distinct select on columns"""
-    distinct_on: [lucuma_elevation_plot_preferences_select_column!]
-
-    """limit the number of rows returned"""
-    limit: Int
-
-    """skip the first n rows. Use only with order_by"""
-    offset: Int
-
-    """sort the rows by one or more columns"""
-    order_by: [lucuma_elevation_plot_preferences_order_by!]
-
-    """filter the rows returned"""
-    where: lucuma_elevation_plot_preferences_bool_exp
-  ): [lucuma_elevation_plot_preferences!]!
-
-  """An aggregate relationship"""
-  lucuma_elevation_plot_preferences_aggregate(
-    """distinct select on columns"""
-    distinct_on: [lucuma_elevation_plot_preferences_select_column!]
-
-    """limit the number of rows returned"""
-    limit: Int
-
-    """skip the first n rows. Use only with order_by"""
-    offset: Int
-
-    """sort the rows by one or more columns"""
-    order_by: [lucuma_elevation_plot_preferences_order_by!]
-
-    """filter the rows returned"""
-    where: lucuma_elevation_plot_preferences_bool_exp
-  ): lucuma_elevation_plot_preferences_aggregate!
-
-  """An array relationship"""
   lucuma_target_preferences(
     """distinct select on columns"""
     distinct_on: [lucuma_target_preferences_select_column!]
@@ -1490,7 +1224,6 @@ input lucuma_target_bool_exp {
   _and: [lucuma_target_bool_exp!]
   _not: lucuma_target_bool_exp
   _or: [lucuma_target_bool_exp!]
-  lucuma_elevation_plot_preferences: lucuma_elevation_plot_preferences_bool_exp
   lucuma_target_preferences: lucuma_target_preferences_bool_exp
   target_id: String_comparison_exp
 }
@@ -1509,7 +1242,6 @@ enum lucuma_target_constraint {
 input type for inserting data into table "lucuma_target"
 """
 input lucuma_target_insert_input {
-  lucuma_elevation_plot_preferences: lucuma_elevation_plot_preferences_arr_rel_insert_input
   lucuma_target_preferences: lucuma_target_preferences_arr_rel_insert_input
   target_id: String
 }
@@ -1556,7 +1288,6 @@ input lucuma_target_on_conflict {
 
 """Ordering options when selecting data from "lucuma_target"."""
 input lucuma_target_order_by {
-  lucuma_elevation_plot_preferences_aggregate: lucuma_elevation_plot_preferences_aggregate_order_by
   lucuma_target_preferences_aggregate: lucuma_target_preferences_aggregate_order_by
   target_id: order_by
 }
@@ -1570,19 +1301,18 @@ input lucuma_target_pk_columns_input {
 columns and relationships of "lucuma_target_preferences"
 """
 type lucuma_target_preferences {
-  agsCandidates: Boolean!
-  agsOverlay: Boolean!
-  fov: bigint
-  fovDec: bigint!
-  fovRA: bigint!
-  fullScreen: Boolean!
+  agsCandidates: Boolean
+  agsOverlay: Boolean
+  fovDec: bigint
+  fovRA: bigint
+  fullScreen: Boolean
 
   """An object relationship"""
   lucuma_target: lucuma_target!
   target_id: String!
   user_id: String!
-  viewOffsetP: bigint!
-  viewOffsetQ: bigint!
+  viewOffsetP: bigint
+  viewOffsetQ: bigint
 }
 
 """
@@ -1639,7 +1369,6 @@ input lucuma_target_preferences_arr_rel_insert_input {
 
 """aggregate avg on columns"""
 type lucuma_target_preferences_avg_fields {
-  fov: Float
   fovDec: Float
   fovRA: Float
   viewOffsetP: Float
@@ -1650,7 +1379,6 @@ type lucuma_target_preferences_avg_fields {
 order by avg() on columns of table "lucuma_target_preferences"
 """
 input lucuma_target_preferences_avg_order_by {
-  fov: order_by
   fovDec: order_by
   fovRA: order_by
   viewOffsetP: order_by
@@ -1666,7 +1394,6 @@ input lucuma_target_preferences_bool_exp {
   _or: [lucuma_target_preferences_bool_exp!]
   agsCandidates: Boolean_comparison_exp
   agsOverlay: Boolean_comparison_exp
-  fov: bigint_comparison_exp
   fovDec: bigint_comparison_exp
   fovRA: bigint_comparison_exp
   fullScreen: Boolean_comparison_exp
@@ -1691,7 +1418,6 @@ enum lucuma_target_preferences_constraint {
 input type for incrementing numeric columns in table "lucuma_target_preferences"
 """
 input lucuma_target_preferences_inc_input {
-  fov: bigint
   fovDec: bigint
   fovRA: bigint
   viewOffsetP: bigint
@@ -1704,7 +1430,6 @@ input type for inserting data into table "lucuma_target_preferences"
 input lucuma_target_preferences_insert_input {
   agsCandidates: Boolean
   agsOverlay: Boolean
-  fov: bigint
   fovDec: bigint
   fovRA: bigint
   fullScreen: Boolean
@@ -1717,7 +1442,6 @@ input lucuma_target_preferences_insert_input {
 
 """aggregate max on columns"""
 type lucuma_target_preferences_max_fields {
-  fov: bigint
   fovDec: bigint
   fovRA: bigint
   target_id: String
@@ -1730,7 +1454,6 @@ type lucuma_target_preferences_max_fields {
 order by max() on columns of table "lucuma_target_preferences"
 """
 input lucuma_target_preferences_max_order_by {
-  fov: order_by
   fovDec: order_by
   fovRA: order_by
   target_id: order_by
@@ -1741,7 +1464,6 @@ input lucuma_target_preferences_max_order_by {
 
 """aggregate min on columns"""
 type lucuma_target_preferences_min_fields {
-  fov: bigint
   fovDec: bigint
   fovRA: bigint
   target_id: String
@@ -1754,7 +1476,6 @@ type lucuma_target_preferences_min_fields {
 order by min() on columns of table "lucuma_target_preferences"
 """
 input lucuma_target_preferences_min_order_by {
-  fov: order_by
   fovDec: order_by
   fovRA: order_by
   target_id: order_by
@@ -1787,7 +1508,6 @@ input lucuma_target_preferences_on_conflict {
 input lucuma_target_preferences_order_by {
   agsCandidates: order_by
   agsOverlay: order_by
-  fov: order_by
   fovDec: order_by
   fovRA: order_by
   fullScreen: order_by
@@ -1813,9 +1533,6 @@ enum lucuma_target_preferences_select_column {
 
   """column name"""
   agsOverlay
-
-  """column name"""
-  fov
 
   """column name"""
   fovDec
@@ -1845,7 +1562,6 @@ input type for updating data in table "lucuma_target_preferences"
 input lucuma_target_preferences_set_input {
   agsCandidates: Boolean
   agsOverlay: Boolean
-  fov: bigint
   fovDec: bigint
   fovRA: bigint
   fullScreen: Boolean
@@ -1857,7 +1573,6 @@ input lucuma_target_preferences_set_input {
 
 """aggregate stddev on columns"""
 type lucuma_target_preferences_stddev_fields {
-  fov: Float
   fovDec: Float
   fovRA: Float
   viewOffsetP: Float
@@ -1868,7 +1583,6 @@ type lucuma_target_preferences_stddev_fields {
 order by stddev() on columns of table "lucuma_target_preferences"
 """
 input lucuma_target_preferences_stddev_order_by {
-  fov: order_by
   fovDec: order_by
   fovRA: order_by
   viewOffsetP: order_by
@@ -1877,7 +1591,6 @@ input lucuma_target_preferences_stddev_order_by {
 
 """aggregate stddev_pop on columns"""
 type lucuma_target_preferences_stddev_pop_fields {
-  fov: Float
   fovDec: Float
   fovRA: Float
   viewOffsetP: Float
@@ -1888,7 +1601,6 @@ type lucuma_target_preferences_stddev_pop_fields {
 order by stddev_pop() on columns of table "lucuma_target_preferences"
 """
 input lucuma_target_preferences_stddev_pop_order_by {
-  fov: order_by
   fovDec: order_by
   fovRA: order_by
   viewOffsetP: order_by
@@ -1897,7 +1609,6 @@ input lucuma_target_preferences_stddev_pop_order_by {
 
 """aggregate stddev_samp on columns"""
 type lucuma_target_preferences_stddev_samp_fields {
-  fov: Float
   fovDec: Float
   fovRA: Float
   viewOffsetP: Float
@@ -1908,7 +1619,6 @@ type lucuma_target_preferences_stddev_samp_fields {
 order by stddev_samp() on columns of table "lucuma_target_preferences"
 """
 input lucuma_target_preferences_stddev_samp_order_by {
-  fov: order_by
   fovDec: order_by
   fovRA: order_by
   viewOffsetP: order_by
@@ -1930,7 +1640,6 @@ input lucuma_target_preferences_stream_cursor_input {
 input lucuma_target_preferences_stream_cursor_value_input {
   agsCandidates: Boolean
   agsOverlay: Boolean
-  fov: bigint
   fovDec: bigint
   fovRA: bigint
   fullScreen: Boolean
@@ -1942,7 +1651,6 @@ input lucuma_target_preferences_stream_cursor_value_input {
 
 """aggregate sum on columns"""
 type lucuma_target_preferences_sum_fields {
-  fov: bigint
   fovDec: bigint
   fovRA: bigint
   viewOffsetP: bigint
@@ -1953,7 +1661,6 @@ type lucuma_target_preferences_sum_fields {
 order by sum() on columns of table "lucuma_target_preferences"
 """
 input lucuma_target_preferences_sum_order_by {
-  fov: order_by
   fovDec: order_by
   fovRA: order_by
   viewOffsetP: order_by
@@ -1969,9 +1676,6 @@ enum lucuma_target_preferences_update_column {
 
   """column name"""
   agsOverlay
-
-  """column name"""
-  fov
 
   """column name"""
   fovDec
@@ -2006,7 +1710,6 @@ input lucuma_target_preferences_updates {
 
 """aggregate var_pop on columns"""
 type lucuma_target_preferences_var_pop_fields {
-  fov: Float
   fovDec: Float
   fovRA: Float
   viewOffsetP: Float
@@ -2017,7 +1720,6 @@ type lucuma_target_preferences_var_pop_fields {
 order by var_pop() on columns of table "lucuma_target_preferences"
 """
 input lucuma_target_preferences_var_pop_order_by {
-  fov: order_by
   fovDec: order_by
   fovRA: order_by
   viewOffsetP: order_by
@@ -2026,7 +1728,6 @@ input lucuma_target_preferences_var_pop_order_by {
 
 """aggregate var_samp on columns"""
 type lucuma_target_preferences_var_samp_fields {
-  fov: Float
   fovDec: Float
   fovRA: Float
   viewOffsetP: Float
@@ -2037,7 +1738,6 @@ type lucuma_target_preferences_var_samp_fields {
 order by var_samp() on columns of table "lucuma_target_preferences"
 """
 input lucuma_target_preferences_var_samp_order_by {
-  fov: order_by
   fovDec: order_by
   fovRA: order_by
   viewOffsetP: order_by
@@ -2046,7 +1746,6 @@ input lucuma_target_preferences_var_samp_order_by {
 
 """aggregate variance on columns"""
 type lucuma_target_preferences_variance_fields {
-  fov: Float
   fovDec: Float
   fovRA: Float
   viewOffsetP: Float
@@ -2057,7 +1756,6 @@ type lucuma_target_preferences_variance_fields {
 order by variance() on columns of table "lucuma_target_preferences"
 """
 input lucuma_target_preferences_variance_order_by {
-  fov: order_by
   fovDec: order_by
   fovRA: order_by
   viewOffsetP: order_by
@@ -2214,7 +1912,9 @@ input lucuma_user_pk_columns_input {
 columns and relationships of "lucuma_user_preferences"
 """
 type lucuma_user_preferences {
-  aladinMouseScroll: Boolean!
+  aladin_mouse_scroll: Boolean
+  elevation_plot_range: elevation_plot_range
+  elevation_plot_time: elevation_plot_time
 
   """An object relationship"""
   lucuma_user: lucuma_user!
@@ -2245,7 +1945,9 @@ input lucuma_user_preferences_bool_exp {
   _and: [lucuma_user_preferences_bool_exp!]
   _not: lucuma_user_preferences_bool_exp
   _or: [lucuma_user_preferences_bool_exp!]
-  aladinMouseScroll: Boolean_comparison_exp
+  aladin_mouse_scroll: Boolean_comparison_exp
+  elevation_plot_range: elevation_plot_range_comparison_exp
+  elevation_plot_time: elevation_plot_time_comparison_exp
   lucuma_user: lucuma_user_bool_exp
   user_id: String_comparison_exp
 }
@@ -2264,18 +1966,24 @@ enum lucuma_user_preferences_constraint {
 input type for inserting data into table "lucuma_user_preferences"
 """
 input lucuma_user_preferences_insert_input {
-  aladinMouseScroll: Boolean
+  aladin_mouse_scroll: Boolean
+  elevation_plot_range: elevation_plot_range
+  elevation_plot_time: elevation_plot_time
   lucuma_user: lucuma_user_obj_rel_insert_input
   user_id: String
 }
 
 """aggregate max on columns"""
 type lucuma_user_preferences_max_fields {
+  elevation_plot_range: elevation_plot_range
+  elevation_plot_time: elevation_plot_time
   user_id: String
 }
 
 """aggregate min on columns"""
 type lucuma_user_preferences_min_fields {
+  elevation_plot_range: elevation_plot_range
+  elevation_plot_time: elevation_plot_time
   user_id: String
 }
 
@@ -2301,7 +2009,9 @@ input lucuma_user_preferences_on_conflict {
 
 """Ordering options when selecting data from "lucuma_user_preferences"."""
 input lucuma_user_preferences_order_by {
-  aladinMouseScroll: order_by
+  aladin_mouse_scroll: order_by
+  elevation_plot_range: order_by
+  elevation_plot_time: order_by
   lucuma_user: lucuma_user_order_by
   user_id: order_by
 }
@@ -2316,7 +2026,13 @@ select columns of table "lucuma_user_preferences"
 """
 enum lucuma_user_preferences_select_column {
   """column name"""
-  aladinMouseScroll
+  aladin_mouse_scroll
+
+  """column name"""
+  elevation_plot_range
+
+  """column name"""
+  elevation_plot_time
 
   """column name"""
   user_id
@@ -2326,7 +2042,9 @@ enum lucuma_user_preferences_select_column {
 input type for updating data in table "lucuma_user_preferences"
 """
 input lucuma_user_preferences_set_input {
-  aladinMouseScroll: Boolean
+  aladin_mouse_scroll: Boolean
+  elevation_plot_range: elevation_plot_range
+  elevation_plot_time: elevation_plot_time
   user_id: String
 }
 
@@ -2343,7 +2061,9 @@ input lucuma_user_preferences_stream_cursor_input {
 
 """Initial value of the column from where the streaming should start"""
 input lucuma_user_preferences_stream_cursor_value_input {
-  aladinMouseScroll: Boolean
+  aladin_mouse_scroll: Boolean
+  elevation_plot_range: elevation_plot_range
+  elevation_plot_time: elevation_plot_time
   user_id: String
 }
 
@@ -2352,7 +2072,13 @@ update columns of table "lucuma_user_preferences"
 """
 enum lucuma_user_preferences_update_column {
   """column name"""
-  aladinMouseScroll
+  aladin_mouse_scroll
+
+  """column name"""
+  elevation_plot_range
+
+  """column name"""
+  elevation_plot_time
 
   """column name"""
   user_id
@@ -2436,19 +2162,6 @@ type Mutation {
   delete single row from the table: "grid_layout_positions"
   """
   delete_grid_layout_positions_by_pk(breakpoint_name: breakpoint_name!, section: grid_layout_area!, tile: String!, user_id: String!): grid_layout_positions
-
-  """
-  delete data from the table: "lucuma_elevation_plot_preferences"
-  """
-  delete_lucuma_elevation_plot_preferences(
-    """filter the rows which have to be deleted"""
-    where: lucuma_elevation_plot_preferences_bool_exp!
-  ): lucuma_elevation_plot_preferences_mutation_response
-
-  """
-  delete single row from the table: "lucuma_elevation_plot_preferences"
-  """
-  delete_lucuma_elevation_plot_preferences_by_pk(target_id: String!, user_id: String!): lucuma_elevation_plot_preferences
 
   """
   delete data from the table: "lucuma_itc_plot_preferences"
@@ -2571,28 +2284,6 @@ type Mutation {
     """upsert condition"""
     on_conflict: grid_layout_positions_on_conflict
   ): grid_layout_positions
-
-  """
-  insert data into the table: "lucuma_elevation_plot_preferences"
-  """
-  insert_lucuma_elevation_plot_preferences(
-    """the rows to be inserted"""
-    objects: [lucuma_elevation_plot_preferences_insert_input!]!
-
-    """upsert condition"""
-    on_conflict: lucuma_elevation_plot_preferences_on_conflict
-  ): lucuma_elevation_plot_preferences_mutation_response
-
-  """
-  insert a single row into the table: "lucuma_elevation_plot_preferences"
-  """
-  insert_lucuma_elevation_plot_preferences_one(
-    """the row to be inserted"""
-    object: lucuma_elevation_plot_preferences_insert_input!
-
-    """upsert condition"""
-    on_conflict: lucuma_elevation_plot_preferences_on_conflict
-  ): lucuma_elevation_plot_preferences
 
   """
   insert data into the table: "lucuma_itc_plot_preferences"
@@ -2793,34 +2484,6 @@ type Mutation {
     """updates to execute, in order"""
     updates: [grid_layout_positions_updates!]!
   ): [grid_layout_positions_mutation_response]
-
-  """
-  update data of the table: "lucuma_elevation_plot_preferences"
-  """
-  update_lucuma_elevation_plot_preferences(
-    """sets the columns of the filtered rows to the given values"""
-    _set: lucuma_elevation_plot_preferences_set_input
-
-    """filter the rows which have to be updated"""
-    where: lucuma_elevation_plot_preferences_bool_exp!
-  ): lucuma_elevation_plot_preferences_mutation_response
-
-  """
-  update single row of the table: "lucuma_elevation_plot_preferences"
-  """
-  update_lucuma_elevation_plot_preferences_by_pk(
-    """sets the columns of the filtered rows to the given values"""
-    _set: lucuma_elevation_plot_preferences_set_input
-    pk_columns: lucuma_elevation_plot_preferences_pk_columns_input!
-  ): lucuma_elevation_plot_preferences
-
-  """
-  update multiples rows of table: "lucuma_elevation_plot_preferences"
-  """
-  update_lucuma_elevation_plot_preferences_many(
-    """updates to execute, in order"""
-    updates: [lucuma_elevation_plot_preferences_updates!]!
-  ): [lucuma_elevation_plot_preferences_mutation_response]
 
   """
   update data of the table: "lucuma_itc_plot_preferences"
@@ -3110,47 +2773,6 @@ type Query {
   grid_layout_positions_by_pk(breakpoint_name: breakpoint_name!, section: grid_layout_area!, tile: String!, user_id: String!): grid_layout_positions
 
   """An array relationship"""
-  lucuma_elevation_plot_preferences(
-    """distinct select on columns"""
-    distinct_on: [lucuma_elevation_plot_preferences_select_column!]
-
-    """limit the number of rows returned"""
-    limit: Int
-
-    """skip the first n rows. Use only with order_by"""
-    offset: Int
-
-    """sort the rows by one or more columns"""
-    order_by: [lucuma_elevation_plot_preferences_order_by!]
-
-    """filter the rows returned"""
-    where: lucuma_elevation_plot_preferences_bool_exp
-  ): [lucuma_elevation_plot_preferences!]!
-
-  """An aggregate relationship"""
-  lucuma_elevation_plot_preferences_aggregate(
-    """distinct select on columns"""
-    distinct_on: [lucuma_elevation_plot_preferences_select_column!]
-
-    """limit the number of rows returned"""
-    limit: Int
-
-    """skip the first n rows. Use only with order_by"""
-    offset: Int
-
-    """sort the rows by one or more columns"""
-    order_by: [lucuma_elevation_plot_preferences_order_by!]
-
-    """filter the rows returned"""
-    where: lucuma_elevation_plot_preferences_bool_exp
-  ): lucuma_elevation_plot_preferences_aggregate!
-
-  """
-  fetch data from the table: "lucuma_elevation_plot_preferences" using primary key columns
-  """
-  lucuma_elevation_plot_preferences_by_pk(target_id: String!, user_id: String!): lucuma_elevation_plot_preferences
-
-  """An array relationship"""
   lucuma_itc_plot_preferences(
     """distinct select on columns"""
     distinct_on: [lucuma_itc_plot_preferences_select_column!]
@@ -3426,23 +3048,6 @@ input resizable_area_comparison_exp {
   _nin: [resizable_area!]
 }
 
-scalar site
-
-"""
-Boolean expression to compare columns of type "site". All fields are combined with logical 'AND'.
-"""
-input site_comparison_exp {
-  _eq: site
-  _gt: site
-  _gte: site
-  _in: [site!]
-  _is_null: Boolean
-  _lt: site
-  _lte: site
-  _neq: site
-  _nin: [site!]
-}
-
 type Subscription {
   """
   fetch data from the table: "explore_resizable_width"
@@ -3561,61 +3166,6 @@ type Subscription {
     """filter the rows returned"""
     where: grid_layout_positions_bool_exp
   ): [grid_layout_positions!]!
-
-  """An array relationship"""
-  lucuma_elevation_plot_preferences(
-    """distinct select on columns"""
-    distinct_on: [lucuma_elevation_plot_preferences_select_column!]
-
-    """limit the number of rows returned"""
-    limit: Int
-
-    """skip the first n rows. Use only with order_by"""
-    offset: Int
-
-    """sort the rows by one or more columns"""
-    order_by: [lucuma_elevation_plot_preferences_order_by!]
-
-    """filter the rows returned"""
-    where: lucuma_elevation_plot_preferences_bool_exp
-  ): [lucuma_elevation_plot_preferences!]!
-
-  """An aggregate relationship"""
-  lucuma_elevation_plot_preferences_aggregate(
-    """distinct select on columns"""
-    distinct_on: [lucuma_elevation_plot_preferences_select_column!]
-
-    """limit the number of rows returned"""
-    limit: Int
-
-    """skip the first n rows. Use only with order_by"""
-    offset: Int
-
-    """sort the rows by one or more columns"""
-    order_by: [lucuma_elevation_plot_preferences_order_by!]
-
-    """filter the rows returned"""
-    where: lucuma_elevation_plot_preferences_bool_exp
-  ): lucuma_elevation_plot_preferences_aggregate!
-
-  """
-  fetch data from the table: "lucuma_elevation_plot_preferences" using primary key columns
-  """
-  lucuma_elevation_plot_preferences_by_pk(target_id: String!, user_id: String!): lucuma_elevation_plot_preferences
-
-  """
-  fetch data from the table in a streaming manner : "lucuma_elevation_plot_preferences"
-  """
-  lucuma_elevation_plot_preferences_stream(
-    """maximum number of rows returned in a single batch"""
-    batch_size: Int!
-
-    """cursor to stream the results returned by the query"""
-    cursor: [lucuma_elevation_plot_preferences_stream_cursor_input]!
-
-    """filter the rows returned"""
-    where: lucuma_elevation_plot_preferences_bool_exp
-  ): [lucuma_elevation_plot_preferences!]!
 
   """An array relationship"""
   lucuma_itc_plot_preferences(

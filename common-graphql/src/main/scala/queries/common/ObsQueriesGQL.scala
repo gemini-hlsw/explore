@@ -610,4 +610,43 @@ object ObsQueriesGQL {
       }
     """
   }
+
+  @GraphQL
+  trait CloneObservationMutation extends GraphQLOperation[ObservationDB] {
+    val document = """
+      mutation ($input: CloneObservationInput!){
+        cloneObservation(input: $input) {
+          newObservation {
+            id
+            title
+            subtitle
+            constraintSet {
+              imageQuality
+              cloudExtinction
+              skyBackground
+              waterVapor
+            }
+            status
+            activeStatus
+            plannedTime {
+              execution {
+                microseconds
+              }
+            }
+          }
+        }
+      }
+    """
+
+    object Data {
+      object CloneObservation {
+        object NewObservation {
+          trait ConstraintSet extends ConstraintsSummary
+          object PlannedTime {
+            type Execution = time.Duration
+          }
+        }
+      }
+    }
+  }
 }

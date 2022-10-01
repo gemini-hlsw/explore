@@ -55,10 +55,10 @@ case class ElevationPlotSection(
 object ElevationPlotSection {
   private type Props = ElevationPlotSection
 
-  given Reusability[Props] =
+  private given Reusability[Props] =
     Reusability.by(x => (x.uid, x.tid, x.scienceMode, x.visualizationTime, x.coords.value))
 
-  val preferredSiteFor = (c: Props) =>
+  private val preferredSiteFor = (c: Props) =>
     c.scienceMode
       .map {
         case ScienceMode.GmosNorthLongSlit(_, _) => Site.GN
@@ -68,28 +68,22 @@ object ElevationPlotSection {
         if (c.coords.value.dec.toAngle.toSignedDoubleDegrees > -5) Site.GN else Site.GS
       }
 
-  def prefsSetter(
+  private def prefsSetter(
     props:   Props,
     options: View[Pot[ElevationPlotOptions]],
-    site:    Site => Site = identity,
     range:   PlotRange => PlotRange = identity,
     time:    TimeDisplay => TimeDisplay = identity
   )(using AppContextIO): Callback =
     options.get.toOption.map { opts =>
       ElevationPlotPreference
-        .updatePlotPreferences[IO](props.uid,
-                                   props.tid,
-                                   site(opts.site),
-                                   range(opts.range),
-                                   time(opts.time)
-        )
+        .updatePlotPreferences[IO](props.uid, range(opts.range), time(opts.time))
         .runAsync
         .void
     }.getOrEmpty
 
-  val sitePrism = Pot.readyPrism.andThen(ElevationPlotOptions.site)
+  private val sitePrism = Pot.readyPrism.andThen(ElevationPlotOptions.site)
 
-  inline def calcTime(visualizationTime: Option[Instant], site: Site): LocalDate =
+  private inline def calcTime(visualizationTime: Option[Instant], site: Site): LocalDate =
     visualizationTime
       .map(LocalDateTime.ofInstant(_, site.timezone).toLocalDate)
       .getOrElse(ZonedDateTime.now(site.timezone).toLocalDate.plusDays(1))
@@ -107,19 +101,19 @@ object ElevationPlotSection {
           s.setState(preferredSiteFor(props)) >>
             options.modCB(
               sitePrism.replace(preferredSiteFor(props)),
-              _.map(o => prefsSetter(props, options, site = _ => o.site)).toOption.getOrEmpty
+              _.map(o => prefsSetter(props, options)).toOption.getOrEmpty
             )
       )
       .useEffectWithDepsBy((props, _, _) => (props.uid, props.tid)) { (props, site, options) => _ =>
         import props.given
 
         ElevationPlotPreference
-          .queryWithDefault[IO](props.uid, props.tid, site.value)
-          .flatMap { case (site, range, time) =>
+          .queryWithDefault[IO](props.uid)
+          .flatMap { case (range, time) =>
             options
               .set(
                 ElevationPlotOptions.Default
-                  .copy(site = site, range = range, time = time)
+                  .copy(site = site.value, range = range, time = time)
                   .ready
               )
               .to[IO]
@@ -151,7 +145,7 @@ object ElevationPlotSection {
           rangeView.set(timeRange) *> prefsSetter(props, options, range = _ => timeRange)
 
         def setSite(site: Site) =
-          siteView.set(site) *> prefsSetter(props, options, site = _ => site)
+          siteView.set(site)
 
         val renderPlot: ElevationPlotOptions => VdomNode =
           (opt: ElevationPlotOptions) =>
