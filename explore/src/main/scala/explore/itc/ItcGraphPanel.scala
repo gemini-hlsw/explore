@@ -104,7 +104,7 @@ object ItcGraphPanel {
                 case u            => Pot.Ready(Map(m.target -> m))
               } *> loading.setState(PlotLoading.Done).to[IO],
             (charts.setState(
-              Pot.error(new RuntimeException("Not enough information to call ITC"))
+              Pot.error(new RuntimeException("Not enough information to calculate the ITC graph"))
             ) *> loading.setState(PlotLoading.Done)).to[IO],
             loading.setState(PlotLoading.Loading).to[IO]
           )
@@ -163,6 +163,7 @@ object ItcGraphPanel {
                 error,
                 opt.chartType,
                 props.selectedTarget.get.map(_.name.value),
+                props.signalToNoiseAt,
                 loading.value,
                 opt.detailsShown
               ),

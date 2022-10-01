@@ -3,9 +3,9 @@
 
 package explore.highcharts
 
-import japgolly.scalajs.react._
+import japgolly.scalajs.react.*
 import react.common.style.Css
-import reactST.highcharts.mod._
+import reactST.highcharts.mod.*
 
 extension (c: Chart_)
   inline def showLoadingCB: Callback              = CallbackTo(c.showLoading())
@@ -21,6 +21,8 @@ extension (c: ChartOptions)
     c.setEvents(
       ChartEventsOptions().setSelection((_, s) => cb(s).runNow())
     )
+
+extension (c: XAxisPlotLinesOptions) inline def clazz(s: Css) = c.setClassName(s.htmlClass)
 
 def commonOptions: ChartOptions =
   ChartOptions()

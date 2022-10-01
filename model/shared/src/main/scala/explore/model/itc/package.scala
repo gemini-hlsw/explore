@@ -6,7 +6,7 @@ package explore.model.itc
 import cats.Eq
 import cats.data.NonEmptyList
 import cats.derived.*
-import cats.syntax.all._
+import cats.syntax.all.*
 import eu.timepit.refined.cats.refTypeEq
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosInt
@@ -18,8 +18,8 @@ import lucuma.core.model.implicits.*
 import lucuma.core.util.Enumerated
 import lucuma.core.util.NewType
 
-import scala.concurrent.duration._
-import scala.math._
+import scala.concurrent.duration.*
+import scala.math.*
 
 sealed trait ItcQueryProblems extends Product with Serializable derives Eq
 
