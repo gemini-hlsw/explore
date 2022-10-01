@@ -122,7 +122,7 @@ object UserPreferencesQueriesGQL {
           fullScreen
         }
         lucuma_user_preferences_by_pk(user_id: $user_id) {
-          aladinMouseScroll
+          aladin_mouse_scroll
         }
       }
     """
@@ -131,28 +131,51 @@ object UserPreferencesQueriesGQL {
   @GraphQL
   trait UserElevationPlotPreferencesQuery extends GraphQLOperation[UserPreferencesDB] {
     val document = """
-      query target_preferences($user_id: String! = "", $targetId: String! = "") {
-        lucuma_elevation_plot_preferences_by_pk(target_id: $targetId, user_id: $user_id) {
-          site
-          range
-          time
+      query plot_preferences($user_id: String! = "") {
+        lucuma_user_preferences_by_pk(user_id: $user_id) {
+          elevation_plot_range
+          elevation_plot_time
         }
       }
     """
   }
 
   @GraphQL
-  trait UserPreferencesUpdateQuery extends GraphQLOperation[UserPreferencesDB] {
+  trait UserPreferencesAladinUpdate extends GraphQLOperation[UserPreferencesDB] {
     val document = """
-      mutation user_preferences_upsert($aladinMouseScroll: Boolean = false, $user_id: String = "") {
+      mutation user_preferences_upsert($user_id: String = "", $aladin_mouse_scroll: Boolean = false) {
         insert_lucuma_user_preferences_one(
           object: {
             user_id: $user_id,
-            aladinMouseScroll: $aladinMouseScroll
+            aladin_mouse_scroll: $aladin_mouse_scroll
           },
           on_conflict: {
             constraint: lucuma_user_preferences_pkey,
-            update_columns: aladinMouseScroll
+            update_columns: aladin_mouse_scroll
+          }
+        ) {
+          user_id
+        }
+      }
+    """
+  }
+
+  @GraphQL
+  trait UserPreferencesElevPlotUpdate extends GraphQLOperation[UserPreferencesDB] {
+    val document = """
+      mutation user_preferences_upsert($user_id: String = "", $elevationPlotRange: elevation_plot_range = "", $elevationPlotTime: elevation_plot_time = "") {
+        insert_lucuma_user_preferences_one(
+          object: {
+            user_id: $user_id,
+            elevation_plot_range: $elevationPlotRange,
+            elevation_plot_time: $elevationPlotTime
+          },
+          on_conflict: {
+            constraint: lucuma_user_preferences_pkey,
+            update_columns: [
+              elevation_plot_range,
+              elevation_plot_time
+            ]
           }
         ) {
           user_id
@@ -191,7 +214,7 @@ object UserPreferencesQueriesGQL {
   }
 
   @GraphQL
-  trait UserTargetPreferencesFovUpdat extends GraphQLOperation[UserPreferencesDB] {
+  trait UserTargetPreferencesFovUpdate extends GraphQLOperation[UserPreferencesDB] {
     val document =
       """ mutation update_target_fov($user_id: String!, $target_id: String!, $fovRA: bigint!, $fovDec: bigint!) {
         update_lucuma_target_preferences_by_pk(
@@ -209,7 +232,7 @@ object UserPreferencesQueriesGQL {
       }"""
   }
   @GraphQL
-  trait ItcPlotPreferencesQuery       extends GraphQLOperation[UserPreferencesDB] {
+  trait ItcPlotPreferencesQuery        extends GraphQLOperation[UserPreferencesDB] {
     val document = """
       query itc_plot_preferences($user_id: String! = "", $observation_id: String! = "") {
         lucuma_itc_plot_preferences_by_pk(observation_id: $observation_id, user_id: $user_id) {

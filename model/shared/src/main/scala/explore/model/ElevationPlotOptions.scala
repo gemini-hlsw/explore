@@ -10,7 +10,7 @@ import explore.model.enums.TimeDisplay
 import lucuma.core.enums.Site
 import monocle.Focus
 
-final case class ElevationPlotOptions(
+case class ElevationPlotOptions(
   site:  Site,
   range: PlotRange,
   time:  TimeDisplay
