@@ -1,3 +1,9 @@
+schema {
+  query: query_root
+  mutation: mutation_root
+  subscription: subscription_root
+}
+
 """whether this query should be cached (Hasura Cloud only)"""
 directive @cached(
   """measured in seconds"""
@@ -1908,7 +1914,6 @@ columns and relationships of "lucuma_user_preferences"
 type lucuma_user_preferences {
   aladin_mouse_scroll: Boolean
   elevation_plot_range: elevation_plot_range
-  elevation_plot_site: site
   elevation_plot_time: elevation_plot_time
 
   """An object relationship"""
@@ -1942,7 +1947,6 @@ input lucuma_user_preferences_bool_exp {
   _or: [lucuma_user_preferences_bool_exp!]
   aladin_mouse_scroll: Boolean_comparison_exp
   elevation_plot_range: elevation_plot_range_comparison_exp
-  elevation_plot_site: site_comparison_exp
   elevation_plot_time: elevation_plot_time_comparison_exp
   lucuma_user: lucuma_user_bool_exp
   user_id: String_comparison_exp
@@ -1964,7 +1968,6 @@ input type for inserting data into table "lucuma_user_preferences"
 input lucuma_user_preferences_insert_input {
   aladin_mouse_scroll: Boolean
   elevation_plot_range: elevation_plot_range
-  elevation_plot_site: site
   elevation_plot_time: elevation_plot_time
   lucuma_user: lucuma_user_obj_rel_insert_input
   user_id: String
@@ -1973,7 +1976,6 @@ input lucuma_user_preferences_insert_input {
 """aggregate max on columns"""
 type lucuma_user_preferences_max_fields {
   elevation_plot_range: elevation_plot_range
-  elevation_plot_site: site
   elevation_plot_time: elevation_plot_time
   user_id: String
 }
@@ -1981,7 +1983,6 @@ type lucuma_user_preferences_max_fields {
 """aggregate min on columns"""
 type lucuma_user_preferences_min_fields {
   elevation_plot_range: elevation_plot_range
-  elevation_plot_site: site
   elevation_plot_time: elevation_plot_time
   user_id: String
 }
@@ -2010,7 +2011,6 @@ input lucuma_user_preferences_on_conflict {
 input lucuma_user_preferences_order_by {
   aladin_mouse_scroll: order_by
   elevation_plot_range: order_by
-  elevation_plot_site: order_by
   elevation_plot_time: order_by
   lucuma_user: lucuma_user_order_by
   user_id: order_by
@@ -2032,9 +2032,6 @@ enum lucuma_user_preferences_select_column {
   elevation_plot_range
 
   """column name"""
-  elevation_plot_site
-
-  """column name"""
   elevation_plot_time
 
   """column name"""
@@ -2047,7 +2044,6 @@ input type for updating data in table "lucuma_user_preferences"
 input lucuma_user_preferences_set_input {
   aladin_mouse_scroll: Boolean
   elevation_plot_range: elevation_plot_range
-  elevation_plot_site: site
   elevation_plot_time: elevation_plot_time
   user_id: String
 }
@@ -2067,7 +2063,6 @@ input lucuma_user_preferences_stream_cursor_input {
 input lucuma_user_preferences_stream_cursor_value_input {
   aladin_mouse_scroll: Boolean
   elevation_plot_range: elevation_plot_range
-  elevation_plot_site: site
   elevation_plot_time: elevation_plot_time
   user_id: String
 }
@@ -2081,9 +2076,6 @@ enum lucuma_user_preferences_update_column {
 
   """column name"""
   elevation_plot_range
-
-  """column name"""
-  elevation_plot_site
 
   """column name"""
   elevation_plot_time
@@ -3054,23 +3046,6 @@ input resizable_area_comparison_exp {
   _lte: resizable_area
   _neq: resizable_area
   _nin: [resizable_area!]
-}
-
-scalar site
-
-"""
-Boolean expression to compare columns of type "site". All fields are combined with logical 'AND'.
-"""
-input site_comparison_exp {
-  _eq: site
-  _gt: site
-  _gte: site
-  _in: [site!]
-  _is_null: Boolean
-  _lt: site
-  _lte: site
-  _neq: site
-  _nin: [site!]
 }
 
 type Subscription {

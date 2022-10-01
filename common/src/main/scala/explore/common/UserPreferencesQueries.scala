@@ -330,7 +330,6 @@ object UserPreferencesQueries {
   object ElevationPlotPreference:
     def updatePlotPreferences[F[_]: ApplicativeThrow](
       userId: User.Id,
-      site:   Site,
       range:  PlotRange,
       time:   TimeDisplay
     )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
@@ -338,33 +337,27 @@ object UserPreferencesQueries {
 
       execute[F](
         user_id = userId.show.assign,
-        elevationPlotSite = site.assign,
         elevationPlotRange = range.assign,
         elevationPlotTime = time.assign
       ).attempt.void
 
     // Gets the prefs for the elevation plot
-    def queryWithDefault[F[_]: ApplicativeThrow](
-      uid:         User.Id,
-      defaultSite: Site
-    )(using TransactionalClient[F, UserPreferencesDB]): F[(Site, PlotRange, TimeDisplay)] =
+    def queryWithDefault[F[_]: ApplicativeThrow](uid: User.Id)(using
+      TransactionalClient[F, UserPreferencesDB]
+    ): F[(PlotRange, TimeDisplay)] =
       import UserElevationPlotPreferencesQuery.*
       for r <-
           query[F](uid.show)
             .map { r =>
               r.lucuma_user_preferences_by_pk.map(result =>
-                (result.elevation_plot_site,
-                 result.elevation_plot_range,
-                 result.elevation_plot_time
-                )
+                (result.elevation_plot_range, result.elevation_plot_time)
               )
             }
             .handleError(_ => none)
       yield
-        val site  = r.flatMap(_._1).getOrElse(defaultSite)
-        val range = r.flatMap(_._2).getOrElse(PlotRange.Night)
-        val time  = r.flatMap(_._3).getOrElse(TimeDisplay.Site)
+        val range = r.flatMap(_._1).getOrElse(PlotRange.Night)
+        val time  = r.flatMap(_._2).getOrElse(TimeDisplay.Site)
 
-        (site, range, time)
+        (range, time)
 
 }

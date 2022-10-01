@@ -6,10 +6,6 @@ alter table "public"."lucuma_user_preferences" rename column "aladin_mouse_scrol
 
 alter table "public"."lucuma_user_preferences" add column "elevation_plot_time" elevation_plot_time null;
 
-alter table "public"."lucuma_user_preferences" alter column "elevation_plot_site" set not null;
-
 alter table "public"."lucuma_user_preferences" add column "elevation_plot_range" elevation_plot_range null;
-
-alter table "public"."lucuma_user_preferences" add column "elevation_plot_site" site not null;
 
 alter table "public"."lucuma_user_preferences" alter column "aladinMouseScroll" set not null;

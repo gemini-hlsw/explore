@@ -133,7 +133,6 @@ object UserPreferencesQueriesGQL {
     val document = """
       query plot_preferences($user_id: String! = "") {
         lucuma_user_preferences_by_pk(user_id: $user_id) {
-          elevation_plot_site
           elevation_plot_range
           elevation_plot_time
         }
@@ -164,18 +163,16 @@ object UserPreferencesQueriesGQL {
   @GraphQL
   trait UserPreferencesElevPlotUpdate extends GraphQLOperation[UserPreferencesDB] {
     val document = """
-      mutation user_preferences_upsert($user_id: String = "", $elevationPlotRange: elevation_plot_range = "", $elevationPlotSite: site = "", $elevationPlotTime: elevation_plot_time = "") {
+      mutation user_preferences_upsert($user_id: String = "", $elevationPlotRange: elevation_plot_range = "", $elevationPlotTime: elevation_plot_time = "") {
         insert_lucuma_user_preferences_one(
           object: {
             user_id: $user_id,
-            elevation_plot_site: $elevationPlotSite,
             elevation_plot_range: $elevationPlotRange,
             elevation_plot_time: $elevationPlotTime
           },
           on_conflict: {
             constraint: lucuma_user_preferences_pkey,
             update_columns: [
-              elevation_plot_site,
               elevation_plot_range,
               elevation_plot_time
             ]
