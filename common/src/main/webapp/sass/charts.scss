@@ -222,6 +222,12 @@ $description-column-count: 2;
   --itc-plot-lightgreen: hsl(98deg 40.6% 68.8%);
   --itc-plot-red: hsl(359deg 79.5% 49.8%);
   --itc-plot-lightred: hsl(339deg 79.5% 69.8%);
+  --itc-plot-wavelength-line: hsl(0deg 10.0% 90.0%);
+
+  .itc-plot-wavelength-line {
+    stroke: var(--itc-plot-wavelength-line);
+    stroke-dasharray: 2 2
+  }
 
   .highcharts-title {
     font-size: 14px;

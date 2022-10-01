@@ -161,6 +161,7 @@ object ExploreStyles {
   val ItcPlotDetailsHidden: Css  = Css("itc-plot-details-hidden")
   val ItcPlotLoading: Css        = Css("itc-plot-loading")
   val ItcPlotChart: Css          = Css("itc-plot-chart")
+  val ItcPlotWvPlotLine: Css     = Css("itc-plot-wavelength-line")
   val ItcPlotDescription: Css    = Css("itc-plot-description")
   val ItcPlotBody: Css           = Css("itc-plot-body")
   val ItcPlotControls: Css       = Css("itc-plot-controls")

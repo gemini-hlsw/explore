@@ -11,6 +11,7 @@ import explore.components.ui.ExploreStyles
 import explore.highcharts.*
 import explore.implicits.*
 import explore.model.enums.ItcChartType
+import explore.model.enums.ItcSeriesType
 import explore.model.itc.ItcChart
 import explore.model.itc.ItcSeries
 import explore.model.itc.PlotDetails
@@ -21,6 +22,7 @@ import explore.syntax.ui.given
 import explore.utils.*
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.math.Wavelength
 import lucuma.core.util.Enumerated
 import lucuma.refined.*
 import lucuma.ui.syntax.all.*
@@ -34,6 +36,7 @@ import react.semanticui.elements.button.ButtonGroup
 import react.semanticui.elements.loader.Loader
 import react.semanticui.sizes.*
 import reactST.highcharts.highchartsStrings.line
+import reactST.highcharts.mod.DashStyleValue
 import reactST.highcharts.mod.*
 
 import scala.collection.immutable.HashSet
@@ -41,30 +44,33 @@ import scala.scalajs.js
 import scala.scalajs.js.JSConverters.*
 
 case class ItcSpectroscopyPlot(
-  charts:     Option[NonEmptyList[ItcChart]],
-  error:      Option[String],
-  chartType:  ItcChartType,
-  targetName: Option[String],
-  loading:    PlotLoading,
-  details:    PlotDetails
+  charts:       Option[NonEmptyList[ItcChart]],
+  error:        Option[String],
+  chartType:    ItcChartType,
+  targetName:   Option[String],
+  atWavelength: Option[Wavelength],
+  loading:      PlotLoading,
+  details:      PlotDetails
 ) extends ReactFnProps(ItcSpectroscopyPlot.component)
 
 object ItcSpectroscopyPlot {
   private type Props = ItcSpectroscopyPlot
 
-  def chartOptions(
-    chart:      ItcChart,
-    targetName: Option[String],
-    loading:    PlotLoading,
-    details:    PlotDetails,
-    height:     Double
+  private def chartOptions(
+    chart:        ItcChart,
+    targetName:   Option[String],
+    loading:      PlotLoading,
+    details:      PlotDetails,
+    atWavelength: Option[Wavelength],
+    height:       Double
   ) = {
     val yAxis            = chart.series.foldLeft(YAxis.Empty)(_ ∪ _.yAxis)
     val title            = chart.chartType match
       case ItcChartType.SignalChart => "𝐞⁻ per exposure per spectral pixel"
       case ItcChartType.S2NChart    => "S/N per spectral pixel"
     val (min, max, tick) = yAxis.ticks(10)
-    val yAxes            = YAxisOptions()
+
+    val yAxes = YAxisOptions()
       .setTitle(YAxisTitleOptions().setText(title))
       .setAllowDecimals(false)
       .setTickInterval(tick)
@@ -93,6 +99,33 @@ object ItcSpectroscopyPlot {
       case ItcChartType.SignalChart => "Signal in 1-pixel"
       case ItcChartType.S2NChart    => "Signal / Noise"
 
+    val plotLines = chart.chartType match
+      case ItcChartType.SignalChart => js.Array()
+      case ItcChartType.S2NChart    =>
+        val value = atWavelength.map(w => w.nanometer.value.toDouble).orElse {
+          // we should do this on the backend
+          chart.series
+            .filter(_.seriesType === ItcSeriesType.FinalS2NData)
+            .map(_.data.maximumByOption(_._2))
+            .flattenOption
+            .maximumByOption(_._2)
+            .map(_._1)
+        }
+
+        value
+          .foldMap(value =>
+            List(
+              XAxisPlotLinesOptions()
+                .setDashStyle(DashStyleValue.LongDash)
+                .setWidth(3)
+                .setValue(value)
+                .clazz(ExploreStyles.ItcPlotWvPlotLine)
+                .setZIndex(10)
+                .setLabel(XAxisPlotLinesLabelOptions().setText(f"$value%.1f nm"))
+            )
+          )
+          .toJSArray
+
     Options()
       .setChart(
         commonOptions
@@ -113,6 +146,7 @@ object ItcSpectroscopyPlot {
         XAxisOptions()
           .setType(AxisTypeValue.linear)
           .setTitle(XAxisTitleOptions().setText("Wavelength (nm)"))
+          .setPlotLines(plotLines)
       )
       .setYAxis(List(yAxes).toJSArray)
       .setPlotOptions(
@@ -146,7 +180,7 @@ object ItcSpectroscopyPlot {
       )
   }
 
-  def emptyChartOptions(height: Double) = {
+  private def emptyChartOptions(height: Double) = {
     val yAxis = YAxisOptions()
       .setAllowDecimals(false)
       .setMin(0)
@@ -201,6 +235,7 @@ object ItcSpectroscopyPlot {
                                         props.targetName,
                                         props.loading,
                                         props.details,
+                                        props.atWavelength,
                                         height
         )
       }.toMap
