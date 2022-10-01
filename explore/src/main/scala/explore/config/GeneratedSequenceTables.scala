@@ -10,6 +10,7 @@ import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.semanticui.elements.header.Header
 import react.semanticui.elements.segment.Segment
+import explore.components.ui.ExploreStyles
 
 final case class GeneratedSequenceTables(config: FutureExecutionConfig)
     extends ReactFnProps[GeneratedSequenceTables](GeneratedSequenceTables.component)
@@ -24,7 +25,7 @@ object GeneratedSequenceTables {
         <.div(^.height := "100%", ^.overflow.auto)(
           Segment(
             SequenceTable.bracketDef,
-            <.div(
+            <.div(ExploreStyles.SequencesPanel)(
               Header("Acquisition"),
               SequenceTable(
                 props.config.acquisition.nextAtom +: props.config.acquisition.possibleFuture

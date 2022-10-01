@@ -339,6 +339,7 @@ object ExploreStyles {
   val ITCHeaderCell: Css                = Css("explore-modes-table-itc-header-cell")
   val ITCCell: Css                      = Css("explore-modes-table-itc-cell")
   val SequenceObsSutitle                = Css("explore-sequence-obs-subtitle")
+  val SequencesPanel                    = Css("explore-sequences-panel")
 
   val ButtonCopy: Css         = Css("explore-button-copy")
   val ButtonsUndo: Css        = Css("explore-buttons-undo")
