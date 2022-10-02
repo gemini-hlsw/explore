@@ -17,8 +17,9 @@ import japgolly.scalajs.react.extra.router.ResolutionWithProps
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import react.common.*
+import react.common.ReactFnProps
 import react.hotkeys.*
+import react.hotkeys.hooks.*
 import react.semanticui.modules.sidebar.Sidebar
 import react.semanticui.modules.sidebar.SidebarAnimation
 import react.semanticui.modules.sidebar.SidebarDirection
@@ -28,6 +29,10 @@ import react.semanticui.modules.sidebar.SidebarWidth
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSExportTopLevel
+import explore.model.enums.AppTab
+import explore.shortcuts.*
+import explore.shortcuts.given
+import japgolly.scalajs.react.extra.router.SetRouteVia
 
 case class ExploreLayout(
   resolution: ResolutionWithProps[Page, View[RootModel]]
@@ -42,50 +47,68 @@ object ExploreLayout:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(HelpContext.ctx)
-      .render { (props, helpCtx) =>
+      .useContext(AppContext.ctx)
+      .useHotkeysBy { (props, _, ctx) =>
+        val routingInfo          = RoutingInfo.from(props.resolution.page)
+        def goToTab(tab: AppTab) =
+          ctx.setPageVia(tab, routingInfo.programId, routingInfo.focused, SetRouteVia.HistoryPush)
+
+        val callbacks: ShortcutCallbacks = {
+          case GoToObs         =>
+            goToTab(AppTab.Observations)
+          case GoToTargets     =>
+            goToTab(AppTab.Targets)
+          case GoToProposals   =>
+            goToTab(AppTab.Proposal)
+          case GoToConstraints =>
+            goToTab(AppTab.Constraints)
+          case GoToOverview    =>
+            goToTab(AppTab.Overview)
+        }
+        UseHotkeysProps(
+          List(GoToObs, GoToTargets, GoToProposals, GoToConstraints, GoToOverview).toHotKeys,
+          callbacks
+        )
+      }
+      .render { (props, helpCtx, _, _) =>
         IfLogged(props.view)((vault: UserVault, onLogout: IO[Unit]) =>
           val routingInfo = RoutingInfo.from(props.resolution.page)
 
           val helpView = helpCtx.displayedHelp
-          GlobalHotKeys(
-            keyMap = KeyMap("CLOSE_HELP" -> "ESC"),
-            handlers = Handlers("CLOSE_HELP" -> helpView.set(none))
-          )(
-            SidebarPushable(
-              Sidebar(
-                width = SidebarWidth.Wide,
-                direction = SidebarDirection.Right,
-                animation = SidebarAnimation.Overlay,
-                visible = helpView.get.isDefined
-              )(
-                helpView.get
-                  .map { h =>
-                    HelpBody(helpCtx, h)
-                  }
-                  .when(helpView.get.isDefined)
-              ),
-              SidebarPusher(dimmed = helpView.get.isDefined)(
+          SidebarPushable(
+            Sidebar(
+              width = SidebarWidth.Wide,
+              direction = SidebarDirection.Right,
+              animation = SidebarAnimation.Overlay,
+              visible = helpView.get.isDefined
+            )(
+              helpView.get
+                .map { h =>
+                  HelpBody(helpCtx, h)
+                }
+                .when(helpView.get.isDefined)
+            ),
+            SidebarPusher(dimmed = helpView.get.isDefined)(
+              <.div(
+                ExploreStyles.MainGrid,
+                TopBar(
+                  vault.user,
+                  routingInfo.optProgramId,
+                  props.view.zoom(RootModel.localPreferences).get,
+                  props.view.zoom(RootModel.undoStacks),
+                  onLogout >> props.view.zoom(RootModel.vault).set(none).to[IO]
+                ),
                 <.div(
-                  ExploreStyles.MainGrid,
-                  TopBar(
-                    vault.user,
-                    routingInfo.optProgramId,
-                    props.view.zoom(RootModel.localPreferences).get,
-                    props.view.zoom(RootModel.undoStacks),
-                    onLogout >> props.view.zoom(RootModel.vault).set(none).to[IO]
-                  ),
-                  <.div(
-                    ExploreStyles.SideTabs,
-                    SideTabs(routingInfo)
-                  ),
-                  <.div(
-                    ExploreStyles.MainBody,
-                    props.resolution.renderP(props.view)
-                  )
+                  ExploreStyles.SideTabs,
+                  SideTabs(routingInfo)
+                ),
+                <.div(
+                  ExploreStyles.MainBody,
+                  props.resolution.renderP(props.view)
                 )
-              )(
-                ^.onClick --> helpView.set(none)
               )
+            )(
+              ^.onClick --> helpView.set(none)
             )
           )
         )

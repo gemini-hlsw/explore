@@ -47,6 +47,8 @@ import react.common.ReactFnProps
 import react.draggable.Axis
 import react.gridlayout.*
 import react.resizable.*
+import react.hotkeys.*
+import react.hotkeys.hooks.*
 import react.resizeDetector.*
 import react.resizeDetector.hooks.*
 import react.semanticui.elements.button.Button
