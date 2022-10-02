@@ -109,7 +109,7 @@ object ObsBadge {
                 ExploreStyles.ObsBadgeHeader,
                 obs match {
                   case withTitle: ObsWithTitle => titleAndId(withTitle.title)
-                  case withConf: ObsWithConf   => withConf.conf
+                  case withConf: ObsWithConf   => titleAndId(withConf.conf)
                   case _                       => titleAndId("")
                 },
                 props.cloneCB.whenDefined(_ => duplicateButton),
