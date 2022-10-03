@@ -11,7 +11,6 @@ import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.common.ObsQueries.*
 import explore.events.ItcMessage
-import explore.implicits.*
 import explore.model.ScienceMode
 import explore.model.ScienceModeAdvanced
 import explore.model.ScienceModeBasic
@@ -29,13 +28,14 @@ import lucuma.core.math.Wavelength
 import lucuma.core.model.ExposureTimeMode
 import queries.schemas.itc.implicits.*
 import react.common.ReactFnProps
+import workers.WorkerClient
 
 trait ItcPanelProps(
   scienceMode:              Option[ScienceMode],
   spectroscopyRequirements: Option[SpectroscopyRequirementsData],
   scienceData:              Option[ScienceData],
   exposure:                 Option[ItcChartExposureTime]
-) {
+):
   // This will not match the coverage center as used in the table
   // Will be fixed in a future PR
   val coverageCenterWavelength: Option[CoverageCenterWavelength] =
@@ -125,7 +125,7 @@ trait ItcPanelProps(
     onComplete:  ItcChartResult => IO[Unit],
     orElse:      IO[Unit],
     beforeStart: IO[Unit]
-  )(using AppContextIO): IO[Unit] =
+  )(using WorkerClient[IO, ItcMessage.Request]): IO[Unit] =
     val action: Option[IO[Unit]] =
       for
         w           <- wavelength
@@ -141,4 +141,3 @@ trait ItcPanelProps(
           )
           .use(_.evalMap(onComplete).compile.drain)
     action.getOrElse(orElse)
-}

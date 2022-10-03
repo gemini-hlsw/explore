@@ -3,27 +3,26 @@
 
 package explore.observationtree
 
-import cats.Order._
+import cats.Order.*
 import cats.effect.IO
-import cats.syntax.all._
+import cats.syntax.all.*
 import clue.TransactionalClient
-import clue.data.syntax._
+import clue.data.syntax.*
 import crystal.react.View
-import crystal.react.implicits._
+import crystal.react.implicits.*
 import explore.common.AsterismQueries
-import explore.common.AsterismQueries._
-import explore.implicits._
+import explore.common.AsterismQueries.*
 import explore.model.AsterismGroup
 import explore.model.ObsIdSet
 import explore.model.TargetWithObs
-import explore.model.syntax.all._
-import explore.undo._
+import explore.model.syntax.all.*
+import explore.undo.*
 import japgolly.scalajs.react.callback.Callback
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
-import lucuma.schemas.ObservationDB.Types._
+import lucuma.schemas.ObservationDB.Types.*
 import queries.common.TargetQueriesGQL
-import queries.schemas.implicits._
+import queries.schemas.implicits.*
 
 import scala.annotation.unused
 import scala.collection.immutable.SortedSet

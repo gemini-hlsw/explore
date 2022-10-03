@@ -3,32 +3,32 @@
 
 package explore.proposal
 
-import cats.syntax.all._
+import cats.syntax.all.*
 import crystal.react.View
 import crystal.react.ViewOpt
-import eu.timepit.refined.auto._
-import eu.timepit.refined.cats._
+import eu.timepit.refined.auto.*
+import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.ui.ExploreStyles
 import explore.components.ui.FomanticStyles
 import explore.components.ui.PartnerFlags
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ZeroTo100
-import lucuma.core.validation._
-import lucuma.refined._
+import lucuma.core.validation.*
+import lucuma.refined.*
 import lucuma.ui.forms.FormInputEV
-import lucuma.ui.input._
+import lucuma.ui.input.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.function.Index
 import react.common.ReactFnProps
 import react.semanticui.collections.form.Form
-import react.semanticui.collections.table._
+import react.semanticui.collections.table.*
 import react.semanticui.elements.button.Button
-import react.semanticui.modules.modal._
+import react.semanticui.modules.modal.*
 
-final case class PartnerSplitsEditor(
+case class PartnerSplitsEditor(
   show:    Boolean,
   splits:  View[List[PartnerSplit]],
   closeMe: Callback,

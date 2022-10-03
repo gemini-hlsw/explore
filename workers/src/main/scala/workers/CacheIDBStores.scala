@@ -7,11 +7,11 @@ import boopickle.DefaultBasic.*
 import boopickle.Pickler
 import explore.events.CatalogMessage
 import explore.model.boopickle.CatalogPicklers.given
-import japgolly.scalajs.react.callback._
-import japgolly.webapputil.binary._
-import japgolly.webapputil.boopickle._
+import japgolly.scalajs.react.callback.*
+import japgolly.webapputil.binary.*
+import japgolly.webapputil.boopickle.*
 import japgolly.webapputil.indexeddb.IndexedDb.DatabaseName
-import japgolly.webapputil.indexeddb._
+import japgolly.webapputil.indexeddb.*
 import lucuma.ags.GuideStarCandidate
 
 import scala.annotation.nowarn
@@ -53,7 +53,7 @@ object CacheIDBStores {
 
   // Data type picklers
   object DBPicklers {
-    import SafePickler.ConstructionHelperImplicits._
+    import SafePickler.ConstructionHelperImplicits.*
 
     //  SafePickler` is defined in webapp-util and provides some additional features.
     implicit def safePicklerCatalogResults: SafePickler[List[GuideStarCandidate]] =
@@ -64,7 +64,7 @@ object CacheIDBStores {
   }
 
   def apply(): CacheIDBStores = new CacheIDBStores {
-    import DBPicklers._
+    import DBPicklers.*
 
     // Store the cache expiration and key
     override val cacheStore =

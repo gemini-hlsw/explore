@@ -3,19 +3,19 @@
 
 package explore.itc
 
-import cats.syntax.all._
+import cats.syntax.all.*
 import crystal.react.ViewOpt
 import explore.components.ui.ExploreStyles
 import explore.model.enums.ItcChartType
 import explore.model.itc.PlotDetails
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.ButtonGroup
-import react.semanticui.sizes._
+import react.semanticui.sizes.*
 
 case class ItcPlotControl(
   chartType:   ViewOpt[ItcChartType],

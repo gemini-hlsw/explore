@@ -8,7 +8,7 @@ import monocle.Getter
 import monocle.Lens
 
 // Wrap a Getter and an Adjuster
-final case class GetAdjust[T, A](getter: Getter[T, A], adjuster: Adjuster[T, A]) {
+case class GetAdjust[T, A](getter: Getter[T, A], adjuster: Adjuster[T, A]) {
   lazy val get: T => A             = getter.get
   lazy val set: A => T => T        = adjuster.set
   lazy val mod: (A => A) => T => T = adjuster.modify
@@ -19,7 +19,7 @@ final case class GetAdjust[T, A](getter: Getter[T, A], adjuster: Adjuster[T, A])
   def andThen[B](getAdjust: GetAdjust[A, B]): GetAdjust[T, B] =
     GetAdjust(getter.andThen(getAdjust.getter), adjuster.andThen(getAdjust.adjuster))
 }
-object GetAdjust                                                                 {
+object GetAdjust                                                           {
   def apply[T, A](lens: Lens[T, A]): GetAdjust[T, A] =
     GetAdjust(lens.asGetter, lens.asAdjuster)
 

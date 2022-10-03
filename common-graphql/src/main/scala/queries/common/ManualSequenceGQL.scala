@@ -11,7 +11,7 @@ import lucuma.core.math.Offset
 import lucuma.core.model.sequence.ManualConfig
 import lucuma.schemas.ObservationDB
 
-// gql: import lucuma.schemas.decoders._
+// gql: import lucuma.schemas.decoders.*
 
 object ManualSequenceGQL {
 

@@ -4,9 +4,9 @@
 package explore.optics
 
 import cats.Eq
-import monocle.law.discipline._
+import monocle.law.discipline.*
 import org.scalacheck.Arbitrary
-import org.scalacheck.Prop._
+import org.scalacheck.Prop.*
 import org.typelevel.discipline.Laws
 
 object AdjusterTests extends Laws {

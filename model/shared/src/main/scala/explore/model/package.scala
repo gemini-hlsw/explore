@@ -3,10 +3,10 @@
 
 package explore.model
 
-import cats.syntax.all._
+import cats.syntax.all.*
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.api.RefinedTypeOps
-import eu.timepit.refined.auto._
+import eu.timepit.refined.auto.*
 import eu.timepit.refined.numeric.Interval
 import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.enums.StellarLibrarySpectrum

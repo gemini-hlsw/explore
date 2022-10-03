@@ -6,17 +6,19 @@ package explore.programs
 import cats.Order.*
 import cats.effect.IO
 import cats.syntax.all.*
+import clue.TransactionalClient
 import crystal.react.View
 import crystal.react.hooks.*
 import crystal.react.implicits.*
 import crystal.react.reuse.*
 import explore.EditableLabel
 import explore.Icons
+import explore.*
 import explore.common.ProgramQueries
 import explore.common.ProgramQueries.ProgramInfo
 import explore.common.ProgramQueries.*
 import explore.components.ui.ExploreStyles
-import explore.implicits.*
+import explore.model.AppContext
 import explore.model.Focused
 import explore.model.enums.AppTab
 import explore.syntax.ui.given
@@ -25,9 +27,11 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
+import lucuma.schemas.ObservationDB
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import org.typelevel.log4cats.Logger
 import queries.common.ProgramQueriesGQL.*
 import react.common.ReactFnProps
 import react.floatingui.Placement
@@ -44,18 +48,18 @@ case class ProgramTable(
   currentProgramId: Option[Program.Id],
   selectProgram:    Program.Id => Callback,
   isRequired:       Boolean
-)(using val ctx:    AppContextIO)
-    extends ReactFnProps(ProgramTable.component)
+) extends ReactFnProps(ProgramTable.component)
 
-object ProgramTable {
+object ProgramTable:
   private type Props = ProgramTable
 
-  protected val ProgsTableDef = TableDef[View[ProgramInfo]].withSortBy.withFlexLayout
+  private val ProgsTableDef = TableDef[View[ProgramInfo]].withSortBy.withFlexLayout
 
-  protected val ProgsTable = new SUITableVirtuoso(ProgsTableDef)
+  private val ProgsTable = new SUITableVirtuoso(ProgsTableDef)
 
-  protected def addProgram(programs: View[List[ProgramInfo]], adding: View[Boolean])(implicit
-    ctx:                             AppContextIO
+  private def addProgram(programs: View[List[ProgramInfo]], adding: View[Boolean])(using
+    TransactionalClient[IO, ObservationDB],
+    Logger[IO]
   ): IO[Unit] =
     adding.async.set(true) >>
       ProgramQueries
@@ -63,47 +67,54 @@ object ProgramTable {
         .flatMap(pi => programs.async.mod(_ :+ pi))
         .guarantee(adding.async.set(false))
 
-  protected def deleteProgram(pinf: View[ProgramInfo])(implicit ctx: AppContextIO): IO[Unit] =
+  private def deleteProgram(pinf: View[ProgramInfo])(using
+    TransactionalClient[IO, ObservationDB]
+  ): IO[Unit] =
     pinf.zoom(ProgramInfo.deleted).set(true).to[IO] >>
       ProgramQueries.deleteProgram[IO](pinf.get.id)
 
-  protected def undeleteProgram(pinf: View[ProgramInfo])(implicit
-    ctx:                              AppContextIO
+  private def undeleteProgram(pinf: View[ProgramInfo])(using
+    TransactionalClient[IO, ObservationDB],
+    Logger[IO]
   ): IO[Unit] =
     pinf.zoom(ProgramInfo.deleted).set(false).to[IO] >>
       ProgramQueries.undeleteProgram[IO](pinf.get.id)
 
-  protected def onModName(pinf: ProgramInfo)(implicit ctx: AppContextIO): Callback =
+  private def onModName(pinf: ProgramInfo)(using
+    TransactionalClient[IO, ObservationDB],
+    Logger[IO]
+  ): Callback =
     ProgramQueries.updateProgramName[IO](pinf.id, pinf.name).runAsync
 
-  protected def onNewData(
-    isRequired:   Boolean,
-    programs:     List[ProgramInfo]
-  )(implicit ctx: AppContextIO): IO[Unit] =
-    (isRequired, programs) match {
+  private def onNewData(
+    isRequired: Boolean,
+    programs:   List[ProgramInfo],
+    ctx:        AppContext[IO]
+  ): IO[Unit] =
+    (isRequired, programs) match
       case (true, head :: Nil) => ctx.replacePage(AppTab.Overview, head.id, Focused.None).to[IO]
       case _                   => IO.unit
-    }
 
   private val component = ScalaFnComponent
     .withHooks[Props]
+    .useContext(AppContext.ctx)
     .useStateView(false) // Adding new program
     .useStateView(false) // Show deleted
-    .useStreamResourceViewBy((_, _, showDeleted) => showDeleted.get) {
-      (props, _, _) => showDeleted =>
-        import props.given
+    .useStreamResourceViewBy((_, _, _, showDeleted) => showDeleted.get) {
+      (props, ctx, _, _) => showDeleted =>
+        import ctx.given
 
         ProgramsQuery
           .query(includeDeleted = showDeleted)
           .map(ProgramsQuery.Data.asProgramInfoList)
-          .flatTap(programs => onNewData(props.isRequired, programs))
+          .flatTap(programs => onNewData(props.isRequired, programs, ctx))
           .reRunOnResourceSignals(ProgramEditSubscription.subscribe[IO]())
     }
     // Columns
-    .useMemoBy((props, _, _, programs) =>
+    .useMemoBy((props, _, _, _, programs) =>
       (props.currentProgramId, programs.toOption.map(_.get.length).orEmpty)
-    ) { (props, _, _, _) => (currentProgramId, programCount) =>
-      import props.given
+    ) { (props, ctx, _, _, _) => (currentProgramId, programCount) =>
+      import ctx.given
 
       List(
         ProgsTableDef
@@ -191,9 +202,9 @@ object ProgramTable {
       )
     }
     // Rows
-    .useMemoBy((_, _, showDeleted, programs, _) =>
+    .useMemoBy((_, _, _, showDeleted, programs, _) =>
       (programs.toOption.map(_.reuseByValue), showDeleted.get)
-    ) { (_, _, _, _, _) => (programs, showDeleted) =>
+    ) { (_, _, _, _, _, _) => (programs, showDeleted) =>
       programs
         .map(
           _.value.toListOfViews
@@ -202,15 +213,15 @@ object ProgramTable {
         )
         .orEmpty
     }
-    .useTableBy((_, _, _, _, cols, rows) =>
+    .useTableBy((_, _, _, _, _, cols, rows) =>
       ProgsTableDef(
         cols,
         rows,
         ((options: ProgsTableDef.OptionsType) => options.setAutoResetSortBy(false)).reuseAlways
       )
     )
-    .render { (props, adding, showDeleted, programsPot, _, _, tableInstance) =>
-      import props.given
+    .render { (props, ctx, adding, showDeleted, programsPot, _, _, tableInstance) =>
+      import ctx.given
 
       <.div(ExploreStyles.ProgramTable)(
         programsPot.render(programs =>
@@ -246,4 +257,3 @@ object ProgramTable {
         )
       )
     }
-}

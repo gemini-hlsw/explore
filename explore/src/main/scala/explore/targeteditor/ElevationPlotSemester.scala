@@ -11,7 +11,7 @@ import crystal.react.implicits.given
 import crystal.react.reuse.*
 import explore.events.PlotMessage.*
 import explore.highcharts.*
-import explore.implicits.*
+import explore.model.AppContext
 import explore.model.CoordinatesAtVizTime
 import explore.model.WorkerClients.PlotClient
 import explore.model.boopickle.CommonPicklers.given
@@ -46,16 +46,15 @@ import scala.collection.immutable.TreeMap
 import scala.concurrent.duration.*
 import scala.scalajs.js
 
-import js.JSConverters._
+import js.JSConverters.*
 
 case class ElevationPlotSemester(
-  site:             Site,
-  coords:           CoordinatesAtVizTime,
-  semester:         Semester
-)(implicit val ctx: AppContextIO)
-    extends ReactFnProps(ElevationPlotSemester.component)
+  site:     Site,
+  coords:   CoordinatesAtVizTime,
+  semester: Semester
+) extends ReactFnProps(ElevationPlotSemester.component)
 
-object ElevationPlotSemester {
+object ElevationPlotSemester:
   private type Props = ElevationPlotSemester
 
   private val PlotDayRate: Long     = 3
@@ -68,23 +67,25 @@ object ElevationPlotSemester {
   private val component =
     ScalaFnComponent
       .withHooks[Props]
+      .useContext(AppContext.ctx)
       .useResizeDetector()
       .useSerialState(none[Chart_])
-      .useStreamResourceBy((_, _, chartOpt) => chartOpt)((props, _, _) =>
+      .useStreamResourceBy((_, _, _, chartOpt) => chartOpt)((props, ctx, _, _) =>
         chartOpt =>
           chartOpt.value.value
             .map { chart =>
-              given AppContextIO = props.ctx
+              import ctx.given
 
               val series = chart.series(0)
               val xAxis  = chart.xAxis(0)
 
               PlotClient[IO]
                 .request(
-                  RequestSemesterSidereal(props.semester,
-                                          props.site,
-                                          props.coords.value,
-                                          PlotDayRate
+                  RequestSemesterSidereal(
+                    props.semester,
+                    props.site,
+                    props.coords.value,
+                    PlotDayRate
                   )
                 )
                 .map(
@@ -144,15 +145,13 @@ object ElevationPlotSemester {
             }
             .getOrElse(Resource.pure(fs2.Stream()))
       )
-      .useEffectWithDepsBy((_, resize, _, _) => resize)((_, _, chartOpt, _) =>
+      .useEffectWithDepsBy((_, _, resize, _, _) => resize)((_, _, _, chartOpt, _) =>
         resize =>
           (resize.height, resize.width, chartOpt.value.value)
             .mapN((height, width, chart) => Callback(chart.setSize(width, height)))
             .orEmpty
       )
-      .render { (props, resize, chartOpt, _) =>
-        implicit val ct = props.ctx
-
+      .render { (props, _, resize, chartOpt, _) =>
         def timeFormat(value: Double): String =
           ZonedDateTime
             .ofInstant(Instant.ofEpochMilli(value.toLong), props.site.timezone)
@@ -250,4 +249,3 @@ object ElevationPlotSemester {
             .when(resize.height.isDefined)
         ).withRef(resize.ref)
       }
-}

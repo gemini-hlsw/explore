@@ -6,7 +6,6 @@ package explore
 import cats.syntax.all.*
 import crystal.react.View
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.implicits.*
 import explore.syntax.ui.*
 import explore.syntax.ui.given
 import japgolly.scalajs.react.*

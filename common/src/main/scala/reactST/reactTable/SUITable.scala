@@ -3,21 +3,21 @@
 
 package reactST.reactTable
 
-import cats.syntax.all._
+import cats.syntax.all.*
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.syntax.ui.*
 import explore.syntax.ui.given
-import japgolly.scalajs.react._
+import japgolly.scalajs.react.*
 import japgolly.scalajs.react.component.JsFn
 import japgolly.scalajs.react.internal.Box
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.style.Css
 import react.semanticui.AsC
-import react.semanticui.collections.table._
-import reactST.reactTable._
+import react.semanticui.collections.table.*
+import reactST.reactTable.*
 import reactST.reactTable.facade.cell.Cell
 import reactST.reactTable.facade.column.Column
 import reactST.reactTable.facade.column.HeaderGroup
@@ -44,7 +44,7 @@ object definitions {
   type BodyCellRender[D, Plugins] = Cell[D, ?, Plugins] => TableCell
   type BodyCell[D, Plugins]       = TableCell | BodyCellRender[D, Plugins]
 }
-import definitions._
+import definitions.*
 
 trait LayoutDefaultTag[Layout] {
   val tag: js.UndefOr[AsC]

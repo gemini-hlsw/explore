@@ -4,38 +4,38 @@
 package explore.common
 
 import _root_.cats.Applicative
-import cats.effect._
-import cats.implicits._
-import eu.timepit.refined._
+import cats.effect.*
+import cats.implicits.*
+import eu.timepit.refined.*
 import eu.timepit.refined.collection.NonEmpty
 import explore.common.RetryHelpers
 import explore.model.SSOConfig
 import explore.model.UserVault
 import io.circe.Decoder
-import io.circe.generic.semiauto._
-import io.circe.parser._
+import io.circe.generic.semiauto.*
+import io.circe.parser.*
 import lucuma.core.model.User
-import lucuma.sso.client.codec.user._
-import org.http4s._
+import lucuma.sso.client.codec.user.*
+import org.http4s.*
 import org.http4s.dom.FetchClientBuilder
 import org.scalajs.dom.RequestCredentials
 import org.scalajs.dom.window
 import org.typelevel.log4cats.Logger
-import retry._
+import retry.*
 
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.{util => ju}
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
-final case class JwtOrcidProfile(exp: Long, `lucuma-user`: User)
+case class JwtOrcidProfile(exp: Long, `lucuma-user`: User)
 
 object JwtOrcidProfile {
   implicit val decoder: Decoder[JwtOrcidProfile] = deriveDecoder
 }
 
 case class SSOClient[F[_]: Async: Logger](config: SSOConfig) {
-  import RetryHelpers._
+  import RetryHelpers.*
 
   private val client = FetchClientBuilder[F]
     .withRequestTimeout(config.readTimeout)

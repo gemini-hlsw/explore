@@ -6,18 +6,18 @@ package explore.undo
 import cats.effect.IO
 import cats.effect.std.Dispatcher
 import cats.kernel.Eq
-import cats.syntax.all._
+import cats.syntax.all.*
 import explore.data.KeyedIndexedList
 import explore.data.tree.KeyedIndexedTree.Index
-import explore.data.tree._
+import explore.data.tree.*
 import explore.optics.Adjuster
 import explore.optics.GetAdjust
-import explore.undo._
+import explore.undo.*
 import log4cats.loglevel.LogLevelLogger
 import monocle.Focus
 import monocle.Iso
 import monocle.Lens
-import monocle.function.all._
+import monocle.function.all.*
 import monocle.macros.GenLens
 import org.typelevel.log4cats.Logger
 

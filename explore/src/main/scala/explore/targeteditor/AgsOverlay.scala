@@ -3,25 +3,25 @@
 
 package explore.targeteditor
 
-import cats.syntax.all._
+import cats.syntax.all.*
 import crystal.react.View
 import explore.Icons
 import explore.components.ui.ExploreStyles
-import explore.model.formats._
-import japgolly.scalajs.react._
+import explore.model.formats.*
+import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ags.AgsAnalysis
 import lucuma.ags.AgsGuideQuality
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.semanticui.elements.button.Button
-import react.semanticui.sizes._
+import react.semanticui.sizes.*
 
 import scala.math.BigDecimal.RoundingMode
 
-final case class AgsOverlay(
+case class AgsOverlay(
   selectedGSIndex:   View[Option[Int]],
   maxIndex:          Int,
   selectedGuideStar: Option[AgsAnalysis]

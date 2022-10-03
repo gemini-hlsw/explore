@@ -7,7 +7,7 @@ import cats.kernel.laws.discipline.EqTests
 import cats.laws.discipline.FunctorTests
 import explore.data.tree.Node
 import explore.data.tree.Tree
-import explore.model.arb.all._
+import explore.model.arb.all.*
 import munit.DisciplineSuite
 
 class TreeSuite extends DisciplineSuite {

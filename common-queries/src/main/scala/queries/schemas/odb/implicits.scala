@@ -4,97 +4,91 @@
 package queries.schemas
 
 import clue.data.Input
-import clue.data.syntax._
+import clue.data.syntax.*
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosLong
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.ResizableSection
-import io.circe.syntax._
+import io.circe.syntax.*
 import lucuma.core.enums.Band
-import lucuma.core.math.BrightnessUnits._
-import lucuma.core.math._
-import lucuma.core.math.dimensional._
-import lucuma.core.model.ExposureTimeMode._
-import lucuma.core.model.ProposalClass._
-import lucuma.core.model._
-import lucuma.core.syntax.time._
+import lucuma.core.math.BrightnessUnits.*
+import lucuma.core.math.*
+import lucuma.core.math.dimensional.*
+import lucuma.core.model.ExposureTimeMode.*
+import lucuma.core.model.ProposalClass.*
+import lucuma.core.model.*
+import lucuma.core.syntax.time.*
 import lucuma.schemas.ObservationDB.Enums.PosAngleConstraintType
-import lucuma.schemas.ObservationDB.Types._
+import lucuma.schemas.ObservationDB.Types.*
 import queries.schemas.UserPreferencesDB.Types.ExploreResizableWidthInsertInput
 
 import scala.collection.immutable.SortedMap
+import scala.annotation.targetName
+import explore.model.ScienceModeBasic
+import explore.model.ScienceModeAdvanced
+import explore.model.ScienceMode
 
-final case class WidthUpsertInput(user: User.Id, section: ResizableSection, width: Int)
+case class WidthUpsertInput(user: User.Id, section: ResizableSection, width: Int)
 
 // TODO Move to lucuma-schemas
 object implicits {
-  implicit class ObsIdOps(val id: Observation.Id) extends AnyVal {
+  extension (id: Observation.Id)
     def toWhereObservation: WhereObservation =
       WhereObservation(id = WhereOrderObservationId(EQ = id.assign).assign)
-  }
 
-  implicit class ObsIdListOps(val ids: List[Observation.Id]) extends AnyVal {
+  extension (ids: List[Observation.Id])
+    @targetName("ObservationId_toWhereObservation")
     def toWhereObservation: WhereObservation =
       WhereObservation(id = WhereOrderObservationId(IN = ids.assign).assign)
-  }
 
-  implicit class ProgramidOps(val id: Program.Id) extends AnyVal {
+  extension (id: Program.Id)
     def toWhereProgram: WhereProgram =
       WhereProgram(id = WhereOrderProgramId(EQ = id.assign).assign)
 
+    @targetName("ProgramId_toWhereObservation")
     def toWhereObservation: WhereObservation =
       WhereObservation(programId = WhereOrderProgramId(EQ = id.assign).assign)
-  }
 
-  implicit class TargetIdOps(val id: Target.Id) extends AnyVal {
+  extension (id: Target.Id)
     def toWhereTarget: WhereTarget =
       WhereTarget(id = WhereOrderTargetId(EQ = id.assign).assign)
-  }
 
-  implicit class AngleOps(val a: Angle) extends AnyVal {
+  extension (a: Angle)
     def toInput: AngleInput =
       AngleInput(microarcseconds = a.toMicroarcseconds.assign)
-  }
 
-  implicit class WavelengthOps(val w: Wavelength) extends AnyVal {
+  extension (w: Wavelength)
     def toInput: WavelengthInput =
       WavelengthInput(picometers = w.toPicometers.value.assign)
-  }
 
-  implicit class CatalogInfoOps(val info: CatalogInfo) extends AnyVal {
+  extension (info: CatalogInfo)
     def toInput: CatalogInfoInput =
       CatalogInfoInput(info.catalog.assign, info.id.assign, info.objectType.orIgnore)
-  }
 
-  implicit class RightAscensionOps(val ra: RightAscension) extends AnyVal {
+  extension (ra: RightAscension)
     def toInput: RightAscensionInput =
       RightAscensionInput(microarcseconds = ra.toAngle.toMicroarcseconds.assign)
-  }
 
-  implicit class DeclinationOps(val dec: Declination) extends AnyVal {
+  extension (dec: Declination)
     def toInput: DeclinationInput =
       DeclinationInput(microarcseconds = dec.toAngle.toMicroarcseconds.assign)
-  }
 
-  implicit class ProperMotionOps(val pm: ProperMotion) extends AnyVal {
+  extension (pm: ProperMotion)
     def toInput: ProperMotionInput =
       ProperMotionInput(
         ra = ProperMotionComponentInput(microarcsecondsPerYear = pm.ra.μasy.value.assign),
         dec = ProperMotionComponentInput(microarcsecondsPerYear = pm.dec.μasy.value.assign)
       )
-  }
 
-  implicit class RadialVelocityOps(val rv: RadialVelocity) extends AnyVal {
+  extension (rv: RadialVelocity)
     def toInput: RadialVelocityInput =
       RadialVelocityInput(metersPerSecond = rv.rv.value.assign)
-  }
 
-  implicit class ParallaxOps(val p: Parallax) extends AnyVal {
+  extension (p: Parallax)
     def toInput: ParallaxInput =
       ParallaxInput(microarcseconds = p.μas.value.value.assign)
-  }
 
-  implicit class UnnormalizedSedOps(val u: UnnormalizedSED) extends AnyVal {
+  extension (u: UnnormalizedSED)
     def toInput: UnnormalizedSedInput =
       u match {
         case UnnormalizedSED.StellarLibrary(librarySpectrum)          =>
@@ -120,11 +114,9 @@ object implicits {
             case (wavelength, value) => FluxDensity(wavelength.toInput, value)
           }.assign)
       }
-  }
 
-  implicit class IntegratedBandBrightnessesOps(
-    val bs: SortedMap[Band, BrightnessMeasure[Integrated]]
-  ) extends AnyVal {
+  extension (bs: SortedMap[Band, BrightnessMeasure[Integrated]])
+    @targetName("IntegratedBrightnessMap_toInput")
     def toInput: List[BandBrightnessIntegratedInput] =
       bs.toList.map { case (band, measure) =>
         BandBrightnessIntegratedInput(
@@ -134,11 +126,9 @@ object implicits {
           error = measure.error.orIgnore
         )
       }
-  }
 
-  implicit class SurfaceBandBrightnessesOps(
-    val bs: SortedMap[Band, BrightnessMeasure[Surface]]
-  ) extends AnyVal {
+  extension (bs: SortedMap[Band, BrightnessMeasure[Surface]])
+    @targetName("SurfaceBrightnessMap_toInput")
     def toInput: List[BandBrightnessSurfaceInput] =
       bs.toList.map { case (band, measure) =>
         BandBrightnessSurfaceInput(
@@ -148,29 +138,23 @@ object implicits {
           error = measure.error.orIgnore
         )
       }
-  }
 
-  implicit class IntegratedBandNormalizedOps(val b: SpectralDefinition.BandNormalized[Integrated])
-      extends AnyVal {
+  extension (b: SpectralDefinition.BandNormalized[Integrated])
     def toInput: BandNormalizedIntegratedInput =
       BandNormalizedIntegratedInput(
         sed = b.sed.toInput.assign,
         brightnesses = b.brightnesses.toInput.assign
       )
-  }
 
-  implicit class SurfaceBandNormalizedOps(val b: SpectralDefinition.BandNormalized[Surface])
-      extends AnyVal {
+  extension (b: SpectralDefinition.BandNormalized[Surface])
     def toInput: BandNormalizedSurfaceInput =
       BandNormalizedSurfaceInput(
         sed = b.sed.toInput.assign,
         brightnesses = b.brightnesses.toInput.assign
       )
-  }
 
-  implicit class IntegratedEmissionLineMapOps(
-    val lines: SortedMap[Wavelength, EmissionLine[Integrated]]
-  ) extends AnyVal {
+  extension (lines: SortedMap[Wavelength, EmissionLine[Integrated]])
+    @targetName("IntegratedEmissionLineMap_toInput")
     def toInput: List[EmissionLineIntegratedInput] =
       lines.toList.map { case (wavelength, line) =>
         EmissionLineIntegratedInput(
@@ -182,11 +166,9 @@ object implicits {
           ).assign
         )
       }
-  }
 
-  implicit class SurfaceEmissionLineMapOps(
-    val lines: SortedMap[Wavelength, EmissionLine[Surface]]
-  ) extends AnyVal {
+  extension (lines: SortedMap[Wavelength, EmissionLine[Surface]])
+    @targetName("SurfaceEmissionLineMap_toInput")
     def toInput: List[EmissionLineSurfaceInput] =
       lines.toList.map { case (wavelength, line) =>
         EmissionLineSurfaceInput(
@@ -198,118 +180,100 @@ object implicits {
           ).assign
         )
       }
-  }
 
-  implicit class IntegratedFluxDensityContinuumOps(
-    val fdc: Measure[PosBigDecimal] Of FluxDensityContinuum[Integrated]
-  ) extends AnyVal {
+  extension (fdc: Measure[PosBigDecimal] Of FluxDensityContinuum[Integrated])
     def toInput: FluxDensityContinuumIntegratedInput = FluxDensityContinuumIntegratedInput(
       value = fdc.value,
       units = Measure.unitsTagged.get(fdc)
     )
-  }
 
-  implicit class SurfaceFluxDensityContinuumOps(
-    val fdc: Measure[PosBigDecimal] Of FluxDensityContinuum[Surface]
-  ) extends AnyVal {
+  extension (fdc: Measure[PosBigDecimal] Of FluxDensityContinuum[Surface])
     def toInput: FluxDensityContinuumSurfaceInput = FluxDensityContinuumSurfaceInput(
       value = fdc.value,
       units = Measure.unitsTagged.get(fdc)
     )
-  }
 
-  implicit class IntegratedEmissionLinesOps(val e: SpectralDefinition.EmissionLines[Integrated])
-      extends AnyVal {
+  extension (e: SpectralDefinition.EmissionLines[Integrated])
     def toInput: EmissionLinesIntegratedInput =
       EmissionLinesIntegratedInput(
         lines = e.lines.toInput.assign,
         fluxDensityContinuum = e.fluxDensityContinuum.toInput.assign
       )
-  }
 
-  implicit class SurfaceEmissionLinesOps(val e: SpectralDefinition.EmissionLines[Surface])
-      extends AnyVal {
+  extension (e: SpectralDefinition.EmissionLines[Surface])
     def toInput: EmissionLinesSurfaceInput =
       EmissionLinesSurfaceInput(
         lines = e.lines.toInput.assign,
         fluxDensityContinuum = e.fluxDensityContinuum.toInput.assign
       )
-  }
 
-  implicit class IntegratedSpectralDefinitionOps(val s: SpectralDefinition[Integrated])
-      extends AnyVal {
+  extension (s: SpectralDefinition[Integrated])
     def toInput: SpectralDefinitionIntegratedInput =
-      s match {
+      s match
         case b @ SpectralDefinition.BandNormalized(_, _) =>
           SpectralDefinitionIntegratedInput(bandNormalized = b.toInput.assign)
         case e @ SpectralDefinition.EmissionLines(_, _)  =>
           SpectralDefinitionIntegratedInput(emissionLines = e.toInput.assign)
-      }
-  }
 
-  implicit class SurfaceSpectralDefinitionOps(val s: SpectralDefinition[Surface]) extends AnyVal {
+  extension (s: SpectralDefinition[Surface])
     def toInput: SpectralDefinitionSurfaceInput =
-      s match {
+      s match
         case b @ SpectralDefinition.BandNormalized(_, _) =>
           SpectralDefinitionSurfaceInput(bandNormalized = b.toInput.assign)
         case e @ SpectralDefinition.EmissionLines(_, _)  =>
           SpectralDefinitionSurfaceInput(emissionLines = e.toInput.assign)
-      }
-  }
 
-  implicit class SourceProfileOps(val s: SourceProfile) extends AnyVal {
+  extension (s: SourceProfile)
     def toInput: SourceProfileInput =
-      s match {
+      s match
         case SourceProfile.Point(definition)          =>
           SourceProfileInput(point = definition.toInput.assign)
         case SourceProfile.Uniform(definition)        =>
           SourceProfileInput(uniform = definition.toInput.assign)
         case SourceProfile.Gaussian(fwhm, definition) =>
-          SourceProfileInput(gaussian =
-            GaussianInput(fwhm.toInput.assign, definition.toInput.assign).assign
+          SourceProfileInput(
+            gaussian = GaussianInput(fwhm.toInput.assign, definition.toInput.assign).assign
           )
-      }
-  }
 
-  implicit class PosAngleConstraintOps(val p: PosAngleConstraint) extends AnyVal {
+  extension (p: PosAngleConstraint)
     def toInput: PosAngleConstraintInput =
-      p match {
+      p match
         case PosAngleConstraint.Fixed(angle)               =>
-          PosAngleConstraintInput(constraint = PosAngleConstraintType.Fixed.assign,
-                                  angle = angle.toInput.assign
+          PosAngleConstraintInput(
+            constraint = PosAngleConstraintType.Fixed.assign,
+            angle = angle.toInput.assign
           )
         case PosAngleConstraint.AllowFlip(angle)           =>
-          PosAngleConstraintInput(constraint = PosAngleConstraintType.AllowFlip.assign,
-                                  angle = angle.toInput.assign
+          PosAngleConstraintInput(
+            constraint = PosAngleConstraintType.AllowFlip.assign,
+            angle = angle.toInput.assign
           )
         case PosAngleConstraint.ParallacticOverride(angle) =>
-          PosAngleConstraintInput(constraint = PosAngleConstraintType.AverageParallactic.assign,
-                                  angle = angle.toInput.assign
+          PosAngleConstraintInput(
+            constraint = PosAngleConstraintType.AverageParallactic.assign,
+            angle = angle.toInput.assign
           )
         case PosAngleConstraint.AverageParallactic         =>
-          PosAngleConstraintInput(constraint = PosAngleConstraintType.AverageParallactic.assign,
-                                  angle = Input.unassign
+          PosAngleConstraintInput(
+            constraint = PosAngleConstraintType.AverageParallactic.assign,
+            angle = Input.unassign
           )
-      }
-  }
 
-  extension(nnd: NonNegDuration)
+  extension (nnd: NonNegDuration)
     def toInput: NonNegDurationInput =
       NonNegDurationInput(microseconds = PosLong.unsafeFrom(nnd.value.toMicros).assign)
 
-  implicit class ExposureTimeModeOps(val etm: ExposureTimeMode) extends AnyVal {
-    def toInput: ExposureTimeModeInput = etm match {
+  extension (etm: ExposureTimeMode)
+    def toInput: ExposureTimeModeInput = etm match
       case FixedExposure(count, time) =>
         ExposureTimeModeInput(fixedExposure =
           FixedExposureModeInput(count = count, time = time.toInput).assign
         )
       case SignalToNoise(value)       =>
         ExposureTimeModeInput(signalToNoise = SignalToNoiseModeInput(value = value).assign)
-    }
-  }
 
-  implicit class PropocalClassOps(val p: ProposalClass) extends AnyVal {
-    def toInput: ProposalClassInput = p match {
+  extension (p: ProposalClass)
+    def toInput: ProposalClassInput = p match
       case DemoScience(minPercentTime)                                  =>
         ProposalClassInput(demoScience =
           DemoScienceInput(minPercentTime = minPercentTime.assign).assign
@@ -354,10 +318,8 @@ object implicits {
         ProposalClassInput(poorWeather =
           PoorWeatherInput(minPercentTime = minPercentTime.assign).assign
         )
-    }
-  }
 
-  implicit class ProposalOps(val proposal: Proposal) extends AnyVal {
+  extension (proposal: Proposal)
     def toInput: ProposalInput = ProposalInput(
       title = proposal.title.orUnassign,
       proposalClass = proposal.proposalClass.toInput.assign,
@@ -368,9 +330,8 @@ object implicits {
         PartnerSplitsInput(par.assign, pct.assign)
       }.assign
     )
-  }
 
-  implicit class SiderealTargetOps(val sidereal: Target.Sidereal) extends AnyVal {
+  extension (sidereal: Target.Sidereal)
     def toInput: SiderealInput = SiderealInput(
       ra = sidereal.tracking.baseCoordinates.ra.toInput.assign,
       dec = sidereal.tracking.baseCoordinates.dec.toInput.assign,
@@ -390,9 +351,8 @@ object implicits {
           sourceProfile = sidereal.sourceProfile.toInput.assign
         ).assign
       )
-  }
 
-  implicit class NonsiderealTargetOps(val nonsidereal: Target.Nonsidereal) extends AnyVal {
+  extension (nonsidereal: Target.Nonsidereal)
     def toInput: NonsiderealInput = NonsiderealInput(
       key = NonEmptyString.unsafeFrom(nonsidereal.ephemerisKey.asJson.toString).assign
     )
@@ -406,12 +366,79 @@ object implicits {
           sourceProfile = nonsidereal.sourceProfile.toInput.assign
         ).assign
       )
-  }
 
-  implicit def widthUpsertInput(w: WidthUpsertInput): ExploreResizableWidthInsertInput =
-    ExploreResizableWidthInsertInput(
-      w.section.value.assign,
-      w.user.toString.assign,
-      w.width.assign
-    )
+  extension (b: ScienceModeBasic.GmosNorthLongSlit)
+    def toInput: GmosNorthLongSlitBasicConfigInput =
+      GmosNorthLongSlitBasicConfigInput(b.grating.assign, b.filter.orUnassign, b.fpu.assign)
+
+  extension (b: ScienceModeBasic.GmosSouthLongSlit)
+    def toInput: GmosSouthLongSlitBasicConfigInput =
+      GmosSouthLongSlitBasicConfigInput(b.grating.assign, b.filter.orUnassign, b.fpu.assign)
+
+  extension [A](o: Offset.Component[A])
+    def toInput: OffsetComponentInput =
+      OffsetComponentInput(microarcseconds = o.toAngle.toMicroarcseconds.assign)
+
+  extension (a: ScienceModeAdvanced.GmosNorthLongSlit)
+    def toInput: GmosNorthLongSlitAdvancedConfigInput =
+      GmosNorthLongSlitAdvancedConfigInput(
+        a.overrideWavelength.map(_.toInput).orUnassign,
+        a.overrideGrating.orUnassign,
+        a.overrideFilter.orUnassign,
+        a.overrideFpu.orUnassign,
+        a.overrideExposureTimeMode.map(_.toInput).orUnassign,
+        a.explicitXBin.orUnassign,
+        a.explicitYBin.orUnassign,
+        a.explicitAmpReadMode.orUnassign,
+        a.explicitAmpGain.orUnassign,
+        a.explicitRoi.orUnassign,
+        a.explicitWavelengthDithers
+          .map(_.toList.map(_.value))
+          .orUnassign,
+        a.explicitSpatialOffsets.map(_.toList.map(_.toInput)).orUnassign
+      )
+
+  extension (a: ScienceModeAdvanced.GmosSouthLongSlit)
+    def toInput: GmosSouthLongSlitAdvancedConfigInput =
+      GmosSouthLongSlitAdvancedConfigInput(
+        a.overrideWavelength.map(_.toInput).orUnassign,
+        a.overrideGrating.orUnassign,
+        a.overrideFilter.orUnassign,
+        a.overrideFpu.orUnassign,
+        a.overrideExposureTimeMode.map(_.toInput).orUnassign,
+        a.explicitXBin.orUnassign,
+        a.explicitYBin.orUnassign,
+        a.explicitAmpReadMode.orUnassign,
+        a.explicitAmpGain.orUnassign,
+        a.explicitRoi.orUnassign,
+        a.explicitWavelengthDithers
+          .map(_.toList.map(_.value))
+          .orUnassign,
+        a.explicitSpatialOffsets.map(_.toList.map(_.toInput)).orUnassign
+      )
+
+  extension (b: ScienceMode)
+    def toInput: ScienceModeInput = b match
+      case ScienceMode.GmosNorthLongSlit(basic, advanced) =>
+        ScienceModeInput(
+          gmosNorthLongSlit = GmosNorthLongSlitInput(
+            basic = basic.toInput.assign,
+            advanced = advanced.toInput.assign
+          ).assign
+        )
+      case ScienceMode.GmosSouthLongSlit(basic, advanced) =>
+        ScienceModeInput(
+          gmosSouthLongSlit = GmosSouthLongSlitInput(
+            basic = basic.toInput.assign,
+            advanced = advanced.toInput.assign
+          ).assign
+        )
+
+  extension (w: WidthUpsertInput)
+    def toInput: ExploreResizableWidthInsertInput =
+      ExploreResizableWidthInsertInput(
+        w.section.value.assign,
+        w.user.toString.assign,
+        w.width.assign
+      )
 }

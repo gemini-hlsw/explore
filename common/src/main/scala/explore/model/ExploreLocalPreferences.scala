@@ -5,7 +5,7 @@ package explore.model
 
 import cats.Eq
 import cats.effect.Sync
-import cats.syntax.all._
+import cats.syntax.all.*
 import io.circe.Decoder
 import io.circe.Encoder
 import io.circe.HCursor
@@ -13,7 +13,7 @@ import io.circe.Json
 import io.circe.KeyDecoder
 import io.circe.KeyEncoder
 import io.circe.parser.decode
-import io.circe.syntax._
+import io.circe.syntax.*
 import log4cats.loglevel.LogLevelLogger
 import lucuma.core.math.Angle
 import lucuma.core.model.Observation

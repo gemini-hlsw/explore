@@ -1,7 +1,7 @@
 import sbt.Def
 import org.portablescala.sbtplatformdeps.PlatformDepsGroupArtifactID
-import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
-import sbt.librarymanagement._
+import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport.*
+import sbt.librarymanagement.*
 
 object Settings {
 
@@ -45,7 +45,7 @@ object Settings {
   }
 
   object Libraries {
-    import LibraryVersions._
+    import LibraryVersions.*
 
     private def deps(modules: PlatformDepsGroupArtifactID*)(version: String): Seq[ModuleID] =
       modules.map(_ % version)

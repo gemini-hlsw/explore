@@ -4,9 +4,9 @@
 package explore.model
 
 import cats.Order
-import cats.Order._
+import cats.Order.*
 import cats.data.NonEmptySet
-import cats.syntax.all._
+import cats.syntax.all.*
 import explore.model.util.NonEmptySetWrapper
 import lucuma.core.model.Observation
 import monocle.Iso
@@ -14,7 +14,7 @@ import monocle.Prism
 
 import scala.collection.immutable.SortedSet
 
-final case class ObsIdSet(idSet: NonEmptySet[Observation.Id])
+case class ObsIdSet(idSet: NonEmptySet[Observation.Id])
 
 object ObsIdSet {
   implicit val orderObsIdSet: Order[ObsIdSet] = Order.by(_.idSet)

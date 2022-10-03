@@ -8,7 +8,8 @@ import crystal.Pot
 import crystal.react.View
 import crystal.react.hooks._
 import crystal.react.implicits._
-import explore.implicits._
+import explore.*
+import explore.model.AppContext
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -19,18 +20,18 @@ import queries.common.GeneratedSequenceSQL._
 import queries.common.ObsQueriesGQL
 import react.common.ReactFnProps
 
-final case class GeneratedSequenceViewer(obsId: Observation.Id, changed: View[Pot[Unit]])(implicit
-  val ctx:                                      AppContextIO
-) extends ReactFnProps[GeneratedSequenceViewer](GeneratedSequenceViewer.component)
+case class GeneratedSequenceViewer(obsId: Observation.Id, changed: View[Pot[Unit]])
+    extends ReactFnProps(GeneratedSequenceViewer.component)
 
-object GeneratedSequenceViewer {
-  type Props = GeneratedSequenceViewer
+object GeneratedSequenceViewer:
+  private type Props = GeneratedSequenceViewer
 
-  val component =
+  private val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStreamResourceOnMountBy { props =>
-        implicit val ctx = props.ctx
+      .useContext(AppContext.ctx)
+      .useStreamResourceOnMountBy { (props, ctx) =>
+        import ctx.given
 
         SequenceSteps
           .query(props.obsId)
@@ -40,14 +41,13 @@ object GeneratedSequenceViewer {
             ObsQueriesGQL.ObservationEditSubscription.subscribe[IO](props.obsId)
           )
       }
-      .useEffectWithDepsBy((_, config) => config.toPot.void)((props, _) =>
+      .useEffectWithDepsBy((_, _, config) => config.toPot.void)((props, _, _) =>
         changedPot => props.changed.set(changedPot)
       )
-      .render((props, config) =>
+      .render((props, _, config) =>
         props.changed.get
           .flatMap(_ => config.toPot.flatten)
           .render(
             _.fold[VdomNode](<.div("Default observation not found"))(GeneratedSequenceTables.apply)
           )
       )
-}

@@ -4,19 +4,19 @@
 package explore.components
 
 import cats.effect.IO
-import cats.syntax.all._
+import cats.syntax.all.*
 import crystal.react.View
-import crystal.react.hooks._
-import crystal.react.implicits._
+import crystal.react.hooks.*
+import crystal.react.implicits.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.Resources
 import explore.components.ui.ExploreStyles
-import explore.implicits._
+import explore.model.AppContext
 import explore.model.UserVault
-import explore.utils._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import explore.utils.*
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.UAParser
@@ -28,29 +28,21 @@ import react.semanticui.elements.label.Label
 import react.semanticui.modules.modal.Modal
 import react.semanticui.modules.modal.ModalContent
 import react.semanticui.modules.modal.ModalSize
-import react.semanticui.shorthand._
-import react.semanticui.sizes._
+import react.semanticui.shorthand.*
+import react.semanticui.sizes.*
 
-final case class UserSelectionForm(
-  vault:        View[Option[UserVault]],
-  message:      View[Option[NonEmptyString]]
-)(implicit ctx: AppContextIO)
-    extends ReactFnProps[UserSelectionForm](UserSelectionForm.component) {
-  val guest: Callback =
-    ctx.sso.guest.flatMap(v => vault.set(v.some).to[IO]).runAsync
+case class UserSelectionForm(
+  vault:   View[Option[UserVault]],
+  message: View[Option[NonEmptyString]]
+) extends ReactFnProps[UserSelectionForm](UserSelectionForm.component)
 
-  val login: Callback =
-    ctx.sso.redirectToLogin.runAsync
-}
+object UserSelectionForm:
+  private type Props = UserSelectionForm
 
-object UserSelectionForm {
-  protected type Props = UserSelectionForm
-
-  final private case class BrowserInfo(supportedOrcidBrowser: Boolean, warnBrowser: Boolean) {
+  private case class BrowserInfo(supportedOrcidBrowser: Boolean, warnBrowser: Boolean):
     @inline def showButtons: Boolean = supportedOrcidBrowser
-  }
 
-  private object BrowserInfo {
+  private object BrowserInfo:
     def supportedOrcidBrowser: IO[BrowserInfo] = IO {
       val browser  = UAParser(dom.window.navigator.userAgent).getBrowser()
       val verRegex = raw"(\d{0,3}).(\d{0,3})\.?(.*)?".r
@@ -61,13 +53,19 @@ object UserSelectionForm {
         case _                                                      => BrowserInfo(true, false)
       }
     }.handleError(_ => BrowserInfo(true, true))
-  }
 
-  protected val component =
+  private val component =
     ScalaFnComponent
       .withHooks[Props]
+      .useContext(AppContext.ctx)
       .useEffectResultOnMount(BrowserInfo.supportedOrcidBrowser)
-      .render((props, browserInfoPot) =>
+      .render((props, ctx, browserInfoPot) =>
+        import ctx.given
+
+        val guest: Callback = ctx.sso.guest.flatMap(v => props.vault.set(v.some).to[IO]).runAsync
+
+        val login: Callback = ctx.sso.redirectToLogin.runAsync
+
         Modal(
           size = ModalSize.Large,
           clazz = ExploreStyles.LoginBox,
@@ -86,7 +84,7 @@ object UserSelectionForm {
                     ),
                     clazz = ExploreStyles.LoginBoxButton,
                     size = Big,
-                    onClick = props.login >> props.message.set(none)
+                    onClick = login >> props.message.set(none)
                   ).when(browserInfo.showButtons),
                   Button(
                     content = <.div(
@@ -97,7 +95,7 @@ object UserSelectionForm {
                     ),
                     size = Big,
                     clazz = ExploreStyles.LoginBoxButton,
-                    onClick = props.guest >> props.message.set(none)
+                    onClick = guest >> props.message.set(none)
                   ).when(browserInfo.showButtons)
                 ),
                 props.message.get.whenDefined(message =>
@@ -125,4 +123,3 @@ object UserSelectionForm {
           open = true
         )
       )
-}

@@ -3,35 +3,36 @@
 
 package explore.proposal
 
-import cats.Order._
+import cats.Order.*
 import cats.data.Chain
 import cats.effect.IO
-import cats.syntax.all._
+import cats.syntax.all.*
+import clue.TransactionalClient
 import clue.data.Input
-import clue.data.syntax._
+import clue.data.syntax.*
 import crystal.react.View
-import crystal.react.hooks._
-import eu.timepit.refined.auto._
-import eu.timepit.refined.cats._
+import crystal.react.hooks.*
+import eu.timepit.refined.auto.*
+import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.Aligner
 import explore.components.FormStaticData
 import explore.components.HelpIcon
 import explore.components.Tile
-import explore.components.ui._
+import explore.components.ui.*
 import explore.components.undo.UndoButtons
-import explore.implicits._
+import explore.model.AppContext
 import explore.model.ExploreModelValidators
 import explore.model.Hours
 import explore.model.display.given
-import explore.model.reusability._
-import explore.optics.all._
-import explore.proposal.ProposalClassType._
-import explore.undo._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.enums._
+import explore.model.reusability.*
+import explore.optics.all.*
+import explore.proposal.ProposalClassType.*
+import explore.undo.*
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.*
 import lucuma.core.model.IntPercent
 import lucuma.core.model.NonNegDuration
 import lucuma.core.model.Partner
@@ -39,40 +40,41 @@ import lucuma.core.model.Program
 import lucuma.core.model.Proposal
 import lucuma.core.model.ProposalClass
 import lucuma.core.model.ZeroTo100
-import lucuma.core.syntax.time._
+import lucuma.core.syntax.time.*
 import lucuma.core.util.Enumerated
-import lucuma.core.validation._
+import lucuma.core.validation.*
 import lucuma.refined.*
-import lucuma.schemas.ObservationDB.Types._
-import lucuma.ui.forms._
-import lucuma.ui.input._
+import lucuma.schemas.ObservationDB
+import lucuma.schemas.ObservationDB.Types.*
+import lucuma.ui.forms.*
+import lucuma.ui.input.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.Iso
+import org.typelevel.log4cats.Logger
 import queries.common.ProgramQueriesGQL
-import queries.schemas.implicits._
+import queries.schemas.implicits.*
 import react.common.ReactFnProps
-import react.semanticui.collections.form._
+import react.semanticui.collections.form.*
 import react.semanticui.elements.label.Label
-import react.semanticui.modules.dropdown._
-import react.semanticui.shorthand._
-import spire.std.any._
+import react.semanticui.modules.dropdown.*
+import react.semanticui.shorthand.*
+import spire.std.any.*
 
 import scala.collection.immutable.SortedMap
 
-import scalajs.js.JSConverters._
+import scalajs.js.JSConverters.*
 
-final case class ProposalEditor(
+case class ProposalEditor(
   programId:     Program.Id,
   proposal:      View[Proposal],
   undoStacks:    View[UndoStacks[IO, Proposal]],
   executionTime: NonNegDuration,
   band3Time:     NonNegDuration
-)(using val ctx: AppContextIO)
-    extends ReactFnProps[ProposalEditor](ProposalEditor.component)
+) extends ReactFnProps(ProposalEditor.component)
 
-object ProposalEditor {
-  type Props = ProposalEditor
+object ProposalEditor:
+  private type Props = ProposalEditor
 
   private val Hours2Micros = BigDecimal(60L * 60L * 1000L * 1000L)
 
@@ -143,7 +145,7 @@ object ProposalEditor {
     <.span(timeText, ExploreStyles.MinimumPercent)
   }
 
-  def categoryTag(category: TacCategory): String = Enumerated[TacCategory].tag(category)
+  private def categoryTag(category: TacCategory): String = Enumerated[TacCategory].tag(category)
 
   private val categoryOptions = Enumerated[TacCategory].all
     .groupBy(_.group)
@@ -167,7 +169,7 @@ object ProposalEditor {
     splitView
       .set(SortedMap.from(splitList.filter(_.percent.value > 0).map(_.toTuple)))
 
-  def renderDetails(
+  private def renderDetails(
     aligner:           Aligner[Proposal, Input[ProposalInput]],
     undoCtx:           UndoContext[Proposal],
     totalHours:        View[Hours],
@@ -179,8 +181,7 @@ object ProposalEditor {
     executionTime:     NonNegDuration,
     band3Time:         NonNegDuration,
     renderInTitle:     Tile.RenderInTitle
-  )(implicit ctx:      AppContextIO): VdomNode = {
-
+  )(using Logger[IO]): VdomNode = {
     val titleAligner: Aligner[Option[NonEmptyString], Input[NonEmptyString]] =
       aligner.zoom(Proposal.title, t => _.map(ProposalInput.title.modify(t)))
 
@@ -351,7 +352,7 @@ object ProposalEditor {
     )
   }
 
-  def renderFn(
+  private def renderFn(
     programId:         Program.Id,
     proposal:          View[Proposal],
     undoStacks:        View[UndoStacks[IO, Proposal]],
@@ -362,7 +363,7 @@ object ProposalEditor {
     splitsList:        View[List[PartnerSplit]],
     executionTime:     NonNegDuration,
     band3Time:         NonNegDuration
-  )(implicit ctx:      AppContextIO) = {
+  )(using TransactionalClient[IO, ObservationDB], Logger[IO]) = {
     def closePartnerSplitsEditor: Callback = showModal.set(false)
 
     val undoCtx: UndoContext[Proposal]                   = UndoContext(undoStacks, proposal)
@@ -424,35 +425,36 @@ object ProposalEditor {
     )
   }
 
-  val component =
+  private val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStateViewBy(
+      .useContext(AppContext.ctx)
+      .useStateViewBy((props, _) =>
         // total time - we need `Hours` for editing and also to preserve if
         // the user switches between classes with and without total time.
-        _.proposal
+        props.proposal
           .zoom(Proposal.proposalClass.andThen(ProposalClass.totalTime))
           .get
           .map(toHours)
           .getOrElse(Hours.unsafeFrom(0))
       )
-      .useStateViewBy((props, _) =>
+      .useStateViewBy((props, _, _) =>
         // mininum percent total time = need to preserve between class switches
         props.proposal
           .zoom(Proposal.proposalClass.andThen(ProposalClass.minPercentTotalTime))
           .get
           .getOrElse(IntPercent.unsafeFrom(80))
       )
-      .useStateViewBy((props, _, _) =>
+      .useStateViewBy((props, _, _, _) =>
         // Initial proposal class type
         ProposalClassType.fromProposalClass(props.proposal.get.proposalClass)
       )
       .useStateView(false) // show partner splits modal
       .useStateView(List.empty[PartnerSplit])
-      .useStateViewBy((props, _, _, _, _, _) => props.proposal.get.proposalClass)
-      .useEffectWithDepsBy((props, _, _, _, _, _, _) => props.proposal.get.proposalClass)(
+      .useStateViewBy((props, _, _, _, _, _, _) => props.proposal.get.proposalClass)
+      .useEffectWithDepsBy((props, _, _, _, _, _, _, _) => props.proposal.get.proposalClass)(
         // Deal with changes to the ProposalClass.
-        (props, totalHours, minPct2, classType, _, _, oldClass) =>
+        (props, _, totalHours, minPct2, classType, _, _, oldClass) =>
           newClass => {
             val setClass =
               if (oldClass.get === newClass) Callback.empty
@@ -469,8 +471,9 @@ object ProposalEditor {
             setClass >> setType >> setHours >> setPct2
           }
       )
-      .render { (props, totalHours, minPct2, proposalClassType, showModal, splitsList, _) =>
-        import props.given
+      .render { (props, ctx, totalHours, minPct2, proposalClassType, showModal, splitsList, _) =>
+        import ctx.given
+
         renderFn(
           props.programId,
           props.proposal,
@@ -484,4 +487,3 @@ object ProposalEditor {
           props.band3Time
         )
       }
-}

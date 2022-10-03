@@ -5,7 +5,7 @@ package explore.data
 
 import cats.kernel.laws.discipline.EqTests
 import explore.data.tree.KeyedIndexedTree
-import explore.model.arb.all._
+import explore.model.arb.all.*
 import munit.DisciplineSuite
 
 class KeyedIndexedTreeSuite extends DisciplineSuite {

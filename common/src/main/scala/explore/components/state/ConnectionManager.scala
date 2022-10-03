@@ -4,44 +4,42 @@
 package explore.components.state
 
 import cats.effect.IO
-import cats.syntax.all._
-import crystal.react.hooks._
-import crystal.react.implicits._
+import cats.syntax.all.*
+import crystal.react.hooks.*
+import crystal.react.implicits.*
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.implicits._
+import explore.model.AppContext
 import io.circe.Json
-import io.circe.syntax._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import io.circe.syntax.*
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
-import react.common.ReactFnProps
+import react.common.ReactFnPropsWithChildren
 import react.semanticui.elements.loader.Loader
 
-final case class ConnectionManager(ssoToken: NonEmptyString, onConnect: IO[Unit])(
-  val render:                                VdomNode
-)(implicit val ctx:                          AppContextIO)
-    extends ReactFnProps[ConnectionManager](ConnectionManager.component) {
-  val payload: Map[String, Json] =
-    Map("Authorization" -> s"Bearer ${props.ssoToken.value}".asJson)
-}
+case class ConnectionManager(ssoToken: NonEmptyString, onConnect: IO[Unit])
+    extends ReactFnPropsWithChildren(ConnectionManager.component):
+  val payload: Map[String, Json] = Map("Authorization" -> s"Bearer ${ssoToken.value}".asJson)
 
 object ConnectionManager {
-  protected type Props = ConnectionManager
+  private type Props = ConnectionManager
 
-  protected val component = ScalaFnComponent
+  private val component = ScalaFnComponent
     .withHooks[Props]
+    .withPropsChildren
+    .useContext(AppContext.ctx)
     .useState(false) // initialized as state, which forces rerender on set
     .useRef(false)   // initialized as ref, which can be read asynchronously by cleanup
-    .useEffectWithDepsBy((props, _, _) => props.ssoToken.value) {
-      (props, initializedState, _) => _ =>
-        implicit val ctx = props.ctx
+    .useEffectWithDepsBy((props, _, _, _, _) => props.ssoToken.value) {
+      (props, _, ctx, initializedState, _) => _ =>
+        import ctx.given
 
         (Logger[IO].debug(s"[ConnectionManager] Token changed. Refreshing connections.") >>
           ctx.clients.odb.initialize(props.payload)).whenA(initializedState.value)
     }
-    .useAsyncEffectOnMountBy { (props, initializedState, initializedRef) =>
-      implicit val ctx = props.ctx
+    .useAsyncEffectOnMountBy { (props, _, ctx, initializedState, initializedRef) =>
+      import ctx.given
 
       val initialize: IO[Unit] =
         ctx.clients.init(props.payload) >>
@@ -57,9 +55,9 @@ object ConnectionManager {
 
       initialize.as(cleanup)
     }
-    .render((props, initializedState, _) =>
+    .render((props, children, _, initializedState, _) =>
       if (initializedState.value)
-        props.render
+        children
       else
         Loader(active = true)
     )

@@ -4,13 +4,13 @@
 package explore.model.arb
 
 import explore.model.ExploreLocalPreferences
-import explore.model.ExploreLocalPreferences._
-import lucuma.core.util.arb.ArbEnumerated._
-import lucuma.core.util.arb.ArbGid._
+import explore.model.ExploreLocalPreferences.*
+import lucuma.core.util.arb.ArbEnumerated.*
+import lucuma.core.util.arb.ArbGid.*
 import org.scalacheck.Arbitrary
-import org.scalacheck.Arbitrary._
+import org.scalacheck.Arbitrary.*
 import org.scalacheck.Cogen
-import org.scalacheck.Cogen._
+import org.scalacheck.Cogen.*
 import typings.loglevel.mod.LogLevelDesc
 
 trait ArbExploreLocalPreferences {

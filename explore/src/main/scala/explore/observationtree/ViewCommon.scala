@@ -3,8 +3,10 @@
 
 package explore.observationtree
 
+import cats.effect.IO
 import explore.*
 import explore.components.ui.ExploreStyles
+import explore.model.AppContext
 import explore.model.Focused
 import explore.model.ObsIdSet
 import explore.model.ObsSummary
@@ -38,11 +40,12 @@ trait ViewCommon {
     highlightSelected: Boolean = true,
     forceHighlight:    Boolean = false,
     linkToObsTab:      Boolean = false,
-    onCtrlClick:       Observation.Id => Callback = _ => Callback.empty
+    onCtrlClick:       Observation.Id => Callback = _ => Callback.empty,
+    ctx:               AppContext[IO]
   )(
     obs:               ObsSummary,
     idx:               Int
-  )(using ctx:         AppContextIO): TagMod =
+  ): TagMod =
     <.div(ExploreStyles.ObsTreeItem)(
       Draggable(obs.id.toString, idx) { case (provided, snapshot, _) =>
         <.div(

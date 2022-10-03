@@ -3,7 +3,7 @@
 
 package explore.model.syntax
 
-import cats.syntax.all._
+import cats.syntax.all.*
 import explore.model.enums.PosAngleOptions
 import lucuma.core.enums.Site
 import lucuma.core.math.Angle

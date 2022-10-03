@@ -3,19 +3,19 @@
 
 package explore.config
 
-import cats.effect._
-import crystal.react._
-import crystal.react.implicits._
-import eu.timepit.refined.auto._
+import cats.effect.*
+import crystal.react.*
+import crystal.react.implicits.*
+import eu.timepit.refined.auto.*
 import explore.common.ObsQueries
 import explore.components.HelpIcon
 import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
-import explore.implicits._
+import explore.model.AppContext
 import explore.model.enums.PosAngleOptions
-import explore.model.syntax.all._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import explore.model.syntax.all.*
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Angle
 import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.Observation
@@ -30,16 +30,15 @@ import monocle.std.option
 import react.common.Css
 import react.common.ReactFnProps
 import react.semanticui.collections.form.Form
-import react.semanticui.sizes._
+import react.semanticui.sizes.*
 
-final case class ObsConfigurationPanel(
-  obsId:            Observation.Id,
-  posAngleView:     View[Option[PosAngleConstraint]]
-)(implicit val ctx: AppContextIO)
-    extends ReactFnProps[ObsConfigurationPanel](ObsConfigurationPanel.component)
+case class ObsConfigurationPanel(
+  obsId:        Observation.Id,
+  posAngleView: View[Option[PosAngleConstraint]]
+) extends ReactFnProps(ObsConfigurationPanel.component)
 
-object ObsConfigurationPanel {
-  type Props = ObsConfigurationPanel
+object ObsConfigurationPanel:
+  private type Props = ObsConfigurationPanel
 
   /**
    * Used to convert pos angle and an enumeration for a UI selector It is unsafe as the angle is
@@ -57,58 +56,59 @@ object ObsConfigurationPanel {
         })
     )
 
-  protected val component =
-    ScalaFnComponent[Props] { props =>
-      implicit val ctx: AppContextIO = props.ctx
+  private val component =
+    ScalaFnComponent
+      .withHooks[Props]
+      .useContext(AppContext.ctx)
+      .render { (props, ctx) =>
+        import ctx.given
 
-      val paView = props.posAngleView
-        .withOnMod(c => ObsQueries.updatePosAngle[IO](List(props.obsId), c).runAsync)
+        val paView = props.posAngleView
+          .withOnMod(c => ObsQueries.updatePosAngle[IO](List(props.obsId), c).runAsync)
 
-      val posAngleOptionsView: View[PosAngleOptions] =
-        paView.zoom(unsafePosOptionsLens)
+        val posAngleOptionsView: View[PosAngleOptions] =
+          paView.zoom(unsafePosOptionsLens)
 
-      val fixedView: ViewOpt[Angle] =
-        paView
-          .zoom(option.some[PosAngleConstraint])
-          .zoom(PosAngleConstraint.fixedAngle)
+        val fixedView: ViewOpt[Angle] =
+          paView
+            .zoom(option.some[PosAngleConstraint])
+            .zoom(PosAngleConstraint.fixedAngle)
 
-      val allowedFlipView: ViewOpt[Angle] =
-        paView
-          .zoom(option.some[PosAngleConstraint])
-          .zoom(PosAngleConstraint.allowFlipAngle)
+        val allowedFlipView: ViewOpt[Angle] =
+          paView
+            .zoom(option.some[PosAngleConstraint])
+            .zoom(PosAngleConstraint.allowFlipAngle)
 
-      val parallacticOverrideView: ViewOpt[Angle] =
-        paView
-          .zoom(option.some[PosAngleConstraint])
-          .zoom(PosAngleConstraint.parallacticOverrideAngle)
+        val parallacticOverrideView: ViewOpt[Angle] =
+          paView
+            .zoom(option.some[PosAngleConstraint])
+            .zoom(PosAngleConstraint.parallacticOverrideAngle)
 
-      def posAngleEditor(pa: View[Angle]) =
-        <.div(
-          ExploreStyles.InputWithLabel,
-          InputWithUnits(
-            id = "pos-angle-value".refined,
-            clazz = Css.Empty,
-            value = pa,
-            units = "° E of N",
-            validFormat = MathValidators.truncatedAngleDegrees,
-            changeAuditor = ChangeAuditor.bigDecimal(3.refined, 2.refined)
+        def posAngleEditor(pa: View[Angle]) =
+          <.div(
+            ExploreStyles.InputWithLabel,
+            InputWithUnits(
+              id = "pos-angle-value".refined,
+              clazz = Css.Empty,
+              value = pa,
+              units = "° E of N",
+              validFormat = MathValidators.truncatedAngleDegrees,
+              changeAuditor = ChangeAuditor.bigDecimal(3.refined, 2.refined)
+            )
           )
+
+        Form(size = Small)(
+          ExploreStyles.Compact,
+          ExploreStyles.ObsConfigurationForm
+        )(
+          <.label("Position Angle", HelpIcon("configuration/positionangle.md".refined)),
+          EnumViewSelect(
+            clazz = ExploreStyles.ObsConfigurationObsPA,
+            id = "pos-angle-alternative",
+            value = posAngleOptionsView
+          ),
+          fixedView.mapValue(posAngleEditor),
+          allowedFlipView.mapValue(posAngleEditor),
+          parallacticOverrideView.mapValue(posAngleEditor)
         )
-
-      Form(size = Small)(
-        ExploreStyles.Compact,
-        ExploreStyles.ObsConfigurationForm
-      )(
-        <.label("Position Angle", HelpIcon("configuration/positionangle.md".refined)),
-        EnumViewSelect(
-          clazz = ExploreStyles.ObsConfigurationObsPA,
-          id = "pos-angle-alternative",
-          value = posAngleOptionsView
-        ),
-        fixedView.mapValue(posAngleEditor),
-        allowedFlipView.mapValue(posAngleEditor),
-        parallacticOverrideView.mapValue(posAngleEditor)
-      )
-    }
-
-}
+      }

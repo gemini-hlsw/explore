@@ -4,39 +4,40 @@
 package explore.constraints
 
 import cats.effect.IO
-import cats.syntax.all._
+import cats.syntax.all.*
 import crystal.react.View
-import eu.timepit.refined.auto._
-import eu.timepit.refined.cats._
+import eu.timepit.refined.auto.*
+import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.common.ConstraintsQueries._
+import explore.common.ConstraintsQueries.*
 import explore.components.HelpIcon
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
-import explore.implicits._
+import explore.given
+import explore.model.AppContext
 import explore.model.Help
-import explore.model.display._
+import explore.model.display.*
 import explore.undo.UndoContext
-import explore.undo._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import explore.undo.*
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.Observation
 import lucuma.core.model.validation.ModelValidators
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
-import lucuma.core.validation._
+import lucuma.core.validation.*
 import lucuma.refined.*
-import lucuma.schemas.ObservationDB.Types._
+import lucuma.schemas.ObservationDB.Types.*
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.EnumDropdownView
 import lucuma.ui.primereact.FormInputTextView
 import lucuma.ui.primereact.FormLabel
-import lucuma.ui.reusability._
+import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.Lens
@@ -45,16 +46,15 @@ import react.primereact.PrimeStyles
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.label.LabelPointing
 
-final case class ConstraintsPanel(
+case class ConstraintsPanel(
   obsIds:        List[Observation.Id],
   constraintSet: View[ConstraintSet],
   undoStacks:    View[UndoStacks[IO, ConstraintSet]],
   renderInTitle: Tile.RenderInTitle
-)(using val ctx: AppContextIO)
-    extends ReactFnProps[ConstraintsPanel](ConstraintsPanel.component)
+) extends ReactFnProps(ConstraintsPanel.component)
 
-object ConstraintsPanel {
-  type Props = ConstraintsPanel
+object ConstraintsPanel:
+  private type Props = ConstraintsPanel
 
   private enum ElevationRangeType(val label: String):
     case AirMass   extends ElevationRangeType("Air Mass")
@@ -64,9 +64,9 @@ object ConstraintsPanel {
     given Enumerated[ElevationRangeType] = Enumerated.from(AirMass, HourAngle).withTag(_.label)
     given Display[ElevationRangeType]    = Display.byShortName(_.label)
 
-  import ElevationRangeType._
+  import ElevationRangeType.*
 
-  private final case class ElevationRangeOptions(
+  private case class ElevationRangeOptions(
     rangeType: ElevationRangeType,
     airMass:   ElevationRange.AirMass,
     hourAngle: ElevationRange.HourAngle
@@ -89,18 +89,19 @@ object ConstraintsPanel {
       ).toElevationRange(er)
   }
 
-  protected val component =
+  private val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStateBy(props =>
+      .useContext(AppContext.ctx)
+      .useStateBy((props, _) =>
         ElevationRangeOptions.fromElevationRange(props.constraintSet.get.elevationRange)
       )
-      .useEffectWithDepsBy((props, _) => props.constraintSet.get.elevationRange)(
-        (_, elevationRangeOptions) =>
+      .useEffectWithDepsBy((props, _, _) => props.constraintSet.get.elevationRange)(
+        (_, _, elevationRangeOptions) =>
           elevationRange => elevationRangeOptions.modState(_.toElevationRange(elevationRange))
       )
-      .render { (props, elevationRangeOptions) =>
-        import props.given
+      .render { (props, ctx, elevationRangeOptions) =>
+        import ctx.given
 
         val undoCtx: UndoContext[ConstraintSet] = UndoContext(props.undoStacks, props.constraintSet)
 
@@ -116,8 +117,9 @@ object ConstraintsPanel {
           remoteSet: A => ConstraintSetInput => ConstraintSetInput
         ) = {
           val id = NonEmptyString.unsafeFrom(label.value.toLowerCase().replaceAll(" ", "-"))
-          React.Fragment(FormLabel(htmlFor = id)(label, HelpIcon(helpId)),
-                         EnumDropdownView(id = id, value = undoViewSet(lens, remoteSet))
+          React.Fragment(
+            FormLabel(htmlFor = id)(label, HelpIcon(helpId)),
+            EnumDropdownView(id = id, value = undoViewSet(lens, remoteSet))
           )
 
         }
@@ -260,4 +262,3 @@ object ConstraintsPanel {
           )
         )
       }
-}

@@ -9,7 +9,7 @@ import explore.model.arb.ArbRootModel
 import munit.DisciplineSuite
 
 class RootModelSuite extends DisciplineSuite {
-  import ArbRootModel._
+  import ArbRootModel.*
 
   checkAll("Eq[RootModel]", EqTests[RootModel].eqv)
 }

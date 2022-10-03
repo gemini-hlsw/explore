@@ -4,13 +4,13 @@
 package explore.model.arb
 
 import explore.model.TargetSummary
-import lucuma.core.util.arb.ArbEnumerated._
+import lucuma.core.util.arb.ArbEnumerated.*
 import org.scalacheck.Arbitrary
-import org.scalacheck.Arbitrary._
+import org.scalacheck.Arbitrary.*
 import org.scalacheck.Cogen
-import org.scalacheck.Cogen._
-import lucuma.core.util.arb.ArbGid._
-import eu.timepit.refined.scalacheck._
+import org.scalacheck.Cogen.*
+import lucuma.core.util.arb.ArbGid.*
+import eu.timepit.refined.scalacheck.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 

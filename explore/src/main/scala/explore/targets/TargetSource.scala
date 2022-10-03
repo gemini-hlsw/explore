@@ -5,11 +5,11 @@ package explore.targets
 
 import cats.Order
 import cats.effect.Async
-import cats.syntax.all._
+import cats.syntax.all.*
 import clue.TransactionalClient
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.SimbadSearch
-import japgolly.scalajs.react.ReactCats._
+import japgolly.scalajs.react.ReactCats.*
 import japgolly.scalajs.react.Reusability
 import lucuma.catalog.CatalogTargetResult
 import lucuma.core.enums.CatalogName

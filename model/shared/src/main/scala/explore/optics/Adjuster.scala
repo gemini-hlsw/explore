@@ -3,8 +3,8 @@
 
 package explore.optics
 
-import explore.optics.all._
-import monocle._
+import explore.optics.all.*
+import monocle.*
 
 // An Adjuster is just like a Setter, but less strict: it does not abide by the "compose modify" law.
 // It allows the modify/set functions to adjust the result (eg: not going out of bounds), which breaks composability.

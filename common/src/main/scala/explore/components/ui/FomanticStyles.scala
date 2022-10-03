@@ -3,9 +3,9 @@
 
 package explore.components.ui
 
-import cats.syntax.all._
-import react.common.implicits._
-import react.common.style._
+import cats.syntax.all.*
+import react.common.implicits.*
+import react.common.style.*
 
 object FomanticStyles {
   val Text: Css = Css("text")

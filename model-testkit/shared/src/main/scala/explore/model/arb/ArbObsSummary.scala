@@ -7,7 +7,7 @@ import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Cogen
 import eu.timepit.refined.types.string.NonEmptyString
-import eu.timepit.refined.scalacheck.string._
+import eu.timepit.refined.scalacheck.string.*
 import explore.model.ConstraintsSummary
 import explore.model.ObsSummaryWithConstraints
 import explore.model.ObsSummaryWithTitleAndConstraints
@@ -20,19 +20,19 @@ import lucuma.core.enums.ObsStatus
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.arb.ArbTime
-import lucuma.core.model.arb.ArbPosAngleConstraint._
-import lucuma.core.math.arb.ArbWavelength._
-import lucuma.core.util.arb.ArbGid._
-import lucuma.core.util.arb.ArbEnumerated._
+import lucuma.core.model.arb.ArbPosAngleConstraint.*
+import lucuma.core.math.arb.ArbWavelength.*
+import lucuma.core.util.arb.ArbGid.*
+import lucuma.core.util.arb.ArbEnumerated.*
 import java.time.Duration
 import java.time.Instant
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.math.Wavelength
 
 trait ArbObsSummary {
-  import ArbConstraintsSummary._
-  import ArbTime._
-  import ArbScienceMode._
+  import ArbConstraintsSummary.*
+  import ArbTime.*
+  import ArbScienceMode.*
 
   implicit val arbObsSummaryWithConstraints: Arbitrary[ObsSummaryWithConstraints] =
     Arbitrary[ObsSummaryWithConstraints] {

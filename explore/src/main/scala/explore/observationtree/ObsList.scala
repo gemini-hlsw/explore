@@ -5,6 +5,7 @@ package explore.observationtree
 
 import cats.effect.IO
 import cats.syntax.all.*
+import clue.TransactionalClient
 import crystal.react.View
 import crystal.react.hooks.*
 import crystal.react.implicits.*
@@ -13,7 +14,7 @@ import explore.Icons
 import explore.common.ObsQueries
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
-import explore.implicits.*
+import explore.model.AppContext
 import explore.model.Focused
 import explore.model.ObsSummaryWithTitleConstraintsAndConf
 import explore.model.enums.AppTab
@@ -29,10 +30,12 @@ import lucuma.core.enums.ObsStatus
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
+import lucuma.schemas.ObservationDB
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
+import org.typelevel.log4cats.Logger
 import react.common.ReactFnProps
 import react.semanticui.elements.button.Button
 import react.semanticui.shorthand.*
@@ -47,10 +50,9 @@ case class ObsList(
   focusedTarget:   Option[Target.Id],
   setSummaryPanel: Callback,
   undoStacks:      View[UndoStacks[IO, ObservationList]]
-)(using val ctx:   AppContextIO)
-    extends ReactFnProps(ObsList.component) {}
+) extends ReactFnProps(ObsList.component) {}
 
-object ObsList {
+object ObsList:
   private type Props = ObsList
 
   private val obsListMod =
@@ -58,8 +60,10 @@ object ObsList {
       ObsSummaryWithTitleConstraintsAndConf.id
     )
 
-  private def setObs(programId: Program.Id, obsId: Option[Observation.Id])(implicit
-    ctx:                        AppContextIO
+  private def setObs(
+    programId: Program.Id,
+    obsId:     Option[Observation.Id],
+    ctx:       AppContext[IO]
   ): Callback =
     ctx.pushPage(AppTab.Observations, programId, obsId.fold(Focused.None)(Focused.singleObs(_)))
 
@@ -67,13 +71,16 @@ object ObsList {
     programId: Program.Id,
     pos:       Int,
     undoCtx:   UndoContext[ObservationList],
-    adding:    View[Boolean]
-  )(using ctx: AppContextIO): IO[Unit] =
+    adding:    View[Boolean],
+    ctx:       AppContext[IO]
+  ): IO[Unit] =
+    import ctx.given
+
     adding.async.set(true) >>
       createObservation[IO](programId)
         .flatMap { obs =>
           ObsListActions
-            .obsExistence(obs.id, o => setObs(programId, o.some))
+            .obsExistence(obs.id, o => setObs(programId, o.some, ctx))
             .mod(undoCtx)(obsListMod.upsert(obs.toTitleAndConstraints, pos))
             .to[IO]
         }
@@ -84,13 +91,16 @@ object ObsList {
     obsId:     Observation.Id,
     pos:       Int,
     undoCtx:   UndoContext[ObservationList],
-    adding:    View[Boolean]
-  )(using ctx: AppContextIO): IO[Unit] =
+    adding:    View[Boolean],
+    ctx:       AppContext[IO]
+  ): IO[Unit] =
+    import ctx.given
+
     adding.async.set(true) >>
       cloneObservation[IO](obsId)
         .flatMap { obs =>
           ObsListActions
-            .obsExistence(obs.id, o => setObs(programId, o.some))
+            .obsExistence(obs.id, o => setObs(programId, o.some, ctx))
             .mod(undoCtx)(obsListMod.upsert(obs.toTitleAndConstraints, pos))
             .to[IO]
         }
@@ -99,11 +109,13 @@ object ObsList {
   private val component =
     ScalaFnComponent
       .withHooks[Props]
+      .useContext(AppContext.ctx)
       // Saved index into the observation list
       .useState(none[Int])
-      .useEffectWithDepsBy((props, _) => (props.focusedObs, props.observations.get)) {
-        (props, optIndex) => params =>
-          import props.given
+      .useEffectWithDepsBy((props, _, _) => (props.focusedObs, props.observations.get)) {
+        (props, ctx, optIndex) => params =>
+          import ctx.given
+
           val (focusedObs, obsList) = params
 
           focusedObs.fold(optIndex.setState(none)) { obsId =>
@@ -113,22 +125,22 @@ object ObsList {
               case (_, Some(fidx))    =>
                 optIndex.setState(fidx.some) // focused obs is in list
               case (None, None)       =>
-                setObs(props.programId, none) >> optIndex.setState(none)
+                setObs(props.programId, none, ctx) >> optIndex.setState(none)
               case (Some(oidx), None) =>
                 // focused obs no longer exists, but we have a previous index.
                 val newIdx = math.min(oidx, obsList.length - 1)
                 obsList.toList
                   .get(newIdx.toLong)
-                  .fold(optIndex.setState(none) >> setObs(props.programId, none))(obsSumm =>
-                    optIndex.setState(newIdx.some) >> setObs(props.programId, obsSumm.id.some)
+                  .fold(optIndex.setState(none) >> setObs(props.programId, none, ctx))(obsSumm =>
+                    optIndex.setState(newIdx.some) >> setObs(props.programId, obsSumm.id.some, ctx)
                   )
             }
           }
       }
       // adding new observation
       .useStateView(false)
-      .render { (props, _, adding) =>
-        import props.given
+      .render { (props, ctx, _, adding) =>
+        import ctx.given
 
         val undoCtx      = UndoContext(props.undoStacks, props.observations)
         val observations = props.observations.get.toList
@@ -143,13 +155,14 @@ object ObsList {
               content = "Obs",
               disabled = adding.get,
               loading = adding.get,
-              onClick = insertObs(props.programId, observations.length, undoCtx, adding).runAsync
+              onClick =
+                insertObs(props.programId, observations.length, undoCtx, adding, ctx).runAsync
             ),
             UndoButtons(undoCtx, size = Mini, disabled = adding.get)
           ),
           <.div(
             Button(
-              onClick = setObs(props.programId, none) >> props.setSummaryPanel,
+              onClick = setObs(props.programId, none, ctx) >> props.setSummaryPanel,
               clazz = ExploreStyles.ButtonSummary
             )(
               Icons.ListIcon.clazz(ExploreStyles.PaddedRightIcon),
@@ -168,7 +181,7 @@ object ObsList {
                     Focused.singleObs(focusedObs, props.focusedTarget)
                   ),
                   ExploreStyles.ObsItem |+| ExploreStyles.SelectedObsItem.when_(selected),
-                  ^.onClick ==> linkOverride(setObs(props.programId, focusedObs.some))
+                  ^.onClick ==> linkOverride(setObs(props.programId, focusedObs.some, ctx))
                 )(
                   ObsBadge(
                     obs,
@@ -183,14 +196,16 @@ object ObsList {
                       .obsEditSubtitle(obs.id)
                       .set(undoCtx) _).compose((_: Option[NonEmptyString]).some).some,
                     deleteCB = ObsListActions
-                      .obsExistence(obs.id, o => setObs(props.programId, o.some))
+                      .obsExistence(obs.id, o => setObs(props.programId, o.some, ctx))
                       .mod(undoCtx)(obsListMod.delete)
                       .some,
-                    cloneCB = cloneObs(props.programId,
-                                       obs.id,
-                                       observations.length,
-                                       undoCtx,
-                                       adding
+                    cloneCB = cloneObs(
+                      props.programId,
+                      obs.id,
+                      observations.length,
+                      undoCtx,
+                      adding,
+                      ctx
                     ).runAsync.some
                   )
                 )
@@ -199,4 +214,3 @@ object ObsList {
           )
         )
       }
-}

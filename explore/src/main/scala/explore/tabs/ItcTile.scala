@@ -8,7 +8,6 @@ import crystal.react.View
 import explore.common.ObsQueries.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
-import explore.implicits.*
 import explore.itc.ItcGraphPanel
 import explore.itc.ItcPanelProps
 import explore.itc.ItcPanelTitle
@@ -30,7 +29,7 @@ object ItcTile:
     scienceData:              Option[ScienceData],
     itcExposureTime:          Option[ItcChartExposureTime],
     selectedTarget:           View[Option[ItcTarget]]
-  )(using AppContextIO) =
+  ) =
     Tile(
       ObsTabTilesIds.ItcId.id,
       s"ITC",

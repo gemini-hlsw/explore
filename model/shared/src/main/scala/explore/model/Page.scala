@@ -15,21 +15,21 @@ import monocle.Iso
 sealed trait Page extends Product with Serializable derives Eq
 
 object Page {
-  case object NoProgramPage                                                   extends Page
-  final case class HomePage(programId: Program.Id)                            extends Page
-  final case class ProposalPage(programId: Program.Id)                        extends Page
-  final case class ObservationsBasePage(programId: Program.Id)                extends Page
-  final case class ObsPage(programId: Program.Id, obsId: Observation.Id)      extends Page
-  final case class ObsTargetPage(programId: Program.Id, obsId: Observation.Id, targetId: Target.Id)
+  case object NoProgramPage                                             extends Page
+  case class HomePage(programId: Program.Id)                            extends Page
+  case class ProposalPage(programId: Program.Id)                        extends Page
+  case class ObservationsBasePage(programId: Program.Id)                extends Page
+  case class ObsPage(programId: Program.Id, obsId: Observation.Id)      extends Page
+  case class ObsTargetPage(programId: Program.Id, obsId: Observation.Id, targetId: Target.Id)
       extends Page
-  final case class TargetsBasePage(programId: Program.Id)                     extends Page
-  final case class TargetsObsPage(programId: Program.Id, obsId: ObsIdSet)     extends Page
-  final case class TargetPage(programId: Program.Id, targetId: Target.Id)     extends Page
-  final case class TargetWithObsPage(programId: Program.Id, obsId: ObsIdSet, targetId: Target.Id)
+  case class TargetsBasePage(programId: Program.Id)                     extends Page
+  case class TargetsObsPage(programId: Program.Id, obsId: ObsIdSet)     extends Page
+  case class TargetPage(programId: Program.Id, targetId: Target.Id)     extends Page
+  case class TargetWithObsPage(programId: Program.Id, obsId: ObsIdSet, targetId: Target.Id)
       extends Page
-  final case class ConfigurationsPage(programId: Program.Id)                  extends Page
-  final case class ConstraintsBasePage(programId: Program.Id)                 extends Page
-  final case class ConstraintsObsPage(programId: Program.Id, obsId: ObsIdSet) extends Page
+  case class ConfigurationsPage(programId: Program.Id)                  extends Page
+  case class ConstraintsBasePage(programId: Program.Id)                 extends Page
+  case class ConstraintsObsPage(programId: Program.Id, obsId: ObsIdSet) extends Page
 
   object HomePage {
     final val iso: Iso[Program.Id, HomePage] =

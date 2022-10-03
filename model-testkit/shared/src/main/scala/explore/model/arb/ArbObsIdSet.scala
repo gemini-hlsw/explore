@@ -4,12 +4,12 @@
 package explore.model.arb
 
 import cats.data.NonEmptySet
-import cats.laws.discipline.arbitrary._
+import cats.laws.discipline.arbitrary.*
 import explore.model.ObsIdSet
 import lucuma.core.model.Observation
-import lucuma.core.util.arb.ArbGid._
+import lucuma.core.util.arb.ArbGid.*
 import org.scalacheck.Arbitrary
-import org.scalacheck.Arbitrary._
+import org.scalacheck.Arbitrary.*
 import org.scalacheck.Cogen
 
 trait ArbObsIdSet {

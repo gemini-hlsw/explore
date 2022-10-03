@@ -8,9 +8,9 @@ import clue.annotation.GraphQL
 import io.circe.Decoder
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
-import lucuma.core.model.sequence._
+import lucuma.core.model.sequence.*
 import lucuma.schemas.ObservationDB
-import lucuma.schemas.decoders._
+import lucuma.schemas.decoders.*
 
 object GeneratedSequenceSQL {
 

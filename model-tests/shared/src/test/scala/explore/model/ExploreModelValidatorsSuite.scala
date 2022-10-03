@@ -16,7 +16,7 @@ import lucuma.core.optics.laws.discipline.ValidSplitEpiTests
 import lucuma.core.optics.laws.discipline.ValidWedgeTests
 import munit.DisciplineSuite
 import org.scalacheck.Arbitrary
-import org.scalacheck.Arbitrary._
+import org.scalacheck.Arbitrary.*
 import org.scalacheck.Gen
 
 final class ExploreModelValidatorsSuite extends DisciplineSuite:

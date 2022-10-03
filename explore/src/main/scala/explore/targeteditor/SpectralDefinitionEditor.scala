@@ -3,6 +3,7 @@
 
 package explore.targeteditor
 
+import cats.effect.IO
 import cats.syntax.all.*
 import clue.data.Input
 import clue.data.syntax.*
@@ -14,11 +15,12 @@ import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string
+import explore.*
 import explore.common.*
 import explore.components.HelpIcon
 import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
-import explore.implicits.*
+import explore.model.AppContext
 import explore.model.display.given
 import explore.model.enums.IntegratedSEDType
 import explore.model.enums.IntegratedSEDType.given
@@ -54,6 +56,7 @@ import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.given
+import org.typelevel.log4cats.Logger
 import queries.schemas.implicits.*
 import react.common.ReactFnProps
 import react.semanticui.elements.label.LabelPointing
@@ -61,21 +64,13 @@ import react.semanticui.elements.label.LabelPointing
 import scala.collection.immutable.HashSet
 import scala.collection.immutable.SortedMap
 
-sealed trait SpectralDefinitionEditor[T, S] {
-  val spectralDefinition: Aligner[SpectralDefinition[T], S]
-
-  val toInput: SpectralDefinition[T] => S
-
-  implicit val appCtx: AppContextIO
-
-  val sedAlignerOpt: Option[Aligner[UnnormalizedSED, UnnormalizedSedInput]]
-
-  val bandBrightnessesViewOpt: Option[View[SortedMap[Band, BrightnessMeasure[T]]]]
-
-  val emissionLinesViewOpt: Option[View[SortedMap[Wavelength, EmissionLine[T]]]]
-
-  val fluxDensityContinuumOpt: Option[View[Measure[PosBigDecimal] Of FluxDensityContinuum[T]]]
-}
+sealed trait SpectralDefinitionEditor[T, S]:
+  def spectralDefinition: Aligner[SpectralDefinition[T], S]
+  def toInput: SpectralDefinition[T] => S
+  def sedAlignerOpt: Option[Aligner[UnnormalizedSED, UnnormalizedSedInput]]
+  def bandBrightnessesViewOpt: Option[View[SortedMap[Band, BrightnessMeasure[T]]]]
+  def emissionLinesViewOpt: Option[View[SortedMap[Wavelength, EmissionLine[T]]]]
+  def fluxDensityContinuumOpt: Option[View[Measure[PosBigDecimal] Of FluxDensityContinuum[T]]]
 
 sealed abstract class SpectralDefinitionEditorBuilder[
   T,
@@ -92,183 +87,186 @@ sealed abstract class SpectralDefinitionEditorBuilder[
   protected val currentType: SpectralDefinition[T] => SEDType[T]
   protected val disabledItems: HashSet[SEDType[T]]
 
-  val component = ScalaFnComponent[Props] { props =>
-    import props.given
+  val component = ScalaFnComponent
+    .withHooks[Props]
+    .useContext(AppContext.ctx)
+    .render { (props, ctx) =>
+      import ctx.given
 
-    val stellarLibrarySpectrumAlignerOpt
-      : Option[Aligner[StellarLibrarySpectrum, Input[StellarLibrarySpectrum]]] =
-      props.sedAlignerOpt.flatMap(
-        _.zoomOpt(
-          UnnormalizedSED.stellarLibrary.andThen(
-            UnnormalizedSED.StellarLibrary.librarySpectrum
-          ),
-          UnnormalizedSedInput.stellarLibrary.modify
+      val stellarLibrarySpectrumAlignerOpt
+        : Option[Aligner[StellarLibrarySpectrum, Input[StellarLibrarySpectrum]]] =
+        props.sedAlignerOpt.flatMap(
+          _.zoomOpt(
+            UnnormalizedSED.stellarLibrary.andThen(
+              UnnormalizedSED.StellarLibrary.librarySpectrum
+            ),
+            UnnormalizedSedInput.stellarLibrary.modify
+          )
         )
-      )
 
-    val coolStarTemperatureAlignerOpt
-      : Option[Aligner[CoolStarTemperature, Input[CoolStarTemperature]]] =
-      props.sedAlignerOpt.flatMap(
-        _.zoomOpt(
-          UnnormalizedSED.coolStarModel.andThen(UnnormalizedSED.CoolStarModel.temperature),
-          UnnormalizedSedInput.coolStar.modify
+      val coolStarTemperatureAlignerOpt
+        : Option[Aligner[CoolStarTemperature, Input[CoolStarTemperature]]] =
+        props.sedAlignerOpt.flatMap(
+          _.zoomOpt(
+            UnnormalizedSED.coolStarModel.andThen(UnnormalizedSED.CoolStarModel.temperature),
+            UnnormalizedSedInput.coolStar.modify
+          )
         )
-      )
 
-    val galaxySpectrumAlignerOpt: Option[Aligner[GalaxySpectrum, Input[GalaxySpectrum]]] =
-      props.sedAlignerOpt.flatMap(
-        _.zoomOpt(
-          UnnormalizedSED.galaxy.andThen(UnnormalizedSED.Galaxy.galaxySpectrum),
-          UnnormalizedSedInput.galaxy.modify
+      val galaxySpectrumAlignerOpt: Option[Aligner[GalaxySpectrum, Input[GalaxySpectrum]]] =
+        props.sedAlignerOpt.flatMap(
+          _.zoomOpt(
+            UnnormalizedSED.galaxy.andThen(UnnormalizedSED.Galaxy.galaxySpectrum),
+            UnnormalizedSedInput.galaxy.modify
+          )
         )
-      )
 
-    val planetSpectrumAlignerOpt: Option[Aligner[PlanetSpectrum, Input[PlanetSpectrum]]] =
-      props.sedAlignerOpt.flatMap(
-        _.zoomOpt(
-          UnnormalizedSED.planet.andThen(UnnormalizedSED.Planet.planetSpectrum),
-          UnnormalizedSedInput.planet.modify
+      val planetSpectrumAlignerOpt: Option[Aligner[PlanetSpectrum, Input[PlanetSpectrum]]] =
+        props.sedAlignerOpt.flatMap(
+          _.zoomOpt(
+            UnnormalizedSED.planet.andThen(UnnormalizedSED.Planet.planetSpectrum),
+            UnnormalizedSedInput.planet.modify
+          )
         )
-      )
 
-    val quasarSpectrumAlignerOpt: Option[Aligner[QuasarSpectrum, Input[QuasarSpectrum]]] =
-      props.sedAlignerOpt.flatMap(
-        _.zoomOpt(
-          UnnormalizedSED.quasar.andThen(UnnormalizedSED.Quasar.quasarSpectrum),
-          UnnormalizedSedInput.quasar.modify
+      val quasarSpectrumAlignerOpt: Option[Aligner[QuasarSpectrum, Input[QuasarSpectrum]]] =
+        props.sedAlignerOpt.flatMap(
+          _.zoomOpt(
+            UnnormalizedSED.quasar.andThen(UnnormalizedSED.Quasar.quasarSpectrum),
+            UnnormalizedSedInput.quasar.modify
+          )
         )
-      )
 
-    val hiiRegionSpectrumAlignerOpt: Option[Aligner[HIIRegionSpectrum, Input[HIIRegionSpectrum]]] =
-      props.sedAlignerOpt.flatMap(
-        _.zoomOpt(
-          UnnormalizedSED.hiiRegion.andThen(UnnormalizedSED.HIIRegion.hiiRegionSpectrum),
-          UnnormalizedSedInput.hiiRegion.modify
+      val hiiRegionSpectrumAlignerOpt
+        : Option[Aligner[HIIRegionSpectrum, Input[HIIRegionSpectrum]]] =
+        props.sedAlignerOpt.flatMap(
+          _.zoomOpt(
+            UnnormalizedSED.hiiRegion.andThen(UnnormalizedSED.HIIRegion.hiiRegionSpectrum),
+            UnnormalizedSedInput.hiiRegion.modify
+          )
         )
-      )
 
-    val planetaryNebulaSpectrumAlignerOpt
-      : Option[Aligner[PlanetaryNebulaSpectrum, Input[PlanetaryNebulaSpectrum]]] =
-      props.sedAlignerOpt.flatMap(
-        _.zoomOpt(
-          UnnormalizedSED.planetaryNebula.andThen(
-            UnnormalizedSED.PlanetaryNebula.planetaryNebulaSpectrum
-          ),
-          UnnormalizedSedInput.planetaryNebula.modify
+      val planetaryNebulaSpectrumAlignerOpt
+        : Option[Aligner[PlanetaryNebulaSpectrum, Input[PlanetaryNebulaSpectrum]]] =
+        props.sedAlignerOpt.flatMap(
+          _.zoomOpt(
+            UnnormalizedSED.planetaryNebula.andThen(
+              UnnormalizedSED.PlanetaryNebula.planetaryNebulaSpectrum
+            ),
+            UnnormalizedSedInput.planetaryNebula.modify
+          )
         )
-      )
 
-    val powerLawIndexAlignerOpt: Option[Aligner[BigDecimal, Input[BigDecimal]]] =
-      props.sedAlignerOpt.flatMap(
-        _.zoomOpt(
-          UnnormalizedSED.powerLaw.andThen(UnnormalizedSED.PowerLaw.index),
-          UnnormalizedSedInput.powerLaw.modify
+      val powerLawIndexAlignerOpt: Option[Aligner[BigDecimal, Input[BigDecimal]]] =
+        props.sedAlignerOpt.flatMap(
+          _.zoomOpt(
+            UnnormalizedSED.powerLaw.andThen(UnnormalizedSED.PowerLaw.index),
+            UnnormalizedSedInput.powerLaw.modify
+          )
         )
-      )
 
-    val blackBodyTemperatureAlignerOpt: Option[Aligner[Quantity[PosInt, Kelvin], Input[PosInt]]] =
-      props.sedAlignerOpt.flatMap(
-        _.zoomOpt(
-          UnnormalizedSED.blackBody.andThen(UnnormalizedSED.BlackBody.temperature),
-          UnnormalizedSedInput.blackBodyTempK.modify
+      val blackBodyTemperatureAlignerOpt: Option[Aligner[Quantity[PosInt, Kelvin], Input[PosInt]]] =
+        props.sedAlignerOpt.flatMap(
+          _.zoomOpt(
+            UnnormalizedSED.blackBody.andThen(UnnormalizedSED.BlackBody.temperature),
+            UnnormalizedSedInput.blackBodyTempK.modify
+          )
         )
-      )
 
-    def spectrumRow[T: Enumerated: Display](id: string.NonEmptyString, view: View[T]) =
+      def spectrumRow[T: Enumerated: Display](id: string.NonEmptyString, view: View[T]) =
+        React.Fragment(
+          <.span,
+          EnumViewSelect(id, view),
+          <.span
+        )
+
       React.Fragment(
+        <.label("SED", HelpIcon("target/main/target-sed.md".refined), ExploreStyles.SkipToNext),
+        EnumSelect[SEDType[T]](
+          label = "",
+          value = currentType(props.spectralDefinition.get).some,
+          onChange = sed => props.spectralDefinition.view(props.toInput).mod(sed.convert),
+          disabledItems = disabledItems
+        ),
         <.span,
-        EnumViewSelect(id, view),
-        <.span
-      )
-
-    React.Fragment(
-      <.label("SED", HelpIcon("target/main/target-sed.md".refined), ExploreStyles.SkipToNext),
-      EnumSelect[SEDType[T]](
-        label = "",
-        value = currentType(props.spectralDefinition.get).some,
-        onChange = sed => props.spectralDefinition.view(props.toInput).mod(sed.convert),
-        disabledItems = disabledItems
-      ),
-      <.span,
-      stellarLibrarySpectrumAlignerOpt
-        .map(rsu => spectrumRow("slSpectrum".refined, rsu.view(_.assign))),
-      coolStarTemperatureAlignerOpt
-        .map(rsu => spectrumRow("csTemp".refined, rsu.view(_.assign))),
-      galaxySpectrumAlignerOpt
-        .map(rsu => spectrumRow("gSpectrum".refined, rsu.view(_.assign))),
-      planetSpectrumAlignerOpt
-        .map(rsu => spectrumRow("pSpectrum".refined, rsu.view(_.assign))),
-      quasarSpectrumAlignerOpt
-        .map(rsu => spectrumRow("qSpectrum".refined, rsu.view(_.assign))),
-      hiiRegionSpectrumAlignerOpt
-        .map(rsu => spectrumRow("hiirSpectrum".refined, rsu.view(_.assign))),
-      planetaryNebulaSpectrumAlignerOpt
-        .map(rsu => spectrumRow("pnSpectrum".refined, rsu.view(_.assign))),
-      powerLawIndexAlignerOpt
-        .map(rsu =>
-          React.Fragment(
-            <.label("Index", ExploreStyles.SkipToNext),
-            FormInputEV( // Power-law index can be any decimal
-              id = "powerLawIndex".refined,
-              value = rsu.view(_.assign),
-              validFormat = InputValidSplitEpi.bigDecimal,
-              changeAuditor = ChangeAuditor.fromInputValidSplitEpi(InputValidSplitEpi.bigDecimal),
-              errorClazz = ExploreStyles.InputErrorTooltip,
-              errorPointing = LabelPointing.Below
-            ),
-            <.span
-          )
-        ),
-      blackBodyTemperatureAlignerOpt
-        .map(rsu =>
-          React.Fragment(
-            <.label("Temperature", ExploreStyles.SkipToNext),
-            InputWithUnits( // Temperature is in K, a positive integer
-              id = "bbTempK".refined,
-              value = rsu.view(_.value.assign).stripQuantity,
-              validFormat = InputValidSplitEpi.posInt,
-              changeAuditor = ChangeAuditor
-                .fromInputValidSplitEpi(InputValidSplitEpi.posInt)
-                .denyNeg,
-              units = "°K"
-            ),
-            <.span
-          )
-        ),
-      props.bandBrightnessesViewOpt
-        .map(bandBrightnessesView =>
-          <.div(ExploreStyles.BrightnessesTableWrapper, brightnessEditor(bandBrightnessesView))
-        ),
-      props.fluxDensityContinuumOpt
-        .map(fluxDensityContinuum =>
-          React.Fragment(
-            <.label("Continuum", ExploreStyles.SkipToNext),
-            FormInputEV(
-              id = "fluxValue".refined,
-              value = fluxDensityContinuum.zoom(
-                Measure.valueTagged[PosBigDecimal, FluxDensityContinuum[T]]
+        stellarLibrarySpectrumAlignerOpt
+          .map(rsu => spectrumRow("slSpectrum".refined, rsu.view(_.assign))),
+        coolStarTemperatureAlignerOpt
+          .map(rsu => spectrumRow("csTemp".refined, rsu.view(_.assign))),
+        galaxySpectrumAlignerOpt
+          .map(rsu => spectrumRow("gSpectrum".refined, rsu.view(_.assign))),
+        planetSpectrumAlignerOpt
+          .map(rsu => spectrumRow("pSpectrum".refined, rsu.view(_.assign))),
+        quasarSpectrumAlignerOpt
+          .map(rsu => spectrumRow("qSpectrum".refined, rsu.view(_.assign))),
+        hiiRegionSpectrumAlignerOpt
+          .map(rsu => spectrumRow("hiirSpectrum".refined, rsu.view(_.assign))),
+        planetaryNebulaSpectrumAlignerOpt
+          .map(rsu => spectrumRow("pnSpectrum".refined, rsu.view(_.assign))),
+        powerLawIndexAlignerOpt
+          .map(rsu =>
+            React.Fragment(
+              <.label("Index", ExploreStyles.SkipToNext),
+              FormInputEV( // Power-law index can be any decimal
+                id = "powerLawIndex".refined,
+                value = rsu.view(_.assign),
+                validFormat = InputValidSplitEpi.bigDecimal,
+                changeAuditor = ChangeAuditor.fromInputValidSplitEpi(InputValidSplitEpi.bigDecimal),
+                errorClazz = ExploreStyles.InputErrorTooltip,
+                errorPointing = LabelPointing.Below
               ),
-              validFormat = InputValidSplitEpi.posBigDecimalWithScientificNotation,
-              changeAuditor = ChangeAuditor.posScientificNotation()
-            ),
-            EnumViewSelect(
-              "Units",
-              fluxDensityContinuum
-                .zoom(Measure.unitsTagged[PosBigDecimal, FluxDensityContinuum[T]])
+              <.span
             )
-          )
-        ),
-      props.emissionLinesViewOpt.map(e =>
-        <.div(ExploreStyles.BrightnessesTableWrapper, emissionLineEditor(e))
+          ),
+        blackBodyTemperatureAlignerOpt
+          .map(rsu =>
+            React.Fragment(
+              <.label("Temperature", ExploreStyles.SkipToNext),
+              InputWithUnits( // Temperature is in K, a positive integer
+                id = "bbTempK".refined,
+                value = rsu.view(_.value.assign).stripQuantity,
+                validFormat = InputValidSplitEpi.posInt,
+                changeAuditor = ChangeAuditor
+                  .fromInputValidSplitEpi(InputValidSplitEpi.posInt)
+                  .denyNeg,
+                units = "°K"
+              ),
+              <.span
+            )
+          ),
+        props.bandBrightnessesViewOpt
+          .map(bandBrightnessesView =>
+            <.div(ExploreStyles.BrightnessesTableWrapper, brightnessEditor(bandBrightnessesView))
+          ),
+        props.fluxDensityContinuumOpt
+          .map(fluxDensityContinuum =>
+            React.Fragment(
+              <.label("Continuum", ExploreStyles.SkipToNext),
+              FormInputEV(
+                id = "fluxValue".refined,
+                value = fluxDensityContinuum.zoom(
+                  Measure.valueTagged[PosBigDecimal, FluxDensityContinuum[T]]
+                ),
+                validFormat = InputValidSplitEpi.posBigDecimalWithScientificNotation,
+                changeAuditor = ChangeAuditor.posScientificNotation()
+              ),
+              EnumViewSelect(
+                "Units",
+                fluxDensityContinuum
+                  .zoom(Measure.unitsTagged[PosBigDecimal, FluxDensityContinuum[T]])
+              )
+            )
+          ),
+        props.emissionLinesViewOpt
+          .map(e => <.div(ExploreStyles.BrightnessesTableWrapper, emissionLineEditor(e)))
       )
-    )
-  }
+    }
 
 }
 
-final case class IntegratedSpectralDefinitionEditor(
+case class IntegratedSpectralDefinitionEditor(
   val spectralDefinition: Aligner[SpectralDefinition[Integrated], SpectralDefinitionIntegratedInput]
-)(implicit val appCtx:    AppContextIO)
+)(using Logger[IO])
     extends ReactFnProps[IntegratedSpectralDefinitionEditor](
       IntegratedSpectralDefinitionEditor.component
     )
@@ -290,17 +288,19 @@ final case class IntegratedSpectralDefinitionEditor(
 
   val sedAlignerOpt: Option[Aligner[UnnormalizedSED, UnnormalizedSedInput]] =
     bandNormalizedAlignerOpt.map(
-      _.zoom(SpectralDefinition.BandNormalized.sed[Integrated],
-             forceAssign(BandNormalizedIntegratedInput.sed.modify)(
-               UnnormalizedSedInput()
-             )
+      _.zoom(
+        SpectralDefinition.BandNormalized.sed[Integrated],
+        forceAssign(BandNormalizedIntegratedInput.sed.modify)(
+          UnnormalizedSedInput()
+        )
       )
     )
 
   val bandBrightnessesViewOpt: Option[View[SortedMap[Band, BrightnessMeasure[Integrated]]]] =
     bandNormalizedAlignerOpt.map(
-      _.zoom(SpectralDefinition.BandNormalized.brightnesses[Integrated],
-             BandNormalizedIntegratedInput.brightnesses.modify
+      _.zoom(
+        SpectralDefinition.BandNormalized.brightnesses[Integrated],
+        BandNormalizedIntegratedInput.brightnesses.modify
       )
         .view(_.toInput.assign)
     )
@@ -317,8 +317,9 @@ final case class IntegratedSpectralDefinitionEditor(
 
   override val emissionLinesViewOpt: Option[View[SortedMap[Wavelength, EmissionLine[Integrated]]]] =
     emissionLinesAlignerOpt.map(
-      _.zoom(SpectralDefinition.EmissionLines.lines[Integrated],
-             EmissionLinesIntegratedInput.lines.modify
+      _.zoom(
+        SpectralDefinition.EmissionLines.lines[Integrated],
+        EmissionLinesIntegratedInput.lines.modify
       )
         .view(_.toInput.assign)
     )
@@ -354,9 +355,9 @@ object IntegratedSpectralDefinitionEditor
     emissionLinesView => IntegratedEmissionLineEditor(emissionLinesView, false)
 }
 
-final case class SurfaceSpectralDefinitionEditor(
+case class SurfaceSpectralDefinitionEditor(
   val spectralDefinition: Aligner[SpectralDefinition[Surface], SpectralDefinitionSurfaceInput]
-)(implicit val appCtx:    AppContextIO)
+)(using Logger[IO])
     extends ReactFnProps[SurfaceSpectralDefinitionEditor](
       SurfaceSpectralDefinitionEditor.component
     )
@@ -412,8 +413,9 @@ final case class SurfaceSpectralDefinitionEditor(
   override val fluxDensityContinuumOpt
     : Option[View[Measure[PosBigDecimal] Of FluxDensityContinuum[Surface]]] =
     emissionLinesAlignerOpt.map(
-      _.zoom(SpectralDefinition.EmissionLines.fluxDensityContinuum[Surface],
-             EmissionLinesSurfaceInput.fluxDensityContinuum.modify
+      _.zoom(
+        SpectralDefinition.EmissionLines.fluxDensityContinuum[Surface],
+        EmissionLinesSurfaceInput.fluxDensityContinuum.modify
       ).view(_.toInput.assign)
     )
 }

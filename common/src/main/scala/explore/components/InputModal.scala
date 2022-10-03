@@ -3,14 +3,14 @@
 
 package explore.components
 
-import crystal.react.hooks._
-import crystal.react.reuse._
-import eu.timepit.refined.auto._
+import crystal.react.hooks.*
+import crystal.react.reuse.*
+import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.refined.*
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.syntax.all.*
@@ -18,7 +18,7 @@ import lucuma.ui.syntax.all.given
 import react.common.Css
 import react.common.ReactFnProps
 import react.semanticui.elements.button.Button
-import react.semanticui.modules.modal._
+import react.semanticui.modules.modal.*
 import react.semanticui.sizes.Small
 
 import scala.language.implicitConversions
@@ -27,7 +27,7 @@ import scala.scalajs.js.|
 /**
  * Generic component to accept user input
  */
-final case class InputModal(
+case class InputModal(
   title:        String,
   initialValue: Option[NonEmptyString],
   label:        String,

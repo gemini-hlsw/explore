@@ -23,8 +23,8 @@ import explore.common.UserPreferencesQueries.*
 import explore.components.WIP
 import explore.components.ui.ExploreStyles
 import explore.config.ExposureTimeModeType.FixedExposure
-import explore.events._
-import explore.implicits.*
+import explore.events.*
+import explore.model.AppContext
 import explore.model.ScienceMode
 import explore.model.ScienceModeAdvanced
 import explore.model.ScienceModeBasic
@@ -55,7 +55,7 @@ import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.given
 import monocle.Focus
 import monocle.Lens
-import queries.common.UserPreferencesQueriesGQL._
+import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.itc.implicits.*
 import react.common.ReactFnProps
 
@@ -69,8 +69,7 @@ case class ItcGraphPanel(
   scienceData:              Option[ScienceData],
   exposure:                 Option[ItcChartExposureTime],
   selectedTarget:           View[Option[ItcTarget]]
-)(using val ctx:            AppContextIO)
-    extends ReactFnProps(ItcGraphPanel.component)
+) extends ReactFnProps(ItcGraphPanel.component)
     with ItcPanelProps(scienceMode, spectroscopyRequirements, scienceData, exposure)
 
 case class ItcGraphProperties(chartType: ItcChartType, detailsShown: PlotDetails)
@@ -81,7 +80,7 @@ object ItcGraphProperties:
   val detailsShown: Lens[ItcGraphProperties, PlotDetails] =
     Focus[ItcGraphProperties](_.detailsShown)
 
-object ItcGraphPanel {
+object ItcGraphPanel:
   private type Props = ItcGraphPanel with ItcPanelProps
 
   given Reusability[PlotDetails]        = Reusability.byEq
@@ -90,32 +89,35 @@ object ItcGraphPanel {
   private val component =
     ScalaFnComponent
       .withHooks[Props]
+      .useContext(AppContext.ctx)
       .useState(Pot.pending[Map[ItcTarget, ItcChartResult]])
       // loading
       .useState(PlotLoading.Done)
       // Request ITC graph data
-      .useEffectWithDepsBy((props, _, _) => props.queryProps) { (props, charts, loading) => _ =>
-        import props.given
-        props
-          .requestITCData(
-            m =>
-              charts.modStateAsync {
-                case Pot.Ready(r) => Pot.Ready(r + (m.target -> m))
-                case u            => Pot.Ready(Map(m.target -> m))
-              } *> loading.setState(PlotLoading.Done).to[IO],
-            (charts.setState(
-              Pot.error(new RuntimeException("Not enough information to calculate the ITC graph"))
-            ) *> loading.setState(PlotLoading.Done)).to[IO],
-            loading.setState(PlotLoading.Loading).to[IO]
-          )
-          .runAsyncAndForget
+      .useEffectWithDepsBy((props, _, _, _) => props.queryProps) {
+        (props, ctx, charts, loading) => _ =>
+          import ctx.given
+
+          props
+            .requestITCData(
+              m =>
+                charts.modStateAsync {
+                  case Pot.Ready(r) => Pot.Ready(r + (m.target -> m))
+                  case u            => Pot.Ready(Map(m.target -> m))
+                } *> loading.setState(PlotLoading.Done).to[IO],
+              (charts.setState(
+                Pot.error(new RuntimeException("Not enough information to calculate the ITC graph"))
+              ) *> loading.setState(PlotLoading.Done)).to[IO],
+              loading.setState(PlotLoading.Loading).to[IO]
+            )
+            .runAsyncAndForget
       }
       // Graph properties
       .useStateView(Pot.pending[ItcGraphProperties])
       // Read preferences
-      .useEffectWithDepsBy((props, _, _, _) => (props.uid, props.oid)) {
-        (props, _, _, settings) => _ =>
-          import props.given
+      .useEffectWithDepsBy((props, _, _, _, _) => (props.uid, props.oid)) {
+        (props, ctx, _, _, settings) => _ =>
+          import ctx.given
 
           ItcPlotPreferences
             .queryWithDefault[IO](props.uid, props.oid)
@@ -125,22 +127,23 @@ object ItcGraphPanel {
             .runAsyncAndForget
       }
       // Write preferences
-      .useEffectWithDepsBy((_, _, _, settings) => settings.get) { (props, _, _, _) => settings =>
-        import props.given
+      .useEffectWithDepsBy((_, _, _, _, settings) => settings.get) {
+        (props, ctx, _, _, _) => settings =>
+          import ctx.given
 
-        settings.toOption
-          .map(settings =>
-            ItcPlotPreferences
-              .updatePlotPreferences[IO](props.uid,
-                                         props.oid,
-                                         settings.chartType,
-                                         settings.detailsShown
-              )
-              .runAsyncAndForget
-          )
-          .getOrEmpty
+          settings.toOption
+            .map(settings =>
+              ItcPlotPreferences
+                .updatePlotPreferences[IO](props.uid,
+                                           props.oid,
+                                           settings.chartType,
+                                           settings.detailsShown
+                )
+                .runAsyncAndForget
+            )
+            .getOrEmpty
       }
-      .render { (props, results, loading, settings) =>
+      .render { (props, _, results, loading, settings) =>
         val chartTypeView =
           settings.zoom(Pot.readyPrism.andThen(ItcGraphProperties.chartType))
 
@@ -173,4 +176,3 @@ object ItcGraphPanel {
 
         potRenderView[ItcGraphProperties](renderPlot)(settings)
       }
-}

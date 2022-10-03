@@ -3,7 +3,7 @@
 
 package explore.model
 
-import cats._
+import cats.*
 import cats.derived.*
 import explore.model.enums.PlotRange
 import explore.model.enums.TimeDisplay

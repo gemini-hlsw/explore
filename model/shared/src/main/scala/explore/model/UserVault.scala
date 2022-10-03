@@ -5,15 +5,15 @@ package explore.model
 
 import cats.Eq
 import cats.derived.*
-import eu.timepit.refined.cats._
+import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.model.User
 import monocle.Focus
-import org.typelevel.cats.time.instances.instant._
+import org.typelevel.cats.time.instances.instant.*
 
 import java.time.Instant
 
-final case class UserVault(user: User, expiration: Instant, token: NonEmptyString) derives Eq
+case class UserVault(user: User, expiration: Instant, token: NonEmptyString) derives Eq
 
 object UserVault:
   val user = Focus[UserVault](_.user)

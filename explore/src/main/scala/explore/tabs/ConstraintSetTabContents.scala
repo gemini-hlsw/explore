@@ -5,19 +5,20 @@ package explore.tabs
 
 import cats.effect.IO
 import cats.syntax.all.*
+import clue.TransactionalClient
 import crystal.react.View
 import crystal.react.hooks.*
 import crystal.react.implicits.*
 import crystal.react.reuse.*
 import eu.timepit.refined.auto.*
 import explore.Icons
+import explore.*
 import explore.common.ConstraintGroupQueries.*
 import explore.common.UserPreferencesQueries.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.constraints.ConstraintsPanel
 import explore.constraints.ConstraintsSummaryTable
-import explore.implicits.*
 import explore.model.*
 import explore.model.enums.AppTab
 import explore.model.reusability.*
@@ -39,9 +40,11 @@ import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
 import org.scalajs.dom.window
+import org.typelevel.log4cats.Logger
 import queries.common.ConstraintGroupQueriesGQL.*
 import queries.common.ObsQueriesGQL
 import queries.common.UserPreferencesQueriesGQL.*
+import queries.schemas.UserPreferencesDB
 import react.common.ReactFnProps
 import react.draggable.Axis
 import react.fa.*
@@ -65,31 +68,32 @@ case class ConstraintSetTabContents(
   groupUndoStack: View[Map[ObsIdSet, UndoStacks[IO, ConstraintSet]]],
   hiddenColumns:  View[Set[String]],
   summarySorting: View[List[(String, Boolean)]]
-)(using val ctx:  AppContextIO)
-    extends ReactFnProps(ConstraintSetTabContents.component)
+) extends ReactFnProps(ConstraintSetTabContents.component)
 
-object ConstraintSetTabContents extends TwoResizablePanels {
+object ConstraintSetTabContents extends TwoResizablePanels:
   private type Props = ConstraintSetTabContents
   given Reusability[Double] = Reusability.double(2.0)
 
-  def readWidthPreference(props: Props, state: View[TwoPanelState]): Callback = {
-    import props.given
-
+  def readWidthPreference(props: Props, state: View[TwoPanelState])(using
+    TransactionalClient[IO, UserPreferencesDB],
+    Logger[IO]
+  ): Callback =
     (UserAreaWidths.queryWithDefault[IO](
       props.userId,
       ResizableSection.ConstraintSetsTree,
       Constants.InitialTreeWidth.toInt
     ) >>= (w => state.zoom(TwoPanelState.treeWidth).async.set(w.toDouble))).runAsync
-  }
 
   private def renderFn(
     props:              Props,
     state:              View[TwoPanelState],
     resize:             UseResizeDetectorReturn,
-    debouncer:          Reusable[UseSingleEffect[IO]]
+    debouncer:          Reusable[UseSingleEffect[IO]],
+    ctx:                AppContext[IO]
   )(
     constraintsWithObs: View[ConstraintSummaryWithObervations]
-  )(using ctx:          AppContextIO): VdomNode = {
+  ): VdomNode = {
+    import ctx.given
 
     val treeWidth = state.get.treeWidth.toInt
 
@@ -136,7 +140,7 @@ object ConstraintSetTabContents extends TwoResizablePanels {
     }
 
     val backButton: VdomNode =
-      makeBackButton(props.programId, AppTab.Constraints, ctx, state.zoom(TwoPanelState.selected))
+      makeBackButton(props.programId, AppTab.Constraints, state.zoom(TwoPanelState.selected), ctx)
 
     val (coreWidth, coreHeight) = coreDimensions(resize, treeWidth)
 
@@ -226,10 +230,11 @@ object ConstraintSetTabContents extends TwoResizablePanels {
       constraintsTree(constraintsWithObs),
       rightSide,
       RightSideCardinality.Single,
-      treeResize(props.userId,
-                 state.zoom(TwoPanelState.treeWidth),
-                 ResizableSection.ConstraintSetsTree,
-                 debouncer
+      treeResize(
+        props.userId,
+        state.zoom(TwoPanelState.treeWidth),
+        ResizableSection.ConstraintSetsTree,
+        debouncer
       )
     )
   }
@@ -237,11 +242,15 @@ object ConstraintSetTabContents extends TwoResizablePanels {
   private val component =
     ScalaFnComponent
       .withHooks[Props]
+      .useContext(AppContext.ctx)
       .useStateView(TwoPanelState.initial(SelectedPanel.Uninitialized))
-      .useEffectOnMountBy((props, state) => readWidthPreference(props, state))
-      .useEffectWithDepsBy((props, state) =>
+      .useEffectOnMountBy((props, ctx, state) =>
+        import ctx.given
+        readWidthPreference(props, state)
+      )
+      .useEffectWithDepsBy((props, _, state) =>
         (props.focusedObsSet, state.zoom(TwoPanelState.selected).reuseByValue)
-      ) { (_, _) => params =>
+      ) { (_, _, _) => params =>
         val (focusedObsSet, selected) = params
         (focusedObsSet, selected.get) match {
           case (Some(_), _)                 => selected.set(SelectedPanel.editor)
@@ -249,8 +258,8 @@ object ConstraintSetTabContents extends TwoResizablePanels {
           case _                            => Callback.empty
         }
       }
-      .useStreamResourceViewOnMountBy { (props, _) =>
-        import props.given
+      .useStreamResourceViewOnMountBy { (props, ctx, _) =>
+        import ctx.given
 
         ConstraintGroupObsQuery
           .query(props.programId)
@@ -262,11 +271,10 @@ object ConstraintSetTabContents extends TwoResizablePanels {
       // Measure its size
       .useResizeDetector()
       .useSingleEffect(debounce = 1.second)
-      .render { (props, state, constraintsWithObs, resize, debouncer) =>
-        import props.given
+      .render { (props, ctx, state, constraintsWithObs, resize, debouncer) =>
+        import ctx.given
 
         <.div(
-          constraintsWithObs.render(renderFn(props, state, resize, debouncer) _)
+          constraintsWithObs.render(renderFn(props, state, resize, debouncer, ctx) _)
         ).withRef(resize.ref)
       }
-}

@@ -19,8 +19,8 @@ import explore.Icons
 import explore.common.UserPreferencesQueries.*
 import explore.components.ui.ExploreStyles
 import explore.events.*
-import explore.implicits.*
 import explore.model.AladinMouseScroll
+import explore.model.AppContext
 import explore.model.Asterism
 import explore.model.Constants
 import explore.model.ObsConfiguration
@@ -67,49 +67,49 @@ import java.time.Instant
 import scala.concurrent.duration.*
 
 case class AladinCell(
-  uid:           User.Id,
-  tid:           Target.Id,
-  obsConf:       ObsConfiguration,
-  asterism:      Asterism,
-  fullScreen:    View[Boolean]
-)(using val ctx: AppContextIO)
-    extends ReactFnProps(AladinCell.component)
+  uid:        User.Id,
+  tid:        Target.Id,
+  obsConf:    ObsConfiguration,
+  asterism:   Asterism,
+  fullScreen: View[Boolean]
+) extends ReactFnProps(AladinCell.component)
 
-object AladinCell extends ModelOptics {
+object AladinCell extends ModelOptics:
   private type Props = AladinCell
 
-  val params  = AgsParams.GmosAgsParams(none, PortDisposition.Side)
-  val basePos = AgsPosition(Angle.Angle0, Offset.Zero)
+  private val params  = AgsParams.GmosAgsParams(none, PortDisposition.Side)
+  private val basePos = AgsPosition(Angle.Angle0, Offset.Zero)
 
   // We want to re render only when the vizTime changes at least a month
   // We keep the candidates data pm corrected for the viz time
   // If it changes over a month we'll request the data again and recalculate
   // This way we avoid recalculating pm for example if only pos angle or
   // conditions change
-  given Reusability[Instant] = Reusability {
+  private given Reusability[Instant] = Reusability {
     Duration.between(_, _).toDays().abs < 30L
   }
 
-  given Reusability[AgsState] = Reusability.byEq
-  given Reusability[Props]    =
+  private given Reusability[AgsState] = Reusability.byEq
+  private given Reusability[Props]    =
     Reusability.by(x => (x.uid, x.tid, x.obsConf, x.asterism, x.fullScreen.reuseByValue))
 
-  val fovLens: Lens[TargetVisualOptions, Fov] =
+  private val fovLens: Lens[TargetVisualOptions, Fov] =
     Lens[TargetVisualOptions, Fov](t => Fov(t.fovRA, t.fovDec))(f =>
       t => t.copy(fovRA = f.x, fovDec = f.y)
     )
 
-  val targetPrefs: Lens[(UserGlobalPreferences, TargetVisualOptions), TargetVisualOptions] =
+  private val targetPrefs: Lens[(UserGlobalPreferences, TargetVisualOptions), TargetVisualOptions] =
     Focus[(UserGlobalPreferences, TargetVisualOptions)](_._2)
 
-  val userPrefs: Lens[(UserGlobalPreferences, TargetVisualOptions), UserGlobalPreferences] =
+  private val userPrefs: Lens[(UserGlobalPreferences, TargetVisualOptions), UserGlobalPreferences] =
     Focus[(UserGlobalPreferences, TargetVisualOptions)](_._1)
 
   private val component =
     ScalaFnComponent
       .withHooks[Props]
+      .useContext(AppContext.ctx)
       // mouse coordinates, starts on the base
-      .useStateBy(_.asterism.baseTracking.baseCoordinates)
+      .useStateBy((props, _) => props.asterism.baseTracking.baseCoordinates)
       // target options, will be read from the user preferences
       .useStateViewWithReuse(Pot.pending[(UserGlobalPreferences, TargetVisualOptions)])
       // flag to trigger centering. This is a bit brute force but
@@ -122,9 +122,9 @@ object AladinCell extends ModelOptics {
       // Ags state
       .useState[AgsState](AgsState.Idle)
       // Request data again if vizTime changes more than a month
-      .useEffectWithDepsBy((p, _, _, _, _, _, _) => p.obsConf.vizTime) {
-        (props, _, _, _, gs, _, agsState) => vizTime =>
-          import props.given
+      .useEffectWithDepsBy((p, _, _, _, _, _, _, _) => p.obsConf.vizTime) {
+        (props, ctx, _, _, _, gs, _, agsState) => vizTime =>
+          import ctx.given
 
           agsState.setStateAsync(AgsState.LoadingCandidates) >>
             CatalogClient[IO].requestSingle(
@@ -134,9 +134,9 @@ object AladinCell extends ModelOptics {
               agsState.setState(AgsState.Idle).to[IO] >> gs.setStateAsync(candidates)
             ).orEmpty)
       }
-      .useEffectWithDepsBy((p, _, _, _, _, _, _) => (p.uid, p.tid)) {
-        (props, _, options, _, _, _, _) => _ =>
-          import props.given
+      .useEffectWithDepsBy((p, _, _, _, _, _, _, _) => (p.uid, p.tid)) {
+        (props, ctx, _, options, _, _, _, _) => _ =>
+          import ctx.given
 
           TargetPreferences
             .queryWithDefault[IO](props.uid, props.tid, Constants.InitialFov)
@@ -149,7 +149,7 @@ object AladinCell extends ModelOptics {
       // Selected GS index. Should be stored in the db
       .useStateViewWithReuse(none[Int])
       // Request ags calculation
-      .useEffectWithDepsBy((p, _, _, _, candidates, _, _, _) =>
+      .useEffectWithDepsBy((p, _, _, _, _, candidates, _, _, _) =>
         (p.asterism.baseTracking,
          p.obsConf.posAngleConstraint,
          p.obsConf.constraints,
@@ -157,7 +157,7 @@ object AladinCell extends ModelOptics {
          p.obsConf.vizTime,
          candidates.value
         )
-      ) { (props, _, _, _, _, ags, agsState, selectedIndex) =>
+      ) { (props, ctx, _, _, _, _, ags, agsState, selectedIndex) =>
         {
           case (tracking,
                 Some(posAngle),
@@ -166,14 +166,13 @@ object AladinCell extends ModelOptics {
                 vizTime,
                 candidates
               ) =>
-            import props.given
+            import ctx.given
 
-            val pa = posAngle match {
+            val pa = posAngle match
               case PosAngleConstraint.Fixed(a)               => a.some
               case PosAngleConstraint.AllowFlip(a)           => a.some
               case PosAngleConstraint.ParallacticOverride(a) => a.some
               case _                                         => none
-            }
 
             (tracking.at(vizTime), pa).mapN { (base, pa) =>
               val basePos = AgsPosition(pa, Offset.Zero)
@@ -183,7 +182,7 @@ object AladinCell extends ModelOptics {
                   .flatMap(_.toSidereal)
                   .flatMap(_.target.tracking.at(vizTime))
 
-              for {
+              for
                 _ <- selectedIndex.async.set(none)
                 _ <- agsState.setStateAsync(AgsState.Calculating)
                 _ <- AgsClient[IO]
@@ -205,7 +204,7 @@ object AladinCell extends ModelOptics {
                        )
                        .unlessA(candidates.isEmpty)
                        .handleErrorWith(t => Logger[IO].error(t)("ERROR IN AGS REQUEST"))
-              } yield ()
+              yield ()
             }.orEmpty
           case _ => IO.unit
         }
@@ -213,8 +212,8 @@ object AladinCell extends ModelOptics {
       // open settings menu
       .useState(SettingsMenuState.Closed)
       // Reset the selected gs if results change
-      .useEffectWithDepsBy((p, _, _, _, _, agsResults, _, _, _) => (agsResults, p.obsConf)) {
-        (p, _, _, _, _, agsResults, agsState, selectedIndex, _) => _ =>
+      .useEffectWithDepsBy((p, _, _, _, _, _, agsResults, _, _, _) => (agsResults, p.obsConf)) {
+        (p, _, _, _, _, _, agsResults, agsState, selectedIndex, _) => _ =>
           selectedIndex
             .set(
               0.some.filter(_ => agsResults.value.nonEmpty && p.obsConf.canSelectGuideStar)
@@ -224,6 +223,7 @@ object AladinCell extends ModelOptics {
       .renderWithReuse {
         (
           props,
+          ctx,
           mouseCoords,
           options,
           center,
@@ -233,7 +233,7 @@ object AladinCell extends ModelOptics {
           selectedGSIndex,
           openSettings
         ) =>
-          import props.given
+          import ctx.given
 
           val agsCandidatesView =
             options.zoom(
@@ -447,5 +447,3 @@ object AladinCell extends ModelOptics {
             )
           )
       }
-
-}

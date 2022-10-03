@@ -3,19 +3,19 @@
 
 package explore.model
 
-import cats.syntax.all._
-import eu.timepit.refined._
+import cats.syntax.all.*
+import eu.timepit.refined.*
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosLong
 import explore.model.Page
-import explore.model.Page._
+import explore.model.Page.*
 import explore.model.enums.AppTab
 import japgolly.scalajs.react.Reusability
 import lucuma.core.model.Program
-import lucuma.refined._
-import lucuma.ui.reusability._
+import lucuma.refined.*
+import lucuma.ui.reusability.*
 
-final case class RoutingInfo(appTab: AppTab, optProgramId: Option[Program.Id], focused: Focused) {
+case class RoutingInfo(appTab: AppTab, optProgramId: Option[Program.Id], focused: Focused) {
   // The only Page that doesn't have a program ID is the NoProgramPage, so instead of forcing everyplace to deal
   // Option[Program.Id], we'll just associate a dummy id with it. NoProgramPage will need special handling, anyways.
   def programId: Program.Id = optProgramId.getOrElse(RoutingInfo.dummyProgramId)

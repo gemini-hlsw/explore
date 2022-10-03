@@ -4,9 +4,9 @@
 package explore.model
 
 import cats.Eq
-import cats.implicits._
+import cats.implicits.*
 import io.circe.Decoder
-import io.circe.Decoder._
+import io.circe.Decoder.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import monocle.Focus
@@ -15,7 +15,7 @@ import monocle.Lens
 import scala.collection.immutable.SortedSet
 
 // We keep track of the observations a target is in to know if it's shared or not.
-final case class TargetWithObs(target: Target, obsIds: SortedSet[Observation.Id]) {
+case class TargetWithObs(target: Target, obsIds: SortedSet[Observation.Id]) {
   def addObsIds(ids: ObsIdSet): TargetWithObs =
     TargetWithObs.obsIds.modify(_ ++ ids.toSortedSet)(this)
 
@@ -33,7 +33,7 @@ object TargetWithObs {
     Focus[TargetWithObs](_.obsIds)
 }
 
-final case class TargetWithIdAndObs(id: Target.Id, targetWithObs: TargetWithObs) {
+case class TargetWithIdAndObs(id: Target.Id, targetWithObs: TargetWithObs) {
   def target: Target                    = targetWithObs.target
   def obsIds: SortedSet[Observation.Id] = targetWithObs.obsIds
 

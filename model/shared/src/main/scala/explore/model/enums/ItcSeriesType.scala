@@ -3,7 +3,7 @@
 
 package explore.model.enums
 
-import lucuma.core.syntax.string._
+import lucuma.core.syntax.string.*
 import lucuma.core.util.Enumerated
 
 enum ItcSeriesType(val tag: String):

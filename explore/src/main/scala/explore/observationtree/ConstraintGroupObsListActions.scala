@@ -4,16 +4,15 @@
 package explore.observationtree
 
 import cats.effect.IO
-import cats.implicits._
+import cats.implicits.*
 import clue.TransactionalClient
 import crystal.react.View
-import crystal.react.implicits._
-import explore.common.ConstraintGroupQueries._
+import crystal.react.implicits.*
+import explore.common.ConstraintGroupQueries.*
 import explore.common.ObsQueries
-import explore.implicits._
 import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
-import explore.undo._
+import explore.undo.*
 import japgolly.scalajs.react.callback.Callback
 import lucuma.schemas.ObservationDB
 

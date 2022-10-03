@@ -3,20 +3,20 @@
 
 package explore.model.arb
 
-import cats.syntax.all._
+import cats.syntax.all.*
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Cogen
 import org.scalacheck.Gen
 import explore.model.ScienceMode
-import lucuma.core.util.arb.ArbGid._
-import lucuma.core.util.arb.ArbEnumerated._
+import lucuma.core.util.arb.ArbGid.*
+import lucuma.core.util.arb.ArbEnumerated.*
 import explore.model.ScienceModeBasic
 import explore.model.ScienceModeAdvanced
 
 trait ArbScienceMode {
-  import ArbScienceModeBasic._
-  import ArbScienceModeAdvanced._
+  import ArbScienceModeBasic.*
+  import ArbScienceModeAdvanced.*
 
   implicit val arbGmosNorthLongSlit: Arbitrary[ScienceMode.GmosNorthLongSlit] =
     Arbitrary[ScienceMode.GmosNorthLongSlit](

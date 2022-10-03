@@ -8,7 +8,7 @@ import lucuma.core.model.Partner
 import monocle.Focus
 import monocle.Lens
 
-final case class PartnerSplit(partner: Partner, percent: IntPercent) {
+case class PartnerSplit(partner: Partner, percent: IntPercent) {
   def toTuple = (partner, percent)
 }
 

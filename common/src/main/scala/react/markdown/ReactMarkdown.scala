@@ -3,15 +3,15 @@
 
 package react.markdown
 
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom._
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.*
 import org.http4s.Uri
 import react.common.Css
 import react.common.GenericFnComponentPA
 
 import scala.scalajs.js
-import scala.scalajs.js.JSConverters._
-import scala.scalajs.js.annotation._
+import scala.scalajs.js.JSConverters.*
+import scala.scalajs.js.annotation.*
 
 sealed trait RemarkPlugin extends js.Object
 
@@ -35,7 +35,7 @@ object RehypePlugin {
   object RehypeKatex extends js.Object with RehypePlugin
 }
 
-final case class ReactMarkdown(
+case class ReactMarkdown(
   content:                js.UndefOr[String],
   clazz:                  js.UndefOr[Css] = js.undefined,
   linkTarget:             js.UndefOr[String] = js.undefined,

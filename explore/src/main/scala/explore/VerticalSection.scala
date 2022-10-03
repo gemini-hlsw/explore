@@ -4,8 +4,8 @@
 package explore
 
 import explore.components.ui.ExploreStyles
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnPropsWithChildren
 
@@ -14,7 +14,7 @@ import react.common.ReactFnPropsWithChildren
  * https://stackoverflow.com/questions/16301625/rotated-elements-in-css-that-affect-their-parents-height-correctly
  * It requires css to work properly
  */
-final case class VerticalSection()
+case class VerticalSection()
     extends ReactFnPropsWithChildren[VerticalSection](VerticalSection.component)
 
 object VerticalSection {

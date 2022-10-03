@@ -28,7 +28,7 @@ enum ProposalClassType(val label: String) derives Enumerated:
     minPctTotalTime: IntPercent,
     totalTime:       NonNegDuration
   ): ProposalClass = {
-    import ProposalClassType._
+    import ProposalClassType.*
     this match {
       case LargeProgram       => ProposalClass.LargeProgram(minPctTime, minPctTotalTime, totalTime)
       case FastTurnaround     => ProposalClass.FastTurnaround(minPctTime)

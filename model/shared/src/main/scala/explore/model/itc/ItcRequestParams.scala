@@ -3,10 +3,10 @@
 
 package explore.model.itc
 
-import cats.data._
+import cats.data.*
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
-import explore.model.itc._
+import explore.model.itc.*
 import explore.modes.InstrumentRow
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet

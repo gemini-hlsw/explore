@@ -9,7 +9,7 @@ import cats.data.*
 import cats.effect.*
 import cats.syntax.all.*
 import clue.TransactionalClient
-import clue.data.syntax._
+import clue.data.syntax.*
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosInt
 import explore.model.boopickle.ItcPicklers.given
@@ -29,7 +29,7 @@ import queries.schemas.itc.implicits.*
 import workers.*
 
 import java.util.UUID
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 //
 object ITCGraphRequests {
   // Picklers for generated types not in the model.

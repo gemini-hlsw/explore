@@ -53,7 +53,7 @@ object UserPreferencesQueries {
       width:   Int
     )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
       userId.traverse { i =>
-        execute[F](WidthUpsertInput(i, section, width)).attempt
+        execute[F](WidthUpsertInput(i, section, width).toInput).attempt
       }.void
   }
 

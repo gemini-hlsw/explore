@@ -5,16 +5,16 @@ package explore.targeteditor
 
 import cats.Order
 import cats.data.NonEmptyMap
-import cats.syntax.all._
+import cats.syntax.all.*
 import explore.model.ScienceMode
 import explore.model.ScienceModeBasic
 import lucuma.core.enums.PortDisposition
 import lucuma.core.geom.ShapeExpression
 import lucuma.core.geom.gmos
-import lucuma.core.geom.syntax.shapeexpression._
+import lucuma.core.geom.syntax.shapeexpression.*
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
-import react.common.implicits._
+import react.common.implicits.*
 import react.common.style.Css
 
 /**

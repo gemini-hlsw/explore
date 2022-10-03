@@ -3,7 +3,7 @@
 
 package explore.events
 
-import boopickle.DefaultBasic._
+import boopickle.DefaultBasic.*
 import boopickle.Pickler
 import explore.model.boopickle.CatalogPicklers.given
 import lucuma.ags.AgsAnalysis

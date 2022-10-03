@@ -3,8 +3,8 @@
 
 // package explore.common.arb
 
-// import cats.syntax.all._
-// import explore.common.TargetObsQueries._
+// import cats.syntax.all.*
+// import explore.common.TargetObsQueries.*
 // import explore.common.TargetObsQueriesGQL
 // import explore.model.arb.ArbConstraintsSummary
 // import lucuma.core.arb.ArbTime
@@ -13,19 +13,19 @@
 // import lucuma.core.model.Asterism
 // import lucuma.core.model.Observation
 // import lucuma.core.model.Target
-// import lucuma.core.util.arb.ArbEnumerated._
-// import lucuma.core.util.arb.ArbGid._
+// import lucuma.core.util.arb.ArbEnumerated.*
+// import lucuma.core.util.arb.ArbGid.*
 // import org.scalacheck.Arbitrary
-// import org.scalacheck.Arbitrary._
+// import org.scalacheck.Arbitrary.*
 // import org.scalacheck.Cogen
-// import org.scalacheck.Cogen._
+// import org.scalacheck.Cogen.*
 // import org.scalacheck.Gen
 
 // import java.time.Duration
 
 // trait ArbTargetObsQueries {
-//   import ArbConstraintsSummary._
-//   import ArbTime._
+//   import ArbConstraintsSummary.*
+//   import ArbTime.*
 
 //   type ConstraintSet = TargetObsQueriesGQL.TargetsObsQuery.Data.Observations.Nodes.ConstraintSet
 //   val ConstraintSet = TargetObsQueriesGQL.TargetsObsQuery.Data.Observations.Nodes.ConstraintSet

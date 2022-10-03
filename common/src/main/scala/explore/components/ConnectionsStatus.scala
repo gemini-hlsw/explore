@@ -4,15 +4,16 @@
 package explore.components
 
 import clue.PersistentClientStatus
-import clue.PersistentClientStatus._
+import clue.PersistentClientStatus.*
 import crystal.Pot
 import crystal.react.hooks.*
-import explore.*
+import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.components.ui.ExploreStyles.*
+import explore.model.AppContext
 import explore.syntax.ui.*
 import explore.syntax.ui.given
-import japgolly.scalajs.react._
+import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -22,11 +23,10 @@ import react.floatingui.syntax.*
 import react.semanticui.elements.icon.*
 import react.semanticui.views.item.Item
 
-case class ConnectionsStatus()(using val ctx: AppContextIO)
-    extends ReactFnProps[ConnectionsStatus](ConnectionsStatus.component)
+case class ConnectionsStatus() extends ReactFnProps(ConnectionsStatus.component)
 
-object ConnectionsStatus {
-  type Props = ConnectionsStatus
+object ConnectionsStatus:
+  private type Props = ConnectionsStatus
 
   private def renderStatus(name: String, status: Pot[PersistentClientStatus]): VdomNode = {
     val (message, (clazz, show)) = status match {
@@ -52,9 +52,9 @@ object ConnectionsStatus {
     } else <.span()
   }
 
-  val component =
+  private val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStreamOnMountBy(props => props.ctx.clients.odb.statusStream)
-      .render((_, status) => renderStatus("ODB", status.toPot))
-}
+      .useContext(AppContext.ctx)
+      .useStreamOnMountBy((_, ctx) => ctx.clients.odb.statusStream)
+      .render((_, _, status) => renderStatus("ODB", status.toPot))

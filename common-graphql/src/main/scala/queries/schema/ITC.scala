@@ -8,13 +8,13 @@ import eu.timepit.refined.types.numeric
 import eu.timepit.refined.types.string
 import io.circe.Encoder
 import io.circe.Json
-import io.circe.generic.semiauto._
+import io.circe.generic.semiauto.*
 import lucuma.core.enums
-import lucuma.core.math.BrightnessUnits._
-import lucuma.core.math.dimensional._
+import lucuma.core.math.BrightnessUnits.*
+import lucuma.core.math.dimensional.*
 import lucuma.core.model
-import lucuma.core.model._
-import lucuma.core.model.sequence._
+import lucuma.core.model.*
+import lucuma.core.model.sequence.*
 
 @GraphQLSchema
 trait ITC {

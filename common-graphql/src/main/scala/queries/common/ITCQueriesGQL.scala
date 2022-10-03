@@ -9,7 +9,7 @@ import eu.timepit.refined.types.string
 import explore.model.itc.ItcCcd
 import explore.model.itc.remote.ItcChartGroupRemote
 import queries.schemas.ITC
-// gql: import io.circe.refined._
+// gql: import io.circe.refined.*
 
 object ITCQueriesGQL {
 

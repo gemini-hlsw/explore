@@ -5,7 +5,7 @@ package explore.model.util
 
 import cats.Eq
 import cats.data.NonEmptySet
-import cats.syntax.all._
+import cats.syntax.all.*
 import monocle.Iso
 
 import scala.collection.immutable.SortedSet

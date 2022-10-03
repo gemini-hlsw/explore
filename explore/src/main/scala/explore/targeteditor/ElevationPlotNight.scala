@@ -5,16 +5,16 @@ package explore.targeteditor
 
 import cats.Eq
 import cats.derived.*
-import cats.syntax.all._
+import cats.syntax.all.*
+import explore.*
 import explore.components.ui.ExploreStyles
 import explore.highcharts.*
-import explore.implicits._
 import explore.model.CoordinatesAtVizTime
 import explore.model.enums.TimeDisplay
 import explore.syntax.ui.*
 import explore.syntax.ui.given
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Site
 import lucuma.core.enums.TwilightType
 import lucuma.core.math.Angle
@@ -27,10 +27,10 @@ import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.highcharts.ResizingChart
 import react.moon.MoonPhase
-import react.resizeDetector.hooks._
+import react.resizeDetector.hooks.*
 import reactST.highcharts.highchartsStrings.line
 import reactST.highcharts.mod.XAxisLabelsOptions
-import reactST.highcharts.mod._
+import reactST.highcharts.mod.*
 
 import java.time.Duration
 import java.time.Instant
@@ -43,7 +43,7 @@ import scala.collection.immutable.HashSet
 import scala.deriving.Mirror
 import scala.scalajs.js
 
-import js.JSConverters._
+import js.JSConverters.*
 
 case class ElevationPlotNight(
   site:        Site,
@@ -197,7 +197,7 @@ object ElevationPlotNight {
             )
           }
 
-        val seriesData = summon[Mirror.Of[SeriesData]].fromProduct(unzip4(series))
+        val seriesData = summon[Mirror.Of[SeriesData]].fromProduct(series.unzip4)
 
         def timezoneInstantFormat(instant: Instant, zoneId: ZoneId): String =
           ZonedDateTime

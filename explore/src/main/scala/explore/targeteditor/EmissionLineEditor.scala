@@ -17,9 +17,9 @@ import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
-import explore.components.ui.ExploreStyles
-import explore.implicits.*
+import explore.*
 import explore.model.enums.*
+import explore.components.ui.ExploreStyles
 import explore.model.formats.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -240,7 +240,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
 
 }
 
-final case class IntegratedEmissionLineEditor(
+case class IntegratedEmissionLineEditor(
   emissionLines: View[SortedMap[Wavelength, EmissionLine[Integrated]]],
   disabled:      Boolean
 ) extends ReactFnProps[IntegratedEmissionLineEditor](IntegratedEmissionLineEditor.component)
@@ -252,7 +252,7 @@ object IntegratedEmissionLineEditor
     summon[TaggedUnit[ErgsPerSecondCentimeter2, LineFlux[Integrated]]].unit
 }
 
-final case class SurfaceEmissionLineEditor(
+case class SurfaceEmissionLineEditor(
   emissionLines: View[SortedMap[Wavelength, EmissionLine[Surface]]],
   disabled:      Boolean
 ) extends ReactFnProps[SurfaceEmissionLineEditor](SurfaceEmissionLineEditor.component)

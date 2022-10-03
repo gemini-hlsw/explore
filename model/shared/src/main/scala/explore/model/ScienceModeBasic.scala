@@ -5,9 +5,9 @@ package explore.model
 
 import cats.Eq
 import cats.derived.*
-import cats.syntax.all._
+import cats.syntax.all.*
 import io.circe.Decoder
-import io.circe.generic.semiauto._
+import io.circe.generic.semiauto.*
 import lucuma.core.enums.GmosNorthFilter
 import lucuma.core.enums.GmosNorthFpu
 import lucuma.core.enums.GmosNorthGrating
@@ -20,7 +20,7 @@ import monocle.Lens
 sealed trait ScienceModeBasic extends Product with Serializable derives Eq
 
 object ScienceModeBasic {
-  final case class GmosNorthLongSlit(
+  case class GmosNorthLongSlit(
     grating: GmosNorthGrating,
     filter:  Option[GmosNorthFilter],
     fpu:     GmosNorthFpu
@@ -36,7 +36,7 @@ object ScienceModeBasic {
     val fpu: Lens[GmosNorthLongSlit, GmosNorthFpu]               = Focus[GmosNorthLongSlit](_.fpu)
   }
 
-  final case class GmosSouthLongSlit(
+  case class GmosSouthLongSlit(
     grating: GmosSouthGrating,
     filter:  Option[GmosSouthFilter],
     fpu:     GmosSouthFpu

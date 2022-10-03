@@ -4,37 +4,39 @@
 package explore.components
 
 import cats.Eq
-import cats.Order._
+import cats.Order.*
 import cats.effect.IO
-import cats.syntax.all._
+import cats.syntax.all.*
+import clue.TransactionalClient
 import crystal.react.hooks.UseStateView
-import crystal.react.hooks._
-import crystal.react.implicits._
-import crystal.react.reuse._
-import eu.timepit.refined.auto._
-import explore.common.UserPreferencesQueries._
+import crystal.react.hooks.*
+import crystal.react.implicits.*
+import crystal.react.reuse.*
+import eu.timepit.refined.auto.*
+import explore.common.UserPreferencesQueries.*
 import explore.components.ui.ExploreStyles
-import explore.implicits._
+import explore.model.AppContext
 import explore.model.Constants
 import explore.model.GridLayoutSection
 import explore.model.enums.TileSizeState
 import explore.model.layout.*
 import explore.model.layout.given
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.User
-import lucuma.ui.reusability._
+import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.Traversal
-import queries.common.UserPreferencesQueriesGQL._
+import queries.common.UserPreferencesQueriesGQL.*
+import queries.schemas.UserPreferencesDB
 import react.common.ReactFnProps
 import react.common.implicits.given
 import react.common.style.Css
-import react.gridlayout._
+import react.gridlayout.*
 
-import scala.concurrent.duration._
-import scala.scalajs.js.JSConverters._
+import scala.concurrent.duration.*
+import scala.scalajs.js.JSConverters.*
 import scala.scalajs.js.|
 
 case class TileController(
@@ -45,26 +47,23 @@ case class TileController(
   tiles:         List[Tile],
   section:       GridLayoutSection,
   clazz:         Option[Css] = None
-)(using val ctx: AppContextIO)
-    extends ReactFnProps[TileController](TileController.component)
+) extends ReactFnProps(TileController.component)
 
-object TileController {
-  type Props = TileController
+object TileController:
+  private type Props = TileController
 
-  def storeLayouts(
+  private def storeLayouts(
     userId:    Option[User.Id],
     section:   GridLayoutSection,
     layouts:   Layouts,
     debouncer: Reusable[UseSingleEffect[IO]]
-  )(implicit
-    ctx:       AppContextIO
-  ): Callback =
+  )(using TransactionalClient[IO, UserPreferencesDB]): Callback =
     debouncer
       .submit(UserGridLayoutUpsert.storeLayoutsPreference[IO](userId, section, layouts))
       .runAsyncAndForget
 
   // Calculate the state out of the height
-  def unsafeSizeToState(
+  private def unsafeSizeToState(
     layoutsMap: LayoutsMap,
     tileId:     Tile.TileId
   ): TileSizeState = {
@@ -77,20 +76,20 @@ object TileController {
     if (h.exists(_ === 1)) TileSizeState.Minimized else TileSizeState.Normal
   }
 
-  val allTiles: Traversal[LayoutsMap, LayoutItem] =
+  private val allTiles: Traversal[LayoutsMap, LayoutItem] =
     allLayouts.andThen(layoutItems)
 
-  def unsafeTileHeight(id: Tile.TileId): Traversal[LayoutsMap, Int] =
+  private def unsafeTileHeight(id: Tile.TileId): Traversal[LayoutsMap, Int] =
     allTiles
       .filter(_.i.forall(_ === id.value))
       .andThen(layoutItemHeight)
 
-  def tileResizable(id: Tile.TileId): Traversal[LayoutsMap, Boolean | Unit] =
+  private def tileResizable(id: Tile.TileId): Traversal[LayoutsMap, Boolean | Unit] =
     allTiles
       .filter(_.i.forall(_ === id.value))
       .andThen(layoutItemResizable)
 
-  def updateResizableState(p: LayoutsMap): LayoutsMap =
+  private def updateResizableState(p: LayoutsMap): LayoutsMap =
     allLayouts
       .andThen(layoutItems)
       .modify {
@@ -98,21 +97,24 @@ object TileController {
         case r              => r
       }(p)
 
-  val component =
+  private val component =
     ScalaFnComponent
       .withHooks[Props]
+      .useContext(AppContext.ctx)
       .useSingleEffect(debounce = 1.second)
       // Store the current breakpoint
-      .useStateBy { (p, _) =>
+      .useStateBy { (p, _, _) =>
         getBreakpointFromWidth(p.layoutMap.map { case (x, (w, _, _)) => x -> w }, p.gridWidth)
       }
       // Store the current layout
-      .useStateViewBy((p, _, _) => updateResizableState(p.layoutMap))
+      .useStateViewBy((p, _, _, _) => updateResizableState(p.layoutMap))
       // Update the current layout if it changes upstream
-      .useEffectWithDepsBy((p, _, _, _) => p.layoutMap)((_, _, _, current) =>
+      .useEffectWithDepsBy((p, _, _, _, _) => p.layoutMap)((_, _, _, _, current) =>
         layout => current.set(updateResizableState(layout))
       )
-      .render { (p, debouncer, bn, currentLayout) =>
+      .render { (p, ctx, debouncer, bn, currentLayout) =>
+        import ctx.given
+
         def sizeState(id: Tile.TileId) = (st: TileSizeState) =>
           currentLayout
             .zoom(allTiles)
@@ -169,7 +171,7 @@ object TileController {
                 currentLayout.mod(breakpointLayout(bn.value).replace(l))
               }
             }.getOrEmpty *>
-              storeLayouts(p.userId, p.section, b, debouncer)(p.ctx).when_(changed)
+              storeLayouts(p.userId, p.section, b, debouncer).when_(changed)
           },
           layouts = currentLayout.get,
           className = p.clazz.map(_.htmlClass).orUndefined
@@ -206,5 +208,3 @@ object TileController {
           }.toVdomArray
         )
       }
-
-}

@@ -3,22 +3,22 @@
 
 package explore.targeteditor
 
-import cats.syntax.all._
+import cats.syntax.all.*
 import crystal.react.View
-import crystal.react.hooks._
-import eu.timepit.refined.auto._
+import crystal.react.hooks.*
+import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.ui.ExploreStyles
 import explore.itc.requiredForITC
-import explore.model.conversions._
+import explore.model.conversions.*
 import explore.model.display.given
-import explore.model.formats._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import explore.model.formats.*
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.RadialVelocity
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
-import lucuma.core.validation._
+import lucuma.core.validation.*
 import lucuma.refined.*
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.forms.FormInputEV
@@ -27,7 +27,7 @@ import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.semanticui.elements.label.LabelPointing
 
-final case class RVInput(
+case class RVInput(
   rv:       View[Option[RadialVelocity]],
   disabled: Boolean
 ) extends ReactFnProps[RVInput](RVInput.component)

@@ -4,7 +4,7 @@
 package explore.model
 
 import cats.kernel.laws.discipline.EqTests
-import explore.model.arb.all._
+import explore.model.arb.all.*
 import munit.DisciplineSuite
 
 class ObsSummarySuite extends DisciplineSuite {

@@ -15,7 +15,7 @@ import crystal.react.implicits.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
-import explore.implicits.*
+import explore.model.AppContext
 import explore.model.Constants
 import explore.model.EmptySiderealTarget
 import explore.model.TargetWithOptId
@@ -48,11 +48,10 @@ import scala.collection.immutable.SortedMap
 import scala.concurrent.duration.*
 
 case class TargetSelectionPopup(
-  programId:     Program.Id,
-  trigger:       Button,
-  onSelected:    TargetWithOptId => Callback
-)(using val ctx: AppContextIO)
-    extends ReactFnProps(TargetSelectionPopup.component)
+  programId:  Program.Id,
+  trigger:    Button,
+  onSelected: TargetWithOptId => Callback
+) extends ReactFnProps(TargetSelectionPopup.component)
 
 object SearchingState extends NewType[Boolean]:
   inline def Searching: SearchingState = SearchingState(true)
@@ -82,12 +81,11 @@ object TargetSelectionPopup {
 
   private val component = ScalaFnComponent
     .withHooks[Props]
+    .useContext(AppContext.ctx)
     // inputValue
     .useStateView("")
     // results
-    .useState(
-      SortedMap.empty[TargetSource[IO], NonEmptyList[Result]]
-    )
+    .useState(SortedMap.empty[TargetSource[IO], NonEmptyList[Result]])
     // searching
     .useState(SearchingState.Idle)
     // singleEffect
@@ -97,16 +95,16 @@ object TargetSelectionPopup {
     // selectedTarget
     .useState(none[SelectedTarget])
     // targetSources
-    .useMemoBy((props, _, _, _, _, _, _) => props.ctx) { (props, _, _, _, _, _, _) => propsCtx =>
-      import props.given
+    .useMemoBy((_, _, _, _, _, _, _, _) => ()) { (props, ctx, _, _, _, _, _, _) => _ =>
+      import ctx.given
 
       TargetSource.FromProgram[IO](props.programId) :: TargetSource.forAllCatalogs[IO]
     }
     // aladinRef
     .useMemo(())(_ => Ref.toScalaComponent(Aladin.component))
     // re render when selected changes
-    .useEffectWithDepsBy((_, _, _, _, _, _, selectedTarget, _, _) => selectedTarget.value)(
-      (_, _, _, _, _, _, _, _, aladinRef) =>
+    .useEffectWithDepsBy((_, _, _, _, _, _, _, selectedTarget, _, _) => selectedTarget.value)(
+      (_, _, _, _, _, _, _, _, _, aladinRef) =>
         sel =>
           aladinRef.get.asCBO
             .flatMapCB(b => b.backend.fixLayoutDimensions *> b.backend.recalculateView)
@@ -116,6 +114,7 @@ object TargetSelectionPopup {
     .render {
       (
         props,
+        ctx,
         inputValue,
         results,
         searching,
@@ -125,7 +124,7 @@ object TargetSelectionPopup {
         targetSources,
         aladinRef
       ) =>
-        import props.given
+        import ctx.given
 
         val cleanResults = selectedTarget.setState(none) >> results.setState(SortedMap.empty)
 

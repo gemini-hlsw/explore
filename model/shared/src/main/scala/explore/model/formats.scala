@@ -21,7 +21,7 @@ import spire.math.Rational
 
 import java.text.NumberFormat
 import java.util.Locale
-import scala.math._
+import scala.math.*
 
 trait formats:
   private def formatterZ(dig: Int): NumberFormat = {

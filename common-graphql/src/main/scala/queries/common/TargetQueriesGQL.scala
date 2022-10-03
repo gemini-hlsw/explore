@@ -8,7 +8,7 @@ import clue.annotation.GraphQL
 import explore.model
 import lucuma.schemas.ObservationDB
 
-// gql: import explore.model.TargetWithId._
+// gql: import explore.model.TargetWithId.*
 
 object TargetQueriesGQL {
 

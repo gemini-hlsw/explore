@@ -56,7 +56,7 @@ sealed trait InstrumentRow derives Eq {
   override def toString(): String = s"Mode: ${instrument.shortName}, $grating, $filter, $fpu"
 }
 
-final case class GmosNorthSpectroscopyRow(
+case class GmosNorthSpectroscopyRow(
   grating: GmosNorthGrating,
   fpu:     GmosNorthFpu,
   filter:  Option[GmosNorthFilter]
@@ -69,7 +69,7 @@ final case class GmosNorthSpectroscopyRow(
   val hasFilter  = filter.isDefined
 }
 
-final case class GmosSouthSpectroscopyRow(
+case class GmosSouthSpectroscopyRow(
   grating: GmosSouthGrating,
   fpu:     GmosSouthFpu,
   filter:  Option[GmosSouthFilter]
@@ -82,8 +82,7 @@ final case class GmosSouthSpectroscopyRow(
   val hasFilter  = filter.isDefined
 }
 
-final case class Flamingos2SpectroscopyRow(grating: F2Disperser, filter: F2Filter)
-    extends InstrumentRow {
+case class Flamingos2SpectroscopyRow(grating: F2Disperser, filter: F2Filter) extends InstrumentRow {
   type Grating = F2Disperser
   type Filter  = F2Filter
   type FPU     = Unit
@@ -93,8 +92,7 @@ final case class Flamingos2SpectroscopyRow(grating: F2Disperser, filter: F2Filte
   val hasFilter  = true
 }
 
-final case class GpiSpectroscopyRow(grating: GpiDisperser, filter: GpiFilter)
-    extends InstrumentRow {
+case class GpiSpectroscopyRow(grating: GpiDisperser, filter: GpiFilter) extends InstrumentRow {
   type Grating = GpiDisperser
   type Filter  = GpiFilter
   type FPU     = Unit
@@ -104,7 +102,7 @@ final case class GpiSpectroscopyRow(grating: GpiDisperser, filter: GpiFilter)
   val hasFilter  = true
 }
 
-final case class GnirsSpectroscopyRow(grating: GnirsDisperser, filter: GnirsFilter)
+case class GnirsSpectroscopyRow(grating: GnirsDisperser, filter: GnirsFilter)
     extends InstrumentRow {
   type Grating = GnirsDisperser
   type Filter  = GnirsFilter
@@ -116,7 +114,7 @@ final case class GnirsSpectroscopyRow(grating: GnirsDisperser, filter: GnirsFilt
 }
 
 // Used for Instruments not fully defined
-final case class GenericSpectroscopyRow(i: Instrument, grating: String, filter: NonEmptyString)
+case class GenericSpectroscopyRow(i: Instrument, grating: String, filter: NonEmptyString)
     extends InstrumentRow {
   type Grating = String
   type Filter  = NonEmptyString

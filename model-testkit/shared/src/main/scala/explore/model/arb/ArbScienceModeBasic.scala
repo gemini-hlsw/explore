@@ -3,14 +3,14 @@
 
 package explore.model.arb
 
-import cats.syntax.all._
+import cats.syntax.all.*
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Cogen
 import org.scalacheck.Gen
 import explore.model.ScienceModeBasic
-import lucuma.core.util.arb.ArbGid._
-import lucuma.core.util.arb.ArbEnumerated._
+import lucuma.core.util.arb.ArbGid.*
+import lucuma.core.util.arb.ArbEnumerated.*
 import lucuma.core.enums.GmosNorthFilter
 import lucuma.core.enums.GmosNorthGrating
 import lucuma.core.enums.GmosNorthFpu

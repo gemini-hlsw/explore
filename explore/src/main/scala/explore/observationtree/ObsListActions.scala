@@ -9,7 +9,6 @@ import clue.data.syntax.*
 import crystal.react.implicits.*
 import explore.common.ObsQueries
 import explore.data.KeyedIndexedList
-import explore.implicits.*
 import explore.model.ObsSummaryWithTitleConstraintsAndConf
 import explore.optics.GetAdjust
 import explore.optics.all.*

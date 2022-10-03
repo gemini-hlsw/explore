@@ -3,9 +3,9 @@
 
 package explore.events
 
-import boopickle.DefaultBasic._
+import boopickle.DefaultBasic.*
 import cats.Eq
-import cats.data._
+import cats.data.*
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt

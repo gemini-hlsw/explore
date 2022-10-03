@@ -5,6 +5,7 @@ package explore.targeteditor
 
 import cats.effect.IO
 import cats.syntax.all.*
+import clue.TransactionalClient
 import crystal.Pot
 import crystal.react.View
 import crystal.react.hooks.*
@@ -14,7 +15,7 @@ import explore.Icons
 import explore.common.AsterismQueries
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
-import explore.implicits.*
+import explore.model.AppContext
 import explore.model.Asterism
 import explore.model.ObsIdSet
 import explore.model.SiderealTargetWithId
@@ -24,6 +25,7 @@ import explore.targets.TargetColumns
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Target
+import lucuma.schemas.ObservationDB
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -53,8 +55,7 @@ case class TargetTable(
   vizTime:        Option[Instant],
   renderInTitle:  Tile.RenderInTitle,
   fullScreen:     Boolean
-)(using val ctx:  AppContextIO)
-    extends ReactFnProps(TargetTable.component)
+) extends ReactFnProps(TargetTable.component)
 
 object TargetTable {
   private type Props = TargetTable
@@ -74,17 +75,18 @@ object TargetTable {
   )
 
   private def deleteSiderealTarget(
-    obsIds:       ObsIdSet,
-    targetId:     Target.Id
-  )(implicit ctx: AppContextIO): IO[Unit] =
+    obsIds:   ObsIdSet,
+    targetId: Target.Id
+  )(using TransactionalClient[IO, ObservationDB]): IO[Unit] =
     AsterismQueries.removeTargetFromAsterisms[IO](obsIds.toList, targetId)
 
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
+      .useContext(AppContext.ctx)
       // cols
-      .useMemoBy(props => (props.obsIds, props.targets.get)) { props => _ =>
-        import props.given
+      .useMemoBy((props, _) => (props.obsIds, props.targets.get)) { (props, ctx) => _ =>
+        import ctx.given
 
         def column[V](id: String, accessor: SiderealTargetWithId => V) =
           TargetTable
@@ -113,15 +115,15 @@ object TargetTable {
             .allColumns
       }
       // If vizTime is not set, change it to now
-      .useEffectResultWithDepsBy((p, _) => p.vizTime) { (_, _) => vizTime =>
+      .useEffectResultWithDepsBy((p, _, _) => p.vizTime) { (_, _, _) => vizTime =>
         IO(vizTime.getOrElse(Instant.now()))
       }
       // rows
-      .useMemoBy((props, _, vizTime) => (props.targets.get, vizTime))((_, _, _) => {
+      .useMemoBy((props, _, _, vizTime) => (props.targets.get, vizTime))((_, _, _, _) =>
         case (targets, Pot.Ready(vizTime)) => targets.foldMap(_.toSiderealAt(vizTime))
         case _                             => Nil
-      })
-      .useTableBy((props, cols, _, rows) =>
+      )
+      .useTableBy((props, _, cols, _, rows) =>
         TargetTable(
           cols,
           rows,
@@ -140,16 +142,17 @@ object TargetTable {
           }.reuseCurrying(props.hiddenColumns.get)
         )
       )
-      .render((props, _, _, rows, tableInstance) =>
+      .render((props, _, _, _, rows, tableInstance) =>
         React.Fragment(
           props.renderInTitle(
             <.span(ExploreStyles.TitleSelectColumns)(
-              Dropdown(item = true,
-                       simple = true,
-                       pointing = Pointing.TopRight,
-                       scrolling = true,
-                       text = "Columns",
-                       clazz = ExploreStyles.SelectColumns
+              Dropdown(
+                item = true,
+                simple = true,
+                pointing = Pointing.TopRight,
+                scrolling = true,
+                text = "Columns",
+                clazz = ExploreStyles.SelectColumns
               )(
                 DropdownMenu(
                   tableInstance.allColumns

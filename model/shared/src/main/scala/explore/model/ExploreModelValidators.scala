@@ -5,7 +5,7 @@ package explore.model
 
 import cats.data.NonEmptyChain
 import cats.data.NonEmptyList
-import cats.syntax.all._
+import cats.syntax.all.*
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.numeric.Interval
@@ -13,7 +13,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.DitherNanoMeters
 import explore.model.DitherNanoMetersRange
 import explore.model.HourRange
-import explore.model.display._
+import explore.model.display.*
 import lucuma.core.math.Axis
 import lucuma.core.math.Offset
 import lucuma.core.math.Parallax
@@ -23,7 +23,7 @@ import lucuma.core.math.validation.MathValidators
 import lucuma.core.optics.Format
 import lucuma.core.optics.ValidSplitEpi
 import lucuma.core.optics.ValidWedge
-import lucuma.core.validation._
+import lucuma.core.validation.*
 import lucuma.refined.*
 import lucuma.utils.*
 

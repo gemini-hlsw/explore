@@ -15,12 +15,13 @@ import crystal.react.reuse.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.numeric.NonNegInt
 import explore.Icons
+import explore.*
 import explore.common.AsterismQueries.*
 import explore.common.UserPreferencesQueries.*
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
-import explore.implicits.*
+import explore.given
 import explore.model.*
 import explore.model.enums.AppTab
 import explore.model.layout.*
@@ -76,11 +77,10 @@ case class TargetTabContents(
   searching:         View[Set[Target.Id]],
   expandedIds:       View[SortedSet[ObsIdSet]],
   hiddenColumns:     View[Set[String]]
-)(using val ctx:     AppContextIO)
-    extends ReactFnProps(TargetTabContents.component)
+) extends ReactFnProps(TargetTabContents.component)
 
-object TargetTabContents {
-  type Props = TargetTabContents
+object TargetTabContents:
+  private type Props = TargetTabContents
 
   private val TargetHeight: NonNegInt      = 18.refined
   private val TargetMinHeight: NonNegInt   = 15.refined
@@ -90,7 +90,7 @@ object TargetTabContents {
   private val DefaultWidth: NonNegInt      = 10.refined
   private val DefaultLargeWidth: NonNegInt = 12.refined
 
-  val layoutMedium: Layout = Layout(
+  private val layoutMedium: Layout = Layout(
     List(
       LayoutItem(
         i = ObsTabTilesIds.TargetId.id.value,
@@ -122,22 +122,24 @@ object TargetTabContents {
     )
   )
 
-  def otherObsCount(targetMap: TargetWithObsList, obsIds: ObsIdSet)(
-    targetId:                  Target.Id
+  private def otherObsCount(targetMap: TargetWithObsList, obsIds: ObsIdSet)(
+    targetId:                          Target.Id
   ): Int =
     targetMap.get(targetId).fold(0)(tg => (tg.obsIds -- obsIds.toSortedSet).size)
 
-  protected def renderFn(
+  private def renderFn(
     props:                 Props,
     panels:                View[TwoPanelState],
     defaultLayouts:        LayoutsMap,
     layouts:               View[Pot[LayoutsMap]],
     resize:                UseResizeDetectorReturn,
     debouncer:             Reusable[UseSingleEffect[IO]],
-    fullScreen:            View[Boolean]
+    fullScreen:            View[Boolean],
+    ctx:                   AppContext[IO]
   )(
     asterismGroupsWithObs: View[AsterismGroupsWithObs]
-  )(using ctx:             AppContextIO): VdomNode = {
+  ): VdomNode = {
+    import ctx.given
 
     val panelsResize =
       (_: ReactEvent, d: ResizeCallbackData) =>
@@ -180,7 +182,7 @@ object TargetTabContents {
       agl.values.find(ag => obsIds.subsetOf(ag.obsIds))
 
     def setPage(focused: Focused): Callback =
-      props.ctx.pushPage(AppTab.Targets, props.programId, focused)
+      ctx.pushPage(AppTab.Targets, props.programId, focused)
 
     def selectObservationAndTarget(expandedIds: View[SortedSet[ObsIdSet]])(
       obsId:                                    Observation.Id,
@@ -586,21 +588,21 @@ object TargetTabContents {
     }
   }
 
-  protected val component =
+  private val component =
     ScalaFnComponent
       .withHooks[Props]
+      .useContext(AppContext.ctx)
       // Two panel state
       .useStateView(TwoPanelState.initial(SelectedPanel.Uninitialized))
-      .useEffectWithDepsBy((props, state) =>
+      .useEffectWithDepsBy((props, _, state) =>
         (props.focused, state.zoom(TwoPanelState.selected).reuseByValue)
-      ) { (_, _) => params =>
+      ) { (_, _, _) => params =>
         val (focused, selected) = params
-        (focused, selected.get) match {
+        (focused, selected.get) match
           case (Focused(Some(_), _), _)                    => selected.set(SelectedPanel.editor)
           case (Focused(None, Some(_)), _)                 => selected.set(SelectedPanel.editor)
           case (Focused(None, None), SelectedPanel.Editor) => selected.set(SelectedPanel.Summary)
           case _                                           => Callback.empty
-        }
       }
       // Measure its size
       .useResizeDetector()
@@ -609,41 +611,39 @@ object TargetTabContents {
       // Keep a record of the initial target layout
       .useMemo(())(_ => defaultTargetLayouts)
       // Load the config from user prefrences
-      .useEffectWithDepsBy((p, _, _, _, _) => p.userId) {
-        (props, panels, _, layout, defaultLayout) => _ =>
-          {
-            import props.given
+      .useEffectWithDepsBy((p, _, _, _, _, _) => p.userId) {
+        (props, ctx, panels, _, layout, defaultLayout) => _ =>
+          import ctx.given
 
-            UserGridLayoutQuery
-              .queryWithDefault[IO](
-                props.userId,
-                GridLayoutSection.TargetLayout,
-                ResizableSection.TargetsTree,
-                (Constants.InitialTreeWidth.toInt, defaultLayout)
-              )
-              .attempt
-              .flatMap {
-                case Right((w, dbLayout)) =>
-                  (panels
-                    .mod(
-                      TwoPanelState.treeWidth.replace(w.toDouble)
-                    ) *> layout.mod(
-                    _.fold(
-                      mergeMap(dbLayout, defaultLayout).ready,
-                      _ => mergeMap(dbLayout, defaultLayout).ready,
-                      cur => mergeMap(dbLayout, cur).ready
-                    )
-                  ))
-                    .to[IO]
-                case Left(_)              =>
-                  IO.unit
-              }
-          }
+          UserGridLayoutQuery
+            .queryWithDefault[IO](
+              props.userId,
+              GridLayoutSection.TargetLayout,
+              ResizableSection.TargetsTree,
+              (Constants.InitialTreeWidth.toInt, defaultLayout)
+            )
+            .attempt
+            .flatMap {
+              case Right((w, dbLayout)) =>
+                (panels
+                  .mod(
+                    TwoPanelState.treeWidth.replace(w.toDouble)
+                  ) *> layout.mod(
+                  _.fold(
+                    mergeMap(dbLayout, defaultLayout).ready,
+                    _ => mergeMap(dbLayout, defaultLayout).ready,
+                    cur => mergeMap(dbLayout, cur).ready
+                  )
+                ))
+                  .to[IO]
+              case Left(_)              =>
+                IO.unit
+            }
       }
       .useSingleEffect(debounce = 1.second)
       // Shared obs conf (posAngle)
-      .useStreamResourceViewOnMountBy { (props, _, _, _, _, _) =>
-        import props.given
+      .useStreamResourceViewOnMountBy { (props, ctx, _, _, _, _, _) =>
+        import ctx.given
 
         AsterismGroupObsQuery
           .query(props.programId)
@@ -658,6 +658,7 @@ object TargetTabContents {
       .render {
         (
           props,
+          ctx,
           twoPanelState,
           resize,
           layout,
@@ -666,8 +667,6 @@ object TargetTabContents {
           asterismGroupsWithObs,
           fullScreen
         ) =>
-          import props.given
-
           <.div(
             asterismGroupsWithObs.render(
               renderFn(
@@ -677,10 +676,9 @@ object TargetTabContents {
                 layout,
                 resize,
                 debouncer,
-                fullScreen
+                fullScreen,
+                ctx
               )
             )
           ).withRef(resize.ref)
       }
-
-}

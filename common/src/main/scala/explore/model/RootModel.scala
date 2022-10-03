@@ -5,8 +5,8 @@ package explore.model
 
 import cats.Eq
 import cats.effect.IO
-import cats.syntax.all._
-import eu.timepit.refined.cats._
+import cats.syntax.all.*
+import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.enums.Band
 import lucuma.core.model.GuestUser

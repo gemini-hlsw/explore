@@ -6,6 +6,7 @@ package explore.observationtree
 import cats.Order.*
 import cats.effect.IO
 import cats.syntax.all.*
+import clue.TransactionalClient
 import crystal.react.View
 import crystal.react.hooks.*
 import crystal.react.implicits.*
@@ -13,7 +14,7 @@ import explore.Icons
 import explore.common.AsterismQueries.*
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
-import explore.implicits.*
+import explore.model.AppContext
 import explore.model.AsterismGroup
 import explore.model.EmptySiderealTarget
 import explore.model.Focused
@@ -26,9 +27,11 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
+import lucuma.schemas.ObservationDB
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import mouse.boolean.*
+import org.typelevel.log4cats.Logger
 import queries.common.TargetQueriesGQL
 import queries.schemas.implicits.*
 import react.beautifuldnd.*
@@ -52,14 +55,12 @@ case class AsterismGroupObsList(
   setSummaryPanel:  Callback,
   expandedIds:      View[SortedSet[ObsIdSet]],
   undoStacks:       View[UndoStacks[IO, AsterismGroupsWithObs]]
-)(using val ctx:    AppContextIO)
-    extends ReactFnProps[AsterismGroupObsList](AsterismGroupObsList.component)
-    with ViewCommon {
+) extends ReactFnProps[AsterismGroupObsList](AsterismGroupObsList.component)
+    with ViewCommon:
   override val focusedObsSet: Option[ObsIdSet] = focused.obsSet
-}
 
-object AsterismGroupObsList {
-  type Props = AsterismGroupObsList
+object AsterismGroupObsList:
+  private type Props = AsterismGroupObsList
 
   // Would be better respresented as a union type in scala 3
   private type TargetOrObsSet = Either[Target.Id, ObsIdSet]
@@ -100,9 +101,10 @@ object AsterismGroupObsList {
 
   private def onDragEnd(
     props:   Props,
+    ctx:     AppContext[IO],
     undoCtx: UndoContext[AsterismGroupsWithObs]
   ): (DropResult, ResponderProvided) => Callback = { (result, _) =>
-    import props.given
+    import ctx.given
 
     val oData = for {
       destination <- result.destination.toOption
@@ -114,7 +116,7 @@ object AsterismGroupObsList {
     } yield (destAg, draggedIds)
 
     def setObsSet(obsIds: ObsIdSet) =
-      props.ctx.pushPage(AppTab.Targets, props.programId, Focused(obsIds.some))
+      ctx.pushPage(AppTab.Targets, props.programId, Focused(obsIds.some))
 
     oData.foldMap { case (destAg, draggedIds) =>
       draggedIds match {
@@ -136,7 +138,7 @@ object AsterismGroupObsList {
     undoCtx:       UndoContext[AsterismGroupsWithObs],
     adding:        View[Boolean],
     setTargetPage: Target.Id => Option[Target.Id] => IO[Unit]
-  )(using AppContextIO): IO[Unit] =
+  )(using TransactionalClient[IO, ObservationDB], Logger[IO]): IO[Unit] =
     adding.async.set(true) >>
       TargetQueriesGQL.CreateTargetMutation
         .execute(EmptySiderealTarget.toCreateTargetInput(programId))
@@ -153,14 +155,15 @@ object AsterismGroupObsList {
         }
         .guarantee(adding.async.set(false))
 
-  protected val component = ScalaFnComponent
+  private val component = ScalaFnComponent
     .withHooks[Props]
-    .useState(false)                          // dragging
-    .useStateView(false)                      // adding
-    .useRefBy((props, _, _) => props.focused) // focusedRef
+    .useContext(AppContext.ctx)
+    .useState(false)                             // dragging
+    .useStateView(false)                         // adding
+    .useRefBy((props, _, _, _) => props.focused) // focusedRef
     // Make sure we see latest focused value in callbacks
-    .useEffectBy((props, _, _, focusedRef) => focusedRef.set(props.focused))
-    .useEffectOnMountBy { (props, _, _, _) =>
+    .useEffectBy((props, _, _, _, focusedRef) => focusedRef.set(props.focused))
+    .useEffectOnMountBy { (props, ctx, _, _, _) =>
       val asterismsWithObs = props.asterismsWithObs.get
       val asterismGroups   = asterismsWithObs.asterismGroups
       val expandedIds      = props.expandedIds
@@ -170,7 +173,7 @@ object AsterismGroupObsList {
         .map(_._2)
 
       def replacePage(focused: Focused): Callback =
-        props.ctx.replacePage(AppTab.Targets, props.programId, focused)
+        ctx.replacePage(AppTab.Targets, props.programId, focused)
 
       val obsMissing    = props.focused.obsSet.nonEmpty && selectedAG.isEmpty
       val targetMissing =
@@ -197,8 +200,8 @@ object AsterismGroupObsList {
         _ <- cleanupExpandedIds
       } yield ()
     }
-    .render { (props, dragging, adding, focusedRef) =>
-      import props.given
+    .render { (props, ctx, dragging, adding, focusedRef) =>
+      import ctx.given
 
       val observations     = props.asterismsWithObs.get.observations
       val asterismGroups   = props.asterismsWithObs.get.asterismGroups.map(_._2)
@@ -213,7 +216,7 @@ object AsterismGroupObsList {
         props.focused.obsSet.isEmpty && props.focused.target.exists(_ === targetId)
 
       def setFocused(focused: Focused): Callback =
-        props.ctx.pushPage(AppTab.Targets, props.programId, focused)
+        ctx.pushPage(AppTab.Targets, props.programId, focused)
 
       val setTargetPage: Target.Id => Option[Target.Id] => IO[Unit] =
         targetId =>
@@ -253,7 +256,7 @@ object AsterismGroupObsList {
             .getOrElse(<.span("ERROR"))
         )
 
-      val handleDragEnd = onDragEnd(props, undoCtx)
+      val handleDragEnd = onDragEnd(props, ctx, undoCtx)
 
       def handleCtrlClick(obsId: Observation.Id, groupIds: ObsIdSet) =
         props.focused.obsSet.fold(setFocused(props.focused.withSingleObs(obsId))) { selectedIds =>
@@ -333,7 +336,8 @@ object AsterismGroupObsList {
                         forceHighlight = isObsSelected(obs.id),
                         linkToObsTab = false,
                         onSelect = obsId => setFocused(props.focused.withSingleObs(obsId)),
-                        onCtrlClick = _ => handleCtrlClick(obs.id, obsIds)
+                        onCtrlClick = _ => handleCtrlClick(obs.id, obsIds),
+                        ctx
                       )(obs, idx)
                     }
                   )
@@ -349,7 +353,7 @@ object AsterismGroupObsList {
         targetWithObs: TargetWithObs,
         setPage:       Option[Target.Id] => IO[Unit],
         index:         Int
-      )(using AppContextIO): VdomNode = {
+      ): VdomNode = {
         val deleteButton = Button(
           size = Small,
           compact = true,
@@ -461,4 +465,3 @@ object AsterismGroupObsList {
         )
       )
     }
-}

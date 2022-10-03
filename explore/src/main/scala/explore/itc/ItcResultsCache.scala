@@ -3,17 +3,17 @@
 
 package explore.model.itc
 
-import cats.data._
-import cats.syntax.all._
-import eu.timepit.refined.auto._
+import cats.data.*
+import cats.syntax.all.*
+import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.numeric.PosBigDecimal
-import explore.model.itc._
-import explore.modes._
-import lucuma.core.enums._
+import explore.model.itc.*
+import explore.modes.*
+import lucuma.core.enums.*
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import monocle.Focus
-import mouse.boolean._
+import mouse.boolean.*
 
 // Simple cache of the remotely calculated values
 case class ItcResultsCache(

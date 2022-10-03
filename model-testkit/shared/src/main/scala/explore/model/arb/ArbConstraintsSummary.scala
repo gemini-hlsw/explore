@@ -3,14 +3,14 @@
 
 package explore.model.arb
 
-import lucuma.core.util.arb.ArbEnumerated._
+import lucuma.core.util.arb.ArbEnumerated.*
 import org.scalacheck.Arbitrary
-import org.scalacheck.Arbitrary._
+import org.scalacheck.Arbitrary.*
 import org.scalacheck.Cogen
-import org.scalacheck.Cogen._
+import org.scalacheck.Cogen.*
 import explore.model.ConstraintsSummary
-import lucuma.core.enums._
-import lucuma.core.util.arb.ArbGid._
+import lucuma.core.enums.*
+import lucuma.core.util.arb.ArbGid.*
 
 trait ArbConstraintsSummary {
   def buildConstraintsSummaryArb[A <: ConstraintsSummary](

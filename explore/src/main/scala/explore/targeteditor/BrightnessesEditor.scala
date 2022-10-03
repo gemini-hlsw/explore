@@ -3,39 +3,40 @@
 
 package explore.targeteditor
 
-import cats.Order._
-import cats.syntax.all._
-import crystal.react._
-import crystal.react.hooks._
-import crystal.react.implicits._
-import crystal.react.reuse._
-import eu.timepit.refined.auto._
+import cats.Order.*
+import cats.syntax.all.*
+import crystal.react.*
+import crystal.react.hooks.*
+import crystal.react.implicits.*
+import crystal.react.reuse.*
+import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
+import explore.*
 import explore.components.ui.ExploreStyles
-import explore.implicits._
+import explore.given
 import explore.model.ExploreModelValidators
 import explore.model.display.given
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.callback.CallbackCats._
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.callback.CallbackCats.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Band
-import lucuma.core.math.BrightnessUnits._
-import lucuma.core.math.dimensional._
+import lucuma.core.math.BrightnessUnits.*
+import lucuma.core.math.dimensional.*
 import lucuma.core.util.Enumerated
 import lucuma.refined.*
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
-import lucuma.ui.reusability._
+import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.Focus
 import react.common.ReactFnProps
-import react.semanticui.collections.table._
+import react.semanticui.collections.table.*
 import react.semanticui.elements.button.Button
-import react.semanticui.sizes._
-import reactST.reactTable._
+import react.semanticui.sizes.*
+import reactST.reactTable.*
 import reactST.reactTable.mod.SortingRule
 
 import scala.collection.immutable.SortedMap
@@ -47,7 +48,7 @@ sealed trait BrightnessesEditor[T] {
 
 sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T]](implicit
   enumUnits: Enumerated[Units Of Brightness[T]]
-) {
+):
   protected case class State(usedBands: Set[Band], newBand: Option[Band])
 
   object State {
@@ -209,29 +210,26 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
         )
 
       }
-}
 
-final case class IntegratedBrightnessEditor(
+case class IntegratedBrightnessEditor(
   brightnesses: View[SortedMap[Band, BrightnessMeasure[Integrated]]],
   disabled:     Boolean
 ) extends ReactFnProps[IntegratedBrightnessEditor](IntegratedBrightnessEditor.component)
     with BrightnessesEditor[Integrated]
 
 object IntegratedBrightnessEditor
-    extends BrightnessesEditorBuilder[Integrated, IntegratedBrightnessEditor] {
+    extends BrightnessesEditorBuilder[Integrated, IntegratedBrightnessEditor]:
   protected val label                                                          = "Brightness"
   protected lazy val defaultBandUnits: Band => Units Of Brightness[Integrated] =
     _.defaultIntegrated.units
-}
 
-final case class SurfaceBrightnessEditor(
+case class SurfaceBrightnessEditor(
   brightnesses: View[SortedMap[Band, BrightnessMeasure[Surface]]],
   disabled:     Boolean
 ) extends ReactFnProps[SurfaceBrightnessEditor](SurfaceBrightnessEditor.component)
     with BrightnessesEditor[Surface]
 
-object SurfaceBrightnessEditor extends BrightnessesEditorBuilder[Surface, SurfaceBrightnessEditor] {
+object SurfaceBrightnessEditor extends BrightnessesEditorBuilder[Surface, SurfaceBrightnessEditor]:
   protected val label                                                       = "Surface Brightness"
   protected lazy val defaultBandUnits: Band => Units Of Brightness[Surface] =
     _.defaultSurface.units
-}

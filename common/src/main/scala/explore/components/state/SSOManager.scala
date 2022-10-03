@@ -4,50 +4,52 @@
 package explore.components.state
 
 import cats.effect.IO
-import cats.syntax.all._
-import crystal.react.hooks._
-import crystal.react.implicits._
-import eu.timepit.refined.auto._
+import cats.syntax.all.*
+import crystal.react.hooks.*
+import crystal.react.implicits.*
+import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.implicits._
+import explore.model.AppContext
 import explore.model.UserVault
-import japgolly.scalajs.react._
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.refined.*
 import org.typelevel.log4cats.Logger
 import react.common.ReactFnProps
 
 import java.time.Instant
 
-final case class SSOManager(
-  expiration:       Instant,
-  setVault:         Option[UserVault] => Callback,
-  setMessage:       NonEmptyString => Callback
-)(implicit val ctx: AppContextIO)
-    extends ReactFnProps[SSOManager](SSOManager.component)
+case class SSOManager(
+  expiration: Instant,
+  setVault:   Option[UserVault] => Callback,
+  setMessage: NonEmptyString => Callback
+) extends ReactFnProps(SSOManager.component)
 
-object SSOManager {
-  protected type Props = SSOManager
+object SSOManager:
+  private type Props = SSOManager
 
   private def tokenRefresher(
-    expiration:   Instant,
-    setVault:     Option[UserVault] => Callback,
-    setMessage:   NonEmptyString => Callback
-  )(implicit ctx: AppContextIO): IO[Unit] =
+    expiration: Instant,
+    setVault:   Option[UserVault] => Callback,
+    setMessage: NonEmptyString => Callback,
+    ctx:        AppContext[IO]
+  ): IO[Unit] =
     for {
       vaultOpt <- ctx.sso.refreshToken(expiration)
       _        <- setVault(vaultOpt).to[IO]
       _        <- vaultOpt.fold(setMessage("Your session has expired".refined).to[IO])(vault =>
-                    tokenRefresher(vault.expiration, setVault, setMessage)
+                    tokenRefresher(vault.expiration, setVault, setMessage, ctx)
                   )
     } yield ()
 
-  protected val component = ScalaFnComponent
+  private val component = ScalaFnComponent
     .withHooks[Props]
-    .useRef(none[IO[Unit]])             // cancelToken
-    .useAsyncEffectOnMountBy { (props, cancelToken) =>
-      implicit val ctx = props.ctx
+    .useContext(AppContext.ctx)
+    .useRef(none[IO[Unit]])         // cancelToken
+    .useAsyncEffectOnMountBy { (props, ctx, cancelToken) =>
+      import ctx.given
 
-      tokenRefresher(props.expiration, props.setVault, props.setMessage)
+      tokenRefresher(props.expiration, props.setVault, props.setMessage, ctx)
         .onError(t =>
           Logger[IO].error(t)("Error refreshing SSO token") >>
             (props.setVault(none) >>
@@ -64,5 +66,4 @@ object SSOManager {
           )
         )
     }
-    .render((_, _) => React.Fragment()) // This is a "phantom" component. Doesn't render anything.
-}
+    .render((_, _, _) => EmptyVdom) // This is a "phantom" component. Doesn't render anything.

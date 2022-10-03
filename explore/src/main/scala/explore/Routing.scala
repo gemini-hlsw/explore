@@ -3,22 +3,22 @@
 
 package explore
 
-import cats.Order._
+import cats.Order.*
 import cats.data.NonEmptySet
-import cats.syntax.all._
+import cats.syntax.all.*
 import crystal.react.View
 import explore.components.ui.ExploreStyles
 import explore.config.SequenceEditor
 import explore.model.Page
-import explore.model.Page._
-import explore.model._
+import explore.model.Page.*
+import explore.model.*
 import explore.programs.ProgramsPopup
 import explore.proposal.ProposalTabContents
-import explore.tabs._
-import japgolly.scalajs.react.ReactMonocle._
-import japgolly.scalajs.react.extra.router._
+import explore.tabs.*
+import japgolly.scalajs.react.ReactMonocle.*
+import japgolly.scalajs.react.extra.router.*
 import japgolly.scalajs.react.vdom.VdomElement
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
@@ -34,7 +34,7 @@ sealed trait ElementItem  extends Product with Serializable
 case object IconsElement  extends ElementItem
 case object LabelsElement extends ElementItem
 
-object Routing {
+object Routing:
 
   private def withSize(f: ResizeDetector.Dimensions => VdomElement): VdomElement =
     ResizeDetector() { s =>
@@ -46,76 +46,64 @@ object Routing {
   private def homeTab(): VdomElement = UnderConstruction()
 
   private def targetTab(page: Page, model: View[RootModel]): VdomElement =
-    AppCtx.using { implicit ctx =>
-      val routingInfo = RoutingInfo.from(page)
-      TargetTabContents(
-        model.zoom(RootModel.userId).get,
-        routingInfo.programId,
-        routingInfo.focused,
-        model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forAsterismGroupList),
-        model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forSiderealTarget),
-        model.zoom(RootModel.searchingTarget),
-        model.zoom(RootModel.expandedIds.andThen(ExpandedIds.asterismObsIds)),
-        model.zoom(RootModel.targetSummaryHiddenColumns)
-      )
-    }
+    val routingInfo = RoutingInfo.from(page)
+    TargetTabContents(
+      model.zoom(RootModel.userId).get,
+      routingInfo.programId,
+      routingInfo.focused,
+      model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forAsterismGroupList),
+      model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forSiderealTarget),
+      model.zoom(RootModel.searchingTarget),
+      model.zoom(RootModel.expandedIds.andThen(ExpandedIds.asterismObsIds)),
+      model.zoom(RootModel.targetSummaryHiddenColumns)
+    )
 
   private def obsTab(page: Page, model: View[RootModel]): VdomElement =
-    AppCtx.using { implicit ctx =>
-      val routingInfo = RoutingInfo.from(page)
-      ObsTabContents(
-        model.zoom(RootModel.userId).get,
-        routingInfo.programId,
-        routingInfo.focused.obsSet.map(_.head),
-        routingInfo.focused.target,
-        model.zoom(RootModel.undoStacks),
-        model.zoom(RootModel.searchingTarget),
-        model.zoom(RootModel.targetSummaryHiddenColumns)
-      )
-    }
+    val routingInfo = RoutingInfo.from(page)
+    ObsTabContents(
+      model.zoom(RootModel.userId).get,
+      routingInfo.programId,
+      routingInfo.focused.obsSet.map(_.head),
+      routingInfo.focused.target,
+      model.zoom(RootModel.undoStacks),
+      model.zoom(RootModel.searchingTarget),
+      model.zoom(RootModel.targetSummaryHiddenColumns)
+    )
 
   private def constraintSetTab(page: Page, model: View[RootModel]): VdomElement =
-    AppCtx.using { implicit ctx =>
-      val routingInfo = RoutingInfo.from(page)
-      ConstraintSetTabContents(
-        model.zoom(RootModel.userId).get,
-        routingInfo.programId,
-        routingInfo.focused.obsSet,
-        model.zoom(
-          RootModel.expandedIds.andThen(ExpandedIds.constraintSetObsIds)
-        ),
-        model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forConstraintList),
-        model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forConstraintGroup),
-        model.zoom(RootModel.constraintSummaryHiddenColumns),
-        model.zoom(RootModel.constraintSummarySorting)
-      )
-    }
+    val routingInfo = RoutingInfo.from(page)
+    ConstraintSetTabContents(
+      model.zoom(RootModel.userId).get,
+      routingInfo.programId,
+      routingInfo.focused.obsSet,
+      model.zoom(
+        RootModel.expandedIds.andThen(ExpandedIds.constraintSetObsIds)
+      ),
+      model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forConstraintList),
+      model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forConstraintGroup),
+      model.zoom(RootModel.constraintSummaryHiddenColumns),
+      model.zoom(RootModel.constraintSummarySorting)
+    )
 
   private def proposalTab(page: Page, model: View[RootModel]): VdomElement =
-    AppCtx.using { implicit ctx =>
-      val routingInfo = RoutingInfo.from(page)
-      ProposalTabContents(routingInfo.programId,
-                          model.zoom(RootModel.user).get,
-                          model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forProposal)
-      )
-    }
+    val routingInfo = RoutingInfo.from(page)
+    ProposalTabContents(routingInfo.programId,
+                        model.zoom(RootModel.user).get,
+                        model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forProposal)
+    )
 
   private def configurationsTab(page: Page): VdomElement =
-    AppCtx.using { implicit ctx =>
-      SequenceEditor(RoutingInfo.from(page).programId)
-    }
+    SequenceEditor(RoutingInfo.from(page).programId)
 
   private def showProgramSelectionPopup(model: View[RootModel]): VdomElement =
-    AppCtx.using { implicit ctx =>
-      ProgramsPopup(
-        currentProgramId = none,
-        undoStacks = model.zoom(RootModel.undoStacks)
-      )
-    }
+    ProgramsPopup(
+      currentProgramId = none,
+      undoStacks = model.zoom(RootModel.undoStacks)
+    )
 
   def config: RouterWithPropsConfig[Page, View[RootModel]] =
     RouterWithPropsConfigDsl[Page, View[RootModel]].buildConfig { dsl =>
-      import dsl._
+      import dsl.*
 
       // We can't use gid.regexPattern because capture groups don't work here.
       def gidRegEx[Id](implicit gid: Gid[Id]): String =
@@ -235,5 +223,3 @@ object Routing {
 
       configuration
     }
-
-}

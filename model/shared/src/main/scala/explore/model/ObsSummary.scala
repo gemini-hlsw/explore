@@ -4,9 +4,9 @@
 package explore.model
 
 import cats.Eq
-import cats.syntax.all._
-import eu.timepit.refined.auto._
-import eu.timepit.refined.cats._
+import cats.syntax.all.*
+import eu.timepit.refined.auto.*
+import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.enums.ObsActiveStatus
 import lucuma.core.enums.ObsStatus
@@ -15,7 +15,7 @@ import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target
 import monocle.Focus
-import org.typelevel.cats.time._
+import org.typelevel.cats.time.*
 
 import java.time.Duration
 import java.time.Instant

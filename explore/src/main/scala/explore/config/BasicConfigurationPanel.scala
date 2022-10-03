@@ -13,8 +13,8 @@ import explore.common.ObsQueries.*
 import explore.common.ScienceQueries.*
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
-import explore.implicits.*
 import explore.model
+import explore.model.AppContext
 import explore.model.CoordinatesAtVizTime
 import explore.model.ImagingConfigurationOptions
 import explore.model.display.given
@@ -49,19 +49,19 @@ case class BasicConfigurationPanel(
   baseCoordinates: Option[CoordinatesAtVizTime],
   onShowDetails:   Callback,
   confMatrix:      SpectroscopyModesMatrix
-)(using val ctx:   AppContextIO)
-    extends ReactFnProps(BasicConfigurationPanel.component)
+) extends ReactFnProps(BasicConfigurationPanel.component)
 
-private object BasicConfigurationPanel {
+private object BasicConfigurationPanel:
   private type Props = BasicConfigurationPanel
 
   private val component =
     ScalaFnComponent
       .withHooks[Props]
+      .useContext(AppContext.ctx)
       .useStateView[ScienceMode](ScienceMode.Spectroscopy)
       .useStateView[ImagingConfigurationOptions](ImagingConfigurationOptions.Default)
-      .render { (props, mode, imaging) =>
-        import props.given
+      .render { (props, ctx, mode, imaging) =>
+        import ctx.given
 
         val requirementsViewSet: ScienceRequirementsUndoView =
           ScienceRequirementsUndoView(props.obsId, props.requirementsCtx)
@@ -108,5 +108,3 @@ private object BasicConfigurationPanel {
           )
         )
       }
-
-}

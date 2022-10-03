@@ -3,14 +3,14 @@
 
 package explore.model.boopickle
 
-import boopickle.DefaultBasic._
+import boopickle.DefaultBasic.*
 import cats.Order
 import cats.data.NonEmptyChain
 import cats.data.NonEmptyList
 import cats.data.NonEmptyMap
-import coulomb._
+import coulomb.*
 import coulomb.syntax.*
-import eu.timepit.refined._
+import eu.timepit.refined.*
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.api.Validate
 import eu.timepit.refined.numeric.NonNegative

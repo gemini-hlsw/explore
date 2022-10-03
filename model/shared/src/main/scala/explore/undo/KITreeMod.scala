@@ -3,7 +3,7 @@
 
 package explore.undo
 
-import explore.data.tree._
+import explore.data.tree.*
 import monocle.Getter
 import monocle.Lens
 

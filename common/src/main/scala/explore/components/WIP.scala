@@ -4,14 +4,14 @@
 package explore.components
 
 import explore.components.ui.ExploreStyles
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.common.style.Css
 
-final case class WIP(clazz: Css, elem: VdomNode) extends ReactFnProps[WIP](WIP.component)
+case class WIP(clazz: Css, elem: VdomNode) extends ReactFnProps[WIP](WIP.component)
 
 object WIP {
   type Props = WIP

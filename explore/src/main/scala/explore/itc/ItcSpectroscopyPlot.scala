@@ -9,7 +9,6 @@ import crystal.Pot
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.highcharts.*
-import explore.implicits.*
 import explore.model.enums.ItcChartType
 import explore.model.enums.ItcSeriesType
 import explore.model.itc.ItcCcd
@@ -21,8 +20,8 @@ import explore.model.itc.math.roundToSignificantFigures
 import explore.syntax.ui.*
 import explore.syntax.ui.given
 import explore.utils.*
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Wavelength
 import lucuma.core.util.Enumerated
 import lucuma.refined.*

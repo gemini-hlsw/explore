@@ -3,24 +3,24 @@
 
 package workers
 
-import boopickle.DefaultBasic._
-import cats.effect._
-import cats.effect.unsafe.implicits._
-import cats.syntax.all._
+import boopickle.DefaultBasic.*
+import cats.effect.*
+import cats.effect.unsafe.implicits.*
+import cats.syntax.all.*
 import clue.TransactionalClient
-import clue._
+import clue.*
 import clue.js.FetchJSBackend
 import clue.js.FetchMethod
-import explore.events._
+import explore.events.*
 import explore.itc.ITCGraphRequests
 import explore.itc.ITCRequests
 import explore.model.AppConfig
 import explore.model.StaticData
-import explore.model.boopickle.Boopickle._
+import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.ItcPicklers
 import explore.modes.SpectroscopyModesMatrix
-import japgolly.scalajs.react.callback.CallbackCatsEffect._
-import japgolly.scalajs.react.callback._
+import japgolly.scalajs.react.callback.CallbackCatsEffect.*
+import japgolly.scalajs.react.callback.*
 import log4cats.loglevel.LogLevelLogger
 import lucuma.ags.Ags
 import lucuma.ags.AgsAnalysis
@@ -31,10 +31,10 @@ import queries.schemas.ITC
 import typings.loglevel.mod.LogLevelDesc
 
 import java.time.Duration
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 import scala.scalajs.js
 
-import js.annotation._
+import js.annotation.*
 
 /**
  * Web worker that can query gaia and store results locally

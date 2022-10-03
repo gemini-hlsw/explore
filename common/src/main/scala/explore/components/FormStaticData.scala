@@ -4,9 +4,9 @@
 package explore.components
 
 import explore.components.ui.ExploreStyles
-import japgolly.scalajs.react._
+import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.TagMod
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
@@ -16,7 +16,7 @@ import react.common.ReactFnProps
  * be only as wide as it needs to be.
  */
 
-final case class FormStaticData(
+case class FormStaticData(
   id:        String,
   value:     TagMod,
   label:     String,

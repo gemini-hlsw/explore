@@ -4,7 +4,7 @@
 package react.reflex
 
 import explore.syntax.ui.*
-import japgolly.scalajs.react._
+import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.TagMod
 import react.common.Css
 import react.common.GenericComponentPAC
@@ -16,7 +16,7 @@ import scalajs.js
 // ReflexHandle must either:
 // 1) Be the first direct child of a ReactElement; or otherwise:
 // 2) Be wrapped within a ReflexWithHandle, and the provided parameter be passed on opaquely.
-final case class ReflexHandle(
+case class ReflexHandle(
   propagate:              js.UndefOr[Boolean] = js.undefined,
   onStartResize:          js.UndefOr[ResizeEvent => Callback] = js.undefined,
   onStopResize:           js.UndefOr[ResizeEvent => Callback] = js.undefined,
@@ -56,7 +56,7 @@ object ReflexHandle {
     onStopResize.toJs.foreach(v => p.onStopResize = v)
     onResize.toJs.foreach(v => p.onResize = v)
     provided.foreach { v =>
-      import cats.syntax.all._
+      import cats.syntax.all.*
       (v.index.toOption, v.events.toOption).tupled match {
         case None                  =>
           throw new Exception(

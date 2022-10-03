@@ -4,7 +4,7 @@
 package react.reflex
 
 import explore.syntax.ui.*
-import japgolly.scalajs.react._
+import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.TagMod
 import react.common.Css
 import react.common.GenericComponentPAC
@@ -13,7 +13,7 @@ import scala.scalajs.js.annotation.JSImport
 
 import scalajs.js
 
-final case class ReflexElement(
+case class ReflexElement(
   propagateDimensions:     js.UndefOr[Boolean] = js.undefined,
   propagateDimensionsRate: js.UndefOr[Double] = js.undefined,
   resizeHeight:            js.UndefOr[Boolean] = js.undefined,

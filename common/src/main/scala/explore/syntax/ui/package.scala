@@ -4,18 +4,18 @@
 package explore.syntax
 
 import cats.Eq
-import cats.syntax.all._
+import cats.syntax.all.*
 import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
 import explore.model.Constants
-import explore.utils._
+import explore.utils.*
 import japgolly.scalajs.react.CtorType
 import japgolly.scalajs.react.callback.Callback
 import japgolly.scalajs.react.component.Scala
 import japgolly.scalajs.react.component.ScalaFn
 import japgolly.scalajs.react.component.ScalaForwardRef
-import japgolly.scalajs.react.vdom._
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.forms.ExternalValue
 import lucuma.ui.forms.FormInputEV
 import org.scalajs.dom.Window
@@ -33,7 +33,7 @@ import react.common.GenericFnComponentPA
 import react.common.GenericFnComponentPAC
 import react.common.GenericFnComponentPC
 import react.common.ReactRender
-import react.common.implicits._
+import react.common.implicits.*
 
 import scala.scalajs.js
 import scala.scalajs.js.UndefOr

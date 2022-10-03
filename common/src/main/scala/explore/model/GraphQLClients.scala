@@ -3,21 +3,21 @@
 
 package explore.model
 
-import cats._
-import cats.effect._
-import cats.syntax.all._
-import clue._
+import cats.*
+import cats.effect.*
+import cats.syntax.all.*
+import clue.*
 import io.circe.Json
-import lucuma.schemas._
-import org.http4s._
+import lucuma.schemas.*
+import org.http4s.*
 import org.typelevel.log4cats.Logger
-import queries.schemas._
+import queries.schemas.*
 
 case class GraphQLClients[F[_]: Async: Parallel] protected (
   odb:           WebSocketClient[F, ObservationDB],
   preferencesDB: WebSocketClient[F, UserPreferencesDB],
   itc:           TransactionalClient[F, ITC]
-) {
+):
   def init(payload: Map[String, Json]): F[Unit] =
     (
       preferencesDB.connect() >> preferencesDB.initialize(),
@@ -29,8 +29,7 @@ case class GraphQLClients[F[_]: Async: Parallel] protected (
       preferencesDB.terminate() >> preferencesDB.disconnect(WebSocketCloseParams(code = 1000)),
       odb.terminate() >> odb.disconnect(WebSocketCloseParams(code = 1000))
     ).sequence.void
-}
-object GraphQLClients {
+object GraphQLClients:
   def build[F[_]: Async: TransactionalBackend: WebSocketBackend: Parallel: Logger](
     odbURI:               Uri,
     prefsURI:             Uri,
@@ -45,4 +44,3 @@ object GraphQLClients {
       itcClient   <-
         TransactionalClient.of[F, ITC](itcURI, "ITC")
     } yield GraphQLClients(odbClient, prefsClient, itcClient)
-}

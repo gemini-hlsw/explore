@@ -3,15 +3,15 @@
 
 package explore.model.boopickle
 
-import boopickle.DefaultBasic._
-import cats.effect._
-import cats.syntax.all._
+import boopickle.DefaultBasic.*
+import cats.effect.*
+import cats.syntax.all.*
 import fs2.Chunk.ByteBuffer.apply
 import org.scalajs.dom
 
 import java.nio.ByteBuffer
 import scala.scalajs.js
-import scala.scalajs.js.typedarray._
+import scala.scalajs.js.typedarray.*
 
 trait BoopicklePlatform {
 

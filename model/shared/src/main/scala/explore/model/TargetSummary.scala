@@ -5,7 +5,7 @@ package explore.model
 
 import cats.Eq
 import cats.derived.*
-import eu.timepit.refined.cats._
+import eu.timepit.refined.cats.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 
