@@ -36,7 +36,11 @@ sealed abstract class SEDType[T](
 ) extends Product
     with Serializable
 
-sealed abstract class SEDTypeEnum[T](implicit
+extension [T](units: Enumerated[Units Of FluxDensityContinuum[T]])
+  def defaultContinuumUnits = units.all.head
+extension [T](units: Enumerated[Units Of LineFlux[T]]) def defaultLineUnits = units.all.head
+
+sealed abstract class SEDTypeEnum[T](using
   enumFDCUnits: Enumerated[Units Of FluxDensityContinuum[T]]
 ) {
   import UnnormalizedSED.*
@@ -73,7 +77,7 @@ sealed abstract class SEDTypeEnum[T](implicit
         _ =>
           EmissionLines[T](
             SortedMap.empty,
-            enumFDCUnits.all.last.withValueTagged(BigDecimal(1).refined[Positive])
+            enumFDCUnits.defaultContinuumUnits.withValueTagged(BigDecimal(1).refined[Positive])
           )
       )
   case object PowerLawType extends BandNormalizedSED("Power Law", PowerLaw(BigDecimal(0)))

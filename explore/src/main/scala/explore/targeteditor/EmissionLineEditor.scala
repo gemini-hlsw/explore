@@ -19,6 +19,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.implicits.*
+import explore.model.enums.*
 import explore.model.formats.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -58,7 +59,7 @@ sealed trait EmissionLineEditor[T] {
 sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T]](using
   enumUnits: Enumerated[Units Of LineFlux[T]]
 ) {
-  private val defaultLineUnits: Units Of LineFlux[T] = enumUnits.all.last
+  private val defaultLineUnits: Units Of LineFlux[T] = enumUnits.defaultLineUnits
 
   private type RowValue = (Wavelength, View[EmissionLine[T]])
 
