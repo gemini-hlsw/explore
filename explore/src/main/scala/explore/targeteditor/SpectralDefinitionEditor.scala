@@ -21,10 +21,10 @@ import explore.components.ui.ExploreStyles
 import explore.implicits.*
 import explore.model.display.given
 import explore.model.enums.IntegratedSEDType
-import explore.model.enums.IntegratedSEDType.*
+import explore.model.enums.IntegratedSEDType.given
 import explore.model.enums.SEDType
 import explore.model.enums.SurfaceSEDType
-import explore.model.enums.SurfaceSEDType.*
+import explore.model.enums.SurfaceSEDType.given
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*

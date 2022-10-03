@@ -9,10 +9,10 @@ import lucuma.core.util.NewType
 import monocle.Focus
 
 object AladinMouseScroll extends NewType[Boolean]:
-  val Allowed: AladinMouseScroll  = AladinMouseScroll(true)
-  val Disabled: AladinMouseScroll = AladinMouseScroll(false)
+  inline def Allowed: AladinMouseScroll  = AladinMouseScroll(true)
+  inline def Disabled: AladinMouseScroll = AladinMouseScroll(false)
   extension (s: AladinMouseScroll)
-    def flip: AladinMouseScroll =
+    inline def flip: AladinMouseScroll =
       if (s.value) AladinMouseScroll.Disabled else AladinMouseScroll.Allowed
 
 type AladinMouseScroll = AladinMouseScroll.Type

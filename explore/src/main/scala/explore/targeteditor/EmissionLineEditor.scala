@@ -3,58 +3,62 @@
 
 package explore.targeteditor
 
-import cats.Order._
-import cats.syntax.all._
-import coulomb._
+import cats.Order.*
+import cats.syntax.all.*
+import coulomb.*
 import coulomb.syntax.*
 import crystal.react.View
-import crystal.react.hooks._
-import crystal.react.implicits._
-import crystal.react.reuse._
-import eu.timepit.refined._
-import eu.timepit.refined.cats._
+import crystal.react.hooks.*
+import crystal.react.implicits.*
+import crystal.react.reuse.*
+import eu.timepit.refined.*
+import eu.timepit.refined.cats.*
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
-import explore.implicits._
-import explore.model.formats._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.math.BrightnessUnits._
+import explore.implicits.*
+import explore.model.formats.*
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.math.BrightnessUnits.*
 import lucuma.core.math.Wavelength
-import lucuma.core.math.dimensional._
-import lucuma.core.math.units._
+import lucuma.core.math.dimensional.*
+import lucuma.core.math.units.*
 import lucuma.core.model.EmissionLine
 import lucuma.core.util.Enumerated
-import lucuma.core.validation._
+import lucuma.core.util.NewType
+import lucuma.core.validation.*
 import lucuma.refined.*
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
-import lucuma.ui.reusability._
+import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
-import react.semanticui.collections.table._
+import react.semanticui.collections.table.*
 import react.semanticui.elements.button.Button
-import react.semanticui.sizes._
-import reactST.reactTable._
+import react.semanticui.sizes.*
+import reactST.reactTable.*
 import reactST.reactTable.mod.SortingRule
 
 import scala.collection.immutable.SortedMap
 import scala.math.BigDecimal.RoundingMode
+
+object AddDisabled extends NewType[Boolean]
+type AddDisabled = AddDisabled.Type
 
 sealed trait EmissionLineEditor[T] {
   val emissionLines: View[SortedMap[Wavelength, EmissionLine[T]]]
   val disabled: Boolean
 }
 
-sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T]](implicit
+sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T]](using
   enumUnits: Enumerated[Units Of LineFlux[T]]
 ) {
-  private val defaultLineUnits: Units Of LineFlux[T] = enumUnits.all.head
+  private val defaultLineUnits: Units Of LineFlux[T] = enumUnits.all.last
 
   private type RowValue = (Wavelength, View[EmissionLine[T]])
 
@@ -66,8 +70,9 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
 
   val component = ScalaFnComponent
     .withHooks[Props]
-    .useMemoBy(props => (props.emissionLines.reuseByValue, props.disabled)) { _ => // Memo cols
-      { case (emissionLines, disabled) =>
+    // Memo cols
+    .useMemoBy(props => (props.emissionLines.reuseByValue, props.disabled)) {
+      _ => (emissionLines, disabled) =>
         List(
           EmissionLineTableRef
             .Column("wavelength", _._1)
@@ -158,7 +163,6 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
             .setMaxWidth(25)
             .setDisableSortBy(true)
         )
-      }
     }
     // rows
     .useMemoBy((props, _) => props.emissionLines.get)((props, _) =>
@@ -177,7 +181,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
     // newWavelength
     .useStateView(none[Wavelength])
     // addDisabled
-    .useStateView(true)
+    .useStateView(AddDisabled(true))
     .render { (props, _, _, tableInstance, newWavelength, addDisabled) =>
       val bd1 = refineV[Positive](BigDecimal(1)).getOrElse(sys.error("Cannot happen"))
 
@@ -205,7 +209,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
               .decimal(3.refined)
               .allow(List("0", "0.").contains)
               .optional,
-            onTextChange = s => addDisabled.set(s.isEmpty),
+            onTextChange = s => addDisabled.set(AddDisabled(s.isEmpty)),
             clazz = ExploreStyles.NewEmissionLineWavelength
           ),
           "μm",
@@ -214,7 +218,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
             compact = true,
             onClick = addLine,
             clazz = ExploreStyles.BrightnessAddButton,
-            disabled = props.disabled || addDisabled.get
+            disabled = props.disabled || addDisabled.get.value
           )(
             Icons.New
           )

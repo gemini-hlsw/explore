@@ -3,7 +3,7 @@
 
 package explore.model.enums
 
-import cats.Order._
+import cats.Order.*
 import cats.data.NonEmptyMap
 import coulomb.*
 import coulomb.syntax.*
@@ -18,15 +18,15 @@ import lucuma.core.enums.PlanetSpectrum
 import lucuma.core.enums.PlanetaryNebulaSpectrum
 import lucuma.core.enums.QuasarSpectrum
 import lucuma.core.enums.StellarLibrarySpectrum
-import lucuma.core.math.BrightnessUnits._
+import lucuma.core.math.BrightnessUnits.*
 import lucuma.core.math.Wavelength
-import lucuma.core.math.dimensional.Units._
-import lucuma.core.math.dimensional._
+import lucuma.core.math.dimensional.Units.*
+import lucuma.core.math.dimensional.*
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
-import lucuma.refined._
+import lucuma.refined.*
 
 import scala.collection.immutable.SortedMap
 
@@ -39,8 +39,8 @@ sealed abstract class SEDType[T](
 sealed abstract class SEDTypeEnum[T](implicit
   enumFDCUnits: Enumerated[Units Of FluxDensityContinuum[T]]
 ) {
-  import UnnormalizedSED._
-  import SpectralDefinition._
+  import UnnormalizedSED.*
+  import SpectralDefinition.*
 
   private def toBandNormalized[T](
     sed: UnnormalizedSED
@@ -73,7 +73,7 @@ sealed abstract class SEDTypeEnum[T](implicit
         _ =>
           EmissionLines[T](
             SortedMap.empty,
-            enumFDCUnits.all.head.withValueTagged(BigDecimal(1).refined[Positive])
+            enumFDCUnits.all.last.withValueTagged(BigDecimal(1).refined[Positive])
           )
       )
   case object PowerLawType extends BandNormalizedSED("Power Law", PowerLaw(BigDecimal(0)))
@@ -123,11 +123,11 @@ sealed abstract class SEDTypeEnum[T](implicit
 }
 
 object IntegratedSEDType extends SEDTypeEnum[Integrated] {
-  implicit val enumIntegratedSEDType: Enumerated[SEDType[Integrated]] = enumSEDType
-  implicit val displayIntegratedSEDType: Display[SEDType[Integrated]] = displaySEDType
+  given Enumerated[SEDType[Integrated]] = enumSEDType
+  given Display[SEDType[Integrated]]    = displaySEDType
 }
 
 object SurfaceSEDType extends SEDTypeEnum[Surface] {
-  implicit val enumSurfaceSEDType: Enumerated[SEDType[Surface]] = enumSEDType
-  implicit val displaySurfaceSEDType: Display[SEDType[Surface]] = displaySEDType
+  given Enumerated[SEDType[Surface]] = enumSEDType
+  given Display[SEDType[Surface]]    = displaySEDType
 }
