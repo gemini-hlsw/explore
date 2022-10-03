@@ -8,7 +8,7 @@ import eu.timepit.refined.types.numeric.NonNegInt
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.itc.ItcCcd
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.NonNegDuration
 import lucuma.core.util.NewType
 import lucuma.ui.syntax.all.*
@@ -49,5 +49,8 @@ def formatDuration(seconds: Long): String =
 def format(time: NonNegDuration, count: NonNegInt): String =
   s"$count × ${formatDuration(time.value.getSeconds())} = ${formatDuration(time.value.getSeconds() * count.value)}"
 
-def formatCcds(ccds: Option[NonEmptyList[ItcCcd]], extractor: NonEmptyList[ItcCcd] => String) =
+def formatCcds(
+  ccds:      Option[NonEmptyList[ItcCcd]],
+  extractor: NonEmptyList[ItcCcd] => String
+): String =
   ccds.fold("-")(extractor)
