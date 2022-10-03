@@ -4622,6 +4622,10 @@ type Query {
     input: SpectroscopyModeInput!
   ): [SpectroscopyResult!]!
 
+  spectroscopySignalToNoiseBeta(
+    input: SpectroscopySNInput!
+  ): SignalToNoiseResult!
+
   spectroscopyGraph(
     input: SpectroscopyGraphModeInput!
   ): SpectroscopyGraphResult!
@@ -4691,6 +4695,9 @@ input SpectroscopyModeInput {
   # Observing wavelength.
   wavelength: WavelengthInput!
 
+  # Wavelength at which to measure Signal to Noise
+  signalToNoiseAt: WavelengthInput
+
   # Minimum desired signal-to-noise ratio.
   signalToNoise: PosBigDecimal!
 
@@ -4722,10 +4729,46 @@ input SignificantFiguresInput {
   ccd: PosInt
 }
 
-# Configuration alternatives query
+# Parameters to retrieve graph data
 input SpectroscopyGraphModeInput {
   # Observing wavelength.
   wavelength: WavelengthInput!
+
+  # Wavelength at which to measure Signal to Noise
+  signalToNoiseAt: WavelengthInput
+
+  # Exposure time duration
+  exposureTime: NonNegDurationInput!
+
+  # Exposures
+  exposures: PosInt!
+
+  # Spatial profile PointSource/UniformSource/GaussianSource.
+  sourceProfile: SourceProfileInput!
+
+  # Observing Band
+  band: Band!
+
+  # Target radial velocity
+  radialVelocity: RadialVelocityInput!
+
+  # Conditions
+  constraints: ConstraintSetInput!
+
+  # Instrument modes
+  mode: InstrumentModesInput!
+
+  # Significant figures, truncates the amount of significant value
+  significantFigures: SignificantFiguresInput
+}
+
+# Parameters to calculate signal to noise
+input SpectroscopySNInput {
+  # Observing wavelength.
+  wavelength: WavelengthInput!
+
+  # Wavelength at which to measure Signal to Noise
+  signalToNoiseAt: WavelengthInput
 
   # Exposure time duration
   exposureTime: NonNegDurationInput!
@@ -4844,8 +4887,20 @@ type ItcCcd {
   # the final SN ratio for a single image
   singleSNRatio: BigDecimal!
 
+  # Wavelength where we get the max singl SN
+  wavelengthForMaxSingleSNRatio: Wavelength!
+
+  # the max single SN ratio for this ccd
+  maxSingleSNRatio:  BigDecimal!
+
   # the total SN ratio for all images
   totalSNRatio:  BigDecimal!
+
+  # Wavelength where we get the max total SN
+  wavelengthForMaxTotalSNRatio: Wavelength!
+
+  # the max final SN ratio for this ccd
+  maxTotalSNRatio:  BigDecimal!
 
   # the highest e- count for all pixels on the CCD
   peakPixelFlux: BigDecimal!
@@ -4874,3 +4929,46 @@ type SpectroscopyGraphResult {
 
 }
 
+"""Calculation result types"""
+enum SNResultType {
+  SUCCESS
+
+  NO_DATA
+
+  ABOVE_RANGE
+
+  BELOW_RANGE
+
+  CALCULATION_ERROR
+}
+
+interface SignalToNoiseResult {
+
+  # ITC result type
+  resultType: SNResultType!
+}
+
+type SNCalcSuccess implements SignalToNoiseResult {
+  resultType: SNResultType!
+
+  # Resulting signal to noise
+  signalToNoise: BigDecimal!
+}
+
+type SNWavelengthAtBelowRange implements SignalToNoiseResult {
+  resultType: SNResultType!
+
+  signalToNoiseAt: Wavelength!
+}
+
+type SNWavelengthAtAboveRange implements SignalToNoiseResult {
+  resultType: SNResultType!
+
+  signalToNoiseAt: Wavelength!
+}
+
+type SNCalcError implements SignalToNoiseResult {
+  resultType: SNResultType!
+
+  msg: String!
+}

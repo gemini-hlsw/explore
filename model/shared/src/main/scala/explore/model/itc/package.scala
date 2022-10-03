@@ -13,10 +13,12 @@ import eu.timepit.refined.types.numeric.PosInt
 import explore.model.enums.ItcChartType
 import explore.model.enums.ItcSeriesType
 import io.circe.Decoder
+import lucuma.core.math.Wavelength
 import lucuma.core.model.NonNegDuration
 import lucuma.core.model.implicits.*
 import lucuma.core.util.Enumerated
 import lucuma.core.util.NewType
+import lucuma.schemas.decoders.given
 
 import scala.concurrent.duration.*
 import scala.math.*
@@ -73,10 +75,12 @@ case class ItcChartExposureTime(
 ) derives Eq
 
 case class ItcCcd(
-  singleSNRatio: Double, // the final SN ratio for a single image
-  totalSNRatio:  Double, // the total SN ratio for all images
-  peakPixelFlux: Double, // the highest e- count for all pixels on the CCD
-  ampGain:       Double  // the amplifier gain for this CCD (used to calculate ADU)
+  singleSNRatio:                Double, // the final SN ratio for a single image
+  totalSNRatio:                 Double, // the total SN ratio for all images
+  maxTotalSNRatio:              Double, // the total SN ratio for all images
+  peakPixelFlux:                Double, // the highest e- count for all pixels on the CCD
+  ampGain:                      Double, // the amplifier gain for this CCD (used to calculate ADU)
+  wavelengthForMaxTotalSNRatio: Wavelength
 ) derives Decoder {
   val adu: Int = (peakPixelFlux / ampGain).toInt // the ADU value
 }

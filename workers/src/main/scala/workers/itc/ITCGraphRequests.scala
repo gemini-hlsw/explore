@@ -69,22 +69,22 @@ object ITCGraphRequests {
       request: ItcGraphRequestParams
     ): F[List[(ItcTarget, SpectroscopyGraphITCQuery.Data)]] =
       request.target
-        .fproduct(t => selectedBrightness(t.profile, request.wavelength.value))
-        .collect { case (t, Some(brightness)) =>
+        .fproduct(t => selectedBand(t.profile, request.wavelength.value))
+        .collect { case (t, Some(band)) =>
           request.mode.toITCInput
             .map(mode =>
               SpectroscopyGraphITCQuery
                 .query(
                   SpectroscopyGraphModeInput(
-                    request.wavelength.value.toInput,
-                    request.exposureTime.toInput,
-                    request.exposures,
-                    t.profile.toInput,
-                    brightness,
-                    t.rv.toITCInput,
-                    request.constraints,
-                    mode,
-                    significantFigures
+                    wavelength = request.wavelength.value.toInput,
+                    exposureTime = request.exposureTime.toInput,
+                    exposures = request.exposures,
+                    sourceProfile = t.profile.toInput,
+                    band = band,
+                    radialVelocity = t.rv.toITCInput,
+                    constraints = request.constraints,
+                    mode = mode,
+                    significantFigures = significantFigures
                   ).assign
                 )
                 .map(r => t -> r)
@@ -94,7 +94,7 @@ object ITCGraphRequests {
         .sequence
 
     // We cache unexpanded results, exactly as received from server.
-    val cacheableRequest = Cacheable(CacheName("itcGraphQuery"), CacheVersion(1), doRequest)
+    val cacheableRequest = Cacheable(CacheName("itcGraphQuery"), CacheVersion(2), doRequest)
 
     itcRowsParams.map { request =>
       Logger[F].debug(

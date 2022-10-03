@@ -56,8 +56,8 @@ def niceNum(range: Double, round: Boolean): Double =
 
 extension (w: Wavelength) inline def pm = w.toPicometers.value.value
 
-// Find the magnitude closest to the requested wavelength
-def selectedBrightness(
+// Find the band closest to the requested wavelength
+def selectedBand(
   sourceProfile: SourceProfile,
   wavelength:    Wavelength
 ): Option[Band] =

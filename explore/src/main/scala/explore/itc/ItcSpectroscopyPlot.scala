@@ -12,6 +12,7 @@ import explore.highcharts.*
 import explore.implicits.*
 import explore.model.enums.ItcChartType
 import explore.model.enums.ItcSeriesType
+import explore.model.itc.ItcCcd
 import explore.model.itc.ItcChart
 import explore.model.itc.ItcSeries
 import explore.model.itc.PlotDetails
@@ -44,6 +45,7 @@ import scala.scalajs.js
 import scala.scalajs.js.JSConverters.*
 
 case class ItcSpectroscopyPlot(
+  ccds:         Option[NonEmptyList[ItcCcd]],
   charts:       Option[NonEmptyList[ItcChart]],
   error:        Option[String],
   chartType:    ItcChartType,
@@ -57,12 +59,13 @@ object ItcSpectroscopyPlot {
   private type Props = ItcSpectroscopyPlot
 
   private def chartOptions(
-    chart:        ItcChart,
-    targetName:   Option[String],
-    loading:      PlotLoading,
-    details:      PlotDetails,
-    atWavelength: Option[Wavelength],
-    height:       Double
+    chart:           ItcChart,
+    targetName:      Option[String],
+    loading:         PlotLoading,
+    details:         PlotDetails,
+    atWavelength:    Option[Wavelength],
+    maxSNWavelength: Option[Wavelength],
+    height:          Double
   ) = {
     val yAxis            = chart.series.foldLeft(YAxis.Empty)(_ ∪ _.yAxis)
     val title            = chart.chartType match
@@ -102,15 +105,7 @@ object ItcSpectroscopyPlot {
     val plotLines = chart.chartType match
       case ItcChartType.SignalChart => js.Array()
       case ItcChartType.S2NChart    =>
-        val value = atWavelength.map(w => w.nanometer.value.toDouble).orElse {
-          // we should do this on the backend
-          chart.series
-            .filter(_.seriesType === ItcSeriesType.FinalS2NData)
-            .map(_.data.maximumByOption(_._2))
-            .flattenOption
-            .maximumByOption(_._2)
-            .map(_._1)
-        }
+        val value = atWavelength.orElse(maxSNWavelength).map(_.nanometer.value.toDouble)
 
         value
           .foldMap(value =>
@@ -229,13 +224,21 @@ object ItcSpectroscopyPlot {
       val series: List[ItcChart] =
         props.charts.filterNot(_ => loading).foldMap(_.toList)
 
-      val height          = resize.height.getOrElse(1).toDouble
+      val height                              = resize.height.getOrElse(1).toDouble
+      val maxSNWavelength: Option[Wavelength] =
+        props.ccds
+          .foldMap(_.toList)
+          .map(c => (c.maxTotalSNRatio, c.wavelengthForMaxTotalSNRatio))
+          .maxByOption(_._1)
+          .map(_._2)
+
       val itcChartOptions = series.map { chart =>
         chart.chartType -> chartOptions(chart,
                                         props.targetName,
                                         props.loading,
                                         props.details,
                                         props.atWavelength,
+                                        maxSNWavelength,
                                         height
         )
       }.toMap
