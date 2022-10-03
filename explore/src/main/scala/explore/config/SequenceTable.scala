@@ -97,7 +97,6 @@ object SequenceTable:
 
   private val offsetFormat = new DecimalFormat("#.0")
 
-  // private val StepTable = TableDef[StepLine]
   private val ColDef = ColumnDef[StepLine]
 
   private def drawBracket(rows: Int): VdomElement =
@@ -175,8 +174,6 @@ object SequenceTable:
       )
       .flatten
 
-  // private val StepTableComponent = new SUITable(StepTable)
-
   val bracketDef =
     svg(^.width := "0", ^.height := "0")(
       defs(
@@ -207,7 +204,7 @@ object SequenceTable:
           compact = Compact.Very,
           hoverableRows = true,
           celled = true,
-          cellClassFn = (_, col, _) =>
-            if (col === "stepType") Css("explore-table-cell-hide-border") else Css.Empty
+          cellClassFn =
+            (_, col, _) => if (col === "stepType") ExploreStyles.CellHideBorder else Css.Empty
         )
       }

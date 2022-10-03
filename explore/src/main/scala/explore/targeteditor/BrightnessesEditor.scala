@@ -30,6 +30,7 @@ import lucuma.core.util.Enumerated
 // import lucuma.ui.reusability._
 // import lucuma.ui.syntax.all.*
 // import lucuma.ui.syntax.all.given
+import lucuma.ui.table.*
 // import monocle.Focus
 import react.common.ReactFnProps
 // import react.semanticui.collections.table._
