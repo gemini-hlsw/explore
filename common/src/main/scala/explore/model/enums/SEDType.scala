@@ -22,6 +22,7 @@ import lucuma.core.math.BrightnessUnits.*
 import lucuma.core.math.Wavelength
 import lucuma.core.math.dimensional.Units.*
 import lucuma.core.math.dimensional.*
+import lucuma.core.math.units.*
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
 import lucuma.core.util.Display
@@ -77,7 +78,8 @@ sealed abstract class SEDTypeEnum[T](using
         _ =>
           EmissionLines[T](
             SortedMap.empty,
-            enumFDCUnits.defaultContinuumUnits.withValueTagged(BigDecimal(1).refined[Positive])
+            // enumFDCUnits.defaultContinuumUnits.withValueTagged(BigDecimal(1).refined[Positive])
+            SEDTypeEnum.defaultContinuumUnits.withValueTagged(BigDecimal(1).refined[Positive])
           )
       )
   case object PowerLawType extends BandNormalizedSED("Power Law", PowerLaw(BigDecimal(0)))
@@ -125,6 +127,12 @@ sealed abstract class SEDTypeEnum[T](using
 
   protected val displaySEDType: Display[SEDType[T]] = Display.byShortName(_.name)
 }
+
+object SEDTypeEnum:
+  val defaultContinuumUnits =
+    summon[TaggedUnit[ErgsPerSecondCentimeter2Angstrom, FluxDensityContinuum[Integrated]]].unit
+  // val defaultLineFluxUnits  =
+  //   summon[TaggedUnit[ErgsPerSecondCentimeter2Angstrom, LineFlux[Integrated]]].unit
 
 object IntegratedSEDType extends SEDTypeEnum[Integrated] {
   given Enumerated[SEDType[Integrated]] = enumSEDType
