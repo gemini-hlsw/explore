@@ -72,18 +72,18 @@ object ITCRequests {
       Logger[F]
         .debug(
           s"ITC: Request for mode: ${params.mode}, centralWavelength: ${params.wavelength} and target count: ${params.target.name.value}"
-        ) *> selectedBrightness(params.target.profile, params.wavelength.value)
-        .map { brightness =>
+        ) *> selectedBand(params.target.profile, params.wavelength.value)
+        .map { band =>
           SpectroscopyITCQuery
             .query(
               SpectroscopyModeInput(
-                params.wavelength.value.toInput,
-                params.signalToNoise,
-                params.target.profile.toInput,
-                brightness,
-                params.target.rv.toITCInput,
-                params.constraints,
-                params.mode.toITCInput.map(_.assign).toList
+                wavelength = params.wavelength.value.toInput,
+                signalToNoise = params.signalToNoise,
+                sourceProfile = params.target.profile.toInput,
+                band = band,
+                radialVelocity = params.target.rv.toITCInput,
+                constraints = params.constraints,
+                modes = params.mode.toITCInput.map(_.assign).toList
               ).assign
             )
             .flatTap { r =>

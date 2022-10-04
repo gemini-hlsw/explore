@@ -6,11 +6,13 @@ package explore.itc
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.Pot
+import crystal.implicits.*
 import crystal.react.View
 import crystal.react.hooks.*
 import crystal.react.implicits.*
 import eu.timepit.refined.*
 import eu.timepit.refined.numeric.Positive
+import explore.Icons
 import explore.common.ObsQueries.*
 import explore.components.ui.ExploreStyles
 import explore.events.*
@@ -24,12 +26,14 @@ import explore.model.itc.ItcTarget
 import explore.model.itc.math.*
 import explore.model.reusability.*
 import explore.model.reusability.given
+import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.given
 import queries.schemas.itc.implicits.*
 import react.common.ReactFnProps
+import react.floatingui.syntax.*
 import react.primereact.Dropdown
 import react.primereact.SelectItem
 
@@ -48,6 +52,11 @@ case class ItcPanelTitle(
 object ItcPanelTitle:
   private type Props = ItcPanelTitle with ItcPanelProps
 
+  val MissingInfoMsg                   = "Not enough information to call ITC"
+  val MissingInfo: Pot[ItcChartResult] =
+    Pot.error(new RuntimeException(MissingInfoMsg))
+  val MissingInfoIcon                  = Icons.ExclamationTriangle.clazz(ExploreStyles.WarningIcon)
+
   private val component =
     ScalaFnComponent
       .withHooks[Props]
@@ -60,53 +69,77 @@ object ItcPanelTitle:
         yield b
         r.orElse(props.scienceData.flatMap(_.itcTargets.headOption))
       }(props => t => props.selectedTarget.set(t))
-      .useState(Pot.pending[Map[ItcTarget, ItcChartResult]])
+      .useStateBy(_.itcTargets.map(_.toList.map(t => t -> MissingInfo).toMap).getOrElse(Map.empty))
       // Request ITC graph data and extract ccds info from there
       .useEffectWithDepsBy((props, _) => props.queryProps) { (props, charts) => _ =>
         import props.given
         props.requestITCData(
           m =>
-            charts.modStateAsync {
-              case Pot.Ready(r) => Pot.Ready(r + (m.target -> m))
-              case u            => Pot.Ready(Map(m.target -> m))
+            charts.modStateAsync { r =>
+              r + (m.target -> m.ready)
             },
           charts
-            .setState(Pot.error(new RuntimeException("Not enough information to call ITC")))
+            .setState(
+              props.itcTargets.foldMap(_.toList.map(t => t -> MissingInfo)).toMap
+            )
             .to[IO],
           IO.unit
         )
       }
       .render { (props, results) =>
-        def newSelected(p: ItcTarget): Option[ItcTarget] =
-          props.targets.find(_ === p)
+        def newSelected(p: Int): Option[ItcTarget] =
+          props.targets.lift(p)
 
-        val selectedResult: Option[ItcChartResult] =
-          props.selectedTarget.get.flatMap(t => results.value.toOption.flatMap(_.get(t)))
+        val selectedResult: Pot[ItcChartResult] =
+          Pot
+            .fromOption(props.selectedTarget.get)
+            .flatMap(t => results.value.getOrElse(t, Pot.pending[ItcChartResult]))
 
-        val selected = props.selectedTarget.get.map(_.name.value)
+        val selected       = props.selectedTarget.get.map(_.name.value)
+        val selectedTarget = props.selectedTarget.get
 
-        val itcTargets = props.itcTargets.foldMap(_.toList)
-        val ccds       = selectedResult.map(_._2)
-        val singleSN   = formatCcds(ccds, _.maxSingleSNRatio.toString)
-        val totalSN    = formatCcds(ccds, _.maxTotalSNRatio.toString)
+        val itcTargets          = props.itcTargets.foldMap(_.toList)
+        val idx                 = itcTargets.indexWhere(selectedTarget.contains)
+        val itcTargetsWithIndex = itcTargets.zipWithIndex
+
+        val ccds                                 = selectedResult.map(_._2)
+        def singleSN: ItcChartResult => VdomNode =
+          (r: ItcChartResult) => <.span(formatCcds(r.ccds.some, _.maxSingleSNRatio.toString))
+        def totalSN: ItcChartResult => VdomNode  =
+          (r: ItcChartResult) => <.span(formatCcds(r.ccds.some, _.maxTotalSNRatio.toString))
+        val existTargets                         = props.targets.nonEmpty
+
+        def snSection(title: String, fn: ItcChartResult => VdomNode) =
+          React.Fragment(
+            <.label(title),
+            if (existTargets) {
+              potRender[ItcChartResult](
+                singleSN,
+                Icons.Spinner.spin(true),
+                e => <.span(MissingInfoIcon).withTooltip(e.getMessage)
+              )(
+                selectedResult
+              )
+            } else {
+              <.span(MissingInfoIcon).withTooltip(MissingInfoMsg)
+            }
+          )
 
         <.div(
           ExploreStyles.ItcTileTitle,
           <.label(s"Target:"),
           Dropdown(
             clazz = ExploreStyles.ItcTileTargetSelector,
-            value = props.selectedTarget.get.orUndefined,
+            value = idx,
             onChange = {
-              case t @ ItcTarget(_, _, _) => props.selectedTarget.set(newSelected(t))
-              case _                      => Callback.empty
+              case t: Int => props.selectedTarget.set(newSelected(t))
+              case _      => Callback.empty
             },
-            options = itcTargets.map(t => SelectItem(label = t.name.value, value = t))
+            options = itcTargetsWithIndex.map((t, i) => SelectItem(label = t.name.value, value = i))
           ).when(itcTargets.length > 1),
           <.span(props.selectedTarget.get.map(_.name.value).getOrElse("-"))
             .when(itcTargets.length === 1),
-          <.label(s"S/N per exposure:"),
-          <.span(singleSN),
-          <.label(s"S/N Total:"),
-          <.span(totalSN)
+          snSection("S/N per exposure:", singleSN),
+          snSection("S/N Total:", totalSN)
         )
       }

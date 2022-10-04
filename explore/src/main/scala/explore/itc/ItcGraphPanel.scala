@@ -159,6 +159,7 @@ object ItcGraphPanel {
               ExploreStyles.ItcPlotDetailsHidden.unless(opt.detailsShown.value),
               ItcSpectroscopyPlotDescription(props.chartExposureTime, selectedResult.map(_.ccds)),
               ItcSpectroscopyPlot(
+                selectedResult.map(_.ccds),
                 selectedResult.map(_.charts),
                 error,
                 opt.chartType,

@@ -22,6 +22,7 @@ import lucuma.core.math.BrightnessUnits.*
 import lucuma.core.math.Wavelength
 import lucuma.core.math.dimensional.Units.*
 import lucuma.core.math.dimensional.*
+import lucuma.core.math.units.*
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
 import lucuma.core.util.Display
@@ -36,12 +37,10 @@ sealed abstract class SEDType[T](
 ) extends Product
     with Serializable
 
-extension [T](units: Enumerated[Units Of FluxDensityContinuum[T]])
-  def defaultContinuumUnits = units.all.head
-extension [T](units: Enumerated[Units Of LineFlux[T]]) def defaultLineUnits = units.all.head
-
-sealed abstract class SEDTypeEnum[T](using
-  enumFDCUnits: Enumerated[Units Of FluxDensityContinuum[T]]
+sealed abstract class SEDTypeEnum[T](
+  defaultContinuumUnits: Units Of FluxDensityContinuum[T]
+)(using
+  enumFDCUnits:          Enumerated[Units Of FluxDensityContinuum[T]]
 ) {
   import UnnormalizedSED.*
   import SpectralDefinition.*
@@ -77,7 +76,7 @@ sealed abstract class SEDTypeEnum[T](using
         _ =>
           EmissionLines[T](
             SortedMap.empty,
-            enumFDCUnits.defaultContinuumUnits.withValueTagged(BigDecimal(1).refined[Positive])
+            defaultContinuumUnits.withValueTagged(BigDecimal(1).refined[Positive])
           )
       )
   case object PowerLawType extends BandNormalizedSED("Power Law", PowerLaw(BigDecimal(0)))
@@ -126,12 +125,20 @@ sealed abstract class SEDTypeEnum[T](using
   protected val displaySEDType: Display[SEDType[T]] = Display.byShortName(_.name)
 }
 
-object IntegratedSEDType extends SEDTypeEnum[Integrated] {
+object IntegratedSEDType
+    extends SEDTypeEnum[Integrated](
+      summon[TaggedUnit[ErgsPerSecondCentimeter2Angstrom, FluxDensityContinuum[Integrated]]].unit
+    ) {
   given Enumerated[SEDType[Integrated]] = enumSEDType
   given Display[SEDType[Integrated]]    = displaySEDType
 }
 
-object SurfaceSEDType extends SEDTypeEnum[Surface] {
+object SurfaceSEDType
+    extends SEDTypeEnum[Surface](
+      summon[
+        TaggedUnit[ErgsPerSecondCentimeter2AngstromArcsec2, FluxDensityContinuum[Surface]]
+      ].unit
+    ) {
   given Enumerated[SEDType[Surface]] = enumSEDType
   given Display[SEDType[Surface]]    = displaySEDType
 }

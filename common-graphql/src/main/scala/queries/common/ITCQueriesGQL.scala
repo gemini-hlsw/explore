@@ -59,6 +59,10 @@ object ITCQueriesGQL {
             totalSNRatio
             peakPixelFlux
             ampGain
+            maxTotalSNRatio
+            wavelengthForMaxTotalSNRatio {
+              picometers
+            }
           }
           charts {
             chartType
