@@ -49,13 +49,14 @@ object ITCRequests {
     }
 
   def queryItc[F[_]: Concurrent: Parallel: Logger](
-    wavelength:    Wavelength,
-    signalToNoise: PosBigDecimal,
-    constraints:   ConstraintSet,
-    targets:       ItcTarget,
-    modes:         List[SpectroscopyModeRow],
-    cache:         Cache[F],
-    callback:      Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]] => F[Unit]
+    wavelength:      Wavelength,
+    signalToNoise:   PosBigDecimal,
+    constraints:     ConstraintSet,
+    targets:         ItcTarget,
+    modes:           List[SpectroscopyModeRow],
+    signalToNoiseAt: Option[Wavelength],
+    cache:           Cache[F],
+    callback:        Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]] => F[Unit]
   )(using Monoid[F[Unit]], TransactionalClient[F, ITC]): F[Unit] = {
     def itcResults(r: ItcResults): List[EitherNec[ItcQueryProblems, ItcResult]] =
       // Convert to usable types
@@ -80,6 +81,7 @@ object ITCRequests {
                 wavelength = params.wavelength.value.toInput,
                 signalToNoise = params.signalToNoise,
                 sourceProfile = params.target.profile.toInput,
+                signalToNoiseAt = params.signalToNoiseAt.map(_.toInput).orIgnore,
                 band = band,
                 radialVelocity = params.target.rv.toITCInput,
                 constraints = params.constraints,
@@ -128,9 +130,9 @@ object ITCRequests {
       // Only handle known modes
       .collect {
         case (Some(wavelength), m: GmosNorthSpectroscopyRow) =>
-          ItcRequestParams(wavelength, signalToNoise, constraints, targets, m)
+          ItcRequestParams(wavelength, signalToNoise, signalToNoiseAt, constraints, targets, m)
         case (Some(wavelength), m: GmosSouthSpectroscopyRow) =>
-          ItcRequestParams(wavelength, signalToNoise, constraints, targets, m)
+          ItcRequestParams(wavelength, signalToNoise, signalToNoiseAt, constraints, targets, m)
       }
 
     parTraverseN(

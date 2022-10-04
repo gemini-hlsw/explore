@@ -234,6 +234,7 @@ private object SpectroscopyModesTable:
     itc:         ItcResultsCache,
     cw:          Option[Wavelength],
     sn:          Option[PosBigDecimal],
+    snAt:        Option[Wavelength],
     constraints: ConstraintSet,
     target:      Option[ItcTarget]
   ): SortByFn[SpectroscopyModeRow] =
@@ -243,8 +244,8 @@ private object SpectroscopyModesTable:
       _:    String | String,
       desc: Boolean | Unit
     ) =>
-      (itc.forRow(cw, sn, constraints, target, rowA.original),
-       itc.forRow(cw, sn, constraints, target, rowB.original)
+      (itc.forRow(cw, sn, snAt, constraints, target, rowA.original),
+       itc.forRow(cw, sn, snAt, constraints, target, rowB.original)
       ) match {
         case (Right(ItcResult.Result(e1, t1)), Right(ItcResult.Result(e2, t2))) =>
           (e1.toMillis * t1 - e2.toMillis * t2).toDouble
@@ -264,6 +265,7 @@ private object SpectroscopyModesTable:
     cw:          Option[Wavelength],
     fpu:         Option[FocalPlane],
     sn:          Option[PosBigDecimal],
+    snAt:        Option[Wavelength],
     constraints: ConstraintSet,
     target:      Option[ItcTarget],
     itc:         ItcResultsCache,
@@ -275,7 +277,7 @@ private object SpectroscopyModesTable:
         .setWidth(120)
         .setMinWidth(50)
         .setMaxWidth(150),
-      column(TimeColumnId, itc.forRow(cw, sn, constraints, target, _))
+      column(TimeColumnId, itc.forRow(cw, sn, snAt, constraints, target, _))
         .setCell(c => itcCell(c.value))
         .setWidth(80)
         .setMinWidth(80)
@@ -292,7 +294,7 @@ private object SpectroscopyModesTable:
               )
           )
         )
-        .setSortType(sortItcFun(itc, cw, sn, constraints, target))
+        .setSortType(sortItcFun(itc, cw, sn, snAt, constraints, target))
         .setDisableSortBy(progress.isDefined),
       column(SlitWidthColumnId, SpectroscopyModeRow.slitWidth.get)
         .setCell(c => formatSlitWidth(c.value))
@@ -417,15 +419,16 @@ private object SpectroscopyModesTable:
       .useMemoBy { (props, _, rows, itc, _) => // Calculate the common errors
         (props.spectroscopyRequirements.wavelength,
          props.spectroscopyRequirements.signalToNoise,
+         props.spectroscopyRequirements.signalToNoiseAt,
          props.brightestTarget,
          props.constraints,
          rows,
          itc
         )
-      } { (_, _, _, _, _) => (wavelength, sn, targets, constraints, rows, itc) =>
+      } { (_, _, _, _, _) => (wavelength, sn, snAt, targets, constraints, rows, itc) =>
         rows.value
           .map(
-            itc.value.forRow(wavelength, sn, constraints, targets, _)
+            itc.value.forRow(wavelength, sn, snAt, constraints, targets, _)
           )
           .collect { case Left(p) =>
             p.toList.filter {
@@ -441,6 +444,7 @@ private object SpectroscopyModesTable:
         (props.spectroscopyRequirements.wavelength,
          props.spectroscopyRequirements.focalPlane,
          props.spectroscopyRequirements.signalToNoise,
+         props.spectroscopyRequirements.signalToNoiseAt,
          props.brightestTarget,
          props.constraints,
          itc,
@@ -448,8 +452,16 @@ private object SpectroscopyModesTable:
         )
       } {
         (_, _, _, _, _, _) =>
-          (wavelength, focalPlane, sn, targets, constraints, itc, itcProgress) =>
-            columns(wavelength, focalPlane, sn, constraints, targets, itc.value, itcProgress.value)
+          (wavelength, focalPlane, sn, signalToNoiseAt, targets, constraints, itc, itcProgress) =>
+            columns(wavelength,
+                    focalPlane,
+                    sn,
+                    signalToNoiseAt,
+                    constraints,
+                    targets,
+                    itc.value,
+                    itcProgress.value
+            )
       }
       // selectedIndex
       .useStateBy((props, _, rows, _, _, _, _) => selectedRowIndex(props.scienceMode.get, rows))
@@ -473,13 +485,14 @@ private object SpectroscopyModesTable:
         (
           props.spectroscopyRequirements.wavelength,
           props.spectroscopyRequirements.signalToNoise,
+          props.spectroscopyRequirements.signalToNoiseAt,
           props.constraints,
           props.brightestTarget,
           range
         )
       ) {
-        (_, ctx, _, itcResults, itcProgress, _, _, _, ti, _, range, _) =>
-          (wavelength, signalToNoise, constraints, brightestTarget, range) =>
+        (props, ctx, _, itcResults, itcProgress, _, _, _, ti, _, range, _) =>
+          (wavelength, signalToNoise, signalToNoiseAt, constraints, brightestTarget, range) =>
             import ctx.given
 
             val sortedRows = ti.value.preSortedRows.map(_.original).toList
@@ -494,9 +507,17 @@ private object SpectroscopyModesTable:
                       val cw    = row.coverageCenter(w)
                       row.instrument match
                         case m: GmosNorthSpectroscopyRow =>
-                          cw.exists(w => cache.contains(ItcRequestParams(w, sn, constraints, t, m)))
+                          cw.exists(w =>
+                            cache.contains(
+                              ItcRequestParams(w, sn, signalToNoiseAt, constraints, t, m)
+                            )
+                          )
                         case m: GmosSouthSpectroscopyRow =>
-                          cw.exists(w => cache.contains(ItcRequestParams(w, sn, constraints, t, m)))
+                          cw.exists(w =>
+                            cache.contains(
+                              ItcRequestParams(w, sn, signalToNoiseAt, constraints, t, m)
+                            )
+                          )
                         case _                           => true
                     }
 
@@ -506,7 +527,7 @@ private object SpectroscopyModesTable:
                     _       <- Resource.eval(itcProgress.setStateAsync(progressZero))
                     request <-
                       ItcClient[IO]
-                        .request(ItcMessage.Query(w, sn, constraints, t, modes))
+                        .request(ItcMessage.Query(w, sn, constraints, t, modes, signalToNoiseAt))
                         .map(
                           // Avoid intermediate rerenders. They are slow.
                           _.groupWithin(100, 500.millis).evalTap(itcResponseChunk =>

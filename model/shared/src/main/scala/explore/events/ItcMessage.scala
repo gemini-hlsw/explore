@@ -48,11 +48,12 @@ object ItcMessage extends ItcPicklers {
   }
 
   case class Query(
-    wavelength:    Wavelength,
-    signalToNoise: PosBigDecimal,
-    constraints:   ConstraintSet,
-    targets:       ItcTarget,
-    modes:         List[SpectroscopyModeRow]
+    wavelength:      Wavelength,
+    signalToNoise:   PosBigDecimal,
+    constraints:     ConstraintSet,
+    targets:         ItcTarget,
+    modes:           List[SpectroscopyModeRow],
+    signalToNoiseAt: Option[Wavelength]
   ) extends Request {
     type ResponseType = Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]
   }

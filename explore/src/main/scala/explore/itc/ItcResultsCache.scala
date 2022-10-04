@@ -50,16 +50,18 @@ case class ItcResultsCache(
 
   // Read the cache value or a default
   def forRow(
-    w:  Option[Wavelength],
-    sn: Option[PosBigDecimal],
-    c:  ConstraintSet,
-    t:  Option[ItcTarget],
-    r:  SpectroscopyModeRow
+    w:    Option[Wavelength],
+    sn:   Option[PosBigDecimal],
+    snAt: Option[Wavelength],
+    c:    ConstraintSet,
+    t:    Option[ItcTarget],
+    r:    SpectroscopyModeRow
   ): EitherNec[ItcQueryProblems, ItcResult] =
-    (wavelength(w, r), signalToNoise(sn), mode(r), targets(t)).parMapN { (w, sn, im, t) =>
-      cache
-        .get(ItcRequestParams(w, sn, c, t, im))
-        .getOrElse(ItcResult.Pending.rightNec[ItcQueryProblems])
+    (wavelength(w, r), signalToNoise(sn), snAt.validNec.toEither, mode(r), targets(t)).parMapN {
+      (w, sn, snAt, im, t) =>
+        cache
+          .get(ItcRequestParams(w, sn, snAt, c, t, im))
+          .getOrElse(ItcResult.Pending.rightNec[ItcQueryProblems])
     }.flatten
 
   def size: Int = cache.size

@@ -44,14 +44,14 @@ import scala.scalajs.js
 import scala.scalajs.js.JSConverters.*
 
 case class ItcSpectroscopyPlot(
-  ccds:         Option[NonEmptyList[ItcCcd]],
-  charts:       Option[NonEmptyList[ItcChart]],
-  error:        Option[String],
-  chartType:    ItcChartType,
-  targetName:   Option[String],
-  atWavelength: Option[Wavelength],
-  loading:      PlotLoading,
-  details:      PlotDetails
+  ccds:            Option[NonEmptyList[ItcCcd]],
+  charts:          Option[NonEmptyList[ItcChart]],
+  error:           Option[String],
+  chartType:       ItcChartType,
+  targetName:      Option[String],
+  signalToNoiseAt: Option[Wavelength],
+  loading:         PlotLoading,
+  details:         PlotDetails
 ) extends ReactFnProps(ItcSpectroscopyPlot.component)
 
 object ItcSpectroscopyPlot {
@@ -62,7 +62,7 @@ object ItcSpectroscopyPlot {
     targetName:      Option[String],
     loading:         PlotLoading,
     details:         PlotDetails,
-    atWavelength:    Option[Wavelength],
+    signalToNoiseAt: Option[Wavelength],
     maxSNWavelength: Option[Wavelength],
     height:          Double
   ) = {
@@ -104,7 +104,7 @@ object ItcSpectroscopyPlot {
     val plotLines = chart.chartType match
       case ItcChartType.SignalChart => js.Array()
       case ItcChartType.S2NChart    =>
-        val value = atWavelength.orElse(maxSNWavelength).map(_.nanometer.value.toDouble)
+        val value = signalToNoiseAt.orElse(maxSNWavelength).map(_.nanometer.value.toDouble)
 
         value
           .foldMap(value =>
@@ -236,7 +236,7 @@ object ItcSpectroscopyPlot {
                                         props.targetName,
                                         props.loading,
                                         props.details,
-                                        props.atWavelength,
+                                        props.signalToNoiseAt,
                                         maxSNWavelength,
                                         height
         )
