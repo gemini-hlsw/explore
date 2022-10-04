@@ -5,9 +5,9 @@ package explore.modes
 
 import cats.data.NonEmptyList
 import cats.effect.Concurrent
-import cats.syntax.all._
-import fs2._
-import fs2.data.csv._
+import cats.syntax.all.*
+import fs2.*
+import fs2.data.csv.*
 
 trait SpectroscopyModesMatrixPlatform extends SpectroscopyModesMatrixDecoders {
   def loadMatrix[F[_]: Concurrent](s: Stream[F, String]): F[List[SpectroscopyModeRow]] =

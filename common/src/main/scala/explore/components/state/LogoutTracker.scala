@@ -4,29 +4,28 @@
 package explore.components.state
 
 import cats.effect.IO
-import cats.syntax.all._
-import crystal.react.implicits._
-import eu.timepit.refined.auto._
+import cats.syntax.all.*
+import crystal.react.implicits.*
+import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.events._
-import explore.implicits._
+import explore.events.*
 import explore.model.UserVault
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.broadcastchannel._
-import lucuma.refined._
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.broadcastchannel.*
+import lucuma.refined.*
 import react.common.ReactFnProps
 
-final case class LogoutTracker(
+case class LogoutTracker(
   setVault:   Option[UserVault] => Callback,
   setMessage: NonEmptyString => Callback
-)(val render: IO[Unit] => VdomNode)(implicit val ctx: AppContextIO)
-    extends ReactFnProps[LogoutTracker](LogoutTracker.component)
+)(val render: IO[Unit] => VdomNode)
+    extends ReactFnProps(LogoutTracker.component)
 
-object LogoutTracker {
-  type Props = LogoutTracker
+object LogoutTracker:
+  private type Props = LogoutTracker
 
-  val component = ScalaFnComponent
+  private val component = ScalaFnComponent
     .withHooks[Props]
     // Create a nonce
     .useMemo(())(_ => System.currentTimeMillis)
@@ -34,6 +33,7 @@ object LogoutTracker {
     .useState(none[BroadcastChannel[ExploreEvent]])
     .useEffectOnMountBy { (props, nonce, state) =>
       val bc = new BroadcastChannel[ExploreEvent]("explore")
+
       bc.onmessage = (
         (x: ExploreEvent) =>
           // This is coming from the js world, we can't match the type
@@ -54,5 +54,3 @@ object LogoutTracker {
         props.render(IO(bc.postMessage(ExploreEvent.LogoutEvent(nonce.value))).attempt.void)
       )
     }
-
-}

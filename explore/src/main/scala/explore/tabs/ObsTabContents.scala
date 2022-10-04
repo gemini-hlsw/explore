@@ -16,11 +16,10 @@ import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
-import explore.common.ObsQueries.*
+import explore.*
 import explore.common.UserPreferencesQueries.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
-import explore.implicits.*
 import explore.model.*
 import explore.model.enums.AppTab
 import explore.model.layout.*
@@ -43,6 +42,7 @@ import lucuma.ui.utils.*
 import org.scalajs.dom.window
 import queries.common.ObsQueriesGQL.*
 import queries.common.UserPreferencesQueriesGQL.*
+import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
 import react.draggable.Axis
 import react.gridlayout.*
@@ -55,16 +55,15 @@ import react.semanticui.sizes.*
 
 import scala.concurrent.duration.*
 
-final case class ObsTabContents(
-  userId:           Option[User.Id],
-  programId:        Program.Id,
-  focusedObs:       Option[Observation.Id],
-  focusedTarget:    Option[Target.Id],
-  undoStacks:       View[ModelUndoStacks[IO]],
-  searching:        View[Set[Target.Id]],
-  hiddenColumns:    View[Set[String]]
-)(implicit val ctx: AppContextIO)
-    extends ReactFnProps[ObsTabContents](ObsTabContents.component)
+case class ObsTabContents(
+  userId:        Option[User.Id],
+  programId:     Program.Id,
+  focusedObs:    Option[Observation.Id],
+  focusedTarget: Option[Target.Id],
+  undoStacks:    View[ModelUndoStacks[IO]],
+  searching:     View[Set[Target.Id]],
+  hiddenColumns: View[Set[String]]
+) extends ReactFnProps(ObsTabContents.component)
 
 enum ObsTabTilesIds:
   case NotesId, TargetId, PlotId, ConstraintsId, ConfigurationId, ItcId
@@ -77,8 +76,8 @@ enum ObsTabTilesIds:
     case ConfigurationId => "configuration".refined
     case ItcId           => "itc".refined
 
-object ObsTabContents extends TwoResizablePanels {
-  type Props = ObsTabContents
+object ObsTabContents extends TwoResizablePanels:
+  private type Props = ObsTabContents
 
   private val NotesMaxHeight: NonNegInt         = 3.refined
   private val TargetHeight: NonNegInt           = 18.refined
@@ -160,16 +159,19 @@ object ObsTabContents extends TwoResizablePanels {
       )
     )
 
-  protected def renderFn(
+  private def renderFn(
     props:              Props,
     panels:             View[TwoPanelState],
     defaultLayouts:     LayoutsMap,
     layouts:            View[Pot[LayoutsMap]],
     resize:             UseResizeDetectorReturn,
-    debouncer:          Reusable[UseSingleEffect[IO]]
+    debouncer:          Reusable[UseSingleEffect[IO]],
+    ctx:                AppContext[IO]
   )(
     obsWithConstraints: View[ObsSummariesWithConstraints]
-  )(implicit ctx:       AppContextIO): VdomNode = {
+  ): VdomNode = {
+    import ctx.given
+
     val observations     = obsWithConstraints.zoom(ObsSummariesWithConstraints.observations)
     val constraintGroups = obsWithConstraints.zoom(ObsSummariesWithConstraints.constraintGroups)
 
@@ -187,7 +189,7 @@ object ObsTabContents extends TwoResizablePanels {
       )
 
     val backButton: VdomNode =
-      makeBackButton(props.programId, AppTab.Observations, ctx, selectedView)
+      makeBackButton(props.programId, AppTab.Observations, selectedView, ctx)
 
     val (coreWidth, coreHeight) = coreDimensions(resize, treeWidth)
 
@@ -239,13 +241,14 @@ object ObsTabContents extends TwoResizablePanels {
     )
   }
 
-  protected val component =
+  private val component =
     ScalaFnComponent
       .withHooks[Props]
+      .useContext(AppContext.ctx)
       .useStateView(TwoPanelState.initial(SelectedPanel.Uninitialized))
-      .useEffectWithDepsBy((props, panels) =>
+      .useEffectWithDepsBy((props, _, panels) =>
         (props.focusedObs, panels.zoom(TwoPanelState.selected).reuseByValue)
-      ) { (_, _) => params =>
+      ) { (_, _, _) => params =>
         val (focusedObs, selected) = params
         (focusedObs, selected.get) match {
           case (Some(_), _)                 => selected.set(SelectedPanel.editor)
@@ -260,10 +263,10 @@ object ObsTabContents extends TwoResizablePanels {
       // Keep a record of the initial target layouut
       .useMemo(())(_ => defaultObsLayouts)
       // Restore positions from the db
-      .useEffectWithDepsBy((p, _, _, _, _) => (p.userId, p.focusedObs, p.focusedTarget))(
-        (props, panels, _, layout, defaultLayout) =>
+      .useEffectWithDepsBy((p, _, _, _, _, _) => (p.userId, p.focusedObs, p.focusedTarget))(
+        (props, ctx, panels, _, layout, defaultLayout) =>
           _ => {
-            import props.given
+            import ctx.given
 
             UserGridLayoutQuery
               .queryWithDefault[IO](
@@ -290,8 +293,8 @@ object ObsTabContents extends TwoResizablePanels {
           }
       )
       .useSingleEffect(debounce = 1.second)
-      .useStreamResourceViewOnMountBy { (props, _, _, _, _, _) =>
-        import props.given
+      .useStreamResourceViewOnMountBy { (props, ctx, _, _, _, _, _) =>
+        import ctx.given
 
         ProgramObservationsQuery
           .query(props.programId)
@@ -303,6 +306,7 @@ object ObsTabContents extends TwoResizablePanels {
       .render {
         (
           props,
+          ctx,
           twoPanelState,
           resize,
           layouts,
@@ -310,8 +314,6 @@ object ObsTabContents extends TwoResizablePanels {
           debouncer,
           obsWithConstraints
         ) =>
-          import props.given
-
           <.div(
             obsWithConstraints.render(
               renderFn(
@@ -320,10 +322,9 @@ object ObsTabContents extends TwoResizablePanels {
                 defaultLayout,
                 layouts,
                 resize,
-                debouncer
+                debouncer,
+                ctx
               ) _
             )
           ).withRef(resize.ref)
       }
-
-}

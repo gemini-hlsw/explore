@@ -4,24 +4,23 @@
 package explore.common
 
 import cats.Order
-import cats.implicits._
-import explore.implicits._
+import cats.implicits.*
 import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
 import explore.model.ObsSummaryWithTitleAndConf
-import explore.model.syntax.all._
-import japgolly.scalajs.react._
+import explore.model.syntax.all.*
+import japgolly.scalajs.react.*
 import lucuma.core.model.Observation
-import lucuma.ui.reusability._
+import lucuma.ui.reusability.*
 import monocle.Focus
 import monocle.Getter
-import queries.common.ConstraintGroupQueriesGQL._
+import queries.common.ConstraintGroupQueriesGQL.*
 
 import scala.collection.immutable.SortedMap
 
-object ConstraintGroupQueries {
+object ConstraintGroupQueries:
   // The default cats ordering for sorted set sorts by size first, then contents. That's not what we want.
-  implicit val orderSortedSet: Order[ObsIdSet] = Order.by(_.toList)
+  given Order[ObsIdSet] = Order.by(_.toList)
 
   type ObservationResult = ConstraintGroupObsQuery.Data.Observations.Matches
   val ObservationResult = ConstraintGroupObsQuery.Data.Observations.Matches
@@ -34,13 +33,9 @@ object ConstraintGroupQueries {
     observations:     ObsList
   )
 
-  object ConstraintSummaryWithObervations {
+  object ConstraintSummaryWithObervations:
     val constraintGroups = Focus[ConstraintSummaryWithObervations](_.constraintGroups)
     val observations     = Focus[ConstraintSummaryWithObervations](_.observations)
-  }
-
-  implicit val constraintsSummWithObsReuse: Reusability[ConstraintSummaryWithObervations] =
-    Reusability.derive
 
   private def obsResultToSummary(obsR: ObservationResult): ObsSummaryWithTitleAndConf =
     ObsSummaryWithTitleAndConf(
@@ -64,8 +59,5 @@ object ConstraintGroupQueries {
           .toSortedMap(ObsSummaryWithTitleAndConf.id.get)
       )
 
-  implicit class ConstraintGroupObsQueryDataOps(val self: ConstraintGroupObsQuery.Data.type)
-      extends AnyVal {
+  extension (self: ConstraintGroupObsQuery.Data.type)
     def asConstraintSummWithObs = queryToConstraintsWithObsGetter
-  }
-}

@@ -8,15 +8,15 @@ import explore.components.ui.ExploreStyles
 import explore.syntax.ui.*
 import explore.syntax.ui.given
 import explore.undo.UndoContext
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
-import react.semanticui.elements.button._
-import react.semanticui.sizes._
+import react.semanticui.elements.button.*
+import react.semanticui.sizes.*
 
-final case class UndoButtons[A](
+case class UndoButtons[A](
   undoCtx:  UndoContext[A],
   size:     SemanticSize = Tiny,
   disabled: Boolean = false

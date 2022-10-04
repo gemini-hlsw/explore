@@ -3,35 +3,34 @@
 
 package explore
 
-import cats.effect._
-import cats.syntax.all._
+import cats.effect.*
+import cats.syntax.all.*
 import crystal.Pot
-import crystal.react.hooks._
-import crystal.react.implicits._
+import crystal.react.hooks.*
+import crystal.react.implicits.*
 import explore.components.ui.ExploreStyles
 import explore.model.Help
 import explore.syntax.ui.*
 import explore.syntax.ui.given
-import explore.utils._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import explore.utils.*
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import org.http4s._
+import org.http4s.*
 import org.http4s.dom.FetchClientBuilder
 import react.common.ReactFnProps
-import react.hotkeys._
+import react.hotkeys.*
 import react.markdown.ReactMarkdown
 import react.markdown.RehypePlugin
 import react.markdown.RemarkPlugin
 import react.semanticui.elements.button.Button
-import react.semanticui.sizes._
+import react.semanticui.sizes.*
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 import scala.util.Try
 
-final case class HelpBody(base: HelpContext, helpId: Help.Id)(implicit val ctx: AppContextIO)
-    extends ReactFnProps[HelpBody](HelpBody.component) {
+case class HelpBody(base: HelpContext, helpId: Help.Id) extends ReactFnProps(HelpBody.component):
   private val path: Uri.Path = Uri.Path.unsafeFromString(helpId.value)
   private val rootUrl: Uri   = base.rawUrl / base.user / base.project
   private val baseUrl: Uri   =
@@ -48,12 +47,11 @@ final case class HelpBody(base: HelpContext, helpId: Help.Id)(implicit val ctx: 
   private val editPage       = (rootEditUrl / "edit" / "main")
     .addPath(path)
     .withQueryParam("message", s"Update $helpId")
-}
 
-object HelpBody {
-  type Props = HelpBody
+object HelpBody:
+  private type Props = HelpBody
 
-  def load(uri: Uri): IO[Try[String]] =
+  private def load(uri: Uri): IO[Try[String]] =
     FetchClientBuilder[IO]
       .withRequestTimeout(5.seconds)
       .create
@@ -66,64 +64,62 @@ object HelpBody {
   private val component =
     ScalaFnComponent
       .withHooks[Props]
+      .useContext(HelpContext.ctx)
       .useStateView(Pot.pending[String])
-      .useEffectOnMountBy { (props, state) =>
+      .useEffectOnMountBy { (props, _, state) =>
         load(props.url).flatMap(v => state.set(Pot.fromTry(v)).to[IO])
       }
-      .render { (props, state) =>
+      .render { (props, helpCtx, state) =>
         val imageConv = (s: Uri) => props.baseUrl.addPath(s.path)
 
-        HelpCtx.usingView { helpCtx =>
-          val helpView = helpCtx.zoom(HelpContext.displayedHelp)
-          val editUrl  = state.get match {
-            case Pot.Ready(_) => props.editPage
-            case _            => props.newPage
-          }
-
-          <.div(
-            ExploreStyles.HelpSidebar,
-            GlobalHotKeys(keyMap = KeyMap("CLOSE_HELP" -> "ESC"),
-                          handlers = Handlers("CLOSE_HELP" -> helpView.set(none))
-            ),
-            <.div(
-              ExploreStyles.HelpTitle,
-              <.h4(ExploreStyles.HelpTitleLabel, "Help"),
-              <.div(
-                Button(as = <.a, size = Mini, compact = true, onClick = helpView.set(None))(
-                  Icons.Edit
-                )(^.href := editUrl.toString(), ^.target := "_blank"),
-                Button(size = Mini, compact = true, onClick = helpView.set(None))(
-                  Icons.Close
-                )
-              )
-            ),
-            <.div(
-              ExploreStyles.HelpBody,
-              state.get match {
-                case Pot.Ready(a)                                 =>
-                  ReactMarkdown(
-                    content = a,
-                    clazz = ExploreStyles.HelpMarkdownBody,
-                    linkTarget = "_blank",
-                    imageConv,
-                    remarkPlugins = List(RemarkPlugin.RemarkMath, RemarkPlugin.RemarkGFM),
-                    rehypePlugins = List(RehypePlugin.RehypeKatex)
-                  ): VdomNode
-                case Pot.Pending                                  => <.div(ExploreStyles.HelpMarkdownBody, "Loading...")
-                case Pot.Error(o) if o.getMessage.contains("404") =>
-                  <.div(
-                    ExploreStyles.HelpMarkdownBody,
-                    "Not found, maybe you want to create it ",
-                    <.a(^.href := props.newPage.toString(), ^.target := "_blank", Icons.Edit)
-                  )
-                case Pot.Error(_)                                 =>
-                  <.div(
-                    ExploreStyles.HelpMarkdownBody,
-                    "We encountered an error trying to read the help file"
-                  )
-              }
-            )
-          )
+        val helpView = helpCtx.displayedHelp
+        val editUrl  = state.get match {
+          case Pot.Ready(_) => props.editPage
+          case _            => props.newPage
         }
+
+        <.div(
+          ExploreStyles.HelpSidebar,
+          GlobalHotKeys(keyMap = KeyMap("CLOSE_HELP" -> "ESC"),
+                        handlers = Handlers("CLOSE_HELP" -> helpView.set(none))
+          ),
+          <.div(
+            ExploreStyles.HelpTitle,
+            <.h4(ExploreStyles.HelpTitleLabel, "Help"),
+            <.div(
+              Button(as = <.a, size = Mini, compact = true, onClick = helpView.set(None))(
+                Icons.Edit
+              )(^.href := editUrl.toString(), ^.target := "_blank"),
+              Button(size = Mini, compact = true, onClick = helpView.set(None))(
+                Icons.Close
+              )
+            )
+          ),
+          <.div(
+            ExploreStyles.HelpBody,
+            state.get match {
+              case Pot.Ready(a)                                 =>
+                ReactMarkdown(
+                  content = a,
+                  clazz = ExploreStyles.HelpMarkdownBody,
+                  linkTarget = "_blank",
+                  imageConv,
+                  remarkPlugins = List(RemarkPlugin.RemarkMath, RemarkPlugin.RemarkGFM),
+                  rehypePlugins = List(RehypePlugin.RehypeKatex)
+                ): VdomNode
+              case Pot.Pending                                  => <.div(ExploreStyles.HelpMarkdownBody, "Loading...")
+              case Pot.Error(o) if o.getMessage.contains("404") =>
+                <.div(
+                  ExploreStyles.HelpMarkdownBody,
+                  "Not found, maybe you want to create it ",
+                  <.a(^.href := props.newPage.toString(), ^.target := "_blank", Icons.Edit)
+                )
+              case Pot.Error(_)                                 =>
+                <.div(
+                  ExploreStyles.HelpMarkdownBody,
+                  "We encountered an error trying to read the help file"
+                )
+            }
+          )
+        )
       }
-}

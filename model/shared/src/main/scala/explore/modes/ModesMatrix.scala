@@ -6,21 +6,21 @@ package explore.modes
 import cats.Eq
 import cats.Order
 import cats.derived.*
-import cats.syntax.all._
-import coulomb._
+import cats.syntax.all.*
+import coulomb.*
 import coulomb.ops.algebra.spire.all.given
 import coulomb.policy.spire.standard.given
 import coulomb.syntax.*
 import coulomb.units.si.Second
-import eu.timepit.refined._
-import eu.timepit.refined.cats._
+import eu.timepit.refined.*
+import eu.timepit.refined.cats.*
 import eu.timepit.refined.numeric.Positive
-import eu.timepit.refined.types.numeric._
-import fs2.data.csv._
+import eu.timepit.refined.types.numeric.*
+import fs2.data.csv.*
 import lucuma.core.enums.Instrument
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
-import lucuma.core.math.units._
+import lucuma.core.math.units.*
 import lucuma.core.util.Enumerated
 import monocle.Lens
 import monocle.macros.GenLens
@@ -213,7 +213,7 @@ trait ModesMatrixDecoders extends Decoders {
     } yield ModeRow(i, m, f, im, ix, r, w, b, gmin, gmax, mf, di, sw, ao, sd, c, ss, mo, me)
 }
 
-final case class ModesMatrix(matrix: List[ModeRow]) {
+case class ModesMatrix(matrix: List[ModeRow]) {
 
   val DefaultMinExp: Quantity[PosBigDecimal, Second] =
     BigDecimal(1).withRefinedUnit[Positive, Second]

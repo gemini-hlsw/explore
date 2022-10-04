@@ -4,54 +4,53 @@
 package explore.observationtree
 
 import cats.effect.IO
-import cats.syntax.all._
+import cats.syntax.all.*
 import clue.TransactionalClient
 import crystal.react.View
 import crystal.react.reuse.Reuse
 import explore.Icons
-import explore.common.ConstraintGroupQueries._
+import explore.common.ConstraintGroupQueries.*
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
-import explore.implicits._
+import explore.model.AppContext
 import explore.model.ConstraintGroup
 import explore.model.Focused
 import explore.model.ObsIdSet
 import explore.model.display.given
 import explore.model.enums.AppTab
 import explore.undo.UndoContext
-import explore.undo._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import explore.undo.*
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
-import lucuma.core.syntax.all._
+import lucuma.core.syntax.all.*
 import lucuma.schemas.ObservationDB
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import mouse.boolean._
-import react.beautifuldnd._
+import mouse.boolean.*
+import react.beautifuldnd.*
 import react.common.ReactFnProps
 import react.fa.FontAwesomeIcon
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.segment.Segment
 import react.semanticui.elements.segment.SegmentGroup
-import react.semanticui.sizes._
+import react.semanticui.sizes.*
 
 import scala.collection.immutable.SortedSet
 
-final case class ConstraintGroupObsList(
+case class ConstraintGroupObsList(
   constraintsWithObs: View[ConstraintSummaryWithObervations],
   programId:          Program.Id,
   focusedObsSet:      Option[ObsIdSet],
   setSummaryPanel:    Reuse[Callback],
   expandedIds:        View[SortedSet[ObsIdSet]],
   undoStacks:         View[UndoStacks[IO, ConstraintGroupList]]
-)(using val ctx:      AppContextIO)
-    extends ReactFnProps[ConstraintGroupObsList](ConstraintGroupObsList.component)
+) extends ReactFnProps[ConstraintGroupObsList](ConstraintGroupObsList.component)
     with ViewCommon
 
-object ConstraintGroupObsList {
-  protected type Props = ConstraintGroupObsList
+object ConstraintGroupObsList:
+  private type Props = ConstraintGroupObsList
 
   private def toggleExpanded(obsIds: ObsIdSet, expandedIds: View[SortedSet[ObsIdSet]]): Callback =
     expandedIds.mod { expanded =>
@@ -97,10 +96,11 @@ object ConstraintGroupObsList {
     }
   }
 
-  protected val component = ScalaFnComponent
+  private val component = ScalaFnComponent
     .withHooks[Props]
+    .useContext(AppContext.ctx)
     .useState(false) // dragging
-    .useEffectOnMountBy { (props, _) =>
+    .useEffectOnMountBy { (props, ctx, _) =>
       val constraintsWithObs = props.constraintsWithObs.get
       val constraintGroups   = constraintsWithObs.constraintGroups
       val expandedIds        = props.expandedIds
@@ -113,7 +113,7 @@ object ConstraintGroupObsList {
       // Unfocus the group with observations doesn't exist
       val unfocus =
         if (props.focusedObsSet.nonEmpty && selectedGroup.isEmpty)
-          props.ctx.replacePage(AppTab.Constraints, props.programId, Focused.None)
+          ctx.replacePage(AppTab.Constraints, props.programId, Focused.None)
         else Callback.empty
 
       val expandSelected = selectedGroup.foldMap(cg => expandedIds.mod(_ + cg.obsIds))
@@ -127,8 +127,8 @@ object ConstraintGroupObsList {
         _ <- cleanupExpandedIds
       } yield ()
     }
-    .render { (props, dragging) =>
-      import props.given
+    .render { (props, ctx, dragging) =>
+      import ctx.given
 
       val observations = props.constraintsWithObs.get.observations
 
@@ -140,10 +140,11 @@ object ConstraintGroupObsList {
       )
 
       val renderClone: Draggable.Render = (provided, snapshot, rubric) =>
-        <.div(provided.innerRef,
-              provided.draggableProps,
-              provided.dragHandleProps,
-              props.getDraggedStyle(provided.draggableStyle, snapshot)
+        <.div(
+          provided.innerRef,
+          provided.draggableProps,
+          provided.dragHandleProps,
+          props.getDraggedStyle(provided.draggableStyle, snapshot)
         )(
           getDraggedIds(rubric.draggableId, props.focusedObsSet)
             .flatMap(obsIds =>
@@ -242,7 +243,8 @@ object ConstraintGroupObsList {
                       forceHighlight = isObsSelected(obs.id),
                       linkToObsTab = false,
                       onSelect = setObs,
-                      onCtrlClick = id => handleCtrlClick(id, obsIds)
+                      onCtrlClick = id => handleCtrlClick(id, obsIds),
+                      ctx
                     )(obs, idx)
                   }
                 ),
@@ -276,4 +278,3 @@ object ConstraintGroupObsList {
         )
       )
     }
-}

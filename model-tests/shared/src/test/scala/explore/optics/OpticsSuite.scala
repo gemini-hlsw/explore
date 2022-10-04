@@ -5,16 +5,16 @@ package explore
 
 import cats.kernel.Eq
 import explore.model.ScienceModeAdvanced.GmosSouthLongSlit
-import explore.model.arb.ArbScienceModeAdvanced._
-import explore.optics._
-import explore.optics.all._
-import lucuma.core.util.arb.ArbEnumerated._
+import explore.model.arb.ArbScienceModeAdvanced.*
+import explore.optics.*
+import explore.optics.all.*
+import lucuma.core.util.arb.ArbEnumerated.*
 import monocle.Focus
 import monocle.Lens
 import monocle.law.discipline.LensTests
 import munit.DisciplineSuite
 import org.scalacheck.Arbitrary
-import org.scalacheck.Arbitrary._
+import org.scalacheck.Arbitrary.*
 
 case class Inner[A](a: A)
 object Inner {

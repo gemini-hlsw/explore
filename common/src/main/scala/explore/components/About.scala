@@ -3,12 +3,12 @@
 
 package explore.components
 
-import crystal.react.reuse._
+import crystal.react.reuse.*
 import explore.Icons
-import explore._
 import explore.components.ui.ExploreStyles
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import explore.model.AppContext
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.syntax.all.given
 import react.clipboard.CopyToClipboard
 import react.common.ReactFnProps
@@ -16,16 +16,16 @@ import react.semanticui.modules.modal.Dimmer.Blurring
 import react.semanticui.modules.modal.Modal
 import react.semanticui.modules.modal.ModalContent
 
-case class About(trigger: Reuse[VdomNode])(implicit val ctx: AppContextIO)
-    extends ReactFnProps[About](About.component)
+case class About(trigger: Reuse[VdomNode]) extends ReactFnProps(About.component)
 
-object About {
-  type Props = About
+object About:
+  private type Props = About
 
-  val component = ScalaFnComponent
+  private val component = ScalaFnComponent
     .withHooks[Props]
+    .useContext(AppContext.ctx)
     .useState(false) // copied
-    .render((props, copied) =>
+    .render((props, ctx, copied) =>
       Modal(
         dimmer = Blurring,
         trigger = props.trigger: VdomNode,
@@ -37,9 +37,9 @@ object About {
               ExploreStyles.Version,
               ExploreStyles.VersionUncopied.when(!copied.value)
             )(
-              s"Version: ${props.ctx.version}",
+              s"Version: ${ctx.version}",
               CopyToClipboard(
-                text = props.ctx.version.value,
+                text = ctx.version.value,
                 onCopy = (_, copiedCallback) =>
                   copied.setState(copiedCallback) *>
                     copied.setState(false).delayMs(1500).toCallback
@@ -54,4 +54,3 @@ object About {
         )
       )
     )
-}

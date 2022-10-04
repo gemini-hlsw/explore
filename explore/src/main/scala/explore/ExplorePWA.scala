@@ -5,17 +5,17 @@ package explore
 
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.callback.Callback
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.fa.IconSize
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes
-import react.toastify._
+import react.toastify.*
 
 import scala.annotation.nowarn
 import scala.scalajs.js
-import scala.scalajs.js.annotation._
+import scala.scalajs.js.annotation.*
 
 @JSExportTopLevel("ExplorePWA")
 object ExplorePWA {

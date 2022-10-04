@@ -3,11 +3,11 @@
 
 package explore.model.enums
 
-import eu.timepit.refined.auto._
+import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
-import lucuma.refined._
+import lucuma.refined.*
 
 enum PosAngleOptions(val tag: NonEmptyString, val longName: NonEmptyString):
   case Fixed extends PosAngleOptions("Fixed".refined, "Fixed".refined)

@@ -3,14 +3,14 @@
 
 package explore.components
 
-import cats.syntax.all._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import cats.syntax.all.*
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.Css
 import react.common.ReactFnPropsWithChildren
-import react.resizeDetector.hooks._
+import react.resizeDetector.hooks.*
 
 case class ResponsiveComponent(
   widthBreakpoints:  List[(Int, Css)],

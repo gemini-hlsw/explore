@@ -9,54 +9,53 @@ import cats.effect.IOApp
 import cats.effect.Resource
 import cats.effect.Sync
 import cats.effect.std.Dispatcher
-import cats.syntax.all._
+import cats.syntax.all.*
 import clue.WebSocketReconnectionStrategy
 import clue.js.FetchJSBackend
 import clue.js.FetchMethod
 import clue.js.WebSocketJSBackend
-import crystal.react._
-import crystal.react.reuse._
+import crystal.react.*
+import crystal.react.hooks.*
+import crystal.react.reuse.*
 import eu.timepit.refined.collection.NonEmpty
-import explore._
+import explore.*
 import explore.components.ui.ExploreStyles
 import explore.events.*
 import explore.model.AppConfig
 import explore.model.AppContext
 import explore.model.ExploreLocalPreferences
 import explore.model.Focused
+import explore.model.Help
 import explore.model.RootModel
 import explore.model.RoutingInfo
 import explore.model.UserVault
 import explore.model.WorkerClients
 import explore.model.enums.AppTab
 import explore.model.enums.ExecutionEnvironment
-import explore.model.reusability._
+import explore.model.reusability.*
 import explore.syntax.ui.given
-import explore.utils._
-import japgolly.scalajs.react.Reusability
-import japgolly.scalajs.react.extra.router._
-import japgolly.scalajs.react.vdom.VdomElement
-import japgolly.scalajs.react.vdom.html_<^._
+import explore.utils.*
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.extra.router.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import log4cats.loglevel.LogLevelLogger
 import lucuma.core.model.Program
 import lucuma.refined.*
 import lucuma.ui.enums.Theme
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import org.http4s.circe._
+import org.http4s.circe.*
 import org.http4s.dom.FetchClientBuilder
-import org.http4s.implicits._
 import org.scalajs.dom
 import org.scalajs.dom.Element
 import org.scalajs.dom.RequestCache
 import org.typelevel.log4cats.Logger
-import react.toastify._
 
 import java.util.concurrent.TimeUnit
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 import scala.scalajs.js
 
-import js.annotation._
+import js.annotation.*
 
 @JSExportTopLevel("Explore")
 object ExploreMain extends IOApp.Simple {
@@ -150,16 +149,6 @@ object ExploreMain extends IOApp.Simple {
       val (router, routerCtl) =
         RouterWithProps.componentAndCtl(BaseUrl.fromWindowOrigin, Routing.config)
 
-      def rootComponent(view: ReuseView[RootModel]): VdomElement =
-        <.div(
-          router(view),
-          ToastContainer(
-            position = Position.BottomRight,
-            theme = react.toastify.Theme.Dark,
-            clazz = ExploreStyles.ExploreToast
-          )
-        )
-
       def pageUrl(tab: AppTab, programId: Program.Id, focused: model.Focused): String =
         routerCtl.urlFor(RoutingInfo.getPage(tab, programId, focused)).value
 
@@ -187,34 +176,11 @@ object ExploreMain extends IOApp.Simple {
         _                    <- setupReusabilityOverlay(appConfig.environment)
         r                    <- (ctx.sso.whoami, setupDOM[IO], showEnvironment[IO](appConfig.environment)).parTupled
         (vault, container, _) = r
-      } yield {
-        val RootComponent =
-          ContextProvider(AppCtx, ctx)
-
-        val HelpContextComponent =
-          ContextProvider(
-            HelpCtx,
-            HelpContext(
-              rawUrl = uri"https://raw.githubusercontent.com",
-              editUrl = uri"https://github.com",
-              user = "gemini-hlsw",
-              project = "explore-help-docs",
-              displayedHelp = none
-            )
-          )
-
-        val StateProviderComponent =
-          StateProvider(initialModel(vault, localPreferences))
-
-        RootComponent(
-          (HelpContextComponent(
-            (StateProviderComponent((rootComponent _).reuseAlways): VdomNode).reuseAlways
-          ): VdomNode).reuseAlways
-        ).renderIntoDOM(container)
-      }
+      } yield RootComponent(ctx, router, initialModel(vault, localPreferences))
+        .renderIntoDOM(container)
     }.void
       .handleErrorWith { t =>
-        IO.println("Error initializing") >>
+        Logger[IO].error("Error initializing") >>
           crash[IO](s"There was an error initializing Explore:<br/>${t.getMessage}")
       }
 

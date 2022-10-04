@@ -13,10 +13,9 @@ import crystal.react.implicits.*
 import eu.timepit.refined.*
 import eu.timepit.refined.numeric.Positive
 import explore.Icons
-import explore.common.ObsQueries.*
 import explore.components.ui.ExploreStyles
 import explore.events.*
-import explore.implicits.*
+import explore.model.AppContext
 import explore.model.ScienceMode
 import explore.model.WorkerClients.*
 import explore.model.boopickle.ItcPicklers.given
@@ -31,13 +30,14 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.given
-import queries.schemas.itc.implicits.*
+import queries.schemas.itc.conversions.*
+import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
 import react.floatingui.syntax.*
 import react.primereact.Dropdown
 import react.primereact.SelectItem
 
-import scala.scalajs.js.JSConverters._
+import scala.scalajs.js.JSConverters.*
 
 case class ItcPanelTitle(
   scienceMode:              Option[ScienceMode],
@@ -45,8 +45,7 @@ case class ItcPanelTitle(
   scienceData:              Option[ScienceData],
   exposure:                 Option[ItcChartExposureTime],
   selectedTarget:           View[Option[ItcTarget]]
-)(using val ctx:            AppContextIO)
-    extends ReactFnProps(ItcPanelTitle.component)
+) extends ReactFnProps(ItcPanelTitle.component)
     with ItcPanelProps(scienceMode, spectroscopyRequirements, scienceData, exposure)
 
 object ItcPanelTitle:
@@ -60,7 +59,8 @@ object ItcPanelTitle:
   private val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useEffectWithDepsBy { props =>
+      .useContext(AppContext.ctx)
+      .useEffectWithDepsBy { (props, _) =>
         val r = for
           w <- props.wavelength
           s <- props.scienceData
@@ -68,11 +68,14 @@ object ItcPanelTitle:
           b <- t.brightestAt(w.value)
         yield b
         r.orElse(props.scienceData.flatMap(_.itcTargets.headOption))
-      }(props => t => props.selectedTarget.set(t))
-      .useStateBy(_.itcTargets.map(_.toList.map(t => t -> MissingInfo).toMap).getOrElse(Map.empty))
+      }((props, _) => t => props.selectedTarget.set(t))
+      .useStateBy((props, _) =>
+        props.itcTargets.map(_.toList.map(t => t -> MissingInfo).toMap).getOrElse(Map.empty)
+      )
       // Request ITC graph data and extract ccds info from there
-      .useEffectWithDepsBy((props, _) => props.queryProps) { (props, charts) => _ =>
-        import props.given
+      .useEffectWithDepsBy((props, _, _) => props.queryProps) { (props, ctx, charts) => _ =>
+        import ctx.given
+
         props.requestITCData(
           m =>
             charts.modStateAsync { r =>
@@ -86,7 +89,7 @@ object ItcPanelTitle:
           IO.unit
         )
       }
-      .render { (props, results) =>
+      .render { (props, _, results) =>
         def newSelected(p: Int): Option[ItcTarget] =
           props.targets.lift(p)
 

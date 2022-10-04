@@ -5,17 +5,17 @@ package explore.targeteditor
 
 import cats.effect.IO
 import cats.syntax.all.*
+import clue.TransactionalClient
 import crystal.Pot
 import crystal.react.View
 import crystal.react.hooks.*
 import crystal.react.implicits.*
 import explore.Icons
 import explore.common.AsterismQueries
-import explore.common.ObsQueries
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.config.VizTimeEditor
-import explore.implicits.*
+import explore.model.AppContext
 import explore.model.Asterism
 import explore.model.ObsIdSet
 import explore.model.ScienceMode
@@ -39,13 +39,16 @@ import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
+import lucuma.schemas.ObservationDB
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.Lens
 import monocle.std.option.some
+import org.typelevel.log4cats.Logger
 import queries.common.TargetQueriesGQL.*
-import queries.schemas.implicits.*
+import queries.schemas.odb.ObsQueries
+import queries.schemas.odb.conversions.*
 import react.common.ReactFnProps
 import react.semanticui.elements.button.*
 import react.semanticui.modules.checkbox.*
@@ -71,8 +74,7 @@ case class AsterismEditor(
   searching:     View[Set[Target.Id]],
   hiddenColumns: View[Set[String]],
   renderInTitle: Tile.RenderInTitle
-)(using val ctx: AppContextIO)
-    extends ReactFnProps(AsterismEditor.component)
+) extends ReactFnProps(AsterismEditor.component)
 
 object AsterismEditor {
   private type Props = AsterismEditor
@@ -85,7 +87,7 @@ object AsterismEditor {
     target:         Target.Sidereal,
     selectedTarget: View[Option[Target.Id]],
     adding:         View[Boolean]
-  )(using AppContextIO): IO[Unit] = {
+  )(using TransactionalClient[IO, ObservationDB], Logger[IO]): IO[Unit] =
     val targetId: IO[Target.Id] = oTargetId.fold(
       CreateTargetMutation
         .execute(target.toCreateTargetInput(programId))
@@ -105,7 +107,6 @@ object AsterismEditor {
             AsterismQueries.addTargetToAsterisms[IO](obsIds.toList, tid)
         }
         .guarantee(adding.async.set(false))
-  }
 
   private def onCloneTarget(
     id:        Target.Id,
@@ -122,12 +123,13 @@ object AsterismEditor {
   private val component =
     ScalaFnComponent
       .withHooks[Props]
+      .useContext(AppContext.ctx)
       // adding
       .useStateView(false)
       // edit target in current obs only (0), or all "instances" of the target (1)
       .useState(0)
-      .useEffectWithDepsBy((props, _, _) => (props.asterism.get, props.currentTarget)) {
-        (props, _, _) => (asterism, oTargetId) =>
+      .useEffectWithDepsBy((props, _, _, _) => (props.asterism.get, props.currentTarget)) {
+        (props, _, _, _) => (asterism, oTargetId) =>
           // if the selected targetId is None, or not in the asterism, select the first target (if any)
           // Need to replace history here.
           oTargetId match {
@@ -144,8 +146,8 @@ object AsterismEditor {
       }
       // full screen aladin
       .useStateView(false)
-      .render { (props, adding, editScope, fullScreen) =>
-        import props.given
+      .render { (props, ctx, adding, editScope, fullScreen) =>
+        import ctx.given
 
         val targetView: View[Option[Target.Id]] =
           View[Option[Target.Id]](

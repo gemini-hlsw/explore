@@ -4,7 +4,7 @@
 package explore.model.itc.math
 
 import cats.data.NonEmptyList
-import cats.syntax.all._
+import cats.syntax.all.*
 import explore.model.itc.ItcCcd
 import lucuma.core.enums.Band
 import lucuma.core.math.BrightnessUnits.*
@@ -12,7 +12,7 @@ import lucuma.core.math.Wavelength
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.SpectralDefinition
 
-import scala.math._
+import scala.math.*
 
 extension (ccds: NonEmptyList[ItcCcd])
   def maxPeakPixelFlux: Int    = ccds.maximumBy(_.peakPixelFlux).peakPixelFlux.toInt

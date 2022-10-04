@@ -3,7 +3,7 @@
 
 package explore.events
 
-import boopickle.DefaultBasic._
+import boopickle.DefaultBasic.*
 import boopickle.Pickler
 import explore.model.boopickle.CatalogPicklers.given
 import explore.model.boopickle.CommonPicklers
@@ -25,12 +25,12 @@ object PlotMessage extends CommonPicklers {
 
   // We return `Long`s instead `Instant` and `Duration` in order to offload as much of the
   // work as possible to the worker. The chart will need the numeric values to plot.
-  final case class SemesterPoint(epochMilli: Long, visibilityMillis: Long)
+  case class SemesterPoint(epochMilli: Long, visibilityMillis: Long)
   object SemesterPoint {
     given Pickler[SemesterPoint] = generatePickler
   }
 
-  final case class RequestSemesterSidereal(
+  case class RequestSemesterSidereal(
     semester: Semester,
     site:     Site,
     coords:   Coordinates,

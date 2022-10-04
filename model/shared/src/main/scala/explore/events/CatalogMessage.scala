@@ -16,14 +16,14 @@ import java.time.Instant
 object CatalogMessage extends CatalogPicklers {
   sealed trait Request extends WorkerRequest
 
-  final case class GSRequest(
+  case class GSRequest(
     tracking: ObjectTracking,
     vizTime:  Instant
   ) extends Request {
     type ResponseType = List[GuideStarCandidate]
   }
 
-  final case class GSCacheCleanupRequest(elapsedTime: Duration) extends Request {
+  case class GSCacheCleanupRequest(elapsedTime: Duration) extends Request {
     type ResponseType = Nothing
   }
 

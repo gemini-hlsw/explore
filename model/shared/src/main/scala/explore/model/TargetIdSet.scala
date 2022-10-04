@@ -5,7 +5,7 @@ package explore.model
 
 import cats.Order
 import cats.data.NonEmptySet
-import cats.syntax.all._
+import cats.syntax.all.*
 import explore.model.util.NonEmptySetWrapper
 import lucuma.core.model.Target
 import monocle.Iso

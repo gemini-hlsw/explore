@@ -3,12 +3,12 @@
 
 package explore.model.enums
 
-import cats.syntax.all._
-import eu.timepit.refined.auto._
+import cats.syntax.all.*
+import eu.timepit.refined.auto.*
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.util.Enumerated
-import lucuma.refined._
+import lucuma.refined.*
 
 enum ExecutionEnvironment(val tag: String, val suffix: Option[NonEmptyString]):
   case Development extends ExecutionEnvironment("DEVELOPMENT", "DEV".refined[NonEmpty].some)

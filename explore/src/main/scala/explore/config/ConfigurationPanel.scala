@@ -16,15 +16,14 @@ import crystal.react.hooks.*
 import crystal.react.implicits.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.*
 import explore.common.Aligner
-import explore.common.ObsQueries.*
-import explore.common.ScienceQueries.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.events.*
-import explore.implicits.*
 import explore.model
+import explore.model.AppContext
 import explore.model.CoordinatesAtVizTime
 import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle.*
@@ -47,7 +46,8 @@ import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import org.http4s.syntax.all.*
 import queries.common.ObsQueriesGQL
-import queries.schemas.implicits.*
+import queries.schemas.odb.ObsQueries.*
+import queries.schemas.odb.conversions.*
 import react.common.ReactFnProps
 
 case class ConfigurationPanel(
@@ -59,10 +59,9 @@ case class ConfigurationPanel(
   itcTargets:      List[ItcTarget],
   baseCoordinates: Option[CoordinatesAtVizTime],
   renderInTitle:   Tile.RenderInTitle
-)(using val ctx:   AppContextIO)
-    extends ReactFnProps(ConfigurationPanel.component)
+) extends ReactFnProps[ConfigurationPanel](ConfigurationPanel.component)
 
-object ConfigurationPanel {
+object ConfigurationPanel:
   private type Props = ConfigurationPanel
 
   // TODO: The following few methods could be moved to `clue` if they are appropiate. Before
@@ -76,10 +75,9 @@ object ConfigurationPanel {
     /**
      * If the Input is not `Assing[A]`, create a new Input with the parameter and `assign` it.
      */
-    def orAssign(ifNotAssigned: => A): Input[A] = input match {
+    def orAssign(ifNotAssigned: => A): Input[A] = input match
       case Assign(_) => input
       case _         => ifNotAssigned.assign
-    }
 
   /**
    * Handles the case where `A.Input[B]` not have an assigned value, but it needs to be created for
@@ -116,13 +114,14 @@ object ConfigurationPanel {
   private val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStateViewBy(props =>
+      .useContext(AppContext.ctx)
+      .useStateViewBy((props, _) =>
         props.scienceData.model.get.mode.fold(ConfigEditState.TableView)(_ =>
           ConfigEditState.DetailsView
         )
       )
-      .useEffectWithDepsBy((props, _) => props.scienceData.model.get.mode) {
-        (_, editState) => oScienceMode =>
+      .useEffectWithDepsBy((props, _, _) => props.scienceData.model.get.mode) {
+        (_, _, editState) => oScienceMode =>
           // In case a undo/redo creates a customization, they can't be on the table panel.
           // If undo removes the config entirely, they have to be on the table panel
           oScienceMode.fold(editState.set(ConfigEditState.TableView))(m =>
@@ -131,16 +130,16 @@ object ConfigurationPanel {
             else Callback.empty
           )
       }
-      .useEffectResultOnMountBy { (props, _) =>
-        import props.given
+      .useEffectResultOnMountBy { (props, ctx, _) =>
+        import ctx.given
 
         ItcClient[IO]
           .requestSingle(
             ItcMessage.SpectroscopyMatrixRequest(uri"/instrument_spectroscopy_matrix.csv")
           )
       }
-      .render { (props, editState, matrix) =>
-        import props.given
+      .render { (props, ctx, editState, matrix) =>
+        import ctx.given
 
         val requirementsCtx: UndoSetter[ScienceRequirementsData] =
           props.scienceData.zoom(ScienceData.requirements)
@@ -246,5 +245,3 @@ object ConfigurationPanel {
           )
         )
       }
-
-}

@@ -3,25 +3,25 @@
 
 package reactST.reactTable
 
-import cats.syntax.all._
+import cats.syntax.all.*
 import explore.components.ui.ExploreStyles
 import explore.syntax.ui.*
 import explore.syntax.ui.given
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactPropsForwardRef
 import react.common.style.Css
-import react.semanticui.collections.table._
-import react.virtuoso._
+import react.semanticui.collections.table.*
+import react.virtuoso.*
 import react.virtuoso.raw.ListRange
 import reactST.reactTable.facade.tableInstance.TableInstance
 
 import scalajs.js
 import scalajs.js.|
-import scalajs.js.JSConverters._
-import definitions._
+import scalajs.js.JSConverters.*
+import definitions.*
 
 class SUITableVirtuoso[D, Plugins](
   tableDef:     TableDef[D, Plugins, Layout.NonTable] // tableDef is just used to infer types.

@@ -35,8 +35,8 @@ import queries.schemas.UserPreferencesDB.Enums.*
 import queries.schemas.UserPreferencesDB.Scalars.*
 import queries.schemas.UserPreferencesDB.Types.LucumaObservationInsertInput
 import queries.schemas.UserPreferencesDB.Types.*
-import queries.schemas.WidthUpsertInput
-import queries.schemas.implicits.*
+import queries.schemas.odb.WidthUpsertInput
+import queries.schemas.odb.conversions.*
 import react.gridlayout.{BreakpointName => _, _}
 import reactST.highcharts.highchartsStrings.chart_
 
@@ -53,7 +53,7 @@ object UserPreferencesQueries {
       width:   Int
     )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
       userId.traverse { i =>
-        execute[F](WidthUpsertInput(i, section, width)).attempt
+        execute[F](WidthUpsertInput(i, section, width).toInput).attempt
       }.void
   }
 

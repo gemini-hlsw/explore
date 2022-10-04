@@ -13,18 +13,18 @@ sealed trait ObsNode {
   val id: UUID
 }
 object ObsNode       {
-  final case class Obs(id: UUID, value: ObsSummary) extends ObsNode
+  case class Obs(id: UUID, value: ObsSummary) extends ObsNode
 
   object Obs {
     val id: Lens[Obs, UUID] = GenLens[Obs](_.id)
   }
 
-  final case class And(id: UUID, andParams: String) extends ObsNode
+  case class And(id: UUID, andParams: String) extends ObsNode
   object And {
     val id: Lens[And, UUID] = GenLens[And](_.id)
   }
 
-  final case class Or(id: UUID, orParams: String) extends ObsNode
+  case class Or(id: UUID, orParams: String) extends ObsNode
   object Or {
     val id: Lens[Or, UUID] = GenLens[Or](_.id)
   }

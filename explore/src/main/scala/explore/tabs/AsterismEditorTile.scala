@@ -5,14 +5,13 @@ package explore.tabs
 
 import cats.effect.IO
 import cats.syntax.all.*
+import clue.TransactionalClient
 import crystal.Pot
 import crystal.react.View
 import crystal.react.implicits.*
-import explore.common.ObsQueries
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.config.VizTimeEditor
-import explore.implicits.*
 import explore.model.Asterism
 import explore.model.ObsIdSet
 import explore.model.ScienceMode
@@ -29,13 +28,16 @@ import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
+import lucuma.schemas.ObservationDB
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import org.typelevel.log4cats.Logger
+import queries.schemas.odb.ObsQueries
 import react.common.ReactFnProps
 
 import java.time.Instant
 
-object AsterismEditorTile {
+object AsterismEditorTile:
 
   def asterismEditorTile(
     userId:          Option[User.Id],
@@ -54,7 +56,7 @@ object AsterismEditorTile {
     title:           String,
     backButton:      Option[VdomNode] = none,
     hiddenColumns:   View[Set[String]]
-  )(using AppContextIO) = {
+  )(using TransactionalClient[IO, ObservationDB], Logger[IO]) = {
 
     // Save the time here. this works for the obs and target tabs
     val vizTimeView = potVizTime.map(_.withOnMod { t =>
@@ -97,5 +99,3 @@ object AsterismEditorTile {
       )
     )
   }
-
-}

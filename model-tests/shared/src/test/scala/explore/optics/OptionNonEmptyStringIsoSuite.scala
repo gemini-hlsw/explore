@@ -3,9 +3,9 @@
 
 package explore.optics
 
-import eu.timepit.refined.cats._
-import eu.timepit.refined.scalacheck.all._
-import explore.optics.all._
+import eu.timepit.refined.cats.*
+import eu.timepit.refined.scalacheck.all.*
+import explore.optics.all.*
 import monocle.law.discipline.IsoTests
 import munit.DisciplineSuite
 

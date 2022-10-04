@@ -1,12 +1,12 @@
 // Copyright (c) 2016-2022 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.common
+package queries.schemas.odb
 
 import cats.effect.Async
-import cats.implicits._
+import cats.implicits.*
 import clue.TransactionalClient
-import clue.data.syntax._
+import clue.data.syntax.*
 import crystal.Pot
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
@@ -17,9 +17,9 @@ import explore.model.ObsSummaryWithTitleAndConstraints
 import explore.model.ObsSummaryWithTitleConstraintsAndConf
 import explore.model.ScienceMode
 import explore.model.TargetSummary
-import explore.optics.all._
-import explore.model.syntax.all._
-import japgolly.scalajs.react._
+import explore.optics.all.*
+import explore.model.syntax.all.*
+import japgolly.scalajs.react.*
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.Observation
@@ -27,12 +27,12 @@ import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
-import lucuma.schemas.ObservationDB.Types._
+import lucuma.schemas.ObservationDB.Types.*
 import monocle.Focus
 import monocle.Getter
 import monocle.Lens
-import queries.common.ObsQueriesGQL._
-import queries.schemas.implicits._
+import queries.common.ObsQueriesGQL.*
+import queries.schemas.odb.conversions.*
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap

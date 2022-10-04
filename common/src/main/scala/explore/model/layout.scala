@@ -3,19 +3,19 @@
 
 package explore.model
 
-import cats.Order._
-import cats._
-import cats.syntax.all._
-import eu.timepit.refined.cats._
+import cats.Order.*
+import cats.*
+import cats.syntax.all.*
+import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
-import japgolly.scalajs.react.ReactCats._
+import japgolly.scalajs.react.ReactCats.*
 import japgolly.scalajs.react.Reusability
 import monocle.Focus
 import monocle.Lens
 import monocle.Traversal
-import monocle.function.At._
-import monocle.function.Each._
-import react.gridlayout._
+import monocle.function.At.*
+import monocle.function.Each.*
+import react.gridlayout.*
 
 import scala.collection.immutable.SortedMap
 

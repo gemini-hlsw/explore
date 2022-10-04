@@ -4,9 +4,9 @@
 package explore.model.arb
 
 import org.scalacheck.Arbitrary
-import org.scalacheck.Arbitrary._
+import org.scalacheck.Arbitrary.*
 import org.scalacheck.Cogen
-import org.scalacheck.Cogen._
+import org.scalacheck.Cogen.*
 import explore.data.tree.Node
 import explore.data.tree.Tree
 import org.scalacheck.Gen

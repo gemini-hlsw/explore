@@ -3,8 +3,8 @@
 
 package explore.model
 
-import cats.Order._
-import cats._
+import cats.Order.*
+import cats.*
 import lucuma.core.model.Target
 import monocle.Focus
 

@@ -3,15 +3,14 @@
 
 package explore.components
 
-import cats.syntax.all._
-import eu.timepit.refined.types.string._
+import cats.syntax.all.*
+import eu.timepit.refined.types.string.*
 import explore.HelpContext
-import explore.HelpCtx
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.Help
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.Css
@@ -19,7 +18,7 @@ import react.common.ReactFnProps
 
 import scala.scalajs.js
 
-final case class HelpIcon(id: Help.Id, clazz: js.UndefOr[Css] = js.undefined)
+case class HelpIcon(id: Help.Id, clazz: js.UndefOr[Css] = js.undefined)
     extends ReactFnProps[HelpIcon](HelpIcon.component)
 
 object HelpIcon:
@@ -27,17 +26,17 @@ object HelpIcon:
 
   type HelpId = NonEmptyString
 
-  val component = ScalaFnComponent[Props] { p =>
-    HelpCtx.usingView { help =>
-      val helpMsg = help.zoom(HelpContext.displayedHelp)
+  val component = ScalaFnComponent
+    .withHooks[Props]
+    .useContext(HelpContext.ctx)
+    .render { (props, help) =>
       <.span(
-        ^.cls :=? p.clazz.map(_.htmlClass),
+        ^.cls :=? props.clazz.map(_.htmlClass),
         ^.onClick ==> { (e: ReactMouseEvent) =>
-          e.stopPropagationCB *> e.preventDefaultCB *> helpMsg.set(p.id.some)
+          e.stopPropagationCB *> e.preventDefaultCB *> help.displayedHelp.set(props.id.some)
         },
         Icons.Info
           .fixedWidth()
           .clazz(ExploreStyles.HelpIcon)
       )
     }
-  }

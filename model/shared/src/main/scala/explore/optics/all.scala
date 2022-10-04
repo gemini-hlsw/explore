@@ -3,8 +3,8 @@
 
 package explore.optics
 
-import cats.syntax.all._
-import monocle._
+import cats.syntax.all.*
+import monocle.*
 import monocle.function.At
 import monocle.function.At.atMap
 import monocle.function.Index

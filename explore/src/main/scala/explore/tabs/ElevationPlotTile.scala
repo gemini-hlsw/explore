@@ -6,7 +6,6 @@ package explore.tabs
 import cats.syntax.all.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
-import explore.implicits.*
 import explore.model.CoordinatesAtVizTime
 import explore.model.ScienceMode
 import explore.targeteditor.ElevationPlotSection
@@ -28,7 +27,7 @@ object ElevationPlotTile:
     scienceMode: Option[ScienceMode],
     coordinates: Option[CoordinatesAtVizTime],
     vizTime:     Option[Instant]
-  )(using AppContextIO) =
+  ) =
     Tile(
       ObsTabTilesIds.PlotId.id,
       "Elevation Plot",

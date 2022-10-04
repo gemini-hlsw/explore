@@ -5,21 +5,21 @@ package explore.components
 
 import cats.Eq
 import eu.timepit.refined.api.Refined
-import eu.timepit.refined.auto._
+import eu.timepit.refined.auto.*
 import eu.timepit.refined.numeric.Interval
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.ui.ExploreStyles
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.validation.InputValidFormat
-import lucuma.refined._
+import lucuma.refined.*
 import lucuma.ui.forms.ExternalValue
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.syntax.all.given
 import react.common.Css
 import react.common.ReactFnProps
-import react.semanticui._
+import react.semanticui.*
 import react.semanticui.elements.icon.Icon
 import react.semanticui.elements.input.IconPosition
 import react.semanticui.elements.label.Label
@@ -27,7 +27,7 @@ import react.semanticui.elements.label.LabelPointing
 
 import scala.scalajs.js
 
-final case class InputWithUnits[EV[_], A](
+case class InputWithUnits[EV[_], A](
   value:           EV[A],
   validFormat:     InputValidFormat[A],
   changeAuditor:   ChangeAuditor,

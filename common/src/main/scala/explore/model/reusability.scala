@@ -4,7 +4,6 @@
 package explore.model
 
 import clue.PersistentClientStatus
-import explore.common.ObsQueries.SpectroscopyRequirementsData
 import explore.data.KeyedIndexedList
 import explore.events.CatalogMessage
 import explore.model.Asterism
@@ -14,7 +13,7 @@ import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.ItcTarget
 import explore.modes.InstrumentRow
 import explore.undo.UndoStacks
-import japgolly.scalajs.react.ReactCats._
+import japgolly.scalajs.react.ReactCats.*
 import japgolly.scalajs.react.Reusability
 import lucuma.ags.AgsParams
 import lucuma.ags.AgsPosition
@@ -30,7 +29,8 @@ import lucuma.core.model.ProposalClass
 import lucuma.core.model.Target
 import lucuma.core.util.NewType
 import lucuma.schemas.ObservationDB.Enums.Existence
-import lucuma.ui.reusability._
+import lucuma.ui.reusability.*
+import queries.schemas.odb.ObsQueries.SpectroscopyRequirementsData
 
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.TreeSeqMap
@@ -41,7 +41,6 @@ import scala.collection.immutable.TreeSeqMap
 object reusability {
   // Model
   implicit val itcTargetProps: Reusability[ItcTarget]                                = Reusability.byEq
-  implicit def appContextReuse[F[_]]: Reusability[AppContext[F]]                     = Reusability.always
   implicit val statusReuse: Reusability[PersistentClientStatus]                      = Reusability.byEq
   implicit val targetOptionsReuse: Reusability[TargetVisualOptions]                  = Reusability.byEq
   implicit val userVaultReuse: Reusability[UserVault]                                = Reusability.byEq

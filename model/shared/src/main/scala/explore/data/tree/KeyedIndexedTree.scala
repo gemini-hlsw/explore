@@ -4,12 +4,12 @@
 package explore.data.tree
 
 import cats.kernel.Eq
-import cats.syntax.all._
+import cats.syntax.all.*
 
 import scala.collection.immutable.HashMap
 import scala.collection.immutable.HashSet
 
-import KeyedIndexedTree._
+import KeyedIndexedTree.*
 
 case class KeyedIndexedTree[K: Eq, A] private (
   private val byKey:  Map[K, Node[IndexedElem[K, A]]],

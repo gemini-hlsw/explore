@@ -3,19 +3,19 @@
 
 package workers
 
-import boopickle.DefaultBasic._
+import boopickle.DefaultBasic.*
 import cats.effect.Async
 import cats.effect.Resource
 import cats.effect.Sync
 import cats.effect.std.Dispatcher
-import cats.syntax.all._
-import explore.model.boopickle.Boopickle._
+import cats.syntax.all.*
+import explore.model.boopickle.Boopickle.*
 import fs2.Stream
 import fs2.concurrent.Topic
 import org.scalajs.dom
 
 import scala.scalajs.js
-import scala.scalajs.js.typedarray._
+import scala.scalajs.js.typedarray.*
 
 /**
  * WebWorker abstraction running on F. it is possible to post messages and get a stream of events

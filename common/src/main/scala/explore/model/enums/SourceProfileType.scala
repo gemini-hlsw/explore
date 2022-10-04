@@ -14,7 +14,7 @@ sealed abstract class SourceProfileType(
     with Serializable
 
 object SourceProfileType {
-  import SourceProfile._
+  import SourceProfile.*
 
   case object PointType    extends SourceProfileType("Point", _.toPoint)
   case object UniformType  extends SourceProfileType("Uniform", _.toUniform)

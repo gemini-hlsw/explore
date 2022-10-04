@@ -3,26 +3,26 @@
 
 package explore.config
 
-import cats.syntax.all._
-import crystal.react.reuse._
+import cats.syntax.all.*
+import crystal.react.reuse.*
 import explore.Icons
 import explore.components.ui.ExploreStyles
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.all.svg._
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.all.svg.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
-import lucuma.core.model.sequence._
-import lucuma.ui.reusability._
+import lucuma.core.model.sequence.*
+import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
-import react.semanticui.collections.table._
-import reactST.reactTable._
+import react.semanticui.collections.table.*
+import reactST.reactTable.*
 
 import java.text.DecimalFormat
 
-final case class SequenceTable(atoms: List[Atom])
+case class SequenceTable(atoms: List[Atom])
     extends ReactFnProps[SequenceTable](SequenceTable.component)
 
 object SequenceTable {

@@ -5,6 +5,7 @@ package explore.targeteditor
 
 import cats.effect.IO
 import cats.syntax.all.*
+import clue.TransactionalClient
 import crystal.Pot
 import crystal.implicits.*
 import crystal.react.View
@@ -15,7 +16,7 @@ import explore.*
 import explore.common.UserPreferencesQueries.*
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
-import explore.implicits.*
+import explore.model.AppContext
 import explore.model.CoordinatesAtVizTime
 import explore.model.ElevationPlotOptions
 import explore.model.ScienceMode
@@ -34,7 +35,9 @@ import lucuma.refined.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import org.typelevel.log4cats.Logger
 import queries.common.UserPreferencesQueriesGQL.*
+import queries.schemas.UserPreferencesDB
 import react.common.ReactFnProps
 import react.datepicker.*
 import react.semanticui.collections.form.Form
@@ -49,10 +52,9 @@ case class ElevationPlotSection(
   scienceMode:       Option[ScienceMode],
   visualizationTime: Option[Instant],
   coords:            CoordinatesAtVizTime
-)(using val ctx:     AppContextIO)
-    extends ReactFnProps(ElevationPlotSection.component)
+) extends ReactFnProps(ElevationPlotSection.component)
 
-object ElevationPlotSection {
+object ElevationPlotSection:
   private type Props = ElevationPlotSection
 
   private given Reusability[Props] =
@@ -73,7 +75,7 @@ object ElevationPlotSection {
     options: View[Pot[ElevationPlotOptions]],
     range:   PlotRange => PlotRange = identity,
     time:    TimeDisplay => TimeDisplay = identity
-  )(using AppContextIO): Callback =
+  )(using TransactionalClient[IO, UserPreferencesDB], Logger[IO]): Callback =
     options.get.toOption.map { opts =>
       ElevationPlotPreference
         .updatePlotPreferences[IO](props.uid, range(opts.range), time(opts.time))
@@ -91,12 +93,13 @@ object ElevationPlotSection {
   private val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStateBy[Site](preferredSiteFor)
+      .useContext(AppContext.ctx)
+      .useStateBy[Site]((props, _) => preferredSiteFor(props))
       // plot options, will be read from the user preferences
       .useStateView(Pot.pending[ElevationPlotOptions])
-      .useEffectWithDepsBy((props, _, _) => props)((_, s, options) =>
+      .useEffectWithDepsBy((props, _, _, _) => props)((_, ctx, s, options) =>
         props =>
-          import props.given
+          import ctx.given
 
           s.setState(preferredSiteFor(props)) >>
             options.modCB(
@@ -104,30 +107,31 @@ object ElevationPlotSection {
               _.map(o => prefsSetter(props, options)).toOption.getOrEmpty
             )
       )
-      .useEffectWithDepsBy((props, _, _) => (props.uid, props.tid)) { (props, site, options) => _ =>
-        import props.given
+      .useEffectWithDepsBy((props, _, _, _) => (props.uid, props.tid)) {
+        (props, ctx, site, options) => _ =>
+          import ctx.given
 
-        ElevationPlotPreference
-          .queryWithDefault[IO](props.uid)
-          .flatMap { case (range, time) =>
-            options
-              .set(
-                ElevationPlotOptions.Default
-                  .copy(site = site.value, range = range, time = time)
-                  .ready
-              )
-              .to[IO]
-          }
-          .runAsyncAndForget
+          ElevationPlotPreference
+            .queryWithDefault[IO](props.uid)
+            .flatMap { case (range, time) =>
+              options
+                .set(
+                  ElevationPlotOptions.Default
+                    .copy(site = site.value, range = range, time = time)
+                    .ready
+                )
+                .to[IO]
+            }
+            .runAsyncAndForget
       }
       // Actual date
-      .useStateBy((props, site, _) => calcTime(props.visualizationTime, site.value))
+      .useStateBy((props, _, site, _) => calcTime(props.visualizationTime, site.value))
       // Update date if props change
-      .useEffectWithDepsBy((props, site, _, _) => (props.visualizationTime, site.value)) {
-        (_, _, _, date) => (vizTime, site) => date.setState(calcTime(vizTime, site))
+      .useEffectWithDepsBy((props, _, site, _, _) => (props.visualizationTime, site.value)) {
+        (_, _, _, _, date) => (vizTime, site) => date.setState(calcTime(vizTime, site))
       }
-      .render { (props, _, options, date) =>
-        import props.given
+      .render { (props, ctx, _, options, date) =>
+        import ctx.given
 
         val siteView =
           options.zoom(sitePrism)
@@ -218,4 +222,3 @@ object ElevationPlotSection {
 
         potRenderView[ElevationPlotOptions](renderPlot)(options)
       }
-}

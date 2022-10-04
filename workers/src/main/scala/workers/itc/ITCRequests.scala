@@ -4,13 +4,13 @@
 package explore.itc
 
 import boopickle.DefaultBasic.*
-import cats._
-import cats.data._
-import cats.effect._
+import cats.*
+import cats.data.*
+import cats.effect.*
 import cats.effect.std.Semaphore
-import cats.syntax.all._
+import cats.syntax.all.*
 import clue.TransactionalClient
-import clue.data.syntax._
+import clue.data.syntax.*
 import crystal.ViewF
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosBigDecimal
@@ -23,20 +23,20 @@ import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.SpectroscopyModeRow
 import lucuma.core.enums.Band
-import lucuma.core.math.BrightnessUnits._
+import lucuma.core.math.BrightnessUnits.*
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.SpectralDefinition
 import org.scalajs.dom
 import org.typelevel.log4cats.Logger
-import queries.common.ITCQueriesGQL._
+import queries.common.ITCQueriesGQL.*
 import queries.schemas.ITC
-import queries.schemas.itc.implicits._
+import queries.schemas.itc.conversions.*
 import workers.*
 
 import java.util.UUID
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 object ITCRequests {
   // Copied from https://gist.github.com/gvolpe/44e2263f9068efe298a1f30390de6d22

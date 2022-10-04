@@ -3,16 +3,16 @@
 
 package explore.data.tree
 
-import cats._
-import cats.syntax.all._
+import cats.*
+import cats.syntax.all.*
 import monocle.Focus
 
-final case class Tree[A](children: List[Node[A]]) {
+case class Tree[A](children: List[Node[A]]) {
   def map[B](f: A => B): Tree[B] =
     Tree(children.map(_.map(f)))
 }
 
-final case class Node[A](value: A, children: List[Node[A]] = List.empty) {
+case class Node[A](value: A, children: List[Node[A]] = List.empty) {
   def map[B](f: A => B): Node[B] =
     Node(f(value), children.map(_.map(f)))
 }
@@ -44,12 +44,12 @@ object Node {
 }
 
 // Version with different types for internal and leaf nodes. I don't think this would work easily with tree component.
-// @Lenses final case class Tree[A, B](children: List[Node[A, B]])
+// @Lenses case class Tree[A, B](children: List[Node[A, B]])
 // sealed trait Node[A, B]
 // object Node {
-//   @Lenses final case class Internal[A, B](value: A, children: List[Node[A, B]] = List.empty)
+//   @Lenses case class Internal[A, B](value: A, children: List[Node[A, B]] = List.empty)
 //       extends Node[A, B]
-//   @Lenses final case class Leaf[A, B](value: B) extends Node[A, B]
+//   @Lenses case class Leaf[A, B](value: B) extends Node[A, B]
 // }
 
 // object Tree {

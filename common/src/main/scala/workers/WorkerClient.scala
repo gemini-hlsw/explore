@@ -15,7 +15,7 @@ import explore.model.boopickle.Boopickle.*
 import fs2.RaiseThrowable
 import org.typelevel.log4cats.Logger
 
-import WorkerMessage._
+import WorkerMessage.*
 
 /**
  * Implements the client side of a simple client/server protocol that provides a somewhat more

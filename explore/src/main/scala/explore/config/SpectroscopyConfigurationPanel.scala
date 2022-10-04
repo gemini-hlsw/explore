@@ -3,32 +3,32 @@
 
 package explore.config
 
-import cats.syntax.all._
+import cats.syntax.all.*
 import crystal.react.View
-import eu.timepit.refined.auto._
-import eu.timepit.refined.cats._
-import explore.common.ObsQueries.SpectroscopyRequirementsData
+import eu.timepit.refined.auto.*
+import eu.timepit.refined.cats.*
 import explore.components.HelpIcon
 import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
 import explore.itc.requiredForITC
 import explore.model.ExploreModelValidators
 import explore.model.display.given
-import explore.model.formats._
-import explore.syntax.ui._
-import japgolly.scalajs.react._
+import explore.model.formats.*
+import explore.syntax.ui.*
+import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
-import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.validation._
+import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.validation.*
 import lucuma.refined.*
 import lucuma.ui.forms.EnumViewOptionalSelect
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.syntax.all.given
+import queries.schemas.odb.ObsQueries.SpectroscopyRequirementsData
 import react.common.Css
 import react.common.ReactFnProps
 
-final case class SpectroscopyConfigurationPanel(
+case class SpectroscopyConfigurationPanel(
   options: View[SpectroscopyRequirementsData]
 ) extends ReactFnProps[SpectroscopyConfigurationPanel](SpectroscopyConfigurationPanel.component)
 

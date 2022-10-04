@@ -3,35 +3,35 @@
 
 package explore.common
 
+import _root_.cats.effect.IO
 import cats.Endo
-import clue.data.syntax._
+import clue.TransactionalClient
+import clue.data.syntax.*
 import crystal.react.View
-import crystal.react.implicits._
-import eu.timepit.refined._
+import crystal.react.implicits.*
+import eu.timepit.refined.*
 import eu.timepit.refined.numeric.Positive
-import explore.common.ObsQueries._
-import explore.implicits._
-import explore.model.ScienceMode
-import explore.model.ScienceModeAdvanced
-import explore.model.ScienceModeBasic
 import explore.undo.UndoSetter
 import lucuma.core.enums
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
 import lucuma.core.model.Observation
-import lucuma.core.optics.syntax.lens._
-import lucuma.schemas.ObservationDB.Types._
+import lucuma.core.optics.syntax.lens.*
+import lucuma.schemas.ObservationDB
+import lucuma.schemas.ObservationDB.Types.*
 import monocle.Lens
-import queries.common.ObsQueriesGQL._
-import queries.schemas.implicits._
+import org.typelevel.log4cats.Logger
+import queries.common.ObsQueriesGQL.*
+import queries.schemas.odb.ObsQueries.*
+import queries.schemas.odb.conversions.*
 
-object ScienceQueries {
+object ScienceQueries:
 
   case class ScienceRequirementsUndoView(
     obsId:                   Observation.Id,
     scienceRequirementsUndo: UndoSetter[ScienceRequirementsData]
-  )(implicit ctx:            AppContextIO) {
+  )(using TransactionalClient[IO, ObservationDB], Logger[IO]):
     def apply[A](
       modelGet:  ScienceRequirementsData => A,
       modelMod:  (A => A) => ScienceRequirementsData => ScienceRequirementsData,
@@ -58,9 +58,8 @@ object ScienceQueries {
       remoteSet: A => ScienceRequirementsInput => ScienceRequirementsInput
     ): View[A] =
       apply(lens.get, lens.modify, remoteSet)
-  }
 
-  object UpdateScienceRequirements {
+  object UpdateScienceRequirements:
     def mode(n: enums.ScienceMode): Endo[ScienceRequirementsInput] =
       ScienceRequirementsInput.mode.replace(n.assign)
 
@@ -105,84 +104,3 @@ object ScienceQueries {
         input.runS(SpectroscopyScienceRequirementsInput()).value.assign
       )
     }
-  }
-
-  implicit class ScienceModeBasicGmosNLongSlitOps(val b: ScienceModeBasic.GmosNorthLongSlit)
-      extends AnyVal {
-    def toInput: GmosNorthLongSlitBasicConfigInput =
-      GmosNorthLongSlitBasicConfigInput(b.grating.assign, b.filter.orUnassign, b.fpu.assign)
-  }
-
-  implicit class ScienceModeBasicGmosSLongSlitOps(val b: ScienceModeBasic.GmosSouthLongSlit)
-      extends AnyVal {
-    def toInput: GmosSouthLongSlitBasicConfigInput =
-      GmosSouthLongSlitBasicConfigInput(b.grating.assign, b.filter.orUnassign, b.fpu.assign)
-  }
-
-  implicit class OffsetComponentOps[A](val o: Offset.Component[A]) extends AnyVal {
-    def toInput: OffsetComponentInput =
-      OffsetComponentInput(microarcseconds = o.toAngle.toMicroarcseconds.assign)
-  }
-
-  implicit class ScienceModeAdvancedGmosNLongSlitOps(val a: ScienceModeAdvanced.GmosNorthLongSlit)
-      extends AnyVal {
-    def toInput: GmosNorthLongSlitAdvancedConfigInput =
-      GmosNorthLongSlitAdvancedConfigInput(
-        a.overrideWavelength.map(_.toInput).orUnassign,
-        a.overrideGrating.orUnassign,
-        a.overrideFilter.orUnassign,
-        a.overrideFpu.orUnassign,
-        a.overrideExposureTimeMode.map(_.toInput).orUnassign,
-        a.explicitXBin.orUnassign,
-        a.explicitYBin.orUnassign,
-        a.explicitAmpReadMode.orUnassign,
-        a.explicitAmpGain.orUnassign,
-        a.explicitRoi.orUnassign,
-        a.explicitWavelengthDithers
-          .map(_.toList.map(_.value))
-          .orUnassign,
-        a.explicitSpatialOffsets.map(_.toList.map(_.toInput)).orUnassign
-      )
-  }
-
-  implicit class ScienceModeAdvancedGmosSLongSlitOps(val a: ScienceModeAdvanced.GmosSouthLongSlit)
-      extends AnyVal {
-    def toInput: GmosSouthLongSlitAdvancedConfigInput =
-      GmosSouthLongSlitAdvancedConfigInput(
-        a.overrideWavelength.map(_.toInput).orUnassign,
-        a.overrideGrating.orUnassign,
-        a.overrideFilter.orUnassign,
-        a.overrideFpu.orUnassign,
-        a.overrideExposureTimeMode.map(_.toInput).orUnassign,
-        a.explicitXBin.orUnassign,
-        a.explicitYBin.orUnassign,
-        a.explicitAmpReadMode.orUnassign,
-        a.explicitAmpGain.orUnassign,
-        a.explicitRoi.orUnassign,
-        a.explicitWavelengthDithers
-          .map(_.toList.map(_.value))
-          .orUnassign,
-        a.explicitSpatialOffsets.map(_.toList.map(_.toInput)).orUnassign
-      )
-  }
-
-  implicit class ScienceModeOps(val b: ScienceMode) extends AnyVal {
-    def toInput: ScienceModeInput =
-      b match {
-        case ScienceMode.GmosNorthLongSlit(basic, advanced) =>
-          ScienceModeInput(
-            gmosNorthLongSlit = GmosNorthLongSlitInput(
-              basic = basic.toInput.assign,
-              advanced = advanced.toInput.assign
-            ).assign
-          )
-        case ScienceMode.GmosSouthLongSlit(basic, advanced) =>
-          ScienceModeInput(
-            gmosSouthLongSlit = GmosSouthLongSlitInput(
-              basic = basic.toInput.assign,
-              advanced = advanced.toInput.assign
-            ).assign
-          )
-      }
-  }
-}

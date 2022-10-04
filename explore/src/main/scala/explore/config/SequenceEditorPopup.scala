@@ -4,44 +4,41 @@
 package explore.config
 
 import crystal.Pot
-import crystal.implicits._
-import crystal.react.hooks._
+import crystal.implicits.*
+import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
-import explore.implicits._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import explore.given
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.semanticui.elements.button.Button
-import react.semanticui.modules.modal._
-import react.semanticui.shorthand._
-import react.semanticui.sizes._
+import react.semanticui.modules.modal.*
+import react.semanticui.shorthand.*
+import react.semanticui.sizes.*
 
-final case class SequenceEditorPopup(
-  obsId:            Observation.Id,
-  title:            String,
-  subtitle:         Option[NonEmptyString],
-  dithersControl:   Callback => VdomElement,
-  offsetsControl:   Callback => VdomElement,
-  trigger:          VdomElement
-)(implicit val ctx: AppContextIO)
-    extends ReactFnProps[SequenceEditorPopup](SequenceEditorPopup.component)
+case class SequenceEditorPopup(
+  obsId:          Observation.Id,
+  title:          String,
+  subtitle:       Option[NonEmptyString],
+  dithersControl: Callback => VdomElement,
+  offsetsControl: Callback => VdomElement,
+  trigger:        VdomElement
+) extends ReactFnProps(SequenceEditorPopup.component)
 
-object SequenceEditorPopup {
-  type Props = SequenceEditorPopup
+object SequenceEditorPopup:
+  private type Props = SequenceEditorPopup
 
-  protected val component =
+  private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useState(false)        // isOpen
       .useStateView(().ready) // changed - Indicates whether to display sequence or pending.
       .render { (props, isOpen, changed) =>
-        implicit val ctx = props.ctx
-
         React.Fragment(
           <.span(^.onClick --> isOpen.setState(true), props.trigger),
           Modal(
@@ -77,4 +74,3 @@ object SequenceEditorPopup {
           )
         )
       }
-}

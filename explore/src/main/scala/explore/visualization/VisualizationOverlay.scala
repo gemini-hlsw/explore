@@ -4,12 +4,12 @@
 package explore.visualization
 
 import cats.data.NonEmptyMap
-import cats.syntax.all._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.svg_<^._
+import cats.syntax.all.*
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.svg_<^.*
 import lucuma.core.geom.ShapeExpression
 import lucuma.core.geom.jts.JtsShape
-import lucuma.core.geom.jts.interpreter._
+import lucuma.core.geom.jts.interpreter.*
 import lucuma.core.math.Offset
 import lucuma.ui.syntax.all.given
 import org.locationtech.jts.geom.Geometry

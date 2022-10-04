@@ -4,9 +4,9 @@
 package explore.model.arb
 
 import explore.model.UserVault
-import lucuma.core.model.arb._
-import lucuma.core.arb._
-import eu.timepit.refined.scalacheck.string._
+import lucuma.core.model.arb.*
+import lucuma.core.arb.*
+import eu.timepit.refined.scalacheck.string.*
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Cogen
@@ -15,8 +15,8 @@ import java.time.Instant
 import lucuma.core.model.User
 
 trait ArbUserVault {
-  import ArbUser._
-  import ArbTime._
+  import ArbUser.*
+  import ArbTime.*
 
   implicit val userVaultArb: Arbitrary[UserVault] = Arbitrary[UserVault] {
     for {

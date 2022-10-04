@@ -60,7 +60,7 @@ object PlotServer extends WorkerServer[IO, PlotMessage.Request] {
 
   private given Pickler[SkyCalcResults] = generatePickler
 
-  private final case class SemesterPlotCalc(semester: Semester, site: Site, cache: Cache[IO]) {
+  private case class SemesterPlotCalc(semester: Semester, site: Site, cache: Cache[IO]) {
 
     def siderealVisibility(
       skyCalcSamples: Samples[SkyCalcResults]

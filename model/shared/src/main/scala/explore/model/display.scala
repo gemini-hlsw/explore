@@ -3,14 +3,14 @@
 
 package explore.model
 
-import cats.syntax.all._
-import eu.timepit.refined.cats._
-import lucuma.core.enums._
+import cats.syntax.all.*
+import eu.timepit.refined.cats.*
+import lucuma.core.enums.*
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
-import lucuma.core.syntax.display._
+import lucuma.core.syntax.display.*
 import lucuma.core.util.Display
 import lucuma.core.validation.InputValidSplitEpi
 
@@ -95,7 +95,7 @@ trait DisplayImplicits {
 
   given Display[StellarLibrarySpectrum] = Display.byShortName(_.sedSpectrum)
 
-  import UnnormalizedSED._
+  import UnnormalizedSED.*
   given Display[UnnormalizedSED] = Display.byShortName {
     case StellarLibrary(librarySpectrum)          => librarySpectrum.shortName
     case CoolStarModel(temperature)               => s"Cool Star (${temperature.temperature.value} °K)"

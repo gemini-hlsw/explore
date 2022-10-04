@@ -3,23 +3,23 @@
 
 package explore.targeteditor
 
-import cats.syntax.all._
+import cats.syntax.all.*
 import crystal.react.View
-import crystal.react.hooks._
-import eu.timepit.refined.cats._
+import crystal.react.hooks.*
+import eu.timepit.refined.cats.*
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
-import explore.model._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import explore.model.*
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Target
 import lucuma.core.validation.InputValidSplitEpi
 import lucuma.refined.*
-import lucuma.ui.forms._
-import lucuma.ui.reusability._
+import lucuma.ui.forms.*
+import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.all.given
@@ -27,14 +27,14 @@ import lucuma.ui.utils.abbreviate
 import org.scalajs.dom
 import react.common.ReactFnProps
 import react.semanticui.collections.form.Form.FormProps
-import react.semanticui.collections.form._
+import react.semanticui.collections.form.*
 import react.semanticui.elements.label.LabelPointing
-import react.semanticui.shorthand._
+import react.semanticui.shorthand.*
 
 import scalajs.js.timers
-import scalajs.js.JSConverters._
+import scalajs.js.JSConverters.*
 
-final case class SearchForm(
+case class SearchForm(
   id:          Target.Id,
   targetView:  View[NonEmptyString],
   name:        NonEmptyString,

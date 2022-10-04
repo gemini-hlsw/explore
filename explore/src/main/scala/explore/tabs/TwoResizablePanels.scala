@@ -5,6 +5,7 @@ package explore.tabs
 
 import cats.effect.IO
 import cats.syntax.all.*
+import clue.TransactionalClient
 import crystal.react.View
 import crystal.react.hooks.*
 import crystal.react.implicits.*
@@ -12,7 +13,6 @@ import crystal.react.reuse.*
 import explore.Icons
 import explore.common.UserPreferencesQueries.*
 import explore.components.ui.ExploreStyles
-import explore.implicits.*
 import explore.model.*
 import explore.model.enums.AppTab
 import explore.syntax.ui.*
@@ -25,7 +25,9 @@ import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
 import org.scalajs.dom.window
+import org.typelevel.log4cats.Logger
 import queries.common.UserPreferencesQueriesGQL.*
+import queries.schemas.UserPreferencesDB
 import react.draggable.Axis
 import react.resizable.*
 import react.resizeDetector.*
@@ -53,9 +55,7 @@ trait TwoResizablePanels {
     widthView: View[Double],
     section:   ResizableSection,
     debouncer: Reusable[UseSingleEffect[IO]]
-  )(using
-    ctx:       AppContextIO
-  ) =
+  )(using TransactionalClient[IO, UserPreferencesDB], Logger[IO]) =
     (_: ReactEvent, d: ResizeCallbackData) =>
       widthView.set(d.size.width.toDouble) *>
         debouncer
@@ -68,8 +68,8 @@ trait TwoResizablePanels {
   def makeBackButton(
     programId: Program.Id,
     appTab:    AppTab,
-    ctx:       AppContextIO,
-    pv:        View[SelectedPanel]
+    pv:        View[SelectedPanel],
+    ctx:       AppContext[IO]
   ): VdomNode =
     Button(
       as = <.a,

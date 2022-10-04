@@ -3,15 +3,15 @@
 
 package explore.model.arb
 
-import cats.syntax.all._
+import cats.syntax.all.*
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Cogen
 import org.scalacheck.Gen
 import explore.model.ScienceModeAdvanced
-import lucuma.core.util.arb.ArbGid._
-import lucuma.core.util.arb.ArbEnumerated._
-import lucuma.core.enums._
+import lucuma.core.util.arb.ArbGid.*
+import lucuma.core.util.arb.ArbEnumerated.*
+import lucuma.core.enums.*
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
 import lucuma.core.math.arb.ArbOffset
@@ -19,16 +19,16 @@ import lucuma.core.math.arb.ArbRefined
 import lucuma.core.math.arb.ArbWavelength
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.arb.ArbExposureTimeMode
-import eu.timepit.refined.scalacheck.numeric._
+import eu.timepit.refined.scalacheck.numeric.*
 import cats.data.NonEmptyList
-import cats.laws.discipline.arbitrary._
+import cats.laws.discipline.arbitrary.*
 import explore.model.DitherNanoMeters
 
 trait ArbScienceModeAdvanced {
-  import ArbExposureTimeMode._
-  import ArbOffset._
-  import ArbRefined._
-  import ArbWavelength._
+  import ArbExposureTimeMode.*
+  import ArbOffset.*
+  import ArbRefined.*
+  import ArbWavelength.*
 
   implicit val arbGmosNorthLongSlitAdvanced: Arbitrary[ScienceModeAdvanced.GmosNorthLongSlit] =
     Arbitrary[ScienceModeAdvanced.GmosNorthLongSlit](

@@ -6,8 +6,8 @@ package explore
 import _root_.boopickle.Default.Pickler
 import _root_.boopickle.Default.Pickle
 import _root_.boopickle.Default.Unpickle
-import cats.laws._
-import cats.laws.discipline._
+import cats.laws.*
+import cats.laws.discipline.*
 import cats.kernel.Eq
 import org.scalacheck.{Arbitrary, Prop, Shrink}
 import org.typelevel.discipline.Laws

@@ -13,7 +13,7 @@ import scala.scalajs.js.annotation.JSImport
 
 import scalajs.js
 
-final case class ReflexContainer(
+case class ReflexContainer(
   orientation:            js.UndefOr[Orientation] = js.undefined,
   maxRecDepth:            js.UndefOr[Double] = js.undefined,
   windowResizeAware:      js.UndefOr[Boolean] = js.undefined,

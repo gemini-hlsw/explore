@@ -3,9 +3,9 @@
 
 package explore.model.boopickle
 
-import boopickle.DefaultBasic._
+import boopickle.DefaultBasic.*
 import cats.data.NonEmptyMap
-import cats.implicits._
+import cats.implicits.*
 import coulomb.Quantity
 import eu.timepit.refined.types.numeric.NonNegBigDecimal
 import eu.timepit.refined.types.numeric.PosBigDecimal
@@ -31,7 +31,7 @@ import explore.modes.ModeSlitSize
 import explore.modes.ModeWavelength
 import explore.modes.SpectroscopyModeRow
 import explore.modes.SpectroscopyModesMatrix
-import explore.modes._
+import explore.modes.*
 import lucuma.core.enums.FocalPlane
 import lucuma.core.enums.SpectroscopyCapabilities
 import lucuma.core.math.BrightnessUnits
@@ -40,8 +40,8 @@ import lucuma.core.math.BrightnessUnits.FluxDensityContinuum
 import lucuma.core.math.BrightnessUnits.LineFlux
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.Wavelength
-import lucuma.core.math.dimensional._
-import lucuma.core.math.units._
+import lucuma.core.math.dimensional.*
+import lucuma.core.math.units.*
 import lucuma.core.model.EmissionLine
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.SpectralDefinition

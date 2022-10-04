@@ -3,42 +3,42 @@
 
 package explore.targets
 
-import cats.Order._
-import cats.syntax.all._
+import cats.Order.*
+import cats.syntax.all.*
 import crystal.react.View
-import crystal.react.reuse._
-import explore.common.AsterismQueries._
+import crystal.react.reuse.*
+import explore.common.AsterismQueries.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.TargetWithIdAndObs
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
-import lucuma.ui.reusability._
+import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.Css
 import react.common.ReactFnProps
-import react.semanticui.collections.table._
+import react.semanticui.collections.table.*
 import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.modules.dropdown.DropdownItem
-import react.semanticui.modules.dropdown._
-import reactST.reactTable._
+import react.semanticui.modules.dropdown.*
+import reactST.reactTable.*
 import reactST.reactTable.mod.DefaultSortTypes
 import reactST.reactTable.mod.IdType
 
-import scalajs.js.JSConverters._
+import scalajs.js.JSConverters.*
 
-final case class TargetSummaryTable(
+case class TargetSummaryTable(
   targets:           TargetWithObsList,
   hiddenColumns:     View[Set[String]],
   selectObservation: (Observation.Id, Target.Id) => Callback,
   selectTarget:      Target.Id => Callback,
   renderInTitle:     Tile.RenderInTitle
-) extends ReactFnProps[TargetSummaryTable](TargetSummaryTable.component)
+) extends ReactFnProps(TargetSummaryTable.component)
 
-object TargetSummaryTable {
+object TargetSummaryTable:
   type Props = TargetSummaryTable
 
   protected val TargetTable = TableDef[TargetWithIdAndObs].withSortBy
@@ -173,4 +173,3 @@ object TargetSummaryTable {
           )(tableInstance)
         )
       )
-}

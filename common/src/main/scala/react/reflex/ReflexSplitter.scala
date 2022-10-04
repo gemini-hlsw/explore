@@ -3,8 +3,8 @@
 
 package react.reflex
 
-import explore.syntax.ui._
-import japgolly.scalajs.react._
+import explore.syntax.ui.*
+import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.TagMod
 import react.common.Css
 import react.common.GenericComponentPA
@@ -13,7 +13,7 @@ import scala.scalajs.js.annotation.JSImport
 
 import scalajs.js
 
-final case class ReflexSplitter(
+case class ReflexSplitter(
   propagate:              js.UndefOr[Boolean] = js.undefined,
   onStartResize:          js.UndefOr[ResizeEvent => Callback] = js.undefined,
   onStopResize:           js.UndefOr[ResizeEvent => Callback] = js.undefined,

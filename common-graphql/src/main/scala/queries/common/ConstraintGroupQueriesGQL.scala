@@ -10,8 +10,8 @@ import lucuma.schemas.ObservationDB
 
 import java.time
 
-// gql: import io.circe.refined._
-// gql: import lucuma.schemas.decoders._
+// gql: import io.circe.refined.*
+// gql: import lucuma.schemas.decoders.*
 
 object ConstraintGroupQueriesGQL {
 

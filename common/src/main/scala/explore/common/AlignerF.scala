@@ -5,7 +5,7 @@ package explore.common
 
 import cats.MonadError
 import crystal.react.View
-import crystal.react.implicits._
+import crystal.react.implicits.*
 import explore.undo.UndoContext
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.util.Effect
@@ -29,7 +29,7 @@ import org.typelevel.log4cats.Logger
  * The idea is to keep code to edit the model as simple as possible, while providing a way to
  * compose components that edit different parts of the model in the same undo context.
  */
-trait AlignerF[F[_], B, S] { self =>
+trait AlignerF[F[_], B, S]:
   protected type _A // Base model type
   protected type _T // Base delta structure type
 
@@ -51,11 +51,9 @@ trait AlignerF[F[_], B, S] { self =>
    * The `View` should be built at the last possible moment in order to maximize the granularity of
    * undo operations and remote changes.
    */
-  def viewMod(toInput: B => S => S)(implicit
-    F:                 MonadError[F, Throwable],
-    dispatcher:        Effect.Dispatch[F],
-    logger:            Logger[F]
-  ): View[B] =
+  def viewMod(
+    toInput: B => S => S
+  )(using MonadError[F, Throwable], Effect.Dispatch[F], Logger[F]): View[B] =
     _undoCtx
       .undoableView(_modelGet, _modelMod)
       .withOnMod(value => _onMod(_remoteMod(toInput(value))(_remoteBaseInput)).runAsync)
@@ -67,11 +65,9 @@ trait AlignerF[F[_], B, S] { self =>
    * The `View` should be built at the last possible moment in order to maximize the granularity of
    * undo operations and remote changes.
    */
-  def view(toInput: B => S)(implicit
-    F:              MonadError[F, Throwable],
-    dispatcher:     Effect.Dispatch[F],
-    logger:         Logger[F]
-  ): View[B] =
+  def view(
+    toInput: B => S
+  )(using MonadError[F, Throwable], Effect.Dispatch[F], Logger[F]): View[B] =
     viewMod(b => _ => toInput(b))
 
   /**
@@ -137,9 +133,8 @@ trait AlignerF[F[_], B, S] { self =>
       val modelMod: (C => C) => B => B = f => _.map(f)
       zoom(bToC, modelMod, identity[S => S] _)
     }
-}
 
-object AlignerF {
+object AlignerF:
 
   /**
    * Build a `AlignerF` for property `B` of base model `A` and property `S` of delta structure `T`
@@ -173,6 +168,5 @@ object AlignerF {
   ): AlignerF[F, A, T] =
     AlignerF[F, A, A, T, T](undoCtx, remoteBaseInput, onMod, identity, identity, identity)
 
-  implicit def reuseAligner[F[_], B: Reusability, S]: Reusability[AlignerF[F, B, S]] =
+  given [F[_], B: Reusability, S]: Reusability[AlignerF[F, B, S]] =
     Reusability.by(_.get)
-}

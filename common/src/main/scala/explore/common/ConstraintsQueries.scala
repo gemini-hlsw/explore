@@ -4,26 +4,29 @@
 package explore.common
 
 import cats.Endo
-import clue.data.syntax._
+import cats.effect.IO
+import clue.TransactionalClient
+import clue.data.syntax.*
 import crystal.react.View
-import crystal.react.implicits._
+import crystal.react.implicits.*
 import eu.timepit.refined.types.numeric.PosBigDecimal
-import explore.implicits._
 import explore.undo.UndoContext
-import lucuma.core.enums._
+import lucuma.core.enums.*
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.Observation
-import lucuma.schemas.ObservationDB.Types._
+import lucuma.schemas.ObservationDB
+import lucuma.schemas.ObservationDB.Types.*
 import monocle.Lens
-import queries.common.ObsQueriesGQL._
-import queries.schemas.implicits._
+import org.typelevel.log4cats.Logger
+import queries.common.ObsQueriesGQL.*
+import queries.schemas.odb.conversions.*
 
-object ConstraintsQueries {
+object ConstraintsQueries:
   case class UndoView(
-    obsIds:       List[Observation.Id],
-    undoCtx:      UndoContext[ConstraintSet]
-  )(implicit ctx: AppContextIO) {
+    obsIds:  List[Observation.Id],
+    undoCtx: UndoContext[ConstraintSet]
+  )(using TransactionalClient[IO, ObservationDB], Logger[IO]):
     def apply[A](
       modelGet:  ConstraintSet => A,
       modelMod:  (A => A) => ConstraintSet => ConstraintSet,
@@ -50,9 +53,8 @@ object ConstraintsQueries {
       remoteSet: A => ConstraintSetInput => ConstraintSetInput
     ): View[A] =
       apply(lens.get, lens.modify, remoteSet)
-  }
 
-  object UpdateConstraintSet {
+  object UpdateConstraintSet:
     def imageQuality(iq: ImageQuality): Endo[ConstraintSetInput] =
       ConstraintSetInput.imageQuality.replace(iq.assign)
 
@@ -82,5 +84,3 @@ object ConstraintsQueries {
       ElevationRangeInput()
       ConstraintSetInput.elevationRange.replace(createER.assign)
     }
-  }
-}

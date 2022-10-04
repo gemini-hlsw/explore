@@ -4,9 +4,9 @@
 package explore.modes
 
 import cats.effect.Async
-import cats.syntax.all._
-import fs2.data.csv._
-import fs2.io.file._
+import cats.syntax.all.*
+import fs2.data.csv.*
+import fs2.io.file.*
 import fs2.text
 
 trait ModesMatrixPlatform extends ModesMatrixDecoders {

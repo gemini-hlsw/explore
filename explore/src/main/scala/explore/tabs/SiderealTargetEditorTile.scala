@@ -4,7 +4,7 @@
 package explore.tabs
 
 import cats.effect.IO
-import cats.syntax.all._
+import cats.syntax.all.*
 import crystal.react.View
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
@@ -13,7 +13,7 @@ import explore.model.util.*
 import explore.targeteditor.SiderealTargetEditor
 import explore.undo.UndoStacks
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.syntax.all.*

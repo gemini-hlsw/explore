@@ -6,15 +6,15 @@ package explore.model
 import cats.Eq
 import cats.data.NonEmptyList
 import cats.derived.*
-import cats.syntax.all._
-import eu.timepit.refined.cats._
+import cats.syntax.all.*
+import eu.timepit.refined.cats.*
 import io.circe.Decoder
-import io.circe.refined._
-import lucuma.core.enums._
+import io.circe.refined.*
+import lucuma.core.enums.*
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ExposureTimeMode
-import lucuma.schemas.decoders._
+import lucuma.schemas.decoders.*
 import monocle.Focus
 import monocle.Lens
 import monocle.Prism
@@ -23,7 +23,7 @@ import monocle.macros.GenPrism
 sealed trait ScienceModeAdvanced extends Product with Serializable derives Eq
 
 object ScienceModeAdvanced {
-  final case class GmosNorthLongSlit(
+  case class GmosNorthLongSlit(
     overrideWavelength:        Option[Wavelength],
     overrideGrating:           Option[GmosNorthGrating],
     overrideFilter:            Option[GmosNorthFilter],
@@ -114,7 +114,7 @@ object ScienceModeAdvanced {
       Focus[GmosNorthLongSlit](_.explicitSpatialOffsets)
   }
 
-  final case class GmosSouthLongSlit(
+  case class GmosSouthLongSlit(
     overrideWavelength:        Option[Wavelength],
     overrideGrating:           Option[GmosSouthGrating],
     overrideFilter:            Option[GmosSouthFilter],

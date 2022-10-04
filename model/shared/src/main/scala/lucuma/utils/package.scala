@@ -5,10 +5,10 @@ package lucuma.utils
 
 import cats.Eq
 import cats.Monoid
-import cats.syntax.all._
-import coulomb._
-import eu.timepit.refined.api._
-import lucuma.core.math.units._
+import cats.syntax.all.*
+import coulomb.*
+import eu.timepit.refined.api.*
+import lucuma.core.math.units.*
 import lucuma.core.optics.SplitEpi
 
 def attemptCombine[A: Eq: Monoid, B: Eq: Monoid](a: Option[A], b: Option[B]): Option[(A, B)] =

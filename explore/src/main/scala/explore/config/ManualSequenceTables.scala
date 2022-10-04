@@ -3,16 +3,16 @@
 
 package explore.config
 
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.model.sequence._
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.model.sequence.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.semanticui.elements.header.Header
 import react.semanticui.elements.segment.Segment
 
-final case class ManualSequenceTables(config: ManualConfig)
+case class ManualSequenceTables(config: ManualConfig)
     extends ReactFnProps[ManualSequenceTables](ManualSequenceTables.component)
 
 object ManualSequenceTables {

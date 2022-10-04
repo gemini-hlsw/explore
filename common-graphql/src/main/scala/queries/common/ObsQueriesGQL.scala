@@ -11,9 +11,9 @@ import lucuma.core.{model => coreModel}
 import lucuma.schemas.ObservationDB
 
 import java.time
-// gql: import explore.model.TargetWithId._
-// gql: import io.circe.refined._
-// gql: import lucuma.schemas.decoders._
+// gql: import explore.model.TargetWithId.*
+// gql: import io.circe.refined.*
+// gql: import lucuma.schemas.decoders.*
 
 object ObsQueriesGQL {
   @GraphQL

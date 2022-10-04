@@ -62,12 +62,12 @@ object AladinContainer {
   private type Props = AladinContainer
 
   // This is used for screen coordinates, thus it doesn't need a lot of precission
-  given Reusability[Double]              = Reusability.double(1.0)
-  given Reusability[Option[AgsAnalysis]] = Reusability.by(_.map(_.target.id))
-  given Reusability[List[AgsAnalysis]]   = Reusability.by(_.length)
-  given Reusability[Props]               =
+  private given Reusability[Double]              = Reusability.double(1.0)
+  private given Reusability[Option[AgsAnalysis]] = Reusability.by(_.map(_.target.id))
+  private given Reusability[List[AgsAnalysis]]   = Reusability.by(_.length)
+  private given Reusability[Props]               =
     Reusability.by(x => (x.asterism, x.obsConf, x.allowMouseScroll, x.options))
-  given Reusability[Fov]                 = Reusability.by(x => (x.y, x.y))
+  private given Reusability[Fov]                 = Reusability.by(x => (x.y, x.y))
 
   private val AladinComp = Aladin.component
 

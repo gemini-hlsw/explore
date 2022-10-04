@@ -6,14 +6,14 @@ package explore.model
 import cats.Eq
 import cats.Show
 import cats.effect.Async
-import cats.syntax.all._
+import cats.syntax.all.*
 import explore.model.enums.ExecutionEnvironment
-import io.circe._
-import io.circe.generic.semiauto._
+import io.circe.*
+import io.circe.generic.semiauto.*
 import org.http4s.Uri
-import org.http4s.circe._
+import org.http4s.circe.*
 import org.http4s.client.Client
-import org.http4s.syntax.all._
+import org.http4s.syntax.all.*
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.FiniteDuration

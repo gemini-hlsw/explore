@@ -5,16 +5,16 @@ package explore.tabs
 
 import cats.effect.IO
 import cats.syntax.all.*
+import clue.TransactionalClient
 import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
 import crystal.react.implicits.*
-import explore.common.ObsQueries
-import explore.common.ObsQueries.*
+import explore.*
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
-import explore.implicits.*
+import explore.model.AppContext
 import explore.model.Asterism
 import explore.model.ConstraintGroup
 import explore.model.CoordinatesAtVizTime
@@ -30,7 +30,7 @@ import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.ItcTarget
 import explore.model.itc.OverridenExposureTime
 import explore.model.layout.*
-import explore.optics._
+import explore.optics.*
 import explore.optics.all.*
 import explore.undo.UndoStacks
 import explore.utils.*
@@ -43,9 +43,12 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.syntax.all.*
+import lucuma.schemas.ObservationDB
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import queries.common.ObsQueriesGQL.*
+import queries.schemas.odb.ObsQueries
+import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
 import react.semanticui.addons.select.Select
 import react.semanticui.addons.select.Select.SelectItem
@@ -70,16 +73,15 @@ case class ObsTabTiles(
   layouts:          View[Pot[LayoutsMap]],
   coreWidth:        Int,
   coreHeight:       Int
-)(using val ctx:    AppContextIO)
-    extends ReactFnProps(ObsTabTiles.component)
+) extends ReactFnProps(ObsTabTiles.component)
 
-object ObsTabTiles {
+object ObsTabTiles:
   private type Props = ObsTabTiles
 
   private def makeConstraintsSelector(
     constraintGroups: View[ConstraintsList],
     obsView:          Pot[View[ObsEditData]]
-  )(using AppContextIO): VdomNode =
+  )(using TransactionalClient[IO, ObservationDB]): VdomNode =
     potRender[View[ObsEditData]] { vod =>
       val cgOpt: Option[ConstraintGroup] =
         constraintGroups.get.find(_._1.contains(vod.get.id)).map(_._2)
@@ -122,8 +124,9 @@ object ObsTabTiles {
   private val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStreamResourceViewOnMountBy { props =>
-        import props.given
+      .useContext(AppContext.ctx)
+      .useStreamResourceViewOnMountBy { (props, ctx) =>
+        import ctx.given
 
         ObsEditQuery
           .query(props.obsId)
@@ -135,8 +138,8 @@ object ObsTabTiles {
       }
       // ITC selected target. Here to be shared by the ITC tile body and title
       .useStateView(none[ItcTarget])
-      .render { (props, obsView, itcTarget) =>
-        import props.given
+      .render { (props, ctx, obsView, itcTarget) =>
+        import ctx.given
 
         val obsViewPot = obsView.toPot
 
@@ -220,11 +223,12 @@ object ObsTabTiles {
         }.headOption
 
         val skyPlotTile =
-          ElevationPlotTile.elevationPlotTile(props.userId,
-                                              props.focusedTarget.orElse(firstTarget),
-                                              scienceMode,
-                                              targetCoords,
-                                              vizTime
+          ElevationPlotTile.elevationPlotTile(
+            props.userId,
+            props.focusedTarget.orElse(firstTarget),
+            scienceMode,
+            targetCoords,
+            vizTime
           )
 
         def setCurrentTarget(programId: Program.Id, oid: Option[Observation.Id])(
@@ -236,10 +240,11 @@ object ObsTabTiles {
             .mapN((pot, tid) => pot.mod(_.map(_.focusOn(tid))))
             .getOrEmpty *>
             // Set the route base on the selected target
-            props.ctx.setPageVia(AppTab.Observations,
-                                 programId,
-                                 Focused(oid.map(ObsIdSet.one), tid),
-                                 via
+            ctx.setPageVia(
+              AppTab.Observations,
+              programId,
+              Focused(oid.map(ObsIdSet.one), tid),
+              via
             )
 
         val targetTile = AsterismEditorTile.asterismEditorTile(
@@ -311,5 +316,3 @@ object ObsTabTiles {
 
         potRenderView[LayoutsMap](rglRender)(props.layouts)
       }
-
-}

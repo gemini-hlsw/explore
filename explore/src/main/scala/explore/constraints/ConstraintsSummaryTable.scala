@@ -3,58 +3,57 @@
 
 package explore.constraints
 
-import cats.Order._
-import cats.syntax.all._
+import cats.Order.*
+import cats.syntax.all.*
 import crystal.react.View
-import crystal.react.reuse._
+import crystal.react.reuse.*
 import explore.Icons
-import explore.common.ConstraintGroupQueries._
+import explore.common.ConstraintGroupQueries.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
-import explore.implicits._
+import explore.model.AppContext
 import explore.model.ConstraintGroup
 import explore.model.Focused
 import explore.model.ObsIdSet
 import explore.model.enums.AppTab
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.Program
-import lucuma.ui.reusability._
+import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.Css
 import react.common.ReactFnProps
-import react.semanticui.collections.table._
+import react.semanticui.collections.table.*
 import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.modules.dropdown.DropdownItem
-import react.semanticui.modules.dropdown._
-import reactST.reactTable._
+import react.semanticui.modules.dropdown.*
+import reactST.reactTable.*
 import reactST.reactTable.mod.DefaultSortTypes
 import reactST.reactTable.mod.IdType
 import reactST.reactTable.mod.SortingRule
 
 import scala.collection.immutable.SortedSet
 
-import scalajs.js.JSConverters._
+import scalajs.js.JSConverters.*
 
-final case class ConstraintsSummaryTable(
-  programId:        Program.Id,
-  constraintList:   ConstraintGroupList,
-  hiddenColumns:    View[Set[String]],
-  summarySorting:   View[List[(String, Boolean)]],
-  expandedIds:      View[SortedSet[ObsIdSet]],
-  renderInTitle:    Tile.RenderInTitle
-)(implicit val ctx: AppContextIO)
-    extends ReactFnProps[ConstraintsSummaryTable](ConstraintsSummaryTable.component)
+case class ConstraintsSummaryTable(
+  programId:      Program.Id,
+  constraintList: ConstraintGroupList,
+  hiddenColumns:  View[Set[String]],
+  summarySorting: View[List[(String, Boolean)]],
+  expandedIds:    View[SortedSet[ObsIdSet]],
+  renderInTitle:  Tile.RenderInTitle
+) extends ReactFnProps(ConstraintsSummaryTable.component)
 
-object ConstraintsSummaryTable {
-  type Props = ConstraintsSummaryTable
+object ConstraintsSummaryTable:
+  private type Props = ConstraintsSummaryTable
 
-  protected val ConstraintsTable = TableDef[ConstraintGroup].withSortBy
+  private val ConstraintsTable = TableDef[ConstraintGroup].withSortBy
 
-  protected val ConstraintsTableComponent = new SUITable(ConstraintsTable)
+  private val ConstraintsTableComponent = new SUITable(ConstraintsTable)
 
   private val columnNames: Map[String, String] = Map(
     "edit"         -> " ",
@@ -82,98 +81,100 @@ object ConstraintsSummaryTable {
     state.sortBy.toList
       .map(sr => (sr.id.toString, sr.desc.toOption.getOrElse(false)))
 
-  val component =
+  private val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useMemoBy(_ => ()) { props => _ => // Cols never changes, but needs access to props
-        def column[V](id: String, accessor: ConstraintGroup => V) =
-          ConstraintsTable
-            .Column(id, accessor)
-            .setHeader(columnNames(id))
+      .useContext(AppContext.ctx)
+      .useMemoBy((_, _) => ()) { // Cols never changes, but needs access to props
+        (props, ctx) => _ =>
+          def column[V](id: String, accessor: ConstraintGroup => V) =
+            ConstraintsTable
+              .Column(id, accessor)
+              .setHeader(columnNames(id))
 
-        def setObsSet(obsIdSet: ObsIdSet): Callback =
-          props.ctx.pushPage(AppTab.Constraints, props.programId, Focused.obsSet(obsIdSet))
+          def setObsSet(obsIdSet: ObsIdSet): Callback =
+            ctx.pushPage(AppTab.Constraints, props.programId, Focused.obsSet(obsIdSet))
 
-        List(
-          column("edit", ConstraintGroup.obsIds.get)
-            .setCell(cell => <.a(^.onClick ==> (_ => setObsSet(cell.value)), Icons.Edit))
-            .setDisableSortBy(true),
-          column("iq", ConstraintGroup.constraintSet.andThen(ConstraintSet.imageQuality).get)
-            .setCell(_.value.label)
-            .setSortByFn(_.label),
-          column("cc", ConstraintGroup.constraintSet.andThen(ConstraintSet.cloudExtinction).get)
-            .setCell(_.value.label)
-            .setSortByFn(_.label),
-          column("bg", ConstraintGroup.constraintSet.andThen(ConstraintSet.skyBackground).get)
-            .setCell(_.value.label)
-            .setSortByFn(_.label),
-          column("wv", ConstraintGroup.constraintSet.andThen(ConstraintSet.waterVapor).get)
-            .setCell(_.value.label)
-            .setSortByFn(_.label),
-          column("minam", ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get)
-            .setCell(_.value match {
-              case ElevationRange.AirMass(min, _) => f"${min.value}%.1f"
-              case ElevationRange.HourAngle(_, _) => ""
-            })
-            .setSortByFn(_ match {
-              case ElevationRange.AirMass(min, _) => min.value
-              case ElevationRange.HourAngle(_, _) => ElevationRange.AirMass.MinValue - 1
-            }),
-          column("maxam", ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get)
-            .setCell(_.value match {
-              case ElevationRange.AirMass(_, max) => f"${max.value}%.1f"
-              case ElevationRange.HourAngle(_, _) => ""
-            })
-            .setSortByFn(_ match {
-              case ElevationRange.AirMass(_, max) => max.value
-              case ElevationRange.HourAngle(_, _) => ElevationRange.AirMass.MinValue - 1
-            }),
-          column("minha", ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get)
-            .setCell(_.value match {
-              case ElevationRange.AirMass(_, _)     => ""
-              case ElevationRange.HourAngle(min, _) => f"${min.value}%.1f"
-            })
-            .setSortByFn(_ match {
-              case ElevationRange.AirMass(_, _)     => ElevationRange.HourAngle.MinHour - 1
-              case ElevationRange.HourAngle(min, _) => min.value
-            }),
-          column("maxha", ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get)
-            .setCell(_.value match {
-              case ElevationRange.AirMass(_, _)     => ""
-              case ElevationRange.HourAngle(_, max) => f"${max.value}%.1f"
-            })
-            .setSortByFn(_ match {
-              case ElevationRange.AirMass(_, _)     => ElevationRange.HourAngle.MinHour - 1
-              case ElevationRange.HourAngle(_, max) => max.value
-            }),
-          column("count", _.obsIds.length)
-            .setSortType(DefaultSortTypes.number),
-          column("observations", ConstraintGroup.obsIds.get)
-            .setCell(cell =>
-              <.span(
-                cell.value.toSortedSet.toList
-                  .map(obsId =>
-                    <.a(
-                      ^.onClick ==> (_ =>
-                        (props.ctx.pushPage(
-                          AppTab.Constraints,
-                          props.programId,
-                          Focused.singleObs(obsId)
-                        )
-                          >> props.expandedIds.mod(_ + cell.value)
-                          >> setObsSet(ObsIdSet.one(obsId)))
-                      ),
-                      obsId.toString
+          List(
+            column("edit", ConstraintGroup.obsIds.get)
+              .setCell(cell => <.a(^.onClick ==> (_ => setObsSet(cell.value)), Icons.Edit))
+              .setDisableSortBy(true),
+            column("iq", ConstraintGroup.constraintSet.andThen(ConstraintSet.imageQuality).get)
+              .setCell(_.value.label)
+              .setSortByFn(_.label),
+            column("cc", ConstraintGroup.constraintSet.andThen(ConstraintSet.cloudExtinction).get)
+              .setCell(_.value.label)
+              .setSortByFn(_.label),
+            column("bg", ConstraintGroup.constraintSet.andThen(ConstraintSet.skyBackground).get)
+              .setCell(_.value.label)
+              .setSortByFn(_.label),
+            column("wv", ConstraintGroup.constraintSet.andThen(ConstraintSet.waterVapor).get)
+              .setCell(_.value.label)
+              .setSortByFn(_.label),
+            column("minam", ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get)
+              .setCell(_.value match {
+                case ElevationRange.AirMass(min, _) => f"${min.value}%.1f"
+                case ElevationRange.HourAngle(_, _) => ""
+              })
+              .setSortByFn(_ match {
+                case ElevationRange.AirMass(min, _) => min.value
+                case ElevationRange.HourAngle(_, _) => ElevationRange.AirMass.MinValue - 1
+              }),
+            column("maxam", ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get)
+              .setCell(_.value match {
+                case ElevationRange.AirMass(_, max) => f"${max.value}%.1f"
+                case ElevationRange.HourAngle(_, _) => ""
+              })
+              .setSortByFn(_ match {
+                case ElevationRange.AirMass(_, max) => max.value
+                case ElevationRange.HourAngle(_, _) => ElevationRange.AirMass.MinValue - 1
+              }),
+            column("minha", ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get)
+              .setCell(_.value match {
+                case ElevationRange.AirMass(_, _)     => ""
+                case ElevationRange.HourAngle(min, _) => f"${min.value}%.1f"
+              })
+              .setSortByFn(_ match {
+                case ElevationRange.AirMass(_, _)     => ElevationRange.HourAngle.MinHour - 1
+                case ElevationRange.HourAngle(min, _) => min.value
+              }),
+            column("maxha", ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get)
+              .setCell(_.value match {
+                case ElevationRange.AirMass(_, _)     => ""
+                case ElevationRange.HourAngle(_, max) => f"${max.value}%.1f"
+              })
+              .setSortByFn(_ match {
+                case ElevationRange.AirMass(_, _)     => ElevationRange.HourAngle.MinHour - 1
+                case ElevationRange.HourAngle(_, max) => max.value
+              }),
+            column("count", _.obsIds.length)
+              .setSortType(DefaultSortTypes.number),
+            column("observations", ConstraintGroup.obsIds.get)
+              .setCell(cell =>
+                <.span(
+                  cell.value.toSortedSet.toList
+                    .map(obsId =>
+                      <.a(
+                        ^.onClick ==> (_ =>
+                          (ctx.pushPage(
+                            AppTab.Constraints,
+                            props.programId,
+                            Focused.singleObs(obsId)
+                          )
+                            >> props.expandedIds.mod(_ + cell.value)
+                            >> setObsSet(ObsIdSet.one(obsId)))
+                        ),
+                        obsId.toString
+                      )
                     )
-                  )
-                  .mkReactFragment(", ")
+                    .mkReactFragment(", ")
+                )
               )
-            )
-            .setDisableSortBy(true)
-        )
+              .setDisableSortBy(true)
+          )
       }
-      .useMemoBy((props, _) => props.constraintList)((_, _) => _.values.toList) // Memo rows
-      .useTableBy((props, cols, rows) =>
+      .useMemoBy((props, _, _) => props.constraintList)((_, _, _) => _.values.toList) // Memo rows
+      .useTableBy((props, _, cols, rows) =>
         ConstraintsTable(
           cols,
           rows,
@@ -191,10 +192,10 @@ object ConstraintsSummaryTable {
           }.reuseCurrying(props.hiddenColumns.get)
         )
       )
-      .useEffectWithDepsBy((_, _, _, tableInstance) => fromTableState(tableInstance.state))(
-        (props, _, _, _) => rules => props.summarySorting.set(rules)
+      .useEffectWithDepsBy((_, _, _, _, tableInstance) => fromTableState(tableInstance.state))(
+        (props, _, _, _, _) => rules => props.summarySorting.set(rules)
       )
-      .render((props, _, _, tableInstance) =>
+      .render((props, _, _, _, tableInstance) =>
         <.div(
           props.renderInTitle(
             React.Fragment(
@@ -252,4 +253,3 @@ object ConstraintsSummaryTable {
           )(tableInstance)
         )
       )
-}

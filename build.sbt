@@ -1,6 +1,6 @@
 import org.scalajs.linker.interface.ModuleSplitStyle
-import Settings.Libraries._
-import scala.sys.process._
+import Settings.Libraries.*
+import scala.sys.process.*
 
 val reactJS = "17.0.2"
 val FUILess = "2.8.7"
@@ -297,8 +297,8 @@ lazy val lucumaCssStep = WorkflowStep.Sbt(List("lucumaCss"), name = Some("Extrac
 
 // https://stackoverflow.com/a/55610612
 lazy val npmInstall = WorkflowStep.Run(
-  List("npm install"),
-  name = Some("npm install")
+  List("npm clean-install"),
+  name = Some("npm clean-install")
 )
 
 lazy val npmBuild = WorkflowStep.Run(

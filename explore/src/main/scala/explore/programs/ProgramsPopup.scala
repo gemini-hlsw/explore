@@ -8,7 +8,7 @@ import cats.syntax.all.*
 import crystal.react.View
 import explore.Icons
 import explore.components.ui.ExploreStyles
-import explore.implicits.*
+import explore.model.AppContext
 import explore.model.Focused
 import explore.model.ModelUndoStacks
 import explore.model.enums.AppTab
@@ -30,57 +30,56 @@ case class ProgramsPopup(
   currentProgramId: Option[Program.Id],
   undoStacks:       View[ModelUndoStacks[IO]],
   onClose:          Option[Callback] = none
-)(using val ctx:    AppContextIO)
-    extends ReactFnProps(ProgramsPopup.component)
+) extends ReactFnProps(ProgramsPopup.component)
 
 object ProgramsPopup {
   private type Props = ProgramsPopup
 
-  protected def selectProgram(
+  private def selectProgram(
     onClose:    Option[Callback],
-    undoStacks: View[ModelUndoStacks[IO]]
-  )(
-    programId:  Program.Id
-  )(using ctx:  AppContextIO): Callback =
+    undoStacks: View[ModelUndoStacks[IO]],
+    ctx:        AppContext[IO]
+  )(programId:  Program.Id): Callback =
     onClose.orEmpty >>
       undoStacks.set(ModelUndoStacks[IO]()) >>
       (if (onClose.isEmpty) ctx.replacePage(AppTab.Overview, programId, Focused.None)
        else ctx.pushPage(AppTab.Overview, programId, Focused.None))
 
-  private val component = ScalaFnComponent[Props] { props =>
-    import props.given
+  private val component = ScalaFnComponent
+    .withHooks[Props]
+    .useContext(AppContext.ctx)
+    .render { (props, ctx) =>
+      val actions =
+        if (props.onClose.isEmpty) List.empty
+        else
+          List(
+            Button(size = Small, icon = true, negative = true)(Icons.Close, "Cancel")(
+              ^.tpe := "button",
+              ^.key := "input-cancel"
+            )
+          )
 
-    val actions =
-      if (props.onClose.isEmpty) List.empty
-      else
-        List(
-          Button(size = Small, icon = true, negative = true)(Icons.Close, "Cancel")(
-            ^.tpe := "button",
-            ^.key := "input-cancel"
+      Modal(
+        clazz = ExploreStyles.ProgramsPopup,
+        actions = actions,
+        centered = false,
+        open = true,
+        closeOnDimmerClick = props.onClose.isDefined,
+        closeOnEscape = props.onClose.isDefined,
+        closeIcon = props.onClose
+          .map(_ => Icons.Close.clazz(ExploreStyles.ModalCloseButton): VdomNode)
+          .orUndefined,
+        dimmer = Dimmer.Blurring,
+        size = ModalSize.Small,
+        onClose = props.onClose.orUndefined,
+        header = ModalHeader(content = "Programs"),
+        content = ModalContent(
+          ProgramTable(
+            props.currentProgramId,
+            selectProgram = selectProgram(props.onClose, props.undoStacks, ctx),
+            props.onClose.isEmpty
           )
         )
-
-    Modal(
-      clazz = ExploreStyles.ProgramsPopup,
-      actions = actions,
-      centered = false,
-      open = true,
-      closeOnDimmerClick = props.onClose.isDefined,
-      closeOnEscape = props.onClose.isDefined,
-      closeIcon = props.onClose
-        .map(_ => Icons.Close.clazz(ExploreStyles.ModalCloseButton): VdomNode)
-        .orUndefined,
-      dimmer = Dimmer.Blurring,
-      size = ModalSize.Small,
-      onClose = props.onClose.orUndefined,
-      header = ModalHeader(content = "Programs"),
-      content = ModalContent(
-        ProgramTable(
-          props.currentProgramId,
-          selectProgram = selectProgram(props.onClose, props.undoStacks),
-          props.onClose.isEmpty
-        )
       )
-    )
-  }
+    }
 }

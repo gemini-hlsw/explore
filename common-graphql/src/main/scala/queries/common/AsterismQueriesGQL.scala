@@ -10,7 +10,7 @@ import lucuma.schemas.ObservationDB
 
 import java.time
 
-// gql: import lucuma.schemas.decoders._
+// gql: import lucuma.schemas.decoders.*
 
 object AsterismQueriesGQL {
 

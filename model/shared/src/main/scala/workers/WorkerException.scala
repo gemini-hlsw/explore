@@ -5,7 +5,7 @@ package workers
 
 import boopickle.DefaultBasic.*
 
-final case class WorkerException(
+case class WorkerException(
   originalClass:   String,
   originalMessage: String,
   stackTrace:      List[String]

@@ -3,7 +3,7 @@
 
 package react.reflex
 
-import japgolly.scalajs.react._
+import japgolly.scalajs.react.*
 import org.scalajs.dom
 import react.common.EnumValue
 

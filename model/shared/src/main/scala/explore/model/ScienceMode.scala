@@ -5,25 +5,24 @@ package explore.model
 
 import cats.Eq
 import cats.derived.*
-import cats.syntax.all._
+import cats.syntax.all.*
 import io.circe.Decoder
-import lucuma.core.enums._
+import lucuma.core.enums.*
 import monocle.Focus
 import monocle.Lens
 import monocle.Prism
 import monocle.macros.GenPrism
 
 sealed abstract class ScienceMode(val instrument: Instrument) extends Product with Serializable
-    derives Eq {
+    derives Eq:
   def isCustomized: Boolean = this match {
     case ScienceMode.GmosNorthLongSlit(_, advanced) =>
       advanced =!= ScienceModeAdvanced.GmosNorthLongSlit.Empty
     case ScienceMode.GmosSouthLongSlit(_, advanced) =>
       advanced =!= ScienceModeAdvanced.GmosSouthLongSlit.Empty
   }
-}
 
-object ScienceMode {
+object ScienceMode:
   given Decoder[ScienceMode] =
     Decoder
       .instance(c =>
@@ -100,4 +99,3 @@ object ScienceMode {
 
   val gmosSouthLongSlit: Prism[ScienceMode, GmosSouthLongSlit] =
     GenPrism[ScienceMode, GmosSouthLongSlit]
-}

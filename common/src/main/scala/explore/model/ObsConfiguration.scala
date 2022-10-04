@@ -4,7 +4,7 @@
 package explore.model
 
 import cats.Eq
-import eu.timepit.refined.cats._
+import eu.timepit.refined.cats.*
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
