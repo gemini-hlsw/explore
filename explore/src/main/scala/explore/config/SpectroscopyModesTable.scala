@@ -491,7 +491,7 @@ private object SpectroscopyModesTable:
           range
         )
       ) {
-        (props, ctx, _, itcResults, itcProgress, _, _, _, ti, _, range, _) =>
+        (_, ctx, _, itcResults, itcProgress, _, _, _, ti, _, range, _) =>
           (wavelength, signalToNoise, signalToNoiseAt, constraints, brightestTarget, range) =>
             import ctx.given
 
