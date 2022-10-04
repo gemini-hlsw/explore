@@ -23,7 +23,7 @@ import monocle.Focus
 import monocle.Getter
 import queries.common.AsterismQueriesGQL.*
 import queries.common.ObsQueriesGQL.*
-import queries.schemas.odb.conversions.*
+import queries.schemas.odb.ODBConversions.*
 
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet

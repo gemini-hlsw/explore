@@ -25,6 +25,7 @@ import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.Aligner
+import explore.common.ScienceConversions.*
 import explore.common.ScienceQueries.*
 import explore.components.HelpIcon
 import explore.components.InputWithUnits
@@ -80,7 +81,6 @@ import monocle.Lens
 import mouse.boolean.*
 import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries.*
-import queries.schemas.odb.conversions.*
 import react.common.Css
 import react.common.ReactFnProps
 import react.fa.IconSize

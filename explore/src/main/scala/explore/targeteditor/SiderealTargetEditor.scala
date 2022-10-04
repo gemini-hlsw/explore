@@ -56,7 +56,7 @@ import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.utils.*
 import queries.common.TargetQueriesGQL
-import queries.schemas.odb.conversions.*
+import queries.schemas.odb.ODBConversions.*
 import react.common.ReactFnProps
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.label.LabelPointing

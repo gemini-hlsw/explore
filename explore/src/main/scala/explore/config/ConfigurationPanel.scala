@@ -18,6 +18,7 @@ import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
 import explore.common.Aligner
+import explore.common.ScienceConversions.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
@@ -47,7 +48,6 @@ import lucuma.ui.syntax.all.given
 import org.http4s.syntax.all.*
 import queries.common.ObsQueriesGQL
 import queries.schemas.odb.ObsQueries.*
-import queries.schemas.odb.conversions.*
 import react.common.ReactFnProps
 
 case class ConfigurationPanel(

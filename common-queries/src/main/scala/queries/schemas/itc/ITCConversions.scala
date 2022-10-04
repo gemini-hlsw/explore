@@ -29,7 +29,7 @@ import eu.timepit.refined.types.numeric.PosLong
 import eu.timepit.refined.types.numeric.NonNegBigDecimal
 
 // There is a lot of duplication here with the odb.conversions package
-object conversions:
+trait ITCConversions:
   type SpectroscopyModeInput = ITC.Types.SpectroscopyModeInput
   val SpectroscopyModeInput = ITC.Types.SpectroscopyModeInput
   type GmosNorthFpuInput = ITC.Types.GmosNorthFpuInput
@@ -223,3 +223,5 @@ object conversions:
       case r: GmosSouthSpectroscopyRow =>
         InstrumentModesInput(gmosS = r.toGmosSITCInput).some
       case _                           => none
+
+object ITCConversions extends ITCConversions

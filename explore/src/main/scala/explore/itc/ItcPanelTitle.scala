@@ -30,7 +30,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.given
-import queries.schemas.itc.conversions.*
+import queries.schemas.itc.ITCConversions.*
 import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
 import react.floatingui.syntax.*

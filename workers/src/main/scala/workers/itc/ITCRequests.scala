@@ -32,13 +32,13 @@ import org.scalajs.dom
 import org.typelevel.log4cats.Logger
 import queries.common.ITCQueriesGQL.*
 import queries.schemas.ITC
-import queries.schemas.itc.conversions.*
+import queries.schemas.itc.ITCConversions.*
 import workers.*
 
 import java.util.UUID
 import scala.concurrent.duration.*
 
-object ITCRequests {
+object ITCRequests:
   // Copied from https://gist.github.com/gvolpe/44e2263f9068efe298a1f30390de6d22
   def parTraverseN[F[_]: Concurrent: Parallel, G[_]: Traverse, A, B](
     n:  Long,
@@ -144,5 +144,3 @@ object ITCRequests {
       cache.eval(cacheableRequest).apply(params).flatMap(_.map(callback).orEmpty)
     }.void
   }
-
-}

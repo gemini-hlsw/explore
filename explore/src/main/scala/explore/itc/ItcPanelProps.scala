@@ -25,7 +25,7 @@ import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ExposureTimeMode
-import queries.schemas.itc.conversions.*
+import queries.schemas.itc.ITCConversions.*
 import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
 import workers.WorkerClient

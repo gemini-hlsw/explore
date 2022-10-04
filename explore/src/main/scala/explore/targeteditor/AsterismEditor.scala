@@ -47,8 +47,8 @@ import monocle.Lens
 import monocle.std.option.some
 import org.typelevel.log4cats.Logger
 import queries.common.TargetQueriesGQL.*
+import queries.schemas.odb.ODBConversions.*
 import queries.schemas.odb.ObsQueries
-import queries.schemas.odb.conversions.*
 import react.common.ReactFnProps
 import react.semanticui.elements.button.*
 import react.semanticui.modules.checkbox.*

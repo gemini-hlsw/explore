@@ -35,14 +35,14 @@ import queries.schemas.UserPreferencesDB.Enums.*
 import queries.schemas.UserPreferencesDB.Scalars.*
 import queries.schemas.UserPreferencesDB.Types.LucumaObservationInsertInput
 import queries.schemas.UserPreferencesDB.Types.*
+import queries.schemas.odb.ODBConversions.*
 import queries.schemas.odb.WidthUpsertInput
-import queries.schemas.odb.conversions.*
 import react.gridlayout.{BreakpointName => _, _}
 import reactST.highcharts.highchartsStrings.chart_
 
 import scala.collection.immutable.SortedMap
 
-object UserPreferencesQueries {
+object UserPreferencesQueries:
 
   implicit class UserWidthsCreationOps(val self: UserWidthsCreation.type) extends AnyVal {
     import self.*
@@ -365,5 +365,3 @@ object UserPreferencesQueries {
         w.user.toString.assign,
         w.width.assign
       )
-
-}

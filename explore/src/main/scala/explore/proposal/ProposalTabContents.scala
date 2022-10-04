@@ -32,7 +32,7 @@ import monocle.Focus
 import monocle.Lens
 import org.typelevel.log4cats.Logger
 import queries.common.ProgramQueriesGQL.*
-import queries.schemas.odb.conversions.*
+import queries.schemas.odb.ODBConversions.*
 import react.common.ReactFnProps
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.image.Image

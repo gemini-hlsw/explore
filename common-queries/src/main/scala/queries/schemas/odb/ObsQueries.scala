@@ -32,13 +32,13 @@ import monocle.Focus
 import monocle.Getter
 import monocle.Lens
 import queries.common.ObsQueriesGQL.*
-import queries.schemas.odb.conversions.*
+import queries.schemas.odb.ODBConversions.*
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
 import lucuma.core.model.ExposureTimeMode.FixedExposure
 
-object ObsQueries {
+object ObsQueries:
   type ObservationList = KeyedIndexedList[Observation.Id, ObsSummaryWithTitleConstraintsAndConf]
   type ConstraintsList = SortedMap[ObsIdSet, ConstraintGroup]
 
@@ -278,4 +278,3 @@ object ObsQueries {
         UndeleteObservationsInput(WHERE = obsId.toWhereObservation.assign)
       )
       .void
-}

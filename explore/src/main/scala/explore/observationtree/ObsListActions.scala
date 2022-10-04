@@ -20,8 +20,8 @@ import lucuma.schemas.ObservationDB.Types.*
 import monocle.Focus
 import monocle.Iso
 import queries.common.ObsQueriesGQL.*
+import queries.schemas.odb.ODBConversions.*
 import queries.schemas.odb.ObsQueries
-import queries.schemas.odb.conversions.*
 
 trait ObsListActions {
   protected val obsListMod =
