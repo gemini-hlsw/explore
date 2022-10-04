@@ -1,5 +1,5 @@
 table:
-  name: lucuma_user_preferences
+  name: lucumaUserPreferences
   schema: public
 object_relationships:
 - name: lucuma_user

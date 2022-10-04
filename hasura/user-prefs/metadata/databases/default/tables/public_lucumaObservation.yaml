@@ -1,5 +1,5 @@
 table:
-  name: lucuma_observation
+  name: lucumaObservation
   schema: public
 array_relationships:
 - name: lucuma_itc_plot_preferences

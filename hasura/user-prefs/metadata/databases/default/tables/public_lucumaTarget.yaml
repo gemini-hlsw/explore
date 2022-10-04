@@ -1,5 +1,5 @@
 table:
-  name: lucuma_target
+  name: lucumaTarget
   schema: public
 array_relationships:
 - name: lucuma_target_preferences
