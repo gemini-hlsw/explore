@@ -17,11 +17,12 @@ object CoverageCenterWavelength extends NewType[Wavelength]
 type CoverageCenterWavelength = CoverageCenterWavelength.Type
 
 case class ItcRequestParams(
-  wavelength:    CoverageCenterWavelength,
-  signalToNoise: PosBigDecimal,
-  constraints:   ConstraintSet,
-  target:        ItcTarget,
-  mode:          InstrumentRow
+  wavelength:      CoverageCenterWavelength,
+  signalToNoise:   PosBigDecimal,
+  signalToNoiseAt: Option[Wavelength],
+  constraints:     ConstraintSet,
+  target:          ItcTarget,
+  mode:            InstrumentRow
 )
 
 case class ItcGraphRequestParams(

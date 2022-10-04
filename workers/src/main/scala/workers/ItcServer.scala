@@ -80,7 +80,13 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
                 }
           }
 
-        case ItcMessage.Query(wavelength, signalToNoise, constraint, targets, rows) =>
+        case ItcMessage.Query(wavelength,
+                              signalToNoise,
+                              constraint,
+                              targets,
+                              rows,
+                              signalToNoiseAt
+            ) =>
           Logger[IO].debug(s"ITC query ${rows.length}") *>
             ITCRequests
               .queryItc[IO](
@@ -89,6 +95,7 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
                 constraint,
                 targets,
                 rows,
+                signalToNoiseAt,
                 cache,
                 r => invocation.respond(r)
               )

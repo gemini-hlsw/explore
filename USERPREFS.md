@@ -53,6 +53,7 @@ Changes should be first tested on user-prefs-master to be later applied to
 
 ```
 hasura migrate apply --endpoint https://user-prefs-development.herokuapp.com
+hasura metadata apply --endpoint https://user-prefs-development.herokuapp.com
 ```
 
 For more information visit:
