@@ -5,6 +5,8 @@ package explore.targeteditor
 
 import cats.syntax.all.*
 import crystal.react.View
+import crystal.react.implicits.*
+import crystal.react.reuse.*
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.AladinMouseScroll
@@ -13,6 +15,7 @@ import explore.model.ObsConfiguration
 import explore.model.TargetVisualOptions
 import explore.model.enums.Visible
 import explore.model.reusability.*
+import explore.model.reusability.given
 import explore.visualization.*
 import japgolly.scalajs.react.Reusability.*
 import japgolly.scalajs.react.*
@@ -63,6 +66,10 @@ object AladinContainer {
   given Reusability[Option[AgsAnalysis]] = Reusability.by(_.map(_.target.id))
   given Reusability[List[AgsAnalysis]]   = Reusability.by(_.length)
   given Reusability[AladinMouseScroll]   = Reusability.by(_.value)
+  summon[Reusability[Asterism]]
+  given Reusability[Props]               =
+    Reusability.by(x => (x.asterism, x.obsConf, x.allowMouseScroll, x.options))
+  given Reusability[Fov]                 = Reusability.by(x => (x.y, x.y))
 
   private val AladinComp = Aladin.component
 
@@ -239,16 +246,7 @@ object AladinContainer {
       }
       // Use fov from aladin
       .useState(none[Fov])
-      // full screen trigger reflow
-      .useEffectWithDepsBy((props, _, _, _, _, _, _, _) => props.options.fullScreen)(
-        (_, _, _, aladinRef, _, _, _, _) =>
-          _ =>
-            aladinRef.get.asCBO
-              .flatMapCB(b => b.backend.fixLayoutDimensions *> b.backend.recalculateView)
-              // We need to do this callback delayed or it miss calculates aladin div size
-              .delayMs(10)
-      )
-      .render {
+      .renderWithReuse {
         (props, allCoordinates, currentPos, aladinRef, vizShapes, resize, candidates, fov) =>
           val (baseCoordinates, scienceTargets) = allCoordinates.value
 
@@ -266,10 +264,12 @@ object AladinContainer {
 
           def onZoom =
             (v: Fov) => {
-              // Sometimes get 0 fov, ignore those
-              val ignore = v.x === Angle.Angle0 && v.y === Angle.Angle0
-              (fov.setState(v.some) *> props.updateFov(v)).unless_(ignore)
-            }
+                // Sometimes get 0 fov, ignore those
+                val ignore =
+                  (v.x === Angle.Angle0 && v.y === Angle.Angle0) ||
+                    fov.value.exists(_.isDifferentEnough(v))
+                (fov.setState(v.some) *> props.updateFov(v)).unless_(ignore)
+              }
 
           val vizTime = props.obsConf.vizTime
 
@@ -378,7 +378,10 @@ object AladinContainer {
                       showReticle = false,
                       showLayersControl = false,
                       target = baseCoordinatesForAladin,
-                      fov = props.options.fovDec,
+                      fov = Angle.fromMicroarcseconds(
+                        props.options.fovDec.toMicroarcseconds
+                          .max(props.options.fovRA.toMicroarcseconds)
+                      ),
                       showGotoControl = false,
                       showZoomControl = false,
                       showFullscreenControl = false,

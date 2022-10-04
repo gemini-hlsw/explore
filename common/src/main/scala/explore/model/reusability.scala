@@ -55,8 +55,6 @@ object reusability {
   implicit val obsIdSetReuse: Reusability[ObsIdSet]                                   = Reusability.byEq
   implicit val targetIdSetReuse: Reusability[TargetIdSet]                             = Reusability.byEq
   implicit val targetWithIdReuse: Reusability[TargetWithId]                           = Reusability.byEq
-  implicit val asterismReuse: Reusability[Asterism]                                   = Reusability.byEq
-  implicit val targetWithOptIdReuse: Reusability[TargetWithOptId]                     = Reusability.byEq
   implicit val targetWithIdAndObsReuse: Reusability[TargetWithIdAndObs]               = Reusability.byEq
   implicit val targetWithObsReuse: Reusability[TargetWithObs]                         = Reusability.byEq
   implicit val constraintsSummaryReuse: Reusability[ConstraintsSummary]               = Reusability.byEq
@@ -121,4 +119,8 @@ object reusability {
     reusability: Reusability[W]
   ): Reusability[T] =
     reusability.asInstanceOf[Reusability[T]]
+
+  given Reusability[Asterism] = Reusability.byEq[Asterism].logNonReusable
+
+  implicit val targetWithOptIdReuse: Reusability[TargetWithOptId] = Reusability.byEq
 }
