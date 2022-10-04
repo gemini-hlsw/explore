@@ -52,7 +52,7 @@ case class AladinContainer(
   // TODO Move the functionality of saving the FOV in ALadincell here
   updateFov:              Function1[Fov, Callback],
   updateViewOffset:       Function1[Offset, Callback],
-  centerOnTarget:         View[Boolean],
+  centerOnTarget:         View[CenterTargetTrigger],
   selectedGuideStar:      Option[AgsAnalysis],
   guideStarCandidates:    List[AgsAnalysis]
 ) extends ReactFnProps(AladinContainer.component)
@@ -65,8 +65,6 @@ object AladinContainer {
   given Reusability[Double]              = Reusability.double(1.0)
   given Reusability[Option[AgsAnalysis]] = Reusability.by(_.map(_.target.id))
   given Reusability[List[AgsAnalysis]]   = Reusability.by(_.length)
-  given Reusability[AladinMouseScroll]   = Reusability.by(_.value)
-  summon[Reusability[Asterism]]
   given Reusability[Props]               =
     Reusability.by(x => (x.asterism, x.obsConf, x.allowMouseScroll, x.options))
   given Reusability[Fov]                 = Reusability.by(x => (x.y, x.y))
@@ -159,7 +157,7 @@ object AladinContainer {
                                   coords.dec.toAngle.toSignedDoubleDegrees
               )
             )
-            .when(center)
+            .when(center.value)
         }
       }
       // resize detector
@@ -259,17 +257,17 @@ object AladinContainer {
             val viewOffset = baseCoordinates.diff(viewCoords).offset
             currentPos.setState(Some(viewCoords)) *>
               props.updateViewOffset(viewOffset) *>
-              props.centerOnTarget.set(false)
+              props.centerOnTarget.set(CenterTargetTrigger.Idle)
           }
 
           def onZoom =
             (v: Fov) => {
-                // Sometimes get 0 fov, ignore those
-                val ignore =
-                  (v.x === Angle.Angle0 && v.y === Angle.Angle0) ||
-                    fov.value.exists(_.isDifferentEnough(v))
-                (fov.setState(v.some) *> props.updateFov(v)).unless_(ignore)
-              }
+              // Sometimes get 0 fov, ignore those
+              val ignore =
+                (v.x === Angle.Angle0 && v.y === Angle.Angle0) ||
+                  fov.value.exists(_.isDifferentEnough(v))
+              (fov.setState(v.some) *> props.updateFov(v)).unless_(ignore)
+            }
 
           val vizTime = props.obsConf.vizTime
 

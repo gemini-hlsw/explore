@@ -33,7 +33,7 @@ case class AladinToolbar(
   current:           Coordinates,
   agsState:          AgsState,
   selectedGuideStar: Option[AgsAnalysis],
-  center:            View[Boolean],
+  center:            View[CenterTargetTrigger],
   agsOverlay:        Visible
 ) extends ReactFnProps(AladinToolbar.component)
 
@@ -91,7 +91,10 @@ object AladinToolbar {
         <.div(
           ExploreStyles.AladinCenterButton,
           <.span(
-            Button(size = Mini, icon = true, onClick = props.center.set(true))(
+            Button(size = Mini,
+                   icon = true,
+                   onClick = props.center.set(CenterTargetTrigger.Trigger)
+            )(
               Icons.Bullseye
                 .transform(Transform(size = 24))
                 .clazz(ExploreStyles.Accented)

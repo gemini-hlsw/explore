@@ -9,6 +9,7 @@ import cats.syntax.all.*
 import crystal.Pot
 import crystal.PotOption
 import crystal.implicits.*
+import crystal.react.ReuseView
 import crystal.react.View
 import crystal.react.hooks.*
 import crystal.react.implicits.*
@@ -46,7 +47,6 @@ import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.core.model.User
-import lucuma.core.util.NewType
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -75,14 +75,6 @@ case class AladinCell(
 )(using val ctx: AppContextIO)
     extends ReactFnProps(AladinCell.component)
 
-object SettingsMenuState extends NewType[Boolean]:
-  inline def Open: SettingsMenuState   = SettingsMenuState(true)
-  inline def Closed: SettingsMenuState = SettingsMenuState(false)
-  extension (s: SettingsMenuState)
-    def flip: SettingsMenuState = if (s.value) SettingsMenuState.Closed else SettingsMenuState.Open
-
-type SettingsMenuState = SettingsMenuState.Type
-
 object AladinCell extends ModelOptics {
   private type Props = AladinCell
 
@@ -97,6 +89,10 @@ object AladinCell extends ModelOptics {
   given Reusability[Instant] = Reusability {
     Duration.between(_, _).toDays().abs < 30L
   }
+
+  given Reusability[AgsState] = Reusability.byEq
+  given Reusability[Props]    =
+    Reusability.by(x => (x.uid, x.tid, x.obsConf, x.asterism, x.fullScreen.reuseByValue))
 
   val fovLens: Lens[TargetVisualOptions, Fov] =
     Lens[TargetVisualOptions, Fov](t => Fov(t.fovRA, t.fovDec))(f =>
@@ -115,10 +111,10 @@ object AladinCell extends ModelOptics {
       // mouse coordinates, starts on the base
       .useStateBy(_.asterism.baseTracking.baseCoordinates)
       // target options, will be read from the user preferences
-      .useStateView(Pot.pending[(UserGlobalPreferences, TargetVisualOptions)])
+      .useStateViewWithReuse(Pot.pending[(UserGlobalPreferences, TargetVisualOptions)])
       // flag to trigger centering. This is a bit brute force but
       // avoids us needing a ref to a Fn component
-      .useStateView(false)
+      .useStateViewWithReuse(CenterTargetTrigger.Idle)
       // to get faster reusability use a serial state, rather than check every candidate
       .useSerialState(List.empty[GuideStarCandidate])
       // Analysis results
@@ -151,7 +147,7 @@ object AladinCell extends ModelOptics {
             }
       }
       // Selected GS index. Should be stored in the db
-      .useStateView(none[Int])
+      .useStateViewWithReuse(none[Int])
       // Request ags calculation
       .useEffectWithDepsBy((p, _, _, _, candidates, _, _, _) =>
         (p.asterism.baseTracking,
@@ -225,7 +221,7 @@ object AladinCell extends ModelOptics {
             )
             .unless_(agsState.value === AgsState.Calculating)
       }
-      .render {
+      .renderWithReuse {
         (
           props,
           mouseCoords,

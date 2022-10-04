@@ -120,7 +120,9 @@ object reusability {
   ): Reusability[T] =
     reusability.asInstanceOf[Reusability[T]]
 
-  given Reusability[Asterism] = Reusability.byEq[Asterism].logNonReusable
+  given Reusability[Asterism] = Reusability.byEq[Asterism]
 
-  implicit val targetWithOptIdReuse: Reusability[TargetWithOptId] = Reusability.byEq
+  given Reusability[TargetWithOptId] = Reusability.byEq
+
+  given Reusability[UserGlobalPreferences] = Reusability.byEq
 }
