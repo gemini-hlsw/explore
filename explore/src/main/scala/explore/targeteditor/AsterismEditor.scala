@@ -23,6 +23,7 @@ import explore.model.SiderealTargetWithId
 import explore.model.TargetWithId
 import explore.model.TargetWithOptId
 import explore.model.reusability.*
+import explore.model.reusability.given
 import explore.optics.*
 import explore.optics.all.*
 import explore.targets.TargetSelectionPopup

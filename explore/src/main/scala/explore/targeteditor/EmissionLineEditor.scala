@@ -29,7 +29,6 @@ import lucuma.core.math.dimensional.*
 import lucuma.core.math.units.*
 import lucuma.core.model.EmissionLine
 import lucuma.core.util.Enumerated
-import lucuma.core.util.NewType
 import lucuma.core.validation.*
 import lucuma.refined.*
 import lucuma.ui.forms.EnumViewSelect
@@ -47,9 +46,6 @@ import reactST.reactTable.mod.SortingRule
 
 import scala.collection.immutable.SortedMap
 import scala.math.BigDecimal.RoundingMode
-
-object AddDisabled extends NewType[Boolean]
-type AddDisabled = AddDisabled.Type
 
 sealed trait EmissionLineEditor[T] {
   val emissionLines: View[SortedMap[Wavelength, EmissionLine[T]]]

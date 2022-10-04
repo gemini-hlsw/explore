@@ -3,18 +3,18 @@
 
 package explore.targeteditor
 
-import cats.syntax.all._
+import cats.syntax.all.*
 import crystal.react.View
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.enums.AgsState
 import explore.model.enums.Visible
-import explore.model.formats._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import explore.model.formats.*
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ags.AgsAnalysis
 import lucuma.ags.GuideStarCandidate
-import lucuma.core.math._
+import lucuma.core.math.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.aladin.Fov
@@ -23,17 +23,17 @@ import react.fa.Transform
 import react.floatingui.Placement
 import react.floatingui.syntax.*
 import react.semanticui.elements.button.Button
-import react.semanticui.elements.label._
-import react.semanticui.shorthand._
+import react.semanticui.elements.label.*
+import react.semanticui.shorthand.*
 import react.semanticui.sizes.Small
-import react.semanticui.sizes._
+import react.semanticui.sizes.*
 
 case class AladinToolbar(
   fov:               Fov,
   current:           Coordinates,
   agsState:          AgsState,
   selectedGuideStar: Option[AgsAnalysis],
-  center:            View[Boolean],
+  center:            View[CenterTargetTrigger],
   agsOverlay:        Visible
 ) extends ReactFnProps(AladinToolbar.component)
 
@@ -91,7 +91,10 @@ object AladinToolbar {
         <.div(
           ExploreStyles.AladinCenterButton,
           <.span(
-            Button(size = Mini, icon = true, onClick = props.center.set(true))(
+            Button(size = Mini,
+                   icon = true,
+                   onClick = props.center.set(CenterTargetTrigger.Trigger)
+            )(
               Icons.Bullseye
                 .transform(Transform(size = 24))
                 .clazz(ExploreStyles.Accented)

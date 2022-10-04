@@ -10,7 +10,7 @@ import lucuma.core.util.NewType
 import org.locationtech.jts.geom.Geometry
 import react.aladin.Fov
 
-import scala.math._
+import scala.math.*
 
 // The values on the geometry are in microarcseconds
 // They are fairly large and break is some browsers

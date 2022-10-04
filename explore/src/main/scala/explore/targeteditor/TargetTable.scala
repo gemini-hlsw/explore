@@ -19,6 +19,7 @@ import explore.model.Asterism
 import explore.model.ObsIdSet
 import explore.model.SiderealTargetWithId
 import explore.model.reusability.*
+import explore.model.reusability.given
 import explore.targets.TargetColumns
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*

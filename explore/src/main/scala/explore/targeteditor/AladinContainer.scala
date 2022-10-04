@@ -5,6 +5,8 @@ package explore.targeteditor
 
 import cats.syntax.all.*
 import crystal.react.View
+import crystal.react.implicits.*
+import crystal.react.reuse.*
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.AladinMouseScroll
@@ -13,6 +15,7 @@ import explore.model.ObsConfiguration
 import explore.model.TargetVisualOptions
 import explore.model.enums.Visible
 import explore.model.reusability.*
+import explore.model.reusability.given
 import explore.visualization.*
 import japgolly.scalajs.react.Reusability.*
 import japgolly.scalajs.react.*
@@ -49,7 +52,7 @@ case class AladinContainer(
   // TODO Move the functionality of saving the FOV in ALadincell here
   updateFov:              Function1[Fov, Callback],
   updateViewOffset:       Function1[Offset, Callback],
-  centerOnTarget:         View[Boolean],
+  centerOnTarget:         View[CenterTargetTrigger],
   selectedGuideStar:      Option[AgsAnalysis],
   guideStarCandidates:    List[AgsAnalysis]
 ) extends ReactFnProps(AladinContainer.component)
@@ -62,7 +65,9 @@ object AladinContainer {
   given Reusability[Double]              = Reusability.double(1.0)
   given Reusability[Option[AgsAnalysis]] = Reusability.by(_.map(_.target.id))
   given Reusability[List[AgsAnalysis]]   = Reusability.by(_.length)
-  given Reusability[AladinMouseScroll]   = Reusability.by(_.value)
+  given Reusability[Props]               =
+    Reusability.by(x => (x.asterism, x.obsConf, x.allowMouseScroll, x.options))
+  given Reusability[Fov]                 = Reusability.by(x => (x.y, x.y))
 
   private val AladinComp = Aladin.component
 
@@ -152,7 +157,7 @@ object AladinContainer {
                                   coords.dec.toAngle.toSignedDoubleDegrees
               )
             )
-            .when(center)
+            .when(center.value)
         }
       }
       // resize detector
@@ -239,16 +244,7 @@ object AladinContainer {
       }
       // Use fov from aladin
       .useState(none[Fov])
-      // full screen trigger reflow
-      .useEffectWithDepsBy((props, _, _, _, _, _, _, _) => props.options.fullScreen)(
-        (_, _, _, aladinRef, _, _, _, _) =>
-          _ =>
-            aladinRef.get.asCBO
-              .flatMapCB(b => b.backend.fixLayoutDimensions *> b.backend.recalculateView)
-              // We need to do this callback delayed or it miss calculates aladin div size
-              .delayMs(10)
-      )
-      .render {
+      .renderWithReuse {
         (props, allCoordinates, currentPos, aladinRef, vizShapes, resize, candidates, fov) =>
           val (baseCoordinates, scienceTargets) = allCoordinates.value
 
@@ -261,13 +257,15 @@ object AladinContainer {
             val viewOffset = baseCoordinates.diff(viewCoords).offset
             currentPos.setState(Some(viewCoords)) *>
               props.updateViewOffset(viewOffset) *>
-              props.centerOnTarget.set(false)
+              props.centerOnTarget.set(CenterTargetTrigger.Idle)
           }
 
           def onZoom =
             (v: Fov) => {
               // Sometimes get 0 fov, ignore those
-              val ignore = v.x === Angle.Angle0 && v.y === Angle.Angle0
+              val ignore =
+                (v.x === Angle.Angle0 && v.y === Angle.Angle0) ||
+                  fov.value.exists(_.isDifferentEnough(v))
               (fov.setState(v.some) *> props.updateFov(v)).unless_(ignore)
             }
 
@@ -378,7 +376,10 @@ object AladinContainer {
                       showReticle = false,
                       showLayersControl = false,
                       target = baseCoordinatesForAladin,
-                      fov = props.options.fovDec,
+                      fov = Angle.fromMicroarcseconds(
+                        props.options.fovDec.toMicroarcseconds
+                          .max(props.options.fovRA.toMicroarcseconds)
+                      ),
                       showGotoControl = false,
                       showZoomControl = false,
                       showFullscreenControl = false,
