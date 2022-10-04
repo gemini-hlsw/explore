@@ -59,7 +59,7 @@ sealed trait EmissionLineEditor[T] {
 sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T]](using
   enumUnits: Enumerated[Units Of LineFlux[T]]
 ) {
-  private val defaultLineUnits: Units Of LineFlux[T] = enumUnits.defaultLineUnits
+  protected val defaultLineUnits: Units Of LineFlux[T]
 
   private type RowValue = (Wavelength, View[EmissionLine[T]])
 
@@ -251,7 +251,10 @@ final case class IntegratedEmissionLineEditor(
     with EmissionLineEditor[Integrated]
 
 object IntegratedEmissionLineEditor
-    extends EmissionLineEditorBuilder[Integrated, IntegratedEmissionLineEditor]
+    extends EmissionLineEditorBuilder[Integrated, IntegratedEmissionLineEditor] {
+  val defaultLineUnits =
+    summon[TaggedUnit[ErgsPerSecondCentimeter2, LineFlux[Integrated]]].unit
+}
 
 final case class SurfaceEmissionLineEditor(
   emissionLines: View[SortedMap[Wavelength, EmissionLine[Surface]]],
@@ -260,4 +263,8 @@ final case class SurfaceEmissionLineEditor(
     with EmissionLineEditor[Surface]
 
 object SurfaceEmissionLineEditor
-    extends EmissionLineEditorBuilder[Surface, SurfaceEmissionLineEditor]
+    extends EmissionLineEditorBuilder[Surface, SurfaceEmissionLineEditor] {
+
+  val defaultLineUnits =
+    summon[TaggedUnit[ErgsPerSecondCentimeter2Arcsec2, LineFlux[Surface]]].unit
+}
