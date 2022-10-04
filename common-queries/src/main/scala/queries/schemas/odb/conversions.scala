@@ -20,7 +20,6 @@ import lucuma.core.model.*
 import lucuma.core.syntax.time.*
 import lucuma.schemas.ObservationDB.Enums.PosAngleConstraintType
 import lucuma.schemas.ObservationDB.Types.*
-import queries.schemas.UserPreferencesDB.Types.ExploreResizableWidthInsertInput
 
 import scala.collection.immutable.SortedMap
 import scala.annotation.targetName
@@ -378,14 +377,6 @@ object conversions:
   extension [A](o: Offset.Component[A])
     def toInput: OffsetComponentInput =
       OffsetComponentInput(microarcseconds = o.toAngle.toMicroarcseconds.assign)
-
-  extension (w: WidthUpsertInput)
-    def toInput: ExploreResizableWidthInsertInput =
-      ExploreResizableWidthInsertInput(
-        w.section.value.assign,
-        w.user.toString.assign,
-        w.width.assign
-      )
 
   extension (a: ScienceModeAdvanced.GmosNorthLongSlit)
     def toInput: GmosNorthLongSlitAdvancedConfigInput =

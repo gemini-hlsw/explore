@@ -16,17 +16,17 @@ object UserPreferencesQueriesGQL {
   @GraphQL
   trait UserInsertMutation extends GraphQLOperation[UserPreferencesDB] {
     val document = """
-      mutation insert_user($id: String) {
-        insert_lucuma_user_one(
+      mutation insertUser($id: String) {
+        insert_lucumaUser_one(
           object: {
-            user_id: $id
+            userId: $id
           },
           on_conflict: {
             update_columns: [],
             constraint: lucuma_user_pkey
           }
         ) {
-          user_id
+          userId
           }
         }
     """
@@ -38,15 +38,15 @@ object UserPreferencesQueriesGQL {
   @GraphQL
   trait UserWidthsCreation extends GraphQLOperation[UserPreferencesDB] {
     val document = """
-      mutation update_area_width($item: explore_resizable_width_insert_input!) {
-        insert_explore_resizable_width_one(
+      mutation updateAreaWidth($item: lucumaResizableWidth_insert_input!) {
+        insert_lucumaResizableWidth_one(
           object: $item,
           on_conflict: {
             constraint: explore_resizable_width_pkey,
             update_columns: width
           }
         ) {
-          user_id
+          userId
           }
         }
    """
@@ -58,10 +58,10 @@ object UserPreferencesQueriesGQL {
   @GraphQL
   trait UserAreaWidths extends GraphQLOperation[UserPreferencesDB] {
     val document = """
-      query area_width($user_id: String!, $section: resizable_area!) {
-        explore_resizable_width_by_pk(
+      query areaWidth($userId: String!, $section: resizable_area!) {
+        lucumaResizableWidth_by_pk(
           section: $section,
-          user_id: $user_id
+          userId: $userId
         ) {
           width
         }
@@ -76,18 +76,18 @@ object UserPreferencesQueriesGQL {
   trait UserGridLayoutQuery extends GraphQLOperation[UserPreferencesDB] {
     val document = """
       query
-        obs_tab_preferences($user_id: String!, $criteria: grid_layout_positions_bool_exp!, $section: resizable_area!) {
-          grid_layout_positions(where: $criteria) {
-            breakpoint_name
+        obsTabPreferences($userId: String!, $criteria: lucumaGridLayoutPositions_bool_exp!, $section: resizable_area!) {
+          lucumaGridLayoutPositions(where: $criteria) {
+            breakpointName
             height
             width
             x
             y
             tile
           }
-          explore_resizable_width_by_pk(
+          lucumaResizableWidth_by_pk(
             section: $section,
-            user_id: $user_id
+            userId: $userId
           ) {
             width
           }
@@ -98,8 +98,8 @@ object UserPreferencesQueriesGQL {
   @GraphQL
   trait UserGridLayoutUpsert extends GraphQLOperation[UserPreferencesDB] {
     val document = """
-      mutation insert_layout_positions($objects: [grid_layout_positions_insert_input!]! = {}) {
-        insert_grid_layout_positions(objects: $objects, on_conflict: {
+      mutation insertLayoutPositions($objects: [lucumaGridLayoutPositions_insert_input!]! = {}) {
+        insert_lucumaGridLayoutPositions(objects: $objects, on_conflict: {
           constraint: grid_layout_positions_pkey,
           update_columns: [width, height, x, y]
         }) {
@@ -111,8 +111,8 @@ object UserPreferencesQueriesGQL {
   @GraphQL
   trait UserTargetPreferencesQuery extends GraphQLOperation[UserPreferencesDB] {
     val document = """
-      query target_preferences($user_id: String! = "", $targetId: String! = "") {
-        lucuma_target_preferences_by_pk(target_id: $targetId, user_id: $user_id) {
+      query targetPreferences($userId: String! = "", $targetId: String! = "") {
+        lucumaTargetPreferences_by_pk(targetId: $targetId, userId: $userId) {
           fovRA
           fovDec
           viewOffsetP
@@ -121,8 +121,8 @@ object UserPreferencesQueriesGQL {
           agsOverlay
           fullScreen
         }
-        lucuma_user_preferences_by_pk(user_id: $user_id) {
-          aladin_mouse_scroll
+        lucumaUserPreferences_by_pk(userId: $userId) {
+          aladinMouseScroll
         }
       }
     """
@@ -131,10 +131,10 @@ object UserPreferencesQueriesGQL {
   @GraphQL
   trait UserElevationPlotPreferencesQuery extends GraphQLOperation[UserPreferencesDB] {
     val document = """
-      query plot_preferences($user_id: String! = "") {
-        lucuma_user_preferences_by_pk(user_id: $user_id) {
-          elevation_plot_range
-          elevation_plot_time
+      query plotPreferences($userId: String! = "") {
+        lucumaUserPreferences_by_pk(userId: $userId) {
+          elevationPlotRange
+          elevationPlotTime
         }
       }
     """
@@ -143,18 +143,18 @@ object UserPreferencesQueriesGQL {
   @GraphQL
   trait UserPreferencesAladinUpdate extends GraphQLOperation[UserPreferencesDB] {
     val document = """
-      mutation user_preferences_upsert($user_id: String = "", $aladin_mouse_scroll: Boolean = false) {
-        insert_lucuma_user_preferences_one(
+      mutation userPreferencesUpsert($userId: String = "", $aladinMouseScroll: Boolean = false) {
+        insert_lucumaUserPreferences_one(
           object: {
-            user_id: $user_id,
-            aladin_mouse_scroll: $aladin_mouse_scroll
+            userId: $userId,
+            aladinMouseScroll: $aladinMouseScroll
           },
           on_conflict: {
             constraint: lucuma_user_preferences_pkey,
-            update_columns: aladin_mouse_scroll
+            update_columns: aladinMouseScroll
           }
         ) {
-          user_id
+          userId
         }
       }
     """
@@ -163,22 +163,22 @@ object UserPreferencesQueriesGQL {
   @GraphQL
   trait UserPreferencesElevPlotUpdate extends GraphQLOperation[UserPreferencesDB] {
     val document = """
-      mutation user_preferences_upsert($user_id: String = "", $elevationPlotRange: elevation_plot_range = "", $elevationPlotTime: elevation_plot_time = "") {
-        insert_lucuma_user_preferences_one(
+      mutation userPreferencesUpsert($userId: String = "", $elevationPlotRange: elevation_plot_range = "", $elevationPlotTime: elevation_plot_time = "") {
+        insert_lucumaUserPreferences_one(
           object: {
-            user_id: $user_id,
-            elevation_plot_range: $elevationPlotRange,
-            elevation_plot_time: $elevationPlotTime
+            userId: $userId,
+            elevationPlotRange: $elevationPlotRange,
+            elevationPlotTime: $elevationPlotTime
           },
           on_conflict: {
             constraint: lucuma_user_preferences_pkey,
             update_columns: [
-              elevation_plot_range,
-              elevation_plot_time
+              elevationPlotRange,
+              elevationPlotTime
             ]
           }
         ) {
-          user_id
+          userId
         }
       }
     """
@@ -187,8 +187,8 @@ object UserPreferencesQueriesGQL {
   @GraphQL
   trait UserTargetPreferencesUpsert extends GraphQLOperation[UserPreferencesDB] {
     val document =
-      """mutation target_preferences_upsert($objects: lucuma_target_insert_input! = {}) {
-        insert_lucuma_target(objects: [$objects], on_conflict: {constraint: lucuma_target_pkey, update_columns: target_id}) {
+      """mutation targetPreferencesUpsert($objects: lucumaTarget_insert_input! = {}) {
+        insert_lucumaTarget(objects: [$objects], on_conflict: {constraint: lucuma_target_pkey, update_columns: targetId}) {
           affected_rows
         }
       }"""
@@ -197,18 +197,18 @@ object UserPreferencesQueriesGQL {
   @GraphQL
   trait UserTargetViewOffsetUpdate extends GraphQLOperation[UserPreferencesDB] {
     val document =
-      """ mutation update_target_view_offsetv($user_id: String!, $target_id: String!, $viewOffsetP: bigint!, $viewOffsetQ: bigint!) {
-        update_lucuma_target_preferences_by_pk(
+      """ mutation updateTargetViewOffsetv($userId: String!, $targetId: String!, $viewOffsetP: bigint!, $viewOffsetQ: bigint!) {
+        update_lucumaTargetPreferences_by_pk(
           pk_columns: {
-            user_id: $user_id,
-            target_id: $target_id
+            userId: $userId,
+            targetId: $targetId
           }
           _set: {
             viewOffsetP: $viewOffsetP,
             viewOffsetQ: $viewOffsetQ
           }
         ) {
-          target_id
+          targetId
         }
       }"""
   }
@@ -216,28 +216,28 @@ object UserPreferencesQueriesGQL {
   @GraphQL
   trait UserTargetPreferencesFovUpdate extends GraphQLOperation[UserPreferencesDB] {
     val document =
-      """ mutation update_target_fov($user_id: String!, $target_id: String!, $fovRA: bigint!, $fovDec: bigint!) {
-        update_lucuma_target_preferences_by_pk(
+      """ mutation updateTargetFov($userId: String!, $targetId: String!, $fovRA: bigint!, $fovDec: bigint!) {
+        update_lucumaTargetPreferences_by_pk(
           pk_columns: {
-            user_id: $user_id,
-            target_id: $target_id
+            userId: $userId,
+            targetId: $targetId
           }
           _set: {
             fovRA: $fovRA,
             fovDec: $fovDecc
           }
         ) {
-          target_id
+          targetId
         }
       }"""
   }
   @GraphQL
   trait ItcPlotPreferencesQuery        extends GraphQLOperation[UserPreferencesDB] {
     val document = """
-      query itc_plot_preferences($user_id: String! = "", $observation_id: String! = "") {
-        lucuma_itc_plot_preferences_by_pk(observation_id: $observation_id, user_id: $user_id) {
-          chart_type
-          details_open
+      query itcPlotPreferences($userId: String! = "", $observationId: String! = "") {
+        lucumaItcPlotPreferences_by_pk(observationId: $observationId, userId: $userId) {
+          chartType
+          detailsOpen
         }
       }
     """
@@ -246,8 +246,8 @@ object UserPreferencesQueriesGQL {
   @GraphQL
   trait ItcPlotObservationUpsert extends GraphQLOperation[UserPreferencesDB] {
     val document =
-      """mutation observation_preferences_upsert($objects: lucuma_observation_insert_input! = {}) {
-        insert_lucuma_observation(objects: [$objects], on_conflict: {constraint: lucuma_observation_pkey, update_columns: observation_id}) {
+      """mutation observationPreferencesUpsert($objects: lucumaObservation_insert_input! = {}) {
+        insert_lucumaObservation(objects: [$objects], on_conflict: {constraint: lucuma_observation_pkey, update_columns: observationId}) {
           affected_rows
         }
       }"""

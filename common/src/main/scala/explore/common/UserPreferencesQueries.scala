@@ -65,8 +65,8 @@ object UserPreferencesQueries {
       import UserPreferencesAladinUpdate.*
 
       execute[F](
-        user_id = userId.show.assign,
-        aladin_mouse_scroll = aladinMouseScroll.value.assign
+        userId = userId.show.assign,
+        aladinMouseScroll = aladinMouseScroll.value.assign
       ).attempt.void
 
   extension (self: UserAreaWidths.type)
@@ -86,7 +86,7 @@ object UserPreferencesQueries {
             .liftF[F, Option[Int]] {
               query[F](uid.show, area.value)
                 .map { r =>
-                  r.explore_resizable_width_by_pk.map(_.width)
+                  r.lucumaResizableWidth_by_pk.map(_.width)
                 }
                 .recover(_ => none)
             }
@@ -94,7 +94,7 @@ object UserPreferencesQueries {
 
   extension (self: UserGridLayoutQuery.type)
     def positions2LayoutMap(
-      g: (BreakpointName, List[UserGridLayoutQuery.Data.GridLayoutPositions])
+      g: (BreakpointName, List[UserGridLayoutQuery.Data.LucumaGridLayoutPositions])
     ): (react.gridlayout.BreakpointName, (Int, Int, Layout)) =
       val bn = breakpointNameFromString(g._1)
       bn -> ((breakpointWidth(bn),
@@ -116,8 +116,8 @@ object UserPreferencesQueries {
         uid <- OptionT.fromOption[F](userId)
         c   <-
           OptionT.pure(
-            GridLayoutPositionsBoolExp(
-              user_id = StringComparisonExp(uid.show.assign).assign,
+            LucumaGridLayoutPositionsBoolExp(
+              userId = StringComparisonExp(uid.show.assign).assign,
               section = GridLayoutAreaComparisonExp(layoutSection.value.assign).assign
             )
           )
@@ -125,11 +125,11 @@ object UserPreferencesQueries {
           OptionT
             .liftF[F, (Int, SortedMap[react.gridlayout.BreakpointName, (Int, Int, Layout)])] {
               UserGridLayoutQuery.query[F](uid.show, c, resizableArea.value).map { r =>
-                (r.explore_resizable_width_by_pk.map(_.width), r.grid_layout_positions) match {
+                (r.lucumaResizableWidth_by_pk.map(_.width), r.lucumaGridLayoutPositions) match {
                   case (w, l) if l.isEmpty => (w.getOrElse(defaultValue._1), defaultValue._2)
                   case (w, l)              =>
                     (w.getOrElse(defaultValue._1),
-                     SortedMap(l.groupBy(_.breakpoint_name).map(positions2LayoutMap).toList: _*)
+                     SortedMap(l.groupBy(_.breakpointName).map(positions2LayoutMap).toList: _*)
                     )
                 }
               }
@@ -150,10 +150,10 @@ object UserPreferencesQueries {
           layouts.layouts.flatMap { bl =>
             bl.layout.l.collect {
               case i if i.i.nonEmpty =>
-                GridLayoutPositionsInsertInput(
-                  user_id = uid.show.assign,
+                LucumaGridLayoutPositionsInsertInput(
+                  userId = uid.show.assign,
                   section = section.value.assign,
-                  breakpoint_name = bl.name.name.assign,
+                  breakpointName = bl.name.name.assign,
                   width = i.w.assign,
                   height = i.h.assign,
                   x = i.x.assign,
@@ -180,11 +180,11 @@ object UserPreferencesQueries {
 
       execute[F](
         LucumaTargetInsertInput(
-          target_id = targetId.show.assign,
+          targetId = targetId.show.assign,
           lucuma_target_preferences = LucumaTargetPreferencesArrRelInsertInput(
             data = List(
               LucumaTargetPreferencesInsertInput(
-                user_id = uid.show.assign,
+                userId = uid.show.assign,
                 fovRA = fovRA.map(_.toMicroarcseconds).orIgnore,
                 fovDec = fovDec.map(_.toMicroarcseconds).orIgnore,
                 agsCandidates = agsCandidates.map(Visible.boolIso.reverseGet).orIgnore,
@@ -227,8 +227,8 @@ object UserPreferencesQueries {
           query[F](uid.show, tid.show)
             .map { r =>
               val userPrefs   =
-                r.lucuma_user_preferences_by_pk.flatMap(result => result.aladin_mouse_scroll)
-              val targetPrefs = r.lucuma_target_preferences_by_pk.map(result =>
+                r.lucumaUserPreferences_by_pk.flatMap(result => result.aladinMouseScroll)
+              val targetPrefs = r.lucumaTargetPreferences_by_pk.map(result =>
                 (result.fovRA,
                  result.fovDec,
                  result.viewOffsetP,
@@ -269,8 +269,8 @@ object UserPreferencesQueries {
     )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
       import UserTargetViewOffsetUpdate.*
       execute[F](
-        user_id = uid.show,
-        target_id = targetId.show,
+        userId = uid.show,
+        targetId = targetId.show,
         viewOffsetP = offset.p.toAngle.toMicroarcseconds,
         viewOffsetQ = offset.q.toAngle.toMicroarcseconds
       ).attempt.void
@@ -288,9 +288,7 @@ object UserPreferencesQueries {
       for r <-
           query[F](uid.show, oid.show)
             .map { r =>
-              r.lucuma_itc_plot_preferences_by_pk.map(result =>
-                (result.chart_type, result.details_open)
-              )
+              r.lucumaItcPlotPreferences_by_pk.map(result => (result.chartType, result.detailsOpen))
             }
             .handleError(_ => none)
       yield
@@ -308,13 +306,13 @@ object UserPreferencesQueries {
       import ItcPlotObservationUpsert.*
       execute[F](
         LucumaObservationInsertInput(
-          observation_id = oid.show.assign,
+          observationId = oid.show.assign,
           lucuma_itc_plot_preferences = LucumaItcPlotPreferencesArrRelInsertInput(
             data = List(
               LucumaItcPlotPreferencesInsertInput(
-                user_id = uid.show.assign,
-                chart_type = chartType.assign,
-                details_open = details.value.assign
+                userId = uid.show.assign,
+                chartType = chartType.assign,
+                detailsOpen = details.value.assign
               )
             ),
             on_conflict = LucumaItcPlotPreferencesOnConflict(
@@ -336,7 +334,7 @@ object UserPreferencesQueries {
       import UserPreferencesElevPlotUpdate.*
 
       execute[F](
-        user_id = userId.show.assign,
+        userId = userId.show.assign,
         elevationPlotRange = range.assign,
         elevationPlotTime = time.assign
       ).attempt.void
@@ -349,8 +347,8 @@ object UserPreferencesQueries {
       for r <-
           query[F](uid.show)
             .map { r =>
-              r.lucuma_user_preferences_by_pk.map(result =>
-                (result.elevation_plot_range, result.elevation_plot_time)
+              r.lucumaUserPreferences_by_pk.map(result =>
+                (result.elevationPlotRange, result.elevationPlotTime)
               )
             }
             .handleError(_ => none)
@@ -359,5 +357,13 @@ object UserPreferencesQueries {
         val time  = r.flatMap(_._2).getOrElse(TimeDisplay.Site)
 
         (range, time)
+
+  extension (w: WidthUpsertInput)
+    def toInput: LucumaResizableWidthInsertInput =
+      LucumaResizableWidthInsertInput(
+        w.section.value.assign,
+        w.user.toString.assign,
+        w.width.assign
+      )
 
 }
