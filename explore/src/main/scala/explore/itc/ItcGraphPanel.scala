@@ -18,7 +18,6 @@ import eu.timepit.refined.*
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.UnderConstruction
-import explore.common.ObsQueries.*
 import explore.common.UserPreferencesQueries.*
 import explore.components.WIP
 import explore.components.ui.ExploreStyles
@@ -56,7 +55,8 @@ import lucuma.ui.syntax.all.given
 import monocle.Focus
 import monocle.Lens
 import queries.common.UserPreferencesQueriesGQL.*
-import queries.schemas.itc.implicits.*
+import queries.schemas.itc.conversions.*
+import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
 
 import java.util.UUID

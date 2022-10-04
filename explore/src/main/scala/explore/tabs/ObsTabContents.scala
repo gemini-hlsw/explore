@@ -17,7 +17,6 @@ import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.*
-import explore.common.ObsQueries.*
 import explore.common.UserPreferencesQueries.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
@@ -43,6 +42,7 @@ import lucuma.ui.utils.*
 import org.scalajs.dom.window
 import queries.common.ObsQueriesGQL.*
 import queries.common.UserPreferencesQueriesGQL.*
+import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
 import react.draggable.Axis
 import react.gridlayout.*

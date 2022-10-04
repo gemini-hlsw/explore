@@ -1,7 +1,7 @@
 // Copyright (c) 2016-2022 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package queries.schemas
+package queries.schemas.odb
 
 import clue.data.Input
 import clue.data.syntax.*
@@ -31,7 +31,7 @@ import explore.model.ScienceMode
 case class WidthUpsertInput(user: User.Id, section: ResizableSection, width: Int)
 
 // TODO Move to lucuma-schemas
-object implicits {
+object conversions:
   extension (id: Observation.Id)
     def toWhereObservation: WhereObservation =
       WhereObservation(id = WhereOrderObservationId(EQ = id.assign).assign)
@@ -379,6 +379,14 @@ object implicits {
     def toInput: OffsetComponentInput =
       OffsetComponentInput(microarcseconds = o.toAngle.toMicroarcseconds.assign)
 
+  extension (w: WidthUpsertInput)
+    def toInput: ExploreResizableWidthInsertInput =
+      ExploreResizableWidthInsertInput(
+        w.section.value.assign,
+        w.user.toString.assign,
+        w.width.assign
+      )
+
   extension (a: ScienceModeAdvanced.GmosNorthLongSlit)
     def toInput: GmosNorthLongSlitAdvancedConfigInput =
       GmosNorthLongSlitAdvancedConfigInput(
@@ -433,12 +441,3 @@ object implicits {
             advanced = advanced.toInput.assign
           ).assign
         )
-
-  extension (w: WidthUpsertInput)
-    def toInput: ExploreResizableWidthInsertInput =
-      ExploreResizableWidthInsertInput(
-        w.section.value.assign,
-        w.user.toString.assign,
-        w.width.assign
-      )
-}

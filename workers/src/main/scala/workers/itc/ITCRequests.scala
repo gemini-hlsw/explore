@@ -32,7 +32,7 @@ import org.scalajs.dom
 import org.typelevel.log4cats.Logger
 import queries.common.ITCQueriesGQL.*
 import queries.schemas.ITC
-import queries.schemas.itc.implicits.*
+import queries.schemas.itc.conversions.*
 import workers.*
 
 import java.util.UUID

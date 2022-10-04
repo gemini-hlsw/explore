@@ -4,7 +4,6 @@
 package explore.model
 
 import clue.PersistentClientStatus
-import explore.common.ObsQueries.SpectroscopyRequirementsData
 import explore.data.KeyedIndexedList
 import explore.events.CatalogMessage
 import explore.model.Asterism
@@ -31,6 +30,7 @@ import lucuma.core.model.Target
 import lucuma.core.util.NewType
 import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.ui.reusability.*
+import queries.schemas.odb.ObsQueries.SpectroscopyRequirementsData
 
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.TreeSeqMap

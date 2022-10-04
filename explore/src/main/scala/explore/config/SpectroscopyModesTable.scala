@@ -20,7 +20,6 @@ import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
-import explore.common.ObsQueries.*
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.events.*
@@ -56,6 +55,7 @@ import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.utils.*
+import queries.schemas.odb.ObsQueries.*
 import react.circularprogressbar.CircularProgressbar
 import react.common.Css
 import react.common.ReactFnProps

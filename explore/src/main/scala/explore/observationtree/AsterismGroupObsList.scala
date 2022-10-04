@@ -33,7 +33,7 @@ import lucuma.ui.syntax.all.given
 import mouse.boolean.*
 import org.typelevel.log4cats.Logger
 import queries.common.TargetQueriesGQL
-import queries.schemas.implicits.*
+import queries.schemas.odb.conversions.*
 import react.beautifuldnd.*
 import react.common.ReactFnProps
 import react.fa.FontAwesomeIcon

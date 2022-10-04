@@ -11,8 +11,6 @@ import crystal.react.*
 import crystal.react.hooks.*
 import crystal.react.implicits.*
 import explore.*
-import explore.common.ObsQueries
-import explore.common.ObsQueries.*
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
@@ -49,6 +47,8 @@ import lucuma.schemas.ObservationDB
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import queries.common.ObsQueriesGQL.*
+import queries.schemas.odb.ObsQueries
+import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
 import react.semanticui.addons.select.Select
 import react.semanticui.addons.select.Select.SelectItem

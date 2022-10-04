@@ -27,11 +27,6 @@ case class HelpContext(
 object HelpContext:
   val ctx: Context[HelpContext] = React.createContext(null) // No default value
 
-  // given Reusability[Help.Id]     = Reusability.by(_.value)
-  // given Reusability[Uri]         = Reusability.by(_.toString)
-  // given Reusability[HelpContext] =
-  //   Reusability.by(x => (x.rawUrl, x.editUrl, x.user, x.project, x.displayedHelp.get))
-
   val Provider =
     ScalaFnComponent
       .withHooks[Unit]

@@ -38,7 +38,6 @@ import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import japgolly.scalajs.react.vdom.html_<^.*
 import log4cats.loglevel.LogLevelLogger
 import lucuma.core.model.Program
 import lucuma.refined.*

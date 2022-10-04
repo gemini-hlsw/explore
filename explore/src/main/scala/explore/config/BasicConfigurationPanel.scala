@@ -9,7 +9,6 @@ import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.auto.*
 import explore.Icons
-import explore.common.ObsQueries.*
 import explore.common.ScienceQueries.*
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
@@ -32,6 +31,7 @@ import lucuma.refined.*
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.button.Button

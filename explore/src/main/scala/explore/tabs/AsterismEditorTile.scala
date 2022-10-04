@@ -9,7 +9,6 @@ import clue.TransactionalClient
 import crystal.Pot
 import crystal.react.View
 import crystal.react.implicits.*
-import explore.common.ObsQueries
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.config.VizTimeEditor
@@ -33,6 +32,7 @@ import lucuma.schemas.ObservationDB
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
+import queries.schemas.odb.ObsQueries
 import react.common.ReactFnProps
 
 import java.time.Instant

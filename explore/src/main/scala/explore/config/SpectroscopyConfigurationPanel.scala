@@ -7,7 +7,6 @@ import cats.syntax.all.*
 import crystal.react.View
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
-import explore.common.ObsQueries.SpectroscopyRequirementsData
 import explore.components.HelpIcon
 import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
@@ -25,6 +24,7 @@ import lucuma.ui.forms.EnumViewOptionalSelect
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.syntax.all.given
+import queries.schemas.odb.ObsQueries.SpectroscopyRequirementsData
 import react.common.Css
 import react.common.ReactFnProps
 

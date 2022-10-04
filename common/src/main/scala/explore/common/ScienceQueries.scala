@@ -11,10 +11,6 @@ import crystal.react.View
 import crystal.react.implicits.*
 import eu.timepit.refined.*
 import eu.timepit.refined.numeric.Positive
-import explore.common.ObsQueries.*
-import explore.model.ScienceMode
-import explore.model.ScienceModeAdvanced
-import explore.model.ScienceModeBasic
 import explore.undo.UndoSetter
 import lucuma.core.enums
 import lucuma.core.math.Angle
@@ -27,7 +23,8 @@ import lucuma.schemas.ObservationDB.Types.*
 import monocle.Lens
 import org.typelevel.log4cats.Logger
 import queries.common.ObsQueriesGQL.*
-import queries.schemas.implicits.*
+import queries.schemas.odb.ObsQueries.*
+import queries.schemas.odb.conversions.*
 
 object ScienceQueries:
 

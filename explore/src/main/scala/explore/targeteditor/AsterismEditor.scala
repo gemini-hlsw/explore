@@ -12,7 +12,6 @@ import crystal.react.hooks.*
 import crystal.react.implicits.*
 import explore.Icons
 import explore.common.AsterismQueries
-import explore.common.ObsQueries
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.config.VizTimeEditor
@@ -48,7 +47,8 @@ import monocle.Lens
 import monocle.std.option.some
 import org.typelevel.log4cats.Logger
 import queries.common.TargetQueriesGQL.*
-import queries.schemas.implicits.*
+import queries.schemas.odb.ObsQueries
+import queries.schemas.odb.conversions.*
 import react.common.ReactFnProps
 import react.semanticui.elements.button.*
 import react.semanticui.modules.checkbox.*

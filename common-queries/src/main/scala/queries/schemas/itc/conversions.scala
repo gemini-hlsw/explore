@@ -6,7 +6,6 @@ package queries.schemas.itc
 import cats.syntax.all.*
 import clue.data.Input
 import clue.data.syntax.*
-import explore.common.ObsQueries
 import explore.model.itc.ItcTarget
 import explore.model.TargetWithId
 import explore.modes.GmosNorthSpectroscopyRow
@@ -19,6 +18,7 @@ import lucuma.core.math.dimensional.Measure
 import lucuma.core.model.*
 import lucuma.core.optics.syntax.lens.*
 import queries.common.ITCQueriesGQL
+import queries.schemas.odb.ObsQueries
 import queries.schemas.ITC
 import queries.schemas.ITC.Types.*
 import lucuma.core.enums.GmosNorthFpu
@@ -28,8 +28,8 @@ import explore.model.Asterism
 import eu.timepit.refined.types.numeric.PosLong
 import eu.timepit.refined.types.numeric.NonNegBigDecimal
 
-// There is a lot of duplication here with the odb.implicits package
-object implicits {
+// There is a lot of duplication here with the odb.conversions package
+object conversions:
   type SpectroscopyModeInput = ITC.Types.SpectroscopyModeInput
   val SpectroscopyModeInput = ITC.Types.SpectroscopyModeInput
   type GmosNorthFpuInput = ITC.Types.GmosNorthFpuInput
@@ -223,4 +223,3 @@ object implicits {
       case r: GmosSouthSpectroscopyRow =>
         InstrumentModesInput(gmosS = r.toGmosSITCInput).some
       case _                           => none
-}

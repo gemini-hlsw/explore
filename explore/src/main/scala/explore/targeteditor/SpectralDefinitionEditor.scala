@@ -57,7 +57,7 @@ import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
-import queries.schemas.implicits.*
+import queries.schemas.odb.conversions.*
 import react.common.ReactFnProps
 import react.semanticui.elements.label.LabelPointing
 

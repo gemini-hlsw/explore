@@ -23,7 +23,7 @@ import monocle.Focus
 import monocle.Getter
 import queries.common.AsterismQueriesGQL.*
 import queries.common.ObsQueriesGQL.*
-import queries.schemas.implicits.*
+import queries.schemas.odb.conversions.*
 
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
@@ -60,8 +60,6 @@ object AsterismQueries:
 
     def findWithTargetIds(targetIds: SortedSet[Target.Id]): Option[AsterismGroup] =
       self.find { case (_, ag) => ag.targetIds === targetIds }.map(_._2)
-
-  // given Reusability[AsterismGroupsWithObs] = Reusability.derive
 
   private def obsResultToSummary(obsR: ObservationResult): ObsSummaryWithConstraintsAndConf =
     ObsSummaryWithConstraintsAndConf(

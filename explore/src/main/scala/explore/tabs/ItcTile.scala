@@ -5,7 +5,6 @@ package explore.tabs
 
 import cats.syntax.all.*
 import crystal.react.View
-import explore.common.ObsQueries.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.itc.ItcGraphPanel
@@ -18,6 +17,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
 import lucuma.core.model.User
 import lucuma.ui.syntax.all.given
+import queries.schemas.odb.ObsQueries.*
 
 object ItcTile:
 

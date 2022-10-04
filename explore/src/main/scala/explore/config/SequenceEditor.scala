@@ -11,7 +11,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
 import lucuma.ui.syntax.all.given
 import queries.common.ManualSequenceGQL.*
-import queries.schemas.implicits.*
+import queries.schemas.odb.conversions.*
 import react.common.ReactFnProps
 
 case class SequenceEditor(programId: Program.Id) extends ReactFnProps(SequenceEditor.component)

@@ -37,8 +37,6 @@ object ConstraintGroupQueries:
     val constraintGroups = Focus[ConstraintSummaryWithObervations](_.constraintGroups)
     val observations     = Focus[ConstraintSummaryWithObervations](_.observations)
 
-  // given Reusability[ConstraintSummaryWithObervations] = Reusability.derive
-
   private def obsResultToSummary(obsR: ObservationResult): ObsSummaryWithTitleAndConf =
     ObsSummaryWithTitleAndConf(
       obsR.id,

@@ -7,7 +7,6 @@ import cats.effect.*
 import crystal.react.*
 import crystal.react.implicits.*
 import eu.timepit.refined.auto.*
-import explore.common.ObsQueries
 import explore.components.HelpIcon
 import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
@@ -27,6 +26,7 @@ import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.Lens
 import monocle.std.option
+import queries.schemas.odb.ObsQueries
 import react.common.Css
 import react.common.ReactFnProps
 import react.semanticui.collections.form.Form

@@ -13,7 +13,6 @@ import crystal.react.implicits.*
 import eu.timepit.refined.*
 import eu.timepit.refined.numeric.Positive
 import explore.Icons
-import explore.common.ObsQueries.*
 import explore.components.ui.ExploreStyles
 import explore.events.*
 import explore.model.AppContext
@@ -31,7 +30,8 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.given
-import queries.schemas.itc.implicits.*
+import queries.schemas.itc.conversions.*
+import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
 import react.floatingui.syntax.*
 import react.primereact.Dropdown

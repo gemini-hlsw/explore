@@ -17,7 +17,7 @@ import lucuma.ui.reusability.*
 import monocle.Focus
 import monocle.Lens
 import queries.common.ProgramQueriesGQL.*
-import queries.schemas.implicits.*
+import queries.schemas.odb.conversions.*
 
 object ProgramQueries:
   case class ProgramInfo(id: Program.Id, name: Option[NonEmptyString], deleted: Boolean)

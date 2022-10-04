@@ -9,12 +9,12 @@ import clue.TransactionalClient
 import crystal.react.View
 import crystal.react.implicits.*
 import explore.common.ConstraintGroupQueries.*
-import explore.common.ObsQueries
 import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
 import explore.undo.*
 import japgolly.scalajs.react.callback.Callback
 import lucuma.schemas.ObservationDB
+import queries.schemas.odb.ObsQueries
 
 import scala.collection.immutable.SortedSet
 

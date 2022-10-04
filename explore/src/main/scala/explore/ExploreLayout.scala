@@ -41,9 +41,8 @@ object ExploreLayout:
   private val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useContext(AppContext.ctx)
       .useContext(HelpContext.ctx)
-      .render { (props, _, helpCtx) =>
+      .render { (props, helpCtx) =>
         IfLogged(props.view)((vault: UserVault, onLogout: IO[Unit]) =>
           val routingInfo = RoutingInfo.from(props.resolution.page)
 

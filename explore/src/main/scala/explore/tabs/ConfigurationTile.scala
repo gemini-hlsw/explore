@@ -8,7 +8,6 @@ import crystal.Pot
 import crystal.react.View
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.common.ObsQueries.*
 import explore.components.Tile
 import explore.config.ConfigurationPanel
 import explore.model.CoordinatesAtVizTime
@@ -19,7 +18,8 @@ import lucuma.core.model.Observation
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
-import queries.schemas.itc.implicits.*
+import queries.schemas.itc.conversions.*
+import queries.schemas.odb.ObsQueries.*
 
 object ConfigurationTile {
   def configurationTile(

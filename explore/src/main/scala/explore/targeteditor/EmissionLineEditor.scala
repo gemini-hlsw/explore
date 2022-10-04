@@ -18,8 +18,8 @@ import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.*
-import explore.model.enums.*
 import explore.components.ui.ExploreStyles
+import explore.model.enums.*
 import explore.model.formats.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*

@@ -6,8 +6,6 @@ package explore.model
 import cats.Eq
 import explore.common.AsterismQueries.AsterismGroupsWithObs
 import explore.common.ConstraintGroupQueries.ConstraintGroupList
-import explore.common.ObsQueries.ObservationList
-import explore.common.ObsQueries.ScienceData
 import explore.model.ObsIdSet
 import explore.undo.UndoStacks
 import lucuma.core.model.ConstraintSet
@@ -15,6 +13,8 @@ import lucuma.core.model.Observation
 import lucuma.core.model.Proposal
 import lucuma.core.model.Target
 import monocle.Focus
+import queries.schemas.odb.ObsQueries.ObservationList
+import queries.schemas.odb.ObsQueries.ScienceData
 
 case class ModelUndoStacks[F[_]](
   forObsList:           UndoStacks[F, ObservationList] = UndoStacks.empty[F, ObservationList],

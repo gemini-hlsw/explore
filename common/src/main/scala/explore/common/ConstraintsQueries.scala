@@ -20,7 +20,7 @@ import lucuma.schemas.ObservationDB.Types.*
 import monocle.Lens
 import org.typelevel.log4cats.Logger
 import queries.common.ObsQueriesGQL.*
-import queries.schemas.implicits.*
+import queries.schemas.odb.conversions.*
 
 object ConstraintsQueries:
   case class UndoView(

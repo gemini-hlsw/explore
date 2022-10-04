@@ -9,7 +9,6 @@ import cats.syntax.all.*
 import eu.timepit.refined.*
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosBigDecimal
-import explore.common.ObsQueries.*
 import explore.events.ItcMessage
 import explore.model.ScienceMode
 import explore.model.ScienceModeAdvanced
@@ -26,7 +25,8 @@ import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ExposureTimeMode
-import queries.schemas.itc.implicits.*
+import queries.schemas.itc.conversions.*
+import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
 import workers.WorkerClient
 

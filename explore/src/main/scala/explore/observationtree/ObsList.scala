@@ -11,7 +11,6 @@ import crystal.react.hooks.*
 import crystal.react.implicits.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
-import explore.common.ObsQueries
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.model.AppContext
@@ -36,6 +35,7 @@ import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
 import org.typelevel.log4cats.Logger
+import queries.schemas.odb.ObsQueries
 import react.common.ReactFnProps
 import react.semanticui.elements.button.Button
 import react.semanticui.shorthand.*
