@@ -55,7 +55,7 @@ import lucuma.ui.syntax.all.given
 import monocle.Focus
 import monocle.Lens
 import queries.common.UserPreferencesQueriesGQL.*
-import queries.schemas.itc.conversions.*
+import queries.schemas.itc.ITCConversions.*
 import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
 

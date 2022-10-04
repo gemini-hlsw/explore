@@ -25,13 +25,13 @@ import lucuma.refined.*
 import org.typelevel.log4cats.Logger
 import queries.common.ITCQueriesGQL.*
 import queries.schemas.ITC
-import queries.schemas.itc.conversions.*
+import queries.schemas.itc.ITCConversions.*
 import workers.*
 
 import java.util.UUID
 import scala.concurrent.duration.*
 //
-object ITCGraphRequests {
+object ITCGraphRequests:
   // Picklers for generated types not in the model.
   private given Pickler[SpectroscopyGraphITCQuery.Data.SpectroscopyGraph.Ccds]   = generatePickler
   private given Pickler[SpectroscopyGraphITCQuery.Data.SpectroscopyGraph.Charts] =
@@ -115,5 +115,3 @@ object ITCGraphRequests {
             }.sequence.void
           }
     }.orEmpty
-
-}

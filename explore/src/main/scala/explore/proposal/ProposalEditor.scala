@@ -53,7 +53,7 @@ import lucuma.ui.syntax.all.given
 import monocle.Iso
 import org.typelevel.log4cats.Logger
 import queries.common.ProgramQueriesGQL
-import queries.schemas.odb.conversions.*
+import queries.schemas.odb.ODBConversions.*
 import react.common.ReactFnProps
 import react.semanticui.collections.form.*
 import react.semanticui.elements.label.Label

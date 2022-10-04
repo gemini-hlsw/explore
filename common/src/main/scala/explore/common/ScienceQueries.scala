@@ -23,8 +23,8 @@ import lucuma.schemas.ObservationDB.Types.*
 import monocle.Lens
 import org.typelevel.log4cats.Logger
 import queries.common.ObsQueriesGQL.*
+import queries.schemas.odb.ODBConversions.*
 import queries.schemas.odb.ObsQueries.*
-import queries.schemas.odb.conversions.*
 
 object ScienceQueries:
 
