@@ -77,3 +77,5 @@ object AppContext:
       setPageVia,
       config.environment
     )
+
+  given [F[_]]: Reusability[AppContext[F]] = Reusability.always
