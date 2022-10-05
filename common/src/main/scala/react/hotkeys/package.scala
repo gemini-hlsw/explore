@@ -3,16 +3,16 @@
 
 package react.hotkeys
 
-import cats.syntax.all.*
+// import cats.syntax.all.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.TopNode
 import org.scalajs.dom
-import org.scalajs.dom.html
+// import org.scalajs.dom.html
 
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters.*
 import scala.scalajs.js.annotation.JSImport
-import scala.scalajs.js.|
+// import scala.scalajs.js.|
 
 type Ref             = Ref.Simple[dom.Element]
 type HotkeysCallback = Callback | (HotkeysEvent => Callback)
@@ -72,16 +72,12 @@ object UseHotkeysProps {
     p
 }
 
-object use {
-  @JSImport("react-hotkeys-hook", JSImport.Namespace)
-  @js.native
-  val ^ : js.Any = js.native
-
-  inline def useHotkeys[N <: TopNode](
-    props: UseHotkeysProps
-  ): Ref = {
-    val r = ^.asInstanceOf[js.Dynamic]
-      .applyDynamic("useHotkeys")(props.keys, props.callback)
-    Ref.fromJs(r.asInstanceOf[facade.React.RefHandle[dom.Element | Null]])
-  }
-}
+@JSImport("react-hotkeys-hook", "useHotkeys")
+@js.native
+private val useHotkeys: js.Function4[
+  String,
+  js.Function2[js.Any, HotkeysEvent, Unit],
+  js.UndefOr[Options],
+  js.UndefOr[js.Array[js.Any]],
+  facade.React.RefHandle[dom.Element | Null]
+] = js.native

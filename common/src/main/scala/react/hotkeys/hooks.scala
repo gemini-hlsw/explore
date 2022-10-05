@@ -4,20 +4,21 @@
 package react.hotkeys
 
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.vdom.TopNode
 
-import scala.scalajs.js
-import scala.scalajs.js.JSConverters.*
+private val hook =
+  CustomHook.unchecked[UseHotkeysProps, Ref](props =>
+    Ref.fromJs(useHotkeys(props.keys, props.callback, props.options, props.deps))
+  )
 
 object HooksApiExt {
 
-  private def hook: CustomHook[UseHotkeysProps, Ref] =
-    CustomHook[UseHotkeysProps]
-      .buildReturning { pos =>
-        use.useHotkeys(pos)
-      }
-
   sealed class Primary[Ctx, Step <: HooksApi.AbstractStep](api: HooksApi.Primary[Ctx, Step]) {
+    // final def useHotkeysWithDeps[D: Reusability, A](
+    //   deps:   => D
+    // )(effect: D => DefaultA[A])(implicit
+    //   step:   Step
+    // ): step.Next[Pot[A]] =
+    //   useEffectResultWithDepsBy(_ => deps)(_ => effect)
 
     final def useHotkeys(pos: UseHotkeysProps)(using
       step:                   Step
@@ -28,6 +29,14 @@ object HooksApiExt {
       step:                     Step
     ): step.Next[Ref] =
       api.customBy(ctx => hook(pos(ctx)))
+
+    // final def useHotkeysWithDepsBy[D: Reusability](
+    //   deps:   Ctx => D
+    // )(effect: Ctx => D => UseHotkeysProps)(using step: Step): step.Next[Ref] =
+    //   api.customBy { ctx =>
+    //     val hookInstance = hook[D]
+    //     hookInstance(WithDeps(deps(ctx), effect(ctx)))
+    //   }
 
   }
 
@@ -44,11 +53,6 @@ object HooksApiExt {
 }
 
 object HooksApiExtGlobal {
-  private val hook: CustomHook[UseHotkeysProps, Unit] =
-    CustomHook[UseHotkeysProps]
-      .buildReturning { pos =>
-        use.useHotkeys(pos)
-      }
   // def hook[D: Reusability] = CustomHook[WithDeps[D, ]]
   //   .useState(Pot.pending[A])
   //   .useEffectWithDepsBy((props, _) => props.deps)((_, state) => _ => state.setState(Pot.pending))
@@ -71,7 +75,7 @@ object HooksApiExtGlobal {
     final def useGlobalHotkeysBy(pos: Ctx => UseHotkeysProps)(using
       step:                           Step
     ): step.Self =
-      api.customBy[Unit](ctx => hook(pos(ctx)))
+      api.customBy[Unit](ctx => hook(pos(ctx)).map(_ => ()))
 
     // final def useGlobalHotkeysWithDepsBy[D](deps: CtxFn[D])(effect: CtxFn[D => A]): step.Self =
     // final def useGlobalHotkeysWithDepsBy[D, A](deps:                      Ctx => D)(
