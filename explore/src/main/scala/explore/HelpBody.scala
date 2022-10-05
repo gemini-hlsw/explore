@@ -21,6 +21,7 @@ import org.http4s.*
 import org.http4s.dom.FetchClientBuilder
 import react.common.ReactFnProps
 import react.hotkeys.*
+import react.hotkeys.hooks.*
 import react.markdown.ReactMarkdown
 import react.markdown.RehypePlugin
 import react.markdown.RemarkPlugin
@@ -69,7 +70,8 @@ object HelpBody:
       .useEffectOnMountBy { (props, _, state) =>
         load(props.url).flatMap(v => state.set(Pot.fromTry(v)).to[IO])
       }
-      .render { (props, helpCtx, state) =>
+      .useHotkeysBy((_, helpCtx, _) => UseHotkeysProps("esc", helpCtx.displayedHelp.set(none)))
+      .render { (props, helpCtx, state, _) =>
         val imageConv = (s: Uri) => props.baseUrl.addPath(s.path)
 
         val helpView = helpCtx.displayedHelp
@@ -80,9 +82,6 @@ object HelpBody:
 
         <.div(
           ExploreStyles.HelpSidebar,
-          GlobalHotKeys(keyMap = KeyMap("CLOSE_HELP" -> "ESC"),
-                        handlers = Handlers("CLOSE_HELP" -> helpView.set(none))
-          ),
           <.div(
             ExploreStyles.HelpTitle,
             <.h4(ExploreStyles.HelpTitleLabel, "Help"),

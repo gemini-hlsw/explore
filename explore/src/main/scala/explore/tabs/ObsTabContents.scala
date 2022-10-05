@@ -46,6 +46,8 @@ import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
 import react.draggable.Axis
 import react.gridlayout.*
+import react.hotkeys.*
+import react.hotkeys.hooks.*
 import react.resizable.*
 import react.resizeDetector.*
 import react.resizeDetector.hooks.*
