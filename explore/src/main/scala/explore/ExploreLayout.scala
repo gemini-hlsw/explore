@@ -10,10 +10,14 @@ import crystal.react.implicits.*
 import explore.components.state.IfLogged
 import explore.components.ui.ExploreStyles
 import explore.model.*
+import explore.model.enums.AppTab
+import explore.shortcuts.*
+import explore.shortcuts.given
 import explore.syntax.ui.*
 import explore.syntax.ui.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.ResolutionWithProps
+import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -29,10 +33,6 @@ import react.semanticui.modules.sidebar.SidebarWidth
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSExportTopLevel
-import explore.model.enums.AppTab
-import explore.shortcuts.*
-import explore.shortcuts.given
-import japgolly.scalajs.react.extra.router.SetRouteVia
 
 case class ExploreLayout(
   resolution: ResolutionWithProps[Page, View[RootModel]]

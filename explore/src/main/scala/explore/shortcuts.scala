@@ -4,11 +4,12 @@
 package explore.shortcuts
 
 import eu.timepit.refined.types.string.NonEmptyString
-import lucuma.refined.*
 import japgolly.scalajs.react.Callback
-import react.hotkeys.HotkeysEvent
-import react.hotkeys.HotkeysCallback
 import lucuma.core.util.NewType
+import lucuma.refined.*
+import react.hotkeys.HotkeysCallback
+import react.hotkeys.HotkeysEvent
+
 import scala.scalajs.js.|
 
 object Shortcut extends NewType[String]

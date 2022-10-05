@@ -20,9 +20,7 @@ type HotkeysCallback = Callback | (HotkeysEvent => Callback)
 @js.native
 trait Options extends js.Object {
   var enabled: js.UndefOr[Boolean]                 = js.native
-  // filter?: (event: KeyboardEvent) => boolean;
   var filterPreventDefault: js.UndefOr[Boolean]    = js.native
-  // enableOnTags?: AvailableTags[];
   var enableOnContentEditable: js.UndefOr[Boolean] = js.native
   var splitKey: js.UndefOr[String]                 = js.native
   var keyup: js.UndefOr[Boolean]                   = js.native
