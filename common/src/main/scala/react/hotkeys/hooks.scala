@@ -4,92 +4,104 @@
 package react.hotkeys
 
 import japgolly.scalajs.react.*
+import scalajs.js
 
-private val hook =
-  CustomHook.unchecked[UseHotkeysProps, Ref](props =>
-    Ref.fromJs(useHotkeys(props.keys, props.callback, props.options, props.deps))
-  )
+private def useHotkeysHook[D: Reusability](
+  deps:  => D
+)(props: D => UseHotkeysProps): CustomHook[Unit, Ref] =
+  CustomHook
+    .reusableDeps[D]
+    .apply(() => deps)
+    .map { case (d, rev) =>
+      val p = props(d)
+      Ref.fromJs(useHotkeys(p.keys, p.callback, p.options, js.Array(rev)))
+    }
 
 object HooksApiExt {
 
   sealed class Primary[Ctx, Step <: HooksApi.AbstractStep](api: HooksApi.Primary[Ctx, Step]) {
-    // final def useHotkeysWithDeps[D: Reusability, A](
-    //   deps:   => D
-    // )(effect: D => DefaultA[A])(implicit
-    //   step:   Step
-    // ): step.Next[Pot[A]] =
-    //   useEffectResultWithDepsBy(_ => deps)(_ => effect)
-
-    final def useHotkeys(pos: UseHotkeysProps)(using
-      step:                   Step
+    final def useHotkeysWithDeps[D: Reusability](
+      deps:  => D
+    )(props: D => UseHotkeysProps)(using
+      step:  Step
     ): step.Next[Ref] =
-      useHotkeysBy(_ => pos)
+      useHotkeysWithDepsBy(_ => deps)(_ => props)
 
-    final def useHotkeysBy(pos: Ctx => UseHotkeysProps)(using
+    final def useHotkeys(props: UseHotkeysProps)(using
       step:                     Step
     ): step.Next[Ref] =
-      api.customBy(ctx => hook(pos(ctx)))
+      useHotkeysBy(_ => props)
 
-    // final def useHotkeysWithDepsBy[D: Reusability](
-    //   deps:   Ctx => D
-    // )(effect: Ctx => D => UseHotkeysProps)(using step: Step): step.Next[Ref] =
-    //   api.customBy { ctx =>
-    //     val hookInstance = hook[D]
-    //     hookInstance(WithDeps(deps(ctx), effect(ctx)))
-    //   }
+    final def useHotkeysBy(props: Ctx => UseHotkeysProps)(using
+      step:                       Step
+    ): step.Next[Ref] =
+      useHotkeysWithDepsBy(_ => Reusable.never(()))(ctx => _ => props(ctx))
 
+    final def useHotkeysWithDepsBy[D: Reusability](
+      deps:  Ctx => D
+    )(props: Ctx => D => UseHotkeysProps)(using step: Step): step.Next[Ref] =
+      api.customBy { ctx =>
+        val hookInstance = useHotkeysHook[D]
+        hookInstance(deps(ctx))(props(ctx))
+      }
   }
 
   final class Secondary[Ctx, CtxFn[_], Step <: HooksApi.SubsequentStep[Ctx, CtxFn]](
     api: HooksApi.Secondary[Ctx, CtxFn, Step]
   ) extends Primary[Ctx, Step](api) {
+    def useHotkeysWithDepsBy[D: Reusability](
+      deps:  CtxFn[D]
+    )(props: CtxFn[D => UseHotkeysProps])(using
+      step:  Step
+    ): step.Next[Ref] =
+      useHotkeysWithDepsBy(step.squash(deps)(_))(step.squash(props)(_))
 
     def useHotkeysBy(pos: CtxFn[UseHotkeysProps])(using
       step:               Step
     ): step.Next[Ref] =
       useHotkeysBy(step.squash(pos)(_))
-
   }
 }
 
 object HooksApiExtGlobal {
-  // def hook[D: Reusability] = CustomHook[WithDeps[D, ]]
-  //   .useState(Pot.pending[A])
-  //   .useEffectWithDepsBy((props, _) => props.deps)((_, state) => _ => state.setState(Pot.pending))
-  //   .useEffectWithDepsBy((props, _) => props.deps)((props, state) =>
-  //     deps =>
-  //       (for {
-  //         a <- props.fromDeps(deps)
-  //         _ <- state.setStateAsync(a.ready)
-  //       } yield ()).handleErrorWith(t => state.setStateAsync(Pot.error(t)))
-  //   )
-  //   .buildReturning((_, state) => state.value)
-
   sealed class Primary[Ctx, Step <: HooksApi.AbstractStep](api: HooksApi.Primary[Ctx, Step]) {
 
-    final def useGlobalHotkeys(pos: UseHotkeysProps)(using
-      step:                         Step
+    final def useGlobalHotkeysWithDeps[D: Reusability](
+      deps:  => D
+    )(props: D => UseHotkeysProps)(using
+      step:  Step
     ): step.Self =
-      useGlobalHotkeysBy(_ => pos)
+      useGlobalHotkeysWithDepsBy(_ => deps)(_ => props)
 
-    final def useGlobalHotkeysBy(pos: Ctx => UseHotkeysProps)(using
+    final def useGlobalHotkeys(props: UseHotkeysProps)(using
       step:                           Step
     ): step.Self =
-      api.customBy[Unit](ctx => hook(pos(ctx)).map(_ => ()))
+      useGlobalHotkeysBy(_ => props)
 
-    // final def useGlobalHotkeysWithDepsBy[D](deps: CtxFn[D])(effect: CtxFn[D => A]): step.Self =
-    // final def useGlobalHotkeysWithDepsBy[D, A](deps:                      Ctx => D)(
-    //   effect:                                                             Ctx => D => A
-    // )(
-    //   implicit /*a:                                UseEffectArg[A], */ r: Reusability[D],
-    //   step:                                                               Step
-    // ): step.Self =
-    //   useGlobalHotkeysWithDepsBy(step.squash(deps)(_))(step.squash(effect)(_))
+    final def useGlobalHotkeysBy(props: Ctx => UseHotkeysProps)(using
+      step:                             Step
+    ): step.Self =
+      useGlobalHotkeysWithDepsBy(_ => Reusable.never(()))(ctx => _ => props(ctx))
+
+    final def useGlobalHotkeysWithDepsBy[D: Reusability](
+      deps:  Ctx => D
+    )(props: Ctx => D => UseHotkeysProps)(using step: Step): step.Self =
+      api.customBy { ctx =>
+        val hookInstance = useHotkeysHook[D]
+        hookInstance(deps(ctx))(props(ctx)).map(_ => ())
+      }
   }
 
   final class Secondary[Ctx, CtxFn[_], Step <: HooksApi.SubsequentStep[Ctx, CtxFn]](
     api: HooksApi.Secondary[Ctx, CtxFn, Step]
   ) extends Primary[Ctx, Step](api) {
+
+    def useGlobalHotkeysWithDepsBy[D: Reusability](
+      deps:  CtxFn[D]
+    )(props: CtxFn[D => UseHotkeysProps])(implicit
+      step:  Step
+    ): step.Self =
+      useGlobalHotkeysWithDepsBy(step.squash(deps)(_))(step.squash(props)(_))
 
     def useGlobalHotkeysBy(pos: CtxFn[UseHotkeysProps])(using
       step:                     Step

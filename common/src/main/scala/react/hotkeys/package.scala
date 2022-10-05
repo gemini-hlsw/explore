@@ -5,6 +5,7 @@ package react.hotkeys
 
 // import cats.syntax.all.*
 import japgolly.scalajs.react.*
+import japgolly.scalajs.react.facade.React.HookDeps
 import japgolly.scalajs.react.vdom.TopNode
 import org.scalajs.dom
 // import org.scalajs.dom.html
@@ -18,7 +19,7 @@ type Ref             = Ref.Simple[dom.Element]
 type HotkeysCallback = Callback | (HotkeysEvent => Callback)
 
 @js.native
-trait Options extends js.Object {
+trait HotkeysOptions extends js.Object {
   var enabled: js.UndefOr[Boolean]                 = js.native
   var filterPreventDefault: js.UndefOr[Boolean]    = js.native
   var enableOnContentEditable: js.UndefOr[Boolean] = js.native
@@ -27,12 +28,12 @@ trait Options extends js.Object {
   var keydown: js.UndefOr[Boolean]                 = js.native
 }
 
-object Options {
+object HotkeysOptions {
 
   def apply(
     enabled: js.UndefOr[Boolean] = js.undefined
-  ): Options =
-    val p = js.Dynamic.literal().asInstanceOf[Options]
+  ): HotkeysOptions =
+    val p = js.Dynamic.literal().asInstanceOf[HotkeysOptions]
     p.enabled.foreach(o => p.enabled = o)
     p
 }
@@ -48,9 +49,9 @@ trait UseHotkeysProps extends js.Object {
 
   var callback: js.Function2[js.Any, HotkeysEvent, Unit] = js.native
 
-  var options: js.UndefOr[Options] = js.native
+  var options: js.UndefOr[HotkeysOptions] = js.native
 
-  var deps: js.UndefOr[js.Array[js.Any]] = js.native
+  // var deps: js.UndefOr[js.Array[js.Any]] = js.native
 }
 
 object UseHotkeysProps {
@@ -58,8 +59,7 @@ object UseHotkeysProps {
   def apply(
     keys:     String,
     callback: HotkeysCallback,
-    options:  js.UndefOr[Options] = js.undefined,
-    deps:     js.UndefOr[List[js.Any]] = js.undefined
+    options:  js.UndefOr[HotkeysOptions] = js.undefined
   ): UseHotkeysProps =
     val p = js.Dynamic.literal().asInstanceOf[UseHotkeysProps]
     p.keys = keys
@@ -68,7 +68,6 @@ object UseHotkeysProps {
         case c: Callback                   => c.runNow()
         case c: (HotkeysEvent => Callback) => c(h).runNow()
     options.foreach(o => p.options = o)
-    deps.foreach(o => p.deps = o.toJSArray)
     p
 }
 
@@ -77,7 +76,7 @@ object UseHotkeysProps {
 private val useHotkeys: js.Function4[
   String,
   js.Function2[js.Any, HotkeysEvent, Unit],
-  js.UndefOr[Options],
-  js.UndefOr[js.Array[js.Any]],
+  js.UndefOr[HotkeysOptions],
+  js.UndefOr[HookDeps],
   facade.React.RefHandle[dom.Element | Null]
 ] = js.native
