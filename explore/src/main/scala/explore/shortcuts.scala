@@ -28,6 +28,7 @@ val GoToTargets     = Shortcut("t")
 val GoToProposals   = Shortcut("r")
 val GoToConstraints = Shortcut("c")
 val GoToOverview    = Shortcut("w")
-
-val all: List[Shortcut] =
-  List(GoToObs, GoToTargets, GoToProposals, GoToConstraints, GoToOverview)
+val CopyAlt1        = Shortcut("y")
+val CopyAlt2        = Shortcut("ctrl+c")
+val CopyAlt3        = Shortcut("cmd+c")
+val CopyKeys        = List(CopyAlt1, CopyAlt2, CopyAlt3)

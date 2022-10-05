@@ -10,7 +10,7 @@ import org.scalajs.dom
 import org.scalajs.dom.html
 
 import scala.scalajs.js
-import scala.scalajs.js.JSConverters._
+import scala.scalajs.js.JSConverters.*
 import scala.scalajs.js.annotation.JSImport
 import scala.scalajs.js.|
 
@@ -58,7 +58,8 @@ object UseHotkeysProps {
   def apply(
     keys:     String,
     callback: HotkeysCallback,
-    options:  js.UndefOr[Options] = js.undefined
+    options:  js.UndefOr[Options] = js.undefined,
+    deps:     js.UndefOr[List[js.Any]] = js.undefined
   ): UseHotkeysProps =
     val p = js.Dynamic.literal().asInstanceOf[UseHotkeysProps]
     p.keys = keys
@@ -67,6 +68,7 @@ object UseHotkeysProps {
         case c: Callback                   => c.runNow()
         case c: (HotkeysEvent => Callback) => c(h).runNow()
     options.foreach(o => p.options = o)
+    deps.foreach(o => p.deps = o.toJSArray)
     p
 }
 

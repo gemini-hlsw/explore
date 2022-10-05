@@ -48,7 +48,7 @@ object ExploreLayout:
       .withHooks[Props]
       .useContext(HelpContext.ctx)
       .useContext(AppContext.ctx)
-      .useHotkeysBy { (props, _, ctx) =>
+      .useGlobalHotkeysBy { (props, _, ctx) =>
         val routingInfo          = RoutingInfo.from(props.resolution.page)
         def goToTab(tab: AppTab) =
           ctx.setPageVia(tab, routingInfo.programId, routingInfo.focused, SetRouteVia.HistoryPush)
@@ -68,9 +68,10 @@ object ExploreLayout:
         UseHotkeysProps(
           List(GoToObs, GoToTargets, GoToProposals, GoToConstraints, GoToOverview).toHotKeys,
           callbacks
+          // deps = List(routingInfo.toString)
         )
       }
-      .render { (props, helpCtx, _, _) =>
+      .render { (props, helpCtx, _) =>
         IfLogged(props.view)((vault: UserVault, onLogout: IO[Unit]) =>
           val routingInfo = RoutingInfo.from(props.resolution.page)
 

@@ -36,13 +36,6 @@ case object LabelsElement extends ElementItem
 
 object Routing:
 
-  private def withSize(f: ResizeDetector.Dimensions => VdomElement): VdomElement =
-    ResizeDetector() { s =>
-      <.div(ExploreStyles.SizeDetector, s.targetRef)(
-        f(s)
-      )
-    }
-
   private def homeTab(): VdomElement = UnderConstruction()
 
   private def targetTab(page: Page, model: View[RootModel]): VdomElement =

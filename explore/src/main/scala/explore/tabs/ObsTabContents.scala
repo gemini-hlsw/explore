@@ -54,6 +54,10 @@ import react.resizeDetector.hooks.*
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.sizes.*
+import react.hotkeys.*
+import react.hotkeys.hooks.*
+import explore.shortcuts.*
+import explore.shortcuts.given
 
 import scala.concurrent.duration.*
 
@@ -66,17 +70,6 @@ case class ObsTabContents(
   searching:     View[Set[Target.Id]],
   hiddenColumns: View[Set[String]]
 ) extends ReactFnProps(ObsTabContents.component)
-
-enum ObsTabTilesIds:
-  case NotesId, TargetId, PlotId, ConstraintsId, ConfigurationId, ItcId
-
-  def id: NonEmptyString = this match
-    case NotesId         => "notes".refined
-    case TargetId        => "target".refined
-    case PlotId          => "elevationPlot".refined
-    case ConstraintsId   => "constraints".refined
-    case ConfigurationId => "configuration".refined
-    case ItcId           => "itc".refined
 
 object ObsTabContents extends TwoResizablePanels:
   private type Props = ObsTabContents
@@ -305,6 +298,16 @@ object ObsTabContents extends TwoResizablePanels:
             ProgramObservationsEditSubscription.subscribe[IO](props.programId)
           )
       }
+      .useHotkeysBy { (props, ctx, _, _, _, _, _, _) =>
+        // val routingInfo = RoutingInfo.from(props.resolution.page)
+        // def goToTab(tab: AppTab) =
+        //   ctx.setPageVia(tab, routingInfo.programId, routingInfo.focused, SetRouteVia.HistoryPush)
+
+        def callbacks: ShortcutCallbacks = { case CopyAlt1 | CopyAlt2 | CopyAlt3 =>
+          Callback.log(s"${props.focusedObs}")
+        }
+        UseHotkeysProps(CopyKeys.toHotKeys, callbacks)
+      }
       .render {
         (
           props,
@@ -314,7 +317,8 @@ object ObsTabContents extends TwoResizablePanels:
           layouts,
           defaultLayout,
           debouncer,
-          obsWithConstraints
+          obsWithConstraints,
+          _
         ) =>
           <.div(
             obsWithConstraints.render(
