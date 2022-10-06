@@ -10,6 +10,14 @@ odb tables.
 This is not considered critical and we would take the freedom of deleting the preferences if it
 makes the transition simpler.
 
+We use the graphql naming convention for hasura, thus we need to set the following enn variables:
+
+* HASURA_GRAPHQL_EXPERIMENTAL_FEATURES naming_convention
+* HASURA_GRAPHQL_DEFAULT_NAMING_CONVENTION graphql-default
+
+For more details see:
+https://hasura.io/docs/latest/schema/postgres/naming-convention/
+
 ## Environments
 We have three environments with a respective db and heroku app:
 * development

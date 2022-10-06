@@ -86,7 +86,7 @@ object UserPreferencesQueries:
             .liftF[F, Option[Int]] {
               query[F](uid.show, area.value)
                 .map { r =>
-                  r.lucumaResizableWidth_by_pk.map(_.width)
+                  r.lucumaResizableWidthByPk.map(_.width)
                 }
                 .recover(_ => none)
             }
@@ -125,7 +125,7 @@ object UserPreferencesQueries:
           OptionT
             .liftF[F, (Int, SortedMap[react.gridlayout.BreakpointName, (Int, Int, Layout)])] {
               UserGridLayoutQuery.query[F](uid.show, c, resizableArea.value).map { r =>
-                (r.lucumaResizableWidth_by_pk.map(_.width), r.lucumaGridLayoutPositions) match {
+                (r.lucumaResizableWidthByPk.map(_.width), r.lucumaGridLayoutPositions) match {
                   case (w, l) if l.isEmpty => (w.getOrElse(defaultValue._1), defaultValue._2)
                   case (w, l)              =>
                     (w.getOrElse(defaultValue._1),
@@ -192,7 +192,7 @@ object UserPreferencesQueries:
                 fullScreen = fullScreen.orIgnore
               )
             ),
-            on_conflict = LucumaTargetPreferencesOnConflict(
+            onConflict = LucumaTargetPreferencesOnConflict(
               constraint = LucumaTargetPreferencesConstraint.LucumaTargetPreferencesPkey,
               update_columns = List(
                 LucumaTargetPreferencesUpdateColumn.FovRA.some.filter(_ => fovRA.isDefined),
@@ -227,8 +227,8 @@ object UserPreferencesQueries:
           query[F](uid.show, tid.show)
             .map { r =>
               val userPrefs   =
-                r.lucumaUserPreferences_by_pk.flatMap(result => result.aladinMouseScroll)
-              val targetPrefs = r.lucumaTargetPreferences_by_pk.map(result =>
+                r.lucumaUserPreferencesByPk.flatMap(result => result.aladinMouseScroll)
+              val targetPrefs = r.lucumaTargetPreferencesByPk.map(result =>
                 (result.fovRA,
                  result.fovDec,
                  result.viewOffsetP,
@@ -288,7 +288,7 @@ object UserPreferencesQueries:
       for r <-
           query[F](uid.show, oid.show)
             .map { r =>
-              r.lucumaItcPlotPreferences_by_pk.map(result => (result.chartType, result.detailsOpen))
+              r.lucumaItcPlotPreferencesByPk.map(result => (result.chartType, result.detailsOpen))
             }
             .handleError(_ => none)
       yield
@@ -315,7 +315,7 @@ object UserPreferencesQueries:
                 detailsOpen = details.value.assign
               )
             ),
-            on_conflict = LucumaItcPlotPreferencesOnConflict(
+            onConflict = LucumaItcPlotPreferencesOnConflict(
               constraint = LucumaItcPlotPreferencesConstraint.LucumaItcPlotPreferencesPkey,
               update_columns = List(LucumaItcPlotPreferencesUpdateColumn.ChartType,
                                     LucumaItcPlotPreferencesUpdateColumn.DetailsOpen
@@ -347,7 +347,7 @@ object UserPreferencesQueries:
       for r <-
           query[F](uid.show)
             .map { r =>
-              r.lucumaUserPreferences_by_pk.map(result =>
+              r.lucumaUserPreferencesByPk.map(result =>
                 (result.elevationPlotRange, result.elevationPlotTime)
               )
             }
