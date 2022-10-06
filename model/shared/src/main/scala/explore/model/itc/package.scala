@@ -17,7 +17,6 @@ import lucuma.core.math.Wavelength
 import lucuma.core.model.NonNegDuration
 import lucuma.core.model.implicits.*
 import lucuma.core.util.Enumerated
-import lucuma.core.util.NewType
 import lucuma.schemas.decoders.given
 
 import scala.concurrent.duration.*

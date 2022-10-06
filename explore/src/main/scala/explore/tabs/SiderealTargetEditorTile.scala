@@ -8,6 +8,7 @@ import cats.syntax.all.*
 import crystal.react.View
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
+import explore.model.AladinFullScreen
 import explore.model.Asterism
 import explore.model.util.*
 import explore.targeteditor.SiderealTargetEditor
@@ -32,7 +33,7 @@ object SiderealTargetEditorTile {
     undoStacks: View[UndoStacks[IO, Target.Sidereal]],
     searching:  View[Set[Target.Id]],
     title:      String,
-    fullScreen: View[Boolean],
+    fullScreen: View[AladinFullScreen],
     backButton: Option[VdomNode] = none
   ) =
     Tile(ObsTabTilesIds.TargetId.id,
@@ -43,7 +44,7 @@ object SiderealTargetEditorTile {
     ) { (renderInTitle: Tile.RenderInTitle) =>
       val asterism = target.widen[Target].zoom(Asterism.oneTarget(targetId).reverse.asLens)
       <.div(
-        ExploreStyles.AladinFullScreen.when(fullScreen.get),
+        ExploreStyles.AladinFullScreen.when(fullScreen.get.value),
         <.div(
           ExploreStyles.TargetTileEditor,
           userId.map(uid =>

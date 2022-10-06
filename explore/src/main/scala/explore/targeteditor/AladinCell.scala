@@ -19,6 +19,7 @@ import explore.Icons
 import explore.common.UserPreferencesQueries.*
 import explore.components.ui.ExploreStyles
 import explore.events.*
+import explore.model.AladinFullScreen
 import explore.model.AladinMouseScroll
 import explore.model.AppContext
 import explore.model.Asterism
@@ -71,7 +72,7 @@ case class AladinCell(
   tid:        Target.Id,
   obsConf:    ObsConfiguration,
   asterism:   Asterism,
-  fullScreen: View[Boolean]
+  fullScreen: View[AladinFullScreen]
 ) extends ReactFnProps(AladinCell.component)
 
 object AladinCell extends ModelOptics:
@@ -341,7 +342,7 @@ object AladinCell extends ModelOptics:
               prefsSetter(_.flip, identity, identity)
 
           def fullScreenSetter: Callback =
-            props.fullScreen.mod(!_) *>
+            props.fullScreen.mod(_.flip) *>
               fullScreenView.mod(!_) *>
               prefsSetter(identity, identity, !_)
 
@@ -360,7 +361,7 @@ object AladinCell extends ModelOptics:
                 props.asterism,
                 props.obsConf,
                 u.aladinMouseScroll,
-                t.copy(fullScreen = props.fullScreen.get),
+                t.copy(fullScreen = props.fullScreen.get.value),
                 coordinatesSetter,
                 fovSetter.reuseAlways,
                 offsetSetter.reuseAlways,
@@ -398,8 +399,8 @@ object AladinCell extends ModelOptics:
               ExploreStyles.AladinContainerColumn,
               Button(size = Small, icon = true, onClick = fullScreenSetter)(
                 ExploreStyles.AladinFullScreenButton,
-                Icons.ExpandDiagonal.unless(props.fullScreen.get),
-                Icons.ContractDiagonal.when(props.fullScreen.get)
+                Icons.ExpandDiagonal.unless(props.fullScreen.get.value),
+                Icons.ContractDiagonal.when(props.fullScreen.get.value)
               ),
               <.div(
                 ExploreStyles.AladinToolbox,

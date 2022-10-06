@@ -30,6 +30,9 @@ val GoToConstraints = Shortcut("c")
 val GoToOverview    = Shortcut("w")
 val GoToSummary     = Shortcut("s")
 
+val Down = Shortcut("j")
+val Up   = Shortcut("k")
+
 val CopyAlt1 = Shortcut("y")
 val CopyAlt2 = Shortcut("ctrl+c")
 val CopyAlt3 = Shortcut("cmd+c")

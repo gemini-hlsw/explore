@@ -6,9 +6,9 @@ package explore
 import cats.effect.Async
 import cats.effect.IO
 import cats.effect.IOApp
+import cats.effect.Ref
 import cats.effect.Resource
 import cats.effect.Sync
-import cats.effect.Ref
 import cats.effect.std.Dispatcher
 import cats.syntax.all.*
 import clue.WebSocketReconnectionStrategy
@@ -27,6 +27,7 @@ import explore.model.AppContext
 import explore.model.ExploreLocalPreferences
 import explore.model.Focused
 import explore.model.Help
+import explore.model.LocalClipboard
 import explore.model.RootModel
 import explore.model.RoutingInfo
 import explore.model.UserVault
@@ -57,7 +58,6 @@ import scala.concurrent.duration.*
 import scala.scalajs.js
 
 import js.annotation.*
-import explore.model.LocalClipboard
 
 @JSExportTopLevel("Explore")
 object ExploreMain extends IOApp.Simple {

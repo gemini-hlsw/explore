@@ -9,6 +9,7 @@ import crystal.Pot
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.highcharts.*
+import explore.model.LoadingState
 import explore.model.enums.ItcChartType
 import explore.model.enums.ItcSeriesType
 import explore.model.itc.ItcCcd
@@ -50,7 +51,7 @@ case class ItcSpectroscopyPlot(
   chartType:       ItcChartType,
   targetName:      Option[String],
   signalToNoiseAt: Option[Wavelength],
-  loading:         PlotLoading,
+  loading:         LoadingState,
   details:         PlotDetails
 ) extends ReactFnProps(ItcSpectroscopyPlot.component)
 
@@ -60,7 +61,7 @@ object ItcSpectroscopyPlot {
   private def chartOptions(
     chart:           ItcChart,
     targetName:      Option[String],
-    loading:         PlotLoading,
+    loading:         LoadingState,
     details:         PlotDetails,
     signalToNoiseAt: Option[Wavelength],
     maxSNWavelength: Option[Wavelength],
@@ -126,7 +127,7 @@ object ItcSpectroscopyPlot {
           .setHeight(height)
           .clazz(
             ExploreStyles.ItcPlotChart |+|
-              ExploreStyles.ItcPlotLoading.when_(loading.boolValue)
+              ExploreStyles.ItcPlotLoading.when_(loading.value)
           )
       )
       .setTitle(TitleOptions().setText(chartTitle))
@@ -218,7 +219,7 @@ object ItcSpectroscopyPlot {
     .withHooks[Props]
     .useResizeDetector()
     .render { (props, resize) =>
-      val loading = props.loading.boolValue
+      val loading = props.loading.value
 
       val series: List[ItcChart] =
         props.charts.filterNot(_ => loading).foldMap(_.toList)

@@ -15,6 +15,7 @@ import explore.common.AsterismQueries
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.config.VizTimeEditor
+import explore.model.AladinFullScreen
 import explore.model.AppContext
 import explore.model.Asterism
 import explore.model.ObsIdSet
@@ -145,7 +146,7 @@ object AsterismEditor {
           }
       }
       // full screen aladin
-      .useStateView(false)
+      .useStateView(AladinFullScreen.Normal)
       .render { (props, ctx, adding, editScope, fullScreen) =>
         import ctx.given
 
@@ -166,7 +167,7 @@ object AsterismEditor {
         val vizTime = props.potVizTime.toOption.flatMap(_.get)
 
         <.div(
-          ExploreStyles.AladinFullScreen.when(fullScreen.get),
+          ExploreStyles.AladinFullScreen.when(fullScreen.get.value),
           props.renderInTitle(
             TargetSelectionPopup(
               props.programId,

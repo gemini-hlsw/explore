@@ -15,6 +15,7 @@ import explore.Icons
 import explore.common.AsterismQueries
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
+import explore.model.AladinFullScreen
 import explore.model.AppContext
 import explore.model.Asterism
 import explore.model.ObsIdSet
@@ -54,7 +55,7 @@ case class TargetTable(
   selectedTarget: View[Option[Target.Id]],
   vizTime:        Option[Instant],
   renderInTitle:  Tile.RenderInTitle,
-  fullScreen:     Boolean
+  fullScreen:     AladinFullScreen
 ) extends ReactFnProps(TargetTable.component)
 
 object TargetTable {
@@ -173,7 +174,7 @@ object TargetTable {
                       )
                     }
                 )
-              ).unless(props.fullScreen)
+              ).unless(props.fullScreen.value)
             )
           ),
           if (rows.isEmpty) {

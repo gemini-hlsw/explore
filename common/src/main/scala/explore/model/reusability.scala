@@ -30,6 +30,7 @@ import lucuma.core.model.Target
 import lucuma.core.util.NewType
 import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.ui.reusability.*
+import queries.schemas.odb.ObsQueries.ObsSummariesWithConstraints
 import queries.schemas.odb.ObsQueries.SpectroscopyRequirementsData
 
 import scala.collection.immutable.SortedMap
@@ -124,4 +125,6 @@ object reusability {
   given Reusability[TargetWithOptId] = Reusability.byEq
 
   given Reusability[UserGlobalPreferences] = Reusability.byEq
+
+  given Reusability[ObsSummariesWithConstraints] = Reusability.byEq
 }

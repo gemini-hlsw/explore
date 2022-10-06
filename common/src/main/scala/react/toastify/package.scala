@@ -98,17 +98,19 @@ package toastify {
     var closeButton: Boolean                    = js.native
     var closeOnClick: Boolean                   = js.native
     var theme: js.UndefOr[String]               = js.native
+    var hideProgressBar: js.UndefOr[Boolean]    = js.native
   }
 
   object ToastOptions {
     def apply(
-      toastId:      js.UndefOr[String] = js.undefined,
-      position:     js.UndefOr[Position] = js.undefined,
-      onClose:      js.UndefOr[Callback] = js.undefined,
-      autoClose:    js.UndefOr[Boolean | Double] = js.undefined,
-      closeButton:  js.UndefOr[Boolean] = js.undefined,
-      closeOnClick: js.UndefOr[Boolean] = js.undefined,
-      theme:        js.UndefOr[Theme] = js.undefined
+      toastId:         js.UndefOr[String] = js.undefined,
+      position:        js.UndefOr[Position] = js.undefined,
+      onClose:         js.UndefOr[Callback] = js.undefined,
+      autoClose:       js.UndefOr[Boolean | Double] = js.undefined,
+      closeButton:     js.UndefOr[Boolean] = js.undefined,
+      closeOnClick:    js.UndefOr[Boolean] = js.undefined,
+      theme:           js.UndefOr[Theme] = js.undefined,
+      hideProgressBar: js.UndefOr[Boolean] = js.undefined
     ): ToastOptions = {
       val p = (new js.Object).asInstanceOf[ToastOptions]
       toastId.foreach(q => p.toastId = q)
@@ -118,6 +120,7 @@ package toastify {
       closeButton.foreach(q => p.closeButton = q)
       closeOnClick.foreach(q => p.closeOnClick = q)
       theme.foreach(v => p.theme = v.undefToJs)
+      hideProgressBar.foreach(v => p.hideProgressBar = v)
       p
     }
   }

@@ -24,11 +24,16 @@ import explore.model.*
 import explore.model.enums.AppTab
 import explore.model.layout.*
 import explore.model.layout.unsafe.given
+import explore.model.reusability.*
+import explore.model.reusability.given
 import explore.observationtree.ObsList
+import explore.shortcuts.*
+import explore.shortcuts.given
 import explore.syntax.ui.*
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.callback.CallbackCatsEffect.*
+import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
@@ -47,6 +52,8 @@ import react.common.ReactFnProps
 import react.draggable.Axis
 import react.gridlayout.*
 import react.hotkeys.*
+import react.hotkeys.*
+import react.hotkeys.hooks.*
 import react.hotkeys.hooks.*
 import react.resizable.*
 import react.resizeDetector.*
@@ -54,10 +61,6 @@ import react.resizeDetector.hooks.*
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.sizes.*
-import react.hotkeys.*
-import react.hotkeys.hooks.*
-import explore.shortcuts.*
-import explore.shortcuts.given
 
 import scala.concurrent.duration.*
 
@@ -288,7 +291,7 @@ object ObsTabContents extends TwoResizablePanels:
           }
       )
       .useSingleEffect(debounce = 1.second)
-      .useStreamResourceViewOnMountBy { (props, ctx, _, _, _, _, _) =>
+      .useStreamResourceViewWithReuseOnMountBy { (props, ctx, _, _, _, _, _) =>
         import ctx.given
 
         ProgramObservationsQuery
@@ -298,16 +301,58 @@ object ObsTabContents extends TwoResizablePanels:
             ProgramObservationsEditSubscription.subscribe[IO](props.programId)
           )
       }
-      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, _, _) => props.focusedObs) {
-        (props, ctx, _, _, _, _, _, _) => obs =>
-          import ctx.given
+      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, _, obsList) =>
+        (props.focusedObs, obsList)
+      ) { (props, ctx, _, _, _, _, _, obsList) => (obs, _) =>
+        import ctx.given
 
-          def callbacks: ShortcutCallbacks = { case CopyAlt1 | CopyAlt2 | CopyAlt3 =>
+        val observationIds =
+          obsList.foldMap(_.value.get.observations.elements.map(_.id).zipWithIndex.toList)
+        val obsPos         = observationIds.find(a => obs.forall(_ === a._1)).map(_._2)
+
+        def callbacks: ShortcutCallbacks = {
+          case CopyAlt1 | CopyAlt2 | CopyAlt3 =>
             obs
-              .map(id => ctx.exploreClipboard.set(LocalClipboard.CopiedObservation(id)).runAsync)
+              .map(id =>
+                ctx.exploreClipboard.set(LocalClipboard.CopiedObservation(id)).runAsync *> info(
+                  s"Copied"
+                )
+              )
               .getOrEmpty
-          }
-          UseHotkeysProps(CopyKeys.toHotKeys, callbacks)
+          case Down                           =>
+            obsPos
+              .filter(_ < observationIds.length)
+              .flatMap { p =>
+                observationIds.lift(p + 1).map { (obsId, _) =>
+                  ctx.setPageVia(AppTab.Observations,
+                                 props.programId,
+                                 Focused.singleObs(obsId),
+                                 SetRouteVia.HistoryPush
+                  )
+                }
+              }
+              .getOrEmpty
+          case Up                             =>
+            obsPos
+              .filter(_ > 0)
+              .flatMap { p =>
+                observationIds.lift(p - 1).map { (obsId, _) =>
+                  ctx.setPageVia(AppTab.Observations,
+                                 props.programId,
+                                 Focused.singleObs(obsId),
+                                 SetRouteVia.HistoryPush
+                  )
+                }
+              }
+              .getOrEmpty
+          case GoToSummary                    =>
+            ctx.setPageVia(AppTab.Observations,
+                           props.programId,
+                           Focused.None,
+                           SetRouteVia.HistoryPush
+            )
+        }
+        UseHotkeysProps((GoToSummary :: Up :: Down :: CopyKeys).toHotKeys, callbacks)
       }
       .render {
         (

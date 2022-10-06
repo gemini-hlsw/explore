@@ -3,8 +3,10 @@
 
 package queries.schemas.odb
 
+import cats.Eq
 import cats.effect.Async
 import cats.implicits.*
+import cats.derived.*
 import clue.TransactionalClient
 import clue.data.syntax.*
 import crystal.Pot
@@ -98,7 +100,7 @@ object ObsQueries:
     observations:     ObservationList,
     constraintGroups: ConstraintsList,
     targetMap:        SortedMap[Target.Id, TargetSummary]
-  )
+  ) derives Eq
 
   object ObsSummariesWithConstraints {
     val observations     = Focus[ObsSummariesWithConstraints](_.observations)

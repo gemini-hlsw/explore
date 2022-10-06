@@ -29,6 +29,8 @@ import explore.model.layout.unsafe.given
 import explore.observationtree.AsterismGroupObsList
 import explore.optics.*
 import explore.optics.all.*
+import explore.shortcuts.*
+import explore.shortcuts.given
 import explore.syntax.ui.*
 import explore.syntax.ui.given
 import explore.targets.TargetSummaryTable
@@ -53,25 +55,24 @@ import queries.common.AsterismQueriesGQL.*
 import queries.common.ObsQueriesGQL
 import queries.common.TargetQueriesGQL
 import queries.common.UserPreferencesQueriesGQL.*
+import queries.schemas.odb.ObsQueries
 import react.common.ReactFnProps
 import react.draggable.Axis
 import react.gridlayout.*
+import react.hotkeys.*
+import react.hotkeys.hooks.*
 import react.resizable.*
 import react.resizeDetector.*
 import react.resizeDetector.hooks.*
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
+import react.semanticui.elements.loader.Loader
 import react.semanticui.sizes.*
-import react.hotkeys.*
-import react.hotkeys.hooks.*
-import explore.shortcuts.*
-import explore.shortcuts.given
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration.*
-import queries.schemas.odb.ObsQueries
 
 case class TargetTabContents(
   userId:            Option[User.Id],
@@ -139,7 +140,7 @@ object TargetTabContents:
     layouts:               View[Pot[LayoutsMap]],
     resize:                UseResizeDetectorReturn,
     debouncer:             Reusable[UseSingleEffect[IO]],
-    fullScreen:            View[Boolean],
+    fullScreen:            View[AladinFullScreen],
     ctx:                   AppContext[IO]
   )(
     asterismGroupsWithObs: View[AsterismGroupsWithObs]
@@ -593,35 +594,51 @@ object TargetTabContents:
     }
   }
 
+  private def applyObs(
+    obsId:    Observation.Id,
+    targetId: Target.Id,
+    adding:   View[LoadingState],
+    ctx:      AppContext[IO]
+  ): IO[Unit] =
+    import ctx.given
+
+    adding.async.set(LoadingState.Loading) >>
+      ObsQueries
+        .applyObservation[IO](obsId, targetId)
+        .void
+        // TODO Local insertion before the remote update arrives
+        .guarantee(adding.async.set(LoadingState.Done))
+
   private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      .useGlobalHotkeysWithDepsBy((props, ctx) => props.focused) { (props, ctx) => target =>
-        import ctx.given
+      .useStateView(LoadingState.Done)
+      .useGlobalHotkeysWithDepsBy((props, ctx, loading) => props.focused) {
+        (props, ctx, loading) => target =>
+          import ctx.given
 
-        def callbacks: ShortcutCallbacks = {
-          case PasteAlt1 | PasteAlt2 | PasteAlt3 =>
-            ctx.exploreClipboard.get.flatMap {
-              case LocalClipboard.CopiedObservation(id) if !props.focused.obsSet.contains(id) =>
-                IO.println(s"Paste $id onto ${props.focused.target}") *>
+          def callbacks: ShortcutCallbacks = {
+            case PasteAlt1 | PasteAlt2 | PasteAlt3 =>
+              ctx.exploreClipboard.get.flatMap {
+                case LocalClipboard.CopiedObservation(id) if !props.focused.obsSet.contains(id) =>
                   props.focused.target
-                    .map(targetId => ObsQueries.applyObservation[IO](id, targetId).void)
+                    .map(targetId => applyObs(id, targetId, loading, ctx))
                     .getOrElse(IO.unit)
 
-              case _ => IO.unit
+                case _ => IO.unit
 
-            }.runAsync
-          case GoToSummary                       =>
-            ctx.setPageVia(AppTab.Targets, Program.Id(2.refined), Focused.None, SetRouteVia.HistoryPush)
-        }
-        UseHotkeysProps((GoToSummary :: PasteKeys).toHotKeys, callbacks)
+              }.runAsync
+            case GoToSummary                       =>
+              ctx.setPageVia(AppTab.Targets, props.programId, Focused.None, SetRouteVia.HistoryPush)
+          }
+          UseHotkeysProps((GoToSummary :: PasteKeys).toHotKeys, callbacks)
       }
       // Two panel state
       .useStateView(TwoPanelState.initial(SelectedPanel.Uninitialized))
-      .useEffectWithDepsBy((props, _, state) =>
+      .useEffectWithDepsBy((props, _, _, state) =>
         (props.focused, state.zoom(TwoPanelState.selected).reuseByValue)
-      ) { (_, _, _) => params =>
+      ) { (_, _, _, _) => params =>
         val (focused, selected) = params
         (focused, selected.get) match
           case (Focused(Some(_), _), _)                    => selected.set(SelectedPanel.editor)
@@ -636,8 +653,8 @@ object TargetTabContents:
       // Keep a record of the initial target layout
       .useMemo(())(_ => defaultTargetLayouts)
       // Load the config from user prefrences
-      .useEffectWithDepsBy((p, _, _, _, _, _) => p.userId) {
-        (props, ctx, panels, _, layout, defaultLayout) => _ =>
+      .useEffectWithDepsBy((p, _, _, _, _, _, _) => p.userId) {
+        (props, ctx, _, panels, _, layout, defaultLayout) => _ =>
           import ctx.given
 
           UserGridLayoutQuery
@@ -667,7 +684,7 @@ object TargetTabContents:
       }
       .useSingleEffect(debounce = 1.second)
       // Shared obs conf (posAngle)
-      .useStreamResourceViewOnMountBy { (props, ctx, _, _, _, _, _) =>
+      .useStreamResourceViewOnMountBy { (props, ctx, _, _, _, _, _, _) =>
         import ctx.given
 
         AsterismGroupObsQuery
@@ -679,11 +696,12 @@ object TargetTabContents:
           )
       }
       // full screen aladin
-      .useStateView(true)
+      .useStateView(AladinFullScreen.Normal)
       .render {
         (
           props,
           ctx,
+          active,
           twoPanelState,
           resize,
           layout,
@@ -693,6 +711,14 @@ object TargetTabContents:
           fullScreen
         ) =>
           <.div(
+            // TODO switch to prime react
+            <.div(
+              ^.cls := "ui active dimmer",
+              Loader(
+                active = true,
+                "Cloning observation..."
+              )
+            ).when(active.get.value),
             asterismGroupsWithObs.render(
               renderFn(
                 props,

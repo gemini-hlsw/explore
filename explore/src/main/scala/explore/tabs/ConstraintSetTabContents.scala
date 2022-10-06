@@ -25,11 +25,14 @@ import explore.model.reusability.*
 import explore.observationtree.ConstraintGroupObsList
 import explore.optics.*
 import explore.optics.all.*
+import explore.shortcuts.*
+import explore.shortcuts.given
 import explore.syntax.ui.*
 import explore.undo.*
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.callback.CallbackCatsEffect.*
+import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Program
@@ -48,6 +51,8 @@ import queries.schemas.UserPreferencesDB
 import react.common.ReactFnProps
 import react.draggable.Axis
 import react.fa.*
+import react.hotkeys.*
+import react.hotkeys.hooks.*
 import react.resizable.*
 import react.resizeDetector.*
 import react.resizeDetector.hooks.*
@@ -243,6 +248,14 @@ object ConstraintSetTabContents extends TwoResizablePanels:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
+      .useGlobalHotkeysWithDepsBy((props, ctx) => props.programId) { (props, ctx) => pid =>
+        import ctx.given
+
+        def callbacks: ShortcutCallbacks = { case GoToSummary =>
+          ctx.setPageVia(AppTab.Constraints, pid, Focused.None, SetRouteVia.HistoryPush)
+        }
+        UseHotkeysProps(GoToSummary.value, callbacks)
+      }
       .useStateView(TwoPanelState.initial(SelectedPanel.Uninitialized))
       .useEffectOnMountBy((props, ctx, state) =>
         import ctx.given
