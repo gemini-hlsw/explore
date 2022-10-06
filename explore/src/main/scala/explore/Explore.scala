@@ -8,6 +8,7 @@ import cats.effect.IO
 import cats.effect.IOApp
 import cats.effect.Resource
 import cats.effect.Sync
+import cats.effect.Ref
 import cats.effect.std.Dispatcher
 import cats.syntax.all.*
 import clue.WebSocketReconnectionStrategy
@@ -56,6 +57,7 @@ import scala.concurrent.duration.*
 import scala.scalajs.js
 
 import js.annotation.*
+import explore.model.LocalClipboard
 
 @JSExportTopLevel("Explore")
 object ExploreMain extends IOApp.Simple {
@@ -165,13 +167,15 @@ object ExploreMain extends IOApp.Simple {
         appConfig            <- fetchConfig[IO]
         _                    <- Logger[IO].info(s"Git Commit: [${utils.gitHash.getOrElse("NONE")}]")
         _                    <- Logger[IO].info(s"Config: ${appConfig.show}")
+        clipboard            <- Ref.of[IO, LocalClipboard](LocalClipboard.Empty)
         ctx                  <-
           AppContext.from[IO](
             appConfig,
             reconnectionStrategy,
             pageUrl,
             setPageVia,
-            workerClients
+            workerClients,
+            clipboard
           )
         _                    <- setupReusabilityOverlay(appConfig.environment)
         r                    <- (ctx.sso.whoami, setupDOM[IO], showEnvironment[IO](appConfig.environment)).parTupled

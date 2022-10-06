@@ -28,3 +28,16 @@ val GoToTargets     = Shortcut("t")
 val GoToProposals   = Shortcut("r")
 val GoToConstraints = Shortcut("c")
 val GoToOverview    = Shortcut("w")
+val GoToSummary     = Shortcut("s")
+
+val CopyAlt1 = Shortcut("y")
+val CopyAlt2 = Shortcut("ctrl+c")
+val CopyAlt3 = Shortcut("cmd+c")
+
+val CopyKeys = List(CopyAlt1, CopyAlt2, CopyAlt3)
+
+val PasteAlt1 = Shortcut("p")
+val PasteAlt2 = Shortcut("ctrl+v")
+val PasteAlt3 = Shortcut("cmd+v")
+
+val PasteKeys = List(PasteAlt1, PasteAlt2, PasteAlt3)

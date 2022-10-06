@@ -62,11 +62,16 @@ import react.resizeDetector.hooks.*
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.sizes.*
+import react.hotkeys.*
+import react.hotkeys.hooks.*
+import explore.shortcuts.*
+import explore.shortcuts.given
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration.*
+import queries.schemas.odb.ObsQueries
 
 case class TargetTabContents(
   userId:            Option[User.Id],
@@ -592,6 +597,26 @@ object TargetTabContents:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
+      .useGlobalHotkeysWithDepsBy((props, ctx) => props.focused) { (props, ctx) => target =>
+        import ctx.given
+
+        def callbacks: ShortcutCallbacks = {
+          case PasteAlt1 | PasteAlt2 | PasteAlt3 =>
+            ctx.exploreClipboard.get.flatMap {
+              case LocalClipboard.CopiedObservation(id) if !props.focused.obsSet.contains(id) =>
+                IO.println(s"Paste $id onto ${props.focused.target}") *>
+                  props.focused.target
+                    .map(targetId => ObsQueries.applyObservation[IO](id, targetId).void)
+                    .getOrElse(IO.unit)
+
+              case _ => IO.unit
+
+            }.runAsync
+          case GoToSummary                       =>
+            ctx.setPageVia(AppTab.Targets, Program.Id(2.refined), Focused.None, SetRouteVia.HistoryPush)
+        }
+        UseHotkeysProps((GoToSummary :: PasteKeys).toHotKeys, callbacks)
+      }
       // Two panel state
       .useStateView(TwoPanelState.initial(SelectedPanel.Uninitialized))
       .useEffectWithDepsBy((props, _, state) =>

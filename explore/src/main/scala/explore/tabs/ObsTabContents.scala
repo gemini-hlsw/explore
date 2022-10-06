@@ -54,6 +54,10 @@ import react.resizeDetector.hooks.*
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.sizes.*
+import react.hotkeys.*
+import react.hotkeys.hooks.*
+import explore.shortcuts.*
+import explore.shortcuts.given
 
 import scala.concurrent.duration.*
 
@@ -293,6 +297,17 @@ object ObsTabContents extends TwoResizablePanels:
           .reRunOnResourceSignals(
             ProgramObservationsEditSubscription.subscribe[IO](props.programId)
           )
+      }
+      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, _, _) => props.focusedObs) {
+        (props, ctx, _, _, _, _, _, _) => obs =>
+          import ctx.given
+
+          def callbacks: ShortcutCallbacks = { case CopyAlt1 | CopyAlt2 | CopyAlt3 =>
+            obs
+              .map(id => ctx.exploreClipboard.set(LocalClipboard.CopiedObservation(id)).runAsync)
+              .getOrEmpty
+          }
+          UseHotkeysProps(CopyKeys.toHotKeys, callbacks)
       }
       .render {
         (

@@ -26,17 +26,18 @@ import workers.WebWorkerF
 import workers.WorkerClient
 
 case class AppContext[F[_]](
-  version:       NonEmptyString,
-  clients:       GraphQLClients[F],
-  workerClients: WorkerClients[F],
-  sso:           SSOClient[F],
-  pageUrl:       (AppTab, Program.Id, Focused) => String,
-  setPageVia:    (AppTab, Program.Id, Focused, SetRouteVia) => Callback,
-  environment:   ExecutionEnvironment
+  version:          NonEmptyString,
+  clients:          GraphQLClients[F],
+  workerClients:    WorkerClients[F],
+  sso:              SSOClient[F],
+  pageUrl:          (AppTab, Program.Id, Focused) => String,
+  setPageVia:       (AppTab, Program.Id, Focused, SetRouteVia) => Callback,
+  environment:      ExecutionEnvironment,
+  exploreClipboard: Ref[F, LocalClipboard]
 )(using
-  val F:         Applicative[F],
-  val logger:    Logger[F],
-  val P:         Parallel[F]
+  val F:            Applicative[F],
+  val logger:       Logger[F],
+  val P:            Parallel[F]
 ):
   def pushPage(appTab: AppTab, programId: Program.Id, focused: Focused): Callback =
     setPageVia(appTab, programId, focused, SetRouteVia.HistoryPush)
@@ -61,7 +62,8 @@ object AppContext:
     reconnectionStrategy: WebSocketReconnectionStrategy,
     pageUrl:              (AppTab, Program.Id, Focused) => String,
     setPageVia:           (AppTab, Program.Id, Focused, SetRouteVia) => Callback,
-    workerClients:        WorkerClients[F]
+    workerClients:        WorkerClients[F],
+    exploreClipboard:     Ref[F, LocalClipboard]
   ): F[AppContext[F]] =
     for {
       clients <-
@@ -75,7 +77,8 @@ object AppContext:
       SSOClient(config.sso),
       pageUrl,
       setPageVia,
-      config.environment
+      config.environment,
+      exploreClipboard
     )
 
   given [F[_]]: Reusability[AppContext[F]] = Reusability.always
