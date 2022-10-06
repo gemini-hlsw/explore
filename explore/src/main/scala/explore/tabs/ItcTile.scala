@@ -43,8 +43,6 @@ object ItcTile:
         ): VdomNode).some,
       bodyClass = ExploreStyles.ItcTileBody.some
     )(_ =>
-      println(spectroscopyRequirements)
-      println(itcExposureTime)
       uid.map(
         ItcGraphPanel(_,
                       oid,

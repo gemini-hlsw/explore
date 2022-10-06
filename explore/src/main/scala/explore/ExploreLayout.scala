@@ -48,28 +48,28 @@ object ExploreLayout:
       .withHooks[Props]
       .useContext(HelpContext.ctx)
       .useContext(AppContext.ctx)
-      .useGlobalHotkeysBy { (props, _, ctx) =>
-        val routingInfo          = RoutingInfo.from(props.resolution.page)
-        def goToTab(tab: AppTab) =
-          ctx.setPageVia(tab, routingInfo.programId, routingInfo.focused, SetRouteVia.HistoryPush)
+      .useGlobalHotkeysWithDepsBy((props, _, _) => props.resolution.page.toString) {
+        (props, _, ctx) => _ =>
+          val routingInfo          = RoutingInfo.from(props.resolution.page)
+          def goToTab(tab: AppTab) =
+            ctx.setPageVia(tab, routingInfo.programId, routingInfo.focused, SetRouteVia.HistoryPush)
 
-        val callbacks: ShortcutCallbacks = {
-          case GoToObs         =>
-            goToTab(AppTab.Observations)
-          case GoToTargets     =>
-            goToTab(AppTab.Targets)
-          case GoToProposals   =>
-            goToTab(AppTab.Proposal)
-          case GoToConstraints =>
-            goToTab(AppTab.Constraints)
-          case GoToOverview    =>
-            goToTab(AppTab.Overview)
-        }
-        UseHotkeysProps(
-          List(GoToObs, GoToTargets, GoToProposals, GoToConstraints, GoToOverview).toHotKeys,
-          callbacks
-          // deps = List(routingInfo.toString)
-        )
+          val callbacks: ShortcutCallbacks = {
+            case GoToObs         =>
+              goToTab(AppTab.Observations)
+            case GoToTargets     =>
+              goToTab(AppTab.Targets)
+            case GoToProposals   =>
+              goToTab(AppTab.Proposal)
+            case GoToConstraints =>
+              goToTab(AppTab.Constraints)
+            case GoToOverview    =>
+              goToTab(AppTab.Overview)
+          }
+          UseHotkeysProps(
+            List(GoToObs, GoToTargets, GoToProposals, GoToConstraints, GoToOverview).toHotKeys,
+            callbacks
+          )
       }
       .render { (props, helpCtx, _) =>
         IfLogged(props.view)((vault: UserVault, onLogout: IO[Unit]) =>

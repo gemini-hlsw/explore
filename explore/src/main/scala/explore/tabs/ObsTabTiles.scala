@@ -199,13 +199,6 @@ object ObsTabTiles:
           obsViewPot.map(_.zoom(ObsEditData.scienceData.andThen(ScienceData.constraints)))
 
         val scienceData = obsViewPot.toOption.map(a => ObsEditData.scienceData.get(a.get))
-        println(
-          obsView.toOption
-            .flatMap(
-              _.get.itcExposureTime
-                .map(r => ItcChartExposureTime(OverridenExposureTime.FromItc, r.time, r.count))
-            )
-        )
 
         val itcTile =
           ItcTile.itcTile(

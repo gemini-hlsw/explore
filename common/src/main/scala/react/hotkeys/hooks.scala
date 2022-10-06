@@ -4,6 +4,7 @@
 package react.hotkeys
 
 import japgolly.scalajs.react.*
+
 import scalajs.js
 
 private def useHotkeysHook[D: Reusability](

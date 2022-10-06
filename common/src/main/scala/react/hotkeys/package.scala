@@ -3,17 +3,14 @@
 
 package react.hotkeys
 
-// import cats.syntax.all.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.facade.React.HookDeps
 import japgolly.scalajs.react.vdom.TopNode
 import org.scalajs.dom
-// import org.scalajs.dom.html
 
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters.*
 import scala.scalajs.js.annotation.JSImport
-// import scala.scalajs.js.|
 
 type Ref             = Ref.Simple[dom.Element]
 type HotkeysCallback = Callback | (HotkeysEvent => Callback)
@@ -51,7 +48,6 @@ trait UseHotkeysProps extends js.Object {
 
   var options: js.UndefOr[HotkeysOptions] = js.native
 
-  // var deps: js.UndefOr[js.Array[js.Any]] = js.native
 }
 
 object UseHotkeysProps {
