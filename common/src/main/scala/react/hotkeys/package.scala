@@ -3,22 +3,20 @@
 
 package react.hotkeys
 
-import cats.syntax.all.*
 import japgolly.scalajs.react.*
+import japgolly.scalajs.react.facade.React.HookDeps
 import japgolly.scalajs.react.vdom.TopNode
 import org.scalajs.dom
-import org.scalajs.dom.html
 
 import scala.scalajs.js
-import scala.scalajs.js.JSConverters._
+import scala.scalajs.js.JSConverters.*
 import scala.scalajs.js.annotation.JSImport
-import scala.scalajs.js.|
 
 type Ref             = Ref.Simple[dom.Element]
 type HotkeysCallback = Callback | (HotkeysEvent => Callback)
 
 @js.native
-trait Options extends js.Object {
+trait HotkeysOptions extends js.Object {
   var enabled: js.UndefOr[Boolean]                 = js.native
   var filterPreventDefault: js.UndefOr[Boolean]    = js.native
   var enableOnContentEditable: js.UndefOr[Boolean] = js.native
@@ -27,12 +25,12 @@ trait Options extends js.Object {
   var keydown: js.UndefOr[Boolean]                 = js.native
 }
 
-object Options {
+object HotkeysOptions {
 
   def apply(
     enabled: js.UndefOr[Boolean] = js.undefined
-  ): Options =
-    val p = js.Dynamic.literal().asInstanceOf[Options]
+  ): HotkeysOptions =
+    val p = js.Dynamic.literal().asInstanceOf[HotkeysOptions]
     p.enabled.foreach(o => p.enabled = o)
     p
 }
@@ -48,9 +46,8 @@ trait UseHotkeysProps extends js.Object {
 
   var callback: js.Function2[js.Any, HotkeysEvent, Unit] = js.native
 
-  var options: js.UndefOr[Options] = js.native
+  var options: js.UndefOr[HotkeysOptions] = js.native
 
-  var deps: js.UndefOr[js.Array[js.Any]] = js.native
 }
 
 object UseHotkeysProps {
@@ -58,7 +55,7 @@ object UseHotkeysProps {
   def apply(
     keys:     String,
     callback: HotkeysCallback,
-    options:  js.UndefOr[Options] = js.undefined
+    options:  js.UndefOr[HotkeysOptions] = js.undefined
   ): UseHotkeysProps =
     val p = js.Dynamic.literal().asInstanceOf[UseHotkeysProps]
     p.keys = keys
@@ -70,16 +67,12 @@ object UseHotkeysProps {
     p
 }
 
-object use {
-  @JSImport("react-hotkeys-hook", JSImport.Namespace)
-  @js.native
-  val ^ : js.Any = js.native
-
-  inline def useHotkeys[N <: TopNode](
-    props: UseHotkeysProps
-  ): Ref = {
-    val r = ^.asInstanceOf[js.Dynamic]
-      .applyDynamic("useHotkeys")(props.keys, props.callback)
-    Ref.fromJs(r.asInstanceOf[facade.React.RefHandle[dom.Element | Null]])
-  }
-}
+@JSImport("react-hotkeys-hook", "useHotkeys")
+@js.native
+private val useHotkeys: js.Function4[
+  String,
+  js.Function2[js.Any, HotkeysEvent, Unit],
+  js.UndefOr[HotkeysOptions],
+  js.UndefOr[HookDeps],
+  facade.React.RefHandle[dom.Element | Null]
+] = js.native

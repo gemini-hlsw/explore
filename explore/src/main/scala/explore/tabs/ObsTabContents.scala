@@ -67,17 +67,6 @@ case class ObsTabContents(
   hiddenColumns: View[Set[String]]
 ) extends ReactFnProps(ObsTabContents.component)
 
-enum ObsTabTilesIds:
-  case NotesId, TargetId, PlotId, ConstraintsId, ConfigurationId, ItcId
-
-  def id: NonEmptyString = this match
-    case NotesId         => "notes".refined
-    case TargetId        => "target".refined
-    case PlotId          => "elevationPlot".refined
-    case ConstraintsId   => "constraints".refined
-    case ConfigurationId => "configuration".refined
-    case ItcId           => "itc".refined
-
 object ObsTabContents extends TwoResizablePanels:
   private type Props = ObsTabContents
 

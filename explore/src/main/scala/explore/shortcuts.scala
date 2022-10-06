@@ -28,6 +28,3 @@ val GoToTargets     = Shortcut("t")
 val GoToProposals   = Shortcut("r")
 val GoToConstraints = Shortcut("c")
 val GoToOverview    = Shortcut("w")
-
-val all: List[Shortcut] =
-  List(GoToObs, GoToTargets, GoToProposals, GoToConstraints, GoToOverview)

@@ -70,8 +70,10 @@ object HelpBody:
       .useEffectOnMountBy { (props, _, state) =>
         load(props.url).flatMap(v => state.set(Pot.fromTry(v)).to[IO])
       }
-      .useHotkeysBy((_, helpCtx, _) => UseHotkeysProps("esc", helpCtx.displayedHelp.set(none)))
-      .render { (props, helpCtx, state, _) =>
+      .useGlobalHotkeysBy((_, helpCtx, _) =>
+        UseHotkeysProps("esc", helpCtx.displayedHelp.set(none))
+      )
+      .render { (props, helpCtx, state) =>
         val imageConv = (s: Uri) => props.baseUrl.addPath(s.path)
 
         val helpView = helpCtx.displayedHelp

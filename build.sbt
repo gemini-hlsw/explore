@@ -402,8 +402,8 @@ ThisBuild / githubWorkflowAddedJobs +=
       npmBuild ::
       overrideCiCommit ::
       bundlemon ::
-      firebaseDeployReview ::
-      firebaseDeployStaging ::
+      // firebaseDeployReview ::
+      // firebaseDeployStaging ::
       Nil,
     scalas = List(scalaVersion.value),
     javas = githubWorkflowJavaVersions.value.toList.take(1),
