@@ -30,6 +30,9 @@ val GoToConstraints = Shortcut("c")
 val GoToOverview    = Shortcut("w")
 val GoToSummary     = Shortcut("s")
 
+val CloseHelp     = Shortcut("ESC")
+val ShortcutsHelp = Shortcut("shift+/")
+
 val Down = Shortcut("j")
 val Up   = Shortcut("k")
 

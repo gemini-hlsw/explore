@@ -26,6 +26,7 @@
             pkgs.nodePackages.typescript-language-server
             pkgs.nodePackages.vscode-langservers-extracted
             pkgs.nodePackages.prettier
+            pkgs.nodePackages.typescript
             pkgs.nodePackages.graphqurl
           ];
           typelevelShell = {

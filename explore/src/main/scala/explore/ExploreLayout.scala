@@ -19,6 +19,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.ResolutionWithProps
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.refined.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
@@ -49,7 +50,7 @@ object ExploreLayout:
       .useContext(HelpContext.ctx)
       .useContext(AppContext.ctx)
       .useGlobalHotkeysWithDepsBy((props, _, _) => props.resolution.page.toString) {
-        (props, _, ctx) => _ =>
+        (props, help, ctx) => _ =>
           val routingInfo          = RoutingInfo.from(props.resolution.page)
           def goToTab(tab: AppTab) =
             ctx.setPageVia(tab, routingInfo.programId, routingInfo.focused, SetRouteVia.HistoryPush)
@@ -65,9 +66,16 @@ object ExploreLayout:
               goToTab(AppTab.Constraints)
             case GoToOverview    =>
               goToTab(AppTab.Overview)
+            case ShortcutsHelp   =>
+              help.displayedHelp.set(Some("shortcuts.md".refined))
           }
           UseHotkeysProps(
-            List(GoToObs, GoToTargets, GoToProposals, GoToConstraints, GoToOverview).toHotKeys,
+            (ShortcutsHelp :: List(GoToObs,
+                                   GoToTargets,
+                                   GoToProposals,
+                                   GoToConstraints,
+                                   GoToOverview
+            )).toHotKeys,
             callbacks
           )
       }
