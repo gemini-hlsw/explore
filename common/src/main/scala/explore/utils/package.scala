@@ -16,6 +16,7 @@ import crystal.react.reuse.*
 import eu.timepit.refined.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.BuildInfo
+import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.enums.ExecutionEnvironment
 import explore.model.enums.ExecutionEnvironment.Development
@@ -29,8 +30,10 @@ import lucuma.ui.utils.versionDateFormatter
 import lucuma.ui.utils.versionDateTimeFormatter
 import org.http4s.Uri
 import org.scalajs.dom
+import react.fa.IconSize
 import react.semanticui.collections.message.Message
 import react.semanticui.elements.loader.Loader
+import react.toastify.*
 
 import java.time.Instant
 import scala.scalajs.js
@@ -144,9 +147,20 @@ def forceAssign[T, S](mod: Endo[Input[S]] => Endo[T])(base: S): Endo[S] => Endo[
  * `ExploreStyles.Grow(1), so you may need to add that, too.
  */
 def clearInputIcon[EV[_], A](
-  view:        EV[Option[A]]
-)(implicit ev: ExternalValue[EV]): js.UndefOr[VdomNode] =
+  view:     EV[Option[A]]
+)(using ev: ExternalValue[EV]): js.UndefOr[VdomNode] =
   ev.get(view)
     .flatten
     .map(_ => <.i(ExploreStyles.ClearableInputIcon, ^.onClick --> ev.set(view)(None)))
     .orUndefined
+
+def info(text: String) = Callback(
+  toast(
+    <.div(
+      ExploreStyles.ExploreToastGrid,
+      Icons.Info.size(IconSize.LG),
+      text
+    ),
+    ToastOptions(autoClose = 1500, hideProgressBar = true)
+  )
+)

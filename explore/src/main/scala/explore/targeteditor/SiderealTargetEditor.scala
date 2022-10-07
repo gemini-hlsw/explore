@@ -20,6 +20,7 @@ import explore.components.InputWithUnits
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
+import explore.model.AladinFullScreen
 import explore.model.AppContext
 import explore.model.Asterism
 import explore.model.ExploreModelValidators
@@ -85,7 +86,7 @@ case class SiderealTargetEditor(
   obsIdSubset:   Option[ObsIdSet] = None,
   onClone:       TargetWithId => Callback = _ => Callback.empty,
   renderInTitle: Option[Tile.RenderInTitle] = none,
-  fullScreen:    View[Boolean]
+  fullScreen:    View[AladinFullScreen]
 ) extends ReactFnProps(SiderealTargetEditor.component)
 
 object SiderealTargetEditor {

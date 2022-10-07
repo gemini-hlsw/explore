@@ -24,6 +24,7 @@ import explore.components.ui.ExploreStyles
 import explore.config.ExposureTimeModeType.FixedExposure
 import explore.events.*
 import explore.model.AppContext
+import explore.model.LoadingState
 import explore.model.ScienceMode
 import explore.model.ScienceModeAdvanced
 import explore.model.ScienceModeBasic
@@ -92,7 +93,7 @@ object ItcGraphPanel:
       .useContext(AppContext.ctx)
       .useState(Pot.pending[Map[ItcTarget, ItcChartResult]])
       // loading
-      .useState(PlotLoading.Done)
+      .useState(LoadingState.Done)
       // Request ITC graph data
       .useEffectWithDepsBy((props, _, _, _) => props.queryProps) {
         (props, ctx, charts, loading) => _ =>
@@ -104,11 +105,11 @@ object ItcGraphPanel:
                 charts.modStateAsync {
                   case Pot.Ready(r) => Pot.Ready(r + (m.target -> m))
                   case u            => Pot.Ready(Map(m.target -> m))
-                } *> loading.setState(PlotLoading.Done).to[IO],
+                } *> loading.setState(LoadingState.Done).to[IO],
               (charts.setState(
                 Pot.error(new RuntimeException("Not enough information to calculate the ITC graph"))
-              ) *> loading.setState(PlotLoading.Done)).to[IO],
-              loading.setState(PlotLoading.Loading).to[IO]
+              ) *> loading.setState(LoadingState.Done)).to[IO],
+              loading.setState(LoadingState.Loading).to[IO]
             )
             .runAsyncAndForget
       }

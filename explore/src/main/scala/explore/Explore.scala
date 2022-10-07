@@ -6,6 +6,7 @@ package explore
 import cats.effect.Async
 import cats.effect.IO
 import cats.effect.IOApp
+import cats.effect.Ref
 import cats.effect.Resource
 import cats.effect.Sync
 import cats.effect.std.Dispatcher
@@ -26,6 +27,7 @@ import explore.model.AppContext
 import explore.model.ExploreLocalPreferences
 import explore.model.Focused
 import explore.model.Help
+import explore.model.LocalClipboard
 import explore.model.RootModel
 import explore.model.RoutingInfo
 import explore.model.UserVault
@@ -165,13 +167,15 @@ object ExploreMain extends IOApp.Simple {
         appConfig            <- fetchConfig[IO]
         _                    <- Logger[IO].info(s"Git Commit: [${utils.gitHash.getOrElse("NONE")}]")
         _                    <- Logger[IO].info(s"Config: ${appConfig.show}")
+        clipboard            <- Ref.of[IO, LocalClipboard](LocalClipboard.Empty)
         ctx                  <-
           AppContext.from[IO](
             appConfig,
             reconnectionStrategy,
             pageUrl,
             setPageVia,
-            workerClients
+            workerClients,
+            clipboard
           )
         _                    <- setupReusabilityOverlay(appConfig.environment)
         r                    <- (ctx.sso.whoami, setupDOM[IO], showEnvironment[IO](appConfig.environment)).parTupled

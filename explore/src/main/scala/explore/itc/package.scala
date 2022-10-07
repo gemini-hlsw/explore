@@ -28,16 +28,6 @@ def requiredForITC: TagMod =
     <.span(^.cls := "fa-layers-text fa-inverse", "ITC")
   ).withTooltip("Required for ITC")
 
-opaque type PlotLoading = Boolean
-
-object PlotLoading:
-  val Loading: PlotLoading = true
-  val Done: PlotLoading    = false
-
-  inline def apply(b: Boolean): PlotLoading = b
-
-extension (p: PlotLoading) inline def boolValue: Boolean = p
-
 def formatDuration(seconds: Long): String =
   if (seconds < 60)
     s"$seconds sec"
