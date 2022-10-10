@@ -10,6 +10,7 @@ import crystal.react.hooks.*
 import crystal.react.implicits.*
 import explore.components.ui.ExploreStyles
 import explore.model.Help
+import explore.shortcuts.*
 import explore.syntax.ui.*
 import explore.syntax.ui.given
 import explore.utils.*
@@ -71,7 +72,7 @@ object HelpBody:
         load(props.url).flatMap(v => state.set(Pot.fromTry(v)).to[IO])
       }
       .useGlobalHotkeysBy((_, helpCtx, _) =>
-        UseHotkeysProps("esc", helpCtx.displayedHelp.set(none))
+        UseHotkeysProps(CloseHelp.value, helpCtx.displayedHelp.set(none))
       )
       .render { (props, helpCtx, state) =>
         val imageConv = (s: Uri) => props.baseUrl.addPath(s.path)

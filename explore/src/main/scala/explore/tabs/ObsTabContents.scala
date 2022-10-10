@@ -321,9 +321,10 @@ object ObsTabContents extends TwoResizablePanels:
               .getOrEmpty
           case Down                           =>
             obsPos
-              .filter(_ < observationIds.length)
+              .filter(_ < observationIds.length && obsList.nonEmpty)
               .flatMap { p =>
-                observationIds.lift(p + 1).map { (obsId, _) =>
+                val next = if (props.focusedObs.isEmpty) 0 else p + 1
+                observationIds.lift(next).map { (obsId, _) =>
                   ctx.setPageVia(AppTab.Observations,
                                  props.programId,
                                  Focused.singleObs(obsId),
