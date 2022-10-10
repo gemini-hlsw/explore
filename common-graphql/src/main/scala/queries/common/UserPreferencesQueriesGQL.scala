@@ -195,25 +195,6 @@ object UserPreferencesQueriesGQL {
   }
 
   @GraphQL
-  trait UserTargetViewOffsetUpdate extends GraphQLOperation[UserPreferencesDB] {
-    val document =
-      """ mutation updateTargetViewOffsetv($userId: String!, $targetId: String!, $viewOffsetP: bigint!, $viewOffsetQ: bigint!) {
-        updateLucumaTargetPreferencesByPk(
-          pk_columns: {
-            userId: $userId,
-            targetId: $targetId
-          }
-          _set: {
-            viewOffsetP: $viewOffsetP,
-            viewOffsetQ: $viewOffsetQ
-          }
-        ) {
-          targetId
-        }
-      }"""
-  }
-
-  @GraphQL
   trait UserTargetPreferencesFovUpdate extends GraphQLOperation[UserPreferencesDB] {
     val document =
       """ mutation updateTargetFov($userId: String!, $targetId: String!, $fovRA: bigint!, $fovDec: bigint!) {

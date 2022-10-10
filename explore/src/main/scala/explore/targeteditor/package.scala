@@ -22,11 +22,5 @@ object SettingsMenuState extends NewType[Boolean]:
 
 type SettingsMenuState = SettingsMenuState.Type
 
-object CenterTargetTrigger extends NewType[Boolean]:
-  inline def Trigger: CenterTargetTrigger = CenterTargetTrigger(true)
-  inline def Idle: CenterTargetTrigger    = CenterTargetTrigger(false)
-
-type CenterTargetTrigger = CenterTargetTrigger.Type
-
 object AddDisabled extends NewType[Boolean]
 type AddDisabled = AddDisabled.Type
