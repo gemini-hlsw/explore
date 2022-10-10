@@ -48,11 +48,10 @@ case class AladinContainer(
   obsConf:                ObsConfiguration,
   allowMouseScroll:       AladinMouseScroll,
   options:                TargetVisualOptions,
-  updateMouseCoordinates: Function1[Coordinates, Callback],
+  updateMouseCoordinates: Coordinates => Callback,
   // TODO Move the functionality of saving the FOV in ALadincell here
-  updateFov:              Function1[Fov, Callback],
-  updateViewOffset:       Function1[Offset, Callback],
-  centerOnTarget:         View[CenterTargetTrigger],
+  updateFov:              Fov => Callback,
+  updateViewOffset:       Offset => Callback,
   selectedGuideStar:      Option[AgsAnalysis],
   guideStarCandidates:    List[AgsAnalysis]
 ) extends ReactFnProps(AladinContainer.component)
@@ -144,20 +143,6 @@ object AladinContainer {
               GmosGeometry.commonShapes(Angle.Angle0, candidatesVisibility)
             )
           shapes
-        }
-      }
-      // If needed center on target
-      .useEffectWithDepsBy((p, baseCoordinates, _, _, _) =>
-        (baseCoordinates.value, p.centerOnTarget.get)
-      ) { (_, _, _, aladinRef, _) =>
-        { case ((coords, _), center) =>
-          aladinRef.get.asCBO
-            .flatMapCB(
-              _.backend.gotoRaDec(coords.ra.toAngle.toDoubleDegrees,
-                                  coords.dec.toAngle.toSignedDoubleDegrees
-              )
-            )
-            .when(center.value)
         }
       }
       // resize detector
@@ -256,8 +241,7 @@ object AladinContainer {
             val viewCoords = Coordinates(u.ra, u.dec)
             val viewOffset = baseCoordinates.diff(viewCoords).offset
             currentPos.setState(Some(viewCoords)) *>
-              props.updateViewOffset(viewOffset) *>
-              props.centerOnTarget.set(CenterTargetTrigger.Idle)
+              props.updateViewOffset(viewOffset)
           }
 
           def onZoom =

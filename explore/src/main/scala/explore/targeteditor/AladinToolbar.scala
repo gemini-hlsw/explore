@@ -4,9 +4,10 @@
 package explore.targeteditor
 
 import cats.syntax.all.*
-import crystal.react.View
+import crystal.react.ViewOpt
 import explore.Icons
 import explore.components.ui.ExploreStyles
+import explore.model.TargetVisualOptions
 import explore.model.enums.AgsState
 import explore.model.enums.Visible
 import explore.model.formats.*
@@ -33,8 +34,8 @@ case class AladinToolbar(
   current:           Coordinates,
   agsState:          AgsState,
   selectedGuideStar: Option[AgsAnalysis],
-  center:            View[CenterTargetTrigger],
-  agsOverlay:        Visible
+  agsOverlay:        Visible,
+  viewOffset:        ViewOpt[Offset]
 ) extends ReactFnProps(AladinToolbar.component)
 
 object AladinToolbar {
@@ -91,10 +92,7 @@ object AladinToolbar {
         <.div(
           ExploreStyles.AladinCenterButton,
           <.span(
-            Button(size = Mini,
-                   icon = true,
-                   onClick = props.center.set(CenterTargetTrigger.Trigger)
-            )(
+            Button(size = Mini, icon = true, onClick = props.viewOffset.set(Offset.Zero))(
               Icons.Bullseye
                 .transform(Transform(size = 24))
                 .clazz(ExploreStyles.Accented)

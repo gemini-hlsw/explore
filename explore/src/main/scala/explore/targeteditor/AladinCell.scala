@@ -113,9 +113,6 @@ object AladinCell extends ModelOptics:
       .useStateBy((props, _) => props.asterism.baseTracking.baseCoordinates)
       // target options, will be read from the user preferences
       .useStateViewWithReuse(Pot.pending[(UserGlobalPreferences, TargetVisualOptions)])
-      // flag to trigger centering. This is a bit brute force but
-      // avoids us needing a ref to a Fn component
-      .useStateViewWithReuse(CenterTargetTrigger.Idle)
       // to get faster reusability use a serial state, rather than check every candidate
       .useSerialState(List.empty[GuideStarCandidate])
       // Analysis results
@@ -123,8 +120,8 @@ object AladinCell extends ModelOptics:
       // Ags state
       .useState[AgsState](AgsState.Idle)
       // Request data again if vizTime changes more than a month
-      .useEffectWithDepsBy((p, _, _, _, _, _, _, _) => p.obsConf.vizTime) {
-        (props, ctx, _, _, _, gs, _, agsState) => vizTime =>
+      .useEffectWithDepsBy((p, _, _, _, _, _, _) => p.obsConf.vizTime) {
+        (props, ctx, _, _, gs, _, agsState) => vizTime =>
           import ctx.given
 
           agsState.setStateAsync(AgsState.LoadingCandidates) >>
@@ -135,8 +132,8 @@ object AladinCell extends ModelOptics:
               agsState.setState(AgsState.Idle).to[IO] >> gs.setStateAsync(candidates)
             ).orEmpty)
       }
-      .useEffectWithDepsBy((p, _, _, _, _, _, _, _) => (p.uid, p.tid)) {
-        (props, ctx, _, options, _, _, _, _) => _ =>
+      .useEffectWithDepsBy((p, _, _, _, _, _, _) => (p.uid, p.tid)) {
+        (props, ctx, _, options, _, _, _) => _ =>
           import ctx.given
 
           TargetPreferences
@@ -150,7 +147,7 @@ object AladinCell extends ModelOptics:
       // Selected GS index. Should be stored in the db
       .useStateViewWithReuse(none[Int])
       // Request ags calculation
-      .useEffectWithDepsBy((p, _, _, _, _, candidates, _, _, _) =>
+      .useEffectWithDepsBy((p, _, _, _, candidates, _, _, _) =>
         (p.asterism.baseTracking,
          p.obsConf.posAngleConstraint,
          p.obsConf.constraints,
@@ -158,7 +155,7 @@ object AladinCell extends ModelOptics:
          p.obsConf.vizTime,
          candidates.value
         )
-      ) { (props, ctx, _, _, _, _, ags, agsState, selectedIndex) =>
+      ) { (props, ctx, _, _, _, ags, agsState, selectedIndex) =>
         {
           case (tracking,
                 Some(posAngle),
@@ -213,8 +210,8 @@ object AladinCell extends ModelOptics:
       // open settings menu
       .useState(SettingsMenuState.Closed)
       // Reset the selected gs if results change
-      .useEffectWithDepsBy((p, _, _, _, _, _, agsResults, _, _, _) => (agsResults, p.obsConf)) {
-        (p, _, _, _, _, _, agsResults, agsState, selectedIndex, _) => _ =>
+      .useEffectWithDepsBy((p, _, _, _, _, agsResults, _, _, _) => (agsResults, p.obsConf)) {
+        (p, _, _, _, _, agsResults, agsState, selectedIndex, _) => _ =>
           selectedIndex
             .set(
               0.some.filter(_ => agsResults.value.nonEmpty && p.obsConf.canSelectGuideStar)
@@ -227,7 +224,6 @@ object AladinCell extends ModelOptics:
           ctx,
           mouseCoords,
           options,
-          center,
           _,
           agsResults,
           agsState,
@@ -248,11 +244,6 @@ object AladinCell extends ModelOptics:
 
           val fovView =
             options.zoom(Pot.readyPrism.andThen(targetPrefs).andThen(fovLens))
-
-          val offsetView =
-            options.zoom(
-              Pot.readyPrism.andThen(targetPrefs).andThen(TargetVisualOptions.viewOffset)
-            )
 
           val fullScreenView =
             options.zoom(
@@ -294,7 +285,12 @@ object AladinCell extends ModelOptics:
             }
           }
 
-          val offsetSetter = (newOffset: Offset) => {
+          val offsetView =
+            options.zoom(
+              Pot.readyPrism.andThen(targetPrefs).andThen(TargetVisualOptions.viewOffset)
+            )
+
+          val offsetChangeInAladin = (newOffset: Offset) => {
             val ignore = options.get.fold(
               true,
               _ => true,
@@ -313,6 +309,16 @@ object AladinCell extends ModelOptics:
                 .runAsync
                 .rateLimit(1.seconds, 1)
                 .void
+          }
+
+          // Always store the offset when centering
+          val offsetOnCenter = offsetView.withOnMod {
+            case Some(o) =>
+              TargetPreferences
+                .updateViewOffset[IO](props.uid, props.tid, o)
+                .runAsync
+                .void
+            case _       => Callback.empty
           }
 
           def prefsSetter(
@@ -364,8 +370,7 @@ object AladinCell extends ModelOptics:
                 t.copy(fullScreen = props.fullScreen.get.value),
                 coordinatesSetter,
                 fovSetter.reuseAlways,
-                offsetSetter.reuseAlways,
-                center,
+                offsetChangeInAladin.reuseAlways,
                 selectedGuideStar,
                 agsResults.value
               ).withKey(aladinKey)
@@ -376,8 +381,8 @@ object AladinCell extends ModelOptics:
                             mouseCoords.value,
                             agsState.value,
                             selectedGuideStar,
-                            center,
-                            t.agsOverlay
+                            t.agsOverlay,
+                            offsetOnCenter
               ): VdomNode
 
           val renderAgsOverlay: ((UserGlobalPreferences, TargetVisualOptions)) => VdomNode =

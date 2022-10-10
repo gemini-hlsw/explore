@@ -253,8 +253,8 @@ object UserPreferencesQueries:
             )
             .getOrElse(Offset.Zero)
 
-          val agsCandidates = r._2.flatMap(_._5).map(Visible.boolIso.get).getOrElse(Visible.Hidden)
-          val agsOverlay    = r._2.flatMap(_._6).map(Visible.boolIso.get).getOrElse(Visible.Hidden)
+          val agsCandidates = r._2.flatMap(_._5).map(Visible.boolIso.get).getOrElse(Visible.Inline)
+          val agsOverlay    = r._2.flatMap(_._6).map(Visible.boolIso.get).getOrElse(Visible.Inline)
           val fullScreen    = r._2.flatMap(_._7).getOrElse(false)
 
           TargetVisualOptions(fovRA, fovDec, offset, agsCandidates, agsOverlay, fullScreen)
@@ -267,12 +267,28 @@ object UserPreferencesQueries:
       targetId: Target.Id,
       offset:   Offset
     )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
-      import UserTargetViewOffsetUpdate.*
+      import UserTargetPreferencesUpsert.*
+
       execute[F](
-        userId = uid.show,
-        targetId = targetId.show,
-        viewOffsetP = offset.p.toAngle.toMicroarcseconds,
-        viewOffsetQ = offset.q.toAngle.toMicroarcseconds
+        LucumaTargetInsertInput(
+          targetId = targetId.show.assign,
+          lucuma_target_preferences = LucumaTargetPreferencesArrRelInsertInput(
+            data = List(
+              LucumaTargetPreferencesInsertInput(
+                userId = uid.show.assign,
+                viewOffsetP = offset.p.toAngle.toMicroarcseconds.assign,
+                viewOffsetQ = offset.q.toAngle.toMicroarcseconds.assign
+              )
+            ),
+            onConflict = LucumaTargetPreferencesOnConflict(
+              constraint = LucumaTargetPreferencesConstraint.LucumaTargetPreferencesPkey,
+              update_columns = List(
+                LucumaTargetPreferencesUpdateColumn.ViewOffsetP.some,
+                LucumaTargetPreferencesUpdateColumn.ViewOffsetQ.some
+              ).flattenOption
+            ).assign
+          ).assign
+        )
       ).attempt.void
 
   end TargetPreferences
