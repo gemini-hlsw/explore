@@ -3,6 +3,7 @@
 
 package explore.config
 
+import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.sequence.*
@@ -12,7 +13,7 @@ import react.semanticui.elements.header.Header
 import react.semanticui.elements.segment.Segment
 
 case class GeneratedSequenceTables(config: FutureExecutionConfig)
-    extends ReactFnProps[GeneratedSequenceTables](GeneratedSequenceTables.component)
+    extends ReactFnProps(GeneratedSequenceTables.component)
 
 object GeneratedSequenceTables {
   type Props = GeneratedSequenceTables
@@ -24,7 +25,7 @@ object GeneratedSequenceTables {
         <.div(^.height := "100%", ^.overflow.auto)(
           Segment(
             SequenceTable.bracketDef,
-            <.div(
+            <.div(ExploreStyles.SequencesPanel)(
               Header("Acquisition"),
               SequenceTable(
                 props.config.acquisition.nextAtom +: props.config.acquisition.possibleFuture

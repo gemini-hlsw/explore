@@ -65,7 +65,7 @@ object PopupState extends NewType[Boolean]:
 
 type PopupState = PopupState.Type
 
-object TargetSelectionPopup {
+object TargetSelectionPopup:
   private type Props = TargetSelectionPopup
 
   private case class Result(target: TargetSearchResult, priority: Int) derives Eq
@@ -315,4 +315,3 @@ object TargetSelectionPopup {
           )
         )
     }
-}

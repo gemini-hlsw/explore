@@ -24,6 +24,7 @@ import lucuma.core.enums.Band
 import lucuma.core.math.BrightnessUnits.*
 import lucuma.core.math.dimensional.*
 import lucuma.core.util.Enumerated
+import lucuma.react.table.*
 import lucuma.refined.*
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.forms.FormInputEV
@@ -31,15 +32,17 @@ import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import lucuma.ui.table.*
 import monocle.Focus
 import react.common.ReactFnProps
 import react.semanticui.collections.table.*
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes.*
-import reactST.reactTable.*
-import reactST.reactTable.mod.SortingRule
+import reactST.{tanstackTableCore => raw}
 
 import scala.collection.immutable.SortedMap
+
+import scalajs.js.JSConverters.*
 
 sealed trait BrightnessesEditor[T] {
   val brightnesses: View[SortedMap[Band, BrightnessMeasure[T]]]
@@ -67,11 +70,7 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
 
   private type RowValue = (Band, View[BrightnessMeasure[T]])
 
-  private val BrightnessTableDef = TableDef[RowValue].withSortBy.withFlexLayout
-
-  private val BrightnessTable = new SUITableVirtuoso(BrightnessTableDef)
-
-  private val tableState = BrightnessTableDef.State().setSortBy(SortingRule("band"))
+  private val ColDef = ColumnDef[RowValue]
 
   val component =
     ScalaFnComponent
@@ -82,20 +81,22 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
       )
       .useMemoBy((props, _) => (props.brightnesses.reuseByValue, props.disabled)) {
         (_, _) => // Memo cols
-          { case (brightnesses, disabled) =>
+          case (brightnesses, disabled) =>
             List(
-              BrightnessTableDef
-                .Column("band", _._1)
-                .setHeader("Band")
-                .setCell(_.value.shortName)
-                .setWidth(60)
-                .setMinWidth(50)
-                .setMaxWidth(60)
-                .setSortByAuto,
-              BrightnessTableDef
-                .Column("value", _._2.zoom(Measure.valueTagged[BigDecimal, Brightness[T]]))
-                .setHeader("Value")
-                .setCell(cell =>
+              ColDef(
+                "band",
+                _._1,
+                "Band",
+                _.value.shortName,
+                size = 60,
+                minSize = 50,
+                maxSize = 60
+              ).sortable,
+              ColDef(
+                "value",
+                _._2.zoom(Measure.valueTagged[BigDecimal, Brightness[T]]),
+                "Value",
+                cell =>
                   FormInputEV[View, BigDecimal](
                     id = NonEmptyString.unsafeFrom(s"brightnessValue_${cell.row.id}"),
                     value = cell.value,
@@ -103,29 +104,32 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                     changeAuditor =
                       ChangeAuditor.bigDecimal(2.refined, 3.refined).allowExp(2.refined),
                     disabled = disabled
-                  )
-                )
-                .setWidth(80)
-                .setMinWidth(60)
-                .setMaxWidth(160),
-              BrightnessTableDef
-                .Column("units", _._2.zoom(Measure.unitsTagged[BigDecimal, Brightness[T]]))
-                .setHeader("Units")
-                .setCell(cell =>
+                  ),
+                size = 80,
+                minSize = 60,
+                maxSize = 160
+              ).sortableBy(_.get),
+              ColDef(
+                "units",
+                _._2.zoom(Measure.unitsTagged[BigDecimal, Brightness[T]]),
+                "Units",
+                cell =>
                   EnumViewSelect[View, Units Of Brightness[T]](
                     id = NonEmptyString.unsafeFrom(s"brightnessUnits_${cell.row.id}"),
                     value = cell.value,
                     compact = true,
                     disabled = disabled,
                     clazz = ExploreStyles.BrightnessesTableUnitsDropdown
-                  )
-                )
-                .setWidth(100)
-                .setMinWidth(100)
-                .setMaxWidth(160),
-              BrightnessTableDef
-                .Column("delete", _._1)
-                .setCell(cell =>
+                  ),
+                size = 100,
+                minSize = 100,
+                maxSize = 160
+              ).sortableBy(_.get),
+              ColDef(
+                "delete",
+                _._1,
+                "",
+                cell =>
                   <.div(ExploreStyles.BrightnessesTableDeletButtonWrapper)(
                     Button(
                       size = Small,
@@ -133,30 +137,31 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                       disabled = disabled,
                       onClick = brightnesses.mod(_ - cell.value)
                     )(Icons.Trash)
-                  )
-                )
-                .setWidth(20)
-                .setMinWidth(20)
-                .setMaxWidth(20)
-                .setDisableSortBy(true)
+                  ),
+                size = 20,
+                minSize = 20,
+                maxSize = 20,
+                enableSorting = false
+              )
             )
-          }
       }
       // rows
       .useMemoBy((props, _, _) => props.brightnesses.get)((props, _, _) =>
         _ => props.brightnesses.widen[Map[Band, BrightnessMeasure[T]]].toListOfViews
       )
-      .useTableBy((_, _, cols, rows) =>
-        BrightnessTableDef(
+      .useReactTableBy((_, _, cols, rows) =>
+        TableOptions(
           cols,
           rows,
-          ((_: BrightnessTableDef.OptionsType)
-            .setRowIdFn(_._1.tag)
-            .setInitialState(tableState))
-            .reuseAlways
+          getRowId = (row, _, _) => row._1.tag,
+          enableSorting = true,
+          enableColumnResizing = false,
+          initialState = raw.mod
+            .InitialTableState()
+            .setSorting(List(raw.mod.ColumnSort(false, "band")).toJSArray) // TODO Better facade
         )
       )
-      .render { (props, state, _, _, tableInstance) =>
+      .render { (props, state, _, _, table) =>
         val footer =
           <.div(
             ExploreStyles.BrightnessesTableFooter,
@@ -193,19 +198,15 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
               .whenDefined
           )
 
-        <.div(ExploreStyles.ExploreTable |+| ExploreStyles.BrightnessesTableContainer)(
+        <.div(ExploreStyles.ExploreTable |+| ExploreStyles.BrightnessesContainer)(
           <.label(label),
-          BrightnessTable.Component(
-            table = Table(
-              celled = true,
-              selectable = true,
-              striped = true,
-              unstackable = true,
-              compact = TableCompact.Very
-            ),
-            header = TableHeader(),
+          PrimeAutoHeightVirtualizedTable(
+            table,
+            estimateRowHeightPx = _ => 34,
+            striped = true,
+            compact = Compact.Very,
             emptyMessage = "No brightnesses defined"
-          )(tableInstance),
+          ),
           footer
         )
 

@@ -24,7 +24,6 @@ import react.semanticui.collections.menu.*
 import react.semanticui.elements.button.Button
 
 import scalajs.js
-import scalajs.js.|
 
 case class Tile(
   id:                Tile.TileId,

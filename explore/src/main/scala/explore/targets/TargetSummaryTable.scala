@@ -15,18 +15,16 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
+import lucuma.react.table.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import lucuma.ui.table.*
+import org.scalablytyped.runtime.StringDictionary
 import react.common.Css
 import react.common.ReactFnProps
 import react.semanticui.collections.table.*
-import react.semanticui.modules.checkbox.Checkbox
-import react.semanticui.modules.dropdown.DropdownItem
-import react.semanticui.modules.dropdown.*
-import reactST.reactTable.*
-import reactST.reactTable.mod.DefaultSortTypes
-import reactST.reactTable.mod.IdType
+import reactST.{tanstackTableCore => raw}
 
 import scalajs.js.JSConverters.*
 
@@ -41,9 +39,7 @@ case class TargetSummaryTable(
 object TargetSummaryTable:
   type Props = TargetSummaryTable
 
-  protected val TargetTable = TableDef[TargetWithIdAndObs].withSortBy
-
-  protected val TargetTableComponent = new SUITable(TargetTable)
+  private val ColDef = ColumnDef[TargetWithIdAndObs]
 
   private val columnClasses: Map[String, Css] = Map(
     "id"   -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryId),
@@ -57,119 +53,85 @@ object TargetSummaryTable:
       // cols
       .useMemoBy(_ => ()) { props => _ =>
         def column[V](id: String, accessor: TargetWithIdAndObs => V) =
-          TargetTable
-            .Column(id, row => accessor(row))
-            .setHeader(TargetColumns.allColNames(id))
+          ColDef(id, row => accessor(row), TargetColumns.allColNames(id))
 
         List(
-          // TODO: Add a delete button
-          TargetTable
-            .Column("id", _.id)
-            .setHeader("id")
-            .setCell(cell =>
-              <.a(^.onClick ==> (_ => props.selectTarget(cell.value)), cell.value.toString)
-            )
-            .setSortByAuto
+          ColDef(
+            "id",
+            _.id,
+            "id",
+            cell => <.a(^.onClick ==> (_ => props.selectTarget(cell.value)), cell.value.toString)
+          ).sortable
         ) ++
           TargetColumns
-            .BaseColumnBuilder(TargetTable)(_.target.some)
+            .BaseColumnBuilder(ColDef, _.target.some)
             .allColumns ++
           List(
             column("count", _.obsIds.size) // TODO Right align
-              .setCell(_.value.toString)
-              .setSortType(DefaultSortTypes.number),
+              .copy(cell = _.value.toString),
             column("observations", _.obsIds.toList)
-              .setCell(cell =>
-                <.span(
-                  cell.value
-                    .map(obsId =>
-                      <.a(
-                        ^.onClick ==> (_ => props.selectObservation(obsId, cell.row.original.id)),
-                        obsId.toString
+              .copy(
+                cell = cell =>
+                  <.span(
+                    cell.value
+                      .map(obsId =>
+                        <.a(
+                          ^.onClick ==> (_ => props.selectObservation(obsId, cell.row.original.id)),
+                          obsId.toString
+                        )
                       )
-                    )
-                    .mkReactFragment(", ")
-                )
+                      .mkReactFragment(", ")
+                  ),
+                enableSorting = false
               )
-              .setDisableSortBy(true)
           )
       }
       // rows
       .useMemoBy((props, _) => props.targets)((_, _) =>
         _.toList.map { case (id, targetWithObs) => TargetWithIdAndObs(id, targetWithObs) }
       )
-      .useTableBy((props, cols, rows) =>
-        TargetTable(
+      .useReactTableBy((props, cols, rows) =>
+        TableOptions(
           cols,
           rows,
-          { (hiddenColumns: Set[String], options: TargetTable.OptionsType) =>
-            options
-              .setAutoResetSortBy(false)
-              .setInitialState(
-                TargetTable
-                  .State()
-                  .setHiddenColumns(
-                    hiddenColumns.toList
-                      .map(col => col: IdType[Target.Id])
-                      .toJSArray
-                  )
+          getRowId = (row, _, _) => row.id.toString,
+          enableSorting = true,
+          enableColumnResizing = true,
+          columnResizeMode = raw.mod.ColumnResizeMode.onChange,
+          initialState = raw.mod
+            .InitialTableState()
+            .setColumnVisibility(
+              StringDictionary(
+                props.hiddenColumns.get.toList.map(col => col -> false): _*
               )
-          }.reuseCurrying(props.hiddenColumns.get)
+            )
         )
       )
-      .render((props, _, _, tableInstance) =>
+      .render((props, _, _, table) =>
         <.div(
           props.renderInTitle(
             React.Fragment(
               <.span, // Push column selector to right
               <.span(ExploreStyles.TitleSelectColumns)(
-                Dropdown(
-                  item = true,
-                  simple = true,
-                  pointing = Pointing.TopRight,
-                  scrolling = true,
-                  text = "Columns",
-                  clazz = ExploreStyles.SelectColumns
-                )(
-                  DropdownMenu(
-                    tableInstance.allColumns
-                      .drop(2)
-                      .toTagMod { column =>
-                        val colId = column.id.toString
-                        DropdownItem()(^.key := colId)(
-                          <.div(
-                            Checkbox(
-                              label = TargetColumns.allColNames(colId),
-                              checked = column.isVisible,
-                              onChange = (value: Boolean) =>
-                                Callback(column.toggleHidden()) >>
-                                  props.hiddenColumns
-                                    .mod(cols => if (value) cols - colId else cols + colId)
-                            )
-                          )
-                        )
-                      }
-                  )
+                ColumnSelector(
+                  table,
+                  TargetColumns.allColNames,
+                  props.hiddenColumns,
+                  ExploreStyles.SelectColumns
                 )
               )
             )
           ),
-          TargetTableComponent(
-            table = Table(
-              celled = true,
-              selectable = true,
-              striped = true,
-              compact = TableCompact.Very,
-              unstackable = true,
-              clazz = ExploreStyles.ExploreTable
-            )(),
-            header = true,
-            headerCell = (col: TargetTable.ColumnType) =>
-              TableHeaderCell(clazz =
-                columnClasses.get(col.id.toString).orEmpty |+| ExploreStyles.StickyHeader
-              ),
-            cell = (cell: TargetTable.CellType[?]) =>
-              TableCell(clazz = columnClasses.get(cell.column.id.toString).orEmpty)
-          )(tableInstance)
+          PrimeTable(
+            table,
+            striped = true,
+            compact = Compact.Very,
+            tableMod = ExploreStyles.ExploreTable,
+            headerCellMod = headerCell =>
+              columnClasses
+                .get(headerCell.column.id)
+                .orEmpty |+| ExploreStyles.StickyHeader,
+            cellMod = cell => columnClasses.get(cell.column.id).orEmpty
+          )
         )
       )

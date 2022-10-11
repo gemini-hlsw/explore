@@ -1337,53 +1337,32 @@ img.partner-split-flag {
 }
 
 .explore-table {
-  position: relative;
-  border: 0.2px solid var(--site-border-color);
-  border-radius: @menuBorderRadius;
   overflow-x: auto;
 
-  .table {
+  table {
     min-height: 60px;
-    border-collapse: collapse;
-
-    &.virtualized {
-      height: 100%;
-    }
+    width: 100%;
   }
 
-  tr.explore-table-row-selected,
-  .tr.explore-table-row-selected {
+  tr.explore-table-row-selected {
     box-shadow: inset 0 1px 0 0 var(--explore-selected-box-color),
       inset 0 -1px 0 0 var(--explore-selected-box-color) !important; // Important used to override hover.
 
     background: var(--table-selected-background) !important;
   }
 
-  th,
-  .th {
-    border: 0 !important;
-    text-transform: none !important;
-    white-space: nowrap;
-  }
-
-  td,
-  .td {
-    border: 0 !important;
-    white-space: nowrap;
-  }
-
   .scroll-button {
     position: absolute;
-    right: 1em;
+    right: 2em;
     border-color: var(--explore-selected-box-color) !important;
   }
 
   & .selected-up {
-    top: 2.5em;
+    top: 10em;
   }
 
   & .selected-down {
-    bottom: 1.1em;
+    bottom: 6em;
   }
 }
 
@@ -1397,25 +1376,6 @@ img.partner-split-flag {
   height: 100%;
   display: flex;
   flex-direction: column;
-  border: none;
-
-  >.table {
-    height: 100%;
-    margin: 0;
-
-    thead,
-    tr {
-      display: block;
-    }
-
-    tbody {
-      display: block;
-    }
-
-    .th {
-      white-space: nowrap;
-    }
-  }
 }
 
 .target-grid {
@@ -1863,10 +1823,6 @@ html {
   overflow: hidden !important;
 }
 
-.step-table-header {
-  text-transform: unset !important;
-}
-
 .step-guided {
   color: lightgreen;
 }
@@ -2049,7 +2005,6 @@ html {
 
 .explore-target-summary-delete {
   left: 0;
-  width: 20px;
 }
 
 .explore-target-summary-select {
@@ -2072,10 +2027,9 @@ html {
 .explore-target-summary-type,
 .explore-constraints-summary-edit {
   left: 0;
-  width: 20px;
 
   &.with-delete {
-    left: 34px;
+    left: 35px;
   }
 
   &.with-expander {
@@ -2092,10 +2046,8 @@ html {
 }
 
 .explore-target-summary-name {
-  left: 34px;
-
   &.with-delete {
-    left: 67px;
+    left: 70px;
   }
 
   &.with-expander {
@@ -2268,31 +2220,25 @@ svg[focusable='false']:focus {
   font-size: small;
 }
 
-td.sticky-column,
-.td.sticky-column {
+tbody tr td.sticky-column {
   position: sticky;
+  background: inherit;
   clip-path: inset(2px 0); // Avoids overwriting the box-shadow.
 }
 
-th.sticky-column,
-.th.sticky-column {
+thead tr th.sticky-column {
   position: sticky;
+  background: inherit;
 
   &.sticky-header {
-    z-index: 50;
+    z-index: 15;
   }
 }
 
-th.sticky-header,
-.th.sticky-header {
+thead tr th.sticky-header {
   position: sticky;
   top: 0;
-  z-index: 30;
-}
-
-.ui.table tr.explore-table-row-selected td.sticky-column,
-.ui.table tr.explore-table-row-selected .td.sticky-column {
-  background-color: var(--table-selected-background) !important; // Important overrides regular row background color.
+  z-index: 10;
 }
 
 .explore-modes-table-itc-header-cell {

@@ -64,7 +64,6 @@ class WorkerClient[F[_]: Concurrent: UUIDGen: Logger, R: Pickler] private (
     } yield stream
       .map(decodeFromTransferableEither[FromServer])
       .rethrow
-      .evalTap(msg => Logger[F].debug(s"<<< Received msg from server [$msg]"))
       .collect {
         case FromServer.Data(mid, pickled) if mid === id =>
           fromBytes[requestMessage.ResponseType](pickled.value).some
@@ -73,6 +72,7 @@ class WorkerClient[F[_]: Concurrent: UUIDGen: Logger, R: Pickler] private (
         case FromServer.Error(mid, error) if mid === id  =>
           throw error
       }
+      .evalTap(msg => Logger[F].debug(s"<<< Received msg from server with id [$id]: [$msg]"))
       .unNoneTerminate
       .rethrow
 

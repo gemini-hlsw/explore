@@ -23,7 +23,6 @@ import react.semanticui.sizes.*
 import java.time.Instant
 
 import scalajs.js
-import scalajs.js.|
 
 case class VizTimeEditor(vizTimeView: Pot[View[Option[Instant]]])
     extends ReactFnProps(VizTimeEditor.component)

@@ -22,8 +22,6 @@ import react.semanticui.elements.button.Button
 import react.semanticui.elements.input.Input
 import react.semanticui.sizes.*
 
-import scalajs.js.|
-
 case class EditableLabel(
   value:                Option[NonEmptyString],
   mod:                  Option[NonEmptyString] => Callback,

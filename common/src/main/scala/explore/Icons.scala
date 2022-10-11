@@ -131,18 +131,6 @@ object Icons {
   val faCheck: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faSort")
-  val faSort: FAIcon = js.native
-
-  @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faSortUp")
-  val faSortUp: FAIcon = js.native
-
-  @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faSortDown")
-  val faSortDown: FAIcon = js.native
-
-  @js.native
   @JSImport("@fortawesome/pro-solid-svg-icons", "faChevronRight")
   val faChevronRight: FAIcon = js.native
 
@@ -277,9 +265,6 @@ object Icons {
     faExclamationDiamond,
     faSkullCrossbones,
     faCheck,
-    faSort,
-    faSortUp,
-    faSortDown,
     faChevronRight,
     faChevronRightLight,
     faChevronLeft,
@@ -335,9 +320,6 @@ object Icons {
   val ChevronDoubleUp     = FontAwesomeIcon(faChevronDoubleUp)
   val ChevronDoubleDown   = FontAwesomeIcon(faChevronDoubleDown)
   val Ban                 = FontAwesomeIcon(faBan)
-  val Sort                = FontAwesomeIcon(faSort)
-  val SortDown            = FontAwesomeIcon(faSortDown)
-  val SortUp              = FontAwesomeIcon(faSortUp)
   val ExclamationTriangle = FontAwesomeIcon(faExclamationTriangle)
   val ExclamationDiamond  = FontAwesomeIcon(faExclamationDiamond)
   val UserAstronaut       = FontAwesomeIcon(faUserAstronaut)

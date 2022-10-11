@@ -14,7 +14,6 @@ import react.common.GenericComponentP
 import scala.annotation.nowarn
 
 import scalajs.js
-import scalajs.js.|
 import scalajs.js.annotation.JSImport
 
 package toastify {
