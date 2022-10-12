@@ -340,3 +340,53 @@ $search-preview-margin: 5px;
 .explore-warning-icon {
   color: var(--warning-background-color);
 }
+
+// ------
+// Generic table
+// ------
+.explore-table {
+  overflow-x: auto;
+
+  table {
+    min-height: 60px;
+    width: 100%;
+  }
+
+  tr.explore-table-row-selected {
+    box-shadow: inset 0 1px 0 0 var(--explore-selected-box-color),
+      inset 0 -1px 0 0 var(--explore-selected-box-color) !important; // Important used to override hover.
+
+    background: var(--table-selected-background) !important;
+  }
+
+  .scroll-button {
+    position: absolute;
+    right: 2em;
+    border-color: var(--explore-selected-box-color) !important;
+  }
+
+  & .selected-up {
+    top: 10em;
+  }
+
+  & .selected-down {
+    bottom: 6em;
+  }
+}
+
+.explore-border-table,
+table.explore-border-table {
+  border: 1px solid var(--site-border-color);
+  border-radius: var(--border-radius);
+}
+
+// -------------
+// Move to lucuma-ui
+// -------------
+.pl-react-table {
+  &.p-datatable.p-datatable-hoverable-rows {
+    .p-datatable-tbody>tr:not(.p-highlight, .p-datatable-emptymessage):hover {
+      position: relative;
+    }
+  }
+}

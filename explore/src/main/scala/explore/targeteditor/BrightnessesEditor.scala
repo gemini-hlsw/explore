@@ -205,6 +205,7 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
             estimateRowHeightPx = _ => 34,
             striped = true,
             compact = Compact.Very,
+            tableMod = ExploreStyles.ExploreBorderTable,
             emptyMessage = "No brightnesses defined"
           ),
           footer
