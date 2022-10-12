@@ -107,7 +107,7 @@ object ExploreMain extends IOApp.Simple {
 
   def crash[F[_]: Sync](msg: String): F[Unit] =
     setupDOM[F].map { element =>
-      (ExploreStyles.CrashMessage |+| ExploreStyles.ErrorLabel).htmlClasses
+      (ExploreStyles.CrashMessage |+| ExploreStyles.ErrorLabel).value
         .foreach(element.classList.add)
       element.innerHTML = msg
     }
