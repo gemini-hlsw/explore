@@ -225,6 +225,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
           estimateRowHeightPx = _ => 34,
           striped = true,
           compact = Compact.Very,
+          tableMod = ExploreStyles.ExploreBorderTable,
           emptyMessage = "No lines defined"
         ),
         footer

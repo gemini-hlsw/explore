@@ -230,7 +230,7 @@ object ProgramTable:
               estimateRowHeightPx = _ => 32,
               striped = true,
               compact = Compact.Very,
-              tableMod = ExploreStyles.ExploreTable,
+              tableMod = ExploreStyles.ExploreTable |+| ExploreStyles.ExploreBorderTable,
               emptyMessage = "No programs available"
             ),
             <.div(ExploreStyles.ProgramsPopupAdditionalActions)(

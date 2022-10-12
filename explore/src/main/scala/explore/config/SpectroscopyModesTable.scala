@@ -591,7 +591,10 @@ private object SpectroscopyModesTable:
                 selectedTarget
               )
             ),
-            <.div(ExploreStyles.ExploreTable, ExploreStyles.ModesTable)(
+            <.div(ExploreStyles.ExploreTable,
+                  ExploreStyles.ExploreBorderTable,
+                  ExploreStyles.ModesTable
+            )(
               PrimeAutoHeightVirtualizedTable(
                 table,
                 estimateRowHeightPx = _ => 32,
