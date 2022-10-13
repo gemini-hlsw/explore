@@ -30,14 +30,24 @@ import workers.*
 
 import java.util.UUID
 import scala.concurrent.duration.*
-//
+import io.circe.Json
+import io.circe.parser.{parse => parseJson}
+
 object ITCGraphRequests:
   // Picklers for generated types not in the model.
+  private given Pickler[Json]                                                    =
+    transformPickler[Json, String](parseJson(_).getOrElse(Json.Null))(_.toString)
   private given Pickler[SpectroscopyGraphITCQuery.Data.SpectroscopyGraph.Ccds]   = generatePickler
   private given Pickler[SpectroscopyGraphITCQuery.Data.SpectroscopyGraph.Charts] =
     generatePickler
-  private given Pickler[SpectroscopyGraphITCQuery.Data.SpectroscopyGraph]        = generatePickler
-  private given Pickler[SpectroscopyGraphITCQuery.Data]                          = generatePickler
+  private given Pickler[SpectroscopyGraphITCQuery.Data.SpectroscopyGraph]        =
+    transformPickler[SpectroscopyGraphITCQuery.Data.SpectroscopyGraph, Json](
+      _.asInstanceOf[SpectroscopyGraphITCQuery.Data.SpectroscopyGraph]
+    )(_.asInstanceOf[Json])
+  private given Pickler[SpectroscopyGraphITCQuery.Data]                          =
+    transformPickler[SpectroscopyGraphITCQuery.Data, Json](
+      _.asInstanceOf[SpectroscopyGraphITCQuery.Data]
+    )(_.asInstanceOf[Json])
 
   private val significantFigures =
     SignificantFiguresInput(

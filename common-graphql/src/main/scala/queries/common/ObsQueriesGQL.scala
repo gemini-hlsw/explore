@@ -563,12 +563,15 @@ object ObsQueriesGQL {
       object Observation {
         type PosAngleConstraint = lucuma.core.model.PosAngleConstraint
 
+        trait TargetEnvironment extends AnyRef
         object TargetEnvironment {
           type Asterism = model.TargetWithId
         }
         type ConstraintSet = coreModel.ConstraintSet
 
+        trait ScienceRequirements extends AnyRef
         object ScienceRequirements {
+          trait Spectroscopy extends AnyRef
           object Spectroscopy {
             type Wavelength         = lucuma.core.math.Wavelength
             type SignalToNoiseAt    = lucuma.core.math.Wavelength
