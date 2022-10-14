@@ -8,5 +8,5 @@ import lucuma.core.model.Observation
 sealed trait LocalClipboard
 
 object LocalClipboard:
-  case object Empty                                extends LocalClipboard
-  case class CopiedObservation(id: Observation.Id) extends LocalClipboard
+  case object Empty                             extends LocalClipboard
+  case class CopiedObservations(oids: ObsIdSet) extends LocalClipboard

@@ -595,18 +595,21 @@ object TargetTabContents:
   }
 
   private def applyObs(
-    obsId:    Observation.Id,
-    targetId: Target.Id,
-    adding:   View[LoadingState],
-    ctx:      AppContext[IO]
+    obsIds:    List[Observation.Id],
+    targetIds: List[Target.Id],
+    adding:    View[LoadingState],
+    ctx:       AppContext[IO]
   ): IO[Unit] =
     import ctx.given
-
     adding.async.set(LoadingState.Loading) >>
-      ObsQueries
-        .applyObservation[IO](obsId, targetId)
+      obsIds
+        .traverse(obsId =>
+          ObsQueries
+            .applyObservation[IO](obsId, targetIds)
+            .void
+          // TODO Local insertion before the remote update arrives
+        )
         .void
-        // TODO Local insertion before the remote update arrives
         .guarantee(adding.async.set(LoadingState.Done))
 
   private val component =
@@ -614,26 +617,6 @@ object TargetTabContents:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .useStateView(LoadingState.Done)
-      .useGlobalHotkeysWithDepsBy((props, ctx, loading) => props.focused) {
-        (props, ctx, loading) => target =>
-          import ctx.given
-
-          def callbacks: ShortcutCallbacks = {
-            case PasteAlt1 | PasteAlt2 | PasteAlt3 =>
-              ctx.exploreClipboard.get.flatMap {
-                case LocalClipboard.CopiedObservation(id) if !props.focused.obsSet.contains(id) =>
-                  props.focused.target
-                    .map(targetId => applyObs(id, targetId, loading, ctx))
-                    .getOrElse(IO.unit)
-
-                case _ => IO.unit
-
-              }.runAsync
-            case GoToSummary                       =>
-              ctx.setPageVia(AppTab.Targets, props.programId, Focused.None, SetRouteVia.HistoryPush)
-          }
-          UseHotkeysProps((GoToSummary :: PasteKeys).toHotKeys, callbacks)
-      }
       // Two panel state
       .useStateView(TwoPanelState.initial(SelectedPanel.Uninitialized))
       .useEffectWithDepsBy((props, _, _, state) =>
@@ -694,6 +677,41 @@ object TargetTabContents:
             ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](props.programId),
             TargetQueriesGQL.ProgramTargetEditSubscription.subscribe[IO](props.programId)
           )
+      }
+      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, _, _, asterismGroupWithObs) =>
+        (props.focused, asterismGroupWithObs.toOption.map(_.get.asterismGroups))
+      ) { (props, ctx, loading, _, _, _, _, _, _) => (target, asterismGroups) =>
+        import ctx.given
+        //   obsList.foldMap(_.value.get.observations.elements.map(_.id).zipWithIndex.toList)
+        // val obsPos         = observationIds.find(a => obs.forall(_ === a._1)).map(_._2)
+
+        def callbacks: ShortcutCallbacks = {
+          case CopyAlt1 | CopyAlt2 | CopyAlt3 =>
+            target.obsSet
+              .map(ids =>
+                ctx.exploreClipboard.set(LocalClipboard.CopiedObservations(ids)).runAsync *>
+                  info(s"Copied obs ${ids.idSet.toList.mkString(", ")}")
+              )
+              .getOrEmpty
+
+          case PasteAlt1 | PasteAlt2 | PasteAlt3 =>
+            ctx.exploreClipboard.get.flatMap {
+              case LocalClipboard.CopiedObservations(id) =>
+                val targets =
+                  props.focused.obsSet
+                    .flatMap(i => asterismGroups.flatMap(_.get(i).map(_.targetIds.toList)))
+                    .getOrElse(props.focused.target.toList)
+
+                applyObs(id.idSet.toList, targets, loading, ctx).void
+
+              case _ => IO.unit
+
+            }.runAsync
+
+          case GoToSummary =>
+            ctx.setPageVia(AppTab.Targets, props.programId, Focused.None, SetRouteVia.HistoryPush)
+        }
+        UseHotkeysProps((GoToSummary :: (CopyKeys ::: PasteKeys)).toHotKeys, callbacks)
       }
       // full screen aladin
       .useStateView(AladinFullScreen.Normal)

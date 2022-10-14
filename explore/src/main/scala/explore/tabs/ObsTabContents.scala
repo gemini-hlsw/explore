@@ -52,8 +52,6 @@ import react.common.ReactFnProps
 import react.draggable.Axis
 import react.gridlayout.*
 import react.hotkeys.*
-import react.hotkeys.*
-import react.hotkeys.hooks.*
 import react.hotkeys.hooks.*
 import react.resizable.*
 import react.resizeDetector.*
@@ -314,9 +312,10 @@ object ObsTabContents extends TwoResizablePanels:
           case CopyAlt1 | CopyAlt2 | CopyAlt3 =>
             obs
               .map(id =>
-                ctx.exploreClipboard.set(LocalClipboard.CopiedObservation(id)).runAsync *> info(
-                  s"Copied"
-                )
+                ctx.exploreClipboard
+                  .set(LocalClipboard.CopiedObservations(ObsIdSet.one(id)))
+                  .runAsync *>
+                  info(s"Copied obs $id")
               )
               .getOrEmpty
           case Down                           =>
