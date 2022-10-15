@@ -595,19 +595,23 @@ object TargetTabContents:
   }
 
   private def applyObs(
-    obsIds:    List[Observation.Id],
-    targetIds: List[Target.Id],
-    adding:    View[LoadingState],
-    ctx:       AppContext[IO]
+    obsIds:                List[Observation.Id],
+    targetIds:             List[Target.Id],
+    adding:                View[LoadingState],
+    asterismGroupsWithObs: View[AsterismGroupsWithObs],
+    ctx:                   AppContext[IO]
   ): IO[Unit] =
     import ctx.given
     adding.async.set(LoadingState.Loading) >>
+      IO(pprint.pprintln(asterismGroupsWithObs.get.asterismGroups)) *>
       obsIds
         .traverse(obsId =>
           ObsQueries
             .applyObservation[IO](obsId, targetIds)
+            .flatMap { o =>
+              asterismGroupsWithObs.mod(_.localClone(obsId, o.id, targetIds)).to[IO]
+            }
             .void
-          // TODO Local insertion before the remote update arrives
         )
         .void
         .guarantee(adding.async.set(LoadingState.Done))
@@ -680,10 +684,8 @@ object TargetTabContents:
       }
       .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, _, _, asterismGroupWithObs) =>
         (props.focused, asterismGroupWithObs.toOption.map(_.get.asterismGroups))
-      ) { (props, ctx, loading, _, _, _, _, _, _) => (target, asterismGroups) =>
+      ) { (props, ctx, loading, _, _, _, _, _, agv) => (target, asterismGroups) =>
         import ctx.given
-        //   obsList.foldMap(_.value.get.observations.elements.map(_.id).zipWithIndex.toList)
-        // val obsPos         = observationIds.find(a => obs.forall(_ === a._1)).map(_._2)
 
         def callbacks: ShortcutCallbacks = {
           case CopyAlt1 | CopyAlt2 | CopyAlt3 =>
@@ -702,7 +704,9 @@ object TargetTabContents:
                     .flatMap(i => asterismGroups.flatMap(_.get(i).map(_.targetIds.toList)))
                     .getOrElse(props.focused.target.toList)
 
-                applyObs(id.idSet.toList, targets, loading, ctx).void
+                agv.toOption
+                  .map(agv => applyObs(id.idSet.toList, targets, loading, agv, ctx))
+                  .getOrElse(IO.unit)
 
               case _ => IO.unit
 

@@ -4,6 +4,8 @@
 package explore.model
 
 import cats.Eq
+import cats.Semigroup
+import cats.derived.*
 import lucuma.core.model.Target
 import monocle.Focus
 import monocle.Lens
@@ -13,7 +15,7 @@ import scala.collection.immutable.SortedSet
 case class AsterismGroup(
   obsIds:    ObsIdSet,
   targetIds: SortedSet[Target.Id]
-) {
+) derives Semigroup {
   def addTargetId(targetId: Target.Id): AsterismGroup =
     AsterismGroup.targetIds.modify(_ + targetId)(this)
 

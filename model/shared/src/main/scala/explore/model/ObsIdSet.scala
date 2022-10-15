@@ -5,7 +5,9 @@ package explore.model
 
 import cats.Order
 import cats.Order.*
+import cats.Semigroup
 import cats.data.NonEmptySet
+import cats.derived.*
 import cats.syntax.all.*
 import explore.model.util.NonEmptySetWrapper
 import lucuma.core.model.Observation
@@ -14,10 +16,10 @@ import monocle.Prism
 
 import scala.collection.immutable.SortedSet
 
-case class ObsIdSet(idSet: NonEmptySet[Observation.Id])
+case class ObsIdSet(idSet: NonEmptySet[Observation.Id]) derives Semigroup
 
 object ObsIdSet {
-  implicit val orderObsIdSet: Order[ObsIdSet] = Order.by(_.idSet)
+  given Order[ObsIdSet] = Order.by(_.idSet)
 
   val iso: Iso[ObsIdSet, NonEmptySet[Observation.Id]] =
     Iso[ObsIdSet, NonEmptySet[Observation.Id]](_.idSet)(ObsIdSet.apply)
