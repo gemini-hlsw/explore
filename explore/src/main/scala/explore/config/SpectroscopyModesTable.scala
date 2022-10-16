@@ -278,7 +278,8 @@ private object SpectroscopyModesTable:
           maxSize = 105
         ),
       column(GratingColumnId, SpectroscopyModeRow.grating.get)
-        .copy(cell = cell => formatGrating(cell.value), size = 96, minSize = 96, maxSize = 96),
+        .copy(cell = cell => formatGrating(cell.value), size = 96, minSize = 96, maxSize = 96)
+        .sortableBy(formatGrating),
       column(FilterColumnId, SpectroscopyModeRow.filter.get)
         .copy(cell = cell => formatFilter(cell.value), size = 69, minSize = 69, maxSize = 69),
       column(FPUColumnId, SpectroscopyModeRow.fpu.get)
