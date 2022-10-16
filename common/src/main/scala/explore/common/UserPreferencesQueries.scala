@@ -41,35 +41,25 @@ import react.gridlayout.{BreakpointName => _, _}
 import reactST.highcharts.highchartsStrings.chart_
 
 import scala.collection.immutable.SortedMap
+import explore.model.enums.TableId
 
 object UserPreferencesQueries:
+  type TableColumnPreferences = TableColumnPreferencesQuery.Data
+  val TableColumnPreferences = TableColumnPreferencesQuery.Data
 
-  implicit class UserWidthsCreationOps(val self: UserWidthsCreation.type) extends AnyVal {
-    import self.*
+  object AreaWidths:
 
     def storeWidthPreference[F[_]: ApplicativeThrow](
       userId:  Option[User.Id],
       section: ResizableSection,
       width:   Int
     )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
+      import UserWidthsCreation.*
+
       userId.traverse { i =>
         execute[F](WidthUpsertInput(i, section, width).toInput).attempt
       }.void
-  }
 
-  object UserPreferences:
-    def storePreferences[F[_]: ApplicativeThrow](
-      userId:            User.Id,
-      aladinMouseScroll: AladinMouseScroll
-    )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
-      import UserPreferencesAladinUpdate.*
-
-      execute[F](
-        userId = userId.show.assign,
-        aladinMouseScroll = aladinMouseScroll.value.assign
-      ).attempt.void
-
-  extension (self: UserAreaWidths.type)
     // Gets the width of a section.
     // This is coded to return a default in case
     // there is no data or errors
@@ -78,7 +68,7 @@ object UserPreferencesQueries:
       area:         ResizableSection,
       defaultValue: Int
     )(using TransactionalClient[F, UserPreferencesDB]): F[Int] =
-      import self.*
+      import UserAreaWidths.*
       (for {
         uid <- OptionT.fromOption[F](userId)
         w   <-
@@ -91,11 +81,62 @@ object UserPreferencesQueries:
                 .recover(_ => none)
             }
       } yield w).value.map(_.flatten.getOrElse(defaultValue))
+  end AreaWidths
 
-  extension (self: UserGridLayoutQuery.type)
+  object TableColumns:
+
+    // def storeWidthPreference[F[_]: ApplicativeThrow](
+    //   userId:  Option[User.Id],
+    //   section: ResizableSection,
+    //   width:   Int
+    // )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
+    //   import UserWidthsCreation.*
+    //
+    //   userId.traverse { i =>
+    //     execute[F](WidthUpsertInput(i, section, width).toInput).attempt
+    //   }.void
+    //
+    // Gets the columns fo the table
+    def queryWithDefault[F[_]: MonadThrow](
+      userId:  Option[User.Id],
+      tableId: TableId
+    )(using TransactionalClient[F, UserPreferencesDB]): F[TableColumnPreferences] =
+      import TableColumnPreferencesQuery.*
+
+      (for {
+        uid <- OptionT.fromOption[F](userId)
+        w   <-
+          OptionT
+            .liftF[F, TableColumnPreferences] {
+              query[F](
+                userId = uid.show.assign,
+                tableId = tableId.assign
+              )
+              .recover(_ => TableColumnPreferences(Nil))
+            }
+      } yield w).value
+        .map(_.getOrElse(TableColumnPreferences(Nil)))
+  end TableColumns
+
+  object UserPreferences:
+    def storePreferences[F[_]: ApplicativeThrow](
+      userId:            User.Id,
+      aladinMouseScroll: AladinMouseScroll
+    )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
+      import UserPreferencesAladinUpdate.*
+
+      execute[F](
+        userId = userId.show.assign,
+        aladinMouseScroll = aladinMouseScroll.value.assign
+      ).attempt.void
+  end UserPreferences
+
+  object GridLayouts:
+
     def positions2LayoutMap(
       g: (BreakpointName, List[UserGridLayoutQuery.Data.LucumaGridLayoutPositions])
     ): (react.gridlayout.BreakpointName, (Int, Int, Layout)) =
+      import UserGridLayoutUpsert.*
       val bn = breakpointNameFromString(g._1)
       bn -> ((breakpointWidth(bn),
               breakpointCols(bn),
@@ -137,14 +178,12 @@ object UserPreferencesQueries:
             .handleErrorWith(_ => OptionT.none)
       } yield r).getOrElse(defaultValue)
 
-  implicit class UserGridLayoutUpsertOps(val self: UserGridLayoutUpsert.type) extends AnyVal {
-    import self.*
-
     def storeLayoutsPreference[F[_]: ApplicativeThrow](
       userId:  Option[User.Id],
       section: GridLayoutSection,
       layouts: Layouts
     )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
+      import UserGridLayoutUpsert.*
       userId.traverse { uid =>
         execute[F](
           layouts.layouts.flatMap { bl =>
@@ -164,7 +203,7 @@ object UserPreferencesQueries:
           }
         ).attempt
       }.void
-  }
+  end GridLayouts
 
   object TargetPreferences:
     def updateAladinPreferences[F[_]: ApplicativeThrow](

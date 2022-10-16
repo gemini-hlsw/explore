@@ -83,7 +83,7 @@ object ConstraintSetTabContents extends TwoResizablePanels:
     TransactionalClient[IO, UserPreferencesDB],
     Logger[IO]
   ): Callback =
-    (UserAreaWidths.queryWithDefault[IO](
+    (AreaWidths.queryWithDefault[IO](
       props.userId,
       ResizableSection.ConstraintSetsTree,
       Constants.InitialTreeWidth.toInt

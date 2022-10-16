@@ -234,4 +234,18 @@ object UserPreferencesQueriesGQL {
       }"""
   }
 
+  @GraphQL
+  trait TableColumnPreferencesQuery extends GraphQLOperation[UserPreferencesDB] {
+    val document = """
+      query tableColumnPreferences($tableId: LucumaTableIdsEnum, $userId: String) {
+        lucumaTableColumnPreferences(where: {tableId: {_eq: $tableId}, userId: {_eq: $userId}}) {
+          visible
+          columnId
+          sorting
+        }
+      }"""
+
+    //   object Data {
+    //   }
+  }
 }

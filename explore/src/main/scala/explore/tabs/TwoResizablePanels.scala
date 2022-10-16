@@ -59,10 +59,7 @@ trait TwoResizablePanels {
     (_: ReactEvent, d: ResizeCallbackData) =>
       widthView.set(d.size.width.toDouble) *>
         debouncer
-          .submit(
-            UserWidthsCreation
-              .storeWidthPreference[IO](userId, section, d.size.width)
-          )
+          .submit(AreaWidths.storeWidthPreference[IO](userId, section, d.size.width))
           .runAsync
 
   def makeBackButton(

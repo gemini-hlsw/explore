@@ -58,7 +58,7 @@ object TileController:
     debouncer: Reusable[UseSingleEffect[IO]]
   )(using TransactionalClient[IO, UserPreferencesDB]): Callback =
     debouncer
-      .submit(UserGridLayoutUpsert.storeLayoutsPreference[IO](userId, section, layouts))
+      .submit(GridLayouts.storeLayoutsPreference[IO](userId, section, layouts))
       .runAsyncAndForget
 
   // Calculate the state out of the height

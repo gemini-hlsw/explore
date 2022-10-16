@@ -11,7 +11,7 @@ import lucuma.core.enums.WaterVapor
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 
-trait ConstraintsSummary {
+trait ConstraintsSummary:
   val imageQuality: ImageQuality
   val cloudExtinction: CloudExtinction
   val skyBackground: SkyBackground
@@ -19,9 +19,8 @@ trait ConstraintsSummary {
 
   def summaryString: String =
     s"${imageQuality.label} ${cloudExtinction.label} ${skyBackground.label} ${waterVapor.label}"
-}
 
-object ConstraintsSummary {
+object ConstraintsSummary:
   val default: ConstraintsSummary = new ConstraintsSummary {
     // Defaults here should match server defaults for a smooth UI experience.
     val imageQuality    = ImageQuality.PointEight
@@ -30,7 +29,7 @@ object ConstraintsSummary {
     val waterVapor      = WaterVapor.Wet
   }
 
-  implicit class ConstraintSummaryOps(val cs: ConstraintsSummary) extends AnyVal {
+  extension (cs: ConstraintsSummary)
     // Create a ConstraintSet which is not safe as the elevation range is not set
     def withDefaultElevationRange: ConstraintSet = ConstraintSet(cs.imageQuality,
                                                                  cs.cloudExtinction,
@@ -38,8 +37,6 @@ object ConstraintsSummary {
                                                                  cs.waterVapor,
                                                                  ElevationRange.AirMass.Default
     )
-  }
 
-  implicit val eqConstraintSummary: Eq[ConstraintsSummary] =
+  given Eq[ConstraintsSummary] =
     Eq.by(cs => (cs.imageQuality, cs.cloudExtinction, cs.skyBackground, cs.waterVapor))
-}

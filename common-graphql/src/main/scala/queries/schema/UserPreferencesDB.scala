@@ -20,4 +20,5 @@ trait UserPreferencesDB:
     type Bigint             = Long
 
   object Enums:
-    type ItcChartType = enums.ItcChartType
+    type ItcChartType       = enums.ItcChartType
+    type LucumaTableIdsEnum = explore.model.enums.TableId
