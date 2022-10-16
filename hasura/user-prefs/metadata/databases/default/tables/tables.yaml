@@ -2,6 +2,7 @@
 - "!include public_lucumaItcPlotPreferences.yaml"
 - "!include public_lucumaObservation.yaml"
 - "!include public_lucumaResizableWidth.yaml"
+- "!include public_lucumaSortDirection.yaml"
 - "!include public_lucumaTableColumnPreferences.yaml"
 - "!include public_lucumaTableIds.yaml"
 - "!include public_lucumaTarget.yaml"

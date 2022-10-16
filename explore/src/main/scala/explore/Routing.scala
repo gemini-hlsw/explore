@@ -69,13 +69,9 @@ object Routing:
       model.zoom(RootModel.userId).get,
       routingInfo.programId,
       routingInfo.focused.obsSet,
-      model.zoom(
-        RootModel.expandedIds.andThen(ExpandedIds.constraintSetObsIds)
-      ),
+      model.zoom(RootModel.expandedIds.andThen(ExpandedIds.constraintSetObsIds)),
       model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forConstraintList),
-      model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forConstraintGroup),
-      model.zoom(RootModel.constraintSummaryHiddenColumns),
-      model.zoom(RootModel.constraintSummarySorting)
+      model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forConstraintGroup)
     )
 
   private def proposalTab(page: Page, model: View[RootModel]): VdomElement =

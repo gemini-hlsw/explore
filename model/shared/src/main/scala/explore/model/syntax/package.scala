@@ -3,7 +3,9 @@
 
 package explore.model.syntax
 
+import cats.*
 import cats.syntax.all.*
+import explore.model.TableColumnPref
 import explore.model.enums.PosAngleOptions
 import lucuma.core.enums.Site
 import lucuma.core.math.Angle

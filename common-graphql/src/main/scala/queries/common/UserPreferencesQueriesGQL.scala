@@ -6,6 +6,7 @@ package queries.common
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import queries.schemas.UserPreferencesDB
+// gql: import io.circe.refined.*
 
 object UserPreferencesQueriesGQL {
 
@@ -245,7 +246,23 @@ object UserPreferencesQueriesGQL {
         }
       }"""
 
-    //   object Data {
-    //   }
+    object Data {
+      type LucumaTableColumnPreferences = explore.model.TableColumnPref
+    }
+  }
+
+  @GraphQL
+  trait TableColumnPreferencesUpsert extends GraphQLOperation[UserPreferencesDB] {
+    val document = """
+      mutation tableColumnPreferencesUpsert($objects: [LucumaTableColumnPreferencesInsertInput!]!) {
+        insertLucumaTableColumnPreferences(
+          objects: $objects,
+          onConflict: {
+            constraint: lucumaTableColumnPreferences_pkey,
+            update_columns: [visible, sorting]
+          }) {
+          affected_rows
+        }
+      }"""
   }
 }

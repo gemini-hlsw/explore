@@ -4,6 +4,7 @@
 package explore.model
 
 import cats.Eq
+import cats.derived.*
 import cats.effect.IO
 import cats.syntax.all.*
 import eu.timepit.refined.cats.*
@@ -21,31 +22,27 @@ import monocle.Optional
 import scala.collection.immutable.HashSet
 
 case class RootModel(
-  vault:                          Option[UserVault],
-  localPreferences:               ExploreLocalPreferences,
-  expandedIds:                    ExpandedIds = ExpandedIds(),
-  searchingTarget:                Set[Target.Id] = HashSet.empty,
-  userSelectionMessage:           Option[NonEmptyString] = none,
-  targetSummaryHiddenColumns:     Set[String] =
+  vault:                      Option[UserVault],
+  localPreferences:           ExploreLocalPreferences,
+  expandedIds:                ExpandedIds = ExpandedIds(),
+  searchingTarget:            Set[Target.Id] = HashSet.empty,
+  userSelectionMessage:       Option[NonEmptyString] = none,
+  targetSummaryHiddenColumns: Set[String] =
     Set("epoch", "pmra", "pmdec", "z", "cz", "parallax", "morphology", "sed") ++
       Band.all
         .filterNot(_ === Band.V)
         .map(b => b.shortName + "mag"),
-  constraintSummaryHiddenColumns: Set[String] = Set("minam", "minha", "maxha"),
-  constraintSummarySorting:       List[(String, Boolean)] = List.empty,
-  undoStacks:                     ModelUndoStacks[IO] = ModelUndoStacks[IO]()
-)
+  undoStacks:                 ModelUndoStacks[IO] = ModelUndoStacks[IO]()
+) derives Eq
 
 object RootModel {
-  val vault                          = Focus[RootModel](_.vault)
-  val userSelectionMessage           = Focus[RootModel](_.userSelectionMessage)
-  val searchingTarget                = Focus[RootModel](_.searchingTarget)
-  val undoStacks                     = Focus[RootModel](_.undoStacks)
-  val expandedIds                    = Focus[RootModel](_.expandedIds)
-  val targetSummaryHiddenColumns     = Focus[RootModel](_.targetSummaryHiddenColumns)
-  val constraintSummaryHiddenColumns = Focus[RootModel](_.constraintSummaryHiddenColumns)
-  val constraintSummarySorting       = Focus[RootModel](_.constraintSummarySorting)
-  val localPreferences               = Focus[RootModel](_.localPreferences)
+  val vault                      = Focus[RootModel](_.vault)
+  val userSelectionMessage       = Focus[RootModel](_.userSelectionMessage)
+  val searchingTarget            = Focus[RootModel](_.searchingTarget)
+  val undoStacks                 = Focus[RootModel](_.undoStacks)
+  val expandedIds                = Focus[RootModel](_.expandedIds)
+  val targetSummaryHiddenColumns = Focus[RootModel](_.targetSummaryHiddenColumns)
+  val localPreferences           = Focus[RootModel](_.localPreferences)
 
   val userUserId = Lens[User, User.Id](_.id)(s =>
     a =>
@@ -62,17 +59,4 @@ object RootModel {
   val userId: Optional[RootModel, User.Id] =
     user.andThen(userUserId)
 
-  implicit val eqRootModel: Eq[RootModel] =
-    Eq.by(m =>
-      (m.vault,
-       m.localPreferences,
-       m.expandedIds,
-       m.searchingTarget,
-       m.userSelectionMessage,
-       m.targetSummaryHiddenColumns,
-       m.constraintSummaryHiddenColumns,
-       m.constraintSummarySorting,
-       m.undoStacks
-      )
-    )
 }

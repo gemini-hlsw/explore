@@ -13,10 +13,12 @@ import clue.data.syntax.*
 import explore.model.AladinMouseScroll
 import explore.model.GridLayoutSection
 import explore.model.ResizableSection
+import explore.model.TableColumnPref
 import explore.model.TargetVisualOptions
 import explore.model.UserGlobalPreferences
 import explore.model.enums.ItcChartType
 import explore.model.enums.PlotRange
+import explore.model.enums.TableId
 import explore.model.enums.TimeDisplay
 import explore.model.enums.Visible
 import explore.model.itc.PlotDetails
@@ -36,12 +38,12 @@ import queries.schemas.UserPreferencesDB.Scalars.*
 import queries.schemas.UserPreferencesDB.Types.LucumaObservationInsertInput
 import queries.schemas.UserPreferencesDB.Types.*
 import queries.schemas.odb.ODBConversions.*
-import queries.schemas.odb.WidthUpsertInput
 import react.gridlayout.{BreakpointName => _, _}
 import reactST.highcharts.highchartsStrings.chart_
 
 import scala.collection.immutable.SortedMap
-import explore.model.enums.TableId
+
+case class WidthUpsertInput(user: User.Id, section: ResizableSection, width: Int)
 
 object UserPreferencesQueries:
   type TableColumnPreferences = TableColumnPreferencesQuery.Data
@@ -85,19 +87,18 @@ object UserPreferencesQueries:
 
   object TableColumns:
 
-    // def storeWidthPreference[F[_]: ApplicativeThrow](
-    //   userId:  Option[User.Id],
-    //   section: ResizableSection,
-    //   width:   Int
-    // )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
-    //   import UserWidthsCreation.*
-    //
-    //   userId.traverse { i =>
-    //     execute[F](WidthUpsertInput(i, section, width).toInput).attempt
-    //   }.void
-    //
-    // Gets the columns fo the table
-    def queryWithDefault[F[_]: MonadThrow](
+    def storeColumns[F[_]: ApplicativeThrow](
+      userId:  Option[User.Id],
+      tableId: TableId,
+      columns: List[TableColumnPref]
+    )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
+      import TableColumnPreferencesUpsert.*
+
+      userId.traverse { uid =>
+        execute[F](columns.map(_.toInput(uid, tableId))).attempt
+      }.void
+
+    def queryColumns[F[_]: MonadThrow](
       userId:  Option[User.Id],
       tableId: TableId
     )(using TransactionalClient[F, UserPreferencesDB]): F[TableColumnPreferences] =
@@ -112,7 +113,7 @@ object UserPreferencesQueries:
                 userId = uid.show.assign,
                 tableId = tableId.assign
               )
-              .recover(_ => TableColumnPreferences(Nil))
+                .recover(_ => TableColumnPreferences(Nil))
             }
       } yield w).value
         .map(_.getOrElse(TableColumnPreferences(Nil)))
@@ -419,4 +420,14 @@ object UserPreferencesQueries:
         w.section.value.assign,
         w.user.toString.assign,
         w.width.assign
+      )
+
+  extension (w: TableColumnPref)
+    def toInput(u: User.Id, t: TableId): LucumaTableColumnPreferencesInsertInput =
+      LucumaTableColumnPreferencesInsertInput(
+        userId = u.show.assign,
+        tableId = t.assign,
+        columnId = w.columnId.value.assign,
+        visible = w.visible.assign,
+        sorting = w.sorting.orIgnore
       )

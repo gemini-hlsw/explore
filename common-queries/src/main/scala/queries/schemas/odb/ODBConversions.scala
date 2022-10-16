@@ -24,8 +24,6 @@ import lucuma.schemas.ObservationDB.Types.*
 import scala.collection.immutable.SortedMap
 import scala.annotation.targetName
 
-case class WidthUpsertInput(user: User.Id, section: ResizableSection, width: Int)
-
 // TODO Move to lucuma-schemas
 trait ODBConversions:
   extension (id: Observation.Id)

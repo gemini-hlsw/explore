@@ -6,7 +6,7 @@ package explore.model.enums
 import lucuma.core.util.Enumerated
 
 /**
- * Enum to indicate a plot's time system
+ * Enum to give an id to each table
  */
 enum TableId(val tag: String) derives Enumerated:
   case ConstraintsSummary extends TableId("constraints_summary")

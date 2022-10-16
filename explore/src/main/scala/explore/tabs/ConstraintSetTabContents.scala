@@ -70,16 +70,14 @@ case class ConstraintSetTabContents(
   expandedIds:    View[SortedSet[ObsIdSet]],
   listUndoStacks: View[UndoStacks[IO, ConstraintGroupList]],
   // TODO: Clean up the groupUndoStack somewhere, somehow?
-  groupUndoStack: View[Map[ObsIdSet, UndoStacks[IO, ConstraintSet]]],
-  hiddenColumns:  View[Set[String]],
-  summarySorting: View[List[(String, Boolean)]]
+  groupUndoStack: View[Map[ObsIdSet, UndoStacks[IO, ConstraintSet]]]
 ) extends ReactFnProps(ConstraintSetTabContents.component)
 
 object ConstraintSetTabContents extends TwoResizablePanels:
   private type Props = ConstraintSetTabContents
-  given Reusability[Double] = Reusability.double(2.0)
+  private given Reusability[Double] = Reusability.double(2.0)
 
-  def readWidthPreference(props: Props, state: View[TwoPanelState])(using
+  private def readWidthPreference(props: Props, state: View[TwoPanelState])(using
     TransactionalClient[IO, UserPreferencesDB],
     Logger[IO]
   ): Callback =
@@ -160,10 +158,9 @@ object ConstraintSetTabContents extends TwoResizablePanels:
              key = "constraintsSummary"
         )(renderInTitle =>
           ConstraintsSummaryTable(
+            props.userId,
             props.programId,
             constraintsWithObs.get.constraintGroups,
-            props.hiddenColumns,
-            props.summarySorting,
             props.expandedIds,
             renderInTitle
           )

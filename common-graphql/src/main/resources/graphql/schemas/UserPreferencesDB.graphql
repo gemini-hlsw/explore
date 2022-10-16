@@ -998,12 +998,150 @@ type LucumaResizableWidthVarianceFields {
 }
 
 """
+columns and relationships of "lucumaSortDirection"
+"""
+type LucumaSortDirection {
+  id: String!
+}
+
+"""
+aggregated selection of "lucumaSortDirection"
+"""
+type LucumaSortDirectionAggregate {
+  aggregate: LucumaSortDirectionAggregateFields
+  nodes: [LucumaSortDirection!]!
+}
+
+"""
+aggregate fields of "lucumaSortDirection"
+"""
+type LucumaSortDirectionAggregateFields {
+  count(columns: [LucumaSortDirectionSelectColumn!], distinct: Boolean): Int!
+  max: LucumaSortDirectionMaxFields
+  min: LucumaSortDirectionMinFields
+}
+
+"""
+Boolean expression to filter rows from the table "lucumaSortDirection". All fields are combined with a logical 'AND'.
+"""
+input LucumaSortDirectionBoolExp {
+  _and: [LucumaSortDirectionBoolExp!]
+  _not: LucumaSortDirectionBoolExp
+  _or: [LucumaSortDirectionBoolExp!]
+  id: StringComparisonExp
+}
+
+"""
+unique or primary key constraints on table "lucumaSortDirection"
+"""
+enum LucumaSortDirectionConstraint {
+  """
+  unique or primary key constraint on columns "id"
+  """
+  lucumaSortDirection_pkey
+}
+
+enum LucumaSortDirectionEnum {
+  ASC
+  DESC
+}
+
+"""
+Boolean expression to compare columns of type "LucumaSortDirectionEnum". All fields are combined with logical 'AND'.
+"""
+input LucumaSortDirectionEnumComparisonExp {
+  _eq: LucumaSortDirectionEnum
+  _in: [LucumaSortDirectionEnum!]
+  _isNull: Boolean
+  _neq: LucumaSortDirectionEnum
+  _nin: [LucumaSortDirectionEnum!]
+}
+
+"""
+input type for inserting data into table "lucumaSortDirection"
+"""
+input LucumaSortDirectionInsertInput {
+  id: String
+}
+
+"""aggregate max on columns"""
+type LucumaSortDirectionMaxFields {
+  id: String
+}
+
+"""aggregate min on columns"""
+type LucumaSortDirectionMinFields {
+  id: String
+}
+
+"""
+response of any mutation on the table "lucumaSortDirection"
+"""
+type LucumaSortDirectionMutationResponse {
+  """number of rows affected by the mutation"""
+  affected_rows: Int!
+
+  """data from the rows affected by the mutation"""
+  returning: [LucumaSortDirection!]!
+}
+
+"""
+on_conflict condition type for table "lucumaSortDirection"
+"""
+input LucumaSortDirectionOnConflict {
+  constraint: LucumaSortDirectionConstraint!
+  update_columns: [LucumaSortDirectionUpdateColumn!]! = []
+  where: LucumaSortDirectionBoolExp
+}
+
+"""Ordering options when selecting data from "lucumaSortDirection"."""
+input LucumaSortDirectionOrderBy {
+  id: OrderBy
+}
+
+"""primary key columns input for table: lucumaSortDirection"""
+input LucumaSortDirectionPkColumnsInput {
+  id: String!
+}
+
+"""
+select columns of table "lucumaSortDirection"
+"""
+enum LucumaSortDirectionSelectColumn {
+  """column name"""
+  id
+}
+
+"""
+input type for updating data in table "lucumaSortDirection"
+"""
+input LucumaSortDirectionSetInput {
+  id: String
+}
+
+"""
+update columns of table "lucumaSortDirection"
+"""
+enum LucumaSortDirectionUpdateColumn {
+  """column name"""
+  id
+}
+
+input LucumaSortDirectionUpdates {
+  """sets the columns of the filtered rows to the given values"""
+  _set: LucumaSortDirectionSetInput
+  where: LucumaSortDirectionBoolExp!
+}
+
+"""
 columns and relationships of "lucumaTableColumnPreferences"
 """
 type LucumaTableColumnPreferences {
   columnId: String!
-  sorting: Boolean
+  createdAt: timestamptz
+  sorting: LucumaSortDirectionEnum
   tableId: LucumaTableIdsEnum!
+  updatedAt: timestamptz
   userId: String!
   visible: Boolean!
 }
@@ -1033,8 +1171,10 @@ input LucumaTableColumnPreferencesBoolExp {
   _not: LucumaTableColumnPreferencesBoolExp
   _or: [LucumaTableColumnPreferencesBoolExp!]
   columnId: StringComparisonExp
-  sorting: BooleanComparisonExp
+  createdAt: TimestamptzComparisonExp
+  sorting: LucumaSortDirectionEnumComparisonExp
   tableId: LucumaTableIdsEnumComparisonExp
+  updatedAt: TimestamptzComparisonExp
   userId: StringComparisonExp
   visible: BooleanComparisonExp
 }
@@ -1054,8 +1194,10 @@ input type for inserting data into table "lucumaTableColumnPreferences"
 """
 input LucumaTableColumnPreferencesInsertInput {
   columnId: String
-  sorting: Boolean
+  createdAt: timestamptz
+  sorting: LucumaSortDirectionEnum
   tableId: LucumaTableIdsEnum
+  updatedAt: timestamptz
   userId: String
   visible: Boolean
 }
@@ -1063,12 +1205,16 @@ input LucumaTableColumnPreferencesInsertInput {
 """aggregate max on columns"""
 type LucumaTableColumnPreferencesMaxFields {
   columnId: String
+  createdAt: timestamptz
+  updatedAt: timestamptz
   userId: String
 }
 
 """aggregate min on columns"""
 type LucumaTableColumnPreferencesMinFields {
   columnId: String
+  createdAt: timestamptz
+  updatedAt: timestamptz
   userId: String
 }
 
@@ -1097,8 +1243,10 @@ Ordering options when selecting data from "lucumaTableColumnPreferences".
 """
 input LucumaTableColumnPreferencesOrderBy {
   columnId: OrderBy
+  createdAt: OrderBy
   sorting: OrderBy
   tableId: OrderBy
+  updatedAt: OrderBy
   userId: OrderBy
   visible: OrderBy
 }
@@ -1118,10 +1266,16 @@ enum LucumaTableColumnPreferencesSelectColumn {
   columnId
 
   """column name"""
+  createdAt
+
+  """column name"""
   sorting
 
   """column name"""
   tableId
+
+  """column name"""
+  updatedAt
 
   """column name"""
   userId
@@ -1135,8 +1289,10 @@ input type for updating data in table "lucumaTableColumnPreferences"
 """
 input LucumaTableColumnPreferencesSetInput {
   columnId: String
-  sorting: Boolean
+  createdAt: timestamptz
+  sorting: LucumaSortDirectionEnum
   tableId: LucumaTableIdsEnum
+  updatedAt: timestamptz
   userId: String
   visible: Boolean
 }
@@ -1149,10 +1305,16 @@ enum LucumaTableColumnPreferencesUpdateColumn {
   columnId
 
   """column name"""
+  createdAt
+
+  """column name"""
   sorting
 
   """column name"""
   tableId
+
+  """column name"""
+  updatedAt
 
   """column name"""
   userId
@@ -2192,6 +2354,21 @@ input StringComparisonExp {
   _similar: String
 }
 
+"""
+Boolean expression to compare columns of type "timestamptz". All fields are combined with logical 'AND'.
+"""
+input TimestamptzComparisonExp {
+  _eq: timestamptz
+  _gt: timestamptz
+  _gte: timestamptz
+  _in: [timestamptz!]
+  _isNull: Boolean
+  _lt: timestamptz
+  _lte: timestamptz
+  _neq: timestamptz
+  _nin: [timestamptz!]
+}
+
 scalar bigint
 
 scalar breakpoint_name
@@ -2299,6 +2476,22 @@ input lucumaResizableWidth_streamCursorValueInput {
 }
 
 """
+Streaming cursor of the table "lucumaSortDirection"
+"""
+input lucumaSortDirection_streamCursorInput {
+  """Stream column input with initial value"""
+  initialValue: lucumaSortDirection_streamCursorValueInput!
+
+  """cursor ordering"""
+  ordering: CursorOrdering
+}
+
+"""Initial value of the column from where the streaming should start"""
+input lucumaSortDirection_streamCursorValueInput {
+  id: String
+}
+
+"""
 Streaming cursor of the table "lucumaTableColumnPreferences"
 """
 input lucumaTableColumnPreferences_streamCursorInput {
@@ -2312,8 +2505,10 @@ input lucumaTableColumnPreferences_streamCursorInput {
 """Initial value of the column from where the streaming should start"""
 input lucumaTableColumnPreferences_streamCursorValueInput {
   columnId: String
-  sorting: Boolean
+  createdAt: timestamptz
+  sorting: LucumaSortDirectionEnum
   tableId: LucumaTableIdsEnum
+  updatedAt: timestamptz
   userId: String
   visible: Boolean
 }
@@ -2568,6 +2763,19 @@ type Mutation {
   deleteLucumaResizableWidthByPk(section: resizable_area!, userId: String!): LucumaResizableWidth
 
   """
+  delete data from the table: "lucumaSortDirection"
+  """
+  deleteLucumaSortDirection(
+    """filter the rows which have to be deleted"""
+    where: LucumaSortDirectionBoolExp!
+  ): LucumaSortDirectionMutationResponse
+
+  """
+  delete single row from the table: "lucumaSortDirection"
+  """
+  deleteLucumaSortDirectionByPk(id: String!): LucumaSortDirection
+
+  """
   delete data from the table: "lucumaTableColumnPreferences"
   """
   deleteLucumaTableColumnPreferences(
@@ -2732,6 +2940,28 @@ type Mutation {
     """upsert condition"""
     onConflict: LucumaResizableWidthOnConflict
   ): LucumaResizableWidth
+
+  """
+  insert data into the table: "lucumaSortDirection"
+  """
+  insertLucumaSortDirection(
+    """the rows to be inserted"""
+    objects: [LucumaSortDirectionInsertInput!]!
+
+    """upsert condition"""
+    onConflict: LucumaSortDirectionOnConflict
+  ): LucumaSortDirectionMutationResponse
+
+  """
+  insert a single row into the table: "lucumaSortDirection"
+  """
+  insertLucumaSortDirectionOne(
+    """the row to be inserted"""
+    object: LucumaSortDirectionInsertInput!
+
+    """upsert condition"""
+    onConflict: LucumaSortDirectionOnConflict
+  ): LucumaSortDirection
 
   """
   insert data into the table: "lucumaTableColumnPreferences"
@@ -2988,6 +3218,34 @@ type Mutation {
     """updates to execute, in order"""
     updates: [LucumaResizableWidthUpdates!]!
   ): [LucumaResizableWidthMutationResponse]
+
+  """
+  update data of the table: "lucumaSortDirection"
+  """
+  updateLucumaSortDirection(
+    """sets the columns of the filtered rows to the given values"""
+    _set: LucumaSortDirectionSetInput
+
+    """filter the rows which have to be updated"""
+    where: LucumaSortDirectionBoolExp!
+  ): LucumaSortDirectionMutationResponse
+
+  """
+  update single row of the table: "lucumaSortDirection"
+  """
+  updateLucumaSortDirectionByPk(
+    """sets the columns of the filtered rows to the given values"""
+    _set: LucumaSortDirectionSetInput
+    pk_columns: LucumaSortDirectionPkColumnsInput!
+  ): LucumaSortDirection
+
+  """
+  update multiples rows of table: "lucumaSortDirection"
+  """
+  updateLucumaSortDirectionMany(
+    """updates to execute, in order"""
+    updates: [LucumaSortDirectionUpdates!]!
+  ): [LucumaSortDirectionMutationResponse]
 
   """
   update data of the table: "lucumaTableColumnPreferences"
@@ -3342,6 +3600,51 @@ type Query {
   fetch data from the table: "lucumaResizableWidth" using primary key columns
   """
   lucumaResizableWidthByPk(section: resizable_area!, userId: String!): LucumaResizableWidth
+
+  """
+  fetch data from the table: "lucumaSortDirection"
+  """
+  lucumaSortDirection(
+    """distinct select on columns"""
+    distinctOn: [LucumaSortDirectionSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [LucumaSortDirectionOrderBy!]
+
+    """filter the rows returned"""
+    where: LucumaSortDirectionBoolExp
+  ): [LucumaSortDirection!]!
+
+  """
+  fetch aggregated fields from the table: "lucumaSortDirection"
+  """
+  lucumaSortDirectionAggregate(
+    """distinct select on columns"""
+    distinctOn: [LucumaSortDirectionSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [LucumaSortDirectionOrderBy!]
+
+    """filter the rows returned"""
+    where: LucumaSortDirectionBoolExp
+  ): LucumaSortDirectionAggregate!
+
+  """
+  fetch data from the table: "lucumaSortDirection" using primary key columns
+  """
+  lucumaSortDirectionByPk(id: String!): LucumaSortDirection
 
   """
   fetch data from the table: "lucumaTableColumnPreferences"
@@ -3844,6 +4147,65 @@ type Subscription {
   ): [LucumaResizableWidth!]!
 
   """
+  fetch data from the table: "lucumaSortDirection"
+  """
+  lucumaSortDirection(
+    """distinct select on columns"""
+    distinctOn: [LucumaSortDirectionSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [LucumaSortDirectionOrderBy!]
+
+    """filter the rows returned"""
+    where: LucumaSortDirectionBoolExp
+  ): [LucumaSortDirection!]!
+
+  """
+  fetch aggregated fields from the table: "lucumaSortDirection"
+  """
+  lucumaSortDirectionAggregate(
+    """distinct select on columns"""
+    distinctOn: [LucumaSortDirectionSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [LucumaSortDirectionOrderBy!]
+
+    """filter the rows returned"""
+    where: LucumaSortDirectionBoolExp
+  ): LucumaSortDirectionAggregate!
+
+  """
+  fetch data from the table: "lucumaSortDirection" using primary key columns
+  """
+  lucumaSortDirectionByPk(id: String!): LucumaSortDirection
+
+  """
+  fetch data from the table in a streaming manner : "lucumaSortDirection"
+  """
+  lucumaSortDirectionStream(
+    """maximum number of rows returned in a single batch"""
+    batchSize: Int!
+
+    """cursor to stream the results returned by the query"""
+    cursor: [lucumaSortDirection_streamCursorInput]!
+
+    """filter the rows returned"""
+    where: LucumaSortDirectionBoolExp
+  ): [LucumaSortDirection!]!
+
+  """
   fetch data from the table: "lucumaTableColumnPreferences"
   """
   lucumaTableColumnPreferences(
@@ -4189,4 +4551,6 @@ type Subscription {
     where: LucumaUserBoolExp
   ): [LucumaUser!]!
 }
+
+scalar timestamptz
 
