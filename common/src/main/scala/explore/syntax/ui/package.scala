@@ -4,20 +4,23 @@
 package explore.syntax.ui
 
 import cats.Eq
+import cats.MonadThrow
 import cats.syntax.all.*
+import crystal.react.implicits.*
 import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
 import explore.model.Constants
 import explore.utils.*
 import japgolly.scalajs.react.callback.Callback
+import japgolly.scalajs.react.util.Effect
 import lucuma.ui.forms.ExternalValue
 import lucuma.ui.forms.FormInputEV
 import org.scalajs.dom.Window
+import org.typelevel.log4cats.Logger
 import react.common.Css
 
 import scala.scalajs.js
 import scala.scalajs.js.UndefOr
-import org.typelevel.log4cats.Logger
 
 extension (self: Window)
   def canFitTwoPanels: Boolean =
@@ -53,6 +56,8 @@ extension [EV[_], A, B](input: InputWithUnits[EV, Option[A]])
 extension [A](c: js.UndefOr[A => Callback])
   def toJs: js.UndefOr[js.Function1[A, Unit]] = c.map(x => (a: A) => x(a).runNow())
 
-extension (c: Callback.type) def pprintln[T](a: T): Callback = Callback(_root_.pprint.pprintln(a))
+extension [F[_]: MonadThrow](c: Logger[F])
+  def pdebug[T](a: T): F[Unit] = c.debug(_root_.pprint.apply(a).render)
 
-extension [F[_]](c: Logger[F]) def pdebug[T](a: T): Callback = c.debug(_root_.pprint.apply(a).render)
+  def pdebugCB[T](a: T)(using Effect.Dispatch[F]): Callback =
+    c.debug(_root_.pprint.apply(a).render).runAsyncAndForget
