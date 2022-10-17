@@ -32,33 +32,33 @@ object pprinter {
 
   def apply(x: Any): String = printer.apply(x)
 
-  def error[F[_]](x: Any)(implicit logger: Logger[F]): F[Unit] =
+  def error[F[_]](x: Any)(using logger: Logger[F]): F[Unit] =
     logger.error(apply(x))
 
-  def error[F[_]: Monad](message: String, x: Any)(implicit logger: Logger[F]): F[Unit] =
+  def error[F[_]: Monad](message: String, x: Any)(using logger: Logger[F]): F[Unit] =
     logger.error(message) >> logger.error(apply(x))
 
-  def warn[F[_]](x: Any)(implicit logger: Logger[F]): F[Unit] =
+  def warn[F[_]](x: Any)(using logger: Logger[F]): F[Unit] =
     logger.warn(apply(x))
 
-  def warn[F[_]: Monad](message: String, x: Any)(implicit logger: Logger[F]): F[Unit] =
+  def warn[F[_]: Monad](message: String, x: Any)(using logger: Logger[F]): F[Unit] =
     logger.warn(message) >> logger.warn(apply(x))
 
-  def info[F[_]](x: Any)(implicit logger: Logger[F]): F[Unit] =
+  def info[F[_]](x: Any)(using logger: Logger[F]): F[Unit] =
     logger.info(apply(x))
 
-  def info[F[_]: Monad](message: String, x: Any)(implicit logger: Logger[F]): F[Unit] =
+  def info[F[_]: Monad](message: String, x: Any)(using logger: Logger[F]): F[Unit] =
     logger.info(message) >> logger.info(apply(x))
 
-  def debug[F[_]](x: Any)(implicit logger: Logger[F]): F[Unit] =
+  def debug[F[_]](x: Any)(using logger: Logger[F]): F[Unit] =
     logger.debug(apply(x))
 
-  def debug[F[_]: Monad](message: String, x: Any)(implicit logger: Logger[F]): F[Unit] =
+  def debug[F[_]: Monad](message: String, x: Any)(using logger: Logger[F]): F[Unit] =
     logger.debug(message) >> logger.debug(apply(x))
 
-  def trace[F[_]](x: Any)(implicit logger: Logger[F]): F[Unit] =
+  def trace[F[_]](x: Any)(using logger: Logger[F]): F[Unit] =
     logger.trace(apply(x))
 
-  def trace[F[_]: Monad](message: String, x: Any)(implicit logger: Logger[F]): F[Unit] =
+  def trace[F[_]: Monad](message: String, x: Any)(using logger: Logger[F]): F[Unit] =
     logger.trace(message) >> logger.trace(apply(x))
 }
