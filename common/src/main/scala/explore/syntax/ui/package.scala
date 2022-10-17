@@ -57,11 +57,12 @@ extension [EV[_], A, B](input: InputWithUnits[EV, Option[A]])
 extension [A](c: js.UndefOr[A => Callback])
   def toJs: js.UndefOr[js.Function1[A, Unit]] = c.map(x => (a: A) => x(a).runNow())
 
-extension [F[_]: MonadThrow](c:                          Logger[F])
+extension [F[_]: MonadThrow](c: Logger[F])
   def pdebug[T](a: T): F[Unit] = c.debug(_root_.pprint.apply(a).render)
 
   def pdebugCB[T](a: T)(using Effect.Dispatch[F]): Callback =
     c.debug(_root_.pprint.apply(a).render).runAsyncAndForget
+
 extension [F[_]: Functor: FunctorFilter: Foldable](cols: F[TableColumnPref])
   def hiddenColumns: F[String] =
     cols.collect { case TableColumnPref(cid, false, _) => cid.value }

@@ -129,3 +129,5 @@ object reusability:
   given Reusability[ObsSummariesWithConstraints] = Reusability.byEq
 
   given Reusability[Range.Inclusive] = Reusability.by(x => (x.start, x.end, x.step))
+
+  given Reusability[TableColumnPref] = Reusability.byEq

@@ -23,13 +23,16 @@ import explore.model.Focused
 import explore.model.ObsIdSet
 import explore.model.TableColumnPref
 import explore.model.enums.AppTab
+import explore.model.enums.SortDirection
 import explore.model.enums.TableId
+import explore.model.reusability.given
 import explore.model.syntax.all.*
 import explore.syntax.ui.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
+import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.User
 import lucuma.react.table.*
@@ -50,8 +53,6 @@ import scala.collection.immutable.SortedSet
 
 import scalajs.js.JSConverters.*
 import scalajs.js
-import lucuma.core.model.Observation
-import explore.model.enums.SortDirection
 
 case class ConstraintsSummaryTable(
   userId:         Option[User.Id],
@@ -65,8 +66,6 @@ object ConstraintsSummaryTable:
   private type Props = ConstraintsSummaryTable
 
   private val ColDef = ColumnDef[ConstraintGroup]
-
-  given Reusability[TableColumnPref] = Reusability.byEq
 
   private val columnNames: Map[String, String] = Map(
     "edit"         -> " ",

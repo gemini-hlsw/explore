@@ -5,11 +5,11 @@ package explore.model
 
 import cats.Eq
 import cats.derived.*
+import explore.model.enums.SortDirection
 import io.circe.Decoder
 import lucuma.core.util.NewType
 import monocle.Focus
 import monocle.Lens
-import explore.model.enums.SortDirection
 
 object ColumnId extends NewType[String]
 type ColumnId = ColumnId.Type

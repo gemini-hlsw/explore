@@ -6,7 +6,6 @@ package queries.common
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import queries.schemas.UserPreferencesDB
-// gql: import io.circe.refined.*
 
 object UserPreferencesQueriesGQL {
 
