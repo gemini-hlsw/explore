@@ -17,6 +17,7 @@ import react.common.Css
 
 import scala.scalajs.js
 import scala.scalajs.js.UndefOr
+import org.typelevel.log4cats.Logger
 
 extension (self: Window)
   def canFitTwoPanels: Boolean =
@@ -53,3 +54,5 @@ extension [A](c: js.UndefOr[A => Callback])
   def toJs: js.UndefOr[js.Function1[A, Unit]] = c.map(x => (a: A) => x(a).runNow())
 
 extension (c: Callback.type) def pprintln[T](a: T): Callback = Callback(_root_.pprint.pprintln(a))
+
+extension [F[_]](c: Logger[F]) def pdebug[T](a: T): Callback = c.debug(_root_.pprint.apply(a).render)
