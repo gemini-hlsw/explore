@@ -603,7 +603,6 @@ object TargetTabContents:
   ): IO[Unit] =
     import ctx.given
     adding.async.set(LoadingState.Loading) >>
-      IO(pprint.pprintln(asterismGroupsWithObs.get.asterismGroups)) *>
       obsIds
         .traverse(obsId =>
           ObsQueries
