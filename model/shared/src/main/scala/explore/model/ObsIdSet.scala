@@ -5,6 +5,7 @@ package explore.model
 
 import cats.Order
 import cats.Order.*
+import cats.Semigroup
 import cats.data.NonEmptySet
 import cats.syntax.all.*
 import explore.model.util.NonEmptySetWrapper
@@ -17,7 +18,9 @@ import scala.collection.immutable.SortedSet
 case class ObsIdSet(idSet: NonEmptySet[Observation.Id])
 
 object ObsIdSet {
-  implicit val orderObsIdSet: Order[ObsIdSet] = Order.by(_.idSet)
+  given Order[ObsIdSet] = Order.by(_.idSet)
+
+  given Semigroup[ObsIdSet] = Semigroup.instance((a, b) => ObsIdSet(a.idSet |+| b.idSet))
 
   val iso: Iso[ObsIdSet, NonEmptySet[Observation.Id]] =
     Iso[ObsIdSet, NonEmptySet[Observation.Id]](_.idSet)(ObsIdSet.apply)

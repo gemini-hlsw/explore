@@ -4,6 +4,8 @@
 package explore.model
 
 import cats.Eq
+import cats.Semigroup
+import cats.syntax.all.*
 import lucuma.core.model.Target
 import monocle.Focus
 import monocle.Lens
@@ -14,6 +16,7 @@ case class AsterismGroup(
   obsIds:    ObsIdSet,
   targetIds: SortedSet[Target.Id]
 ) {
+
   def addTargetId(targetId: Target.Id): AsterismGroup =
     AsterismGroup.targetIds.modify(_ + targetId)(this)
 
@@ -30,7 +33,10 @@ case class AsterismGroup(
 }
 
 object AsterismGroup {
-  implicit val eqAsterismGroup: Eq[AsterismGroup] = Eq.by(x => (x.obsIds, x.targetIds))
+  given Eq[AsterismGroup] = Eq.by(x => (x.obsIds, x.targetIds))
+
+  given Semigroup[AsterismGroup] =
+    Semigroup.instance((a, b) => AsterismGroup(a.obsIds |+| b.obsIds, a.targetIds |+| b.targetIds))
 
   val obsIds: Lens[AsterismGroup, ObsIdSet] = Focus[AsterismGroup](_.obsIds)
 

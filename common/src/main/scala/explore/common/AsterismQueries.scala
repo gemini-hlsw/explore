@@ -32,7 +32,7 @@ object AsterismQueries:
   // The default cats ordering for sorted set sorts by size first, then contents. That's not what we want.
   // This is used for sorting the AsterismGroupObsList. If we change to sort by name or something
   // else, we can remove this.
-  given Order[ObsIdSet] = ObsIdSet.orderObsIdSet
+  given Order[ObsIdSet] = ObsIdSet.given_Order_ObsIdSet
 
   type ObservationResult = AsterismGroupObsQuery.Data.Observations.Matches
   val ObservationResult = AsterismGroupObsQuery.Data.Observations.Matches
@@ -45,7 +45,45 @@ object AsterismQueries:
     asterismGroups: AsterismGroupList,
     targetsWithObs: TargetWithObsList,
     observations:   ObsList
-  )
+  ) {
+    //
+    // Emulates locally when an observation is cloned into targedIds
+    def localClone(
+      originalId: Observation.Id,
+      clonedId:   Observation.Id,
+      targetIds:  List[Target.Id]
+    ) = {
+      val newObservations: ObsList = observations
+        .get(originalId)
+        .map(c => clonedId -> c.copy(id = clonedId))
+        .map(observations + _)
+        .getOrElse(observations)
+
+      val newTargetsWithObs: TargetWithObsList = targetIds
+        .foldLeft(targetsWithObs)((t, i) =>
+          t.updatedWith(i)(_.map(r => r.copy(obsIds = r.obsIds + clonedId)))
+        )
+
+      val newAsterismGr = asterismGroups
+        .collect {
+          case (i, o) if i.contains(originalId) =>
+            val cid = ObsIdSet.one(clonedId)
+            cid -> o.copy(obsIds = cid, targetIds = SortedSet.from(targetIds))
+        }
+
+      val newAsterismGroups =
+        (asterismGroups ++ newAsterismGr)
+          .groupMapReduce(_._2.targetIds)(_._2) { case (og1, og2) =>
+            og1 |+| og2
+          }
+          .map((_, ag) => ag.obsIds -> ag)
+
+      copy(asterismGroups = SortedMap.from(newAsterismGroups),
+           targetsWithObs = newTargetsWithObs,
+           observations = newObservations
+      )
+    }
+  }
 
   object AsterismGroupsWithObs {
     val asterismGroups = Focus[AsterismGroupsWithObs](_.asterismGroups)

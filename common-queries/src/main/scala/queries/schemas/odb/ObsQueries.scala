@@ -264,15 +264,15 @@ object ObsQueries:
       }
 
   def applyObservation[F[_]: Async](
-    obsId:    Observation.Id,
-    targetId: Target.Id
+    obsId:     Observation.Id,
+    targetIds: List[Target.Id]
   )(using TransactionalClient[F, ObservationDB]): F[ObsSummaryWithTitleAndConstraints] =
     CloneObservationMutation
       .execute[F](
         CloneObservationInput(
           observationId = obsId,
           SET = ObservationPropertiesInput(targetEnvironment =
-            TargetEnvironmentInput(asterism = List(targetId).assign).assign
+            TargetEnvironmentInput(asterism = targetIds.assign).assign
           ).assign
         )
       )
