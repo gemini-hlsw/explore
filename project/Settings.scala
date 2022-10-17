@@ -12,7 +12,7 @@ object Settings {
     val catsRetry        = "3.1.0"
     val circe            = "0.14.3"
     val circeGolden      = "0.3.0"
-    val clue             = "0.24-dae3eb4-SNAPSHOT"
+    val clue             = "0.24-2d7ee3b-SNAPSHOT"
     val crystal          = "0.32.2"
     val discipline       = "1.5.1"
     val disciplineMUnit  = "1.0.9"
