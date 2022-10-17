@@ -1,1 +1,0 @@
-CREATE TABLE "public"."lucumaTableColumnPreferences" ("tableId" text NOT NULL, "columnId" text NOT NULL, "visible" boolean NOT NULL, "sorting" boolean, PRIMARY KEY ("tableId","columnId") , FOREIGN KEY ("tableId") REFERENCES "public"."lucumaTableIds"("id") ON UPDATE cascade ON DELETE cascade);
