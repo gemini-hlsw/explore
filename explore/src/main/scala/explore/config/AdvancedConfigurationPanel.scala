@@ -728,43 +728,42 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               dithersControl,
               offsetsControl,
               trigger = Button(
-                size = Button.Size.Small,
-                severity = Button.Severity.Secondary,
-                outlined = true
-              ).compact("View Sequence")
+                label = "View Sequence",
+                size = Button.Size.Small
+              ).compact
             ),
             Button(
+              label = "View Suggested Configs",
+              icon = Icons.ListIcon,
               size = Button.Size.Small,
-              severity = Button.Severity.Secondary,
-              outlined = true,
               onClick = props.editState.set(ConfigEditState.TableView)
-            ).compact(Icons.ListIcon, "View Suggested Configs")
+            ).compact
               .unless(isCustomized(props.scienceModeAdvanced)),
             Button(
+              label = "Revert Customizations",
+              icon = Icons.TrashUnstyled,
               size = Button.Size.Small,
               severity = Button.Severity.Danger,
               onClick = props.editState.set(ConfigEditState.DetailsView) >>
                 exposureModeEnum.set(none) >>
                 invalidateITC >>
                 revertCustomizations(props.scienceModeAdvanced)
-            ).compact(Icons.TrashUnstyled, "Revert Customizations")
+            ).compact
               .when(isCustomized(props.scienceModeAdvanced)),
             Button(
+              label = "Customize",
+              icon = Icons.Edit,
               size = Button.Size.Small,
-              severity = Button.Severity.Secondary,
-              outlined = true,
               onClick = props.editState.set(ConfigEditState.SimpleEdit)
-            ).compact(Icons.Edit, "Customize")
+            ).compact
               .when(props.editState.get === ConfigEditState.DetailsView),
             Button(
+              label = "Advanced Customization",
+              icon = Icons.ExclamationTriangle.clazz(ExploreStyles.WarningIcon),
               size = Button.Size.Small,
-              severity = Button.Severity.Secondary,
-              outlined = true,
               onClick = props.editState.set(ConfigEditState.AdvancedEdit)
-            ).compact(
-              Icons.ExclamationTriangle.clazz(ExploreStyles.WarningIcon),
-              "Advanced Customization"
-            ).when(props.editState.get === ConfigEditState.SimpleEdit)
+            ).compact
+              .when(props.editState.get === ConfigEditState.SimpleEdit)
           )
         )
       }
