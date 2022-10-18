@@ -73,7 +73,6 @@ case class AsterismEditor(
   otherObsCount: Target.Id => Int,
   undoStacks:    View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
   searching:     View[Set[Target.Id]],
-  hiddenColumns: View[Set[String]],
   renderInTitle: Tile.RenderInTitle
 ) extends ReactFnProps(AsterismEditor.component)
 
@@ -201,9 +200,9 @@ object AsterismEditor {
           ),
           props.renderInTitle(VizTimeEditor(vizTimeView)),
           TargetTable(
+            props.userId.some,
             props.obsIds,
             props.asterism,
-            props.hiddenColumns,
             targetView,
             vizTime,
             props.renderInTitle,

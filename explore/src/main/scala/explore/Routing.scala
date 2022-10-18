@@ -47,8 +47,7 @@ object Routing:
       model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forAsterismGroupList),
       model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forSiderealTarget),
       model.zoom(RootModel.searchingTarget),
-      model.zoom(RootModel.expandedIds.andThen(ExpandedIds.asterismObsIds)),
-      model.zoom(RootModel.targetSummaryHiddenColumns)
+      model.zoom(RootModel.expandedIds.andThen(ExpandedIds.asterismObsIds))
     )
 
   private def obsTab(page: Page, model: View[RootModel]): VdomElement =
@@ -59,8 +58,7 @@ object Routing:
       routingInfo.focused.obsSet.map(_.head),
       routingInfo.focused.target,
       model.zoom(RootModel.undoStacks),
-      model.zoom(RootModel.searchingTarget),
-      model.zoom(RootModel.targetSummaryHiddenColumns)
+      model.zoom(RootModel.searchingTarget)
     )
 
   private def constraintSetTab(page: Page, model: View[RootModel]): VdomElement =

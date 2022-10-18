@@ -10,11 +10,18 @@ import crystal.react.reuse.*
 import explore.common.AsterismQueries.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
+import explore.model.AppContext
+import explore.model.TableColumnPref
 import explore.model.TargetWithIdAndObs
+import explore.model.enums.TableId
+import explore.syntax.ui.*
+import explore.utils.TableHooks
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.Band
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
+import lucuma.core.model.User
 import lucuma.react.table.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
@@ -29,15 +36,15 @@ import reactST.{tanstackTableCore => raw}
 import scalajs.js.JSConverters.*
 
 case class TargetSummaryTable(
+  userId:            Option[User.Id],
   targets:           TargetWithObsList,
-  hiddenColumns:     View[Set[String]],
   selectObservation: (Observation.Id, Target.Id) => Callback,
   selectTarget:      Target.Id => Callback,
   renderInTitle:     Tile.RenderInTitle
 ) extends ReactFnProps(TargetSummaryTable.component)
 
-object TargetSummaryTable:
-  type Props = TargetSummaryTable
+object TargetSummaryTable extends TableHooks:
+  private type Props = TargetSummaryTable
 
   private val ColDef = ColumnDef[TargetWithIdAndObs]
 
@@ -47,11 +54,18 @@ object TargetSummaryTable:
     "name" -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryName |+| ExploreStyles.WithId)
   )
 
+  val TargetSummaryHiddenColumns: List[TableColumnPref] =
+    (List("epoch", "pmra", "pmdec", "z", "cz", "parallax", "morphology", "sed") ++
+      Band.all
+        .filterNot(_ === Band.V)
+        .map(b => b.shortName + "mag")).map(TableColumnPref.apply)
+
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
+      .useContext(AppContext.ctx)
       // cols
-      .useMemoBy(_ => ()) { props => _ =>
+      .useMemoBy((_, _) => ()) { (props, _) => _ =>
         def column[V](id: String, accessor: TargetWithIdAndObs => V) =
           ColDef(id, row => accessor(row), TargetColumns.allColNames(id))
 
@@ -86,11 +100,23 @@ object TargetSummaryTable:
               )
           )
       }
+      // Load preferences
+      .customBy((props, ctx, cols) =>
+        useTablePreferencesLoad(
+          TablePrefsLoadParams(
+            props.userId,
+            ctx,
+            TableId.TargetsSummary,
+            cols.value,
+            TargetSummaryHiddenColumns
+          )
+        )
+      )
       // rows
-      .useMemoBy((props, _) => props.targets)((_, _) =>
+      .useMemoBy((props, _, _, _) => props.targets)((_, _, _, _) =>
         _.toList.map { case (id, targetWithObs) => TargetWithIdAndObs(id, targetWithObs) }
       )
-      .useReactTableBy((props, cols, rows) =>
+      .useReactTableBy((props, _, cols, prefs, rows) =>
         TableOptions(
           cols,
           rows,
@@ -100,23 +126,28 @@ object TargetSummaryTable:
           columnResizeMode = raw.mod.ColumnResizeMode.onChange,
           initialState = raw.mod
             .InitialTableState()
-            .setColumnVisibility(
-              StringDictionary(
-                props.hiddenColumns.get.toList.map(col => col -> false): _*
-              )
-            )
+            .setColumnVisibility(prefs.get.hiddenColumnsDictionary)
+            .setSorting(toSortingRules(prefs.get.sortingColumns))
         )
       )
-      .render((props, _, _, table) =>
+      .customBy((_, _, _, prefs, _, table) =>
+        useTablePreferencesStore(
+          TablePrefsStoreParams(
+            prefs,
+            table
+          )
+        )
+      )
+      .render((props, _, _, prefs, _, table, _) =>
         <.div(
           props.renderInTitle(
             React.Fragment(
               <.span, // Push column selector to right
               <.span(ExploreStyles.TitleSelectColumns)(
-                ColumnSelector(
+                NewColumnSelector(
                   table,
                   TargetColumns.allColNames,
-                  props.hiddenColumns,
+                  prefs,
                   ExploreStyles.SelectColumns
                 )
               )

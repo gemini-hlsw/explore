@@ -10,3 +10,5 @@ import lucuma.core.util.Enumerated
  */
 enum TableId(val tag: String) derives Enumerated:
   case ConstraintsSummary extends TableId("constraints_summary")
+  case TargetsSummary     extends TableId("targets_summary")
+  case AsterismTargets    extends TableId("asterism_targets")
