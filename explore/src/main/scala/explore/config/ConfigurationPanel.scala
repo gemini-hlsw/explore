@@ -42,6 +42,7 @@ import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.SiderealTracking
+import lucuma.core.model.User
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
@@ -52,6 +53,7 @@ import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
 
 case class ConfigurationPanel(
+  userId:          Option[User.Id],
   obsId:           Observation.Id,
   title:           String,
   subtitle:        Option[NonEmptyString],
@@ -191,6 +193,7 @@ object ConfigurationPanel:
             ObsConfigurationPanel(props.obsId, posAngleView),
             if (editState.get === ConfigEditState.TableView)
               BasicConfigurationPanel(
+                props.userId,
                 props.obsId,
                 requirementsCtx,
                 optModeView,

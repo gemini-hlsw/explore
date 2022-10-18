@@ -27,6 +27,7 @@ import lucuma.core.math.Coordinates
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
 import lucuma.core.model.SiderealTracking
+import lucuma.core.model.User
 import lucuma.refined.*
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.syntax.all.*
@@ -41,6 +42,7 @@ import react.semanticui.sizes.*
 import scalajs.js.JSConverters.*
 
 case class BasicConfigurationPanel(
+  userId:          Option[User.Id],
   obsId:           Observation.Id,
   requirementsCtx: UndoSetter[ScienceRequirementsData],
   scienceModeOpt:  View[Option[model.ScienceMode]],
@@ -88,6 +90,7 @@ private object BasicConfigurationPanel:
               .unless(isSpectroscopy)
           ),
           SpectroscopyModesTable(
+            props.userId,
             props.scienceModeOpt,
             spectroscopy.get,
             props.constraints,
