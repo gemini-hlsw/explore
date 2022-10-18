@@ -3,18 +3,19 @@
 
 package explore.syntax.ui
 
-import cats.Eq
-import cats.MonadThrow
+import cats.*
 import cats.syntax.all.*
 import crystal.react.implicits.*
 import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
 import explore.model.Constants
+import explore.model.TableColumnPref
 import explore.utils.*
 import japgolly.scalajs.react.callback.Callback
 import japgolly.scalajs.react.util.Effect
 import lucuma.ui.forms.ExternalValue
 import lucuma.ui.forms.FormInputEV
+import org.scalablytyped.runtime.StringDictionary
 import org.scalajs.dom.Window
 import org.typelevel.log4cats.Logger
 import react.common.Css
@@ -61,3 +62,20 @@ extension [F[_]: MonadThrow](c: Logger[F])
 
   def pdebugCB[T](a: T)(using Effect.Dispatch[F]): Callback =
     c.debug(_root_.pprint.apply(a).render).runAsyncAndForget
+
+extension [F[_]: Functor: FunctorFilter: Foldable](cols: F[TableColumnPref])
+  def hiddenColumns: F[String] =
+    cols.collect { case TableColumnPref(cid, false, _) => cid.value }
+
+  def sortingColumns: F[(String, Boolean)] =
+    cols.collect { case TableColumnPref(cid, _, Some(d)) => cid.value -> d.toBool }
+
+  def hiddenColumnsDictionary: StringDictionary[Boolean] =
+    StringDictionary(
+      hiddenColumns.toList.map(_ -> false): _*
+    )
+
+  def withStored(storedCols: F[TableColumnPref]): F[TableColumnPref] =
+    cols.map { case t @ TableColumnPref(cid, _, _) =>
+      storedCols.find(_.columnId === cid).getOrElse(t)
+    }

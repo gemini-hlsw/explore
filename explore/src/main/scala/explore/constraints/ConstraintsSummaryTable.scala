@@ -3,29 +3,46 @@
 
 package explore.constraints
 
+import cats.Functor
 import cats.Order.*
+import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.View
+import crystal.react.hooks.*
+import crystal.react.implicits.*
 import crystal.react.reuse.*
 import explore.Icons
 import explore.common.ConstraintGroupQueries.*
+import explore.common.UserPreferencesQueries.TableColumns
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
+import explore.model.ColumnId
 import explore.model.ConstraintGroup
 import explore.model.Focused
 import explore.model.ObsIdSet
+import explore.model.TableColumnPref
 import explore.model.enums.AppTab
+import explore.model.enums.SortDirection
+import explore.model.enums.TableId
+import explore.model.reusability.given
+import explore.model.syntax.all.*
+import explore.syntax.ui.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
+import lucuma.core.model.Observation
 import lucuma.core.model.Program
+import lucuma.core.model.User
 import lucuma.react.table.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
+import monocle.function.Each.each
+import monocle.function.Each.listEach
+import monocle.std.list.*
 import org.scalablytyped.runtime.StringDictionary
 import react.common.Css
 import react.common.ReactFnProps
@@ -38,10 +55,9 @@ import scalajs.js.JSConverters.*
 import scalajs.js
 
 case class ConstraintsSummaryTable(
+  userId:         Option[User.Id],
   programId:      Program.Id,
   constraintList: ConstraintGroupList,
-  hiddenColumns:  View[Set[String]],
-  summarySorting: View[List[(String, Boolean)]],
   expandedIds:    View[SortedSet[ObsIdSet]],
   renderInTitle:  Tile.RenderInTitle
 ) extends ReactFnProps(ConstraintsSummaryTable.component)
@@ -70,27 +86,45 @@ object ConstraintsSummaryTable:
   )
 
   private def toSortingRules(tuples: List[(String, Boolean)]): js.Array[raw.mod.ColumnSort] =
+    // println(s"TO sorting $tuples")
     tuples.map { case (id, b) => raw.mod.ColumnSort(b, id) }.toJSArray
 
   private def fromTableState(state: raw.mod.TableState): List[(String, Boolean)] =
+    // println(s"From sorting ${state.sorting.toList.map(sr => (sr.id.toString, sr.desc))}")
     state.sorting.toList.map(sr => (sr.id.toString, sr.desc))
 
   private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      .useMemoBy((_, _) => ()) { // Cols never changes, but needs access to props
-        (props, ctx) => _ =>
+      .useStateViewWithReuse(
+        List(TableColumnPref("minam"), TableColumnPref("minha"), TableColumnPref("maxha"))
+      )
+      .useMemoBy((_, _, _) => ()) { // Cols never changes, but needs access to props
+        (props, ctx, _) => _ =>
           def column[V](id: String, accessor: ConstraintGroup => V) =
             ColDef(id, accessor, columnNames(id))
 
-          def setObsSet(obsIdSet: ObsIdSet): Callback =
+          def goToObsSet(obsIdSet: ObsIdSet): Callback =
             ctx.pushPage(AppTab.Constraints, props.programId, Focused.obsSet(obsIdSet))
+
+          def obsSetUrl(obsIdSet: ObsIdSet): String =
+            ctx.pageUrl(AppTab.Constraints, props.programId, Focused.obsSet(obsIdSet))
+
+          def goToObs(obsId: Observation.Id): Callback =
+            ctx.pushPage(AppTab.Constraints, props.programId, Focused.singleObs(obsId))
+
+          def obsUrl(obsId: Observation.Id): String =
+            ctx.pageUrl(AppTab.Constraints, props.programId, Focused.singleObs(obsId))
 
           List(
             column("edit", ConstraintGroup.obsIds.get)
               .copy(
-                cell = cell => <.a(^.onClick ==> (_ => setObsSet(cell.value)), Icons.Edit),
+                cell = cell =>
+                  <.a(^.href := obsSetUrl(cell.value),
+                      ^.onClick ==> (_ => goToObsSet(cell.value)),
+                      Icons.Edit
+                  ),
                 enableSorting = false
               ),
             column("iq", ConstraintGroup.constraintSet.andThen(ConstraintSet.imageQuality).get)
@@ -149,14 +183,11 @@ object ConstraintsSummaryTable:
                     cell.value.toSortedSet.toList
                       .map(obsId =>
                         <.a(
+                          ^.href := obsUrl(obsId),
                           ^.onClick ==> (_ =>
-                            (ctx.pushPage(
-                              AppTab.Constraints,
-                              props.programId,
-                              Focused.singleObs(obsId)
-                            )
+                            goToObs(obsId)
                               >> props.expandedIds.mod(_ + cell.value)
-                              >> setObsSet(ObsIdSet.one(obsId)))
+                              >> goToObsSet(ObsIdSet.one(obsId))
                           ),
                           obsId.toString
                         )
@@ -167,8 +198,25 @@ object ConstraintsSummaryTable:
               )
           )
       }
-      .useMemoBy((props, _, _) => props.constraintList)((_, _, _) => _.values.toList) // Memo rows
-      .useReactTableBy((props, _, cols, rows) =>
+      .useEffectWithDepsBy((props, _, _, cols) => props.userId) { (props, ctx, prefs, cols) => _ =>
+        import ctx.given
+        val allColumns =
+          cols.value
+            .map(col => TableColumnPref(ColumnId(col.id), visible = true, None))
+            .withStored(prefs.get)
+
+        TableColumns
+          .queryColumns[IO](props.userId, TableId.ConstraintsSummary)
+          .flatMap(r =>
+            prefs
+              .set(allColumns.withStored(r.lucumaTableColumnPreferences).sortBy(_.columnId.value))
+              .to[IO]
+          )
+          .runAsyncAndForget
+      }
+      // Memo rows
+      .useMemoBy((props, _, _, _) => props.constraintList)((_, _, _, _) => _.values.toList)
+      .useReactTableBy { (props, _, prefs, cols, rows) =>
         TableOptions(
           cols,
           rows,
@@ -178,24 +226,55 @@ object ConstraintsSummaryTable:
           columnResizeMode = raw.mod.ColumnResizeMode.onChange,
           initialState = raw.mod
             .InitialTableState()
-            .setColumnVisibility(
-              StringDictionary(
-                props.hiddenColumns.get.toList.map(col => col -> false): _*
-              )
-            )
-            .setSorting(toSortingRules(props.summarySorting.get))
+            .setColumnVisibility(prefs.get.hiddenColumnsDictionary)
+            .setSorting(toSortingRules(prefs.get.sortingColumns))
         )
+      }
+      .useEffectWithDepsBy((_, _, prefs, _, _, table) => prefs) { (_, _, prefs, _, _, table) => p =>
+        Callback {
+          table.setColumnVisibility(prefs.get.hiddenColumnsDictionary)
+          table.setSorting(toSortingRules(prefs.get.sortingColumns))
+        }
+      }
+      .useEffectWithDepsBy((_, _, prefs, _, _, table) => fromTableState(table.getState()))(
+        (props, ctx, prefs, _, _, table) =>
+          rules =>
+            import ctx.given
+
+            val prefsView = prefs.withOnMod { l =>
+              TableColumns
+                .storeColumns[IO](props.userId, TableId.ConstraintsSummary, l)
+                .runAsyncAndForget
+            }
+            prefsView
+              .mod(_.map {
+                case t @ TableColumnPref(cid, _, _) if rules.find(_._1 === cid.value).isDefined =>
+                  t.copy(sorting =
+                    rules.find(_._1 === cid.value).map(r => SortDirection.fromBoolean(r._2))
+                  )
+                case t                                                                          =>
+                  t.copy(sorting = none)
+              })
       )
-      .useEffectWithDepsBy((_, _, _, _, table) => fromTableState(table.getState()))(
-        (props, _, _, _, _) => rules => props.summarySorting.set(rules)
-      )
-      .render((props, _, _, _, table) =>
+      .render { (props, ctx, prefs, _, _, table) =>
+        import ctx.given
+
+        val prefsView = prefs.withOnMod { l =>
+          TableColumns
+            .storeColumns[IO](props.userId, TableId.ConstraintsSummary, l)
+            .runAsyncAndForget
+        }
         <.div(
           props.renderInTitle(
             React.Fragment(
               <.span, // Push column selector to right
               <.span(ExploreStyles.TitleSelectColumns)(
-                ColumnSelector(table, columnNames, props.hiddenColumns, ExploreStyles.SelectColumns)
+                NewColumnSelector(
+                  table,
+                  columnNames,
+                  prefsView,
+                  ExploreStyles.SelectColumns
+                )
               )
             )
           ),
@@ -211,4 +290,4 @@ object ConstraintsSummaryTable:
             cellMod = cell => columnClasses.get(cell.column.id).orEmpty
           )
         )
-      )
+      }

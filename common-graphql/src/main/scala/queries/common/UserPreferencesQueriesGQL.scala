@@ -234,4 +234,34 @@ object UserPreferencesQueriesGQL {
       }"""
   }
 
+  @GraphQL
+  trait TableColumnPreferencesQuery extends GraphQLOperation[UserPreferencesDB] {
+    val document = """
+      query tableColumnPreferences($tableId: LucumaTableIdsEnum, $userId: String) {
+        lucumaTableColumnPreferences(where: {tableId: {_eq: $tableId}, userId: {_eq: $userId}}) {
+          visible
+          columnId
+          sorting
+        }
+      }"""
+
+    object Data {
+      type LucumaTableColumnPreferences = explore.model.TableColumnPref
+    }
+  }
+
+  @GraphQL
+  trait TableColumnPreferencesUpsert extends GraphQLOperation[UserPreferencesDB] {
+    val document = """
+      mutation tableColumnPreferencesUpsert($objects: [LucumaTableColumnPreferencesInsertInput!]!) {
+        insertLucumaTableColumnPreferences(
+          objects: $objects,
+          onConflict: {
+            constraint: lucumaTableColumnPreferences_pkey,
+            update_columns: [visible, sorting]
+          }) {
+          affected_rows
+        }
+      }"""
+  }
 }

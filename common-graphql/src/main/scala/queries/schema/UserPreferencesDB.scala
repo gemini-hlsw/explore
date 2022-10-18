@@ -9,6 +9,8 @@ import lucuma.core.model.User
 
 @GraphQLSchema
 trait UserPreferencesDB:
+  type Timestamptz = java.time.ZonedDateTime
+
   object Scalars:
     type UserId             = User.Id
     type ResizableArea      = String
@@ -20,4 +22,6 @@ trait UserPreferencesDB:
     type Bigint             = Long
 
   object Enums:
-    type ItcChartType = enums.ItcChartType
+    type ItcChartType            = enums.ItcChartType
+    type LucumaTableIdsEnum      = explore.model.enums.TableId
+    type LucumaSortDirectionEnum = explore.model.enums.SortDirection

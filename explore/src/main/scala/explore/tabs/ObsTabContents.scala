@@ -264,7 +264,7 @@ object ObsTabContents extends TwoResizablePanels:
           _ => {
             import ctx.given
 
-            UserGridLayoutQuery
+            GridLayouts
               .queryWithDefault[IO](
                 props.userId,
                 GridLayoutSection.ObservationsLayout,

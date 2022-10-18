@@ -152,7 +152,7 @@ object TargetTabContents:
         panels.zoom(TwoPanelState.treeWidth).set(d.size.width.toDouble) *>
           debouncer
             .submit(
-              UserWidthsCreation
+              AreaWidths
                 .storeWidthPreference[IO](props.userId, ResizableSection.TargetsTree, d.size.width)
             )
             .runAsyncAndForget
@@ -643,7 +643,7 @@ object TargetTabContents:
         (props, ctx, _, panels, _, layout, defaultLayout) => _ =>
           import ctx.given
 
-          UserGridLayoutQuery
+          GridLayouts
             .queryWithDefault[IO](
               props.userId,
               GridLayoutSection.TargetLayout,
