@@ -191,11 +191,13 @@ object ConstraintsSummaryTable extends TableHooks:
       )
       .customBy((props, ctx, cols) =>
         useTablePreferencesLoad(
-          props.userId,
-          ctx,
-          TableId.ConstraintsSummary,
-          cols.value,
-          List(TableColumnPref("minam"), TableColumnPref("minha"), TableColumnPref("maxha"))
+          TablePrefsLoadParams(
+            props.userId,
+            ctx,
+            TableId.ConstraintsSummary,
+            cols.value,
+            List(TableColumnPref("minam"), TableColumnPref("minha"), TableColumnPref("maxha"))
+          )
         )
       )
       // Memo rows
@@ -216,8 +218,10 @@ object ConstraintsSummaryTable extends TableHooks:
       )
       .customBy((_, _, _, prefs, _, table) =>
         useTablePreferencesStore(
-          prefs,
-          table
+          TablePrefsStoreParams(
+            prefs,
+            table
+          )
         )
       )
       .render { (props, ctx, _, prefs, _, table, _) =>

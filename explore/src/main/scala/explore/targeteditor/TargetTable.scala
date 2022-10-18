@@ -129,11 +129,13 @@ object TargetTable extends TableHooks:
       // Load preferences
       .customBy((props, ctx, cols, _, _) =>
         useTablePreferencesLoad(
-          props.userId,
-          ctx,
-          TableId.AsterismTargets,
-          cols.value,
-          TargetSummaryTable.TargetSummaryHiddenColumns
+          TablePrefsLoadParams(
+            props.userId,
+            ctx,
+            TableId.AsterismTargets,
+            cols.value,
+            TargetSummaryTable.TargetSummaryHiddenColumns
+          )
         )
       )
       .useReactTableBy((props, _, cols, _, rows, prefs) =>
@@ -152,8 +154,10 @@ object TargetTable extends TableHooks:
       )
       .customBy((_, _, _, _, _, prefs, table) =>
         useTablePreferencesStore(
-          prefs,
-          table
+          TablePrefsStoreParams(
+            prefs,
+            table
+          )
         )
       )
       .render((props, _, _, _, rows, prefs, table, _) =>

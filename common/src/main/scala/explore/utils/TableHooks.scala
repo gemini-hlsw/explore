@@ -36,23 +36,29 @@ trait TableHooks:
   def fromTableState(state: raw.mod.TableState): List[(String, Boolean)] =
     state.sorting.toList.map(sr => (sr.id.toString, sr.desc))
 
-  def useTablePreferencesLoad[T] =
-    CustomHook[
-      (Option[User.Id], AppContext[IO], TableId, List[ColumnDef[T, ?]], List[TableColumnPref])
-    ]
-      .useStateViewWithReuseBy(_._5)
+  case class TablePrefsLoadParams[F[_], A](
+    userId: Option[User.Id],
+    ctx:    AppContext[F],
+    tid:    TableId,
+    cols:   List[ColumnDef[A, ?]],
+    prefs:  List[TableColumnPref]
+  )
+
+  def useTablePreferencesLoad[A] =
+    CustomHook[TablePrefsLoadParams[IO, A]]
+      .useStateViewWithReuseBy(_.prefs)
       // Read prefs from the db
       .useEffectWithDepsBy(_.hook1) { hook => prefs =>
-        val (userId, ctx, tid, cols, _) = hook.input
-        import ctx.given
+        val params = hook.input
+        import params.ctx.given
 
         val allColumns =
-          cols
+          params.cols
             .map(col => TableColumnPref(ColumnId(col.id), visible = true, None))
             .withStored(prefs.get)
 
         TableColumns
-          .queryColumns[IO](userId, tid)
+          .queryColumns[IO](params.userId, params.tid)
           .flatMap(r =>
             prefs
               .set(allColumns.withStored(r.lucumaTableColumnPreferences).sortBy(_.columnId.value))
@@ -62,29 +68,31 @@ trait TableHooks:
       }
       // Return a view that will save on mod
       .buildReturning(hook =>
-        val (userId, ctx, tid, cols, _) = hook.input
-        import ctx.given
+        val params = hook.input
+        import params.ctx.given
 
         hook.hook1.withOnMod { l =>
           TableColumns
-            .storeColumns[IO](userId, tid, l)
+            .storeColumns[IO](params.userId, params.tid, l)
             .runAsyncAndForget
         }.reuseByValue
       )
 
+  case class TablePrefsStoreParams[A](prefs: ReuseView[List[TableColumnPref]], table: Table[A])
+
   def useTablePreferencesStore[A] =
-    CustomHook[(ReuseView[List[TableColumnPref]], Table[A])]
+    CustomHook[TablePrefsStoreParams[A]]
       // If prefs change update the table ui
-      .useEffectWithDepsBy((prefs, table) => prefs) { (_, table) => prefs =>
+      .useEffectWithDepsBy(_.prefs) { params => prefs =>
         Callback {
-          table.setColumnVisibility(prefs.get.hiddenColumnsDictionary)
-          table.setSorting(toSortingRules(prefs.get.sortingColumns))
+          params.table.setColumnVisibility(prefs.get.hiddenColumnsDictionary)
+          params.table.setSorting(toSortingRules(prefs.get.sortingColumns))
         }
       }
       // If sorting changes update the prefs (and save in db as a side effect)
-      .useEffectWithDepsBy((_, table) => fromTableState(table.getState()))((prefs, table) =>
+      .useEffectWithDepsBy(params => fromTableState(params.table.getState()))(params =>
         rules =>
-          prefs
+          params.prefs
             .mod(_.map {
               case t @ TableColumnPref(cid, _, _) if rules.find(_._1 === cid.value).isDefined =>
                 t.copy(sorting =

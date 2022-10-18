@@ -103,11 +103,13 @@ object TargetSummaryTable extends TableHooks:
       // Load preferences
       .customBy((props, ctx, cols) =>
         useTablePreferencesLoad(
-          props.userId,
-          ctx,
-          TableId.TargetsSummary,
-          cols.value,
-          TargetSummaryHiddenColumns
+          TablePrefsLoadParams(
+            props.userId,
+            ctx,
+            TableId.TargetsSummary,
+            cols.value,
+            TargetSummaryHiddenColumns
+          )
         )
       )
       // rows
@@ -130,8 +132,10 @@ object TargetSummaryTable extends TableHooks:
       )
       .customBy((_, _, _, prefs, _, table) =>
         useTablePreferencesStore(
-          prefs,
-          table
+          TablePrefsStoreParams(
+            prefs,
+            table
+          )
         )
       )
       .render((props, _, _, prefs, _, table, _) =>
