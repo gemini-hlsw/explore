@@ -81,8 +81,7 @@ case class TargetTabContents(
   listUndoStacks:    View[UndoStacks[IO, AsterismGroupsWithObs]],
   targetsUndoStacks: View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
   searching:         View[Set[Target.Id]],
-  expandedIds:       View[SortedSet[ObsIdSet]],
-  hiddenColumns:     View[Set[String]]
+  expandedIds:       View[SortedSet[ObsIdSet]]
 ) extends ReactFnProps(TargetTabContents.component)
 
 object TargetTabContents:
@@ -433,8 +432,7 @@ object TargetTabContents:
           props.targetsUndoStacks,
           props.searching,
           title,
-          backButton.some,
-          props.hiddenColumns
+          backButton.some
         )
 
       val selectedCoordinates = selectedTarget

@@ -54,8 +54,7 @@ object AsterismEditorTile:
     undoStacks:      View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
     searching:       View[Set[Target.Id]],
     title:           String,
-    backButton:      Option[VdomNode] = none,
-    hiddenColumns:   View[Set[String]]
+    backButton:      Option[VdomNode] = none
   )(using TransactionalClient[IO, ObservationDB], Logger[IO]) = {
 
     // Save the time here. this works for the obs and target tabs
@@ -90,7 +89,6 @@ object AsterismEditorTile:
             otherObsCount,
             undoStacks,
             searching,
-            hiddenColumns,
             renderInTitle
           )
         )

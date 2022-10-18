@@ -22,27 +22,21 @@ import monocle.Optional
 import scala.collection.immutable.HashSet
 
 case class RootModel(
-  vault:                      Option[UserVault],
-  localPreferences:           ExploreLocalPreferences,
-  expandedIds:                ExpandedIds = ExpandedIds(),
-  searchingTarget:            Set[Target.Id] = HashSet.empty,
-  userSelectionMessage:       Option[NonEmptyString] = none,
-  targetSummaryHiddenColumns: Set[String] =
-    Set("epoch", "pmra", "pmdec", "z", "cz", "parallax", "morphology", "sed") ++
-      Band.all
-        .filterNot(_ === Band.V)
-        .map(b => b.shortName + "mag"),
-  undoStacks:                 ModelUndoStacks[IO] = ModelUndoStacks[IO]()
+  vault:                Option[UserVault],
+  localPreferences:     ExploreLocalPreferences,
+  expandedIds:          ExpandedIds = ExpandedIds(),
+  searchingTarget:      Set[Target.Id] = HashSet.empty,
+  userSelectionMessage: Option[NonEmptyString] = none,
+  undoStacks:           ModelUndoStacks[IO] = ModelUndoStacks[IO]()
 ) derives Eq
 
 object RootModel {
-  val vault                      = Focus[RootModel](_.vault)
-  val userSelectionMessage       = Focus[RootModel](_.userSelectionMessage)
-  val searchingTarget            = Focus[RootModel](_.searchingTarget)
-  val undoStacks                 = Focus[RootModel](_.undoStacks)
-  val expandedIds                = Focus[RootModel](_.expandedIds)
-  val targetSummaryHiddenColumns = Focus[RootModel](_.targetSummaryHiddenColumns)
-  val localPreferences           = Focus[RootModel](_.localPreferences)
+  val vault                = Focus[RootModel](_.vault)
+  val userSelectionMessage = Focus[RootModel](_.userSelectionMessage)
+  val searchingTarget      = Focus[RootModel](_.searchingTarget)
+  val undoStacks           = Focus[RootModel](_.undoStacks)
+  val expandedIds          = Focus[RootModel](_.expandedIds)
+  val localPreferences     = Focus[RootModel](_.localPreferences)
 
   val userUserId = Lens[User, User.Id](_.id)(s =>
     a =>

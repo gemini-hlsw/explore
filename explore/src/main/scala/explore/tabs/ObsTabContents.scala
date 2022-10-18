@@ -68,8 +68,7 @@ case class ObsTabContents(
   focusedObs:    Option[Observation.Id],
   focusedTarget: Option[Target.Id],
   undoStacks:    View[ModelUndoStacks[IO]],
-  searching:     View[Set[Target.Id]],
-  hiddenColumns: View[Set[String]]
+  searching:     View[Set[Target.Id]]
 ) extends ReactFnProps(ObsTabContents.component)
 
 object ObsTabContents extends TwoResizablePanels:
@@ -213,7 +212,6 @@ object ObsTabContents extends TwoResizablePanels:
           obsWithConstraints.get.targetMap,
           props.undoStacks,
           props.searching,
-          props.hiddenColumns,
           defaultLayouts,
           layouts,
           coreWidth,

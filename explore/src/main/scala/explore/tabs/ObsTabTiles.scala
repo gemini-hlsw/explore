@@ -68,7 +68,6 @@ case class ObsTabTiles(
   targetMap:        SortedMap[Target.Id, TargetSummary],
   undoStacks:       View[ModelUndoStacks[IO]],
   searching:        View[Set[Target.Id]],
-  hiddenColumns:    View[Set[String]],
   defaultLayouts:   LayoutsMap,
   layouts:          View[Pot[LayoutsMap]],
   coreWidth:        Int,
@@ -262,8 +261,7 @@ object ObsTabTiles:
           props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
           props.searching,
           "Targets",
-          none,
-          props.hiddenColumns
+          none
         )
 
         // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper

@@ -3,7 +3,6 @@
 
 package explore.targets
 
-import explore.model.enums.TableId
 import cats.Order.*
 import cats.syntax.all.*
 import crystal.react.View
@@ -11,12 +10,18 @@ import crystal.react.reuse.*
 import explore.common.AsterismQueries.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
+import explore.model.AppContext
 import explore.model.TableColumnPref
 import explore.model.TargetWithIdAndObs
+import explore.model.enums.TableId
+import explore.syntax.ui.*
+import explore.utils.TableHooks
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.Band
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
+import lucuma.core.model.User
 import lucuma.react.table.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
@@ -26,14 +31,9 @@ import org.scalablytyped.runtime.StringDictionary
 import react.common.Css
 import react.common.ReactFnProps
 import react.semanticui.collections.table.*
-import explore.utils.TableHooks
-import explore.syntax.ui.*
 import reactST.{tanstackTableCore => raw}
 
 import scalajs.js.JSConverters.*
-import explore.model.AppContext
-import lucuma.core.model.User
-import lucuma.core.enums.Band
 
 case class TargetSummaryTable(
   userId:            Option[User.Id],

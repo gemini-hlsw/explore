@@ -20,12 +20,17 @@ import explore.model.AppContext
 import explore.model.Asterism
 import explore.model.ObsIdSet
 import explore.model.SiderealTargetWithId
+import explore.model.enums.TableId
 import explore.model.reusability.*
 import explore.model.reusability.given
+import explore.syntax.ui.*
 import explore.targets.TargetColumns
+import explore.targets.TargetSummaryTable
+import explore.utils.TableHooks
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Target
+import lucuma.core.model.User
 import lucuma.react.table.*
 import lucuma.schemas.ObservationDB
 import lucuma.ui.reusability.*
@@ -46,16 +51,16 @@ import java.time.Instant
 import scalajs.js.JSConverters.*
 
 case class TargetTable(
+  userId:         Option[User.Id],
   obsIds:         ObsIdSet,
   targets:        View[Option[Asterism]],
-  hiddenColumns:  View[Set[String]],
   selectedTarget: View[Option[Target.Id]],
   vizTime:        Option[Instant],
   renderInTitle:  Tile.RenderInTitle,
   fullScreen:     AladinFullScreen
 ) extends ReactFnProps(TargetTable.component)
 
-object TargetTable:
+object TargetTable extends TableHooks:
   private type Props = TargetTable
 
   private val ColDef = ColumnDef[SiderealTargetWithId]
@@ -121,7 +126,17 @@ object TargetTable:
         case (targets, Pot.Ready(vizTime)) => targets.foldMap(_.toSiderealAt(vizTime))
         case _                             => Nil
       )
-      .useReactTableBy((props, _, cols, _, rows) =>
+      // Load preferences
+      .customBy((props, ctx, cols, _, _) =>
+        useTablePreferencesLoad(
+          props.userId,
+          ctx,
+          TableId.AsterismTargets,
+          cols.value,
+          TargetSummaryTable.TargetSummaryHiddenColumns
+        )
+      )
+      .useReactTableBy((props, _, cols, _, rows, prefs) =>
         TableOptions(
           cols,
           rows,
@@ -131,18 +146,21 @@ object TargetTable:
           columnResizeMode = raw.mod.ColumnResizeMode.onChange,
           initialState = raw.mod
             .InitialTableState()
-            .setColumnVisibility(
-              StringDictionary(
-                props.hiddenColumns.get.toList.map(col => col -> false): _*
-              )
-            )
+            .setColumnVisibility(prefs.get.hiddenColumnsDictionary)
+            .setSorting(toSortingRules(prefs.get.sortingColumns))
         )
       )
-      .render((props, _, _, _, rows, table) =>
+      .customBy((_, _, _, _, _, prefs, table) =>
+        useTablePreferencesStore(
+          prefs,
+          table
+        )
+      )
+      .render((props, _, _, _, rows, prefs, table, _) =>
         React.Fragment(
           props.renderInTitle(
             <.span(ExploreStyles.TitleSelectColumns)(
-              ColumnSelector(table, columnNames, props.hiddenColumns, ExploreStyles.SelectColumns)
+              NewColumnSelector(table, columnNames, prefs, ExploreStyles.SelectColumns)
                 .unless(props.fullScreen.value)
             )
           ),
