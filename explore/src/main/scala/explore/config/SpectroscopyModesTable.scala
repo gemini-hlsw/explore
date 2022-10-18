@@ -4,7 +4,9 @@
 package explore.config
 
 import boopickle.DefaultBasic.*
+import cats.Order
 import cats.Eq
+import cats.implicits.catsKernelOrderingForOrder
 import cats.data.*
 import cats.effect.*
 import cats.effect.std.UUIDGen
@@ -178,6 +180,10 @@ private object SpectroscopyModesTable:
     case _: None.type             => "none"
     case r                        => r.toString
 
+  given Order[InstrumentRow#Grating] = Order.by(_.toString)
+  given Order[InstrumentRow#Filter]  = Order.by(_.toString)
+  given Order[InstrumentRow#FPU]     = Order.by(_.toString)
+
   private def formatWavelengthCoverage(r: Interval[Quantity[BigDecimal, Micrometer]]): String =
     r match
       case Bounded(a, b, _) =>
@@ -279,11 +285,13 @@ private object SpectroscopyModesTable:
         ),
       column(GratingColumnId, SpectroscopyModeRow.grating.get)
         .copy(cell = cell => formatGrating(cell.value), size = 96, minSize = 96, maxSize = 96)
-        .sortableBy(formatGrating),
+        .sortable,
       column(FilterColumnId, SpectroscopyModeRow.filter.get)
-        .copy(cell = cell => formatFilter(cell.value), size = 69, minSize = 69, maxSize = 69),
+        .copy(cell = cell => formatFilter(cell.value), size = 69, minSize = 69, maxSize = 69)
+        .sortable,
       column(FPUColumnId, SpectroscopyModeRow.fpu.get)
-        .copy(cell = cell => formatFPU(cell.value), size = 62, minSize = 62, maxSize = 62),
+        .copy(cell = cell => formatFPU(cell.value), size = 62, minSize = 62, maxSize = 62)
+        .sortable,
       column(CoverageColumnId, SpectroscopyModeRow.coverageInterval(cw))
         .copy(
           cell = cell => formatWavelengthCoverage(cell.value),
