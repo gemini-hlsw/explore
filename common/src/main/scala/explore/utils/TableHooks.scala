@@ -67,7 +67,7 @@ trait TableHooks:
 
         hook.hook1.withOnMod { l =>
           TableColumns
-            .storeColumns[IO](userId, TableId.ConstraintsSummary, l)
+            .storeColumns[IO](userId, tid, l)
             .runAsyncAndForget
         }.reuseByValue
       )
@@ -93,6 +93,7 @@ trait TableHooks:
               case t                                                                          =>
                 t.copy(sorting = none)
             })
+            .when_(rules.nonEmpty)
       )
       // This should ideally be just `build` but something breaks on the subsequent hooks if you do
       .buildReturning(_._2)

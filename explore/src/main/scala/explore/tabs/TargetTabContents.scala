@@ -243,8 +243,8 @@ object TargetTabContents:
     def renderSummary: VdomNode =
       Tile("targetSummary".refined, "Target Summary", backButton.some)(renderInTitle =>
         TargetSummaryTable(
+          props.userId,
           targetMap,
-          props.hiddenColumns,
           selectObservationAndTarget(props.expandedIds) _,
           selectTarget _,
           renderInTitle
