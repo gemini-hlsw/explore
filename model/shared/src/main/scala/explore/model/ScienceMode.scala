@@ -14,13 +14,7 @@ import monocle.Prism
 import monocle.macros.GenPrism
 
 sealed abstract class ScienceMode(val instrument: Instrument) extends Product with Serializable
-    derives Eq:
-  def isCustomized: Boolean = this match {
-    case ScienceMode.GmosNorthLongSlit(_, advanced) =>
-      advanced =!= ScienceModeAdvanced.GmosNorthLongSlit.Empty
-    case ScienceMode.GmosSouthLongSlit(_, advanced) =>
-      advanced =!= ScienceModeAdvanced.GmosSouthLongSlit.Empty
-  }
+    derives Eq
 
 object ScienceMode:
   given Decoder[ScienceMode] =

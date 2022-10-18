@@ -105,6 +105,26 @@ object AladinContainer {
       }
       // Ref to the aladin component
       .useRefToScalaComponent(AladinComp)
+      // If view offset changes upstream to zero, redraw
+      .useEffectWithDepsBy((p, _, _, _) => p.options.viewOffset) {
+        (_, baseCoordinates, viewCoordinates, aladinRef) => offset =>
+          {
+            val newCoords = baseCoordinates.value._1.offsetBy(Angle.Angle0, offset)
+            newCoords
+              .map(coords =>
+                aladinRef.get.asCBO
+                  .flatMapCB(
+                    _.backend.gotoRaDec(coords.ra.toAngle.toDoubleDegrees,
+                                        coords.dec.toAngle.toSignedDoubleDegrees
+                    )
+                  )
+                  .asCallback
+                  .void
+                  .when_(offset === Offset.Zero)
+              )
+              .getOrEmpty
+          }
+      }
       // Memoized svg
       .useMemoBy((p, _, _, _) =>
         (p.obsConf.scienceMode, p.obsConf.posAngle, p.options, p.selectedGuideStar)

@@ -20,10 +20,7 @@ import react.common.style.Css
 /**
  * Test object to produce a gmos geometry. it is for demo purposes only
  */
-object GmosGeometry {
-
-  // Move to react common
-  implicit val cssOrder: Order[Css] = Order.by(_.htmlClass)
+object GmosGeometry:
 
   // Shape to display for a specific mode
   def shapesForMode(
@@ -86,7 +83,7 @@ object GmosGeometry {
     port:            PortDisposition,
     extraCss:        Css
   ): NonEmptyMap[Css, ShapeExpression] =
-    mode match {
+    mode match
       case Some(ScienceMode.GmosNorthLongSlit(ScienceModeBasic.GmosNorthLongSlit(_, _, fpu), _)) =>
         NonEmptyMap.of(
           (Css("gmos-probe-arm") |+| extraCss,
@@ -103,6 +100,3 @@ object GmosGeometry {
         NonEmptyMap.of(
           (Css("gmos-science-ccd"), gmos.scienceArea.imaging ⟲ posAngle)
         )
-    }
-
-}

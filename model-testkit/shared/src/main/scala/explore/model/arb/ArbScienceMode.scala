@@ -15,10 +15,10 @@ import explore.model.ScienceModeBasic
 import explore.model.ScienceModeAdvanced
 
 trait ArbScienceMode {
-  import ArbScienceModeBasic.*
-  import ArbScienceModeAdvanced.*
+  import ArbScienceModeBasic.given
+  import ArbScienceModeAdvanced.given
 
-  implicit val arbGmosNorthLongSlit: Arbitrary[ScienceMode.GmosNorthLongSlit] =
+  given Arbitrary[ScienceMode.GmosNorthLongSlit] =
     Arbitrary[ScienceMode.GmosNorthLongSlit](
       for {
         basic    <- arbitrary[ScienceModeBasic.GmosNorthLongSlit]
@@ -26,7 +26,7 @@ trait ArbScienceMode {
       } yield ScienceMode.GmosNorthLongSlit(basic, advanced)
     )
 
-  implicit val arbGmosSouthLongSlit: Arbitrary[ScienceMode.GmosSouthLongSlit] =
+  given Arbitrary[ScienceMode.GmosSouthLongSlit] =
     Arbitrary[ScienceMode.GmosSouthLongSlit](
       for {
         basic    <- arbitrary[ScienceModeBasic.GmosSouthLongSlit]
@@ -34,22 +34,22 @@ trait ArbScienceMode {
       } yield ScienceMode.GmosSouthLongSlit(basic, advanced)
     )
 
-  implicit val arbScienceMode: Arbitrary[ScienceMode] = Arbitrary[ScienceMode](
+  given Arbitrary[ScienceMode] = Arbitrary[ScienceMode](
     Gen.oneOf(
       arbitrary[ScienceMode.GmosNorthLongSlit],
       arbitrary[ScienceMode.GmosSouthLongSlit]
     )
   )
 
-  implicit val cogenGmosNorthLongSlit: Cogen[ScienceMode.GmosNorthLongSlit] =
+  given Cogen[ScienceMode.GmosNorthLongSlit] =
     Cogen[(ScienceModeBasic.GmosNorthLongSlit, ScienceModeAdvanced.GmosNorthLongSlit)]
       .contramap(o => (o.basic, o.advanced))
 
-  implicit val cogenGmosSouthLongSlit: Cogen[ScienceMode.GmosSouthLongSlit] =
+  given Cogen[ScienceMode.GmosSouthLongSlit] =
     Cogen[(ScienceModeBasic.GmosSouthLongSlit, ScienceModeAdvanced.GmosSouthLongSlit)]
       .contramap(o => (o.basic, o.advanced))
 
-  implicit val cogenScienceMode: Cogen[ScienceMode] =
+  given Cogen[ScienceMode] =
     Cogen[Either[ScienceMode.GmosNorthLongSlit, ScienceMode.GmosSouthLongSlit]]
       .contramap {
         case n @ ScienceMode.GmosNorthLongSlit(_, _) => n.asLeft

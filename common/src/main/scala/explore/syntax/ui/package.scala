@@ -63,6 +63,11 @@ extension [F[_]: MonadThrow](c: Logger[F])
   def pdebugCB[T](a: T)(using Effect.Dispatch[F]): Callback =
     c.debug(_root_.pprint.apply(a).render).runAsyncAndForget
 
+  def pinfo[T](a: T): F[Unit] = c.info(_root_.pprint.apply(a).render)
+
+  def pinfoCB[T](a: T)(using Effect.Dispatch[F]): Callback =
+    c.info(_root_.pprint.apply(a).render).runAsyncAndForget
+
 extension [F[_]: Functor: FunctorFilter: Foldable](cols: F[TableColumnPref])
   def hiddenColumns: F[String] =
     cols.collect { case TableColumnPref(cid, false, _) => cid.value }

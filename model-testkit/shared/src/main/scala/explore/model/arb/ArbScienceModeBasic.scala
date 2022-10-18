@@ -20,7 +20,7 @@ import lucuma.core.enums.GmosSouthFpu
 
 trait ArbScienceModeBasic {
 
-  implicit val arbGmosNorthLongSlitBasic: Arbitrary[ScienceModeBasic.GmosNorthLongSlit] =
+  given Arbitrary[ScienceModeBasic.GmosNorthLongSlit] =
     Arbitrary[ScienceModeBasic.GmosNorthLongSlit](
       for {
         grating <- arbitrary[GmosNorthGrating]
@@ -29,7 +29,7 @@ trait ArbScienceModeBasic {
       } yield ScienceModeBasic.GmosNorthLongSlit(grating, filter, fpu)
     )
 
-  implicit val arbGmosSouthLongSlitBasic: Arbitrary[ScienceModeBasic.GmosSouthLongSlit] =
+  given Arbitrary[ScienceModeBasic.GmosSouthLongSlit] =
     Arbitrary[ScienceModeBasic.GmosSouthLongSlit](
       for {
         grating <- arbitrary[GmosSouthGrating]
@@ -38,22 +38,22 @@ trait ArbScienceModeBasic {
       } yield ScienceModeBasic.GmosSouthLongSlit(grating, filter, fpu)
     )
 
-  implicit val arbScienceModeBasic: Arbitrary[ScienceModeBasic] = Arbitrary[ScienceModeBasic](
+  given Arbitrary[ScienceModeBasic] = Arbitrary[ScienceModeBasic](
     Gen.oneOf(
       arbitrary[ScienceModeBasic.GmosNorthLongSlit],
       arbitrary[ScienceModeBasic.GmosSouthLongSlit]
     )
   )
 
-  implicit val cogenGmosNorthLongSlitBasic: Cogen[ScienceModeBasic.GmosNorthLongSlit] =
+  given Cogen[ScienceModeBasic.GmosNorthLongSlit] =
     Cogen[(GmosNorthGrating, Option[GmosNorthFilter], GmosNorthFpu)]
       .contramap(o => (o.grating, o.filter, o.fpu))
 
-  implicit val cogenGmosSouthLongSlitBasic: Cogen[ScienceModeBasic.GmosSouthLongSlit] =
+  given Cogen[ScienceModeBasic.GmosSouthLongSlit] =
     Cogen[(GmosSouthGrating, Option[GmosSouthFilter], GmosSouthFpu)]
       .contramap(o => (o.grating, o.filter, o.fpu))
 
-  implicit val cogenScienceModeBasic: Cogen[ScienceModeBasic] =
+  given Cogen[ScienceModeBasic] =
     Cogen[Either[ScienceModeBasic.GmosNorthLongSlit, ScienceModeBasic.GmosSouthLongSlit]]
       .contramap {
         case n @ ScienceModeBasic.GmosNorthLongSlit(_, _, _) => n.asLeft

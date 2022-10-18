@@ -32,7 +32,7 @@ import lucuma.core.math.Wavelength
 trait ArbObsSummary {
   import ArbConstraintsSummary.*
   import ArbTime.*
-  import ArbScienceMode.*
+  import ArbScienceMode.given
 
   implicit val arbObsSummaryWithConstraints: Arbitrary[ObsSummaryWithConstraints] =
     Arbitrary[ObsSummaryWithConstraints] {
