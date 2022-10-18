@@ -5,9 +5,11 @@ package explore.config
 
 import boopickle.DefaultBasic.*
 import cats.Eq
+import cats.Order
 import cats.data.*
 import cats.effect.*
 import cats.effect.std.UUIDGen
+import cats.implicits.catsKernelOrderingForOrder
 import cats.syntax.all.*
 import coulomb.Quantity
 import coulomb.policy.spire.standard.given
@@ -35,12 +37,15 @@ import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.boopickle.*
+import explore.model.enums.TableId
 import explore.model.itc.ItcTarget
 import explore.model.itc.*
 import explore.model.reusability.given
 import explore.modes.*
 import explore.syntax.ui.*
+import explore.syntax.ui.*
 import explore.syntax.ui.given
+import explore.utils.TableHooks
 import explore.utils.*
 import japgolly.scalajs.react.Reusability.apply
 import japgolly.scalajs.react.*
@@ -52,6 +57,7 @@ import lucuma.core.math.Wavelength
 import lucuma.core.math.units.Micrometer
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.SiderealTracking
+import lucuma.core.model.User
 import lucuma.core.util.Display
 import lucuma.react.table.*
 import lucuma.refined.*
@@ -83,6 +89,7 @@ import scalajs.js
 import scalajs.js.JSConverters.*
 
 case class SpectroscopyModesTable(
+  userId:                   Option[User.Id],
   scienceMode:              View[Option[ScienceMode]],
   spectroscopyRequirements: SpectroscopyRequirementsData,
   constraints:              ConstraintSet,
@@ -98,7 +105,7 @@ case class SpectroscopyModesTable(
       b  <- tg.brightestAt(w)
     yield b
 
-private object SpectroscopyModesTable:
+private object SpectroscopyModesTable extends TableHooks:
   private type Props = SpectroscopyModesTable
 
   private type ColId = NonEmptyString
@@ -177,6 +184,10 @@ private object SpectroscopyModesTable:
     case f: GnirsFilter           => f.shortName
     case _: None.type             => "none"
     case r                        => r.toString
+
+  given Order[InstrumentRow#Grating] = Order.by(_.toString)
+  given Order[InstrumentRow#Filter]  = Order.by(_.toString)
+  given Order[InstrumentRow#FPU]     = Order.by(_.toString)
 
   private def formatWavelengthCoverage(r: Interval[Quantity[BigDecimal, Micrometer]]): String =
     r match
@@ -278,11 +289,14 @@ private object SpectroscopyModesTable:
           maxSize = 105
         ),
       column(GratingColumnId, SpectroscopyModeRow.grating.get)
-        .copy(cell = cell => formatGrating(cell.value), size = 96, minSize = 96, maxSize = 96),
+        .copy(cell = cell => formatGrating(cell.value), size = 96, minSize = 96, maxSize = 96)
+        .sortable,
       column(FilterColumnId, SpectroscopyModeRow.filter.get)
-        .copy(cell = cell => formatFilter(cell.value), size = 69, minSize = 69, maxSize = 69),
+        .copy(cell = cell => formatFilter(cell.value), size = 69, minSize = 69, maxSize = 69)
+        .sortable,
       column(FPUColumnId, SpectroscopyModeRow.fpu.get)
-        .copy(cell = cell => formatFPU(cell.value), size = 62, minSize = 62, maxSize = 62),
+        .copy(cell = cell => formatFPU(cell.value), size = 62, minSize = 62, maxSize = 62)
+        .sortable,
       column(CoverageColumnId, SpectroscopyModeRow.coverageInterval(cw))
         .copy(
           cell = cell => formatWavelengthCoverage(cell.value),
@@ -440,16 +454,36 @@ private object SpectroscopyModesTable:
       ) { (_, _, _, rows, _, _, _, selectedIndex) => (scienceMode, _) =>
         selectedIndex.setState(selectedRowIndex(scienceMode, rows))
       }
+      // Load preferences
+      .customBy((props, ctx, _, _, _, _, cols, _) =>
+        useTablePreferencesLoad(
+          TablePrefsLoadParams(
+            props.userId,
+            ctx,
+            TableId.SpectroscopyModes,
+            cols.value,
+            Nil
+          )
+        )
+      )
       // table
-      .useReactTableBy((_, _, _, rows, _, _, cols, _) =>
-        TableOptions(cols, rows, getRowId = (row, _, _) => row.id.toString, enableSorting = true)
+      .useReactTableBy((_, _, _, rows, _, _, cols, _, prefs) =>
+        TableOptions(
+          cols,
+          rows,
+          getRowId = (row, _, _) => row.id.toString,
+          enableSorting = true,
+          initialState = raw.mod
+            .InitialTableState()
+            .setSorting(toSortingRules(prefs.get.sortingColumns))
+        )
       )
       // visibleRows
-      .useStateBy((_, _, _, rows, _, _, _, _, _) => none[Range.Inclusive])
+      .useStateBy((_, _, _, rows, _, _, _, _, _, _) => none[Range.Inclusive])
       // atTop
       .useState(false)
       // Recalculate ITC values if the wv or sn change or if the rows get modified
-      .useStreamResourceBy((props, _, _, _, _, _, _, _, _, visibleRows, _) =>
+      .useStreamResourceBy((props, _, _, _, _, _, _, _, _, _, visibleRows, _) =>
         (
           props.spectroscopyRequirements.wavelength,
           props.spectroscopyRequirements.signalToNoise,
@@ -458,7 +492,7 @@ private object SpectroscopyModesTable:
           props.brightestTarget
         )
       ) {
-        (_, ctx, itcResults, _, itcProgress, _, _, _, table, visibleRows, _) => (
+        (_, ctx, itcResults, _, itcProgress, _, _, _, _, table, visibleRows, _) => (
           wavelength,
           signalToNoise,
           signalToNoiseAt,
@@ -515,13 +549,21 @@ private object SpectroscopyModesTable:
             .getOrElse(Resource.pure(fs2.Stream()))
       }
       .useRef(none[HTMLTableVirtualizer])
-      .useEffectOnMountBy((_, _, _, _, _, _, _, selectedIndex, _, _, _, _, virtualizerRef) =>
+      .useEffectOnMountBy((_, _, _, _, _, _, _, selectedIndex, _, _, _, _, _, virtualizerRef) =>
         virtualizerRef.get.flatMap(refOpt =>
           Callback(
             for
               virtualizer <- refOpt
               idx         <- selectedIndex.value
             yield virtualizer.scrollToIndex(idx + 1, ScrollOptions)
+          )
+        )
+      )
+      .customBy((_, _, _, _, _, _, _, _, prefs, table, _, _, _, _) =>
+        useTablePreferencesStore(
+          TablePrefsStoreParams(
+            prefs,
+            table
           )
         )
       )
@@ -535,11 +577,13 @@ private object SpectroscopyModesTable:
           errs,
           _,
           selectedIndex,
+          _,
           table,
           visibleRows,
           atTop,
           _,
-          virtualizerRef
+          virtualizerRef,
+          _
         ) =>
           def toggleRow(row: SpectroscopyModeRow): Option[ScienceMode] =
             rowToConf(row).filterNot(conf => props.scienceMode.get.contains_(conf))

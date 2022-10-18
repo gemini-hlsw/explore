@@ -15,6 +15,7 @@ import explore.undo.*
 import explore.utils.*
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Observation
+import lucuma.core.model.User
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
@@ -23,6 +24,7 @@ import queries.schemas.odb.ObsQueries.*
 
 object ConfigurationTile {
   def configurationTile(
+    userId:          Option[User.Id],
     obsId:           Observation.Id,
     obsData:         Pot[(String, Option[NonEmptyString], View[ScienceData])],
     undoStacks:      View[UndoStacks[IO, ScienceData]],
@@ -36,6 +38,7 @@ object ConfigurationTile {
       potRender[(String, Option[NonEmptyString], View[ScienceData])] {
         (title, subtitle, scienceData) =>
           ConfigurationPanel(
+            userId,
             obsId,
             title,
             subtitle,

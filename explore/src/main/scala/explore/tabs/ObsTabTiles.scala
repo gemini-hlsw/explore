@@ -281,6 +281,7 @@ object ObsTabTiles:
 
         val configurationTile =
           ConfigurationTile.configurationTile(
+            props.userId,
             props.obsId,
             obsViewPot.map(obsEditData =>
               (obsEditData.get.title,
