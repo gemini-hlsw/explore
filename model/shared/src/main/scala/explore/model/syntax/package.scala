@@ -12,7 +12,7 @@ import lucuma.core.model.PosAngleConstraint
 
 import scala.collection.immutable.SortedMap
 
-object all:
+object all extends ScienceModesSyntax:
 
   extension (pa: PosAngleOptions)
     def toPosAngle(a: Angle): Option[PosAngleConstraint] = pa match

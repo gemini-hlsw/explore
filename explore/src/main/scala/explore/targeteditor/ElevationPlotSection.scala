@@ -23,6 +23,7 @@ import explore.model.ScienceMode
 import explore.model.enums.PlotRange
 import explore.model.enums.TimeDisplay
 import explore.model.reusability.*
+import explore.model.syntax.scienceModes.*
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -62,10 +63,7 @@ object ElevationPlotSection:
 
   private val preferredSiteFor = (c: Props) =>
     c.scienceMode
-      .map {
-        case ScienceMode.GmosNorthLongSlit(_, _) => Site.GN
-        case ScienceMode.GmosSouthLongSlit(_, _) => Site.GS
-      }
+      .map(_.siteFor)
       .getOrElse {
         if (c.coords.value.dec.toAngle.toSignedDoubleDegrees > -5) Site.GN else Site.GS
       }

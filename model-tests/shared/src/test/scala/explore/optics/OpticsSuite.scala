@@ -5,7 +5,7 @@ package explore
 
 import cats.kernel.Eq
 import explore.model.ScienceModeAdvanced.GmosSouthLongSlit
-import explore.model.arb.ArbScienceModeAdvanced.*
+import explore.model.arb.ArbScienceModeAdvanced.given
 import explore.optics.*
 import explore.optics.all.*
 import lucuma.core.util.arb.ArbEnumerated.*

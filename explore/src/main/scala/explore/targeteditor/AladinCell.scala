@@ -35,7 +35,9 @@ import explore.model.enums.AgsState
 import explore.model.enums.Visible
 import explore.model.reusability.*
 import explore.model.reusability.given
+import explore.model.syntax.scienceModes.*
 import explore.optics.ModelOptics
+import explore.syntax.ui.*
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -77,9 +79,6 @@ case class AladinCell(
 
 object AladinCell extends ModelOptics:
   private type Props = AladinCell
-
-  private val params  = AgsParams.GmosAgsParams(none, PortDisposition.Side)
-  private val basePos = AgsPosition(Angle.Angle0, Offset.Zero)
 
   // We want to re render only when the vizTime changes at least a month
   // We keep the candidates data pm corrected for the viz time
@@ -153,6 +152,7 @@ object AladinCell extends ModelOptics:
          p.obsConf.constraints,
          p.obsConf.wavelength,
          p.obsConf.vizTime,
+         p.obsConf.scienceMode,
          candidates.value
         )
       ) { (props, ctx, _, _, _, ags, agsState, selectedIndex) =>
@@ -162,6 +162,7 @@ object AladinCell extends ModelOptics:
                 Some(constraints),
                 Some(wavelength),
                 vizTime,
+                scienceMode,
                 candidates
               ) =>
             import ctx.given
@@ -174,6 +175,8 @@ object AladinCell extends ModelOptics:
 
             (tracking.at(vizTime), pa).mapN { (base, pa) =>
               val basePos = AgsPosition(pa, Offset.Zero)
+              val fpu     = scienceMode.flatMap(_.fpuAlternative)
+              val params  = AgsParams.GmosAgsParams(fpu, PortDisposition.Side)
 
               val sciencePositions =
                 props.asterism.asList
@@ -356,7 +359,7 @@ object AladinCell extends ModelOptics:
             allowMouseZoomView.mod(_.flip) *>
               UserPreferences.storePreferences[IO](props.uid, allowMouseZoom.flip).runAsync
 
-          val aladinKey = s"${props.asterism}"
+          val aladinKey = s"${props.asterism.asList.map(_.id)}"
 
           val selectedGuideStar = selectedGSIndex.get.flatMap(agsResults.value.lift)
           val usableGuideStar   = selectedGuideStar.exists(_.isUsable)

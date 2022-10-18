@@ -30,7 +30,7 @@ trait ArbScienceModeAdvanced {
   import ArbRefined.*
   import ArbWavelength.*
 
-  implicit val arbGmosNorthLongSlitAdvanced: Arbitrary[ScienceModeAdvanced.GmosNorthLongSlit] =
+  given Arbitrary[ScienceModeAdvanced.GmosNorthLongSlit] =
     Arbitrary[ScienceModeAdvanced.GmosNorthLongSlit](
       for {
         overrideWavelength        <- arbitrary[Option[Wavelength]]
@@ -61,7 +61,7 @@ trait ArbScienceModeAdvanced {
       )
     )
 
-  implicit val arbGmosSouthLongSlitAdvanced: Arbitrary[ScienceModeAdvanced.GmosSouthLongSlit] =
+  given Arbitrary[ScienceModeAdvanced.GmosSouthLongSlit] =
     Arbitrary[ScienceModeAdvanced.GmosSouthLongSlit](
       for {
         overrideWavelength        <- arbitrary[Option[Wavelength]]
@@ -92,7 +92,7 @@ trait ArbScienceModeAdvanced {
       )
     )
 
-  implicit val arbScienceModeAdvanced: Arbitrary[ScienceModeAdvanced] =
+  given Arbitrary[ScienceModeAdvanced] =
     Arbitrary[ScienceModeAdvanced](
       Gen.oneOf(
         arbitrary[ScienceModeAdvanced.GmosNorthLongSlit],
@@ -100,7 +100,7 @@ trait ArbScienceModeAdvanced {
       )
     )
 
-  implicit val cogenGmosNorthLongSlitAdvanced: Cogen[ScienceModeAdvanced.GmosNorthLongSlit] =
+  given Cogen[ScienceModeAdvanced.GmosNorthLongSlit] =
     Cogen[
       (Option[Wavelength],
        Option[GmosNorthGrating],
@@ -132,7 +132,7 @@ trait ArbScienceModeAdvanced {
         )
       )
 
-  implicit val cogenGmosSouthLongSlitAdvanced: Cogen[ScienceModeAdvanced.GmosSouthLongSlit] =
+  given Cogen[ScienceModeAdvanced.GmosSouthLongSlit] =
     Cogen[
       (Option[Wavelength],
        Option[GmosSouthGrating],
@@ -164,7 +164,7 @@ trait ArbScienceModeAdvanced {
         )
       )
 
-  implicit val cogenScienceModeAdvanced: Cogen[ScienceModeAdvanced] =
+  given Cogen[ScienceModeAdvanced] =
     Cogen[Either[ScienceModeAdvanced.GmosNorthLongSlit, ScienceModeAdvanced.GmosSouthLongSlit]]
       .contramap {
         case n @ ScienceModeAdvanced.GmosNorthLongSlit(_, _, _, _, _, _, _, _, _, _, _, _) =>
