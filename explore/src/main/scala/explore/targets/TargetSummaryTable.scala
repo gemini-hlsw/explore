@@ -34,10 +34,15 @@ import lucuma.ui.table.*
 import org.scalablytyped.runtime.StringDictionary
 import react.common.Css
 import react.common.ReactFnProps
+import react.hotkeys.*
 import react.semanticui.collections.table.*
+import reactST.react.reactStrings.I
 import reactST.{tanstackTableCore => raw}
 
 import scalajs.js.JSConverters.*
+import react.primereact.Button
+import explore.Icons
+import react.primereact.PrimeStyles
 
 case class TargetSummaryTable(
   userId:            Option[User.Id],
@@ -129,10 +134,12 @@ object TargetSummaryTable extends TableHooks:
             getRowId = (row, _, _) => row.id.toString,
             enableSorting = true,
             enableColumnResizing = true,
+            enableMultiRowSelection = true,
             columnResizeMode = raw.mod.ColumnResizeMode.onChange,
             initialState = raw.mod
               .InitialTableState()
               .setColumnVisibility(TargetColumns.DefaultVisibility)
+              .setRowSelection(StringDictionary())
           ),
           TableStore(props.userId, TableId.TargetsSummary, cols)
         )
@@ -141,7 +148,20 @@ object TargetSummaryTable extends TableHooks:
         <.div(
           props.renderInTitle(
             React.Fragment(
-              <.span, // Push column selector to right
+              <.div(
+                <.label("Select"),
+                ExploreStyles.TableSelectionToolbar,
+                Button(size = Button.Size.Small,
+                       icon = Icons.CheckDouble,
+                       onClick = Callback(table.toggleAllRowsSelected(true))
+                ),
+                <.label("All"),
+                Button(size = Button.Size.Small,
+                       icon = Icons.SquareXMark,
+                       onClick = Callback(table.toggleAllRowsSelected(false))
+                ),
+                <.label("None")
+              ),
               <.span(ExploreStyles.TitleSelectColumns)(
                 NewColumnSelector(
                   table,
@@ -155,11 +175,56 @@ object TargetSummaryTable extends TableHooks:
             table,
             striped = true,
             compact = Compact.Very,
-            tableMod = ExploreStyles.ExploreTable,
+            tableMod = ExploreStyles.ExploreTable |+| ExploreStyles.ExploreSelectableTable,
             headerCellMod = headerCell =>
               columnClasses
                 .get(headerCell.column.id)
                 .orEmpty |+| ExploreStyles.StickyHeader,
+            rowMod = row =>
+              TagMod(
+                ExploreStyles.TableRowSelected.when_(row.getIsSelected()),
+                ^.onClick --> Callback.log(s"cmd ${isHotkeyPressed("cmd")}") *> Callback {
+                  // If cmd is pressed add to the selection
+                  if (!isCmdCtrlPressed) table.toggleAllRowsSelected(false)
+                  if (isShiftPressed) {
+                    // If shift is pressed extend
+                    val selectedRows = table.getSelectedRowModel().rows.toList.sortBy(_.id)
+                    val allRows      = table.getRowModel().rows.toList.sortBy(_.id)
+                    if (selectedRows.isEmpty) row.toggleSelected()
+                    else {
+                      val currentId      = row.id
+                      // selectedRow is not empty, these won't fail
+                      val first          = selectedRows.head.id
+                      val last           = selectedRows.last.id
+                      val indexOfCurrent = allRows.indexWhere(_.id === currentId)
+                      val indexOfFirst   = allRows.indexWhere(_.id === first)
+                      val indexOfLast    = allRows.indexWhere(_.id === last)
+                      if (indexOfCurrent === -1 || indexOfFirst === -1 || indexOfLast === -1) {
+                        println("Illegal selection state")
+                      } else {
+
+                        if (currentId < first) {
+                          table.setRowSelection(
+                            StringDictionary(
+                              (first -> true) :: allRows
+                                .slice(indexOfCurrent, indexOfFirst)
+                                .map(_.id -> true): _*
+                            )
+                          )
+                        } else {
+                          table.setRowSelection(
+                            StringDictionary(
+                              ((currentId -> true) :: allRows
+                                .slice(indexOfLast, indexOfCurrent)
+                                .map(_.id -> true)): _*
+                            )
+                          )
+                        }
+                      }
+                    }
+                  } else row.toggleSelected()
+                }
+              ),
             cellMod = cell => columnClasses.get(cell.column.id).orEmpty
           )
         )
