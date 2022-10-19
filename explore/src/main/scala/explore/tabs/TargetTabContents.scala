@@ -243,6 +243,7 @@ object TargetTabContents:
       Tile("targetSummary".refined, "Target Summary", backButton.some)(renderInTitle =>
         TargetSummaryTable(
           props.userId,
+          props.programId,
           targetMap,
           selectObservationAndTarget(props.expandedIds) _,
           selectTarget _,
