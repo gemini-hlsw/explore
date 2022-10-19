@@ -13,7 +13,7 @@ object Settings {
     val circe            = "0.14.3"
     val circeGolden      = "0.3.0"
     val clue             = "0.23.1"
-    val crystal          = "0.32.2"
+    val crystal          = "0.33.0"
     val discipline       = "1.5.1"
     val disciplineMUnit  = "1.0.9"
     val fs2              = "3.3.0"
@@ -27,17 +27,17 @@ object Settings {
     val lucumaBC         = "0.4.0"
     val lucumaCore       = "0.57.0"
     val lucumaCatalog    = "0.29.5"
-    val lucumaReact      = "0.11.0"
+    val lucumaReact      = "0.12.0"
     val lucumaRefined    = "0.1.1"
     val lucumaSchemas    = "0.37.4"
     val lucumaSSO        = "0.4.2"
-    val lucumaUI         = "0.48.1"
+    val lucumaUI         = "0.49.0"
     val monocle          = "3.1.0"
     val mouse            = "1.2.0"
     val mUnit            = "0.7.29"
     val mUnitCatsEffect  = "1.0.7"
     val pprint           = "0.8.0"
-    val reactAladin      = "0.27.1"
+    val reactAladin      = "0.27.2"
     val refinedAlgebra   = "0.1.0"
     val scalaJsDom       = "2.3.0"
     val scalaJsReact     = "2.1.1"
@@ -111,7 +111,7 @@ object Settings {
 
     val Crystal = Def.setting(
       deps(
-        "com.rpiaggio" %%% "crystal"
+        "edu.gemini" %%% "crystal"
       )(crystal)
     )
 
