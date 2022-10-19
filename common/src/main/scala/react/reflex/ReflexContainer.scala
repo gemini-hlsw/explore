@@ -20,8 +20,8 @@ case class ReflexContainer(
   clazz:                  js.UndefOr[Css] = js.undefined,
   override val modifiers: Seq[TagMod] = Seq.empty
 ) extends GenericComponentPAC[ReflexContainer.Props, ReflexContainer] {
-  override protected def cprops                     = ReflexContainer.props(this)
-  override protected val component                  = ReflexContainer.component
+  override protected def cprops    = ReflexContainer.props(this)
+  override protected val component = ReflexContainer.component
   override def addModifiers(modifiers: Seq[TagMod]) = copy(modifiers = this.modifiers ++ modifiers)
 }
 

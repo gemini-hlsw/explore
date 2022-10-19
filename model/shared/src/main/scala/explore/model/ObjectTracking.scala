@@ -23,7 +23,7 @@ sealed trait ObjectTracking derives Eq:
 object ObjectTracking:
   case class ConstantTracking(coord: Coordinates) extends ObjectTracking derives Eq:
     def at(i: Instant): Option[CoordinatesAtVizTime] = CoordinatesAtVizTime(coord).some
-    def baseCoordinates: Coordinates                 = coord
+    def baseCoordinates: Coordinates = coord
 
   case class SiderealObjectTracking(tracking: SiderealTracking) extends ObjectTracking derives Eq:
     def at(i: Instant): Option[CoordinatesAtVizTime] =

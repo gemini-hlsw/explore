@@ -130,9 +130,9 @@ package toastify {
   object rawToast extends js.Object {
     def apply(text: String): Unit = js.native
 
-    def info(node: React.Element, options: ToastOptions = ToastOptions()): Unit  = js.native
+    def info(node:  React.Element, options: ToastOptions = ToastOptions()): Unit = js.native
     def apply(node: React.Element, options: ToastOptions = ToastOptions()): Unit = js.native
-    def dismiss(id: String): Unit                                                = js.native
+    def dismiss(id: String): Unit = js.native
   }
 
   object toast {

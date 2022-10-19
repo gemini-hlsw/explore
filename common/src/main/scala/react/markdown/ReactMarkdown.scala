@@ -44,8 +44,8 @@ case class ReactMarkdown(
   rehypePlugins:          js.UndefOr[List[RehypePlugin]] = js.undefined,
   override val modifiers: Seq[TagMod] = Seq.empty
 ) extends GenericFnComponentPA[ReactMarkdown.Props, ReactMarkdown] {
-  override protected def cprops                     = ReactMarkdown.props(this)
-  override protected val component                  = ReactMarkdown.component
+  override protected def cprops    = ReactMarkdown.props(this)
+  override protected val component = ReactMarkdown.component
   override def addModifiers(modifiers: Seq[TagMod]) = copy(modifiers = this.modifiers ++ modifiers)
 }
 

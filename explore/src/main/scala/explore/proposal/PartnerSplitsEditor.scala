@@ -89,7 +89,7 @@ object PartnerSplitsEditor {
       )
     }
 
-  private def total(p: Props)       = p.splits.get.map(_.percent.value).sum
+  private def total(p:       Props) = p.splits.get.map(_.percent.value).sum
   private def addsUpTo100(p: Props) = total(p) === 100
 
   protected val component = ScalaFnComponent[Props] { props =>
