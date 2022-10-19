@@ -14,7 +14,7 @@ import reactST.{tanstackTableCore => raw}
 
 case class NewColumnSelector[T](
   table:       raw.mod.Table[T],
-  columnNames: Map[String, String],
+  columnNames: String => String, // id -> label
   clazz:       Css = Css.Empty
 ) extends ReactFnProps(NewColumnSelector.component)
 

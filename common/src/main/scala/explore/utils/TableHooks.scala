@@ -12,6 +12,7 @@ import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.hooks.CustomHook
 import japgolly.scalajs.react.util.DefaultEffects.{Async => DefaultA}
+import lucuma.core.util.NewType
 import lucuma.react.table.*
 import reactST.{tanstackTableCore => raw}
 
@@ -34,25 +35,33 @@ private object TableHooks:
   private given Reusability[raw.mod.TableState] =
     Reusability.by(state => (state.columnVisibility, state.sorting))
 
+  private object PrefsLoaded extends NewType[Boolean]
+  private type PrefsLoaded = PrefsLoaded.Type
+
+  private object CanSave extends NewType[Boolean]
+  private type CanSave = CanSave.Type
+
   private def hook[T] =
     CustomHook[TableOptionsWithStateStore[DefaultA, T]]
       .useReactTableBy(_.tableOptions)
-      .useState(false) // prefsDone
-      .useRef(false)   // canSave
-      .useEffectOnMountBy((props, table, prefsDone, canSave) =>
+      .useState(PrefsLoaded(false))
+      .useRef(CanSave(false))
+      .useEffectOnMountBy((props, table, prefsLoadad, canSave) =>
         (props.stateStore.load() >>=
           (mod => Sync[DefaultA].delay(table.setState(mod))))
           .guarantee( // This also forces a rerender, which react-table isn't doing by just changing the state.
-            prefsDone.setStateAsync(true)
+            prefsLoadad.setStateAsync(PrefsLoaded(true))
           )
       )
-      .useEffectWithDepsBy((_, table, _, _) => table.getState())((props, _, prefsDone, canSave) =>
+      .useEffectWithDepsBy((_, table, _, _) => table.getState())((props, _, prefsLoadad, canSave) =>
         state =>
           // Don't save prefs while we are still attempting to load them or if we just loaded them.
           props.stateStore
             .save(state)
-            .whenA(prefsDone.value && canSave.value)
-            >> canSave.setAsync(true).whenA(prefsDone.value && !canSave.value)
+            .whenA(prefsLoadad.value.value && canSave.value.value)
+            >> canSave
+              .setAsync(CanSave(true))
+              .whenA(prefsLoadad.value.value && !canSave.value.value)
       )
       .buildReturning((_, table, _, _) => table)
 
