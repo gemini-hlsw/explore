@@ -11,8 +11,10 @@ import explore.common.AsterismQueries.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
+import explore.model.Focused
 import explore.model.TableColumnPref
 import explore.model.TargetWithIdAndObs
+import explore.model.enums.AppTab
 import explore.model.enums.TableId
 import explore.syntax.ui.*
 import explore.utils.TableHooks
@@ -20,6 +22,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Band
 import lucuma.core.model.Observation
+import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.react.table.*
@@ -37,6 +40,7 @@ import scalajs.js.JSConverters.*
 
 case class TargetSummaryTable(
   userId:            Option[User.Id],
+  programId:         Program.Id,
   targets:           TargetWithObsList,
   selectObservation: (Observation.Id, Target.Id) => Callback,
   selectTarget:      Target.Id => Callback,
@@ -65,16 +69,26 @@ object TargetSummaryTable extends TableHooks:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       // cols
-      .useMemoBy((_, _) => ()) { (props, _) => _ =>
+      .useMemoBy((_, _) => ()) { (props, ctx) => _ =>
         def column[V](id: String, accessor: TargetWithIdAndObs => V) =
           ColDef(id, row => accessor(row), TargetColumns.allColNames(id))
+
+        def targetUrl(targetId: Target.Id): String =
+          ctx.pageUrl(AppTab.Targets, props.programId, Focused.target(targetId))
+
+        def obsUrl(targetId: Target.Id, obsId: Observation.Id): String =
+          ctx.pageUrl(AppTab.Targets, props.programId, Focused.singleObs(obsId, targetId.some))
 
         List(
           ColDef(
             "id",
             _.id,
             "id",
-            cell => <.a(^.onClick ==> (_ => props.selectTarget(cell.value)), cell.value.toString)
+            cell =>
+              <.a(^.href := targetUrl(cell.value),
+                  ^.onClick ==> (e => e.preventDefaultCB *> props.selectTarget(cell.value)),
+                  cell.value.toString
+              )
           ).sortable
         ) ++
           TargetColumns
@@ -83,19 +97,25 @@ object TargetSummaryTable extends TableHooks:
           List(
             column("count", _.obsIds.size) // TODO Right align
               .copy(cell = _.value.toString),
-            column("observations", _.obsIds.toList)
+            column("observations", x => (x.id, x.obsIds.toList))
               .copy(
                 cell = cell =>
+                  val (tid, obsIds) = cell.value
                   <.span(
-                    cell.value
+                    obsIds
                       .map(obsId =>
                         <.a(
-                          ^.onClick ==> (_ => props.selectObservation(obsId, cell.row.original.id)),
-                          obsId.toString
+                          ^.href := obsUrl(tid, obsId),
+                          ^.onClick ==> (e =>
+                            e.preventDefaultCB *>
+                              props.selectObservation(obsId, cell.row.original.id)
+                          ),
+                          obsId.show
                         )
                       )
                       .mkReactFragment(", ")
-                  ),
+                  )
+                ,
                 enableSorting = false
               )
           )
