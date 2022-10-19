@@ -39,6 +39,7 @@ import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
+import org.scalablytyped.runtime.StringDictionary
 import react.common.Css
 import react.common.ReactFnProps
 import reactST.{tanstackTableCore => raw}
@@ -46,7 +47,6 @@ import reactST.{tanstackTableCore => raw}
 import scala.collection.immutable.SortedSet
 
 import scalajs.js.JSConverters.*
-import org.scalablytyped.runtime.StringDictionary
 
 case class ConstraintsSummaryTable(
   userId:         Option[User.Id],
