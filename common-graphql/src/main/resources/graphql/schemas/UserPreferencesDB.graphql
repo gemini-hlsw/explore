@@ -1140,6 +1140,7 @@ type LucumaTableColumnPreferences {
   columnId: String!
   createdAt: timestamptz
   sorting: LucumaSortDirectionEnum
+  sortingOrder: Int
   tableId: LucumaTableIdsEnum!
   updatedAt: timestamptz
   userId: String!
@@ -1158,9 +1159,22 @@ type LucumaTableColumnPreferencesAggregate {
 aggregate fields of "lucumaTableColumnPreferences"
 """
 type LucumaTableColumnPreferencesAggregateFields {
+  avg: LucumaTableColumnPreferencesAvgFields
   count(columns: [LucumaTableColumnPreferencesSelectColumn!], distinct: Boolean): Int!
   max: LucumaTableColumnPreferencesMaxFields
   min: LucumaTableColumnPreferencesMinFields
+  stddev: LucumaTableColumnPreferencesStddevFields
+  stddevPop: LucumaTableColumnPreferencesStddev_popFields
+  stddevSamp: LucumaTableColumnPreferencesStddev_sampFields
+  sum: LucumaTableColumnPreferencesSumFields
+  varPop: LucumaTableColumnPreferencesVar_popFields
+  varSamp: LucumaTableColumnPreferencesVar_sampFields
+  variance: LucumaTableColumnPreferencesVarianceFields
+}
+
+"""aggregate avg on columns"""
+type LucumaTableColumnPreferencesAvgFields {
+  sortingOrder: Float
 }
 
 """
@@ -1173,6 +1187,7 @@ input LucumaTableColumnPreferencesBoolExp {
   columnId: StringComparisonExp
   createdAt: TimestamptzComparisonExp
   sorting: LucumaSortDirectionEnumComparisonExp
+  sortingOrder: IntComparisonExp
   tableId: LucumaTableIdsEnumComparisonExp
   updatedAt: TimestamptzComparisonExp
   userId: StringComparisonExp
@@ -1190,12 +1205,20 @@ enum LucumaTableColumnPreferencesConstraint {
 }
 
 """
+input type for incrementing numeric columns in table "lucumaTableColumnPreferences"
+"""
+input LucumaTableColumnPreferencesIncInput {
+  sortingOrder: Int
+}
+
+"""
 input type for inserting data into table "lucumaTableColumnPreferences"
 """
 input LucumaTableColumnPreferencesInsertInput {
   columnId: String
   createdAt: timestamptz
   sorting: LucumaSortDirectionEnum
+  sortingOrder: Int
   tableId: LucumaTableIdsEnum
   updatedAt: timestamptz
   userId: String
@@ -1206,6 +1229,7 @@ input LucumaTableColumnPreferencesInsertInput {
 type LucumaTableColumnPreferencesMaxFields {
   columnId: String
   createdAt: timestamptz
+  sortingOrder: Int
   updatedAt: timestamptz
   userId: String
 }
@@ -1214,6 +1238,7 @@ type LucumaTableColumnPreferencesMaxFields {
 type LucumaTableColumnPreferencesMinFields {
   columnId: String
   createdAt: timestamptz
+  sortingOrder: Int
   updatedAt: timestamptz
   userId: String
 }
@@ -1245,6 +1270,7 @@ input LucumaTableColumnPreferencesOrderBy {
   columnId: OrderBy
   createdAt: OrderBy
   sorting: OrderBy
+  sortingOrder: OrderBy
   tableId: OrderBy
   updatedAt: OrderBy
   userId: OrderBy
@@ -1272,6 +1298,9 @@ enum LucumaTableColumnPreferencesSelectColumn {
   sorting
 
   """column name"""
+  sortingOrder
+
+  """column name"""
   tableId
 
   """column name"""
@@ -1291,10 +1320,31 @@ input LucumaTableColumnPreferencesSetInput {
   columnId: String
   createdAt: timestamptz
   sorting: LucumaSortDirectionEnum
+  sortingOrder: Int
   tableId: LucumaTableIdsEnum
   updatedAt: timestamptz
   userId: String
   visible: Boolean
+}
+
+"""aggregate stddev on columns"""
+type LucumaTableColumnPreferencesStddevFields {
+  sortingOrder: Float
+}
+
+"""aggregate stddev_pop on columns"""
+type LucumaTableColumnPreferencesStddev_popFields {
+  sortingOrder: Float
+}
+
+"""aggregate stddev_samp on columns"""
+type LucumaTableColumnPreferencesStddev_sampFields {
+  sortingOrder: Float
+}
+
+"""aggregate sum on columns"""
+type LucumaTableColumnPreferencesSumFields {
+  sortingOrder: Int
 }
 
 """
@@ -1311,6 +1361,9 @@ enum LucumaTableColumnPreferencesUpdateColumn {
   sorting
 
   """column name"""
+  sortingOrder
+
+  """column name"""
   tableId
 
   """column name"""
@@ -1324,9 +1377,27 @@ enum LucumaTableColumnPreferencesUpdateColumn {
 }
 
 input LucumaTableColumnPreferencesUpdates {
+  """increments the numeric columns with given value of the filtered values"""
+  _inc: LucumaTableColumnPreferencesIncInput
+
   """sets the columns of the filtered rows to the given values"""
   _set: LucumaTableColumnPreferencesSetInput
   where: LucumaTableColumnPreferencesBoolExp!
+}
+
+"""aggregate var_pop on columns"""
+type LucumaTableColumnPreferencesVar_popFields {
+  sortingOrder: Float
+}
+
+"""aggregate var_samp on columns"""
+type LucumaTableColumnPreferencesVar_sampFields {
+  sortingOrder: Float
+}
+
+"""aggregate variance on columns"""
+type LucumaTableColumnPreferencesVarianceFields {
+  sortingOrder: Float
 }
 
 """
@@ -2507,6 +2578,7 @@ input lucumaTableColumnPreferences_streamCursorValueInput {
   columnId: String
   createdAt: timestamptz
   sorting: LucumaSortDirectionEnum
+  sortingOrder: Int
   tableId: LucumaTableIdsEnum
   updatedAt: timestamptz
   userId: String
@@ -3251,6 +3323,9 @@ type Mutation {
   update data of the table: "lucumaTableColumnPreferences"
   """
   updateLucumaTableColumnPreferences(
+    """increments the numeric columns with given value of the filtered values"""
+    _inc: LucumaTableColumnPreferencesIncInput
+
     """sets the columns of the filtered rows to the given values"""
     _set: LucumaTableColumnPreferencesSetInput
 
@@ -3262,6 +3337,9 @@ type Mutation {
   update single row of the table: "lucumaTableColumnPreferences"
   """
   updateLucumaTableColumnPreferencesByPk(
+    """increments the numeric columns with given value of the filtered values"""
+    _inc: LucumaTableColumnPreferencesIncInput
+
     """sets the columns of the filtered rows to the given values"""
     _set: LucumaTableColumnPreferencesSetInput
     pk_columns: LucumaTableColumnPreferencesPkColumnsInput!

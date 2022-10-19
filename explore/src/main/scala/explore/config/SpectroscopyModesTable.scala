@@ -23,6 +23,7 @@ import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
+import explore.common.UserPreferencesQueries.TableStore
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.events.*
@@ -454,36 +455,26 @@ private object SpectroscopyModesTable extends TableHooks:
       ) { (_, _, _, rows, _, _, _, selectedIndex) => (scienceMode, _) =>
         selectedIndex.setState(selectedRowIndex(scienceMode, rows))
       }
-      // Load preferences
-      .customBy((props, ctx, _, _, _, _, cols, _) =>
-        useTablePreferencesLoad(
-          TablePrefsLoadParams(
-            props.userId,
-            ctx,
-            TableId.SpectroscopyModes,
-            cols.value,
-            Nil
-          )
-        )
-      )
       // table
-      .useReactTableBy((_, _, _, rows, _, _, cols, _, prefs) =>
-        TableOptions(
-          cols,
-          rows,
-          getRowId = (row, _, _) => row.id.toString,
-          enableSorting = true,
-          initialState = raw.mod
-            .InitialTableState()
-            .setSorting(toSortingRules(prefs.get.sortingColumns))
+      .useReactTableWithStateStoreBy((props, ctx, _, rows, _, _, cols, _) =>
+        import ctx.given
+
+        TableOptionsWithStateStore(
+          TableOptions(
+            cols,
+            rows,
+            getRowId = (row, _, _) => row.id.toString,
+            enableSorting = true
+          ),
+          TableStore(props.userId, TableId.SpectroscopyModes, cols)
         )
       )
       // visibleRows
-      .useStateBy((_, _, _, rows, _, _, _, _, _, _) => none[Range.Inclusive])
+      .useStateBy((_, _, _, rows, _, _, _, _, _) => none[Range.Inclusive])
       // atTop
       .useState(false)
       // Recalculate ITC values if the wv or sn change or if the rows get modified
-      .useStreamResourceBy((props, _, _, _, _, _, _, _, _, _, visibleRows, _) =>
+      .useStreamResourceBy((props, _, _, _, _, _, _, _, _, visibleRows, _) =>
         (
           props.spectroscopyRequirements.wavelength,
           props.spectroscopyRequirements.signalToNoise,
@@ -492,7 +483,7 @@ private object SpectroscopyModesTable extends TableHooks:
           props.brightestTarget
         )
       ) {
-        (_, ctx, itcResults, _, itcProgress, _, _, _, _, table, visibleRows, _) => (
+        (_, ctx, itcResults, _, itcProgress, _, _, _, table, visibleRows, _) => (
           wavelength,
           signalToNoise,
           signalToNoiseAt,
@@ -549,21 +540,13 @@ private object SpectroscopyModesTable extends TableHooks:
             .getOrElse(Resource.pure(fs2.Stream()))
       }
       .useRef(none[HTMLTableVirtualizer])
-      .useEffectOnMountBy((_, _, _, _, _, _, _, selectedIndex, _, _, _, _, _, virtualizerRef) =>
+      .useEffectOnMountBy((_, _, _, _, _, _, _, selectedIndex, _, _, _, _, virtualizerRef) =>
         virtualizerRef.get.flatMap(refOpt =>
           Callback(
             for
               virtualizer <- refOpt
               idx         <- selectedIndex.value
             yield virtualizer.scrollToIndex(idx + 1, ScrollOptions)
-          )
-        )
-      )
-      .customBy((_, _, _, _, _, _, _, _, prefs, table, _, _, _, _) =>
-        useTablePreferencesStore(
-          TablePrefsStoreParams(
-            prefs,
-            table
           )
         )
       )
@@ -577,13 +560,11 @@ private object SpectroscopyModesTable extends TableHooks:
           errs,
           _,
           selectedIndex,
-          _,
           table,
           visibleRows,
           atTop,
           _,
-          virtualizerRef,
-          _
+          virtualizerRef
         ) =>
           def toggleRow(row: SpectroscopyModeRow): Option[ScienceMode] =
             rowToConf(row).filterNot(conf => props.scienceMode.get.contains_(conf))

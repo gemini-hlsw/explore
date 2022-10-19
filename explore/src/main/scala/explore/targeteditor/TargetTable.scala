@@ -13,6 +13,7 @@ import crystal.react.implicits.*
 import crystal.react.reuse.*
 import explore.Icons
 import explore.common.AsterismQueries
+import explore.common.UserPreferencesQueries.TableStore
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AladinFullScreen
@@ -27,6 +28,7 @@ import explore.syntax.ui.*
 import explore.targets.TargetColumns
 import explore.targets.TargetSummaryTable
 import explore.utils.TableHooks
+import explore.utils.TableOptionsWithStateStore
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Target
@@ -126,45 +128,29 @@ object TargetTable extends TableHooks:
         case (targets, Pot.Ready(vizTime)) => targets.foldMap(_.toSiderealAt(vizTime))
         case _                             => Nil
       )
-      // Load preferences
-      .customBy((props, ctx, cols, _, _) =>
-        useTablePreferencesLoad(
-          TablePrefsLoadParams(
-            props.userId,
-            ctx,
-            TableId.AsterismTargets,
-            cols.value,
-            TargetSummaryTable.TargetSummaryHiddenColumns
-          )
+      .useReactTableWithStateStoreBy((props, ctx, cols, _, rows) =>
+        import ctx.given
+
+        TableOptionsWithStateStore(
+          TableOptions(
+            cols,
+            rows,
+            getRowId = (row, _, _) => row.id.toString,
+            enableSorting = true,
+            enableColumnResizing = true,
+            columnResizeMode = raw.mod.ColumnResizeMode.onChange,
+            initialState = raw.mod
+              .InitialTableState()
+              .setColumnVisibility(TargetColumns.DefaultVisibility)
+          ),
+          TableStore(props.userId, TableId.AsterismTargets, cols)
         )
       )
-      .useReactTableBy((props, _, cols, _, rows, prefs) =>
-        TableOptions(
-          cols,
-          rows,
-          getRowId = (row, _, _) => row.id.toString,
-          enableSorting = true,
-          enableColumnResizing = true,
-          columnResizeMode = raw.mod.ColumnResizeMode.onChange,
-          initialState = raw.mod
-            .InitialTableState()
-            .setColumnVisibility(prefs.get.hiddenColumnsDictionary)
-            .setSorting(toSortingRules(prefs.get.sortingColumns))
-        )
-      )
-      .customBy((_, _, _, _, _, prefs, table) =>
-        useTablePreferencesStore(
-          TablePrefsStoreParams(
-            prefs,
-            table
-          )
-        )
-      )
-      .render((props, _, _, _, rows, prefs, table, _) =>
+      .render((props, _, _, _, rows, table) =>
         React.Fragment(
           props.renderInTitle(
             <.span(ExploreStyles.TitleSelectColumns)(
-              NewColumnSelector(table, columnNames, prefs, ExploreStyles.SelectColumns)
+              NewColumnSelector(table, columnNames, ExploreStyles.SelectColumns)
                 .unless(props.fullScreen.value)
             )
           ),

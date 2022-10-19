@@ -242,12 +242,9 @@ object UserPreferencesQueriesGQL {
           visible
           columnId
           sorting
+          sortingOrder
         }
       }"""
-
-    object Data {
-      type LucumaTableColumnPreferences = explore.model.TableColumnPref
-    }
   }
 
   @GraphQL
@@ -258,7 +255,7 @@ object UserPreferencesQueriesGQL {
           objects: $objects,
           onConflict: {
             constraint: lucumaTableColumnPreferences_pkey,
-            update_columns: [visible, sorting]
+            update_columns: [visible, sorting, sortingOrder]
           }) {
           affected_rows
         }

@@ -34,6 +34,8 @@ import lucuma.core.syntax.display.*
 import lucuma.core.util.Display
 import lucuma.react.table.*
 import lucuma.ui.syntax.all.given
+import org.scalablytyped.runtime.StringDictionary
+import reactST.{tanstackTableCore => raw}
 
 object TargetColumns:
   val baseColNames: Map[String, String] = Map(
@@ -42,6 +44,7 @@ object TargetColumns:
   )
 
   val siderealColNames: Map[String, String] = Map(
+    "type"         -> "Type",
     "ra"           -> "RA",
     "dec"          -> "Dec",
     "priority"     -> "Priority",
@@ -59,6 +62,14 @@ object TargetColumns:
   ) ++ Band.all.map(m => (m.tag + "mag", m.shortName)).toMap
 
   val allColNames: Map[String, String] = baseColNames ++ siderealColNames
+
+  val DefaultVisibility: raw.mod.VisibilityState =
+    StringDictionary(
+      (List("epoch", "pmra", "pmdec", "z", "cz", "parallax", "morphology", "sed") ++
+        Band.all
+          .filterNot(_ === Band.V)
+          .map(b => b.shortName + "mag")).map(_ -> false): _*
+    )
 
   trait BaseColBuilder[D](colDef: ColumnDef.Applied[D], getTarget: D => Option[Target]):
     def baseColumn[V](id: String, accessor: Target => V): ColumnDef.Single[D, Option[V]] =

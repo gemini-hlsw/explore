@@ -13,21 +13,20 @@ import crystal.react.implicits.*
 import crystal.react.reuse.*
 import explore.Icons
 import explore.common.ConstraintGroupQueries.*
-import explore.common.UserPreferencesQueries.TableColumns
+import explore.common.UserPreferencesQueries.TableStore
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.ColumnId
 import explore.model.ConstraintGroup
 import explore.model.Focused
 import explore.model.ObsIdSet
-import explore.model.TableColumnPref
 import explore.model.enums.AppTab
 import explore.model.enums.TableId
 import explore.model.reusability.given
 import explore.model.syntax.all.*
 import explore.syntax.ui.*
 import explore.utils.TableHooks
+import explore.utils.TableOptionsWithStateStore
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ConstraintSet
@@ -40,11 +39,14 @@ import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
+import org.scalablytyped.runtime.StringDictionary
 import react.common.Css
 import react.common.ReactFnProps
 import reactST.{tanstackTableCore => raw}
 
 import scala.collection.immutable.SortedSet
+
+import scalajs.js.JSConverters.*
 
 case class ConstraintsSummaryTable(
   userId:         Option[User.Id],
@@ -76,6 +78,9 @@ object ConstraintsSummaryTable extends TableHooks:
   private val columnClasses: Map[String, Css] = Map(
     "edit" -> (ExploreStyles.StickyColumn |+| ExploreStyles.ConstraintsSummaryEdit)
   )
+
+  private val DefaultColVisibility: raw.mod.VisibilityState =
+    StringDictionary(List("minam", "minha", "maxha").map(_ -> false): _*)
 
   private val component =
     ScalaFnComponent
@@ -189,42 +194,27 @@ object ConstraintsSummaryTable extends TableHooks:
                 )
             )
       )
-      .customBy((props, ctx, cols) =>
-        useTablePreferencesLoad(
-          TablePrefsLoadParams(
-            props.userId,
-            ctx,
-            TableId.ConstraintsSummary,
-            cols.value,
-            List(TableColumnPref("minam"), TableColumnPref("minha"), TableColumnPref("maxha"))
-          )
-        )
-      )
       // Memo rows
-      .useMemoBy((props, _, _, _) => props.constraintList)((_, _, _, _) => _.values.toList)
-      .useReactTableBy((props, _, cols, prefs, rows) =>
-        TableOptions(
-          cols,
-          rows,
-          getRowId = (row, _, _) => row.constraintSet.toString,
-          enableSorting = true,
-          enableColumnResizing = true,
-          columnResizeMode = raw.mod.ColumnResizeMode.onChange,
-          initialState = raw.mod
-            .InitialTableState()
-            .setColumnVisibility(prefs.get.hiddenColumnsDictionary)
-            .setSorting(toSortingRules(prefs.get.sortingColumns))
+      .useMemoBy((props, _, _) => props.constraintList)((_, _, _) => _.values.toList)
+      .useReactTableWithStateStoreBy((props, ctx, cols, rows) =>
+        import ctx.given
+
+        TableOptionsWithStateStore(
+          TableOptions(
+            cols,
+            rows,
+            getRowId = (row, _, _) => row.constraintSet.toString,
+            enableSorting = true,
+            enableColumnResizing = true,
+            columnResizeMode = raw.mod.ColumnResizeMode.onChange,
+            initialState = raw.mod
+              .InitialTableState()
+              .setColumnVisibility(DefaultColVisibility)
+          ),
+          TableStore(props.userId, TableId.ConstraintsSummary, cols)
         )
       )
-      .customBy((_, _, _, prefs, _, table) =>
-        useTablePreferencesStore(
-          TablePrefsStoreParams(
-            prefs,
-            table
-          )
-        )
-      )
-      .render { (props, ctx, _, prefs, _, table, _) =>
+      .render { (props, ctx, _, _, table) =>
         import ctx.given
 
         <.div(
@@ -232,12 +222,7 @@ object ConstraintsSummaryTable extends TableHooks:
             React.Fragment(
               <.span, // Push column selector to right
               <.span(ExploreStyles.TitleSelectColumns)(
-                NewColumnSelector(
-                  table,
-                  columnNames,
-                  prefs,
-                  ExploreStyles.SelectColumns
-                )
+                NewColumnSelector(table, columnNames, ExploreStyles.SelectColumns)
               )
             )
           ),

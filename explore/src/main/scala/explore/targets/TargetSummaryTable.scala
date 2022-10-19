@@ -8,16 +8,17 @@ import cats.syntax.all.*
 import crystal.react.View
 import crystal.react.reuse.*
 import explore.common.AsterismQueries.*
+import explore.common.UserPreferencesQueries.TableStore
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Focused
-import explore.model.TableColumnPref
 import explore.model.TargetWithIdAndObs
 import explore.model.enums.AppTab
 import explore.model.enums.TableId
 import explore.syntax.ui.*
 import explore.utils.TableHooks
+import explore.utils.TableOptionsWithStateStore
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Band
@@ -57,12 +58,6 @@ object TargetSummaryTable extends TableHooks:
     "type" -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryType |+| ExploreStyles.WithId),
     "name" -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryName |+| ExploreStyles.WithId)
   )
-
-  val TargetSummaryHiddenColumns: List[TableColumnPref] =
-    (List("epoch", "pmra", "pmdec", "z", "cz", "parallax", "morphology", "sed") ++
-      Band.all
-        .filterNot(_ === Band.V)
-        .map(b => b.shortName + "mag")).map(TableColumnPref.apply)
 
   protected val component =
     ScalaFnComponent
@@ -120,45 +115,29 @@ object TargetSummaryTable extends TableHooks:
               )
           )
       }
-      // Load preferences
-      .customBy((props, ctx, cols) =>
-        useTablePreferencesLoad(
-          TablePrefsLoadParams(
-            props.userId,
-            ctx,
-            TableId.TargetsSummary,
-            cols.value,
-            TargetSummaryHiddenColumns
-          )
-        )
-      )
       // rows
-      .useMemoBy((props, _, _, _) => props.targets)((_, _, _, _) =>
+      .useMemoBy((props, _, _) => props.targets)((_, _, _) =>
         _.toList.map { case (id, targetWithObs) => TargetWithIdAndObs(id, targetWithObs) }
       )
-      .useReactTableBy((props, _, cols, prefs, rows) =>
-        TableOptions(
-          cols,
-          rows,
-          getRowId = (row, _, _) => row.id.toString,
-          enableSorting = true,
-          enableColumnResizing = true,
-          columnResizeMode = raw.mod.ColumnResizeMode.onChange,
-          initialState = raw.mod
-            .InitialTableState()
-            .setColumnVisibility(prefs.get.hiddenColumnsDictionary)
-            .setSorting(toSortingRules(prefs.get.sortingColumns))
+      .useReactTableWithStateStoreBy((props, ctx, cols, rows) =>
+        import ctx.given
+
+        TableOptionsWithStateStore(
+          TableOptions(
+            cols,
+            rows,
+            getRowId = (row, _, _) => row.id.toString,
+            enableSorting = true,
+            enableColumnResizing = true,
+            columnResizeMode = raw.mod.ColumnResizeMode.onChange,
+            initialState = raw.mod
+              .InitialTableState()
+              .setColumnVisibility(TargetColumns.DefaultVisibility)
+          ),
+          TableStore(props.userId, TableId.TargetsSummary, cols)
         )
       )
-      .customBy((_, _, _, prefs, _, table) =>
-        useTablePreferencesStore(
-          TablePrefsStoreParams(
-            prefs,
-            table
-          )
-        )
-      )
-      .render((props, _, _, prefs, _, table, _) =>
+      .render((props, _, _, _, table) =>
         <.div(
           props.renderInTitle(
             React.Fragment(
@@ -167,7 +146,6 @@ object TargetSummaryTable extends TableHooks:
                 NewColumnSelector(
                   table,
                   TargetColumns.allColNames,
-                  prefs,
                   ExploreStyles.SelectColumns
                 )
               )
