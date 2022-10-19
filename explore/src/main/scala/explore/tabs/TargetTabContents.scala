@@ -63,6 +63,7 @@ import react.hotkeys.*
 import react.hotkeys.hooks.*
 import react.primereact.Toast
 import react.primereact.hooks.all.*
+import react.primereact.PrimeStyles
 import react.resizable.*
 import react.resizeDetector.*
 import react.resizeDetector.hooks.*
@@ -240,19 +241,46 @@ object TargetTabContents:
         )
       )(^.href := ctx.pageUrl(AppTab.Targets, props.programId, Focused.None), Icons.ChevronLeft)
 
+    def onTextChange(e: ReactEventFromInput): Callback =
+      Callback(org.scalajs.dom.window.console.log(e.target.files(0)))
+
     /**
      * Render the summary table.
      */
     def renderSummary: VdomNode =
-      Tile("targetSummary".refined, "Target Summary", backButton.some)(renderInTitle =>
-        TargetSummaryTable(
-          props.userId,
-          props.programId,
-          targetMap,
-          selectObservationAndTarget(props.expandedIds) _,
-          selectTarget _,
-          renderInTitle
-        ): VdomNode
+      <.div(
+        Tile(
+          "targetSummary".refined,
+          "Target Summary",
+          backButton.some,
+          control = _ =>
+            Option(
+              <.div(
+                // ExploreStyles.SummaryTableToolbar,
+                <.label(PrimeStyles.ButtonSmall,
+                        PrimeStyles.ButtonIcon,
+                        ^.cls     := "p-button p-fileupload",
+                        ^.htmlFor := "target-import",
+                        Icons.FileImport
+                ),
+                <.input(^.tpe     := "file",
+                        ^.onChange ==> onTextChange,
+                        ^.id      := "target-import",
+                        ^.name    := "file",
+                        ^.accept  := ".csv"
+                )
+              )
+            )
+        )(renderInTitle =>
+          TargetSummaryTable(
+            props.userId,
+            props.programId,
+            targetMap,
+            selectObservationAndTarget(props.expandedIds) _,
+            selectTarget _,
+            renderInTitle
+          ): VdomNode
+        )
       )
 
     val coreWidth  = resize.width.getOrElse(0) - treeWidth

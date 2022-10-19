@@ -442,4 +442,6 @@ object ExploreStyles {
   // See `clearInputIcon` in `explore.utils.package`
   val ClearableInputIcon: Css         = Css("clearable-input-icon")
   val ClearableInputPaddingReset: Css = Css("clearable-input-padding-reset")
+
+  val SummaryTableToolbar: Css = Css("summary-table-toolbar")
 }

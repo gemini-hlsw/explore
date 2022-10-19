@@ -569,3 +569,17 @@ table.explore-border-table {
   }
 }
 
+// -----
+// Toolbar over summary tables
+// ------
+.summary-table-toolbar {
+  padding: 0.25rem 0.25rem;
+}
+
+
+.p-button.p-fileupload {
+  + input[type="file"] {
+    display: none;
+  }
+}
+
