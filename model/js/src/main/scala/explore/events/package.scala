@@ -22,9 +22,9 @@ package object events {
     }
 
     object LogoutEvent {
-      val event                               = LogoutEventId
-      def apply(nonce: Long)                  = new LogoutEvent(nonce)
-      def unapply(l: LogoutEvent): Some[Long] = Some(l.nonce)
+      val event = LogoutEventId
+      def apply(nonce: Long)                    = new LogoutEvent(nonce)
+      def unapply(l:   LogoutEvent): Some[Long] = Some(l.nonce)
     }
 
   }

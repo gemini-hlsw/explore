@@ -96,7 +96,7 @@ extension [F[_], N, U](self: ViewF[F, Quantity[N, U]])
 extension [F[_], N, U](self: ViewOptF[F, Quantity[N, U]])
   def stripQuantity: ViewOptF[F, N] = self.as(quantityIso[N, U])
 
-extension [F[_], N, U](self: ReuseViewOptF[F, Quantity[N, U]])
+extension [F[_], N, U](self:    ReuseViewOptF[F, Quantity[N, U]])
   def stripQuantity(implicit F: Monad[F]): ReuseViewOptF[F, N] = self.as(quantityIso[N, U])
 
 // React implicits

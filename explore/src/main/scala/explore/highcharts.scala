@@ -8,9 +8,9 @@ import react.common.style.Css
 import reactST.highcharts.mod.*
 
 extension (c: Chart_)
-  inline def showLoadingCB: Callback              = CallbackTo(c.showLoading())
+  inline def showLoadingCB: Callback = CallbackTo(c.showLoading())
   inline def showLoadingCB(str: String): Callback = CallbackTo(c.showLoading(str))
-  inline def reflowCB: Callback                   = Callback(c.reflow())
+  inline def reflowCB: Callback = Callback(c.reflow())
 
 type ChartSelection = ChartSelectionContextObject
 

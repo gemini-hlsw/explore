@@ -21,8 +21,8 @@ case class ReflexSplitter(
   clazz:                  js.UndefOr[Css] = js.undefined,
   override val modifiers: Seq[TagMod] = Seq.empty
 ) extends GenericComponentPA[ReflexSplitter.Props, ReflexSplitter] {
-  override protected def cprops                     = ReflexSplitter.props(this)
-  override protected val component                  = ReflexSplitter.component
+  override protected def cprops    = ReflexSplitter.props(this)
+  override protected val component = ReflexSplitter.component
   override def addModifiers(modifiers: Seq[TagMod]) = copy(modifiers = this.modifiers ++ modifiers)
 }
 

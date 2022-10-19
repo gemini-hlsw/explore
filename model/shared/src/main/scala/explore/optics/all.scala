@@ -21,7 +21,7 @@ object all extends ModelOptics {
     @inline final def asAdjuster: Adjuster[From, To] =
       new Adjuster[From, To] {
         def modify(f: To => To): From => From = self.modify(f)
-        def set(to: To): From => From         = self.replace(to)
+        def set(to:   To): From => From       = self.replace(to)
       }
   }
 
@@ -32,7 +32,7 @@ object all extends ModelOptics {
     @inline final def asAdjuster: Adjuster[From, To] =
       new Adjuster[From, To] {
         def modify(f: To => To): From => From = self.modify(f)
-        def set(to: To): From => From         = self.replace(to)
+        def set(to:   To): From => From       = self.replace(to)
       }
 
     def composeGetAdjust[X](other: GetAdjust[To, X]): GetAdjust[From, X] =
@@ -51,7 +51,7 @@ object all extends ModelOptics {
     @inline final def asAdjuster: Adjuster[From, To] =
       new Adjuster[From, To] {
         def modify(f: To => To): From => From = self.modify(f)
-        def set(to: To): From => From         = self.replace(to)
+        def set(to:   To): From => From       = self.replace(to)
       }
   }
 
@@ -62,7 +62,7 @@ object all extends ModelOptics {
     @inline final def asAdjuster: Adjuster[From, To] =
       new Adjuster[From, To] {
         def modify(f: To => To): From => From = self.modify(f)
-        def set(to: To): From => From         = self.replace(to)
+        def set(to:   To): From => From       = self.replace(to)
       }
   }
 
@@ -81,7 +81,7 @@ object all extends ModelOptics {
     @inline final def asAdjuster: Adjuster[From, To] =
       new Adjuster[From, To] {
         def modify(f: To => To): From => From = self.modify(f)
-        def set(to: To): From => From         = self.replace(to)
+        def set(to:   To): From => From       = self.replace(to)
       }
   }
 
