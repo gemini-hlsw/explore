@@ -9,7 +9,6 @@ import crystal.react.implicits.*
 import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
 import explore.model.Constants
-import explore.model.TableColumnPref
 import explore.utils.*
 import japgolly.scalajs.react.callback.Callback
 import japgolly.scalajs.react.util.Effect
@@ -67,20 +66,3 @@ extension [F[_]: MonadThrow](c: Logger[F])
 
   def pinfoCB[T](a: T)(using Effect.Dispatch[F]): Callback =
     c.info(_root_.pprint.apply(a).render).runAsyncAndForget
-
-extension [F[_]: Functor: FunctorFilter: Foldable](cols: F[TableColumnPref])
-  def hiddenColumns: F[String] =
-    cols.collect { case TableColumnPref(cid, false, _) => cid.value }
-
-  def sortingColumns: F[(String, Boolean)] =
-    cols.collect { case TableColumnPref(cid, _, Some(d)) => cid.value -> d.toBool }
-
-  def hiddenColumnsDictionary: StringDictionary[Boolean] =
-    StringDictionary(
-      hiddenColumns.toList.map(_ -> false): _*
-    )
-
-  def withStored(storedCols: F[TableColumnPref]): F[TableColumnPref] =
-    cols.map { case t @ TableColumnPref(cid, _, _) =>
-      storedCols.find(_.columnId === cid).getOrElse(t)
-    }

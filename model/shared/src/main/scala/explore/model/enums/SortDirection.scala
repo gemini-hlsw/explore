@@ -13,9 +13,9 @@ enum SortDirection(val tag: String) derives Enumerated:
   case Desc extends SortDirection("desc")
 
 object SortDirection:
-  def fromBoolean(b: Boolean) = if (b) SortDirection.Desc else SortDirection.Asc
+  def fromDescending(b: Boolean) = if (b) SortDirection.Desc else SortDirection.Asc
 
   extension (d: SortDirection)
-    def toBool: Boolean = d match
+    def toDescending: Boolean = d match
       case Asc  => false
       case Desc => true

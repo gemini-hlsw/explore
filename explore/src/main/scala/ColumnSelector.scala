@@ -5,7 +5,6 @@ package lucuma.ui.table
 
 import cats.syntax.all.*
 import crystal.react.View
-import explore.model.TableColumnPref
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import react.common.*
@@ -14,10 +13,9 @@ import react.semanticui.modules.dropdown.*
 import reactST.{tanstackTableCore => raw}
 
 case class NewColumnSelector[T](
-  table:         raw.mod.Table[T],
-  columnNames:   Map[String, String],
-  hiddenColumns: View[List[TableColumnPref]],
-  clazz:         Css = Css.Empty
+  table:       raw.mod.Table[T],
+  columnNames: Map[String, String],
+  clazz:       Css = Css.Empty
 ) extends ReactFnProps(NewColumnSelector.component)
 
 object NewColumnSelector:
@@ -43,14 +41,7 @@ object NewColumnSelector:
                 Checkbox(
                   label = props.columnNames(colId),
                   checked = column.getIsVisible(),
-                  onChange = (value: Boolean) =>
-                    Callback(column.toggleVisibility()) >>
-                      props.hiddenColumns
-                        .mod(_.map {
-                          case t @ TableColumnPref(cid, _, _) if cid.value === colId =>
-                            t.copy(visible = value)
-                          case t                                                     => t
-                        })
+                  onChange = (value: Boolean) => Callback(column.toggleVisibility())
                 )
               )
             )

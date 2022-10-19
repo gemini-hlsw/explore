@@ -13,11 +13,11 @@ import clue.data.syntax.*
 import explore.model.AladinMouseScroll
 import explore.model.GridLayoutSection
 import explore.model.ResizableSection
-import explore.model.TableColumnPref
 import explore.model.TargetVisualOptions
 import explore.model.UserGlobalPreferences
 import explore.model.enums.ItcChartType
 import explore.model.enums.PlotRange
+import explore.model.enums.SortDirection
 import explore.model.enums.TableId
 import explore.model.enums.TimeDisplay
 import explore.model.enums.Visible
@@ -25,12 +25,15 @@ import explore.model.itc.PlotDetails
 import explore.model.itc.*
 import explore.model.layout.*
 import explore.model.layout.given
+import explore.utils.TableStateStore
 import lucuma.core.enums.Site
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.model.User
+import lucuma.react.table.ColumnDef
+import org.scalablytyped.runtime.StringDictionary
 import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.UserPreferencesDB
 import queries.schemas.UserPreferencesDB.Enums.*
@@ -40,8 +43,13 @@ import queries.schemas.UserPreferencesDB.Types.*
 import queries.schemas.odb.ODBConversions.*
 import react.gridlayout.{BreakpointName => _, _}
 import reactST.highcharts.highchartsStrings.chart_
+import reactST.{tanstackTableCore => raw}
 
 import scala.collection.immutable.SortedMap
+import scala.scalajs.js.WrappedDictionary
+
+import scalajs.js.JSConverters.*
+import scalajs.js
 
 case class WidthUpsertInput(user: User.Id, section: ResizableSection, width: Int)
 
@@ -84,40 +92,6 @@ object UserPreferencesQueries:
             }
       } yield w).value.map(_.flatten.getOrElse(defaultValue))
   end AreaWidths
-
-  object TableColumns:
-
-    def storeColumns[F[_]: ApplicativeThrow](
-      userId:  Option[User.Id],
-      tableId: TableId,
-      columns: List[TableColumnPref]
-    )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
-      import TableColumnPreferencesUpsert.*
-
-      userId.traverse { uid =>
-        execute[F](columns.map(_.toInput(uid, tableId))).attempt
-      }.void
-
-    def queryColumns[F[_]: MonadThrow](
-      userId:  Option[User.Id],
-      tableId: TableId
-    )(using TransactionalClient[F, UserPreferencesDB]): F[TableColumnPreferences] =
-      import TableColumnPreferencesQuery.*
-
-      (for {
-        uid <- OptionT.fromOption[F](userId)
-        w   <-
-          OptionT
-            .liftF[F, TableColumnPreferences] {
-              query[F](
-                userId = uid.show.assign,
-                tableId = tableId.assign
-              )
-                .recover(_ => TableColumnPreferences(Nil))
-            }
-      } yield w).value
-        .map(_.getOrElse(TableColumnPreferences(Nil)))
-  end TableColumns
 
   object UserPreferences:
     def storePreferences[F[_]: ApplicativeThrow](
@@ -373,8 +347,9 @@ object UserPreferencesQueries:
             ),
             onConflict = LucumaItcPlotPreferencesOnConflict(
               constraint = LucumaItcPlotPreferencesConstraint.LucumaItcPlotPreferencesPkey,
-              update_columns = List(LucumaItcPlotPreferencesUpdateColumn.ChartType,
-                                    LucumaItcPlotPreferencesUpdateColumn.DetailsOpen
+              update_columns = List(
+                LucumaItcPlotPreferencesUpdateColumn.ChartType,
+                LucumaItcPlotPreferencesUpdateColumn.DetailsOpen
               )
             ).assign
           ).assign
@@ -414,6 +389,59 @@ object UserPreferencesQueries:
 
         (range, time)
 
+  case class TableStore[F[_]: MonadThrow](
+    userId:  Option[User.Id],
+    tableId: TableId,
+    columns: List[ColumnDef[?, ?]]
+  )(using TransactionalClient[F, UserPreferencesDB])
+      extends TableStateStore[F]:
+    def load(): F[raw.mod.TableState => raw.mod.TableState] =
+      userId
+        .traverse { uid =>
+          TableColumnPreferencesQuery
+            .query[F](
+              userId = uid.show.assign,
+              tableId = tableId.assign
+            )
+            .recover(_ => TableColumnPreferencesQuery.Data(Nil))
+            .map(prefs =>
+              (tableState: raw.mod.TableState) =>
+                tableState
+                  .setColumnVisibility(
+                    prefs.lucumaTableColumnPreferences.applyVisibility(tableState.columnVisibility)
+                  )
+                  .setSorting(prefs.lucumaTableColumnPreferences.applySorting(tableState.sorting))
+            )
+        }
+        .map(_.getOrElse(identity))
+
+    def save(state: raw.mod.TableState): F[Unit] =
+      userId.traverse { uid =>
+        TableColumnPreferencesUpsert
+          .execute[F](
+            columns.map(col =>
+              val sorting: Map[String, (Boolean, Int)] = state.sorting.zipWithIndex
+                .map((colSort, idx) => colSort.id -> (colSort.desc, idx))
+                .toMap
+
+              LucumaTableColumnPreferencesInsertInput(
+                userId = uid.show.assign,
+                tableId = tableId.assign,
+                columnId = col.id.assign,
+                visible = state.columnVisibility.get(col.id).getOrElse(true).assign,
+                sorting = sorting
+                  .get(col.id)
+                  .map(_._1)
+                  .map(SortDirection.fromDescending)
+                  .orUnassign,
+                sortingOrder = sorting.get(col.id).map(_._2).orUnassign
+              )
+            )
+          )
+          .attempt
+      }.void
+  end TableStore
+
   extension (w: WidthUpsertInput)
     def toInput: LucumaResizableWidthInsertInput =
       LucumaResizableWidthInsertInput(
@@ -422,12 +450,26 @@ object UserPreferencesQueries:
         w.width.assign
       )
 
-  extension (w: TableColumnPref)
-    def toInput(u: User.Id, t: TableId): LucumaTableColumnPreferencesInsertInput =
-      LucumaTableColumnPreferencesInsertInput(
-        userId = u.show.assign,
-        tableId = t.assign,
-        columnId = w.columnId.value.assign,
-        visible = w.visible.assign,
-        sorting = w.sorting.orIgnore
+  extension (tableColsPrefs: List[TableColumnPreferencesQuery.Data.LucumaTableColumnPreferences])
+    def applyVisibility(original: raw.mod.VisibilityState): raw.mod.VisibilityState =
+      StringDictionary(
+        tableColsPrefs
+          .foldLeft(original.toMap)((visible, col) =>
+            visible + (col.columnId.toString -> col.visible)
+          )
+          .toList: _*
       )
+
+    def applySorting(original: js.Array[raw.mod.ColumnSort]): js.Array[raw.mod.ColumnSort] =
+      val sortedCols =
+        tableColsPrefs
+          .flatMap(col => (col.columnId.toString.some, col.sorting, col.sortingOrder).tupled)
+          .sortBy(_._3)
+
+      // We don't force unsorting, in case there's a default sorting.
+      sortedCols match
+        case Nil      => original
+        case nonEmpty =>
+          nonEmpty
+            .map((colId, s, _) => raw.mod.ColumnSort(s.toDescending, colId))
+            .toJSArray
