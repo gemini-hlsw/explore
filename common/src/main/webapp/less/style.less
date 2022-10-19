@@ -2281,7 +2281,7 @@ input:-webkit-autofill:active {
 
 // Reusability overlays.
 body.hide-reusability {
-  &>div:not(#root):not(.p-component) {
+  &>div:not(#root)[title^="Last update reason"] {
     display: none;
   }
 }

@@ -16,10 +16,9 @@ import lucuma.core.model.Observation
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
-import react.semanticui.elements.button.Button
-import react.semanticui.modules.modal.*
-import react.semanticui.shorthand.*
-import react.semanticui.sizes.*
+import react.primereact.Button
+import react.primereact.Dialog
+import react.primereact.DialogPosition
 
 case class SequenceEditorPopup(
   obsId:          Observation.Id,
@@ -36,41 +35,38 @@ object SequenceEditorPopup:
   private val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useState(false)        // isOpen
+      .useStateView(false)    // isOpen
       .useStateView(().ready) // changed - Indicates whether to display sequence or pending.
       .render { (props, isOpen, changed) =>
         React.Fragment(
-          <.span(^.onClick --> isOpen.setState(true), props.trigger),
-          Modal(
-            actions = List(
-              Button(size = Small, icon = true)(
-                Icons.Close,
-                "Close"
-              )(^.tpe := "button", ^.key := "input-cancel")
-            ),
-            centered = false, // Works better on iOS
-            open = isOpen.value,
-            closeIcon = Icons.Close.clazz(ExploreStyles.ModalCloseButton),
-            dimmer = Dimmer.Blurring,
-            size = ModalSize.Small,
-            onClose = isOpen.setState(false),
-            header = ModalHeader(content =
-              React.Fragment(
-                <.div(s"${props.obsId}: ${props.title}"),
-                props.subtitle.map(subtitle => <.div(ExploreStyles.SequenceObsSutitle, subtitle))
+          <.span(^.onClick --> isOpen.set(true), props.trigger),
+          Dialog(
+            footer = Button(size = Button.Size.Small,
+                            icon = Icons.Close,
+                            label = "Close",
+                            onClick = isOpen.set(false)
+            )
+              .withMods(^.key := "input-cancel"),
+            position = DialogPosition.Top,
+            visible = isOpen.get,
+            clazz = ExploreStyles.Dialog.Small,
+            dismissableMask = true,
+            resizable = false,
+            onHide = isOpen.set(false),
+            header = React.Fragment(
+              <.div(s"${props.obsId}: ${props.title}"),
+              props.subtitle.map(subtitle => <.div(ExploreStyles.SequenceObsSutitle, subtitle))
+            )
+          )(
+            <.div(ExploreStyles.SeqGenParametersForm)(
+              <.div(ExploreStyles.ExploreForm)(
+                props.dithersControl(changed.set(Pot.pending))
+              ),
+              <.div(ExploreStyles.ExploreForm)(
+                props.offsetsControl(changed.set(Pot.pending))
               )
             ),
-            content = ModalContent(
-              <.div(ExploreStyles.SeqGenParametersForm)(
-                <.div(ExploreStyles.ExploreForm)(
-                  props.dithersControl(changed.set(Pot.pending))
-                ),
-                <.div(ExploreStyles.ExploreForm)(
-                  props.offsetsControl(changed.set(Pot.pending))
-                )
-              ),
-              GeneratedSequenceViewer(props.obsId, changed)
-            )
+            GeneratedSequenceViewer(props.obsId, changed)
           )
         )
       }

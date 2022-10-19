@@ -1,3 +1,5 @@
+@use 'common.scss';
+
 /* stylelint-disable no-invalid-position-at-import-rule */
 .light-theme {
   @import "/lucuma-css/light-theme";
@@ -10,112 +12,18 @@
 @import "/lucuma-css/lucuma-ui";
 /* stylelint-enable no-invalid-position-at-import-rule */
 
-// specific to Explore
+// specific to Explore - may be able to remove this when we're fully primereact - may have to apply to tiles or something
 .constraints-tile .explore-tile-body,
 .explore-advanced-configuration-grid {
   background-color: var(--surface-card);
 }
 
-.explore-advanced-configuration-buttons {
-  grid-area: buttons;
-  justify-self: end;
-}
+.p-component.p-dialog {
+  &.pl-dialog-small {
+    max-width: 95%;
 
-.explore-advanced-configuration-grid {
-  display: grid;
-  padding: 0.5em;
-  grid-gap: 1em;
-  grid-template:
-    'col1 col2 col3' auto
-    'col1 buttons buttons' auto
-    / 1fr 1fr 1fr;
-
-  label.explore-indent-label {
-    text-indent: 2em;
-  }
-}
-
-.tile-sm-width,
-.tile-xxs-width,
-.tile-xs-width {
-  .explore-advanced-configuration-grid {
-    grid-template:
-      'col1' auto
-      'col2' auto
-      'col3' auto
-      'buttons' auto
-      / auto;
-  }
-}
-
-.explore-advanced-configuration-col1 {
-  grid-area: col1;
-}
-
-.explore-advanced-configuration-col2 {
-  grid-area: col2;
-}
-
-.explore-advanced-configuration-col3 {
-  grid-area: col3;
-}
-
-.constraints-grid {
-  padding: 0.5em;
-  display: grid;
-  align-items: baseline;
-  gap: 0.3em 0.5em;
-
-  --column-wide-span: 3;
-
-  grid-template-columns: [label1] max-content [field1] minmax(20ch, 3fr) [label2] max-content [field2] minmax(20ch,
-      3fr);
-
-  .elevation-range-picker {
-    width: 9em;
-  }
-
-  .elevation-range-entry {
-    width: 8em;
-
-    input {
-      width: 100%;
-    }
-  }
-
-  .constraints-elevation-range {
-    display: flex;
-    gap: 0.3em 0.5em;
-    align-items: baseline;
-    justify-self: stretch;
-    grid-column: 2 / span var(--column-wide-span);
-  }
-}
-
-.tile-xxs-width,
-.tile-xs-width {
-  .constraints-grid {
-    --column-wide-span: 1;
-
-    grid-template-columns: max-content 1fr;
-
-    .elevation-range-picker {
-      grid-column: -1 / 1;
-    }
-
-    .constraints-elevation-range {
-      flex-direction: column;
-      justify-items: stretch;
-      display: grid;
-      grid-template-columns: max-content 1fr;
-
-      .field {
-        width: 100%;
-      }
-
-      label:last-child {
-        display: none;
-      }
+    @media (min-width: common.$tablet-responsive-cutoff) {
+      max-width: 760px;
     }
   }
 }
