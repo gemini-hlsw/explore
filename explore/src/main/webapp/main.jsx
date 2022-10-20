@@ -19,13 +19,6 @@ import { Explore, ExplorePWA } from "@sjs/main.js";
 
 import { registerSW } from "virtual:pwa-register";
 
-// Setup the Service Worker
-if ("serviceWorker" in navigator
-  && !/local.lucuma.xyz/.test(window.location)) {
-  ExplorePWA.runServiceWorker();
-}
-
-// Setting this here shouldn't be necessary if we get `vite-plugin-environment` to work.
 // but for now we can survive setting this only on dev
 if (!process) {
   process = {
@@ -37,6 +30,13 @@ if (import.meta.env.DEV) {
 }
 
 Explore.runIOApp();
+
+// Setup the Service Worker, after Explore is started
+if ("serviceWorker" in navigator) {
+  ExplorePWA.runServiceWorker();
+}
+
+// Setting this here shouldn't be necessary if we get `vite-plugin-environment` to work.
 
 if (import.meta.hot) {
   import.meta.hot.accept();

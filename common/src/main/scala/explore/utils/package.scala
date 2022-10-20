@@ -31,15 +31,15 @@ import lucuma.ui.utils.versionDateTimeFormatter
 import org.http4s.Uri
 import org.scalajs.dom
 import react.fa.IconSize
+import react.primereact.Button
+import react.primereact.MessageItem
+import react.primereact.ToastRef
 import react.semanticui.collections.message.Message
 import react.semanticui.elements.loader.Loader
-import react.toastify.*
-import react.primereact.ToastRef
 
 import java.time.Instant
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters.*
-import react.primereact.MessageItem
 
 val canvasWidth  = VdomAttr("width")
 val canvasHeight = VdomAttr("height")
@@ -158,23 +158,24 @@ def clearInputIcon[EV[_], A](
 
 extension (toastRef: ToastRef)
   def info(text: String) =
-    toastRef.show(MessageItem(content = text, sticky = true))
-    // toast(
-    //   <.div(
-    //     ExploreStyles.ExploreToastGrid,
-    //     Icons.Info.size(IconSize.LG),
-    //     text
-    //   ),
-    //   ToastOptions(autoClose = 1500, hideProgressBar = true)
-    // )
+    toastRef.show(
+      MessageItem(content = <.span(Icons.InfoLight.size(IconSize.LG), text),
+                  clazz = ExploreStyles.ExploreToast
+      )
+    )
 
-def inf(text: String) = Callback(
-  toast(
-    <.div(
-      ExploreStyles.ExploreToastGrid,
-      Icons.Info.size(IconSize.LG),
-      text
-    ),
-    ToastOptions(autoClose = 1500, hideProgressBar = true)
-  )
-)
+  def prompt(text: String, callback: Callback) =
+    toastRef.show(
+      MessageItem(
+        content = <.div(
+          ExploreStyles.ExplorePromptToast,
+          <.span(
+            Icons.InfoLight.size(IconSize.LG),
+            text
+          ),
+          Button(size = Button.Size.Small, onClick = toastRef.clear() *> callback)("Upgrade ...")
+        ),
+        clazz = ExploreStyles.ExploreToast,
+        sticky = true
+      )
+    )

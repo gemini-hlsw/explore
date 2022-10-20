@@ -53,14 +53,14 @@ import react.draggable.Axis
 import react.gridlayout.*
 import react.hotkeys.*
 import react.hotkeys.hooks.*
+import react.primereact.Toast
+import react.primereact.hooks.all.*
 import react.resizable.*
 import react.resizeDetector.*
 import react.resizeDetector.hooks.*
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.sizes.*
-import react.primereact.Toast
-import react.primereact.hooks.all.*
 
 import scala.concurrent.duration.*
 

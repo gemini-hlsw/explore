@@ -7,24 +7,31 @@ import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.View
 import crystal.react.implicits.*
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.state.IfLogged
 import explore.components.ui.ExploreStyles
+import explore.events.ExploreEvent
 import explore.model.*
 import explore.model.enums.AppTab
 import explore.shortcuts.*
 import explore.shortcuts.given
 import explore.syntax.ui.*
 import explore.syntax.ui.given
+import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.ResolutionWithProps
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.broadcastchannel.*
+import lucuma.refined.*
 import lucuma.refined.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.*
+import react.fa.IconSize
 import react.hotkeys.*
 import react.hotkeys.hooks.*
+import react.primereact.MessageItem
 import react.primereact.Toast
 import react.primereact.hooks.all.*
 import react.semanticui.modules.sidebar.Sidebar
@@ -82,6 +89,31 @@ object ExploreLayout:
           )
       }
       .useToastRef
+      .useEffectOnMountBy { (props, _, ctx, toastRef) =>
+        Callback {
+          ctx.broadcastChannel.onmessage = (
+            (x: ExploreEvent) =>
+              // This is coming from the js world, we can't match the type
+              x.event match {
+                // TODO: Handle logout events
+                case ExploreEvent.PWAUpdateId =>
+                  IO.println("Message pwa wants to update") *>
+                    toastRef
+                      .prompt(
+                        "A new version of explore is available",
+                        IO(
+                          ctx.broadcastChannel.postMessage(ExploreEvent.PWAReload)
+                        ).runAsyncAndForget
+                      )
+                      .to[IO]
+                case _                        => IO.unit
+              }
+          ): (
+            ExploreEvent => IO[Unit]
+          ) // Scala 3 infers the return type as Any if we don't ascribe
+
+        }
+      }
       .render { (props, helpCtx, _, toastRef) =>
         IfLogged(props.view)((vault: UserVault, onLogout: IO[Unit]) =>
           val routingInfo = RoutingInfo.from(props.resolution.page)
