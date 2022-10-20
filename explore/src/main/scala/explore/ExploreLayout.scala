@@ -22,9 +22,11 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.refined.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import react.common.ReactFnProps
+import react.common.*
 import react.hotkeys.*
 import react.hotkeys.hooks.*
+import react.primereact.Toast
+import react.primereact.hooks.all.*
 import react.semanticui.modules.sidebar.Sidebar
 import react.semanticui.modules.sidebar.SidebarAnimation
 import react.semanticui.modules.sidebar.SidebarDirection
@@ -79,7 +81,8 @@ object ExploreLayout:
             callbacks
           )
       }
-      .render { (props, helpCtx, _) =>
+      .useToastRef
+      .render { (props, helpCtx, _, toastRef) =>
         IfLogged(props.view)((vault: UserVault, onLogout: IO[Unit]) =>
           val routingInfo = RoutingInfo.from(props.resolution.page)
 
@@ -100,6 +103,8 @@ object ExploreLayout:
             SidebarPusher(dimmed = helpView.get.isDefined)(
               <.div(
                 ExploreStyles.MainGrid,
+                Toast(Toast.Position.BottomLeft)
+                  .withRef(toastRef.ref),
                 TopBar(
                   vault.user,
                   routingInfo.optProgramId,

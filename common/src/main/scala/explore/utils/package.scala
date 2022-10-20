@@ -34,10 +34,12 @@ import react.fa.IconSize
 import react.semanticui.collections.message.Message
 import react.semanticui.elements.loader.Loader
 import react.toastify.*
+import react.primereact.ToastRef
 
 import java.time.Instant
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters.*
+import react.primereact.MessageItem
 
 val canvasWidth  = VdomAttr("width")
 val canvasHeight = VdomAttr("height")
@@ -154,7 +156,19 @@ def clearInputIcon[EV[_], A](
     .map(_ => <.i(ExploreStyles.ClearableInputIcon, ^.onClick --> ev.set(view)(None)))
     .orUndefined
 
-def info(text: String) = Callback(
+extension (toastRef: ToastRef)
+  def info(text: String) =
+    toastRef.show(MessageItem(content = text, sticky = true))
+    // toast(
+    //   <.div(
+    //     ExploreStyles.ExploreToastGrid,
+    //     Icons.Info.size(IconSize.LG),
+    //     text
+    //   ),
+    //   ToastOptions(autoClose = 1500, hideProgressBar = true)
+    // )
+
+def inf(text: String) = Callback(
   toast(
     <.div(
       ExploreStyles.ExploreToastGrid,
