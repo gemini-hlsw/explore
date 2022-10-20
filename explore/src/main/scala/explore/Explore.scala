@@ -189,7 +189,7 @@ object ExploreMain extends IOApp.Simple {
       }
 
     (for {
-      dispatcher       <- Dispatcher[IO]
+      dispatcher       <- Dispatcher.parallel[IO]
       _                <- Resource.eval(setupHighCharts[IO])
       prefs            <- Resource.eval(ExploreLocalPreferences.loadPreferences[IO])
       given Logger[IO] <- Resource.eval(setupLogger[IO](prefs))

@@ -34,7 +34,7 @@ import WorkerMessage.*
 trait WorkerServer[F[_]: Async, T: Pickler](using Monoid[F[Unit]]):
   protected val run: F[Unit] =
     (for {
-      dispatcher      <- Dispatcher[F]
+      dispatcher      <- Dispatcher.parallel[F]
       given Logger[F] <- Resource.eval(setupLogger)
       _               <- Resource.eval(runInternal(dispatcher))
     } yield ()).useForever.void

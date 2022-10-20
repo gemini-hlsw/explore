@@ -38,7 +38,7 @@ class UndoContextSpec extends munit.CatsEffectSuite {
 
   def kiIntList(i: Int*) = kiList(i: _*)(idLens.get)
 
-  val dispatcher = ResourceFixture(Dispatcher[IO])
+  val dispatcher = ResourceFixture(Dispatcher.parallel[IO])
 
   dispatcher.test("UndoRedo") { implicit dispatcher =>
     for {
