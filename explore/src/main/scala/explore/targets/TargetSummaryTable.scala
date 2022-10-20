@@ -7,6 +7,7 @@ import cats.Order.*
 import cats.syntax.all.*
 import crystal.react.View
 import crystal.react.reuse.*
+import explore.Icons
 import explore.common.AsterismQueries.*
 import explore.common.UserPreferencesQueries.TableStore
 import explore.components.Tile
@@ -35,14 +36,13 @@ import org.scalablytyped.runtime.StringDictionary
 import react.common.Css
 import react.common.ReactFnProps
 import react.hotkeys.*
+import react.primereact.Button
+import react.primereact.PrimeStyles
 import react.semanticui.collections.table.*
 import reactST.react.reactStrings.I
 import reactST.{tanstackTableCore => raw}
 
 import scalajs.js.JSConverters.*
-import react.primereact.Button
-import explore.Icons
-import react.primereact.PrimeStyles
 
 case class TargetSummaryTable(
   userId:            Option[User.Id],
