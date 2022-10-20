@@ -13,6 +13,7 @@ import explore.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
+import lucuma.core.util.NewType
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
@@ -32,27 +33,30 @@ case class SequenceEditorPopup(
 object SequenceEditorPopup:
   private type Props = SequenceEditorPopup
 
+  private object IsOpen extends NewType[Boolean]
+  private type IsOpen = IsOpen.type
+
   private val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStateView(false)    // isOpen
+      .useStateView(IsOpen(false))
       .useStateView(().ready) // changed - Indicates whether to display sequence or pending.
       .render { (props, isOpen, changed) =>
         React.Fragment(
-          <.span(^.onClick --> isOpen.set(true), props.trigger),
+          <.span(^.onClick --> isOpen.set(IsOpen(true)), props.trigger),
           Dialog(
             footer = Button(size = Button.Size.Small,
                             icon = Icons.Close,
                             label = "Close",
-                            onClick = isOpen.set(false)
+                            onClick = isOpen.set(IsOpen(false))
             )
               .withMods(^.key := "input-cancel"),
             position = DialogPosition.Top,
-            visible = isOpen.get,
+            visible = isOpen.get.value,
             clazz = ExploreStyles.Dialog.Small,
             dismissableMask = true,
             resizable = false,
-            onHide = isOpen.set(false),
+            onHide = isOpen.set(IsOpen(false)),
             header = React.Fragment(
               <.div(s"${props.obsId}: ${props.title}"),
               props.subtitle.map(subtitle => <.div(ExploreStyles.SequenceObsSutitle, subtitle))
