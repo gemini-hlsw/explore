@@ -183,32 +183,34 @@ object TargetSummaryTable extends TableHooks:
             rowMod = row =>
               TagMod(
                 ExploreStyles.TableRowSelected.when_(row.getIsSelected()),
-                ^.onClick --> Callback.log(s"cmd ${isHotkeyPressed("cmd")}") *> Callback {
+                ^.onClick --> Callback {
                   // If cmd is pressed add to the selection
                   if (!isCmdCtrlPressed) table.toggleAllRowsSelected(false)
                   if (isShiftPressed) {
                     // If shift is pressed extend
-                    val selectedRows = table.getSelectedRowModel().rows.toList.sortBy(_.id)
-                    val allRows      = table.getRowModel().rows.toList.sortBy(_.id)
+                    val selectedRows =
+                      table
+                        .getSelectedRowModel()
+                        .rows
+                        .toList
+                    val allRows      =
+                      table.getRowModel().rows.toList.zipWithIndex
                     if (selectedRows.isEmpty) row.toggleSelected()
                     else {
                       val currentId      = row.id
                       // selectedRow is not empty, these won't fail
-                      val first          = selectedRows.head.id
-                      val last           = selectedRows.last.id
-                      val indexOfCurrent = allRows.indexWhere(_.id === currentId)
-                      val indexOfFirst   = allRows.indexWhere(_.id === first)
-                      val indexOfLast    = allRows.indexWhere(_.id === last)
-                      if (indexOfCurrent === -1 || indexOfFirst === -1 || indexOfLast === -1) {
-                        println("Illegal selection state")
-                      } else {
-
-                        if (currentId < first) {
+                      val firstId        = selectedRows.head.id
+                      val lastId         = selectedRows.last.id
+                      val indexOfCurrent = allRows.indexWhere(_._1.id === currentId)
+                      val indexOfFirst   = allRows.indexWhere(_._1.id === firstId)
+                      val indexOfLast    = allRows.indexWhere(_._1.id === lastId)
+                      if (indexOfCurrent =!= -1 && indexOfFirst =!= -1 && indexOfLast =!= -1) {
+                        if (indexOfCurrent < indexOfFirst) {
                           table.setRowSelection(
                             StringDictionary(
-                              (first -> true) :: allRows
+                              (firstId -> true) :: allRows
                                 .slice(indexOfCurrent, indexOfFirst)
-                                .map(_.id -> true): _*
+                                .map(_._1.id -> true): _*
                             )
                           )
                         } else {
@@ -216,7 +218,7 @@ object TargetSummaryTable extends TableHooks:
                             StringDictionary(
                               ((currentId -> true) :: allRows
                                 .slice(indexOfLast, indexOfCurrent)
-                                .map(_.id -> true)): _*
+                                .map(_._1.id -> true)): _*
                             )
                           )
                         }
