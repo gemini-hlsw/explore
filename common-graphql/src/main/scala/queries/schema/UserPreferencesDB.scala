@@ -6,6 +6,8 @@ package queries.schemas
 import clue.annotation.GraphQLSchema
 import explore.model.enums
 import lucuma.core.model.User
+import lucuma.core.util.Enumerated
+import lucuma.react.table.SortDirection
 
 @GraphQLSchema
 trait UserPreferencesDB:
@@ -24,4 +26,10 @@ trait UserPreferencesDB:
   object Enums:
     type ItcChartType            = enums.ItcChartType
     type LucumaTableIdsEnum      = explore.model.enums.TableId
-    type LucumaSortDirectionEnum = explore.model.enums.SortDirection
+    type LucumaSortDirectionEnum = SortDirection
+
+  given Enumerated[SortDirection] =
+    Enumerated.from(SortDirection.Ascending, SortDirection.Descending).withTag {
+      case SortDirection.Ascending  => "asc"
+      case SortDirection.Descending => "desc"
+    }

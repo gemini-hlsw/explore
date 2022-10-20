@@ -14,6 +14,7 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
 import lucuma.core.model.sequence.*
+import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.given
@@ -109,57 +110,82 @@ object SequenceTable:
   private def rightAligned(value: Any) =
     <.div(^.textAlign.right)(value.toString)
 
+  private val AtomStepsColumnId: ColumnId = ColumnId("atomSteps")
+  private val StepTypeColumnId: ColumnId  = ColumnId("stepType")
+  private val ExposureColumnId: ColumnId  = ColumnId("exposure")
+  private val GuideColumnId: ColumnId     = ColumnId("guide")
+  private val PColumnId: ColumnId         = ColumnId("p")
+  private val QColumnId: ColumnId         = ColumnId("q")
+  private val LambdaColumnId: ColumnId    = ColumnId("lambda")
+  private val FPUColumnId: ColumnId       = ColumnId("fpu")
+  private val GratingColumnId: ColumnId   = ColumnId("grating")
+  private val FilterColumnId: ColumnId    = ColumnId("filter")
+  private val XBinColumnId: ColumnId      = ColumnId("xbin")
+  private val YBinColumnId: ColumnId      = ColumnId("Ybin")
+  private val ROIColumnId: ColumnId       = ColumnId("roi")
+  private val SNColumnId: ColumnId        = ColumnId("sn")
+
   private val columns = List(
-    ColDef("atomSteps", _.firstOf, header = " ", cell = _.value.map(drawBracket)),
-    ColDef("stepType", _.step.stepConfig.stepType, header = "Type", cell = _.value.toString),
+    ColDef(AtomStepsColumnId, _.firstOf, header = " ", cell = _.value.map(drawBracket)),
     ColDef(
-      "exposure",
+      StepTypeColumnId,
+      _.step.stepConfig.stepType,
+      header = "Type",
+      cell = _.value.toString
+    ),
+    ColDef(
+      ExposureColumnId,
       _.exposureSecs,
       header = _ => rightAligned("Exp (sec)"),
       cell = cell => rightAligned(cell.value)
     ),
     ColDef(
-      "guide",
+      GuideColumnId,
       _.guided,
       header = "",
       cell = cell =>
         if (cell.value) Icons.Crosshairs.copy(clazz = ExploreStyles.StepGuided) else EmptyVdom
     ),
     ColDef(
-      "p",
+      PColumnId,
       _.p,
       header = _ => rightAligned("p"),
       cell = cell => rightAligned(offsetFormat.format(cell.value))
     ),
     ColDef(
-      "q",
+      QColumnId,
       _.q,
       header = _ => rightAligned("q"),
       cell = cell => rightAligned(offsetFormat.format(cell.value))
     ),
     ColDef(
-      "lambda",
+      LambdaColumnId,
       _.wavelength,
       header = _ => rightAligned("λ (nm)"),
       cell = _.value.map((rightAligned _).compose(_.toInt))
     ),
-    ColDef("fpu", _.fpuName, header = _ => rightAligned("FPU"), cell = _.value.map(rightAligned)),
-    ColDef("grating", _.gratingName, header = "Grating", cell = _.value.orEmpty),
-    ColDef("filter", _.filterName, header = "Filter", cell = _.value.orEmpty),
     ColDef(
-      "xbin",
+      FPUColumnId,
+      _.fpuName,
+      header = _ => rightAligned("FPU"),
+      cell = _.value.map(rightAligned)
+    ),
+    ColDef(GratingColumnId, _.gratingName, header = "Grating", cell = _.value.orEmpty),
+    ColDef(FilterColumnId, _.filterName, header = "Filter", cell = _.value.orEmpty),
+    ColDef(
+      XBinColumnId,
       _.readoutXBin,
       header = _ => rightAligned("Xbin"),
       cell = cell => rightAligned(cell.value.orEmpty)
     ),
     ColDef(
-      "ybin",
+      YBinColumnId,
       _.readoutYBin,
       header = _ => rightAligned("Ybin"),
       cell = cell => rightAligned(cell.value.orEmpty)
     ),
-    ColDef("roi", _.roi, header = "ROI", cell = _.value.orEmpty),
-    ColDef("sn", _ => "", header = "S/N")
+    ColDef(ROIColumnId, _.roi, header = "ROI", cell = _.value.orEmpty),
+    ColDef(SNColumnId, _ => "", header = "S/N")
   )
 
   private def buildLines(
@@ -193,14 +219,14 @@ object SequenceTable:
         TableOptions(
           columns.reuseAlways,
           Reuse(props.atoms).self.map(buildLines),
-          getRowId = (row, _, _) => row.step.id.toString,
+          getRowId = (row, _, _) => RowId(row.step.id.toString),
           enableColumnResizing = false
         )
       )
       .render { (_, table) =>
         PrimeVirtualizedTable(
           table,
-          estimateRowHeightPx = _ => 28,
+          estimateRowHeight = _ => 28.toPx,
           compact = Compact.Very,
           hoverableRows = true,
           celled = true,

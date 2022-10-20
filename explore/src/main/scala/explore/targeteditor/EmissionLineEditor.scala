@@ -30,6 +30,7 @@ import lucuma.core.math.units.*
 import lucuma.core.model.EmissionLine
 import lucuma.core.util.Enumerated
 import lucuma.core.validation.*
+import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
 import lucuma.ui.forms.EnumViewSelect
@@ -64,6 +65,11 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
 
   private val ColDef = ColumnDef[RowValue]
 
+  private val WavelengthColumnId: ColumnId = ColumnId("wavelength")
+  private val LineValueColumnId: ColumnId  = ColumnId("lineValue")
+  private val LineUnitsColumnId: ColumnId  = ColumnId("lineUnits")
+  private val DeleteColumnId: ColumnId     = ColumnId("delete")
+
   val component = ScalaFnComponent
     .withHooks[Props]
     // Memo cols
@@ -71,7 +77,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
       _ => (emissionLines, disabled) =>
         List(
           ColDef(
-            "wavelength",
+            WavelengthColumnId,
             _._1,
             _ => <.span(ExploreStyles.TextPlain, "λ (µm)"),
             cell =>
@@ -79,12 +85,12 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
                 .reverseGet(cell.value)
                 .setScale(3, RoundingMode.HALF_UP)
                 .toString,
-            size = 60,
-            minSize = 50,
-            maxSize = 80
+            size = 60.toPx,
+            minSize = 50.toPx,
+            maxSize = 80.toPx
           ).sortable,
           ColDef(
-            "width",
+            ColumnId("width"),
             _._2.zoom(EmissionLine.lineWidth[T]).stripQuantity,
             "Width (km/s)",
             cell =>
@@ -95,12 +101,12 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
                 changeAuditor = ChangeAuditor.posBigDecimal(3.refined).allowEmpty,
                 disabled = disabled
               ),
-            size = 100,
-            minSize = 80,
-            maxSize = 160
+            size = 100.toPx,
+            minSize = 80.toPx,
+            maxSize = 160.toPx
           ),
           ColDef(
-            "lineValue",
+            LineValueColumnId,
             _._2.zoom(
               EmissionLine.lineFlux.andThen(Measure.valueTagged[PosBigDecimal, LineFlux[T]])
             ),
@@ -113,12 +119,12 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
                 changeAuditor = ChangeAuditor.posScientificNotation(),
                 disabled = disabled
               ),
-            size = 80,
-            minSize = 70,
-            maxSize = 160
+            size = 80.toPx,
+            minSize = 70.toPx,
+            maxSize = 160.toPx
           ),
           ColDef(
-            "lineUnits",
+            LineUnitsColumnId,
             _._2.zoom(
               EmissionLine.lineFlux.andThen(Measure.unitsTagged[PosBigDecimal, LineFlux[T]])
             ),
@@ -131,12 +137,12 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
                 disabled = disabled,
                 clazz = ExploreStyles.BrightnessesTableUnitsDropdown
               ),
-            size = 120,
-            minSize = 85,
-            maxSize = 140
+            size = 120.toPx,
+            minSize = 85.toPx,
+            maxSize = 140.toPx
           ),
           ColDef(
-            "delete",
+            DeleteColumnId,
             _._1,
             "",
             cell =>
@@ -149,9 +155,9 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
                   onClick = emissionLines.mod(_ - cell.value)
                 )(Icons.Trash)
               ),
-            size = 20,
-            minSize = 20,
-            maxSize = 20,
+            size = 20.toPx,
+            minSize = 20.toPx,
+            maxSize = 20.toPx,
             enableSorting = false
           )
         )
@@ -164,12 +170,11 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
       TableOptions(
         cols,
         rows,
-        getRowId = (row, _, _) => row._1.toPicometers.value.toString,
+        getRowId = (row, _, _) => RowId(row._1.toPicometers.value.toString),
         enableSorting = true,
         enableColumnResizing = false,
-        initialState = raw.mod
-          .InitialTableState()
-          .setSorting(List(raw.mod.ColumnSort(false, "wavelength")).toJSArray) // TODO Better facade
+        initialState =
+          TableState(sorting = Sorting(ColumnId("wavelength") -> SortDirection.Ascending))
       )
     )
     // newWavelength
@@ -222,7 +227,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
         <.label("Brightness"),
         PrimeAutoHeightVirtualizedTable(
           table,
-          estimateRowHeightPx = _ => 34,
+          estimateRowHeight = _ => 34.toPx,
           striped = true,
           compact = Compact.Very,
           tableMod = ExploreStyles.ExploreBorderTable,

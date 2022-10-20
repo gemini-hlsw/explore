@@ -25,14 +25,14 @@ case class TableOptionsWithStateStore[F[_], T](
 )
 
 private object TableHooks:
-  private given Reusability[Map[String, Boolean]] = Reusability.map
-
-  private given Reusability[raw.mod.VisibilityState] = Reusability.by(_.toMap)
-
-  private given Reusability[raw.mod.SortingState] =
-    Reusability.by(_.toList.map(cs => (cs.id, cs.desc)))
-
-  private given Reusability[raw.mod.TableState] =
+  private given Reusability[ColumnId]                  = Reusability.by(_.value)
+  private given Reusability[Visibility]                = Reusability.by(_.value)
+  private given Reusability[Map[ColumnId, Visibility]] = Reusability.map
+  private given Reusability[ColumnVisibility]          = Reusability.by(_.value)
+  private given Reusability[SortDirection]             = Reusability.by(_.toDescending)
+  private given Reusability[ColumnSort]                = Reusability.derive
+  private given Reusability[Sorting]                   = Reusability.by(_.value)
+  private given Reusability[TableState]                =
     Reusability.by(state => (state.columnVisibility, state.sorting))
 
   private object PrefsLoaded extends NewType[Boolean]
@@ -48,7 +48,7 @@ private object TableHooks:
       .useRef(CanSave(false))
       .useEffectOnMountBy((props, table, prefsLoadad, canSave) =>
         (props.stateStore.load() >>=
-          (mod => Sync[DefaultA].delay(table.setState(mod))))
+          (mod => table.modState(mod).to[DefaultA]))
           .guarantee( // This also forces a rerender, which react-table isn't doing by just changing the state.
             prefsLoadad.setStateAsync(PrefsLoaded(true))
           )
@@ -70,14 +70,14 @@ private object TableHooks:
       options: TableOptionsWithStateStore[DefaultA, T]
     )(using
       step:    Step
-    ): step.Next[raw.mod.Table[T]] =
+    ): step.Next[Table[T]] =
       useReactTableWithStateStoreBy(_ => options)
 
     final def useReactTableWithStateStoreBy[T](
       options: Ctx => TableOptionsWithStateStore[DefaultA, T]
     )(using
       step:    Step
-    ): step.Next[raw.mod.Table[T]] =
+    ): step.Next[Table[T]] =
       api.customBy(ctx => hook(options(ctx)))
 
   final class Secondary[Ctx, CtxFn[_], Step <: HooksApi.SubsequentStep[Ctx, CtxFn]](
@@ -87,7 +87,7 @@ private object TableHooks:
       tableDefWithOptions: CtxFn[TableOptionsWithStateStore[DefaultA, T]]
     )(implicit
       step:                Step
-    ): step.Next[raw.mod.Table[T]] =
+    ): step.Next[Table[T]] =
       super.useReactTableWithStateStoreBy(step.squash(tableDefWithOptions)(_))
 
 trait TableHooks:

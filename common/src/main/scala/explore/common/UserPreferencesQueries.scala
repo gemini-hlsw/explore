@@ -17,7 +17,6 @@ import explore.model.TargetVisualOptions
 import explore.model.UserGlobalPreferences
 import explore.model.enums.ItcChartType
 import explore.model.enums.PlotRange
-import explore.model.enums.SortDirection
 import explore.model.enums.TableId
 import explore.model.enums.TimeDisplay
 import explore.model.enums.Visible
@@ -32,7 +31,7 @@ import lucuma.core.math.Offset
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.model.User
-import lucuma.react.table.ColumnDef
+import lucuma.react.table.*
 import org.scalablytyped.runtime.StringDictionary
 import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.UserPreferencesDB
@@ -395,7 +394,7 @@ object UserPreferencesQueries:
     columns: List[ColumnDef[?, ?]]
   )(using TransactionalClient[F, UserPreferencesDB])
       extends TableStateStore[F]:
-    def load(): F[raw.mod.TableState => raw.mod.TableState] =
+    def load(): F[TableState => TableState] =
       userId
         .traverse { uid =>
           TableColumnPreferencesQuery
@@ -405,35 +404,32 @@ object UserPreferencesQueries:
             )
             .recover(_ => TableColumnPreferencesQuery.Data(Nil))
             .map(prefs =>
-              (tableState: raw.mod.TableState) =>
+              (tableState: TableState) =>
                 tableState
-                  .setColumnVisibility(
+                  .withColumnVisibility(
                     prefs.lucumaTableColumnPreferences.applyVisibility(tableState.columnVisibility)
                   )
-                  .setSorting(prefs.lucumaTableColumnPreferences.applySorting(tableState.sorting))
+                  .withSorting(prefs.lucumaTableColumnPreferences.applySorting(tableState.sorting))
             )
         }
         .map(_.getOrElse(identity))
 
-    def save(state: raw.mod.TableState): F[Unit] =
+    def save(state: TableState): F[Unit] =
       userId.traverse { uid =>
         TableColumnPreferencesUpsert
           .execute[F](
             columns.map(col =>
-              val sorting: Map[String, (Boolean, Int)] = state.sorting.zipWithIndex
-                .map((colSort, idx) => colSort.id -> (colSort.desc, idx))
+              val sorting: Map[ColumnId, (SortDirection, Int)] = state.sorting.value.zipWithIndex
+                .map((colSort, idx) => colSort.columnId -> (colSort.direction, idx))
                 .toMap
 
               LucumaTableColumnPreferencesInsertInput(
                 userId = uid.show.assign,
                 tableId = tableId.assign,
-                columnId = col.id.assign,
-                visible = state.columnVisibility.get(col.id).getOrElse(true).assign,
-                sorting = sorting
-                  .get(col.id)
-                  .map(_._1)
-                  .map(SortDirection.fromDescending)
-                  .orUnassign,
+                columnId = col.id.value.assign,
+                visible =
+                  state.columnVisibility.value.getOrElse(col.id, Visibility.Visible).value.assign,
+                sorting = sorting.get(col.id).map(_._1).orUnassign,
                 sortingOrder = sorting.get(col.id).map(_._2).orUnassign
               )
             )
@@ -451,25 +447,19 @@ object UserPreferencesQueries:
       )
 
   extension (tableColsPrefs: List[TableColumnPreferencesQuery.Data.LucumaTableColumnPreferences])
-    def applyVisibility(original: raw.mod.VisibilityState): raw.mod.VisibilityState =
-      StringDictionary(
-        tableColsPrefs
-          .foldLeft(original.toMap)((visible, col) =>
-            visible + (col.columnId.toString -> col.visible)
-          )
-          .toList: _*
+    def applyVisibility(original: ColumnVisibility): ColumnVisibility =
+      original.modify(
+        _ ++
+          tableColsPrefs.map(col => ColumnId(col.columnId) -> Visibility.fromVisible(col.visible))
       )
 
-    def applySorting(original: js.Array[raw.mod.ColumnSort]): js.Array[raw.mod.ColumnSort] =
+    def applySorting(original: Sorting): Sorting =
       val sortedCols =
         tableColsPrefs
-          .flatMap(col => (col.columnId.toString.some, col.sorting, col.sortingOrder).tupled)
+          .flatMap(col => (ColumnId(col.columnId).some, col.sorting, col.sortingOrder).tupled)
           .sortBy(_._3)
 
       // We don't force unsorting, in case there's a default sorting.
       sortedCols match
         case Nil      => original
-        case nonEmpty =>
-          nonEmpty
-            .map((colId, s, _) => raw.mod.ColumnSort(s.toDescending, colId))
-            .toJSArray
+        case nonEmpty => Sorting(nonEmpty.map((colId, dir, _) => colId -> dir): _*)

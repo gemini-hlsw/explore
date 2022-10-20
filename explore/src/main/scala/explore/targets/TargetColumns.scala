@@ -32,54 +32,78 @@ import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.Target
 import lucuma.core.syntax.display.*
 import lucuma.core.util.Display
+import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.ui.syntax.all.given
 import org.scalablytyped.runtime.StringDictionary
 import reactST.{tanstackTableCore => raw}
 
 object TargetColumns:
-  val baseColNames: Map[String, String] = Map(
-    "type" -> " ",
-    "name" -> "Name"
+  val TypeColumnId: ColumnId       = ColumnId("type")
+  val NameColumnId: ColumnId       = ColumnId("name")
+  val RAColumnId: ColumnId         = ColumnId("ra")
+  val DecColumnId: ColumnId        = ColumnId("dec")
+  val EpochColumnId: ColumnId      = ColumnId("epoch")
+  val PMRAColumnId: ColumnId       = ColumnId("pmra")
+  val PMDecColumnId: ColumnId      = ColumnId("pmdec")
+  val RVColumnId: ColumnId         = ColumnId("rv")
+  val ZColumnId: ColumnId          = ColumnId("z")
+  val CZColumnId: ColumnId         = ColumnId("cz")
+  val ParallaxColumnId: ColumnId   = ColumnId("parallax")
+  val MorphologyColumnId: ColumnId = ColumnId("morphology")
+  val SEDColumnId: ColumnId        = ColumnId("sed")
+
+  def bandColumnId(band: Band): ColumnId = ColumnId(s"${band.tag}mag")
+
+  val baseColNames: Map[ColumnId, String] = Map(
+    TypeColumnId -> " ",
+    NameColumnId -> "Name"
   )
 
-  val siderealColNames: Map[String, String] = Map(
-    "type"         -> "Type",
-    "ra"           -> "RA",
-    "dec"          -> "Dec",
-    "priority"     -> "Priority",
-    "count"        -> "Count",
-    "observations" -> "Observations",
-    "epoch"        -> "Epoch",
-    "pmra"         -> "µ RA",
-    "pmdec"        -> "µ Dec",
-    "rv"           -> "RV",
-    "z"            -> "z",
-    "cz"           -> "cz",
-    "parallax"     -> "Parallax",
-    "morphology"   -> "Morphology",
-    "sed"          -> "SED"
-  ) ++ Band.all.map(m => (m.tag + "mag", m.shortName)).toMap
+  val siderealColNames: Map[ColumnId, String] = Map(
+    TypeColumnId       -> "Type",
+    RAColumnId         -> "RA",
+    DecColumnId        -> "Dec",
+    EpochColumnId      -> "Epoch",
+    PMRAColumnId       -> "µ RA",
+    PMDecColumnId      -> "µ Dec",
+    RVColumnId         -> "RV",
+    ZColumnId          -> "z",
+    CZColumnId         -> "cz",
+    ParallaxColumnId   -> "Parallax",
+    MorphologyColumnId -> "Morphology",
+    SEDColumnId        -> "SED"
+  ) ++ Band.all.map(b => bandColumnId(b) -> b.shortName).toMap
 
-  val allColNames: Map[String, String] = baseColNames ++ siderealColNames
+  val allColNames: Map[ColumnId, String] = baseColNames ++ siderealColNames
 
-  val DefaultVisibility: raw.mod.VisibilityState =
-    StringDictionary(
-      (List("epoch", "pmra", "pmdec", "z", "cz", "parallax", "morphology", "sed") ++
+  val DefaultVisibility: ColumnVisibility =
+    ColumnVisibility(
+      (List(
+        EpochColumnId,
+        PMRAColumnId,
+        PMDecColumnId,
+        ZColumnId,
+        CZColumnId,
+        ParallaxColumnId,
+        MorphologyColumnId,
+        SEDColumnId
+      ) ++
         Band.all
           .filterNot(_ === Band.V)
-          .map(b => b.shortName + "mag")).map(_ -> false): _*
+          .map(b => bandColumnId(b))).map(_ -> Visibility.Hidden): _*
     )
 
   trait BaseColBuilder[D](colDef: ColumnDef.Applied[D], getTarget: D => Option[Target]):
-    def baseColumn[V](id: String, accessor: Target => V): ColumnDef.Single[D, Option[V]] =
+    def baseColumn[V](id: ColumnId, accessor: Target => V): ColumnDef.Single[D, Option[V]] =
       colDef(id, getTarget.andThen(_.map(accessor)), baseColNames(id))
 
     val baseColumns =
       List(
-        baseColumn("type", _ => ()).copy(cell = _ => Icons.Star.fixedWidth(): VdomNode, size = 35),
-        baseColumn("name", Target.name.get)
-          .copy(cell = _.value.map(_.toString).orEmpty, size = 120)
+        baseColumn(TypeColumnId, _ => ())
+          .copy(cell = _ => Icons.Star.fixedWidth(): VdomNode, size = 35.toPx),
+        baseColumn(NameColumnId, Target.name.get)
+          .copy(cell = _.value.map(_.toString).orEmpty, size = 120.toPx)
           .sortableBy(_.toString)
       )
 
@@ -88,13 +112,13 @@ object TargetColumns:
     getSiderealTarget: D => Option[Target.Sidereal]
   ):
     def siderealColumnOpt[V](
-      id:       String,
+      id:       ColumnId,
       accessor: Target.Sidereal => Option[V]
     ): ColumnDef.Single[D, Option[V]] =
       colDef(id, getSiderealTarget.andThen(_.flatMap(accessor)), siderealColNames(id))
 
     def siderealColumn[V](
-      id:       String,
+      id:       ColumnId,
       accessor: Target.Sidereal => V
     ): ColumnDef.Single[D, Option[V]] =
       siderealColumnOpt(id, accessor.andThen(_.some))
@@ -108,62 +132,66 @@ object TargetColumns:
 
     val siderealColumns =
       List(
-        siderealColumn("ra", Target.Sidereal.baseRA.get)
-          .copy(cell = _.value.map(MathValidators.truncatedRA.reverseGet).orEmpty, size = 100)
+        siderealColumn(RAColumnId, Target.Sidereal.baseRA.get)
+          .copy(cell = _.value.map(MathValidators.truncatedRA.reverseGet).orEmpty, size = 100.toPx)
           .sortable,
-        siderealColumn("dec", Target.Sidereal.baseDec.get)
-          .copy(cell = _.value.map(MathValidators.truncatedDec.reverseGet).orEmpty, size = 100)
+        siderealColumn(DecColumnId, Target.Sidereal.baseDec.get)
+          .copy(cell = _.value.map(MathValidators.truncatedDec.reverseGet).orEmpty, size = 100.toPx)
           .sortable
       ) ++
         Band.all.map(band =>
           siderealColumnOpt(
-            band.tag + "mag",
+            bandColumnId(band),
             t => targetBrightnesses.get(t).flatMap(_.get(band))
           ).copy(
             cell = _.value.map(displayWithoutError(_)(displayBrightness)).orEmpty,
-            size = 80,
+            size = 80.toPx,
             enableSorting = false // We cannot sort since there may be different units.
           )
         ) ++
         List(
-          siderealColumn("epoch", Target.Sidereal.epoch.get)
+          siderealColumn(EpochColumnId, Target.Sidereal.epoch.get)
             .copy(
               cell = _.value
                 .map(value =>
                   s"${value.scheme.prefix}${Epoch.fromStringNoScheme.reverseGet(value)}"
                 )
                 .orEmpty,
-              size = 90
+              size = 90.toPx
             )
             .sortable,
-          siderealColumnOpt("pmra", Target.Sidereal.properMotionRA.getOption)
-            .copy(cell = _.value.map(pmRAValidWedge.reverseGet).orEmpty, size = 90)
+          siderealColumnOpt(PMRAColumnId, Target.Sidereal.properMotionRA.getOption)
+            .copy(cell = _.value.map(pmRAValidWedge.reverseGet).orEmpty, size = 90.toPx)
             .sortable,
-          siderealColumnOpt("pmdec", Target.Sidereal.properMotionDec.getOption)
-            .copy(cell = _.value.map(pmDecValidWedge.reverseGet).orEmpty, size = 90)
+          siderealColumnOpt(PMDecColumnId, Target.Sidereal.properMotionDec.getOption)
+            .copy(cell = _.value.map(pmDecValidWedge.reverseGet).orEmpty, size = 90.toPx)
             .sortable,
-          siderealColumnOpt("rv", Target.Sidereal.radialVelocity.get)
-            .copy(cell = _.value.map(formatRV.reverseGet).orEmpty, size = 90)
+          siderealColumnOpt(RVColumnId, Target.Sidereal.radialVelocity.get)
+            .copy(cell = _.value.map(formatRV.reverseGet).orEmpty, size = 90.toPx)
             .sortable,
-          siderealColumnOpt("z", (Target.Sidereal.radialVelocity.get _).andThen(rvToRedshiftGet))
-            .copy(cell = _.value.map(formatZ.reverseGet).orEmpty, size = 90)
+          siderealColumnOpt(
+            ZColumnId,
+            (Target.Sidereal.radialVelocity.get _).andThen(rvToRedshiftGet)
+          )
+            .copy(cell = _.value.map(formatZ.reverseGet).orEmpty, size = 90.toPx)
             .sortable,
-          siderealColumnOpt("cz", (Target.Sidereal.radialVelocity.get _).andThen(rvToARVGet))
-            .copy(cell = _.value.map(formatCZ.reverseGet).orEmpty, size = 90)
+          siderealColumnOpt(CZColumnId, (Target.Sidereal.radialVelocity.get _).andThen(rvToARVGet))
+            .copy(cell = _.value.map(formatCZ.reverseGet).orEmpty, size = 90.toPx)
             .sortable,
-          siderealColumnOpt("parallax", Target.Sidereal.parallax.get)
-            .copy(cell = _.value.map(Parallax.milliarcseconds.get).map(_.toString).orEmpty,
-                  size = 90
+          siderealColumnOpt(ParallaxColumnId, Target.Sidereal.parallax.get)
+            .copy(
+              cell = _.value.map(Parallax.milliarcseconds.get).map(_.toString).orEmpty,
+              size = 90.toPx
             )
             .sortable,
           siderealColumn(
-            "morphology",
+            MorphologyColumnId,
             (Target.Sidereal.sourceProfile.get _).andThen(SourceProfileType.fromSourceProfile)
           )
-            .copy(cell = _.value.map(_.shortName).orEmpty, size = 115)
+            .copy(cell = _.value.map(_.shortName).orEmpty, size = 115.toPx)
             .sortable,
           siderealColumn(
-            "sed",
+            SEDColumnId,
             t =>
               Target.Sidereal.integratedSpectralDefinition
                 .getOption(t)
@@ -171,7 +199,7 @@ object TargetColumns:
                 .orElse(Target.Sidereal.surfaceSpectralDefinition.getOption(t).map(_.shortName))
                 .orEmpty
           )
-            .copy(cell = _.value.orEmpty, size = 200)
+            .copy(cell = _.value.orEmpty, size = 200.toPx)
             .sortable
         )
 

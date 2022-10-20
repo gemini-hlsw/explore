@@ -3,8 +3,9 @@
 
 package explore.utils
 
-import reactST.{tanstackTableCore => raw}
+import cats.Endo
+import lucuma.react.table.TableState
 
 trait TableStateStore[F[_]]:
-  def load(): F[raw.mod.TableState => raw.mod.TableState]
-  def save(state: raw.mod.TableState): F[Unit]
+  def load(): F[Endo[TableState]]
+  def save(state: TableState): F[Unit]
