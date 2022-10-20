@@ -76,3 +76,15 @@ private val useHotkeys: js.Function4[
   js.UndefOr[HookDeps],
   facade.React.RefHandle[dom.Element | Null]
 ] = js.native
+
+@JSImport("react-hotkeys-hook", "isHotkeyPressed")
+@js.native
+val isHotkeyPressed: js.Function1[
+  String | Double,
+  Boolean
+] = js.native
+
+// Don't make these val or you will get always false
+def isCmdCtrlPressed: Boolean = isHotkeyPressed("cmd") || isHotkeyPressed("ctrl")
+
+def isShiftPressed: Boolean = isHotkeyPressed("shift")

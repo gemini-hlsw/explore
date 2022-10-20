@@ -328,6 +328,7 @@ object ExploreStyles {
   val ConfigurationFilter: Css          = Css("explore-configuration-filter") |+| Css("field")
   val ConfigurationFilterItem: Css      = Css("explore-configuration-filter-item")
   val ExploreTable: Css                 = Css("explore-table")
+  val ExploreSelectableTable: Css       = Css("explore-selectable-table")
   val ExploreBorderTable: Css           = Css("explore-border-table")
   val TableRowSelected: Css             = Css("explore-table-row-selected")
   val ModesTableTitle: Css              = Css("explore-modes-table-title")
@@ -345,13 +346,15 @@ object ExploreStyles {
   val SequencesPanel                    = Css("explore-sequences-panel")
   val CellHideBorder                    = Css("explore-table-cell-hide-border")
 
-  val ButtonCopy: Css         = Css("explore-button-copy")
-  val ButtonsUndo: Css        = Css("explore-buttons-undo")
-  val ButtonsUndoLabel: Css   = Css("explore-buttons-undo-label")
-  val ButtonSummary: Css      = Css("explore-button-summary")
-  val TitleUndoButtons: Css   = Css("explore-title-undo-buttons")
-  val TitleSelectColumns: Css = Css("explore-title-select-columns")
-  val SelectColumns: Css      = Css("explore-select-columns")
+  val ButtonCopy: Css            = Css("explore-button-copy")
+  val ButtonsUndo: Css           = Css("explore-buttons-undo")
+  val ButtonsUndoLabel: Css      = Css("explore-buttons-undo-label")
+  val ButtonSummary: Css         = Css("explore-button-summary")
+  val TitleUndoButtons: Css      = Css("explore-title-undo-buttons")
+  val TitleSelectColumns: Css    = Css("explore-title-select-columns")
+  val TableSelectionToolbar: Css = Css("explore-table-selection-toolbar")
+
+  val SelectColumns: Css = Css("explore-select-columns")
 
   val VeryCompact: Css = Css("verycompact")
 
