@@ -89,6 +89,7 @@ object AladinCell extends ModelOptics:
     Duration.between(_, _).toDays().abs < 30L
   }
 
+  private given Reusability[Asterism] = Reusability.by(_.toSiderealTracking)
   private given Reusability[AgsState] = Reusability.byEq
   private given Reusability[Props]    =
     Reusability.by(x => (x.uid, x.tid, x.obsConf, x.asterism, x.fullScreen.reuseByValue))
@@ -103,6 +104,50 @@ object AladinCell extends ModelOptics:
 
   private val userPrefs: Lens[(UserGlobalPreferences, TargetVisualOptions), UserGlobalPreferences] =
     Focus[(UserGlobalPreferences, TargetVisualOptions)](_._1)
+
+  private def offsetViews(
+    props:   Props,
+    options: View[Pot[(UserGlobalPreferences, TargetVisualOptions)]]
+  )(ctx:     AppContext[IO]) = {
+    import ctx.given
+
+    val offsetView =
+      options.zoom(
+        Pot.readyPrism.andThen(targetPrefs).andThen(TargetVisualOptions.viewOffset)
+      )
+
+    val offsetChangeInAladin = (newOffset: Offset) => {
+      val ignore = options.get.fold(
+        true,
+        _ => true,
+        o => {
+          val diffP = newOffset.p.toAngle.difference(o._2.viewOffset.p.toAngle)
+          val diffQ = newOffset.q.toAngle.difference(o._2.viewOffset.q.toAngle)
+          // Don't save if the change is less than 1 arcse
+          diffP.toMicroarcseconds < 1e6 && diffQ.toMicroarcseconds < 1e6
+        }
+      )
+
+      offsetView.set(newOffset) *>
+        TargetPreferences
+          .updateViewOffset[IO](props.uid, props.tid, newOffset)
+          .unlessA(ignore)
+          .runAsync
+          .rateLimit(1.seconds, 1)
+          .void
+    }
+
+    // Always store the offset when centering
+    val offsetOnCenter = offsetView.withOnMod {
+      case Some(o) =>
+        TargetPreferences
+          .updateViewOffset[IO](props.uid, props.tid, o)
+          .runAsync
+          .void
+      case _       => Callback.empty
+    }
+    (offsetView, offsetChangeInAladin, offsetOnCenter)
+  }
 
   private val component =
     ScalaFnComponent
@@ -145,6 +190,16 @@ object AladinCell extends ModelOptics:
       }
       // Selected GS index. Should be stored in the db
       .useStateViewWithReuse(none[Int])
+      // Reset offset and gs if asterism change
+      .useEffectWithDepsBy((p, _, _, _, _, _, _, _) => p.asterism)(
+        (props, ctx, _, options, _, _, _, gs) =>
+          _ => {
+            val (_, _, offsetOnCenter) = offsetViews(props, options)(ctx)
+
+            // if the coordinates change, reset ags and offset
+            gs.set(none) *> offsetOnCenter.set(Offset.Zero)
+          }
+      )
       // Request ags calculation
       .useEffectWithDepsBy((p, _, _, _, candidates, _, _, _) =>
         (p.asterism.baseTracking,
@@ -288,41 +343,7 @@ object AladinCell extends ModelOptics:
             }
           }
 
-          val offsetView =
-            options.zoom(
-              Pot.readyPrism.andThen(targetPrefs).andThen(TargetVisualOptions.viewOffset)
-            )
-
-          val offsetChangeInAladin = (newOffset: Offset) => {
-            val ignore = options.get.fold(
-              true,
-              _ => true,
-              o => {
-                val diffP = newOffset.p.toAngle.difference(o._2.viewOffset.p.toAngle)
-                val diffQ = newOffset.q.toAngle.difference(o._2.viewOffset.q.toAngle)
-                // Don't save if the change is less than 1 arcse
-                diffP.toMicroarcseconds < 1e6 && diffQ.toMicroarcseconds < 1e6
-              }
-            )
-
-            offsetView.set(newOffset) *>
-              TargetPreferences
-                .updateViewOffset[IO](props.uid, props.tid, newOffset)
-                .unlessA(ignore)
-                .runAsync
-                .rateLimit(1.seconds, 1)
-                .void
-          }
-
-          // Always store the offset when centering
-          val offsetOnCenter = offsetView.withOnMod {
-            case Some(o) =>
-              TargetPreferences
-                .updateViewOffset[IO](props.uid, props.tid, o)
-                .runAsync
-                .void
-            case _       => Callback.empty
-          }
+          val (offsetView, offsetChangeInAladin, offsetOnCenter) = offsetViews(props, options)(ctx)
 
           def prefsSetter(
             candidates: Visible => Visible,
@@ -359,8 +380,6 @@ object AladinCell extends ModelOptics:
             allowMouseZoomView.mod(_.flip) *>
               UserPreferences.storePreferences[IO](props.uid, allowMouseZoom.flip).runAsync
 
-          val aladinKey = s"${props.asterism.asList.map(_.id)}"
-
           val selectedGuideStar = selectedGSIndex.get.flatMap(agsResults.value.lift)
           val usableGuideStar   = selectedGuideStar.exists(_.isUsable)
 
@@ -376,7 +395,7 @@ object AladinCell extends ModelOptics:
                 offsetChangeInAladin.reuseAlways,
                 selectedGuideStar,
                 agsResults.value
-              ).withKey(aladinKey)
+              )
 
           val renderToolbar: ((UserGlobalPreferences, TargetVisualOptions)) => VdomNode =
             case (_: UserGlobalPreferences, t: TargetVisualOptions) =>

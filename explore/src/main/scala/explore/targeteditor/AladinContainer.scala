@@ -67,6 +67,7 @@ object AladinContainer {
   private given Reusability[Props]               =
     Reusability.by(x => (x.asterism, x.obsConf, x.allowMouseScroll, x.options))
   private given Reusability[Fov]                 = Reusability.by(x => (x.y, x.y))
+  private given Reusability[Asterism]            = Reusability.by(_.toSiderealTracking)
 
   private val AladinComp = Aladin.component
 
@@ -84,7 +85,7 @@ object AladinContainer {
     ScalaFnComponent
       .withHooks[Props]
       // Base coordinates and science targets with pm correction if possible
-      .useMemoBy(_.obsConf.vizTime) { p => i =>
+      .useMemoBy(p => (p.asterism, p.obsConf.vizTime)) { p => (_, i) =>
         val base    = p.asterism.baseTracking
           .at(i)
           .map(_.value)
@@ -106,8 +107,8 @@ object AladinContainer {
       // Ref to the aladin component
       .useRefToScalaComponent(AladinComp)
       // If view offset changes upstream to zero, redraw
-      .useEffectWithDepsBy((p, _, _, _) => p.options.viewOffset) {
-        (_, baseCoordinates, viewCoordinates, aladinRef) => offset =>
+      .useEffectWithDepsBy((p, baseCoordinates, _, _) => (baseCoordinates, p.options.viewOffset)) {
+        (_, baseCoordinates, viewCoordinates, aladinRef) => (_, offset) =>
           {
             val newCoords = baseCoordinates.value._1.offsetBy(Angle.Angle0, offset)
             newCoords
@@ -126,59 +127,58 @@ object AladinContainer {
           }
       }
       // Memoized svg
-      .useMemoBy((p, _, _, _) =>
-        (p.obsConf.scienceMode, p.obsConf.posAngle, p.options, p.selectedGuideStar)
-      ) { (_, baseCoordinates, _, _) =>
-        { case (mode, posAngle, options, gs) =>
-          val candidatesVisibility =
-            ExploreStyles.GuideStarCandidateVisible.when_(options.agsCandidates.visible)
+      .useMemoBy((p, allCoordinates, _, _) =>
+        (allCoordinates, p.obsConf.scienceMode, p.obsConf.posAngle, p.options, p.selectedGuideStar)
+      ) { (_, _, _, _) => (allCoordinates, mode, posAngle, options, gs) =>
+        val candidatesVisibility =
+          ExploreStyles.GuideStarCandidateVisible.when_(options.agsCandidates.visible)
 
-          val probeArmShapes = (gs, posAngle).mapN { case (c, posAngle) =>
-            val gsOffset = baseCoordinates._1.diff(c.target.tracking.baseCoordinates).offset
-            GmosGeometry.probeShapes(posAngle,
-                                     gsOffset,
-                                     Offset.Zero,
-                                     mode,
-                                     PortDisposition.Side,
-                                     Css.Empty
-            )
-          }
-
-          val usableGuideStar = gs.exists(_.isUsable)
-
-          val shapes = posAngle
-            .map { posAngle =>
-              val baseShapes =
-                GmosGeometry.shapesForMode(posAngle, mode, PortDisposition.Side) ++
-                  GmosGeometry.commonShapes(posAngle, candidatesVisibility)
-
-              probeArmShapes
-                .filter(_ => usableGuideStar) // Don't show the probe if there is no usable GS
-                .map { probeArm =>
-                  baseShapes ++ probeArm
-                }
-                .getOrElse(baseShapes)
-            }
-            .getOrElse(
-              GmosGeometry.commonShapes(Angle.Angle0, candidatesVisibility)
-            )
-          shapes
+        val probeArmShapes = (gs, posAngle).mapN { case (c, posAngle) =>
+          val gsOffset = allCoordinates._1.diff(c.target.tracking.baseCoordinates).offset
+          GmosGeometry.probeShapes(posAngle,
+                                   gsOffset,
+                                   Offset.Zero,
+                                   mode,
+                                   PortDisposition.Side,
+                                   Css.Empty
+          )
         }
+
+        val usableGuideStar = gs.exists(_.isUsable)
+
+        val shapes = posAngle
+          .map { posAngle =>
+            val baseShapes =
+              GmosGeometry.shapesForMode(posAngle, mode, PortDisposition.Side) ++
+                GmosGeometry.commonShapes(posAngle, candidatesVisibility)
+
+            probeArmShapes
+              .filter(_ => usableGuideStar) // Don't show the probe if there is no usable GS
+              .map { probeArm =>
+                baseShapes ++ probeArm
+              }
+              .getOrElse(baseShapes)
+          }
+          .getOrElse(
+            GmosGeometry.commonShapes(Angle.Angle0, candidatesVisibility)
+          )
+        shapes
       }
       // resize detector
       .useResizeDetector()
       // memoized catalog targets with their proper motions corrected
-      .useMemoBy((props, _, _, _, _, _) =>
+      .useMemoBy((props, allCoordinates, _, _, _, _) =>
         (props.guideStarCandidates,
          props.options.agsCandidates.visible,
          props.options.fullScreen,
          props.obsConf.posAngle,
          props.obsConf.vizTime,
          props.obsConf.scienceMode,
-         props.selectedGuideStar
+         props.selectedGuideStar,
+         allCoordinates
         )
-      ) { case (_, allCoordinates, _, _, _, _) =>
-        (candidates, visible, _, posAngle, obsInstant, scienceMode, selectedGS) =>
+      ) { case (_, _, _, _, _, _) =>
+        (candidates, visible, _, posAngle, obsInstant, scienceMode, selectedGS, allCoordinates) =>
           posAngle
             .map { posAngle =>
               val (baseCoordinates, scienceTargets) = allCoordinates.value

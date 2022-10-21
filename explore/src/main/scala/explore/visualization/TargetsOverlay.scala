@@ -91,9 +91,6 @@ case class TargetsOverlay(
 
 object TargetsOverlay {
   type Props = TargetsOverlay
-  given Reusability[Double] = Reusability.double(1)
-  given Reusability[Fov]    = Reusability.derive
-  given Reusability[Props]  = Reusability.derive
 
   val JtsSvg     = Css("targets-overlay-svg")
   val JtsTargets = Css("overlay-all-targets")
