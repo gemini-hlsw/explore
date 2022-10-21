@@ -58,10 +58,20 @@ object TargetSummaryTable extends TableHooks:
 
   private val ColDef = ColumnDef[TargetWithIdAndObs]
 
-  private val columnClasses: Map[String, Css] = Map(
-    "id"   -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryId),
-    "type" -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryType |+| ExploreStyles.WithId),
-    "name" -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryName |+| ExploreStyles.WithId)
+  private val IdColumnId: ColumnId           = ColumnId("id")
+  private val CountColumnId: ColumnId        = ColumnId("count")
+  private val ObservationsColumnId: ColumnId = ColumnId("observations")
+
+  private val columnClasses: Map[ColumnId, Css] = Map(
+    IdColumnId                 -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryId),
+    TargetColumns.TypeColumnId -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryType |+| ExploreStyles.WithId),
+    TargetColumns.NameColumnId -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryName |+| ExploreStyles.WithId)
+  )
+
+  private val colNames: Map[ColumnId, String] = TargetColumns.allColNames ++ Map(
+    IdColumnId           -> "Id",
+    CountColumnId        -> "Count",
+    ObservationsColumnId -> "Observations"
   )
 
   protected val component =
@@ -70,8 +80,8 @@ object TargetSummaryTable extends TableHooks:
       .useContext(AppContext.ctx)
       // cols
       .useMemoBy((_, _) => ()) { (props, ctx) => _ =>
-        def column[V](id: String, accessor: TargetWithIdAndObs => V) =
-          ColDef(id, row => accessor(row), TargetColumns.allColNames(id))
+        def column[V](id: ColumnId, accessor: TargetWithIdAndObs => V) =
+          ColDef(id, row => accessor(row), colNames(id))
 
         def targetUrl(targetId: Target.Id): String =
           ctx.pageUrl(AppTab.Targets, props.programId, Focused.target(targetId))
@@ -81,13 +91,14 @@ object TargetSummaryTable extends TableHooks:
 
         List(
           ColDef(
-            "id",
+            IdColumnId,
             _.id,
             "id",
             cell =>
-              <.a(^.href := targetUrl(cell.value),
-                  ^.onClick ==> (e => e.preventDefaultCB *> props.selectTarget(cell.value)),
-                  cell.value.toString
+              <.a(
+                ^.href := targetUrl(cell.value),
+                ^.onClick ==> (e => e.preventDefaultCB *> props.selectTarget(cell.value)),
+                cell.value.toString
               )
           ).sortable
         ) ++
@@ -95,9 +106,9 @@ object TargetSummaryTable extends TableHooks:
             .BaseColumnBuilder(ColDef, _.target.some)
             .allColumns ++
           List(
-            column("count", _.obsIds.size) // TODO Right align
+            column(CountColumnId, _.obsIds.size) // TODO Right align
               .copy(cell = _.value.toString),
-            column("observations", x => (x.id, x.obsIds.toList))
+            column(ObservationsColumnId, x => (x.id, x.obsIds.toList))
               .copy(
                 cell = cell =>
                   val (tid, obsIds) = cell.value
@@ -131,15 +142,15 @@ object TargetSummaryTable extends TableHooks:
           TableOptions(
             cols,
             rows,
-            getRowId = (row, _, _) => row.id.toString,
+            getRowId = (row, _, _) => RowId(row.id.toString),
             enableSorting = true,
             enableColumnResizing = true,
             enableMultiRowSelection = true,
             columnResizeMode = raw.mod.ColumnResizeMode.onChange,
-            initialState = raw.mod
-              .InitialTableState()
-              .setColumnVisibility(TargetColumns.DefaultVisibility)
-              .setRowSelection(StringDictionary())
+            initialState = TableState(
+              columnVisibility = TargetColumns.DefaultVisibility,
+              rowSelection = RowSelection()
+            )
           ),
           TableStore(props.userId, TableId.TargetsSummary, cols)
         )
@@ -165,7 +176,7 @@ object TargetSummaryTable extends TableHooks:
               <.span(ExploreStyles.TitleSelectColumns)(
                 NewColumnSelector(
                   table,
-                  TargetColumns.allColNames,
+                  colNames,
                   ExploreStyles.SelectColumns
                 )
               )
@@ -178,7 +189,7 @@ object TargetSummaryTable extends TableHooks:
             tableMod = ExploreStyles.ExploreTable |+| ExploreStyles.ExploreSelectableTable,
             headerCellMod = headerCell =>
               columnClasses
-                .get(headerCell.column.id)
+                .get(ColumnId(headerCell.column.id))
                 .orEmpty |+| ExploreStyles.StickyHeader,
             rowMod = row =>
               TagMod(
@@ -207,18 +218,18 @@ object TargetSummaryTable extends TableHooks:
                       if (indexOfCurrent =!= -1 && indexOfFirst =!= -1 && indexOfLast =!= -1) {
                         if (indexOfCurrent < indexOfFirst) {
                           table.setRowSelection(
-                            StringDictionary(
-                              (firstId -> true) :: allRows
+                            RowSelection(
+                              (RowId(firstId) -> true) :: allRows
                                 .slice(indexOfCurrent, indexOfFirst)
-                                .map(_._1.id -> true): _*
+                                .map { case (row, _) => RowId(row.id) -> true }: _*
                             )
                           )
                         } else {
                           table.setRowSelection(
-                            StringDictionary(
-                              ((currentId -> true) :: allRows
+                            RowSelection(
+                              (RowId(currentId) -> true) :: allRows
                                 .slice(indexOfLast, indexOfCurrent)
-                                .map(_._1.id -> true)): _*
+                                .map { case (row, _) => RowId(row.id) -> true }: _*
                             )
                           )
                         }
@@ -227,7 +238,7 @@ object TargetSummaryTable extends TableHooks:
                   } else row.toggleSelected()
                 }
               ),
-            cellMod = cell => columnClasses.get(cell.column.id).orEmpty
+            cellMod = cell => columnClasses.get(ColumnId(cell.column.id)).orEmpty
           )
         )
       )

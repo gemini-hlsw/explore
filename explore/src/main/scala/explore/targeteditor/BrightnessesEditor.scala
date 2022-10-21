@@ -24,6 +24,7 @@ import lucuma.core.enums.Band
 import lucuma.core.math.BrightnessUnits.*
 import lucuma.core.math.dimensional.*
 import lucuma.core.util.Enumerated
+import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
 import lucuma.ui.forms.EnumViewSelect
@@ -72,6 +73,11 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
 
   private val ColDef = ColumnDef[RowValue]
 
+  private val BandColumnId: ColumnId   = ColumnId("band")
+  private val ValueColumnId: ColumnId  = ColumnId("value")
+  private val UnitsColumnId: ColumnId  = ColumnId("units")
+  private val DeleteColumnId: ColumnId = ColumnId("delete")
+
   val component =
     ScalaFnComponent
       .withHooks[Props]
@@ -84,16 +90,16 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
           case (brightnesses, disabled) =>
             List(
               ColDef(
-                "band",
+                BandColumnId,
                 _._1,
                 "Band",
                 _.value.shortName,
-                size = 60,
-                minSize = 50,
-                maxSize = 60
+                size = 60.toPx,
+                minSize = 50.toPx,
+                maxSize = 60.toPx
               ).sortable,
               ColDef(
-                "value",
+                ValueColumnId,
                 _._2.zoom(Measure.valueTagged[BigDecimal, Brightness[T]]),
                 "Value",
                 cell =>
@@ -105,12 +111,12 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                       ChangeAuditor.bigDecimal(2.refined, 3.refined).allowExp(2.refined),
                     disabled = disabled
                   ),
-                size = 80,
-                minSize = 60,
-                maxSize = 160
+                size = 80.toPx,
+                minSize = 60.toPx,
+                maxSize = 160.toPx
               ).sortableBy(_.get),
               ColDef(
-                "units",
+                UnitsColumnId,
                 _._2.zoom(Measure.unitsTagged[BigDecimal, Brightness[T]]),
                 "Units",
                 cell =>
@@ -121,12 +127,12 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                     disabled = disabled,
                     clazz = ExploreStyles.BrightnessesTableUnitsDropdown
                   ),
-                size = 100,
-                minSize = 100,
-                maxSize = 160
+                size = 100.toPx,
+                minSize = 100.toPx,
+                maxSize = 160.toPx
               ).sortableBy(_.get),
               ColDef(
-                "delete",
+                DeleteColumnId,
                 _._1,
                 "",
                 cell =>
@@ -138,9 +144,9 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                       onClick = brightnesses.mod(_ - cell.value)
                     )(Icons.Trash)
                   ),
-                size = 20,
-                minSize = 20,
-                maxSize = 20,
+                size = 20.toPx,
+                minSize = 20.toPx,
+                maxSize = 20.toPx,
                 enableSorting = false
               )
             )
@@ -153,12 +159,10 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
         TableOptions(
           cols,
           rows,
-          getRowId = (row, _, _) => row._1.tag,
+          getRowId = (row, _, _) => RowId(row._1.tag),
           enableSorting = true,
           enableColumnResizing = false,
-          initialState = raw.mod
-            .InitialTableState()
-            .setSorting(List(raw.mod.ColumnSort(false, "band")).toJSArray) // TODO Better facade
+          initialState = TableState(sorting = Sorting(ColumnId("band") -> SortDirection.Ascending))
         )
       )
       .render { (props, state, _, _, table) =>
@@ -202,7 +206,7 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
           <.label(label),
           PrimeAutoHeightVirtualizedTable(
             table,
-            estimateRowHeightPx = _ => 34,
+            estimateRowHeight = _ => 34.toPx,
             striped = true,
             compact = Compact.Very,
             tableMod = ExploreStyles.ExploreBorderTable,

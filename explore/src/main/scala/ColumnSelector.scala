@@ -7,14 +7,15 @@ import cats.syntax.all.*
 import crystal.react.View
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.react.table.ColumnId
+import lucuma.react.table.Table
 import react.common.*
 import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.modules.dropdown.*
-import reactST.{tanstackTableCore => raw}
 
 case class NewColumnSelector[T](
-  table:       raw.mod.Table[T],
-  columnNames: String => String, // id -> label
+  table:       Table[T],
+  columnNames: ColumnId => String, // id -> label
   clazz:       Css = Css.Empty
 ) extends ReactFnProps(NewColumnSelector.component)
 
@@ -34,18 +35,19 @@ object NewColumnSelector:
         props.table
           .getAllColumns()
           .drop(1)
-          .toTagMod { column =>
+          .map { column =>
             val colId = column.id
             DropdownItem()(^.key := colId)(
               <.div(
                 Checkbox(
-                  label = props.columnNames(colId),
+                  label = props.columnNames(ColumnId(colId)),
                   checked = column.getIsVisible(),
                   onChange = (value: Boolean) => Callback(column.toggleVisibility())
                 )
               )
             )
           }
+          .toTagMod
       )
     )
   }

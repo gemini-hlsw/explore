@@ -33,9 +33,11 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Target
 import lucuma.core.model.User
+import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.schemas.ObservationDB
 import lucuma.ui.reusability.*
+import lucuma.ui.syntax.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
@@ -67,14 +69,16 @@ object TargetTable extends TableHooks:
 
   private val ColDef = ColumnDef[SiderealTargetWithId]
 
-  private val columnNames: Map[String, String] = Map(
-    "delete" -> " "
+  private val DeleteColumnId: ColumnId = ColumnId("delete")
+
+  private val columnNames: Map[ColumnId, String] = Map(
+    DeleteColumnId -> " "
   ) ++ TargetColumns.allColNames
 
-  private val columnClasses: Map[String, Css] = Map(
-    "delete" -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryDelete),
-    "type"   -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryType |+| ExploreStyles.WithDelete),
-    "name"   -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryName |+| ExploreStyles.WithDelete)
+  private val columnClasses: Map[ColumnId, Css] = Map(
+    DeleteColumnId             -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryDelete),
+    TargetColumns.TypeColumnId -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryType |+| ExploreStyles.WithDelete),
+    TargetColumns.NameColumnId -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryName |+| ExploreStyles.WithDelete)
   )
 
   private def deleteSiderealTarget(
@@ -91,12 +95,9 @@ object TargetTable extends TableHooks:
       .useMemoBy((props, _) => (props.obsIds, props.targets.get)) { (props, ctx) => _ =>
         import ctx.given
 
-        def column[V](id: String, accessor: SiderealTargetWithId => V) =
-          ColDef(id, accessor, columnNames(id))
-
         List(
           ColDef(
-            "delete",
+            DeleteColumnId,
             _.id,
             "",
             cell =>
@@ -111,7 +112,7 @@ object TargetTable extends TableHooks:
                     props.targets.mod(_.flatMap(_.remove(cell.value))) >>
                     deleteSiderealTarget(props.obsIds, cell.value).runAsync
               ),
-            size = 35,
+            size = 35.toPx,
             enableSorting = false
           )
         ) ++
@@ -135,13 +136,11 @@ object TargetTable extends TableHooks:
           TableOptions(
             cols,
             rows,
-            getRowId = (row, _, _) => row.id.toString,
+            getRowId = (row, _, _) => RowId(row.id.toString),
             enableSorting = true,
             enableColumnResizing = true,
             columnResizeMode = raw.mod.ColumnResizeMode.onChange,
-            initialState = raw.mod
-              .InitialTableState()
-              .setColumnVisibility(TargetColumns.DefaultVisibility)
+            initialState = TableState(columnVisibility = TargetColumns.DefaultVisibility)
           ),
           TableStore(props.userId, TableId.AsterismTargets, cols)
         )
@@ -168,7 +167,7 @@ object TargetTable extends TableHooks:
                 tableMod = ExploreStyles.ExploreTable,
                 headerCellMod = headerCell =>
                   columnClasses
-                    .get(headerCell.column.id)
+                    .get(ColumnId(headerCell.column.id))
                     .orEmpty |+| ExploreStyles.StickyHeader,
                 rowMod = row =>
                   TagMod(
@@ -176,7 +175,7 @@ object TargetTable extends TableHooks:
                       .when_(props.selectedTarget.get.exists(_ === row.original.id)),
                     ^.onClick --> props.selectedTarget.set(row.original.id.some)
                   ),
-                cellMod = cell => columnClasses.get(cell.column.id).orEmpty
+                cellMod = cell => columnClasses.get(ColumnId(cell.column.id)).orEmpty
               )
             )
           }

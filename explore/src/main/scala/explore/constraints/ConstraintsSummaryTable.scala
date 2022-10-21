@@ -34,6 +34,7 @@ import lucuma.core.model.ElevationRange
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.User
+import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
@@ -61,26 +62,42 @@ object ConstraintsSummaryTable extends TableHooks:
 
   private val ColDef = ColumnDef[ConstraintGroup]
 
-  private val columnNames: Map[String, String] = Map(
-    "edit"         -> " ",
-    "iq"           -> "IQ",
-    "cc"           -> "CC",
-    "bg"           -> "BG",
-    "wv"           -> "WV",
-    "minam"        -> "Min AM",
-    "maxam"        -> "Max AM",
-    "minha"        -> "Min HA",
-    "maxha"        -> "Max HA",
-    "count"        -> "Count",
-    "observations" -> "Observations"
+  private val EditColumnId: ColumnId         = ColumnId("edit")
+  private val IQColumnId: ColumnId           = ColumnId("iq")
+  private val CCColumnId: ColumnId           = ColumnId("cc")
+  private val BGColumnId: ColumnId           = ColumnId("bg")
+  private val WVColumnId: ColumnId           = ColumnId("wv")
+  private val MinAMColumnId: ColumnId        = ColumnId("minam")
+  private val MaxAMColumnId: ColumnId        = ColumnId("maxam")
+  private val MinHAColumnId: ColumnId        = ColumnId("minha")
+  private val MaxHAColumnId: ColumnId        = ColumnId("maxha")
+  private val CountColumnId: ColumnId        = ColumnId("count")
+  private val ObservationsColumnId: ColumnId = ColumnId("observations")
+
+  private val columnNames: Map[ColumnId, String] = Map(
+    EditColumnId         -> " ",
+    IQColumnId           -> "IQ",
+    CCColumnId           -> "CC",
+    BGColumnId           -> "BG",
+    WVColumnId           -> "WV",
+    MinAMColumnId        -> "Min AM",
+    MaxAMColumnId        -> "Max AM",
+    MinHAColumnId        -> "Min HA",
+    MaxHAColumnId        -> "Max HA",
+    CountColumnId        -> "Count",
+    ObservationsColumnId -> "Observations"
   )
 
-  private val columnClasses: Map[String, Css] = Map(
-    "edit" -> (ExploreStyles.StickyColumn |+| ExploreStyles.ConstraintsSummaryEdit)
+  private val columnClasses: Map[ColumnId, Css] = Map(
+    EditColumnId -> (ExploreStyles.StickyColumn |+| ExploreStyles.ConstraintsSummaryEdit)
   )
 
-  private val DefaultColVisibility: raw.mod.VisibilityState =
-    StringDictionary(List("minam", "minha", "maxha").map(_ -> false): _*)
+  private val DefaultColVisibility: ColumnVisibility =
+    ColumnVisibility(
+      MinAMColumnId -> Visibility.Hidden,
+      MinHAColumnId -> Visibility.Hidden,
+      MaxHAColumnId -> Visibility.Hidden
+    )
 
   private val component =
     ScalaFnComponent
@@ -89,7 +106,7 @@ object ConstraintsSummaryTable extends TableHooks:
       .useMemoBy((_, _) => ())( // Cols never changes, but needs access to props
         (props, ctx) =>
           _ =>
-            def column[V](id: String, accessor: ConstraintGroup => V)
+            def column[V](id: ColumnId, accessor: ConstraintGroup => V)
               : ColumnDef.Single[ConstraintGroup, V] =
               ColDef(id, accessor, columnNames(id))
 
@@ -106,7 +123,7 @@ object ConstraintsSummaryTable extends TableHooks:
               ctx.pageUrl(AppTab.Constraints, props.programId, Focused.singleObs(obsId))
 
             List(
-              column("edit", ConstraintGroup.obsIds.get)
+              column(EditColumnId, ConstraintGroup.obsIds.get)
                 .copy(
                   cell = cell =>
                     <.a(^.href := obsSetUrl(cell.value),
@@ -115,20 +132,33 @@ object ConstraintsSummaryTable extends TableHooks:
                     ),
                   enableSorting = false
                 ),
-              column("iq", ConstraintGroup.constraintSet.andThen(ConstraintSet.imageQuality).get)
+              column(
+                IQColumnId,
+                ConstraintGroup.constraintSet.andThen(ConstraintSet.imageQuality).get
+              )
                 .copy(cell = _.value.label)
                 .sortableBy(_.label),
-              column("cc", ConstraintGroup.constraintSet.andThen(ConstraintSet.cloudExtinction).get)
+              column(
+                CCColumnId,
+                ConstraintGroup.constraintSet.andThen(ConstraintSet.cloudExtinction).get
+              )
                 .copy(cell = _.value.label)
                 .sortableBy(_.label),
-              column("bg", ConstraintGroup.constraintSet.andThen(ConstraintSet.skyBackground).get)
+              column(
+                BGColumnId,
+                ConstraintGroup.constraintSet.andThen(ConstraintSet.skyBackground).get
+              )
                 .copy(cell = _.value.label)
                 .sortableBy(_.label),
-              column("wv", ConstraintGroup.constraintSet.andThen(ConstraintSet.waterVapor).get)
+              column(
+                WVColumnId,
+                ConstraintGroup.constraintSet.andThen(ConstraintSet.waterVapor).get
+              )
                 .copy(cell = _.value.label)
                 .sortableBy(_.label),
-              column("minam",
-                     ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
+              column(
+                MinAMColumnId,
+                ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
               )
                 .copy(cell = _.value match
                   case ElevationRange.AirMass(min, _) => f"${min.value}%.1f"
@@ -138,8 +168,9 @@ object ConstraintsSummaryTable extends TableHooks:
                   case ElevationRange.AirMass(min, _) => min.value
                   case ElevationRange.HourAngle(_, _) => ElevationRange.AirMass.MinValue - 1
                 ),
-              column("maxam",
-                     ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
+              column(
+                MaxAMColumnId,
+                ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
               )
                 .copy(cell = _.value match
                   case ElevationRange.AirMass(_, max) => f"${max.value}%.1f"
@@ -149,8 +180,9 @@ object ConstraintsSummaryTable extends TableHooks:
                   case ElevationRange.AirMass(_, max) => max.value
                   case ElevationRange.HourAngle(_, _) => ElevationRange.AirMass.MinValue - 1
                 ),
-              column("minha",
-                     ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
+              column(
+                MinHAColumnId,
+                ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
               )
                 .copy(cell = _.value match
                   case ElevationRange.AirMass(_, _)     => ""
@@ -160,8 +192,9 @@ object ConstraintsSummaryTable extends TableHooks:
                   case ElevationRange.AirMass(_, _)     => ElevationRange.HourAngle.MinHour - 1
                   case ElevationRange.HourAngle(min, _) => min.value
                 ),
-              column("maxha",
-                     ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
+              column(
+                MaxHAColumnId,
+                ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
               )
                 .copy(cell = _.value match
                   case ElevationRange.AirMass(_, _)     => ""
@@ -171,8 +204,8 @@ object ConstraintsSummaryTable extends TableHooks:
                   case ElevationRange.AirMass(_, _)     => ElevationRange.HourAngle.MinHour - 1
                   case ElevationRange.HourAngle(_, max) => max.value
                 ),
-              column("count", _.obsIds.length),
-              column("observations", ConstraintGroup.obsIds.get)
+              column(CountColumnId, _.obsIds.length),
+              column(ObservationsColumnId, ConstraintGroup.obsIds.get)
                 .copy(
                   cell = cell =>
                     <.span(
@@ -203,13 +236,11 @@ object ConstraintsSummaryTable extends TableHooks:
           TableOptions(
             cols,
             rows,
-            getRowId = (row, _, _) => row.constraintSet.toString,
+            getRowId = (row, _, _) => RowId(row.constraintSet.toString),
             enableSorting = true,
             enableColumnResizing = true,
             columnResizeMode = raw.mod.ColumnResizeMode.onChange,
-            initialState = raw.mod
-              .InitialTableState()
-              .setColumnVisibility(DefaultColVisibility)
+            initialState = TableState(columnVisibility = DefaultColVisibility)
           ),
           TableStore(props.userId, TableId.ConstraintsSummary, cols)
         )
@@ -233,9 +264,9 @@ object ConstraintsSummaryTable extends TableHooks:
             tableMod = ExploreStyles.ExploreTable,
             headerCellMod = headerCell =>
               columnClasses
-                .get(headerCell.column.id)
+                .get(ColumnId(headerCell.column.id))
                 .orEmpty |+| ExploreStyles.StickyHeader,
-            cellMod = cell => columnClasses.get(cell.column.id).orEmpty
+            cellMod = cell => columnClasses.get(ColumnId(cell.column.id)).orEmpty
           )
         )
       }

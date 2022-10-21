@@ -27,6 +27,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
+import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.schemas.ObservationDB
 import lucuma.ui.reusability.*
@@ -95,6 +96,10 @@ object ProgramTable:
       case (true, head :: Nil) => ctx.replacePage(AppTab.Overview, head.id, Focused.None).to[IO]
       case _                   => IO.unit
 
+  private val ActionsColumnId: ColumnId = ColumnId("actions")
+  private val IdColumnId: ColumnId      = ColumnId("id")
+  private val NameColumnId: ColumnId    = ColumnId("name")
+
   private val component = ScalaFnComponent
     .withHooks[Props]
     .useContext(AppContext.ctx)
@@ -118,7 +123,7 @@ object ProgramTable:
 
       List(
         ColDef(
-          "actions",
+          ActionsColumnId,
           identity[View[ProgramInfo]] _,
           "Actions",
           cell = { cell =>
@@ -167,21 +172,21 @@ object ProgramTable:
               ).when(isDeleted)
             )
           },
-          size = 100,
-          minSize = 100,
-          maxSize = 120
+          size = 100.toPx,
+          minSize = 100.toPx,
+          maxSize = 120.toPx
         ).sortableBy(_.get.deleted),
         ColDef(
-          "id",
+          IdColumnId,
           _.get.id,
           "Id",
           _.value.toString,
-          size = 50,
-          minSize = 50,
-          maxSize = 70
+          size = 50.toPx,
+          minSize = 50.toPx,
+          maxSize = 70.toPx
         ).sortable,
         ColDef(
-          "name",
+          NameColumnId,
           _.withOnMod(onModName).zoom(ProgramInfo.name),
           "Name",
           cell =>
@@ -198,9 +203,9 @@ object ProgramTable:
                 okButtonTooltip = "Accept".some,
                 discardButtonTooltip = "Discard".some
               ),
-          size = 500,
-          minSize = 200,
-          maxSize = 1000
+          size = 500.toPx,
+          minSize = 200.toPx,
+          maxSize = 1000.toPx
         ).sortableBy(_.get.foldMap(_.value))
       )
     }
@@ -227,7 +232,7 @@ object ProgramTable:
           React.Fragment(
             PrimeAutoHeightVirtualizedTable(
               table,
-              estimateRowHeightPx = _ => 32,
+              estimateRowHeight = _ => 32.toPx,
               striped = true,
               compact = Compact.Very,
               tableMod = ExploreStyles.ExploreTable |+| ExploreStyles.ExploreBorderTable,

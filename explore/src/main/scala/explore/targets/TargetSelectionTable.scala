@@ -27,10 +27,12 @@ object TargetSelectionTable:
 
   private val ColDef = ColumnDef[TargetSearchResult]
 
-  private val columnClasses: Map[String, Css] = Map(
-    "select" -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummarySelect),
-    "type"   -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryType |+| ExploreStyles.WithSelect),
-    "name"   -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryName |+| ExploreStyles.WithSelect)
+  private val SelectColumnId: ColumnId = ColumnId("select")
+
+  private val columnClasses: Map[ColumnId, Css] = Map(
+    SelectColumnId             -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummarySelect),
+    TargetColumns.TypeColumnId -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryType |+| ExploreStyles.WithSelect),
+    TargetColumns.NameColumnId -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryName |+| ExploreStyles.WithSelect)
   )
 
   private val component = ScalaFnComponent
@@ -39,7 +41,7 @@ object TargetSelectionTable:
     .useMemoBy(_ => ()) { props => _ =>
       List(
         ColDef(
-          "select",
+          SelectColumnId,
           target => target,
           "",
           cell =>
@@ -76,12 +78,12 @@ object TargetSelectionTable:
         compact = Compact.Very,
         tableMod = ExploreStyles.ExploreTable,
         headerCellMod = headerCell =>
-          columnClasses.get(headerCell.column.id).orEmpty |+| ExploreStyles.StickyHeader,
+          columnClasses.get(ColumnId(headerCell.column.id)).orEmpty |+| ExploreStyles.StickyHeader,
         rowMod = row =>
           TagMod(
             ExploreStyles.TableRowSelected.when_(props.selectedIndex.contains_(row.index.toInt)),
             ^.onClick --> props.onClick(row.original, row.index.toInt)
           ),
-        cellMod = cell => columnClasses.get(cell.column.id).orEmpty
+        cellMod = cell => columnClasses.get(ColumnId(cell.column.id)).orEmpty
       )
     )

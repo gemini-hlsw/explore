@@ -60,6 +60,7 @@ import lucuma.core.model.ConstraintSet
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.User
 import lucuma.core.util.Display
+import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
 import lucuma.ui.reusability.*
@@ -109,19 +110,13 @@ case class SpectroscopyModesTable(
 private object SpectroscopyModesTable extends TableHooks:
   private type Props = SpectroscopyModesTable
 
-  private type ColId = NonEmptyString
-
-  private given Reusability[EitherNec[ItcQueryProblems, ItcResult]] = Reusability.byEq
-
-  private given Reusability[SpectroscopyModesMatrix] = Reusability.by(_.matrix.length)
-
-  private given Reusability[ItcResultsCache] = Reusability.by(_.cache.size)
-
+  private given Reusability[EitherNec[ItcQueryProblems, ItcResult]]                        = Reusability.byEq
+  private given Reusability[SpectroscopyModesMatrix]                                       = Reusability.by(_.matrix.length)
+  private given Reusability[ItcResultsCache]                                               = Reusability.by(_.cache.size)
   private given Reusability[Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]] =
     Reusability.never
 
-  private given Eq[Range.Inclusive] = Eq.by(x => (x.start, x.end, x.step))
-
+  private given Eq[Range.Inclusive]          = Eq.by(x => (x.start, x.end, x.step))
   private given Reusability[Range.Inclusive] = Reusability.byEq
 
   private val ColDef = ColumnDef[SpectroscopyModeRow]
@@ -133,23 +128,23 @@ private object SpectroscopyModesTable extends TableHooks:
     case ModeGrating.SomeGrating(t) => t
   }
 
-  private def column[V](id: ColId, accessor: SpectroscopyModeRow => V) =
+  private def column[V](id: ColumnId, accessor: SpectroscopyModeRow => V) =
     ColDef(id, accessor, columnNames.getOrElse(id, id.value))
 
-  private val SelectedColumnId: ColId    = "selected".refined
-  private val InstrumentColumnId: ColId  = "instrument".refined
-  private val SlitWidthColumnId: ColId   = "slit_width".refined
-  private val SlitLengthColumnId: ColId  = "slit_length".refined
-  private val GratingColumnId: ColId     = "grating".refined
-  private val FilterColumnId: ColId      = "filter".refined
-  private val CoverageColumnId: ColId    = "coverage".refined
-  private val FPUColumnId: ColId         = "fpu".refined
-  private val ResolutionColumnId: ColId  = "resolution".refined
-  private val AvailablityColumnId: ColId = "availability".refined
-  private val TimeColumnId: ColId        = "time".refined
+  private val SelectedColumnId: ColumnId    = ColumnId("selected")
+  private val InstrumentColumnId: ColumnId  = ColumnId("instrument")
+  private val SlitWidthColumnId: ColumnId   = ColumnId("slit_width")
+  private val SlitLengthColumnId: ColumnId  = ColumnId("slit_length")
+  private val GratingColumnId: ColumnId     = ColumnId("grating")
+  private val FilterColumnId: ColumnId      = ColumnId("filter")
+  private val CoverageColumnId: ColumnId    = ColumnId("coverage")
+  private val FPUColumnId: ColumnId         = ColumnId("fpu")
+  private val ResolutionColumnId: ColumnId  = ColumnId("resolution")
+  private val AvailablityColumnId: ColumnId = ColumnId("availability")
+  private val TimeColumnId: ColumnId        = ColumnId("time")
 
-  private val columnNames: Map[ColId, String] =
-    Map[NonEmptyString, String](
+  private val columnNames: Map[ColumnId, String] =
+    Map[ColumnId, String](
       InstrumentColumnId  -> "Instrument",
       SlitWidthColumnId   -> "Slit Width",
       SlitLengthColumnId  -> "Slit Length",
@@ -251,7 +246,12 @@ private object SpectroscopyModesTable extends TableHooks:
   ) =
     List(
       column(InstrumentColumnId, SpectroscopyModeRow.instrumentAndConfig.get)
-        .copy(cell = cell => formatInstrument(cell.value), size = 120, minSize = 50, maxSize = 150),
+        .copy(
+          cell = cell => formatInstrument(cell.value),
+          size = 120.toPx,
+          minSize = 50.toPx,
+          maxSize = 150.toPx
+        ),
       column(
         TimeColumnId,
         itc
@@ -274,41 +274,66 @@ private object SpectroscopyModesTable extends TableHooks:
                 )
             ),
           cell = cell => itcCell(itc.forRow(cw, sn, snAt, constraints, target, cell.row.original)),
-          size = 80,
-          minSize = 80,
-          maxSize = 80,
+          size = 80.toPx,
+          minSize = 80.toPx,
+          maxSize = 80.toPx,
           enableSorting = progress.isEmpty,
           sortUndefined = UndefinedPriority.Lower
         ),
       column(SlitWidthColumnId, SpectroscopyModeRow.slitWidth.get)
-        .copy(cell = cell => formatSlitWidth(cell.value), size = 100, minSize = 100, maxSize = 100),
+        .copy(
+          cell = cell => formatSlitWidth(cell.value),
+          size = 100.toPx,
+          minSize = 100.toPx,
+          maxSize = 100.toPx
+        ),
       column(SlitLengthColumnId, SpectroscopyModeRow.slitLength.get)
         .copy(
           cell = cell => formatSlitLength(cell.value),
-          size = 105,
-          minSize = 105,
-          maxSize = 105
+          size = 105.toPx,
+          minSize = 105.toPx,
+          maxSize = 105.toPx
         ),
       column(GratingColumnId, SpectroscopyModeRow.grating.get)
-        .copy(cell = cell => formatGrating(cell.value), size = 96, minSize = 96, maxSize = 96)
+        .copy(
+          cell = cell => formatGrating(cell.value),
+          size = 96.toPx,
+          minSize = 96.toPx,
+          maxSize = 96.toPx
+        )
         .sortable,
       column(FilterColumnId, SpectroscopyModeRow.filter.get)
-        .copy(cell = cell => formatFilter(cell.value), size = 69, minSize = 69, maxSize = 69)
+        .copy(
+          cell = cell => formatFilter(cell.value),
+          size = 69.toPx,
+          minSize = 69.toPx,
+          maxSize = 69.toPx
+        )
         .sortable,
       column(FPUColumnId, SpectroscopyModeRow.fpu.get)
-        .copy(cell = cell => formatFPU(cell.value), size = 62, minSize = 62, maxSize = 62)
+        .copy(
+          cell = cell => formatFPU(cell.value),
+          size = 62.toPx,
+          minSize = 62.toPx,
+          maxSize = 62.toPx
+        )
         .sortable,
       column(CoverageColumnId, SpectroscopyModeRow.coverageInterval(cw))
         .copy(
           cell = cell => formatWavelengthCoverage(cell.value),
-          size = 100,
-          minSize = 100,
-          maxSize = 100
+          size = 100.toPx,
+          minSize = 100.toPx,
+          maxSize = 100.toPx
         ),
       column(ResolutionColumnId, SpectroscopyModeRow.resolution.get)
-        .copy(cell = _.value.toString, size = 70, minSize = 70, maxSize = 70),
+        .copy(cell = _.value.toString, size = 70.toPx, minSize = 70.toPx, maxSize = 70.toPx),
       column(AvailablityColumnId, rowToConf)
-        .copy(cell = _.value.fold("No")(_ => "Yes"), size = 66, minSize = 66, maxSize = 66)
+        .copy(
+          cell = _.value.fold("No")(_ => "Yes"),
+          size = 66.toPx,
+          minSize = 66.toPx,
+          maxSize = 66.toPx
+        )
     ).filter { case c => (c.id.toString) != FPUColumnId.value || fpu.isEmpty }
 
   extension (row: SpectroscopyModeRow)
@@ -463,7 +488,7 @@ private object SpectroscopyModesTable extends TableHooks:
           TableOptions(
             cols,
             rows,
-            getRowId = (row, _, _) => row.id.toString,
+            getRowId = (row, _, _) => RowId(row.id.toString),
             enableSorting = true
           ),
           TableStore(props.userId, TableId.SpectroscopyModes, cols)
@@ -616,13 +641,14 @@ private object SpectroscopyModesTable extends TableHooks:
                 selectedTarget
               )
             ),
-            <.div(ExploreStyles.ExploreTable,
-                  ExploreStyles.ExploreBorderTable,
-                  ExploreStyles.ModesTable
+            <.div(
+              ExploreStyles.ExploreTable,
+              ExploreStyles.ExploreBorderTable,
+              ExploreStyles.ModesTable
             )(
               PrimeAutoHeightVirtualizedTable(
                 table,
-                estimateRowHeightPx = _ => 32,
+                estimateRowHeight = _ => 32.toPx,
                 striped = true,
                 compact = Compact.Very,
                 getItemKey = idx => rows(idx).id,
