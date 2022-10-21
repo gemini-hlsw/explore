@@ -13,6 +13,7 @@ import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ags.AgsAnalysis
 import lucuma.ags.AgsGuideQuality
+import lucuma.core.enums.GuideSpeed
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
@@ -65,10 +66,14 @@ object AgsOverlay {
             ),
             <.div(
               ExploreStyles.AgsDescription,
-              analysis.quality match {
-                case AgsGuideQuality.DeliversRequestedIq =>
-                  Icons.CircleSmall.clazz(ExploreStyles.AgsGoodIQ)
-                case _                                   => ""
+              analysis.match {
+                case AgsAnalysis.Usable(_, _, Some(GuideSpeed.Fast), _, _)   =>
+                  Icons.CircleSmall.clazz(ExploreStyles.AgsFast)
+                case AgsAnalysis.Usable(_, _, Some(GuideSpeed.Medium), _, _) =>
+                  Icons.CircleSmall.clazz(ExploreStyles.AgsMedium)
+                case AgsAnalysis.Usable(_, _, Some(GuideSpeed.Slow), _, _)   =>
+                  Icons.CircleSmall.clazz(ExploreStyles.AgsSlow)
+                case _                                                       => ""
               },
               analysis match {
                 case AgsAnalysis.Usable(_, _, Some(speed), _, _) =>

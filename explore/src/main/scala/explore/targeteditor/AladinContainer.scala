@@ -22,6 +22,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ags.AgsAnalysis
+import lucuma.core.enums.GuideSpeed
 import lucuma.core.enums.PortDisposition
 import lucuma.core.geom.jts.interpreter.*
 import lucuma.core.math.Angle
@@ -207,22 +208,26 @@ object AladinContainer {
                       .atStartOfDay(ZoneId.of("UTC"))
                       .toInstant()
 
-                  val vignettesScience = g match {
+                  val vignettesScience = g match
                     case AgsAnalysis.VignettesScience(_) => true
                     case _                               => false
-                  }
+
+                  val speedCss = g.match
+                    case AgsAnalysis.Usable(_, _, Some(GuideSpeed.Fast), _, _)   =>
+                      ExploreStyles.GuideSpeedFast
+                    case AgsAnalysis.Usable(_, _, Some(GuideSpeed.Medium), _, _) =>
+                      ExploreStyles.GuideSpeedMedium
+                    case AgsAnalysis.Usable(_, _, Some(GuideSpeed.Slow), _, _)   =>
+                      ExploreStyles.GuideSpeedSlow
+                    case _                                                       => Css.Empty
 
                   (tracking.at(targetEpochInstant), tracking.at(obsInstant)).mapN {
                     (source, dest) =>
-                      val offset   = baseCoordinates.diff(dest).offset
-                      val extraCss =
-                        if (!vignettesScience && patrolField.exists(_.contains(offset)))
-                          ExploreStyles.GuideStarTargetReachable
-                        else Css.Empty
+                      val offset = baseCoordinates.diff(dest).offset
                       if (candidates.length < 500) {
                         List[SVGTarget](
                           SVGTarget.GuideStarCandidateTarget(dest,
-                                                             extraCss |+| candidatesVisibility,
+                                                             speedCss |+| candidatesVisibility,
                                                              3
                           ),
                           SVGTarget.LineTo(
@@ -235,7 +240,7 @@ object AladinContainer {
                         List[SVGTarget](
                           SVGTarget.GuideStarCandidateTarget(
                             dest,
-                            ExploreStyles.GuideStarCandidateCrowded |+| extraCss |+| candidatesVisibility,
+                            ExploreStyles.GuideStarCandidateCrowded |+| speedCss |+| candidatesVisibility,
                             2
                           )
                         )
