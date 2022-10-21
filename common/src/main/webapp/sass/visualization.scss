@@ -161,22 +161,50 @@
       fill: hsl(9deg 100% 63.9% / 50%);
     }
 
-    &.guide-star-candidate-target-reachable {
-      stroke-width: 0.5px;
-      fill: hsl(180deg 100% 50%);
-    }
-
     &.guide-star-candidate-target-visible {
       display: inline;
     }
+
+    // fast -> green
+    &.guide-star-fast {
+      stroke-width: 0.5px;
+      stroke: hsl(120deg 60.7% 33.9%);
+      fill: var(--ags-fast-guide-speed-color);
+      fill-opacity: 70%;
+    }
+
+    // fast -> yellow
+    &.guide-star-medium {
+      stroke-width: 0.5px;
+      stroke: hsl(43deg 74.4% 69.0%);
+      fill: var(--ags-medium-guide-speed-color);
+      fill-opacity: 80%;
+    }
+
+    // slow -> orange
+    &.guide-star-slow {
+      stroke-width: 0.5px;
+      stroke: hsl(39deg 100.0% 50.0%);
+      fill: var(--ags-slow-guide-speed-color);
+      fill-opacity: 80%;
+    }
+
+    // faint -> red
+    &.guide-star-too-faint {
+      stroke-width: 0.5px;
+      stroke: hsl(9deg 100.0% 63.9%);
+      fill: hsl(0deg 100.0% 50.0%);
+      fill-opacity: 50%;
+    }
+
   }
 
   .guide-star-target {
-    stroke: hsl(120deg 100% 19.6%);
+    stroke: hsl(180deg 80% 40.0%);
     stroke-width: 1px;
     stroke-opacity: 100%;
-    fill: green;
-    fill-opacity: 60%;
+    fill: hsl(174deg 72.1% 56.5%);
+    fill-opacity: 70%;
   }
 
   .guide-star-candidate-target-base {
@@ -341,7 +369,15 @@
     }
   }
 
-  .ags-good-iq-color {
-    color: var(--ags-good-iq-color);
+  .ags-fast-color {
+    color: var(--ags-fast-guide-speed-color);
+  }
+
+  .ags-medium-color {
+    color: var(--ags-medium-guide-speed-color);
+  }
+
+  .ags-slow-color {
+    color: var(--ags-slow-guide-speed-color);
   }
 }
