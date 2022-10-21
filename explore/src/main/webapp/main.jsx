@@ -13,7 +13,6 @@ import "/common/sass/explore.scss";
 import "/common/less/vendor/react-reflex.less";
 import "github-markdown-css/github-markdown-light.css";
 import "react-circular-progressbar/dist/styles.css";
-import 'react-toastify/dist/ReactToastify.css';
 
 import { Explore, ExplorePWA } from "@sjs/main.js";
 

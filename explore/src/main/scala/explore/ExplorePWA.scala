@@ -98,10 +98,11 @@ object ExplorePWA {
             onNeedRefresh =
               // If a new version is detected ask the usser
               Callback.log("New version available") *>
-                requestUserConfirmation(bc).delayMs(5000.0).toCallback,
+                // Delay a bit to let the front setup the listener
+                requestUserConfirmation(bc).delayMs(4000.0).toCallback,
             onOfflineReady = Callback.log(s"Offline ready"),
             onRegisterError = (x: js.Any) =>
-              Callback.log(s"Error on service worker $x") *> Callback(
+              Callback.log(s"Error on service worker registration $x") *> Callback(
                 org.scalajs.dom.window.console.log(x)
               ),
             onRegistered = (r: ServiceWorkerRegistration) =>

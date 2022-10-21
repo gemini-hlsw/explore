@@ -536,9 +536,9 @@ table.explore-border-table {
   }
 }
 
-//----
+// ------
 // Toasts
-//----
+// ------
 .explore-toast {
   .p-toast-message-content {
     align-items: center;
@@ -551,8 +551,11 @@ table.explore-border-table {
       align-items: start;
       width: 100%;
 
-      svg.svg-inline-fa {
-        padding-right: 0.5em;
+      & > span {
+        /* stylelint-disable-next-line selector-class-pattern */
+        svg .svg-inline--fa {
+          padding-right: 0.5em;
+        }
       }
 
       button {

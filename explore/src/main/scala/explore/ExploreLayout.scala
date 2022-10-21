@@ -97,20 +97,18 @@ object ExploreLayout:
               x.event match {
                 // TODO: Handle logout events
                 case ExploreEvent.PWAUpdateId =>
-                  IO.println("Message pwa wants to update") *>
-                    toastRef
-                      .prompt(
-                        "A new version of explore is available",
-                        IO(
-                          ctx.broadcastChannel.postMessage(ExploreEvent.PWAReload)
-                        ).runAsyncAndForget
-                      )
-                      .to[IO]
+                  toastRef
+                    .prompt(
+                      "A new version of explore is available!",
+                      IO(
+                        ctx.broadcastChannel.postMessage(ExploreEvent.PWAReload)
+                      ).runAsyncAndForget
+                    )
+                    .to[IO]
                 case _                        => IO.unit
               }
-          ): (
-            ExploreEvent => IO[Unit]
-          ) // Scala 3 infers the return type as Any if we don't ascribe
+          ): (ExploreEvent => IO[Unit])
+          // Scala 3 infers the return type as Any if we don't ascribe
 
         }
       }
@@ -135,7 +133,7 @@ object ExploreLayout:
             SidebarPusher(dimmed = helpView.get.isDefined)(
               <.div(
                 ExploreStyles.MainGrid,
-                Toast(Toast.Position.BottomLeft)
+                Toast(Toast.Position.BottomRight)
                   .withRef(toastRef.ref),
                 TopBar(
                   vault.user,

@@ -693,7 +693,6 @@ object TargetTabContents:
             target.obsSet
               .map(ids =>
                 ctx.exploreClipboard.set(LocalClipboard.CopiedObservations(ids)).runAsync *>
-                  Callback.log("HHH") *>
                   toastRef.info(s"Copied obs ${ids.idSet.toList.mkString(", ")}")
               )
               .getOrEmpty
