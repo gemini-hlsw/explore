@@ -95,9 +95,6 @@ object TargetTable extends TableHooks:
       .useMemoBy((props, _) => (props.obsIds, props.targets.get)) { (props, ctx) => _ =>
         import ctx.given
 
-        // def column[V](id: DeleteColumnId, accessor: SiderealTargetWithId => V) =
-        //   ColDef(id, accessor, columnNames(id))
-
         List(
           ColDef(
             DeleteColumnId,
