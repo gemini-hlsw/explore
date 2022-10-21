@@ -124,7 +124,7 @@ object ConstraintsSummaryTable extends TableHooks:
               ctx.pageUrl(AppTab.Constraints, props.programId, Focused.singleObs(obsId))
 
             List(
-              column(ColumnId("edit"), ConstraintGroup.obsIds.get)
+              column(EditColumnId, ConstraintGroup.obsIds.get)
                 .copy(
                   cell = cell =>
                     <.a(^.href := obsSetUrl(cell.value),
@@ -134,31 +134,31 @@ object ConstraintsSummaryTable extends TableHooks:
                   enableSorting = false
                 ),
               column(
-                ColumnId("iq"),
+                IQColumnId,
                 ConstraintGroup.constraintSet.andThen(ConstraintSet.imageQuality).get
               )
                 .copy(cell = _.value.label)
                 .sortableBy(_.label),
               column(
-                ColumnId("cc"),
+                CCColumnId,
                 ConstraintGroup.constraintSet.andThen(ConstraintSet.cloudExtinction).get
               )
                 .copy(cell = _.value.label)
                 .sortableBy(_.label),
               column(
-                ColumnId("bg"),
+                BGColumnId,
                 ConstraintGroup.constraintSet.andThen(ConstraintSet.skyBackground).get
               )
                 .copy(cell = _.value.label)
                 .sortableBy(_.label),
               column(
-                ColumnId("wv"),
+                WVColumnId,
                 ConstraintGroup.constraintSet.andThen(ConstraintSet.waterVapor).get
               )
                 .copy(cell = _.value.label)
                 .sortableBy(_.label),
               column(
-                ColumnId("minam"),
+                MinAMColumnId,
                 ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
               )
                 .copy(cell = _.value match
@@ -170,7 +170,7 @@ object ConstraintsSummaryTable extends TableHooks:
                   case ElevationRange.HourAngle(_, _) => ElevationRange.AirMass.MinValue - 1
                 ),
               column(
-                ColumnId("maxam"),
+                MaxAMColumnId,
                 ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
               )
                 .copy(cell = _.value match
@@ -182,7 +182,7 @@ object ConstraintsSummaryTable extends TableHooks:
                   case ElevationRange.HourAngle(_, _) => ElevationRange.AirMass.MinValue - 1
                 ),
               column(
-                ColumnId("minha"),
+                MinHAColumnId,
                 ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
               )
                 .copy(cell = _.value match
@@ -194,7 +194,7 @@ object ConstraintsSummaryTable extends TableHooks:
                   case ElevationRange.HourAngle(min, _) => min.value
                 ),
               column(
-                ColumnId("maxha"),
+                MaxHAColumnId,
                 ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
               )
                 .copy(cell = _.value match
@@ -205,8 +205,8 @@ object ConstraintsSummaryTable extends TableHooks:
                   case ElevationRange.AirMass(_, _)     => ElevationRange.HourAngle.MinHour - 1
                   case ElevationRange.HourAngle(_, max) => max.value
                 ),
-              column(ColumnId("count"), _.obsIds.length),
-              column(ColumnId("observations"), ConstraintGroup.obsIds.get)
+              column(CountColumnId, _.obsIds.length),
+              column(ObservationsColumnId, ConstraintGroup.obsIds.get)
                 .copy(
                   cell = cell =>
                     <.span(
