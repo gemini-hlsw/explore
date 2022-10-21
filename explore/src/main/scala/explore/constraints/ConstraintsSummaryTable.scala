@@ -43,7 +43,6 @@ import lucuma.ui.table.*
 import org.scalablytyped.runtime.StringDictionary
 import react.common.Css
 import react.common.ReactFnProps
-import reactST.tanstackReactTable.tanstackReactTableStrings.columnVisibility
 import reactST.{tanstackTableCore => raw}
 
 import scala.collection.immutable.SortedSet
