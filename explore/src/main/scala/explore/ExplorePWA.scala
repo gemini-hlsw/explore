@@ -86,9 +86,11 @@ object ExplorePWA {
         (x: ExploreEvent) =>
           // This is coming from the client
           x.event match {
-            case ExploreEvent.PWAReloadId =>
+            case ExploreEvent.PWAReloadId      =>
               IO(updateSW(true))
-            case a                        => IO.unit
+            case ExploreEvent.ExploreUIReadyId =>
+              IO(updateSW)
+            case a                             => IO.unit
           }
       ): (ExploreEvent => IO[Unit])
 
@@ -99,7 +101,7 @@ object ExplorePWA {
               // If a new version is detected ask the usser
               Callback.log("New version available") *>
                 // Delay a bit to let the front setup the listener
-                requestUserConfirmation(bc).delayMs(4000.0).toCallback,
+                requestUserConfirmation(bc),
             onOfflineReady = Callback.log(s"Offline ready"),
             onRegisterError = (x: js.Any) =>
               Callback.log(s"Error on service worker registration $x") *> Callback(
@@ -112,7 +114,6 @@ object ExplorePWA {
                 scheduleUpdateCheck(r)                             // Periodic checks
           )
         )
-      updateSW
     }
 
   @JSExport

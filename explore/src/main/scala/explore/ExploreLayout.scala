@@ -110,6 +110,8 @@ object ExploreLayout:
           ): (ExploreEvent => IO[Unit])
           // Scala 3 infers the return type as Any if we don't ascribe
 
+          ctx.broadcastChannel.postMessage(ExploreEvent.ExploreUIReady)
+
         }
       }
       .render { (props, helpCtx, _, toastRef) =>

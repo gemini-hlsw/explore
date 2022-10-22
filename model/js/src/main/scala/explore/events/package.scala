@@ -13,9 +13,10 @@ sealed trait ExploreEvent extends js.Object {
 }
 
 object ExploreEvent {
-  val LogoutEventId = 1
-  val PWAUpdateId   = 2
-  val PWAReloadId   = 3
+  val LogoutEventId    = 1
+  val PWAUpdateId      = 2
+  val PWAReloadId      = 3
+  val ExploreUIReadyId = 4
 
   class LogoutEvent(val nonce: Long) extends ExploreEvent {
     val event = LogoutEventId
@@ -35,6 +36,11 @@ object ExploreEvent {
 
   object PWAReload extends ExploreEvent {
     val event = PWAReloadId
+    val value = ""
+  }
+
+  object ExploreUIReady extends ExploreEvent {
+    val event = ExploreUIReadyId
     val value = ""
   }
 
