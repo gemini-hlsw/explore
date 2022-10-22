@@ -8,6 +8,7 @@ import cats.syntax.all.*
 import crystal.react.View
 import crystal.react.implicits.*
 import crystal.react.reuse.*
+import crystal.react.implicits.*
 import explore.Icons
 import explore.common.AsterismQueries.*
 import explore.common.UserPreferencesQueries.TableStore
@@ -44,8 +45,10 @@ import react.primereact.PrimeStyles
 import react.semanticui.collections.table.*
 import reactST.react.reactStrings.I
 import reactST.{tanstackTableCore => raw}
+import fs2.dom
 
 import scalajs.js.JSConverters.*
+import cats.effect.IO
 
 case class TargetSummaryTable(
   userId:            Option[User.Id],
@@ -76,6 +79,15 @@ object TargetSummaryTable extends TableHooks:
     CountColumnId        -> "Count",
     ObservationsColumnId -> "Observations"
   )
+
+  def onTextChange(e: ReactEventFromInput): Callback =
+    e.target.files.toList
+      .traverse(f => importTargets(dom.readReadableStream(IO(f.stream()))).compile.toList)
+      .flatTap(c => IO.println(c))
+      .void
+      .handleErrorWith(e => IO.println(e))
+      .runAsyncAndForget
+    // Callback(org.scalajs.dom.window.console.log(e.target.files(0).stream()))
 
   protected val component =
     ScalaFnComponent
@@ -187,6 +199,18 @@ object TargetSummaryTable extends TableHooks:
             React.Fragment(
               <.div(
                 ExploreStyles.TableSelectionToolbar,
+                <.label(PrimeStyles.ButtonSmall,
+                        PrimeStyles.ButtonIcon,
+                        ^.cls     := "p-button p-fileupload",
+                        ^.htmlFor := "target-import",
+                        Icons.FileImport
+                ),
+                <.input(^.tpe     := "file",
+                        ^.onChange ==> onTextChange,
+                        ^.id      := "target-import",
+                        ^.name    := "file",
+                        ^.accept  := ".csv"
+                ),
                 Button(
                   size = Button.Size.Small,
                   icon = Icons.CheckDouble,

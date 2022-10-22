@@ -241,9 +241,6 @@ object TargetTabContents:
         )
       )(^.href := ctx.pageUrl(AppTab.Targets, props.programId, Focused.None), Icons.ChevronLeft)
 
-    def onTextChange(e: ReactEventFromInput): Callback =
-      Callback(org.scalajs.dom.window.console.log(e.target.files(0)))
-
     /**
      * Render the summary table.
      */
@@ -252,25 +249,7 @@ object TargetTabContents:
         Tile(
           "targetSummary".refined,
           "Target Summary",
-          backButton.some,
-          control = _ =>
-            Option(
-              <.div(
-                // ExploreStyles.SummaryTableToolbar,
-                <.label(PrimeStyles.ButtonSmall,
-                        PrimeStyles.ButtonIcon,
-                        ^.cls     := "p-button p-fileupload",
-                        ^.htmlFor := "target-import",
-                        Icons.FileImport
-                ),
-                <.input(^.tpe     := "file",
-                        ^.onChange ==> onTextChange,
-                        ^.id      := "target-import",
-                        ^.name    := "file",
-                        ^.accept  := ".csv"
-                )
-              )
-            )
+          backButton.some
         )(renderInTitle =>
           TargetSummaryTable(
             props.userId,

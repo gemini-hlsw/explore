@@ -235,6 +235,7 @@ lazy val commonJsLibSettings = commonLibSettings ++ Seq(
   libraryDependencies ++=
     ClueScalaJS.value ++
       Http4sDom.value ++
+      FS2Dom.value ++
       Log4Cats.value ++
       ScalaJSReact.value ++
       ScalaJSDom.value ++
