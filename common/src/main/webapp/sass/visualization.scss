@@ -149,12 +149,12 @@
     isolation: inline;
   }
 
+  .guide-star-target,
   .guide-star-candidate-target {
     display: none;
     stroke: red;
     stroke-width: 1px;
     fill: hsl(9deg 100% 63.9% / 80%);
-    isolation: initial;
 
     &.guide-star-candidate-target-crowded {
       stroke-width: 0.5px;
@@ -167,15 +167,15 @@
 
     // fast -> green
     &.guide-star-fast {
-      stroke-width: 0.5px;
+      stroke-width: 1px;
       stroke: hsl(120deg 60.7% 33.9%);
       fill: var(--ags-fast-guide-speed-color);
       fill-opacity: 70%;
     }
 
-    // fast -> yellow
+    // medium -> yellow
     &.guide-star-medium {
-      stroke-width: 0.5px;
+      stroke-width: 1px;
       stroke: hsl(43deg 74.4% 69.0%);
       fill: var(--ags-medium-guide-speed-color);
       fill-opacity: 80%;
@@ -183,7 +183,7 @@
 
     // slow -> orange
     &.guide-star-slow {
-      stroke-width: 0.5px;
+      stroke-width: 1px;
       stroke: hsl(39deg 100.0% 50.0%);
       fill: var(--ags-slow-guide-speed-color);
       fill-opacity: 80%;
@@ -191,7 +191,7 @@
 
     // faint -> red
     &.guide-star-too-faint {
-      stroke-width: 0.5px;
+      stroke-width: 1px;
       stroke: hsl(9deg 100.0% 63.9%);
       fill: hsl(0deg 100.0% 50.0%);
       fill-opacity: 50%;
@@ -200,11 +200,7 @@
   }
 
   .guide-star-target {
-    stroke: hsl(180deg 80% 40.0%);
-    stroke-width: 1px;
-    stroke-opacity: 100%;
-    fill: hsl(174deg 72.1% 56.5%);
-    fill-opacity: 70%;
+    display: inline;
   }
 
   .guide-star-candidate-target-base {
