@@ -99,6 +99,10 @@ object Icons {
   val faInfoCircle: FAIcon = js.native
 
   @js.native
+  @JSImport("@fortawesome/pro-regular-svg-icons", "faCircleInfo")
+  val faInfoCircleLight: FAIcon = js.native
+
+  @js.native
   @JSImport("@fortawesome/pro-light-svg-icons", "faClipboard")
   val faClipboard: FAIcon = js.native
 
@@ -261,6 +265,7 @@ object Icons {
     faMousePointer,
     faSignOutAlt,
     faInfoCircle,
+    faInfoCircleLight,
     faClipboard,
     faClipboardCheck,
     faTimes,
@@ -331,6 +336,7 @@ object Icons {
   val Logout              = FontAwesomeIcon(faSignOutAlt)
   val SkullCrossBones     = FontAwesomeIcon(faSkullCrossbones)
   val Info                = FontAwesomeIcon(faInfoCircle)
+  val InfoLight           = FontAwesomeIcon(faInfoCircleLight)
   val Clipboard           = FontAwesomeIcon(faClipboard)
   val ClipboardCheck      = FontAwesomeIcon(faClipboardCheck)
   val Close               = FontAwesomeIcon(faTimes)

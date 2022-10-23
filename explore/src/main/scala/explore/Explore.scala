@@ -21,6 +21,7 @@ import crystal.react.reuse.*
 import eu.timepit.refined.collection.NonEmpty
 import explore.*
 import explore.components.ui.ExploreStyles
+import explore.events.ExploreEvent
 import explore.events.*
 import explore.model.AppConfig
 import explore.model.AppContext
@@ -41,6 +42,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import log4cats.loglevel.LogLevelLogger
+import lucuma.broadcastchannel.*
 import lucuma.core.model.Program
 import lucuma.refined.*
 import lucuma.ui.enums.Theme
@@ -121,6 +123,11 @@ object ExploreMain extends IOApp.Simple {
     react.highcharts.HighchartsAccesibility
   }
 
+  def broadcastChannel[F[_]: Sync]: Resource[F, BroadcastChannel[ExploreEvent]] =
+    Resource.make(Sync[F].delay(new BroadcastChannel[ExploreEvent]("explore")))(c =>
+      Sync[F].delay(c.close())
+    )
+
   override final def run: IO[Unit] = {
 
     def setupReusabilityOverlay(env: ExecutionEnvironment): IO[Unit] =
@@ -143,7 +150,8 @@ object ExploreMain extends IOApp.Simple {
     def buildPage(
       dispatcher:       Dispatcher[IO],
       workerClients:    WorkerClients[IO],
-      localPreferences: ExploreLocalPreferences
+      localPreferences: ExploreLocalPreferences,
+      bc:               BroadcastChannel[ExploreEvent]
     )(using Logger[IO]): IO[Unit] = {
       given FetchJSBackend[IO]     = FetchJSBackend[IO](FetchMethod.GET)
       given WebSocketJSBackend[IO] = WebSocketJSBackend[IO](dispatcher)
@@ -175,7 +183,8 @@ object ExploreMain extends IOApp.Simple {
             pageUrl,
             setPageVia,
             workerClients,
-            clipboard
+            clipboard,
+            bc
           )
         _                    <- setupReusabilityOverlay(appConfig.environment)
         r                    <- (ctx.sso.whoami, setupDOM[IO], showEnvironment[IO](appConfig.environment)).parTupled
@@ -194,7 +203,8 @@ object ExploreMain extends IOApp.Simple {
       prefs            <- Resource.eval(ExploreLocalPreferences.loadPreferences[IO])
       given Logger[IO] <- Resource.eval(setupLogger[IO](prefs))
       workerClients    <- WorkerClients.build[IO](dispatcher)
-      _                <- Resource.eval(buildPage(dispatcher, workerClients, prefs))
+      bc               <- broadcastChannel[IO]
+      _                <- Resource.eval(buildPage(dispatcher, workerClients, prefs, bc))
     } yield ()).useForever
   }
 

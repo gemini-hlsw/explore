@@ -536,3 +536,32 @@ table.explore-border-table {
   }
 }
 
+// ------
+// Toasts
+// ------
+.explore-toast {
+  .p-toast-message-content {
+    align-items: center;
+    font-size: small;
+    justify-content: space-between;
+
+    .explore-prompt-toast {
+      display: flex;
+      flex-direction: column;
+      align-items: start;
+      width: 100%;
+
+      & > span {
+        /* stylelint-disable-next-line selector-class-pattern */
+        svg .svg-inline--fa {
+          padding-right: 0.5em;
+        }
+      }
+
+      button {
+        align-self: end;
+      }
+    }
+  }
+}
+

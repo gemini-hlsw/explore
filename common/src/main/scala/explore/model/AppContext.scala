@@ -10,6 +10,7 @@ import clue.*
 import clue.js.FetchJSBackend
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.SSOClient
+import explore.events.ExploreEvent
 import explore.events.*
 import explore.model.enums.AppTab
 import explore.model.enums.ExecutionEnvironment
@@ -17,6 +18,7 @@ import explore.utils
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.feature.Context
+import lucuma.broadcastchannel.*
 import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB
 import org.typelevel.log4cats.Logger
@@ -33,7 +35,8 @@ case class AppContext[F[_]](
   pageUrl:          (AppTab, Program.Id, Focused) => String,
   setPageVia:       (AppTab, Program.Id, Focused, SetRouteVia) => Callback,
   environment:      ExecutionEnvironment,
-  exploreClipboard: Ref[F, LocalClipboard]
+  exploreClipboard: Ref[F, LocalClipboard],
+  broadcastChannel: BroadcastChannel[ExploreEvent]
 )(using
   val F:            Applicative[F],
   val logger:       Logger[F],
@@ -63,7 +66,8 @@ object AppContext:
     pageUrl:              (AppTab, Program.Id, Focused) => String,
     setPageVia:           (AppTab, Program.Id, Focused, SetRouteVia) => Callback,
     workerClients:        WorkerClients[F],
-    exploreClipboard:     Ref[F, LocalClipboard]
+    exploreClipboard:     Ref[F, LocalClipboard],
+    broadcastChannel:     BroadcastChannel[ExploreEvent]
   ): F[AppContext[F]] =
     for {
       clients <-
@@ -78,7 +82,8 @@ object AppContext:
       pageUrl,
       setPageVia,
       config.environment,
-      exploreClipboard
+      exploreClipboard,
+      broadcastChannel
     )
 
   given [F[_]]: Reusability[AppContext[F]] = Reusability.always

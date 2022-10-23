@@ -14,7 +14,6 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.RouterWithProps
 import japgolly.scalajs.react.vdom.html_<^.*
 import react.common.*
-import react.toastify.*
 
 case class RootComponent(
   ctx:          AppContext[IO],
@@ -32,14 +31,7 @@ object RootComponent:
       .render((props, rootModel) =>
         AppContext.ctx.provide(props.ctx)(
           HelpContext.Provider(
-            <.div(
-              props.router(rootModel),
-              ToastContainer(
-                position = Position.BottomRight,
-                theme = react.toastify.Theme.Dark,
-                clazz = ExploreStyles.ExploreToast
-              )
-            )
+            props.router(rootModel)
           )
         )
       )

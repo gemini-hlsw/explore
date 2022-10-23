@@ -56,11 +56,13 @@ import queries.common.ObsQueriesGQL
 import queries.common.TargetQueriesGQL
 import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.odb.ObsQueries
-import react.common.ReactFnProps
+import react.common.*
 import react.draggable.Axis
 import react.gridlayout.*
 import react.hotkeys.*
 import react.hotkeys.hooks.*
+import react.primereact.Toast
+import react.primereact.hooks.all.*
 import react.resizable.*
 import react.resizeDetector.*
 import react.resizeDetector.hooks.*
@@ -680,9 +682,10 @@ object TargetTabContents:
             TargetQueriesGQL.ProgramTargetEditSubscription.subscribe[IO](props.programId)
           )
       }
-      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, _, _, asterismGroupWithObs) =>
+      .useToastRef
+      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, _, _, asterismGroupWithObs, _) =>
         (props.focused, asterismGroupWithObs.toOption.map(_.get.asterismGroups))
-      ) { (props, ctx, loading, _, _, _, _, _, agv) => (target, asterismGroups) =>
+      ) { (props, ctx, loading, _, _, _, _, _, agv, toastRef) => (target, asterismGroups) =>
         import ctx.given
 
         def callbacks: ShortcutCallbacks = {
@@ -690,7 +693,7 @@ object TargetTabContents:
             target.obsSet
               .map(ids =>
                 ctx.exploreClipboard.set(LocalClipboard.CopiedObservations(ids)).runAsync *>
-                  info(s"Copied obs ${ids.idSet.toList.mkString(", ")}")
+                  toastRef.info(s"Copied obs ${ids.idSet.toList.mkString(", ")}")
               )
               .getOrEmpty
 
@@ -728,10 +731,12 @@ object TargetTabContents:
           defaultLayout,
           debouncer,
           asterismGroupsWithObs,
+          toastRef,
           fullScreen
         ) =>
           <.div(
             // TODO switch to prime react
+            Toast(Toast.Position.BottomRight).withRef(toastRef.ref),
             <.div(
               ^.cls := "ui active dimmer",
               Loader(

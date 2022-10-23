@@ -432,8 +432,8 @@ object ExploreStyles {
   val AladinSettingsMenu           = Css("explore-aladin-settings-menu")
   val BlendedSVG                   = Css("blended-svg")
 
-  val ExploreToast     = Css("explore-toast")
-  val ExploreToastGrid = Css("explore-toast-grid")
+  val ExploreToast       = Css("explore-toast")
+  val ExplorePromptToast = Css("explore-prompt-toast")
 
   // For icons that will be show instead of an input during some circumstances.
   val InputReplacementIcon: Css = Css("input-replacement-icon") |+| Css("field")

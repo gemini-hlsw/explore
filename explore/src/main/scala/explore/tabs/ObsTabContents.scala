@@ -48,11 +48,13 @@ import org.scalajs.dom.window
 import queries.common.ObsQueriesGQL.*
 import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.odb.ObsQueries.*
-import react.common.ReactFnProps
+import react.common.*
 import react.draggable.Axis
 import react.gridlayout.*
 import react.hotkeys.*
 import react.hotkeys.hooks.*
+import react.primereact.Toast
+import react.primereact.hooks.all.*
 import react.resizable.*
 import react.resizeDetector.*
 import react.resizeDetector.hooks.*
@@ -297,9 +299,10 @@ object ObsTabContents extends TwoResizablePanels:
             ProgramObservationsEditSubscription.subscribe[IO](props.programId)
           )
       }
-      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, _, obsList) =>
+      .useToastRef
+      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, _, obsList, _) =>
         (props.focusedObs, obsList)
-      ) { (props, ctx, _, _, _, _, _, obsList) => (obs, _) =>
+      ) { (props, ctx, _, _, _, _, _, obsList, toastRef) => (obs, _) =>
         import ctx.given
 
         val observationIds =
@@ -313,7 +316,7 @@ object ObsTabContents extends TwoResizablePanels:
                 ctx.exploreClipboard
                   .set(LocalClipboard.CopiedObservations(ObsIdSet.one(id)))
                   .runAsync *>
-                  info(s"Copied obs $id")
+                  toastRef.info(s"Copied obs $id")
               )
               .getOrEmpty
           case Down                           =>
@@ -361,9 +364,11 @@ object ObsTabContents extends TwoResizablePanels:
           layouts,
           defaultLayout,
           debouncer,
-          obsWithConstraints
+          obsWithConstraints,
+          toastRef
         ) =>
           <.div(
+            Toast(Toast.Position.BottomRight).withRef(toastRef.ref),
             obsWithConstraints.render(
               renderFn(
                 props,

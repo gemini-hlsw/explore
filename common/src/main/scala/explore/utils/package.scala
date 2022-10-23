@@ -31,9 +31,11 @@ import lucuma.ui.utils.versionDateTimeFormatter
 import org.http4s.Uri
 import org.scalajs.dom
 import react.fa.IconSize
+import react.primereact.Button
+import react.primereact.MessageItem
+import react.primereact.ToastRef
 import react.semanticui.collections.message.Message
 import react.semanticui.elements.loader.Loader
-import react.toastify.*
 
 import java.time.Instant
 import scala.scalajs.js
@@ -154,13 +156,26 @@ def clearInputIcon[EV[_], A](
     .map(_ => <.i(ExploreStyles.ClearableInputIcon, ^.onClick --> ev.set(view)(None)))
     .orUndefined
 
-def info(text: String) = Callback(
-  toast(
-    <.div(
-      ExploreStyles.ExploreToastGrid,
-      Icons.Info.size(IconSize.LG),
-      text
-    ),
-    ToastOptions(autoClose = 1500, hideProgressBar = true)
-  )
-)
+extension (toastRef: ToastRef)
+  def info(text: String) =
+    toastRef.show(
+      MessageItem(content = <.span(Icons.InfoLight.size(IconSize.LG), text),
+                  clazz = ExploreStyles.ExploreToast
+      )
+    )
+
+  def prompt(text: String, callback: Callback) =
+    toastRef.show(
+      MessageItem(
+        content = <.div(
+          ExploreStyles.ExplorePromptToast,
+          <.span(
+            Icons.InfoLight.size(IconSize.LG),
+            text
+          ),
+          Button(size = Button.Size.Small, onClick = toastRef.clear() *> callback)("Upgrade ...")
+        ),
+        clazz = ExploreStyles.ExploreToast,
+        sticky = true
+      )
+    )
