@@ -89,7 +89,7 @@ object AladinCell extends ModelOptics:
     Duration.between(_, _).toDays().abs < 30L
   }
 
-  private given Reusability[Asterism] = Reusability.by(_.toSiderealTracking)
+  private given Reusability[Asterism] = Reusability.by(x => (x.toSiderealTracking, x.focus.id))
   private given Reusability[AgsState] = Reusability.byEq
   private given Reusability[Props]    =
     Reusability.by(x => (x.uid, x.tid, x.obsConf, x.asterism, x.fullScreen.reuseByValue))

@@ -68,7 +68,7 @@ object AladinContainer {
   private given Reusability[Props]               =
     Reusability.by(x => (x.asterism, x.obsConf, x.allowMouseScroll, x.options))
   private given Reusability[Fov]                 = Reusability.by(x => (x.y, x.y))
-  private given Reusability[Asterism]            = Reusability.by(_.toSiderealTracking)
+  private given Reusability[Asterism]            = Reusability.by(x => (x.toSiderealTracking, x.focus.id))
 
   private val AladinComp = Aladin.component
 
