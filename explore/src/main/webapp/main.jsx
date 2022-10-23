@@ -31,8 +31,7 @@ if (import.meta.env.DEV) {
 Explore.runIOApp();
 
 // Setup the Service Worker, after Explore is started
-if ("serviceWorker" in navigator)
-  && !/local.lucuma.xyz/.test(window.location)) {
+if ("serviceWorker" in navigator && !/local.lucuma.xyz/.test(window.location)) {
   ExplorePWA.runServiceWorker();
 }
 
