@@ -202,7 +202,8 @@ object TargetTabContents:
         setPage(Focused(obsIdSet.some, targetId.some))
     }
 
-    def selectTarget(targetId: Target.Id): Callback = setPage(Focused.target(targetId))
+    def selectTarget(targetId: Target.Id): Callback =
+      setPage(Focused.target(targetId))
 
     def onModAsterismsWithObs(
       groupIds:  ObsIdSet,
@@ -277,11 +278,7 @@ object TargetTabContents:
               targetMap.get(id).map(two => TargetWithId(id, two.target))
             )
           )
-
-      val a = Asterism
-        .fromTargets(
-          targetIds.toList.flatMap(id => targetMap.get(id).map(two => TargetWithId(id, two.target)))
-        )
+          .map(a => props.focused.target.map(t => a.focusOn(t)).getOrElse(a))
 
       val getAsterism: AsterismGroupsWithObs => Option[Asterism] = _ => asterism
 

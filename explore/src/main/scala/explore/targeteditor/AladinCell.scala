@@ -77,7 +77,11 @@ case class AladinCell(
   fullScreen: View[AladinFullScreen]
 ) extends ReactFnProps(AladinCell.component)
 
-object AladinCell extends ModelOptics:
+trait AladinCommon:
+  given Reusability[Asterism] = Reusability.by(x => (x.toSiderealTracking, x.focus.id))
+  given Reusability[AgsState] = Reusability.byEq
+
+object AladinCell extends ModelOptics with AladinCommon:
   private type Props = AladinCell
 
   // We want to re render only when the vizTime changes at least a month
@@ -89,9 +93,7 @@ object AladinCell extends ModelOptics:
     Duration.between(_, _).toDays().abs < 30L
   }
 
-  private given Reusability[Asterism] = Reusability.by(_.toSiderealTracking)
-  private given Reusability[AgsState] = Reusability.byEq
-  private given Reusability[Props]    =
+  private given Reusability[Props] =
     Reusability.by(x => (x.uid, x.tid, x.obsConf, x.asterism, x.fullScreen.reuseByValue))
 
   private val fovLens: Lens[TargetVisualOptions, Fov] =

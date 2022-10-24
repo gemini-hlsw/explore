@@ -57,7 +57,7 @@ case class AladinContainer(
   guideStarCandidates:    List[AgsAnalysis]
 ) extends ReactFnProps(AladinContainer.component)
 
-object AladinContainer {
+object AladinContainer extends AladinCommon {
 
   private type Props = AladinContainer
 
@@ -68,7 +68,6 @@ object AladinContainer {
   private given Reusability[Props]               =
     Reusability.by(x => (x.asterism, x.obsConf, x.allowMouseScroll, x.options))
   private given Reusability[Fov]                 = Reusability.by(x => (x.y, x.y))
-  private given Reusability[Asterism]            = Reusability.by(_.toSiderealTracking)
 
   private val AladinComp = Aladin.component
 

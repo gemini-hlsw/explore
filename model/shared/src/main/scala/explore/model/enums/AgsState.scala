@@ -4,7 +4,6 @@
 package explore.model.enums
 
 import cats.Eq
-import lucuma.core.util.Enumerated
 
 enum AgsState:
   case Idle, LoadingCandidates, Calculating, Error
