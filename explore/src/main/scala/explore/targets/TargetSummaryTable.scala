@@ -8,7 +8,7 @@ import cats.syntax.all.*
 import crystal.react.View
 import crystal.react.implicits.*
 import crystal.react.reuse.*
-import crystal.react.implicits.*
+import crystal.react.hooks.*
 import explore.Icons
 import explore.common.AsterismQueries.*
 import explore.common.UserPreferencesQueries.TableStore
@@ -42,12 +42,15 @@ import react.primereact.Button
 import react.primereact.ConfirmDialog
 import react.primereact.DialogPosition
 import react.primereact.PrimeStyles
+import lucuma.ui.primereact.*
 import react.semanticui.collections.table.*
 import reactST.react.reactStrings.I
 import reactST.{tanstackTableCore => raw}
 import fs2.dom
+import lucuma.core.util.NewType
 
 import scalajs.js.JSConverters.*
+import org.scalajs.dom.{File => DOMFile}
 import cats.effect.IO
 
 case class TargetSummaryTable(
@@ -68,6 +71,9 @@ object TargetSummaryTable extends TableHooks:
   private val CountColumnId: ColumnId        = ColumnId("count")
   private val ObservationsColumnId: ColumnId = ColumnId("observations")
 
+  private object IsImportOpen extends NewType[Boolean]
+  private type IsImportOpen = IsImportOpen.type
+
   private val columnClasses: Map[ColumnId, Css] = Map(
     IdColumnId                 -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryId),
     TargetColumns.TypeColumnId -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryType |+| ExploreStyles.WithId),
@@ -79,15 +85,6 @@ object TargetSummaryTable extends TableHooks:
     CountColumnId        -> "Count",
     ObservationsColumnId -> "Observations"
   )
-
-  def onTextChange(e: ReactEventFromInput): Callback =
-    e.target.files.toList
-      .traverse(f => importTargets(dom.readReadableStream(IO(f.stream()))).compile.toList)
-      .flatTap(c => IO.println(c))
-      .void
-      .handleErrorWith(e => IO.println(e))
-      .runAsyncAndForget
-    // Callback(org.scalajs.dom.window.console.log(e.target.files(0).stream()))
 
   protected val component =
     ScalaFnComponent
@@ -103,7 +100,6 @@ object TargetSummaryTable extends TableHooks:
 
         def obsUrl(targetId: Target.Id, obsId: Observation.Id): String =
           ctx.pageUrl(AppTab.Targets, props.programId, Focused.singleObs(obsId, targetId.some))
-
         List(
           ColDef(
             IdColumnId,
@@ -170,7 +166,9 @@ object TargetSummaryTable extends TableHooks:
           TableStore(props.userId, TableId.TargetsSummary, cols)
         )
       )
-      .render((props, ctx, _, _, table) =>
+      // Files to be imported
+      .useStateView(List.empty[DOMFile])
+      .render((props, ctx, _, _, table, filesToImport) =>
         import ctx.given
 
         val selectedRows    = table.getSelectedRowModel().rows.toList
@@ -194,14 +192,35 @@ object TargetSummaryTable extends TableHooks:
             icon = Icons.SkullCrossBones.color("red")
           )
 
+        def onTextChange(e: ReactEventFromInput): Callback =
+          // e.target.files.toList
+          //   .traverse(f =>
+          //     importTargets(props.programId, dom.readReadableStream(IO(f.stream()))).compile.toList
+          //   )
+          //   .flatTap(c => IO.println(c))
+          //   .void
+          //   .handleErrorWith(e => IO.println(e))
+          //   .runAsyncAndForget
+          // Callback(org.scaljs.dom.window.console.log(e.target.files(0).stream()))
+          val files = e.target.files.toList
+          if (files.nonEmpty) filesToImport.set(files) else Callback.empty
+          // e.target.files.toList
+          //   .traverse(f =>
+          //     importTargets(props.programId, dom.readReadableStream(IO(f.stream()))).compile.toList
+          //   )
+          //   .flatTap(c => IO.println(c))
+          //   .void
+          //   .handleErrorWith(e => IO.println(e))
+          //   .runAsyncAndForget
+
         <.div(
           props.renderInTitle(
             React.Fragment(
               <.div(
                 ExploreStyles.TableSelectionToolbar,
                 <.label(PrimeStyles.ButtonSmall,
-                        PrimeStyles.ButtonIcon,
-                        ^.cls     := "p-button p-fileupload",
+                        // PrimeStyles.ButtonIcon,
+                        ^.cls     := "pl-compact p-component p-button p-fileupload",
                         ^.htmlFor := "target-import",
                         Icons.FileImport
                 ),
@@ -211,21 +230,24 @@ object TargetSummaryTable extends TableHooks:
                         ^.name    := "file",
                         ^.accept  := ".csv"
                 ),
+                TargetImportPopup(props.programId, filesToImport),
                 Button(
                   size = Button.Size.Small,
                   icon = Icons.CheckDouble,
+                  label = "All",
                   onClick = table.toggleAllRowsSelected(true)
-                )(" All"),
+                ).compact,
                 Button(
                   size = Button.Size.Small,
                   icon = Icons.SquareXMark,
+                  label = "None",
                   onClick = table.toggleAllRowsSelected(false)
-                )(" None"),
+                ).compact,
                 Button(
                   size = Button.Size.Small,
                   icon = Icons.Trash,
                   onClick = deleteSelected
-                ).when(selectedRows.nonEmpty),
+                ).compact.when(selectedRows.nonEmpty),
                 ConfirmDialog()
               ),
               <.span(ExploreStyles.TitleSelectColumns)(
