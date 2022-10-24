@@ -172,6 +172,7 @@ object AladinContainer {
         (props.guideStarCandidates,
          props.options.agsCandidates.visible,
          props.options.fullScreen,
+         props.options.fovRA,
          props.obsConf.posAngle,
          props.obsConf.vizTime,
          props.obsConf.scienceMode,
@@ -179,23 +180,32 @@ object AladinContainer {
          allCoordinates
         )
       ) { case (_, _, _, _, _, _) =>
-        (candidates, visible, _, posAngle, obsInstant, scienceMode, selectedGS, allCoordinates) =>
+        (
+          candidates,
+          visible,
+          _,
+          fovRA,
+          posAngle,
+          obsInstant,
+          scienceMode,
+          selectedGS,
+          allCoordinates
+        ) =>
           posAngle
             .map { posAngle =>
               val (baseCoordinates, scienceTargets) = allCoordinates.value
 
+              val fov = fovRA.toMicroarcseconds / 1e6
+
+              def calcSize(size: Double): Double = size.max(size * (225 / fov))
+
               val candidatesVisibility =
                 ExploreStyles.GuideStarCandidateVisible.when_(visible)
-
-              val selectedGSTarget = selectedGS
-                .flatMap(_.target.tracking.at(obsInstant))
-                .map(c => SVGTarget.GuideStarTarget(c, Css.Empty, 4))
 
               val patrolField =
                 GmosGeometry.patrolField(posAngle, scienceMode, PortDisposition.Side).map(_.eval)
 
               candidates
-                .filterNot(x => selectedGS.exists(_.target.id === x.target.id))
                 // TODO This should be done in AGS proper
                 .filterNot(x => scienceTargets.contains(x.target.tracking.baseCoordinates))
                 .flatMap { g =>
@@ -226,10 +236,14 @@ object AladinContainer {
                       val offset = baseCoordinates.diff(dest).offset
                       if (candidates.length < 500) {
                         List[SVGTarget](
-                          SVGTarget.GuideStarCandidateTarget(dest,
-                                                             speedCss |+| candidatesVisibility,
-                                                             3
-                          ),
+                          if (selectedGS.forall(_.target.id === g.target.id)) {
+                            SVGTarget.GuideStarTarget(dest, speedCss, calcSize(4))
+                          } else {
+                            SVGTarget.GuideStarCandidateTarget(dest,
+                                                               speedCss |+| candidatesVisibility,
+                                                               calcSize(3)
+                            )
+                          },
                           SVGTarget.LineTo(
                             source,
                             dest,
@@ -238,16 +252,20 @@ object AladinContainer {
                         )
                       } else {
                         List[SVGTarget](
-                          SVGTarget.GuideStarCandidateTarget(
-                            dest,
-                            ExploreStyles.GuideStarCandidateCrowded |+| speedCss |+| candidatesVisibility,
-                            2
-                          )
+                          if (selectedGS.forall(_.target.id === g.target.id)) {
+                            SVGTarget.GuideStarTarget(dest, speedCss, calcSize(4))
+                          } else {
+                            SVGTarget.GuideStarCandidateTarget(
+                              dest,
+                              ExploreStyles.GuideStarCandidateCrowded |+| speedCss |+| candidatesVisibility,
+                              calcSize(2)
+                            )
+                          }
                         )
                       }
                   }
                 }
-                .flatten ++ selectedGSTarget.toList
+                .flatten
             }
             .getOrElse(Nil)
 
