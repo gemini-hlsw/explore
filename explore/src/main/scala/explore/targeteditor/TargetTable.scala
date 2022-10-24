@@ -149,7 +149,7 @@ object TargetTable extends TableHooks:
         React.Fragment(
           props.renderInTitle(
             <.span(ExploreStyles.TitleSelectColumns)(
-              NewColumnSelector(table, columnNames, ExploreStyles.SelectColumns)
+              ColumnSelector(table, columnNames, ExploreStyles.SelectColumns)
                 .unless(props.fullScreen.value)
             )
           ),
