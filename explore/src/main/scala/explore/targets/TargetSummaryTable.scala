@@ -160,20 +160,17 @@ object TargetSummaryTable extends TableHooks:
           props.renderInTitle(
             React.Fragment(
               <.div(
-                <.label("Select"),
                 ExploreStyles.TableSelectionToolbar,
                 Button(
                   size = Button.Size.Small,
                   icon = Icons.CheckDouble,
                   onClick = table.toggleAllRowsSelected(true)
-                ),
-                <.label("All"),
+                )("All"),
                 Button(
                   size = Button.Size.Small,
                   icon = Icons.SquareXMark,
                   onClick = table.toggleAllRowsSelected(false)
-                ),
-                <.label("None")
+                )("None")
               ),
               <.span(ExploreStyles.TitleSelectColumns)(
                 ColumnSelector(
