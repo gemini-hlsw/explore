@@ -6,8 +6,8 @@ package explore.targets
 import cats.Order.*
 import cats.syntax.all.*
 import crystal.react.View
-import crystal.react.reuse.*
 import crystal.react.implicits.*
+import crystal.react.reuse.*
 import explore.Icons
 import explore.common.AsterismQueries.*
 import explore.common.UserPreferencesQueries.TableStore
@@ -37,9 +37,9 @@ import org.scalablytyped.runtime.StringDictionary
 import react.common.Css
 import react.common.ReactFnProps
 import react.hotkeys.*
-import react.primereact.DialogPosition
-import react.primereact.ConfirmDialog
 import react.primereact.Button
+import react.primereact.ConfirmDialog
+import react.primereact.DialogPosition
 import react.primereact.PrimeStyles
 import react.semanticui.collections.table.*
 import reactST.react.reactStrings.I
@@ -225,15 +225,13 @@ object TargetSummaryTable extends TableHooks:
             rowMod = row =>
               TagMod(
                 ExploreStyles.TableRowSelected.when_(row.getIsSelected()),
-                ^.onClick --> Callback {
+                ^.onClick --> {
                   // If cmd is pressed add to the selection
-                  if (!isCmdCtrlPressed) table.toggleAllRowsSelected(false)
-                  if (isShiftPressed) {
-                    // If shift is pressed extend
-                    val allRows =
-                      table.getRowModel().rows.toList.zipWithIndex
-                    if (selectedRows.isEmpty) row.toggleSelected()
-                    else {
+                  table.toggleAllRowsSelected(false).unless(isCmdCtrlPressed) *> {
+                    if (isShiftPressed && selectedRows.nonEmpty) {
+                      // If shift is pressed extend
+                      val allRows        =
+                        table.getRowModel().rows.toList.zipWithIndex
                       val currentId      = row.id
                       // selectedRow is not empty, these won't fail
                       val firstId        = selectedRows.head.id
@@ -259,9 +257,9 @@ object TargetSummaryTable extends TableHooks:
                             )
                           )
                         }
-                      }
-                    }
-                  } else row.toggleSelected()
+                      } else Callback.empty
+                    } else Callback(row.toggleSelected())
+                  }
                 }
               ),
             cellMod = cell => columnClasses.get(ColumnId(cell.column.id)).orEmpty

@@ -7,8 +7,8 @@ import cats.effect.IO
 import cats.syntax.all.*
 import clue.TransactionalClient
 import clue.data.syntax.*
-import lucuma.core.model.Target
 import lucuma.core.model.Program
+import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import queries.common.TargetQueriesGQL
