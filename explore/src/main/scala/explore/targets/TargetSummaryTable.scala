@@ -162,19 +162,21 @@ object TargetSummaryTable extends TableHooks:
               <.div(
                 <.label("Select"),
                 ExploreStyles.TableSelectionToolbar,
-                Button(size = Button.Size.Small,
-                       icon = Icons.CheckDouble,
-                       onClick = Callback(table.toggleAllRowsSelected(true))
+                Button(
+                  size = Button.Size.Small,
+                  icon = Icons.CheckDouble,
+                  onClick = table.toggleAllRowsSelected(true)
                 ),
                 <.label("All"),
-                Button(size = Button.Size.Small,
-                       icon = Icons.SquareXMark,
-                       onClick = Callback(table.toggleAllRowsSelected(false))
+                Button(
+                  size = Button.Size.Small,
+                  icon = Icons.SquareXMark,
+                  onClick = table.toggleAllRowsSelected(false)
                 ),
                 <.label("None")
               ),
               <.span(ExploreStyles.TitleSelectColumns)(
-                NewColumnSelector(
+                ColumnSelector(
                   table,
                   colNames,
                   ExploreStyles.SelectColumns

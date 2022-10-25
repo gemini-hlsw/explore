@@ -253,7 +253,7 @@ object ConstraintsSummaryTable extends TableHooks:
             React.Fragment(
               <.span, // Push column selector to right
               <.span(ExploreStyles.TitleSelectColumns)(
-                NewColumnSelector(table, columnNames, ExploreStyles.SelectColumns)
+                ColumnSelector(table, columnNames, ExploreStyles.SelectColumns)
               )
             )
           ),
