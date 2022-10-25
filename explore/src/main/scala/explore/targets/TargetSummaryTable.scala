@@ -6,6 +6,7 @@ package explore.targets
 import cats.Order.*
 import cats.syntax.all.*
 import crystal.react.View
+import crystal.react.implicits.*
 import crystal.react.reuse.*
 import explore.Icons
 import explore.common.AsterismQueries.*
@@ -37,6 +38,8 @@ import react.common.Css
 import react.common.ReactFnProps
 import react.hotkeys.*
 import react.primereact.Button
+import react.primereact.ConfirmDialog
+import react.primereact.DialogPosition
 import react.primereact.PrimeStyles
 import react.semanticui.collections.table.*
 import reactST.react.reactStrings.I
@@ -47,7 +50,7 @@ import scalajs.js.JSConverters.*
 case class TargetSummaryTable(
   userId:            Option[User.Id],
   programId:         Program.Id,
-  targets:           TargetWithObsList,
+  targets:           View[TargetWithObsList],
   selectObservation: (Observation.Id, Target.Id) => Callback,
   selectTarget:      Target.Id => Callback,
   renderInTitle:     Tile.RenderInTitle
@@ -132,8 +135,8 @@ object TargetSummaryTable extends TableHooks:
           )
       }
       // rows
-      .useMemoBy((props, _, _) => props.targets)((_, _, _) =>
-        _.toList.map { case (id, targetWithObs) => TargetWithIdAndObs(id, targetWithObs) }
+      .useMemoBy((props, _, _) => props.targets.get)((_, _, _) =>
+        _.toList.map((id, targetWithObs) => TargetWithIdAndObs(id, targetWithObs))
       )
       .useReactTableWithStateStoreBy((props, ctx, cols, rows) =>
         import ctx.given
@@ -155,25 +158,51 @@ object TargetSummaryTable extends TableHooks:
           TableStore(props.userId, TableId.TargetsSummary, cols)
         )
       )
-      .render((props, _, _, _, table) =>
+      .render((props, ctx, _, _, table) =>
+        import ctx.given
+
+        val selectedRows    = table.getSelectedRowModel().rows.toList
+        val selectedRowsIds = selectedRows.map(_.original.id)
+
+        def deleteSelected: Callback =
+          ConfirmDialog.confirmDialog(
+            message = <.div(
+              <.div(s"This action will delete ${selectedRows.length} targets."),
+              <.div("This is not undoable, Are you sure?")
+            ),
+            header = "Targets delete",
+            acceptLabel = "Yes, delete",
+            position = DialogPosition.Top,
+            accept = props.targets
+              .mod(_.filter((id, _) => !selectedRowsIds.contains(id))) *> TargetSummaryActions
+              .deleteTargets(selectedRowsIds, props.programId)
+              .runAsyncAndForget,
+            acceptClass = PrimeStyles.ButtonSmall,
+            rejectClass = PrimeStyles.ButtonSmall,
+            icon = Icons.SkullCrossBones.color("red")
+          )
+
         <.div(
           props.renderInTitle(
             React.Fragment(
               <.div(
-                <.label("Select"),
                 ExploreStyles.TableSelectionToolbar,
                 Button(
                   size = Button.Size.Small,
                   icon = Icons.CheckDouble,
                   onClick = table.toggleAllRowsSelected(true)
-                ),
-                <.label("All"),
+                )(" All"),
                 Button(
                   size = Button.Size.Small,
                   icon = Icons.SquareXMark,
                   onClick = table.toggleAllRowsSelected(false)
-                ),
-                <.label("None")
+                )(" None"),
+                Button(
+                  size = Button.Size.Small,
+                  icon = Icons.Trash,
+                  onClick = deleteSelected
+                ).when(selectedRows.nonEmpty),
+                ConfirmDialog()
               ),
               <.span(ExploreStyles.TitleSelectColumns)(
                 ColumnSelector(
@@ -196,20 +225,13 @@ object TargetSummaryTable extends TableHooks:
             rowMod = row =>
               TagMod(
                 ExploreStyles.TableRowSelected.when_(row.getIsSelected()),
-                ^.onClick --> Callback {
+                ^.onClick --> {
                   // If cmd is pressed add to the selection
-                  if (!isCmdCtrlPressed) table.toggleAllRowsSelected(false)
-                  if (isShiftPressed) {
-                    // If shift is pressed extend
-                    val selectedRows =
-                      table
-                        .getSelectedRowModel()
-                        .rows
-                        .toList
-                    val allRows      =
-                      table.getRowModel().rows.toList.zipWithIndex
-                    if (selectedRows.isEmpty) row.toggleSelected()
-                    else {
+                  table.toggleAllRowsSelected(false).unless(isCmdCtrlPressed) *> {
+                    if (isShiftPressed && selectedRows.nonEmpty) {
+                      // If shift is pressed extend
+                      val allRows        =
+                        table.getRowModel().rows.toList.zipWithIndex
                       val currentId      = row.id
                       // selectedRow is not empty, these won't fail
                       val firstId        = selectedRows.head.id
@@ -235,9 +257,9 @@ object TargetSummaryTable extends TableHooks:
                             )
                           )
                         }
-                      }
-                    }
-                  } else row.toggleSelected()
+                      } else Callback.empty
+                    } else Callback(row.toggleSelected())
+                  }
                 }
               ),
             cellMod = cell => columnClasses.get(ColumnId(cell.column.id)).orEmpty

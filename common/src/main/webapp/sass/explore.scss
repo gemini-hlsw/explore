@@ -25,7 +25,11 @@
 
   .p-button.p-button-sm {
     padding: 0.3rem;
-    width: 2rem;
+    max-width: 4rem;
+
+    & svg.p-button-icon:not(.fa-trash-can) {
+      margin-right: 0.2rem;
+    }
   }
 }
 

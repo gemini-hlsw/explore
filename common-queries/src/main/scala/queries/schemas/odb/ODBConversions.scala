@@ -47,6 +47,10 @@ trait ODBConversions:
     def toWhereTarget: WhereTarget =
       WhereTarget(id = WhereOrderTargetId(EQ = id.assign).assign)
 
+  extension (ids: List[Target.Id])
+    def toWhereTargets: WhereTarget =
+      WhereTarget(OR = ids.map(_.toWhereTarget).assign)
+
   extension (a: Angle)
     def toInput: AngleInput =
       AngleInput(microarcseconds = a.toMicroarcseconds.assign)
