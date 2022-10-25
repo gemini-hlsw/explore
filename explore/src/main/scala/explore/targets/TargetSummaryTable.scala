@@ -7,6 +7,7 @@ import cats.Order.*
 import cats.syntax.all.*
 import crystal.react.View
 import crystal.react.reuse.*
+import crystal.react.implicits.*
 import explore.Icons
 import explore.common.AsterismQueries.*
 import explore.common.UserPreferencesQueries.TableStore
@@ -36,6 +37,8 @@ import org.scalablytyped.runtime.StringDictionary
 import react.common.Css
 import react.common.ReactFnProps
 import react.hotkeys.*
+import react.primereact.DialogPosition
+import react.primereact.ConfirmDialog
 import react.primereact.Button
 import react.primereact.PrimeStyles
 import react.semanticui.collections.table.*
@@ -155,7 +158,28 @@ object TargetSummaryTable extends TableHooks:
           TableStore(props.userId, TableId.TargetsSummary, cols)
         )
       )
-      .render((props, _, _, _, table) =>
+      .render((props, ctx, _, _, table) =>
+        import ctx.given
+
+        val selectedRows = table.getSelectedRowModel().rows.toList
+
+        def deleteSelected: Callback =
+          ConfirmDialog.confirmDialog(
+            message = <.div(
+              <.div(s"This action will delete ${table.getSelectedRowModel().rows.length} targets."),
+              <.div("This is not undoable, Are you sure?")
+            ),
+            header = "Targets delete",
+            acceptLabel = "Yes, delete",
+            position = DialogPosition.Top,
+            accept = props.targets.mod(_.filter) *> TargetSummaryActions
+              .deleteTargets(selectedRows.map(_.original.id), props.programId)
+              .runAsyncAndForget,
+            acceptClass = PrimeStyles.ButtonSmall,
+            rejectClass = PrimeStyles.ButtonSmall,
+            icon = Icons.SkullCrossBones.color("red")
+          )
+
         <.div(
           props.renderInTitle(
             React.Fragment(
@@ -165,12 +189,18 @@ object TargetSummaryTable extends TableHooks:
                   size = Button.Size.Small,
                   icon = Icons.CheckDouble,
                   onClick = table.toggleAllRowsSelected(true)
-                )("All"),
+                )(" All"),
                 Button(
                   size = Button.Size.Small,
                   icon = Icons.SquareXMark,
                   onClick = table.toggleAllRowsSelected(false)
-                )("None")
+                )(" None"),
+                Button(
+                  size = Button.Size.Small,
+                  icon = Icons.Trash,
+                  onClick = deleteSelected
+                ).when(table.getSelectedRowModel().rows.nonEmpty),
+                ConfirmDialog()
               ),
               <.span(ExploreStyles.TitleSelectColumns)(
                 ColumnSelector(
@@ -198,12 +228,7 @@ object TargetSummaryTable extends TableHooks:
                   if (!isCmdCtrlPressed) table.toggleAllRowsSelected(false)
                   if (isShiftPressed) {
                     // If shift is pressed extend
-                    val selectedRows =
-                      table
-                        .getSelectedRowModel()
-                        .rows
-                        .toList
-                    val allRows      =
+                    val allRows =
                       table.getRowModel().rows.toList.zipWithIndex
                     if (selectedRows.isEmpty) row.toggleSelected()
                     else {

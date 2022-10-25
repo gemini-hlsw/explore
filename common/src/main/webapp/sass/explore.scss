@@ -27,7 +27,7 @@
     padding: 0.3rem;
     max-width: 4rem;
 
-    & svg.p-button-icon {
+    & svg.p-button-icon:not(.fa-trash-can) {
       margin-right: 0.2rem;
     }
   }
