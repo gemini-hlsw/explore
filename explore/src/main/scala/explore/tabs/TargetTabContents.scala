@@ -162,7 +162,8 @@ object TargetTabContents:
 
     val selectedView: View[SelectedPanel] = panels.zoom(TwoPanelState.selected)
 
-    val targetMap: TargetWithObsList = asterismGroupsWithObs.get.targetsWithObs
+    val targetMap: View[TargetWithObsList] =
+      asterismGroupsWithObs.zoom(AsterismGroupsWithObs.targetsWithObs)
 
     // Tree area
     def tree(objectsWithObs: View[AsterismGroupsWithObs]) =
@@ -275,7 +276,7 @@ object TargetTabContents:
         Asterism
           .fromTargets(
             targetIds.toList.flatMap(id =>
-              targetMap.get(id).map(two => TargetWithId(id, two.target))
+              targetMap.get.get(id).map(two => TargetWithId(id, two.target))
             )
           )
           .map(a => props.focused.target.map(t => a.focusOn(t)).getOrElse(a))
@@ -428,7 +429,7 @@ object TargetTabContents:
           wavelength,
           props.focused.target,
           setCurrentTarget(props.programId, idsToEdit) _,
-          otherObsCount(targetMap, idsToEdit) _,
+          otherObsCount(targetMap.get, idsToEdit) _,
           props.targetsUndoStacks,
           props.searching,
           title,
@@ -537,7 +538,7 @@ object TargetTabContents:
         .fold(renderSummary) {
           _ match {
             case Left(targetId) =>
-              targetMap
+              targetMap.get
                 .get(targetId)
                 .fold(renderSummary)(u =>
                   u.target match {

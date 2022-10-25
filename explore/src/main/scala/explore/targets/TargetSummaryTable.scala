@@ -50,7 +50,7 @@ import scalajs.js.JSConverters.*
 case class TargetSummaryTable(
   userId:            Option[User.Id],
   programId:         Program.Id,
-  targets:           TargetWithObsList,
+  targets:           View[TargetWithObsList],
   selectObservation: (Observation.Id, Target.Id) => Callback,
   selectTarget:      Target.Id => Callback,
   renderInTitle:     Tile.RenderInTitle
@@ -135,8 +135,8 @@ object TargetSummaryTable extends TableHooks:
           )
       }
       // rows
-      .useMemoBy((props, _, _) => props.targets)((_, _, _) =>
-        _.toList.map { case (id, targetWithObs) => TargetWithIdAndObs(id, targetWithObs) }
+      .useMemoBy((props, _, _) => props.targets.get)((_, _, _) =>
+        _.toList.map((id, targetWithObs) => TargetWithIdAndObs(id, targetWithObs))
       )
       .useReactTableWithStateStoreBy((props, ctx, cols, rows) =>
         import ctx.given
@@ -161,19 +161,21 @@ object TargetSummaryTable extends TableHooks:
       .render((props, ctx, _, _, table) =>
         import ctx.given
 
-        val selectedRows = table.getSelectedRowModel().rows.toList
+        val selectedRows    = table.getSelectedRowModel().rows.toList
+        val selectedRowsIds = selectedRows.map(_.original.id)
 
         def deleteSelected: Callback =
           ConfirmDialog.confirmDialog(
             message = <.div(
-              <.div(s"This action will delete ${table.getSelectedRowModel().rows.length} targets."),
+              <.div(s"This action will delete ${selectedRows.length} targets."),
               <.div("This is not undoable, Are you sure?")
             ),
             header = "Targets delete",
             acceptLabel = "Yes, delete",
             position = DialogPosition.Top,
-            accept = props.targets.mod(_.filter) *> TargetSummaryActions
-              .deleteTargets(selectedRows.map(_.original.id), props.programId)
+            accept = props.targets
+              .mod(_.filter((id, _) => !selectedRowsIds.contains(id))) *> TargetSummaryActions
+              .deleteTargets(selectedRowsIds, props.programId)
               .runAsyncAndForget,
             acceptClass = PrimeStyles.ButtonSmall,
             rejectClass = PrimeStyles.ButtonSmall,
@@ -199,7 +201,7 @@ object TargetSummaryTable extends TableHooks:
                   size = Button.Size.Small,
                   icon = Icons.Trash,
                   onClick = deleteSelected
-                ).when(table.getSelectedRowModel().rows.nonEmpty),
+                ).when(selectedRows.nonEmpty),
                 ConfirmDialog()
               ),
               <.span(ExploreStyles.TitleSelectColumns)(

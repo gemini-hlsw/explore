@@ -49,7 +49,7 @@ trait ODBConversions:
 
   extension (ids: List[Target.Id])
     def toWhereTargets: WhereTarget =
-      WhereTarget(AND = ids.map(_.toWhereTarget).assign)
+      WhereTarget(OR = ids.map(_.toWhereTarget).assign)
 
   extension (a: Angle)
     def toInput: AngleInput =
