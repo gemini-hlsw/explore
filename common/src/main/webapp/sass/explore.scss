@@ -585,3 +585,28 @@ table.explore-border-table {
   }
 }
 
+// ----
+// Target import dialog
+// ----
+.explore-target-import-form {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 20vw;
+
+  .p-progress-spinner {
+    height: 4rem;
+    width: 4rem;
+    margin: 0.5rem 2rem;
+  }
+
+  div {
+    display: flex;
+    flex-direction: column;
+    margin-right: 2rem;
+  }
+
+  svg.fa-check {
+    color: var(--explore-accent-color);
+  }
+}

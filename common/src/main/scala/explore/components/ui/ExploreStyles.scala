@@ -308,7 +308,7 @@ object ExploreStyles {
   val StepGuided: Css = Css("step-guided")
 
   val ExploreForm: Css          = Css("explore-form")
-  val TargetImportForm: Css          = Css("explore-target-import--form")
+  val TargetImportForm: Css     = Css("explore-target-import-form")
   val SkipToNext: Css           = Css("explore-skip-to-next")
   val SeqGenParametersForm: Css = Css("seq-gen-parameters-form")
 

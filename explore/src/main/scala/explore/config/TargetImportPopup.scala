@@ -3,36 +3,39 @@
 
 package explore.targets
 
-import crystal.react.View
 import cats.*
-import cats.syntax.all.*
 import cats.effect.*
 import cats.effect.syntax.all.*
+import cats.syntax.all.*
 import clue.TransactionalClient
+import crystal.react.View
+import crystal.react.implicits.*
 import crystal.react.reuse.*
 import explore.Icons
-import crystal.react.implicits.*
+import explore.components.ui.ExploreStyles
+import explore.model.AppContext
 import fs2.*
 import fs2.text
-import lucuma.core.model.Program
-import lucuma.core.model.Target
-import explore.model.AppContext
-import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.catalog.csv.TargetImport
+import lucuma.core.model.Program
+import lucuma.core.model.Target
+import lucuma.schemas.ObservationDB
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import monocle.Focus
+import monocle.Lens
+import org.scalajs.dom.{File => DOMFile}
+import org.typelevel.log4cats.Logger
+import queries.common.TargetQueriesGQL.*
+import queries.schemas.odb.ODBConversions.*
 import react.common.ReactFnProps
+import react.fa.IconSize
 import react.primereact.Button
 import react.primereact.Dialog
 import react.primereact.DialogPosition
 import react.primereact.ProgressSpinner
-import org.scalajs.dom.{File => DOMFile}
-import lucuma.schemas.ObservationDB
-import queries.common.TargetQueriesGQL.*
-import queries.schemas.odb.ODBConversions.*
-import lucuma.catalog.csv.TargetImport
-import org.typelevel.log4cats.Logger
 
 case class TargetImportPopup(
   programId: Program.Id,
@@ -42,54 +45,77 @@ case class TargetImportPopup(
 object TargetImportPopup:
   private type Props = TargetImportPopup
 
-  given Reusability[DOMFile] = Reusability.by(_.name)
+  private case class State(
+    loaded:       List[Target],
+    current:      Option[Target],
+    genericError: Option[String],
+    targetErrors: Int,
+    done:         Boolean
+  )
 
-  def importTargets[F[_]: Spawn: Logger](
-    programId:     Program.Id,
-    s:             Stream[F, Byte],
-    currentTarget: Option[Target] => F[Unit]
+  private object State {
+    val loaded: Lens[State, List[Target]]         = Focus[State](_.loaded)
+    val genericError: Lens[State, Option[String]] = Focus[State](_.genericError)
+    val targetErrors: Lens[State, Int]            = Focus[State](_.targetErrors)
+    val done: Lens[State, Boolean]                = Focus[State](_.done)
+    val Default                                   = State(Nil, none, none, 0, false)
+  }
+
+  private given Reusability[DOMFile] = Reusability.by(_.name)
+
+  private def importTargets[F[_]: Concurrent: Logger](
+    programId:   Program.Id,
+    s:           Stream[F, Byte],
+    stateUpdate: (State => State) => F[Unit]
   )(using TransactionalClient[F, ObservationDB]) =
     s
       .through(text.utf8.decode)
       .through(TargetImport.csv2targets)
       .evalMap {
-        case Left(a)       => Applicative[F].unit
+        case Left(a)       =>
+          stateUpdate(State.targetErrors.modify(_ + 1))
         case Right(target) =>
-          Logger[F].info(s"create $target") *>
-            currentTarget(target.some).start *>
-            CreateTargetMutation
-              .execute(target.toCreateTargetInput(programId))
-              .map(_.createTarget.target.id)
-              .void
+          CreateTargetMutation
+            .execute(target.toCreateTargetInput(programId))
+            .map(_.createTarget.target.id.some)
+            .flatTap(_ =>
+              stateUpdate(l => l.copy(current = target.some, loaded = (target :: l.loaded).reverse))
+            )
+            .void
       }
+      .handleErrorWith(e =>
+        Stream.eval(stateUpdate(State.genericError.replace(e.getMessage().some)))
+      )
 
   private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      .useState(none[Target])
-      .useEffectWithDepsBy((props, _, _) => props.files.get) {
-        (props, ctx, currentTarget) => files =>
-          import ctx.given
+      .useState(State.Default)
+      .useEffectWithDepsBy((props, _, _) => props.files.get) { (props, ctx, state) => files =>
+        import ctx.given
 
+        state.setState(State.Default).to[IO] *>
           files
             .traverse(f =>
               importTargets[IO](props.programId,
                                 dom.readReadableStream(IO(f.stream())),
-                                currentTarget.setState(_).to[IO]
+                                state.modState(_).to[IO]
               ).compile.toList
             )
+            .flatTap(_ => state.modState(State.done.replace(true)).to[IO])
             .void
+            .whenA(files.nonEmpty)
       }
-      .render { (props, _, currentTarget) =>
+      .render { (props, _, state) =>
         Dialog(
           footer = Button(size = Button.Size.Small,
                           icon = Icons.Close,
                           label = "Close",
-                          disabled = props.files.get.isEmpty,
+                          disabled = !state.value.done,
                           onClick = props.files.set(Nil)
           ),
-          //   .withMods(^.key := "input-cancel"),
+          closable = false,
           position = DialogPosition.Top,
           visible = props.files.get.nonEmpty,
           clazz = ExploreStyles.Dialog.Small,
@@ -97,14 +123,19 @@ object TargetImportPopup:
           resizable = false,
           onHide = props.files.set(Nil),
           header = "Import Targets"
-          //   <.div(s"${props.obsId}: ${props.title}"),
-          //   props.subtitle.map(subtitle => <.div(ExploreStyles.SequenceObsSutitle, subtitle))
-          // )
         )(
           <.div(ExploreStyles.TargetImportForm)(
-            ProgressSpinner(),
-            s"Importing ${currentTarget.value.foldMap(_.name.value)}"
-            // ProgressBar(value = 10)
+            ProgressSpinner(strokeWidth = "5").unless(state.value.done),
+            Icons.Checkmark.size(IconSize.X4).when(state.value.done),
+            <.div(
+              <.span(s"Importing ${state.value.loaded.headOption.foldMap(_.name.value)}")
+                .unless(state.value.done),
+              <.span(s"Imported ${state.value.loaded.length} targets").when(state.value.done),
+              <.span(s"Import errors: ${state.value.targetErrors}")
+            ).when(state.value.genericError.isEmpty),
+            <.div(
+              <.span(s"Import error: ${state.value.genericError.orEmpty}")
+            ).unless(state.value.genericError.isEmpty)
           )
         )
       }

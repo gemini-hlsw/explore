@@ -4,11 +4,12 @@
 package explore.targets
 
 import cats.Order.*
+import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.View
+import crystal.react.hooks.*
 import crystal.react.implicits.*
 import crystal.react.reuse.*
-import crystal.react.hooks.*
 import explore.Icons
 import explore.common.AsterismQueries.*
 import explore.common.UserPreferencesQueries.TableStore
@@ -22,6 +23,7 @@ import explore.model.enums.TableId
 import explore.syntax.ui.*
 import explore.utils.TableHooks
 import explore.utils.TableOptionsWithStateStore
+import fs2.dom
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Band
@@ -29,12 +31,15 @@ import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
+import lucuma.core.util.NewType
 import lucuma.react.table.*
+import lucuma.ui.primereact.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import org.scalablytyped.runtime.StringDictionary
+import org.scalajs.dom.{File => DOMFile}
 import react.common.Css
 import react.common.ReactFnProps
 import react.hotkeys.*
@@ -42,16 +47,11 @@ import react.primereact.Button
 import react.primereact.ConfirmDialog
 import react.primereact.DialogPosition
 import react.primereact.PrimeStyles
-import lucuma.ui.primereact.*
 import react.semanticui.collections.table.*
 import reactST.react.reactStrings.I
 import reactST.{tanstackTableCore => raw}
-import fs2.dom
-import lucuma.core.util.NewType
 
 import scalajs.js.JSConverters.*
-import org.scalajs.dom.{File => DOMFile}
-import cats.effect.IO
 
 case class TargetSummaryTable(
   userId:            Option[User.Id],
@@ -184,34 +184,20 @@ object TargetSummaryTable extends TableHooks:
             acceptLabel = "Yes, delete",
             position = DialogPosition.Top,
             accept = props.targets
-              .mod(_.filter((id, _) => !selectedRowsIds.contains(id))) *> TargetSummaryActions
-              .deleteTargets(selectedRowsIds, props.programId)
-              .runAsyncAndForget,
+              .mod(_.filter((id, _) => !selectedRowsIds.contains(id))) *>
+              table.toggleAllRowsSelected(false) *>
+              TargetSummaryActions
+                .deleteTargets(selectedRowsIds, props.programId)
+                .runAsyncAndForget,
             acceptClass = PrimeStyles.ButtonSmall,
             rejectClass = PrimeStyles.ButtonSmall,
             icon = Icons.SkullCrossBones.color("red")
           )
 
         def onTextChange(e: ReactEventFromInput): Callback =
-          // e.target.files.toList
-          //   .traverse(f =>
-          //     importTargets(props.programId, dom.readReadableStream(IO(f.stream()))).compile.toList
-          //   )
-          //   .flatTap(c => IO.println(c))
-          //   .void
-          //   .handleErrorWith(e => IO.println(e))
-          //   .runAsyncAndForget
-          // Callback(org.scaljs.dom.window.console.log(e.target.files(0).stream()))
           val files = e.target.files.toList
-          if (files.nonEmpty) filesToImport.set(files) else Callback.empty
-          // e.target.files.toList
-          //   .traverse(f =>
-          //     importTargets(props.programId, dom.readReadableStream(IO(f.stream()))).compile.toList
-          //   )
-          //   .flatTap(c => IO.println(c))
-          //   .void
-          //   .handleErrorWith(e => IO.println(e))
-          //   .runAsyncAndForget
+          // set value to null so we can reuse the import button
+          (Callback(e.target.value = null) *> filesToImport.set(files)).when_(files.nonEmpty)
 
         <.div(
           props.renderInTitle(
@@ -219,7 +205,6 @@ object TargetSummaryTable extends TableHooks:
               <.div(
                 ExploreStyles.TableSelectionToolbar,
                 <.label(PrimeStyles.ButtonSmall,
-                        // PrimeStyles.ButtonIcon,
                         ^.cls     := "pl-compact p-component p-button p-fileupload",
                         ^.htmlFor := "target-import",
                         Icons.FileImport
