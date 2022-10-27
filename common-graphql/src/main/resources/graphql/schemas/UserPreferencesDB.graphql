@@ -793,211 +793,6 @@ input LucumaObservationUpdates {
 }
 
 """
-columns and relationships of "lucumaResizableWidth"
-"""
-type LucumaResizableWidth {
-  section: resizable_area!
-  userId: String!
-  width: Int!
-}
-
-"""
-aggregated selection of "lucumaResizableWidth"
-"""
-type LucumaResizableWidthAggregate {
-  aggregate: LucumaResizableWidthAggregateFields
-  nodes: [LucumaResizableWidth!]!
-}
-
-"""
-aggregate fields of "lucumaResizableWidth"
-"""
-type LucumaResizableWidthAggregateFields {
-  avg: LucumaResizableWidthAvgFields
-  count(columns: [LucumaResizableWidthSelectColumn!], distinct: Boolean): Int!
-  max: LucumaResizableWidthMaxFields
-  min: LucumaResizableWidthMinFields
-  stddev: LucumaResizableWidthStddevFields
-  stddevPop: LucumaResizableWidthStddev_popFields
-  stddevSamp: LucumaResizableWidthStddev_sampFields
-  sum: LucumaResizableWidthSumFields
-  varPop: LucumaResizableWidthVar_popFields
-  varSamp: LucumaResizableWidthVar_sampFields
-  variance: LucumaResizableWidthVarianceFields
-}
-
-"""aggregate avg on columns"""
-type LucumaResizableWidthAvgFields {
-  width: Float
-}
-
-"""
-Boolean expression to filter rows from the table "lucumaResizableWidth". All fields are combined with a logical 'AND'.
-"""
-input LucumaResizableWidthBoolExp {
-  _and: [LucumaResizableWidthBoolExp!]
-  _not: LucumaResizableWidthBoolExp
-  _or: [LucumaResizableWidthBoolExp!]
-  section: ResizableAreaComparisonExp
-  userId: StringComparisonExp
-  width: IntComparisonExp
-}
-
-"""
-unique or primary key constraints on table "lucumaResizableWidth"
-"""
-enum LucumaResizableWidthConstraint {
-  """
-  unique or primary key constraint on columns "section", "userId"
-  """
-  explore_resizable_width_pkey
-}
-
-"""
-input type for incrementing numeric columns in table "lucumaResizableWidth"
-"""
-input LucumaResizableWidthIncInput {
-  width: Int
-}
-
-"""
-input type for inserting data into table "lucumaResizableWidth"
-"""
-input LucumaResizableWidthInsertInput {
-  section: resizable_area
-  userId: String
-  width: Int
-}
-
-"""aggregate max on columns"""
-type LucumaResizableWidthMaxFields {
-  section: resizable_area
-  userId: String
-  width: Int
-}
-
-"""aggregate min on columns"""
-type LucumaResizableWidthMinFields {
-  section: resizable_area
-  userId: String
-  width: Int
-}
-
-"""
-response of any mutation on the table "lucumaResizableWidth"
-"""
-type LucumaResizableWidthMutationResponse {
-  """number of rows affected by the mutation"""
-  affected_rows: Int!
-
-  """data from the rows affected by the mutation"""
-  returning: [LucumaResizableWidth!]!
-}
-
-"""
-on_conflict condition type for table "lucumaResizableWidth"
-"""
-input LucumaResizableWidthOnConflict {
-  constraint: LucumaResizableWidthConstraint!
-  update_columns: [LucumaResizableWidthUpdateColumn!]! = []
-  where: LucumaResizableWidthBoolExp
-}
-
-"""Ordering options when selecting data from "lucumaResizableWidth"."""
-input LucumaResizableWidthOrderBy {
-  section: OrderBy
-  userId: OrderBy
-  width: OrderBy
-}
-
-"""primary key columns input for table: lucumaResizableWidth"""
-input LucumaResizableWidthPkColumnsInput {
-  section: resizable_area!
-  userId: String!
-}
-
-"""
-select columns of table "lucumaResizableWidth"
-"""
-enum LucumaResizableWidthSelectColumn {
-  """column name"""
-  section
-
-  """column name"""
-  userId
-
-  """column name"""
-  width
-}
-
-"""
-input type for updating data in table "lucumaResizableWidth"
-"""
-input LucumaResizableWidthSetInput {
-  section: resizable_area
-  userId: String
-  width: Int
-}
-
-"""aggregate stddev on columns"""
-type LucumaResizableWidthStddevFields {
-  width: Float
-}
-
-"""aggregate stddev_pop on columns"""
-type LucumaResizableWidthStddev_popFields {
-  width: Float
-}
-
-"""aggregate stddev_samp on columns"""
-type LucumaResizableWidthStddev_sampFields {
-  width: Float
-}
-
-"""aggregate sum on columns"""
-type LucumaResizableWidthSumFields {
-  width: Int
-}
-
-"""
-update columns of table "lucumaResizableWidth"
-"""
-enum LucumaResizableWidthUpdateColumn {
-  """column name"""
-  section
-
-  """column name"""
-  userId
-
-  """column name"""
-  width
-}
-
-input LucumaResizableWidthUpdates {
-  """increments the numeric columns with given value of the filtered values"""
-  _inc: LucumaResizableWidthIncInput
-
-  """sets the columns of the filtered rows to the given values"""
-  _set: LucumaResizableWidthSetInput
-  where: LucumaResizableWidthBoolExp!
-}
-
-"""aggregate var_pop on columns"""
-type LucumaResizableWidthVar_popFields {
-  width: Float
-}
-
-"""aggregate var_samp on columns"""
-type LucumaResizableWidthVar_sampFields {
-  width: Float
-}
-
-"""aggregate variance on columns"""
-type LucumaResizableWidthVarianceFields {
-  width: Float
-}
-
-"""
 columns and relationships of "lucumaSortDirection"
 """
 type LucumaSortDirection {
@@ -2358,21 +2153,6 @@ enum OrderBy {
 }
 
 """
-Boolean expression to compare columns of type "resizable_area". All fields are combined with logical 'AND'.
-"""
-input ResizableAreaComparisonExp {
-  _eq: resizable_area
-  _gt: resizable_area
-  _gte: resizable_area
-  _in: [resizable_area!]
-  _isNull: Boolean
-  _lt: resizable_area
-  _lte: resizable_area
-  _neq: resizable_area
-  _nin: [resizable_area!]
-}
-
-"""
 Boolean expression to compare columns of type "String". All fields are combined with logical 'AND'.
 """
 input StringComparisonExp {
@@ -2526,24 +2306,6 @@ input lucumaObservation_streamCursorInput {
 """Initial value of the column from where the streaming should start"""
 input lucumaObservation_streamCursorValueInput {
   observationId: String
-}
-
-"""
-Streaming cursor of the table "lucumaResizableWidth"
-"""
-input lucumaResizableWidth_streamCursorInput {
-  """Stream column input with initial value"""
-  initialValue: lucumaResizableWidth_streamCursorValueInput!
-
-  """cursor ordering"""
-  ordering: CursorOrdering
-}
-
-"""Initial value of the column from where the streaming should start"""
-input lucumaResizableWidth_streamCursorValueInput {
-  section: resizable_area
-  userId: String
-  width: Int
 }
 
 """
@@ -2822,19 +2584,6 @@ type Mutation {
   deleteLucumaObservationByPk(observationId: String!): LucumaObservation
 
   """
-  delete data from the table: "lucumaResizableWidth"
-  """
-  deleteLucumaResizableWidth(
-    """filter the rows which have to be deleted"""
-    where: LucumaResizableWidthBoolExp!
-  ): LucumaResizableWidthMutationResponse
-
-  """
-  delete single row from the table: "lucumaResizableWidth"
-  """
-  deleteLucumaResizableWidthByPk(section: resizable_area!, userId: String!): LucumaResizableWidth
-
-  """
   delete data from the table: "lucumaSortDirection"
   """
   deleteLucumaSortDirection(
@@ -2990,28 +2739,6 @@ type Mutation {
     """upsert condition"""
     onConflict: LucumaObservationOnConflict
   ): LucumaObservation
-
-  """
-  insert data into the table: "lucumaResizableWidth"
-  """
-  insertLucumaResizableWidth(
-    """the rows to be inserted"""
-    objects: [LucumaResizableWidthInsertInput!]!
-
-    """upsert condition"""
-    onConflict: LucumaResizableWidthOnConflict
-  ): LucumaResizableWidthMutationResponse
-
-  """
-  insert a single row into the table: "lucumaResizableWidth"
-  """
-  insertLucumaResizableWidthOne(
-    """the row to be inserted"""
-    object: LucumaResizableWidthInsertInput!
-
-    """upsert condition"""
-    onConflict: LucumaResizableWidthOnConflict
-  ): LucumaResizableWidth
 
   """
   insert data into the table: "lucumaSortDirection"
@@ -3256,40 +2983,6 @@ type Mutation {
     """updates to execute, in order"""
     updates: [LucumaObservationUpdates!]!
   ): [LucumaObservationMutationResponse]
-
-  """
-  update data of the table: "lucumaResizableWidth"
-  """
-  updateLucumaResizableWidth(
-    """increments the numeric columns with given value of the filtered values"""
-    _inc: LucumaResizableWidthIncInput
-
-    """sets the columns of the filtered rows to the given values"""
-    _set: LucumaResizableWidthSetInput
-
-    """filter the rows which have to be updated"""
-    where: LucumaResizableWidthBoolExp!
-  ): LucumaResizableWidthMutationResponse
-
-  """
-  update single row of the table: "lucumaResizableWidth"
-  """
-  updateLucumaResizableWidthByPk(
-    """increments the numeric columns with given value of the filtered values"""
-    _inc: LucumaResizableWidthIncInput
-
-    """sets the columns of the filtered rows to the given values"""
-    _set: LucumaResizableWidthSetInput
-    pk_columns: LucumaResizableWidthPkColumnsInput!
-  ): LucumaResizableWidth
-
-  """
-  update multiples rows of table: "lucumaResizableWidth"
-  """
-  updateLucumaResizableWidthMany(
-    """updates to execute, in order"""
-    updates: [LucumaResizableWidthUpdates!]!
-  ): [LucumaResizableWidthMutationResponse]
 
   """
   update data of the table: "lucumaSortDirection"
@@ -3635,51 +3328,6 @@ type Query {
   lucumaObservationByPk(observationId: String!): LucumaObservation
 
   """
-  fetch data from the table: "lucumaResizableWidth"
-  """
-  lucumaResizableWidth(
-    """distinct select on columns"""
-    distinctOn: [LucumaResizableWidthSelectColumn!]
-
-    """limit the number of rows returned"""
-    limit: Int
-
-    """skip the first n rows. Use only with order_by"""
-    offset: Int
-
-    """sort the rows by one or more columns"""
-    orderBy: [LucumaResizableWidthOrderBy!]
-
-    """filter the rows returned"""
-    where: LucumaResizableWidthBoolExp
-  ): [LucumaResizableWidth!]!
-
-  """
-  fetch aggregated fields from the table: "lucumaResizableWidth"
-  """
-  lucumaResizableWidthAggregate(
-    """distinct select on columns"""
-    distinctOn: [LucumaResizableWidthSelectColumn!]
-
-    """limit the number of rows returned"""
-    limit: Int
-
-    """skip the first n rows. Use only with order_by"""
-    offset: Int
-
-    """sort the rows by one or more columns"""
-    orderBy: [LucumaResizableWidthOrderBy!]
-
-    """filter the rows returned"""
-    where: LucumaResizableWidthBoolExp
-  ): LucumaResizableWidthAggregate!
-
-  """
-  fetch data from the table: "lucumaResizableWidth" using primary key columns
-  """
-  lucumaResizableWidthByPk(section: resizable_area!, userId: String!): LucumaResizableWidth
-
-  """
   fetch data from the table: "lucumaSortDirection"
   """
   lucumaSortDirection(
@@ -3987,8 +3635,6 @@ type Query {
   lucumaUserPreferencesByPk(userId: String!): LucumaUserPreferences
 }
 
-scalar resizable_area
-
 type Subscription {
   """
   fetch data from the table: "lucumaGridLayoutPositions"
@@ -4164,65 +3810,6 @@ type Subscription {
     """filter the rows returned"""
     where: LucumaObservationBoolExp
   ): [LucumaObservation!]!
-
-  """
-  fetch data from the table: "lucumaResizableWidth"
-  """
-  lucumaResizableWidth(
-    """distinct select on columns"""
-    distinctOn: [LucumaResizableWidthSelectColumn!]
-
-    """limit the number of rows returned"""
-    limit: Int
-
-    """skip the first n rows. Use only with order_by"""
-    offset: Int
-
-    """sort the rows by one or more columns"""
-    orderBy: [LucumaResizableWidthOrderBy!]
-
-    """filter the rows returned"""
-    where: LucumaResizableWidthBoolExp
-  ): [LucumaResizableWidth!]!
-
-  """
-  fetch aggregated fields from the table: "lucumaResizableWidth"
-  """
-  lucumaResizableWidthAggregate(
-    """distinct select on columns"""
-    distinctOn: [LucumaResizableWidthSelectColumn!]
-
-    """limit the number of rows returned"""
-    limit: Int
-
-    """skip the first n rows. Use only with order_by"""
-    offset: Int
-
-    """sort the rows by one or more columns"""
-    orderBy: [LucumaResizableWidthOrderBy!]
-
-    """filter the rows returned"""
-    where: LucumaResizableWidthBoolExp
-  ): LucumaResizableWidthAggregate!
-
-  """
-  fetch data from the table: "lucumaResizableWidth" using primary key columns
-  """
-  lucumaResizableWidthByPk(section: resizable_area!, userId: String!): LucumaResizableWidth
-
-  """
-  fetch data from the table in a streaming manner : "lucumaResizableWidth"
-  """
-  lucumaResizableWidthStream(
-    """maximum number of rows returned in a single batch"""
-    batchSize: Int!
-
-    """cursor to stream the results returned by the query"""
-    cursor: [lucumaResizableWidth_streamCursorInput]!
-
-    """filter the rows returned"""
-    where: LucumaResizableWidthBoolExp
-  ): [LucumaResizableWidth!]!
 
   """
   fetch data from the table: "lucumaSortDirection"
