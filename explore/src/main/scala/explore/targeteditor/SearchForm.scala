@@ -109,13 +109,13 @@ object SearchForm {
         val searchIcon =
           (if (enabled.value)
              if (props.searching.get.nonEmpty)
-               Icons.Spinner.spin(true)
+               Icons.Spinner.withSpin(true)
              else
                Icons.Search.addModifiers(
                  Seq(^.onKeyPress ==> iconKeyPress, ^.onClick --> search)
                )
            else
-             Icons.Ban).clazz(ExploreStyles.AladinSearchIcon)(^.tabIndex := -1)
+             Icons.Ban).withClass(ExploreStyles.AladinSearchIcon)(^.tabIndex := -1)
 
         val disabled = props.searching.get.exists(_ === props.id)
 

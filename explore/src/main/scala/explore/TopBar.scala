@@ -112,12 +112,12 @@ object TopBar:
                 DropdownMenu(
                   About(
                     Reuse.always(
-                      DropdownItem(text = "About Explore", icon = Icons.Info.fixedWidth())
+                      DropdownItem(text = "About Explore", icon = Icons.Info.withFixedWidth())
                     )
                   ),
                   DropdownItem(
                     text = "Manage Programs",
-                    icon = Icons.ListCheck.fixedWidth(),
+                    icon = Icons.ListCheck.withFixedWidth(),
                     onClick = isProgramsOpen.setState(true)
                   ),
                   TagMod.when(isProgramsOpen.value)(
@@ -138,11 +138,11 @@ object TopBar:
                   ).when(role === GuestRole),
                   DropdownItem(
                     text = "Logout",
-                    icon = Icons.Logout.fixedWidth(),
+                    icon = Icons.Logout.withFixedWidth(),
                     onClick = logout.runAsync
                   ),
                   DropdownItem()(
-                    Icons.BarCodeRead.fixedWidth(),
+                    Icons.BarCodeRead.withFixedWidth(),
                     "Log Level",
                     DropdownMenu(
                       DropdownItem(onClick = setLogLevel(LogLevelDesc.INFO))(
@@ -167,7 +167,7 @@ object TopBar:
                     .whenDefined,
                   DropdownItem(
                     text = "Toggle Reusability",
-                    icon = Icons.CrystalBall.fixedWidth(),
+                    icon = Icons.CrystalBall.withFixedWidth(),
                     onClick = utils.toggleReusabilityOverlay[CallbackTo]()
                   )
                     .when(ctx.environment === ExecutionEnvironment.Development)

@@ -21,8 +21,6 @@ import explore.model.TargetWithIdAndObs
 import explore.model.enums.AppTab
 import explore.model.enums.TableId
 import explore.syntax.ui.*
-import explore.utils.TableHooks
-import explore.utils.TableOptionsWithStateStore
 import fs2.dom
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -37,6 +35,8 @@ import lucuma.ui.primereact.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import lucuma.ui.table.TableHooks
+import lucuma.ui.table.TableOptionsWithStateStore
 import lucuma.ui.table.*
 import org.scalablytyped.runtime.StringDictionary
 import org.scalajs.dom.{File => DOMFile}
@@ -118,28 +118,26 @@ object TargetSummaryTable extends TableHooks:
             .allColumns ++
           List(
             column(CountColumnId, _.obsIds.size) // TODO Right align
-              .copy(cell = _.value.toString),
+              .setCell(_.value.toString),
             column(ObservationsColumnId, x => (x.id, x.obsIds.toList))
-              .copy(
-                cell = cell =>
-                  val (tid, obsIds) = cell.value
-                  <.span(
-                    obsIds
-                      .map(obsId =>
-                        <.a(
-                          ^.href := obsUrl(tid, obsId),
-                          ^.onClick ==> (e =>
-                            e.preventDefaultCB *>
-                              props.selectObservation(obsId, cell.row.original.id)
-                          ),
-                          obsId.show
-                        )
+              .setCell(cell =>
+                val (tid, obsIds) = cell.value
+                <.span(
+                  obsIds
+                    .map(obsId =>
+                      <.a(
+                        ^.href := obsUrl(tid, obsId),
+                        ^.onClick ==> (e =>
+                          e.preventDefaultCB *>
+                            props.selectObservation(obsId, cell.row.original.id)
+                        ),
+                        obsId.show
                       )
-                      .mkReactFragment(", ")
-                  )
-                ,
-                enableSorting = false
+                    )
+                    .mkReactFragment(", ")
+                )
               )
+              .setEnableSorting(false)
           )
       }
       // rows
@@ -157,7 +155,7 @@ object TargetSummaryTable extends TableHooks:
             enableSorting = true,
             enableColumnResizing = true,
             enableMultiRowSelection = true,
-            columnResizeMode = raw.mod.ColumnResizeMode.onChange,
+            columnResizeMode = ColumnResizeMode.OnChange,
             initialState = TableState(
               columnVisibility = TargetColumns.DefaultVisibility,
               rowSelection = RowSelection()
@@ -191,7 +189,7 @@ object TargetSummaryTable extends TableHooks:
                 .runAsyncAndForget,
             acceptClass = PrimeStyles.ButtonSmall,
             rejectClass = PrimeStyles.ButtonSmall,
-            icon = Icons.SkullCrossBones.color("red")
+            icon = Icons.SkullCrossBones.withColor("red")
           )
 
         def onTextChange(e: ReactEventFromInput): Callback =

@@ -159,8 +159,9 @@ def clearInputIcon[EV[_], A](
 extension (toastRef: ToastRef)
   def info(text: String) =
     toastRef.show(
-      MessageItem(content = <.span(Icons.InfoLight.size(IconSize.LG), text),
-                  clazz = ExploreStyles.ExploreToast
+      MessageItem(
+        content = <.span(Icons.InfoLight.withSize(IconSize.LG), text),
+        clazz = ExploreStyles.ExploreToast
       )
     )
 
@@ -170,7 +171,7 @@ extension (toastRef: ToastRef)
         content = <.div(
           ExploreStyles.ExplorePromptToast,
           <.span(
-            Icons.InfoLight.size(IconSize.LG),
+            Icons.InfoLight.withSize(IconSize.LG),
             text
           ),
           Button(size = Button.Size.Small, onClick = toastRef.clear() *> callback)("Upgrade ...")

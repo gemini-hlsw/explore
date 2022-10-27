@@ -28,8 +28,8 @@ object UnderConstruction {
             <.div("Under Construction"),
             <.div(ExploreStyles.HVCenter,
                   Icons.Gears
-                    .size(IconSize.X5)
-                    .title("Under construction")
+                    .withSize(IconSize.X5)
+                    .withTitle("Under construction")
             )
           )
         )

@@ -46,7 +46,6 @@ import explore.modes.*
 import explore.syntax.ui.*
 import explore.syntax.ui.*
 import explore.syntax.ui.given
-import explore.utils.TableHooks
 import explore.utils.*
 import japgolly.scalajs.react.Reusability.apply
 import japgolly.scalajs.react.*
@@ -66,6 +65,8 @@ import lucuma.refined.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import lucuma.ui.table.ColumnSize.*
+import lucuma.ui.table.TableHooks
 import lucuma.ui.table.*
 import lucuma.utils.*
 import queries.schemas.odb.ObsQueries.*
@@ -207,7 +208,7 @@ private object SpectroscopyModesTable extends TableHooks:
     val content: TagMod = c match
       case Left(nel)                        =>
         if (nel.exists(_ == ItcQueryProblems.UnsupportedMode))
-          <.span(Icons.Ban.color("red"))
+          <.span(Icons.Ban.withColor("red"))
             .withTooltip(tooltip = "Mode not supported", placement = Placement.RightStart)
         else
           val content = nel.collect {
@@ -226,9 +227,9 @@ private object SpectroscopyModesTable extends TableHooks:
             tooltip = s"${r.exposures} × ${formatDuration(r.exposureTime.toSeconds)}"
           )
       case Right(ItcResult.Pending)         =>
-        Icons.Spinner.spin(true)
+        Icons.Spinner.withSpin(true)
       case Right(ItcResult.SourceTooBright) =>
-        <.span(Icons.SunBright.color("yellow"))
+        <.span(Icons.SunBright.withColor("yellow"))
           .withTooltip(tooltip = "Source too bright")
 
     <.div(ExploreStyles.ITCCell, content)
@@ -246,12 +247,8 @@ private object SpectroscopyModesTable extends TableHooks:
   ) =
     List(
       column(InstrumentColumnId, SpectroscopyModeRow.instrumentAndConfig.get)
-        .copy(
-          cell = cell => formatInstrument(cell.value),
-          size = 120.toPx,
-          minSize = 50.toPx,
-          maxSize = 150.toPx
-        ),
+        .setCell(cell => formatInstrument(cell.value))
+        .setColumnSize(Resizable(120.toPx, min = 50.toPx, max = 150.toPx)),
       column(
         TimeColumnId,
         itc
@@ -260,80 +257,50 @@ private object SpectroscopyModesTable extends TableHooks:
           .collect { case ItcResult.Result(e, t) => e.toMillis.toInt * t }
           .orUndefined // This value only used for sorting.
       )
-        .copy(
-          header = _ =>
-            <.div(ExploreStyles.ITCHeaderCell)(
-              "Time",
-              progress
-                .map(p =>
-                  CircularProgressbar(
-                    p.percentage.value.value,
-                    strokeWidth = 15,
-                    className = "explore-modes-table-itc-circular-progressbar"
-                  )
+        .setHeader(_ =>
+          <.div(ExploreStyles.ITCHeaderCell)(
+            "Time",
+            progress
+              .map(p =>
+                CircularProgressbar(
+                  p.percentage.value.value,
+                  strokeWidth = 15,
+                  className = "explore-modes-table-itc-circular-progressbar"
                 )
-            ),
-          cell = cell => itcCell(itc.forRow(cw, sn, snAt, constraints, target, cell.row.original)),
-          size = 80.toPx,
-          minSize = 80.toPx,
-          maxSize = 80.toPx,
-          enableSorting = progress.isEmpty,
-          sortUndefined = UndefinedPriority.Lower
-        ),
-      column(SlitWidthColumnId, SpectroscopyModeRow.slitWidth.get)
-        .copy(
-          cell = cell => formatSlitWidth(cell.value),
-          size = 100.toPx,
-          minSize = 100.toPx,
-          maxSize = 100.toPx
-        ),
-      column(SlitLengthColumnId, SpectroscopyModeRow.slitLength.get)
-        .copy(
-          cell = cell => formatSlitLength(cell.value),
-          size = 105.toPx,
-          minSize = 105.toPx,
-          maxSize = 105.toPx
-        ),
-      column(GratingColumnId, SpectroscopyModeRow.grating.get)
-        .copy(
-          cell = cell => formatGrating(cell.value),
-          size = 96.toPx,
-          minSize = 96.toPx,
-          maxSize = 96.toPx
+              )
+          )
         )
+        .setCell(cell => itcCell(itc.forRow(cw, sn, snAt, constraints, target, cell.row.original)))
+        .setColumnSize(FixedSize(80.toPx))
+        .setEnableSorting(progress.isEmpty)
+        .setSortUndefined(UndefinedPriority.Lower),
+      column(SlitWidthColumnId, SpectroscopyModeRow.slitWidth.get)
+        .setCell(cell => formatSlitWidth(cell.value))
+        .setColumnSize(FixedSize(100.toPx)),
+      column(SlitLengthColumnId, SpectroscopyModeRow.slitLength.get)
+        .setCell(cell => formatSlitLength(cell.value))
+        .setColumnSize(FixedSize(105.toPx)),
+      column(GratingColumnId, SpectroscopyModeRow.grating.get)
+        .setCell(cell => formatGrating(cell.value))
+        .setColumnSize(FixedSize(96.toPx))
         .sortable,
       column(FilterColumnId, SpectroscopyModeRow.filter.get)
-        .copy(
-          cell = cell => formatFilter(cell.value),
-          size = 69.toPx,
-          minSize = 69.toPx,
-          maxSize = 69.toPx
-        )
+        .setCell(cell => formatFilter(cell.value))
+        .setColumnSize(FixedSize(69.toPx))
         .sortable,
       column(FPUColumnId, SpectroscopyModeRow.fpu.get)
-        .copy(
-          cell = cell => formatFPU(cell.value),
-          size = 62.toPx,
-          minSize = 62.toPx,
-          maxSize = 62.toPx
-        )
+        .setCell(cell => formatFPU(cell.value))
+        .setColumnSize(FixedSize(62.toPx))
         .sortable,
       column(CoverageColumnId, SpectroscopyModeRow.coverageInterval(cw))
-        .copy(
-          cell = cell => formatWavelengthCoverage(cell.value),
-          size = 100.toPx,
-          minSize = 100.toPx,
-          maxSize = 100.toPx
-        ),
+        .setCell(cell => formatWavelengthCoverage(cell.value))
+        .setColumnSize(FixedSize(100.toPx)),
       column(ResolutionColumnId, SpectroscopyModeRow.resolution.get)
-        .copy(cell = _.value.toString, size = 70.toPx, minSize = 70.toPx, maxSize = 70.toPx),
+        .setCell(_.value.toString)
+        .setColumnSize(FixedSize(70.toPx)),
       column(AvailablityColumnId, rowToConf)
-        .copy(
-          cell = _.value.fold("No")(_ => "Yes"),
-          size = 66.toPx,
-          minSize = 66.toPx,
-          maxSize = 66.toPx
-        )
+        .setCell(_.value.fold("No")(_ => "Yes"))
+        .setColumnSize(FixedSize(66.toPx))
     ).filter { case c => (c.id.toString) != FPUColumnId.value || fpu.isEmpty }
 
   extension (row: SpectroscopyModeRow)

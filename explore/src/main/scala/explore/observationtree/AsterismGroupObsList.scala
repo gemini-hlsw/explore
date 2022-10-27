@@ -295,7 +295,7 @@ object AsterismGroupObsList:
               }
             )
           )
-          .fixedWidth()
+          .withFixedWidth()
 
         Droppable(ObsIdSet.fromString.reverseGet(obsIds), renderClone = renderClone) {
           case (provided, snapshot) =>
@@ -409,7 +409,7 @@ object AsterismGroupObsList:
               onClick = setFocused(Focused.None) >> props.setSummaryPanel,
               clazz = ExploreStyles.ButtonSummary
             )(
-              Icons.ListIcon.clazz(ExploreStyles.PaddedRightIcon),
+              Icons.ListIcon.withClass(ExploreStyles.PaddedRightIcon),
               "Target Summary"
             )
           ),

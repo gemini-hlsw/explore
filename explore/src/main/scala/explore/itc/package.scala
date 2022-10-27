@@ -23,8 +23,8 @@ def requiredForITC: TagMod =
   <.span(
     ^.cls := "fa-layers fa-fw",
     Icons.StarExclamation
-      .clazz(ExploreStyles.WarningIcon)
-      .size(IconSize.X1),
+      .withClass(ExploreStyles.WarningIcon)
+      .withSize(IconSize.X1),
     <.span(^.cls := "fa-layers-text fa-inverse", "ITC")
   ).withTooltip("Required for ITC")
 

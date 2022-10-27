@@ -308,8 +308,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
     <.span(
       ^.cls := "fa-layers fa-fw",
       Icons.ExclamationDiamond
-        .clazz(ExploreStyles.WarningIcon)
-        .size(IconSize.X1)
+        .withClass(ExploreStyles.WarningIcon)
+        .withSize(IconSize.X1)
     ).withTooltip(tooltip = <.div("Customized!", <.br, s"Orginal: $original"))
 
   private def customizableEnumSelect[A: Enumerated: Display](
@@ -609,8 +609,9 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                     )
                     FormInputText(id = "signalToNoise".refined, value = value, disabled = true)
                   },
-                  pendingRender =
-                    <.div(ExploreStyles.InputReplacementIcon, Icons.Spinner.spin(true)): VdomNode
+                  pendingRender = <.div(ExploreStyles.InputReplacementIcon,
+                                        Icons.Spinner.withSpin(true)
+                  ): VdomNode
                 )(props.potITC.get.map(_.map(_.signalToNoise)))
               ),
             FormLabel(htmlFor = "exposureTime".refined)(
@@ -642,8 +643,10 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                                   postAddons = List("sec")
                     )
                   },
-                  pendingRender =
-                    <.div(ExploreStyles.InputReplacementIcon, Icons.Spinner.spin(true)): VdomNode
+                  pendingRender = <.div(
+                    ExploreStyles.InputReplacementIcon,
+                    Icons.Spinner.withSpin(true)
+                  ): VdomNode
                 )(props.potITC.get.map(_.map(_.exposureTime)))
               ),
             FormLabel(htmlFor = "exposureCount".refined)(
@@ -667,8 +670,10 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                     val value = oe.fold(itcNoneMsg)(_.toString)
                     FormInputText(id = "exposureCount".refined, value = value, disabled = true)
                   },
-                  pendingRender =
-                    <.div(ExploreStyles.InputReplacementIcon, Icons.Spinner.spin(true)): VdomNode
+                  pendingRender = <.div(
+                    ExploreStyles.InputReplacementIcon,
+                    Icons.Spinner.withSpin(true)
+                  ): VdomNode
                 )(props.potITC.get.map(_.map(_.exposures)))
               )
           ),
@@ -759,7 +764,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               .when(props.editState.get === ConfigEditState.DetailsView),
             Button(
               label = "Advanced Customization",
-              icon = Icons.ExclamationTriangle.clazz(ExploreStyles.WarningIcon),
+              icon = Icons.ExclamationTriangle.withClass(ExploreStyles.WarningIcon),
               size = Button.Size.Small,
               onClick = props.editState.set(ConfigEditState.AdvancedEdit)
             ).compact

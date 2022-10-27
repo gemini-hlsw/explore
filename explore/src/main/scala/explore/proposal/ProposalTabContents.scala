@@ -94,7 +94,7 @@ object ProposalTabContents:
                 Button(
                   content = <.div(
                     ExploreStyles.LoginOrcidButton,
-                    Icons.FileCirclePlus.clazz(ExploreStyles.OrcidIcon),
+                    Icons.FileCirclePlus.withClass(ExploreStyles.OrcidIcon),
                     "Create a Proposal"
                   ),
                   size = Big,

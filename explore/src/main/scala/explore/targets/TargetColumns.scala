@@ -101,9 +101,11 @@ object TargetColumns:
     val baseColumns =
       List(
         baseColumn(TypeColumnId, _ => ())
-          .copy(cell = _ => Icons.Star.fixedWidth(): VdomNode, size = 35.toPx),
+          .setCell(_ => Icons.Star.withFixedWidth(): VdomNode)
+          .setSize(35.toPx),
         baseColumn(NameColumnId, Target.name.get)
-          .copy(cell = _.value.map(_.toString).orEmpty, size = 120.toPx)
+          .setCell(_.value.map(_.toString).orEmpty)
+          .setSize(120.toPx)
           .sortableBy(_.toString)
       )
 
@@ -133,62 +135,66 @@ object TargetColumns:
     val siderealColumns =
       List(
         siderealColumn(RAColumnId, Target.Sidereal.baseRA.get)
-          .copy(cell = _.value.map(MathValidators.truncatedRA.reverseGet).orEmpty, size = 100.toPx)
+          .setCell(_.value.map(MathValidators.truncatedRA.reverseGet).orEmpty)
+          .setSize(100.toPx)
           .sortable,
         siderealColumn(DecColumnId, Target.Sidereal.baseDec.get)
-          .copy(cell = _.value.map(MathValidators.truncatedDec.reverseGet).orEmpty, size = 100.toPx)
+          .setCell(_.value.map(MathValidators.truncatedDec.reverseGet).orEmpty)
+          .setSize(100.toPx)
           .sortable
       ) ++
         Band.all.map(band =>
           siderealColumnOpt(
             bandColumnId(band),
             t => targetBrightnesses.get(t).flatMap(_.get(band))
-          ).copy(
-            cell = _.value.map(displayWithoutError(_)(displayBrightness)).orEmpty,
-            size = 80.toPx,
-            enableSorting = false // We cannot sort since there may be different units.
-          )
+          ).setCell(_.value.map(displayWithoutError(_)(displayBrightness)).orEmpty)
+            .setSize(80.toPx)
+            .setEnableSorting(false) // We cannot sort since there may be different units.
         ) ++
         List(
           siderealColumn(EpochColumnId, Target.Sidereal.epoch.get)
-            .copy(
-              cell = _.value
+            .setCell(
+              _.value
                 .map(value =>
                   s"${value.scheme.prefix}${Epoch.fromStringNoScheme.reverseGet(value)}"
                 )
-                .orEmpty,
-              size = 90.toPx
+                .orEmpty
             )
+            .setSize(90.toPx)
             .sortable,
           siderealColumnOpt(PMRAColumnId, Target.Sidereal.properMotionRA.getOption)
-            .copy(cell = _.value.map(pmRAValidWedge.reverseGet).orEmpty, size = 90.toPx)
+            .setCell(_.value.map(pmRAValidWedge.reverseGet).orEmpty)
+            .setSize(90.toPx)
             .sortable,
           siderealColumnOpt(PMDecColumnId, Target.Sidereal.properMotionDec.getOption)
-            .copy(cell = _.value.map(pmDecValidWedge.reverseGet).orEmpty, size = 90.toPx)
+            .setCell(_.value.map(pmDecValidWedge.reverseGet).orEmpty)
+            .setSize(90.toPx)
             .sortable,
           siderealColumnOpt(RVColumnId, Target.Sidereal.radialVelocity.get)
-            .copy(cell = _.value.map(formatRV.reverseGet).orEmpty, size = 90.toPx)
+            .setCell(_.value.map(formatRV.reverseGet).orEmpty)
+            .setSize(90.toPx)
             .sortable,
           siderealColumnOpt(
             ZColumnId,
             (Target.Sidereal.radialVelocity.get _).andThen(rvToRedshiftGet)
           )
-            .copy(cell = _.value.map(formatZ.reverseGet).orEmpty, size = 90.toPx)
+            .setCell(_.value.map(formatZ.reverseGet).orEmpty)
+            .setSize(90.toPx)
             .sortable,
           siderealColumnOpt(CZColumnId, (Target.Sidereal.radialVelocity.get _).andThen(rvToARVGet))
-            .copy(cell = _.value.map(formatCZ.reverseGet).orEmpty, size = 90.toPx)
+            .setCell(_.value.map(formatCZ.reverseGet).orEmpty)
+            .setSize(90.toPx)
             .sortable,
           siderealColumnOpt(ParallaxColumnId, Target.Sidereal.parallax.get)
-            .copy(
-              cell = _.value.map(Parallax.milliarcseconds.get).map(_.toString).orEmpty,
-              size = 90.toPx
-            )
+            .setCell(_.value.map(Parallax.milliarcseconds.get).map(_.toString).orEmpty)
+            .setSize(90.toPx)
             .sortable,
           siderealColumn(
             MorphologyColumnId,
             (Target.Sidereal.sourceProfile.get _).andThen(SourceProfileType.fromSourceProfile)
           )
-            .copy(cell = _.value.map(_.shortName).orEmpty, size = 115.toPx)
+            .setCell(_.value.map(_.shortName).orEmpty)
+            .setSize(115.toPx)
             .sortable,
           siderealColumn(
             SEDColumnId,
@@ -199,7 +205,8 @@ object TargetColumns:
                 .orElse(Target.Sidereal.surfaceSpectralDefinition.getOption(t).map(_.shortName))
                 .orEmpty
           )
-            .copy(cell = _.value.orEmpty, size = 200.toPx)
+            .setCell(_.value.orEmpty)
+            .setSize(200.toPx)
             .sortable
         )
 

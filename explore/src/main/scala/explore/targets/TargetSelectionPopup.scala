@@ -210,7 +210,7 @@ object TargetSelectionPopup:
             ),
             centered = false, // Works better on iOS
             open = isOpen.value.value,
-            closeIcon = Icons.Close.clazz(ExploreStyles.ModalCloseButton),
+            closeIcon = Icons.Close.withClass(ExploreStyles.ModalCloseButton),
             dimmer = Dimmer.Blurring,
             size = ModalSize.Large,
             onOpen = cleanState,

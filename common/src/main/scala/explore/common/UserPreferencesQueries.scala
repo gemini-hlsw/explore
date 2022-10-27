@@ -24,7 +24,6 @@ import explore.model.itc.PlotDetails
 import explore.model.itc.*
 import explore.model.layout.*
 import explore.model.layout.given
-import explore.utils.TableStateStore
 import lucuma.core.enums.Site
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
@@ -32,7 +31,9 @@ import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.react.table.*
+import lucuma.ui.table.TableStateStore
 import org.scalablytyped.runtime.StringDictionary
+import org.typelevel.log4cats.Logger
 import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.UserPreferencesDB
 import queries.schemas.UserPreferencesDB.Enums.*
@@ -392,7 +393,7 @@ object UserPreferencesQueries:
     userId:  Option[User.Id],
     tableId: TableId,
     columns: List[ColumnDef[?, ?]]
-  )(using TransactionalClient[F, UserPreferencesDB])
+  )(using TransactionalClient[F, UserPreferencesDB], Logger[F])
       extends TableStateStore[F]:
     def load(): F[TableState => TableState] =
       userId
@@ -402,14 +403,18 @@ object UserPreferencesQueries:
               userId = uid.show.assign,
               tableId = tableId.assign
             )
-            .recover(_ => TableColumnPreferencesQuery.Data(Nil))
+            .recoverWith(t =>
+              Logger[F]
+                .error(t)(s"Error loading table preferences for [$tableId]")
+                .as(TableColumnPreferencesQuery.Data(Nil))
+            )
             .map(prefs =>
               (tableState: TableState) =>
                 tableState
-                  .withColumnVisibility(
+                  .setColumnVisibility(
                     prefs.lucumaTableColumnPreferences.applyVisibility(tableState.columnVisibility)
                   )
-                  .withSorting(prefs.lucumaTableColumnPreferences.applySorting(tableState.sorting))
+                  .setSorting(prefs.lucumaTableColumnPreferences.applySorting(tableState.sorting))
             )
         }
         .map(_.getOrElse(identity))

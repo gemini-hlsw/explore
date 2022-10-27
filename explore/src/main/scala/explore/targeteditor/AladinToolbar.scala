@@ -47,7 +47,7 @@ object AladinToolbar {
 
       React.Fragment(
         Label(
-          icon = Icons.Maximize.clazz(ExploreStyles.Accented),
+          icon = Icons.Maximize.withClass(ExploreStyles.Accented),
           clazz = ExploreStyles.AladinFOV,
           size = Small,
           detail = LabelDetail(clazz = ExploreStyles.AladinDetailText,
@@ -57,17 +57,17 @@ object AladinToolbar {
         ),
         <.div(
           ExploreStyles.AladinGuideStarLoading,
-          <.span(Icons.CircleSmall.beat().clazz(ExploreStyles.WarningIcon))
+          <.span(Icons.CircleSmall.withBeat().withClass(ExploreStyles.WarningIcon))
             .withTooltip(
               tooltip = "Loading catalog stars.."
             )
             .when(props.agsState === AgsState.LoadingCandidates),
-          <.span(Icons.CircleSmall.beat().clazz(ExploreStyles.WarningIcon))
+          <.span(Icons.CircleSmall.withBeat().withClass(ExploreStyles.WarningIcon))
             .withTooltip(
               tooltip = "Calculating guide star.."
             )
             .when(props.agsState === AgsState.Calculating),
-          <.span(Icons.CircleSmall.clazz(ExploreStyles.ErrorIcon))
+          <.span(Icons.CircleSmall.withClass(ExploreStyles.ErrorIcon))
             .withTooltip(
               tooltip = "The Catalog isn't responding at the moment - please try again later.."
             )
@@ -82,7 +82,7 @@ object AladinToolbar {
           "Calculating...".when(props.agsState === AgsState.Calculating)
         ),
         Label(
-          icon = Icons.MousePointer.clazz(ExploreStyles.Accented),
+          icon = Icons.MousePointer.withClass(ExploreStyles.Accented),
           clazz = ExploreStyles.AladinCurrentCoords,
           size = Small,
           detail = LabelDetail(clazz = ExploreStyles.AladinDetailText,
@@ -94,8 +94,8 @@ object AladinToolbar {
           <.span(
             Button(size = Mini, icon = true, onClick = props.viewOffset.set(Offset.Zero))(
               Icons.Bullseye
-                .transform(Transform(size = 24))
-                .clazz(ExploreStyles.Accented)
+                .withTransform(Transform(size = 24))
+                .withClass(ExploreStyles.Accented)
             )
           ).withTooltip(
             tooltip = "Center on target",

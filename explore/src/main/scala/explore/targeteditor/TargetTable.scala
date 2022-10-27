@@ -27,8 +27,6 @@ import explore.model.reusability.given
 import explore.syntax.ui.*
 import explore.targets.TargetColumns
 import explore.targets.TargetSummaryTable
-import explore.utils.TableHooks
-import explore.utils.TableOptionsWithStateStore
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Target
@@ -40,6 +38,8 @@ import lucuma.ui.reusability.*
 import lucuma.ui.syntax.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import lucuma.ui.table.TableHooks
+import lucuma.ui.table.TableOptionsWithStateStore
 import lucuma.ui.table.*
 import org.scalablytyped.runtime.StringDictionary
 import react.common.Css
@@ -105,7 +105,7 @@ object TargetTable extends TableHooks:
                 size = Tiny,
                 compact = true,
                 clazz = ExploreStyles.DeleteButton |+| ExploreStyles.ObsDeleteButton,
-                icon = Icons.Trash.fixedWidth(),
+                icon = Icons.Trash.withFixedWidth(),
                 onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
                   e.preventDefaultCB >>
                     e.stopPropagationCB >>
@@ -139,7 +139,7 @@ object TargetTable extends TableHooks:
             getRowId = (row, _, _) => RowId(row.id.toString),
             enableSorting = true,
             enableColumnResizing = true,
-            columnResizeMode = raw.mod.ColumnResizeMode.onChange,
+            columnResizeMode = ColumnResizeMode.OnChange,
             initialState = TableState(columnVisibility = TargetColumns.DefaultVisibility)
           ),
           TableStore(props.userId, TableId.AsterismTargets, cols)

@@ -25,8 +25,6 @@ import explore.model.enums.TableId
 import explore.model.reusability.given
 import explore.model.syntax.all.*
 import explore.syntax.ui.*
-import explore.utils.TableHooks
-import explore.utils.TableOptionsWithStateStore
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ConstraintSet
@@ -39,6 +37,8 @@ import lucuma.react.table.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import lucuma.ui.table.TableHooks
+import lucuma.ui.table.TableOptionsWithStateStore
 import lucuma.ui.table.*
 import org.scalablytyped.runtime.StringDictionary
 import react.common.Css
@@ -124,43 +124,42 @@ object ConstraintsSummaryTable extends TableHooks:
 
             List(
               column(EditColumnId, ConstraintGroup.obsIds.get)
-                .copy(
-                  cell = cell =>
-                    <.a(^.href := obsSetUrl(cell.value),
-                        ^.onClick ==> (_ => goToObsSet(cell.value)),
-                        Icons.Edit
-                    ),
-                  enableSorting = false
-                ),
+                .setCell(cell =>
+                  <.a(^.href := obsSetUrl(cell.value),
+                      ^.onClick ==> (_ => goToObsSet(cell.value)),
+                      Icons.Edit
+                  )
+                )
+                .setEnableSorting(false),
               column(
                 IQColumnId,
                 ConstraintGroup.constraintSet.andThen(ConstraintSet.imageQuality).get
               )
-                .copy(cell = _.value.label)
+                .setCell(_.value.label)
                 .sortableBy(_.label),
               column(
                 CCColumnId,
                 ConstraintGroup.constraintSet.andThen(ConstraintSet.cloudExtinction).get
               )
-                .copy(cell = _.value.label)
+                .setCell(_.value.label)
                 .sortableBy(_.label),
               column(
                 BGColumnId,
                 ConstraintGroup.constraintSet.andThen(ConstraintSet.skyBackground).get
               )
-                .copy(cell = _.value.label)
+                .setCell(_.value.label)
                 .sortableBy(_.label),
               column(
                 WVColumnId,
                 ConstraintGroup.constraintSet.andThen(ConstraintSet.waterVapor).get
               )
-                .copy(cell = _.value.label)
+                .setCell(_.value.label)
                 .sortableBy(_.label),
               column(
                 MinAMColumnId,
                 ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
               )
-                .copy(cell = _.value match
+                .setCell(_.value match
                   case ElevationRange.AirMass(min, _) => f"${min.value}%.1f"
                   case ElevationRange.HourAngle(_, _) => ""
                 )
@@ -172,7 +171,7 @@ object ConstraintsSummaryTable extends TableHooks:
                 MaxAMColumnId,
                 ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
               )
-                .copy(cell = _.value match
+                .setCell(_.value match
                   case ElevationRange.AirMass(_, max) => f"${max.value}%.1f"
                   case ElevationRange.HourAngle(_, _) => ""
                 )
@@ -184,7 +183,7 @@ object ConstraintsSummaryTable extends TableHooks:
                 MinHAColumnId,
                 ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
               )
-                .copy(cell = _.value match
+                .setCell(_.value match
                   case ElevationRange.AirMass(_, _)     => ""
                   case ElevationRange.HourAngle(min, _) => f"${min.value}%.1f"
                 )
@@ -196,7 +195,7 @@ object ConstraintsSummaryTable extends TableHooks:
                 MaxHAColumnId,
                 ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
               )
-                .copy(cell = _.value match
+                .setCell(_.value match
                   case ElevationRange.AirMass(_, _)     => ""
                   case ElevationRange.HourAngle(_, max) => f"${max.value}%.1f"
                 )
@@ -206,25 +205,24 @@ object ConstraintsSummaryTable extends TableHooks:
                 ),
               column(CountColumnId, _.obsIds.length),
               column(ObservationsColumnId, ConstraintGroup.obsIds.get)
-                .copy(
-                  cell = cell =>
-                    <.span(
-                      cell.value.toSortedSet.toList
-                        .map(obsId =>
-                          <.a(
-                            ^.href := obsUrl(obsId),
-                            ^.onClick ==> (_ =>
-                              goToObs(obsId)
-                                >> props.expandedIds.mod(_ + cell.value)
-                                >> goToObsSet(ObsIdSet.one(obsId))
-                            ),
-                            obsId.toString
-                          )
+                .setCell(cell =>
+                  <.span(
+                    cell.value.toSortedSet.toList
+                      .map(obsId =>
+                        <.a(
+                          ^.href := obsUrl(obsId),
+                          ^.onClick ==> (_ =>
+                            goToObs(obsId)
+                              >> props.expandedIds.mod(_ + cell.value)
+                              >> goToObsSet(ObsIdSet.one(obsId))
+                          ),
+                          obsId.toString
                         )
-                        .mkReactFragment(", ")
-                    ),
-                  enableSorting = false
+                      )
+                      .mkReactFragment(", ")
+                  )
                 )
+                .setEnableSorting(false)
             )
       )
       // Memo rows
@@ -239,7 +237,7 @@ object ConstraintsSummaryTable extends TableHooks:
             getRowId = (row, _, _) => RowId(row.constraintSet.toString),
             enableSorting = true,
             enableColumnResizing = true,
-            columnResizeMode = raw.mod.ColumnResizeMode.onChange,
+            columnResizeMode = ColumnResizeMode.OnChange,
             initialState = TableState(columnVisibility = DefaultColVisibility)
           ),
           TableStore(props.userId, TableId.ConstraintsSummary, cols)

@@ -29,7 +29,7 @@ object About:
       Modal(
         dimmer = Blurring,
         trigger = props.trigger: VdomNode,
-        closeIcon = Icons.Close.clazz(ExploreStyles.ModalCloseButton),
+        closeIcon = Icons.Close.withClass(ExploreStyles.ModalCloseButton),
         content = ModalContent(
           <.div(
             Logo(),
