@@ -8,6 +8,7 @@ import cats.derived.*
 import japgolly.scalajs.react.ReactCats.*
 import japgolly.scalajs.react.Reusability
 import lucuma.ui.reusability.*
+import explore.syntax.ui.*
 import monocle.Focus
 import org.scalajs.dom.window
 
@@ -44,10 +45,10 @@ object TwoPanelState {
   val treeWidth = Focus[TwoPanelState](_.treeWidth)
 
   // Keep them as def to take the value window.innerWidth at the current time
-  def isTwoPanel: Boolean = window.innerWidth > Constants.TwoPanelCutoff
+  // def isTwoPanel: Boolean = window.innerWidth > Constants.TwoPanelCutoff
 
   def initialPanelWidth(sp: SelectedPanel): Double =
-    if (isTwoPanel) Constants.InitialTreeWidth
+    if (window.canFitTwoPanels) Constants.InitialTreeWidth
     else if (sp.rightPanelVisible) 0
     else window.innerWidth
 

@@ -154,7 +154,8 @@ object ExploreLayout:
                 )
               )
             )(
-              ^.onClick --> helpView.set(none)
+              // Don't set unless needed or it will trigger an unnecessary rerender
+              ^.onClick --> helpView.set(none).when_(helpView.get.isDefined)
             )
           )
         )

@@ -86,7 +86,7 @@ case class TargetTabContents(
   expandedIds:       View[SortedSet[ObsIdSet]]
 ) extends ReactFnProps(TargetTabContents.component)
 
-object TargetTabContents:
+object TargetTabContents extends TwoResizablePanels:
   private type Props = TargetTabContents
 
   private val TargetHeight: NonNegInt      = 18.refined
@@ -147,16 +147,6 @@ object TargetTabContents:
     asterismGroupsWithObs: View[AsterismGroupsWithObs]
   ): VdomNode = {
     import ctx.given
-
-    val panelsResize =
-      (_: ReactEvent, d: ResizeCallbackData) =>
-        panels.zoom(TwoPanelState.treeWidth).set(d.size.width.toDouble) *>
-          debouncer
-            .submit(
-              AreaWidths
-                .storeWidthPreference[IO](props.userId, ResizableSection.TargetsTree, d.size.width)
-            )
-            .runAsyncAndForget
 
     val treeWidth: Int = panels.get.treeWidth.toInt
 
@@ -562,41 +552,50 @@ object TargetTabContents:
           }
         }
 
-    // It would be nice to make a single component here but it gets hard when you
-    // have the resizable element. Instead we have either two panels with a resizable
-    // or only one panel at a time (Mobile)
-    if (window.canFitTwoPanels) {
-      <.div(
-        ExploreStyles.TreeRGL,
-        <.div(ExploreStyles.Tree, treeInner(asterismGroupsWithObs))
-          .when(selectedPanel.leftPanelVisible),
-        <.div(^.key := "target-right-side", ExploreStyles.SinglePanelTile)(
-          rightSide
-        ).when(selectedPanel.rightPanelVisible)
-      )
-    } else {
-      <.div(
-        ExploreStyles.TreeRGL,
-        Resizable(
-          axis = Axis.X,
-          width = treeWidth.toDouble,
-          height = coreHeight.toDouble,
-          minConstraints = (Constants.MinLeftPanelWidth.toInt, 0),
-          maxConstraints = (coreWidth / 2, 0),
-          onResize = panelsResize,
-          resizeHandles = List(ResizeHandleAxis.East),
-          content = tree(asterismGroupsWithObs),
-          clazz = ExploreStyles.ResizableSeparator
-        ),
-        <.div(^.key   := "target-right-side",
-              ExploreStyles.SinglePanelTile,
-              ^.width := coreWidth.px,
-              ^.left  := treeWidth.px
-        )(
-          rightSide
-        )
-      )
-    }
+    println(treeWidth)
+    makeOneOrTwoPanels(
+      treeWidth,
+      coreHeight,
+      coreWidth,
+      panels,
+      treeInner(asterismGroupsWithObs),
+      rightSide,
+      RightSideCardinality.Multi
+    )
+    // if (TwoPanelState.isTwoPanel) {
+    //
+    //   <.div(
+    //     ExploreStyles.TreeRGL,
+    //     // Resizable(
+    //     //   axis = Axis.X,
+    //     //   width = treeWidth.toDouble,
+    //     //   height = coreHeight.toDouble,
+    //     //   minConstraints = (Constants.MinLeftPanelWidth.toInt, 0),
+    //     //   maxConstraints = (coreWidth / 2, 0),
+    //     //   // onResize = panelsResize// ,
+    //     //   resizeHandles = List(ResizeHandleAxis.East),
+    //     //   content = tree(asterismGroupsWithObs),
+    //     //   clazz = ExploreStyles.ResizableSeparator
+    //     // ),
+    //     tree(asterismGroupsWithObs),
+    //     <.div(^.key   := "target-right-side",
+    //           ExploreStyles.SinglePanelTile,
+    //           ^.width := coreWidth.px,
+    //           ^.left  := treeWidth.px
+    //     )(
+    //       rightSide
+    //     )
+    //   )
+    // } else {
+    //   <.div(
+    //     ExploreStyles.TreeRGL,
+    //     <.div(ExploreStyles.Tree, treeInner(asterismGroupsWithObs))
+    //       .when(selectedPanel.leftPanelVisible),
+    //     <.div(^.key := "target-right-side", ExploreStyles.SinglePanelTile)(
+    //       rightSide
+    //     ).when(selectedPanel.rightPanelVisible)
+    //   )
+    // }
   }
 
   private def applyObs(
@@ -630,6 +629,7 @@ object TargetTabContents:
       .useEffectWithDepsBy((props, _, _, state) =>
         (props.focused, state.zoom(TwoPanelState.selected).reuseByValue)
       ) { (_, _, _, _) => params =>
+        println("Selected")
         val (focused, selected) = params
         (focused, selected.get) match
           case (Focused(Some(_), _), _)                    => selected.set(SelectedPanel.editor)
@@ -652,25 +652,21 @@ object TargetTabContents:
             .queryWithDefault[IO](
               props.userId,
               GridLayoutSection.TargetLayout,
-              ResizableSection.TargetsTree,
-              (Constants.InitialTreeWidth.toInt, defaultLayout)
+              defaultLayout
             )
             .attempt
             .flatMap {
-              case Right((w, dbLayout)) =>
-                (panels
+              case Right(dbLayout) =>
+                layout
                   .mod(
-                    TwoPanelState.treeWidth.replace(w.toDouble)
-                  ) *> layout.mod(
-                  _.fold(
-                    mergeMap(dbLayout, defaultLayout).ready,
-                    _ => mergeMap(dbLayout, defaultLayout).ready,
-                    cur => mergeMap(dbLayout, cur).ready
+                    _.fold(
+                      mergeMap(dbLayout, defaultLayout).ready,
+                      _ => mergeMap(dbLayout, defaultLayout).ready,
+                      cur => mergeMap(dbLayout, cur).ready
+                    )
                   )
-                ))
                   .to[IO]
-              case Left(_)              =>
-                IO.unit
+              case Left(_)         => IO.unit
             }
       }
       .useSingleEffect(debounce = 1.second)
@@ -738,6 +734,7 @@ object TargetTabContents:
           toastRef,
           fullScreen
         ) =>
+          println(twoPanelState.get)
           <.div(
             // TODO switch to prime react
             Toast(Toast.Position.BottomRight).withRef(toastRef.ref),

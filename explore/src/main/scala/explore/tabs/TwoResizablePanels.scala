@@ -29,7 +29,6 @@ import org.typelevel.log4cats.Logger
 import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.UserPreferencesDB
 import react.draggable.Axis
-import react.resizable.*
 import react.resizeDetector.*
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
@@ -50,18 +49,6 @@ trait TwoResizablePanels {
     val coreHeight = resize.height.getOrElse(0)
     (coreWidth, coreHeight)
 
-  def treeResize(
-    userId:    Option[User.Id],
-    widthView: View[Double],
-    section:   ResizableSection,
-    debouncer: Reusable[UseSingleEffect[IO]]
-  )(using TransactionalClient[IO, UserPreferencesDB], Logger[IO]) =
-    (_: ReactEvent, d: ResizeCallbackData) =>
-      widthView.set(d.size.width.toDouble) *>
-        debouncer
-          .submit(AreaWidths.storeWidthPreference[IO](userId, section, d.size.width))
-          .runAsync
-
   def makeBackButton(
     programId: Program.Id,
     appTab:    AppTab,
@@ -80,7 +67,7 @@ trait TwoResizablePanels {
       )
     )(^.href := ctx.pageUrl(appTab, programId, Focused.None), Icons.ChevronLeft)
 
-  def tree(panel: VdomNode, treeWidth: Int, cardinality: RightSideCardinality) =
+  private def tree(panel: VdomNode, treeWidth: Int, cardinality: RightSideCardinality) =
     <.div(
       ^.width := treeWidth.px,
       ExploreStyles.Tree,
@@ -89,7 +76,7 @@ trait TwoResizablePanels {
       treeInner(panel)
     )
 
-  def treeInner(panel: VdomNode): VdomNode =
+  private def treeInner(panel: VdomNode): VdomNode =
     <.div(ExploreStyles.TreeBody)(panel)
 
   def makeOneOrTwoPanels(
@@ -99,32 +86,12 @@ trait TwoResizablePanels {
     pv:          View[TwoPanelState],
     leftPanel:   VdomNode,
     rightSide:   VdomNode,
-    cardinality: RightSideCardinality,
-    treeResize:  (ReactEvent, ResizeCallbackData) => Callback
+    cardinality: RightSideCardinality
   ): VdomNode =
     if (window.canFitTwoPanels) {
       <.div(
         ExploreStyles.TreeRGL,
-        <.div(ExploreStyles.Tree, treeInner(leftPanel))
-          .when(pv.get.selected.leftPanelVisible),
-        <.div(ExploreStyles.SinglePanelTile)(
-          rightSide
-        ).when(pv.get.selected.rightPanelVisible)
-      )
-    } else {
-      <.div(
-        ExploreStyles.TreeRGL,
-        Resizable(
-          axis = Axis.X,
-          width = treeWidth.toDouble,
-          height = coreHeight.toDouble,
-          minConstraints = (Constants.MinLeftPanelWidth.toInt, 0),
-          maxConstraints = (coreWidth / 2, 0),
-          onResize = treeResize,
-          resizeHandles = List(ResizeHandleAxis.East),
-          content = tree(leftPanel, treeWidth, cardinality),
-          clazz = ExploreStyles.ResizableSeparator
-        ),
+        tree(leftPanel, treeWidth, cardinality),
         <.div(
           ExploreStyles.SinglePanelTile,
           ^.width := coreWidth.px,
@@ -132,6 +99,15 @@ trait TwoResizablePanels {
         )(
           rightSide
         )
+      )
+    } else {
+      <.div(
+        ExploreStyles.TreeRGL,
+        <.div(ExploreStyles.Tree, treeInner(leftPanel))
+          .when(pv.get.selected.leftPanelVisible),
+        <.div(ExploreStyles.SinglePanelTile)(
+          rightSide
+        ).when(pv.get.selected.rightPanelVisible)
       )
     }
 }

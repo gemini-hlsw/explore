@@ -23,8 +23,9 @@ import scala.scalajs.js
 import scala.scalajs.js.UndefOr
 
 extension (self: Window)
-  def canFitTwoPanels: Boolean =
-    self.innerWidth <= Constants.TwoPanelCutoff
+  // Keep this as def to take the value window.innerWidth at the current time
+  inline def canFitTwoPanels: Boolean =
+    self.innerWidth > Constants.TwoPanelCutoff
 
 extension [EV[_], A, B](input: FormInputEV[EV, Option[A]])
   def clearable(using ev: ExternalValue[EV], ev3: Eq[A]) =

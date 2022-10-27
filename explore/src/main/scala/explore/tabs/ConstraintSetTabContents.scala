@@ -53,7 +53,6 @@ import react.draggable.Axis
 import react.fa.*
 import react.hotkeys.*
 import react.hotkeys.hooks.*
-import react.resizable.*
 import react.resizeDetector.*
 import react.resizeDetector.hooks.*
 import react.semanticui.elements.button.Button
@@ -77,26 +76,14 @@ object ConstraintSetTabContents extends TwoResizablePanels:
   private type Props = ConstraintSetTabContents
   private given Reusability[Double] = Reusability.double(2.0)
 
-  private def readWidthPreference(props: Props, state: View[TwoPanelState])(using
-    TransactionalClient[IO, UserPreferencesDB],
-    Logger[IO]
-  ): Callback =
-    (AreaWidths.queryWithDefault[IO](
-      props.userId,
-      ResizableSection.ConstraintSetsTree,
-      Constants.InitialTreeWidth.toInt
-    ) >>= (w => state.zoom(TwoPanelState.treeWidth).async.set(w.toDouble))).runAsync
-
   private def renderFn(
     props:              Props,
     state:              View[TwoPanelState],
     resize:             UseResizeDetectorReturn,
-    debouncer:          Reusable[UseSingleEffect[IO]],
     ctx:                AppContext[IO]
   )(
     constraintsWithObs: View[ConstraintSummaryWithObervations]
   ): VdomNode = {
-    import ctx.given
 
     val treeWidth = state.get.treeWidth.toInt
 
@@ -231,13 +218,7 @@ object ConstraintSetTabContents extends TwoResizablePanels:
       state,
       constraintsTree(constraintsWithObs),
       rightSide,
-      RightSideCardinality.Single,
-      treeResize(
-        props.userId,
-        state.zoom(TwoPanelState.treeWidth),
-        ResizableSection.ConstraintSetsTree,
-        debouncer
-      )
+      RightSideCardinality.Single
     )
   }
 
@@ -254,10 +235,6 @@ object ConstraintSetTabContents extends TwoResizablePanels:
         UseHotkeysProps(GoToSummary.value, callbacks)
       }
       .useStateView(TwoPanelState.initial(SelectedPanel.Uninitialized))
-      .useEffectOnMountBy((props, ctx, state) =>
-        import ctx.given
-        readWidthPreference(props, state)
-      )
       .useEffectWithDepsBy((props, _, state) =>
         (props.focusedObsSet, state.zoom(TwoPanelState.selected).reuseByValue)
       ) { (_, _, _) => params =>
@@ -280,11 +257,8 @@ object ConstraintSetTabContents extends TwoResizablePanels:
       }
       // Measure its size
       .useResizeDetector()
-      .useSingleEffect(debounce = 1.second)
-      .render { (props, ctx, state, constraintsWithObs, resize, debouncer) =>
-        import ctx.given
-
+      .render { (props, ctx, state, constraintsWithObs, resize) =>
         <.div(
-          constraintsWithObs.render(renderFn(props, state, resize, debouncer, ctx) _)
+          constraintsWithObs.render(renderFn(props, state, resize, ctx) _)
         ).withRef(resize.ref)
       }

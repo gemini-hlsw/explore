@@ -55,7 +55,6 @@ import react.hotkeys.*
 import react.hotkeys.hooks.*
 import react.primereact.Toast
 import react.primereact.hooks.all.*
-import react.resizable.*
 import react.resizeDetector.*
 import react.resizeDetector.hooks.*
 import react.semanticui.elements.button.Button
@@ -220,6 +219,7 @@ object ObsTabContents extends TwoResizablePanels:
           coreHeight
         ).withKey(obsId.toString)
       )
+    println(treeWidth)
 
     makeOneOrTwoPanels(
       treeWidth,
@@ -228,12 +228,7 @@ object ObsTabContents extends TwoResizablePanels:
       panels,
       observationsTree(observations),
       rightSide,
-      RightSideCardinality.Multi,
-      treeResize(props.userId,
-                 panels.zoom(TwoPanelState.treeWidth),
-                 ResizableSection.ObservationsTree,
-                 debouncer
-      )
+      RightSideCardinality.Multi
     )
   }
 
@@ -256,10 +251,10 @@ object ObsTabContents extends TwoResizablePanels:
       .useResizeDetector()
       // Layout
       .useStateView(Pot.pending[LayoutsMap])
-      // Keep a record of the initial target layouut
+      // Keep a record of the initial target layout
       .useMemo(())(_ => defaultObsLayouts)
       // Restore positions from the db
-      .useEffectWithDepsBy((p, _, _, _, _, _) => (p.userId, p.focusedObs, p.focusedTarget))(
+      .useEffectWithDepsBy((p, _, _, _, _, _) => p.userId)(
         (props, ctx, panels, _, layout, defaultLayout) =>
           _ => {
             import ctx.given
@@ -268,23 +263,21 @@ object ObsTabContents extends TwoResizablePanels:
               .queryWithDefault[IO](
                 props.userId,
                 GridLayoutSection.ObservationsLayout,
-                ResizableSection.ObservationsTree,
-                (Constants.InitialTreeWidth.toInt, defaultLayout)
+                defaultLayout
               )
               .attempt
               .flatMap {
-                case Right((w, dbLayout)) =>
-                  (panels
-                    .mod(TwoPanelState.treeWidth.replace(w.toDouble)) >>
-                    layout.mod(
+                case Right(dbLayout) =>
+                  layout
+                    .mod(
                       _.fold(
                         mergeMap(dbLayout, defaultLayout).ready,
                         _ => mergeMap(dbLayout, defaultLayout).ready,
-                        _ => mergeMap(dbLayout, defaultLayout).ready
+                        cur => mergeMap(dbLayout, defaultLayout).ready
                       )
-                    ))
+                    )
                     .to[IO]
-                case Left(_)              => IO.unit
+                case Left(_)         => IO.unit
               }
           }
       )
@@ -367,6 +360,7 @@ object ObsTabContents extends TwoResizablePanels:
           obsWithConstraints,
           toastRef
         ) =>
+          println(twoPanelState.get)
           <.div(
             Toast(Toast.Position.BottomRight).withRef(toastRef.ref),
             obsWithConstraints.render(

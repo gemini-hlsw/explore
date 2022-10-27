@@ -8,7 +8,6 @@ import clue.data.syntax.*
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosLong
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.model.ResizableSection
 import io.circe.syntax.*
 import lucuma.core.enums.Band
 import lucuma.core.math.BrightnessUnits.*
