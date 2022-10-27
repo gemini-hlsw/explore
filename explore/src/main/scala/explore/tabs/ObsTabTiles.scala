@@ -70,8 +70,7 @@ case class ObsTabTiles(
   searching:        View[Set[Target.Id]],
   defaultLayouts:   LayoutsMap,
   layouts:          View[Pot[LayoutsMap]],
-  coreWidth:        Int,
-  coreHeight:       Int
+  gridWidth:        Int
 ) extends ReactFnProps(ObsTabTiles.component)
 
 object ObsTabTiles:
@@ -298,7 +297,7 @@ object ObsTabTiles:
         val rglRender: LayoutsMap => VdomNode = (l: LayoutsMap) =>
           TileController(
             props.userId,
-            props.coreWidth,
+            props.gridWidth,
             props.defaultLayouts,
             l,
             List(

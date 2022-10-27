@@ -72,7 +72,7 @@ case class ObsTabContents(
   searching:     View[Set[Target.Id]]
 ) extends ReactFnProps(ObsTabContents.component)
 
-object ObsTabContents extends TwoResizablePanels:
+object ObsTabContents extends TwoPanels:
   private type Props = ObsTabContents
 
   private val NotesMaxHeight: NonNegInt         = 3.refined
@@ -171,7 +171,6 @@ object ObsTabContents extends TwoResizablePanels:
     val observations     = obsWithConstraints.zoom(ObsSummariesWithConstraints.observations)
     val constraintGroups = obsWithConstraints.zoom(ObsSummariesWithConstraints.constraintGroups)
 
-    val treeWidth    = panels.get.treeWidth.toInt
     val selectedView = panels.zoom(TwoPanelState.selected)
 
     def observationsTree(observations: View[ObservationList]) =
@@ -187,9 +186,7 @@ object ObsTabContents extends TwoResizablePanels:
     val backButton: VdomNode =
       makeBackButton(props.programId, AppTab.Observations, selectedView, ctx)
 
-    val (coreWidth, coreHeight) = coreDimensions(resize, treeWidth)
-
-    val rightSide: VdomNode =
+    val rightSide = (resize: UseResizeDetectorReturn) =>
       props.focusedObs.fold[VdomNode](
         Tile("observations".refined,
              "Observations Summary",
@@ -215,20 +212,16 @@ object ObsTabContents extends TwoResizablePanels:
           props.searching,
           defaultLayouts,
           layouts,
-          coreWidth,
-          coreHeight
+          resize.width.getOrElse(1)
         ).withKey(obsId.toString)
       )
-    println(treeWidth)
 
     makeOneOrTwoPanels(
-      treeWidth,
-      coreHeight,
-      coreWidth,
       panels,
       observationsTree(observations),
       rightSide,
-      RightSideCardinality.Multi
+      RightSideCardinality.Multi,
+      resize
     )
   }
 
@@ -254,7 +247,7 @@ object ObsTabContents extends TwoResizablePanels:
       // Keep a record of the initial target layout
       .useMemo(())(_ => defaultObsLayouts)
       // Restore positions from the db
-      .useEffectWithDepsBy((p, _, _, _, _, _) => p.userId)(
+      .useEffectWithDepsBy((p, _, _, _, _, _) => (p.userId, p.focusedObs))(
         (props, ctx, panels, _, layout, defaultLayout) =>
           _ => {
             import ctx.given
@@ -273,7 +266,7 @@ object ObsTabContents extends TwoResizablePanels:
                       _.fold(
                         mergeMap(dbLayout, defaultLayout).ready,
                         _ => mergeMap(dbLayout, defaultLayout).ready,
-                        cur => mergeMap(dbLayout, defaultLayout).ready
+                        _ => mergeMap(dbLayout, defaultLayout).ready
                       )
                     )
                     .to[IO]
@@ -360,8 +353,7 @@ object ObsTabContents extends TwoResizablePanels:
           obsWithConstraints,
           toastRef
         ) =>
-          println(twoPanelState.get)
-          <.div(
+          React.Fragment(
             Toast(Toast.Position.BottomRight).withRef(toastRef.ref),
             obsWithConstraints.render(
               renderFn(
@@ -374,5 +366,5 @@ object ObsTabContents extends TwoResizablePanels:
                 ctx
               ) _
             )
-          ).withRef(resize.ref)
+          )
       }

@@ -72,7 +72,7 @@ case class ConstraintSetTabContents(
   groupUndoStack: View[Map[ObsIdSet, UndoStacks[IO, ConstraintSet]]]
 ) extends ReactFnProps(ConstraintSetTabContents.component)
 
-object ConstraintSetTabContents extends TwoResizablePanels:
+object ConstraintSetTabContents extends TwoPanels:
   private type Props = ConstraintSetTabContents
   private given Reusability[Double] = Reusability.double(2.0)
 
@@ -84,8 +84,6 @@ object ConstraintSetTabContents extends TwoResizablePanels:
   )(
     constraintsWithObs: View[ConstraintSummaryWithObervations]
   ): VdomNode = {
-
-    val treeWidth = state.get.treeWidth.toInt
 
     def constraintsTree(constraintWithObs: View[ConstraintSummaryWithObervations]) =
       ConstraintGroupObsList(
@@ -132,93 +130,92 @@ object ConstraintSetTabContents extends TwoResizablePanels:
     val backButton: VdomNode =
       makeBackButton(props.programId, AppTab.Constraints, state.zoom(TwoPanelState.selected), ctx)
 
-    val (coreWidth, coreHeight) = coreDimensions(resize, treeWidth)
-
-    val rightSide = props.focusedObsSet
-      .flatMap(ids =>
-        findConstraintGroup(ids, constraintsWithObs.get.constraintGroups).map(cg => (ids, cg))
-      )
-      .fold[VdomNode] {
-        Tile("constraints".refined,
-             "Constraints Summary",
-             backButton.some,
-             key = "constraintsSummary"
-        )(renderInTitle =>
-          ConstraintsSummaryTable(
-            props.userId,
-            props.programId,
-            constraintsWithObs.get.constraintGroups,
-            props.expandedIds,
-            renderInTitle
+    val rightSide = (_: UseResizeDetectorReturn) =>
+      props.focusedObsSet
+        .flatMap(ids =>
+          findConstraintGroup(ids, constraintsWithObs.get.constraintGroups).map(cg => (ids, cg))
+        )
+        .fold[VdomNode] {
+          Tile("constraints".refined,
+               "Constraints Summary",
+               backButton.some,
+               key = "constraintsSummary"
+          )(renderInTitle =>
+            ConstraintsSummaryTable(
+              props.userId,
+              props.programId,
+              constraintsWithObs.get.constraintGroups,
+              props.expandedIds,
+              renderInTitle
+            )
           )
-        )
-      } { case (idsToEdit, constraintGroup) =>
-        val groupObsIds   = constraintGroup.obsIds
-        val constraintSet = constraintGroup.constraintSet
-        val cglView       = constraintsWithObs
-          .withOnMod(onModSummaryWithObs(groupObsIds, idsToEdit))
-          .zoom(ConstraintSummaryWithObervations.constraintGroups)
+        } { case (idsToEdit, constraintGroup) =>
+          val groupObsIds   = constraintGroup.obsIds
+          val constraintSet = constraintGroup.constraintSet
+          val cglView       = constraintsWithObs
+            .withOnMod(onModSummaryWithObs(groupObsIds, idsToEdit))
+            .zoom(ConstraintSummaryWithObervations.constraintGroups)
 
-        val getCs: ConstraintGroupList => ConstraintSet = _ => constraintSet
+          val getCs: ConstraintGroupList => ConstraintSet = _ => constraintSet
 
-        def modCs(mod: ConstraintSet => ConstraintSet): ConstraintGroupList => ConstraintGroupList =
-          cgl =>
-            findConstraintGroup(idsToEdit, cgl)
-              .map { cg =>
-                val newCg        = ConstraintGroup.constraintSet.modify(mod)(cg)
-                // see if the edit caused a merger
-                val mergeWithIds = cgl
-                  .find { case (ids, group) =>
-                    !ids.intersects(idsToEdit) && group.constraintSet === newCg.constraintSet
+          def modCs(
+            mod: ConstraintSet => ConstraintSet
+          ): ConstraintGroupList => ConstraintGroupList =
+            cgl =>
+              findConstraintGroup(idsToEdit, cgl)
+                .map { cg =>
+                  val newCg        = ConstraintGroup.constraintSet.modify(mod)(cg)
+                  // see if the edit caused a merger
+                  val mergeWithIds = cgl
+                    .find { case (ids, group) =>
+                      !ids.intersects(idsToEdit) && group.constraintSet === newCg.constraintSet
+                    }
+                    .map(_._1)
+
+                  // If we're editing an observation within a larger group, we need a split
+                  val splitList =
+                    if (idsToEdit === groupObsIds)
+                      cgl.updated(groupObsIds, newCg) // otherwise, just update current group
+                    else {
+                      val diffIds = groupObsIds.removeUnsafe(idsToEdit)
+                      cgl
+                        .removed(groupObsIds)
+                        .updated(idsToEdit, ConstraintGroup(newCg.constraintSet, idsToEdit))
+                        .updated(diffIds, ConstraintGroup(cg.constraintSet, diffIds))
+                    }
+
+                  mergeWithIds.fold(splitList) { idsToMerge =>
+                    val combined = idsToMerge ++ idsToEdit
+                    splitList
+                      .removed(idsToMerge)
+                      .removed(idsToEdit)
+                      .updated(combined, ConstraintGroup(newCg.constraintSet, combined))
                   }
-                  .map(_._1)
-
-                // If we're editing an observation within a larger group, we need a split
-                val splitList =
-                  if (idsToEdit === groupObsIds)
-                    cgl.updated(groupObsIds, newCg) // otherwise, just update current group
-                  else {
-                    val diffIds = groupObsIds.removeUnsafe(idsToEdit)
-                    cgl
-                      .removed(groupObsIds)
-                      .updated(idsToEdit, ConstraintGroup(newCg.constraintSet, idsToEdit))
-                      .updated(diffIds, ConstraintGroup(cg.constraintSet, diffIds))
-                  }
-
-                mergeWithIds.fold(splitList) { idsToMerge =>
-                  val combined = idsToMerge ++ idsToEdit
-                  splitList
-                    .removed(idsToMerge)
-                    .removed(idsToEdit)
-                    .updated(combined, ConstraintGroup(newCg.constraintSet, combined))
                 }
-              }
-              .getOrElse(cgl) // shouldn't happen
+                .getOrElse(cgl) // shouldn't happen
 
-        val csView: View[ConstraintSet] =
-          cglView
-            .zoom(getCs)(modCs)
+          val csView: View[ConstraintSet] =
+            cglView
+              .zoom(getCs)(modCs)
 
-        val csUndo: View[UndoStacks[IO, ConstraintSet]] =
-          props.groupUndoStack.zoom(atMapWithDefault(idsToEdit, UndoStacks.empty))
+          val csUndo: View[UndoStacks[IO, ConstraintSet]] =
+            props.groupUndoStack.zoom(atMapWithDefault(idsToEdit, UndoStacks.empty))
 
-        val title = idsToEdit.single match
-          case Some(id) => s"Observation $id"
-          case None     => s"Editing Constraints for ${idsToEdit.size} Observations"
+          val title = idsToEdit.single match
+            case Some(id) => s"Observation $id"
+            case None     => s"Editing Constraints for ${idsToEdit.size} Observations"
 
-        Tile("constraints".refined, title, backButton.some)(renderInTitle =>
-          ConstraintsPanel(idsToEdit.toList, csView, csUndo, renderInTitle)
-        )
-      }
+          Tile("constraints".refined, title, backButton.some)(renderInTitle =>
+            ConstraintsPanel(idsToEdit.toList, csView, csUndo, renderInTitle)
+          )
+        }
 
     makeOneOrTwoPanels(
-      treeWidth,
-      coreHeight,
-      coreWidth,
       state,
       constraintsTree(constraintsWithObs),
       rightSide,
-      RightSideCardinality.Single
+      RightSideCardinality.Single,
+      resize
     )
   }
 
@@ -258,7 +255,7 @@ object ConstraintSetTabContents extends TwoResizablePanels:
       // Measure its size
       .useResizeDetector()
       .render { (props, ctx, state, constraintsWithObs, resize) =>
-        <.div(
-          constraintsWithObs.render(renderFn(props, state, resize, ctx) _)
-        ).withRef(resize.ref)
+        // <.div(
+        constraintsWithObs.render(renderFn(props, state, resize, ctx) _)
+        // ).withRef(resize.ref)
       }

@@ -7,3 +7,8 @@ $mobile-responsive-cutoff: 670px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+@mixin full-height-width {
+  height: 100%;
+  width: 100%;
+}

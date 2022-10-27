@@ -90,8 +90,6 @@ object TileController:
       .andThen(layoutItemResizable)
 
   private def updateResizableState(p: LayoutsMap): LayoutsMap =
-    // println("Changed upstream")
-    // layoutPprint.pprintln(p)
     allLayouts
       .andThen(layoutItems)
       .modify {
@@ -116,33 +114,27 @@ object TileController:
       )
       .render { (p, ctx, debouncer, bn, currentLayout) =>
         import ctx.given
-        println("---------------")
-        // layoutPprint.pprintln(currentLayout.get)
 
         def sizeState(id: Tile.TileId) = (st: TileSizeState) =>
           currentLayout
             .zoom(allTiles)
             .mod {
               case l if l.i.forall(_ === id.value) =>
-                pprint.pprintln(s"resize match $id $st")
-                val rl =
-                  if (st === TileSizeState.Minimized) l.copy(h = 1, minH = 1, isResizable = false)
-                  else if (st === TileSizeState.Normal) {
-                    val defaultHeight =
-                      unsafeTileHeight(id).headOption(p.defaultLayout).getOrElse(1)
-                    // restore the resizable state
-                    val resizable     =
-                      tileResizable(id).headOption(p.defaultLayout).getOrElse(true: Boolean | Unit)
-                    // TODO: Restore to the previous size
-                    l.copy(h = defaultHeight,
-                           isResizable = resizable,
-                           minH = scala.math.max(l.minH.getOrElse(1), defaultHeight)
-                    )
-                  } else l
-                rl
+                if (st === TileSizeState.Minimized) l.copy(h = 1, minH = 1, isResizable = false)
+                else if (st === TileSizeState.Normal) {
+                  val defaultHeight =
+                    unsafeTileHeight(id).headOption(p.defaultLayout).getOrElse(1)
+                  // restore the resizable state
+                  val resizable     =
+                    tileResizable(id).headOption(p.defaultLayout).getOrElse(true: Boolean | Unit)
+                  // TODO: Restore to the previous size
+                  l.copy(h = defaultHeight,
+                         isResizable = resizable,
+                         minH = scala.math.max(l.minH.getOrElse(1), defaultHeight)
+                  )
+                } else l
               case l                               => l
             }
-          // layoutPprint.pprintln(rl)
 
         ResponsiveReactGridLayout(
           width = p.gridWidth.toDouble,
