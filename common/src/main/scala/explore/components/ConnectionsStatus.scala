@@ -44,7 +44,7 @@ object ConnectionsStatus:
 
     if (show) {
       Item(clazz = ExploreStyles.ConnectionIcon)(
-        <.span(Icons.CircleSmall.clazz(clazz)).withTooltip(
+        <.span(Icons.CircleSmall.withClass(clazz)).withTooltip(
           tooltip = message,
           placement = Placement.Bottom
         )

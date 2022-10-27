@@ -89,8 +89,7 @@ object UserSelectionForm:
                   Button(
                     content = <.div(
                       ExploreStyles.LoginOrcidButton,
-                      Icons.UserAstronaut
-                        .clazz(ExploreStyles.OrcidIcon),
+                      Icons.UserAstronaut.withClass(ExploreStyles.OrcidIcon),
                       "Continue as Guest"
                     ),
                     size = Big,

@@ -54,7 +54,7 @@ object ItcPanelTitle:
   val MissingInfoMsg                   = "Not enough information to call ITC"
   val MissingInfo: Pot[ItcChartResult] =
     Pot.error(new RuntimeException(MissingInfoMsg))
-  val MissingInfoIcon                  = Icons.ExclamationTriangle.clazz(ExploreStyles.WarningIcon)
+  val MissingInfoIcon                  = Icons.ExclamationTriangle.withClass(ExploreStyles.WarningIcon)
 
   private val component =
     ScalaFnComponent
@@ -118,7 +118,7 @@ object ItcPanelTitle:
             if (existTargets) {
               potRender[ItcChartResult](
                 singleSN,
-                Icons.Spinner.spin(true),
+                Icons.Spinner.withSpin(true),
                 e => <.span(MissingInfoIcon).withTooltip(e.getMessage)
               )(
                 selectedResult

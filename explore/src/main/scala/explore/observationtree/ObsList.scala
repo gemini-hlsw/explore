@@ -165,7 +165,7 @@ object ObsList:
               onClick = setObs(props.programId, none, ctx) >> props.setSummaryPanel,
               clazz = ExploreStyles.ButtonSummary
             )(
-              Icons.ListIcon.clazz(ExploreStyles.PaddedRightIcon),
+              Icons.ListIcon.withClass(ExploreStyles.PaddedRightIcon),
               "Observations Summary"
             )
           ),

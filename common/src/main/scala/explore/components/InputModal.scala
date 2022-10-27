@@ -69,7 +69,7 @@ object InputModal {
           ),
           centered = false, // Works better on iOS
           trigger = props.trigger.value,
-          closeIcon = Icons.Close.clazz(ExploreStyles.ModalCloseButton),
+          closeIcon = Icons.Close.withClass(ExploreStyles.ModalCloseButton),
           dimmer = Dimmer.Blurring,
           size = ModalSize.Small,
           onClose = cleanInput,

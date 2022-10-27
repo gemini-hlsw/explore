@@ -68,11 +68,11 @@ object AgsOverlay {
               ExploreStyles.AgsDescription,
               analysis.match {
                 case AgsAnalysis.Usable(_, _, Some(GuideSpeed.Fast), _, _)   =>
-                  Icons.CircleSmall.clazz(ExploreStyles.AgsFast)
+                  Icons.CircleSmall.withClass(ExploreStyles.AgsFast)
                 case AgsAnalysis.Usable(_, _, Some(GuideSpeed.Medium), _, _) =>
-                  Icons.CircleSmall.clazz(ExploreStyles.AgsMedium)
+                  Icons.CircleSmall.withClass(ExploreStyles.AgsMedium)
                 case AgsAnalysis.Usable(_, _, Some(GuideSpeed.Slow), _, _)   =>
-                  Icons.CircleSmall.clazz(ExploreStyles.AgsSlow)
+                  Icons.CircleSmall.withClass(ExploreStyles.AgsSlow)
                 case _                                                       => ""
               },
               analysis match {

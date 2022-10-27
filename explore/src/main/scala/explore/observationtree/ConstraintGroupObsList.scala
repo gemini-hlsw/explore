@@ -206,7 +206,7 @@ object ConstraintGroupObsList:
               }
             )
           )
-          .fixedWidth()
+          .withFixedWidth()
 
         Droppable(ObsIdSet.fromString.reverseGet(obsIds), renderClone = renderClone) {
           case (provided, snapshot) =>
@@ -266,7 +266,7 @@ object ConstraintGroupObsList:
               onClick = setObsSet(none) >> props.setSummaryPanel.value,
               clazz = ExploreStyles.ButtonSummary
             )(
-              Icons.ListIcon.clazz(ExploreStyles.PaddedRightIcon),
+              Icons.ListIcon.withClass(ExploreStyles.PaddedRightIcon),
               "Constraints Summary"
             )
           ),

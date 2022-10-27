@@ -13,6 +13,12 @@ import lucuma.react.table.SortDirection
 trait UserPreferencesDB:
   type Timestamptz = java.time.ZonedDateTime
 
+  given Enumerated[SortDirection] =
+    Enumerated.from(SortDirection.Ascending, SortDirection.Descending).withTag {
+      case SortDirection.Ascending  => "ASC"
+      case SortDirection.Descending => "DESC"
+    }
+
   object Scalars:
     type UserId             = User.Id
     type ResizableArea      = String
@@ -27,9 +33,3 @@ trait UserPreferencesDB:
     type ItcChartType            = enums.ItcChartType
     type LucumaTableIdsEnum      = explore.model.enums.TableId
     type LucumaSortDirectionEnum = SortDirection
-
-  given Enumerated[SortDirection] =
-    Enumerated.from(SortDirection.Ascending, SortDirection.Descending).withTag {
-      case SortDirection.Ascending  => "asc"
-      case SortDirection.Descending => "desc"
-    }

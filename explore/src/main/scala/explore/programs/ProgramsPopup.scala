@@ -67,7 +67,7 @@ object ProgramsPopup {
         closeOnDimmerClick = props.onClose.isDefined,
         closeOnEscape = props.onClose.isDefined,
         closeIcon = props.onClose
-          .map(_ => Icons.Close.clazz(ExploreStyles.ModalCloseButton): VdomNode)
+          .map(_ => Icons.Close.withClass(ExploreStyles.ModalCloseButton): VdomNode)
           .orUndefined,
         dimmer = Dimmer.Blurring,
         size = ModalSize.Small,

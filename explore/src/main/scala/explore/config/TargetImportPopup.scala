@@ -126,7 +126,7 @@ object TargetImportPopup:
         )(
           <.div(ExploreStyles.TargetImportForm)(
             ProgressSpinner(strokeWidth = "5").unless(state.value.done),
-            Icons.Checkmark.size(IconSize.X4).when(state.value.done),
+            Icons.Checkmark.withSize(IconSize.X4).when(state.value.done),
             <.div(
               <.span(s"Importing ${state.value.loaded.length}")
                 .unless(state.value.done),
