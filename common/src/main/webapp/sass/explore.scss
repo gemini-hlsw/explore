@@ -22,11 +22,9 @@
   label.p-button.pl-compact {
     padding: 0.4em 0.5em;
     margin-right: 0.25em;
-    // font-size: smaller;
   }
 
   .p-button.p-button-sm {
-    // padding: 0.3rem;
     max-width: 4rem;
 
     & svg.p-button-icon:not(.fa-trash-can) {
@@ -575,7 +573,7 @@ table.explore-border-table {
 // Toolbar over summary tables
 // ------
 .summary-table-toolbar {
-  padding: 0.25rem 0.25rem;
+  padding: 0.25rem;
 }
 
 
