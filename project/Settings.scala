@@ -18,7 +18,7 @@ object Settings {
     val disciplineMUnit  = "1.0.9"
     val fs2              = "3.3.0"
     val fs2Data          = "1.6.0"
-    val fs2Dom           = "0.0-9abbf5e-SNAPSHOT"
+    val fs2Dom           = "0.1.0-M1"
     val geminiLocales    = "0.7.0"
     val http4s           = "0.23.16"
     val http4sDom        = "0.2.3"
