@@ -244,15 +244,21 @@ object TargetTabContents:
      * Render the summary table.
      */
     def renderSummary: VdomNode =
-      Tile("targetSummary".refined, "Target Summary", backButton.some)(renderInTitle =>
-        TargetSummaryTable(
-          props.userId,
-          props.programId,
-          targetMap,
-          selectObservationAndTarget(props.expandedIds) _,
-          selectTarget _,
-          renderInTitle
-        ): VdomNode
+      <.div(
+        Tile(
+          "targetSummary".refined,
+          "Target Summary",
+          backButton.some
+        )(renderInTitle =>
+          TargetSummaryTable(
+            props.userId,
+            props.programId,
+            targetMap,
+            selectObservationAndTarget(props.expandedIds) _,
+            selectTarget _,
+            renderInTitle
+          ): VdomNode
+        )
       )
 
     val coreWidth  = resize.width.getOrElse(0) - treeWidth

@@ -4,8 +4,10 @@
 package explore.targets
 
 import cats.Order.*
+import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.View
+import crystal.react.hooks.*
 import crystal.react.implicits.*
 import crystal.react.reuse.*
 import explore.Icons
@@ -21,6 +23,7 @@ import explore.model.enums.TableId
 import explore.syntax.ui.*
 import explore.utils.TableHooks
 import explore.utils.TableOptionsWithStateStore
+import fs2.dom
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Band
@@ -28,12 +31,15 @@ import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
+import lucuma.core.util.NewType
 import lucuma.react.table.*
+import lucuma.ui.primereact.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import org.scalablytyped.runtime.StringDictionary
+import org.scalajs.dom.{File => DOMFile}
 import react.common.Css
 import react.common.ReactFnProps
 import react.hotkeys.*
@@ -65,6 +71,9 @@ object TargetSummaryTable extends TableHooks:
   private val CountColumnId: ColumnId        = ColumnId("count")
   private val ObservationsColumnId: ColumnId = ColumnId("observations")
 
+  private object IsImportOpen extends NewType[Boolean]
+  private type IsImportOpen = IsImportOpen.type
+
   private val columnClasses: Map[ColumnId, Css] = Map(
     IdColumnId                 -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryId),
     TargetColumns.TypeColumnId -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryType |+| ExploreStyles.WithId),
@@ -91,7 +100,6 @@ object TargetSummaryTable extends TableHooks:
 
         def obsUrl(targetId: Target.Id, obsId: Observation.Id): String =
           ctx.pageUrl(AppTab.Targets, props.programId, Focused.singleObs(obsId, targetId.some))
-
         List(
           ColDef(
             IdColumnId,
@@ -158,7 +166,9 @@ object TargetSummaryTable extends TableHooks:
           TableStore(props.userId, TableId.TargetsSummary, cols)
         )
       )
-      .render((props, ctx, _, _, table) =>
+      // Files to be imported
+      .useStateView(List.empty[DOMFile])
+      .render((props, ctx, _, _, table, filesToImport) =>
         import ctx.given
 
         val selectedRows    = table.getSelectedRowModel().rows.toList
@@ -174,34 +184,54 @@ object TargetSummaryTable extends TableHooks:
             acceptLabel = "Yes, delete",
             position = DialogPosition.Top,
             accept = props.targets
-              .mod(_.filter((id, _) => !selectedRowsIds.contains(id))) *> TargetSummaryActions
-              .deleteTargets(selectedRowsIds, props.programId)
-              .runAsyncAndForget,
+              .mod(_.filter((id, _) => !selectedRowsIds.contains(id))) *>
+              table.toggleAllRowsSelected(false) *>
+              TargetSummaryActions
+                .deleteTargets(selectedRowsIds, props.programId)
+                .runAsyncAndForget,
             acceptClass = PrimeStyles.ButtonSmall,
             rejectClass = PrimeStyles.ButtonSmall,
             icon = Icons.SkullCrossBones.color("red")
           )
+
+        def onTextChange(e: ReactEventFromInput): Callback =
+          val files = e.target.files.toList
+          // set value to null so we can reuse the import button
+          (Callback(e.target.value = null) *> filesToImport.set(files)).when_(files.nonEmpty)
 
         <.div(
           props.renderInTitle(
             React.Fragment(
               <.div(
                 ExploreStyles.TableSelectionToolbar,
+                <.label(^.cls     := "pl-compact p-component p-button p-fileupload",
+                        ^.htmlFor := "target-import",
+                        Icons.FileArrowUp
+                ),
+                <.input(^.tpe     := "file",
+                        ^.onChange ==> onTextChange,
+                        ^.id      := "target-import",
+                        ^.name    := "file",
+                        ^.accept  := ".csv"
+                ),
+                TargetImportPopup(props.programId, filesToImport),
                 Button(
                   size = Button.Size.Small,
                   icon = Icons.CheckDouble,
+                  label = "All",
                   onClick = table.toggleAllRowsSelected(true)
-                )(" All"),
+                ).compact,
                 Button(
                   size = Button.Size.Small,
                   icon = Icons.SquareXMark,
+                  label = "None",
                   onClick = table.toggleAllRowsSelected(false)
-                )(" None"),
+                ).compact,
                 Button(
                   size = Button.Size.Small,
                   icon = Icons.Trash,
                   onClick = deleteSelected
-                ).when(selectedRows.nonEmpty),
+                ).compact.when(selectedRows.nonEmpty),
                 ConfirmDialog()
               ),
               <.span(ExploreStyles.TitleSelectColumns)(

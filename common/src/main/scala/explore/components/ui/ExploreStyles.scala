@@ -308,6 +308,7 @@ object ExploreStyles {
   val StepGuided: Css = Css("step-guided")
 
   val ExploreForm: Css          = Css("explore-form")
+  val TargetImportForm: Css     = Css("explore-target-import-form")
   val SkipToNext: Css           = Css("explore-skip-to-next")
   val SeqGenParametersForm: Css = Css("seq-gen-parameters-form")
 
@@ -442,4 +443,6 @@ object ExploreStyles {
   // See `clearInputIcon` in `explore.utils.package`
   val ClearableInputIcon: Css         = Css("clearable-input-icon")
   val ClearableInputPaddingReset: Css = Css("clearable-input-padding-reset")
+
+  val SummaryTableToolbar: Css = Css("summary-table-toolbar")
 }
