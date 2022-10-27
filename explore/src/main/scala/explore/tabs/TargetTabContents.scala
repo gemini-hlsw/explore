@@ -61,7 +61,6 @@ import react.draggable.Axis
 import react.gridlayout.*
 import react.hotkeys.*
 import react.hotkeys.hooks.*
-import react.primereact.PrimeStyles
 import react.primereact.Toast
 import react.primereact.hooks.all.*
 import react.resizable.*

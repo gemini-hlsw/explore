@@ -204,10 +204,9 @@ object TargetSummaryTable extends TableHooks:
             React.Fragment(
               <.div(
                 ExploreStyles.TableSelectionToolbar,
-                <.label(PrimeStyles.ButtonSmall,
-                        ^.cls     := "pl-compact p-component p-button p-fileupload",
+                <.label(^.cls     := "pl-compact p-component p-button p-fileupload",
                         ^.htmlFor := "target-import",
-                        Icons.FileImport
+                        Icons.FileArrowUp
                 ),
                 <.input(^.tpe     := "file",
                         ^.onChange ==> onTextChange,
