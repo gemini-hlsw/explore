@@ -13,6 +13,7 @@ import crystal.react.reuse.*
 import explore.Icons
 import explore.common.AsterismQueries.*
 import explore.common.UserPreferencesQueries.TableStore
+import explore.components.HelpIcon
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
@@ -30,7 +31,9 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.util.NewType
+import lucuma.react.syntax.*
 import lucuma.react.table.*
+import lucuma.refined.*
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
@@ -202,6 +205,7 @@ object TargetSummaryTable extends TableHooks:
             React.Fragment(
               <.div(
                 ExploreStyles.TableSelectionToolbar,
+                HelpIcon("target/main/target-import.md".refined),
                 <.label(^.cls     := "pl-compact p-component p-button p-fileupload",
                         ^.htmlFor := "target-import",
                         Icons.FileArrowUp
@@ -241,8 +245,9 @@ object TargetSummaryTable extends TableHooks:
               )
             )
           ),
-          PrimeTable(
+          PrimeVirtualizedTable(
             table,
+            _ => 32.toPx,
             striped = true,
             compact = Compact.Very,
             tableMod = ExploreStyles.ExploreTable |+| ExploreStyles.ExploreSelectableTable,
