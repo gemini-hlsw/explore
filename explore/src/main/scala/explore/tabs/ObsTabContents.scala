@@ -254,28 +254,27 @@ object ObsTabContents extends TwoPanels:
           _ => {
             import ctx.given
 
-            IO.println("Load") *>
-              GridLayouts
-                .queryWithDefault[IO](
-                  props.userId,
-                  GridLayoutSection.ObservationsLayout,
-                  defaultLayout
-                )
-                .attempt
-                .flatMap {
-                  case Right(dbLayout) =>
-                    layoutPprint(dbLayout)
-                    layout
-                      .mod(
-                        _.fold(
-                          mergeMap(dbLayout, defaultLayout).ready,
-                          _ => mergeMap(dbLayout, defaultLayout).ready,
-                          cur => mergeMap(dbLayout, cur).ready
-                        )
+            GridLayouts
+              .queryWithDefault[IO](
+                props.userId,
+                GridLayoutSection.ObservationsLayout,
+                defaultLayout
+              )
+              .attempt
+              .flatMap {
+                case Right(dbLayout) =>
+                  layoutPprint(dbLayout)
+                  layout
+                    .mod(
+                      _.fold(
+                        mergeMap(dbLayout, defaultLayout).ready,
+                        _ => mergeMap(dbLayout, defaultLayout).ready,
+                        cur => mergeMap(dbLayout, cur).ready
                       )
-                      .to[IO]
-                  case Left(_)         => IO.unit
-                }
+                    )
+                    .to[IO]
+                case Left(_)         => IO.unit
+              }
           }
       )
       .useSingleEffect(debounce = 1.second)
