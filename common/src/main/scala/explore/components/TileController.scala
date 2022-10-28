@@ -3,8 +3,8 @@
 
 package explore.components
 
-import cats.*
 import cats.Order.*
+import cats.*
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.TransactionalClient

@@ -84,7 +84,7 @@ object ExploreStyles {
   val RGLArea: Css            = Css("rgl-area")
   // val RGLPlaceholder: Css       = Css("rgl-placeholder")
   val SinglePanelTile: Css    = Css("single-panel-tile")
-  val MultiPanelTile: Css    = Css("multi-panel-tile")
+  val MultiPanelTile: Css     = Css("multi-panel-tile")
 
   val SideTabsVertical: Css     = Css("sidetabs-body-vertical")
   val SideTabsHorizontal: Css   = Css("sidetabs-body-horizontal")

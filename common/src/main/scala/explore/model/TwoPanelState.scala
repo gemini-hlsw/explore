@@ -5,10 +5,10 @@ package explore.model
 
 import cats.Eq
 import cats.derived.*
+import explore.syntax.ui.*
 import japgolly.scalajs.react.ReactCats.*
 import japgolly.scalajs.react.Reusability
 import lucuma.ui.reusability.*
-import explore.syntax.ui.*
 import monocle.Focus
 import org.scalajs.dom.window
 

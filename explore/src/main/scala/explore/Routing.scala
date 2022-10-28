@@ -55,8 +55,7 @@ object Routing:
     ObsTabContents(
       model.zoom(RootModel.userId).get,
       routingInfo.programId,
-      routingInfo.focused.obsSet.map(_.head),
-      routingInfo.focused.target,
+      routingInfo.focused,
       model.zoom(RootModel.undoStacks),
       model.zoom(RootModel.searchingTarget)
     )

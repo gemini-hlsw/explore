@@ -255,7 +255,5 @@ object ConstraintSetTabContents extends TwoPanels:
       // Measure its size
       .useResizeDetector()
       .render { (props, ctx, state, constraintsWithObs, resize) =>
-        // <.div(
         constraintsWithObs.render(renderFn(props, state, resize, ctx) _)
-        // ).withRef(resize.ref)
       }

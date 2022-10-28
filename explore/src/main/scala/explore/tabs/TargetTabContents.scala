@@ -603,26 +603,27 @@ object TargetTabContents extends TwoPanels:
         (props, ctx, _, panels, _, layout, defaultLayout) => _ =>
           import ctx.given
 
-          GridLayouts
-            .queryWithDefault[IO](
-              props.userId,
-              GridLayoutSection.TargetLayout,
-              defaultLayout
-            )
-            .attempt
-            .flatMap {
-              case Right(dbLayout) =>
-                layout
-                  .mod(
-                    _.fold(
-                      mergeMap(dbLayout, defaultLayout).ready,
-                      _ => mergeMap(dbLayout, defaultLayout).ready,
-                      cur => mergeMap(dbLayout, cur).ready
+          IO.println("target reset") *>
+            GridLayouts
+              .queryWithDefault[IO](
+                props.userId,
+                GridLayoutSection.TargetLayout,
+                defaultLayout
+              )
+              .attempt
+              .flatMap {
+                case Right(dbLayout) =>
+                  layout
+                    .mod(
+                      _.fold(
+                        mergeMap(dbLayout, defaultLayout).ready,
+                        _ => mergeMap(dbLayout, defaultLayout).ready,
+                        cur => mergeMap(dbLayout, cur).ready
+                      )
                     )
-                  )
-                  .to[IO]
-              case Left(_)         => IO.unit
-            }
+                    .to[IO]
+                case Left(_)         => IO.unit
+              }
       }
       .useSingleEffect(debounce = 1.second)
       // Shared obs conf (posAngle)
@@ -712,7 +713,8 @@ object TargetTabContents extends TwoPanels:
                 debouncer,
                 fullScreen,
                 ctx
-              )
+              ),
+              <.span(Loader(active = true)).withRef(resize.ref)
             )
           )
       }

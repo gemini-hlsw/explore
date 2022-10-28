@@ -40,6 +40,7 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.refined.*
+import lucuma.schemas.ObservationDB
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -59,18 +60,35 @@ import react.resizeDetector.*
 import react.resizeDetector.hooks.*
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
+import react.semanticui.elements.loader.Loader
 import react.semanticui.sizes.*
 
 import scala.concurrent.duration.*
 
+// import react.semanticui.addons.select.Select
+// import react.semanticui.addons.select.Select.SelectItem
+// import react.semanticui.modules.dropdown.Dropdown
+// import queries.common.ObsQueriesGQL
+// import queries.common.TargetQueriesGQL
+// import queries.common.ObsQueriesGQL.*
+// import queries.schemas.odb.ObsQueries
+// import queries.schemas.odb.ObsQueries.*
+// import clue.TransactionalClient
+// import lucuma.core.syntax.all.*
+// import scala.collection.immutable.SortedMap
+// import explore.components.TileController
+
 case class ObsTabContents(
-  userId:        Option[User.Id],
-  programId:     Program.Id,
-  focusedObs:    Option[Observation.Id],
-  focusedTarget: Option[Target.Id],
-  undoStacks:    View[ModelUndoStacks[IO]],
-  searching:     View[Set[Target.Id]]
-) extends ReactFnProps(ObsTabContents.component)
+  userId:     Option[User.Id],
+  programId:  Program.Id,
+  focused:    Focused,
+  undoStacks: View[ModelUndoStacks[IO]],
+  searching:  View[Set[Target.Id]]
+) extends ReactFnProps(ObsTabContents.component) {
+  pprint.pprintln(this)
+  val focusedObs: Option[Observation.Id] = focused.obsSet.map(_.head)
+  val focusedTarget: Option[Target.Id]   = focused.target
+}
 
 object ObsTabContents extends TwoPanels:
   private type Props = ObsTabContents
@@ -179,14 +197,14 @@ object ObsTabContents extends TwoPanels:
         props.programId,
         props.focusedObs,
         props.focusedTarget,
-        selectedView.set(SelectedPanel.summary).reuseAlways,
+        selectedView.set(SelectedPanel.summary),
         props.undoStacks.zoom(ModelUndoStacks.forObsList)
       )
 
     val backButton: VdomNode =
       makeBackButton(props.programId, AppTab.Observations, selectedView, ctx)
 
-    val rightSide = (resize: UseResizeDetectorReturn) =>
+    def rightSide = (resize: UseResizeDetectorReturn) =>
       props.focusedObs.fold[VdomNode](
         Tile("observations".refined,
              "Observations Summary",
@@ -205,15 +223,14 @@ object ObsTabContents extends TwoPanels:
           obsId,
           backButton,
           constraintGroups,
-          props.focusedObs,
           props.focusedTarget,
           obsWithConstraints.get.targetMap,
           props.undoStacks,
           props.searching,
           defaultLayouts,
           layouts,
-          resize.width.getOrElse(1)
-        ).withKey(obsId.toString)
+          resize
+        ).withKey(s"${obsId.show}-${resize.isReady}-${panels.get}-${layouts.get}")
       )
 
     makeOneOrTwoPanels(
@@ -275,7 +292,7 @@ object ObsTabContents extends TwoPanels:
           }
       )
       .useSingleEffect(debounce = 1.second)
-      .useStreamResourceViewWithReuseOnMountBy { (props, ctx, _, _, _, _, _) =>
+      .useStreamResourceViewOnMountBy { (props, ctx, _, _, _, _, _) =>
         import ctx.given
 
         ProgramObservationsQuery
@@ -287,13 +304,13 @@ object ObsTabContents extends TwoPanels:
       }
       .useToastRef
       .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, _, obsList, _) =>
-        (props.focusedObs, obsList)
-      ) { (props, ctx, _, _, _, _, _, obsList, toastRef) => (obs, _) =>
+        (props.focusedObs,
+         obsList.foldMap(_.get.observations.elements.map(_.id).zipWithIndex.toList)
+        )
+      ) { (props, ctx, _, _, _, _, _, obsList, toastRef) => (obs, observationIds) =>
         import ctx.given
 
-        val observationIds =
-          obsList.foldMap(_.value.get.observations.elements.map(_.id).zipWithIndex.toList)
-        val obsPos         = observationIds.find(a => obs.forall(_ === a._1)).map(_._2)
+        val obsPos = observationIds.find(a => obs.forall(_ === a._1)).map(_._2)
 
         def callbacks: ShortcutCallbacks = {
           case CopyAlt1 | CopyAlt2 | CopyAlt3 =>
@@ -364,7 +381,8 @@ object ObsTabContents extends TwoPanels:
                 resize,
                 debouncer,
                 ctx
-              ) _
+              ) _,
+              <.span(Loader(active = true)).withRef(resize.ref)
             )
           )
       }
