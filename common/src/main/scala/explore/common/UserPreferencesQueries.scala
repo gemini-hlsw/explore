@@ -166,10 +166,10 @@ object UserPreferencesQueries:
                   agsCandidates.isDefined
                 ),
                 LucumaTargetPreferencesUpdateColumn.AgsOverlay.some.filter(_ =>
-                  agsCandidates.isDefined
+                  agsOverlay.isDefined
                 ),
                 LucumaTargetPreferencesUpdateColumn.FullScreen.some.filter(_ =>
-                  agsCandidates.isDefined
+                  fullScreen.isDefined
                 )
               ).flattenOption
             ).assign
