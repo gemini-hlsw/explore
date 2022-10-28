@@ -571,6 +571,7 @@ table.explore-border-table {
   }
 }
 
+
 // -----
 // Toolbar over summary tables
 // ------
@@ -611,30 +612,25 @@ table.explore-border-table {
   }
 }
 
-//----------
+// ----------
 // Main grid
-//----------
+// ----------
 .main-grid {
-  $topBottom: 42px;
+  $top-bottom-space: 42px;
 
   display: grid;
   height: 100vh;
   width: 100%;
   overflow: hidden;
-  grid-template-columns: 1fr;
-  grid-template-rows:
-    $topBottom minmax(calc(100% - $topBottom - $topBottom), 1fr) $topBottom;
-  grid-template-areas:
-    'header'
-    'body'
-    'sidebar';
+  grid-template:
+    'header' $top-bottom-space
+    'body' minmax(calc(100% - $top-bottom-space - $top-bottom-space), 1fr)
+    'sidebar' #{$top-bottom-space} / 1fr;
 
   @media (min-width: common.$tablet-responsive-cutoff) {
-    grid-template-columns: 50px auto;
-    grid-template-rows: $topBottom minmax(calc(100% - $topBottom), 1fr);
-    grid-template-areas:
-      'header header'
-      'sidebar body';
+    grid-template:
+      'header header' $top-bottom-space
+      'sidebar body' minmax(calc(100% - $top-bottom-space), 1fr) / 50px auto;
   }
 }
 
@@ -643,43 +639,21 @@ table.explore-border-table {
 // Two panel pages
 // Area where the grid-layout is placed
 // ------------
-.rgl-area,
-.tree-rgl {
-  // height: 100%;
-  // @include common.full-height-width;
-  // width: 100vw;
-}
-
 .tree-rgl {
   overflow-y: hidden;
   overflow-x: hidden;
   position: relative;
   display: flex;
-  // gap: 0.2em;
 }
 
 // Section on the left to place the tree
 .tree {
-  // height: 100%;
-  // width: 100%;
-  // left: 0;
-  // top: 0;
-  // position: absolute;
-  // justify-self: stretch;
-
-  // Special css to decorate the resize handle. It needs to be very specific
-  // .react-resizable-handle.react-resizable-handle-e {
-  //   cursor: e-resize;
-  // }
   display: flex;
 }
 
 // Inner area of the tree
 .tree-body {
-  // .full-height-width();
-  // @include common.full-height-width;
   width: 100vw;
-  // height: 100%;
 
   @media (min-width: common.$mobile-responsive-cutoff) {
     width: $tree-section-width;
@@ -688,32 +662,12 @@ table.explore-border-table {
       left: solid 1px var(--under-tab-border-color);
     }
   }
-// }
-//
-// .resizable-single-panel {
-  // box-shadow: inset -5px 0 0 0 var(--tile-background);
 }
-
-// .resizable-multi-panel {
-//   box-shadow: inset -5px 0 0 0 var(--site-page-background);
-// }
-
 
 .multi-panel-tile,
 .single-panel-tile {
-  // @include common.full-height-width;
-  // width: 100vw;
-  // @include common.full-height-width;
-  // height: 100%;
-  @media (min-width: common.$mobile-responsive-cutoff) {
-    // width: calc(100vw - $tree-section-width - 42px)
-    // width: initial;
-    flex-shrink: 1;
-    flex-grow: 1;
-  }
-
-  // position: absolute;
-  // top: 0;
+  flex-shrink: 1;
+  flex-grow: 1;
   overflow-y: auto;
   overflow-x: auto;
 }
@@ -732,16 +686,12 @@ table.explore-border-table {
 .obs-scroll-tree {
   height: 100%;
   flex-grow: 1;
+  overflow-y: auto;
   padding: {
     top: 0.2em;
     right: 0.2em;
     left: 0.2em;
   };
-  overflow-y: auto;
-  // border: {
-  //   right: solid 1px var(--under-tab-border-color);
-  //   left: solid 1px var(--under-tab-border-color);
-  // }
 }
 
 .obs-tree-wrapper {
@@ -751,14 +701,5 @@ table.explore-border-table {
   min-height: 0;
   height: 100%;
   overflow: hidden;
-
-  // .obs-tree,
-  // .obs-tree-section {
-  // // .obs-scroll-tree {
-  //   border: {
-  //     right: solid 1px var(--under-tab-border-color);
-  //     left: solid 1px var(--under-tab-border-color);
-  //   }
-  // }
 }
 

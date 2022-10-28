@@ -22,6 +22,7 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.*
 import explore.model.enums.AppTab
+import explore.model.enums.GridLayoutSection
 import explore.model.layout.*
 import explore.model.layout.unsafe.given
 import explore.model.reusability.*
@@ -65,19 +66,6 @@ import react.semanticui.sizes.*
 
 import scala.concurrent.duration.*
 
-// import react.semanticui.addons.select.Select
-// import react.semanticui.addons.select.Select.SelectItem
-// import react.semanticui.modules.dropdown.Dropdown
-// import queries.common.ObsQueriesGQL
-// import queries.common.TargetQueriesGQL
-// import queries.common.ObsQueriesGQL.*
-// import queries.schemas.odb.ObsQueries
-// import queries.schemas.odb.ObsQueries.*
-// import clue.TransactionalClient
-// import lucuma.core.syntax.all.*
-// import scala.collection.immutable.SortedMap
-// import explore.components.TileController
-
 case class ObsTabContents(
   userId:     Option[User.Id],
   programId:  Program.Id,
@@ -85,7 +73,6 @@ case class ObsTabContents(
   undoStacks: View[ModelUndoStacks[IO]],
   searching:  View[Set[Target.Id]]
 ) extends ReactFnProps(ObsTabContents.component) {
-  pprint.pprintln(this)
   val focusedObs: Option[Observation.Id] = focused.obsSet.map(_.head)
   val focusedTarget: Option[Target.Id]   = focused.target
 }
@@ -269,26 +256,28 @@ object ObsTabContents extends TwoPanels:
           _ => {
             import ctx.given
 
-            GridLayouts
-              .queryWithDefault[IO](
-                props.userId,
-                GridLayoutSection.ObservationsLayout,
-                defaultLayout
-              )
-              .attempt
-              .flatMap {
-                case Right(dbLayout) =>
-                  layout
-                    .mod(
-                      _.fold(
-                        mergeMap(dbLayout, defaultLayout).ready,
-                        _ => mergeMap(dbLayout, defaultLayout).ready,
-                        _ => mergeMap(dbLayout, defaultLayout).ready
+            IO.println("Load") *>
+              GridLayouts
+                .queryWithDefault[IO](
+                  props.userId,
+                  GridLayoutSection.ObservationsLayout,
+                  defaultLayout
+                )
+                .attempt
+                .flatMap {
+                  case Right(dbLayout) =>
+                    layoutPprint(dbLayout)
+                    layout
+                      .mod(
+                        _.fold(
+                          mergeMap(dbLayout, defaultLayout).ready,
+                          _ => mergeMap(dbLayout, defaultLayout).ready,
+                          cur => mergeMap(dbLayout, cur).ready
+                        )
                       )
-                    )
-                    .to[IO]
-                case Left(_)         => IO.unit
-              }
+                      .to[IO]
+                  case Left(_)         => IO.unit
+                }
           }
       )
       .useSingleEffect(debounce = 1.second)

@@ -17,7 +17,7 @@ import explore.common.UserPreferencesQueries.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Constants
-import explore.model.GridLayoutSection
+import explore.model.enums.GridLayoutSection
 import explore.model.enums.TileSizeState
 import explore.model.layout.*
 import explore.model.layout.given
@@ -110,7 +110,7 @@ object TileController:
       .useStateViewBy((p, _, _, _) => updateResizableState(p.layoutMap))
       // Update the current layout if it changes upstream
       .useEffectWithDepsBy((p, _, _, _, _) => p.layoutMap)((_, _, _, _, current) =>
-        layout => Callback.log("Changed upstream") *> current.set(updateResizableState(layout))
+        layout => current.set(updateResizableState(layout))
       )
       .render { (p, ctx, debouncer, bn, currentLayout) =>
         import ctx.given

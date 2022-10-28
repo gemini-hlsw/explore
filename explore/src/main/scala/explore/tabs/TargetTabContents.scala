@@ -24,6 +24,7 @@ import explore.components.ui.ExploreStyles
 import explore.given
 import explore.model.*
 import explore.model.enums.AppTab
+import explore.model.enums.GridLayoutSection
 import explore.model.layout.*
 import explore.model.layout.unsafe.given
 import explore.observationtree.AsterismGroupObsList
@@ -584,7 +585,6 @@ object TargetTabContents extends TwoPanels:
       .useEffectWithDepsBy((props, _, _, state) =>
         (props.focused, state.zoom(TwoPanelState.selected).reuseByValue)
       ) { (_, _, _, _) => params =>
-        println("Selected")
         val (focused, selected) = params
         (focused, selected.get) match
           case (Focused(Some(_), _), _)                    => selected.set(SelectedPanel.editor)
@@ -603,27 +603,26 @@ object TargetTabContents extends TwoPanels:
         (props, ctx, _, panels, _, layout, defaultLayout) => _ =>
           import ctx.given
 
-          IO.println("target reset") *>
-            GridLayouts
-              .queryWithDefault[IO](
-                props.userId,
-                GridLayoutSection.TargetLayout,
-                defaultLayout
-              )
-              .attempt
-              .flatMap {
-                case Right(dbLayout) =>
-                  layout
-                    .mod(
-                      _.fold(
-                        mergeMap(dbLayout, defaultLayout).ready,
-                        _ => mergeMap(dbLayout, defaultLayout).ready,
-                        cur => mergeMap(dbLayout, cur).ready
-                      )
+          GridLayouts
+            .queryWithDefault[IO](
+              props.userId,
+              GridLayoutSection.TargetLayout,
+              defaultLayout
+            )
+            .attempt
+            .flatMap {
+              case Right(dbLayout) =>
+                layout
+                  .mod(
+                    _.fold(
+                      mergeMap(dbLayout, defaultLayout).ready,
+                      _ => mergeMap(dbLayout, defaultLayout).ready,
+                      cur => mergeMap(dbLayout, cur).ready
                     )
-                    .to[IO]
-                case Left(_)         => IO.unit
-              }
+                  )
+                  .to[IO]
+              case Left(_)         => IO.unit
+            }
       }
       .useSingleEffect(debounce = 1.second)
       // Shared obs conf (posAngle)
@@ -690,7 +689,6 @@ object TargetTabContents extends TwoPanels:
           toastRef,
           fullScreen
         ) =>
-          println(twoPanelState.get)
           React.Fragment(
             // TODO switch to prime react
             Toast(Toast.Position.BottomRight).withRef(toastRef.ref),

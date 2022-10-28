@@ -11,9 +11,9 @@ import cats.syntax.all.*
 import clue.TransactionalClient
 import clue.data.syntax.*
 import explore.model.AladinMouseScroll
-import explore.model.GridLayoutSection
 import explore.model.TargetVisualOptions
 import explore.model.UserGlobalPreferences
+import explore.model.enums.GridLayoutSection
 import explore.model.enums.ItcChartType
 import explore.model.enums.PlotRange
 import explore.model.enums.TableId
@@ -90,17 +90,10 @@ object UserPreferencesQueries:
     )(using TransactionalClient[F, UserPreferencesDB]): F[LayoutsMap] =
       (for {
         uid <- OptionT.fromOption[F](userId)
-        c   <-
-          OptionT.pure(
-            LucumaGridLayoutPositionsBoolExp(
-              userId = StringComparisonExp(uid.show.assign).assign,
-              section = GridLayoutAreaComparisonExp(layoutSection.value.assign).assign
-            )
-          )
         r   <-
           OptionT
             .liftF[F, SortedMap[react.gridlayout.BreakpointName, (Int, Int, Layout)]] {
-              UserGridLayoutQuery.query[F](uid.show, c).map { r =>
+              UserGridLayoutQuery.query[F](uid.show, layoutSection).map { r =>
                 r.lucumaGridLayoutPositions match {
                   case l if l.isEmpty => defaultValue
                   case l              =>
@@ -124,7 +117,7 @@ object UserPreferencesQueries:
               case i if i.i.nonEmpty =>
                 LucumaGridLayoutPositionsInsertInput(
                   userId = uid.show.assign,
-                  section = section.value.assign,
+                  section = section.assign,
                   breakpointName = bl.name.name.assign,
                   width = i.w.assign,
                   height = i.h.assign,

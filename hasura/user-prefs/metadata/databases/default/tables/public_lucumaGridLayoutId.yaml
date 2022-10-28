@@ -1,0 +1,4 @@
+table:
+  name: lucumaGridLayoutId
+  schema: public
+is_enum: true

@@ -19,13 +19,13 @@ import explore.model.Asterism
 import explore.model.ConstraintGroup
 import explore.model.CoordinatesAtVizTime
 import explore.model.Focused
-import explore.model.GridLayoutSection
 import explore.model.ModelUndoStacks
 import explore.model.ObsIdSet
 import explore.model.ScienceMode
 import explore.model.TargetSummary
 import explore.model.display.given
 import explore.model.enums.AppTab
+import explore.model.enums.GridLayoutSection
 import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.ItcTarget
 import explore.model.itc.OverridenExposureTime

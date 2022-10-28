@@ -39,17 +39,17 @@ object UserPreferencesQueriesGQL {
   @GraphQL
   trait UserGridLayoutQuery extends GraphQLOperation[UserPreferencesDB] {
     val document = """
-      query
-        obsTabPreferences($userId: String!, $criteria: LucumaGridLayoutPositionsBoolExp!) {
-          lucumaGridLayoutPositions(where: $criteria) {
-            breakpointName
-            height
-            width
-            x
-            y
-            tile
-          }
+      query tabPositions($userId: String!, $section: LucumaGridLayoutIdEnum!){
+        lucumaGridLayoutPositions(where: {section: {_eq: $section}, userId: {_eq: $userId}}) {
+          breakpointName
+          height
+          width
+          x
+          y
+          tile
+          userId
         }
+      }
     """
   }
 

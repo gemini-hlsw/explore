@@ -98,21 +98,6 @@ input ElevationPlotTimeComparisonExp {
 }
 
 """
-Boolean expression to compare columns of type "grid_layout_area". All fields are combined with logical 'AND'.
-"""
-input GridLayoutAreaComparisonExp {
-  _eq: grid_layout_area
-  _gt: grid_layout_area
-  _gte: grid_layout_area
-  _in: [grid_layout_area!]
-  _isNull: Boolean
-  _lt: grid_layout_area
-  _lte: grid_layout_area
-  _neq: grid_layout_area
-  _nin: [grid_layout_area!]
-}
-
-"""
 Boolean expression to compare columns of type "Int". All fields are combined with logical 'AND'.
 """
 input IntComparisonExp {
@@ -143,12 +128,148 @@ input ItcChartTypeComparisonExp {
 }
 
 """
+columns and relationships of "lucumaGridLayoutId"
+"""
+type LucumaGridLayoutId {
+  id: String!
+}
+
+"""
+aggregated selection of "lucumaGridLayoutId"
+"""
+type LucumaGridLayoutIdAggregate {
+  aggregate: LucumaGridLayoutIdAggregateFields
+  nodes: [LucumaGridLayoutId!]!
+}
+
+"""
+aggregate fields of "lucumaGridLayoutId"
+"""
+type LucumaGridLayoutIdAggregateFields {
+  count(columns: [LucumaGridLayoutIdSelectColumn!], distinct: Boolean): Int!
+  max: LucumaGridLayoutIdMaxFields
+  min: LucumaGridLayoutIdMinFields
+}
+
+"""
+Boolean expression to filter rows from the table "lucumaGridLayoutId". All fields are combined with a logical 'AND'.
+"""
+input LucumaGridLayoutIdBoolExp {
+  _and: [LucumaGridLayoutIdBoolExp!]
+  _not: LucumaGridLayoutIdBoolExp
+  _or: [LucumaGridLayoutIdBoolExp!]
+  id: StringComparisonExp
+}
+
+"""
+unique or primary key constraints on table "lucumaGridLayoutId"
+"""
+enum LucumaGridLayoutIdConstraint {
+  """
+  unique or primary key constraint on columns "id"
+  """
+  lucumaGridLayoutId_pkey
+}
+
+enum LucumaGridLayoutIdEnum {
+  OBSERVATIONS
+  TARGETS
+}
+
+"""
+Boolean expression to compare columns of type "LucumaGridLayoutIdEnum". All fields are combined with logical 'AND'.
+"""
+input LucumaGridLayoutIdEnumComparisonExp {
+  _eq: LucumaGridLayoutIdEnum
+  _in: [LucumaGridLayoutIdEnum!]
+  _isNull: Boolean
+  _neq: LucumaGridLayoutIdEnum
+  _nin: [LucumaGridLayoutIdEnum!]
+}
+
+"""
+input type for inserting data into table "lucumaGridLayoutId"
+"""
+input LucumaGridLayoutIdInsertInput {
+  id: String
+}
+
+"""aggregate max on columns"""
+type LucumaGridLayoutIdMaxFields {
+  id: String
+}
+
+"""aggregate min on columns"""
+type LucumaGridLayoutIdMinFields {
+  id: String
+}
+
+"""
+response of any mutation on the table "lucumaGridLayoutId"
+"""
+type LucumaGridLayoutIdMutationResponse {
+  """number of rows affected by the mutation"""
+  affected_rows: Int!
+
+  """data from the rows affected by the mutation"""
+  returning: [LucumaGridLayoutId!]!
+}
+
+"""
+on_conflict condition type for table "lucumaGridLayoutId"
+"""
+input LucumaGridLayoutIdOnConflict {
+  constraint: LucumaGridLayoutIdConstraint!
+  update_columns: [LucumaGridLayoutIdUpdateColumn!]! = []
+  where: LucumaGridLayoutIdBoolExp
+}
+
+"""Ordering options when selecting data from "lucumaGridLayoutId"."""
+input LucumaGridLayoutIdOrderBy {
+  id: OrderBy
+}
+
+"""primary key columns input for table: lucumaGridLayoutId"""
+input LucumaGridLayoutIdPkColumnsInput {
+  id: String!
+}
+
+"""
+select columns of table "lucumaGridLayoutId"
+"""
+enum LucumaGridLayoutIdSelectColumn {
+  """column name"""
+  id
+}
+
+"""
+input type for updating data in table "lucumaGridLayoutId"
+"""
+input LucumaGridLayoutIdSetInput {
+  id: String
+}
+
+"""
+update columns of table "lucumaGridLayoutId"
+"""
+enum LucumaGridLayoutIdUpdateColumn {
+  """column name"""
+  id
+}
+
+input LucumaGridLayoutIdUpdates {
+  """sets the columns of the filtered rows to the given values"""
+  _set: LucumaGridLayoutIdSetInput
+  where: LucumaGridLayoutIdBoolExp!
+}
+
+"""
 columns and relationships of "lucumaGridLayoutPositions"
 """
 type LucumaGridLayoutPositions {
   breakpointName: breakpoint_name!
   height: Int!
-  section: grid_layout_area!
+  section: LucumaGridLayoutIdEnum!
   tile: String!
   userId: String!
   width: Int!
@@ -198,7 +319,7 @@ input LucumaGridLayoutPositionsBoolExp {
   _or: [LucumaGridLayoutPositionsBoolExp!]
   breakpointName: BreakpointNameComparisonExp
   height: IntComparisonExp
-  section: GridLayoutAreaComparisonExp
+  section: LucumaGridLayoutIdEnumComparisonExp
   tile: StringComparisonExp
   userId: StringComparisonExp
   width: IntComparisonExp
@@ -232,7 +353,7 @@ input type for inserting data into table "lucumaGridLayoutPositions"
 input LucumaGridLayoutPositionsInsertInput {
   breakpointName: breakpoint_name
   height: Int
-  section: grid_layout_area
+  section: LucumaGridLayoutIdEnum
   tile: String
   userId: String
   width: Int
@@ -244,7 +365,6 @@ input LucumaGridLayoutPositionsInsertInput {
 type LucumaGridLayoutPositionsMaxFields {
   breakpointName: breakpoint_name
   height: Int
-  section: grid_layout_area
   tile: String
   userId: String
   width: Int
@@ -256,7 +376,6 @@ type LucumaGridLayoutPositionsMaxFields {
 type LucumaGridLayoutPositionsMinFields {
   breakpointName: breakpoint_name
   height: Int
-  section: grid_layout_area
   tile: String
   userId: String
   width: Int
@@ -299,7 +418,7 @@ input LucumaGridLayoutPositionsOrderBy {
 """primary key columns input for table: lucumaGridLayoutPositions"""
 input LucumaGridLayoutPositionsPkColumnsInput {
   breakpointName: breakpoint_name!
-  section: grid_layout_area!
+  section: LucumaGridLayoutIdEnum!
   tile: String!
   userId: String!
 }
@@ -339,7 +458,7 @@ input type for updating data in table "lucumaGridLayoutPositions"
 input LucumaGridLayoutPositionsSetInput {
   breakpointName: breakpoint_name
   height: Int
-  section: grid_layout_area
+  section: LucumaGridLayoutIdEnum
   tile: String
   userId: String
   width: Int
@@ -2228,9 +2347,23 @@ scalar elevation_plot_range
 
 scalar elevation_plot_time
 
-scalar grid_layout_area
-
 scalar itc_chart_type
+
+"""
+Streaming cursor of the table "lucumaGridLayoutId"
+"""
+input lucumaGridLayoutId_streamCursorInput {
+  """Stream column input with initial value"""
+  initialValue: lucumaGridLayoutId_streamCursorValueInput!
+
+  """cursor ordering"""
+  ordering: CursorOrdering
+}
+
+"""Initial value of the column from where the streaming should start"""
+input lucumaGridLayoutId_streamCursorValueInput {
+  id: String
+}
 
 """
 Streaming cursor of the table "lucumaGridLayoutPositions"
@@ -2247,7 +2380,7 @@ input lucumaGridLayoutPositions_streamCursorInput {
 input lucumaGridLayoutPositions_streamCursorValueInput {
   breakpointName: breakpoint_name
   height: Int
-  section: grid_layout_area
+  section: LucumaGridLayoutIdEnum
   tile: String
   userId: String
   width: Int
@@ -2545,6 +2678,19 @@ input lucumaUser_streamCursorValueInput {
 """mutation root"""
 type Mutation {
   """
+  delete data from the table: "lucumaGridLayoutId"
+  """
+  deleteLucumaGridLayoutId(
+    """filter the rows which have to be deleted"""
+    where: LucumaGridLayoutIdBoolExp!
+  ): LucumaGridLayoutIdMutationResponse
+
+  """
+  delete single row from the table: "lucumaGridLayoutId"
+  """
+  deleteLucumaGridLayoutIdByPk(id: String!): LucumaGridLayoutId
+
+  """
   delete data from the table: "lucumaGridLayoutPositions"
   """
   deleteLucumaGridLayoutPositions(
@@ -2555,7 +2701,7 @@ type Mutation {
   """
   delete single row from the table: "lucumaGridLayoutPositions"
   """
-  deleteLucumaGridLayoutPositionsByPk(breakpointName: breakpoint_name!, section: grid_layout_area!, tile: String!, userId: String!): LucumaGridLayoutPositions
+  deleteLucumaGridLayoutPositionsByPk(breakpointName: breakpoint_name!, section: LucumaGridLayoutIdEnum!, tile: String!, userId: String!): LucumaGridLayoutPositions
 
   """
   delete data from the table: "lucumaItcPlotPreferences"
@@ -2673,6 +2819,28 @@ type Mutation {
   delete single row from the table: "lucumaUserPreferences"
   """
   deleteLucumaUserPreferencesByPk(userId: String!): LucumaUserPreferences
+
+  """
+  insert data into the table: "lucumaGridLayoutId"
+  """
+  insertLucumaGridLayoutId(
+    """the rows to be inserted"""
+    objects: [LucumaGridLayoutIdInsertInput!]!
+
+    """upsert condition"""
+    onConflict: LucumaGridLayoutIdOnConflict
+  ): LucumaGridLayoutIdMutationResponse
+
+  """
+  insert a single row into the table: "lucumaGridLayoutId"
+  """
+  insertLucumaGridLayoutIdOne(
+    """the row to be inserted"""
+    object: LucumaGridLayoutIdInsertInput!
+
+    """upsert condition"""
+    onConflict: LucumaGridLayoutIdOnConflict
+  ): LucumaGridLayoutId
 
   """
   insert data into the table: "lucumaGridLayoutPositions"
@@ -2893,6 +3061,34 @@ type Mutation {
     """upsert condition"""
     onConflict: LucumaUserPreferencesOnConflict
   ): LucumaUserPreferences
+
+  """
+  update data of the table: "lucumaGridLayoutId"
+  """
+  updateLucumaGridLayoutId(
+    """sets the columns of the filtered rows to the given values"""
+    _set: LucumaGridLayoutIdSetInput
+
+    """filter the rows which have to be updated"""
+    where: LucumaGridLayoutIdBoolExp!
+  ): LucumaGridLayoutIdMutationResponse
+
+  """
+  update single row of the table: "lucumaGridLayoutId"
+  """
+  updateLucumaGridLayoutIdByPk(
+    """sets the columns of the filtered rows to the given values"""
+    _set: LucumaGridLayoutIdSetInput
+    pk_columns: LucumaGridLayoutIdPkColumnsInput!
+  ): LucumaGridLayoutId
+
+  """
+  update multiples rows of table: "lucumaGridLayoutId"
+  """
+  updateLucumaGridLayoutIdMany(
+    """updates to execute, in order"""
+    updates: [LucumaGridLayoutIdUpdates!]!
+  ): [LucumaGridLayoutIdMutationResponse]
 
   """
   update data of the table: "lucumaGridLayoutPositions"
@@ -3195,6 +3391,51 @@ type Mutation {
 
 type Query {
   """
+  fetch data from the table: "lucumaGridLayoutId"
+  """
+  lucumaGridLayoutId(
+    """distinct select on columns"""
+    distinctOn: [LucumaGridLayoutIdSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [LucumaGridLayoutIdOrderBy!]
+
+    """filter the rows returned"""
+    where: LucumaGridLayoutIdBoolExp
+  ): [LucumaGridLayoutId!]!
+
+  """
+  fetch aggregated fields from the table: "lucumaGridLayoutId"
+  """
+  lucumaGridLayoutIdAggregate(
+    """distinct select on columns"""
+    distinctOn: [LucumaGridLayoutIdSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [LucumaGridLayoutIdOrderBy!]
+
+    """filter the rows returned"""
+    where: LucumaGridLayoutIdBoolExp
+  ): LucumaGridLayoutIdAggregate!
+
+  """
+  fetch data from the table: "lucumaGridLayoutId" using primary key columns
+  """
+  lucumaGridLayoutIdByPk(id: String!): LucumaGridLayoutId
+
+  """
   fetch data from the table: "lucumaGridLayoutPositions"
   """
   lucumaGridLayoutPositions(
@@ -3237,7 +3478,7 @@ type Query {
   """
   fetch data from the table: "lucumaGridLayoutPositions" using primary key columns
   """
-  lucumaGridLayoutPositionsByPk(breakpointName: breakpoint_name!, section: grid_layout_area!, tile: String!, userId: String!): LucumaGridLayoutPositions
+  lucumaGridLayoutPositionsByPk(breakpointName: breakpoint_name!, section: LucumaGridLayoutIdEnum!, tile: String!, userId: String!): LucumaGridLayoutPositions
 
   """
   fetch data from the table: "lucumaItcPlotPreferences"
@@ -3637,6 +3878,65 @@ type Query {
 
 type Subscription {
   """
+  fetch data from the table: "lucumaGridLayoutId"
+  """
+  lucumaGridLayoutId(
+    """distinct select on columns"""
+    distinctOn: [LucumaGridLayoutIdSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [LucumaGridLayoutIdOrderBy!]
+
+    """filter the rows returned"""
+    where: LucumaGridLayoutIdBoolExp
+  ): [LucumaGridLayoutId!]!
+
+  """
+  fetch aggregated fields from the table: "lucumaGridLayoutId"
+  """
+  lucumaGridLayoutIdAggregate(
+    """distinct select on columns"""
+    distinctOn: [LucumaGridLayoutIdSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [LucumaGridLayoutIdOrderBy!]
+
+    """filter the rows returned"""
+    where: LucumaGridLayoutIdBoolExp
+  ): LucumaGridLayoutIdAggregate!
+
+  """
+  fetch data from the table: "lucumaGridLayoutId" using primary key columns
+  """
+  lucumaGridLayoutIdByPk(id: String!): LucumaGridLayoutId
+
+  """
+  fetch data from the table in a streaming manner : "lucumaGridLayoutId"
+  """
+  lucumaGridLayoutIdStream(
+    """maximum number of rows returned in a single batch"""
+    batchSize: Int!
+
+    """cursor to stream the results returned by the query"""
+    cursor: [lucumaGridLayoutId_streamCursorInput]!
+
+    """filter the rows returned"""
+    where: LucumaGridLayoutIdBoolExp
+  ): [LucumaGridLayoutId!]!
+
+  """
   fetch data from the table: "lucumaGridLayoutPositions"
   """
   lucumaGridLayoutPositions(
@@ -3679,7 +3979,7 @@ type Subscription {
   """
   fetch data from the table: "lucumaGridLayoutPositions" using primary key columns
   """
-  lucumaGridLayoutPositionsByPk(breakpointName: breakpoint_name!, section: grid_layout_area!, tile: String!, userId: String!): LucumaGridLayoutPositions
+  lucumaGridLayoutPositionsByPk(breakpointName: breakpoint_name!, section: LucumaGridLayoutIdEnum!, tile: String!, userId: String!): LucumaGridLayoutPositions
 
   """
   fetch data from the table in a streaming manner : "lucumaGridLayoutPositions"

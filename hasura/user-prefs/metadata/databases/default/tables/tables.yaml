@@ -1,3 +1,4 @@
+- "!include public_lucumaGridLayoutId.yaml"
 - "!include public_lucumaGridLayoutPositions.yaml"
 - "!include public_lucumaItcPlotPreferences.yaml"
 - "!include public_lucumaObservation.yaml"

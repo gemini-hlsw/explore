@@ -44,9 +44,6 @@ object TwoPanelState {
   val selected  = Focus[TwoPanelState](_.selected)
   val treeWidth = Focus[TwoPanelState](_.treeWidth)
 
-  // Keep them as def to take the value window.innerWidth at the current time
-  // def isTwoPanel: Boolean = window.innerWidth > Constants.TwoPanelCutoff
-
   def initialPanelWidth(sp: SelectedPanel): Double =
     if (window.canFitTwoPanels) Constants.InitialTreeWidth
     else if (sp.rightPanelVisible) 0
