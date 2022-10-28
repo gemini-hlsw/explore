@@ -33,4 +33,3 @@ trait UserPreferencesDB:
     type LucumaTableIdsEnum      = explore.model.enums.TableId
     type LucumaSortDirectionEnum = SortDirection
     type LucumaGridLayoutIdEnum  = explore.model.enums.GridLayoutSection
-

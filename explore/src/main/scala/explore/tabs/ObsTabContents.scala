@@ -23,6 +23,7 @@ import explore.components.ui.ExploreStyles
 import explore.model.*
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
+import explore.model.enums.SelectedPanel
 import explore.model.layout.*
 import explore.model.layout.unsafe.given
 import explore.model.reusability.*
@@ -162,7 +163,7 @@ object ObsTabContents extends TwoPanels:
 
   private def renderFn(
     props:              Props,
-    panels:             View[TwoPanelState],
+    selectedView:       View[SelectedPanel],
     defaultLayouts:     LayoutsMap,
     layouts:            View[Pot[LayoutsMap]],
     resize:             UseResizeDetectorReturn,
@@ -176,15 +177,13 @@ object ObsTabContents extends TwoPanels:
     val observations     = obsWithConstraints.zoom(ObsSummariesWithConstraints.observations)
     val constraintGroups = obsWithConstraints.zoom(ObsSummariesWithConstraints.constraintGroups)
 
-    val selectedView = panels.zoom(TwoPanelState.selected)
-
     def observationsTree(observations: View[ObservationList]) =
       ObsList(
         observations,
         props.programId,
         props.focusedObs,
         props.focusedTarget,
-        selectedView.set(SelectedPanel.summary),
+        selectedView.set(SelectedPanel.Summary),
         props.undoStacks.zoom(ModelUndoStacks.forObsList)
       )
 
@@ -217,11 +216,11 @@ object ObsTabContents extends TwoPanels:
           defaultLayouts,
           layouts,
           resize
-        ).withKey(s"${obsId.show}-${resize.isReady}-${panels.get}-${layouts.get}")
+        ).withKey(s"${obsId.show}")
       )
 
     makeOneOrTwoPanels(
-      panels,
+      selectedView,
       observationsTree(observations),
       rightSide,
       RightSideCardinality.Multi,
@@ -233,16 +232,15 @@ object ObsTabContents extends TwoPanels:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      .useStateView(TwoPanelState.initial(SelectedPanel.Uninitialized))
-      .useEffectWithDepsBy((props, _, panels) =>
-        (props.focusedObs, panels.zoom(TwoPanelState.selected).reuseByValue)
-      ) { (_, _, _) => params =>
-        val (focusedObs, selected) = params
-        (focusedObs, selected.get) match {
-          case (Some(_), _)                 => selected.set(SelectedPanel.editor)
-          case (None, SelectedPanel.Editor) => selected.set(SelectedPanel.Summary)
-          case _                            => Callback.empty
-        }
+      .useStateView[SelectedPanel](SelectedPanel.Uninitialized)
+      .useEffectWithDepsBy((props, _, panels) => (props.focusedObs, panels.reuseByValue)) {
+        (_, _, _) => params =>
+          val (focusedObs, selected) = params
+          (focusedObs, selected.get) match {
+            case (Some(_), _)                 => selected.set(SelectedPanel.Editor)
+            case (None, SelectedPanel.Editor) => selected.set(SelectedPanel.Summary)
+            case _                            => Callback.empty
+          }
       }
       // Measure its size
       .useResizeDetector()

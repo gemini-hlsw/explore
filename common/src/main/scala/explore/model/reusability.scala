@@ -8,6 +8,7 @@ import explore.data.KeyedIndexedList
 import explore.events.CatalogMessage
 import explore.model.Asterism
 import explore.model.ObjectTracking
+import explore.model.enums.SelectedPanel
 import explore.model.itc.CoverageCenterWavelength
 import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.ItcTarget
@@ -129,3 +130,5 @@ object reusability:
   given Reusability[ObsSummariesWithConstraints] = Reusability.byEq
 
   given Reusability[Range.Inclusive] = Reusability.by(x => (x.start, x.end, x.step))
+
+  given Reusability[SelectedPanel] = Reusability.byEq

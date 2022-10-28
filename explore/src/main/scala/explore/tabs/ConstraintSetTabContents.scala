@@ -21,7 +21,9 @@ import explore.constraints.ConstraintsPanel
 import explore.constraints.ConstraintsSummaryTable
 import explore.model.*
 import explore.model.enums.AppTab
+import explore.model.enums.SelectedPanel
 import explore.model.reusability.*
+import explore.model.reusability.given
 import explore.observationtree.ConstraintGroupObsList
 import explore.optics.*
 import explore.optics.all.*
@@ -78,7 +80,7 @@ object ConstraintSetTabContents extends TwoPanels:
 
   private def renderFn(
     props:              Props,
-    state:              View[TwoPanelState],
+    state:              View[SelectedPanel],
     resize:             UseResizeDetectorReturn,
     ctx:                AppContext[IO]
   )(
@@ -90,7 +92,7 @@ object ConstraintSetTabContents extends TwoPanels:
         constraintWithObs,
         props.programId,
         props.focusedObsSet,
-        state.zoom(TwoPanelState.selected).set(SelectedPanel.summary).reuseAlways,
+        state.set(SelectedPanel.Summary),
         props.expandedIds,
         props.listUndoStacks
       )
@@ -128,7 +130,7 @@ object ConstraintSetTabContents extends TwoPanels:
     }
 
     val backButton: VdomNode =
-      makeBackButton(props.programId, AppTab.Constraints, state.zoom(TwoPanelState.selected), ctx)
+      makeBackButton(props.programId, AppTab.Constraints, state, ctx)
 
     val rightSide = (_: UseResizeDetectorReturn) =>
       props.focusedObsSet
@@ -231,16 +233,15 @@ object ConstraintSetTabContents extends TwoPanels:
         }
         UseHotkeysProps(GoToSummary.value, callbacks)
       }
-      .useStateView(TwoPanelState.initial(SelectedPanel.Uninitialized))
-      .useEffectWithDepsBy((props, _, state) =>
-        (props.focusedObsSet, state.zoom(TwoPanelState.selected).reuseByValue)
-      ) { (_, _, _) => params =>
-        val (focusedObsSet, selected) = params
-        (focusedObsSet, selected.get) match {
-          case (Some(_), _)                 => selected.set(SelectedPanel.editor)
-          case (None, SelectedPanel.Editor) => selected.set(SelectedPanel.summary)
-          case _                            => Callback.empty
-        }
+      .useStateView[SelectedPanel](SelectedPanel.Uninitialized)
+      .useEffectWithDepsBy((props, _, state) => (props.focusedObsSet, state.reuseByValue)) {
+        (_, _, _) => params =>
+          val (focusedObsSet, selected) = params
+          (focusedObsSet, selected.get) match {
+            case (Some(_), _)                 => selected.set(SelectedPanel.Editor)
+            case (None, SelectedPanel.Editor) => selected.set(SelectedPanel.Summary)
+            case _                            => Callback.empty
+          }
       }
       .useStreamResourceViewOnMountBy { (props, ctx, _) =>
         import ctx.given

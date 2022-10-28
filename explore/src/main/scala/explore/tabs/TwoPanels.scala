@@ -15,6 +15,7 @@ import explore.common.UserPreferencesQueries.*
 import explore.components.ui.ExploreStyles
 import explore.model.*
 import explore.model.enums.AppTab
+import explore.model.enums.SelectedPanel
 import explore.syntax.ui.*
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -53,7 +54,7 @@ trait TwoPanels {
       clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
       onClickE = linkOverride[ButtonProps](
         ctx.pushPage(appTab, programId, Focused.None) >>
-          pv.set(SelectedPanel.tree)
+          pv.set(SelectedPanel.Tree)
       )
     )(^.href := ctx.pageUrl(appTab, programId, Focused.None), Icons.ChevronLeft)
 
@@ -67,7 +68,7 @@ trait TwoPanels {
     <.div(ExploreStyles.TreeBody)(panel)
 
   def makeOneOrTwoPanels(
-    pv:          View[TwoPanelState],
+    pv:          View[SelectedPanel],
     leftPanel:   VdomNode,
     rightSide:   UseResizeDetectorReturn => VdomNode,
     cardinality: RightSideCardinality,
@@ -88,13 +89,13 @@ trait TwoPanels {
       <.div(
         ExploreStyles.TreeRGL,
         <.div(ExploreStyles.Tree, treeInner(leftPanel))
-          .when(pv.get.selected.leftPanelVisible),
+          .when(pv.get.leftPanelVisible),
         <.div(
           ExploreStyles.SinglePanelTile.when(cardinality == RightSideCardinality.Single),
           ExploreStyles.MultiPanelTile.when(cardinality == RightSideCardinality.Multi)
         )(
           rightSide(resize)
-        ).when(pv.get.selected.rightPanelVisible)
+        ).when(pv.get.rightPanelVisible)
       ).withRef(resize.ref)
     }
 }

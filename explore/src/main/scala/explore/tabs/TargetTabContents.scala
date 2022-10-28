@@ -25,8 +25,10 @@ import explore.given
 import explore.model.*
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
+import explore.model.enums.SelectedPanel
 import explore.model.layout.*
 import explore.model.layout.unsafe.given
+import explore.model.reusability.given
 import explore.observationtree.AsterismGroupObsList
 import explore.optics.*
 import explore.optics.all.*
@@ -137,7 +139,7 @@ object TargetTabContents extends TwoPanels:
 
   private def renderFn(
     props:                 Props,
-    panels:                View[TwoPanelState],
+    selectedView:          View[SelectedPanel],
     defaultLayouts:        LayoutsMap,
     layouts:               View[Pot[LayoutsMap]],
     resize:                UseResizeDetectorReturn,
@@ -149,8 +151,6 @@ object TargetTabContents extends TwoPanels:
   ): VdomNode = {
     import ctx.given
 
-    val selectedView: View[SelectedPanel] = panels.zoom(TwoPanelState.selected)
-
     val targetMap: View[TargetWithObsList] =
       asterismGroupsWithObs.zoom(AsterismGroupsWithObs.targetsWithObs)
 
@@ -159,7 +159,7 @@ object TargetTabContents extends TwoPanels:
         objectsWithObs,
         props.programId,
         props.focused,
-        selectedView.set(SelectedPanel.summary),
+        selectedView.set(SelectedPanel.Summary),
         props.expandedIds,
         props.listUndoStacks
       )
@@ -217,7 +217,7 @@ object TargetTabContents extends TwoPanels:
         clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
         onClickE = linkOverride[ButtonProps](
           ctx.pushPage(AppTab.Targets, props.programId, Focused.None) >>
-            selectedView.set(SelectedPanel.tree)
+            selectedView.set(SelectedPanel.Tree)
         )
       )(^.href := ctx.pageUrl(AppTab.Targets, props.programId, Focused.None), Icons.ChevronLeft)
 
@@ -514,8 +514,6 @@ object TargetTabContents extends TwoPanels:
       potRender[LayoutsMap](rglRender)(layouts.get)
     }
 
-    val selectedPanel = panels.get.selected
-
     val optSelected: Option[Either[Target.Id, ObsIdSet]] = props.focused match {
       case Focused(Some(obsIdSet), _)    => obsIdSet.asRight.some
       case Focused(None, Some(targetId)) => targetId.asLeft.some
@@ -546,7 +544,7 @@ object TargetTabContents extends TwoPanels:
         }
 
     makeOneOrTwoPanels(
-      panels,
+      selectedView,
       targetTree(asterismGroupsWithObs),
       rightSide,
       RightSideCardinality.Multi,
@@ -581,16 +579,14 @@ object TargetTabContents extends TwoPanels:
       .useContext(AppContext.ctx)
       .useStateView(LoadingState.Done)
       // Two panel state
-      .useStateView(TwoPanelState.initial(SelectedPanel.Uninitialized))
-      .useEffectWithDepsBy((props, _, _, state) =>
-        (props.focused, state.zoom(TwoPanelState.selected).reuseByValue)
-      ) { (_, _, _, _) => params =>
-        val (focused, selected) = params
-        (focused, selected.get) match
-          case (Focused(Some(_), _), _)                    => selected.set(SelectedPanel.editor)
-          case (Focused(None, Some(_)), _)                 => selected.set(SelectedPanel.editor)
-          case (Focused(None, None), SelectedPanel.Editor) => selected.set(SelectedPanel.Summary)
-          case _                                           => Callback.empty
+      .useStateView[SelectedPanel](SelectedPanel.Uninitialized)
+      .useEffectWithDepsBy((props, _, _, state) => (props.focused, state.reuseByValue)) {
+        (_, _, _, selected) => (focused, _) =>
+          (focused, selected.get) match
+            case (Focused(Some(_), _), _)                    => selected.set(SelectedPanel.Editor)
+            case (Focused(None, Some(_)), _)                 => selected.set(SelectedPanel.Editor)
+            case (Focused(None, None), SelectedPanel.Editor) => selected.set(SelectedPanel.Summary)
+            case _                                           => Callback.empty
       }
       // Measure its size
       .useResizeDetector()
