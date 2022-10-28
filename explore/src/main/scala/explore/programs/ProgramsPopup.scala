@@ -6,6 +6,7 @@ package explore.programs
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.View
+import crystal.react.hooks.*
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
@@ -15,14 +16,13 @@ import explore.model.enums.AppTab
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
+import lucuma.core.util.NewType
+import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
-import react.semanticui.elements.button.Button
-import react.semanticui.modules.modal.Modal
-import react.semanticui.modules.modal.*
-import react.semanticui.shorthand.*
-import react.semanticui.sizes.*
+import react.primereact.Dialog
+import react.primereact.DialogPosition
 
 import scalajs.js.JSConverters.*
 
@@ -34,6 +34,9 @@ case class ProgramsPopup(
 
 object ProgramsPopup {
   private type Props = ProgramsPopup
+
+  private object IsOpen extends NewType[Boolean]
+  private type IsOpen = IsOpen.type
 
   private def selectProgram(
     onClose:    Option[Callback],
@@ -48,37 +51,27 @@ object ProgramsPopup {
   private val component = ScalaFnComponent
     .withHooks[Props]
     .useContext(AppContext.ctx)
-    .render { (props, ctx) =>
-      val actions =
-        if (props.onClose.isEmpty) List.empty
-        else
-          List(
-            Button(size = Small, icon = true, negative = true)(Icons.Close, "Cancel")(
-              ^.tpe := "button",
-              ^.key := "input-cancel"
-            )
-          )
+    .useStateView(IsOpen(true))
+    .render { (props, ctx, isOpen) =>
 
-      Modal(
-        clazz = ExploreStyles.ProgramsPopup,
-        actions = actions,
-        centered = false,
-        open = true,
-        closeOnDimmerClick = props.onClose.isDefined,
+      val onHide = props.onClose.map(oc => isOpen.set(IsOpen(false)) >> oc)
+
+      Dialog(
+        visible = isOpen.get.value,
+        onHide = onHide.orEmpty,
+        position = DialogPosition.Top,
         closeOnEscape = props.onClose.isDefined,
-        closeIcon = props.onClose
-          .map(_ => Icons.Close.withClass(ExploreStyles.ModalCloseButton): VdomNode)
-          .orUndefined,
-        dimmer = Dimmer.Blurring,
-        size = ModalSize.Small,
-        onClose = props.onClose.orUndefined,
-        header = ModalHeader(content = "Programs"),
-        content = ModalContent(
-          ProgramTable(
-            props.currentProgramId,
-            selectProgram = selectProgram(props.onClose, props.undoStacks, ctx),
-            props.onClose.isEmpty
-          )
+        closable = props.onClose.isDefined,
+        dismissableMask = props.onClose.isDefined,
+        resizable = false,
+        clazz = ExploreStyles.Dialog.Small |+| ExploreStyles.ProgramsPopup,
+        header = "Programs"
+      )(
+        ProgramTable(
+          props.currentProgramId,
+          selectProgram = selectProgram(props.onClose, props.undoStacks, ctx),
+          props.onClose.isEmpty,
+          onHide
         )
       )
     }

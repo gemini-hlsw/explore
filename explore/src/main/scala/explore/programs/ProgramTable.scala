@@ -29,7 +29,9 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
 import lucuma.react.syntax.*
 import lucuma.react.table.*
+import lucuma.refined.*
 import lucuma.schemas.ObservationDB
+import lucuma.ui.primereact.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -39,18 +41,14 @@ import queries.common.ProgramQueriesGQL.*
 import react.common.ReactFnProps
 import react.floatingui.Placement
 import react.floatingui.syntax.*
-import react.semanticui.collections.table.TableCompact
-import react.semanticui.collections.table.*
-import react.semanticui.elements.button.*
-import react.semanticui.modules.checkbox.Checkbox
-import react.semanticui.shorthand.*
-import react.semanticui.sizes.*
+import react.primereact.Button
 import reactST.{tanstackTableCore => raw}
 
 case class ProgramTable(
   currentProgramId: Option[Program.Id],
   selectProgram:    Program.Id => Callback,
-  isRequired:       Boolean
+  isRequired:       Boolean,
+  onClose:          Option[Callback]
 ) extends ReactFnProps(ProgramTable.component)
 
 object ProgramTable:
@@ -131,45 +129,26 @@ object ProgramTable:
             val isDeleted = cell.value.get.deleted
             <.div(
               Button(
-                content = "Select",
-                size = Mini,
-                compact = true,
+                label = "Select",
                 icon = Icons.Checkmark,
+                severity = Button.Severity.Secondary,
                 disabled = currentProgramId.exists(_ === programId),
-                onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
-                  e.preventDefaultCB >>
-                    e.stopPropagationCB >>
-                    props.selectProgram(programId)
-              ).unless(cell.row.original.get.deleted),
-              <.span(
-                Button(
-                  size = Mini,
-                  compact = true,
-                  icon = Icons.Trash,
-                  // can't delete the current or last one
-                  disabled = currentProgramId.exists(_ === programId) || programCount < 2,
-                  onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
-                    e.preventDefaultCB >>
-                      e.stopPropagationCB >>
-                      deleteProgram(cell.value).runAsync
-                )
-              ).withTooltip(tooltip = "Delete program", placement = Placement.Right)
-                .unless(isDeleted),
-              <.span(
-                Button(
-                  content = "Undelete",
-                  size = Mini,
-                  compact = true,
-                  icon = Icons.TrashUndo,
-                  onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
-                    e.preventDefaultCB >>
-                      e.stopPropagationCB >>
-                      undeleteProgram(cell.value).runAsync
-                )
-              ).withTooltip(
-                tooltip = "Undelete program",
-                placement = Placement.Right
-              ).when(isDeleted)
+                onClick = props.selectProgram(programId)
+              ).compact.mini.unless(cell.row.original.get.deleted),
+              Button(
+                icon = Icons.Trash,
+                severity = Button.Severity.Secondary,
+                disabled = currentProgramId.exists(_ === programId) || programCount < 2,
+                onClick = deleteProgram(cell.value).runAsync,
+                tooltip = "Delete program"
+              ).mini.compact.unless(isDeleted),
+              Button(
+                label = "Undelete",
+                icon = Icons.TrashUndo,
+                severity = Button.Severity.Secondary,
+                onClick = undeleteProgram(cell.value).runAsync,
+                tooltip = "Undelete program"
+              ).mini.compact.when(isDeleted)
             )
           },
           size = 100.toPx,
@@ -227,33 +206,44 @@ object ProgramTable:
     .render { (props, ctx, adding, showDeleted, programsPot, _, _, table) =>
       import ctx.given
 
-      <.div(ExploreStyles.ProgramTable)(
+      val closeButton =
+        props.onClose.fold(none)(cb =>
+          Button(label = "Cancel",
+                 icon = Icons.Close,
+                 severity = Button.Severity.Danger,
+                 onClick = cb
+          ).compact.some
+        )
+
+      <.div(
         programsPot.render(programs =>
           React.Fragment(
-            PrimeAutoHeightVirtualizedTable(
-              table,
-              estimateRowHeight = _ => 32.toPx,
-              striped = true,
-              compact = Compact.Very,
-              tableMod = ExploreStyles.ExploreTable |+| ExploreStyles.ExploreBorderTable,
-              emptyMessage = "No programs available"
+            <.div(ExploreStyles.ProgramTable)(
+              PrimeAutoHeightVirtualizedTable(
+                table,
+                estimateRowHeight = _ => 32.toPx,
+                striped = true,
+                compact = Compact.Very,
+                tableMod = ExploreStyles.ExploreTable |+| ExploreStyles.ExploreBorderTable,
+                emptyMessage = "No programs available"
+              )
             ),
-            <.div(ExploreStyles.ProgramsPopupAdditionalActions)(
+            // Since we can't add a footer to the Dialog here, we pretend to be one.
+            <.div(ExploreStyles.ProgramsPopupFauxFooter)(
               Button(
-                clazz = ExploreStyles.ProgramAdd,
-                compact = true,
-                positive = true,
+                label = "Program",
                 icon = Icons.New,
-                content = "Program",
+                severity = Button.Severity.Success,
+                clazz = ExploreStyles.ProgramAdd,
                 disabled = adding.get,
                 loading = adding.get,
                 onClick = addProgram(programs, adding).runAsync
+              ).small.compact,
+              CheckboxView(id = "show-deleted".refined,
+                           value = showDeleted,
+                           label = "Show deleted"
               ),
-              Checkbox(
-                label = "Show deleted",
-                checked = showDeleted.get,
-                onChange = showDeleted.set
-              )
+              closeButton
             )
           )
         )

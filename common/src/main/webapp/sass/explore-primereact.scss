@@ -20,10 +20,10 @@
 
 .p-component.p-dialog {
   &.pl-dialog-small {
-    max-width: 95%;
+    width: 95%;
 
     @media (min-width: common.$tablet-responsive-cutoff) {
-      max-width: 760px;
+      width: 760px;
     }
   }
 }

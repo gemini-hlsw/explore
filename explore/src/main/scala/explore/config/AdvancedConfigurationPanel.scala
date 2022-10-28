@@ -734,40 +734,39 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               offsetsControl,
               trigger = Button(
                 label = "View Sequence",
-                size = Button.Size.Small
-              ).compact
+                severity = Button.Severity.Secondary
+              ).compact.small
             ),
             Button(
               label = "View Suggested Configs",
               icon = Icons.ListIcon,
-              size = Button.Size.Small,
+              severity = Button.Severity.Secondary,
               onClick = props.editState.set(ConfigEditState.TableView)
-            ).compact
+            ).compact.small
               .unless(isCustomized(props.scienceModeAdvanced)),
             Button(
               label = "Revert Customizations",
               icon = Icons.TrashUnstyled,
-              size = Button.Size.Small,
               severity = Button.Severity.Danger,
               onClick = props.editState.set(ConfigEditState.DetailsView) >>
                 exposureModeEnum.set(none) >>
                 invalidateITC >>
                 revertCustomizations(props.scienceModeAdvanced)
-            ).compact
+            ).compact.small
               .when(isCustomized(props.scienceModeAdvanced)),
             Button(
               label = "Customize",
               icon = Icons.Edit,
-              size = Button.Size.Small,
+              severity = Button.Severity.Secondary,
               onClick = props.editState.set(ConfigEditState.SimpleEdit)
-            ).compact
+            ).compact.small
               .when(props.editState.get === ConfigEditState.DetailsView),
             Button(
               label = "Advanced Customization",
               icon = Icons.ExclamationTriangle.withClass(ExploreStyles.WarningIcon),
-              size = Button.Size.Small,
+              severity = Button.Severity.Secondary,
               onClick = props.editState.set(ConfigEditState.AdvancedEdit)
-            ).compact
+            ).compact.small
               .when(props.editState.get === ConfigEditState.SimpleEdit)
           )
         )
