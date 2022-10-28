@@ -66,7 +66,6 @@ import react.hotkeys.*
 import react.hotkeys.hooks.*
 import react.primereact.Toast
 import react.primereact.hooks.all.*
-import react.resizable.*
 import react.resizeDetector.*
 import react.resizeDetector.hooks.*
 import react.semanticui.elements.button.Button
