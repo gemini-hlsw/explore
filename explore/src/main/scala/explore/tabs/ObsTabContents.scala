@@ -235,6 +235,9 @@ object ObsTabContents extends TwoResizablePanels:
                  debouncer
       )
     )
+    <.div(
+      "test"
+    ).withRef(resize.ref)
   }
 
   private val component =
@@ -289,7 +292,7 @@ object ObsTabContents extends TwoResizablePanels:
           }
       )
       .useSingleEffect(debounce = 1.second)
-      .useStreamResourceViewWithReuseOnMountBy { (props, ctx, _, _, _, _, _) =>
+      .useStreamResourceViewOnMountBy { (props, ctx, _, _, _, _, _) =>
         import ctx.given
 
         ProgramObservationsQuery
@@ -300,61 +303,61 @@ object ObsTabContents extends TwoResizablePanels:
           )
       }
       .useToastRef
-      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, _, obsList, _) =>
-        (props.focusedObs, obsList)
-      ) { (props, ctx, _, _, _, _, _, obsList, toastRef) => (obs, _) =>
-        import ctx.given
-
-        val observationIds =
-          obsList.foldMap(_.value.get.observations.elements.map(_.id).zipWithIndex.toList)
-        val obsPos         = observationIds.find(a => obs.forall(_ === a._1)).map(_._2)
-
-        def callbacks: ShortcutCallbacks = {
-          case CopyAlt1 | CopyAlt2 | CopyAlt3 =>
-            obs
-              .map(id =>
-                ctx.exploreClipboard
-                  .set(LocalClipboard.CopiedObservations(ObsIdSet.one(id)))
-                  .runAsync *>
-                  toastRef.info(s"Copied obs $id")
-              )
-              .getOrEmpty
-          case Down                           =>
-            obsPos
-              .filter(_ < observationIds.length && obsList.nonEmpty)
-              .flatMap { p =>
-                val next = if (props.focusedObs.isEmpty) 0 else p + 1
-                observationIds.lift(next).map { (obsId, _) =>
-                  ctx.setPageVia(AppTab.Observations,
-                                 props.programId,
-                                 Focused.singleObs(obsId),
-                                 SetRouteVia.HistoryPush
-                  )
-                }
-              }
-              .getOrEmpty
-          case Up                             =>
-            obsPos
-              .filter(_ > 0)
-              .flatMap { p =>
-                observationIds.lift(p - 1).map { (obsId, _) =>
-                  ctx.setPageVia(AppTab.Observations,
-                                 props.programId,
-                                 Focused.singleObs(obsId),
-                                 SetRouteVia.HistoryPush
-                  )
-                }
-              }
-              .getOrEmpty
-          case GoToSummary                    =>
-            ctx.setPageVia(AppTab.Observations,
-                           props.programId,
-                           Focused.None,
-                           SetRouteVia.HistoryPush
-            )
-        }
-        UseHotkeysProps((GoToSummary :: Up :: Down :: CopyKeys).toHotKeys, callbacks)
-      }
+      // .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, _, obsList, _) =>
+      //   (props.focusedObs, obsList)
+      // ) { (props, ctx, _, _, _, _, _, obsList, toastRef) => (obs, _) =>
+      //   import ctx.given
+      //
+      //   val observationIds =
+      //     obsList.foldMap(_.value.get.observations.elements.map(_.id).zipWithIndex.toList)
+      //   val obsPos         = observationIds.find(a => obs.forall(_ === a._1)).map(_._2)
+      //
+      //   def callbacks: ShortcutCallbacks = {
+      //     case CopyAlt1 | CopyAlt2 | CopyAlt3 =>
+      //       obs
+      //         .map(id =>
+      //           ctx.exploreClipboard
+      //             .set(LocalClipboard.CopiedObservations(ObsIdSet.one(id)))
+      //             .runAsync *>
+      //             toastRef.info(s"Copied obs $id")
+      //         )
+      //         .getOrEmpty
+      //     case Down                           =>
+      //       obsPos
+      //         .filter(_ < observationIds.length && obsList.nonEmpty)
+      //         .flatMap { p =>
+      //           val next = if (props.focusedObs.isEmpty) 0 else p + 1
+      //           observationIds.lift(next).map { (obsId, _) =>
+      //             ctx.setPageVia(AppTab.Observations,
+      //                            props.programId,
+      //                            Focused.singleObs(obsId),
+      //                            SetRouteVia.HistoryPush
+      //             )
+      //           }
+      //         }
+      //         .getOrEmpty
+      //     case Up                             =>
+      //       obsPos
+      //         .filter(_ > 0)
+      //         .flatMap { p =>
+      //           observationIds.lift(p - 1).map { (obsId, _) =>
+      //             ctx.setPageVia(AppTab.Observations,
+      //                            props.programId,
+      //                            Focused.singleObs(obsId),
+      //                            SetRouteVia.HistoryPush
+      //             )
+      //           }
+      //         }
+      //         .getOrEmpty
+      //     case GoToSummary                    =>
+      //       ctx.setPageVia(AppTab.Observations,
+      //                      props.programId,
+      //                      Focused.None,
+      //                      SetRouteVia.HistoryPush
+      //       )
+      //   }
+      //   UseHotkeysProps((GoToSummary :: Up :: Down :: CopyKeys).toHotKeys, callbacks)
+      // }
       .render {
         (
           props,
@@ -367,8 +370,14 @@ object ObsTabContents extends TwoResizablePanels:
           obsWithConstraints,
           toastRef
         ) =>
-          <.div(
+          println(s"Render $resize")
+          React.Fragment(
             Toast(Toast.Position.BottomRight).withRef(toastRef.ref),
+            // This sets the resize
+            // <.div(
+            //   "test"
+            // ).withRef(resize.ref)
+            // this doesnt set the resize
             obsWithConstraints.render(
               renderFn(
                 props,
@@ -380,5 +389,5 @@ object ObsTabContents extends TwoResizablePanels:
                 ctx
               ) _
             )
-          ).withRef(resize.ref)
+          )
       }
