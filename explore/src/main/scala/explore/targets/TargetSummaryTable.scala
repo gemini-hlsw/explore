@@ -245,13 +245,12 @@ object TargetSummaryTable extends TableHooks:
               )
             )
           ),
-          PrimeVirtualizedTable(
+          PrimeAutoHeightVirtualizedTable(
             table,
             _ => 32.toPx,
             striped = true,
             compact = Compact.Very,
             tableMod = ExploreStyles.ExploreTable |+| ExploreStyles.ExploreSelectableTable,
-            containerMod = ExploreStyles.ExploreFullHeightTable,
             headerCellMod = headerCell =>
               columnClasses
                 .get(ColumnId(headerCell.column.id))
