@@ -24,8 +24,11 @@ import explore.components.ui.ExploreStyles
 import explore.given
 import explore.model.*
 import explore.model.enums.AppTab
+import explore.model.enums.GridLayoutSection
+import explore.model.enums.SelectedPanel
 import explore.model.layout.*
 import explore.model.layout.unsafe.given
+import explore.model.reusability.given
 import explore.observationtree.AsterismGroupObsList
 import explore.optics.*
 import explore.optics.all.*
@@ -63,7 +66,6 @@ import react.hotkeys.*
 import react.hotkeys.hooks.*
 import react.primereact.Toast
 import react.primereact.hooks.all.*
-import react.resizable.*
 import react.resizeDetector.*
 import react.resizeDetector.hooks.*
 import react.semanticui.elements.button.Button
@@ -86,7 +88,7 @@ case class TargetTabContents(
   expandedIds:       View[SortedSet[ObsIdSet]]
 ) extends ReactFnProps(TargetTabContents.component)
 
-object TargetTabContents:
+object TargetTabContents extends TwoPanels:
   private type Props = TargetTabContents
 
   private val TargetHeight: NonNegInt      = 18.refined
@@ -136,7 +138,7 @@ object TargetTabContents:
 
   private def renderFn(
     props:                 Props,
-    panels:                View[TwoPanelState],
+    selectedView:          View[SelectedPanel],
     defaultLayouts:        LayoutsMap,
     layouts:               View[Pot[LayoutsMap]],
     resize:                UseResizeDetectorReturn,
@@ -148,39 +150,17 @@ object TargetTabContents:
   ): VdomNode = {
     import ctx.given
 
-    val panelsResize =
-      (_: ReactEvent, d: ResizeCallbackData) =>
-        panels.zoom(TwoPanelState.treeWidth).set(d.size.width.toDouble) *>
-          debouncer
-            .submit(
-              AreaWidths
-                .storeWidthPreference[IO](props.userId, ResizableSection.TargetsTree, d.size.width)
-            )
-            .runAsyncAndForget
-
-    val treeWidth: Int = panels.get.treeWidth.toInt
-
-    val selectedView: View[SelectedPanel] = panels.zoom(TwoPanelState.selected)
-
     val targetMap: View[TargetWithObsList] =
       asterismGroupsWithObs.zoom(AsterismGroupsWithObs.targetsWithObs)
 
-    // Tree area
-    def tree(objectsWithObs: View[AsterismGroupsWithObs]) =
-      <.div(^.width := treeWidth.px, ExploreStyles.Tree |+| ExploreStyles.ResizableSinglePanel)(
-        treeInner(objectsWithObs)
-      )
-
-    def treeInner(objectsWithObs: View[AsterismGroupsWithObs]) =
-      <.div(ExploreStyles.TreeBody)(
-        AsterismGroupObsList(
-          objectsWithObs,
-          props.programId,
-          props.focused,
-          selectedView.set(SelectedPanel.summary),
-          props.expandedIds,
-          props.listUndoStacks
-        )
+    def targetTree(objectsWithObs: View[AsterismGroupsWithObs]) =
+      AsterismGroupObsList(
+        objectsWithObs,
+        props.programId,
+        props.focused,
+        selectedView.set(SelectedPanel.Summary),
+        props.expandedIds,
+        props.listUndoStacks
       )
 
     def findAsterismGroup(
@@ -236,7 +216,7 @@ object TargetTabContents:
         clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
         onClickE = linkOverride[ButtonProps](
           ctx.pushPage(AppTab.Targets, props.programId, Focused.None) >>
-            selectedView.set(SelectedPanel.tree)
+            selectedView.set(SelectedPanel.Tree)
         )
       )(^.href := ctx.pageUrl(AppTab.Targets, props.programId, Focused.None), Icons.ChevronLeft)
 
@@ -261,9 +241,6 @@ object TargetTabContents:
         )
       )
 
-    val coreWidth  = resize.width.getOrElse(0) - treeWidth
-    val coreHeight = resize.height.getOrElse(0)
-
     /**
      * Render the asterism editor
      *
@@ -274,7 +251,11 @@ object TargetTabContents:
      *   The AsterismGroup that is the basis for editing. All or part of it may be included in the
      *   edit.
      */
-    def renderAsterismEditor(idsToEdit: ObsIdSet, asterismGroup: AsterismGroup): VdomNode = {
+    def renderAsterismEditor(
+      resize:        UseResizeDetectorReturn,
+      idsToEdit:     ObsIdSet,
+      asterismGroup: AsterismGroup
+    ): VdomNode = {
       val groupIds  = asterismGroup.obsIds
       val targetIds = asterismGroup.targetIds
 
@@ -466,7 +447,7 @@ object TargetTabContents:
       val rglRender: LayoutsMap => VdomNode = (l: LayoutsMap) =>
         TileController(
           props.userId,
-          coreWidth,
+          resize.width.getOrElse(1),
           defaultLayouts,
           l,
           List(asterismEditorTile, skyPlotTile),
@@ -477,6 +458,7 @@ object TargetTabContents:
     }
 
     def renderSiderealTargetEditor(
+      resize:   UseResizeDetectorReturn,
       targetId: Target.Id,
       target:   Target.Sidereal
     ): VdomNode = {
@@ -521,7 +503,7 @@ object TargetTabContents:
 
       val rglRender: LayoutsMap => VdomNode = (l: LayoutsMap) =>
         TileController(props.userId,
-                       coreWidth,
+                       resize.width.getOrElse(1),
                        defaultLayouts,
                        l,
                        List(targetTile, skyPlotTile),
@@ -531,15 +513,13 @@ object TargetTabContents:
       potRender[LayoutsMap](rglRender)(layouts.get)
     }
 
-    val selectedPanel = panels.get.selected
-
     val optSelected: Option[Either[Target.Id, ObsIdSet]] = props.focused match {
       case Focused(Some(obsIdSet), _)    => obsIdSet.asRight.some
       case Focused(None, Some(targetId)) => targetId.asLeft.some
       case _                             => none
     }
 
-    val rightSide: VdomNode =
+    val rightSide = (resize: UseResizeDetectorReturn) =>
       optSelected
         .fold(renderSummary) {
           _ match {
@@ -551,52 +531,24 @@ object TargetTabContents:
                     case Nonsidereal(_, _, _)     =>
                       <.div("Editing of Non-Sidereal targets not supported")
                     case s @ Sidereal(_, _, _, _) =>
-                      renderSiderealTargetEditor(targetId, s)
+                      renderSiderealTargetEditor(resize, targetId, s)
                   }
                 )
             case Right(obsIds)  =>
               findAsterismGroup(obsIds, asterismGroupsWithObs.get.asterismGroups)
                 .fold(renderSummary) { asterismGroup =>
-                  renderAsterismEditor(obsIds, asterismGroup)
+                  renderAsterismEditor(resize, obsIds, asterismGroup)
                 }
           }
         }
 
-    // It would be nice to make a single component here but it gets hard when you
-    // have the resizable element. Instead we have either two panels with a resizable
-    // or only one panel at a time (Mobile)
-    if (window.canFitTwoPanels) {
-      <.div(
-        ExploreStyles.TreeRGL,
-        <.div(ExploreStyles.Tree, treeInner(asterismGroupsWithObs))
-          .when(selectedPanel.leftPanelVisible),
-        <.div(^.key := "target-right-side", ExploreStyles.SinglePanelTile)(
-          rightSide
-        ).when(selectedPanel.rightPanelVisible)
-      )
-    } else {
-      <.div(
-        ExploreStyles.TreeRGL,
-        Resizable(
-          axis = Axis.X,
-          width = treeWidth.toDouble,
-          height = coreHeight.toDouble,
-          minConstraints = (Constants.MinLeftPanelWidth.toInt, 0),
-          maxConstraints = (coreWidth / 2, 0),
-          onResize = panelsResize,
-          resizeHandles = List(ResizeHandleAxis.East),
-          content = tree(asterismGroupsWithObs),
-          clazz = ExploreStyles.ResizableSeparator
-        ),
-        <.div(^.key   := "target-right-side",
-              ExploreStyles.SinglePanelTile,
-              ^.width := coreWidth.px,
-              ^.left  := treeWidth.px
-        )(
-          rightSide
-        )
-      )
-    }
+    makeOneOrTwoPanels(
+      selectedView,
+      targetTree(asterismGroupsWithObs),
+      rightSide,
+      RightSideCardinality.Multi,
+      resize
+    )
   }
 
   private def applyObs(
@@ -626,16 +578,14 @@ object TargetTabContents:
       .useContext(AppContext.ctx)
       .useStateView(LoadingState.Done)
       // Two panel state
-      .useStateView(TwoPanelState.initial(SelectedPanel.Uninitialized))
-      .useEffectWithDepsBy((props, _, _, state) =>
-        (props.focused, state.zoom(TwoPanelState.selected).reuseByValue)
-      ) { (_, _, _, _) => params =>
-        val (focused, selected) = params
-        (focused, selected.get) match
-          case (Focused(Some(_), _), _)                    => selected.set(SelectedPanel.editor)
-          case (Focused(None, Some(_)), _)                 => selected.set(SelectedPanel.editor)
-          case (Focused(None, None), SelectedPanel.Editor) => selected.set(SelectedPanel.Summary)
-          case _                                           => Callback.empty
+      .useStateView[SelectedPanel](SelectedPanel.Uninitialized)
+      .useEffectWithDepsBy((props, _, _, state) => (props.focused, state.reuseByValue)) {
+        (_, _, _, selected) => (focused, _) =>
+          (focused, selected.get) match
+            case (Focused(Some(_), _), _)                    => selected.set(SelectedPanel.Editor)
+            case (Focused(None, Some(_)), _)                 => selected.set(SelectedPanel.Editor)
+            case (Focused(None, None), SelectedPanel.Editor) => selected.set(SelectedPanel.Summary)
+            case _                                           => Callback.empty
       }
       // Measure its size
       .useResizeDetector()
@@ -652,25 +602,21 @@ object TargetTabContents:
             .queryWithDefault[IO](
               props.userId,
               GridLayoutSection.TargetLayout,
-              ResizableSection.TargetsTree,
-              (Constants.InitialTreeWidth.toInt, defaultLayout)
+              defaultLayout
             )
             .attempt
             .flatMap {
-              case Right((w, dbLayout)) =>
-                (panels
+              case Right(dbLayout) =>
+                layout
                   .mod(
-                    TwoPanelState.treeWidth.replace(w.toDouble)
-                  ) *> layout.mod(
-                  _.fold(
-                    mergeMap(dbLayout, defaultLayout).ready,
-                    _ => mergeMap(dbLayout, defaultLayout).ready,
-                    cur => mergeMap(dbLayout, cur).ready
+                    _.fold(
+                      mergeMap(dbLayout, defaultLayout).ready,
+                      _ => mergeMap(dbLayout, defaultLayout).ready,
+                      cur => mergeMap(dbLayout, cur).ready
+                    )
                   )
-                ))
                   .to[IO]
-              case Left(_)              =>
-                IO.unit
+              case Left(_)         => IO.unit
             }
       }
       .useSingleEffect(debounce = 1.second)
@@ -738,16 +684,18 @@ object TargetTabContents:
           toastRef,
           fullScreen
         ) =>
-          <.div(
+          React.Fragment(
             // TODO switch to prime react
             Toast(Toast.Position.BottomRight).withRef(toastRef.ref),
-            <.div(
-              ^.cls := "ui active dimmer",
-              Loader(
-                active = true,
-                "Cloning observation..."
+            if (active.get.value) {
+              <.div(
+                ^.cls := "ui active dimmer",
+                Loader(
+                  active = true,
+                  "Cloning observation..."
+                )
               )
-            ).when(active.get.value),
+            } else EmptyVdom,
             asterismGroupsWithObs.render(
               renderFn(
                 props,
@@ -758,7 +706,8 @@ object TargetTabContents:
                 debouncer,
                 fullScreen,
                 ctx
-              )
+              ),
+              <.span(Loader(active = true)).withRef(resize.ref)
             )
-          ).withRef(resize.ref)
+          )
       }

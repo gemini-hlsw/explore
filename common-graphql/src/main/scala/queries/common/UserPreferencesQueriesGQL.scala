@@ -34,65 +34,22 @@ object UserPreferencesQueriesGQL {
   }
 
   /**
-   * Update the width of a given area/user
-   */
-  @GraphQL
-  trait UserWidthsCreation extends GraphQLOperation[UserPreferencesDB] {
-    val document = """
-      mutation updateAreaWidth($item: LucumaResizableWidthInsertInput!) {
-        insertLucumaResizableWidthOne(
-          object: $item,
-          onConflict: {
-            constraint: explore_resizable_width_pkey,
-            update_columns: width
-          }
-        ) {
-          userId
-          }
-        }
-   """
-  }
-
-  /**
-   * Read the stored width of an area
-   */
-  @GraphQL
-  trait UserAreaWidths extends GraphQLOperation[UserPreferencesDB] {
-    val document = """
-      query areaWidth($userId: String!, $section: resizable_area!) {
-        lucumaResizableWidthByPk(
-          section: $section,
-          userId: $userId
-        ) {
-          width
-        }
-      }
-    """
-  }
-
-  /**
    * Read the grid layout for a given section
    */
   @GraphQL
   trait UserGridLayoutQuery extends GraphQLOperation[UserPreferencesDB] {
     val document = """
-      query
-        obsTabPreferences($userId: String!, $criteria: LucumaGridLayoutPositionsBoolExp!, $section: resizable_area!) {
-          lucumaGridLayoutPositions(where: $criteria) {
-            breakpointName
-            height
-            width
-            x
-            y
-            tile
-          }
-          lucumaResizableWidthByPk(
-            section: $section,
-            userId: $userId
-          ) {
-            width
-          }
+      query tabPositions($userId: String!, $section: LucumaGridLayoutIdEnum!){
+        lucumaGridLayoutPositions(where: {section: {_eq: $section}, userId: {_eq: $userId}}) {
+          breakpointName
+          height
+          width
+          x
+          y
+          tile
+          userId
         }
+      }
     """
   }
 

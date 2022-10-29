@@ -43,7 +43,7 @@ case class ConstraintGroupObsList(
   constraintsWithObs: View[ConstraintSummaryWithObervations],
   programId:          Program.Id,
   focusedObsSet:      Option[ObsIdSet],
-  setSummaryPanel:    Reuse[Callback],
+  setSummaryPanel:    Callback,
   expandedIds:        View[SortedSet[ObsIdSet]],
   undoStacks:         View[UndoStacks[IO, ConstraintGroupList]]
 ) extends ReactFnProps[ConstraintGroupObsList](ConstraintGroupObsList.component)
@@ -263,7 +263,7 @@ object ConstraintGroupObsList:
           <.div(ExploreStyles.TreeToolbar)(UndoButtons(undoCtx, size = Mini)),
           <.div(
             Button(
-              onClick = setObsSet(none) >> props.setSummaryPanel.value,
+              onClick = setObsSet(none) >> props.setSummaryPanel,
               clazz = ExploreStyles.ButtonSummary
             )(
               Icons.ListIcon.withClass(ExploreStyles.PaddedRightIcon),

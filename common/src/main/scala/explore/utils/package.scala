@@ -76,16 +76,6 @@ val DefaultPendingRender: VdomNode = Loader(active = true)
 val DefaultErrorRender: Throwable => VdomNode =
   t => Message(error = true)(t.getMessage)
 
-def potRenderWithReuse[A](
-  valueRender:   A ==> VdomNode,
-  pendingRender: => Reuse[VdomNode] = Reuse.always(DefaultPendingRender),
-  errorRender:   Throwable ==> VdomNode = Reuse.always(DefaultErrorRender)
-): Pot[A] ==> VdomNode =
-  (pendingRender, errorRender, valueRender).curryReusing.in(
-    (pendingRender, errorRender, valueRender, pot: Pot[A]) =>
-      pot.fold(pendingRender, errorRender, valueRender)
-  )
-
 def potRender[A](
   valueRender:   A => VdomNode,
   pendingRender: => VdomNode = DefaultPendingRender,

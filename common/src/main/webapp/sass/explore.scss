@@ -1,5 +1,7 @@
 @use 'common.scss';
 
+$tree-section-width: 300px;
+
 @mixin small-tile-title {
   display: flex;
   gap: 1em;
@@ -608,6 +610,7 @@ table.explore-border-table {
   }
 }
 
+
 // -----
 // Toolbar over summary tables
 // ------
@@ -647,3 +650,95 @@ table.explore-border-table {
     color: var(--explore-accent-color);
   }
 }
+
+// ----------
+// Main grid
+// ----------
+.main-grid {
+  $top-bottom-space: 42px;
+
+  display: grid;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  grid-template:
+    'header' $top-bottom-space
+    'body' minmax(calc(100% - $top-bottom-space - $top-bottom-space), 1fr)
+    'sidebar' #{$top-bottom-space} / 1fr;
+
+  @media (min-width: common.$tablet-responsive-cutoff) {
+    grid-template:
+      'header header' $top-bottom-space
+      'sidebar body' minmax(calc(100% - $top-bottom-space), 1fr) / 50px auto;
+  }
+}
+
+
+// ------------
+// Two panel pages
+// Area where the grid-layout is placed
+// ------------
+.tree-rgl {
+  overflow-y: hidden;
+  overflow-x: hidden;
+  position: relative;
+  display: flex;
+}
+
+// Section on the left to place the tree
+.tree {
+  display: flex;
+}
+
+// Inner area of the tree
+.tree-body {
+  width: 100vw;
+
+  @media (min-width: common.$mobile-responsive-cutoff) {
+    width: $tree-section-width;
+    border: {
+      right: solid 1px var(--under-tab-border-color);
+      left: solid 1px var(--under-tab-border-color);
+    }
+  }
+}
+
+.multi-panel-tile,
+.single-panel-tile {
+  flex-shrink: 1;
+  flex-grow: 1;
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
+.tree-toolbar {
+  display: flex;
+  flex-shrink: 0;
+  justify-content: space-between;
+  padding: 5px;
+  background-color: var(--tile-title-background);
+}
+
+// ------
+// Obs-tree
+// -----
+.obs-scroll-tree {
+  height: 100%;
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: {
+    top: 0.2em;
+    right: 0.2em;
+    left: 0.2em;
+  };
+}
+
+.obs-tree-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+

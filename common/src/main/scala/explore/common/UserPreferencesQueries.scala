@@ -11,10 +11,9 @@ import cats.syntax.all.*
 import clue.TransactionalClient
 import clue.data.syntax.*
 import explore.model.AladinMouseScroll
-import explore.model.GridLayoutSection
-import explore.model.ResizableSection
 import explore.model.TargetVisualOptions
 import explore.model.UserGlobalPreferences
+import explore.model.enums.GridLayoutSection
 import explore.model.enums.ItcChartType
 import explore.model.enums.PlotRange
 import explore.model.enums.TableId
@@ -51,47 +50,9 @@ import scala.scalajs.js.WrappedDictionary
 import scalajs.js.JSConverters.*
 import scalajs.js
 
-case class WidthUpsertInput(user: User.Id, section: ResizableSection, width: Int)
-
 object UserPreferencesQueries:
   type TableColumnPreferences = TableColumnPreferencesQuery.Data
   val TableColumnPreferences = TableColumnPreferencesQuery.Data
-
-  object AreaWidths:
-
-    def storeWidthPreference[F[_]: ApplicativeThrow](
-      userId:  Option[User.Id],
-      section: ResizableSection,
-      width:   Int
-    )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
-      import UserWidthsCreation.*
-
-      userId.traverse { i =>
-        execute[F](WidthUpsertInput(i, section, width).toInput).attempt
-      }.void
-
-    // Gets the width of a section.
-    // This is coded to return a default in case
-    // there is no data or errors
-    def queryWithDefault[F[_]: MonadThrow](
-      userId:       Option[User.Id],
-      area:         ResizableSection,
-      defaultValue: Int
-    )(using TransactionalClient[F, UserPreferencesDB]): F[Int] =
-      import UserAreaWidths.*
-      (for {
-        uid <- OptionT.fromOption[F](userId)
-        w   <-
-          OptionT
-            .liftF[F, Option[Int]] {
-              query[F](uid.show, area.value)
-                .map { r =>
-                  r.lucumaResizableWidthByPk.map(_.width)
-                }
-                .recover(_ => none)
-            }
-      } yield w).value.map(_.flatten.getOrElse(defaultValue))
-  end AreaWidths
 
   object UserPreferences:
     def storePreferences[F[_]: ApplicativeThrow](
@@ -125,28 +86,18 @@ object UserPreferencesQueries:
     def queryWithDefault[F[_]: MonadThrow](
       userId:        Option[User.Id],
       layoutSection: GridLayoutSection,
-      resizableArea: ResizableSection,
-      defaultValue:  (Int, LayoutsMap)
-    )(using TransactionalClient[F, UserPreferencesDB]): F[(Int, LayoutsMap)] =
+      defaultValue:  LayoutsMap
+    )(using TransactionalClient[F, UserPreferencesDB]): F[LayoutsMap] =
       (for {
         uid <- OptionT.fromOption[F](userId)
-        c   <-
-          OptionT.pure(
-            LucumaGridLayoutPositionsBoolExp(
-              userId = StringComparisonExp(uid.show.assign).assign,
-              section = GridLayoutAreaComparisonExp(layoutSection.value.assign).assign
-            )
-          )
         r   <-
           OptionT
-            .liftF[F, (Int, SortedMap[react.gridlayout.BreakpointName, (Int, Int, Layout)])] {
-              UserGridLayoutQuery.query[F](uid.show, c, resizableArea.value).map { r =>
-                (r.lucumaResizableWidthByPk.map(_.width), r.lucumaGridLayoutPositions) match {
-                  case (w, l) if l.isEmpty => (w.getOrElse(defaultValue._1), defaultValue._2)
-                  case (w, l)              =>
-                    (w.getOrElse(defaultValue._1),
-                     SortedMap(l.groupBy(_.breakpointName).map(positions2LayoutMap).toList: _*)
-                    )
+            .liftF[F, SortedMap[react.gridlayout.BreakpointName, (Int, Int, Layout)]] {
+              UserGridLayoutQuery.query[F](uid.show, layoutSection).map { r =>
+                r.lucumaGridLayoutPositions match {
+                  case l if l.isEmpty => defaultValue
+                  case l              =>
+                    SortedMap(l.groupBy(_.breakpointName).map(positions2LayoutMap).toList: _*)
                 }
               }
             }
@@ -166,7 +117,7 @@ object UserPreferencesQueries:
               case i if i.i.nonEmpty =>
                 LucumaGridLayoutPositionsInsertInput(
                   userId = uid.show.assign,
-                  section = section.value.assign,
+                  section = section.assign,
                   breakpointName = bl.name.name.assign,
                   width = i.w.assign,
                   height = i.h.assign,
@@ -442,14 +393,6 @@ object UserPreferencesQueries:
           .attempt
       }.void
   end TableStore
-
-  extension (w: WidthUpsertInput)
-    def toInput: LucumaResizableWidthInsertInput =
-      LucumaResizableWidthInsertInput(
-        w.section.value.assign,
-        w.user.toString.assign,
-        w.width.assign
-      )
 
   extension (tableColsPrefs: List[TableColumnPreferencesQuery.Data.LucumaTableColumnPreferences])
     def applyVisibility(original: ColumnVisibility): ColumnVisibility =

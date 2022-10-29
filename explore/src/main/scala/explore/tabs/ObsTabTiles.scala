@@ -19,13 +19,13 @@ import explore.model.Asterism
 import explore.model.ConstraintGroup
 import explore.model.CoordinatesAtVizTime
 import explore.model.Focused
-import explore.model.GridLayoutSection
 import explore.model.ModelUndoStacks
 import explore.model.ObsIdSet
 import explore.model.ScienceMode
 import explore.model.TargetSummary
 import explore.model.display.given
 import explore.model.enums.AppTab
+import explore.model.enums.GridLayoutSection
 import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.ItcTarget
 import explore.model.itc.OverridenExposureTime
@@ -50,6 +50,7 @@ import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ObsQueries
 import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
+import react.resizeDetector.*
 import react.semanticui.addons.select.Select
 import react.semanticui.addons.select.Select.SelectItem
 import react.semanticui.modules.dropdown.Dropdown
@@ -63,15 +64,13 @@ case class ObsTabTiles(
   obsId:            Observation.Id,
   backButton:       VdomNode,
   constraintGroups: View[ConstraintsList],
-  focusedObs:       Option[Observation.Id],
   focusedTarget:    Option[Target.Id],
   targetMap:        SortedMap[Target.Id, TargetSummary],
   undoStacks:       View[ModelUndoStacks[IO]],
   searching:        View[Set[Target.Id]],
   defaultLayouts:   LayoutsMap,
   layouts:          View[Pot[LayoutsMap]],
-  coreWidth:        Int,
-  coreHeight:       Int
+  resize:           UseResizeDetectorReturn
 ) extends ReactFnProps(ObsTabTiles.component)
 
 object ObsTabTiles:
@@ -218,7 +217,7 @@ object ObsTabTiles:
 
         // first target of the obs. We can use it in case there is no target focus
         val firstTarget = props.targetMap.collect {
-          case (tid, ts) if props.focusedObs.forall(o => ts.obsIds.contains(o)) => tid
+          case (tid, ts) if ts.obsIds.contains(props.obsId) => tid
         }.headOption
 
         val skyPlotTile =
@@ -256,7 +255,7 @@ object ObsTabTiles:
           obsView.toOption.map(_.get.scienceData.constraints),
           obsView.toOption.flatMap(_.get.scienceData.requirements.spectroscopy.wavelength),
           props.focusedTarget,
-          setCurrentTarget(props.programId, props.focusedObs),
+          setCurrentTarget(props.programId, props.obsId.some),
           otherObsCount(props.targetMap, props.obsId, _),
           props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
           props.searching,
@@ -298,7 +297,7 @@ object ObsTabTiles:
         val rglRender: LayoutsMap => VdomNode = (l: LayoutsMap) =>
           TileController(
             props.userId,
-            props.coreWidth,
+            props.resize.width.getOrElse(0),
             props.defaultLayouts,
             l,
             List(

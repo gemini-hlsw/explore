@@ -3,8 +3,8 @@
 
 package explore.components
 
-import cats.Eq
 import cats.Order.*
+import cats.*
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.TransactionalClient
@@ -17,11 +17,12 @@ import explore.common.UserPreferencesQueries.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Constants
-import explore.model.GridLayoutSection
+import explore.model.enums.GridLayoutSection
 import explore.model.enums.TileSizeState
 import explore.model.layout.*
 import explore.model.layout.given
 import japgolly.scalajs.react.*
+import japgolly.scalajs.react.util.Effect.Dispatch
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.User
 import lucuma.ui.reusability.*
@@ -51,14 +52,14 @@ case class TileController(
 object TileController:
   private type Props = TileController
 
-  private def storeLayouts(
+  private def storeLayouts[F[_]: MonadThrow: Dispatch](
     userId:    Option[User.Id],
     section:   GridLayoutSection,
     layouts:   Layouts,
-    debouncer: Reusable[UseSingleEffect[IO]]
-  )(using TransactionalClient[IO, UserPreferencesDB]): Callback =
+    debouncer: Reusable[UseSingleEffect[F]]
+  )(using TransactionalClient[F, UserPreferencesDB]): Callback =
     debouncer
-      .submit(GridLayouts.storeLayoutsPreference[IO](userId, section, layouts))
+      .submit(GridLayouts.storeLayoutsPreference[F](userId, section, layouts))
       .runAsyncAndForget
 
   // Calculate the state out of the height
@@ -101,11 +102,11 @@ object TileController:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .useSingleEffect(debounce = 1.second)
-      // Store the current breakpoint
+      // Get the breakpoint from the layout
       .useStateBy { (p, _, _) =>
         getBreakpointFromWidth(p.layoutMap.map { case (x, (w, _, _)) => x -> w }, p.gridWidth)
       }
-      // Store the current layout
+      // Make a local copy of the layout fixing the state of minimized layouts
       .useStateViewBy((p, _, _, _) => updateResizableState(p.layoutMap))
       // Update the current layout if it changes upstream
       .useEffectWithDepsBy((p, _, _, _, _) => p.layoutMap)((_, _, _, _, current) =>

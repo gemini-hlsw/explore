@@ -22,6 +22,8 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.*
 import explore.model.enums.AppTab
+import explore.model.enums.GridLayoutSection
+import explore.model.enums.SelectedPanel
 import explore.model.layout.*
 import explore.model.layout.unsafe.given
 import explore.model.reusability.*
@@ -40,6 +42,7 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.refined.*
+import lucuma.schemas.ObservationDB
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -55,25 +58,27 @@ import react.hotkeys.*
 import react.hotkeys.hooks.*
 import react.primereact.Toast
 import react.primereact.hooks.all.*
-import react.resizable.*
 import react.resizeDetector.*
 import react.resizeDetector.hooks.*
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
+import react.semanticui.elements.loader.Loader
 import react.semanticui.sizes.*
 
 import scala.concurrent.duration.*
 
 case class ObsTabContents(
-  userId:        Option[User.Id],
-  programId:     Program.Id,
-  focusedObs:    Option[Observation.Id],
-  focusedTarget: Option[Target.Id],
-  undoStacks:    View[ModelUndoStacks[IO]],
-  searching:     View[Set[Target.Id]]
-) extends ReactFnProps(ObsTabContents.component)
+  userId:     Option[User.Id],
+  programId:  Program.Id,
+  focused:    Focused,
+  undoStacks: View[ModelUndoStacks[IO]],
+  searching:  View[Set[Target.Id]]
+) extends ReactFnProps(ObsTabContents.component) {
+  val focusedObs: Option[Observation.Id] = focused.obsSet.map(_.head)
+  val focusedTarget: Option[Target.Id]   = focused.target
+}
 
-object ObsTabContents extends TwoResizablePanels:
+object ObsTabContents extends TwoPanels:
   private type Props = ObsTabContents
 
   private val NotesMaxHeight: NonNegInt         = 3.refined
@@ -158,7 +163,7 @@ object ObsTabContents extends TwoResizablePanels:
 
   private def renderFn(
     props:              Props,
-    panels:             View[TwoPanelState],
+    selectedView:       View[SelectedPanel],
     defaultLayouts:     LayoutsMap,
     layouts:            View[Pot[LayoutsMap]],
     resize:             UseResizeDetectorReturn,
@@ -172,25 +177,20 @@ object ObsTabContents extends TwoResizablePanels:
     val observations     = obsWithConstraints.zoom(ObsSummariesWithConstraints.observations)
     val constraintGroups = obsWithConstraints.zoom(ObsSummariesWithConstraints.constraintGroups)
 
-    val treeWidth    = panels.get.treeWidth.toInt
-    val selectedView = panels.zoom(TwoPanelState.selected)
-
     def observationsTree(observations: View[ObservationList]) =
       ObsList(
         observations,
         props.programId,
         props.focusedObs,
         props.focusedTarget,
-        selectedView.set(SelectedPanel.summary).reuseAlways,
+        selectedView.set(SelectedPanel.Summary),
         props.undoStacks.zoom(ModelUndoStacks.forObsList)
       )
 
     val backButton: VdomNode =
       makeBackButton(props.programId, AppTab.Observations, selectedView, ctx)
 
-    val (coreWidth, coreHeight) = coreDimensions(resize, treeWidth)
-
-    val rightSide: VdomNode =
+    def rightSide = (resize: UseResizeDetectorReturn) =>
       props.focusedObs.fold[VdomNode](
         Tile("observations".refined,
              "Observations Summary",
@@ -209,31 +209,22 @@ object ObsTabContents extends TwoResizablePanels:
           obsId,
           backButton,
           constraintGroups,
-          props.focusedObs,
           props.focusedTarget,
           obsWithConstraints.get.targetMap,
           props.undoStacks,
           props.searching,
           defaultLayouts,
           layouts,
-          coreWidth,
-          coreHeight
-        ).withKey(obsId.toString)
+          resize
+        ).withKey(s"${obsId.show}")
       )
 
     makeOneOrTwoPanels(
-      treeWidth,
-      coreHeight,
-      coreWidth,
-      panels,
+      selectedView,
       observationsTree(observations),
       rightSide,
       RightSideCardinality.Multi,
-      treeResize(props.userId,
-                 panels.zoom(TwoPanelState.treeWidth),
-                 ResizableSection.ObservationsTree,
-                 debouncer
-      )
+      resize
     )
   }
 
@@ -241,25 +232,24 @@ object ObsTabContents extends TwoResizablePanels:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      .useStateView(TwoPanelState.initial(SelectedPanel.Uninitialized))
-      .useEffectWithDepsBy((props, _, panels) =>
-        (props.focusedObs, panels.zoom(TwoPanelState.selected).reuseByValue)
-      ) { (_, _, _) => params =>
-        val (focusedObs, selected) = params
-        (focusedObs, selected.get) match {
-          case (Some(_), _)                 => selected.set(SelectedPanel.editor)
-          case (None, SelectedPanel.Editor) => selected.set(SelectedPanel.Summary)
-          case _                            => Callback.empty
-        }
+      .useStateView[SelectedPanel](SelectedPanel.Uninitialized)
+      .useEffectWithDepsBy((props, _, panels) => (props.focusedObs, panels.reuseByValue)) {
+        (_, _, _) => params =>
+          val (focusedObs, selected) = params
+          (focusedObs, selected.get) match {
+            case (Some(_), _)                 => selected.set(SelectedPanel.Editor)
+            case (None, SelectedPanel.Editor) => selected.set(SelectedPanel.Summary)
+            case _                            => Callback.empty
+          }
       }
       // Measure its size
       .useResizeDetector()
       // Layout
       .useStateView(Pot.pending[LayoutsMap])
-      // Keep a record of the initial target layouut
+      // Keep a record of the initial target layout
       .useMemo(())(_ => defaultObsLayouts)
       // Restore positions from the db
-      .useEffectWithDepsBy((p, _, _, _, _, _) => (p.userId, p.focusedObs, p.focusedTarget))(
+      .useEffectWithDepsBy((p, _, _, _, _, _) => (p.userId, p.focusedObs))(
         (props, ctx, panels, _, layout, defaultLayout) =>
           _ => {
             import ctx.given
@@ -268,28 +258,27 @@ object ObsTabContents extends TwoResizablePanels:
               .queryWithDefault[IO](
                 props.userId,
                 GridLayoutSection.ObservationsLayout,
-                ResizableSection.ObservationsTree,
-                (Constants.InitialTreeWidth.toInt, defaultLayout)
+                defaultLayout
               )
               .attempt
               .flatMap {
-                case Right((w, dbLayout)) =>
-                  (panels
-                    .mod(TwoPanelState.treeWidth.replace(w.toDouble)) >>
-                    layout.mod(
+                case Right(dbLayout) =>
+                  layoutPprint(dbLayout)
+                  layout
+                    .mod(
                       _.fold(
                         mergeMap(dbLayout, defaultLayout).ready,
                         _ => mergeMap(dbLayout, defaultLayout).ready,
-                        _ => mergeMap(dbLayout, defaultLayout).ready
+                        cur => mergeMap(dbLayout, cur).ready
                       )
-                    ))
+                    )
                     .to[IO]
-                case Left(_)              => IO.unit
+                case Left(_)         => IO.unit
               }
           }
       )
       .useSingleEffect(debounce = 1.second)
-      .useStreamResourceViewWithReuseOnMountBy { (props, ctx, _, _, _, _, _) =>
+      .useStreamResourceViewOnMountBy { (props, ctx, _, _, _, _, _) =>
         import ctx.given
 
         ProgramObservationsQuery
@@ -301,13 +290,13 @@ object ObsTabContents extends TwoResizablePanels:
       }
       .useToastRef
       .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, _, obsList, _) =>
-        (props.focusedObs, obsList)
-      ) { (props, ctx, _, _, _, _, _, obsList, toastRef) => (obs, _) =>
+        (props.focusedObs,
+         obsList.foldMap(_.get.observations.elements.map(_.id).zipWithIndex.toList)
+        )
+      ) { (props, ctx, _, _, _, _, _, obsList, toastRef) => (obs, observationIds) =>
         import ctx.given
 
-        val observationIds =
-          obsList.foldMap(_.value.get.observations.elements.map(_.id).zipWithIndex.toList)
-        val obsPos         = observationIds.find(a => obs.forall(_ === a._1)).map(_._2)
+        val obsPos = observationIds.find(a => obs.forall(_ === a._1)).map(_._2)
 
         def callbacks: ShortcutCallbacks = {
           case CopyAlt1 | CopyAlt2 | CopyAlt3 =>
@@ -367,7 +356,7 @@ object ObsTabContents extends TwoResizablePanels:
           obsWithConstraints,
           toastRef
         ) =>
-          <.div(
+          React.Fragment(
             Toast(Toast.Position.BottomRight).withRef(toastRef.ref),
             obsWithConstraints.render(
               renderFn(
@@ -378,7 +367,8 @@ object ObsTabContents extends TwoResizablePanels:
                 resize,
                 debouncer,
                 ctx
-              ) _
+              ) _,
+              <.span(Loader(active = true)).withRef(resize.ref)
             )
-          ).withRef(resize.ref)
+          )
       }

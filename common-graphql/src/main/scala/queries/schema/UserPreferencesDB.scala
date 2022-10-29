@@ -23,7 +23,6 @@ trait UserPreferencesDB:
     type UserId             = User.Id
     type ResizableArea      = String
     type BreakpointName     = String
-    type GridLayoutArea     = String
     type Site               = lucuma.core.enums.Site
     type ElevationPlotRange = explore.model.enums.PlotRange
     type ElevationPlotTime  = explore.model.enums.TimeDisplay
@@ -33,3 +32,4 @@ trait UserPreferencesDB:
     type ItcChartType            = enums.ItcChartType
     type LucumaTableIdsEnum      = explore.model.enums.TableId
     type LucumaSortDirectionEnum = SortDirection
+    type LucumaGridLayoutIdEnum  = explore.model.enums.GridLayoutSection

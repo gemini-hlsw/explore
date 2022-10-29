@@ -16,9 +16,6 @@
 @gridSpace: 5px;
 @minHeight: 2.85714286em; // TODO: Calculate this on less
 @resizeHandleWidth: 5px; // Width of the tree resize handle
-// The Target Position layout
-@tablet-responsive-cutoff: 992px;
-@mobile-responsive-cutoff: 670px;
 
 // media queries cutoff
 @tablet-responsive-cutoff: 992px;
@@ -213,33 +210,6 @@ body.light-theme {
 
 tfoot {
   background-color: var(--table-footer-background);
-}
-
-//----------
-// Main grid
-//----------
-.main-grid {
-  @topBottom: 42px;
-
-  display: grid;
-  height: 100vh;
-  width: 100%;
-  overflow: hidden;
-  grid-template-columns: 1fr;
-  grid-template-rows:
-    @topBottom minmax(calc(100% - @topBottom - @topBottom), 1fr) @topBottom;
-  grid-template-areas:
-    'header'
-    'body'
-    'sidebar';
-
-  @media (min-width: @tablet-responsive-cutoff) {
-    grid-template-columns: 50px auto;
-    grid-template-rows: @topBottom minmax(calc(100% - @topBottom), 1fr);
-    grid-template-areas:
-      'header header'
-      'sidebar body';
-  }
 }
 
 /* Avoid Chrome to see Safari hack */
@@ -582,47 +552,6 @@ tfoot {
   height: 100%;
 }
 
-// Area where the grid-layout is placed
-.rgl-area,
-.tree-rgl {
-  .full-height-width();
-}
-
-.tree-rgl {
-  overflow-y: hidden;
-  overflow-x: hidden;
-  position: relative;
-}
-
-// Section on the left to place the tree
-.tree {
-  height: 100%;
-  width: 100%;
-  left: 0;
-  top: 0;
-  position: absolute;
-
-  // Special css to decorate the resize handle. It needs to be very specific
-  .react-resizable-handle.react-resizable-handle-e {
-    cursor: e-resize;
-  }
-}
-
-.resizable-single-panel {
-  box-shadow: inset -5px 0 0 0 var(--tile-background);
-}
-
-.resizable-multi-panel {
-  box-shadow: inset -5px 0 0 0 var(--site-page-background);
-}
-
-.rgl-placeholder {
-  background-color: var(--tile-background);
-  height: 100%;
-  top: 0;
-  position: absolute;
-}
-
 .target-tile-body {
   display: flex;
   flex-direction: column;
@@ -683,33 +612,6 @@ tfoot {
   }
 }
 
-.single-panel-tile {
-  .full-height-width();
-
-  position: absolute;
-  top: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-// Inner area of the tree
-.tree-body {
-  .full-height-width();
-
-  @media (min-width: @tablet-responsive-cutoff) {
-    width:~'calc(100% - @{resizeHandleWidth})';
-  }
-}
-
-.obs-tree-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  min-height: 0;
-  height: 100%;
-  overflow: hidden;
-}
-
 .obs-tree {
   display: flex;
   flex-direction: column;
@@ -717,16 +619,6 @@ tfoot {
   justify-content: center;
   flex-grow: 1;
   overflow: hidden;
-}
-
-.obs-scroll-tree {
-  height: 100%;
-  flex-grow: 1;
-  padding-top: 0.2em;
-  padding-right: 0.2em;
-  padding-left: 0.2em;
-  overflow-y: auto;
-  border: solid 1px var(--under-tab-border-color);
 }
 
 .obs-unassigned {
@@ -898,14 +790,6 @@ tfoot {
   justify-self: end;
 }
 
-.tree-toolbar {
-  display: flex;
-  flex-shrink: 0;
-  justify-content: space-between;
-  padding: 5px;
-  background-color: var(--tile-title-background);
-}
-
 .dragging-over {
   background-color: var(--explore-group-dragging) !important;
 }
@@ -1073,11 +957,6 @@ tfoot {
 .wip {
   position: relative;
   display: inline-block;
-}
-
-// observation tab edit panel
-.observation-tiles .constraints-tile {
-  z-index: 1;
 }
 
 .wip .wip-warning {

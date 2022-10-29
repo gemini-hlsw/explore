@@ -236,7 +236,6 @@ object Settings {
         "edu.gemini" %%% "lucuma-react-grid-layout",
         "edu.gemini" %%% "lucuma-react-highcharts",
         "edu.gemini" %%% "lucuma-react-hotkeys",
-        "edu.gemini" %%% "lucuma-react-resizable",
         "edu.gemini" %%% "lucuma-react-resize-detector",
         "edu.gemini" %%% "lucuma-react-semantic-ui",
         "edu.gemini" %%% "lucuma-react-moon",
