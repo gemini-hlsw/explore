@@ -58,7 +58,7 @@
     "stylelint": "^14.14.0",
     "stylelint-color-format": "^1.1.0",
     "stylelint-config-prettier": "^9.0.3",
-    "stylelint-config-standard-scss": "^5.0.0",
+    "stylelint-config-standard-scss": "^6.0.0",
     "terser": "5.15.1",
     "vite": "3.1.8",
     "vite-plugin-fonts": "^0.6.0",
