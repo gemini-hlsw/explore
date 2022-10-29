@@ -149,7 +149,8 @@ object TargetColumns:
             t => targetBrightnesses.get(t).flatMap(_.get(band))
           ).setCell(_.value.map(displayWithoutError(_)(displayBrightness)).orEmpty)
             .setSize(80.toPx)
-            .setEnableSorting(false) // We cannot sort since there may be different units.
+            // By user request we allow sorting by value though there maybe a mix of units
+            .sortableBy(_.map(_.value))
         ) ++
         List(
           siderealColumn(EpochColumnId, Target.Sidereal.epoch.get)
