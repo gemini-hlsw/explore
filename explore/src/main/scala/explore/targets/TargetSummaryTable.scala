@@ -200,7 +200,7 @@ object TargetSummaryTable extends TableHooks:
           // set value to null so we can reuse the import button
           (Callback(e.target.value = null) *> filesToImport.set(files)).when_(files.nonEmpty)
 
-        <.div(
+        React.Fragment(
           props.renderInTitle(
             React.Fragment(
               <.div(
@@ -251,6 +251,7 @@ object TargetSummaryTable extends TableHooks:
             striped = true,
             compact = Compact.Very,
             tableMod = ExploreStyles.ExploreTable |+| ExploreStyles.ExploreSelectableTable,
+            containerMod = ExploreStyles.ExploreFullHeightTable,
             headerCellMod = headerCell =>
               columnClasses
                 .get(ColumnId(headerCell.column.id))
