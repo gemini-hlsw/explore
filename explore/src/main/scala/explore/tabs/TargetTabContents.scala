@@ -224,21 +224,19 @@ object TargetTabContents extends TwoPanels:
      * Render the summary table.
      */
     def renderSummary: VdomNode =
-      <.div(
-        Tile(
-          "targetSummary".refined,
-          "Target Summary",
-          backButton.some
-        )(renderInTitle =>
-          TargetSummaryTable(
-            props.userId,
-            props.programId,
-            targetMap,
-            selectObservationAndTarget(props.expandedIds) _,
-            selectTarget _,
-            renderInTitle
-          ): VdomNode
-        )
+      Tile(
+        "targetSummary".refined,
+        "Target Summary",
+        backButton.some
+      )(renderInTitle =>
+        TargetSummaryTable(
+          props.userId,
+          props.programId,
+          targetMap,
+          selectObservationAndTarget(props.expandedIds) _,
+          selectTarget _,
+          renderInTitle
+        ): VdomNode
       )
 
     /**
