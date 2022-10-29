@@ -60,7 +60,7 @@
     "stylelint-config-prettier": "^9.0.3",
     "stylelint-config-standard-scss": "^6.0.0",
     "terser": "5.15.1",
-    "vite": "3.1.8",
+    "vite": "3.2.1",
     "vite-plugin-fonts": "^0.6.0",
     "vite-plugin-mkcert": "^1.10.1",
     "vite-plugin-pwa": "^0.13.1"
