@@ -3,18 +3,16 @@
 
 :root {
   --aladin-image-saturation: 0;
-  --aladin-image-brightness: 1;
+  --aladin-image-brightness: 0.5;
 }
 
 $saturation: var(--aladin-image-saturation);
+$brightness: var(--aladin-image-brightness);
 
 /* stylelint-disable-next-line selector-class-pattern */
 .aladin-imageCanvas {
-  filter: #{saturate}(string.unquote($saturation));
-          // brightness(var(--aladin-image-brightness));
+  filter: #{saturate}(string.unquote($saturation)) brightness(string.unquote($brightness));
 }
-
-
 
 .aladin-container {
   overflow: hidden; // Needed to keep the visualization svg inside the component

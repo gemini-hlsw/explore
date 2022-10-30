@@ -481,6 +481,18 @@ object AladinCell extends ModelOptics with AladinCommon:
                         root.style.setProperty("--aladin-image-saturation", s"${d / 100}")
                       }
                   ),
+                  <.label("Brightness"),
+                  Slider(
+                    clazz = ExploreStyles.AladinRangeControl,
+                    value = 3,
+                    onChange = d =>
+                      Callback {
+                        val root = org.scalajs.dom.document
+                          .querySelector(":root")
+                          .asInstanceOf[org.scalajs.dom.HTMLElement]
+                        root.style.setProperty("--aladin-image-brightness", s"${d / 100}")
+                      }
+                  ),
                   MenuItem(
                     allowMouseZoomView
                       .zoom(AladinMouseScroll.value.asLens)
