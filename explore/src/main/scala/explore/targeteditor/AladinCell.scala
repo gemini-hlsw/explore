@@ -64,6 +64,7 @@ import react.aladin.Fov
 import react.common.ReactFnProps
 import react.primereact.Checkbox
 import react.primereact.Divider
+import react.primereact.ProgressBar
 import react.semanticui.collections.menu.*
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes.*
@@ -71,6 +72,7 @@ import react.semanticui.sizes.*
 import java.time.Duration
 import java.time.Instant
 import scala.concurrent.duration.*
+import react.primereact.Slider
 
 case class AladinCell(
   uid:        User.Id,
@@ -467,6 +469,18 @@ object AladinCell extends ModelOptics with AladinCommon:
                       )
                   ),
                   Divider(),
+                  <.label("Saturation"),
+                  Slider(
+                    clazz = ExploreStyles.AladinRangeControl,
+                    value = 3,
+                    onChange = d =>
+                      Callback {
+                        val root = org.scalajs.dom.document
+                          .querySelector(":root")
+                          .asInstanceOf[org.scalajs.dom.HTMLElement]
+                        root.style.setProperty("--aladin-image-saturation", s"${d / 100}")
+                      }
+                  ),
                   MenuItem(
                     allowMouseZoomView
                       .zoom(AladinMouseScroll.value.asLens)

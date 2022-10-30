@@ -178,6 +178,7 @@ object ExploreStyles {
   val AladinCenterButton: Css     = Css("aladin-status-center-button")
   val AladinSearchIcon: Css       = Css("aladin-search-icon")
   val AladinFullScreen: Css       = Css("aladin-full-screen")
+  val AladinRangeControl: Css     = Css("aladin-range-control")
 
   val AgsOverlay: Css          = Css("ags-overlay")
   val AgsDescription: Css      = Css("ags-description")
