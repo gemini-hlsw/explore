@@ -8,8 +8,8 @@ import crystal.react.View
 import eu.timepit.refined.types.string.NonEmptyString
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^._
-import react.common.*
 import lucuma.ui.syntax.css.*
+import react.common.*
 import react.primereact.Slider
 
 import scalajs.js
@@ -29,11 +29,11 @@ object SliderView {
       props.clazz.getOrElse(Css.Empty),
       <.label(^.htmlFor := props.id.value, props.label),
       Slider(id = props.id.value,
-               value = props.value.get,
-               onChange = props.value.set,
-               disabled = props.disabled,
-               clazz = props.clazz
-      ),
+             value = props.value.get,
+             onChange = props.value.set,
+             disabled = props.disabled,
+             clazz = props.clazz
+      )
     )
   }
 }

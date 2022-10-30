@@ -10,6 +10,8 @@ import cats.data.OptionT
 import cats.syntax.all.*
 import clue.TransactionalClient
 import clue.data.syntax.*
+import eu.timepit.refined.*
+import eu.timepit.refined.numeric.*
 import explore.model.AladinMouseScroll
 import explore.model.TargetVisualOptions
 import explore.model.UserGlobalPreferences
@@ -30,6 +32,7 @@ import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.react.table.*
+import lucuma.refined.*
 import lucuma.ui.table.TableStateStore
 import org.scalablytyped.runtime.StringDictionary
 import org.typelevel.log4cats.Logger
@@ -139,37 +142,47 @@ object UserPreferencesQueries:
       fovDec:        Option[Angle] = None,
       agsCandidates: Option[Visible] = None,
       agsOverlay:    Option[Visible] = None,
-      fullScreen:    Option[Boolean] = None
+      fullScreen:    Option[Boolean] = None,
+      saturation:    Option[Int] = None,
+      brightness:    Option[Int] = None
     )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
       import UserTargetPreferencesUpsert.*
 
       execute[F](
         LucumaTargetInsertInput(
           targetId = targetId.show.assign,
-          lucuma_target_preferences = LucumaTargetPreferencesArrRelInsertInput(
+          lucuma_target_preferences = ExploreTargetPreferencesArrRelInsertInput(
             data = List(
-              LucumaTargetPreferencesInsertInput(
+              ExploreTargetPreferencesInsertInput(
                 userId = uid.show.assign,
                 fovRA = fovRA.map(_.toMicroarcseconds).orIgnore,
                 fovDec = fovDec.map(_.toMicroarcseconds).orIgnore,
                 agsCandidates = agsCandidates.map(Visible.boolIso.reverseGet).orIgnore,
                 agsOverlay = agsOverlay.map(Visible.boolIso.reverseGet).orIgnore,
-                fullScreen = fullScreen.orIgnore
+                fullScreen = fullScreen.orIgnore,
+                saturation = saturation.orIgnore,
+                brightness = brightness.orIgnore
               )
             ),
-            onConflict = LucumaTargetPreferencesOnConflict(
-              constraint = LucumaTargetPreferencesConstraint.LucumaTargetPreferencesPkey,
+            onConflict = ExploreTargetPreferencesOnConflict(
+              constraint = ExploreTargetPreferencesConstraint.LucumaTargetPreferencesPkey,
               update_columns = List(
-                LucumaTargetPreferencesUpdateColumn.FovRA.some.filter(_ => fovRA.isDefined),
-                LucumaTargetPreferencesUpdateColumn.FovDec.some.filter(_ => fovDec.isDefined),
-                LucumaTargetPreferencesUpdateColumn.AgsCandidates.some.filter(_ =>
+                ExploreTargetPreferencesUpdateColumn.FovRA.some.filter(_ => fovRA.isDefined),
+                ExploreTargetPreferencesUpdateColumn.FovDec.some.filter(_ => fovDec.isDefined),
+                ExploreTargetPreferencesUpdateColumn.AgsCandidates.some.filter(_ =>
                   agsCandidates.isDefined
                 ),
-                LucumaTargetPreferencesUpdateColumn.AgsOverlay.some.filter(_ =>
+                ExploreTargetPreferencesUpdateColumn.AgsOverlay.some.filter(_ =>
                   agsOverlay.isDefined
                 ),
-                LucumaTargetPreferencesUpdateColumn.FullScreen.some.filter(_ =>
+                ExploreTargetPreferencesUpdateColumn.FullScreen.some.filter(_ =>
                   fullScreen.isDefined
+                ),
+                ExploreTargetPreferencesUpdateColumn.Saturation.some.filter(_ =>
+                  saturation.isDefined
+                ),
+                ExploreTargetPreferencesUpdateColumn.Brightness.some.filter(_ =>
+                  brightness.isDefined
                 )
               ).flattenOption
             ).assign
@@ -193,14 +206,16 @@ object UserPreferencesQueries:
             .map { r =>
               val userPrefs   =
                 r.lucumaUserPreferencesByPk.flatMap(result => result.aladinMouseScroll)
-              val targetPrefs = r.lucumaTargetPreferencesByPk.map(result =>
+              val targetPrefs = r.exploreTargetPreferencesByPk.map(result =>
                 (result.fovRA,
                  result.fovDec,
                  result.viewOffsetP,
                  result.viewOffsetQ,
                  result.agsCandidates,
                  result.agsOverlay,
-                 result.fullScreen
+                 result.fullScreen,
+                 result.saturation,
+                 result.brightness
                 )
               )
               (userPrefs, targetPrefs)
@@ -221,6 +236,14 @@ object UserPreferencesQueries:
           val agsCandidates = r._2.flatMap(_._5).map(Visible.boolIso.get).getOrElse(Visible.Inline)
           val agsOverlay    = r._2.flatMap(_._6).map(Visible.boolIso.get).getOrElse(Visible.Inline)
           val fullScreen    = r._2.flatMap(_._7).getOrElse(false)
+          val saturation    = r._2
+            .flatMap(_._8)
+            .flatMap(refineV[Interval.Closed[0, 100]](_).toOption)
+            .getOrElse(100.refined[Interval.Closed[0, 100]])
+          val brightness    = r._2
+            .flatMap(_._9)
+            .flatMap(refineV[Interval.Closed[0, 100]](_).toOption)
+            .getOrElse(100.refined[Interval.Closed[0, 100]])
 
           TargetVisualOptions(fovRA,
                               fovDec,
@@ -228,8 +251,8 @@ object UserPreferencesQueries:
                               agsCandidates,
                               agsOverlay,
                               fullScreen,
-                              100,
-                              100
+                              saturation,
+                              brightness
           )
         }
         (userPrefs, targetPrefs)
@@ -245,19 +268,19 @@ object UserPreferencesQueries:
       execute[F](
         LucumaTargetInsertInput(
           targetId = targetId.show.assign,
-          lucuma_target_preferences = LucumaTargetPreferencesArrRelInsertInput(
+          lucuma_target_preferences = ExploreTargetPreferencesArrRelInsertInput(
             data = List(
-              LucumaTargetPreferencesInsertInput(
+              ExploreTargetPreferencesInsertInput(
                 userId = uid.show.assign,
                 viewOffsetP = offset.p.toAngle.toMicroarcseconds.assign,
                 viewOffsetQ = offset.q.toAngle.toMicroarcseconds.assign
               )
             ),
-            onConflict = LucumaTargetPreferencesOnConflict(
-              constraint = LucumaTargetPreferencesConstraint.LucumaTargetPreferencesPkey,
+            onConflict = ExploreTargetPreferencesOnConflict(
+              constraint = ExploreTargetPreferencesConstraint.LucumaTargetPreferencesPkey,
               update_columns = List(
-                LucumaTargetPreferencesUpdateColumn.ViewOffsetP.some,
-                LucumaTargetPreferencesUpdateColumn.ViewOffsetQ.some
+                ExploreTargetPreferencesUpdateColumn.ViewOffsetP.some,
+                ExploreTargetPreferencesUpdateColumn.ViewOffsetQ.some
               ).flattenOption
             ).assign
           ).assign

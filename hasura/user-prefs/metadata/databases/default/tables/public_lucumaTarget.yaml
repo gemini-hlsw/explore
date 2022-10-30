@@ -7,5 +7,5 @@ array_relationships:
     foreign_key_constraint_on:
       column: targetId
       table:
-        name: lucumaTargetPreferences
+        name: exploreTargetPreferences
         schema: public

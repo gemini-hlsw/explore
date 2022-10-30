@@ -70,7 +70,7 @@ object UserPreferencesQueriesGQL {
   trait UserTargetPreferencesQuery extends GraphQLOperation[UserPreferencesDB] {
     val document = """
       query targetPreferences($userId: String! = "", $targetId: String! = "") {
-        lucumaTargetPreferencesByPk(targetId: $targetId, userId: $userId) {
+        exploreTargetPreferencesByPk(targetId: $targetId, userId: $userId) {
           fovRA
           fovDec
           viewOffsetP
@@ -78,6 +78,8 @@ object UserPreferencesQueriesGQL {
           agsCandidates
           agsOverlay
           fullScreen
+          saturation
+          brightness
         }
         lucumaUserPreferencesByPk(userId: $userId) {
           aladinMouseScroll
@@ -156,7 +158,7 @@ object UserPreferencesQueriesGQL {
   trait UserTargetPreferencesFovUpdate extends GraphQLOperation[UserPreferencesDB] {
     val document =
       """ mutation updateTargetFov($userId: String!, $targetId: String!, $fovRA: bigint!, $fovDec: bigint!) {
-        updateLucumaTargetPreferencesByPk(
+        updateExploreTargetPreferencesByPk(
           pk_columns: {
             userId: $userId,
             targetId: $targetId

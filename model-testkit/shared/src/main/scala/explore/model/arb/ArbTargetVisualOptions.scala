@@ -5,6 +5,7 @@ package explore.model.arb
 
 import explore.model.TargetVisualOptions
 import explore.model.enums.Visible
+import eu.timepit.refined.scalacheck.numeric.*
 import lucuma.core.util.arb.ArbEnumerated.*
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
@@ -27,8 +28,8 @@ trait ArbTargetVisualOptions:
         a    <- arbitrary[Visible]
         o    <- arbitrary[Visible]
         f    <- arbitrary[Boolean]
-        s    <- Gen.chooseNum(0, 100)
-        b    <- Gen.chooseNum(0, 100)
+        s    <- arbitrary[TargetVisualOptions.ImageFilterRange]
+        b    <- arbitrary[TargetVisualOptions.ImageFilterRange]
       } yield TargetVisualOptions(fra, fdec, vo, a, o, f, s, b)
     }
 

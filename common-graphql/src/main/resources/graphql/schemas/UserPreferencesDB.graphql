@@ -98,6 +98,413 @@ input ElevationPlotTimeComparisonExp {
 }
 
 """
+columns and relationships of "exploreTargetPreferences"
+"""
+type ExploreTargetPreferences {
+  agsCandidates: Boolean
+  agsOverlay: Boolean
+  brightness: Int
+  createdAt: timestamptz
+  fovDec: bigint
+  fovRA: bigint
+  fullScreen: Boolean
+
+  """An object relationship"""
+  lucuma_target: LucumaTarget!
+  saturation: Int
+  targetId: String!
+  updatedAt: timestamptz
+  userId: String!
+  viewOffsetP: bigint
+  viewOffsetQ: bigint
+}
+
+"""
+aggregated selection of "exploreTargetPreferences"
+"""
+type ExploreTargetPreferencesAggregate {
+  aggregate: ExploreTargetPreferencesAggregateFields
+  nodes: [ExploreTargetPreferences!]!
+}
+
+"""
+aggregate fields of "exploreTargetPreferences"
+"""
+type ExploreTargetPreferencesAggregateFields {
+  avg: ExploreTargetPreferencesAvgFields
+  count(columns: [ExploreTargetPreferencesSelectColumn!], distinct: Boolean): Int!
+  max: ExploreTargetPreferencesMaxFields
+  min: ExploreTargetPreferencesMinFields
+  stddev: ExploreTargetPreferencesStddevFields
+  stddevPop: ExploreTargetPreferencesStddev_popFields
+  stddevSamp: ExploreTargetPreferencesStddev_sampFields
+  sum: ExploreTargetPreferencesSumFields
+  varPop: ExploreTargetPreferencesVar_popFields
+  varSamp: ExploreTargetPreferencesVar_sampFields
+  variance: ExploreTargetPreferencesVarianceFields
+}
+
+"""
+order by aggregate values of table "exploreTargetPreferences"
+"""
+input ExploreTargetPreferencesAggregateOrderBy {
+  avg: exploreTargetPreferences_avg_order_by
+  count: OrderBy
+  max: exploreTargetPreferences_max_order_by
+  min: exploreTargetPreferences_min_order_by
+  stddev: exploreTargetPreferences_stddev_order_by
+  stddev_pop: exploreTargetPreferences_stddev_pop_order_by
+  stddev_samp: exploreTargetPreferences_stddev_samp_order_by
+  sum: exploreTargetPreferences_sum_order_by
+  var_pop: exploreTargetPreferences_var_pop_order_by
+  var_samp: exploreTargetPreferences_var_samp_order_by
+  variance: exploreTargetPreferences_variance_order_by
+}
+
+"""
+input type for inserting array relation for remote table "exploreTargetPreferences"
+"""
+input ExploreTargetPreferencesArrRelInsertInput {
+  data: [ExploreTargetPreferencesInsertInput!]!
+
+  """upsert condition"""
+  onConflict: ExploreTargetPreferencesOnConflict
+}
+
+"""aggregate avg on columns"""
+type ExploreTargetPreferencesAvgFields {
+  brightness: Float
+  fovDec: Float
+  fovRA: Float
+  saturation: Float
+  viewOffsetP: Float
+  viewOffsetQ: Float
+}
+
+"""
+Boolean expression to filter rows from the table "exploreTargetPreferences". All fields are combined with a logical 'AND'.
+"""
+input ExploreTargetPreferencesBoolExp {
+  _and: [ExploreTargetPreferencesBoolExp!]
+  _not: ExploreTargetPreferencesBoolExp
+  _or: [ExploreTargetPreferencesBoolExp!]
+  agsCandidates: BooleanComparisonExp
+  agsOverlay: BooleanComparisonExp
+  brightness: IntComparisonExp
+  createdAt: TimestamptzComparisonExp
+  fovDec: BigintComparisonExp
+  fovRA: BigintComparisonExp
+  fullScreen: BooleanComparisonExp
+  lucuma_target: LucumaTargetBoolExp
+  saturation: IntComparisonExp
+  targetId: StringComparisonExp
+  updatedAt: TimestamptzComparisonExp
+  userId: StringComparisonExp
+  viewOffsetP: BigintComparisonExp
+  viewOffsetQ: BigintComparisonExp
+}
+
+"""
+unique or primary key constraints on table "exploreTargetPreferences"
+"""
+enum ExploreTargetPreferencesConstraint {
+  """
+  unique or primary key constraint on columns "targetId", "userId"
+  """
+  lucuma_target_preferences_pkey
+}
+
+"""
+input type for incrementing numeric columns in table "exploreTargetPreferences"
+"""
+input ExploreTargetPreferencesIncInput {
+  brightness: Int
+  fovDec: bigint
+  fovRA: bigint
+  saturation: Int
+  viewOffsetP: bigint
+  viewOffsetQ: bigint
+}
+
+"""
+input type for inserting data into table "exploreTargetPreferences"
+"""
+input ExploreTargetPreferencesInsertInput {
+  agsCandidates: Boolean
+  agsOverlay: Boolean
+  brightness: Int
+  createdAt: timestamptz
+  fovDec: bigint
+  fovRA: bigint
+  fullScreen: Boolean
+  lucuma_target: LucumaTargetObjRelInsertInput
+  saturation: Int
+  targetId: String
+  updatedAt: timestamptz
+  userId: String
+  viewOffsetP: bigint
+  viewOffsetQ: bigint
+}
+
+"""aggregate max on columns"""
+type ExploreTargetPreferencesMaxFields {
+  brightness: Int
+  createdAt: timestamptz
+  fovDec: bigint
+  fovRA: bigint
+  saturation: Int
+  targetId: String
+  updatedAt: timestamptz
+  userId: String
+  viewOffsetP: bigint
+  viewOffsetQ: bigint
+}
+
+"""aggregate min on columns"""
+type ExploreTargetPreferencesMinFields {
+  brightness: Int
+  createdAt: timestamptz
+  fovDec: bigint
+  fovRA: bigint
+  saturation: Int
+  targetId: String
+  updatedAt: timestamptz
+  userId: String
+  viewOffsetP: bigint
+  viewOffsetQ: bigint
+}
+
+"""
+response of any mutation on the table "exploreTargetPreferences"
+"""
+type ExploreTargetPreferencesMutationResponse {
+  """number of rows affected by the mutation"""
+  affected_rows: Int!
+
+  """data from the rows affected by the mutation"""
+  returning: [ExploreTargetPreferences!]!
+}
+
+"""
+on_conflict condition type for table "exploreTargetPreferences"
+"""
+input ExploreTargetPreferencesOnConflict {
+  constraint: ExploreTargetPreferencesConstraint!
+  update_columns: [ExploreTargetPreferencesUpdateColumn!]! = []
+  where: ExploreTargetPreferencesBoolExp
+}
+
+"""Ordering options when selecting data from "exploreTargetPreferences"."""
+input ExploreTargetPreferencesOrderBy {
+  agsCandidates: OrderBy
+  agsOverlay: OrderBy
+  brightness: OrderBy
+  createdAt: OrderBy
+  fovDec: OrderBy
+  fovRA: OrderBy
+  fullScreen: OrderBy
+  lucuma_target: LucumaTargetOrderBy
+  saturation: OrderBy
+  targetId: OrderBy
+  updatedAt: OrderBy
+  userId: OrderBy
+  viewOffsetP: OrderBy
+  viewOffsetQ: OrderBy
+}
+
+"""primary key columns input for table: exploreTargetPreferences"""
+input ExploreTargetPreferencesPkColumnsInput {
+  targetId: String!
+  userId: String!
+}
+
+"""
+select columns of table "exploreTargetPreferences"
+"""
+enum ExploreTargetPreferencesSelectColumn {
+  """column name"""
+  agsCandidates
+
+  """column name"""
+  agsOverlay
+
+  """column name"""
+  brightness
+
+  """column name"""
+  createdAt
+
+  """column name"""
+  fovDec
+
+  """column name"""
+  fovRA
+
+  """column name"""
+  fullScreen
+
+  """column name"""
+  saturation
+
+  """column name"""
+  targetId
+
+  """column name"""
+  updatedAt
+
+  """column name"""
+  userId
+
+  """column name"""
+  viewOffsetP
+
+  """column name"""
+  viewOffsetQ
+}
+
+"""
+input type for updating data in table "exploreTargetPreferences"
+"""
+input ExploreTargetPreferencesSetInput {
+  agsCandidates: Boolean
+  agsOverlay: Boolean
+  brightness: Int
+  createdAt: timestamptz
+  fovDec: bigint
+  fovRA: bigint
+  fullScreen: Boolean
+  saturation: Int
+  targetId: String
+  updatedAt: timestamptz
+  userId: String
+  viewOffsetP: bigint
+  viewOffsetQ: bigint
+}
+
+"""aggregate stddev on columns"""
+type ExploreTargetPreferencesStddevFields {
+  brightness: Float
+  fovDec: Float
+  fovRA: Float
+  saturation: Float
+  viewOffsetP: Float
+  viewOffsetQ: Float
+}
+
+"""aggregate stddev_pop on columns"""
+type ExploreTargetPreferencesStddev_popFields {
+  brightness: Float
+  fovDec: Float
+  fovRA: Float
+  saturation: Float
+  viewOffsetP: Float
+  viewOffsetQ: Float
+}
+
+"""aggregate stddev_samp on columns"""
+type ExploreTargetPreferencesStddev_sampFields {
+  brightness: Float
+  fovDec: Float
+  fovRA: Float
+  saturation: Float
+  viewOffsetP: Float
+  viewOffsetQ: Float
+}
+
+"""aggregate sum on columns"""
+type ExploreTargetPreferencesSumFields {
+  brightness: Int
+  fovDec: bigint
+  fovRA: bigint
+  saturation: Int
+  viewOffsetP: bigint
+  viewOffsetQ: bigint
+}
+
+"""
+update columns of table "exploreTargetPreferences"
+"""
+enum ExploreTargetPreferencesUpdateColumn {
+  """column name"""
+  agsCandidates
+
+  """column name"""
+  agsOverlay
+
+  """column name"""
+  brightness
+
+  """column name"""
+  createdAt
+
+  """column name"""
+  fovDec
+
+  """column name"""
+  fovRA
+
+  """column name"""
+  fullScreen
+
+  """column name"""
+  saturation
+
+  """column name"""
+  targetId
+
+  """column name"""
+  updatedAt
+
+  """column name"""
+  userId
+
+  """column name"""
+  viewOffsetP
+
+  """column name"""
+  viewOffsetQ
+}
+
+input ExploreTargetPreferencesUpdates {
+  """increments the numeric columns with given value of the filtered values"""
+  _inc: ExploreTargetPreferencesIncInput
+
+  """sets the columns of the filtered rows to the given values"""
+  _set: ExploreTargetPreferencesSetInput
+  where: ExploreTargetPreferencesBoolExp!
+}
+
+"""aggregate var_pop on columns"""
+type ExploreTargetPreferencesVar_popFields {
+  brightness: Float
+  fovDec: Float
+  fovRA: Float
+  saturation: Float
+  viewOffsetP: Float
+  viewOffsetQ: Float
+}
+
+"""aggregate var_samp on columns"""
+type ExploreTargetPreferencesVar_sampFields {
+  brightness: Float
+  fovDec: Float
+  fovRA: Float
+  saturation: Float
+  viewOffsetP: Float
+  viewOffsetQ: Float
+}
+
+"""aggregate variance on columns"""
+type ExploreTargetPreferencesVarianceFields {
+  brightness: Float
+  fovDec: Float
+  fovRA: Float
+  saturation: Float
+  viewOffsetP: Float
+  viewOffsetQ: Float
+}
+
+"""
 Boolean expression to compare columns of type "Int". All fields are combined with logical 'AND'.
 """
 input IntComparisonExp {
@@ -1459,7 +1866,7 @@ type LucumaTarget {
   """An aggregate relationship"""
   lucumaTargetPreferencesAggregate(
     """distinct select on columns"""
-    distinctOn: [LucumaTargetPreferencesSelectColumn!]
+    distinctOn: [ExploreTargetPreferencesSelectColumn!]
 
     """limit the number of rows returned"""
     limit: Int
@@ -1468,16 +1875,16 @@ type LucumaTarget {
     offset: Int
 
     """sort the rows by one or more columns"""
-    orderBy: [LucumaTargetPreferencesOrderBy!]
+    orderBy: [ExploreTargetPreferencesOrderBy!]
 
     """filter the rows returned"""
-    where: LucumaTargetPreferencesBoolExp
-  ): LucumaTargetPreferencesAggregate!
+    where: ExploreTargetPreferencesBoolExp
+  ): ExploreTargetPreferencesAggregate!
 
   """An array relationship"""
   lucuma_target_preferences(
     """distinct select on columns"""
-    distinctOn: [LucumaTargetPreferencesSelectColumn!]
+    distinctOn: [ExploreTargetPreferencesSelectColumn!]
 
     """limit the number of rows returned"""
     limit: Int
@@ -1486,11 +1893,11 @@ type LucumaTarget {
     offset: Int
 
     """sort the rows by one or more columns"""
-    orderBy: [LucumaTargetPreferencesOrderBy!]
+    orderBy: [ExploreTargetPreferencesOrderBy!]
 
     """filter the rows returned"""
-    where: LucumaTargetPreferencesBoolExp
-  ): [LucumaTargetPreferences!]!
+    where: ExploreTargetPreferencesBoolExp
+  ): [ExploreTargetPreferences!]!
   targetId: String!
 }
 
@@ -1518,7 +1925,7 @@ input LucumaTargetBoolExp {
   _and: [LucumaTargetBoolExp!]
   _not: LucumaTargetBoolExp
   _or: [LucumaTargetBoolExp!]
-  lucuma_target_preferences: LucumaTargetPreferencesBoolExp
+  lucuma_target_preferences: ExploreTargetPreferencesBoolExp
   targetId: StringComparisonExp
 }
 
@@ -1536,7 +1943,7 @@ enum LucumaTargetConstraint {
 input type for inserting data into table "lucumaTarget"
 """
 input LucumaTargetInsertInput {
-  lucuma_target_preferences: LucumaTargetPreferencesArrRelInsertInput
+  lucuma_target_preferences: ExploreTargetPreferencesArrRelInsertInput
   targetId: String
 }
 
@@ -1582,350 +1989,13 @@ input LucumaTargetOnConflict {
 
 """Ordering options when selecting data from "lucumaTarget"."""
 input LucumaTargetOrderBy {
-  lucuma_target_preferencesAggregate: LucumaTargetPreferencesAggregateOrderBy
+  lucuma_target_preferencesAggregate: ExploreTargetPreferencesAggregateOrderBy
   targetId: OrderBy
 }
 
 """primary key columns input for table: lucumaTarget"""
 input LucumaTargetPkColumnsInput {
   targetId: String!
-}
-
-"""
-columns and relationships of "lucumaTargetPreferences"
-"""
-type LucumaTargetPreferences {
-  agsCandidates: Boolean
-  agsOverlay: Boolean
-  fovDec: bigint
-  fovRA: bigint
-  fullScreen: Boolean
-
-  """An object relationship"""
-  lucuma_target: LucumaTarget!
-  targetId: String!
-  userId: String!
-  viewOffsetP: bigint
-  viewOffsetQ: bigint
-}
-
-"""
-aggregated selection of "lucumaTargetPreferences"
-"""
-type LucumaTargetPreferencesAggregate {
-  aggregate: LucumaTargetPreferencesAggregateFields
-  nodes: [LucumaTargetPreferences!]!
-}
-
-"""
-aggregate fields of "lucumaTargetPreferences"
-"""
-type LucumaTargetPreferencesAggregateFields {
-  avg: LucumaTargetPreferencesAvgFields
-  count(columns: [LucumaTargetPreferencesSelectColumn!], distinct: Boolean): Int!
-  max: LucumaTargetPreferencesMaxFields
-  min: LucumaTargetPreferencesMinFields
-  stddev: LucumaTargetPreferencesStddevFields
-  stddevPop: LucumaTargetPreferencesStddev_popFields
-  stddevSamp: LucumaTargetPreferencesStddev_sampFields
-  sum: LucumaTargetPreferencesSumFields
-  varPop: LucumaTargetPreferencesVar_popFields
-  varSamp: LucumaTargetPreferencesVar_sampFields
-  variance: LucumaTargetPreferencesVarianceFields
-}
-
-"""
-order by aggregate values of table "lucumaTargetPreferences"
-"""
-input LucumaTargetPreferencesAggregateOrderBy {
-  avg: lucumaTargetPreferences_avg_order_by
-  count: OrderBy
-  max: lucumaTargetPreferences_max_order_by
-  min: lucumaTargetPreferences_min_order_by
-  stddev: lucumaTargetPreferences_stddev_order_by
-  stddev_pop: lucumaTargetPreferences_stddev_pop_order_by
-  stddev_samp: lucumaTargetPreferences_stddev_samp_order_by
-  sum: lucumaTargetPreferences_sum_order_by
-  var_pop: lucumaTargetPreferences_var_pop_order_by
-  var_samp: lucumaTargetPreferences_var_samp_order_by
-  variance: lucumaTargetPreferences_variance_order_by
-}
-
-"""
-input type for inserting array relation for remote table "lucumaTargetPreferences"
-"""
-input LucumaTargetPreferencesArrRelInsertInput {
-  data: [LucumaTargetPreferencesInsertInput!]!
-
-  """upsert condition"""
-  onConflict: LucumaTargetPreferencesOnConflict
-}
-
-"""aggregate avg on columns"""
-type LucumaTargetPreferencesAvgFields {
-  fovDec: Float
-  fovRA: Float
-  viewOffsetP: Float
-  viewOffsetQ: Float
-}
-
-"""
-Boolean expression to filter rows from the table "lucumaTargetPreferences". All fields are combined with a logical 'AND'.
-"""
-input LucumaTargetPreferencesBoolExp {
-  _and: [LucumaTargetPreferencesBoolExp!]
-  _not: LucumaTargetPreferencesBoolExp
-  _or: [LucumaTargetPreferencesBoolExp!]
-  agsCandidates: BooleanComparisonExp
-  agsOverlay: BooleanComparisonExp
-  fovDec: BigintComparisonExp
-  fovRA: BigintComparisonExp
-  fullScreen: BooleanComparisonExp
-  lucuma_target: LucumaTargetBoolExp
-  targetId: StringComparisonExp
-  userId: StringComparisonExp
-  viewOffsetP: BigintComparisonExp
-  viewOffsetQ: BigintComparisonExp
-}
-
-"""
-unique or primary key constraints on table "lucumaTargetPreferences"
-"""
-enum LucumaTargetPreferencesConstraint {
-  """
-  unique or primary key constraint on columns "targetId", "userId"
-  """
-  lucuma_target_preferences_pkey
-}
-
-"""
-input type for incrementing numeric columns in table "lucumaTargetPreferences"
-"""
-input LucumaTargetPreferencesIncInput {
-  fovDec: bigint
-  fovRA: bigint
-  viewOffsetP: bigint
-  viewOffsetQ: bigint
-}
-
-"""
-input type for inserting data into table "lucumaTargetPreferences"
-"""
-input LucumaTargetPreferencesInsertInput {
-  agsCandidates: Boolean
-  agsOverlay: Boolean
-  fovDec: bigint
-  fovRA: bigint
-  fullScreen: Boolean
-  lucuma_target: LucumaTargetObjRelInsertInput
-  targetId: String
-  userId: String
-  viewOffsetP: bigint
-  viewOffsetQ: bigint
-}
-
-"""aggregate max on columns"""
-type LucumaTargetPreferencesMaxFields {
-  fovDec: bigint
-  fovRA: bigint
-  targetId: String
-  userId: String
-  viewOffsetP: bigint
-  viewOffsetQ: bigint
-}
-
-"""aggregate min on columns"""
-type LucumaTargetPreferencesMinFields {
-  fovDec: bigint
-  fovRA: bigint
-  targetId: String
-  userId: String
-  viewOffsetP: bigint
-  viewOffsetQ: bigint
-}
-
-"""
-response of any mutation on the table "lucumaTargetPreferences"
-"""
-type LucumaTargetPreferencesMutationResponse {
-  """number of rows affected by the mutation"""
-  affected_rows: Int!
-
-  """data from the rows affected by the mutation"""
-  returning: [LucumaTargetPreferences!]!
-}
-
-"""
-on_conflict condition type for table "lucumaTargetPreferences"
-"""
-input LucumaTargetPreferencesOnConflict {
-  constraint: LucumaTargetPreferencesConstraint!
-  update_columns: [LucumaTargetPreferencesUpdateColumn!]! = []
-  where: LucumaTargetPreferencesBoolExp
-}
-
-"""Ordering options when selecting data from "lucumaTargetPreferences"."""
-input LucumaTargetPreferencesOrderBy {
-  agsCandidates: OrderBy
-  agsOverlay: OrderBy
-  fovDec: OrderBy
-  fovRA: OrderBy
-  fullScreen: OrderBy
-  lucuma_target: LucumaTargetOrderBy
-  targetId: OrderBy
-  userId: OrderBy
-  viewOffsetP: OrderBy
-  viewOffsetQ: OrderBy
-}
-
-"""primary key columns input for table: lucumaTargetPreferences"""
-input LucumaTargetPreferencesPkColumnsInput {
-  targetId: String!
-  userId: String!
-}
-
-"""
-select columns of table "lucumaTargetPreferences"
-"""
-enum LucumaTargetPreferencesSelectColumn {
-  """column name"""
-  agsCandidates
-
-  """column name"""
-  agsOverlay
-
-  """column name"""
-  fovDec
-
-  """column name"""
-  fovRA
-
-  """column name"""
-  fullScreen
-
-  """column name"""
-  targetId
-
-  """column name"""
-  userId
-
-  """column name"""
-  viewOffsetP
-
-  """column name"""
-  viewOffsetQ
-}
-
-"""
-input type for updating data in table "lucumaTargetPreferences"
-"""
-input LucumaTargetPreferencesSetInput {
-  agsCandidates: Boolean
-  agsOverlay: Boolean
-  fovDec: bigint
-  fovRA: bigint
-  fullScreen: Boolean
-  targetId: String
-  userId: String
-  viewOffsetP: bigint
-  viewOffsetQ: bigint
-}
-
-"""aggregate stddev on columns"""
-type LucumaTargetPreferencesStddevFields {
-  fovDec: Float
-  fovRA: Float
-  viewOffsetP: Float
-  viewOffsetQ: Float
-}
-
-"""aggregate stddev_pop on columns"""
-type LucumaTargetPreferencesStddev_popFields {
-  fovDec: Float
-  fovRA: Float
-  viewOffsetP: Float
-  viewOffsetQ: Float
-}
-
-"""aggregate stddev_samp on columns"""
-type LucumaTargetPreferencesStddev_sampFields {
-  fovDec: Float
-  fovRA: Float
-  viewOffsetP: Float
-  viewOffsetQ: Float
-}
-
-"""aggregate sum on columns"""
-type LucumaTargetPreferencesSumFields {
-  fovDec: bigint
-  fovRA: bigint
-  viewOffsetP: bigint
-  viewOffsetQ: bigint
-}
-
-"""
-update columns of table "lucumaTargetPreferences"
-"""
-enum LucumaTargetPreferencesUpdateColumn {
-  """column name"""
-  agsCandidates
-
-  """column name"""
-  agsOverlay
-
-  """column name"""
-  fovDec
-
-  """column name"""
-  fovRA
-
-  """column name"""
-  fullScreen
-
-  """column name"""
-  targetId
-
-  """column name"""
-  userId
-
-  """column name"""
-  viewOffsetP
-
-  """column name"""
-  viewOffsetQ
-}
-
-input LucumaTargetPreferencesUpdates {
-  """increments the numeric columns with given value of the filtered values"""
-  _inc: LucumaTargetPreferencesIncInput
-
-  """sets the columns of the filtered rows to the given values"""
-  _set: LucumaTargetPreferencesSetInput
-  where: LucumaTargetPreferencesBoolExp!
-}
-
-"""aggregate var_pop on columns"""
-type LucumaTargetPreferencesVar_popFields {
-  fovDec: Float
-  fovRA: Float
-  viewOffsetP: Float
-  viewOffsetQ: Float
-}
-
-"""aggregate var_samp on columns"""
-type LucumaTargetPreferencesVar_sampFields {
-  fovDec: Float
-  fovRA: Float
-  viewOffsetP: Float
-  viewOffsetQ: Float
-}
-
-"""aggregate variance on columns"""
-type LucumaTargetPreferencesVarianceFields {
-  fovDec: Float
-  fovRA: Float
-  viewOffsetP: Float
-  viewOffsetQ: Float
 }
 
 """
@@ -2347,6 +2417,162 @@ scalar elevation_plot_range
 
 scalar elevation_plot_time
 
+"""
+order by avg() on columns of table "exploreTargetPreferences"
+"""
+input exploreTargetPreferences_avg_order_by {
+  brightness: OrderBy
+  fovDec: OrderBy
+  fovRA: OrderBy
+  saturation: OrderBy
+  viewOffsetP: OrderBy
+  viewOffsetQ: OrderBy
+}
+
+"""
+order by max() on columns of table "exploreTargetPreferences"
+"""
+input exploreTargetPreferences_max_order_by {
+  brightness: OrderBy
+  createdAt: OrderBy
+  fovDec: OrderBy
+  fovRA: OrderBy
+  saturation: OrderBy
+  targetId: OrderBy
+  updatedAt: OrderBy
+  userId: OrderBy
+  viewOffsetP: OrderBy
+  viewOffsetQ: OrderBy
+}
+
+"""
+order by min() on columns of table "exploreTargetPreferences"
+"""
+input exploreTargetPreferences_min_order_by {
+  brightness: OrderBy
+  createdAt: OrderBy
+  fovDec: OrderBy
+  fovRA: OrderBy
+  saturation: OrderBy
+  targetId: OrderBy
+  updatedAt: OrderBy
+  userId: OrderBy
+  viewOffsetP: OrderBy
+  viewOffsetQ: OrderBy
+}
+
+"""
+order by stddev() on columns of table "exploreTargetPreferences"
+"""
+input exploreTargetPreferences_stddev_order_by {
+  brightness: OrderBy
+  fovDec: OrderBy
+  fovRA: OrderBy
+  saturation: OrderBy
+  viewOffsetP: OrderBy
+  viewOffsetQ: OrderBy
+}
+
+"""
+order by stddev_pop() on columns of table "exploreTargetPreferences"
+"""
+input exploreTargetPreferences_stddev_pop_order_by {
+  brightness: OrderBy
+  fovDec: OrderBy
+  fovRA: OrderBy
+  saturation: OrderBy
+  viewOffsetP: OrderBy
+  viewOffsetQ: OrderBy
+}
+
+"""
+order by stddev_samp() on columns of table "exploreTargetPreferences"
+"""
+input exploreTargetPreferences_stddev_samp_order_by {
+  brightness: OrderBy
+  fovDec: OrderBy
+  fovRA: OrderBy
+  saturation: OrderBy
+  viewOffsetP: OrderBy
+  viewOffsetQ: OrderBy
+}
+
+"""
+Streaming cursor of the table "exploreTargetPreferences"
+"""
+input exploreTargetPreferences_streamCursorInput {
+  """Stream column input with initial value"""
+  initialValue: exploreTargetPreferences_streamCursorValueInput!
+
+  """cursor ordering"""
+  ordering: CursorOrdering
+}
+
+"""Initial value of the column from where the streaming should start"""
+input exploreTargetPreferences_streamCursorValueInput {
+  agsCandidates: Boolean
+  agsOverlay: Boolean
+  brightness: Int
+  createdAt: timestamptz
+  fovDec: bigint
+  fovRA: bigint
+  fullScreen: Boolean
+  saturation: Int
+  targetId: String
+  updatedAt: timestamptz
+  userId: String
+  viewOffsetP: bigint
+  viewOffsetQ: bigint
+}
+
+"""
+order by sum() on columns of table "exploreTargetPreferences"
+"""
+input exploreTargetPreferences_sum_order_by {
+  brightness: OrderBy
+  fovDec: OrderBy
+  fovRA: OrderBy
+  saturation: OrderBy
+  viewOffsetP: OrderBy
+  viewOffsetQ: OrderBy
+}
+
+"""
+order by var_pop() on columns of table "exploreTargetPreferences"
+"""
+input exploreTargetPreferences_var_pop_order_by {
+  brightness: OrderBy
+  fovDec: OrderBy
+  fovRA: OrderBy
+  saturation: OrderBy
+  viewOffsetP: OrderBy
+  viewOffsetQ: OrderBy
+}
+
+"""
+order by var_samp() on columns of table "exploreTargetPreferences"
+"""
+input exploreTargetPreferences_var_samp_order_by {
+  brightness: OrderBy
+  fovDec: OrderBy
+  fovRA: OrderBy
+  saturation: OrderBy
+  viewOffsetP: OrderBy
+  viewOffsetQ: OrderBy
+}
+
+"""
+order by variance() on columns of table "exploreTargetPreferences"
+"""
+input exploreTargetPreferences_variance_order_by {
+  brightness: OrderBy
+  fovDec: OrderBy
+  fovRA: OrderBy
+  saturation: OrderBy
+  viewOffsetP: OrderBy
+  viewOffsetQ: OrderBy
+}
+
 scalar itc_chart_type
 
 """
@@ -2497,134 +2723,6 @@ input lucumaTableIds_streamCursorValueInput {
 }
 
 """
-order by avg() on columns of table "lucumaTargetPreferences"
-"""
-input lucumaTargetPreferences_avg_order_by {
-  fovDec: OrderBy
-  fovRA: OrderBy
-  viewOffsetP: OrderBy
-  viewOffsetQ: OrderBy
-}
-
-"""
-order by max() on columns of table "lucumaTargetPreferences"
-"""
-input lucumaTargetPreferences_max_order_by {
-  fovDec: OrderBy
-  fovRA: OrderBy
-  targetId: OrderBy
-  userId: OrderBy
-  viewOffsetP: OrderBy
-  viewOffsetQ: OrderBy
-}
-
-"""
-order by min() on columns of table "lucumaTargetPreferences"
-"""
-input lucumaTargetPreferences_min_order_by {
-  fovDec: OrderBy
-  fovRA: OrderBy
-  targetId: OrderBy
-  userId: OrderBy
-  viewOffsetP: OrderBy
-  viewOffsetQ: OrderBy
-}
-
-"""
-order by stddev() on columns of table "lucumaTargetPreferences"
-"""
-input lucumaTargetPreferences_stddev_order_by {
-  fovDec: OrderBy
-  fovRA: OrderBy
-  viewOffsetP: OrderBy
-  viewOffsetQ: OrderBy
-}
-
-"""
-order by stddev_pop() on columns of table "lucumaTargetPreferences"
-"""
-input lucumaTargetPreferences_stddev_pop_order_by {
-  fovDec: OrderBy
-  fovRA: OrderBy
-  viewOffsetP: OrderBy
-  viewOffsetQ: OrderBy
-}
-
-"""
-order by stddev_samp() on columns of table "lucumaTargetPreferences"
-"""
-input lucumaTargetPreferences_stddev_samp_order_by {
-  fovDec: OrderBy
-  fovRA: OrderBy
-  viewOffsetP: OrderBy
-  viewOffsetQ: OrderBy
-}
-
-"""
-Streaming cursor of the table "lucumaTargetPreferences"
-"""
-input lucumaTargetPreferences_streamCursorInput {
-  """Stream column input with initial value"""
-  initialValue: lucumaTargetPreferences_streamCursorValueInput!
-
-  """cursor ordering"""
-  ordering: CursorOrdering
-}
-
-"""Initial value of the column from where the streaming should start"""
-input lucumaTargetPreferences_streamCursorValueInput {
-  agsCandidates: Boolean
-  agsOverlay: Boolean
-  fovDec: bigint
-  fovRA: bigint
-  fullScreen: Boolean
-  targetId: String
-  userId: String
-  viewOffsetP: bigint
-  viewOffsetQ: bigint
-}
-
-"""
-order by sum() on columns of table "lucumaTargetPreferences"
-"""
-input lucumaTargetPreferences_sum_order_by {
-  fovDec: OrderBy
-  fovRA: OrderBy
-  viewOffsetP: OrderBy
-  viewOffsetQ: OrderBy
-}
-
-"""
-order by var_pop() on columns of table "lucumaTargetPreferences"
-"""
-input lucumaTargetPreferences_var_pop_order_by {
-  fovDec: OrderBy
-  fovRA: OrderBy
-  viewOffsetP: OrderBy
-  viewOffsetQ: OrderBy
-}
-
-"""
-order by var_samp() on columns of table "lucumaTargetPreferences"
-"""
-input lucumaTargetPreferences_var_samp_order_by {
-  fovDec: OrderBy
-  fovRA: OrderBy
-  viewOffsetP: OrderBy
-  viewOffsetQ: OrderBy
-}
-
-"""
-order by variance() on columns of table "lucumaTargetPreferences"
-"""
-input lucumaTargetPreferences_variance_order_by {
-  fovDec: OrderBy
-  fovRA: OrderBy
-  viewOffsetP: OrderBy
-  viewOffsetQ: OrderBy
-}
-
-"""
 Streaming cursor of the table "lucumaTarget"
 """
 input lucumaTarget_streamCursorInput {
@@ -2677,6 +2775,19 @@ input lucumaUser_streamCursorValueInput {
 
 """mutation root"""
 type Mutation {
+  """
+  delete data from the table: "exploreTargetPreferences"
+  """
+  deleteExploreTargetPreferences(
+    """filter the rows which have to be deleted"""
+    where: ExploreTargetPreferencesBoolExp!
+  ): ExploreTargetPreferencesMutationResponse
+
+  """
+  delete single row from the table: "exploreTargetPreferences"
+  """
+  deleteExploreTargetPreferencesByPk(targetId: String!, userId: String!): ExploreTargetPreferences
+
   """
   delete data from the table: "lucumaGridLayoutId"
   """
@@ -2782,19 +2893,6 @@ type Mutation {
   deleteLucumaTargetByPk(targetId: String!): LucumaTarget
 
   """
-  delete data from the table: "lucumaTargetPreferences"
-  """
-  deleteLucumaTargetPreferences(
-    """filter the rows which have to be deleted"""
-    where: LucumaTargetPreferencesBoolExp!
-  ): LucumaTargetPreferencesMutationResponse
-
-  """
-  delete single row from the table: "lucumaTargetPreferences"
-  """
-  deleteLucumaTargetPreferencesByPk(targetId: String!, userId: String!): LucumaTargetPreferences
-
-  """
   delete data from the table: "lucumaUser"
   """
   deleteLucumaUser(
@@ -2819,6 +2917,28 @@ type Mutation {
   delete single row from the table: "lucumaUserPreferences"
   """
   deleteLucumaUserPreferencesByPk(userId: String!): LucumaUserPreferences
+
+  """
+  insert data into the table: "exploreTargetPreferences"
+  """
+  insertExploreTargetPreferences(
+    """the rows to be inserted"""
+    objects: [ExploreTargetPreferencesInsertInput!]!
+
+    """upsert condition"""
+    onConflict: ExploreTargetPreferencesOnConflict
+  ): ExploreTargetPreferencesMutationResponse
+
+  """
+  insert a single row into the table: "exploreTargetPreferences"
+  """
+  insertExploreTargetPreferencesOne(
+    """the row to be inserted"""
+    object: ExploreTargetPreferencesInsertInput!
+
+    """upsert condition"""
+    onConflict: ExploreTargetPreferencesOnConflict
+  ): ExploreTargetPreferences
 
   """
   insert data into the table: "lucumaGridLayoutId"
@@ -2997,28 +3117,6 @@ type Mutation {
   ): LucumaTarget
 
   """
-  insert data into the table: "lucumaTargetPreferences"
-  """
-  insertLucumaTargetPreferences(
-    """the rows to be inserted"""
-    objects: [LucumaTargetPreferencesInsertInput!]!
-
-    """upsert condition"""
-    onConflict: LucumaTargetPreferencesOnConflict
-  ): LucumaTargetPreferencesMutationResponse
-
-  """
-  insert a single row into the table: "lucumaTargetPreferences"
-  """
-  insertLucumaTargetPreferencesOne(
-    """the row to be inserted"""
-    object: LucumaTargetPreferencesInsertInput!
-
-    """upsert condition"""
-    onConflict: LucumaTargetPreferencesOnConflict
-  ): LucumaTargetPreferences
-
-  """
   insert data into the table: "lucumaUser"
   """
   insertLucumaUser(
@@ -3061,6 +3159,40 @@ type Mutation {
     """upsert condition"""
     onConflict: LucumaUserPreferencesOnConflict
   ): LucumaUserPreferences
+
+  """
+  update data of the table: "exploreTargetPreferences"
+  """
+  updateExploreTargetPreferences(
+    """increments the numeric columns with given value of the filtered values"""
+    _inc: ExploreTargetPreferencesIncInput
+
+    """sets the columns of the filtered rows to the given values"""
+    _set: ExploreTargetPreferencesSetInput
+
+    """filter the rows which have to be updated"""
+    where: ExploreTargetPreferencesBoolExp!
+  ): ExploreTargetPreferencesMutationResponse
+
+  """
+  update single row of the table: "exploreTargetPreferences"
+  """
+  updateExploreTargetPreferencesByPk(
+    """increments the numeric columns with given value of the filtered values"""
+    _inc: ExploreTargetPreferencesIncInput
+
+    """sets the columns of the filtered rows to the given values"""
+    _set: ExploreTargetPreferencesSetInput
+    pk_columns: ExploreTargetPreferencesPkColumnsInput!
+  ): ExploreTargetPreferences
+
+  """
+  update multiples rows of table: "exploreTargetPreferences"
+  """
+  updateExploreTargetPreferencesMany(
+    """updates to execute, in order"""
+    updates: [ExploreTargetPreferencesUpdates!]!
+  ): [ExploreTargetPreferencesMutationResponse]
 
   """
   update data of the table: "lucumaGridLayoutId"
@@ -3299,40 +3431,6 @@ type Mutation {
   ): [LucumaTargetMutationResponse]
 
   """
-  update data of the table: "lucumaTargetPreferences"
-  """
-  updateLucumaTargetPreferences(
-    """increments the numeric columns with given value of the filtered values"""
-    _inc: LucumaTargetPreferencesIncInput
-
-    """sets the columns of the filtered rows to the given values"""
-    _set: LucumaTargetPreferencesSetInput
-
-    """filter the rows which have to be updated"""
-    where: LucumaTargetPreferencesBoolExp!
-  ): LucumaTargetPreferencesMutationResponse
-
-  """
-  update single row of the table: "lucumaTargetPreferences"
-  """
-  updateLucumaTargetPreferencesByPk(
-    """increments the numeric columns with given value of the filtered values"""
-    _inc: LucumaTargetPreferencesIncInput
-
-    """sets the columns of the filtered rows to the given values"""
-    _set: LucumaTargetPreferencesSetInput
-    pk_columns: LucumaTargetPreferencesPkColumnsInput!
-  ): LucumaTargetPreferences
-
-  """
-  update multiples rows of table: "lucumaTargetPreferences"
-  """
-  updateLucumaTargetPreferencesMany(
-    """updates to execute, in order"""
-    updates: [LucumaTargetPreferencesUpdates!]!
-  ): [LucumaTargetPreferencesMutationResponse]
-
-  """
   update data of the table: "lucumaUser"
   """
   updateLucumaUser(
@@ -3390,6 +3488,51 @@ type Mutation {
 }
 
 type Query {
+  """
+  fetch data from the table: "exploreTargetPreferences"
+  """
+  exploreTargetPreferences(
+    """distinct select on columns"""
+    distinctOn: [ExploreTargetPreferencesSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [ExploreTargetPreferencesOrderBy!]
+
+    """filter the rows returned"""
+    where: ExploreTargetPreferencesBoolExp
+  ): [ExploreTargetPreferences!]!
+
+  """
+  fetch aggregated fields from the table: "exploreTargetPreferences"
+  """
+  exploreTargetPreferencesAggregate(
+    """distinct select on columns"""
+    distinctOn: [ExploreTargetPreferencesSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [ExploreTargetPreferencesOrderBy!]
+
+    """filter the rows returned"""
+    where: ExploreTargetPreferencesBoolExp
+  ): ExploreTargetPreferencesAggregate!
+
+  """
+  fetch data from the table: "exploreTargetPreferences" using primary key columns
+  """
+  exploreTargetPreferencesByPk(targetId: String!, userId: String!): ExploreTargetPreferences
+
   """
   fetch data from the table: "lucumaGridLayoutId"
   """
@@ -3745,49 +3888,6 @@ type Query {
   lucumaTargetByPk(targetId: String!): LucumaTarget
 
   """
-  fetch data from the table: "lucumaTargetPreferences"
-  """
-  lucumaTargetPreferences(
-    """distinct select on columns"""
-    distinctOn: [LucumaTargetPreferencesSelectColumn!]
-
-    """limit the number of rows returned"""
-    limit: Int
-
-    """skip the first n rows. Use only with order_by"""
-    offset: Int
-
-    """sort the rows by one or more columns"""
-    orderBy: [LucumaTargetPreferencesOrderBy!]
-
-    """filter the rows returned"""
-    where: LucumaTargetPreferencesBoolExp
-  ): [LucumaTargetPreferences!]!
-
-  """An aggregate relationship"""
-  lucumaTargetPreferencesAggregate(
-    """distinct select on columns"""
-    distinctOn: [LucumaTargetPreferencesSelectColumn!]
-
-    """limit the number of rows returned"""
-    limit: Int
-
-    """skip the first n rows. Use only with order_by"""
-    offset: Int
-
-    """sort the rows by one or more columns"""
-    orderBy: [LucumaTargetPreferencesOrderBy!]
-
-    """filter the rows returned"""
-    where: LucumaTargetPreferencesBoolExp
-  ): LucumaTargetPreferencesAggregate!
-
-  """
-  fetch data from the table: "lucumaTargetPreferences" using primary key columns
-  """
-  lucumaTargetPreferencesByPk(targetId: String!, userId: String!): LucumaTargetPreferences
-
-  """
   fetch data from the table: "lucumaUser"
   """
   lucumaUser(
@@ -3877,6 +3977,65 @@ type Query {
 }
 
 type Subscription {
+  """
+  fetch data from the table: "exploreTargetPreferences"
+  """
+  exploreTargetPreferences(
+    """distinct select on columns"""
+    distinctOn: [ExploreTargetPreferencesSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [ExploreTargetPreferencesOrderBy!]
+
+    """filter the rows returned"""
+    where: ExploreTargetPreferencesBoolExp
+  ): [ExploreTargetPreferences!]!
+
+  """
+  fetch aggregated fields from the table: "exploreTargetPreferences"
+  """
+  exploreTargetPreferencesAggregate(
+    """distinct select on columns"""
+    distinctOn: [ExploreTargetPreferencesSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [ExploreTargetPreferencesOrderBy!]
+
+    """filter the rows returned"""
+    where: ExploreTargetPreferencesBoolExp
+  ): ExploreTargetPreferencesAggregate!
+
+  """
+  fetch data from the table: "exploreTargetPreferences" using primary key columns
+  """
+  exploreTargetPreferencesByPk(targetId: String!, userId: String!): ExploreTargetPreferences
+
+  """
+  fetch data from the table in a streaming manner : "exploreTargetPreferences"
+  """
+  exploreTargetPreferencesStream(
+    """maximum number of rows returned in a single batch"""
+    batchSize: Int!
+
+    """cursor to stream the results returned by the query"""
+    cursor: [exploreTargetPreferences_streamCursorInput]!
+
+    """filter the rows returned"""
+    where: ExploreTargetPreferencesBoolExp
+  ): [ExploreTargetPreferences!]!
+
   """
   fetch data from the table: "lucumaGridLayoutId"
   """
@@ -4328,63 +4487,6 @@ type Subscription {
 
   """fetch data from the table: "lucumaTarget" using primary key columns"""
   lucumaTargetByPk(targetId: String!): LucumaTarget
-
-  """
-  fetch data from the table: "lucumaTargetPreferences"
-  """
-  lucumaTargetPreferences(
-    """distinct select on columns"""
-    distinctOn: [LucumaTargetPreferencesSelectColumn!]
-
-    """limit the number of rows returned"""
-    limit: Int
-
-    """skip the first n rows. Use only with order_by"""
-    offset: Int
-
-    """sort the rows by one or more columns"""
-    orderBy: [LucumaTargetPreferencesOrderBy!]
-
-    """filter the rows returned"""
-    where: LucumaTargetPreferencesBoolExp
-  ): [LucumaTargetPreferences!]!
-
-  """An aggregate relationship"""
-  lucumaTargetPreferencesAggregate(
-    """distinct select on columns"""
-    distinctOn: [LucumaTargetPreferencesSelectColumn!]
-
-    """limit the number of rows returned"""
-    limit: Int
-
-    """skip the first n rows. Use only with order_by"""
-    offset: Int
-
-    """sort the rows by one or more columns"""
-    orderBy: [LucumaTargetPreferencesOrderBy!]
-
-    """filter the rows returned"""
-    where: LucumaTargetPreferencesBoolExp
-  ): LucumaTargetPreferencesAggregate!
-
-  """
-  fetch data from the table: "lucumaTargetPreferences" using primary key columns
-  """
-  lucumaTargetPreferencesByPk(targetId: String!, userId: String!): LucumaTargetPreferences
-
-  """
-  fetch data from the table in a streaming manner : "lucumaTargetPreferences"
-  """
-  lucumaTargetPreferencesStream(
-    """maximum number of rows returned in a single batch"""
-    batchSize: Int!
-
-    """cursor to stream the results returned by the query"""
-    cursor: [lucumaTargetPreferences_streamCursorInput]!
-
-    """filter the rows returned"""
-    where: LucumaTargetPreferencesBoolExp
-  ): [LucumaTargetPreferences!]!
 
   """
   fetch data from the table in a streaming manner : "lucumaTarget"

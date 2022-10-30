@@ -15,6 +15,7 @@ import crystal.react.View
 import crystal.react.hooks.*
 import crystal.react.implicits.*
 import crystal.react.reuse.*
+import eu.timepit.refined.*
 import eu.timepit.refined.auto.*
 import explore.Icons
 import explore.common.UserPreferencesQueries.*
@@ -52,12 +53,15 @@ import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.refined.*
+import lucuma.ui.primereact.SliderView
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.Focus
 import monocle.Lens
+import org.scalajs.dom.HTMLElement
+import org.scalajs.dom.document
 import org.typelevel.log4cats.Logger
 import queries.common.UserPreferencesQueriesGQL.*
 import react.aladin.Fov
@@ -72,9 +76,6 @@ import react.semanticui.sizes.*
 import java.time.Duration
 import java.time.Instant
 import scala.concurrent.duration.*
-import lucuma.ui.primereact.SliderView
-import org.scalajs.dom.document
-import org.scalajs.dom.HTMLElement
 
 case class AladinCell(
   uid:        User.Id,
@@ -158,7 +159,22 @@ object AladinCell extends ModelOptics with AladinCommon:
     (offsetChangeInAladin, offsetOnCenter)
   }
 
-  private val component =
+  def setVariable(root: Option[HTMLElement], variableName: String, value: Int): Callback =
+    root
+      .map(root =>
+        Callback(
+          root.style.setProperty(s"--aladin-image-$variableName", s"${value / 100.0}")
+        )
+      )
+      .getOrEmpty
+
+  private val unsafeRangeLens: Lens[TargetVisualOptions.ImageFilterRange, Double] =
+    Lens[TargetVisualOptions.ImageFilterRange, Double](_.value.toDouble)(x =>
+      _ =>
+        refineV[TargetVisualOptions.FilterRange](x.toInt).toOption
+          .getOrElse(sys.error("Not allowed"))
+    )
+  private val component                                                           =
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
@@ -185,23 +201,31 @@ object AladinCell extends ModelOptics with AladinCommon:
               agsState.setState(AgsState.Idle).to[IO] >> gs.setStateAsync(candidates)
             ).orEmpty)
       }
-      .useEffectWithDepsBy((p, _, _, _, _, _, _) => (p.uid, p.tid)) {
-        (props, ctx, _, options, _, _, _) => _ =>
+      // Reference to the root
+      .useMemo(())(_ =>
+        Option(document.querySelector(":root")) match {
+          case Some(r: HTMLElement) => r.some
+          case _                    => none
+        }
+      )
+      // Load target preferences
+      .useEffectWithDepsBy((p, _, _, _, _, _, _, _) => (p.uid, p.tid)) {
+        (props, ctx, _, options, _, _, _, root) => _ =>
           import ctx.given
 
           TargetPreferences
             .queryWithDefault[IO](props.uid, props.tid, Constants.InitialFov)
             .flatMap { (up, tp) =>
-              options
-                .set((up, tp).ready)
-                .to[IO]
+              (options.set((up, tp).ready) *>
+                setVariable(root, "saturation", tp.saturation) *>
+                setVariable(root, "brightness", tp.brightness)).to[IO]
             }
       }
       // Selected GS index. Should be stored in the db
       .useStateViewWithReuse(none[Int])
       // Reset offset and gs if asterism change
-      .useEffectWithDepsBy((p, _, _, _, _, _, _, _) => p.asterism)(
-        (props, ctx, _, options, _, _, _, gs) =>
+      .useEffectWithDepsBy((p, _, _, _, _, _, _, _, _) => p.asterism)(
+        (props, ctx, _, options, _, _, _, _, gs) =>
           _ => {
             val (_, offsetOnCenter) = offsetViews(props, options)(ctx)
 
@@ -210,7 +234,7 @@ object AladinCell extends ModelOptics with AladinCommon:
           }
       )
       // Request ags calculation
-      .useEffectWithDepsBy((p, _, _, _, candidates, _, _, _) =>
+      .useEffectWithDepsBy((p, _, _, _, candidates, _, _, _, _) =>
         (p.asterism.baseTracking,
          p.obsConf.posAngleConstraint,
          p.obsConf.constraints,
@@ -219,7 +243,7 @@ object AladinCell extends ModelOptics with AladinCommon:
          p.obsConf.scienceMode,
          candidates.value
         )
-      ) { (props, ctx, _, _, _, ags, agsState, selectedIndex) =>
+      ) { (props, ctx, _, _, _, ags, agsState, _, selectedIndex) =>
         {
           case (tracking,
                 Some(posAngle),
@@ -275,22 +299,16 @@ object AladinCell extends ModelOptics with AladinCommon:
         }
       }
       // open settings menu
-      .useState(SettingsMenuState.Open)
+      .useState(SettingsMenuState.Closed)
       // Reset the selected gs if results change
-      .useEffectWithDepsBy((p, _, _, _, _, agsResults, _, _, _) => (agsResults, p.obsConf)) {
-        (p, _, _, _, _, agsResults, agsState, selectedIndex, _) => _ =>
+      .useEffectWithDepsBy((p, _, _, _, _, _, agsResults, _, _, _) => (agsResults, p.obsConf)) {
+        (p, _, _, _, _, agsResults, agsState, _, selectedIndex, _) => _ =>
           selectedIndex
             .set(
               0.some.filter(_ => agsResults.value.nonEmpty && p.obsConf.canSelectGuideStar)
             )
             .unless_(agsState.value === AgsState.Calculating)
       }
-      .useMemo(())(_ =>
-        Option(document.querySelector(":root")) match {
-          case Some(r: HTMLElement) => r.some
-          case _                    => none
-        }
-      )
       .renderWithReuse {
         (
           props,
@@ -300,16 +318,18 @@ object AladinCell extends ModelOptics with AladinCommon:
           _,
           agsResults,
           agsState,
+          root,
           selectedGSIndex,
-          openSettings,
-          root
+          openSettings
         ) =>
           import ctx.given
 
           def prefsSetter(
             candidates: Option[Visible] = None,
             overlay:    Option[Visible] = None,
-            fullScreen: Option[Boolean] = None
+            fullScreen: Option[Boolean] = None,
+            saturation: Option[Int] = None,
+            brightness: Option[Int] = None
           ): Callback =
             TargetPreferences
               .updateAladinPreferences[IO](
@@ -317,7 +337,9 @@ object AladinCell extends ModelOptics with AladinCommon:
                 props.tid,
                 agsCandidates = candidates,
                 agsOverlay = overlay,
-                fullScreen = fullScreen
+                fullScreen = fullScreen,
+                saturation = saturation,
+                brightness = brightness
               )
               .runAsync
               .void
@@ -343,24 +365,29 @@ object AladinCell extends ModelOptics with AladinCommon:
           val fovView =
             options.zoom(Pot.readyPrism.andThen(targetPrefs).andThen(fovLens))
 
-          def cssVarView(varLens: Lens[TargetVisualOptions, Int], variableName: String) =
+          def cssVarView(
+            varLens:        Lens[TargetVisualOptions, TargetVisualOptions.ImageFilterRange],
+            variableName:   String,
+            updateCallback: Int => Callback
+          ) =
             options
               .zoom(
                 Pot.readyPrism.andThen(targetPrefs).andThen(varLens)
               )
               .withOnMod(s =>
-                (root.value, s)
-                  .mapN((r, s) =>
-                    // Change saturation variable on css
-                    Callback(
-                      r.style.setProperty(s"--aladin-image-$variableName", s"${s / 100.0}")
-                    )
-                  )
-                  .getOrEmpty
+                s.map(s => setVariable(root, variableName, s) *> updateCallback(s)).getOrEmpty
               )
 
-          val saturationView = cssVarView(TargetVisualOptions.saturation, "saturation")
-          val brightnessView = cssVarView(TargetVisualOptions.brightness, "brightness")
+          val saturationView =
+            cssVarView(TargetVisualOptions.saturation,
+                       "saturation",
+                       s => prefsSetter(saturation = s.some)
+            )
+          val brightnessView =
+            cssVarView(TargetVisualOptions.brightness,
+                       "brightness",
+                       s => prefsSetter(brightness = s.some)
+            )
 
           val fullScreenView =
             options
@@ -498,7 +525,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                   ),
                   Divider(),
                   saturationView
-                    .zoom(TargetVisualOptions.unsafeDoubleLens)
+                    .zoom(unsafeRangeLens)
                     .asView
                     .map(view =>
                       SliderView(
@@ -509,7 +536,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                       )
                     ),
                   brightnessView
-                    .zoom(TargetVisualOptions.unsafeDoubleLens)
+                    .zoom(unsafeRangeLens)
                     .asView
                     .map(view =>
                       SliderView(

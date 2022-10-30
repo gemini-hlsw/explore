@@ -5,9 +5,14 @@ package explore.model
 
 import cats.Eq
 import cats.derived.*
+import eu.timepit.refined.*
+import eu.timepit.refined.api.*
+import eu.timepit.refined.cats.*
+import eu.timepit.refined.numeric.*
 import explore.model.enums.Visible
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
+import lucuma.refined.*
 import monocle.Focus
 import monocle.Lens
 
@@ -18,11 +23,13 @@ case class TargetVisualOptions(
   agsCandidates: Visible,
   agsOverlay:    Visible,
   fullScreen:    Boolean,
-  saturation:    Int,
-  brightness:    Int
+  saturation:    TargetVisualOptions.ImageFilterRange,
+  brightness:    TargetVisualOptions.ImageFilterRange
 ) derives Eq
 
 object TargetVisualOptions:
+  type FilterRange      = Interval.Closed[0, 100]
+  type ImageFilterRange = Int Refined FilterRange
   val fovRA         = Focus[TargetVisualOptions](_.fovRA)
   val fovDec        = Focus[TargetVisualOptions](_.fovDec)
   val viewOffset    = Focus[TargetVisualOptions](_.viewOffset)
@@ -39,9 +46,6 @@ object TargetVisualOptions:
                         Visible.Hidden,
                         Visible.Hidden,
                         false,
-                        100,
-                        100
+                        100.refined,
+                        100.refined
     )
-
-  val unsafeDoubleLens: Lens[Int, Double] =
-    Lens[Int, Double](_.toDouble)(x => _ => x.toInt)
