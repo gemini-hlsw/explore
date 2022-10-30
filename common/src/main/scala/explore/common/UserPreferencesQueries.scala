@@ -222,7 +222,15 @@ object UserPreferencesQueries:
           val agsOverlay    = r._2.flatMap(_._6).map(Visible.boolIso.get).getOrElse(Visible.Inline)
           val fullScreen    = r._2.flatMap(_._7).getOrElse(false)
 
-          TargetVisualOptions(fovRA, fovDec, offset, agsCandidates, agsOverlay, fullScreen)
+          TargetVisualOptions(fovRA,
+                              fovDec,
+                              offset,
+                              agsCandidates,
+                              agsOverlay,
+                              fullScreen,
+                              100,
+                              100
+          )
         }
         (userPrefs, targetPrefs)
       }

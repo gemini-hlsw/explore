@@ -9,6 +9,7 @@ import explore.model.enums.Visible
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import monocle.Focus
+import monocle.Lens
 
 case class TargetVisualOptions(
   fovRA:         Angle,
@@ -16,7 +17,9 @@ case class TargetVisualOptions(
   viewOffset:    Offset,
   agsCandidates: Visible,
   agsOverlay:    Visible,
-  fullScreen:    Boolean
+  fullScreen:    Boolean,
+  saturation:    Int,
+  brightness:    Int
 ) derives Eq
 
 object TargetVisualOptions:
@@ -26,6 +29,8 @@ object TargetVisualOptions:
   val agsCandidates = Focus[TargetVisualOptions](_.agsCandidates)
   val agsOverlay    = Focus[TargetVisualOptions](_.agsOverlay)
   val fullScreen    = Focus[TargetVisualOptions](_.fullScreen)
+  val saturation    = Focus[TargetVisualOptions](_.saturation)
+  val brightness    = Focus[TargetVisualOptions](_.brightness)
 
   val Default =
     TargetVisualOptions(Constants.InitialFov,
@@ -33,5 +38,10 @@ object TargetVisualOptions:
                         Offset.Zero,
                         Visible.Hidden,
                         Visible.Hidden,
-                        false
+                        false,
+                        100,
+                        100
     )
+
+  val unsafeDoubleLens: Lens[Int, Double] =
+    Lens[Int, Double](_.toDouble)(x => _ => x.toInt)

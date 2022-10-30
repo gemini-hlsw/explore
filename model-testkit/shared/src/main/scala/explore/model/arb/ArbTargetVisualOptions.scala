@@ -11,6 +11,7 @@ import lucuma.core.math.Offset
 import lucuma.core.math.arb.ArbAngle.*
 import lucuma.core.math.arb.ArbOffset.*
 import org.scalacheck.Arbitrary
+import org.scalacheck.Gen
 import org.scalacheck.Arbitrary.*
 import org.scalacheck.Cogen
 import org.scalacheck.Cogen.*
@@ -26,7 +27,9 @@ trait ArbTargetVisualOptions:
         a    <- arbitrary[Visible]
         o    <- arbitrary[Visible]
         f    <- arbitrary[Boolean]
-      } yield TargetVisualOptions(fra, fdec, vo, a, o, f)
+        s    <- Gen.chooseNum(0, 100)
+        b    <- Gen.chooseNum(0, 100)
+      } yield TargetVisualOptions(fra, fdec, vo, a, o, f, s, b)
     }
 
   given Cogen[TargetVisualOptions] =

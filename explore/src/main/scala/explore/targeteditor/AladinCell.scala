@@ -72,7 +72,9 @@ import react.semanticui.sizes.*
 import java.time.Duration
 import java.time.Instant
 import scala.concurrent.duration.*
-import react.primereact.Slider
+import lucuma.ui.primereact.SliderView
+import org.scalajs.dom.document
+import org.scalajs.dom.HTMLElement
 
 case class AladinCell(
   uid:        User.Id,
@@ -283,6 +285,12 @@ object AladinCell extends ModelOptics with AladinCommon:
             )
             .unless_(agsState.value === AgsState.Calculating)
       }
+      .useMemo(())(_ =>
+        Option(document.querySelector(":root")) match {
+          case Some(r: HTMLElement) => r.some
+          case _                    => none
+        }
+      )
       .renderWithReuse {
         (
           props,
@@ -293,7 +301,8 @@ object AladinCell extends ModelOptics with AladinCommon:
           agsResults,
           agsState,
           selectedGSIndex,
-          openSettings
+          openSettings,
+          root
         ) =>
           import ctx.given
 
@@ -333,6 +342,25 @@ object AladinCell extends ModelOptics with AladinCommon:
 
           val fovView =
             options.zoom(Pot.readyPrism.andThen(targetPrefs).andThen(fovLens))
+
+          def cssVarView(varLens: Lens[TargetVisualOptions, Int], variableName: String) =
+            options
+              .zoom(
+                Pot.readyPrism.andThen(targetPrefs).andThen(varLens)
+              )
+              .withOnMod(s =>
+                (root.value, s)
+                  .mapN((r, s) =>
+                    // Change saturation variable on css
+                    Callback(
+                      r.style.setProperty(s"--aladin-image-$variableName", s"${s / 100.0}")
+                    )
+                  )
+                  .getOrEmpty
+              )
+
+          val saturationView = cssVarView(TargetVisualOptions.saturation, "saturation")
+          val brightnessView = cssVarView(TargetVisualOptions.brightness, "brightness")
 
           val fullScreenView =
             options
@@ -469,30 +497,29 @@ object AladinCell extends ModelOptics with AladinCommon:
                       )
                   ),
                   Divider(),
-                  <.label("Saturation"),
-                  Slider(
-                    clazz = ExploreStyles.AladinRangeControl,
-                    value = 3,
-                    onChange = d =>
-                      Callback {
-                        val root = org.scalajs.dom.document
-                          .querySelector(":root")
-                          .asInstanceOf[org.scalajs.dom.HTMLElement]
-                        root.style.setProperty("--aladin-image-saturation", s"${d / 100}")
-                      }
-                  ),
-                  <.label("Brightness"),
-                  Slider(
-                    clazz = ExploreStyles.AladinRangeControl,
-                    value = 3,
-                    onChange = d =>
-                      Callback {
-                        val root = org.scalajs.dom.document
-                          .querySelector(":root")
-                          .asInstanceOf[org.scalajs.dom.HTMLElement]
-                        root.style.setProperty("--aladin-image-brightness", s"${d / 100}")
-                      }
-                  ),
+                  saturationView
+                    .zoom(TargetVisualOptions.unsafeDoubleLens)
+                    .asView
+                    .map(view =>
+                      SliderView(
+                        id = "saturation".refined,
+                        label = "Saturation",
+                        clazz = ExploreStyles.AladinRangeControl,
+                        value = view
+                      )
+                    ),
+                  brightnessView
+                    .zoom(TargetVisualOptions.unsafeDoubleLens)
+                    .asView
+                    .map(view =>
+                      SliderView(
+                        id = "brightness".refined,
+                        label = "Brightness",
+                        clazz = ExploreStyles.AladinRangeControl,
+                        value = view
+                      )
+                    ),
+                  Divider(),
                   MenuItem(
                     allowMouseZoomView
                       .zoom(AladinMouseScroll.value.asLens)
