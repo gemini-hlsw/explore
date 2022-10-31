@@ -60,7 +60,7 @@ const itcCache = ({ name, pattern }) => ({
     expiration: {
       purgeOnQuotaError: true,
       maxEntries: 5000,
-      maxAgeSeconds: 60 * 60 * 24 * 7, // 1week
+      maxAgeSeconds: 60 * 60 * 24, // 1day
     },
     cacheableResponse: {
       statuses: [200],
@@ -217,6 +217,11 @@ export default defineConfig(({ command, mode }) => {
     },
     worker: {
       format: 'es', // We need this for workers to be able to do dynamic imports.
+      // We need these to allow wasm modules on the workres
+      plugins: [
+        wasm(),
+        topLevelAwait()
+      ]
     },
     plugins: [
       wasm(),
@@ -225,7 +230,9 @@ export default defineConfig(({ command, mode }) => {
       react(),
       fontImport,
       VitePWA({
+        injectRegister: "inline",
         workbox: {
+          globPatterns: ['**/*.{js,html,wasm}'],
           maximumFileSizeToCacheInBytes: 30000000, // sjs produce large ffiles
           // Cache aladin images
           runtimeCaching: [
