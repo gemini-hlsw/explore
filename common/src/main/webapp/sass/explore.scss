@@ -628,25 +628,44 @@ table.explore-border-table {
 // ----
 // Target import dialog
 // ----
+.explore-target-import-dialog {
+  width: 500px;
+}
+
 .explore-target-import-form {
-  display: flex;
+  display: grid;
   align-items: center;
   justify-content: space-between;
+  grid-template:
+    "progress msg" 1fr
+    "errors   errors" minmax(min-content, 300px) / 1fr 3fr;
+  row-gap: 0.5rem;
   min-width: 20vw;
+  max-width: 760px;
 
   .p-progress-spinner {
+    grid-area: progress;
     height: 4rem;
     width: 4rem;
     margin: 0.5rem 2rem;
   }
 
-  div {
+  .explore-target-import-description {
+    grid-area: msg;
     display: flex;
     flex-direction: column;
+    justify-self: end;
     margin-right: 2rem;
+    overflow: hidden;
+  }
+
+  .explore-target-import-errors {
+    grid-area: errors;
+    height: 300px;
   }
 
   svg.fa-check {
+    grid-area: progress;
     color: var(--explore-accent-color);
   }
 }
@@ -654,24 +673,24 @@ table.explore-border-table {
 // ----------
 // Main grid
 // ----------
-.main-grid {
-  $top-bottom-space: 42px;
+  .main-grid {
+    $top-bottom-space: 42px;
 
-  display: grid;
-  height: 100vh;
-  width: 100%;
-  overflow: hidden;
-  grid-template:
-    'header' $top-bottom-space
-    'body' minmax(calc(100% - $top-bottom-space - $top-bottom-space), 1fr)
-    'sidebar' #{$top-bottom-space} / 1fr;
-
-  @media (min-width: common.$tablet-responsive-cutoff) {
+    display: grid;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
     grid-template:
-      'header header' $top-bottom-space
-      'sidebar body' minmax(calc(100% - $top-bottom-space), 1fr) / 50px auto;
+      'header' $top-bottom-space
+      'body' minmax(calc(100% - $top-bottom-space - $top-bottom-space), 1fr)
+      'sidebar' #{$top-bottom-space} / 1fr;
+
+    @media (min-width: common.$tablet-responsive-cutoff) {
+      grid-template:
+        'header header' $top-bottom-space
+        'sidebar body' minmax(calc(100% - $top-bottom-space), 1fr) / 50px auto;
+    }
   }
-}
 
 
 // ------------

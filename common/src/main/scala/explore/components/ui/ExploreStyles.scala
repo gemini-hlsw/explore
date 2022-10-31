@@ -304,10 +304,13 @@ object ExploreStyles {
 
   val StepGuided: Css = Css("step-guided")
 
-  val ExploreForm: Css          = Css("explore-form")
-  val TargetImportForm: Css     = Css("explore-target-import-form")
-  val SkipToNext: Css           = Css("explore-skip-to-next")
-  val SeqGenParametersForm: Css = Css("seq-gen-parameters-form")
+  val ExploreForm: Css             = Css("explore-form")
+  val TargetImportForm: Css        = Css("explore-target-import-form")
+  val TargetImportDescription: Css = Css("explore-target-import-description")
+  val TargetImportErrors: Css      = Css("explore-target-import-errors")
+  val TargetImportDialog: Css      = Css("explore-target-import-dialog")
+  val SkipToNext: Css              = Css("explore-skip-to-next")
+  val SeqGenParametersForm: Css    = Css("seq-gen-parameters-form")
 
   // Configuration tile
   val ObsConfigurationForm: Css         = Css("explore-obs-configuration-form")

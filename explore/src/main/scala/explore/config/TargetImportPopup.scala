@@ -21,9 +21,12 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.catalog.csv.TargetImport
 import lucuma.core.model.Program
 import lucuma.core.model.Target
+import lucuma.react.syntax.*
+import lucuma.react.table.*
 import lucuma.schemas.ObservationDB
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import lucuma.ui.table.*
 import monocle.Focus
 import monocle.Lens
 import org.scalajs.dom.{File => DOMFile}
@@ -37,6 +40,8 @@ import react.primereact.Dialog
 import react.primereact.DialogPosition
 import react.primereact.ProgressSpinner
 
+import scala.concurrent.duration.*
+
 case class TargetImportPopup(
   programId: Program.Id,
   files:     View[List[DOMFile]]
@@ -49,19 +54,20 @@ object TargetImportPopup:
     loaded:       List[Target],
     current:      Option[Target],
     genericError: Option[String],
-    targetErrors: Int,
+    targetErrors: List[String],
     done:         Boolean
   )
 
   private object State {
     val loaded: Lens[State, List[Target]]         = Focus[State](_.loaded)
     val genericError: Lens[State, Option[String]] = Focus[State](_.genericError)
-    val targetErrors: Lens[State, Int]            = Focus[State](_.targetErrors)
+    val targetErrors: Lens[State, List[String]]   = Focus[State](_.targetErrors)
     val done: Lens[State, Boolean]                = Focus[State](_.done)
-    val Default                                   = State(Nil, none, none, 0, false)
+    val Default                                   = State(Nil, none, none, Nil, false)
   }
 
   private given Reusability[DOMFile] = Reusability.by(_.name)
+  private val ColDef                 = ColumnDef[String]
 
   private def importTargets[F[_]: Concurrent: Logger](
     programId:   Program.Id,
@@ -73,7 +79,7 @@ object TargetImportPopup:
       .through(TargetImport.csv2targets)
       .evalMap {
         case Left(a)       =>
-          stateUpdate(State.targetErrors.modify(_ + 1))
+          stateUpdate(State.targetErrors.modify(e => e :++ a.toList.map(_.displayValue)))
         case Right(target) =>
           CreateTargetMutation
             .execute(target.toCreateTargetInput(programId))
@@ -107,7 +113,35 @@ object TargetImportPopup:
             .void
             .whenA(files.nonEmpty)
       }
-      .render { (props, _, state) =>
+      // cols
+      .useMemoBy((_, _, _) => ()) { (props, ctx, _) => _ =>
+        List(
+          ColDef(
+            ColumnId("Errors"),
+            identity,
+            size = 1000.toPx,
+            enableResizing = false,
+            enableSorting = false
+          )
+        )
+      }
+      // rows
+      .useMemoBy((_, _, state, _) => state.value.targetErrors.length) { (props, _, state, _) => _ =>
+        state.value.targetErrors
+      }
+      .useReactTableBy((props, ctx, _, cols, rows) =>
+        import ctx.given
+
+        TableOptions(
+          cols,
+          rows,
+          initialState = TableState(
+            columnVisibility = TargetColumns.DefaultVisibility,
+            rowSelection = RowSelection()
+          )
+        ),
+      )
+      .render { (props, _, state, _, rows, table) =>
         Dialog(
           footer = Button(size = Button.Size.Small,
                           icon = Icons.Close,
@@ -118,7 +152,7 @@ object TargetImportPopup:
           closable = false,
           position = DialogPosition.Top,
           visible = props.files.get.nonEmpty,
-          clazz = ExploreStyles.Dialog.Small,
+          clazz = ExploreStyles.TargetImportDialog,
           dismissableMask = true,
           resizable = false,
           onHide = props.files.set(Nil),
@@ -128,14 +162,27 @@ object TargetImportPopup:
             ProgressSpinner(strokeWidth = "5").unless(state.value.done),
             Icons.Checkmark.withSize(IconSize.X4).when(state.value.done),
             <.div(
+              ExploreStyles.TargetImportDescription,
               <.span(s"Importing ${state.value.loaded.length}")
                 .unless(state.value.done),
               <.span(s"Imported ${state.value.loaded.length} targets").when(state.value.done),
-              <.span(s"Import errors: ${state.value.targetErrors}")
+              <.span(s"Import errors: ${state.value.targetErrors.length}")
             ).when(state.value.genericError.isEmpty),
             <.div(
+              ExploreStyles.TargetImportDescription,
               <.span(s"Import error: ${state.value.genericError.orEmpty}")
-            ).unless(state.value.genericError.isEmpty)
+            ).unless(state.value.genericError.isEmpty),
+            <.div(
+              ExploreStyles.TargetImportErrors |+| ExploreStyles.ExploreBorderTable,
+              PrimeAutoHeightVirtualizedTable(
+                table,
+                estimateRowHeight = _ => 34.toPx,
+                tableMod = ExploreStyles.ExploreTable,
+                striped = true,
+                compact = Compact.Very,
+                emptyMessage = "No lines defined"
+              ).when(state.value.targetErrors.nonEmpty)
+            )
           )
         )
       }

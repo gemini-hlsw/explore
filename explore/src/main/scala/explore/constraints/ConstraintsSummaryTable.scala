@@ -37,8 +37,6 @@ import lucuma.react.table.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import lucuma.ui.table.TableHooks
-import lucuma.ui.table.TableOptionsWithStateStore
 import lucuma.ui.table.*
 import org.scalablytyped.runtime.StringDictionary
 import react.common.Css
