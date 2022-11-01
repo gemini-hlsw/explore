@@ -179,8 +179,7 @@ object TargetImportPopup:
                 estimateRowHeight = _ => 34.toPx,
                 tableMod = ExploreStyles.ExploreTable,
                 striped = true,
-                compact = Compact.Very,
-                emptyMessage = "No lines defined"
+                compact = Compact.Very
               ).when(state.value.targetErrors.nonEmpty)
             )
           )
