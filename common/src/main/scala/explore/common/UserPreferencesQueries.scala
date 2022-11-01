@@ -205,43 +205,47 @@ object UserPreferencesQueries:
           query[F](uid.show, tid.show)
             .map { r =>
               val userPrefs   =
-                r.lucumaUserPreferencesByPk.flatMap(result => result.aladinMouseScroll)
-              val targetPrefs = r.exploreTargetPreferencesByPk.map(result =>
-                (result.fovRA,
-                 result.fovDec,
-                 result.viewOffsetP,
-                 result.viewOffsetQ,
-                 result.agsCandidates,
-                 result.agsOverlay,
-                 result.fullScreen,
-                 result.saturation,
-                 result.brightness
-                )
-              )
+                r.lucumaUserPreferencesByPk
+              val targetPrefs = r.exploreTargetPreferencesByPk
               (userPrefs, targetPrefs)
             }
             .handleError(_ => (none, none))
       } yield {
-        val userPrefs   = UserGlobalPreferences(AladinMouseScroll(r._1.getOrElse(false)))
+        val (userPrefsResult, targetPrefsResult) = r
+
+        val userPrefs = UserGlobalPreferences(
+          AladinMouseScroll(userPrefsResult.flatMap(_.aladinMouseScroll).getOrElse(false))
+        )
+
         val targetPrefs = {
-          val fovRA  = r._2.flatMap(_._1.map(Angle.fromMicroarcseconds)).getOrElse(defaultFov)
-          val fovDec = r._2.flatMap(_._2.map(Angle.fromMicroarcseconds)).getOrElse(defaultFov)
-          val offset = r._2
+          val fovRA  =
+            targetPrefsResult.flatMap(_.fovRA.map(Angle.fromMicroarcseconds)).getOrElse(defaultFov)
+          val fovDec =
+            targetPrefsResult.flatMap(_.fovDec.map(Angle.fromMicroarcseconds)).getOrElse(defaultFov)
+          val offset = targetPrefsResult
             .flatMap(u =>
-              (u._3.map(Angle.fromMicroarcseconds(_).p), u._4.map(Angle.fromMicroarcseconds(_).q))
+              (u.viewOffsetP.map(Angle.fromMicroarcseconds(_).p),
+               u.viewOffsetQ.map(Angle.fromMicroarcseconds(_).q)
+              )
                 .mapN(Offset.apply)
             )
             .getOrElse(Offset.Zero)
 
-          val agsCandidates = r._2.flatMap(_._5).map(Visible.boolIso.get).getOrElse(Visible.Inline)
-          val agsOverlay    = r._2.flatMap(_._6).map(Visible.boolIso.get).getOrElse(Visible.Inline)
-          val fullScreen    = r._2.flatMap(_._7).getOrElse(false)
-          val saturation    = r._2
-            .flatMap(_._8)
+          val agsCandidates = targetPrefsResult
+            .flatMap(_.agsCandidates)
+            .map(Visible.boolIso.get)
+            .getOrElse(Visible.Inline)
+          val agsOverlay    = targetPrefsResult
+            .flatMap(_.agsOverlay)
+            .map(Visible.boolIso.get)
+            .getOrElse(Visible.Inline)
+          val fullScreen    = targetPrefsResult.flatMap(_.fullScreen).getOrElse(false)
+          val saturation    = targetPrefsResult
+            .flatMap(_.saturation)
             .flatMap(refineV[Interval.Closed[0, 100]](_).toOption)
             .getOrElse(100.refined[Interval.Closed[0, 100]])
-          val brightness    = r._2
-            .flatMap(_._9)
+          val brightness    = targetPrefsResult
+            .flatMap(_.brightness)
             .flatMap(refineV[Interval.Closed[0, 100]](_).toOption)
             .getOrElse(100.refined[Interval.Closed[0, 100]])
 
