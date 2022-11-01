@@ -96,7 +96,7 @@ trait CatalogPicklers extends CommonPicklers {
 
   given Pickler[AgsAnalysis.MagnitudeTooBright] = generatePickler
 
-  given Pickler[AgsAnalysis.NotReachable] = generatePickler
+  given Pickler[AgsAnalysis.NotReachableAtPosition] = generatePickler
 
   given Pickler[AgsAnalysis.NoMagnitudeForBand] = generatePickler
 
@@ -116,7 +116,7 @@ trait CatalogPicklers extends CommonPicklers {
       .addConcreteType[AgsAnalysis.NoGuideStarForProbe]
       .addConcreteType[AgsAnalysis.MagnitudeTooFaint]
       .addConcreteType[AgsAnalysis.MagnitudeTooBright]
-      .addConcreteType[AgsAnalysis.NotReachable]
+      .addConcreteType[AgsAnalysis.NotReachableAtPosition]
       .addConcreteType[AgsAnalysis.NoMagnitudeForBand]
       .addConcreteType[AgsAnalysis.Usable]
 
