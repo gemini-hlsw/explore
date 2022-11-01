@@ -639,7 +639,6 @@ private object SpectroscopyModesTable extends TableHooks:
                 estimateRowHeight = _ => 32.toPx,
                 striped = true,
                 compact = Compact.Very,
-                // getItemKey = idx => rows(idx).id,
                 containerMod = ^.overflow.auto,
                 rowMod = row =>
                   TagMod(
