@@ -120,7 +120,14 @@ private object SpectroscopyModesTable extends TableHooks:
   private given Eq[Range.Inclusive]          = Eq.by(x => (x.start, x.end, x.step))
   private given Reusability[Range.Inclusive] = Reusability.byEq
 
-  private val ColDef = ColumnDef[SpectroscopyModeRow]
+  private case class SpectroscopyModeRowWithResult(
+    entry:  SpectroscopyModeRow,
+    result: EitherNec[ItcQueryProblems, ItcResult]
+  ):
+    lazy val exposureTime: Option[Int] =
+      result.toOption.collect { case ItcResult.Result(e, t) => e.toMillis.toInt * t }
+
+  private val ColDef = ColumnDef[SpectroscopyModeRowWithResult]
 
   private val decFormat = new DecimalFormat("0.###")
 
@@ -129,7 +136,10 @@ private object SpectroscopyModesTable extends TableHooks:
     case ModeGrating.SomeGrating(t) => t
   }
 
-  private def column[V](id: ColumnId, accessor: SpectroscopyModeRow => V) =
+  private def column[V](
+    id:       ColumnId,
+    accessor: SpectroscopyModeRowWithResult => V
+  ): ColumnDef.Single[SpectroscopyModeRowWithResult, V] =
     ColDef(id, accessor, columnNames.getOrElse(id, id.value))
 
   private val SelectedColumnId: ColumnId    = ColumnId("selected")
@@ -246,17 +256,10 @@ private object SpectroscopyModesTable extends TableHooks:
     progress:    Option[Progress]
   ) =
     List(
-      column(InstrumentColumnId, SpectroscopyModeRow.instrumentAndConfig.get)
+      column(InstrumentColumnId, row => SpectroscopyModeRow.instrumentAndConfig.get(row.entry))
         .setCell(cell => formatInstrument(cell.value))
         .setColumnSize(Resizable(120.toPx, min = 50.toPx, max = 150.toPx)),
-      column(
-        TimeColumnId,
-        itc
-          .forRow(cw, sn, snAt, constraints, target, _)
-          .toOption
-          .collect { case ItcResult.Result(e, t) => e.toMillis.toInt * t }
-          .orUndefined // This value only used for sorting.
-      )
+      column(TimeColumnId, _.exposureTime.orUndefined)
         .setHeader(_ =>
           <.div(ExploreStyles.ITCHeaderCell)(
             "Time",
@@ -270,37 +273,38 @@ private object SpectroscopyModesTable extends TableHooks:
               )
           )
         )
-        .setCell(cell => itcCell(itc.forRow(cw, sn, snAt, constraints, target, cell.row.original)))
+        .setCell(cell => itcCell(cell.row.original.result))
         .setColumnSize(FixedSize(80.toPx))
         .setEnableSorting(progress.isEmpty)
         .setSortUndefined(UndefinedPriority.Lower),
-      column(SlitWidthColumnId, SpectroscopyModeRow.slitWidth.get)
+      column(SlitWidthColumnId, row => SpectroscopyModeRow.slitWidth.get(row.entry))
         .setCell(cell => formatSlitWidth(cell.value))
         .setColumnSize(FixedSize(100.toPx)),
-      column(SlitLengthColumnId, SpectroscopyModeRow.slitLength.get)
+      column(SlitLengthColumnId, row => SpectroscopyModeRow.slitLength.get(row.entry))
         .setCell(cell => formatSlitLength(cell.value))
         .setColumnSize(FixedSize(105.toPx)),
-      column(GratingColumnId, SpectroscopyModeRow.grating.get)
+      column(GratingColumnId, row => SpectroscopyModeRow.grating.get(row.entry))
         .setCell(cell => formatGrating(cell.value))
         .setColumnSize(FixedSize(96.toPx))
         .sortable,
-      column(FilterColumnId, SpectroscopyModeRow.filter.get)
+      column(FilterColumnId, row => SpectroscopyModeRow.filter.get(row.entry))
         .setCell(cell => formatFilter(cell.value))
         .setColumnSize(FixedSize(69.toPx))
         .sortable,
-      column(FPUColumnId, SpectroscopyModeRow.fpu.get)
+      column(FPUColumnId, row => SpectroscopyModeRow.fpu.get(row.entry))
         .setCell(cell => formatFPU(cell.value))
         .setColumnSize(FixedSize(62.toPx))
         .sortable,
-      column(CoverageColumnId, SpectroscopyModeRow.coverageInterval(cw))
+      column(CoverageColumnId, row => SpectroscopyModeRow.coverageInterval(cw)(row.entry))
         .setCell(cell => formatWavelengthCoverage(cell.value))
         .setColumnSize(FixedSize(100.toPx)),
-      column(ResolutionColumnId, SpectroscopyModeRow.resolution.get)
+      column(ResolutionColumnId, row => SpectroscopyModeRow.resolution.get(row.entry))
         .setCell(_.value.toString)
         .setColumnSize(FixedSize(70.toPx)),
-      column(AvailablityColumnId, rowToConf)
+      column(AvailablityColumnId, row => rowToConf(row.entry))
         .setCell(_.value.fold("No")(_ => "Yes"))
         .setColumnSize(FixedSize(66.toPx))
+        .setSortUndefined(UndefinedPriority.Lower)
     ).filter { case c => (c.id.toString) != FPUColumnId.value || fpu.isEmpty }
 
   extension (row: SpectroscopyModeRow)
@@ -333,10 +337,10 @@ private object SpectroscopyModesTable extends TableHooks:
 
   private def selectedRowIndex(
     scienceMode: Option[ScienceMode],
-    rows:        List[SpectroscopyModeRow]
+    rows:        List[SpectroscopyModeRowWithResult]
   ): Option[Int] =
     scienceMode
-      .map(selected => rows.indexWhere(_.equalsConf(selected)))
+      .map(selected => rows.indexWhere(_.entry.equalsConf(selected)))
       .filterNot(_ === -1)
 
   private def getVisibleOriginalRows(
@@ -361,10 +365,15 @@ private object SpectroscopyModesTable extends TableHooks:
         ItcResultsCache(Map.empty[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]])
       )
       // rows
-      .useMemoBy((p, _, itcResults) =>
-        // We need the results as a depedency here so that rows are recomputed, otherwise the table memoizes them
-        (p.matrix, p.spectroscopyRequirements, p.baseCoordinates.map(_.value.dec), itcResults.value)
-      ) { (_, _, _) => (matrix, s, dec, _) =>
+      .useMemoBy((props, _, itcResults) =>
+        (props.matrix,
+         props.spectroscopyRequirements,
+         props.baseCoordinates.map(_.value.dec),
+         itcResults.value,
+         props.brightestTarget,
+         props.constraints
+        )
+      ) { (_, _, _) => (matrix, s, dec, itc, target, constraints) =>
         val rows                =
           matrix
             .filtered(
@@ -378,8 +387,13 @@ private object SpectroscopyModesTable extends TableHooks:
               ),
               declination = dec
             )
-        val (enabled, disabled) = rows.partition(enabledRow)
-        enabled ++ disabled
+        val (enabled, disabled) = rows.partition(_.enabledRow)
+        (enabled ++ disabled).map(row =>
+          SpectroscopyModeRowWithResult(
+            row,
+            itc.forRow(s.wavelength, s.signalToNoise, s.signalToNoiseAt, constraints, target, row)
+          )
+        )
       }
       // itcProgress
       .useState(none[Progress])
@@ -394,9 +408,7 @@ private object SpectroscopyModesTable extends TableHooks:
         )
       } { (_, _, _, _, _) => (wavelength, sn, snAt, targets, constraints, rows, itcResults) =>
         rows.value
-          .map(
-            itcResults.forRow(wavelength, sn, snAt, constraints, targets, _)
-          )
+          .map(_.result)
           .collect { case Left(p) =>
             p.toList.filter {
               case ItcQueryProblems.MissingTargetInfo => true
@@ -455,7 +467,7 @@ private object SpectroscopyModesTable extends TableHooks:
           TableOptions(
             cols,
             rows,
-            getRowId = (row, _, _) => RowId(row.id.toString),
+            getRowId = (row, _, _) => RowId(row.entry.id.toString),
             enableSorting = true
           ),
           TableStore(props.userId, TableId.SpectroscopyModes, cols)
@@ -492,13 +504,20 @@ private object SpectroscopyModesTable extends TableHooks:
                 sortedRows
                   .filterNot { row => // Discard modes already in the cache
                     val cache = itcResults.value.cache
-                    val cw    = row.coverageCenter(w)
+                    val cw    = row.entry.coverageCenter(w)
 
                     cw.exists(w =>
-                      row.instrument.instrument match
+                      row.entry.instrument.instrument match
                         case Instrument.GmosNorth | Instrument.GmosSouth =>
                           cache.contains(
-                            ItcRequestParams(w, sn, signalToNoiseAt, constraints, t, row.instrument)
+                            ItcRequestParams(
+                              w,
+                              sn,
+                              signalToNoiseAt,
+                              constraints,
+                              t,
+                              row.entry.instrument
+                            )
                           )
                         case _                                           => true
                     )
@@ -510,9 +529,11 @@ private object SpectroscopyModesTable extends TableHooks:
                   _       <- Resource.eval(itcProgress.setStateAsync(progressZero))
                   request <-
                     ItcClient[IO]
-                      .request(ItcMessage.Query(w, sn, constraints, t, modes, signalToNoiseAt))
+                      .request(
+                        ItcMessage.Query(w, sn, constraints, t, modes.map(_.entry), signalToNoiseAt)
+                      )
                       .map(
-                        // Avoid intermediate rerenders. They are slow.
+                        // Avoid rerendering on every single result, it's slow.
                         _.groupWithin(100, 500.millis)
                           .evalTap(itcResponseChunk =>
                             itcProgress
@@ -558,8 +579,8 @@ private object SpectroscopyModesTable extends TableHooks:
           _,
           virtualizerRef
         ) =>
-          def toggleRow(row: SpectroscopyModeRow): Option[ScienceMode] =
-            rowToConf(row).filterNot(conf => props.scienceMode.get.contains_(conf))
+          def toggleRow(row: SpectroscopyModeRowWithResult): Option[ScienceMode] =
+            rowToConf(row.entry).filterNot(conf => props.scienceMode.get.contains_(conf))
 
           def scrollButton(content: VdomNode, style: Css, indexCondition: Int => Boolean): TagMod =
             selectedIndex.value.whenDefined(idx =>
@@ -618,18 +639,18 @@ private object SpectroscopyModesTable extends TableHooks:
                 estimateRowHeight = _ => 32.toPx,
                 striped = true,
                 compact = Compact.Very,
-                getItemKey = idx => rows(idx).id,
+                // getItemKey = idx => rows(idx).id,
                 containerMod = ^.overflow.auto,
                 rowMod = row =>
                   TagMod(
-                    ^.disabled := !enabledRow(row.original),
+                    ^.disabled := !row.original.entry.enabledRow,
                     ExploreStyles.TableRowSelected
                       .when_(selectedIndex.value.exists(_ === row.index.toInt)),
                     (^.onClick --> (
                       props.scienceMode.set(toggleRow(row.original)) >>
                         selectedIndex.setState(row.index.toInt.some) >>
                         props.onSelect
-                    )).when(enabledRow(row.original))
+                    )).when(row.original.entry.enabledRow)
                   ),
                 onChange = virtualizer =>
                   visibleRows.setState(
