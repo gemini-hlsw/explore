@@ -170,11 +170,12 @@ object AladinCell extends ModelOptics with AladinCommon:
 
   private val unsafeRangeLens: Lens[TargetVisualOptions.ImageFilterRange, Double] =
     Lens[TargetVisualOptions.ImageFilterRange, Double](_.value.toDouble)(x =>
-      _ =>
+      y =>
         refineV[TargetVisualOptions.FilterRange](x.toInt).toOption
-          .getOrElse(sys.error("Not allowed"))
+          .getOrElse(y) // Ignore invalid updates
     )
-  private val component                                                           =
+
+  private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
