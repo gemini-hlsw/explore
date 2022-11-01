@@ -5,12 +5,14 @@ package explore.model.arb
 
 import explore.model.TargetVisualOptions
 import explore.model.enums.Visible
+import eu.timepit.refined.scalacheck.numeric.*
 import lucuma.core.util.arb.ArbEnumerated.*
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.arb.ArbAngle.*
 import lucuma.core.math.arb.ArbOffset.*
 import org.scalacheck.Arbitrary
+import org.scalacheck.Gen
 import org.scalacheck.Arbitrary.*
 import org.scalacheck.Cogen
 import org.scalacheck.Cogen.*
@@ -26,7 +28,9 @@ trait ArbTargetVisualOptions:
         a    <- arbitrary[Visible]
         o    <- arbitrary[Visible]
         f    <- arbitrary[Boolean]
-      } yield TargetVisualOptions(fra, fdec, vo, a, o, f)
+        s    <- arbitrary[TargetVisualOptions.ImageFilterRange]
+        b    <- arbitrary[TargetVisualOptions.ImageFilterRange]
+      } yield TargetVisualOptions(fra, fdec, vo, a, o, f, s, b)
     }
 
   given Cogen[TargetVisualOptions] =

@@ -1,4 +1,18 @@
 @use 'common.scss';
+@use "sass:string";
+
+:root {
+  --aladin-image-saturation: 1;
+  --aladin-image-brightness: 1;
+}
+
+$saturation: var(--aladin-image-saturation);
+$brightness: var(--aladin-image-brightness);
+
+/* stylelint-disable-next-line selector-class-pattern */
+.aladin-imageCanvas {
+  filter: #{saturate}(string.unquote($saturation)) brightness(string.unquote($brightness));
+}
 
 .aladin-container {
   overflow: hidden; // Needed to keep the visualization svg inside the component
@@ -294,6 +308,10 @@
     &.ui.compact.vertical.menu {
       width: 14em !important; // in SUI it is important too
     }
+  }
+
+  .aladin-range-control {
+    margin: 0.3rem 0.4rem;
   }
 }
 
