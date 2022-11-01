@@ -62,7 +62,8 @@ case class TargetSummaryTable(
   targets:           View[TargetWithObsList],
   selectObservation: (Observation.Id, Target.Id) => Callback,
   selectTarget:      Target.Id => Callback,
-  renderInTitle:     Tile.RenderInTitle
+  renderInTitle:     Tile.RenderInTitle,
+  selectedTargetIds: View[List[Target.Id]]
 ) extends ReactFnProps(TargetSummaryTable.component)
 
 object TargetSummaryTable extends TableHooks:
@@ -169,6 +170,10 @@ object TargetSummaryTable extends TableHooks:
       )
       // Files to be imported
       .useStateView(List.empty[DOMFile])
+      // Copy the selection upstream
+      .useEffectWithDepsBy((_, _, _, _, table, _) =>
+        table.getSelectedRowModel().rows.toList.map(_.original.id)
+      )((props, _, _, _, _, _) => ids => props.selectedTargetIds.set(ids))
       .render((props, ctx, _, _, table, filesToImport) =>
         import ctx.given
 
