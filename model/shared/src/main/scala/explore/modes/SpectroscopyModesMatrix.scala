@@ -366,8 +366,8 @@ trait SpectroscopyModesMatrixDecoders extends Decoders {
       r   <- row.as[PosInt]("resolution")
       sl  <- row.as[ModeSlitSize]("slit length")
       sw  <- row.as[ModeSlitSize]("slit width")
-    } yield fs.map(f =>
-      SpectroscopyModeRow(row.line.foldMap(_.toInt), i, s, f, c, a, min, max, wo, wr, r, sl, sw)
+    } yield fs.map(f => // Ids are assigned later, after list is flattened.
+      SpectroscopyModeRow(0, i, s, f, c, a, min, max, wo, wr, r, sl, sw)
     )
 
 }
