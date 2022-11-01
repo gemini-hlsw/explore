@@ -221,14 +221,23 @@ object AladinContainer extends AladinCommon {
                     case AgsAnalysis.VignettesScience(_) => true
                     case _                               => false
 
-                  val speedCss = g.match
-                    case AgsAnalysis.Usable(_, _, Some(GuideSpeed.Fast), _, _)   =>
+                  val guideSpeed = g.match
+                    case AgsAnalysis.Usable(_, _, s @ Some(_), _, _)              =>
+                      s
+                    case AgsAnalysis.NotReachableAtPosition(_, _, s @ Some(_), _) =>
+                      s
+                    case _                                                        =>
+                      none
+
+                  val speedCss = guideSpeed.match
+                    case Some(GuideSpeed.Fast)   =>
                       ExploreStyles.GuideSpeedFast
-                    case AgsAnalysis.Usable(_, _, Some(GuideSpeed.Medium), _, _) =>
+                    case Some(GuideSpeed.Medium) =>
                       ExploreStyles.GuideSpeedMedium
-                    case AgsAnalysis.Usable(_, _, Some(GuideSpeed.Slow), _, _)   =>
+                    case Some(GuideSpeed.Slow)   =>
                       ExploreStyles.GuideSpeedSlow
-                    case _                                                       => Css.Empty
+                    case _                       =>
+                      Css.Empty
 
                   (tracking.at(targetEpochInstant), tracking.at(obsInstant)).mapN {
                     (source, dest) =>
