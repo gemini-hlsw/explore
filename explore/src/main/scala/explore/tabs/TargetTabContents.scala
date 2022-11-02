@@ -144,6 +144,7 @@ object TargetTabContents extends TwoPanels:
     resize:                UseResizeDetectorReturn,
     debouncer:             Reusable[UseSingleEffect[IO]],
     fullScreen:            View[AladinFullScreen],
+    selectedTargetIds:     View[List[Target.Id]],
     ctx:                   AppContext[IO]
   )(
     asterismGroupsWithObs: View[AsterismGroupsWithObs]
@@ -235,7 +236,8 @@ object TargetTabContents extends TwoPanels:
           targetMap,
           selectObservationAndTarget(props.expandedIds) _,
           selectTarget _,
-          renderInTitle
+          renderInTitle,
+          selectedTargetIds
         ): VdomNode
       )
 
@@ -631,40 +633,61 @@ object TargetTabContents extends TwoPanels:
           )
       }
       .useToastRef
-      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, _, _, asterismGroupWithObs, _) =>
-        (props.focused, asterismGroupWithObs.toOption.map(_.get.asterismGroups))
-      ) { (props, ctx, loading, _, _, _, _, _, agv, toastRef) => (target, asterismGroups) =>
-        import ctx.given
+      // Selected targets on the summary table
+      .useStateView(List.empty[Target.Id])
+      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, _, _, asterismGroupWithObs, _, selIds) =>
+        (props.focused, asterismGroupWithObs.toOption.map(_.get.asterismGroups), selIds.get)
+      ) {
+        (props, ctx, loading, _, _, _, _, _, agv, toastRef, _) =>
+          (target, asterismGroups, selectedIds) =>
+            import ctx.given
 
-        def callbacks: ShortcutCallbacks = {
-          case CopyAlt1 | CopyAlt2 | CopyAlt3 =>
-            target.obsSet
-              .map(ids =>
-                ctx.exploreClipboard.set(LocalClipboard.CopiedObservations(ids)).runAsync *>
-                  toastRef.info(s"Copied obs ${ids.idSet.toList.mkString(", ")}")
-              )
-              .getOrEmpty
+            def callbacks: ShortcutCallbacks = {
+              case CopyAlt1 | CopyAlt2 | CopyAlt3 =>
+                target.obsSet
+                  .map(ids =>
+                    ctx.exploreClipboard.set(LocalClipboard.CopiedObservations(ids)).runAsync *>
+                      toastRef.info(s"Copied obs ${ids.idSet.toList.mkString(", ")}")
+                  )
+                  .getOrEmpty
 
-          case PasteAlt1 | PasteAlt2 | PasteAlt3 =>
-            ctx.exploreClipboard.get.flatMap {
-              case LocalClipboard.CopiedObservations(id) =>
-                val targets =
-                  props.focused.obsSet
-                    .flatMap(i => asterismGroups.flatMap(_.get(i).map(_.targetIds.toList)))
-                    .getOrElse(props.focused.target.toList)
+              case PasteAlt1 | PasteAlt2 | PasteAlt3 =>
+                ctx.exploreClipboard.get.flatMap {
+                  case LocalClipboard.CopiedObservations(id) =>
+                    val treeTargets =
+                      props.focused.obsSet
+                        .flatMap(i => asterismGroups.flatMap(_.get(i).map(_.targetIds.toList)))
+                        .getOrElse(props.focused.target.toList)
 
-                agv.toOption
-                  .map(agv => applyObs(id.idSet.toList, targets, loading, agv, ctx))
-                  .getOrElse(IO.unit)
+                    if (treeTargets.nonEmpty)
+                      // Apply the obs to selected targets on the tree
+                      agv.toOption
+                        .map(agv => applyObs(id.idSet.toList, treeTargets, loading, agv, ctx))
+                        .getOrElse(IO.unit)
+                    else
+                      // Apply the obs to selected targets on the summary table to each target
+                      agv.toOption
+                        .map(agv =>
+                          selectedIds
+                            .traverse(tid =>
+                              applyObs(id.idSet.toList, List(tid), loading, agv, ctx)
+                            )
+                            .void
+                        )
+                        .getOrElse(IO.unit)
 
-              case _ => IO.unit
+                  case _ => IO.unit
 
-            }.runAsync
+                }.runAsync
 
-          case GoToSummary =>
-            ctx.setPageVia(AppTab.Targets, props.programId, Focused.None, SetRouteVia.HistoryPush)
-        }
-        UseHotkeysProps((GoToSummary :: (CopyKeys ::: PasteKeys)).toHotKeys, callbacks)
+              case GoToSummary =>
+                ctx.setPageVia(AppTab.Targets,
+                               props.programId,
+                               Focused.None,
+                               SetRouteVia.HistoryPush
+                )
+            }
+            UseHotkeysProps((GoToSummary :: (CopyKeys ::: PasteKeys)).toHotKeys, callbacks)
       }
       // full screen aladin
       .useStateView(AladinFullScreen.Normal)
@@ -680,6 +703,7 @@ object TargetTabContents extends TwoPanels:
           debouncer,
           asterismGroupsWithObs,
           toastRef,
+          selectedTargetIds,
           fullScreen
         ) =>
           React.Fragment(
@@ -703,6 +727,7 @@ object TargetTabContents extends TwoPanels:
                 resize,
                 debouncer,
                 fullScreen,
+                selectedTargetIds,
                 ctx
               ),
               <.span(Loader(active = true)).withRef(resize.ref)
