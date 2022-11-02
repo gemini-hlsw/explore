@@ -62,7 +62,7 @@ object Routing:
 
   private def constraintSetTab(page: Page, model: View[RootModel]): VdomElement =
     val routingInfo = RoutingInfo.from(page)
-    ConstraintSetTabContents(
+    ConstraintsTabContents(
       model.zoom(RootModel.userId).get,
       routingInfo.programId,
       routingInfo.focused.obsSet,

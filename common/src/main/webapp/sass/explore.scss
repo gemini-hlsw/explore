@@ -991,3 +991,25 @@ table.explore-border-table {
   }
 }
 
+// --------------
+// Timing windows
+// --------------
+.timing-windows-body {
+  padding: 0.5em;
+  display: grid;
+  grid-template:
+    'table table' 300px
+    'editor add' min-content / 1fr min-content;
+
+  & ul {
+    grid-area: table;
+  }
+
+  .timing-window-editor {
+    grid-area: editor;
+  }
+
+  & .p-button {
+    grid-area: add;
+  }
+}

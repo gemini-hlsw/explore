@@ -4,33 +4,42 @@
 package explore.tabs
 
 import cats.effect.IO
+import cats.effect.Resource
 import cats.syntax.all.*
 import clue.TransactionalClient
-import crystal.react.View
+import crystal.implicits.*
+import crystal.react.*
 import crystal.react.hooks.*
 import crystal.react.implicits.*
 import crystal.react.reuse.*
+import eu.timepit.refined.types.numeric.NonNegInt
+import lucuma.refined.*
 import eu.timepit.refined.auto.*
 import explore.Icons
 import explore.*
 import explore.common.ConstraintGroupQueries.*
 import explore.common.UserPreferencesQueries.*
+import explore.common.TimingQueries.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
-import explore.constraints.ConstraintsPanel
+import explore.constraints.TimingWindowsPanel
 import explore.constraints.ConstraintsSummaryTable
-import explore.model.*
+import explore.constraints.ConstraintsPanel
+import explore.model.layout.*
+import explore.model.layout.unsafe.given
 import explore.model.enums.AppTab
 import explore.model.enums.SelectedPanel
 import explore.model.reusability.*
 import explore.model.reusability.given
 import explore.observationtree.ConstraintGroupObsList
+import react.gridlayout.*
 import explore.optics.*
 import explore.optics.all.*
 import explore.shortcuts.*
 import explore.shortcuts.given
 import explore.syntax.ui.*
 import explore.undo.*
+import explore.model.*
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.callback.CallbackCatsEffect.*
@@ -47,6 +56,7 @@ import lucuma.ui.utils.*
 import org.scalajs.dom.window
 import org.typelevel.log4cats.Logger
 import queries.common.ConstraintGroupQueriesGQL.*
+import queries.common.TimingWindowsGQL.*
 import queries.common.ObsQueriesGQL
 import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.UserPreferencesDB
@@ -63,8 +73,12 @@ import react.semanticui.sizes.*
 
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration.*
+import explore.model.enums.GridLayoutSection
+import explore.components.TileController
+import crystal.Pot
+import monocle.Focus
 
-case class ConstraintSetTabContents(
+case class ConstraintsTabContents(
   userId:         Option[User.Id],
   programId:      Program.Id,
   focusedObsSet:  Option[ObsIdSet],
@@ -72,20 +86,73 @@ case class ConstraintSetTabContents(
   listUndoStacks: View[UndoStacks[IO, ConstraintGroupList]],
   // TODO: Clean up the groupUndoStack somewhere, somehow?
   groupUndoStack: View[Map[ObsIdSet, UndoStacks[IO, ConstraintSet]]]
-) extends ReactFnProps(ConstraintSetTabContents.component)
+) extends ReactFnProps(ConstraintsTabContents.component)
 
-object ConstraintSetTabContents extends TwoPanels:
-  private type Props = ConstraintSetTabContents
+object ConstraintsTabContents extends TwoPanels:
+  private type Props = ConstraintsTabContents
   private given Reusability[Double] = Reusability.double(2.0)
 
+  private val ConstraintsMinHeight: NonNegInt   = 4.refined
+  private val ConstraintsMaxHeight: NonNegInt   = 4.refined
+  private val TimingWindowsHeight: NonNegInt    = 18.refined
+  private val TimingWindowsMinHeight: NonNegInt = 15.refined
+  private val TimingWindowsMaxHeight: NonNegInt = 22.refined
+  private val TileMinWidth: NonNegInt           = 6.refined
+  private val DefaultWidth: NonNegInt           = 10.refined
+  private val DefaultLargeWidth: NonNegInt      = 12.refined
+
+  private val layoutMedium: Layout = Layout(
+    List(
+      LayoutItem(
+        i = ObsTabTilesIds.ConstraintsId.id.value,
+        x = 0,
+        y = 0,
+        w = DefaultWidth.value,
+        h = ConstraintsMaxHeight.value,
+        minH = ConstraintsMinHeight.value,
+        maxH = ConstraintsMaxHeight.value,
+        minW = TileMinWidth.value
+      ),
+      LayoutItem(
+        i = ObsTabTilesIds.TimingWindowsId.id.value,
+        x = 0,
+        y = ConstraintsMinHeight.value,
+        w = DefaultWidth.value,
+        h = TimingWindowsHeight.value,
+        maxH = TimingWindowsMaxHeight.value,
+        minH = TimingWindowsMaxHeight.value,
+        minW = TileMinWidth.value
+      )
+    )
+  )
+
+  private val defaultTargetLayouts = defineStdLayouts(
+    Map(
+      (BreakpointName.lg,
+       layoutItems.andThen(layoutItemWidth).replace(DefaultLargeWidth)(layoutMedium)
+      ),
+      (BreakpointName.md, layoutMedium)
+    )
+  )
+
   private def renderFn(
-    props:              Props,
-    state:              View[SelectedPanel],
-    resize:             UseResizeDetectorReturn,
-    ctx:                AppContext[IO]
+    props:                 Props,
+    state:                 View[SelectedPanel],
+    defaultLayouts:        LayoutsMap,
+    layouts:               View[Pot[LayoutsMap]],
+    resize:                UseResizeDetectorReturn,
+    ctx:                   AppContext[IO]
   )(
-    constraintsWithObs: View[ConstraintSummaryWithObervations]
+    constraintsAndWindows: View[(TimingWindowResult, ConstraintSummaryWithObervations)]
   ): VdomNode = {
+
+    val constraintsWithObs = constraintsAndWindows.zoom(
+      Focus[(TimingWindowResult, ConstraintSummaryWithObervations)](_._2)
+    )
+
+    val timingWindows = constraintsAndWindows.zoom(
+      Focus[(TimingWindowResult, ConstraintSummaryWithObervations)](_._1)
+    )
 
     def constraintsTree(constraintWithObs: View[ConstraintSummaryWithObervations]) =
       ConstraintGroupObsList(
@@ -203,13 +270,30 @@ object ConstraintSetTabContents extends TwoPanels:
           val csUndo: View[UndoStacks[IO, ConstraintSet]] =
             props.groupUndoStack.zoom(atMapWithDefault(idsToEdit, UndoStacks.empty))
 
-          val title = idsToEdit.single match
+          val constraintsTitle = idsToEdit.single match
             case Some(id) => s"Observation $id"
             case None     => s"Editing Constraints for ${idsToEdit.size} Observations"
 
-          Tile("constraints".refined, title, backButton.some)(renderInTitle =>
-            ConstraintsPanel(idsToEdit.toList, csView, csUndo, renderInTitle)
+          val constraintsTile = Tile(ObsTabTilesIds.ConstraintsId.id,
+                                     constraintsTitle,
+                                     backButton.some
+          )(renderInTitle => ConstraintsPanel(idsToEdit.toList, csView, csUndo, renderInTitle))
+
+          val timingWindowsTile = Tile(ObsTabTilesIds.TimingWindowsId.id, "Timing Windows")(
+            renderInTitle => TimingWindowsPanel(timingWindows)
           )
+
+          val rglRender: LayoutsMap => VdomNode = (l: LayoutsMap) =>
+            TileController(
+              props.userId,
+              resize.width.getOrElse(1),
+              defaultLayouts,
+              l,
+              List(constraintsTile, timingWindowsTile),
+              GridLayoutSection.ConstraintsLayout,
+              None
+            )
+          potRender[LayoutsMap](rglRender)(layouts.get)
         }
 
     makeOneOrTwoPanels(
@@ -233,9 +317,38 @@ object ConstraintSetTabContents extends TwoPanels:
         }
         UseHotkeysProps(GoToSummary.value, callbacks)
       }
+      // Initial target layout
+      .useStateView(Pot.pending[LayoutsMap])
+      // Keep a record of the initial target layout
+      .useMemo(())(_ => defaultTargetLayouts)
+      // Load the config from user prefrences
+      .useEffectWithDepsBy((p, _, _, _) => p.userId) { (props, ctx, layout, defaultLayout) => _ =>
+        import ctx.given
+
+        GridLayouts
+          .queryWithDefault[IO](
+            props.userId,
+            GridLayoutSection.ConstraintsLayout,
+            defaultLayout
+          )
+          .attempt
+          .flatMap {
+            case Right(dbLayout) =>
+              layout
+                .mod(
+                  _.fold(
+                    mergeMap(dbLayout, defaultLayout).ready,
+                    _ => mergeMap(dbLayout, defaultLayout).ready,
+                    cur => mergeMap(dbLayout, cur).ready
+                  )
+                )
+                .to[IO]
+            case Left(_)         => IO.unit
+          }
+      }
       .useStateView[SelectedPanel](SelectedPanel.Uninitialized)
-      .useEffectWithDepsBy((props, _, state) => (props.focusedObsSet, state.reuseByValue)) {
-        (_, _, _) => params =>
+      .useEffectWithDepsBy((props, _, _, _, state) => (props.focusedObsSet, state.reuseByValue)) {
+        (_, _, _, _, _) => params =>
           val (focusedObsSet, selected) = params
           (focusedObsSet, selected.get) match {
             case (Some(_), _)                 => selected.set(SelectedPanel.Editor)
@@ -243,18 +356,17 @@ object ConstraintSetTabContents extends TwoPanels:
             case _                            => Callback.empty
           }
       }
-      .useStreamResourceViewOnMountBy { (props, ctx, _) =>
+      .useStreamResourceViewOnMountBy { (props, ctx, _, _, _) =>
         import ctx.given
 
-        ConstraintGroupObsQuery
-          .query(props.programId)
-          .map(ConstraintGroupObsQuery.Data.asConstraintSummWithObs.get)
+        (TimingWindowsQuery.query(), ConstraintGroupObsQuery.query(props.programId))
+          .mapN((tw, cg) => (tw, ConstraintGroupObsQuery.Data.asConstraintSummWithObs.get(cg)))
           .reRunOnResourceSignals(
             ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](props.programId)
           )
       }
       // Measure its size
       .useResizeDetector()
-      .render { (props, ctx, state, constraintsWithObs, resize) =>
-        constraintsWithObs.render(renderFn(props, state, resize, ctx) _)
+      .render { (props, ctx, layout, defaultLayout, state, constraintsWithObs, resize) =>
+        constraintsWithObs.render(renderFn(props, state, defaultLayout, layout, resize, ctx) _)
       }

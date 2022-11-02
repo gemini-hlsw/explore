@@ -13,6 +13,8 @@ import lucuma.react.table.SortDirection
 trait UserPreferencesDB:
   type Timestamptz = java.time.ZonedDateTime
 
+  // Temporary for timing windows
+
   given Enumerated[SortDirection] =
     Enumerated.from(SortDirection.Ascending, SortDirection.Descending).withTag {
       case SortDirection.Ascending  => "ASC"
