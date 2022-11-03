@@ -3,6 +3,7 @@
 
 package explore.targets
 
+import cats.Order
 import cats.Order.*
 import cats.syntax.all.*
 import eu.timepit.refined.types.string.NonEmptyString
@@ -132,6 +133,9 @@ object TargetColumns:
         <.span(ExploreStyles.UnitsTableLabel, measure.units.shortName.replace(" mag", ""))
       )
 
+    // Order first by unit alphabetically and then value
+    private given Order[Measure[BigDecimal]] = Order.by(x => (x.units.abbv, x.value))
+
     val siderealColumns =
       List(
         siderealColumn(RAColumnId, Target.Sidereal.baseRA.get)
@@ -149,7 +153,8 @@ object TargetColumns:
             t => targetBrightnesses.get(t).flatMap(_.get(band))
           ).setCell(_.value.map(displayWithoutError(_)(displayBrightness)).orEmpty)
             .setSize(80.toPx)
-            .setEnableSorting(false) // We cannot sort since there may be different units.
+            // By user request we allow sorting by value though there maybe a mix of units
+            .sortable
         ) ++
         List(
           siderealColumn(EpochColumnId, Target.Sidereal.epoch.get)
