@@ -138,12 +138,14 @@ object TileController:
 
         ResponsiveReactGridLayout(
           width = p.gridWidth.toDouble,
-          autoSize = true,
+          // autoSize = true,
           // this has a performance cost but lets controls on the title to work properly
           // https://github.com/react-grid-layout/react-grid-layout/issues/858#issuecomment-426346399
           useCSSTransforms = false, // this has a performanco cost but see
           margin = (Constants.GridRowPadding, Constants.GridRowPadding),
+          // margin = (0, 0),
           containerPadding = (Constants.GridRowPadding, 0),
+          // containerPadding = (0, 0),
           rowHeight = Constants.GridRowHeight,
           draggableHandle = s".${ExploreStyles.TileTitleMenu.htmlClass}",
           onBreakpointChange = (bk: BreakpointName, _: Int) => bn.setState(bk),

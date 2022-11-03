@@ -5,11 +5,15 @@ package queries.common
 
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
-import queries.schemas.UserPreferencesDB
 import explore.model.TimingWindowEntry
+import io.circe.Decoder
+import io.circe.generic.semiauto.*
+import lucuma.schemas.decoders.*
+import queries.schemas.UserPreferencesDB
 // gql: import queries.schemas.UserPreferencesDB.*
 
 object TimingWindowsGQL:
+  given Decoder[TimingWindowEntry] = deriveDecoder
 
   /**
    * Read the grid layout for a given section

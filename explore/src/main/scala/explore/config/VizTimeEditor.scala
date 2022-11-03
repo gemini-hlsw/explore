@@ -30,36 +30,6 @@ case class VizTimeEditor(vizTimeView: Pot[View[Option[Instant]]])
 object VizTimeEditor {
   private type Props = VizTimeEditor
 
-  // TODO Move these to react-datetime
-  extension (instant: Instant)
-    // DatePicker only works in local timezone, so we trick it by adding the timezone offset.
-    // See https://github.com/Hacker0x01/react-datepicker/issues/1787
-    def toDatePickerJsDate: js.Date =
-      new js.Date(instant.toEpochMilli.toDouble + (new js.Date()).getTimezoneOffset() * 60000)
-
-  extension [A](value: js.UndefOr[DateOrRange])
-    def fromDatePickerToInstantEitherOpt(using
-      A <:< js.Date
-    ): Option[Either[(Instant, Instant), Instant]] =
-      value.toEitherOpt.map { (e: Either[(js.Date, js.Date), js.Date]) =>
-        e match {
-          case Left((d1, d2)) =>
-            Left((InstantBuilder.fromDatePickerJsDate(d1), InstantBuilder.fromDatePickerJsDate(d2)))
-          case Right(d)       =>
-            Right(InstantBuilder.fromDatePickerJsDate(d))
-        }
-      }.widen
-
-    def fromDatePickerToInstantOpt(using ev: A <:< js.Date): Option[Instant] =
-      fromDatePickerToInstantEitherOpt.flatMap(_.toOption)
-
-  object InstantBuilder {
-    // DatePicker only works in local timezone, so we trick it by adding the timezone offset.
-    // See https://github.com/Hacker0x01/react-datepicker/issues/1787
-    def fromDatePickerJsDate(jsDate: js.Date): Instant =
-      Instant.ofEpochMilli((jsDate.getTime() - jsDate.getTimezoneOffset() * 60000).toLong)
-  }
-
   private val component =
     ScalaFnComponent[Props] { p =>
       <.div(

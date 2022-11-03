@@ -92,20 +92,30 @@ $tree-section-width: 300px;
 // Obs time editor
 // ------
 @mixin react-datepicker-wrapper {
-  width: unset;
-  padding-left: 0.3em;
-  padding-right: 0.3em;
+  & .react-datepicker-wrapper {
+    width: unset;
+    padding-left: 0.3em;
+    padding-right: 0.3em;
+  }
+}
+
+@mixin react-datepicker-input {
+  /* stylelint-disable-next-line selector-class-pattern */
+  & .react-datepicker__input-container input {
+    text-shadow: unset;
+    font-weight: unset;
+    font-size: smaller;
+  }
 }
 
 .explore-obs-instant-tile-title {
   @include small-tile-title;
+  @include react-datepicker-input;
+  @include react-datepicker-wrapper;
 
   justify-content: center;
   flex-grow: 0;
 
-  & .react-datepicker-wrapper {
-    @include react-datepicker-wrapper;
-  }
 
   label:first-child {
     @include common.text-ellipsis;
@@ -149,12 +159,6 @@ $tree-section-width: 300px;
     }
   }
 
-  /* stylelint-disable-next-line selector-class-pattern */
-  & .react-datepicker__input-container input {
-    text-shadow: unset;
-    font-weight: unset;
-    font-size: smaller;
-  }
 }
 
 // ------
@@ -994,22 +998,78 @@ table.explore-border-table {
 // --------------
 // Timing windows
 // --------------
+@mixin timing-window-list {
+  margin-bottom: 0.5em;
+  border: solid 1px var(--under-tab-border-color);
+  min-height: var(--timing-windows-height);
+  height: var(--timing-windows-height);
+  grid-area: table;
+}
+
 .timing-windows-body {
+  --timing-windows-height: 200px;
   padding: 0.5em;
   display: grid;
   grid-template:
-    'table table' 300px
+    'table table' min-content
     'editor add' min-content / 1fr min-content;
 
-  & ul {
-    grid-area: table;
+  @media (min-width: common.$mobile-responsive-cutoff) {
+    --timing-windows-height: 300px;
+  }
+
+  .timing-windows-header {
+    display: none;
+      height: 0px;
+    & tr {
+      height: 0px;
+    }
+  }
+
+  .timing-windows-empty {
+    @include timing-window-list;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: large;
+  }
+
+  .timing-windows-table {
+    @include timing-window-list;
   }
 
   .timing-window-editor {
     grid-area: editor;
+    @include react-datepicker-input;
+    @include react-datepicker-wrapper;
+    padding: 0.5em;
+
+    & span {
+      display: inline-block;
+    }
+
+    & .p-radiobutton {
+      // padding-right: 0.5em;
+    }
+
+    & > * {
+      margin-bottom: 0.5em;
+    }
+
+    & .timing-window-remain-open {
+      display: flex;
+      align-items: baseline;
+
+      & .field {
+        width: 7ch;
+        margin-left: 0.5em;
+      }
+    }
   }
 
   & .p-button {
     grid-area: add;
+    align-self: start;
   }
 }

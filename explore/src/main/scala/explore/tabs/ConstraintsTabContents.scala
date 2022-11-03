@@ -7,39 +7,40 @@ import cats.effect.IO
 import cats.effect.Resource
 import cats.syntax.all.*
 import clue.TransactionalClient
+import crystal.Pot
 import crystal.implicits.*
 import crystal.react.*
 import crystal.react.hooks.*
 import crystal.react.implicits.*
 import crystal.react.reuse.*
-import eu.timepit.refined.types.numeric.NonNegInt
-import lucuma.refined.*
 import eu.timepit.refined.auto.*
+import eu.timepit.refined.types.numeric.NonNegInt
 import explore.Icons
 import explore.*
 import explore.common.ConstraintGroupQueries.*
-import explore.common.UserPreferencesQueries.*
 import explore.common.TimingQueries.*
+import explore.common.UserPreferencesQueries.*
 import explore.components.Tile
+import explore.components.TileController
 import explore.components.ui.ExploreStyles
-import explore.constraints.TimingWindowsPanel
-import explore.constraints.ConstraintsSummaryTable
 import explore.constraints.ConstraintsPanel
+import explore.constraints.ConstraintsSummaryTable
+import explore.constraints.TimingWindowsPanel
+import explore.model.*
+import explore.model.enums.AppTab
+import explore.model.enums.GridLayoutSection
+import explore.model.enums.SelectedPanel
 import explore.model.layout.*
 import explore.model.layout.unsafe.given
-import explore.model.enums.AppTab
-import explore.model.enums.SelectedPanel
 import explore.model.reusability.*
 import explore.model.reusability.given
 import explore.observationtree.ConstraintGroupObsList
-import react.gridlayout.*
 import explore.optics.*
 import explore.optics.all.*
 import explore.shortcuts.*
 import explore.shortcuts.given
 import explore.syntax.ui.*
 import explore.undo.*
-import explore.model.*
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.callback.CallbackCatsEffect.*
@@ -49,34 +50,34 @@ import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Program
 import lucuma.core.model.User
 import lucuma.refined.*
+import lucuma.refined.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
+import monocle.Focus
 import org.scalajs.dom.window
 import org.typelevel.log4cats.Logger
 import queries.common.ConstraintGroupQueriesGQL.*
-import queries.common.TimingWindowsGQL.*
 import queries.common.ObsQueriesGQL
+import queries.common.TimingWindowsGQL.*
 import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.UserPreferencesDB
 import react.common.ReactFnProps
 import react.draggable.Axis
 import react.fa.*
+import react.gridlayout.*
 import react.hotkeys.*
 import react.hotkeys.hooks.*
 import react.resizeDetector.*
 import react.resizeDetector.hooks.*
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
+import react.semanticui.elements.loader.Loader
 import react.semanticui.sizes.*
 
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration.*
-import explore.model.enums.GridLayoutSection
-import explore.components.TileController
-import crystal.Pot
-import monocle.Focus
 
 case class ConstraintsTabContents(
   userId:         Option[User.Id],
@@ -92,9 +93,10 @@ object ConstraintsTabContents extends TwoPanels:
   private type Props = ConstraintsTabContents
   private given Reusability[Double] = Reusability.double(2.0)
 
+  private val ConstraintsHeight: NonNegInt      = 4.refined
   private val ConstraintsMinHeight: NonNegInt   = 4.refined
-  private val ConstraintsMaxHeight: NonNegInt   = 4.refined
-  private val TimingWindowsHeight: NonNegInt    = 18.refined
+  private val ConstraintsMaxHeight: NonNegInt   = 8.refined
+  private val TimingWindowsHeight: NonNegInt    = 15.refined
   private val TimingWindowsMinHeight: NonNegInt = 15.refined
   private val TimingWindowsMaxHeight: NonNegInt = 22.refined
   private val TileMinWidth: NonNegInt           = 6.refined
@@ -116,7 +118,7 @@ object ConstraintsTabContents extends TwoPanels:
       LayoutItem(
         i = ObsTabTilesIds.TimingWindowsId.id.value,
         x = 0,
-        y = ConstraintsMinHeight.value,
+        y = ConstraintsHeight.value,
         w = DefaultWidth.value,
         h = TimingWindowsHeight.value,
         maxH = TimingWindowsMaxHeight.value,
@@ -280,7 +282,7 @@ object ConstraintsTabContents extends TwoPanels:
           )(renderInTitle => ConstraintsPanel(idsToEdit.toList, csView, csUndo, renderInTitle))
 
           val timingWindowsTile = Tile(ObsTabTilesIds.TimingWindowsId.id, "Timing Windows")(
-            renderInTitle => TimingWindowsPanel(timingWindows)
+            renderInTitle => TimingWindowsPanel(timingWindows.zoom(TimingWindowsList))
           )
 
           val rglRender: LayoutsMap => VdomNode = (l: LayoutsMap) =>
@@ -300,7 +302,7 @@ object ConstraintsTabContents extends TwoPanels:
       state,
       constraintsTree(constraintsWithObs),
       rightSide,
-      RightSideCardinality.Single,
+      RightSideCardinality.Multi,
       resize
     )
   }
@@ -368,5 +370,10 @@ object ConstraintsTabContents extends TwoPanels:
       // Measure its size
       .useResizeDetector()
       .render { (props, ctx, layout, defaultLayout, state, constraintsWithObs, resize) =>
-        constraintsWithObs.render(renderFn(props, state, defaultLayout, layout, resize, ctx) _)
+        React.Fragment(
+          constraintsWithObs.render(renderFn(props, state, defaultLayout, layout, resize, ctx) _,
+                                    <.span(Loader(active = true)).withRef(resize.ref)
+          )
+        )
+
       }

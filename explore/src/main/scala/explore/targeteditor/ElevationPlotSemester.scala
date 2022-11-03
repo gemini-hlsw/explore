@@ -12,6 +12,7 @@ import crystal.react.reuse.*
 import explore.events.PlotMessage.*
 import explore.highcharts.*
 import explore.model.AppContext
+import explore.model.Constants
 import explore.model.CoordinatesAtVizTime
 import explore.model.WorkerClients.PlotClient
 import explore.model.boopickle.CommonPicklers.given
@@ -61,8 +62,6 @@ object ElevationPlotSemester:
   private val MillisPerHour: Double = 60 * 60 * 1000
   private val MillisPerDay: Double  = MillisPerHour * 24
   private val MinVisibility: Double = 0.2 // 12 minutes
-
-  private val dateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
   private val component =
     ScalaFnComponent
@@ -155,7 +154,7 @@ object ElevationPlotSemester:
         def timeFormat(value: Double): String =
           ZonedDateTime
             .ofInstant(Instant.ofEpochMilli(value.toLong), props.site.timezone)
-            .format(dateTimeFormatter)
+            .format(Constants.GppDateFormatter)
 
         val tickFormatter: AxisLabelsFormatterCallbackFunction =
           (
@@ -169,8 +168,8 @@ object ElevationPlotSemester:
 
         def dateFormat(value: Double): String =
           ZonedDateTime
-            .ofInstant(Instant.ofEpochMilli(value.toLong), ZoneOffset.UTC)
-            .format(dateTimeFormatter)
+            .ofInstant(Instant.ofEpochMilli(value.toLong), Constants.UTC)
+            .format(Constants.GppDateFormatter)
 
         val tooltipFormatter: TooltipFormatterCallbackFunction = {
           (ctx: TooltipFormatterContextObject, _: Tooltip) =>
