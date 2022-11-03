@@ -17,19 +17,16 @@ import explore.model.UserVault
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.util.NewType
+import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.UAParser
 import org.scalajs.dom
-import react.common.ReactFnProps
-import react.semanticui.elements.button.Button
-import react.semanticui.elements.image.Image
-import react.semanticui.elements.label.Label
-import react.semanticui.modules.modal.Modal
-import react.semanticui.modules.modal.ModalContent
-import react.semanticui.modules.modal.ModalSize
-import react.semanticui.shorthand.*
-import react.semanticui.sizes.*
+import react.common.*
+import react.primereact.Button
+import react.primereact.Dialog
+import react.primereact.Message
 
 case class UserSelectionForm(
   vault:   View[Option[UserVault]],
@@ -38,6 +35,9 @@ case class UserSelectionForm(
 
 object UserSelectionForm:
   private type Props = UserSelectionForm
+
+  private object IsOpen extends NewType[Boolean]
+  private type IsOpen = IsOpen.type
 
   private case class BrowserInfo(supportedOrcidBrowser: Boolean, warnBrowser: Boolean):
     @inline def showButtons: Boolean = supportedOrcidBrowser
@@ -58,67 +58,73 @@ object UserSelectionForm:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
+      .useStateView(IsOpen(true))
       .useEffectResultOnMount(BrowserInfo.supportedOrcidBrowser)
-      .render((props, ctx, browserInfoPot) =>
+      .render((props, ctx, isOpen, browserInfoPot) =>
         import ctx.given
 
         val guest: Callback = ctx.sso.guest.flatMap(v => props.vault.set(v.some).to[IO]).runAsync
 
         val login: Callback = ctx.sso.redirectToLogin.runAsync
 
-        Modal(
-          size = ModalSize.Large,
-          clazz = ExploreStyles.LoginBox,
-          content = ModalContent(
-            browserInfoPot.render(browserInfo =>
+        Dialog(
+          closable = false,
+          visible = isOpen.get.value,
+          onHide = isOpen.set(IsOpen(false)),
+          resizable = false,
+          draggable = false,
+          showHeader = false,
+          clazz = ExploreStyles.Dialog.Small
+        )(
+          browserInfoPot.render(browserInfo =>
+            React.Fragment(
               <.div(
                 ExploreStyles.LoginBoxLayout,
                 Logo(),
                 <.div(
                   ExploreStyles.UserSelectionButtons,
                   Button(
-                    content = <.div(
-                      ExploreStyles.LoginOrcidButton,
-                      Image(clazz = ExploreStyles.OrcidIcon, src = Resources.OrcidLogo),
-                      "Login with ORCID"
-                    ),
                     clazz = ExploreStyles.LoginBoxButton,
-                    size = Big,
-                    onClick = login >> props.message.set(none)
+                    severity = Button.Severity.Secondary,
+                    onClick = login >> props.message.set(none) >> isOpen.set(IsOpen(false))
+                  ).big(
+                    <.div(
+                      ExploreStyles.LoginOrcidButton,
+                      <.img(ExploreStyles.OrcidIcon, ^.src := Resources.OrcidLogo),
+                      "Login with ORCID"
+                    )
                   ).when(browserInfo.showButtons),
                   Button(
-                    content = <.div(
+                    clazz = ExploreStyles.LoginBoxButton,
+                    severity = Button.Severity.Secondary,
+                    onClick = guest >> props.message.set(none) >> isOpen.set(IsOpen(false))
+                  ).big(
+                    <.div(
                       ExploreStyles.LoginOrcidButton,
                       Icons.UserAstronaut.withClass(ExploreStyles.OrcidIcon),
                       "Continue as Guest"
-                    ),
-                    size = Big,
-                    clazz = ExploreStyles.LoginBoxButton,
-                    onClick = guest >> props.message.set(none)
+                    )
                   ).when(browserInfo.showButtons)
-                ),
+                )
+              ),
+              <.div(ExploreStyles.LoginMessagesLayout)(
                 props.message.get.whenDefined(message =>
-                  Label(
-                    size = Large,
-                    clazz = ExploreStyles.LoginBoxButton |+| ExploreStyles.ErrorLabel
-                  )(message.value)
+                  Message(text = message.value, severity = Message.Severity.Error)
                 ),
-                Label(
-                  size = Large,
-                  clazz = ExploreStyles.LoginBoxButton |+| ExploreStyles.ErrorLabel
-                )(
-                  Icons.SkullCrossBones,
-                  "This version of Safari isn't supported. Try a newer version (≥14.0.1) or a recent version of Chrome or Firefox."
+                Message(
+                  text =
+                    "This version of Safari isn't supported. Try a newer version (≥14.0.1) or a recent version of Chrome or Firefox.",
+                  severity = Message.Severity.Error,
+                  icon = Icons.SkullCrossBones
                 ).unless(browserInfo.supportedOrcidBrowser),
-                Label(size = Large,
-                      clazz = ExploreStyles.LoginBoxButton |+| ExploreStyles.WarningLabel
-                )(
-                  Icons.ExclamationTriangle,
-                  "ORCID authentication does not work with some configurations of Safari and MacOS. If it doesn't work for you please try Chrome or Firefox."
+                Message(
+                  text =
+                    "ORCID authentication does not work with some configurations of Safari and MacOS. If it doesn't work for you please try Chrome or Firefox.",
+                  severity = Message.Severity.Warning,
+                  icon = Icons.ExclamationTriangle
                 ).when(browserInfo.warnBrowser)
               )
             )
-          ),
-          open = true
+          )
         )
       )

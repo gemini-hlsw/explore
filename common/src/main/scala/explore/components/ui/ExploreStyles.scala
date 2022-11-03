@@ -262,15 +262,15 @@ object ExploreStyles {
   val UnitsTableLabel: Css  = Css("explore-table-units-label")
 
   // Login box
-  val LoginBox: Css          = Css("explore-login-box")
-  val LoginBoxLayout: Css    = Css("explore-login-box-layout")
-  val LoginTitle: Css        = Css("explore-login-title")
-  val LoginTitleWrapper: Css = Css("explore-login-title-wrapper")
-  val LoginBoxButton: Css    = Css("explore-login-button")
-  val OrcidIcon: Css         = Css("explore-login-orcid-icon")
-  val LoginOrcidButton: Css  = Css("explore-login-orcid-button")
-  val OrcidIconMenu: Css     = Css("explore-orcid-icon-menu")
-  val OrcidMenu: Css         = Css("explore-orcid-menu")
+  val LoginBoxLayout: Css      = Css("explore-login-box-layout")
+  val LoginMessagesLayout: Css = Css("explore-login-messages-layout")
+  val LoginTitle: Css          = Css("explore-login-title")
+  val LoginTitleWrapper: Css   = Css("explore-login-title-wrapper")
+  val LoginBoxButton: Css      = Css("explore-login-button")
+  val OrcidIcon: Css           = Css("explore-login-orcid-icon")
+  val LoginOrcidButton: Css    = Css("explore-login-orcid-button")
+  val OrcidIconMenu: Css       = Css("explore-orcid-icon-menu")
+  val OrcidMenu: Css           = Css("explore-orcid-menu")
 
   // Labels
   val WarningLabel: Css = Css("explore-warning-label")
