@@ -30,6 +30,7 @@ import log4cats.loglevel.LogLevelLogger
 import lucuma.core.model.GuestRole
 import lucuma.core.model.Program
 import lucuma.core.model.User
+import lucuma.core.util.NewType
 import lucuma.ui.enums.Theme
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -58,16 +59,20 @@ case class TopBar(
 object TopBar:
   private type Props = TopBar
 
+  private object IsAboutOpen extends NewType[Boolean]
+  private type IsAboutOpen = IsAboutOpen.type
+
   private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .useState(false) // isProgramsOpen
+      .useStateView(IsAboutOpen(false))
       .useState(false) // just to force rerenders
-      .useEffectResultWithDepsBy((_, _, _, toggle) => toggle.value)((_, _, _, _) =>
+      .useEffectResultWithDepsBy((_, _, _, _, toggle) => toggle.value)((_, _, _, _, _) =>
         _ => Theme.current
       )
-      .render { (props, ctx, isProgramsOpen, toggle, themePot) =>
+      .render { (props, ctx, isProgramsOpen, isAboutOpen, toggle, themePot) =>
         import ctx.given
 
         val role = props.user.role
@@ -110,10 +115,12 @@ object TopBar:
                 clazz = ExploreStyles.MainMenuDropdown
               )(
                 DropdownMenu(
-                  About(
-                    Reuse.always(
-                      DropdownItem(text = "About Explore", icon = Icons.Info.withFixedWidth())
-                    )
+                  DropdownItem(text = "About Explore",
+                               icon = Icons.Info.withFixedWidth(),
+                               onClick = isAboutOpen.set(IsAboutOpen(true))
+                  ),
+                  TagMod.when(isAboutOpen.get.value)(
+                    About(isAboutOpen.zoom(IsAboutOpen.value))
                   ),
                   DropdownItem(
                     text = "Manage Programs",

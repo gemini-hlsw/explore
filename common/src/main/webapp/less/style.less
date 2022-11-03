@@ -1332,57 +1332,6 @@ img.partner-split-flag {
   margin-bottom: 0;
 }
 
-i.icon.user-astronaut::before {
-  content: '\f4fb';
-}
-
-.ui.modal.explore-login-box>.content {
-  background-color: var(--modal-background);
-}
-
-.explore-login-box-layout {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.explore-login-title-wrapper {
-  overflow: hidden;
-  margin-bottom: 4em;
-}
-
-.explore-login-title {
-  @spacing: 20px;
-
-  transform: translate(-100%, 0%);
-  font-weight: 300;
-  font-size: 3em;
-  text-transform: uppercase;
-  letter-spacing: @spacing;
-  text-indent: @spacing;
-  animation: showTopText 0.8s;
-  animation-delay: 0.2s;
-  animation-fill-mode: forwards;
-  border-bottom: var(--explore-accent-color) solid 4px;
-}
-
-@keyframes showTopText {
-  0% {
-    transform: translate3d(0, 100%, 0);
-    opacity: 0;
-  }
-
-  100% {
-    transform: translate3d(0, 0, 0);
-    opacity: 1;
-  }
-}
-
-.explore-login-orcid-button {
-  display: flex;
-  align-items: center;
-}
-
 .warning-label-mixin() {
   color: var(--warning-text-color);
   background-color: var(--warning-background-color);
@@ -1401,41 +1350,6 @@ div.inline.field.explore-warning-input {
 .ui.label.explore-warning-label {
   .warning-label-mixin();
 }
-
-.ui.label.explore-login-button {
-  margin-bottom: 1em;
-  white-space: wrap;
-  max-width: 60%;
-  text-align: center;
-  display: flex;
-  justify-items: center;
-}
-
-.ui.button.explore-login-button {
-  margin-bottom: 1em;
-}
-
-.explore-orcid-icon-menu,
-.explore-login-orcid-icon {
-  @logosize: 1.18em;
-
-  margin-right: 0.42em;
-  vertical-align: baseline;
-  width: @logosize;
-  height: @logosize;
-}
-
-.explore-orcid-menu {
-  display: flex;
-  flex-direction: row;
-  justify-content: baseline;
-  padding-right: 1em;
-}
-
-.explore-orcid-icon-menu {
-  margin-right: 0.8em;
-}
-
 #staging-banner {
   @spacing: 20;
 
