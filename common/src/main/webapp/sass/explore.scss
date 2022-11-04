@@ -556,7 +556,6 @@ i.icon.user-astronaut::before {
 .explore-login-title-wrapper {
   overflow: hidden;
   margin-bottom: 2em;
-
   line-height: 1.4;
 }
 
@@ -569,13 +568,13 @@ i.icon.user-astronaut::before {
   text-transform: uppercase;
   letter-spacing: $spacing;
   text-indent: $spacing;
-  animation: showTopText 0.8s;
+  animation: show-top-text 0.8s;
   animation-delay: 0.2s;
   animation-fill-mode: forwards;
   border-bottom: var(--explore-accent-color) solid 4px;
 }
 
-@keyframes showTopText {
+@keyframes show-top-text {
   0% {
     transform: translate3d(0, 100%, 0);
     opacity: 0;
