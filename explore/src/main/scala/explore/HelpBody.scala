@@ -21,8 +21,6 @@ import lucuma.ui.syntax.all.given
 import org.http4s.*
 import org.http4s.dom.FetchClientBuilder
 import react.common.ReactFnProps
-import react.hotkeys.*
-import react.hotkeys.hooks.*
 import react.markdown.ReactMarkdown
 import react.markdown.RehypePlugin
 import react.markdown.RemarkPlugin
@@ -71,9 +69,6 @@ object HelpBody:
       .useEffectOnMountBy { (props, _, state) =>
         load(props.url).flatMap(v => state.set(Pot.fromTry(v)).to[IO])
       }
-      .useGlobalHotkeysBy((_, helpCtx, _) =>
-        UseHotkeysProps(CloseHelp.value, helpCtx.displayedHelp.set(none))
-      )
       .render { (props, helpCtx, state) =>
         val imageConv = (s: Uri) => props.baseUrl.addPath(s.path)
 
@@ -83,8 +78,7 @@ object HelpBody:
           case _            => props.newPage
         }
 
-        <.div(
-          ExploreStyles.HelpSidebar,
+        React.Fragment(
           <.div(
             ExploreStyles.HelpTitle,
             <.h4(ExploreStyles.HelpTitleLabel, "Help"),

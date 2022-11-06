@@ -1,7 +1,6 @@
 @import 'suithemes/default/globals/site.variables';
 @import 'suithemes/default/modules/dropdown.variables';
 @import 'theme/site/collections/form.variables';
-@import 'theme/site/modules/sidebar.variables';
 @import 'theme/site/globals/site.variables';
 
 // vertical buttons
@@ -1485,63 +1484,6 @@ html {
   left: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
-}
-
-.explore-help-icon {
-  margin-left: 0.5em;
-  cursor: pointer;
-  color: var(--site-text-color);
-}
-
-.explore-help-icon-floating {
-  position: absolute;
-  top: 3px;
-  z-index: 10;
-}
-
-.explore-help-sidebar {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  max-height: 100%;
-  min-height: 0;
-}
-
-.explore-help-title {
-  display: flex;
-  flex: 0 1 auto;
-  width: 100%;
-  justify-content: space-between;
-  align-items: center;
-  background-color: var(--control-background-color);
-  padding-left: 0.6em;
-  padding-top: 0.6em;
-  padding-bottom: 0.6em;
-}
-
-.explore-help-title-label {
-  margin-bottom: 0;
-}
-
-.explore-help-body {
-  flex: 1 1 auto;
-  overflow: auto;
-  min-height: 0;
-  background-color: white;
-}
-
-.markdown-body {
-  height: 100%;
-  padding: 1em;
-
-  svg.svg-inline--fa {
-    color: hsl(210, 12.2%, 16.1%);
-  }
-
-  * {
-    text-shadow: none;
-    color: black;
-  }
 }
 
 .ui.wide.right.sidebar {

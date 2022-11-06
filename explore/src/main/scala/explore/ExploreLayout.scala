@@ -25,6 +25,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.broadcastchannel.*
 import lucuma.refined.*
 import lucuma.refined.*
+import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.*
@@ -32,14 +33,9 @@ import react.fa.IconSize
 import react.hotkeys.*
 import react.hotkeys.hooks.*
 import react.primereact.MessageItem
+import react.primereact.Sidebar
 import react.primereact.Toast
 import react.primereact.hooks.all.*
-import react.semanticui.modules.sidebar.Sidebar
-import react.semanticui.modules.sidebar.SidebarAnimation
-import react.semanticui.modules.sidebar.SidebarDirection
-import react.semanticui.modules.sidebar.SidebarPushable
-import react.semanticui.modules.sidebar.SidebarPusher
-import react.semanticui.modules.sidebar.SidebarWidth
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSExportTopLevel
@@ -119,43 +115,42 @@ object ExploreLayout:
           val routingInfo = RoutingInfo.from(props.resolution.page)
 
           val helpView = helpCtx.displayedHelp
-          SidebarPushable(
+          React.Fragment(
             Sidebar(
-              width = SidebarWidth.Wide,
-              direction = SidebarDirection.Right,
-              animation = SidebarAnimation.Overlay,
-              visible = helpView.get.isDefined
+              position = Sidebar.Position.Right,
+              size = Sidebar.Size.Medium,
+              visible = helpView.get.isDefined,
+              clazz = ExploreStyles.HelpSidebar,
+              showCloseIcon = false,
+              onHide = helpView.set(none).when_(helpView.get.isDefined)
             )(
-              helpView.get
-                .map { h =>
-                  HelpBody(helpCtx, h)
-                }
-                .when(helpView.get.isDefined)
-            ),
-            SidebarPusher(dimmed = helpView.get.isDefined)(
               <.div(
-                ExploreStyles.MainGrid,
-                Toast(Toast.Position.BottomRight)
-                  .withRef(toastRef.ref),
-                TopBar(
-                  vault.user,
-                  routingInfo.optProgramId,
-                  props.view.zoom(RootModel.localPreferences).get,
-                  props.view.zoom(RootModel.undoStacks),
-                  onLogout >> props.view.zoom(RootModel.vault).set(none).to[IO]
-                ),
-                <.div(
-                  ExploreStyles.SideTabs,
-                  SideTabs(routingInfo)
-                ),
-                <.div(
-                  ExploreStyles.MainBody,
-                  props.resolution.renderP(props.view)
-                )
+                helpView.get
+                  .map { h =>
+                    HelpBody(helpCtx, h)
+                  }
+                  .when(helpView.get.isDefined)
               )
-            )(
-              // Don't set unless needed or it will trigger an unnecessary rerender
-              ^.onClick --> helpView.set(none).when_(helpView.get.isDefined)
+            ),
+            <.div(
+              ExploreStyles.MainGrid,
+              Toast(Toast.Position.BottomRight)
+                .withRef(toastRef.ref),
+              TopBar(
+                vault.user,
+                routingInfo.optProgramId,
+                props.view.zoom(RootModel.localPreferences).get,
+                props.view.zoom(RootModel.undoStacks),
+                onLogout >> props.view.zoom(RootModel.vault).set(none).to[IO]
+              ),
+              <.div(
+                ExploreStyles.SideTabs,
+                SideTabs(routingInfo)
+              ),
+              <.div(
+                ExploreStyles.MainBody,
+                props.resolution.renderP(props.view)
+              )
             )
           )
         )
