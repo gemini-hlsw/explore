@@ -60,6 +60,8 @@ object TimingWindowsPanel:
   private given Show[TimingWindowEntry] = Show.show {
     case tw @ TimingWindowEntry(_, startsOn, false, _, _, _, _, _, Some(closeOn)) =>
       s"${openText(tw)} and close on ${formatZDT(closeOn)}"
+    case tw @ TimingWindowEntry(_, startsOn, false, _, _, _, _, Some(openFor), _) =>
+      s"${openText(tw)}, remain open for ${durationHM.reverseGet(openFor)}"
     case tw @ TimingWindowEntry(_, startsOn, true, _, _, _, _, _, _)              =>
       s"${openText(tw)} and remain open forever"
     case tw @ TimingWindowEntry(_, startsOn, false, _, _, _, _, _, _)             =>
@@ -110,6 +112,7 @@ object TimingWindowsPanel:
               case Nil     => Nil
             }
           }
+        println(current)
 
         val selectedTW            =
           props.windows.zoom(
@@ -230,9 +233,12 @@ object TimingWindowsPanel:
                 ),
                 selectedRepeat.asView
                   .map(selectedRepeat =>
-                    CheckboxView("repeat-with-period".refined,
-                                 selectedRepeat,
-                                 "Repeat with a period of"
+                    <.div(
+                      ExploreStyles.TimingWindowRepeatEditor,
+                      CheckboxView("repeat-with-period".refined,
+                                   selectedRepeat,
+                                   "Repeat with a period of"
+                      )
                     )
                   )
                   .when(e.remainOpenFor.isDefined)

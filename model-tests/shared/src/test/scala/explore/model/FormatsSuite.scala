@@ -20,6 +20,7 @@ import org.typelevel.cats.time.instances.all.*
 import java.time.Duration
 
 class FormatsSuite extends munit.DisciplineSuite {
+
   assertEquals(parsers.durationHM.parseAll("0").toOption,
                NonNegDuration.unsafeFrom(Duration.ofMinutes(0)).some
   )
@@ -35,8 +36,28 @@ class FormatsSuite extends munit.DisciplineSuite {
   assertEquals(parsers.durationHM.parseAll("0:48").toOption,
                NonNegDuration.unsafeFrom(Duration.ofMinutes(48)).some
   )
+  assertEquals(
+    parsers.durationHMS.parseAll("18179:02:26.000").toOption,
+    NonNegDuration.unsafeFrom(Duration.ofHours(18179).plusMinutes(2).plusSeconds(26)).some
+  )
+  assertEquals(
+    parsers.durationHMS.parseAll("18179:02:09.033").toOption,
+    NonNegDuration
+      .unsafeFrom(Duration.ofHours(18179).plusMinutes(2).plusSeconds(9).plusMillis(33))
+      .some
+  )
+  assertEquals(
+    parsers.durationHMS.parseAll("18179:02:09.0319029201091").toOption,
+    NonNegDuration
+      .unsafeFrom(Duration.ofHours(18179).plusMinutes(2).plusSeconds(9).plusMillis(31))
+      .some
+  )
   checkAll(
     "durationHMFormat",
     ValidWedgeTests(durationHM).validWedgeLawsWith(finiteDurationsHM)
+  )
+  checkAll(
+    "durationHMSFormat",
+    ValidWedgeTests(durationHMS).validWedgeLawsWith(finiteDurationsHMS)
   )
 }

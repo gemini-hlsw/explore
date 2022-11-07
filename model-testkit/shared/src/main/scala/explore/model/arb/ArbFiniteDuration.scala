@@ -12,40 +12,31 @@ import java.time.Duration
 import org.typelevel.cats.time.arb.TimeArbitraries.*
 import lucuma.core.model.NonNegDuration
 import lucuma.core.model.arb.ArbNonNegDuration.*
+import java.time.temporal.TemporalUnit
 
 trait ArbFiniteDuration {
 
-  // given Arbitrary[FiniteDuration] = {
-  //   import TimeUnit.*
-  //
-  //   val genTU = Gen.oneOf(NANOSECONDS, MICROSECONDS, MILLISECONDS, SECONDS, MINUTES, HOURS)
-  //
-  //   Arbitrary {
-  //     genTU.flatMap(u => Gen.choose[Long](0L, 60L).map(FiniteDuration(_, u)))
-  //   }
-  // }
-  //
-  // given Cogen[FiniteDuration] =
-  //   Cogen[Long].contramap(_.toNanos)
-  //
-  // // private[this] val blundedFiniteDurationHM: Gen[FiniteDuration] =
-  //   for {
-  //     s  <- Gen.choose(0, 60)
-  //     bd <- arbitrary[Int].map(BigDecimal(_))
-  //   } yield BigDecimal(bd.underlying.movePointLeft(s))
   private val perturbations: List[String => Gen[String]] =
-    List(_ => arbitrary[String] // swap for a random string
-    // s => Gen.const(s.replace(":", " ")) // replace colons with spaces (ok)
-    )
+    List(_ => arbitrary[String]) // swap for a random string
 
   val finiteDurationsHM: Gen[String] =
     arbitrary[NonNegDuration]
       .map { d =>
-        // println(s"${d.toMinutes / 60}:${d.toMinutes % 60}")
-        s"${d.value.toHours / 60}:${d.value.toMinutes % 60}"
+        s"${d.value.toHoursPart}:${d.value.toMinutesPart}"
       }
       .flatMapOneOf(Gen.const, perturbations: _*)
-//     Gen.oneOf(intBoundedBigDecimals, arbitrary[BigDecimal])
+
+  val finiteDurationsHMS: Gen[String] =
+    arbitrary[NonNegDuration]
+      .map { d =>
+        val secs =
+          if (d.value.toMillisPart() > 0)
+            f"${d.value.toSecondsPart()}%02d.${d.value.toMillisPart() % 1000}%03d"
+          else
+            f"${d.value.toSecondsPart()}%02d"
+        s"${d.value.toHoursPart}:${d.value.toMinutesPart}:$secs"
+      }
+      .flatMapOneOf(Gen.const, (((_: String) => finiteDurationsHM) :: perturbations): _*)
 }
 
 object ArbFiniteDuration extends ArbFiniteDuration

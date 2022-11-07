@@ -126,4 +126,24 @@ trait formats:
       }
     )
 
+  val durationHMS: InputValidWedge[NonNegDuration] =
+    InputValidWedge(
+      s =>
+        parsers.durationHMS
+          .parseAll(s)
+          .leftMap { e =>
+            "Duration parsing errors".refined[NonEmpty]
+          }
+          .toEitherErrors,
+      d => {
+        val td   = d.value
+        val secs =
+          if (td.toMillisPart() > 0)
+            f"${td.toSecondsPart()}%02d.${td.toMillisPart() % 1000}%03d"
+          else
+            f"${td.toSecondsPart()}%02d"
+        f"${td.toMinutes / 60}:${td.toMinutes % 60}%02d:$secs"
+      }
+    )
+
 object formats extends formats

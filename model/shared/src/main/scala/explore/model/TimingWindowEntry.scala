@@ -66,9 +66,8 @@ object TimingWindowEntry:
   val repeatTimes: Lens[TimingWindowEntry, Option[Int]] =
     Focus[TimingWindowEntry](_.repeatTimes)
 
-  val repeat: Lens[TimingWindowEntry, Boolean]                     =
+  val repeat: Lens[TimingWindowEntry, Boolean] =
     Focus[TimingWindowEntry](_.repeat)
-  // val repeatTimesSelected: Lens[TimingWindowEntry, Boolean] =
-  //   Focus[TimingWindowEntry](_.repeatTimes)
+
   def forever(id: Int, startsOn: ZonedDateTime): TimingWindowEntry =
     new TimingWindowEntry(id, startsOn.withSecond(0).withNano(0), true)
