@@ -61,7 +61,7 @@ $tree-section-width: 300px;
   grid-template-columns: repeat(3, minmax(fit-content, 1fr));
   grid-template-rows: repeat(2, min-content);
 
-  *:nth-child(2n) {
+  & *:nth-child(2n) {
     grid-row: 2
   }
 
@@ -857,5 +857,90 @@ table.explore-border-table {
   min-height: 0;
   height: 100%;
   overflow: hidden;
+}
+
+// -------
+// Help sidebar
+// -------
+.explore-help-icon {
+  margin-left: 0.5em;
+  cursor: pointer;
+  color: var(--site-text-color);
+}
+
+.explore-help-icon-floating {
+  position: absolute;
+  top: 3px;
+  z-index: 10;
+}
+
+.p-sidebar.explore-help-sidebar {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--help-background-color);
+
+  & .p-sidebar-header {
+    display: none;
+  }
+
+  & .p-sidebar-content {
+    padding: 0;
+    overflow-y: unset;
+
+    & > div {
+      height: 100%;
+    }
+
+  }
+}
+
+.explore-help-title {
+  display: flex;
+  flex: 0 1 auto;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--control-background-color);
+  padding: {
+    left: 0.6em;
+    top: 0.6em;
+    bottom: 0.6em;
+  }
+}
+
+.explore-help-title-label {
+  margin-bottom: 0;
+}
+
+.explore-help-body {
+  flex: 1 1 auto;
+  overflow: auto;
+  height: 100%;
+  min-height: 100%;
+  background-color: var(--help-background-color);
+}
+
+// make it wider on smaller screens
+@media screen and (max-width: 64em) {
+  .p-sidebar-left .p-sidebar-md,
+  .p-sidebar-right .p-sidebar-md {
+      width: 30rem;
+  }
+}
+
+.markdown-body {
+  padding: 1em;
+  overflow: auto;
+
+  /* stylelint-disable-next-line selector-class-pattern */
+  svg.svg-inline--fa {
+    color: hsl(210deg 12.2% 16.1%);
+  }
+
+  /* stylelint-disable-next-line no-descending-specificity */
+  & * {
+    text-shadow: none;
+    color: black;
+  }
 }
 
