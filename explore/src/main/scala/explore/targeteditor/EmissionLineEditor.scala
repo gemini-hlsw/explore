@@ -182,7 +182,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
     // addDisabled
     .useStateView(AddDisabled(true))
     .render { (props, _, _, table, newWavelength, addDisabled) =>
-      val bd1 = refineV[Positive](BigDecimal(1)).getOrElse(sys.error("Cannot happen"))
+      val bd1 = PosBigDecimal.unsafeFrom(BigDecimal(1))
 
       val addLine =
         newWavelength.get.foldMap(wavelength =>
@@ -223,7 +223,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
           )
         )
 
-      <.div(ExploreStyles.ExploreTable)(
+      <.div(ExploreStyles.ExploreTable |+| ExploreStyles.BrightnessesContainer)(
         <.label("Brightness"),
         PrimeAutoHeightVirtualizedTable(
           table,
