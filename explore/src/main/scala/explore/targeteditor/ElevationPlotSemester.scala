@@ -235,7 +235,7 @@ object ElevationPlotSemester:
           )
           .setSeries(
             List(
-              SeriesLineOptions((), (), line)
+              SeriesLineOptions(line)
                 .setName("Visibility")
                 .setYAxis(0)
             )

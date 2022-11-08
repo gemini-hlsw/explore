@@ -227,7 +227,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
         <.label("Brightness"),
         PrimeAutoHeightVirtualizedTable(
           table,
-          estimateRowHeight = _ => 34.toPx,
+          estimateSize = _ => 34.toPx,
           striped = true,
           compact = Compact.Very,
           tableMod = ExploreStyles.ExploreBorderTable,

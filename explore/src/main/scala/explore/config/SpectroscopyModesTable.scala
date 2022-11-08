@@ -636,7 +636,7 @@ private object SpectroscopyModesTable extends TableHooks:
             )(
               PrimeAutoHeightVirtualizedTable(
                 table,
-                estimateRowHeight = _ => 32.toPx,
+                estimateSize = _ => 32.toPx,
                 striped = true,
                 compact = Compact.Very,
                 containerMod = ^.overflow.auto,

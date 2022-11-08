@@ -23,7 +23,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [3.2.1-RC4]
+        scala: [3.2.1]
         java: [temurin@17]
         project: [rootJS, rootJVM]
     runs-on: ${{ matrix.os }}
@@ -100,7 +100,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [3.2.1-RC4]
+        scala: [3.2.1]
         java: [temurin@17]
     runs-on: ${{ matrix.os }}
     steps:
@@ -168,7 +168,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [3.2.1-RC4]
+        scala: [3.2.1]
         java: [temurin@17]
     runs-on: ${{ matrix.os }}
     steps:
@@ -236,7 +236,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [3.2.1-RC4]
+        scala: [3.2.1]
         java: [temurin@17]
     runs-on: ${{ matrix.os }}
     steps:

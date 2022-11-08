@@ -159,7 +159,7 @@ object ItcSpectroscopyPlot {
       .setSeries(
         chart.series
           .map(series =>
-            SeriesLineOptions((), (), line)
+            SeriesLineOptions(line)
               .setName(series.title)
               .setYAxis(0)
               .setData(

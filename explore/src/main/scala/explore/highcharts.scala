@@ -5,6 +5,7 @@ package explore.highcharts
 
 import japgolly.scalajs.react.*
 import react.common.style.Css
+import reactST.highcharts.highchartsStrings
 import reactST.highcharts.mod.*
 
 extension (c: Chart_)
@@ -12,12 +13,10 @@ extension (c: Chart_)
   inline def showLoadingCB(str: String): Callback = CallbackTo(c.showLoading(str))
   inline def reflowCB: Callback = Callback(c.reflow())
 
-type ChartSelection = ChartSelectionContextObject
-
 extension (c: ChartOptions)
   inline def clazz(s: Css) = c.setClassName(s.htmlClass)
 
-  inline def selectionCB(cb: ChartSelection => Callback) =
+  inline def selectionCB(cb: SelectEventObject => Callback) =
     c.setEvents(
       ChartEventsOptions().setSelection((_, s) => cb(s).runNow())
     )
@@ -28,6 +27,6 @@ def commonOptions: ChartOptions =
   ChartOptions()
     .setStyledMode(true)
     .setAlignTicks(false)
-    .setZooming(ChartZoomingOptions().setType(OptionsTypeValue.xy))
+    .setZooming(ChartZoomingOptions().setType(highchartsStrings.xy.toString))
     .setPanning(ChartPanningOptions().setEnabled(true))
-    .setPanKey(OptionsPanKeyValue.shift)
+    .setPanKey("shift")

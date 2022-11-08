@@ -176,7 +176,7 @@ object TargetImportPopup:
               ExploreStyles.TargetImportErrors |+| ExploreStyles.ExploreBorderTable,
               PrimeAutoHeightVirtualizedTable(
                 table,
-                estimateRowHeight = _ => 34.toPx,
+                estimateSize = _ => 34.toPx,
                 tableMod = ExploreStyles.ExploreTable,
                 striped = true,
                 compact = Compact.Very

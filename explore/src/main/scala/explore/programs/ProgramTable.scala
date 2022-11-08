@@ -221,7 +221,7 @@ object ProgramTable:
             <.div(ExploreStyles.ProgramTable)(
               PrimeAutoHeightVirtualizedTable(
                 table,
-                estimateRowHeight = _ => 32.toPx,
+                estimateSize = _ => 32.toPx,
                 striped = true,
                 compact = Compact.Very,
                 tableMod = ExploreStyles.ExploreTable |+| ExploreStyles.ExploreBorderTable,
