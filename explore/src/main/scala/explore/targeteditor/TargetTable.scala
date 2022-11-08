@@ -44,7 +44,6 @@ import lucuma.ui.table.*
 import org.scalablytyped.runtime.StringDictionary
 import react.common.Css
 import react.common.ReactFnProps
-import react.semanticui.collections.table.*
 import react.semanticui.elements.button.*
 import react.semanticui.shorthand.*
 import react.semanticui.sizes.*

@@ -6,27 +6,31 @@ package explore.proposal
 import cats.syntax.all.*
 import crystal.react.View
 import crystal.react.ViewOpt
+import crystal.react.implicits.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.*
 import explore.components.ui.ExploreStyles
 import explore.components.ui.FomanticStyles
 import explore.components.ui.PartnerFlags
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.model.Partner
 import lucuma.core.model.ZeroTo100
 import lucuma.core.validation.*
+import lucuma.react.table.*
 import lucuma.refined.*
-import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.*
+import lucuma.ui.primereact.FormInputTextView
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import lucuma.ui.table.*
 import monocle.function.Index
 import react.common.ReactFnProps
-import react.semanticui.collections.form.Form
-import react.semanticui.collections.table.*
-import react.semanticui.elements.button.Button
-import react.semanticui.modules.modal.*
+import react.primereact.Button
+import react.primereact.Dialog
+import react.primereact.Message
 
 case class PartnerSplitsEditor(
   show:    Boolean,
@@ -36,93 +40,102 @@ case class PartnerSplitsEditor(
 ) extends ReactFnProps[PartnerSplitsEditor](PartnerSplitsEditor.component)
 
 object PartnerSplitsEditor {
-  protected type Props = PartnerSplitsEditor
+  private type Props = PartnerSplitsEditor
 
-  private def toolbar(p: Props): ModalActions =
-    ModalActions(
-      <.div(
-        ExploreStyles.FlexContainer,
-        <.div("Total must be 100.",
-              ExploreStyles.PartnerSplitsEditorError,
-              ExploreStyles.FlexGrow(1.refined)
-        )
-          .unless(addsUpTo100(p)),
-        Button(negative = true, onClick = p.closeMe)(^.tpe := "button")(
-          "Cancel",
-          ExploreStyles.FlexEnd
-        ),
-        Button(positive = true)("OK", ^.disabled := !addsUpTo100(p), ^.tpe := "submit")
+  private val ColDef = ColumnDef[View[PartnerSplit]]
+
+  given Reusability[PartnerSplit] = Reusability.byEq
+
+  private def save(props: Props) =
+    if (addsUpTo100(props.splits.get))
+      props.onSave(props.splits.get) >> props.closeMe >> Callback.log("Closing")
+    else Callback.empty
+
+  private def footer(props: Props) =
+    <.div(
+      Message(text = "Must add up to 100", severity = Message.Severity.Error)
+        .unless(addsUpTo100(props.splits.get)),
+      Button(label = "Cancel", severity = Button.Severity.Danger, onClick = props.closeMe),
+      Button(label = "OK",
+             severity = Button.Severity.Success,
+             onClick = save(props),
+             disabled = !addsUpTo100(props.splits.get)
       )
     )
 
-  private def makeTableRows(p: Props): TagMod =
-    p.splits.get.zipWithIndex.toTagMod { case (ps, idx) =>
-      val splitView: ViewOpt[PartnerSplit] =
-        p.splits.zoom[PartnerSplit](Index.index[List[PartnerSplit], Int, PartnerSplit](idx))
+  private def makeId(partner: Partner) = s"${partner.tag}-percent"
+  private def makePartnerCell(partner: Partner): VdomNode =
+    <.label(
+      <.img(^.src := PartnerFlags.smallFlag(partner),
+            ^.alt := s"${partner.name} Flag",
+            ExploreStyles.PartnerSplitFlag
+      ),
+      partner.name,
+      ^.htmlFor := makeId(partner)
+    )
 
-      val id = s"${ps.partner.tag}-percent"
-      React.Fragment(
-        TableRow(
-          TableCell(
-            <.label(
-              <.img(^.src := PartnerFlags.smallFlag(ps.partner),
-                    ^.alt := s"${ps.partner.name} Flag",
-                    ExploreStyles.PartnerSplitFlag
-              ),
-              ps.partner.name,
-              ^.htmlFor := id
-            )
-          ),
-          TableCell(
-            <.span(
-              FormInputEV(
-                id = NonEmptyString.from(id).getOrElse("SPLIT_ID".refined),
-                value = splitView.zoom(PartnerSplit.percent),
-                validFormat = InputValidSplitEpi.refinedInt[ZeroTo100],
-                changeAuditor = ChangeAuditor.refinedInt[ZeroTo100]()
-              ).withMods(
-                ^.autoFocus := idx === 0
-              )
-            )
-          )
+  private def makePercentCell(split: View[PartnerSplit]) =
+    <.span(
+      FormInputTextView(
+        id = NonEmptyString.from(makeId(split.get.partner)).getOrElse("SPLIT_ID".refined),
+        value = split.zoom(PartnerSplit.percent),
+        validFormat = InputValidSplitEpi.refinedInt[ZeroTo100],
+        changeAuditor = ChangeAuditor.refinedInt[ZeroTo100]()
+      ).withMods(
+        ^.autoFocus := split.get.partner === Partner.Ar
+      )
+    )
+
+  private def total(splits:       List[PartnerSplit]) = splits.map(_.percent.value).sum
+  private def addsUpTo100(splits: List[PartnerSplit]) = total(splits) === 100
+
+  protected val component = ScalaFnComponent
+    .withHooks[Props]
+    // columns
+    .useMemo(()) { _ =>
+      List(
+        ColDef(id = ColumnId("partner"),
+               accessor = _.get.partner,
+               header = "Partner",
+               cell = cell => makePartnerCell(cell.value),
+               footer = _ => "Total"
+        ),
+        ColDef(
+          id = ColumnId("percent"),
+          header = "Percent",
+          cell = cell => makePercentCell(cell.row.original),
+          footer = ctx =>
+            val tot: Int = ctx.table.getRowModel().rows.map(_.original.get.percent.value).sum
+            s"${tot}%"
         )
       )
     }
-
-  private def total(p:       Props) = p.splits.get.map(_.percent.value).sum
-  private def addsUpTo100(p: Props) = total(p) === 100
-
-  protected val component = ScalaFnComponent[Props] { props =>
-    def save =
-      if (addsUpTo100(props)) props.onSave(props.splits.get) >> props.closeMe else Callback.empty
-
-    Modal(size = ModalSize.Mini, open = props.show)(
-      ModalHeader(content = "Partner Splits"),
-      ModalContent(
-        Form(
-          action = "#",
-          onSubmitE = (e: ReactEvent, _: Form.FormProps) => e.preventDefaultCB *> save
-        )(
-          Table(compact = TableCompact.Very)(
-            ExploreStyles.PartnerSplitsEditorTable,
-            TableHeader(
-              TableRow(
-                TableHeaderCell("Partner"),
-                TableHeaderCell("Percent")
-              )
-            ),
-            TableBody(makeTableRows(props)),
-            TableFooter(
-              TableRow(
-                TableCell("Total"),
-                TableCell(s"${total(props)}%"),
-                FomanticStyles.RightAligned
-              )
-            )
-          ),
-          toolbar(props)
-        )
+    // rows
+    .useMemoBy((props, _) => props.splits.reuseByValue)((_, _) => _.value.toListOfViews)
+    .useReactTableBy((_, cols, rows) =>
+      TableOptions(cols,
+                   rows,
+                   getRowId = (row, _, _) => RowId(row.get.partner.tag),
+                   enableSorting = false,
+                   enableColumnResizing = false
       )
     )
-  }
+    .render { (props, _, _, table) =>
+      Dialog(
+        visible = props.show,
+        onHide = props.closeMe,
+        header = "PartnerSplits",
+        footer = footer(props),
+        closable = false,
+        resizable = false,
+        focusOnShow = true,
+        clazz = ExploreStyles.PartnerSplitsEditorDialog
+      )(
+        PrimeTable(table,
+                   striped = true,
+                   compact = Compact.Very,
+                   tableMod = ExploreStyles.ExploreBorderTable
+        )
+      )
+    }
 }

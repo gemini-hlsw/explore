@@ -50,7 +50,6 @@ import react.primereact.Button
 import react.primereact.ConfirmDialog
 import react.primereact.DialogPosition
 import react.primereact.PrimeStyles
-import react.semanticui.collections.table.*
 import reactST.react.reactStrings.I
 import reactST.{tanstackTableCore => raw}
 

@@ -76,7 +76,6 @@ import react.common.ReactFnProps
 import react.floatingui.Placement
 import react.floatingui.syntax.*
 import react.semanticui.*
-import react.semanticui.collections.table.*
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.label.Label
 import reactST.{tanstackTableCore => raw}
