@@ -372,7 +372,7 @@ object ElevationPlotNight {
           .setSeries(
             ElevationSeries.values
               .map(series =>
-                SeriesLineOptions((), (), line)
+                SeriesLineOptions(line)
                   .setName(series.name)
                   .setYAxis(series.yAxis)
                   .setData(series.data(seriesData).toJSArray)

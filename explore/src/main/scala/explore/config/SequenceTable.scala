@@ -226,7 +226,7 @@ object SequenceTable:
       .render { (_, table) =>
         PrimeVirtualizedTable(
           table,
-          estimateRowHeight = _ => 28.toPx,
+          estimateSize = _ => 28.toPx,
           compact = Compact.Very,
           hoverableRows = true,
           celled = true,
