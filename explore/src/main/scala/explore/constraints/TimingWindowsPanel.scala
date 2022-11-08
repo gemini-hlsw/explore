@@ -58,13 +58,16 @@ object TimingWindowsPanel:
     s"Open on ${formatZDT(tw.startsOn)}"
 
   private given Show[TimingWindowEntry] = Show.show {
-    case tw @ TimingWindowEntry(_, startsOn, false, _, _, _, _, _, Some(closeOn)) =>
+    case tw @ TimingWindowEntry(_, startsOn, false, _, _, _, _, _, Some(closeOn))            =>
       s"${openText(tw)} and close on ${formatZDT(closeOn)}"
-    case tw @ TimingWindowEntry(_, startsOn, false, _, _, _, _, Some(openFor), _) =>
+    case tw @ TimingWindowEntry(_, startsOn, false, Some(period), _, _, _, Some(openFor), _) =>
+      s"${openText(tw)}, remain open for ${durationHM.reverseGet(openFor)}, repeat with a period of ${durationHMS
+          .reverseGet(period)}"
+    case tw @ TimingWindowEntry(_, startsOn, false, _, _, _, _, Some(openFor), _)            =>
       s"${openText(tw)}, remain open for ${durationHM.reverseGet(openFor)}"
-    case tw @ TimingWindowEntry(_, startsOn, true, _, _, _, _, _, _)              =>
+    case tw @ TimingWindowEntry(_, startsOn, true, _, _, _, _, _, _)                         =>
       s"${openText(tw)} and remain open forever"
-    case tw @ TimingWindowEntry(_, startsOn, false, _, _, _, _, _, _)             =>
+    case tw @ TimingWindowEntry(_, startsOn, false, _, _, _, _, _, _)                        =>
       openText(tw)
   }
 
@@ -112,7 +115,6 @@ object TimingWindowsPanel:
               case Nil     => Nil
             }
           }
-        println(current)
 
         val selectedTW            =
           props.windows.zoom(
@@ -121,8 +123,12 @@ object TimingWindowsPanel:
         val selectedStartsOn      = selectedTW.zoom(TimingWindowEntry.startsOn)
         val selectedCloseOn       = selectedTW.zoom(TimingWindowEntry.closeOn)
         val selectedRemainOpenFor = selectedTW.zoom(TimingWindowEntry.remainOpenFor)
-        val selectedRepeat        = selectedTW.zoom(TimingWindowEntry.repeat)
+        val selectedRepeat        = selectedTW.zoom(TimingWindowEntry.repeat).withOnMod {
+          case Some(true) => selectedTW.mod(_.toRepeatPeriod)
+          case _          => selectedTW.mod(_.noRepeatPeriod)
+        }
         val selectedRepeatTimes   = selectedTW.zoom(TimingWindowEntry.repeatTimes)
+        val selectedRepeatPeriod  = selectedTW.zoom(TimingWindowEntry.repeatPeriod)
 
         <.div(
           ExploreStyles.TimingWindowsBody,
@@ -234,10 +240,44 @@ object TimingWindowsPanel:
                 selectedRepeat.asView
                   .map(selectedRepeat =>
                     <.div(
-                      ExploreStyles.TimingWindowRepeatEditor,
-                      CheckboxView("repeat-with-period".refined,
-                                   selectedRepeat,
-                                   "Repeat with a period of"
+                      <.div(
+                        ExploreStyles.TimingWindowRepeatEditor,
+                        CheckboxView("repeat-with-period".refined,
+                                     selectedRepeat,
+                                     "Repeat with a period of"
+                        ),
+                        FormInputEV(
+                          id = "repat-period".refined,
+                          value = selectedRepeatPeriod,
+                          validFormat = durationHMS.optional,
+                          changeAuditor = ChangeAuditor.fromInputValidWedge(durationHMS),
+                          clazz = ExploreStyles.TargetRaDecMinWidth,
+                          errorPointing = LabelPointing.Below,
+                          errorClazz = ExploreStyles.InputErrorTooltip
+                        )
+                      ),
+                      <.div(
+                        ExploreStyles.TimingWindowRepeatEditorAlternatives,
+                        <.div(
+                          RadioButton(
+                            "repeat-forever",
+                            id = "repeat-forever-option",
+                            checked = e.repeatForever.getOrElse(false),
+                            onChange =
+                              (_, checked) => selectedTW.mod(_.toRepeatForever).when_(checked)
+                          ),
+                          <.label("Forever", ^.htmlFor := "repeat-forever-option")
+                        ),
+                        <.div(
+                          RadioButton(
+                            "repeat-n-times",
+                            id = "repeat-n-times",
+                            checked = e.repeatTimes.isDefined,
+                            onChange =
+                              (_, checked) => selectedTW.mod(_.toRepeatForever).when_(checked)
+                          ),
+                          <.label("Times", ^.htmlFor := "repeat-n-times")
+                        )
                       )
                     )
                   )

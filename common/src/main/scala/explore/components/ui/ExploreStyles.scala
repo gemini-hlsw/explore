@@ -458,5 +458,6 @@ object ExploreStyles {
   val TimingWindowEditor: Css       = Css("timing-window-editor")
   val TimingWindowRemainOpen: Css   = Css("timing-window-remain-open")
   val TimingWindowRepeatEditor: Css = Css("timing-window-repeat-editor")
+  val TimingWindowRepeatEditorAlternatives: Css = Css("timing-window-repeat-editor-alternatives")
   val TimingWindowsHeader: Css      = Css("timing-windows-header")
 }

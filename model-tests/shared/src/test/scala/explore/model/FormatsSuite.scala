@@ -6,20 +6,41 @@ package explore.model
 import cats.kernel.laws.discipline.*
 import cats.syntax.all.*
 import eu.timepit.refined.cats.given
-import explore.model.arb.ArbFiniteDuration.*
-import explore.model.arb.ArbFiniteDuration.given
 import explore.model.formats.*
 import lucuma.core.model.NonNegDuration
 import lucuma.core.model.arb.ArbNonNegDuration.*
-import lucuma.core.optics.laws.discipline.ValidSplitEpiTests
 import lucuma.core.optics.laws.discipline.ValidWedgeTests
 import org.scalacheck.Prop.*
 import org.typelevel.cats.time.arb.TimeArbitraries.*
 import org.typelevel.cats.time.instances.all.*
+import org.scalacheck.Arbitrary.arbitrary
+import org.scalacheck.Gen
+import lucuma.core.arb.*
 
 import java.time.Duration
 
 class FormatsSuite extends munit.DisciplineSuite {
+  private val perturbations: List[String => Gen[String]] =
+    List(_ => arbitrary[String]) // swap for a random string
+
+  val finiteDurationsHM: Gen[String] =
+    arbitrary[NonNegDuration]
+      .map { d =>
+        s"${d.value.toHoursPart}:${d.value.toMinutesPart}"
+      }
+      .flatMapOneOf(Gen.const, perturbations: _*)
+
+  val finiteDurationsHMS: Gen[String] =
+    arbitrary[NonNegDuration]
+      .map { d =>
+        val secs =
+          if (d.value.toMillisPartTmp() > 0)
+            f"${d.value.toSecondsPartTmp()}%02d.${d.value.toMillisPartTmp() % 1000}%03d"
+          else
+            f"${d.value.toSecondsPartTmp()}%02d"
+        s"${d.value.toHoursPartTmp()}:${d.value.toMinutesPartTmp()}:$secs"
+      }
+      .flatMapOneOf(Gen.const, (((_: String) => finiteDurationsHM) :: perturbations): _*)
 
   assertEquals(parsers.durationHM.parseAll("0").toOption,
                NonNegDuration.unsafeFrom(Duration.ofMinutes(0)).some

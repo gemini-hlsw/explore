@@ -1050,7 +1050,7 @@ table.explore-border-table {
     }
 
     & .p-radiobutton {
-      // padding-right: 0.5em;
+      margin-right: 0.3em;
     }
 
     & > * {
@@ -1061,14 +1061,22 @@ table.explore-border-table {
       margin-left: 1.5em;
     }
 
-    & .timing-window-remain-open {
+    & .timing-window-remain-open, .timing-window-repeat-editor {
       display: flex;
       align-items: baseline;
 
       & .field {
-        width: 7ch;
+        width: 9ch;
         margin-left: 0.5em;
       }
+    }
+
+    & .timing-window-repeat-editor-alternatives {
+      display: flex;
+      flex-direction: column;
+      row-gap: 0.5em;
+      margin-top: 0.5em;
+      margin-left: 3em;
     }
   }
 

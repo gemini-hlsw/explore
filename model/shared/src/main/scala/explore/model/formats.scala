@@ -126,6 +126,12 @@ trait formats:
       }
     )
 
+  extension (d: Duration)
+    def toSecondsPartTmp(): Int = ((d.toMillis() / 1000L) % 60L).toInt
+    def toMinutesPartTmp(): Int = (d.toMinutes()          % 60L).toInt
+    def toHoursPartTmp(): Int   = (d.toHours()            % 24L).toInt
+    def toMillisPartTmp(): Int  = (d.getNano() / 1000000L).toInt
+
   val durationHMS: InputValidWedge[NonNegDuration] =
     InputValidWedge(
       s =>
@@ -138,11 +144,11 @@ trait formats:
       d => {
         val td   = d.value
         val secs =
-          if (td.toMillisPart() > 0)
-            f"${td.toSecondsPart()}%02d.${td.toMillisPart() % 1000}%03d"
+          if (td.toMillisPartTmp() > 0)
+            f"${td.toSecondsPartTmp()}%02d.${td.toMillisPartTmp() % 1000}%03d"
           else
-            f"${td.toSecondsPart()}%02d"
-        f"${td.toMinutes / 60}:${td.toMinutes % 60}%02d:$secs"
+            f"${td.toSecondsPartTmp()}%02d"
+        f"${td.toHoursPartTmp()}:${td.toMinutesPartTmp()}%02d:$secs"
       }
     )
 

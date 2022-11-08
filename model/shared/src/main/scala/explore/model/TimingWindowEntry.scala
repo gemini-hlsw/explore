@@ -20,7 +20,7 @@ case class TimingWindowEntry private (
   id:            Int,
   startsOn:      ZonedDateTime,
   forever:       Boolean,
-  repeatPeriod:  Option[Int] = None,
+  repeatPeriod:  Option[NonNegDuration] = None,
   repeatForever: Option[Boolean] = None,
   repeat:        Boolean = false,
   repeatTimes:   Option[Int] = None,
@@ -53,6 +53,33 @@ case class TimingWindowEntry private (
          remainOpenFor = Some(NonNegDuration.unsafeFrom(Duration.ofDays(1))),
          closeOn = None
     )
+
+  def toRepeatPeriod: TimingWindowEntry =
+    copy(
+      forever = false,
+      repeatPeriod = Some(NonNegDuration.unsafeFrom(Duration.ofHours(12))),
+      repeatForever = None,
+      repeatTimes = None,
+      repeat = true,
+      remainOpenFor = remainOpenFor.orElse(Some(NonNegDuration.unsafeFrom(Duration.ofDays(1)))),
+      closeOn = None
+    )
+
+  def toRepeatForever: TimingWindowEntry =
+    copy(
+      forever = false,
+      repeatPeriod = repeatPeriod.orElse(Some(NonNegDuration.unsafeFrom(Duration.ofHours(12)))),
+      repeatForever = Some(true),
+      repeatTimes = None,
+      repeat = true,
+      remainOpenFor = remainOpenFor.orElse(Some(NonNegDuration.unsafeFrom(Duration.ofDays(1)))),
+      closeOn = None
+    )
+
+  def noRepeatPeriod: TimingWindowEntry =
+    copy(
+      repeatPeriod = None
+    )
 }
 
 object TimingWindowEntry:
@@ -68,6 +95,9 @@ object TimingWindowEntry:
 
   val repeat: Lens[TimingWindowEntry, Boolean] =
     Focus[TimingWindowEntry](_.repeat)
+
+  val repeatPeriod: Lens[TimingWindowEntry, Option[NonNegDuration]] =
+    Focus[TimingWindowEntry](_.repeatPeriod)
 
   def forever(id: Int, startsOn: ZonedDateTime): TimingWindowEntry =
     new TimingWindowEntry(id, startsOn.withSecond(0).withNano(0), true)
