@@ -6,18 +6,23 @@ package explore.constraints
 import cats.Show
 import cats.syntax.all.*
 import crystal.react.View
+import eu.timepit.refined.cats.*
 import explore.Icons
 import explore.common.TimingQueries.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Constants
-import explore.model.TimingWindowEntry
+import explore.model.TimingWindow
+import explore.model.TimingWindowRepeat
+import explore.model.TimingWindowRepeatPeriod
 import explore.model.formats.*
 import explore.model.reusability.given
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.model.NonNegDuration
 import lucuma.core.model.implicits.*
+import lucuma.core.validation.InputValidSplitEpi
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
@@ -41,34 +46,44 @@ import react.resizeDetector.hooks.*
 import react.semanticui.elements.label.LabelPointing
 import reactST.tanstackTableCore.mod.Column
 
+import java.time.Duration
 import java.time.ZonedDateTime
 import scala.concurrent.duration.FiniteDuration
 
-case class TimingWindowsPanel(windows: View[List[TimingWindowEntry]])
+case class TimingWindowsPanel(windows: View[List[TimingWindow]])
     extends ReactFnProps(TimingWindowsPanel.component)
 
 object TimingWindowsPanel:
   private type Props = TimingWindowsPanel
 
-  private val ColDef = ColumnDef[TimingWindowEntry]
+  private val ColDef = ColumnDef[TimingWindow]
 
-  def formatZDT(tw: ZonedDateTime): String    =
+  def formatZDT(tw: ZonedDateTime): String =
     s"${Constants.GppDateFormatter.format(tw)} @ ${Constants.GppTimeTZFormatter.format(tw)}"
-  def openText(tw: TimingWindowEntry): String =
+  def openText(tw: TimingWindow): String   =
     s"Open on ${formatZDT(tw.startsOn)}"
 
-  private given Show[TimingWindowEntry] = Show.show {
-    case tw @ TimingWindowEntry(_, startsOn, false, _, _, _, _, _, Some(closeOn))            =>
+  private given Show[TimingWindowRepeatPeriod] = Show.show {
+    case TimingWindowRepeatPeriod(period, None)    =>
+      s"repeat with a period of ${durationHMS.reverseGet(period)} forever"
+    case TimingWindowRepeatPeriod(period, Some(n)) =>
+      s"repeat with a period of ${durationHMS.reverseGet(period)} $n times"
+  }
+
+  private given Show[TimingWindowRepeat] = Show.show {
+    case TimingWindowRepeat(period, None)         =>
+      s"remain open for ${durationHM.reverseGet(period)}"
+    case TimingWindowRepeat(period, Some(repeat)) =>
+      s"remain open for ${durationHM.reverseGet(period)}, ${repeat.show}"
+  }
+
+  private given Show[TimingWindow] = Show.show {
+    case tw @ TimingWindow(_, startsOn, Some(Right(repeat))) =>
+      s"${openText(tw)}, ${repeat.show}"
+    case tw @ TimingWindow(_, startsOn, Some(Left(closeOn))) =>
       s"${openText(tw)} and close on ${formatZDT(closeOn)}"
-    case tw @ TimingWindowEntry(_, startsOn, false, Some(period), _, _, _, Some(openFor), _) =>
-      s"${openText(tw)}, remain open for ${durationHM.reverseGet(openFor)}, repeat with a period of ${durationHMS
-          .reverseGet(period)}"
-    case tw @ TimingWindowEntry(_, startsOn, false, _, _, _, _, Some(openFor), _)            =>
-      s"${openText(tw)}, remain open for ${durationHM.reverseGet(openFor)}"
-    case tw @ TimingWindowEntry(_, startsOn, true, _, _, _, _, _, _)                         =>
+    case tw @ TimingWindow(_, startsOn, None)                =>
       s"${openText(tw)} and remain open forever"
-    case tw @ TimingWindowEntry(_, startsOn, false, _, _, _, _, _, _)                        =>
-      openText(tw)
   }
 
   private val DeleteColWidth = 40
@@ -106,7 +121,7 @@ object TimingWindowsPanel:
       )
       .render { (props, _, resize, _, rows, table) =>
         val current = table.getSelectedRowModel().rows.headOption.map(_.original)
-        val pos     = rows.indexWhere((x: TimingWindowEntry) => current.exists(_.id === x.id))
+        val pos     = rows.indexWhere((x: TimingWindow) => current.exists(_.id === x.id))
 
         def headOption[A]: Optional[List[A], A] =
           Optional[List[A], A](_.headOption) { a =>
@@ -118,17 +133,13 @@ object TimingWindowsPanel:
 
         val selectedTW            =
           props.windows.zoom(
-            Index.index[List[TimingWindowEntry], Int, TimingWindowEntry](pos)
+            Index.index[List[TimingWindow], Int, TimingWindow](pos)
           )
-        val selectedStartsOn      = selectedTW.zoom(TimingWindowEntry.startsOn)
-        val selectedCloseOn       = selectedTW.zoom(TimingWindowEntry.closeOn)
-        val selectedRemainOpenFor = selectedTW.zoom(TimingWindowEntry.remainOpenFor)
-        val selectedRepeat        = selectedTW.zoom(TimingWindowEntry.repeat).withOnMod {
-          case Some(true) => selectedTW.mod(_.toRepeatPeriod)
-          case _          => selectedTW.mod(_.noRepeatPeriod)
-        }
-        val selectedRepeatTimes   = selectedTW.zoom(TimingWindowEntry.repeatTimes)
-        val selectedRepeatPeriod  = selectedTW.zoom(TimingWindowEntry.repeatPeriod)
+        val selectedStartsOn      = selectedTW.zoom(TimingWindow.startsOn)
+        val selectedCloseOn       = selectedTW.zoom(TimingWindow.closeOn)
+        val selectedRemainOpenFor = selectedTW.zoom(TimingWindow.remainOpenFor)
+        val selectedRepeatPeriod  = selectedTW.zoom(TimingWindow.repeatPeriod)
+        val selectedRepeatNTimes  = selectedTW.zoom(TimingWindow.repeatFrequency)
 
         <.div(
           ExploreStyles.TimingWindowsBody,
@@ -164,7 +175,10 @@ object TimingWindowsPanel:
             )
           ).withRef(resize.ref),
           current
-            .map(e =>
+            .map { e =>
+              pprint.pprintln(e)
+              println(s"Repeat ${e.repeatPeriod}")
+              println(s"Repeat ${e.repetition}")
               <.div(
                 ExploreStyles.TimingWindowEditor,
                 <.span(
@@ -183,7 +197,7 @@ object TimingWindowsPanel:
                 <.div(
                   RadioButton("forever",
                               id = "forever-option",
-                              checked = e.forever,
+                              checked = e.openForever,
                               onChange = (_, checked) => selectedTW.mod(_.toForever).when_(checked)
                   ),
                   <.label("Remain open forever", ^.htmlFor := "forever-option")
@@ -192,7 +206,7 @@ object TimingWindowsPanel:
                   RadioButton(
                     "close-on",
                     id = "close-on-option",
-                    checked = e.closeOn.isDefined,
+                    checked = e.closeOn,
                     onChange = (_, checked) =>
                       CallbackTo.now
                         .flatMap(i =>
@@ -201,16 +215,16 @@ object TimingWindowsPanel:
                         .when_(checked)
                   ),
                   <.label("Close on ", ^.htmlFor := "close-on-option"),
-                  e.closeOn.map { closeOn =>
+                  selectedCloseOn.asView.map { closeOn =>
                     React.Fragment(
                       Datepicker(onChange =
                         (newValue, _) =>
                           newValue.fromDatePickerToZDTOpt.foldMap { i =>
-                            selectedCloseOn.set(i.withSecond(0).withNano(0).some)
+                            selectedCloseOn.set(i.withSecond(0).withNano(0))
                           }
                       )
                         .showTimeInput(true)
-                        .selected(closeOn.toDatePickerJsDate)
+                        .selected(closeOn.get.toDatePickerJsDate)
                         .dateFormat("yyyy-MM-dd HH:mm"),
                       <.span(" UTC")
                     )
@@ -218,42 +232,54 @@ object TimingWindowsPanel:
                 ),
                 <.div(
                   ExploreStyles.TimingWindowRemainOpen,
-                  RadioButton("remain-open",
-                              id = "remain-open",
-                              checked = e.remainOpenFor.isDefined,
-                              onChange =
-                                (_, checked) => selectedTW.mod(_.toRemainOpen).when_(checked)
+                  RadioButton(
+                    "remain-open",
+                    id = "remain-open",
+                    checked = e.remainOpenFor,
+                    onChange = (_, checked) =>
+                      selectedTW
+                        .mod(_.toRemainOpen(NonNegDuration.unsafeFrom(Duration.ofDays(2))))
+                        .when_(checked)
                   ),
                   <.label("Remain open for", ^.htmlFor := "remain-open"),
-                  selectedRemainOpenFor.asView.filter(_.get.isDefined).map { remainOpen =>
+                  selectedRemainOpenFor.asView.map { remainOpen =>
                     FormInputEV(
                       id = "remain-duration".refined,
                       value = remainOpen,
-                      validFormat = durationHM.optional,
+                      validFormat = durationHM,
                       changeAuditor = ChangeAuditor.fromInputValidWedge(durationHM),
-                      clazz = ExploreStyles.TargetRaDecMinWidth,
                       errorPointing = LabelPointing.Below,
                       errorClazz = ExploreStyles.InputErrorTooltip
                     )
                   }
                 ),
-                selectedRepeat.asView
-                  .map(selectedRepeat =>
+                selectedRemainOpenFor.asView
+                  .map { _ =>
                     <.div(
                       <.div(
                         ExploreStyles.TimingWindowRepeatEditor,
-                        CheckboxView("repeat-with-period".refined,
-                                     selectedRepeat,
-                                     "Repeat with a period of"
+                        <.div(
+                          LucumaStyles.CheckboxWithLabel,
+                          Checkbox(
+                            id = "repeat-with-period",
+                            checked = e.repeatPeriod,
+                            onChange = checked =>
+                              selectedTW
+                                .mod(
+                                  _.toRepeatPeriod(NonNegDuration.unsafeFrom(Duration.ofHours(12)))
+                                )
+                                .when_(checked) // *>
+                          ),
+                          <.label("Repeat with a period of", ^.htmlFor := "repeat-with-period")
                         ),
                         FormInputEV(
                           id = "repat-period".refined,
                           value = selectedRepeatPeriod,
-                          validFormat = durationHMS.optional,
+                          validFormat = durationHMS,
                           changeAuditor = ChangeAuditor.fromInputValidWedge(durationHMS),
-                          clazz = ExploreStyles.TargetRaDecMinWidth,
                           errorPointing = LabelPointing.Below,
-                          errorClazz = ExploreStyles.InputErrorTooltip
+                          errorClazz = ExploreStyles.InputErrorTooltip,
+                          disabled = !e.repeatPeriod
                         )
                       ),
                       <.div(
@@ -262,34 +288,45 @@ object TimingWindowsPanel:
                           RadioButton(
                             "repeat-forever",
                             id = "repeat-forever-option",
-                            checked = e.repeatForever.getOrElse(false),
+                            checked = e.repeatForever,
                             onChange =
-                              (_, checked) => selectedTW.mod(_.toRepeatForever).when_(checked)
+                              (_, checked) => selectedTW.mod(_.toRepeatPeriodForever).when_(checked)
                           ),
                           <.label("Forever", ^.htmlFor := "repeat-forever-option")
                         ),
                         <.div(
+                          ExploreStyles.TimingWindowRepeatEditorNTimes,
                           RadioButton(
                             "repeat-n-times",
                             id = "repeat-n-times",
-                            checked = e.repeatTimes.isDefined,
-                            onChange =
-                              (_, checked) => selectedTW.mod(_.toRepeatForever).when_(checked)
+                            checked = !e.repeatForever,
+                            onChange = (_, checked) =>
+                              selectedTW.mod(_.toRepeatPeriodNTimes(1.refined)).when_(checked)
                           ),
-                          <.label("Times", ^.htmlFor := "repeat-n-times")
+                          FormInputEV(
+                            id = "repat-n-times-value".refined,
+                            value = selectedRepeatNTimes,
+                            validFormat = InputValidSplitEpi.posInt,
+                            changeAuditor = ChangeAuditor.posInt,
+                            clazz = ExploreStyles.TimingWindowNTimesField,
+                            errorPointing = LabelPointing.Below,
+                            errorClazz = ExploreStyles.InputErrorTooltip,
+                            disabled = !e.repeatPeriod
+                          ),
+                          <.label("Times", ^.htmlFor := "repeat-n-times-value")
                         )
-                      )
+                      ).when(e.repeatPeriod)
                     )
-                  )
-                  .when(e.remainOpenFor.isDefined)
-              ),
-            ),
+                  }
+                  .when(e.remainOpenFor)
+              )
+            },
           Button(
             size = Button.Size.Small,
             onClick = CallbackTo.now
               .flatMap(i =>
                 props.windows.mod(l =>
-                  TimingWindowEntry.forever(
+                  TimingWindow.forever(
                     i.toEpochMilli().toInt,
                     ZonedDateTime.ofInstant(i, Constants.UTC).withSecond(0).withNano(0)
                   ) :: l

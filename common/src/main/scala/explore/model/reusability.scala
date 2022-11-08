@@ -133,4 +133,6 @@ object reusability:
 
   given Reusability[SelectedPanel] = Reusability.byEq
 
-  given Reusability[TimingWindowEntry] = Reusability.byEq
+  given Reusability[TimingWindowRepeat] = Reusability.byEq
+
+  given Reusability[TimingWindow] = Reusability.byEq

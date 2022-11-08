@@ -7,15 +7,15 @@ import cats.kernel.laws.discipline.*
 import cats.syntax.all.*
 import eu.timepit.refined.cats.given
 import explore.model.formats.*
+import lucuma.core.arb.*
 import lucuma.core.model.NonNegDuration
 import lucuma.core.model.arb.ArbNonNegDuration.*
 import lucuma.core.optics.laws.discipline.ValidWedgeTests
+import org.scalacheck.Arbitrary.arbitrary
+import org.scalacheck.Gen
 import org.scalacheck.Prop.*
 import org.typelevel.cats.time.arb.TimeArbitraries.*
 import org.typelevel.cats.time.instances.all.*
-import org.scalacheck.Arbitrary.arbitrary
-import org.scalacheck.Gen
-import lucuma.core.arb.*
 
 import java.time.Duration
 

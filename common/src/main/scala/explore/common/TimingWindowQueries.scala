@@ -3,8 +3,10 @@
 
 package explore.common
 
+import explore.model.TimingWindow
 import explore.model.TimingWindowEntry
 import monocle.Focus
+import monocle.Iso
 import monocle.Lens
 import queries.common.TimingWindowsGQL.*
 // import queries.schemas.odb.ODBConversions.*
@@ -12,5 +14,12 @@ import queries.common.TimingWindowsGQL.*
 object TimingQueries:
 
   type TimingWindowResult = TimingWindowsQuery.Data
-  val TimingWindowsList: Lens[TimingWindowResult, List[TimingWindowEntry]] =
-    Focus[TimingWindowResult](_.tmpTimingWindows)
+  val TimingWindowResult = TimingWindowsQuery.Data
+
+  val EntryToTimingWindows: Iso[List[TimingWindowResult.TmpTimingWindows], List[TimingWindow]] =
+    Iso[List[TimingWindowResult.TmpTimingWindows], List[TimingWindow]](
+      _.map(TimingWindowEntry.toTimingWindow)
+    )(_.map(TimingWindowEntry.fromTimingWindow))
+
+  val TimingWindowsList: Lens[TimingWindowResult, List[TimingWindow]] =
+    Focus[TimingWindowResult](_.tmpTimingWindows).andThen(EntryToTimingWindows)

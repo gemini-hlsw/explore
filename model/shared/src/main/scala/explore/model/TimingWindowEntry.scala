@@ -6,98 +6,255 @@ package explore.model
 import cats.Eq
 import cats.derived.*
 import cats.syntax.all.*
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.cats.*
+import eu.timepit.refined.numeric.NonNegative
+import eu.timepit.refined.numeric.Positive
+import eu.timepit.refined.refineV
+import eu.timepit.refined.types.numeric.PosInt
 import io.circe.Decoder
 import lucuma.core.model.NonNegDuration
 import lucuma.core.model.implicits.*
+import lucuma.refined.*
 import monocle.Focus
 import monocle.Lens
+import monocle.Optional
+import monocle.POptional
+import monocle.std.either.*
+import monocle.std.option
 import org.typelevel.cats.time.instances.zoneddatetime.*
 
 import java.time.Duration
 import java.time.ZonedDateTime
 
-case class TimingWindowEntry private (
+case class TimingWindowRepeatPeriod(
+  period:          NonNegDuration,
+  repeatFrequency: Option[PosInt] // Times repetition or forever
+) derives Eq {
+  def toForever: TimingWindowRepeatPeriod = copy(repeatFrequency = None)
+  def toNTimes(n: PosInt): TimingWindowRepeatPeriod = copy(repeatFrequency = n.some)
+}
+
+object TimingWindowRepeatPeriod:
+  val period: Lens[TimingWindowRepeatPeriod, NonNegDuration] =
+    Focus[TimingWindowRepeatPeriod](_.period)
+
+  val repeatFrequency: Lens[TimingWindowRepeatPeriod, Option[PosInt]] =
+    Focus[TimingWindowRepeatPeriod](_.repeatFrequency)
+
+case class TimingWindowRepeat(
+  remainOpenFor: NonNegDuration,
+  repeatPeriod:  Option[TimingWindowRepeatPeriod]
+) derives Eq {}
+
+object TimingWindowRepeat:
+  def remainOpenFor(openFor: NonNegDuration) = TimingWindowRepeat(openFor, None)
+
+  val remainOpenFor: Lens[TimingWindowRepeat, NonNegDuration] =
+    Focus[TimingWindowRepeat](_.remainOpenFor)
+
+  val repeatPeriod: Lens[TimingWindowRepeat, Option[TimingWindowRepeatPeriod]] =
+    Focus[TimingWindowRepeat](_.repeatPeriod)
+
+case class TimingWindow private (
+  id:         Int,
+  startsOn:   ZonedDateTime,
+  repetition: Option[Either[ZonedDateTime, TimingWindowRepeat]]
+) derives Eq {
+  def toCloseOn(closeOn: ZonedDateTime): TimingWindow =
+    copy(repetition = closeOn.asLeft.some)
+
+  def toForever: TimingWindow =
+    copy(repetition = None)
+
+  def toRemainOpen(duration: NonNegDuration): TimingWindow =
+    copy(repetition = TimingWindowRepeat(duration, None).asRight.some)
+
+  def toRepeatPeriod(period: NonNegDuration): TimingWindow =
+    copy(repetition =
+      repetition.map(_.map(_.copy(repeatPeriod = TimingWindowRepeatPeriod(period, None).some)))
+    )
+
+  def noRepeatPeriod: TimingWindow =
+    copy(repetition = repetition.map(_.map(_.copy(repeatPeriod = none))))
+
+  def toRepeatPeriodForever: TimingWindow =
+    copy(repetition =
+      repetition.map(
+        _.map(u => u.copy(repeatPeriod = u.repeatPeriod.map(_.copy(repeatFrequency = None))))
+      )
+    )
+
+  def toRepeatPeriodNTimes(times: PosInt): TimingWindow =
+    copy(repetition =
+      repetition.map(
+        _.map { u =>
+          println(s"to copy ${u.repeatPeriod}")
+          println(s"to copy ${u.repeatPeriod.map(_.copy(repeatFrequency = times.some))}")
+          u.copy(remainOpenFor = u.remainOpenFor,
+                 repeatPeriod = u.repeatPeriod.map(_.copy(repeatFrequency = times.some))
+          )
+        }
+      )
+    )
+
+  def openForever: Boolean = repetition.isEmpty
+
+  def closeOn: Boolean = repetition.exists(_.isLeft)
+
+  def remainOpenFor: Boolean = repetition.exists(_.isRight)
+
+  def repeatPeriod: Boolean = repetition.exists(_.toOption.exists(_.repeatPeriod.isDefined))
+
+  def repeatForever: Boolean =
+    repetition.exists(_.toOption.exists(_.repeatPeriod.exists(_.repeatFrequency.isEmpty)))
+}
+
+object TimingWindow:
+  val startsOn: Lens[TimingWindow, ZonedDateTime] = Focus[TimingWindow](_.startsOn)
+
+  val closeOn: Optional[TimingWindow, ZonedDateTime] =
+    Focus[TimingWindow](_.repetition).some.andThen(stdLeft)
+
+  val remainOpenFor: Optional[TimingWindow, NonNegDuration] =
+    Focus[TimingWindow](_.repetition).some
+      .andThen(stdRight)
+      .andThen(TimingWindowRepeat.remainOpenFor)
+
+  val repeatPeriod: Optional[TimingWindow, NonNegDuration] =
+    Focus[TimingWindow](_.repetition).some
+      .andThen(stdRight)
+      .andThen(TimingWindowRepeat.repeatPeriod)
+      .andThen(option.some)
+      .andThen(TimingWindowRepeatPeriod.period)
+
+  val repeatFrequency: Optional[TimingWindow, PosInt] =
+    Focus[TimingWindow](_.repetition).some
+      .andThen(stdRight)
+      .andThen(TimingWindowRepeat.repeatPeriod)
+      .andThen(option.some)
+      .andThen(TimingWindowRepeatPeriod.repeatFrequency)
+      .andThen(option.some)
+
+  def forever(id: Int, startsOn: ZonedDateTime): TimingWindow =
+    new TimingWindow(id, startsOn, None)
+
+  def closeOn(id: Int, startsOn: ZonedDateTime, closeOn: ZonedDateTime): TimingWindow =
+    new TimingWindow(id, startsOn, repetition = closeOn.asLeft.some)
+
+  def remainOpenFor(id: Int, startsOn: ZonedDateTime, remainOpen: NonNegDuration): TimingWindow =
+    new TimingWindow(id, startsOn, repetition = TimingWindowRepeat(remainOpen, None).asRight.some)
+
+  def remainOpenForWithPeriod(
+    id:         Int,
+    startsOn:   ZonedDateTime,
+    remainOpen: NonNegDuration,
+    period:     NonNegDuration
+  ): TimingWindow =
+    new TimingWindow(
+      id,
+      startsOn,
+      repetition =
+        TimingWindowRepeat(remainOpen, Some(TimingWindowRepeatPeriod(period, None))).asRight.some
+    )
+
+  def remainOpenForTimes(
+    id:         Int,
+    startsOn:   ZonedDateTime,
+    remainOpen: NonNegDuration,
+    period:     NonNegDuration,
+    times:      PosInt
+  ): TimingWindow =
+    new TimingWindow(
+      id,
+      startsOn,
+      repetition = TimingWindowRepeat(remainOpen,
+                                      Some(TimingWindowRepeatPeriod(period, times.some))
+      ).asRight.some
+    )
+
+case class TimingWindowEntry(
   id:            Int,
   startsOn:      ZonedDateTime,
   forever:       Boolean,
   repeatPeriod:  Option[NonNegDuration] = None,
   repeatForever: Option[Boolean] = None,
-  repeat:        Boolean = false,
   repeatTimes:   Option[Int] = None,
   remainOpenFor: Option[NonNegDuration] = None,
   closeOn:       Option[ZonedDateTime] = None
-) derives Eq {
-  def toCloseOn(closeOn: ZonedDateTime): TimingWindowEntry =
-    copy(forever = false,
-         repeatPeriod = None,
-         repeatForever = None,
-         repeatTimes = None,
-         remainOpenFor = None,
-         closeOn = closeOn.some
-    )
-
-  def toForever: TimingWindowEntry =
-    copy(forever = true,
-         repeatPeriod = None,
-         repeatForever = None,
-         repeatTimes = None,
-         remainOpenFor = None,
-         closeOn = None
-    )
-
-  def toRemainOpen: TimingWindowEntry =
-    copy(forever = false,
-         repeatPeriod = None,
-         repeatForever = None,
-         repeatTimes = None,
-         remainOpenFor = Some(NonNegDuration.unsafeFrom(Duration.ofDays(1))),
-         closeOn = None
-    )
-
-  def toRepeatPeriod: TimingWindowEntry =
-    copy(
-      forever = false,
-      repeatPeriod = Some(NonNegDuration.unsafeFrom(Duration.ofHours(12))),
-      repeatForever = None,
-      repeatTimes = None,
-      repeat = true,
-      remainOpenFor = remainOpenFor.orElse(Some(NonNegDuration.unsafeFrom(Duration.ofDays(1)))),
-      closeOn = None
-    )
-
-  def toRepeatForever: TimingWindowEntry =
-    copy(
-      forever = false,
-      repeatPeriod = repeatPeriod.orElse(Some(NonNegDuration.unsafeFrom(Duration.ofHours(12)))),
-      repeatForever = Some(true),
-      repeatTimes = None,
-      repeat = true,
-      remainOpenFor = remainOpenFor.orElse(Some(NonNegDuration.unsafeFrom(Duration.ofDays(1)))),
-      closeOn = None
-    )
-
-  def noRepeatPeriod: TimingWindowEntry =
-    copy(
-      repeatPeriod = None
-    )
-}
+)
 
 object TimingWindowEntry:
-  val startsOn: Lens[TimingWindowEntry, ZonedDateTime] = Focus[TimingWindowEntry](_.startsOn)
+  def fromTimingWindow(tw: TimingWindow): TimingWindowEntry =
+    tw match
+      case TimingWindow(
+            id,
+            startsOn,
+            Some(
+              Right(
+                TimingWindowRepeat(remainOpen, Some(TimingWindowRepeatPeriod(period, Some(times))))
+              )
+            )
+          ) =>
+        TimingWindowEntry(id,
+                          startsOn,
+                          false,
+                          repeatPeriod = period.some,
+                          remainOpenFor = remainOpen.some,
+                          repeatTimes = times.value.some
+        )
+      case TimingWindow(
+            id,
+            startsOn,
+            Some(
+              Right(TimingWindowRepeat(remainOpen, Some(TimingWindowRepeatPeriod(period, None))))
+            )
+          ) =>
+        TimingWindowEntry(id,
+                          startsOn,
+                          false,
+                          remainOpenFor = remainOpen.some,
+                          repeatPeriod = period.some
+        )
+      case TimingWindow(id, startsOn, Some(Right(TimingWindowRepeat(remainOpen, None)))) =>
+        TimingWindowEntry(id, startsOn, false, remainOpenFor = remainOpen.some)
+      case TimingWindow(id, startsOn, Some(Left(repetition)))                            =>
+        TimingWindowEntry(id, startsOn, false, closeOn = repetition.some)
+      case TimingWindow(id, startsOn, None)                                              =>
+        TimingWindowEntry(id, startsOn, true)
 
-  val closeOn: Lens[TimingWindowEntry, Option[ZonedDateTime]] = Focus[TimingWindowEntry](_.closeOn)
-
-  val remainOpenFor: Lens[TimingWindowEntry, Option[NonNegDuration]] =
-    Focus[TimingWindowEntry](_.remainOpenFor)
-
-  val repeatTimes: Lens[TimingWindowEntry, Option[Int]] =
-    Focus[TimingWindowEntry](_.repeatTimes)
-
-  val repeat: Lens[TimingWindowEntry, Boolean] =
-    Focus[TimingWindowEntry](_.repeat)
-
-  val repeatPeriod: Lens[TimingWindowEntry, Option[NonNegDuration]] =
-    Focus[TimingWindowEntry](_.repeatPeriod)
-
-  def forever(id: Int, startsOn: ZonedDateTime): TimingWindowEntry =
-    new TimingWindowEntry(id, startsOn.withSecond(0).withNano(0), true)
+  def toTimingWindow(tw: TimingWindowEntry): TimingWindow =
+    tw match
+      case TimingWindowEntry(id,
+                             startsOn,
+                             false,
+                             Some(repeatPeriod),
+                             _,
+                             Some(times),
+                             Some(remainOpenFor),
+                             _
+          ) =>
+        TimingWindow.remainOpenForTimes(id,
+                                        startsOn,
+                                        remainOpenFor,
+                                        repeatPeriod,
+                                        refineV[Positive](times).getOrElse(1.refined)
+        )
+      case TimingWindowEntry(id,
+                             startsOn,
+                             false,
+                             Some(repeatPeriod),
+                             _,
+                             _,
+                             Some(remainOpenFor),
+                             _
+          ) =>
+        TimingWindow.remainOpenForWithPeriod(id, startsOn, remainOpenFor, repeatPeriod)
+      case TimingWindowEntry(id, startsOn, false, _, _, _, Some(remainOpenFor), _) =>
+        TimingWindow.remainOpenFor(id, startsOn, remainOpenFor)
+      case TimingWindowEntry(id, startsOn, false, _, _, _, _, Some(closeOn))       =>
+        TimingWindow.closeOn(id, startsOn, closeOn)
+      case TimingWindowEntry(id, startsOn, true, _, _, _, _, _)                    =>
+        TimingWindow.forever(id, startsOn)
+      case _                                                                       =>
+        sys.error("Case not covered on the db model")

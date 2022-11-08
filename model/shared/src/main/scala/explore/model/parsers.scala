@@ -11,11 +11,11 @@ import cats.parse.*
 import cats.syntax.all.*
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
+import lucuma.core.math.parser.AngleParsers
 import lucuma.core.model.NonNegDuration
 import lucuma.core.parser.MiscParsers
 
 import java.time.Duration
-import lucuma.core.math.parser.AngleParsers
 
 trait parsers:
   val colonOrSpace: Parser[Unit] = MiscParsers.colon | sp

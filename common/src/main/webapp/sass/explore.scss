@@ -1008,6 +1008,7 @@ table.explore-border-table {
 
 .timing-windows-body {
   --timing-windows-height: 200px;
+
   padding: 0.5em;
   display: grid;
   grid-template:
@@ -1020,9 +1021,10 @@ table.explore-border-table {
 
   .timing-windows-header {
     display: none;
-      height: 0px;
+    height: 0;
+
     & tr {
-      height: 0px;
+      height: 0;
     }
   }
 
@@ -1040,11 +1042,13 @@ table.explore-border-table {
   }
 
   .timing-window-editor {
-    grid-area: editor;
     @include react-datepicker-input;
     @include react-datepicker-wrapper;
+
+    grid-area: editor;
     padding: 0.5em;
 
+    /* stylelint-disable-next-line no-descending-specificity */
     & span {
       display: inline-block;
     }
@@ -1061,13 +1065,22 @@ table.explore-border-table {
       margin-left: 1.5em;
     }
 
-    & .timing-window-remain-open, .timing-window-repeat-editor {
+    & .timing-window-remain-open, .timing-window-repeat-editor, .timing-window-repeat-editor-n-times {
       display: flex;
       align-items: baseline;
 
+      /* stylelint-disable-next-line no-descending-specificity */
+      & label {
+        margin-right: 0.5em;
+      }
+
       & .field {
-        width: 9ch;
-        margin-left: 0.5em;
+        margin-right: 0.5em;
+        font-size: smaller;
+
+        & .ui.input {
+          width: 9ch;
+        }
       }
     }
 
@@ -1080,6 +1093,7 @@ table.explore-border-table {
     }
   }
 
+  /* stylelint-disable-next-line no-descending-specificity */
   & .p-button {
     grid-area: add;
     align-self: start;
