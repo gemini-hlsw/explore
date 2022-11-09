@@ -162,21 +162,14 @@ $tree-section-width: 300px;
 // ------
 
 .explore-target-search-form {
+  display: grid !important;
+  flex-direction: column;
   max-height: 85vh; // Don't let the form grow too large
 
-  .content {
-    flex-shrink: 1;
-  }
-
-  .actions {
+  .p-dialog-footer>div {
     display: flex;
     justify-content: space-between;
   }
-}
-
-.visible.transition.explore-target-search-form {
-  display: grid !important;
-  flex-direction: column;
 }
 
 $search-preview-height-mobile: 150px;
@@ -195,7 +188,7 @@ $search-preview-margin: 5px;
   grid-template-columns: 1fr;
   grid-auto-rows: fit-content;
 
-  .header {
+  .pl-header {
     padding: 0.2em;
     margin: 0;
     margin-bottom: 0.2em;

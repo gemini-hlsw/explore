@@ -378,6 +378,7 @@ object ExploreStyles {
 
   object Dialog: // SUI has Mini, Tiny, Small, Large and Fullscreen.
     val Small: Css = Css("pl-dialog-small")
+    val Large: Css = Css("pl-dialog-large")
 
   val ModalCloseButton: Css     = Css("modal-close-button")
   val UserSelectionButtons: Css = Css("user-selection-buttons")
@@ -444,4 +445,8 @@ object ExploreStyles {
   val ClearableInputPaddingReset: Css = Css("clearable-input-padding-reset")
 
   val SummaryTableToolbar: Css = Css("summary-table-toolbar")
+
+  // TODO: to lucuma-ui
+  val Header: Css      = Css("pl-header")
+  val SmallHeader: Css = Header |+| lucuma.ui.primereact.LucumaStyles.Small
 }

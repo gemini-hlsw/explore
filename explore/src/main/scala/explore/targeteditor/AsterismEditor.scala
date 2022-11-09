@@ -40,7 +40,9 @@ import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
+import lucuma.core.util.NewType
 import lucuma.schemas.ObservationDB
+import lucuma.ui.primereact.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -51,10 +53,8 @@ import queries.common.TargetQueriesGQL.*
 import queries.schemas.odb.ODBConversions.*
 import queries.schemas.odb.ObsQueries
 import react.common.ReactFnProps
-import react.semanticui.elements.button.*
+import react.primereact.Button
 import react.semanticui.modules.checkbox.*
-import react.semanticui.shorthand.*
-import react.semanticui.sizes.*
 
 import java.time.Instant
 
@@ -79,6 +79,15 @@ case class AsterismEditor(
 object AsterismEditor {
   private type Props = AsterismEditor
 
+  private object EditScope extends NewType[Boolean]:
+    inline def AllInstances: EditScope = EditScope(true)
+    inline def CurrentOnly: EditScope  = EditScope(false)
+
+  private type EditScope = EditScope.Type
+
+  private object AreAdding extends NewType[Boolean]
+  private type AreAdding = AreAdding.Type
+
   private def insertSiderealTarget(
     programId:      Program.Id,
     obsIds:         ObsIdSet,
@@ -86,7 +95,7 @@ object AsterismEditor {
     oTargetId:      Option[Target.Id],
     target:         Target.Sidereal,
     selectedTarget: View[Option[Target.Id]],
-    adding:         View[Boolean]
+    adding:         View[AreAdding]
   )(using TransactionalClient[IO, ObservationDB], Logger[IO]): IO[Unit] =
     val targetId: IO[Target.Id] = oTargetId.fold(
       CreateTargetMutation
@@ -94,7 +103,7 @@ object AsterismEditor {
         .map(_.createTarget.target.id)
     )(IO(_))
 
-    adding.async.set(true) >>
+    adding.async.set(AreAdding(true)) >>
       targetId
         .flatMap { tid =>
           val newTarget   = TargetWithId(tid, target)
@@ -106,7 +115,7 @@ object AsterismEditor {
             selectedTarget.async.set(tid.some) >>
             AsterismQueries.addTargetToAsterisms[IO](obsIds.toList, tid)
         }
-        .guarantee(adding.async.set(false))
+        .guarantee(adding.async.set(AreAdding(false)))
 
   private def onCloneTarget(
     id:        Target.Id,
@@ -124,10 +133,8 @@ object AsterismEditor {
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      // adding
-      .useStateView(false)
-      // edit target in current obs only (0), or all "instances" of the target (1)
-      .useState(0)
+      .useStateView(AreAdding(false))
+      .useState(EditScope.CurrentOnly)
       .useEffectWithDepsBy((props, _, _, _) => (props.asterism.get, props.currentTarget)) {
         (props, _, _, _) => (asterism, oTargetId) =>
           // if the selected targetId is None, or not in the asterism, select the first target (if any)
@@ -171,16 +178,12 @@ object AsterismEditor {
             TargetSelectionPopup(
               props.programId,
               trigger = Button(
-                size = Tiny,
-                compact = true,
-                positive = true,
-                clazz = ExploreStyles.VeryCompact,
-                disabled = adding.get,
+                severity = Button.Severity.Success,
+                disabled = adding.get.value,
                 icon = Icons.New,
-                loading = adding.get,
-                content = "Add",
-                labelPosition = LabelPosition.Left
-              ),
+                loading = adding.get.value,
+                label = "Add"
+              ).tiny.compact,
               onSelected = _ match {
                 case TargetWithOptId(oid, t @ Target.Sidereal(_, _, _, _)) =>
                   insertSiderealTarget(
@@ -230,15 +233,15 @@ object AsterismEditor {
                             if (props.obsIds.size === 1) "only this observation"
                             else "only the current observations",
                           value = 0,
-                          checked = editScope.value === 0,
-                          onChange = (_: Boolean) => editScope.setState(0)
+                          checked = editScope.value === EditScope.CurrentOnly,
+                          onChange = (_: Boolean) => editScope.setState(EditScope.CurrentOnly)
                         ),
                         Checkbox(
                           name = "editScope",
                           label = "all observations of this target",
                           value = 1,
-                          checked = editScope.value === 1,
-                          onChange = (_: Boolean) => editScope.setState(1)
+                          checked = editScope.value === EditScope.AllInstances,
+                          onChange = (_: Boolean) => editScope.setState(EditScope.AllInstances)
                         )
                       ).when(otherObsCount > 0),
                       props.asterism.mapValue(asterism =>
@@ -254,7 +257,8 @@ object AsterismEditor {
                           props.searching,
                           onClone = onCloneTarget(targetId, props.asterism, props.setTarget) _,
                           obsIdSubset =
-                            if (otherObsCount > 0 && editScope.value === 0) props.obsIds.some
+                            if (otherObsCount > 0 && editScope.value === EditScope.CurrentOnly)
+                              props.obsIds.some
                             else none,
                           fullScreen = fullScreen
                         )

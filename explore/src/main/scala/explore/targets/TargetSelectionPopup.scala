@@ -31,18 +31,15 @@ import lucuma.core.model.Target
 import lucuma.core.util.NewType
 import lucuma.refined.*
 import lucuma.ui.forms.FormInputEV
+import lucuma.ui.primereact.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.aladin.*
 import react.common.ReactFnProps
-import react.semanticui.elements.button.Button
-import react.semanticui.elements.header.Header
-import react.semanticui.elements.segment.Segment
-import react.semanticui.elements.segment.SegmentGroup
-import react.semanticui.modules.modal.*
-import react.semanticui.shorthand.*
-import react.semanticui.sizes.*
+import react.primereact.Button
+import react.primereact.Dialog
+import react.primereact.DialogPosition
 
 import scala.collection.immutable.SortedMap
 import scala.concurrent.duration.*
@@ -189,49 +186,38 @@ object TargetSelectionPopup:
               .orEmpty
 
         React.Fragment(
-          props.trigger(^.onClick --> isOpen.setState(PopupState.Open)),
-          Modal(
-            as = <.form,      // This lets us sumbit on enter
-            clazz = ExploreStyles.TargetSearchForm,
-            actions = List(
-              Button(size = Small, icon = true, negative = true)(
-                Icons.Close,
-                "Cancel"
-              )(^.tpe := "button", ^.key := "input-cancel"),
-              Button(
-                size = Small,
-                icon = true,
-                positive = true,
-                onClick = props.onSelected(TargetWithOptId(none, EmptySiderealTarget))
-              )(
-                Icons.New,
-                "Create Empty Sidereal Target"
-              )(^.tpe := "button", ^.key := "input-empty")
+          <.span(^.onClick --> (cleanState >> isOpen.setState(PopupState.Open)), props.trigger),
+          Dialog(
+            clazz = ExploreStyles.TargetSearchForm |+| ExploreStyles.Dialog.Large,
+            contentClass = ExploreStyles.TargetSearchContent,
+            footer = <.div(
+              Button(label = "Close",
+                     icon = Icons.Close,
+                     severity = Button.Severity.Danger,
+                     onClick = isOpen.setState(PopupState.Closed)
+              ).small,
+              Button(label = "Create Empty Sidereal Target",
+                     icon = Icons.New,
+                     severity = Button.Severity.Success
+              ).small
             ),
-            centered = false, // Works better on iOS
-            open = isOpen.value.value,
-            closeIcon = Icons.Close.withClass(ExploreStyles.ModalCloseButton),
-            dimmer = Dimmer.Blurring,
-            size = ModalSize.Large,
-            onOpen = cleanState,
-            onClose =
+            position = DialogPosition.Top,
+            visible = isOpen.value.value,
+            dismissableMask = true,
+            onHide =
               singleEffect.cancel.runAsync >> isOpen.setState(PopupState.Closed) >> cleanState,
-            header = ModalHeader(content = "Add Target"),
-            content = ModalContent(
-              ExploreStyles.TargetSearchContent,
+            header = "Add Target"
+          )(
+            React.Fragment(
               <.span(ExploreStyles.TargetSearchTop)(
                 <.span(ExploreStyles.TargetSearchInput)(
-                  FormInputEV(
+                  FormInputTextView(
                     id = "name".refined,
                     value = inputValue,
-                    // TODO Investigate if we can replicate SUI's "input with icon" styles (which use <i>) but using <svg>,
-                    // so that they work with fontawesome.
-                    // icon = Icons.Search,
-                    // iconPosition = IconPosition.Left,
-                    onTextChange = t =>
+                    preAddons = List(if (searching.value.value) Icons.Spinner else Icons.Search),
+                    onTextChange = (t: String) =>
                       inputValue.set(t) >>
                         singleEffect.submit(IO.sleep(700.milliseconds) >> search(t)).runAsync,
-                    loading = searching.value.value
                   )
                     .withMods(^.placeholder := "Name", ^.autoFocus := true)
                 )
@@ -272,7 +258,7 @@ object TargetSelectionPopup:
                   else
                     s"Add a new target from ${source.name} (${showCount(sourceResults.length, "result")})"
                 React.Fragment(
-                  Header(size = Small)(header),
+                  <.div(ExploreStyles.SmallHeader, header),
                   <.div(ExploreStyles.TargetSearchResults)(
                     TargetSelectionTable(
                       sourceResults.toList.map(_.target),
@@ -301,16 +287,7 @@ object TargetSelectionPopup:
                     )
                   )
                 )
-              }.toTagMod
-            )
-          )(
-            ^.autoComplete.off,
-            ^.onSubmit ==> (e =>
-              e.preventDefaultCB >>
-                singleEffect
-                  .submit(search(inputValue.get))
-                  .runAsync
-                  .whenA(searching.value == SearchingState.Searching)
+              }.toVdomArray
             )
           )
         )
