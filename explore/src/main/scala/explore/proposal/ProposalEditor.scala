@@ -175,7 +175,7 @@ object ProposalEditor:
     totalHours:        View[Hours],
     minPct2:           View[IntPercent],
     proposalClassType: View[ProposalClassType],
-    showModal:         View[Boolean],
+    showDialog:        View[Boolean],
     splitsList:        View[List[PartnerSplit]],
     splitsMap:         SortedMap[Partner, IntPercent],
     executionTime:     NonNegDuration,
@@ -253,7 +253,7 @@ object ProposalEditor:
           .get(p)
           .fold(PartnerSplit(p, 0.refined))(pct => PartnerSplit(p, pct))
       )
-      splitsList.set(allPartners) >> showModal.set(true)
+      splitsList.set(allPartners) >> showDialog.set(true)
     }
 
     def onClassTypeMod(classType: ProposalClassType): Callback = {
@@ -359,12 +359,12 @@ object ProposalEditor:
     totalHours:        View[Hours],
     minPct2:           View[IntPercent],
     proposalClassType: View[ProposalClassType],
-    showModal:         View[Boolean],
+    showDialog:        View[Boolean],
     splitsList:        View[List[PartnerSplit]],
     executionTime:     NonNegDuration,
     band3Time:         NonNegDuration
   )(using TransactionalClient[IO, ObservationDB], Logger[IO]) = {
-    def closePartnerSplitsEditor: Callback = showModal.set(false)
+    def closePartnerSplitsEditor: Callback = showDialog.set(false)
 
     val undoCtx: UndoContext[Proposal]                   = UndoContext(undoStacks, proposal)
     val aligner: Aligner[Proposal, Input[ProposalInput]] =
@@ -402,7 +402,7 @@ object ProposalEditor:
             totalHours,
             minPct2,
             proposalClassType,
-            showModal,
+            showDialog,
             splitsList,
             splitsView.get,
             executionTime,
@@ -417,7 +417,7 @@ object ProposalEditor:
         Tile("preview".refined, "Preview")(_ => <.span("Placeholder for PDF preview."))
       ),
       PartnerSplitsEditor(
-        showModal.get,
+        showDialog.get,
         splitsList,
         closePartnerSplitsEditor,
         saveStateSplits(splitsView, _)
@@ -471,7 +471,7 @@ object ProposalEditor:
             setClass >> setType >> setHours >> setPct2
           }
       )
-      .render { (props, ctx, totalHours, minPct2, proposalClassType, showModal, splitsList, _) =>
+      .render { (props, ctx, totalHours, minPct2, proposalClassType, showDialog, splitsList, _) =>
         import ctx.given
 
         renderFn(
@@ -481,7 +481,7 @@ object ProposalEditor:
           totalHours,
           minPct2,
           proposalClassType,
-          showModal,
+          showDialog,
           splitsList,
           props.executionTime,
           props.band3Time

@@ -516,10 +516,6 @@ i.icon.user-astronaut::before {
   content: '\f4fb';
 }
 
-// .ui.modal.explore-login-box>.content {
-//   background-color: var(--modal-background);
-// }
-
 .explore-login-box-layout {
   display: flex;
   flex-direction: column;
@@ -605,6 +601,64 @@ i.icon.user-astronaut::before {
 
 .explore-orcid-icon-menu {
   margin-right: 0.8em;
+}
+
+.version {
+  font-size: smaller;
+  float: right;
+
+  // CopyToClipboard
+  div {
+    display: inline-block;
+    margin-left: 5px;
+  }
+
+  .uncopied {
+    // CopyToClipboard
+    div {
+      cursor: pointer;
+    }
+  }
+}
+
+// ------
+// Proposals and Partner Splits
+// ------
+img.partner-split-flag {
+  height: 16px;
+  width: 32px;
+  margin-right: 0.5em;
+}
+
+.partner-splits-editor-dialog {
+  .pl-react-table.p-component {
+    width: 100%;
+    table-layout: auto;
+
+    th,
+    td {
+      width: 17em !important;
+    }
+
+    th:last-child,
+    td:last-child,
+    td:last-child>span>div {
+      width: 4em !important;
+    }
+
+    tfoot tr th,
+    .p-inputtext {
+      text-align: right;
+      padding: 0.5em;
+    }
+  }
+
+  &.p-dialog.p-component .p-dialog-footer {
+    .p-inline-message {
+      float: left;
+      vertical-align: middle;
+    }
+  }
 }
 
 // ------

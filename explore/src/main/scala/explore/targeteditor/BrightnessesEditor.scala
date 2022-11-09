@@ -36,7 +36,6 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import monocle.Focus
 import react.common.ReactFnProps
-import react.semanticui.collections.table.*
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes.*
 import reactST.{tanstackTableCore => raw}

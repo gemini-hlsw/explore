@@ -16,6 +16,7 @@
       {
         "importFrom": ["vars.css", "explore/target/lucuma-css/dark-theme.css"]
       }
-    ]
+    ],
+    "no-descending-specificity": null 
   }
 }
