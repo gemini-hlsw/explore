@@ -5,22 +5,15 @@ package queries.common
 
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
+import explore.model.Constants
 import explore.model.TimingWindowEntry
-import io.circe.Decoder
-import io.circe.generic.semiauto.*
-import lucuma.schemas.decoders.*
 import queries.schemas.UserPreferencesDB
-import java.time.ZonedDateTime
-import io.circe.Encoder
+
 import java.time.format.DateTimeFormatter
 // gql: import queries.schemas.UserPreferencesDB.*
+// gql: import queries.schemas.UserPreferencesDB.given
 
 object TimingWindowsGQL:
-  given Decoder[ZonedDateTime]     =
-    Decoder.decodeZonedDateTimeWithFormatter(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-  given Encoder[ZonedDateTime]     =
-    Encoder.encodeZonedDateTimeWithFormatter(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-  given Decoder[TimingWindowEntry] = deriveDecoder
 
   /**
    * Read the grid layout for a given section
@@ -65,4 +58,26 @@ object TimingWindowsGQL:
           id
         }
       }"""
+  }
+
+  @GraphQL
+  trait DeleteTimingWindow extends GraphQLOperation[UserPreferencesDB] {
+    val document = """
+      mutation deleteTimingWindow($id: Int = 10) {
+        deleteTmpTimingWindowsByPk(id: $id) {
+          id
+        }
+      }
+    """
+  }
+
+  @GraphQL
+  trait UpdateTimingWindow extends GraphQLOperation[UserPreferencesDB] {
+    val document = """
+      mutation updateTimingWindow($id: Int = 10, $_set: TmpTimingWindowsSetInput = {}) {
+        updateTmpTimingWindowsByPk(pk_columns: {id: $id}, _set: $_set) {
+          id
+        }
+      }
+    """
   }

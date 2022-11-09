@@ -4,13 +4,29 @@
 package queries.schemas
 
 import clue.annotation.GraphQLSchema
+import explore.model.Constants
+import explore.model.TimingWindowEntry
 import explore.model.enums
+import io.circe.Decoder
+import io.circe.Encoder
+import io.circe.generic.semiauto.*
 import lucuma.core.model.User
 import lucuma.core.util.Enumerated
 import lucuma.react.table.SortDirection
+import lucuma.schemas.decoders.*
+
+import java.time.ZonedDateTime
 
 @GraphQLSchema
 trait UserPreferencesDB:
+  given Decoder[ZonedDateTime] =
+    Decoder.decodeZonedDateTimeWithFormatter(Constants.IsoUTCFormatter)
+
+  given Encoder[ZonedDateTime] =
+    Encoder.encodeZonedDateTimeWithFormatter(Constants.IsoUTCFormatter)
+
+  given Decoder[TimingWindowEntry] = deriveDecoder
+
   type Timestamptz = java.time.ZonedDateTime
 
   given Enumerated[SortDirection] =
@@ -27,6 +43,7 @@ trait UserPreferencesDB:
     type ElevationPlotRange = explore.model.enums.PlotRange
     type ElevationPlotTime  = explore.model.enums.TimeDisplay
     type Bigint             = Long
+    type Timestamptz        = java.time.ZonedDateTime
 
   object Enums:
     type ItcChartType            = enums.ItcChartType

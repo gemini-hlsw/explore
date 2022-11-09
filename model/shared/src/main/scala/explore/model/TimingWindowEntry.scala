@@ -89,8 +89,6 @@ case class TimingWindow private (
     copy(repetition =
       repetition.map(
         _.map { u =>
-          println(s"to copy ${u.repeatPeriod}")
-          println(s"to copy ${u.repeatPeriod.map(_.copy(repeatFrequency = times.some))}")
           u.copy(remainOpenFor = u.remainOpenFor,
                  repeatPeriod = u.repeatPeriod.map(_.copy(repeatFrequency = times.some))
           )
@@ -173,14 +171,16 @@ object TimingWindow:
       ).asRight.some
     )
 
+// This is a model for the table in hasura which is very basic
+// It will be superseeded on the real api
 case class TimingWindowEntry(
   id:            Int,
   startsOn:      ZonedDateTime,
   forever:       Boolean,
-  repeatPeriod:  Option[NonNegDuration] = None,
+  repeatPeriod:  Option[Int] = None,
   repeatForever: Option[Boolean] = None,
   repeatTimes:   Option[Int] = None,
-  remainOpenFor: Option[NonNegDuration] = None,
+  remainOpenFor: Option[Int] = None, // Seconds
   closeOn:       Option[ZonedDateTime] = None
 )
 
@@ -199,8 +199,8 @@ object TimingWindowEntry:
         TimingWindowEntry(id,
                           startsOn,
                           false,
-                          repeatPeriod = period.some,
-                          remainOpenFor = remainOpen.some,
+                          repeatPeriod = period.value.getSeconds.toInt.some,
+                          remainOpenFor = remainOpen.value.getSeconds.toInt.some,
                           repeatTimes = times.value.some
         )
       case TimingWindow(
@@ -213,11 +213,16 @@ object TimingWindowEntry:
         TimingWindowEntry(id,
                           startsOn,
                           false,
-                          remainOpenFor = remainOpen.some,
-                          repeatPeriod = period.some
+                          remainOpenFor = remainOpen.value.getSeconds.toInt.some,
+                          repeatForever = true.some,
+                          repeatPeriod = period.value.getSeconds.toInt.some
         )
       case TimingWindow(id, startsOn, Some(Right(TimingWindowRepeat(remainOpen, None)))) =>
-        TimingWindowEntry(id, startsOn, false, remainOpenFor = remainOpen.some)
+        TimingWindowEntry(id,
+                          startsOn,
+                          false,
+                          remainOpenFor = remainOpen.value.getSeconds.toInt.some
+        )
       case TimingWindow(id, startsOn, Some(Left(repetition)))                            =>
         TimingWindowEntry(id, startsOn, false, closeOn = repetition.some)
       case TimingWindow(id, startsOn, None)                                              =>
@@ -234,11 +239,12 @@ object TimingWindowEntry:
                              Some(remainOpenFor),
                              _
           ) =>
-        TimingWindow.remainOpenForTimes(id,
-                                        startsOn,
-                                        remainOpenFor,
-                                        repeatPeriod,
-                                        refineV[Positive](times).getOrElse(1.refined)
+        TimingWindow.remainOpenForTimes(
+          id,
+          startsOn,
+          NonNegDuration.unsafeFrom(Duration.ofSeconds(remainOpenFor)),
+          NonNegDuration.unsafeFrom(Duration.ofSeconds(repeatPeriod)),
+          refineV[Positive](times).getOrElse(1.refined)
         )
       case TimingWindowEntry(id,
                              startsOn,
@@ -249,9 +255,17 @@ object TimingWindowEntry:
                              Some(remainOpenFor),
                              _
           ) =>
-        TimingWindow.remainOpenForWithPeriod(id, startsOn, remainOpenFor, repeatPeriod)
+        TimingWindow.remainOpenForWithPeriod(
+          id,
+          startsOn,
+          NonNegDuration.unsafeFrom(Duration.ofSeconds(remainOpenFor)),
+          NonNegDuration.unsafeFrom(Duration.ofSeconds(repeatPeriod))
+        )
       case TimingWindowEntry(id, startsOn, false, _, _, _, Some(remainOpenFor), _) =>
-        TimingWindow.remainOpenFor(id, startsOn, remainOpenFor)
+        TimingWindow.remainOpenFor(id,
+                                   startsOn,
+                                   NonNegDuration.unsafeFrom(Duration.ofSeconds(remainOpenFor))
+        )
       case TimingWindowEntry(id, startsOn, false, _, _, _, _, Some(closeOn))       =>
         TimingWindow.closeOn(id, startsOn, closeOn)
       case TimingWindowEntry(id, startsOn, true, _, _, _, _, _)                    =>

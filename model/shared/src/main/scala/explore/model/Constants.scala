@@ -27,6 +27,8 @@ trait Constants {
   val GppDateFormatter: DateTimeFormatter   = DateTimeFormatter.ofPattern("yyyy-MMM-dd")
   val GppTimeFormatter: DateTimeFormatter   = DateTimeFormatter.ofPattern("HH:mm")
   val GppTimeTZFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm z")
+  val IsoUTCFormatter: DateTimeFormatter    =
+    DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(Constants.UTC)
 }
 
 object Constants extends Constants

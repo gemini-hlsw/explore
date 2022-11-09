@@ -4,12 +4,15 @@
 package explore.constraints
 
 import cats.Show
+import cats.effect.IO
 import cats.syntax.all.*
+import clue.TransactionalClient
 import clue.data.syntax.*
-import crystal.react.implicits.*
 import crystal.react.View
+import crystal.react.implicits.*
 import eu.timepit.refined.cats.*
 import explore.Icons
+import explore.common.TimingQueries
 import explore.common.TimingQueries.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
@@ -24,6 +27,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.NonNegDuration
 import lucuma.core.model.implicits.*
+import lucuma.core.util.NewType
 import lucuma.core.validation.InputValidSplitEpi
 import lucuma.react.syntax.*
 import lucuma.react.table.*
@@ -32,6 +36,7 @@ import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
+import lucuma.ui.syntax.util.*
 import lucuma.ui.table.PrimeAutoHeightVirtualizedTable
 import lucuma.ui.table.PrimeTable
 import lucuma.ui.table.*
@@ -40,6 +45,9 @@ import monocle.Traversal
 import monocle.function.FilterIndex.filterIndex
 import monocle.function.Index
 import monocle.function.Index.*
+import queries.common.TimingWindowsGQL.*
+import queries.common.UserPreferencesQueriesGQL.*
+import queries.schemas.UserPreferencesDB
 import react.common.ReactFnProps
 import react.common.Style
 import react.datepicker.Datepicker
@@ -51,26 +59,34 @@ import reactST.tanstackTableCore.mod.Column
 import java.time.Duration
 import java.time.ZonedDateTime
 import scala.concurrent.duration.FiniteDuration
-import queries.common.TimingWindowsGQL.*
-import queries.common.UserPreferencesQueriesGQL.*
 
 case class TimingWindowsPanel(windows: View[List[TimingWindow]])
     extends ReactFnProps(TimingWindowsPanel.component)
+
+private object TimingWindowOperating extends NewType[Boolean]:
+  inline def Operating: TimingWindowOperating = TimingWindowOperating(true)
+  inline def Idle: TimingWindowOperating      = TimingWindowOperating(false)
+  extension (s: TimingWindowOperating)
+    inline def flip: TimingWindowOperating =
+      if (s.value) TimingWindowOperating.Idle else TimingWindowOperating.Operating
+private type TimingWindowOperating = TimingWindowOperating.Type
 
 object TimingWindowsPanel:
   private type Props = TimingWindowsPanel
 
   private val ColDef = ColumnDef[TimingWindow]
 
-  def formatZDT(tw: ZonedDateTime): String =
+  private def formatZDT(tw: ZonedDateTime): String =
     s"${Constants.GppDateFormatter.format(tw)} @ ${Constants.GppTimeTZFormatter.format(tw)}"
-  def openText(tw: TimingWindow): String   =
+  private def openText(tw: TimingWindow): String   =
     s"Open on ${formatZDT(tw.startsOn)}"
 
   private given Show[TimingWindowRepeatPeriod] = Show.show {
-    case TimingWindowRepeatPeriod(period, None)    =>
+    case TimingWindowRepeatPeriod(period, None)                     =>
       s"repeat with a period of ${durationHMS.reverseGet(period)} forever"
-    case TimingWindowRepeatPeriod(period, Some(n)) =>
+    case TimingWindowRepeatPeriod(period, Some(n)) if n.value === 1 =>
+      s"repeat with a period of ${durationHMS.reverseGet(period)} once"
+    case TimingWindowRepeatPeriod(period, Some(n))                  =>
       s"repeat with a period of ${durationHMS.reverseGet(period)} $n times"
   }
 
@@ -90,32 +106,57 @@ object TimingWindowsPanel:
       s"${openText(tw)} and remain open forever"
   }
 
-  private val DeleteColWidth = 40
+  private val DeleteColWidth = 20
   private val WindowColId    = "Timing window"
   private val DeleteColId    = "Delete"
+
+  private def deleteRow(
+    dbActive: TimingWindowOperating => Callback,
+    id:       Int,
+    windows:  View[List[TimingWindow]]
+  )(using TransactionalClient[IO, UserPreferencesDB]): Callback =
+    dbActive(TimingWindowOperating.Operating) *>
+      DeleteTimingWindow
+        .execute(id.assign)
+        .flatMap(_ => windows.mod(_.filterNot(_.id === id)).to[IO])
+        .guarantee(dbActive(TimingWindowOperating.Idle).to[IO])
+        .runAsyncAndForget
 
   private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .useResizeDetector()
+      .useState(TimingWindowOperating.Idle)
       // cols
-      .useMemoBy((_, _, resize) => resize) { (props, _, _) => resize =>
-        List(
-          ColDef(
-            ColumnId(WindowColId),
-            _.show,
-            size = resize.width.map(z => (z - DeleteColWidth).toPx).getOrElse(400.toPx)
-          ),
-          ColDef(
-            ColumnId(DeleteColId),
-            size = DeleteColWidth.toPx
-          ).setCell(_ => Icons.Trash)
-        )
+      .useMemoBy((_, _, resize, operating) => (resize, operating)) {
+        (props, ctx, _, _) => (resize, operating) =>
+          import ctx.given
+          List(
+            ColDef(
+              ColumnId(WindowColId),
+              _.show,
+              size = resize.width.map(z => (z - DeleteColWidth).toPx).getOrElse(400.toPx)
+            ),
+            ColDef(
+              ColumnId(DeleteColId),
+              identity,
+              size = DeleteColWidth.toPx
+            ).setCell(c =>
+              Button(text = true,
+                     onClickE = e =>
+                       e.stopPropagationCB *> deleteRow(
+                         operating.setState,
+                         c.value.id,
+                         props.windows
+                       )
+              ).compact.small(Icons.Trash)
+            )
+          )
       }
       // rows
-      .useMemoBy((props, _, _, _) => props.windows.get)((_, _, _, _) => l => l)
-      .useReactTableBy((props, _, _, cols, rows) =>
+      .useMemoBy((props, _, _, _, _) => props.windows.get)((_, _, _, _, _) => l => l)
+      .useReactTableBy((props, _, _, _, cols, rows) =>
         TableOptions(
           cols,
           rows,
@@ -123,19 +164,48 @@ object TimingWindowsPanel:
           getRowId = (row, _, _) => RowId(row.id.toString)
         )
       )
-      .render { (props, ctx, resize, _, rows, table) =>
+      .render { (props, ctx, resize, dbActive, _, rows, table) =>
+        import ctx.given
+
         val current = table.getSelectedRowModel().rows.headOption.map(_.original)
         val pos     = rows.indexWhere((x: TimingWindow) => current.exists(_.id === x.id))
 
-        val selectedTW            =
-          props.windows.zoom(
-            Index.index[List[TimingWindow], Int, TimingWindow](pos)
-          )
+        val selectedTW =
+          props.windows
+            .zoom(Index.index[List[TimingWindow], Int, TimingWindow](pos))
+            .withOnMod {
+              case Some(tw) =>
+                Callback.pprintln(tw) *> TimingQueries.updateTimingWindow[IO](tw).runAsyncAndForget
+              case None     => Callback.empty
+            }
+
         val selectedStartsOn      = selectedTW.zoom(TimingWindow.startsOn)
         val selectedCloseOn       = selectedTW.zoom(TimingWindow.closeOn)
         val selectedRemainOpenFor = selectedTW.zoom(TimingWindow.remainOpenFor)
         val selectedRepeatPeriod  = selectedTW.zoom(TimingWindow.repeatPeriod)
         val selectedRepeatNTimes  = selectedTW.zoom(TimingWindow.repeatFrequency)
+
+        def addNewRow = dbActive.setState(TimingWindowOperating.Operating) *> CallbackTo.now
+          .flatMap { i =>
+            import ctx.given
+            val startsOn =
+              ZonedDateTime.ofInstant(i, Constants.UTC).withSecond(0).withNano(0)
+
+            InsertTimingWindow
+              .execute(startsOn.assign)
+              .flatMap(id =>
+                id.insertTmpTimingWindowsOne
+                  .map(_.id)
+                  .map(id =>
+                    props.windows
+                      .mod(l => (TimingWindow.forever(id, startsOn) :: l.reverse).reverse)
+                      .to[IO]
+                  )
+                  .orEmpty
+              )
+              .guarantee(dbActive.setState(TimingWindowOperating.Idle).to[IO])
+              .runAsyncAndForget
+          }
 
         <.div(
           ExploreStyles.TimingWindowsBody,
@@ -172,9 +242,6 @@ object TimingWindowsPanel:
           ).withRef(resize.ref),
           current
             .map { e =>
-              pprint.pprintln(e)
-              println(s"Repeat ${e.repeatPeriod}")
-              println(s"Repeat ${e.repetition}")
               <.div(
                 ExploreStyles.TimingWindowEditor,
                 <.span(
@@ -264,7 +331,8 @@ object TimingWindowsPanel:
                                 .mod(
                                   _.toRepeatPeriod(NonNegDuration.unsafeFrom(Duration.ofHours(12)))
                                 )
-                                .when_(checked) // *>
+                                .when_(checked) *>
+                                selectedTW.mod(_.toRepeatPeriodForever).unless_(checked)
                           ),
                           <.label("Repeat with a period of", ^.htmlFor := "repeat-with-period")
                         ),
@@ -319,24 +387,8 @@ object TimingWindowsPanel:
             },
           Button(
             size = Button.Size.Small,
-            onClick = CallbackTo.now
-              .flatMap { i =>
-                import ctx.given
-                println("HERE")
-
-                println(ZonedDateTime.ofInstant(i, Constants.UTC))
-                InsertTimingWindow
-                  .execute(
-                    ZonedDateTime.ofInstant(i, Constants.UTC).withSecond(0).withNano(0).assign
-                  )
-                  .runAsyncAndForget // *>
-              // props.windows.mod(l =>
-              //   TimingWindow.forever(
-              //     i.toEpochMilli().toInt,
-              //     ZonedDateTime.ofInstant(i, Constants.UTC).withSecond(0).withNano(0)
-              //   ) :: l
-              // )
-              }
+            disabled = dbActive.value.value,
+            onClick = addNewRow
           ).compact
             .small(Icons.ThinPlus)
         )

@@ -281,9 +281,12 @@ object ConstraintsTabContents extends TwoPanels:
                                      backButton.some
           )(renderInTitle => ConstraintsPanel(idsToEdit.toList, csView, csUndo, renderInTitle))
 
-          val timingWindowsTile = Tile(ObsTabTilesIds.TimingWindowsId.id, "Timing Windows")(
-            renderInTitle => TimingWindowsPanel(timingWindows.zoom(TimingWindowsList))
-          )
+          val timingWindowsView = timingWindows.zoom(TimingWindowsList)
+          val timingWindowsTile =
+            Tile(ObsTabTilesIds.TimingWindowsId.id, "Timing Windows")(renderInTitle =>
+              TimingWindowsPanel(timingWindowsView)
+                .withKey(s"timing-window-${timingWindowsView.get.length}")
+            )
 
           val rglRender: LayoutsMap => VdomNode = (l: LayoutsMap) =>
             TileController(
