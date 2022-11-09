@@ -180,8 +180,8 @@ object TargetImportPopup:
                 tableMod = ExploreStyles.ExploreTable,
                 striped = true,
                 compact = Compact.Very
-              ).when(state.value.targetErrors.nonEmpty)
-            )
+              )
+            ).when(state.value.targetErrors.nonEmpty)
           )
         )
       }
