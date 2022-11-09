@@ -10,10 +10,10 @@ import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.react.table.*
+import lucuma.ui.primereact.*
 import lucuma.ui.table.*
 import react.common.*
-import react.semanticui.elements.button.Button
-import react.semanticui.sizes
+import react.primereact.Button
 
 case class TargetSelectionTable(
   targets:       List[TargetSearchResult],
@@ -45,20 +45,15 @@ object TargetSelectionTable:
           target => target,
           "",
           cell =>
+            val (label, icon) =
+              cell.value.targetWithOptId.optId.fold(("Add", Icons.New))(_ => ("Link", Icons.Link))
             Button(
-              size = sizes.Tiny,
-              compact = true,
-              positive = true,
-              icon = true,
-              onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
-                e.stopPropagationCB >> props.onSelected(cell.value)
-            )(
-              ^.tpe := "button"
-            )(
-              cell.value.targetWithOptId.optId.fold(React.Fragment(Icons.New, "Add"))(_ =>
-                React.Fragment(Icons.Link, "Link")
-              )
-            ),
+              severity = Button.Severity.Success,
+              label = label,
+              icon = icon,
+              onClickE = e => e.stopPropagationCB >> props.onSelected(cell.value)
+            ).tiny.compact
+          ,
           enableSorting = false
         )
       ) ++

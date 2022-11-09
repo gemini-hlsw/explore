@@ -26,4 +26,26 @@
       width: 760px;
     }
   }
+
+  &.pl-dialog-large {
+    width: 95%;
+
+    @media (min-width: 1200px) {
+      width: 1080px;
+    }
+  }
 }
+ 
+// TODO: Move to lucuma-ui
+// From the SUI Header component
+.pl-header {
+  font-size: 1.2857em;
+  font-weight: bold;
+  line-height: 1.2857em;
+  margin: calc(2rem - 0.1429em) 0 1rem;
+
+  &.pl-small {
+    font-size: 1.0714em;
+  }
+}
+
