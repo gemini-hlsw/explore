@@ -91,17 +91,14 @@ case class ConstraintsTabContents(
 
 object ConstraintsTabContents extends TwoPanels:
   private type Props = ConstraintsTabContents
-  private given Reusability[Double] = Reusability.double(2.0)
 
-  private val ConstraintsHeight: NonNegInt      = 4.refined
-  private val ConstraintsMinHeight: NonNegInt   = 4.refined
-  private val ConstraintsMaxHeight: NonNegInt   = 8.refined
-  private val TimingWindowsHeight: NonNegInt    = 15.refined
-  private val TimingWindowsMinHeight: NonNegInt = 15.refined
-  private val TimingWindowsMaxHeight: NonNegInt = 22.refined
-  private val TileMinWidth: NonNegInt           = 6.refined
-  private val DefaultWidth: NonNegInt           = 10.refined
-  private val DefaultLargeWidth: NonNegInt      = 12.refined
+  private val ConstraintsHeight: NonNegInt        = 4.refined
+  private val ConstraintsSmallHeight: NonNegInt   = 7.refined
+  private val TimingWindowsHeight: NonNegInt      = 14.refined
+  private val TimingWindowsSmallHeight: NonNegInt = 12.refined
+  private val TileMinWidth: NonNegInt             = 6.refined
+  private val DefaultWidth: NonNegInt             = 10.refined
+  private val DefaultLargeWidth: NonNegInt        = 12.refined
 
   private val layoutMedium: Layout = Layout(
     List(
@@ -110,10 +107,8 @@ object ConstraintsTabContents extends TwoPanels:
         x = 0,
         y = 0,
         w = DefaultWidth.value,
-        h = ConstraintsMaxHeight.value,
-        minH = ConstraintsMinHeight.value,
-        maxH = ConstraintsMaxHeight.value,
-        minW = TileMinWidth.value
+        h = ConstraintsHeight.value,
+        isResizable = false
       ),
       LayoutItem(
         i = ObsTabTilesIds.TimingWindowsId.id.value,
@@ -121,9 +116,7 @@ object ConstraintsTabContents extends TwoPanels:
         y = ConstraintsHeight.value,
         w = DefaultWidth.value,
         h = TimingWindowsHeight.value,
-        maxH = TimingWindowsMaxHeight.value,
-        minH = TimingWindowsMaxHeight.value,
-        minW = TileMinWidth.value
+        isResizable = false
       )
     )
   )
@@ -278,14 +271,16 @@ object ConstraintsTabContents extends TwoPanels:
 
           val constraintsTile = Tile(ObsTabTilesIds.ConstraintsId.id,
                                      constraintsTitle,
-                                     backButton.some
+                                     backButton.some,
+                                     canMinimize = true
           )(renderInTitle => ConstraintsPanel(idsToEdit.toList, csView, csUndo, renderInTitle))
 
           val timingWindowsView = timingWindows.zoom(TimingWindowsList)
           val timingWindowsTile =
-            Tile(ObsTabTilesIds.TimingWindowsId.id, "Timing Windows")(renderInTitle =>
-              TimingWindowsPanel(timingWindowsView)
-                .withKey(s"timing-window-${timingWindowsView.get.length}")
+            Tile(ObsTabTilesIds.TimingWindowsId.id, "Timing Windows", canMinimize = true)(
+              renderInTitle =>
+                TimingWindowsPanel(timingWindowsView)
+                  .withKey(s"timing-window-${timingWindowsView.get.length}")
             )
 
           val rglRender: LayoutsMap => VdomNode = (l: LayoutsMap) =>

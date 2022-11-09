@@ -23,7 +23,6 @@ import explore.model.enums.ExecutionEnvironment
 import explore.model.enums.ExecutionEnvironment.Development
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.syntax.ZonedDateTimeOps.apply
 import lucuma.ui.enums.Theme
 import lucuma.ui.forms.ExternalValue
 import lucuma.ui.syntax.all.*

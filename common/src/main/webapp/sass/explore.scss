@@ -104,7 +104,6 @@ $tree-section-width: 300px;
   & .react-datepicker__input-container input {
     text-shadow: unset;
     font-weight: unset;
-    font-size: smaller;
   }
 }
 
@@ -115,7 +114,7 @@ $tree-section-width: 300px;
 
   justify-content: center;
   flex-grow: 0;
-
+  font-size: smaller;
 
   label:first-child {
     @include common.text-ellipsis;
@@ -1047,8 +1046,8 @@ table.explore-border-table {
 
     grid-area: editor;
     padding: 0.5em;
+    font-size: smaller;
 
-    /* stylelint-disable-next-line no-descending-specificity */
     & span {
       display: inline-block;
     }
@@ -1069,14 +1068,12 @@ table.explore-border-table {
       display: flex;
       align-items: baseline;
 
-      /* stylelint-disable-next-line no-descending-specificity */
       & label {
         margin-right: 0.5em;
       }
 
       & .field {
         margin-right: 0.5em;
-        font-size: smaller;
 
         & .ui.input {
           width: 9ch;
@@ -1093,7 +1090,6 @@ table.explore-border-table {
     }
   }
 
-  /* stylelint-disable-next-line no-descending-specificity */
   & .p-button {
     grid-area: add;
     align-self: start;

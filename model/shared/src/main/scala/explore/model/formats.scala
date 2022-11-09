@@ -126,6 +126,7 @@ trait formats:
       }
     )
 
+  // TODO: Include these in scala-java-time
   extension (d: Duration)
     def toSecondsPartTmp(): Int = ((d.toMillis() / 1000L) % 60L).toInt
     def toMinutesPartTmp(): Int = (d.toMinutes()          % 60L).toInt

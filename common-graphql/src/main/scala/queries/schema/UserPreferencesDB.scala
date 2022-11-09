@@ -43,7 +43,6 @@ trait UserPreferencesDB:
     type ElevationPlotRange = explore.model.enums.PlotRange
     type ElevationPlotTime  = explore.model.enums.TimeDisplay
     type Bigint             = Long
-    type Timestamptz        = java.time.ZonedDateTime
 
   object Enums:
     type ItcChartType            = enums.ItcChartType

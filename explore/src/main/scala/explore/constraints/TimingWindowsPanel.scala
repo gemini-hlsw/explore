@@ -122,6 +122,31 @@ object TimingWindowsPanel:
         .guarantee(dbActive(TimingWindowOperating.Idle).to[IO])
         .runAsyncAndForget
 
+  private def addNewRow(
+    dbActive: TimingWindowOperating => Callback,
+    windows:  View[List[TimingWindow]]
+  )(using TransactionalClient[IO, UserPreferencesDB]): Callback =
+    dbActive(TimingWindowOperating.Operating) *> CallbackTo.now
+      .flatMap { i =>
+        val startsOn =
+          ZonedDateTime.ofInstant(i, Constants.UTC).withSecond(0).withNano(0)
+
+        InsertTimingWindow
+          .execute(startsOn.assign)
+          .flatMap(id =>
+            id.insertTmpTimingWindowsOne
+              .map(_.id)
+              .map(id =>
+                windows
+                  .mod(l => (TimingWindow.forever(id, startsOn) :: l.reverse).reverse)
+                  .to[IO]
+              )
+              .orEmpty
+          )
+          .guarantee(dbActive(TimingWindowOperating.Idle).to[IO])
+          .runAsyncAndForget
+      }
+
   private val component =
     ScalaFnComponent
       .withHooks[Props]
@@ -184,28 +209,6 @@ object TimingWindowsPanel:
         val selectedRemainOpenFor = selectedTW.zoom(TimingWindow.remainOpenFor)
         val selectedRepeatPeriod  = selectedTW.zoom(TimingWindow.repeatPeriod)
         val selectedRepeatNTimes  = selectedTW.zoom(TimingWindow.repeatFrequency)
-
-        def addNewRow = dbActive.setState(TimingWindowOperating.Operating) *> CallbackTo.now
-          .flatMap { i =>
-            import ctx.given
-            val startsOn =
-              ZonedDateTime.ofInstant(i, Constants.UTC).withSecond(0).withNano(0)
-
-            InsertTimingWindow
-              .execute(startsOn.assign)
-              .flatMap(id =>
-                id.insertTmpTimingWindowsOne
-                  .map(_.id)
-                  .map(id =>
-                    props.windows
-                      .mod(l => (TimingWindow.forever(id, startsOn) :: l.reverse).reverse)
-                      .to[IO]
-                  )
-                  .orEmpty
-              )
-              .guarantee(dbActive.setState(TimingWindowOperating.Idle).to[IO])
-              .runAsyncAndForget
-          }
 
         <.div(
           ExploreStyles.TimingWindowsBody,
@@ -388,7 +391,7 @@ object TimingWindowsPanel:
           Button(
             size = Button.Size.Small,
             disabled = dbActive.value.value,
-            onClick = addNewRow
+            onClick = addNewRow(dbActive.setState, props.windows)
           ).compact
             .small(Icons.ThinPlus)
         )

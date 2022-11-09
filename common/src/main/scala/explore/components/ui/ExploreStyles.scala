@@ -447,9 +447,9 @@ object ExploreStyles {
   val SummaryTableToolbar: Css = Css("summary-table-toolbar")
 
   // TODO: to lucuma-ui
-  val Header: Css                   = Css("pl-header")
-  val SmallHeader: Css              = Header |+| lucuma.ui.primereact.LucumaStyles.Small
-  //
+  val Header: Css      = Css("pl-header")
+  val SmallHeader: Css = Header |+| lucuma.ui.primereact.LucumaStyles.Small
+
   // Timing Windows
   val TimingWindowsBody: Css                    = Css("timing-windows-body")
   val TimingWindowsEmpty: Css                   = Css("timing-windows-empty")

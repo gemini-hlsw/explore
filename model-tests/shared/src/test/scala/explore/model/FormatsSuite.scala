@@ -26,7 +26,7 @@ class FormatsSuite extends munit.DisciplineSuite {
   val finiteDurationsHM: Gen[String] =
     arbitrary[NonNegDuration]
       .map { d =>
-        s"${d.value.toHoursPart}:${d.value.toMinutesPart}"
+        s"${d.value.toHoursPartTmp()}:${d.value.toMinutesPartTmp()}"
       }
       .flatMapOneOf(Gen.const, perturbations: _*)
 

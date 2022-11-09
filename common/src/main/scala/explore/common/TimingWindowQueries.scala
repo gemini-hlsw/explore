@@ -16,7 +16,6 @@ import queries.common.TimingWindowsGQL.*
 import queries.common.TimingWindowsGQL.given
 import queries.schemas.UserPreferencesDB
 import queries.schemas.UserPreferencesDB.Types.*
-// import queries.schemas.odb.ODBConversions.*
 
 object TimingQueries:
 
