@@ -210,16 +210,25 @@ object TargetSelectionPopup:
           )(
             React.Fragment(
               <.span(ExploreStyles.TargetSearchTop)(
-                <.span(ExploreStyles.TargetSearchInput)(
+                <.form(ExploreStyles.TargetSearchInput)(
                   FormInputTextView(
                     id = "name".refined,
+                    placeholder = "Name",
                     value = inputValue,
                     preAddons = List(if (searching.value.value) Icons.Spinner else Icons.Search),
                     onTextChange = (t: String) =>
                       inputValue.set(t) >>
                         singleEffect.submit(IO.sleep(700.milliseconds) >> search(t)).runAsync,
+                  ).withMods(^.autoFocus := true)
+                )(
+                  ^.autoComplete.off,
+                  ^.onSubmit ==> (e =>
+                    e.preventDefaultCB >>
+                      singleEffect
+                        .submit(search(inputValue.get))
+                        .runAsync
+                        .whenA(searching.value == SearchingState.Searching)
                   )
-                    .withMods(^.placeholder := "Name", ^.autoFocus := true)
                 )
               ),
               <.div(ExploreStyles.TargetSearchPreview)(
