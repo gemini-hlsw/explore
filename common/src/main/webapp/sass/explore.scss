@@ -736,7 +736,7 @@ table.explore-border-table {
   justify-content: space-between;
   grid-template:
     "progress msg" 1fr
-    "errors   errors" minmax(min-content, 300px) / 1fr 3fr;
+    "errors   errors" min-content / 1fr 3fr;
   row-gap: 0.5rem;
   min-width: 20vw;
   max-width: 760px;
