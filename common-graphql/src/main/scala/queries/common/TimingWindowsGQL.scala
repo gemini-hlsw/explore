@@ -10,9 +10,16 @@ import io.circe.Decoder
 import io.circe.generic.semiauto.*
 import lucuma.schemas.decoders.*
 import queries.schemas.UserPreferencesDB
+import java.time.ZonedDateTime
+import io.circe.Encoder
+import java.time.format.DateTimeFormatter
 // gql: import queries.schemas.UserPreferencesDB.*
 
 object TimingWindowsGQL:
+  given Decoder[ZonedDateTime]     =
+    Decoder.decodeZonedDateTimeWithFormatter(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+  given Encoder[ZonedDateTime]     =
+    Encoder.encodeZonedDateTimeWithFormatter(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
   given Decoder[TimingWindowEntry] = deriveDecoder
 
   /**
@@ -40,15 +47,22 @@ object TimingWindowsGQL:
     }
   }
 
-  // @GraphQL
-  // trait UserGridLayoutUpsert extends GraphQLOperation[UserPreferencesDB] {
-  //   val document = """
-  //     mutation insertLayoutPositions($objects: [LucumaGridLayoutPositionsInsertInput!]! = {}) {
-  //       insertLucumaGridLayoutPositions(objects: $objects, onConflict: {
-  //         constraint: grid_layout_positions_pkey,
-  //         update_columns: [width, height, x, y]
-  //       }) {
-  //         affected_rows
-  //       }
-  //     }"""
-  // }
+  @GraphQL
+  trait TimingWindowSubscription extends GraphQLOperation[UserPreferencesDB] {
+    val document = """
+      subscription TimingWindowsSuscription {
+        tmpTimingWindows {
+          id
+        }
+      }"""
+  }
+
+  @GraphQL
+  trait InsertTimingWindow extends GraphQLOperation[UserPreferencesDB] {
+    val document = """
+      mutation insertTimingWindow($startsOn: timestamptz = "") {
+        insertTmpTimingWindowsOne(object: {startsOn: $startsOn, forever: true}) {
+          id
+        }
+      }"""
+  }

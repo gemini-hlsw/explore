@@ -5,6 +5,8 @@ package explore.constraints
 
 import cats.Show
 import cats.syntax.all.*
+import clue.data.syntax.*
+import crystal.react.implicits.*
 import crystal.react.View
 import eu.timepit.refined.cats.*
 import explore.Icons
@@ -49,6 +51,8 @@ import reactST.tanstackTableCore.mod.Column
 import java.time.Duration
 import java.time.ZonedDateTime
 import scala.concurrent.duration.FiniteDuration
+import queries.common.TimingWindowsGQL.*
+import queries.common.UserPreferencesQueriesGQL.*
 
 case class TimingWindowsPanel(windows: View[List[TimingWindow]])
     extends ReactFnProps(TimingWindowsPanel.component)
@@ -119,17 +123,9 @@ object TimingWindowsPanel:
           getRowId = (row, _, _) => RowId(row.id.toString)
         )
       )
-      .render { (props, _, resize, _, rows, table) =>
+      .render { (props, ctx, resize, _, rows, table) =>
         val current = table.getSelectedRowModel().rows.headOption.map(_.original)
         val pos     = rows.indexWhere((x: TimingWindow) => current.exists(_.id === x.id))
-
-        def headOption[A]: Optional[List[A], A] =
-          Optional[List[A], A](_.headOption) { a =>
-            {
-              case x :: xs => a :: xs
-              case Nil     => Nil
-            }
-          }
 
         val selectedTW            =
           props.windows.zoom(
@@ -324,14 +320,23 @@ object TimingWindowsPanel:
           Button(
             size = Button.Size.Small,
             onClick = CallbackTo.now
-              .flatMap(i =>
-                props.windows.mod(l =>
-                  TimingWindow.forever(
-                    i.toEpochMilli().toInt,
-                    ZonedDateTime.ofInstant(i, Constants.UTC).withSecond(0).withNano(0)
-                  ) :: l
-                )
-              )
+              .flatMap { i =>
+                import ctx.given
+                println("HERE")
+
+                println(ZonedDateTime.ofInstant(i, Constants.UTC))
+                InsertTimingWindow
+                  .execute(
+                    ZonedDateTime.ofInstant(i, Constants.UTC).withSecond(0).withNano(0).assign
+                  )
+                  .runAsyncAndForget // *>
+              // props.windows.mod(l =>
+              //   TimingWindow.forever(
+              //     i.toEpochMilli().toInt,
+              //     ZonedDateTime.ofInstant(i, Constants.UTC).withSecond(0).withNano(0)
+              //   ) :: l
+              // )
+              }
           ).compact
             .small(Icons.ThinPlus)
         )

@@ -364,7 +364,8 @@ object ConstraintsTabContents extends TwoPanels:
         (TimingWindowsQuery.query(), ConstraintGroupObsQuery.query(props.programId))
           .mapN((tw, cg) => (tw, ConstraintGroupObsQuery.Data.asConstraintSummWithObs.get(cg)))
           .reRunOnResourceSignals(
-            ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](props.programId)
+            ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](props.programId),
+            TimingWindowSubscription.subscribe[IO]()
           )
       }
       // Measure its size
