@@ -132,3 +132,7 @@ object reusability:
   given Reusability[Range.Inclusive] = Reusability.by(x => (x.start, x.end, x.step))
 
   given Reusability[SelectedPanel] = Reusability.byEq
+
+  given Reusability[TimingWindowRepeat] = Reusability.byEq
+
+  given Reusability[TimingWindow] = Reusability.byEq

@@ -8,6 +8,7 @@ import coulomb.*
 import coulomb.ops.algebra.spire.all.given
 import coulomb.policy.spire.standard.given
 import coulomb.syntax.*
+import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.refineV
 import explore.optics.all.*
 import lucuma.core.math.HourAngle.HMS
@@ -15,11 +16,15 @@ import lucuma.core.math.Parallax
 import lucuma.core.math.ProperMotion.AngularVelocityComponent
 import lucuma.core.math.*
 import lucuma.core.math.units.*
+import lucuma.core.model.NonNegDuration
 import lucuma.core.optics.*
 import lucuma.core.syntax.string.*
+import lucuma.core.validation.*
+import lucuma.refined.*
 import spire.math.Rational
 
 import java.text.NumberFormat
+import java.time.Duration
 import java.util.Locale
 import scala.math.*
 
@@ -105,5 +110,47 @@ trait formats:
     else
       f"$arcseconds%01d.$mas%02d″"
   }
+
+  val durationHM: InputValidWedge[NonNegDuration] =
+    InputValidWedge(
+      s =>
+        parsers.durationHM
+          .parseAll(s)
+          .leftMap { e =>
+            "Duration parsing errors".refined[NonEmpty]
+          }
+          .toEitherErrors,
+      d => {
+        val td = d.value
+        f"${td.toMinutes / 60}:${td.toMinutes % 60}%02d"
+      }
+    )
+
+  // TODO: Include these in scala-java-time
+  extension (d: Duration)
+    def toSecondsPartTmp(): Int = ((d.toMillis() / 1000L) % 60L).toInt
+    def toMinutesPartTmp(): Int = (d.toMinutes()          % 60L).toInt
+    def toHoursPartTmp(): Int   = (d.toHours()            % 24L).toInt
+    def toMillisPartTmp(): Int  = (d.getNano() / 1000000L).toInt
+
+  val durationHMS: InputValidWedge[NonNegDuration] =
+    InputValidWedge(
+      s =>
+        parsers.durationHMS
+          .parseAll(s)
+          .leftMap { e =>
+            "Duration parsing errors".refined[NonEmpty]
+          }
+          .toEitherErrors,
+      d => {
+        val td   = d.value
+        val secs =
+          if (td.toMillisPartTmp() > 0)
+            f"${td.toSecondsPartTmp()}%02d.${td.toMillisPartTmp() % 1000}%03d"
+          else
+            f"${td.toSecondsPartTmp()}%02d"
+        f"${td.toHoursPartTmp()}:${td.toMinutesPartTmp()}%02d:$secs"
+      }
+    )
 
 object formats extends formats

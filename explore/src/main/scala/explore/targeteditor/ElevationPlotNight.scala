@@ -9,6 +9,7 @@ import cats.syntax.all.*
 import explore.*
 import explore.components.ui.ExploreStyles
 import explore.highcharts.*
+import explore.model.Constants
 import explore.model.CoordinatesAtVizTime
 import explore.model.enums.TimeDisplay
 import explore.syntax.ui.*
@@ -89,8 +90,6 @@ object ElevationPlotNight {
     case ParallacticAngle extends ElevationSeries("Parallactic Angle", 1, _.parallacticAngle)
     case SkyBrightness    extends ElevationSeries("Sky Brightness", 2, _.skyBrightness)
     case LunarElevation   extends ElevationSeries("Lunar Elevation", 0, _.moonAltitude)
-
-  private val dateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
   private def formatAngle(degs: Double): String = {
     val dms     = Angle.DMS(Angle.fromDoubleDegrees(degs))
@@ -202,7 +201,7 @@ object ElevationPlotNight {
         def timezoneInstantFormat(instant: Instant, zoneId: ZoneId): String =
           ZonedDateTime
             .ofInstant(instant, zoneId)
-            .format(dateTimeFormatter)
+            .format(Constants.GppTimeFormatter)
 
         def instantFormat(instant: Instant): String =
           props.timeDisplay match {

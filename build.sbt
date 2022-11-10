@@ -213,6 +213,7 @@ lazy val commonLibSettings = Seq(
       In(Test)(
         MUnit.value ++
           Discipline.value ++
+          CatsTimeTestkit.value ++
           MUnitCatsEffect.value ++
           MonocleLaw.value
       ),
@@ -222,6 +223,7 @@ lazy val commonLibSettings = Seq(
 lazy val testkitLibSettings = Seq(
   libraryDependencies ++= Discipline.value ++
     MonocleLaw.value ++
+    CatsTimeTestkit.value ++
     LucumaCoreTestKit.value ++
     LucumaCatalogTestKit.value
 )

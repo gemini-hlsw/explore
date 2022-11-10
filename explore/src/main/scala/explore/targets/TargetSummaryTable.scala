@@ -38,8 +38,6 @@ import lucuma.ui.primereact.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import lucuma.ui.table.TableHooks
-import lucuma.ui.table.TableOptionsWithStateStore
 import lucuma.ui.table.*
 import org.scalablytyped.runtime.StringDictionary
 import org.scalajs.dom.{File => DOMFile}

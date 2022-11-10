@@ -21,6 +21,7 @@ import monocle.Lens
 import org.typelevel.log4cats.Logger
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ODBConversions.*
+
 object ConstraintsQueries:
   case class UndoView(
     obsIds:  List[Observation.Id],

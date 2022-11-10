@@ -1,5 +1,5 @@
-resolvers in Global += Resolver.sonatypeRepo("public")
-resolvers in Global += Resolver.sonatypeRepo("snapshots")
+resolvers in Global ++= Resolver.sonatypeOssRepos("public")
+resolvers in Global ++= Resolver.sonatypeOssRepos("snapshots")
 
 addSbtPlugin("edu.gemini"   % "sbt-lucuma-app" % "0.10.5")
 addSbtPlugin("edu.gemini"   % "sbt-lucuma-css" % "0.10.5")

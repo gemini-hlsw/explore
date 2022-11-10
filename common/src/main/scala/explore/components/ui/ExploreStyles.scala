@@ -449,4 +449,17 @@ object ExploreStyles {
   // TODO: to lucuma-ui
   val Header: Css      = Css("pl-header")
   val SmallHeader: Css = Header |+| lucuma.ui.primereact.LucumaStyles.Small
+
+  // Timing Windows
+  val TimingWindowsBody: Css                    = Css("timing-windows-body")
+  val TimingWindowsEmpty: Css                   = Css("timing-windows-empty")
+  val TimingWindowsList: Css                    = Css("timing-windows-list")
+  val TimingWindowsTable: Css                   = Css("timing-windows-table")
+  val TimingWindowEditor: Css                   = Css("timing-window-editor")
+  val TimingWindowRemainOpen: Css               = Css("timing-window-remain-open")
+  val TimingWindowRepeatEditor: Css             = Css("timing-window-repeat-editor")
+  val TimingWindowRepeatEditorAlternatives: Css = Css("timing-window-repeat-editor-alternatives")
+  val TimingWindowRepeatEditorNTimes: Css       = Css("timing-window-repeat-editor-n-times")
+  val TimingWindowNTimesField: Css              = Css("timing-window-n-times-field")
+  val TimingWindowsHeader: Css                  = Css("timing-windows-header")
 }

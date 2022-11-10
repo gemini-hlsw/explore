@@ -595,7 +595,7 @@ object TargetTabContents extends TwoPanels:
       .useMemo(())(_ => defaultTargetLayouts)
       // Load the config from user prefrences
       .useEffectWithDepsBy((p, _, _, _, _, _, _) => p.userId) {
-        (props, ctx, _, panels, _, layout, defaultLayout) => _ =>
+        (props, ctx, _, _, _, layout, defaultLayout) => _ =>
           import ctx.given
 
           GridLayouts

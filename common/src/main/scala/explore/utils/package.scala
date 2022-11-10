@@ -18,6 +18,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.BuildInfo
 import explore.Icons
 import explore.components.ui.ExploreStyles
+import explore.model.Constants
 import explore.model.enums.ExecutionEnvironment
 import explore.model.enums.ExecutionEnvironment.Development
 import japgolly.scalajs.react.*
@@ -30,6 +31,7 @@ import lucuma.ui.utils.versionDateFormatter
 import lucuma.ui.utils.versionDateTimeFormatter
 import org.http4s.Uri
 import org.scalajs.dom
+import react.datepicker.*
 import react.fa.IconSize
 import react.primereact.Button
 import react.primereact.MessageItem
@@ -38,6 +40,7 @@ import react.semanticui.collections.message.Message
 import react.semanticui.elements.loader.Loader
 
 import java.time.Instant
+import java.time.ZonedDateTime
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters.*
 
@@ -170,3 +173,40 @@ extension (toastRef: ToastRef)
         sticky = true
       )
     )
+
+// TODO Move these to react-datetime
+extension (instant:  Instant)
+  // DatePicker only works in local timezone, so we trick it by adding the timezone offset.
+  // See https://github.com/Hacker0x01/react-datepicker/issues/1787
+  def toDatePickerJsDate: js.Date =
+    new js.Date(instant.toEpochMilli.toDouble + (new js.Date()).getTimezoneOffset() * 60000)
+
+extension (zdt: ZonedDateTime)
+  // DatePicker only works in local timezone, so we trick it by adding the timezone offset.
+  // See https://github.com/Hacker0x01/react-datepicker/issues/1787
+  def toDatePickerJsDate: js.Date =
+    zdt.toInstant.toDatePickerJsDate
+
+// DatePicker only works in local timezone, so we trick it by adding the timezone offset.
+// See https://github.com/Hacker0x01/react-datepicker/issues/1787
+private def fromDatePickerJsDate(jsDate: js.Date): Instant =
+  Instant.ofEpochMilli((jsDate.getTime() - jsDate.getTimezoneOffset() * 60000).toLong)
+
+extension [A](value: js.UndefOr[DateOrRange])
+  def fromDatePickerToInstantEitherOpt(using
+    A <:< js.Date
+  ): Option[Either[(Instant, Instant), Instant]] =
+    value.toEitherOpt.map { (e: Either[(js.Date, js.Date), js.Date]) =>
+      e match {
+        case Left((d1, d2)) =>
+          Left((fromDatePickerJsDate(d1), fromDatePickerJsDate(d2)))
+        case Right(d)       =>
+          Right(fromDatePickerJsDate(d))
+      }
+    }.widen
+
+  def fromDatePickerToInstantOpt(using ev: A <:< js.Date): Option[Instant] =
+    fromDatePickerToInstantEitherOpt.flatMap(_.toOption)
+
+  def fromDatePickerToZDTOpt(using ev: A <:< js.Date): Option[ZonedDateTime] =
+    fromDatePickerToInstantOpt.map(i => ZonedDateTime.ofInstant(i, Constants.UTC))
