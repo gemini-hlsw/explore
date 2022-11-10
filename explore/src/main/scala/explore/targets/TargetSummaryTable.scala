@@ -298,6 +298,8 @@ object TargetSummaryTable extends TableHooks:
                 }
               ),
             cellMod = cell => columnClasses.get(ColumnId(cell.column.id)).orEmpty
-          )
+          ).withKey(
+            s"summary-table-${filesToImport.get.size}"
+          ) // workaround to redraw when files are imported
         )
       )

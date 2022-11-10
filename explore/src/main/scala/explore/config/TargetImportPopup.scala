@@ -29,6 +29,9 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import monocle.Focus
 import monocle.Lens
+import org.http4s.client.Client
+import org.http4s.dom.FetchClientBuilder
+import org.http4s.syntax.all.*
 import org.scalajs.dom.{File => DOMFile}
 import org.typelevel.log4cats.Logger
 import queries.common.TargetQueriesGQL.*
@@ -72,11 +75,14 @@ object TargetImportPopup:
   private def importTargets[F[_]: Concurrent: Logger](
     programId:   Program.Id,
     s:           Stream[F, Byte],
-    stateUpdate: (State => State) => F[Unit]
+    stateUpdate: (State => State) => F[Unit],
+    client:      Client[F]
   )(using TransactionalClient[F, ObservationDB]) =
     s
       .through(text.utf8.decode)
-      .through(TargetImport.csv2targets)
+      .through(
+        TargetImport.csv2targetsAndLookup(client, uri"https://lucuma-cors-proxy.herokuapp.com".some)
+      )
       .evalMap {
         case Left(a)       =>
           stateUpdate(State.targetErrors.modify(e => e :++ a.toList.map(_.displayValue)))
@@ -102,14 +108,22 @@ object TargetImportPopup:
         import ctx.given
 
         state.setState(State.Default).to[IO] *>
-          files
-            .traverse(f =>
-              importTargets[IO](props.programId,
-                                dom.readReadableStream(IO(f.stream())),
-                                state.modState(_).to[IO]
-              ).compile.toList
-            )
-            .flatTap(_ => state.modState(State.done.replace(true)).to[IO])
+          FetchClientBuilder[IO]
+            .withRequestTimeout(15.seconds)
+            .resource
+            .use { client =>
+              files
+                .traverse(f =>
+                  importTargets[IO](props.programId,
+                                    dom.readReadableStream(IO(f.stream())),
+                                    state.modState(_).to[IO],
+                                    client
+                  )
+                )
+                .compile
+                .toList
+            }
+            .guarantee(state.modState(State.done.replace(true)).to[IO])
             .void
             .whenA(files.nonEmpty)
       }
@@ -180,7 +194,7 @@ object TargetImportPopup:
                 tableMod = ExploreStyles.ExploreTable,
                 striped = true,
                 compact = Compact.Very
-              )
+              ).withKey(s"errors-table-${state.value.targetErrors.length}")
             ).when(state.value.targetErrors.nonEmpty)
           )
         )
