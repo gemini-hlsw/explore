@@ -1048,40 +1048,40 @@ table.explore-border-table {
     padding: 0.5em;
     font-size: smaller;
 
-    & span {
+    span {
       display: inline-block;
     }
 
-    & .p-radiobutton {
+    .p-radiobutton {
       margin-right: 0.3em;
     }
 
-    & > * {
+    > * {
       margin-bottom: 0.5em;
     }
 
-    & .timing-window-repeat-editor {
+    .timing-window-repeat-editor {
       margin-left: 1.5em;
     }
 
-    & .timing-window-remain-open, .timing-window-repeat-editor, .timing-window-repeat-editor-n-times {
+    .timing-window-remain-open, .timing-window-repeat-editor, .timing-window-repeat-editor-n-times {
       display: flex;
       align-items: baseline;
 
-      & label {
+      label {
         margin-right: 0.5em;
       }
 
-      & .field {
+      .field {
         margin-right: 0.5em;
 
-        & .ui.input {
+        .ui.input {
           width: 9ch;
         }
       }
     }
 
-    & .timing-window-repeat-editor-alternatives {
+    .timing-window-repeat-editor-alternatives {
       display: flex;
       flex-direction: column;
       row-gap: 0.5em;
@@ -1090,7 +1090,7 @@ table.explore-border-table {
     }
   }
 
-  & .p-button {
+  .p-button {
     grid-area: add;
     align-self: start;
   }

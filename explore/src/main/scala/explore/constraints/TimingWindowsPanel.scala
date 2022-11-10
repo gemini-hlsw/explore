@@ -200,7 +200,7 @@ object TimingWindowsPanel:
             .zoom(Index.index[List[TimingWindow], Int, TimingWindow](pos))
             .withOnMod {
               case Some(tw) =>
-                Callback.pprintln(tw) *> TimingQueries.updateTimingWindow[IO](tw).runAsyncAndForget
+                TimingQueries.updateTimingWindow[IO](tw).runAsyncAndForget
               case None     => Callback.empty
             }
 

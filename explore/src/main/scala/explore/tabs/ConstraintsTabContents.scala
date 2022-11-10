@@ -121,7 +121,7 @@ object ConstraintsTabContents extends TwoPanels:
     )
   )
 
-  private val defaultTargetLayouts = defineStdLayouts(
+  private val defaultConstraintsLayouts = defineStdLayouts(
     Map(
       (BreakpointName.lg,
        layoutItems.andThen(layoutItemWidth).replace(DefaultLargeWidth)(layoutMedium)
@@ -320,7 +320,7 @@ object ConstraintsTabContents extends TwoPanels:
       // Initial target layout
       .useStateView(Pot.pending[LayoutsMap])
       // Keep a record of the initial target layout
-      .useMemo(())(_ => defaultTargetLayouts)
+      .useMemo(())(_ => defaultConstraintsLayouts)
       // Load the config from user prefrences
       .useEffectWithDepsBy((p, _, _, _) => p.userId) { (props, ctx, layout, defaultLayout) => _ =>
         import ctx.given
