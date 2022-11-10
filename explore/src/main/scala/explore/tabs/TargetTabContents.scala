@@ -238,7 +238,7 @@ object TargetTabContents extends TwoPanels:
           selectTarget _,
           renderInTitle,
           selectedTargetIds
-        ): VdomNode
+        )
       )
 
     /**
