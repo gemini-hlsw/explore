@@ -10,16 +10,20 @@ import lucuma.refined.*
 import react.hotkeys.HotkeysCallback
 import react.hotkeys.HotkeysEvent
 
-object Shortcut extends NewType[String]
+import scala.scalajs.js.JSConverters.*
+
+object Shortcut extends NewType[List[String]] {
+  inline def apply(key: String): Shortcut = Shortcut(List(key))
+}
 type Shortcut = Shortcut.Type
 
-extension (shortcuts: List[Shortcut]) def toHotKeys: String = shortcuts.mkString(",")
+extension (shortcuts: List[Shortcut]) def toHotKeys: List[String] = shortcuts.flatMap(_.value)
 
 type ShortcutCallbacks = PartialFunction[Shortcut, Callback]
 
 given Conversion[PartialFunction[Shortcut, Callback], HotkeysCallback] with
   def apply(p: PartialFunction[Shortcut, Callback]): HotkeysCallback =
-    (e: HotkeysEvent) => p.applyOrElse(Shortcut(e.key), _ => Callback.empty)
+    (e: HotkeysEvent) => p.applyOrElse(Shortcut(e.keys.toList), _ => Callback.empty)
 
 val GoToObs         = Shortcut("o")
 val GoToTargets     = Shortcut("t")

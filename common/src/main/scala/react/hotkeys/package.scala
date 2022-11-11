@@ -37,12 +37,17 @@ object HotkeysOptions {
 
 @js.native
 trait HotkeysEvent extends js.Object {
-  var key: String
+  val alt: Boolean
+  val ctrl: Boolean
+  val shift: Boolean
+  val meta: Boolean
+  val mod: Boolean
+  val keys: js.Array[String]
 }
 
 @js.native
 trait UseHotkeysProps extends js.Object {
-  var keys: String = js.native
+  var keys: String | js.Array[String] = js.native
 
   var callback: js.Function2[js.Any, HotkeysEvent, Unit] = js.native
 
@@ -53,13 +58,13 @@ trait UseHotkeysProps extends js.Object {
 object UseHotkeysProps {
 
   def apply(
-    keys:     String,
+    keys:     List[String],
     callback: HotkeysCallback,
     options:  js.UndefOr[HotkeysOptions] = js.undefined
   ): UseHotkeysProps =
     val p = js.Dynamic.literal().asInstanceOf[UseHotkeysProps]
-    p.keys = keys
-    p.callback = (_, h) =>
+    p.keys = keys.toJSArray
+    p.callback = (u, h) =>
       callback match
         case c: Callback                   => c.runNow()
         case c: (HotkeysEvent => Callback) => c(h).runNow()
@@ -70,7 +75,7 @@ object UseHotkeysProps {
 @JSImport("react-hotkeys-hook", "useHotkeys")
 @js.native
 private val useHotkeys: js.Function4[
-  String,
+  String | js.Array[String],
   js.Function2[js.Any, HotkeysEvent, Unit],
   js.UndefOr[HotkeysOptions],
   js.UndefOr[HookDeps],
@@ -80,11 +85,11 @@ private val useHotkeys: js.Function4[
 @JSImport("react-hotkeys-hook", "isHotkeyPressed")
 @js.native
 val isHotkeyPressed: js.Function1[
-  String | Double,
+  String | js.Array[String],
   Boolean
 ] = js.native
 
 // Don't make these val or you will get always false
-def isCmdCtrlPressed: Boolean = isHotkeyPressed("cmd") || isHotkeyPressed("ctrl")
+def isCmdCtrlPressed: Boolean = isHotkeyPressed("meta") || isHotkeyPressed("ctrl")
 
 def isShiftPressed: Boolean = isHotkeyPressed("shift")

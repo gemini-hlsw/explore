@@ -315,7 +315,7 @@ object ConstraintsTabContents extends TwoPanels:
         def callbacks: ShortcutCallbacks = { case GoToSummary =>
           ctx.setPageVia(AppTab.Constraints, pid, Focused.None, SetRouteVia.HistoryPush)
         }
-        UseHotkeysProps(GoToSummary.value, callbacks)
+        UseHotkeysProps(List(GoToSummary).toHotKeys, callbacks)
       }
       // Initial target layout
       .useStateView(Pot.pending[LayoutsMap])
