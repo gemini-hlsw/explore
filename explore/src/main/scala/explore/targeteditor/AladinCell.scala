@@ -289,7 +289,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                        )
                        .flatMap(
                          _.map(r =>
-                           agsState.setStateAsync(AgsState.Idle) *> ags.setStateAsync(r)
+                           ags.setStateAsync(r) *> agsState.setStateAsync(AgsState.Idle)
                          ).orEmpty
                        )
                        .unlessA(candidates.isEmpty)
@@ -302,13 +302,14 @@ object AladinCell extends ModelOptics with AladinCommon:
       // open settings menu
       .useState(SettingsMenuState.Closed)
       // Reset the selected gs if results change
-      .useEffectWithDepsBy((p, _, _, _, _, _, agsResults, _, _, _) => (agsResults, p.obsConf)) {
-        (p, _, _, _, _, agsResults, agsState, _, selectedIndex, _) => _ =>
-          selectedIndex
-            .set(
-              0.some.filter(_ => agsResults.value.nonEmpty && p.obsConf.canSelectGuideStar)
-            )
-            .unless_(agsState.value === AgsState.Calculating)
+      .useEffectWithDepsBy((p, _, _, _, _, _, agsResults, agsState, _, _) =>
+        (agsResults, p.obsConf, agsState)
+      ) { (p, _, _, _, _, agsResults, agsState, _, selectedIndex, _) => _ =>
+        selectedIndex
+          .set(
+            0.some.filter(_ => agsResults.value.nonEmpty && p.obsConf.canSelectGuideStar)
+          )
+          .unless_(agsState.value === AgsState.Calculating)
       }
       .renderWithReuse {
         (
@@ -350,18 +351,14 @@ object AladinCell extends ModelOptics with AladinCommon:
               .zoom(
                 Pot.readyPrism.andThen(targetPrefs).andThen(TargetVisualOptions.agsCandidates)
               )
-              .withOnMod(v =>
-                openSettings.setState(SettingsMenuState.Closed) *> prefsSetter(candidates = v)
-              )
+              .withOnMod(v => prefsSetter(candidates = v))
 
           val agsOverlayView =
             options
               .zoom(
                 Pot.readyPrism.andThen(targetPrefs).andThen(TargetVisualOptions.agsOverlay)
               )
-              .withOnMod(v =>
-                openSettings.setState(SettingsMenuState.Closed) *> prefsSetter(overlay = v)
-              )
+              .withOnMod(v => prefsSetter(overlay = v))
 
           val fovView =
             options.zoom(Pot.readyPrism.andThen(targetPrefs).andThen(fovLens))
@@ -405,8 +402,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                 Pot.readyPrism.andThen(userPrefs).andThen(UserGlobalPreferences.aladinMouseScroll)
               )
               .withOnMod(z =>
-                openSettings.setState(SettingsMenuState.Closed) *>
-                  z.map(z => UserPreferences.storePreferences[IO](props.uid, z).runAsync).getOrEmpty
+                z.map(z => UserPreferences.storePreferences[IO](props.uid, z).runAsync).getOrEmpty
               )
 
           val coordinatesSetter =
