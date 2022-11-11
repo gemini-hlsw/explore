@@ -196,9 +196,13 @@ object TargetSelectionPopup:
                      severity = Button.Severity.Danger,
                      onClick = isOpen.setState(PopupState.Closed)
               ).small,
-              Button(label = "Create Empty Sidereal Target",
-                     icon = Icons.New,
-                     severity = Button.Severity.Success
+              Button(
+                label = "Create Empty Sidereal Target",
+                icon = Icons.New,
+                severity = Button.Severity.Success,
+                onClick = props
+                  .onSelected(TargetWithOptId(none, EmptySiderealTarget))
+                  .flatTap(_ => isOpen.setState(PopupState.Closed))
               ).small
             ),
             position = DialogPosition.Top,
