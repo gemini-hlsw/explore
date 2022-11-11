@@ -68,33 +68,276 @@ enum CursorOrdering {
 }
 
 """
-Boolean expression to compare columns of type "elevation_plot_range". All fields are combined with logical 'AND'.
+columns and relationships of "explorePlotRange"
 """
-input ElevationPlotRangeComparisonExp {
-  _eq: elevation_plot_range
-  _gt: elevation_plot_range
-  _gte: elevation_plot_range
-  _in: [elevation_plot_range!]
-  _isNull: Boolean
-  _lt: elevation_plot_range
-  _lte: elevation_plot_range
-  _neq: elevation_plot_range
-  _nin: [elevation_plot_range!]
+type ExplorePlotRange {
+  id: String!
 }
 
 """
-Boolean expression to compare columns of type "elevation_plot_time". All fields are combined with logical 'AND'.
+aggregated selection of "explorePlotRange"
 """
-input ElevationPlotTimeComparisonExp {
-  _eq: elevation_plot_time
-  _gt: elevation_plot_time
-  _gte: elevation_plot_time
-  _in: [elevation_plot_time!]
+type ExplorePlotRangeAggregate {
+  aggregate: ExplorePlotRangeAggregateFields
+  nodes: [ExplorePlotRange!]!
+}
+
+"""
+aggregate fields of "explorePlotRange"
+"""
+type ExplorePlotRangeAggregateFields {
+  count(columns: [ExplorePlotRangeSelectColumn!], distinct: Boolean): Int!
+  max: ExplorePlotRangeMaxFields
+  min: ExplorePlotRangeMinFields
+}
+
+"""
+Boolean expression to filter rows from the table "explorePlotRange". All fields are combined with a logical 'AND'.
+"""
+input ExplorePlotRangeBoolExp {
+  _and: [ExplorePlotRangeBoolExp!]
+  _not: ExplorePlotRangeBoolExp
+  _or: [ExplorePlotRangeBoolExp!]
+  id: StringComparisonExp
+}
+
+"""
+unique or primary key constraints on table "explorePlotRange"
+"""
+enum ExplorePlotRangeConstraint {
+  """
+  unique or primary key constraint on columns "id"
+  """
+  explorePlotRange_pkey
+}
+
+enum ExplorePlotRangeEnum {
+  NIGHT
+  SEMESTER
+}
+
+"""
+Boolean expression to compare columns of type "ExplorePlotRangeEnum". All fields are combined with logical 'AND'.
+"""
+input ExplorePlotRangeEnumComparisonExp {
+  _eq: ExplorePlotRangeEnum
+  _in: [ExplorePlotRangeEnum!]
   _isNull: Boolean
-  _lt: elevation_plot_time
-  _lte: elevation_plot_time
-  _neq: elevation_plot_time
-  _nin: [elevation_plot_time!]
+  _neq: ExplorePlotRangeEnum
+  _nin: [ExplorePlotRangeEnum!]
+}
+
+"""
+input type for inserting data into table "explorePlotRange"
+"""
+input ExplorePlotRangeInsertInput {
+  id: String
+}
+
+"""aggregate max on columns"""
+type ExplorePlotRangeMaxFields {
+  id: String
+}
+
+"""aggregate min on columns"""
+type ExplorePlotRangeMinFields {
+  id: String
+}
+
+"""
+response of any mutation on the table "explorePlotRange"
+"""
+type ExplorePlotRangeMutationResponse {
+  """number of rows affected by the mutation"""
+  affected_rows: Int!
+
+  """data from the rows affected by the mutation"""
+  returning: [ExplorePlotRange!]!
+}
+
+"""
+on_conflict condition type for table "explorePlotRange"
+"""
+input ExplorePlotRangeOnConflict {
+  constraint: ExplorePlotRangeConstraint!
+  update_columns: [ExplorePlotRangeUpdateColumn!]! = []
+  where: ExplorePlotRangeBoolExp
+}
+
+"""Ordering options when selecting data from "explorePlotRange"."""
+input ExplorePlotRangeOrderBy {
+  id: OrderBy
+}
+
+"""primary key columns input for table: explorePlotRange"""
+input ExplorePlotRangePkColumnsInput {
+  id: String!
+}
+
+"""
+select columns of table "explorePlotRange"
+"""
+enum ExplorePlotRangeSelectColumn {
+  """column name"""
+  id
+}
+
+"""
+input type for updating data in table "explorePlotRange"
+"""
+input ExplorePlotRangeSetInput {
+  id: String
+}
+
+"""
+update columns of table "explorePlotRange"
+"""
+enum ExplorePlotRangeUpdateColumn {
+  """column name"""
+  id
+}
+
+input ExplorePlotRangeUpdates {
+  """sets the columns of the filtered rows to the given values"""
+  _set: ExplorePlotRangeSetInput
+  where: ExplorePlotRangeBoolExp!
+}
+
+"""
+columns and relationships of "explorePlotTime"
+"""
+type ExplorePlotTime {
+  id: String!
+}
+
+"""
+aggregated selection of "explorePlotTime"
+"""
+type ExplorePlotTimeAggregate {
+  aggregate: ExplorePlotTimeAggregateFields
+  nodes: [ExplorePlotTime!]!
+}
+
+"""
+aggregate fields of "explorePlotTime"
+"""
+type ExplorePlotTimeAggregateFields {
+  count(columns: [ExplorePlotTimeSelectColumn!], distinct: Boolean): Int!
+  max: ExplorePlotTimeMaxFields
+  min: ExplorePlotTimeMinFields
+}
+
+"""
+Boolean expression to filter rows from the table "explorePlotTime". All fields are combined with a logical 'AND'.
+"""
+input ExplorePlotTimeBoolExp {
+  _and: [ExplorePlotTimeBoolExp!]
+  _not: ExplorePlotTimeBoolExp
+  _or: [ExplorePlotTimeBoolExp!]
+  id: StringComparisonExp
+}
+
+"""
+unique or primary key constraints on table "explorePlotTime"
+"""
+enum ExplorePlotTimeConstraint {
+  """
+  unique or primary key constraint on columns "id"
+  """
+  explorePlotTime_pkey
+}
+
+enum ExplorePlotTimeEnum {
+  SIDEREAL
+  SITE
+  UT
+}
+
+"""
+Boolean expression to compare columns of type "ExplorePlotTimeEnum". All fields are combined with logical 'AND'.
+"""
+input ExplorePlotTimeEnumComparisonExp {
+  _eq: ExplorePlotTimeEnum
+  _in: [ExplorePlotTimeEnum!]
+  _isNull: Boolean
+  _neq: ExplorePlotTimeEnum
+  _nin: [ExplorePlotTimeEnum!]
+}
+
+"""
+input type for inserting data into table "explorePlotTime"
+"""
+input ExplorePlotTimeInsertInput {
+  id: String
+}
+
+"""aggregate max on columns"""
+type ExplorePlotTimeMaxFields {
+  id: String
+}
+
+"""aggregate min on columns"""
+type ExplorePlotTimeMinFields {
+  id: String
+}
+
+"""
+response of any mutation on the table "explorePlotTime"
+"""
+type ExplorePlotTimeMutationResponse {
+  """number of rows affected by the mutation"""
+  affected_rows: Int!
+
+  """data from the rows affected by the mutation"""
+  returning: [ExplorePlotTime!]!
+}
+
+"""
+on_conflict condition type for table "explorePlotTime"
+"""
+input ExplorePlotTimeOnConflict {
+  constraint: ExplorePlotTimeConstraint!
+  update_columns: [ExplorePlotTimeUpdateColumn!]! = []
+  where: ExplorePlotTimeBoolExp
+}
+
+"""Ordering options when selecting data from "explorePlotTime"."""
+input ExplorePlotTimeOrderBy {
+  id: OrderBy
+}
+
+"""primary key columns input for table: explorePlotTime"""
+input ExplorePlotTimePkColumnsInput {
+  id: String!
+}
+
+"""
+select columns of table "explorePlotTime"
+"""
+enum ExplorePlotTimeSelectColumn {
+  """column name"""
+  id
+}
+
+"""
+input type for updating data in table "explorePlotTime"
+"""
+input ExplorePlotTimeSetInput {
+  id: String
+}
+
+"""
+update columns of table "explorePlotTime"
+"""
+enum ExplorePlotTimeUpdateColumn {
+  """column name"""
+  id
+}
+
+input ExplorePlotTimeUpdates {
+  """sets the columns of the filtered rows to the given values"""
+  _set: ExplorePlotTimeSetInput
+  where: ExplorePlotTimeBoolExp!
 }
 
 """
@@ -579,6 +822,7 @@ enum LucumaGridLayoutIdConstraint {
 }
 
 enum LucumaGridLayoutIdEnum {
+  CONSTRAINTS
   OBSERVATIONS
   TARGETS
 }
@@ -2133,8 +2377,8 @@ columns and relationships of "lucumaUserPreferences"
 """
 type LucumaUserPreferences {
   aladinMouseScroll: Boolean
-  elevationPlotRange: elevation_plot_range
-  elevationPlotTime: elevation_plot_time
+  elevationPlotRange: ExplorePlotRangeEnum
+  elevationPlotTime: ExplorePlotTimeEnum
 
   """An object relationship"""
   lucuma_user: LucumaUser!
@@ -2166,8 +2410,8 @@ input LucumaUserPreferencesBoolExp {
   _not: LucumaUserPreferencesBoolExp
   _or: [LucumaUserPreferencesBoolExp!]
   aladinMouseScroll: BooleanComparisonExp
-  elevationPlotRange: ElevationPlotRangeComparisonExp
-  elevationPlotTime: ElevationPlotTimeComparisonExp
+  elevationPlotRange: ExplorePlotRangeEnumComparisonExp
+  elevationPlotTime: ExplorePlotTimeEnumComparisonExp
   lucuma_user: LucumaUserBoolExp
   userId: StringComparisonExp
 }
@@ -2187,23 +2431,19 @@ input type for inserting data into table "lucumaUserPreferences"
 """
 input LucumaUserPreferencesInsertInput {
   aladinMouseScroll: Boolean
-  elevationPlotRange: elevation_plot_range
-  elevationPlotTime: elevation_plot_time
+  elevationPlotRange: ExplorePlotRangeEnum
+  elevationPlotTime: ExplorePlotTimeEnum
   lucuma_user: LucumaUserObjRelInsertInput
   userId: String
 }
 
 """aggregate max on columns"""
 type LucumaUserPreferencesMaxFields {
-  elevationPlotRange: elevation_plot_range
-  elevationPlotTime: elevation_plot_time
   userId: String
 }
 
 """aggregate min on columns"""
 type LucumaUserPreferencesMinFields {
-  elevationPlotRange: elevation_plot_range
-  elevationPlotTime: elevation_plot_time
   userId: String
 }
 
@@ -2263,8 +2503,8 @@ input type for updating data in table "lucumaUserPreferences"
 """
 input LucumaUserPreferencesSetInput {
   aladinMouseScroll: Boolean
-  elevationPlotRange: elevation_plot_range
-  elevationPlotTime: elevation_plot_time
+  elevationPlotRange: ExplorePlotRangeEnum
+  elevationPlotTime: ExplorePlotTimeEnum
   userId: String
 }
 
@@ -2703,9 +2943,37 @@ scalar bigint
 
 scalar breakpoint_name
 
-scalar elevation_plot_range
+"""
+Streaming cursor of the table "explorePlotRange"
+"""
+input explorePlotRange_streamCursorInput {
+  """Stream column input with initial value"""
+  initialValue: explorePlotRange_streamCursorValueInput!
 
-scalar elevation_plot_time
+  """cursor ordering"""
+  ordering: CursorOrdering
+}
+
+"""Initial value of the column from where the streaming should start"""
+input explorePlotRange_streamCursorValueInput {
+  id: String
+}
+
+"""
+Streaming cursor of the table "explorePlotTime"
+"""
+input explorePlotTime_streamCursorInput {
+  """Stream column input with initial value"""
+  initialValue: explorePlotTime_streamCursorValueInput!
+
+  """cursor ordering"""
+  ordering: CursorOrdering
+}
+
+"""Initial value of the column from where the streaming should start"""
+input explorePlotTime_streamCursorValueInput {
+  id: String
+}
 
 """
 order by avg() on columns of table "exploreTargetPreferences"
@@ -3042,8 +3310,8 @@ input lucumaUserPreferences_streamCursorInput {
 """Initial value of the column from where the streaming should start"""
 input lucumaUserPreferences_streamCursorValueInput {
   aladinMouseScroll: Boolean
-  elevationPlotRange: elevation_plot_range
-  elevationPlotTime: elevation_plot_time
+  elevationPlotRange: ExplorePlotRangeEnum
+  elevationPlotTime: ExplorePlotTimeEnum
   userId: String
 }
 
@@ -3065,6 +3333,32 @@ input lucumaUser_streamCursorValueInput {
 
 """mutation root"""
 type Mutation {
+  """
+  delete data from the table: "explorePlotRange"
+  """
+  deleteExplorePlotRange(
+    """filter the rows which have to be deleted"""
+    where: ExplorePlotRangeBoolExp!
+  ): ExplorePlotRangeMutationResponse
+
+  """
+  delete single row from the table: "explorePlotRange"
+  """
+  deleteExplorePlotRangeByPk(id: String!): ExplorePlotRange
+
+  """
+  delete data from the table: "explorePlotTime"
+  """
+  deleteExplorePlotTime(
+    """filter the rows which have to be deleted"""
+    where: ExplorePlotTimeBoolExp!
+  ): ExplorePlotTimeMutationResponse
+
+  """
+  delete single row from the table: "explorePlotTime"
+  """
+  deleteExplorePlotTimeByPk(id: String!): ExplorePlotTime
+
   """
   delete data from the table: "exploreTargetPreferences"
   """
@@ -3220,6 +3514,50 @@ type Mutation {
   delete single row from the table: "tmpTimingWindows"
   """
   deleteTmpTimingWindowsByPk(id: Int!): TmpTimingWindows
+
+  """
+  insert data into the table: "explorePlotRange"
+  """
+  insertExplorePlotRange(
+    """the rows to be inserted"""
+    objects: [ExplorePlotRangeInsertInput!]!
+
+    """upsert condition"""
+    onConflict: ExplorePlotRangeOnConflict
+  ): ExplorePlotRangeMutationResponse
+
+  """
+  insert a single row into the table: "explorePlotRange"
+  """
+  insertExplorePlotRangeOne(
+    """the row to be inserted"""
+    object: ExplorePlotRangeInsertInput!
+
+    """upsert condition"""
+    onConflict: ExplorePlotRangeOnConflict
+  ): ExplorePlotRange
+
+  """
+  insert data into the table: "explorePlotTime"
+  """
+  insertExplorePlotTime(
+    """the rows to be inserted"""
+    objects: [ExplorePlotTimeInsertInput!]!
+
+    """upsert condition"""
+    onConflict: ExplorePlotTimeOnConflict
+  ): ExplorePlotTimeMutationResponse
+
+  """
+  insert a single row into the table: "explorePlotTime"
+  """
+  insertExplorePlotTimeOne(
+    """the row to be inserted"""
+    object: ExplorePlotTimeInsertInput!
+
+    """upsert condition"""
+    onConflict: ExplorePlotTimeOnConflict
+  ): ExplorePlotTime
 
   """
   insert data into the table: "exploreTargetPreferences"
@@ -3484,6 +3822,62 @@ type Mutation {
     """upsert condition"""
     onConflict: TmpTimingWindowsOnConflict
   ): TmpTimingWindows
+
+  """
+  update data of the table: "explorePlotRange"
+  """
+  updateExplorePlotRange(
+    """sets the columns of the filtered rows to the given values"""
+    _set: ExplorePlotRangeSetInput
+
+    """filter the rows which have to be updated"""
+    where: ExplorePlotRangeBoolExp!
+  ): ExplorePlotRangeMutationResponse
+
+  """
+  update single row of the table: "explorePlotRange"
+  """
+  updateExplorePlotRangeByPk(
+    """sets the columns of the filtered rows to the given values"""
+    _set: ExplorePlotRangeSetInput
+    pk_columns: ExplorePlotRangePkColumnsInput!
+  ): ExplorePlotRange
+
+  """
+  update multiples rows of table: "explorePlotRange"
+  """
+  updateExplorePlotRangeMany(
+    """updates to execute, in order"""
+    updates: [ExplorePlotRangeUpdates!]!
+  ): [ExplorePlotRangeMutationResponse]
+
+  """
+  update data of the table: "explorePlotTime"
+  """
+  updateExplorePlotTime(
+    """sets the columns of the filtered rows to the given values"""
+    _set: ExplorePlotTimeSetInput
+
+    """filter the rows which have to be updated"""
+    where: ExplorePlotTimeBoolExp!
+  ): ExplorePlotTimeMutationResponse
+
+  """
+  update single row of the table: "explorePlotTime"
+  """
+  updateExplorePlotTimeByPk(
+    """sets the columns of the filtered rows to the given values"""
+    _set: ExplorePlotTimeSetInput
+    pk_columns: ExplorePlotTimePkColumnsInput!
+  ): ExplorePlotTime
+
+  """
+  update multiples rows of table: "explorePlotTime"
+  """
+  updateExplorePlotTimeMany(
+    """updates to execute, in order"""
+    updates: [ExplorePlotTimeUpdates!]!
+  ): [ExplorePlotTimeMutationResponse]
 
   """
   update data of the table: "exploreTargetPreferences"
@@ -3847,6 +4241,94 @@ type Mutation {
 }
 
 type Query {
+  """
+  fetch data from the table: "explorePlotRange"
+  """
+  explorePlotRange(
+    """distinct select on columns"""
+    distinctOn: [ExplorePlotRangeSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [ExplorePlotRangeOrderBy!]
+
+    """filter the rows returned"""
+    where: ExplorePlotRangeBoolExp
+  ): [ExplorePlotRange!]!
+
+  """
+  fetch aggregated fields from the table: "explorePlotRange"
+  """
+  explorePlotRangeAggregate(
+    """distinct select on columns"""
+    distinctOn: [ExplorePlotRangeSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [ExplorePlotRangeOrderBy!]
+
+    """filter the rows returned"""
+    where: ExplorePlotRangeBoolExp
+  ): ExplorePlotRangeAggregate!
+
+  """
+  fetch data from the table: "explorePlotRange" using primary key columns
+  """
+  explorePlotRangeByPk(id: String!): ExplorePlotRange
+
+  """
+  fetch data from the table: "explorePlotTime"
+  """
+  explorePlotTime(
+    """distinct select on columns"""
+    distinctOn: [ExplorePlotTimeSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [ExplorePlotTimeOrderBy!]
+
+    """filter the rows returned"""
+    where: ExplorePlotTimeBoolExp
+  ): [ExplorePlotTime!]!
+
+  """
+  fetch aggregated fields from the table: "explorePlotTime"
+  """
+  explorePlotTimeAggregate(
+    """distinct select on columns"""
+    distinctOn: [ExplorePlotTimeSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [ExplorePlotTimeOrderBy!]
+
+    """filter the rows returned"""
+    where: ExplorePlotTimeBoolExp
+  ): ExplorePlotTimeAggregate!
+
+  """fetch data from the table: "explorePlotTime" using primary key columns"""
+  explorePlotTimeByPk(id: String!): ExplorePlotTime
+
   """
   fetch data from the table: "exploreTargetPreferences"
   """
@@ -4381,6 +4863,122 @@ type Query {
 }
 
 type Subscription {
+  """
+  fetch data from the table: "explorePlotRange"
+  """
+  explorePlotRange(
+    """distinct select on columns"""
+    distinctOn: [ExplorePlotRangeSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [ExplorePlotRangeOrderBy!]
+
+    """filter the rows returned"""
+    where: ExplorePlotRangeBoolExp
+  ): [ExplorePlotRange!]!
+
+  """
+  fetch aggregated fields from the table: "explorePlotRange"
+  """
+  explorePlotRangeAggregate(
+    """distinct select on columns"""
+    distinctOn: [ExplorePlotRangeSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [ExplorePlotRangeOrderBy!]
+
+    """filter the rows returned"""
+    where: ExplorePlotRangeBoolExp
+  ): ExplorePlotRangeAggregate!
+
+  """
+  fetch data from the table: "explorePlotRange" using primary key columns
+  """
+  explorePlotRangeByPk(id: String!): ExplorePlotRange
+
+  """
+  fetch data from the table in a streaming manner : "explorePlotRange"
+  """
+  explorePlotRangeStream(
+    """maximum number of rows returned in a single batch"""
+    batchSize: Int!
+
+    """cursor to stream the results returned by the query"""
+    cursor: [explorePlotRange_streamCursorInput]!
+
+    """filter the rows returned"""
+    where: ExplorePlotRangeBoolExp
+  ): [ExplorePlotRange!]!
+
+  """
+  fetch data from the table: "explorePlotTime"
+  """
+  explorePlotTime(
+    """distinct select on columns"""
+    distinctOn: [ExplorePlotTimeSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [ExplorePlotTimeOrderBy!]
+
+    """filter the rows returned"""
+    where: ExplorePlotTimeBoolExp
+  ): [ExplorePlotTime!]!
+
+  """
+  fetch aggregated fields from the table: "explorePlotTime"
+  """
+  explorePlotTimeAggregate(
+    """distinct select on columns"""
+    distinctOn: [ExplorePlotTimeSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [ExplorePlotTimeOrderBy!]
+
+    """filter the rows returned"""
+    where: ExplorePlotTimeBoolExp
+  ): ExplorePlotTimeAggregate!
+
+  """fetch data from the table: "explorePlotTime" using primary key columns"""
+  explorePlotTimeByPk(id: String!): ExplorePlotTime
+
+  """
+  fetch data from the table in a streaming manner : "explorePlotTime"
+  """
+  explorePlotTimeStream(
+    """maximum number of rows returned in a single batch"""
+    batchSize: Int!
+
+    """cursor to stream the results returned by the query"""
+    cursor: [explorePlotTime_streamCursorInput]!
+
+    """filter the rows returned"""
+    where: ExplorePlotTimeBoolExp
+  ): [ExplorePlotTime!]!
+
   """
   fetch data from the table: "exploreTargetPreferences"
   """

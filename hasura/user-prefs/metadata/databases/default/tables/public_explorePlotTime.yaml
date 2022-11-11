@@ -1,0 +1,4 @@
+table:
+  name: explorePlotTime
+  schema: public
+is_enum: true
