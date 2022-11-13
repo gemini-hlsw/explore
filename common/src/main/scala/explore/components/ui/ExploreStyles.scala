@@ -238,10 +238,8 @@ object ExploreStyles {
   val TargetAladinCell: Css         = Css("target-aladin-cell")
   val TargetAladin: Css             = Css("aladin-target")
   val TargetAladinDisableMouse: Css = Css("aladin-target-disable-mouse")
-  val TargetRaDecMinWidth: Css      = Css("target-ra-dec-min-width")
   val TargetForm: Css               = Css("target-form")
   val TargetProperMotionForm: Css   = Css("target-proper-motion-form")
-  val SearchForm: Css               = Css("target-search-form")
   val TargetRVControls: Css         = Css("target-rv-controls")
   val CatalogueForm: Css            = Css("catalogue-form")
 
@@ -286,7 +284,6 @@ object ExploreStyles {
   val BrightnessesTableFooter: Css             = Css("explore-brightnesses-footer")
   val BrightnessesTableUnitsDropdown: Css      = Css("explore-brightnesses-units-dropdown")
   val BrightnessesTableDeletButtonWrapper: Css = Css("explore-brightnesses-delete-button-wrapper")
-  val BrightnessAddButton: Css                 = Css("explore-brightnesses-add-button")
   val EmptyTreeContent: Css                    = Css("explore-empty-tree-content")
 
   // This is rendered without React, so we include SUI classes.
@@ -403,8 +400,6 @@ object ExploreStyles {
   val TargetSearchAladin: Css             = Css("aladin-search-target")
   val TargetSearchPreviewPlaceholder: Css = Css("explore-target-search-preview-placeholder")
   val TargetSearchResults: Css            = Css("explore-target-search-results")
-
-  val NewEmissionLineWavelength: Css = Css("explore-new-emissionline-wavelength")
 
   // Aladin Target classes
   val ScienceTarget: Css           = Css("science-target")

@@ -63,12 +63,6 @@ a {
   color: var(--site-link-color);
 }
 
-.explore-new-emissionline-wavelength {
-  .ui.input {
-    padding: 0 0.5em;
-  }
-}
-
 // Mixins
 //
 .full-height-width {
@@ -551,66 +545,6 @@ tfoot {
   height: 100%;
 }
 
-.target-tile-body {
-  display: flex;
-  flex-direction: column;
-
-  >div {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-  }
-}
-
-.target-tile-editor {
-  flex-grow: 2;
-  display: flex;
-  flex-direction: column;
-}
-
-.expanded-aladin() {
-  grid-template-areas: 'aladin';
-  grid-template-columns: 1fr;
-
-  .explore-title-undo-buttons {
-    display: none;
-  }
-
-  .target-form {
-    display: none;
-  }
-
-  .target-proper-motion-form {
-    display: none;
-  }
-
-  .target-source-profile-editor {
-    display: none;
-  }
-}
-
-.aladin-full-screen {
-
-  .explore-shared-edit-warning,
-  .target-asterism-table {
-    display: none;
-  }
-
-  >div .target-grid {
-    .expanded-aladin();
-  }
-
-}
-
-.explore-form.target-source-profile-editor {
-  align-self: stretch;
-  grid-template-rows: repeat(3, auto) 1fr;
-
-  &.gaussian {
-    grid-template-rows: repeat(4, auto) 1fr;
-  }
-}
-
 .obs-tree {
   display: flex;
   flex-direction: column;
@@ -930,11 +864,6 @@ tfoot {
     'fov    agsstatus guidestar curr   center';
 }
 
-.aladin-search-icon {
-  align-self: center;
-  margin-left: 0.5em;
-}
-
 .moon-phase {
   position: absolute;
   top: 5px;
@@ -985,28 +914,6 @@ tfoot {
   width: 100%;
 }
 
-.target-form {
-  grid-template-columns: [label] minmax(100px, 10%) [field] 1fr;
-  justify-items: stretch;
-}
-
-.target-search-form {
-  grid-column: 1 / span 2;
-  display: grid;
-  grid-template-columns: [label] minmax(100px, 10%) [field] minmax(calc(100% - 100px - 0.3em),
-      calc(90% - 0.3em));
-  grid-gap: 0.3em;
-
-  .field {
-    margin-bottom: 0 !important;
-  }
-
-  .ui.input {
-    display: grid;
-    grid-template-columns: [input] calc(100% - 20px) [svg] 20px;
-  }
-}
-
 .target-brightness-cell {
   .form {
     height: 100%;
@@ -1018,23 +925,8 @@ tfoot {
   outline: 3px solid pink !important;
 }
 
-.target-rv-controls {
-  justify-self: stretch;
-
-  .explore-grow-1 {
-    margin-left: 0.3em !important;
-  }
-}
-
 .catalogue-form {
   height: max-content; // keep it from expanding to fill cell
-}
-
-// for the ra and dec inputs expand
-.target-ra-dec-min-width {
-  .ui.input {
-    width: 100%;
-  }
 }
 
 .error-label-mixin() {
@@ -1147,98 +1039,6 @@ div.partner-split-total {
   }
 }
 
-.explore-brightnesses-wrapper {
-  grid-column: 1 / -1;
-  justify-self: stretch;
-  align-self: stretch;
-}
-
-.explore-brightnesses-container {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.target-grid {
-  display: grid;
-  grid-gap: 0.5em;
-  grid-row-gap: 0.3em;
-  padding: 0.5em;
-  height: 100%;
-
-  .explore-title-undo-buttons {
-    grid-area: undo;
-  }
-
-  .target-aladin-cell {
-    grid-area: aladin;
-  }
-
-  .target-form {
-    grid-area: coordinates;
-  }
-
-  .target-proper-motion-form {
-    grid-area: proper-motion;
-  }
-
-  .target-source-profile-editor {
-    grid-area: source-profile;
-  }
-}
-
-.tile-xl-width,
-.tile-lg-width,
-.tile-md-width,
-.tile-sm-width {
-  .target-grid {
-    grid-template-columns: 1fr 2fr;
-    grid-template-rows: min-content min-content min-content 1fr;
-    grid-template-areas:
-      'undo           aladin'
-      'coordinates    aladin'
-      'proper-motion  aladin'
-      'source-profile aladin';
-  }
-
-  .target-aladin-cell {
-    grid-row: span 4;
-  }
-}
-
-// For very small tables hide the headers and add fake "header" to the left of the row
-.tile-xs-width {
-
-  // For very small tables make the undo buttons remove the text
-  .explore-buttons-undo-label {
-    display: none;
-  }
-
-  .target-grid {
-    .expanded-aladin();
-  }
-
-  .explore-brightnesses-container {
-
-    .ui.table,
-    thead,
-    tbody,
-    th,
-    td,
-    tr {
-      // SUI already has an !important
-      display: block !important;
-    }
-
-    // Hide table headers (but not display: none;, for accessibility)
-    thead tr {
-      position: absolute;
-      top: -9999px;
-      left: -9999px;
-    }
-  }
-}
-
 // position all fields relative so that error labels position properly.
 .ui .field {
   position: relative;
@@ -1262,13 +1062,15 @@ div.partner-split-total {
 .ui.button.blended-button {
   border: none;
   background-color: transparent;
-  box-shadow: none;
-
+  box-shadow: none;n
   &:hover {
     outline: 1px var(--site-border-color) solid;
   }
 }
 
+// TODO: This was also used in the brightness tables, but is no longer needed. 
+// When the obs badge is converted to primereact, this may be able to go away, or
+// be made specific to the obs badge
 .ui.button.delete-button {
   padding: 0;
   margin: 0;
@@ -1347,82 +1149,59 @@ html {
   padding: 1em;
 }
 
+// This selector is never matched after the new table transistion. But, the table doesn't
+// seem to be shown on small screens?
 // https://css-tricks.com/responsive-data-tables/
-.tile-xs-width .explore-brightnesses-container .ui.ui.ui.ui.table:not(.unstackable) {
-  tfoot {
-    display: block;
-  }
+// .tile-xs-width .explore-brightnesses-container .ui.ui.ui.ui.table:not(.unstackable) {
+//   tfoot {
+//     display: block;
+//   }
 
-  td {
-    /* Behave  like a "row" */
-    position: relative;
-    padding-left: 40%;
-    padding-right: 0.5em;
-  }
+//   td {
+//     /* Behave  like a "row" */
+//     position: relative;
+//     padding-left: 40%;
+//     padding-right: 0.5em;
+//   }
 
-  td::before {
-    /* Now like a table header */
-    position: absolute;
+//   td::before {
+//     /* Now like a table header */
+//     position: absolute;
 
-    /* Top/left values mimic padding */
-    top: 6px;
-    left: 6px;
-    width: 45%;
-    padding-left: 0.25em;
-    white-space: nowrap;
-  }
+//     /* Top/left values mimic padding */
+//     top: 6px;
+//     left: 6px;
+//     width: 45%;
+//     padding-left: 0.25em;
+//     white-space: nowrap;
+//   }
 
-  td:first-child::before {
-    font-weight: normal;
-  }
+//   td:first-child::before {
+//     font-weight: normal;
+//   }
 
-  // It is a bit unfortunate that we have to hardcode the column names here
-  td:nth-of-type(1)::before {
-    content: 'Value';
-  }
+//   // It is a bit unfortunate that we have to hardcode the column names here
+//   td:nth-of-type(1)::before {
+//     content: 'Value';
+//   }
 
-  td:nth-of-type(2)::before {
-    content: 'Band';
-  }
+//   td:nth-of-type(2)::before {
+//     content: 'Band';
+//   }
 
-  td:nth-of-type(3)::before {
-    content: 'System';
-  }
+//   td:nth-of-type(3)::before {
+//     content: 'System';
+//   }
 
-  td:nth-of-type(4)::before {
-    content: '';
-  }
+//   td:nth-of-type(4)::before {
+//     content: '';
+//   }
 
-  // Align the trash button
-  td:last-child button {
-    margin-left: auto;
-  }
-}
-
-.explore-brightnesses-units-dropdown .ui.dropdown {
-  white-space: nowrap;
-}
-
-.explore-brightnesses-delete-button-wrapper {
-  display: flex;
-  justify-content: center;
-
-  .ui.button.delete-button {
-    padding: 0.4em 0;
-  }
-}
-
-.explore-brightnesses-footer {
-  display: flex;
-  justify-content: flex-start;
-  padding: 0.2em;
-  border-top: 0.2px solid var(--under-tab-border-color);
-  background-color: var(--table-footer-background);
-}
-
-.ui.button.explore-brightnesses-add-button {
-  margin-left: 5px;
-}
+//   // Align the trash button
+//   td:last-child button {
+//     margin-left: auto;
+//   }
+// }
 
 .obs-badge-header {
   display: flex;

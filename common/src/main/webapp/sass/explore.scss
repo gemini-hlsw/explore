@@ -13,6 +13,10 @@ $tree-section-width: 300px;
   }
 }
 
+.p-inputgroup.explore-warning-input {
+  box-shadow: -0 0 2px 1px var(--warning-background-color);
+}
+
 // -----
 // Table toolbar
 // -----
@@ -157,7 +161,212 @@ $tree-section-width: 300px;
       display: unset;
     }
   }
+}
 
+// ------
+// Sidereal Target Editor
+// ------
+.explore-brightnesses-wrapper {
+  grid-column: 1 / -1;
+  justify-self: stretch;
+  align-self: stretch;
+}
+
+.explore-brightnesses-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.explore-brightnesses-units-dropdown.p-dropdown {
+  white-space: nowrap;
+  width: 100%;
+}
+
+.explore-brightnesses-delete-button-wrapper {
+  display: flex;
+  justify-content: center;
+
+  .p-button.delete-button {
+    padding: 0;
+    flex-shrink: 0;
+  }
+}
+
+.target-grid {
+  display: grid;
+  grid-gap: 0.5em;
+  grid-row-gap: 0.3em;
+  padding: 0.5em;
+  height: 100%;
+
+  .explore-title-undo-buttons {
+    grid-area: undo;
+  }
+
+  .target-aladin-cell {
+    grid-area: aladin;
+  }
+
+  .target-form {
+    grid-area: coordinates;
+  }
+
+  .target-proper-motion-form {
+    grid-area: proper-motion;
+
+    .p-inputgroup>span:first-of-type {
+      width: 4em;
+    }
+  }
+
+  .target-source-profile-editor {
+    grid-area: source-profile;
+  }
+}
+
+.target-rv-controls {
+  justify-self: stretch;
+
+  .explore-grow-1 {
+    margin-left: 0.3em !important;
+  }
+}
+
+@mixin expanded-aladin {
+  grid-template-areas: 'aladin';
+  grid-template-columns: 1fr;
+
+  .explore-title-undo-buttons {
+    display: none;
+  }
+
+  .target-form {
+    display: none;
+  }
+
+  .target-proper-motion-form {
+    display: none;
+  }
+
+  .target-source-profile-editor {
+    display: none;
+  }
+}
+
+.tile-xl-width,
+.tile-lg-width,
+.tile-md-width,
+.tile-sm-width {
+  .target-grid {
+    grid-template-columns: 1fr 2fr;
+    grid-template-rows: min-content min-content min-content 1fr;
+    grid-template-areas:
+      'undo           aladin'
+      'coordinates    aladin'
+      'proper-motion  aladin'
+      'source-profile aladin';
+  }
+
+  .target-aladin-cell {
+    grid-row: span 4;
+  }
+}
+
+.tile-xs-width {
+  
+  // undo buttons are not show in xs tiles, only aladin
+  // For very small tables make the undo buttons remove the text
+  // .explore-buttons-undo-label {
+  //   display: none;
+  // }
+  
+  .target-grid {
+    @include expanded-aladin;
+  }
+  
+  // brightness are not even displayed in xs tiles.
+  // For very small tables hide the headers and add fake "header" to the left of the row
+  // .explore-brightnesses-container {
+
+  //   .ui.table,
+  //   thead,
+  //   tbody,
+  //   th,
+  //   td,
+  //   tr {
+  //     // SUI already has an !important
+  //     display: block !important;
+  //   }
+
+  //   // Hide table headers (but not display: none;, for accessibility)
+  //   thead tr {
+  //     position: absolute;
+  //     top: -9999px;
+  //     left: -9999px;
+  //   }
+  // }
+}
+
+.target-tile-body {
+  display: flex;
+  flex-direction: column;
+
+  >div {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.target-tile-editor {
+  flex-grow: 2;
+  display: flex;
+  flex-direction: column;
+}
+
+.aladin-full-screen {
+
+  .explore-shared-edit-warning,
+  .target-asterism-table {
+    display: none;
+  }
+
+  >div .target-grid {
+    @include expanded-aladin;
+  }
+
+}
+
+.pl-form-column.target-source-profile-editor {
+  align-self: stretch;
+  grid-template-rows: repeat(3, auto) 1fr;
+
+  &.gaussian {
+    grid-template-rows: repeat(4, auto) 1fr;
+  }
+}
+
+.explore-brightnesses-footer {
+  display: flex;
+  justify-content: flex-start;
+  padding: 0.2em;
+  border-top: 0.2px solid var(--under-tab-border-color);
+  background-color: var(--table-footer-background);
+
+  .pl-form-field-label {
+    flex-shrink: 0;
+  }
+
+  .pl-form-field {
+    margin-left: 5px;
+    width: 15em;
+  }
+
+  .p-button {
+    margin-left: 5px;
+    flex-shrink: 0;
+  }
 }
 
 // ------

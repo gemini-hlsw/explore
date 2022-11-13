@@ -33,16 +33,14 @@ import lucuma.core.validation.*
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
-import lucuma.ui.forms.EnumViewSelect
-import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
+import lucuma.ui.primereact.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import react.common.ReactFnProps
-import react.semanticui.elements.button.Button
-import react.semanticui.sizes.*
+import react.primereact.Button
 import reactST.{tanstackTableCore => raw}
 
 import scala.collection.immutable.SortedMap
@@ -93,7 +91,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
             _._2.zoom(EmissionLine.lineWidth[T]).stripQuantity,
             "Width (km/s)",
             cell =>
-              FormInputEV[View, PosBigDecimal](
+              FormInputTextView(
                 id = NonEmptyString.unsafeFrom(s"lineWidth_${cell.row.id}"),
                 value = cell.value,
                 validFormat = InputValidSplitEpi.posBigDecimal,
@@ -111,7 +109,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
             ),
             "Brightness",
             cell =>
-              FormInputEV[View, PosBigDecimal](
+              FormInputTextView(
                 id = NonEmptyString.unsafeFrom(s"lineValue_${cell.row.id}"),
                 value = cell.value,
                 validFormat = InputValidSplitEpi.posBigDecimalWithScientificNotation,
@@ -129,10 +127,9 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
             ),
             "Units",
             cell =>
-              EnumViewSelect[View, Units Of LineFlux[T]](
-                id = s"lineUnits_${cell.row.id}",
+              EnumDropdownView(
+                id = NonEmptyString.unsafeFrom(s"lineUnits_${cell.row.id}"),
                 value = cell.value,
-                compact = true,
                 disabled = disabled,
                 clazz = ExploreStyles.BrightnessesTableUnitsDropdown
               ),
@@ -148,11 +145,12 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
               <.div(
                 ExploreStyles.BrightnessesTableDeletButtonWrapper,
                 Button(
-                  size = Small,
+                  icon = Icons.Trash,
                   clazz = ExploreStyles.DeleteButton,
+                  text = true,
                   disabled = disabled,
                   onClick = emissionLines.mod(_ - cell.value)
-                )(Icons.Trash)
+                ).small
               ),
             size = 20.toPx,
             minSize = 20.toPx,
@@ -197,29 +195,25 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
       val footer =
         <.div(
           ExploreStyles.BrightnessesTableFooter,
-          "New line λ: ",
-          FormInputEV[View, Option[Wavelength]](
+          FormInputTextView(
             id = "newWavelength".refined,
             value = newWavelength,
+            label = "New line λ:",
             validFormat = InputValidSplitEpi.fromFormat(formatWavelengthMicron).optional,
             changeAuditor = ChangeAuditor
               .fromFormat(formatWavelengthMicron)
               .decimal(3.refined)
               .allow(List("0", "0.").contains)
               .optional,
-            onTextChange = s => addDisabled.set(AddDisabled(s.isEmpty)),
-            clazz = ExploreStyles.NewEmissionLineWavelength
+            onTextChange = (s: String) => addDisabled.set(AddDisabled(s.isEmpty)),
+            postAddons = List("μm")
           ),
-          "μm",
           Button(
-            size = Mini,
-            compact = true,
+            icon = Icons.New,
             onClick = addLine,
-            clazz = ExploreStyles.BrightnessAddButton,
+            severity = Button.Severity.Secondary,
             disabled = props.disabled || addDisabled.get.value
-          )(
-            Icons.New
-          )
+          ).mini.compact
         )
 
       <.div(ExploreStyles.ExploreTable |+| ExploreStyles.BrightnessesContainer)(

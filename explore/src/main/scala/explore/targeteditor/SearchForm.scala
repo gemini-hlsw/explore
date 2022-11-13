@@ -18,18 +18,18 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Target
 import lucuma.core.validation.InputValidSplitEpi
 import lucuma.refined.*
-import lucuma.ui.forms.*
+import lucuma.ui.primereact.FormInputTextView
+import lucuma.ui.primereact.LucumaStyles
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.abbreviate
 import org.scalajs.dom
+import org.scalajs.dom.ext.KeyCode
+import org.scalajs.dom.ext.KeyValue
 import react.common.ReactFnProps
-import react.semanticui.collections.form.Form.FormProps
-import react.semanticui.collections.form.*
-import react.semanticui.elements.label.LabelPointing
-import react.semanticui.shorthand.*
+import react.primereact.Button
 
 import scalajs.js.timers
 import scalajs.js.JSConverters.*
@@ -70,6 +70,7 @@ object SearchForm {
         _ => // Auto-select name field on new targets.
           // Accessing dom elements by id is not ideal in React, but passing a ref to the <input> element of a
           // Form.Input is a bit convoluted. We should reevaluate when and if we switch to another component library.
+          // TODO: I don't think this even works.
           CallbackTo(
             Option(dom.document.getElementById("search"))
               .foldMap(node =>
@@ -99,48 +100,33 @@ object SearchForm {
               _ => searchComplete >> error.setState("Search error...".refined[NonEmpty].some)
             )
 
-        def iconKeyPress(e: ReactKeyboardEvent): Callback =
-          search >> e.stopPropagationCB *> e.preventDefaultCB
-
-        def submitForm: Form.OnSubmitE =
-          (e: Form.ReactFormEvent, _: FormProps) =>
-            e.preventDefaultCB >> search.when(enabled.value).void
+        def onKeyPress = (e: ReactKeyboardEvent) =>
+          Callback.log(s"Key Code: ${e.key}") >>
+            Callback.log(s"Key Value: ${KeyValue.Enter}") >>
+            (if (Option(e.key).exists(_ === KeyValue.Enter))
+               Callback.log("Hit Enter") >> search.when(enabled.value).void
+             else Callback.log("Not Enter"))
 
         val searchIcon =
-          (if (enabled.value)
-             if (props.searching.get.nonEmpty)
-               Icons.Spinner.withSpin(true)
-             else
-               Icons.Search.addModifiers(
-                 Seq(^.onKeyPress ==> iconKeyPress, ^.onClick --> search)
-               )
-           else
-             Icons.Ban).withClass(ExploreStyles.AladinSearchIcon)(^.tabIndex := -1)
+          if (enabled.value)
+            if (props.searching.get.nonEmpty)
+              Icons.Spinner.withSpin(true)
+            else
+              Icons.Search.addModifiers(Seq(^.onClick --> search))
+          else Icons.Ban
+        val disabled   = props.searching.get.exists(_ === props.id)
 
-        val disabled = props.searching.get.exists(_ === props.id)
-
-        Form(clazz = ExploreStyles.SearchForm, onSubmitE = submitForm)(
-          <.label("Name",
-                  HelpIcon("target/main/search-target.md".refined),
-                  ExploreStyles.SkipToNext
-          ),
-          FormInputEV(
-            id = "search".refined,
-            value = term.withOnMod(props.targetView.set),
-            validFormat = InputValidSplitEpi.nonEmptyString,
-            error = error.value.orUndefined,
-            loading = disabled,
-            disabled = disabled,
-            errorClazz = ExploreStyles.InputErrorTooltipBelow,
-            errorPointing = LabelPointing.Above,
-            onTextChange = _ => error.setState(none),
-            onValidChange = valid => enabled.setState(valid),
-            icon = searchIcon
-          ).withMods(^.placeholder := "Name"),
-          // We need this hidden control to submit when pressing enter
-          <.input(^.`type`         := "submit", ^.hidden := true)
-        )
-
+        FormInputTextView(
+          id = "search".refined,
+          value = term.withOnMod(props.targetView.set),
+          label = React.Fragment("Name", HelpIcon("target/main/search-target.md".refined)),
+          validFormat = InputValidSplitEpi.nonEmptyString,
+          error = error.value.orUndefined,
+          disabled = disabled,
+          postAddons = List(searchIcon),
+          onTextChange = (_: String) => error.setState(none),
+          onValidChange = valid => enabled.setState(valid),
+          placeholder = "Name"
+        ).withMods(^.onKeyPress ==> onKeyPress)
       }
-
 }

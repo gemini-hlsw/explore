@@ -27,17 +27,15 @@ import lucuma.core.util.Enumerated
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
-import lucuma.ui.forms.EnumViewSelect
-import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
+import lucuma.ui.primereact.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import monocle.Focus
 import react.common.ReactFnProps
-import react.semanticui.elements.button.Button
-import react.semanticui.sizes.*
+import react.primereact.Button
 import reactST.{tanstackTableCore => raw}
 
 import scala.collection.immutable.SortedMap
@@ -102,7 +100,7 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                 _._2.zoom(Measure.valueTagged[BigDecimal, Brightness[T]]),
                 "Value",
                 cell =>
-                  FormInputEV[View, BigDecimal](
+                  FormInputTextView(
                     id = NonEmptyString.unsafeFrom(s"brightnessValue_${cell.row.id}"),
                     value = cell.value,
                     validFormat = ExploreModelValidators.brightnessValidWedge,
@@ -119,10 +117,9 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                 _._2.zoom(Measure.unitsTagged[BigDecimal, Brightness[T]]),
                 "Units",
                 cell =>
-                  EnumViewSelect[View, Units Of Brightness[T]](
+                  EnumDropdownView[Units Of Brightness[T]](
                     id = NonEmptyString.unsafeFrom(s"brightnessUnits_${cell.row.id}"),
                     value = cell.value,
-                    compact = true,
                     disabled = disabled,
                     clazz = ExploreStyles.BrightnessesTableUnitsDropdown
                   ),
@@ -137,11 +134,12 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                 cell =>
                   <.div(ExploreStyles.BrightnessesTableDeletButtonWrapper)(
                     Button(
-                      size = Small,
+                      icon = Icons.Trash,
                       clazz = ExploreStyles.DeleteButton,
+                      text = true,
                       disabled = disabled,
                       onClick = brightnesses.mod(_ - cell.value)
-                    )(Icons.Trash)
+                    ).small
                   ),
                 size = 20.toPx,
                 minSize = 20.toPx,
@@ -179,23 +177,19 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                   )
 
                 React.Fragment(
-                  EnumViewSelect(
-                    id = "NEW_BAND",
+                  EnumDropdownView(
+                    id = "NEW_BAND".refined,
                     value = bandView,
                     exclude = state.get.usedBands,
-                    upward = true,
-                    clazz = ExploreStyles.FlatFormField,
+                    clazz = ExploreStyles.FlatFormField, // TODO: Look at this CSS
                     disabled = props.disabled
                   ),
                   Button(
-                    size = Mini,
-                    compact = true,
+                    icon = Icons.New,
                     onClick = addBrightness,
-                    clazz = ExploreStyles.BrightnessAddButton,
-                    disabled = props.disabled
-                  )(
-                    Icons.New
-                  )
+                    disabled = props.disabled,
+                    severity = Button.Severity.Secondary
+                  ).mini.compact
                 )
               }
               .whenDefined
