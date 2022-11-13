@@ -1347,69 +1347,94 @@ html {
   padding: 1em;
 }
 
+// This selector is never matched after the new table transistion. But, the table doesn't
+// seem to be shown on small screens?
 // https://css-tricks.com/responsive-data-tables/
-.tile-xs-width .explore-brightnesses-container .ui.ui.ui.ui.table:not(.unstackable) {
-  tfoot {
-    display: block;
-  }
+// .tile-xs-width .explore-brightnesses-container .ui.ui.ui.ui.table:not(.unstackable) {
+//   tfoot {
+//     display: block;
+//   }
 
-  td {
-    /* Behave  like a "row" */
-    position: relative;
-    padding-left: 40%;
-    padding-right: 0.5em;
-  }
+//   td {
+//     /* Behave  like a "row" */
+//     position: relative;
+//     padding-left: 40%;
+//     padding-right: 0.5em;
+//   }
 
-  td::before {
-    /* Now like a table header */
-    position: absolute;
+//   td::before {
+//     /* Now like a table header */
+//     position: absolute;
 
-    /* Top/left values mimic padding */
-    top: 6px;
-    left: 6px;
-    width: 45%;
-    padding-left: 0.25em;
-    white-space: nowrap;
-  }
+//     /* Top/left values mimic padding */
+//     top: 6px;
+//     left: 6px;
+//     width: 45%;
+//     padding-left: 0.25em;
+//     white-space: nowrap;
+//   }
 
-  td:first-child::before {
-    font-weight: normal;
-  }
+//   td:first-child::before {
+//     font-weight: normal;
+//   }
 
-  // It is a bit unfortunate that we have to hardcode the column names here
-  td:nth-of-type(1)::before {
-    content: 'Value';
-  }
+//   // It is a bit unfortunate that we have to hardcode the column names here
+//   td:nth-of-type(1)::before {
+//     content: 'Value';
+//   }
 
-  td:nth-of-type(2)::before {
-    content: 'Band';
-  }
+//   td:nth-of-type(2)::before {
+//     content: 'Band';
+//   }
 
-  td:nth-of-type(3)::before {
-    content: 'System';
-  }
+//   td:nth-of-type(3)::before {
+//     content: 'System';
+//   }
 
-  td:nth-of-type(4)::before {
-    content: '';
-  }
+//   td:nth-of-type(4)::before {
+//     content: '';
+//   }
 
-  // Align the trash button
-  td:last-child button {
-    margin-left: auto;
-  }
-}
+//   // Align the trash button
+//   td:last-child button {
+//     margin-left: auto;
+//   }
+// }
 
-.explore-brightnesses-units-dropdown .ui.dropdown {
+.explore-brightnesses-units-dropdown.p-dropdown {
   white-space: nowrap;
+  width: 100%;
 }
 
 .explore-brightnesses-delete-button-wrapper {
   display: flex;
   justify-content: center;
 
-  .ui.button.delete-button {
-    padding: 0.4em 0;
+  .p-button.delete-button {
+    padding: 0;
   }
+}
+
+// TODO: Temporary until the entire sidereal target editor is converted to primereact
+.explore-brightnesses-wrapper .explore-brightnesses-container {
+  // Because even the brightnesses tabler is embedded in a SUI Form, the SUI CSS os overriding 
+  // the primereact CSS.
+  .p-inputgroup.pl-form-field input {
+    font-family: "Lato", "Helvetica Neue", Arial, Helvetica, sans-serif;
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.87);
+    background: #121212;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #383838;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+    appearance: none;
+    border-radius: 4px;
+  }
+
+  // Need to do some theme work on the dropdowns.
+ .p-dropdown .p-dropdown-trigger-icon {
+  font-size: .929em;
+ } 
 }
 
 .explore-brightnesses-footer {
@@ -1420,7 +1445,7 @@ html {
   background-color: var(--table-footer-background);
 }
 
-.ui.button.explore-brightnesses-add-button {
+.p-button.explore-brightnesses-add-button {
   margin-left: 5px;
 }
 
