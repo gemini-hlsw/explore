@@ -35,7 +35,7 @@ object Settings {
     val lucumaSSO        = "0.4.3"
     val lucumaUI         = "0.56.0"
     val monocle          = "3.1.0"
-    val mouse            = "1.2.0"
+    val mouse            = "1.2.1"
     val mUnit            = "0.7.29"
     val mUnitCatsEffect  = "1.0.7"
     val pprint           = "0.8.0"
