@@ -107,7 +107,7 @@ lazy val workers = project
 
 lazy val graphql = project
   .in(file("common-graphql"))
-  .dependsOn(model.jvm)
+  .dependsOn(model.js)
   .settings(commonSettings: _*)
   .settings(commonJsLibSettings: _*)
   .settings(
@@ -118,7 +118,7 @@ lazy val graphql = project
 
 lazy val queries = project
   .in(file("common-queries"))
-  .dependsOn(model.jvm)
+  .dependsOn(model.js)
   .settings(commonSettings: _*)
   .settings(commonJsLibSettings: _*)
   .settings(
