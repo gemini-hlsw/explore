@@ -21,11 +21,13 @@ import monocle.Lens
 import org.typelevel.log4cats.Logger
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ODBConversions.*
+import lucuma.core.model.Program
 
 object ConstraintsQueries:
   case class UndoView(
-    obsIds:  List[Observation.Id],
-    undoCtx: UndoContext[ConstraintSet]
+    programId: Program.Id,
+    obsIds:    List[Observation.Id],
+    undoCtx:   UndoContext[ConstraintSet]
   )(using TransactionalClient[IO, ObservationDB], Logger[IO]):
     def apply[A](
       modelGet:  ConstraintSet => A,
@@ -38,6 +40,7 @@ object ConstraintsQueries:
           UpdateObservationMutation
             .execute(
               UpdateObservationsInput(
+                programId = programId,
                 WHERE = obsIds.toWhereObservation.assign,
                 SET = ObservationPropertiesInput(
                   constraintSet = remoteSet(value)(ConstraintSetInput()).assign

@@ -18,7 +18,7 @@ import monocle.Focus
 import org.typelevel.cats.time.*
 
 import java.time.Duration
-import java.time.Instant
+import lucuma.core.util.Timestamp
 
 trait ObsSummary {
   val id: Observation.Id
@@ -59,7 +59,7 @@ trait ObsWithConf extends ObsSummary {
 }
 
 trait ObsWithVizTime extends ObsSummary {
-  def visualizationTime: Option[Instant]
+  def visualizationTime: Option[Timestamp]
 }
 
 trait ObsWithTitle extends ObsSummary {
@@ -129,7 +129,7 @@ case class ObsSummaryWithTitleConstraintsAndConf(
   override val activeStatus:      ObsActiveStatus,
   override val duration:          Duration,
   override val scienceMode:       Option[ScienceMode],
-  override val visualizationTime: Option[Instant]
+  override val visualizationTime: Option[Timestamp]
 ) extends ObsSummary
     with ObsWithTitle
     with ObsWithConstraints
@@ -183,7 +183,7 @@ case class ObsSummaryWithConstraintsAndConf(
   override val duration:          Duration,
   scienceTargetIds:               Set[Target.Id],
   override val scienceMode:       Option[ScienceMode],
-  override val visualizationTime: Option[Instant],
+  override val visualizationTime: Option[Timestamp],
   posAngleConstraint:             Option[PosAngleConstraint],
   wavelength:                     Option[Wavelength]
 ) extends ObsSummary

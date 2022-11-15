@@ -34,6 +34,7 @@ import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries
 import react.common.ReactFnProps
+import lucuma.core.util.Timestamp
 
 import java.time.Instant
 
@@ -44,7 +45,7 @@ object AsterismEditorTile:
     programId:       Program.Id,
     obsId:           ObsIdSet,
     potAsterismMode: Pot[(View[Option[Asterism]], Option[ScienceMode])],
-    potVizTime:      Pot[View[Option[Instant]]],
+    potVizTime:      Pot[View[Option[Timestamp]]],
     posAngle:        Option[PosAngleConstraint],
     constraints:     Option[ConstraintSet],
     wavelength:      Option[Wavelength],
@@ -59,7 +60,7 @@ object AsterismEditorTile:
 
     // Save the time here. this works for the obs and target tabs
     val vizTimeView = potVizTime.map(_.withOnMod { t =>
-      ObsQueries.updateVisualizationTime[IO](obsId.toList, t).runAsync
+      ObsQueries.updateVisualizationTime[IO](programId, obsId.toList, t).runAsync
     })
 
     def control: VdomNode = <.div(VizTimeEditor(vizTimeView))

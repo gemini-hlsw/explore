@@ -55,6 +55,7 @@ import queries.schemas.odb.ObsQueries
 import react.common.ReactFnProps
 import react.primereact.Button
 import react.semanticui.modules.checkbox.*
+import lucuma.core.util.Timestamp
 
 import java.time.Instant
 
@@ -63,7 +64,7 @@ case class AsterismEditor(
   programId:     Program.Id,
   obsIds:        ObsIdSet,
   asterism:      View[Option[Asterism]],
-  potVizTime:    Pot[View[Option[Instant]]],
+  potVizTime:    Pot[View[Option[Timestamp]]],
   scienceMode:   Option[ScienceMode],
   posAngle:      Option[PosAngleConstraint],
   constraints:   Option[ConstraintSet],
@@ -113,7 +114,7 @@ object AsterismEditor {
           }
           asterismAdd >>
             selectedTarget.async.set(tid.some) >>
-            AsterismQueries.addTargetToAsterisms[IO](obsIds.toList, tid)
+            AsterismQueries.addTargetToAsterisms[IO](programId, obsIds.toList, tid)
         }
         .guarantee(adding.async.set(AreAdding(false)))
 
@@ -167,7 +168,7 @@ object AsterismEditor {
 
         // Save the time here. this works for the obs and target tabs
         val vizTimeView = props.potVizTime.map(_.withOnMod { t =>
-          ObsQueries.updateVisualizationTime[IO](props.obsIds.toList, t).runAsync
+          ObsQueries.updateVisualizationTime[IO](props.programId, props.obsIds.toList, t).runAsync
         })
 
         val vizTime = props.potVizTime.toOption.flatMap(_.get)
@@ -204,6 +205,7 @@ object AsterismEditor {
           props.renderInTitle(VizTimeEditor(vizTimeView)),
           TargetTable(
             props.userId.some,
+            props.programId,
             props.obsIds,
             props.asterism,
             targetView,

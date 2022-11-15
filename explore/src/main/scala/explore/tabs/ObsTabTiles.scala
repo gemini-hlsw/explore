@@ -54,6 +54,7 @@ import react.resizeDetector.*
 import react.semanticui.addons.select.Select
 import react.semanticui.addons.select.Select.SelectItem
 import react.semanticui.modules.dropdown.Dropdown
+import lucuma.core.util.Timestamp
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
@@ -77,6 +78,7 @@ object ObsTabTiles:
   private type Props = ObsTabTiles
 
   private def makeConstraintsSelector(
+    programId:        Program.Id,
     constraintGroups: View[ConstraintsList],
     obsView:          Pot[View[ObsEditData]]
   )(using TransactionalClient[IO, ObservationDB]): VdomNode =
@@ -97,7 +99,7 @@ object ObsTabTiles:
               .zoom(ObsEditData.scienceData.andThen(ScienceData.constraints))
               .set(cg.constraintSet) >>
               ObsQueries
-                .updateObservationConstraintSet[IO](List(vod.get.id), cg.constraintSet)
+                .updateObservationConstraintSet[IO](programId, List(vod.get.id), cg.constraintSet)
                 .runAsyncAndForget
           }.getOrEmpty
         },
@@ -158,7 +160,7 @@ object ObsTabTiles:
         val potAsterismMode: Pot[(View[Option[Asterism]], Option[ScienceMode])] =
           potAsterism.map(x => (x, scienceMode))
 
-        val vizTimeView: Pot[View[Option[Instant]]] =
+        val vizTimeView: Pot[View[Option[Timestamp]]] =
           obsViewPot.map(_.zoom(ObsEditData.visualizationTime))
 
         val vizTime = vizTimeView.toOption.flatMap(_.get)
@@ -166,7 +168,9 @@ object ObsTabTiles:
         // asterism base coordinates at viz time or default to base coordinates
         val targetCoords: Option[CoordinatesAtVizTime] =
           (vizTime, potAsterism.toOption)
-            .mapN((instant, asterism) => asterism.get.flatMap(_.baseTracking.at(instant)))
+            .mapN((timestamp, asterism) =>
+              asterism.get.flatMap(_.baseTracking.at(timestamp.toInstant))
+            )
             .flatten
             .orElse(
               // If e.g. vizTime isn't defined default to the asterism base coordinates
@@ -213,7 +217,8 @@ object ObsTabTiles:
             itcTarget
           )
 
-        val constraintsSelector = makeConstraintsSelector(props.constraintGroups, obsViewPot)
+        val constraintsSelector =
+          makeConstraintsSelector(props.programId, props.constraintGroups, obsViewPot)
 
         // first target of the obs. We can use it in case there is no target focus
         val firstTarget = props.targetMap.collect {
@@ -269,6 +274,7 @@ object ObsTabTiles:
         // as changing the css classes on the various tiles when the dropdown is clicked to control z-index.
         val constraintsTile =
           ConstraintsTile.constraintsTile(
+            props.programId,
             props.obsId,
             constraints,
             props.undoStacks
@@ -281,6 +287,7 @@ object ObsTabTiles:
         val configurationTile =
           ConfigurationTile.configurationTile(
             props.userId,
+            props.programId,
             props.obsId,
             obsViewPot.map(obsEditData =>
               (obsEditData.get.title,

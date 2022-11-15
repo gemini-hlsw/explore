@@ -325,7 +325,7 @@ object ExploreStyles {
   val AdvancedConfigurationCol2: Css    = Css("explore-advanced-configuration-col2")
   val AdvancedConfigurationCol3: Css    = Css("explore-advanced-configuration-col3")
   val AdvancedConfigurationButtons: Css = Css("explore-advanced-configuration-buttons")
-  val ConfigurationCapabilities: Css    = Css("explore-configuration-capabilities")
+  val ConfigurationCapability: Css      = Css("explore-configuration-capability")
   val InputWithLabel: Css               = Css("explore-configuration-input-with-units")
   val ConfigurationFilter: Css          = Css("explore-configuration-filter") |+| Css("field")
   val ConfigurationFilterItem: Css      = Css("explore-configuration-filter-item")

@@ -72,6 +72,7 @@ import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.elements.loader.Loader
 import react.semanticui.sizes.*
+import lucuma.core.util.Timestamp
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
@@ -329,7 +330,7 @@ object TargetTabContents extends TwoPanels:
         )
       }
 
-      val getVizTime: AsterismGroupsWithObs => Option[Instant] = a =>
+      val getVizTime: AsterismGroupsWithObs => Option[Timestamp] = a =>
         for {
           id <- idsToEdit.single
           o  <- a.observations.get(id)
@@ -337,7 +338,7 @@ object TargetTabContents extends TwoPanels:
         } yield t
 
       def modVizTime(
-        mod: Option[Instant] => Option[Instant]
+        mod: Option[Timestamp] => Option[Timestamp]
       ): AsterismGroupsWithObs => AsterismGroupsWithObs = awgo =>
         idsToEdit.single
           .map(i =>
@@ -353,7 +354,7 @@ object TargetTabContents extends TwoPanels:
           .withOnMod(onModAsterismsWithObs(groupIds, idsToEdit))
           .zoom(getAsterism)(modAsterism)
 
-      val vizTimeView: View[Option[Instant]] =
+      val vizTimeView: View[Option[Timestamp]] =
         asterismGroupsWithObs
           .zoom(getVizTime)(modVizTime)
 

@@ -17,7 +17,7 @@ import lucuma.core.model.ExposureTimeMode.*
 import lucuma.core.model.ProposalClass.*
 import lucuma.core.model.*
 import lucuma.core.syntax.time.*
-import lucuma.schemas.ObservationDB.Enums.PosAngleConstraintType
+// import lucuma.schemas.ObservationDB.Enums.PosAngleConstraintType
 import lucuma.schemas.ObservationDB.Types.*
 
 import scala.collection.immutable.SortedMap
@@ -40,7 +40,8 @@ trait ODBConversions:
 
     @targetName("ProgramId_toWhereObservation")
     def toWhereObservation: WhereObservation =
-      WhereObservation(programId = WhereOrderProgramId(EQ = id.assign).assign)
+      WhereObservation()
+      // WhereObservation(programId = WhereOrderProgramId(EQ = id.assign).assign)
 
   extension (id: Target.Id)
     def toWhereTarget: WhereTarget =
@@ -234,27 +235,28 @@ trait ODBConversions:
 
   extension (p: PosAngleConstraint)
     def toInput: PosAngleConstraintInput =
-      p match
-        case PosAngleConstraint.Fixed(angle)               =>
-          PosAngleConstraintInput(
-            constraint = PosAngleConstraintType.Fixed.assign,
-            angle = angle.toInput.assign
-          )
-        case PosAngleConstraint.AllowFlip(angle)           =>
-          PosAngleConstraintInput(
-            constraint = PosAngleConstraintType.AllowFlip.assign,
-            angle = angle.toInput.assign
-          )
-        case PosAngleConstraint.ParallacticOverride(angle) =>
-          PosAngleConstraintInput(
-            constraint = PosAngleConstraintType.AverageParallactic.assign,
-            angle = angle.toInput.assign
-          )
-        case PosAngleConstraint.AverageParallactic         =>
-          PosAngleConstraintInput(
-            constraint = PosAngleConstraintType.AverageParallactic.assign,
-            angle = Input.unassign
-          )
+      PosAngleConstraintInput()
+      // p match
+      //   case PosAngleConstraint.Fixed(angle)               =>
+      //     PosAngleConstraintInput(
+      //       constraint = PosAngleConstraintType.Fixed.assign,
+      //       angle = angle.toInput.assign
+      //     )
+      //   case PosAngleConstraint.AllowFlip(angle)           =>
+      //     PosAngleConstraintInput(
+      //       constraint = PosAngleConstraintType.AllowFlip.assign,
+      //       angle = angle.toInput.assign
+      //     )
+      //   case PosAngleConstraint.ParallacticOverride(angle) =>
+      //     PosAngleConstraintInput(
+      //       constraint = PosAngleConstraintType.AverageParallactic.assign,
+      //       angle = angle.toInput.assign
+      //     )
+      //   case PosAngleConstraint.AverageParallactic         =>
+      //     PosAngleConstraintInput(
+      //       constraint = PosAngleConstraintType.AverageParallactic.assign,
+      //       angle = Input.unassign
+      //     )
 
   extension (nnd: NonNegDuration)
     def toInput: NonNegDurationInput =
@@ -324,7 +326,7 @@ trait ODBConversions:
       toOActivation = proposal.toOActivation.assign,
       `abstract` = proposal.abstrakt.orUnassign,
       partnerSplits = proposal.partnerSplits.toList.map { case (par, pct) =>
-        PartnerSplitsInput(par.assign, pct.assign)
+        PartnerSplitInput(par, pct)
       }.assign
     )
 
@@ -346,7 +348,7 @@ trait ODBConversions:
           name = sidereal.name.assign,
           sidereal = toInput.assign,
           sourceProfile = sidereal.sourceProfile.toInput.assign
-        ).assign
+        )
       )
 
   extension (nonsidereal: Target.Nonsidereal)
@@ -361,7 +363,7 @@ trait ODBConversions:
           name = nonsidereal.name.assign,
           nonsidereal = toInput.assign,
           sourceProfile = nonsidereal.sourceProfile.toInput.assign
-        ).assign
+        )
       )
 
 object ODBConversions extends ODBConversions

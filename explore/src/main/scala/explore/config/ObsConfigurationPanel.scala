@@ -31,8 +31,10 @@ import react.common.Css
 import react.common.ReactFnProps
 import react.semanticui.collections.form.Form
 import react.semanticui.sizes.*
+import lucuma.core.model.Program
 
 case class ObsConfigurationPanel(
+  programId:    Program.Id,
   obsId:        Observation.Id,
   posAngleView: View[Option[PosAngleConstraint]]
 ) extends ReactFnProps(ObsConfigurationPanel.component)
@@ -64,7 +66,9 @@ object ObsConfigurationPanel:
         import ctx.given
 
         val paView = props.posAngleView
-          .withOnMod(c => ObsQueries.updatePosAngle[IO](List(props.obsId), c).runAsync)
+          .withOnMod(c =>
+            ObsQueries.updatePosAngle[IO](props.programId, List(props.obsId), c).runAsync
+          )
 
         val posAngleOptionsView: View[PosAngleOptions] =
           paView.zoom(unsafePosOptionsLens)

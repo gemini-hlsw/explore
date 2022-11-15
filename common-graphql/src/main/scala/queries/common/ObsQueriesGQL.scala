@@ -40,69 +40,39 @@ object ObsQueriesGQL {
                 microseconds
               }
             }
-            scienceMode {
+            observingMode {
               gmosNorthLongSlit {
-                basic {
-                  grating
-                  filter
-                  fpu
-                }
-                advanced {
-                  overrideGrating
-                  overrideFilter
-                  overrideFpu
-                  overrideExposureTimeMode {
-                    signalToNoise {
-                      value
-                    }
-                    fixedExposure {
-                      count
-                      time {
-                        microseconds
-                      }
-                    }
-                  }
-                  explicitXBin
-                  explicitYBin
-                  explicitAmpReadMode
-                  explicitAmpGain
-                  explicitRoi
-                  explicitWavelengthDithersNm
-                  explicitSpatialOffsets {
-                    microarcseconds
-                  }
+                initialGrating
+                initialFilter
+                initialFpu
+                grating
+                filter
+                fpu
+                explicitXBin
+                explicitYBin
+                explicitAmpReadMode
+                explicitAmpGain
+                explicitRoi
+                explicitWavelengthDithers
+                explicitSpatialOffsets {
+                  microarcseconds
                 }
               }
               gmosSouthLongSlit {
-                basic {
-                  grating
-                  filter
-                  fpu
-                }
-                advanced {
-                  overrideGrating
-                  overrideFilter
-                  overrideFpu
-                  overrideExposureTimeMode {
-                    signalToNoise {
-                      value
-                    }
-                    fixedExposure {
-                      count
-                      time {
-                        microseconds
-                      }
-                    }
-                  }
-                  explicitXBin
-                  explicitYBin
-                  explicitAmpReadMode
-                  explicitAmpGain
-                  explicitRoi
-                  explicitWavelengthDithersNm
-                  explicitSpatialOffsets {
-                    microarcseconds
-                  }
+                initialGrating
+                initialFilter
+                initialFpu
+                grating
+                filter
+                fpu
+                explicitXBin
+                explicitYBin
+                explicitAmpReadMode
+                explicitAmpGain
+                explicitRoi
+                explicitWavelengthDithers
+                explicitSpatialOffsets {
+                  microarcseconds
                 }
               }
             }
@@ -161,7 +131,7 @@ object ObsQueriesGQL {
           object PlannedTime {
             type Execution = time.Duration
           }
-          type ScienceMode = model.ScienceMode
+          type ObservingMode = model.ScienceMode
         }
       }
 
@@ -266,7 +236,7 @@ object ObsQueriesGQL {
           subtitle
           visualizationTime
           posAngleConstraint {
-            constraint
+            mode
             angle {
               microarcseconds
             }
@@ -473,78 +443,42 @@ object ObsQueriesGQL {
               focalPlaneAngle {
                 microarcseconds
               }
-              capabilities
+              capability
             }
           }
-          scienceMode {
+          observingMode {
             gmosNorthLongSlit {
-              basic {
-                grating
-                filter
-                fpu
-              }
-              advanced {
-                overrideWavelength {
-                  picometers
-                }
-                overrideGrating
-                overrideFilter
-                overrideFpu
-                overrideExposureTimeMode {
-                  signalToNoise {
-                    value
-                  }
-                  fixedExposure {
-                    count
-                    time {
-                      microseconds
-                    }
-                  }
-                }
-                explicitXBin
-                explicitYBin
-                explicitAmpReadMode
-                explicitAmpGain
-                explicitRoi
-                explicitWavelengthDithersNm
-                explicitSpatialOffsets {
-                  microarcseconds
-                }
+              initialGrating
+              initialFilter
+              initialFpu
+              grating
+              filter
+              fpu
+              explicitXBin
+              explicitYBin
+              explicitAmpReadMode
+              explicitAmpGain
+              explicitRoi
+              explicitWavelengthDithers
+              explicitSpatialOffsets {
+                microarcseconds
               }
             }
             gmosSouthLongSlit {
-              basic {
-                grating
-                filter
-                fpu
-              }
-              advanced {
-                overrideWavelength {
-                  picometers
-                }
-                overrideGrating
-                overrideFilter
-                overrideFpu
-                overrideExposureTimeMode {
-                  signalToNoise {
-                    value
-                  }
-                  fixedExposure {
-                    count
-                    time {
-                      microseconds
-                    }
-                  }
-                }
-                explicitXBin
-                explicitYBin
-                explicitAmpReadMode
-                explicitAmpGain
-                explicitRoi
-                explicitWavelengthDithersNm
-                explicitSpatialOffsets {
-                  microarcseconds
-                }
+              initialGrating
+              initialFilter
+              initialFpu
+              grating
+              filter
+              fpu
+              explicitXBin
+              explicitYBin
+              explicitAmpReadMode
+              explicitAmpGain
+              explicitRoi
+              explicitWavelengthDithers
+              explicitSpatialOffsets {
+                microarcseconds
               }
             }
           }
@@ -577,7 +511,7 @@ object ObsQueriesGQL {
           }
         }
 
-        type ScienceMode = model.ScienceMode
+        type ObservingMode = model.ScienceMode
 
         object Itc {
           type ExposureTime = lucuma.core.model.NonNegDuration

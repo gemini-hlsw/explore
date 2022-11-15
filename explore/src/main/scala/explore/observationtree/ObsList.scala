@@ -187,13 +187,13 @@ object ObsList:
                     obs,
                     selected = selected,
                     setStatusCB = (ObsListActions
-                      .obsEditStatus(obs.id)
+                      .obsEditStatus(props.programId, obs.id)
                       .set(undoCtx) _).compose((_: ObsStatus).some).some,
                     setActiveStatusCB = (ObsListActions
-                      .obsActiveStatus(obs.id)
+                      .obsActiveStatus(props.programId, obs.id)
                       .set(undoCtx) _).compose((_: ObsActiveStatus).some).some,
                     setSubtitleCB = (ObsListActions
-                      .obsEditSubtitle(obs.id)
+                      .obsEditSubtitle(props.programId, obs.id)
                       .set(undoCtx) _).compose((_: Option[NonEmptyString]).some).some,
                     deleteCB = ObsListActions
                       .obsExistence(obs.id, o => setObs(props.programId, o.some, ctx))

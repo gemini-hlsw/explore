@@ -62,6 +62,8 @@ import react.common.ReactFnProps
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.label.LabelPointing
 import react.semanticui.sizes.Small
+import lucuma.core.util.Timestamp
+import explore.model.reusability.given
 
 import java.time.Instant
 
@@ -76,7 +78,7 @@ case class SearchCallback(
 case class SiderealTargetEditor(
   uid:           User.Id,
   asterism:      View[Asterism],
-  vizTime:       Option[Instant],
+  vizTime:       Option[Timestamp],
   posAngle:      Option[PosAngleConstraint],
   scienceMode:   Option[ScienceMode],
   constraints:   Option[ConstraintSet],
@@ -143,7 +145,7 @@ object SiderealTargetEditor {
       .useState(false) // cloning
       // If vizTime is not set, change it to now
       .useEffectResultWithDepsBy((p, _, _) => p.vizTime) { (_, _, _) => vizTime =>
-        IO(vizTime.getOrElse(Instant.now()))
+        IO(vizTime.getOrElse(Timestamp.unsafeFromInstantTruncated(Instant.now())))
       }
       .render { (props, ctx, cloning, vizTime) =>
         import ctx.given
@@ -300,7 +302,7 @@ object SiderealTargetEditor {
                 UndoButtons(undoCtx, disabled = disabled)
                   .when(props.renderInTitle.isEmpty && props.obsIdSubset.isEmpty)
               ),
-              potRender[Instant](vizTime =>
+              potRender[Timestamp](vizTime =>
                 AladinCell(
                   props.uid,
                   tid,

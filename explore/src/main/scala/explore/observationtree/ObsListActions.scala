@@ -22,6 +22,7 @@ import monocle.Iso
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ODBConversions.*
 import queries.schemas.odb.ObsQueries
+import lucuma.core.model.Program
 
 trait ObsListActions {
   protected val obsListMod =
@@ -38,13 +39,16 @@ trait ObsListActions {
       .withKey(obsId)
       .composeOptionLens(Focus[(ObsSummaryWithTitleConstraintsAndConf, Int)](_._1))
 
-  def obsEditStatus(obsId: Observation.Id)(using TransactionalClient[IO, ObservationDB]) = Action(
+  def obsEditStatus(programId: Program.Id, obsId: Observation.Id)(using
+    TransactionalClient[IO, ObservationDB]
+  ) = Action(
     access = obsWithId(obsId).composeOptionLens(ObsSummaryWithTitleConstraintsAndConf.status)
   )(onSet =
     (_, status) =>
       UpdateObservationMutation
         .execute[IO](
           UpdateObservationsInput(
+            programId = programId,
             WHERE = obsId.toWhereObservation.assign,
             SET = ObservationPropertiesInput(status = status.orIgnore)
           )
@@ -52,13 +56,16 @@ trait ObsListActions {
         .void
   )
 
-  def obsEditSubtitle(obsId: Observation.Id)(using TransactionalClient[IO, ObservationDB]) = Action(
+  def obsEditSubtitle(programId: Program.Id, obsId: Observation.Id)(using
+    TransactionalClient[IO, ObservationDB]
+  ) = Action(
     access = obsWithId(obsId).composeOptionLens(ObsSummaryWithTitleConstraintsAndConf.subtitle)
   )(onSet =
     (_, subtitleOpt) =>
       UpdateObservationMutation
         .execute[IO](
           UpdateObservationsInput(
+            programId = programId,
             WHERE = obsId.toWhereObservation.assign,
             SET = ObservationPropertiesInput(subtitle = subtitleOpt.flatten.orUnassign)
           )
@@ -66,13 +73,16 @@ trait ObsListActions {
         .void
   )
 
-  def obsActiveStatus(obsId: Observation.Id)(using TransactionalClient[IO, ObservationDB]) = Action(
+  def obsActiveStatus(programId: Program.Id, obsId: Observation.Id)(using
+    TransactionalClient[IO, ObservationDB]
+  ) = Action(
     access = obsWithId(obsId).composeOptionLens(ObsSummaryWithTitleConstraintsAndConf.activeStatus)
   )(onSet =
     (_, activeStatus) =>
       UpdateObservationMutation
         .execute[IO](
           UpdateObservationsInput(
+            programId = programId,
             WHERE = obsId.toWhereObservation.assign,
             SET = ObservationPropertiesInput(activeStatus = activeStatus.orIgnore)
           )

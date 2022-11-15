@@ -25,10 +25,12 @@ import org.typelevel.log4cats.Logger
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ODBConversions.*
 import queries.schemas.odb.ObsQueries.*
+import lucuma.core.model.Program
 
 object ScienceQueries:
 
   case class ScienceRequirementsUndoView(
+    programId:               Program.Id,
     obsId:                   Observation.Id,
     scienceRequirementsUndo: UndoSetter[ScienceRequirementsData]
   )(using TransactionalClient[IO, ObservationDB], Logger[IO]):
@@ -43,6 +45,7 @@ object ScienceQueries:
           UpdateObservationMutation
             .execute(
               UpdateObservationsInput(
+                programId = programId,
                 WHERE = obsId.toWhereObservation.assign,
                 SET = ObservationPropertiesInput(scienceRequirements =
                   remoteSet(value)(ScienceRequirementsInput()).assign
@@ -63,9 +66,9 @@ object ScienceQueries:
     def mode(n: enums.ScienceMode): Endo[ScienceRequirementsInput] =
       ScienceRequirementsInput.mode.replace(n.assign)
 
-    def angle(w: Angle): FocalPlaneAngleInput =
-      (FocalPlaneAngleInput.microarcseconds := w.toMicroarcseconds.assign)
-        .runS(FocalPlaneAngleInput())
+    def angle(w: Angle): AngleInput =
+      (AngleInput.microarcseconds := w.toMicroarcseconds.assign)
+        .runS(AngleInput())
         .value
 
     def wavelength(w: Wavelength): WavelengthInput =
@@ -98,7 +101,7 @@ object ScienceQueries:
           _ <- SpectroscopyScienceRequirementsInput.focalPlaneAngle    := op.focalPlaneAngle
                  .map(angle)
                  .orUnassign
-          _ <- SpectroscopyScienceRequirementsInput.capabilities       := op.capabilities.orUnassign
+          _ <- SpectroscopyScienceRequirementsInput.capability         := op.capability.orUnassign
         } yield ()
       ScienceRequirementsInput.spectroscopy.replace(
         input.runS(SpectroscopyScienceRequirementsInput()).value.assign

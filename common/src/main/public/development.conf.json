@@ -1,6 +1,6 @@
 {
   "environment": "DEVELOPMENT",
-  "odbURI": "wss://lucuma-odb-development.herokuapp.com/ws",
+  "odbURI": "wss://172.28.98.72:8082/ws",
   "preferencesDBURI": "wss://user-prefs-development.herokuapp.com/v1/graphql",
   "itcURI": "https://itc-development.herokuapp.com/itc",
   "sso": {

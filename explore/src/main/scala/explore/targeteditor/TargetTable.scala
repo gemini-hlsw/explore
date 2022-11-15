@@ -49,16 +49,19 @@ import react.semanticui.shorthand.*
 import react.semanticui.sizes.*
 import reactST.{tanstackTableCore => raw}
 
+import lucuma.core.util.Timestamp
 import java.time.Instant
 
 import scalajs.js.JSConverters.*
+import lucuma.core.model.Program
 
 case class TargetTable(
   userId:         Option[User.Id],
+  programId:      Program.Id,
   obsIds:         ObsIdSet,
   targets:        View[Option[Asterism]],
   selectedTarget: View[Option[Target.Id]],
-  vizTime:        Option[Instant],
+  vizTime:        Option[Timestamp],
   renderInTitle:  Tile.RenderInTitle,
   fullScreen:     AladinFullScreen
 ) extends ReactFnProps(TargetTable.component)
@@ -81,10 +84,11 @@ object TargetTable extends TableHooks:
   )
 
   private def deleteSiderealTarget(
-    obsIds:   ObsIdSet,
-    targetId: Target.Id
+    programId: Program.Id,
+    obsIds:    ObsIdSet,
+    targetId:  Target.Id
   )(using TransactionalClient[IO, ObservationDB]): IO[Unit] =
-    AsterismQueries.removeTargetFromAsterisms[IO](obsIds.toList, targetId)
+    AsterismQueries.removeTargetFromAsterisms[IO](programId, obsIds.toList, targetId)
 
   protected val component =
     ScalaFnComponent
@@ -109,7 +113,7 @@ object TargetTable extends TableHooks:
                   e.preventDefaultCB >>
                     e.stopPropagationCB >>
                     props.targets.mod(_.flatMap(_.remove(cell.value))) >>
-                    deleteSiderealTarget(props.obsIds, cell.value).runAsync
+                    deleteSiderealTarget(props.programId, props.obsIds, cell.value).runAsync
               ),
             size = 35.toPx,
             enableSorting = false
@@ -121,11 +125,11 @@ object TargetTable extends TableHooks:
       }
       // If vizTime is not set, change it to now
       .useEffectResultWithDepsBy((p, _, _) => p.vizTime) { (_, _, _) => vizTime =>
-        IO(vizTime.getOrElse(Instant.now()))
+        IO(vizTime.getOrElse(Timestamp.unsafeFromInstantTruncated(Instant.now())))
       }
       // rows
       .useMemoBy((props, _, _, vizTime) => (props.targets.get, vizTime))((_, _, _, _) =>
-        case (targets, Pot.Ready(vizTime)) => targets.foldMap(_.toSiderealAt(vizTime))
+        case (targets, Pot.Ready(vizTime)) => targets.foldMap(_.toSiderealAt(vizTime.toInstant))
         case _                             => Nil
       )
       .useReactTableWithStateStoreBy((props, ctx, cols, _, rows) =>

@@ -122,11 +122,11 @@ object AsterismGroupObsList:
       draggedIds match {
         case Left(targetId) if !destAg.targetIds.contains(targetId) =>
           AsterismGroupObsListActions
-            .dropTarget(destAg.obsIds, targetId, props.expandedIds)
+            .dropTarget(props.programId, destAg.obsIds, targetId, props.expandedIds)
             .set(undoCtx)(destAg.some)
         case Right(obsIds) if !destAg.obsIds.intersects(obsIds)     =>
           AsterismGroupObsListActions
-            .dropObservations(obsIds, props.expandedIds, setObsSet)
+            .dropObservations(props.programId, obsIds, props.expandedIds, setObsSet)
             .set(undoCtx)(destAg.some)
         case _                                                      => Callback.empty
       }

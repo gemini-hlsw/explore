@@ -87,14 +87,14 @@ object AladinContainer extends AladinCommon {
       // Base coordinates and science targets with pm correction if possible
       .useMemoBy(p => (p.asterism, p.obsConf.vizTime)) { p => (_, i) =>
         val base    = p.asterism.baseTracking
-          .at(i)
+          .at(i.toInstant)
           .map(_.value)
           .getOrElse(p.asterism.baseTracking.baseCoordinates)
         val science = p.asterism.toSidereal
           .map(t =>
             (t.id === p.asterism.focus.id,
              t.target.name,
-             t.target.tracking.at(i),
+             t.target.tracking.at(i.toInstant),
              t.target.tracking.baseCoordinates
             )
           )
@@ -239,7 +239,7 @@ object AladinContainer extends AladinCommon {
                     case _                       =>
                       Css.Empty
 
-                  (tracking.at(targetEpochInstant), tracking.at(obsInstant)).mapN {
+                  (tracking.at(targetEpochInstant), tracking.at(obsInstant.toInstant)).mapN {
                     (source, dest) =>
                       val offset = baseCoordinates.diff(dest).offset
                       if (candidates.length < 500) {

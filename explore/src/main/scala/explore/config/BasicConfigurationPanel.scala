@@ -40,9 +40,11 @@ import react.semanticui.shorthand.*
 import react.semanticui.sizes.*
 
 import scalajs.js.JSConverters.*
+import lucuma.core.model.Program
 
 case class BasicConfigurationPanel(
   userId:          Option[User.Id],
+  programId:       Program.Id,
   obsId:           Observation.Id,
   requirementsCtx: UndoSetter[ScienceRequirementsData],
   scienceModeOpt:  View[Option[model.ScienceMode]],
@@ -66,7 +68,7 @@ private object BasicConfigurationPanel:
         import ctx.given
 
         val requirementsViewSet: ScienceRequirementsUndoView =
-          ScienceRequirementsUndoView(props.obsId, props.requirementsCtx)
+          ScienceRequirementsUndoView(props.programId, props.obsId, props.requirementsCtx)
 
         val isSpectroscopy: Boolean = mode.get === ScienceMode.Spectroscopy
 

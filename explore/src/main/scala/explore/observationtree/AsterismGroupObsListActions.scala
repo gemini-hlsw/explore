@@ -26,6 +26,7 @@ import queries.schemas.odb.ODBConversions.*
 
 import scala.annotation.unused
 import scala.collection.immutable.SortedSet
+import lucuma.core.model.Program
 
 object AsterismGroupObsListActions {
   private def obsDropGetter(
@@ -187,6 +188,7 @@ object AsterismGroupObsListActions {
       .void
 
   def dropObservations(
+    programId:   Program.Id,
     draggedIds:  ObsIdSet,
     expandedIds: View[SortedSet[ObsIdSet]],
     setObsSet:   ObsIdSet => Callback
@@ -197,14 +199,22 @@ object AsterismGroupObsListActions {
           // destination ids may not be found when undoing
           val optDestIds =
             agwo.asterismGroups.findWithTargetIds(asterismGroup.targetIds).map(_.obsIds)
-          AsterismQueries.replaceAsterism[IO](draggedIds.toList, asterismGroup.targetIds.toList) >>
+          AsterismQueries.replaceAsterism[IO](programId,
+                                              draggedIds.toList,
+                                              asterismGroup.targetIds.toList
+          ) >>
             expandedIds.mod(updateExpandedIds(draggedIds, optDestIds) _).to[IO] >>
             setObsSet(optDestIds.fold(draggedIds)(_ ++ draggedIds)).to[IO]
         }
     )
 
-  def dropTarget(obsIds: ObsIdSet, targetId: Target.Id, expandedIds: View[SortedSet[ObsIdSet]])(
-    implicit c:          TransactionalClient[IO, ObservationDB]
+  def dropTarget(
+    programId:   Program.Id,
+    obsIds:      ObsIdSet,
+    targetId:    Target.Id,
+    expandedIds: View[SortedSet[ObsIdSet]]
+  )(implicit
+    c:           TransactionalClient[IO, ObservationDB]
   ) = Action(getter = targetDropGetter, setter = targetDropSetter(obsIds, targetId))(
     onSet = (agwo, _) => {
       val agl        = agwo.asterismGroups
@@ -218,13 +228,13 @@ object AsterismGroupObsListActions {
           expandedIds
             .mod(undoTargetDropExpandedMod(obsIds, targetId, currentAg, agl) _)
             .to[IO] >>
-            AsterismQueries.removeTargetFromAsterisms[IO](obsIds.toList, targetId)
+            AsterismQueries.removeTargetFromAsterisms[IO](programId, obsIds.toList, targetId)
         else
           // do or redo
           expandedIds
             .mod(doTargetDropExpandedMod(obsIds, targetId, currentAg, agl) _)
             .to[IO] >>
-            AsterismQueries.addTargetToAsterisms[IO](obsIds.toList, targetId)
+            AsterismQueries.addTargetToAsterisms[IO](programId, obsIds.toList, targetId)
       }
     }
   )

@@ -151,13 +151,13 @@ object ImagingConfigurationPanel {
           changeAuditor = ChangeAuditor.posBigDecimal().optional
         ),
         <.label(
-          "Capabilities",
+          "Capability",
           HelpIcon("configuration/capabilities.md".refined),
           ExploreStyles.SkipToNext
         ),
         EnumViewOptionalSelect(
           id = "imaging-capabilities",
-          clazz = ExploreStyles.ConfigurationCapabilities,
+          clazz = ExploreStyles.ConfigurationCapability,
           clearable = true,
           upward = true,
           placeholder = "Extra capablities",

@@ -18,10 +18,12 @@ import lucuma.core.model.Observation
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.style.Css
+import lucuma.core.model.Program
 
 object ConstraintsTile {
 
   def constraintsTile(
+    programId:  Program.Id,
     obsId:      Observation.Id,
     csPot:      Pot[View[ConstraintSet]],
     undoStacks: View[UndoStacks[IO, ConstraintSet]],
@@ -36,7 +38,7 @@ object ConstraintsTile {
       controllerClass = clazz
     )(renderInTitle =>
       potRender[View[ConstraintSet]](cs =>
-        ConstraintsPanel(List(obsId), cs, undoStacks, renderInTitle)
+        ConstraintsPanel(programId, List(obsId), cs, undoStacks, renderInTitle)
       )(csPot)
     )
 
