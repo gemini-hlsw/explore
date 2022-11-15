@@ -75,21 +75,21 @@ jobs:
 
       - name: Check headers and formatting
         if: matrix.java == 'temurin@17'
-        run: sbt -v -J-Xmx6g 'project ${{ matrix.project }}' '++${{ matrix.scala }}' headerCheckAll scalafmtCheckAll 'project /' scalafmtSbtCheck lucumaScalafmtCheck lucumaScalafixCheck
+        run: sbt -v -J-Xmx6g 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' headerCheckAll scalafmtCheckAll 'project /' scalafmtSbtCheck lucumaScalafmtCheck lucumaScalafixCheck
 
       - name: scalaJSLink
         if: matrix.project == 'rootJS'
-        run: sbt -v -J-Xmx6g 'project ${{ matrix.project }}' '++${{ matrix.scala }}' Test/scalaJSLinkerResult
+        run: sbt -v -J-Xmx6g 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' Test/scalaJSLinkerResult
 
       - name: Test
-        run: sbt -v -J-Xmx6g 'project ${{ matrix.project }}' '++${{ matrix.scala }}' test
+        run: sbt -v -J-Xmx6g 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' test
 
       - name: Check scalafix lints
         if: matrix.java == 'temurin@17'
-        run: sbt -v -J-Xmx6g 'project ${{ matrix.project }}' '++${{ matrix.scala }}' 'scalafixAll --check'
+        run: sbt -v -J-Xmx6g 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' 'scalafixAll --check'
 
       - name: Aggregate coverage reports
-        run: sbt -v -J-Xmx6g 'project ${{ matrix.project }}' '++${{ matrix.scala }}' coverageReport coverageAggregate
+        run: sbt -v -J-Xmx6g 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' coverageReport coverageAggregate
 
       - name: Upload code coverage data
         run: 'bash <(curl -s https://codecov.io/bash)'
@@ -142,7 +142,7 @@ jobs:
           key: ${{ runner.os }}-sbt-cache-v2-${{ hashFiles('**/*.sbt') }}-${{ hashFiles('project/build.properties') }}
 
       - name: Stage
-        run: sbt -v -J-Xmx6g '++${{ matrix.scala }}' stage
+        run: sbt -v -J-Xmx6g '++ ${{ matrix.scala }}' stage
 
       - name: npm clean-install
         run: npm clean-install
@@ -213,7 +213,7 @@ jobs:
           key: ${{ runner.os }}-sbt-cache-v2-${{ hashFiles('**/*.sbt') }}-${{ hashFiles('project/build.properties') }}
 
       - name: Stage
-        run: sbt -v -J-Xmx6g '++${{ matrix.scala }}' stage
+        run: sbt -v -J-Xmx6g '++ ${{ matrix.scala }}' stage
 
       - name: npm clean-install
         run: npm clean-install
@@ -253,7 +253,7 @@ jobs:
         run: npm clean-install
 
       - name: Extract CSS files
-        run: sbt -v -J-Xmx6g '++${{ matrix.scala }}' lucumaCss
+        run: sbt -v -J-Xmx6g '++ ${{ matrix.scala }}' lucumaCss
 
       - name: Setup and expand vars dark
         run: |
