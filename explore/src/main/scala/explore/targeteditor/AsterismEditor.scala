@@ -61,6 +61,7 @@ import queries.schemas.odb.ODBConversions.*
 import queries.schemas.odb.ObsQueries
 import react.common.ReactFnProps
 import react.primereact.Button
+import lucuma.core.util.Timestamp
 
 import java.time.Instant
 
@@ -69,7 +70,7 @@ case class AsterismEditor(
   programId:      Program.Id,
   sharedInObsIds: ObsIdSet,
   asterism:       View[Option[Asterism]],
-  potVizTime:     Pot[View[Option[Instant]]],
+  potVizTime:     Pot[View[Option[Timestamp]]],
   scienceMode:    Option[ScienceMode],
   constraints:    Option[ConstraintSet],
   wavelength:     Option[Wavelength],
@@ -144,7 +145,9 @@ object AsterismEditor extends AsterismModifier:
 
         // Save the time here. this works for the obs and target tabs
         val vizTimeView = props.potVizTime.map(_.withOnMod { t =>
-          ObsQueries.updateVisualizationTime[IO](props.sharedInObsIds.toList, t).runAsync
+          ObsQueries
+            .updateVisualizationTime[IO](props.programId, props.sharedInObsIds.toList, t)
+            .runAsync
         })
 
         val vizTime = props.potVizTime.toOption.flatMap(_.get)
@@ -180,6 +183,7 @@ object AsterismEditor extends AsterismModifier:
           props.renderInTitle(VizTimeEditor(vizTimeView)),
           TargetTable(
             props.userId.some,
+            props.programId,
             props.sharedInObsIds,
             props.asterism,
             targetView,

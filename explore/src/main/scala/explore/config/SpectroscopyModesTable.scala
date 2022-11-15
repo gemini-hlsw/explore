@@ -381,7 +381,7 @@ private object SpectroscopyModesTable extends TableHooks:
           matrix
             .filtered(
               focalPlane = s.focalPlane,
-              capabilities = s.capabilities,
+              capability = s.capability,
               wavelength = s.wavelength,
               slitWidth = s.focalPlaneAngle,
               resolution = s.resolution,

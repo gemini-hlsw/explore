@@ -41,16 +41,16 @@ object SpectroscopyConfigurationPanel {
 
   protected val component =
     ScalaFnComponent[Props] { p =>
-      val wv                       = p.options.zoom(SpectroscopyRequirementsData.wavelength)
-      val resolution               = p.options.zoom(SpectroscopyRequirementsData.resolution)
-      val signalToNoise            = p.options.zoom(SpectroscopyRequirementsData.signalToNoise)
-      val signalToNoiseAt          = p.options.zoom(SpectroscopyRequirementsData.signalToNoiseAt)
-      val wavelengthCoverage       =
+      val wv                     = p.options.zoom(SpectroscopyRequirementsData.wavelength)
+      val resolution             = p.options.zoom(SpectroscopyRequirementsData.resolution)
+      val signalToNoise          = p.options.zoom(SpectroscopyRequirementsData.signalToNoise)
+      val signalToNoiseAt        = p.options.zoom(SpectroscopyRequirementsData.signalToNoiseAt)
+      val wavelengthCoverage     =
         p.options.zoom(SpectroscopyRequirementsData.wavelengthCoverage)
-      val focalPlane               = p.options.zoom(SpectroscopyRequirementsData.focalPlane)
-      val focalPlaneAngle          = p.options.zoom(SpectroscopyRequirementsData.focalPlaneAngle)
-      val spectroscopyCapabilities =
-        p.options.zoom(SpectroscopyRequirementsData.capabilities)
+      val focalPlane             = p.options.zoom(SpectroscopyRequirementsData.focalPlane)
+      val focalPlaneAngle        = p.options.zoom(SpectroscopyRequirementsData.focalPlaneAngle)
+      val spectroscopyCapability =
+        p.options.zoom(SpectroscopyRequirementsData.capability)
 
       val wvMicroInput    = ExploreModelValidators.wavelengthValidWedge.optional
       val wvChangeAuditor = ChangeAuditor

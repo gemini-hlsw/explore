@@ -155,11 +155,11 @@ object ObsList:
                   ObsBadge(
                     obs,
                     selected = selected,
-                    setStatusCB = (obsEditStatus(obs.id)
+                    setStatusCB = (obsEditStatus(props.programId, obs.id)
                       .set(undoCtx) _).compose((_: ObsStatus).some).some,
-                    setActiveStatusCB = (obsActiveStatus(obs.id)
+                    setActiveStatusCB = (obsActiveStatus(props.programId, obs.id)
                       .set(undoCtx) _).compose((_: ObsActiveStatus).some).some,
-                    setSubtitleCB = (obsEditSubtitle(obs.id)
+                    setSubtitleCB = (obsEditSubtitle(props.programId, obs.id)
                       .set(undoCtx) _).compose((_: Option[NonEmptyString]).some).some,
                     deleteCB = obsExistence(obs.id, o => setObs(props.programId, o.some, ctx))
                       .mod(undoCtx)(obsListMod.delete)

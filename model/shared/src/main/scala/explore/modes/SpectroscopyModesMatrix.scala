@@ -222,7 +222,7 @@ case class SpectroscopyModeRow(
   instrument:         InstrumentRow,
   config:             NonEmptyString,
   focalPlane:         FocalPlane,
-  capabilities:       Option[SpectroscopyCapabilities],
+  capability:         Option[SpectroscopyCapabilities],
   ao:                 ModeAO,
   minWavelength:      ModeWavelength,
   maxWavelength:      ModeWavelength,
@@ -378,19 +378,19 @@ case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
   val FilterLimit = Wavelength.fromIntNanometers(650)
 
   def filtered(
-    focalPlane:   Option[FocalPlane] = None,
-    capabilities: Option[SpectroscopyCapabilities] = None,
-    iq:           Option[ImageQuality] = None,
-    wavelength:   Option[Wavelength] = None,
-    resolution:   Option[PosInt] = None,
-    coverage:     Option[Quantity[NonNegBigDecimal, Micrometer]] = None,
-    slitWidth:    Option[Angle] = None,
-    declination:  Option[Declination] = None
+    focalPlane:  Option[FocalPlane] = None,
+    capability:  Option[SpectroscopyCapabilities] = None,
+    iq:          Option[ImageQuality] = None,
+    wavelength:  Option[Wavelength] = None,
+    resolution:  Option[PosInt] = None,
+    coverage:    Option[Quantity[NonNegBigDecimal, Micrometer]] = None,
+    slitWidth:   Option[Angle] = None,
+    declination: Option[Declination] = None
   ): List[SpectroscopyModeRow] = {
     // Criteria to filter the modes
     val filter: SpectroscopyModeRow => Boolean = r =>
       focalPlane.forall(f => r.focalPlane === f) &&
-        r.capabilities === capabilities &&
+        r.capability === capability &&
         iq.forall(i => r.ao =!= ModeAO.AO || (i <= ImageQuality.PointTwo)) &&
         wavelength.forall(w => w >= r.minWavelength.w && w <= r.maxWavelength.w) &&
         resolution.forall(_ <= r.resolution) &&

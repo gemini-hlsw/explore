@@ -38,6 +38,7 @@ import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries
 import react.common.ReactFnProps
+import lucuma.core.util.Timestamp
 
 import java.time.Instant
 
@@ -62,7 +63,7 @@ object AsterismEditorTile:
   )(using TransactionalClient[IO, ObservationDB], Logger[IO]): Tile = {
     // Save the time here. this works for the obs and target tabs
     val vizTimeView = potVizTime.map(_.withOnMod { t =>
-      ObsQueries.updateVisualizationTime[IO](sharedInObsIds.toList, t).runAsync
+      ObsQueries.updateVisualizationTime[IO](programId, sharedInObsIds.toList, t).runAsync
     })
 
     // Store the pos angle on the db

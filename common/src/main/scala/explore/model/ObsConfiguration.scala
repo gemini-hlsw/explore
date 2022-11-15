@@ -15,10 +15,10 @@ import lucuma.core.model.PosAngleConstraint
 import monocle.Focus
 import org.typelevel.cats.time.instantInstances
 
-import java.time.Instant
+import lucuma.core.util.Timestamp
 
 case class ObsConfiguration(
-  vizTime:            Instant,
+  vizTime:            Timestamp,
   scienceMode:        Option[ScienceMode],
   posAngleConstraint: Option[PosAngleConstraint],
   constraints:        Option[ConstraintSet],

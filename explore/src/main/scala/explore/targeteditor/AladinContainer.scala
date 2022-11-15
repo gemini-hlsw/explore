@@ -250,7 +250,7 @@ object AladinContainer extends AladinCommon {
                     case m                                                    =>
                       ExploreStyles.VignettedGS
 
-                  (tracking.at(targetEpochInstant), tracking.at(obsInstant)).mapN {
+                  (tracking.at(targetEpochInstant), tracking.at(obsInstant.toInstant)).mapN {
                     (source, dest) =>
                       val offset = baseCoordinates.diff(dest).offset
                       if (candidates.length < 500) {

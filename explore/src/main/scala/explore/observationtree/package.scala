@@ -70,13 +70,16 @@ private def obsWithId(
     .withKey(obsId)
     .composeOptionLens(Focus[(ObsSummaryWithTitleConstraintsAndConf, Int)](_._1))
 
-def obsEditStatus(obsId: Observation.Id)(using TransactionalClient[IO, ObservationDB]) = Action(
+def obsEditStatus(programId: Program.Id, obsId: Observation.Id)(using
+  TransactionalClient[IO, ObservationDB]
+) = Action(
   access = obsWithId(obsId).composeOptionLens(ObsSummaryWithTitleConstraintsAndConf.status)
 )(onSet =
   (_, status) =>
     UpdateObservationMutation
       .execute[IO](
         UpdateObservationsInput(
+          programId = programId,
           WHERE = obsId.toWhereObservation.assign,
           SET = ObservationPropertiesInput(status = status.orIgnore)
         )
@@ -84,13 +87,16 @@ def obsEditStatus(obsId: Observation.Id)(using TransactionalClient[IO, Observati
       .void
 )
 
-def obsEditSubtitle(obsId: Observation.Id)(using TransactionalClient[IO, ObservationDB]) = Action(
+def obsEditSubtitle(programId: Program.Id, obsId: Observation.Id)(using
+  TransactionalClient[IO, ObservationDB]
+) = Action(
   access = obsWithId(obsId).composeOptionLens(ObsSummaryWithTitleConstraintsAndConf.subtitle)
 )(onSet =
   (_, subtitleOpt) =>
     UpdateObservationMutation
       .execute[IO](
         UpdateObservationsInput(
+          programId = programId,
           WHERE = obsId.toWhereObservation.assign,
           SET = ObservationPropertiesInput(subtitle = subtitleOpt.flatten.orUnassign)
         )
@@ -98,13 +104,16 @@ def obsEditSubtitle(obsId: Observation.Id)(using TransactionalClient[IO, Observa
       .void
 )
 
-def obsActiveStatus(obsId: Observation.Id)(using TransactionalClient[IO, ObservationDB]) = Action(
+def obsActiveStatus(programId: Program.Id, obsId: Observation.Id)(using
+  TransactionalClient[IO, ObservationDB]
+) = Action(
   access = obsWithId(obsId).composeOptionLens(ObsSummaryWithTitleConstraintsAndConf.activeStatus)
 )(onSet =
   (_, activeStatus) =>
     UpdateObservationMutation
       .execute[IO](
         UpdateObservationsInput(
+          programId = programId,
           WHERE = obsId.toWhereObservation.assign,
           SET = ObservationPropertiesInput(activeStatus = activeStatus.orIgnore)
         )

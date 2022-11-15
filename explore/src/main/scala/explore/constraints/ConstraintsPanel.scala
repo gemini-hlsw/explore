@@ -43,8 +43,10 @@ import lucuma.ui.utils.given
 import monocle.Lens
 import react.common.ReactFnProps
 import react.primereact.PrimeStyles
+import lucuma.core.model.Program
 
 case class ConstraintsPanel(
+  programId:     Program.Id,
   obsIds:        List[Observation.Id],
   constraintSet: View[ConstraintSet],
   undoStacks:    View[UndoStacks[IO, ConstraintSet]],
@@ -103,7 +105,7 @@ object ConstraintsPanel:
 
         val undoCtx: UndoContext[ConstraintSet] = UndoContext(props.undoStacks, props.constraintSet)
 
-        val undoViewSet = UndoView(props.obsIds, undoCtx)
+        val undoViewSet = UndoView(props.programId, props.obsIds, undoCtx)
 
         val erView =
           undoViewSet(ConstraintSet.elevationRange, UpdateConstraintSet.elevationRange)

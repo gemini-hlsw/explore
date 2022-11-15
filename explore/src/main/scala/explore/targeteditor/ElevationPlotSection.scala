@@ -52,12 +52,13 @@ import react.primereact.SelectButton
 import react.primereact.SelectItem
 
 import java.time.*
+import lucuma.core.util.Timestamp
 
 case class ElevationPlotSection(
   uid:               User.Id,
   tid:               Target.Id,
   scienceMode:       Option[ScienceMode],
-  visualizationTime: Option[Instant],
+  visualizationTime: Option[Timestamp],
   coords:            CoordinatesAtVizTime
 ) extends ReactFnProps(ElevationPlotSection.component)
 
@@ -88,9 +89,9 @@ object ElevationPlotSection:
 
   private val sitePrism = Pot.readyPrism.andThen(ElevationPlotOptions.site)
 
-  private inline def calcTime(visualizationTime: Option[Instant], site: Site): LocalDate =
+  private inline def calcTime(visualizationTime: Option[Timestamp], site: Site): LocalDate =
     visualizationTime
-      .map(LocalDateTime.ofInstant(_, site.timezone).toLocalDate)
+      .map(t => LocalDateTime.ofInstant(t.toInstant, site.timezone).toLocalDate)
       .getOrElse(ZonedDateTime.now(site.timezone).toLocalDate.plusDays(1))
 
   private val component =

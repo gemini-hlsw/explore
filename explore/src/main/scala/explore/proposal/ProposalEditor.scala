@@ -389,14 +389,14 @@ object ProposalEditor:
              UpdateProgramsInput.SET.andThen(ProgramPropertiesInput.proposal).modify
       )
 
-    val splitsAligner: Aligner[SortedMap[Partner, IntPercent], Input[List[PartnerSplitsInput]]] =
+    val splitsAligner: Aligner[SortedMap[Partner, IntPercent], Input[List[PartnerSplitInput]]] =
       aligner.zoom(Proposal.partnerSplits, s => _.map(ProposalInput.partnerSplits.modify(s)))
 
     val splitsView: View[SortedMap[Partner, IntPercent]] =
       splitsAligner.view(
         _.toList
           .map { case (par, pct) =>
-            PartnerSplitsInput(partner = par.assign, percent = pct.assign)
+            PartnerSplitInput(partner = par, percent = pct)
           }
           .assign
       )

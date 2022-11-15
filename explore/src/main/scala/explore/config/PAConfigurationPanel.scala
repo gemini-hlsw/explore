@@ -33,8 +33,10 @@ import monocle.std.option
 import queries.schemas.odb.ObsQueries
 import react.common.Css
 import react.common.ReactFnProps
+import lucuma.core.model.Program
 
 case class PAConfigurationPanel(
+  programId:    Program.Id,
   obsId:        Observation.Id,
   posAngleView: View[Option[PosAngleConstraint]],
   selectedPA:   Option[Angle],
@@ -68,12 +70,12 @@ object PAConfigurationPanel:
         import ctx.given
 
         val paView = props.posAngleView
-          .withOnMod { c =>
-            (props.agsState.async.set(AgsState.Saving) *>
-              ObsQueries.updatePosAngle[IO](List(props.obsId), c))
+          .withOnMod(c =>
+            (props.agsState.async.set(AgsState.Saving) >>
+              ObsQueries.updatePosAngle[IO](props.programId, List(props.obsId), c))
               .guarantee(props.agsState.async.set(AgsState.Idle))
               .runAsync
-          }
+          )
 
         val posAngleOptionsView: View[PosAngleOptions] =
           paView.zoom(unsafePosOptionsLens)

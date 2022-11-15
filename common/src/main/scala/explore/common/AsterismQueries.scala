@@ -28,6 +28,7 @@ import queries.schemas.odb.ODBConversions.*
 
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
+import lucuma.core.model.Program
 
 object AsterismQueries:
   // The default cats ordering for sorted set sorts by size first, then contents. That's not what we want.
@@ -115,9 +116,9 @@ object AsterismQueries:
       obsR.activeStatus,
       obsR.plannedTime.execution,
       obsR.targetEnvironment.asterism.map(_.id).toSet,
-      obsR.scienceMode,
-      obsR.visualizationTime,
-      obsR.posAngleConstraint,
+      obsR.observingMode,
+      none, // obsR.visualizationTime,
+      obsR.posAngleConstraint.some,
       obsR.scienceRequirements.spectroscopy.wavelength
     )
 
@@ -146,10 +147,12 @@ object AsterismQueries:
     def asAsterismGroupWithObs = queryToAsterismGroupWithObsGetter
 
   def replaceAsterism[F[_]: Async](
+    programId: Program.Id,
     obsIds:    List[Observation.Id],
     targetIds: List[Target.Id]
   )(using TransactionalClient[F, ObservationDB]) =
     val input = UpdateObservationsInput(
+      programId = programId,
       WHERE = obsIds.toWhereObservation.assign,
       SET = ObservationPropertiesInput(
         targetEnvironment = TargetEnvironmentInput(asterism = targetIds.assign).assign
@@ -157,21 +160,25 @@ object AsterismQueries:
     )
     UpdateObservationMutation.execute[F](input).void
 
-  def addTargetsToAsterisms[F[_]: Async](
+  def addTargetToAsterisms[F[_]: Async](
+    programId: Program.Id,
     obsIds:    List[Observation.Id],
     targetIds: List[Target.Id]
   )(using TransactionalClient[F, ObservationDB]) =
     val input = UpdateAsterismsInput(
+      programId = programId,
       WHERE = obsIds.toWhereObservation.assign,
       SET = targetIds.map(tid => EditAsterismsPatchInput(ADD = tid.assign))
     )
     UpdateAsterismsMutation.execute[F](input).void
 
-  def removeTargetsFromAsterisms[F[_]: Async](
+  def removeTargetFromAsterisms[F[_]: Async](
+    programId: Program.Id,
     obsIds:    List[Observation.Id],
     targetIds: List[Target.Id]
   )(using TransactionalClient[F, ObservationDB]) =
     val input = UpdateAsterismsInput(
+      programId = programId,
       WHERE = obsIds.toWhereObservation.assign,
       SET = targetIds.map(tid => EditAsterismsPatchInput(DELETE = tid.assign))
     )

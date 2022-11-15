@@ -57,20 +57,16 @@ object ConstraintGroupQueriesGQL {
           	    microseconds
           	  }
           	}
-            scienceMode {
+            observingMode {
               gmosNorthLongSlit {
-                basic {
-                  grating
-                  filter
-                  fpu
-                }
+                grating
+                filter
+                fpu
               }
               gmosSouthLongSlit {
-                basic {
-                  grating
-                  filter
-                  fpu
-                }
+                grating
+                filter
+                fpu
               }
             }
           }
@@ -88,7 +84,7 @@ object ConstraintGroupQueriesGQL {
           object PlannedTime {
             type Execution = time.Duration
           }
-          type ScienceMode = model.ScienceMode
+          type ObservingMode = model.ScienceMode
         }
 
       }

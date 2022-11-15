@@ -23,10 +23,12 @@ import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 import queries.schemas.itc.ITCConversions.*
 import queries.schemas.odb.ObsQueries.*
+import lucuma.core.model.Program
 
 object ConfigurationTile {
   def configurationTile(
     userId:          Option[User.Id],
+    programId:       Program.Id,
     obsId:           Observation.Id,
     obsData:         Pot[(String, Option[NonEmptyString], View[ScienceData])],
     undoStacks:      View[UndoStacks[IO, ScienceData]],
@@ -43,6 +45,7 @@ object ConfigurationTile {
         (title, subtitle, scienceData) =>
           ConfigurationPanel(
             userId,
+            programId,
             obsId,
             title,
             subtitle,

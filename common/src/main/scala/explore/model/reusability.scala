@@ -37,6 +37,7 @@ import lucuma.schemas.model.Visit
 import lucuma.ui.reusability.*
 import queries.schemas.odb.ObsQueries.ObsSummariesWithConstraints
 import queries.schemas.odb.ObsQueries.SpectroscopyRequirementsData
+import lucuma.core.util.Timestamp
 
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.TreeSeqMap
@@ -71,6 +72,7 @@ object reusability:
     Reusability.byEq
   given Reusability[ObsSummaryWithTitleAndConstraints]     = Reusability.byEq
   given Reusability[ObsSummaryWithTitleConstraintsAndConf] = Reusability.byEq
+  // given Reusability[Timestamp]                                                        = Reusability.byEq
 
   // Undo
   given undoStacksReuse[F[_], M]: Reusability[UndoStacks[F, M]] =

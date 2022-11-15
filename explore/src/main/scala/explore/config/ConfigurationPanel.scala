@@ -53,9 +53,11 @@ import org.http4s.syntax.all.*
 import queries.common.ObsQueriesGQL
 import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
+import lucuma.core.model.Program
 
 case class ConfigurationPanel(
   userId:          Option[User.Id],
+  programId:       Program.Id,
   obsId:           Observation.Id,
   title:           String,
   subtitle:        Option[NonEmptyString],
@@ -151,35 +153,35 @@ object ConfigurationPanel:
         val requirementsCtx: UndoSetter[ScienceRequirementsData] =
           props.scienceData.zoom(ScienceData.requirements)
 
-        val modeAligner: Aligner[Option[model.ScienceMode], Input[ScienceModeInput]] =
-          Aligner(
-            props.scienceData,
-            UpdateObservationsInput(
-              WHERE = props.obsId.toWhereObservation.assign,
-              SET = ObservationPropertiesInput(scienceMode = ScienceModeInput().assign)
-            ),
-            (ObsQueriesGQL.UpdateObservationMutation.execute[IO] _).andThen(_.void)
-          ).zoom(
-            ScienceData.mode,
-            UpdateObservationsInput.SET.andThen(ObservationPropertiesInput.scienceMode).modify
-          )
+        // val modeAligner: Aligner[Option[model.ScienceMode], Input[ScienceModeInput]] =
+        //   Aligner(
+        //     props.scienceData,
+        //     UpdateObservationsInput(
+        //       WHERE = props.obsId.toWhereObservation.assign,
+        //       SET = ObservationPropertiesInput(scienceMode = ScienceModeInput().assign)
+        //     ),
+        //     (ObsQueriesGQL.UpdateObservationMutation.execute[IO] _).andThen(_.void)
+        //   ).zoom(
+        //     ScienceData.mode,
+        //     UpdateObservationsInput.SET.andThen(ObservationPropertiesInput.scienceMode).modify
+        //   )
 
-        val optModeView: View[Option[model.ScienceMode]] =
-          modeAligner.view(_.map(_.toInput).orUnassign)
+        // val optModeView: View[Option[model.ScienceMode]] =
+        //   modeAligner.view(_.map(_.toInput).orUnassign)
 
-        val optModeAligner = modeAligner.toOption
+        // val optModeAligner = modeAligner.toOption
 
         val showDetailsCB: Callback = editState.set(ConfigEditState.DetailsView)
 
         val posAngleView: View[Option[PosAngleConstraint]] =
           props.scienceData.undoableView(ScienceData.posAngle)
 
-        val optNorthAligner = optModeAligner.flatMap {
-          _.zoomOpt(
-            model.ScienceMode.gmosNorthLongSlit,
-            mapModOrAssign(GmosNorthLongSlitInput())(ScienceModeInput.gmosNorthLongSlit.modify)
-          )
-        }
+        // val optNorthAligner = optModeAligner.flatMap {
+        //   _.zoomOpt(
+        //     model.ScienceMode.gmosNorthLongSlit,
+        //     mapModOrAssign(GmosNorthLongSlitInput())(ScienceModeInput.gmosNorthLongSlit.modify)
+        //   )
+        // }
 
         val optSouthAligner = optModeAligner.flatMap {
           _.zoomOpt(

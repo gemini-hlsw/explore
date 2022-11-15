@@ -35,6 +35,7 @@ import monocle.Getter
 import monocle.Lens
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ODBConversions.*
+import lucuma.core.util.Timestamp
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
@@ -83,17 +84,17 @@ object ObsQueries:
     id:                Observation.Id,
     title:             String,
     subtitle:          Option[NonEmptyString],
-    visualizationTime: Option[Instant],
+    visualizationTime: Option[Timestamp],
     scienceData:       ScienceData,
     itcExposureTime:   Option[FixedExposure]
   )
 
   object ObsEditData {
-    val title: Lens[ObsEditData, String]                      = Focus[ObsEditData](_.title)
-    val subtitle: Lens[ObsEditData, Option[NonEmptyString]]   = Focus[ObsEditData](_.subtitle)
-    val visualizationTime: Lens[ObsEditData, Option[Instant]] =
+    val title: Lens[ObsEditData, String]                        = Focus[ObsEditData](_.title)
+    val subtitle: Lens[ObsEditData, Option[NonEmptyString]]     = Focus[ObsEditData](_.subtitle)
+    val visualizationTime: Lens[ObsEditData, Option[Timestamp]] =
       Focus[ObsEditData](_.visualizationTime)
-    val scienceData: Lens[ObsEditData, ScienceData]           = Focus[ObsEditData](_.scienceData)
+    val scienceData: Lens[ObsEditData, ScienceData]             = Focus[ObsEditData](_.scienceData)
   }
 
   case class ObsSummariesWithConstraints(
@@ -118,10 +119,10 @@ object ObsQueries:
           itcExposureTime = obs.itc.map(_.asFixedExposureTime),
           scienceData = ScienceData(
             requirements = obs.scienceRequirements,
-            mode = obs.scienceMode,
+            mode = obs.observingMode,
             constraints = obs.constraintSet,
             targets = obs.targetEnvironment,
-            posAngle = obs.posAngleConstraint,
+            posAngle = none, // obs.posAngleConstraint,
             potITC = Pot(obs.itc)
           )
         )
@@ -143,8 +144,8 @@ object ObsQueries:
               mtch.status,
               mtch.activeStatus,
               mtch.plannedTime.execution,
-              mtch.scienceMode,
-              mtch.visualizationTime
+              mtch.observingMode,
+              none // mtch.visualizationTime
             )
           ),
           ObsSummaryWithTitleConstraintsAndConf.id.get
@@ -158,6 +159,7 @@ object ObsQueries:
       )
 
   def updateObservationConstraintSet[F[_]: Async](
+    programId:   Program.Id,
     obsIds:      List[Observation.Id],
     constraints: ConstraintSet
   )(implicit
@@ -188,6 +190,7 @@ object ObsQueries:
     UpdateObservationMutation
       .execute[F](
         UpdateObservationsInput(
+          programId = programId,
           WHERE = obsIds.toWhereObservation.assign,
           SET = editInput
         )
@@ -196,8 +199,9 @@ object ObsQueries:
   }
 
   def updateVisualizationTime[F[_]: Async](
+    programId:         Program.Id,
     obsIds:            List[Observation.Id],
-    visualizationTime: Option[Instant]
+    visualizationTime: Option[Timestamp]
   )(using TransactionalClient[F, ObservationDB]): F[Unit] = {
 
     val editInput = ObservationPropertiesInput(visualizationTime = visualizationTime.orUnassign)
@@ -205,6 +209,7 @@ object ObsQueries:
     UpdateObservationMutation
       .execute[F](
         UpdateObservationsInput(
+          programId = programId,
           WHERE = obsIds.toWhereObservation.assign,
           SET = editInput
         )
@@ -213,6 +218,7 @@ object ObsQueries:
   }
 
   def updatePosAngle[F[_]: Async](
+    programId:          Program.Id,
     obsIds:             List[Observation.Id],
     posAngleConstraint: Option[PosAngleConstraint]
   )(using TransactionalClient[F, ObservationDB]): F[Unit] = {
@@ -223,6 +229,7 @@ object ObsQueries:
     UpdateObservationMutation
       .execute[F](
         UpdateObservationsInput(
+          programId = programId,
           WHERE = obsIds.toWhereObservation.assign,
           SET = editInput
         )

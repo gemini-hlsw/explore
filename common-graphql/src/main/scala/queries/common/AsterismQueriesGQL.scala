@@ -212,7 +212,7 @@ object AsterismQueriesGQL {
             activeStatus
             visualizationTime
             posAngleConstraint {
-              constraint
+              mode
               angle {
                 microarcseconds
               }
@@ -234,20 +234,16 @@ object AsterismQueriesGQL {
                 }
               }
             }
-            scienceMode {
+            observingMode {
               gmosNorthLongSlit {
-                basic {
-                  grating
-                  filter
-                  fpu
-                }
+                grating
+                filter
+                fpu
               }
               gmosSouthLongSlit {
-                basic {
-                  grating
-                  filter
-                  fpu
-                }
+                grating
+                filter
+                fpu
               }
             }
           }
@@ -264,7 +260,7 @@ object AsterismQueriesGQL {
         object Matches {
           type PosAngleConstraint = lucuma.core.model.PosAngleConstraint
           trait ConstraintSet extends model.ConstraintsSummary
-          type ScienceMode = model.ScienceMode
+          type ObservingMode = model.ScienceMode
           object PlannedTime {
             type Execution = time.Duration
           }

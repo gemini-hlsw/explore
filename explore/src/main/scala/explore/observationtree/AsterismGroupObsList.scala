@@ -124,7 +124,14 @@ object AsterismGroupObsList:
       if (destAg.obsIds.intersects(draggedIds)) Callback.empty
       else
         AsterismGroupObsListActions
-          .dropObservations(draggedIds, srcIds, destAg.obsIds, props.expandedIds, setObsSet)
+          .dropObservations(
+            props.programId,
+            draggedIds,
+            srcIds,
+            destAg.obsIds,
+            props.expandedIds,
+            setObsSet
+          )
           .set(props.undoCtx)(destAg.some)
     }
   }
