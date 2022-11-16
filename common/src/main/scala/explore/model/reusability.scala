@@ -33,7 +33,6 @@ import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.ui.reusability.*
 import queries.schemas.odb.ObsQueries.ObsSummariesWithConstraints
 import queries.schemas.odb.ObsQueries.SpectroscopyRequirementsData
-import lucuma.core.util.Timestamp
 
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.TreeSeqMap
@@ -70,7 +69,6 @@ object reusability:
     : Reusability[ObsSummaryWithTitleAndConstraints] = Reusability.byEq
   implicit val obsSummaryWithTargetsConstraintsAndConfReuse
     : Reusability[ObsSummaryWithTitleConstraintsAndConf] = Reusability.byEq
-  given Reusability[Timestamp]                                                        = Reusability.byEq
 
   // Undo
   implicit def undoStacksReuse[F[_], M]: Reusability[UndoStacks[F, M]]               =

@@ -17,7 +17,7 @@ import lucuma.core.model.User
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 
-import lucuma.core.util.Timestamp
+import java.time.Instant
 
 object ElevationPlotTile:
 
@@ -26,7 +26,7 @@ object ElevationPlotTile:
     tid:         Option[Target.Id],
     scienceMode: Option[ScienceMode],
     coordinates: Option[CoordinatesAtVizTime],
-    vizTime:     Option[Timestamp]
+    vizTime:     Option[Instant]
   ) =
     Tile(
       ObsTabTilesIds.PlotId.id,

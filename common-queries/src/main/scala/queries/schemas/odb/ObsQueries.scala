@@ -84,17 +84,17 @@ object ObsQueries:
     id:                Observation.Id,
     title:             String,
     subtitle:          Option[NonEmptyString],
-    visualizationTime: Option[Timestamp],
+    visualizationTime: Option[Instant],
     scienceData:       ScienceData,
     itcExposureTime:   Option[FixedExposure]
   )
 
   object ObsEditData {
-    val title: Lens[ObsEditData, String]                        = Focus[ObsEditData](_.title)
-    val subtitle: Lens[ObsEditData, Option[NonEmptyString]]     = Focus[ObsEditData](_.subtitle)
-    val visualizationTime: Lens[ObsEditData, Option[Timestamp]] =
+    val title: Lens[ObsEditData, String]                      = Focus[ObsEditData](_.title)
+    val subtitle: Lens[ObsEditData, Option[NonEmptyString]]   = Focus[ObsEditData](_.subtitle)
+    val visualizationTime: Lens[ObsEditData, Option[Instant]] =
       Focus[ObsEditData](_.visualizationTime)
-    val scienceData: Lens[ObsEditData, ScienceData]             = Focus[ObsEditData](_.scienceData)
+    val scienceData: Lens[ObsEditData, ScienceData]           = Focus[ObsEditData](_.scienceData)
   }
 
   case class ObsSummariesWithConstraints(
@@ -115,7 +115,7 @@ object ObsQueries:
           id = obs.id,
           title = obs.title,
           subtitle = obs.subtitle,
-          visualizationTime = obs.visualizationTime,
+          visualizationTime = obs.visualizationTime.map(_.toInstant),
           itcExposureTime = obs.itc.map(_.asFixedExposureTime),
           scienceData = ScienceData(
             requirements = obs.scienceRequirements,
@@ -201,10 +201,12 @@ object ObsQueries:
   def updateVisualizationTime[F[_]: Async](
     programId:         Program.Id,
     obsIds:            List[Observation.Id],
-    visualizationTime: Option[Timestamp]
+    visualizationTime: Option[Instant]
   )(using TransactionalClient[F, ObservationDB]): F[Unit] = {
 
-    val editInput = ObservationPropertiesInput(visualizationTime = visualizationTime.orUnassign)
+    val editInput = ObservationPropertiesInput(visualizationTime =
+      visualizationTime.flatMap(Timestamp.fromInstantTruncated).orUnassign
+    )
 
     UpdateObservationMutation
       .execute[F](

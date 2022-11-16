@@ -55,7 +55,6 @@ import queries.schemas.odb.ObsQueries
 import react.common.ReactFnProps
 import react.primereact.Button
 import react.semanticui.modules.checkbox.*
-import lucuma.core.util.Timestamp
 
 import java.time.Instant
 
@@ -64,7 +63,7 @@ case class AsterismEditor(
   programId:     Program.Id,
   obsIds:        ObsIdSet,
   asterism:      View[Option[Asterism]],
-  potVizTime:    Pot[View[Option[Timestamp]]],
+  potVizTime:    Pot[View[Option[Instant]]],
   scienceMode:   Option[ScienceMode],
   posAngle:      Option[PosAngleConstraint],
   constraints:   Option[ConstraintSet],

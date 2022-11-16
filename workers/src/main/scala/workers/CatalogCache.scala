@@ -99,7 +99,7 @@ trait CatalogCache extends CatalogIDB {
 
     val brightnessConstraints = ags.widestConstraints
 
-    val ldt   = LocalDateTime.ofInstant(obsTime.toInstant, Constants.UTC)
+    val ldt   = LocalDateTime.ofInstant(obsTime, Constants.UTC)
     // We consider the query valid from the fist moment of the year to the end
     val start = ldt.`with`(ChronoField.DAY_OF_YEAR, 1L).`with`(ChronoField.NANO_OF_DAY, 0)
     val end   = start.plus(1, ChronoUnit.YEARS)
@@ -129,7 +129,7 @@ trait CatalogCache extends CatalogIDB {
                   GuideStarCandidate.siderealTarget.get(s)
                 }.map(gsc =>
                   // Do PM correction
-                  gsc.at(request.vizTime.toInstant)
+                  gsc.at(request.vizTime)
                 )
               )
               .flatMap { candidates =>

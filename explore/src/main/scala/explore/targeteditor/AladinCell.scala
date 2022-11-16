@@ -262,7 +262,7 @@ object AladinCell extends ModelOptics with AladinCommon:
               case PosAngleConstraint.ParallacticOverride(a) => a.some
               case _                                         => none
 
-            (tracking.at(vizTime.toInstant), pa).mapN { (base, pa) =>
+            (tracking.at(vizTime), pa).mapN { (base, pa) =>
               val basePos = AgsPosition(pa, Offset.Zero)
               val fpu     = scienceMode.flatMap(_.fpuAlternative)
               val params  = AgsParams.GmosAgsParams(fpu, PortDisposition.Side)
@@ -270,7 +270,7 @@ object AladinCell extends ModelOptics with AladinCommon:
               val sciencePositions =
                 props.asterism.asList
                   .flatMap(_.toSidereal)
-                  .flatMap(_.target.tracking.at(vizTime.toInstant))
+                  .flatMap(_.target.tracking.at(vizTime))
 
               for
                 _ <- selectedIndex.async.set(none)

@@ -34,7 +34,6 @@ import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries
 import react.common.ReactFnProps
-import lucuma.core.util.Timestamp
 
 import java.time.Instant
 
@@ -45,7 +44,7 @@ object AsterismEditorTile:
     programId:       Program.Id,
     obsId:           ObsIdSet,
     potAsterismMode: Pot[(View[Option[Asterism]], Option[ScienceMode])],
-    potVizTime:      Pot[View[Option[Timestamp]]],
+    potVizTime:      Pot[View[Option[Instant]]],
     posAngle:        Option[PosAngleConstraint],
     constraints:     Option[ConstraintSet],
     wavelength:      Option[Wavelength],

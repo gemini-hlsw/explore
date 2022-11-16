@@ -54,7 +54,6 @@ import react.resizeDetector.*
 import react.semanticui.addons.select.Select
 import react.semanticui.addons.select.Select.SelectItem
 import react.semanticui.modules.dropdown.Dropdown
-import lucuma.core.util.Timestamp
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
@@ -160,7 +159,7 @@ object ObsTabTiles:
         val potAsterismMode: Pot[(View[Option[Asterism]], Option[ScienceMode])] =
           potAsterism.map(x => (x, scienceMode))
 
-        val vizTimeView: Pot[View[Option[Timestamp]]] =
+        val vizTimeView: Pot[View[Option[Instant]]] =
           obsViewPot.map(_.zoom(ObsEditData.visualizationTime))
 
         val vizTime = vizTimeView.toOption.flatMap(_.get)
@@ -168,9 +167,7 @@ object ObsTabTiles:
         // asterism base coordinates at viz time or default to base coordinates
         val targetCoords: Option[CoordinatesAtVizTime] =
           (vizTime, potAsterism.toOption)
-            .mapN((timestamp, asterism) =>
-              asterism.get.flatMap(_.baseTracking.at(timestamp.toInstant))
-            )
+            .mapN((instant, asterism) => asterism.get.flatMap(_.baseTracking.at(instant)))
             .flatten
             .orElse(
               // If e.g. vizTime isn't defined default to the asterism base coordinates
