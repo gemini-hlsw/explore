@@ -48,7 +48,6 @@ import react.common.ReactFnProps
 import react.primereact.Button
 import reactST.{tanstackTableCore => raw}
 
-import lucuma.core.util.Timestamp
 import java.time.Instant
 
 import scalajs.js.JSConverters.*
@@ -60,7 +59,7 @@ case class TargetTable(
   obsIds:         ObsIdSet,
   targets:        View[Option[Asterism]],
   selectedTarget: View[Option[Target.Id]],
-  vizTime:        Option[Timestamp],
+  vizTime:        Option[Instant],
   renderInTitle:  Tile.RenderInTitle,
   fullScreen:     AladinFullScreen
 ) extends ReactFnProps(TargetTable.component)
@@ -124,11 +123,11 @@ object TargetTable extends TableHooks:
       }
       // If vizTime is not set, change it to now
       .useEffectResultWithDepsBy((p, _, _) => p.vizTime) { (_, _, _) => vizTime =>
-        IO(vizTime.getOrElse(Timestamp.unsafeFromInstantTruncated(Instant.now())))
+        IO(vizTime.getOrElse(Instant.now()))
       }
       // rows
       .useMemoBy((props, _, _, vizTime) => (props.targets.get, vizTime))((_, _, _, _) =>
-        case (targets, Pot.Ready(vizTime)) => targets.foldMap(_.toSiderealAt(vizTime.toInstant))
+        case (targets, Pot.Ready(vizTime)) => targets.foldMap(_.toSiderealAt(vizTime))
         case _                             => Nil
       )
       .useReactTableWithStateStoreBy((props, ctx, cols, _, rows) =>

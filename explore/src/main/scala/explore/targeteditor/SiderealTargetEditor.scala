@@ -65,8 +65,6 @@ import queries.common.TargetQueriesGQL
 import queries.schemas.odb.ODBConversions.*
 import react.common.*
 import react.primereact.Message
-import lucuma.core.util.Timestamp
-import explore.model.reusability.given
 
 import java.time.Instant
 
@@ -143,7 +141,7 @@ object SiderealTargetEditor {
       .useState(false) // cloning
       // If vizTime is not set, change it to now
       .useEffectResultWithDepsBy((p, _, _) => p.vizTime) { (_, _, _) => vizTime =>
-        IO(vizTime.getOrElse(Timestamp.unsafeFromInstantTruncated(Instant.now())))
+        IO(vizTime.getOrElse(Instant.now()))
       }
       .render { (props, ctx, cloning, vizTime) =>
         import ctx.given
@@ -295,7 +293,7 @@ object SiderealTargetEditor {
                 UndoButtons(undoCtx, disabled = disabled)
                   .when(props.renderInTitle.isEmpty && props.obsIdSubset.isEmpty)
               ),
-              potRender[Timestamp](vizTime =>
+              potRender[Instant](vizTime =>
                 AladinCell(
                   props.userId,
                   tid,

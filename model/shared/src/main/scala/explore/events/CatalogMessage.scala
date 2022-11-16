@@ -11,14 +11,14 @@ import lucuma.ags.GuideStarCandidate
 import workers.WorkerRequest
 
 import java.time.Duration
-import lucuma.core.util.Timestamp
+import java.time.Instant
 
 object CatalogMessage extends CatalogPicklers {
   sealed trait Request extends WorkerRequest
 
   case class GSRequest(
     tracking: ObjectTracking,
-    vizTime:  Timestamp
+    vizTime:  Instant
   ) extends Request {
     type ResponseType = List[GuideStarCandidate]
   }

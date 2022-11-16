@@ -21,7 +21,7 @@ import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.std.option.some
 
-import lucuma.core.util.Timestamp
+import java.time.Instant
 
 object SiderealTargetEditorTile {
 
@@ -29,7 +29,7 @@ object SiderealTargetEditorTile {
     userId:     Option[User.Id],
     targetId:   Target.Id,
     target:     View[Target.Sidereal],
-    vizTime:    Option[Timestamp],
+    vizTime:    Option[Instant],
     undoStacks: View[UndoStacks[IO, Target.Sidereal]],
     searching:  View[Set[Target.Id]],
     title:      String,

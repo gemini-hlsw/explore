@@ -42,7 +42,6 @@ import lucuma.core.model.given
 import lucuma.core.util.Enumerated
 import lucuma.core.util.NewType
 import org.http4s.Uri
-import lucuma.core.util.Timestamp
 
 import java.time.Duration
 import java.time.Instant
@@ -177,9 +176,6 @@ trait CommonPicklers {
     transformPickler[Instant, (Long, Long)]((epochSecond, nanoOfSecond) =>
       Instant.ofEpochSecond(epochSecond, nanoOfSecond)
     )(i => (i.getEpochSecond, i.getNano))
-
-  given Pickler[Timestamp] =
-    transformPickler[Timestamp, Instant](Timestamp.unsafeFromInstantTruncated)(_.toInstant)
 
   given Pickler[Duration] =
     transformPickler(Duration.ofMillis)(_.toMillis)

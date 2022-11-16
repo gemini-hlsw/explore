@@ -38,7 +38,6 @@ import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries
 import react.common.ReactFnProps
-import lucuma.core.util.Timestamp
 
 import java.time.Instant
 

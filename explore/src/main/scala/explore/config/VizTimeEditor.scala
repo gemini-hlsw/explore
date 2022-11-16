@@ -18,12 +18,11 @@ import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.datepicker.*
 
-import lucuma.core.util.Timestamp
 import java.time.Instant
 
 import scalajs.js
 
-case class VizTimeEditor(vizTimeView: Pot[View[Option[Timestamp]]])
+case class VizTimeEditor(vizTimeView: Pot[View[Option[Instant]]])
     extends ReactFnProps(VizTimeEditor.component)
 
 object VizTimeEditor {
@@ -33,9 +32,9 @@ object VizTimeEditor {
     ScalaFnComponent[Props] { p =>
       <.div(
         ExploreStyles.ObsInstantTileTitle,
-        potRender[View[Option[Timestamp]]](
+        potRender[View[Option[Instant]]](
           pendingRender = EmptyVdom,
-          valueRender = timestamp =>
+          valueRender = instant =>
             React.Fragment(
               <.label(dataAbbrv := "Time",
                       <.span("Observation time"),
@@ -44,11 +43,11 @@ object VizTimeEditor {
               Datepicker(onChange =
                 (newValue, _) =>
                   newValue.fromDatePickerToInstantOpt.foldMap { i =>
-                    timestamp.set(Timestamp.fromInstantTruncated(i))
+                    instant.set(i.some)
                   }
               )
                 .showTimeInput(true)
-                .selected(timestamp.get.map(_.toInstant).getOrElse(Instant.now).toDatePickerJsDate)
+                .selected(instant.get.getOrElse(Instant.now).toDatePickerJsDate)
                 .dateFormat("yyyy-MM-dd HH:mm"),
               <.label("UTC")
             )

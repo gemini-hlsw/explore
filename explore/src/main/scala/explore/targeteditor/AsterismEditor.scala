@@ -61,7 +61,6 @@ import queries.schemas.odb.ODBConversions.*
 import queries.schemas.odb.ObsQueries
 import react.common.ReactFnProps
 import react.primereact.Button
-import lucuma.core.util.Timestamp
 
 import java.time.Instant
 
@@ -70,7 +69,7 @@ case class AsterismEditor(
   programId:      Program.Id,
   sharedInObsIds: ObsIdSet,
   asterism:       View[Option[Asterism]],
-  potVizTime:     Pot[View[Option[Timestamp]]],
+  potVizTime:     Pot[View[Option[Instant]]],
   scienceMode:    Option[ScienceMode],
   constraints:    Option[ConstraintSet],
   wavelength:     Option[Wavelength],

@@ -25,16 +25,14 @@ import lucuma.core.math.arb.ArbWavelength.*
 import lucuma.core.util.arb.ArbGid.*
 import lucuma.core.util.arb.ArbEnumerated.*
 import java.time.Duration
+import java.time.Instant
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.math.Wavelength
-import lucuma.core.util.Timestamp
-import lucuma.core.util.arb.ArbTimestamp
 
 trait ArbObsSummary {
   import ArbConstraintsSummary.*
   import ArbTime.*
   import ArbScienceMode.given
-  import ArbTimestamp.given
 
   implicit val arbObsSummaryWithConstraints: Arbitrary[ObsSummaryWithConstraints] =
     Arbitrary[ObsSummaryWithConstraints] {
@@ -111,7 +109,7 @@ trait ArbObsSummary {
         activeStatus <- arbitrary[ObsActiveStatus]
         duration     <- arbitrary[Duration]
         mode         <- arbitrary[Option[ScienceMode]]
-        vizTime      <- arbitrary[Option[Timestamp]]
+        vizTime      <- arbitrary[Option[Instant]]
       } yield ObsSummaryWithTitleConstraintsAndConf(
         id,
         title,
@@ -203,7 +201,7 @@ trait ArbObsSummary {
         duration     <- arbitrary[Duration]
         targets      <- arbitrary[Set[Target.Id]]
         mode         <- arbitrary[Option[ScienceMode]]
-        vizTime      <- arbitrary[Option[Timestamp]]
+        vizTime      <- arbitrary[Option[Instant]]
         pa           <- arbitrary[Option[PosAngleConstraint]]
         wv           <- arbitrary[Option[Wavelength]]
       } yield ObsSummaryWithConstraintsAndConf(
@@ -229,7 +227,7 @@ trait ArbObsSummary {
        Duration,
        Option[ScienceMode],
        List[Target.Id],
-       Option[Timestamp],
+       Option[Instant],
        Option[PosAngleConstraint],
        Option[Wavelength]
       )
