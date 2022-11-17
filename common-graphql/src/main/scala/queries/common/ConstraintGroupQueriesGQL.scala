@@ -45,7 +45,7 @@ object ConstraintGroupQueriesGQL {
           }
         }
 
-        observations(WHERE: {programId: {EQ: $programId}}) {
+        observations(programId: $programId) {
           matches {
             id
             title

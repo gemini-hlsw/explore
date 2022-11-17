@@ -108,7 +108,7 @@ object ProgramQueriesGQL {
   trait ProgramEditSubscription extends GraphQLOperation[ObservationDB] {
     val document: String = """
       subscription($programId: ProgramId) {
-        programEdit(programId: $programId) {
+        programEdit(input: {programId: $programId}) {
           id
         }
       }

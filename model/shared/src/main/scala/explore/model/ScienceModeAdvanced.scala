@@ -58,7 +58,7 @@ object ScienceModeAdvanced {
           explicitAmpGain           <- c.downField("explicitAmpGain").as[Option[GmosAmpGain]]
           explicitRoi               <- c.downField("explicitRoi").as[Option[GmosRoi]]
           explicitWavelengthDithers <-
-            c.downField("explicitWavelengthDithersNm").as[Option[NonEmptyList[DitherNanoMeters]]]
+            c.downField("explicitWavelengthDithers").as[Option[NonEmptyList[DitherNanoMeters]]]
           explicitSpatialOffsets    <-
             c.downField("explicitSpatialOffsets").as[Option[NonEmptyList[Offset.Q]]]
         } yield GmosNorthLongSlit(

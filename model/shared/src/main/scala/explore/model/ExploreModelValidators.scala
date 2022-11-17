@@ -20,9 +20,7 @@ import lucuma.core.math.Parallax
 import lucuma.core.math.ProperMotion
 import lucuma.core.math.Wavelength
 import lucuma.core.math.validation.MathValidators
-import lucuma.core.optics.Format
-import lucuma.core.optics.ValidSplitEpi
-import lucuma.core.optics.ValidWedge
+import lucuma.core.optics.*
 import lucuma.core.validation.*
 import lucuma.refined.*
 import lucuma.utils.*
@@ -39,9 +37,22 @@ object ExploreModelValidators:
       n => Try(displayBrightness.shortName(n)).toOption.orEmpty
     )
 
+  import eu.timepit.refined.*
+
+  val ditherNmDecimalWavelength: ValidSplitEpi[Errors, DitherNanoMetersValue, Wavelength] =
+    ValidSplitEpi[Errors, DitherNanoMetersValue, Wavelength](
+      v =>
+        Wavelength.decimalNanometers
+          .getOption(v.value)
+          .toRight("Invalid Dither Wavelength Value")
+          .toEitherErrorsUnsafe,
+      Wavelength.decimalNanometers.reverseGet.andThen(DitherNanoMetersValue.unsafeFrom)
+    )
+
   val dithersValidSplitEpi: InputValidSplitEpi[Option[NonEmptyList[DitherNanoMeters]]] =
     InputValidSplitEpi
       .refinedBigDecimal[DitherNanoMetersRange]
+      .andThen(ditherNmDecimalWavelength)
       .toNel()
       .withErrorMessage("Invalid wavelength dither values".refined)
       .optional

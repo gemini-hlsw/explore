@@ -18,8 +18,8 @@ object ManualSequenceGQL {
   @GraphQL
   trait SequenceSteps extends GraphQLOperation[ObservationDB] {
     val document = """
-      query($whereObservation: WhereObservation!) {
-        observations(WHERE: $whereObservation, LIMIT: 1) {
+      query($programId: ProgramId!) {
+        observations(programId: $programId, LIMIT: 1) {
           matches {
             config:manualConfig {
               instrument
