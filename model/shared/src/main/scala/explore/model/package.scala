@@ -11,6 +11,7 @@ import eu.timepit.refined.numeric.Interval
 import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.enums.StellarLibrarySpectrum
 import lucuma.core.math.Coordinates
+import lucuma.core.math.Wavelength
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.SpectralDefinition
@@ -22,11 +23,13 @@ import lucuma.refined.*
 import scala.collection.immutable.SortedMap
 
 type DitherNanoMetersRange = Interval.Closed[-1000, 1000]
-type DitherNanoMeters      = BigDecimal Refined DitherNanoMetersRange
+type DitherNanoMetersValue = BigDecimal Refined DitherNanoMetersRange
+type DitherNanoMeters      = Wavelength
+object DitherNanoMetersValue extends RefinedTypeOps[DitherNanoMetersValue, BigDecimal]
 
 val MaxHourValue = BigDecimal(1000)
-type HourRange            = Interval.Closed[0, 1000]
-type Hours                = BigDecimal Refined HourRange
+type HourRange             = Interval.Closed[0, 1000]
+type Hours                 = BigDecimal Refined HourRange
 object Hours extends RefinedTypeOps[Hours, BigDecimal] {
   val Max: Hours = Hours.unsafeFrom(MaxHourValue)
 }
@@ -43,4 +46,4 @@ val EmptySiderealTarget =
 
 // Tag to indicate the coordinates have been corrected for proper motion
 object CoordinatesAtVizTime extends NewType[Coordinates]
-type CoordinatesAtVizTime = CoordinatesAtVizTime.Type
+type CoordinatesAtVizTime  = CoordinatesAtVizTime.Type

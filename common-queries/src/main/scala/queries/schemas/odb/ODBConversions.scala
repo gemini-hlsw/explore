@@ -39,10 +39,10 @@ trait ODBConversions:
     def toWhereProgram: WhereProgram =
       WhereProgram(id = WhereOrderProgramId(EQ = id.assign).assign)
 
-    @targetName("ProgramId_toWhereObservation")
-    def toWhereObservation: WhereObservation =
-      WhereObservation()
-      // WhereObservation(programId = WhereOrderProgramId(EQ = id.assign).assign)
+    // @targetName("ProgramId_toWhereObservation")
+    // def toWhereObservation: WhereObservation =
+    //   WhereObservation()
+    //   // WhereObservation(programId = WhereOrderProgramId(EQ = id.assign).assign)
 
   extension (id: Target.Id)
     def toWhereTarget: WhereTarget =

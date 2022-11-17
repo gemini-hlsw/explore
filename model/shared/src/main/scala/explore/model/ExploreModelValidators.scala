@@ -41,6 +41,18 @@ object ExploreModelValidators:
       n => Try(displayBrightness.shortName(n)).toOption.orEmpty
     )
 
+  import eu.timepit.refined.*
+
+  val ditherNmDecimalWavelength: ValidSplitEpi[Errors, DitherNanoMetersValue, Wavelength] =
+    ValidSplitEpi[Errors, DitherNanoMetersValue, Wavelength](
+      v =>
+        Wavelength.decimalNanometers
+          .getOption(v.value)
+          .toRight("Invalid Dither Wavelength Value")
+          .toEitherErrorsUnsafe,
+      Wavelength.decimalNanometers.reverseGet.andThen(DitherNanoMetersValue.unsafeFrom)
+    )
+
   val dithersValidSplitEpi: InputValidSplitEpi[Option[NonEmptyList[DitherNanoMeters]]] =
     InputValidSplitEpi
       .refinedBigDecimal[DitherNanoMetersRange]

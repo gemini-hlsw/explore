@@ -21,7 +21,7 @@ object ObsQueriesGQL {
     // TODO We should do a single observations query and extract the constraint sets and targets from it.
     val document = """
       query($programId: ProgramId!) {
-        observations(WHERE: {programId: {EQ: $programId}}) {
+        observations(programId: $programId) {
           matches {
             id
             title
@@ -53,7 +53,9 @@ object ObsQueriesGQL {
                 explicitAmpReadMode
                 explicitAmpGain
                 explicitRoi
-                explicitWavelengthDithers
+                explicitWavelengthDithers {
+                  picometers
+                }
                 explicitSpatialOffsets {
                   microarcseconds
                 }
@@ -70,7 +72,9 @@ object ObsQueriesGQL {
                 explicitAmpReadMode
                 explicitAmpGain
                 explicitRoi
-                explicitWavelengthDithers
+                explicitWavelengthDithers {
+                  picometers
+                }
                 explicitSpatialOffsets {
                   microarcseconds
                 }
@@ -459,7 +463,9 @@ object ObsQueriesGQL {
               explicitAmpReadMode
               explicitAmpGain
               explicitRoi
-              explicitWavelengthDithers
+              explicitWavelengthDithers {
+                picometers
+              }
               explicitSpatialOffsets {
                 microarcseconds
               }
@@ -476,7 +482,9 @@ object ObsQueriesGQL {
               explicitAmpReadMode
               explicitAmpGain
               explicitRoi
-              explicitWavelengthDithers
+              explicitWavelengthDithers {
+                picometers
+              }
               explicitSpatialOffsets {
                 microarcseconds
               }

@@ -1,6 +1,6 @@
 {
   "environment": "DEVELOPMENT",
-  "odbURI": "wss://172.28.98.72:8082/ws",
+  "odbURI": "ws://172.28.98.178:8082/ws",
   "preferencesDBURI": "wss://user-prefs-development.herokuapp.com/v1/graphql",
   "itcURI": "https://itc-development.herokuapp.com/itc",
   "sso": {
