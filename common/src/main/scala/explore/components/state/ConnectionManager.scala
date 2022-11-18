@@ -16,7 +16,9 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 import react.common.ReactFnPropsWithChildren
-import react.semanticui.elements.loader.Loader
+import explore.Icons
+import react.fa.IconSize
+import explore.components.ui.ExploreStyles
 
 case class ConnectionManager(ssoToken: NonEmptyString, onConnect: IO[Unit])
     extends ReactFnPropsWithChildren(ConnectionManager.component):
@@ -59,6 +61,6 @@ object ConnectionManager {
       if (initializedState.value)
         children
       else
-        Loader(active = true)
+        Icons.SolarSystem.withSpin(true).withSize(IconSize.X4).withClass(ExploreStyles.Loader)
     )
 }

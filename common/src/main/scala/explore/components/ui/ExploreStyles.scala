@@ -462,4 +462,6 @@ object ExploreStyles {
   val TimingWindowRepeatEditorNTimes: Css       = Css("timing-window-repeat-editor-n-times")
   val TimingWindowNTimesField: Css              = Css("timing-window-n-times-field")
   val TimingWindowsHeader: Css                  = Css("timing-windows-header")
+
+  val Loader: Css = Css("loader")
 }
