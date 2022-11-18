@@ -109,7 +109,9 @@ object ProgramQueriesGQL {
     val document: String = """
       subscription($programId: ProgramId) {
         programEdit(input: {programId: $programId}) {
-          id
+          value {
+            id
+          }
         }
       }
     """
