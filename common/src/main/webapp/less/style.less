@@ -1149,60 +1149,6 @@ html {
   padding: 1em;
 }
 
-// This selector is never matched after the new table transistion. But, the table doesn't
-// seem to be shown on small screens?
-// https://css-tricks.com/responsive-data-tables/
-// .tile-xs-width .explore-brightnesses-container .ui.ui.ui.ui.table:not(.unstackable) {
-//   tfoot {
-//     display: block;
-//   }
-
-//   td {
-//     /* Behave  like a "row" */
-//     position: relative;
-//     padding-left: 40%;
-//     padding-right: 0.5em;
-//   }
-
-//   td::before {
-//     /* Now like a table header */
-//     position: absolute;
-
-//     /* Top/left values mimic padding */
-//     top: 6px;
-//     left: 6px;
-//     width: 45%;
-//     padding-left: 0.25em;
-//     white-space: nowrap;
-//   }
-
-//   td:first-child::before {
-//     font-weight: normal;
-//   }
-
-//   // It is a bit unfortunate that we have to hardcode the column names here
-//   td:nth-of-type(1)::before {
-//     content: 'Value';
-//   }
-
-//   td:nth-of-type(2)::before {
-//     content: 'Band';
-//   }
-
-//   td:nth-of-type(3)::before {
-//     content: 'System';
-//   }
-
-//   td:nth-of-type(4)::before {
-//     content: '';
-//   }
-
-//   // Align the trash button
-//   td:last-child button {
-//     margin-left: auto;
-//   }
-// }
-
 .obs-badge-header {
   display: flex;
   align-items: center;
@@ -1377,6 +1323,12 @@ html {
 
 .tile-xs-width {
   .explore-shared-edit-warning {
+    display: none;
+  }
+
+  // TODO: This will require some work when we change the undo buttons to primereact.
+  // For very small tables make the undo buttons remove the text
+  .explore-buttons-undo-label {
     display: none;
   }
 }

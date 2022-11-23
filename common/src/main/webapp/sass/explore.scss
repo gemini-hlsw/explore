@@ -233,16 +233,15 @@ $tree-section-width: 300px;
   }
 }
 
-@mixin expanded-aladin {
-  grid-template-areas: 'aladin';
-  grid-template-columns: 1fr;
+@mixin hide-hidden-target-cells($all) {
+  @if $all {
+    .explore-title-undo-buttons {
+      display: none;
+    }
 
-  .explore-title-undo-buttons {
-    display: none;
-  }
-
-  .target-form {
-    display: none;
+    .target-form {
+      display: none;
+    }
   }
 
   .target-proper-motion-form {
@@ -259,13 +258,12 @@ $tree-section-width: 300px;
 .tile-md-width,
 .tile-sm-width {
   .target-grid {
-    grid-template-columns: 1fr 2fr;
-    grid-template-rows: min-content min-content min-content 1fr;
-    grid-template-areas:
-      'undo           aladin'
-      'coordinates    aladin'
-      'proper-motion  aladin'
-      'source-profile aladin';
+    grid-template:
+      'undo           aladin' min-content
+      'coordinates    aladin' min-content
+      'proper-motion  aladin' min-content
+      'source-profile aladin' 1fr
+      / 1fr 2fr;
   }
 
   .target-aladin-cell {
@@ -274,38 +272,15 @@ $tree-section-width: 300px;
 }
 
 .tile-xs-width {
-  
-  // undo buttons are not show in xs tiles, only aladin
-  // For very small tables make the undo buttons remove the text
-  // .explore-buttons-undo-label {
-  //   display: none;
-  // }
-  
   .target-grid {
-    @include expanded-aladin;
+    @include hide-hidden-target-cells(false);
+
+    grid-template:
+      'undo' min-content
+      'coordinates' min-content
+      'aladin' 1fr
+      / 1fr
   }
-  
-  // brightness are not even displayed in xs tiles.
-  // For very small tables hide the headers and add fake "header" to the left of the row
-  // .explore-brightnesses-container {
-
-  //   .ui.table,
-  //   thead,
-  //   tbody,
-  //   th,
-  //   td,
-  //   tr {
-  //     // SUI already has an !important
-  //     display: block !important;
-  //   }
-
-  //   // Hide table headers (but not display: none;, for accessibility)
-  //   thead tr {
-  //     position: absolute;
-  //     top: -9999px;
-  //     left: -9999px;
-  //   }
-  // }
 }
 
 .target-tile-body {
@@ -326,16 +301,18 @@ $tree-section-width: 300px;
 }
 
 .aladin-full-screen {
-
   .explore-shared-edit-warning,
   .target-asterism-table {
     display: none;
   }
 
   >div .target-grid {
-    @include expanded-aladin;
-  }
+    @include hide-hidden-target-cells(true);
 
+    grid-template: 
+      'aladin' 1fr
+      / 1fr;
+  }
 }
 
 .pl-form-column.target-source-profile-editor {
