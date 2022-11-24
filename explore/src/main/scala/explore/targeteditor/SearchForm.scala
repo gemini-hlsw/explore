@@ -70,7 +70,6 @@ object SearchForm {
         _ => // Auto-select name field on new targets.
           // Accessing dom elements by id is not ideal in React, but passing a ref to the <input> element of a
           // Form.Input is a bit convoluted. We should reevaluate when and if we switch to another component library.
-          // TODO: I don't think this even works.
           CallbackTo(
             Option(dom.document.getElementById("search"))
               .foldMap(node =>
