@@ -52,6 +52,8 @@ import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
+import lucuma.ui.primereact.FormInputTextView
+import lucuma.ui.primereact.LucumaStyles
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -59,9 +61,6 @@ import lucuma.utils.*
 import queries.common.TargetQueriesGQL
 import queries.schemas.odb.ODBConversions.*
 import react.common.ReactFnProps
-import react.semanticui.collections.form.Form
-import react.semanticui.elements.label.LabelPointing
-import react.semanticui.sizes.Small
 
 import java.time.Instant
 
@@ -315,7 +314,7 @@ object SiderealTargetEditor {
                   props.fullScreen
                 )
               )(vizTime),
-              <.div(ExploreStyles.Grid, ExploreStyles.Compact, ExploreStyles.TargetForm)(
+              <.div(LucumaStyles.FormColumnVeryCompact, ExploreStyles.TargetForm)(
                 // Keep the search field and the coords always together
                 SearchForm(
                   tid,
@@ -327,85 +326,68 @@ object SiderealTargetEditor {
                   props.searching,
                   searchAndSet(allView)
                 ),
-                <.label("RA",
-                        HelpIcon("target/main/coordinates.md".refined),
-                        ExploreStyles.SkipToNext
-                ),
-                FormInputEV(
+                FormInputTextView(
                   id = "ra".refined,
                   value = coordsRAView,
+                  label = React.Fragment("RA", HelpIcon("target/main/coordinates.md".refined)),
+                  disabled = disabled,
                   validFormat = MathValidators.truncatedRA,
-                  changeAuditor = ChangeAuditor.truncatedRA,
-                  clazz = ExploreStyles.TargetRaDecMinWidth,
-                  errorPointing = LabelPointing.Below,
-                  errorClazz = ExploreStyles.InputErrorTooltip,
-                  disabled = disabled
+                  changeAuditor = ChangeAuditor.truncatedRA
                 ),
-                <.label("Dec",
-                        HelpIcon("target/main/coordinates.md".refined),
-                        ExploreStyles.SkipToNext
-                ),
-                FormInputEV(
+                FormInputTextView(
                   id = "dec".refined,
                   value = coordsDecView,
+                  label = React.Fragment("Dec", HelpIcon("target/main/coordinates.md".refined)),
+                  disabled = disabled,
                   validFormat = MathValidators.truncatedDec,
-                  changeAuditor = ChangeAuditor.truncatedDec,
-                  clazz = ExploreStyles.TargetRaDecMinWidth,
-                  errorPointing = LabelPointing.Below,
-                  errorClazz = ExploreStyles.InputErrorTooltip,
-                  disabled = disabled
+                  changeAuditor = ChangeAuditor.truncatedDec
                 )
               ),
-              Form(as = <.div, size = Small)(
-                ExploreStyles.Grid,
-                ExploreStyles.Compact,
-                ExploreStyles.ExploreForm,
+              <.div(
+                LucumaStyles.FormColumnVeryCompact,
                 ExploreStyles.TargetProperMotionForm,
-                <.label("Epoch",
-                        HelpIcon("target/main/epoch.md".refined),
-                        ExploreStyles.SkipToNext
-                ),
-                InputWithUnits(
+                FormInputTextView(
                   id = "epoch".refined,
                   value = epochView,
+                  label = React.Fragment("Epoch", HelpIcon("target/main/epoch.md".refined)),
+                  disabled = disabled,
                   validFormat = MathValidators.epochNoScheme,
                   changeAuditor = ChangeAuditor.maxLength(8.refined).decimal(3.refined).denyNeg,
-                  units = "years",
-                  disabled = disabled
+                  postAddons = List("years")
                 ),
-                <.label("µ RA", ExploreStyles.SkipToNext),
-                InputWithUnits(
+                FormInputTextView(
                   id = "raPM".refined,
                   value = properMotionRAView,
+                  label = "µ RA",
+                  disabled = disabled,
                   validFormat = ExploreModelValidators.pmRAValidWedge.optional,
                   changeAuditor = ChangeAuditor.bigDecimal(3.refined).optional,
-                  units = "mas/y",
-                  disabled = disabled
+                  postAddons = List("mas/y")
                 ),
-                <.label("µ Dec", ExploreStyles.SkipToNext),
-                InputWithUnits(
+                FormInputTextView(
                   id = "raDec".refined,
                   value = properMotionDecView,
+                  label = "µ Dec",
+                  disabled = disabled,
                   validFormat = ExploreModelValidators.pmDecValidWedge.optional,
                   changeAuditor = ChangeAuditor.bigDecimal(3.refined).optional,
-                  units = "mas/y",
-                  disabled = disabled
+                  postAddons = List("mas/y")
                 ),
-                <.label("Parallax", ExploreStyles.SkipToNext),
-                InputWithUnits(
+                FormInputTextView(
                   id = "parallax".refined,
                   value = parallaxView,
+                  label = "Parallax",
+                  disabled = disabled,
                   validFormat = ExploreModelValidators.pxValidWedge.optional,
                   changeAuditor = ChangeAuditor.bigDecimal(3.refined).optional,
-                  units = "mas",
-                  disabled = disabled
+                  postAddons = List("mas")
                 ),
                 RVInput(radialVelocityView, disabled)
               ),
-              Form(as = <.div, size = Small)(
+              <.div(
                 ExploreStyles.Grid,
                 ExploreStyles.Compact,
-                ExploreStyles.ExploreForm,
+                LucumaStyles.FormColumnVeryCompact,
                 ExploreStyles.TargetSourceProfileEditor,
                 ExploreStyles.Gaussian
                   .when(SourceProfile.gaussian.getOption(sourceProfileAligner.get).isDefined)

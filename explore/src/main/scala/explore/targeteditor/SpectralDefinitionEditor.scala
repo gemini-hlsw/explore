@@ -18,7 +18,6 @@ import eu.timepit.refined.types.string
 import explore.*
 import explore.common.*
 import explore.components.HelpIcon
-import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.display.given
@@ -50,16 +49,17 @@ import lucuma.core.util.Enumerated
 import lucuma.core.validation.InputValidSplitEpi
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
-import lucuma.ui.forms.EnumSelect
-import lucuma.ui.forms.EnumViewSelect
-import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
+import lucuma.ui.primereact.EnumDropdown
+import lucuma.ui.primereact.EnumDropdownView
+import lucuma.ui.primereact.FormInputTextView
+import lucuma.ui.primereact.FormLabel
+import lucuma.ui.primereact.LucumaStyles
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ODBConversions.*
 import react.common.ReactFnProps
-import react.semanticui.elements.label.LabelPointing
 
 import scala.collection.immutable.HashSet
 import scala.collection.immutable.SortedMap
@@ -174,21 +174,17 @@ sealed abstract class SpectralDefinitionEditorBuilder[
         )
 
       def spectrumRow[T: Enumerated: Display](id: string.NonEmptyString, view: View[T]) =
-        React.Fragment(
-          <.span,
-          EnumViewSelect(id, view),
-          <.span
-        )
+        EnumDropdownView(id = id, value = view, clazz = LucumaStyles.FormField)
 
       React.Fragment(
-        <.label("SED", HelpIcon("target/main/target-sed.md".refined), ExploreStyles.SkipToNext),
-        EnumSelect[SEDType[T]](
-          label = "",
-          value = currentType(props.spectralDefinition.get).some,
+        FormLabel(htmlFor = "sed".refined)("SED", HelpIcon("target/main/target-sed.md".refined)),
+        EnumDropdown[SEDType[T]](
+          id = "sed".refined,
+          value = currentType(props.spectralDefinition.get),
           onChange = sed => props.spectralDefinition.view(props.toInput).mod(sed.convert),
-          disabledItems = disabledItems
+          disabledItems = disabledItems,
+          clazz = LucumaStyles.FormField
         ),
-        <.span,
         stellarLibrarySpectrumAlignerOpt
           .map(rsu => spectrumRow("slSpectrum".refined, rsu.view(_.assign))),
         coolStarTemperatureAlignerOpt
@@ -205,34 +201,26 @@ sealed abstract class SpectralDefinitionEditorBuilder[
           .map(rsu => spectrumRow("pnSpectrum".refined, rsu.view(_.assign))),
         powerLawIndexAlignerOpt
           .map(rsu =>
-            React.Fragment(
-              <.label("Index", ExploreStyles.SkipToNext),
-              FormInputEV( // Power-law index can be any decimal
-                id = "powerLawIndex".refined,
-                value = rsu.view(_.assign),
-                validFormat = InputValidSplitEpi.bigDecimal,
-                changeAuditor = ChangeAuditor.fromInputValidSplitEpi(InputValidSplitEpi.bigDecimal),
-                errorClazz = ExploreStyles.InputErrorTooltip,
-                errorPointing = LabelPointing.Below
-              ),
-              <.span
-            )
+            FormInputTextView( // Power-law index can be any decimal
+              id = "powerLawIndex".refined,
+              value = rsu.view(_.assign),
+              label = "Index",
+              validFormat = InputValidSplitEpi.bigDecimal,
+              changeAuditor = ChangeAuditor.fromInputValidSplitEpi(InputValidSplitEpi.bigDecimal)
+            ),
           ),
         blackBodyTemperatureAlignerOpt
           .map(rsu =>
-            React.Fragment(
-              <.label("Temperature", ExploreStyles.SkipToNext),
-              InputWithUnits( // Temperature is in K, a positive integer
-                id = "bbTempK".refined,
-                value = rsu.view(_.value.assign).stripQuantity,
-                validFormat = InputValidSplitEpi.posInt,
-                changeAuditor = ChangeAuditor
-                  .fromInputValidSplitEpi(InputValidSplitEpi.posInt)
-                  .denyNeg,
-                units = "°K"
-              ),
-              <.span
-            )
+            FormInputTextView( // Temperature is in K, a positive integer
+              id = "bbTempK".refined,
+              value = rsu.view(_.value.assign).stripQuantity,
+              label = "Temperature",
+              validFormat = InputValidSplitEpi.posInt,
+              changeAuditor = ChangeAuditor
+                .fromInputValidSplitEpi(InputValidSplitEpi.posInt)
+                .denyNeg,
+              postAddons = List("°K")
+            ),
           ),
         props.bandBrightnessesViewOpt
           .map(bandBrightnessesView =>
@@ -241,19 +229,22 @@ sealed abstract class SpectralDefinitionEditorBuilder[
         props.fluxDensityContinuumOpt
           .map(fluxDensityContinuum =>
             React.Fragment(
-              <.label("Continuum", ExploreStyles.SkipToNext),
-              FormInputEV(
-                id = "fluxValue".refined,
-                value = fluxDensityContinuum.zoom(
-                  Measure.valueTagged[PosBigDecimal, FluxDensityContinuum[T]]
+              FormLabel(htmlFor = "fluxValue".refined)("Continuum"),
+              <.div(
+                ExploreStyles.FlexContainer |+| LucumaStyles.FormField,
+                FormInputTextView(
+                  id = "fluxValue".refined,
+                  value = fluxDensityContinuum.zoom(
+                    Measure.valueTagged[PosBigDecimal, FluxDensityContinuum[T]]
+                  ),
+                  validFormat = InputValidSplitEpi.posBigDecimalWithScientificNotation,
+                  changeAuditor = ChangeAuditor.posScientificNotation()
                 ),
-                validFormat = InputValidSplitEpi.posBigDecimalWithScientificNotation,
-                changeAuditor = ChangeAuditor.posScientificNotation()
-              ),
-              EnumViewSelect(
-                "Units",
-                fluxDensityContinuum
-                  .zoom(Measure.unitsTagged[PosBigDecimal, FluxDensityContinuum[T]])
+                EnumDropdownView(
+                  id = "Units".refined,
+                  value = fluxDensityContinuum
+                    .zoom(Measure.unitsTagged[PosBigDecimal, FluxDensityContinuum[T]])
+                )
               )
             )
           ),

@@ -8,7 +8,6 @@ import clue.data.syntax.*
 import eu.timepit.refined.auto.*
 import explore.common.*
 import explore.components.HelpIcon
-import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.enums.SourceProfileType
@@ -20,8 +19,11 @@ import lucuma.core.model.SourceProfile
 import lucuma.core.model.SourceProfile.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
-import lucuma.ui.forms.EnumSelect
 import lucuma.ui.input.ChangeAuditor
+import lucuma.ui.primereact.EnumDropdown
+import lucuma.ui.primereact.FormInputTextView
+import lucuma.ui.primereact.FormLabel
+import lucuma.ui.primereact.LucumaStyles
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.given
 import queries.schemas.*
@@ -50,16 +52,16 @@ object SourceProfileEditor:
           )
 
         React.Fragment(
-          <.label(
+          FormLabel(htmlFor = "profile-type".refined)(
             "Profile",
-            HelpIcon("target/main/target-profile.md".refined),
-            ExploreStyles.SkipToNext
+            HelpIcon("target/main/target-profile.md".refined)
           ),
-          EnumSelect[SourceProfileType](
-            value = SourceProfileType.fromSourceProfile(props.sourceProfile.get).some,
-            onChange = sp => props.sourceProfile.view(_.toInput).mod(sp.convert)
+          EnumDropdown[SourceProfileType](
+            id = "profile-type".refined,
+            value = SourceProfileType.fromSourceProfile(props.sourceProfile.get),
+            onChange = sp => props.sourceProfile.view(_.toInput).mod(sp.convert),
+            clazz = LucumaStyles.FormField
           ),
-          <.span,
           props.sourceProfile
             .zoomOpt(
               SourceProfile.point.andThen(Point.spectralDefinition),
@@ -79,18 +81,18 @@ object SourceProfileEditor:
           gaussianAlignerOpt
             .map(gaussianAligner =>
               React.Fragment(
-                <.label("FWHM", ExploreStyles.SkipToNext),
-                InputWithUnits(                             // FWHM is positive arcsec accepting decimals
+                FormInputTextView(                          // FWHM is positive arcsec accepting decimals
                   id = "fwhm".refined,
                   value = gaussianAligner
                     .zoom(Gaussian.fwhm, GaussianInput.fwhm.modify)
                     .view(_.toInput.assign),
+                  label = "FWHM",
                   validFormat = MathValidators.angleArcSec, // THIS IS ARCSEC AND NOT SIGNED!
                   changeAuditor = ChangeAuditor
                     .fromInputValidSplitEpi(MathValidators.angleArcSec)
                     .denyNeg
                     .allowEmpty,
-                  units = "arcsec"
+                  postAddons = List("arcsec")
                 ),
                 IntegratedSpectralDefinitionEditor(
                   gaussianAligner.zoom(
