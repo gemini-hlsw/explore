@@ -29,6 +29,7 @@ import lucuma.react.table.*
 import lucuma.refined.*
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.*
+import lucuma.ui.primereact.given
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -117,7 +118,7 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                 _._2.zoom(Measure.unitsTagged[BigDecimal, Brightness[T]]),
                 "Units",
                 cell =>
-                  EnumDropdownView[Units Of Brightness[T]](
+                  EnumDropdownView(
                     id = NonEmptyString.unsafeFrom(s"brightnessUnits_${cell.row.id}"),
                     value = cell.value,
                     disabled = disabled,

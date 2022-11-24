@@ -13,6 +13,12 @@ $tree-section-width: 300px;
   }
 }
 
+// There is still an analog to this in style.less
+@mixin warning-label-mixin {
+  color: var(--warning-text-color);
+  background-color: var(--warning-background-color);
+}
+
 .p-inputgroup.explore-warning-input {
   box-shadow: -0 0 2px 1px var(--warning-background-color);
 }
@@ -343,6 +349,25 @@ $tree-section-width: 300px;
   .p-button {
     margin-left: 5px;
     flex-shrink: 0;
+  }
+}
+
+// ------
+// Asterism Editor
+// ------
+
+.explore-shared-edit-warning {
+  @include warning-label-mixin;
+
+  padding: 0.4em;
+
+  .pl-radiobutton-with-label {
+    padding-left: 2em;
+
+    .p-radiobutton .p-radiobutton-box.p-highlight {
+      border-color: black;
+      background-color: black;
+    }
   }
 }
 
@@ -1234,6 +1259,10 @@ table.explore-border-table {
     padding: 0.5em;
     font-size: smaller;
 
+    .p-inputgroup input {
+      font-size: 96%;
+    }
+
     span {
       display: inline-block;
     }
@@ -1258,14 +1287,19 @@ table.explore-border-table {
         margin-right: 0.5em;
       }
 
-      .field {
+      .pl-form-field {
         margin-right: 0.5em;
+        width: 9ch;
 
-        .ui.input {
-          width: 9ch;
-        }
+        // .ui.input {
+        //   width: 9ch;
+        // }
       }
     }
+
+    // .timing-window-n-times-field {
+    //   width: 7em;
+    // }
 
     .timing-window-repeat-editor-alternatives {
       display: flex;

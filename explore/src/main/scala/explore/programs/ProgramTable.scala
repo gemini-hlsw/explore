@@ -32,6 +32,7 @@ import lucuma.react.table.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB
 import lucuma.ui.primereact.*
+import lucuma.ui.primereact.given
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given

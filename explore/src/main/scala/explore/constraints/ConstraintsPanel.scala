@@ -37,6 +37,7 @@ import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.EnumDropdownView
 import lucuma.ui.primereact.FormInputTextView
 import lucuma.ui.primereact.FormLabel
+import lucuma.ui.primereact.given
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given

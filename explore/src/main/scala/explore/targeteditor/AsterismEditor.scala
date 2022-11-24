@@ -41,8 +41,10 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.util.NewType
+import lucuma.refined.*
 import lucuma.schemas.ObservationDB
 import lucuma.ui.primereact.*
+import lucuma.ui.primereact.given
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -134,7 +136,7 @@ object AsterismEditor {
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .useStateView(AreAdding(false))
-      .useState(EditScope.CurrentOnly)
+      .useStateView(EditScope.CurrentOnly)
       .useEffectWithDepsBy((props, _, _, _) => (props.asterism.get, props.currentTarget)) {
         (props, _, _, _) => (asterism, oTargetId) =>
           // if the selected targetId is None, or not in the asterism, select the first target (if any)
@@ -227,22 +229,15 @@ object AsterismEditor {
                       <.div(
                         ExploreStyles.SharedEditWarning,
                         s"${t.name.value} is in ${otherObsCount} other observation$plural. Edits here should apply to:",
-                        Checkbox(
-                          name = "editScope",
-                          label =
-                            if (props.obsIds.size === 1) "only this observation"
-                            else "only the current observations",
-                          value = 0,
-                          checked = editScope.value === EditScope.CurrentOnly,
-                          onChange = (_: Boolean) => editScope.setState(EditScope.CurrentOnly)
-                        ),
-                        Checkbox(
-                          name = "editScope",
-                          label = "all observations of this target",
-                          value = 1,
-                          checked = editScope.value === EditScope.AllInstances,
-                          onChange = (_: Boolean) => editScope.setState(EditScope.AllInstances)
-                        )
+                        BooleanRadioButtons(
+                          view = editScope.as(EditScope.value),
+                          idBase = "editscope".refined,
+                          name = "editScope".refined,
+                          trueLabel = "all observations of this target".refined,
+                          falseLabel =
+                            if (props.obsIds.size === 1) "only this observation".refined
+                            else "only the current observations".refined,
+                        ).toFalseTrueFragment
                       ).when(otherObsCount > 0),
                       props.asterism.mapValue(asterism =>
                         SiderealTargetEditor(
@@ -257,7 +252,7 @@ object AsterismEditor {
                           props.searching,
                           onClone = onCloneTarget(targetId, props.asterism, props.setTarget) _,
                           obsIdSubset =
-                            if (otherObsCount > 0 && editScope.value === EditScope.CurrentOnly)
+                            if (otherObsCount > 0 && editScope.get === EditScope.CurrentOnly)
                               props.obsIds.some
                             else none,
                           fullScreen = fullScreen

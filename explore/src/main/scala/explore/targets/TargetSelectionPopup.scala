@@ -32,6 +32,7 @@ import lucuma.core.util.NewType
 import lucuma.refined.*
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.primereact.*
+import lucuma.ui.primereact.given
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
