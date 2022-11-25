@@ -1090,6 +1090,7 @@ div.partner-split-total {
   margin-bottom: 0;
 }
 
+// There is already an anolog to this in explore.scss
 .warning-label-mixin() {
   color: var(--warning-text-color);
   background-color: var(--warning-background-color);
@@ -1311,21 +1312,7 @@ html {
   }
 }
 
-.explore-shared-edit-warning {
-  .warning-label-mixin();
-
-  padding: 0.4em;
-
-  .checkbox {
-    padding-left: 2em;
-  }
-}
-
 .tile-xs-width {
-  .explore-shared-edit-warning {
-    display: none;
-  }
-
   // TODO: This will require some work when we change the undo buttons to primereact.
   // For very small tables make the undo buttons remove the text
   .explore-buttons-undo-label {
@@ -1365,7 +1352,7 @@ html {
 
 .explore-target-summary-select {
   left: 0;
-  width: 70px;
+  width: 70px !important;
 
   .p-button {
     width: 55px;

@@ -24,6 +24,7 @@ import lucuma.ui.primereact.EnumDropdown
 import lucuma.ui.primereact.FormInputTextView
 import lucuma.ui.primereact.FormLabel
 import lucuma.ui.primereact.LucumaStyles
+import lucuma.ui.primereact.given
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.given
 import queries.schemas.*

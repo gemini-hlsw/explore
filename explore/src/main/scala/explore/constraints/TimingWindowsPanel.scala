@@ -32,9 +32,9 @@ import lucuma.core.validation.InputValidSplitEpi
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
-import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.*
+import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.util.*
 import lucuma.ui.table.PrimeAutoHeightVirtualizedTable
@@ -59,6 +59,8 @@ import reactST.tanstackTableCore.mod.Column
 import java.time.Duration
 import java.time.ZonedDateTime
 import scala.concurrent.duration.FiniteDuration
+
+import scalajs.js.timers
 
 case class TimingWindowsPanel(windows: View[List[TimingWindow]])
     extends ReactFnProps(TimingWindowsPanel.component)
@@ -309,13 +311,11 @@ object TimingWindowsPanel:
                   ),
                   <.label("Remain open for", ^.htmlFor := "remain-open"),
                   selectedRemainOpenFor.asView.map { remainOpen =>
-                    FormInputEV(
+                    FormInputTextView(
                       id = "remain-duration".refined,
                       value = remainOpen,
                       validFormat = durationHM,
-                      changeAuditor = ChangeAuditor.fromInputValidWedge(durationHM),
-                      errorPointing = LabelPointing.Below,
-                      errorClazz = ExploreStyles.InputErrorTooltip
+                      changeAuditor = ChangeAuditor.fromInputValidWedge(durationHM)
                     )
                   }
                 ),
@@ -335,17 +335,15 @@ object TimingWindowsPanel:
                                   _.toRepeatPeriod(NonNegDuration.unsafeFrom(Duration.ofHours(12)))
                                 )
                                 .when_(checked) *>
-                                selectedTW.mod(_.toRepeatPeriodForever).unless_(checked)
+                                selectedTW.mod(_.noRepeatPeriod).unless_(checked)
                           ),
                           <.label("Repeat with a period of", ^.htmlFor := "repeat-with-period")
                         ),
-                        FormInputEV(
+                        FormInputTextView(
                           id = "repat-period".refined,
                           value = selectedRepeatPeriod,
                           validFormat = durationHMS,
                           changeAuditor = ChangeAuditor.fromInputValidWedge(durationHMS),
-                          errorPointing = LabelPointing.Below,
-                          errorClazz = ExploreStyles.InputErrorTooltip,
                           disabled = !e.repeatPeriod
                         )
                       ),
@@ -370,15 +368,18 @@ object TimingWindowsPanel:
                             onChange = (_, checked) =>
                               selectedTW.mod(_.toRepeatPeriodNTimes(1.refined)).when_(checked)
                           ),
-                          FormInputEV(
-                            id = "repat-n-times-value".refined,
+                          FormInputTextView(
+                            id = "repeat-n-times-value".refined,
                             value = selectedRepeatNTimes,
                             validFormat = InputValidSplitEpi.posInt,
                             changeAuditor = ChangeAuditor.posInt,
-                            clazz = ExploreStyles.TimingWindowNTimesField,
-                            errorPointing = LabelPointing.Below,
-                            errorClazz = ExploreStyles.InputErrorTooltip,
-                            disabled = !e.repeatPeriod
+                            disabled = !e.repeatPeriod,
+                            // when focusing, if the viewOpt is empty, switch to `n times` and select all text
+                            onFocus = ev =>
+                              selectedRepeatNTimes.get.fold(
+                                selectedTW.mod(_.toRepeatPeriodNTimes(1.refined)) >>
+                                  Callback(timers.setTimeout(0)(ev.target.select()))
+                              )(_ => Callback.empty)
                           ),
                           <.label("Times", ^.htmlFor := "repeat-n-times-value")
                         )

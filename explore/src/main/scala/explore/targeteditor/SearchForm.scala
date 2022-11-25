@@ -20,6 +20,7 @@ import lucuma.core.validation.InputValidSplitEpi
 import lucuma.refined.*
 import lucuma.ui.primereact.FormInputTextView
 import lucuma.ui.primereact.LucumaStyles
+import lucuma.ui.primereact.given
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given

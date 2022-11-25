@@ -23,6 +23,7 @@ import lucuma.react.table.*
 import lucuma.refined.*
 import lucuma.ui.input.*
 import lucuma.ui.primereact.FormInputTextView
+import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*

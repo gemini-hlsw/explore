@@ -53,8 +53,8 @@ import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.refined.*
-import lucuma.ui.primereact.SliderView
 import lucuma.ui.primereact.*
+import lucuma.ui.primereact.given
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -502,7 +502,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                       .asView
                       .map(view =>
                         CheckboxView(
-                          id = "ags-overlay".refined,
+                          id = "ags-candidates".refined,
                           value = view,
                           label = "Show Catalog"
                         )
