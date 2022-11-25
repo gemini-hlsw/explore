@@ -655,10 +655,11 @@ private object SpectroscopyModesTable extends TableHooks:
                     virtualizer
                       .getVirtualItems()
                       .some
+                      .filter(_.nonEmpty)
                       .map(items => items.head.index.toInt to items.last.index.toInt)
                   ) >> atTop.setState(virtualizer.scrollElement.scrollTop < 32),
                 virtualizerRef = virtualizerRef,
-                emptyMessage = "No matching modes"
+                emptyMessage = <.div(ExploreStyles.SpectroscopyTableEmpty, "No matching modes")
               ),
               scrollButton(
                 Icons.ChevronDoubleUp,
