@@ -123,7 +123,7 @@ object UserPreferencesQueriesGQL {
   @GraphQL
   trait UserPreferencesElevPlotUpdate extends GraphQLOperation[UserPreferencesDB] {
     val document = """
-      mutation userPreferencesUpsert($userId: String = "", $elevationPlotRange: elevation_plot_range = "", $elevationPlotTime: elevation_plot_time = "") {
+      mutation userPreferencesUpsert($userId: String = "", $elevationPlotRange: ExplorePlotRangeEnum, $elevationPlotTime: ExplorePlotTimeEnum) {
         insertLucumaUserPreferencesOne(
           object: {
             userId: $userId,
@@ -172,8 +172,9 @@ object UserPreferencesQueriesGQL {
         }
       }"""
   }
+
   @GraphQL
-  trait ItcPlotPreferencesQuery        extends GraphQLOperation[UserPreferencesDB] {
+  trait ItcPlotPreferencesQuery extends GraphQLOperation[UserPreferencesDB] {
     val document = """
       query itcPlotPreferences($userId: String! = "", $observationId: String! = "") {
         lucumaItcPlotPreferencesByPk(observationId: $observationId, userId: $userId) {

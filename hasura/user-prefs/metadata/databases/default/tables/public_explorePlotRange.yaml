@@ -1,0 +1,4 @@
+table:
+  name: explorePlotRange
+  schema: public
+is_enum: true
