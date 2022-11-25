@@ -315,7 +315,7 @@ $tree-section-width: 300px;
   >div .target-grid {
     @include hide-hidden-target-cells(true);
 
-    grid-template: 
+    grid-template:
       'aladin' 1fr
       / 1fr;
   }
@@ -1307,3 +1307,31 @@ table.explore-border-table {
     align-self: start;
   }
 }
+
+// Move to lucuma-ui?
+.explore-table:has(.p-datatable-emptymessage) {
+  tr.p-datatable-emptymessage {
+    background: none;
+  }
+}
+
+.explore-table:has(.p-datatable-emptymessage):has(.explore-table-emptymessage) {
+  width: 100%;
+}
+
+.p-datatable-emptymessage {
+  div {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, 100%);
+    font-size: 1.3em;
+    border-bottom: var(--explore-accent-color) solid 2px;
+  }
+}
+
+div.spectroscopy-table-emptymessage {
+  left: 10px;
+  transform: unset;
+}
+

@@ -77,7 +77,7 @@ object TargetImportPopup:
     s:           Stream[F, Byte],
     stateUpdate: (State => State) => F[Unit],
     client:      Client[F]
-  )(using TransactionalClient[F, ObservationDB]) =
+  )(using TransactionalClient[F, ObservationDB]): Stream[F, Unit] =
     s
       .through(text.utf8.decode)
       .through(

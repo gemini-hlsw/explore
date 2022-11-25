@@ -297,7 +297,8 @@ object TargetSummaryTable extends TableHooks:
                   }
                 }
               ),
-            cellMod = cell => columnClasses.get(ColumnId(cell.column.id)).orEmpty
+            cellMod = cell => columnClasses.get(ColumnId(cell.column.id)).orEmpty,
+            emptyMessage = <.div("No targets present")
             // workaround to redraw when files are imported
           ).withKey(s"summary-table-${filesToImport.get.size}")
         )

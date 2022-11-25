@@ -242,7 +242,7 @@ object TimingWindowsPanel:
                     Callback(row.toggleSelected())
                 ),
               // If cmd is pressed add to the selection
-              emptyMessage = "No timing windows defined"
+              emptyMessage = <.div(ExploreStyles.ExploreTableEmpty, "No timing windows defined")
             )
           ).withRef(resize.ref),
           current
