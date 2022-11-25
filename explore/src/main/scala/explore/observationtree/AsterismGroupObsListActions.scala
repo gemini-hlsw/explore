@@ -203,31 +203,32 @@ object AsterismGroupObsListActions {
         }
     )
 
-  def dropTarget(obsIds: ObsIdSet, targetId: Target.Id, expandedIds: View[SortedSet[ObsIdSet]])(
-    implicit c:          TransactionalClient[IO, ObservationDB]
-  ) = Action(getter = targetDropGetter, setter = targetDropSetter(obsIds, targetId))(
-    onSet = (agwo, _) => {
-      val agl        = agwo.asterismGroups
-      // We always need to look in the list to get the most current aterism group. We
-      // should always find one, unless an observation has been deleted, in which case we do nothing...
-      val oCurrentAg = agl.findContainingObsIds(obsIds)
-      oCurrentAg.foldMap { currentAg =>
-        // This seems to be the only way to tell if we're doing or undoing?
-        if (currentAg.targetIds.contains(targetId))
-          // undo
-          expandedIds
-            .mod(undoTargetDropExpandedMod(obsIds, targetId, currentAg, agl) _)
-            .to[IO] >>
-            AsterismQueries.removeTargetFromAsterisms[IO](obsIds.toList, targetId)
-        else
-          // do or redo
-          expandedIds
-            .mod(doTargetDropExpandedMod(obsIds, targetId, currentAg, agl) _)
-            .to[IO] >>
-            AsterismQueries.addTargetToAsterisms[IO](obsIds.toList, targetId)
-      }
-    }
-  )
+  // TODO: No longer used, but may be useful if/when implementing copy/paste from target table
+  // def dropTarget(obsIds: ObsIdSet, targetId: Target.Id, expandedIds: View[SortedSet[ObsIdSet]])(
+  //   implicit c:          TransactionalClient[IO, ObservationDB]
+  // ) = Action(getter = targetDropGetter, setter = targetDropSetter(obsIds, targetId))(
+  //   onSet = (agwo, _) => {
+  //     val agl        = agwo.asterismGroups
+  //     // We always need to look in the list to get the most current aterism group. We
+  //     // should always find one, unless an observation has been deleted, in which case we do nothing...
+  //     val oCurrentAg = agl.findContainingObsIds(obsIds)
+  //     oCurrentAg.foldMap { currentAg =>
+  //       // This seems to be the only way to tell if we're doing or undoing?
+  //       if (currentAg.targetIds.contains(targetId))
+  //         // undo
+  //         expandedIds
+  //           .mod(undoTargetDropExpandedMod(obsIds, targetId, currentAg, agl) _)
+  //           .to[IO] >>
+  //           AsterismQueries.removeTargetFromAsterisms[IO](obsIds.toList, targetId)
+  //       else
+  //         // do or redo
+  //         expandedIds
+  //           .mod(doTargetDropExpandedMod(obsIds, targetId, currentAg, agl) _)
+  //           .to[IO] >>
+  //           AsterismQueries.addTargetToAsterisms[IO](obsIds.toList, targetId)
+  //     }
+  //   }
+  // )
 
   def targetExistence(targetId: Target.Id, setPage: Option[Target.Id] => IO[Unit])(implicit
     c:                          TransactionalClient[IO, ObservationDB]
