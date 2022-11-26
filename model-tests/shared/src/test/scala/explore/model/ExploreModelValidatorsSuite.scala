@@ -20,12 +20,11 @@ import org.scalacheck.Arbitrary.*
 import org.scalacheck.Gen
 
 final class ExploreModelValidatorsSuite extends DisciplineSuite:
-
   // Scala.js seems to have trouble formatting BigDecimals with very high absolute scale or precision.
   // We therefore use these bounded arbitraries.
   // TODO: This is duplicated in `InputValidSplitEpiInstancesSuite` in lucuma-core.
   // We should move it to the testkit there and reuse it here.
-  implicit lazy val arbBigDecimalLimitedPrecision: Arbitrary[BigDecimal] =
+  given Arbitrary[BigDecimal] =
     Arbitrary(
       org.scalacheck.Arbitrary.arbBigDecimal.arbitrary.suchThat(x =>
         x.scale.abs < 100 && x.precision <= 15

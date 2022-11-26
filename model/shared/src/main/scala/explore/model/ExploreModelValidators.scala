@@ -23,6 +23,7 @@ import lucuma.core.math.validation.MathValidators
 import lucuma.core.optics.Format
 import lucuma.core.optics.ValidSplitEpi
 import lucuma.core.optics.ValidWedge
+import lucuma.core.syntax.string.*
 import lucuma.core.validation.*
 import lucuma.refined.*
 import lucuma.utils.*
@@ -30,7 +31,7 @@ import lucuma.utils.*
 import scala.util.Try
 
 object ExploreModelValidators:
-  val i = ValidSplitEpi
+  private val i = ValidSplitEpi
     .forRefined[String, BigDecimal, HourRange]("Invalid hour value")
 
   val brightnessValidWedge: InputValidWedge[BigDecimal] =
@@ -71,13 +72,18 @@ object ExploreModelValidators:
           .toErrorsValidWedge
       )
 
+  private val bdPattern = """"-?(?:\\d+(?:\\.\\d+)?|\\.\\d+)""".r
+
   // Strips non-significant zeros on `reverseGet`
-  val compactDecimalString: Format[String, String] =
+  private val compactDecimalString: Format[String, String] =
     Format(
       _.some,
       s =>
-        try BigDecimal(s).bigDecimal.stripTrailingZeros.toPlainString
-        catch { case _ => s }
+        if (bdPattern.matches(s)) {
+          s.parseBigDecimalOption
+            .map(_.bigDecimal.stripTrailingZeros.toPlainString)
+            .getOrElse(s)
+        } else s
     )
 
   val compactDecimalStringValidWedge: InputValidWedge[String] =
