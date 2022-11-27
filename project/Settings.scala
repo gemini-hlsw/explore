@@ -38,7 +38,7 @@ object Settings {
     val mouse            = "1.2.1"
     val mUnit            = "0.7.29"
     val mUnitCatsEffect  = "1.0.7"
-    val pprint           = "0.8.0"
+    val pprint           = "0.8.1"
     val reactAladin      = "0.27.7"
     val refinedAlgebra   = "0.1.0"
     val scalaJsDom       = "2.3.0"
