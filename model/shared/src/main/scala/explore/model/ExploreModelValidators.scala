@@ -72,6 +72,8 @@ object ExploreModelValidators:
           .toErrorsValidWedge
       )
 
+  // Only support numbers (one or more) with an optional sign and an optional
+  // decimal point with or without numbers after the decimal point
   private val bdPattern = """"-?(?:\\d+(?:\\.\\d+)?|\\.\\d+)""".r
 
   // Strips non-significant zeros on `reverseGet`
