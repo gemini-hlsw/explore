@@ -81,6 +81,15 @@ object AladinContainer extends AladinCommon {
       case null       => ()
     }
 
+  private def speedCss(gs: GuideSpeed): Css =
+    gs match
+      case GuideSpeed.Fast   =>
+        ExploreStyles.GuideSpeedFast
+      case GuideSpeed.Medium =>
+        ExploreStyles.GuideSpeedMedium
+      case GuideSpeed.Slow   =>
+        ExploreStyles.GuideSpeedSlow
+
   private val component =
     ScalaFnComponent
       .withHooks[Props]
@@ -221,23 +230,16 @@ object AladinContainer extends AladinCommon {
                     case AgsAnalysis.VignettesScience(_) => true
                     case _                               => false
 
-                  val guideSpeed = g.match
-                    case AgsAnalysis.Usable(_, _, s @ Some(_), _, _)              =>
-                      s
-                    case AgsAnalysis.NotReachableAtPosition(_, _, s @ Some(_), _) =>
-                      s
-                    case _                                                        =>
-                      none
-
-                  val speedCss = guideSpeed.match
-                    case Some(GuideSpeed.Fast)   =>
-                      ExploreStyles.GuideSpeedFast
-                    case Some(GuideSpeed.Medium) =>
-                      ExploreStyles.GuideSpeedMedium
-                    case Some(GuideSpeed.Slow)   =>
-                      ExploreStyles.GuideSpeedSlow
-                    case _                       =>
+                  val candidateCss = g.match
+                    case _ if scienceMode.isEmpty                             =>
+                      // Don't color the stars for guide speed if there is no mode selected
                       Css.Empty
+                    case AgsAnalysis.Usable(_, _, Some(s), _, _)              =>
+                      speedCss(s)
+                    case AgsAnalysis.NotReachableAtPosition(_, _, Some(s), _) =>
+                      speedCss(s)
+                    case m                                                    =>
+                      ExploreStyles.VignettedGS
 
                   (tracking.at(targetEpochInstant), tracking.at(obsInstant)).mapN {
                     (source, dest) =>
@@ -245,11 +247,12 @@ object AladinContainer extends AladinCommon {
                       if (candidates.length < 500) {
                         List[SVGTarget](
                           if (selectedGS.forall(_.target.id === g.target.id)) {
-                            SVGTarget.GuideStarTarget(dest, speedCss, calcSize(4))
+                            SVGTarget.GuideStarTarget(dest, candidateCss, calcSize(4))
                           } else {
-                            SVGTarget.GuideStarCandidateTarget(dest,
-                                                               speedCss |+| candidatesVisibility,
-                                                               calcSize(3)
+                            SVGTarget.GuideStarCandidateTarget(
+                              dest,
+                              candidateCss |+| candidatesVisibility,
+                              calcSize(3)
                             )
                           },
                           SVGTarget.LineTo(
@@ -261,11 +264,11 @@ object AladinContainer extends AladinCommon {
                       } else {
                         List[SVGTarget](
                           if (selectedGS.forall(_.target.id === g.target.id)) {
-                            SVGTarget.GuideStarTarget(dest, speedCss, calcSize(4))
+                            SVGTarget.GuideStarTarget(dest, candidateCss, calcSize(4))
                           } else {
                             SVGTarget.GuideStarCandidateTarget(
                               dest,
-                              ExploreStyles.GuideStarCandidateCrowded |+| speedCss |+| candidatesVisibility,
+                              ExploreStyles.GuideStarCandidateCrowded |+| candidateCss |+| candidatesVisibility,
                               calcSize(2)
                             )
                           }
