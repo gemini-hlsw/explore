@@ -8,7 +8,7 @@ object Settings {
   object LibraryVersions {
     val boopickle        = "1.4.0"
     val cats             = "2.9.0"
-    val catsEffect       = "3.4.1"
+    val catsEffect       = "3.4.2"
     val catsRetry        = "3.1.0"
     val catsTime         = "0.5.1"
     val circe            = "0.14.3"
