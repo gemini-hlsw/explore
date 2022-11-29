@@ -41,6 +41,7 @@ import lucuma.ui.primereact.given
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import lucuma.ui.utils.given
 import monocle.Lens
 import react.common.ReactFnProps
 import react.primereact.PrimeStyles

@@ -16,6 +16,7 @@ import lucuma.core.model.Observation
 import lucuma.core.util.NewType
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import lucuma.ui.utils.given
 import react.common.ReactFnProps
 import react.primereact.Button
 import react.primereact.Dialog

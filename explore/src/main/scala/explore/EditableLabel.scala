@@ -13,6 +13,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.util.NewType
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import lucuma.ui.utils.given
 import org.scalajs.dom
 import react.common.ReactFnProps
 import react.common.style.Css
