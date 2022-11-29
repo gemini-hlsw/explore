@@ -238,11 +238,10 @@ object TargetSelectionPopup:
               ),
               <.div(ExploreStyles.TargetSearchPreview)(
                 selectedTarget.value
-                  .collect {
-                    case SelectedTarget(Target.Sidereal(_, tracking, _, _), _, _, angSize) =>
-                      (tracking.baseCoordinates, angSize)
+                  .collect { case SelectedTarget(Target.Sidereal(_, tracking, _, _), _, _, _) =>
+                    tracking.baseCoordinates
                   }
-                  .map[VdomNode] { case (coordinates, angSize) =>
+                  .map[VdomNode] { case coordinates =>
                     Aladin.component
                       .withRef(aladinRef)
                       .withKey(
@@ -253,12 +252,7 @@ object TargetSelectionPopup:
                           showReticle = false,
                           showLayersControl = false,
                           target = Coordinates.fromHmsDms.reverseGet(coordinates),
-                          fov = angSize
-                            .map(m =>
-                              Angle.microarcseconds
-                                .modify(Constants.AngleSizeFovFactor)(m.majorAxis)
-                            )
-                            .getOrElse(Constants.InitialFov): Angle,
+                          fov = Constants.PreviewFov,
                           showGotoControl = false
                         )
                       )
