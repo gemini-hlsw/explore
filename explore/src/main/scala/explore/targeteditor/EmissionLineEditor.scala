@@ -40,6 +40,7 @@ import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
+import lucuma.ui.utils.*
 import react.common.ReactFnProps
 import react.primereact.Button
 import reactST.{tanstackTableCore => raw}

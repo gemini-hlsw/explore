@@ -37,6 +37,7 @@ import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
+import lucuma.ui.utils.*
 import org.typelevel.log4cats.Logger
 import queries.common.ProgramQueriesGQL.*
 import react.common.ReactFnProps

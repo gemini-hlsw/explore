@@ -9,26 +9,18 @@ import cats.effect.Temporal
 import cats.effect.kernel.Resource
 import cats.syntax.all.*
 import clue.*
-import coulomb.Quantity
 import crystal.Pot
-import crystal.ViewF
-import crystal.ViewOptF
 import crystal.implicits.*
 import crystal.react.ReuseViewF
 import crystal.react.ReuseViewOptF
 import crystal.react.reuse.*
-import eu.timepit.refined.api.Refined
 import explore.events.*
 import explore.model.AppContext
 import explore.optics.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.*
-import lucuma.core.optics.*
-import lucuma.core.util.Enumerated
 import lucuma.schemas.*
 import monocle.function.At
-import monocle.function.At.at
-import monocle.function.Index.index
 import org.scalajs.dom
 import org.typelevel.log4cats.Logger
 import queries.schemas.*
@@ -38,37 +30,6 @@ import scala.annotation.targetName
 import scala.annotation.unused
 import scala.collection.immutable.SortedMap
 import scala.concurrent.duration.*
-
-extension [A, B, C, D](list: List[(A, B, C, D)]) // TODO Move to utils
-  def unzip4: (List[A], List[B], List[C], List[D]) =
-    list.foldRight((List.empty[A], List.empty[B], List.empty[C], List.empty[D]))((tuple, accum) =>
-      (tuple._1 :: accum._1, tuple._2 :: accum._2, tuple._3 :: accum._3, tuple._4 :: accum._4)
-    )
-
-extension [F[_], A](listView: ViewF[F, List[A]])
-  @targetName("ListView_toListOfViews")
-  def toListOfViews: List[ViewF[F, A]] =
-    // It's safe to "get" since we are only invoking for existing indices.
-    listView.get.indices.toList.map { i =>
-      val atIndex = index[List[A], Int, A](i)
-      listView
-        .zoom((atIndex.getOption _).andThen(_.get))(atIndex.modify)
-    }
-
-extension [F[_], K, V](mapView: ViewF[F, Map[K, V]])
-  @targetName("MapView_toListOfViews")
-  def toListOfViews: List[(K, ViewF[F, V])] =
-    // It's safe to "get" since we are only invoking for existing keys.
-    mapView.get.keys.toList.map(k =>
-      k -> mapView.zoom(at[Map[K, V], K, Option[V]](k)).zoom(_.get)(f => _.map(f))
-    )
-
-inline given [T, P](using f: T => VdomNode): Conversion[T Refined P, VdomNode] = v => f(v.value)
-
-given [A: Enumerated, B: Enumerated]: Enumerated[(A, B)] =
-  Enumerated
-    .fromNEL(NonEmptyList.fromListUnsafe((Enumerated[A].all, Enumerated[B].all).tupled))
-    .withTag { case (a, b) => s"${Enumerated[A].tag(a)}, ${Enumerated[B].tag(b)} " }
 
 extension [F[_], A](view: ReuseViewF[F, A])
   def zoomGetAdjust[B](getAdjust: GetAdjust[A, B])(implicit F: Monad[F]): ReuseViewF[F, B] =
@@ -88,16 +49,6 @@ extension [F[_], A](viewOpt: ReuseViewOptF[F, A])
   // Helps type inference by sidestepping overloaded "zoom".
   def zoomLens[B](lens: monocle.Lens[A, B])(implicit F: Monad[F]): ReuseViewOptF[F, B] =
     viewOpt.zoom(lens)
-
-// Coulomb implicits
-extension [F[_], N, U](self: ViewF[F, Quantity[N, U]])
-  def stripQuantity: ViewF[F, N] = self.as(quantityIso[N, U])
-
-extension [F[_], N, U](self: ViewOptF[F, Quantity[N, U]])
-  def stripQuantity: ViewOptF[F, N] = self.as(quantityIso[N, U])
-
-extension [F[_], N, U](self:    ReuseViewOptF[F, Quantity[N, U]])
-  def stripQuantity(implicit F: Monad[F]): ReuseViewOptF[F, N] = self.as(quantityIso[N, U])
 
 // React implicits
 extension (a: HtmlAttrs)

@@ -77,6 +77,7 @@ import lucuma.ui.primereact.given
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import lucuma.ui.utils.given
 import lucuma.utils.*
 import monocle.Lens
 import mouse.boolean.*

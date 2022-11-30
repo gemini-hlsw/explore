@@ -34,6 +34,7 @@ import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
+import lucuma.ui.utils.*
 import monocle.Focus
 import react.common.ReactFnProps
 import react.primereact.Button

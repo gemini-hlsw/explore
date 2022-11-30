@@ -25,6 +25,7 @@ import lucuma.core.model.ObservingNight
 import lucuma.core.util.Enumerated
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import lucuma.ui.utils.*
 import react.common.ReactFnProps
 import react.highcharts.ResizingChart
 import react.moon.MoonPhase

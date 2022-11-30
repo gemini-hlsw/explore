@@ -58,6 +58,7 @@ import lucuma.ui.primereact.LucumaStyles
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.given
+import lucuma.ui.utils.*
 import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ODBConversions.*
 import react.common.ReactFnProps
