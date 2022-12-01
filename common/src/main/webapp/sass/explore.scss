@@ -37,8 +37,6 @@ $tree-section-width: 300px;
   }
 
   .p-button.p-button-sm {
-    max-width: 4rem;
-
     & svg.p-button-icon:not(.fa-trash-can) {
       margin-right: 0.2rem;
     }
@@ -949,18 +947,16 @@ table.explore-border-table {
     font-size: small;
     justify-content: space-between;
 
+    /* stylelint-disable-next-line selector-class-pattern */
+    span > svg.svg-inline--fa {
+      padding-right: 0.5em;
+    } 
+
     .explore-prompt-toast {
       display: flex;
       flex-direction: column;
       align-items: start;
       width: 100%;
-
-      & > span {
-        /* stylelint-disable-next-line selector-class-pattern */
-        svg .svg-inline--fa {
-          padding-right: 0.5em;
-        }
-      }
 
       button {
         align-self: end;

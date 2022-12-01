@@ -65,6 +65,7 @@ import react.gridlayout.*
 import react.hotkeys.*
 import react.hotkeys.hooks.*
 import react.primereact.Toast
+import react.primereact.ToastRef
 import react.primereact.hooks.all.*
 import react.resizeDetector.*
 import react.resizeDetector.hooks.*
@@ -145,23 +146,29 @@ object TargetTabContents extends TwoPanels:
     debouncer:             Reusable[UseSingleEffect[IO]],
     fullScreen:            View[AladinFullScreen],
     selectedTargetIds:     View[List[Target.Id]],
-    ctx:                   AppContext[IO]
+    ctx:                   AppContext[IO],
+    toastRef:              ToastRef
   )(
     asterismGroupsWithObs: View[AsterismGroupsWithObs]
   ): VdomNode = {
     import ctx.given
 
-    val targetMap: View[TargetWithObsList] =
+    val astGrpObsListUndoCtx: UndoContext[AsterismGroupsWithObs] =
+      UndoContext(props.listUndoStacks, asterismGroupsWithObs)
+    val targetMap: View[TargetWithObsList]                       =
       asterismGroupsWithObs.zoom(AsterismGroupsWithObs.targetsWithObs)
 
-    def targetTree(objectsWithObs: View[AsterismGroupsWithObs]) =
+    def targetTree(
+      objectsWithObs: View[AsterismGroupsWithObs],
+      undoCtx:        UndoContext[AsterismGroupsWithObs]
+    ) =
       AsterismGroupObsList(
         objectsWithObs,
         props.programId,
         props.focused,
         selectedView.set(SelectedPanel.Summary),
         props.expandedIds,
-        props.listUndoStacks
+        undoCtx
       )
 
     def findAsterismGroup(
@@ -184,8 +191,8 @@ object TargetTabContents extends TwoPanels:
         setPage(Focused(obsIdSet.some, targetId.some))
     }
 
-    def selectTarget(targetId: Target.Id): Callback =
-      setPage(Focused.target(targetId))
+    def selectTargetOrSummary(oTargetId: Option[Target.Id]): Callback =
+      oTargetId.fold(setPage(Focused.None))(targetId => setPage(Focused.target(targetId)))
 
     def onModAsterismsWithObs(
       groupIds:  ObsIdSet,
@@ -235,9 +242,11 @@ object TargetTabContents extends TwoPanels:
           props.programId,
           targetMap,
           selectObservationAndTarget(props.expandedIds) _,
-          selectTarget _,
+          selectTargetOrSummary _,
           renderInTitle,
-          selectedTargetIds
+          selectedTargetIds,
+          astGrpObsListUndoCtx,
+          toastRef
         )
       )
 
@@ -544,7 +553,7 @@ object TargetTabContents extends TwoPanels:
 
     makeOneOrTwoPanels(
       selectedView,
-      targetTree(asterismGroupsWithObs),
+      targetTree(asterismGroupsWithObs, astGrpObsListUndoCtx),
       rightSide,
       RightSideCardinality.Multi,
       resize
@@ -728,7 +737,8 @@ object TargetTabContents extends TwoPanels:
                 debouncer,
                 fullScreen,
                 selectedTargetIds,
-                ctx
+                ctx,
+                toastRef
               ),
               <.span(Loader(active = true)).withRef(resize.ref)
             )

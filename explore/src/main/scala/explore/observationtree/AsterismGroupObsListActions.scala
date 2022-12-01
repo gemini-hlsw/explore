@@ -60,7 +60,7 @@ object AsterismGroupObsListActions {
           // group with (srcIds - draggedIds)
           val tmp = updatedList + destGroup.asObsKeyValue
           srcIds.remove(draggedIds).fold(tmp)(ids => tmp - ids)
-        } else updatedList // something changed remotely
+        } else updatedList // something changed outside the scope of this undoctx
 
         // remove the dragged ids from all the targets in the src
         val tempTargets = srcGroup.targetIds.foldRight(agwo.targetsWithObs) {
@@ -175,29 +175,13 @@ object AsterismGroupObsListActions {
   //   }
   // }
 
-  private def deleteTarget(targetId: Target.Id)(implicit
-    c:                               TransactionalClient[IO, ObservationDB]
-  ): IO[Unit] =
-    TargetQueriesGQL.DeleteTargetsMutation
-      .execute[IO](
-        DeleteTargetsInput(WHERE = targetId.toWhereTarget.assign)
-      )
-      .void
-
-  private def undeleteTarget(targetId: Target.Id)(implicit
-    c:                                 TransactionalClient[IO, ObservationDB]
-  ): IO[Unit] =
-    TargetQueriesGQL.UndeleteTargetsMutation
-      .execute[IO](UndeleteTargetsInput(WHERE = targetId.toWhereTarget.assign))
-      .void
-
   def dropObservations(
     draggedIds:  ObsIdSet,
     srcIds:      ObsIdSet,
     destIds:     ObsIdSet,
     expandedIds: View[SortedSet[ObsIdSet]],
     setObsSet:   ObsIdSet => Callback
-  )(implicit c:  TransactionalClient[IO, ObservationDB]) =
+  )(using c:     TransactionalClient[IO, ObservationDB]) =
     Action(getter = obsDropGetter(draggedIds), setter = obsDropSetter(draggedIds, srcIds, destIds))(
       onSet = (agwo, oAsterismGroup) =>
         oAsterismGroup.foldMap { asterismGroup =>
@@ -212,7 +196,7 @@ object AsterismGroupObsListActions {
 
   // TODO: No longer used, but may be useful if/when implementing copy/paste from target table
   // def dropTarget(obsIds: ObsIdSet, targetId: Target.Id, expandedIds: View[SortedSet[ObsIdSet]])(
-  //   implicit c:          TransactionalClient[IO, ObservationDB]
+  //   using c:          TransactionalClient[IO, ObservationDB]
   // ) = Action(getter = targetDropGetter, setter = targetDropSetter(obsIds, targetId))(
   //   onSet = (agwo, _) => {
   //     val agl        = agwo.asterismGroups
@@ -237,29 +221,4 @@ object AsterismGroupObsListActions {
   //   }
   // )
 
-  def targetExistence(targetId: Target.Id, setPage: Option[Target.Id] => IO[Unit])(implicit
-    c:                          TransactionalClient[IO, ObservationDB]
-  ): Action[AsterismGroupsWithObs, Option[TargetWithObs]] =
-    // can switch appCtx to TransactionalClient when logging not required
-    Action[AsterismGroupsWithObs, Option[TargetWithObs]](
-      getter = (agwo: AsterismGroupsWithObs) => agwo.targetsWithObs.get(targetId),
-      setter = (otwo: Option[TargetWithObs]) =>
-        otwo.fold(AsterismGroupsWithObs.targetsWithObs.modify(_.removed(targetId))) { tg =>
-          AsterismGroupsWithObs.targetsWithObs.modify(_.updated(targetId, tg)) >>>
-            AsterismGroupsWithObs.asterismGroups.modify(
-              _.map { case (_, ag) =>
-                if (ag.obsIds.toSortedSet.intersect(tg.obsIds).nonEmpty) ag.addTargetId(targetId)
-                else ag
-              }.toList.toSortedMap(_.obsIds)
-            )
-        }
-    )(
-      // DB creation is performed beforehand, in order to get id
-      onSet =
-        (_, otg) => otg.fold(deleteTarget(targetId) >> setPage(none))(_ => setPage(targetId.some)),
-      onRestore = (_, otg) =>
-        otg.fold(deleteTarget(targetId) >> setPage(none)) { _ =>
-          undeleteTarget(targetId) >> setPage(targetId.some)
-        }
-    )
 }
