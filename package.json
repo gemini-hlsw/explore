@@ -12,7 +12,7 @@
     "@fortawesome/pro-thin-svg-icons": "^6.1.2",
     "@fortawesome/react-fontawesome": "^0.1.18",
     "@tanstack/react-table": "^8.5.30",
-    "@tanstack/react-virtual": "v3.0.0-beta.21",
+    "@tanstack/react-virtual": "v3.0.0-beta.23",
     "broadcast-channel": "4.18.1",
     "copy-to-clipboard": "3.3.3",
     "fomantic-ui-less": "2.8.8",
