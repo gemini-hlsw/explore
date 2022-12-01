@@ -101,11 +101,9 @@ object SearchForm {
             )
 
         def onKeyPress = (e: ReactKeyboardEvent) =>
-          Callback.log(s"Key Code: ${e.key}") >>
-            Callback.log(s"Key Value: ${KeyValue.Enter}") >>
-            (if (Option(e.key).exists(_ === KeyValue.Enter))
-               Callback.log("Hit Enter") >> search.when(enabled.value).void
-             else Callback.log("Not Enter"))
+          if (Option(e.key).exists(_ === KeyValue.Enter))
+            search.when(enabled.value).void
+          else Callback.empty
 
         val searchIcon =
           if (enabled.value)
