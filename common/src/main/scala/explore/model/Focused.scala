@@ -27,6 +27,8 @@ case class Focused(obsSet: Option[ObsIdSet] = none, target: Option[Target.Id] = 
   def withTarget(target: Target.Id): Focused = withTargetOpt(target.some)
 
   def withoutTarget: Focused = withTargetOpt(none)
+
+  def isEmpty: Boolean = obsSet.isEmpty && target.isEmpty
 }
 
 object Focused {

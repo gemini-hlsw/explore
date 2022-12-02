@@ -16,7 +16,6 @@ import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.model.AppContext
 import explore.model.AsterismGroup
-import explore.model.EmptySiderealTarget
 import explore.model.Focused
 import explore.model.ObsIdSet
 import explore.model.TargetWithObs
@@ -32,12 +31,9 @@ import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import mouse.boolean.*
 import org.typelevel.log4cats.Logger
-import queries.common.TargetQueriesGQL
-import queries.schemas.odb.ODBConversions.*
 import react.beautifuldnd.*
 import react.common.ReactFnProps
 import react.fa.FontAwesomeIcon
-import react.reflex.*
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.header.Header
 import react.semanticui.elements.segment.Segment
@@ -54,16 +50,13 @@ case class AsterismGroupObsList(
   focused:          Focused,
   setSummaryPanel:  Callback,
   expandedIds:      View[SortedSet[ObsIdSet]],
-  undoStacks:       View[UndoStacks[IO, AsterismGroupsWithObs]]
+  undoCtx:          UndoContext[AsterismGroupsWithObs]
 ) extends ReactFnProps[AsterismGroupObsList](AsterismGroupObsList.component)
     with ViewCommon:
   override val focusedObsSet: Option[ObsIdSet] = focused.obsSet
 
 object AsterismGroupObsList:
   private type Props = AsterismGroupObsList
-
-  // Would be better respresented as a union type in scala 3
-  private type TargetOrObsSet = Either[Target.Id, ObsIdSet]
 
   private def toggleExpanded(
     obsIds:      ObsIdSet,
@@ -75,11 +68,9 @@ object AsterismGroupObsList:
         .fold(expanded - obsIds, expanded + obsIds)
     }
 
-  private def parseDragId(dragId: String): Option[Either[Target.Id, Observation.Id]] =
+  private def parseDragId(dragId: String): Option[Observation.Id] =
     Observation.Id
       .parse(dragId)
-      .map(_.asRight)
-      .orElse(Target.Id.parse(dragId).map(_.asLeft))
 
   /**
    * When we're dragging an observation, we can either be dragging a single observation or a group
@@ -87,22 +78,18 @@ object AsterismGroupObsList:
    * items in the selection. However, the user may have something selected, but be dragging
    * something that is NOT in the selection - in which case we just drag the individual item.
    */
-  private def getDraggedIds(dragId: String, props: Props): Option[TargetOrObsSet] =
-    parseDragId(dragId).map {
-      case Left(targetId) => targetId.asLeft
-      case Right(obsId)   =>
-        props.focusedObsSet
-          .fold(ObsIdSet.one(obsId)) { selectedIds =>
-            if (selectedIds.contains(obsId)) selectedIds
-            else ObsIdSet.one(obsId)
-          }
-          .asRight
+  private def getDraggedIds(dragId: String, props: Props): Option[ObsIdSet] =
+    parseDragId(dragId).map { obsId =>
+      props.focusedObsSet
+        .fold(ObsIdSet.one(obsId)) { selectedIds =>
+          if (selectedIds.contains(obsId)) selectedIds
+          else ObsIdSet.one(obsId)
+        }
     }
 
   private def onDragEnd(
-    props:   Props,
-    ctx:     AppContext[IO],
-    undoCtx: UndoContext[AsterismGroupsWithObs]
+    props: Props,
+    ctx:   AppContext[IO]
   ): (DropResult, ResponderProvided) => Callback = { (result, _) =>
     import ctx.given
 
@@ -111,59 +98,30 @@ object AsterismGroupObsList:
       destIds     <- ObsIdSet.fromString.getOption(destination.droppableId)
       draggedIds  <- getDraggedIds(result.draggableId, props)
       destAg      <-
-        props.asterismsWithObs.get.asterismGroups.values
-          .find(_.obsIds === destIds)
-    } yield (destAg, draggedIds)
+        props.asterismsWithObs.get.asterismGroups.values.find(_.obsIds === destIds)
+      srcAg       <- props.asterismsWithObs.get.asterismGroups.findContainingObsIds(draggedIds)
+    } yield (destAg, draggedIds, srcAg.obsIds)
 
     def setObsSet(obsIds: ObsIdSet) =
-      ctx.pushPage(AppTab.Targets, props.programId, Focused(obsIds.some))
+      // if focused is empty, we're looking at the target summary table and don't want to
+      // switch to editing because of drag and drop
+      if (props.focused.isEmpty) Callback.empty
+      else ctx.pushPage(AppTab.Targets, props.programId, Focused(obsIds.some))
 
-    oData.foldMap { case (destAg, draggedIds) =>
-      draggedIds match {
-        case Left(targetId) if !destAg.targetIds.contains(targetId) =>
-          AsterismGroupObsListActions
-            .dropTarget(destAg.obsIds, targetId, props.expandedIds)
-            .set(undoCtx)(destAg.some)
-        case Right(obsIds) if !destAg.obsIds.intersects(obsIds)     =>
-          AsterismGroupObsListActions
-            .dropObservations(obsIds, props.expandedIds, setObsSet)
-            .set(undoCtx)(destAg.some)
-        case _                                                      => Callback.empty
-      }
+    oData.foldMap { (destAg, draggedIds, srcIds) =>
+      if (destAg.obsIds.intersects(draggedIds)) Callback.empty
+      else
+        AsterismGroupObsListActions
+          .dropObservations(draggedIds, srcIds, destAg.obsIds, props.expandedIds, setObsSet)
+          .set(props.undoCtx)(destAg.some)
     }
   }
-
-  private def insertSiderealTarget(
-    programId:     Program.Id,
-    undoCtx:       UndoContext[AsterismGroupsWithObs],
-    adding:        View[Boolean],
-    setTargetPage: Target.Id => Option[Target.Id] => IO[Unit]
-  )(using TransactionalClient[IO, ObservationDB], Logger[IO]): IO[Unit] =
-    adding.async.set(true) >>
-      TargetQueriesGQL.CreateTargetMutation
-        .execute(EmptySiderealTarget.toCreateTargetInput(programId))
-        // .void
-        .flatMap { data =>
-          val targetId = data.createTarget.target.id
-
-          AsterismGroupObsListActions
-            .targetExistence(targetId, setTargetPage(targetId))
-            .set(undoCtx)(
-              TargetWithObs(EmptySiderealTarget, SortedSet.empty).some
-            )
-            .to[IO]
-        }
-        .guarantee(adding.async.set(false))
 
   private val component = ScalaFnComponent
     .withHooks[Props]
     .useContext(AppContext.ctx)
-    .useState(false)                             // dragging
-    .useStateView(false)                         // adding
-    .useRefBy((props, _, _, _) => props.focused) // focusedRef
-    // Make sure we see latest focused value in callbacks
-    .useEffectBy((props, _, _, _, focusedRef) => focusedRef.set(props.focused))
-    .useEffectOnMountBy { (props, ctx, _, _, _) =>
+    .useState(false) // dragging
+    .useEffectOnMountBy { (props, ctx, _) =>
       val asterismsWithObs = props.asterismsWithObs.get
       val asterismGroups   = asterismsWithObs.asterismGroups
       val expandedIds      = props.expandedIds
@@ -200,33 +158,18 @@ object AsterismGroupObsList:
         _ <- cleanupExpandedIds
       } yield ()
     }
-    .render { (props, ctx, dragging, adding, focusedRef) =>
+    .render { (props, ctx, dragging) =>
       import ctx.given
 
       val observations     = props.asterismsWithObs.get.observations
       val asterismGroups   = props.asterismsWithObs.get.asterismGroups.map(_._2)
       val targetWithObsMap = props.asterismsWithObs.get.targetsWithObs
 
-      val undoCtx = UndoContext(props.undoStacks, props.asterismsWithObs)
-
       def isObsSelected(obsId: Observation.Id): Boolean =
         props.focused.obsSet.exists(_.contains(obsId))
 
-      def isTargetSelected(targetId: Target.Id): Boolean =
-        props.focused.obsSet.isEmpty && props.focused.target.exists(_ === targetId)
-
       def setFocused(focused: Focused): Callback =
         ctx.pushPage(AppTab.Targets, props.programId, focused)
-
-      val setTargetPage: Target.Id => Option[Target.Id] => IO[Unit] =
-        targetId =>
-          newTargetId =>
-            focusedRef.getAsync >>= (currentFocused =>
-              newTargetId match { // When deleting, focus away only if focus was on deleted target.
-                case None if !currentFocused.target.contains(targetId) => IO.unit
-                case other                                             => setFocused(Focused(target = other)).to[IO]
-              }
-            )
 
       def renderObsClone(obsIds: ObsIdSet): Option[TagMod] =
         obsIds.single.fold {
@@ -246,17 +189,12 @@ object AsterismGroupObsList:
           provided.dragHandleProps,
           props.getDraggedStyle(provided.draggableStyle, snapshot)
         )(
-          // we don't need to render clones for the targets, the default is what we want.
-          // (We don't include a `renderClone` value in the target `Droppable`.)
           getDraggedIds(rubric.draggableId, props)
-            .flatMap {
-              case Left(_)       => none
-              case Right(obsIds) => renderObsClone(obsIds)
-            }
+            .flatMap(renderObsClone)
             .getOrElse(<.span("ERROR"))
         )
 
-      val handleDragEnd = onDragEnd(props, ctx, undoCtx)
+      val handleDragEnd = onDragEnd(props, ctx)
 
       def handleCtrlClick(obsId: Observation.Id, groupIds: ObsIdSet) =
         props.focused.obsSet.fold(setFocused(props.focused.withSingleObs(obsId))) { selectedIds =>
@@ -348,53 +286,6 @@ object AsterismGroupObsList:
         }
       }
 
-      def renderTarget(
-        targetId:      Target.Id,
-        targetWithObs: TargetWithObs,
-        setPage:       Option[Target.Id] => IO[Unit],
-        index:         Int
-      ): VdomNode = {
-        val deleteButton = Button(
-          size = Small,
-          compact = true,
-          clazz = ExploreStyles.DeleteButton |+| ExploreStyles.ObsDeleteButton,
-          icon = Icons.Trash,
-          onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
-            e.preventDefaultCB >>
-              e.stopPropagationCB >>
-              AsterismGroupObsListActions
-                .targetExistence(targetId, setPage)
-                .set(undoCtx)(none)
-        )
-
-        Draggable(targetId.toString, index) { case (provided, snapshot, _) =>
-          <.div(
-            provided.innerRef,
-            provided.draggableProps,
-            props.getDraggedStyle(provided.draggableStyle, snapshot),
-            ^.onClick ==> { _ => setFocused(Focused.target(targetId)) }
-          )(
-            <.span(provided.dragHandleProps)(
-              Card(raised = isTargetSelected(targetId))(ExploreStyles.ObsBadge)(
-                CardContent(
-                  CardHeader(
-                    <.div(
-                      ExploreStyles.ObsBadgeHeader,
-                      <.div(
-                        ExploreStyles.ObsBadgeTargetAndId,
-                        <.div(targetWithObs.target.name.value),
-                        <.div(ExploreStyles.ObsBadgeId, s"[${targetId.value.value.toHexString}]"),
-                        deleteButton
-                      )
-                    )
-                  )
-                )
-              )
-            )
-          )
-        }
-      }
-
       DragDropContext(
         onDragStart = (_: DragStart, _: ResponderProvided) => dragging.setState(true),
         onDragEnd =
@@ -402,7 +293,7 @@ object AsterismGroupObsList:
       )(
         <.div(ExploreStyles.ObsTreeWrapper)(
           <.div(ExploreStyles.TreeToolbar)(
-            UndoButtons(undoCtx, size = Mini)
+            UndoButtons(props.undoCtx, size = Mini)
           ),
           <.div(
             Button(
@@ -413,54 +304,10 @@ object AsterismGroupObsList:
               "Target Summary"
             )
           ),
-          ReflexContainer()(
-            List[TagMod](
-              ReflexElement(minSize = 36, clazz = ExploreStyles.ObsTreeSection)(
-                Header(block = true, clazz = ExploreStyles.ObsTreeHeader)("Asterisms"),
-                <.div(ExploreStyles.ObsTree)(
-                  <.div(ExploreStyles.ObsScrollTree)(
-                    asterismGroups.toTagMod(renderAsterismGroup)
-                  )
-                )
-              ),
-              ReflexSplitter(propagate = true),
-              ReflexElement(minSize = 36, clazz = ExploreStyles.ObsTreeSection, withHandle = true)(
-                ReflexWithHandle(reflexProvided =>
-                  Droppable("target-list") { case (provided, _) =>
-                    <.div(provided.innerRef, provided.droppableProps)(
-                      ReflexHandle(provided = reflexProvided)(
-                        Header(block = true, clazz = ExploreStyles.ObsTreeHeader)(
-                          "Target Library",
-                          Button(
-                            size = Mini,
-                            compact = true,
-                            positive = true,
-                            icon = Icons.New,
-                            content = "Sidereal",
-                            disabled = adding.get,
-                            loading = adding.get,
-                            onClick = insertSiderealTarget(
-                              props.programId,
-                              undoCtx,
-                              adding,
-                              setTargetPage
-                            ).runAsync
-                          )
-                        )
-                      ),
-                      <.div(ExploreStyles.ObsTree)(
-                        <.div(ExploreStyles.ObsScrollTree)(
-                          targetWithObsMap.toList.zipWithIndex.map { case ((tid, t), idx) =>
-                            renderTarget(tid, t, setTargetPage(tid), idx)
-                          }.toTagMod,
-                          provided.placeholder
-                        )
-                      )
-                    )
-                  }
-                )
-              )
-            ).toTagMod
+          <.div(ExploreStyles.ObsTree)(
+            <.div(ExploreStyles.ObsScrollTree)(
+              asterismGroups.toTagMod(renderAsterismGroup)
+            )
           )
         )
       )
