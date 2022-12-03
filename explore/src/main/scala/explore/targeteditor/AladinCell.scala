@@ -418,7 +418,7 @@ object AladinCell extends ModelOptics with AladinCommon:
             )
             if (newFov.x.toMicroarcseconds === 0L) Callback.empty
             else {
-              fovView.set(newFov).unless_(ignore) *>
+              fovView.set(newFov) *>
                 TargetPreferences
                   .updateAladinPreferences[IO](props.uid, props.tid, newFov.x.some, newFov.y.some)
                   .unlessA(ignore)

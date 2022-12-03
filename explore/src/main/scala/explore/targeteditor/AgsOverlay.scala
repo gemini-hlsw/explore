@@ -41,7 +41,7 @@ object AgsOverlay {
             <.div(
               ExploreStyles.AgsDescription,
               Icons.Bahai,
-              analysis.target.name.value,
+              <.span(analysis.target.name.value),
               <.div(
                 ExploreStyles.AgsNavigation,
                 Button(
