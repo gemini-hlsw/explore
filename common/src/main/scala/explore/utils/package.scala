@@ -18,7 +18,6 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.BuildInfo
 import explore.Icons
 import explore.components.ui.ExploreStyles
-import explore.model.Constants
 import explore.model.enums.ExecutionEnvironment
 import explore.model.enums.ExecutionEnvironment.Development
 import japgolly.scalajs.react.*
@@ -41,6 +40,7 @@ import react.semanticui.elements.loader.Loader
 
 import java.time.Instant
 import java.time.ZonedDateTime
+import java.time.ZoneOffset
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters.*
 
@@ -209,4 +209,4 @@ extension [A](value: js.UndefOr[DateOrRange])
     fromDatePickerToInstantEitherOpt.flatMap(_.toOption)
 
   def fromDatePickerToZDTOpt(using ev: A <:< js.Date): Option[ZonedDateTime] =
-    fromDatePickerToInstantOpt.map(i => ZonedDateTime.ofInstant(i, Constants.UTC))
+    fromDatePickerToInstantOpt.map(i => ZonedDateTime.ofInstant(i, ZoneOffset.UTC))

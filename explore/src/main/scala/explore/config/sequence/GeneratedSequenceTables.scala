@@ -1,7 +1,7 @@
 // Copyright (c) 2016-2022 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.config
+package explore.config.sequence
 
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.*
@@ -11,29 +11,32 @@ import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.semanticui.elements.header.Header
 import react.semanticui.elements.segment.Segment
+import lucuma.core.model.Observation
 
-case class GeneratedSequenceTables(config: FutureExecutionConfig)
+case class GeneratedSequenceTables(obsId: Observation.Id, config: FutureExecutionConfig)
     extends ReactFnProps(GeneratedSequenceTables.component)
 
-object GeneratedSequenceTables {
-  type Props = GeneratedSequenceTables
+object GeneratedSequenceTables:
+  private type Props = GeneratedSequenceTables
 
-  val component =
+  private val component =
     ScalaFnComponent
       .withHooks[Props]
       .render { props =>
         <.div(^.height := "100%", ^.overflow.auto)(
           Segment(
-            SequenceTable.bracketDef,
+            GmosSequenceTable.bracketDef,
             <.div(ExploreStyles.SequencesPanel)(
+              VisitsViewer(props.obsId),
               Header("Acquisition"),
-              SequenceTable(
+              GmosSequenceTable(
                 props.config.acquisition.nextAtom +: props.config.acquisition.possibleFuture
               ),
               Header("Science"),
-              SequenceTable(props.config.science.nextAtom +: props.config.science.possibleFuture)
+              GmosSequenceTable(
+                props.config.science.nextAtom +: props.config.science.possibleFuture
+              )
             )
           )
         )
       }
-}

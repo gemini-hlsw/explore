@@ -1,7 +1,7 @@
 // Copyright (c) 2016-2022 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.config
+package explore.config.sequence
 
 import cats.effect.IO
 import crystal.Pot
@@ -48,6 +48,8 @@ object GeneratedSequenceViewer:
         props.changed.get
           .flatMap(_ => config.toPot.flatten)
           .render(
-            _.fold[VdomNode](<.div("Default observation not found"))(GeneratedSequenceTables.apply)
+            _.fold[VdomNode](<.div("Default observation not found"))(config =>
+              GeneratedSequenceTables(props.obsId, config)
+            )
           )
       )

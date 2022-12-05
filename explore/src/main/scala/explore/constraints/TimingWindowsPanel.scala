@@ -58,6 +58,7 @@ import reactST.tanstackTableCore.mod.Column
 
 import java.time.Duration
 import java.time.ZonedDateTime
+import java.time.ZoneOffset
 import scala.concurrent.duration.FiniteDuration
 
 import scalajs.js.timers
@@ -131,7 +132,7 @@ object TimingWindowsPanel:
     dbActive(TimingWindowOperating.Operating) *> CallbackTo.now
       .flatMap { i =>
         val startsOn =
-          ZonedDateTime.ofInstant(i, Constants.UTC).withSecond(0).withNano(0)
+          ZonedDateTime.ofInstant(i, ZoneOffset.UTC).withSecond(0).withNano(0)
 
         InsertTimingWindow
           .execute(startsOn.assign)
@@ -278,7 +279,7 @@ object TimingWindowsPanel:
                     onChange = (_, checked) =>
                       CallbackTo.now
                         .flatMap(i =>
-                          selectedTW.mod(_.toCloseOn(ZonedDateTime.ofInstant(i, Constants.UTC)))
+                          selectedTW.mod(_.toCloseOn(ZonedDateTime.ofInstant(i, ZoneOffset.UTC)))
                         )
                         .when_(checked)
                   ),

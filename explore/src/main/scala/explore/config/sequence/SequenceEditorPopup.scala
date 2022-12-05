@@ -1,7 +1,7 @@
 // Copyright (c) 2016-2022 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.config
+package explore.config.sequence
 
 import crystal.Pot
 import crystal.implicits.*
@@ -46,15 +46,16 @@ object SequenceEditorPopup:
         React.Fragment(
           <.span(^.onClick --> isOpen.set(IsOpen(true)), props.trigger),
           Dialog(
-            footer = Button(size = Button.Size.Small,
-                            icon = Icons.Close,
-                            label = "Close",
-                            onClick = isOpen.set(IsOpen(false))
+            footer = Button(
+              size = Button.Size.Small,
+              icon = Icons.Close,
+              label = "Close",
+              onClick = isOpen.set(IsOpen(false))
             )
               .withMods(^.key := "input-cancel"),
             position = DialogPosition.Top,
             visible = isOpen.get.value,
-            clazz = ExploreStyles.Dialog.Small,
+            clazz = ExploreStyles.Dialog.Large,
             dismissableMask = true,
             resizable = false,
             onHide = isOpen.set(IsOpen(false)),

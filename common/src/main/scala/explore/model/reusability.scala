@@ -36,6 +36,8 @@ import queries.schemas.odb.ObsQueries.SpectroscopyRequirementsData
 
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.TreeSeqMap
+import lucuma.schemas.model.Visit
+import lucuma.schemas.model.StepRecord
 
 /**
  * Reusability instances for model classes
@@ -136,3 +138,7 @@ object reusability:
   given Reusability[TimingWindowRepeat] = Reusability.byEq
 
   given Reusability[TimingWindow] = Reusability.byEq
+
+  given Reusability[Visit] = Reusability.byEq
+
+  given Reusability[StepRecord] = Reusability.byEq

@@ -9,7 +9,6 @@ import explore.model.Constants
 import explore.model.TimingWindowEntry
 import queries.schemas.UserPreferencesDB
 
-import java.time.format.DateTimeFormatter
 // gql: import queries.schemas.UserPreferencesDB.*
 // gql: import queries.schemas.UserPreferencesDB.given
 

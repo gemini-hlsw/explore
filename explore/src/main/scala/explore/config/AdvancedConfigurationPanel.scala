@@ -31,6 +31,7 @@ import explore.components.HelpIcon
 import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
 import explore.config.ExposureTimeModeType.*
+import explore.config.sequence.SequenceEditorPopup
 import explore.given
 import explore.model.AppContext
 import explore.model.DitherNanoMeters

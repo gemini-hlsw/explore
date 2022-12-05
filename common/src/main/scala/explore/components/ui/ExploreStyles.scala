@@ -9,7 +9,7 @@ import eu.timepit.refined.numeric.Interval
 import react.common.implicits.*
 import react.common.style.*
 
-object ExploreStyles {
+object ExploreStyles:
   val FadeIn: Css = Css("fade-in")
 
   val HideReusability = Css("hide-reusability")
@@ -213,10 +213,9 @@ object ExploreStyles {
   val InputErrorTooltipBelow: Css = Css("explore-input-error-tooltip-below")
   val FlatFormField: Css          = Css("flat-form-field")
 
-  // Clue websocket connection status
-  val ConnectionOK: Css      = Css("connection-ok")
-  val ConnectionWarning: Css = Css("connection-warning")
-  val ConnectionError: Css   = Css("connection-error")
+  val IndicatorOK: Css      = Css("indicator-ok")
+  val IndicatorWarning: Css = Css("indicator-warning")
+  val IndicatorFail: Css    = Css("indicator-fail")
 
   // WIP
   val WIP: Css        = Css("wip")
@@ -343,9 +342,20 @@ object ExploreStyles {
   val SelectedDown: Css                 = Css("selected-down")
   val ITCHeaderCell: Css                = Css("explore-modes-table-itc-header-cell")
   val ITCCell: Css                      = Css("explore-modes-table-itc-cell")
-  val SequenceObsSutitle                = Css("explore-sequence-obs-subtitle")
-  val SequencesPanel                    = Css("explore-sequences-panel")
-  val CellHideBorder                    = Css("explore-table-cell-hide-border")
+
+  // Sequence Viewer
+  val SequenceObsSutitle               = Css("explore-sequence-obs-subtitle")
+  val SequencesPanel                   = Css("explore-sequences-panel")
+  val CellHideBorder                   = Css("explore-table-cell-hide-border")
+  val SequenceBracketCell              = Css("explore-sequence-bracket-cell")
+  val VisitSection                     = Css("explore-visit-section")
+  val VisitHeader                      = Css("explore-visit-header")
+  val VisitStepExtra                   = Css("explore-visit-step-extra")
+  val VisitStepExtraDatetime           = Css("explore-visit-step-extra-datetime")
+  val VisitStepExtraDatasets           = Css("explore-visit-step-extra-datasets")
+  val VisitStepExtraDatasetItem        = Css("explore-visit-step-extra-dataset-item")
+  val VisitStepExtraDatasetStatusIcon  = Css("explore-visit-step-extra-dataset-status-icon")
+  val VisitStepExtraDatasetStatusLabel = Css("explore-visit-step-extra-dataset-status-label")
 
   val ButtonCopy: Css            = Css("explore-button-copy")
   val ButtonsUndo: Css           = Css("explore-buttons-undo")
@@ -459,4 +469,3 @@ object ExploreStyles {
   val TimingWindowRepeatEditorAlternatives: Css = Css("timing-window-repeat-editor-alternatives")
   val TimingWindowRepeatEditorNTimes: Css       = Css("timing-window-repeat-editor-n-times")
   val TimingWindowsHeader: Css                  = Css("timing-windows-header")
-}

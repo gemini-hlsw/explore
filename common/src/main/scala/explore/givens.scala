@@ -88,6 +88,10 @@ extension [F[_], A](f: F[A])
   )(using Temporal[F]): fs2.Stream[F, A] =
     reRunOnSignal(signals.reduceLeft(_ merge _), debounce)
 
+  /**
+   * Given an effect producing an A and a bunch of `Resource`s providing signal streams, runs the
+   * effect and then re-runs it whenver a signal is received, producing a Stream[A].
+   */
   def reRunOnResourceSignals(
     subscriptions: NonEmptyList[Resource[F, fs2.Stream[F, ?]]],
     debounce:      Option[FiniteDuration] = 2.seconds.some
@@ -95,6 +99,10 @@ extension [F[_], A](f: F[A])
     subscriptions.sequence
       .map(ss => reRunOnSignals(ss.map(_.void), debounce))
 
+  /**
+   * Given an effect producing an A and a bunch of `Resource`s providing signal streams, runs the
+   * effect and then re-runs it whenver a signal is received, producing a Stream[A].
+   */
   def reRunOnResourceSignals(
     head: Resource[F, fs2.Stream[F, ?]],
     tail: Resource[F, fs2.Stream[F, ?]]*
@@ -104,6 +112,10 @@ extension [F[_], A](f: F[A])
       2.seconds.some // For some reason, compiler can't resolve default parameter value here
     )
 
+  /**
+   * Given an effect producing an A and a bunch of `Resource`s providing signal streams, runs the
+   * effect and then re-runs it whenver a signal is received, producing a Stream[A].
+   */
   def reRunOnResourceSignals(
     debounce: FiniteDuration,
     head:     Resource[F, fs2.Stream[F, ?]],
@@ -112,6 +124,11 @@ extension [F[_], A](f: F[A])
     reRunOnResourceSignals(NonEmptyList.of(head, tail: _*), debounce.some)
 
 extension [F[_], A](f: F[Pot[A]])
+  /**
+   * Given an effect `f` producing an A and a bunch of signal streams, returns a `Stream` that
+   * starts with the result of `f` and then upon each signal, produces `Pending` followed by the
+   * result of re-evaluating `f`.
+   */
   def resetOnSignal(
     signal:   fs2.Stream[F, Unit],
     debounce: Option[FiniteDuration] = 2.seconds.some
@@ -122,6 +139,11 @@ extension [F[_], A](f: F[Pot[A]])
     )
   }
 
+  /**
+   * Given an effect `f` producing an A and a bunch of signal streams, returns a `Stream` that
+   * starts with the result of `f` and then upon each signal, produces `Pending` followed by the
+   * result of re-evaluating `f`.
+   */
   def resetOnSignals(
     signals:  NonEmptyList[fs2.Stream[F, Unit]],
     debounce: Option[FiniteDuration] = 2.seconds.some
@@ -135,12 +157,22 @@ extension [F[_], A](f: F[Pot[A]])
     subscriptions.sequence
       .map(ss => resetOnSignals(ss.map(_.void), debounce))
 
+  /**
+   * Given an effect `f` producing an A and a bunch of `Resource`s providing signal streams, returns
+   * a `Stream` that starts with the result of `f` and then upon each signal, produces `Pending`
+   * followed by the result of re-evaluating `f`.
+   */
   def resetOnResourceSignals(
     head: Resource[F, fs2.Stream[F, ?]],
     tail: Resource[F, fs2.Stream[F, ?]]*
   )(using Temporal[F]): Resource[F, fs2.Stream[F, Pot[A]]] =
     resetOnResourceSignalsB(NonEmptyList.of(head, tail: _*))
 
+  /**
+   * Given an effect `f` producing an A and a bunch of `Resource`s providing signal streams, returns
+   * a `Stream` that starts with the result of `f` and then upon each signal, produces `Pending`
+   * followed by the result of re-evaluating `f`.
+   */
   def resetOnResourceSignals(
     debounce: FiniteDuration,
     head:     Resource[F, fs2.Stream[F, ?]],

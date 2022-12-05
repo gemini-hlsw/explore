@@ -215,6 +215,10 @@ object Icons {
   val faThinSliders: FAIcon = js.native
 
   @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faCircle")
+  val faCircle: FAIcon = js.native
+
+  @js.native
   @JSImport("@fortawesome/pro-solid-svg-icons", "faCircleSmall")
   val faCircleSmall: FAIcon = js.native
 
@@ -268,6 +272,7 @@ object Icons {
     faBan,
     faMousePointer,
     faSignOutAlt,
+    faCircle,
     faInfoCircle,
     faInfoCircleLight,
     faClipboard,
@@ -359,6 +364,7 @@ object Icons {
   val TriangleSolid       = FontAwesomeIcon(faTriangleSolid)
   val CrystalBall         = FontAwesomeIcon(faCrystalBall)
   val ThinSliders         = FontAwesomeIcon(faThinSliders)
+  val Circle              = FontAwesomeIcon(faCircle)
   val CircleSmall         = FontAwesomeIcon(faCircleSmall)
   val Bahai               = FontAwesomeIcon(faBahai)
   val FileCirclePlus      = FontAwesomeIcon(faFileCirclePlus)

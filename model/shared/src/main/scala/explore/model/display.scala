@@ -137,6 +137,11 @@ trait DisplayImplicits {
   given Display[GmosAmpGain] = Display.by(_.shortName, _.longName)
 
   given Display[GmosRoi] = Display.byShortName(_.longName)
+
+  given Display[SequenceType] = Display.byShortName(_ match
+    case SequenceType.Acquisition => "Acquisition"
+    case SequenceType.Science     => "Science"
+  )
 }
 
 object display extends DisplayImplicits

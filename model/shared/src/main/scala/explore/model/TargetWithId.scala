@@ -24,6 +24,7 @@ import monocle.Prism
 
 import java.time.Instant
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 import scala.collection.immutable.SortedMap
 
 case class TargetWithId(id: Target.Id, target: Target) derives Eq {
@@ -73,7 +74,7 @@ case class SiderealTargetWithId(id: Target.Id, target: Target.Sidereal) derives 
   def toTargetWithId = TargetWithId(id, target)
 
   def at(i: Instant): SiderealTargetWithId = {
-    val ldt            = LocalDateTime.ofInstant(i, Constants.UTC)
+    val ldt            = LocalDateTime.ofInstant(i, ZoneOffset.UTC)
     val epoch          = Epoch.Julian.fromLocalDateTime(ldt).getOrElse(target.tracking.epoch)
     val trackingUpdate = (tracking: SiderealTracking) =>
       tracking.at(i).fold(tracking) { c =>

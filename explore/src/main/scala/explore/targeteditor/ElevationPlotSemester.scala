@@ -42,7 +42,6 @@ import java.time.Instant
 import java.time.LocalTime
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
 import scala.collection.immutable.TreeMap
 import scala.concurrent.duration.*
 import scala.scalajs.js
@@ -168,7 +167,7 @@ object ElevationPlotSemester:
 
         def dateFormat(value: Double): String =
           ZonedDateTime
-            .ofInstant(Instant.ofEpochMilli(value.toLong), Constants.UTC)
+            .ofInstant(Instant.ofEpochMilli(value.toLong), ZoneOffset.UTC)
             .format(Constants.GppDateFormatter)
 
         val tooltipFormatter: TooltipFormatterCallbackFunction = {
