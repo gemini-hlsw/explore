@@ -339,6 +339,8 @@ $brightness: var(--aladin-image-brightness);
   }
 
   .ags-description {
+    @include common.text-ellipsis;
+
     display: flex;
     gap: 0.1em;
     align-items: center;

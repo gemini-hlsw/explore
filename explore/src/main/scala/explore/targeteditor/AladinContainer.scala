@@ -269,7 +269,7 @@ object AladinContainer extends AladinCommon {
                             SVGTarget.GuideStarCandidateTarget(
                               dest,
                               ExploreStyles.GuideStarCandidateCrowded |+| candidateCss |+| candidatesVisibility,
-                              calcSize(2)
+                              calcSize(2.7)
                             )
                           }
                         )
