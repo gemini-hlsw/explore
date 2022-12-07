@@ -143,7 +143,6 @@ object AsterismGroupObsList:
     adding.async.set(AddingTarget(true)) >>
       TargetQueriesGQL.CreateTargetMutation
         .execute(EmptySiderealTarget.toCreateTargetInput(programId))
-        // .void
         .flatMap { data =>
           val targetId = data.createTarget.target.id
 
