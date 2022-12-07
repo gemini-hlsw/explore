@@ -36,6 +36,7 @@ import explore.shortcuts.*
 import explore.shortcuts.given
 import explore.syntax.ui.*
 import explore.syntax.ui.given
+import explore.targets.ObservationPasteActions
 import explore.targets.TargetSummaryTable
 import explore.undo.*
 import explore.utils.*
@@ -565,18 +566,33 @@ object TargetTabContents extends TwoPanels:
     targetIds:             List[Target.Id],
     adding:                View[LoadingState],
     asterismGroupsWithObs: View[AsterismGroupsWithObs],
-    ctx:                   AppContext[IO]
+    ctx:                   AppContext[IO],
+    listUndoStacks:        View[UndoStacks[IO, AsterismGroupsWithObs]],
+    expandedIds:           View[SortedSet[ObsIdSet]]
   ): IO[Unit] =
     import ctx.given
+    val undoContext = UndoContext(listUndoStacks, asterismGroupsWithObs)
     adding.async.set(LoadingState.Loading) >>
-      obsIds
-        .traverse(obsId =>
+      (obsIds, targetIds).tupled
+        .traverse((obsId, tid) =>
           ObsQueries
-            .applyObservation[IO](obsId, targetIds)
-            .flatMap { o =>
-              asterismGroupsWithObs.mod(_.localClone(obsId, o.id, targetIds)).to[IO]
+            .applyObservation[IO](obsId, List(tid))
+            .map { o =>
+              asterismGroupsWithObs.get
+                .cloneObsWithTargets(obsId, o.id, List(tid))
             }
-            .void
+            .map(_.map(summ => (summ, tid)))
+        )
+        .flatMap(olist =>
+          olist.sequence
+            .foldMap(summList =>
+              val newIds    = summList.map((summ, tid) => (summ.id, tid))
+              val summaries = summList.map(_._1)
+              ObservationPasteActions
+                .paste(newIds, expandedIds)
+                .set(undoContext)(summaries.some)
+                .to[IO]
+            )
         )
         .void
         .guarantee(adding.async.set(LoadingState.Done))
@@ -671,19 +687,32 @@ object TargetTabContents extends TwoPanels:
                     if (treeTargets.nonEmpty)
                       // Apply the obs to selected targets on the tree
                       agv.toOption
-                        .map(agv => applyObs(id.idSet.toList, treeTargets, loading, agv, ctx))
+                        .map(agv =>
+                          applyObs(id.idSet.toList,
+                                   treeTargets,
+                                   loading,
+                                   agv,
+                                   ctx,
+                                   props.listUndoStacks,
+                                   props.expandedIds
+                          )
+                        )
                         .getOrElse(IO.unit)
-                    else
+                    else if (selectedIds.nonEmpty)
                       // Apply the obs to selected targets on the summary table to each target
                       agv.toOption
                         .map(agv =>
-                          selectedIds
-                            .traverse(tid =>
-                              applyObs(id.idSet.toList, List(tid), loading, agv, ctx)
-                            )
-                            .void
+                          applyObs(id.idSet.toList,
+                                   selectedIds,
+                                   loading,
+                                   agv,
+                                   ctx,
+                                   props.listUndoStacks,
+                                   props.expandedIds
+                          )
                         )
                         .getOrElse(IO.unit)
+                    else IO.unit
 
                   case _ => IO.unit
 

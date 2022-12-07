@@ -46,42 +46,49 @@ object AsterismQueries:
     targetsWithObs: TargetWithObsList,
     observations:   ObsList
   ) {
-    //
-    // Emulates locally when an observation is cloned into targedIds
-    def localClone(
+    def cloneObsWithTargets(
       originalId: Observation.Id,
       clonedId:   Observation.Id,
       targetIds:  List[Target.Id]
-    ) = {
-      val newObservations: ObsList = observations
-        .get(originalId)
-        .map(c => clonedId -> c.copy(id = clonedId))
-        .map(observations + _)
-        .getOrElse(observations)
+    ): Option[ObsSummaryWithConstraintsAndConf] =
+      observations.get(originalId).map(_.copy(id = clonedId, scienceTargetIds = targetIds.toSet))
 
-      val newTargetsWithObs: TargetWithObsList = targetIds
-        .foldLeft(targetsWithObs)((t, i) =>
-          t.updatedWith(i)(_.map(r => r.copy(obsIds = r.obsIds + clonedId)))
+    def insertObs(obsSummary: ObsSummaryWithConstraintsAndConf): AsterismGroupsWithObs = {
+      val newObservations   = observations + (obsSummary.id -> obsSummary)
+      val newTargetsWithObs = obsSummary.scienceTargetIds.foldLeft(targetsWithObs)((twos, id) =>
+        twos.updatedWith(id)(_.map(r => r.copy(obsIds = r.obsIds + obsSummary.id)))
+      )
+
+      val targetIds         = SortedSet.from(obsSummary.scienceTargetIds)
+      val newIdSet          = ObsIdSet.one(obsSummary.id)
+      val newAsterismGr     = AsterismGroup(newIdSet, targetIds)
+      val currentAsterismGr = asterismGroups.find((ids, grp) => grp.targetIds === targetIds)
+      val newAsterismGroups =
+        currentAsterismGr.fold(asterismGroups + newAsterismGr.asObsKeyValue)((ids, _) =>
+          asterismGroups - ids + AsterismGroup(ids ++ newIdSet, targetIds).asObsKeyValue
         )
 
-      val newAsterismGr = asterismGroups
-        .collect {
-          case (i, o) if i.contains(originalId) =>
-            val cid = ObsIdSet.one(clonedId)
-            cid -> o.copy(obsIds = cid, targetIds = SortedSet.from(targetIds))
-        }
+      AsterismGroupsWithObs(newAsterismGroups, newTargetsWithObs, newObservations)
+    }
 
-      val newAsterismGroups =
-        (asterismGroups ++ newAsterismGr)
-          .groupMapReduce(_._2.targetIds)(_._2) { case (og1, og2) =>
-            og1 |+| og2
-          }
-          .map((_, ag) => ag.obsIds -> ag)
-
-      copy(asterismGroups = SortedMap.from(newAsterismGroups),
-           targetsWithObs = newTargetsWithObs,
-           observations = newObservations
+    def removeObsWithTargets(
+      obsId:     Observation.Id,
+      targetIds: SortedSet[Target.Id]
+    ): AsterismGroupsWithObs = {
+      val newObservations   = observations - obsId
+      val newTargetsWithObs = targetIds.foldLeft(targetsWithObs)((twos, id) =>
+        twos.updatedWith(id)(_.map(r => r.copy(obsIds = r.obsIds - obsId)))
       )
+
+      val currentAsterismGr = asterismGroups.find((ids, grp) => grp.targetIds === targetIds)
+      val newAsterismGroups = currentAsterismGr.fold(asterismGroups) { (currentIds, _) =>
+        val remainingIds = currentIds.removeOne(obsId)
+        val tmpGroups    = remainingIds.fold(asterismGroups)(remaining =>
+          asterismGroups + AsterismGroup(remaining, targetIds).asObsKeyValue
+        )
+        tmpGroups - currentIds
+      }
+      AsterismGroupsWithObs(newAsterismGroups, newTargetsWithObs, newObservations)
     }
   }
 
