@@ -22,7 +22,7 @@ import lucuma.schemas.ObservationDB.Types.*
 import queries.common.TargetQueriesGQL
 import queries.schemas.odb.ODBConversions.*
 
-object TargetSummaryActions {
+object TargetAddDeleteActions {
   private def singleTargetGetter(
     targetId: Target.Id
   ): AsterismGroupsWithObs => Option[TargetWithObs] = _.targetsWithObs.get(targetId)
@@ -121,7 +121,7 @@ object TargetSummaryActions {
       onRestore = (_, lotwo) =>
         lotwo.sequence.fold(
           remoteDeleteTargets(targetIds, programId) >> setSummary >>
-            postMessage(s"Re-deleted ${targetIds.length} target(s)")
+            postMessage(s"Deleted ${targetIds.length} target(s)")
         )(_ =>
           remoteUndeleteTargets(targetIds, programId) >> setSummary >>
             postMessage(s"Restored ${targetIds.length} target(s)")
