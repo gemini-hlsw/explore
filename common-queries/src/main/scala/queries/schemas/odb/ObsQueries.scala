@@ -306,3 +306,21 @@ object ObsQueries:
         UndeleteObservationsInput(WHERE = obsId.toWhereObservation.assign)
       )
       .void
+
+  def deleteObservations[F[_]: Async](
+    obsIds: List[Observation.Id]
+  )(using TransactionalClient[F, ObservationDB]): F[Unit] =
+    ProgramDeleteObservations
+      .execute[F](
+        DeleteObservationsInput(WHERE = obsIds.toWhereObservation.assign)
+      )
+      .void
+
+  def undeleteObservations[F[_]: Async](
+    obsIds: List[Observation.Id]
+  )(using TransactionalClient[F, ObservationDB]): F[Unit] =
+    ProgramUndeleteObservations
+      .execute[F](
+        UndeleteObservationsInput(WHERE = obsIds.toWhereObservation.assign)
+      )
+      .void
