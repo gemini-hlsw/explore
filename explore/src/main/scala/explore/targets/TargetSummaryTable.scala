@@ -18,7 +18,6 @@ import explore.components.HelpIcon
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.EmptySiderealTarget
 import explore.model.Focused
 import explore.model.TargetWithIdAndObs
 import explore.model.TargetWithObs
@@ -46,8 +45,6 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import org.scalablytyped.runtime.StringDictionary
 import org.scalajs.dom.{File => DOMFile}
-import queries.common.TargetQueriesGQL
-import queries.schemas.odb.ODBConversions.*
 import react.common.Css
 import react.common.ReactFnProps
 import react.hotkeys.*
@@ -85,10 +82,10 @@ object TargetSummaryTable extends TableHooks:
   private val ObservationsColumnId: ColumnId = ColumnId("observations")
 
   private object IsImportOpen extends NewType[Boolean]
-  private type IsImportOpen = IsImportOpen.type
+  private type IsImportOpen = IsImportOpen.Type
 
-  private object AddingOrDeletingTargets extends NewType[Boolean]
-  private type AddingOrDeletingTargets = AddingOrDeletingTargets.type
+  private object DeletingTargets extends NewType[Boolean]
+  private type DeletingTargets = DeletingTargets.Type
 
   private val columnClasses: Map[ColumnId, Css] = Map(
     IdColumnId                 -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryId),
@@ -184,12 +181,12 @@ object TargetSummaryTable extends TableHooks:
       )
       // Files to be imported
       .useStateView(List.empty[DOMFile])
-      .useStateView(AddingOrDeletingTargets(false))
+      .useStateView(DeletingTargets(false))
       // Copy the selection upstream
       .useEffectWithDepsBy((_, _, _, _, table, _, _) =>
         table.getSelectedRowModel().rows.toList.map(_.original.id)
       )((props, _, _, _, _, _, _) => ids => props.selectedTargetIds.set(ids))
-      .render((props, ctx, _, _, table, filesToImport, addingOrDeletingTargets) =>
+      .render((props, ctx, _, _, table, filesToImport, deletingTargets) =>
         import ctx.given
 
         val selectedRows    = table.getSelectedRowModel().rows.toList
@@ -204,8 +201,8 @@ object TargetSummaryTable extends TableHooks:
             accept = props.targets
               .mod(_.filter((id, _) => !selectedRowsIds.contains(id))) *>
               table.toggleAllRowsSelected(false) *>
-              (addingOrDeletingTargets.async.set(AddingOrDeletingTargets(true)) >>
-                TargetSummaryActions
+              (deletingTargets.async.set(DeletingTargets(true)) >>
+                TargetAddDeleteActions
                   .deleteTargets(selectedRowsIds,
                                  props.programId,
                                  props.selectTargetOrSummary(none).to[IO],
@@ -214,32 +211,12 @@ object TargetSummaryTable extends TableHooks:
                   .set(props.undoCtx)(selectedRowsIds.map(_ => none[TargetWithObs]))
                   .to[IO]
                   .guarantee(
-                    addingOrDeletingTargets.async.set(AddingOrDeletingTargets(false))
+                    deletingTargets.async.set(DeletingTargets(false))
                   )).runAsyncAndForget,
             acceptClass = PrimeStyles.ButtonSmall,
             rejectClass = PrimeStyles.ButtonSmall,
             icon = Icons.SkullCrossBones.withColor("red")
           )
-
-        def insertSiderealTarget: IO[Unit] =
-          addingOrDeletingTargets.async.set(AddingOrDeletingTargets(true)) >>
-            TargetQueriesGQL.CreateTargetMutation
-              .execute(EmptySiderealTarget.toCreateTargetInput(props.programId))
-              .flatMap { data =>
-                val targetId = data.createTarget.target.id
-
-                TargetSummaryActions
-                  .insertTarget(targetId,
-                                props.programId,
-                                props.selectTargetOrSummary(_).to[IO],
-                                props.toastRef.info(_).to[IO]
-                  )
-                  .set(props.undoCtx)(
-                    TargetWithObs(EmptySiderealTarget, SortedSet.empty).some
-                  )
-                  .to[IO]
-              }
-              .guarantee(addingOrDeletingTargets.async.set(AddingOrDeletingTargets(false)))
 
         def onTextChange(e: ReactEventFromInput): Callback =
           val files = e.target.files.toList
@@ -277,18 +254,9 @@ object TargetSummaryTable extends TableHooks:
                 ).compact,
                 Button(
                   size = Button.Size.Small,
-                  severity = Button.Severity.Success,
-                  icon = Icons.New,
-                  label = "Sidereal",
-                  disabled = addingOrDeletingTargets.get.value,
-                  loading = addingOrDeletingTargets.get.value,
-                  onClick = insertSiderealTarget.runAsync
-                ).compact,
-                Button(
-                  size = Button.Size.Small,
                   icon = Icons.Trash,
-                  disabled = addingOrDeletingTargets.get.value,
-                  loading = addingOrDeletingTargets.get.value,
+                  disabled = deletingTargets.get.value,
+                  loading = deletingTargets.get.value,
                   onClick = deleteSelected
                 ).compact.when(selectedRows.nonEmpty),
                 ConfirmDialog()

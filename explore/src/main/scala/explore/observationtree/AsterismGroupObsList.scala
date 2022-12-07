@@ -16,25 +16,33 @@ import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.model.AppContext
 import explore.model.AsterismGroup
+import explore.model.EmptySiderealTarget
 import explore.model.Focused
 import explore.model.ObsIdSet
 import explore.model.TargetWithObs
 import explore.model.enums.AppTab
+import explore.targets.TargetAddDeleteActions
 import explore.undo.*
+import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
+import lucuma.core.util.NewType
 import lucuma.schemas.ObservationDB
+import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import mouse.boolean.*
 import org.typelevel.log4cats.Logger
+import queries.common.TargetQueriesGQL
+import queries.schemas.odb.ODBConversions.*
 import react.beautifuldnd.*
 import react.common.ReactFnProps
 import react.fa.FontAwesomeIcon
-import react.semanticui.elements.button.Button
+import react.primereact.Button
+import react.primereact.ToastRef
 import react.semanticui.elements.header.Header
 import react.semanticui.elements.segment.Segment
 import react.semanticui.elements.segment.SegmentGroup
@@ -45,18 +53,26 @@ import react.semanticui.views.card.*
 import scala.collection.immutable.SortedSet
 
 case class AsterismGroupObsList(
-  asterismsWithObs: View[AsterismGroupsWithObs],
-  programId:        Program.Id,
-  focused:          Focused,
-  setSummaryPanel:  Callback,
-  expandedIds:      View[SortedSet[ObsIdSet]],
-  undoCtx:          UndoContext[AsterismGroupsWithObs]
+  asterismsWithObs:      View[AsterismGroupsWithObs],
+  programId:             Program.Id,
+  focused:               Focused,
+  setSummaryPanel:       Callback,
+  expandedIds:           View[SortedSet[ObsIdSet]],
+  undoCtx:               UndoContext[AsterismGroupsWithObs],
+  toastRef:              ToastRef,
+  selectTargetOrSummary: Option[Target.Id] => Callback
 ) extends ReactFnProps[AsterismGroupObsList](AsterismGroupObsList.component)
     with ViewCommon:
   override val focusedObsSet: Option[ObsIdSet] = focused.obsSet
 
 object AsterismGroupObsList:
   private type Props = AsterismGroupObsList
+
+  private object AddingTarget extends NewType[Boolean]
+  private type AddingTarget = AddingTarget.Type
+
+  private object Dragging extends NewType[Boolean]
+  private type Dragging = Dragging.Type
 
   private def toggleExpanded(
     obsIds:      ObsIdSet,
@@ -117,11 +133,39 @@ object AsterismGroupObsList:
     }
   }
 
+  private def insertSiderealTarget(
+    programId:             Program.Id,
+    undoCtx:               UndoContext[AsterismGroupsWithObs],
+    adding:                View[AddingTarget],
+    selectTargetOrSummary: Option[Target.Id] => Callback,
+    toastRef:              ToastRef
+  )(using TransactionalClient[IO, ObservationDB], Logger[IO]): IO[Unit] =
+    adding.async.set(AddingTarget(true)) >>
+      TargetQueriesGQL.CreateTargetMutation
+        .execute(EmptySiderealTarget.toCreateTargetInput(programId))
+        // .void
+        .flatMap { data =>
+          val targetId = data.createTarget.target.id
+
+          TargetAddDeleteActions
+            .insertTarget(targetId,
+                          programId,
+                          selectTargetOrSummary(_).to[IO],
+                          toastRef.info(_).to[IO]
+            )
+            .set(undoCtx)(
+              TargetWithObs(EmptySiderealTarget, SortedSet.empty).some
+            )
+            .to[IO]
+        }
+        .guarantee(adding.async.set(AddingTarget(false)))
+
   private val component = ScalaFnComponent
     .withHooks[Props]
     .useContext(AppContext.ctx)
-    .useState(false) // dragging
-    .useEffectOnMountBy { (props, ctx, _) =>
+    .useState(Dragging(false))
+    .useStateView(AddingTarget(false))
+    .useEffectOnMountBy { (props, ctx, _, _) =>
       val asterismsWithObs = props.asterismsWithObs.get
       val asterismGroups   = asterismsWithObs.asterismGroups
       val expandedIds      = props.expandedIds
@@ -158,7 +202,7 @@ object AsterismGroupObsList:
         _ <- cleanupExpandedIds
       } yield ()
     }
-    .render { (props, ctx, dragging) =>
+    .render { (props, ctx, dragging, addingTarget) =>
       import ctx.given
 
       val observations     = props.asterismsWithObs.get.observations
@@ -257,7 +301,7 @@ object AsterismGroupObsList:
                 clazz = ExploreStyles.ObsTreeGroup |+| Option
                   .when(groupSelected)(ExploreStyles.SelectedObsTreeGroup)
                   .orElse(
-                    Option.when(!dragging.value)(ExploreStyles.UnselectedObsTreeGroup)
+                    Option.when(!dragging.value.value)(ExploreStyles.UnselectedObsTreeGroup)
                   )
                   .orEmpty
               )(
@@ -287,16 +331,30 @@ object AsterismGroupObsList:
       }
 
       DragDropContext(
-        onDragStart = (_: DragStart, _: ResponderProvided) => dragging.setState(true),
-        onDragEnd =
-          (result, provided) => dragging.setState(false) >> handleDragEnd(result, provided)
+        onDragStart = (_: DragStart, _: ResponderProvided) => dragging.setState(Dragging(true)),
+        onDragEnd = (result, provided) =>
+          dragging.setState(Dragging(false)) >> handleDragEnd(result, provided)
       )(
         <.div(ExploreStyles.ObsTreeWrapper)(
           <.div(ExploreStyles.TreeToolbar)(
+            Button(
+              label = "Tgt",
+              icon = Icons.New,
+              severity = Button.Severity.Success,
+              disabled = addingTarget.get.value,
+              loading = addingTarget.get.value,
+              onClick = insertSiderealTarget(props.programId,
+                                             props.undoCtx,
+                                             addingTarget,
+                                             props.selectTargetOrSummary,
+                                             props.toastRef
+              ).runAsync
+            ).compact.mini,
             UndoButtons(props.undoCtx, size = Mini)
           ),
           <.div(
             Button(
+              severity = Button.Severity.Secondary,
               onClick = setFocused(Focused.None) >> props.setSummaryPanel,
               clazz = ExploreStyles.ButtonSummary
             )(

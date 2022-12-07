@@ -169,7 +169,9 @@ object TargetTabContents extends TwoPanels:
         props.focused,
         selectedView.set(SelectedPanel.Summary),
         props.expandedIds,
-        undoCtx
+        undoCtx,
+        toastRef,
+        selectTargetOrSummary _
       )
 
     def findAsterismGroup(
