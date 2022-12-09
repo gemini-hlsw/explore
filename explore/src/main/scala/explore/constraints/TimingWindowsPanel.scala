@@ -26,7 +26,7 @@ import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.NonNegDuration
-import lucuma.core.model.implicits.*
+import lucuma.core.model.given
 import lucuma.core.util.NewType
 import lucuma.core.validation.InputValidSplitEpi
 import lucuma.react.syntax.*

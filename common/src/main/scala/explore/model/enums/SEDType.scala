@@ -5,6 +5,7 @@ package explore.model.enums
 
 import cats.Order.*
 import cats.data.NonEmptyMap
+import cats.syntax.all.*
 import coulomb.*
 import coulomb.syntax.*
 import coulomb.units.si.Kelvin
@@ -25,8 +26,7 @@ import lucuma.core.math.dimensional.*
 import lucuma.core.math.units.*
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
-import lucuma.core.util.Display
-import lucuma.core.util.Enumerated
+import lucuma.core.util.*
 import lucuma.refined.*
 
 import scala.collection.immutable.SortedMap
@@ -49,8 +49,8 @@ sealed abstract class SEDTypeEnum[T](
     sed: UnnormalizedSED
   ): SpectralDefinition[T] => SpectralDefinition[T] =
     _ match {
-      case BandNormalized(_, bs) => BandNormalized(sed, bs)
-      case EmissionLines(_, _)   => BandNormalized(sed, SortedMap.empty)
+      case BandNormalized(_, bs) => BandNormalized(sed.some, bs)
+      case EmissionLines(_, _)   => BandNormalized(sed.some, SortedMap.empty)
     }
 
   protected sealed abstract class BandNormalizedSED(name: String, sed: UnnormalizedSED)
@@ -92,17 +92,18 @@ sealed abstract class SEDTypeEnum[T](
 
   def fromSpectralDefinition(spectralDefinition: SpectralDefinition[T]): SEDType[T] =
     spectralDefinition match {
-      case BandNormalized(StellarLibrary(_), _)  => StellarLibraryType
-      case BandNormalized(CoolStarModel(_), _)   => CoolStarModelType
-      case BandNormalized(Galaxy(_), _)          => GalaxyType
-      case BandNormalized(Planet(_), _)          => PlanetType
-      case BandNormalized(Quasar(_), _)          => QuasarType
-      case BandNormalized(HIIRegion(_), _)       => HIIRegionType
-      case BandNormalized(PlanetaryNebula(_), _) => PlanetaryNebulaType
-      case EmissionLines(_, _)                   => EmissionLineType
-      case BandNormalized(PowerLaw(_), _)        => PowerLawType
-      case BandNormalized(BlackBody(_), _)       => BlackBodyType
-      case BandNormalized(UserDefined(_), _)     => UserDefinedType
+      case BandNormalized(Some(StellarLibrary(_)), _)  => StellarLibraryType
+      case BandNormalized(Some(CoolStarModel(_)), _)   => CoolStarModelType
+      case BandNormalized(Some(Galaxy(_)), _)          => GalaxyType
+      case BandNormalized(Some(Planet(_)), _)          => PlanetType
+      case BandNormalized(Some(Quasar(_)), _)          => QuasarType
+      case BandNormalized(Some(HIIRegion(_)), _)       => HIIRegionType
+      case BandNormalized(Some(PlanetaryNebula(_)), _) => PlanetaryNebulaType
+      case EmissionLines(_, _)                         => EmissionLineType
+      case BandNormalized(Some(PowerLaw(_)), _)        => PowerLawType
+      case BandNormalized(Some(BlackBody(_)), _)       => BlackBodyType
+      case BandNormalized(Some(UserDefined(_)), _)     => UserDefinedType
+      case BandNormalized(_, _)                        => UserDefinedType
     }
 
   protected val enumSEDType: Enumerated[SEDType[T]] =

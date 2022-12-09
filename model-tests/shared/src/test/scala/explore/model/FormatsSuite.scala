@@ -9,7 +9,7 @@ import eu.timepit.refined.cats.given
 import explore.model.formats.*
 import lucuma.core.arb.*
 import lucuma.core.model.NonNegDuration
-import lucuma.core.model.arb.ArbNonNegDuration.*
+import lucuma.core.model.arb.ArbNonNegDuration.given
 import lucuma.core.optics.laws.discipline.ValidWedgeTests
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen

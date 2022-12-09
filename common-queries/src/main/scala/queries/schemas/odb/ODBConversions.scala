@@ -9,15 +9,17 @@ import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosLong
 import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.syntax.*
+import lucuma.core.math.dimensional.*
 import lucuma.core.enums.Band
 import lucuma.core.math.BrightnessUnits.*
 import lucuma.core.math.*
-import lucuma.core.math.dimensional.*
 import lucuma.core.model.ExposureTimeMode.*
 import lucuma.core.model.ProposalClass.*
 import lucuma.core.model.*
+import lucuma.core.util.*
 import lucuma.core.syntax.time.*
 import lucuma.schemas.ObservationDB.Enums.PosAngleConstraintType
+import lucuma.schemas.ObservationDB.Enums.BrightnessIntegratedUnits
 import lucuma.schemas.ObservationDB.Types.*
 
 import scala.collection.immutable.SortedMap
@@ -139,14 +141,14 @@ trait ODBConversions:
   extension (b: SpectralDefinition.BandNormalized[Integrated])
     def toInput: BandNormalizedIntegratedInput =
       BandNormalizedIntegratedInput(
-        sed = b.sed.toInput.assign,
+        sed = b.sed.map(_.toInput).orUnassign,
         brightnesses = b.brightnesses.toInput.assign
       )
 
   extension (b: SpectralDefinition.BandNormalized[Surface])
     def toInput: BandNormalizedSurfaceInput =
       BandNormalizedSurfaceInput(
-        sed = b.sed.toInput.assign,
+        sed = b.sed.map(_.toInput).orUnassign,
         brightnesses = b.brightnesses.toInput.assign
       )
 

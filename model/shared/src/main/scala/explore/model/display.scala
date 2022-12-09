@@ -110,8 +110,9 @@ trait DisplayImplicits {
   }
 
   given displaySpectralDefinition[T]: Display[SpectralDefinition[T]] = Display.byShortName {
-    case SpectralDefinition.BandNormalized(band, _) => band.shortName
-    case SpectralDefinition.EmissionLines(_, _)     => "Emission Lines"
+    case SpectralDefinition.BandNormalized(Some(band), _) => band.shortName
+    case SpectralDefinition.BandNormalized(_, _)          => "No SED"
+    case SpectralDefinition.EmissionLines(_, _)           => "Emission Lines"
   }
 
   given Display[GmosXBinning] = Display.by(_.shortName, _.longName)

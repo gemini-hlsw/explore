@@ -60,13 +60,13 @@ trait CatalogPicklers extends CommonPicklers {
     }
 
   given Pickler[ProperMotion.RA] =
-    transformPickler(ProperMotion.RA.microarcsecondsPerYear.reverseGet)(
-      ProperMotion.RA.microarcsecondsPerYear.get
+    transformPickler(ProperMotion.RA.microarcsecondsPerYear.get)(
+      ProperMotion.RA.microarcsecondsPerYear.reverseGet
     )
 
   given Pickler[ProperMotion.Dec] =
-    transformPickler(ProperMotion.Dec.microarcsecondsPerYear.reverseGet)(
-      ProperMotion.Dec.microarcsecondsPerYear.get
+    transformPickler(ProperMotion.Dec.microarcsecondsPerYear.get)(
+      ProperMotion.Dec.microarcsecondsPerYear.reverseGet
     )
 
   given Pickler[ProperMotion] = generatePickler

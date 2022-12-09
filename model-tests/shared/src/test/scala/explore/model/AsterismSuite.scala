@@ -9,7 +9,7 @@ import explore.model.arb.all.*
 import explore.model.arb.all.given
 import lucuma.core.data.arb.ArbZipper.*
 import lucuma.core.model.Target
-import lucuma.core.model.arb.ArbTarget.*
+import lucuma.core.model.arb.ArbTarget.given
 import lucuma.core.util.arb.ArbEnumerated.*
 import lucuma.core.util.arb.ArbGid.*
 import monocle.law.discipline.*
@@ -64,7 +64,7 @@ class AsterismSuite extends DisciplineSuite:
             arbAsterism.arbitrary,
             for
               ast    <- arbAsterism.arbitrary
-              target <- arbTarget.arbitrary.map(t => TargetWithId(id, t))
+              target <- arbitrary[Target].map(t => TargetWithId(id, t))
             yield ast.add(target)
           )
         )

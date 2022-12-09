@@ -28,7 +28,7 @@ import lucuma.core.math.ProperMotion.RA
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.Redshift
 import lucuma.core.math.RightAscension
-import lucuma.core.math.dimensional.*
+import lucuma.core.math.dimensional.Measure
 import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.Target
 import lucuma.core.syntax.display.*

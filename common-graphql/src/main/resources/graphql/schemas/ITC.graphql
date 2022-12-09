@@ -2481,21 +2481,21 @@ type BandBrightnessSurface {
 """Band normalized common interface"""
 interface BandNormalized {
   """Un-normalized spectral energy distribution"""
-  sed: UnnormalizedSed!
+  sed: UnnormalizedSed
 }
 
 type BandNormalizedIntegrated implements BandNormalized {
   brightnesses: [BandBrightnessIntegrated!]!
 
   """Un-normalized spectral energy distribution"""
-  sed: UnnormalizedSed!
+  sed: UnnormalizedSed
 }
 
 type BandNormalizedSurface implements BandNormalized {
   brightnesses: [BandBrightnessSurface!]!
 
   """Un-normalized spectral energy distribution"""
-  sed: UnnormalizedSed!
+  sed: UnnormalizedSed
 }
 
 """Brightness integrated units"""

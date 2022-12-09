@@ -94,7 +94,7 @@ trait ITCConversions:
   extension (b: SpectralDefinition.BandNormalized[Integrated])
     def toCreateInput: BandNormalizedIntegratedInput =
       BandNormalizedIntegratedInput(
-        sed = b.sed.toInput.assign,
+        sed = b.sed.map(_.toInput).orUnassign,
         brightnesses = b.brightnesses.toList.map { (band, measure) =>
           BandBrightnessIntegratedInput(
             band = band,
@@ -108,7 +108,7 @@ trait ITCConversions:
   extension (b: SpectralDefinition.BandNormalized[Surface])
     def toCreateInput: BandNormalizedSurfaceInput =
       BandNormalizedSurfaceInput(
-        sed = b.sed.toInput.assign,
+        sed = b.sed.map(_.toInput).orUnassign,
         brightnesses = b.brightnesses.toList.map { (band, measure) =>
           BandBrightnessSurfaceInput(
             band = band,

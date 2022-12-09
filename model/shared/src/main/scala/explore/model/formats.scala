@@ -13,10 +13,11 @@ import eu.timepit.refined.refineV
 import explore.optics.all.*
 import lucuma.core.math.HourAngle.HMS
 import lucuma.core.math.Parallax
-import lucuma.core.math.ProperMotion.AngularVelocityComponent
+import lucuma.core.math.ProperMotion.AngularVelocity
 import lucuma.core.math.*
 import lucuma.core.math.units.*
 import lucuma.core.model.NonNegDuration
+import lucuma.core.model.given
 import lucuma.core.optics.*
 import lucuma.core.syntax.string.*
 import lucuma.core.validation.*

@@ -20,6 +20,7 @@ import lucuma.core.math.Parallax
 import lucuma.core.math.ProperMotion
 import lucuma.core.math.Wavelength
 import lucuma.core.math.validation.MathValidators
+import lucuma.core.model.given
 import lucuma.core.optics.Format
 import lucuma.core.optics.ValidSplitEpi
 import lucuma.core.optics.ValidWedge
@@ -43,14 +44,14 @@ object ExploreModelValidators:
   val dithersValidSplitEpi: InputValidSplitEpi[Option[NonEmptyList[DitherNanoMeters]]] =
     InputValidSplitEpi
       .refinedBigDecimal[DitherNanoMetersRange]
-      .toNel()
+      .toNel(".".refined)
       .withErrorMessage("Invalid wavelength dither values".refined)
       .optional
 
   val offsetQNELValidWedge: InputValidWedge[Option[NonEmptyList[Offset.Q]]] =
     MathValidators.truncatedAngleSignedDegrees
       .andThen(Offset.Component.angle[Axis.Q].reverse)
-      .toNel()
+      .toNel(".".refined)
       .withErrorMessage("Invalid offsets".refined)
       .optional
 

@@ -46,6 +46,7 @@ import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
+import lucuma.core.util.Of
 import lucuma.core.validation.InputValidSplitEpi
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
@@ -59,6 +60,7 @@ import lucuma.ui.primereact.given
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
+import monocle.std.option
 import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ODBConversions.*
 import react.common.ReactFnProps
@@ -99,9 +101,10 @@ sealed abstract class SpectralDefinitionEditorBuilder[
         : Option[Aligner[StellarLibrarySpectrum, Input[StellarLibrarySpectrum]]] =
         props.sedAlignerOpt.flatMap(
           _.zoomOpt(
-            UnnormalizedSED.stellarLibrary.andThen(
-              UnnormalizedSED.StellarLibrary.librarySpectrum
-            ),
+            UnnormalizedSED.stellarLibrary
+              .andThen(
+                UnnormalizedSED.StellarLibrary.librarySpectrum
+              ),
             UnnormalizedSedInput.stellarLibrary.modify
           )
         )
@@ -280,9 +283,9 @@ case class IntegratedSpectralDefinitionEditor(
     )
 
   val sedAlignerOpt: Option[Aligner[UnnormalizedSED, UnnormalizedSedInput]] =
-    bandNormalizedAlignerOpt.map(
-      _.zoom(
-        SpectralDefinition.BandNormalized.sed[Integrated],
+    bandNormalizedAlignerOpt.flatMap(
+      _.zoomOpt(
+        SpectralDefinition.BandNormalized.sed[Integrated].some,
         forceAssign(BandNormalizedIntegratedInput.sed.modify)(
           UnnormalizedSedInput()
         )
@@ -369,9 +372,9 @@ case class SurfaceSpectralDefinitionEditor(
     )
 
   val sedAlignerOpt: Option[Aligner[UnnormalizedSED, UnnormalizedSedInput]] =
-    bandNormalizedAlignerOpt.map(
-      _.zoom(
-        SpectralDefinition.BandNormalized.sed[Surface],
+    bandNormalizedAlignerOpt.flatMap(
+      _.zoomOpt(
+        SpectralDefinition.BandNormalized.sed[Surface].some,
         forceAssign(BandNormalizedSurfaceInput.sed.modify)(UnnormalizedSedInput())
       )
     )

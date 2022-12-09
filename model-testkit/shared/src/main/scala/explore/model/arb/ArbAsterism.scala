@@ -9,7 +9,7 @@ import explore.model.Asterism
 import explore.model.TargetWithId
 import explore.model.SiderealTargetWithId
 import lucuma.core.model.Target
-import lucuma.core.model.arb.ArbTarget.*
+import lucuma.core.model.arb.ArbTarget.given
 import lucuma.core.util.arb.ArbGid.*
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.*
