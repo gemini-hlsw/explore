@@ -14,7 +14,7 @@ import eu.timepit.refined.refineV
 import eu.timepit.refined.types.numeric.PosInt
 import io.circe.Decoder
 import lucuma.core.model.NonNegDuration
-import lucuma.core.model.implicits.*
+import lucuma.core.model.given
 import lucuma.refined.*
 import monocle.Focus
 import monocle.Lens

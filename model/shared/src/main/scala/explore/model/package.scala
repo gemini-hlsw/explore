@@ -37,12 +37,7 @@ val EmptySiderealTarget =
   Target.Sidereal(
     NewTargetName,
     SiderealTracking.const(Coordinates.Zero),
-    SourceProfile.Point(
-      SpectralDefinition.BandNormalized(
-        UnnormalizedSED.StellarLibrary(StellarLibrarySpectrum.O5V),
-        SortedMap.empty
-      )
-    ),
+    SourceProfile.Point(SpectralDefinition.BandNormalized(none, SortedMap.empty)),
     none
   )
 

@@ -24,6 +24,7 @@ import lucuma.core.enums.Band
 import lucuma.core.math.BrightnessUnits.*
 import lucuma.core.math.dimensional.*
 import lucuma.core.util.Enumerated
+import lucuma.core.util.Of
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*

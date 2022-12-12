@@ -10,7 +10,7 @@ import lucuma.core.math.arb.ArbRadialVelocity
 import lucuma.core.math.arb.ArbRedshift
 import lucuma.core.model.arb.ArbNonNegDuration
 import lucuma.core.model.arb.ArbTarget
-import lucuma.core.model.implicits.*
+import lucuma.core.model.given
 import lucuma.core.optics.laws.discipline.SplitEpiTests
 import monocle.law.discipline.IsoTests
 import monocle.law.discipline.OptionalTests
@@ -18,10 +18,10 @@ import munit.DisciplineSuite
 import org.scalacheck.Arbitrary.*
 
 class ModelOpticsSuite extends DisciplineSuite {
-  import ArbNonNegDuration.*
+  import ArbNonNegDuration.given
   import ArbRadialVelocity.*
   import ArbRedshift.*
-  import ArbTarget.*
+  import ArbTarget.given
 
   checkAll("redshiftBigDecimal", IsoTests(redshiftBigDecimalIso))
   checkAll("targetRV", OptionalTests(targetRV))

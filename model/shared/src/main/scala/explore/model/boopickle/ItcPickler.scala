@@ -46,6 +46,7 @@ import lucuma.core.model.EmissionLine
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
+import lucuma.core.util.Of
 
 import scala.collection.immutable.SortedMap
 

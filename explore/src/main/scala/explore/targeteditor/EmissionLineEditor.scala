@@ -29,6 +29,7 @@ import lucuma.core.math.dimensional.*
 import lucuma.core.math.units.*
 import lucuma.core.model.EmissionLine
 import lucuma.core.util.Enumerated
+import lucuma.core.util.Of
 import lucuma.core.validation.*
 import lucuma.react.syntax.*
 import lucuma.react.table.*

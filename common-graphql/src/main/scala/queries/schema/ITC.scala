@@ -15,6 +15,7 @@ import lucuma.core.math.dimensional.*
 import lucuma.core.model
 import lucuma.core.model.*
 import lucuma.core.model.sequence.*
+import lucuma.core.util.Of
 
 @GraphQLSchema
 trait ITC {

@@ -15,7 +15,7 @@ import explore.model.enums.ItcSeriesType
 import io.circe.Decoder
 import lucuma.core.math.Wavelength
 import lucuma.core.model.NonNegDuration
-import lucuma.core.model.implicits.*
+import lucuma.core.model.given
 import lucuma.core.util.Enumerated
 import lucuma.schemas.decoders.given
 

@@ -25,7 +25,7 @@ import cats.laws.discipline.arbitrary.*
 import explore.model.DitherNanoMeters
 
 trait ArbScienceModeAdvanced {
-  import ArbExposureTimeMode.*
+  import ArbExposureTimeMode.given
   import ArbOffset.*
   import ArbRefined.*
   import ArbWavelength.*
