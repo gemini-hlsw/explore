@@ -14,50 +14,11 @@
 
 @gridSpace: 5px;
 @minHeight: 2.85714286em; // TODO: Calculate this on less
-@resizeHandleWidth: 5px; // Width of the tree resize handle
 
 // media queries cutoff
 @tablet-responsive-cutoff: 992px;
 @mobile-responsive-cutoff: 670px;
 
-// Full viewport settings taken from https://dev.to/lennythedev/css-gotcha-how-to-fill-page-with-a-div-270j
-
-html,
-body {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  overflow: hidden;
-  position: fixed;
-  min-height: 100vh;
-
-  /* mobile viewport bug fix */
-  min-height: -webkit-fill-available;
-  width: 100vw;
-  scrollbar-width: thin;
-  scrollbar-color: var(--scrollbar-background);
-}
-
-*::-webkit-scrollbar {
-  width: 0.8em !important;
-}
-
-*::-webkit-scrollbar-track {
-  background: var(--scrollbar-background) !important;
-}
-
-*::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-background-thumb) !important;
-  border: 1px solid var(--scrollbar-background);
-
-  &:active,
-  &:hover {
-    background: var(--scrollbar-background-thumb-hover) !important;
-  }
-}
 
 a {
   color: var(--site-link-color);
@@ -203,22 +164,6 @@ body.light-theme {
 
 tfoot {
   background-color: var(--table-footer-background);
-}
-
-/* Avoid Chrome to see Safari hack */
-@supports (-webkit-touch-callout: none) {
-  .main-grid {
-    /* The hack for Safari */
-    height: -webkit-fill-available;
-  }
-}
-
-.main-body {
-  grid-area: body;
-  max-width: 100vw;
-  overflow: hidden;
-  display: grid;
-  justify-items: stretch;
 }
 
 .main-title {
@@ -524,21 +469,6 @@ tfoot {
   justify-content: center;
   align-items: center;
   height: 100%;
-}
-
-// Vertical handle to resize the tree
-.resize-handle {
-  width: @resizeHandleWidth;
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  user-select: none;
-  cursor: ew-resize;
-  position: relative;
-  margin-left: -@resizeHandleWidth;
-  background: black;
-  z-index: 1;
 }
 
 .maingrid {
@@ -1063,7 +993,7 @@ div.partner-split-total {
   }
 }
 
-// TODO: This was also used in the brightness tables, but is no longer needed. 
+// TODO: This was also used in the brightness tables, but is no longer needed.
 // When the obs badge is converted to primereact, this may be able to go away, or
 // be made specific to the obs badge
 .ui.button.delete-button {
