@@ -37,12 +37,12 @@ body {
 body {
   overflow: hidden;
   position: fixed;
-  min-height: 100svh;
+  min-height: 100dvh;
 
   /* mobile viewport bug fix */
   /* stylelint-disable-next-line value-no-vendor-prefix */
   min-height: -webkit-fill-available;
-  width: 100svw;
+  width: 100dvw;
 }
 
 @mixin small-tile-title {
@@ -1075,7 +1075,7 @@ table.explore-border-table {
 
   display: grid;
   height: 100vh;
-  height: 100svh;
+  height: 100dvh;
   width: 100%;
   overflow: hidden;
   grid-template:
