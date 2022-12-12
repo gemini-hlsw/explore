@@ -39,9 +39,13 @@ object ObservationPasteActions {
     otwol:                       Option[List[ObsSummaryWithConstraintsAndConf]]
   ): AsterismGroupsWithObs => AsterismGroupsWithObs = agwo =>
     otwol.fold {
-      // agwo doesn't contain the observations, so we're deleting.
+      // the Option[List]] is empty, so we're deleting.
       ids.foldLeft(agwo) { case (grps, (obsId, tid)) =>
-        grps.removeObsWithTargets(obsId, SortedSet(tid))
+        // the target list could have been edited, so we'll look for the current list
+        val targetIds = grps.observations
+          .get(obsId)
+          .fold(SortedSet(tid))(o => SortedSet.from(o.scienceTargetIds))
+        grps.removeObsWithTargets(obsId, targetIds)
       }
 
     } {

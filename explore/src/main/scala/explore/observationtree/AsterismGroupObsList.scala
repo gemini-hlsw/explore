@@ -21,6 +21,7 @@ import explore.model.Focused
 import explore.model.ObsIdSet
 import explore.model.TargetWithObs
 import explore.model.enums.AppTab
+import explore.targets.ObservationInsertAction
 import explore.targets.TargetAddDeleteActions
 import explore.undo.*
 import explore.utils.*
@@ -38,6 +39,7 @@ import mouse.boolean.*
 import org.typelevel.log4cats.Logger
 import queries.common.TargetQueriesGQL
 import queries.schemas.odb.ODBConversions.*
+import queries.schemas.odb.ObsQueries
 import react.beautifuldnd.*
 import react.common.ReactFnProps
 import react.fa.FontAwesomeIcon
@@ -53,14 +55,15 @@ import react.semanticui.views.card.*
 import scala.collection.immutable.SortedSet
 
 case class AsterismGroupObsList(
-  asterismsWithObs:      View[AsterismGroupsWithObs],
-  programId:             Program.Id,
-  focused:               Focused,
-  setSummaryPanel:       Callback,
-  expandedIds:           View[SortedSet[ObsIdSet]],
-  undoCtx:               UndoContext[AsterismGroupsWithObs],
-  toastRef:              ToastRef,
-  selectTargetOrSummary: Option[Target.Id] => Callback
+  asterismsWithObs:       View[AsterismGroupsWithObs],
+  programId:              Program.Id,
+  focused:                Focused,
+  setSummaryPanel:        Callback,
+  expandedIds:            View[SortedSet[ObsIdSet]],
+  undoCtx:                UndoContext[AsterismGroupsWithObs],
+  toastRef:               ToastRef,
+  selectTargetOrSummary:  Option[Target.Id] => Callback,
+  selectedSummaryTargets: List[Target.Id]
 ) extends ReactFnProps[AsterismGroupObsList](AsterismGroupObsList.component)
     with ViewCommon:
   override val focusedObsSet: Option[ObsIdSet] = focused.obsSet
@@ -68,8 +71,8 @@ case class AsterismGroupObsList(
 object AsterismGroupObsList:
   private type Props = AsterismGroupObsList
 
-  private object AddingTarget extends NewType[Boolean]
-  private type AddingTarget = AddingTarget.Type
+  private object AddingTargetOrObs extends NewType[Boolean]
+  private type AddingTargetOrObs = AddingTargetOrObs.Type
 
   private object Dragging extends NewType[Boolean]
   private type Dragging = Dragging.Type
@@ -136,11 +139,11 @@ object AsterismGroupObsList:
   private def insertSiderealTarget(
     programId:             Program.Id,
     undoCtx:               UndoContext[AsterismGroupsWithObs],
-    adding:                View[AddingTarget],
+    adding:                View[AddingTargetOrObs],
     selectTargetOrSummary: Option[Target.Id] => Callback,
     toastRef:              ToastRef
   )(using TransactionalClient[IO, ObservationDB], Logger[IO]): IO[Unit] =
-    adding.async.set(AddingTarget(true)) >>
+    adding.async.set(AddingTargetOrObs(true)) >>
       TargetQueriesGQL.CreateTargetMutation
         .execute(EmptySiderealTarget.toCreateTargetInput(programId))
         .flatMap { data =>
@@ -157,13 +160,33 @@ object AsterismGroupObsList:
             )
             .to[IO]
         }
-        .guarantee(adding.async.set(AddingTarget(false)))
+        .guarantee(adding.async.set(AddingTargetOrObs(false)))
+
+  private def insertObs(
+    programId:          Program.Id,
+    targetIds:          SortedSet[Target.Id],
+    undoCtx:            UndoContext[AsterismGroupsWithObs],
+    adding:             View[AddingTargetOrObs],
+    expandedIds:        View[SortedSet[ObsIdSet]],
+    selectObsOrSummary: Option[Observation.Id] => Callback,
+    toastRef:           ToastRef
+  )(using TransactionalClient[IO, ObservationDB], Logger[IO]): IO[Unit] =
+    adding.async.set(AddingTargetOrObs(true)) >>
+      ObsQueries
+        .createObservationWithTargets[IO](programId, targetIds)
+        .flatMap { obs =>
+          ObservationInsertAction
+            .insert(obs.id, expandedIds, selectObsOrSummary(_).to[IO], toastRef.info(_).to[IO])
+            .set(undoCtx)(obs.toConstraintsAndConf(targetIds).some)
+            .to[IO]
+        }
+        .guarantee(adding.async.set(AddingTargetOrObs(false)))
 
   private val component = ScalaFnComponent
     .withHooks[Props]
     .useContext(AppContext.ctx)
     .useState(Dragging(false))
-    .useStateView(AddingTarget(false))
+    .useStateView(AddingTargetOrObs(false))
     .useEffectOnMountBy { (props, ctx, _, _) =>
       val asterismsWithObs = props.asterismsWithObs.get
       val asterismGroups   = asterismsWithObs.asterismGroups
@@ -201,18 +224,28 @@ object AsterismGroupObsList:
         _ <- cleanupExpandedIds
       } yield ()
     }
-    .render { (props, ctx, dragging, addingTarget) =>
+    .render { (props, ctx, dragging, addingTargetOrObs) =>
       import ctx.given
 
       val observations     = props.asterismsWithObs.get.observations
       val asterismGroups   = props.asterismsWithObs.get.asterismGroups.map(_._2)
       val targetWithObsMap = props.asterismsWithObs.get.targetsWithObs
 
+      // first look to see if something is focused in the tree, else see if something is focused in the summary
+      val selectedTargetIds: SortedSet[Target.Id] =
+        props.focused.obsSet
+          .flatMap(ids => props.asterismsWithObs.get.asterismGroups.get(ids).map(_.targetIds))
+          .orElse(props.focused.target.map(SortedSet(_)))
+          .getOrElse(SortedSet.from(props.selectedSummaryTargets))
+
       def isObsSelected(obsId: Observation.Id): Boolean =
         props.focused.obsSet.exists(_.contains(obsId))
 
       def setFocused(focused: Focused): Callback =
         ctx.pushPage(AppTab.Targets, props.programId, focused)
+
+      def selectObsOrSummary(oObsId: Option[Observation.Id]): Callback =
+        oObsId.fold(setFocused(Focused.None))(obsId => setFocused(Focused.singleObs(obsId)))
 
       def renderObsClone(obsIds: ObsIdSet): Option[TagMod] =
         obsIds.single.fold {
@@ -337,14 +370,29 @@ object AsterismGroupObsList:
         <.div(ExploreStyles.ObsTreeWrapper)(
           <.div(ExploreStyles.TreeToolbar)(
             Button(
+              label = "Obs",
+              icon = Icons.New,
+              severity = Button.Severity.Success,
+              disabled = addingTargetOrObs.get.value,
+              loading = addingTargetOrObs.get.value,
+              onClick = insertObs(props.programId,
+                                  selectedTargetIds,
+                                  props.undoCtx,
+                                  addingTargetOrObs,
+                                  props.expandedIds,
+                                  selectObsOrSummary,
+                                  props.toastRef
+              ).runAsync
+            ).compact.mini,
+            Button(
               label = "Tgt",
               icon = Icons.New,
               severity = Button.Severity.Success,
-              disabled = addingTarget.get.value,
-              loading = addingTarget.get.value,
+              disabled = addingTargetOrObs.get.value,
+              loading = addingTargetOrObs.get.value,
               onClick = insertSiderealTarget(props.programId,
                                              props.undoCtx,
-                                             addingTarget,
+                                             addingTargetOrObs,
                                              props.selectTargetOrSummary,
                                              props.toastRef
               ).runAsync

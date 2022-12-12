@@ -107,6 +107,20 @@ case class ObsSummaryWithTitleAndConstraints(
       none,
       none
     )
+
+  def toConstraintsAndConf(targetIds: Set[Target.Id]) =
+    ObsSummaryWithConstraintsAndConf(
+      id,
+      constraints,
+      status,
+      activeStatus,
+      duration,
+      targetIds,
+      none,
+      none,
+      none,
+      none
+    )
 }
 
 object ObsSummaryWithTitleAndConstraints {

@@ -245,6 +245,31 @@ object ObsQueries:
       )
     }
 
+  def createObservationWithTargets[F[_]: Async](
+    programId: Program.Id,
+    targetIds: Set[Target.Id]
+  )(using TransactionalClient[F, ObservationDB]): F[ObsSummaryWithTitleAndConstraints] =
+    ProgramCreateObservation
+      .execute[F](
+        CreateObservationInput(programId = programId,
+                               SET = ObservationPropertiesInput(targetEnvironment =
+                                 TargetEnvironmentInput(asterism = targetIds.toList.assign).assign
+                               ).assign
+        )
+      )
+      .map { data =>
+        val obs = data.createObservation.observation
+        ObsSummaryWithTitleAndConstraints(
+          obs.id,
+          obs.title,
+          obs.subtitle,
+          obs.constraintSet,
+          obs.status,
+          obs.activeStatus,
+          obs.plannedTime.execution
+        )
+      }
+
   def cloneObservation[F[_]: Async](
     obsId: Observation.Id
   )(using TransactionalClient[F, ObservationDB]): F[ObsSummaryWithTitleAndConstraints] =
