@@ -2,6 +2,49 @@
 
 $tree-section-width: 300px;
 
+// Scrollbar
+*::-webkit-scrollbar {
+  width: 0.8em !important;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-background) !important;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-background-thumb) !important;
+  border: 1px solid var(--scrollbar-background);
+
+  &:active,
+  &:hover {
+    background: var(--scrollbar-background-thumb-hover) !important;
+  }
+}
+
+*::-webkit-scrollbar-corner {
+  background: var(--control-background-color);
+}
+
+// Full viewport settings taken from https://dev.to/lennythedev/css-gotcha-how-to-fill-page-with-a-div-270j
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  overflow: hidden;
+  position: fixed;
+  min-height: 100svh;
+
+  /* mobile viewport bug fix */
+  /* stylelint-disable-next-line value-no-vendor-prefix */
+  min-height: -webkit-fill-available;
+  width: 100svw;
+}
+
 @mixin small-tile-title {
   display: flex;
   gap: 1em;
@@ -949,7 +992,7 @@ table.explore-border-table {
     /* stylelint-disable-next-line selector-class-pattern */
     span > svg.svg-inline--fa {
       padding-right: 0.5em;
-    } 
+    }
 
     .explore-prompt-toast {
       display: flex;
@@ -1027,25 +1070,45 @@ table.explore-border-table {
 // ----------
 // Main grid
 // ----------
-  .main-grid {
-    $top-bottom-space: 42px;
+.main-grid {
+  $top-bottom-space: 42px;
 
-    display: grid;
-    height: 100vh;
-    width: 100%;
-    overflow: hidden;
+  display: grid;
+  height: 100vh;
+  height: 100svh;
+  width: 100%;
+  overflow: hidden;
+  grid-template:
+    'header' $top-bottom-space
+    'body' minmax(calc(100% - $top-bottom-space - $top-bottom-space), 1fr)
+    'sidebar' #{$top-bottom-space} / 1fr;
+
+  @media (min-width: common.$tablet-responsive-cutoff) {
     grid-template:
-      'header' $top-bottom-space
-      'body' minmax(calc(100% - $top-bottom-space - $top-bottom-space), 1fr)
-      'sidebar' #{$top-bottom-space} / 1fr;
-
-    @media (min-width: common.$tablet-responsive-cutoff) {
-      grid-template:
-        'header header' $top-bottom-space
-        'sidebar body' minmax(calc(100% - $top-bottom-space), 1fr) / 50px auto;
-    }
+      'header header' $top-bottom-space
+      'sidebar body' minmax(calc(100% - $top-bottom-space), 1fr) / 50px auto;
   }
+}
 
+
+// --------------------
+// Main grid definition
+// --------------------
+@supports (-webkit-touch-callout: none) {
+  .main-grid {
+    /* The hack for Safari */
+    /* stylelint-disable-next-line value-no-vendor-prefix */
+    height: -webkit-fill-available;
+  }
+}
+
+.main-body {
+  grid-area: body;
+  max-width: 100svw;
+  overflow: hidden;
+  display: grid;
+  justify-items: stretch;
+}
 
 // ------------
 // Two panel pages
