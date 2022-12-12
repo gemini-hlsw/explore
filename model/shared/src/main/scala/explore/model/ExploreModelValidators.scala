@@ -44,14 +44,14 @@ object ExploreModelValidators:
   val dithersValidSplitEpi: InputValidSplitEpi[Option[NonEmptyList[DitherNanoMeters]]] =
     InputValidSplitEpi
       .refinedBigDecimal[DitherNanoMetersRange]
-      .toNel(".".refined)
+      .toNel(",".refined)
       .withErrorMessage("Invalid wavelength dither values".refined)
       .optional
 
   val offsetQNELValidWedge: InputValidWedge[Option[NonEmptyList[Offset.Q]]] =
     MathValidators.truncatedAngleSignedDegrees
       .andThen(Offset.Component.angle[Axis.Q].reverse)
-      .toNel(".".refined)
+      .toNel(",".refined)
       .withErrorMessage("Invalid offsets".refined)
       .optional
 
