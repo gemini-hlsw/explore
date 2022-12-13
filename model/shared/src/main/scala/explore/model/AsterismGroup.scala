@@ -5,6 +5,7 @@ package explore.model
 
 import cats.Eq
 import cats.Semigroup
+import cats.derived.*
 import cats.syntax.all.*
 import lucuma.core.model.Target
 import monocle.Focus
@@ -15,10 +16,13 @@ import scala.collection.immutable.SortedSet
 case class AsterismGroup(
   obsIds:    ObsIdSet,
   targetIds: SortedSet[Target.Id]
-) {
+) derives Eq {
 
   def addTargetId(targetId: Target.Id): AsterismGroup =
     AsterismGroup.targetIds.modify(_ + targetId)(this)
+
+  def addTargetIds(targetIds: Set[Target.Id]): AsterismGroup =
+    AsterismGroup.targetIds.modify(_ ++ targetIds)(this)
 
   def addObsIds(newIds: ObsIdSet): AsterismGroup =
     AsterismGroup.obsIds.modify(_ ++ newIds)(this)
@@ -33,7 +37,6 @@ case class AsterismGroup(
 }
 
 object AsterismGroup {
-  given Eq[AsterismGroup] = Eq.by(x => (x.obsIds, x.targetIds))
 
   given Semigroup[AsterismGroup] =
     Semigroup.instance((a, b) => AsterismGroup(a.obsIds |+| b.obsIds, a.targetIds |+| b.targetIds))

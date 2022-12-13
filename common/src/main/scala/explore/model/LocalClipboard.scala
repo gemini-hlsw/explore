@@ -10,3 +10,4 @@ sealed trait LocalClipboard
 object LocalClipboard:
   case object Empty                             extends LocalClipboard
   case class CopiedObservations(oids: ObsIdSet) extends LocalClipboard
+  case class CopiedTargets(tids: TargetIdSet)   extends LocalClipboard

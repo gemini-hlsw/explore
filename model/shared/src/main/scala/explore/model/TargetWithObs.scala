@@ -4,6 +4,7 @@
 package explore.model
 
 import cats.Eq
+import cats.derived.*
 import cats.implicits.*
 import io.circe.Decoder
 import io.circe.Decoder.*
@@ -15,7 +16,7 @@ import monocle.Lens
 import scala.collection.immutable.SortedSet
 
 // We keep track of the observations a target is in to know if it's shared or not.
-case class TargetWithObs(target: Target, obsIds: SortedSet[Observation.Id]) {
+case class TargetWithObs(target: Target, obsIds: SortedSet[Observation.Id]) derives Eq {
   def addObsIds(ids: ObsIdSet): TargetWithObs =
     TargetWithObs.obsIds.modify(_ ++ ids.toSortedSet)(this)
 
@@ -24,8 +25,6 @@ case class TargetWithObs(target: Target, obsIds: SortedSet[Observation.Id]) {
 }
 
 object TargetWithObs {
-  implicit val eqTargetWithObs: Eq[TargetWithObs] = Eq.by(x => (x.target, x.obsIds))
-
   val target: Lens[TargetWithObs, Target] =
     Focus[TargetWithObs](_.target)
 
@@ -33,7 +32,7 @@ object TargetWithObs {
     Focus[TargetWithObs](_.obsIds)
 }
 
-case class TargetWithIdAndObs(id: Target.Id, targetWithObs: TargetWithObs) {
+case class TargetWithIdAndObs(id: Target.Id, targetWithObs: TargetWithObs) derives Eq {
   def target: Target                    = targetWithObs.target
   def obsIds: SortedSet[Observation.Id] = targetWithObs.obsIds
 
@@ -47,8 +46,6 @@ case class TargetWithIdAndObs(id: Target.Id, targetWithObs: TargetWithObs) {
 }
 
 object TargetWithIdAndObs {
-  implicit val eqTargetWithIdAndObs: Eq[TargetWithIdAndObs] = Eq.by(x => (x.id, x.targetWithObs))
-
   val id: Lens[TargetWithIdAndObs, Target.Id] =
     Focus[TargetWithIdAndObs](_.id)
 

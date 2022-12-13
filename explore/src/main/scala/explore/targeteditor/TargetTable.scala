@@ -84,7 +84,7 @@ object TargetTable extends TableHooks:
     obsIds:   ObsIdSet,
     targetId: Target.Id
   )(using TransactionalClient[IO, ObservationDB]): IO[Unit] =
-    AsterismQueries.removeTargetFromAsterisms[IO](obsIds.toList, targetId)
+    AsterismQueries.removeTargetsFromAsterisms[IO](obsIds.toList, List(targetId))
 
   protected val component =
     ScalaFnComponent
