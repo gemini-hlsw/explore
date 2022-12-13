@@ -7,18 +7,18 @@ import cats.syntax.all.*
 import crystal.react.hooks.*
 import crystal.react.implicits.*
 import explore.*
+import explore.components.ui.ExploreStyles
+import explore.model.Constants
+import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.ui.syntax.all.given
-import react.common.ReactFnProps
-import lucuma.react.table.*
-import explore.model.reusability.given
-import lucuma.ui.table.*
-import lucuma.react.syntax.*
-import lucuma.schemas.model.StepRecord
-import explore.model.Constants
-import explore.components.ui.ExploreStyles
 import lucuma.core.enums.DatasetQaState
+import lucuma.react.syntax.*
+import lucuma.react.table.*
+import lucuma.schemas.model.StepRecord
+import lucuma.ui.syntax.all.given
+import lucuma.ui.table.*
+import react.common.ReactFnProps
 
 final case class VisitTable(steps: List[StepRecord]) extends ReactFnProps(VisitTable.component)
 

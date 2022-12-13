@@ -30,14 +30,14 @@ import lucuma.core.model.ProposalClass
 import lucuma.core.model.Target
 import lucuma.core.util.NewType
 import lucuma.schemas.ObservationDB.Enums.Existence
+import lucuma.schemas.model.StepRecord
+import lucuma.schemas.model.Visit
 import lucuma.ui.reusability.*
 import queries.schemas.odb.ObsQueries.ObsSummariesWithConstraints
 import queries.schemas.odb.ObsQueries.SpectroscopyRequirementsData
 
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.TreeSeqMap
-import lucuma.schemas.model.Visit
-import lucuma.schemas.model.StepRecord
 
 /**
  * Reusability instances for model classes

@@ -5,13 +5,14 @@ package explore.config.sequence
 
 import cats.syntax.all.*
 import explore.Icons
-import lucuma.react.table.*
-import lucuma.react.syntax.*
+import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import explore.components.ui.ExploreStyles
-import java.text.DecimalFormat
+import lucuma.react.syntax.*
+import lucuma.react.table.*
 import lucuma.ui.syntax.all.given
+
+import java.text.DecimalFormat
 
 object SequenceColumns:
   val StepTypeColumnId: ColumnId   = ColumnId("stepType")

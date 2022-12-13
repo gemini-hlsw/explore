@@ -4,16 +4,17 @@
 package explore.config.sequence
 
 import cats.syntax.all.*
+import lucuma.core.enums.StepType
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
+import lucuma.core.model.NonNegDuration
 import lucuma.core.model.sequence.*
-import lucuma.core.enums.StepType
 import lucuma.schemas.model.StepRecord
 import lucuma.schemas.model.Visit
-import java.time.Instant
+
 import java.time.Duration
-import lucuma.core.model.NonNegDuration
+import java.time.Instant
 
 sealed trait GmosSequenceRow:
   def id: String

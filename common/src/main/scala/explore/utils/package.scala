@@ -39,8 +39,8 @@ import react.semanticui.collections.message.Message
 import react.semanticui.elements.loader.Loader
 
 import java.time.Instant
-import java.time.ZonedDateTime
 import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters.*
 

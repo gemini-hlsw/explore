@@ -6,12 +6,12 @@ package explore.config.sequence
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.model.Observation
 import lucuma.core.model.sequence.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.semanticui.elements.header.Header
 import react.semanticui.elements.segment.Segment
-import lucuma.core.model.Observation
 
 case class GeneratedSequenceTables(obsId: Observation.Id, config: FutureExecutionConfig)
     extends ReactFnProps(GeneratedSequenceTables.component)

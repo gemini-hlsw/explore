@@ -3,39 +3,40 @@
 
 package explore.config.sequence
 
-import cats.syntax.all.*
 import cats.effect.IO
+import cats.syntax.all.*
 import crystal.Pot
 import crystal.react.View
 import crystal.react.hooks.*
 import crystal.react.implicits.*
 import explore.*
+import explore.components.ui.ExploreStyles
 import explore.model.AppContext
+import explore.model.Constants
 import explore.model.display.given
+import explore.model.reusability.given
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.SequenceType
 import lucuma.core.model.Observation
+import lucuma.core.model.sequence.DynamicConfig
 import lucuma.core.syntax.all.given
+import lucuma.react.syntax.*
+import lucuma.react.table.*
+import lucuma.schemas.model.StepRecord
+import lucuma.schemas.model.Visit
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import queries.common.VisitsSQL.*
-import queries.common.ObsQueriesGQL
-import react.common.ReactFnProps
-import lucuma.react.table.*
-import lucuma.schemas.model.Visit
-import explore.model.reusability.given
 import lucuma.ui.table.*
-import lucuma.react.syntax.*
-import java.time.ZoneOffset
+import queries.common.ObsQueriesGQL
+import queries.common.VisitsSQL.*
+import react.common.ReactFnProps
 import react.primereact.AccordionMultiple
 import react.primereact.AccordionTab
-import explore.components.ui.ExploreStyles
-import lucuma.schemas.model.StepRecord
-import lucuma.core.enums.SequenceType
-import explore.model.Constants
-import lucuma.core.model.sequence.DynamicConfig
+
 import java.time.Duration
+import java.time.ZoneOffset
 
 case class VisitsViewer(obsId: Observation.Id) extends ReactFnProps(VisitsViewer.component)
 
