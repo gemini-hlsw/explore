@@ -735,16 +735,16 @@ object TargetTabContents extends TwoPanels:
                     (props.focused.obsSet, optViewAgwo).tupled
                       .foldMap((obsIds, agwov) =>
                         val undoContext    = UndoContext(props.listUndoStacks, agwov)
-                        // don't want to do anything if the target astersism already contains the targets
+                        // Only want to paste targets that aren't already in the target asterism or
+                        // undo is messed up.
+                        // If all the targets are already there, do nothing.
                         val targetAsterism = agwov.get.asterismGroups
                           .findContainingObsIds(obsIds)
                         targetAsterism
-                          .flatMap(ag =>
-                            if (tids.toSortedSet.subsetOf(ag.targetIds)) none else ag.some
-                          )
-                          .foldMap(_ =>
+                          .flatMap(ag => tids.removeSet(ag.targetIds))
+                          .foldMap(uniqueTids =>
                             TargetPasteAction
-                              .pasteTargets(obsIds, tids, selectObsIds, props.expandedIds)
+                              .pasteTargets(obsIds, uniqueTids, selectObsIds, props.expandedIds)
                               .set(undoContext)(())
                               .to[IO]
                           )
