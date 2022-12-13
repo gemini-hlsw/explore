@@ -29,7 +29,7 @@ import queries.schemas.odb.ObsQueries
 
 import scala.collection.immutable.SortedSet
 
-object ObservationPasteActions {
+object ObservationPasteAction {
   private def obsListGetter(
     ids: List[(Observation.Id, Target.Id)]
   ): AsterismGroupsWithObs => Option[List[ObsSummaryWithConstraintsAndConf]] = agwo =>

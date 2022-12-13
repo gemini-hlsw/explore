@@ -115,7 +115,7 @@ object AsterismEditor {
           }
           asterismAdd >>
             selectedTarget.async.set(tid.some) >>
-            AsterismQueries.addTargetToAsterisms[IO](obsIds.toList, tid)
+            AsterismQueries.addTargetsToAsterisms[IO](obsIds.toList, List(tid))
         }
         .guarantee(adding.async.set(AreAdding(false)))
 

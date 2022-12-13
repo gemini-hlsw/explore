@@ -79,52 +79,6 @@ object AsterismGroupObsListActions {
       .getOrElse(agwo)
   }
 
-  // TODO: Was used by dropTarget(), may be useful if/when implementing copy/paste from target table
-  // Any value returned by using this is wrong under too many circumstances. So, we always just get
-  // the most current value from the list.
-  // private val targetDropGetter: AsterismGroupsWithObs => Option[AsterismGroup] = _ => None
-
-  // TODO: Was used by dropTarget(), may be useful if/when implementing copy/paste from target table
-  // private def targetDropSetter(obsIds: ObsIdSet, targetId: Target.Id)(
-  //   // We always need to get the most recent group from the list, so we ignore this.
-  //   @unused oAsterismGroup:            Option[AsterismGroup]
-  // ): AsterismGroupsWithObs => AsterismGroupsWithObs = agwo => {
-  //   val origAsterismGroups = agwo.asterismGroups
-
-  //   // Note: We always need to get the most current asterism group from the list.
-  //   origAsterismGroups
-  //     .findContainingObsIds(obsIds)
-  //     .fold(agwo) { currentAg =>
-  //       val currentObsIds = currentAg.obsIds
-
-  //       // It seems the only way to know if we're setting or restoring is if the asterism group
-  //       // currently contains the target id or not.
-  //       val isUndo       = currentAg.targetIds.contains(targetId)
-  //       val newTargetIds =
-  //         if (isUndo) currentAg.targetIds - targetId
-  //         else currentAg.targetIds + targetId
-
-  //       val splitAsterismGroups = if (currentObsIds === obsIds) {
-  //         origAsterismGroups + currentAg.copy(targetIds = newTargetIds).asObsKeyValue
-  //       } else {
-  //         origAsterismGroups - currentObsIds +
-  //           currentAg.removeObsIdsUnsafe(obsIds).asObsKeyValue +
-  //           AsterismGroup(obsIds, newTargetIds).asObsKeyValue
-  //       }
-
-  //       val updatedAsterismGroups =
-  //         origAsterismGroups.findWithTargetIds(newTargetIds).fold(splitAsterismGroups) { ag =>
-  //           splitAsterismGroups - obsIds - ag.obsIds + ag.addObsIds(obsIds).asObsKeyValue
-  //         }
-
-  //       val updatedTargetsWithObs = agwo.targetsWithObs.updatedWith(targetId)(
-  //         _.map(tg => if (isUndo) tg.removeObsIds(obsIds) else tg.addObsIds(obsIds))
-  //       )
-
-  //       agwo.copy(asterismGroups = updatedAsterismGroups, targetsWithObs = updatedTargetsWithObs)
-  //     }
-  // }
-
   private def updateExpandedIds(
     draggedIds: ObsIdSet,
     optDestIds: Option[ObsIdSet]
@@ -139,41 +93,6 @@ object AsterismGroupObsListActions {
         else ids.remove(draggedIds)
       ) + (destIds ++ draggedIds)
     }
-
-  // TODO: Was used by dropTarget(), may be useful if/when implementing copy/paste from target table
-  // private def doTargetDropExpandedMod(
-  //   obsIds:    ObsIdSet,
-  //   targetId:  Target.Id,
-  //   currentAg: AsterismGroup,
-  //   agl:       AsterismGroupList
-  // )(eids:      SortedSet[ObsIdSet]): SortedSet[ObsIdSet] = {
-  //   val newTargets = currentAg.targetIds + targetId
-  //   agl.findWithTargetIds(newTargets).fold(eids) { mergeWith =>
-  //     if (eids.contains(obsIds) || eids.contains(mergeWith.obsIds))
-  //       eids - obsIds - mergeWith.obsIds + (obsIds ++ mergeWith.obsIds)
-  //     else eids
-  //   }
-  // }
-
-  // TODO: Was used by dropTarget(), may be useful if/when implementing copy/paste from target table
-  // private def undoTargetDropExpandedMod(
-  //   obsIds:    ObsIdSet,
-  //   targetId:  Target.Id,
-  //   currentAg: AsterismGroup,
-  //   agl:       AsterismGroupList
-  // )(eids:      SortedSet[ObsIdSet]): SortedSet[ObsIdSet] = {
-  //   val split =
-  //     if (obsIds.strictSubsetOf(currentAg.obsIds) && eids.contains(currentAg.obsIds))
-  //       eids - currentAg.obsIds + obsIds + currentAg.obsIds.removeUnsafe(obsIds)
-  //     else eids
-
-  //   val newTargets = currentAg.targetIds - targetId
-  //   agl.findWithTargetIds(newTargets).fold(split) { mergeWith =>
-  //     if (eids.contains(obsIds) || eids.contains(mergeWith.obsIds))
-  //       split - obsIds - mergeWith.obsIds + (obsIds ++ mergeWith.obsIds)
-  //     else split
-  //   }
-  // }
 
   def dropObservations(
     draggedIds:  ObsIdSet,
@@ -193,32 +112,4 @@ object AsterismGroupObsListActions {
             setObsSet(optDestIds.fold(draggedIds)(_ ++ draggedIds)).to[IO]
         }
     )
-
-  // TODO: No longer used, but may be useful if/when implementing copy/paste from target table
-  // def dropTarget(obsIds: ObsIdSet, targetId: Target.Id, expandedIds: View[SortedSet[ObsIdSet]])(
-  //   using c:          TransactionalClient[IO, ObservationDB]
-  // ) = Action(getter = targetDropGetter, setter = targetDropSetter(obsIds, targetId))(
-  //   onSet = (agwo, _) => {
-  //     val agl        = agwo.asterismGroups
-  //     // We always need to look in the list to get the most current aterism group. We
-  //     // should always find one, unless an observation has been deleted, in which case we do nothing...
-  //     val oCurrentAg = agl.findContainingObsIds(obsIds)
-  //     oCurrentAg.foldMap { currentAg =>
-  //       // This seems to be the only way to tell if we're doing or undoing?
-  //       if (currentAg.targetIds.contains(targetId))
-  //         // undo
-  //         expandedIds
-  //           .mod(undoTargetDropExpandedMod(obsIds, targetId, currentAg, agl) _)
-  //           .to[IO] >>
-  //           AsterismQueries.removeTargetFromAsterisms[IO](obsIds.toList, targetId)
-  //       else
-  //         // do or redo
-  //         expandedIds
-  //           .mod(doTargetDropExpandedMod(obsIds, targetId, currentAg, agl) _)
-  //           .to[IO] >>
-  //           AsterismQueries.addTargetToAsterisms[IO](obsIds.toList, targetId)
-  //     }
-  //   }
-  // )
-
 }

@@ -4,6 +4,7 @@
 package explore.model
 
 import cats.Eq
+import cats.derived.*
 import cats.syntax.all.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
@@ -76,12 +77,10 @@ case class ObsSummaryWithConstraints(
   scienceTargetIds:          Set[Target.Id]
 ) extends ObsSummary
     with ObsWithConstraints
+    derives Eq
 
 object ObsSummaryWithConstraints {
   val id = Focus[ObsSummaryWithConstraints](_.id)
-
-  implicit val eqObsSummaryWithConstraints: Eq[ObsSummaryWithConstraints] =
-    Eq.by(o => (o.id, o.constraints, o.status, o.activeStatus, o.duration, o.scienceTargetIds))
 }
 
 case class ObsSummaryWithTitleAndConstraints(
@@ -94,7 +93,8 @@ case class ObsSummaryWithTitleAndConstraints(
   override val duration:     Duration
 ) extends ObsSummary
     with ObsWithTitle
-    with ObsWithConstraints {
+    with ObsWithConstraints
+    derives Eq {
   def toTitleAndConstraints =
     ObsSummaryWithTitleConstraintsAndConf(
       id,
@@ -129,9 +129,6 @@ object ObsSummaryWithTitleAndConstraints {
   val subtitle     = Focus[ObsSummaryWithTitleAndConstraints](_.subtitle)
   val status       = Focus[ObsSummaryWithTitleAndConstraints](_.status)
   val activeStatus = Focus[ObsSummaryWithTitleAndConstraints](_.activeStatus)
-
-  implicit val eqObsSummaryWithTitleAndConstraints: Eq[ObsSummaryWithTitleAndConstraints] =
-    Eq.by(o => (o.id, o.title, o.subtitle, o.constraints, o.status, o.activeStatus, o.duration))
 }
 
 case class ObsSummaryWithTitleConstraintsAndConf(
@@ -149,25 +146,13 @@ case class ObsSummaryWithTitleConstraintsAndConf(
     with ObsWithConstraints
     with ObsWithVizTime
     with ObsWithConf
+    derives Eq
 
 object ObsSummaryWithTitleConstraintsAndConf {
   val id           = Focus[ObsSummaryWithTitleConstraintsAndConf](_.id)
   val subtitle     = Focus[ObsSummaryWithTitleConstraintsAndConf](_.subtitle)
   val status       = Focus[ObsSummaryWithTitleConstraintsAndConf](_.status)
   val activeStatus = Focus[ObsSummaryWithTitleConstraintsAndConf](_.activeStatus)
-
-  implicit val eqObsSummaryWithTitleConstraintsAndConf: Eq[ObsSummaryWithTitleConstraintsAndConf] =
-    Eq.by(o =>
-      (o.id,
-       o.title,
-       o.subtitle,
-       o.constraints,
-       o.status,
-       o.activeStatus,
-       o.duration,
-       o.scienceMode
-      )
-    )
 }
 
 case class ObsSummaryWithTitleAndConf(
@@ -181,12 +166,10 @@ case class ObsSummaryWithTitleAndConf(
 ) extends ObsSummary
     with ObsWithTitle
     with ObsWithConf
+    derives Eq
 
 object ObsSummaryWithTitleAndConf {
   val id = Focus[ObsSummaryWithTitleAndConf](_.id)
-
-  implicit val eqObsSummaryWithTargetsAndConf: Eq[ObsSummaryWithTitleAndConf] =
-    Eq.by(o => (o.id, o.title, o.subtitle, o.status, o.activeStatus, o.duration, o.scienceMode))
 }
 
 case class ObsSummaryWithConstraintsAndConf(
@@ -204,23 +187,10 @@ case class ObsSummaryWithConstraintsAndConf(
     with ObsWithConstraints
     with ObsWithVizTime
     with ObsWithConf
+    derives Eq
 
 object ObsSummaryWithConstraintsAndConf {
   val id                = Focus[ObsSummaryWithConstraintsAndConf](_.id)
   val configuration     = Focus[ObsSummaryWithConstraintsAndConf](_.scienceMode)
   val visualizationTime = Focus[ObsSummaryWithConstraintsAndConf](_.visualizationTime)
-
-  implicit val eqObsSummaryWithConstraintsAndConf: Eq[ObsSummaryWithConstraintsAndConf] =
-    Eq.by(o =>
-      (o.id,
-       o.constraints,
-       o.status,
-       o.activeStatus,
-       o.duration,
-       o.scienceTargetIds,
-       o.scienceMode,
-       o.visualizationTime,
-       o.posAngleConstraint
-      )
-    )
 }

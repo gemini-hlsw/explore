@@ -3,6 +3,7 @@
 
 package explore.common
 
+import cats.Eq
 import cats.Order
 import cats.effect.Async
 import cats.implicits.*
@@ -156,22 +157,22 @@ object AsterismQueries:
     )
     UpdateObservationMutation.execute[F](input).void
 
-  def addTargetToAsterisms[F[_]: Async](
-    obsIds:   List[Observation.Id],
-    targetId: Target.Id
+  def addTargetsToAsterisms[F[_]: Async](
+    obsIds:    List[Observation.Id],
+    targetIds: List[Target.Id]
   )(using TransactionalClient[F, ObservationDB]) =
     val input = UpdateAsterismsInput(
       WHERE = obsIds.toWhereObservation.assign,
-      SET = List(EditAsterismsPatchInput(ADD = targetId.assign))
+      SET = targetIds.map(tid => EditAsterismsPatchInput(ADD = tid.assign))
     )
     UpdateAsterismsMutation.execute[F](input).void
 
-  def removeTargetFromAsterisms[F[_]: Async](
-    obsIds:   List[Observation.Id],
-    targetId: Target.Id
+  def removeTargetsFromAsterisms[F[_]: Async](
+    obsIds:    List[Observation.Id],
+    targetIds: List[Target.Id]
   )(using TransactionalClient[F, ObservationDB]) =
     val input = UpdateAsterismsInput(
       WHERE = obsIds.toWhereObservation.assign,
-      SET = List(EditAsterismsPatchInput(DELETE = targetId.assign))
+      SET = targetIds.map(tid => EditAsterismsPatchInput(DELETE = tid.assign))
     )
     UpdateAsterismsMutation.execute[F](input).void
