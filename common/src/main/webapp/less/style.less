@@ -167,17 +167,6 @@ tfoot {
   .full-height-width();
 }
 
-.ui.button.active.side-button {
-  border-top: var(--explore-accent-color) solid 4px;
-  background-color: var(--under-tab-background-active-color);
-  font-weight: bold;
-}
-
-.ui.tabular.menu .item.connection-icon {
-  padding-right: 0.5em;
-  padding-left: 0;
-}
-
 // Used as part of creating headers in a FormSelect.
 // Selector is very specific to avoid affecting other controls
 .ui.dropdown.selection .menu .item.header.disabled {
@@ -199,105 +188,9 @@ tfoot {
   margin-right: 0.5em;
 }
 
-.sidetabs {
-  grid-area: sidebar;
-  background: var(--sidetab-background);
-  overflow: hidden;
-}
-
-.sidetabs-divider {
-  display: none;
-
-  @media (min-width: @tablet-responsive-cutoff) {
-    display: block;
-  }
-}
-
-// Side tabs
-.sidetabs-body {
-  display: flex;
-
-  @media (min-width: @tablet-responsive-cutoff) {
-    height: 100%;
-    display: block;
-    overflow: hidden;
-  }
-}
-
-.sidetabs-body-vertical {
-  height: 100%;
-  display: none;
-
-  @media (min-width: @tablet-responsive-cutoff) {
-    display: inherit;
-  }
-}
-
-.sidetabs-body-horizontal {
-  height: 100%;
-  display: flex;
-  overflow: hidden;
-  padding-top: 0.2em;
-  padding-bottom: 0.2em;
-  width: 100vw;
-  max-width: 100vw;
-  justify-content: space-between;
-  align-items: stretch;
-  border-top: 1px solid var(--under-tab-border-color);
-}
-
-.ui.label.bottom-tab-selector {
-  flex-grow: 1;
-  flex-shrink: 1;
-  font-weight: 300;
-  text-align: center;
-  padding-top: 0.4em;
-  padding-bottom: 0.2em;
-  margin-right: 0.2em;
-  margin-left: 0.2em;
-  border-radius: 0.2em;
-  border: 1px solid var(--under-tab-border-color);
-  background-color: var(--under-tab-background-color);
-}
-
-.ui.label.bottom-tab-selector:hover,
-.ui.label.bottom-tab-selector:focus {
-  border: 1px solid var(--under-tab-border-color);
-  background-color: var(--under-tab-background-focus-color);
-}
-
-.ui.label.active.bottom-tab-selector {
-  border: 1px solid var(--under-tab-border-color);
-  border-top: var(--explore-accent-color) solid 4px;
-  background-color: var(--under-tab-background-active-color);
-  font-weight: bold;
-}
-
-.ui.label.active.bottom-tab-selector:hover,
-.ui.label.active.bottom-tab-selector:focus {
-  border: 1px solid var(--under-tab-border-color);
-  border-top: var(--explore-accent-color) solid 4px;
-  background-color: var(--under-tab-background-focus-active-color);
-}
-
 //----------
 // Main title
 //----------
-// Taken from the definitíon of ui.button transition but removed background-color and background
-// When animating those two properties you see some flickering in FF
-.ui.button.side-button {
-  border: 1px solid var(--under-tab-border-color);
-  border-bottom: transparent solid 4px;
-  border-bottom-left-radius: unset;
-  border-bottom-right-radius: unset;
-  background-color: var(--under-tab-background-color);
-  font-weight: 300;
-  transition: opacity @defaultDuration @defaultEasing,
-    color @defaultDuration @defaultEasing,
-    box-shadow @defaultDuration @defaultEasing;
-}
-
-
 .proposal-tile {
   margin: 0.5em;
 }

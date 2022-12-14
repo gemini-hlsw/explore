@@ -507,14 +507,13 @@ object AladinCell extends ModelOptics with AladinCommon:
 
           val renderToolbar: ((UserGlobalPreferences, TargetVisualOptions)) => VdomNode =
             case (_: UserGlobalPreferences, t: TargetVisualOptions) =>
-              props.agsState.map(agsState =>
-                AladinToolbar(Fov(t.fovRA, t.fovDec),
-                              mouseCoords.value,
-                              agsState.get,
-                              selectedGuideStar,
-                              t.agsOverlay,
-                              offsetOnCenter
-                )
+              val agsState = props.agsState.map(_.get).getOrElse(AgsState.Idle)
+              AladinToolbar(Fov(t.fovRA, t.fovDec),
+                            mouseCoords.value,
+                            agsState,
+                            selectedGuideStar,
+                            t.agsOverlay,
+                            offsetOnCenter
               )
 
           val renderAgsOverlay: ((UserGlobalPreferences, TargetVisualOptions)) => VdomNode =
