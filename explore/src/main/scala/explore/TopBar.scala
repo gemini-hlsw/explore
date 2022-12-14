@@ -60,7 +60,7 @@ object TopBar:
   private type Props = TopBar
 
   private object IsAboutOpen extends NewType[Boolean]
-  private type IsAboutOpen = IsAboutOpen.type
+  private type IsAboutOpen = IsAboutOpen.Type
 
   private val component =
     ScalaFnComponent

@@ -5,6 +5,7 @@ package explore.targeteditor
 
 import cats.syntax.all.*
 import clue.data.syntax.*
+import crystal.react.hooks.*
 import eu.timepit.refined.auto.*
 import explore.common.*
 import explore.components.HelpIcon
@@ -43,7 +44,8 @@ object SourceProfileEditor:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      .render { (props, ctx) =>
+      .useStateView(IsExpanded(true))
+      .render { (props, ctx, brightnessExpanded) =>
         import ctx.given
 
         val gaussianAlignerOpt: Option[Aligner[Gaussian, GaussianInput]] =
@@ -69,7 +71,7 @@ object SourceProfileEditor:
               forceAssign(SourceProfileInput.point.modify)(SpectralDefinitionIntegratedInput())
             )
             .map(pointSpectralDefinitionAccess =>
-              IntegratedSpectralDefinitionEditor(pointSpectralDefinitionAccess)
+              IntegratedSpectralDefinitionEditor(pointSpectralDefinitionAccess, brightnessExpanded)
             ),
           props.sourceProfile
             .zoomOpt(
@@ -77,7 +79,7 @@ object SourceProfileEditor:
               forceAssign(SourceProfileInput.uniform.modify)(SpectralDefinitionSurfaceInput())
             )
             .map(uniformSpectralDefinitionAccess =>
-              SurfaceSpectralDefinitionEditor(uniformSpectralDefinitionAccess)
+              SurfaceSpectralDefinitionEditor(uniformSpectralDefinitionAccess, brightnessExpanded)
             ),
           gaussianAlignerOpt
             .map(gaussianAligner =>
@@ -101,7 +103,8 @@ object SourceProfileEditor:
                     forceAssign(GaussianInput.spectralDefinition.modify)(
                       SpectralDefinitionIntegratedInput()
                     )
-                  )
+                  ),
+                  brightnessExpanded
                 )
               )
             )

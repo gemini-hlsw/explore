@@ -22,7 +22,7 @@ object About:
   private type Props = About
 
   private object Copied extends NewType[Boolean]
-  private type Copied = Copied.type
+  private type Copied = Copied.Type
 
   private val component = ScalaFnComponent
     .withHooks[Props]

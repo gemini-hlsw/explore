@@ -218,6 +218,27 @@ body {
   grid-column: 1 / -1;
   justify-self: stretch;
   align-self: stretch;
+
+  .p-accordion {
+    height: 100%;
+
+    .p-accordion-tab {
+      height: 100%;
+
+
+      .p-accordion-header .p-accordion-header-link {
+        padding: 0;
+      }
+
+      .p-toggleable-content {
+        height: 100%;
+
+        .p-accordion-content {
+          height: 100%;
+        }
+      }
+    }
+  }
 }
 
 .explore-brightnesses-container {

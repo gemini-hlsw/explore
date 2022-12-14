@@ -35,7 +35,7 @@ object SequenceEditorPopup:
   private type Props = SequenceEditorPopup
 
   private object IsOpen extends NewType[Boolean]
-  private type IsOpen = IsOpen.type
+  private type IsOpen = IsOpen.Type
 
   private val component =
     ScalaFnComponent

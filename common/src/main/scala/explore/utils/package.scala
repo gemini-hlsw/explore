@@ -22,6 +22,7 @@ import explore.model.enums.ExecutionEnvironment
 import explore.model.enums.ExecutionEnvironment.Development
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.util.NewType
 import lucuma.ui.enums.Theme
 import lucuma.ui.forms.ExternalValue
 import lucuma.ui.syntax.all.*
@@ -210,3 +211,6 @@ extension [A](value: js.UndefOr[DateOrRange])
 
   def fromDatePickerToZDTOpt(using ev: A <:< js.Date): Option[ZonedDateTime] =
     fromDatePickerToInstantOpt.map(i => ZonedDateTime.ofInstant(i, ZoneOffset.UTC))
+
+object IsExpanded extends NewType[Boolean]
+type IsExpanded = IsExpanded.Type

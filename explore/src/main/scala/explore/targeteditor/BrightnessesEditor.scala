@@ -17,6 +17,7 @@ import explore.components.ui.ExploreStyles
 import explore.given
 import explore.model.ExploreModelValidators
 import explore.model.display.given
+import explore.utils.IsExpanded
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.callback.CallbackCats.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -38,6 +39,8 @@ import lucuma.ui.table.*
 import lucuma.ui.utils.*
 import monocle.Focus
 import react.common.ReactFnProps
+import react.primereact.Accordion
+import react.primereact.AccordionTab
 import react.primereact.Button
 import reactST.{tanstackTableCore => raw}
 
@@ -45,10 +48,10 @@ import scala.collection.immutable.SortedMap
 
 import scalajs.js.JSConverters.*
 
-sealed trait BrightnessesEditor[T] {
-  val brightnesses: View[SortedMap[Band, BrightnessMeasure[T]]]
-  val disabled: Boolean
-}
+sealed trait BrightnessesEditor[T]:
+  def brightnesses: View[SortedMap[Band, BrightnessMeasure[T]]]
+  def expanded: View[IsExpanded]
+  def disabled: Boolean
 
 sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T]](implicit
   enumUnits: Enumerated[Units Of Brightness[T]]
@@ -94,9 +97,7 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                 _._1,
                 "Band",
                 _.value.shortName,
-                size = 60.toPx,
-                minSize = 50.toPx,
-                maxSize = 60.toPx
+                size = 70.toPx
               ).sortable,
               ColDef(
                 ValueColumnId,
@@ -111,9 +112,7 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                       ChangeAuditor.bigDecimal(2.refined, 3.refined).allowExp(2.refined),
                     disabled = disabled
                   ),
-                size = 80.toPx,
-                minSize = 60.toPx,
-                maxSize = 160.toPx
+                size = 100.toPx
               ).sortableBy(_.get),
               ColDef(
                 UnitsColumnId,
@@ -126,9 +125,7 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                     disabled = disabled,
                     clazz = ExploreStyles.BrightnessesTableUnitsDropdown
                   ),
-                size = 100.toPx,
-                minSize = 100.toPx,
-                maxSize = 160.toPx
+                size = 183.toPx
               ).sortableBy(_.get),
               ColDef(
                 DeleteColumnId,
@@ -145,8 +142,6 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                     ).small
                   ),
                 size = 20.toPx,
-                minSize = 20.toPx,
-                maxSize = 20.toPx,
                 enableSorting = false
               )
             )
@@ -161,7 +156,8 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
           rows,
           getRowId = (row, _, _) => RowId(row._1.tag),
           enableSorting = true,
-          enableColumnResizing = false,
+          enableColumnResizing = true,
+          columnResizeMode = ColumnResizeMode.OnChange,
           initialState = TableState(sorting = Sorting(ColumnId("band") -> SortDirection.Ascending))
         )
       )
@@ -198,23 +194,31 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
               .whenDefined
           )
 
-        <.div(ExploreStyles.ExploreTable |+| ExploreStyles.BrightnessesContainer)(
-          <.label(label),
-          PrimeAutoHeightVirtualizedTable(
-            table,
-            estimateSize = _ => 34.toPx,
-            striped = true,
-            compact = Compact.Very,
-            tableMod = ExploreStyles.ExploreBorderTable,
-            emptyMessage = "No brightnesses defined"
-          ),
-          footer
+        Accordion(
+          activeIndex = Option.when(props.expanded.get.value)(0).orUndefined,
+          onTabOpen = _ => props.expanded.set(IsExpanded(true)),
+          onTabClose = _ => props.expanded.set(IsExpanded(false)),
+          tabs = List(
+            AccordionTab(header = label)(
+              <.div(ExploreStyles.ExploreTable |+| ExploreStyles.BrightnessesContainer)(
+                PrimeAutoHeightVirtualizedTable(
+                  table,
+                  estimateSize = _ => 34.toPx,
+                  striped = true,
+                  compact = Compact.Very,
+                  tableMod = ExploreStyles.ExploreBorderTable,
+                  emptyMessage = "No brightnesses defined"
+                ),
+                footer
+              )
+            )
+          )
         )
-
       }
 
 case class IntegratedBrightnessEditor(
   brightnesses: View[SortedMap[Band, BrightnessMeasure[Integrated]]],
+  expanded:     View[IsExpanded],
   disabled:     Boolean
 ) extends ReactFnProps[IntegratedBrightnessEditor](IntegratedBrightnessEditor.component)
     with BrightnessesEditor[Integrated]
@@ -227,6 +231,7 @@ object IntegratedBrightnessEditor
 
 case class SurfaceBrightnessEditor(
   brightnesses: View[SortedMap[Band, BrightnessMeasure[Surface]]],
+  expanded:     View[IsExpanded],
   disabled:     Boolean
 ) extends ReactFnProps[SurfaceBrightnessEditor](SurfaceBrightnessEditor.component)
     with BrightnessesEditor[Surface]
