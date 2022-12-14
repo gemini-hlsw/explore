@@ -19,8 +19,10 @@ import fs2.text
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.catalog.csv.TargetImport
+import lucuma.core.enums.StellarLibrarySpectrum
 import lucuma.core.model.Program
 import lucuma.core.model.Target
+import lucuma.core.model.UnnormalizedSED
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.schemas.ObservationDB
@@ -84,9 +86,13 @@ object TargetImportPopup:
         TargetImport.csv2targetsAndLookup(client, uri"https://lucuma-cors-proxy.herokuapp.com".some)
       )
       .evalMap {
-        case Left(a)       =>
+        case Left(a)    =>
           stateUpdate(State.targetErrors.modify(e => e :++ a.toList.map(_.displayValue)))
-        case Right(target) =>
+        case Right(tgt) =>
+          // FIXME The backend needs a SED
+          val target = Target.Sidereal.unnormalizedSED.replace(
+            UnnormalizedSED.StellarLibrary(StellarLibrarySpectrum.O5V).some
+          )(tgt)
           CreateTargetMutation
             .execute(target.toCreateTargetInput(programId))
             .map(_.createTarget.target.id.some)
