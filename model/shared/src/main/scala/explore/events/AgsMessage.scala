@@ -23,7 +23,7 @@ object AgsMessage {
     wavelength:         Wavelength,
     baseCoordinates:    Coordinates,
     scienceCoordinates: List[Coordinates],
-    position:           AgsPosition,
+    position:           List[AgsPosition],
     params:             AgsParams,
     candidates:         List[GuideStarCandidate]
   ) extends WorkerRequest {

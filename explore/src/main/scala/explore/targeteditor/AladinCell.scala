@@ -257,45 +257,49 @@ object AladinCell extends ModelOptics with AladinCommon:
             import ctx.given
 
             val pa = posAngle match
-              case PosAngleConstraint.Fixed(a)               => a.some
-              case PosAngleConstraint.AllowFlip(a)           => a.some
-              case PosAngleConstraint.ParallacticOverride(a) => a.some
-              case _                                         => none
+              case PosAngleConstraint.Fixed(a)               => List(a)
+              case PosAngleConstraint.AllowFlip(a)           => List(a)
+              case PosAngleConstraint.ParallacticOverride(a) => Nil
+              case _                                         => Nil
 
-            (tracking.at(vizTime), pa).mapN { (base, pa) =>
-              val basePos = AgsPosition(pa, Offset.Zero)
-              val fpu     = scienceMode.flatMap(_.fpuAlternative)
-              val params  = AgsParams.GmosAgsParams(fpu, PortDisposition.Side)
+            tracking
+              .at(vizTime)
+              .filter(_ => pa.nonEmpty)
+              .map { base =>
+                val basePos = pa.map(pa => AgsPosition(pa, Offset.Zero))
+                val fpu     = scienceMode.flatMap(_.fpuAlternative)
+                val params  = AgsParams.GmosAgsParams(fpu, PortDisposition.Side)
 
-              val sciencePositions =
-                props.asterism.asList
-                  .flatMap(_.toSidereal)
-                  .flatMap(_.target.tracking.at(vizTime))
+                val sciencePositions =
+                  props.asterism.asList
+                    .flatMap(_.toSidereal)
+                    .flatMap(_.target.tracking.at(vizTime))
 
-              for
-                _ <- selectedIndex.async.set(none)
-                _ <- agsState.setStateAsync(AgsState.Calculating)
-                _ <- AgsClient[IO]
-                       .requestSingle(
-                         AgsMessage.Request(props.tid,
-                                            constraints,
-                                            wavelength,
-                                            base.value,
-                                            sciencePositions,
-                                            basePos,
-                                            params,
-                                            candidates
+                for
+                  _ <- selectedIndex.async.set(none)
+                  _ <- agsState.setStateAsync(AgsState.Calculating)
+                  _ <- AgsClient[IO]
+                         .requestSingle(
+                           AgsMessage.Request(props.tid,
+                                              constraints,
+                                              wavelength,
+                                              base.value,
+                                              sciencePositions,
+                                              basePos,
+                                              params,
+                                              candidates
+                           )
                          )
-                       )
-                       .flatMap(
-                         _.map(r =>
-                           ags.setStateAsync(r) *> agsState.setStateAsync(AgsState.Idle)
-                         ).orEmpty
-                       )
-                       .unlessA(candidates.isEmpty)
-                       .handleErrorWith(t => Logger[IO].error(t)("ERROR IN AGS REQUEST"))
-              yield ()
-            }.orEmpty
+                         .flatMap(
+                           _.map(r =>
+                             ags.setStateAsync(r) *> agsState.setStateAsync(AgsState.Idle)
+                           ).orEmpty
+                         )
+                         .unlessA(candidates.isEmpty)
+                         .handleErrorWith(t => Logger[IO].error(t)("ERROR IN AGS REQUEST"))
+                yield ()
+              }
+              .orEmpty
           case _ => IO.unit
         }
       }
