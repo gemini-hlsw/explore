@@ -99,8 +99,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
   val component = ScalaFnComponent
     .withHooks[Props]
     .useContext(AppContext.ctx)
-    // .useStateView(IsExpanded(true))
-    .render { (props, ctx) => // , brightnessExpanded) =>
+    .render { (props, ctx) =>
       import ctx.given
 
       val stellarLibrarySpectrumAlignerOpt
