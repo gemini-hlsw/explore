@@ -8,7 +8,7 @@ import cats.data.NonEmptySet
 import cats.syntax.all.*
 import crystal.react.View
 import explore.components.ui.ExploreStyles
-import explore.config.SequenceEditor
+import explore.config.sequence.SequenceEditor
 import explore.model.Page
 import explore.model.Page.*
 import explore.model.*

@@ -1,38 +1,42 @@
 // Copyright (c) 2016-2022 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.config
+package explore.config.sequence
 
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.model.Observation
 import lucuma.core.model.sequence.*
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.semanticui.elements.header.Header
 import react.semanticui.elements.segment.Segment
 
-case class ManualSequenceTables(config: ManualConfig)
-    extends ReactFnProps(ManualSequenceTables.component)
+case class GeneratedSequenceTables(obsId: Observation.Id, config: FutureExecutionConfig)
+    extends ReactFnProps(GeneratedSequenceTables.component)
 
-object ManualSequenceTables {
-  type Props = ManualSequenceTables
+object GeneratedSequenceTables:
+  private type Props = GeneratedSequenceTables
 
-  val component =
+  private val component =
     ScalaFnComponent
       .withHooks[Props]
       .render { props =>
         <.div(^.height := "100%", ^.overflow.auto)(
           Segment(
-            SequenceTable.bracketDef,
+            GmosSequenceTable.bracketDef,
             <.div(ExploreStyles.SequencesPanel)(
+              VisitsViewer(props.obsId),
               Header("Acquisition"),
-              SequenceTable(props.config.acquisition),
+              GmosSequenceTable(
+                props.config.acquisition.nextAtom +: props.config.acquisition.possibleFuture
+              ),
               Header("Science"),
-              SequenceTable(props.config.science)
+              GmosSequenceTable(
+                props.config.science.nextAtom +: props.config.science.possibleFuture
+              )
             )
           )
         )
       }
-}

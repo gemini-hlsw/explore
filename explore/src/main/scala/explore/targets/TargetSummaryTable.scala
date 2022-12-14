@@ -53,7 +53,6 @@ import react.primereact.ConfirmDialog
 import react.primereact.DialogPosition
 import react.primereact.PrimeStyles
 import react.primereact.ToastRef
-import reactST.react.reactStrings.I
 import reactST.{tanstackTableCore => raw}
 
 import scala.collection.immutable.SortedSet

@@ -30,14 +30,14 @@ object ConnectionsStatus:
 
   private def renderStatus(name: String, status: Pot[PersistentClientStatus]): VdomNode = {
     val (message, (clazz, show)) = status match {
-      case Pot.Pending      => ("Mounting...", (ConnectionWarning, true))
-      case Pot.Error(t)     => (t.getMessage, (ConnectionError, true))
+      case Pot.Pending      => ("Mounting...", (IndicatorWarning, true))
+      case Pot.Error(t)     => (t.getMessage, (IndicatorFail, true))
       case Pot.Ready(value) =>
         (value.toString,
          value match {
-           case Connecting                             => (ConnectionWarning, true)
-           case Connected | Initializing | Initialized => (ConnectionOK, false)
-           case Disconnected                           => (ConnectionError, true)
+           case Connecting                             => (IndicatorWarning, true)
+           case Connected | Initializing | Initialized => (IndicatorOK, false)
+           case Disconnected                           => (IndicatorFail, true)
          }
         )
     }

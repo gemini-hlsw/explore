@@ -3,13 +3,14 @@
 
 package explore.model
 
+import cats.syntax.all.*
 import lucuma.core.math.Angle
 
-import java.time.ZoneId
+import java.time.Duration
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
-trait Constants {
+trait Constants:
   val TwoPanelCutoff           = 576.0
   val InitialTreeWidth         = 300.0
   val MinLeftPanelWidth        = 270.0
@@ -22,14 +23,18 @@ trait Constants {
   val SimbadResultLimit        = 50
   val MaxConcurrentItcRequests = 4
 
-  val UTC       = ZoneId.of("UTC")
-  val UTCOffset = ZoneOffset.UTC
-
   val GppDateFormatter: DateTimeFormatter   = DateTimeFormatter.ofPattern("yyyy-MMM-dd")
   val GppTimeFormatter: DateTimeFormatter   = DateTimeFormatter.ofPattern("HH:mm")
   val GppTimeTZFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm z")
   val IsoUTCFormatter: DateTimeFormatter    =
-    DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(Constants.UTC)
-}
+    DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneOffset.UTC)
+  val UtcFormatter: DateTimeFormatter       =
+    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneOffset.UTC)
+  val DurationFormatter: Duration => String = d =>
+    val hours: Option[Long]  = d.toHours.some.filter(_ > 0)
+    val minutes: Option[Int] = d.toMinutesPart.some.filter(_ > 0 || hours.isDefined)
+    val seconds: Int         = d.toSecondsPart
+
+    hours.map(h => s"${h}h").orEmpty + minutes.map(m => s"${m}m").orEmpty + s"${seconds}s"
 
 object Constants extends Constants

@@ -795,18 +795,6 @@ tfoot {
   right: 1rem;
 }
 
-.connection-ok {
-  color: greenyellow;
-}
-
-.connection-warning {
-  color: gold;
-}
-
-.connection-error {
-  color: red;
-}
-
 .wip {
   position: relative;
   display: inline-block;
@@ -987,7 +975,8 @@ div.partner-split-total {
 .ui.button.blended-button {
   border: none;
   background-color: transparent;
-  box-shadow: none;n
+  box-shadow: none;
+
   &:hover {
     outline: 1px var(--site-border-color) solid;
   }
@@ -1034,6 +1023,7 @@ div.inline.field.explore-warning-input {
 .ui.label.explore-warning-label {
   .warning-label-mixin();
 }
+
 #staging-banner {
   @spacing: 20;
 
@@ -1239,6 +1229,7 @@ html {
 }
 
 .tile-xs-width {
+
   // TODO: This will require some work when we change the undo buttons to primereact.
   // For very small tables make the undo buttons remove the text
   .explore-buttons-undo-label {

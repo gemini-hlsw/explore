@@ -10,7 +10,6 @@ import cats.effect.Concurrent
 import cats.effect.IO
 import cats.syntax.all.*
 import explore.events.*
-import explore.model.Constants
 import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.*
 import explore.model.boopickle.*
@@ -42,7 +41,7 @@ import spire.math.Interval
 
 import java.time.Instant
 import java.time.LocalDateTime
-import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.temporal.ChronoField
 import java.time.temporal.ChronoUnit
 
@@ -99,55 +98,55 @@ trait CatalogCache extends CatalogIDB {
 
     val brightnessConstraints = ags.widestConstraints
 
-    val ldt   = LocalDateTime.ofInstant(obsTime, Constants.UTC)
+    val ldt   = LocalDateTime.ofInstant(obsTime, ZoneOffset.UTC)
     // We consider the query valid from the fist moment of the year to the end
     val start = ldt.`with`(ChronoField.DAY_OF_YEAR, 1L).`with`(ChronoField.NANO_OF_DAY, 0)
     val end   = start.plus(1, ChronoUnit.YEARS)
 
-    (tracking.at(start.toInstant(Constants.UTCOffset)),
-     tracking.at(end.toInstant(Constants.UTCOffset))
-    ).mapN { (a, b) =>
-      // Make a query based on two coordinates of the base of an asterism over a year
-      val query = CoordinatesRangeQueryByADQL(
-        NonEmptyList.of(a.value, b.value),
-        probeArm.candidatesArea,
-        brightnessConstraints.some,
-        proxy.some
-      )
-
-      (Logger[IO].debug(s"Requested catalog $query ${cacheQueryHash.hash(query)}") *>
-        // Try to find it in the db
-        readGuideStarCandidates(idb, stores, query)
-          .toF[IO]
-          .handleError(_ => none)) // Try to find it in the db
-        .flatMap(
-          _.fold(
-            // Not found in the db, re request
-            readFromGaia[IO](client, query)
-              .map(
-                _.collect { case Right(s) =>
-                  GuideStarCandidate.siderealTarget.get(s)
-                }.map(gsc =>
-                  // Do PM correction
-                  gsc.at(request.vizTime)
-                )
-              )
-              .flatMap { candidates =>
-                Logger[IO].debug(
-                  s"Catalog results from remote catalog: ${candidates.length} candidates"
-                ) *>
-                  respond(candidates) *>
-                  storeGuideStarCandidates(idb, stores, query, candidates)
-                    .toF[IO]
-                    .handleError(e => Logger[IO].error(e)("Error storing guidestar candidates"))
-              }
-              .void
-          ) { c =>
-            // Cache hit!
-            Logger[IO].debug(s"Catalog results from cache: ${c.length} candidates") *>
-              respond(c)
-          }
+    (tracking.at(start.toInstant(ZoneOffset.UTC)), tracking.at(end.toInstant(ZoneOffset.UTC)))
+      .mapN { (a, b) =>
+        // Make a query based on two coordinates of the base of an asterism over a year
+        val query = CoordinatesRangeQueryByADQL(
+          NonEmptyList.of(a.value, b.value),
+          probeArm.candidatesArea,
+          brightnessConstraints.some,
+          proxy.some
         )
-    }.getOrElse(IO.unit)
+
+        (Logger[IO].debug(s"Requested catalog $query ${cacheQueryHash.hash(query)}") *>
+          // Try to find it in the db
+          readGuideStarCandidates(idb, stores, query)
+            .toF[IO]
+            .handleError(_ => none)) // Try to find it in the db
+          .flatMap(
+            _.fold(
+              // Not found in the db, re request
+              readFromGaia[IO](client, query)
+                .map(
+                  _.collect { case Right(s) =>
+                    GuideStarCandidate.siderealTarget.get(s)
+                  }.map(gsc =>
+                    // Do PM correction
+                    gsc.at(request.vizTime)
+                  )
+                )
+                .flatMap { candidates =>
+                  Logger[IO].debug(
+                    s"Catalog results from remote catalog: ${candidates.length} candidates"
+                  ) *>
+                    respond(candidates) *>
+                    storeGuideStarCandidates(idb, stores, query, candidates)
+                      .toF[IO]
+                      .handleError(e => Logger[IO].error(e)("Error storing guidestar candidates"))
+                }
+                .void
+            ) { c =>
+              // Cache hit!
+              Logger[IO].debug(s"Catalog results from cache: ${c.length} candidates") *>
+                respond(c)
+            }
+          )
+      }
+      .getOrElse(IO.unit)
   }
 }

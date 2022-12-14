@@ -30,6 +30,8 @@ import lucuma.core.model.ProposalClass
 import lucuma.core.model.Target
 import lucuma.core.util.NewType
 import lucuma.schemas.ObservationDB.Enums.Existence
+import lucuma.schemas.model.StepRecord
+import lucuma.schemas.model.Visit
 import lucuma.ui.reusability.*
 import queries.schemas.odb.ObsQueries.ObsSummariesWithConstraints
 import queries.schemas.odb.ObsQueries.SpectroscopyRequirementsData
@@ -136,3 +138,7 @@ object reusability:
   given Reusability[TimingWindowRepeat] = Reusability.byEq
 
   given Reusability[TimingWindow] = Reusability.byEq
+
+  given Reusability[Visit] = Reusability.byEq
+
+  given Reusability[StepRecord] = Reusability.byEq
