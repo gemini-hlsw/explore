@@ -100,6 +100,10 @@ export default defineConfig(({ command, mode }) => {
       path.resolve(publicDirProd, 'instrument_spectroscopy_matrix.csv'),
       path.resolve(publicDirDev, 'instrument_spectroscopy_matrix.csv')
     );
+    fs.copyFileSync(
+      path.resolve(publicDirProd, 'bracket.svg'),
+      path.resolve(publicDirDev, 'bracket.svg')
+    );
   });
 
   const publicDir = mode == 'production' ? publicDirProd : publicDirDev;

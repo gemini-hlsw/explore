@@ -25,7 +25,6 @@ object GeneratedSequenceTables:
       .render { props =>
         <.div(^.height := "100%", ^.overflow.auto)(
           Segment(
-            GmosSequenceTable.bracketDef,
             <.div(ExploreStyles.SequencesPanel)(
               VisitsViewer(props.obsId),
               Header("Acquisition"),
