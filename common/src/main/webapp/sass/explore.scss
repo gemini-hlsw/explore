@@ -25,11 +25,6 @@ $tree-section-width: 300px;
   background: var(--control-background-color);
 }
 
-// Should we just set this in the "lucuma" styles?
-.p-accordion .p-accordion-header:not(.p-disabled) .p-accordion-header-link:focus {
-  box-shadow: none !important;
-}
-
 // Full viewport settings taken from https://dev.to/lennythedev/css-gotcha-how-to-fill-page-with-a-div-270j
 
 html,
@@ -375,7 +370,6 @@ body {
 }
 
 .aladin-full-screen {
-
   .explore-shared-edit-warning,
   .target-asterism-table {
     display: none;
@@ -954,7 +948,6 @@ i.icon.user-astronaut::before {
   }
 
   .uncopied {
-
     // CopyToClipboard
     div {
       cursor: pointer;
@@ -1337,7 +1330,6 @@ table.explore-border-table {
 
 // make it wider on smaller screens
 @media screen and (max-width: 64em) {
-
   .p-sidebar-left .p-sidebar-md,
   .p-sidebar-right .p-sidebar-md {
     width: 30rem;
