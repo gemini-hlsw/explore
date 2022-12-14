@@ -36,7 +36,7 @@ object ProgramsPopup {
   private type Props = ProgramsPopup
 
   private object IsOpen extends NewType[Boolean]
-  private type IsOpen = IsOpen.type
+  private type IsOpen = IsOpen.Type
 
   private def selectProgram(
     onClose:    Option[Callback],

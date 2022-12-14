@@ -10,6 +10,7 @@ import clue.data.syntax.*
 import coulomb.*
 import coulomb.units.si.Kelvin
 import crystal.react.View
+import crystal.react.hooks.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.numeric.PosBigDecimal
@@ -70,6 +71,8 @@ import scala.collection.immutable.SortedMap
 
 sealed trait SpectralDefinitionEditor[T, S]:
   def spectralDefinition: Aligner[SpectralDefinition[T], S]
+  def brightnessExpanded: View[IsExpanded]
+
   def toInput: SpectralDefinition[T] => S
   def sedAlignerOpt: Option[Aligner[UnnormalizedSED, UnnormalizedSedInput]]
   def bandBrightnessesViewOpt: Option[View[SortedMap[Band, BrightnessMeasure[T]]]]
@@ -85,16 +88,19 @@ sealed abstract class SpectralDefinitionEditorBuilder[
   sedTypeDisplay: Display[SEDType[T]],
   enumFDCUnits:   Enumerated[Units Of FluxDensityContinuum[T]]
 ) {
-  protected val brightnessEditor: View[SortedMap[Band, BrightnessMeasure[T]]] => VdomNode
-  protected val emissionLineEditor: View[SortedMap[Wavelength, EmissionLine[T]]] => VdomNode
+  protected def brightnessEditor
+    : (View[SortedMap[Band, BrightnessMeasure[T]]], View[IsExpanded]) => VdomNode
+  protected def emissionLineEditor
+    : (View[SortedMap[Wavelength, EmissionLine[T]]], View[IsExpanded]) => VdomNode
 
-  protected val currentType: SpectralDefinition[T] => SEDType[T]
-  protected val disabledItems: HashSet[SEDType[T]]
+  protected def currentType: SpectralDefinition[T] => SEDType[T]
+  protected def disabledItems: HashSet[SEDType[T]]
 
   val component = ScalaFnComponent
     .withHooks[Props]
     .useContext(AppContext.ctx)
-    .render { (props, ctx) =>
+    // .useStateView(IsExpanded(true))
+    .render { (props, ctx) => // , brightnessExpanded) =>
       import ctx.given
 
       val stellarLibrarySpectrumAlignerOpt
@@ -229,7 +235,9 @@ sealed abstract class SpectralDefinitionEditorBuilder[
           ),
         props.bandBrightnessesViewOpt
           .map(bandBrightnessesView =>
-            <.div(ExploreStyles.BrightnessesTableWrapper, brightnessEditor(bandBrightnessesView))
+            <.div(ExploreStyles.BrightnessesTableWrapper)(
+              brightnessEditor(bandBrightnessesView, props.brightnessExpanded)
+            )
           ),
         props.fluxDensityContinuumOpt
           .map(fluxDensityContinuum =>
@@ -254,14 +262,19 @@ sealed abstract class SpectralDefinitionEditorBuilder[
             )
           ),
         props.emissionLinesViewOpt
-          .map(e => <.div(ExploreStyles.BrightnessesTableWrapper, emissionLineEditor(e)))
+          .map(e =>
+            <.div(ExploreStyles.BrightnessesTableWrapper)(
+              emissionLineEditor(e, props.brightnessExpanded)
+            )
+          )
       )
     }
 
 }
 
 case class IntegratedSpectralDefinitionEditor(
-  val spectralDefinition: Aligner[SpectralDefinition[Integrated], SpectralDefinitionIntegratedInput]
+  spectralDefinition: Aligner[SpectralDefinition[Integrated], SpectralDefinitionIntegratedInput],
+  brightnessExpanded: View[IsExpanded]
 )(using Logger[IO])
     extends ReactFnProps[IntegratedSpectralDefinitionEditor](
       IntegratedSpectralDefinitionEditor.component
@@ -343,16 +356,19 @@ object IntegratedSpectralDefinitionEditor
   override protected val disabledItems: HashSet[SEDType[Integrated]] =
     HashSet(IntegratedSEDType.UserDefinedType)
 
-  protected val brightnessEditor: View[SortedMap[Band, BrightnessMeasure[Integrated]]] => VdomNode =
-    brightnessesView => IntegratedBrightnessEditor(brightnessesView, false)
+  override protected val brightnessEditor
+    : (View[SortedMap[Band, BrightnessMeasure[Integrated]]], View[IsExpanded]) => VdomNode =
+    (brightnessesView, expanded) => IntegratedBrightnessEditor(brightnessesView, expanded, false)
 
-  protected val emissionLineEditor
-    : View[SortedMap[Wavelength, EmissionLine[Integrated]]] => VdomNode =
-    emissionLinesView => IntegratedEmissionLineEditor(emissionLinesView, false)
+  override protected val emissionLineEditor
+    : (View[SortedMap[Wavelength, EmissionLine[Integrated]]], View[IsExpanded]) => VdomNode =
+    (emissionLinesView, expanded) =>
+      IntegratedEmissionLineEditor(emissionLinesView, expanded, false)
 }
 
 case class SurfaceSpectralDefinitionEditor(
-  val spectralDefinition: Aligner[SpectralDefinition[Surface], SpectralDefinitionSurfaceInput]
+  spectralDefinition: Aligner[SpectralDefinition[Surface], SpectralDefinitionSurfaceInput],
+  brightnessExpanded: View[IsExpanded]
 )(using Logger[IO])
     extends ReactFnProps[SurfaceSpectralDefinitionEditor](
       SurfaceSpectralDefinitionEditor.component
@@ -428,10 +444,12 @@ object SurfaceSpectralDefinitionEditor
   override protected val disabledItems: HashSet[SEDType[Surface]] =
     HashSet(SurfaceSEDType.UserDefinedType)
 
-  protected val brightnessEditor: View[SortedMap[Band, BrightnessMeasure[Surface]]] => VdomNode =
-    brightnessesView => SurfaceBrightnessEditor(brightnessesView, false)
+  override protected val brightnessEditor
+    : (View[SortedMap[Band, BrightnessMeasure[Surface]]], View[IsExpanded]) => VdomNode =
+    (brightnessesView, expanded) => SurfaceBrightnessEditor(brightnessesView, expanded, false)
 
-  protected val emissionLineEditor: View[SortedMap[Wavelength, EmissionLine[Surface]]] => VdomNode =
-    emissionLinesView => SurfaceEmissionLineEditor(emissionLinesView, false)
+  override protected val emissionLineEditor
+    : (View[SortedMap[Wavelength, EmissionLine[Surface]]], View[IsExpanded]) => VdomNode =
+    (emissionLinesView, expanded) => SurfaceEmissionLineEditor(emissionLinesView, expanded, false)
 
 }

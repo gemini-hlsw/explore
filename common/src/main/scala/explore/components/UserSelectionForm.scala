@@ -37,7 +37,7 @@ object UserSelectionForm:
   private type Props = UserSelectionForm
 
   private object IsOpen extends NewType[Boolean]
-  private type IsOpen = IsOpen.type
+  private type IsOpen = IsOpen.Type
 
   private case class BrowserInfo(supportedOrcidBrowser: Boolean, warnBrowser: Boolean):
     @inline def showButtons: Boolean = supportedOrcidBrowser

@@ -21,6 +21,7 @@ import explore.*
 import explore.components.ui.ExploreStyles
 import explore.model.enums.*
 import explore.model.formats.*
+import explore.utils.IsExpanded
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.BrightnessUnits.*
@@ -43,6 +44,8 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.utils.*
 import react.common.ReactFnProps
+import react.primereact.Accordion
+import react.primereact.AccordionTab
 import react.primereact.Button
 import reactST.{tanstackTableCore => raw}
 
@@ -51,10 +54,10 @@ import scala.math.BigDecimal.RoundingMode
 
 import scalajs.js.JSConverters.*
 
-sealed trait EmissionLineEditor[T] {
-  val emissionLines: View[SortedMap[Wavelength, EmissionLine[T]]]
-  val disabled: Boolean
-}
+sealed trait EmissionLineEditor[T]:
+  def emissionLines: View[SortedMap[Wavelength, EmissionLine[T]]]
+  def expanded: View[IsExpanded]
+  def disabled: Boolean
 
 sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T]](using
   enumUnits: Enumerated[Units Of LineFlux[T]]
@@ -85,9 +88,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
                 .reverseGet(cell.value)
                 .setScale(3, RoundingMode.HALF_UP)
                 .toString,
-            size = 60.toPx,
-            minSize = 50.toPx,
-            maxSize = 80.toPx
+            size = 74.toPx
           ).sortable,
           ColDef(
             ColumnId("width"),
@@ -101,9 +102,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
                 changeAuditor = ChangeAuditor.posBigDecimal(3.refined).allowEmpty,
                 disabled = disabled
               ),
-            size = 100.toPx,
-            minSize = 80.toPx,
-            maxSize = 160.toPx
+            size = 116.toPx
           ),
           ColDef(
             LineValueColumnId,
@@ -119,9 +118,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
                 changeAuditor = ChangeAuditor.posScientificNotation(),
                 disabled = disabled
               ),
-            size = 80.toPx,
-            minSize = 70.toPx,
-            maxSize = 160.toPx
+            size = 102.toPx
           ),
           ColDef(
             LineUnitsColumnId,
@@ -136,9 +133,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
                 disabled = disabled,
                 clazz = ExploreStyles.BrightnessesTableUnitsDropdown
               ),
-            size = 120.toPx,
-            minSize = 85.toPx,
-            maxSize = 140.toPx
+            size = 171.toPx
           ),
           ColDef(
             DeleteColumnId,
@@ -156,8 +151,6 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
                 ).small
               ),
             size = 20.toPx,
-            minSize = 20.toPx,
-            maxSize = 20.toPx,
             enableSorting = false
           )
         )
@@ -172,7 +165,8 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
         rows,
         getRowId = (row, _, _) => RowId(row._1.toPicometers.value.toString),
         enableSorting = true,
-        enableColumnResizing = false,
+        enableColumnResizing = true,
+        columnResizeMode = ColumnResizeMode.OnChange,
         initialState =
           TableState(sorting = Sorting(ColumnId("wavelength") -> SortDirection.Ascending))
       )
@@ -219,22 +213,31 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
           ).mini.compact
         )
 
-      <.div(ExploreStyles.ExploreTable |+| ExploreStyles.BrightnessesContainer)(
-        <.label("Brightness"),
-        PrimeAutoHeightVirtualizedTable(
-          table,
-          estimateSize = _ => 34.toPx,
-          striped = true,
-          compact = Compact.Very,
-          tableMod = ExploreStyles.ExploreBorderTable,
-          emptyMessage = "No lines defined"
-        ),
-        footer
+      Accordion(
+        activeIndex = Option.when(props.expanded.get.value)(0).orUndefined,
+        onTabOpen = _ => props.expanded.set(IsExpanded(true)),
+        onTabClose = _ => props.expanded.set(IsExpanded(false)),
+        tabs = List(
+          AccordionTab(header = "Brightness")(
+            <.div(ExploreStyles.ExploreTable |+| ExploreStyles.BrightnessesContainer)(
+              PrimeAutoHeightVirtualizedTable(
+                table,
+                estimateSize = _ => 34.toPx,
+                striped = true,
+                compact = Compact.Very,
+                tableMod = ExploreStyles.ExploreBorderTable,
+                emptyMessage = "No lines defined"
+              ),
+              footer
+            )
+          )
+        )
       )
     }
 
 case class IntegratedEmissionLineEditor(
   emissionLines: View[SortedMap[Wavelength, EmissionLine[Integrated]]],
+  expanded:      View[IsExpanded],
   disabled:      Boolean
 ) extends ReactFnProps[IntegratedEmissionLineEditor](IntegratedEmissionLineEditor.component)
     with EmissionLineEditor[Integrated]
@@ -247,6 +250,7 @@ object IntegratedEmissionLineEditor
 
 case class SurfaceEmissionLineEditor(
   emissionLines: View[SortedMap[Wavelength, EmissionLine[Surface]]],
+  expanded:      View[IsExpanded],
   disabled:      Boolean
 ) extends ReactFnProps[SurfaceEmissionLineEditor](SurfaceEmissionLineEditor.component)
     with EmissionLineEditor[Surface]
