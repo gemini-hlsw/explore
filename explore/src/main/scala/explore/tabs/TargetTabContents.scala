@@ -499,7 +499,7 @@ object TargetTabContents extends TwoPanels:
 
       val title = s"Editing Target ${target.name.value} [$targetId]"
 
-      val targetTile = SiderealTargetEditorTile.siderealTargetEditorTile(
+      val targetTile = SiderealTargetEditorTile.sideralTargetEditorTile(
         props.userId,
         targetId,
         targetView,

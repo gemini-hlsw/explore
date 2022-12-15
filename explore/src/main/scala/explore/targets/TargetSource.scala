@@ -4,6 +4,7 @@
 package explore.targets
 
 import cats.Order
+import cats.data.NonEmptyList
 import cats.effect.Async
 import cats.syntax.all.*
 import clue.TransactionalClient
@@ -19,16 +20,15 @@ import lucuma.schemas.ObservationDB
 import org.typelevel.log4cats.Logger
 import queries.common.TargetQueriesGQL
 
-protected sealed trait TargetSource[F[_]] {
+sealed trait TargetSource[F[_]]:
   def name: String
   def existing: Boolean
   def searches(name: NonEmptyString): List[F[List[TargetSearchResult]]]
-}
 
-protected object TargetSource {
+object TargetSource:
   case class FromProgram[F[_]: Async](programId: Program.Id)(using
     TransactionalClient[F, ObservationDB]
-  ) extends TargetSource[F] {
+  ) extends TargetSource[F]:
     val name: String = s"Program $programId"
 
     val existing: Boolean = true
@@ -47,9 +47,8 @@ protected object TargetSource {
       )
 
     override def toString: String = programId.toString
-  }
 
-  case class FromCatalog[F[_]: Async: Logger](catalogName: CatalogName) extends TargetSource[F] {
+  case class FromCatalog[F[_]: Async: Logger](catalogName: CatalogName) extends TargetSource[F]:
     val name: String = Enumerated[CatalogName].tag(catalogName).capitalize
 
     val existing: Boolean = false
@@ -81,10 +80,14 @@ protected object TargetSource {
       }
 
     override def toString: String = catalogName.toString
-  }
 
-  def forAllCatalogs[F[_]: Async: Logger]: List[TargetSource[F]] =
-    Enumerated[CatalogName].all.map(source => TargetSource.FromCatalog(source))
+  def forAllCatalogs[F[_]: Async: Logger]: NonEmptyList[TargetSource[F]] =
+    NonEmptyList.fromListUnsafe(
+      Enumerated[CatalogName].all.map(source => TargetSource.FromCatalog(source))
+    )
+
+  def forAllSiderealCatalogs[F[_]: Async: Logger]: NonEmptyList[TargetSource[F]] =
+    NonEmptyList.of(TargetSource.FromCatalog(CatalogName.Simbad))
 
   // TODO Test
   given orderTargetSource[F[_]]: Order[TargetSource[F]] = Order.from {
@@ -95,4 +98,3 @@ protected object TargetSource {
   }
 
   given reuseTargetSource[F[_]]: Reusability[TargetSource[F]] = Reusability.byEq
-}
