@@ -434,6 +434,7 @@ object TargetTabContents extends TwoPanels:
           props.targetsUndoStacks,
           props.searching,
           title,
+          none,
           backButton.some
         )
 
@@ -493,7 +494,7 @@ object TargetTabContents extends TwoPanels:
 
       val title = s"Editing Target ${target.name.value} [$targetId]"
 
-      val targetTile = SiderealTargetEditorTile.sideralTargetEditorTile(
+      val targetTile = SiderealTargetEditorTile.siderealTargetEditorTile(
         props.userId,
         targetId,
         targetView,
@@ -502,6 +503,7 @@ object TargetTabContents extends TwoPanels:
         props.searching,
         title,
         fullScreen,
+        none,
         backButton.some
       )
 

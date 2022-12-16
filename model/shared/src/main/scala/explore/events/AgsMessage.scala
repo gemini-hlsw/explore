@@ -15,6 +15,7 @@ import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Target
 import workers.WorkerRequest
+import cats.data.NonEmptyList
 
 object AgsMessage {
   case class Request(
@@ -23,7 +24,7 @@ object AgsMessage {
     wavelength:         Wavelength,
     baseCoordinates:    Coordinates,
     scienceCoordinates: List[Coordinates],
-    position:           List[AgsPosition],
+    positions:          NonEmptyList[AgsPosition],
     params:             AgsParams,
     candidates:         List[GuideStarCandidate]
   ) extends WorkerRequest {

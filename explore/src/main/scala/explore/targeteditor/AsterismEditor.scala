@@ -59,6 +59,7 @@ import react.primereact.Button
 import react.semanticui.modules.checkbox.*
 
 import java.time.Instant
+import explore.model.enums.AgsState
 
 case class AsterismEditor(
   userId:        User.Id,
@@ -75,7 +76,8 @@ case class AsterismEditor(
   otherObsCount: Target.Id => Int,
   undoStacks:    View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
   searching:     View[Set[Target.Id]],
-  renderInTitle: Tile.RenderInTitle
+  renderInTitle: Tile.RenderInTitle,
+  agsState:      Option[View[AgsState]]
 ) extends ReactFnProps(AsterismEditor.component)
 
 object AsterismEditor {
@@ -255,7 +257,8 @@ object AsterismEditor {
                             if (otherObsCount > 0 && editScope.get === EditScope.CurrentOnly)
                               props.obsIds.some
                             else none,
-                          fullScreen = fullScreen
+                          fullScreen = fullScreen,
+                          agsState = props.agsState
                         )
                       )
                     )

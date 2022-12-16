@@ -229,6 +229,7 @@ object ObsQueries:
       )
       .void
   }
+
   def createObservation[F[_]: Async](
     programId: Program.Id
   )(using TransactionalClient[F, ObservationDB]): F[ObsSummaryWithTitleAndConstraints] =

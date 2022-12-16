@@ -36,6 +36,7 @@ import queries.schemas.odb.ObsQueries
 import react.common.ReactFnProps
 
 import java.time.Instant
+import explore.model.enums.AgsState
 
 object AsterismEditorTile:
 
@@ -54,6 +55,7 @@ object AsterismEditorTile:
     undoStacks:      View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
     searching:       View[Set[Target.Id]],
     title:           String,
+    agsState:        Option[View[AgsState]],
     backButton:      Option[VdomNode] = none
   )(using TransactionalClient[IO, ObservationDB], Logger[IO]) = {
 
@@ -89,7 +91,8 @@ object AsterismEditorTile:
             otherObsCount,
             undoStacks,
             searching,
-            renderInTitle
+            renderInTitle,
+            agsState
           )
         )
       }(

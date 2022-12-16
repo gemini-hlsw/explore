@@ -22,10 +22,12 @@ import lucuma.ui.syntax.all.given
 import monocle.std.option.some
 
 import java.time.Instant
+import explore.model.enums.AgsState
+import lucuma.core.model.Observation
 
 object SiderealTargetEditorTile {
 
-  def sideralTargetEditorTile(
+  def siderealTargetEditorTile(
     userId:     Option[User.Id],
     targetId:   Target.Id,
     target:     View[Target.Sidereal],
@@ -34,6 +36,7 @@ object SiderealTargetEditorTile {
     searching:  View[Set[Target.Id]],
     title:      String,
     fullScreen: View[AladinFullScreen],
+    oidAndAgs:  Option[(Observation.Id, View[AgsState])],
     backButton: Option[VdomNode] = none
   ) =
     Tile(ObsTabTilesIds.TargetId.id,
@@ -58,6 +61,7 @@ object SiderealTargetEditorTile {
               none,
               undoStacks,
               searching,
+              agsState = oidAndAgs.map(_._2),
               renderInTitle = renderInTitle.some,
               fullScreen = fullScreen
             )

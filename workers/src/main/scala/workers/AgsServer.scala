@@ -36,7 +36,7 @@ object AgsServer extends WorkerServer[IO, AgsMessage.Request] {
                      r.wavelength,
                      r.baseCoordinates,
                      r.scienceCoordinates,
-                     r.position,
+                     r.positions,
                      r.params,
                      r.candidates
         )

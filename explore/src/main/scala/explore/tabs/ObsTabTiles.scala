@@ -57,6 +57,7 @@ import react.semanticui.modules.dropdown.Dropdown
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
+import explore.model.enums.AgsState
 
 case class ObsTabTiles(
   userId:           Option[User.Id],
@@ -136,7 +137,9 @@ object ObsTabTiles:
       }
       // ITC selected target. Here to be shared by the ITC tile body and title
       .useStateView(none[ItcTarget])
-      .render { (props, ctx, obsView, itcTarget) =>
+      // Ags state
+      .useStateView[AgsState](AgsState.Idle)
+      .render { (props, ctx, obsView, itcTarget, agsState) =>
         import ctx.given
 
         val obsViewPot = obsView.toPot
@@ -260,7 +263,8 @@ object ObsTabTiles:
           props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
           props.searching,
           "Targets",
-          none
+          agsState = agsState.some,
+          backButton = none
         )
 
         // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper

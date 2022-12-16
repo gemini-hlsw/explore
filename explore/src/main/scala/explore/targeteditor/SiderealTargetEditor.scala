@@ -64,6 +64,7 @@ import queries.schemas.odb.ODBConversions.*
 import react.common.ReactFnProps
 
 import java.time.Instant
+import explore.model.enums.AgsState
 
 case class SearchCallback(
   searchTerm: NonEmptyString,
@@ -86,7 +87,8 @@ case class SiderealTargetEditor(
   obsIdSubset:   Option[ObsIdSet] = None,
   onClone:       TargetWithId => Callback = _ => Callback.empty,
   renderInTitle: Option[Tile.RenderInTitle] = none,
-  fullScreen:    View[AladinFullScreen]
+  fullScreen:    View[AladinFullScreen],
+  agsState:      Option[View[AgsState]]
 ) extends ReactFnProps(SiderealTargetEditor.component)
 
 object SiderealTargetEditor {
@@ -289,6 +291,7 @@ object SiderealTargetEditor {
               }
 
           val disabled = props.searching.get.exists(_ === tid) || cloning.value
+          println(props.obsIdSubset.foldMap(_.idSet.toList))
 
           React.Fragment(
             props.renderInTitle
@@ -304,6 +307,7 @@ object SiderealTargetEditor {
                 AladinCell(
                   props.uid,
                   tid,
+                  props.obsIdSubset.foldMap(_.idSet.toList),
                   ObsConfiguration(
                     vizTime,
                     props.scienceMode,
@@ -312,7 +316,8 @@ object SiderealTargetEditor {
                     props.wavelength
                   ),
                   props.asterism.get,
-                  props.fullScreen
+                  props.fullScreen,
+                  props.agsState
                 )
               )(vizTime),
               <.div(LucumaStyles.FormColumnVeryCompact, ExploreStyles.TargetForm)(
