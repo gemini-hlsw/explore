@@ -11,6 +11,7 @@ import explore.components.HelpIcon
 import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
+import explore.model.enums.AgsState
 import explore.model.enums.PosAngleOptions
 import explore.model.syntax.all.*
 import japgolly.scalajs.react.*
@@ -34,7 +35,8 @@ import react.semanticui.sizes.*
 
 case class ObsConfigurationPanel(
   obsId:        Observation.Id,
-  posAngleView: View[Option[PosAngleConstraint]]
+  posAngleView: View[Option[PosAngleConstraint]],
+  agsState:     View[AgsState]
 ) extends ReactFnProps(ObsConfigurationPanel.component)
 
 object ObsConfigurationPanel:
@@ -64,7 +66,12 @@ object ObsConfigurationPanel:
         import ctx.given
 
         val paView = props.posAngleView
-          .withOnMod(c => ObsQueries.updatePosAngle[IO](List(props.obsId), c).runAsync)
+          .withOnMod { c =>
+            (props.agsState.async.set(AgsState.Saving) *>
+              ObsQueries.updatePosAngle[IO](List(props.obsId), c))
+              .guarantee(props.agsState.async.set(AgsState.Idle))
+              .runAsync
+          }
 
         val posAngleOptionsView: View[PosAngleOptions] =
           paView.zoom(unsafePosOptionsLens)
@@ -92,6 +99,7 @@ object ObsConfigurationPanel:
               clazz = Css.Empty,
               value = pa,
               units = "° E of N",
+              disabled = !props.agsState.get.canRecalculate,
               validFormat = MathValidators.truncatedAngleDegrees,
               changeAuditor = ChangeAuditor.bigDecimal(3.refined, 2.refined)
             )
@@ -105,7 +113,8 @@ object ObsConfigurationPanel:
           EnumViewSelect(
             clazz = ExploreStyles.ObsConfigurationObsPA,
             id = "pos-angle-alternative",
-            value = posAngleOptionsView
+            value = posAngleOptionsView,
+            disabled = !props.agsState.get.canRecalculate
           ),
           fixedView.mapValue(posAngleEditor),
           allowedFlipView.mapValue(posAngleEditor),

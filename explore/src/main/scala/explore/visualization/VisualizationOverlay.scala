@@ -29,14 +29,14 @@ case class SVGVisualizationOverlay(
 ) extends ReactFnProps(SVGVisualizationOverlay.component)
 
 object SVGVisualizationOverlay {
-  type Props = SVGVisualizationOverlay
+  private type Props = SVGVisualizationOverlay
 
   val JtsPolygon    = Css("viz-polygon")
   val JtsCollection = Css("viz-collecttion")
   val JtsGuides     = Css("viz-guides")
   val JtsSvg        = Css("visualization-overlay-svg")
 
-  def forGeometry(css: Css, g: Geometry): VdomNode =
+  private def forGeometry(css: Css, g: Geometry): VdomNode =
     g match {
       case p: Polygon            =>
         val points = p.getCoordinates
@@ -51,10 +51,10 @@ object SVGVisualizationOverlay {
       case _                     => EmptyVdom
     }
 
-  val canvasWidth  = VdomAttr("width")
-  val canvasHeight = VdomAttr("height")
+  private val canvasWidth  = VdomAttr("width")
+  private val canvasHeight = VdomAttr("height")
 
-  val component =
+  private val component =
     ScalaFnComponent[Props] { p =>
       // Render the svg
       val evald: NonEmptyMap[Css, JtsShape] = p.shapes

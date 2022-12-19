@@ -5,6 +5,7 @@ package explore.events
 
 import boopickle.DefaultBasic.*
 import boopickle.Pickler
+import cats.data.NonEmptyList
 import explore.model.boopickle.CatalogPicklers.given
 import lucuma.ags.AgsAnalysis
 import lucuma.ags.AgsParams
@@ -23,7 +24,7 @@ object AgsMessage {
     wavelength:         Wavelength,
     baseCoordinates:    Coordinates,
     scienceCoordinates: List[Coordinates],
-    position:           AgsPosition,
+    positions:          NonEmptyList[AgsPosition],
     params:             AgsParams,
     candidates:         List[GuideStarCandidate]
   ) extends WorkerRequest {

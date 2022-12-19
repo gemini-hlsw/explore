@@ -25,7 +25,7 @@ import java.time.Instant
 
 object SiderealTargetEditorTile {
 
-  def sideralTargetEditorTile(
+  def siderealTargetEditorTile(
     userId:     Option[User.Id],
     targetId:   Target.Id,
     target:     View[Target.Sidereal],
@@ -55,9 +55,9 @@ object SiderealTargetEditorTile {
               none,
               none,
               none,
-              none,
               undoStacks,
               searching,
+              posAngleView = none,
               renderInTitle = renderInTitle.some,
               fullScreen = fullScreen
             )

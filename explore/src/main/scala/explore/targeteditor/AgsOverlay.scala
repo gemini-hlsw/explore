@@ -67,16 +67,16 @@ object AgsOverlay {
             <.div(
               ExploreStyles.AgsDescription,
               analysis.match {
-                case AgsAnalysis.Usable(_, _, Some(GuideSpeed.Fast), _, _)   =>
+                case AgsAnalysis.Usable(_, _, Some(GuideSpeed.Fast), _, _, _)   =>
                   Icons.CircleSmall.withClass(ExploreStyles.AgsFast)
-                case AgsAnalysis.Usable(_, _, Some(GuideSpeed.Medium), _, _) =>
+                case AgsAnalysis.Usable(_, _, Some(GuideSpeed.Medium), _, _, _) =>
                   Icons.CircleSmall.withClass(ExploreStyles.AgsMedium)
-                case AgsAnalysis.Usable(_, _, Some(GuideSpeed.Slow), _, _)   =>
+                case AgsAnalysis.Usable(_, _, Some(GuideSpeed.Slow), _, _, _)   =>
                   Icons.CircleSmall.withClass(ExploreStyles.AgsSlow)
-                case _                                                       => ""
+                case _                                                          => ""
               },
               analysis match {
-                case AgsAnalysis.Usable(_, _, Some(speed), _, _) =>
+                case AgsAnalysis.Usable(_, _, Some(speed), _, _, _) =>
                   React.Fragment(
                     <.div(ExploreStyles.AgsGuideSpeed, speed.tag),
                     <.div(ExploreStyles.AgsGBrightness,
@@ -88,7 +88,7 @@ object AgsOverlay {
                           s"(${formatCoordinates(analysis.target.tracking.baseCoordinates)})"
                     )
                   )
-                case _                                           => EmptyVdom
+                case _                                              => EmptyVdom
               }
             )
           )

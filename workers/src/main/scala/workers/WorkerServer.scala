@@ -95,7 +95,7 @@ trait WorkerServer[F[_]: Async, T: Pickler](using Monoid[F[Unit]]):
                         postAsTransferable[F, FromServer](
                           self,
                           FromServer.Error(id, WorkerException.fromThrowable(t))
-                        )
+                        ) >> F.cede
                       )
                       .guarantee(cancelTokens.update(_ - id))
                       .start

@@ -17,6 +17,7 @@ import workers.*
 
 import java.time.Duration
 import java.time.Instant
+import scala.concurrent.duration.*
 import scala.scalajs.js.annotation.JSExport
 import scala.scalajs.js.annotation.JSExportTopLevel
 
@@ -25,7 +26,7 @@ object AgsServer extends WorkerServer[IO, AgsMessage.Request] {
   @JSExport
   def runWorker(): Unit = run.unsafeRunAndForget()
 
-  private val AgsCacheVersion: Int = 4
+  private val AgsCacheVersion: Int = 5
 
   private val CacheRetention: Duration = Duration.ofDays(60)
 
@@ -36,7 +37,7 @@ object AgsServer extends WorkerServer[IO, AgsMessage.Request] {
                      r.wavelength,
                      r.baseCoordinates,
                      r.scienceCoordinates,
-                     r.position,
+                     r.positions,
                      r.params,
                      r.candidates
         )
@@ -53,6 +54,9 @@ object AgsServer extends WorkerServer[IO, AgsMessage.Request] {
         case req @ AgsMessage.Request(_, _, _, _, _, _, _, _) =>
           val cacheableRequest =
             Cacheable(CacheName("ags"), CacheVersion(AgsCacheVersion), agsCalculation)
-          cache.eval(cacheableRequest).apply(req).flatMap(m => invocation.respond(m))
+          cache
+            .eval(cacheableRequest)
+            .apply(req)
+            .flatMap(invocation.respond)
       }
 }

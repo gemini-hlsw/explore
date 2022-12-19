@@ -15,6 +15,7 @@ import explore.config.VizTimeEditor
 import explore.model.Asterism
 import explore.model.ObsIdSet
 import explore.model.ScienceMode
+import explore.model.enums.AgsState
 import explore.model.enums.TileSizeState
 import explore.targeteditor.AsterismEditor
 import explore.undo.UndoStacks
@@ -24,6 +25,7 @@ import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
+import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.Target
@@ -42,10 +44,9 @@ object AsterismEditorTile:
   def asterismEditorTile(
     userId:          Option[User.Id],
     programId:       Program.Id,
-    obsId:           ObsIdSet,
+    sharedInObsIds:  ObsIdSet,
     potAsterismMode: Pot[(View[Option[Asterism]], Option[ScienceMode])],
     potVizTime:      Pot[View[Option[Instant]]],
-    posAngle:        Option[PosAngleConstraint],
     constraints:     Option[ConstraintSet],
     wavelength:      Option[Wavelength],
     currentTarget:   Option[Target.Id],
@@ -54,13 +55,26 @@ object AsterismEditorTile:
     undoStacks:      View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
     searching:       View[Set[Target.Id]],
     title:           String,
+    posAngle:        Option[(Observation.Id, View[PosAngleConstraint], View[AgsState])],
     backButton:      Option[VdomNode] = none
   )(using TransactionalClient[IO, ObservationDB], Logger[IO]) = {
 
     // Save the time here. this works for the obs and target tabs
     val vizTimeView = potVizTime.map(_.withOnMod { t =>
-      ObsQueries.updateVisualizationTime[IO](obsId.toList, t).runAsync
+      ObsQueries.updateVisualizationTime[IO](sharedInObsIds.toList, t).runAsync
     })
+
+    // Store the pos angle on the db
+    val posAngleView = posAngle.map((oid, paView, agsStateView) =>
+      (paView.withOnMod(pa =>
+         agsStateView.set(AgsState.Saving) *> ObsQueries
+           .updatePosAngle[IO](List(oid), pa.some)
+           .guarantee(agsStateView.async.set(AgsState.Idle))
+           .runAsync
+       ),
+       agsStateView
+      )
+    )
 
     def control: VdomNode = <.div(VizTimeEditor(vizTimeView))
 
@@ -77,11 +91,10 @@ object AsterismEditorTile:
           AsterismEditor(
             uid,
             programId,
-            obsId,
+            sharedInObsIds,
             asterism,
             potVizTime,
             scienceMode,
-            posAngle,
             constraints,
             wavelength,
             currentTarget,
@@ -89,7 +102,8 @@ object AsterismEditorTile:
             otherObsCount,
             undoStacks,
             searching,
-            renderInTitle
+            renderInTitle,
+            posAngleView
           )
         )
       }(

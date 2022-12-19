@@ -227,14 +227,14 @@ object AladinContainer extends AladinCommon {
                       .toInstant()
 
                   val vignettesScience = g match
-                    case AgsAnalysis.VignettesScience(_) => true
-                    case _                               => false
+                    case AgsAnalysis.VignettesScience(_, _) => true
+                    case _                                  => false
 
                   val candidateCss = g.match
                     case _ if scienceMode.isEmpty                             =>
                       // Don't color the stars for guide speed if there is no mode selected
                       Css.Empty
-                    case AgsAnalysis.Usable(_, _, Some(s), _, _)              =>
+                    case AgsAnalysis.Usable(_, _, Some(s), _, _, _)           =>
                       speedCss(s)
                     case AgsAnalysis.NotReachableAtPosition(_, _, Some(s), _) =>
                       speedCss(s)

@@ -24,6 +24,7 @@ import explore.model.ObsIdSet
 import explore.model.ScienceMode
 import explore.model.TargetSummary
 import explore.model.display.given
+import explore.model.enums.AgsState
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
 import explore.model.itc.ItcChartExposureTime
@@ -39,6 +40,7 @@ import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Observation
+import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
@@ -136,7 +138,9 @@ object ObsTabTiles:
       }
       // ITC selected target. Here to be shared by the ITC tile body and title
       .useStateView(none[ItcTarget])
-      .render { (props, ctx, obsView, itcTarget) =>
+      // Ags state
+      .useStateView[AgsState](AgsState.Idle)
+      .render { (props, ctx, obsView, itcTarget, agsState) =>
         import ctx.given
 
         val obsViewPot = obsView.toPot
@@ -144,7 +148,12 @@ object ObsTabTiles:
         val scienceMode: Option[ScienceMode] =
           obsView.toOption.flatMap(_.get.scienceData.mode)
 
-        val posAngle = obsView.toOption.flatMap(_.get.scienceData.posAngle)
+        val posAngle: Option[View[PosAngleConstraint]] =
+          obsView.toOption
+            .map(
+              _.zoom(ObsEditData.scienceData.andThen(ScienceData.posAngle.some))
+            )
+            .flatMap(_.asView)
 
         val potAsterism: Pot[View[Option[Asterism]]] =
           obsViewPot.map(v =>
@@ -251,7 +260,6 @@ object ObsTabTiles:
           ObsIdSet.one(props.obsId),
           potAsterismMode,
           vizTimeView,
-          posAngle,
           obsView.toOption.map(_.get.scienceData.constraints),
           obsView.toOption.flatMap(_.get.scienceData.requirements.spectroscopy.wavelength),
           props.focusedTarget,
@@ -260,7 +268,8 @@ object ObsTabTiles:
           props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
           props.searching,
           "Targets",
-          none
+          posAngle.map(p => (props.obsId, p, agsState)),
+          backButton = none
         )
 
         // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper
@@ -291,7 +300,8 @@ object ObsTabTiles:
             props.undoStacks
               .zoom(ModelUndoStacks.forObservationData[IO])
               .zoom(atMapWithDefault(props.obsId, UndoStacks.empty)),
-            targetCoords
+            targetCoords,
+            agsState
           )
 
         val rglRender: LayoutsMap => VdomNode = (l: LayoutsMap) =>

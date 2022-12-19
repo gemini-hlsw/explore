@@ -30,6 +30,7 @@ import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.boopickle.*
+import explore.model.enums.AgsState
 import explore.model.itc.ItcTarget
 import explore.model.reusability.*
 import explore.model.syntax.scienceModes.*
@@ -61,6 +62,7 @@ case class ConfigurationPanel(
   constraints:     ConstraintSet,
   itcTargets:      List[ItcTarget],
   baseCoordinates: Option[CoordinatesAtVizTime],
+  agsState:        View[AgsState],
   renderInTitle:   Tile.RenderInTitle
 ) extends ReactFnProps[ConfigurationPanel](ConfigurationPanel.component)
 
@@ -190,7 +192,7 @@ object ConfigurationPanel:
             <.div(ExploreStyles.TitleUndoButtons)(UndoButtons(props.scienceData))
           ),
           <.div(ExploreStyles.ConfigurationGrid)(
-            ObsConfigurationPanel(props.obsId, posAngleView),
+            ObsConfigurationPanel(props.obsId, posAngleView, props.agsState),
             if (editState.get === ConfigEditState.TableView)
               BasicConfigurationPanel(
                 props.userId,

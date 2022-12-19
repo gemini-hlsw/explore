@@ -29,6 +29,7 @@ import explore.model.ObsIdSet
 import explore.model.ScienceMode
 import explore.model.SiderealTargetWithId
 import explore.model.TargetWithId
+import explore.model.enums.AgsState
 import explore.model.formats.*
 import explore.model.util.*
 import explore.undo.UndoContext
@@ -77,7 +78,6 @@ case class SiderealTargetEditor(
   uid:           User.Id,
   asterism:      View[Asterism],
   vizTime:       Option[Instant],
-  posAngle:      Option[PosAngleConstraint],
   scienceMode:   Option[ScienceMode],
   constraints:   Option[ConstraintSet],
   wavelength:    Option[Wavelength],
@@ -86,8 +86,11 @@ case class SiderealTargetEditor(
   obsIdSubset:   Option[ObsIdSet] = None,
   onClone:       TargetWithId => Callback = _ => Callback.empty,
   renderInTitle: Option[Tile.RenderInTitle] = none,
-  fullScreen:    View[AladinFullScreen]
-) extends ReactFnProps(SiderealTargetEditor.component)
+  fullScreen:    View[AladinFullScreen],
+  posAngleView:  Option[(View[PosAngleConstraint], View[AgsState])]
+) extends ReactFnProps(SiderealTargetEditor.component) {
+  val posAngle: Option[PosAngleConstraint] = posAngleView.map(_._1.get)
+}
 
 object SiderealTargetEditor {
   private type Props = SiderealTargetEditor
@@ -312,7 +315,8 @@ object SiderealTargetEditor {
                     props.wavelength
                   ),
                   props.asterism.get,
-                  props.fullScreen
+                  props.fullScreen,
+                  props.posAngleView
                 )
               )(vizTime),
               <.div(LucumaStyles.FormColumnVeryCompact, ExploreStyles.TargetForm)(
