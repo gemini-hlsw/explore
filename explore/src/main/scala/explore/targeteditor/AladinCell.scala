@@ -202,7 +202,7 @@ object AladinCell extends ModelOptics with AladinCommon:
       // Analysis results
       .useSerialState(List.empty[AgsAnalysis])
       // Request data again if vizTime changes more than a month
-      .useEffectWithDepsBy((p, _, __, _, _) => p.obsConf.vizTime) {
+      .useEffectWithDepsBy((p, _, _, _, _) => p.obsConf.vizTime) {
         (props, ctx, _, gs, _) => vizTime =>
           import ctx.given
 
