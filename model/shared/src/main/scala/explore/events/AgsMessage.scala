@@ -5,6 +5,7 @@ package explore.events
 
 import boopickle.DefaultBasic.*
 import boopickle.Pickler
+import cats.data.NonEmptyList
 import explore.model.boopickle.CatalogPicklers.given
 import lucuma.ags.AgsAnalysis
 import lucuma.ags.AgsParams
@@ -15,7 +16,6 @@ import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Target
 import workers.WorkerRequest
-import cats.data.NonEmptyList
 
 object AgsMessage {
   case class Request(

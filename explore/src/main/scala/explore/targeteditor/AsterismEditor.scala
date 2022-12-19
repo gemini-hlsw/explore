@@ -23,6 +23,7 @@ import explore.model.ScienceMode
 import explore.model.SiderealTargetWithId
 import explore.model.TargetWithId
 import explore.model.TargetWithOptId
+import explore.model.enums.AgsState
 import explore.model.reusability.*
 import explore.model.reusability.given
 import explore.optics.*
@@ -36,6 +37,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.data.Zipper
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
+import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.Target
@@ -59,8 +61,6 @@ import react.primereact.Button
 import react.semanticui.modules.checkbox.*
 
 import java.time.Instant
-import explore.model.enums.AgsState
-import lucuma.core.model.Observation
 
 case class AsterismEditor(
   userId:         User.Id,
@@ -69,7 +69,6 @@ case class AsterismEditor(
   asterism:       View[Option[Asterism]],
   potVizTime:     Pot[View[Option[Instant]]],
   scienceMode:    Option[ScienceMode],
-  posAngle:       Option[PosAngleConstraint],
   constraints:    Option[ConstraintSet],
   wavelength:     Option[Wavelength],
   currentTarget:  Option[Target.Id],
@@ -78,8 +77,10 @@ case class AsterismEditor(
   undoStacks:     View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
   searching:      View[Set[Target.Id]],
   renderInTitle:  Tile.RenderInTitle,
-  agsState:       Option[(Observation.Id, View[AgsState])]
-) extends ReactFnProps(AsterismEditor.component)
+  posAngleView:   Option[(View[PosAngleConstraint], View[AgsState])]
+) extends ReactFnProps(AsterismEditor.component) {
+  val posAngle: Option[PosAngleConstraint] = posAngleView.map(_._1.get)
+}
 
 object AsterismEditor {
   private type Props = AsterismEditor
@@ -247,7 +248,6 @@ object AsterismEditor {
                           props.userId,
                           asterism,
                           vizTime,
-                          props.posAngle,
                           props.scienceMode,
                           props.constraints,
                           props.wavelength,
@@ -259,7 +259,7 @@ object AsterismEditor {
                               props.sharedInObsIds.some
                             else none,
                           fullScreen = fullScreen,
-                          agsState = props.agsState
+                          posAngleView = props.posAngleView
                         )
                       )
                     )

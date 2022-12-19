@@ -17,9 +17,9 @@ import workers.*
 
 import java.time.Duration
 import java.time.Instant
+import scala.concurrent.duration.*
 import scala.scalajs.js.annotation.JSExport
 import scala.scalajs.js.annotation.JSExportTopLevel
-import scala.concurrent.duration.*
 
 @JSExportTopLevel("AgsServer", moduleID = "exploreworkers")
 object AgsServer extends WorkerServer[IO, AgsMessage.Request] {

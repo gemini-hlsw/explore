@@ -10,7 +10,7 @@ enum AgsState:
 
   def canRecalculate: Boolean = this match
     case Idle | Error => true
-    case _ => false
+    case _            => false
 
 object AgsState:
   /** @group Typeclass Instances */

@@ -11,6 +11,7 @@ import explore.components.HelpIcon
 import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
+import explore.model.enums.AgsState
 import explore.model.enums.PosAngleOptions
 import explore.model.syntax.all.*
 import japgolly.scalajs.react.*
@@ -31,7 +32,6 @@ import react.common.Css
 import react.common.ReactFnProps
 import react.semanticui.collections.form.Form
 import react.semanticui.sizes.*
-import explore.model.enums.AgsState
 
 case class ObsConfigurationPanel(
   obsId:        Observation.Id,

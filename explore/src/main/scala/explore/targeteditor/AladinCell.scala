@@ -5,9 +5,9 @@ package explore.targeteditor
 
 import boopickle.DefaultBasic.*
 import cats.Order
+import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
-import cats.data.NonEmptyList
 import crystal.Pot
 import crystal.PotOption
 import crystal.ViewOptF
@@ -67,6 +67,7 @@ import org.scalajs.dom.HTMLElement
 import org.scalajs.dom.document
 import org.typelevel.log4cats.Logger
 import queries.common.UserPreferencesQueriesGQL.*
+import queries.schemas.odb.ObsQueries
 import react.aladin.Fov
 import react.common.ReactFnProps
 import react.primereact.Checkbox
@@ -79,18 +80,17 @@ import react.semanticui.sizes.*
 import java.time.Duration
 import java.time.Instant
 import scala.concurrent.duration.*
-import queries.schemas.odb.ObsQueries
 
 case class AladinCell(
-  uid:         User.Id,
-  tid:         Target.Id,
-  obsConf:     ObsConfiguration,
-  asterism:    Asterism,
-  fullScreen:  View[AladinFullScreen],
-  oidAgsState: Option[(Observation.Id, View[AgsState])]
+  uid:          User.Id,
+  tid:          Target.Id,
+  obsConf:      ObsConfiguration,
+  asterism:     Asterism,
+  fullScreen:   View[AladinFullScreen],
+  posAngleView: Option[(View[PosAngleConstraint], View[AgsState])]
 ) extends ReactFnProps(AladinCell.component) {
-  val oid: Option[Observation.Id]      = oidAgsState.map(_._1)
-  val agsState: Option[View[AgsState]] = oidAgsState.map(_._2)
+  val setPA: Option[View[PosAngleConstraint]] = posAngleView.map(_._1)
+  val agsState: Option[View[AgsState]]        = posAngleView.map(_._2)
 }
 
 trait AladinCommon:
@@ -321,17 +321,11 @@ object AladinCell extends ModelOptics with AladinCommon:
           .collect { case AgsAnalysis.Usable(_, _, _, _, _, AgsPosition(angle, _)) =>
             p.obsConf.posAngleConstraint match
               case Some(PosAngleConstraint.AllowFlip(a)) if a =!= angle =>
-                import ctx.given
-                ObsQueries
-                  .updatePosAngle[IO](
-                    p.oid.toList,
-                    PosAngleConstraint.AllowFlip(angle).some
-                  )
-              case _                                                    => IO.unit
+                p.setPA.map(_.set(PosAngleConstraint.AllowFlip(angle))).getOrEmpty
+              case _                                                    => Callback.empty
           }
-          .getOrElse(IO.unit)
-          .unlessA(p.agsState.forall(_.get === AgsState.Calculating) || agsResults.value.isEmpty)
-          .runAsyncAndForget *>
+          .getOrEmpty
+          .unless_(p.agsState.forall(_.get === AgsState.Calculating) || agsResults.value.isEmpty) *>
           selectedIndex
             .set(
               0.some.filter(_ => agsResults.value.nonEmpty && p.obsConf.canSelectGuideStar)

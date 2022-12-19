@@ -409,7 +409,6 @@ object TargetTabContents extends TwoPanels:
 
       val constraints = obsConf.map(_._1)
       val scienceMode = obsConf.map(_._2)
-      val posAngle    = obsConf.map(_._3)
       val wavelength  = obsConf.map(_._4)
 
       def setCurrentTarget(programId: Program.Id, oids: ObsIdSet)(
@@ -425,7 +424,6 @@ object TargetTabContents extends TwoPanels:
           idsToEdit,
           Pot(asterismView, scienceMode),
           Pot(vizTimeView),
-          posAngle,
           constraints,
           wavelength,
           props.focused.target,
@@ -503,7 +501,6 @@ object TargetTabContents extends TwoPanels:
         props.searching,
         title,
         fullScreen,
-        none,
         backButton.some
       )
 

@@ -30,6 +30,7 @@ import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.boopickle.*
+import explore.model.enums.AgsState
 import explore.model.itc.ItcTarget
 import explore.model.reusability.*
 import explore.model.syntax.scienceModes.*
@@ -51,7 +52,6 @@ import org.http4s.syntax.all.*
 import queries.common.ObsQueriesGQL
 import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
-import explore.model.enums.AgsState
 
 case class ConfigurationPanel(
   userId:          Option[User.Id],

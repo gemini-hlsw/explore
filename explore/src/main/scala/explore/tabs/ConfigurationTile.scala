@@ -11,6 +11,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.Tile
 import explore.config.ConfigurationPanel
 import explore.model.CoordinatesAtVizTime
+import explore.model.enums.AgsState
 import explore.undo.*
 import explore.utils.*
 import lucuma.core.math.Coordinates
@@ -21,7 +22,6 @@ import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 import queries.schemas.itc.ITCConversions.*
 import queries.schemas.odb.ObsQueries.*
-import explore.model.enums.AgsState
 
 object ConfigurationTile {
   def configurationTile(
@@ -30,7 +30,7 @@ object ConfigurationTile {
     obsData:         Pot[(String, Option[NonEmptyString], View[ScienceData])],
     undoStacks:      View[UndoStacks[IO, ScienceData]],
     baseCoordinates: Option[CoordinatesAtVizTime],
-    agsState: AgsState
+    agsState:        AgsState
   )(using Logger[IO]) =
     Tile(
       ObsTabTilesIds.ConfigurationId.id,
