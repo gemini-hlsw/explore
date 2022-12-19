@@ -36,7 +36,7 @@ import react.semanticui.sizes.*
 case class ObsConfigurationPanel(
   obsId:        Observation.Id,
   posAngleView: View[Option[PosAngleConstraint]],
-  agsState:     AgsState
+  agsState:     View[AgsState]
 ) extends ReactFnProps(ObsConfigurationPanel.component)
 
 object ObsConfigurationPanel:
@@ -64,10 +64,14 @@ object ObsConfigurationPanel:
       .useContext(AppContext.ctx)
       .render { (props, ctx) =>
         import ctx.given
-        println(props.agsState)
 
         val paView = props.posAngleView
-          .withOnMod(c => ObsQueries.updatePosAngle[IO](List(props.obsId), c).runAsync)
+          .withOnMod { c =>
+            (props.agsState.async.set(AgsState.Saving) *>
+              ObsQueries.updatePosAngle[IO](List(props.obsId), c))
+              .guarantee(props.agsState.async.set(AgsState.Idle))
+              .runAsync
+          }
 
         val posAngleOptionsView: View[PosAngleOptions] =
           paView.zoom(unsafePosOptionsLens)
@@ -95,7 +99,7 @@ object ObsConfigurationPanel:
               clazz = Css.Empty,
               value = pa,
               units = "° E of N",
-              disabled = !props.agsState.canRecalculate,
+              disabled = !props.agsState.get.canRecalculate,
               validFormat = MathValidators.truncatedAngleDegrees,
               changeAuditor = ChangeAuditor.bigDecimal(3.refined, 2.refined)
             )
@@ -110,7 +114,7 @@ object ObsConfigurationPanel:
             clazz = ExploreStyles.ObsConfigurationObsPA,
             id = "pos-angle-alternative",
             value = posAngleOptionsView,
-            disabled = !props.agsState.canRecalculate
+            disabled = !props.agsState.get.canRecalculate
           ),
           fixedView.mapValue(posAngleEditor),
           allowedFlipView.mapValue(posAngleEditor),

@@ -301,7 +301,7 @@ object ObsTabTiles:
               .zoom(ModelUndoStacks.forObservationData[IO])
               .zoom(atMapWithDefault(props.obsId, UndoStacks.empty)),
             targetCoords,
-            agsState.get
+            agsState
           )
 
         val rglRender: LayoutsMap => VdomNode = (l: LayoutsMap) =>

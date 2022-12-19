@@ -6,7 +6,7 @@ package explore.model.enums
 import cats.Eq
 
 enum AgsState:
-  case Idle, LoadingCandidates, Calculating, Error
+  case Idle, LoadingCandidates, Calculating, Saving, Error
 
   def canRecalculate: Boolean = this match
     case Idle | Error => true

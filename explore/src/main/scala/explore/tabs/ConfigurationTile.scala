@@ -30,7 +30,7 @@ object ConfigurationTile {
     obsData:         Pot[(String, Option[NonEmptyString], View[ScienceData])],
     undoStacks:      View[UndoStacks[IO, ScienceData]],
     baseCoordinates: Option[CoordinatesAtVizTime],
-    agsState:        AgsState
+    agsState:        View[AgsState]
   )(using Logger[IO]) =
     Tile(
       ObsTabTilesIds.ConfigurationId.id,

@@ -292,7 +292,6 @@ object SiderealTargetEditor {
               }
 
           val disabled = props.searching.get.exists(_ === tid) || cloning.value
-          println(props.obsIdSubset.foldMap(_.idSet.toList))
 
           React.Fragment(
             props.renderInTitle

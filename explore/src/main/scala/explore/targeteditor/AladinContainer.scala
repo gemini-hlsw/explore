@@ -154,7 +154,6 @@ object AladinContainer extends AladinCommon {
         }
 
         val usableGuideStar = gs.exists(_.isUsable)
-        cats.effect.IO.cede
 
         val shapes = posAngle
           .map { posAngle =>

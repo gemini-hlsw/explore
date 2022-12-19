@@ -62,7 +62,7 @@ case class ConfigurationPanel(
   constraints:     ConstraintSet,
   itcTargets:      List[ItcTarget],
   baseCoordinates: Option[CoordinatesAtVizTime],
-  agsState:        AgsState,
+  agsState:        View[AgsState],
   renderInTitle:   Tile.RenderInTitle
 ) extends ReactFnProps[ConfigurationPanel](ConfigurationPanel.component)
 

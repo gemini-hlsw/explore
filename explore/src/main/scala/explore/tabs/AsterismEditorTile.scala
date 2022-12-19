@@ -64,8 +64,14 @@ object AsterismEditorTile:
       ObsQueries.updateVisualizationTime[IO](sharedInObsIds.toList, t).runAsync
     })
 
+    // Store the pos angle on the db
     val posAngleView = posAngle.map((oid, paView, agsStateView) =>
-      (paView.withOnMod(pa => ObsQueries.updatePosAngle[IO](List(oid), pa.some).runAsync),
+      (paView.withOnMod(pa =>
+         agsStateView.set(AgsState.Saving) *> ObsQueries
+           .updatePosAngle[IO](List(oid), pa.some)
+           .guarantee(agsStateView.async.set(AgsState.Idle))
+           .runAsync
+       ),
        agsStateView
       )
     )

@@ -208,13 +208,13 @@ object AladinCell extends ModelOptics with AladinCommon:
 
           props.agsState
             .map(agsState =>
-              agsState.set(AgsState.LoadingCandidates).to[IO] >>
-                CatalogClient[IO].requestSingle(
-                  CatalogMessage.GSRequest(props.asterism.baseTracking, vizTime)
-                ) >>=
-                (_.map(candidates =>
-                  agsState.set(AgsState.Idle).to[IO] >> gs.setStateAsync(candidates)
-                ).orEmpty)
+              (for {
+                _          <- agsState.async.set(AgsState.LoadingCandidates)
+                candidates <- CatalogClient[IO].requestSingle(
+                                CatalogMessage.GSRequest(props.asterism.baseTracking, vizTime)
+                              )
+                _          <- candidates.map(gs.setStateAsync(_)).orEmpty
+              } yield ()).guarantee(agsState.async.set(AgsState.Idle))
             )
             .orEmpty
       }
@@ -302,7 +302,31 @@ object AladinCell extends ModelOptics with AladinCommon:
                                          candidates
                       )
                     )
-                    .flatMap(_.map(r => ags.setStateAsync(r.selectBestPosition(positions))).orEmpty)
+                    .map(_.map(_.selectBestPosition(positions)))
+                    .flatMap { r =>
+                      // Set the analysis
+                      (r.map(ags.setState).getOrEmpty *>
+                        // If we need to flip change the constraint
+                        r
+                          .map(_.headOption)
+                          .collect {
+                            case Some(AgsAnalysis.Usable(_, _, _, _, _, AgsPosition(angle, _))) =>
+                              props.obsConf.posAngleConstraint match
+                                case Some(PosAngleConstraint.AllowFlip(a)) if a =!= angle =>
+                                  props.setPA
+                                    .map(_.set(PosAngleConstraint.AllowFlip(angle)))
+                                    .getOrEmpty
+                                case _                                                    => Callback.empty
+                          }
+                          .orEmpty *>
+                        // set the selected index
+                        selectedIndex
+                          .set(
+                            0.some.filter(_ =>
+                              r.exists(_.nonEmpty) && props.obsConf.canSelectGuideStar
+                            )
+                          )).to[IO]
+                    }
                     .unlessA(candidates.isEmpty)
                     .handleErrorWith(t => Logger[IO].error(t)("ERROR IN AGS REQUEST"))
               yield ()
@@ -313,25 +337,6 @@ object AladinCell extends ModelOptics with AladinCommon:
       }
       // open settings menu
       .useState(SettingsMenuState.Closed)
-      // Reset the selected gs if results change
-      .useEffectWithDepsBy((p, _, _, _, _, agsResults, _, _) =>
-        (agsResults, p.obsConf, p.agsState.map(_.reuseByValue))
-      ) { (p, ctx, _, _, agsResults, _, selectedIndex, _) => _ =>
-        agsResults.value.headOption
-          .collect { case AgsAnalysis.Usable(_, _, _, _, _, AgsPosition(angle, _)) =>
-            p.obsConf.posAngleConstraint match
-              case Some(PosAngleConstraint.AllowFlip(a)) if a =!= angle =>
-                p.setPA.map(_.set(PosAngleConstraint.AllowFlip(angle))).getOrEmpty
-              case _                                                    => Callback.empty
-          }
-          .getOrEmpty
-          .unless_(p.agsState.forall(_.get === AgsState.Calculating) || agsResults.value.isEmpty) *>
-          selectedIndex
-            .set(
-              0.some.filter(_ => agsResults.value.nonEmpty && p.obsConf.canSelectGuideStar)
-            )
-            .unless_(p.agsState.forall(_.get === AgsState.Calculating))
-      }
       // mouse coordinates, starts on the base
       .useStateBy((props, _, _, _, _, _, _, _) => props.asterism.baseTracking.baseCoordinates)
       .renderWithReuse {
