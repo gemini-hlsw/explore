@@ -51,6 +51,7 @@ import org.http4s.syntax.all.*
 import queries.common.ObsQueriesGQL
 import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
+import explore.model.enums.AgsState
 
 case class ConfigurationPanel(
   userId:          Option[User.Id],
@@ -61,6 +62,7 @@ case class ConfigurationPanel(
   constraints:     ConstraintSet,
   itcTargets:      List[ItcTarget],
   baseCoordinates: Option[CoordinatesAtVizTime],
+  agsState:        AgsState,
   renderInTitle:   Tile.RenderInTitle
 ) extends ReactFnProps[ConfigurationPanel](ConfigurationPanel.component)
 
@@ -190,7 +192,7 @@ object ConfigurationPanel:
             <.div(ExploreStyles.TitleUndoButtons)(UndoButtons(props.scienceData))
           ),
           <.div(ExploreStyles.ConfigurationGrid)(
-            ObsConfigurationPanel(props.obsId, posAngleView),
+            ObsConfigurationPanel(props.obsId, posAngleView, props.agsState),
             if (editState.get === ConfigEditState.TableView)
               BasicConfigurationPanel(
                 props.userId,

@@ -263,7 +263,7 @@ object ObsTabTiles:
           props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
           props.searching,
           "Targets",
-          agsState = agsState.some,
+          agsState = (props.obsId, agsState).some,
           backButton = none
         )
 
@@ -295,7 +295,8 @@ object ObsTabTiles:
             props.undoStacks
               .zoom(ModelUndoStacks.forObservationData[IO])
               .zoom(atMapWithDefault(props.obsId, UndoStacks.empty)),
-            targetCoords
+            targetCoords,
+            agsState.get
           )
 
         val rglRender: LayoutsMap => VdomNode = (l: LayoutsMap) =>

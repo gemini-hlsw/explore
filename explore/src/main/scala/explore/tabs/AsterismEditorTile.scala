@@ -37,13 +37,14 @@ import react.common.ReactFnProps
 
 import java.time.Instant
 import explore.model.enums.AgsState
+import lucuma.core.model.Observation
 
 object AsterismEditorTile:
 
   def asterismEditorTile(
     userId:          Option[User.Id],
     programId:       Program.Id,
-    obsId:           ObsIdSet,
+    sharedInObsIds:  ObsIdSet,
     potAsterismMode: Pot[(View[Option[Asterism]], Option[ScienceMode])],
     potVizTime:      Pot[View[Option[Instant]]],
     posAngle:        Option[PosAngleConstraint],
@@ -55,13 +56,13 @@ object AsterismEditorTile:
     undoStacks:      View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
     searching:       View[Set[Target.Id]],
     title:           String,
-    agsState:        Option[View[AgsState]],
+    agsState:        Option[(Observation.Id, View[AgsState])],
     backButton:      Option[VdomNode] = none
   )(using TransactionalClient[IO, ObservationDB], Logger[IO]) = {
 
     // Save the time here. this works for the obs and target tabs
     val vizTimeView = potVizTime.map(_.withOnMod { t =>
-      ObsQueries.updateVisualizationTime[IO](obsId.toList, t).runAsync
+      ObsQueries.updateVisualizationTime[IO](sharedInObsIds.toList, t).runAsync
     })
 
     def control: VdomNode = <.div(VizTimeEditor(vizTimeView))
@@ -79,7 +80,7 @@ object AsterismEditorTile:
           AsterismEditor(
             uid,
             programId,
-            obsId,
+            sharedInObsIds,
             asterism,
             potVizTime,
             scienceMode,

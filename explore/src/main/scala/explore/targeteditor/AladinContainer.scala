@@ -154,6 +154,7 @@ object AladinContainer extends AladinCommon {
         }
 
         val usableGuideStar = gs.exists(_.isUsable)
+        cats.effect.IO.cede
 
         val shapes = posAngle
           .map { posAngle =>
@@ -227,8 +228,8 @@ object AladinContainer extends AladinCommon {
                       .toInstant()
 
                   val vignettesScience = g match
-                    case AgsAnalysis.VignettesScience(_) => true
-                    case _                               => false
+                    case AgsAnalysis.VignettesScience(_, _) => true
+                    case _                                  => false
 
                   val candidateCss = g.match
                     case _ if scienceMode.isEmpty                             =>

@@ -31,10 +31,12 @@ import react.common.Css
 import react.common.ReactFnProps
 import react.semanticui.collections.form.Form
 import react.semanticui.sizes.*
+import explore.model.enums.AgsState
 
 case class ObsConfigurationPanel(
   obsId:        Observation.Id,
-  posAngleView: View[Option[PosAngleConstraint]]
+  posAngleView: View[Option[PosAngleConstraint]],
+  agsState:     AgsState
 ) extends ReactFnProps(ObsConfigurationPanel.component)
 
 object ObsConfigurationPanel:
@@ -62,6 +64,7 @@ object ObsConfigurationPanel:
       .useContext(AppContext.ctx)
       .render { (props, ctx) =>
         import ctx.given
+        println(props.agsState)
 
         val paView = props.posAngleView
           .withOnMod(c => ObsQueries.updatePosAngle[IO](List(props.obsId), c).runAsync)
@@ -92,6 +95,7 @@ object ObsConfigurationPanel:
               clazz = Css.Empty,
               value = pa,
               units = "° E of N",
+              disabled = !props.agsState.canRecalculate,
               validFormat = MathValidators.truncatedAngleDegrees,
               changeAuditor = ChangeAuditor.bigDecimal(3.refined, 2.refined)
             )
@@ -105,7 +109,8 @@ object ObsConfigurationPanel:
           EnumViewSelect(
             clazz = ExploreStyles.ObsConfigurationObsPA,
             id = "pos-angle-alternative",
-            value = posAngleOptionsView
+            value = posAngleOptionsView,
+            disabled = !props.agsState.canRecalculate
           ),
           fixedView.mapValue(posAngleEditor),
           allowedFlipView.mapValue(posAngleEditor),

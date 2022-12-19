@@ -60,24 +60,25 @@ import react.semanticui.modules.checkbox.*
 
 import java.time.Instant
 import explore.model.enums.AgsState
+import lucuma.core.model.Observation
 
 case class AsterismEditor(
-  userId:        User.Id,
-  programId:     Program.Id,
-  obsIds:        ObsIdSet,
-  asterism:      View[Option[Asterism]],
-  potVizTime:    Pot[View[Option[Instant]]],
-  scienceMode:   Option[ScienceMode],
-  posAngle:      Option[PosAngleConstraint],
-  constraints:   Option[ConstraintSet],
-  wavelength:    Option[Wavelength],
-  currentTarget: Option[Target.Id],
-  setTarget:     (Option[Target.Id], SetRouteVia) => Callback,
-  otherObsCount: Target.Id => Int,
-  undoStacks:    View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
-  searching:     View[Set[Target.Id]],
-  renderInTitle: Tile.RenderInTitle,
-  agsState:      Option[View[AgsState]]
+  userId:         User.Id,
+  programId:      Program.Id,
+  sharedInObsIds: ObsIdSet,
+  asterism:       View[Option[Asterism]],
+  potVizTime:     Pot[View[Option[Instant]]],
+  scienceMode:    Option[ScienceMode],
+  posAngle:       Option[PosAngleConstraint],
+  constraints:    Option[ConstraintSet],
+  wavelength:     Option[Wavelength],
+  currentTarget:  Option[Target.Id],
+  setTarget:      (Option[Target.Id], SetRouteVia) => Callback,
+  otherObsCount:  Target.Id => Int,
+  undoStacks:     View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
+  searching:      View[Set[Target.Id]],
+  renderInTitle:  Tile.RenderInTitle,
+  agsState:       Option[(Observation.Id, View[AgsState])]
 ) extends ReactFnProps(AsterismEditor.component)
 
 object AsterismEditor {
@@ -171,7 +172,7 @@ object AsterismEditor {
 
         // Save the time here. this works for the obs and target tabs
         val vizTimeView = props.potVizTime.map(_.withOnMod { t =>
-          ObsQueries.updateVisualizationTime[IO](props.obsIds.toList, t).runAsync
+          ObsQueries.updateVisualizationTime[IO](props.sharedInObsIds.toList, t).runAsync
         })
 
         val vizTime = props.potVizTime.toOption.flatMap(_.get)
@@ -192,7 +193,7 @@ object AsterismEditor {
                 case TargetWithOptId(oid, t @ Target.Sidereal(_, _, _, _)) =>
                   insertSiderealTarget(
                     props.programId,
-                    props.obsIds,
+                    props.sharedInObsIds,
                     props.asterism,
                     oid,
                     t,
@@ -208,7 +209,7 @@ object AsterismEditor {
           props.renderInTitle(VizTimeEditor(vizTimeView)),
           TargetTable(
             props.userId.some,
-            props.obsIds,
+            props.sharedInObsIds,
             props.asterism,
             targetView,
             vizTime,
@@ -237,7 +238,7 @@ object AsterismEditor {
                           name = "editScope".refined,
                           trueLabel = "all observations of this target".refined,
                           falseLabel =
-                            if (props.obsIds.size === 1) "only this observation".refined
+                            if (props.sharedInObsIds.size === 1) "only this observation".refined
                             else "only the current observations".refined,
                         ).toFalseTrueFragment
                       ).when(otherObsCount > 0),
@@ -255,7 +256,7 @@ object AsterismEditor {
                           onClone = onCloneTarget(targetId, props.asterism, props.setTarget) _,
                           obsIdSubset =
                             if (otherObsCount > 0 && editScope.get === EditScope.CurrentOnly)
-                              props.obsIds.some
+                              props.sharedInObsIds.some
                             else none,
                           fullScreen = fullScreen,
                           agsState = props.agsState

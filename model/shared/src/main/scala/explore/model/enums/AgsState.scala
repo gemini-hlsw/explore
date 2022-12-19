@@ -8,6 +8,10 @@ import cats.Eq
 enum AgsState:
   case Idle, LoadingCandidates, Calculating, Error
 
+  def canRecalculate: Boolean = this match
+    case Idle | Error => true
+    case _ => false
+
 object AgsState:
   /** @group Typeclass Instances */
   given Eq[AgsState] = Eq.fromUniversalEquals

@@ -21,6 +21,7 @@ import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 import queries.schemas.itc.ITCConversions.*
 import queries.schemas.odb.ObsQueries.*
+import explore.model.enums.AgsState
 
 object ConfigurationTile {
   def configurationTile(
@@ -28,7 +29,8 @@ object ConfigurationTile {
     obsId:           Observation.Id,
     obsData:         Pot[(String, Option[NonEmptyString], View[ScienceData])],
     undoStacks:      View[UndoStacks[IO, ScienceData]],
-    baseCoordinates: Option[CoordinatesAtVizTime]
+    baseCoordinates: Option[CoordinatesAtVizTime],
+    agsState: AgsState
   )(using Logger[IO]) =
     Tile(
       ObsTabTilesIds.ConfigurationId.id,
@@ -46,6 +48,7 @@ object ConfigurationTile {
             scienceData.get.constraints,
             scienceData.get.itcTargets,
             baseCoordinates,
+            agsState,
             renderInTitle
           )
       }(obsData)

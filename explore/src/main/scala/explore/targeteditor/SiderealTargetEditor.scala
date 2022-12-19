@@ -65,6 +65,7 @@ import react.common.ReactFnProps
 
 import java.time.Instant
 import explore.model.enums.AgsState
+import lucuma.core.model.Observation
 
 case class SearchCallback(
   searchTerm: NonEmptyString,
@@ -88,7 +89,7 @@ case class SiderealTargetEditor(
   onClone:       TargetWithId => Callback = _ => Callback.empty,
   renderInTitle: Option[Tile.RenderInTitle] = none,
   fullScreen:    View[AladinFullScreen],
-  agsState:      Option[View[AgsState]]
+  agsState:      Option[(Observation.Id, View[AgsState])]
 ) extends ReactFnProps(SiderealTargetEditor.component)
 
 object SiderealTargetEditor {
@@ -307,7 +308,6 @@ object SiderealTargetEditor {
                 AladinCell(
                   props.uid,
                   tid,
-                  props.obsIdSubset.foldMap(_.idSet.toList),
                   ObsConfiguration(
                     vizTime,
                     props.scienceMode,

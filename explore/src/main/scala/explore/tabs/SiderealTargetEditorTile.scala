@@ -61,7 +61,7 @@ object SiderealTargetEditorTile {
               none,
               undoStacks,
               searching,
-              agsState = oidAndAgs.map(_._2),
+              agsState = oidAndAgs,
               renderInTitle = renderInTitle.some,
               fullScreen = fullScreen
             )

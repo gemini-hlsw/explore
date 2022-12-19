@@ -19,6 +19,7 @@ import java.time.Duration
 import java.time.Instant
 import scala.scalajs.js.annotation.JSExport
 import scala.scalajs.js.annotation.JSExportTopLevel
+import scala.concurrent.duration.*
 
 @JSExportTopLevel("AgsServer", moduleID = "exploreworkers")
 object AgsServer extends WorkerServer[IO, AgsMessage.Request] {
@@ -53,6 +54,9 @@ object AgsServer extends WorkerServer[IO, AgsMessage.Request] {
         case req @ AgsMessage.Request(_, _, _, _, _, _, _, _) =>
           val cacheableRequest =
             Cacheable(CacheName("ags"), CacheVersion(AgsCacheVersion), agsCalculation)
-          cache.eval(cacheableRequest).apply(req).flatMap(m => invocation.respond(m))
+          cache
+            .eval(cacheableRequest)
+            .apply(req)
+            .flatMap(m => invocation.respond(m))
       }
 }
