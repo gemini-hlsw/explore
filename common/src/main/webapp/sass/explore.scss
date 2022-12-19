@@ -1458,6 +1458,25 @@ table.explore-border-table {
   }
 }
 
+// -----------------
+// Pos angle form
+// -----------------
+.explore-pa-configuration-form {
+  grid-area: obs-props;
+  display: flex;
+  gap: 0.3em;
+  align-items: baseline;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--site-border-color);
+  align-self: stretch;
+
+  .explore-pa-configuration-angle {
+    input {
+      width: 9ch;
+    }
+  }
+}
+
 // Move to lucuma-ui?
 .explore-table:has(.p-datatable-emptymessage) {
   tr.p-datatable-emptymessage {
@@ -1496,3 +1515,4 @@ div.spectroscopy-table-emptymessage {
 .indicator-fail {
   color: var(--red-500);
 }
+

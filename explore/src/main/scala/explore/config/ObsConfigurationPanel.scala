@@ -21,8 +21,12 @@ import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.refined.*
-import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.input.ChangeAuditor
+import lucuma.ui.primereact.EnumDropdownView
+import lucuma.ui.primereact.FormInputTextView
+import lucuma.ui.primereact.FormLabel
+import lucuma.ui.primereact.LucumaStyles
+import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.Lens
@@ -30,8 +34,6 @@ import monocle.std.option
 import queries.schemas.odb.ObsQueries
 import react.common.Css
 import react.common.ReactFnProps
-import react.semanticui.collections.form.Form
-import react.semanticui.sizes.*
 
 case class ObsConfigurationPanel(
   obsId:        Observation.Id,
@@ -94,25 +96,28 @@ object ObsConfigurationPanel:
         def posAngleEditor(pa: View[Angle]) =
           <.div(
             ExploreStyles.InputWithLabel,
-            InputWithUnits(
+            FormInputTextView(
               id = "pos-angle-value".refined,
-              clazz = Css.Empty,
+              groupClass = ExploreStyles.PAConfigurationAngle,
               value = pa,
-              units = "° E of N",
+              postAddons = List("° E of N"),
               disabled = !props.agsState.get.canRecalculate,
               validFormat = MathValidators.truncatedAngleDegrees,
               changeAuditor = ChangeAuditor.bigDecimal(3.refined, 2.refined)
             )
           )
 
-        Form(size = Small)(
-          ExploreStyles.Compact,
-          ExploreStyles.ObsConfigurationForm
+        <.div(
+          LucumaStyles.FormColumnCompact,
+          ExploreStyles.PAConfigurationForm
         )(
-          <.label("Position Angle", HelpIcon("configuration/positionangle.md".refined)),
-          EnumViewSelect(
+          FormLabel(htmlFor = "pos-angle-alternative".refined)(
+            "Position Angle",
+            HelpIcon("configuration/positionangle.md".refined)
+          ),
+          EnumDropdownView(
             clazz = ExploreStyles.ObsConfigurationObsPA,
-            id = "pos-angle-alternative",
+            id = "pos-angle-alternative".refined,
             value = posAngleOptionsView,
             disabled = !props.agsState.get.canRecalculate
           ),
