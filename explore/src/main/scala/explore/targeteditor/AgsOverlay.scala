@@ -17,8 +17,6 @@ import lucuma.core.enums.GuideSpeed
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
-import react.semanticui.elements.button.Button
-import react.semanticui.sizes.*
 
 import scala.math.BigDecimal.RoundingMode
 
@@ -35,6 +33,16 @@ object AgsOverlay {
     ScalaFnComponent[Props] { props =>
       val selectedIndex = props.selectedGSIndex.get
 
+      val canGoPrev                               = selectedIndex.exists(_ > 0)
+      def goPrev(e: ReactEvent): Option[Callback] = Option {
+        props.selectedGSIndex.mod(_.map(_ - 1))
+      }.filter(_ => canGoPrev)
+
+      val canGoNext                               = selectedIndex.exists(_ < props.maxIndex - 1)
+      def goNext(e: ReactEvent): Option[Callback] = Option {
+        props.selectedGSIndex.mod(_.map(_ + 1))
+      }.filter(_ => canGoNext)
+
       props.selectedGuideStar
         .map { case analysis =>
           ReactFragment(
@@ -44,24 +52,18 @@ object AgsOverlay {
               <.span(analysis.target.name.value),
               <.div(
                 ExploreStyles.AgsNavigation,
-                Button(
-                  as = <.a,
-                  size = Mini,
-                  basic = true,
-                  compact = true,
-                  disabled = selectedIndex.exists(_ <= 0),
-                  onClick = props.selectedGSIndex.mod(_.map(_ - 1)),
-                  clazz = ExploreStyles.BlendedButton |+| ExploreStyles.AgsNavigationButton
-                )(Icons.ChevronLeft),
-                Button(
-                  as = <.a,
-                  size = Mini,
-                  basic = true,
-                  compact = true,
-                  disabled = selectedIndex.exists(_ >= props.maxIndex - 1),
-                  onClick = props.selectedGSIndex.mod(_.map(_ + 1)),
-                  clazz = ExploreStyles.BlendedButton |+| ExploreStyles.AgsNavigationButton
-                )(Icons.ChevronRight)
+                <.span(
+                  ExploreStyles.Disabled.unless(canGoPrev),
+                  ^.onClick ==>? goPrev,
+                  ExploreStyles.BlendedButton |+| ExploreStyles.AgsNavigationButton,
+                  Icons.ChevronLeft
+                ),
+                <.span(
+                  ExploreStyles.Disabled.unless(canGoNext),
+                  ^.onClick ==>? goNext,
+                  ExploreStyles.BlendedButton |+| ExploreStyles.AgsNavigationButton,
+                  Icons.ChevronRight
+                )
               )
             ),
             <.div(

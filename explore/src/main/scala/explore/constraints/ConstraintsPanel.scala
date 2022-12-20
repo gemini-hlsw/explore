@@ -45,8 +45,6 @@ import lucuma.ui.utils.given
 import monocle.Lens
 import react.common.ReactFnProps
 import react.primereact.PrimeStyles
-import react.semanticui.collections.form.Form
-import react.semanticui.elements.label.LabelPointing
 
 case class ConstraintsPanel(
   obsIds:        List[Observation.Id],

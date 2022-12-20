@@ -458,6 +458,7 @@ object ExploreStyles:
   // TODO: to lucuma-ui
   val Header: Css      = Css("pl-header")
   val SmallHeader: Css = Header |+| lucuma.ui.primereact.LucumaStyles.Small
+  val Disabled: Css    = Css("pl-disabled")
 
   // Timing Windows
   val TimingWindowsBody: Css                    = Css("timing-windows-body")

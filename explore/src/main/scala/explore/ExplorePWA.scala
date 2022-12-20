@@ -12,8 +12,6 @@ import lucuma.broadcastchannel.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.fa.IconSize
-import react.semanticui.elements.button.Button
-import react.semanticui.sizes
 
 import scala.annotation.nowarn
 import scala.scalajs.js
