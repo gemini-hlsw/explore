@@ -30,6 +30,7 @@ import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
+import lucuma.ui.primereact.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -37,9 +38,7 @@ import lucuma.ui.utils.*
 import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries
 import react.common.ReactFnProps
-import react.semanticui.elements.button.Button
-import react.semanticui.shorthand.*
-import react.semanticui.sizes.*
+import react.primereact.Button
 
 import ObsQueries.*
 
@@ -148,25 +147,23 @@ object ObsList:
         <.div(ExploreStyles.ObsTreeWrapper)(
           <.div(ExploreStyles.TreeToolbar)(
             Button(
-              size = Mini,
-              compact = true,
-              positive = true,
+              severity = Button.Severity.Success,
               icon = Icons.New,
-              content = "Obs",
+              label = "Obs",
               disabled = adding.get,
               loading = adding.get,
               onClick =
                 insertObs(props.programId, observations.length, undoCtx, adding, ctx).runAsync
-            ),
-            UndoButtons(undoCtx, size = Mini, disabled = adding.get)
+            ).mini.compact,
+            UndoButtons(undoCtx, size = PlSize.Mini, disabled = adding.get)
           ),
           <.div(
             Button(
+              severity = Button.Severity.Secondary,
+              icon = Icons.ListIcon,
+              label = "Observations Summary",
               onClick = setObs(props.programId, none, ctx) >> props.setSummaryPanel,
               clazz = ExploreStyles.ButtonSummary
-            )(
-              Icons.ListIcon.withClass(ExploreStyles.PaddedRightIcon),
-              "Observations Summary"
             )
           ),
           <.div(ExploreStyles.ObsTree)(

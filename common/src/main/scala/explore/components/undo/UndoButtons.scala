@@ -10,15 +10,16 @@ import explore.syntax.ui.given
 import explore.undo.UndoContext
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
-import react.semanticui.elements.button.*
-import react.semanticui.sizes.*
+import react.primereact.Button
+import reactST.primereact.primereactStrings.outlined
 
 case class UndoButtons[A](
   undoCtx:  UndoContext[A],
-  size:     SemanticSize = Tiny,
+  size:     PlSize = PlSize.Tiny,
   disabled: Boolean = false
 ) extends ReactFnProps[UndoButtons[Any]](UndoButtons.component)
 
@@ -29,25 +30,28 @@ object UndoButtons {
     ScalaFnComponent { (p: Props[A]) =>
       <.div(
         ExploreStyles.ButtonsUndo,
-        ButtonGroup(labeled = true, icon = true, compact = true, size = p.size)(
+        <.span(
+          react.common.style.Css("p-buttonset"),
           Button(
+            severity = Button.Severity.Secondary,
+            outlined = true,
             onClick = p.undoCtx.undo,
-            size = p.size,
             disabled = p.undoCtx.isUndoEmpty || p.disabled || p.undoCtx.working,
             loading = p.undoCtx.working,
-            clazz = ExploreStyles.VeryCompact,
-            labelPosition = LabelPosition.Left,
-            icon = true
-          )(Icons.Undo, <.span(ExploreStyles.ButtonsUndoLabel, "Undo")),
+            clazz = p.size.cls,
+            icon = Icons.Undo,
+            label = "Undo"
+          ).compact,
           Button(
+            severity = Button.Severity.Secondary,
+            outlined = true,
             onClick = p.undoCtx.redo,
-            size = p.size,
             disabled = p.undoCtx.isRedoEmpty || p.disabled || p.undoCtx.working,
             loading = p.undoCtx.working,
-            clazz = ExploreStyles.VeryCompact,
-            icon = true,
-            labelPosition = LabelPosition.Left
-          )(Icons.Redo, <.span(ExploreStyles.ButtonsUndoLabel, "Redo"))
+            clazz = p.size.cls,
+            icon = Icons.Redo,
+            label = "Redo"
+          ).compact
         )
       )
     }

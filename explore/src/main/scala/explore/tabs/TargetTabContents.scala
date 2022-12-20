@@ -71,10 +71,7 @@ import react.primereact.ToastRef
 import react.primereact.hooks.all.*
 import react.resizeDetector.*
 import react.resizeDetector.hooks.*
-import react.semanticui.elements.button.Button
-import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.elements.loader.Loader
-import react.semanticui.sizes.*
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
@@ -221,17 +218,7 @@ object TargetTabContents extends TwoPanels:
       }
 
     val backButton: VdomNode =
-      Button(
-        as = <.a,
-        size = Mini,
-        compact = true,
-        basic = true,
-        clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
-        onClickE = linkOverride[ButtonProps](
-          ctx.pushPage(AppTab.Targets, props.programId, Focused.None) >>
-            selectedView.set(SelectedPanel.Tree)
-        )
-      )(^.href := ctx.pageUrl(AppTab.Targets, props.programId, Focused.None), Icons.ChevronLeft)
+      makeBackButton(props.programId, AppTab.Targets, selectedView, ctx)
 
     /**
      * Render the summary table.

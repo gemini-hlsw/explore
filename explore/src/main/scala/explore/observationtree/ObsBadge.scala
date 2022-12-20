@@ -23,18 +23,17 @@ import lucuma.core.model.Observation
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Gid
 import lucuma.ui.forms.EnumViewSelect
+import lucuma.ui.primereact.EnumDropdownView
+import lucuma.ui.primereact.*
+import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.floatingui.Placement
 import react.floatingui.syntax.*
-import react.semanticui.collections.form.FormDropdown
-import react.semanticui.elements.button.Button
-import react.semanticui.modules.checkbox.Checkbox
-import react.semanticui.modules.dropdown.Dropdown
-import react.semanticui.shorthand.*
-import react.semanticui.sizes.*
-import react.semanticui.views.card.*
+import react.primereact.Button
+import react.primereact.InputSwitch
+import react.primereact.TooltipOptions
 
 case class ObsBadge(
   obs:               ObsSummary, // The layout will depend on the mixins of the ObsSummary.
@@ -72,27 +71,21 @@ object ObsBadge {
 
       val deleteButton =
         Button(
-          size = Small,
-          compact = true,
+          text = true,
           clazz = ExploreStyles.DeleteButton |+| ExploreStyles.ObsDeleteButton,
-          icon = <.span(Icons.Trash).withTooltip("Delete"),
-          onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
-            e.preventDefaultCB *>
-              e.stopPropagationCB *>
-              props.deleteCB.getOrEmpty
-        )
+          icon = Icons.Trash,
+          tooltip = "Delete",
+          onClickE = e => e.preventDefaultCB *> e.stopPropagationCB *> props.deleteCB.getOrEmpty
+        ).small
 
       val duplicateButton =
         Button(
-          size = Small,
-          compact = true,
+          text = true,
           clazz = ExploreStyles.ObsCloneButton,
-          icon = <.span(Icons.Clone).withTooltip("Duplicate"),
-          onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
-            e.preventDefaultCB *>
-              e.stopPropagationCB *>
-              props.cloneCB.getOrEmpty
-        )
+          icon = Icons.Clone,
+          tooltip = "Duplicate",
+          onClickE = e => e.preventDefaultCB *> e.stopPropagationCB *> props.cloneCB.getOrEmpty
+        ).small
 
       def titleAndId(title: String) =
         <.div(
@@ -101,77 +94,82 @@ object ObsBadge {
           <.div(ExploreStyles.ObsBadgeId, s"[${idIso.get(obs.id).value.toHexString}]")
         )
 
-      <.div(
-        Card(raised = props.selected)(ExploreStyles.ObsBadge)(
-          CardContent(
-            CardHeader(
-              <.div(
-                ExploreStyles.ObsBadgeHeader,
-                obs match {
-                  case withTitle: ObsWithTitle => titleAndId(withTitle.title)
-                  case withConf: ObsWithConf   => titleAndId(withConf.conf)
-                  case _                       => titleAndId("")
-                },
-                props.cloneCB.whenDefined(_ => duplicateButton),
-                props.deleteCB.whenDefined(_ => deleteButton)
+      val header = <.div(
+        ExploreStyles.ObsBadgeHeader,
+        obs match {
+          case withTitle: ObsWithTitle => titleAndId(withTitle.title)
+          case withConf: ObsWithConf   => titleAndId(withConf.conf)
+          case _                       => titleAndId("")
+        },
+        props.cloneCB.whenDefined(_ => duplicateButton),
+        props.deleteCB.whenDefined(_ => deleteButton)
+      )
+
+      val meta = <.div(
+        ExploreStyles.ObsBadgeMeta,
+        obs match {
+          case withTitle: ObsWithTitle =>
+            props.setSubtitleCB
+              .map(setCB =>
+                EditableLabel(
+                  value = withTitle.subtitle,
+                  mod = setCB,
+                  editOnClick = false,
+                  textClass = ExploreStyles.ObsBadgeSubtitle,
+                  inputClass = ExploreStyles.ObsBadgeSubtitleInput,
+                  addButtonLabel = "Add description",
+                  addButtonClass = ExploreStyles.ObsBadgeSubtitleAdd,
+                  leftButtonClass =
+                    ExploreStyles.BlendedButton |+| ExploreStyles.ObsBadgeSubtitleEdit,
+                  rightButtonClass =
+                    ExploreStyles.BlendedButton |+| ExploreStyles.ObsBadgeSubtitleDelete
+                )
               )
-            ),
-            CardMeta(
-              obs match {
-                case withTitle: ObsWithTitle =>
-                  props.setSubtitleCB
-                    .map(setCB =>
-                      EditableLabel(
-                        value = withTitle.subtitle,
-                        mod = setCB,
-                        editOnClick = false,
-                        textClass = ExploreStyles.ObsBadgeSubtitle,
-                        inputClass = ExploreStyles.ObsBadgeSubtitleInput,
-                        addButtonLabel = "Add description",
-                        addButtonClass = ExploreStyles.ObsBadgeSubtitleAdd,
-                        leftButtonClass =
-                          ExploreStyles.BlendedButton |+| ExploreStyles.ObsBadgeSubtitleEdit,
-                        rightButtonClass =
-                          ExploreStyles.BlendedButton |+| ExploreStyles.ObsBadgeSubtitleDelete
-                      )
-                    )
-                    .whenDefined
-                case _                       => TagMod.empty
-              },
-              renderEnumProgress(obs.status)
-            ),
-            CardDescription(ExploreStyles.ObsBadgeDescription)(
-              obs match {
-                case _: ObsWithTitle                     =>
-                  ReactFragment(List(conf, constraints).flatten: _*)
-                case withConstraints: ObsWithConstraints =>
-                  ReactFragment(withConstraints.constraintsSummary)
-                case _                                   =>
-                  ReactFragment(obs.id.toString)
-              },
-              props.setActiveStatusCB.map(setActiveStatus =>
-                <.span(
-                  Checkbox(
-                    toggle = true,
-                    checked = obs.activeStatus.toBoolean,
-                    onClickE = (e: ReactEvent, _: Checkbox.CheckboxProps) =>
-                      e.preventDefaultCB >> e.stopPropagationCB >> setActiveStatus(
-                        ObsActiveStatus.FromBoolean.get(!obs.activeStatus.toBoolean)
-                      ),
-                    clazz = ExploreStyles.ObsActiveStatusToggle
-                  )
-                ).withTooltip(
-                  placement = Placement.TopEnd,
+              .whenDefined
+          case _                       => TagMod.empty
+        },
+        renderEnumProgress(obs.status)
+      )
+
+      <.div(
+        <.div(ExploreStyles.ObsBadge, ExploreStyles.ObsBadgeSelected.when(props.selected))(
+          header,
+          meta,
+          <.div(ExploreStyles.ObsBadgeDescription)(
+            props.setActiveStatusCB.map(_ => ExploreStyles.ObsBadgeHasActiveStatus).orEmpty,
+            obs match {
+              case _: ObsWithTitle                     =>
+                <.span(List(conf, constraints).flatten: _*)
+              case withConstraints: ObsWithConstraints =>
+                <.span(withConstraints.constraintsSummary)
+              case _                                   =>
+                <.span(obs.id.toString)
+            },
+            props.setActiveStatusCB.map(setActiveStatus =>
+              <.span(
+                InputSwitch(
+                  checked = obs.activeStatus.toBoolean,
+                  onChange = _ =>
+                    setActiveStatus(ObsActiveStatus.FromBoolean.get(!obs.activeStatus.toBoolean)),
+                  clazz = ExploreStyles.ObsActiveStatusToggle,
                   tooltip = obs.activeStatus match
                     case ObsActiveStatus.Active   => "Observation is active"
                     case ObsActiveStatus.Inactive => "Observation is not active"
+                  ,
+                  tooltipOptions = TooltipOptions(position = TooltipOptions.Position.Left)
                 )
+              )(
+                // don't select the observation when changing the active status
+                ^.onClick ==> { e => e.preventDefaultCB >> e.stopPropagationCB }
               )
-            ),
-            CardExtra(clazz = ExploreStyles.ObsBadgeExtra)(
-              props.setStatusCB.map(setStatus =>
-                EnumViewSelect(
-                  id = s"obs-status-${obs.id}-2",
+            )
+          ),
+          <.div(ExploreStyles.ObsBadgeExtra)(
+            props.setStatusCB.map(setStatus =>
+              <.span(
+                ExploreStyles.ObsStatusSelectWrapper,
+                EnumDropdownView(
+                  id = NonEmptyString.unsafeFrom(s"obs-status-${obs.id}-2"),
                   value = View[ObsStatus](
                     obs.status,
                     { (f, cb) =>
@@ -179,17 +177,17 @@ object ObsBadge {
                       setStatus(newValue) >> cb(newValue)
                     }
                   ),
-                  compact = true,
-                  onClickE = (e: ReactEvent, _: Dropdown.DropdownProps) =>
-                    e.preventDefaultCB >> e.stopPropagationCB,
-                  onChangeE = (e: ReactEvent, _: FormDropdown.FormDropdownProps) =>
-                    e.preventDefaultCB >> e.stopPropagationCB,
-                  clazz = ExploreStyles.ObsStatusSelect
+                  size = PlSize.Mini,
+                  clazz = ExploreStyles.ObsStatusSelect,
+                  panelClass = ExploreStyles.ObsStatusSelectPanel
                 )
-              ),
-              <.span(
-                s"${obs.duration.toHours}hrs ${obs.duration.toMinutes % 60}mins"
+              )(
+                // don't select the observation when changing the status
+                ^.onClick ==> { e => e.preventDefaultCB >> e.stopPropagationCB }
               )
+            ),
+            <.span(
+              s"${obs.duration.toHours}hrs ${obs.duration.toMinutes % 60}mins"
             )
           )
         )

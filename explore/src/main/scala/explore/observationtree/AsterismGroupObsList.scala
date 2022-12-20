@@ -45,12 +45,8 @@ import react.common.ReactFnProps
 import react.fa.FontAwesomeIcon
 import react.primereact.Button
 import react.primereact.ToastRef
-import react.semanticui.elements.header.Header
 import react.semanticui.elements.segment.Segment
 import react.semanticui.elements.segment.SegmentGroup
-import react.semanticui.shorthand.*
-import react.semanticui.sizes.*
-import react.semanticui.views.card.*
 
 import scala.collection.immutable.SortedSet
 
@@ -397,7 +393,7 @@ object AsterismGroupObsList:
                                              props.toastRef
               ).runAsync
             ).compact.mini,
-            UndoButtons(props.undoCtx, size = Mini)
+            UndoButtons(props.undoCtx, size = PlSize.Mini)
           ),
           <.div(
             Button(

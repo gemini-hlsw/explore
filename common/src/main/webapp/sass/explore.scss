@@ -2,6 +2,10 @@
 
 $tree-section-width: 300px;
 
+// media queries cutoff
+$tablet-responsive-cutoff: 992px;
+$mobile-responsive-cutoff: 670px;
+
 // Scrollbar
 *::-webkit-scrollbar {
   width: 0.8em !important;
@@ -54,6 +58,33 @@ body {
   label {
     font-weight: bold;
   }
+}
+
+.p-component.p-button.tile-back-button {
+  margin-right: 0;
+
+  @media (min-width: $mobile-responsive-cutoff) {
+    display: none;
+  }
+}
+
+.explore-buttons-undo {
+  margin-left: auto;
+
+  .p-buttonset .p-component.p-button {
+    color: var(--site-text-color);
+  }
+}
+
+.tile-xs-width {
+  // For very small tables make the undo buttons remove the text
+  .explore-buttons-undo .p-button-label {
+    display: none;
+  }
+}
+
+.explore-title-undo-buttons {
+  text-align: right;
 }
 
 // There is still an analog to this in style.less
@@ -341,16 +372,14 @@ body {
   }
 }
 
-.tile-xs-width {
-  .target-grid {
-    @include hide-hidden-target-cells(false);
+.tile-xs-width .target-grid{
+  @include hide-hidden-target-cells(false);
 
-    grid-template:
-      'undo' min-content
-      'coordinates' min-content
-      'aladin' 1fr
-      / 1fr
-  }
+  grid-template:
+    'undo' min-content
+    'coordinates' min-content
+    'aladin' 1fr
+    / 1fr
 }
 
 .target-tile-body {
@@ -589,6 +618,25 @@ $search-preview-margin: 5px;
   }
 }
 
+.pl-react-table.pl-celled-table {
+  .p-datatable-tbody>tr>td {
+    &.explore-table-cell-hide-border {
+      border-left-width: 0;
+    }
+
+    &.explore-sequence-bracket-cell {
+      overflow: visible;
+      position: relative;
+      z-index: 50;
+
+      svg {
+        overflow: visible;
+        fill: var(--text-color);
+      }
+    }
+  }
+}
+
 // -------------
 // Toolbar of the aladin display
 // -------------
@@ -654,40 +702,144 @@ $search-preview-margin: 5px;
 // ------
 // Obs badge
 // ------
-
-.ui.button.obs-clone-button,
-.ui.button.delete-button.obs-delete-button {
-  border: none;
-  background-color: transparent;
+.obs-badge {
+  width: 100%;
   margin: 0;
-  padding: 0 !important;
+  padding: 1em;
+  background-color: var(--obs-badge-background);
+  border: solid 1px var(--site-border-color);
+  border-radius: 5px;
 
-  &:hover {
-    outline: 1px var(--site-border-color) solid;
+  // defined in lucuma-ui.scss. Linting doesn't capture that.
+  /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
+  font-size: var(--pl-mini-font-size);
+
+  .p-component.p-button {
+    color: var(--site-text-color) !important;
+    
+    &:hover {
+      outline: 1px  var(--site-border-color) solid;
+    }
   }
 
-  svg {
-    margin: 0 !important;
+  &:last-child {
+    margin-bottom: 0.2em;
+  }
+
+  .obs-badge-header,
+  .obs-badge-meta,
+  .obs-badge-description,
+  .obs-badge-extra {
+    color: var(--obs-badge-color);
+  }
+
+  .obs-badge-header {
+    .obs-badge-target-and-id {
+      display: flex;
+      width: 100%;
+      /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
+      font-size: var(--pl-large-font-size);
+      font-weight: 700;
+    }
+
+    .p-component.p-button.obs-clone-button,
+    .p-component.p-button.obs-delete-button {
+      margin: 0;
+      padding: 0;
+    }
+  }
+
+  .obs-badge-description {
+    /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
+    font-size: var(--pl-tiny-font-size);
+
+    // because of the rotate, Y is X
+    $active-status-translate-y: 2.5em;
+    
+    .p-component.p-inputswitch.obs-active-status-toggle {
+      transform: rotate(270deg) scale(0.6) translateY($active-status-translate-y);
+      height: 21px;
+
+      &.p-inputswitch-checked .p-inputswitch-slider {
+        background: var(--explore-accent-color);
+      }
+    }
+
+    // if we have the active status toggle, it is transformed and leaves
+    // unused space. We want to be able to use that space.
+    &.obs-badge-has-active-status span:first-child {
+      margin-right: -$active-status-translate-y;
+    }
+  }
+  
+  .obs-badge-extra {
+    margin-top: 5px;
+    display: flex;
+    justify-content: space-between;
+
+    .obs-status-select-wrapper {
+      flex-grow: 2;
+      margin-right: 2em;
+    }
+  }
+
+  .obs-badge-subtitle {
+    font-size: x-small;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    margin-bottom: -1px;
+  }
+
+  .obs-badge-subtitle-input {
+    flex-grow: 2;
+
+    & input {
+      font-size: x-small !important;
+      padding: 1px !important;
+    }
+  }
+
+  .obs-badge-subtitle-add {
+    float: right;
+    font-size: x-small !important;
+  }
+
+  .p-component.p-button.obs-badge-subtitle-edit {
+    margin-left: 0.5em;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .p-component.p-button.obs-badge-subtitle-delete {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .obs-badge-id {
+    margin-left: auto;
+    margin-right: 1em;
+    font-weight: normal;
+    font-size: small;
+    opacity: 0.5;
+  }
+
+  .obs-status-select {
+    width: 100%;
+    background-color: var(--obs-selected-badge-background);
   }
 }
 
-.pl-react-table.pl-celled-table {
-  .p-datatable-tbody>tr>td {
-    &.explore-table-cell-hide-border {
-      border-left-width: 0;
-    }
+// The panel is not nested in the obs badge
+.obs-status-select-panel.p-dropdown-panel {
+  background-color: var(--obs-selected-badge-background);
+}
 
-    &.explore-sequence-bracket-cell {
-      overflow: visible;
-      position: relative;
-      z-index: 50;
-
-      svg {
-        overflow: visible;
-        fill: var(--text-color);
-      }
-    }
-  }
+.selected-obs-item .obs-badge,
+.obs-tree-item .obs-badge.obs-badge-selected {
+  background-color: var(--obs-selected-badge-background);
+  box-shadow: 0 0 0 2px var(--site-solid-border-color);
 }
 
 // ------
@@ -736,7 +888,6 @@ $search-preview-margin: 5px;
 .explore-advanced-configuration-col3 {
   grid-area: col3;
 }
-
 
 // ------
 // Constraints
@@ -1515,4 +1666,3 @@ div.spectroscopy-table-emptymessage {
 .indicator-fail {
   color: var(--red-500);
 }
-
