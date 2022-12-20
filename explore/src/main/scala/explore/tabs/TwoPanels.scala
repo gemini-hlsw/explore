@@ -22,6 +22,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
 import lucuma.core.model.User
+import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
@@ -30,10 +31,8 @@ import org.typelevel.log4cats.Logger
 import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.UserPreferencesDB
 import react.draggable.Axis
+import react.primereact.Button
 import react.resizeDetector.*
-import react.semanticui.elements.button.Button
-import react.semanticui.elements.button.Button.ButtonProps
-import react.semanticui.sizes.*
 
 enum RightSideCardinality:
   case Single, Multi
@@ -47,16 +46,13 @@ trait TwoPanels {
     ctx:       AppContext[IO]
   ): VdomNode =
     Button(
-      as = <.a,
-      size = Mini,
-      compact = true,
-      basic = true,
-      clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
-      onClickE = linkOverride[ButtonProps](
-        ctx.pushPage(appTab, programId, Focused.None) >>
-          pv.set(SelectedPanel.Tree)
-      )
-    )(^.href := ctx.pageUrl(appTab, programId, Focused.None), Icons.ChevronLeft)
+      icon = Icons.ChevronLeft,
+      severity = Button.Severity.Secondary,
+      text = true,
+      clazz = ExploreStyles.TileBackButton,
+      onClick = ctx.pushPage(appTab, programId, Focused.None) >>
+        pv.set(SelectedPanel.Tree)
+    ).mini.compact
 
   private def tree(panel: VdomNode, cardinality: RightSideCardinality) =
     <.div(

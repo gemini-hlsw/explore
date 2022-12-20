@@ -274,14 +274,6 @@ tfoot {
   color: unset;
 }
 
-.ui.button.tile-back-button {
-  margin-right: 0;
-
-  @media (min-width: @mobile-responsive-cutoff) {
-    display: none;
-  }
-}
-
 .explore-tile-control {
   margin-right: auto;
   flex-grow: 3;
@@ -509,77 +501,6 @@ tfoot {
 .obs-tree-item {
   margin-left: 25px;
   padding: 5px;
-}
-
-.card.obs-badge {
-  width: 100%;
-  margin: 0 0;
-  background-color: var(--obs-badge-background);
-  border: solid 1px var(--site-border-color);
-  font-size: smaller;
-}
-
-.card.obs-badge:last-child {
-  margin-bottom: 0.2em;
-}
-
-.card.obs-badge .content .header,
-.card.obs-badge .content .meta,
-.card.obs-badge .content .description,
-.card.obs-badge .content .extra {
-  color: var(--obs-badge-color);
-}
-
-.obs-badge-target-and-id {
-  display: flex;
-  width: 100%;
-}
-
-.obs-badge-subtitle {
-  font-size: x-small;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  width: 100%;
-  margin-bottom: -1px;
-}
-
-.obs-badge-subtitle-input {
-  flex-grow: 2;
-
-  & input {
-    font-size: x-small !important;
-    padding: 1px !important;
-  }
-}
-
-.obs-badge-subtitle-add {
-  float: right;
-  font-size: x-small !important;
-}
-
-.ui.button.compact.obs-badge-subtitle-edit {
-  margin-left: 0.5em;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-}
-
-.ui.button.compact.obs-badge-subtitle-delete {
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-}
-
-.obs-badge-id {
-  margin-left: auto;
-  margin-right: 1em;
-  font-weight: normal;
-  font-size: small;
-  opacity: 0.5;
-}
-
-.selected-obs-item .card.obs-badge,
-.obs-tree-item .card.obs-badge.raised {
-  background-color: var(--obs-selected-badge-background);
 }
 
 .obs-tree-group-header {
@@ -1210,10 +1131,6 @@ html {
   border: 0 !important; // important to override SUI's style.
 }
 
-.explore-buttons-undo {
-  margin-left: auto;
-}
-
 .explore-button-summary {
   width: 100%;
   justify-content: center;
@@ -1226,19 +1143,6 @@ html {
   .icon {
     width: 2em;
   }
-}
-
-.tile-xs-width {
-
-  // TODO: This will require some work when we change the undo buttons to primereact.
-  // For very small tables make the undo buttons remove the text
-  .explore-buttons-undo-label {
-    display: none;
-  }
-}
-
-.explore-title-undo-buttons {
-  text-align: right;
 }
 
 .explore-title-select-columns {
@@ -1409,36 +1313,6 @@ svg[focusable='false']:focus {
 .user-selection-buttons {
   display: flex;
   flex-direction: column;
-}
-
-.obs-badge-extra {
-  margin-top: 5px;
-  display: flex;
-  justify-content: space-between;
-}
-
-.obs-status-select {
-  flex-grow: 2;
-  margin-right: 2em;
-
-  .ui.dropdown {
-    width: 100%;
-    font-size: inherit;
-
-    .menu .item {
-      font-size: inherit;
-      border: 0;
-    }
-  }
-}
-
-.ui.toggle.checkbox.obs-active-status-toggle {
-  transform: rotate(270deg) scale(0.6) translate(-100%, 70%);
-  width: auto;
-
-  input:checked~label::before {
-    background-color: var(--checkbox-toggle-checked-background) !important;
-  }
 }
 
 .ui.selectable.table>tbody>tr:hover,

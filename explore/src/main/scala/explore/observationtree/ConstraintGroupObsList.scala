@@ -26,6 +26,7 @@ import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.syntax.all.*
 import lucuma.schemas.ObservationDB
+import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import mouse.boolean.*
@@ -260,7 +261,7 @@ object ConstraintGroupObsList:
           (result, provided) => dragging.setState(false) >> handleDragEnd(result, provided)
       )(
         <.div(ExploreStyles.ObsTreeWrapper)(
-          <.div(ExploreStyles.TreeToolbar)(UndoButtons(undoCtx, size = Mini)),
+          <.div(ExploreStyles.TreeToolbar)(UndoButtons(undoCtx, size = PlSize.Mini)),
           <.div(
             Button(
               onClick = setObsSet(none) >> props.setSummaryPanel,

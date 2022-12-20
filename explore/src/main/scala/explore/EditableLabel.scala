@@ -11,6 +11,7 @@ import explore.syntax.ui.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.util.NewType
+import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.given
@@ -19,9 +20,10 @@ import react.common.ReactFnProps
 import react.common.style.Css
 import react.fa.FontAwesomeIcon
 import react.floatingui.syntax.*
-import react.semanticui.elements.button.Button
-import react.semanticui.elements.input.Input
-import react.semanticui.sizes.*
+import react.primereact.Button
+import react.primereact.InputText
+
+import scalajs.js.JSConverters.*
 
 case class EditableLabel(
   value:                Option[NonEmptyString],
@@ -101,45 +103,47 @@ object EditableLabel {
           Option(node.asInstanceOf[dom.html.Element]).foreach(_.focus())
 
         val leftButton: VdomNode = Button(
-          size = Mini,
-          compact = true,
+          icon = Icons.Edit,
+          text = true,
+          severity = Button.Severity.Secondary,
           clazz = props.leftButtonClass,
-          onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) => editCB(e)
-        )(Icons.Edit)
+          onClickE = editCB,
+          tooltip = props.leftButtonTooltip.orUndefined
+        ).mini.compact
 
         val rightButton: VdomNode = Button(
-          size = Mini,
-          compact = true,
+          icon = props.rightButtonIcon,
+          text = true,
+          severity = Button.Severity.Secondary,
           clazz = props.rightButtonClass,
-          onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
-            e.stopPropagationCB >> e.preventDefaultCB >> props.mod(none)
-        )(props.rightButtonIcon)
+          onClickE = e => e.stopPropagationCB >> e.preventDefaultCB >> props.mod(none),
+          tooltip = props.leftButtonTooltip.orUndefined
+        ).mini.compact
 
         val acceptButton: VdomNode = Button(
-          size = Mini,
-          compact = true,
+          icon = Icons.Checkmark,
+          text = true,
+          severity = Button.Severity.Secondary,
           clazz = props.leftButtonClass,
-          onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
-            e.stopPropagationCB >> e.preventDefaultCB >> submitCB
-        )(Icons.Checkmark)
+          onClickE = e => e.stopPropagationCB >> e.preventDefaultCB >> submitCB
+        ).mini.compact
 
         val discardButton: VdomNode = Button(
-          size = Mini,
-          compact = true,
+          icon = Icons.Close,
+          text = true,
+          severity = Button.Severity.Secondary,
           clazz = props.rightButtonClass,
-          onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
-            e.stopPropagationCB >> e.preventDefaultCB >> editing.setState(NotEditing)
-        )(Icons.Close)
+          onClickE = e => e.stopPropagationCB >> e.preventDefaultCB >> editing.setState(NotEditing)
+        ).mini.compact
 
         if (editing.value.value)
           <.div(^.width := "100%", ^.display.flex)(
-            Input(
+            InputText(
+              id = "editable-label-input", // won't necesessarily be unique...
               value = displayValue.value,
-              onChangeE = (e: ReactEventFromInput) => displayValue.setState(e.target.value),
-              size = Mini,
-              focus = true,
+              onChange = (e: ReactEventFromInput) => displayValue.setState(e.target.value),
               clazz = props.inputClass
-            )(
+            ).mini.withMods(
               ^.onKeyUp ==> (e =>
                 if (e.key === "Enter") submitCB
                 else if (e.key === "Escape") editing.setState(NotEditing)
@@ -156,11 +160,10 @@ object EditableLabel {
         else
           props.value.fold[VdomNode](
             Button(
-              size = Mini,
-              compact = true,
+              severity = Button.Severity.Secondary,
               clazz = props.addButtonClass,
-              onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) => editCB(e)
-            )(props.addButtonLabel)
+              onClickE = editCB
+            ).mini.compact(props.addButtonLabel)
           )(text =>
             <.div(^.width := "100%", ^.display.flex)(
               <.span(
@@ -168,8 +171,8 @@ object EditableLabel {
                 ^.onClick ==> (v => editCB(v).whenA(props.editOnClick)),
                 text
               ),
-              props.leftButtonTooltip.fold(leftButton)(tt => <.span(leftButton).withTooltip(tt)),
-              props.rightButtonTooltip.fold(rightButton)(tt => <.span(rightButton).withTooltip(tt))
+              leftButton,
+              rightButton
             )
           )
       }
