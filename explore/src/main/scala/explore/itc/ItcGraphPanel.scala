@@ -84,8 +84,8 @@ object ItcGraphProperties:
 object ItcGraphPanel:
   private type Props = ItcGraphPanel with ItcPanelProps
 
-  given Reusability[PlotDetails]        = Reusability.byEq
-  given Reusability[ItcGraphProperties] = Reusability.by(x => (x.chartType, x.detailsShown))
+  private given Reusability[PlotDetails]        = Reusability.byEq
+  private given Reusability[ItcGraphProperties] = Reusability.by(x => (x.chartType, x.detailsShown))
 
   private val component =
     ScalaFnComponent

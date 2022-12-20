@@ -729,7 +729,7 @@ $search-preview-margin: 5px;
 
   .p-component.p-button {
     color: var(--site-text-color) !important;
-    
+
     &:hover {
       outline: 1px  var(--site-border-color) solid;
     }
@@ -768,7 +768,7 @@ $search-preview-margin: 5px;
 
     // because of the rotate, Y is X
     $active-status-translate-y: 2.5em;
-    
+
     .p-component.p-inputswitch.obs-active-status-toggle {
       transform: rotate(270deg) scale(0.6) translateY($active-status-translate-y);
       height: 21px;
@@ -784,7 +784,7 @@ $search-preview-margin: 5px;
       margin-right: -$active-status-translate-y;
     }
   }
-  
+
   .obs-badge-extra {
     margin-top: 5px;
     display: flex;
@@ -1646,6 +1646,17 @@ table.explore-border-table {
   tr.p-datatable-emptymessage {
     background: none;
   }
+}
+
+.p-component.p-button.pl-tiny {
+  /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
+  font-size: var(--pl-tiny-font-size);
+}
+
+.p-component.p-button.pl-compact {
+  row-gap: 0.5em;
+  /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
+  padding: var(--compact-button-padding);
 }
 
 .explore-table:has(.p-datatable-emptymessage):has(.explore-table-emptymessage) {
