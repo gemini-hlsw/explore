@@ -55,13 +55,13 @@ object AgsOverlay {
                 <.span(
                   ExploreStyles.Disabled.unless(canGoPrev),
                   ^.onClick ==>? goPrev,
-                  ExploreStyles.BlendedButton |+| ExploreStyles.AgsNavigationButton,
+                  ExploreStyles.AgsNavigationButton,
                   Icons.ChevronLeft
                 ),
                 <.span(
                   ExploreStyles.Disabled.unless(canGoNext),
                   ^.onClick ==>? goNext,
-                  ExploreStyles.BlendedButton |+| ExploreStyles.AgsNavigationButton,
+                  ExploreStyles.AgsNavigationButton,
                   Icons.ChevronRight
                 )
               )
