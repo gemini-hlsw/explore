@@ -70,11 +70,11 @@ import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.odb.ObsQueries
 import react.aladin.Fov
 import react.common.ReactFnProps
+import react.primereact.Button
 import react.primereact.Checkbox
 import react.primereact.Divider
 import react.primereact.ProgressBar
 import react.semanticui.collections.menu.*
-import react.semanticui.elements.button.Button
 import react.semanticui.sizes.*
 
 import java.time.Duration
@@ -507,14 +507,16 @@ object AladinCell extends ModelOptics with AladinCommon:
             ExploreStyles.TargetAladinCell,
             <.div(
               ExploreStyles.AladinContainerColumn,
-              Button(size = Small, icon = true, onClick = fullScreenSetter)(
-                ExploreStyles.AladinFullScreenButton,
-                Icons.ExpandDiagonal.unless(props.fullScreen.get.value),
-                Icons.ContractDiagonal.when(props.fullScreen.get.value)
-              ),
+              Button(onClick = fullScreenSetter)
+                .withMods(
+                  ExploreStyles.ButtonOnAladin |+| ExploreStyles.AladinFullScreenButton,
+                  Icons.ExpandDiagonal.unless(props.fullScreen.get.value),
+                  Icons.ContractDiagonal.when(props.fullScreen.get.value)
+                )
+                .small,
               <.div(
                 ExploreStyles.AladinToolbox,
-                Button(size = Small, icon = true, onClick = openSettings.modState(_.flip))(
+                Button(onClick = openSettings.modState(_.flip)).withMods(
                   ExploreStyles.ButtonOnAladin,
                   ^.onMouseEnter --> openSettings.setState(SettingsMenuState.Open),
                   Icons.ThinSliders

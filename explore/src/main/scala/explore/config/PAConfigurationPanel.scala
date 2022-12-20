@@ -22,9 +22,8 @@ import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.refined.*
 import lucuma.ui.input.ChangeAuditor
-import lucuma.ui.primereact.EnumDropdownView
+import lucuma.ui.primereact.FormEnumDropdownView
 import lucuma.ui.primereact.FormInputTextView
-import lucuma.ui.primereact.FormLabel
 import lucuma.ui.primereact.LucumaStyles
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.*
@@ -35,14 +34,14 @@ import queries.schemas.odb.ObsQueries
 import react.common.Css
 import react.common.ReactFnProps
 
-case class ObsConfigurationPanel(
+case class PAConfigurationPanel(
   obsId:        Observation.Id,
   posAngleView: View[Option[PosAngleConstraint]],
   agsState:     View[AgsState]
-) extends ReactFnProps(ObsConfigurationPanel.component)
+) extends ReactFnProps(PAConfigurationPanel.component)
 
-object ObsConfigurationPanel:
-  private type Props = ObsConfigurationPanel
+object PAConfigurationPanel:
+  private type Props = PAConfigurationPanel
 
   /**
    * Used to convert pos angle and an enumeration for a UI selector It is unsafe as the angle is
@@ -111,13 +110,11 @@ object ObsConfigurationPanel:
           LucumaStyles.FormColumnCompact,
           ExploreStyles.PAConfigurationForm
         )(
-          FormLabel(htmlFor = "pos-angle-alternative".refined)(
-            "Position Angle",
-            HelpIcon("configuration/positionangle.md".refined)
-          ),
-          EnumDropdownView(
+          FormEnumDropdownView(
             clazz = ExploreStyles.ObsConfigurationObsPA,
             id = "pos-angle-alternative".refined,
+            label =
+              React.Fragment("Position Angle", HelpIcon("configuration/positionangle.md".refined)),
             value = posAngleOptionsView,
             disabled = !props.agsState.get.canRecalculate
           ),

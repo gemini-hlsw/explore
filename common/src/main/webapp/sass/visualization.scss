@@ -248,26 +248,27 @@ $brightness: var(--aladin-image-brightness);
   }
 }
 
-.ui.small.button.explore-aladin-button {
+.p-button.p-button-icon-only.explore-aladin-button,
+.p-button.explore-aladin-button {
   background: var(--button-background-color-semi);
+  border-color: var(--gray-500);
+  padding: 0.3em;
+  margin-right: 0;
+  aspect-ratio: 1;
+
+  &:enabled:focus,
+  &:enabled:hover {
+    background: var(--gray-700);
+    border-color: var(--gray-200);
+    box-shadow: 0 0 0 0.5px var(--gray-200);
+  }
 }
 
 @mixin aladin-button-mixin {
   position: absolute;
   z-index: 120;
-
-  .ui.icon.button {
-    margin: 0;
-
-    /* stylelint-disable-next-line selector-class-pattern */
-    svg.svg-inline--fa {
-      width: auto;
-    }
-  }
-
-  .ui.icon.button:not(.animated, .compact, .labeled) {
-    padding: 0.4em;
-  }
+  padding: 0.3em;
+  aspect-ratio: 1;
 }
 
 .explore-aladin-zoom-control {
@@ -279,8 +280,7 @@ $brightness: var(--aladin-image-brightness);
   flex-direction: column;
 }
 
-.ui.icon.button:not(.animated, .compact, .labeled).explore-aladin-fullscreen-button {
-  padding: 0.4em;
+.p-button.explore-aladin-fullscreen-button {
   margin: 0;
 
   /* stylelint-disable-next-line selector-class-pattern */

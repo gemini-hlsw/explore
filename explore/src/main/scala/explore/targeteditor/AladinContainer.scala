@@ -29,6 +29,7 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
 import lucuma.core.model.SiderealTracking
+import lucuma.ui.primereact.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -36,9 +37,8 @@ import org.scalajs.dom.Element
 import react.aladin.*
 import react.common.Css
 import react.common.ReactFnProps
+import react.primereact.Button
 import react.resizeDetector.hooks.*
-import react.semanticui.elements.button.Button
-import react.semanticui.sizes.*
 
 import java.time.LocalDate
 import java.time.ZoneId
@@ -369,21 +369,15 @@ object AladinContainer extends AladinCommon {
                 <.div(
                   ExploreStyles.AladinZoomControl,
                   Button(
-                    size = Small,
-                    icon = true,
+                    clazz = ExploreStyles.ButtonOnAladin,
+                    icon = Icons.ThinPlus,
                     onClick = aladinRef.get.asCBO.flatMapCB(_.backend.increaseZoom).toCallback
-                  )(
-                    ExploreStyles.ButtonOnAladin,
-                    Icons.ThinPlus
-                  ),
+                  ).small,
                   Button(
-                    size = Small,
-                    icon = true,
+                    clazz = ExploreStyles.ButtonOnAladin,
+                    icon = Icons.ThinMinus,
                     onClick = aladinRef.get.asCBO.flatMapCB(_.backend.decreaseZoom).toCallback
-                  )(
-                    ExploreStyles.ButtonOnAladin,
-                    Icons.ThinMinus
-                  )
+                  ).small
                 ),
                 (resize.width, resize.height, fov.value)
                   .mapN(

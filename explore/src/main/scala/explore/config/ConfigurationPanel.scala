@@ -185,14 +185,15 @@ object ConfigurationPanel:
             mapModOrAssign(GmosSouthLongSlitInput())(ScienceModeInput.gmosSouthLongSlit.modify)
           )
         }
-        val confMatrix      = matrix.toOption.flatten.getOrElse(SpectroscopyModesMatrix.empty)
+
+        val confMatrix = matrix.toOption.flatten.getOrElse(SpectroscopyModesMatrix.empty)
 
         React.Fragment(
           props.renderInTitle(
             <.div(ExploreStyles.TitleUndoButtons)(UndoButtons(props.scienceData))
           ),
           <.div(ExploreStyles.ConfigurationGrid)(
-            ObsConfigurationPanel(props.obsId, posAngleView, props.agsState),
+            PAConfigurationPanel(props.obsId, posAngleView, props.agsState),
             if (editState.get === ConfigEditState.TableView)
               BasicConfigurationPanel(
                 props.userId,
