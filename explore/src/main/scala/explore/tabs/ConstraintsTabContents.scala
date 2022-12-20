@@ -71,10 +71,6 @@ import react.hotkeys.*
 import react.hotkeys.hooks.*
 import react.resizeDetector.*
 import react.resizeDetector.hooks.*
-import react.semanticui.elements.button.Button
-import react.semanticui.elements.button.Button.ButtonProps
-import react.semanticui.elements.loader.Loader
-import react.semanticui.sizes.*
 
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration.*
@@ -370,8 +366,9 @@ object ConstraintsTabContents extends TwoPanels:
       .useResizeDetector()
       .render { (props, ctx, layout, defaultLayout, state, constraintsWithObs, resize) =>
         React.Fragment(
-          constraintsWithObs.render(renderFn(props, state, defaultLayout, layout, resize, ctx) _,
-                                    <.span(Loader(active = true)).withRef(resize.ref)
+          constraintsWithObs.render(
+            renderFn(props, state, defaultLayout, layout, resize, ctx) _,
+            <.span(DefaultPendingRender).withRef(resize.ref)
           )
         )
 

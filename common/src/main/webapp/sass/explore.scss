@@ -97,6 +97,19 @@ body {
   box-shadow: -0 0 2px 1px var(--warning-background-color);
 }
 
+.p-progress-spinner.explore-loader {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin: 0;
+    text-align: center;
+    z-index: 1000;
+    transform: translateX(-50%) translateY(-50%);
+    width: 4rem;
+    height: 4rem;
+    font-size: 1em;
+}
+
 // -----
 // Table toolbar
 // -----
