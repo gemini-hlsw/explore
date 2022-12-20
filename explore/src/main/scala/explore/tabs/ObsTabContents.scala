@@ -60,10 +60,6 @@ import react.primereact.Toast
 import react.primereact.hooks.all.*
 import react.resizeDetector.*
 import react.resizeDetector.hooks.*
-import react.semanticui.elements.button.Button
-import react.semanticui.elements.button.Button.ButtonProps
-import react.semanticui.elements.loader.Loader
-import react.semanticui.sizes.*
 
 import scala.concurrent.duration.*
 
@@ -368,7 +364,7 @@ object ObsTabContents extends TwoPanels:
                 debouncer,
                 ctx
               ) _,
-              <.span(Loader(active = true)).withRef(resize.ref)
+              <.span(DefaultPendingRender).withRef(resize.ref)
             )
           )
       }

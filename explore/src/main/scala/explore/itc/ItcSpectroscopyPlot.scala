@@ -31,11 +31,6 @@ import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.highcharts.ResizingChart
 import react.resizeDetector.hooks.*
-import react.semanticui.collections.form.Form
-import react.semanticui.elements.button.Button
-import react.semanticui.elements.button.ButtonGroup
-import react.semanticui.elements.loader.Loader
-import react.semanticui.sizes.*
 import reactST.highcharts.highchartsStrings.line
 import reactST.highcharts.mod.DashStyleValue
 import reactST.highcharts.mod.*

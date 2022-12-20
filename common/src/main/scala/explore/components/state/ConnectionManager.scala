@@ -8,6 +8,7 @@ import cats.syntax.all.*
 import crystal.react.hooks.*
 import crystal.react.implicits.*
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import io.circe.Json
 import io.circe.syntax.*
@@ -16,7 +17,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 import react.common.ReactFnPropsWithChildren
-import react.semanticui.elements.loader.Loader
+import react.primereact.ProgressSpinner
 
 case class ConnectionManager(ssoToken: NonEmptyString, onConnect: IO[Unit])
     extends ReactFnPropsWithChildren(ConnectionManager.component):
@@ -59,6 +60,6 @@ object ConnectionManager {
       if (initializedState.value)
         children
       else
-        Loader(active = true)
+        ProgressSpinner(clazz = ExploreStyles.Loader)
     )
 }

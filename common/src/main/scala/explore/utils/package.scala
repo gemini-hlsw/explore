@@ -34,10 +34,10 @@ import org.scalajs.dom
 import react.datepicker.*
 import react.fa.IconSize
 import react.primereact.Button
+import react.primereact.Message
 import react.primereact.MessageItem
+import react.primereact.ProgressSpinner
 import react.primereact.ToastRef
-import react.semanticui.collections.message.Message
-import react.semanticui.elements.loader.Loader
 
 import java.time.Instant
 import java.time.ZoneOffset
@@ -75,10 +75,10 @@ def version(environment: ExecutionEnvironment): NonEmptyString = {
 }
 
 // TODO All the "potRender" methods should go in lucuma-ui
-val DefaultPendingRender: VdomNode = Loader(active = true)
+val DefaultPendingRender: VdomNode = ProgressSpinner(clazz = ExploreStyles.Loader)
 
 val DefaultErrorRender: Throwable => VdomNode =
-  t => Message(error = true)(t.getMessage)
+  t => Message(text = t.getMessage, severity = Message.Severity.Error)
 
 def potRender[A](
   valueRender:   A => VdomNode,

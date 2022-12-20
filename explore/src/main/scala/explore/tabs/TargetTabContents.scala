@@ -71,7 +71,6 @@ import react.primereact.ToastRef
 import react.primereact.hooks.all.*
 import react.resizeDetector.*
 import react.resizeDetector.hooks.*
-import react.semanticui.elements.loader.Loader
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
@@ -751,7 +750,7 @@ object TargetTabContents extends TwoPanels:
         (
           props,
           ctx,
-          active,
+          _,
           twoPanelState,
           resize,
           layout,
@@ -765,15 +764,6 @@ object TargetTabContents extends TwoPanels:
           React.Fragment(
             // TODO switch to prime react
             Toast(Toast.Position.BottomRight).withRef(toastRef.ref),
-            if (active.get.value) {
-              <.div(
-                ^.cls := "ui active dimmer",
-                Loader(
-                  active = true,
-                  "Cloning observation..."
-                )
-              )
-            } else EmptyVdom,
             asterismGroupsWithObs.render(
               renderFn(
                 props,
@@ -787,7 +777,7 @@ object TargetTabContents extends TwoPanels:
                 ctx,
                 toastRef
               ),
-              <.span(Loader(active = true)).withRef(resize.ref)
+              <.span(DefaultPendingRender).withRef(resize.ref)
             )
           )
       }

@@ -33,6 +33,8 @@ object ExploreStyles:
   val TileSMH: Css            = Css("tile-sm-height")
   val TileMDH: Css            = Css("tile-md-height")
 
+  val Loader: Css = Css("explore-loader")
+
   val Accented: Css   = Css("explore-accented")
   val TextPlain: Css  = Css("explore-text-plain")
   val TextNoWrap: Css = Css("explore-text-nowrap")

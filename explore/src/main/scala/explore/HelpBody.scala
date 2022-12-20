@@ -16,6 +16,7 @@ import explore.syntax.ui.given
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import org.http4s.*
@@ -24,8 +25,7 @@ import react.common.ReactFnProps
 import react.markdown.ReactMarkdown
 import react.markdown.RehypePlugin
 import react.markdown.RemarkPlugin
-import react.semanticui.elements.button.Button
-import react.semanticui.sizes.*
+import react.primereact.Button
 
 import scala.concurrent.duration.*
 import scala.util.Try
@@ -83,12 +83,17 @@ object HelpBody:
             ExploreStyles.HelpTitle,
             <.h4(ExploreStyles.HelpTitleLabel, "Help"),
             <.div(
-              Button(as = <.a, size = Mini, compact = true, onClick = helpView.set(None))(
-                Icons.Edit
-              )(^.href := editUrl.toString(), ^.target := "_blank"),
-              Button(size = Mini, compact = true, onClick = helpView.set(None))(
-                Icons.Close
-              )
+              <.a(Button(icon = Icons.Edit,
+                         severity = Button.Severity.Secondary,
+                         onClick = helpView.set(None)
+                  ).mini.compact,
+                  ^.href   := editUrl.toString(),
+                  ^.target := "_blank"
+              ),
+              Button(icon = Icons.Close,
+                     severity = Button.Severity.Secondary,
+                     onClick = helpView.set(None)
+              ).mini.compact
             )
           ),
           <.div(

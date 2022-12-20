@@ -24,8 +24,6 @@ case class HelpIcon(id: Help.Id, clazz: js.UndefOr[Css] = js.undefined)
 object HelpIcon:
   type Props = HelpIcon
 
-  type HelpId = NonEmptyString
-
   val component = ScalaFnComponent
     .withHooks[Props]
     .useContext(HelpContext.ctx)
