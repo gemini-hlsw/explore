@@ -345,17 +345,7 @@ $brightness: var(--aladin-image-brightness);
     align-items: center;
 
     .ags-navigation {
-      margin-left: 0.5em;
-
-      .pl-disabled {
-        cursor: initial;
-
-        /* stylelint-disable-next-line selector-class-pattern */
-        svg.svg-inline--fa {
-          color: var(--gray-400);
-        }
-      }
-
+      margin-left: auto;
     }
 
     .ags-navigation-button {
