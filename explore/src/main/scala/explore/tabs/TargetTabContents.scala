@@ -90,6 +90,8 @@ case class TargetTabContents(
 object TargetTabContents extends TwoPanels:
   private type Props = TargetTabContents
 
+  private val SummaryHeight: NonNegInt     = 6.refined
+  private val SummaryMinHeight: NonNegInt  = 4.refined
   private val TargetHeight: NonNegInt      = 18.refined
   private val TargetMinHeight: NonNegInt   = 15.refined
   private val SkyPlotHeight: NonNegInt     = 9.refined
@@ -101,9 +103,18 @@ object TargetTabContents extends TwoPanels:
   private val layoutMedium: Layout = Layout(
     List(
       LayoutItem(
-        i = ObsTabTilesIds.TargetId.id.value,
+        i = ObsTabTilesIds.TargetSummaryId.id.value,
         x = 0,
         y = 0,
+        w = DefaultWidth.value,
+        h = SummaryHeight.value,
+        minH = SummaryMinHeight.value,
+        minW = TileMinWidth.value
+      ),
+      LayoutItem(
+        i = ObsTabTilesIds.TargetId.id.value,
+        x = 0,
+        y = SummaryHeight.value,
         w = DefaultWidth.value,
         h = TargetHeight.value,
         minH = TargetMinHeight.value,
@@ -112,7 +123,7 @@ object TargetTabContents extends TwoPanels:
       LayoutItem(
         i = ObsTabTilesIds.PlotId.id.value,
         x = 0,
-        y = TargetHeight.value,
+        y = SummaryHeight.value + TargetHeight.value,
         w = DefaultWidth.value,
         h = SkyPlotHeight.value,
         minH = SkyPlotMinHeight.value,
@@ -121,12 +132,36 @@ object TargetTabContents extends TwoPanels:
     )
   )
 
-  private val defaultTargetLayouts = defineStdLayouts(
+  private val defaultLayouts = defineStdLayouts(
     Map(
       (BreakpointName.lg,
        layoutItems.andThen(layoutItemWidth).replace(DefaultLargeWidth)(layoutMedium)
       ),
       (BreakpointName.md, layoutMedium)
+    )
+  )
+
+  private val singleLayoutMedium: Layout = Layout(
+    List(
+      LayoutItem(
+        i = ObsTabTilesIds.TargetSummaryId.id.value,
+        x = 0,
+        y = 0,
+        w = DefaultWidth.value,
+        h = 0, // This doesn't matter, we are forcing 100%.
+        minH = SummaryMinHeight.value,
+        minW = TileMinWidth.value,
+        static = true
+      )
+    )
+  )
+
+  private val defaultSingleLayouts = defineStdLayouts(
+    Map(
+      (BreakpointName.lg,
+       layoutItems.andThen(layoutItemWidth).replace(DefaultLargeWidth)(singleLayoutMedium)
+      ),
+      (BreakpointName.md, singleLayoutMedium)
     )
   )
 
@@ -138,7 +173,6 @@ object TargetTabContents extends TwoPanels:
   private def renderFn(
     props:                 Props,
     selectedView:          View[SelectedPanel],
-    defaultLayouts:        LayoutsMap,
     layouts:               View[Pot[LayoutsMap]],
     resize:                UseResizeDetectorReturn,
     debouncer:             Reusable[UseSingleEffect[IO]],
@@ -153,7 +187,8 @@ object TargetTabContents extends TwoPanels:
 
     val astGrpObsListUndoCtx: UndoContext[AsterismGroupsWithObs] =
       UndoContext(props.listUndoStacks, asterismGroupsWithObs)
-    val targetMap: View[TargetWithObsList]                       =
+
+    val targetMap: View[TargetWithObsList] =
       asterismGroupsWithObs.zoom(AsterismGroupsWithObs.targetsWithObs)
 
     def targetTree(
@@ -164,18 +199,14 @@ object TargetTabContents extends TwoPanels:
         objectsWithObs,
         props.programId,
         props.focused,
-        selectedView.set(SelectedPanel.Summary),
         props.expandedIds,
         undoCtx,
         toastRef,
         selectTargetOrSummary _,
-        selectedTargetIds.get
+        selectedTargetIds
       )
 
-    def findAsterismGroup(
-      obsIds: ObsIdSet,
-      agl:    AsterismGroupList
-    ): Option[AsterismGroup] =
+    def findAsterismGroup(obsIds: ObsIdSet, agl: AsterismGroupList): Option[AsterismGroup] =
       agl.values.find(ag => obsIds.subsetOf(ag.obsIds))
 
     def setPage(focused: Focused): Callback =
@@ -222,9 +253,9 @@ object TargetTabContents extends TwoPanels:
     /**
      * Render the summary table.
      */
-    def renderSummary: VdomNode =
+    def renderSummary(single: Boolean): Tile =
       Tile(
-        "targetSummary".refined,
+        ObsTabTilesIds.TargetSummaryId.id,
         "Target Summary",
         backButton.some
       )(renderInTitle =>
@@ -255,7 +286,7 @@ object TargetTabContents extends TwoPanels:
       resize:        UseResizeDetectorReturn,
       idsToEdit:     ObsIdSet,
       asterismGroup: AsterismGroup
-    ): VdomNode = {
+    ): List[Tile] = {
       val groupIds  = asterismGroup.obsIds
       val targetIds = asterismGroup.targetIds
 
@@ -330,11 +361,11 @@ object TargetTabContents extends TwoPanels:
       }
 
       val getVizTime: AsterismGroupsWithObs => Option[Instant] = a =>
-        for {
+        for
           id <- idsToEdit.single
           o  <- a.observations.get(id)
           t  <- o.visualizationTime
-        } yield t
+        yield t
 
       def modVizTime(
         mod: Option[Instant] => Option[Instant]
@@ -443,24 +474,14 @@ object TargetTabContents extends TwoPanels:
           vizTimeView.get
         )
 
-      val rglRender: LayoutsMap => VdomNode = (l: LayoutsMap) =>
-        TileController(
-          props.userId,
-          resize.width.getOrElse(1),
-          defaultLayouts,
-          l,
-          List(asterismEditorTile, skyPlotTile),
-          GridLayoutSection.TargetLayout,
-          None
-        )
-      potRender[LayoutsMap](rglRender)(layouts.get)
+      List(asterismEditorTile, skyPlotTile)
     }
 
     def renderSiderealTargetEditor(
       resize:   UseResizeDetectorReturn,
       targetId: Target.Id,
       target:   Target.Sidereal
-    ): VdomNode = {
+    ): List[Tile] = {
       val getTarget: TargetWithObsList => Target.Sidereal = _ => target
 
       def modTarget(
@@ -500,46 +521,57 @@ object TargetTabContents extends TwoPanels:
           none
         )
 
-      val rglRender: LayoutsMap => VdomNode = (l: LayoutsMap) =>
-        TileController(props.userId,
-                       resize.width.getOrElse(1),
-                       defaultLayouts,
-                       l,
-                       List(targetTile, skyPlotTile),
-                       GridLayoutSection.TargetLayout,
-                       None
-        )
-      potRender[LayoutsMap](rglRender)(layouts.get)
+      List(renderSummary(false), targetTile, skyPlotTile)
     }
 
-    val optSelected: Option[Either[Target.Id, ObsIdSet]] = props.focused match {
+    val optSelected: Option[Either[Target.Id, ObsIdSet]] = props.focused match
       case Focused(Some(obsIdSet), _)    => obsIdSet.asRight.some
       case Focused(None, Some(targetId)) => targetId.asLeft.some
       case _                             => none
-    }
 
-    val rightSide = (resize: UseResizeDetectorReturn) =>
-      optSelected
-        .fold(renderSummary) {
-          _ match {
-            case Left(targetId) =>
-              targetMap.get
-                .get(targetId)
-                .fold(renderSummary)(u =>
-                  u.target match {
-                    case Nonsidereal(_, _, _)     =>
-                      <.div("Editing of Non-Sidereal targets not supported")
-                    case s @ Sidereal(_, _, _, _) =>
-                      renderSiderealTargetEditor(resize, targetId, s)
-                  }
-                )
-            case Right(obsIds)  =>
-              findAsterismGroup(obsIds, asterismGroupsWithObs.get.asterismGroups)
-                .fold(renderSummary) { asterismGroup =>
-                  renderAsterismEditor(resize, obsIds, asterismGroup)
-                }
-          }
-        }
+    val renderNonSiderealTargetEditor: List[Tile] =
+      List(
+        renderSummary(false),
+        Tile("nonSiderealTarget".refined, "Non-sidereal target")(_ =>
+          <.div("Editing of Non-Sidereal targets not supported")
+        )
+      )
+
+    val rightSide = { (resize: UseResizeDetectorReturn) =>
+      val tileListObSelectedOpt: Option[(List[Tile], Boolean)] = optSelected.flatMap(
+        _ match
+          case Left(targetId) =>
+            targetMap.get
+              .get(targetId)
+              .map(u =>
+                u.target match
+                  case Nonsidereal(_, _, _)     => (renderNonSiderealTargetEditor, false)
+                  case s @ Sidereal(_, _, _, _) =>
+                    (renderSiderealTargetEditor(resize, targetId, s), false)
+              )
+          case Right(obsIds)  =>
+            findAsterismGroup(obsIds, asterismGroupsWithObs.get.asterismGroups)
+              .map(asterismGroup => (renderAsterismEditor(resize, obsIds, asterismGroup), true))
+      )
+
+      val tileList: Option[List[Tile]] = tileListObSelectedOpt.map(_._1)
+      val obsSelected: Boolean         = tileListObSelectedOpt.map(_._2).exists(identity)
+
+      layouts.get.render(l =>
+        TileController(
+          props.userId,
+          resize.width.getOrElse(1),
+          tileList.fold(defaultSingleLayouts)(_ => defaultLayouts),
+          tileList.fold(defaultSingleLayouts)(_ => l),
+          tileList.getOrElse(List(renderSummary(true))),
+          GridLayoutSection.TargetLayout,
+          Option.when(tileList.isEmpty)(ExploreStyles.SingleTileMaximized),
+          storeLayout = tileList.nonEmpty
+        ).withKey(if (obsSelected) "target-obs-controller" else "target-summary-controller")
+        // We need different tile controller keys when in observations than when in target summary,
+        // so that it clears its internal state.
+      )
+    }
 
     makeOneOrTwoPanels(
       selectedView,
@@ -605,37 +637,34 @@ object TargetTabContents extends TwoPanels:
       .useResizeDetector()
       // Initial target layout
       .useStateView(Pot.pending[LayoutsMap])
-      // Keep a record of the initial target layout
-      .useMemo(())(_ => defaultTargetLayouts)
       // Load the config from user prefrences
-      .useEffectWithDepsBy((p, _, _, _, _, _, _) => p.userId) {
-        (props, ctx, _, _, _, layout, defaultLayout) => _ =>
-          import ctx.given
+      .useEffectWithDepsBy((p, _, _, _, _, _) => p.userId) { (props, ctx, _, _, _, layout) => _ =>
+        import ctx.given
 
-          GridLayouts
-            .queryWithDefault[IO](
-              props.userId,
-              GridLayoutSection.TargetLayout,
-              defaultLayout
-            )
-            .attempt
-            .flatMap {
-              case Right(dbLayout) =>
-                layout
-                  .mod(
-                    _.fold(
-                      mergeMap(dbLayout, defaultLayout).ready,
-                      _ => mergeMap(dbLayout, defaultLayout).ready,
-                      cur => mergeMap(dbLayout, cur).ready
-                    )
+        GridLayouts
+          .queryWithDefault[IO](
+            props.userId,
+            GridLayoutSection.TargetLayout,
+            defaultLayouts
+          )
+          .attempt
+          .flatMap {
+            case Right(dbLayout) =>
+              layout
+                .mod(
+                  _.fold(
+                    mergeMap(dbLayout, defaultLayouts).ready,
+                    _ => mergeMap(dbLayout, defaultLayouts).ready,
+                    cur => mergeMap(dbLayout, cur).ready
                   )
-                  .to[IO]
-              case Left(_)         => IO.unit
-            }
+                )
+                .to[IO]
+            case Left(_)         => IO.unit
+          }
       }
       .useSingleEffect(debounce = 1.second)
       // Shared obs conf (posAngle)
-      .useStreamResourceViewOnMountBy { (props, ctx, _, _, _, _, _, _) =>
+      .useStreamResourceViewOnMountBy { (props, ctx, _, _, _, _, _) =>
         import ctx.given
 
         AsterismGroupObsQuery
@@ -648,11 +677,12 @@ object TargetTabContents extends TwoPanels:
       }
       .useToastRef
       // Selected targets on the summary table
-      .useStateView(List.empty[Target.Id])
-      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, _, _, asterismGroupWithObs, _, selIds) =>
+      .useStateViewBy((props, _, _, _, _, _, _, _, _) => props.focused.target.toList)
+      // .useStateView(List.empty[Target.Id])
+      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, _, asterismGroupWithObs, _, selIds) =>
         (props.focused, asterismGroupWithObs.toOption.map(_.get.asterismGroups), selIds.get)
       ) {
-        (props, ctx, loading, _, _, _, _, _, poagwov, toastRef, _) =>
+        (props, ctx, loading, _, _, _, _, poagwov, toastRef, _) =>
           (target, asterismGroups, selectedIds) =>
             import ctx.given
 
@@ -690,13 +720,14 @@ object TargetTabContents extends TwoPanels:
                       // Apply the obs to selected targets on the tree
                       optViewAgwo
                         .map(agwov =>
-                          applyObs(id.idSet.toList,
-                                   treeTargets,
-                                   loading,
-                                   agwov,
-                                   ctx,
-                                   props.listUndoStacks,
-                                   props.expandedIds
+                          applyObs(
+                            id.idSet.toList,
+                            treeTargets,
+                            loading,
+                            agwov,
+                            ctx,
+                            props.listUndoStacks,
+                            props.expandedIds
                           )
                         )
                         .getOrElse(IO.unit)
@@ -704,13 +735,14 @@ object TargetTabContents extends TwoPanels:
                       // Apply the obs to selected targets on the summary table to each target
                       optViewAgwo
                         .map(agwov =>
-                          applyObs(id.idSet.toList,
-                                   selectedIds,
-                                   loading,
-                                   agwov,
-                                   ctx,
-                                   props.listUndoStacks,
-                                   props.expandedIds
+                          applyObs(
+                            id.idSet.toList,
+                            selectedIds,
+                            loading,
+                            agwov,
+                            ctx,
+                            props.listUndoStacks,
+                            props.expandedIds
                           )
                         )
                         .getOrElse(IO.unit)
@@ -754,7 +786,6 @@ object TargetTabContents extends TwoPanels:
           twoPanelState,
           resize,
           layout,
-          defaultLayout,
           debouncer,
           asterismGroupsWithObs,
           toastRef,
@@ -768,7 +799,6 @@ object TargetTabContents extends TwoPanels:
               renderFn(
                 props,
                 twoPanelState,
-                defaultLayout,
                 layout,
                 resize,
                 debouncer,

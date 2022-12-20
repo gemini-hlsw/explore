@@ -479,3 +479,5 @@ object ExploreStyles:
   val TimingWindowRepeatEditorAlternatives: Css = Css("timing-window-repeat-editor-alternatives")
   val TimingWindowRepeatEditorNTimes: Css       = Css("timing-window-repeat-editor-n-times")
   val TimingWindowsHeader: Css                  = Css("timing-windows-header")
+
+  val SingleTileMaximized: Css = Css("explore-single-tile-maximized")
