@@ -54,12 +54,11 @@ case class AsterismGroupObsList(
   asterismsWithObs:       View[AsterismGroupsWithObs],
   programId:              Program.Id,
   focused:                Focused,
-  setSummaryPanel:        Callback,
   expandedIds:            View[SortedSet[ObsIdSet]],
   undoCtx:                UndoContext[AsterismGroupsWithObs],
   toastRef:               ToastRef,
   selectTargetOrSummary:  Option[Target.Id] => Callback,
-  selectedSummaryTargets: List[Target.Id]
+  selectedSummaryTargets: View[List[Target.Id]]
 ) extends ReactFnProps[AsterismGroupObsList](AsterismGroupObsList.component)
     with ViewCommon:
   override val focusedObsSet: Option[ObsIdSet] = focused.obsSet
@@ -231,8 +230,7 @@ object AsterismGroupObsList:
       val selectedTargetIds: SortedSet[Target.Id] =
         props.focused.obsSet
           .flatMap(ids => props.asterismsWithObs.get.asterismGroups.get(ids).map(_.targetIds))
-          .orElse(props.focused.target.map(SortedSet(_)))
-          .getOrElse(SortedSet.from(props.selectedSummaryTargets))
+          .getOrElse(SortedSet.from(props.selectedSummaryTargets.get))
 
       def isObsSelected(obsId: Observation.Id): Boolean =
         props.focused.obsSet.exists(_.contains(obsId))
@@ -371,13 +369,14 @@ object AsterismGroupObsList:
               severity = Button.Severity.Success,
               disabled = addingTargetOrObs.get.value,
               loading = addingTargetOrObs.get.value,
-              onClick = insertObs(props.programId,
-                                  selectedTargetIds,
-                                  props.undoCtx,
-                                  addingTargetOrObs,
-                                  props.expandedIds,
-                                  selectObsOrSummary,
-                                  props.toastRef
+              onClick = insertObs(
+                props.programId,
+                selectedTargetIds,
+                props.undoCtx,
+                addingTargetOrObs,
+                props.expandedIds,
+                selectObsOrSummary,
+                props.toastRef
               ).runAsync
             ).compact.mini,
             Button(
@@ -386,11 +385,12 @@ object AsterismGroupObsList:
               severity = Button.Severity.Success,
               disabled = addingTargetOrObs.get.value,
               loading = addingTargetOrObs.get.value,
-              onClick = insertSiderealTarget(props.programId,
-                                             props.undoCtx,
-                                             addingTargetOrObs,
-                                             props.selectTargetOrSummary,
-                                             props.toastRef
+              onClick = insertSiderealTarget(
+                props.programId,
+                props.undoCtx,
+                addingTargetOrObs,
+                props.selectTargetOrSummary,
+                props.toastRef
               ).runAsync
             ).compact.mini,
             UndoButtons(props.undoCtx, size = PlSize.Mini)
@@ -398,7 +398,9 @@ object AsterismGroupObsList:
           <.div(
             Button(
               severity = Button.Severity.Secondary,
-              onClick = setFocused(Focused.None) >> props.setSummaryPanel,
+              onClick =
+                ctx.pushPage(AppTab.Targets, props.programId, props.focused.withoutObsSet) >>
+                  props.selectedSummaryTargets.set(props.focused.target.toList),
               clazz = ExploreStyles.ButtonSummary
             )(
               Icons.ListIcon.withClass(ExploreStyles.PaddedRightIcon),

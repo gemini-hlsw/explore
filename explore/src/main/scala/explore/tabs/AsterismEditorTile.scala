@@ -57,8 +57,7 @@ object AsterismEditorTile:
     title:           String,
     posAngle:        Option[(Observation.Id, View[PosAngleConstraint], View[AgsState])],
     backButton:      Option[VdomNode] = none
-  )(using TransactionalClient[IO, ObservationDB], Logger[IO]) = {
-
+  )(using TransactionalClient[IO, ObservationDB], Logger[IO]): Tile = {
     // Save the time here. this works for the obs and target tabs
     val vizTimeView = potVizTime.map(_.withOnMod { t =>
       ObsQueries.updateVisualizationTime[IO](sharedInObsIds.toList, t).runAsync
@@ -86,7 +85,7 @@ object AsterismEditorTile:
       control = s => control.some.filter(_ => s === TileSizeState.Minimized),
       bodyClass = Some(ExploreStyles.TargetTileBody)
     )((renderInTitle: Tile.RenderInTitle) =>
-      potRender[(View[Option[Asterism]], Option[ScienceMode])] { case (asterism, scienceMode) =>
+      potAsterismMode.render((asterism, scienceMode) =>
         userId.map(uid =>
           AsterismEditor(
             uid,
@@ -106,8 +105,6 @@ object AsterismEditorTile:
             posAngleView
           )
         )
-      }(
-        potAsterismMode
       )
     )
   }

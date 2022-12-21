@@ -7,10 +7,12 @@ import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.refined.*
 
 enum ObsTabTilesIds:
-  case NotesId, TargetId, PlotId, ConstraintsId, ConfigurationId, ItcId, TimingWindowsId
+  case NotesId, TargetSummaryId, TargetId, PlotId, ConstraintsId, ConfigurationId, ItcId,
+    TimingWindowsId
 
   def id: NonEmptyString = this match
     case NotesId         => "notes".refined
+    case TargetSummaryId => "targetSummary".refined
     case TargetId        => "target".refined
     case PlotId          => "elevationPlot".refined
     case ConstraintsId   => "constraints".refined
