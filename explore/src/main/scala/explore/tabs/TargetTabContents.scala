@@ -729,7 +729,7 @@ object TargetTabContents extends TwoPanels:
                             props.expandedIds
                           )
                         )
-                        .getOrElse(IO.unit)
+                        .orEmpty
                     else IO.unit
 
                   case LocalClipboard.CopiedTargets(tids) =>
@@ -752,7 +752,6 @@ object TargetTabContents extends TwoPanels:
                       )
 
                   case _ => IO.unit
-
                 }.runAsync
 
               case GoToSummary =>
