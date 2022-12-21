@@ -33,7 +33,6 @@ case class Tile(
   canMinimize:       Boolean = false,
   canMaximize:       Boolean = false,
   state:             TileSizeState = TileSizeState.Normal,
-  fadeIn:            Boolean = true,
   sizeStateCallback: TileSizeState => Callback = _ => Callback.empty,
   controllerClass:   Option[Css] = None, // applied to wrapping div when in a TileController.
   bodyClass:         Option[Css] = None, // applied to tile body
@@ -105,7 +104,7 @@ object Tile {
             .runNow()
 
         <.div(
-          ExploreStyles.Tile |+| ExploreStyles.FadeIn.when_(p.fadeIn) |+| p.tileClass.orEmpty,
+          ExploreStyles.Tile |+| ExploreStyles.FadeIn |+| p.tileClass.orEmpty,
           ^.key := p.id.value
         )(
           // Tile title, set classes based on size
