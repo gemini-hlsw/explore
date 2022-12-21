@@ -14,8 +14,6 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
-import react.semanticui.collections.form.Form
-import react.semanticui.sizes.*
 
 case class ItcSpectroscopyPlotDescription(
   exposureTime: Option[ItcChartExposureTime],
@@ -26,7 +24,8 @@ object ItcSpectroscopyPlotDescription {
   type Props = ItcSpectroscopyPlotDescription
 
   val component = ScalaFnComponent[Props] { props =>
-    Form(size = Small, clazz = ExploreStyles.ItcPlotDescription)(
+    <.div(
+      ExploreStyles.ItcPlotDescription,
       <.label("Integration Time:"),
       <.span(props.exposureTime.fold("-") { case ItcChartExposureTime(_, time, count) =>
         format(time, count)
