@@ -713,7 +713,7 @@ object TargetTabContents extends TwoPanels:
                     val treeTargets =
                       props.focused.obsSet
                         .flatMap(i => asterismGroups.flatMap(_.get(i).map(_.targetIds.toList)))
-                        .getOrElse(props.focused.target.toList)
+                        .getOrElse(selectedIds)
 
                     if (treeTargets.nonEmpty)
                       // Apply the obs to selected targets on the tree
@@ -722,21 +722,6 @@ object TargetTabContents extends TwoPanels:
                           applyObs(
                             id.idSet.toList,
                             treeTargets,
-                            loading,
-                            agwov,
-                            ctx,
-                            props.listUndoStacks,
-                            props.expandedIds
-                          )
-                        )
-                        .getOrElse(IO.unit)
-                    else if (selectedIds.nonEmpty)
-                      // Apply the obs to selected targets on the summary table to each target
-                      optViewAgwo
-                        .map(agwov =>
-                          applyObs(
-                            id.idSet.toList,
-                            selectedIds,
                             loading,
                             agwov,
                             ctx,

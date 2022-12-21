@@ -230,7 +230,6 @@ object AsterismGroupObsList:
       val selectedTargetIds: SortedSet[Target.Id] =
         props.focused.obsSet
           .flatMap(ids => props.asterismsWithObs.get.asterismGroups.get(ids).map(_.targetIds))
-          .orElse(props.focused.target.map(SortedSet(_)))
           .getOrElse(SortedSet.from(props.selectedSummaryTargets.get))
 
       def isObsSelected(obsId: Observation.Id): Boolean =
