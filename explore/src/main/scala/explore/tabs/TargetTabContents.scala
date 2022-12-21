@@ -678,7 +678,6 @@ object TargetTabContents extends TwoPanels:
       .useToastRef
       // Selected targets on the summary table
       .useStateViewBy((props, _, _, _, _, _, _, _, _) => props.focused.target.toList)
-      // .useStateView(List.empty[Target.Id])
       .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, _, asterismGroupWithObs, _, selIds) =>
         (props.focused, asterismGroupWithObs.toOption.map(_.get.asterismGroups), selIds.get)
       ) {
