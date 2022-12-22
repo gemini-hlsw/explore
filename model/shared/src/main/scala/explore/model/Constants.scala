@@ -4,7 +4,9 @@
 package explore.model
 
 import cats.syntax.all.*
+import lucuma.core.enums.StellarLibrarySpectrum
 import lucuma.core.math.Angle
+import lucuma.core.model.UnnormalizedSED
 
 import java.time.Duration
 import java.time.ZoneOffset
@@ -22,6 +24,7 @@ trait Constants:
   val PreviewFov: Angle        = Angle.fromMicroarcseconds(60000000L)
   val SimbadResultLimit        = 50
   val MaxConcurrentItcRequests = 4
+  val DefaultSED               = UnnormalizedSED.StellarLibrary(StellarLibrarySpectrum.O5V)
 
   val GppDateFormatter: DateTimeFormatter   = DateTimeFormatter.ofPattern("yyyy-MMM-dd")
   val GppTimeFormatter: DateTimeFormatter   = DateTimeFormatter.ofPattern("HH:mm")

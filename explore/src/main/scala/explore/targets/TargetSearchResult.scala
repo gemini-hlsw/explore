@@ -5,12 +5,14 @@ package explore.targets
 
 import cats.Eq
 import cats.syntax.all.*
+import explore.model.Constants
 import explore.model.TargetWithOptId
 import japgolly.scalajs.react.ReactCats.*
 import japgolly.scalajs.react.Reusability
 import lucuma.catalog.AngularSize
 import lucuma.catalog.CatalogTargetResult
 import lucuma.core.model.CatalogInfo
+import lucuma.core.model.SourceProfile
 import lucuma.core.model.Target
 
 case class TargetSearchResult(
@@ -23,7 +25,15 @@ case class TargetSearchResult(
 
 object TargetSearchResult {
   def fromCatalogTargetResult(r: CatalogTargetResult): TargetSearchResult =
-    TargetSearchResult(TargetWithOptId(none, r.target), r.angularSize)
+    TargetSearchResult(
+      TargetWithOptId(
+        none,
+        Target.Sidereal.sourceProfile
+          .andThen(SourceProfile.unnormalizedSED)
+          .modify(_.orElse(Constants.DefaultSED.some))(r.target) // Ensure SED is always present.
+      ),
+      r.angularSize
+    )
 
   given Eq[TargetSearchResult] =
     Eq.by(t =>

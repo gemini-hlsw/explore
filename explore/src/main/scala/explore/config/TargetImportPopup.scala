@@ -14,6 +14,7 @@ import crystal.react.reuse.*
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
+import explore.model.Constants
 import fs2.*
 import fs2.text
 import japgolly.scalajs.react.*
@@ -90,9 +91,7 @@ object TargetImportPopup:
           stateUpdate(State.targetErrors.modify(e => e :++ a.toList.map(_.displayValue)))
         case Right(tgt) =>
           // FIXME The backend needs a SED
-          val target = Target.Sidereal.unnormalizedSED.replace(
-            UnnormalizedSED.StellarLibrary(StellarLibrarySpectrum.O5V).some
-          )(tgt)
+          val target = Target.Sidereal.unnormalizedSED.replace(Constants.DefaultSED.some)(tgt)
           CreateTargetMutation
             .execute(target.toCreateTargetInput(programId))
             .map(_.createTarget.target.id.some)

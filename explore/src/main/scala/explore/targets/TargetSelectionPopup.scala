@@ -49,6 +49,7 @@ import scala.collection.immutable.SortedMap
 import scala.concurrent.duration.*
 
 case class TargetSelectionPopup(
+  title:               String,
   targetSources:       NonEmptyList[TargetSource[IO]],
   selectExistingLabel: String,
   selectExistingIcon:  FontAwesomeIcon,
@@ -249,7 +250,7 @@ object TargetSelectionPopup:
             dismissableMask = true,
             onHide = singleEffect.cancel.runAsync >> isOpen
               .setState(PopupState.Closed) >> cleanState >> props.onCancel,
-            header = "Add Target"
+            header = props.title
           )(
             React.Fragment(
               <.span(ExploreStyles.TargetSearchTop)(

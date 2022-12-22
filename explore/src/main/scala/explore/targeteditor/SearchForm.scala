@@ -91,6 +91,7 @@ object SearchForm:
         val searchIcon: VdomNode =
           if (enabled.value)
             TargetSelectionPopup(
+              "Replace Target Data",
               TargetSource.forAllSiderealCatalogs[IO],
               "",
               Icons.Ban,
