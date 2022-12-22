@@ -196,10 +196,10 @@ object ConstraintsTabContents extends TwoPanels:
           findConstraintGroup(ids, constraintsWithObs.get.constraintGroups).map(cg => (ids, cg))
         )
         .fold[VdomNode] {
-          Tile("constraints".refined,
-               "Constraints Summary",
-               backButton.some,
-               key = "constraintsSummary"
+          Tile(
+            "constraints".refined,
+            "Constraints Summary",
+            backButton.some
           )(renderInTitle =>
             ConstraintsSummaryTable(
               props.userId,

@@ -7,6 +7,7 @@ import cats.syntax.all.*
 import crystal.react.View
 import explore.Icons
 import explore.components.ui.ExploreStyles
+import explore.model.enums.AgsState
 import explore.model.formats.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
@@ -23,7 +24,8 @@ import scala.math.BigDecimal.RoundingMode
 case class AgsOverlay(
   selectedGSIndex:   View[Option[Int]],
   maxIndex:          Int,
-  selectedGuideStar: Option[AgsAnalysis]
+  selectedGuideStar: Option[AgsAnalysis],
+  agsState:          AgsState
 ) extends ReactFnProps[AgsOverlay](AgsOverlay.component)
 
 object AgsOverlay {
@@ -33,12 +35,15 @@ object AgsOverlay {
     ScalaFnComponent[Props] { props =>
       val selectedIndex = props.selectedGSIndex.get
 
-      val canGoPrev                               = selectedIndex.exists(_ > 0)
+      val canGoPrev = props.agsState === AgsState.Idle && selectedIndex.exists(_ > 0)
+
       def goPrev(e: ReactEvent): Option[Callback] = Option {
         props.selectedGSIndex.mod(_.map(_ - 1))
       }.filter(_ => canGoPrev)
 
-      val canGoNext                               = selectedIndex.exists(_ < props.maxIndex - 1)
+      val canGoNext =
+        props.agsState === AgsState.Idle && selectedIndex.exists(_ < props.maxIndex - 1)
+
       def goNext(e: ReactEvent): Option[Callback] = Option {
         props.selectedGSIndex.mod(_.map(_ + 1))
       }.filter(_ => canGoNext)
@@ -69,16 +74,16 @@ object AgsOverlay {
             <.div(
               ExploreStyles.AgsDescription,
               analysis.match {
-                case AgsAnalysis.Usable(_, _, Some(GuideSpeed.Fast), _, _, _)   =>
+                case AgsAnalysis.Usable(_, _, Some(GuideSpeed.Fast), _, _)   =>
                   Icons.CircleSmall.withClass(ExploreStyles.AgsFast)
-                case AgsAnalysis.Usable(_, _, Some(GuideSpeed.Medium), _, _, _) =>
+                case AgsAnalysis.Usable(_, _, Some(GuideSpeed.Medium), _, _) =>
                   Icons.CircleSmall.withClass(ExploreStyles.AgsMedium)
-                case AgsAnalysis.Usable(_, _, Some(GuideSpeed.Slow), _, _, _)   =>
+                case AgsAnalysis.Usable(_, _, Some(GuideSpeed.Slow), _, _)   =>
                   Icons.CircleSmall.withClass(ExploreStyles.AgsSlow)
-                case _                                                          => ""
+                case _                                                       => ""
               },
               analysis match {
-                case AgsAnalysis.Usable(_, _, Some(speed), _, _, _) =>
+                case AgsAnalysis.Usable(_, _, Some(speed), _, _) =>
                   React.Fragment(
                     <.div(ExploreStyles.AgsGuideSpeed, speed.tag),
                     <.div(ExploreStyles.AgsGBrightness,
@@ -90,7 +95,7 @@ object AgsOverlay {
                           s"(${formatCoordinates(analysis.target.tracking.baseCoordinates)})"
                     )
                   )
-                case _                                              => EmptyVdom
+                case _                                           => EmptyVdom
               }
             )
           )

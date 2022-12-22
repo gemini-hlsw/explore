@@ -107,24 +107,15 @@ object TargetSummaryTable extends TableHooks:
         def column[V](id: ColumnId, accessor: TargetWithIdAndObs => V) =
           ColDef(id, row => accessor(row), colNames(id))
 
-        def targetUrl(targetId: Target.Id): String =
-          ctx.pageUrl(AppTab.Targets, props.programId, Focused.target(targetId))
-
         def obsUrl(targetId: Target.Id, obsId: Observation.Id): String =
           ctx.pageUrl(AppTab.Targets, props.programId, Focused.singleObs(obsId, targetId.some))
+
         List(
           ColDef(
             IdColumnId,
             _.id,
             "id",
-            cell =>
-              <.a(
-                ^.href := targetUrl(cell.value),
-                ^.onClick ==> (e =>
-                  e.preventDefaultCB *> props.selectTargetOrSummary(cell.value.some)
-                ),
-                cell.value.toString
-              )
+            _.value.toString
           ).sortable
         ) ++
           TargetColumns
@@ -161,6 +152,19 @@ object TargetSummaryTable extends TableHooks:
       .useReactTableWithStateStoreBy((props, ctx, cols, rows) =>
         import ctx.given
 
+        def targetIds2RowSelection: List[Target.Id] => RowSelection = targetIds =>
+          RowSelection(
+            targetIds.map(targetId => RowId(targetId.toString) -> true).toMap
+          )
+
+        def rowSelection2TargetIds: RowSelection => List[Target.Id] = selection =>
+          selection.value
+            .filter(_._2)
+            .keys
+            .toList
+            .map(rowId => Target.Id.parse(rowId.value))
+            .flattenOption
+
         TableOptionsWithStateStore(
           TableOptions(
             cols,
@@ -170,9 +174,19 @@ object TargetSummaryTable extends TableHooks:
             enableColumnResizing = true,
             enableMultiRowSelection = true,
             columnResizeMode = ColumnResizeMode.OnChange,
+            state = PartialTableState(
+              rowSelection = targetIds2RowSelection(props.selectedTargetIds.get)
+            ),
+            onRowSelectionChange = _ match
+              case Updater.Set(selection) =>
+                props.selectedTargetIds.set(rowSelection2TargetIds(selection))
+              case Updater.Mod(f)         =>
+                props.selectedTargetIds.mod(targetIds =>
+                  rowSelection2TargetIds(f(targetIds2RowSelection(targetIds)))
+                )
+            ,
             initialState = TableState(
-              columnVisibility = TargetColumns.DefaultVisibility,
-              rowSelection = RowSelection()
+              columnVisibility = TargetColumns.DefaultVisibility
             )
           ),
           TableStore(props.userId, TableId.TargetsSummary, cols)
@@ -184,7 +198,16 @@ object TargetSummaryTable extends TableHooks:
       // Copy the selection upstream
       .useEffectWithDepsBy((_, _, _, _, table, _, _) =>
         table.getSelectedRowModel().rows.toList.map(_.original.id)
-      )((props, _, _, _, _, _, _) => ids => props.selectedTargetIds.set(ids))
+      )((props, ctx, _, _, _, _, _) =>
+        ids =>
+          props.selectedTargetIds.set(ids) >>
+            ids.headOption
+              .filter(_ => ids.length === 1) // Only if there's just 1 target selected
+              .map(targetId =>
+                ctx.pushPage(AppTab.Targets, props.programId, Focused.target(targetId))
+              )
+              .getOrElse(ctx.pushPage(AppTab.Targets, props.programId, Focused.None))
+      )
       .render((props, ctx, _, _, table, filesToImport, deletingTargets) =>
         import ctx.given
 
@@ -202,10 +225,11 @@ object TargetSummaryTable extends TableHooks:
               table.toggleAllRowsSelected(false) *>
               (deletingTargets.async.set(DeletingTargets(true)) >>
                 TargetAddDeleteActions
-                  .deleteTargets(selectedRowsIds,
-                                 props.programId,
-                                 props.selectTargetOrSummary(none).to[IO],
-                                 props.toastRef.info(_).to[IO]
+                  .deleteTargets(
+                    selectedRowsIds,
+                    props.programId,
+                    props.selectTargetOrSummary(none).to[IO],
+                    props.toastRef.info(_).to[IO]
                   )
                   .set(props.undoCtx)(selectedRowsIds.map(_ => none[TargetWithObs]))
                   .to[IO]
@@ -274,6 +298,7 @@ object TargetSummaryTable extends TableHooks:
             _ => 32.toPx,
             striped = true,
             compact = Compact.Very,
+            innerContainerMod = ^.width := "100%",
             tableMod = ExploreStyles.ExploreTable |+| ExploreStyles.ExploreSelectableTable,
             headerCellMod = headerCell =>
               columnClasses

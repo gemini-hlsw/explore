@@ -188,10 +188,10 @@ object ObsTabContents extends TwoPanels:
 
     def rightSide = (resize: UseResizeDetectorReturn) =>
       props.focusedObs.fold[VdomNode](
-        Tile("observations".refined,
-             "Observations Summary",
-             backButton.some,
-             key = "observationsSummary"
+        Tile(
+          "observations".refined,
+          "Observations Summary",
+          backButton.some
         )(_ =>
           <.div(
             ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,

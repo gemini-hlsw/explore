@@ -34,7 +34,6 @@ case class Tile(
   canMaximize:       Boolean = false,
   state:             TileSizeState = TileSizeState.Normal,
   sizeStateCallback: TileSizeState => Callback = _ => Callback.empty,
-  key:               js.UndefOr[Key] = js.undefined,
   controllerClass:   Option[Css] = None, // applied to wrapping div when in a TileController.
   bodyClass:         Option[Css] = None, // applied to tile body
   tileClass:         Option[Css] = None, // applied to the tile
@@ -105,7 +104,8 @@ object Tile {
             .runNow()
 
         <.div(
-          ExploreStyles.Tile |+| ExploreStyles.FadeIn |+| p.tileClass.orEmpty
+          ExploreStyles.Tile |+| ExploreStyles.FadeIn |+| p.tileClass.orEmpty,
+          ^.key := p.id.value
         )(
           // Tile title, set classes based on size
           ResponsiveComponent(

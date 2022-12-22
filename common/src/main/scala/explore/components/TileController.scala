@@ -46,7 +46,8 @@ case class TileController(
   layoutMap:     LayoutsMap,
   tiles:         List[Tile],
   section:       GridLayoutSection,
-  clazz:         Option[Css] = None
+  clazz:         Option[Css] = None,
+  storeLayout:   Boolean = true
 ) extends ReactFnProps(TileController.component)
 
 object TileController:
@@ -109,10 +110,10 @@ object TileController:
       // Make a local copy of the layout fixing the state of minimized layouts
       .useStateViewBy((p, _, _, _) => updateResizableState(p.layoutMap))
       // Update the current layout if it changes upstream
-      .useEffectWithDepsBy((p, _, _, _, _) => p.layoutMap)((_, _, _, _, current) =>
-        layout => current.set(updateResizableState(layout))
+      .useEffectWithDepsBy((p, _, _, _, _) => p.layoutMap)((_, _, _, _, currentLayout) =>
+        layout => currentLayout.set(updateResizableState(layout))
       )
-      .render { (p, ctx, debouncer, bn, currentLayout) =>
+      .render { (p, ctx, debouncer, breakpoint, currentLayout) =>
         import ctx.given
 
         def sizeState(id: Tile.TileId) = (st: TileSizeState) =>
@@ -146,32 +147,29 @@ object TileController:
           containerPadding = (Constants.GridRowPadding, 0),
           rowHeight = Constants.GridRowHeight,
           draggableHandle = s".${ExploreStyles.TileTitleMenu.htmlClass}",
-          onBreakpointChange = (bk: BreakpointName, _: Int) => bn.setState(bk),
-          onLayoutChange = (_: Layout, b: Layouts) => {
+          onBreakpointChange = (bk: BreakpointName, _: Int) => breakpoint.setState(bk),
+          onLayoutChange = (_: Layout, newLayouts: Layouts) => {
             // We need to sort the layouts to do proper comparision
-            val cur     = b.layouts.map(x => (x.name, x.layout)).sortBy(_._1).map { case (n, l) =>
-              (n, l.l.sortBy(_.i.toString))
-            }
+            val cur     =
+              newLayouts.layouts.map(x => (x.name, x.layout)).sortBy(_._1).map { case (n, l) =>
+                (n, l.l.sortBy(_.i.toString))
+              }
             val next    = currentLayout.get
-              .map { case (b, (_, _, l)) =>
-                (b, l)
+              .map { case (breakpoint, (_, _, layout)) =>
+                (breakpoint, layout.l.sortBy(_.i.toString))
               }
               .toList
               .sortBy(_._1)
-              .map { case (n, l) =>
-                (n, l.l.sortBy(_.i.toString))
-              }
             val changed = cur =!= next
 
             {
-              val le = b.layouts.find(_.name.name === bn.value.name).map(_.layout)
+              val le = newLayouts.layouts.find(_.name.name === breakpoint.value.name).map(_.layout)
 
               // Store the current layout in the state for debugging
-              le.map { l =>
-                currentLayout.mod(breakpointLayout(bn.value).replace(l))
-              }
+              le.map(l => currentLayout.mod(breakpointLayout(breakpoint.value).replace(l)))
             }.getOrEmpty *>
-              storeLayouts(p.userId, p.section, b, debouncer).when_(changed)
+              storeLayouts(p.userId, p.section, newLayouts, debouncer)
+                .when_(changed && p.storeLayout)
           },
           layouts = currentLayout.get,
           className = p.clazz.map(_.htmlClass).orUndefined
@@ -181,7 +179,7 @@ object TileController:
               ^.key := t.id.value,
               // Show tile proprties on the title if enabled
               currentLayout.get
-                .get(bn.value)
+                .get(breakpoint.value)
                 .flatMap { case (_, _, l) =>
                   l.l
                     .find(_.i === t.id.value)
