@@ -36,16 +36,14 @@ import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import org.scalajs.dom
 import org.scalajs.dom.window
-import react.common.ReactFnProps
-import react.semanticui.collections.menu.*
-import react.semanticui.elements.image.Image
-import react.semanticui.modules.checkbox.Checkbox
-import react.semanticui.modules.dropdown.Dropdown
-import react.semanticui.modules.dropdown.DropdownDivider
-import react.semanticui.modules.dropdown.DropdownItem
-import react.semanticui.modules.dropdown.DropdownMenu
-import react.semanticui.shorthand.*
-import react.semanticui.views.item.Item
+import react.common.*
+import react.fa.FontAwesomeIcon
+import react.primereact.Button
+import react.primereact.Image
+import react.primereact.MenuItem
+import react.primereact.PopupTieredMenu
+import react.primereact.Toolbar
+import react.primereact.hooks.all.*
 import typings.loglevel.mod.LogLevelDesc
 
 case class TopBar(
@@ -69,10 +67,11 @@ object TopBar:
       .useState(false) // isProgramsOpen
       .useStateView(IsAboutOpen(false))
       .useState(false) // just to force rerenders
-      .useEffectResultWithDepsBy((_, _, _, _, toggle) => toggle.value)((_, _, _, _, _) =>
+      .usePopupMenuRef
+      .useEffectResultWithDepsBy((_, _, _, _, toggle, _) => toggle.value)((_, _, _, _, _, _) =>
         _ => Theme.current
       )
-      .render { (props, ctx, isProgramsOpen, isAboutOpen, toggle, themePot) =>
+      .render { (props, ctx, isProgramsOpen, isAboutOpen, toggle, menuRef, themePot) =>
         import ctx.given
 
         val role = props.user.role
@@ -87,100 +86,96 @@ object TopBar:
               props.preferences.copy(level = l)
             ) *> IO(window.location.reload(false))).runAsync
 
-        <.div(
-          ExploreStyles.MainHeader,
-          Menu(
-            attached = MenuAttached.Top,
-            borderless = true,
-            tabular = MenuTabular.Right
-          )(
-            MenuItem(
-              <.span(
-                ExploreStyles.MainTitle,
-                "Explore"
-              )
-            ),
-            Item(
-              ExploreStyles.MainUserName,
-              props.user.displayName
-            ),
-            ConnectionsStatus(),
-            MenuMenu(position = MenuMenuPosition.Right, clazz = ExploreStyles.MainMenu)(
-              Dropdown(
-                item = true,
-                simple = true,
-                compact = true,
-                icon = Icons.Bars,
-                open = false,
-                clazz = ExploreStyles.MainMenuDropdown
-              )(
-                DropdownMenu(
-                  DropdownItem(text = "About Explore",
-                               icon = Icons.Info.withFixedWidth(),
-                               onClick = isAboutOpen.set(IsAboutOpen(true))
-                  ),
-                  TagMod.when(isAboutOpen.get.value)(
-                    About(isAboutOpen.zoom(IsAboutOpen.value))
-                  ),
-                  DropdownItem(
-                    text = "Manage Programs",
-                    icon = Icons.ListCheck.withFixedWidth(),
-                    onClick = isProgramsOpen.setState(true)
-                  ),
-                  TagMod.when(isProgramsOpen.value)(
-                    ProgramsPopup(
-                      props.programId,
-                      props.undoStacks,
-                      isProgramsOpen.setState(false).some.reuseAlways
-                    )
-                  ),
-                  DropdownDivider(),
-                  DropdownItem(
-                    onClick = ctx.sso.switchToORCID.runAsync
-                  )(
-                    <.div(ExploreStyles.OrcidMenu)(
-                      Image(clazz = ExploreStyles.OrcidIconMenu, src = Resources.OrcidLogo),
-                      <.span(^.cls := "text", "Login with ORCID")
-                    )
-                  ).when(role === GuestRole),
-                  DropdownItem(
-                    text = "Logout",
-                    icon = Icons.Logout.withFixedWidth(),
-                    onClick = logout.runAsync
-                  ),
-                  DropdownItem()(
-                    Icons.BarCodeRead.withFixedWidth(),
-                    "Log Level",
-                    DropdownMenu(
-                      DropdownItem(onClick = setLogLevel(LogLevelDesc.INFO))(
-                        Checkbox(label = "Info", checked = level =!= LogLevelDesc.DEBUG)
-                      ),
-                      DropdownItem(onClick = setLogLevel(LogLevelDesc.DEBUG))(
-                        Checkbox(label = "Debug", checked = level === LogLevelLogger.Level.DEBUG)
-                      )
-                    )
-                  ).when(ctx.environment =!= ExecutionEnvironment.Production),
-                  themePot
-                    .map(currentTheme =>
-                      DropdownItem(
-                        onClick =
-                          (if (currentTheme === Theme.Light) Theme.Dark.setup[CallbackTo]
-                           else Theme.Light.setup[CallbackTo]) >> toggle.setState(!toggle.value)
-                      )(
-                        Checkbox(label = "Dark/Light", checked = currentTheme === Theme.Dark)
-                      ).when(ctx.environment === ExecutionEnvironment.Development)
-                    )
-                    .toOption
-                    .whenDefined,
-                  DropdownItem(
-                    text = "Toggle Reusability",
-                    icon = Icons.CrystalBall.withFixedWidth(),
-                    onClick = utils.toggleReusabilityOverlay[CallbackTo]()
-                  )
-                    .when(ctx.environment === ExecutionEnvironment.Development)
-                )
+        val themeMenuItem = themePot
+          .map(currentTheme =>
+            MenuItem.SubMenu(label = "Theme",
+                             icon = Icons.Eclipse,
+                             visible = ctx.environment === ExecutionEnvironment.Development
+            )(
+              MenuItem.Item(
+                label = "Dark",
+                icon = Icons.Moon,
+                disabled = currentTheme === Theme.Dark,
+                command = Theme.Dark.setup[CallbackTo] >> toggle.modState(!_)
+              ),
+              MenuItem.Item(
+                label = "Light",
+                icon = Icons.SunBright,
+                disabled = currentTheme === Theme.Light,
+                command = Theme.Light.setup[CallbackTo] >> toggle.modState(!_)
               )
             )
           )
+          .toOption
+          .getOrElse(MenuItem.Item(label = "placeholder", visible = false))
+
+        val menuItems = List(
+          MenuItem.Item(
+            label = "About Explore",
+            icon = Icons.Info,
+            command = isAboutOpen.set(IsAboutOpen(true))
+          ),
+          MenuItem.Item(
+            label = "Manage Programs",
+            icon = Icons.ListCheck,
+            command = isProgramsOpen.setState(true)
+          ),
+          MenuItem.Separator,
+          MenuItem.Item(
+            label = "Login with ORCID",
+            icon = Image(src = Resources.OrcidLogo, clazz = ExploreStyles.OrcidIconMenu),
+            visible = role === GuestRole,
+            command = ctx.sso.switchToORCID.runAsync
+          ),
+          MenuItem.Item(label = "Logout", icon = Icons.Logout, command = logout.runAsync),
+          MenuItem.SubMenu(
+            label = "Log Level",
+            icon = Icons.BarCodeRead,
+            visible = ctx.environment =!= ExecutionEnvironment.Production
+          )(
+            MenuItem.Item(
+              label = "Info",
+              command = setLogLevel(LogLevelDesc.INFO),
+              disabled = level =!= LogLevelDesc.DEBUG,
+              icon = Icons.Info
+            ),
+            MenuItem.Item(
+              label = "Debug",
+              command = setLogLevel(LogLevelDesc.DEBUG),
+              disabled = level === LogLevelDesc.DEBUG,
+              icon = Icons.Bug
+            )
+          ),
+          themeMenuItem,
+          MenuItem.Item(
+            label = "Toggle Reusability",
+            icon = Icons.CrystalBall,
+            command = utils.toggleReusabilityOverlay[CallbackTo](),
+            visible = ctx.environment === ExecutionEnvironment.Development
+          )
+        )
+
+        React.Fragment(
+          Toolbar(
+            clazz = ExploreStyles.MainHeader,
+            left = <.span(ExploreStyles.MainTitle, "Explore"),
+            right = React.Fragment(
+              <.span(ExploreStyles.MainUserName, props.user.displayName),
+              Button(icon = Icons.Bars,
+                     text = true,
+                     severity = Button.Severity.Secondary,
+                     onClickE = menuRef.toggle
+              )
+            )
+          ),
+          PopupTieredMenu(model = menuItems).withRef(menuRef.ref),
+          if (isAboutOpen.get.value) About(isAboutOpen.zoom(IsAboutOpen.value))
+          else EmptyVdom,
+          if (isProgramsOpen.value)
+            ProgramsPopup(props.programId,
+                          props.undoStacks,
+                          isProgramsOpen.setState(false).some.reuseAlways
+            )
+          else EmptyVdom
         )
       }

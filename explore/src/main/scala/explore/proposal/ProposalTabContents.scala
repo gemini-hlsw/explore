@@ -27,6 +27,7 @@ import lucuma.core.model.StandardUser
 import lucuma.core.model.User
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
+import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
 import monocle.Focus
 import monocle.Lens
@@ -34,9 +35,8 @@ import org.typelevel.log4cats.Logger
 import queries.common.ProgramQueriesGQL.*
 import queries.schemas.odb.ODBConversions.*
 import react.common.ReactFnProps
-import react.semanticui.elements.button.Button
-import react.semanticui.elements.image.Image
-import react.semanticui.sizes.Big
+import react.primereact.Button
+import react.primereact.Image
 
 import java.time.Duration
 
@@ -92,29 +92,23 @@ object ProposalTabContents:
               <.div(
                 ExploreStyles.HVCenter,
                 Button(
-                  content = <.div(
-                    ExploreStyles.LoginOrcidButton,
-                    Icons.FileCirclePlus.withClass(ExploreStyles.OrcidIcon),
-                    "Create a Proposal"
-                  ),
-                  size = Big,
+                  label = "Create a Proposal",
+                  icon = Icons.FileCirclePlus.withClass(ExploreStyles.OrcidIcon),
                   clazz = ExploreStyles.LoginBoxButton,
+                  severity = Button.Severity.Secondary,
                   onClick = createProposal(programId, optProposalInfo, executionTime)
-                )
+                ).big
               )
             case _                     =>
               <.div(
                 ExploreStyles.HVCenter,
                 Button(
-                  content = <.div(
-                    ExploreStyles.LoginOrcidButton,
-                    Image(clazz = ExploreStyles.OrcidIcon, src = Resources.OrcidLogo),
-                    "Login with ORCID to create a Proposal"
-                  ),
-                  size = Big,
+                  label = "Login with ORCID to create a Proposal",
+                  icon = Image(src = Resources.OrcidLogo, clazz = ExploreStyles.OrcidIcon),
                   clazz = ExploreStyles.LoginBoxButton,
+                  severity = Button.Severity.Secondary,
                   onClick = ctx.sso.switchToORCID.runAsync
-                )
+                ).big
               )
           })
       }

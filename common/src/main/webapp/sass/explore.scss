@@ -1041,11 +1041,6 @@ i.icon.user-astronaut::before {
       margin-top: 2em;
     }
   }
-
-  .explore-login-orcid-button {
-    display: flex;
-    align-items: center;
-  }
 }
 
 .explore-login-title-wrapper {
@@ -1099,7 +1094,7 @@ i.icon.user-astronaut::before {
 }
 
 .explore-orcid-icon-menu {
-  margin-right: 0.8em;
+  vertical-align: middle;
 }
 
 .version {
@@ -1116,6 +1111,44 @@ i.icon.user-astronaut::before {
     // CopyToClipboard
     div {
       cursor: pointer;
+    }
+  }
+}
+
+// ------
+// Topbar
+// ------
+.main-title {
+  text-transform: uppercase;
+  letter-spacing: 0.4em;
+}
+
+.main-user-name {
+  margin-left: auto;
+  letter-spacing: 0.1em;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.main-header.p-toolbar {
+  grid-area: header;
+  width: 100vw;
+  min-width: 100vw;
+
+  .p-toolbar-group-right,
+  .p-toolbar-group-left {
+    display: flex;
+    flex-direction: row;
+    column-gap: 1.5em;
+
+    .p-component.p-button.p-button-text {
+      margin: 0;
+      padding: 0;
+
+      &:not(:hover) {
+        color: var(--site-text-color);
+      }
     }
   }
 }
@@ -1646,17 +1679,6 @@ table.explore-border-table {
   tr.p-datatable-emptymessage {
     background: none;
   }
-}
-
-.p-component.p-button.pl-tiny {
-  /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
-  font-size: var(--pl-tiny-font-size);
-}
-
-.p-component.p-button.pl-compact {
-  row-gap: 0.5em;
-  /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
-  padding: var(--compact-button-padding);
 }
 
 .explore-table:has(.p-datatable-emptymessage):has(.explore-table-emptymessage) {
