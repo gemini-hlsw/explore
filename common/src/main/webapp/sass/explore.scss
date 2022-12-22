@@ -1726,6 +1726,80 @@ table.explore-border-table {
   }
 }
 
+// -------------------------
+// Basic configuration forms
+// -------------------------
+.explore-basic-configuration-buttons {
+  grid-area: buttons;
+  justify-self: end;
+}
+
+.explore-basic-configuration-form {
+  grid-area: form;
+  grid-row-end: span 2;
+  display: grid;
+  justify-items: start;
+  align-items: baseline;
+  align-self: start;
+  padding: 0.5em;
+  row-gap: 0.5em;
+  grid-template-columns: [label] minmax(110px, 10%) [field] 1fr;
+
+  .pl-form-field {
+    justify-self: stretch;
+  }
+
+  .explore-units-label {
+    justify-self: start;
+  }
+
+  .p-input-text,
+  .p-dropdown {
+    min-width: 100%;
+  }
+}
+
+.explore-basic-configuration-sn-at {
+  display: flex;
+  justify-content: stretch;
+  grid-gap: 0.5em;
+
+  div:first-child {
+    flex-grow: 1;
+  }
+
+  div:last-child {
+    flex-grow: 1;
+  }
+
+  #signal-to-noise-at {
+    width: 7ch;
+  }
+}
+
+.explore-basic-configuration-grid {
+  min-height: 0;
+  height: 100%;
+  display: grid;
+  gap: 0.5em;
+  grid-template:
+    'form table-header' auto
+    'form table' 1fr
+    'form buttons' auto / 3fr minmax(0, 4fr);
+  grid-template-rows: auto 1fr auto;
+}
+
+.explore-basic-configuration-focal-plane {
+  display: flex;
+  gap: 0.5em;
+
+  div:first-child {
+    flex-grow: 2;
+    min-width: unset;
+  }
+}
+
+
 // -----------------
 // Pos angle form
 // -----------------

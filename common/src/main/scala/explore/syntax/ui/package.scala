@@ -6,7 +6,6 @@ package explore.syntax.ui
 import cats.*
 import cats.syntax.all.*
 import crystal.react.implicits.*
-import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
 import explore.model.Constants
 import explore.utils.*
@@ -39,18 +38,6 @@ extension [EV[_], A, B](input: FormInputEV[EV, Option[A]])
       input.clazz.fold(ExploreStyles.ClearableInputPaddingReset)(
         _ |+| ExploreStyles.ClearableInputPaddingReset
       )
-    input.copy(icon = clearInputIcon[EV, A](input.value), clazz = newClazz)
-  }
-
-extension [EV[_], A, B](input: InputWithUnits[EV, Option[A]])
-  def clearable(using ev: ExternalValue[EV], ev3: Eq[A]) =
-    input.copy(icon = clearInputIcon[EV, A](input.value))
-
-  // When an icon is added to a FormInputEV, SUI adds extra padding on the right to make
-  // space for the icon. However, with some layouts this can cause resizing issues, so this
-  // method removes that extra padding. See `clearInputIcon` for more details.
-  def clearableNoPadding(using ev: ExternalValue[EV], ev3: Eq[A]) = {
-    val newClazz = input.clazz |+| ExploreStyles.ClearableInputPaddingReset
     input.copy(icon = clearInputIcon[EV, A](input.value), clazz = newClazz)
   }
 
