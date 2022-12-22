@@ -120,6 +120,17 @@ object AladinCell extends ModelOptics with AladinCommon:
       )
     )
 
+  // We want to consider AllowFlip with flipped angle the same so we don't retrigger the ags calculation
+  private given Reusability[PosAngleConstraint] = Reusability {
+    case (PosAngleConstraint.Fixed(a), PosAngleConstraint.Fixed(b))                             => a === b
+    case (PosAngleConstraint.AllowFlip(a), PosAngleConstraint.AllowFlip(b))                     =>
+      a === b || a.flip === b
+    case (PosAngleConstraint.AverageParallactic, PosAngleConstraint.AverageParallactic)         => true
+    case (PosAngleConstraint.ParallacticOverride(a), PosAngleConstraint.ParallacticOverride(b)) =>
+      a === b
+    case _                                                                                      => false
+  }
+
   private val fovLens: Lens[TargetVisualOptions, Fov] =
     Lens[TargetVisualOptions, Fov](t => Fov(t.fovRA, t.fovDec))(f =>
       t => t.copy(fovRA = f.x, fovDec = f.y)
@@ -190,6 +201,17 @@ object AladinCell extends ModelOptics with AladinCommon:
         refineV[TargetVisualOptions.FilterRange](x.toInt).toOption
           .getOrElse(y) // Ignore invalid updates
     )
+
+  private def flipAngle(props: Props): Option[AgsAnalysis] => Callback =
+    case Some(AgsAnalysis.Usable(_, _, _, _, pos)) =>
+      val angle = pos.head._1.posAngle
+      props.obsConf.posAngleConstraint match
+        case Some(PosAngleConstraint.AllowFlip(a)) if a =!= angle =>
+          props.setPA
+            .map(_.set(PosAngleConstraint.AllowFlip(angle)))
+            .getOrEmpty
+        case _                                                    => Callback.empty
+    case _                                         => Callback.empty
 
   private val component =
     ScalaFnComponent
@@ -302,22 +324,14 @@ object AladinCell extends ModelOptics with AladinCommon:
                                          candidates
                       )
                     )
-                    .map(_.map(_.selectBestPosition(positions)))
+                    .map(_.map(_.sortPositions(positions)))
                     .flatMap { r =>
                       // Set the analysis
                       (r.map(ags.setState).getOrEmpty *>
                         // If we need to flip change the constraint
                         r
                           .map(_.headOption)
-                          .collect {
-                            case Some(AgsAnalysis.Usable(_, _, _, _, _, AgsPosition(angle, _))) =>
-                              props.obsConf.posAngleConstraint match
-                                case Some(PosAngleConstraint.AllowFlip(a)) if a =!= angle =>
-                                  props.setPA
-                                    .map(_.set(PosAngleConstraint.AllowFlip(angle)))
-                                    .getOrEmpty
-                                case _                                                    => Callback.empty
-                          }
+                          .map(flipAngle(props))
                           .orEmpty *>
                         // set the selected index
                         selectedIndex
@@ -325,7 +339,8 @@ object AladinCell extends ModelOptics with AladinCommon:
                             0.some.filter(_ =>
                               r.exists(_.nonEmpty) && props.obsConf.canSelectGuideStar
                             )
-                          )).to[IO]
+                          ))
+                        .to[IO]
                     }
                     .unlessA(candidates.isEmpty)
                     .handleErrorWith(t => Logger[IO].error(t)("ERROR IN AGS REQUEST"))
@@ -347,11 +362,19 @@ object AladinCell extends ModelOptics with AladinCommon:
           _,
           agsResults,
           root,
-          selectedGSIndex,
+          selectedGSIndexView,
           openSettings,
           mouseCoords
         ) =>
           import ctx.given
+
+          // If the selected GS changes do a flip when necessary
+          val selectedGSIndex = selectedGSIndexView.withOnMod(idx =>
+            idx
+              .map(agsResults.value.lift)
+              .map(flipAngle(props))
+              .getOrEmpty
+          )
 
           def prefsSetter(
             candidates: Option[Visible] = None,
@@ -493,12 +516,15 @@ object AladinCell extends ModelOptics with AladinCommon:
           val renderAgsOverlay: ((UserGlobalPreferences, TargetVisualOptions)) => VdomNode =
             case (u: UserGlobalPreferences, t: TargetVisualOptions) =>
               if (t.agsOverlay.visible && usableGuideStar) {
-                <.div(
-                  ExploreStyles.AgsOverlay,
-                  AgsOverlay(
-                    selectedGSIndex,
-                    agsResults.value.count(_.isUsable),
-                    selectedGuideStar
+                props.agsState.map(agsState =>
+                  <.div(
+                    ExploreStyles.AgsOverlay,
+                    AgsOverlay(
+                      selectedGSIndex,
+                      agsResults.value.count(_.isUsable),
+                      selectedGuideStar,
+                      agsState.get
+                    )
                   )
                 )
               } else EmptyVdom

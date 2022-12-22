@@ -234,7 +234,7 @@ object AladinContainer extends AladinCommon {
                     case _ if scienceMode.isEmpty                             =>
                       // Don't color the stars for guide speed if there is no mode selected
                       Css.Empty
-                    case AgsAnalysis.Usable(_, _, Some(s), _, _, _)           =>
+                    case AgsAnalysis.Usable(_, _, Some(s), _, _)              =>
                       speedCss(s)
                     case AgsAnalysis.NotReachableAtPosition(_, _, Some(s), _) =>
                       speedCss(s)
