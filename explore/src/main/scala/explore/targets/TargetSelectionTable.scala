@@ -13,13 +13,18 @@ import lucuma.react.table.*
 import lucuma.ui.primereact.*
 import lucuma.ui.table.*
 import react.common.*
+import react.fa.FontAwesomeIcon
 import react.primereact.Button
 
 case class TargetSelectionTable(
-  targets:       List[TargetSearchResult],
-  onSelected:    TargetSearchResult => Callback,
-  selectedIndex: Option[Int],
-  onClick:       (TargetSearchResult, Int) => Callback
+  targets:             List[TargetSearchResult],
+  selectExistingLabel: String,
+  selectExistingIcon:  FontAwesomeIcon,
+  selectNewLabel:      String,
+  selectNewIcon:       FontAwesomeIcon,
+  onSelected:          TargetSearchResult => Callback,
+  selectedIndex:       Option[Int],
+  onClick:             (TargetSearchResult, Int) => Callback
 ) extends ReactFnProps(TargetSelectionTable.component)
 
 object TargetSelectionTable:
@@ -46,7 +51,10 @@ object TargetSelectionTable:
           "",
           cell =>
             val (label, icon) =
-              cell.value.targetWithOptId.optId.fold(("Add", Icons.New))(_ => ("Link", Icons.Link))
+              cell.value.targetWithOptId.optId.fold(
+                (props.selectNewLabel, props.selectNewIcon)
+              )(_ => (props.selectExistingLabel, props.selectExistingIcon))
+
             Button(
               severity = Button.Severity.Success,
               label = label,

@@ -280,7 +280,7 @@ object AsterismGroupObsList:
         val targets = asterismGroup.targetIds.toList.map(targetWithObsMap.get).flatten
 
         if (targets.isEmpty) "<No Targets>"
-        else targets.map(_.target.name).mkString(";")
+        else targets.map(_.target.name).mkString("; ")
       }
 
       def renderAsterismGroup(asterismGroup: AsterismGroup): VdomNode = {

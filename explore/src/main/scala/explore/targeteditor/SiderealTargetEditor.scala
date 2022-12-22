@@ -44,6 +44,7 @@ import lucuma.core.math.*
 import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.PosAngleConstraint
+import lucuma.core.model.Program
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.Target
 import lucuma.core.model.User
@@ -66,16 +67,8 @@ import react.common.ReactFnProps
 
 import java.time.Instant
 
-case class SearchCallback(
-  searchTerm: NonEmptyString,
-  onComplete: Option[Target] => Callback,
-  onError:    Throwable => Callback
-) {
-  def run: Callback = Callback.empty
-}
-
 case class SiderealTargetEditor(
-  uid:           User.Id,
+  userId:        User.Id,
   asterism:      View[Asterism],
   vizTime:       Option[Instant],
   scienceMode:   Option[ScienceMode],
@@ -276,21 +269,6 @@ object SiderealTargetEditor {
               forceAssign(sourceProfileLens.modify)(SourceProfileInput())
             )
 
-          def searchAndSet(allView: View[Target.Sidereal])(
-            s:                      SearchCallback
-          ): Callback =
-            SimbadSearch
-              .search[IO](s.searchTerm)
-              .map(_.headOption)
-              .runAsyncAndThen {
-                case Right(Some(r)) =>
-                  allView.set(r.target) >> s.onComplete(r.target.some)
-                case Right(None)    =>
-                  s.onComplete(none)
-                case Left(t)        =>
-                  s.onError(t)
-              }
-
           val disabled = props.searching.get.exists(_ === tid) || cloning.value
 
           React.Fragment(
@@ -305,7 +283,7 @@ object SiderealTargetEditor {
               ),
               potRender[Instant](vizTime =>
                 AladinCell(
-                  props.uid,
+                  props.userId,
                   tid,
                   ObsConfiguration(
                     vizTime,
@@ -327,9 +305,8 @@ object SiderealTargetEditor {
                   // with coords & magnitudes from the catalog search, so that all 3 fields are
                   // a single undo/redo operation.
                   nameView,
-                  targetView.zoom(SiderealTargetWithId.target.andThen(Target.Sidereal.name)).get,
-                  props.searching,
-                  searchAndSet(allView)
+                  allView.set,
+                  props.searching
                 ),
                 FormInputTextView(
                   id = "ra".refined,

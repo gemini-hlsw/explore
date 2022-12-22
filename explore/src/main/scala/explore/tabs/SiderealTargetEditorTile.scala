@@ -36,11 +36,12 @@ object SiderealTargetEditorTile {
     fullScreen: View[AladinFullScreen],
     backButton: Option[VdomNode] = none
   ) =
-    Tile(ObsTabTilesIds.TargetId.id,
-         title,
-         back = backButton,
-         canMinimize = true,
-         bodyClass = Some(ExploreStyles.TargetTileBody)
+    Tile(
+      ObsTabTilesIds.TargetId.id,
+      title,
+      back = backButton,
+      canMinimize = true,
+      bodyClass = Some(ExploreStyles.TargetTileBody)
     ) { (renderInTitle: Tile.RenderInTitle) =>
       val asterism = target.widen[Target].zoom(Asterism.oneTarget(targetId).reverse.asLens)
       <.div(

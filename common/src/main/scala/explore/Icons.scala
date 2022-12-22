@@ -15,6 +15,10 @@ import scala.scalajs.js.annotation.*
 @nowarn
 object Icons {
   @js.native
+  @JSImport("@fortawesome/pro-regular-svg-icons", "faArrowDownLeft")
+  val faArrowDownLeft: FAIcon = js.native
+
+  @js.native
   @JSImport("@fortawesome/pro-duotone-svg-icons", "faGears")
   val faGears: FAIcon = js.native
 
@@ -252,6 +256,7 @@ object Icons {
 
   // This is tedious but lets us do proper tree-shaking
   IconLibrary.add(
+    faArrowDownLeft,
     faGears,
     faBars,
     faBarCodeRead,
@@ -313,6 +318,7 @@ object Icons {
     faSquareXMark
   )
 
+  val ArrowDownLeft       = FontAwesomeIcon(faArrowDownLeft)
   val Bars                = FontAwesomeIcon(faBars)
   val BarCodeRead         = FontAwesomeIcon(faBarCodeRead)
   val StarExclamation     = FontAwesomeIcon(faStarExclamation)

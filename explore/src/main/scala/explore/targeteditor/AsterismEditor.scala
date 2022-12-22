@@ -29,6 +29,7 @@ import explore.model.reusability.given
 import explore.optics.*
 import explore.optics.all.*
 import explore.targets.TargetSelectionPopup
+import explore.targets.TargetSource
 import explore.undo.UndoStacks
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
@@ -82,7 +83,7 @@ case class AsterismEditor(
   val posAngle: Option[PosAngleConstraint] = posAngleView.map(_._1.get)
 }
 
-object AsterismEditor {
+object AsterismEditor extends AsterismModifier:
   private type Props = AsterismEditor
 
   private object EditScope extends NewType[Boolean]:
@@ -93,35 +94,6 @@ object AsterismEditor {
 
   private object AreAdding extends NewType[Boolean]
   private type AreAdding = AreAdding.Type
-
-  private def insertSiderealTarget(
-    programId:      Program.Id,
-    obsIds:         ObsIdSet,
-    asterism:       View[Option[Asterism]],
-    oTargetId:      Option[Target.Id],
-    target:         Target.Sidereal,
-    selectedTarget: View[Option[Target.Id]],
-    adding:         View[AreAdding]
-  )(using TransactionalClient[IO, ObservationDB], Logger[IO]): IO[Unit] =
-    val targetId: IO[Target.Id] = oTargetId.fold(
-      CreateTargetMutation
-        .execute(target.toCreateTargetInput(programId))
-        .map(_.createTarget.target.id)
-    )(IO(_))
-
-    adding.async.set(AreAdding(true)) >>
-      targetId
-        .flatMap { tid =>
-          val newTarget   = TargetWithId(tid, target)
-          val asterismAdd = asterism.async.mod {
-            case a @ Some(_) => a.map(_.add(newTarget))
-            case _           => Asterism.one(newTarget).some
-          }
-          asterismAdd >>
-            selectedTarget.async.set(tid.some) >>
-            AsterismQueries.addTargetsToAsterisms[IO](obsIds.toList, List(tid))
-        }
-        .guarantee(adding.async.set(AreAdding(false)))
 
   private def onCloneTarget(
     id:        Target.Id,
@@ -182,7 +154,11 @@ object AsterismEditor {
           ExploreStyles.AladinFullScreen.when(fullScreen.get.value),
           props.renderInTitle(
             TargetSelectionPopup(
-              props.programId,
+              TargetSource.FromProgram[IO](props.programId) :: TargetSource.forAllCatalogs[IO],
+              selectExistingLabel = "Link",
+              selectExistingIcon = Icons.Link,
+              selectNewLabel = "Add",
+              selectNewIcon = Icons.New,
               trigger = Button(
                 severity = Button.Severity.Success,
                 disabled = adding.get.value,
@@ -190,21 +166,15 @@ object AsterismEditor {
                 loading = adding.get.value,
                 label = "Add"
               ).tiny.compact,
-              onSelected = _ match {
-                case TargetWithOptId(oid, t @ Target.Sidereal(_, _, _, _)) =>
+              onSelected = targetWithOptId =>
+                (adding.async.set(AreAdding(true)) >>
                   insertSiderealTarget(
                     props.programId,
                     props.sharedInObsIds,
                     props.asterism,
-                    oid,
-                    t,
-                    targetView,
-                    adding
-                  ).runAsync
-
-                case _ =>
-                  Callback.empty
-              }
+                    targetWithOptId
+                  ).flatMap(oTargetId => targetView.async.set(oTargetId))
+                    .guarantee(adding.async.set(AreAdding(false)))).runAsync
             )
           ),
           props.renderInTitle(VizTimeEditor(vizTimeView)),
@@ -270,4 +240,3 @@ object AsterismEditor {
             }
         )
       }
-}

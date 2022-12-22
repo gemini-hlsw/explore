@@ -63,7 +63,8 @@ object SourceProfileEditor:
             id = "profile-type".refined,
             value = SourceProfileType.fromSourceProfile(props.sourceProfile.get),
             onChange = sp => props.sourceProfile.view(_.toInput).mod(sp.convert),
-            clazz = LucumaStyles.FormField
+            clazz = LucumaStyles.FormField,
+            disabled = props.disabled
           ),
           props.sourceProfile
             .zoomOpt(
@@ -71,7 +72,11 @@ object SourceProfileEditor:
               forceAssign(SourceProfileInput.point.modify)(SpectralDefinitionIntegratedInput())
             )
             .map(pointSpectralDefinitionAccess =>
-              IntegratedSpectralDefinitionEditor(pointSpectralDefinitionAccess, brightnessExpanded)
+              IntegratedSpectralDefinitionEditor(
+                pointSpectralDefinitionAccess,
+                brightnessExpanded,
+                props.disabled
+              )
             ),
           props.sourceProfile
             .zoomOpt(
@@ -79,7 +84,11 @@ object SourceProfileEditor:
               forceAssign(SourceProfileInput.uniform.modify)(SpectralDefinitionSurfaceInput())
             )
             .map(uniformSpectralDefinitionAccess =>
-              SurfaceSpectralDefinitionEditor(uniformSpectralDefinitionAccess, brightnessExpanded)
+              SurfaceSpectralDefinitionEditor(
+                uniformSpectralDefinitionAccess,
+                brightnessExpanded,
+                props.disabled
+              )
             ),
           gaussianAlignerOpt
             .map(gaussianAligner =>
@@ -95,7 +104,8 @@ object SourceProfileEditor:
                     .fromInputValidSplitEpi(MathValidators.angleArcSec)
                     .denyNeg
                     .allowEmpty,
-                  postAddons = List("arcsec")
+                  postAddons = List("arcsec"),
+                  disabled = props.disabled
                 ),
                 IntegratedSpectralDefinitionEditor(
                   gaussianAligner.zoom(
@@ -104,7 +114,8 @@ object SourceProfileEditor:
                       SpectralDefinitionIntegratedInput()
                     )
                   ),
-                  brightnessExpanded
+                  brightnessExpanded,
+                  props.disabled
                 )
               )
             )
