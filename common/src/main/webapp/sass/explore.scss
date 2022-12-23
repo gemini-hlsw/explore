@@ -1532,7 +1532,7 @@ table.explore-border-table {
   height: 100%;
 
   .highcharts-xaxis .highcharts-axis-title {
-    fill: hsl(0, 87%, 66%);
+    fill: hsl(0deg 87% 66%);
   }
 
   >div {
@@ -1547,7 +1547,7 @@ table.explore-border-table {
 }
 
 .p-button.pl-very-compact {
-  padding: 0.11em 0.5em 0.11em;
+  padding: 0.11em 0.5em;
 }
 
 .dark-theme .p-selectbutton {
