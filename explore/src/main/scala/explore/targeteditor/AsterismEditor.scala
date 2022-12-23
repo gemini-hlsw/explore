@@ -154,6 +154,7 @@ object AsterismEditor extends AsterismModifier:
           ExploreStyles.AladinFullScreen.when(fullScreen.get.value),
           props.renderInTitle(
             TargetSelectionPopup(
+              "Add Target",
               TargetSource.FromProgram[IO](props.programId) :: TargetSource.forAllCatalogs[IO],
               selectExistingLabel = "Link",
               selectExistingIcon = Icons.Link,
