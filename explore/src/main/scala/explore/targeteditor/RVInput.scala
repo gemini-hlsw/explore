@@ -46,14 +46,8 @@ object RVInput {
     given Enumerated[RVView] = Enumerated.from(RVView.RV, RVView.Z, RVView.CZ).withTag(_.tag)
     given Display[RVView]    = Display.byShortName(_.tag.value)
 
-  private def addons(rvView: RVView, v: Option[RadialVelocity]): List[TagMod] =
-    val l: List[TagMod] = if (v.isEmpty) List(requiredForITC) else List.empty
-    rvView match {
-      case RVView.Z              =>
-        l
-      case RVView.CZ | RVView.RV =>
-        "km/s" :: l
-    }
+  private def addons(v: Option[RadialVelocity]): List[TagMod] =
+    if (v.isEmpty) List(requiredForITC) else List.empty
 
   protected val component =
     ScalaFnComponent
@@ -74,7 +68,7 @@ object RVInput {
               changeAuditor = ChangeAuditor.fromFormat(formatZ).decimal(9.refined).optional,
               groupClass = baseCss,
               disabled = props.disabled,
-              postAddons = addons(rvView.get, props.rv.get)
+              postAddons = addons(props.rv.get)
             )
           case RVView.CZ =>
             FormInputTextView(
@@ -85,7 +79,8 @@ object RVInput {
               changeAuditor = ChangeAuditor.fromFormat(formatCZ).decimal(10.refined).optional,
               groupClass = baseCss,
               disabled = props.disabled,
-              postAddons = addons(rvView.get, props.rv.get)
+              units = "km/s",
+              postAddons = addons(props.rv.get)
             )
           case RVView.RV =>
             FormInputTextView(
@@ -96,7 +91,8 @@ object RVInput {
               changeAuditor = ChangeAuditor.fromFormat(formatRV).decimal(3.refined).optional,
               groupClass = baseCss,
               disabled = props.disabled,
-              postAddons = addons(rvView.get, props.rv.get)
+              units = "km/s",
+              postAddons = addons(props.rv.get)
             )
         }
         React.Fragment(

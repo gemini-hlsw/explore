@@ -203,7 +203,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
               .allow(List("0", "0.").contains)
               .optional,
             onTextChange = (s: String) => addDisabled.set(AddDisabled(s.isEmpty)),
-            postAddons = List("μm")
+            units = "μm"
           ),
           Button(
             icon = Icons.New,
