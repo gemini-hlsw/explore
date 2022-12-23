@@ -3,15 +3,20 @@
 
 package explore.utils
 
+import cats.Applicative
 import cats.Endo
+import cats.Monad
 import cats.Monoid
+import cats.effect.Deferred
 import cats.effect.Sync
+import cats.effect.kernel.Sync
 import cats.syntax.all.*
 import clue.data.*
 import clue.data.syntax.*
 import crystal.Pot
 import crystal.PotOption
 import crystal.react.View
+import crystal.react.implicits.*
 import crystal.react.reuse.*
 import eu.timepit.refined.*
 import eu.timepit.refined.types.string.NonEmptyString
@@ -150,16 +155,18 @@ def clearInputIcon[EV[_], A](
     .map(_ => <.i(ExploreStyles.ClearableInputIcon, ^.onClick --> ev.set(view)(None)))
     .orUndefined
 
+// TODO Move these to lucuma-ui
 extension (toastRef: ToastRef)
-  def info(text: String) =
+  def show(text: String, severity: Message.Severity = Message.Severity.Info): Callback =
     toastRef.show(
       MessageItem(
         content = <.span(Icons.InfoLight.withSize(IconSize.LG), text),
+        severity = severity,
         clazz = ExploreStyles.ExploreToast
       )
     )
 
-  def prompt(text: String, callback: Callback) =
+  def prompt(text: String, callback: Callback): Callback =
     toastRef.show(
       MessageItem(
         content = <.div(
@@ -175,8 +182,12 @@ extension (toastRef: ToastRef)
       )
     )
 
+extension [F[_]: Sync](toastRef: Deferred[F, ToastRef])
+  def showToast(text: String, severity: Message.Severity = Message.Severity.Info): F[Unit] =
+    toastRef.tryGet.flatMap(_.map(_.show(text, severity).to[F]).getOrElse(Applicative[F].unit))
+
 // TODO Move these to react-datetime
-extension (instant:  Instant)
+extension (instant: Instant)
   // DatePicker only works in local timezone, so we trick it by adding the timezone offset.
   // See https://github.com/Hacker0x01/react-datepicker/issues/1787
   def toDatePickerJsDate: js.Date =

@@ -67,8 +67,7 @@ case class TargetSummaryTable(
   selectTargetOrSummary: Option[Target.Id] => Callback,
   renderInTitle:         Tile.RenderInTitle,
   selectedTargetIds:     View[List[Target.Id]],
-  undoCtx:               UndoContext[AsterismGroupsWithObs],
-  toastRef:              ToastRef
+  undoCtx:               UndoContext[AsterismGroupsWithObs]
 ) extends ReactFnProps(TargetSummaryTable.component)
 
 object TargetSummaryTable extends TableHooks:
@@ -229,13 +228,11 @@ object TargetSummaryTable extends TableHooks:
                     selectedRowsIds,
                     props.programId,
                     props.selectTargetOrSummary(none).to[IO],
-                    props.toastRef.info(_).to[IO]
+                    ctx.toastRef.showToast(_)
                   )
                   .set(props.undoCtx)(selectedRowsIds.map(_ => none[TargetWithObs]))
                   .to[IO]
-                  .guarantee(
-                    deletingTargets.async.set(DeletingTargets(false))
-                  )).runAsyncAndForget,
+                  .guarantee(deletingTargets.async.set(DeletingTargets(false)))).runAsyncAndForget,
             acceptClass = PrimeStyles.ButtonSmall,
             rejectClass = PrimeStyles.ButtonSmall,
             icon = Icons.SkullCrossBones.withColor("red")

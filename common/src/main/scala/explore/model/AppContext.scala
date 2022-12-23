@@ -24,6 +24,7 @@ import lucuma.schemas.ObservationDB
 import org.typelevel.log4cats.Logger
 import queries.schemas.ITC
 import queries.schemas.UserPreferencesDB
+import react.primereact.ToastRef
 import workers.WebWorkerF
 import workers.WorkerClient
 
@@ -36,7 +37,8 @@ case class AppContext[F[_]](
   setPageVia:       (AppTab, Program.Id, Focused, SetRouteVia) => Callback,
   environment:      ExecutionEnvironment,
   exploreClipboard: Ref[F, LocalClipboard],
-  broadcastChannel: BroadcastChannel[ExploreEvent]
+  broadcastChannel: BroadcastChannel[ExploreEvent],
+  toastRef:         Deferred[F, ToastRef]
 )(using
   val F:            Applicative[F],
   val logger:       Logger[F],
@@ -67,7 +69,8 @@ object AppContext:
     setPageVia:           (AppTab, Program.Id, Focused, SetRouteVia) => Callback,
     workerClients:        WorkerClients[F],
     exploreClipboard:     Ref[F, LocalClipboard],
-    broadcastChannel:     BroadcastChannel[ExploreEvent]
+    broadcastChannel:     BroadcastChannel[ExploreEvent],
+    toastRef:             Deferred[F, ToastRef]
   ): F[AppContext[F]] =
     for {
       clients <-
@@ -83,7 +86,8 @@ object AppContext:
       setPageVia,
       config.environment,
       exploreClipboard,
-      broadcastChannel
+      broadcastChannel,
+      toastRef
     )
 
   given [F[_]]: Reusability[AppContext[F]] = Reusability.always

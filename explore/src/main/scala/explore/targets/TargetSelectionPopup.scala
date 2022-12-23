@@ -169,12 +169,6 @@ object TargetSelectionPopup:
     .useState(PopupState.Closed)
     // selectedTarget
     .useStateView(none[SelectedTarget])
-    // targetSources
-    // .useMemoBy((_, _, _, _, _, _, _, _) => ()) { (props, ctx, _, _, _, _, _, _) => _ =>
-    //   import ctx.given
-
-    //   TargetSource.FromProgram[IO](props.programId) :: TargetSource.forAllCatalogs[IO]
-    // }
     // aladinRef
     .useMemo(())(_ => Ref.toScalaComponent(Aladin.component))
     // re render when selected changes
@@ -196,7 +190,6 @@ object TargetSelectionPopup:
         singleEffect,
         isOpen,
         selectedTarget,
-        // targetSources,
         aladinRef
       ) =>
         import ctx.given
@@ -259,7 +252,8 @@ object TargetSelectionPopup:
                     id = "name".refined,
                     placeholder = "Name",
                     value = inputValue,
-                    preAddons = List(if (searching.get.value) Icons.Spinner else Icons.Search),
+                    preAddons =
+                      List(if (searching.get.value) Icons.Spinner.withSpin(true) else Icons.Search),
                     onTextChange = (t: String) =>
                       inputValue.set(t) >>
                         singleEffect

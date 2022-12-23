@@ -9,6 +9,7 @@ import cats.effect.IOApp
 import cats.effect.Ref
 import cats.effect.Resource
 import cats.effect.Sync
+import cats.effect.kernel.Deferred
 import cats.effect.std.Dispatcher
 import cats.syntax.all.*
 import clue.WebSocketReconnectionStrategy
@@ -54,6 +55,7 @@ import org.scalajs.dom
 import org.scalajs.dom.Element
 import org.scalajs.dom.RequestCache
 import org.typelevel.log4cats.Logger
+import react.primereact.ToastRef
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.*
@@ -176,6 +178,7 @@ object ExploreMain extends IOApp.Simple {
         _                    <- Logger[IO].info(s"Git Commit: [${utils.gitHash.getOrElse("NONE")}]")
         _                    <- Logger[IO].info(s"Config: ${appConfig.show}")
         clipboard            <- Ref.of[IO, LocalClipboard](LocalClipboard.Empty)
+        toastRef             <- Deferred[IO, ToastRef]
         ctx                  <-
           AppContext.from[IO](
             appConfig,
@@ -184,7 +187,8 @@ object ExploreMain extends IOApp.Simple {
             setPageVia,
             workerClients,
             clipboard,
-            bc
+            bc,
+            toastRef
           )
         _                    <- setupReusabilityOverlay(appConfig.environment)
         r                    <- (ctx.sso.whoami, setupDOM[IO], showEnvironment[IO](appConfig.environment)).parTupled

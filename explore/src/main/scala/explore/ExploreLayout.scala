@@ -35,6 +35,7 @@ import react.hotkeys.hooks.*
 import react.primereact.MessageItem
 import react.primereact.Sidebar
 import react.primereact.Toast
+import react.primereact.ToastRef
 import react.primereact.hooks.all.*
 
 import scala.scalajs.js
@@ -48,6 +49,8 @@ case class ExploreLayout(
 
 object ExploreLayout:
   private type Props = ExploreLayout
+
+  private given Reusability[ToastRef] = Reusability.by_==
 
   private val component =
     ScalaFnComponent
@@ -75,16 +78,21 @@ object ExploreLayout:
               help.displayedHelp.set(Some("shortcuts.md".refined))
           }
           UseHotkeysProps(
-            (ShortcutsHelp :: List(GoToObs,
-                                   GoToTargets,
-                                   GoToProposals,
-                                   GoToConstraints,
-                                   GoToOverview
-            )).toHotKeys,
+            (ShortcutsHelp ::
+              List(GoToObs, GoToTargets, GoToProposals, GoToConstraints, GoToOverview)).toHotKeys,
             callbacks
           )
       }
       .useToastRef
+      .useEffectWithDepsBy((_, _, _, toastRef) => toastRef)((_, _, ctx, _) =>
+        import ctx.given
+
+        toastRef =>
+          toastRef.ref.get
+            .flatMap(
+              _.map(_ => ctx.toastRef.complete(toastRef).void.runAsync).orEmpty
+            )
+      )
       .useEffectOnMountBy { (props, _, ctx, toastRef) =>
         Callback {
           ctx.broadcastChannel.onmessage = (
@@ -107,7 +115,6 @@ object ExploreLayout:
           // Scala 3 infers the return type as Any if we don't ascribe
 
           ctx.broadcastChannel.postMessage(ExploreEvent.ExploreUIReady)
-
         }
       }
       .render { (props, helpCtx, _, toastRef) =>
@@ -115,7 +122,9 @@ object ExploreLayout:
           val routingInfo = RoutingInfo.from(props.resolution.page)
 
           val helpView = helpCtx.displayedHelp
+
           React.Fragment(
+            Toast(Toast.Position.BottomRight).withRef(toastRef.ref),
             Sidebar(
               position = Sidebar.Position.Right,
               size = Sidebar.Size.Medium,
@@ -126,16 +135,12 @@ object ExploreLayout:
             )(
               <.div(
                 helpView.get
-                  .map { h =>
-                    HelpBody(helpCtx, h)
-                  }
+                  .map(h => HelpBody(helpCtx, h))
                   .when(helpView.get.isDefined)
               )
             ),
             <.div(
               ExploreStyles.MainGrid,
-              Toast(Toast.Position.BottomRight)
-                .withRef(toastRef.ref),
               TopBar(
                 vault.user,
                 routingInfo.optProgramId,
