@@ -26,6 +26,7 @@ import org.scalajs.dom
 import react.common.*
 import react.primereact.Button
 import react.primereact.Dialog
+import react.primereact.Image
 import react.primereact.Message
 
 case class UserSelectionForm(
@@ -84,27 +85,19 @@ object UserSelectionForm:
                 <.div(
                   ExploreStyles.UserSelectionButtons,
                   Button(
+                    label = "Login with ORCID",
+                    icon = Image(src = Resources.OrcidLogo, clazz = ExploreStyles.OrcidIcon),
                     clazz = ExploreStyles.LoginBoxButton,
                     severity = Button.Severity.Secondary,
                     onClick = login >> props.message.set(none) >> isOpen.set(IsOpen(false))
-                  ).big(
-                    <.div(
-                      ExploreStyles.LoginOrcidButton,
-                      <.img(ExploreStyles.OrcidIcon, ^.src := Resources.OrcidLogo),
-                      "Login with ORCID"
-                    )
-                  ).when(browserInfo.showButtons),
+                  ).big.when(browserInfo.showButtons),
                   Button(
+                    label = "Continue as Guest",
+                    icon = Icons.UserAstronaut.withClass(ExploreStyles.OrcidIcon),
                     clazz = ExploreStyles.LoginBoxButton,
                     severity = Button.Severity.Secondary,
                     onClick = guest >> props.message.set(none) >> isOpen.set(IsOpen(false))
-                  ).big(
-                    <.div(
-                      ExploreStyles.LoginOrcidButton,
-                      Icons.UserAstronaut.withClass(ExploreStyles.OrcidIcon),
-                      "Continue as Guest"
-                    )
-                  ).when(browserInfo.showButtons)
+                  ).big.when(browserInfo.showButtons)
                 )
               ),
               <.div(ExploreStyles.LoginMessagesLayout)(
