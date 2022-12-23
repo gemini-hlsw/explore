@@ -30,7 +30,6 @@ import lucuma.ui.primereact.given
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.abbreviate
 import org.scalajs.dom
 import org.scalajs.dom.HTMLButtonElement

@@ -4,6 +4,7 @@
 package explore.model.enums
 
 import lucuma.core.syntax.string.*
+import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 
 enum ItcSeriesType(val tag: String):
@@ -39,3 +40,8 @@ object ItcChartType:
         ItcChartType.S2NChart
       )
       .withTag(_.tag)
+
+  given Display[ItcChartType] = Display.byShortName {
+    case ItcChartType.SignalChart => "Signal"
+    case ItcChartType.S2NChart    => "S/N"
+  }

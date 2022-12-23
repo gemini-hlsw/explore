@@ -17,6 +17,9 @@ import lucuma.core.validation.InputValidSplitEpi
 import java.text.DecimalFormat
 
 trait DisplayImplicits {
+  given Display[Site] =
+    Display.byShortName(_.shortName)
+
   given Display[TacGroup] =
     Display.byShortName(_.label)
 

@@ -10,7 +10,10 @@ import explore.model.enums.ItcChartType
 import explore.model.itc.PlotDetails
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.refined.*
+import lucuma.ui.primereact.SelectButtonEnumView
 import lucuma.ui.primereact.*
+import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
@@ -32,13 +35,6 @@ object ItcPlotControl:
       case ItcChartType.S2NChart    => "S/N"
       case ItcChartType.SignalChart => "Signal"
 
-    val options = ItcChartType.values
-      .map(ch =>
-        SelectItem(ch, label = label(ch), clazz = LucumaStyles.Tiny |+| LucumaStyles.Compact)
-      )
-      .toList
-      .reverse
-
     <.div(
       ExploreStyles.ItcPlotControls,
       Button(
@@ -49,10 +45,10 @@ object ItcPlotControl:
         label = descText
       ).tiny.compact,
       props.chartType.asView.map { ct =>
-        SelectButton[ItcChartType](ct.get,
-                                   options,
-                                   clazz = LucumaStyles.Tiny,
-                                   onChange = props.chartType.set
+        SelectButtonEnumView(
+          "itc-plot-type".refined,
+          ct,
+          buttonClass = LucumaStyles.Tiny |+| LucumaStyles.VeryCompact
         )
       }
     )

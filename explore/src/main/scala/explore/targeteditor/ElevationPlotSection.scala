@@ -20,6 +20,7 @@ import explore.model.AppContext
 import explore.model.CoordinatesAtVizTime
 import explore.model.ElevationPlotOptions
 import explore.model.ScienceMode
+import explore.model.display.given
 import explore.model.enums.PlotRange
 import explore.model.enums.TimeDisplay
 import explore.model.reusability.*
@@ -32,7 +33,12 @@ import lucuma.core.math.Coordinates
 import lucuma.core.model.Semester
 import lucuma.core.model.Target
 import lucuma.core.model.User
+import lucuma.core.util.Enumerated
 import lucuma.refined.*
+import lucuma.ui.primereact.LucumaStyles
+import lucuma.ui.primereact.SelectButtonEnumView
+import lucuma.ui.primereact.*
+import lucuma.ui.primereact.given
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -41,9 +47,9 @@ import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.UserPreferencesDB
 import react.common.ReactFnProps
 import react.datepicker.*
-import react.semanticui.collections.form.Form
-import react.semanticui.elements.button.Button
-import react.semanticui.elements.button.ButtonGroup
+import react.primereact.Button
+import react.primereact.SelectButton
+import react.primereact.SelectItem
 
 import java.time.*
 
@@ -67,7 +73,6 @@ object ElevationPlotSection:
       .getOrElse {
         if (c.coords.value.dec.toAngle.toSignedDoubleDegrees > -5) Site.GN else Site.GS
       }
-
   private def prefsSetter(
     props:   Props,
     options: View[Pot[ElevationPlotOptions]],
@@ -166,21 +171,21 @@ object ElevationPlotSection:
                   case _                          => EmptyVdom
                 }
               },
-              Form(clazz = ExploreStyles.ElevationPlotControls)(
-                ButtonGroup(compact = true)(
-                  Button(
-                    active = siteView.contains(Site.GN),
-                    onClick = setSite(Site.GN)
-                  )("GN"),
-                  Button(
-                    active = siteView.contains(Site.GS),
-                    onClick = setSite(Site.GS)
-                  )("GS")
+              <.div(
+                ExploreStyles.ElevationPlotControls,
+                siteView.asView.map(siteView =>
+                  SelectButtonEnumView(
+                    "elevation-plot-site".refined,
+                    siteView,
+                    buttonClass = LucumaStyles.Tiny |+| LucumaStyles.VeryCompact
+                  )
                 ),
                 <.div(ExploreStyles.ElevationPlotDatePickerControls)(
                   Button(onClick = date.modState(_.minusDays(1)),
-                         clazz = ExploreStyles.ElevationPlotDateButton
-                  )(Icons.ChevronLeftLight),
+                         clazz = ExploreStyles.ElevationPlotDateButton,
+                         text = false,
+                         icon = Icons.ChevronLeftLight
+                  ).tiny.compact,
                   Datepicker(
                     onChange = (newValue, _) => date.setState(newValue.toLocalDateOpt.get)
                   )
@@ -188,32 +193,20 @@ object ElevationPlotSection:
                     .dateFormat("yyyy-MM-dd")
                     .className(ExploreStyles.ElevationPlotDatePicker.htmlClass),
                   Button(onClick = date.modState(_.plusDays(1)),
-                         clazz = ExploreStyles.ElevationPlotDateButton
-                  )(Icons.ChevronRightLight)
+                         clazz = ExploreStyles.ElevationPlotDateButton,
+                         text = false,
+                         icon = Icons.ChevronRightLight
+                  ).tiny.compact
                 ),
-                ButtonGroup(compact = true)(
-                  Button(
-                    active = rangeView.contains(PlotRange.Night),
-                    onClick = setRange(PlotRange.Night)
-                  )("Night"),
-                  Button(
-                    active = rangeView.contains(PlotRange.Semester),
-                    onClick = setRange(PlotRange.Semester)
-                  )("Semester")
+                SelectButtonEnumView(
+                  "elevation-plot-range".refined,
+                  rangeView,
+                  buttonClass = LucumaStyles.Tiny |+| LucumaStyles.VeryCompact
                 ),
-                ButtonGroup(compact = true)(
-                  Button(
-                    active = timeView.contains(TimeDisplay.UT),
-                    onClick = setTime(TimeDisplay.UT)
-                  )("UT"),
-                  Button(
-                    active = timeView.contains(TimeDisplay.Sidereal),
-                    onClick = setTime(TimeDisplay.Sidereal)
-                  )("Sidereal"),
-                  Button(
-                    active = timeView.contains(TimeDisplay.Site),
-                    onClick = setTime(TimeDisplay.Site)
-                  )("Site")
+                SelectButtonEnumView(
+                  "elevation-plot-time".refined,
+                  timeView,
+                  buttonClass = LucumaStyles.Tiny |+| LucumaStyles.VeryCompact
                 )(^.visibility.hidden.when(rangeView.contains(PlotRange.Semester)))
               )
             )
