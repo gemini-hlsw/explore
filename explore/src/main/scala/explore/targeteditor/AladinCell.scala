@@ -224,21 +224,18 @@ object AladinCell extends ModelOptics with AladinCommon:
       // Analysis results
       .useSerialState(List.empty[AgsAnalysis])
       // Request data again if vizTime changes more than a month
-      .useEffectWithDepsBy((p, _, _, _, _) => p.obsConf.vizTime) {
-        (props, ctx, _, gs, _) => vizTime =>
-          import ctx.given
+      .useEffectWithDepsBy((p, _, _, _, _) =>
+        (p.obsConf.vizTime, p.asterism.baseTracking, p.agsState.isDefined)
+      ) { (props, ctx, _, gs, _) => (vizTime, baseTracking, _) =>
+        import ctx.given
 
-          props.agsState
-            .map(agsState =>
-              (for {
-                _          <- agsState.async.set(AgsState.LoadingCandidates)
-                candidates <- CatalogClient[IO].requestSingle(
-                                CatalogMessage.GSRequest(props.asterism.baseTracking, vizTime)
-                              )
-                _          <- candidates.map(gs.setStateAsync(_)).orEmpty
-              } yield ()).guarantee(agsState.async.set(AgsState.Idle))
-            )
-            .orEmpty
+        (for {
+          _          <- props.agsState.foldMap(_.async.set(AgsState.LoadingCandidates))
+          candidates <- CatalogClient[IO].requestSingle(
+                          CatalogMessage.GSRequest(baseTracking, vizTime)
+                        )
+          _          <- candidates.map(gs.setStateAsync(_)).orEmpty
+        } yield ()).guarantee(props.agsState.foldMap(_.async.set(AgsState.Idle)))
       }
       // Reference to the root
       .useMemo(())(_ =>
