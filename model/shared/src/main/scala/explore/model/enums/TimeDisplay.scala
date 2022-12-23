@@ -3,6 +3,7 @@
 
 package explore.model.enums
 
+import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 
 /**
@@ -25,3 +26,8 @@ object TimeDisplay:
   /** @group Typeclass Instances */
   given Enumerated[TimeDisplay] =
     Enumerated.from(UT, Sidereal, Site).withTag(_.tag)
+
+  given Display[TimeDisplay] = Display.byShortName {
+    case TimeDisplay.UT => TimeDisplay.UT.tag.toUpperCase
+    case e              => e.tag.capitalize
+  }

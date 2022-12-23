@@ -158,8 +158,6 @@ object ExploreStyles:
   val ElevationPlotDatePickerControls: Css = Css("elevation-plot-datepicker-controls")
   val ElevationPlotDatePicker: Css         = Css("ui input elevation-plot-datepicker")
   val ElevationPlotDateButton: Css         = Css("elevation-plot-date-button")
-  val PlotToggleCheckbox: Css              = Css("plot-toggle-checkbox")
-  val PlotToggle: Css                      = Css("plot-toggle")
 
   val ItcPlotSelector: Css       = Css("itc-plot-selector")
   val ItcPlotSection: Css        = Css("itc-plot-section")

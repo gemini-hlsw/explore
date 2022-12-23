@@ -3,6 +3,7 @@
 
 package explore.model.enums
 
+import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 
 /**
@@ -25,3 +26,5 @@ object PlotRange:
   /** @group Typeclass Instances */
   given Enumerated[PlotRange] =
     Enumerated.from(Night, Semester).withTag(_.tag)
+
+  given Display[PlotRange] = Display.byShortName(_.tag.capitalize)
