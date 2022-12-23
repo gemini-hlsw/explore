@@ -335,7 +335,7 @@ object SiderealTargetEditor {
                   disabled = disabled,
                   validFormat = MathValidators.epochNoScheme,
                   changeAuditor = ChangeAuditor.maxLength(8.refined).decimal(3.refined).denyNeg,
-                  postAddons = List("years")
+                  units = "years"
                 ),
                 FormInputTextView(
                   id = "raPM".refined,
@@ -344,7 +344,7 @@ object SiderealTargetEditor {
                   disabled = disabled,
                   validFormat = ExploreModelValidators.pmRAValidWedge.optional,
                   changeAuditor = ChangeAuditor.bigDecimal(3.refined).optional,
-                  postAddons = List("mas/y")
+                  units = "mas/y"
                 ),
                 FormInputTextView(
                   id = "raDec".refined,
@@ -353,7 +353,7 @@ object SiderealTargetEditor {
                   disabled = disabled,
                   validFormat = ExploreModelValidators.pmDecValidWedge.optional,
                   changeAuditor = ChangeAuditor.bigDecimal(3.refined).optional,
-                  postAddons = List("mas/y")
+                  units = "mas/y"
                 ),
                 FormInputTextView(
                   id = "parallax".refined,
@@ -362,7 +362,7 @@ object SiderealTargetEditor {
                   disabled = disabled,
                   validFormat = ExploreModelValidators.pxValidWedge.optional,
                   changeAuditor = ChangeAuditor.bigDecimal(3.refined).optional,
-                  postAddons = List("mas")
+                  units = "mas"
                 ),
                 RVInput(radialVelocityView, disabled)
               ),

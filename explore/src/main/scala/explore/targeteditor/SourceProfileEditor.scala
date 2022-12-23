@@ -104,7 +104,7 @@ object SourceProfileEditor:
                     .fromInputValidSplitEpi(MathValidators.angleArcSec)
                     .denyNeg
                     .allowEmpty,
-                  postAddons = List("arcsec"),
+                  units = "arcsec",
                   disabled = props.disabled
                 ),
                 IntegratedSpectralDefinitionEditor(

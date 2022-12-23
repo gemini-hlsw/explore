@@ -237,7 +237,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
               changeAuditor = ChangeAuditor
                 .fromInputValidSplitEpi(InputValidSplitEpi.posInt)
                 .denyNeg,
-              postAddons = List("°K"),
+              units = "°K",
               disabled = props.disabled
             ),
           ),

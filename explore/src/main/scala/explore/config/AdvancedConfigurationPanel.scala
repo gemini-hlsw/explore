@@ -46,7 +46,6 @@ import explore.modes.SpectroscopyModeRow
 import explore.modes.SpectroscopyModesMatrix
 import explore.optics.*
 import explore.optics.all.*
-import explore.syntax.ui.*
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
@@ -90,6 +89,7 @@ import react.fa.IconSize
 import react.floatingui.syntax.*
 import react.primereact.Button
 import react.primereact.PrimeStyles
+import reactST.primereact.components.{Button => CButton}
 import spire.math.Bounded
 import spire.math.Interval
 
@@ -354,12 +354,13 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
       id = id,
       value = value,
       label = label,
-      postAddons = List(unitAddon, customAddon).flatten,
+      units = units.orUndefined,
+      postAddons = customAddon.toList,
       validFormat = validFormat,
       changeAuditor = changeAuditor,
       placeholder = originalText.orUndefined,
       disabled = disabled
-    )
+    ).clearable
 
   val component =
     ScalaFnComponent
@@ -631,7 +632,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                     .withOnMod(_ => invalidateITC),
                   validFormat = InputValidSplitEpi.refinedInt[NonNegative],
                   changeAuditor = ChangeAuditor.refinedInt[NonNegative](),
-                  postAddons = List("sec"),
+                  units = "sec",
                   disabled = disableSimpleEdit
                 ): TagMod
               )
@@ -643,7 +644,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                     FormInputText(id = "exposureTime".refined,
                                   value = value,
                                   disabled = true,
-                                  postAddons = List("sec")
+                                  units = "sec"
                     )
                   },
                   pendingRender = <.div(
@@ -725,7 +726,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               id = "lambdaCoverage".refined,
               value = readonlyData.value.fold("Unknown")(_.formattedCoverage),
               disabled = true,
-              postAddons = List("nm")
+              units = "nm"
             )
           ),
           <.div(ExploreStyles.AdvancedConfigurationButtons)(

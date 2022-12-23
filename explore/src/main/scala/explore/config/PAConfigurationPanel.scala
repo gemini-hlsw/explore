@@ -99,7 +99,7 @@ object PAConfigurationPanel:
               id = "pos-angle-value".refined,
               groupClass = ExploreStyles.PAConfigurationAngle,
               value = pa,
-              postAddons = List("° E of N"),
+              units = "° E of N",
               disabled = !props.agsState.get.canRecalculate,
               validFormat = MathValidators.truncatedAngleDegrees,
               changeAuditor = ChangeAuditor.bigDecimal(3.refined, 2.refined)
