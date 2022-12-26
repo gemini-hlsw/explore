@@ -161,6 +161,7 @@ object TopBar:
             left = <.span(ExploreStyles.MainTitle, "Explore"),
             right = React.Fragment(
               <.span(ExploreStyles.MainUserName, props.user.displayName),
+              ConnectionsStatus(),
               Button(icon = Icons.Bars,
                      text = true,
                      severity = Button.Severity.Secondary,

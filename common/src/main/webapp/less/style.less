@@ -146,9 +146,6 @@ body.light-theme {
 }
 
 // Classes
-.tilemenu {
-  background: darkgray;
-}
 
 .explore-accented {
   color: var(--explore-accent-color);
@@ -193,45 +190,6 @@ tfoot {
   }
 }
 
-.explore-tile-title {
-  flex-grow: 0;
-  background-color: var(--tile-title-background);
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-
-  & .tabular.menu .item {
-    color: var(--tile-title-color);
-    letter-spacing: 0.1em;
-  }
-}
-
-.explore-tile-title-strip {
-  flex-grow: 2;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.explore-fixed-size-tile-title {
-  margin-right: 1em;
-}
-
-.ui.menu.explore-tile-title-menu {
-  margin-top: 0;
-  cursor: pointer;
-  min-height: 36px;
-  flex-shrink: 2;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.ui.menu.explore-tile-title-menu .item {
-  padding-left: 0.5em;
-  letter-spacing: 2px;
-}
-
 .constraints-grid.ui.form .field {
   margin-bottom: 0;
 }
@@ -239,16 +197,6 @@ tfoot {
 .ui.selection.dropdown.constraints-tile-selector {
   font-size: smaller;
   margin-right: 0.5em;
-}
-
-.ui.menu.explore-tile-title-menu a.item:hover {
-  background: unset;
-  color: unset;
-}
-
-.explore-tile-control {
-  margin-right: auto;
-  flex-grow: 3;
 }
 
 .sidetabs {
@@ -349,47 +297,6 @@ tfoot {
     box-shadow @defaultDuration @defaultEasing;
 }
 
-.explore-tile-body {
-  flex-grow: 1;
-  overflow-y: auto;
-  background-color: var(--tile-background);
-}
-
-.explore-tile {
-  .full-height-width();
-
-  display: flex;
-  flex-direction: column;
-  background-color: var(--tile-background);
-}
-
-.fade-in {
-  animation: fadeIn 0.5s;
-}
-
-@keyframes fadeIn {
-  0% {
-    opacity: 0;
-  }
-
-  100% {
-    opacity: 1;
-  }
-}
-
-.ui.basic.button.explore-tile-state-button:hover {
-  background: transparent;
-  box-shadow: none;
-  outline: none;
-  filter: brightness(100%);
-}
-
-.explore-tile-state-button {
-  filter: brightness(80%);
-  margin-right: 0.5em;
-  transform-origin: center center;
-  transition: transform 0.25s, filter 0.25s ease-in;
-}
 
 .proposal-tile {
   margin: 0.5em;

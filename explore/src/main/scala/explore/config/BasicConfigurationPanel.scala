@@ -36,11 +36,10 @@ import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
-import react.semanticui.elements.button.Button
-import react.semanticui.shorthand.*
-import react.semanticui.sizes.*
 
 import scalajs.js.JSConverters.*
+import react.primereact.Button
+import lucuma.ui.primereact.*
 
 case class BasicConfigurationPanel(
   userId:          Option[User.Id],
@@ -99,13 +98,12 @@ private object BasicConfigurationPanel:
           ).when(isSpectroscopy),
           <.div(ExploreStyles.BasicConfigurationButtons)(
             Button(
-              size = Small,
-              compact = true,
-              content = "View Details",
+              "View Details",
               icon = Icons.Gears,
               disabled = props.scienceModeOpt.get.isEmpty,
+              severity = Button.Severity.Secondary,
               onClick = props.onShowDetails
-            )
+            ).compact.small
           )
         )
       }

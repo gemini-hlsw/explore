@@ -49,6 +49,9 @@ body {
   width: 100dvw;
 }
 
+// -------
+// Tile
+// -------
 @mixin small-tile-title {
   display: flex;
   gap: 1em;
@@ -60,6 +63,41 @@ body {
   }
 }
 
+.tile-xs-width {
+  // For very small tables make the undo buttons remove the text
+  .explore-buttons-undo .p-button-label {
+    display: none;
+  }
+}
+
+.explore-tile-body {
+  flex-grow: 1;
+  overflow-y: auto;
+  background-color: var(--tile-background);
+}
+
+.explore-tile {
+  height: 100%;
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  background-color: var(--tile-background);
+}
+
+.fade-in {
+  animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
 .p-component.p-button.tile-back-button {
   margin-right: 0;
 
@@ -68,18 +106,71 @@ body {
   }
 }
 
+.explore-tile-title {
+  flex-grow: 0;
+  background-color: var(--tile-title-background);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  min-height: 36px;
+
+  & .tabular.menu .item {
+    color: var(--tile-title-color);
+    letter-spacing: 0.1em;
+  }
+}
+
+.explore-tile-title-strip {
+  flex-grow: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.explore-fixed-size-tile-title {
+  margin-right: 1em;
+}
+
+.explore-tile-title-menu {
+  @include common.text-ellipsis;
+
+  cursor: move;
+  padding: 0.5em;
+  letter-spacing: 2px;
+}
+
+.explore-tile-control {
+  margin-right: auto;
+  flex-grow: 3;
+}
+
+
+.p-button.p-button-text.explore-tile-state-button {
+  color: var(--site-text-color);
+  filter: brightness(70%);
+  margin-right: 0.5em;
+  transform-origin: center center;
+  transition: transform 0.25s, filter 0.25s ease-in;
+
+  &:enabled:focus {
+    border: none;
+    box-shadow: none;
+  }
+
+  &:enabled:hover {
+    color: var(--site-text-color);
+    filter: brightness(100%);
+  }
+}
+
+// -------
+// Undo
+// -------
 .explore-buttons-undo {
   margin-left: auto;
 
   .p-buttonset .p-component.p-button {
     color: var(--site-text-color);
-  }
-}
-
-.tile-xs-width {
-  // For very small tables make the undo buttons remove the text
-  .explore-buttons-undo .p-button-label {
-    display: none;
   }
 }
 

@@ -20,8 +20,6 @@ import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.floatingui.Placement
 import react.floatingui.syntax.*
-import react.semanticui.elements.icon.*
-import react.semanticui.views.item.Item
 
 case class ConnectionsStatus() extends ReactFnProps(ConnectionsStatus.component)
 
@@ -43,11 +41,11 @@ object ConnectionsStatus:
     }
 
     if (show) {
-      Item(clazz = ExploreStyles.ConnectionIcon)(
-        <.span(Icons.CircleSmall.withClass(clazz)).withTooltip(
-          tooltip = message,
-          placement = Placement.Bottom
-        )
+      <.div(ExploreStyles.ConnectionIcon,
+            <.span(Icons.CircleSmall.withClass(clazz)).withTooltip(
+              tooltip = message,
+              placement = Placement.Bottom
+            )
       )
     } else <.span()
   }
