@@ -107,14 +107,8 @@ object SearchForm:
               ).tiny.compact,
               onSelected = targetWithId =>
                 (targetWithId.target match
-                  case t @ Target.Sidereal(_, _, _, _) =>
-                    props.targetSet(t)
-                  // .onError { case t: Throwable =>
-                  //   Logger[IO].error(t)("Error saving target").runAsync
-                  //     >> toastRef.info("Error saving target")
-                  // }
-
-                  case _ => Callback.empty
+                  case t @ Target.Sidereal(_, _, _, _) => props.targetSet(t)
+                  case _                               => Callback.empty
                 ) >> searchComplete,
               onCancel = searchComplete,
               initialSearch = term.get.some,
