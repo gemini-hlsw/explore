@@ -35,6 +35,7 @@ import org.scalajs.dom
 import org.scalajs.dom.HTMLButtonElement
 import org.scalajs.dom.ext.KeyCode
 import org.scalajs.dom.ext.KeyValue
+import org.typelevel.log4cats.Logger
 import react.common.ReactFnProps
 import react.primereact.Button
 
@@ -76,7 +77,7 @@ object SearchForm:
             .void
       )
       .useRefToVdom[HTMLButtonElement]
-      .render { (props, ctx, term, enabled, error, buttonRef) =>
+      .render { (props, ctx, term, enabled, error, buttonRef) => // , toastRef) =>
         import ctx.given
 
         val searchComplete: Callback = props.searching.mod(_ - props.id)

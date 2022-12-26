@@ -66,9 +66,6 @@ import react.draggable.Axis
 import react.gridlayout.*
 import react.hotkeys.*
 import react.hotkeys.hooks.*
-import react.primereact.Toast
-import react.primereact.ToastRef
-import react.primereact.hooks.all.*
 import react.resizeDetector.*
 import react.resizeDetector.hooks.*
 
@@ -178,8 +175,7 @@ object TargetTabContents extends TwoPanels:
     debouncer:             Reusable[UseSingleEffect[IO]],
     fullScreen:            View[AladinFullScreen],
     selectedTargetIds:     View[List[Target.Id]],
-    ctx:                   AppContext[IO],
-    toastRef:              ToastRef
+    ctx:                   AppContext[IO]
   )(
     asterismGroupsWithObs: View[AsterismGroupsWithObs]
   ): VdomNode = {
@@ -201,7 +197,6 @@ object TargetTabContents extends TwoPanels:
         props.focused,
         props.expandedIds,
         undoCtx,
-        toastRef,
         selectTargetOrSummary _,
         selectedTargetIds
       )
@@ -267,8 +262,7 @@ object TargetTabContents extends TwoPanels:
           selectTargetOrSummary _,
           renderInTitle,
           selectedTargetIds,
-          astGrpObsListUndoCtx,
-          toastRef
+          astGrpObsListUndoCtx
         )
       )
 
@@ -675,89 +669,87 @@ object TargetTabContents extends TwoPanels:
             TargetQueriesGQL.ProgramTargetEditSubscription.subscribe[IO](props.programId)
           )
       }
-      .useToastRef
       // Selected targets on the summary table
-      .useStateViewBy((props, _, _, _, _, _, _, _, _) => props.focused.target.toList)
-      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, _, asterismGroupWithObs, _, selIds) =>
+      .useStateViewBy((props, _, _, _, _, _, _, _) => props.focused.target.toList)
+      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, _, asterismGroupWithObs, selIds) =>
         (props.focused, asterismGroupWithObs.toOption.map(_.get.asterismGroups), selIds.get)
-      ) {
-        (props, ctx, loading, _, _, _, _, poagwov, toastRef, _) =>
-          (target, asterismGroups, selectedIds) =>
-            import ctx.given
+      ) { (props, ctx, loading, _, _, _, _, poagwov, _) => (target, asterismGroups, selectedIds) =>
+        import ctx.given
 
-            val optViewAgwo = poagwov.toOption
+        val optViewAgwo = poagwov.toOption
 
-            def selectObsIds: ObsIdSet => IO[Unit] =
-              obsIds => ctx.pushPage(AppTab.Targets, props.programId, Focused.obsSet(obsIds)).to[IO]
+        def selectObsIds: ObsIdSet => IO[Unit] =
+          obsIds => ctx.pushPage(AppTab.Targets, props.programId, Focused.obsSet(obsIds)).to[IO]
 
-            def callbacks: ShortcutCallbacks = {
-              case CopyAlt1 | CopyAlt2 | CopyAlt3 =>
-                target.obsSet
-                  .map(ids =>
-                    ctx.exploreClipboard.set(LocalClipboard.CopiedObservations(ids)).runAsync *>
-                      toastRef.info(s"Copied obs ${ids.idSet.toList.mkString(", ")}")
+        def callbacks: ShortcutCallbacks = {
+          case CopyAlt1 | CopyAlt2 | CopyAlt3 =>
+            target.obsSet
+              .map(ids =>
+                (ctx.exploreClipboard.set(LocalClipboard.CopiedObservations(ids)) >>
+                  ctx.toastRef.showToast(s"Copied obs ${ids.idSet.toList.mkString(", ")}")).runAsync
+              )
+              .orElse(
+                TargetIdSet
+                  .fromTargetIdList(selectedIds)
+                  .map(tids =>
+                    (ctx.exploreClipboard.set(LocalClipboard.CopiedTargets(tids)) >>
+                      ctx.toastRef
+                        .showToast(s"Copied targets ${tids.toList.mkString(", ")}")).runAsync
                   )
-                  .orElse(
-                    TargetIdSet
-                      .fromTargetIdList(selectedIds)
-                      .map(tids =>
-                        ctx.exploreClipboard.set(LocalClipboard.CopiedTargets(tids)).runAsync *>
-                          toastRef.info(s"Copied targets ${tids.toList.mkString(", ")}")
+              )
+              .getOrEmpty
+
+          case PasteAlt1 | PasteAlt2 | PasteAlt3 =>
+            ctx.exploreClipboard.get.flatMap {
+              case LocalClipboard.CopiedObservations(id) =>
+                val treeTargets =
+                  props.focused.obsSet
+                    .flatMap(i => asterismGroups.flatMap(_.get(i).map(_.targetIds.toList)))
+                    .getOrElse(selectedIds)
+
+                if (treeTargets.nonEmpty)
+                  // Apply the obs to selected targets on the tree
+                  optViewAgwo
+                    .map(agwov =>
+                      applyObs(
+                        id.idSet.toList,
+                        treeTargets,
+                        loading,
+                        agwov,
+                        ctx,
+                        props.listUndoStacks,
+                        props.expandedIds
+                      )
+                    )
+                    .orEmpty
+                else IO.unit
+
+              case LocalClipboard.CopiedTargets(tids) =>
+                (props.focused.obsSet, optViewAgwo).tupled
+                  .foldMap((obsIds, agwov) =>
+                    val undoContext    = UndoContext(props.listUndoStacks, agwov)
+                    // Only want to paste targets that aren't already in the target asterism or
+                    // undo is messed up.
+                    // If all the targets are already there, do nothing.
+                    val targetAsterism = agwov.get.asterismGroups
+                      .findContainingObsIds(obsIds)
+                    targetAsterism
+                      .flatMap(ag => tids.removeSet(ag.targetIds))
+                      .foldMap(uniqueTids =>
+                        TargetPasteAction
+                          .pasteTargets(obsIds, uniqueTids, selectObsIds, props.expandedIds)
+                          .set(undoContext)(())
+                          .to[IO]
                       )
                   )
-                  .getOrEmpty
 
-              case PasteAlt1 | PasteAlt2 | PasteAlt3 =>
-                ctx.exploreClipboard.get.flatMap {
-                  case LocalClipboard.CopiedObservations(id) =>
-                    val treeTargets =
-                      props.focused.obsSet
-                        .flatMap(i => asterismGroups.flatMap(_.get(i).map(_.targetIds.toList)))
-                        .getOrElse(selectedIds)
+              case _ => IO.unit
+            }.runAsync
 
-                    if (treeTargets.nonEmpty)
-                      // Apply the obs to selected targets on the tree
-                      optViewAgwo
-                        .map(agwov =>
-                          applyObs(
-                            id.idSet.toList,
-                            treeTargets,
-                            loading,
-                            agwov,
-                            ctx,
-                            props.listUndoStacks,
-                            props.expandedIds
-                          )
-                        )
-                        .orEmpty
-                    else IO.unit
-
-                  case LocalClipboard.CopiedTargets(tids) =>
-                    (props.focused.obsSet, optViewAgwo).tupled
-                      .foldMap((obsIds, agwov) =>
-                        val undoContext    = UndoContext(props.listUndoStacks, agwov)
-                        // Only want to paste targets that aren't already in the target asterism or
-                        // undo is messed up.
-                        // If all the targets are already there, do nothing.
-                        val targetAsterism = agwov.get.asterismGroups
-                          .findContainingObsIds(obsIds)
-                        targetAsterism
-                          .flatMap(ag => tids.removeSet(ag.targetIds))
-                          .foldMap(uniqueTids =>
-                            TargetPasteAction
-                              .pasteTargets(obsIds, uniqueTids, selectObsIds, props.expandedIds)
-                              .set(undoContext)(())
-                              .to[IO]
-                          )
-                      )
-
-                  case _ => IO.unit
-                }.runAsync
-
-              case GoToSummary =>
-                ctx.pushPage(AppTab.Targets, props.programId, Focused.None)
-            }
-            UseHotkeysProps((GoToSummary :: (CopyKeys ::: PasteKeys)).toHotKeys, callbacks)
+          case GoToSummary =>
+            ctx.pushPage(AppTab.Targets, props.programId, Focused.None)
+        }
+        UseHotkeysProps((GoToSummary :: (CopyKeys ::: PasteKeys)).toHotKeys, callbacks)
       }
       // full screen aladin
       .useStateView(AladinFullScreen.Normal)
@@ -771,13 +763,10 @@ object TargetTabContents extends TwoPanels:
           layout,
           debouncer,
           asterismGroupsWithObs,
-          toastRef,
           selectedTargetIds,
           fullScreen
         ) =>
           React.Fragment(
-            // TODO switch to prime react
-            Toast(Toast.Position.BottomRight).withRef(toastRef.ref),
             asterismGroupsWithObs.render(
               renderFn(
                 props,
@@ -787,8 +776,7 @@ object TargetTabContents extends TwoPanels:
                 debouncer,
                 fullScreen,
                 selectedTargetIds,
-                ctx,
-                toastRef
+                ctx
               ),
               <.span(DefaultPendingRender).withRef(resize.ref)
             )

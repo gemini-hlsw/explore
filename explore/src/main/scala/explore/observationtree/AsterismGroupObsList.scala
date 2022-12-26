@@ -4,6 +4,7 @@
 package explore.observationtree
 
 import cats.Order.*
+import cats.effect.Deferred
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.TransactionalClient
@@ -56,7 +57,6 @@ case class AsterismGroupObsList(
   focused:                Focused,
   expandedIds:            View[SortedSet[ObsIdSet]],
   undoCtx:                UndoContext[AsterismGroupsWithObs],
-  toastRef:               ToastRef,
   selectTargetOrSummary:  Option[Target.Id] => Callback,
   selectedSummaryTargets: View[List[Target.Id]]
 ) extends ReactFnProps[AsterismGroupObsList](AsterismGroupObsList.component)
@@ -136,7 +136,7 @@ object AsterismGroupObsList:
     undoCtx:               UndoContext[AsterismGroupsWithObs],
     adding:                View[AddingTargetOrObs],
     selectTargetOrSummary: Option[Target.Id] => Callback,
-    toastRef:              ToastRef
+    toastRef:              Deferred[IO, ToastRef]
   )(using TransactionalClient[IO, ObservationDB], Logger[IO]): IO[Unit] =
     adding.async.set(AddingTargetOrObs(true)) >>
       TargetQueriesGQL.CreateTargetMutation
@@ -145,10 +145,11 @@ object AsterismGroupObsList:
           val targetId = data.createTarget.target.id
 
           TargetAddDeleteActions
-            .insertTarget(targetId,
-                          programId,
-                          selectTargetOrSummary(_).to[IO],
-                          toastRef.info(_).to[IO]
+            .insertTarget(
+              targetId,
+              programId,
+              selectTargetOrSummary(_).to[IO],
+              toastRef.showToast(_)
             )
             .set(undoCtx)(
               TargetWithObs(EmptySiderealTarget, SortedSet.empty).some
@@ -164,14 +165,14 @@ object AsterismGroupObsList:
     adding:             View[AddingTargetOrObs],
     expandedIds:        View[SortedSet[ObsIdSet]],
     selectObsOrSummary: Option[Observation.Id] => Callback,
-    toastRef:           ToastRef
+    toastRef:           Deferred[IO, ToastRef]
   )(using TransactionalClient[IO, ObservationDB], Logger[IO]): IO[Unit] =
     adding.async.set(AddingTargetOrObs(true)) >>
       ObsQueries
         .createObservationWithTargets[IO](programId, targetIds)
         .flatMap { obs =>
           ObservationInsertAction
-            .insert(obs.id, expandedIds, selectObsOrSummary(_).to[IO], toastRef.info(_).to[IO])
+            .insert(obs.id, expandedIds, selectObsOrSummary(_).to[IO], toastRef.showToast(_))
             .set(undoCtx)(obs.toConstraintsAndConf(targetIds).some)
             .to[IO]
         }
@@ -376,7 +377,7 @@ object AsterismGroupObsList:
                 addingTargetOrObs,
                 props.expandedIds,
                 selectObsOrSummary,
-                props.toastRef
+                ctx.toastRef
               ).runAsync
             ).compact.mini,
             Button(
@@ -390,7 +391,7 @@ object AsterismGroupObsList:
                 props.undoCtx,
                 addingTargetOrObs,
                 props.selectTargetOrSummary,
-                props.toastRef
+                ctx.toastRef
               ).runAsync
             ).compact.mini,
             UndoButtons(props.undoCtx, size = PlSize.Mini)

@@ -61,9 +61,11 @@ import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.utils.*
+import org.typelevel.log4cats.Logger
 import queries.common.TargetQueriesGQL
 import queries.schemas.odb.ODBConversions.*
-import react.common.ReactFnProps
+import react.common.*
+import react.primereact.Message
 
 import java.time.Instant
 
@@ -110,20 +112,23 @@ object SiderealTargetEditor {
     onClone: TargetWithId => Callback
   )(
     input:   UpdateTargetsInput
-  )(using TransactionalClient[IO, ObservationDB]): IO[Unit] =
-    optObs.fold(TargetQueriesGQL.UpdateTargetsMutation.execute(input).void) { obsIds =>
-      cloning.setState(true).to[IO] >>
-        cloneTarget(id, obsIds)
-          .flatMap { newId =>
-            val newInput = UpdateTargetsInput.WHERE.replace(newId.toWhereTarget.assign)(input)
-            TargetQueriesGQL.UpdateTargetsMutationWithResult
-              .execute(newInput)
-              .flatMap(data =>
-                (data.updateTargets.targets.headOption.foldMap(onClone) >>
-                  cloning.setState(false)).to[IO]
-              )
-          }
-    }
+  )(using TransactionalClient[IO, ObservationDB], Logger[IO]): IO[Unit] =
+    optObs
+      .fold(
+        TargetQueriesGQL.UpdateTargetsMutation
+          .execute(input)
+          .void
+      ) { obsIds =>
+        cloning.setStateAsync(true) >>
+          cloneTarget(id, obsIds)
+            .flatMap { newId =>
+              val newInput = UpdateTargetsInput.WHERE.replace(newId.toWhereTarget.assign)(input)
+              TargetQueriesGQL.UpdateTargetsMutationWithResult
+                .execute(newInput)
+                .flatMap(data => data.updateTargets.targets.headOption.foldMap(onClone(_).to[IO]))
+            }
+            .guarantee(cloning.setStateAsync(false))
+      }
 
   private def buildProperMotion(
     ra:  Option[ProperMotion.RA],
@@ -141,7 +146,7 @@ object SiderealTargetEditor {
       .useEffectResultWithDepsBy((p, _, _) => p.vizTime) { (_, _, _) => vizTime =>
         IO(vizTime.getOrElse(Instant.now()))
       }
-      .render { (props, ctx, cloning, vizTime) =>
+      .render { (props, ctx, cloning, vizTime) => // , toastRef) =>
         import ctx.given
 
         val focusedTarget = props.asterism.zoom(Asterism.focus)
@@ -158,7 +163,17 @@ object SiderealTargetEditor {
           val tid = selectedTargetView.get.id
 
           val remoteOnMod: UpdateTargetsInput => IO[Unit] =
-            getRemoteOnMod(tid, props.obsIdSubset, cloning, props.onClone) _
+            getRemoteOnMod(
+              tid,
+              props.obsIdSubset,
+              cloning,
+              props.onClone
+            ).andThen(
+              _.handleErrorWith(t =>
+                Logger[IO].error(t)(s"Error updating target [$tid]") >>
+                  ctx.toastRef.showToast(s"Error saving target [$tid]", Message.Severity.Error)
+              )
+            )
 
           val siderealTargetAligner: Aligner[Target.Sidereal, UpdateTargetsInput] =
             Aligner(
@@ -272,6 +287,7 @@ object SiderealTargetEditor {
           val disabled = props.searching.get.exists(_ === tid) || cloning.value
 
           React.Fragment(
+            // Toast(Toast.Position.BottomRight).withRef(toastRef.ref),
             props.renderInTitle
               .map(_.apply(<.span(ExploreStyles.TitleUndoButtons)(UndoButtons(undoCtx)))),
             <.div(ExploreStyles.TargetGrid)(

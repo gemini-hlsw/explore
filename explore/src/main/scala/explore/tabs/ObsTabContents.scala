@@ -56,8 +56,6 @@ import react.draggable.Axis
 import react.gridlayout.*
 import react.hotkeys.*
 import react.hotkeys.hooks.*
-import react.primereact.Toast
-import react.primereact.hooks.all.*
 import react.resizeDetector.*
 import react.resizeDetector.hooks.*
 
@@ -284,12 +282,11 @@ object ObsTabContents extends TwoPanels:
             ProgramObservationsEditSubscription.subscribe[IO](props.programId)
           )
       }
-      .useToastRef
-      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, _, obsList, _) =>
+      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, _, obsList) =>
         (props.focusedObs,
          obsList.foldMap(_.get.observations.elements.map(_.id).zipWithIndex.toList)
         )
-      ) { (props, ctx, _, _, _, _, _, obsList, toastRef) => (obs, observationIds) =>
+      ) { (props, ctx, _, _, _, _, _, obsList) => (obs, observationIds) =>
         import ctx.given
 
         val obsPos = observationIds.find(a => obs.forall(_ === a._1)).map(_._2)
@@ -298,10 +295,8 @@ object ObsTabContents extends TwoPanels:
           case CopyAlt1 | CopyAlt2 | CopyAlt3 =>
             obs
               .map(id =>
-                ctx.exploreClipboard
-                  .set(LocalClipboard.CopiedObservations(ObsIdSet.one(id)))
-                  .runAsync *>
-                  toastRef.info(s"Copied obs $id")
+                (ctx.exploreClipboard.set(LocalClipboard.CopiedObservations(ObsIdSet.one(id))) >>
+                  ctx.toastRef.showToast(s"Copied obs $id")).runAsync
               )
               .getOrEmpty
           case Down                           =>
@@ -349,11 +344,9 @@ object ObsTabContents extends TwoPanels:
           layouts,
           defaultLayout,
           debouncer,
-          obsWithConstraints,
-          toastRef
+          obsWithConstraints
         ) =>
           React.Fragment(
-            Toast(Toast.Position.BottomRight).withRef(toastRef.ref),
             obsWithConstraints.render(
               renderFn(
                 props,

@@ -4,6 +4,7 @@
 package explore.common
 
 import cats.MonadError
+import cats.syntax.all.*
 import crystal.react.View
 import crystal.react.implicits.*
 import explore.undo.UndoContext
