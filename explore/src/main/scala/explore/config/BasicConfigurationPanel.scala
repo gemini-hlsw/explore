@@ -30,11 +30,12 @@ import lucuma.core.model.SiderealTracking
 import lucuma.core.model.User
 import lucuma.refined.*
 import lucuma.ui.forms.EnumViewSelect
+import lucuma.ui.primereact.FormEnumDropdownView
+import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
-import react.semanticui.collections.form.Form
 import react.semanticui.elements.button.Button
 import react.semanticui.shorthand.*
 import react.semanticui.sizes.*
@@ -77,13 +78,10 @@ private object BasicConfigurationPanel:
           )
 
         <.div(ExploreStyles.BasicConfigurationGrid)(
-          Form(size = Small)(
-            ExploreStyles.Compact,
-            ExploreStyles.ExploreForm,
-            ExploreStyles.BasicConfigurationForm
-          )(
+          <.div(
+            ExploreStyles.BasicConfigurationForm,
             <.label("Mode", HelpIcon("configuration/mode.md".refined)),
-            EnumViewSelect(id = "configuration-mode", value = mode),
+            FormEnumDropdownView(id = "configuration-mode".refined, value = mode),
             SpectroscopyConfigurationPanel(spectroscopy)
               .when(isSpectroscopy),
             ImagingConfigurationPanel(imaging)

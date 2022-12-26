@@ -8,7 +8,6 @@ import crystal.react.View
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
 import explore.components.HelpIcon
-import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
 import explore.itc.requiredForITC
 import explore.model.ExploreModelValidators
@@ -18,11 +17,18 @@ import explore.syntax.ui.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.math.Wavelength
 import lucuma.core.validation.*
 import lucuma.refined.*
 import lucuma.ui.forms.EnumViewOptionalSelect
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
+import lucuma.ui.primereact.FormEnumDropdownOptionalView
+import lucuma.ui.primereact.FormInputTextView
+import lucuma.ui.primereact.FormLabel
+import lucuma.ui.primereact.LucumaStyles
+import lucuma.ui.primereact.clearable
+import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 import queries.schemas.odb.ObsQueries.SpectroscopyRequirementsData
 import react.common.Css
@@ -55,108 +61,90 @@ object SpectroscopyConfigurationPanel {
         .decimal(3.refined)
         .optional
 
-      val wvUnits =
-        <.span("μm ", requiredForITC.unless(wv.get.isDefined))
-
       ReactFragment(
-        <.label("Wavelength",
-                HelpIcon("configuration/wavelength.md".refined),
-                ExploreStyles.SkipToNext
-        ),
-        InputWithUnits(
+        FormInputTextView[View, Option[Wavelength]](
           id = "configuration-wavelength".refined,
-          clazz = ExploreStyles.WarningInput.when_(wv.get.isEmpty),
-          inline = true,
           value = wv,
-          units = wvUnits,
+          label = ReactFragment(
+            "Wavelength",
+            HelpIcon("configuration/wavelength.md".refined)
+          ),
+          groupClass = ExploreStyles.WarningInput.when_(wv.get.isEmpty),
+          postAddons = wv.get.fold(List(requiredForITC))(_ => Nil),
+          units = "μm",
           validFormat = wvMicroInput,
-          changeAuditor = wvChangeAuditor,
-          disabled = false
-        ).clearableNoPadding,
-        <.label("λ / Δλ",
-                HelpIcon("configuration/spectral_resolution.md".refined),
-                ExploreStyles.SkipToNext
-        ),
-        FormInputEV(
+          changeAuditor = wvChangeAuditor
+        ).clearable,
+        FormInputTextView(
           id = "configuration-resolution-power".refined,
           value = resolution,
+          label = ReactFragment(
+            "λ / Δλ",
+            HelpIcon("configuration/spectral_resolution.md".refined)
+          ),
           validFormat = InputValidSplitEpi.posInt.optional,
           changeAuditor = ChangeAuditor.posInt.optional
-        ).clearableNoPadding,
-        <.label("S / N",
-                HelpIcon("configuration/signal_to_noise.md".refined),
-                ExploreStyles.SkipToNext
+        ).clearable,
+        FormLabel("signal-to-noise".refined)(
+          "S / N",
+          HelpIcon("configuration/signal_to_noise.md".refined)
         ),
-        FormInputEV(
-          id = "signal-to-noise".refined,
-          value = signalToNoise,
-          clazz = ExploreStyles.WarningInput.when_(signalToNoise.get.isEmpty),
-          validFormat = InputValidSplitEpi.posBigDecimal.optional,
-          changeAuditor = ChangeAuditor.posBigDecimal().optional
-        ).clearableNoPadding,
         <.div(
-          ExploreStyles.InputWithLabel,
-          requiredForITC.unless(signalToNoise.get.isDefined),
-          <.label("at"),
-          InputWithUnits(
+          LucumaStyles.FormField |+| ExploreStyles.BasicConfigurationSNAt,
+          FormInputTextView(
+            id = "signal-to-noise".refined,
+            value = signalToNoise,
+            groupClass = ExploreStyles.WarningInput.when_(signalToNoise.get.isEmpty),
+            validFormat = InputValidSplitEpi.posBigDecimal.optional,
+            postAddons = signalToNoise.get.fold(List(requiredForITC))(_ => Nil),
+            changeAuditor = ChangeAuditor.posBigDecimal().optional
+          ).withMods(^.autoComplete := "off").clearable,
+          FormLabel("signal-to-noise-at".refined)("at"),
+          FormInputTextView(
             id = "signal-to-noise-at".refined,
-            clazz = Css.Empty,
             value = signalToNoiseAt,
             units = "μm",
             validFormat = wvMicroInput,
-            changeAuditor = wvChangeAuditor,
-            disabled = false
-          ).clearableNoPadding
+            changeAuditor = wvChangeAuditor
+          ).clearable
         ),
-        <.label("λ Coverage",
-                HelpIcon("configuration/wavelength_coverage.md".refined),
-                ExploreStyles.SkipToNext
-        ),
-        InputWithUnits(
+        FormInputTextView(
           id = "wavelength-coverage".refined,
-          clazz = Css.Empty,
-          inline = true,
           value = wavelengthCoverage,
           units = "μm",
+          label = ReactFragment(
+            "λ Coverage",
+            HelpIcon("configuration/wavelength_coverage.md".refined)
+          ),
           validFormat = wvMicroInput,
-          changeAuditor = wvChangeAuditor,
-          disabled = false
-        ).clearableNoPadding,
-        <.label("Focal Plane",
-                HelpIcon("configuration/focal_plane.md".refined),
-                ExploreStyles.SkipToNext
-        ),
-        EnumViewOptionalSelect(
-          id = "focal-plane",
-          placeholder = "Any",
-          upward = true,
-          value = focalPlane,
-          clearable = true
+          changeAuditor = wvChangeAuditor
+        ).clearable,
+        FormLabel("focal-plane".refined)("Focal Plane",
+                                         HelpIcon("configuration/focal_plane.md".refined)
         ),
         <.div(
-          ExploreStyles.InputWithLabel,
-          InputWithUnits(
+          LucumaStyles.FormField |+| ExploreStyles.BasicConfigurationFocalPlane,
+          FormEnumDropdownOptionalView(
+            id = "focal-plane".refined,
+            placeholder = "Any",
+            value = focalPlane
+          ),
+          FormInputTextView(
             id = "focal-plane-angle".refined,
-            clazz = Css.Empty,
             value = focalPlaneAngle,
             units = "arcsec",
             validFormat = InputValidWedge.fromFormat(formatArcsec).optional,
-            changeAuditor = ChangeAuditor.fromFormat(formatArcsec).optional,
-            disabled = false
-          ).clearableNoPadding
+            changeAuditor = ChangeAuditor.fromFormat(formatArcsec).optional
+          ).clearable
         ),
-        <.label(
-          "Capabilities",
-          HelpIcon("configuration/capabilities.md".refined),
-          ExploreStyles.SkipToNext
-        ),
-        EnumViewOptionalSelect(
-          id = "spectroscopy-capabilities",
-          clazz = ExploreStyles.ConfigurationCapabilities,
-          clearable = true,
-          upward = true,
+        FormEnumDropdownOptionalView(
+          id = "spectroscopy-capabilities".refined,
           placeholder = "None",
-          value = spectroscopyCapabilities
+          value = spectroscopyCapabilities,
+          label = ReactFragment(
+            "Capabilities",
+            HelpIcon("configuration/capabilities.md".refined)
+          )
         )
       )
     }

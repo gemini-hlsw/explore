@@ -8,7 +8,6 @@ import crystal.react.*
 import crystal.react.implicits.*
 import eu.timepit.refined.auto.*
 import explore.components.HelpIcon
-import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.enums.AgsState
@@ -94,7 +93,6 @@ object PAConfigurationPanel:
 
         def posAngleEditor(pa: View[Angle]) =
           <.div(
-            ExploreStyles.InputWithLabel,
             FormInputTextView(
               id = "pos-angle-value".refined,
               groupClass = ExploreStyles.PAConfigurationAngle,

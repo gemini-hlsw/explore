@@ -28,7 +28,6 @@ import explore.common.Aligner
 import explore.common.ScienceConversions.*
 import explore.common.ScienceQueries.*
 import explore.components.HelpIcon
-import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
 import explore.config.ExposureTimeModeType.*
 import explore.config.sequence.SequenceEditorPopup

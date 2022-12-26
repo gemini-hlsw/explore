@@ -861,19 +861,6 @@ html {
   height: 100%;
 }
 
-.explore-basic-configuration-grid {
-  min-height: 0;
-  height: 100%;
-  display: grid;
-  gap: 0.5em;
-  grid-template-areas:
-    'form table-header'
-    'form table'
-    'form buttons';
-  grid-template-columns: auto minmax(0, 1fr);
-  grid-template-rows: auto 1fr auto;
-}
-
 .explore-form {
   display: grid;
   justify-items: start;
@@ -902,29 +889,6 @@ html {
 .seq-gen-parameters-form {
   display: flex;
   justify-content: space-around;
-}
-
-.explore-configuration-input-with-units {
-  display: flex;
-  margin-left: 0.25em;
-  align-items: baseline;
-
-  .explore-units-label {
-    align-self: baseline;
-    margin-bottom: unset;
-  }
-
-  :first-child {
-    margin-right: 0.25em;
-  }
-
-  .field {
-    width: 10ch;
-  }
-}
-
-.explore-configuration-capabilities {
-  grid-column: span 2;
 }
 
 .block.header.obs-tree-header {
@@ -1096,16 +1060,6 @@ html {
 
 .explore-modes-table {
   grid-area: table;
-}
-
-.explore-basic-configuration-buttons {
-  grid-area: buttons;
-  justify-self: end;
-}
-
-.explore-basic-configuration-form {
-  grid-area: form;
-  grid-row-end: span 3;
 }
 
 .explore-modes-header {

@@ -11,7 +11,6 @@ import crystal.react.View
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
 import explore.components.HelpIcon
-import explore.components.InputWithUnits
 import explore.components.ui.ExploreStyles
 import explore.model.AvailableFilter
 import explore.model.ImagingConfigurationOptions
@@ -28,9 +27,14 @@ import lucuma.refined.*
 import lucuma.ui.forms.EnumViewOptionalSelect
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
+import lucuma.ui.primereact.FormEnumDropdownOptionalView
+import lucuma.ui.primereact.FormInputTextView
+import lucuma.ui.primereact.LucumaStyles
+import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 import react.common.Css
 import react.common.ReactFnProps
+import react.primereact.PrimeStyles
 import react.semanticui.collections.menu.MenuHeader
 import react.semanticui.modules.dropdown.*
 import spire.math.Rational
@@ -44,17 +48,20 @@ case class ImagingConfigurationPanel(
 ) extends ReactFnProps(ImagingConfigurationPanel.component)
 
 object ImagingConfigurationPanel {
-  private type Props = ImagingConfigurationPanel
-  type SectionHeader = String
+  private type Props         = ImagingConfigurationPanel
+  private type SectionHeader = String
 
-  given Display[ImagingCapabilities] = Display.by(_.label, _.label)
+  private given Display[ImagingCapabilities] = Display.by(_.label, _.label)
 
-  val byFilterType = ImagingConfigurationOptions.availableOptions.groupBy(_.filterType)
-  val broadBand    = byFilterType.getOrElse(FilterType.BroadBand, Nil).sortBy(_.centralWavelength)
-  val narrowBand   = byFilterType.getOrElse(FilterType.NarrowBand, Nil).sortBy(_.centralWavelength)
-  val combination  = byFilterType.getOrElse(FilterType.Combination, Nil).sortBy(_.centralWavelength)
+  private val byFilterType = ImagingConfigurationOptions.availableOptions.groupBy(_.filterType)
+  private val broadBand    =
+    byFilterType.getOrElse(FilterType.BroadBand, Nil).sortBy(_.centralWavelength)
+  private val narrowBand   =
+    byFilterType.getOrElse(FilterType.NarrowBand, Nil).sortBy(_.centralWavelength)
+  private val combination  =
+    byFilterType.getOrElse(FilterType.Combination, Nil).sortBy(_.centralWavelength)
 
-  def valuesToFilters(v: js.Array[String]): SortedSet[AvailableFilter] =
+  private def valuesToFilters(v: js.Array[String]): SortedSet[AvailableFilter] =
     SortedSet(
       v.map { t =>
         ImagingConfigurationOptions.availableOptions.find(_.tag === t)
@@ -63,16 +70,16 @@ object ImagingConfigurationPanel {
       }.toList: _*
     )
 
-  def formatCentral(r: Quantity[Rational, Nanometer]): String =
+  private def formatCentral(r: Quantity[Rational, Nanometer]): String =
     if (r.value > 1000)
       f"${r.toValue[Double].toUnit[Micrometer].value}%.3f μm"
     else
       s"${r.value.toInt} nm"
 
-  def formatRange(r: Quantity[Int, Nanometer]): String =
+  private def formatRange(r: Quantity[Int, Nanometer]): String =
     s"${r.value.toInt} nm"
 
-  def filterItem(f: Either[SectionHeader, AvailableFilter]) =
+  private def filterItem(f: Either[SectionHeader, AvailableFilter]) =
     DropdownItem(
       value = f.fold(identity, _.tag),
       text = f.fold(identity, _.shortName),
@@ -90,7 +97,7 @@ object ImagingConfigurationPanel {
       selected = false
     )
 
-  val options: List[Option[Either[SectionHeader, AvailableFilter]]] =
+  private val options: List[Option[Either[SectionHeader, AvailableFilter]]] =
     "Broad band".asLeft.some ::
       broadBand.map(f => f.asRight.some) :::
       ("Narrow band".asLeft.some ::
@@ -126,40 +133,27 @@ object ImagingConfigurationPanel {
               )
               .getOrEmpty
         ),
-        <.label("Field of View",
-                HelpIcon("configuration/fov.md".refined),
-                ExploreStyles.SkipToNext
-        ),
-        InputWithUnits(
+        FormInputTextView(
           id = "configuration-fov".refined,
-          clazz = Css.Empty,
-          inline = true,
           value = fov,
-          units = "arcsec",
+          label = ReactFragment("Field of View", HelpIcon("configuration/fov.md".refined)),
+          postAddons = List("arcsec"),
           validFormat = InputValidWedge.fromFormat(formatArcsec).optional,
-          changeAuditor = ChangeAuditor.fromFormat(formatArcsec).optional,
-          disabled = false
+          changeAuditor = ChangeAuditor.fromFormat(formatArcsec).optional
         ),
-        <.label("S / N",
-                HelpIcon("configuration/signal_to_noise.md".refined),
-                ExploreStyles.SkipToNext
-        ),
-        FormInputEV(
+        FormInputTextView(
           id = "signal-to-noise".refined,
           value = signalToNoise,
+          label = ReactFragment("S / N", HelpIcon("configuration/signal_to_noise.md".refined)),
           validFormat = InputValidSplitEpi.posBigDecimal.optional,
           changeAuditor = ChangeAuditor.posBigDecimal().optional
         ),
-        <.label(
-          "Capabilities",
-          HelpIcon("configuration/capabilities.md".refined),
-          ExploreStyles.SkipToNext
-        ),
-        EnumViewOptionalSelect(
-          id = "imaging-capabilities",
-          clazz = ExploreStyles.ConfigurationCapabilities,
-          clearable = true,
-          upward = true,
+        FormEnumDropdownOptionalView(
+          id = "imaging-capabilities".refined,
+          label = ReactFragment(
+            "Capabilities",
+            HelpIcon("configuration/capabilities.md".refined)
+          ),
           placeholder = "Extra capablities",
           value = capabilities
         )

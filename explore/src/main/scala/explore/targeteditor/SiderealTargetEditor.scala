@@ -16,7 +16,6 @@ import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.string.*
 import explore.common.*
 import explore.components.HelpIcon
-import explore.components.InputWithUnits
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
