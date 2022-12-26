@@ -31,15 +31,15 @@ import lucuma.core.model.User
 import lucuma.refined.*
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.primereact.FormEnumDropdownView
+import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
+import react.primereact.Button
 
 import scalajs.js.JSConverters.*
-import react.primereact.Button
-import lucuma.ui.primereact.*
 
 case class BasicConfigurationPanel(
   userId:          Option[User.Id],

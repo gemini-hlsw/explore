@@ -79,7 +79,6 @@ body {
 .explore-tile {
   height: 100%;
   width: 100%;
-
   display: flex;
   flex-direction: column;
   background-color: var(--tile-background);
@@ -89,6 +88,7 @@ body {
   animation: fadeIn 0.5s;
 }
 
+/* stylelint-disable-next-line keyframes-name-pattern */
 @keyframes fadeIn {
   0% {
     opacity: 0;
@@ -98,6 +98,7 @@ body {
     opacity: 1;
   }
 }
+
 .p-component.p-button.tile-back-button {
   margin-right: 0;
 
@@ -740,10 +741,22 @@ $search-preview-margin: 5px;
 // -------------
 // Toolbar of the aladin display
 // -------------
+@mixin aladin-toolbar-labels {
+  padding: 0 0.6em;
+  background-color: var(--surface-100);
+  border-radius: 0.2em;
+  outline: solid 1px var(--surface-200);
+}
+
 .aladin-status-fov {
+  @include aladin-toolbar-labels;
+
   grid-area: fov;
   justify-self: stretch;
   align-self: center;
+  display: flex;
+  gap: 0.3em;
+  align-items: center;
 }
 
 @mixin aladin-gs-status {
@@ -761,7 +774,6 @@ $search-preview-margin: 5px;
   @include common.text-ellipsis;
 
   grid-area: guidestar;
-  align-self: center;
   font-size: smaller;
 }
 
@@ -783,6 +795,8 @@ $search-preview-margin: 5px;
 }
 
 .aladin-status-current-coordinates {
+  @include aladin-toolbar-labels;
+
   grid-area: curr;
   justify-self: end;
   align-self: center;
@@ -797,6 +811,19 @@ $search-preview-margin: 5px;
 .aladin-detail-text {
   color: white;
   white-space: nowrap;
+  font-size: smaller;
+  margin-left: 0.4em;
+}
+
+.aladin-container-column {
+  height: 100%;
+  display: grid;
+  align-content: stretch;
+  position: relative;
+  row-gap: 0.1em;
+  grid-template:
+    'aladin aladin    aladin    aladin aladin' 1fr
+    'fov    agsstatus guidestar curr   center' min-content / max-content min-content 1fr 1fr min-content;
 }
 
 // ------

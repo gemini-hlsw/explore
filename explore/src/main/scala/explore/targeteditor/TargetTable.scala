@@ -34,6 +34,7 @@ import lucuma.core.model.User
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.schemas.ObservationDB
+import lucuma.ui.primereact.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.*
 import lucuma.ui.syntax.all.*
@@ -44,13 +45,12 @@ import lucuma.ui.table.*
 import org.scalablytyped.runtime.StringDictionary
 import react.common.Css
 import react.common.ReactFnProps
+import react.primereact.Button
 import reactST.{tanstackTableCore => raw}
 
 import java.time.Instant
 
 import scalajs.js.JSConverters.*
-import react.primereact.Button
-import lucuma.ui.primereact.*
 
 case class TargetTable(
   userId:         Option[User.Id],

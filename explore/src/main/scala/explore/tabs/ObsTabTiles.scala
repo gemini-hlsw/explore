@@ -52,12 +52,12 @@ import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ObsQueries
 import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
+import react.primereact.Dropdown
+import react.primereact.SelectItem
 import react.resizeDetector.*
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
-import react.primereact.Dropdown
-import react.primereact.SelectItem
 
 case class ObsTabTiles(
   userId:           Option[User.Id],
