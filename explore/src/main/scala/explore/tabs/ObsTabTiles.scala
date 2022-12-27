@@ -52,10 +52,9 @@ import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ObsQueries
 import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
+import react.primereact.Dropdown
+import react.primereact.SelectItem
 import react.resizeDetector.*
-import react.semanticui.addons.select.Select
-import react.semanticui.addons.select.Select.SelectItem
-import react.semanticui.modules.dropdown.Dropdown
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
@@ -86,13 +85,13 @@ object ObsTabTiles:
       val cgOpt: Option[ConstraintGroup] =
         constraintGroups.get.find(_._1.contains(vod.get.id)).map(_._2)
 
-      Select(
+      Dropdown(
         clazz = ExploreStyles.ConstraintsTileSelector,
         value = cgOpt.map(cg => ObsIdSet.fromString.reverseGet(cg.obsIds)).orEmpty,
-        onChange = (p: Dropdown.DropdownProps) => {
+        onChange = (p: String) => {
           val newCgOpt =
             ObsIdSet.fromString
-              .getOption(p.value.toString)
+              .getOption(p)
               .flatMap(ids => constraintGroups.get.get(ids))
           newCgOpt.map { cg =>
             vod
@@ -105,9 +104,9 @@ object ObsTabTiles:
         },
         options = constraintGroups.get
           .map(kv =>
-            new SelectItem(
+            new SelectItem[String](
               value = ObsIdSet.fromString.reverseGet(kv._1),
-              text = kv._2.constraintSet.shortName
+              label = kv._2.constraintSet.shortName
             )
           )
           .toList

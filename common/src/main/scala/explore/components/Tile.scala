@@ -8,20 +8,21 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.components.ui.ExploreStyles.*
+import explore.model.Constants
 import explore.model.enums.TileSizeState
 import explore.model.layout
 import explore.syntax.ui.*
 import explore.syntax.ui.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import org.scalajs.dom
 import react.common.ReactFnProps
 import react.common.style.*
 import react.fa.given
-import react.semanticui.collections.menu.*
-import react.semanticui.elements.button.Button
+import react.primereact.Button
 
 import scalajs.js
 
@@ -74,29 +75,27 @@ object Tile {
       .render { (p, infoRef) =>
         val maximizeButton =
           Button(
-            as = <.a,
-            basic = true,
-            compact = true,
-            clazz = ExploreStyles.TileStateButton |+| ExploreStyles.BlendedButton,
+            text = true,
+            clazz = ExploreStyles.TileStateButton,
+            icon = Icons.Maximize,
             onClick = p
               .sizeStateCallback(TileSizeState.Normal)
               .when_(p.state === TileSizeState.Minimized) *> p
               .sizeStateCallback(TileSizeState.Maximized)
               .when_(p.state === TileSizeState.Normal)
-          )(Icons.Maximize)
+          )
 
         val minimizeButton =
           Button(
-            as = <.a,
-            basic = true,
-            compact = true,
+            text = true,
             clazz = ExploreStyles.TileStateButton |+| ExploreStyles.BlendedButton,
+            icon = Icons.Minimize,
             onClick = p
               .sizeStateCallback(TileSizeState.Normal)
               .when_(p.state === TileSizeState.Maximized) *> p
               .sizeStateCallback(TileSizeState.Minimized)
               .when_(p.state === TileSizeState.Normal)
-          )(Icons.Minimize)
+          )
 
         def setInfoRef(node: dom.Node | Null): Unit =
           infoRef
@@ -115,13 +114,9 @@ object Tile {
           )(
             React.Fragment(
               p.back.map(b => <.div(ExploreStyles.TileButton, b)),
-              Menu(
-                compact = true,
-                borderless = true,
-                secondary = true,
-                clazz = ExploreStyles.TileTitleMenu
-              )(
-                MenuItem(as = <.a)(p.title)
+              <.div(
+                ExploreStyles.TileTitleMenu,
+                p.title
               ),
               p.control(p.state).map(b => <.div(ExploreStyles.TileControl, b)),
               <.span(^.key := "tileTitle", ^.untypedRef(setInfoRef).when(infoRef.value.isEmpty))(

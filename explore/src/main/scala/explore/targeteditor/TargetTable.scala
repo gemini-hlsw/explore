@@ -34,6 +34,7 @@ import lucuma.core.model.User
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.schemas.ObservationDB
+import lucuma.ui.primereact.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.*
 import lucuma.ui.syntax.all.*
@@ -44,9 +45,7 @@ import lucuma.ui.table.*
 import org.scalablytyped.runtime.StringDictionary
 import react.common.Css
 import react.common.ReactFnProps
-import react.semanticui.elements.button.*
-import react.semanticui.shorthand.*
-import react.semanticui.sizes.*
+import react.primereact.Button
 import reactST.{tanstackTableCore => raw}
 
 import java.time.Instant
@@ -101,16 +100,16 @@ object TargetTable extends TableHooks:
             "",
             cell =>
               Button(
-                size = Tiny,
-                compact = true,
+                text = true,
                 clazz = ExploreStyles.DeleteButton |+| ExploreStyles.ObsDeleteButton,
-                icon = Icons.Trash.withFixedWidth(),
-                onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
+                icon = Icons.Trash,
+                tooltip = "Delete",
+                onClickE = (e: ReactMouseEvent) =>
                   e.preventDefaultCB >>
                     e.stopPropagationCB >>
                     props.targets.mod(_.flatMap(_.remove(cell.value))) >>
                     deleteSiderealTarget(props.obsIds, cell.value).runAsync
-              ),
+              ).tiny.compact,
             size = 35.toPx,
             enableSorting = false
           )

@@ -59,7 +59,6 @@ import queries.schemas.odb.ODBConversions.*
 import queries.schemas.odb.ObsQueries
 import react.common.ReactFnProps
 import react.primereact.Button
-import react.semanticui.modules.checkbox.*
 
 import java.time.Instant
 

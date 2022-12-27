@@ -31,14 +31,13 @@ import lucuma.core.model.User
 import lucuma.refined.*
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.primereact.FormEnumDropdownView
+import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
-import react.semanticui.elements.button.Button
-import react.semanticui.shorthand.*
-import react.semanticui.sizes.*
+import react.primereact.Button
 
 import scalajs.js.JSConverters.*
 
@@ -99,13 +98,12 @@ private object BasicConfigurationPanel:
           ).when(isSpectroscopy),
           <.div(ExploreStyles.BasicConfigurationButtons)(
             Button(
-              size = Small,
-              compact = true,
-              content = "View Details",
+              "View Details",
               icon = Icons.Gears,
               disabled = props.scienceModeOpt.get.isEmpty,
+              severity = Button.Severity.Secondary,
               onClick = props.onShowDetails
-            )
+            ).compact.small
           )
         )
       }
