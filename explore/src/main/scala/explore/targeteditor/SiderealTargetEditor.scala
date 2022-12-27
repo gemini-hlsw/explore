@@ -145,7 +145,7 @@ object SiderealTargetEditor {
       .useEffectResultWithDepsBy((p, _, _) => p.vizTime) { (_, _, _) => vizTime =>
         IO(vizTime.getOrElse(Instant.now()))
       }
-      .render { (props, ctx, cloning, vizTime) => // , toastRef) =>
+      .render { (props, ctx, cloning, vizTime) =>
         import ctx.given
 
         val focusedTarget = props.asterism.zoom(Asterism.focus)

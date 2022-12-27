@@ -62,6 +62,7 @@ import lucuma.core.util.Display
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
+import lucuma.ui.primereact.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -75,9 +76,7 @@ import react.common.Css
 import react.common.ReactFnProps
 import react.floatingui.Placement
 import react.floatingui.syntax.*
-import react.semanticui.*
-import react.semanticui.elements.button.Button
-import react.semanticui.elements.label.Label
+import react.primereact.Button
 import reactST.{tanstackTableCore => raw}
 import reactST.{tanstackVirtualCore => rawVirtual}
 import spire.math.Bounded
@@ -584,25 +583,22 @@ private object SpectroscopyModesTable extends TableHooks:
           def scrollButton(content: VdomNode, style: Css, indexCondition: Int => Boolean): TagMod =
             selectedIndex.value.whenDefined(idx =>
               Button(
-                compact = true,
+                clazz = ExploreStyles.ScrollButton |+| style,
                 onClick = virtualizerRef.get.flatMap(ref =>
                   Callback(
                     ref.foreach(_.scrollToIndex(idx + 1, ScrollOptions))
                   )
                 )
-              )(
-                ExploreStyles.ScrollButton,
-                style
-              )(content).when(indexCondition(idx))
+              ).withMods(content).compact.when(indexCondition(idx))
             )
 
           val errLabel: List[VdomNode] = errs.collect {
             case ItcQueryProblems.MissingWavelength    =>
-              Label(clazz = ExploreStyles.WarningLabel, size = sizes.Small)("Set Wav..")
+              <.label(ExploreStyles.WarningLabel)("Set Wav..")
             case ItcQueryProblems.MissingSignalToNoise =>
-              Label(clazz = ExploreStyles.WarningLabel, size = sizes.Small)("Set S/N")
+              <.label(ExploreStyles.WarningLabel)("Set S/N")
             case ItcQueryProblems.MissingTargetInfo    =>
-              Label(clazz = ExploreStyles.WarningLabel, size = sizes.Small)("Missing Target Info")
+              <.label(ExploreStyles.WarningLabel)("Missing Target Info")
           }
 
           val selectedTarget =
@@ -611,9 +607,7 @@ private object SpectroscopyModesTable extends TableHooks:
               t <- props.brightestTarget
               if props.targets.exists(_.length > 1)
               if errLabel.isEmpty
-            yield Label(size = sizes.Small, clazz = ExploreStyles.ModesTableTarget)(
-              s"on ${t.name.value}"
-            ).some
+            yield <.label(ExploreStyles.ModesTableTarget)(s"on ${t.name.value}").some
 
           React.Fragment(
             <.div(ExploreStyles.ModesTableTitle)(
