@@ -44,8 +44,7 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.utils.*
 import react.common.ReactFnProps
-import react.primereact.Accordion
-import react.primereact.AccordionTab
+import react.primereact.Panel
 import react.primereact.Button
 import reactST.{tanstackTableCore => raw}
 
@@ -213,24 +212,22 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
           ).mini.compact
         )
 
-      Accordion(
-        activeIndex = Option.when(props.expanded.get.value)(0).orUndefined,
-        onTabOpen = _ => props.expanded.set(IsExpanded(true)),
-        onTabClose = _ => props.expanded.set(IsExpanded(false)),
-        tabs = List(
-          AccordionTab(header = "Brightness")(
-            <.div(ExploreStyles.ExploreTable |+| ExploreStyles.BrightnessesContainer)(
-              PrimeAutoHeightVirtualizedTable(
-                table,
-                estimateSize = _ => 34.toPx,
-                striped = true,
-                compact = Compact.Very,
-                tableMod = ExploreStyles.ExploreBorderTable,
-                emptyMessage = "No lines defined"
-              ),
-              footer
-            )
-          )
+      Panel(
+        header = "Brightness",
+        toggleable = true,
+        onExpand = props.expanded.set(IsExpanded(true)),
+        onCollapse = props.expanded.set(IsExpanded(false))
+      )(
+        <.div(ExploreStyles.ExploreTable |+| ExploreStyles.BrightnessesContainer)(
+          PrimeAutoHeightVirtualizedTable(
+            table,
+            estimateSize = _ => 34.toPx,
+            striped = true,
+            compact = Compact.Very,
+            tableMod = ExploreStyles.ExploreBorderTable,
+            emptyMessage = "No lines defined"
+          ),
+          footer
         )
       )
     }

@@ -355,23 +355,21 @@ body {
   justify-self: stretch;
   align-self: stretch;
 
-  .p-accordion {
+  .p-panel.p-panel-toggleable {
     height: 100%;
+    display: flex;
+    flex-direction: column;
 
-    .p-accordion-tab {
+    .p-panel-header {
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+
+    .p-toggleable-content {
       height: 100%;
 
-
-      .p-accordion-header .p-accordion-header-link {
-        padding: 0;
-      }
-
-      .p-toggleable-content {
+      .p-panel-content {
         height: 100%;
-
-        .p-accordion-content {
-          height: 100%;
-        }
       }
     }
   }
