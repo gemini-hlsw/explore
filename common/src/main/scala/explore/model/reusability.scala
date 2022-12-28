@@ -44,71 +44,70 @@ import scala.collection.immutable.TreeSeqMap
  */
 object reusability:
   // Model
-  implicit val itcTargetProps: Reusability[ItcTarget]                                = Reusability.byEq
-  implicit val statusReuse: Reusability[PersistentClientStatus]                      = Reusability.byEq
-  implicit val targetOptionsReuse: Reusability[TargetVisualOptions]                  = Reusability.byEq
-  implicit val userVaultReuse: Reusability[UserVault]                                = Reusability.byEq
-  implicit val targetViewExpandedIdsReuse: Reusability[ExpandedIds]                  = Reusability.byEq
-  implicit val rootModelReuse: Reusability[RootModel]                                = Reusability.byEq
-  implicit def idListReuse[Id, A: Reusability]: Reusability[KeyedIndexedList[Id, A]] =
+  given Reusability[ItcTarget]                                                = Reusability.byEq
+  given Reusability[PersistentClientStatus]                                   = Reusability.byEq
+  given Reusability[TargetVisualOptions]                                      = Reusability.byEq
+  given Reusability[UserVault]                                                = Reusability.byEq
+  given Reusability[ExpandedIds]                                              = Reusability.byEq
+  given Reusability[RootModel]                                                = Reusability.byEq
+  given idListReuse[Id, A: Reusability]: Reusability[KeyedIndexedList[Id, A]] =
     Reusability.by(_.toList)
 
-  implicit val scienceTargetsReuse: Reusability[TreeSeqMap[Target.Id, Target]]        =
+  given Reusability[TreeSeqMap[Target.Id, Target]]         =
     Reusability.by((_: TreeSeqMap[Target.Id, Target]).toMap)(Reusability.map)
-  implicit val obsIdSetReuse: Reusability[ObsIdSet]                                   = Reusability.byEq
-  implicit val targetIdSetReuse: Reusability[TargetIdSet]                             = Reusability.byEq
-  implicit val targetWithIdReuse: Reusability[TargetWithId]                           = Reusability.byEq
-  implicit val targetWithIdAndObsReuse: Reusability[TargetWithIdAndObs]               = Reusability.byEq
-  implicit val targetWithObsReuse: Reusability[TargetWithObs]                         = Reusability.byEq
-  implicit val constraintsSummaryReuse: Reusability[ConstraintsSummary]               = Reusability.byEq
-  implicit val constraintGroupReuse: Reusability[ConstraintGroup]                     = Reusability.byEq
-  implicit val obsSummaryReuse: Reusability[ObsSummary]                               = Reusability.byEq
-  implicit val localPreferencesReuse: Reusability[ExploreLocalPreferences]            = Reusability.byEq
-  implicit val posAngleReuse: Reusability[PosAngleConstraint]                         = Reusability.byEq
-  implicit val obsSummaryWithConstraintsReuse: Reusability[ObsSummaryWithConstraints] =
+  given Reusability[ObsIdSet]                              = Reusability.byEq
+  given Reusability[TargetIdSet]                           = Reusability.byEq
+  given Reusability[TargetWithId]                          = Reusability.byEq
+  given Reusability[TargetWithIdAndObs]                    = Reusability.byEq
+  given Reusability[TargetWithObs]                         = Reusability.byEq
+  given Reusability[ConstraintsSummary]                    = Reusability.byEq
+  given Reusability[ConstraintGroup]                       = Reusability.byEq
+  given Reusability[ObsSummary]                            = Reusability.byEq
+  given Reusability[ExploreLocalPreferences]               = Reusability.byEq
+  given Reusability[PosAngleConstraint]                    = Reusability.byEq
+  given Reusability[ObsSummaryWithConstraints]             =
     Reusability.byEq
-  implicit val obsSummaryWithTargetsAndConstraintsReuse
-    : Reusability[ObsSummaryWithTitleAndConstraints] = Reusability.byEq
-  implicit val obsSummaryWithTargetsConstraintsAndConfReuse
-    : Reusability[ObsSummaryWithTitleConstraintsAndConf] = Reusability.byEq
+  given Reusability[ObsSummaryWithTitleAndConstraints]     = Reusability.byEq
+  given Reusability[ObsSummaryWithTitleConstraintsAndConf] = Reusability.byEq
 
   // Undo
-  implicit def undoStacksReuse[F[_], M]: Reusability[UndoStacks[F, M]]               =
+  given undoStacksReuse[F[_], M]: Reusability[UndoStacks[F, M]] =
     Reusability.by(s => (s.undo.length, s.redo.length, s.working))
-  implicit def undoStacksMapReuse[F[_], K, M]: Reusability[Map[K, UndoStacks[F, M]]] =
+
+  given undoStacksMapReuse[F[_], K, M]: Reusability[Map[K, UndoStacks[F, M]]] =
     Reusability.by[Map[K, UndoStacks[F, M]], Int](_.size) && Reusability[Map[K, UndoStacks[F, M]]](
       (a, b) =>
         a.forall { case (k, stacksA) =>
           b.get(k).exists(stacksB => undoStacksReuse.test(stacksA, stacksB))
         }
     )
-  implicit def modelUndoStacksReuse[F[_]]: Reusability[ModelUndoStacks[F]]           = Reusability.byEq
+  given modelUndoStacksReuse[F[_]]: Reusability[ModelUndoStacks[F]]           = Reusability.byEq
 
-  implicit val filterReuse: Reusability[AvailableFilter]              = Reusability.byEq
-  implicit val optionsReuse: Reusability[ImagingConfigurationOptions] = Reusability.byEq
-  implicit val percentageReuse: Reusability[Progress]                 = Reusability.byEq
+  given Reusability[AvailableFilter]             = Reusability.byEq
+  given Reusability[ImagingConfigurationOptions] = Reusability.byEq
+  given Reusability[Progress]                    = Reusability.byEq
 
-  implicit val angularSizeReuse: Reusability[AngularSize]                                   = Reusability.byEq
-  implicit val catalogTargetReuse: Reusability[CatalogTargetResult]                         = Reusability.byEq
-  implicit val scienceModeBasicReuse: Reusability[ScienceModeBasic]                         = Reusability.byEq
-  implicit val scienceModeAdvancedResultReuse: Reusability[ScienceModeAdvanced]             = Reusability.byEq
-  implicit val gmosNorthLongSlitBasicReuse: Reusability[ScienceModeBasic.GmosNorthLongSlit] =
+  given Reusability[AngularSize]                        = Reusability.byEq
+  given Reusability[CatalogTargetResult]                = Reusability.byEq
+  given Reusability[ScienceModeBasic]                   = Reusability.byEq
+  given Reusability[ScienceModeAdvanced]                = Reusability.byEq
+  given Reusability[ScienceModeBasic.GmosNorthLongSlit] =
     Reusability.byEq
-  implicit val gmosSouthLongSlitBasicReuse: Reusability[ScienceModeBasic.GmosSouthLongSlit] =
+  given Reusability[ScienceModeBasic.GmosSouthLongSlit] =
     Reusability.byEq
-  implicit val scienceModeResultReuse: Reusability[ScienceMode]                             = Reusability.byEq
-  implicit val guideStarReuse: Reusability[GuideStarCandidate]                              = Reusability.by(_.name.value)
-  implicit val agsPositionReuse: Reusability[AgsPosition]                                   = Reusability.byEq
-  implicit val agsParamsReuse: Reusability[AgsParams]                                       = Reusability.byEq
+  given Reusability[ScienceMode]                        = Reusability.byEq
+  given Reusability[GuideStarCandidate]                 = Reusability.by(_.name.value)
+  given Reusability[AgsPosition]                        = Reusability.byEq
+  given Reusability[AgsParams]                          = Reusability.byEq
 
-  implicit val partnerSplitsReuse: Reusability[SortedMap[Partner, IntPercent]] =
+  given Reusability[SortedMap[Partner, IntPercent]] =
     Reusability.by((_: SortedMap[Partner, IntPercent]).toMap)(Reusability.map)
-  implicit val proposalClassReuse: Reusability[ProposalClass]                  = Reusability.byEq
-  implicit val proposalReuse: Reusability[Proposal]                            = Reusability.byEq
-  implicit val obsConfReuse: Reusability[ObsConfiguration]                     = Reusability.byEq
+  given Reusability[ProposalClass]                  = Reusability.byEq
+  given Reusability[Proposal]                       = Reusability.byEq
+  given Reusability[ObsConfiguration]               = Reusability.byEq
 
-  implicit val existenceReuse: Reusability[Existence]                       = Reusability.byEq
-  implicit val requirementsReuse: Reusability[SpectroscopyRequirementsData] = Reusability.byEq
+  given Reusability[Existence]                    = Reusability.byEq
+  given Reusability[SpectroscopyRequirementsData] = Reusability.byEq
 
   given Reusability[ItcChartExposureTime] = Reusability.byEq
 

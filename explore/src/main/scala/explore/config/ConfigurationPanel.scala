@@ -32,7 +32,7 @@ import explore.model.boopickle.ItcPicklers.given
 import explore.model.boopickle.*
 import explore.model.enums.AgsState
 import explore.model.itc.ItcTarget
-import explore.model.reusability.*
+import explore.model.reusability.given
 import explore.model.syntax.scienceModes.*
 import explore.modes.SpectroscopyModesMatrix
 import explore.undo.*

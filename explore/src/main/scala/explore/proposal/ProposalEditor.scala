@@ -26,7 +26,7 @@ import explore.model.AppContext
 import explore.model.ExploreModelValidators
 import explore.model.Hours
 import explore.model.display.given
-import explore.model.reusability.*
+import explore.model.reusability.given
 import explore.optics.all.*
 import explore.proposal.ProposalClassType.*
 import explore.undo.*

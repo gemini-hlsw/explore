@@ -14,7 +14,7 @@ import explore.components.UserSelectionForm
 import explore.model.AppContext
 import explore.model.RootModel
 import explore.model.UserVault
-import explore.model.reusability.*
+import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.syntax.all.*
