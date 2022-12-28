@@ -5,6 +5,7 @@ package explore
 
 import cats.effect.IO
 import cats.syntax.all.*
+import crystal.react.hooks.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.RoutingInfo
@@ -12,78 +13,78 @@ import explore.model.enums.AppTab
 import explore.syntax.ui.*
 import explore.syntax.ui.given
 import japgolly.scalajs.react.*
+import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.util.Display
+import lucuma.refined.*
+import lucuma.ui.primereact.*
+import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
+import react.common.Css
 import react.common.ReactFnProps
-import react.semanticui.elements.button.Button
-import react.semanticui.elements.button.Button.ButtonProps
-import react.semanticui.elements.button.ButtonGroup
-import react.semanticui.elements.divider.Divider
-import react.semanticui.elements.label.Label
-import react.semanticui.elements.label.Label.LabelProps
-import react.semanticui.sizes.*
+import react.primereact.Button
+import react.primereact.Divider
+import react.primereact.SelectButton
 
 case class SideTabs(routingInfo: RoutingInfo) extends ReactFnProps(SideTabs.component)
 
 object SideTabs:
   private type Props = SideTabs
 
+  private given Display[AppTab] = _.title
+
   private val component =
-    ScalaFnComponent.withHooks[Props].useContext(AppContext.ctx).render { (p, ctx) =>
-      val focus = p.routingInfo.appTab
-      val ri    = p.routingInfo
+    ScalaFnComponent
+      .withHooks[Props]
+      .useContext(AppContext.ctx)
+      .useStateView(AppTab.all.head)
+      .render { (p, ctx, tabs) =>
+        val focus = p.routingInfo.appTab
+        val ri    = p.routingInfo
 
-      def onClickE[A](tab: AppTab) =
-        linkOverride[A](ctx.pushPage(tab, ri.programId, ri.focused))
+        val tabView = tabs.withOnMod(tab => ctx.pushPage(tab, ri.programId, ri.focused))
 
-      def tabButton(tab: AppTab): Button =
-        Button(
-          as = <.a,
-          active = tab === focus,
-          clazz = ExploreStyles.SideButton,
-          onClickE = onClickE[ButtonProps](tab)
-        )(^.href := ctx.pageUrl(tab, ri.programId, ri.focused), tab.title)
+        val groupCssClasses =
+          Map(1 -> ExploreStyles.SideTabGroup, 2 -> ExploreStyles.SideTabGroup, 3 -> Css.Empty)
 
-      def tab(tab: AppTab): Label =
-        Label(
-          as = <.a,
-          active = tab === focus,
-          clazz = ExploreStyles.TabSelector,
-          size = Tiny,
-          onClickE = onClickE[LabelProps](tab)
-        )(^.href := ctx.pageUrl(tab, ri.programId, ri.focused), tab.title)
-
-      def makeButtonSection(tabs: List[AppTab]): TagMod = tabs match {
-        case justOne :: Nil => VerticalSection()(tabButton(justOne))
-        case _              =>
-          VerticalSection()(
-            ButtonGroup(tabs.reverse.map(tabButton).toTagMod)
+        React.Fragment(
+          <.div(
+            ExploreStyles.SideTabsVertical,
+            SelectButtonEnumView(
+              "side-tabs".refined,
+              tabView,
+              buttonClass = ExploreStyles.SideButton,
+              itemTemplate = tab =>
+                <.div(
+                  ExploreStyles.RotationWrapperOuter |+|
+                    groupCssClasses.getOrElse(tab.value.buttonGroup, Css.Empty),
+                  <.div(
+                    ExploreStyles.RotationWrapperInner,
+                    <.a(
+                      ^.onClick ==> ((e: ReactEvent) => e.preventDefaultCB),
+                      ^.href := ctx.pageUrl(tab.value, ri.programId, ri.focused),
+                      ExploreStyles.VerticalButton,
+                      tab.value.title
+                    )
+                  )
+                )
+            )
+          ),
+          <.div(
+            SelectButtonEnumView(
+              "side-tabs".refined,
+              tabView,
+              groupClass = ExploreStyles.SideTabsHorizontal,
+              buttonClass = ExploreStyles.TabSelector,
+              itemTemplate = tab =>
+                <.a(
+                  ^.onClick ==> ((e: ReactEvent) => e.preventDefaultCB),
+                  ^.href := ctx.pageUrl(tab.value, ri.programId, ri.focused),
+                  tab.value.title
+                )
+            )
           )
-      }
-
-      val verticalButtonsSections: List[TagMod] =
-        AppTab.all.toList
-          .groupBy(_.buttonGroup)
-          .toList
-          .sortBy(_._1)
-          .map(tup => makeButtonSection(tup._2))
-
-      val horizontalButtonsSections: List[TagMod] =
-        AppTab.all.toList
-          .map(tup => tab(tup))
-
-      React.Fragment(
-        <.div(
-          ExploreStyles.SideTabsVertical,
-          verticalButtonsSections.mkTagMod(
-            Divider(hidden = true, clazz = ExploreStyles.SideTabsDivider)
-          )
-        ),
-        <.div(
-          ExploreStyles.SideTabsHorizontal,
-          horizontalButtonsSections.toTagMod
         )
-      )
-    }
+      }

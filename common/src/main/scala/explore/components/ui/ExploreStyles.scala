@@ -69,6 +69,7 @@ object ExploreStyles:
   val MainMenuDropdown: Css      = Css("main-menu-dropdown")
   val SideTabs: Css              = Css("sidetabs")
   val SideButton: Css            = Css("side-button")
+  val SideTabGroup: Css          = Css("side-tabs-group")
   val TabSelector: Css           = Css("bottom-tab-selector")
   val BlendedButton: Css         = Css("blended-button")
   val JustifyRight: Css          = Css("justify-right")

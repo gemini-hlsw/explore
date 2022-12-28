@@ -1470,7 +1470,7 @@ table.explore-border-table {
 // Main grid
 // ----------
 .main-grid {
-  $top-bottom-space: 42px;
+  $top-bottom-space: 36px;
 
   display: grid;
   height: 100vh;
@@ -1983,3 +1983,150 @@ div.spectroscopy-table-emptymessage {
     width: 100% !important;
   }
 }
+
+// ---------
+// Side tabs
+// ---------
+.p-selectbutton.p-button,
+.p-component.p-button {
+  &.bottom-tab-selector,
+  &.side-button {
+    border: 1px solid var(--under-tab-border-color);
+    border-radius: 0.4em;
+    background-color: var(--under-tab-background-color);
+    font-weight: 200;
+    font-size: small;
+    margin-left: 0.8em;
+    padding-left: 0.3em;
+    outline: none;
+    box-shadow: none;
+    color: var(--under-tab-border-color);
+
+    a {
+      color: var(--site-text-color);
+    }
+
+    &:not(:first-of-type, last-of-type),
+    &:not(button, a, .p-disabled):active {
+      border-radius: 0.3em;
+    }
+
+    &:hover, &:focus, &:focus-visible, &:not(button, a, .p-disabled):active {
+      background-color: var(--under-tab-background-active-color);
+      border: 1px solid var(--under-tab-border-color);
+    }
+
+    &.p-highlight {
+      background-color: var(--under-tab-background-active-color);
+      font-weight: bold;
+      border-color: transparent;
+
+      &:hover, &:focus, &:focus-visible {
+        background-color: var(--under-tab-background-color);
+      }
+    }
+
+    // This may not work on FF but it is not very critical
+    &:has(.side-tabs-group) {
+      margin-bottom: 1em;
+    }
+  }
+
+  &.side-button {
+    padding: {
+      top: 1em;
+      bottom: 1em;
+    }
+
+    &.p-highlight,
+    &.p-highlight:hover, &.p-highlight:focus, &.p-highlight:focus-visible,
+    &:hover, &:focus, &:focus-visible {
+      border-left: var(--explore-accent-color) solid 3px;
+      border: {
+        top: none;
+        right: none;
+        bottom: none;
+      }
+    }
+  }
+
+  &.bottom-tab-selector {
+    &.p-highlight,
+    &.p-highlight:hover, &.p-highlight:focus, &.p-highlight:focus-visible,
+    &:hover, &:focus, &:focus-visible {
+      border-top: var(--explore-accent-color) solid 3px;
+      border: {
+        left: none;
+        right: none;
+        bottom: none;
+      }
+    }
+  }
+
+}
+
+.p-component.p-button {
+  &.bottom-tab-selector {
+    flex-grow: 1;
+    flex-shrink: 1;
+    font-weight: 100;
+    text-align: center;
+    font-size: smaller;
+    padding-top: 0.4em;
+    margin-right: 0.2em;
+    margin-left: 0.4em;
+    border-radius: 0.2em;
+    border: 1px solid var(--under-tab-border-color);
+    background-color: var(--under-tab-background-color);
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+  }
+}
+
+.sidetabs {
+  grid-area: sidebar;
+  background: var(--sidetab-background);
+  overflow: hidden;
+}
+
+.sidetabs-divider {
+  display: none;
+
+  @media (min-width: common.$tablet-responsive-cutoff) {
+    display: block;
+  }
+}
+
+.sidetabs-body {
+  display: flex;
+
+  @media (min-width: common.$tablet-responsive-cutoff) {
+    height: 100%;
+    display: block;
+    overflow: hidden;
+  }
+}
+
+.sidetabs-body-vertical {
+  height: 100%;
+  display: none;
+
+  @media (min-width: common.$tablet-responsive-cutoff) {
+    display: inherit;
+  }
+}
+
+.sidetabs-body-horizontal {
+  height: 100%;
+  display: flex;
+  overflow: hidden;
+  padding-top: 0.2em;
+  padding-bottom: 0;
+  width: 100svw;
+  max-width: 100svw;
+  justify-content: space-between;
+  align-items: stretch;
+  border-top: 1px solid var(--under-tab-border-color);
+}
+
