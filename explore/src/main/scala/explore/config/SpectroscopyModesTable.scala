@@ -81,6 +81,7 @@ import reactST.{tanstackTableCore => raw}
 import reactST.{tanstackVirtualCore => rawVirtual}
 import spire.math.Bounded
 import spire.math.Interval
+import scala.collection.decorators.*
 
 import java.text.DecimalFormat
 import java.util.UUID
@@ -219,12 +220,15 @@ private object SpectroscopyModesTable extends TableHooks:
           <.span(Icons.Ban.withColor("red"))
             .withTooltip(tooltip = "Mode not supported", placement = Placement.RightStart)
         else
-          val content = nel.collect {
-            case ItcQueryProblems.MissingSignalToNoise => <.span("Set S/N")
-            case ItcQueryProblems.MissingWavelength    => <.span("Set Wavelength")
-            case ItcQueryProblems.MissingTargetInfo    => <.span("Missing target info")
-            case ItcQueryProblems.GenericError(e)      => e.split("\\.").mkTagMod(<.br)
-          }.toList
+          val content = nel
+            .collect {
+              case ItcQueryProblems.MissingSignalToNoise => <.span("Set S/N")
+              case ItcQueryProblems.MissingWavelength    => <.span("Set Wavelength")
+              case ItcQueryProblems.MissingTargetInfo    => <.span("Missing target info")
+              case ItcQueryProblems.GenericError(e)      => e.split("\\.").mkTagMod(<.br)
+            }
+            .toList
+            .intersperse(<.br: VdomNode)
 
           <.span(Icons.TriangleSolid)
             .withTooltip(tooltip = <.div(content.mkTagMod(<.span)), placement = Placement.RightEnd)
@@ -584,22 +588,22 @@ private object SpectroscopyModesTable extends TableHooks:
             selectedIndex.value.whenDefined(idx =>
               Button(
                 clazz = ExploreStyles.ScrollButton |+| style,
+                severity = Button.Severity.Secondary,
                 onClick = virtualizerRef.get.flatMap(ref =>
-                  Callback(
-                    ref.foreach(_.scrollToIndex(idx + 1, ScrollOptions))
-                  )
+                  Callback(ref.foreach(_.scrollToIndex(idx + 1, ScrollOptions)))
                 )
               ).withMods(content).compact.when(indexCondition(idx))
             )
 
-          val errLabel: List[VdomNode] = errs.collect {
-            case ItcQueryProblems.MissingWavelength    =>
-              <.label(ExploreStyles.WarningLabel)("Set Wav..")
-            case ItcQueryProblems.MissingSignalToNoise =>
-              <.label(ExploreStyles.WarningLabel)("Set S/N")
-            case ItcQueryProblems.MissingTargetInfo    =>
-              <.label(ExploreStyles.WarningLabel)("Missing Target Info")
-          }
+          val errLabel: List[VdomNode] = errs
+            .collect {
+              case ItcQueryProblems.MissingWavelength    =>
+                <.label(ExploreStyles.WarningLabel)("Set Wav..")
+              case ItcQueryProblems.MissingSignalToNoise =>
+                <.label(ExploreStyles.WarningLabel)("Set S/N")
+              case ItcQueryProblems.MissingTargetInfo    =>
+                <.label(ExploreStyles.WarningLabel)("Missing Target Info")
+            }
 
           val selectedTarget =
             for
