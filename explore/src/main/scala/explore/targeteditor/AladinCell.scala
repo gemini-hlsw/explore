@@ -55,6 +55,7 @@ import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.core.model.User
+import lucuma.core.util.NewType
 import lucuma.refined.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
@@ -98,14 +99,18 @@ trait AladinCommon:
   given Reusability[AgsState] = Reusability.byEq
 
 object AladinCell extends ModelOptics with AladinCommon:
+  private object ManualAgsOverride extends NewType[Boolean]
+  private type ManualAgsOverride = ManualAgsOverride.Type
+
   private type Props = AladinCell
+  private given Reusability[View[ManualAgsOverride]] = Reusability.by(_.get)
 
   // We want to re render only when the vizTime changes at least a month
   // We keep the candidates data pm corrected for the viz time
   // If it changes over a month we'll request the data again and recalculate
   // This way we avoid recalculating pm for example if only pos angle or
   // conditions change
-  private given Reusability[Instant] = Reusability {
+  private given Reusability[Instant] = Reusability[Instant] {
     Duration.between(_, _).toDays().abs < 30L
   }
 
@@ -119,17 +124,6 @@ object AladinCell extends ModelOptics with AladinCommon:
        x.fullScreen.reuseByValue
       )
     )
-
-  // We want to consider AllowFlip with flipped angle the same so we don't retrigger the ags calculation
-  private given Reusability[PosAngleConstraint] = Reusability {
-    case (PosAngleConstraint.Fixed(a), PosAngleConstraint.Fixed(b))                             => a === b
-    case (PosAngleConstraint.AllowFlip(a), PosAngleConstraint.AllowFlip(b))                     =>
-      a === b || a.flip === b
-    case (PosAngleConstraint.AverageParallactic, PosAngleConstraint.AverageParallactic)         => true
-    case (PosAngleConstraint.ParallacticOverride(a), PosAngleConstraint.ParallacticOverride(b)) =>
-      a === b
-    case _                                                                                      => false
-  }
 
   private val fovLens: Lens[TargetVisualOptions, Fov] =
     Lens[TargetVisualOptions, Fov](t => Fov(t.fovRA, t.fovDec))(f =>
@@ -202,14 +196,17 @@ object AladinCell extends ModelOptics with AladinCommon:
           .getOrElse(y) // Ignore invalid updates
     )
 
-  private def flipAngle(props: Props): Option[AgsAnalysis] => Callback =
+  private def flipAngle(
+    props:          Props,
+    manualOverride: View[ManualAgsOverride]
+  ): Option[AgsAnalysis] => Callback =
     case Some(AgsAnalysis.Usable(_, _, _, _, pos)) =>
       val angle = pos.head._1.posAngle
       props.obsConf.posAngleConstraint match
         case Some(PosAngleConstraint.AllowFlip(a)) if a =!= angle =>
           props.setPA
             .map(_.set(PosAngleConstraint.AllowFlip(angle)))
-            .getOrEmpty
+            .getOrEmpty *> manualOverride.set(ManualAgsOverride(true))
         case _                                                    => Callback.empty
     case _                                         => Callback.empty
 
@@ -267,8 +264,14 @@ object AladinCell extends ModelOptics with AladinCommon:
             gs.set(none) *> offsetOnCenter.set(Offset.Zero)
           }
       )
+      .useStateView(ManualAgsOverride(false))
+      // Reset selection if pos angle changes except for manual selection changes
+      .useEffectWithDepsBy((p, _, _, _, _, _, _, _) => p.obsConf.posAngleConstraint)(
+        (_, _, _, _, _, _, selectedIndex, agsOverride) =>
+          _ => selectedIndex.set(none).unless_(agsOverride.get.value)
+      )
       // Request ags calculation
-      .useEffectWithDepsBy((p, _, _, candidates, _, _, _) =>
+      .useEffectWithDepsBy((p, _, _, candidates, _, _, _, _) =>
         (p.asterism.baseTracking,
          p.obsConf.posAngleConstraint,
          p.obsConf.constraints,
@@ -277,7 +280,7 @@ object AladinCell extends ModelOptics with AladinCommon:
          p.obsConf.scienceMode,
          candidates.value
         )
-      ) { (props, ctx, _, _, ags, _, selectedIndex) =>
+      ) { (props, ctx, _, _, ags, _, selectedIndex, agsOverride) =>
         {
           case (tracking,
                 Some(posAngle),
@@ -306,7 +309,6 @@ object AladinCell extends ModelOptics with AladinCommon:
                   .flatMap(_.target.tracking.at(vizTime))
 
               val process = for
-                _ <- selectedIndex.async.set(none)
                 _ <- agsState.set(AgsState.Calculating).to[IO]
                 _ <-
                   AgsClient[IO]
@@ -328,21 +330,25 @@ object AladinCell extends ModelOptics with AladinCommon:
                         // If we need to flip change the constraint
                         r
                           .map(_.headOption)
-                          .map(flipAngle(props))
-                          .orEmpty *>
+                          .map(flipAngle(props, agsOverride))
+                          .orEmpty
+                          .unlessA(agsOverride.get.value) *>
                         // set the selected index
                         selectedIndex
                           .set(
                             0.some.filter(_ =>
                               r.exists(_.nonEmpty) && props.obsConf.canSelectGuideStar
                             )
-                          ))
+                          )
+                          .unlessA(agsOverride.get.value))
                         .to[IO]
                     }
                     .unlessA(candidates.isEmpty)
                     .handleErrorWith(t => Logger[IO].error(t)("ERROR IN AGS REQUEST"))
               yield ()
-              process.guarantee(agsState.async.set(AgsState.Idle))
+              process.guarantee(
+                agsOverride.async.set(ManualAgsOverride(false)) *> agsState.async.set(AgsState.Idle)
+              )
             }.orEmpty
           case _ => IO.unit
         }
@@ -350,7 +356,7 @@ object AladinCell extends ModelOptics with AladinCommon:
       // open settings menu
       .useState(SettingsMenuState.Closed)
       // mouse coordinates, starts on the base
-      .useStateBy((props, _, _, _, _, _, _, _) => props.asterism.baseTracking.baseCoordinates)
+      .useStateBy((props, _, _, _, _, _, _, _, _) => props.asterism.baseTracking.baseCoordinates)
       .renderWithReuse {
         (
           props,
@@ -360,6 +366,7 @@ object AladinCell extends ModelOptics with AladinCommon:
           agsResults,
           root,
           selectedGSIndexView,
+          agsManualOverride,
           openSettings,
           mouseCoords
         ) =>
@@ -369,7 +376,7 @@ object AladinCell extends ModelOptics with AladinCommon:
           val selectedGSIndex = selectedGSIndexView.withOnMod(idx =>
             idx
               .map(agsResults.value.lift)
-              .map(flipAngle(props))
+              .map(flipAngle(props, agsManualOverride))
               .getOrEmpty
           )
 
