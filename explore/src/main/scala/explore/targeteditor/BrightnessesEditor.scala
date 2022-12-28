@@ -39,8 +39,8 @@ import lucuma.ui.table.*
 import lucuma.ui.utils.*
 import monocle.Focus
 import react.common.ReactFnProps
-import react.primereact.Panel
 import react.primereact.Button
+import react.primereact.Panel
 import reactST.{tanstackTableCore => raw}
 
 import scala.collection.immutable.SortedMap

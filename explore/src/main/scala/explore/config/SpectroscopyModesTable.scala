@@ -81,10 +81,10 @@ import reactST.{tanstackTableCore => raw}
 import reactST.{tanstackVirtualCore => rawVirtual}
 import spire.math.Bounded
 import spire.math.Interval
-import scala.collection.decorators.*
 
 import java.text.DecimalFormat
 import java.util.UUID
+import scala.collection.decorators.*
 import scala.concurrent.duration.*
 
 import scalajs.js
