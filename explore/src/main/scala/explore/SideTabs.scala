@@ -46,10 +46,8 @@ object SideTabs:
 
         val tabView = tabs.withOnMod(tab => ctx.pushPage(tab, ri.programId, ri.focused))
 
-        val groupCssClasses = Map(1 -> ExploreStyles.SideTabGroup1,
-                                  2 -> ExploreStyles.SideTabGroup2,
-                                  3 -> ExploreStyles.SideTabGroup3
-        )
+        val groupCssClasses =
+          Map(1 -> ExploreStyles.SideTabGroup, 2 -> ExploreStyles.SideTabGroup, 3 -> Css.Empty)
 
         React.Fragment(
           <.div(

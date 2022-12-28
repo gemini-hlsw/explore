@@ -2027,8 +2027,7 @@ div.spectroscopy-table-emptymessage {
     }
 
     // This may not work on FF but it is not very critical
-    &:has(.side-tabs-group-2),
-    &:has(.side-tabs-group-1) {
+    &:has(.side-tabs-group) {
       margin-bottom: 1em;
     }
   }
