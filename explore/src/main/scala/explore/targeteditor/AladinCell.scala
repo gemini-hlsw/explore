@@ -95,14 +95,13 @@ case class AladinCell(
 }
 
 trait AladinCommon:
-  val asReu: Reusability[Asterism] = Reusability.by(x => (x.toSiderealTracking, x.focus.id))
-  given Reusability[Asterism]      = asReu.logNonReusable
-  given Reusability[AgsState]      = Reusability.byEq
-
-object ManualAgsOverride extends NewType[Boolean]
-type ManualAgsOverride = ManualAgsOverride.Type
+  given Reusability[Asterism] = Reusability.by(x => (x.toSiderealTracking, x.focus.id))
+  given Reusability[AgsState] = Reusability.byEq
 
 object AladinCell extends ModelOptics with AladinCommon:
+  private object ManualAgsOverride extends NewType[Boolean]
+  private type ManualAgsOverride = ManualAgsOverride.Type
+
   private type Props = AladinCell
   private given Reusability[View[ManualAgsOverride]] = Reusability.by(_.get)
 
