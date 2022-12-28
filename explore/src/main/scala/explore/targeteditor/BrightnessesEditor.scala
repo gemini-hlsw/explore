@@ -39,9 +39,8 @@ import lucuma.ui.table.*
 import lucuma.ui.utils.*
 import monocle.Focus
 import react.common.ReactFnProps
-import react.primereact.Accordion
-import react.primereact.AccordionTab
 import react.primereact.Button
+import react.primereact.Panel
 import reactST.{tanstackTableCore => raw}
 
 import scala.collection.immutable.SortedMap
@@ -194,24 +193,22 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
               .whenDefined
           )
 
-        Accordion(
-          activeIndex = Option.when(props.expanded.get.value)(0).orUndefined,
-          onTabOpen = _ => props.expanded.set(IsExpanded(true)),
-          onTabClose = _ => props.expanded.set(IsExpanded(false)),
-          tabs = List(
-            AccordionTab(header = label)(
-              <.div(ExploreStyles.ExploreTable |+| ExploreStyles.BrightnessesContainer)(
-                PrimeAutoHeightVirtualizedTable(
-                  table,
-                  estimateSize = _ => 34.toPx,
-                  striped = true,
-                  compact = Compact.Very,
-                  tableMod = ExploreStyles.ExploreBorderTable,
-                  emptyMessage = "No brightnesses defined"
-                ),
-                footer
-              )
-            )
+        Panel(
+          header = label,
+          toggleable = true,
+          onExpand = props.expanded.set(IsExpanded(true)),
+          onCollapse = props.expanded.set(IsExpanded(false))
+        )(
+          <.div(ExploreStyles.ExploreTable |+| ExploreStyles.BrightnessesContainer)(
+            PrimeAutoHeightVirtualizedTable(
+              table,
+              estimateSize = _ => 34.toPx,
+              striped = true,
+              compact = Compact.Very,
+              tableMod = ExploreStyles.ExploreBorderTable,
+              emptyMessage = "No brightnesses defined"
+            ),
+            footer
           )
         )
       }

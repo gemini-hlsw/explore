@@ -10,8 +10,7 @@ import lucuma.core.model.Observation
 import lucuma.core.model.sequence.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
-import react.semanticui.elements.header.Header
-import react.semanticui.elements.segment.Segment
+import react.primereact.Panel
 
 case class GeneratedSequenceTables(obsId: Observation.Id, config: FutureExecutionConfig)
     extends ReactFnProps(GeneratedSequenceTables.component)
@@ -22,20 +21,18 @@ object GeneratedSequenceTables:
   private val component =
     ScalaFnComponent
       .withHooks[Props]
-      .render { props =>
-        <.div(^.height := "100%", ^.overflow.auto)(
-          Segment(
-            <.div(ExploreStyles.SequencesPanel)(
-              VisitsViewer(props.obsId),
-              Header("Acquisition"),
-              GmosSequenceTable(
-                props.config.acquisition.nextAtom +: props.config.acquisition.possibleFuture
-              ),
-              Header("Science"),
-              GmosSequenceTable(
-                props.config.science.nextAtom +: props.config.science.possibleFuture
-              )
+      .render(props =>
+        Panel()(
+          <.div(ExploreStyles.SequencesPanel)(
+            VisitsViewer(props.obsId),
+            <.h3("Acquisition"),
+            GmosSequenceTable(
+              props.config.acquisition.nextAtom +: props.config.acquisition.possibleFuture
+            ),
+            <.h3("Science"),
+            GmosSequenceTable(
+              props.config.science.nextAtom +: props.config.science.possibleFuture
             )
           )
         )
-      }
+      )

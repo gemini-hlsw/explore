@@ -62,6 +62,7 @@ import lucuma.core.util.Display
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
+import lucuma.ui.primereact.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -75,9 +76,7 @@ import react.common.Css
 import react.common.ReactFnProps
 import react.floatingui.Placement
 import react.floatingui.syntax.*
-import react.semanticui.*
-import react.semanticui.elements.button.Button
-import react.semanticui.elements.label.Label
+import react.primereact.Button
 import reactST.{tanstackTableCore => raw}
 import reactST.{tanstackVirtualCore => rawVirtual}
 import spire.math.Bounded
@@ -85,6 +84,7 @@ import spire.math.Interval
 
 import java.text.DecimalFormat
 import java.util.UUID
+import scala.collection.decorators.*
 import scala.concurrent.duration.*
 
 import scalajs.js
@@ -220,12 +220,15 @@ private object SpectroscopyModesTable extends TableHooks:
           <.span(Icons.Ban.withColor("red"))
             .withTooltip(tooltip = "Mode not supported", placement = Placement.RightStart)
         else
-          val content = nel.collect {
-            case ItcQueryProblems.MissingSignalToNoise => <.span("Set S/N")
-            case ItcQueryProblems.MissingWavelength    => <.span("Set Wavelength")
-            case ItcQueryProblems.MissingTargetInfo    => <.span("Missing target info")
-            case ItcQueryProblems.GenericError(e)      => e.split("\\.").mkTagMod(<.br)
-          }.toList
+          val content = nel
+            .collect {
+              case ItcQueryProblems.MissingSignalToNoise => <.span("Set S/N")
+              case ItcQueryProblems.MissingWavelength    => <.span("Set Wavelength")
+              case ItcQueryProblems.MissingTargetInfo    => <.span("Missing target info")
+              case ItcQueryProblems.GenericError(e)      => e.split("\\.").mkTagMod(<.br)
+            }
+            .toList
+            .intersperse(<.br: VdomNode)
 
           <.span(Icons.TriangleSolid)
             .withTooltip(tooltip = <.div(content.mkTagMod(<.span)), placement = Placement.RightEnd)
@@ -584,26 +587,23 @@ private object SpectroscopyModesTable extends TableHooks:
           def scrollButton(content: VdomNode, style: Css, indexCondition: Int => Boolean): TagMod =
             selectedIndex.value.whenDefined(idx =>
               Button(
-                compact = true,
+                clazz = ExploreStyles.ScrollButton |+| style,
+                severity = Button.Severity.Secondary,
                 onClick = virtualizerRef.get.flatMap(ref =>
-                  Callback(
-                    ref.foreach(_.scrollToIndex(idx + 1, ScrollOptions))
-                  )
+                  Callback(ref.foreach(_.scrollToIndex(idx + 1, ScrollOptions)))
                 )
-              )(
-                ExploreStyles.ScrollButton,
-                style
-              )(content).when(indexCondition(idx))
+              ).withMods(content).compact.when(indexCondition(idx))
             )
 
-          val errLabel: List[VdomNode] = errs.collect {
-            case ItcQueryProblems.MissingWavelength    =>
-              Label(clazz = ExploreStyles.WarningLabel, size = sizes.Small)("Set Wav..")
-            case ItcQueryProblems.MissingSignalToNoise =>
-              Label(clazz = ExploreStyles.WarningLabel, size = sizes.Small)("Set S/N")
-            case ItcQueryProblems.MissingTargetInfo    =>
-              Label(clazz = ExploreStyles.WarningLabel, size = sizes.Small)("Missing Target Info")
-          }
+          val errLabel: List[VdomNode] = errs
+            .collect {
+              case ItcQueryProblems.MissingWavelength    =>
+                <.label(ExploreStyles.WarningLabel)("Set Wav..")
+              case ItcQueryProblems.MissingSignalToNoise =>
+                <.label(ExploreStyles.WarningLabel)("Set S/N")
+              case ItcQueryProblems.MissingTargetInfo    =>
+                <.label(ExploreStyles.WarningLabel)("Missing Target Info")
+            }
 
           val selectedTarget =
             for
@@ -611,9 +611,7 @@ private object SpectroscopyModesTable extends TableHooks:
               t <- props.brightestTarget
               if props.targets.exists(_.length > 1)
               if errLabel.isEmpty
-            yield Label(size = sizes.Small, clazz = ExploreStyles.ModesTableTarget)(
-              s"on ${t.name.value}"
-            ).some
+            yield <.label(ExploreStyles.ModesTableTarget)(s"on ${t.name.value}").some
 
           React.Fragment(
             <.div(ExploreStyles.ModesTableTitle)(
