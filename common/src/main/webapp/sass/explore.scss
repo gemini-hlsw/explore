@@ -1612,6 +1612,8 @@ table.explore-border-table {
   }
 }
 
+$help-title-height: 40px;
+
 .explore-help-title {
   display: flex;
   flex: 0 1 auto;
@@ -1619,6 +1621,7 @@ table.explore-border-table {
   justify-content: space-between;
   align-items: center;
   background-color: var(--control-background-color);
+  height: $help-title-height;
 
   padding: {
     left: 0.6em;
@@ -1634,8 +1637,8 @@ table.explore-border-table {
 .explore-help-body {
   flex: 1 1 auto;
   overflow: auto;
-  height: 100%;
-  min-height: 100%;
+  height: calc(100% - $help-title-height);
+  min-height: calc(100% - $help-title-height);
   background-color: var(--help-background-color);
 }
 
