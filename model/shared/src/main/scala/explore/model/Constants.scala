@@ -19,9 +19,9 @@ trait Constants:
   val GridRowHeight            = 36
   val GridRowPadding           = 5
   val GridColCount             = 12
-  val InitialFov: Angle        = Angle.fromDoubleDegrees(0.25)
   // 1 arcmin
   val PreviewFov: Angle        = Angle.fromMicroarcseconds(60000000L)
+  val InitialFov: Angle        = PreviewFov
   val SimbadResultLimit        = 50
   val MaxConcurrentItcRequests = 4
   val DefaultSED               = UnnormalizedSED.StellarLibrary(StellarLibrarySpectrum.O5V)
