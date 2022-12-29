@@ -43,8 +43,8 @@ object TargetVisualOptions:
     TargetVisualOptions(Constants.InitialFov,
                         Constants.InitialFov,
                         Offset.Zero,
-                        Visible.Hidden,
-                        Visible.Hidden,
+                        Visible.Inline,
+                        Visible.Inline,
                         false,
                         100.refined,
                         100.refined
