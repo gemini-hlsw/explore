@@ -46,23 +46,26 @@ import lucuma.core.validation.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
-import lucuma.ui.forms.*
 import lucuma.ui.input.*
+import lucuma.ui.primereact.*
+import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.Iso
 import org.typelevel.log4cats.Logger
 import queries.common.ProgramQueriesGQL
 import queries.schemas.odb.ODBConversions.*
+import react.common.Css
 import react.common.ReactFnProps
-import react.semanticui.collections.form.*
-import react.semanticui.elements.label.Label
-import react.semanticui.modules.dropdown.*
-import react.semanticui.shorthand.*
+import react.primereact.Button
+import react.primereact.Divider
+import react.primereact.Dropdown
+import react.primereact.SelectItem
 import spire.std.any.*
 
 import scala.collection.immutable.SortedMap
 
+import scalajs.js
 import scalajs.js.JSConverters.*
 
 case class ProposalEditor(
@@ -147,20 +150,24 @@ object ProposalEditor:
 
   private def categoryTag(category: TacCategory): String = Enumerated[TacCategory].tag(category)
 
-  private val categoryOptions = Enumerated[TacCategory].all
-    .groupBy(_.group)
-    .toList
-    .sortBy(_._1)
-    .foldRight(Chain.empty[DropdownItem]) { case ((group, cats), acc) =>
-      val groupItem =
-        DropdownItem(text = group.label, value = group.label, className = "header", disabled = true)
-      val catItems  =
-        Chain.fromSeq(
-          cats.map(cat => DropdownItem(text = cat.label, value = categoryTag(cat)))
-        )
-      groupItem +: (catItems ++ acc)
-    }
-    .toList
+  private val categoryOptions: List[SelectItem[String]] =
+    Enumerated[TacCategory].all
+      .groupBy(_.group)
+      .toList
+      .sortBy(_._1)
+      .foldRight(Chain.empty[SelectItem[String]]) { case ((group, cats), acc) =>
+        val groupItem =
+          SelectItem(
+            label = group.label,
+            value = group.label,
+            className = "header",
+            disabled = true
+          )
+        val catItems  =
+          Chain.fromSeq(cats.map(cat => SelectItem(label = cat.label, value = categoryTag(cat))))
+        groupItem +: (catItems ++ acc)
+      }
+      .toList
 
   private def saveStateSplits(
     splitView: View[SortedMap[Partner, IntPercent]],
@@ -222,24 +229,21 @@ object ProposalEditor:
       }
 
     def makeMinimumPctInput[A](pctView: View[IntPercent], id: NonEmptyString): TagMod =
-      FormInputEV(
+      FormInputTextView(
         value = pctView,
         validFormat = InputValidSplitEpi.refinedInt[ZeroTo100],
         changeAuditor = ChangeAuditor.refinedInt[ZeroTo100](),
-        label = Label("Minimum %", HelpIcon("proposal/main/minimum-pct.md".refined)),
+        label = React.Fragment("Minimum %", HelpIcon("proposal/main/minimum-pct.md".refined)),
         id = id
-      ).withMods(
-        ExploreStyles.FlexShrink(0.refined),
-        ExploreStyles.MinimumPercent
       )
 
     def totalTimeEntry[A]: Option[VdomNode] =
       totalTime.map(_ =>
-        FormInputEV(
+        FormInputTextView(
           value = totalHours.withOnMod(h => totalTimeView.set(fromHours(h))),
           validFormat = ExploreModelValidators.hoursValidWedge,
           changeAuditor = ChangeAuditor.accept.decimal(2.refined),
-          label = Label("Total", HelpIcon("proposal/main/total-time.md".refined)),
+          label = React.Fragment("Total", HelpIcon("proposal/main/total-time.md".refined)),
           id = "total-time-entry".refined
         ).withMods(
           ExploreStyles.FlexShrink(0.refined),
@@ -269,85 +273,91 @@ object ProposalEditor:
 
     React.Fragment(
       renderInTitle(<.div(ExploreStyles.TitleUndoButtons)(UndoButtons(undoCtx))),
-      Form(
-        <.div(
-          ExploreStyles.TwoColumnGrid,
-          ExploreStyles.ProposalDetailsGrid,
-          FormInputEV(
-            id = "title".refined,
-            className = "inverse",
-            value = titleView,
-            validFormat = InputValidSplitEpi.nonEmptyString.optional,
-            label = "Title"
-          ).withMods(^.autoFocus := true),
-          <.div(
-            ExploreStyles.FlexContainer,
-            FormButton(
-              icon = Icons.Edit,
-              label = "Partners",
-              tpe = "button",
-              clazz = ExploreStyles.FlexShrink(0.refined) |+| ExploreStyles.PartnerSplitTotal,
-              onClick = openPartnerSplitsEditor
-            ),
-            partnerSplits(splitsMap),
-            makeMinimumPctInput(minimumPct1View, "min-pct-1".refined).unless(has2Minimums)
-          ),
-          <.div(
-            ExploreStyles.FlexContainer,
-            FormStaticData(value = formatHours(toHours(executionTime)),
-                           label = time1Label,
-                           id = "time1"
-            )(
-              ExploreStyles.FlexShrink(0.refined),
-              ExploreStyles.PartnerSplitTotal
-            ),
-            timeSplits(splitsMap, executionTime),
-            minimumTime(minimumPct1View.get, executionTime).unless(has2Minimums),
-            makeMinimumPctInput(minimumPct1View, "min-pct-1".refined).when(has2Minimums)
-          ),
-          secondTime.fold(<.span(): VdomNode) { t2 =>
+      <.form(
+        <.div(ExploreStyles.ProposalDetailsGrid)(
+          <.div(LucumaStyles.FormColumnCompact, LucumaStyles.LinearColumn)(
+            FormInputTextView(
+              id = "title".refined,
+              inputClass = Css("inverse"),
+              value = titleView,
+              validFormat = InputValidSplitEpi.nonEmptyString.optional,
+              label = "Title"
+            )(^.autoFocus := true),
             <.div(
               ExploreStyles.FlexContainer,
-              totalTimeEntry.getOrElse(
-                FormStaticData(value = formatHours(toHours(t2)), label = "Band 3", id = "band-3")(
-                  ExploreStyles.FlexShrink(0.refined),
-                  ExploreStyles.PartnerSplitTotal
+              <.div(ExploreStyles.FlexShrink(0.refined) |+| ExploreStyles.PartnerSplitTotal)(
+                <.label("Partners"),
+                Button(
+                  icon = Icons.Edit,
+                  severity = Button.Severity.Secondary,
+                  tpe = Button.Type.Button,
+                  onClick = openPartnerSplitsEditor
                 )
               ),
-              timeSplits(splitsMap, t2),
-              minimumPct2View
-                .mapValue(pctView => makeMinimumPctInput(pctView, "min-pct-2".refined))
-                .getOrElse(minimumTime(minimumPct1View.get, t2))
+              partnerSplits(splitsMap),
+              <.div(ExploreStyles.FlexShrink(0.refined), ExploreStyles.MinimumPercent)(
+                makeMinimumPctInput(minimumPct1View, "min-pct-1".refined).unless(has2Minimums)
+              )
+            ),
+            <.div(
+              ExploreStyles.FlexContainer,
+              FormStaticData(
+                value = formatHours(toHours(executionTime)),
+                label = time1Label,
+                id = "time1"
+              )(
+                ExploreStyles.FlexShrink(0.refined),
+                ExploreStyles.PartnerSplitTotal
+              ),
+              timeSplits(splitsMap, executionTime),
+              minimumTime(minimumPct1View.get, executionTime).unless(has2Minimums),
+              makeMinimumPctInput(minimumPct1View, "min-pct-1".refined).when(has2Minimums)
+            ),
+            secondTime.fold(<.span(): VdomNode) { t2 =>
+              <.div(
+                ExploreStyles.FlexContainer,
+                totalTimeEntry.getOrElse(
+                  FormStaticData(value = formatHours(toHours(t2)), label = "Band 3", id = "band-3")(
+                    ExploreStyles.FlexShrink(0.refined),
+                    ExploreStyles.PartnerSplitTotal
+                  )
+                ),
+                timeSplits(splitsMap, t2),
+                minimumPct2View
+                  .mapValue(pctView => makeMinimumPctInput(pctView, "min-pct-2".refined))
+                  .getOrElse(minimumTime(minimumPct1View.get, t2))
+              )
+            }
+          ),
+          <.div(LucumaStyles.FormColumnCompact, LucumaStyles.LinearColumn)(
+            FormEnumDropdownView(
+              id = "proposal-class".refined,
+              value = proposalClassType.withOnMod(onClassTypeMod _),
+              label = React.Fragment("Class", HelpIcon("proposal/main/class.md".refined))
+            ),
+            FormDropdownOptional(
+              id = "category".refined,
+              label = React.Fragment("Category", HelpIcon("proposal/main/category.md".refined)),
+              value = categoryView.get.map(categoryTag),
+              options = categoryOptions,
+              onChange = _.map(v => categoryView.set(Enumerated[TacCategory].fromTag(v))).orEmpty,
+              modifiers = List(^.id := "category")
+            ),
+            FormEnumDropdownView(
+              id = "too-activation".refined,
+              value = activationView,
+              label = React.Fragment("ToO Activation",
+                                     HelpIcon("proposal/main/too-activation.md".refined)
+              )
             )
-          },
-          EnumViewSelect(
-            id = "proposal-class",
-            value = proposalClassType.withOnMod(onClassTypeMod _),
-            label = Label("Class", HelpIcon("proposal/main/class.md".refined))
-          ),
-          FormSelect(
-            label = Label("Category", HelpIcon("proposal/main/category.md".refined)),
-            value = categoryView.get.map(categoryTag).orUndefined,
-            options = categoryOptions,
-            onChange = (ddp: FormDropdown.FormDropdownProps) =>
-              ddp.value.toOption
-                .map(v => categoryView.set(Enumerated[TacCategory].fromTag(v.asInstanceOf[String])))
-                .orEmpty,
-            modifiers = List(^.id := "category")
-          ),
-          EnumViewSelect(
-            id = "too-activation",
-            value = activationView,
-            label = Label("ToO Activation", HelpIcon("proposal/main/too-activation.md".refined))
           )
         ),
-        <.div(FomanticStyles.Divider),
-        FormTextAreaEV(
+        Divider(borderType = Divider.BorderType.Solid),
+        FormInputTextAreaView(
           id = "abstract".refined,
           label = "Abstract",
-          rows = 10,
           value = abstractView.as(optionNonEmptyStringIso)
-        )
+        )(ExploreStyles.ProposalAbstract, ^.rows := 10)
       )
     )
   }

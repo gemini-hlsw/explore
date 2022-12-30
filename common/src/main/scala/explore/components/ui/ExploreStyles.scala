@@ -199,7 +199,8 @@ object ExploreStyles:
 
   val MoonPhase: Css = Css("moon-phase")
 
-  val ProposalDetailsGrid: Css = Css("proposal-details-grid")
+  val ProposalDetailsGrid: Css = Css("explore-proposal-details-grid")
+  val ProposalAbstract: Css    = Css("explore-proposal-abstract")
 
   val MinimumPercent: Css = Css("minimum-percent") |+| FlexEnd
 
@@ -211,8 +212,6 @@ object ExploreStyles:
 
   // Semantic UI form overrides and extensions
   val Grid: Css                   = Css("explore-grid")
-  val TwoColumnGrid: Css          = Grid |+| Css("explore-two-columns")
-  val ThreeColumnGrid: Css        = Grid |+| Css("explore-three-columns")
   val Compact: Css                = Css("explore-compact")
   val ErrorLabel: Css             = Css("explore-error-label")
   val InputErrorTooltip: Css      = Css("explore-input-error-tooltip")

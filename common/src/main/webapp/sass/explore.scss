@@ -2014,7 +2014,10 @@ div.spectroscopy-table-emptymessage {
       border-radius: 0.3em;
     }
 
-    &:hover, &:focus, &:focus-visible, &:not(button, a, .p-disabled):active {
+    &:hover,
+    &:focus,
+    &:focus-visible,
+    &:not(button, a, .p-disabled):active {
       background-color: var(--under-tab-background-active-color);
       border: 1px solid var(--under-tab-border-color);
     }
@@ -2024,7 +2027,9 @@ div.spectroscopy-table-emptymessage {
       font-weight: bold;
       border-color: transparent;
 
-      &:hover, &:focus, &:focus-visible {
+      &:hover,
+      &:focus,
+      &:focus-visible {
         background-color: var(--under-tab-background-color);
       }
     }
@@ -2042,8 +2047,12 @@ div.spectroscopy-table-emptymessage {
     }
 
     &.p-highlight,
-    &.p-highlight:hover, &.p-highlight:focus, &.p-highlight:focus-visible,
-    &:hover, &:focus, &:focus-visible {
+    &.p-highlight:hover,
+    &.p-highlight:focus,
+    &.p-highlight:focus-visible,
+    &:hover,
+    &:focus,
+    &:focus-visible {
       border-left: var(--explore-accent-color) solid 3px;
       border: {
         top: none;
@@ -2055,8 +2064,12 @@ div.spectroscopy-table-emptymessage {
 
   &.bottom-tab-selector {
     &.p-highlight,
-    &.p-highlight:hover, &.p-highlight:focus, &.p-highlight:focus-visible,
-    &:hover, &:focus, &:focus-visible {
+    &.p-highlight:hover,
+    &.p-highlight:focus,
+    &.p-highlight:focus-visible,
+    &:hover,
+    &:focus,
+    &:focus-visible {
       border-top: var(--explore-accent-color) solid 3px;
       border: {
         left: none;
@@ -2133,3 +2146,12 @@ div.spectroscopy-table-emptymessage {
   border-top: 1px solid var(--under-tab-border-color);
 }
 
+.explore-proposal-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(34em, 1fr));
+  column-gap: 0.5dvw;
+}
+
+.explore-proposal-abstract {
+  width: 100%;
+}
