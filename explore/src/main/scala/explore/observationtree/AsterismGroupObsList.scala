@@ -46,8 +46,6 @@ import react.common.ReactFnProps
 import react.fa.FontAwesomeIcon
 import react.primereact.Button
 import react.primereact.ToastRef
-import react.semanticui.elements.segment.Segment
-import react.semanticui.elements.segment.SegmentGroup
 
 import scala.collection.immutable.SortedSet
 
@@ -246,8 +244,8 @@ object AsterismGroupObsList:
         obsIds.single.fold {
           val list        = obsIds.toList
           val div: TagMod = <.div(
-            SegmentGroup(
-              list.toTagMod(id => Segment(id.show))
+            <.div(
+              list.toTagMod(id => <.div(id.show))
             )
           )
           div.some
@@ -323,9 +321,8 @@ object AsterismGroupObsList:
                 snapshot.draggingOverWith.exists(id => parseDragId(id).isDefined)
               )
             )(
-              Segment(
-                vertical = true,
-                clazz = ExploreStyles.ObsTreeGroup |+| Option
+              <.div(
+                ExploreStyles.ObsTreeGroup |+| Option
                   .when(groupSelected)(ExploreStyles.SelectedObsTreeGroup)
                   .orElse(
                     Option.when(!dragging.value.value)(ExploreStyles.UnselectedObsTreeGroup)
