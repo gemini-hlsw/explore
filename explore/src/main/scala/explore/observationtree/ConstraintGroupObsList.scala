@@ -33,10 +33,7 @@ import mouse.boolean.*
 import react.beautifuldnd.*
 import react.common.ReactFnProps
 import react.fa.FontAwesomeIcon
-import react.semanticui.elements.button.Button
-import react.semanticui.elements.segment.Segment
-import react.semanticui.elements.segment.SegmentGroup
-import react.semanticui.sizes.*
+import react.primereact.Button
 
 import scala.collection.immutable.SortedSet
 
@@ -151,14 +148,8 @@ object ConstraintGroupObsList:
             .flatMap(obsIds =>
               if (obsIds.size === 1)
                 observations.get(obsIds.head).map(obs => props.renderObsBadge(obs))
-              else {
-                val div: TagMod = <.div(
-                  SegmentGroup(
-                    obsIds.toList.toTagMod(id => Segment(id.show))
-                  )
-                )
-                div.some
-              }
+              else
+                <.div(obsIds.toList.toTagMod(id => <.div(id.show))).some
             )
             .getOrElse(<.span("ERROR"))
         )
@@ -226,9 +217,8 @@ object ConstraintGroupObsList:
                 snapshot.draggingOverWith.exists(id => Observation.Id.parse(id).isDefined)
               )
             )(
-              Segment(
-                vertical = true,
-                clazz = ExploreStyles.ObsTreeGroup |+| Option
+              <.div(
+                ExploreStyles.ObsTreeGroup |+| Option
                   .when(groupSelected)(ExploreStyles.SelectedObsTreeGroup)
                   .orElse(
                     Option.when(!dragging.value)(ExploreStyles.UnselectedObsTreeGroup)
@@ -265,7 +255,8 @@ object ConstraintGroupObsList:
           <.div(
             Button(
               onClick = setObsSet(none) >> props.setSummaryPanel,
-              clazz = ExploreStyles.ButtonSummary
+              clazz = ExploreStyles.ButtonSummary,
+              severity = Button.Severity.Secondary
             )(
               Icons.ListIcon.withClass(ExploreStyles.PaddedRightIcon),
               "Constraints Summary"
