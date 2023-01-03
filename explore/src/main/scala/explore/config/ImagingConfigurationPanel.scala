@@ -137,7 +137,7 @@ object ImagingConfigurationPanel {
           id = "configuration-fov".refined,
           value = fov,
           label = ReactFragment("Field of View", HelpIcon("configuration/fov.md".refined)),
-          postAddons = List("arcsec"),
+          units = "arcsec",
           validFormat = InputValidWedge.fromFormat(formatArcsec).optional,
           changeAuditor = ChangeAuditor.fromFormat(formatArcsec).optional
         ),

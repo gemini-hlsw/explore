@@ -258,7 +258,6 @@ object ExploreStyles:
   // styles for icons that acts as buttons
   val ButtonIcon: Css       = Css("explore-button-icon")
   val FormSectionLabel: Css = Css("explore-section-label")
-  val UnitsLabel: Css       = Css("explore-units-label")
   val UnitsTableLabel: Css  = Css("explore-table-units-label")
 
   // Login box

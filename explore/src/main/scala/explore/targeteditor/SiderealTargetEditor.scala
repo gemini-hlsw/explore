@@ -286,7 +286,6 @@ object SiderealTargetEditor {
           val disabled = props.searching.get.exists(_ === tid) || cloning.value
 
           React.Fragment(
-            // Toast(Toast.Position.BottomRight).withRef(toastRef.ref),
             props.renderInTitle
               .map(_.apply(<.span(ExploreStyles.TitleUndoButtons)(UndoButtons(undoCtx)))),
             <.div(ExploreStyles.TargetGrid)(

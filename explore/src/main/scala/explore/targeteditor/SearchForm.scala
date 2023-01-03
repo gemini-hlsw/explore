@@ -77,7 +77,7 @@ object SearchForm:
             .void
       )
       .useRefToVdom[HTMLButtonElement]
-      .render { (props, ctx, term, enabled, error, buttonRef) => // , toastRef) =>
+      .render { (props, ctx, term, enabled, error, buttonRef) =>
         import ctx.given
 
         val searchComplete: Callback = props.searching.mod(_ - props.id)
