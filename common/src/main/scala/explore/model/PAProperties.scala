@@ -6,7 +6,6 @@ package explore.model
 import cats.syntax.all.*
 import crystal.react.View
 import crystal.react.implicits.*
-import crystal.react.reuse.*
 import explore.model.enums.AgsState
 import explore.model.reusability.given
 import japgolly.scalajs.react.Reusability
@@ -39,6 +38,5 @@ object PAProperties:
     case _                                                                      => false
   }
 
-  given Reusability[PAProperties] = Reusability.by(x =>
-    (x.oid, x.selectedGS.reuseByValue, x.agsState.reuseByValue, x.constraint.reuseByValue)
-  )
+  given Reusability[PAProperties] =
+    Reusability.by(x => (x.oid, x.selectedGS.get, x.agsState.get, x.constraint.get))
