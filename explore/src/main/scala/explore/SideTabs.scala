@@ -19,6 +19,7 @@ import lucuma.core.util.Display
 import lucuma.refined.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
@@ -40,6 +41,9 @@ object SideTabs:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .useStateView(AppTab.all.head)
+      .useEffectWithDepsBy((p, _, _) => p.routingInfo.appTab)((_, _, selected) =>
+        focus => selected.set(focus)
+      )
       .render { (p, ctx, tabs) =>
         val focus = p.routingInfo.appTab
         val ri    = p.routingInfo
