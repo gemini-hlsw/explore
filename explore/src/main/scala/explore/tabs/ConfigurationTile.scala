@@ -14,6 +14,7 @@ import explore.model.CoordinatesAtVizTime
 import explore.model.enums.AgsState
 import explore.undo.*
 import explore.utils.*
+import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Observation
 import lucuma.core.model.User
@@ -30,6 +31,7 @@ object ConfigurationTile {
     obsData:         Pot[(String, Option[NonEmptyString], View[ScienceData])],
     undoStacks:      View[UndoStacks[IO, ScienceData]],
     baseCoordinates: Option[CoordinatesAtVizTime],
+    selectedPA:      Option[Angle],
     agsState:        View[AgsState]
   )(using Logger[IO]) =
     Tile(
@@ -49,6 +51,7 @@ object ConfigurationTile {
             scienceData.get.itcTargets,
             baseCoordinates,
             agsState,
+            selectedPA,
             renderInTitle
           )
       }(obsData)

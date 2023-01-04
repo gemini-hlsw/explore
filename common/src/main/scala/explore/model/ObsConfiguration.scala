@@ -4,6 +4,9 @@
 package explore.model
 
 import cats.Eq
+import cats.data.NonEmptyList
+import cats.derived.*
+import cats.syntax.all.*
 import eu.timepit.refined.cats.*
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
@@ -20,26 +23,28 @@ case class ObsConfiguration(
   posAngleConstraint: Option[PosAngleConstraint],
   constraints:        Option[ConstraintSet],
   wavelength:         Option[Wavelength]
-) {
-  def hasPosAngleConstraint: Boolean = posAngleConstraint.isDefined
+) derives Eq {
+  // Move to lucuma-catalog
+  def positions = posAngleConstraint match
+    case Some(PosAngleConstraint.Fixed(a))               => NonEmptyList.of(a).some
+    case Some(PosAngleConstraint.AllowFlip(a))           => NonEmptyList.of(a, a.flip).some
+    case Some(PosAngleConstraint.ParallacticOverride(a)) => NonEmptyList.of(a).some
+    case None                                            => NonEmptyList.fromList(ObsConfiguration.UnconstrainedAngles)
+    case _                                               => None
+
+  def hasPosAngleConstraint: Boolean = positions.isDefined
 
   def canSelectGuideStar: Boolean =
     hasPosAngleConstraint && scienceMode.isDefined && constraints.isDefined
 
-  def posAngle: Option[Angle] = posAngleConstraint.collect {
-    case PosAngleConstraint.Fixed(a)               => a
-    case PosAngleConstraint.AllowFlip(a)           => a
-    case PosAngleConstraint.ParallacticOverride(a) => a
-  }
 }
 
-object ObsConfiguration {
+object ObsConfiguration:
   val vizTime            = Focus[ObsConfiguration](_.vizTime)
   val searchingTarget    = Focus[ObsConfiguration](_.scienceMode)
   val posAngleConstraint = Focus[ObsConfiguration](_.posAngleConstraint)
   val constraints        = Focus[ObsConfiguration](_.constraints)
   val wavelength         = Focus[ObsConfiguration](_.wavelength)
 
-  implicit val eqRootModel: Eq[ObsConfiguration] =
-    Eq.by(m => (m.vizTime, m.scienceMode, m.posAngleConstraint, m.constraints, m.wavelength))
-}
+  val UnconstrainedAngles =
+    (0 until 360 by 10).map(a => Angle.fromDoubleDegrees(a.toDouble)).toList

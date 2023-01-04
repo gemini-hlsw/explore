@@ -19,6 +19,7 @@ import explore.model.AladinFullScreen
 import explore.model.AppContext
 import explore.model.Asterism
 import explore.model.ObsIdSet
+import explore.model.PAProperties
 import explore.model.ScienceMode
 import explore.model.SiderealTargetWithId
 import explore.model.TargetWithId
@@ -36,6 +37,7 @@ import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.data.Zipper
+import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
@@ -77,10 +79,8 @@ case class AsterismEditor(
   undoStacks:     View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
   searching:      View[Set[Target.Id]],
   renderInTitle:  Tile.RenderInTitle,
-  posAngleView:   Option[(View[PosAngleConstraint], View[AgsState])]
-) extends ReactFnProps(AsterismEditor.component) {
-  val posAngle: Option[PosAngleConstraint] = posAngleView.map(_._1.get)
-}
+  paProps:        Option[PAProperties]
+) extends ReactFnProps(AsterismEditor.component)
 
 object AsterismEditor extends AsterismModifier:
   private type Props = AsterismEditor
@@ -229,7 +229,7 @@ object AsterismEditor extends AsterismModifier:
                               props.sharedInObsIds.some
                             else none,
                           fullScreen = fullScreen,
-                          posAngleView = props.posAngleView
+                          props.paProps
                         )
                       )
                     )

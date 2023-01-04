@@ -38,6 +38,7 @@ import explore.modes.SpectroscopyModesMatrix
 import explore.undo.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
@@ -63,6 +64,7 @@ case class ConfigurationPanel(
   itcTargets:      List[ItcTarget],
   baseCoordinates: Option[CoordinatesAtVizTime],
   agsState:        View[AgsState],
+  selectedPA:      Option[Angle],
   renderInTitle:   Tile.RenderInTitle
 ) extends ReactFnProps[ConfigurationPanel](ConfigurationPanel.component)
 
@@ -193,7 +195,7 @@ object ConfigurationPanel:
             <.div(ExploreStyles.TitleUndoButtons)(UndoButtons(props.scienceData))
           ),
           <.div(ExploreStyles.ConfigurationGrid)(
-            PAConfigurationPanel(props.obsId, posAngleView, props.agsState),
+            PAConfigurationPanel(props.obsId, posAngleView, props.selectedPA, props.agsState),
             if (editState.get === ConfigEditState.TableView)
               BasicConfigurationPanel(
                 props.userId,
