@@ -24,7 +24,7 @@ object ObsQueriesGQL {
         observations(programId: $programId) {
           matches {
             id
-            title
+            title:subtitle
             subtitle
             constraintSet {
               imageQuality
@@ -176,7 +176,7 @@ object ObsQueriesGQL {
         createObservation(input: $createObservation) {
           observation {
             id
-            title
+            title:subtitle
             subtitle
             constraintSet {
               imageQuality
@@ -240,7 +240,7 @@ object ObsQueriesGQL {
       query($programId: ProgramId!, $obsId: ObservationId!) {
         observation(observationId: $obsId) {
           id
-          title
+          title:subtitle
           subtitle
           visualizationTime
           posAngleConstraint {
@@ -572,7 +572,7 @@ object ObsQueriesGQL {
         cloneObservation(input: $input) {
           newObservation {
             id
-            title
+            title:subtitle
             subtitle
             constraintSet {
               imageQuality

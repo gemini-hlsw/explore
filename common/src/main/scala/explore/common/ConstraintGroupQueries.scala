@@ -40,7 +40,8 @@ object ConstraintGroupQueries:
   private def obsResultToSummary(obsR: ObservationResult): ObsSummaryWithTitleAndConf =
     ObsSummaryWithTitleAndConf(
       obsR.id,
-      obsR.title,
+      // obsR.title,
+      obsR.title.map(_.value).orEmpty,
       obsR.subtitle,
       obsR.status,
       obsR.activeStatus,

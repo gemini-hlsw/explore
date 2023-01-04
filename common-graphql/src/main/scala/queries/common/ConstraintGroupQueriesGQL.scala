@@ -48,7 +48,7 @@ object ConstraintGroupQueriesGQL {
         observations(programId: $programId) {
           matches {
             id
-            title
+            title:subtitle
             subtitle
           	status
           	activeStatus

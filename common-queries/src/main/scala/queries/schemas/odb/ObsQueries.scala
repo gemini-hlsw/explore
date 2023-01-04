@@ -113,7 +113,8 @@ object ObsQueries:
       data.observation.map { obs =>
         ObsEditData(
           id = obs.id,
-          title = obs.title,
+          // title = obs.title,
+          title = obs.title.map(_.value).orEmpty,
           subtitle = obs.subtitle,
           visualizationTime = obs.visualizationTime.map(_.toInstant),
           itcExposureTime = data.itc.map(_.result.asFixedExposureTime),
@@ -138,7 +139,8 @@ object ObsQueries:
           data.observations.matches.map(mtch =>
             ObsSummaryWithTitleConstraintsAndConf(
               mtch.id,
-              mtch.title,
+              // mtch.title,
+              mtch.title.map(_.value).orEmpty,
               mtch.subtitle,
               mtch.constraintSet,
               mtch.status,
@@ -246,7 +248,8 @@ object ObsQueries:
       val obs = data.createObservation.observation
       ObsSummaryWithTitleAndConstraints(
         obs.id,
-        obs.title,
+        // obs.title,
+        obs.title.map(_.value).orEmpty,
         obs.subtitle,
         obs.constraintSet,
         obs.status,
@@ -271,7 +274,8 @@ object ObsQueries:
         val obs = data.createObservation.observation
         ObsSummaryWithTitleAndConstraints(
           obs.id,
-          obs.title,
+          // obs.title,
+          obs.title.map(_.value).orEmpty,
           obs.subtitle,
           obs.constraintSet,
           obs.status,
@@ -289,7 +293,8 @@ object ObsQueries:
         val newObs = o.cloneObservation.newObservation
         ObsSummaryWithTitleAndConstraints(
           newObs.id,
-          newObs.title,
+          // newObs.title,
+          newObs.title.map(_.value).orEmpty,
           newObs.subtitle,
           newObs.constraintSet,
           newObs.status,
@@ -315,7 +320,8 @@ object ObsQueries:
         val newObs = o.cloneObservation.newObservation
         ObsSummaryWithTitleAndConstraints(
           newObs.id,
-          newObs.title,
+          // newObs.title,
+          newObs.title.map(_.value).orEmpty,
           newObs.subtitle,
           newObs.constraintSet,
           newObs.status,
