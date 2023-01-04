@@ -58,7 +58,7 @@ object SiderealTargetEditorTile {
               none,
               undoStacks,
               searching,
-              posAngleView = none,
+              paProps = none,
               renderInTitle = renderInTitle.some,
               fullScreen = fullScreen
             )

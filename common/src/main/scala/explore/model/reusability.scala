@@ -8,6 +8,7 @@ import explore.data.KeyedIndexedList
 import explore.events.CatalogMessage
 import explore.model.Asterism
 import explore.model.ObjectTracking
+import explore.model.enums.AgsState
 import explore.model.enums.SelectedPanel
 import explore.model.itc.CoverageCenterWavelength
 import explore.model.itc.ItcChartExposureTime
@@ -16,6 +17,7 @@ import explore.modes.InstrumentRow
 import explore.undo.UndoStacks
 import japgolly.scalajs.react.ReactCats.*
 import japgolly.scalajs.react.Reusability
+import lucuma.ags.AgsAnalysis
 import lucuma.ags.AgsParams
 import lucuma.ags.AgsPosition
 import lucuma.ags.GuideStarCandidate
@@ -99,6 +101,7 @@ object reusability:
   given Reusability[GuideStarCandidate]                 = Reusability.by(_.name.value)
   given Reusability[AgsPosition]                        = Reusability.byEq
   given Reusability[AgsParams]                          = Reusability.byEq
+  given Reusability[AgsState]                           = Reusability.byEq
 
   given Reusability[SortedMap[Partner, IntPercent]] =
     Reusability.by((_: SortedMap[Partner, IntPercent]).toMap)(Reusability.map)

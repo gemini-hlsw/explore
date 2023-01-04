@@ -1932,6 +1932,10 @@ $help-title-height: 40px;
       width: 9ch;
     }
   }
+
+  label:last-child {
+    margin-left: 1em;
+  }
 }
 
 // Move to lucuma-ui?

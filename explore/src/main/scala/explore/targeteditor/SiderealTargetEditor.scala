@@ -25,6 +25,7 @@ import explore.model.Asterism
 import explore.model.ExploreModelValidators
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
+import explore.model.PAProperties
 import explore.model.ScienceMode
 import explore.model.SiderealTargetWithId
 import explore.model.TargetWithId
@@ -81,10 +82,8 @@ case class SiderealTargetEditor(
   onClone:       TargetWithId => Callback = _ => Callback.empty,
   renderInTitle: Option[Tile.RenderInTitle] = none,
   fullScreen:    View[AladinFullScreen],
-  posAngleView:  Option[(View[PosAngleConstraint], View[AgsState])]
-) extends ReactFnProps(SiderealTargetEditor.component) {
-  val posAngle: Option[PosAngleConstraint] = posAngleView.map(_._1.get)
-}
+  paProps:       Option[PAProperties]
+) extends ReactFnProps(SiderealTargetEditor.component)
 
 object SiderealTargetEditor {
   private type Props = SiderealTargetEditor
@@ -302,13 +301,13 @@ object SiderealTargetEditor {
                   ObsConfiguration(
                     vizTime,
                     props.scienceMode,
-                    props.posAngle,
+                    props.paProps.flatMap(_.constraint.get),
                     props.constraints,
                     props.wavelength
                   ),
                   props.asterism.get,
                   props.fullScreen,
-                  props.posAngleView
+                  props.paProps
                 )
               )(vizTime),
               <.div(LucumaStyles.FormColumnVeryCompact, ExploreStyles.TargetForm)(

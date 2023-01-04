@@ -4,6 +4,7 @@
 package explore.config
 
 import cats.effect.*
+import cats.syntax.all.*
 import crystal.react.*
 import crystal.react.implicits.*
 import eu.timepit.refined.auto.*
@@ -36,6 +37,7 @@ import react.common.ReactFnProps
 case class PAConfigurationPanel(
   obsId:        Observation.Id,
   posAngleView: View[Option[PosAngleConstraint]],
+  selectedPA:   Option[Angle],
   agsState:     View[AgsState]
 ) extends ReactFnProps(PAConfigurationPanel.component)
 
@@ -91,6 +93,12 @@ object PAConfigurationPanel:
             .zoom(option.some[PosAngleConstraint])
             .zoom(PosAngleConstraint.parallacticOverrideAngle)
 
+        val selectedAngle = props.posAngleView.get match
+          case None =>
+            props.selectedPA
+              .map(a => <.label(f"Selected Angle: ${a.toDoubleDegrees}%.0f °"))
+          case _    => None
+
         def posAngleEditor(pa: View[Angle]) =
           <.div(
             FormInputTextView(
@@ -109,7 +117,6 @@ object PAConfigurationPanel:
           ExploreStyles.PAConfigurationForm
         )(
           FormEnumDropdownView(
-            clazz = ExploreStyles.ObsConfigurationObsPA,
             id = "pos-angle-alternative".refined,
             label =
               React.Fragment("Position Angle", HelpIcon("configuration/positionangle.md".refined)),
@@ -118,6 +125,7 @@ object PAConfigurationPanel:
           ),
           fixedView.mapValue(posAngleEditor),
           allowedFlipView.mapValue(posAngleEditor),
-          parallacticOverrideView.mapValue(posAngleEditor)
+          parallacticOverrideView.mapValue(posAngleEditor),
+          selectedAngle
         )
       }

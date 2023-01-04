@@ -21,6 +21,7 @@ import explore.model.CoordinatesAtVizTime
 import explore.model.Focused
 import explore.model.ModelUndoStacks
 import explore.model.ObsIdSet
+import explore.model.PAProperties
 import explore.model.ScienceMode
 import explore.model.TargetSummary
 import explore.model.display.given
@@ -38,6 +39,8 @@ import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.ags.AgsAnalysis
+import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
@@ -139,7 +142,10 @@ object ObsTabTiles:
       .useStateView(none[ItcTarget])
       // Ags state
       .useStateView[AgsState](AgsState.Idle)
-      .render { (props, ctx, obsView, itcTarget, agsState) =>
+      // Selected GS. to share the PA chosen for Unconstrained and average modes
+      // This should go to the db eventually
+      .useStateView(none[AgsAnalysis])
+      .render { (props, ctx, obsView, itcTarget, agsState, selectedPA) =>
         import ctx.given
 
         val obsViewPot = obsView.toPot
@@ -147,12 +153,11 @@ object ObsTabTiles:
         val scienceMode: Option[ScienceMode] =
           obsView.toOption.flatMap(_.get.scienceData.mode)
 
-        val posAngle: Option[View[PosAngleConstraint]] =
+        val posAngle: Option[View[Option[PosAngleConstraint]]] =
           obsView.toOption
             .map(
-              _.zoom(ObsEditData.scienceData.andThen(ScienceData.posAngle.some))
+              _.zoom(ObsEditData.scienceData.andThen(ScienceData.posAngle))
             )
-            .flatMap(_.asView)
 
         val potAsterism: Pot[View[Option[Asterism]]] =
           obsViewPot.map(v =>
@@ -253,6 +258,8 @@ object ObsTabTiles:
               via
             )
 
+        val paProps = posAngle.map(p => PAProperties(props.obsId, selectedPA, agsState, p))
+
         val targetTile = AsterismEditorTile.asterismEditorTile(
           props.userId,
           props.programId,
@@ -267,7 +274,7 @@ object ObsTabTiles:
           props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
           props.searching,
           "Targets",
-          posAngle.map(p => (props.obsId, p, agsState)),
+          paProps,
           backButton = none
         )
 
@@ -300,6 +307,7 @@ object ObsTabTiles:
               .zoom(ModelUndoStacks.forObservationData[IO])
               .zoom(atMapWithDefault(props.obsId, UndoStacks.empty)),
             targetCoords,
+            paProps.flatMap(_.selectedPA),
             agsState
           )
 

@@ -29,6 +29,7 @@ import explore.model.AppContext
 import explore.model.Asterism
 import explore.model.Constants
 import explore.model.ObsConfiguration
+import explore.model.PAProperties
 import explore.model.TargetVisualOptions
 import explore.model.UserGlobalPreferences
 import explore.model.WorkerClients.*
@@ -85,16 +86,13 @@ import java.time.Instant
 import scala.concurrent.duration.*
 
 case class AladinCell(
-  uid:          User.Id,
-  tid:          Target.Id,
-  obsConf:      ObsConfiguration,
-  asterism:     Asterism,
-  fullScreen:   View[AladinFullScreen],
-  posAngleView: Option[(View[PosAngleConstraint], View[AgsState])]
-) extends ReactFnProps(AladinCell.component) {
-  val setPA: Option[View[PosAngleConstraint]] = posAngleView.map(_._1)
-  val agsState: Option[View[AgsState]]        = posAngleView.map(_._2)
-}
+  uid:        User.Id,
+  tid:        Target.Id,
+  obsConf:    ObsConfiguration,
+  asterism:   Asterism,
+  fullScreen: View[AladinFullScreen],
+  paProps:    Option[PAProperties]
+) extends ReactFnProps(AladinCell.component)
 
 trait AladinCommon:
   given Reusability[Asterism] = Reusability.by(x => (x.toSiderealTracking, x.focus.id))
@@ -119,15 +117,7 @@ object AladinCell extends ModelOptics with AladinCommon:
   }
 
   private given Reusability[Props] =
-    Reusability.by(x =>
-      (x.uid,
-       x.tid,
-       x.obsConf,
-       x.agsState.map(_.reuseByValue),
-       x.asterism,
-       x.fullScreen.reuseByValue
-      )
-    )
+    Reusability.by(x => (x.uid, x.tid, x.obsConf, x.paProps, x.asterism, x.fullScreen.reuseByValue))
 
   private val fovLens: Lens[TargetVisualOptions, Fov] =
     Lens[TargetVisualOptions, Fov](t => Fov(t.fovRA, t.fovDec))(f =>
@@ -208,8 +198,8 @@ object AladinCell extends ModelOptics with AladinCommon:
       val angle = pos.head._1.posAngle
       props.obsConf.posAngleConstraint match
         case Some(PosAngleConstraint.AllowFlip(a)) if a =!= angle =>
-          props.setPA
-            .map(_.set(PosAngleConstraint.AllowFlip(angle)))
+          props.paProps
+            .map(_.constraint.set(PosAngleConstraint.AllowFlip(angle).some))
             .getOrEmpty *> manualOverride.set(ManualAgsOverride(true))
         case _                                                    => Callback.empty
     case _                                         => Callback.empty
@@ -225,18 +215,17 @@ object AladinCell extends ModelOptics with AladinCommon:
       // Analysis results
       .useSerialState(List.empty[AgsAnalysis])
       // Request data again if vizTime changes more than a month
-      .useEffectWithDepsBy((p, _, _, _, _) =>
-        (p.obsConf.vizTime, p.asterism.baseTracking, p.agsState.isDefined)
-      ) { (props, ctx, _, gs, _) => (vizTime, baseTracking, _) =>
-        import ctx.given
+      .useEffectWithDepsBy((p, _, _, _, _) => (p.obsConf.vizTime, p.asterism.baseTracking)) {
+        (props, ctx, _, gs, _) => (vizTime, baseTracking) =>
+          import ctx.given
 
-        (for {
-          _          <- props.agsState.foldMap(_.async.set(AgsState.LoadingCandidates))
-          candidates <- CatalogClient[IO].requestSingle(
-                          CatalogMessage.GSRequest(baseTracking, vizTime)
-                        )
-          _          <- candidates.map(gs.setStateAsync(_)).orEmpty
-        } yield ()).guarantee(props.agsState.foldMap(_.async.set(AgsState.Idle)))
+          (for {
+            _          <- props.paProps.foldMap(_.agsState.async.set(AgsState.LoadingCandidates))
+            candidates <- CatalogClient[IO].requestSingle(
+                            CatalogMessage.GSRequest(baseTracking, vizTime)
+                          )
+            _          <- candidates.map(gs.setStateAsync(_)).orEmpty
+          } yield ()).guarantee(props.paProps.foldMap(_.agsState.async.set(AgsState.Idle)))
       }
       // Reference to the root
       .useMemo(())(_ =>
@@ -277,7 +266,7 @@ object AladinCell extends ModelOptics with AladinCommon:
       // Request ags calculation
       .useEffectWithDepsBy((p, _, _, candidates, _, _, _, _) =>
         (p.asterism.baseTracking,
-         p.obsConf.posAngleConstraint,
+         p.obsConf.positions,
          p.obsConf.constraints,
          p.obsConf.wavelength,
          p.obsConf.vizTime,
@@ -287,7 +276,7 @@ object AladinCell extends ModelOptics with AladinCommon:
       ) { (props, ctx, _, _, ags, _, selectedIndex, agsOverride) =>
         {
           case (tracking,
-                Some(posAngle),
+                positions,
                 Some(constraints),
                 Some(wavelength),
                 vizTime,
@@ -296,63 +285,62 @@ object AladinCell extends ModelOptics with AladinCommon:
               ) =>
             import ctx.given
 
-            val pa = posAngle match
-              case PosAngleConstraint.Fixed(a)               => NonEmptyList.of(a).some
-              case PosAngleConstraint.AllowFlip(a)           => NonEmptyList.of(a, a.flip).some
-              case PosAngleConstraint.ParallacticOverride(a) => None
-              case _                                         => None
+            (positions, tracking.at(vizTime), props.paProps.map(_.agsState)).mapN {
+              (angles, base, agsState) =>
+                val positions = angles.map(pa => AgsPosition(pa, Offset.Zero))
+                val fpu       = scienceMode.flatMap(_.fpuAlternative)
+                val params    = AgsParams.GmosAgsParams(fpu, PortDisposition.Side)
 
-            (pa, tracking.at(vizTime), props.agsState).mapN { (angles, base, agsState) =>
-              val positions = angles.map(pa => AgsPosition(pa, Offset.Zero))
-              val fpu       = scienceMode.flatMap(_.fpuAlternative)
-              val params    = AgsParams.GmosAgsParams(fpu, PortDisposition.Side)
+                val sciencePositions =
+                  props.asterism.asList
+                    .flatMap(_.toSidereal)
+                    .flatMap(_.target.tracking.at(vizTime))
 
-              val sciencePositions =
-                props.asterism.asList
-                  .flatMap(_.toSidereal)
-                  .flatMap(_.target.tracking.at(vizTime))
-
-              val process = for
-                _ <- agsState.set(AgsState.Calculating).to[IO]
-                _ <-
-                  AgsClient[IO]
-                    .requestSingle(
-                      AgsMessage.Request(props.tid,
-                                         constraints,
-                                         wavelength,
-                                         base.value,
-                                         sciencePositions,
-                                         positions,
-                                         params,
-                                         candidates
+                val process = for
+                  _ <- agsState.set(AgsState.Calculating).to[IO]
+                  _ <-
+                    AgsClient[IO]
+                      .requestSingle(
+                        AgsMessage.Request(props.tid,
+                                           constraints,
+                                           wavelength,
+                                           base.value,
+                                           sciencePositions,
+                                           positions,
+                                           params,
+                                           candidates
+                        )
                       )
-                    )
-                    .map(_.map(_.sortPositions(positions)))
-                    .flatMap { r =>
-                      // Set the analysis
-                      (r.map(ags.setState).getOrEmpty *>
-                        // If we need to flip change the constraint
-                        r
-                          .map(_.headOption)
-                          .map(flipAngle(props, agsOverride))
-                          .orEmpty
-                          .unlessA(agsOverride.get.value) *>
-                        // set the selected index
-                        selectedIndex
-                          .set(
-                            0.some.filter(_ =>
+                      .map(_.map(_.sortPositions(positions)))
+                      .flatMap { r =>
+                        // Set the analysis
+                        (r.map(ags.setState).getOrEmpty *>
+                          // If we need to flip change the constraint
+                          r
+                            .map(_.headOption)
+                            .map(flipAngle(props, agsOverride))
+                            .orEmpty
+                            .unlessA(agsOverride.get.value) *>
+                          // set the selected index to the first entry
+                          {
+                            val index      = 0.some.filter(_ =>
                               r.exists(_.nonEmpty) && props.obsConf.canSelectGuideStar
                             )
-                          )
-                          .unlessA(agsOverride.get.value))
-                        .to[IO]
-                    }
-                    .unlessA(candidates.isEmpty)
-                    .handleErrorWith(t => Logger[IO].error(t)("ERROR IN AGS REQUEST"))
-              yield ()
-              process.guarantee(
-                agsOverride.async.set(ManualAgsOverride(false)) *> agsState.async.set(AgsState.Idle)
-              )
+                            val selectedGS = index.flatMap(i => r.flatMap(_.lift(i)))
+                            (selectedIndex
+                              .set(index) *> props.paProps
+                              .map(_.selectedGS.set(selectedGS))
+                              .getOrEmpty).unlessA(agsOverride.get.value)
+                          }).to[IO]
+                      }
+                      .unlessA(candidates.isEmpty)
+                      .handleErrorWith(t => Logger[IO].error(t)("ERROR IN AGS REQUEST"))
+                yield ()
+                process.guarantee(
+                  agsOverride.async.set(ManualAgsOverride(false)) *> agsState.async.set(
+                    AgsState.Idle
+                  )
+                )
             }.orEmpty
           case _ => IO.unit
         }
@@ -379,7 +367,11 @@ object AladinCell extends ModelOptics with AladinCommon:
           val selectedGSIndex = selectedGSIndexView.withOnMod(idx =>
             idx
               .map(agsResults.value.lift)
-              .map(flipAngle(props, agsManualOverride))
+              .map(a =>
+                flipAngle(props, agsManualOverride)(a) *> props.paProps
+                  .map(_.selectedGS.set(a))
+                  .getOrEmpty
+              )
               .getOrEmpty
           )
 
@@ -508,7 +500,7 @@ object AladinCell extends ModelOptics with AladinCommon:
 
           val renderToolbar: ((UserGlobalPreferences, TargetVisualOptions)) => VdomNode =
             case (_: UserGlobalPreferences, t: TargetVisualOptions) =>
-              val agsState = props.agsState.map(_.get).getOrElse(AgsState.Idle)
+              val agsState = props.paProps.map(_.agsState.get).getOrElse(AgsState.Idle)
               AladinToolbar(Fov(t.fovRA, t.fovDec),
                             mouseCoords.value,
                             agsState,
@@ -520,14 +512,14 @@ object AladinCell extends ModelOptics with AladinCommon:
           val renderAgsOverlay: ((UserGlobalPreferences, TargetVisualOptions)) => VdomNode =
             case (u: UserGlobalPreferences, t: TargetVisualOptions) =>
               if (t.agsOverlay.visible && usableGuideStar) {
-                props.agsState.map(agsState =>
+                props.paProps.map(paProps =>
                   <.div(
                     ExploreStyles.AgsOverlay,
                     AgsOverlay(
                       selectedGSIndex,
                       agsResults.value.count(_.isUsable),
                       selectedGuideStar,
-                      agsState.get
+                      paProps.agsState.get
                     )
                   )
                 )
