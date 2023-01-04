@@ -468,5 +468,3 @@ object ExploreStyles:
   val TimingWindowsHeader: Css                  = Css("timing-windows-header")
 
   val SingleTileMaximized: Css = Css("explore-single-tile-maximized")
-  val Loader: Css = Css("loader")
-}

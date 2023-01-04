@@ -20,7 +20,11 @@ object AsterismQueriesGQL {
       query($programId: ProgramId!) {
         asterismGroup(programId: $programId) {
           matches {
-            observationIds
+            observations {
+              matches {
+                id
+              }
+            }
             asterism {
               id
             }
@@ -29,7 +33,11 @@ object AsterismQueriesGQL {
 
         targetGroup(programId: $programId) {
           matches {
-            observationIds
+            observations {
+              matches {
+                id
+              }
+            }
             target {
               id
               name

@@ -86,7 +86,7 @@ object TargetTable extends TableHooks:
     obsIds:    ObsIdSet,
     targetId:  Target.Id
   )(using TransactionalClient[IO, ObservationDB]): IO[Unit] =
-    AsterismQueries.removeTargetsFromAsterisms[IO](programId, obsIds.toList, List(targetId)))
+    AsterismQueries.removeTargetsFromAsterisms[IO](programId, obsIds.toList, List(targetId))
 
   protected val component =
     ScalaFnComponent
@@ -112,7 +112,7 @@ object TargetTable extends TableHooks:
                     e.stopPropagationCB >>
                     props.targets.mod(_.flatMap(_.remove(cell.value))) >>
                     deleteSiderealTarget(props.programId, props.obsIds, cell.value).runAsync
-              ).tiny.compact,,
+              ).tiny.compact,
             size = 35.toPx,
             enableSorting = false
           )

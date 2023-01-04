@@ -111,7 +111,11 @@ object ObsQueriesGQL {
 
         targetGroup(programId: $programId) {
           matches {
-            observationIds
+            observations {
+              matches {
+                id
+              }
+            }
             target {
               id
               sidereal {
@@ -233,7 +237,7 @@ object ObsQueriesGQL {
   @GraphQL
   trait ObsEditQuery extends GraphQLOperation[ObservationDB] {
     val document = """
-      query($obsId: ObservationId!) {
+      query($programId: ProgramId!, $obsId: ObservationId!) {
         observation(observationId: $obsId) {
           id
           title
@@ -490,16 +494,22 @@ object ObsQueriesGQL {
               }
             }
           }
-          itc {
-            exposureTime {
-              microseconds
+        }
+
+        itc(programId: $programId, observationId: $obsId) {
+          result {
+            ... on ItcSuccess {
+              exposureTime {
+                microseconds
+              }
+              exposures
+              signalToNoise
             }
-            exposures
-            signalToNoise
           }
         }
       }
     """
+    // TODO: Consider ItcMissingParams and ItcServiceError
 
     object Data {
       object Observation {
@@ -520,8 +530,10 @@ object ObsQueriesGQL {
         }
 
         type ObservingMode = model.ScienceMode
+      }
 
-        object Itc {
+      object Itc {
+        object Result {
           type ExposureTime = lucuma.core.model.NonNegDuration
         }
       }

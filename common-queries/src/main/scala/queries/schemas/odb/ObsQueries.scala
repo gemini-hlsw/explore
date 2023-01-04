@@ -53,8 +53,8 @@ object ObsQueries:
   type SpectroscopyRequirementsData = ObservationData.ScienceRequirements.Spectroscopy
   val SpectroscopyRequirementsData = ObservationData.ScienceRequirements.Spectroscopy
 
-  type ITCSuccess = ObservationData.Itc
-  val ITCSuccess = ObservationData.Itc
+  type ITCSuccess = ObsEditQuery.Data.Itc.Result
+  val ITCSuccess = ObsEditQuery.Data.Itc.Result
 
   case class ScienceData(
     requirements: ScienceRequirementsData,
@@ -116,14 +116,14 @@ object ObsQueries:
           title = obs.title,
           subtitle = obs.subtitle,
           visualizationTime = obs.visualizationTime.map(_.toInstant),
-          itcExposureTime = obs.itc.map(_.asFixedExposureTime),
+          itcExposureTime = data.itc.map(_.result.asFixedExposureTime),
           scienceData = ScienceData(
             requirements = obs.scienceRequirements,
             mode = obs.observingMode,
             constraints = obs.constraintSet,
             targets = obs.targetEnvironment,
             posAngle = none, // obs.posAngleConstraint,
-            potITC = Pot(obs.itc)
+            potITC = Pot(data.itc.map(_.result))
           )
         )
       }
@@ -154,7 +154,7 @@ object ObsQueries:
         data.targetGroup.matches
           .toSortedMap(
             _.target.id,
-            group => TargetSummary(group.observationIds.toSet, group.target.id)
+            group => TargetSummary(group.observations.matches.map(_.id).toSet, group.target.id)
           )
       )
 

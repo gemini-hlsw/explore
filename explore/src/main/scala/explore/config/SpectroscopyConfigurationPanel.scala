@@ -136,12 +136,12 @@ object SpectroscopyConfigurationPanel {
           ).clearable
         ),
         FormEnumDropdownOptionalView(
-          id = "spectroscopy-capabilities".refined,
+          id = "spectroscopy-capability".refined,
           placeholder = "None",
-          value = spectroscopyCapabilities,
+          value = spectroscopyCapability,
           label = ReactFragment(
-            "Capabilities",
-            HelpIcon("configuration/capabilities.md".refined)
+            "Capability",
+            HelpIcon("configuration/capability.md".refined)
           )
         )
       )

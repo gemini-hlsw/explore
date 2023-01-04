@@ -734,7 +734,13 @@ object TargetTabContents extends TwoPanels:
                       .flatMap(ag => tids.removeSet(ag.targetIds))
                       .foldMap(uniqueTids =>
                         TargetPasteAction
-                          .pasteTargets(obsIds, uniqueTids, selectObsIds, props.expandedIds)
+                          .pasteTargets(
+                            props.programId,
+                            obsIds,
+                            uniqueTids,
+                            selectObsIds,
+                            props.expandedIds
+                          )
                           .set(undoContext)(())
                           .to[IO]
                       )

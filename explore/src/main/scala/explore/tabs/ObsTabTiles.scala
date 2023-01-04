@@ -132,7 +132,7 @@ object ObsTabTiles:
         import ctx.given
 
         ObsEditQuery
-          .query(props.obsId)
+          .query(props.programId, props.obsId)
           .map(
             _.asObsEditData
               .getOrElse(throw new Exception(s"Observation [${props.obsId}] not found"))

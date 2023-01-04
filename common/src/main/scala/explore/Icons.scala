@@ -266,6 +266,7 @@ object Icons {
   @JSImport("@fortawesome/pro-solid-svg-icons", "faBug")
   val faBug: FAIcon = js.native
 
+  @js.native
   @JSImport("@fortawesome/pro-duotone-svg-icons", "faSolarSystem")
   val faSolarSystem: FAIcon = js.native
 
