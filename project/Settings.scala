@@ -21,7 +21,7 @@ object Settings {
     val fs2Data                = "1.6.0"
     val fs2Dom                 = "0.1.0"
     val geminiLocales          = "0.7.0"
-    val http4s                 = "0.23.16"
+    val http4s                 = "0.23.17"
     val http4sDom              = "0.2.3"
     val kittens                = "3.0.0"
     val log4Cats               = "2.5.0"
