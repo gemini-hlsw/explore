@@ -236,15 +236,28 @@ $brightness: var(--aladin-image-brightness);
   display: none;
 }
 
-.ui.vertical.menu.explore-aladin-settings-menu {
+.p-menu.p-component.explore-aladin-settings-menu {
   background: var(--button-background-color-semi);
   border-color: var(--site-border-color);
-  min-height: auto;
-  margin-left: 0.1em;
-  cursor: pointer;
-
-  .item {
+  /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
+  font-size: var(--pl-mini-font-size);
+  width: 14em;
+ 
+  .p-menuitem-link {
     padding: 0.6em;
+
+    // otherwise, the slider handle can stick out too far.
+    &:has(.aladin-range-control) {
+      padding-right: 1rem;
+    }
+
+    .aladin-range-control {
+      width: 100%;
+    
+      .p-slider {
+        width: 100%;
+      }
+    }
   }
 }
 
@@ -304,19 +317,6 @@ $brightness: var(--aladin-image-brightness);
 
   .explore-aladin-button {
     position: absolute;
-  }
-
-  .explore-aladin-settings-menu {
-    position: absolute;
-    left: 35px;
-
-    &.ui.compact.vertical.menu {
-      width: 14em !important; // in SUI it is important too
-    }
-  }
-
-  .aladin-range-control {
-    margin: 0.3rem 0.7rem;
   }
 }
 

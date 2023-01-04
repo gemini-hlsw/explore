@@ -14,13 +14,5 @@ extension (fov: Fov)
     (fov.x.toMicroarcseconds - newFov.x.toMicroarcseconds).abs < 1e7 ||
       (fov.y.toMicroarcseconds - newFov.y.toMicroarcseconds).abs < 1e7
 
-object SettingsMenuState extends NewType[Boolean]:
-  inline def Open: SettingsMenuState   = SettingsMenuState(true)
-  inline def Closed: SettingsMenuState = SettingsMenuState(false)
-  extension (s: SettingsMenuState)
-    def flip: SettingsMenuState = if (s.value) SettingsMenuState.Closed else SettingsMenuState.Open
-
-type SettingsMenuState = SettingsMenuState.Type
-
 object AddDisabled extends NewType[Boolean]
 type AddDisabled = AddDisabled.Type

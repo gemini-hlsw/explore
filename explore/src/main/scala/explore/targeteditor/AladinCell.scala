@@ -70,13 +70,15 @@ import org.typelevel.log4cats.Logger
 import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.odb.ObsQueries
 import react.aladin.Fov
-import react.common.ReactFnProps
+import react.common.*
 import react.primereact.Button
 import react.primereact.Checkbox
 import react.primereact.Divider
+import react.primereact.MenuItem
+import react.primereact.PopupMenu
+import react.primereact.PopupMenuRef
 import react.primereact.ProgressBar
-import react.semanticui.collections.menu.*
-import react.semanticui.sizes.*
+import react.primereact.hooks.all.*
 
 import java.time.Duration
 import java.time.Instant
@@ -104,6 +106,8 @@ object AladinCell extends ModelOptics with AladinCommon:
 
   private type Props = AladinCell
   private given Reusability[View[ManualAgsOverride]] = Reusability.by(_.get)
+  private given Reusability[PopupMenuRef]            =
+    Reusability.by(ref => Option(ref.ref.raw.current).isDefined)
 
   // We want to re render only when the vizTime changes at least a month
   // We keep the candidates data pm corrected for the viz time
@@ -353,10 +357,9 @@ object AladinCell extends ModelOptics with AladinCommon:
           case _ => IO.unit
         }
       }
-      // open settings menu
-      .useState(SettingsMenuState.Closed)
       // mouse coordinates, starts on the base
-      .useStateBy((props, _, _, _, _, _, _, _, _) => props.asterism.baseTracking.baseCoordinates)
+      .useStateBy((props, _, _, _, _, _, _, _) => props.asterism.baseTracking.baseCoordinates)
+      .usePopupMenuRef
       .renderWithReuse {
         (
           props,
@@ -367,8 +370,8 @@ object AladinCell extends ModelOptics with AladinCommon:
           root,
           selectedGSIndexView,
           agsManualOverride,
-          openSettings,
-          mouseCoords
+          mouseCoords,
+          menuRef
         ) =>
           import ctx.given
 
@@ -446,9 +449,7 @@ object AladinCell extends ModelOptics with AladinCommon:
               .zoom(
                 Pot.readyPrism.andThen(targetPrefs).andThen(TargetVisualOptions.fullScreen)
               )
-              .withOnMod(v =>
-                openSettings.setState(SettingsMenuState.Closed) *> prefsSetter(fullScreen = v)
-              )
+              .withOnMod(v => prefsSetter(fullScreen = v))
 
           val allowMouseZoomView =
             options
@@ -532,6 +533,73 @@ object AladinCell extends ModelOptics with AladinCommon:
                 )
               } else EmptyVdom
 
+          val menuItems = List(
+            MenuItem.Custom(
+              agsCandidatesView
+                .zoom(Visible.boolIso.reverse.asLens)
+                .asView
+                .map(view =>
+                  CheckboxView(
+                    id = "ags-candidates".refined,
+                    value = view,
+                    label = "Show Catalog"
+                  )
+                )
+            ),
+            MenuItem.Custom(
+              agsOverlayView
+                .zoom(Visible.boolIso.reverse.asLens)
+                .asView
+                .map(view =>
+                  CheckboxView(
+                    id = "ags-overlay".refined,
+                    value = view,
+                    label = "AGS"
+                  )
+                )
+            ),
+            MenuItem.Separator,
+            MenuItem.Custom(
+              saturationView
+                .zoom(unsafeRangeLens)
+                .asView
+                .map(view =>
+                  SliderView(
+                    id = "saturation".refined,
+                    label = "Saturation",
+                    clazz = ExploreStyles.AladinRangeControl,
+                    value = view
+                  )
+                )
+            ),
+            MenuItem.Custom(
+              brightnessView
+                .zoom(unsafeRangeLens)
+                .asView
+                .map(view =>
+                  SliderView(
+                    id = "brightness".refined,
+                    label = "Brightness",
+                    clazz = ExploreStyles.AladinRangeControl,
+                    value = view
+                  )
+                )
+            ),
+            MenuItem.Separator,
+            MenuItem.Custom(
+              allowMouseZoomView
+                .zoom(AladinMouseScroll.value.asLens)
+                .asView
+                .map(view =>
+                  CheckboxView(
+                    id = "allow-zoom".refined,
+                    value = view,
+                    label = "Scroll to zoom"
+                  )
+                )
+            )
+          )
+
           <.div(
             ExploreStyles.TargetAladinCell,
             <.div(
@@ -545,82 +613,18 @@ object AladinCell extends ModelOptics with AladinCommon:
                 .small,
               <.div(
                 ExploreStyles.AladinToolbox,
-                Button(onClick = openSettings.modState(_.flip)).withMods(
+                Button(onClickE = menuRef.toggle).withMods(
                   ExploreStyles.ButtonOnAladin,
-                  ^.onMouseEnter --> openSettings.setState(SettingsMenuState.Open),
                   Icons.ThinSliders
-                ),
-                Menu(vertical = true,
-                     compact = true,
-                     size = Mini,
-                     clazz = ExploreStyles.AladinSettingsMenu
-                )(
-                  ^.onMouseLeave --> openSettings.setState(SettingsMenuState.Closed),
-                  MenuItem(
-                    agsCandidatesView
-                      .zoom(Visible.boolIso.reverse.asLens)
-                      .asView
-                      .map(view =>
-                        CheckboxView(
-                          id = "ags-candidates".refined,
-                          value = view,
-                          label = "Show Catalog"
-                        )
-                      )
-                  ),
-                  MenuItem(
-                    agsOverlayView
-                      .zoom(Visible.boolIso.reverse.asLens)
-                      .asView
-                      .map(view =>
-                        CheckboxView(
-                          id = "ags-overlay".refined,
-                          value = view,
-                          label = "AGS"
-                        )
-                      )
-                  ),
-                  Divider(),
-                  saturationView
-                    .zoom(unsafeRangeLens)
-                    .asView
-                    .map(view =>
-                      SliderView(
-                        id = "saturation".refined,
-                        label = "Saturation",
-                        clazz = ExploreStyles.AladinRangeControl,
-                        value = view
-                      )
-                    ),
-                  brightnessView
-                    .zoom(unsafeRangeLens)
-                    .asView
-                    .map(view =>
-                      SliderView(
-                        id = "brightness".refined,
-                        label = "Brightness",
-                        clazz = ExploreStyles.AladinRangeControl,
-                        value = view
-                      )
-                    ),
-                  Divider(),
-                  MenuItem(
-                    allowMouseZoomView
-                      .zoom(AladinMouseScroll.value.asLens)
-                      .asView
-                      .map(view =>
-                        CheckboxView(
-                          id = "allow-zoom".refined,
-                          value = view,
-                          label = "Scroll to zoom"
-                        )
-                      )
-                  )
-                ).when(openSettings.value.value)
+                )
               ),
               potRenderView[(UserGlobalPreferences, TargetVisualOptions)](renderCell)(options),
               potRenderView[(UserGlobalPreferences, TargetVisualOptions)](renderToolbar)(options),
-              potRenderView[(UserGlobalPreferences, TargetVisualOptions)](renderAgsOverlay)(options)
-            )
+              potRenderView[(UserGlobalPreferences, TargetVisualOptions)](renderAgsOverlay)(
+                options
+              )
+            ),
+            PopupMenu(model = menuItems, clazz = ExploreStyles.AladinSettingsMenu)
+              .withRef(menuRef.ref)
           )
       }
