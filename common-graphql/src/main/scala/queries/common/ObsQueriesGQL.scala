@@ -35,11 +35,6 @@ object ObsQueriesGQL {
             status
             activeStatus
             visualizationTime
-            plannedTime {
-              execution {
-                microseconds
-              }
-            }
             observingMode {
               gmosNorthLongSlit {
                 initialGrating
@@ -132,6 +127,12 @@ object ObsQueriesGQL {
       }
     """
 
+    // plannedTime {
+    //   execution {
+    //     microseconds
+    //   }
+    // }
+
     object Data {
       object Observations {
         object Matches {
@@ -162,7 +163,7 @@ object ObsQueriesGQL {
   trait ProgramObservationsEditSubscription extends GraphQLOperation[ObservationDB] {
     val document = """
       subscription($programId: ProgramId!) {
-        observationEdit(programId: $programId) {
+        observationEdit(input: {programId: $programId}) {
           id
         }
       }
@@ -545,7 +546,7 @@ object ObsQueriesGQL {
   trait ObservationEditSubscription extends GraphQLOperation[ObservationDB] {
     val document = """
       subscription($obsId: ObservationId!) {
-        observationEdit(observationId: $obsId) {
+        observationEdit(input: {observationId: $obsId}) {
           id
         }
       }

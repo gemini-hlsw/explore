@@ -145,7 +145,8 @@ object ObsQueries:
               mtch.constraintSet,
               mtch.status,
               mtch.activeStatus,
-              mtch.plannedTime.execution,
+              // mtch.plannedTime.execution,
+              java.time.Duration.ZERO,
               mtch.observingMode,
               none // mtch.visualizationTime
             )

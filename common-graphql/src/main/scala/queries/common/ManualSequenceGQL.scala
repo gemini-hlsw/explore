@@ -23,11 +23,6 @@ object ManualSequenceGQL {
           matches {
             config:manualConfig {
               instrument
-              plannedTime {
-                setup {
-                  microseconds
-                }
-              }
               ... on GmosNorthManualConfig {
                 staticN: static {
                   stageMode
@@ -243,6 +238,12 @@ object ManualSequenceGQL {
         }
       }
     """
+
+    // plannedTime {
+    //   execution {
+    //     microseconds
+    //   }
+    // }
 
     implicit def offsetComponentDecoder[T]: Decoder[Offset.Component[T]] = Decoder.instance(c =>
       c.downField("microarcseconds")

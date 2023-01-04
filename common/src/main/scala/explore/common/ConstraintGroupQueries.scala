@@ -45,7 +45,8 @@ object ConstraintGroupQueries:
       obsR.subtitle,
       obsR.status,
       obsR.activeStatus,
-      obsR.plannedTime.execution,
+      // obsR.plannedTime.execution,
+      java.time.Duration.ZERO,
       obsR.observingMode
     )
 

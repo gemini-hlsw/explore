@@ -52,11 +52,6 @@ object ConstraintGroupQueriesGQL {
             subtitle
           	status
           	activeStatus
-          	plannedTime {
-          	  execution {
-          	    microseconds
-          	  }
-          	}
             observingMode {
               gmosNorthLongSlit {
                 grating
@@ -73,6 +68,12 @@ object ConstraintGroupQueriesGQL {
         }
       }
       """
+
+    // plannedTime {
+    //   execution {
+    //     microseconds
+    //   }
+    // }
 
     object Data {
       object ConstraintSetGroup {
