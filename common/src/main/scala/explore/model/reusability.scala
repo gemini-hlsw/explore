@@ -102,6 +102,7 @@ object reusability:
   given Reusability[AgsPosition]                        = Reusability.byEq
   given Reusability[AgsParams]                          = Reusability.byEq
   given Reusability[AgsState]                           = Reusability.byEq
+  given Reusability[AgsAnalysis]                        = Reusability.byEq
 
   given Reusability[SortedMap[Partner, IntPercent]] =
     Reusability.by((_: SortedMap[Partner, IntPercent]).toMap)(Reusability.map)

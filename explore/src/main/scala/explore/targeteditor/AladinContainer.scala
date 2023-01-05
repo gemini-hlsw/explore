@@ -55,12 +55,7 @@ case class AladinContainer(
   updateViewOffset:       Offset => Callback,
   selectedGuideStar:      Option[AgsAnalysis],
   guideStarCandidates:    List[AgsAnalysis]
-) extends ReactFnProps(AladinContainer.component) {
-  // Move to lucuma-catalog
-  def posAngle: Option[Angle] = selectedGuideStar match
-    case Some(AgsAnalysis.Usable(_, _, _, _, v)) => v.head._1.posAngle.some
-    case _                                       => None
-}
+) extends ReactFnProps(AladinContainer.component)
 
 object AladinContainer extends AladinCommon {
 
@@ -142,8 +137,9 @@ object AladinContainer extends AladinCommon {
       }
       // Memoized svg
       .useMemoBy((p, allCoordinates, _, _) =>
-        (allCoordinates, p.obsConf.scienceMode, p.posAngle, p.options, p.selectedGuideStar)
-      ) { (_, _, _, _) => (allCoordinates, mode, posAngle, options, gs) =>
+        (allCoordinates, p.obsConf.scienceMode, p.options, p.selectedGuideStar)
+      ) { (_, _, _, _) => (allCoordinates, mode, options, gs) =>
+        val posAngle             = gs.posAngle
         val candidatesVisibility =
           ExploreStyles.GuideStarCandidateVisible.when_(options.agsCandidates.visible)
 
@@ -186,7 +182,6 @@ object AladinContainer extends AladinCommon {
          props.options.agsCandidates.visible,
          props.options.fullScreen,
          props.options.fovRA,
-         props.posAngle,
          props.obsConf.vizTime,
          props.obsConf.scienceMode,
          props.selectedGuideStar,
@@ -198,13 +193,12 @@ object AladinContainer extends AladinCommon {
           visible,
           _,
           fovRA,
-          posAngle,
           obsInstant,
           scienceMode,
           selectedGS,
           allCoordinates
         ) =>
-          posAngle
+          selectedGS.posAngle
             .map { posAngle =>
               val (baseCoordinates, scienceTargets) = allCoordinates.value
 

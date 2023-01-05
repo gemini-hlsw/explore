@@ -266,7 +266,7 @@ object AladinCell extends ModelOptics with AladinCommon:
       // Request ags calculation
       .useEffectWithDepsBy((p, _, _, candidates, _, _, _, _) =>
         (p.asterism.baseTracking,
-         p.obsConf.positions,
+         p.obsConf.posAngleConstraint.anglesToTest,
          p.obsConf.constraints,
          p.obsConf.wavelength,
          p.obsConf.vizTime,

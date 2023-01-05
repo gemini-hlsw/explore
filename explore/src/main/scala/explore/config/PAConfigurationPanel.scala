@@ -96,7 +96,7 @@ object PAConfigurationPanel:
         val selectedAngle = props.posAngleView.get match
           case None =>
             props.selectedPA
-              .map(a => <.label(f"Selected Angle: ${a.toDoubleDegrees}%.0f °"))
+              .map(a => <.label(f"${a.toDoubleDegrees}%.0f °"))
           case _    => None
 
         def posAngleEditor(pa: View[Angle]) =

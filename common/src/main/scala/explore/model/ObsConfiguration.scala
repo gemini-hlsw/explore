@@ -8,7 +8,7 @@ import cats.data.NonEmptyList
 import cats.derived.*
 import cats.syntax.all.*
 import eu.timepit.refined.cats.*
-import lucuma.core.math.Angle
+import lucuma.ags.*
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.PosAngleConstraint
@@ -24,15 +24,8 @@ case class ObsConfiguration(
   constraints:        Option[ConstraintSet],
   wavelength:         Option[Wavelength]
 ) derives Eq {
-  // Move to lucuma-catalog
-  def positions = posAngleConstraint match
-    case Some(PosAngleConstraint.Fixed(a))               => NonEmptyList.of(a).some
-    case Some(PosAngleConstraint.AllowFlip(a))           => NonEmptyList.of(a, a.flip).some
-    case Some(PosAngleConstraint.ParallacticOverride(a)) => NonEmptyList.of(a).some
-    case None                                            => NonEmptyList.fromList(ObsConfiguration.UnconstrainedAngles)
-    case _                                               => None
 
-  def hasPosAngleConstraint: Boolean = positions.isDefined
+  def hasPosAngleConstraint: Boolean = posAngleConstraint.anglesToTest.isDefined
 
   def canSelectGuideStar: Boolean =
     hasPosAngleConstraint && scienceMode.isDefined && constraints.isDefined
@@ -45,6 +38,3 @@ object ObsConfiguration:
   val posAngleConstraint = Focus[ObsConfiguration](_.posAngleConstraint)
   val constraints        = Focus[ObsConfiguration](_.constraints)
   val wavelength         = Focus[ObsConfiguration](_.wavelength)
-
-  val UnconstrainedAngles =
-    (0 until 360 by 10).map(a => Angle.fromDoubleDegrees(a.toDouble)).toList
