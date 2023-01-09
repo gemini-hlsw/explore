@@ -35,9 +35,11 @@ import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 import react.common.Css
 import react.common.ReactFnProps
+import react.primereact.MultiSelect
 import react.primereact.PrimeStyles
-import react.semanticui.collections.menu.MenuHeader
-import react.semanticui.modules.dropdown.*
+import react.primereact.SelectItem
+import react.primereact.SelectItemGroup
+import react.primereact.SelectItemGroups
 import spire.math.Rational
 
 import scala.collection.immutable.SortedSet
@@ -62,15 +64,6 @@ object ImagingConfigurationPanel {
   private val combination  =
     byFilterType.getOrElse(FilterType.Combination, Nil).sortBy(_.centralWavelength)
 
-  private def valuesToFilters(v: js.Array[String]): SortedSet[AvailableFilter] =
-    SortedSet(
-      v.map { t =>
-        ImagingConfigurationOptions.availableOptions.find(_.tag === t)
-      }.collect { case Some(x) =>
-        x
-      }.toList: _*
-    )
-
   private def formatCentral(r: Quantity[PosBigDecimal, Micrometer]): String =
     if (r.value > 1000)
       f"${r.value.value.toDouble}%.3f μm"
@@ -80,31 +73,17 @@ object ImagingConfigurationPanel {
   private def formatRange(r: Quantity[Int, Nanometer]): String =
     s"${r.value.toInt} nm"
 
-  private def filterItem(f: Either[SectionHeader, AvailableFilter]) =
-    DropdownItem(
-      value = f.fold(identity, _.tag),
-      text = f.fold(identity, _.shortName),
-      content = f match {
-        case Left(f)  =>
-          MenuHeader(content = f): VdomNode
-        case Right(f) =>
-          <.div(
-            ExploreStyles.ConfigurationFilterItem,
-            <.span(f.shortName),
-            <.span(formatCentral(f.centralWavelength.toMicrometers)),
-            <.span(f.range.map(formatRange))
-          )
-      },
-      selected = false
-    )
+  extension (filter: AvailableFilter)
+    def toSelectItem: SelectItem[AvailableFilter] =
+      SelectItem(value = filter, label = filter.shortName)
 
-  private val options: List[Option[Either[SectionHeader, AvailableFilter]]] =
-    "Broad band".asLeft.some ::
-      broadBand.map(f => f.asRight.some) :::
-      ("Narrow band".asLeft.some ::
-        narrowBand.map(f => f.asRight.some)) :::
-      ("Combination".asLeft.some ::
-        combination.map(f => f.asRight.some))
+  private val filterGroups: SelectItemGroups[AvailableFilter] = SelectItemGroups(groups =
+    List(
+      SelectItemGroup(label = "Broad Band", options = broadBand.map(_.toSelectItem)),
+      SelectItemGroup(label = "Narrow Band", options = narrowBand.map(_.toSelectItem)),
+      SelectItemGroup(label = "Combination", options = combination.map(_.toSelectItem))
+    )
+  )
 
   protected val component =
     ScalaFnComponent[Props] { p =>
@@ -114,25 +93,23 @@ object ImagingConfigurationPanel {
       val capabilities  = p.options.zoom(ImagingConfigurationOptions.capabilities)
 
       ReactFragment(
-        <.label("Filter", HelpIcon("configuration/filter.md".refined), ExploreStyles.SkipToNext),
-        Dropdown(
-          placeholder = "Filters",
-          clazz = ExploreStyles.ConfigurationFilter,
-          selection = true,
-          multiple = true,
-          search = true,
-          value = filters.get.toList.map(_.tag).toJSArray,
-          options = options.collect { case Some(x) => filterItem(x) },
-          onChange = (ddp: Dropdown.DropdownProps) =>
-            ddp.value.toOption
-              .map(r =>
-                (r: Any) match {
-                  case v: js.Array[?] =>
-                    filters.set(valuesToFilters(v.collect { case s: String => s }))
-                  case _              => Callback.empty
-                }
-              )
-              .getOrEmpty
+        <.label("Filter", HelpIcon("configuration/filter.md".refined), LucumaStyles.FormFieldLabel),
+        MultiSelect(
+          id = "filters",
+          value = filters.get.toList,
+          options = filterGroups,
+          clazz = LucumaStyles.FormField,
+          panelClass = ExploreStyles.ConfigurationFilter,
+          filter = true,
+          showSelectAll = false,
+          display = MultiSelect.Display.Chip,
+          onChange = fs => filters.set(SortedSet.from(fs)),
+          itemTemplate = si =>
+            <.div(
+              <.span(si.value.shortName),
+              <.span(formatCentral(si.value.centralWavelength.toMicrometers)),
+              <.span(si.value.range.map(formatRange))
+            )
         ),
         FormInputTextView(
           id = "configuration-fov".refined,

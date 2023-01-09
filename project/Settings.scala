@@ -245,7 +245,6 @@ object Settings {
         "edu.gemini" %%% "lucuma-react-highcharts",
         "edu.gemini" %%% "lucuma-react-hotkeys",
         "edu.gemini" %%% "lucuma-react-resize-detector",
-        "edu.gemini" %%% "lucuma-react-semantic-ui",
         "edu.gemini" %%% "lucuma-react-moon",
         "edu.gemini" %%% "lucuma-react-prime-react"
       )(lucumaReact)

@@ -49,6 +49,21 @@ body {
   width: 100dvw;
 }
 
+// Reusability overlays.
+body.hide-reusability {
+  &>div:not(#root)[title^="Last update reason"] {
+    display: none;
+  }
+}
+
+.input-replacement-icon {
+  /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
+  line-height: var(--pl-input-line-height);
+  border: 1px dashed transparent; // the border makes the sizing work.
+  /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
+  padding: var(--pl-input-padding)
+}
+
 // -------
 // Tile
 // -------
@@ -970,6 +985,28 @@ $search-preview-margin: 5px;
 .obs-tree-item .obs-badge.obs-badge-selected {
   background-color: var(--obs-selected-badge-background);
   box-shadow: 0 0 0 2px var(--site-solid-border-color);
+}
+
+// ------
+// Imaging Configuration
+// ------
+.explore-configuration-filter .p-multiselect-item >span {
+  width: 100%;
+
+  div {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    justify-items: end;
+
+    span:first-child {
+      justify-self: start;
+    }
+
+    span:not(:first-child) {
+      color: var(--site-input-placeholder-focus-color);
+      font-size: smaller;
+    }
+  }
 }
 
 // ------

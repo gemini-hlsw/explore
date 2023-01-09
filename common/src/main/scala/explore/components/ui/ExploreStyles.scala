@@ -302,12 +302,10 @@ object ExploreStyles:
 
   val StepGuided: Css = Css("step-guided")
 
-  val ExploreForm: Css             = Css("explore-form")
   val TargetImportForm: Css        = Css("explore-target-import-form")
   val TargetImportDescription: Css = Css("explore-target-import-description")
   val TargetImportErrors: Css      = Css("explore-target-import-errors")
   val TargetImportDialog: Css      = Css("explore-target-import-dialog")
-  val SkipToNext: Css              = Css("explore-skip-to-next")
   val SeqGenParametersForm: Css    = Css("seq-gen-parameters-form")
 
   // Configuration tile
@@ -327,7 +325,6 @@ object ExploreStyles:
   val AdvancedConfigurationCol3: Css    = Css("explore-advanced-configuration-col3")
   val AdvancedConfigurationButtons: Css = Css("explore-advanced-configuration-buttons")
   val ConfigurationFilter: Css          = Css("explore-configuration-filter") |+| Css("field")
-  val ConfigurationFilterItem: Css      = Css("explore-configuration-filter-item")
   val ExploreTable: Css                 = Css("explore-table")
   val ExploreTableEmpty: Css            = Css("explore-table-emptymessage")
   val SpectroscopyTableEmpty: Css       = Css("spectroscopy-table-emptymessage")
