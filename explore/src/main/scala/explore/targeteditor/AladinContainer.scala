@@ -90,28 +90,38 @@ object AladinContainer extends AladinCommon {
       case GuideSpeed.Slow   =>
         ExploreStyles.GuideSpeedSlow
 
+  private def baseAndScience(p: Props) = {
+    val base    = p.asterism.baseTracking
+      .at(p.obsConf.vizTime)
+      .map(_.value)
+      .getOrElse(p.asterism.baseTracking.baseCoordinates)
+    val science = p.asterism.toSidereal
+      .map(t =>
+        (t.id === p.asterism.focus.id,
+         t.target.name,
+         t.target.tracking.at(p.obsConf.vizTime),
+         t.target.tracking.baseCoordinates
+        )
+      )
+    (base, science)
+  }
+
   private val component =
     ScalaFnComponent
       .withHooks[Props]
       // Base coordinates and science targets with pm correction if possible
-      .useMemoBy(p => (p.asterism, p.obsConf.vizTime)) { p => (_, i) =>
-        val base    = p.asterism.baseTracking
-          .at(i)
-          .map(_.value)
-          .getOrElse(p.asterism.baseTracking.baseCoordinates)
-        val science = p.asterism.toSidereal
-          .map(t =>
-            (t.id === p.asterism.focus.id,
-             t.target.name,
-             t.target.tracking.at(i),
-             t.target.tracking.baseCoordinates
-            )
-          )
-        (base, science)
-      }
+      .useStateBy(p => baseAndScience(p))
       // View coordinates base coordinates with pm correction + user panning
       .useStateBy { (p, baseCoordinates) =>
         baseCoordinates.value._1.offsetBy(Angle.Angle0, p.options.viewOffset)
+      }
+      .useEffectWithDepsBy((p, _, _) => (p.asterism, p.obsConf.vizTime)) {
+        (p, baseCoordinates, currentPos) => _ =>
+          val (base, science) = baseAndScience(p)
+          baseCoordinates.setState((base, science)) *>
+            currentPos.setState(
+              base.offsetBy(Angle.Angle0, p.options.viewOffset)
+            )
       }
       // Ref to the aladin component
       .useRefToScalaComponent(AladinComp)
@@ -144,7 +154,7 @@ object AladinContainer extends AladinCommon {
           ExploreStyles.GuideStarCandidateVisible.when_(options.agsCandidates.visible)
 
         val probeArmShapes = (gs, posAngle).mapN { case (c, posAngle) =>
-          val gsOffset = allCoordinates._1.diff(c.target.tracking.baseCoordinates).offset
+          val gsOffset = allCoordinates.value._1.diff(c.target.tracking.baseCoordinates).offset
           GmosGeometry.probeShapes(posAngle,
                                    gsOffset,
                                    Offset.Zero,
