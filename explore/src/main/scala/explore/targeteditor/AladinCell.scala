@@ -247,24 +247,28 @@ object AladinCell extends ModelOptics with AladinCommon:
       }
       // Selected GS index. Should be stored in the db
       .useStateViewWithReuse(none[Int])
+      // mouse coordinates, starts on the base
+      .useStateBy((props, _, _, _, _, _, _) => props.asterism.baseTracking.baseCoordinates)
       // Reset offset and gs if asterism change
-      .useEffectWithDepsBy((p, _, _, _, _, _, _) => p.asterism)(
-        (props, ctx, options, _, _, _, gs) =>
+      .useEffectWithDepsBy((p, _, _, _, _, _, _, _) => p.asterism)(
+        (props, ctx, options, _, _, _, gs, mouseCoords) =>
           _ => {
             val (_, offsetOnCenter) = offsetViews(props, options)(ctx)
 
-            // if the coordinates change, reset ags and offset
-            gs.set(none) *> offsetOnCenter.set(Offset.Zero)
+            // if the coordinates change, reset ags, offset and mouse coordinates
+            gs.set(none) *> offsetOnCenter.set(Offset.Zero) *> mouseCoords.setState(
+              props.asterism.baseTracking.baseCoordinates
+            )
           }
       )
       .useStateView(ManualAgsOverride(false))
       // Reset selection if pos angle changes except for manual selection changes
-      .useEffectWithDepsBy((p, _, _, _, _, _, _, _) => p.obsConf.posAngleConstraint)(
-        (_, _, _, _, _, _, selectedIndex, agsOverride) =>
+      .useEffectWithDepsBy((p, _, _, _, _, _, _, _, _) => p.obsConf.posAngleConstraint)(
+        (_, _, _, _, _, _, selectedIndex, _, agsOverride) =>
           _ => selectedIndex.set(none).unless_(agsOverride.get.value)
       )
       // Request ags calculation
-      .useEffectWithDepsBy((p, _, _, candidates, _, _, _, _) =>
+      .useEffectWithDepsBy((p, _, _, candidates, _, _, _, _, _) =>
         (p.asterism.baseTracking,
          p.obsConf.posAngleConstraint.anglesToTest,
          p.obsConf.constraints,
@@ -273,7 +277,7 @@ object AladinCell extends ModelOptics with AladinCommon:
          p.obsConf.scienceMode,
          candidates.value
         )
-      ) { (props, ctx, _, _, ags, _, selectedIndex, agsOverride) =>
+      ) { (props, ctx, _, _, ags, _, selectedIndex, _, agsOverride) =>
         {
           case (tracking,
                 positions,
@@ -345,8 +349,6 @@ object AladinCell extends ModelOptics with AladinCommon:
           case _ => IO.unit
         }
       }
-      // mouse coordinates, starts on the base
-      .useStateBy((props, _, _, _, _, _, _, _) => props.asterism.baseTracking.baseCoordinates)
       .usePopupMenuRef
       .renderWithReuse {
         (
@@ -357,8 +359,8 @@ object AladinCell extends ModelOptics with AladinCommon:
           agsResults,
           root,
           selectedGSIndexView,
-          agsManualOverride,
           mouseCoords,
+          agsManualOverride,
           menuRef
         ) =>
           import ctx.given
