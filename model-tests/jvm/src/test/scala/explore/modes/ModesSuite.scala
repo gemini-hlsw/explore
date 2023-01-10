@@ -58,7 +58,7 @@ class ModesSuite extends CatsEffectSuite {
           FocalPlane.SingleSlit.some,
           none,
           Some(ImageQuality.PointThree),
-          Wavelength.fromNanometers(500),
+          Wavelength.fromIntNanometers(500),
           1.refined[Positive].some,
           BigDecimal(0).refined[NonNegative].withUnit[Micrometer].some,
           Angle.fromDoubleArcseconds(1).some,
@@ -81,7 +81,7 @@ class ModesSuite extends CatsEffectSuite {
     IO(allModesFixture())
       .map(
         _.spectroscopyModes(
-          dwmin = ModeBandWidth(Rational.zero.withUnit[Nanometer]).some,
+          dwmin = ModeBandwidth(BigDecimal(0).withUnit[Nanometer]).some,
           dwmax = none,
           rmin = BigDecimal(300).refined[Positive].some,
           dims = ModeSpatialDimension.One.some,
@@ -91,7 +91,7 @@ class ModesSuite extends CatsEffectSuite {
           skysub = ModeSkysub.High.some,
           iqmax = ModeIQ(Angle.fromDoubleArcseconds(1.0)).some,
           fov = none,
-          wlen = Wavelength.fromNanometers(800)
+          wlen = Wavelength.fromIntNanometers(800)
         )
       )
       // .flatTap(_.traverse(IO.println))

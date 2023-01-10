@@ -100,7 +100,7 @@ object ItcSpectroscopyPlot {
     val plotLines = chart.chartType match
       case ItcChartType.SignalChart => js.Array()
       case ItcChartType.S2NChart    =>
-        val value = signalToNoiseAt.orElse(maxSNWavelength).map(_.nanometer.value.toDouble)
+        val value = signalToNoiseAt.orElse(maxSNWavelength).map(_.toNanometers.value.value.toDouble)
 
         value
           .foldMap(value =>

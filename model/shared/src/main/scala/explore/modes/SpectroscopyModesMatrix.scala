@@ -243,7 +243,7 @@ case class SpectroscopyModeRow(
       case b: Point[Quantity[BigDecimal, Micrometer]]   => b.value.some
       case _                                            => none
     micros
-      .flatMap(m => Wavelength.fromPicometers.getOption(m.toUnit[Picometer].value.toInt))
+      .flatMap(m => Wavelength.fromIntPicometers(m.toUnit[Picometer].value.toInt))
       .map(CoverageCenterWavelength(_))
   }
 
@@ -293,10 +293,11 @@ object SpectroscopyModeRow {
 
         val λr     = r.wavelengthCoverage.toValue[BigDecimal]
         // Coverage of allowed wavelength
-        val λmin   = r.minWavelength.w.micrometer
-        val λmax   = r.maxWavelength.w.micrometer
+        // Can be simplified once coulomb-refined is available
+        val λmin   = r.minWavelength.w.toMicrometers.value.value.withUnit[Micrometer]
+        val λmax   = r.maxWavelength.w.toMicrometers.value.value.withUnit[Micrometer]
         val Δ      = λr / TwoFactor
-        val λ      = w.micrometer
+        val λ      = w.toMicrometers.value.value.withUnit[Micrometer]
         val λa     = λ - Δ
         val λb     = λ + Δ
         // if we are below min clip but shift the coverage
@@ -374,7 +375,7 @@ trait SpectroscopyModesMatrixDecoders extends Decoders {
 
 case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
   val ScoreBump   = Rational(1, 2)
-  val FilterLimit = Wavelength.fromNanometers(650)
+  val FilterLimit = Wavelength.fromIntNanometers(650)
 
   def filtered(
     focalPlane:   Option[FocalPlane] = None,
@@ -400,39 +401,39 @@ case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
     // Calculates a score for each mode for sorting purposes. It is down in Rational space, we may change it to double as we don't really need high precission for this
     val score: SpectroscopyModeRow => Rational = { r =>
       // Difference in wavelength
-      val deltaWave: Rational       =
+      val deltaWave: BigDecimal       =
         wavelength
-          .map(w => (r.optimalWavelength.w.nanometer - w.nanometer).value.abs)
-          .getOrElse(Rational.zero)
+          .map(w => r.optimalWavelength.w.diff(w).abs.toNanometers.value)
+          .getOrElse(BigDecimal(0))
       // Difference in slit width
-      val deltaSlitWidth: Rational  =
+      val deltaSlitWidth: Rational    =
         iq.map(i =>
           (Rational(r.slitWidth.size.toMicroarcseconds, 1000000) - i.toArcSeconds.value).abs
         ).getOrElse(Rational.zero)
       // Difference in resolution
-      val deltaRes: BigDecimal      =
+      val deltaRes: BigDecimal        =
         resolution.foldMap(re => (re.value - r.resolution.value).abs)
       // give a bumpp to non-AO modes (but don't discard them)
-      val aoScore: Rational         =
+      val aoScore: Rational           =
         if (iq.forall(i => r.ao =!= ModeAO.AO || (i <= ImageQuality.PointTwo))) ScoreBump
         else Rational.zero
       // If wavelength > 0.65mu, then prefer settings with a filter to avoid 2nd order contamination
-      val filterScore: Rational     =
+      val filterScore: Rational       =
         (wavelength, FilterLimit)
           .mapN { (w, l) =>
             if (w >= l && r.hasFilter) ScoreBump else Rational.zero
           }
           .getOrElse(Rational.zero)
       // Wavelength matche
-      val wavelengthScore: Rational = wavelength
-        .map(w => w.nanometer.value / (w.nanometer.value + deltaWave))
-        .getOrElse(Rational.zero)
+      val wavelengthScore: BigDecimal = wavelength
+        .map(w => w.toNanometers.value.value / (w.toNanometers.value.value + deltaWave))
+        .getOrElse(BigDecimal(0))
       // Resolution match
-      val resolutionScore: Rational = resolution
+      val resolutionScore: Rational   = resolution
         .map(r => Rational(r.value / (r.value + deltaRes)))
         .getOrElse(Rational.zero)
       // Slit width match to the seeing (the IFU always matches)
-      val slitWidthScore            =
+      val slitWidthScore              =
         if (r.focalPlane === FocalPlane.IFU)
           Rational.one
         else

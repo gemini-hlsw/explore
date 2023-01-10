@@ -6,6 +6,7 @@ package explore
 import cats.Eq
 import cats.derived.*
 import cats.syntax.all.*
+import coulomb.policy.spire.standard.given
 import eu.timepit.refined.*
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.numeric.Positive
@@ -22,7 +23,7 @@ import monocle.macros.GenLens
 package modes {
 
   case class ModeWavelength(w: Wavelength) {
-    override def toString: String = s"${w.micrometer.value.toDouble} μm"
+    override def toString: String = s"${w.toMicrometers.value.value.toDouble} μm"
   }
 
   case class ModeSlitSize(size: Angle) {
@@ -84,8 +85,8 @@ package modes {
 
     val micrometerDecoder: CellDecoder[Wavelength] =
       CellDecoder.bigDecimalDecoder.emap(x =>
-        Wavelength.fromPicometers
-          .getOption((x * 1000000).intValue)
+        Wavelength
+          .fromIntPicometers((x * 1000000).intValue)
           .toRight(new DecoderError(s"Invalid wavelength value $x"))
       )
 

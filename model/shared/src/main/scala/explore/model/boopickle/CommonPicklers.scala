@@ -102,8 +102,8 @@ trait CommonPicklers {
 
   given Pickler[Wavelength] =
     transformPickler((i: Int) =>
-      Wavelength.fromPicometers
-        .getOption(i)
+      Wavelength
+        .fromIntPicometers(i)
         .getOrElse(sys.error("cannot unpickle"))
     )(_.toPicometers.value.value)
 

@@ -12,6 +12,7 @@ import clue.data.syntax.*
 import coulomb.Quantity
 import coulomb.ops.algebra.spire.all.given
 import coulomb.policy.spire.standard.given
+import coulomb.syntax.*
 import crystal.Pot
 import crystal.react.View
 import crystal.react.hooks.*
@@ -398,7 +399,9 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             capabilities = cap,
             slitWidth = fpa,
             resolution = res,
-            coverage = cov.flatMap(_.micrometer.toValue[BigDecimal].toRefined[NonNegative].toOption)
+            coverage = cov.flatMap(
+              _.toMicrometers.value.value.withUnit[Micrometer].toRefined[NonNegative].toOption
+            )
           )
         }
       }

@@ -67,8 +67,7 @@ object ImagingConfigurationOptions {
         val shortName         = f.shortName
         val centralWavelength = f.wavelength
         val range             = (u, l).mapN { (a, b) =>
-          val q: Quantity[Rational, Nanometer] = a.nanometer - b.nanometer
-          q.tToValue[Int]
+          a.diff(b).toNanometers.tToValue[Int]
         }
       }
     }
@@ -86,7 +85,7 @@ object ImagingConfigurationOptions {
         val shortName: String = f.shortName
         val centralWavelength = f.wavelength
         val range             = (u, l).mapN { (a, b) =>
-          (a.nanometer - b.nanometer).tToValue[Int]
+          a.diff(b).toNanometers.tToValue[Int]
         }
       }
     }

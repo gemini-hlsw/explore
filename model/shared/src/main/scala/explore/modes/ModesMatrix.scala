@@ -20,8 +20,10 @@ import fs2.data.csv.*
 import lucuma.core.enums.Instrument
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
+import lucuma.core.math.WavelengthDither
 import lucuma.core.math.units.*
 import lucuma.core.util.Enumerated
+import lucuma.core.util.NewType
 import monocle.Lens
 import monocle.macros.GenLens
 import spire.math.Rational
@@ -29,41 +31,33 @@ import spire.math.Rational
 enum ObservationMode derives Order:
   case Spectroscopy, Imaging, Polarimetry
 
-case class ModeIQ(iq: Angle) {
-  override def toString: String = s"iq(${Angle.milliarcseconds.get(iq)})"
+object ModeIQ extends NewType[Angle] {
+  given Order[ModeIQ] = Order.by(_.value.toMicroarcseconds)
+}
+type ModeIQ = ModeIQ.Type
+
+object ModeFov extends NewType[Angle] {
+  given Order[ModeFov] = Order.by(_.value.toMicroarcseconds)
+}
+type ModeFov = ModeFov.Type
+
+object ModeBandwidth extends NewType[Quantity[BigDecimal, Micrometer]] {
+  val Zero                   = ModeBandwidth(BigDecimal(0).withUnit[Micrometer])
+  val Ten                    = ModeBandwidth(BigDecimal(10).withUnit[Micrometer])
+  given Order[ModeBandwidth] = Order.by(_.value.value)
 }
 
-object ModeIQ {
-  given Order[ModeIQ] = Order.by(_.iq.toMicroarcseconds)
-}
+type ModeBandwidth = ModeBandwidth.Type
 
-case class ModeFov(fov: Angle) {
-  override def toString: String = s"fov(${Angle.milliarcseconds.get(fov)})"
+object ModeGratingMinWavelength extends NewType[Wavelength] {
+  given Order[ModeGratingMinWavelength] = Order.by(_.value)
 }
+type ModeGratingMinWavelength = ModeGratingMinWavelength.Type
 
-object ModeFov {
-  given Order[ModeFov] = Order.by(_.fov.toMicroarcseconds)
+object ModeGratingMaxWavelength extends NewType[Wavelength] {
+  given Order[ModeGratingMinWavelength] = Order.by(_.value)
 }
-
-case class ModeBandWidth(w: Quantity[Rational, Micrometer]) {
-  override def toString: String = s"band_width(${w.value.toInt})"
-}
-
-case class ModeGratingMinWavelength(w: Wavelength) {
-  override def toString: String = s"grcwlen_min(${w.micrometer.value.toInt})"
-}
-
-object ModeGratingMinWavelength {
-  given Order[ModeGratingMinWavelength] = Order.by(_.w)
-}
-
-case class ModeGratingMaxWavelength(w: Wavelength) {
-  override def toString: String = s"grcwlen_max(${w.micrometer.value.toInt})"
-}
-
-object ModeGratingMaxWavelength {
-  given Order[ModeGratingMaxWavelength] = Order.by(_.w)
-}
+type ModeGratingMaxWavelength = ModeGratingMaxWavelength.Type
 
 enum ModeFilter derives Order:
   // At the moment we only care about the presence of filter
@@ -94,7 +88,7 @@ case class ModeRow(
   iqMax:                ModeIQ,
   resolution:           PosBigDecimal,
   wavelength:           ModeWavelength,
-  bandWidth:            ModeBandWidth,
+  bandWidth:            ModeBandwidth,
   gratingMinWavelength: ModeGratingMinWavelength,
   gratingMaxWavelength: ModeGratingMaxWavelength,
   filter:               ModeFilter,
@@ -125,19 +119,19 @@ trait ModesMatrixDecoders extends Decoders {
       }
 
   given CellDecoder[ModeIQ] =
-    arcsecDecoder.map(ModeIQ.apply)
+    arcsecDecoder.map(x => ModeIQ(x))
 
   given CellDecoder[ModeFov] =
-    arcsecDecoder.map(ModeFov.apply)
+    arcsecDecoder.map(x => ModeFov(x))
 
-  given CellDecoder[ModeBandWidth] =
-    micrometerDecoder.map(w => ModeBandWidth(w.nanometer))
+  given CellDecoder[ModeBandwidth] =
+    micrometerDecoder.map(w => ModeBandwidth(w.µm.value.value.withUnit[Micrometer]))
 
   given CellDecoder[ModeGratingMinWavelength] =
-    micrometerDecoder.map(ModeGratingMinWavelength.apply)
+    micrometerDecoder.map(x => ModeGratingMinWavelength(x))
 
   given CellDecoder[ModeGratingMaxWavelength] =
-    micrometerDecoder.map(ModeGratingMaxWavelength.apply)
+    micrometerDecoder.map(x => ModeGratingMaxWavelength(x))
 
   given CellDecoder[ModeFilter] =
     CellDecoder.stringDecoder
@@ -198,7 +192,7 @@ trait ModesMatrixDecoders extends Decoders {
       ix   <- row.as[ModeIQ]("iq_max")
       r    <- row.as[PosBigDecimal]("resolution")
       w    <- row.as[ModeWavelength]("wavelength")
-      b    <- row.as[ModeBandWidth]("band_width")
+      b    <- row.as[ModeBandwidth]("band_width")
       gmin <- row.as[ModeGratingMinWavelength]("grcwlen_min")
       gmax <- row.as[ModeGratingMaxWavelength]("grcwlen_max")
       mf   <- row.as[ModeFilter]("filter")
@@ -219,8 +213,8 @@ case class ModesMatrix(matrix: List[ModeRow]) {
     BigDecimal(1).withRefinedUnit[Positive, Second]
 
   def spectroscopyModes(
-    dwmin:       Option[ModeBandWidth],
-    dwmax:       Option[ModeBandWidth],
+    dwmin:       Option[ModeBandwidth],
+    dwmax:       Option[ModeBandwidth],
     rmin:        Option[PosBigDecimal],
     dims:        Option[ModeSpatialDimension],
     coronograph: Option[ModeCoronagraph],
@@ -233,22 +227,22 @@ case class ModesMatrix(matrix: List[ModeRow]) {
   ): List[ModeRow] = {
     val defaultIQMax                 = ModeIQ(Angle.fromDoubleArcseconds(10))
     val defaultFOV                   = ModeFov(Angle.fromDoubleArcseconds(1))
-    val l_dwmin                      = dwmin.map(_.w).getOrElse(Rational.zero.withUnit[Micrometer])
-    val l_dwmax                      = dwmax.map(_.w).getOrElse(Rational(10).withUnit[Micrometer])
+    val l_dwmin                      = dwmin.getOrElse(ModeBandwidth.Zero)
+    val l_dwmax                      = dwmax.getOrElse(ModeBandwidth.Ten)
     val criteria: ModeRow => Boolean = m =>
       m.mode === ObservationMode.Spectroscopy &&
         rmin.forall(m.resolution >= _) &&
         dims.forall(m.spatialDimensions >= _) &&
-        m.bandWidth.w >= l_dwmin &&
-        m.bandWidth.w <= l_dwmax &&
+        m.bandWidth >= l_dwmin &&
+        m.bandWidth <= l_dwmax &&
         coronograph.forall(_ === m.coronograph) &&
         m.minExposure <= mexp.getOrElse(DefaultMinExp) &&
         mos.forall(_ === m.mos) &&
         skysub.forall(_ === m.skySub) &&
         m.iqMin <= iqmax.getOrElse(defaultIQMax) &&
         m.fov >= fov.getOrElse(defaultFOV) &&
-        wlen.forall(m.gratingMinWavelength.w <= _) &&
-        wlen.forall(m.gratingMaxWavelength.w >= _)
+        wlen.forall(m.gratingMinWavelength.value <= _) &&
+        wlen.forall(m.gratingMaxWavelength.value >= _)
 
     matrix.filter(criteria)
   }

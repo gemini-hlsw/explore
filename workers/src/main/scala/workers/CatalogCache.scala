@@ -48,7 +48,7 @@ import java.time.temporal.ChronoUnit
 trait CatalogQuerySettings {
   val proxy = uri"https://cors-proxy.lucuma.xyz"
 
-  val MaxTargets = 30000
+  val MaxTargets = 100
 
   given Hash[Coordinates]            = Hash.fromUniversalHashCode
   given catalog: CatalogAdapter.Gaia = CatalogAdapter.Gaia3Lite
