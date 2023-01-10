@@ -31,21 +31,15 @@ import spire.math.Rational
 enum ObservationMode derives Order:
   case Spectroscopy, Imaging, Polarimetry
 
-case class ModeIQ(iq: Angle) {
-  override def toString: String = s"iq(${Angle.milliarcseconds.get(iq)})"
+object ModeIQ extends NewType[Angle] {
+  given Order[ModeIQ] = Order.by(_.value.toMicroarcseconds)
 }
+type ModeIQ = ModeIQ.Type
 
-object ModeIQ {
-  given Order[ModeIQ] = Order.by(_.iq.toMicroarcseconds)
+object ModeFov extends NewType[Angle] {
+  given Order[ModeFov] = Order.by(_.value.toMicroarcseconds)
 }
-
-case class ModeFov(fov: Angle) {
-  override def toString: String = s"fov(${Angle.milliarcseconds.get(fov)})"
-}
-
-object ModeFov {
-  given Order[ModeFov] = Order.by(_.fov.toMicroarcseconds)
-}
+type ModeFov = ModeFov.Type
 
 object ModeBandwidth extends NewType[Quantity[BigDecimal, Micrometer]] {
   val Zero                   = ModeBandwidth(BigDecimal(0).withUnit[Micrometer])
@@ -55,21 +49,15 @@ object ModeBandwidth extends NewType[Quantity[BigDecimal, Micrometer]] {
 
 type ModeBandwidth = ModeBandwidth.Type
 
-case class ModeGratingMinWavelength(w: Wavelength) {
-  override def toString: String = s"grcwlen_min(${w.toMicrometers.value.value.toInt})"
+object ModeGratingMinWavelength extends NewType[Wavelength] {
+  given Order[ModeGratingMinWavelength] = Order.by(_.value)
 }
+type ModeGratingMinWavelength = ModeGratingMinWavelength.Type
 
-object ModeGratingMinWavelength {
-  given Order[ModeGratingMinWavelength] = Order.by(_.w)
+object ModeGratingMaxWavelength extends NewType[Wavelength] {
+  given Order[ModeGratingMinWavelength] = Order.by(_.value)
 }
-
-case class ModeGratingMaxWavelength(w: Wavelength) {
-  override def toString: String = s"grcwlen_max(${w.toMicrometers.value.value.toInt})"
-}
-
-object ModeGratingMaxWavelength {
-  given Order[ModeGratingMaxWavelength] = Order.by(_.w)
-}
+type ModeGratingMaxWavelength = ModeGratingMaxWavelength.Type
 
 enum ModeFilter derives Order:
   // At the moment we only care about the presence of filter
@@ -131,19 +119,19 @@ trait ModesMatrixDecoders extends Decoders {
       }
 
   given CellDecoder[ModeIQ] =
-    arcsecDecoder.map(ModeIQ.apply)
+    arcsecDecoder.map(x => ModeIQ(x))
 
   given CellDecoder[ModeFov] =
-    arcsecDecoder.map(ModeFov.apply)
+    arcsecDecoder.map(x => ModeFov(x))
 
   given CellDecoder[ModeBandwidth] =
     micrometerDecoder.map(w => ModeBandwidth(w.µm.value.value.withUnit[Micrometer]))
 
   given CellDecoder[ModeGratingMinWavelength] =
-    micrometerDecoder.map(ModeGratingMinWavelength.apply)
+    micrometerDecoder.map(x => ModeGratingMinWavelength(x))
 
   given CellDecoder[ModeGratingMaxWavelength] =
-    micrometerDecoder.map(ModeGratingMaxWavelength.apply)
+    micrometerDecoder.map(x => ModeGratingMaxWavelength(x))
 
   given CellDecoder[ModeFilter] =
     CellDecoder.stringDecoder
@@ -253,8 +241,8 @@ case class ModesMatrix(matrix: List[ModeRow]) {
         skysub.forall(_ === m.skySub) &&
         m.iqMin <= iqmax.getOrElse(defaultIQMax) &&
         m.fov >= fov.getOrElse(defaultFOV) &&
-        wlen.forall(m.gratingMinWavelength.w <= _) &&
-        wlen.forall(m.gratingMaxWavelength.w >= _)
+        wlen.forall(m.gratingMinWavelength.value <= _) &&
+        wlen.forall(m.gratingMaxWavelength.value >= _)
 
     matrix.filter(criteria)
   }
