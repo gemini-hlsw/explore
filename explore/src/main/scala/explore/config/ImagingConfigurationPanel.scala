@@ -10,6 +10,7 @@ import coulomb.policy.spire.standard.given
 import crystal.react.View
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
+import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.model.AvailableFilter
@@ -70,9 +71,9 @@ object ImagingConfigurationPanel {
       }.toList: _*
     )
 
-  private def formatCentral(r: Quantity[Rational, Nanometer]): String =
+  private def formatCentral(r: Quantity[PosBigDecimal, Micrometer]): String =
     if (r.value > 1000)
-      f"${r.toValue[Double].toUnit[Micrometer].value}%.3f μm"
+      f"${r.value.value.toDouble}%.3f μm"
     else
       s"${r.value.toInt} nm"
 
@@ -90,7 +91,7 @@ object ImagingConfigurationPanel {
           <.div(
             ExploreStyles.ConfigurationFilterItem,
             <.span(f.shortName),
-            <.span(formatCentral(f.centralWavelength.nanometer)),
+            <.span(formatCentral(f.centralWavelength.toMicrometers)),
             <.span(f.range.map(formatRange))
           )
       },

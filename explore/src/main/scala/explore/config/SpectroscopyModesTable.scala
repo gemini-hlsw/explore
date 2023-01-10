@@ -13,6 +13,7 @@ import cats.implicits.catsKernelOrderingForOrder
 import cats.syntax.all.*
 import coulomb.Quantity
 import coulomb.policy.spire.standard.given
+import coulomb.syntax.*
 import crystal.react.View
 import crystal.react.hooks.*
 import crystal.react.implicits.*
@@ -385,7 +386,7 @@ private object SpectroscopyModesTable extends TableHooks:
               slitWidth = s.focalPlaneAngle,
               resolution = s.resolution,
               coverage = s.wavelengthCoverage.flatMap(
-                _.micrometer.toValue[BigDecimal].toRefined[NonNegative].toOption
+                _.toMicrometers.value.value.withUnit[Micrometer].toRefined[NonNegative].toOption
               ),
               declination = dec
             )

@@ -71,7 +71,7 @@ trait formats:
 
   val formatWavelengthMicron: Format[String, Wavelength] =
     Format(_.parseBigDecimalOption.flatMap(Wavelength.decimalMicrometers.getOption),
-           _.micrometer.toUnit[Micrometer].value.toString
+           _.toMicrometers.value.value.toString
     )
 
   val formatArcsec: Format[String, Angle] =

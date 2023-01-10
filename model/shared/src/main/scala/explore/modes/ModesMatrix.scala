@@ -20,8 +20,10 @@ import fs2.data.csv.*
 import lucuma.core.enums.Instrument
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
+import lucuma.core.math.WavelengthDither
 import lucuma.core.math.units.*
 import lucuma.core.util.Enumerated
+import lucuma.core.util.NewType
 import monocle.Lens
 import monocle.macros.GenLens
 import spire.math.Rational
@@ -45,12 +47,16 @@ object ModeFov {
   given Order[ModeFov] = Order.by(_.fov.toMicroarcseconds)
 }
 
-case class ModeBandWidth(w: Quantity[Rational, Micrometer]) {
-  override def toString: String = s"band_width(${w.value.toInt})"
+object ModeBandwidth extends NewType[Quantity[BigDecimal, Micrometer]] {
+  val Zero                   = ModeBandwidth(BigDecimal(0).withUnit[Micrometer])
+  val Ten                    = ModeBandwidth(BigDecimal(10).withUnit[Micrometer])
+  given Order[ModeBandwidth] = Order.by(_.value.value)
 }
 
+type ModeBandwidth = ModeBandwidth.Type
+
 case class ModeGratingMinWavelength(w: Wavelength) {
-  override def toString: String = s"grcwlen_min(${w.micrometer.value.toInt})"
+  override def toString: String = s"grcwlen_min(${w.toMicrometers.value.value.toInt})"
 }
 
 object ModeGratingMinWavelength {
@@ -58,7 +64,7 @@ object ModeGratingMinWavelength {
 }
 
 case class ModeGratingMaxWavelength(w: Wavelength) {
-  override def toString: String = s"grcwlen_max(${w.micrometer.value.toInt})"
+  override def toString: String = s"grcwlen_max(${w.toMicrometers.value.value.toInt})"
 }
 
 object ModeGratingMaxWavelength {
@@ -94,7 +100,7 @@ case class ModeRow(
   iqMax:                ModeIQ,
   resolution:           PosBigDecimal,
   wavelength:           ModeWavelength,
-  bandWidth:            ModeBandWidth,
+  bandWidth:            ModeBandwidth,
   gratingMinWavelength: ModeGratingMinWavelength,
   gratingMaxWavelength: ModeGratingMaxWavelength,
   filter:               ModeFilter,
@@ -130,8 +136,8 @@ trait ModesMatrixDecoders extends Decoders {
   given CellDecoder[ModeFov] =
     arcsecDecoder.map(ModeFov.apply)
 
-  given CellDecoder[ModeBandWidth] =
-    micrometerDecoder.map(w => ModeBandWidth(w.nanometer))
+  given CellDecoder[ModeBandwidth] =
+    micrometerDecoder.map(w => ModeBandwidth(w.µm.value.value.withUnit[Micrometer]))
 
   given CellDecoder[ModeGratingMinWavelength] =
     micrometerDecoder.map(ModeGratingMinWavelength.apply)
@@ -198,7 +204,7 @@ trait ModesMatrixDecoders extends Decoders {
       ix   <- row.as[ModeIQ]("iq_max")
       r    <- row.as[PosBigDecimal]("resolution")
       w    <- row.as[ModeWavelength]("wavelength")
-      b    <- row.as[ModeBandWidth]("band_width")
+      b    <- row.as[ModeBandwidth]("band_width")
       gmin <- row.as[ModeGratingMinWavelength]("grcwlen_min")
       gmax <- row.as[ModeGratingMaxWavelength]("grcwlen_max")
       mf   <- row.as[ModeFilter]("filter")
@@ -219,8 +225,8 @@ case class ModesMatrix(matrix: List[ModeRow]) {
     BigDecimal(1).withRefinedUnit[Positive, Second]
 
   def spectroscopyModes(
-    dwmin:       Option[ModeBandWidth],
-    dwmax:       Option[ModeBandWidth],
+    dwmin:       Option[ModeBandwidth],
+    dwmax:       Option[ModeBandwidth],
     rmin:        Option[PosBigDecimal],
     dims:        Option[ModeSpatialDimension],
     coronograph: Option[ModeCoronagraph],
@@ -233,14 +239,14 @@ case class ModesMatrix(matrix: List[ModeRow]) {
   ): List[ModeRow] = {
     val defaultIQMax                 = ModeIQ(Angle.fromDoubleArcseconds(10))
     val defaultFOV                   = ModeFov(Angle.fromDoubleArcseconds(1))
-    val l_dwmin                      = dwmin.map(_.w).getOrElse(Rational.zero.withUnit[Micrometer])
-    val l_dwmax                      = dwmax.map(_.w).getOrElse(Rational(10).withUnit[Micrometer])
+    val l_dwmin                      = dwmin.getOrElse(ModeBandwidth.Zero)
+    val l_dwmax                      = dwmax.getOrElse(ModeBandwidth.Ten)
     val criteria: ModeRow => Boolean = m =>
       m.mode === ObservationMode.Spectroscopy &&
         rmin.forall(m.resolution >= _) &&
         dims.forall(m.spatialDimensions >= _) &&
-        m.bandWidth.w >= l_dwmin &&
-        m.bandWidth.w <= l_dwmax &&
+        m.bandWidth >= l_dwmin &&
+        m.bandWidth <= l_dwmax &&
         coronograph.forall(_ === m.coronograph) &&
         m.minExposure <= mexp.getOrElse(DefaultMinExp) &&
         mos.forall(_ === m.mos) &&
