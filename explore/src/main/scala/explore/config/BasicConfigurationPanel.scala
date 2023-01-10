@@ -29,7 +29,6 @@ import lucuma.core.model.Observation
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.User
 import lucuma.refined.*
-import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.primereact.FormEnumDropdownView
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given

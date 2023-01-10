@@ -31,7 +31,6 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.util.NewType
 import lucuma.refined.*
-import lucuma.ui.forms.FormInputEV
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.*

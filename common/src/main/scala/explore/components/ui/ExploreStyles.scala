@@ -447,11 +447,6 @@ object ExploreStyles:
   // For icons that will be show instead of an input during some circumstances.
   val InputReplacementIcon: Css = Css("input-replacement-icon") |+| Css("field")
 
-  // For making a Input have a "X" icon for clearing, like the dropdowns do.
-  // See `clearInputIcon` in `explore.utils.package`
-  val ClearableInputIcon: Css         = Css("clearable-input-icon")
-  val ClearableInputPaddingReset: Css = Css("clearable-input-padding-reset")
-
   val SummaryTableToolbar: Css = Css("summary-table-toolbar")
 
   // TODO: to lucuma-ui

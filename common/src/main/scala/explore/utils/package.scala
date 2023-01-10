@@ -29,7 +29,6 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.util.NewType
 import lucuma.ui.enums.Theme
-import lucuma.ui.forms.ExternalValue
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.versionDateFormatter
@@ -132,28 +131,6 @@ def forceAssign[T, S](mod: Endo[Input[S]] => Endo[T])(base: S): Endo[S] => Endo[
       case Assign(edit) => modS(edit).assign
       case _            => modS(base).assign
     }
-
-/**
- * Creates an `X` icon that clears the data from a `FormInputEV` which uses a `View[Option[A]]` It
- * should be assigned to the `icon` parameter of `FormInputEV` and use the same `View`. It is styled
- * to look like the clear icon for the `EnumViewOptionalSelect`s.
- *
- * Depending on the layout containing the `FormInputEV`, you may also need to add the
- * `ExploreStyles.ClearableInputPaddingReset` class. When an icon is added to a FormInput, it
- * changes the padding for the enclosed `input` to make room for the icon - lots of room - which can
- * change your layout. The above class resets the padding to the standard for FormInputs without
- * icons. The downside, of course, is that if your content can extend all the wqy to the right side
- * of the input, the `X` icon will sit on top of it. Usually this is not a problem. Note that this
- * will override that for `InputWithUnits` this will override the default `clazz` of
- * `ExploreStyles.Grow(1), so you may need to add that, too.
- */
-def clearInputIcon[EV[_], A](
-  view:     EV[Option[A]]
-)(using ev: ExternalValue[EV]): js.UndefOr[VdomNode] =
-  ev.get(view)
-    .flatten
-    .map(_ => <.i(ExploreStyles.ClearableInputIcon, ^.onClick --> ev.set(view)(None)))
-    .orUndefined
 
 // TODO Move these to lucuma-ui
 extension (toastRef: ToastRef)

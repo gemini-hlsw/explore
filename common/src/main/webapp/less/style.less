@@ -1,6 +1,5 @@
+// These need to be kept until we unify the colors in `variables-*.less` with the primereact colors.
 @import 'suithemes/default/globals/site.variables';
-@import 'suithemes/default/modules/dropdown.variables';
-@import 'theme/site/collections/form.variables';
 @import 'theme/site/globals/site.variables';
 
 // vertical buttons
@@ -545,28 +544,6 @@ html {
 .explore-button-summary {
   width: 100%;
   justify-content: center;
-}
-
-.explore-title-select-columns {
-  text-align: right;
-  display: none;
-}
-
-@media (min-width: @mobile-responsive-cutoff) {
-  .explore-title-select-columns {
-    display: inline;
-  }
-}
-
-.explore-select-columns {
-  .menu {
-    max-height: 30em !important;
-    z-index: 3000 !important;
-
-    .item {
-      font-size: small !important;
-    }
-  }
 }
 
 .explore-target-summary-delete {

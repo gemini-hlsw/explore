@@ -20,8 +20,6 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Wavelength
 import lucuma.core.validation.*
 import lucuma.refined.*
-import lucuma.ui.forms.EnumViewOptionalSelect
-import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.FormEnumDropdownOptionalView
 import lucuma.ui.primereact.FormInputTextView

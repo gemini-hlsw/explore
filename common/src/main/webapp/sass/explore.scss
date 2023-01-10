@@ -36,6 +36,13 @@ body {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+
+  // set font from primereact
+  font-family: var(--font-family);
+
+  // these were taken from SUI
+  font-size: 14px;
+  line-height: 1.4285em;
 }
 
 body {
@@ -62,6 +69,11 @@ body.hide-reusability {
   border: 1px dashed transparent; // the border makes the sizing work.
   /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
   padding: var(--pl-input-padding)
+}
+
+// taken from SUI
+a, a:hover {
+  text-decoration: none;
 }
 
 // -------
@@ -1505,6 +1517,57 @@ table.explore-border-table {
   svg.fa-check {
     grid-area: progress;
     color: var(--explore-accent-color);
+  }
+}
+
+// ----------
+// Target table column selector menu
+// ----------
+.explore-title-select-columns {
+  text-align: right;
+  display: none;
+}
+
+@media (min-width: $mobile-responsive-cutoff) {
+  .explore-title-select-columns {
+    display: inline;
+  }
+}
+
+.explore-select-columns {
+  &.p-component.p-button.p-button-text {
+    color: var(--text-color);
+
+    .p-button-icon-right {
+      margin-left: 0.5rem;
+    }
+
+    &:focus {
+      box-shadow: none;
+    }
+  }
+
+  &.p-menu {
+    max-height: 25rem;
+    overflow-y: scroll;
+
+    .p-menuitem {
+      padding-top: 0;
+      padding-bottom: 0.2rem;
+
+      .p-checkbox {
+        .p-checkbox-box {
+          height: 16px;
+          width: 16px;
+          margin-top: 2px;
+        }
+
+        label {
+          /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
+          font-size: var(--pl-tiny-font-size);
+        }
+      }
+    }
   }
 }
 
