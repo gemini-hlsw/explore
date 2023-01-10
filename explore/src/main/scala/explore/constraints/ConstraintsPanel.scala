@@ -31,8 +31,6 @@ import lucuma.core.util.Enumerated
 import lucuma.core.validation.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
-import lucuma.ui.forms.EnumViewSelect
-import lucuma.ui.forms.FormInputEV
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.EnumDropdownView
 import lucuma.ui.primereact.FormInputTextView

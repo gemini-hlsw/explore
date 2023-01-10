@@ -302,12 +302,10 @@ object ExploreStyles:
 
   val StepGuided: Css = Css("step-guided")
 
-  val ExploreForm: Css             = Css("explore-form")
   val TargetImportForm: Css        = Css("explore-target-import-form")
   val TargetImportDescription: Css = Css("explore-target-import-description")
   val TargetImportErrors: Css      = Css("explore-target-import-errors")
   val TargetImportDialog: Css      = Css("explore-target-import-dialog")
-  val SkipToNext: Css              = Css("explore-skip-to-next")
   val SeqGenParametersForm: Css    = Css("seq-gen-parameters-form")
 
   // Configuration tile
@@ -327,7 +325,6 @@ object ExploreStyles:
   val AdvancedConfigurationCol3: Css    = Css("explore-advanced-configuration-col3")
   val AdvancedConfigurationButtons: Css = Css("explore-advanced-configuration-buttons")
   val ConfigurationFilter: Css          = Css("explore-configuration-filter") |+| Css("field")
-  val ConfigurationFilterItem: Css      = Css("explore-configuration-filter-item")
   val ExploreTable: Css                 = Css("explore-table")
   val ExploreTableEmpty: Css            = Css("explore-table-emptymessage")
   val SpectroscopyTableEmpty: Css       = Css("spectroscopy-table-emptymessage")
@@ -449,11 +446,6 @@ object ExploreStyles:
 
   // For icons that will be show instead of an input during some circumstances.
   val InputReplacementIcon: Css = Css("input-replacement-icon") |+| Css("field")
-
-  // For making a Input have a "X" icon for clearing, like the dropdowns do.
-  // See `clearInputIcon` in `explore.utils.package`
-  val ClearableInputIcon: Css         = Css("clearable-input-icon")
-  val ClearableInputPaddingReset: Css = Css("clearable-input-padding-reset")
 
   val SummaryTableToolbar: Css = Css("summary-table-toolbar")
 

@@ -33,7 +33,7 @@ object Settings {
     val lucumaRefined          = "0.1.1"
     val lucumaSchemas          = "0.39.1"
     val lucumaSSO              = "0.4.5"
-    val lucumaUI               = "0.64.2"
+    val lucumaUI               = "0.65.0"
     val monocle                = "3.2.0"
     val mouse                  = "1.2.1"
     val mUnit                  = "0.7.29"
@@ -245,7 +245,6 @@ object Settings {
         "edu.gemini" %%% "lucuma-react-highcharts",
         "edu.gemini" %%% "lucuma-react-hotkeys",
         "edu.gemini" %%% "lucuma-react-resize-detector",
-        "edu.gemini" %%% "lucuma-react-semantic-ui",
         "edu.gemini" %%% "lucuma-react-moon",
         "edu.gemini" %%% "lucuma-react-prime-react"
       )(lucumaReact)

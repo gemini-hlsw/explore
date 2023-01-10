@@ -11,8 +11,6 @@ import explore.model.Constants
 import explore.utils.*
 import japgolly.scalajs.react.callback.Callback
 import japgolly.scalajs.react.util.Effect
-import lucuma.ui.forms.ExternalValue
-import lucuma.ui.forms.FormInputEV
 import org.scalablytyped.runtime.StringDictionary
 import org.scalajs.dom.Window
 import org.typelevel.log4cats.Logger
@@ -25,21 +23,6 @@ extension (self: Window)
   // Keep this as def to take the value window.innerWidth at the current time
   def canFitTwoPanels: Boolean =
     self.innerWidth > Constants.TwoPanelCutoff
-
-extension [EV[_], A, B](input: FormInputEV[EV, Option[A]])
-  def clearable(using ev: ExternalValue[EV], ev3: Eq[A]) =
-    input.copy(icon = clearInputIcon[EV, A](input.value))
-
-  // When an icon is added to a FormInputEV, SUI adds extra padding on the right to make
-  // space for the icon. However, with some layouts this can cause resizing issues, so this
-  // method removes that extra padding. See `clearInputIcon` for more details.
-  def clearableNoPadding(using ev: ExternalValue[EV], ev3: Eq[A]) = {
-    val newClazz: UndefOr[Css] =
-      input.clazz.fold(ExploreStyles.ClearableInputPaddingReset)(
-        _ |+| ExploreStyles.ClearableInputPaddingReset
-      )
-    input.copy(icon = clearInputIcon[EV, A](input.value), clazz = newClazz)
-  }
 
 extension [A](c: js.UndefOr[A => Callback])
   def toJs: js.UndefOr[js.Function1[A, Unit]] = c.map(x => (a: A) => x(a).runNow())

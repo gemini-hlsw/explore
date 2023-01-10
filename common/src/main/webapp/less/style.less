@@ -1,6 +1,5 @@
+// These need to be kept until we unify the colors in `variables-*.less` with the primereact colors.
 @import 'suithemes/default/globals/site.variables';
-@import 'suithemes/default/modules/dropdown.variables';
-@import 'theme/site/collections/form.variables';
 @import 'theme/site/globals/site.variables';
 
 // vertical buttons
@@ -165,27 +164,6 @@ tfoot {
 
 .size-detector {
   .full-height-width();
-}
-
-// Used as part of creating headers in a FormSelect.
-// Selector is very specific to avoid affecting other controls
-.ui.dropdown.selection .menu .item.header.disabled {
-  text-align: right;
-  color: var(--dropdown-item-color);
-
-  &:hover {
-    color: var(--dropdown-item-color);
-    background: unset;
-  }
-}
-
-.constraints-grid.ui.form .field {
-  margin-bottom: 0;
-}
-
-.ui.selection.dropdown.constraints-tile-selector {
-  font-size: smaller;
-  margin-right: 0.5em;
 }
 
 //----------
@@ -390,26 +368,6 @@ tfoot {
   background-color: var(--negative-background-color);
 }
 
-.ui.label.explore-error-label {
-  .error-label-mixin();
-}
-
-.ui.form .field>.explore-error-label {
-  .error-label-mixin();
-}
-
-.ui.form .field>label {
-  margin: 0;
-}
-
-.ui.basic.label.explore-section-label {
-  background-color: transparent;
-  border: none;
-  letter-spacing: 0.15em;
-  border-radius: 0;
-  border-bottom: 1px solid var(--input-color);
-}
-
 .explore-table-units-label {
   margin-left: 0.25em;
   font-size: x-small;
@@ -422,10 +380,6 @@ tfoot {
 .minimum-percent {
   width: 5.5em;
   padding-left: 0.5em !important;
-
-  div& .ui.input input {
-    text-align: right;
-  }
 
   span& {
     text-align: end;
@@ -470,11 +424,6 @@ div.partner-split-total {
   }
 }
 
-// position all fields relative so that error labels position properly.
-.ui .field {
-  position: relative;
-}
-
 .explore-input-error-mixin() {
   left: 30%;
   z-index: 3;
@@ -490,44 +439,6 @@ div.partner-split-total {
   .explore-input-error-mixin();
 }
 
-.ui.button.blended-button {
-  border: none;
-  background-color: transparent;
-  box-shadow: none;
-
-  &:hover {
-    outline: 1px var(--site-border-color) solid;
-  }
-}
-
-// TODO: This was also used in the brightness tables, but is no longer needed.
-// When the obs badge is converted to primereact, this may be able to go away, or
-// be made specific to the obs badge
-.ui.button.delete-button {
-  padding: 0;
-  margin: 0;
-  margin-right: 0.4em;
-  border: none;
-  background-color: transparent;
-  box-shadow: none;
-  display: flex;
-  justify-content: center;
-
-  &:hover {
-    outline: 1px var(--site-border-color) solid;
-  }
-}
-
-.ui.form .field.flat-form-field {
-  margin-bottom: 0;
-}
-
-// There is already an anolog to this in explore.scss
-.warning-label-mixin() {
-  color: var(--warning-text-color);
-  background-color: var(--warning-background-color);
-}
-
 span.fa-layers-text {
   font-weight: 900;
   transform: scale(0.6) translate(-1em, -2.4em) rotate(30deg);
@@ -536,10 +447,6 @@ span.fa-layers-text {
 div.field.explore-warning-input,
 div.inline.field.explore-warning-input {
   box-shadow: -0 0 2px 1px var(--warning-background-color);
-}
-
-.ui.label.explore-warning-label {
-  .warning-label-mixin();
 }
 
 #staging-banner {
@@ -602,11 +509,6 @@ html {
   text-align: center;
 }
 
-.ui.wide.right.sidebar {
-  max-width: 100%;
-  overflow: hidden !important;
-}
-
 .step-guided {
   color: lightgreen;
 }
@@ -617,31 +519,6 @@ html {
   padding: 0.5em;
   gap: 0.5em;
   height: 100%;
-}
-
-.explore-form {
-  display: grid;
-  justify-items: start;
-  align-items: baseline;
-  align-self: start;
-  grid-template-columns: [label] minmax(120px, 10%) [field] 1fr [units] auto;
-
-  .field {
-    justify-self: stretch;
-  }
-
-  .explore-units-label {
-    justify-self: start;
-  }
-
-  .field .ui.input,
-  .field .ui.selection.dropdown {
-    min-width: 100%;
-  }
-}
-
-.explore-skip-to-next {
-  grid-column: 1;
 }
 
 .seq-gen-parameters-form {
@@ -660,34 +537,6 @@ html {
   justify-content: space-between;
 }
 
-.ui.dropdown.explore-configuration-filter {
-  min-width: 100%;
-
-  .menu>.item>.header {
-    text-align: center;
-    text-transform: uppercase;
-    text-decoration: underline;
-    font-size: smaller;
-    pointer-events: none;
-    cursor: unset;
-  }
-}
-
-.explore-configuration-filter-item {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  justify-items: end;
-
-  span:first-child {
-    justify-self: start;
-  }
-
-  span:not(:first-child) {
-    color: var(--site-input-placeholder-focus-color);
-    font-size: smaller;
-  }
-}
-
 .explore-button-copy {
   border: 0 !important; // important to override SUI's style.
 }
@@ -695,37 +544,6 @@ html {
 .explore-button-summary {
   width: 100%;
   justify-content: center;
-}
-
-.ui.labeled.icon.button.verycompact {
-  padding-left: 2.3em !important;
-  padding-right: 0.5em !important;
-
-  .icon {
-    width: 2em;
-  }
-}
-
-.explore-title-select-columns {
-  text-align: right;
-  display: none;
-}
-
-@media (min-width: @mobile-responsive-cutoff) {
-  .explore-title-select-columns {
-    display: inline;
-  }
-}
-
-.explore-select-columns {
-  .menu {
-    max-height: 30em !important;
-    z-index: 3000 !important;
-
-    .item {
-      font-size: small !important;
-    }
-  }
 }
 
 .explore-target-summary-delete {
@@ -792,13 +610,6 @@ html {
   padding-left: 10px;
 }
 
-.ui.label.explore-modes-table-target {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .explore-modes-table-count {
   flex-shrink: 0;
 }
@@ -825,21 +636,7 @@ html {
   white-space: nowrap;
 }
 
-.ui.button.compact,
-.ui.labeled.icon.button.left.verycompact {
-  padding-left: 0.5em !important;
-  padding-right: 0.5em !important;
-}
-
-.ui.icon.button svg.svg-inline--fa,
-.ui.button.compact svg.svg-inline--fa,
-.ui.button.verycompact svg.svg-inline--fa {
-  width: 1.5em;
-}
-
-svg.padded-right-icon.svg-inline--fa,
-.ui.icon.labeled.button svg.svg-inline--fa,
-.ui.menu .ui.dropdown .menu>.item svg.svg-inline--fa {
+svg.padded-right-icon.svg-inline--fa {
   margin-right: 3px;
 }
 
@@ -864,18 +661,6 @@ svg[focusable='false']:focus {
 .user-selection-buttons {
   display: flex;
   flex-direction: column;
-}
-
-.ui.selectable.table>tbody>tr:hover,
-.ui.selectable.table .tbody .tr:not(.disabled):not(.thead > .tr):not(.tfoot > .tr):hover,
-.ui.table tbody tr td.selectable:hover,
-.ui.table .tbody .tr:not(.disabled) .td.selectable:not(.thead > .tr):not(.tfoot > .tr):hover {
-  box-shadow: inset 0 1px 0 0 var(--explore-accent-color),
-    inset 0 -1px 0 0 var(--explore-accent-color);
-}
-
-.ui.popup.explore-compact {
-  padding: 0.5em;
 }
 
 .explore-modes-table-itc-cell {
@@ -925,99 +710,4 @@ thead tr th.sticky-header {
   .CircularProgressbar-path {
     stroke: var(--site-text-color) !important;
   }
-}
-
-.ui.striped.table tr:nth-child(2n + 1) td.sticky-column,
-.ui.striped.table tr:nth-child(2n + 1) .td.sticky-column {
-  background-color: var(--table-background);
-}
-
-.ui.striped.table tr:nth-child(2n) td.sticky-column,
-.ui.striped.table tr:nth-child(2n) .td.sticky-column {
-  background-color: var(--table-striped-background);
-}
-
-.ui.striped.table tr:hover td.sticky-column,
-.ui.striped.table tr:hover .td.sticky-column {
-  background: var(--table-selectable-background);
-  color: var(--table-selectable-color);
-}
-
-// Override SUI's default, which prevented shrinking on small screens.
-.ui.form .field .ui.input input,
-.ui.form .fields .field .ui.input input {
-  width: 100%;
-}
-
-.ui.form .field .ui.icon.input input,
-.ui.form .fields .field .ui.icon.input input {
-  width: auto;
-}
-
-.ui.form .field.field input:-webkit-autofill,
-.ui.form .field.field input:-webkit-autofill:hover,
-.ui.form .field.field input:-webkit-autofill:focus,
-.ui.form .field.field input:-webkit-autofill:active,
-.ui.input input:-webkit-autofill,
-.ui.input input:-webkit-autofill:hover,
-.ui.input input:-webkit-autofill:focus,
-.ui.input input:-webkit-autofill:active,
-.ui.form input:-webkit-autofill,
-.ui.form input:-webkit-autofill:hover,
-.ui.form input:-webkit-autofill:focus,
-.ui.form input:-webkit-autofill:active,
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus,
-input:-webkit-autofill:active {
-  box-shadow: 0 0 0 30px var(--form-input-background) inset !important;
-  -webkit-box-shadow: 0 0 0 30px var(--form-input-background) inset !important;
-  -webkit-text-fill-color: var(--input-color);
-  border: 1px solid var(--site-border-color) !important;
-}
-
-// Reusability overlays.
-body.hide-reusability {
-  &>div:not(#root)[title^="Last update reason"] {
-    display: none;
-  }
-}
-
-.input-replacement-icon {
-  line-height: @inputLineHeight;
-  border: 1px dashed transparent; // the border makes the sizing work.
-  padding: @inputPadding;
-}
-
-
-.ui.ui.ui.ui.icon.input .clearable-input-icon {
-  // These values were obtained empirically by using the debugger to find
-  // the values used by `.dropdown.icon`. They are being calculated somewhere
-  // in SUI, but I haven't found the location.
-  position: absolute;
-  font-family: "Dropdown";
-  backface-visibility: hidden;
-  font-weight: normal;
-  font-style: normal;
-  text-align: center;
-  float: right;
-  opacity: 0.6;
-  top: 0.35714286em;
-  right: 0.42857143em;
-  z-index: 3;
-  margin: -0.35714286em;
-  padding: 0.41666667em;
-  line-height: 1.21428571em;
-
-  &:before {
-    content: "⨉";
-    top: 0.2em;
-    right: 0.2em;
-    position: absolute;
-    font-size: medium;
-  }
-}
-
-.field.clearable-input-padding-reset>.ui.ui.ui.ui.icon.input>input {
-  padding: @inputPadding;
 }

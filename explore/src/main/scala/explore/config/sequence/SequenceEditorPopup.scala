@@ -14,6 +14,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
 import lucuma.core.util.NewType
+import lucuma.ui.primereact.LucumaStyles
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.given
@@ -65,10 +66,10 @@ object SequenceEditorPopup:
             )
           )(
             <.div(ExploreStyles.SeqGenParametersForm)(
-              <.div(ExploreStyles.ExploreForm)(
+              <.div(LucumaStyles.FormColumn)(
                 props.dithersControl(changed.set(Pot.pending))
               ),
-              <.div(ExploreStyles.ExploreForm)(
+              <.div(LucumaStyles.FormColumn)(
                 props.offsetsControl(changed.set(Pot.pending))
               )
             ),

@@ -22,7 +22,6 @@ import lucuma.core.enums.ObsStatus
 import lucuma.core.model.Observation
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Gid
-import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.primereact.EnumDropdownView
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
