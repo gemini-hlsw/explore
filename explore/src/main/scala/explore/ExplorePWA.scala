@@ -108,7 +108,7 @@ object ExplorePWA {
             onRegistered = (r: ServiceWorkerRegistration) =>
               // https://vite-plugin-pwa.netlify.app/guide/periodic-sw-updates.html
               Callback.log(s"Service worker registered, setup self update task") *>
-                Callback(r.update()).delayMs(1000.0).toCallback *> // Inital check
+                Callback(r.update()).delayMs(2000.0).toCallback *> // Inital check
                 scheduleUpdateCheck(r)                             // Periodic checks
           )
         )

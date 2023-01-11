@@ -304,7 +304,10 @@ object TargetSummaryTable extends TableHooks:
             rowMod = row =>
               TagMod(
                 ExploreStyles.TableRowSelected.when_(row.getIsSelected()),
-                ^.onClick --> {
+                ^.onClick ==> { (e: ReactMouseEvent) =>
+                  val isShiftPressed   = e.shiftKey
+                  val isCmdCtrlPressed = e.metaKey || e.ctrlKey
+
                   // If cmd is pressed add to the selection
                   table.toggleAllRowsSelected(false).unless(isCmdCtrlPressed) *> {
                     if (isShiftPressed && selectedRows.nonEmpty) {

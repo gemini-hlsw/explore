@@ -11,6 +11,7 @@ import cats.effect.Resource
 import cats.effect.Sync
 import cats.effect.kernel.Deferred
 import cats.effect.std.Dispatcher
+import cats.effect.unsafe.implicits.global
 import cats.syntax.all.*
 import clue.WebSocketReconnectionStrategy
 import clue.js.FetchJSBackend
@@ -64,15 +65,10 @@ import scala.scalajs.js
 import js.annotation.*
 
 @JSExportTopLevel("Explore")
-object ExploreMain extends IOApp.Simple {
+object ExploreMain {
 
   @JSExport
-  def resetIOApp(): Unit =
-    // https://github.com/typelevel/cats-effect/pull/2114#issue-687064738
-    cats.effect.unsafe.JSPlatform.resetRuntime()
-
-  @JSExport
-  def runIOApp(): Unit = main(Array.empty)
+  def runIOApp(): Unit = run.unsafeRunAndForget()
 
   def setupLogger[F[_]: Sync](p: ExploreLocalPreferences): F[Logger[F]] = Sync[F].delay {
     LogLevelLogger.setLevel(p.level)
@@ -130,7 +126,7 @@ object ExploreMain extends IOApp.Simple {
       Sync[F].delay(c.close())
     )
 
-  override final def run: IO[Unit] = {
+  def run: IO[Unit] = {
 
     def setupReusabilityOverlay(env: ExecutionEnvironment): IO[Unit] =
       if (env === ExecutionEnvironment.Development) {
