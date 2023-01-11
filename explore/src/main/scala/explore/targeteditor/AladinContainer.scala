@@ -6,7 +6,7 @@ package explore.targeteditor
 import cats.data.NonEmptyList
 import cats.data.NonEmptyMap
 import cats.syntax.all.*
-import eu.timepit.refined.*
+import eu.timepit.refined.refineV
 import eu.timepit.refined.numeric.NonNegative
 import explore.aladin.AladinZoomControl
 import explore.components.ui.ExploreStyles
@@ -92,6 +92,7 @@ object AladinContainer extends AladinCommon {
       .at(p.vizTime)
       .getOrElse(CoordinatesAtVizTime(p.asterism.baseTracking.baseCoordinates))
 
+    summon[cats.Eq[lucuma.core.model.Target.Id]]
     val science = p.asterism.toSidereal
       .map(t =>
         (t.id === p.asterism.focus.id,

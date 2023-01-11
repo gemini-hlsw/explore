@@ -402,9 +402,11 @@ object ObsTabTiles:
           val skyPlotTile: Tile =
             ElevationPlotTile.elevationPlotTile(
               props.userId,
-              props.focusedTarget.orElse(props.observation.get.scienceTargetIds.headOption),
-              props.observation.get.observingMode.map(_.siteFor),
-              targetCoords,
+              props.focusedTarget,
+              // .orElse(props.observation.scienceTargetIds.headOption),
+              None, // props.site,
+              // props.observation.observingMode.map(_.siteFor),
+              targetCoords.map(NonEmptyList.one(_)),
               vizTime,
               timingWindows.get,
               props.globalPreferences.get

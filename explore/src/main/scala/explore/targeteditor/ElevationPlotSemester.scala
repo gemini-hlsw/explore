@@ -6,6 +6,7 @@ package explore.targeteditor
 import cats.effect.IO
 import cats.effect.Resource
 import cats.syntax.all.*
+import cats.data.NonEmptyList
 import crystal.react.hooks.*
 import explore.events.PlotMessage.*
 import explore.highcharts.*
@@ -41,7 +42,7 @@ import js.JSConverters.*
 
 case class ElevationPlotSemester(
   site:             Site,
-  coords:           CoordinatesAtVizTime,
+  coords:           NonEmptyList[CoordinatesAtVizTime],
   semester:         Semester,
   date:             LocalDate,
   excludeIntervals: List[BoundedInterval[Instant]]
@@ -76,7 +77,7 @@ object ElevationPlotSemester:
                     RequestSemesterSidereal(
                       props.semester,
                       props.site,
-                      props.coords.value,
+                      props.coords.head.value,
                       PlotDayRate
                     )
                   )

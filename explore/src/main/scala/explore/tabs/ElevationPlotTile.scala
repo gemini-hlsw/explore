@@ -4,6 +4,7 @@
 package explore.tabs
 
 import cats.syntax.all.*
+import cats.data.NonEmptyList
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.GlobalPreferences
@@ -26,7 +27,7 @@ object ElevationPlotTile:
     uid:               Option[User.Id],
     tid:               Option[Target.Id],
     site:              Option[Site],
-    coordinates:       Option[CoordinatesAtVizTime],
+    coordinates:       Option[NonEmptyList[CoordinatesAtVizTime]],
     vizTime:           Option[Instant],
     timingWindows:     List[TimingWindow] = List.empty,
     globalPreferences: GlobalPreferences
@@ -43,7 +44,7 @@ object ElevationPlotTile:
                                targetId,
                                site,
                                vizTime,
-                               coordinates,
+                               coordinates.head,
                                timingWindows,
                                globalPreferences
           ): VdomNode

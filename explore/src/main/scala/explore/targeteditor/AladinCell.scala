@@ -15,7 +15,6 @@ import crystal.react.*
 import crystal.react.given
 import crystal.react.hooks.*
 import crystal.react.reuse.*
-import eu.timepit.refined.*
 import eu.timepit.refined.auto.*
 import explore.Icons
 import explore.aladin.AladinFullScreenControl

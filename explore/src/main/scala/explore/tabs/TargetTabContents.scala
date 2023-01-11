@@ -5,6 +5,7 @@ package explore.tabs
 
 import cats.effect.IO
 import cats.syntax.all.*
+import cats.data.NonEmptyList
 import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
@@ -56,6 +57,7 @@ import queries.schemas.odb.ObsQueries
 
 import java.time.Instant
 import scala.collection.immutable.SortedSet
+import lucuma.core.enums.Site
 
 case class TargetTabContents(
   userId:           Option[User.Id],
@@ -303,7 +305,7 @@ object TargetTabContents extends TwoPanels:
           props.userId,
           props.focused.target,
           configuration.map(_.siteFor),
-          selectedCoordinates.map(CoordinatesAtVizTime(_)),
+          selectedCoordinates.map(r => NonEmptyList.one(CoordinatesAtVizTime(r))),
           vizTimeView.get,
           Nil,
           props.globalPreferences.get
@@ -341,10 +343,10 @@ object TargetTabContents extends TwoPanels:
         ElevationPlotTile.elevationPlotTile(
           props.userId,
           targetId.some,
-          none,
+          lucuma.core.enums.Site.GN.some,
           // TODO PM correct the coordinates
-          CoordinatesAtVizTime(Target.Sidereal.baseCoordinates.get(target)).some,
-          none,
+          NonEmptyList.one(CoordinatesAtVizTime(Target.Sidereal.baseCoordinates.get(target))).some,
+          None, // vizTimeView.get,
           Nil,
           props.globalPreferences.get
         )

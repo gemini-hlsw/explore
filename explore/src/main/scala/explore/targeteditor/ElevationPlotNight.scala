@@ -6,6 +6,7 @@ package explore.targeteditor
 import cats.Eq
 import cats.derived.*
 import cats.syntax.all.*
+import cats.data.NonEmptyList
 import explore.*
 import explore.highcharts.*
 import explore.model.Constants
@@ -48,7 +49,7 @@ import js.JSConverters.*
 
 case class ElevationPlotNight(
   site:              Site,
-  coords:            CoordinatesAtVizTime,
+  coords:            NonEmptyList[CoordinatesAtVizTime],
   date:              LocalDate,
   timeDisplay:       TimeDisplay,
   visualizationTime: Option[Instant],
@@ -170,7 +171,7 @@ object ElevationPlotNight:
         val start          = tbOfficialNight.start
         val end            = tbOfficialNight.end
         val skyCalcResults =
-          SkyCalc.forInterval(props.site, start, end, PlotEvery, _ => props.coords.value)
+          SkyCalc.forInterval(props.site, start, end, PlotEvery, _ => props.coords.head.value)
         val series         = skyCalcResults
           .map { (instant, results) =>
             val millisSinceEpoch = instant.toEpochMilli.toDouble

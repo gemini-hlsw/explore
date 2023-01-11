@@ -3,14 +3,12 @@
 
 package explore.targeteditor
 
-import cats.effect.IO
 import cats.syntax.all.*
 import crystal.*
 import crystal.react.*
+import cats.data.NonEmptyList
 import crystal.react.hooks.*
 import explore.*
-import explore.common.UserPreferencesQueries
-import explore.common.UserPreferencesQueries.*
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
@@ -59,6 +57,15 @@ case class ElevationPlotSection(
 object ElevationPlotSection:
   private type Props = ElevationPlotSection
 
+  // private given Reusability[ElevationPlotOptions] = Reusability.byEq
+
+  // private val sitePrism = Pot.readyPrism.andThen(ElevationPlotOptions.site)
+
+  // private inline def calcTime(visualizationTime: Option[Instant], site: Site): LocalDate =
+  //   visualizationTime
+  //     .map(LocalDateTime.ofInstant(_, site.timezone).toLocalDate)
+  // .getOrElse(ZonedDateTime.now(site.timezone).toLocalDate.plusDays(1))
+
   private val component =
     ScalaFnComponent
       .withHooks[Props]
@@ -81,19 +88,7 @@ object ElevationPlotSection:
       .useEffectWithDepsBy((props, _, _) => props.visualizationTime)((props, _, options) =>
         _.map(vt => options.mod(_.withDateAndSemesterOf(vt))).orEmpty
       )
-      .render { (props, ctx, elevationPlotOptions) =>
-        import ctx.given
-
-        val options = elevationPlotOptions.withOnMod(opts =>
-          ElevationPlotPreference
-            .updatePlotPreferences[IO](props.uid,
-                                       opts.range,
-                                       opts.timeDisplay,
-                                       opts.showScheduling.value
-            )
-            .runAsync
-        )
-
+      .render { (props, ctx, options) =>
         val siteView           = options.zoom(ElevationPlotOptions.site)
         val rangeView          = options.zoom(ElevationPlotOptions.range)
         val dateView           = options.zoom(ElevationPlotOptions.date)
@@ -135,7 +130,7 @@ object ElevationPlotSection:
               case PlotRange.Night    =>
                 ElevationPlotNight(
                   opt.site,
-                  props.coords,
+                  NonEmptyList.of(props.coords),
                   opt.date,
                   opt.timeDisplay,
                   props.visualizationTime,
@@ -145,7 +140,7 @@ object ElevationPlotSection:
                 val coords = props.coords
                 ElevationPlotSemester(
                   opt.site,
-                  coords,
+                  NonEmptyList.of(coords),
                   opt.semester,
                   opt.date,
                   windowsNetExcludeIntervals
