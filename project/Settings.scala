@@ -39,7 +39,7 @@ object Settings {
     val mUnit                  = "0.7.29"
     val mUnitCatsEffect        = "1.0.7"
     val pprint                 = "0.8.1"
-    val reactAladin            = "0.28.1"
+    val reactAladin            = "0.28.2"
     val refinedAlgebra         = "0.1.0"
     val scalaCollectionContrib = "0.3.0"
     val scalaJsDom             = "2.3.0"
