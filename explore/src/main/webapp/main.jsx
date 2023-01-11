@@ -37,7 +37,4 @@ if ("serviceWorker" in navigator && !/local.lucuma.xyz/.test(window.location)) {
 
 if (import.meta.hot) {
   import.meta.hot.accept();
-  import.meta.hot.dispose((_) => {
-    // Reset the IO runtime
-  });
 }
