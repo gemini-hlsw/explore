@@ -3,95 +3,95 @@
 
 // package explore.config
 
-import cats.Eq
-import cats.MonadError
-import cats.data.NonEmptyList
-import cats.effect.IO
-import cats.syntax.all.*
-import clue.data.syntax.*
-import coulomb.Quantity
-import coulomb.ops.algebra.spire.all.given
-import coulomb.policy.spire.standard.given
-import coulomb.syntax.*
-import crystal.Pot
-import crystal.react.View
-import crystal.react.hooks.*
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined.auto.*
-import eu.timepit.refined.cats.*
-import eu.timepit.refined.numeric.NonNegative
-import eu.timepit.refined.types.numeric.NonNegInt
-import eu.timepit.refined.types.numeric.PosBigDecimal
-import eu.timepit.refined.types.numeric.PosInt
-import eu.timepit.refined.types.string.NonEmptyString
-import explore.Icons
-import explore.common.Aligner
-import explore.common.ScienceConversions.*
-import explore.common.ScienceQueries.*
-import explore.components.HelpIcon
-import explore.components.ui.ExploreStyles
-import explore.config.ExposureTimeModeType.*
-import explore.config.sequence.SequenceEditorPopup
-import explore.given
-import explore.model.AppContext
-import explore.model.DitherNanoMeters
-import explore.model.ExploreModelValidators
-import explore.model.ScienceModeAdvanced
-import explore.model.ScienceModeBasic
-import explore.model.display.given
-import explore.model.reusability.given
-import explore.modes.GmosNorthSpectroscopyRow
-import explore.modes.GmosSouthSpectroscopyRow
-import explore.modes.SpectroscopyModeRow
-import explore.modes.SpectroscopyModesMatrix
-import explore.optics.*
-import explore.optics.all.*
-import explore.utils.*
-import japgolly.scalajs.react.*
-import japgolly.scalajs.react.feature.ReactFragment
-import japgolly.scalajs.react.util.Effect
-import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.enums.GmosXBinning
-import lucuma.core.enums.GmosYBinning
-import lucuma.core.enums.*
-import lucuma.core.math.Offset
-import lucuma.core.math.Wavelength
-import lucuma.core.math.units.Micrometer
-import lucuma.core.model.ExposureTimeMode
-import lucuma.core.model.NonNegDuration
-import lucuma.core.model.Observation
-import lucuma.core.syntax.all.*
-import lucuma.core.util.Display
-import lucuma.core.util.Enumerated
-import lucuma.core.validation.*
-import lucuma.refined.*
-import lucuma.schemas.ObservationDB.Types.*
-import lucuma.ui.input.ChangeAuditor
-import lucuma.ui.primereact.FormEnumDropdownOptionalView
-import lucuma.ui.primereact.FormInputText
-import lucuma.ui.primereact.FormInputTextView
-import lucuma.ui.primereact.FormLabel
-import lucuma.ui.primereact.LucumaStyles
-import lucuma.ui.primereact.*
-import lucuma.ui.primereact.given
-import lucuma.ui.reusability.*
-import lucuma.ui.syntax.all.*
-import lucuma.ui.syntax.all.given
-import lucuma.ui.utils.given
-import lucuma.utils.*
-import monocle.Lens
-import mouse.boolean.*
-import org.typelevel.log4cats.Logger
-import queries.schemas.odb.ObsQueries.*
-import react.common.Css
-import react.common.ReactFnProps
-import react.fa.IconSize
-import react.floatingui.syntax.*
-import react.primereact.Button
-import react.primereact.PrimeStyles
-import reactST.primereact.components.{Button => CButton}
-import spire.math.Bounded
-import spire.math.Interval
+// import cats.Eq
+// import cats.MonadError
+// import cats.data.NonEmptyList
+// import cats.effect.IO
+// import cats.syntax.all.*
+// import clue.data.syntax.*
+// import coulomb.Quantity
+// import coulomb.ops.algebra.spire.all.given
+// import coulomb.policy.spire.standard.given
+// import coulomb.syntax.*
+// import crystal.Pot
+// import crystal.react.View
+// import crystal.react.hooks.*
+// import eu.timepit.refined.api.Refined
+// import eu.timepit.refined.auto.*
+// import eu.timepit.refined.cats.*
+// import eu.timepit.refined.numeric.NonNegative
+// import eu.timepit.refined.types.numeric.NonNegInt
+// import eu.timepit.refined.types.numeric.PosBigDecimal
+// import eu.timepit.refined.types.numeric.PosInt
+// import eu.timepit.refined.types.string.NonEmptyString
+// import explore.Icons
+// import explore.common.Aligner
+// import explore.common.ScienceConversions.*
+// import explore.common.ScienceQueries.*
+// import explore.components.HelpIcon
+// import explore.components.ui.ExploreStyles
+// import explore.config.ExposureTimeModeType.*
+// import explore.config.sequence.SequenceEditorPopup
+// import explore.given
+// import explore.model.AppContext
+// import explore.model.DitherNanoMeters
+// import explore.model.ExploreModelValidators
+// import explore.model.ScienceModeAdvanced
+// import explore.model.ScienceModeBasic
+// import explore.model.display.given
+// import explore.model.reusability.given
+// import explore.modes.GmosNorthSpectroscopyRow
+// import explore.modes.GmosSouthSpectroscopyRow
+// import explore.modes.SpectroscopyModeRow
+// import explore.modes.SpectroscopyModesMatrix
+// import explore.optics.*
+// import explore.optics.all.*
+// import explore.utils.*
+// import japgolly.scalajs.react.*
+// import japgolly.scalajs.react.feature.ReactFragment
+// import japgolly.scalajs.react.util.Effect
+// import japgolly.scalajs.react.vdom.html_<^.*
+// import lucuma.core.enums.GmosXBinning
+// import lucuma.core.enums.GmosYBinning
+// import lucuma.core.enums.*
+// import lucuma.core.math.Offset
+// import lucuma.core.math.Wavelength
+// import lucuma.core.math.units.Micrometer
+// import lucuma.core.model.ExposureTimeMode
+// import lucuma.core.model.NonNegDuration
+// import lucuma.core.model.Observation
+// import lucuma.core.syntax.all.*
+// import lucuma.core.util.Display
+// import lucuma.core.util.Enumerated
+// import lucuma.core.validation.*
+// import lucuma.refined.*
+// import lucuma.schemas.ObservationDB.Types.*
+// import lucuma.ui.input.ChangeAuditor
+// import lucuma.ui.primereact.FormEnumDropdownOptionalView
+// import lucuma.ui.primereact.FormInputText
+// import lucuma.ui.primereact.FormInputTextView
+// import lucuma.ui.primereact.FormLabel
+// import lucuma.ui.primereact.LucumaStyles
+// import lucuma.ui.primereact.*
+// import lucuma.ui.primereact.given
+// import lucuma.ui.reusability.*
+// import lucuma.ui.syntax.all.*
+// import lucuma.ui.syntax.all.given
+// import lucuma.ui.utils.given
+// import lucuma.utils.*
+// import monocle.Lens
+// import mouse.boolean.*
+// import org.typelevel.log4cats.Logger
+// import queries.schemas.odb.ObsQueries.*
+// import react.common.Css
+// import react.common.ReactFnProps
+// import react.fa.IconSize
+// import react.floatingui.syntax.*
+// import react.primereact.Button
+// import react.primereact.PrimeStyles
+// import reactST.primereact.components.{Button => CButton}
+// import spire.math.Bounded
+// import spire.math.Interval
 
 // import java.time.Duration
 
@@ -375,39 +375,39 @@ import spire.math.Interval
 //       .useEffectWithDepsBy { (props, ctx, _) =>
 //         import ctx.given
 
-        overrideExposureTimeMode(props.scienceModeAdvanced).get.map(
-          ExposureTimeModeType.fromExposureTimeMode
-        )
-      }((_, _, exposureModeEnum) =>
-        newExpModeEnum =>
-          if (exposureModeEnum.get =!= newExpModeEnum) exposureModeEnum.set(newExpModeEnum)
-          else Callback.empty
-      )
-      // filter the spectroscopy matrix by the requirements that don't get overridden
-      // by the advanced config (wavelength, for example).
-      .useMemoBy((props, _, _) =>
-        (props.spectroscopyRequirements.focalPlane,
-         props.spectroscopyRequirements.capabilities,
-         props.spectroscopyRequirements.focalPlaneAngle,
-         props.spectroscopyRequirements.resolution,
-         props.spectroscopyRequirements.wavelengthCoverage
-        )
-      ) { (props, _, _) =>
-        { case (fp, cap, fpa, res, cov) =>
-          props.confMatrix.filtered(
-            focalPlane = fp,
-            capabilities = cap,
-            slitWidth = fpa,
-            resolution = res,
-            coverage = cov.flatMap(
-              _.toMicrometers.value.value.withUnit[Micrometer].toRefined[NonNegative].toOption
-            )
-          )
-        }
-      }
-      // Try to find the readonly data from the spectroscopy matrix
-      .useMemoBy { (props, ctx, _, rows) =>
-        import ctx.given
+//         overrideExposureTimeMode(props.scienceModeAdvanced).get.map(
+//           ExposureTimeModeType.fromExposureTimeMode
+//         )
+//       }((_, _, exposureModeEnum) =>
+//         newExpModeEnum =>
+//           if (exposureModeEnum.get =!= newExpModeEnum) exposureModeEnum.set(newExpModeEnum)
+//           else Callback.empty
+//       )
+//       // filter the spectroscopy matrix by the requirements that don't get overridden
+//       // by the advanced config (wavelength, for example).
+//       .useMemoBy((props, _, _) =>
+//         (props.spectroscopyRequirements.focalPlane,
+//          props.spectroscopyRequirements.capabilities,
+//          props.spectroscopyRequirements.focalPlaneAngle,
+//          props.spectroscopyRequirements.resolution,
+//          props.spectroscopyRequirements.wavelengthCoverage
+//         )
+//       ) { (props, _, _) =>
+//         { case (fp, cap, fpa, res, cov) =>
+//           props.confMatrix.filtered(
+//             focalPlane = fp,
+//             capabilities = cap,
+//             slitWidth = fpa,
+//             resolution = res,
+//             coverage = cov.flatMap(
+//               _.toMicrometers.value.value.withUnit[Micrometer].toRefined[NonNegative].toOption
+//             )
+//           )
+//         }
+//       }
+//       // Try to find the readonly data from the spectroscopy matrix
+//       .useMemoBy { (props, ctx, _, rows) =>
+//         import ctx.given
 
 //         val advanced = props.scienceModeAdvanced
 //         (props.scienceModeBasic,

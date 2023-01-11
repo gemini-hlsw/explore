@@ -42,6 +42,7 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
+import lucuma.core.model.Program
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.User
@@ -53,7 +54,6 @@ import org.http4s.syntax.all.*
 import queries.common.ObsQueriesGQL
 import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
-import lucuma.core.model.Program
 
 case class ConfigurationPanel(
   userId:          Option[User.Id],
@@ -197,7 +197,12 @@ object ConfigurationPanel:
             <.div(ExploreStyles.TitleUndoButtons)(UndoButtons(props.scienceData))
           ),
           <.div(ExploreStyles.ConfigurationGrid)(
-            PAConfigurationPanel(props.programId, props.obsId, posAngleView, props.agsState)
+            PAConfigurationPanel(props.programId,
+                                 props.obsId,
+                                 posAngleView,
+                                 props.selectedPA,
+                                 props.agsState
+            )
             // if (editState.get === ConfigEditState.TableView)
             //   BasicConfigurationPanel(
             //     props.userId,
@@ -212,47 +217,47 @@ object ConfigurationPanel:
             //   )
             // else
             //   React.Fragment(
-            // // Gmos North Long Slit
-            // optNorthAligner.map(northAligner =>
-            //   AdvancedConfigurationPanel
-            //     .GmosNorthLongSlit(
-            //       props.obsId,
-            //       props.title,
-            //       props.subtitle,
-            //       northAligner.zoom(
-            //         model.ScienceMode.GmosNorthLongSlit.advanced,
-            //         modOrAssignAndMap(GmosNorthLongSlitAdvancedConfigInput())(
-            //           GmosNorthLongSlitInput.advanced.modify
+            //     // Gmos North Long Slit
+            //     optNorthAligner.map(northAligner =>
+            //       AdvancedConfigurationPanel
+            //         .GmosNorthLongSlit(
+            //           props.obsId,
+            //           props.title,
+            //           props.subtitle,
+            //           northAligner.zoom(
+            //             model.ScienceMode.GmosNorthLongSlit.advanced,
+            //             modOrAssignAndMap(GmosNorthLongSlitAdvancedConfigInput())(
+            //               GmosNorthLongSlitInput.advanced.modify
+            //             )
+            //           ),
+            //           northAligner.get.basic,
+            //           requirementsCtx.model.get.spectroscopy,
+            //           props.scienceData.model.zoom(ScienceData.potITC),
+            //           editState,
+            //           confMatrix
             //         )
-            //       ),
-            //       northAligner.get.basic,
-            //       requirementsCtx.model.get.spectroscopy,
-            //       props.scienceData.model.zoom(ScienceData.potITC),
-            //       editState,
-            //       confMatrix
-            //     )
-            // ),
-            // // Gmos South Long Slit
-            // optSouthAligner.map(southAligner =>
-            //   AdvancedConfigurationPanel
-            //     .GmosSouthLongSlit(
-            //       props.obsId,
-            //       props.title,
-            //       props.subtitle,
-            //       southAligner.zoom(
-            //         model.ScienceMode.GmosSouthLongSlit.advanced,
-            //         modOrAssignAndMap(GmosSouthLongSlitAdvancedConfigInput())(
-            //           GmosSouthLongSlitInput.advanced.modify
+            //     ),
+            //     // Gmos South Long Slit
+            //     optSouthAligner.map(southAligner =>
+            //       AdvancedConfigurationPanel
+            //         .GmosSouthLongSlit(
+            //           props.obsId,
+            //           props.title,
+            //           props.subtitle,
+            //           southAligner.zoom(
+            //             model.ScienceMode.GmosSouthLongSlit.advanced,
+            //             modOrAssignAndMap(GmosSouthLongSlitAdvancedConfigInput())(
+            //               GmosSouthLongSlitInput.advanced.modify
+            //             )
+            //           ),
+            //           southAligner.get.basic,
+            //           requirementsCtx.model.get.spectroscopy,
+            //           props.scienceData.model.zoom(ScienceData.potITC),
+            //           editState,
+            //           confMatrix
             //         )
-            //       ),
-            //       southAligner.get.basic,
-            //       requirementsCtx.model.get.spectroscopy,
-            //       props.scienceData.model.zoom(ScienceData.potITC),
-            //       editState,
-            //       confMatrix
             //     )
-            // )
-            // )
+            //   )
           )
         )
       }

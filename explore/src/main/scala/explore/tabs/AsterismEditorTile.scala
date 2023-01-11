@@ -70,7 +70,7 @@ object AsterismEditorTile:
       p.copy(constraint =
         paView.withOnMod(pa =>
           agsStateView.set(AgsState.Saving) *> ObsQueries
-            .updatePosAngle[IO](List(oid), pa)
+            .updatePosAngle[IO](programId, List(oid), pa)
             .guarantee(agsStateView.async.set(AgsState.Idle))
             .runAsync
         )

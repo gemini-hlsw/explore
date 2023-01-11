@@ -20,6 +20,7 @@ import lucuma.core.math.Angle
 import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
+import lucuma.core.model.Program
 import lucuma.refined.*
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.FormEnumDropdownView
@@ -33,7 +34,6 @@ import monocle.std.option
 import queries.schemas.odb.ObsQueries
 import react.common.Css
 import react.common.ReactFnProps
-import lucuma.core.model.Program
 
 case class PAConfigurationPanel(
   programId:    Program.Id,
