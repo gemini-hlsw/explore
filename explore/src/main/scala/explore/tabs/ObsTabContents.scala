@@ -292,14 +292,15 @@ object ObsTabContents extends TwoPanels:
         val obsPos = observationIds.find(a => obs.forall(_ === a._1)).map(_._2)
 
         def callbacks: ShortcutCallbacks = {
-          case CopyAlt1 | CopyAlt2 | CopyAlt3 =>
+          case CopyAlt1 | CopyAlt2 =>
             obs
               .map(id =>
                 (ctx.exploreClipboard.set(LocalClipboard.CopiedObservations(ObsIdSet.one(id))) >>
                   ctx.toastRef.showToast(s"Copied obs $id")).runAsync
               )
               .getOrEmpty
-          case Down                           =>
+
+          case Down        =>
             obsPos
               .filter(_ < observationIds.length && obsList.nonEmpty)
               .flatMap { p =>
@@ -313,7 +314,7 @@ object ObsTabContents extends TwoPanels:
                 }
               }
               .getOrEmpty
-          case Up                             =>
+          case Up          =>
             obsPos
               .filter(_ > 0)
               .flatMap { p =>
@@ -326,7 +327,7 @@ object ObsTabContents extends TwoPanels:
                 }
               }
               .getOrEmpty
-          case GoToSummary                    =>
+          case GoToSummary =>
             ctx.setPageVia(AppTab.Observations,
                            props.programId,
                            Focused.None,

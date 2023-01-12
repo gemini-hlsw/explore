@@ -682,7 +682,7 @@ object TargetTabContents extends TwoPanels:
           obsIds => ctx.pushPage(AppTab.Targets, props.programId, Focused.obsSet(obsIds)).to[IO]
 
         def callbacks: ShortcutCallbacks = {
-          case CopyAlt1 | CopyAlt2 | CopyAlt3 =>
+          case CopyAlt1 | CopyAlt2 =>
             target.obsSet
               .map(ids =>
                 (ctx.exploreClipboard.set(LocalClipboard.CopiedObservations(ids)) >>
@@ -699,7 +699,7 @@ object TargetTabContents extends TwoPanels:
               )
               .getOrEmpty
 
-          case PasteAlt1 | PasteAlt2 | PasteAlt3 =>
+          case PasteAlt1 | PasteAlt2 =>
             ctx.exploreClipboard.get.flatMap {
               case LocalClipboard.CopiedObservations(id) =>
                 val treeTargets =
