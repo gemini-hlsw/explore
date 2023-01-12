@@ -58,13 +58,11 @@ val Down = Shortcut("j")
 val Up   = Shortcut("k")
 
 val CopyAlt1 = Shortcut("y")
-val CopyAlt2 = Shortcut("ctrl+c")
-val CopyAlt3 = Shortcut("meta+c")
+val CopyAlt2 = Shortcut("meta+c")
 
-val CopyKeys = List(CopyAlt1, CopyAlt2, CopyAlt3)
+val CopyKeys = List(CopyAlt1, CopyAlt2)
 
 val PasteAlt1 = Shortcut("p")
-val PasteAlt2 = Shortcut("ctrl+v")
-val PasteAlt3 = Shortcut("meta+v")
+val PasteAlt2 = Shortcut("meta+v")
 
-val PasteKeys = List(PasteAlt1, PasteAlt2, PasteAlt3)
+val PasteKeys = List(PasteAlt1, PasteAlt2)
