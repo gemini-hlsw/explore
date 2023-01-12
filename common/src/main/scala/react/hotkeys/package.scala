@@ -28,17 +28,20 @@ trait HotkeysOptions extends js.Object {
 object HotkeysOptions {
 
   def apply(
-    enabled: js.UndefOr[Boolean] = js.undefined
+    enabled:              js.UndefOr[Boolean] = js.undefined,
+    filterPreventDefault: js.UndefOr[Boolean] = js.undefined,
+    splitKey:             js.UndefOr[String] = js.undefined
   ): HotkeysOptions =
     val p = js.Dynamic.literal().asInstanceOf[HotkeysOptions]
     p.enabled.foreach(o => p.enabled = o)
+    p.filterPreventDefault.foreach(o => p.filterPreventDefault = o)
+    p.splitKey.foreach(o => p.splitKey = o)
     p
 }
 
 @js.native
 trait HotkeysEvent extends js.Object {
   val alt: Boolean
-  val ctrl: Boolean
   val shift: Boolean
   val meta: Boolean
   val mod: Boolean
