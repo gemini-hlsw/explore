@@ -579,7 +579,6 @@ object TargetTabContents extends TwoPanels:
   private def applyObs(
     obsIds:                List[Observation.Id],
     targetIds:             List[Target.Id],
-    adding:                View[LoadingState],
     asterismGroupsWithObs: View[AsterismGroupsWithObs],
     ctx:                   AppContext[IO],
     listUndoStacks:        View[UndoStacks[IO, AsterismGroupsWithObs]],
@@ -587,40 +586,37 @@ object TargetTabContents extends TwoPanels:
   ): IO[Unit] =
     import ctx.given
     val undoContext = UndoContext(listUndoStacks, asterismGroupsWithObs)
-    adding.async.set(LoadingState.Loading) >>
-      (obsIds, targetIds).tupled
-        .traverse((obsId, tid) =>
-          ObsQueries
-            .applyObservation[IO](obsId, List(tid))
-            .map { o =>
-              asterismGroupsWithObs.get
-                .cloneObsWithTargets(obsId, o.id, List(tid))
-            }
-            .map(_.map(summ => (summ, tid)))
-        )
-        .flatMap(olist =>
-          olist.sequence
-            .foldMap(summList =>
-              val newIds    = summList.map((summ, tid) => (summ.id, tid))
-              val summaries = summList.map(_._1)
-              ObservationPasteAction
-                .paste(newIds, expandedIds)
-                .set(undoContext)(summaries.some)
-                .to[IO]
-            )
-        )
-        .void
-        .guarantee(adding.async.set(LoadingState.Done))
+    (obsIds, targetIds).tupled
+      .traverse((obsId, tid) =>
+        ObsQueries
+          .applyObservation[IO](obsId, List(tid))
+          .map { o =>
+            asterismGroupsWithObs.get
+              .cloneObsWithTargets(obsId, o.id, List(tid))
+          }
+          .map(_.map(summ => (summ, tid)))
+      )
+      .flatMap(olist =>
+        olist.sequence
+          .foldMap(summList =>
+            val newIds    = summList.map((summ, tid) => (summ.id, tid))
+            val summaries = summList.map(_._1)
+            ObservationPasteAction
+              .paste(newIds, expandedIds)
+              .set(undoContext)(summaries.some)
+              .to[IO]
+          )
+      )
+      .void
 
   private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      .useStateView(LoadingState.Done)
       // Two panel state
       .useStateView[SelectedPanel](SelectedPanel.Uninitialized)
-      .useEffectWithDepsBy((props, _, _, state) => (props.focused, state.reuseByValue)) {
-        (_, _, _, selected) => (focused, _) =>
+      .useEffectWithDepsBy((props, _, state) => (props.focused, state.reuseByValue)) {
+        (_, _, selected) => (focused, _) =>
           (focused, selected.get) match
             case (Focused(Some(_), _), _)                    => selected.set(SelectedPanel.Editor)
             case (Focused(None, Some(_)), _)                 => selected.set(SelectedPanel.Editor)
@@ -632,7 +628,7 @@ object TargetTabContents extends TwoPanels:
       // Initial target layout
       .useStateView(Pot.pending[LayoutsMap])
       // Load the config from user prefrences
-      .useEffectWithDepsBy((p, _, _, _, _, _) => p.userId) { (props, ctx, _, _, _, layout) => _ =>
+      .useEffectWithDepsBy((p, _, _, _, _) => p.userId) { (props, ctx, _, _, layout) => _ =>
         import ctx.given
 
         GridLayouts
@@ -658,7 +654,7 @@ object TargetTabContents extends TwoPanels:
       }
       .useSingleEffect(debounce = 1.second)
       // Shared obs conf (posAngle)
-      .useStreamResourceViewOnMountBy { (props, ctx, _, _, _, _, _) =>
+      .useStreamResourceViewOnMountBy { (props, ctx, _, _, _, _) =>
         import ctx.given
 
         AsterismGroupObsQuery
@@ -670,10 +666,10 @@ object TargetTabContents extends TwoPanels:
           )
       }
       // Selected targets on the summary table
-      .useStateViewBy((props, _, _, _, _, _, _, _) => props.focused.target.toList)
-      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, _, asterismGroupWithObs, selIds) =>
+      .useStateViewBy((props, _, _, _, _, _, _) => props.focused.target.toList)
+      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, asterismGroupWithObs, selIds) =>
         (props.focused, asterismGroupWithObs.toOption.map(_.get.asterismGroups), selIds.get)
-      ) { (props, ctx, loading, _, _, _, _, poagwov, _) => (target, asterismGroups, selectedIds) =>
+      ) { (props, ctx, _, _, _, _, poagwov, _) => (target, asterismGroups, selectedIds) =>
         import ctx.given
 
         val optViewAgwo = poagwov.toOption
@@ -711,15 +707,15 @@ object TargetTabContents extends TwoPanels:
                   // Apply the obs to selected targets on the tree
                   optViewAgwo
                     .map(agwov =>
-                      applyObs(
-                        id.idSet.toList,
-                        treeTargets,
-                        loading,
-                        agwov,
-                        ctx,
-                        props.listUndoStacks,
-                        props.expandedIds
-                      )
+                      ctx.toastRef.showToast(s"Pasting obs ${id.idSet.toList.mkString(", ")}") *>
+                        applyObs(
+                          id.idSet.toList,
+                          treeTargets,
+                          agwov,
+                          ctx,
+                          props.listUndoStacks,
+                          props.expandedIds
+                        )
                     )
                     .orEmpty
                 else IO.unit
@@ -757,7 +753,6 @@ object TargetTabContents extends TwoPanels:
         (
           props,
           ctx,
-          _,
           twoPanelState,
           resize,
           layout,
