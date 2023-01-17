@@ -22,6 +22,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.BuildInfo
 import explore.Icons
 import explore.components.ui.ExploreStyles
+import explore.model.AppContext
 import explore.model.enums.ExecutionEnvironment
 import explore.model.enums.ExecutionEnvironment.Development
 import japgolly.scalajs.react.*
@@ -45,10 +46,9 @@ import react.primereact.ToastRef
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
+import scala.concurrent.duration.*
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters.*
-import scala.concurrent.duration.*
-import explore.model.AppContext
 
 val canvasWidth  = VdomAttr("width")
 val canvasHeight = VdomAttr("height")

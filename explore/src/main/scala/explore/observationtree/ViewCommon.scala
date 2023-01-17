@@ -5,27 +5,17 @@ package explore.observationtree
 
 import cats.effect.IO
 import cats.syntax.all.*
-import crystal.react.implicits.*
-import explore.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.Focused
 import explore.model.ObsIdSet
 import explore.model.ObsSummary
-import explore.model.enums.AppTab
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.TagMod
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.beautifuldnd.*
-import explore.undo.UndoContext
-import queries.schemas.odb.ObsQueries.*
-import explore.model.ObsSummaryWithTitleAndConstraints
-import explore.undo.KIListMod
-import explore.model.ObsSummaryWithTitleConstraintsAndConf
 
 trait ViewCommon {
   def programId: Program.Id
@@ -66,8 +56,7 @@ trait ViewCommon {
                else onSelect(obs.id))
           }).when(selectable),
           (^.onDoubleClick ==> { (e: ReactEvent) =>
-            e.stopPropagationCB >>
-              ObsOperations.setObs(programId, obs.id.some, ctx)
+            e.stopPropagationCB >> setObs(programId, obs.id.some, ctx)
           }).when(linkToObsTab)
         )(<.span(provided.dragHandleProps)(renderObsBadge(obs, highlightSelected, forceHighlight)))
       }
@@ -86,43 +75,3 @@ trait ViewCommon {
     ExploreStyles.DraggingOver.when(isDragging)
 
 }
-
-object ObsOperations:
-  val obsListMod =
-    KIListMod[ObsSummaryWithTitleConstraintsAndConf, Observation.Id](
-      ObsSummaryWithTitleConstraintsAndConf.id
-    )
-
-  def setObs[F[_]](
-    programId: Program.Id,
-    obsId:     Option[Observation.Id],
-    ctx:       AppContext[F]
-  ): Callback =
-    ctx.pushPage(AppTab.Observations, programId, obsId.fold(Focused.None)(Focused.singleObs(_)))
-
-  def cloneObs(
-    programId: Program.Id,
-    obsId:     Observation.Id,
-    pos:       Int,
-    undoCtx:   UndoContext[ObservationList],
-    setObs:    Observation.Id => Callback,
-    aftermod:  ObsSummaryWithTitleAndConstraints => Option[
-      ObsListActions.obsListMod.ElemWithIndex
-    ] => Option[
-      ObsListActions.obsListMod.ElemWithIndex
-    ],
-    ctx:       AppContext[IO],
-    before:    IO[Unit] = IO.unit,
-    after:     IO[Unit] = IO.unit
-  ): IO[Unit] =
-    import ctx.given
-
-    before >>
-      cloneObservation[IO](obsId)
-        .flatMap { obs =>
-          ObsListActions
-            .obsExistence(obs.id, setObs)
-            .mod(undoCtx)(aftermod(obs))
-            .to[IO]
-        }
-        .guarantee(after)

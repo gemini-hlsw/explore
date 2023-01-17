@@ -67,9 +67,8 @@ object ObsList:
     adding.async.set(true) >>
       createObservation[IO](programId)
         .flatMap { obs =>
-          ObsListActions
-            .obsExistence(obs.id, o => ObsOperations.setObs(programId, o.some, ctx))
-            .mod(undoCtx)(ObsOperations.obsListMod.upsert(obs.toTitleAndConstraints, pos))
+          obsExistence(obs.id, o => setObs(programId, o.some, ctx))
+            .mod(undoCtx)(obsListMod.upsert(obs.toTitleAndConstraints, pos))
             .to[IO]
         }
         .guarantee(adding.async.set(false))
@@ -93,19 +92,16 @@ object ObsList:
               case (_, Some(fidx))    =>
                 optIndex.setState(fidx.some) // focused obs is in list
               case (None, None)       =>
-                ObsOperations.setObs(props.programId, none, ctx) >> optIndex.setState(none)
+                setObs(props.programId, none, ctx) >> optIndex.setState(none)
               case (Some(oidx), None) =>
                 // focused obs no longer exists, but we have a previous index.
                 val newIdx = math.min(oidx, obsList.length - 1)
                 obsList.toList
                   .get(newIdx.toLong)
                   .fold(
-                    optIndex.setState(none) >> ObsOperations.setObs(props.programId, none, ctx)
+                    optIndex.setState(none) >> setObs(props.programId, none, ctx)
                   )(obsSumm =>
-                    optIndex.setState(newIdx.some) >> ObsOperations.setObs(props.programId,
-                                                                           obsSumm.id.some,
-                                                                           ctx
-                    )
+                    optIndex.setState(newIdx.some) >> setObs(props.programId, obsSumm.id.some, ctx)
                   )
             }
           }
@@ -136,7 +132,7 @@ object ObsList:
               severity = Button.Severity.Secondary,
               icon = Icons.ListIcon,
               label = "Observations Summary",
-              onClick = ObsOperations.setObs(props.programId, none, ctx) >> props.setSummaryPanel,
+              onClick = setObs(props.programId, none, ctx) >> props.setSummaryPanel,
               clazz = ExploreStyles.ButtonSummary
             )
           ),
@@ -153,41 +149,31 @@ object ObsList:
                   ),
                   ExploreStyles.ObsItem |+| ExploreStyles.SelectedObsItem.when_(selected),
                   ^.onClick ==> linkOverride(
-                    ObsOperations.setObs(props.programId, focusedObs.some, ctx)
+                    setObs(props.programId, focusedObs.some, ctx)
                   )
                 )(
                   ObsBadge(
                     obs,
                     selected = selected,
-                    setStatusCB = (ObsListActions
-                      .obsEditStatus(obs.id)
+                    setStatusCB = (obsEditStatus(obs.id)
                       .set(undoCtx) _).compose((_: ObsStatus).some).some,
-                    setActiveStatusCB = (ObsListActions
-                      .obsActiveStatus(obs.id)
+                    setActiveStatusCB = (obsActiveStatus(obs.id)
                       .set(undoCtx) _).compose((_: ObsActiveStatus).some).some,
-                    setSubtitleCB = (ObsListActions
-                      .obsEditSubtitle(obs.id)
+                    setSubtitleCB = (obsEditSubtitle(obs.id)
                       .set(undoCtx) _).compose((_: Option[NonEmptyString]).some).some,
-                    deleteCB = ObsListActions
-                      .obsExistence(obs.id, o => ObsOperations.setObs(props.programId, o.some, ctx))
-                      .mod(undoCtx)(ObsOperations.obsListMod.delete)
+                    deleteCB = obsExistence(obs.id, o => setObs(props.programId, o.some, ctx))
+                      .mod(undoCtx)(obsListMod.delete)
                       .showToastCB(ctx)(s"Deleted obs ${obs.id.show}")
                       .some,
-                    cloneCB = ObsOperations
-                      .cloneObs(
-                        props.programId,
-                        obs.id,
-                        observations.length,
-                        undoCtx,
-                        o => ObsOperations.setObs(props.programId, o.some, ctx),
-                        o =>
-                          ObsOperations.obsListMod.upsert(o.toTitleAndConstraints,
-                                                          observations.length
-                          ),
-                        ctx,
-                        adding.async.set(true),
-                        adding.async.set(false)
-                      )
+                    cloneCB = cloneObs(
+                      props.programId,
+                      obs.id,
+                      observations.length,
+                      undoCtx,
+                      ctx,
+                      adding.async.set(true),
+                      adding.async.set(false)
+                    )
                       .withToast(ctx)(s"Duplicating obs ${obs.id}")
                       .runAsync
                       .some

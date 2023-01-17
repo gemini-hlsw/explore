@@ -28,10 +28,11 @@ import explore.model.layout.*
 import explore.model.layout.unsafe.given
 import explore.model.reusability.*
 import explore.model.reusability.given
-import explore.observationtree.ObsList
+import explore.observationtree.*
 import explore.shortcuts.*
 import explore.shortcuts.given
 import explore.syntax.ui.*
+import explore.undo.UndoContext
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.callback.CallbackCatsEffect.*
@@ -60,8 +61,6 @@ import react.resizeDetector.*
 import react.resizeDetector.hooks.*
 
 import scala.concurrent.duration.*
-import explore.observationtree.ObsOperations
-import explore.undo.UndoContext
 
 case class ObsTabContents(
   userId:     Option[User.Id],
@@ -315,16 +314,11 @@ object ObsTabContents extends TwoPanels:
                     UndoContext(props.obsListStacks, observations)
                   idSet.idSet.toList
                     .traverse(oid =>
-                      ObsOperations.cloneObs(
+                      cloneObs(
                         props.programId,
                         oid,
                         observationIds.length,
                         undoCtx,
-                        o => ObsOperations.setObs(props.programId, o.some, ctx),
-                        o =>
-                          ObsOperations.obsListMod.upsert(o.toTitleAndConstraints,
-                                                          observationIds.length
-                          ),
                         ctx
                       )
                     )
