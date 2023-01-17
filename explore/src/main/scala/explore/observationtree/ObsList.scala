@@ -55,11 +55,6 @@ case class ObsList(
 object ObsList:
   private type Props = ObsList
 
-  private val obsListMod =
-    KIListMod[ObsSummaryWithTitleConstraintsAndConf, Observation.Id](
-      ObsSummaryWithTitleConstraintsAndConf.id
-    )
-
   private def insertObs(
     programId: Program.Id,
     pos:       Int,
@@ -74,7 +69,7 @@ object ObsList:
         .flatMap { obs =>
           ObsListActions
             .obsExistence(obs.id, o => ObsOperations.setObs(programId, o.some, ctx))
-            .mod(undoCtx)(obsListMod.upsert(obs.toTitleAndConstraints, pos))
+            .mod(undoCtx)(ObsOperations.obsListMod.upsert(obs.toTitleAndConstraints, pos))
             .to[IO]
         }
         .guarantee(adding.async.set(false))
@@ -175,7 +170,8 @@ object ObsList:
                       .set(undoCtx) _).compose((_: Option[NonEmptyString]).some).some,
                     deleteCB = ObsListActions
                       .obsExistence(obs.id, o => ObsOperations.setObs(props.programId, o.some, ctx))
-                      .mod(undoCtx)(obsListMod.delete)
+                      .mod(undoCtx)(ObsOperations.obsListMod.delete)
+                      .showToastCB(ctx)(s"Deleted obs ${obs.id.show}")
                       .some,
                     cloneCB = ObsOperations
                       .cloneObs(
@@ -184,7 +180,10 @@ object ObsList:
                         observations.length,
                         undoCtx,
                         o => ObsOperations.setObs(props.programId, o.some, ctx),
-                        o => obsListMod.upsert(o.toTitleAndConstraints, observations.length),
+                        o =>
+                          ObsOperations.obsListMod.upsert(o.toTitleAndConstraints,
+                                                          observations.length
+                          ),
                         ctx,
                         adding.async.set(true),
                         adding.async.set(false)

@@ -24,6 +24,8 @@ import react.beautifuldnd.*
 import explore.undo.UndoContext
 import queries.schemas.odb.ObsQueries.*
 import explore.model.ObsSummaryWithTitleAndConstraints
+import explore.undo.KIListMod
+import explore.model.ObsSummaryWithTitleConstraintsAndConf
 
 trait ViewCommon {
   def programId: Program.Id
@@ -86,6 +88,11 @@ trait ViewCommon {
 }
 
 object ObsOperations:
+  val obsListMod =
+    KIListMod[ObsSummaryWithTitleConstraintsAndConf, Observation.Id](
+      ObsSummaryWithTitleConstraintsAndConf.id
+    )
+
   def setObs[F[_]](
     programId: Program.Id,
     obsId:     Option[Observation.Id],
