@@ -4,19 +4,16 @@
 package explore.observationtree
 
 import cats.effect.IO
-import explore.*
+import cats.syntax.all.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.Focused
 import explore.model.ObsIdSet
 import explore.model.ObsSummary
-import explore.model.enums.AppTab
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.TagMod
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.beautifuldnd.*
 
@@ -59,8 +56,7 @@ trait ViewCommon {
                else onSelect(obs.id))
           }).when(selectable),
           (^.onDoubleClick ==> { (e: ReactEvent) =>
-            e.stopPropagationCB >>
-              ctx.pushPage(AppTab.Observations, programId, Focused.singleObs(obs.id))
+            e.stopPropagationCB >> setObs(programId, obs.id.some, ctx)
           }).when(linkToObsTab)
         )(<.span(provided.dragHandleProps)(renderObsBadge(obs, highlightSelected, forceHighlight)))
       }
@@ -77,4 +73,5 @@ trait ViewCommon {
 
   def getListStyle(isDragging: Boolean): TagMod =
     ExploreStyles.DraggingOver.when(isDragging)
+
 }

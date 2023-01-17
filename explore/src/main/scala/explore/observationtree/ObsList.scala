@@ -22,6 +22,7 @@ import explore.observationtree.ObsBadge
 import explore.undo.KIListMod
 import explore.undo.UndoContext
 import explore.undo.UndoStacks
+import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ObsActiveStatus
@@ -54,18 +55,6 @@ case class ObsList(
 object ObsList:
   private type Props = ObsList
 
-  private val obsListMod =
-    KIListMod[ObsSummaryWithTitleConstraintsAndConf, Observation.Id](
-      ObsSummaryWithTitleConstraintsAndConf.id
-    )
-
-  private def setObs(
-    programId: Program.Id,
-    obsId:     Option[Observation.Id],
-    ctx:       AppContext[IO]
-  ): Callback =
-    ctx.pushPage(AppTab.Observations, programId, obsId.fold(Focused.None)(Focused.singleObs(_)))
-
   private def insertObs(
     programId: Program.Id,
     pos:       Int,
@@ -78,28 +67,7 @@ object ObsList:
     adding.async.set(true) >>
       createObservation[IO](programId)
         .flatMap { obs =>
-          ObsListActions
-            .obsExistence(obs.id, o => setObs(programId, o.some, ctx))
-            .mod(undoCtx)(obsListMod.upsert(obs.toTitleAndConstraints, pos))
-            .to[IO]
-        }
-        .guarantee(adding.async.set(false))
-
-  private def cloneObs(
-    programId: Program.Id,
-    obsId:     Observation.Id,
-    pos:       Int,
-    undoCtx:   UndoContext[ObservationList],
-    adding:    View[Boolean],
-    ctx:       AppContext[IO]
-  ): IO[Unit] =
-    import ctx.given
-
-    adding.async.set(true) >>
-      cloneObservation[IO](obsId)
-        .flatMap { obs =>
-          ObsListActions
-            .obsExistence(obs.id, o => setObs(programId, o.some, ctx))
+          obsExistence(obs.id, o => setObs(programId, o.some, ctx))
             .mod(undoCtx)(obsListMod.upsert(obs.toTitleAndConstraints, pos))
             .to[IO]
         }
@@ -130,7 +98,9 @@ object ObsList:
                 val newIdx = math.min(oidx, obsList.length - 1)
                 obsList.toList
                   .get(newIdx.toLong)
-                  .fold(optIndex.setState(none) >> setObs(props.programId, none, ctx))(obsSumm =>
+                  .fold(
+                    optIndex.setState(none) >> setObs(props.programId, none, ctx)
+                  )(obsSumm =>
                     optIndex.setState(newIdx.some) >> setObs(props.programId, obsSumm.id.some, ctx)
                   )
             }
@@ -178,32 +148,35 @@ object ObsList:
                     Focused.singleObs(focusedObs, props.focusedTarget)
                   ),
                   ExploreStyles.ObsItem |+| ExploreStyles.SelectedObsItem.when_(selected),
-                  ^.onClick ==> linkOverride(setObs(props.programId, focusedObs.some, ctx))
+                  ^.onClick ==> linkOverride(
+                    setObs(props.programId, focusedObs.some, ctx)
+                  )
                 )(
                   ObsBadge(
                     obs,
                     selected = selected,
-                    setStatusCB = (ObsListActions
-                      .obsEditStatus(obs.id)
+                    setStatusCB = (obsEditStatus(obs.id)
                       .set(undoCtx) _).compose((_: ObsStatus).some).some,
-                    setActiveStatusCB = (ObsListActions
-                      .obsActiveStatus(obs.id)
+                    setActiveStatusCB = (obsActiveStatus(obs.id)
                       .set(undoCtx) _).compose((_: ObsActiveStatus).some).some,
-                    setSubtitleCB = (ObsListActions
-                      .obsEditSubtitle(obs.id)
+                    setSubtitleCB = (obsEditSubtitle(obs.id)
                       .set(undoCtx) _).compose((_: Option[NonEmptyString]).some).some,
-                    deleteCB = ObsListActions
-                      .obsExistence(obs.id, o => setObs(props.programId, o.some, ctx))
+                    deleteCB = obsExistence(obs.id, o => setObs(props.programId, o.some, ctx))
                       .mod(undoCtx)(obsListMod.delete)
+                      .showToastCB(ctx)(s"Deleted obs ${obs.id.show}")
                       .some,
                     cloneCB = cloneObs(
                       props.programId,
                       obs.id,
                       observations.length,
                       undoCtx,
-                      adding,
-                      ctx
-                    ).runAsync.some
+                      ctx,
+                      adding.async.set(true),
+                      adding.async.set(false)
+                    )
+                      .withToast(ctx)(s"Duplicating obs ${obs.id}")
+                      .runAsync
+                      .some
                   )
                 )
               }

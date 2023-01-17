@@ -28,10 +28,11 @@ import explore.model.layout.*
 import explore.model.layout.unsafe.given
 import explore.model.reusability.*
 import explore.model.reusability.given
-import explore.observationtree.ObsList
+import explore.observationtree.*
 import explore.shortcuts.*
 import explore.shortcuts.given
 import explore.syntax.ui.*
+import explore.undo.UndoContext
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.callback.CallbackCatsEffect.*
@@ -70,6 +71,7 @@ case class ObsTabContents(
 ) extends ReactFnProps(ObsTabContents.component) {
   val focusedObs: Option[Observation.Id] = focused.obsSet.map(_.head)
   val focusedTarget: Option[Target.Id]   = focused.target
+  val obsListStacks                      = undoStacks.zoom(ModelUndoStacks.forObsList)
 }
 
 object ObsTabContents extends TwoPanels:
@@ -178,7 +180,7 @@ object ObsTabContents extends TwoPanels:
         props.focusedObs,
         props.focusedTarget,
         selectedView.set(SelectedPanel.Summary),
-        props.undoStacks.zoom(ModelUndoStacks.forObsList)
+        props.obsListStacks
       )
 
     val backButton: VdomNode =
@@ -295,12 +297,38 @@ object ObsTabContents extends TwoPanels:
           case CopyAlt1 | CopyAlt2 =>
             obs
               .map(id =>
-                (ctx.exploreClipboard.set(LocalClipboard.CopiedObservations(ObsIdSet.one(id))) >>
-                  ctx.toastRef.showToast(s"Copied obs $id")).runAsync
+                ctx.exploreClipboard
+                  .set(LocalClipboard.CopiedObservations(ObsIdSet.one(id)))
+                  .withToast(ctx)(s"Copied obs $id")
               )
-              .getOrEmpty
+              .orUnit
+              .runAsync
 
-          case Down        =>
+          case PasteAlt1 | PasteAlt2 =>
+            ctx.exploreClipboard.get.flatMap {
+              case LocalClipboard.CopiedObservations(idSet) =>
+                obsList.toOption.map { obsWithConstraints =>
+                  val observations =
+                    obsWithConstraints.zoom(ObsSummariesWithConstraints.observations)
+                  val undoCtx      =
+                    UndoContext(props.obsListStacks, observations)
+                  idSet.idSet.toList
+                    .traverse(oid =>
+                      cloneObs(
+                        props.programId,
+                        oid,
+                        observationIds.length,
+                        undoCtx,
+                        ctx
+                      )
+                    )
+                    .void
+                    .withToast(ctx)(s"Duplicating obs ${idSet.idSet.mkString_(", ")}")
+                }.orUnit
+              case _                                        => IO.unit
+            }.runAsync
+
+          case Down =>
             obsPos
               .filter(_ < observationIds.length && obsList.nonEmpty)
               .flatMap { p =>
@@ -314,7 +342,8 @@ object ObsTabContents extends TwoPanels:
                 }
               }
               .getOrEmpty
-          case Up          =>
+
+          case Up =>
             obsPos
               .filter(_ > 0)
               .flatMap { p =>
@@ -327,6 +356,7 @@ object ObsTabContents extends TwoPanels:
                 }
               }
               .getOrEmpty
+
           case GoToSummary =>
             ctx.setPageVia(AppTab.Observations,
                            props.programId,
@@ -334,7 +364,9 @@ object ObsTabContents extends TwoPanels:
                            SetRouteVia.HistoryPush
             )
         }
-        UseHotkeysProps((GoToSummary :: Up :: Down :: CopyKeys).toHotKeys, callbacks)
+        UseHotkeysProps(((GoToSummary :: Up :: Down :: Nil) ::: (CopyKeys ::: PasteKeys)).toHotKeys,
+                        callbacks
+        )
       }
       .render {
         (

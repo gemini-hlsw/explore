@@ -7,9 +7,8 @@ import cats.Applicative
 import cats.Endo
 import cats.Monad
 import cats.Monoid
-import cats.effect.Deferred
-import cats.effect.Sync
-import cats.effect.kernel.Sync
+import cats.effect.*
+import cats.effect.syntax.all.*
 import cats.syntax.all.*
 import clue.data.*
 import clue.data.syntax.*
@@ -23,6 +22,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.BuildInfo
 import explore.Icons
 import explore.components.ui.ExploreStyles
+import explore.model.AppContext
 import explore.model.enums.ExecutionEnvironment
 import explore.model.enums.ExecutionEnvironment.Development
 import japgolly.scalajs.react.*
@@ -46,6 +46,7 @@ import react.primereact.ToastRef
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
+import scala.concurrent.duration.*
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters.*
 
@@ -162,6 +163,22 @@ extension (toastRef: ToastRef)
 extension [F[_]: Sync](toastRef: Deferred[F, ToastRef])
   def showToast(text: String, severity: Message.Severity = Message.Severity.Info): F[Unit] =
     toastRef.tryGet.flatMap(_.map(_.show(text, severity).to[F]).getOrElse(Applicative[F].unit))
+
+  def clear(): F[Unit] =
+    toastRef.tryGet.flatMap(_.map(_.clear().to[F]).getOrElse(Applicative[F].unit))
+
+extension [F[_]: Sync](f: F[Unit])
+  def withToast(
+    ctx:  AppContext[F]
+  )(text: String, severity: Message.Severity = Message.Severity.Info): F[Unit] =
+    f <* ctx.toastRef.showToast(text, severity)
+
+extension (f:       Callback)
+  def showToastCB(
+    ctx:  AppContext[IO]
+  )(text: String, severity: Message.Severity = Message.Severity.Info): Callback =
+    import ctx.given
+    f.to[IO].withToast(ctx)(text, severity).runAsync
 
 // TODO Move these to react-datetime
 extension (instant: Instant)
