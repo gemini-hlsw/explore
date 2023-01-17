@@ -167,18 +167,11 @@ extension [F[_]: Sync](toastRef: Deferred[F, ToastRef])
   def clear(): F[Unit] =
     toastRef.tryGet.flatMap(_.map(_.clear().to[F]).getOrElse(Applicative[F].unit))
 
-extension [F[_]: Async, E](f: F[Unit])
+extension [F[_]: Sync](f: F[Unit])
   def withToast(
     ctx:  AppContext[F]
   )(text: String, severity: Message.Severity = Message.Severity.Info): F[Unit] =
-    Sync[F].realTime.flatMap(start =>
-      (f <* ctx.toastRef
-        .showToast(text, severity)).guarantee(Sync[F].realTime.flatMap { end =>
-        ctx.toastRef
-          .clear()
-          .delayBy(3000.milliseconds - (end - start))
-      })
-    )
+    f <* ctx.toastRef.showToast(text, severity)
 
 extension (f:       Callback)
   def showToastCB(
