@@ -681,19 +681,21 @@ object TargetTabContents extends TwoPanels:
           case CopyAlt1 | CopyAlt2 =>
             target.obsSet
               .map(ids =>
-                (ctx.exploreClipboard.set(LocalClipboard.CopiedObservations(ids)) >>
-                  ctx.toastRef.showToast(s"Copied obs ${ids.idSet.toList.mkString(", ")}")).runAsync
+                ctx.exploreClipboard
+                  .set(LocalClipboard.CopiedObservations(ids))
+                  .withToast(ctx)(s"Copied obs ${ids.idSet.toList.mkString(", ")}")
               )
               .orElse(
                 TargetIdSet
                   .fromTargetIdList(selectedIds)
                   .map(tids =>
-                    (ctx.exploreClipboard.set(LocalClipboard.CopiedTargets(tids)) >>
-                      ctx.toastRef
-                        .showToast(s"Copied targets ${tids.toList.mkString(", ")}")).runAsync
+                    ctx.exploreClipboard
+                      .set(LocalClipboard.CopiedTargets(tids))
+                      .withToast(ctx)(s"Copied targets ${tids.toList.mkString(", ")}")
                   )
               )
-              .getOrEmpty
+              .orUnit
+              .runAsync
 
           case PasteAlt1 | PasteAlt2 =>
             ctx.exploreClipboard.get.flatMap {
@@ -707,15 +709,14 @@ object TargetTabContents extends TwoPanels:
                   // Apply the obs to selected targets on the tree
                   optViewAgwo
                     .map(agwov =>
-                      ctx.toastRef.showToast(s"Pasting obs ${id.idSet.toList.mkString(", ")}") *>
-                        applyObs(
-                          id.idSet.toList,
-                          treeTargets,
-                          agwov,
-                          ctx,
-                          props.listUndoStacks,
-                          props.expandedIds
-                        )
+                      applyObs(
+                        id.idSet.toList,
+                        treeTargets,
+                        agwov,
+                        ctx,
+                        props.listUndoStacks,
+                        props.expandedIds
+                      ).withToast(ctx)(s"Pasting obs ${id.idSet.toList.mkString(", ")}")
                     )
                     .orEmpty
                 else IO.unit

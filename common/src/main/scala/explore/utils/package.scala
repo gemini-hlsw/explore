@@ -7,9 +7,8 @@ import cats.Applicative
 import cats.Endo
 import cats.Monad
 import cats.Monoid
-import cats.effect.Deferred
-import cats.effect.Sync
-import cats.effect.kernel.Sync
+import cats.effect.*
+import cats.effect.syntax.all.*
 import cats.syntax.all.*
 import clue.data.*
 import clue.data.syntax.*
@@ -48,6 +47,8 @@ import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters.*
+import scala.concurrent.duration.*
+import explore.model.AppContext
 
 val canvasWidth  = VdomAttr("width")
 val canvasHeight = VdomAttr("height")
@@ -162,6 +163,29 @@ extension (toastRef: ToastRef)
 extension [F[_]: Sync](toastRef: Deferred[F, ToastRef])
   def showToast(text: String, severity: Message.Severity = Message.Severity.Info): F[Unit] =
     toastRef.tryGet.flatMap(_.map(_.show(text, severity).to[F]).getOrElse(Applicative[F].unit))
+
+  def clear(): F[Unit] =
+    toastRef.tryGet.flatMap(_.map(_.clear().to[F]).getOrElse(Applicative[F].unit))
+
+extension [F[_]: Async, E](f: F[Unit])
+  def withToast(
+    ctx:  AppContext[F]
+  )(text: String, severity: Message.Severity = Message.Severity.Info): F[Unit] =
+    Sync[F].realTime.flatMap(start =>
+      (f <* ctx.toastRef
+        .showToast(text, severity)).guarantee(Sync[F].realTime.flatMap { end =>
+        ctx.toastRef
+          .clear()
+          .delayBy(3000.milliseconds - (end - start))
+      })
+    )
+
+extension (f:       Callback)
+  def showToastCB(
+    ctx:  AppContext[IO]
+  )(text: String, severity: Message.Severity = Message.Severity.Info): Callback =
+    import ctx.given
+    f.to[IO].withToast(ctx)(text, severity).runAsync
 
 // TODO Move these to react-datetime
 extension (instant: Instant)

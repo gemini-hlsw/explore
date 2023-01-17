@@ -24,7 +24,7 @@ import queries.schemas.odb.ODBConversions.*
 import queries.schemas.odb.ObsQueries
 
 trait ObsListActions {
-  protected val obsListMod =
+  val obsListMod =
     KIListMod[ObsSummaryWithTitleConstraintsAndConf, Observation.Id](
       ObsSummaryWithTitleConstraintsAndConf.id
     )

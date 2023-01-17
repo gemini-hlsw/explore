@@ -4,6 +4,8 @@
 package explore.observationtree
 
 import cats.effect.IO
+import cats.syntax.all.*
+import crystal.react.implicits.*
 import explore.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
@@ -19,6 +21,9 @@ import lucuma.core.model.Program
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.beautifuldnd.*
+import explore.undo.UndoContext
+import queries.schemas.odb.ObsQueries.*
+import explore.model.ObsSummaryWithTitleAndConstraints
 
 trait ViewCommon {
   def programId: Program.Id
@@ -60,7 +65,7 @@ trait ViewCommon {
           }).when(selectable),
           (^.onDoubleClick ==> { (e: ReactEvent) =>
             e.stopPropagationCB >>
-              ctx.pushPage(AppTab.Observations, programId, Focused.singleObs(obs.id))
+              ObsOperations.setObs(programId, obs.id.some, ctx)
           }).when(linkToObsTab)
         )(<.span(provided.dragHandleProps)(renderObsBadge(obs, highlightSelected, forceHighlight)))
       }
@@ -77,4 +82,40 @@ trait ViewCommon {
 
   def getListStyle(isDragging: Boolean): TagMod =
     ExploreStyles.DraggingOver.when(isDragging)
+
 }
+
+object ObsOperations:
+  def setObs[F[_]](
+    programId: Program.Id,
+    obsId:     Option[Observation.Id],
+    ctx:       AppContext[F]
+  ): Callback =
+    ctx.pushPage(AppTab.Observations, programId, obsId.fold(Focused.None)(Focused.singleObs(_)))
+
+  def cloneObs(
+    programId: Program.Id,
+    obsId:     Observation.Id,
+    pos:       Int,
+    undoCtx:   UndoContext[ObservationList],
+    setObs:    Observation.Id => Callback,
+    aftermod:  ObsSummaryWithTitleAndConstraints => Option[
+      ObsListActions.obsListMod.ElemWithIndex
+    ] => Option[
+      ObsListActions.obsListMod.ElemWithIndex
+    ],
+    ctx:       AppContext[IO],
+    before:    IO[Unit] = IO.unit,
+    after:     IO[Unit] = IO.unit
+  ): IO[Unit] =
+    import ctx.given
+
+    before >>
+      cloneObservation[IO](obsId)
+        .flatMap { obs =>
+          ObsListActions
+            .obsExistence(obs.id, setObs)
+            .mod(undoCtx)(aftermod(obs))
+            .to[IO]
+        }
+        .guarantee(after)

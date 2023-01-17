@@ -12,7 +12,8 @@ import java.util.UUID
 sealed trait ObsNode {
   val id: UUID
 }
-object ObsNode       {
+
+object ObsNode {
   case class Obs(id: UUID, value: ObsSummary) extends ObsNode
 
   object Obs {
