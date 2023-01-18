@@ -300,7 +300,7 @@ object SiderealTargetEditor {
                   ObsConfiguration(
                     vizTime,
                     props.scienceMode,
-                    props.paProps.flatMap(_.constraint.get),
+                    props.paProps.map(_.constraint.get),
                     props.constraints,
                     props.wavelength
                   ),

@@ -25,7 +25,7 @@ case class ObsConfiguration(
   wavelength:         Option[Wavelength]
 ) derives Eq {
 
-  def hasPosAngleConstraint: Boolean = posAngleConstraint.anglesToTest.isDefined
+  def hasPosAngleConstraint: Boolean = posAngleConstraint.map(_.anglesToTest).isDefined
 
   def canSelectGuideStar: Boolean =
     hasPosAngleConstraint && scienceMode.isDefined && constraints.isDefined

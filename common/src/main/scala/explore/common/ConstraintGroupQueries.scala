@@ -40,13 +40,11 @@ object ConstraintGroupQueries:
   private def obsResultToSummary(obsR: ObservationResult): ObsSummaryWithTitleAndConf =
     ObsSummaryWithTitleAndConf(
       obsR.id,
-      // obsR.title,
-      obsR.title.map(_.value).orEmpty,
+      obsR.title,
       obsR.subtitle,
       obsR.status,
       obsR.activeStatus,
-      // obsR.plannedTime.execution,
-      java.time.Duration.ZERO,
+      obsR.plannedTime.execution,
       obsR.observingMode
     )
 

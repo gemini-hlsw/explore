@@ -577,6 +577,7 @@ object TargetTabContents extends TwoPanels:
   }
 
   private def applyObs(
+    programId:             Program.Id,
     obsIds:                List[Observation.Id],
     targetIds:             List[Target.Id],
     asterismGroupsWithObs: View[AsterismGroupsWithObs],
@@ -602,7 +603,7 @@ object TargetTabContents extends TwoPanels:
             val newIds    = summList.map((summ, tid) => (summ.id, tid))
             val summaries = summList.map(_._1)
             ObservationPasteAction
-              .paste(newIds, expandedIds)
+              .paste(programId, newIds, expandedIds)
               .set(undoContext)(summaries.some)
               .to[IO]
           )
@@ -710,6 +711,7 @@ object TargetTabContents extends TwoPanels:
                   optViewAgwo
                     .map(agwov =>
                       applyObs(
+                        props.programId,
                         id.idSet.toList,
                         treeTargets,
                         agwov,

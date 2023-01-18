@@ -48,10 +48,15 @@ object ConstraintGroupQueriesGQL {
         observations(programId: $programId) {
           matches {
             id
-            title:subtitle
+            title
             subtitle
-          	status
-          	activeStatus
+            status
+            activeStatus
+            plannedTime {
+              execution {
+                microseconds
+              }
+            }
             observingMode {
               gmosNorthLongSlit {
                 grating
@@ -68,12 +73,6 @@ object ConstraintGroupQueriesGQL {
         }
       }
       """
-
-    // plannedTime {
-    //   execution {
-    //     microseconds
-    //   }
-    // }
 
     object Data {
       object ConstraintSetGroup {

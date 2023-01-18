@@ -67,7 +67,7 @@ object ObsList:
     adding.async.set(true) >>
       createObservation[IO](programId)
         .flatMap { obs =>
-          obsExistence(obs.id, o => setObs(programId, o.some, ctx))
+          obsExistence(programId, obs.id, o => setObs(programId, o.some, ctx))
             .mod(undoCtx)(obsListMod.upsert(obs.toTitleAndConstraints, pos))
             .to[IO]
         }
@@ -161,7 +161,10 @@ object ObsList:
                       .set(undoCtx) _).compose((_: ObsActiveStatus).some).some,
                     setSubtitleCB = (obsEditSubtitle(props.programId, obs.id)
                       .set(undoCtx) _).compose((_: Option[NonEmptyString]).some).some,
-                    deleteCB = obsExistence(obs.id, o => setObs(props.programId, o.some, ctx))
+                    deleteCB = obsExistence(props.programId,
+                                            obs.id,
+                                            o => setObs(props.programId, o.some, ctx)
+                    )
                       .mod(undoCtx)(obsListMod.delete)
                       .showToastCB(ctx)(s"Deleted obs ${obs.id.show}")
                       .some,

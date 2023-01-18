@@ -24,7 +24,7 @@ object ObsQueriesGQL {
         observations(programId: $programId) {
           matches {
             id
-            title:subtitle
+            title
             subtitle
             constraintSet {
               imageQuality
@@ -35,6 +35,11 @@ object ObsQueriesGQL {
             status
             activeStatus
             visualizationTime
+            plannedTime {
+              execution {
+                microseconds
+              }
+            }
             observingMode {
               gmosNorthLongSlit {
                 initialGrating
@@ -127,12 +132,6 @@ object ObsQueriesGQL {
       }
     """
 
-    // plannedTime {
-    //   execution {
-    //     microseconds
-    //   }
-    // }
-
     object Data {
       object Observations {
         object Matches {
@@ -177,7 +176,7 @@ object ObsQueriesGQL {
         createObservation(input: $createObservation) {
           observation {
             id
-            title:subtitle
+            title
             subtitle
             constraintSet {
               imageQuality
@@ -210,38 +209,12 @@ object ObsQueriesGQL {
   }
 
   @GraphQL
-  trait ProgramDeleteObservations extends GraphQLOperation[ObservationDB] {
-    val document = """
-      mutation($input: DeleteObservationsInput!) {
-        deleteObservations(input: $input) {
-          observations {
-            id
-          }
-        }
-      }
-    """
-  }
-
-  @GraphQL
-  trait ProgramUndeleteObservations extends GraphQLOperation[ObservationDB] {
-    val document = """
-      mutation($input: UndeleteObservationsInput!) {
-        undeleteObservations(input: $input) {
-          observations {
-            id
-          }
-        }
-      }
-    """
-  }
-
-  @GraphQL
   trait ObsEditQuery extends GraphQLOperation[ObservationDB] {
     val document = """
       query($programId: ProgramId!, $obsId: ObservationId!) {
         observation(observationId: $obsId) {
           id
-          title:subtitle
+          title
           subtitle
           visualizationTime
           posAngleConstraint {
@@ -506,6 +479,12 @@ object ObsQueriesGQL {
               exposures
               signalToNoise
             }
+            ... on ItcMissingParams {
+              params
+            }
+            ... on ItcServiceError {
+              message
+            }
           }
         }
       }
@@ -533,11 +512,7 @@ object ObsQueriesGQL {
         type ObservingMode = model.ScienceMode
       }
 
-      object Itc {
-        object Result {
-          type ExposureTime = lucuma.core.model.NonNegDuration
-        }
-      }
+      type Itc = explore.model.OdbItcResult
     }
 
   }
@@ -573,7 +548,7 @@ object ObsQueriesGQL {
         cloneObservation(input: $input) {
           newObservation {
             id
-            title:subtitle
+            title
             subtitle
             constraintSet {
               imageQuality

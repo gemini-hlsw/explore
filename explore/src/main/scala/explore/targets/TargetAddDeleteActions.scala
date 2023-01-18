@@ -18,6 +18,7 @@ import explore.undo.*
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
+import lucuma.schemas.ObservationDB.Enums.*
 import lucuma.schemas.ObservationDB.Types.*
 import queries.common.TargetQueriesGQL
 import queries.schemas.odb.ODBConversions.*
@@ -55,12 +56,13 @@ object TargetAddDeleteActions {
   private def remoteDeleteTargets(targetIds: List[Target.Id], programId: Program.Id)(using
     c:                                       TransactionalClient[IO, ObservationDB]
   ): IO[Unit] =
-    TargetQueriesGQL.DeleteTargetsMutation
+    TargetQueriesGQL.UpdateTargetsMutation
       .execute[IO](
-        DeleteTargetsInput(WHERE =
-          targetIds.toWhereTargets
+        UpdateTargetsInput(
+          WHERE = targetIds.toWhereTargets
             .copy(programId = WhereOrderProgramId(programId.assign).assign)
-            .assign
+            .assign,
+          SET = TargetPropertiesInput(existence = Existence.Deleted.assign)
         )
       )
       .void
@@ -68,12 +70,14 @@ object TargetAddDeleteActions {
   private def remoteUndeleteTargets(targetIds: List[Target.Id], programId: Program.Id)(using
     c:                                         TransactionalClient[IO, ObservationDB]
   ): IO[Unit] =
-    TargetQueriesGQL.UndeleteTargetsMutation
+    TargetQueriesGQL.UpdateTargetsMutation
       .execute[IO](
-        UndeleteTargetsInput(WHERE =
-          targetIds.toWhereTargets
+        UpdateTargetsInput(
+          WHERE = targetIds.toWhereTargets
             .copy(programId = WhereOrderProgramId(programId.assign).assign)
-            .assign
+            .assign,
+          SET = TargetPropertiesInput(existence = Existence.Present.assign),
+          includeDeleted = true.assign
         )
       )
       .void

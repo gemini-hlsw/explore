@@ -173,7 +173,7 @@ object ConfigurationPanel:
 
         val showDetailsCB: Callback = editState.set(ConfigEditState.DetailsView)
 
-        val posAngleView: View[Option[PosAngleConstraint]] =
+        val posAngleView: View[PosAngleConstraint] =
           props.scienceData.undoableView(ScienceData.posAngle)
 
         // val optNorthAligner = optModeAligner.flatMap {

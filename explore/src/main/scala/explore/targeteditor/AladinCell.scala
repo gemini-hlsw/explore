@@ -199,7 +199,7 @@ object AladinCell extends ModelOptics with AladinCommon:
       props.obsConf.posAngleConstraint match
         case Some(PosAngleConstraint.AllowFlip(a)) if a =!= angle =>
           props.paProps
-            .map(_.constraint.set(PosAngleConstraint.AllowFlip(angle).some))
+            .map(_.constraint.set(PosAngleConstraint.AllowFlip(angle)))
             .getOrEmpty *> manualOverride.set(ManualAgsOverride(true))
         case _                                                    => Callback.empty
     case _                                         => Callback.empty
@@ -270,7 +270,7 @@ object AladinCell extends ModelOptics with AladinCommon:
       // Request ags calculation
       .useEffectWithDepsBy((p, _, _, candidates, _, _, _, _, _) =>
         (p.asterism.baseTracking,
-         p.obsConf.posAngleConstraint.anglesToTest,
+         p.obsConf.posAngleConstraint.flatMap(_.anglesToTest),
          p.obsConf.constraints,
          p.obsConf.wavelength,
          p.obsConf.vizTime,

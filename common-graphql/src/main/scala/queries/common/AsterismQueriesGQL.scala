@@ -225,6 +225,11 @@ object AsterismQueriesGQL {
                 microarcseconds
               }
             }
+            plannedTime {
+              execution {
+                microseconds
+              }
+            }
             targetEnvironment {
               asterism {
                 id
@@ -253,12 +258,6 @@ object AsterismQueriesGQL {
         }
       }
     """
-
-    // plannedTime {
-    //   execution {
-    //     microseconds
-    //   }
-    // }
 
     object Data {
       object TargetGroup {

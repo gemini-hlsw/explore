@@ -18,7 +18,7 @@ import lucuma.core.model.ProposalClass.*
 import lucuma.core.model.*
 import lucuma.core.util.*
 import lucuma.core.syntax.time.*
-// import lucuma.schemas.ObservationDB.Enums.PosAngleConstraintType
+import lucuma.schemas.ObservationDB.Enums.PosAngleConstraintMode
 import lucuma.schemas.ObservationDB.Types.*
 
 import scala.collection.immutable.SortedMap
@@ -236,28 +236,28 @@ trait ODBConversions:
 
   extension (p: PosAngleConstraint)
     def toInput: PosAngleConstraintInput =
-      PosAngleConstraintInput()
-      // p match
-      //   case PosAngleConstraint.Fixed(angle)               =>
-      //     PosAngleConstraintInput(
-      //       constraint = PosAngleConstraintType.Fixed.assign,
-      //       angle = angle.toInput.assign
-      //     )
-      //   case PosAngleConstraint.AllowFlip(angle)           =>
-      //     PosAngleConstraintInput(
-      //       constraint = PosAngleConstraintType.AllowFlip.assign,
-      //       angle = angle.toInput.assign
-      //     )
-      //   case PosAngleConstraint.ParallacticOverride(angle) =>
-      //     PosAngleConstraintInput(
-      //       constraint = PosAngleConstraintType.AverageParallactic.assign,
-      //       angle = angle.toInput.assign
-      //     )
-      //   case PosAngleConstraint.AverageParallactic         =>
-      //     PosAngleConstraintInput(
-      //       constraint = PosAngleConstraintType.AverageParallactic.assign,
-      //       angle = Input.unassign
-      //     )
+      p match
+        case PosAngleConstraint.Fixed(angle)               =>
+          PosAngleConstraintInput(
+            mode = PosAngleConstraintMode.Fixed.assign,
+            angle = angle.toInput.assign
+          )
+        case PosAngleConstraint.AllowFlip(angle)           =>
+          PosAngleConstraintInput(
+            mode = PosAngleConstraintMode.AllowFlip.assign,
+            angle = angle.toInput.assign
+          )
+        case PosAngleConstraint.ParallacticOverride(angle) =>
+          PosAngleConstraintInput(
+            mode = PosAngleConstraintMode.ParallacticOverride.assign,
+            angle = angle.toInput.assign
+          )
+        case PosAngleConstraint.AverageParallactic         =>
+          PosAngleConstraintInput(
+            mode = PosAngleConstraintMode.AverageParallactic.assign
+          )
+        case PosAngleConstraint.Unbounded                  =>
+          PosAngleConstraintInput(mode = PosAngleConstraintMode.Unbounded.assign)
 
   extension (nnd: NonNegDuration)
     def toInput: NonNegDurationInput =

@@ -154,7 +154,7 @@ object ObsTabTiles:
         val scienceMode: Option[ScienceMode] =
           obsView.toOption.flatMap(_.get.scienceData.mode)
 
-        val posAngle: Option[View[Option[PosAngleConstraint]]] =
+        val posAngle: Option[View[PosAngleConstraint]] =
           obsView.toOption
             .map(
               _.zoom(ObsEditData.scienceData.andThen(ScienceData.posAngle))
