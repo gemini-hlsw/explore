@@ -71,6 +71,7 @@ object ElevationPlotSection:
       .getOrElse {
         if (c.coords.value.dec.toAngle.toSignedDoubleDegrees > -5) Site.GN else Site.GS
       }
+
   private def prefsSetter(
     props:   Props,
     options: View[Pot[ElevationPlotOptions]],
