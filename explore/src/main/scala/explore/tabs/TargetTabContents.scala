@@ -662,8 +662,8 @@ object TargetTabContents extends TwoPanels:
           .query(props.programId)
           .map(AsterismGroupObsQuery.Data.asAsterismGroupWithObs.get)
           .reRunOnResourceSignals(
-            ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](props.programId),
-            TargetQueriesGQL.ProgramTargetEditSubscription.subscribe[IO](props.programId)
+            ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](props.programId)
+            // TargetQueriesGQL.ProgramTargetEditSubscription.subscribe[IO](props.programId)
           )
       }
       // Selected targets on the summary table
