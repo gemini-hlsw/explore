@@ -160,10 +160,14 @@ object ObsQueriesGQL {
 
   @GraphQL
   trait ProgramObservationsEditSubscription extends GraphQLOperation[ObservationDB] {
+    // We need to include the `value {id}` to avoid a bug in grackle.
     val document = """
       subscription($programId: ProgramId!) {
         observationEdit(input: {programId: $programId}) {
           id
+          value {
+            id
+          }
         }
       }
     """
@@ -519,10 +523,14 @@ object ObsQueriesGQL {
 
   @GraphQL
   trait ObservationEditSubscription extends GraphQLOperation[ObservationDB] {
+    // We need to include the `value {id}` to avoid a bug in grackle.
     val document = """
       subscription($obsId: ObservationId!) {
         observationEdit(input: {observationId: $obsId}) {
           id
+          value {
+            id
+          }
         }
       }
     """
