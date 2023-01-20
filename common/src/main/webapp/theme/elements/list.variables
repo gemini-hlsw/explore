@@ -1,4 +1,0 @@
-@itemLinkColor: @textColor;
-@itemHeaderLinkColor: #fff;
-@itemDescriptionColor: @gray-light;
-@invertedLinkListItemColor: @gray-light;

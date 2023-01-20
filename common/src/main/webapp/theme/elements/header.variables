@@ -1,3 +1,0 @@
-@textColor: #c8c8c8;
-@blockBackground: var(--header-block-background);
-@attachedBackground: @gray-darker;
