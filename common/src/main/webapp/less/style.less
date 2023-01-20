@@ -1,6 +1,4 @@
-// These need to be kept until we unify the colors in `variables-*.less` with the primereact colors.
-@import 'suithemes/default/globals/site.variables';
-@import 'theme/site/globals/site.variables';
+@import 'legacyvariables.less';
 
 // vertical buttons
 @import 'verticalbuttons.less';
@@ -33,16 +31,6 @@ a {
 :root {
   color-scheme: dark;
 }
-
-// Scrollbars
-// * {
-//   scrollbar-width: thin;
-// }
-
-/* Works on Chrome/Edge/Safari */
-// *::-webkit-scrollbar {
-//   width: 12px;
-// }
 
 /*** iPhone and iOS Form Input Zoom Fixes ***/
 @media screen and (device-aspect-ratio: 2/3) {

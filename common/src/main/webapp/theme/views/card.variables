@@ -1,4 +1,0 @@
-@background: lighten(@gray-darker, 5%);
-@border: none;
-@descriptionColor: white;
-@boxShadow: none;

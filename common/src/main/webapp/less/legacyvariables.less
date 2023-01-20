@@ -1,5 +1,10 @@
-// vite with SUI has troubles loading fonts
+// ----------------------------------------
+// Legacy variables from the SUI dark theme
+// ----------------------------------------
 @importGoogleFonts: false;
+
+/* This is the single variable that controls them all */
+@emSize   : 14px;
 
 @color-gray-dark: hsl(210, 7.9%, 24.7%);
 @color-gray-darker:  #272b30;
@@ -43,6 +48,9 @@
 @invertedSelectedTextColor           : rgba(0, 0, 0, 0.95);
 @invertedDisabledTextColor           : rgba(0, 0, 0, 0.2);
 
+@relative5px  : unit( (5 / @emSize), em);
+@relative6px  : unit( (6 / @emSize), em);
+@infoColor              : #31CCEC;
 @textColor           : var(--site-text-color);
 @mutedTextColor      : rgba(255, 255, 255, 0.8);
 @lightTextColor      : rgba(255, 255, 255, 0.7);
@@ -82,3 +90,13 @@
 @inputHighlightBackground : var(--site-input-highlight-background);
 @inputHighlightColor      : var(--site-text-color);
 
+// Variables used on the light theme
+@lightGrey        : #DCDDDE;
+@grey             : #767676;
+@white            : #FFFFFF;
+@offWhite         : #F9FAFB;
+@subtleTransparentBlack     : rgba(0, 0, 0, 0.03);
+@transparentBlack           : rgba(0, 0, 0, 0.05);
+@strongTransparentBlack     : rgba(0, 0, 0, 0.10);
+
+// End legacy variables
