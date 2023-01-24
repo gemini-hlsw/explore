@@ -440,13 +440,35 @@ object ObsQueriesGQL {
               grating
               filter
               fpu
+              xBin
+              defaultXBin
               explicitXBin
+              yBin
+              defaultYBin
               explicitYBin
+              ampReadMode
+              defaultAmpReadMode
               explicitAmpReadMode
+              ampGain
+              defaultAmpGain
               explicitAmpGain
+              roi
+              defaultRoi
               explicitRoi
+              wavelengthDithers {
+                picometers
+              }
+              defaultWavelengthDithers {
+                picometers
+              }
               explicitWavelengthDithers {
                 picometers
+              }
+              spatialOffsets {
+                microarcseconds
+              }
+              defaultSpatialOffsets {
+                microarcseconds
               }
               explicitSpatialOffsets {
                 microarcseconds
@@ -459,13 +481,35 @@ object ObsQueriesGQL {
               grating
               filter
               fpu
+              xBin
+              defaultXBin
               explicitXBin
+              yBin
+              defaultYBin
               explicitYBin
+              ampReadMode
+              defaultAmpReadMode
               explicitAmpReadMode
+              ampGain
+              defaultAmpGain
               explicitAmpGain
+              roi
+              defaultRoi
               explicitRoi
+              wavelengthDithers {
+                picometers
+              }
+              defaultWavelengthDithers {
+                picometers
+              }
               explicitWavelengthDithers {
                 picometers
+              }
+              spatialOffsets {
+                microarcseconds
+              }
+              defaultSpatialOffsets {
+                microarcseconds
               }
               explicitSpatialOffsets {
                 microarcseconds
@@ -493,7 +537,6 @@ object ObsQueriesGQL {
         }
       }
     """
-    // TODO: Consider ItcMissingParams and ItcServiceError
 
     object Data {
       object Observation {

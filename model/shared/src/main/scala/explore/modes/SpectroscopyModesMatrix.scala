@@ -32,9 +32,6 @@ import lucuma.core.util.Enumerated
 import monocle.Getter
 import monocle.Lens
 import monocle.macros.GenLens
-import spire.math.Bounded
-import spire.math.Interval
-import spire.math.Point
 import spire.math.Rational
 
 sealed trait InstrumentRow derives Eq {
@@ -236,14 +233,12 @@ case class SpectroscopyModeRow(
 
   inline def hasFilter: Boolean = instrument.hasFilter
 
+  // This `should` always return a `some`, but if the row is wonky for some reason...
   def coverageCenter(cw: Wavelength): Option[CoverageCenterWavelength] = {
-    val micros = SpectroscopyModeRow.coverageInterval(cw.some)(this) match
-      case b: Bounded[Quantity[BigDecimal, Micrometer]] =>
-        (b.lowerBound.a + ((b.upperBound.a - b.lowerBound.a) / SpectroscopyModeRow.TwoFactor)).some
-      case b: Point[Quantity[BigDecimal, Micrometer]]   => b.value.some
-      case _                                            => none
-    micros
-      .flatMap(m => Wavelength.fromIntPicometers(m.toUnit[Picometer].value.toInt))
+    val (min, max) = SpectroscopyModeRow.coverageInterval(cw)(this)
+    val micros     = min + (max - min) / SpectroscopyModeRow.TwoFactor
+    Wavelength
+      .fromIntPicometers(micros.toUnit[Picometer].value.toInt)
       .map(CoverageCenterWavelength(_))
   }
 
@@ -283,35 +278,29 @@ object SpectroscopyModeRow {
   val TwoFactor = BigDecimal(2).withUnit[1]
 
   def coverageInterval(
-    cw: Option[Wavelength]
-  ): SpectroscopyModeRow => Interval[Quantity[BigDecimal, Micrometer]] =
+    cw: Wavelength
+  ): SpectroscopyModeRow => (Quantity[BigDecimal, Micrometer], Quantity[BigDecimal, Micrometer]) =
     r =>
-      cw.fold(
-        Interval.point(r.wavelengthCoverage.toValue[BigDecimal])
-      ) { w =>
-        import spire.std.bigDecimal._
-
-        val λr     = r.wavelengthCoverage.toValue[BigDecimal]
-        // Coverage of allowed wavelength
-        // Can be simplified once coulomb-refined is available
-        val λmin   = r.minWavelength.w.toMicrometers.value.value.withUnit[Micrometer]
-        val λmax   = r.maxWavelength.w.toMicrometers.value.value.withUnit[Micrometer]
-        val Δ      = λr / TwoFactor
-        val λ      = w.toMicrometers.value.value.withUnit[Micrometer]
-        val λa     = λ - Δ
-        val λb     = λ + Δ
-        // if we are below min clip but shift the coverage
-        // same if we are above max
-        // At any event we clip at min/max
-        val (a, b) = if (λa < λmin) {
-          (λmin, λmin + λr)
-        } else if (λb > λmax) {
-          (λmax - λr, λmax)
-        } else {
-          (λa, λb)
-        }
-        Interval(a.max(λmin), b.min(λmax))
+      val λr     = r.optimalWavelength.w.toMicrometers.value.value.withUnit[Micrometer]
+      // Coverage of allowed wavelength
+      // Can be simplified once coulomb-refined is available
+      val λmin   = r.minWavelength.w.toMicrometers.value.value.withUnit[Micrometer]
+      val λmax   = r.maxWavelength.w.toMicrometers.value.value.withUnit[Micrometer]
+      val Δ      = λr / TwoFactor
+      val λ      = cw.toMicrometers.value.value.withUnit[Micrometer]
+      val λa     = λ - Δ
+      val λb     = λ + Δ
+      // if we are below min clip but shift the coverage
+      // same if we are above max
+      // At any event we clip at min/max
+      val (a, b) = if (λa < λmin) {
+        (λmin, λmin + λr)
+      } else if (λb > λmax) {
+        (λmax - λr, λmax)
+      } else {
+        (λa, λb)
       }
+      (a.max(λmin), b.min(λmax))
 
   def resolution: Getter[SpectroscopyModeRow, PosInt] =
     Getter(_.resolution)

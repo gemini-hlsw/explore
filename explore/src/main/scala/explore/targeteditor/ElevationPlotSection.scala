@@ -24,7 +24,6 @@ import explore.model.display.given
 import explore.model.enums.PlotRange
 import explore.model.enums.TimeDisplay
 import explore.model.reusability.given
-import explore.model.syntax.scienceModes.*
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*

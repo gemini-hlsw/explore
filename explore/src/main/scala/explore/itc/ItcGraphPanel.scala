@@ -26,8 +26,6 @@ import explore.events.*
 import explore.model.AppContext
 import explore.model.LoadingState
 import explore.model.ScienceMode
-import explore.model.ScienceModeAdvanced
-import explore.model.ScienceModeBasic
 import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.ItcPicklers.given

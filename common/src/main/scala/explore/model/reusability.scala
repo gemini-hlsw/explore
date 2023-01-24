@@ -89,20 +89,15 @@ object reusability:
   given Reusability[ImagingConfigurationOptions] = Reusability.byEq
   given Reusability[Progress]                    = Reusability.byEq
 
-  given Reusability[AngularSize]                        = Reusability.byEq
-  given Reusability[CatalogTargetResult]                = Reusability.byEq
-  given Reusability[ScienceModeBasic]                   = Reusability.byEq
-  given Reusability[ScienceModeAdvanced]                = Reusability.byEq
-  given Reusability[ScienceModeBasic.GmosNorthLongSlit] =
-    Reusability.byEq
-  given Reusability[ScienceModeBasic.GmosSouthLongSlit] =
-    Reusability.byEq
-  given Reusability[ScienceMode]                        = Reusability.byEq
-  given Reusability[GuideStarCandidate]                 = Reusability.by(_.name.value)
-  given Reusability[AgsPosition]                        = Reusability.byEq
-  given Reusability[AgsParams]                          = Reusability.byEq
-  given Reusability[AgsState]                           = Reusability.byEq
-  given Reusability[AgsAnalysis]                        = Reusability.byEq
+  given Reusability[AngularSize]         = Reusability.byEq
+  given Reusability[CatalogTargetResult] = Reusability.byEq
+  given Reusability[ScienceMode]         = Reusability.byEq
+  given Reusability[ScienceModeInitial]  = Reusability.byEq
+  given Reusability[GuideStarCandidate]  = Reusability.by(_.name.value)
+  given Reusability[AgsPosition]         = Reusability.byEq
+  given Reusability[AgsParams]           = Reusability.byEq
+  given Reusability[AgsState]            = Reusability.byEq
+  given Reusability[AgsAnalysis]         = Reusability.byEq
 
   given Reusability[SortedMap[Partner, IntPercent]] =
     Reusability.by((_: SortedMap[Partner, IntPercent]).toMap)(Reusability.map)

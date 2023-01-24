@@ -26,6 +26,7 @@ import explore.events.*
 import explore.model
 import explore.model.AppContext
 import explore.model.CoordinatesAtVizTime
+import explore.model.ScienceModeInitial
 import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.ItcPicklers.given
@@ -33,7 +34,6 @@ import explore.model.boopickle.*
 import explore.model.enums.AgsState
 import explore.model.itc.ItcTarget
 import explore.model.reusability.given
-import explore.model.syntax.scienceModes.*
 import explore.modes.SpectroscopyModesMatrix
 import explore.undo.*
 import japgolly.scalajs.react.*
@@ -139,7 +139,10 @@ object ConfigurationPanel:
             else Callback.empty
           )
       }
-      .useEffectResultOnMountBy { (props, ctx, _) =>
+      // TODO: Need to send to API to create configuration. I don't thik we can proactiveley create a local configuration,
+      // we will have to wait for the server.
+      .useStateView(none[ScienceModeInitial])
+      .useEffectResultOnMountBy { (props, ctx, _, _) =>
         import ctx.given
 
         ItcClient[IO]
@@ -147,29 +150,30 @@ object ConfigurationPanel:
             ItcMessage.SpectroscopyMatrixRequest(uri"/instrument_spectroscopy_matrix.csv")
           )
       }
-      .render { (props, ctx, editState, matrix) =>
+      .render { (props, ctx, editState, scienceModeInitial, matrix) =>
         import ctx.given
 
         val requirementsCtx: UndoSetter[ScienceRequirementsData] =
           props.scienceData.zoom(ScienceData.requirements)
 
-        // val modeAligner: Aligner[Option[model.ScienceMode], Input[ScienceModeInput]] =
-        //   Aligner(
-        //     props.scienceData,
-        //     UpdateObservationsInput(
-        //       WHERE = props.obsId.toWhereObservation.assign,
-        //       SET = ObservationPropertiesInput(scienceMode = ScienceModeInput().assign)
-        //     ),
-        //     (ObsQueriesGQL.UpdateObservationMutation.execute[IO] _).andThen(_.void)
-        //   ).zoom(
-        //     ScienceData.mode,
-        //     UpdateObservationsInput.SET.andThen(ObservationPropertiesInput.scienceMode).modify
-        //   )
+        val modeAligner: Aligner[Option[model.ScienceMode], Input[ObservingModeInput]] =
+          Aligner(
+            props.scienceData,
+            UpdateObservationsInput(
+              props.programId,
+              WHERE = props.obsId.toWhereObservation.assign,
+              SET = ObservationPropertiesInput(observingMode = ObservingModeInput().assign)
+            ),
+            (ObsQueriesGQL.UpdateObservationMutation.execute[IO] _).andThen(_.void)
+          ).zoom(
+            ScienceData.mode,
+            UpdateObservationsInput.SET.andThen(ObservationPropertiesInput.observingMode).modify
+          )
 
-        // val optModeView: View[Option[model.ScienceMode]] =
-        //   modeAligner.view(_.map(_.toInput).orUnassign)
+        val optModeView: View[Option[model.ScienceMode]] =
+          modeAligner.view(_.map(_.toInput).orUnassign)
 
-        // val optModeAligner = modeAligner.toOption
+        val optModeAligner = modeAligner.toOption
 
         val showDetailsCB: Callback = editState.set(ConfigEditState.DetailsView)
 
@@ -202,19 +206,20 @@ object ConfigurationPanel:
                                  posAngleView,
                                  props.selectedPA,
                                  props.agsState
-            )
+            ),
             // if (editState.get === ConfigEditState.TableView)
-            //   BasicConfigurationPanel(
-            //     props.userId,
-            //     props.obsId,
-            //     requirementsCtx,
-            //     optModeView,
-            //     props.constraints,
-            //     props.itcTargets,
-            //     props.baseCoordinates,
-            //     showDetailsCB,
-            //     confMatrix
-            //   )
+            BasicConfigurationPanel(
+              props.userId,
+              props.programId,
+              props.obsId,
+              requirementsCtx,
+              scienceModeInitial,
+              props.constraints,
+              props.itcTargets,
+              props.baseCoordinates,
+              showDetailsCB,
+              confMatrix
+            )
             // else
             //   React.Fragment(
             //     // Gmos North Long Slit

@@ -40,7 +40,6 @@ import explore.model.enums.AgsState
 import explore.model.enums.Visible
 import explore.model.reusability.*
 import explore.model.reusability.given
-import explore.model.syntax.scienceModes.*
 import explore.optics.ModelOptics
 import explore.syntax.ui.*
 import explore.utils.*

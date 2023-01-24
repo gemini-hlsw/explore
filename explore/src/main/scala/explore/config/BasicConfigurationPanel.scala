@@ -46,7 +46,7 @@ case class BasicConfigurationPanel(
   programId:       Program.Id,
   obsId:           Observation.Id,
   requirementsCtx: UndoSetter[ScienceRequirementsData],
-  scienceModeOpt:  View[Option[model.ScienceMode]],
+  scienceModeOpt:  View[Option[model.ScienceModeInitial]],
   constraints:     ConstraintSet,
   itcTargets:      List[ItcTarget],
   baseCoordinates: Option[CoordinatesAtVizTime],

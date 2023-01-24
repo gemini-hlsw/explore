@@ -53,9 +53,9 @@ trait ObsWithConf extends ObsSummary {
   def scienceMode: Option[ScienceMode]
 
   val conf: String = scienceMode match {
-    case Some(n @ ScienceMode.GmosNorthLongSlit(_, _)) => s"GMOS-N ${n.grating.shortName}"
-    case Some(s @ ScienceMode.GmosSouthLongSlit(_, _)) => s"GMOS-S ${s.grating.shortName}"
-    case _                                             => s"-"
+    case Some(n: ScienceMode.GmosNorthLongSlit) => s"GMOS-N ${n.grating.shortName}"
+    case Some(s: ScienceMode.GmosSouthLongSlit) => s"GMOS-S ${s.grating.shortName}"
+    case _                                      => s"-"
   }
 }
 

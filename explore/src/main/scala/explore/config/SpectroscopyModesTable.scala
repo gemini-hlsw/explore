@@ -32,9 +32,7 @@ import explore.itc.*
 import explore.model.AppContext
 import explore.model.CoordinatesAtVizTime
 import explore.model.Progress
-import explore.model.ScienceMode
-import explore.model.ScienceModeAdvanced
-import explore.model.ScienceModeBasic
+import explore.model.ScienceModeInitial
 import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.ItcPicklers.given
@@ -80,8 +78,6 @@ import react.floatingui.syntax.*
 import react.primereact.Button
 import reactST.{tanstackTableCore => raw}
 import reactST.{tanstackVirtualCore => rawVirtual}
-import spire.math.Bounded
-import spire.math.Interval
 
 import java.text.DecimalFormat
 import java.util.UUID
@@ -93,7 +89,7 @@ import scalajs.js.JSConverters.*
 
 case class SpectroscopyModesTable(
   userId:                   Option[User.Id],
-  scienceMode:              View[Option[ScienceMode]],
+  scienceMode:              View[Option[ScienceModeInitial]],
   spectroscopyRequirements: SpectroscopyRequirementsData,
   constraints:              ConstraintSet,
   targets:                  Option[List[ItcTarget]],
@@ -196,14 +192,14 @@ private object SpectroscopyModesTable extends TableHooks:
   given Order[InstrumentRow#Filter]  = Order.by(_.toString)
   given Order[InstrumentRow#FPU]     = Order.by(_.toString)
 
-  private def formatWavelengthCoverage(r: Interval[Quantity[BigDecimal, Micrometer]]): String =
-    r match
-      case Bounded(a, b, _) =>
-        List(a, b)
-          .map(q => decFormat.format(q.value.setScale(3, BigDecimal.RoundingMode.DOWN)))
-          .mkString(" - ")
-      case _                =>
-        "-"
+  private def formatWavelengthCoverage(
+    r: Option[(Quantity[BigDecimal, Micrometer], Quantity[BigDecimal, Micrometer])]
+  ): String =
+    r.fold("-")(
+      _.toList
+        .map(q => decFormat.format(q.value.setScale(3, BigDecimal.RoundingMode.DOWN)))
+        .mkString(" - ")
+    )
 
   private def formatInstrument(r: (Instrument, NonEmptyString)): String = r match
     case (i @ Instrument.Gnirs, m) => s"${i.longName} $m"
@@ -298,52 +294,61 @@ private object SpectroscopyModesTable extends TableHooks:
         .setCell(cell => formatFPU(cell.value))
         .setColumnSize(FixedSize(62.toPx))
         .sortable,
-      column(CoverageColumnId, row => SpectroscopyModeRow.coverageInterval(cw)(row.entry))
+      column(CoverageColumnId,
+             row => cw.map(w => SpectroscopyModeRow.coverageInterval(w)(row.entry))
+      )
         .setCell(cell => formatWavelengthCoverage(cell.value))
         .setColumnSize(FixedSize(100.toPx)),
       column(ResolutionColumnId, row => SpectroscopyModeRow.resolution.get(row.entry))
         .setCell(_.value.toString)
         .setColumnSize(FixedSize(70.toPx)),
-      column(AvailablityColumnId, row => rowToConf(row.entry))
+      column(AvailablityColumnId, row => row.entry.rowToConf(cw))
         .setCell(_.value.fold("No")(_ => "Yes"))
         .setColumnSize(FixedSize(66.toPx))
         .setSortUndefined(UndefinedPriority.Lower)
     ).filter { case c => (c.id.toString) != FPUColumnId.value || fpu.isEmpty }
 
   extension (row: SpectroscopyModeRow)
-    def rowToConf: Option[ScienceMode] =
-      row.instrument match
-        case GmosNorthSpectroscopyRow(grating, fpu, filter)
-            if row.focalPlane === FocalPlane.SingleSlit =>
-          ScienceMode
-            .GmosNorthLongSlit(
-              basic = ScienceModeBasic.GmosNorthLongSlit(grating, filter, fpu),
-              advanced = ScienceModeAdvanced.GmosNorthLongSlit.Empty
-            )
-            .some
-        case GmosSouthSpectroscopyRow(grating, fpu, filter)
-            if row.focalPlane === FocalPlane.SingleSlit =>
-          ScienceMode
-            .GmosSouthLongSlit(
-              basic = ScienceModeBasic.GmosSouthLongSlit(grating, filter, fpu),
-              advanced = ScienceModeAdvanced.GmosSouthLongSlit.Empty
-            )
-            .some
-        case _ => none
+    def rowToConf(cw: Option[Wavelength]): Option[ScienceModeInitial] =
+      cw.flatMap(row.coverageCenter).flatMap { cc =>
+        row.instrument match
+          case GmosNorthSpectroscopyRow(grating, fpu, filter)
+              if row.focalPlane === FocalPlane.SingleSlit =>
+            ScienceModeInitial
+              .GmosNorthLongSlit(
+                grating = grating,
+                filter = filter,
+                fpu = fpu,
+                centralWavelength = cc
+              )
+              .some
+          case GmosSouthSpectroscopyRow(grating, fpu, filter)
+              if row.focalPlane === FocalPlane.SingleSlit =>
+            ScienceModeInitial
+              .GmosSouthLongSlit(
+                grating = grating,
+                filter = filter,
+                fpu = fpu,
+                centralWavelength = cc
+              )
+              .some
+          case _ => none
+      }
 
-    def equalsConf(conf: ScienceMode): Boolean =
-      rowToConf.exists(_ === conf)
+    def equalsConf(conf: ScienceModeInitial, cw: Option[Wavelength]): Boolean =
+      rowToConf(cw).exists(_ === conf)
 
     def enabledRow: Boolean =
       List(Instrument.GmosNorth, Instrument.GmosSouth).contains_(row.instrument.instrument) &&
         row.focalPlane === FocalPlane.SingleSlit
 
   private def selectedRowIndex(
-    scienceMode: Option[ScienceMode],
+    scienceMode: Option[ScienceModeInitial],
+    cw:          Option[Wavelength],
     rows:        List[SpectroscopyModeRowWithResult]
   ): Option[Int] =
     scienceMode
-      .map(selected => rows.indexWhere(_.entry.equalsConf(selected)))
+      .map(selected => rows.indexWhere(_.entry.equalsConf(selected, cw)))
       .filterNot(_ === -1)
 
   private def getVisibleOriginalRows(
@@ -455,12 +460,14 @@ private object SpectroscopyModesTable extends TableHooks:
           )
       }
       // selectedIndex
-      .useStateBy((props, _, _, rows, _, _, _) => selectedRowIndex(props.scienceMode.get, rows))
+      .useStateBy((props, _, _, rows, _, _, _) =>
+        selectedRowIndex(props.scienceMode.get, props.spectroscopyRequirements.wavelength, rows)
+      )
       // Recompute state if conf or requirements change.
       .useEffectWithDepsBy((props, _, _, _, _, _, _, _) =>
         (props.scienceMode.get, props.spectroscopyRequirements)
-      ) { (_, _, _, rows, _, _, _, selectedIndex) => (scienceMode, _) =>
-        selectedIndex.setState(selectedRowIndex(scienceMode, rows))
+      ) { (_, _, _, rows, _, _, _, selectedIndex) => (scienceMode, requirements) =>
+        selectedIndex.setState(selectedRowIndex(scienceMode, requirements.wavelength, rows))
       }
       // table
       .useReactTableWithStateStoreBy((props, ctx, _, rows, _, _, cols, _) =>
@@ -582,8 +589,10 @@ private object SpectroscopyModesTable extends TableHooks:
           _,
           virtualizerRef
         ) =>
-          def toggleRow(row: SpectroscopyModeRowWithResult): Option[ScienceMode] =
-            rowToConf(row.entry).filterNot(conf => props.scienceMode.get.contains_(conf))
+          def toggleRow(row: SpectroscopyModeRowWithResult): Option[ScienceModeInitial] =
+            row.entry
+              .rowToConf(props.spectroscopyRequirements.wavelength)
+              .filterNot(conf => props.scienceMode.get.contains_(conf))
 
           def scrollButton(content: VdomNode, style: Css, indexCondition: Int => Boolean): TagMod =
             selectedIndex.value.whenDefined(idx =>
