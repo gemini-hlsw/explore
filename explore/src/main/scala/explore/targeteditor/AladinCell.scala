@@ -23,16 +23,8 @@ import explore.Icons
 import explore.common.UserPreferencesQueries.*
 import explore.components.ui.ExploreStyles
 import explore.events.*
-import explore.model.AladinFullScreen
-import explore.model.AladinMouseScroll
-import explore.model.AppContext
-import explore.model.Asterism
-import explore.model.Constants
-import explore.model.ObsConfiguration
-import explore.model.PAProperties
-import explore.model.TargetVisualOptions
-import explore.model.UserGlobalPreferences
 import explore.model.WorkerClients.*
+import explore.model.*
 import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.CatalogPicklers.given
 import explore.model.boopickle.*
@@ -270,7 +262,7 @@ object AladinCell extends ModelOptics with AladinCommon:
       // Request ags calculation
       .useEffectWithDepsBy((p, _, _, candidates, _, _, _, _, _) =>
         (p.asterism.baseTracking,
-         p.obsConf.posAngleConstraint.anglesToTest,
+         p.obsConf.posAngleConstraint,
          p.obsConf.constraints,
          p.obsConf.wavelength,
          p.obsConf.vizTime,
@@ -280,7 +272,7 @@ object AladinCell extends ModelOptics with AladinCommon:
       ) { (props, ctx, _, _, ags, _, selectedIndex, _, agsOverride) =>
         {
           case (tracking,
-                positions,
+                paConstraint,
                 Some(constraints),
                 Some(wavelength),
                 vizTime,
@@ -288,6 +280,8 @@ object AladinCell extends ModelOptics with AladinCommon:
                 candidates
               ) =>
             import ctx.given
+            val positions =
+              scienceMode.flatMap(m => paConstraint.anglesToTestAt(m.siteFor, tracking, vizTime))
 
             (positions, tracking.at(vizTime), props.paProps.map(_.agsState)).mapN {
               (angles, base, agsState) =>
@@ -327,9 +321,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                             .unlessA(agsOverride.get.value) *>
                           // set the selected index to the first entry
                           {
-                            val index      = 0.some.filter(_ =>
-                              r.exists(_.nonEmpty) && props.obsConf.canSelectGuideStar
-                            )
+                            val index      = 0.some.filter(_ => r.exists(_.nonEmpty))
                             val selectedGS = index.flatMap(i => r.flatMap(_.lift(i)))
                             (selectedIndex
                               .set(index) *> props.paProps
