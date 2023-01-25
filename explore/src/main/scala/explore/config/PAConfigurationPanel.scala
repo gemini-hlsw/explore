@@ -94,10 +94,13 @@ object PAConfigurationPanel:
             .zoom(PosAngleConstraint.parallacticOverrideAngle)
 
         val selectedAngle = props.posAngleView.get match
-          case None =>
+          case None                                        =>
             props.selectedPA
               .map(a => <.label(f"${a.toDoubleDegrees}%.0f °"))
-          case _    => None
+          case Some(PosAngleConstraint.AverageParallactic) =>
+            props.selectedPA
+              .map(a => <.label(f"${a.toDoubleDegrees}%.2f °"))
+          case _                                           => None
 
         def posAngleEditor(pa: View[Angle]) =
           <.div(
