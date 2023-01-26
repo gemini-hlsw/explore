@@ -45,16 +45,33 @@ object ObsQueriesGQL {
                 initialGrating
                 initialFilter
                 initialFpu
+                initialCentralWavelength {
+                    picometers
+                  }
                 grating
                 filter
                 fpu
+                centralWavelength {
+                    picometers
+                  }
+                defaultXBin
                 explicitXBin
+                defaultYBin
                 explicitYBin
+                defaultAmpReadMode
                 explicitAmpReadMode
+                defaultAmpGain
                 explicitAmpGain
+                defaultRoi
                 explicitRoi
+                defaultWavelengthDithers {
+                  picometers
+                }
                 explicitWavelengthDithers {
                   picometers
+                }
+                defaultSpatialOffsets {
+                  microarcseconds
                 }
                 explicitSpatialOffsets {
                   microarcseconds
@@ -64,16 +81,33 @@ object ObsQueriesGQL {
                 initialGrating
                 initialFilter
                 initialFpu
+                initialCentralWavelength {
+                    picometers
+                  }
                 grating
                 filter
                 fpu
+                centralWavelength {
+                  picometers
+                }
+                defaultXBin
                 explicitXBin
+                defaultYBin
                 explicitYBin
+                defaultAmpReadMode
                 explicitAmpReadMode
+                defaultAmpGain
                 explicitAmpGain
+                defaultRoi
                 explicitRoi
+                defaultWavelengthDithers {
+                  picometers
+                }
                 explicitWavelengthDithers {
                   picometers
+                }
+                defaultSpatialOffsets {
+                  microarcseconds
                 }
                 explicitSpatialOffsets {
                   microarcseconds
@@ -437,35 +471,30 @@ object ObsQueriesGQL {
               initialGrating
               initialFilter
               initialFpu
+              initialCentralWavelength {
+                  picometers
+                }
               grating
               filter
               fpu
-              xBin
+              centralWavelength {
+                  picometers
+                }
               defaultXBin
               explicitXBin
-              yBin
               defaultYBin
               explicitYBin
-              ampReadMode
               defaultAmpReadMode
               explicitAmpReadMode
-              ampGain
               defaultAmpGain
               explicitAmpGain
-              roi
               defaultRoi
               explicitRoi
-              wavelengthDithers {
-                picometers
-              }
               defaultWavelengthDithers {
                 picometers
               }
               explicitWavelengthDithers {
                 picometers
-              }
-              spatialOffsets {
-                microarcseconds
               }
               defaultSpatialOffsets {
                 microarcseconds
@@ -478,35 +507,30 @@ object ObsQueriesGQL {
               initialGrating
               initialFilter
               initialFpu
+              initialCentralWavelength {
+                  picometers
+                }
               grating
               filter
               fpu
-              xBin
-              defaultXBin
-              explicitXBin
-              yBin
-              defaultYBin
-              explicitYBin
-              ampReadMode
-              defaultAmpReadMode
-              explicitAmpReadMode
-              ampGain
-              defaultAmpGain
-              explicitAmpGain
-              roi
-              defaultRoi
-              explicitRoi
-              wavelengthDithers {
+              centralWavelength {
                 picometers
               }
+              defaultXBin
+              explicitXBin
+              defaultYBin
+              explicitYBin
+              defaultAmpReadMode
+              explicitAmpReadMode
+              defaultAmpGain
+              explicitAmpGain
+              defaultRoi
+              explicitRoi
               defaultWavelengthDithers {
                 picometers
               }
               explicitWavelengthDithers {
                 picometers
-              }
-              spatialOffsets {
-                microarcseconds
               }
               defaultSpatialOffsets {
                 microarcseconds

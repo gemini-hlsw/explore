@@ -7,7 +7,6 @@ import cats.data.NonEmptyList
 import cats.laws.discipline.arbitrary.*
 import cats.syntax.all.*
 import eu.timepit.refined.scalacheck.numeric.*
-import explore.model.DitherNanoMeters
 import explore.model.ScienceMode
 import explore.model.itc.CoverageCenterWavelength
 import lucuma.core.util.arb.ArbGid.*
@@ -15,9 +14,11 @@ import lucuma.core.util.arb.ArbEnumerated.*
 import lucuma.core.enums.*
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
+import lucuma.core.math.WavelengthDither
 import lucuma.core.math.arb.ArbOffset
 import lucuma.core.math.arb.ArbRefined
 import lucuma.core.math.arb.ArbWavelength
+import lucuma.core.math.arb.ArbWavelengthDither
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.arb.ArbExposureTimeMode
 import org.scalacheck.Arbitrary
@@ -30,6 +31,7 @@ trait ArbScienceMode {
   import ArbOffset.*
   import ArbRefined.*
   import ArbWavelength.*
+  import ArbWavelengthDither.given
 
   given Arbitrary[ScienceMode.GmosNorthLongSlit] =
     Arbitrary[ScienceMode.GmosNorthLongSlit](
@@ -52,8 +54,8 @@ trait ArbScienceMode {
         explicitAmpGain           <- arbitrary[Option[GmosAmpGain]]
         defaultRoi                <- arbitrary[GmosRoi]
         explicitRoi               <- arbitrary[Option[GmosRoi]]
-        defaultWavelengthDithers  <- arbitrary[NonEmptyList[DitherNanoMeters]]
-        explicitWavelengthDithers <- arbitrary[Option[NonEmptyList[DitherNanoMeters]]]
+        defaultWavelengthDithers  <- arbitrary[NonEmptyList[WavelengthDither]]
+        explicitWavelengthDithers <- arbitrary[Option[NonEmptyList[WavelengthDither]]]
         defaultSpatialOffsets     <- arbitrary[NonEmptyList[Offset.Q]]
         explicitSpatialOffsets    <- arbitrary[Option[NonEmptyList[Offset.Q]]]
       } yield ScienceMode.GmosNorthLongSlit(
@@ -103,8 +105,8 @@ trait ArbScienceMode {
         explicitAmpGain           <- arbitrary[Option[GmosAmpGain]]
         defaultRoi                <- arbitrary[GmosRoi]
         explicitRoi               <- arbitrary[Option[GmosRoi]]
-        defaultWavelengthDithers  <- arbitrary[NonEmptyList[DitherNanoMeters]]
-        explicitWavelengthDithers <- arbitrary[Option[NonEmptyList[DitherNanoMeters]]]
+        defaultWavelengthDithers  <- arbitrary[NonEmptyList[WavelengthDither]]
+        explicitWavelengthDithers <- arbitrary[Option[NonEmptyList[WavelengthDither]]]
         defaultSpatialOffsets     <- arbitrary[NonEmptyList[Offset.Q]]
         explicitSpatialOffsets    <- arbitrary[Option[NonEmptyList[Offset.Q]]]
       } yield ScienceMode.GmosSouthLongSlit(
@@ -160,8 +162,8 @@ trait ArbScienceMode {
        Option[GmosAmpGain],
        GmosRoi,
        Option[GmosRoi],
-       NonEmptyList[DitherNanoMeters],
-       Option[NonEmptyList[DitherNanoMeters]],
+       NonEmptyList[WavelengthDither],
+       Option[NonEmptyList[WavelengthDither]],
        NonEmptyList[Offset.Q],
        Option[NonEmptyList[Offset.Q]]
       )
@@ -212,8 +214,8 @@ trait ArbScienceMode {
        Option[GmosAmpGain],
        GmosRoi,
        Option[GmosRoi],
-       NonEmptyList[DitherNanoMeters],
-       Option[NonEmptyList[DitherNanoMeters]],
+       NonEmptyList[WavelengthDither],
+       Option[NonEmptyList[WavelengthDither]],
        NonEmptyList[Offset.Q],
        Option[NonEmptyList[Offset.Q]]
       )

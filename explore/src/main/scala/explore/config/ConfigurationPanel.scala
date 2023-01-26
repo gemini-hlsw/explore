@@ -46,6 +46,7 @@ import lucuma.core.model.Program
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.User
+import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.ui.reusability.*
 import lucuma.ui.syntax.all.*
@@ -54,6 +55,7 @@ import org.http4s.syntax.all.*
 import queries.common.ObsQueriesGQL
 import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
+import clue.TransactionalClient
 
 case class ConfigurationPanel(
   userId:          Option[User.Id],
@@ -116,6 +118,22 @@ object ConfigurationPanel:
         bAssign.map(f)
       })
 
+  // TODO: We probably want a mutation that returns the configuration so that we can update locally
+  private def createConfiguration(
+    programId: Program.Id,
+    obsId:     Observation.Id,
+    mode:      ScienceModeInitial
+  )(using TransactionalClient[IO, ObservationDB]) =
+    ObsQueriesGQL.UpdateObservationMutation
+      .execute[IO](
+        UpdateObservationsInput(
+          programId = programId,
+          WHERE = obsId.toWhereObservation.assign,
+          SET = ObservationPropertiesInput(observingMode = mode.toInput.assign)
+        )
+      )
+      .void
+
   private given Eq[SpectroscopyModesMatrix] = Eq.by(_.matrix.isEmpty)
 
   private given Reusability[SpectroscopyModesMatrix] = Reusability.byEq
@@ -139,8 +157,7 @@ object ConfigurationPanel:
             else Callback.empty
           )
       }
-      // TODO: Need to send to API to create configuration. I don't thik we can proactiveley create a local configuration,
-      // we will have to wait for the server.
+      // TODO: We probably want to move this to ObsTabContents.
       .useStateView(none[ScienceModeInitial])
       .useEffectResultOnMountBy { (props, ctx, _, _) =>
         import ctx.given
@@ -180,19 +197,21 @@ object ConfigurationPanel:
         val posAngleView: View[PosAngleConstraint] =
           props.scienceData.undoableView(ScienceData.posAngle)
 
-        // val optNorthAligner = optModeAligner.flatMap {
-        //   _.zoomOpt(
-        //     model.ScienceMode.gmosNorthLongSlit,
-        //     mapModOrAssign(GmosNorthLongSlitInput())(ScienceModeInput.gmosNorthLongSlit.modify)
-        //   )
-        // }
+        val optNorthAligner = optModeAligner.flatMap {
+          _.zoomOpt(
+            model.ScienceMode.gmosNorthLongSlit,
+            modOrAssignAndMap(GmosNorthLongSlitInput())(
+              ObservingModeInput.gmosNorthLongSlit.modify
+            )
+          )
+        }
 
-        // val optSouthAligner = optModeAligner.flatMap {
-        //   _.zoomOpt(
-        //     model.ScienceMode.gmosSouthLongSlit,
-        //     mapModOrAssign(GmosSouthLongSlitInput())(ScienceModeInput.gmosSouthLongSlit.modify)
-        //   )
-        // }
+        val optSouthAligner = optModeAligner.flatMap {
+          _.zoomOpt(
+            model.ScienceMode.gmosSouthLongSlit,
+            modOrAssignAndMap(GmosSouthLongSlitInput())(ObservingModeInput.gmosSouthLongSlit.modify)
+          )
+        }
 
         val confMatrix = matrix.toOption.flatten.getOrElse(SpectroscopyModesMatrix.empty)
 
@@ -207,62 +226,66 @@ object ConfigurationPanel:
                                  props.selectedPA,
                                  props.agsState
             ),
-            // if (editState.get === ConfigEditState.TableView)
-            BasicConfigurationPanel(
-              props.userId,
-              props.programId,
-              props.obsId,
-              requirementsCtx,
-              scienceModeInitial,
-              props.constraints,
-              props.itcTargets,
-              props.baseCoordinates,
-              showDetailsCB,
-              confMatrix
-            )
-            // else
-            //   React.Fragment(
-            //     // Gmos North Long Slit
-            //     optNorthAligner.map(northAligner =>
-            //       AdvancedConfigurationPanel
-            //         .GmosNorthLongSlit(
-            //           props.obsId,
-            //           props.title,
-            //           props.subtitle,
-            //           northAligner.zoom(
-            //             model.ScienceMode.GmosNorthLongSlit.advanced,
-            //             modOrAssignAndMap(GmosNorthLongSlitAdvancedConfigInput())(
-            //               GmosNorthLongSlitInput.advanced.modify
-            //             )
-            //           ),
-            //           northAligner.get.basic,
-            //           requirementsCtx.model.get.spectroscopy,
-            //           props.scienceData.model.zoom(ScienceData.potITC),
-            //           editState,
-            //           confMatrix
-            //         )
-            //     ),
-            //     // Gmos South Long Slit
-            //     optSouthAligner.map(southAligner =>
-            //       AdvancedConfigurationPanel
-            //         .GmosSouthLongSlit(
-            //           props.obsId,
-            //           props.title,
-            //           props.subtitle,
-            //           southAligner.zoom(
-            //             model.ScienceMode.GmosSouthLongSlit.advanced,
-            //             modOrAssignAndMap(GmosSouthLongSlitAdvancedConfigInput())(
-            //               GmosSouthLongSlitInput.advanced.modify
-            //             )
-            //           ),
-            //           southAligner.get.basic,
-            //           requirementsCtx.model.get.spectroscopy,
-            //           props.scienceData.model.zoom(ScienceData.potITC),
-            //           editState,
-            //           confMatrix
-            //         )
-            //     )
-            //   )
+            if (editState.get === ConfigEditState.TableView)
+              BasicConfigurationPanel(
+                props.userId,
+                props.programId,
+                props.obsId,
+                requirementsCtx,
+                scienceModeInitial.withOnMod(mode =>
+                  createConfiguration(props.programId, props.obsId, mode.get).runAsync()
+                ),
+                props.constraints,
+                props.itcTargets,
+                props.baseCoordinates,
+                showDetailsCB,
+                confMatrix
+              )
+            else
+              React.Fragment(
+                // Gmos North Long Slit
+                optNorthAligner.map(northAligner =>
+                  AdvancedConfigurationPanel
+                    .GmosNorthLongSlit(
+                      props.obsId,
+                      props.title,
+                      props.subtitle,
+                      northAligner,
+                      // northAligner.zoom(
+                      //   model.ScienceMode.GmosNorthLongSlit.advanced,
+                      //   modOrAssignAndMap(GmosNorthLongSlitAdvancedConfigInput())(
+                      //     GmosNorthLongSlitInput.advanced.modify
+                      //   )
+                      // ),
+                      // northAligner.get.basic,
+                      requirementsCtx.model.get.spectroscopy,
+                      props.scienceData.model.zoom(ScienceData.potITC),
+                      editState,
+                      confMatrix
+                    )
+                ),
+                // Gmos South Long Slit
+                optSouthAligner.map(southAligner =>
+                  AdvancedConfigurationPanel
+                    .GmosSouthLongSlit(
+                      props.obsId,
+                      props.title,
+                      props.subtitle,
+                      southAligner,
+                      // southAligner.zoom(
+                      //   model.ScienceMode.GmosSouthLongSlit.advanced,
+                      //   modOrAssignAndMap(GmosSouthLongSlitAdvancedConfigInput())(
+                      //     GmosSouthLongSlitInput.advanced.modify
+                      //   )
+                      // ),
+                      // southAligner.get.basic,
+                      requirementsCtx.model.get.spectroscopy,
+                      props.scienceData.model.zoom(ScienceData.potITC),
+                      editState,
+                      confMatrix
+                    )
+                )
+              )
           )
         )
       }
