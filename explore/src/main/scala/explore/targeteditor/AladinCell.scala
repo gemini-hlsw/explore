@@ -84,7 +84,12 @@ case class AladinCell(
   asterism:   Asterism,
   fullScreen: View[AladinFullScreen],
   paProps:    Option[PAProperties]
-) extends ReactFnProps(AladinCell.component)
+) extends ReactFnProps(AladinCell.component) {
+  val positions =
+    obsConf.scienceMode.flatMap(m =>
+      obsConf.posAngleConstraint.anglesToTestAt(m.siteFor, asterism.baseTracking, obsConf.vizTime)
+    )
+}
 
 trait AladinCommon:
   given Reusability[Asterism] = Reusability.by(x => (x.toSiderealTracking, x.focus.id))
@@ -262,7 +267,7 @@ object AladinCell extends ModelOptics with AladinCommon:
       // Request ags calculation
       .useEffectWithDepsBy((p, _, _, candidates, _, _, _, _, _) =>
         (p.asterism.baseTracking,
-         p.obsConf.posAngleConstraint,
+         p.positions,
          p.obsConf.constraints,
          p.obsConf.wavelength,
          p.obsConf.vizTime,
@@ -272,7 +277,7 @@ object AladinCell extends ModelOptics with AladinCommon:
       ) { (props, ctx, _, _, ags, _, selectedIndex, _, agsOverride) =>
         {
           case (tracking,
-                paConstraint,
+                positions,
                 Some(constraints),
                 Some(wavelength),
                 vizTime,
@@ -280,8 +285,6 @@ object AladinCell extends ModelOptics with AladinCommon:
                 candidates
               ) =>
             import ctx.given
-            val positions =
-              scienceMode.flatMap(m => paConstraint.anglesToTestAt(m.siteFor, tracking, vizTime))
 
             (positions, tracking.at(vizTime), props.paProps.map(_.agsState)).mapN {
               (angles, base, agsState) =>
