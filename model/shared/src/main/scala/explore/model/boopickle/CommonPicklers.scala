@@ -34,13 +34,13 @@ import lucuma.core.math.RightAscension
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
-import lucuma.core.model.NonNegDuration
 import lucuma.core.model.Semester
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.core.model.given
 import lucuma.core.util.Enumerated
 import lucuma.core.util.NewType
+import lucuma.core.util.TimeSpan
 import org.http4s.Uri
 
 import java.time.Duration
@@ -180,8 +180,8 @@ trait CommonPicklers {
   given Pickler[Duration] =
     transformPickler(Duration.ofMillis)(_.toMillis)
 
-  given Pickler[NonNegDuration] =
-    picklerRefined[Duration, NonNegative]
+  given Pickler[TimeSpan] =
+    transformPickler(TimeSpan.unsafeFromMicroseconds)(_.toMicroseconds)
 
   given Pickler[Year] =
     transformPickler(Year.of)(_.getValue)

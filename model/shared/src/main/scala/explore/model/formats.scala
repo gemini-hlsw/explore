@@ -16,10 +16,10 @@ import lucuma.core.math.Parallax
 import lucuma.core.math.ProperMotion.AngularVelocity
 import lucuma.core.math.*
 import lucuma.core.math.units.*
-import lucuma.core.model.NonNegDuration
 import lucuma.core.model.given
 import lucuma.core.optics.*
 import lucuma.core.syntax.string.*
+import lucuma.core.util.TimeSpan
 import lucuma.core.validation.*
 import lucuma.refined.*
 import spire.math.Rational
@@ -112,7 +112,14 @@ trait formats:
       f"$arcseconds%01d.$mas%02d″"
   }
 
-  val durationHM: InputValidWedge[NonNegDuration] =
+  // TODO: Move these to lucuma-core?
+  extension (ts: TimeSpan)
+    def toSecondsPart: Int = ((ts.toMilliseconds / 1000L) % 60L).toInt
+    def toMinutesPart: Int = (ts.toMinutes.longValue      % 60L).toInt
+    def toHoursPart: Int   = (ts.toHours.longValue        % 24L).toInt
+    def toMillisPart: Int  = ts.toMilliseconds.intValue
+
+  val durationHM: InputValidWedge[TimeSpan] =
     InputValidWedge(
       s =>
         parsers.durationHM
@@ -121,20 +128,10 @@ trait formats:
             "Duration parsing errors".refined[NonEmpty]
           }
           .toEitherErrors,
-      d => {
-        val td = d.value
-        f"${td.toMinutes / 60}:${td.toMinutes % 60}%02d"
-      }
+      ts => f"${ts.toHours.longValue / 60}:${ts.toMinutesPart}%02d"
     )
 
-  // TODO: Include these in scala-java-time
-  extension (d: Duration)
-    def toSecondsPartTmp(): Int = ((d.toMillis() / 1000L) % 60L).toInt
-    def toMinutesPartTmp(): Int = (d.toMinutes()          % 60L).toInt
-    def toHoursPartTmp(): Int   = (d.toHours()            % 24L).toInt
-    def toMillisPartTmp(): Int  = (d.getNano() / 1000000L).toInt
-
-  val durationHMS: InputValidWedge[NonNegDuration] =
+  val durationHMS: InputValidWedge[TimeSpan] =
     InputValidWedge(
       s =>
         parsers.durationHMS
@@ -143,14 +140,13 @@ trait formats:
             "Duration parsing errors".refined[NonEmpty]
           }
           .toEitherErrors,
-      d => {
-        val td   = d.value
+      ts => {
         val secs =
-          if (td.toMillisPartTmp() > 0)
-            f"${td.toSecondsPartTmp()}%02d.${td.toMillisPartTmp() % 1000}%03d"
+          if (ts.toMillisPart > 0)
+            f"${ts.toSecondsPart}%02d.${ts.toMillisPart % 1000}%03d"
           else
-            f"${td.toSecondsPartTmp()}%02d"
-        f"${td.toHoursPartTmp()}:${td.toMinutesPartTmp()}%02d:$secs"
+            f"${ts.toSecondsPart}%02d"
+        f"${ts.toHoursPart}:${ts.toMinutesPart}%02d:$secs"
       }
     )
 

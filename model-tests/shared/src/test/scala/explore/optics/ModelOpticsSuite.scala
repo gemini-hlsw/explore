@@ -8,17 +8,17 @@ import eu.timepit.refined.scalacheck.all.*
 import explore.optics.all.*
 import lucuma.core.math.arb.ArbRadialVelocity
 import lucuma.core.math.arb.ArbRedshift
-import lucuma.core.model.arb.ArbNonNegDuration
 import lucuma.core.model.arb.ArbTarget
 import lucuma.core.model.given
 import lucuma.core.optics.laws.discipline.SplitEpiTests
+import lucuma.core.util.arb.ArbTimeSpan
 import monocle.law.discipline.IsoTests
 import monocle.law.discipline.OptionalTests
 import munit.DisciplineSuite
 import org.scalacheck.Arbitrary.*
 
 class ModelOpticsSuite extends DisciplineSuite {
-  import ArbNonNegDuration.given
+  import ArbTimeSpan.given
   import ArbRadialVelocity.*
   import ArbRedshift.*
   import ArbTarget.given
@@ -26,5 +26,5 @@ class ModelOpticsSuite extends DisciplineSuite {
   checkAll("redshiftBigDecimal", IsoTests(redshiftBigDecimalIso))
   checkAll("targetRV", OptionalTests(targetRV))
   checkAll("optionNonEmptyStringIso", IsoTests(optionNonEmptyStringIso))
-  checkAll("nonNegDurationSecondsSplitEpi", SplitEpiTests(nonNegDurationSecondsSplitEpi).splitEpi)
+  checkAll("timeSpanSecondsSplitEpi", SplitEpiTests(timeSpanSecondsSplitEpi).splitEpi)
 }

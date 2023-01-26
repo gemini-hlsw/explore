@@ -27,7 +27,6 @@ import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.ExposureTimeMode.FixedExposure
 import lucuma.core.model.Observation
-import lucuma.core.model.NonNegDuration
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.syntax.time.*

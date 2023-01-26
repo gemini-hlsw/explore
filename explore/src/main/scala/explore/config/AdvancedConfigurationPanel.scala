@@ -59,11 +59,11 @@ import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDither
 import lucuma.core.math.units.Micrometer
 import lucuma.core.model.ExposureTimeMode
-import lucuma.core.model.NonNegDuration
 import lucuma.core.model.Observation
 import lucuma.core.syntax.all.*
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
+import lucuma.core.util.TimeSpan
 import lucuma.core.validation.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
@@ -506,8 +506,6 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
 
         val invalidateITC: Callback =
           props.potITC.set(Pot.pending[Option[OdbItcResult.Success]])
-
-        val zeroDuration: NonNegDuration = NonNegDuration.unsafeFrom(Duration.ofMillis(0))
 
         val wavelengthView           = centralWavelength(props.scienceMode)
         val initialCentralWavelength = initialCentralWavelengthLens.get(props.scienceMode.get)

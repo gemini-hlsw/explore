@@ -25,9 +25,9 @@ import explore.model.reusability.given
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.model.NonNegDuration
 import lucuma.core.model.given
 import lucuma.core.util.NewType
+import lucuma.core.util.TimeSpan
 import lucuma.core.validation.InputValidSplitEpi
 import lucuma.react.syntax.*
 import lucuma.react.table.*
@@ -306,7 +306,9 @@ object TimingWindowsPanel:
                     checked = e.remainOpenFor,
                     onChange = (_, checked) =>
                       selectedTW
-                        .mod(_.toRemainOpen(NonNegDuration.unsafeFrom(Duration.ofDays(2))))
+                        .mod(
+                          _.toRemainOpen(TimeSpan.unsafeFromDuration(Duration.ofDays(2)))
+                        )
                         .when_(checked)
                   ),
                   <.label("Remain open for", ^.htmlFor := "remain-open"),
@@ -332,7 +334,9 @@ object TimingWindowsPanel:
                             onChange = checked =>
                               selectedTW
                                 .mod(
-                                  _.toRepeatPeriod(NonNegDuration.unsafeFrom(Duration.ofHours(12)))
+                                  _.toRepeatPeriod(
+                                    TimeSpan.unsafeFromDuration(Duration.ofHours(12))
+                                  )
                                 )
                                 .when_(checked) *>
                                 selectedTW.mod(_.noRepeatPeriod).unless_(checked)

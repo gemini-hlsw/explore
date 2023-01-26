@@ -9,7 +9,7 @@ import io.circe.Decoder
 import io.circe.generic.semiauto
 import io.circe.refined.*
 import lucuma.schemas.decoders.*
-import lucuma.core.model.NonNegDuration
+import lucuma.core.util.TimeSpan
 import monocle.Focus
 import monocle.Prism
 import monocle.macros.GenPrism
@@ -21,7 +21,7 @@ sealed trait OdbItcResult extends Product with Serializable
 // of getting ITC data via the ODB.
 object OdbItcResult {
   case class Success(
-    exposureTime:  NonNegDuration,
+    exposureTime:  TimeSpan,
     exposures:     NonNegInt,
     signalToNoise: PosBigDecimal
   ) extends OdbItcResult

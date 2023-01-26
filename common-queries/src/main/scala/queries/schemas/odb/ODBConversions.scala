@@ -259,9 +259,8 @@ trait ODBConversions:
         case PosAngleConstraint.Unbounded                  =>
           PosAngleConstraintInput(mode = PosAngleConstraintMode.Unbounded.assign)
 
-  extension (nnd: NonNegDuration)
-    def toInput: NonNegDurationInput =
-      NonNegDurationInput(microseconds = PosLong.unsafeFrom(nnd.value.toMicros).assign)
+  extension (ts: TimeSpan)
+    def toInput: TimeSpanInput = TimeSpanInput(microseconds = ts.toMicroseconds.assign)
 
   extension (etm: ExposureTimeMode)
     def toInput: ExposureTimeModeInput = etm match

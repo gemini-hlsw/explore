@@ -30,9 +30,9 @@ import lucuma.core.math.Coordinates
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ExposureTimeMode.FixedExposure
-import lucuma.core.model.NonNegDuration
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
+import lucuma.core.util.TimeSpan
 import org.http4s.Uri
 import workers.WorkerRequest
 
@@ -60,7 +60,7 @@ object ItcMessage extends ItcPicklers {
 
   case class GraphQuery(
     wavelength:   CoverageCenterWavelength,
-    exposureTime: NonNegDuration,
+    exposureTime: TimeSpan,
     exposures:    PosInt,
     constraints:  ConstraintSet,
     targets:      NonEmptyList[ItcTarget],

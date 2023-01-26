@@ -34,7 +34,6 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.*
 import lucuma.core.model.IntPercent
-import lucuma.core.model.NonNegDuration
 import lucuma.core.model.Partner
 import lucuma.core.model.Program
 import lucuma.core.model.Proposal
@@ -42,6 +41,7 @@ import lucuma.core.model.ProposalClass
 import lucuma.core.model.ZeroTo100
 import lucuma.core.syntax.time.*
 import lucuma.core.util.Enumerated
+import lucuma.core.util.TimeSpan
 import lucuma.core.validation.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB
@@ -72,8 +72,8 @@ case class ProposalEditor(
   programId:     Program.Id,
   proposal:      View[Proposal],
   undoStacks:    View[UndoStacks[IO, Proposal]],
-  executionTime: NonNegDuration,
-  band3Time:     NonNegDuration
+  executionTime: TimeSpan,
+  band3Time:     TimeSpan
 ) extends ReactFnProps(ProposalEditor.component)
 
 object ProposalEditor:
@@ -81,11 +81,11 @@ object ProposalEditor:
 
   private val Hours2Micros = BigDecimal(60L * 60L * 1000L * 1000L)
 
-  private def toHours(time: NonNegDuration): Hours =
-    Hours.from(time.value.toMicros / Hours2Micros).getOrElse(Hours.Max)
+  private def toHours(time: TimeSpan): Hours =
+    Hours.from(time.toHours.longValue).getOrElse(Hours.Max)
 
-  private def fromHours(hours: Hours): NonNegDuration =
-    NonNegDuration.unsafeFrom((hours.value * Hours2Micros).toLong.microseconds)
+  private def fromHours(hours: Hours): TimeSpan =
+    TimeSpan.unsafeFromMicroseconds((hours.value * Hours2Micros).longValue)
 
   private def formatHours(hours: BigDecimal) = f"$hours%.2fh"
 
@@ -127,7 +127,7 @@ object ProposalEditor:
     )
   }
 
-  private def timeSplits(splits: SortedMap[Partner, IntPercent], total: NonNegDuration): TagMod =
+  private def timeSplits(splits: SortedMap[Partner, IntPercent], total: TimeSpan): TagMod =
     splits match {
       case a if a.isEmpty => TagMod.empty
       case _              =>
@@ -136,13 +136,13 @@ object ProposalEditor:
         <.div(ps, ExploreStyles.FlexContainer, ExploreStyles.FlexWrap)
     }
 
-  private def timeSplit(ps: PartnerSplit, total: NonNegDuration) = {
+  private def timeSplit(ps: PartnerSplit, total: TimeSpan) = {
     val splitTime = ps.percent.value * toHours(total).value / 100
     val timeText  = formatHours(splitTime)
     <.span(timeText, ExploreStyles.PartnerSplitData)
   }
 
-  private def minimumTime(pct: IntPercent, total: NonNegDuration) = {
+  private def minimumTime(pct: IntPercent, total: TimeSpan) = {
     val time     = pct.value * toHours(total).value / 100
     val timeText = formatHours(time)
     <.span(timeText, ExploreStyles.MinimumPercent)
@@ -185,8 +185,8 @@ object ProposalEditor:
     showDialog:        View[Boolean],
     splitsList:        View[List[PartnerSplit]],
     splitsMap:         SortedMap[Partner, IntPercent],
-    executionTime:     NonNegDuration,
-    band3Time:         NonNegDuration,
+    executionTime:     TimeSpan,
+    band3Time:         TimeSpan,
     renderInTitle:     Tile.RenderInTitle
   )(using Logger[IO]): VdomNode = {
     val titleAligner: Aligner[Option[NonEmptyString], Input[NonEmptyString]] =
@@ -371,8 +371,8 @@ object ProposalEditor:
     proposalClassType: View[ProposalClassType],
     showDialog:        View[Boolean],
     splitsList:        View[List[PartnerSplit]],
-    executionTime:     NonNegDuration,
-    band3Time:         NonNegDuration
+    executionTime:     TimeSpan,
+    band3Time:         TimeSpan
   )(using TransactionalClient[IO, ObservationDB], Logger[IO]) = {
     def closePartnerSplitsEditor: Callback = showDialog.set(false)
 

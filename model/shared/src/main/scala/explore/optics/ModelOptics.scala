@@ -18,11 +18,11 @@ import lucuma.core.math.RadialVelocity
 import lucuma.core.math.Redshift
 import lucuma.core.math.dimensional.Measure
 import lucuma.core.math.units.*
-import lucuma.core.model.NonNegDuration
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.Target
 import lucuma.core.optics.SplitEpi
 import lucuma.core.syntax.time.*
+import lucuma.core.util.TimeSpan
 import monocle.Getter
 import monocle.Optional
 import monocle.*
@@ -69,11 +69,8 @@ trait ModelOptics {
     Iso[Option[NonEmptyString], String](_.foldMap(_.value))(s => NonEmptyString.from(s).toOption)
 
   // Note: truncates to Int.MaxValue - shouldn't have durations longer than that...
-  val nonNegDurationSecondsSplitEpi: SplitEpi[NonNegDuration, NonNegInt] = SplitEpi(
-    nnd =>
-      NonNegInt.unsafeFrom(
-        math.min((nnd.value: Duration).toMicros / 1000L / 1000L, Int.MaxValue.toLong).toInt
-      ),
-    secs => NonNegDuration.unsafeFrom(secs.value.toLong.seconds)
+  val timeSpanSecondsSplitEpi: SplitEpi[TimeSpan, NonNegInt] = SplitEpi(
+    ts => NonNegInt.unsafeFrom(math.min(ts.toSeconds.intValue, Int.MaxValue)),
+    secs => TimeSpan.unsafeFromDuration(secs.value.toLong.seconds)
   )
 }

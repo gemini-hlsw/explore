@@ -3,30 +3,31 @@
 
 package queries.schemas.itc
 
+import cats.data.NonEmptyList
 import cats.syntax.all.*
 import clue.data.Input
 import clue.data.syntax.*
-import explore.model.itc.ItcTarget
+import eu.timepit.refined.types.numeric.PosLong
+import eu.timepit.refined.types.numeric.NonNegBigDecimal
+import explore.model.Asterism
 import explore.model.TargetWithId
+import explore.model.itc.ItcTarget
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
 import explore.optics.all.*
+import lucuma.core.enums.GmosNorthFpu
+import lucuma.core.enums.GmosSouthFpu
 import lucuma.core.math.BrightnessUnits.*
 import lucuma.core.math.*
 import lucuma.core.math.dimensional.Measure
 import lucuma.core.model.*
 import lucuma.core.optics.syntax.lens.*
+import lucuma.core.util.TimeSpan
 import queries.common.ITCQueriesGQL
 import queries.schemas.odb.ObsQueries
 import queries.schemas.ITC
 import queries.schemas.ITC.Types.*
-import lucuma.core.enums.GmosNorthFpu
-import lucuma.core.enums.GmosSouthFpu
-import cats.data.NonEmptyList
-import explore.model.Asterism
-import eu.timepit.refined.types.numeric.PosLong
-import eu.timepit.refined.types.numeric.NonNegBigDecimal
 
 // There is a lot of duplication here with the odb.conversions package
 trait ITCConversions:
@@ -60,9 +61,9 @@ trait ITCConversions:
         .runS(WavelengthInput())
         .value
 
-  extension (nnd: NonNegDuration)
+  extension (ts: TimeSpan)
     def toInput: NonNegDurationInput =
-      NonNegDurationInput(milliseconds = NonNegBigDecimal.unsafeFrom(nnd.value.toMillis).assign)
+      NonNegDurationInput(microseconds = PosLong.unsafeFrom(ts.toMicroseconds).assign)
 
   // These are copied from the odb side
   extension (u: UnnormalizedSED)
