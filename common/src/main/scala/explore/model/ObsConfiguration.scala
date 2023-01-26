@@ -23,14 +23,7 @@ case class ObsConfiguration(
   posAngleConstraint: Option[PosAngleConstraint],
   constraints:        Option[ConstraintSet],
   wavelength:         Option[Wavelength]
-) derives Eq {
-
-  def hasPosAngleConstraint: Boolean = posAngleConstraint.map(_.anglesToTest).isDefined
-
-  def canSelectGuideStar: Boolean =
-    hasPosAngleConstraint && scienceMode.isDefined && constraints.isDefined
-
-}
+) derives Eq
 
 object ObsConfiguration:
   val vizTime            = Focus[ObsConfiguration](_.vizTime)

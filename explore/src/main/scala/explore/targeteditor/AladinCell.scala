@@ -23,16 +23,8 @@ import explore.Icons
 import explore.common.UserPreferencesQueries.*
 import explore.components.ui.ExploreStyles
 import explore.events.*
-import explore.model.AladinFullScreen
-import explore.model.AladinMouseScroll
-import explore.model.AppContext
-import explore.model.Asterism
-import explore.model.Constants
-import explore.model.ObsConfiguration
-import explore.model.PAProperties
-import explore.model.TargetVisualOptions
-import explore.model.UserGlobalPreferences
 import explore.model.WorkerClients.*
+import explore.model.*
 import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.CatalogPicklers.given
 import explore.model.boopickle.*
@@ -91,7 +83,12 @@ case class AladinCell(
   asterism:   Asterism,
   fullScreen: View[AladinFullScreen],
   paProps:    Option[PAProperties]
-) extends ReactFnProps(AladinCell.component)
+) extends ReactFnProps(AladinCell.component) {
+  val positions =
+    obsConf.scienceMode.flatMap(m =>
+      obsConf.posAngleConstraint.anglesToTestAt(m.siteFor, asterism.baseTracking, obsConf.vizTime)
+    )
+}
 
 trait AladinCommon:
   given Reusability[Asterism] = Reusability.by(x => (x.toSiderealTracking, x.focus.id))
@@ -269,7 +266,7 @@ object AladinCell extends ModelOptics with AladinCommon:
       // Request ags calculation
       .useEffectWithDepsBy((p, _, _, candidates, _, _, _, _, _) =>
         (p.asterism.baseTracking,
-         p.obsConf.posAngleConstraint.flatMap(_.anglesToTest),
+         p.positions,
          p.obsConf.constraints,
          p.obsConf.wavelength,
          p.obsConf.vizTime,
@@ -326,9 +323,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                             .unlessA(agsOverride.get.value) *>
                           // set the selected index to the first entry
                           {
-                            val index      = 0.some.filter(_ =>
-                              r.exists(_.nonEmpty) && props.obsConf.canSelectGuideStar
-                            )
+                            val index      = 0.some.filter(_ => r.exists(_.nonEmpty))
                             val selectedGS = index.flatMap(i => r.flatMap(_.lift(i)))
                             (selectedIndex
                               .set(index) *> props.paProps
