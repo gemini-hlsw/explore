@@ -29,7 +29,7 @@ object Settings {
     val lucumaBC               = "0.4.0"
     val lucumaCore             = "0.62.0-3-e4a86a2-SNAPSHOT"
     val lucumaCatalog          = "0.38.1-13-036a832-SNAPSHOT"
-    val lucumaReact            = "0.31.1"
+    val lucumaReact            = "0.31.2"
     val lucumaRefined          = "0.1.1"
     val lucumaSchemas          = "0.40-950a074-SNAPSHOT"
     val lucumaSSO              = "0.4.6"
