@@ -70,7 +70,7 @@ trait ModelOptics {
 
   // Note: truncates to Int.MaxValue - shouldn't have durations longer than that...
   val timeSpanSecondsSplitEpi: SplitEpi[TimeSpan, NonNegInt] = SplitEpi(
-    ts => NonNegInt.unsafeFrom(math.min(ts.toSeconds.intValue, Int.MaxValue)),
+    ts => NonNegInt.unsafeFrom(math.min(ts.toSeconds.longValue, Int.MaxValue.toLong).toInt),
     secs => TimeSpan.unsafeFromDuration(secs.value.toLong.seconds)
   )
 }

@@ -114,10 +114,10 @@ trait formats:
 
   // TODO: Move these to lucuma-core?
   extension (ts: TimeSpan)
-    def toSecondsPart: Int = ((ts.toMilliseconds / 1000L) % 60L).toInt
+    def toSecondsPart: Int = (ts.toSeconds.longValue      % 60L).toInt
     def toMinutesPart: Int = (ts.toMinutes.longValue      % 60L).toInt
     def toHoursPart: Int   = (ts.toHours.longValue        % 24L).toInt
-    def toMillisPart: Int  = ts.toMilliseconds.intValue
+    def toMillisPart: Int  = (ts.toMilliseconds.longValue % 1000L).toInt
 
   val durationHM: InputValidWedge[TimeSpan] =
     InputValidWedge(
@@ -128,7 +128,7 @@ trait formats:
             "Duration parsing errors".refined[NonEmpty]
           }
           .toEitherErrors,
-      ts => f"${ts.toHours.longValue / 60}:${ts.toMinutesPart}%02d"
+      ts => f"${ts.toHoursPart}:${ts.toMinutesPart}%02d"
     )
 
   val durationHMS: InputValidWedge[TimeSpan] =
@@ -143,7 +143,7 @@ trait formats:
       ts => {
         val secs =
           if (ts.toMillisPart > 0)
-            f"${ts.toSecondsPart}%02d.${ts.toMillisPart % 1000}%03d"
+            f"${ts.toSecondsPart}%02d.${ts.toMillisPart}%03d"
           else
             f"${ts.toSecondsPart}%02d"
         f"${ts.toHoursPart}:${ts.toMinutesPart}%02d:$secs"

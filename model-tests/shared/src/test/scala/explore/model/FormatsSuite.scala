@@ -35,7 +35,7 @@ class FormatsSuite extends munit.DisciplineSuite {
       .map { ts =>
         val secs =
           if (ts.toMillisPart > 0)
-            f"${ts.toSecondsPart}%02d.${ts.toMillisPart % 1000}%03d"
+            f"${ts.toSecondsPart}%02d.${ts.toMillisPart}%03d"
           else
             f"${ts.toSecondsPart}%02d"
         s"${ts.toHoursPart}:${ts.toMinutes}:$secs"
@@ -74,11 +74,11 @@ class FormatsSuite extends munit.DisciplineSuite {
       .some
   )
   checkAll(
-    "durationHMFormat",
+    "durationHMValidWedge",
     ValidWedgeTests(durationHM).validWedgeLawsWith(finiteDurationsHM)
   )
   checkAll(
-    "durationHMSFormat",
+    "durationHMSValidWedge",
     ValidWedgeTests(durationHMS).validWedgeLawsWith(finiteDurationsHMS)
   )
 }
