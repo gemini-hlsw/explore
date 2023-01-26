@@ -13,7 +13,7 @@ object Settings {
     val catsTime               = "0.5.1"
     val circe                  = "0.14.3"
     val circeGolden            = "0.3.0"
-    val clue                   = "0.23.1"
+    val clue                   = "0.23.2"
     val crystal                = "0.33.9"
     val discipline             = "1.5.1"
     val disciplineMUnit        = "1.0.9"
