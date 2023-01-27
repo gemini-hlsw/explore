@@ -29,6 +29,7 @@ import explore.targets.TargetColumns
 import explore.targets.TargetSummaryTable
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.react.syntax.*
@@ -51,7 +52,6 @@ import reactST.{tanstackTableCore => raw}
 import java.time.Instant
 
 import scalajs.js.JSConverters.*
-import lucuma.core.model.Program
 
 case class TargetTable(
   userId:         Option[User.Id],

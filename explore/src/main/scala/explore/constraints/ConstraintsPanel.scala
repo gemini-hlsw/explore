@@ -25,6 +25,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.Observation
+import lucuma.core.model.Program
 import lucuma.core.model.validation.ModelValidators
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
@@ -43,7 +44,6 @@ import lucuma.ui.utils.given
 import monocle.Lens
 import react.common.ReactFnProps
 import react.primereact.PrimeStyles
-import lucuma.core.model.Program
 
 case class ConstraintsPanel(
   programId:     Program.Id,

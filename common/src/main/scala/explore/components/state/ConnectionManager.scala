@@ -8,6 +8,7 @@ import cats.syntax.all.*
 import crystal.react.hooks.*
 import crystal.react.implicits.*
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import io.circe.Json
@@ -17,10 +18,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 import react.common.ReactFnPropsWithChildren
-// import react.primereact.ProgressSpinner
-import explore.Icons
 import react.fa.IconSize
-import explore.components.ui.ExploreStyles
 
 case class ConnectionManager(ssoToken: NonEmptyString, onConnect: IO[Unit])
     extends ReactFnPropsWithChildren(ConnectionManager.component):

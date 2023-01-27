@@ -18,6 +18,7 @@ import explore.model.TargetWithObs
 import explore.model.syntax.all.*
 import explore.undo.*
 import japgolly.scalajs.react.callback.Callback
+import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
@@ -26,7 +27,6 @@ import queries.schemas.odb.ODBConversions.*
 
 import scala.annotation.unused
 import scala.collection.immutable.SortedSet
-import lucuma.core.model.Program
 
 object AsterismGroupObsListActions {
   private def obsDropGetter(

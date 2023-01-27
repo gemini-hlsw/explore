@@ -6,6 +6,7 @@ package explore.config
 import cats.Eq
 import cats.effect.IO
 import cats.syntax.all.*
+import clue.TransactionalClient
 import clue.data.Assign
 import clue.data.Input
 import clue.data.syntax.*
@@ -42,8 +43,8 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
-import lucuma.core.model.Program
 import lucuma.core.model.PosAngleConstraint
+import lucuma.core.model.Program
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.User
 import lucuma.schemas.ObservationDB
@@ -55,7 +56,6 @@ import org.http4s.syntax.all.*
 import queries.common.ObsQueriesGQL
 import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
-import clue.TransactionalClient
 
 case class ConfigurationPanel(
   userId:          Option[User.Id],

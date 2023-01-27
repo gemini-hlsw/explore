@@ -8,8 +8,8 @@ import eu.timepit.refined.types.numeric.PosBigDecimal
 import io.circe.Decoder
 import io.circe.generic.semiauto
 import io.circe.refined.*
-import lucuma.schemas.decoders.*
 import lucuma.core.util.TimeSpan
+import lucuma.schemas.decoders.*
 import monocle.Focus
 import monocle.Prism
 import monocle.macros.GenPrism

@@ -17,6 +17,7 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
 import lucuma.core.model.Observation
+import lucuma.core.model.Program
 import lucuma.core.optics.syntax.lens.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
@@ -25,7 +26,6 @@ import org.typelevel.log4cats.Logger
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ODBConversions.*
 import queries.schemas.odb.ObsQueries.*
-import lucuma.core.model.Program
 
 object ScienceQueries:
 

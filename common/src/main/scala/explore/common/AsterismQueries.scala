@@ -16,6 +16,7 @@ import explore.model.TargetWithObs
 import explore.model.syntax.all.*
 import japgolly.scalajs.react.*
 import lucuma.core.model.Observation
+import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
@@ -28,7 +29,6 @@ import queries.schemas.odb.ODBConversions.*
 
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
-import lucuma.core.model.Program
 
 object AsterismQueries:
   // The default cats ordering for sorted set sorts by size first, then contents. That's not what we want.

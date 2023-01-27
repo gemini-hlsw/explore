@@ -26,6 +26,7 @@ import lucuma.core.enums.ScienceMode
 import lucuma.core.math.Coordinates
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
+import lucuma.core.model.Program
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.User
 import lucuma.refined.*
@@ -39,7 +40,6 @@ import react.common.ReactFnProps
 import react.primereact.Button
 
 import scalajs.js.JSConverters.*
-import lucuma.core.model.Program
 
 case class BasicConfigurationPanel(
   userId:          Option[User.Id],

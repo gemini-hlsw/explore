@@ -13,9 +13,9 @@ import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
 import explore.undo.*
 import japgolly.scalajs.react.callback.Callback
+import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB
 import queries.schemas.odb.ObsQueries
-import lucuma.core.model.Program
 
 import scala.collection.immutable.SortedSet
 

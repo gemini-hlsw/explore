@@ -17,13 +17,13 @@ import explore.utils.*
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Observation
+import lucuma.core.model.Program
 import lucuma.core.model.User
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 import queries.schemas.itc.ITCConversions.*
 import queries.schemas.odb.ObsQueries.*
-import lucuma.core.model.Program
 
 object ConfigurationTile {
   def configurationTile(

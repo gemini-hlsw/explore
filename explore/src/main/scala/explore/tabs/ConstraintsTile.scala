@@ -15,10 +15,10 @@ import explore.utils.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
+import lucuma.core.model.Program
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.style.Css
-import lucuma.core.model.Program
 
 object ConstraintsTile {
 
