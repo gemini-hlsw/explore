@@ -13,6 +13,7 @@ import explore.events.PlotMessage
 import explore.model.boopickle.CommonPicklers.given
 import lucuma.core.enums.Site
 import lucuma.core.enums.TwilightType
+import lucuma.core.math.BoundedInterval
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.Place
@@ -23,13 +24,11 @@ import lucuma.core.math.skycalc.solver.ElevationSolver
 import lucuma.core.math.skycalc.solver.Samples
 import lucuma.core.model.Semester
 import lucuma.core.model.TwilightBoundedNight
-import lucuma.core.syntax.boundedInterval.given
-import lucuma.core.syntax.time.given
+import lucuma.core.syntax.time.*
 import lucuma.core.util.Enumerated
 import org.scalajs.dom
 import org.typelevel.cats.time.given
 import org.typelevel.log4cats.Logger
-import spire.math.Bounded
 import spire.math.extras.interval.IntervalSeq
 
 import java.time.Duration
@@ -65,7 +64,7 @@ object PlotServer extends WorkerServer[IO, PlotMessage.Request] {
     def siderealVisibility(
       skyCalcSamples: Samples[SkyCalcResults]
     ): Cacheable[IO, (Site, LocalDate, Coordinates), (Instant, Duration)] = {
-      val targetVisible: Bounded[Instant] => IntervalSeq[Instant] =
+      val targetVisible: BoundedInterval[Instant] => IntervalSeq[Instant] =
         ElevationSolver(MinTargetElevation, Declination.Max).solve(skyCalcSamples) _
 
       Cacheable(
@@ -87,7 +86,7 @@ object PlotServer extends WorkerServer[IO, PlotMessage.Request] {
     def siderealSamples(coords: Coordinates, dayRate: Long): fs2.Stream[IO, (Instant, Duration)] = {
       val skyCalcSamples = Samples
         .atFixedRate(
-          Bounded.unsafeOpenUpper(
+          BoundedInterval.unsafeOpenUpper(
             semester.start.atSite(site).toInstant,
             semester.end.atSite(site).toInstant
           ),

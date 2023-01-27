@@ -99,9 +99,9 @@ trait ITCConversions:
         brightnesses = b.brightnesses.toList.map { (band, measure) =>
           BandBrightnessIntegratedInput(
             band = band,
-            value = measure.value.assign,
+            value = measure.value.value.assign,
             units = Measure.unitsTagged.get(measure).assign,
-            error = measure.error.orIgnore
+            error = measure.error.map(_.value).orIgnore
           )
         }.assign
       )
@@ -113,9 +113,9 @@ trait ITCConversions:
         brightnesses = b.brightnesses.toList.map { (band, measure) =>
           BandBrightnessSurfaceInput(
             band = band,
-            value = measure.value.assign,
+            value = measure.value.value.assign,
             units = Measure.unitsTagged.get(measure).assign,
-            error = measure.error.orIgnore
+            error = measure.error.map(_.value).orIgnore
           )
         }.assign
       )

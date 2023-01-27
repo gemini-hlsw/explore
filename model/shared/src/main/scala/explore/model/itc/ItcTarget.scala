@@ -9,6 +9,7 @@ import coulomb.syntax.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.itc.math.*
 import lucuma.core.enums.Band
+import lucuma.core.math.BrightnessValue
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.Wavelength
 import lucuma.core.model.SourceProfile
@@ -21,7 +22,7 @@ case class ItcTarget(
 
 object ItcTarget:
   extension (target: ItcTarget)
-    def brightnessNearestTo(w: Wavelength): Option[(Band, BigDecimal)] =
+    def brightnessNearestTo(w: Wavelength): Option[(Band, BrightnessValue)] =
       val integrated = SourceProfile.integratedBrightnesses
         .getOption(target.profile)
         .flatMap { sb =>

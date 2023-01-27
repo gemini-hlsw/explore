@@ -5,7 +5,6 @@ package explore.common
 
 import clue.data.syntax.*
 import explore.model.BasicConfiguration
-import explore.model.DitherNanoMeters
 import explore.model.ScienceMode
 import lucuma.core.math.*
 import lucuma.schemas.ObservationDB.Types.*
@@ -14,15 +13,13 @@ import queries.schemas.odb.ODBConversions
 import scala.annotation.targetName
 
 trait ScienceConversions extends ODBConversions:
-  extension (d: DitherNanoMeters)
-    def toInput: WavelengthDitherInput = WavelengthDitherInput(nanometers = d.value.assign)
-
   // The @targetName is needed to differentiate it from the Wavelength extension method. Both
   // are opaque types of `Quantity[Int, Picometer]`. This is fine at compile time without the
   // @targetName, but the js linker doesn't seem to be able to differentiate.
   extension (d: WavelengthDither)
     @targetName("WavelengthDither_toInput")
-    def toInput = WavelengthDitherInput(picometers = d.toPicometers.value.assign)
+    def toInput: WavelengthDitherInput =
+      WavelengthDitherInput(picometers = d.toPicometers.value.assign)
 
   extension [A](o: Offset.Component[A])
     def toInput: OffsetComponentInput =

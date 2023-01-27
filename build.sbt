@@ -196,6 +196,7 @@ lazy val commonLibSettings = Seq(
       CatsRetry.value ++
       Circe.value ++
       Clue.value ++
+      CoulombRefined.value ++
       Crystal.value ++
       FS2.value ++
       FS2Data.value ++

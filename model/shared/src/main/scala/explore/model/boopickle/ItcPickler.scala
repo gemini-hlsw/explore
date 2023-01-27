@@ -74,9 +74,13 @@ trait ItcPicklers extends CommonPicklers {
       .addConcreteType[GnirsSpectroscopyRow]
       .addConcreteType[GenericSpectroscopyRow]
 
-  given Pickler[ModeWavelength] = generatePickler
+  given Pickler[ModeWavelength] = picklerNewType(ModeWavelength)
 
-  given Pickler[ModeSlitSize] = generatePickler
+  given Pickler[ModeSlitSize] = picklerNewType(ModeSlitSize)
+
+  given Pickler[CoverageCenterWavelength] = picklerNewType(CoverageCenterWavelength)
+
+  given Pickler[ModeWavelengthRange] = picklerNewType(ModeWavelengthRange)
 
   given Pickler[SpectroscopyModeRow] = generatePickler
 

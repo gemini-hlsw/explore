@@ -120,9 +120,9 @@ trait ODBConversions:
       bs.toList.map { case (band, measure) =>
         BandBrightnessIntegratedInput(
           band = band,
-          value = measure.value.assign,
+          value = measure.value.value.assign,
           units = Measure.unitsTagged.get(measure).assign,
-          error = measure.error.orIgnore
+          error = measure.error.map(_.value).orIgnore
         )
       }
 
@@ -132,9 +132,9 @@ trait ODBConversions:
       bs.toList.map { case (band, measure) =>
         BandBrightnessSurfaceInput(
           band = band,
-          value = measure.value.assign,
+          value = measure.value.value.assign,
           units = Measure.unitsTagged.get(measure).assign,
-          error = measure.error.orIgnore
+          error = measure.error.map(_.value).orIgnore
         )
       }
 

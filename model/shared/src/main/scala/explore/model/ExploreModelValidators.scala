@@ -8,63 +8,85 @@ import cats.data.NonEmptyList
 import cats.syntax.all.*
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.collection.NonEmpty
-import eu.timepit.refined.numeric.Interval
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.model.DitherNanoMeters
-import explore.model.DitherNanoMetersRange
 import explore.model.HourRange
-import explore.model.display.*
+import explore.model.display.given
 import lucuma.core.math.Axis
+import lucuma.core.math.BrightnessValue
 import lucuma.core.math.Offset
 import lucuma.core.math.Parallax
 import lucuma.core.math.ProperMotion
 import lucuma.core.math.Wavelength
+import lucuma.core.math.WavelengthDither
+import lucuma.core.math.WavelengthRange
 import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.given
 import lucuma.core.optics.Format
+import lucuma.core.optics.ValidFilter
 import lucuma.core.optics.ValidSplitEpi
 import lucuma.core.optics.ValidWedge
+import lucuma.core.syntax.display.*
 import lucuma.core.syntax.string.*
 import lucuma.core.validation.*
 import lucuma.refined.*
 import lucuma.utils.*
+import monocle.Iso
+import spire.math.Bounded
 
 import scala.util.Try
 
 object ExploreModelValidators:
-  private val i = ValidSplitEpi
-    .forRefined[String, BigDecimal, HourRange]("Invalid hour value")
+  type ValidFilterNEC[A] = ValidFilter[NonEmptyChain[NonEmptyString], A]
 
-  val brightnessValidWedge: InputValidWedge[BigDecimal] =
+  private val i = ValidSplitEpi
+    .forRefined[String, BigDecimal, HourRange](_ => "Invalid hour value")
+
+  val brightnessValidWedge: InputValidWedge[BrightnessValue] =
     InputValidWedge(
-      InputValidSplitEpi.bigDecimal.withErrorMessage("Invalid brightness value".refined).getValid,
-      n => Try(displayBrightness.shortName(n)).toOption.orEmpty
+      InputValidSplitEpi.bigDecimal
+        .withErrorMessage(_ => "Invalid brightness value".refined)
+        .getValid
+        .andThen(_.map(BrightnessValue(_))),
+      n => Try(n.shortName).toOption.orEmpty
     )
 
-  // import eu.timepit.refined.*
+  private def ditherInRange(
+    λcentral: Wavelength,
+    λmin:     Wavelength,
+    λmax:     Wavelength,
+    λr:       WavelengthRange
+  ): ValidFilterNEC[WavelengthDither] =
+    // min + coverage/2 ≤ CentralWavelength + WavelengthDither ≤ max - coverage/2
+    val minValidPm = λmin.pm.value.value + λr.pm.value.value / 2
+    val maxValidPm = λmax.pm.value.value - λr.pm.value.value / 2
+    ValidFilter(
+      λdither =>
+        val adjusted = λcentral.unsafeOffset(λdither).pm.value.value
+        minValidPm < adjusted && adjusted < maxValidPm
+      ,
+      _ => NonEmptyChain("Dither value is outside of valid range".refined)
+    )
 
-  // val ditherNmDecimalWavelength: ValidSplitEpi[Errors, DitherNanoMetersValue, Wavelength] =
-  //   ValidSplitEpi[Errors, DitherNanoMetersValue, Wavelength](
-  //     v =>
-  //       Wavelength.decimalNanometers
-  //         .getOption(v.value)
-  //         .toRight("Invalid Dither Wavelength Value")
-  //         .toEitherErrorsUnsafe,
-  //     Wavelength.decimalNanometers.reverseGet.andThen(DitherNanoMetersValue.unsafeFrom)
-  //   )
+  val ditherValidSplitEpi: InputValidSplitEpi[WavelengthDither] =
+    InputValidSplitEpi.bigDecimal
+      .andThen(
+        WavelengthDither.decimalNanometers,
+        _ => NonEmptyChain("Invalid dither value".refined[NonEmpty])
+      )
 
-  val dithersValidSplitEpi: InputValidSplitEpi[Option[NonEmptyList[DitherNanoMeters]]] =
-    InputValidSplitEpi
-      .refinedBigDecimal[DitherNanoMetersRange]
-      .toNel(",".refined)
-      .withErrorMessage("Invalid wavelength dither values".refined)
-      .optional
+  def dithersValidSplitEpi(
+    λcentral: Wavelength,
+    λmin:     Wavelength,
+    λmax:     Wavelength,
+    λr:       WavelengthRange
+  ): InputValidSplitEpi[WavelengthDither] =
+    ditherValidSplitEpi.andThen(ditherInRange(λcentral, λmin, λmax, λr))
 
   val offsetQNELValidWedge: InputValidWedge[Option[NonEmptyList[Offset.Q]]] =
     MathValidators.truncatedAngleSignedDegrees
       .andThen(Offset.Component.angle[Axis.Q].reverse)
       .toNel(",".refined)
-      .withErrorMessage("Invalid offsets".refined)
+      .withErrorMessage(_ => "Invalid offsets".refined)
       .optional
 
   val hoursValidWedge: InputValidWedge[BigDecimal Refined HourRange] =
@@ -72,7 +94,7 @@ object ExploreModelValidators:
       .truncatedBigDecimal(decimals = 2.refined)
       .andThen(
         ValidSplitEpi
-          .forRefined[String, BigDecimal, HourRange]("Invalid hour value")
+          .forRefined[String, BigDecimal, HourRange](_ => "Invalid hour value")
           .toErrorsValidSplitEpiUnsafe
       )
 
@@ -81,9 +103,14 @@ object ExploreModelValidators:
       .truncatedBigDecimal(3.refined)
       .andThen(
         ValidWedge
-          .fromFormat(Wavelength.decimalMicrometers, "Invalid Wavelength".refined[NonEmpty])
+          .fromFormat(Wavelength.decimalMicrometers, _ => "Invalid Wavelength".refined[NonEmpty])
           .toErrorsValidWedge
       )
+
+  val wavelengthRangeValidWedge: InputValidWedge[WavelengthRange] =
+    wavelengthValidWedge.andThen(
+      Iso[Wavelength, WavelengthRange](w => WavelengthRange(w.pm))(wc => Wavelength(wc.pm))
+    )
 
   // Only support numbers (one or more) with an optional sign and an optional
   // decimal point with or without numbers after the decimal point
@@ -110,7 +137,7 @@ object ExploreModelValidators:
         .truncatedBigDecimal(3.refined)
         .andThen(
           Parallax.milliarcseconds.reverse,
-          NonEmptyChain(NonEmptyString.unsafeFrom("Invalid parallax"))
+          _ => NonEmptyChain("Invalid parallax".refined[NonEmpty])
         )
     )
 
@@ -120,7 +147,7 @@ object ExploreModelValidators:
         .truncatedBigDecimal(3.refined)
         .andThen(
           ProperMotion.RA.milliarcsecondsPerYear.reverse,
-          NonEmptyChain(NonEmptyString.unsafeFrom("Invalid right ascencion velocity"))
+          _ => NonEmptyChain("Invalid right ascencion velocity".refined[NonEmpty])
         )
     )
 
@@ -130,6 +157,6 @@ object ExploreModelValidators:
         .truncatedBigDecimal(3.refined)
         .andThen(
           ProperMotion.Dec.milliarcsecondsPerYear.reverse,
-          NonEmptyChain(NonEmptyString.unsafeFrom("Invalid declination velocity"))
+          _ => NonEmptyChain("Invalid declination velocity".refined[NonEmpty])
         )
     )

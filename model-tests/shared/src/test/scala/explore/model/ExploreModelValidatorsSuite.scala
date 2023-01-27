@@ -9,6 +9,7 @@ import eu.timepit.refined.scalacheck.all.*
 import lucuma.core.arb.*
 import lucuma.core.math.Angle
 import lucuma.core.math.arb.ArbAngle.*
+import lucuma.core.math.arb.ArbBrightnessValue.given
 import lucuma.core.math.arb.ArbOffset.*
 import lucuma.core.math.arb.ArbParallax.*
 import lucuma.core.math.arb.ArbProperMotion.given
@@ -37,8 +38,8 @@ final class ExploreModelValidatorsSuite extends DisciplineSuite:
   )
 
   checkAll(
-    "dithersValidSplitEpi",
-    ValidSplitEpiTests(ExploreModelValidators.dithersValidSplitEpi).validSplitEpiLaws
+    "ditherValidSplitEpi",
+    ValidSplitEpiTests(ExploreModelValidators.ditherValidSplitEpi).validSplitEpiLaws
   )
 
   checkAll(
