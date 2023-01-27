@@ -105,6 +105,6 @@ extension (posAngleConstraint: Option[PosAngleConstraint])
     case Some(PosAngleConstraint.AllowFlip(a))           => NonEmptyList.of(a, a.flip).some
     case Some(PosAngleConstraint.ParallacticOverride(a)) => NonEmptyList.of(a).some
     case Some(PosAngleConstraint.AverageParallactic)     =>
-      averageParallacticAngle(site, tracking, vizTime).map(NonEmptyList.of(_))
+      averageParallacticAngle(site, tracking, vizTime).map(a => NonEmptyList.of(a, a.flip))
     case None                                            => NonEmptyList.fromList(UnconstrainedAngles)
     case _                                               => None
