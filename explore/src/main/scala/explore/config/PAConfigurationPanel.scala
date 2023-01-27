@@ -100,6 +100,7 @@ object PAConfigurationPanel:
           case Some(PosAngleConstraint.AverageParallactic) =>
             props.selectedPA
               .map(a => <.label(f"${a.toDoubleDegrees}%.2f °"))
+              .orElse(<.label("Not Visible").some)
           case _                                           => None
 
         def posAngleEditor(pa: View[Angle]) =
