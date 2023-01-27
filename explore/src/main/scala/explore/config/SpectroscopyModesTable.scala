@@ -94,8 +94,7 @@ case class SpectroscopyModesTable(
   constraints:              ConstraintSet,
   targets:                  Option[List[ItcTarget]],
   baseCoordinates:          Option[CoordinatesAtVizTime],
-  matrix:                   SpectroscopyModesMatrix,
-  onSelect:                 Callback
+  matrix:                   SpectroscopyModesMatrix
 ) extends ReactFnProps(SpectroscopyModesTable.component):
   val brightestTarget: Option[ItcTarget] =
     for
@@ -654,8 +653,7 @@ private object SpectroscopyModesTable extends TableHooks:
                       .when_(selectedIndex.value.exists(_ === row.index.toInt)),
                     (^.onClick --> (
                       props.scienceMode.set(toggleRow(row.original)) >>
-                        selectedIndex.setState(row.index.toInt.some) >>
-                        props.onSelect
+                        selectedIndex.setState(row.index.toInt.some)
                     )).when(row.original.entry.enabledRow)
                   ),
                 onChange = virtualizer =>

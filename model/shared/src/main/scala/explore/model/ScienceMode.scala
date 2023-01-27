@@ -93,6 +93,21 @@ object ScienceMode:
         explicitWavelengthDithers.exists(_ =!= defaultWavelengthDithers) ||
         explicitSpatialOffsets.exists(_ =!= defaultSpatialOffsets)
 
+    def revertCustomizations: GmosNorthLongSlit =
+      this.copy(
+        grating = this.initialGrating,
+        filter = this.initialFilter,
+        fpu = this.initialFpu,
+        centralWavelength = this.initialCentralWavelength,
+        explicitXBin = None,
+        explicitYBin = None,
+        explicitAmpReadMode = None,
+        explicitAmpGain = None,
+        explicitRoi = None,
+        explicitWavelengthDithers = None,
+        explicitSpatialOffsets = None
+      )
+
   object GmosNorthLongSlit:
     given Decoder[GmosNorthLongSlit] = deriveDecoder
 
@@ -179,6 +194,20 @@ object ScienceMode:
         explicitWavelengthDithers.exists(_ =!= defaultWavelengthDithers) ||
         explicitSpatialOffsets.exists(_ =!= defaultSpatialOffsets)
 
+    def revertCustomizations: GmosSouthLongSlit =
+      this.copy(
+        grating = this.initialGrating,
+        filter = this.initialFilter,
+        fpu = this.initialFpu,
+        centralWavelength = this.initialCentralWavelength,
+        explicitXBin = None,
+        explicitYBin = None,
+        explicitAmpReadMode = None,
+        explicitAmpGain = None,
+        explicitRoi = None,
+        explicitWavelengthDithers = None,
+        explicitSpatialOffsets = None
+      )
   object GmosSouthLongSlit:
     given Decoder[GmosSouthLongSlit] = deriveDecoder
 

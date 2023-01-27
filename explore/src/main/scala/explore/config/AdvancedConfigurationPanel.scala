@@ -106,7 +106,7 @@ sealed trait AdvancedConfigurationPanel[T <: ScienceMode, Input]:
   def scienceMode: Aligner[T, Input]
   def spectroscopyRequirements: SpectroscopyRequirementsData
   def potITC: View[Pot[Option[OdbItcResult.Success]]]
-  def editState: View[ConfigEditState]
+  def deleteConfig: Callback
   def confMatrix: SpectroscopyModesMatrix
 
 sealed abstract class AdvancedConfigurationPanelBuilder[
@@ -126,12 +126,11 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
 
   @inline protected def isCustomized(aligner: AA): Boolean = aligner.get.isCustomized
 
-  // TODO: Reverting will delete the configuration
-  // @inline protected def revertCustomizations(aligner: AA)(using
-  //   MonadError[IO, Throwable],
-  //   Effect.Dispatch[IO],
-  //   Logger[IO]
-  // ): Callback
+  @inline protected def revertCustomizations(aligner: AA)(using
+    MonadError[IO, Throwable],
+    Effect.Dispatch[IO],
+    Logger[IO]
+  ): Callback
 
   @inline protected def centralWavelength(aligner: AA)(using
     MonadError[IO, Throwable],
@@ -440,8 +439,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
           findMatrixData(props.scienceMode.get, reqsWavelength, rows)
         }
       }
-      // .render { (props, ctx, exposureModeEnum, _, readonlyData) =>
-      .render { (props, ctx, _, readonlyData) =>
+      .useStateView(ConfigEditState.View)
+      .render { (props, ctx, _, readonlyData, editState) =>
         import ctx.given
 
         // val exposureModeView = overrideExposureTimeMode(props.scienceMode)
@@ -463,9 +462,9 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
         //     )
         //     .flatten
 
-        val disableAdvancedEdit = props.editState.get =!= ConfigEditState.AdvancedEdit
+        val disableAdvancedEdit = editState.get =!= ConfigEditState.AdvancedEdit
         val disableSimpleEdit   =
-          disableAdvancedEdit && props.editState.get =!= ConfigEditState.SimpleEdit
+          disableAdvancedEdit && editState.get =!= ConfigEditState.SimpleEdit
 
         def dithersControl(onChange: Callback): VdomElement =
           <.span("Under construction")
@@ -758,37 +757,36 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               ).compact.small
             ),
             Button(
-              label = "View Suggested Configs",
+              label = "Revert Configuration",
               icon = Icons.ListIcon,
               severity = Button.Severity.Secondary,
-              onClick = props.editState.set(ConfigEditState.TableView)
+              onClick = props.deleteConfig
             ).compact.small
               .unless(isCustomized(props.scienceMode)),
             Button(
               label = "Revert Customizations",
               icon = Icons.TrashUnstyled,
               severity = Button.Severity.Danger,
-              onClick = props.editState.set(ConfigEditState.DetailsView) >>
+              onClick = editState.set(ConfigEditState.View) >>
                 // exposureModeEnum.set(none) >>
-                invalidateITC // >>
-              // TODO: Put back
-              // revertCustomizations(props.scienceMode)
+                invalidateITC >>
+                revertCustomizations(props.scienceMode)
             ).compact.small
               .when(isCustomized(props.scienceMode)),
             Button(
               label = "Customize",
               icon = Icons.Edit,
               severity = Button.Severity.Secondary,
-              onClick = props.editState.set(ConfigEditState.SimpleEdit)
+              onClick = editState.set(ConfigEditState.SimpleEdit)
             ).compact.small
-              .when(props.editState.get === ConfigEditState.DetailsView),
+              .when(editState.get === ConfigEditState.View),
             Button(
               label = "Advanced Customization",
               icon = Icons.ExclamationTriangle.withClass(ExploreStyles.WarningIcon),
               severity = Button.Severity.Secondary,
-              onClick = props.editState.set(ConfigEditState.AdvancedEdit)
+              onClick = editState.set(ConfigEditState.AdvancedEdit)
             ).compact.small
-              .when(props.editState.get === ConfigEditState.SimpleEdit)
+              .when(editState.get === ConfigEditState.SimpleEdit)
           )
         )
       }
@@ -826,7 +824,7 @@ object AdvancedConfigurationPanel {
     scienceMode:              Aligner[ScienceMode.GmosNorthLongSlit, GmosNorthLongSlitInput],
     spectroscopyRequirements: SpectroscopyRequirementsData,
     potITC:                   View[Pot[Option[OdbItcResult.Success]]],
-    editState:                View[ConfigEditState],
+    deleteConfig:             Callback,
     confMatrix:               SpectroscopyModesMatrix
   ) extends ReactFnProps[AdvancedConfigurationPanel.GmosNorthLongSlit](
         AdvancedConfigurationPanel.GmosNorthLongSlit.component
@@ -846,11 +844,10 @@ object AdvancedConfigurationPanel {
         GmosNorthFpu,
       ] {
 
-    // TODO: Reverting will delete the configuration
-    // @inline override protected def revertCustomizations(
-    //   aligner: AA
-    // )(using MonadError[IO, Throwable], Effect.Dispatch[IO], Logger[IO]): Callback =
-    //   aligner.view(_.toInput).set(ScienceMode.GmosNorthLongSlit.Empty)
+    @inline override protected def revertCustomizations(
+      aligner: AA
+    )(using MonadError[IO, Throwable], Effect.Dispatch[IO], Logger[IO]): Callback =
+      aligner.view(_.toInput).mod(_.revertCustomizations)
 
     @inline override protected def centralWavelength(
       aligner: AA
@@ -1027,7 +1024,7 @@ object AdvancedConfigurationPanel {
     scienceMode:              Aligner[ScienceMode.GmosSouthLongSlit, GmosSouthLongSlitInput],
     spectroscopyRequirements: SpectroscopyRequirementsData,
     potITC:                   View[Pot[Option[OdbItcResult.Success]]],
-    editState:                View[ConfigEditState],
+    deleteConfig:             Callback,
     confMatrix:               SpectroscopyModesMatrix
   ) extends ReactFnProps[AdvancedConfigurationPanel.GmosSouthLongSlit](
         AdvancedConfigurationPanel.GmosSouthLongSlit.component
@@ -1050,10 +1047,10 @@ object AdvancedConfigurationPanel {
     // @inline override protected def isCustomized(aligner: AA): Boolean =
     //   aligner.get =!= ScienceMode.GmosSouthLongSlit.Empty
 
-    // @inline override protected def revertCustomizations(
-    //   aligner: AA
-    // )(using MonadError[IO, Throwable], Effect.Dispatch[IO], Logger[IO]): Callback =
-    //   aligner.view(_.toInput).set(ScienceMode.GmosSouthLongSlit.Empty)
+    @inline override protected def revertCustomizations(
+      aligner: AA
+    )(using MonadError[IO, Throwable], Effect.Dispatch[IO], Logger[IO]): Callback =
+      aligner.view(_.toInput).mod(_.revertCustomizations)
 
     @inline override def centralWavelength(
       aligner: AA

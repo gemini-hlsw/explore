@@ -50,7 +50,7 @@ case class BasicConfigurationPanel(
   constraints:     ConstraintSet,
   itcTargets:      List[ItcTarget],
   baseCoordinates: Option[CoordinatesAtVizTime],
-  onShowDetails:   Callback,
+  createConfig:    Callback,
   confMatrix:      SpectroscopyModesMatrix
 ) extends ReactFnProps(BasicConfigurationPanel.component)
 
@@ -94,16 +94,16 @@ private object BasicConfigurationPanel:
             props.constraints,
             if (props.itcTargets.isEmpty) none else props.itcTargets.some,
             props.baseCoordinates,
-            props.confMatrix,
-            props.onShowDetails
+            props.confMatrix
           ).when(isSpectroscopy),
           <.div(ExploreStyles.BasicConfigurationButtons)(
             Button(
-              "View Details",
+              "Accept Configuration",
               icon = Icons.Gears,
+              // TODO: also need to disable if there is insufficient information for ITC
               disabled = props.scienceModeOpt.get.isEmpty,
               severity = Button.Severity.Secondary,
-              onClick = props.onShowDetails
+              onClick = props.createConfig
             ).compact.small
           )
         )

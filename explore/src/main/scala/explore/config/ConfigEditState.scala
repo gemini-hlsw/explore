@@ -7,5 +7,5 @@ import cats.Eq
 import cats.derived.*
 
 enum ConfigEditState derives Eq {
-  case TableView, DetailsView, SimpleEdit, AdvancedEdit
+  case View, SimpleEdit, AdvancedEdit
 }
