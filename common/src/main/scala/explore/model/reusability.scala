@@ -23,6 +23,7 @@ import lucuma.ags.AgsPosition
 import lucuma.ags.GuideStarCandidate
 import lucuma.catalog.AngularSize
 import lucuma.catalog.CatalogTargetResult
+import lucuma.core.geom.Area
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.IntPercent
 import lucuma.core.model.Partner
@@ -145,3 +146,5 @@ object reusability:
   given Reusability[Visit] = Reusability.byEq
 
   given Reusability[StepRecord] = Reusability.byEq
+
+  given Reusability[Area] = Reusability.byEq

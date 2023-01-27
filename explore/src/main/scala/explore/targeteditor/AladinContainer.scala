@@ -3,6 +3,7 @@
 
 package explore.targeteditor
 
+import cats.data.NonEmptyList
 import cats.syntax.all.*
 import crystal.react.View
 import crystal.react.implicits.*
@@ -22,8 +23,10 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ags.AgsAnalysis
+import lucuma.ags.AgsPosition
 import lucuma.core.enums.GuideSpeed
 import lucuma.core.enums.PortDisposition
+import lucuma.core.geom.Area
 import lucuma.core.geom.jts.interpreter.*
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
@@ -63,7 +66,15 @@ object AladinContainer extends AladinCommon {
 
   // This is used for screen coordinates, thus it doesn't need a lot of precission
   private given Reusability[Double]              = Reusability.double(1.0)
-  private given Reusability[Option[AgsAnalysis]] = Reusability.by(_.map(_.target.id))
+  // We need to dectect if the selected GS deserves a refresh, this could be if the
+  // selected target changes or if e.g. the pos angle change for the same target
+  private given Reusability[Option[AgsAnalysis]] = Reusability.by(_ match {
+    case Some(AgsAnalysis.Usable(_, target, _, _, v)) => ((target.id, v)).some
+    // simulate vignetting for reusability it only matters if it changes
+    case Some(t)                                      =>
+      (t.target.id, NonEmptyList.of((AgsPosition(Angle.Angle0, Offset.Zero), Area.MaxArea))).some
+    case _                                            => None
+  })
   private given Reusability[List[AgsAnalysis]]   = Reusability.by(_.length)
   private given Reusability[Props]               =
     Reusability.by(x => (x.asterism, x.obsConf, x.allowMouseScroll, x.options))
