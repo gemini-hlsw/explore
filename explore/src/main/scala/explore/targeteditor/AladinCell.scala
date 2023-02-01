@@ -85,8 +85,8 @@ case class AladinCell(
   paProps:    Option[PAProperties]
 ) extends ReactFnProps(AladinCell.component) {
   val positions =
-    obsConf.scienceMode.flatMap(m =>
-      obsConf.posAngleConstraint.anglesToTestAt(m.siteFor, asterism.baseTracking, obsConf.vizTime)
+    obsConf.configuration.flatMap(c =>
+      obsConf.posAngleConstraint.anglesToTestAt(c.siteFor, asterism.baseTracking, obsConf.vizTime)
     )
 }
 
@@ -270,7 +270,7 @@ object AladinCell extends ModelOptics with AladinCommon:
          p.obsConf.constraints,
          p.obsConf.wavelength,
          p.obsConf.vizTime,
-         p.obsConf.scienceMode,
+         p.obsConf.configuration,
          candidates.value
         )
       ) { (props, ctx, _, _, ags, _, selectedIndex, _, agsOverride) =>

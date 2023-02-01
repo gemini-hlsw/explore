@@ -34,6 +34,7 @@ import explore.config.ExposureTimeModeType.*
 import explore.config.sequence.SequenceEditorPopup
 import explore.given
 import explore.model.AppContext
+import explore.model.BasicConfigAndItc
 import explore.model.ExploreModelValidators
 import explore.model.OdbItcResult
 import explore.model.ScienceMode
@@ -108,6 +109,7 @@ sealed trait AdvancedConfigurationPanel[T <: ScienceMode, Input]:
   def potITC: View[Pot[Option[OdbItcResult.Success]]]
   def deleteConfig: Callback
   def confMatrix: SpectroscopyModesMatrix
+  def selectedConfig: View[Option[BasicConfigAndItc]]
 
 sealed abstract class AdvancedConfigurationPanelBuilder[
   T <: ScienceMode,
@@ -583,7 +585,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             customizableInputText(
               id = "central-wavelength".refined,
               value = wavelengthView.withOnMod(_ => invalidateITC),
-              label = React.Fragment("Wavelength",
+              label = React.Fragment("Central Wavelength",
                                      HelpIcon("configuration/central=wavelength.md".refined)
               ),
               validFormat = ExploreModelValidators.wavelengthValidWedge,
@@ -760,7 +762,10 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               label = "Revert Configuration",
               icon = Icons.ListIcon,
               severity = Button.Severity.Secondary,
-              onClick = props.deleteConfig
+              onClick = props.selectedConfig.set(
+                BasicConfigAndItc(props.scienceMode.get.toBasicConfiguration, none).some
+              )
+                >> props.deleteConfig
             ).compact.small
               .unless(isCustomized(props.scienceMode)),
             Button(
@@ -825,7 +830,8 @@ object AdvancedConfigurationPanel {
     spectroscopyRequirements: SpectroscopyRequirementsData,
     potITC:                   View[Pot[Option[OdbItcResult.Success]]],
     deleteConfig:             Callback,
-    confMatrix:               SpectroscopyModesMatrix
+    confMatrix:               SpectroscopyModesMatrix,
+    selectedConfig:           View[Option[BasicConfigAndItc]]
   ) extends ReactFnProps[AdvancedConfigurationPanel.GmosNorthLongSlit](
         AdvancedConfigurationPanel.GmosNorthLongSlit.component
       )
@@ -1025,7 +1031,8 @@ object AdvancedConfigurationPanel {
     spectroscopyRequirements: SpectroscopyRequirementsData,
     potITC:                   View[Pot[Option[OdbItcResult.Success]]],
     deleteConfig:             Callback,
-    confMatrix:               SpectroscopyModesMatrix
+    confMatrix:               SpectroscopyModesMatrix,
+    selectedConfig:           View[Option[BasicConfigAndItc]]
   ) extends ReactFnProps[AdvancedConfigurationPanel.GmosSouthLongSlit](
         AdvancedConfigurationPanel.GmosSouthLongSlit.component
       )

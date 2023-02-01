@@ -1955,7 +1955,17 @@ $help-title-height: 40px;
 // -------------------------
 .explore-basic-configuration-buttons {
   grid-area: buttons;
-  justify-self: end;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1em;
+
+  .p-inline-message {
+    flex: 1 1;
+  }
+
+  .p-button {
+    flex: 0 0 auto;
+  }
 }
 
 .explore-basic-configuration-form {

@@ -24,6 +24,7 @@ import explore.components.ui.ExploreStyles
 import explore.config.ExposureTimeModeType.FixedExposure
 import explore.events.*
 import explore.model.AppContext
+import explore.model.BasicConfigAndItc
 import explore.model.LoadingState
 import explore.model.ScienceMode
 import explore.model.WorkerClients.*
@@ -67,9 +68,10 @@ case class ItcGraphPanel(
   spectroscopyRequirements: Option[SpectroscopyRequirementsData],
   scienceData:              Option[ScienceData],
   exposure:                 Option[ItcChartExposureTime],
-  selectedTarget:           View[Option[ItcTarget]]
+  selectedTarget:           View[Option[ItcTarget]],
+  selectedConfig:           Option[BasicConfigAndItc] // selected row in spectroscopy modes table
 ) extends ReactFnProps(ItcGraphPanel.component)
-    with ItcPanelProps(scienceMode, spectroscopyRequirements, scienceData, exposure)
+    with ItcPanelProps(scienceMode, spectroscopyRequirements, scienceData, exposure, selectedConfig)
 
 case class ItcGraphProperties(chartType: ItcChartType, detailsShown: PlotDetails)
 object ItcGraphProperties:

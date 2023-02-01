@@ -92,7 +92,8 @@ object reusability:
   given Reusability[AngularSize]         = Reusability.byEq
   given Reusability[CatalogTargetResult] = Reusability.byEq
   given Reusability[ScienceMode]         = Reusability.byEq
-  given Reusability[ScienceModeInitial]  = Reusability.byEq
+  given Reusability[BasicConfiguration]  = Reusability.byEq
+  given Reusability[BasicConfigAndItc]   = Reusability.byEq
   given Reusability[GuideStarCandidate]  = Reusability.by(_.name.value)
   given Reusability[AgsPosition]         = Reusability.byEq
   given Reusability[AgsParams]           = Reusability.byEq

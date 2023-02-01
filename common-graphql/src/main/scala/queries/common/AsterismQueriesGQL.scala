@@ -247,11 +247,17 @@ object AsterismQueriesGQL {
                 grating
                 filter
                 fpu
+                centralWavelength {
+                  picometers
+                }
               }
               gmosSouthLongSlit {
                 grating
                 filter
                 fpu
+                centralWavelength {
+                  picometers
+                }
               }
             }
           }
@@ -268,7 +274,7 @@ object AsterismQueriesGQL {
         object Matches {
           type PosAngleConstraint = lucuma.core.model.PosAngleConstraint
           trait ConstraintSet extends model.ConstraintsSummary
-          type ObservingMode = model.ScienceMode
+          type ObservingMode = model.BasicConfiguration
           object PlannedTime {
             type Execution = time.Duration
           }

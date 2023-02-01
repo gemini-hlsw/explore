@@ -147,8 +147,8 @@ object AladinContainer extends AladinCommon {
       }
       // Memoized svg
       .useMemoBy((p, allCoordinates, _, _) =>
-        (allCoordinates, p.obsConf.scienceMode, p.options, p.selectedGuideStar)
-      ) { (_, _, _, _) => (allCoordinates, mode, options, gs) =>
+        (allCoordinates, p.obsConf.configuration, p.options, p.selectedGuideStar)
+      ) { (_, _, _, _) => (allCoordinates, configuration, options, gs) =>
         val posAngle             = gs.posAngle
         val candidatesVisibility =
           ExploreStyles.GuideStarCandidateVisible.when_(options.agsCandidates.visible)
@@ -158,7 +158,7 @@ object AladinContainer extends AladinCommon {
           GmosGeometry.probeShapes(posAngle,
                                    gsOffset,
                                    Offset.Zero,
-                                   mode,
+                                   configuration,
                                    PortDisposition.Side,
                                    Css.Empty
           )
@@ -169,7 +169,7 @@ object AladinContainer extends AladinCommon {
         val shapes = posAngle
           .map { posAngle =>
             val baseShapes =
-              GmosGeometry.shapesForMode(posAngle, mode, PortDisposition.Side) ++
+              GmosGeometry.shapesForMode(posAngle, configuration, PortDisposition.Side) ++
                 GmosGeometry.commonShapes(posAngle, candidatesVisibility)
 
             probeArmShapes
@@ -193,7 +193,7 @@ object AladinContainer extends AladinCommon {
          props.options.fullScreen,
          props.options.fovRA,
          props.obsConf.vizTime,
-         props.obsConf.scienceMode,
+         props.obsConf.configuration,
          props.selectedGuideStar,
          allCoordinates
         )
@@ -204,7 +204,7 @@ object AladinContainer extends AladinCommon {
           _,
           fovRA,
           obsInstant,
-          scienceMode,
+          configuration,
           selectedGS,
           allCoordinates
         ) =>
@@ -220,7 +220,7 @@ object AladinContainer extends AladinCommon {
                 ExploreStyles.GuideStarCandidateVisible.when_(visible)
 
               val patrolField =
-                GmosGeometry.patrolField(posAngle, scienceMode, PortDisposition.Side).map(_.eval)
+                GmosGeometry.patrolField(posAngle, configuration, PortDisposition.Side).map(_.eval)
 
               candidates
                 // TODO This should be done in AGS proper
@@ -240,7 +240,7 @@ object AladinContainer extends AladinCommon {
                     case _                                  => false
 
                   val candidateCss = g.match
-                    case _ if scienceMode.isEmpty                             =>
+                    case _ if configuration.isEmpty                           =>
                       // Don't color the stars for guide speed if there is no mode selected
                       Css.Empty
                     case AgsAnalysis.Usable(_, _, Some(s), _, _)              =>

@@ -35,6 +35,13 @@ sealed abstract class ScienceMode(val instrument: Instrument) extends Product wi
     case n: ScienceMode.GmosNorthLongSlit => Site.GN
     case s: ScienceMode.GmosSouthLongSlit => Site.GS
   }
+
+  def toBasicConfiguration: BasicConfiguration = this match {
+    case n: ScienceMode.GmosNorthLongSlit =>
+      BasicConfiguration.GmosNorthLongSlit(n.grating, n.filter, n.fpu, n.centralWavelength)
+    case s: ScienceMode.GmosSouthLongSlit =>
+      BasicConfiguration.GmosSouthLongSlit(s.grating, s.filter, s.fpu, s.centralWavelength)
+  }
 }
 
 object ScienceMode:

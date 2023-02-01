@@ -8,6 +8,7 @@ import cats.data.NonEmptyList
 import cats.derived.*
 import cats.syntax.all.*
 import eu.timepit.refined.cats.*
+import explore.model.BasicConfiguration
 import lucuma.ags.*
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
@@ -19,7 +20,7 @@ import java.time.Instant
 
 case class ObsConfiguration(
   vizTime:            Instant,
-  scienceMode:        Option[ScienceMode],
+  configuration:      Option[BasicConfiguration],
   posAngleConstraint: Option[PosAngleConstraint],
   constraints:        Option[ConstraintSet],
   wavelength:         Option[Wavelength]
@@ -27,7 +28,7 @@ case class ObsConfiguration(
 
 object ObsConfiguration:
   val vizTime            = Focus[ObsConfiguration](_.vizTime)
-  val searchingTarget    = Focus[ObsConfiguration](_.scienceMode)
+  val configuration      = Focus[ObsConfiguration](_.configuration)
   val posAngleConstraint = Focus[ObsConfiguration](_.posAngleConstraint)
   val constraints        = Focus[ObsConfiguration](_.constraints)
   val wavelength         = Focus[ObsConfiguration](_.wavelength)

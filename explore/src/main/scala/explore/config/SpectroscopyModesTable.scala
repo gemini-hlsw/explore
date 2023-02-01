@@ -30,9 +30,10 @@ import explore.components.ui.ExploreStyles
 import explore.events.*
 import explore.itc.*
 import explore.model.AppContext
+import explore.model.BasicConfigAndItc
+import explore.model.BasicConfiguration
 import explore.model.CoordinatesAtVizTime
 import explore.model.Progress
-import explore.model.ScienceModeInitial
 import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.ItcPicklers.given
@@ -58,6 +59,7 @@ import lucuma.core.model.ConstraintSet
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.User
 import lucuma.core.util.Display
+import lucuma.core.util.TimeSpan
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
@@ -89,7 +91,7 @@ import scalajs.js.JSConverters.*
 
 case class SpectroscopyModesTable(
   userId:                   Option[User.Id],
-  scienceMode:              View[Option[ScienceModeInitial]],
+  selectedConfig:           View[Option[BasicConfigAndItc]],
   spectroscopyRequirements: SpectroscopyRequirementsData,
   constraints:              ConstraintSet,
   targets:                  Option[List[ItcTarget]],
@@ -301,19 +303,28 @@ private object SpectroscopyModesTable extends TableHooks:
       column(ResolutionColumnId, row => SpectroscopyModeRow.resolution.get(row.entry))
         .setCell(_.value.toString)
         .setColumnSize(FixedSize(70.toPx)),
-      column(AvailablityColumnId, row => row.entry.rowToConf(cw))
+      column(AvailablityColumnId, row => row.rowToConf(cw))
         .setCell(_.value.fold("No")(_ => "Yes"))
         .setColumnSize(FixedSize(66.toPx))
         .setSortUndefined(UndefinedPriority.Lower)
     ).filter { case c => (c.id.toString) != FPUColumnId.value || fpu.isEmpty }
 
-  extension (row: SpectroscopyModeRow)
-    def rowToConf(cw: Option[Wavelength]): Option[ScienceModeInitial] =
-      cw.flatMap(row.coverageCenter).flatMap { cc =>
-        row.instrument match
+  extension (itc: ItcResult)
+    private def toChartExposureTime: Option[ItcChartExposureTime] = itc match {
+      case ItcResult.Result(time, count) =>
+        (TimeSpan.fromMicroseconds(time.toMicros), NonNegInt.from(count).toOption).mapN((t, c) =>
+          ItcChartExposureTime(OverridenExposureTime.FromItc, t, c)
+        )
+      case _                             => none
+    }
+
+  extension (row: SpectroscopyModeRowWithResult)
+    private def rowToConf(cw: Option[Wavelength]): Option[BasicConfigAndItc] =
+      val config = cw.flatMap(row.entry.coverageCenter).flatMap { cc =>
+        row.entry.instrument match
           case GmosNorthSpectroscopyRow(grating, fpu, filter)
-              if row.focalPlane === FocalPlane.SingleSlit =>
-            ScienceModeInitial
+              if row.entry.focalPlane === FocalPlane.SingleSlit =>
+            BasicConfiguration
               .GmosNorthLongSlit(
                 grating = grating,
                 filter = filter,
@@ -322,8 +333,8 @@ private object SpectroscopyModesTable extends TableHooks:
               )
               .some
           case GmosSouthSpectroscopyRow(grating, fpu, filter)
-              if row.focalPlane === FocalPlane.SingleSlit =>
-            ScienceModeInitial
+              if row.entry.focalPlane === FocalPlane.SingleSlit =>
+            BasicConfiguration
               .GmosSouthLongSlit(
                 grating = grating,
                 filter = filter,
@@ -333,21 +344,23 @@ private object SpectroscopyModesTable extends TableHooks:
               .some
           case _ => none
       }
+      config.map(c => BasicConfigAndItc(c, row.result.toOption.flatMap(_.toChartExposureTime)))
 
-    def equalsConf(conf: ScienceModeInitial, cw: Option[Wavelength]): Boolean =
-      rowToConf(cw).exists(_ === conf)
+    private def equalsConf(conf: BasicConfiguration, cw: Option[Wavelength]): Boolean =
+      rowToConf(cw).exists(_.configuration === conf)
 
-    def enabledRow: Boolean =
+  extension (row: SpectroscopyModeRow)
+    private def enabledRow: Boolean =
       List(Instrument.GmosNorth, Instrument.GmosSouth).contains_(row.instrument.instrument) &&
         row.focalPlane === FocalPlane.SingleSlit
 
   private def selectedRowIndex(
-    scienceMode: Option[ScienceModeInitial],
-    cw:          Option[Wavelength],
-    rows:        List[SpectroscopyModeRowWithResult]
+    configuration: Option[BasicConfiguration],
+    cw:            Option[Wavelength],
+    rows:          List[SpectroscopyModeRowWithResult]
   ): Option[Int] =
-    scienceMode
-      .map(selected => rows.indexWhere(_.entry.equalsConf(selected, cw)))
+    configuration
+      .map(selected => rows.indexWhere(_.equalsConf(selected, cw)))
       .filterNot(_ === -1)
 
   private def getVisibleOriginalRows(
@@ -460,13 +473,25 @@ private object SpectroscopyModesTable extends TableHooks:
       }
       // selectedIndex
       .useStateBy((props, _, _, rows, _, _, _) =>
-        selectedRowIndex(props.scienceMode.get, props.spectroscopyRequirements.wavelength, rows)
+        selectedRowIndex(props.selectedConfig.get.map(_.configuration),
+                         props.spectroscopyRequirements.wavelength,
+                         rows
+        )
       )
       // Recompute state if conf or requirements change.
       .useEffectWithDepsBy((props, _, _, _, _, _, _, _) =>
-        (props.scienceMode.get, props.spectroscopyRequirements)
-      ) { (_, _, _, rows, _, _, _, selectedIndex) => (scienceMode, requirements) =>
-        selectedIndex.setState(selectedRowIndex(scienceMode, requirements.wavelength, rows))
+        (props.selectedConfig.get.map(_.configuration), props.spectroscopyRequirements)
+      ) { (_, _, _, rows, _, _, _, selectedIndex) => (configuration, requirements) =>
+        selectedIndex.setState(selectedRowIndex(configuration, requirements.wavelength, rows))
+      }
+      // Set the selected config if the rows change because it might have different itc data
+      .useEffectWithDepsBy((_, _, _, rows, _, _, _, _) => rows) {
+        (props, _, _, _, _, _, _, selectedIndex) => rows =>
+          val optRow = selectedIndex.value.flatMap(idx => rows.lift(idx))
+          val conf   = optRow.flatMap(_.rowToConf(props.spectroscopyRequirements.wavelength))
+          if (props.selectedConfig.get =!= conf)
+            props.selectedConfig.set(conf)
+          else Callback.empty
       }
       // table
       .useReactTableWithStateStoreBy((props, ctx, _, rows, _, _, cols, _) =>
@@ -588,10 +613,12 @@ private object SpectroscopyModesTable extends TableHooks:
           _,
           virtualizerRef
         ) =>
-          def toggleRow(row: SpectroscopyModeRowWithResult): Option[ScienceModeInitial] =
-            row.entry
+          def toggleRow(
+            row: SpectroscopyModeRowWithResult
+          ): Option[explore.model.BasicConfigAndItc] =
+            row
               .rowToConf(props.spectroscopyRequirements.wavelength)
-              .filterNot(conf => props.scienceMode.get.contains_(conf))
+              .filterNot(conf => props.selectedConfig.get.contains_(conf))
 
           def scrollButton(content: VdomNode, style: Css, indexCondition: Int => Boolean): TagMod =
             selectedIndex.value.whenDefined(idx =>
@@ -652,7 +679,7 @@ private object SpectroscopyModesTable extends TableHooks:
                     ExploreStyles.TableRowSelected
                       .when_(selectedIndex.value.exists(_ === row.index.toInt)),
                     (^.onClick --> (
-                      props.scienceMode.set(toggleRow(row.original)) >>
+                      props.selectedConfig.set(toggleRow(row.original)) >>
                         selectedIndex.setState(row.index.toInt.some)
                     )).when(row.original.entry.enabledRow)
                   ),

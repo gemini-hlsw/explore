@@ -13,9 +13,9 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.config.VizTimeEditor
 import explore.model.Asterism
+import explore.model.BasicConfiguration
 import explore.model.ObsIdSet
 import explore.model.PAProperties
-import explore.model.ScienceMode
 import explore.model.enums.AgsState
 import explore.model.enums.TileSizeState
 import explore.targeteditor.AsterismEditor
@@ -47,7 +47,7 @@ object AsterismEditorTile:
     userId:          Option[User.Id],
     programId:       Program.Id,
     sharedInObsIds:  ObsIdSet,
-    potAsterismMode: Pot[(View[Option[Asterism]], Option[ScienceMode])],
+    potAsterismMode: Pot[(View[Option[Asterism]], Option[BasicConfiguration])],
     potVizTime:      Pot[View[Option[Instant]]],
     constraints:     Option[ConstraintSet],
     wavelength:      Option[Wavelength],
@@ -87,7 +87,7 @@ object AsterismEditorTile:
       control = s => control.some.filter(_ => s === TileSizeState.Minimized),
       bodyClass = Some(ExploreStyles.TargetTileBody)
     )((renderInTitle: Tile.RenderInTitle) =>
-      potAsterismMode.render((asterism, scienceMode) =>
+      potAsterismMode.render((asterism, configuration) =>
         userId.map(uid =>
           AsterismEditor(
             uid,
@@ -95,7 +95,7 @@ object AsterismEditorTile:
             sharedInObsIds,
             asterism,
             potVizTime,
-            scienceMode,
+            configuration,
             constraints,
             wavelength,
             currentTarget,

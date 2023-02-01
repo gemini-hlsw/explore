@@ -24,10 +24,11 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.events.*
-import explore.model
 import explore.model.AppContext
+import explore.model.BasicConfigAndItc
+import explore.model.BasicConfiguration
 import explore.model.CoordinatesAtVizTime
-import explore.model.ScienceModeInitial
+import explore.model.ScienceMode
 import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.ItcPicklers.given
@@ -69,6 +70,7 @@ case class ConfigurationPanel(
   baseCoordinates: Option[CoordinatesAtVizTime],
   agsState:        View[AgsState],
   selectedPA:      Option[Angle],
+  selectedConfig:  View[Option[BasicConfigAndItc]],
   renderInTitle:   Tile.RenderInTitle
 ) extends ReactFnProps[ConfigurationPanel](ConfigurationPanel.component)
 
@@ -120,20 +122,25 @@ object ConfigurationPanel:
 
   // TODO: We probably want a mutation that returns the configuration so that we can update locally
   private def createConfiguration(
-    programId: Program.Id,
-    obsId:     Observation.Id,
-    mode:      Option[ScienceModeInitial]
-  )(using TransactionalClient[IO, ObservationDB]) =
-    mode.foldMap(m =>
-      ObsQueriesGQL.UpdateObservationMutation
+    programId:   Program.Id,
+    obsId:       Observation.Id,
+    config:      Option[BasicConfiguration],
+    scienceMode: View[Option[ScienceMode]]
+  )(using TransactionalClient[IO, ObservationDB]): IO[Unit] =
+    config.foldMap(c =>
+      ObsQueriesGQL.CreateConfigurationMutation
         .execute[IO](
           UpdateObservationsInput(
             programId = programId,
             WHERE = obsId.toWhereObservation.assign,
-            SET = ObservationPropertiesInput(observingMode = m.toInput.assign)
+            SET = ObservationPropertiesInput(observingMode = c.toInput.assign)
           )
         )
-        .void
+        .flatMap(data =>
+          scienceMode
+            .set(data.updateObservations.observations.headOption.flatMap(_.observingMode))
+            .to[IO]
+        )
     )
 
   private given Eq[SpectroscopyModesMatrix] = Eq.by(_.matrix.isEmpty)
@@ -144,9 +151,7 @@ object ConfigurationPanel:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      // TODO: We probably want to move this to ObsTabContents.
-      .useStateView(none[ScienceModeInitial])
-      .useEffectResultOnMountBy { (props, ctx, _) =>
+      .useEffectResultOnMountBy { (props, ctx) =>
         import ctx.given
 
         ItcClient[IO]
@@ -154,13 +159,13 @@ object ConfigurationPanel:
             ItcMessage.SpectroscopyMatrixRequest(uri"/instrument_spectroscopy_matrix.csv")
           )
       }
-      .render { (props, ctx, scienceModeInitial, matrix) =>
+      .render { (props, ctx, matrix) =>
         import ctx.given
 
         val requirementsCtx: UndoSetter[ScienceRequirementsData] =
           props.scienceData.zoom(ScienceData.requirements)
 
-        val modeAligner: Aligner[Option[model.ScienceMode], Input[ObservingModeInput]] =
+        val modeAligner: Aligner[Option[ScienceMode], Input[ObservingModeInput]] =
           Aligner(
             props.scienceData,
             UpdateObservationsInput(
@@ -174,7 +179,7 @@ object ConfigurationPanel:
             UpdateObservationsInput.SET.andThen(ObservationPropertiesInput.observingMode).modify
           )
 
-        val optModeView: View[Option[model.ScienceMode]] =
+        val optModeView: View[Option[ScienceMode]] =
           modeAligner.view(_.map(_.toInput).orUnassign)
 
         val deleteConfiguration = optModeView.set(none)
@@ -186,7 +191,7 @@ object ConfigurationPanel:
 
         val optNorthAligner = optModeAligner.flatMap {
           _.zoomOpt(
-            model.ScienceMode.gmosNorthLongSlit,
+            ScienceMode.gmosNorthLongSlit,
             modOrAssignAndMap(GmosNorthLongSlitInput())(
               ObservingModeInput.gmosNorthLongSlit.modify
             )
@@ -195,7 +200,7 @@ object ConfigurationPanel:
 
         val optSouthAligner = optModeAligner.flatMap {
           _.zoomOpt(
-            model.ScienceMode.gmosSouthLongSlit,
+            ScienceMode.gmosSouthLongSlit,
             modOrAssignAndMap(GmosSouthLongSlitInput())(ObservingModeInput.gmosSouthLongSlit.modify)
           )
         }
@@ -219,11 +224,15 @@ object ConfigurationPanel:
                 props.programId,
                 props.obsId,
                 requirementsCtx,
-                scienceModeInitial,
+                props.selectedConfig,
                 props.constraints,
                 props.itcTargets,
                 props.baseCoordinates,
-                createConfiguration(props.programId, props.obsId, scienceModeInitial.get).runAsync,
+                createConfiguration(props.programId,
+                                    props.obsId,
+                                    props.selectedConfig.get.map(_.configuration),
+                                    optModeView
+                ),
                 confMatrix
               )
             else
@@ -239,7 +248,8 @@ object ConfigurationPanel:
                       requirementsCtx.model.get.spectroscopy,
                       props.scienceData.model.zoom(ScienceData.potITC),
                       deleteConfiguration,
-                      confMatrix
+                      confMatrix,
+                      props.selectedConfig
                     )
                 ),
                 // Gmos South Long Slit
@@ -253,7 +263,8 @@ object ConfigurationPanel:
                       requirementsCtx.model.get.spectroscopy,
                       props.scienceData.model.zoom(ScienceData.potITC),
                       deleteConfiguration,
-                      confMatrix
+                      confMatrix,
+                      props.selectedConfig
                     )
                 )
               )

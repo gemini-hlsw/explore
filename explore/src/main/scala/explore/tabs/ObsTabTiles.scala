@@ -16,6 +16,8 @@ import explore.components.TileController
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Asterism
+import explore.model.BasicConfigAndItc
+import explore.model.BasicConfiguration
 import explore.model.ConstraintGroup
 import explore.model.CoordinatesAtVizTime
 import explore.model.Focused
@@ -146,7 +148,9 @@ object ObsTabTiles:
       // Selected GS. to share the PA chosen for Unconstrained and average modes
       // This should go to the db eventually
       .useStateView(none[AgsAnalysis])
-      .render { (props, ctx, obsView, itcTarget, agsState, selectedPA) =>
+      // the configuration the user has selected from the spectroscopy modes table, if any
+      .useStateView(none[BasicConfigAndItc])
+      .render { (props, ctx, obsView, itcTarget, agsState, selectedPA, selectedConfig) =>
         import ctx.given
 
         val obsViewPot = obsView.toPot
@@ -169,8 +173,8 @@ object ObsTabTiles:
             ).zoom(Asterism.fromTargetsListOn(props.focusedTarget).asLens)
           )
 
-        val potAsterismMode: Pot[(View[Option[Asterism]], Option[ScienceMode])] =
-          potAsterism.map(x => (x, scienceMode))
+        val potAsterismMode: Pot[(View[Option[Asterism]], Option[BasicConfiguration])] =
+          potAsterism.map(x => (x, scienceMode.map(_.toBasicConfiguration)))
 
         val vizTimeView: Pot[View[Option[Instant]]] =
           obsViewPot.map(_.zoom(ObsEditData.visualizationTime))
@@ -224,7 +228,8 @@ object ObsTabTiles:
                 _.get.itcExposureTime
                   .map(r => ItcChartExposureTime(OverridenExposureTime.FromItc, r.time, r.count))
               ),
-            itcTarget
+            itcTarget,
+            selectedConfig.get
           )
 
         val constraintsSelector =
@@ -239,7 +244,7 @@ object ObsTabTiles:
           ElevationPlotTile.elevationPlotTile(
             props.userId,
             props.focusedTarget.orElse(firstTarget),
-            scienceMode,
+            scienceMode.map(_.siteFor),
             targetCoords,
             vizTime
           )
@@ -312,7 +317,8 @@ object ObsTabTiles:
               .zoom(atMapWithDefault(props.obsId, UndoStacks.empty)),
             targetCoords,
             paProps.flatMap(_.selectedPA),
-            agsState
+            agsState,
+            selectedConfig
           )
 
         val rglRender: LayoutsMap => VdomNode = (l: LayoutsMap) =>
