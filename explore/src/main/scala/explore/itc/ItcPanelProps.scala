@@ -10,6 +10,8 @@ import eu.timepit.refined.*
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.events.ItcMessage
+import explore.model.BasicConfigAndItc
+import explore.model.BasicConfiguration
 import explore.model.ScienceMode
 import explore.model.WorkerClients.ItcClient
 import explore.model.boopickle.ItcPicklers.given
@@ -32,18 +34,26 @@ trait ItcPanelProps(
   scienceMode:              Option[ScienceMode],
   spectroscopyRequirements: Option[SpectroscopyRequirementsData],
   scienceData:              Option[ScienceData],
-  exposure:                 Option[ItcChartExposureTime]
+  exposure:                 Option[ItcChartExposureTime],
+  selectedConfig:           Option[BasicConfigAndItc] // selected row in spectroscopy modes table
 ):
+  // if there is a scienceMode, that means a configuration has been created. If not, we'll use the
+  // row selected in the spectroscopy modes table if it exists
+  val configAndItc: Option[BasicConfigAndItc] =
+    scienceMode.map(m => BasicConfigAndItc(m.toBasicConfiguration, exposure)).orElse(selectedConfig)
+
   val signalToNoiseAt: Option[Wavelength] = spectroscopyRequirements.flatMap(_.signalToNoiseAt)
 
-  val wavelength: Option[CoverageCenterWavelength] = scienceMode match
-    case Some(m: ScienceMode.GmosNorthLongSlit) => m.centralWavelength.some
+  val wavelength: Option[CoverageCenterWavelength] = configAndItc match
+    case Some(BasicConfigAndItc(c: BasicConfiguration.GmosNorthLongSlit, _)) =>
+      c.centralWavelength.some
 
-    case Some(m: ScienceMode.GmosSouthLongSlit) => m.centralWavelength.some
+    case Some(BasicConfigAndItc(c: BasicConfiguration.GmosSouthLongSlit, _)) =>
+      c.centralWavelength.some
 
     case _ => none
 
-    // TODO: Revisit when we have exposure mode in science requirements
+    // TODO: Revisit when we have exposure mode in spectroscopy requirements
   val signalToNoise: Option[PosBigDecimal]         = spectroscopyRequirements.flatMap(_.signalToNoise)
 
   // val signalToNoise: Option[PosBigDecimal] = scienceMode match
@@ -66,19 +76,18 @@ trait ItcPanelProps(
   //   case _ =>
   //     spectroscopyRequirements.flatMap(_.signalToNoise)
 
-  val instrumentRow: Option[InstrumentRow]            = scienceMode match
-    case Some(m: ScienceMode.GmosNorthLongSlit) =>
-      GmosNorthSpectroscopyRow(m.grating, m.fpu, m.filter).some
+  val instrumentRow: Option[InstrumentRow]            = configAndItc match
+    case Some(BasicConfigAndItc(c: BasicConfiguration.GmosNorthLongSlit, _)) =>
+      GmosNorthSpectroscopyRow(c.grating, c.fpu, c.filter).some
 
-    case Some(m: ScienceMode.GmosSouthLongSlit) =>
-      GmosSouthSpectroscopyRow(m.grating, m.fpu, m.filter).some
+    case Some(BasicConfigAndItc(c: BasicConfiguration.GmosSouthLongSlit, _)) =>
+      GmosSouthSpectroscopyRow(c.grating, c.fpu, c.filter).some
 
     case _ =>
       none
 
     // TODO: Revisit when we have exposure mode in science requirements
-  val chartExposureTime: Option[ItcChartExposureTime] =
-    exposure.map(r => ItcChartExposureTime(OverridenExposureTime.Overriden, r.time, r.count))
+  val chartExposureTime: Option[ItcChartExposureTime] = configAndItc.flatMap(_.exposureTime)
 
   // val chartExposureTime: Option[ItcChartExposureTime] = scienceMode match
   //   case Some(ScienceMode.GmosNorthLongSlit(basic, adv)) =>

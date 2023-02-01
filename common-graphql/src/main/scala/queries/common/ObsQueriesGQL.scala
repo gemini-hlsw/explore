@@ -42,75 +42,19 @@ object ObsQueriesGQL {
             }
             observingMode {
               gmosNorthLongSlit {
-                initialGrating
-                initialFilter
-                initialFpu
-                initialCentralWavelength {
-                    picometers
-                  }
                 grating
                 filter
                 fpu
                 centralWavelength {
                     picometers
                   }
-                defaultXBin
-                explicitXBin
-                defaultYBin
-                explicitYBin
-                defaultAmpReadMode
-                explicitAmpReadMode
-                defaultAmpGain
-                explicitAmpGain
-                defaultRoi
-                explicitRoi
-                defaultWavelengthDithers {
-                  picometers
-                }
-                explicitWavelengthDithers {
-                  picometers
-                }
-                defaultSpatialOffsets {
-                  microarcseconds
-                }
-                explicitSpatialOffsets {
-                  microarcseconds
-                }
               }
               gmosSouthLongSlit {
-                initialGrating
-                initialFilter
-                initialFpu
-                initialCentralWavelength {
-                    picometers
-                  }
                 grating
                 filter
                 fpu
                 centralWavelength {
                   picometers
-                }
-                defaultXBin
-                explicitXBin
-                defaultYBin
-                explicitYBin
-                defaultAmpReadMode
-                explicitAmpReadMode
-                defaultAmpGain
-                explicitAmpGain
-                defaultRoi
-                explicitRoi
-                defaultWavelengthDithers {
-                  picometers
-                }
-                explicitWavelengthDithers {
-                  picometers
-                }
-                defaultSpatialOffsets {
-                  microarcseconds
-                }
-                explicitSpatialOffsets {
-                  microarcseconds
                 }
               }
             }
@@ -173,7 +117,7 @@ object ObsQueriesGQL {
           object PlannedTime {
             type Execution = time.Duration
           }
-          type ObservingMode = model.ScienceMode
+          type ObservingMode = model.BasicConfiguration
         }
       }
 
@@ -614,6 +558,100 @@ object ObsQueriesGQL {
         }
       }
     """
+  }
+
+  @GraphQL
+  trait CreateConfigurationMutation extends GraphQLOperation[ObservationDB] {
+    val document = """
+      mutation ($input: UpdateObservationsInput!){
+        updateObservations(input: $input) {
+          observations {
+            observingMode {
+              gmosNorthLongSlit {
+                initialGrating
+                initialFilter
+                initialFpu
+                initialCentralWavelength {
+                    picometers
+                  }
+                grating
+                filter
+                fpu
+                centralWavelength {
+                    picometers
+                  }
+                defaultXBin
+                explicitXBin
+                defaultYBin
+                explicitYBin
+                defaultAmpReadMode
+                explicitAmpReadMode
+                defaultAmpGain
+                explicitAmpGain
+                defaultRoi
+                explicitRoi
+                defaultWavelengthDithers {
+                  picometers
+                }
+                explicitWavelengthDithers {
+                  picometers
+                }
+                defaultSpatialOffsets {
+                  microarcseconds
+                }
+                explicitSpatialOffsets {
+                  microarcseconds
+                }
+              }
+              gmosSouthLongSlit {
+                initialGrating
+                initialFilter
+                initialFpu
+                initialCentralWavelength {
+                    picometers
+                  }
+                grating
+                filter
+                fpu
+                centralWavelength {
+                  picometers
+                }
+                defaultXBin
+                explicitXBin
+                defaultYBin
+                explicitYBin
+                defaultAmpReadMode
+                explicitAmpReadMode
+                defaultAmpGain
+                explicitAmpGain
+                defaultRoi
+                explicitRoi
+                defaultWavelengthDithers {
+                  picometers
+                }
+                explicitWavelengthDithers {
+                  picometers
+                }
+                defaultSpatialOffsets {
+                  microarcseconds
+                }
+                explicitSpatialOffsets {
+                  microarcseconds
+                }
+              }
+            }
+          }
+        }
+      }
+    """
+
+    object Data {
+      object UpdateObservations {
+        object Observations {
+          type ObservingMode = model.ScienceMode
+        }
+      }
+    }
   }
 
   @GraphQL

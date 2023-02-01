@@ -16,6 +16,7 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.events.*
 import explore.model.AppContext
+import explore.model.BasicConfigAndItc
 import explore.model.ScienceMode
 import explore.model.WorkerClients.*
 import explore.model.boopickle.ItcPicklers.given
@@ -44,9 +45,10 @@ case class ItcPanelTitle(
   spectroscopyRequirements: Option[SpectroscopyRequirementsData],
   scienceData:              Option[ScienceData],
   exposure:                 Option[ItcChartExposureTime],
-  selectedTarget:           View[Option[ItcTarget]]
+  selectedTarget:           View[Option[ItcTarget]],
+  selectedConfig:           Option[BasicConfigAndItc]
 ) extends ReactFnProps(ItcPanelTitle.component)
-    with ItcPanelProps(scienceMode, spectroscopyRequirements, scienceData, exposure)
+    with ItcPanelProps(scienceMode, spectroscopyRequirements, scienceData, exposure, selectedConfig)
 
 object ItcPanelTitle:
   private type Props = ItcPanelTitle with ItcPanelProps
@@ -117,7 +119,7 @@ object ItcPanelTitle:
             <.label(title),
             if (existTargets) {
               potRender[ItcChartResult](
-                singleSN,
+                fn,
                 Icons.Spinner.withSpin(true),
                 e => <.span(MissingInfoIcon).withTooltip(e.getMessage)
               )(

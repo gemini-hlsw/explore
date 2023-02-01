@@ -3,23 +3,26 @@
 
 package explore.config
 
+import cats.effect.IO
 import cats.syntax.all.*
 import coulomb.ops.algebra.spire.all.given
 import crystal.react.*
 import crystal.react.hooks.*
+import crystal.react.implicits.*
 import eu.timepit.refined.auto.*
 import explore.Icons
 import explore.common.ScienceQueries.*
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
-import explore.model
 import explore.model.AppContext
+import explore.model.BasicConfigAndItc
 import explore.model.CoordinatesAtVizTime
 import explore.model.ImagingConfigurationOptions
 import explore.model.display.given
 import explore.model.itc.ItcTarget
 import explore.modes.SpectroscopyModesMatrix
 import explore.undo.*
+import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ScienceMode
@@ -29,6 +32,7 @@ import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.User
+import lucuma.core.util.NewType
 import lucuma.refined.*
 import lucuma.ui.primereact.FormEnumDropdownView
 import lucuma.ui.primereact.*
@@ -38,6 +42,7 @@ import lucuma.ui.syntax.all.given
 import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
 import react.primereact.Button
+import react.primereact.Message
 
 import scalajs.js.JSConverters.*
 
@@ -46,16 +51,19 @@ case class BasicConfigurationPanel(
   programId:       Program.Id,
   obsId:           Observation.Id,
   requirementsCtx: UndoSetter[ScienceRequirementsData],
-  scienceModeOpt:  View[Option[model.ScienceModeInitial]],
+  selectedConfig:  View[Option[BasicConfigAndItc]],
   constraints:     ConstraintSet,
   itcTargets:      List[ItcTarget],
   baseCoordinates: Option[CoordinatesAtVizTime],
-  createConfig:    Callback,
+  createConfig:    IO[Unit],
   confMatrix:      SpectroscopyModesMatrix
 ) extends ReactFnProps(BasicConfigurationPanel.component)
 
 private object BasicConfigurationPanel:
   private type Props = BasicConfigurationPanel
+
+  private object Creating extends NewType[Boolean]
+  private type Creating = Creating.Type
 
   private val component =
     ScalaFnComponent
@@ -63,7 +71,8 @@ private object BasicConfigurationPanel:
       .useContext(AppContext.ctx)
       .useStateView[ScienceMode](ScienceMode.Spectroscopy)
       .useStateView[ImagingConfigurationOptions](ImagingConfigurationOptions.Default)
-      .render { (props, ctx, mode, imaging) =>
+      .useStateView(Creating(false))
+      .render { (props, ctx, mode, imaging, creating) =>
         import ctx.given
 
         val requirementsViewSet: ScienceRequirementsUndoView =
@@ -77,6 +86,19 @@ private object BasicConfigurationPanel:
             UpdateScienceRequirements.spectroscopyRequirements
           )
 
+        val isMissingItc =
+          props.itcTargets.isEmpty || spectroscopy.get.wavelength.isEmpty || spectroscopy.get.signalToNoise.isEmpty
+
+        val creationWarning: Option[String] =
+          if (isMissingItc) "To create a configuration, enter all information required for ITC".some
+          else if (props.selectedConfig.get.isEmpty)
+            "To create a configuration, select a table row".some
+          else none
+
+        val buttonIcon =
+          if (creating.get.value) Icons.Spinner.withSpin(true)
+          else Icons.Gears
+
         <.div(ExploreStyles.BasicConfigurationGrid)(
           <.div(
             ExploreStyles.BasicConfigurationForm,
@@ -89,7 +111,7 @@ private object BasicConfigurationPanel:
           ),
           SpectroscopyModesTable(
             props.userId,
-            props.scienceModeOpt,
+            props.selectedConfig,
             spectroscopy.get,
             props.constraints,
             if (props.itcTargets.isEmpty) none else props.itcTargets.some,
@@ -97,14 +119,15 @@ private object BasicConfigurationPanel:
             props.confMatrix
           ).when(isSpectroscopy),
           <.div(ExploreStyles.BasicConfigurationButtons)(
+            creationWarning.map(m => Message(text = m)),
             Button(
               "Accept Configuration",
-              icon = Icons.Gears,
-              // TODO: also need to disable if there is insufficient information for ITC
-              disabled = props.scienceModeOpt.get.isEmpty,
+              icon = buttonIcon,
+              disabled = creating.get.value || creationWarning.isDefined,
               severity = Button.Severity.Secondary,
-              onClick = props.createConfig
+              onClick = (creating.async.set(Creating(true)) >>
+                props.createConfig.guarantee(creating.async.set(Creating(false)))).runAsync
             ).compact.small
-          )
+          ).when(isSpectroscopy)
         )
       }

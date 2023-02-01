@@ -4,9 +4,9 @@
 package explore.common
 
 import clue.data.syntax.*
+import explore.model.BasicConfiguration
 import explore.model.DitherNanoMeters
 import explore.model.ScienceMode
-import explore.model.ScienceModeInitial
 import lucuma.core.math.*
 import lucuma.schemas.ObservationDB.Types.*
 import queries.schemas.odb.ODBConversions
@@ -70,9 +70,9 @@ trait ScienceConversions extends ODBConversions:
           gmosSouthLongSlit = o.toInput.assign
         )
 
-  extension (i: ScienceModeInitial)
+  extension (i: BasicConfiguration)
     def toInput: ObservingModeInput = i match
-      case o: ScienceModeInitial.GmosNorthLongSlit =>
+      case o: BasicConfiguration.GmosNorthLongSlit =>
         ObservingModeInput(
           gmosNorthLongSlit = GmosNorthLongSlitInput(
             grating = o.grating.assign,
@@ -81,7 +81,7 @@ trait ScienceConversions extends ODBConversions:
             centralWavelength = o.centralWavelength.value.toInput.assign
           ).assign
         )
-      case o: ScienceModeInitial.GmosSouthLongSlit =>
+      case o: BasicConfiguration.GmosSouthLongSlit =>
         ObservingModeInput(
           gmosSouthLongSlit = GmosSouthLongSlitInput(
             grating = o.grating.assign,

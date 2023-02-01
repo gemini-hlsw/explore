@@ -583,7 +583,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             customizableInputText(
               id = "central-wavelength".refined,
               value = wavelengthView.withOnMod(_ => invalidateITC),
-              label = React.Fragment("Wavelength",
+              label = React.Fragment("Central Wavelength",
                                      HelpIcon("configuration/central=wavelength.md".refined)
               ),
               validFormat = ExploreModelValidators.wavelengthValidWedge,

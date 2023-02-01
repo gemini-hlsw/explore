@@ -406,21 +406,21 @@ object TargetTabContents extends TwoPanels:
                       _,
                       _,
                       _,
-                      Some(sm),
+                      Some(conf),
                       _,
                       Some(posAngle),
                       Some(wavelength)
                     )
                   ) if k === id =>
-                (const.withDefaultElevationRange, sm, posAngle, wavelength)
+                (const.withDefaultElevationRange, conf, posAngle, wavelength)
             }
             .headOption
         case _        => None
       }
 
-      val constraints = obsConf.map(_._1)
-      val scienceMode = obsConf.map(_._2)
-      val wavelength  = obsConf.map(_._4)
+      val constraints                               = obsConf.map(_._1)
+      val configuration: Option[BasicConfiguration] = obsConf.map(_._2)
+      val wavelength                                = obsConf.map(_._4)
 
       def setCurrentTarget(programId: Program.Id, oids: ObsIdSet)(
         tid:                          Option[Target.Id],
@@ -433,7 +433,7 @@ object TargetTabContents extends TwoPanels:
           props.userId,
           props.programId,
           idsToEdit,
-          Pot(asterismView, scienceMode),
+          Pot(asterismView, configuration),
           Pot(vizTimeView),
           constraints,
           wavelength,
@@ -463,7 +463,7 @@ object TargetTabContents extends TwoPanels:
         ElevationPlotTile.elevationPlotTile(
           props.userId,
           props.focused.target,
-          scienceMode,
+          configuration.map(_.siteFor),
           selectedCoordinates.flatten.map(CoordinatesAtVizTime(_)),
           vizTimeView.get
         )

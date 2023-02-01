@@ -10,6 +10,7 @@ import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.Tile
 import explore.config.ConfigurationPanel
+import explore.model.BasicConfigAndItc
 import explore.model.CoordinatesAtVizTime
 import explore.model.enums.AgsState
 import explore.undo.*
@@ -34,7 +35,8 @@ object ConfigurationTile {
     undoStacks:      View[UndoStacks[IO, ScienceData]],
     baseCoordinates: Option[CoordinatesAtVizTime],
     selectedPA:      Option[Angle],
-    agsState:        View[AgsState]
+    agsState:        View[AgsState],
+    selectedConfig:  View[Option[BasicConfigAndItc]]
   )(using Logger[IO]) =
     Tile(
       ObsTabTilesIds.ConfigurationId.id,
@@ -55,6 +57,7 @@ object ConfigurationTile {
             baseCoordinates,
             agsState,
             selectedPA,
+            selectedConfig,
             renderInTitle
           )
       }(obsData)
