@@ -248,7 +248,8 @@ object ConfigurationPanel:
                       requirementsCtx.model.get.spectroscopy,
                       props.scienceData.model.zoom(ScienceData.potITC),
                       deleteConfiguration,
-                      confMatrix
+                      confMatrix,
+                      props.selectedConfig
                     )
                 ),
                 // Gmos South Long Slit
@@ -262,7 +263,8 @@ object ConfigurationPanel:
                       requirementsCtx.model.get.spectroscopy,
                       props.scienceData.model.zoom(ScienceData.potITC),
                       deleteConfiguration,
-                      confMatrix
+                      confMatrix,
+                      props.selectedConfig
                     )
                 )
               )
