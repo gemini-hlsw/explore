@@ -285,61 +285,65 @@ object AladinCell extends ModelOptics with AladinCommon:
               ) =>
             import ctx.given
 
-            (positions, tracking.at(vizTime), props.paProps.map(_.agsState)).mapN {
-              (angles, base, agsState) =>
-                val positions = angles.map(pa => AgsPosition(pa, Offset.Zero))
-                val fpu       = scienceMode.flatMap(_.fpuAlternative)
-                val params    = AgsParams.GmosAgsParams(fpu, PortDisposition.Side)
+            (selectedIndex
+              .set(none) *> props.paProps.map(_.selectedGS.set(none)).orEmpty)
+              .to[IO]
+              .whenA(positions.isEmpty) *>
+              (positions, tracking.at(vizTime), props.paProps.map(_.agsState)).mapN {
+                (angles, base, agsState) =>
+                  val positions = angles.map(pa => AgsPosition(pa, Offset.Zero))
+                  val fpu       = scienceMode.flatMap(_.fpuAlternative)
+                  val params    = AgsParams.GmosAgsParams(fpu, PortDisposition.Side)
 
-                val sciencePositions =
-                  props.asterism.asList
-                    .flatMap(_.toSidereal)
-                    .flatMap(_.target.tracking.at(vizTime))
+                  val sciencePositions =
+                    props.asterism.asList
+                      .flatMap(_.toSidereal)
+                      .flatMap(_.target.tracking.at(vizTime))
 
-                val process = for
-                  _ <- agsState.set(AgsState.Calculating).to[IO]
-                  _ <-
-                    AgsClient[IO]
-                      .requestSingle(
-                        AgsMessage.Request(props.tid,
-                                           constraints,
-                                           wavelength,
-                                           base.value,
-                                           sciencePositions,
-                                           positions,
-                                           params,
-                                           candidates
+                  val process = for
+                    _ <- agsState.set(AgsState.Calculating).to[IO]
+                    _ <-
+                      AgsClient[IO]
+                        .requestSingle(
+                          AgsMessage.Request(props.tid,
+                                             constraints,
+                                             wavelength,
+                                             base.value,
+                                             sciencePositions,
+                                             positions,
+                                             params,
+                                             candidates
+                          )
                         )
-                      )
-                      .map(_.map(_.sortPositions(positions)))
-                      .flatMap { r =>
-                        // Set the analysis
-                        (r.map(ags.setState).getOrEmpty *>
-                          // If we need to flip change the constraint
-                          r
-                            .map(_.headOption)
-                            .map(flipAngle(props, agsOverride))
-                            .orEmpty
-                            .unlessA(agsOverride.get.value) *>
-                          // set the selected index to the first entry
-                          {
-                            val index      = 0.some.filter(_ => r.exists(_.nonEmpty))
-                            val selectedGS = index.flatMap(i => r.flatMap(_.lift(i)))
-                            (selectedIndex
-                              .set(index) *> props.paProps
-                              .map(_.selectedGS.set(selectedGS))
-                              .getOrEmpty).unlessA(agsOverride.get.value)
-                          }).to[IO]
-                      }
-                      .unlessA(candidates.isEmpty)
-                      .handleErrorWith(t => Logger[IO].error(t)("ERROR IN AGS REQUEST"))
-                yield ()
-                process.guarantee(
-                  agsOverride.async.set(ManualAgsOverride(false)) *> agsState.async.set(
-                    AgsState.Idle
+                        .map(_.map(_.sortPositions(positions)))
+                        .flatMap { r =>
+                          // Set the analysis
+                          (r.map(ags.setState).getOrEmpty *>
+                            // If we need to flip change the constraint
+                            r
+                              .map(_.headOption)
+                              .map(flipAngle(props, agsOverride))
+                              .orEmpty
+                              .unlessA(agsOverride.get.value) *>
+                            // set the selected index to the first entry
+                            {
+                              val index      = 0.some.filter(_ => r.exists(_.nonEmpty))
+                              val selectedGS = index.flatMap(i => r.flatMap(_.lift(i)))
+                              (selectedIndex
+                                .set(index) *> props.paProps
+                                .map(_.selectedGS.set(selectedGS))
+                                .getOrEmpty).unlessA(agsOverride.get.value)
+                            }).to[IO]
+                        }
+                        .unlessA(candidates.isEmpty)
+                        .handleErrorWith(t => Logger[IO].error(t)("ERROR IN AGS REQUEST"))
+                  yield ()
+                  process.guarantee(
+                    agsOverride.async.set(ManualAgsOverride(false)) *> agsState.async.set(
+                      AgsState.Idle
+                    )
                   )
-                )
-            }.orEmpty
+              }.orEmpty
           case _ => IO.unit
         }
       }
