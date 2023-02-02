@@ -26,6 +26,7 @@ import lucuma.core.util.Enumerated
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
+import org.scalajs.dom
 import react.common.ReactFnProps
 import react.highcharts.ResizingChart
 import react.moon.MoonPhase
@@ -43,7 +44,6 @@ import java.time.ZonedDateTime
 import scala.collection.immutable.HashSet
 import scala.deriving.Mirror
 import scala.scalajs.js
-import org.scalajs.dom
 
 import js.JSConverters.*
 
