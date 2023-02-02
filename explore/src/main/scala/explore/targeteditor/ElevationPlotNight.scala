@@ -43,6 +43,7 @@ import java.time.ZonedDateTime
 import scala.collection.immutable.HashSet
 import scala.deriving.Mirror
 import scala.scalajs.js
+import org.scalajs.dom
 
 import js.JSConverters.*
 
@@ -386,19 +387,25 @@ object ElevationPlotNight {
               .toJSArray
           )
 
-        val (moonPhase, moonIllum) = skyCalcResults(
-          skyCalcResults.length / 2
-        ).bimap(MoonCalc.approxPhase, _.lunarIlluminatedFraction.toDouble)
+        val (midOfNight, midOfNightResult) = skyCalcResults(skyCalcResults.length / 2)
+
+        val moonPhase = MoonCalc.approxPhase(midOfNight)
+        val moonIllum = midOfNightResult.lunarIlluminatedFraction.toDouble
+
+        dom.console.log(
+          s"Moon brightness computed at [${midOfNight.atZone(ZoneOffset.UTC)}]: [$moonIllum]"
+        )
 
         <.div(
           // Include the size in the key
           ResizingChart(options).withKey(s"$props-$resize").when(resize.height.isDefined),
           <.div(ExploreStyles.MoonPhase)(
             <.span(
-              MoonPhase(phase = moonPhase,
-                        size = 20,
-                        border = "1px solid black",
-                        darkColor = "#303030"
+              MoonPhase(
+                phase = moonPhase,
+                size = 20,
+                border = "1px solid black",
+                darkColor = "#303030"
               ),
               <.small("%1.0f%%".format(moonIllum * 100))
             )
