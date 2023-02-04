@@ -393,7 +393,10 @@ object ElevationPlotNight {
         val moonIllum = midOfNightResult.lunarIlluminatedFraction.toDouble
 
         dom.console.log(
-          s"Moon brightness computed at [${midOfNight.atZone(ZoneOffset.UTC)}]: [$moonIllum]"
+          s"Moon brightness computed at [${midOfNight.atZone(ZoneOffset.UTC)}]: [$moonIllum]\n",
+          s"Official Twilights:\n",
+          s" >>> [${start.atZone(ZoneOffset.UTC)}]\n",
+          s" <<< [${end.atZone(ZoneOffset.UTC)}]"
         )
 
         <.div(
