@@ -359,7 +359,11 @@ object AsterismGroupObsList:
         onDragStart = (_: DragStart, _: ResponderProvided) => dragging.setState(Dragging(true)),
         onDragEnd = (result, provided) =>
           dragging.setState(Dragging(false)) >> handleDragEnd(result, provided)
-      )(
+      ) {
+        // make the target name sort case insensitive
+        given Ordering[String] = Ordering.fromLessThan(_.toLowerCase < _.toLowerCase)
+        import scala.Ordering.Implicits.seqOrdering
+
         <.div(ExploreStyles.ObsTreeWrapper)(
           <.div(ExploreStyles.TreeToolbar)(
             Button(
@@ -416,5 +420,5 @@ object AsterismGroupObsList:
             )
           )
         )
-      )
+      }
     }
