@@ -351,7 +351,7 @@ trait SpectroscopyModesMatrixDecoders extends Decoders {
       min <- row.as[ModeWavelength]("wave min")
       max <- row.as[ModeWavelength]("wave max")
       wo  <- row.as[ModeWavelength]("wave optimal")
-      wr  <- row.as[ModeWavelengthRange]("wave coverage") // .map(_.withUnit[Micrometer])
+      wr  <- row.as[ModeWavelengthRange]("wave coverage")
       r   <- row.as[PosInt]("resolution")
       sl  <- row.as[ModeSlitSize]("slit length")
       sw  <- row.as[ModeSlitSize]("slit width")
