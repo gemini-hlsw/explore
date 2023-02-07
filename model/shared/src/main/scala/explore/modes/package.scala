@@ -15,30 +15,33 @@ import fs2.data.csv.*
 import lucuma.core.enums.Instrument
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
+import lucuma.core.math.WavelengthRange
 import lucuma.core.optics.Wedge
 import lucuma.core.util.Enumerated
+import lucuma.core.util.NewType
 import monocle.Lens
 import monocle.macros.GenLens
 
 package modes {
+  object ModeWavelength extends NewType[Wavelength]:
+    extension (w: ModeWavelength)
+      def toString: String = s"${w.value.toMicrometers.value.value.toDouble} μm"
+  type ModeWavelength = ModeWavelength.Type
 
-  case class ModeWavelength(w: Wavelength) {
-    override def toString: String = s"${w.toMicrometers.value.value.toDouble} μm"
-  }
+  object ModeWavelengthRange extends NewType[WavelengthRange]
+  type ModeWavelengthRange = ModeWavelengthRange.Type
 
-  case class ModeSlitSize(size: Angle) {
-    override def toString: String = s"${Angle.milliarcseconds.get(size) / 1000.0} arcsec"
-  }
-
-  object ModeSlitSize {
-    val size: Lens[ModeSlitSize, Angle] = GenLens[ModeSlitSize](_.size)
-
+  object ModeSlitSize extends NewType[Angle]:
     val milliarcseconds: Wedge[Angle, BigDecimal] =
       Angle.milliarcseconds
         .imapB(_.underlying.movePointRight(3).intValue,
                n => new java.math.BigDecimal(n).movePointLeft(3)
         )
-  }
+
+    extension (size: ModeSlitSize)
+      def toString: String = s"${Angle.milliarcseconds.get(size.value) / 1000.0} arcsec"
+
+  type ModeSlitSize = ModeSlitSize.Type
 
   enum ModeAO(val tag: String):
     case NoAO extends ModeAO("no_ao")
@@ -83,15 +86,20 @@ package modes {
           case _     => ModeAO.NoAO
         }
 
-    val micrometerDecoder: CellDecoder[Wavelength] =
+    val micrometerToPicometerDecoder: CellDecoder[PosInt] =
       CellDecoder.bigDecimalDecoder.emap(x =>
-        Wavelength
-          .fromIntPicometers((x * 1000000).intValue)
-          .toRight(new DecoderError(s"Invalid wavelength value $x"))
+        PosInt
+          .from((x * 1000000).intValue)
+          .leftMap(msg => new DecoderError(s"Invalid wavelength value $x: $msg"))
       )
 
-    given CellDecoder[ModeWavelength] =
-      micrometerDecoder.map(ModeWavelength.apply)
+    val micrometerWavelengthDecoder: CellDecoder[Wavelength] =
+      micrometerToPicometerDecoder.map(Wavelength(_))
+
+    given CellDecoder[ModeWavelength] = micrometerWavelengthDecoder.map(ModeWavelength(_))
+
+    given CellDecoder[ModeWavelengthRange] =
+      micrometerToPicometerDecoder.map(pm => ModeWavelengthRange(WavelengthRange(pm)))
 
     given CellDecoder[PosBigDecimal] =
       CellDecoder.bigDecimalDecoder
@@ -109,7 +117,7 @@ package modes {
       CellDecoder.bigDecimalDecoder.map(x => Angle.milliarcseconds.reverseGet((x * 1000).intValue))
 
     given CellDecoder[ModeSlitSize] =
-      arcsecDecoder.map(ModeSlitSize.apply)
+      arcsecDecoder.map(ModeSlitSize(_))
 
   }
 }

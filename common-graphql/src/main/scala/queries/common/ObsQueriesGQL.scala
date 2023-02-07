@@ -519,7 +519,7 @@ object ObsQueriesGQL {
           object Spectroscopy {
             type Wavelength         = lucuma.core.math.Wavelength
             type SignalToNoiseAt    = lucuma.core.math.Wavelength
-            type WavelengthCoverage = lucuma.core.math.Wavelength
+            type WavelengthCoverage = lucuma.core.math.WavelengthRange
             type FocalPlaneAngle    = lucuma.core.math.Angle
           }
         }

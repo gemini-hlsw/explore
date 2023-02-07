@@ -13,6 +13,7 @@ import coulomb.conversion.ValueConversion
 import coulomb.conversion.spire.*
 import coulomb.ops.algebra.cats.quantity.given
 import coulomb.ops.algebra.spire.all.given
+import coulomb.policy.overlay.refined.algebraic.given
 import coulomb.policy.spire.standard.given
 import coulomb.syntax.*
 import eu.timepit.refined._
@@ -25,8 +26,11 @@ import explore.model.syntax.all._
 import fs2.data.csv._
 import lucuma.core.enums._
 import lucuma.core.math.Angle
+import lucuma.core.math.BoundedInterval
+import lucuma.core.math.BoundedInterval.*
 import lucuma.core.math.Declination
 import lucuma.core.math.Wavelength
+import lucuma.core.math.WavelengthRange
 import lucuma.core.math.units._
 import lucuma.core.util.Enumerated
 import monocle.Getter
@@ -215,33 +219,33 @@ object InstrumentRow {
 }
 
 case class SpectroscopyModeRow(
-  id:                 Int, // Give them a local id to simplify reusability
-  instrument:         InstrumentRow,
-  config:             NonEmptyString,
-  focalPlane:         FocalPlane,
-  capability:         Option[SpectroscopyCapabilities],
-  ao:                 ModeAO,
-  minWavelength:      ModeWavelength,
-  maxWavelength:      ModeWavelength,
-  optimalWavelength:  ModeWavelength,
-  wavelengthCoverage: Quantity[NonNegBigDecimal, Micrometer],
-  resolution:         PosInt,
-  slitLength:         ModeSlitSize,
-  slitWidth:          ModeSlitSize
+  id:                Int, // Give them a local id to simplify reusability
+  instrument:        InstrumentRow,
+  config:            NonEmptyString,
+  focalPlane:        FocalPlane,
+  capability:        Option[SpectroscopyCapabilities],
+  ao:                ModeAO,
+  minWavelength:     ModeWavelength,
+  maxWavelength:     ModeWavelength,
+  optimalWavelength: ModeWavelength,
+  wavelengthRange:   ModeWavelengthRange,
+  resolution:        PosInt,
+  slitLength:        ModeSlitSize,
+  slitWidth:         ModeSlitSize
 ) {
-  inline def calculatedCoverage: Quantity[NonNegBigDecimal, Micrometer] = wavelengthCoverage
+  // inline def calculatedCoverage: Quantity[NonNegBigDecimal, Micrometer] = wavelengthCoverage
 
   inline def hasFilter: Boolean = instrument.hasFilter
 
   // This `should` always return a `some`, but if the row is wonky for some reason...
-  def coverageCenter(cw: Wavelength): Option[CoverageCenterWavelength] = {
-    val (min, max) = SpectroscopyModeRow.coverageInterval(cw)(this)
-    val micros     = min + (max - min) / SpectroscopyModeRow.TwoFactor
-    Wavelength
-      .fromIntPicometers(micros.toUnit[Picometer].value.toInt)
+  def coverageCenter(cw: Wavelength): Option[CoverageCenterWavelength] =
+    SpectroscopyModeRow
+      .coverageInterval(cw)(this)
+      .map(coverage =>
+        coverage.lower.pm.value.value + (coverage.upper.pm.value.value - coverage.lower.pm.value.value) / 2
+      )
+      .flatMap(pms => Wavelength.fromIntPicometers(pms))
       .map(CoverageCenterWavelength(_))
-  }
-
 }
 
 object SpectroscopyModeRow {
@@ -275,32 +279,27 @@ object SpectroscopyModeRow {
   def filter: Getter[SpectroscopyModeRow, InstrumentRow#Filter] =
     instrumentRow.andThen(InstrumentRow.filter)
 
-  val TwoFactor = BigDecimal(2).withUnit[1]
+  import lucuma.core.math.units.*
 
-  def coverageInterval(
-    cw: Wavelength
-  ): SpectroscopyModeRow => (Quantity[BigDecimal, Micrometer], Quantity[BigDecimal, Micrometer]) =
+  def coverageInterval(λ: Wavelength): SpectroscopyModeRow => Option[BoundedInterval[Wavelength]] =
     r =>
-      val λr     = r.optimalWavelength.w.toMicrometers.value.value.withUnit[Micrometer]
+      val λr      = r.wavelengthRange.value
       // Coverage of allowed wavelength
       // Can be simplified once coulomb-refined is available
-      val λmin   = r.minWavelength.w.toMicrometers.value.value.withUnit[Micrometer]
-      val λmax   = r.maxWavelength.w.toMicrometers.value.value.withUnit[Micrometer]
-      val Δ      = λr / TwoFactor
-      val λ      = cw.toMicrometers.value.value.withUnit[Micrometer]
-      val λa     = λ - Δ
-      val λb     = λ + Δ
-      // if we are below min clip but shift the coverage
+      val λmin    = r.minWavelength.value
+      val λmax    = r.maxWavelength.value
+      val range   = λr.centeredAt(λ)
+      // if we are below min clip but shift the range
       // same if we are above max
       // At any event we clip at min/max
-      val (a, b) = if (λa < λmin) {
-        (λmin, λmin + λr)
-      } else if (λb > λmax) {
-        (λmax - λr, λmax)
-      } else {
-        (λa, λb)
-      }
-      (a.max(λmin), b.min(λmax))
+      val shifted =
+        if (range.lower < λmin)
+          λr.startingAt(λmin)
+        else if (range.upper > λmax)
+          λr.endingAt(λmax)
+        else
+          range
+      shifted.intersect(BoundedInterval.unsafeClosed(λmin, λmax))
 
   def resolution: Getter[SpectroscopyModeRow, PosInt] =
     Getter(_.resolution)
@@ -352,7 +351,7 @@ trait SpectroscopyModesMatrixDecoders extends Decoders {
       min <- row.as[ModeWavelength]("wave min")
       max <- row.as[ModeWavelength]("wave max")
       wo  <- row.as[ModeWavelength]("wave optimal")
-      wr  <- row.as[NonNegBigDecimal]("wave coverage").map(_.withUnit[Micrometer])
+      wr  <- row.as[ModeWavelengthRange]("wave coverage")
       r   <- row.as[PosInt]("resolution")
       sl  <- row.as[ModeSlitSize]("slit length")
       sw  <- row.as[ModeSlitSize]("slit width")
@@ -372,7 +371,7 @@ case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
     iq:          Option[ImageQuality] = None,
     wavelength:  Option[Wavelength] = None,
     resolution:  Option[PosInt] = None,
-    coverage:    Option[Quantity[NonNegBigDecimal, Micrometer]] = None,
+    range:       Option[WavelengthRange] = None,
     slitWidth:   Option[Angle] = None,
     declination: Option[Declination] = None
   ): List[SpectroscopyModeRow] = {
@@ -381,10 +380,10 @@ case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
       focalPlane.forall(f => r.focalPlane === f) &&
         r.capability === capability &&
         iq.forall(i => r.ao =!= ModeAO.AO || (i <= ImageQuality.PointTwo)) &&
-        wavelength.forall(w => w >= r.minWavelength.w && w <= r.maxWavelength.w) &&
+        wavelength.forall(w => w >= r.minWavelength.value && w <= r.maxWavelength.value) &&
         resolution.forall(_ <= r.resolution) &&
-        coverage.forall(_ <= r.wavelengthCoverage) &&
-        slitWidth.forall(_.toMicroarcseconds <= r.slitLength.size.toMicroarcseconds) &&
+        range.forall(_ <= r.wavelengthRange.value) &&
+        slitWidth.forall(_.toMicroarcseconds <= r.slitLength.value.toMicroarcseconds) &&
         declination.forall(r.instrument.site.inPreferredDeclination)
 
     // Calculates a score for each mode for sorting purposes. It is down in Rational space, we may change it to double as we don't really need high precission for this
@@ -392,12 +391,12 @@ case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
       // Difference in wavelength
       val deltaWave: BigDecimal       =
         wavelength
-          .map(w => r.optimalWavelength.w.diff(w).abs.toNanometers.value)
+          .map(w => r.optimalWavelength.value.diff(w).abs.toNanometers.value)
           .getOrElse(BigDecimal(0))
       // Difference in slit width
       val deltaSlitWidth: Rational    =
         iq.map(i =>
-          (Rational(r.slitWidth.size.toMicroarcseconds, 1000000) - i.toArcSeconds.value).abs
+          (Rational(r.slitWidth.value.toMicroarcseconds, 1000000) - i.toArcSeconds.value).abs
         ).getOrElse(Rational.zero)
       // Difference in resolution
       val deltaRes: BigDecimal        =

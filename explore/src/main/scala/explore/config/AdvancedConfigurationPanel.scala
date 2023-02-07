@@ -20,8 +20,6 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.numeric.NonNegative
-import eu.timepit.refined.types.numeric.NonNegInt
-import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
@@ -52,12 +50,13 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.util.Effect
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.enums.GmosXBinning
-import lucuma.core.enums.GmosYBinning
 import lucuma.core.enums.*
+import lucuma.core.math.BoundedInterval
+import lucuma.core.math.BoundedInterval.*
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDither
+import lucuma.core.math.WavelengthRange
 import lucuma.core.math.units.Micrometer
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.Observation
@@ -67,13 +66,9 @@ import lucuma.core.util.Enumerated
 import lucuma.core.util.TimeSpan
 import lucuma.core.validation.*
 import lucuma.refined.*
+import lucuma.schemas.ObservationDB.Types.WavelengthInput
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.ui.input.ChangeAuditor
-import lucuma.ui.primereact.FormEnumDropdownOptionalView
-import lucuma.ui.primereact.FormInputText
-import lucuma.ui.primereact.FormInputTextView
-import lucuma.ui.primereact.FormLabel
-import lucuma.ui.primereact.LucumaStyles
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.*
@@ -91,9 +86,6 @@ import react.fa.IconSize
 import react.floatingui.syntax.*
 import react.primereact.Button
 import react.primereact.PrimeStyles
-import reactST.primereact.components.{Button => CButton}
-import spire.math.Bounded
-import spire.math.Interval
 
 import java.time.Duration
 
@@ -230,21 +222,29 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
       .allow(s => s === "0" || s === "0.")
       .decimal(3.refined)
 
-  private case class ReadonlyData(
-    coverage:   (Quantity[BigDecimal, Micrometer], Quantity[BigDecimal, Micrometer]),
-    resolution: PosInt
-  ) {
-    val formattedCoverage: String =
-      this.coverage.toList
-        .map(q => "%.3f".format(q.value.setScale(3, BigDecimal.RoundingMode.DOWN)))
-        .mkString(" - ")
-  }
+  private case class ModeData(
+    interval:   BoundedInterval[Wavelength],
+    resolution: PosInt,
+    λmin:       Wavelength,
+    λmax:       Wavelength,
+    range:      WavelengthRange
+  )
 
-  private object ReadonlyData {
-    def build(row: SpectroscopyModeRow, wavelength: Option[Wavelength]): Option[ReadonlyData] =
+  private object ModeData {
+    def build(row: SpectroscopyModeRow, wavelength: Option[Wavelength]): Option[ModeData] =
       wavelength.flatMap { cw =>
-        if (cw >= row.minWavelength.w && cw <= row.maxWavelength.w)
-          ReadonlyData(SpectroscopyModeRow.coverageInterval(cw)(row), row.resolution).some
+        if (cw >= row.minWavelength.value && cw <= row.maxWavelength.value)
+          SpectroscopyModeRow
+            .coverageInterval(cw)(row)
+            .map(interval =>
+              ModeData(
+                interval,
+                row.resolution,
+                row.minWavelength.value,
+                row.maxWavelength.value,
+                row.wavelengthRange.value
+              )
+            )
         else
           none
       }
@@ -254,23 +254,23 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
     mode:           T,
     reqsWavelength: Option[Wavelength],
     row:            SpectroscopyModeRow
-  ): Option[ReadonlyData] = (mode, row.instrument) match {
-    case (m: ScienceMode.GmosNorthLongSlit, GmosNorthSpectroscopyRow(rGrating, rFpu, rFilter)) =>
-      if (m.grating === rGrating && m.filter === rFilter && m.fpu === rFpu)
-        ReadonlyData.build(row, reqsWavelength)
-      else none
-    case (m: ScienceMode.GmosSouthLongSlit, GmosSouthSpectroscopyRow(rGrating, rFpu, rFilter)) =>
-      if (m.grating === rGrating && m.filter === rFilter && m.fpu === rFpu)
-        ReadonlyData.build(row, reqsWavelength)
-      else none
-    case _                                                                                     => none
-  }
+  ): Option[ModeData] =
+    reqsWavelength.flatMap(cw =>
+      (mode, row.instrument) match
+        case (m: ScienceMode.GmosNorthLongSlit, GmosNorthSpectroscopyRow(rGrating, rFpu, rFilter))
+            if m.grating === rGrating && m.filter === rFilter && m.fpu === rFpu =>
+          ModeData.build(row, reqsWavelength)
+        case (m: ScienceMode.GmosSouthLongSlit, GmosSouthSpectroscopyRow(rGrating, rFpu, rFilter))
+            if m.grating === rGrating && m.filter === rFilter && m.fpu === rFpu =>
+          ModeData.build(row, reqsWavelength)
+        case _ => none
+    )
 
   private def findMatrixData(
     mode:           T,
     reqsWavelength: Option[Wavelength],
     rows:           List[SpectroscopyModeRow]
-  ): Option[ReadonlyData] =
+  ): Option[ModeData] =
     rows.collectFirstSome(row => findMatrixDataFromRow(mode, reqsWavelength, row))
 
   private def customized(original: String): VdomNode =
@@ -413,19 +413,17 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
          props.spectroscopyRequirements.wavelengthCoverage
         )
       ) { (props, _) =>
-        { case (fp, cap, fpa, res, cov) =>
+        { case (fp, cap, fpa, res, rng) =>
           props.confMatrix.filtered(
             focalPlane = fp,
             capability = cap,
             slitWidth = fpa,
             resolution = res,
-            coverage = cov.flatMap(
-              _.toMicrometers.value.value.withUnit[Micrometer].toRefined[NonNegative].toOption
-            )
+            range = rng
           )
         }
       }
-      // Try to find the readonly data from the spectroscopy matrix
+      // Try to find the mode row from the spectroscopy matrix
       .useMemoBy { (props, ctx, rows) =>
         import ctx.given
 
@@ -442,7 +440,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
         }
       }
       .useStateView(ConfigEditState.View)
-      .render { (props, ctx, _, readonlyData, editState) =>
+      .render { (props, ctx, _, modeData, editState) =>
         import ctx.given
 
         // val exposureModeView = overrideExposureTimeMode(props.scienceMode)
@@ -468,23 +466,41 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
         val disableSimpleEdit   =
           disableAdvancedEdit && editState.get =!= ConfigEditState.SimpleEdit
 
+        val wavelengthView           = centralWavelength(props.scienceMode)
+        val initialCentralWavelength = initialCentralWavelengthLens.get(props.scienceMode.get)
+
+        val validDithers = modeData.value
+          .map(mode =>
+            ExploreModelValidators.dithersValidSplitEpi(
+              wavelengthView.get,
+              mode.λmin,
+              mode.λmax,
+              mode.range
+            )
+          )
+          .getOrElse(
+            ExploreModelValidators.ditherValidSplitEpi
+          )
+          .toNel(",".refined)
+          .withErrorMessage(_ => "Invalid wavelength dither values".refined)
+          .optional
+
         def dithersControl(onChange: Callback): VdomElement =
-          <.span("Under construction")
-          // val view = explicitWavelengthDithers(props.scienceMode)
-          // customizableInputTextOptional(
-          //   id = "dithers".refined,
-          //   value = view.withOnMod(_ => onChange),
-          //   originalValue = defaultWavelengthDithersLens.get(props.scienceMode.get),
-          //   label =
-          //     React.Fragment("λ Dithers", HelpIcon("configuration/lambda-dithers.md".refined)),
-          //   validFormat = ExploreModelValidators.dithersValidSplitEpi,
-          //   changeAuditor = ChangeAuditor
-          //     .bigDecimal(integers = 3.refined, decimals = 1.refined)
-          //     .toSequence()
-          //     .optional,
-          //   units = "nm".some,
-          //   disabled = disableSimpleEdit
-          // )
+          val view = explicitWavelengthDithers(props.scienceMode)
+          customizableInputTextOptional(
+            id = "dithers".refined,
+            value = view.withOnMod(_ => onChange),
+            originalValue = defaultWavelengthDithersLens.get(props.scienceMode.get),
+            label =
+              React.Fragment("λ Dithers", HelpIcon("configuration/lambda-dithers.md".refined)),
+            validFormat = validDithers,
+            changeAuditor = ChangeAuditor
+              .bigDecimal(integers = 3.refined, decimals = 1.refined)
+              .toSequence()
+              .optional,
+            units = "nm".some,
+            disabled = disableSimpleEdit
+          )
 
         def offsetsControl(onChange: Callback): VdomElement = {
           val view = explicitSpatialOffsets(props.scienceMode)
@@ -492,8 +508,9 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             id = "offsets".refined,
             value = view.withOnMod(_ => onChange),
             originalValue = defaultSpatialOffsetsLens.get(props.scienceMode.get),
-            label = React.Fragment("Spatial Offsets",
-                                   HelpIcon("configuration/spatial-offsets.md".refined)
+            label = React.Fragment(
+              "Spatial Offsets",
+              HelpIcon("configuration/spatial-offsets.md".refined)
             ),
             validFormat = ExploreModelValidators.offsetQNELValidWedge,
             changeAuditor = ChangeAuditor
@@ -507,9 +524,6 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
 
         val invalidateITC: Callback =
           props.potITC.set(Pot.pending[Option[OdbItcResult.Success]])
-
-        val wavelengthView           = centralWavelength(props.scienceMode)
-        val initialCentralWavelength = initialCentralWavelengthLens.get(props.scienceMode.get)
 
         // val originalSignalToNoiseText =
         //   props.spectroscopyRequirements.signalToNoise.fold("None")(sn =>
@@ -734,14 +748,14 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             ),
             FormInputText(
               id = "lambda".refined,
-              value = readonlyData.value.fold("Unknown")(_.resolution.toString),
+              value = modeData.value.fold("Unknown")(_.resolution.toString),
               label = "λ / Δλ",
               disabled = true
             ),
             FormLabel(htmlFor = "lambdaCoverage".refined)("λ Coverage"),
             FormInputText(
               id = "lambdaCoverage".refined,
-              value = readonlyData.value.fold("Unknown")(_.formattedCoverage),
+              value = modeData.value.fold("Unknown")(_.interval.shortName),
               disabled = true,
               units = "nm"
             )

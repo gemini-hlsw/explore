@@ -24,6 +24,7 @@ import lucuma.ags.GuideStarCandidate
 import lucuma.catalog.AngularSize
 import lucuma.catalog.CatalogTargetResult
 import lucuma.core.geom.Area
+import lucuma.core.math.WavelengthRange
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.IntPercent
 import lucuma.core.model.Partner
@@ -144,3 +145,5 @@ object reusability:
   given Reusability[StepRecord] = Reusability.byEq
 
   given Reusability[Area] = Reusability.byEq
+
+  given Reusability[WavelengthRange] = Reusability.byEq

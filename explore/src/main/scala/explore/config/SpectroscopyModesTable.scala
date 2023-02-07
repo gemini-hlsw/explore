@@ -38,6 +38,7 @@ import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.boopickle.*
+import explore.model.display.given
 import explore.model.enums.TableId
 import explore.model.itc.ItcTarget
 import explore.model.itc.*
@@ -52,12 +53,14 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.FocalPlane
 import lucuma.core.enums.*
+import lucuma.core.math.BoundedInterval
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units.Micrometer
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.User
+import lucuma.core.syntax.all.*
 import lucuma.core.util.Display
 import lucuma.core.util.TimeSpan
 import lucuma.react.syntax.*
@@ -167,11 +170,11 @@ private object SpectroscopyModesTable extends TableHooks:
 
   private val formatSlitWidth: ModeSlitSize => String = ss =>
     decFormat.format(
-      ModeSlitSize.milliarcseconds.get(ss.size).setScale(3, BigDecimal.RoundingMode.UP)
+      ModeSlitSize.milliarcseconds.get(ss.value).setScale(3, BigDecimal.RoundingMode.UP)
     )
 
   private val formatSlitLength: ModeSlitSize => String = ss =>
-    f"${ModeSlitSize.milliarcseconds.get(ss.size).setScale(0, BigDecimal.RoundingMode.DOWN)}%1.0f"
+    f"${ModeSlitSize.milliarcseconds.get(ss.value).setScale(0, BigDecimal.RoundingMode.DOWN)}%1.0f"
 
   private def formatGrating(grating: InstrumentRow#Grating): String = grating match
     case f: GmosSouthGrating => f.shortName
@@ -192,15 +195,6 @@ private object SpectroscopyModesTable extends TableHooks:
   given Order[InstrumentRow#Grating] = Order.by(_.toString)
   given Order[InstrumentRow#Filter]  = Order.by(_.toString)
   given Order[InstrumentRow#FPU]     = Order.by(_.toString)
-
-  private def formatWavelengthCoverage(
-    r: Option[(Quantity[BigDecimal, Micrometer], Quantity[BigDecimal, Micrometer])]
-  ): String =
-    r.fold("-")(
-      _.toList
-        .map(q => decFormat.format(q.value.setScale(3, BigDecimal.RoundingMode.DOWN)))
-        .mkString(" - ")
-    )
 
   private def formatInstrument(r: (Instrument, NonEmptyString)): String = r match
     case (i @ Instrument.Gnirs, m) => s"${i.longName} $m"
@@ -295,10 +289,10 @@ private object SpectroscopyModesTable extends TableHooks:
         .setCell(cell => formatFPU(cell.value))
         .setColumnSize(FixedSize(62.toPx))
         .sortable,
-      column(CoverageColumnId,
-             row => cw.map(w => SpectroscopyModeRow.coverageInterval(w)(row.entry))
-      )
-        .setCell(cell => formatWavelengthCoverage(cell.value))
+      column(
+        CoverageColumnId,
+        row => cw.map(w => SpectroscopyModeRow.coverageInterval(w)(row.entry))
+      ).setCell(cell => cell.value.flatten.fold("-")(_.shortName))
         .setColumnSize(FixedSize(100.toPx)),
       column(ResolutionColumnId, row => SpectroscopyModeRow.resolution.get(row.entry))
         .setCell(_.value.toString)
@@ -402,9 +396,7 @@ private object SpectroscopyModesTable extends TableHooks:
               wavelength = s.wavelength,
               slitWidth = s.focalPlaneAngle,
               resolution = s.resolution,
-              coverage = s.wavelengthCoverage.flatMap(
-                _.toMicrometers.value.value.withUnit[Micrometer].toRefined[NonNegative].toOption
-              ),
+              range = s.wavelengthCoverage,
               declination = dec
             )
         val (enabled, disabled) = rows.partition(_.enabledRow)
@@ -473,9 +465,10 @@ private object SpectroscopyModesTable extends TableHooks:
       }
       // selectedIndex
       .useStateBy((props, _, _, rows, _, _, _) =>
-        selectedRowIndex(props.selectedConfig.get.map(_.configuration),
-                         props.spectroscopyRequirements.wavelength,
-                         rows
+        selectedRowIndex(
+          props.selectedConfig.get.map(_.configuration),
+          props.spectroscopyRequirements.wavelength,
+          rows
         )
       )
       // Recompute state if conf or requirements change.
