@@ -273,6 +273,20 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
   ): Option[ModeData] =
     rows.collectFirstSome(row => findMatrixDataFromRow(mode, reqsWavelength, row))
 
+  // If the view contains `none`, `get` returns the default value. When setting,
+  // if the new value is the default value, set it to none.
+  extension [A: Eq](view: View[Option[A]])
+    private def withDefault(default: A): View[Option[A]]                 =
+      view.zoom(_.orElse(default.some))(f =>
+        b => f(b).flatMap(newB => if (newB === default) none else newB.some)
+      )
+    private def withOptionalDefault(default: Option[A]): View[Option[A]] =
+      default.fold(view)(d =>
+        view.zoom(_.orElse(default))(f =>
+          b => f(b).flatMap(newB => if (newB === d) none else newB.some)
+        )
+      )
+
   private def customized(original: String): VdomNode =
     <.span(
       ^.cls := "fa-layers fa-fw",
@@ -369,8 +383,10 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
   ) =
     val unitAddon    = units.map(u => u: TagMod)
     val originalText = validFormat.reverseGet(originalValue.some)
-    val customAddon  = value.get.map(_ => customized(originalText))
-    FormInputTextView(
+    val isModified   = value.get.exists(_ =!= originalValue)
+    val customAddon  =
+      value.get.flatMap(v => if (isModified) customized(originalText).some else none)
+    val input        = FormInputTextView(
       id = id,
       value = value,
       label = label,
@@ -380,7 +396,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
       changeAuditor = changeAuditor,
       placeholder = originalText,
       disabled = disabled
-    ).clearable
+    )
+    if (isModified) input.clearable else input
 
   val component =
     ScalaFnComponent
@@ -486,11 +503,12 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
           .optional
 
         def dithersControl(onChange: Callback): VdomElement =
-          val view = explicitWavelengthDithers(props.scienceMode)
+          val default = defaultWavelengthDithersLens.get(props.scienceMode.get)
+          val view    = explicitWavelengthDithers(props.scienceMode).withDefault(default)
           customizableInputTextOptional(
             id = "dithers".refined,
             value = view.withOnMod(_ => onChange),
-            originalValue = defaultWavelengthDithersLens.get(props.scienceMode.get),
+            originalValue = default,
             label =
               React.Fragment("λ Dithers", HelpIcon("configuration/lambda-dithers.md".refined)),
             validFormat = validDithers,
@@ -503,11 +521,12 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
           )
 
         def offsetsControl(onChange: Callback): VdomElement = {
-          val view = explicitSpatialOffsets(props.scienceMode)
+          val default = defaultSpatialOffsetsLens.get(props.scienceMode.get)
+          val view    = explicitSpatialOffsets(props.scienceMode).withDefault(default)
           customizableInputTextOptional(
             id = "offsets".refined,
             value = view.withOnMod(_ => onChange),
-            originalValue = defaultSpatialOffsetsLens.get(props.scienceMode.get),
+            originalValue = default,
             label = React.Fragment(
               "Spatial Offsets",
               HelpIcon("configuration/spatial-offsets.md".refined)
