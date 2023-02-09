@@ -406,21 +406,21 @@ object TargetTabContents extends TwoPanels:
                       _,
                       _,
                       _,
-                      Some(sm),
+                      Some(conf),
                       _,
                       Some(posAngle),
                       Some(wavelength)
                     )
                   ) if k === id =>
-                (const.withDefaultElevationRange, sm, posAngle, wavelength)
+                (const.withDefaultElevationRange, conf, posAngle, wavelength)
             }
             .headOption
         case _        => None
       }
 
-      val constraints = obsConf.map(_._1)
-      val scienceMode = obsConf.map(_._2)
-      val wavelength  = obsConf.map(_._4)
+      val constraints                               = obsConf.map(_._1)
+      val configuration: Option[BasicConfiguration] = obsConf.map(_._2)
+      val wavelength                                = obsConf.map(_._4)
 
       def setCurrentTarget(programId: Program.Id, oids: ObsIdSet)(
         tid:                          Option[Target.Id],
@@ -433,7 +433,7 @@ object TargetTabContents extends TwoPanels:
           props.userId,
           props.programId,
           idsToEdit,
-          Pot(asterismView, scienceMode),
+          Pot(asterismView, configuration),
           Pot(vizTimeView),
           constraints,
           wavelength,
@@ -463,7 +463,7 @@ object TargetTabContents extends TwoPanels:
         ElevationPlotTile.elevationPlotTile(
           props.userId,
           props.focused.target,
-          scienceMode,
+          configuration.map(_.siteFor),
           selectedCoordinates.flatten.map(CoordinatesAtVizTime(_)),
           vizTimeView.get
         )
@@ -577,6 +577,7 @@ object TargetTabContents extends TwoPanels:
   }
 
   private def applyObs(
+    programId:             Program.Id,
     obsIds:                List[Observation.Id],
     targetIds:             List[Target.Id],
     asterismGroupsWithObs: View[AsterismGroupsWithObs],
@@ -602,7 +603,7 @@ object TargetTabContents extends TwoPanels:
             val newIds    = summList.map((summ, tid) => (summ.id, tid))
             val summaries = summList.map(_._1)
             ObservationPasteAction
-              .paste(newIds, expandedIds)
+              .paste(programId, newIds, expandedIds)
               .set(undoContext)(summaries.some)
               .to[IO]
           )
@@ -710,6 +711,7 @@ object TargetTabContents extends TwoPanels:
                   optViewAgwo
                     .map(agwov =>
                       applyObs(
+                        props.programId,
                         id.idSet.toList,
                         treeTargets,
                         agwov,
@@ -734,7 +736,13 @@ object TargetTabContents extends TwoPanels:
                       .flatMap(ag => tids.removeSet(ag.targetIds))
                       .foldMap(uniqueTids =>
                         TargetPasteAction
-                          .pasteTargets(obsIds, uniqueTids, selectObsIds, props.expandedIds)
+                          .pasteTargets(
+                            props.programId,
+                            obsIds,
+                            uniqueTids,
+                            selectObsIds,
+                            props.expandedIds
+                          )
                           .set(undoContext)(())
                           .to[IO]
                       )

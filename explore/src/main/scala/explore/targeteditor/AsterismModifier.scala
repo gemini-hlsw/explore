@@ -36,7 +36,9 @@ trait AsterismModifier:
         )(IO(_))
 
         targetId
-          .flatTap(tid => AsterismQueries.addTargetsToAsterisms[IO](obsIds.toList, List(tid)))
+          .flatTap(tid =>
+            AsterismQueries.addTargetsToAsterisms[IO](programId, obsIds.toList, List(tid))
+          )
           .flatTap { tid =>
             val newTarget = TargetWithId(tid, target)
 

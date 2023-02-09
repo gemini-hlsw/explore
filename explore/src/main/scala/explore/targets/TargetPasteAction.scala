@@ -106,6 +106,7 @@ object TargetPasteAction {
     currentGroup.obsIds.remove(obsIds).fold(merged)(merged + _)
 
   def pasteTargets(
+    programId:    Program.Id,
     obsIds:       ObsIdSet,
     targetIds:    TargetIdSet,
     selectObsIds: ObsIdSet => IO[Unit],
@@ -119,11 +120,16 @@ object TargetPasteAction {
         val oCurrentGroup = agl.findContainingObsIds(obsIds)
         oCurrentGroup.foldMap(currentGroup =>
           val isUndo = targetIds.toSortedSet.subsetOf(currentGroup.targetIds)
-          expandedIds.mod(modExpanded(obsIds, targetIds, currentGroup, agl, isUndo)).to[IO] >>
+          expandedIds
+            .mod(modExpanded(obsIds, targetIds, currentGroup, agl, isUndo))
+            .to[IO] >>
             selectObsIds(obsIds) >>
             (if (isUndo)
-               AsterismQueries.removeTargetsFromAsterisms[IO](obsIds.toList, targetIds.toList)
-             else AsterismQueries.addTargetsToAsterisms[IO](obsIds.toList, targetIds.toList))
+               AsterismQueries
+                 .removeTargetsFromAsterisms[IO](programId, obsIds.toList, targetIds.toList)
+             else
+               AsterismQueries
+                 .addTargetsToAsterisms[IO](programId, obsIds.toList, targetIds.toList))
         )
     )
 }

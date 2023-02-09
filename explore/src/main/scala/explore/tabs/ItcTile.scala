@@ -10,6 +10,7 @@ import explore.components.ui.ExploreStyles
 import explore.itc.ItcGraphPanel
 import explore.itc.ItcPanelProps
 import explore.itc.ItcPanelTitle
+import explore.model.BasicConfigAndItc
 import explore.model.ScienceMode
 import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.ItcTarget
@@ -28,7 +29,8 @@ object ItcTile:
     spectroscopyRequirements: Option[SpectroscopyRequirementsData],
     scienceData:              Option[ScienceData],
     itcExposureTime:          Option[ItcChartExposureTime],
-    selectedTarget:           View[Option[ItcTarget]]
+    selectedTarget:           View[Option[ItcTarget]],
+    selectedConfig:           Option[BasicConfigAndItc]
   ) =
     Tile(
       ObsTabTilesIds.ItcId.id,
@@ -39,7 +41,8 @@ object ItcTile:
                        spectroscopyRequirements,
                        scienceData,
                        itcExposureTime,
-                       selectedTarget
+                       selectedTarget,
+                       selectedConfig
         ): VdomNode).some,
       bodyClass = ExploreStyles.ItcTileBody.some
     )(_ =>
@@ -50,7 +53,8 @@ object ItcTile:
                       spectroscopyRequirements,
                       scienceData,
                       itcExposureTime,
-                      selectedTarget
+                      selectedTarget,
+                      selectedConfig
         )
       )
     )

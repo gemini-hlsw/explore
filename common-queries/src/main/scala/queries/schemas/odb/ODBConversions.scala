@@ -18,8 +18,7 @@ import lucuma.core.model.ProposalClass.*
 import lucuma.core.model.*
 import lucuma.core.util.*
 import lucuma.core.syntax.time.*
-import lucuma.schemas.ObservationDB.Enums.PosAngleConstraintType
-import lucuma.schemas.ObservationDB.Enums.BrightnessIntegratedUnits
+import lucuma.schemas.ObservationDB.Enums.PosAngleConstraintMode
 import lucuma.schemas.ObservationDB.Types.*
 
 import scala.collection.immutable.SortedMap
@@ -40,9 +39,10 @@ trait ODBConversions:
     def toWhereProgram: WhereProgram =
       WhereProgram(id = WhereOrderProgramId(EQ = id.assign).assign)
 
-    @targetName("ProgramId_toWhereObservation")
-    def toWhereObservation: WhereObservation =
-      WhereObservation(programId = WhereOrderProgramId(EQ = id.assign).assign)
+    // @targetName("ProgramId_toWhereObservation")
+    // def toWhereObservation: WhereObservation =
+    //   WhereObservation()
+    //   // WhereObservation(programId = WhereOrderProgramId(EQ = id.assign).assign)
 
   extension (id: Target.Id)
     def toWhereTarget: WhereTarget =
@@ -120,9 +120,9 @@ trait ODBConversions:
       bs.toList.map { case (band, measure) =>
         BandBrightnessIntegratedInput(
           band = band,
-          value = measure.value.assign,
+          value = measure.value.value.assign,
           units = Measure.unitsTagged.get(measure).assign,
-          error = measure.error.orIgnore
+          error = measure.error.map(_.value).orIgnore
         )
       }
 
@@ -132,9 +132,9 @@ trait ODBConversions:
       bs.toList.map { case (band, measure) =>
         BandBrightnessSurfaceInput(
           band = band,
-          value = measure.value.assign,
+          value = measure.value.value.assign,
           units = Measure.unitsTagged.get(measure).assign,
-          error = measure.error.orIgnore
+          error = measure.error.map(_.value).orIgnore
         )
       }
 
@@ -239,28 +239,28 @@ trait ODBConversions:
       p match
         case PosAngleConstraint.Fixed(angle)               =>
           PosAngleConstraintInput(
-            constraint = PosAngleConstraintType.Fixed.assign,
+            mode = PosAngleConstraintMode.Fixed.assign,
             angle = angle.toInput.assign
           )
         case PosAngleConstraint.AllowFlip(angle)           =>
           PosAngleConstraintInput(
-            constraint = PosAngleConstraintType.AllowFlip.assign,
+            mode = PosAngleConstraintMode.AllowFlip.assign,
             angle = angle.toInput.assign
           )
         case PosAngleConstraint.ParallacticOverride(angle) =>
           PosAngleConstraintInput(
-            constraint = PosAngleConstraintType.AverageParallactic.assign,
+            mode = PosAngleConstraintMode.ParallacticOverride.assign,
             angle = angle.toInput.assign
           )
         case PosAngleConstraint.AverageParallactic         =>
           PosAngleConstraintInput(
-            constraint = PosAngleConstraintType.AverageParallactic.assign,
-            angle = Input.unassign
+            mode = PosAngleConstraintMode.AverageParallactic.assign
           )
+        case PosAngleConstraint.Unbounded                  =>
+          PosAngleConstraintInput(mode = PosAngleConstraintMode.Unbounded.assign)
 
-  extension (nnd: NonNegDuration)
-    def toInput: NonNegDurationInput =
-      NonNegDurationInput(microseconds = PosLong.unsafeFrom(nnd.value.toMicros).assign)
+  extension (ts: TimeSpan)
+    def toInput: TimeSpanInput = TimeSpanInput(microseconds = ts.toMicroseconds.assign)
 
   extension (etm: ExposureTimeMode)
     def toInput: ExposureTimeModeInput = etm match
@@ -325,9 +325,15 @@ trait ODBConversions:
       category = proposal.category.orUnassign,
       toOActivation = proposal.toOActivation.assign,
       `abstract` = proposal.abstrakt.orUnassign,
-      partnerSplits = proposal.partnerSplits.toList.map { case (par, pct) =>
-        PartnerSplitsInput(par.assign, pct.assign)
-      }.assign
+      // Temporary fix until the changes in this issue are complete: https://github.com/gemini-hlsw/lucuma-odb/issues/253
+      // partnerSplits = proposal.partnerSplits.toList.map { case (par, pct) =>
+      //   PartnerSplitInput(par, pct)
+      partnerSplits =
+        if (proposal.partnerSplits.isEmpty) Input.unassign
+        else
+          proposal.partnerSplits.toList.map { case (par, pct) =>
+            PartnerSplitInput(par, pct)
+          }.assign
     )
 
   extension (sidereal: Target.Sidereal)
@@ -348,7 +354,7 @@ trait ODBConversions:
           name = sidereal.name.assign,
           sidereal = toInput.assign,
           sourceProfile = sidereal.sourceProfile.toInput.assign
-        ).assign
+        )
       )
 
   extension (nonsidereal: Target.Nonsidereal)
@@ -363,7 +369,7 @@ trait ODBConversions:
           name = nonsidereal.name.assign,
           nonsidereal = toInput.assign,
           sourceProfile = nonsidereal.sourceProfile.toInput.assign
-        ).assign
+        )
       )
 
 object ODBConversions extends ODBConversions

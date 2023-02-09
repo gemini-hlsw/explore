@@ -10,8 +10,8 @@ import explore.model.itc.*
 import explore.modes.InstrumentRow
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
-import lucuma.core.model.NonNegDuration
 import lucuma.core.util.NewType
+import lucuma.core.util.TimeSpan
 
 object CoverageCenterWavelength extends NewType[Wavelength]
 type CoverageCenterWavelength = CoverageCenterWavelength.Type
@@ -27,7 +27,7 @@ case class ItcRequestParams(
 
 case class ItcGraphRequestParams(
   wavelength:   CoverageCenterWavelength,
-  exposureTime: NonNegDuration,
+  exposureTime: TimeSpan,
   exposures:    PosInt,
   constraints:  ConstraintSet,
   target:       NonEmptyList[ItcTarget],

@@ -14,6 +14,7 @@ import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.data.KeyedIndexedList
 import explore.model.ConstraintGroup
+import explore.model.OdbItcResult
 import explore.model.ObsIdSet
 import explore.model.ObsSummaryWithTitleAndConstraints
 import explore.model.ObsSummaryWithTitleConstraintsAndConf
@@ -24,21 +25,25 @@ import explore.model.syntax.all.*
 import japgolly.scalajs.react.*
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
+import lucuma.core.model.ExposureTimeMode.FixedExposure
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
+import lucuma.core.syntax.time.*
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
+import lucuma.schemas.ObservationDB.Enums.*
 import lucuma.schemas.ObservationDB.Types.*
 import monocle.Focus
 import monocle.Getter
 import monocle.Lens
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ODBConversions.*
+import lucuma.core.util.Timestamp
 
+import java.time.Duration
 import java.time.Instant
 import scala.collection.immutable.SortedMap
-import lucuma.core.model.ExposureTimeMode.FixedExposure
 
 object ObsQueries:
   type ObservationList = KeyedIndexedList[Observation.Id, ObsSummaryWithTitleConstraintsAndConf]
@@ -52,30 +57,27 @@ object ObsQueries:
   type SpectroscopyRequirementsData = ObservationData.ScienceRequirements.Spectroscopy
   val SpectroscopyRequirementsData = ObservationData.ScienceRequirements.Spectroscopy
 
-  type ITCSuccess = ObservationData.Itc
-  val ITCSuccess = ObservationData.Itc
-
   case class ScienceData(
     requirements: ScienceRequirementsData,
     mode:         Option[ScienceMode],
     constraints:  ConstraintSet,
     targets:      Targets,
-    posAngle:     Option[PosAngleConstraint],
-    potITC:       Pot[Option[ITCSuccess]]
+    posAngle:     PosAngleConstraint,
+    potITC:       Pot[Option[OdbItcResult.Success]]
   )
 
   object ScienceData {
-    val requirements: Lens[ScienceData, ScienceRequirementsData] =
+    val requirements: Lens[ScienceData, ScienceRequirementsData]     =
       Focus[ScienceData](_.requirements)
-    val mode: Lens[ScienceData, Option[ScienceMode]]             =
+    val mode: Lens[ScienceData, Option[ScienceMode]]                 =
       Focus[ScienceData](_.mode)
-    val targets: Lens[ScienceData, Targets]                      =
+    val targets: Lens[ScienceData, Targets]                          =
       Focus[ScienceData](_.targets)
-    val constraints: Lens[ScienceData, ConstraintSet]            =
+    val constraints: Lens[ScienceData, ConstraintSet]                =
       Focus[ScienceData](_.constraints)
-    val posAngle: Lens[ScienceData, Option[PosAngleConstraint]]  =
+    val posAngle: Lens[ScienceData, PosAngleConstraint]              =
       Focus[ScienceData](_.posAngle)
-    val potITC: Lens[ScienceData, Pot[Option[ITCSuccess]]]       =
+    val potITC: Lens[ScienceData, Pot[Option[OdbItcResult.Success]]] =
       Focus[ScienceData](_.potITC)
   }
 
@@ -110,25 +112,26 @@ object ObsQueries:
   extension (data: ObsEditQuery.Data)
     def asObsEditData: Option[ObsEditData] =
       data.observation.map { obs =>
+        val itcSuccess = data.itc.flatMap(OdbItcResult.success.getOption)
         ObsEditData(
           id = obs.id,
           title = obs.title,
           subtitle = obs.subtitle,
-          visualizationTime = obs.visualizationTime,
-          itcExposureTime = obs.itc.map(_.asFixedExposureTime),
+          visualizationTime = obs.visualizationTime.map(_.toInstant),
+          itcExposureTime = itcSuccess.map(_.asFixedExposureTime),
           scienceData = ScienceData(
             requirements = obs.scienceRequirements,
-            mode = obs.scienceMode,
+            mode = obs.observingMode,
             constraints = obs.constraintSet,
             targets = obs.targetEnvironment,
             posAngle = obs.posAngleConstraint,
-            potITC = Pot(obs.itc)
+            potITC = Pot(itcSuccess)
           )
         )
       }
-
-  extension (self: ITCSuccess)
-    def asFixedExposureTime = FixedExposure(self.exposures, self.exposureTime)
+  extension (self: OdbItcResult.Success)
+    def asFixedExposureTime: FixedExposure =
+      FixedExposure(self.exposures, self.exposureTime)
 
   extension (data: ProgramObservationsQuery.Data)
     def asObsSummariesWithConstraints: ObsSummariesWithConstraints =
@@ -143,8 +146,8 @@ object ObsQueries:
               mtch.status,
               mtch.activeStatus,
               mtch.plannedTime.execution,
-              mtch.scienceMode,
-              mtch.visualizationTime
+              mtch.observingMode,
+              none // mtch.visualizationTime
             )
           ),
           ObsSummaryWithTitleConstraintsAndConf.id.get
@@ -153,11 +156,12 @@ object ObsQueries:
         data.targetGroup.matches
           .toSortedMap(
             _.target.id,
-            group => TargetSummary(group.observationIds.toSet, group.target.id)
+            group => TargetSummary(group.observations.matches.map(_.id).toSet, group.target.id)
           )
       )
 
   def updateObservationConstraintSet[F[_]: Async](
+    programId:   Program.Id,
     obsIds:      List[Observation.Id],
     constraints: ConstraintSet
   )(implicit
@@ -188,6 +192,7 @@ object ObsQueries:
     UpdateObservationMutation
       .execute[F](
         UpdateObservationsInput(
+          programId = programId,
           WHERE = obsIds.toWhereObservation.assign,
           SET = editInput
         )
@@ -196,15 +201,19 @@ object ObsQueries:
   }
 
   def updateVisualizationTime[F[_]: Async](
+    programId:         Program.Id,
     obsIds:            List[Observation.Id],
     visualizationTime: Option[Instant]
   )(using TransactionalClient[F, ObservationDB]): F[Unit] = {
 
-    val editInput = ObservationPropertiesInput(visualizationTime = visualizationTime.orUnassign)
+    val editInput = ObservationPropertiesInput(visualizationTime =
+      visualizationTime.flatMap(Timestamp.fromInstantTruncated).orUnassign
+    )
 
     UpdateObservationMutation
       .execute[F](
         UpdateObservationsInput(
+          programId = programId,
           WHERE = obsIds.toWhereObservation.assign,
           SET = editInput
         )
@@ -213,16 +222,18 @@ object ObsQueries:
   }
 
   def updatePosAngle[F[_]: Async](
+    programId:          Program.Id,
     obsIds:             List[Observation.Id],
-    posAngleConstraint: Option[PosAngleConstraint]
+    posAngleConstraint: PosAngleConstraint
   )(using TransactionalClient[F, ObservationDB]): F[Unit] = {
 
     val editInput =
-      ObservationPropertiesInput(posAngleConstraint = posAngleConstraint.map(_.toInput).orUnassign)
+      ObservationPropertiesInput(posAngleConstraint = posAngleConstraint.toInput.assign)
 
     UpdateObservationMutation
       .execute[F](
         UpdateObservationsInput(
+          programId = programId,
           WHERE = obsIds.toWhereObservation.assign,
           SET = editInput
         )
@@ -316,37 +327,42 @@ object ObsQueries:
       }
 
   def deleteObservation[F[_]: Async](
-    obsId: Observation.Id
+    programId: Program.Id,
+    obsId:     Observation.Id
   )(using TransactionalClient[F, ObservationDB]): F[Unit] =
-    ProgramDeleteObservations
-      .execute[F](
-        DeleteObservationsInput(WHERE = obsId.toWhereObservation.assign)
-      )
-      .void
+    deleteObservations(programId, List(obsId))
 
   def undeleteObservation[F[_]: Async](
-    obsId: Observation.Id
+    programId: Program.Id,
+    obsId:     Observation.Id
   )(using TransactionalClient[F, ObservationDB]): F[Unit] =
-    ProgramUndeleteObservations
-      .execute[F](
-        UndeleteObservationsInput(WHERE = obsId.toWhereObservation.assign)
-      )
-      .void
+    undeleteObservations(programId, List(obsId))
 
   def deleteObservations[F[_]: Async](
-    obsIds: List[Observation.Id]
+    programId: Program.Id,
+    obsIds:    List[Observation.Id]
   )(using TransactionalClient[F, ObservationDB]): F[Unit] =
-    ProgramDeleteObservations
+    UpdateObservationMutation
       .execute[F](
-        DeleteObservationsInput(WHERE = obsIds.toWhereObservation.assign)
+        UpdateObservationsInput(
+          programId = programId,
+          WHERE = obsIds.toWhereObservation.assign,
+          SET = ObservationPropertiesInput(existence = Existence.Deleted.assign)
+        )
       )
       .void
 
   def undeleteObservations[F[_]: Async](
-    obsIds: List[Observation.Id]
+    programId: Program.Id,
+    obsIds:    List[Observation.Id]
   )(using TransactionalClient[F, ObservationDB]): F[Unit] =
-    ProgramUndeleteObservations
+    UpdateObservationMutation
       .execute[F](
-        UndeleteObservationsInput(WHERE = obsIds.toWhereObservation.assign)
+        UpdateObservationsInput(
+          programId = programId,
+          WHERE = obsIds.toWhereObservation.assign,
+          SET = ObservationPropertiesInput(existence = Existence.Present.assign),
+          includeDeleted = true.assign
+        )
       )
       .void

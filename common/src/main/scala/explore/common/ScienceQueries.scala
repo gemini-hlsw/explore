@@ -16,7 +16,9 @@ import lucuma.core.enums
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
+import lucuma.core.math.WavelengthRange
 import lucuma.core.model.Observation
+import lucuma.core.model.Program
 import lucuma.core.optics.syntax.lens.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
@@ -29,6 +31,7 @@ import queries.schemas.odb.ObsQueries.*
 object ScienceQueries:
 
   case class ScienceRequirementsUndoView(
+    programId:               Program.Id,
     obsId:                   Observation.Id,
     scienceRequirementsUndo: UndoSetter[ScienceRequirementsData]
   )(using TransactionalClient[IO, ObservationDB], Logger[IO]):
@@ -43,6 +46,7 @@ object ScienceQueries:
           UpdateObservationMutation
             .execute(
               UpdateObservationsInput(
+                programId = programId,
                 WHERE = obsId.toWhereObservation.assign,
                 SET = ObservationPropertiesInput(scienceRequirements =
                   remoteSet(value)(ScienceRequirementsInput()).assign
@@ -63,20 +67,20 @@ object ScienceQueries:
     def mode(n: enums.ScienceMode): Endo[ScienceRequirementsInput] =
       ScienceRequirementsInput.mode.replace(n.assign)
 
-    def angle(w: Angle): FocalPlaneAngleInput =
-      (FocalPlaneAngleInput.microarcseconds := w.toMicroarcseconds.assign)
-        .runS(FocalPlaneAngleInput())
+    def angle(w: Angle): AngleInput =
+      (AngleInput.microarcseconds := w.toMicroarcseconds.assign)
+        .runS(AngleInput())
         .value
 
     def wavelength(w: Wavelength): WavelengthInput =
       (WavelengthInput.micrometers :=
         // This will always work because Wavelength.toPicometers is refined Positive
-        refineV[Positive](
-          Wavelength.decimalMicrometers
-            .reverseGet(w)
-        ).toOption.orIgnore)
+        refineV[Positive](Wavelength.decimalMicrometers.reverseGet(w)).toOption.orIgnore)
         .runS(WavelengthInput())
         .value
+
+    def wavelengthRange(wc: WavelengthRange): WavelengthInput =
+      wavelength(Wavelength(wc.pm))
 
     def spectroscopyRequirements(
       op: SpectroscopyRequirementsData
@@ -92,13 +96,13 @@ object ScienceQueries:
                  .map(wavelength)
                  .orUnassign
           _ <- SpectroscopyScienceRequirementsInput.wavelengthCoverage := op.wavelengthCoverage
-                 .map(wavelength)
+                 .map(wavelengthRange)
                  .orUnassign
           _ <- SpectroscopyScienceRequirementsInput.focalPlane         := op.focalPlane.orUnassign
           _ <- SpectroscopyScienceRequirementsInput.focalPlaneAngle    := op.focalPlaneAngle
                  .map(angle)
                  .orUnassign
-          _ <- SpectroscopyScienceRequirementsInput.capabilities       := op.capabilities.orUnassign
+          _ <- SpectroscopyScienceRequirementsInput.capability         := op.capability.orUnassign
         } yield ()
       ScienceRequirementsInput.spectroscopy.replace(
         input.runS(SpectroscopyScienceRequirementsInput()).value.assign

@@ -7,10 +7,10 @@ import cats.syntax.all.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.CoordinatesAtVizTime
-import explore.model.ScienceMode
 import explore.targeteditor.ElevationPlotSection
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.Site
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Target
 import lucuma.core.model.User
@@ -24,7 +24,7 @@ object ElevationPlotTile:
   def elevationPlotTile(
     uid:         Option[User.Id],
     tid:         Option[Target.Id],
-    scienceMode: Option[ScienceMode],
+    site:        Option[Site],
     coordinates: Option[CoordinatesAtVizTime],
     vizTime:     Option[Instant]
   ) =
@@ -36,7 +36,7 @@ object ElevationPlotTile:
     ) { _ =>
       (uid, tid, coordinates)
         .mapN { (uid, targetId, coordinates) =>
-          ElevationPlotSection(uid, targetId, scienceMode, vizTime, coordinates): VdomNode
+          ElevationPlotSection(uid, targetId, site, vizTime, coordinates): VdomNode
         }
         .getOrElse {
           <.div(

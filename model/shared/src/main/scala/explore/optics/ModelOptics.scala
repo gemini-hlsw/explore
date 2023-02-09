@@ -13,16 +13,17 @@ import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.enums.Band
 import lucuma.core.math.ApparentRadialVelocity
+import lucuma.core.math.BrightnessValue
 import lucuma.core.math.Constants.*
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.Redshift
 import lucuma.core.math.dimensional.Measure
 import lucuma.core.math.units.*
-import lucuma.core.model.NonNegDuration
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.Target
 import lucuma.core.optics.SplitEpi
 import lucuma.core.syntax.time.*
+import lucuma.core.util.TimeSpan
 import monocle.Getter
 import monocle.Optional
 import monocle.*
@@ -57,7 +58,7 @@ trait ModelOptics {
    * Getter for any kind of brightness measures of a `Target`, as long as it has a
    * `SpectralDefinition.BandNormalized`
    */
-  val targetBrightnesses: Getter[Target, Option[SortedMap[Band, Measure[BigDecimal]]]] =
+  val targetBrightnesses: Getter[Target, Option[SortedMap[Band, Measure[BrightnessValue]]]] =
     Getter { target =>
       val sourceProfile = Target.sourceProfile.get(target)
       SourceProfile.integratedBrightnesses
@@ -69,11 +70,8 @@ trait ModelOptics {
     Iso[Option[NonEmptyString], String](_.foldMap(_.value))(s => NonEmptyString.from(s).toOption)
 
   // Note: truncates to Int.MaxValue - shouldn't have durations longer than that...
-  val nonNegDurationSecondsSplitEpi: SplitEpi[NonNegDuration, NonNegInt] = SplitEpi(
-    nnd =>
-      NonNegInt.unsafeFrom(
-        math.min((nnd.value: Duration).toMicros / 1000L / 1000L, Int.MaxValue.toLong).toInt
-      ),
-    secs => NonNegDuration.unsafeFrom(secs.value.toLong.seconds)
+  val timeSpanSecondsSplitEpi: SplitEpi[TimeSpan, NonNegInt] = SplitEpi(
+    ts => NonNegInt.unsafeFrom(math.min(ts.toSeconds.longValue, Int.MaxValue.toLong).toInt),
+    secs => TimeSpan.unsafeFromDuration(secs.value.toLong.seconds)
   )
 }

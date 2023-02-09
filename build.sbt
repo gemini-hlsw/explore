@@ -34,8 +34,8 @@ ThisBuild / scalafixDependencies ++= ClueGenerator.value ++ Seq(
   "edu.gemini" % "lucuma-schemas_3" % Settings.LibraryVersions.lucumaSchemas
 )
 ThisBuild / scalafixScalaBinaryVersion := "2.13"
-ThisBuild / scalaVersion               := "3.2.1"
-ThisBuild / crossScalaVersions         := Seq("3.2.1")
+ThisBuild / scalaVersion               := "3.2.2"
+ThisBuild / crossScalaVersions         := Seq("3.2.2")
 ThisBuild / scalacOptions ++= Seq(
   "-language:implicitConversions"
 )
@@ -196,6 +196,7 @@ lazy val commonLibSettings = Seq(
       CatsRetry.value ++
       Circe.value ++
       Clue.value ++
+      CoulombRefined.value ++
       Crystal.value ++
       FS2.value ++
       FS2Data.value ++
@@ -377,7 +378,7 @@ def setupVars(mode: String) = WorkflowStep.Run(
 )
 
 def runLinters(mode: String) = WorkflowStep.Use(
-  UseRef.Public("wearerequired", "lint-action", "v1.11.1"),
+  UseRef.Public("wearerequired", "lint-action", "v2.3.0"),
   name = Some(s"Run linters in $mode mode"),
   params = Map(
     "github_token"         -> "${{ secrets.GITHUB_TOKEN }}",

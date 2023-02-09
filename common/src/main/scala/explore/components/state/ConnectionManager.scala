@@ -8,6 +8,7 @@ import cats.syntax.all.*
 import crystal.react.hooks.*
 import crystal.react.implicits.*
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import io.circe.Json
@@ -17,7 +18,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 import react.common.ReactFnPropsWithChildren
-import react.primereact.ProgressSpinner
+import react.fa.IconSize
 
 case class ConnectionManager(ssoToken: NonEmptyString, onConnect: IO[Unit])
     extends ReactFnPropsWithChildren(ConnectionManager.component):
@@ -60,6 +61,7 @@ object ConnectionManager {
       if (initializedState.value)
         children
       else
-        ProgressSpinner(clazz = ExploreStyles.Loader)
+        // ProgressSpinner(clazz = ExploreStyles.Loader)
+        Icons.SolarSystem.withSpin(true).withSize(IconSize.X4).withClass(ExploreStyles.Loader)
     )
 }

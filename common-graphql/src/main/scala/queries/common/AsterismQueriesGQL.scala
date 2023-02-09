@@ -20,7 +20,11 @@ object AsterismQueriesGQL {
       query($programId: ProgramId!) {
         asterismGroup(programId: $programId) {
           matches {
-            observationIds
+            observations {
+              matches {
+                id
+              }
+            }
             asterism {
               id
             }
@@ -29,7 +33,11 @@ object AsterismQueriesGQL {
 
         targetGroup(programId: $programId) {
           matches {
-            observationIds
+            observations {
+              matches {
+                id
+              }
+            }
             target {
               id
               name
@@ -199,7 +207,7 @@ object AsterismQueriesGQL {
           }
         }
 
-        observations(WHERE: {programId: {EQ: $programId}}) {
+        observations(programId: $programId) {
           matches {
             id
             constraintSet {
@@ -212,7 +220,7 @@ object AsterismQueriesGQL {
             activeStatus
             visualizationTime
             posAngleConstraint {
-              constraint
+              mode
               angle {
                 microarcseconds
               }
@@ -234,19 +242,21 @@ object AsterismQueriesGQL {
                 }
               }
             }
-            scienceMode {
+            observingMode {
               gmosNorthLongSlit {
-                basic {
-                  grating
-                  filter
-                  fpu
+                grating
+                filter
+                fpu
+                centralWavelength {
+                  picometers
                 }
               }
               gmosSouthLongSlit {
-                basic {
-                  grating
-                  filter
-                  fpu
+                grating
+                filter
+                fpu
+                centralWavelength {
+                  picometers
                 }
               }
             }
@@ -264,7 +274,7 @@ object AsterismQueriesGQL {
         object Matches {
           type PosAngleConstraint = lucuma.core.model.PosAngleConstraint
           trait ConstraintSet extends model.ConstraintsSummary
-          type ScienceMode = model.ScienceMode
+          type ObservingMode = model.BasicConfiguration
           object PlannedTime {
             type Execution = time.Duration
           }

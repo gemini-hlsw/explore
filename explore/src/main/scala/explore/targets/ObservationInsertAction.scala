@@ -66,6 +66,7 @@ object ObservationInsertAction {
     )
 
   def insert(
+    programId:   Program.Id,
     obsId:       Observation.Id,
     expandedIds: View[SortedSet[ObsIdSet]],
     setPage:     Option[Observation.Id] => IO[Unit],
@@ -79,11 +80,11 @@ object ObservationInsertAction {
       onRestore = (agwo, optObs) =>
         expandedIds.mod(updateExpandedIds(obsId, agwo, optObs)).to[IO] >>
           optObs.fold(
-            ObsQueries.deleteObservation[IO](obsId) >>
+            ObsQueries.deleteObservation[IO](programId, obsId) >>
               setPage(none) >>
               postMessage(s"Deleted observation $obsId")
           )(_ =>
-            ObsQueries.undeleteObservation[IO](obsId) >>
+            ObsQueries.undeleteObservation[IO](programId, obsId) >>
               setPage(obsId.some) >>
               postMessage(s"Restored observation $obsId")
           )

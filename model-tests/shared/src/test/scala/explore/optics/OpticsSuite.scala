@@ -4,8 +4,8 @@
 package explore
 
 import cats.kernel.Eq
-import explore.model.ScienceModeAdvanced.GmosSouthLongSlit
-import explore.model.arb.ArbScienceModeAdvanced.given
+import explore.model.ScienceMode.GmosSouthLongSlit
+import explore.model.arb.ArbScienceMode.given
 import explore.optics.*
 import explore.optics.all.*
 import lucuma.core.util.arb.ArbEnumerated.*
@@ -51,20 +51,20 @@ class OpticsSuite extends DisciplineSuite {
 
   val disjointZip2 =
     disjointZip(
-      GmosSouthLongSlit.overrideGrating,
-      GmosSouthLongSlit.overrideFilter
+      GmosSouthLongSlit.grating,
+      GmosSouthLongSlit.filter
     )
   val disjointZip3 =
     disjointZip(
-      GmosSouthLongSlit.overrideGrating,
-      GmosSouthLongSlit.overrideFilter,
-      GmosSouthLongSlit.overrideFpu
+      GmosSouthLongSlit.grating,
+      GmosSouthLongSlit.filter,
+      GmosSouthLongSlit.fpu
     )
   val disjointZip4 =
     disjointZip(
-      GmosSouthLongSlit.overrideGrating,
-      GmosSouthLongSlit.overrideFilter,
-      GmosSouthLongSlit.overrideFpu,
+      GmosSouthLongSlit.grating,
+      GmosSouthLongSlit.filter,
+      GmosSouthLongSlit.fpu,
       GmosSouthLongSlit.explicitRoi
     )
 

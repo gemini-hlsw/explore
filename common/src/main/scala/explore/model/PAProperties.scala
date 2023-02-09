@@ -18,7 +18,7 @@ case class PAProperties(
   oid:        Observation.Id,
   selectedGS: View[Option[AgsAnalysis]],
   agsState:   View[AgsState],
-  constraint: View[Option[PosAngleConstraint]]
+  constraint: View[PosAngleConstraint]
 ) {
   val selectedPA = selectedGS.get.posAngle
 }

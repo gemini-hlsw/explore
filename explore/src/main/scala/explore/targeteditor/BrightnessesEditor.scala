@@ -23,6 +23,7 @@ import japgolly.scalajs.react.callback.CallbackCats.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Band
 import lucuma.core.math.BrightnessUnits.*
+import lucuma.core.math.BrightnessValue
 import lucuma.core.math.dimensional.*
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Of
@@ -100,7 +101,7 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
               ).sortable,
               ColDef(
                 ValueColumnId,
-                _._2.zoom(Measure.valueTagged[BigDecimal, Brightness[T]]),
+                _._2.zoom(Measure.valueTagged[BrightnessValue, Brightness[T]]),
                 "Value",
                 cell =>
                   FormInputTextView(
@@ -115,7 +116,7 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
               ).sortableBy(_.get),
               ColDef(
                 UnitsColumnId,
-                _._2.zoom(Measure.unitsTagged[BigDecimal, Brightness[T]]),
+                _._2.zoom(Measure.unitsTagged[BrightnessValue, Brightness[T]]),
                 "Units",
                 cell =>
                   EnumDropdownView(
@@ -171,7 +172,8 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                   props.brightnesses.mod(brightnesses =>
                     brightnesses +
                       (bandView.get ->
-                        defaultBandUnits(bandView.get).withValueTagged(BigDecimal(0)))
+                        defaultBandUnits(bandView.get)
+                          .withValueTagged(BrightnessValue(BigDecimal(0))))
                   )
 
                 React.Fragment(

@@ -265,11 +265,14 @@ object ConstraintsTabContents extends TwoPanels:
             case Some(id) => s"Observation $id"
             case None     => s"Editing Constraints for ${idsToEdit.size} Observations"
 
-          val constraintsTile = Tile(ObsTabTilesIds.ConstraintsId.id,
-                                     constraintsTitle,
-                                     backButton.some,
-                                     canMinimize = true
-          )(renderInTitle => ConstraintsPanel(idsToEdit.toList, csView, csUndo, renderInTitle))
+          val constraintsTile = Tile(
+            ObsTabTilesIds.ConstraintsId.id,
+            constraintsTitle,
+            backButton.some,
+            canMinimize = true
+          )(renderInTitle =>
+            ConstraintsPanel(props.programId, idsToEdit.toList, csView, csUndo, renderInTitle)
+          )
 
           val timingWindowsView = timingWindows.zoom(TimingWindowsList)
           val timingWindowsTile =

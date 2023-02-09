@@ -6,6 +6,10 @@ package explore.model
 import cats.syntax.all.*
 import eu.timepit.refined.cats.*
 import lucuma.core.enums.*
+import lucuma.core.math.BoundedInterval
+import lucuma.core.math.BoundedInterval.*
+import lucuma.core.math.BrightnessValue
+import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.SpectralDefinition
@@ -16,7 +20,7 @@ import lucuma.core.validation.InputValidSplitEpi
 
 import java.text.DecimalFormat
 
-trait DisplayImplicits {
+trait DisplayImplicits:
   given Display[Site] =
     Display.byShortName(_.shortName)
 
@@ -81,19 +85,18 @@ trait DisplayImplicits {
     s"${cs.imageQuality.label} ${cs.cloudExtinction.label} ${cs.skyBackground.label}$wv$er"
   }
 
-  // Not implicit. When we have opaque types we may define a BrightnessValue.
-  val displayBrightness: Display[BigDecimal] = Display.byShortName { x =>
+  given Display[BrightnessValue] = Display.byShortName { x =>
     val f = new DecimalFormat("#.###")
-
     // We don't want scientific notation to kick in for magnitude units.
     // We assume it's magnitudes when x.abs >= 0.00001, since other units are usually
     // expressed in the order of e-18 or e-19.
     // We could make the format depend on the units, but that may be confusing for users
     // in case they want to type the value and then change the units.
-    if (x.abs >= 0.00001)
-      f.format(x).replace("-0", "0")
+    // Very large values (> 10000) are also forced into scientific notation.
+    if (x.value.abs >= 0.00001 && x.value.abs <= 10000)
+      f.format(x.value).replace("-0", "0")
     else
-      InputValidSplitEpi.bigDecimalWithScientificNotation.reverseGet(x)
+      InputValidSplitEpi.bigDecimalWithScientificNotation.reverseGet(x.value)
   }
 
   given Display[StellarLibrarySpectrum] = Display.byShortName(_.sedSpectrum)
@@ -145,6 +148,13 @@ trait DisplayImplicits {
     case SequenceType.Acquisition => "Acquisition"
     case SequenceType.Science     => "Science"
   )
-}
+
+  given Display[BoundedInterval[Wavelength]] = Display.byShortName(interval =>
+    List(interval.lower, interval.upper)
+      .map(q =>
+        "%.3f".format(q.toMicrometers.value.value.setScale(3, BigDecimal.RoundingMode.DOWN))
+      )
+      .mkString(" - ")
+  )
 
 object display extends DisplayImplicits

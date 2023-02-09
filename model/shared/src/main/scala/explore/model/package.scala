@@ -21,9 +21,6 @@ import lucuma.refined.*
 
 import scala.collection.immutable.SortedMap
 
-type DitherNanoMetersRange = Interval.Closed[-1000, 1000]
-type DitherNanoMeters      = BigDecimal Refined DitherNanoMetersRange
-
 val MaxHourValue = BigDecimal(1000)
 type HourRange            = Interval.Closed[0, 1000]
 type Hours                = BigDecimal Refined HourRange

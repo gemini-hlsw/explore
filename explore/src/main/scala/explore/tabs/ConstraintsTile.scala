@@ -15,6 +15,7 @@ import explore.utils.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
+import lucuma.core.model.Program
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.style.Css
@@ -22,6 +23,7 @@ import react.common.style.Css
 object ConstraintsTile {
 
   def constraintsTile(
+    programId:  Program.Id,
     obsId:      Observation.Id,
     csPot:      Pot[View[ConstraintSet]],
     undoStacks: View[UndoStacks[IO, ConstraintSet]],
@@ -36,7 +38,7 @@ object ConstraintsTile {
       controllerClass = clazz
     )(renderInTitle =>
       potRender[View[ConstraintSet]](cs =>
-        ConstraintsPanel(List(obsId), cs, undoStacks, renderInTitle)
+        ConstraintsPanel(programId, List(obsId), cs, undoStacks, renderInTitle)
       )(csPot)
     )
 

@@ -8,8 +8,8 @@ import lucuma.core.enums.StepType
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
-import lucuma.core.model.NonNegDuration
 import lucuma.core.model.sequence.*
+import lucuma.core.util.TimeSpan
 import lucuma.schemas.model.StepRecord
 import lucuma.schemas.model.Visit
 
@@ -29,8 +29,8 @@ sealed trait GmosSequenceRow:
   lazy val stepType: Option[StepType]                       = stepConfig.map(_.stepType)
   lazy val exposureSecs: Option[Long]                       =
     instrumentConfig.map(_ match
-      case DynamicConfig.GmosNorth(exposure, _, _, _, _, _, _) => exposure.getSeconds
-      case DynamicConfig.GmosSouth(exposure, _, _, _, _, _, _) => exposure.getSeconds
+      case DynamicConfig.GmosNorth(exposure, _, _, _, _, _, _) => exposure.toSeconds.longValue
+      case DynamicConfig.GmosSouth(exposure, _, _, _, _, _, _) => exposure.toSeconds.longValue
     )
   // TODO Not in model yet, we are just simulating
   lazy val guided: Boolean                                  =
@@ -108,9 +108,9 @@ object GmosSequenceRow:
     def created: Instant
     def startTime: Option[Instant]
     def endTime: Option[Instant]
-    def duration: Option[NonNegDuration]
+    def duration: Option[TimeSpan]
 
-    lazy val durationSecs: Option[Long] = duration.map(_.value.getSeconds)
+    lazy val durationSecs: Option[Long] = duration.map(_.toSeconds.toLong)
 
   object Executed:
     case class ExecutedVisit(protected val visit: Visit) extends Executed:

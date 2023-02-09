@@ -13,8 +13,8 @@ import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.refineV
 import eu.timepit.refined.types.numeric.PosInt
 import io.circe.Decoder
-import lucuma.core.model.NonNegDuration
 import lucuma.core.model.given
+import lucuma.core.util.TimeSpan
 import lucuma.refined.*
 import monocle.Focus
 import monocle.Lens
@@ -28,7 +28,7 @@ import java.time.Duration
 import java.time.ZonedDateTime
 
 case class TimingWindowRepeatPeriod(
-  period:          NonNegDuration,
+  period:          TimeSpan,
   repeatFrequency: Option[PosInt] // Times repetition or forever
 ) derives Eq {
   def toForever: TimingWindowRepeatPeriod = copy(repeatFrequency = None)
@@ -36,21 +36,21 @@ case class TimingWindowRepeatPeriod(
 }
 
 object TimingWindowRepeatPeriod:
-  val period: Lens[TimingWindowRepeatPeriod, NonNegDuration] =
+  val period: Lens[TimingWindowRepeatPeriod, TimeSpan] =
     Focus[TimingWindowRepeatPeriod](_.period)
 
   val repeatFrequency: Lens[TimingWindowRepeatPeriod, Option[PosInt]] =
     Focus[TimingWindowRepeatPeriod](_.repeatFrequency)
 
 case class TimingWindowRepeat(
-  remainOpenFor: NonNegDuration,
+  remainOpenFor: TimeSpan,
   repeatPeriod:  Option[TimingWindowRepeatPeriod]
 ) derives Eq {}
 
 object TimingWindowRepeat:
-  def remainOpenFor(openFor: NonNegDuration) = TimingWindowRepeat(openFor, None)
+  def remainOpenFor(openFor: TimeSpan) = TimingWindowRepeat(openFor, None)
 
-  val remainOpenFor: Lens[TimingWindowRepeat, NonNegDuration] =
+  val remainOpenFor: Lens[TimingWindowRepeat, TimeSpan] =
     Focus[TimingWindowRepeat](_.remainOpenFor)
 
   val repeatPeriod: Lens[TimingWindowRepeat, Option[TimingWindowRepeatPeriod]] =
@@ -67,10 +67,10 @@ case class TimingWindow private (
   def toForever: TimingWindow =
     copy(repetition = None)
 
-  def toRemainOpen(duration: NonNegDuration): TimingWindow =
+  def toRemainOpen(duration: TimeSpan): TimingWindow =
     copy(repetition = TimingWindowRepeat(duration, None).asRight.some)
 
-  def toRepeatPeriod(period: NonNegDuration): TimingWindow =
+  def toRepeatPeriod(period: TimeSpan): TimingWindow =
     copy(repetition =
       repetition.map(_.map(_.copy(repeatPeriod = TimingWindowRepeatPeriod(period, None).some)))
     )
@@ -114,12 +114,12 @@ object TimingWindow:
   val closeOn: Optional[TimingWindow, ZonedDateTime] =
     Focus[TimingWindow](_.repetition).some.andThen(stdLeft)
 
-  val remainOpenFor: Optional[TimingWindow, NonNegDuration] =
+  val remainOpenFor: Optional[TimingWindow, TimeSpan] =
     Focus[TimingWindow](_.repetition).some
       .andThen(stdRight)
       .andThen(TimingWindowRepeat.remainOpenFor)
 
-  val repeatPeriod: Optional[TimingWindow, NonNegDuration] =
+  val repeatPeriod: Optional[TimingWindow, TimeSpan] =
     Focus[TimingWindow](_.repetition).some
       .andThen(stdRight)
       .andThen(TimingWindowRepeat.repeatPeriod)
@@ -140,14 +140,14 @@ object TimingWindow:
   def closeOn(id: Int, startsOn: ZonedDateTime, closeOn: ZonedDateTime): TimingWindow =
     new TimingWindow(id, startsOn, repetition = closeOn.asLeft.some)
 
-  def remainOpenFor(id: Int, startsOn: ZonedDateTime, remainOpen: NonNegDuration): TimingWindow =
+  def remainOpenFor(id: Int, startsOn: ZonedDateTime, remainOpen: TimeSpan): TimingWindow =
     new TimingWindow(id, startsOn, repetition = TimingWindowRepeat(remainOpen, None).asRight.some)
 
   def remainOpenForWithPeriod(
     id:         Int,
     startsOn:   ZonedDateTime,
-    remainOpen: NonNegDuration,
-    period:     NonNegDuration
+    remainOpen: TimeSpan,
+    period:     TimeSpan
   ): TimingWindow =
     new TimingWindow(
       id,
@@ -159,8 +159,8 @@ object TimingWindow:
   def remainOpenForTimes(
     id:         Int,
     startsOn:   ZonedDateTime,
-    remainOpen: NonNegDuration,
-    period:     NonNegDuration,
+    remainOpen: TimeSpan,
+    period:     TimeSpan,
     times:      PosInt
   ): TimingWindow =
     new TimingWindow(
@@ -199,8 +199,8 @@ object TimingWindowEntry:
         TimingWindowEntry(id,
                           startsOn,
                           false,
-                          repeatPeriod = period.value.getSeconds.toInt.some,
-                          remainOpenFor = remainOpen.value.getSeconds.toInt.some,
+                          repeatPeriod = period.toSeconds.intValue.some,
+                          remainOpenFor = remainOpen.toSeconds.intValue.some,
                           repeatTimes = times.value.some
         )
       case TimingWindow(
@@ -213,16 +213,12 @@ object TimingWindowEntry:
         TimingWindowEntry(id,
                           startsOn,
                           false,
-                          remainOpenFor = remainOpen.value.getSeconds.toInt.some,
+                          remainOpenFor = remainOpen.toSeconds.intValue.some,
                           repeatForever = true.some,
-                          repeatPeriod = period.value.getSeconds.toInt.some
+                          repeatPeriod = period.toSeconds.intValue.some
         )
       case TimingWindow(id, startsOn, Some(Right(TimingWindowRepeat(remainOpen, None)))) =>
-        TimingWindowEntry(id,
-                          startsOn,
-                          false,
-                          remainOpenFor = remainOpen.value.getSeconds.toInt.some
-        )
+        TimingWindowEntry(id, startsOn, false, remainOpenFor = remainOpen.toSeconds.intValue.some)
       case TimingWindow(id, startsOn, Some(Left(repetition)))                            =>
         TimingWindowEntry(id, startsOn, false, closeOn = repetition.some)
       case TimingWindow(id, startsOn, None)                                              =>
@@ -242,8 +238,8 @@ object TimingWindowEntry:
         TimingWindow.remainOpenForTimes(
           id,
           startsOn,
-          NonNegDuration.unsafeFrom(Duration.ofSeconds(remainOpenFor)),
-          NonNegDuration.unsafeFrom(Duration.ofSeconds(repeatPeriod)),
+          TimeSpan.unsafeFromDuration(Duration.ofSeconds(remainOpenFor)),
+          TimeSpan.unsafeFromDuration(Duration.ofSeconds(repeatPeriod)),
           refineV[Positive](times).getOrElse(1.refined)
         )
       case TimingWindowEntry(id,
@@ -258,13 +254,14 @@ object TimingWindowEntry:
         TimingWindow.remainOpenForWithPeriod(
           id,
           startsOn,
-          NonNegDuration.unsafeFrom(Duration.ofSeconds(remainOpenFor)),
-          NonNegDuration.unsafeFrom(Duration.ofSeconds(repeatPeriod))
+          TimeSpan.unsafeFromDuration(Duration.ofSeconds(remainOpenFor)),
+          TimeSpan.unsafeFromDuration(Duration.ofSeconds(repeatPeriod))
         )
       case TimingWindowEntry(id, startsOn, false, _, _, _, Some(remainOpenFor), _) =>
-        TimingWindow.remainOpenFor(id,
-                                   startsOn,
-                                   NonNegDuration.unsafeFrom(Duration.ofSeconds(remainOpenFor))
+        TimingWindow.remainOpenFor(
+          id,
+          startsOn,
+          TimeSpan.unsafeFromDuration(Duration.ofSeconds(remainOpenFor))
         )
       case TimingWindowEntry(id, startsOn, false, _, _, _, _, Some(closeOn))       =>
         TimingWindow.closeOn(id, startsOn, closeOn)

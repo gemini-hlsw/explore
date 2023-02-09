@@ -213,32 +213,6 @@ object TargetQueriesGQL {
   }
 
   @GraphQL
-  trait DeleteTargetsMutation extends GraphQLOperation[ObservationDB] {
-    val document = """
-      mutation($input: DeleteTargetsInput!) {
-        deleteTargets(input: $input) {
-          targets {
-            id
-          }
-        }
-      }
-    """
-  }
-
-  @GraphQL
-  trait UndeleteTargetsMutation extends GraphQLOperation[ObservationDB] {
-    val document = """
-      mutation($input: UndeleteTargetsInput!) {
-        undeleteTargets(input: $input) {
-          targets {
-            id
-          }
-        }
-      }
-    """
-  }
-
-  @GraphQL
   trait UpdateTargetsMutation extends GraphQLOperation[ObservationDB] {
     val document = """
       mutation($input: UpdateTargetsInput!) {
@@ -448,10 +422,14 @@ object TargetQueriesGQL {
 
   @GraphQL
   trait ProgramTargetEditSubscription extends GraphQLOperation[ObservationDB] {
+    // We need to include the `value {id}` to avoid a bug in grackle.
     val document = """
       subscription($programId: ProgramId!) {
-        targetEdit(programId: $programId) {
+        targetEdit(input: {programId: $programId}) {
           id
+          value {
+            id
+          }
         }
       }
     """

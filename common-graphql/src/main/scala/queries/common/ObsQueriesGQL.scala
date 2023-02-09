@@ -21,7 +21,7 @@ object ObsQueriesGQL {
     // TODO We should do a single observations query and extract the constraint sets and targets from it.
     val document = """
       query($programId: ProgramId!) {
-        observations(WHERE: {programId: {EQ: $programId}}) {
+        observations(programId: $programId) {
           matches {
             id
             title
@@ -40,69 +40,21 @@ object ObsQueriesGQL {
                 microseconds
               }
             }
-            scienceMode {
+            observingMode {
               gmosNorthLongSlit {
-                basic {
-                  grating
-                  filter
-                  fpu
-                }
-                advanced {
-                  overrideGrating
-                  overrideFilter
-                  overrideFpu
-                  overrideExposureTimeMode {
-                    signalToNoise {
-                      value
-                    }
-                    fixedExposure {
-                      count
-                      time {
-                        microseconds
-                      }
-                    }
+                grating
+                filter
+                fpu
+                centralWavelength {
+                    picometers
                   }
-                  explicitXBin
-                  explicitYBin
-                  explicitAmpReadMode
-                  explicitAmpGain
-                  explicitRoi
-                  explicitWavelengthDithersNm
-                  explicitSpatialOffsets {
-                    microarcseconds
-                  }
-                }
               }
               gmosSouthLongSlit {
-                basic {
-                  grating
-                  filter
-                  fpu
-                }
-                advanced {
-                  overrideGrating
-                  overrideFilter
-                  overrideFpu
-                  overrideExposureTimeMode {
-                    signalToNoise {
-                      value
-                    }
-                    fixedExposure {
-                      count
-                      time {
-                        microseconds
-                      }
-                    }
-                  }
-                  explicitXBin
-                  explicitYBin
-                  explicitAmpReadMode
-                  explicitAmpGain
-                  explicitRoi
-                  explicitWavelengthDithersNm
-                  explicitSpatialOffsets {
-                    microarcseconds
-                  }
+                grating
+                filter
+                fpu
+                centralWavelength {
+                  picometers
                 }
               }
             }
@@ -137,7 +89,11 @@ object ObsQueriesGQL {
 
         targetGroup(programId: $programId) {
           matches {
-            observationIds
+            observations {
+              matches {
+                id
+              }
+            }
             target {
               id
               sidereal {
@@ -161,7 +117,7 @@ object ObsQueriesGQL {
           object PlannedTime {
             type Execution = time.Duration
           }
-          type ScienceMode = model.ScienceMode
+          type ObservingMode = model.BasicConfiguration
         }
       }
 
@@ -182,10 +138,14 @@ object ObsQueriesGQL {
 
   @GraphQL
   trait ProgramObservationsEditSubscription extends GraphQLOperation[ObservationDB] {
+    // We need to include the `value {id}` to avoid a bug in grackle.
     val document = """
       subscription($programId: ProgramId!) {
-        observationEdit(programId: $programId) {
+        observationEdit(input: {programId: $programId}) {
           id
+          value {
+            id
+          }
         }
       }
     """
@@ -231,42 +191,16 @@ object ObsQueriesGQL {
   }
 
   @GraphQL
-  trait ProgramDeleteObservations extends GraphQLOperation[ObservationDB] {
-    val document = """
-      mutation($input: DeleteObservationsInput!) {
-        deleteObservations(input: $input) {
-          observations {
-            id
-          }
-        }
-      }
-    """
-  }
-
-  @GraphQL
-  trait ProgramUndeleteObservations extends GraphQLOperation[ObservationDB] {
-    val document = """
-      mutation($input: UndeleteObservationsInput!) {
-        undeleteObservations(input: $input) {
-          observations {
-            id
-          }
-        }
-      }
-    """
-  }
-
-  @GraphQL
   trait ObsEditQuery extends GraphQLOperation[ObservationDB] {
     val document = """
-      query($obsId: ObservationId!) {
+      query($programId: ProgramId!, $obsId: ObservationId!) {
         observation(observationId: $obsId) {
           id
           title
           subtitle
           visualizationTime
           posAngleConstraint {
-            constraint
+            mode
             angle {
               microarcseconds
             }
@@ -473,87 +407,100 @@ object ObsQueriesGQL {
               focalPlaneAngle {
                 microarcseconds
               }
-              capabilities
+              capability
             }
           }
-          scienceMode {
+          observingMode {
             gmosNorthLongSlit {
-              basic {
-                grating
-                filter
-                fpu
-              }
-              advanced {
-                overrideWavelength {
+              initialGrating
+              initialFilter
+              initialFpu
+              initialCentralWavelength {
                   picometers
                 }
-                overrideGrating
-                overrideFilter
-                overrideFpu
-                overrideExposureTimeMode {
-                  signalToNoise {
-                    value
-                  }
-                  fixedExposure {
-                    count
-                    time {
-                      microseconds
-                    }
-                  }
+              grating
+              filter
+              fpu
+              centralWavelength {
+                  picometers
                 }
-                explicitXBin
-                explicitYBin
-                explicitAmpReadMode
-                explicitAmpGain
-                explicitRoi
-                explicitWavelengthDithersNm
-                explicitSpatialOffsets {
-                  microarcseconds
-                }
+              defaultXBin
+              explicitXBin
+              defaultYBin
+              explicitYBin
+              defaultAmpReadMode
+              explicitAmpReadMode
+              defaultAmpGain
+              explicitAmpGain
+              defaultRoi
+              explicitRoi
+              defaultWavelengthDithers {
+                picometers
+              }
+              explicitWavelengthDithers {
+                picometers
+              }
+              defaultSpatialOffsets {
+                microarcseconds
+              }
+              explicitSpatialOffsets {
+                microarcseconds
               }
             }
             gmosSouthLongSlit {
-              basic {
-                grating
-                filter
-                fpu
-              }
-              advanced {
-                overrideWavelength {
+              initialGrating
+              initialFilter
+              initialFpu
+              initialCentralWavelength {
                   picometers
                 }
-                overrideGrating
-                overrideFilter
-                overrideFpu
-                overrideExposureTimeMode {
-                  signalToNoise {
-                    value
-                  }
-                  fixedExposure {
-                    count
-                    time {
-                      microseconds
-                    }
-                  }
-                }
-                explicitXBin
-                explicitYBin
-                explicitAmpReadMode
-                explicitAmpGain
-                explicitRoi
-                explicitWavelengthDithersNm
-                explicitSpatialOffsets {
-                  microarcseconds
-                }
+              grating
+              filter
+              fpu
+              centralWavelength {
+                picometers
+              }
+              defaultXBin
+              explicitXBin
+              defaultYBin
+              explicitYBin
+              defaultAmpReadMode
+              explicitAmpReadMode
+              defaultAmpGain
+              explicitAmpGain
+              defaultRoi
+              explicitRoi
+              defaultWavelengthDithers {
+                picometers
+              }
+              explicitWavelengthDithers {
+                picometers
+              }
+              defaultSpatialOffsets {
+                microarcseconds
+              }
+              explicitSpatialOffsets {
+                microarcseconds
               }
             }
           }
-          itc {
-            exposureTime {
-              microseconds
+        }
+
+        itc(programId: $programId, observationId: $obsId) {
+          result {
+            ... on ItcSuccess {
+              exposureTime {
+                microseconds
+              }
+              exposures
+              signalToNoise
             }
-            exposures
-            signalToNoise
+            ... on ItcMissingParams {
+              params
+            }
+            ... on ItcServiceError {
+              message
+            }
           }
         }
       }
@@ -572,27 +519,29 @@ object ObsQueriesGQL {
           object Spectroscopy {
             type Wavelength         = lucuma.core.math.Wavelength
             type SignalToNoiseAt    = lucuma.core.math.Wavelength
-            type WavelengthCoverage = lucuma.core.math.Wavelength
+            type WavelengthCoverage = lucuma.core.math.WavelengthRange
             type FocalPlaneAngle    = lucuma.core.math.Angle
           }
         }
 
-        type ScienceMode = model.ScienceMode
-
-        object Itc {
-          type ExposureTime = lucuma.core.model.NonNegDuration
-        }
+        type ObservingMode = model.ScienceMode
       }
+
+      type Itc = explore.model.OdbItcResult
     }
 
   }
 
   @GraphQL
   trait ObservationEditSubscription extends GraphQLOperation[ObservationDB] {
+    // We need to include the `value {id}` to avoid a bug in grackle.
     val document = """
       subscription($obsId: ObservationId!) {
-        observationEdit(observationId: $obsId) {
+        observationEdit(input: {observationId: $obsId}) {
           id
+          value {
+            id
+          }
         }
       }
     """
@@ -609,6 +558,100 @@ object ObsQueriesGQL {
         }
       }
     """
+  }
+
+  @GraphQL
+  trait CreateConfigurationMutation extends GraphQLOperation[ObservationDB] {
+    val document = """
+      mutation ($input: UpdateObservationsInput!){
+        updateObservations(input: $input) {
+          observations {
+            observingMode {
+              gmosNorthLongSlit {
+                initialGrating
+                initialFilter
+                initialFpu
+                initialCentralWavelength {
+                    picometers
+                  }
+                grating
+                filter
+                fpu
+                centralWavelength {
+                    picometers
+                  }
+                defaultXBin
+                explicitXBin
+                defaultYBin
+                explicitYBin
+                defaultAmpReadMode
+                explicitAmpReadMode
+                defaultAmpGain
+                explicitAmpGain
+                defaultRoi
+                explicitRoi
+                defaultWavelengthDithers {
+                  picometers
+                }
+                explicitWavelengthDithers {
+                  picometers
+                }
+                defaultSpatialOffsets {
+                  microarcseconds
+                }
+                explicitSpatialOffsets {
+                  microarcseconds
+                }
+              }
+              gmosSouthLongSlit {
+                initialGrating
+                initialFilter
+                initialFpu
+                initialCentralWavelength {
+                    picometers
+                  }
+                grating
+                filter
+                fpu
+                centralWavelength {
+                  picometers
+                }
+                defaultXBin
+                explicitXBin
+                defaultYBin
+                explicitYBin
+                defaultAmpReadMode
+                explicitAmpReadMode
+                defaultAmpGain
+                explicitAmpGain
+                defaultRoi
+                explicitRoi
+                defaultWavelengthDithers {
+                  picometers
+                }
+                explicitWavelengthDithers {
+                  picometers
+                }
+                defaultSpatialOffsets {
+                  microarcseconds
+                }
+                explicitSpatialOffsets {
+                  microarcseconds
+                }
+              }
+            }
+          }
+        }
+      }
+    """
+
+    object Data {
+      object UpdateObservations {
+        object Observations {
+          type ObservingMode = model.ScienceMode
+        }
+      }
+    }
   }
 
   @GraphQL
