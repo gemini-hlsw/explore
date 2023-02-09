@@ -325,9 +325,15 @@ trait ODBConversions:
       category = proposal.category.orUnassign,
       toOActivation = proposal.toOActivation.assign,
       `abstract` = proposal.abstrakt.orUnassign,
-      partnerSplits = proposal.partnerSplits.toList.map { case (par, pct) =>
-        PartnerSplitInput(par, pct)
-      }.assign
+      // Temporary fix until the changes in this issue are complete: https://github.com/gemini-hlsw/lucuma-odb/issues/253
+      // partnerSplits = proposal.partnerSplits.toList.map { case (par, pct) =>
+      //   PartnerSplitInput(par, pct)
+      partnerSplits =
+        if (proposal.partnerSplits.isEmpty) Input.unassign
+        else
+          proposal.partnerSplits.toList.map { case (par, pct) =>
+            PartnerSplitInput(par, pct)
+          }.assign
     )
 
   extension (sidereal: Target.Sidereal)
