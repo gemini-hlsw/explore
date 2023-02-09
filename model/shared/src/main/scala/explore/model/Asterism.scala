@@ -13,6 +13,7 @@ import lucuma.core.math.Epoch
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.refined.*
+import lucuma.schemas.model.*
 import monocle.*
 
 import java.time.Instant

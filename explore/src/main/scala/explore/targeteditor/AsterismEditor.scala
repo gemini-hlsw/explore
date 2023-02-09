@@ -21,9 +21,6 @@ import explore.model.Asterism
 import explore.model.BasicConfiguration
 import explore.model.ObsIdSet
 import explore.model.PAProperties
-import explore.model.SiderealTargetWithId
-import explore.model.TargetWithId
-import explore.model.TargetWithOptId
 import explore.model.enums.AgsState
 import explore.model.reusability.given
 import explore.model.reusability.given
@@ -53,6 +50,7 @@ import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import lucuma.schemas.model.*
 import monocle.Lens
 import monocle.std.option.some
 import org.typelevel.log4cats.Logger

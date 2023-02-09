@@ -6,15 +6,13 @@ package explore.model.arb
 import cats.data.NonEmptyList
 import cats.laws.discipline.arbitrary.*
 import explore.model.Asterism
-import explore.model.TargetWithId
-import explore.model.SiderealTargetWithId
 import lucuma.core.model.Target
 import lucuma.core.model.arb.ArbTarget.given
 import lucuma.core.util.arb.ArbGid.*
+import lucuma.schemas.model.*
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.*
 import org.scalacheck.Cogen
-import explore.model.NonsiderealTargetWithId
 import lucuma.core.data.Zipper
 
 trait ArbAsterism {

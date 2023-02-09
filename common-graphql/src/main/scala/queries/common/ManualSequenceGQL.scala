@@ -10,23 +10,21 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.model.sequence.ManualConfig
 import lucuma.schemas.ObservationDB
-
-// gql: import lucuma.schemas.decoders.*
+// gql: import lucuma.schemas.decoders.given
+import lucuma.schemas.odb.*
 
 object ManualSequenceGQL {
 
   @GraphQL
   trait SequenceSteps extends GraphQLOperation[ObservationDB] {
-    val document = """
-      query($programId: ProgramId!) {
-        observations(programId: $programId, LIMIT: 1) {
+    val document = s"""
+      query($$programId: ProgramId!) {
+        observations(programId: $$programId, LIMIT: 1) {
           matches {
             config:manualConfig {
               instrument
               plannedTime {
-                setup {
-                  microseconds
-                }
+                setup $TimeSpanSubquery
               }
               ... on GmosNorthManualConfig {
                 staticN: static {
@@ -86,43 +84,19 @@ object ManualSequenceGQL {
       }
 
       fragment nodAndShuffleFields on GmosNodAndShuffle {
-        posA {
-          p {
-            microarcseconds
-          }
-          q {
-            microarcseconds
-          }
-        }
-        posB {
-          p {
-            microarcseconds
-          }
-          q {
-            microarcseconds
-          }
-        }
+        posA $OffsetSubquery
+        posB $OffsetSubquery
         eOffset
         shuffleOffset
         shuffleCycles
       }
 
       fragment stepTimeFields on StepTime {
-        configChange {
-          microseconds
-        }
-        exposure {
-          microseconds
-        }
-        readout {
-          microseconds
-        }
-        write {
-          microseconds
-        }
-        total {
-          microseconds
-        }
+        configChange $TimeSpanSubquery
+        exposure $TimeSpanSubquery
+        readout $TimeSpanSubquery
+        write $TimeSpanSubquery
+        total $TimeSpanSubquery
       }
 
       fragment northSequenceFields on GmosNorthAtom {
@@ -130,24 +104,14 @@ object ManualSequenceGQL {
         steps {
           id
           instrumentConfig {
-            exposure {
-              microseconds
-            }
-            readout {
-              xBin
-              yBin
-              ampCount
-              ampGain
-              ampReadMode
-            }
+            exposure $TimeSpanSubquery
+            readout $GmosCcdModeSubquery
             dtax
             roi
             gratingConfig {
               grating
               order
-              wavelength {
-                picometers
-              }
+              wavelength $WavelengthSubquery
             }
             filter
             fpu {
@@ -164,14 +128,7 @@ object ManualSequenceGQL {
               shutter
             }
             ... on Science {
-              offset {
-                p {
-                  microarcseconds
-                }
-                q {
-                  microarcseconds
-                }
-              }
+              offset $OffsetSubquery
             }
           }
           time {
@@ -192,21 +149,13 @@ object ManualSequenceGQL {
             exposure {
               microseconds
             }
-            readout {
-              xBin
-              yBin
-              ampCount
-              ampGain
-              ampReadMode
-            }
+            readout $GmosCcdModeSubquery
             dtax
             roi
             gratingConfig {
               grating
               order
-              wavelength {
-                picometers
-              }
+              wavelength $WavelengthSubquery
             }
             filter
             fpu {
@@ -223,14 +172,7 @@ object ManualSequenceGQL {
               shutter
             }
             ... on Science {
-              offset {
-                p {
-                  microarcseconds
-                }
-                q {
-                  microarcseconds
-                }
-              }
+              offset $OffsetSubquery
             }
           }
           time {

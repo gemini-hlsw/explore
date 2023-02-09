@@ -19,7 +19,6 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Constants
 import explore.model.EmptySiderealTarget
-import explore.model.TargetWithOptId
 import explore.model.reusability.given
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -31,6 +30,7 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.util.NewType
 import lucuma.refined.*
+import lucuma.schemas.model.TargetWithOptId
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given

@@ -226,7 +226,8 @@ lazy val testkitLibSettings = Seq(
     MonocleLaw.value ++
     CatsTimeTestkit.value ++
     LucumaCoreTestKit.value ++
-    LucumaCatalogTestKit.value
+    LucumaCatalogTestKit.value ++
+    LucumaSchemasTestkit.value
 )
 
 lazy val commonJVMSettings = Seq(
