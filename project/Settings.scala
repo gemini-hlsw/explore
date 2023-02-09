@@ -11,7 +11,7 @@ object Settings {
     val catsEffect             = "3.4.6"
     val catsRetry              = "3.1.0"
     val catsTime               = "0.5.1"
-    val circe                  = "0.14.3"
+    val circe                  = "0.14.4"
     val circeGolden            = "0.3.0"
     val clue                   = "0.23.2"
     val crystal                = "0.33.9"
