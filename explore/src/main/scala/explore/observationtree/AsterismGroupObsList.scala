@@ -109,8 +109,7 @@ object AsterismGroupObsList:
       destination <- result.destination.toOption
       destIds     <- ObsIdSet.fromString.getOption(destination.droppableId)
       draggedIds  <- getDraggedIds(result.draggableId, props)
-      destAg      <-
-        props.asterismsWithObs.get.asterismGroups.values.find(_.obsIds === destIds)
+      destAg      <- props.asterismsWithObs.get.asterismGroups.get(destIds)
       srcAg       <- props.asterismsWithObs.get.asterismGroups.findContainingObsIds(draggedIds)
     } yield (destAg, draggedIds, srcAg.obsIds)
 
@@ -287,14 +286,16 @@ object AsterismGroupObsList:
           } else Callback.empty // Not in the same group
         }
 
-      def getAsterismGroupName(asterismGroup: AsterismGroup): String = {
-        val targets = asterismGroup.targetIds.toList.map(targetWithObsMap.get).flatten
+      def getAsterismGroupNames(asterismGroup: AsterismGroup): List[String] =
+        asterismGroup.targetIds.toList
+          .map(tid => targetWithObsMap.get(tid).map(_.target.name.value))
+          .flatten
 
-        if (targets.isEmpty) "<No Targets>"
-        else targets.map(_.target.name).mkString("; ")
-      }
+      def makeAsterismGroupName(names: List[String]): String =
+        if (names.isEmpty) "<No Targets>"
+        else names.mkString("; ")
 
-      def renderAsterismGroup(asterismGroup: AsterismGroup): VdomNode = {
+      def renderAsterismGroup(asterismGroup: AsterismGroup, names: List[String]): VdomNode = {
         val obsIds        = asterismGroup.obsIds
         val cgObs         = obsIds.toList.map(id => observations.get(id)).flatten
         // if this group or something in it is selected
@@ -321,7 +322,7 @@ object AsterismGroupObsList:
             val csHeader = <.span(ExploreStyles.ObsTreeGroupHeader)(
               icon,
               <.span(ExploreStyles.ObsGroupTitleWithWrap)(
-                getAsterismGroupName(asterismGroup)
+                makeAsterismGroupName(names)
               ),
               <.span(ExploreStyles.ObsCount, s"${obsIds.size} Obs")
             )
@@ -370,7 +371,11 @@ object AsterismGroupObsList:
         onDragStart = (_: DragStart, _: ResponderProvided) => dragging.setState(Dragging(true)),
         onDragEnd = (result, provided) =>
           dragging.setState(Dragging(false)) >> handleDragEnd(result, provided)
-      )(
+      ) {
+        // make the target name sort case insensitive
+        given Ordering[String] = Ordering.fromLessThan(_.toLowerCase < _.toLowerCase)
+        import scala.Ordering.Implicits.seqOrdering
+
         <.div(ExploreStyles.ObsTreeWrapper)(
           <.div(ExploreStyles.TreeToolbar)(
             Button(
@@ -419,9 +424,13 @@ object AsterismGroupObsList:
           ),
           <.div(ExploreStyles.ObsTree)(
             <.div(ExploreStyles.ObsScrollTree)(
-              asterismGroups.toTagMod(renderAsterismGroup)
+              asterismGroups
+                .map(ag => (ag, getAsterismGroupNames(ag)))
+                .toList
+                .sortBy(_._2)
+                .toTagMod(t => renderAsterismGroup(t._1, t._2))
             )
           )
         )
-      )
+      }
     }
