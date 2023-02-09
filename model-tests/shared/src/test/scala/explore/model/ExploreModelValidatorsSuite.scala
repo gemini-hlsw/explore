@@ -8,6 +8,7 @@ import eu.timepit.refined.cats.*
 import eu.timepit.refined.scalacheck.all.*
 import lucuma.core.arb.*
 import lucuma.core.math.Angle
+import lucuma.core.math.BrightnessValue
 import lucuma.core.math.arb.ArbAngle.*
 import lucuma.core.math.arb.ArbBrightnessValue.given
 import lucuma.core.math.arb.ArbOffset.*
@@ -26,11 +27,11 @@ final class ExploreModelValidatorsSuite extends DisciplineSuite:
   // We therefore use these bounded arbitraries.
   // TODO: This is duplicated in `InputValidSplitEpiInstancesSuite` in lucuma-core.
   // We should move it to the testkit there and reuse it here.
-  given Arbitrary[BigDecimal] =
+  given Arbitrary[BrightnessValue] =
     Arbitrary(
-      org.scalacheck.Arbitrary.arbBigDecimal.arbitrary.suchThat(x =>
-        x.scale.abs < 100 && x.precision <= 15
-      )
+      org.scalacheck.Arbitrary.arbBigDecimal.arbitrary
+        .suchThat(x => x.scale.abs < 100 && x.precision <= 15)
+        .map(BrightnessValue(_))
     )
 
   checkAll(
