@@ -13,6 +13,7 @@ object Settings {
     val catsTime               = "0.5.1"
     val circe                  = "0.14.3"
     val circeGolden            = "0.3.0"
+    val coulomb                = "0.7.2"
     val clue                   = "0.23.2"
     val crystal                = "0.33.9"
     val discipline             = "1.5.1"
@@ -27,13 +28,13 @@ object Settings {
     val log4Cats               = "2.5.0"
     val log4CatsLogLevel       = "0.3.1"
     val lucumaBC               = "0.4.0"
-    val lucumaCore             = "0.61.1"
-    val lucumaCatalog          = "0.38.1"
+    val lucumaCore             = "0.64.0"
+    val lucumaCatalog          = "0.39.0"
     val lucumaReact            = "0.31.2"
     val lucumaRefined          = "0.1.1"
-    val lucumaSchemas          = "0.39.2"
-    val lucumaSSO              = "0.4.6"
-    val lucumaUI               = "0.65.0"
+    val lucumaSchemas          = "0.41.0"
+    val lucumaSSO              = "0.4.8"
+    val lucumaUI               = "0.65.2"
     val monocle                = "3.2.0"
     val mouse                  = "1.2.1"
     val mUnit                  = "0.7.29"
@@ -110,6 +111,12 @@ object Settings {
       deps(
         "edu.gemini" %%% "clue-scalajs"
       )(clue)
+    )
+
+    val CoulombRefined = Def.setting(
+      deps(
+        "com.manyangled" %%% "coulomb-refined"
+      )(coulomb)
     )
 
     val Crystal = Def.setting(

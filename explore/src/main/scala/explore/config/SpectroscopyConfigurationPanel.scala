@@ -41,18 +41,19 @@ object SpectroscopyConfigurationPanel {
 
   protected val component =
     ScalaFnComponent[Props] { p =>
-      val wv                       = p.options.zoom(SpectroscopyRequirementsData.wavelength)
-      val resolution               = p.options.zoom(SpectroscopyRequirementsData.resolution)
-      val signalToNoise            = p.options.zoom(SpectroscopyRequirementsData.signalToNoise)
-      val signalToNoiseAt          = p.options.zoom(SpectroscopyRequirementsData.signalToNoiseAt)
-      val wavelengthCoverage       =
+      val wv                     = p.options.zoom(SpectroscopyRequirementsData.wavelength)
+      val resolution             = p.options.zoom(SpectroscopyRequirementsData.resolution)
+      val signalToNoise          = p.options.zoom(SpectroscopyRequirementsData.signalToNoise)
+      val signalToNoiseAt        = p.options.zoom(SpectroscopyRequirementsData.signalToNoiseAt)
+      val wavelengthRange        =
         p.options.zoom(SpectroscopyRequirementsData.wavelengthCoverage)
-      val focalPlane               = p.options.zoom(SpectroscopyRequirementsData.focalPlane)
-      val focalPlaneAngle          = p.options.zoom(SpectroscopyRequirementsData.focalPlaneAngle)
-      val spectroscopyCapabilities =
-        p.options.zoom(SpectroscopyRequirementsData.capabilities)
+      val focalPlane             = p.options.zoom(SpectroscopyRequirementsData.focalPlane)
+      val focalPlaneAngle        = p.options.zoom(SpectroscopyRequirementsData.focalPlaneAngle)
+      val spectroscopyCapability =
+        p.options.zoom(SpectroscopyRequirementsData.capability)
 
       val wvMicroInput    = ExploreModelValidators.wavelengthValidWedge.optional
+      val wvcMicroInput   = ExploreModelValidators.wavelengthRangeValidWedge.optional
       val wvChangeAuditor = ChangeAuditor
         .fromInputValidWedge(ExploreModelValidators.wavelengthValidWedge)
         .allow(s => s === "0" || s === "0.")
@@ -107,14 +108,14 @@ object SpectroscopyConfigurationPanel {
           ).clearable
         ),
         FormInputTextView(
-          id = "wavelength-coverage".refined,
-          value = wavelengthCoverage,
+          id = "wavelength-range".refined,
+          value = wavelengthRange,
           units = "μm",
           label = ReactFragment(
-            "λ Coverage",
+            "λ Range",
             HelpIcon("configuration/wavelength_coverage.md".refined)
           ),
-          validFormat = wvMicroInput,
+          validFormat = wvcMicroInput,
           changeAuditor = wvChangeAuditor
         ).clearable,
         FormLabel("focal-plane".refined)("Focal Plane",
@@ -136,12 +137,12 @@ object SpectroscopyConfigurationPanel {
           ).clearable
         ),
         FormEnumDropdownOptionalView(
-          id = "spectroscopy-capabilities".refined,
+          id = "spectroscopy-capability".refined,
           placeholder = "None",
-          value = spectroscopyCapabilities,
+          value = spectroscopyCapability,
           label = ReactFragment(
-            "Capabilities",
-            HelpIcon("configuration/capabilities.md".refined)
+            "Capability",
+            HelpIcon("configuration/capability.md".refined)
           )
         )
       )

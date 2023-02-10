@@ -24,7 +24,6 @@ import explore.model.display.given
 import explore.model.enums.PlotRange
 import explore.model.enums.TimeDisplay
 import explore.model.reusability.given
-import explore.model.syntax.scienceModes.*
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -56,7 +55,7 @@ import java.time.*
 case class ElevationPlotSection(
   uid:               User.Id,
   tid:               Target.Id,
-  scienceMode:       Option[ScienceMode],
+  site:              Option[Site],
   visualizationTime: Option[Instant],
   coords:            CoordinatesAtVizTime
 ) extends ReactFnProps(ElevationPlotSection.component)
@@ -65,11 +64,10 @@ object ElevationPlotSection:
   private type Props = ElevationPlotSection
 
   private given Reusability[Props] =
-    Reusability.by(x => (x.uid, x.tid, x.scienceMode, x.visualizationTime, x.coords.value))
+    Reusability.by(x => (x.uid, x.tid, x.site, x.visualizationTime, x.coords.value))
 
   private val preferredSiteFor = (c: Props) =>
-    c.scienceMode
-      .map(_.siteFor)
+    c.site
       .getOrElse {
         if (c.coords.value.dec.toAngle.toSignedDoubleDegrees > -5) Site.GN else Site.GS
       }

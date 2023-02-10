@@ -22,11 +22,11 @@ import explore.components.undo.UndoButtons
 import explore.model.AladinFullScreen
 import explore.model.AppContext
 import explore.model.Asterism
+import explore.model.BasicConfiguration
 import explore.model.ExploreModelValidators
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.PAProperties
-import explore.model.ScienceMode
 import explore.model.SiderealTargetWithId
 import explore.model.TargetWithId
 import explore.model.enums.AgsState
@@ -72,7 +72,7 @@ case class SiderealTargetEditor(
   userId:        User.Id,
   asterism:      View[Asterism],
   vizTime:       Option[Instant],
-  scienceMode:   Option[ScienceMode],
+  configuration: Option[BasicConfiguration],
   constraints:   Option[ConstraintSet],
   wavelength:    Option[Wavelength],
   undoStacks:    View[UndoStacks[IO, Target.Sidereal]],
@@ -299,8 +299,8 @@ object SiderealTargetEditor {
                   tid,
                   ObsConfiguration(
                     vizTime,
-                    props.scienceMode,
-                    props.paProps.flatMap(_.constraint.get),
+                    props.configuration,
+                    props.paProps.map(_.constraint.get),
                     props.constraints,
                     props.wavelength
                   ),

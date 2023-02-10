@@ -20,11 +20,11 @@ import explore.undo.*
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.model.NonNegDuration
 import lucuma.core.model.Program
 import lucuma.core.model.Proposal
 import lucuma.core.model.StandardUser
 import lucuma.core.model.User
+import lucuma.core.util.TimeSpan
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.ui.primereact.*
@@ -50,7 +50,7 @@ object ProposalTabContents:
   private def createProposal(
     programId:       Program.Id,
     optProposalView: View[Option[ProposalInfo]],
-    executionTime:   NonNegDuration
+    executionTime:   TimeSpan
   )(using TransactionalClient[IO, ObservationDB], Logger[IO]): Callback =
     val proposal = Proposal.Default
     optProposalView.set(ProposalInfo(proposal.some, executionTime).some) >>
@@ -84,7 +84,7 @@ object ProposalTabContents:
               proposalView,
               undoStacks,
               executionTime,
-              NonNegDuration.unsafeFrom(Duration.ofNanos(0)) // Will come from API eventually
+              TimeSpan.Zero // Will come from API eventually
             ): VdomNode
           )
           .getOrElse(user match {
@@ -133,8 +133,8 @@ object ProposalTabContents:
       optPropInfo.render(renderFn(props.programId, props.user, props.undoStacks, ctx) _)
     }
 
-case class ProposalInfo(optProposal: Option[Proposal], executionTime: NonNegDuration)
+case class ProposalInfo(optProposal: Option[Proposal], executionTime: TimeSpan)
 
 object ProposalInfo:
   val optProposal: Lens[ProposalInfo, Option[Proposal]] = Focus[ProposalInfo](_.optProposal)
-  val executionTime: Lens[ProposalInfo, NonNegDuration] = Focus[ProposalInfo](_.executionTime)
+  val executionTime: Lens[ProposalInfo, TimeSpan]       = Focus[ProposalInfo](_.executionTime)

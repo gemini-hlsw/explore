@@ -20,7 +20,7 @@ import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
-import lucuma.core.model.NonNegDuration
+import lucuma.core.util.TimeSpan
 import lucuma.refined.*
 import org.typelevel.log4cats.Logger
 import queries.common.ITCQueriesGQL.*
@@ -48,7 +48,7 @@ object ITCGraphRequests:
 
   def queryItc[F[_]: Concurrent: Parallel: Logger](
     wavelength:   CoverageCenterWavelength,
-    exposureTime: NonNegDuration,
+    exposureTime: TimeSpan,
     exposures:    PosInt,
     constraints:  ConstraintSet,
     targets:      NonEmptyList[ItcTarget],

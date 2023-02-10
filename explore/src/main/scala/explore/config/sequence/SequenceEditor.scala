@@ -30,7 +30,7 @@ object SequenceEditor:
         import ctx.given
 
         SequenceSteps
-          .query(props.programId.toWhereObservation)
+          .query(props.programId)
           .map(_.observations.matches.headOption.flatMap(_.config))
       }
       .render((_, _, config) => potRender(renderFn)(config))

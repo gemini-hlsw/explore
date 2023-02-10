@@ -20,6 +20,7 @@ import explore.utils.given
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Band
 import lucuma.core.math.ApparentRadialVelocity
+import lucuma.core.math.BrightnessValue
 import lucuma.core.math.Declination
 import lucuma.core.math.Epoch
 import lucuma.core.math.Parallax
@@ -134,7 +135,7 @@ object TargetColumns:
       )
 
     // Order first by unit alphabetically and then value
-    private given Order[Measure[BigDecimal]] = Order.by(x => (x.units.abbv, x.value))
+    private given Order[Measure[BrightnessValue]] = Order.by(x => (x.units.abbv, x.value))
 
     val siderealColumns =
       List(
@@ -151,7 +152,7 @@ object TargetColumns:
           siderealColumnOpt(
             bandColumnId(band),
             t => targetBrightnesses.get(t).flatMap(_.get(band))
-          ).setCell(_.value.map(displayWithoutError(_)(displayBrightness)).orEmpty)
+          ).setCell(_.value.map(displayWithoutError).orEmpty)
             .setSize(80.toPx)
             // By user request we allow sorting by value though there maybe a mix of units
             .sortable

@@ -8,13 +8,13 @@ import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Cogen
 import eu.timepit.refined.types.string.NonEmptyString
 import eu.timepit.refined.scalacheck.string.*
+import explore.model.BasicConfiguration
 import explore.model.ConstraintsSummary
 import explore.model.ObsSummaryWithConstraints
 import explore.model.ObsSummaryWithTitleAndConstraints
 import explore.model.ObsSummaryWithConstraintsAndConf
 import explore.model.ObsSummaryWithTitleConstraintsAndConf
 import explore.model.ObsSummaryWithTitleAndConf
-import explore.model.ScienceMode
 import lucuma.core.enums.ObsActiveStatus
 import lucuma.core.enums.ObsStatus
 import lucuma.core.model.Observation
@@ -32,7 +32,7 @@ import lucuma.core.math.Wavelength
 trait ArbObsSummary {
   import ArbConstraintsSummary.*
   import ArbTime.*
-  import ArbScienceMode.given
+  import ArbBasicConfiguration.given
 
   implicit val arbObsSummaryWithConstraints: Arbitrary[ObsSummaryWithConstraints] =
     Arbitrary[ObsSummaryWithConstraints] {
@@ -101,15 +101,15 @@ trait ArbObsSummary {
     : Arbitrary[ObsSummaryWithTitleConstraintsAndConf] =
     Arbitrary[ObsSummaryWithTitleConstraintsAndConf] {
       for {
-        id           <- arbitrary[Observation.Id]
-        title        <- arbitrary[String]
-        subtitle     <- arbitrary[Option[NonEmptyString]]
-        constraints  <- arbitrary[ConstraintsSummary]
-        status       <- arbitrary[ObsStatus]
-        activeStatus <- arbitrary[ObsActiveStatus]
-        duration     <- arbitrary[Duration]
-        mode         <- arbitrary[Option[ScienceMode]]
-        vizTime      <- arbitrary[Option[Instant]]
+        id            <- arbitrary[Observation.Id]
+        title         <- arbitrary[String]
+        subtitle      <- arbitrary[Option[NonEmptyString]]
+        constraints   <- arbitrary[ConstraintsSummary]
+        status        <- arbitrary[ObsStatus]
+        activeStatus  <- arbitrary[ObsActiveStatus]
+        duration      <- arbitrary[Duration]
+        configuration <- arbitrary[Option[BasicConfiguration]]
+        vizTime       <- arbitrary[Option[Instant]]
       } yield ObsSummaryWithTitleConstraintsAndConf(
         id,
         title,
@@ -118,7 +118,7 @@ trait ArbObsSummary {
         status,
         activeStatus,
         duration,
-        mode,
+        configuration,
         vizTime
       )
     }
@@ -133,7 +133,7 @@ trait ArbObsSummary {
        ObsStatus,
        ObsActiveStatus,
        Duration,
-       Option[ScienceMode]
+       Option[BasicConfiguration]
       )
     ]
       .contramap(o =>
@@ -144,20 +144,20 @@ trait ArbObsSummary {
          o.status,
          o.activeStatus,
          o.duration,
-         o.scienceMode
+         o.configuration
         )
       )
 
   implicit val arbObsSummaryWithTitleAndConf: Arbitrary[ObsSummaryWithTitleAndConf] =
     Arbitrary[ObsSummaryWithTitleAndConf] {
       for {
-        id           <- arbitrary[Observation.Id]
-        title        <- arbitrary[String]
-        subtitle     <- arbitrary[Option[NonEmptyString]]
-        status       <- arbitrary[ObsStatus]
-        activeStatus <- arbitrary[ObsActiveStatus]
-        duration     <- arbitrary[Duration]
-        mode         <- arbitrary[Option[ScienceMode]]
+        id            <- arbitrary[Observation.Id]
+        title         <- arbitrary[String]
+        subtitle      <- arbitrary[Option[NonEmptyString]]
+        status        <- arbitrary[ObsStatus]
+        activeStatus  <- arbitrary[ObsActiveStatus]
+        duration      <- arbitrary[Duration]
+        configuration <- arbitrary[Option[BasicConfiguration]]
       } yield ObsSummaryWithTitleAndConf(
         id,
         title,
@@ -165,7 +165,7 @@ trait ArbObsSummary {
         status,
         activeStatus,
         duration,
-        mode
+        configuration
       )
     }
 
@@ -177,7 +177,7 @@ trait ArbObsSummary {
        ObsStatus,
        ObsActiveStatus,
        Duration,
-       Option[ScienceMode]
+       Option[BasicConfiguration]
       )
     ]
       .contramap(o =>
@@ -187,23 +187,23 @@ trait ArbObsSummary {
          o.status,
          o.activeStatus,
          o.duration,
-         o.scienceMode
+         o.configuration
         )
       )
 
   implicit val arbObsSummaryWithConstraintsAndConf: Arbitrary[ObsSummaryWithConstraintsAndConf] =
     Arbitrary[ObsSummaryWithConstraintsAndConf] {
       for {
-        id           <- arbitrary[Observation.Id]
-        constraints  <- arbitrary[ConstraintsSummary]
-        status       <- arbitrary[ObsStatus]
-        activeStatus <- arbitrary[ObsActiveStatus]
-        duration     <- arbitrary[Duration]
-        targets      <- arbitrary[Set[Target.Id]]
-        mode         <- arbitrary[Option[ScienceMode]]
-        vizTime      <- arbitrary[Option[Instant]]
-        pa           <- arbitrary[Option[PosAngleConstraint]]
-        wv           <- arbitrary[Option[Wavelength]]
+        id            <- arbitrary[Observation.Id]
+        constraints   <- arbitrary[ConstraintsSummary]
+        status        <- arbitrary[ObsStatus]
+        activeStatus  <- arbitrary[ObsActiveStatus]
+        duration      <- arbitrary[Duration]
+        targets       <- arbitrary[Set[Target.Id]]
+        configuration <- arbitrary[Option[BasicConfiguration]]
+        vizTime       <- arbitrary[Option[Instant]]
+        pa            <- arbitrary[Option[PosAngleConstraint]]
+        wv            <- arbitrary[Option[Wavelength]]
       } yield ObsSummaryWithConstraintsAndConf(
         id,
         constraints,
@@ -211,7 +211,7 @@ trait ArbObsSummary {
         activeStatus,
         duration,
         targets,
-        mode,
+        configuration,
         vizTime,
         pa,
         wv
@@ -225,7 +225,7 @@ trait ArbObsSummary {
        ObsStatus,
        ObsActiveStatus,
        Duration,
-       Option[ScienceMode],
+       Option[BasicConfiguration],
        List[Target.Id],
        Option[Instant],
        Option[PosAngleConstraint],
@@ -238,7 +238,7 @@ trait ArbObsSummary {
          o.status,
          o.activeStatus,
          o.duration,
-         o.scienceMode,
+         o.configuration,
          o.scienceTargetIds.toList,
          o.visualizationTime,
          o.posAngleConstraint,

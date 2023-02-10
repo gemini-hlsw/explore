@@ -72,6 +72,7 @@ object ConstraintGroupObsList:
 
   private def onDragEnd(
     undoCtx:          UndoContext[ConstraintGroupList],
+    programId:        Program.Id,
     expandedIds:      View[SortedSet[ObsIdSet]],
     focusedObsSet:    Option[ObsIdSet],
     constraintGroups: ConstraintGroupList,
@@ -89,7 +90,7 @@ object ConstraintGroupObsList:
 
     oData.foldMap { case (destCg, draggedIds) =>
       ConstraintGroupObsListActions
-        .obsConstraintGroup(draggedIds, expandedIds, setObsSet)
+        .obsConstraintGroup(programId, draggedIds, expandedIds, setObsSet)
         .set(undoCtx)(destCg.some)
     }
   }
@@ -165,6 +166,7 @@ object ConstraintGroupObsList:
 
       val handleDragEnd = onDragEnd(
         undoCtx,
+        props.programId,
         props.expandedIds,
         props.focusedObsSet,
         props.constraintsWithObs.get.constraintGroups,

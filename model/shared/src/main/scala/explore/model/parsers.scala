@@ -12,22 +12,23 @@ import cats.syntax.all.*
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
 import lucuma.core.math.parser.AngleParsers
-import lucuma.core.model.NonNegDuration
 import lucuma.core.parser.MiscParsers
+import lucuma.core.util.TimeSpan
 
 import java.time.Duration
 
 trait parsers:
   val colonOrSpace: Parser[Unit] = MiscParsers.colon | sp
 
-  val durationHM: Parser[NonNegDuration] =
+  val durationHM: Parser[TimeSpan] =
     (digits ~ MiscParsers.colon.void.? ~ AngleParsers.minutes.?)
       .mapFilter { case ((h, _), m) =>
         MiscParsers
           .catchNFE[(String, Option[Int]), Duration] { case (h, m) =>
             Duration.ofMinutes(h.toLong * 60 + m.foldMap(_.toInt))
           }(h, m)
-          .map(NonNegDuration.unsafeFrom)
+          .map(TimeSpan.unsafeFromDuration)
+
       }
       .withContext("duration_hm")
 
@@ -42,14 +43,14 @@ trait parsers:
       }
       .withContext("seconds")
 
-  val durationHMS: Parser[NonNegDuration] =
+  val durationHMS: Parser[TimeSpan] =
     (digits ~ colonOrSpace.void ~ AngleParsers.minutes ~ colonOrSpace.void ~ seconds)
       .mapFilter { case ((((h, _), m), _), (s, ms, _)) =>
         MiscParsers
           .catchNFE[(String, Int, Int, Int), Duration] { case (h, m, s, ms) =>
             Duration.ofSeconds(h.toLong * 3600 + m.toInt * 60 + s).plusMillis(ms)
           }(h, m, s, ms)
-          .map(NonNegDuration.unsafeFrom)
+          .map(TimeSpan.unsafeFromDuration)
       }
       .withContext("duration_hm")
 

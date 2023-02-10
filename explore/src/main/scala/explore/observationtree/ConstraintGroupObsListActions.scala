@@ -13,6 +13,7 @@ import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
 import explore.undo.*
 import japgolly.scalajs.react.callback.Callback
+import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB
 import queries.schemas.odb.ObsQueries
 
@@ -62,6 +63,7 @@ object ConstraintGroupObsListActions {
     }
 
   def obsConstraintGroup(
+    programId:   Program.Id,
     draggedIds:  ObsIdSet,
     expandedIds: View[SortedSet[ObsIdSet]],
     setObsSet:   Option[ObsIdSet] => Callback
@@ -73,7 +75,11 @@ object ConstraintGroupObsListActions {
           val optDestIds = cgl.values
             .find(_.constraintSet === cg.constraintSet)
             .map(_.obsIds)
-          ObsQueries.updateObservationConstraintSet[IO](draggedIds.toList, cg.constraintSet) >>
+          ObsQueries.updateObservationConstraintSet[IO](
+            programId,
+            draggedIds.toList,
+            cg.constraintSet
+          ) >>
             expandedIds.mod(updateExpandedIds(draggedIds, optDestIds) _).to[IO] >>
             setObsSet(optDestIds.fold(draggedIds)(_ ++ draggedIds).some).to[IO]
         }

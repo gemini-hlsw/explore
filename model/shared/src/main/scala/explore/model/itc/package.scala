@@ -14,9 +14,9 @@ import explore.model.enums.ItcChartType
 import explore.model.enums.ItcSeriesType
 import io.circe.Decoder
 import lucuma.core.math.Wavelength
-import lucuma.core.model.NonNegDuration
 import lucuma.core.model.given
 import lucuma.core.util.Enumerated
+import lucuma.core.util.TimeSpan
 import lucuma.schemas.decoders.given
 
 import scala.concurrent.duration.*
@@ -69,7 +69,7 @@ object OverridenExposureTime:
 
 case class ItcChartExposureTime(
   overriden: OverridenExposureTime,
-  time:      NonNegDuration,
+  time:      TimeSpan,
   count:     NonNegInt
 ) derives Eq
 

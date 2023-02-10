@@ -45,31 +45,33 @@ object ConstraintGroupQueriesGQL {
           }
         }
 
-        observations(WHERE: {programId: {EQ: $programId}}) {
+        observations(programId: $programId) {
           matches {
             id
             title
             subtitle
-          	status
-          	activeStatus
-          	plannedTime {
-          	  execution {
-          	    microseconds
-          	  }
-          	}
-            scienceMode {
+            status
+            activeStatus
+            plannedTime {
+              execution {
+                microseconds
+              }
+            }
+            observingMode {
               gmosNorthLongSlit {
-                basic {
-                  grating
-                  filter
-                  fpu
+                grating
+                filter
+                fpu
+                centralWavelength {
+                  picometers
                 }
               }
               gmosSouthLongSlit {
-                basic {
-                  grating
-                  filter
-                  fpu
+                grating
+                filter
+                fpu
+                centralWavelength {
+                  picometers
                 }
               }
             }
@@ -88,7 +90,7 @@ object ConstraintGroupQueriesGQL {
           object PlannedTime {
             type Execution = time.Duration
           }
-          type ScienceMode = model.ScienceMode
+          type ObservingMode = model.BasicConfiguration
         }
 
       }

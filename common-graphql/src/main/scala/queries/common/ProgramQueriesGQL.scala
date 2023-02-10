@@ -6,6 +6,7 @@ package queries.common
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import lucuma.core.model
+import lucuma.core.util.TimeSpan
 import lucuma.schemas.ObservationDB
 
 // gql: import io.circe.refined.*
@@ -98,7 +99,7 @@ object ProgramQueriesGQL {
       object Program {
         type Proposal = model.Proposal
         object PlannedTime {
-          type Execution = model.NonNegDuration
+          type Execution = TimeSpan
         }
       }
     }
@@ -108,8 +109,10 @@ object ProgramQueriesGQL {
   trait ProgramEditSubscription extends GraphQLOperation[ObservationDB] {
     val document: String = """
       subscription($programId: ProgramId) {
-        programEdit(programId: $programId) {
-          id
+        programEdit(input: {programId: $programId}) {
+          value {
+            id
+          }
         }
       }
     """

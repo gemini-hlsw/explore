@@ -76,7 +76,11 @@ object ObservationPasteAction {
         )
     }
 
-  def paste(ids: List[(Observation.Id, Target.Id)], expandedIds: View[SortedSet[ObsIdSet]])(using
+  def paste(
+    programId:   Program.Id,
+    ids:         List[(Observation.Id, Target.Id)],
+    expandedIds: View[SortedSet[ObsIdSet]]
+  )(using
     c:           TransactionalClient[IO, ObservationDB]
   ): Action[AsterismGroupsWithObs, Option[List[ObsSummaryWithConstraintsAndConf]]] =
     Action(getter = obsListGetter(ids), setter = obsListSetter(ids))(
@@ -85,10 +89,10 @@ object ObservationPasteAction {
         val obsIds = ids.map(_._1)
         olObsSumm.fold(
           expandedIds.mod(updateExpandedIds(ids, agwo, false)).to[IO] >>
-            ObsQueries.deleteObservations[IO](obsIds)
+            ObsQueries.deleteObservations[IO](programId, obsIds)
         )(_ =>
           expandedIds.mod(updateExpandedIds(ids, agwo, true)).to[IO] >>
-            ObsQueries.undeleteObservations[IO](obsIds)
+            ObsQueries.undeleteObservations[IO](programId, obsIds)
         )
     )
 }
