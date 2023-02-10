@@ -488,7 +488,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
 
         val validDithers = modeData.value
           .map(mode =>
-            ExploreModelValidators.dithersValidSplitEpi(
+            ExploreModelValidators.dithersValidWedge(
               wavelengthView.get,
               mode.λmin,
               mode.λmax,
@@ -496,7 +496,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             )
           )
           .getOrElse(
-            ExploreModelValidators.ditherValidSplitEpi
+            ExploreModelValidators.ditherValidWedge
           )
           .toNel(",".refined)
           .withErrorMessage(_ => "Invalid wavelength dither values".refined)
