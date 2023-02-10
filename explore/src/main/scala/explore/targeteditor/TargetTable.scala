@@ -22,7 +22,7 @@ import explore.model.Asterism
 import explore.model.ObsIdSet
 import explore.model.SiderealTargetWithId
 import explore.model.enums.TableId
-import explore.model.reusability.*
+import explore.model.reusability.given
 import explore.model.reusability.given
 import explore.syntax.ui.*
 import explore.targets.TargetColumns
@@ -36,7 +36,7 @@ import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.schemas.ObservationDB
 import lucuma.ui.primereact.*
-import lucuma.ui.reusability.*
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given

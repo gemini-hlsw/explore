@@ -30,7 +30,7 @@ import explore.model.boopickle.CatalogPicklers.given
 import explore.model.boopickle.*
 import explore.model.enums.AgsState
 import explore.model.enums.Visible
-import explore.model.reusability.*
+import explore.model.reusability.given
 import explore.model.reusability.given
 import explore.optics.ModelOptics
 import explore.syntax.ui.*
@@ -51,7 +51,7 @@ import lucuma.core.util.NewType
 import lucuma.refined.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
-import lucuma.ui.reusability.*
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.Focus

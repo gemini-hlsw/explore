@@ -38,7 +38,7 @@ import lucuma.ui.primereact.LucumaStyles
 import lucuma.ui.primereact.SelectButtonEnumView
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
-import lucuma.ui.reusability.*
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger

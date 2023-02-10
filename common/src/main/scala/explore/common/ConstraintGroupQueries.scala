@@ -11,7 +11,7 @@ import explore.model.ObsSummaryWithTitleAndConf
 import explore.model.syntax.all.*
 import japgolly.scalajs.react.*
 import lucuma.core.model.Observation
-import lucuma.ui.reusability.*
+import lucuma.ui.reusability.given
 import monocle.Focus
 import monocle.Getter
 import queries.common.ConstraintGroupQueriesGQL.*
