@@ -287,15 +287,17 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
         )
       )
 
-  private def customized(original: String): VdomNode =
+  private def customized(original: String, toRevert: Callback): VdomNode =
     <.span(
       ^.cls := "fa-layers fa-fw",
       Icons.ExclamationDiamond
         .withClass(ExploreStyles.WarningIcon)
-        .withSize(IconSize.X1)
-    ).withTooltip(tooltip = <.div("Customized!", <.br, s"Orginal: $original"))
+        .withSize(IconSize.X1),
+      ^.onClick --> toRevert
+    ).withTooltip(tooltip =
+      <.div("Customized!", <.br, s"Orginal: $original", <.br, "Click to revert.")
+    )
 
-  // TODO: Need a Dropdown that can be reset to a default value.
   private def customizableEnumSelect[A: Enumerated: Display](
     id:       NonEmptyString,
     view:     View[A],
@@ -313,15 +315,20 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
         exclude = exclude,
         disabled = disabled
       ),
-      (view.get =!= original).fold(customized(originalText).some, none[VdomNode])
+      (view.get =!= original).fold(
+        <.span(PrimeStyles.InputGroupAddon, customized(originalText, view.set(original)).some),
+        none[VdomNode]
+      )
     )
 
   private def customizableEnumSelectOptional[A: Enumerated: Display](
-    id:       NonEmptyString,
-    view:     View[Option[A]],
-    original: Option[A],
-    disabled: Boolean,
-    exclude:  Set[A] = Set.empty[A]
+    id:              NonEmptyString,
+    view:            View[Option[A]],
+    original:        Option[A],
+    disabled:        Boolean,
+    exclude:         Set[A] = Set.empty[A],
+    showClear:       Boolean = false,
+    resetToOriginal: Boolean = false // resets to `none` on false
   ) =
     val originalText = original.map(_.shortName).getOrElse("None")
     <.span(
@@ -331,10 +338,13 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
         id = id,
         value = view,
         exclude = exclude,
-        placeholder = originalText,
-        disabled = disabled
+        disabled = disabled,
+        showClear = showClear
       ),
-      view.get.map(_ => customized(originalText))
+      <.span(PrimeStyles.InputGroupAddon,
+             customized(originalText, view.set(if (resetToOriginal) original else none))
+      )
+        .when(view.get =!= original)
     )
 
   private def customizableInputText[A: Eq](
@@ -348,24 +358,15 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
     disabled:      Boolean = false
   ) =
     val isCustom    = value.get =!= originalValue
-    val unitAddon   = units.map(u => u: TagMod)
-    // Need the x icon, but only if not disabled
-    val clearAddon  =
-      if (!disabled && isCustom)
-        <.span(^.cls := (LucumaStyles.BlendedAddon |+| LucumaStyles.IconTimes).htmlClass,
-               ^.onClick --> value.set(originalValue)
-        ).some
-      else none
     val customAddon =
-      if (isCustom) customized(validFormat.reverseGet(originalValue)).some
+      if (isCustom) customized(validFormat.reverseGet(originalValue), value.set(originalValue)).some
       else none
-    val addons      = List(clearAddon, customAddon).flatten
     FormInputTextView(
       id = id,
       value = value,
       label = label,
       units = units.orUndefined,
-      postAddons = addons,
+      postAddons = customAddon.toList,
       validFormat = validFormat,
       changeAuditor = changeAuditor,
       disabled = disabled
@@ -381,23 +382,18 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
     units:         Option[String] = None,
     disabled:      Boolean = false
   ) =
-    val unitAddon    = units.map(u => u: TagMod)
     val originalText = validFormat.reverseGet(originalValue.some)
-    val isModified   = value.get.exists(_ =!= originalValue)
-    val customAddon  =
-      value.get.flatMap(v => if (isModified) customized(originalText).some else none)
-    val input        = FormInputTextView(
+    val customAddon  = value.get.map(_ => customized(originalText, value.set(none)))
+    FormInputTextView(
       id = id,
-      value = value,
+      value = value.withDefault(originalValue),
       label = label,
       units = units.orUndefined,
       postAddons = customAddon.toList,
       validFormat = validFormat,
       changeAuditor = changeAuditor,
-      placeholder = originalText,
       disabled = disabled
     )
-    if (isModified) input.clearable else input
 
   val component =
     ScalaFnComponent
@@ -486,6 +482,10 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
         val wavelengthView           = centralWavelength(props.scienceMode)
         val initialCentralWavelength = initialCentralWavelengthLens.get(props.scienceMode.get)
 
+        val defaultBinning      = defaultBinningLens.get(props.scienceMode.get)
+        val defaultReadModeGain = defaultReadModeGainLens.get(props.scienceMode.get)
+        val defaultRoi          = defaultRoiLens.get(props.scienceMode.get)
+
         val validDithers = modeData.value
           .map(mode =>
             ExploreModelValidators.dithersValidSplitEpi(
@@ -504,7 +504,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
 
         def dithersControl(onChange: Callback): VdomElement =
           val default = defaultWavelengthDithersLens.get(props.scienceMode.get)
-          val view    = explicitWavelengthDithers(props.scienceMode).withDefault(default)
+          val view    = explicitWavelengthDithers(props.scienceMode)
           customizableInputTextOptional(
             id = "dithers".refined,
             value = view.withOnMod(_ => onChange),
@@ -522,7 +522,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
 
         def offsetsControl(onChange: Callback): VdomElement = {
           val default = defaultSpatialOffsetsLens.get(props.scienceMode.get)
-          val view    = explicitSpatialOffsets(props.scienceMode).withDefault(default)
+          val view    = explicitSpatialOffsets(props.scienceMode)
           customizableInputTextOptional(
             id = "offsets".refined,
             value = view.withOnMod(_ => onChange),
@@ -600,7 +600,9 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               view = filter(props.scienceMode),
               original = initialFilterLens.get(props.scienceMode.get),
               disabled = disableAdvancedEdit,
-              exclude = obsoleteFilters
+              exclude = obsoleteFilters,
+              showClear = true,
+              resetToOriginal = true
             ),
             FormLabel(htmlFor = "fpu".refined)(
               "FPU",
@@ -741,8 +743,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             ),
             customizableEnumSelectOptional(
               id = "explicitXBin".refined,
-              view = explicitBinning(props.scienceMode),
-              original = defaultBinningLens.get(props.scienceMode.get).some,
+              view = explicitBinning(props.scienceMode).withDefault(defaultBinning),
+              original = defaultBinning.some,
               disabled = disableAdvancedEdit
             ),
             FormLabel(htmlFor = "explicitReadMode".refined)(
@@ -751,8 +753,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             ),
             customizableEnumSelectOptional(
               id = "explicitReadMode".refined,
-              view = explicitReadModeGain(props.scienceMode),
-              original = defaultReadModeGainLens.get(props.scienceMode.get).some,
+              view = explicitReadModeGain(props.scienceMode).withDefault(defaultReadModeGain),
+              original = defaultReadModeGain.some,
               disabled = disableAdvancedEdit
             ),
             FormLabel(htmlFor = "explicitRoi".refined)("ROI",
@@ -760,8 +762,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             ),
             customizableEnumSelectOptional(
               id = "explicitRoi".refined,
-              view = explicitRoi(props.scienceMode),
-              original = defaultRoiLens.get(props.scienceMode.get).some,
+              view = explicitRoi(props.scienceMode).withDefault(defaultRoi),
+              original = defaultRoi.some,
               disabled = disableAdvancedEdit,
               exclude = obsoleteRois
             ),
