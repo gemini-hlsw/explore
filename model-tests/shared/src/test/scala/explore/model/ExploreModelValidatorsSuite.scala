@@ -40,8 +40,8 @@ final class ExploreModelValidatorsSuite extends DisciplineSuite:
   )
 
   checkAll(
-    "ditherValidSplitEpi",
-    ValidSplitEpiTests(ExploreModelValidators.ditherValidSplitEpi).validSplitEpiLaws
+    "ditherValidWedge",
+    ValidWedgeTests(ExploreModelValidators.ditherValidWedge).validWedgeLaws
   )
 
   checkAll(
