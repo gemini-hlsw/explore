@@ -93,10 +93,10 @@ trait DisplayImplicits:
     // We could make the format depend on the units, but that may be confusing for users
     // in case they want to type the value and then change the units.
     // Very large values (> 10000) are also forced into scientific notation.
-    if (x.value.abs >= 0.00001 && x.value.abs <= 10000)
+    if (x.value.value.abs >= 0.00001 && x.value.value.abs <= 10000)
       f.format(x.value).replace("-0", "0")
     else
-      InputValidSplitEpi.bigDecimalWithScientificNotation.reverseGet(x.value)
+      InputValidSplitEpi.bigDecimalWithScientificNotation.reverseGet(x.value.value)
   }
 
   given Display[StellarLibrarySpectrum] = Display.byShortName(_.sedSpectrum)

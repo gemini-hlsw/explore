@@ -24,12 +24,12 @@ import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.ItcChartResult
 import explore.model.itc.ItcTarget
 import explore.model.itc.math.*
-import explore.model.reusability.*
+import explore.model.reusability.given
 import explore.model.reusability.given
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.ui.reusability.*
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import queries.schemas.itc.ITCConversions.*
 import queries.schemas.odb.ObsQueries.*

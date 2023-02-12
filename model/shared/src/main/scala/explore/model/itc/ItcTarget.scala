@@ -4,8 +4,10 @@
 package explore.model.itc
 
 import cats.Hash
+import cats.Order.given
 import cats.syntax.all.*
 import coulomb.syntax.*
+import eu.timepit.refined.cats.given
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.itc.math.*
 import lucuma.core.enums.Band
@@ -14,11 +16,7 @@ import lucuma.core.math.RadialVelocity
 import lucuma.core.math.Wavelength
 import lucuma.core.model.SourceProfile
 
-case class ItcTarget(
-  name:    NonEmptyString,
-  rv:      RadialVelocity,
-  profile: SourceProfile
-)
+case class ItcTarget(name: NonEmptyString, rv: RadialVelocity, profile: SourceProfile)
 
 object ItcTarget:
   extension (target: ItcTarget)

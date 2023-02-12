@@ -13,6 +13,7 @@ import explore.model.HourRange
 import explore.model.display.given
 import lucuma.core.math.Axis
 import lucuma.core.math.BrightnessValue
+import lucuma.core.math.BrightnessValueRefinement
 import lucuma.core.math.Offset
 import lucuma.core.math.Parallax
 import lucuma.core.math.ProperMotion
@@ -43,7 +44,8 @@ object ExploreModelValidators:
 
   val brightnessValidWedge: InputValidWedge[BrightnessValue] =
     InputValidWedge(
-      InputValidSplitEpi.bigDecimal
+      InputValidSplitEpi
+        .refinedBigDecimal[BrightnessValueRefinement]
         .withErrorMessage(_ => "Invalid brightness value".refined)
         .getValid
         .andThen(_.map(BrightnessValue(_))),
@@ -67,20 +69,21 @@ object ExploreModelValidators:
       _ => NonEmptyChain("Dither value is outside of valid range".refined)
     )
 
-  val ditherValidSplitEpi: InputValidSplitEpi[WavelengthDither] =
-    InputValidSplitEpi.bigDecimal
+  val ditherValidWedge: InputValidWedge[WavelengthDither] =
+    InputValidWedge
+      .truncatedBigDecimal(decimals = 1.refined)
       .andThen(
         WavelengthDither.decimalNanometers,
         _ => NonEmptyChain("Invalid dither value".refined[NonEmpty])
       )
 
-  def dithersValidSplitEpi(
+  def dithersValidWedge(
     λcentral: Wavelength,
     λmin:     Wavelength,
     λmax:     Wavelength,
     λr:       WavelengthRange
-  ): InputValidSplitEpi[WavelengthDither] =
-    ditherValidSplitEpi.andThen(ditherInRange(λcentral, λmin, λmax, λr))
+  ): InputValidWedge[WavelengthDither] =
+    ditherValidWedge.andThen(ditherInRange(λcentral, λmin, λmax, λr).asValidWedge)
 
   val offsetQNELValidWedge: InputValidWedge[Option[NonEmptyList[Offset.Q]]] =
     MathValidators.truncatedAngleSignedDegrees

@@ -6,6 +6,7 @@ package explore.targets
 import cats.Order
 import cats.Order.*
 import cats.syntax.all.*
+import eu.timepit.refined.cats.given
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
