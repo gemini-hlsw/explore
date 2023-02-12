@@ -13,7 +13,7 @@ import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Enums.*
 import lucuma.schemas.ObservationDB.Types.*
-import lucuma.ui.reusability.*
+import lucuma.ui.reusability.given
 import monocle.Focus
 import monocle.Lens
 import queries.common.ProgramQueriesGQL.*

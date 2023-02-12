@@ -37,7 +37,7 @@ import explore.model.itc.ItcSeries
 import explore.model.itc.ItcTarget
 import explore.model.itc.OverridenExposureTime
 import explore.model.itc.PlotDetails
-import explore.model.reusability.*
+import explore.model.reusability.given
 import explore.model.reusability.given
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
@@ -50,7 +50,7 @@ import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.Observation
 import lucuma.core.model.User
-import lucuma.ui.reusability.*
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import monocle.Focus
 import monocle.Lens

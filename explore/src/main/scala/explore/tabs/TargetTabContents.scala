@@ -51,7 +51,7 @@ import lucuma.core.model.Target.Nonsidereal
 import lucuma.core.model.Target.Sidereal
 import lucuma.core.model.User
 import lucuma.refined.*
-import lucuma.ui.reusability.*
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*

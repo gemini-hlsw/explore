@@ -15,7 +15,7 @@ import explore.model.Asterism
 import explore.model.ObsConfiguration
 import explore.model.TargetVisualOptions
 import explore.model.enums.Visible
-import explore.model.reusability.*
+import explore.model.reusability.given
 import explore.model.reusability.given
 import explore.visualization.*
 import japgolly.scalajs.react.Reusability.*
@@ -33,7 +33,7 @@ import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
 import lucuma.core.model.SiderealTracking
 import lucuma.ui.primereact.*
-import lucuma.ui.reusability.*
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import org.scalajs.dom.Element

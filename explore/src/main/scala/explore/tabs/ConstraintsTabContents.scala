@@ -32,7 +32,7 @@ import explore.model.enums.GridLayoutSection
 import explore.model.enums.SelectedPanel
 import explore.model.layout.*
 import explore.model.layout.unsafe.given
-import explore.model.reusability.*
+import explore.model.reusability.given
 import explore.model.reusability.given
 import explore.observationtree.ConstraintGroupObsList
 import explore.optics.*
@@ -51,7 +51,7 @@ import lucuma.core.model.Program
 import lucuma.core.model.User
 import lucuma.refined.*
 import lucuma.refined.*
-import lucuma.ui.reusability.*
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*

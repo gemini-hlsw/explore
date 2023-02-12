@@ -25,7 +25,7 @@ import explore.model.SiderealTargetWithId
 import explore.model.TargetWithId
 import explore.model.TargetWithOptId
 import explore.model.enums.AgsState
-import explore.model.reusability.*
+import explore.model.reusability.given
 import explore.model.reusability.given
 import explore.optics.*
 import explore.optics.all.*
@@ -50,7 +50,7 @@ import lucuma.refined.*
 import lucuma.schemas.ObservationDB
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
-import lucuma.ui.reusability.*
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.Lens

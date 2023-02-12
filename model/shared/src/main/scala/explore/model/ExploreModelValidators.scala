@@ -13,6 +13,7 @@ import explore.model.HourRange
 import explore.model.display.given
 import lucuma.core.math.Axis
 import lucuma.core.math.BrightnessValue
+import lucuma.core.math.BrightnessValueRefinement
 import lucuma.core.math.Offset
 import lucuma.core.math.Parallax
 import lucuma.core.math.ProperMotion
@@ -43,7 +44,8 @@ object ExploreModelValidators:
 
   val brightnessValidWedge: InputValidWedge[BrightnessValue] =
     InputValidWedge(
-      InputValidSplitEpi.bigDecimal
+      InputValidSplitEpi
+        .refinedBigDecimal[BrightnessValueRefinement]
         .withErrorMessage(_ => "Invalid brightness value".refined)
         .getValid
         .andThen(_.map(BrightnessValue(_))),

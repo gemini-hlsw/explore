@@ -35,6 +35,7 @@ import lucuma.refined.*
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.util.*
 import lucuma.ui.table.PrimeAutoHeightVirtualizedTable

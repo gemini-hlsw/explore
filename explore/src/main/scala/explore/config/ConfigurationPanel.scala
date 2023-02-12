@@ -50,7 +50,7 @@ import lucuma.core.model.SiderealTracking
 import lucuma.core.model.User
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
-import lucuma.ui.reusability.*
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import org.http4s.syntax.all.*

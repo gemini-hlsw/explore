@@ -37,7 +37,7 @@ import explore.model.UserVault
 import explore.model.WorkerClients
 import explore.model.enums.AppTab
 import explore.model.enums.ExecutionEnvironment
-import explore.model.reusability.*
+import explore.model.reusability.given
 import explore.syntax.ui.given
 import explore.utils.*
 import japgolly.scalajs.react.*
