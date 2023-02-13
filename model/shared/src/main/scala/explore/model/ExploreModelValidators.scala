@@ -86,7 +86,7 @@ object ExploreModelValidators:
     ditherValidWedge.andThen(ditherInRange(λcentral, λmin, λmax, λr).asValidWedge)
 
   val offsetQNELValidWedge: InputValidWedge[Option[NonEmptyList[Offset.Q]]] =
-    MathValidators.truncatedAngleSignedDegrees
+    MathValidators.truncatedAngleSignedArcSec
       .andThen(Offset.Component.angle[Axis.Q].reverse)
       .toNel(",".refined)
       .withErrorMessage(_ => "Invalid offsets".refined)
