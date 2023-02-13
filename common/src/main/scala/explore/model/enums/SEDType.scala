@@ -20,6 +20,7 @@ import lucuma.core.enums.PlanetaryNebulaSpectrum
 import lucuma.core.enums.QuasarSpectrum
 import lucuma.core.enums.StellarLibrarySpectrum
 import lucuma.core.math.BrightnessUnits.*
+import lucuma.core.math.FluxDensityContinuumValue
 import lucuma.core.math.Wavelength
 import lucuma.core.math.dimensional.Units.*
 import lucuma.core.math.dimensional.*
@@ -76,7 +77,7 @@ sealed abstract class SEDTypeEnum[T](
         _ =>
           EmissionLines[T](
             SortedMap.empty,
-            defaultContinuumUnits.withValueTagged(BigDecimal(1).refined[Positive])
+            defaultContinuumUnits.withValueTagged(FluxDensityContinuumValue.unsafeFrom(1))
           )
       )
   case object PowerLawType extends BandNormalizedSED("Power Law", PowerLaw(BigDecimal(0)))

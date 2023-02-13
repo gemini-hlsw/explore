@@ -25,6 +25,10 @@ import explore.utils.IsExpanded
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.BrightnessUnits.*
+import lucuma.core.math.LineFluxValue
+import lucuma.core.math.LineFluxValueRefinement
+import lucuma.core.math.LineWidthValue
+import lucuma.core.math.LineWidthValueRefinement
 import lucuma.core.math.Wavelength
 import lucuma.core.math.dimensional.*
 import lucuma.core.math.units.*
@@ -97,7 +101,9 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
               FormInputTextView(
                 id = NonEmptyString.unsafeFrom(s"lineWidth_${cell.row.id}"),
                 value = cell.value,
-                validFormat = InputValidSplitEpi.posBigDecimal,
+                validFormat = InputValidSplitEpi
+                  .refinedBigDecimal[LineWidthValueRefinement]
+                  .andThen(LineWidthValue.value.reverse),
                 changeAuditor = ChangeAuditor.posBigDecimal(3.refined).allowEmpty,
                 disabled = disabled
               ),
@@ -105,15 +111,15 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
           ),
           ColDef(
             LineValueColumnId,
-            _._2.zoom(
-              EmissionLine.lineFlux.andThen(Measure.valueTagged[PosBigDecimal, LineFlux[T]])
-            ),
+            _._2.zoom(EmissionLine.lineFlux.andThen(Measure.valueTagged)),
             "Brightness",
             cell =>
               FormInputTextView(
                 id = NonEmptyString.unsafeFrom(s"lineValue_${cell.row.id}"),
                 value = cell.value,
-                validFormat = InputValidSplitEpi.posBigDecimalWithScientificNotation,
+                validFormat = InputValidSplitEpi
+                  .refinedBigDecimalWithScientificNotation[LineFluxValueRefinement]
+                  .andThen(LineFluxValue.value.reverse),
                 changeAuditor = ChangeAuditor.posScientificNotation(),
                 disabled = disabled
               ),
@@ -121,9 +127,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
           ),
           ColDef(
             LineUnitsColumnId,
-            _._2.zoom(
-              EmissionLine.lineFlux.andThen(Measure.unitsTagged[PosBigDecimal, LineFlux[T]])
-            ),
+            _._2.zoom(EmissionLine.lineFlux.andThen(Measure.unitsTagged)),
             "Units",
             cell =>
               EnumDropdownView(
@@ -175,15 +179,13 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
     // addDisabled
     .useStateView(AddDisabled(true))
     .render { (props, _, _, table, newWavelength, addDisabled) =>
-      val bd1 = PosBigDecimal.unsafeFrom(BigDecimal(1))
-
       val addLine =
         newWavelength.get.foldMap(wavelength =>
           props.emissionLines.mod(emissionLines =>
             emissionLines +
               (wavelength -> EmissionLine(
-                bd1.withUnit[KilometersPerSecond],
-                defaultLineUnits.withValueTagged(bd1)
+                LineWidthValue.unsafeFrom(1).withUnit[KilometersPerSecond],
+                defaultLineUnits.withValueTagged(LineFluxValue.unsafeFrom(1))
               ))
           ) >> newWavelength.set(none)
         )

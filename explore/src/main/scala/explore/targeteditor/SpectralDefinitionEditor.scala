@@ -39,6 +39,8 @@ import lucuma.core.enums.PlanetaryNebulaSpectrum
 import lucuma.core.enums.QuasarSpectrum
 import lucuma.core.enums.StellarLibrarySpectrum
 import lucuma.core.math.BrightnessUnits.*
+import lucuma.core.math.FluxDensityContinuumValue
+import lucuma.core.math.FluxDensityContinuumValueRefinement
 import lucuma.core.math.Wavelength
 import lucuma.core.math.dimensional.Units.*
 import lucuma.core.math.dimensional.*
@@ -78,7 +80,7 @@ sealed trait SpectralDefinitionEditor[T, S]:
   def sedAlignerOpt: Option[Aligner[UnnormalizedSED, UnnormalizedSedInput]]
   def bandBrightnessesViewOpt: Option[View[SortedMap[Band, BrightnessMeasure[T]]]]
   def emissionLinesViewOpt: Option[View[SortedMap[Wavelength, EmissionLine[T]]]]
-  def fluxDensityContinuumOpt: Option[View[Measure[PosBigDecimal] Of FluxDensityContinuum[T]]]
+  def fluxDensityContinuumOpt: Option[View[FluxDensityContinuumMeasure[T]]]
 
 sealed abstract class SpectralDefinitionEditorBuilder[
   T,
@@ -255,17 +257,16 @@ sealed abstract class SpectralDefinitionEditorBuilder[
                 ExploreStyles.FlexContainer |+| LucumaStyles.FormField,
                 FormInputTextView(
                   id = "fluxValue".refined,
-                  value = fluxDensityContinuum.zoom(
-                    Measure.valueTagged[PosBigDecimal, FluxDensityContinuum[T]]
-                  ),
-                  validFormat = InputValidSplitEpi.posBigDecimalWithScientificNotation,
+                  value = fluxDensityContinuum.zoom(Measure.valueTagged),
+                  validFormat = InputValidSplitEpi
+                    .refinedBigDecimalWithScientificNotation[FluxDensityContinuumValueRefinement]
+                    .andThen(FluxDensityContinuumValue.value.reverse),
                   changeAuditor = ChangeAuditor.posScientificNotation(),
                   disabled = props.disabled
                 ),
                 EnumDropdownView(
                   id = "Units".refined,
-                  value = fluxDensityContinuum
-                    .zoom(Measure.unitsTagged[PosBigDecimal, FluxDensityContinuum[T]]),
+                  value = fluxDensityContinuum.zoom(Measure.unitsTagged),
                   disabled = props.disabled
                 )
               )
@@ -344,8 +345,7 @@ case class IntegratedSpectralDefinitionEditor(
         .view(_.toInput.assign)
     )
 
-  override val fluxDensityContinuumOpt
-    : Option[View[Measure[PosBigDecimal] Of FluxDensityContinuum[Integrated]]] =
+  override val fluxDensityContinuumOpt: Option[View[FluxDensityContinuumMeasure[Integrated]]] =
     emissionLinesAlignerOpt.map(
       _.zoom(
         SpectralDefinition.EmissionLines.fluxDensityContinuum[Integrated],
@@ -441,8 +441,7 @@ case class SurfaceSpectralDefinitionEditor(
       ).view(_.toInput.assign)
     )
 
-  override val fluxDensityContinuumOpt
-    : Option[View[Measure[PosBigDecimal] Of FluxDensityContinuum[Surface]]] =
+  override val fluxDensityContinuumOpt: Option[View[FluxDensityContinuumMeasure[Surface]]] =
     emissionLinesAlignerOpt.map(
       _.zoom(
         SpectralDefinition.EmissionLines.fluxDensityContinuum[Surface],
