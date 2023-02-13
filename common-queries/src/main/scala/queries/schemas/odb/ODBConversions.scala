@@ -158,9 +158,9 @@ trait ODBConversions:
       lines.toList.map { case (wavelength, line) =>
         EmissionLineIntegratedInput(
           wavelength = wavelength.toInput,
-          lineWidth = line.lineWidth.value.assign,
+          lineWidth = PosBigDecimal.unsafeFrom(line.lineWidth.value.value.value).assign,
           lineFlux = LineFluxIntegratedInput(
-            line.lineFlux.value,
+            PosBigDecimal.unsafeFrom(line.lineFlux.value.value.value),
             Measure.unitsTagged.get(line.lineFlux)
           ).assign
         )
@@ -172,23 +172,23 @@ trait ODBConversions:
       lines.toList.map { case (wavelength, line) =>
         EmissionLineSurfaceInput(
           wavelength = wavelength.toInput,
-          lineWidth = line.lineWidth.value.assign,
+          lineWidth = PosBigDecimal.unsafeFrom(line.lineWidth.value.value.value).assign,
           lineFlux = LineFluxSurfaceInput(
-            line.lineFlux.value,
+            PosBigDecimal.unsafeFrom(line.lineFlux.value.value.value),
             Measure.unitsTagged.get(line.lineFlux)
           ).assign
         )
       }
 
-  extension (fdc: Measure[PosBigDecimal] Of FluxDensityContinuum[Integrated])
+  extension (fdc: FluxDensityContinuumMeasure[Integrated])
     def toInput: FluxDensityContinuumIntegratedInput = FluxDensityContinuumIntegratedInput(
-      value = fdc.value,
+      value = PosBigDecimal.unsafeFrom(fdc.value.value.value),
       units = Measure.unitsTagged.get(fdc)
     )
 
-  extension (fdc: Measure[PosBigDecimal] Of FluxDensityContinuum[Surface])
+  extension (fdc: FluxDensityContinuumMeasure[Surface])
     def toInput: FluxDensityContinuumSurfaceInput = FluxDensityContinuumSurfaceInput(
-      value = fdc.value,
+      value = PosBigDecimal.unsafeFrom(fdc.value.value.value),
       units = Measure.unitsTagged.get(fdc)
     )
 
