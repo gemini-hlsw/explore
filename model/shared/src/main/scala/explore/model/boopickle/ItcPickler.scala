@@ -37,7 +37,11 @@ import lucuma.core.enums.SpectroscopyCapabilities
 import lucuma.core.math.BrightnessUnits
 import lucuma.core.math.BrightnessUnits.Brightness
 import lucuma.core.math.BrightnessUnits.FluxDensityContinuum
+import lucuma.core.math.BrightnessUnits.FluxDensityContinuumMeasure
 import lucuma.core.math.BrightnessUnits.LineFlux
+import lucuma.core.math.FluxDensityContinuumValue
+import lucuma.core.math.LineFluxValue
+import lucuma.core.math.LineWidthValue
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.Wavelength
 import lucuma.core.math.dimensional.*
@@ -133,14 +137,18 @@ trait ItcPicklers extends CommonPicklers {
   given emissionLinesPickler[A](using Pickler[Units Of LineFlux[A]]): Pickler[EmissionLine[A]] =
     generatePickler
 
+  given Pickler[LineFluxValue] = picklerNewType(LineFluxValue)
+
+  given Pickler[LineWidthValue] = picklerNewType(LineWidthValue)
+
+  given Pickler[FluxDensityContinuumValue] = picklerNewType(FluxDensityContinuumValue)
+
   given spectralEmissionLinesPickler[A](using
     Pickler[Units Of LineFlux[A]],
     Pickler[Units Of FluxDensityContinuum[A]]
   ): Pickler[SpectralDefinition.EmissionLines[A]] =
-    transformPickler(
-      (x: (List[(Wavelength, EmissionLine[A])],
-           Measure[PosBigDecimal] Of FluxDensityContinuum[A]
-      )) => SpectralDefinition.EmissionLines(SortedMap.from(x._1), x._2)
+    transformPickler((x: (List[(Wavelength, EmissionLine[A])], FluxDensityContinuumMeasure[A])) =>
+      SpectralDefinition.EmissionLines(SortedMap.from(x._1), x._2)
     )(x => (x.lines.toList, x.fluxDensityContinuum))
 
   given spectralDefinitionPickler[A](using

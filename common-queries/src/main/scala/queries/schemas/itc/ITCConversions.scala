@@ -7,6 +7,7 @@ import cats.data.NonEmptyList
 import cats.syntax.all.*
 import clue.data.Input
 import clue.data.syntax.*
+import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosLong
 import eu.timepit.refined.types.numeric.NonNegBigDecimal
 import explore.model.Asterism
@@ -126,15 +127,15 @@ trait ITCConversions:
         lines = e.lines.toList.map { (wavelength, line) =>
           EmissionLineIntegratedInput(
             wavelength = wavelength.toInput,
-            lineWidth = line.lineWidth.value.assign,
+            lineWidth = PosBigDecimal.unsafeFrom(line.lineWidth.value.value.value).assign,
             lineFlux = LineFluxIntegratedInput(
-              line.lineFlux.value,
+              PosBigDecimal.unsafeFrom(line.lineFlux.value.value.value),
               Measure.unitsTagged.get(line.lineFlux)
             ).assign
           )
         }.assign,
         fluxDensityContinuum = FluxDensityContinuumIntegratedInput(
-          value = e.fluxDensityContinuum.value,
+          value = PosBigDecimal.unsafeFrom(e.fluxDensityContinuum.value.value.value),
           units = Measure.unitsTagged.get(e.fluxDensityContinuum)
         ).assign
       )
@@ -153,15 +154,15 @@ trait ITCConversions:
         lines = e.lines.toList.map { (wavelength, line) =>
           EmissionLineSurfaceInput(
             wavelength = wavelength.toInput,
-            lineWidth = line.lineWidth.value.assign,
+            lineWidth = PosBigDecimal.unsafeFrom(line.lineWidth.value.value.value).assign,
             lineFlux = LineFluxSurfaceInput(
-              line.lineFlux.value,
+              PosBigDecimal.unsafeFrom(line.lineFlux.value.value.value),
               Measure.unitsTagged.get(line.lineFlux)
             ).assign
           )
         }.assign,
         fluxDensityContinuum = FluxDensityContinuumSurfaceInput(
-          value = e.fluxDensityContinuum.value,
+          value = PosBigDecimal.unsafeFrom(e.fluxDensityContinuum.value.value.value),
           units = Measure.unitsTagged.get(e.fluxDensityContinuum)
         ).assign
       )
