@@ -12,6 +12,8 @@ import lucuma.core.model.Target
 import lucuma.core.model.arb.ArbTarget.given
 import lucuma.core.util.arb.ArbEnumerated.*
 import lucuma.core.util.arb.ArbGid.*
+import lucuma.schemas.model.TargetWithId
+import lucuma.schemas.model.arb.ArbTargetWithId.given
 import monocle.law.discipline.*
 import munit.DisciplineSuite
 import org.scalacheck.Arbitrary
