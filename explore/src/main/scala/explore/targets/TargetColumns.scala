@@ -37,9 +37,9 @@ import lucuma.core.syntax.display.*
 import lucuma.core.util.Display
 import lucuma.react.syntax.*
 import lucuma.react.table.*
+import lucuma.typed.{tanstackTableCore => raw}
 import lucuma.ui.syntax.all.given
 import org.scalablytyped.runtime.StringDictionary
-import reactST.{tanstackTableCore => raw}
 
 object TargetColumns:
   val TypeColumnId: ColumnId       = ColumnId("type")

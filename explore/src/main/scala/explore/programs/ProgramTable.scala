@@ -31,6 +31,7 @@ import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB
+import lucuma.typed.{tanstackTableCore => raw}
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
@@ -44,7 +45,6 @@ import react.common.ReactFnProps
 import react.floatingui.Placement
 import react.floatingui.syntax.*
 import react.primereact.Button
-import reactST.{tanstackTableCore => raw}
 
 case class ProgramTable(
   currentProgramId: Option[Program.Id],

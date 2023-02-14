@@ -66,6 +66,8 @@ import lucuma.core.util.TimeSpan
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
+import lucuma.typed.{tanstackTableCore => raw}
+import lucuma.typed.{tanstackVirtualCore => rawVirtual}
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
@@ -81,8 +83,6 @@ import react.common.ReactFnProps
 import react.floatingui.Placement
 import react.floatingui.syntax.*
 import react.primereact.Button
-import reactST.{tanstackTableCore => raw}
-import reactST.{tanstackVirtualCore => rawVirtual}
 
 import java.text.DecimalFormat
 import java.util.UUID
@@ -367,7 +367,7 @@ private object SpectroscopyModesTable extends TableHooks:
   private val ScrollOptions =
     rawVirtual.mod
       .ScrollToOptions()
-      .setSmoothScroll(true)
+      .setBehavior(rawVirtual.mod.ScrollBehavior.smooth)
       .setAlign(rawVirtual.mod.ScrollAlignment.center)
 
   private val component =

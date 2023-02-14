@@ -35,6 +35,7 @@ import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.SiderealTargetWithId
+import lucuma.typed.{tanstackTableCore => raw}
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.*
@@ -47,7 +48,6 @@ import org.scalablytyped.runtime.StringDictionary
 import react.common.Css
 import react.common.ReactFnProps
 import react.primereact.Button
-import reactST.{tanstackTableCore => raw}
 
 import java.time.Instant
 

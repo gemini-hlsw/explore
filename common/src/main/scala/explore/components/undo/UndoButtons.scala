@@ -10,12 +10,12 @@ import explore.syntax.ui.given
 import explore.undo.UndoContext
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.typed.primereact.primereactStrings.outlined
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.primereact.Button
-import reactST.primereact.primereactStrings.outlined
 
 case class UndoButtons[A](
   undoCtx:  UndoContext[A],

@@ -32,6 +32,7 @@ import lucuma.core.util.Of
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
+import lucuma.typed.{tanstackTableCore => raw}
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
@@ -44,7 +45,6 @@ import monocle.Focus
 import react.common.ReactFnProps
 import react.primereact.Button
 import react.primereact.Panel
-import reactST.{tanstackTableCore => raw}
 
 import scala.collection.immutable.SortedMap
 

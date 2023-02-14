@@ -32,6 +32,7 @@ import lucuma.core.validation.InputValidSplitEpi
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
+import lucuma.typed.tanstackTableCore.buildLibTypesMod.Column
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
@@ -54,7 +55,6 @@ import react.common.Style
 import react.datepicker.Datepicker
 import react.primereact.*
 import react.resizeDetector.hooks.*
-import reactST.tanstackTableCore.mod.Column
 
 import java.time.Duration
 import java.time.ZoneOffset
