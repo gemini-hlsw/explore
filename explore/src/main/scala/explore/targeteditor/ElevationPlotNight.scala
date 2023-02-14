@@ -23,6 +23,9 @@ import lucuma.core.math.Coordinates
 import lucuma.core.math.skycalc.ImprovedSkyCalc
 import lucuma.core.model.ObservingNight
 import lucuma.core.util.Enumerated
+import lucuma.typed.highcharts.highchartsStrings.line
+import lucuma.typed.highcharts.mod.XAxisLabelsOptions
+import lucuma.typed.highcharts.mod.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
@@ -31,9 +34,6 @@ import react.common.ReactFnProps
 import react.highcharts.ResizingChart
 import react.moon.MoonPhase
 import react.resizeDetector.hooks.*
-import reactST.highcharts.highchartsStrings.line
-import reactST.highcharts.mod.XAxisLabelsOptions
-import reactST.highcharts.mod.*
 
 import java.time.Duration
 import java.time.Instant
@@ -180,7 +180,7 @@ object ElevationPlotNight {
             val millisSinceEpoch = instant.toEpochMilli.toDouble
 
             def point(value: Double): ResizingChart.Data =
-              PointOptionsObject(js.undefined)
+              PointOptionsObject()
                 .setX(millisSinceEpoch)
                 .setY(value)
 
@@ -372,7 +372,7 @@ object ElevationPlotNight {
           .setSeries(
             ElevationSeries.values
               .map(series =>
-                SeriesLineOptions(line)
+                SeriesLineOptions((), (), line)
                   .setName(series.name)
                   .setYAxis(series.yAxis)
                   .setData(series.data(seriesData).toJSArray)

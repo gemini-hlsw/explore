@@ -27,14 +27,14 @@ import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.model.Semester
 import lucuma.core.syntax.time.*
+import lucuma.typed.highcharts.highchartsStrings.line
+import lucuma.typed.highcharts.mod.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import react.common.GenericComponentPAF2VdomNode
 import react.common.ReactFnProps
 import react.highcharts.ResizingChart
 import react.resizeDetector.hooks.*
-import reactST.highcharts.highchartsStrings.line
-import reactST.highcharts.mod.*
 import spire.math.Bounded
 
 import java.time.Duration
@@ -97,7 +97,7 @@ object ElevationPlotSemester:
                               val visibilityD: Double = visibility / MillisPerHour
 
                               series.addPoint(
-                                PointOptionsObject(accessibility = js.undefined)
+                                PointOptionsObject().setAccessibilityUndefined
                                   .setX(instantD)
                                   // Trick to leave small values out of the plot
                                   .setY(if (visibilityD > MinVisibility) visibilityD else -1),
@@ -233,7 +233,7 @@ object ElevationPlotSemester:
           )
           .setSeries(
             List(
-              SeriesLineOptions(line)
+              SeriesLineOptions((), (), line)
                 .setName("Visibility")
                 .setYAxis(0)
             )

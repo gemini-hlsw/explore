@@ -16,12 +16,12 @@ import lucuma.core.math.Wavelength
 import lucuma.core.model.sequence.*
 import lucuma.react.syntax.*
 import lucuma.react.table.*
+import lucuma.typed.{tanstackTableCore => raw}
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import react.common.Css
 import react.common.ReactFnProps
-import reactST.{tanstackTableCore => raw}
 
 case class GmosSequenceTable(atoms: List[Atom]) extends ReactFnProps(GmosSequenceTable.component)
 
