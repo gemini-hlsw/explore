@@ -7,10 +7,10 @@ import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import io.circe.Decoder
 import lucuma.schemas.ObservationDB
-// gql: import lucuma.schemas.decoders.given
 import lucuma.schemas.model.ExecutionVisits
 import lucuma.schemas.model.Visit
 import lucuma.schemas.odb.*
+// gql: import lucuma.schemas.decoders.given
 
 object VisitsSQL:
 

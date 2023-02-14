@@ -10,8 +10,8 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.model.sequence.ManualConfig
 import lucuma.schemas.ObservationDB
-// gql: import lucuma.schemas.decoders.given
 import lucuma.schemas.odb.*
+// gql: import lucuma.schemas.decoders.given
 
 object ManualSequenceGQL {
 

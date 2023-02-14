@@ -7,10 +7,10 @@ import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import explore.model
 import lucuma.schemas.ObservationDB
-// gql: import lucuma.schemas.decoders.given
 import lucuma.schemas.odb.*
 
 import java.time
+// gql: import lucuma.schemas.decoders.given
 
 object AsterismQueriesGQL {
 

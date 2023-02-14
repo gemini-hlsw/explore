@@ -6,12 +6,12 @@ package queries.common
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import explore.model
-// gql: import io.circe.refined.*
 import lucuma.schemas.ObservationDB
-// gql: import lucuma.schemas.decoders.given
 import lucuma.schemas.odb.*
 
 import java.time
+// gql: import io.circe.refined.*
+// gql: import lucuma.schemas.decoders.given
 
 object ConstraintGroupQueriesGQL {
 
