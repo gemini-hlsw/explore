@@ -7,184 +7,20 @@ import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import explore.model
 import lucuma.schemas.ObservationDB
-
-// gql: import explore.model.TargetWithId.*
+import lucuma.schemas.odb.*
+import lucuma.schemas.{model => schemasModel}
+// gql: import lucuma.schemas.decoders.given
 
 object TargetQueriesGQL {
 
   @GraphQL
   trait TargetNameQuery extends GraphQLOperation[ObservationDB] {
     // FIXME Change this to an actual name pattern query when it's available in the API
-    val document = """
-      query($programId: ProgramId!) {
-        targetGroup(programId: $programId) {
+    val document = s"""
+      query($$programId: ProgramId!) {
+        targetGroup(programId: $$programId) {
           matches {
-            target {
-              id
-              name
-              sidereal {
-                ra {
-                  microarcseconds
-                }
-                dec {
-                  microarcseconds
-                }
-                epoch
-                properMotion {
-                  ra {
-                    microarcsecondsPerYear
-                  }
-                  dec {
-                    microarcsecondsPerYear
-                  }
-                }
-                radialVelocity {
-                  centimetersPerSecond
-                }
-                parallax {
-                  microarcseconds
-                }
-                catalogInfo {
-                  name
-                  id
-                  objectType
-                }
-              }
-              sourceProfile {
-                point {
-                  bandNormalized {
-                    sed {
-                      stellarLibrary
-                      coolStar
-                      galaxy
-                      planet
-                      quasar
-                      hiiRegion
-                      planetaryNebula
-                      powerLaw
-                      blackBodyTempK
-                      fluxDensities {
-                        wavelength {
-                          picometers
-                        }
-                        density
-                      }
-                    }
-                    brightnesses {
-                      band
-                      value
-                      units
-                      error
-                    }
-                  }
-                  emissionLines {
-                    lines {
-                      wavelength {
-                        picometers
-                      }
-                      lineWidth
-                      lineFlux {
-                        value
-                        units
-                      }
-                    }
-                    fluxDensityContinuum {
-                      value
-                      units
-                    }
-                  }
-                }
-                uniform {
-                  bandNormalized {
-                    sed {
-                      stellarLibrary
-                      coolStar
-                      galaxy
-                      planet
-                      quasar
-                      hiiRegion
-                      planetaryNebula
-                      powerLaw
-                      blackBodyTempK
-                      fluxDensities {
-                        wavelength {
-                          picometers
-                        }
-                        density
-                      }
-                    }
-                    brightnesses {
-                      band
-                      value
-                      units
-                      error
-                    }
-                  }
-                  emissionLines {
-                    lines {
-                      wavelength {
-                        picometers
-                      }
-                      lineWidth
-                      lineFlux {
-                        value
-                        units
-                      }
-                    }
-                    fluxDensityContinuum {
-                      value
-                      units
-                    }
-                  }
-                }
-                gaussian {
-                  fwhm {
-                    microarcseconds
-                  }
-                  bandNormalized {
-                    sed {
-                      stellarLibrary
-                      coolStar
-                      galaxy
-                      planet
-                      quasar
-                      hiiRegion
-                      planetaryNebula
-                      powerLaw
-                      blackBodyTempK
-                      fluxDensities {
-                        wavelength {
-                          picometers
-                        }
-                        density
-                      }
-                    }
-                    brightnesses {
-                      band
-                      value
-                      units
-                      error
-                    }
-                  }
-                  emissionLines {
-                    lines {
-                      wavelength {
-                        picometers
-                      }
-                      lineWidth
-                      lineFlux {
-                        value
-                        units
-                      }
-                    }
-                    fluxDensityContinuum {
-                      value
-                      units
-                    }
-                  }
-                }
-              }
-            }
+            target $TargetWithIdSubquery
           }
         }
       }
@@ -193,7 +29,7 @@ object TargetQueriesGQL {
     object Data {
       object TargetGroup {
         object Matches {
-          type Target = model.TargetWithId
+          type Target = schemasModel.TargetWithId
         }
       }
     }
@@ -227,182 +63,17 @@ object TargetQueriesGQL {
 
   @GraphQL
   trait UpdateTargetsMutationWithResult extends GraphQLOperation[ObservationDB] {
-    val document = """
-      mutation($input: UpdateTargetsInput!) {
-        updateTargets(input: $input) {
-          targets {
-            id
-            name
-            sidereal {
-              ra {
-                microarcseconds
-              }
-              dec {
-                microarcseconds
-              }
-              epoch
-              properMotion {
-                ra {
-                  microarcsecondsPerYear
-                }
-                dec {
-                  microarcsecondsPerYear
-                }
-              }
-              radialVelocity {
-                centimetersPerSecond
-              }
-              parallax {
-                microarcseconds
-              }
-              catalogInfo {
-                name
-                id
-                objectType
-              }
-            }
-            sourceProfile {
-              point {
-                bandNormalized {
-                  sed {
-                    stellarLibrary
-                    coolStar
-                    galaxy
-                    planet
-                    quasar
-                    hiiRegion
-                    planetaryNebula
-                    powerLaw
-                    blackBodyTempK
-                    fluxDensities {
-                      wavelength {
-                        picometers
-                      }
-                      density
-                    }
-                  }
-                  brightnesses {
-                    band
-                    value
-                    units
-                    error
-                  }
-                }
-                emissionLines {
-                  lines {
-                    wavelength {
-                      picometers
-                    }
-                    lineWidth
-                    lineFlux {
-                      value
-                      units
-                    }
-                  }
-                  fluxDensityContinuum {
-                    value
-                    units
-                  }
-                }
-              }
-              uniform {
-                bandNormalized {
-                  sed {
-                    stellarLibrary
-                    coolStar
-                    galaxy
-                    planet
-                    quasar
-                    hiiRegion
-                    planetaryNebula
-                    powerLaw
-                    blackBodyTempK
-                    fluxDensities {
-                      wavelength {
-                        picometers
-                      }
-                      density
-                    }
-                  }
-                  brightnesses {
-                    band
-                    value
-                    units
-                    error
-                  }
-                }
-                emissionLines {
-                  lines {
-                    wavelength {
-                      picometers
-                    }
-                    lineWidth
-                    lineFlux {
-                      value
-                      units
-                    }
-                  }
-                  fluxDensityContinuum {
-                    value
-                    units
-                  }
-                }
-              }
-              gaussian {
-                fwhm {
-                  microarcseconds
-                }
-                bandNormalized {
-                  sed {
-                    stellarLibrary
-                    coolStar
-                    galaxy
-                    planet
-                    quasar
-                    hiiRegion
-                    planetaryNebula
-                    powerLaw
-                    blackBodyTempK
-                    fluxDensities {
-                      wavelength {
-                        picometers
-                      }
-                      density
-                    }
-                  }
-                  brightnesses {
-                    band
-                    value
-                    units
-                    error
-                  }
-                }
-                emissionLines {
-                  lines {
-                    wavelength {
-                      picometers
-                    }
-                    lineWidth
-                    lineFlux {
-                      value
-                      units
-                    }
-                  }
-                  fluxDensityContinuum {
-                    value
-                    units
-                  }
-                }
-              }
-            }
-          }
+    val document = s"""
+      mutation($$input: UpdateTargetsInput!) {
+        updateTargets(input: $$input) {
+          targets $TargetWithIdSubquery
         }
       }
     """
 
     object Data {
       object UpdateTargets {
-        type Targets = model.TargetWithId
+        type Targets = schemasModel.TargetWithId
       }
     }
   }

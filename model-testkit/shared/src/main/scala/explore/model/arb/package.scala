@@ -11,5 +11,4 @@ object all
     with ArbKeyedIndexedTree
     with ArbUserVault
     with ArbObsSummary
-    with ArbConstraintsSummary
     with ArbAsterism

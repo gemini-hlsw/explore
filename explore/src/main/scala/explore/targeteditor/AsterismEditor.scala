@@ -21,9 +21,6 @@ import explore.model.Asterism
 import explore.model.BasicConfiguration
 import explore.model.ObsIdSet
 import explore.model.PAProperties
-import explore.model.SiderealTargetWithId
-import explore.model.TargetWithId
-import explore.model.TargetWithOptId
 import explore.model.enums.AgsState
 import explore.model.reusability.given
 import explore.model.reusability.given
@@ -48,6 +45,7 @@ import lucuma.core.model.User
 import lucuma.core.util.NewType
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB
+import lucuma.schemas.model.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given

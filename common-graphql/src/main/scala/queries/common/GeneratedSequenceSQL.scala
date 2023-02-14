@@ -10,15 +10,16 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.model.sequence.*
 import lucuma.schemas.ObservationDB
-import lucuma.schemas.decoders.*
+import lucuma.schemas.decoders.given
+import lucuma.schemas.odb.*
 
 object GeneratedSequenceSQL {
 
   @GraphQL
   trait SequenceSteps extends GraphQLOperation[ObservationDB] {
-    val document = """
-      query($obsId: ObservationId!) {
-        observation(observationId: $obsId) {
+    val document = s"""
+      query($$obsId: ObservationId!) {
+        observation(observationId: $$obsId) {
           execution {
             config:executionConfig {
               instrument
@@ -80,43 +81,19 @@ object GeneratedSequenceSQL {
       }
 
       fragment nodAndShuffleFields on GmosNodAndShuffle {
-        posA {
-          p {
-            microarcseconds
-          }
-          q {
-            microarcseconds
-          }
-        }
-        posB {
-          p {
-            microarcseconds
-          }
-          q {
-            microarcseconds
-          }
-        }
+        posA $OffsetSubquery
+        posB $OffsetSubquery
         eOffset
         shuffleOffset
         shuffleCycles
       }
 
       fragment stepTimeFields on StepTime {
-          configChange {
-            microseconds
-          }
-          exposure {
-            microseconds
-          }
-          readout {
-            microseconds
-          }
-          write {
-            microseconds
-          }
-          total {
-            microseconds
-          }
+          configChange $TimeSpanSubquery
+          exposure $TimeSpanSubquery
+          readout $TimeSpanSubquery
+          write $TimeSpanSubquery
+          total $TimeSpanSubquery
       }
 
       fragment northSequenceFields on GmosNorthAtom {
@@ -124,24 +101,14 @@ object GeneratedSequenceSQL {
         steps {
           id
           instrumentConfig {
-            exposure {
-              microseconds
-            }
-            readout {
-              xBin
-              yBin
-              ampCount
-              ampGain
-              ampReadMode
-            }
+            exposure $TimeSpanSubquery
+            readout $GmosCcdModeSubquery
             dtax
             roi
             gratingConfig {
               grating
               order
-              wavelength {
-                picometers
-              }
+              wavelength $WavelengthSubquery
             }
             filter
             fpu {
@@ -158,14 +125,7 @@ object GeneratedSequenceSQL {
               shutter
             }
             ... on Science {
-              offset {
-                p {
-                  microarcseconds
-                }
-                q {
-                  microarcseconds
-                }
-              }
+              offset $OffsetSubquery
             }
           }
           time {
@@ -186,21 +146,13 @@ object GeneratedSequenceSQL {
             exposure {
               microseconds
             }
-            readout {
-              xBin
-              yBin
-              ampCount
-              ampGain
-              ampReadMode
-            }
+            readout $GmosCcdModeSubquery
             dtax
             roi
             gratingConfig {
               grating
               order
-              wavelength {
-                picometers
-              }
+              wavelength $WavelengthSubquery
             }
             filter
             fpu {
@@ -217,14 +169,7 @@ object GeneratedSequenceSQL {
               shutter
             }
             ... on Science {
-              offset {
-                p {
-                  microarcseconds
-                }
-                q {
-                  microarcseconds
-                }
-              }
+              offset $OffsetSubquery
             }
           }
           time {

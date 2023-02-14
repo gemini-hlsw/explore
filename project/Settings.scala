@@ -8,13 +8,13 @@ object Settings {
   object LibraryVersions {
     val boopickle              = "1.4.0"
     val cats                   = "2.9.0"
-    val catsEffect             = "3.4.6"
+    val catsEffect             = "3.5.0-RC1"
     val catsRetry              = "3.1.0"
     val catsTime               = "0.5.1"
     val circe                  = "0.14.3"
     val circeGolden            = "0.3.0"
     val coulomb                = "0.7.3"
-    val clue                   = "0.23.2"
+    val clue                   = "0.24.1"
     val crystal                = "0.33.9"
     val discipline             = "1.5.1"
     val disciplineMUnit        = "1.0.9"
@@ -32,7 +32,7 @@ object Settings {
     val lucumaCatalog          = "0.39.0"
     val lucumaReact            = "0.31.2"
     val lucumaRefined          = "0.1.1"
-    val lucumaSchemas          = "0.41.1"
+    val lucumaSchemas          = "0.42.1"
     val lucumaSSO              = "0.5.2"
     val lucumaUI               = "0.66.0"
     val monocle                = "3.2.0"
@@ -265,7 +265,14 @@ object Settings {
 
     val LucumaSchemas = Def.setting(
       deps(
-        "edu.gemini" %%% "lucuma-schemas"
+        "edu.gemini" %%% "lucuma-schemas",
+        "edu.gemini" %%% "lucuma-schemas-model"
+      )(lucumaSchemas)
+    )
+
+    val LucumaSchemasTestkit = Def.setting(
+      deps(
+        "edu.gemini" %%% "lucuma-schemas-testkit"
       )(lucumaSchemas)
     )
 

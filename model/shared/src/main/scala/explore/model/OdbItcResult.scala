@@ -9,7 +9,7 @@ import io.circe.Decoder
 import io.circe.generic.semiauto
 import io.circe.refined.*
 import lucuma.core.util.TimeSpan
-import lucuma.schemas.decoders.*
+import lucuma.schemas.decoders.given
 import monocle.Focus
 import monocle.Prism
 import monocle.macros.GenPrism

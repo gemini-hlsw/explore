@@ -145,7 +145,7 @@ object ObsQueries:
               mtch.constraintSet,
               mtch.status,
               mtch.activeStatus,
-              mtch.plannedTime.execution,
+              mtch.plannedTime.execution.toDuration,
               mtch.observingMode,
               none // mtch.visualizationTime
             )
@@ -253,7 +253,7 @@ object ObsQueries:
         obs.constraintSet,
         obs.status,
         obs.activeStatus,
-        obs.plannedTime.execution
+        obs.plannedTime.execution.toDuration
       )
     }
 
@@ -263,10 +263,11 @@ object ObsQueries:
   )(using TransactionalClient[F, ObservationDB]): F[ObsSummaryWithTitleAndConstraints] =
     ProgramCreateObservation
       .execute[F](
-        CreateObservationInput(programId = programId,
-                               SET = ObservationPropertiesInput(targetEnvironment =
-                                 TargetEnvironmentInput(asterism = targetIds.toList.assign).assign
-                               ).assign
+        CreateObservationInput(
+          programId = programId,
+          SET = ObservationPropertiesInput(
+            targetEnvironment = TargetEnvironmentInput(asterism = targetIds.toList.assign).assign
+          ).assign
         )
       )
       .map { data =>
@@ -278,7 +279,7 @@ object ObsQueries:
           obs.constraintSet,
           obs.status,
           obs.activeStatus,
-          obs.plannedTime.execution
+          obs.plannedTime.execution.toDuration
         )
       }
 
@@ -296,7 +297,7 @@ object ObsQueries:
           newObs.constraintSet,
           newObs.status,
           newObs.activeStatus,
-          newObs.plannedTime.execution
+          newObs.plannedTime.execution.toDuration
         )
       }
 
@@ -322,7 +323,7 @@ object ObsQueries:
           newObs.constraintSet,
           newObs.status,
           newObs.activeStatus,
-          newObs.plannedTime.execution
+          newObs.plannedTime.execution.toDuration
         )
       }
 

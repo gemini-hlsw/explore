@@ -8,9 +8,8 @@ import clue.annotation.GraphQL
 import lucuma.core.model
 import lucuma.core.util.TimeSpan
 import lucuma.schemas.ObservationDB
-
 // gql: import io.circe.refined.*
-// gql: import lucuma.schemas.decoders.*
+// gql: import lucuma.schemas.decoders.given
 
 object ProgramQueriesGQL {
   @GraphQL
