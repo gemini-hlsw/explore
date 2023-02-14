@@ -45,12 +45,12 @@ import lucuma.core.model.User
 import lucuma.core.util.NewType
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB
+import lucuma.schemas.model.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import lucuma.schemas.model.*
 import monocle.Lens
 import monocle.std.option.some
 import org.typelevel.log4cats.Logger
