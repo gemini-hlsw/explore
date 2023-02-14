@@ -30,9 +30,8 @@ import explore.model.boopickle.CatalogPicklers.given
 import explore.model.boopickle.*
 import explore.model.enums.AgsState
 import explore.model.enums.Visible
-import explore.model.reusability.*
 import explore.model.reusability.given
-import explore.model.syntax.scienceModes.*
+import explore.model.reusability.given
 import explore.optics.ModelOptics
 import explore.syntax.ui.*
 import explore.utils.*
@@ -52,7 +51,7 @@ import lucuma.core.util.NewType
 import lucuma.refined.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
-import lucuma.ui.reusability.*
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.Focus
@@ -86,8 +85,8 @@ case class AladinCell(
   paProps:    Option[PAProperties]
 ) extends ReactFnProps(AladinCell.component) {
   val positions =
-    obsConf.scienceMode.flatMap(m =>
-      obsConf.posAngleConstraint.anglesToTestAt(m.siteFor, asterism.baseTracking, obsConf.vizTime)
+    obsConf.configuration.flatMap(c =>
+      obsConf.posAngleConstraint.anglesToTestAt(c.siteFor, asterism.baseTracking, obsConf.vizTime)
     )
 }
 
@@ -196,7 +195,7 @@ object AladinCell extends ModelOptics with AladinCommon:
       props.obsConf.posAngleConstraint match
         case Some(PosAngleConstraint.AllowFlip(a)) if a =!= angle =>
           props.paProps
-            .map(_.constraint.set(PosAngleConstraint.AllowFlip(angle).some))
+            .map(_.constraint.set(PosAngleConstraint.AllowFlip(angle)))
             .getOrEmpty *> manualOverride.set(ManualAgsOverride(true))
         case _                                                    => Callback.empty
     case _                                         => Callback.empty
@@ -271,7 +270,7 @@ object AladinCell extends ModelOptics with AladinCommon:
          p.obsConf.constraints,
          p.obsConf.wavelength,
          p.obsConf.vizTime,
-         p.obsConf.scienceMode,
+         p.obsConf.configuration,
          candidates.value
         )
       ) { (props, ctx, _, _, ags, _, selectedIndex, _, agsOverride) =>

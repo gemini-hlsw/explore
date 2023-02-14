@@ -16,6 +16,8 @@ import explore.components.TileController
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Asterism
+import explore.model.BasicConfigAndItc
+import explore.model.BasicConfiguration
 import explore.model.ConstraintGroup
 import explore.model.CoordinatesAtVizTime
 import explore.model.Focused
@@ -81,6 +83,7 @@ object ObsTabTiles:
   private type Props = ObsTabTiles
 
   private def makeConstraintsSelector(
+    programId:        Program.Id,
     constraintGroups: View[ConstraintsList],
     obsView:          Pot[View[ObsEditData]]
   )(using TransactionalClient[IO, ObservationDB]): VdomNode =
@@ -101,7 +104,7 @@ object ObsTabTiles:
               .zoom(ObsEditData.scienceData.andThen(ScienceData.constraints))
               .set(cg.constraintSet) >>
               ObsQueries
-                .updateObservationConstraintSet[IO](List(vod.get.id), cg.constraintSet)
+                .updateObservationConstraintSet[IO](programId, List(vod.get.id), cg.constraintSet)
                 .runAsyncAndForget
           }.getOrEmpty
         },
@@ -131,7 +134,7 @@ object ObsTabTiles:
         import ctx.given
 
         ObsEditQuery
-          .query(props.obsId)
+          .query(props.programId, props.obsId)
           .map(
             _.asObsEditData
               .getOrElse(throw new Exception(s"Observation [${props.obsId}] not found"))
@@ -145,7 +148,9 @@ object ObsTabTiles:
       // Selected GS. to share the PA chosen for Unconstrained and average modes
       // This should go to the db eventually
       .useStateView(none[AgsAnalysis])
-      .render { (props, ctx, obsView, itcTarget, agsState, selectedPA) =>
+      // the configuration the user has selected from the spectroscopy modes table, if any
+      .useStateView(none[BasicConfigAndItc])
+      .render { (props, ctx, obsView, itcTarget, agsState, selectedPA, selectedConfig) =>
         import ctx.given
 
         val obsViewPot = obsView.toPot
@@ -153,7 +158,7 @@ object ObsTabTiles:
         val scienceMode: Option[ScienceMode] =
           obsView.toOption.flatMap(_.get.scienceData.mode)
 
-        val posAngle: Option[View[Option[PosAngleConstraint]]] =
+        val posAngle: Option[View[PosAngleConstraint]] =
           obsView.toOption
             .map(
               _.zoom(ObsEditData.scienceData.andThen(ScienceData.posAngle))
@@ -168,8 +173,8 @@ object ObsTabTiles:
             ).zoom(Asterism.fromTargetsListOn(props.focusedTarget).asLens)
           )
 
-        val potAsterismMode: Pot[(View[Option[Asterism]], Option[ScienceMode])] =
-          potAsterism.map(x => (x, scienceMode))
+        val potAsterismMode: Pot[(View[Option[Asterism]], Option[BasicConfiguration])] =
+          potAsterism.map(x => (x, scienceMode.map(_.toBasicConfiguration)))
 
         val vizTimeView: Pot[View[Option[Instant]]] =
           obsViewPot.map(_.zoom(ObsEditData.visualizationTime))
@@ -223,10 +228,12 @@ object ObsTabTiles:
                 _.get.itcExposureTime
                   .map(r => ItcChartExposureTime(OverridenExposureTime.FromItc, r.time, r.count))
               ),
-            itcTarget
+            itcTarget,
+            selectedConfig.get
           )
 
-        val constraintsSelector = makeConstraintsSelector(props.constraintGroups, obsViewPot)
+        val constraintsSelector =
+          makeConstraintsSelector(props.programId, props.constraintGroups, obsViewPot)
 
         // first target of the obs. We can use it in case there is no target focus
         val firstTarget = props.targetMap.collect {
@@ -237,7 +244,7 @@ object ObsTabTiles:
           ElevationPlotTile.elevationPlotTile(
             props.userId,
             props.focusedTarget.orElse(firstTarget),
-            scienceMode,
+            scienceMode.map(_.siteFor),
             targetCoords,
             vizTime
           )
@@ -284,6 +291,7 @@ object ObsTabTiles:
         // as changing the css classes on the various tiles when the dropdown is clicked to control z-index.
         val constraintsTile =
           ConstraintsTile.constraintsTile(
+            props.programId,
             props.obsId,
             constraints,
             props.undoStacks
@@ -296,6 +304,7 @@ object ObsTabTiles:
         val configurationTile =
           ConfigurationTile.configurationTile(
             props.userId,
+            props.programId,
             props.obsId,
             obsViewPot.map(obsEditData =>
               (obsEditData.get.title,
@@ -308,7 +317,8 @@ object ObsTabTiles:
               .zoom(atMapWithDefault(props.obsId, UndoStacks.empty)),
             targetCoords,
             paProps.flatMap(_.selectedPA),
-            agsState
+            agsState,
+            selectedConfig
           )
 
         val rglRender: LayoutsMap => VdomNode = (l: LayoutsMap) =>

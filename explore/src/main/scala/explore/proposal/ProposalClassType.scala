@@ -4,10 +4,10 @@
 package explore.proposal
 
 import lucuma.core.model.IntPercent
-import lucuma.core.model.NonNegDuration
 import lucuma.core.model.ProposalClass
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
+import lucuma.core.util.TimeSpan
 
 enum ProposalClassType(val label: String) derives Enumerated:
   case LargeProgram       extends ProposalClassType("Large Program Observing at Gemini")
@@ -26,7 +26,7 @@ enum ProposalClassType(val label: String) derives Enumerated:
   def toProposalClass(
     minPctTime:      IntPercent,
     minPctTotalTime: IntPercent,
-    totalTime:       NonNegDuration
+    totalTime:       TimeSpan
   ): ProposalClass = {
     import ProposalClassType.*
     this match {

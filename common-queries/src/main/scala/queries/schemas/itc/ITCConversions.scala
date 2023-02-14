@@ -3,30 +3,32 @@
 
 package queries.schemas.itc
 
+import cats.data.NonEmptyList
 import cats.syntax.all.*
 import clue.data.Input
 import clue.data.syntax.*
+import eu.timepit.refined.types.numeric.PosBigDecimal
+import eu.timepit.refined.types.numeric.PosLong
+import eu.timepit.refined.types.numeric.NonNegBigDecimal
+import explore.model.Asterism
 import explore.model.itc.ItcTarget
-import explore.model.TargetWithId
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
 import explore.optics.all.*
+import lucuma.core.enums.GmosNorthFpu
+import lucuma.core.enums.GmosSouthFpu
 import lucuma.core.math.BrightnessUnits.*
 import lucuma.core.math.*
 import lucuma.core.math.dimensional.Measure
 import lucuma.core.model.*
 import lucuma.core.optics.syntax.lens.*
+import lucuma.core.util.TimeSpan
+import lucuma.schemas.model.TargetWithId
 import queries.common.ITCQueriesGQL
 import queries.schemas.odb.ObsQueries
 import queries.schemas.ITC
 import queries.schemas.ITC.Types.*
-import lucuma.core.enums.GmosNorthFpu
-import lucuma.core.enums.GmosSouthFpu
-import cats.data.NonEmptyList
-import explore.model.Asterism
-import eu.timepit.refined.types.numeric.PosLong
-import eu.timepit.refined.types.numeric.NonNegBigDecimal
 
 // There is a lot of duplication here with the odb.conversions package
 trait ITCConversions:
@@ -60,9 +62,9 @@ trait ITCConversions:
         .runS(WavelengthInput())
         .value
 
-  extension (nnd: NonNegDuration)
+  extension (ts: TimeSpan)
     def toInput: NonNegDurationInput =
-      NonNegDurationInput(milliseconds = NonNegBigDecimal.unsafeFrom(nnd.value.toMillis).assign)
+      NonNegDurationInput(microseconds = PosLong.unsafeFrom(ts.toMicroseconds).assign)
 
   // These are copied from the odb side
   extension (u: UnnormalizedSED)
@@ -98,9 +100,9 @@ trait ITCConversions:
         brightnesses = b.brightnesses.toList.map { (band, measure) =>
           BandBrightnessIntegratedInput(
             band = band,
-            value = measure.value.assign,
+            value = measure.value.value.value.assign,
             units = Measure.unitsTagged.get(measure).assign,
-            error = measure.error.orIgnore
+            error = measure.error.map(_.value.value).orIgnore
           )
         }.assign
       )
@@ -112,9 +114,9 @@ trait ITCConversions:
         brightnesses = b.brightnesses.toList.map { (band, measure) =>
           BandBrightnessSurfaceInput(
             band = band,
-            value = measure.value.assign,
+            value = measure.value.value.value.assign,
             units = Measure.unitsTagged.get(measure).assign,
-            error = measure.error.orIgnore
+            error = measure.error.map(_.value.value).orIgnore
           )
         }.assign
       )
@@ -125,15 +127,15 @@ trait ITCConversions:
         lines = e.lines.toList.map { (wavelength, line) =>
           EmissionLineIntegratedInput(
             wavelength = wavelength.toInput,
-            lineWidth = line.lineWidth.value.assign,
+            lineWidth = PosBigDecimal.unsafeFrom(line.lineWidth.value.value.value).assign,
             lineFlux = LineFluxIntegratedInput(
-              line.lineFlux.value,
+              PosBigDecimal.unsafeFrom(line.lineFlux.value.value.value),
               Measure.unitsTagged.get(line.lineFlux)
             ).assign
           )
         }.assign,
         fluxDensityContinuum = FluxDensityContinuumIntegratedInput(
-          value = e.fluxDensityContinuum.value,
+          value = PosBigDecimal.unsafeFrom(e.fluxDensityContinuum.value.value.value),
           units = Measure.unitsTagged.get(e.fluxDensityContinuum)
         ).assign
       )
@@ -152,15 +154,15 @@ trait ITCConversions:
         lines = e.lines.toList.map { (wavelength, line) =>
           EmissionLineSurfaceInput(
             wavelength = wavelength.toInput,
-            lineWidth = line.lineWidth.value.assign,
+            lineWidth = PosBigDecimal.unsafeFrom(line.lineWidth.value.value.value).assign,
             lineFlux = LineFluxSurfaceInput(
-              line.lineFlux.value,
+              PosBigDecimal.unsafeFrom(line.lineFlux.value.value.value),
               Measure.unitsTagged.get(line.lineFlux)
             ).assign
           )
         }.assign,
         fluxDensityContinuum = FluxDensityContinuumSurfaceInput(
-          value = e.fluxDensityContinuum.value,
+          value = PosBigDecimal.unsafeFrom(e.fluxDensityContinuum.value.value.value),
           units = Measure.unitsTagged.get(e.fluxDensityContinuum)
         ).assign
       )

@@ -12,23 +12,23 @@ import lucuma.core.model.PosAngleConstraint
 
 import scala.collection.immutable.SortedMap
 
-object all extends ScienceModesSyntax:
+object all:
 
   extension (pa: PosAngleOptions)
-    def toPosAngle(a: Angle): Option[PosAngleConstraint] = pa match
-      case PosAngleOptions.Fixed               => PosAngleConstraint.Fixed(a).some
-      case PosAngleOptions.AllowFlip           => PosAngleConstraint.AllowFlip(a).some
-      case PosAngleOptions.AverageParallactic  => PosAngleConstraint.AverageParallactic.some
-      case PosAngleOptions.ParallacticOverride => PosAngleConstraint.ParallacticOverride(a).some
-      case PosAngleOptions.Unconstrained       => none
+    def toPosAngle(a: Angle): PosAngleConstraint = pa match
+      case PosAngleOptions.Fixed               => PosAngleConstraint.Fixed(a)
+      case PosAngleOptions.AllowFlip           => PosAngleConstraint.AllowFlip(a)
+      case PosAngleOptions.AverageParallactic  => PosAngleConstraint.AverageParallactic
+      case PosAngleOptions.ParallacticOverride => PosAngleConstraint.ParallacticOverride(a)
+      case PosAngleOptions.Unconstrained       => PosAngleConstraint.Unbounded
 
-  extension (pa: Option[PosAngleConstraint])
+  extension (pa: PosAngleConstraint)
     def toPosAngleOptions: PosAngleOptions = pa match
-      case Some(PosAngleConstraint.Fixed(_))               => PosAngleOptions.Fixed
-      case Some(PosAngleConstraint.AllowFlip(_))           => PosAngleOptions.AllowFlip
-      case Some(PosAngleConstraint.AverageParallactic)     => PosAngleOptions.AverageParallactic
-      case Some(PosAngleConstraint.ParallacticOverride(_)) => PosAngleOptions.ParallacticOverride
-      case _                                               => PosAngleOptions.Unconstrained
+      case PosAngleConstraint.Fixed(_)               => PosAngleOptions.Fixed
+      case PosAngleConstraint.AllowFlip(_)           => PosAngleOptions.AllowFlip
+      case PosAngleConstraint.AverageParallactic     => PosAngleOptions.AverageParallactic
+      case PosAngleConstraint.ParallacticOverride(_) => PosAngleOptions.ParallacticOverride
+      case PosAngleConstraint.Unbounded              => PosAngleOptions.Unconstrained
 
   extension [A](list: List[A])
     def toSortedMap[K: Ordering, V](getKey: A => K, getValue: A => V = identity[A](_)) =

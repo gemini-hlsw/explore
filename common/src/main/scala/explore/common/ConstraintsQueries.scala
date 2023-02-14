@@ -15,6 +15,7 @@ import lucuma.core.enums.*
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.Observation
+import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import monocle.Lens
@@ -24,8 +25,9 @@ import queries.schemas.odb.ODBConversions.*
 
 object ConstraintsQueries:
   case class UndoView(
-    obsIds:  List[Observation.Id],
-    undoCtx: UndoContext[ConstraintSet]
+    programId: Program.Id,
+    obsIds:    List[Observation.Id],
+    undoCtx:   UndoContext[ConstraintSet]
   )(using TransactionalClient[IO, ObservationDB], Logger[IO]):
     def apply[A](
       modelGet:  ConstraintSet => A,
@@ -38,6 +40,7 @@ object ConstraintsQueries:
           UpdateObservationMutation
             .execute(
               UpdateObservationsInput(
+                programId = programId,
                 WHERE = obsIds.toWhereObservation.assign,
                 SET = ObservationPropertiesInput(
                   constraintSet = remoteSet(value)(ConstraintSetInput()).assign

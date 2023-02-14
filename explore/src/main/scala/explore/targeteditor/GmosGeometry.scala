@@ -6,8 +6,7 @@ package explore.targeteditor
 import cats.Order
 import cats.data.NonEmptyMap
 import cats.syntax.all.*
-import explore.model.ScienceMode
-import explore.model.ScienceModeBasic
+import explore.model.BasicConfiguration
 import lucuma.core.enums.PortDisposition
 import lucuma.core.geom.ShapeExpression
 import lucuma.core.geom.gmos
@@ -24,28 +23,28 @@ object GmosGeometry:
 
   // Shape to display for a specific mode
   def shapesForMode(
-    posAngle: Angle,
-    mode:     Option[ScienceMode],
-    port:     PortDisposition
+    posAngle:      Angle,
+    configuration: Option[BasicConfiguration],
+    port:          PortDisposition
   ): NonEmptyMap[Css, ShapeExpression] =
-    mode match {
-      case Some(ScienceMode.GmosNorthLongSlit(ScienceModeBasic.GmosNorthLongSlit(_, _, fpu), _)) =>
+    configuration match {
+      case Some(m: BasicConfiguration.GmosNorthLongSlit) =>
         NonEmptyMap.of(
           (Css("gmos-science-ccd"), gmos.scienceArea.imaging ⟲ posAngle),
-          (Css("gmos-fpu"), gmos.scienceArea.shapeAt(posAngle, Offset.Zero, fpu.asLeft.some)),
+          (Css("gmos-fpu"), gmos.scienceArea.shapeAt(posAngle, Offset.Zero, m.fpu.asLeft.some)),
           (Css("gmos-patrol-field"),
-           gmos.probeArm.patrolFieldAt(posAngle, Offset.Zero, fpu.asLeft.some, port)
+           gmos.probeArm.patrolFieldAt(posAngle, Offset.Zero, m.fpu.asLeft.some, port)
           )
         )
-      case Some(ScienceMode.GmosSouthLongSlit(ScienceModeBasic.GmosSouthLongSlit(_, _, fpu), _)) =>
+      case Some(m: BasicConfiguration.GmosSouthLongSlit) =>
         NonEmptyMap.of(
           (Css("gmos-science-ccd"), gmos.scienceArea.imaging ⟲ posAngle),
-          (Css("gmos-fpu"), gmos.scienceArea.shapeAt(posAngle, Offset.Zero, fpu.asRight.some)),
+          (Css("gmos-fpu"), gmos.scienceArea.shapeAt(posAngle, Offset.Zero, m.fpu.asRight.some)),
           (Css("gmos-patrol-field"),
-           gmos.probeArm.patrolFieldAt(posAngle, Offset.Zero, fpu.asRight.some, port)
+           gmos.probeArm.patrolFieldAt(posAngle, Offset.Zero, m.fpu.asRight.some, port)
           )
         )
-      case _                                                                                     =>
+      case _                                             =>
         NonEmptyMap.of(
           (Css("gmos-science-ccd"), gmos.scienceArea.imaging ⟲ posAngle)
         )
@@ -53,16 +52,16 @@ object GmosGeometry:
 
   // Shape for the patrol field
   def patrolField(
-    posAngle: Angle,
-    mode:     Option[ScienceMode],
-    port:     PortDisposition
+    posAngle:      Angle,
+    configuration: Option[BasicConfiguration],
+    port:          PortDisposition
   ): Option[ShapeExpression] =
-    mode match {
-      case Some(ScienceMode.GmosNorthLongSlit(ScienceModeBasic.GmosNorthLongSlit(_, _, fpu), _)) =>
-        gmos.probeArm.patrolFieldAt(posAngle, Offset.Zero, fpu.asLeft.some, port).some
-      case Some(ScienceMode.GmosSouthLongSlit(ScienceModeBasic.GmosSouthLongSlit(_, _, fpu), _)) =>
-        gmos.probeArm.patrolFieldAt(posAngle, Offset.Zero, fpu.asRight.some, port).some
-      case _                                                                                     =>
+    configuration match {
+      case Some(m: BasicConfiguration.GmosNorthLongSlit) =>
+        gmos.probeArm.patrolFieldAt(posAngle, Offset.Zero, m.fpu.asLeft.some, port).some
+      case Some(m: BasicConfiguration.GmosSouthLongSlit) =>
+        gmos.probeArm.patrolFieldAt(posAngle, Offset.Zero, m.fpu.asRight.some, port).some
+      case _                                             =>
         none
     }
 
@@ -79,24 +78,24 @@ object GmosGeometry:
     posAngle:        Angle,
     guideStarOffset: Offset,
     offsetPos:       Offset,
-    mode:            Option[ScienceMode],
+    mode:            Option[BasicConfiguration],
     port:            PortDisposition,
     extraCss:        Css
   ): NonEmptyMap[Css, ShapeExpression] =
     mode match
-      case Some(ScienceMode.GmosNorthLongSlit(ScienceModeBasic.GmosNorthLongSlit(_, _, fpu), _)) =>
+      case Some(m: BasicConfiguration.GmosNorthLongSlit) =>
         NonEmptyMap.of(
           (Css("gmos-probe-arm") |+| extraCss,
-           gmos.probeArm.shapeAt(posAngle, guideStarOffset, offsetPos, fpu.asLeft.some, port)
+           gmos.probeArm.shapeAt(posAngle, guideStarOffset, offsetPos, m.fpu.asLeft.some, port)
           )
         )
-      case Some(ScienceMode.GmosSouthLongSlit(ScienceModeBasic.GmosSouthLongSlit(_, _, fpu), _)) =>
+      case Some(m: BasicConfiguration.GmosSouthLongSlit) =>
         NonEmptyMap.of(
           (Css("gmos-probe-arm") |+| extraCss,
-           gmos.probeArm.shapeAt(posAngle, guideStarOffset, offsetPos, fpu.asRight.some, port)
+           gmos.probeArm.shapeAt(posAngle, guideStarOffset, offsetPos, m.fpu.asRight.some, port)
           )
         )
-      case _                                                                                     =>
+      case _                                             =>
         NonEmptyMap.of(
           (Css("gmos-science-ccd"), gmos.scienceArea.imaging ⟲ posAngle)
         )

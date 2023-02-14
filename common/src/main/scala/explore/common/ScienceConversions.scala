@@ -4,78 +4,87 @@
 package explore.common
 
 import clue.data.syntax.*
+import explore.model.BasicConfiguration
 import explore.model.ScienceMode
-import explore.model.ScienceModeAdvanced
-import explore.model.ScienceModeBasic
 import lucuma.core.math.*
 import lucuma.schemas.ObservationDB.Types.*
 import queries.schemas.odb.ODBConversions
 
-trait ScienceConversions extends ODBConversions:
-  extension (b: ScienceModeBasic.GmosNorthLongSlit)
-    def toInput: GmosNorthLongSlitBasicConfigInput =
-      GmosNorthLongSlitBasicConfigInput(b.grating.assign, b.filter.orUnassign, b.fpu.assign)
+import scala.annotation.targetName
 
-  extension (b: ScienceModeBasic.GmosSouthLongSlit)
-    def toInput: GmosSouthLongSlitBasicConfigInput =
-      GmosSouthLongSlitBasicConfigInput(b.grating.assign, b.filter.orUnassign, b.fpu.assign)
+trait ScienceConversions extends ODBConversions:
+  // The @targetName is needed to differentiate it from the Wavelength extension method. Both
+  // are opaque types of `Quantity[Int, Picometer]`. This is fine at compile time without the
+  // @targetName, but the js linker doesn't seem to be able to differentiate.
+  extension (d: WavelengthDither)
+    @targetName("WavelengthDither_toInput")
+    def toInput: WavelengthDitherInput =
+      WavelengthDitherInput(picometers = d.toPicometers.value.assign)
 
   extension [A](o: Offset.Component[A])
     def toInput: OffsetComponentInput =
       OffsetComponentInput(microarcseconds = o.toAngle.toMicroarcseconds.assign)
 
-  extension (a: ScienceModeAdvanced.GmosNorthLongSlit)
-    def toInput: GmosNorthLongSlitAdvancedConfigInput =
-      GmosNorthLongSlitAdvancedConfigInput(
-        a.overrideWavelength.map(_.toInput).orUnassign,
-        a.overrideGrating.orUnassign,
-        a.overrideFilter.orUnassign,
-        a.overrideFpu.orUnassign,
-        a.overrideExposureTimeMode.map(_.toInput).orUnassign,
-        a.explicitXBin.orUnassign,
-        a.explicitYBin.orUnassign,
-        a.explicitAmpReadMode.orUnassign,
-        a.explicitAmpGain.orUnassign,
-        a.explicitRoi.orUnassign,
-        a.explicitWavelengthDithers
-          .map(_.toList.map(_.value))
-          .orUnassign,
-        a.explicitSpatialOffsets.map(_.toList.map(_.toInput)).orUnassign
-      )
-
-  extension (a: ScienceModeAdvanced.GmosSouthLongSlit)
-    def toInput: GmosSouthLongSlitAdvancedConfigInput =
-      GmosSouthLongSlitAdvancedConfigInput(
-        a.overrideWavelength.map(_.toInput).orUnassign,
-        a.overrideGrating.orUnassign,
-        a.overrideFilter.orUnassign,
-        a.overrideFpu.orUnassign,
-        a.overrideExposureTimeMode.map(_.toInput).orUnassign,
-        a.explicitXBin.orUnassign,
-        a.explicitYBin.orUnassign,
-        a.explicitAmpReadMode.orUnassign,
-        a.explicitAmpGain.orUnassign,
-        a.explicitRoi.orUnassign,
-        a.explicitWavelengthDithers
-          .map(_.toList.map(_.value))
-          .orUnassign,
-        a.explicitSpatialOffsets.map(_.toList.map(_.toInput)).orUnassign
-      )
+  extension (o: ScienceMode.GmosNorthLongSlit)
+    def toInput: GmosNorthLongSlitInput = GmosNorthLongSlitInput(
+      grating = o.grating.assign,
+      filter = o.filter.orUnassign,
+      fpu = o.fpu.assign,
+      centralWavelength = o.centralWavelength.value.toInput.assign,
+      explicitXBin = o.explicitXBin.orUnassign,
+      explicitYBin = o.explicitYBin.orUnassign,
+      explicitAmpReadMode = o.explicitAmpReadMode.orUnassign,
+      explicitAmpGain = o.explicitAmpGain.orUnassign,
+      explicitRoi = o.explicitRoi.orUnassign,
+      explicitWavelengthDithers =
+        o.explicitWavelengthDithers.map(_.toList.map(_.toInput)).orUnassign,
+      explicitSpatialOffsets = o.explicitSpatialOffsets.map(_.toList.map(_.toInput)).orUnassign
+    )
+  extension (o: ScienceMode.GmosSouthLongSlit)
+    def toInput: GmosSouthLongSlitInput = GmosSouthLongSlitInput(
+      grating = o.grating.assign,
+      filter = o.filter.orUnassign,
+      fpu = o.fpu.assign,
+      centralWavelength = o.centralWavelength.value.toInput.assign,
+      explicitXBin = o.explicitXBin.orUnassign,
+      explicitYBin = o.explicitYBin.orUnassign,
+      explicitAmpReadMode = o.explicitAmpReadMode.orUnassign,
+      explicitAmpGain = o.explicitAmpGain.orUnassign,
+      explicitRoi = o.explicitRoi.orUnassign,
+      explicitWavelengthDithers =
+        o.explicitWavelengthDithers.map(_.toList.map(_.toInput)).orUnassign,
+      explicitSpatialOffsets = o.explicitSpatialOffsets.map(_.toList.map(_.toInput)).orUnassign
+    )
 
   extension (b: ScienceMode)
-    def toInput: ScienceModeInput = b match
-      case ScienceMode.GmosNorthLongSlit(basic, advanced) =>
-        ScienceModeInput(
+    def toInput: ObservingModeInput = b match
+      case o: ScienceMode.GmosNorthLongSlit =>
+        ObservingModeInput(
+          gmosNorthLongSlit = o.toInput.assign
+        )
+      case o: ScienceMode.GmosSouthLongSlit =>
+        ObservingModeInput(
+          gmosSouthLongSlit = o.toInput.assign
+        )
+
+  extension (i: BasicConfiguration)
+    def toInput: ObservingModeInput = i match
+      case o: BasicConfiguration.GmosNorthLongSlit =>
+        ObservingModeInput(
           gmosNorthLongSlit = GmosNorthLongSlitInput(
-            basic = basic.toInput.assign,
-            advanced = advanced.toInput.assign
+            grating = o.grating.assign,
+            filter = o.filter.orUnassign,
+            fpu = o.fpu.assign,
+            centralWavelength = o.centralWavelength.value.toInput.assign
           ).assign
         )
-      case ScienceMode.GmosSouthLongSlit(basic, advanced) =>
-        ScienceModeInput(
+      case o: BasicConfiguration.GmosSouthLongSlit =>
+        ObservingModeInput(
           gmosSouthLongSlit = GmosSouthLongSlitInput(
-            basic = basic.toInput.assign,
-            advanced = advanced.toInput.assign
+            grating = o.grating.assign,
+            filter = o.filter.orUnassign,
+            fpu = o.fpu.assign,
+            centralWavelength = o.centralWavelength.value.toInput.assign
           ).assign
         )
 

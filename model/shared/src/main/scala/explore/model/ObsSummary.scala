@@ -15,6 +15,7 @@ import lucuma.core.math.Wavelength
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target
+import lucuma.schemas.model.ConstraintsSummary
 import monocle.Focus
 import org.typelevel.cats.time.*
 
@@ -50,11 +51,11 @@ trait ObsWithConstraints extends ObsSummary {
 }
 
 trait ObsWithConf extends ObsSummary {
-  def scienceMode: Option[ScienceMode]
+  def configuration: Option[BasicConfiguration]
 
-  val conf: String = scienceMode match {
-    case Some(n @ ScienceMode.GmosNorthLongSlit(_, _)) => s"GMOS-N ${n.grating.shortName}"
-    case Some(s @ ScienceMode.GmosSouthLongSlit(_, _)) => s"GMOS-S ${s.grating.shortName}"
+  val conf: String = configuration match {
+    case Some(n: BasicConfiguration.GmosNorthLongSlit) => s"GMOS-N ${n.grating.shortName}"
+    case Some(s: BasicConfiguration.GmosSouthLongSlit) => s"GMOS-S ${s.grating.shortName}"
     case _                                             => s"-"
   }
 }
@@ -139,7 +140,7 @@ case class ObsSummaryWithTitleConstraintsAndConf(
   override val status:            ObsStatus,
   override val activeStatus:      ObsActiveStatus,
   override val duration:          Duration,
-  override val scienceMode:       Option[ScienceMode],
+  override val configuration:     Option[BasicConfiguration],
   override val visualizationTime: Option[Instant]
 ) extends ObsSummary
     with ObsWithTitle
@@ -156,13 +157,13 @@ object ObsSummaryWithTitleConstraintsAndConf {
 }
 
 case class ObsSummaryWithTitleAndConf(
-  override val id:           Observation.Id,
-  override val title:        String,
-  override val subtitle:     Option[NonEmptyString],
-  override val status:       ObsStatus,
-  override val activeStatus: ObsActiveStatus,
-  override val duration:     Duration,
-  override val scienceMode:  Option[ScienceMode]
+  override val id:            Observation.Id,
+  override val title:         String,
+  override val subtitle:      Option[NonEmptyString],
+  override val status:        ObsStatus,
+  override val activeStatus:  ObsActiveStatus,
+  override val duration:      Duration,
+  override val configuration: Option[BasicConfiguration]
 ) extends ObsSummary
     with ObsWithTitle
     with ObsWithConf
@@ -179,7 +180,7 @@ case class ObsSummaryWithConstraintsAndConf(
   override val activeStatus:      ObsActiveStatus,
   override val duration:          Duration,
   scienceTargetIds:               Set[Target.Id],
-  override val scienceMode:       Option[ScienceMode],
+  override val configuration:     Option[BasicConfiguration],
   override val visualizationTime: Option[Instant],
   posAngleConstraint:             Option[PosAngleConstraint],
   wavelength:                     Option[Wavelength]
@@ -191,6 +192,6 @@ case class ObsSummaryWithConstraintsAndConf(
 
 object ObsSummaryWithConstraintsAndConf {
   val id                = Focus[ObsSummaryWithConstraintsAndConf](_.id)
-  val configuration     = Focus[ObsSummaryWithConstraintsAndConf](_.scienceMode)
+  val configuration     = Focus[ObsSummaryWithConstraintsAndConf](_.configuration)
   val visualizationTime = Focus[ObsSummaryWithConstraintsAndConf](_.visualizationTime)
 }

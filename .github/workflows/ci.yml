@@ -23,7 +23,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [3.2.1]
+        scala: [3.2.2]
         java: [temurin@17]
         project: [rootJS, rootJVM]
     runs-on: ${{ matrix.os }}
@@ -100,7 +100,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [3.2.1]
+        scala: [3.2.2]
         java: [temurin@17]
     runs-on: ${{ matrix.os }}
     steps:
@@ -168,7 +168,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [3.2.1]
+        scala: [3.2.2]
         java: [temurin@17]
     runs-on: ${{ matrix.os }}
     steps:
@@ -236,7 +236,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [3.2.1]
+        scala: [3.2.2]
         java: [temurin@17]
     runs-on: ${{ matrix.os }}
     steps:
@@ -261,7 +261,7 @@ jobs:
           cat vars.css
 
       - name: Run linters in dark mode
-        uses: wearerequired/lint-action@v1.11.1
+        uses: wearerequired/lint-action@v2.3.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           stylelint: true
@@ -276,7 +276,7 @@ jobs:
 
       - name: Run linters in light mode
         if: github.event_name != 'pull_request'
-        uses: wearerequired/lint-action@v1.11.1
+        uses: wearerequired/lint-action@v2.3.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           stylelint: true

@@ -32,7 +32,7 @@ import explore.model.enums.GridLayoutSection
 import explore.model.enums.SelectedPanel
 import explore.model.layout.*
 import explore.model.layout.unsafe.given
-import explore.model.reusability.*
+import explore.model.reusability.given
 import explore.model.reusability.given
 import explore.observationtree.ConstraintGroupObsList
 import explore.optics.*
@@ -51,7 +51,7 @@ import lucuma.core.model.Program
 import lucuma.core.model.User
 import lucuma.refined.*
 import lucuma.refined.*
-import lucuma.ui.reusability.*
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
@@ -265,11 +265,14 @@ object ConstraintsTabContents extends TwoPanels:
             case Some(id) => s"Observation $id"
             case None     => s"Editing Constraints for ${idsToEdit.size} Observations"
 
-          val constraintsTile = Tile(ObsTabTilesIds.ConstraintsId.id,
-                                     constraintsTitle,
-                                     backButton.some,
-                                     canMinimize = true
-          )(renderInTitle => ConstraintsPanel(idsToEdit.toList, csView, csUndo, renderInTitle))
+          val constraintsTile = Tile(
+            ObsTabTilesIds.ConstraintsId.id,
+            constraintsTitle,
+            backButton.some,
+            canMinimize = true
+          )(renderInTitle =>
+            ConstraintsPanel(props.programId, idsToEdit.toList, csView, csUndo, renderInTitle)
+          )
 
           val timingWindowsView = timingWindows.zoom(TimingWindowsList)
           val timingWindowsTile =

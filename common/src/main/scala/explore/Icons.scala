@@ -266,6 +266,10 @@ object Icons {
   @JSImport("@fortawesome/pro-solid-svg-icons", "faBug")
   val faBug: FAIcon = js.native
 
+  @js.native
+  @JSImport("@fortawesome/pro-duotone-svg-icons", "faSolarSystem")
+  val faSolarSystem: FAIcon = js.native
+
   // This is tedious but lets us do proper tree-shaking
   IconLibrary.add(
     faArrowDownLeft,
@@ -330,7 +334,8 @@ object Icons {
     faContractDiagonal,
     faClone,
     faSquareXMark,
-    faBug
+    faBug,
+    faSolarSystem
   )
 
   val ArrowDownLeft       = FontAwesomeIcon(faArrowDownLeft)
@@ -398,4 +403,5 @@ object Icons {
   val CheckDouble         = FontAwesomeIcon(faListCheck)
   val SquareXMark         = FontAwesomeIcon(faSquareXMark)
   val Bug                 = FontAwesomeIcon(faBug)
+  val SolarSystem         = FontAwesomeIcon(faSolarSystem)
 }

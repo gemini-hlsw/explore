@@ -20,6 +20,7 @@ import lucuma.core.math.Angle
 import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
+import lucuma.core.model.Program
 import lucuma.refined.*
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.FormEnumDropdownView
@@ -35,8 +36,9 @@ import react.common.Css
 import react.common.ReactFnProps
 
 case class PAConfigurationPanel(
+  programId:    Program.Id,
   obsId:        Observation.Id,
-  posAngleView: View[Option[PosAngleConstraint]],
+  posAngleView: View[PosAngleConstraint],
   selectedPA:   Option[Angle],
   agsState:     View[AgsState]
 ) extends ReactFnProps(PAConfigurationPanel.component)
@@ -48,15 +50,15 @@ object PAConfigurationPanel:
    * Used to convert pos angle and an enumeration for a UI selector It is unsafe as the angle is
    * lost for Average Parallictic and Unconstrained
    */
-  private val unsafePosOptionsLens: Lens[Option[PosAngleConstraint], PosAngleOptions] =
-    Lens[Option[PosAngleConstraint], PosAngleOptions](_.toPosAngleOptions)((a: PosAngleOptions) =>
-      (b: Option[PosAngleConstraint]) =>
+  private val unsafePosOptionsLens: Lens[PosAngleConstraint, PosAngleOptions] =
+    Lens[PosAngleConstraint, PosAngleOptions](_.toPosAngleOptions)((a: PosAngleOptions) =>
+      (b: PosAngleConstraint) =>
         a.toPosAngle(b match {
-          case Some(PosAngleConstraint.Fixed(a))               => a
-          case Some(PosAngleConstraint.AllowFlip(a))           => a
-          case Some(PosAngleConstraint.AverageParallactic)     => Angle.Angle0
-          case Some(PosAngleConstraint.ParallacticOverride(a)) => a
-          case None                                            => Angle.Angle0
+          case PosAngleConstraint.Fixed(a)               => a
+          case PosAngleConstraint.AllowFlip(a)           => a
+          case PosAngleConstraint.AverageParallactic     => Angle.Angle0
+          case PosAngleConstraint.ParallacticOverride(a) => a
+          case PosAngleConstraint.Unbounded              => Angle.Angle0
         })
     )
 
@@ -68,40 +70,37 @@ object PAConfigurationPanel:
         import ctx.given
 
         val paView = props.posAngleView
-          .withOnMod { c =>
-            (props.agsState.async.set(AgsState.Saving) *>
-              ObsQueries.updatePosAngle[IO](List(props.obsId), c))
+          .withOnMod(c =>
+            (props.agsState.async.set(AgsState.Saving) >>
+              ObsQueries.updatePosAngle[IO](props.programId, List(props.obsId), c))
               .guarantee(props.agsState.async.set(AgsState.Idle))
               .runAsync
-          }
+          )
 
         val posAngleOptionsView: View[PosAngleOptions] =
           paView.zoom(unsafePosOptionsLens)
 
         val fixedView: ViewOpt[Angle] =
           paView
-            .zoom(option.some[PosAngleConstraint])
             .zoom(PosAngleConstraint.fixedAngle)
 
         val allowedFlipView: ViewOpt[Angle] =
           paView
-            .zoom(option.some[PosAngleConstraint])
             .zoom(PosAngleConstraint.allowFlipAngle)
 
         val parallacticOverrideView: ViewOpt[Angle] =
           paView
-            .zoom(option.some[PosAngleConstraint])
             .zoom(PosAngleConstraint.parallacticOverrideAngle)
 
         val selectedAngle = props.posAngleView.get match
-          case None                                        =>
+          case PosAngleConstraint.Unbounded          =>
             props.selectedPA
               .map(a => <.label(f"${a.toDoubleDegrees}%.0f °"))
-          case Some(PosAngleConstraint.AverageParallactic) =>
+          case PosAngleConstraint.AverageParallactic =>
             props.selectedPA
               .map(a => <.label(f"${a.toDoubleDegrees}%.2f °"))
               .orElse(<.label("Not Visible").some)
-          case _                                           => None
+          case _                                     => None
 
         def posAngleEditor(pa: View[Angle]) =
           <.div(

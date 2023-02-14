@@ -123,7 +123,14 @@ object AsterismGroupObsList:
       if (destAg.obsIds.intersects(draggedIds)) Callback.empty
       else
         AsterismGroupObsListActions
-          .dropObservations(draggedIds, srcIds, destAg.obsIds, props.expandedIds, setObsSet)
+          .dropObservations(
+            props.programId,
+            draggedIds,
+            srcIds,
+            destAg.obsIds,
+            props.expandedIds,
+            setObsSet
+          )
           .set(props.undoCtx)(destAg.some)
     }
   }
@@ -169,7 +176,12 @@ object AsterismGroupObsList:
         .createObservationWithTargets[IO](programId, targetIds)
         .flatMap { obs =>
           ObservationInsertAction
-            .insert(obs.id, expandedIds, selectObsOrSummary(_).to[IO], toastRef.showToast(_))
+            .insert(programId,
+                    obs.id,
+                    expandedIds,
+                    selectObsOrSummary(_).to[IO],
+                    toastRef.showToast(_)
+            )
             .set(undoCtx)(obs.toConstraintsAndConf(targetIds).some)
             .to[IO]
         }

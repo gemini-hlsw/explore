@@ -10,6 +10,7 @@ import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.Tile
 import explore.config.ConfigurationPanel
+import explore.model.BasicConfigAndItc
 import explore.model.CoordinatesAtVizTime
 import explore.model.enums.AgsState
 import explore.undo.*
@@ -17,6 +18,7 @@ import explore.utils.*
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Observation
+import lucuma.core.model.Program
 import lucuma.core.model.User
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -27,12 +29,14 @@ import queries.schemas.odb.ObsQueries.*
 object ConfigurationTile {
   def configurationTile(
     userId:          Option[User.Id],
+    programId:       Program.Id,
     obsId:           Observation.Id,
     obsData:         Pot[(String, Option[NonEmptyString], View[ScienceData])],
     undoStacks:      View[UndoStacks[IO, ScienceData]],
     baseCoordinates: Option[CoordinatesAtVizTime],
     selectedPA:      Option[Angle],
-    agsState:        View[AgsState]
+    agsState:        View[AgsState],
+    selectedConfig:  View[Option[BasicConfigAndItc]]
   )(using Logger[IO]) =
     Tile(
       ObsTabTilesIds.ConfigurationId.id,
@@ -43,6 +47,7 @@ object ConfigurationTile {
         (title, subtitle, scienceData) =>
           ConfigurationPanel(
             userId,
+            programId,
             obsId,
             title,
             subtitle,
@@ -52,6 +57,7 @@ object ConfigurationTile {
             baseCoordinates,
             agsState,
             selectedPA,
+            selectedConfig,
             renderInTitle
           )
       }(obsData)

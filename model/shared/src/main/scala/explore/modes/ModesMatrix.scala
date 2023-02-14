@@ -22,6 +22,7 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDither
 import lucuma.core.math.units.*
+import lucuma.core.math.units.given
 import lucuma.core.util.Enumerated
 import lucuma.core.util.NewType
 import monocle.Lens
@@ -125,13 +126,13 @@ trait ModesMatrixDecoders extends Decoders {
     arcsecDecoder.map(x => ModeFov(x))
 
   given CellDecoder[ModeBandwidth] =
-    micrometerDecoder.map(w => ModeBandwidth(w.µm.value.value.withUnit[Micrometer]))
+    micrometerWavelengthDecoder.map(w => ModeBandwidth(w.µm.toValue[BigDecimal]))
 
   given CellDecoder[ModeGratingMinWavelength] =
-    micrometerDecoder.map(x => ModeGratingMinWavelength(x))
+    micrometerWavelengthDecoder.map(x => ModeGratingMinWavelength(x))
 
   given CellDecoder[ModeGratingMaxWavelength] =
-    micrometerDecoder.map(x => ModeGratingMaxWavelength(x))
+    micrometerWavelengthDecoder.map(x => ModeGratingMaxWavelength(x))
 
   given CellDecoder[ModeFilter] =
     CellDecoder.stringDecoder

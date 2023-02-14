@@ -8,10 +8,13 @@ import eu.timepit.refined.cats.*
 import eu.timepit.refined.scalacheck.all.*
 import lucuma.core.arb.*
 import lucuma.core.math.Angle
+import lucuma.core.math.BrightnessValue
 import lucuma.core.math.arb.ArbAngle.*
+import lucuma.core.math.arb.ArbBrightnessValue.given
 import lucuma.core.math.arb.ArbOffset.*
 import lucuma.core.math.arb.ArbParallax.*
 import lucuma.core.math.arb.ArbProperMotion.given
+import lucuma.core.math.arb.ArbWavelengthDither.given
 import lucuma.core.optics.laws.discipline.ValidSplitEpiTests
 import lucuma.core.optics.laws.discipline.ValidWedgeTests
 import munit.DisciplineSuite
@@ -20,25 +23,14 @@ import org.scalacheck.Arbitrary.*
 import org.scalacheck.Gen
 
 final class ExploreModelValidatorsSuite extends DisciplineSuite:
-  // Scala.js seems to have trouble formatting BigDecimals with very high absolute scale or precision.
-  // We therefore use these bounded arbitraries.
-  // TODO: This is duplicated in `InputValidSplitEpiInstancesSuite` in lucuma-core.
-  // We should move it to the testkit there and reuse it here.
-  given Arbitrary[BigDecimal] =
-    Arbitrary(
-      org.scalacheck.Arbitrary.arbBigDecimal.arbitrary.suchThat(x =>
-        x.scale.abs < 100 && x.precision <= 15
-      )
-    )
-
   checkAll(
     "brightnessValidWedge",
     ValidWedgeTests(ExploreModelValidators.brightnessValidWedge).validWedgeLaws
   )
 
   checkAll(
-    "dithersValidSplitEpi",
-    ValidSplitEpiTests(ExploreModelValidators.dithersValidSplitEpi).validSplitEpiLaws
+    "ditherValidWedge",
+    ValidWedgeTests(ExploreModelValidators.ditherValidWedge).validWedgeLaws
   )
 
   checkAll(

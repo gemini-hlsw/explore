@@ -11,7 +11,7 @@ import explore.model.ObsSummaryWithTitleAndConf
 import explore.model.syntax.all.*
 import japgolly.scalajs.react.*
 import lucuma.core.model.Observation
-import lucuma.ui.reusability.*
+import lucuma.ui.reusability.given
 import monocle.Focus
 import monocle.Getter
 import queries.common.ConstraintGroupQueriesGQL.*
@@ -44,8 +44,8 @@ object ConstraintGroupQueries:
       obsR.subtitle,
       obsR.status,
       obsR.activeStatus,
-      obsR.plannedTime.execution,
-      obsR.scienceMode
+      obsR.plannedTime.execution.toDuration,
+      obsR.observingMode
     )
 
   private val queryToConstraintsWithObsGetter

@@ -21,6 +21,7 @@ import lucuma.ags.GuideStarCandidate
 import lucuma.core.geom.Area
 import lucuma.core.math.Angle
 import lucuma.core.math.Axis
+import lucuma.core.math.BrightnessValue
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.Epoch
@@ -32,15 +33,16 @@ import lucuma.core.math.ProperMotion
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.RightAscension
 import lucuma.core.math.Wavelength
+import lucuma.core.math.WavelengthRange
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
-import lucuma.core.model.NonNegDuration
 import lucuma.core.model.Semester
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.core.model.given
 import lucuma.core.util.Enumerated
 import lucuma.core.util.NewType
+import lucuma.core.util.TimeSpan
 import org.http4s.Uri
 
 import java.time.Duration
@@ -50,9 +52,6 @@ import java.time.Year
 import java.time.ZoneId
 
 trait CommonPicklers {
-  given picklerNewType[W, T <: NewType[W]#Type](using pickler: Pickler[W]): Pickler[T] =
-    pickler.asInstanceOf[Pickler[T]]
-
   given picklerRefined[A: Pickler, B](using Validate[A, B]): Pickler[A Refined B] =
     new Pickler[A Refined B] {
       override def pickle(a: A Refined B)(using state: PickleState): Unit = {
@@ -107,8 +106,17 @@ trait CommonPicklers {
         .getOrElse(sys.error("cannot unpickle"))
     )(_.toPicometers.value.value)
 
+  given Pickler[WavelengthRange] =
+    transformPickler((i: Int) =>
+      WavelengthRange
+        .fromIntPicometers(i)
+        .getOrElse(sys.error("cannot unpickle"))
+    )(_.toPicometers.value.value)
+
   given Pickler[Angle] =
     transformPickler(Angle.fromMicroarcseconds)(_.toMicroarcseconds)
+
+  given Pickler[BrightnessValue] = picklerNewType(BrightnessValue)
 
   given Pickler[RadialVelocity] =
     transformPickler((x: BigDecimal) =>
@@ -180,8 +188,8 @@ trait CommonPicklers {
   given Pickler[Duration] =
     transformPickler(Duration.ofMillis)(_.toMillis)
 
-  given Pickler[NonNegDuration] =
-    picklerRefined[Duration, NonNegative]
+  given Pickler[TimeSpan] =
+    transformPickler(TimeSpan.unsafeFromMicroseconds)(_.toMicroseconds)
 
   given Pickler[Year] =
     transformPickler(Year.of)(_.getValue)

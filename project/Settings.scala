@@ -8,16 +8,17 @@ object Settings {
   object LibraryVersions {
     val boopickle              = "1.4.0"
     val cats                   = "2.9.0"
-    val catsEffect             = "3.4.6"
+    val catsEffect             = "3.5.0-RC1"
     val catsRetry              = "3.1.0"
     val catsTime               = "0.5.1"
     val circe                  = "0.14.3"
     val circeGolden            = "0.3.0"
-    val clue                   = "0.23.2"
+    val coulomb                = "0.7.3"
+    val clue                   = "0.24.1"
     val crystal                = "0.33.9"
     val discipline             = "1.5.1"
     val disciplineMUnit        = "1.0.9"
-    val fs2                    = "3.6.0"
+    val fs2                    = "3.6.1"
     val fs2Data                = "1.6.1"
     val fs2Dom                 = "0.1.0"
     val geminiLocales          = "0.7.0"
@@ -27,13 +28,13 @@ object Settings {
     val log4Cats               = "2.5.0"
     val log4CatsLogLevel       = "0.3.1"
     val lucumaBC               = "0.4.0"
-    val lucumaCore             = "0.61.1"
-    val lucumaCatalog          = "0.38.1"
+    val lucumaCore             = "0.67.0"
+    val lucumaCatalog          = "0.39.0"
     val lucumaReact            = "0.31.2"
     val lucumaRefined          = "0.1.1"
-    val lucumaSchemas          = "0.39.2"
-    val lucumaSSO              = "0.4.6"
-    val lucumaUI               = "0.65.0"
+    val lucumaSchemas          = "0.42.1"
+    val lucumaSSO              = "0.4.8"
+    val lucumaUI               = "0.66.0"
     val monocle                = "3.2.0"
     val mouse                  = "1.2.1"
     val mUnit                  = "0.7.29"
@@ -110,6 +111,12 @@ object Settings {
       deps(
         "edu.gemini" %%% "clue-scalajs"
       )(clue)
+    )
+
+    val CoulombRefined = Def.setting(
+      deps(
+        "com.manyangled" %%% "coulomb-refined"
+      )(coulomb)
     )
 
     val Crystal = Def.setting(
@@ -258,7 +265,14 @@ object Settings {
 
     val LucumaSchemas = Def.setting(
       deps(
-        "edu.gemini" %%% "lucuma-schemas"
+        "edu.gemini" %%% "lucuma-schemas",
+        "edu.gemini" %%% "lucuma-schemas-model"
+      )(lucumaSchemas)
+    )
+
+    val LucumaSchemasTestkit = Def.setting(
+      deps(
+        "edu.gemini" %%% "lucuma-schemas-testkit"
       )(lucumaSchemas)
     )
 

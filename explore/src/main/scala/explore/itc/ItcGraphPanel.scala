@@ -24,10 +24,9 @@ import explore.components.ui.ExploreStyles
 import explore.config.ExposureTimeModeType.FixedExposure
 import explore.events.*
 import explore.model.AppContext
+import explore.model.BasicConfigAndItc
 import explore.model.LoadingState
 import explore.model.ScienceMode
-import explore.model.ScienceModeAdvanced
-import explore.model.ScienceModeBasic
 import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.ItcPicklers.given
@@ -38,7 +37,7 @@ import explore.model.itc.ItcSeries
 import explore.model.itc.ItcTarget
 import explore.model.itc.OverridenExposureTime
 import explore.model.itc.PlotDetails
-import explore.model.reusability.*
+import explore.model.reusability.given
 import explore.model.reusability.given
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
@@ -51,7 +50,7 @@ import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.Observation
 import lucuma.core.model.User
-import lucuma.ui.reusability.*
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import monocle.Focus
 import monocle.Lens
@@ -69,9 +68,10 @@ case class ItcGraphPanel(
   spectroscopyRequirements: Option[SpectroscopyRequirementsData],
   scienceData:              Option[ScienceData],
   exposure:                 Option[ItcChartExposureTime],
-  selectedTarget:           View[Option[ItcTarget]]
+  selectedTarget:           View[Option[ItcTarget]],
+  selectedConfig:           Option[BasicConfigAndItc] // selected row in spectroscopy modes table
 ) extends ReactFnProps(ItcGraphPanel.component)
-    with ItcPanelProps(scienceMode, spectroscopyRequirements, scienceData, exposure)
+    with ItcPanelProps(scienceMode, spectroscopyRequirements, scienceData, exposure, selectedConfig)
 
 case class ItcGraphProperties(chartType: ItcChartType, detailsShown: PlotDetails)
 object ItcGraphProperties:

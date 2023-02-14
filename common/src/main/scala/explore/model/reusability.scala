@@ -23,19 +23,14 @@ import lucuma.ags.AgsPosition
 import lucuma.ags.GuideStarCandidate
 import lucuma.catalog.AngularSize
 import lucuma.catalog.CatalogTargetResult
-import lucuma.core.geom.Area
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.IntPercent
 import lucuma.core.model.Partner
 import lucuma.core.model.PosAngleConstraint
-import lucuma.core.model.Proposal
-import lucuma.core.model.ProposalClass
 import lucuma.core.model.Target
-import lucuma.core.util.NewType
 import lucuma.schemas.ObservationDB.Enums.Existence
-import lucuma.schemas.model.StepRecord
-import lucuma.schemas.model.Visit
-import lucuma.ui.reusability.*
+import lucuma.schemas.model.*
+import lucuma.ui.reusability.given
 import queries.schemas.odb.ObsQueries.ObsSummariesWithConstraints
 import queries.schemas.odb.ObsQueries.SpectroscopyRequirementsData
 
@@ -56,17 +51,20 @@ object reusability:
   given idListReuse[Id, A: Reusability]: Reusability[KeyedIndexedList[Id, A]] =
     Reusability.by(_.toList)
 
-  given Reusability[TreeSeqMap[Target.Id, Target]]         =
+  given Reusability[TreeSeqMap[Target.Id, Target]] =
     Reusability.by((_: TreeSeqMap[Target.Id, Target]).toMap)(Reusability.map)
-  given Reusability[ObsIdSet]                              = Reusability.byEq
-  given Reusability[TargetIdSet]                           = Reusability.byEq
-  given Reusability[TargetWithId]                          = Reusability.byEq
-  given Reusability[TargetWithIdAndObs]                    = Reusability.byEq
-  given Reusability[TargetWithObs]                         = Reusability.byEq
-  given Reusability[ConstraintsSummary]                    = Reusability.byEq
-  given Reusability[ConstraintGroup]                       = Reusability.byEq
-  given Reusability[ObsSummary]                            = Reusability.byEq
-  given Reusability[ExploreLocalPreferences]               = Reusability.byEq
+  given Reusability[ObsIdSet]                      = Reusability.byEq
+  given Reusability[TargetIdSet]                   = Reusability.byEq
+  given Reusability[TargetWithId]                  = Reusability.byEq
+  given Reusability[TargetWithIdAndObs]            = Reusability.byEq
+  given Reusability[TargetWithObs]                 = Reusability.byEq
+  given Reusability[ConstraintsSummary]            = Reusability.byEq
+  given Reusability[ConstraintGroup]               = Reusability.byEq
+  given Reusability[ObsSummary]                    = Reusability.byEq
+  given Reusability[ExploreLocalPreferences]       = Reusability.byEq
+
+  /**
+   */
   given Reusability[PosAngleConstraint]                    = Reusability.byEq
   given Reusability[ObsSummaryWithConstraints]             =
     Reusability.byEq
@@ -90,26 +88,18 @@ object reusability:
   given Reusability[ImagingConfigurationOptions] = Reusability.byEq
   given Reusability[Progress]                    = Reusability.byEq
 
-  given Reusability[AngularSize]                        = Reusability.byEq
-  given Reusability[CatalogTargetResult]                = Reusability.byEq
-  given Reusability[ScienceModeBasic]                   = Reusability.byEq
-  given Reusability[ScienceModeAdvanced]                = Reusability.byEq
-  given Reusability[ScienceModeBasic.GmosNorthLongSlit] =
-    Reusability.byEq
-  given Reusability[ScienceModeBasic.GmosSouthLongSlit] =
-    Reusability.byEq
-  given Reusability[ScienceMode]                        = Reusability.byEq
-  given Reusability[GuideStarCandidate]                 = Reusability.by(_.name.value)
-  given Reusability[AgsPosition]                        = Reusability.byEq
-  given Reusability[AgsParams]                          = Reusability.byEq
-  given Reusability[AgsState]                           = Reusability.byEq
-  given Reusability[AgsAnalysis]                        = Reusability.byEq
+  given Reusability[AngularSize]         = Reusability.byEq
+  given Reusability[CatalogTargetResult] = Reusability.byEq
+  given Reusability[ScienceMode]         = Reusability.byEq
+  given Reusability[BasicConfiguration]  = Reusability.byEq
+  given Reusability[BasicConfigAndItc]   = Reusability.byEq
+  given Reusability[GuideStarCandidate]  = Reusability.by(_.name.value)
+  given Reusability[AgsPosition]         = Reusability.byEq
+  given Reusability[AgsParams]           = Reusability.byEq
+  given Reusability[AgsState]            = Reusability.byEq
+  given Reusability[AgsAnalysis]         = Reusability.byEq
 
-  given Reusability[SortedMap[Partner, IntPercent]] =
-    Reusability.by((_: SortedMap[Partner, IntPercent]).toMap)(Reusability.map)
-  given Reusability[ProposalClass]                  = Reusability.byEq
-  given Reusability[Proposal]                       = Reusability.byEq
-  given Reusability[ObsConfiguration]               = Reusability.byEq
+  given Reusability[ObsConfiguration] = Reusability.byEq
 
   given Reusability[Existence]                    = Reusability.byEq
   given Reusability[SpectroscopyRequirementsData] = Reusability.byEq
@@ -122,11 +112,6 @@ object reusability:
 
   given Reusability[ObjectTracking] = Reusability.byEq
 
-  given reusabilityNewType[W, T <: NewType[W]#Type](using
-    reusability: Reusability[W]
-  ): Reusability[T] =
-    reusability.asInstanceOf[Reusability[T]]
-
   given Reusability[Asterism] = Reusability.byEq[Asterism]
 
   given Reusability[TargetWithOptId] = Reusability.byEq
@@ -134,8 +119,6 @@ object reusability:
   given Reusability[UserGlobalPreferences] = Reusability.byEq
 
   given Reusability[ObsSummariesWithConstraints] = Reusability.byEq
-
-  given Reusability[Range.Inclusive] = Reusability.by(x => (x.start, x.end, x.step))
 
   given Reusability[SelectedPanel] = Reusability.byEq
 
@@ -146,5 +129,3 @@ object reusability:
   given Reusability[Visit] = Reusability.byEq
 
   given Reusability[StepRecord] = Reusability.byEq
-
-  given Reusability[Area] = Reusability.byEq

@@ -10,6 +10,7 @@ import crystal.react.hooks.*
 import crystal.react.implicits.*
 import crystal.react.reuse.*
 import eu.timepit.refined.auto.*
+import eu.timepit.refined.cats.given
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.*
@@ -17,12 +18,14 @@ import explore.components.ui.ExploreStyles
 import explore.given
 import explore.model.ExploreModelValidators
 import explore.model.display.given
+import explore.model.reusability.given
 import explore.utils.IsExpanded
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.callback.CallbackCats.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Band
 import lucuma.core.math.BrightnessUnits.*
+import lucuma.core.math.BrightnessValue
 import lucuma.core.math.dimensional.*
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Of
@@ -32,7 +35,7 @@ import lucuma.refined.*
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
-import lucuma.ui.reusability.*
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
@@ -100,7 +103,7 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
               ).sortable,
               ColDef(
                 ValueColumnId,
-                _._2.zoom(Measure.valueTagged[BigDecimal, Brightness[T]]),
+                _._2.zoom(Measure.valueTagged[BrightnessValue, Brightness[T]]),
                 "Value",
                 cell =>
                   FormInputTextView(
@@ -115,7 +118,7 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
               ).sortableBy(_.get),
               ColDef(
                 UnitsColumnId,
-                _._2.zoom(Measure.unitsTagged[BigDecimal, Brightness[T]]),
+                _._2.zoom(Measure.unitsTagged[BrightnessValue, Brightness[T]]),
                 "Units",
                 cell =>
                   EnumDropdownView(
@@ -171,7 +174,8 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                   props.brightnesses.mod(brightnesses =>
                     brightnesses +
                       (bandView.get ->
-                        defaultBandUnits(bandView.get).withValueTagged(BigDecimal(0)))
+                        defaultBandUnits(bandView.get)
+                          .withValueTagged(BrightnessValue.unsafeFrom(0)))
                   )
 
                 React.Fragment(

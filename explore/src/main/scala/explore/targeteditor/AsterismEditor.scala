@@ -18,14 +18,11 @@ import explore.config.VizTimeEditor
 import explore.model.AladinFullScreen
 import explore.model.AppContext
 import explore.model.Asterism
+import explore.model.BasicConfiguration
 import explore.model.ObsIdSet
 import explore.model.PAProperties
-import explore.model.ScienceMode
-import explore.model.SiderealTargetWithId
-import explore.model.TargetWithId
-import explore.model.TargetWithOptId
 import explore.model.enums.AgsState
-import explore.model.reusability.*
+import explore.model.reusability.given
 import explore.model.reusability.given
 import explore.optics.*
 import explore.optics.all.*
@@ -48,9 +45,10 @@ import lucuma.core.model.User
 import lucuma.core.util.NewType
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB
+import lucuma.schemas.model.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
-import lucuma.ui.reusability.*
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.Lens
@@ -70,7 +68,7 @@ case class AsterismEditor(
   sharedInObsIds: ObsIdSet,
   asterism:       View[Option[Asterism]],
   potVizTime:     Pot[View[Option[Instant]]],
-  scienceMode:    Option[ScienceMode],
+  configuration:  Option[BasicConfiguration],
   constraints:    Option[ConstraintSet],
   wavelength:     Option[Wavelength],
   currentTarget:  Option[Target.Id],
@@ -144,7 +142,9 @@ object AsterismEditor extends AsterismModifier:
 
         // Save the time here. this works for the obs and target tabs
         val vizTimeView = props.potVizTime.map(_.withOnMod { t =>
-          ObsQueries.updateVisualizationTime[IO](props.sharedInObsIds.toList, t).runAsync
+          ObsQueries
+            .updateVisualizationTime[IO](props.programId, props.sharedInObsIds.toList, t)
+            .runAsync
         })
 
         val vizTime = props.potVizTime.toOption.flatMap(_.get)
@@ -180,6 +180,7 @@ object AsterismEditor extends AsterismModifier:
           props.renderInTitle(VizTimeEditor(vizTimeView)),
           TargetTable(
             props.userId.some,
+            props.programId,
             props.sharedInObsIds,
             props.asterism,
             targetView,
@@ -218,7 +219,7 @@ object AsterismEditor extends AsterismModifier:
                           props.userId,
                           asterism,
                           vizTime,
-                          props.scienceMode,
+                          props.configuration,
                           props.constraints,
                           props.wavelength,
                           props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),

@@ -34,7 +34,7 @@ import lucuma.core.model.Program
 import lucuma.core.model.User
 import lucuma.react.syntax.*
 import lucuma.react.table.*
-import lucuma.ui.reusability.*
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*

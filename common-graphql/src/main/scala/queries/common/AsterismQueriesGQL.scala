@@ -7,220 +7,51 @@ import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import explore.model
 import lucuma.schemas.ObservationDB
+import lucuma.schemas.odb.*
 
 import java.time
-
-// gql: import lucuma.schemas.decoders.*
+// gql: import lucuma.schemas.decoders.given
 
 object AsterismQueriesGQL {
 
   @GraphQL
   trait AsterismGroupObsQuery extends GraphQLOperation[ObservationDB] {
-    val document: String = """
-      query($programId: ProgramId!) {
-        asterismGroup(programId: $programId) {
+    val document: String = s"""
+      query($$programId: ProgramId!) {
+        asterismGroup(programId: $$programId) {
           matches {
-            observationIds
+            observations {
+              matches {
+                id
+              }
+            }
             asterism {
               id
             }
           }
         }
 
-        targetGroup(programId: $programId) {
+        targetGroup(programId: $$programId) {
           matches {
-            observationIds
-            target {
-              id
-              name
-              sidereal {
-                ra {
-                  microarcseconds
-                }
-                dec {
-                  microarcseconds
-                }
-                epoch
-                properMotion {
-                  ra {
-                    microarcsecondsPerYear
-                  }
-                  dec {
-                    microarcsecondsPerYear
-                  }
-                }
-                radialVelocity {
-                  centimetersPerSecond
-                }
-                parallax {
-                  microarcseconds
-                }
-                catalogInfo {
-                  name
-                  id
-                  objectType
-                }
-              }
-              sourceProfile {
-                point {
-                  bandNormalized {
-                    sed {
-                      stellarLibrary
-                      coolStar
-                      galaxy
-                      planet
-                      quasar
-                      hiiRegion
-                      planetaryNebula
-                      powerLaw
-                      blackBodyTempK
-                      fluxDensities {
-                        wavelength {
-                          picometers
-                        }
-                        density
-                      }
-                    }
-                    brightnesses {
-                      band
-                      value
-                      units
-                      error
-                    }
-                  }
-                  emissionLines {
-                    lines {
-                      wavelength {
-                        picometers
-                      }
-                      lineWidth
-                      lineFlux {
-                        value
-                        units
-                      }
-                    }
-                    fluxDensityContinuum {
-                      value
-                      units
-                    }
-                  }
-                }
-                uniform {
-                  bandNormalized {
-                    sed {
-                      stellarLibrary
-                      coolStar
-                      galaxy
-                      planet
-                      quasar
-                      hiiRegion
-                      planetaryNebula
-                      powerLaw
-                      blackBodyTempK
-                      fluxDensities {
-                        wavelength {
-                          picometers
-                        }
-                        density
-                      }
-                    }
-                    brightnesses {
-                      band
-                      value
-                      units
-                      error
-                    }
-                  }
-                  emissionLines {
-                    lines {
-                      wavelength {
-                        picometers
-                      }
-                      lineWidth
-                      lineFlux {
-                        value
-                        units
-                      }
-                    }
-                    fluxDensityContinuum {
-                      value
-                      units
-                    }
-                  }
-                }
-                gaussian {
-                  fwhm {
-                    microarcseconds
-                  }
-                  bandNormalized {
-                    sed {
-                      stellarLibrary
-                      coolStar
-                      galaxy
-                      planet
-                      quasar
-                      hiiRegion
-                      planetaryNebula
-                      powerLaw
-                      blackBodyTempK
-                      fluxDensities {
-                        wavelength {
-                          picometers
-                        }
-                        density
-                      }
-                    }
-                    brightnesses {
-                      band
-                      value
-                      units
-                      error
-                    }
-                  }
-                  emissionLines {
-                    lines {
-                      wavelength {
-                        picometers
-                      }
-                      lineWidth
-                      lineFlux {
-                        value
-                        units
-                      }
-                    }
-                    fluxDensityContinuum {
-                      value
-                      units
-                    }
-                  }
-                }
+            observations {
+              matches {
+                id
               }
             }
+            target $TargetWithIdSubquery
           }
         }
 
-        observations(WHERE: {programId: {EQ: $programId}}) {
+        observations(programId: $$programId) {
           matches {
             id
-            constraintSet {
-              imageQuality
-              cloudExtinction
-              skyBackground
-              waterVapor
-            }
+            constraintSet $ConstraintsSummarySubquery
             status
             activeStatus
             visualizationTime
-            posAngleConstraint {
-              constraint
-              angle {
-                microarcseconds
-              }
-            }
+            posAngleConstraint $PosAngleConstraintSubquery
             plannedTime {
-              execution {
-                microseconds
-              }
+              execution $TimeSpanSubquery
             }
             targetEnvironment {
               asterism {
@@ -229,25 +60,21 @@ object AsterismQueriesGQL {
             }
             scienceRequirements {
               spectroscopy {
-                wavelength {
-                  picometers
-                }
+                wavelength $WavelengthSubquery
               }
             }
-            scienceMode {
+            observingMode {
               gmosNorthLongSlit {
-                basic {
-                  grating
-                  filter
-                  fpu
-                }
+                grating
+                filter
+                fpu
+                centralWavelength $WavelengthSubquery
               }
               gmosSouthLongSlit {
-                basic {
-                  grating
-                  filter
-                  fpu
-                }
+                grating
+                filter
+                fpu
+                centralWavelength $WavelengthSubquery
               }
             }
           }
@@ -262,18 +89,7 @@ object AsterismQueriesGQL {
 
       object Observations {
         object Matches {
-          type PosAngleConstraint = lucuma.core.model.PosAngleConstraint
-          trait ConstraintSet extends model.ConstraintsSummary
-          type ScienceMode = model.ScienceMode
-          object PlannedTime {
-            type Execution = time.Duration
-          }
-
-          object ScienceRequirements {
-            object Spectroscopy {
-              type Wavelength = lucuma.core.math.Wavelength
-            }
-          }
+          type ObservingMode = model.BasicConfiguration
         }
       }
     }

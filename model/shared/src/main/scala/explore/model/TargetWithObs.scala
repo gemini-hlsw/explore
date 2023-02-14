@@ -8,8 +8,11 @@ import cats.derived.*
 import cats.implicits.*
 import io.circe.Decoder
 import io.circe.Decoder.*
+import io.circe.generic.semiauto.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
+import lucuma.schemas.decoders.given
+import lucuma.schemas.model.*
 import monocle.Focus
 import monocle.Lens
 
@@ -52,10 +55,16 @@ object TargetWithIdAndObs {
   val targetWithObs: Lens[TargetWithIdAndObs, TargetWithObs] =
     Focus[TargetWithIdAndObs](_.targetWithObs)
 
-  implicit val targetGroupDecode: Decoder[TargetWithIdAndObs] = Decoder.instance(c =>
+  private case class ObsIdMatch(id: Observation.Id)
+  private given Decoder[ObsIdMatch] = deriveDecoder
+
+  private case class ObsIdMatches(matches: List[ObsIdMatch])
+  private given Decoder[ObsIdMatches] = deriveDecoder
+
+  given Decoder[TargetWithIdAndObs] = Decoder.instance(c =>
     for {
-      obsIds       <- c.get[List[Observation.Id]]("observationIds")
       targetWithId <- c.get[TargetWithId]("target")
+      obsIds       <- c.downField("observations").as[ObsIdMatches].map(_.matches.map(_.id))
     } yield TargetWithIdAndObs(
       targetWithId.id,
       TargetWithObs(targetWithId.target, SortedSet.from(obsIds))

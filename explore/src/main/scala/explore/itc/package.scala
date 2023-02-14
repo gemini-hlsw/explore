@@ -9,8 +9,8 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.itc.ItcCcd
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.model.NonNegDuration
 import lucuma.core.util.NewType
+import lucuma.core.util.TimeSpan
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.fa.IconSize
@@ -36,8 +36,8 @@ def formatDuration(seconds: Long): String =
   else
     f"${seconds / 3600.0}%.2f hr"
 
-def format(time: NonNegDuration, count: NonNegInt): String =
-  s"$count × ${formatDuration(time.value.getSeconds())} = ${formatDuration(time.value.getSeconds() * count.value)}"
+def format(time: TimeSpan, count: NonNegInt): String =
+  s"$count × ${formatDuration(time.toSeconds.toLong)} = ${formatDuration(time.toSeconds.toLong * count.value)}"
 
 def formatCcds(
   ccds:      Option[NonEmptyList[ItcCcd]],

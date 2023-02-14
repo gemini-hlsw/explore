@@ -7,36 +7,21 @@ import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import explore.model
 import lucuma.schemas.ObservationDB
+import lucuma.schemas.odb.*
 
 import java.time
-
 // gql: import io.circe.refined.*
-// gql: import lucuma.schemas.decoders.*
+// gql: import lucuma.schemas.decoders.given
 
 object ConstraintGroupQueriesGQL {
 
   @GraphQL
   trait ConstraintGroupObsQuery extends GraphQLOperation[ObservationDB] {
-    val document = """
-      query($programId: ProgramId!) {
-        constraintSetGroup(programId: $programId) {
+    val document = s"""
+      query($$programId: ProgramId!) {
+        constraintSetGroup(programId: $$programId) {
           matches {
-            constraintSet {
-              cloudExtinction
-              imageQuality
-              skyBackground
-              waterVapor
-              elevationRange {
-                airMass {
-                  min
-                  max
-                }
-                hourAngle {
-                  minHours
-                  maxHours
-                }
-              }
-            }
+            constraintSet $ConstraintSetSubquery
             observations {
               matches {
                 id
@@ -45,32 +30,28 @@ object ConstraintGroupQueriesGQL {
           }
         }
 
-        observations(WHERE: {programId: {EQ: $programId}}) {
+        observations(programId: $$programId) {
           matches {
             id
             title
             subtitle
-          	status
-          	activeStatus
-          	plannedTime {
-          	  execution {
-          	    microseconds
-          	  }
-          	}
-            scienceMode {
+            status
+            activeStatus
+            plannedTime {
+              execution $TimeSpanSubquery
+            }
+            observingMode {
               gmosNorthLongSlit {
-                basic {
-                  grating
-                  filter
-                  fpu
-                }
+                grating
+                filter
+                fpu
+                centralWavelength $WavelengthSubquery
               }
               gmosSouthLongSlit {
-                basic {
-                  grating
-                  filter
-                  fpu
-                }
+                grating
+                filter
+                fpu
+                centralWavelength $WavelengthSubquery
               }
             }
           }
@@ -85,12 +66,8 @@ object ConstraintGroupQueriesGQL {
 
       object Observations {
         object Matches {
-          object PlannedTime {
-            type Execution = time.Duration
-          }
-          type ScienceMode = model.ScienceMode
+          type ObservingMode = model.BasicConfiguration
         }
-
       }
     }
   }

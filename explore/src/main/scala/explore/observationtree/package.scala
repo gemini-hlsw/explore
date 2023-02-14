@@ -55,7 +55,7 @@ def cloneObs(
   before >>
     cloneObservation[IO](obsId)
       .flatMap { obs =>
-        obsExistence(obs.id, o => setObs(programId, o.some, ctx))
+        obsExistence(programId, obs.id, o => setObs(programId, o.some, ctx))
           .mod(undoCtx)(obsListMod.upsert(obs.toTitleAndConstraints, pos))
           .to[IO]
       }
@@ -70,13 +70,16 @@ private def obsWithId(
     .withKey(obsId)
     .composeOptionLens(Focus[(ObsSummaryWithTitleConstraintsAndConf, Int)](_._1))
 
-def obsEditStatus(obsId: Observation.Id)(using TransactionalClient[IO, ObservationDB]) = Action(
+def obsEditStatus(programId: Program.Id, obsId: Observation.Id)(using
+  TransactionalClient[IO, ObservationDB]
+) = Action(
   access = obsWithId(obsId).composeOptionLens(ObsSummaryWithTitleConstraintsAndConf.status)
 )(onSet =
   (_, status) =>
     UpdateObservationMutation
       .execute[IO](
         UpdateObservationsInput(
+          programId = programId,
           WHERE = obsId.toWhereObservation.assign,
           SET = ObservationPropertiesInput(status = status.orIgnore)
         )
@@ -84,13 +87,16 @@ def obsEditStatus(obsId: Observation.Id)(using TransactionalClient[IO, Observati
       .void
 )
 
-def obsEditSubtitle(obsId: Observation.Id)(using TransactionalClient[IO, ObservationDB]) = Action(
+def obsEditSubtitle(programId: Program.Id, obsId: Observation.Id)(using
+  TransactionalClient[IO, ObservationDB]
+) = Action(
   access = obsWithId(obsId).composeOptionLens(ObsSummaryWithTitleConstraintsAndConf.subtitle)
 )(onSet =
   (_, subtitleOpt) =>
     UpdateObservationMutation
       .execute[IO](
         UpdateObservationsInput(
+          programId = programId,
           WHERE = obsId.toWhereObservation.assign,
           SET = ObservationPropertiesInput(subtitle = subtitleOpt.flatten.orUnassign)
         )
@@ -98,13 +104,16 @@ def obsEditSubtitle(obsId: Observation.Id)(using TransactionalClient[IO, Observa
       .void
 )
 
-def obsActiveStatus(obsId: Observation.Id)(using TransactionalClient[IO, ObservationDB]) = Action(
+def obsActiveStatus(programId: Program.Id, obsId: Observation.Id)(using
+  TransactionalClient[IO, ObservationDB]
+) = Action(
   access = obsWithId(obsId).composeOptionLens(ObsSummaryWithTitleConstraintsAndConf.activeStatus)
 )(onSet =
   (_, activeStatus) =>
     UpdateObservationMutation
       .execute[IO](
         UpdateObservationsInput(
+          programId = programId,
           WHERE = obsId.toWhereObservation.assign,
           SET = ObservationPropertiesInput(activeStatus = activeStatus.orIgnore)
         )
@@ -112,24 +121,24 @@ def obsActiveStatus(obsId: Observation.Id)(using TransactionalClient[IO, Observa
       .void
 )
 
-def obsExistence(obsId: Observation.Id, setObs: Observation.Id => Callback)(using
-  TransactionalClient[IO, ObservationDB]
+def obsExistence(programId: Program.Id, obsId: Observation.Id, setObs: Observation.Id => Callback)(
+  using TransactionalClient[IO, ObservationDB]
 ) =
   Action(
     access = obsListMod.withKey(obsId)
   )(
     onSet = (_, elemWithIndexOpt) =>
       elemWithIndexOpt.fold {
-        deleteObservation[IO](obsId)
+        deleteObservation[IO](programId, obsId)
       } { case (obs, _) =>
         // Not much to do here, the observation must be created before we get here
         setObs(obs.id).to[IO]
       },
     onRestore = (_, elemWithIndexOpt) =>
       elemWithIndexOpt.fold {
-        deleteObservation[IO](obsId)
+        deleteObservation[IO](programId, obsId)
       } { case (obs, _) =>
-        undeleteObservation[IO](obs.id) >>
+        undeleteObservation[IO](programId, obs.id) >>
           setObs(obs.id).to[IO]
       }
   )

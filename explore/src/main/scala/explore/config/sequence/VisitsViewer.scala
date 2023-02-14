@@ -45,8 +45,8 @@ object VisitsViewer:
 
   private def stepDuration(step: StepRecord): Duration =
     step.instrumentConfig match
-      case DynamicConfig.GmosNorth(exposure, _, _, _, _, _, _) => exposure
-      case DynamicConfig.GmosSouth(exposure, _, _, _, _, _, _) => exposure
+      case DynamicConfig.GmosNorth(exposure, _, _, _, _, _, _) => exposure.toDuration
+      case DynamicConfig.GmosSouth(exposure, _, _, _, _, _, _) => exposure.toDuration
 
   private def renderSequence(
     sequenceType: SequenceType,

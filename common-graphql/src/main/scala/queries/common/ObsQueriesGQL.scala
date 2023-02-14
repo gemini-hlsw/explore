@@ -6,127 +6,52 @@ package queries.common
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import explore.model
-import explore.model.ConstraintsSummary
 import lucuma.core.{model => coreModel}
 import lucuma.schemas.ObservationDB
+import lucuma.schemas.odb.*
 
 import java.time
-// gql: import explore.model.TargetWithId.*
 // gql: import io.circe.refined.*
-// gql: import lucuma.schemas.decoders.*
+// gql: import lucuma.schemas.decoders.given
 
 object ObsQueriesGQL {
   @GraphQL
   trait ProgramObservationsQuery extends GraphQLOperation[ObservationDB] {
     // TODO We should do a single observations query and extract the constraint sets and targets from it.
-    val document = """
-      query($programId: ProgramId!) {
-        observations(WHERE: {programId: {EQ: $programId}}) {
+    val document = s"""
+      query($$programId: ProgramId!) {
+        observations(programId: $$programId) {
           matches {
             id
             title
             subtitle
-            constraintSet {
-              imageQuality
-              cloudExtinction
-              skyBackground
-              waterVapor
-            }
+            constraintSet $ConstraintsSummarySubquery
             status
             activeStatus
             visualizationTime
             plannedTime {
-              execution {
-                microseconds
-              }
+              execution $TimeSpanSubquery
             }
-            scienceMode {
+            observingMode {
               gmosNorthLongSlit {
-                basic {
-                  grating
-                  filter
-                  fpu
-                }
-                advanced {
-                  overrideGrating
-                  overrideFilter
-                  overrideFpu
-                  overrideExposureTimeMode {
-                    signalToNoise {
-                      value
-                    }
-                    fixedExposure {
-                      count
-                      time {
-                        microseconds
-                      }
-                    }
-                  }
-                  explicitXBin
-                  explicitYBin
-                  explicitAmpReadMode
-                  explicitAmpGain
-                  explicitRoi
-                  explicitWavelengthDithersNm
-                  explicitSpatialOffsets {
-                    microarcseconds
-                  }
-                }
+                grating
+                filter
+                fpu
+                centralWavelength $WavelengthSubquery
               }
               gmosSouthLongSlit {
-                basic {
-                  grating
-                  filter
-                  fpu
-                }
-                advanced {
-                  overrideGrating
-                  overrideFilter
-                  overrideFpu
-                  overrideExposureTimeMode {
-                    signalToNoise {
-                      value
-                    }
-                    fixedExposure {
-                      count
-                      time {
-                        microseconds
-                      }
-                    }
-                  }
-                  explicitXBin
-                  explicitYBin
-                  explicitAmpReadMode
-                  explicitAmpGain
-                  explicitRoi
-                  explicitWavelengthDithersNm
-                  explicitSpatialOffsets {
-                    microarcseconds
-                  }
-                }
+                grating
+                filter
+                fpu
+                centralWavelength $WavelengthSubquery
               }
             }
           }
         }
 
-        constraintSetGroup(programId: $programId) {
+        constraintSetGroup(programId: $$programId) {
           matches {
-            constraintSet {
-              cloudExtinction
-              imageQuality
-              skyBackground
-              waterVapor
-              elevationRange {
-                airMass {
-                  min
-                  max
-                }
-                hourAngle {
-                  minHours
-                  maxHours
-                }
-              }
-            }
+            constraintSet $ConstraintSetSubquery
             observations {
               matches {
                 id
@@ -135,18 +60,18 @@ object ObsQueriesGQL {
           }
         }
 
-        targetGroup(programId: $programId) {
+        targetGroup(programId: $$programId) {
           matches {
-            observationIds
+            observations {
+              matches {
+                id
+              }
+            }
             target {
               id
               sidereal {
-                ra {
-                  microarcseconds
-                }
-                dec {
-                  microarcseconds
-                }
+                ra $AngleSubquery
+                dec $AngleSubquery
               }
             }
           }
@@ -157,11 +82,7 @@ object ObsQueriesGQL {
     object Data {
       object Observations {
         object Matches {
-          trait ConstraintSet extends ConstraintsSummary
-          object PlannedTime {
-            type Execution = time.Duration
-          }
-          type ScienceMode = model.ScienceMode
+          type ObservingMode = model.BasicConfiguration
         }
       }
 
@@ -182,10 +103,14 @@ object ObsQueriesGQL {
 
   @GraphQL
   trait ProgramObservationsEditSubscription extends GraphQLOperation[ObservationDB] {
+    // We need to include the `value {id}` to avoid a bug in grackle.
     val document = """
       subscription($programId: ProgramId!) {
-        observationEdit(programId: $programId) {
+        observationEdit(input: {programId: $programId}) {
           id
+          value {
+            id
+          }
         }
       }
     """
@@ -193,63 +118,19 @@ object ObsQueriesGQL {
 
   @GraphQL
   trait ProgramCreateObservation extends GraphQLOperation[ObservationDB] {
-    val document = """
-      mutation($createObservation: CreateObservationInput!) {
-        createObservation(input: $createObservation) {
+    val document = s"""
+      mutation($$createObservation: CreateObservationInput!) {
+        createObservation(input: $$createObservation) {
           observation {
             id
             title
             subtitle
-            constraintSet {
-              imageQuality
-              cloudExtinction
-              skyBackground
-              waterVapor
-            }
+            constraintSet $ConstraintsSummarySubquery
             status
             activeStatus
             plannedTime {
-              execution {
-                microseconds
-              }
+              execution $TimeSpanSubquery
             }
-          }
-        }
-      }
-    """
-
-    object Data {
-      object CreateObservation {
-        object Observation {
-          trait ConstraintSet extends ConstraintsSummary
-          object PlannedTime {
-            type Execution = time.Duration
-          }
-        }
-      }
-    }
-  }
-
-  @GraphQL
-  trait ProgramDeleteObservations extends GraphQLOperation[ObservationDB] {
-    val document = """
-      mutation($input: DeleteObservationsInput!) {
-        deleteObservations(input: $input) {
-          observations {
-            id
-          }
-        }
-      }
-    """
-  }
-
-  @GraphQL
-  trait ProgramUndeleteObservations extends GraphQLOperation[ObservationDB] {
-    val document = """
-      mutation($input: UndeleteObservationsInput!) {
-        undeleteObservations(input: $input) {
-          observations {
-            id
           }
         }
       }
@@ -258,302 +139,104 @@ object ObsQueriesGQL {
 
   @GraphQL
   trait ObsEditQuery extends GraphQLOperation[ObservationDB] {
-    val document = """
-      query($obsId: ObservationId!) {
-        observation(observationId: $obsId) {
+    val document = s"""
+      query($$programId: ProgramId!, $$obsId: ObservationId!) {
+        observation(observationId: $$obsId) {
           id
           title
           subtitle
           visualizationTime
-          posAngleConstraint {
-            constraint
-            angle {
-              microarcseconds
-            }
-          }
+          posAngleConstraint $PosAngleConstraintSubquery
           targetEnvironment {
-            asterism {
-              id
-              name
-              sidereal {
-                ra {
-                  microarcseconds
-                }
-                dec {
-                  microarcseconds
-                }
-                epoch
-                properMotion {
-                  ra {
-                    microarcsecondsPerYear
-                  }
-                  dec {
-                    microarcsecondsPerYear
-                  }
-                }
-                radialVelocity {
-                  centimetersPerSecond
-                }
-                parallax {
-                  microarcseconds
-                }
-                catalogInfo {
-                  name
-                  id
-                  objectType
-                }
-              }
-              sourceProfile {
-                point {
-                  bandNormalized {
-                    sed {
-                      stellarLibrary
-                      coolStar
-                      galaxy
-                      planet
-                      quasar
-                      hiiRegion
-                      planetaryNebula
-                      powerLaw
-                      blackBodyTempK
-                      fluxDensities {
-                        wavelength {
-                          picometers
-                        }
-                        density
-                      }
-                    }
-                    brightnesses {
-                      band
-                      value
-                      units
-                      error
-                    }
-                  }
-                  emissionLines {
-                    lines {
-                      wavelength {
-                        picometers
-                      }
-                      lineWidth
-                      lineFlux {
-                        value
-                        units
-                      }
-                    }
-                    fluxDensityContinuum {
-                      value
-                      units
-                    }
-                  }
-                }
-                uniform {
-                  bandNormalized {
-                    sed {
-                      stellarLibrary
-                      coolStar
-                      galaxy
-                      planet
-                      quasar
-                      hiiRegion
-                      planetaryNebula
-                      powerLaw
-                      blackBodyTempK
-                      fluxDensities {
-                        wavelength {
-                          picometers
-                        }
-                        density
-                      }
-                    }
-                    brightnesses {
-                      band
-                      value
-                      units
-                      error
-                    }
-                  }
-                  emissionLines {
-                    lines {
-                      wavelength {
-                        picometers
-                      }
-                      lineWidth
-                      lineFlux {
-                        value
-                        units
-                      }
-                    }
-                    fluxDensityContinuum {
-                      value
-                      units
-                    }
-                  }
-                }
-                gaussian {
-                  fwhm {
-                    microarcseconds
-                  }
-                  bandNormalized {
-                    sed {
-                      stellarLibrary
-                      coolStar
-                      galaxy
-                      planet
-                      quasar
-                      hiiRegion
-                      planetaryNebula
-                      powerLaw
-                      blackBodyTempK
-                      fluxDensities {
-                        wavelength {
-                          picometers
-                        }
-                        density
-                      }
-                    }
-                    brightnesses {
-                      band
-                      value
-                      units
-                      error
-                    }
-                  }
-                  emissionLines {
-                    lines {
-                      wavelength {
-                        picometers
-                      }
-                      lineWidth
-                      lineFlux {
-                        value
-                        units
-                      }
-                    }
-                    fluxDensityContinuum {
-                      value
-                      units
-                    }
-                  }
-                }
-              }
-            }
+            asterism $TargetWithIdSubquery
           }
-          constraintSet {
-            cloudExtinction
-            imageQuality
-            skyBackground
-            waterVapor
-            elevationRange {
-              airMass {
-                min
-                max
-              }
-              hourAngle {
-                minHours
-                maxHours
-              }
-            }
-          }
+          constraintSet $ConstraintSetSubquery
           scienceRequirements {
             mode
             spectroscopy {
-              wavelength {
-                picometers
-              }
+              wavelength $WavelengthSubquery
               resolution
               signalToNoise
-              signalToNoiseAt {
-                picometers
-              }
-              wavelengthCoverage {
-                picometers
-              }
+              signalToNoiseAt $WavelengthSubquery
+              wavelengthCoverage $WavelengthRangeSubquery
               focalPlane
-              focalPlaneAngle {
-                microarcseconds
-              }
-              capabilities
+              focalPlaneAngle $AngleSubquery
+              capability
             }
           }
-          scienceMode {
+          observingMode {
             gmosNorthLongSlit {
-              basic {
-                grating
-                filter
-                fpu
+              initialGrating
+              initialFilter
+              initialFpu
+              initialCentralWavelength $WavelengthSubquery
+              grating
+              filter
+              fpu
+              centralWavelength $WavelengthSubquery
+              defaultXBin
+              explicitXBin
+              defaultYBin
+              explicitYBin
+              defaultAmpReadMode
+              explicitAmpReadMode
+              defaultAmpGain
+              explicitAmpGain
+              defaultRoi
+              explicitRoi
+              defaultWavelengthDithers $WavelengthDitherSubquery
+              explicitWavelengthDithers $WavelengthDitherSubquery
+              defaultSpatialOffsets {
+                microarcseconds
               }
-              advanced {
-                overrideWavelength {
-                  picometers
-                }
-                overrideGrating
-                overrideFilter
-                overrideFpu
-                overrideExposureTimeMode {
-                  signalToNoise {
-                    value
-                  }
-                  fixedExposure {
-                    count
-                    time {
-                      microseconds
-                    }
-                  }
-                }
-                explicitXBin
-                explicitYBin
-                explicitAmpReadMode
-                explicitAmpGain
-                explicitRoi
-                explicitWavelengthDithersNm
-                explicitSpatialOffsets {
-                  microarcseconds
-                }
+              explicitSpatialOffsets {
+                microarcseconds
               }
             }
             gmosSouthLongSlit {
-              basic {
-                grating
-                filter
-                fpu
+              initialGrating
+              initialFilter
+              initialFpu
+              initialCentralWavelength $WavelengthSubquery
+              grating
+              filter
+              fpu
+              centralWavelength $WavelengthSubquery
+              defaultXBin
+              explicitXBin
+              defaultYBin
+              explicitYBin
+              defaultAmpReadMode
+              explicitAmpReadMode
+              defaultAmpGain
+              explicitAmpGain
+              defaultRoi
+              explicitRoi
+              defaultWavelengthDithers $WavelengthDitherSubquery
+              explicitWavelengthDithers $WavelengthDitherSubquery
+              defaultSpatialOffsets {
+                microarcseconds
               }
-              advanced {
-                overrideWavelength {
-                  picometers
-                }
-                overrideGrating
-                overrideFilter
-                overrideFpu
-                overrideExposureTimeMode {
-                  signalToNoise {
-                    value
-                  }
-                  fixedExposure {
-                    count
-                    time {
-                      microseconds
-                    }
-                  }
-                }
-                explicitXBin
-                explicitYBin
-                explicitAmpReadMode
-                explicitAmpGain
-                explicitRoi
-                explicitWavelengthDithersNm
-                explicitSpatialOffsets {
-                  microarcseconds
-                }
+              explicitSpatialOffsets {
+                microarcseconds
               }
             }
           }
-          itc {
-            exposureTime {
-              microseconds
+        }
+
+        itc(programId: $$programId, observationId: $$obsId) {
+          result {
+            ... on ItcSuccess {
+              exposureTime $TimeSpanSubquery
+              exposures
+              signalToNoise
             }
-            exposures
-            signalToNoise
+            ... on ItcMissingParams {
+              params
+            }
+            ... on ItcServiceError {
+              message
+            }
           }
         }
       }
@@ -561,38 +244,30 @@ object ObsQueriesGQL {
 
     object Data {
       object Observation {
-        type PosAngleConstraint = lucuma.core.model.PosAngleConstraint
-
-        object TargetEnvironment {
-          type Asterism = model.TargetWithId
-        }
-        type ConstraintSet = coreModel.ConstraintSet
-
         object ScienceRequirements {
           object Spectroscopy {
-            type Wavelength         = lucuma.core.math.Wavelength
-            type SignalToNoiseAt    = lucuma.core.math.Wavelength
-            type WavelengthCoverage = lucuma.core.math.Wavelength
-            type FocalPlaneAngle    = lucuma.core.math.Angle
+            type WavelengthCoverage = lucuma.core.math.WavelengthRange
           }
         }
 
-        type ScienceMode = model.ScienceMode
-
-        object Itc {
-          type ExposureTime = lucuma.core.model.NonNegDuration
-        }
+        type ObservingMode = model.ScienceMode
       }
+
+      type Itc = explore.model.OdbItcResult
     }
 
   }
 
   @GraphQL
   trait ObservationEditSubscription extends GraphQLOperation[ObservationDB] {
+    // We need to include the `value {id}` to avoid a bug in grackle.
     val document = """
       subscription($obsId: ObservationId!) {
-        observationEdit(observationId: $obsId) {
+        observationEdit(input: {observationId: $obsId}) {
           id
+          value {
+            id
+          }
         }
       }
     """
@@ -612,25 +287,83 @@ object ObsQueriesGQL {
   }
 
   @GraphQL
-  trait CloneObservationMutation extends GraphQLOperation[ObservationDB] {
-    val document = """
-      mutation ($input: CloneObservationInput!){
-        cloneObservation(input: $input) {
-          newObservation {
-            id
-            title
-            subtitle
-            constraintSet {
-              imageQuality
-              cloudExtinction
-              skyBackground
-              waterVapor
-            }
-            status
-            activeStatus
-            plannedTime {
-              execution {
-                microseconds
+  trait CreateConfigurationMutation extends GraphQLOperation[ObservationDB] {
+    val document = s"""
+      mutation ($$input: UpdateObservationsInput!){
+        updateObservations(input: $$input) {
+          observations {
+            observingMode {
+              gmosNorthLongSlit {
+                initialGrating
+                initialFilter
+                initialFpu
+                initialCentralWavelength {
+                    picometers
+                  }
+                grating
+                filter
+                fpu
+                centralWavelength {
+                    picometers
+                  }
+                defaultXBin
+                explicitXBin
+                defaultYBin
+                explicitYBin
+                defaultAmpReadMode
+                explicitAmpReadMode
+                defaultAmpGain
+                explicitAmpGain
+                defaultRoi
+                explicitRoi
+                defaultWavelengthDithers {
+                  picometers
+                }
+                explicitWavelengthDithers {
+                  picometers
+                }
+                defaultSpatialOffsets {
+                  microarcseconds
+                }
+                explicitSpatialOffsets {
+                  microarcseconds
+                }
+              }
+              gmosSouthLongSlit {
+                initialGrating
+                initialFilter
+                initialFpu
+                initialCentralWavelength {
+                    picometers
+                  }
+                grating
+                filter
+                fpu
+                centralWavelength {
+                  picometers
+                }
+                defaultXBin
+                explicitXBin
+                defaultYBin
+                explicitYBin
+                defaultAmpReadMode
+                explicitAmpReadMode
+                defaultAmpGain
+                explicitAmpGain
+                defaultRoi
+                explicitRoi
+                defaultWavelengthDithers {
+                  picometers
+                }
+                explicitWavelengthDithers {
+                  picometers
+                }
+                defaultSpatialOffsets {
+                  microarcseconds
+                }
+                explicitSpatialOffsets {
+                  microarcseconds
+                }
               }
             }
           }
@@ -639,14 +372,32 @@ object ObsQueriesGQL {
     """
 
     object Data {
-      object CloneObservation {
-        object NewObservation {
-          trait ConstraintSet extends ConstraintsSummary
-          object PlannedTime {
-            type Execution = time.Duration
-          }
+      object UpdateObservations {
+        object Observations {
+          type ObservingMode = model.ScienceMode
         }
       }
     }
+  }
+
+  @GraphQL
+  trait CloneObservationMutation extends GraphQLOperation[ObservationDB] {
+    val document = s"""
+      mutation ($$input: CloneObservationInput!){
+        cloneObservation(input: $$input) {
+          newObservation {
+            id
+            title
+            subtitle
+            constraintSet $ConstraintsSummarySubquery
+            status
+            activeStatus
+            plannedTime {
+              execution $TimeSpanSubquery
+            }
+          }
+        }
+      }
+    """
   }
 }

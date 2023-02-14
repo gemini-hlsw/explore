@@ -25,6 +25,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.Observation
+import lucuma.core.model.Program
 import lucuma.core.model.validation.ModelValidators
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
@@ -36,7 +37,7 @@ import lucuma.ui.primereact.EnumDropdownView
 import lucuma.ui.primereact.FormInputTextView
 import lucuma.ui.primereact.FormLabel
 import lucuma.ui.primereact.given
-import lucuma.ui.reusability.*
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.given
@@ -45,6 +46,7 @@ import react.common.ReactFnProps
 import react.primereact.PrimeStyles
 
 case class ConstraintsPanel(
+  programId:     Program.Id,
   obsIds:        List[Observation.Id],
   constraintSet: View[ConstraintSet],
   undoStacks:    View[UndoStacks[IO, ConstraintSet]],
@@ -103,7 +105,7 @@ object ConstraintsPanel:
 
         val undoCtx: UndoContext[ConstraintSet] = UndoContext(props.undoStacks, props.constraintSet)
 
-        val undoViewSet = UndoView(props.obsIds, undoCtx)
+        val undoViewSet = UndoView(props.programId, props.obsIds, undoCtx)
 
         val erView =
           undoViewSet(ConstraintSet.elevationRange, UpdateConstraintSet.elevationRange)

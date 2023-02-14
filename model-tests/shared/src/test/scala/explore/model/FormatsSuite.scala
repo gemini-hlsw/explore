@@ -8,9 +8,9 @@ import cats.syntax.all.*
 import eu.timepit.refined.cats.given
 import explore.model.formats.*
 import lucuma.core.arb.*
-import lucuma.core.model.NonNegDuration
-import lucuma.core.model.arb.ArbNonNegDuration.given
 import lucuma.core.optics.laws.discipline.ValidWedgeTests
+import lucuma.core.util.TimeSpan
+import lucuma.core.util.arb.ArbTimeSpan.given
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 import org.scalacheck.Prop.*
@@ -24,61 +24,61 @@ class FormatsSuite extends munit.DisciplineSuite {
     List(_ => arbitrary[String]) // swap for a random string
 
   val finiteDurationsHM: Gen[String] =
-    arbitrary[NonNegDuration]
-      .map { d =>
-        s"${d.value.toHoursPartTmp()}:${d.value.toMinutesPartTmp()}"
+    arbitrary[TimeSpan]
+      .map { ts =>
+        s"${ts.toHoursPart}:${ts.toMinutesPart}"
       }
       .flatMapOneOf(Gen.const, perturbations: _*)
 
   val finiteDurationsHMS: Gen[String] =
-    arbitrary[NonNegDuration]
-      .map { d =>
+    arbitrary[TimeSpan]
+      .map { ts =>
         val secs =
-          if (d.value.toMillisPartTmp() > 0)
-            f"${d.value.toSecondsPartTmp()}%02d.${d.value.toMillisPartTmp() % 1000}%03d"
+          if (ts.toMillisPart > 0)
+            f"${ts.toSecondsPart}%02d.${ts.toMillisPart}%03d"
           else
-            f"${d.value.toSecondsPartTmp()}%02d"
-        s"${d.value.toHoursPartTmp()}:${d.value.toMinutesPartTmp()}:$secs"
+            f"${ts.toSecondsPart}%02d"
+        s"${ts.toHoursPart}:${ts.toMinutes}:$secs"
       }
       .flatMapOneOf(Gen.const, (((_: String) => finiteDurationsHM) :: perturbations): _*)
 
   assertEquals(parsers.durationHM.parseAll("0").toOption,
-               NonNegDuration.unsafeFrom(Duration.ofMinutes(0)).some
+               TimeSpan.unsafeFromDuration(Duration.ofMinutes(0)).some
   )
   assertEquals(parsers.durationHM.parseAll("0:0").toOption,
-               NonNegDuration.unsafeFrom(Duration.ofMinutes(0)).some
+               TimeSpan.unsafeFromDuration(Duration.ofMinutes(0)).some
   )
   assertEquals(parsers.durationHM.parseAll("0:00").toOption,
-               NonNegDuration.unsafeFrom(Duration.ofMinutes(0)).some
+               TimeSpan.unsafeFromDuration(Duration.ofMinutes(0)).some
   )
   assertEquals(parsers.durationHM.parseAll("0:2").toOption,
-               NonNegDuration.unsafeFrom(Duration.ofMinutes(2)).some
+               TimeSpan.unsafeFromDuration(Duration.ofMinutes(2)).some
   )
   assertEquals(parsers.durationHM.parseAll("0:48").toOption,
-               NonNegDuration.unsafeFrom(Duration.ofMinutes(48)).some
+               TimeSpan.unsafeFromDuration(Duration.ofMinutes(48)).some
   )
   assertEquals(
     parsers.durationHMS.parseAll("18179:02:26.000").toOption,
-    NonNegDuration.unsafeFrom(Duration.ofHours(18179).plusMinutes(2).plusSeconds(26)).some
+    TimeSpan.unsafeFromDuration(Duration.ofHours(18179).plusMinutes(2).plusSeconds(26)).some
   )
   assertEquals(
     parsers.durationHMS.parseAll("18179:02:09.033").toOption,
-    NonNegDuration
-      .unsafeFrom(Duration.ofHours(18179).plusMinutes(2).plusSeconds(9).plusMillis(33))
+    TimeSpan
+      .unsafeFromDuration(Duration.ofHours(18179).plusMinutes(2).plusSeconds(9).plusMillis(33))
       .some
   )
   assertEquals(
     parsers.durationHMS.parseAll("18179:02:09.0319029201091").toOption,
-    NonNegDuration
-      .unsafeFrom(Duration.ofHours(18179).plusMinutes(2).plusSeconds(9).plusMillis(31))
+    TimeSpan
+      .unsafeFromDuration(Duration.ofHours(18179).plusMinutes(2).plusSeconds(9).plusMillis(31))
       .some
   )
   checkAll(
-    "durationHMFormat",
+    "durationHMValidWedge",
     ValidWedgeTests(durationHM).validWedgeLawsWith(finiteDurationsHM)
   )
   checkAll(
-    "durationHMSFormat",
+    "durationHMSValidWedge",
     ValidWedgeTests(durationHMS).validWedgeLawsWith(finiteDurationsHMS)
   )
 }

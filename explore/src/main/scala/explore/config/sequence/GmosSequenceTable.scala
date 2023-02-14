@@ -16,7 +16,7 @@ import lucuma.core.math.Wavelength
 import lucuma.core.model.sequence.*
 import lucuma.react.syntax.*
 import lucuma.react.table.*
-import lucuma.ui.reusability.*
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import react.common.Css
