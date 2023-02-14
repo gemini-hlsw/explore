@@ -4,10 +4,10 @@
 package explore.common
 
 import clue.data.syntax.*
-import explore.model.BasicConfiguration
-import explore.model.ScienceMode
 import lucuma.core.math.*
 import lucuma.schemas.ObservationDB.Types.*
+import lucuma.schemas.model.BasicConfiguration
+import lucuma.schemas.model.ObservingMode
 import queries.schemas.odb.ODBConversions
 
 import scala.annotation.targetName
@@ -25,7 +25,7 @@ trait ScienceConversions extends ODBConversions:
     def toInput: OffsetComponentInput =
       OffsetComponentInput(microarcseconds = o.toAngle.toMicroarcseconds.assign)
 
-  extension (o: ScienceMode.GmosNorthLongSlit)
+  extension (o: ObservingMode.GmosNorthLongSlit)
     def toInput: GmosNorthLongSlitInput = GmosNorthLongSlitInput(
       grating = o.grating.assign,
       filter = o.filter.orUnassign,
@@ -40,7 +40,7 @@ trait ScienceConversions extends ODBConversions:
         o.explicitWavelengthDithers.map(_.toList.map(_.toInput)).orUnassign,
       explicitSpatialOffsets = o.explicitSpatialOffsets.map(_.toList.map(_.toInput)).orUnassign
     )
-  extension (o: ScienceMode.GmosSouthLongSlit)
+  extension (o: ObservingMode.GmosSouthLongSlit)
     def toInput: GmosSouthLongSlitInput = GmosSouthLongSlitInput(
       grating = o.grating.assign,
       filter = o.filter.orUnassign,
@@ -56,16 +56,12 @@ trait ScienceConversions extends ODBConversions:
       explicitSpatialOffsets = o.explicitSpatialOffsets.map(_.toList.map(_.toInput)).orUnassign
     )
 
-  extension (b: ScienceMode)
+  extension (b: ObservingMode)
     def toInput: ObservingModeInput = b match
-      case o: ScienceMode.GmosNorthLongSlit =>
-        ObservingModeInput(
-          gmosNorthLongSlit = o.toInput.assign
-        )
-      case o: ScienceMode.GmosSouthLongSlit =>
-        ObservingModeInput(
-          gmosSouthLongSlit = o.toInput.assign
-        )
+      case o: ObservingMode.GmosNorthLongSlit =>
+        ObservingModeInput(gmosNorthLongSlit = o.toInput.assign)
+      case o: ObservingMode.GmosSouthLongSlit =>
+        ObservingModeInput(gmosSouthLongSlit = o.toInput.assign)
 
   extension (i: BasicConfiguration)
     def toInput: ObservingModeInput = i match

@@ -40,20 +40,7 @@ object ConstraintGroupQueriesGQL {
             plannedTime {
               execution $TimeSpanSubquery
             }
-            observingMode {
-              gmosNorthLongSlit {
-                grating
-                filter
-                fpu
-                centralWavelength $WavelengthSubquery
-              }
-              gmosSouthLongSlit {
-                grating
-                filter
-                fpu
-                centralWavelength $WavelengthSubquery
-              }
-            }
+            observingMode $BasicConfigurationSubquery
           }
         }
       }
@@ -62,12 +49,6 @@ object ConstraintGroupQueriesGQL {
     object Data {
       object ConstraintSetGroup {
         type Matches = model.ConstraintGroup
-      }
-
-      object Observations {
-        object Matches {
-          type ObservingMode = model.BasicConfiguration
-        }
       }
     }
   }

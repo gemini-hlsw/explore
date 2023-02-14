@@ -10,7 +10,6 @@ import explore.model.Asterism
 import explore.model.ObjectTracking
 import explore.model.enums.AgsState
 import explore.model.enums.SelectedPanel
-import explore.model.itc.CoverageCenterWavelength
 import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.ItcTarget
 import explore.modes.InstrumentRow
@@ -90,7 +89,7 @@ object reusability:
 
   given Reusability[AngularSize]         = Reusability.byEq
   given Reusability[CatalogTargetResult] = Reusability.byEq
-  given Reusability[ScienceMode]         = Reusability.byEq
+  given Reusability[ObservingMode]       = Reusability.byEq
   given Reusability[BasicConfiguration]  = Reusability.byEq
   given Reusability[BasicConfigAndItc]   = Reusability.byEq
   given Reusability[GuideStarCandidate]  = Reusability.by(_.name.value)
@@ -108,7 +107,7 @@ object reusability:
 
   given Reusability[InstrumentRow] = Reusability.byEq
 
-  given Reusability[CoverageCenterWavelength] = Reusability.byEq
+  given Reusability[CentralWavelength] = Reusability.byEq
 
   given Reusability[ObjectTracking] = Reusability.byEq
 

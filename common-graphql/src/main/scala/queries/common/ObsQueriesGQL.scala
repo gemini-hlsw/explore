@@ -32,20 +32,7 @@ object ObsQueriesGQL {
             plannedTime {
               execution $TimeSpanSubquery
             }
-            observingMode {
-              gmosNorthLongSlit {
-                grating
-                filter
-                fpu
-                centralWavelength $WavelengthSubquery
-              }
-              gmosSouthLongSlit {
-                grating
-                filter
-                fpu
-                centralWavelength $WavelengthSubquery
-              }
-            }
+            observingMode $BasicConfigurationSubquery
           }
         }
 
@@ -80,12 +67,6 @@ object ObsQueriesGQL {
     """
 
     object Data {
-      object Observations {
-        object Matches {
-          type ObservingMode = model.BasicConfiguration
-        }
-      }
-
       object ConstraintSetGroup {
         type Matches = model.ConstraintGroup
       }
@@ -98,7 +79,6 @@ object ObsQueriesGQL {
         }
       }
     }
-
   }
 
   @GraphQL
@@ -158,70 +138,13 @@ object ObsQueriesGQL {
               resolution
               signalToNoise
               signalToNoiseAt $WavelengthSubquery
-              wavelengthCoverage $WavelengthRangeSubquery
+              wavelengthCoverage $WavelengthDeltaSubquery
               focalPlane
               focalPlaneAngle $AngleSubquery
               capability
             }
           }
-          observingMode {
-            gmosNorthLongSlit {
-              initialGrating
-              initialFilter
-              initialFpu
-              initialCentralWavelength $WavelengthSubquery
-              grating
-              filter
-              fpu
-              centralWavelength $WavelengthSubquery
-              defaultXBin
-              explicitXBin
-              defaultYBin
-              explicitYBin
-              defaultAmpReadMode
-              explicitAmpReadMode
-              defaultAmpGain
-              explicitAmpGain
-              defaultRoi
-              explicitRoi
-              defaultWavelengthDithers $WavelengthDitherSubquery
-              explicitWavelengthDithers $WavelengthDitherSubquery
-              defaultSpatialOffsets {
-                microarcseconds
-              }
-              explicitSpatialOffsets {
-                microarcseconds
-              }
-            }
-            gmosSouthLongSlit {
-              initialGrating
-              initialFilter
-              initialFpu
-              initialCentralWavelength $WavelengthSubquery
-              grating
-              filter
-              fpu
-              centralWavelength $WavelengthSubquery
-              defaultXBin
-              explicitXBin
-              defaultYBin
-              explicitYBin
-              defaultAmpReadMode
-              explicitAmpReadMode
-              defaultAmpGain
-              explicitAmpGain
-              defaultRoi
-              explicitRoi
-              defaultWavelengthDithers $WavelengthDitherSubquery
-              explicitWavelengthDithers $WavelengthDitherSubquery
-              defaultSpatialOffsets {
-                microarcseconds
-              }
-              explicitSpatialOffsets {
-                microarcseconds
-              }
-            }
-          }
+          observingMode $ObservingModeSubquery
         }
 
         itc(programId: $$programId, observationId: $$obsId) {
@@ -243,19 +166,8 @@ object ObsQueriesGQL {
     """
 
     object Data {
-      object Observation {
-        object ScienceRequirements {
-          object Spectroscopy {
-            type WavelengthCoverage = lucuma.core.math.WavelengthRange
-          }
-        }
-
-        type ObservingMode = model.ScienceMode
-      }
-
       type Itc = explore.model.OdbItcResult
     }
-
   }
 
   @GraphQL
@@ -292,92 +204,11 @@ object ObsQueriesGQL {
       mutation ($$input: UpdateObservationsInput!){
         updateObservations(input: $$input) {
           observations {
-            observingMode {
-              gmosNorthLongSlit {
-                initialGrating
-                initialFilter
-                initialFpu
-                initialCentralWavelength {
-                    picometers
-                  }
-                grating
-                filter
-                fpu
-                centralWavelength {
-                    picometers
-                  }
-                defaultXBin
-                explicitXBin
-                defaultYBin
-                explicitYBin
-                defaultAmpReadMode
-                explicitAmpReadMode
-                defaultAmpGain
-                explicitAmpGain
-                defaultRoi
-                explicitRoi
-                defaultWavelengthDithers {
-                  picometers
-                }
-                explicitWavelengthDithers {
-                  picometers
-                }
-                defaultSpatialOffsets {
-                  microarcseconds
-                }
-                explicitSpatialOffsets {
-                  microarcseconds
-                }
-              }
-              gmosSouthLongSlit {
-                initialGrating
-                initialFilter
-                initialFpu
-                initialCentralWavelength {
-                    picometers
-                  }
-                grating
-                filter
-                fpu
-                centralWavelength {
-                  picometers
-                }
-                defaultXBin
-                explicitXBin
-                defaultYBin
-                explicitYBin
-                defaultAmpReadMode
-                explicitAmpReadMode
-                defaultAmpGain
-                explicitAmpGain
-                defaultRoi
-                explicitRoi
-                defaultWavelengthDithers {
-                  picometers
-                }
-                explicitWavelengthDithers {
-                  picometers
-                }
-                defaultSpatialOffsets {
-                  microarcseconds
-                }
-                explicitSpatialOffsets {
-                  microarcseconds
-                }
-              }
-            }
+            observingMode $ObservingModeSubquery
           }
         }
       }
     """
-
-    object Data {
-      object UpdateObservations {
-        object Observations {
-          type ObservingMode = model.ScienceMode
-        }
-      }
-    }
   }
 
   @GraphQL

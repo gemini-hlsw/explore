@@ -19,7 +19,6 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.CoordinatesAtVizTime
 import explore.model.ElevationPlotOptions
-import explore.model.ScienceMode
 import explore.model.display.given
 import explore.model.enums.PlotRange
 import explore.model.enums.TimeDisplay
@@ -34,6 +33,7 @@ import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.util.Enumerated
 import lucuma.refined.*
+import lucuma.schemas.model.ObservingMode
 import lucuma.ui.primereact.LucumaStyles
 import lucuma.ui.primereact.SelectButtonEnumView
 import lucuma.ui.primereact.*

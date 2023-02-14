@@ -26,9 +26,7 @@ import explore.components.undo.UndoButtons
 import explore.events.*
 import explore.model.AppContext
 import explore.model.BasicConfigAndItc
-import explore.model.BasicConfiguration
 import explore.model.CoordinatesAtVizTime
-import explore.model.ScienceMode
 import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.ItcPicklers.given
@@ -50,6 +48,8 @@ import lucuma.core.model.SiderealTracking
 import lucuma.core.model.User
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
+import lucuma.schemas.model.BasicConfiguration
+import lucuma.schemas.model.ObservingMode
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -80,7 +80,7 @@ object ConfigurationPanel:
   // TODO: The following few methods could be moved to `clue` if they are appropiate. Before
   // doing so, I'd like to have the code reviewed and perhaps looked over by `Mr. Clue` so
   // he can point out a much easier path. :P
-  // The particular problem they solve here is that ScienceModeInput can have either a
+  // The particular problem they solve here is that ObservingModeInput can have either a
   // gmosNorthLongSlitInput or a gmosSouthLongSlitInput, but not both. And we can't know
   // until we edit.
 
@@ -122,10 +122,10 @@ object ConfigurationPanel:
 
   // TODO: We probably want a mutation that returns the configuration so that we can update locally
   private def createConfiguration(
-    programId:   Program.Id,
-    obsId:       Observation.Id,
-    config:      Option[BasicConfiguration],
-    scienceMode: View[Option[ScienceMode]]
+    programId:     Program.Id,
+    obsId:         Observation.Id,
+    config:        Option[BasicConfiguration],
+    observingMode: View[Option[ObservingMode]]
   )(using TransactionalClient[IO, ObservationDB]): IO[Unit] =
     config.foldMap(c =>
       ObsQueriesGQL.CreateConfigurationMutation
@@ -137,7 +137,7 @@ object ConfigurationPanel:
           )
         )
         .flatMap(data =>
-          scienceMode
+          observingMode
             .set(data.updateObservations.observations.headOption.flatMap(_.observingMode))
             .to[IO]
         )
@@ -165,7 +165,7 @@ object ConfigurationPanel:
         val requirementsCtx: UndoSetter[ScienceRequirementsData] =
           props.scienceData.zoom(ScienceData.requirements)
 
-        val modeAligner: Aligner[Option[ScienceMode], Input[ObservingModeInput]] =
+        val modeAligner: Aligner[Option[ObservingMode], Input[ObservingModeInput]] =
           Aligner(
             props.scienceData,
             UpdateObservationsInput(
@@ -179,7 +179,7 @@ object ConfigurationPanel:
             UpdateObservationsInput.SET.andThen(ObservationPropertiesInput.observingMode).modify
           )
 
-        val optModeView: View[Option[ScienceMode]] =
+        val optModeView: View[Option[ObservingMode]] =
           modeAligner.view(_.map(_.toInput).orUnassign)
 
         val deleteConfiguration = optModeView.set(none)
@@ -191,7 +191,7 @@ object ConfigurationPanel:
 
         val optNorthAligner = optModeAligner.flatMap {
           _.zoomOpt(
-            ScienceMode.gmosNorthLongSlit,
+            ObservingMode.gmosNorthLongSlit,
             modOrAssignAndMap(GmosNorthLongSlitInput())(
               ObservingModeInput.gmosNorthLongSlit.modify
             )
@@ -200,7 +200,7 @@ object ConfigurationPanel:
 
         val optSouthAligner = optModeAligner.flatMap {
           _.zoomOpt(
-            ScienceMode.gmosSouthLongSlit,
+            ObservingMode.gmosSouthLongSlit,
             modOrAssignAndMap(GmosSouthLongSlitInput())(ObservingModeInput.gmosSouthLongSlit.modify)
           )
         }

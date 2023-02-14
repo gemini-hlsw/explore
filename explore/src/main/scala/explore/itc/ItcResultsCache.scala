@@ -12,6 +12,7 @@ import explore.modes.*
 import lucuma.core.enums.*
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
+import lucuma.schemas.model.CentralWavelength
 import monocle.Focus
 import mouse.boolean.*
 
@@ -22,17 +23,19 @@ case class ItcResultsCache(
   def wavelength(
     w: Option[Wavelength],
     r: SpectroscopyModeRow
-  ): EitherNec[ItcQueryProblems, CoverageCenterWavelength] =
-    Either.fromOption(w.flatMap(r.coverageCenter),
-                      NonEmptyChain.of(ItcQueryProblems.MissingWavelength)
+  ): EitherNec[ItcQueryProblems, CentralWavelength] =
+    Either.fromOption(
+      w.flatMap(r.intervalCenter),
+      NonEmptyChain.of(ItcQueryProblems.MissingWavelength)
     )
 
   def signalToNoise(w: Option[PosBigDecimal]): EitherNec[ItcQueryProblems, PosBigDecimal] =
     Either.fromOption(w, NonEmptyChain.of(ItcQueryProblems.MissingSignalToNoise))
 
   def mode(r: SpectroscopyModeRow): EitherNec[ItcQueryProblems, InstrumentRow] =
-    Either.fromOption(ItcResultsCache.enabledRow(r).option(r.instrument),
-                      NonEmptyChain.of(ItcQueryProblems.UnsupportedMode)
+    Either.fromOption(
+      ItcResultsCache.enabledRow(r).option(r.instrument),
+      NonEmptyChain.of(ItcQueryProblems.UnsupportedMode)
     )
 
   def targets(r: Option[ItcTarget]): EitherNec[ItcQueryProblems, ItcTarget] =

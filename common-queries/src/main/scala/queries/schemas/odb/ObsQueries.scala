@@ -18,7 +18,6 @@ import explore.model.OdbItcResult
 import explore.model.ObsIdSet
 import explore.model.ObsSummaryWithTitleAndConstraints
 import explore.model.ObsSummaryWithTitleConstraintsAndConf
-import explore.model.ScienceMode
 import explore.model.TargetSummary
 import explore.optics.all.*
 import explore.model.syntax.all.*
@@ -34,6 +33,7 @@ import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Enums.*
 import lucuma.schemas.ObservationDB.Types.*
+import lucuma.schemas.model.ObservingMode
 import monocle.Focus
 import monocle.Getter
 import monocle.Lens
@@ -59,7 +59,7 @@ object ObsQueries:
 
   case class ScienceData(
     requirements: ScienceRequirementsData,
-    mode:         Option[ScienceMode],
+    mode:         Option[ObservingMode],
     constraints:  ConstraintSet,
     targets:      Targets,
     posAngle:     PosAngleConstraint,
@@ -69,7 +69,7 @@ object ObsQueries:
   object ScienceData {
     val requirements: Lens[ScienceData, ScienceRequirementsData]     =
       Focus[ScienceData](_.requirements)
-    val mode: Lens[ScienceData, Option[ScienceMode]]                 =
+    val mode: Lens[ScienceData, Option[ObservingMode]]               =
       Focus[ScienceData](_.mode)
     val targets: Lens[ScienceData, Targets]                          =
       Focus[ScienceData](_.targets)

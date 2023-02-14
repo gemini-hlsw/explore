@@ -12,7 +12,6 @@ import eu.timepit.refined.types.numeric.PosInt
 import explore.model.boopickle.CatalogPicklers
 import explore.model.boopickle.CommonPicklers
 import explore.model.boopickle.ItcPicklers
-import explore.model.itc.CoverageCenterWavelength
 import explore.model.itc.ItcChartResult
 import explore.model.itc.ItcQueryProblems
 import explore.model.itc.ItcRequestParams
@@ -33,6 +32,7 @@ import lucuma.core.model.ExposureTimeMode.FixedExposure
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.core.util.TimeSpan
+import lucuma.schemas.model.CentralWavelength
 import org.http4s.Uri
 import workers.WorkerRequest
 
@@ -59,7 +59,7 @@ object ItcMessage extends ItcPicklers {
   }
 
   case class GraphQuery(
-    wavelength:   CoverageCenterWavelength,
+    wavelength:   CentralWavelength,
     exposureTime: TimeSpan,
     exposures:    PosInt,
     constraints:  ConstraintSet,

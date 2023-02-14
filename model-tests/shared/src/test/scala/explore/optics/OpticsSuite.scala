@@ -4,11 +4,11 @@
 package explore
 
 import cats.kernel.Eq
-import explore.model.ScienceMode.GmosSouthLongSlit
-import explore.model.arb.ArbScienceMode.given
 import explore.optics.*
 import explore.optics.all.*
 import lucuma.core.util.arb.ArbEnumerated.*
+import lucuma.schemas.model.ObservingMode.GmosSouthLongSlit
+import lucuma.schemas.model.arb.ArbObservingMode.given
 import monocle.Focus
 import monocle.Lens
 import monocle.law.discipline.LensTests

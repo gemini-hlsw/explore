@@ -15,7 +15,7 @@ import fs2.data.csv.*
 import lucuma.core.enums.Instrument
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
-import lucuma.core.math.WavelengthRange
+import lucuma.core.math.WavelengthDelta
 import lucuma.core.optics.Wedge
 import lucuma.core.util.Enumerated
 import lucuma.core.util.NewType
@@ -28,8 +28,8 @@ package modes {
       def toString: String = s"${w.value.toMicrometers.value.value.toDouble} μm"
   type ModeWavelength = ModeWavelength.Type
 
-  object ModeWavelengthRange extends NewType[WavelengthRange]
-  type ModeWavelengthRange = ModeWavelengthRange.Type
+  object ModeWavelengthDelta extends NewType[WavelengthDelta]
+  type ModeWavelengthDelta = ModeWavelengthDelta.Type
 
   object ModeSlitSize extends NewType[Angle]:
     val milliarcseconds: Wedge[Angle, BigDecimal] =
@@ -98,8 +98,8 @@ package modes {
 
     given CellDecoder[ModeWavelength] = micrometerWavelengthDecoder.map(ModeWavelength(_))
 
-    given CellDecoder[ModeWavelengthRange] =
-      micrometerToPicometerDecoder.map(pm => ModeWavelengthRange(WavelengthRange(pm)))
+    given CellDecoder[ModeWavelengthDelta] =
+      micrometerToPicometerDecoder.map(pm => ModeWavelengthDelta(WavelengthDelta(pm)))
 
     given CellDecoder[PosBigDecimal] =
       CellDecoder.bigDecimalDecoder

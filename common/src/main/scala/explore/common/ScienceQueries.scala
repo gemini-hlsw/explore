@@ -16,7 +16,7 @@ import lucuma.core.enums
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
-import lucuma.core.math.WavelengthRange
+import lucuma.core.math.WavelengthDelta
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.optics.syntax.lens.*
@@ -79,7 +79,7 @@ object ScienceQueries:
         .runS(WavelengthInput())
         .value
 
-    def wavelengthRange(wc: WavelengthRange): WavelengthInput =
+    def wavelengthDelta(wc: WavelengthDelta): WavelengthInput =
       wavelength(Wavelength(wc.pm))
 
     def spectroscopyRequirements(
@@ -96,7 +96,7 @@ object ScienceQueries:
                  .map(wavelength)
                  .orUnassign
           _ <- SpectroscopyScienceRequirementsInput.wavelengthCoverage := op.wavelengthCoverage
-                 .map(wavelengthRange)
+                 .map(wavelengthDelta)
                  .orUnassign
           _ <- SpectroscopyScienceRequirementsInput.focalPlane         := op.focalPlane.orUnassign
           _ <- SpectroscopyScienceRequirementsInput.focalPlaneAngle    := op.focalPlaneAngle

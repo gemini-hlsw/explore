@@ -8,7 +8,6 @@ import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Cogen
 import eu.timepit.refined.types.string.NonEmptyString
 import eu.timepit.refined.scalacheck.string.*
-import explore.model.BasicConfiguration
 import explore.model.ObsSummaryWithConstraints
 import explore.model.ObsSummaryWithTitleAndConstraints
 import explore.model.ObsSummaryWithConstraintsAndConf
@@ -23,7 +22,9 @@ import lucuma.core.model.arb.ArbPosAngleConstraint.*
 import lucuma.core.math.arb.ArbWavelength.*
 import lucuma.core.util.arb.ArbGid.*
 import lucuma.core.util.arb.ArbEnumerated.*
+import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.ConstraintsSummary
+import lucuma.schemas.model.arb.ArbBasicConfiguration
 import java.time.Duration
 import java.time.Instant
 import lucuma.core.model.PosAngleConstraint

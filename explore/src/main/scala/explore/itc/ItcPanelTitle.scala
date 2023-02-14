@@ -17,7 +17,6 @@ import explore.components.ui.ExploreStyles
 import explore.events.*
 import explore.model.AppContext
 import explore.model.BasicConfigAndItc
-import explore.model.ScienceMode
 import explore.model.WorkerClients.*
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.ItcChartExposureTime
@@ -29,6 +28,7 @@ import explore.model.reusability.given
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.schemas.model.ObservingMode
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import queries.schemas.itc.ITCConversions.*
@@ -41,14 +41,19 @@ import react.primereact.SelectItem
 import scala.scalajs.js.JSConverters.*
 
 case class ItcPanelTitle(
-  scienceMode:              Option[ScienceMode],
+  observingMode:            Option[ObservingMode],
   spectroscopyRequirements: Option[SpectroscopyRequirementsData],
   scienceData:              Option[ScienceData],
   exposure:                 Option[ItcChartExposureTime],
   selectedTarget:           View[Option[ItcTarget]],
   selectedConfig:           Option[BasicConfigAndItc]
 ) extends ReactFnProps(ItcPanelTitle.component)
-    with ItcPanelProps(scienceMode, spectroscopyRequirements, scienceData, exposure, selectedConfig)
+    with ItcPanelProps(observingMode,
+                       spectroscopyRequirements,
+                       scienceData,
+                       exposure,
+                       selectedConfig
+    )
 
 object ItcPanelTitle:
   private type Props = ItcPanelTitle with ItcPanelProps

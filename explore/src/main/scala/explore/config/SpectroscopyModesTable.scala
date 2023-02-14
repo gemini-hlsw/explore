@@ -31,7 +31,6 @@ import explore.events.*
 import explore.itc.*
 import explore.model.AppContext
 import explore.model.BasicConfigAndItc
-import explore.model.BasicConfiguration
 import explore.model.CoordinatesAtVizTime
 import explore.model.Progress
 import explore.model.WorkerClients.*
@@ -66,6 +65,7 @@ import lucuma.core.util.TimeSpan
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
+import lucuma.schemas.model.BasicConfiguration
 import lucuma.typed.{tanstackTableCore => raw}
 import lucuma.typed.{tanstackVirtualCore => rawVirtual}
 import lucuma.ui.primereact.*
@@ -142,30 +142,30 @@ private object SpectroscopyModesTable extends TableHooks:
   ): ColumnDef.Single[SpectroscopyModeRowWithResult, V] =
     ColDef(id, accessor, columnNames.getOrElse(id, id.value))
 
-  private val SelectedColumnId: ColumnId    = ColumnId("selected")
-  private val InstrumentColumnId: ColumnId  = ColumnId("instrument")
-  private val SlitWidthColumnId: ColumnId   = ColumnId("slit_width")
-  private val SlitLengthColumnId: ColumnId  = ColumnId("slit_length")
-  private val GratingColumnId: ColumnId     = ColumnId("grating")
-  private val FilterColumnId: ColumnId      = ColumnId("filter")
-  private val CoverageColumnId: ColumnId    = ColumnId("coverage")
-  private val FPUColumnId: ColumnId         = ColumnId("fpu")
-  private val ResolutionColumnId: ColumnId  = ColumnId("resolution")
-  private val AvailablityColumnId: ColumnId = ColumnId("availability")
-  private val TimeColumnId: ColumnId        = ColumnId("time")
+  private val SelectedColumnId: ColumnId           = ColumnId("selected")
+  private val InstrumentColumnId: ColumnId         = ColumnId("instrument")
+  private val SlitWidthColumnId: ColumnId          = ColumnId("slit_width")
+  private val SlitLengthColumnId: ColumnId         = ColumnId("slit_length")
+  private val GratingColumnId: ColumnId            = ColumnId("grating")
+  private val FilterColumnId: ColumnId             = ColumnId("filter")
+  private val WavelengthIntervalColumnId: ColumnId = ColumnId("interval")
+  private val FPUColumnId: ColumnId                = ColumnId("fpu")
+  private val ResolutionColumnId: ColumnId         = ColumnId("resolution")
+  private val AvailablityColumnId: ColumnId        = ColumnId("availability")
+  private val TimeColumnId: ColumnId               = ColumnId("time")
 
   private val columnNames: Map[ColumnId, String] =
     Map[ColumnId, String](
-      InstrumentColumnId  -> "Instrument",
-      SlitWidthColumnId   -> "Slit Width",
-      SlitLengthColumnId  -> "Slit Length",
-      GratingColumnId     -> "Grating",
-      FilterColumnId      -> "Filter",
-      FPUColumnId         -> "FPU",
-      CoverageColumnId    -> "Coverage",
-      ResolutionColumnId  -> "λ / Δλ",
-      AvailablityColumnId -> "Avail.",
-      TimeColumnId        -> "Time"
+      InstrumentColumnId         -> "Instrument",
+      SlitWidthColumnId          -> "Slit Width",
+      SlitLengthColumnId         -> "Slit Length",
+      GratingColumnId            -> "Grating",
+      FilterColumnId             -> "Filter",
+      FPUColumnId                -> "FPU",
+      WavelengthIntervalColumnId -> "λ Interval",
+      ResolutionColumnId         -> "λ / Δλ",
+      AvailablityColumnId        -> "Avail.",
+      TimeColumnId               -> "Time"
     )
 
   private val formatSlitWidth: ModeSlitSize => String = ss =>
@@ -290,8 +290,8 @@ private object SpectroscopyModesTable extends TableHooks:
         .setColumnSize(FixedSize(62.toPx))
         .sortable,
       column(
-        CoverageColumnId,
-        row => cw.map(w => SpectroscopyModeRow.coverageInterval(w)(row.entry))
+        WavelengthIntervalColumnId,
+        row => cw.map(w => SpectroscopyModeRow.wavelengthInterval(w)(row.entry))
       ).setCell(cell => cell.value.flatten.fold("-")(_.shortName))
         .setColumnSize(FixedSize(100.toPx)),
       column(ResolutionColumnId, row => SpectroscopyModeRow.resolution.get(row.entry))
@@ -314,7 +314,7 @@ private object SpectroscopyModesTable extends TableHooks:
 
   extension (row: SpectroscopyModeRowWithResult)
     private def rowToConf(cw: Option[Wavelength]): Option[BasicConfigAndItc] =
-      val config = cw.flatMap(row.entry.coverageCenter).flatMap { cc =>
+      val config = cw.flatMap(row.entry.intervalCenter).flatMap { cc =>
         row.entry.instrument match
           case GmosNorthSpectroscopyRow(grating, fpu, filter)
               if row.entry.focalPlane === FocalPlane.SingleSlit =>
@@ -531,7 +531,7 @@ private object SpectroscopyModesTable extends TableHooks:
                 sortedRows
                   .filterNot { row => // Discard modes already in the cache
                     val cache = itcResults.value.cache
-                    val cw    = row.entry.coverageCenter(w)
+                    val cw    = row.entry.intervalCenter(w)
 
                     cw.exists(w =>
                       row.entry.instrument.instrument match

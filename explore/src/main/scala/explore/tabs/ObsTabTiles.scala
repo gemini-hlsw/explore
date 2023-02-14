@@ -17,14 +17,12 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Asterism
 import explore.model.BasicConfigAndItc
-import explore.model.BasicConfiguration
 import explore.model.ConstraintGroup
 import explore.model.CoordinatesAtVizTime
 import explore.model.Focused
 import explore.model.ModelUndoStacks
 import explore.model.ObsIdSet
 import explore.model.PAProperties
-import explore.model.ScienceMode
 import explore.model.TargetSummary
 import explore.model.display.given
 import explore.model.enums.AgsState
@@ -51,6 +49,8 @@ import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.syntax.all.*
 import lucuma.schemas.ObservationDB
+import lucuma.schemas.model.BasicConfiguration
+import lucuma.schemas.model.ObservingMode
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import queries.common.ObsQueriesGQL.*
@@ -155,7 +155,7 @@ object ObsTabTiles:
 
         val obsViewPot = obsView.toPot
 
-        val scienceMode: Option[ScienceMode] =
+        val observingMode: Option[ObservingMode] =
           obsView.toOption.flatMap(_.get.scienceData.mode)
 
         val posAngle: Option[View[PosAngleConstraint]] =
@@ -174,7 +174,7 @@ object ObsTabTiles:
           )
 
         val potAsterismMode: Pot[(View[Option[Asterism]], Option[BasicConfiguration])] =
-          potAsterism.map(x => (x, scienceMode.map(_.toBasicConfiguration)))
+          potAsterism.map(x => (x, observingMode.map(_.toBasicConfiguration)))
 
         val vizTimeView: Pot[View[Option[Instant]]] =
           obsViewPot.map(_.zoom(ObsEditData.visualizationTime))
@@ -220,7 +220,7 @@ object ObsTabTiles:
           ItcTile.itcTile(
             props.userId,
             props.obsId,
-            scienceMode,
+            observingMode,
             obsView.toOption.map(_.get.scienceData.requirements.spectroscopy),
             scienceData,
             obsView.toOption
@@ -244,7 +244,7 @@ object ObsTabTiles:
           ElevationPlotTile.elevationPlotTile(
             props.userId,
             props.focusedTarget.orElse(firstTarget),
-            scienceMode.map(_.siteFor),
+            observingMode.map(_.siteFor),
             targetCoords,
             vizTime
           )
