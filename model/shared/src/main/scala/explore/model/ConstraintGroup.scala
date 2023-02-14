@@ -9,7 +9,7 @@ import io.circe.Decoder
 import io.circe.generic.semiauto.*
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
-import lucuma.schemas.decoders.*
+import lucuma.schemas.decoders.given
 import monocle.Focus
 
 import scala.annotation.unused

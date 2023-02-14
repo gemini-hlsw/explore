@@ -13,7 +13,7 @@ import io.circe.generic.semiauto.*
 import lucuma.core.model.User
 import lucuma.core.util.Enumerated
 import lucuma.react.table.SortDirection
-import lucuma.schemas.decoders.*
+import lucuma.schemas.decoders.given
 
 import java.time.ZonedDateTime
 

@@ -9,16 +9,16 @@ import io.circe.Decoder
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.ExecutionVisits
 import lucuma.schemas.model.Visit
-
+import lucuma.schemas.odb.*
 // gql: import lucuma.schemas.decoders.given
 
 object VisitsSQL:
 
   @GraphQL
   trait Visits extends GraphQLOperation[ObservationDB]:
-    val document = """
-      query($obsId: ObservationId!) {
-        observation(observationId: $obsId) {
+    val document = s"""
+      query($$obsId: ObservationId!) {
+        observation(observationId: $$obsId) {
           execution {
             executionConfig {
               instrument
@@ -57,9 +57,7 @@ object VisitsSQL:
                   created
                   startTime
                   endTime
-                  duration {
-                    microseconds
-                  }             
+                  duration $TimeSpanSubquery         
                   staticS:staticConfig {
                     stageMode
                     detector
@@ -86,22 +84,8 @@ object VisitsSQL:
       }
 
       fragment nodAndShuffleFields on GmosNodAndShuffle {
-        posA {
-          p {
-            microarcseconds
-          }
-          q {
-            microarcseconds
-          }
-        }
-        posB {
-          p {
-            microarcseconds
-          }
-          q {
-            microarcseconds
-          }
-        }
+        posA $OffsetSubquery
+        posB $OffsetSubquery
         eOffset
         shuffleOffset
         shuffleCycles
@@ -112,20 +96,12 @@ object VisitsSQL:
         created
         startTime
         endTime
-        duration {
-          microseconds
-        }
+        duration $TimeSpanSubquery
         instrumentConfig {
           exposure {
             microseconds
           }
-          readout {
-            xBin
-            yBin
-            ampCount
-            ampGain
-            ampReadMode
-          }
+          readout $GmosCcdModeSubquery
           dtax
           roi
           gratingConfig {
@@ -154,15 +130,7 @@ object VisitsSQL:
             shutter
           }
           ...on Science {
-            offset {
-              p {
-                microarcseconds
-              }
-              q {
-                microarcseconds
-              }
-            }
-
+            offset $OffsetSubquery
           }
         }
         stepEvents {
@@ -188,20 +156,12 @@ object VisitsSQL:
         created
         startTime
         endTime
-        duration {
-          microseconds
-        }
+        duration $TimeSpanSubquery
         instrumentConfig {
           exposure {
             microseconds
           }
-          readout {
-            xBin
-            yBin
-            ampCount
-            ampGain
-            ampReadMode
-          }
+          readout $GmosCcdModeSubquery
           dtax
           roi
           gratingConfig {
@@ -230,15 +190,7 @@ object VisitsSQL:
             shutter
           }
           ...on Science {
-            offset {
-              p {
-                microarcseconds
-              }
-              q {
-                microarcseconds
-              }
-            }
-
+            offset $OffsetSubquery
           }
         }
         stepEvents {

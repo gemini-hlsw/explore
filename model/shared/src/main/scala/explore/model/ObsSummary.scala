@@ -15,6 +15,7 @@ import lucuma.core.math.Wavelength
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target
+import lucuma.schemas.model.ConstraintsSummary
 import monocle.Focus
 import org.typelevel.cats.time.*
 

@@ -11,11 +11,11 @@ import crystal.react.implicits.*
 import explore.common.AsterismQueries
 import explore.model.Asterism
 import explore.model.ObsIdSet
-import explore.model.TargetWithId
-import explore.model.TargetWithOptId
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
+import lucuma.schemas.model.TargetWithId
+import lucuma.schemas.model.TargetWithOptId
 import org.typelevel.log4cats.Logger
 import queries.common.TargetQueriesGQL.CreateTargetMutation
 import queries.schemas.odb.ODBConversions.*

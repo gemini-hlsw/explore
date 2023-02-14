@@ -27,8 +27,6 @@ import explore.model.ExploreModelValidators
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.PAProperties
-import explore.model.SiderealTargetWithId
-import explore.model.TargetWithId
 import explore.model.enums.AgsState
 import explore.model.formats.*
 import explore.model.util.*
@@ -52,6 +50,7 @@ import lucuma.core.validation.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
+import lucuma.schemas.model.*
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.FormInputTextView
 import lucuma.ui.primereact.LucumaStyles

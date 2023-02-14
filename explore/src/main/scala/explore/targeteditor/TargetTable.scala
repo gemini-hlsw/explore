@@ -20,7 +20,6 @@ import explore.model.AladinFullScreen
 import explore.model.AppContext
 import explore.model.Asterism
 import explore.model.ObsIdSet
-import explore.model.SiderealTargetWithId
 import explore.model.enums.TableId
 import explore.model.reusability.given
 import explore.model.reusability.given
@@ -35,6 +34,7 @@ import lucuma.core.model.User
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.schemas.ObservationDB
+import lucuma.schemas.model.SiderealTargetWithId
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.*

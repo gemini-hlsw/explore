@@ -29,8 +29,7 @@ import lucuma.core.model.Partner
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB.Enums.Existence
-import lucuma.schemas.model.StepRecord
-import lucuma.schemas.model.Visit
+import lucuma.schemas.model.*
 import lucuma.ui.reusability.given
 import queries.schemas.odb.ObsQueries.ObsSummariesWithConstraints
 import queries.schemas.odb.ObsQueries.SpectroscopyRequirementsData
