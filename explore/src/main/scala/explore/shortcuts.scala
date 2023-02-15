@@ -51,8 +51,12 @@ val GoToConstraints = Shortcut("n")
 val GoToOverview    = Shortcut("w")
 val GoToSummary     = Shortcut("s")
 
-val Esc           = Shortcut("ESC")
-val ShortcutsHelp = Shortcut("F1")
+val Esc = Shortcut("ESC")
+
+val ShortcutsHelp1 = Shortcut("F1")
+val ShortcutsHelp2 = Shortcut("shift+?")
+
+val ShortcutsHelpKeys = List(ShortcutsHelp1, ShortcutsHelp2)
 
 val Down = Shortcut("j")
 val Up   = Shortcut("k")
