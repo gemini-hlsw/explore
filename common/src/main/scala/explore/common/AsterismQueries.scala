@@ -20,12 +20,12 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
+import lucuma.schemas.odb.input.*
 import lucuma.ui.reusability.given
 import monocle.Focus
 import monocle.Getter
 import queries.common.AsterismQueriesGQL.*
 import queries.common.ObsQueriesGQL.*
-import queries.schemas.odb.ODBConversions.*
 
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet

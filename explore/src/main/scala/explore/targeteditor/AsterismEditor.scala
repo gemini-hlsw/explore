@@ -45,6 +45,7 @@ import lucuma.core.util.NewType
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.*
+import lucuma.schemas.odb.input.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
@@ -54,7 +55,6 @@ import monocle.Lens
 import monocle.std.option.some
 import org.typelevel.log4cats.Logger
 import queries.common.TargetQueriesGQL.*
-import queries.schemas.odb.ODBConversions.*
 import queries.schemas.odb.ObsQueries
 import react.common.ReactFnProps
 import react.primereact.Button

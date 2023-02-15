@@ -27,6 +27,7 @@ import lucuma.core.model.UnnormalizedSED
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.schemas.ObservationDB
+import lucuma.schemas.odb.input.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
@@ -38,7 +39,6 @@ import org.http4s.syntax.all.*
 import org.scalajs.dom.{File => DOMFile}
 import org.typelevel.log4cats.Logger
 import queries.common.TargetQueriesGQL.*
-import queries.schemas.odb.ODBConversions.*
 import react.common.ReactFnProps
 import react.fa.IconSize
 import react.primereact.Button

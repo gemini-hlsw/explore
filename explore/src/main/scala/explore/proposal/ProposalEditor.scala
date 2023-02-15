@@ -46,6 +46,7 @@ import lucuma.core.validation.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
+import lucuma.schemas.odb.input.*
 import lucuma.ui.input.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
@@ -55,7 +56,6 @@ import lucuma.ui.syntax.all.given
 import monocle.Iso
 import org.typelevel.log4cats.Logger
 import queries.common.ProgramQueriesGQL
-import queries.schemas.odb.ODBConversions.*
 import react.common.Css
 import react.common.ReactFnProps
 import react.primereact.Button

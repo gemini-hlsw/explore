@@ -24,7 +24,6 @@ import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.Aligner
-import explore.common.ScienceConversions.*
 import explore.common.ScienceQueries.*
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
@@ -68,6 +67,7 @@ import lucuma.schemas.ObservationDB.Types.WavelengthInput
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.model.CentralWavelength
 import lucuma.schemas.model.ObservingMode
+import lucuma.schemas.odb.input.*
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
