@@ -64,21 +64,21 @@ object ExploreLayout:
             ctx.setPageVia(tab, routingInfo.programId, routingInfo.focused, SetRouteVia.HistoryPush)
 
           val callbacks: ShortcutCallbacks = {
-            case GoToObs         =>
+            case GoToObs                         =>
               goToTab(AppTab.Observations)
-            case GoToTargets     =>
+            case GoToTargets                     =>
               goToTab(AppTab.Targets)
-            case GoToProposals   =>
+            case GoToProposals                   =>
               goToTab(AppTab.Proposal)
-            case GoToConstraints =>
+            case GoToConstraints                 =>
               goToTab(AppTab.Constraints)
-            case GoToOverview    =>
+            case GoToOverview                    =>
               goToTab(AppTab.Overview)
-            case ShortcutsHelp   =>
+            case ShortcutsHelp1 | ShortcutsHelp2 =>
               help.displayedHelp.set(Some("shortcuts.md".refined))
           }
           UseHotkeysProps(
-            (ShortcutsHelp ::
+            (ShortcutsHelpKeys :::
               List(GoToObs, GoToTargets, GoToProposals, GoToConstraints, GoToOverview)).toHotKeys,
             callbacks
           )
