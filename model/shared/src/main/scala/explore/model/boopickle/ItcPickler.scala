@@ -11,7 +11,6 @@ import eu.timepit.refined.types.numeric.NonNegBigDecimal
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.model.itc.CoverageCenterWavelength
 import explore.model.itc.ItcCcd
 import explore.model.itc.ItcChart
 import explore.model.itc.ItcChartResult
@@ -82,9 +81,7 @@ trait ItcPicklers extends CommonPicklers {
 
   given Pickler[ModeSlitSize] = picklerNewType(ModeSlitSize)
 
-  given Pickler[CoverageCenterWavelength] = picklerNewType(CoverageCenterWavelength)
-
-  given Pickler[ModeWavelengthRange] = picklerNewType(ModeWavelengthRange)
+  given Pickler[ModeWavelengthDelta] = picklerNewType(ModeWavelengthDelta)
 
   given Pickler[SpectroscopyModeRow] = generatePickler
 

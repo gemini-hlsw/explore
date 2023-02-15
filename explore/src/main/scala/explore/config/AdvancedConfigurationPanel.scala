@@ -35,9 +35,7 @@ import explore.model.AppContext
 import explore.model.BasicConfigAndItc
 import explore.model.ExploreModelValidators
 import explore.model.OdbItcResult
-import explore.model.ScienceMode
 import explore.model.display.given
-import explore.model.itc.CoverageCenterWavelength
 import explore.model.reusability.given
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
@@ -55,8 +53,8 @@ import lucuma.core.math.BoundedInterval
 import lucuma.core.math.BoundedInterval.*
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
+import lucuma.core.math.WavelengthDelta
 import lucuma.core.math.WavelengthDither
-import lucuma.core.math.WavelengthRange
 import lucuma.core.math.units.Micrometer
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.Observation
@@ -68,6 +66,8 @@ import lucuma.core.validation.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.WavelengthInput
 import lucuma.schemas.ObservationDB.Types.*
+import lucuma.schemas.model.CentralWavelength
+import lucuma.schemas.model.ObservingMode
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
@@ -92,11 +92,11 @@ import java.time.Duration
 import scalajs.js
 import scalajs.js.JSConverters.*
 
-sealed trait AdvancedConfigurationPanel[T <: ScienceMode, Input]:
+sealed trait AdvancedConfigurationPanel[T <: ObservingMode, Input]:
   def obsId: Observation.Id
   def title: String
   def subtitle: Option[NonEmptyString]
-  def scienceMode: Aligner[T, Input]
+  def observingMode: Aligner[T, Input]
   def spectroscopyRequirements: SpectroscopyRequirementsData
   def potITC: View[Pot[Option[OdbItcResult.Success]]]
   def deleteConfig: Callback
@@ -104,7 +104,7 @@ sealed trait AdvancedConfigurationPanel[T <: ScienceMode, Input]:
   def selectedConfig: View[Option[BasicConfigAndItc]]
 
 sealed abstract class AdvancedConfigurationPanelBuilder[
-  T <: ScienceMode,
+  T <: ObservingMode,
   Input,
   Props <: AdvancedConfigurationPanel[T, Input],
   Grating: Enumerated: Display,
@@ -227,7 +227,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
     resolution: PosInt,
     λmin:       Wavelength,
     λmax:       Wavelength,
-    range:      WavelengthRange
+    delta:      WavelengthDelta
   )
 
   private object ModeData {
@@ -235,14 +235,14 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
       wavelength.flatMap { cw =>
         if (cw >= row.minWavelength.value && cw <= row.maxWavelength.value)
           SpectroscopyModeRow
-            .coverageInterval(cw)(row)
+            .wavelengthInterval(cw)(row)
             .map(interval =>
               ModeData(
                 interval,
                 row.resolution,
                 row.minWavelength.value,
                 row.maxWavelength.value,
-                row.wavelengthRange.value
+                row.wavelengthDelta.value
               )
             )
         else
@@ -257,10 +257,10 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
   ): Option[ModeData] =
     reqsWavelength.flatMap(cw =>
       (mode, row.instrument) match
-        case (m: ScienceMode.GmosNorthLongSlit, GmosNorthSpectroscopyRow(rGrating, rFpu, rFilter))
+        case (m: ObservingMode.GmosNorthLongSlit, GmosNorthSpectroscopyRow(rGrating, rFpu, rFilter))
             if m.grating === rGrating && m.filter === rFilter && m.fpu === rFpu =>
           ModeData.build(row, reqsWavelength)
-        case (m: ScienceMode.GmosSouthLongSlit, GmosSouthSpectroscopyRow(rGrating, rFpu, rFilter))
+        case (m: ObservingMode.GmosSouthLongSlit, GmosSouthSpectroscopyRow(rGrating, rFpu, rFilter))
             if m.grating === rGrating && m.filter === rFilter && m.fpu === rFpu =>
           ModeData.build(row, reqsWavelength)
         case _ => none
@@ -402,13 +402,13 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
       // .useStateViewBy { (props, ctx) =>
       //   import ctx.given
 
-      //   overrideExposureTimeMode(props.scienceMode).get
+      //   overrideExposureTimeMode(props.observingMode).get
       //     .map(ExposureTimeModeType.fromExposureTimeMode)
       // }
       // .useEffectWithDepsBy { (props, ctx, _) =>
       //   import ctx.given
 
-      //   overrideExposureTimeMode(props.scienceMode).get.map(
+      //   overrideExposureTimeMode(props.observingMode).get.map(
       //     ExposureTimeModeType.fromExposureTimeMode
       //   )
       // }((_, _, exposureModeEnum) =>
@@ -442,21 +442,21 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
 
         (props.spectroscopyRequirements.wavelength,
          rows,
-         centralWavelength(props.scienceMode).get,
-         grating(props.scienceMode).get,
-         filter(props.scienceMode).get,
-         fpu(props.scienceMode).get
+         centralWavelength(props.observingMode).get,
+         grating(props.observingMode).get,
+         filter(props.observingMode).get,
+         fpu(props.observingMode).get
         )
       } { (props, _, _) =>
         { case (reqsWavelength, rows, _, _, _, _) =>
-          findMatrixData(props.scienceMode.get, reqsWavelength, rows)
+          findMatrixData(props.observingMode.get, reqsWavelength, rows)
         }
       }
       .useStateView(ConfigEditState.View)
       .render { (props, ctx, _, modeData, editState) =>
         import ctx.given
 
-        // val exposureModeView = overrideExposureTimeMode(props.scienceMode)
+        // val exposureModeView = overrideExposureTimeMode(props.observingMode)
 
         // val exposureCountView: Option[View[NonNegInt]] =
         //   exposureModeView
@@ -479,12 +479,12 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
         val disableSimpleEdit   =
           disableAdvancedEdit && editState.get =!= ConfigEditState.SimpleEdit
 
-        val wavelengthView           = centralWavelength(props.scienceMode)
-        val initialCentralWavelength = initialCentralWavelengthLens.get(props.scienceMode.get)
+        val wavelengthView           = centralWavelength(props.observingMode)
+        val initialCentralWavelength = initialCentralWavelengthLens.get(props.observingMode.get)
 
-        val defaultBinning      = defaultBinningLens.get(props.scienceMode.get)
-        val defaultReadModeGain = defaultReadModeGainLens.get(props.scienceMode.get)
-        val defaultRoi          = defaultRoiLens.get(props.scienceMode.get)
+        val defaultBinning      = defaultBinningLens.get(props.observingMode.get)
+        val defaultReadModeGain = defaultReadModeGainLens.get(props.observingMode.get)
+        val defaultRoi          = defaultRoiLens.get(props.observingMode.get)
 
         val validDithers = modeData.value
           .map(mode =>
@@ -492,7 +492,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               wavelengthView.get,
               mode.λmin,
               mode.λmax,
-              mode.range
+              mode.delta
             )
           )
           .getOrElse(
@@ -503,8 +503,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
           .optional
 
         def dithersControl(onChange: Callback): VdomElement =
-          val default = defaultWavelengthDithersLens.get(props.scienceMode.get)
-          val view    = explicitWavelengthDithers(props.scienceMode)
+          val default = defaultWavelengthDithersLens.get(props.observingMode.get)
+          val view    = explicitWavelengthDithers(props.observingMode)
           customizableInputTextOptional(
             id = "dithers".refined,
             value = view.withOnMod(_ => onChange),
@@ -521,8 +521,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
           )
 
         def offsetsControl(onChange: Callback): VdomElement = {
-          val default = defaultSpatialOffsetsLens.get(props.scienceMode.get)
-          val view    = explicitSpatialOffsets(props.scienceMode)
+          val default = defaultSpatialOffsetsLens.get(props.observingMode.get)
+          val view    = explicitSpatialOffsets(props.observingMode)
           customizableInputTextOptional(
             id = "offsets".refined,
             value = view.withOnMod(_ => onChange),
@@ -586,8 +586,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             ),
             customizableEnumSelect(
               id = "grating".refined,
-              view = grating(props.scienceMode),
-              original = initialGratingLens.get(props.scienceMode.get),
+              view = grating(props.observingMode),
+              original = initialGratingLens.get(props.observingMode.get),
               disabled = disableAdvancedEdit,
               exclude = obsoleteGratings
             ),
@@ -597,8 +597,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             ),
             customizableEnumSelectOptional(
               id = "filter".refined,
-              view = filter(props.scienceMode),
-              original = initialFilterLens.get(props.scienceMode.get),
+              view = filter(props.observingMode),
+              original = initialFilterLens.get(props.observingMode.get),
               disabled = disableAdvancedEdit,
               exclude = obsoleteFilters,
               showClear = true,
@@ -610,8 +610,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             ),
             customizableEnumSelect(
               id = "fpu".refined,
-              view = fpu(props.scienceMode),
-              original = initialFpuLens.get(props.scienceMode.get),
+              view = fpu(props.observingMode),
+              original = initialFpuLens.get(props.observingMode.get),
               disabled = disableAdvancedEdit
             ),
             offsetsControl(Callback.empty)
@@ -743,7 +743,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             ),
             customizableEnumSelectOptional(
               id = "explicitXBin".refined,
-              view = explicitBinning(props.scienceMode).withDefault(defaultBinning),
+              view = explicitBinning(props.observingMode).withDefault(defaultBinning),
               original = defaultBinning.some,
               disabled = disableAdvancedEdit
             ),
@@ -753,7 +753,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             ),
             customizableEnumSelectOptional(
               id = "explicitReadMode".refined,
-              view = explicitReadModeGain(props.scienceMode).withDefault(defaultReadModeGain),
+              view = explicitReadModeGain(props.observingMode).withDefault(defaultReadModeGain),
               original = defaultReadModeGain.some,
               disabled = disableAdvancedEdit
             ),
@@ -762,7 +762,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             ),
             customizableEnumSelectOptional(
               id = "explicitRoi".refined,
-              view = explicitRoi(props.scienceMode).withDefault(defaultRoi),
+              view = explicitRoi(props.observingMode).withDefault(defaultRoi),
               original = defaultRoi.some,
               disabled = disableAdvancedEdit,
               exclude = obsoleteRois
@@ -773,9 +773,9 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               label = "λ / Δλ",
               disabled = true
             ),
-            FormLabel(htmlFor = "lambdaCoverage".refined)("λ Coverage"),
+            FormLabel(htmlFor = "lambdaInterval".refined)("λ Interval"),
             FormInputText(
-              id = "lambdaCoverage".refined,
+              id = "lambdaInterval".refined,
               value = modeData.value.fold("Unknown")(_.interval.shortName),
               disabled = true,
               units = "nm"
@@ -798,11 +798,11 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               icon = Icons.ListIcon,
               severity = Button.Severity.Secondary,
               onClick = props.selectedConfig.set(
-                BasicConfigAndItc(props.scienceMode.get.toBasicConfiguration, none).some
+                BasicConfigAndItc(props.observingMode.get.toBasicConfiguration, none).some
               )
                 >> props.deleteConfig
             ).compact.small
-              .unless(isCustomized(props.scienceMode)),
+              .unless(isCustomized(props.observingMode)),
             Button(
               label = "Revert Customizations",
               icon = Icons.TrashUnstyled,
@@ -810,9 +810,9 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               onClick = editState.set(ConfigEditState.View) >>
                 // exposureModeEnum.set(none) >>
                 invalidateITC >>
-                revertCustomizations(props.scienceMode)
+                revertCustomizations(props.observingMode)
             ).compact.small
-              .when(isCustomized(props.scienceMode)),
+              .when(isCustomized(props.observingMode)),
             Button(
               label = "Customize",
               icon = Icons.Edit,
@@ -834,7 +834,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
 
 object AdvancedConfigurationPanel {
   sealed abstract class GmosAdvancedConfigurationPanel[
-    T <: ScienceMode,
+    T <: ObservingMode,
     Input,
     Props <: AdvancedConfigurationPanel[T, Input],
     Grating: Enumerated: Display,
@@ -861,7 +861,7 @@ object AdvancedConfigurationPanel {
     obsId:                    Observation.Id,
     title:                    String,
     subtitle:                 Option[NonEmptyString],
-    scienceMode:              Aligner[ScienceMode.GmosNorthLongSlit, GmosNorthLongSlitInput],
+    observingMode:            Aligner[ObservingMode.GmosNorthLongSlit, GmosNorthLongSlitInput],
     spectroscopyRequirements: SpectroscopyRequirementsData,
     potITC:                   View[Pot[Option[OdbItcResult.Success]]],
     deleteConfig:             Callback,
@@ -871,13 +871,13 @@ object AdvancedConfigurationPanel {
         AdvancedConfigurationPanel.GmosNorthLongSlit.component
       )
       with AdvancedConfigurationPanel[
-        ScienceMode.GmosNorthLongSlit,
+        ObservingMode.GmosNorthLongSlit,
         GmosNorthLongSlitInput,
       ]
 
   object GmosNorthLongSlit
       extends GmosAdvancedConfigurationPanel[
-        ScienceMode.GmosNorthLongSlit,
+        ObservingMode.GmosNorthLongSlit,
         GmosNorthLongSlitInput,
         AdvancedConfigurationPanel.GmosNorthLongSlit,
         GmosNorthGrating,
@@ -899,7 +899,7 @@ object AdvancedConfigurationPanel {
     ): View[Wavelength] =
       aligner
         .zoom(
-          ScienceMode.GmosNorthLongSlit.centralWavelength.andThen(CoverageCenterWavelength.value),
+          ObservingMode.GmosNorthLongSlit.centralWavelength.andThen(CentralWavelength.value),
           GmosNorthLongSlitInput.centralWavelength.modify
         )
         .view(_.toInput.assign)
@@ -911,7 +911,7 @@ object AdvancedConfigurationPanel {
     ): View[GmosNorthGrating] =
       aligner
         .zoom(
-          ScienceMode.GmosNorthLongSlit.grating,
+          ObservingMode.GmosNorthLongSlit.grating,
           GmosNorthLongSlitInput.grating.modify
         )
         .view(_.assign)
@@ -922,7 +922,7 @@ object AdvancedConfigurationPanel {
       Logger[IO]
     ): View[Option[GmosNorthFilter]] = aligner
       .zoom(
-        ScienceMode.GmosNorthLongSlit.filter,
+        ObservingMode.GmosNorthLongSlit.filter,
         GmosNorthLongSlitInput.filter.modify
       )
       .view(_.orUnassign)
@@ -933,7 +933,7 @@ object AdvancedConfigurationPanel {
       Logger[IO]
     ): View[GmosNorthFpu] = aligner
       .zoom(
-        ScienceMode.GmosNorthLongSlit.fpu,
+        ObservingMode.GmosNorthLongSlit.fpu,
         GmosNorthLongSlitInput.fpu.modify
       )
       .view(_.assign)
@@ -944,16 +944,16 @@ object AdvancedConfigurationPanel {
     //   Logger[IO]
     // ): View[Option[ExposureTimeMode]] = aligner
     //   .zoom(
-    //     ScienceMode.GmosNorthLongSlit.overrideExposureTimeMode,
+    //     ObservingMode.GmosNorthLongSlit.overrideExposureTimeMode,
     //     GmosNorthLongSlitInput.overrideExposureTimeMode.modify
     //   )
     //   .view(_.map(_.toInput).orUnassign)
 
     private val explicitXBin =
-      ScienceMode.GmosNorthLongSlit.explicitXBin
+      ObservingMode.GmosNorthLongSlit.explicitXBin
 
     private val explicitYBin =
-      ScienceMode.GmosNorthLongSlit.explicitYBin
+      ObservingMode.GmosNorthLongSlit.explicitYBin
 
     private def binningAligner(
       aligner: AA
@@ -975,10 +975,10 @@ object AdvancedConfigurationPanel {
         }
 
     private val explicitReadMode =
-      ScienceMode.GmosNorthLongSlit.explicitAmpReadMode
+      ObservingMode.GmosNorthLongSlit.explicitAmpReadMode
 
     private val explicitGain =
-      ScienceMode.GmosNorthLongSlit.explicitAmpGain
+      ObservingMode.GmosNorthLongSlit.explicitAmpGain
 
     private def readGainAligner(
       aligner: AA
@@ -1005,7 +1005,7 @@ object AdvancedConfigurationPanel {
       Logger[IO]
     ): View[Option[GmosRoi]] = aligner
       .zoom(
-        ScienceMode.GmosNorthLongSlit.explicitRoi,
+        ObservingMode.GmosNorthLongSlit.explicitRoi,
         GmosNorthLongSlitInput.explicitRoi.modify
       )
       .view(_.orUnassign)
@@ -1016,7 +1016,7 @@ object AdvancedConfigurationPanel {
       Logger[IO]
     ): View[Option[NonEmptyList[WavelengthDither]]] = aligner
       .zoom(
-        ScienceMode.GmosNorthLongSlit.explicitWavelengthDithers,
+        ObservingMode.GmosNorthLongSlit.explicitWavelengthDithers,
         GmosNorthLongSlitInput.explicitWavelengthDithers.modify
       )
       .view(_.map(_.map(_.toInput).toList).orUnassign)
@@ -1027,30 +1027,32 @@ object AdvancedConfigurationPanel {
       Logger[IO]
     ): View[Option[NonEmptyList[Offset.Q]]] = aligner
       .zoom(
-        ScienceMode.GmosNorthLongSlit.explicitSpatialOffsets,
+        ObservingMode.GmosNorthLongSlit.explicitSpatialOffsets,
         GmosNorthLongSlitInput.explicitSpatialOffsets.modify _
       )
       .view(_.map(_.toList.map(_.toInput)).orUnassign)
 
-    @inline override protected val initialGratingLens           = ScienceMode.GmosNorthLongSlit.initialGrating
-    @inline override protected val initialFilterLens            = ScienceMode.GmosNorthLongSlit.initialFilter
-    @inline override protected val initialFpuLens               = ScienceMode.GmosNorthLongSlit.initialFpu
+    @inline override protected val initialGratingLens           =
+      ObservingMode.GmosNorthLongSlit.initialGrating
+    @inline override protected val initialFilterLens            = ObservingMode.GmosNorthLongSlit.initialFilter
+    @inline override protected val initialFpuLens               = ObservingMode.GmosNorthLongSlit.initialFpu
     @inline override protected val initialCentralWavelengthLens =
-      ScienceMode.GmosNorthLongSlit.initialCentralWavelength.andThen(CoverageCenterWavelength.value)
+      ObservingMode.GmosNorthLongSlit.initialCentralWavelength.andThen(CentralWavelength.value)
     @inline protected val defaultBinningLens                    =
-      disjointZip(ScienceMode.GmosNorthLongSlit.defaultXBin,
-                  ScienceMode.GmosNorthLongSlit.defaultYBin
+      disjointZip(
+        ObservingMode.GmosNorthLongSlit.defaultXBin,
+        ObservingMode.GmosNorthLongSlit.defaultYBin
       )
     @inline protected val defaultReadModeGainLens               =
       disjointZip(
-        ScienceMode.GmosNorthLongSlit.defaultAmpReadMode,
-        ScienceMode.GmosNorthLongSlit.defaultAmpGain
+        ObservingMode.GmosNorthLongSlit.defaultAmpReadMode,
+        ObservingMode.GmosNorthLongSlit.defaultAmpGain
       )
-    @inline protected val defaultRoiLens                        = ScienceMode.GmosNorthLongSlit.defaultRoi
+    @inline protected val defaultRoiLens                        = ObservingMode.GmosNorthLongSlit.defaultRoi
     @inline override protected val defaultWavelengthDithersLens =
-      ScienceMode.GmosNorthLongSlit.defaultWavelengthDithers
+      ObservingMode.GmosNorthLongSlit.defaultWavelengthDithers
     @inline override protected val defaultSpatialOffsetsLens    =
-      ScienceMode.GmosNorthLongSlit.defaultSpatialOffsets
+      ObservingMode.GmosNorthLongSlit.defaultSpatialOffsets
 
     @inline override protected val obsoleteGratings = GmosNorthGrating.all.filter(_.obsolete).toSet
     @inline override protected val obsoleteFilters  = GmosNorthFilter.all.filter(_.obsolete).toSet
@@ -1062,7 +1064,7 @@ object AdvancedConfigurationPanel {
     obsId:                    Observation.Id,
     title:                    String,
     subtitle:                 Option[NonEmptyString],
-    scienceMode:              Aligner[ScienceMode.GmosSouthLongSlit, GmosSouthLongSlitInput],
+    observingMode:            Aligner[ObservingMode.GmosSouthLongSlit, GmosSouthLongSlitInput],
     spectroscopyRequirements: SpectroscopyRequirementsData,
     potITC:                   View[Pot[Option[OdbItcResult.Success]]],
     deleteConfig:             Callback,
@@ -1072,13 +1074,13 @@ object AdvancedConfigurationPanel {
         AdvancedConfigurationPanel.GmosSouthLongSlit.component
       )
       with AdvancedConfigurationPanel[
-        ScienceMode.GmosSouthLongSlit,
+        ObservingMode.GmosSouthLongSlit,
         GmosSouthLongSlitInput
       ]
 
   object GmosSouthLongSlit
       extends GmosAdvancedConfigurationPanel[
-        ScienceMode.GmosSouthLongSlit,
+        ObservingMode.GmosSouthLongSlit,
         GmosSouthLongSlitInput,
         AdvancedConfigurationPanel.GmosSouthLongSlit,
         GmosSouthGrating,
@@ -1087,7 +1089,7 @@ object AdvancedConfigurationPanel {
       ] {
 
     // @inline override protected def isCustomized(aligner: AA): Boolean =
-    //   aligner.get =!= ScienceMode.GmosSouthLongSlit.Empty
+    //   aligner.get =!= ObservingMode.GmosSouthLongSlit.Empty
 
     @inline override protected def revertCustomizations(
       aligner: AA
@@ -1099,7 +1101,7 @@ object AdvancedConfigurationPanel {
     )(using MonadError[IO, Throwable], Effect.Dispatch[IO], Logger[IO]): View[Wavelength] =
       aligner
         .zoom(
-          ScienceMode.GmosSouthLongSlit.centralWavelength.andThen(CoverageCenterWavelength.value),
+          ObservingMode.GmosSouthLongSlit.centralWavelength.andThen(CentralWavelength.value),
           GmosSouthLongSlitInput.centralWavelength.modify
         )
         .view(_.toInput.assign)
@@ -1111,7 +1113,7 @@ object AdvancedConfigurationPanel {
     ): View[GmosSouthGrating] =
       aligner
         .zoom(
-          ScienceMode.GmosSouthLongSlit.grating,
+          ObservingMode.GmosSouthLongSlit.grating,
           GmosSouthLongSlitInput.grating.modify
         )
         .view(_.assign)
@@ -1123,7 +1125,7 @@ object AdvancedConfigurationPanel {
     ): View[Option[GmosSouthFilter]] =
       aligner
         .zoom(
-          ScienceMode.GmosSouthLongSlit.filter,
+          ObservingMode.GmosSouthLongSlit.filter,
           GmosSouthLongSlitInput.filter.modify
         )
         .view(_.orUnassign)
@@ -1134,7 +1136,7 @@ object AdvancedConfigurationPanel {
       Logger[IO]
     ): View[GmosSouthFpu] = aligner
       .zoom(
-        ScienceMode.GmosSouthLongSlit.fpu,
+        ObservingMode.GmosSouthLongSlit.fpu,
         GmosSouthLongSlitInput.fpu.modify
       )
       .view(_.assign)
@@ -1145,15 +1147,15 @@ object AdvancedConfigurationPanel {
     //   Logger[IO]
     // ): View[Option[ExposureTimeMode]] = aligner
     //   .zoom(
-    //     ScienceMode.GmosSouthLongSlit.overrideExposureTimeMode,
+    //     ObservingMode.GmosSouthLongSlit.overrideExposureTimeMode,
     //     GmosSouthLongSlitInput.overrideExposureTimeMode.modify
     //   )
     //   .view(_.map(_.toInput).orUnassign)
 
     private val explicitXBin =
-      ScienceMode.GmosSouthLongSlit.explicitXBin
+      ObservingMode.GmosSouthLongSlit.explicitXBin
     private val explicitYBin =
-      ScienceMode.GmosSouthLongSlit.explicitYBin
+      ObservingMode.GmosSouthLongSlit.explicitYBin
 
     private def binningAligner(
       aligner: AA
@@ -1175,10 +1177,10 @@ object AdvancedConfigurationPanel {
         }
 
     private val explicitReadMode =
-      ScienceMode.GmosSouthLongSlit.explicitAmpReadMode
+      ObservingMode.GmosSouthLongSlit.explicitAmpReadMode
 
     private val explicitGain =
-      ScienceMode.GmosSouthLongSlit.explicitAmpGain
+      ObservingMode.GmosSouthLongSlit.explicitAmpGain
 
     private def readGainAligner(
       aligner: AA
@@ -1205,7 +1207,7 @@ object AdvancedConfigurationPanel {
       Logger[IO]
     ): View[Option[GmosRoi]] = aligner
       .zoom(
-        ScienceMode.GmosSouthLongSlit.explicitRoi,
+        ObservingMode.GmosSouthLongSlit.explicitRoi,
         GmosSouthLongSlitInput.explicitRoi.modify
       )
       .view(_.orUnassign)
@@ -1215,8 +1217,9 @@ object AdvancedConfigurationPanel {
       Effect.Dispatch[IO],
       Logger[IO]
     ): View[Option[NonEmptyList[WavelengthDither]]] = aligner
-      .zoom(ScienceMode.GmosSouthLongSlit.explicitWavelengthDithers,
-            GmosSouthLongSlitInput.explicitWavelengthDithers.modify
+      .zoom(
+        ObservingMode.GmosSouthLongSlit.explicitWavelengthDithers,
+        GmosSouthLongSlitInput.explicitWavelengthDithers.modify
       )
       .view(
         _.map(
@@ -1230,30 +1233,32 @@ object AdvancedConfigurationPanel {
       Logger[IO]
     ): View[Option[NonEmptyList[Offset.Q]]] = aligner
       .zoom(
-        ScienceMode.GmosSouthLongSlit.explicitSpatialOffsets,
+        ObservingMode.GmosSouthLongSlit.explicitSpatialOffsets,
         GmosSouthLongSlitInput.explicitSpatialOffsets.modify _
       )
       .view(_.map(_.toList.map(_.toInput)).orUnassign)
 
-    @inline override protected val initialGratingLens           = ScienceMode.GmosSouthLongSlit.initialGrating
-    @inline override protected val initialFilterLens            = ScienceMode.GmosSouthLongSlit.initialFilter
-    @inline override protected val initialFpuLens               = ScienceMode.GmosSouthLongSlit.initialFpu
+    @inline override protected val initialGratingLens           =
+      ObservingMode.GmosSouthLongSlit.initialGrating
+    @inline override protected val initialFilterLens            = ObservingMode.GmosSouthLongSlit.initialFilter
+    @inline override protected val initialFpuLens               = ObservingMode.GmosSouthLongSlit.initialFpu
     @inline override protected val initialCentralWavelengthLens =
-      ScienceMode.GmosSouthLongSlit.initialCentralWavelength.andThen(CoverageCenterWavelength.value)
+      ObservingMode.GmosSouthLongSlit.initialCentralWavelength.andThen(CentralWavelength.value)
     @inline protected val defaultBinningLens                    =
-      disjointZip(ScienceMode.GmosSouthLongSlit.defaultXBin,
-                  ScienceMode.GmosSouthLongSlit.defaultYBin
+      disjointZip(
+        ObservingMode.GmosSouthLongSlit.defaultXBin,
+        ObservingMode.GmosSouthLongSlit.defaultYBin
       )
     @inline protected val defaultReadModeGainLens               =
       disjointZip(
-        ScienceMode.GmosSouthLongSlit.defaultAmpReadMode,
-        ScienceMode.GmosSouthLongSlit.defaultAmpGain
+        ObservingMode.GmosSouthLongSlit.defaultAmpReadMode,
+        ObservingMode.GmosSouthLongSlit.defaultAmpGain
       )
-    @inline protected val defaultRoiLens                        = ScienceMode.GmosSouthLongSlit.defaultRoi
+    @inline protected val defaultRoiLens                        = ObservingMode.GmosSouthLongSlit.defaultRoi
     @inline override protected val defaultWavelengthDithersLens =
-      ScienceMode.GmosSouthLongSlit.defaultWavelengthDithers
+      ObservingMode.GmosSouthLongSlit.defaultWavelengthDithers
     @inline override protected val defaultSpatialOffsetsLens    =
-      ScienceMode.GmosSouthLongSlit.defaultSpatialOffsets
+      ObservingMode.GmosSouthLongSlit.defaultSpatialOffsets
 
     @inline override protected val obsoleteGratings = GmosSouthGrating.all.filter(_.obsolete).toSet
     @inline override protected val obsoleteFilters  = GmosSouthFilter.all.filter(_.obsolete).toSet

@@ -126,7 +126,7 @@ object ITCRequests:
     val cacheableRequest = Cacheable(CacheName("itcQuery"), CacheVersion(1), doRequest)
 
     val itcRowsParams = modes
-      .map(x => (x.coverageCenter(wavelength), x.instrument))
+      .map(x => (x.intervalCenter(wavelength), x.instrument))
       // Only handle known modes
       .collect {
         case (Some(wavelength), m: GmosNorthSpectroscopyRow) =>

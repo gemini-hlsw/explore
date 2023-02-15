@@ -22,7 +22,6 @@ import explore.components.undo.UndoButtons
 import explore.model.AladinFullScreen
 import explore.model.AppContext
 import explore.model.Asterism
-import explore.model.BasicConfiguration
 import explore.model.ExploreModelValidators
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
@@ -50,6 +49,7 @@ import lucuma.core.validation.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
+import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.*
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.FormInputTextView

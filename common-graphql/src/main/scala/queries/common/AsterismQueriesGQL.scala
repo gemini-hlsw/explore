@@ -63,20 +63,7 @@ object AsterismQueriesGQL {
                 wavelength $WavelengthSubquery
               }
             }
-            observingMode {
-              gmosNorthLongSlit {
-                grating
-                filter
-                fpu
-                centralWavelength $WavelengthSubquery
-              }
-              gmosSouthLongSlit {
-                grating
-                filter
-                fpu
-                centralWavelength $WavelengthSubquery
-              }
-            }
+            observingMode $BasicConfigurationSubquery
           }
         }
       }
@@ -85,12 +72,6 @@ object AsterismQueriesGQL {
     object Data {
       object TargetGroup {
         type Matches = explore.model.TargetWithIdAndObs
-      }
-
-      object Observations {
-        object Matches {
-          type ObservingMode = model.BasicConfiguration
-        }
       }
     }
   }

@@ -45,7 +45,7 @@ object SpectroscopyConfigurationPanel {
       val resolution             = p.options.zoom(SpectroscopyRequirementsData.resolution)
       val signalToNoise          = p.options.zoom(SpectroscopyRequirementsData.signalToNoise)
       val signalToNoiseAt        = p.options.zoom(SpectroscopyRequirementsData.signalToNoiseAt)
-      val wavelengthRange        =
+      val wavelengthDelta        =
         p.options.zoom(SpectroscopyRequirementsData.wavelengthCoverage)
       val focalPlane             = p.options.zoom(SpectroscopyRequirementsData.focalPlane)
       val focalPlaneAngle        = p.options.zoom(SpectroscopyRequirementsData.focalPlaneAngle)
@@ -53,7 +53,7 @@ object SpectroscopyConfigurationPanel {
         p.options.zoom(SpectroscopyRequirementsData.capability)
 
       val wvMicroInput    = ExploreModelValidators.wavelengthValidWedge.optional
-      val wvcMicroInput   = ExploreModelValidators.wavelengthRangeValidWedge.optional
+      val wvcMicroInput   = ExploreModelValidators.wavelengthDeltaValidWedge.optional
       val wvChangeAuditor = ChangeAuditor
         .fromInputValidWedge(ExploreModelValidators.wavelengthValidWedge)
         .allow(s => s === "0" || s === "0.")
@@ -109,10 +109,10 @@ object SpectroscopyConfigurationPanel {
         ),
         FormInputTextView(
           id = "wavelength-range".refined,
-          value = wavelengthRange,
+          value = wavelengthDelta,
           units = "μm",
           label = ReactFragment(
-            "λ Range",
+            "Δλ",
             HelpIcon("configuration/wavelength_coverage.md".refined)
           ),
           validFormat = wvcMicroInput,

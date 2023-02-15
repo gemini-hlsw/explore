@@ -11,12 +11,12 @@ import explore.itc.ItcGraphPanel
 import explore.itc.ItcPanelProps
 import explore.itc.ItcPanelTitle
 import explore.model.BasicConfigAndItc
-import explore.model.ScienceMode
 import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.ItcTarget
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
 import lucuma.core.model.User
+import lucuma.schemas.model.ObservingMode
 import lucuma.ui.syntax.all.given
 import queries.schemas.odb.ObsQueries.*
 
@@ -25,7 +25,7 @@ object ItcTile:
   def itcTile(
     uid:                      Option[User.Id],
     oid:                      Observation.Id,
-    scienceMode:              Option[ScienceMode],
+    observingMode:            Option[ObservingMode],
     spectroscopyRequirements: Option[SpectroscopyRequirementsData],
     scienceData:              Option[ScienceData],
     itcExposureTime:          Option[ItcChartExposureTime],
@@ -37,24 +37,26 @@ object ItcTile:
       s"ITC",
       canMinimize = true,
       control = _ =>
-        (ItcPanelTitle(scienceMode,
-                       spectroscopyRequirements,
-                       scienceData,
-                       itcExposureTime,
-                       selectedTarget,
-                       selectedConfig
+        (ItcPanelTitle(
+          observingMode,
+          spectroscopyRequirements,
+          scienceData,
+          itcExposureTime,
+          selectedTarget,
+          selectedConfig
         ): VdomNode).some,
       bodyClass = ExploreStyles.ItcTileBody.some
     )(_ =>
       uid.map(
-        ItcGraphPanel(_,
-                      oid,
-                      scienceMode,
-                      spectroscopyRequirements,
-                      scienceData,
-                      itcExposureTime,
-                      selectedTarget,
-                      selectedConfig
+        ItcGraphPanel(
+          _,
+          oid,
+          observingMode,
+          spectroscopyRequirements,
+          scienceData,
+          itcExposureTime,
+          selectedTarget,
+          selectedConfig
         )
       )
     )

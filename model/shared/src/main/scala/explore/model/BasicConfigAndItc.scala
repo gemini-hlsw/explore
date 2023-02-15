@@ -6,6 +6,7 @@ package explore.model
 import cats.Eq
 import cats.derived.*
 import explore.model.itc.ItcChartExposureTime
+import lucuma.schemas.model.BasicConfiguration
 import monocle.Focus
 import monocle.Lens
 

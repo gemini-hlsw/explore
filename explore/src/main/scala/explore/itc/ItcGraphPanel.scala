@@ -26,7 +26,6 @@ import explore.events.*
 import explore.model.AppContext
 import explore.model.BasicConfigAndItc
 import explore.model.LoadingState
-import explore.model.ScienceMode
 import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.ItcPicklers.given
@@ -50,6 +49,7 @@ import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.Observation
 import lucuma.core.model.User
+import lucuma.schemas.model.ObservingMode
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import monocle.Focus
@@ -64,14 +64,19 @@ import java.util.UUID
 case class ItcGraphPanel(
   uid:                      User.Id,
   oid:                      Observation.Id,
-  scienceMode:              Option[ScienceMode],
+  observingMode:            Option[ObservingMode],
   spectroscopyRequirements: Option[SpectroscopyRequirementsData],
   scienceData:              Option[ScienceData],
   exposure:                 Option[ItcChartExposureTime],
   selectedTarget:           View[Option[ItcTarget]],
   selectedConfig:           Option[BasicConfigAndItc] // selected row in spectroscopy modes table
 ) extends ReactFnProps(ItcGraphPanel.component)
-    with ItcPanelProps(scienceMode, spectroscopyRequirements, scienceData, exposure, selectedConfig)
+    with ItcPanelProps(observingMode,
+                       spectroscopyRequirements,
+                       scienceData,
+                       exposure,
+                       selectedConfig
+    )
 
 case class ItcGraphProperties(chartType: ItcChartType, detailsShown: PlotDetails)
 object ItcGraphProperties:

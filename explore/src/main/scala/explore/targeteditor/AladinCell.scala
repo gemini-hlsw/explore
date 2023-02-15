@@ -280,7 +280,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                 Some(constraints),
                 Some(wavelength),
                 vizTime,
-                scienceMode,
+                observingMode,
                 candidates
               ) =>
             import ctx.given
@@ -292,7 +292,7 @@ object AladinCell extends ModelOptics with AladinCommon:
               (positions, tracking.at(vizTime), props.paProps.map(_.agsState)).mapN {
                 (angles, base, agsState) =>
                   val positions = angles.map(pa => AgsPosition(pa, Offset.Zero))
-                  val fpu       = scienceMode.flatMap(_.fpuAlternative)
+                  val fpu       = observingMode.flatMap(_.fpuAlternative)
                   val params    = AgsParams.GmosAgsParams(fpu, PortDisposition.Side)
 
                   val sciencePositions =

@@ -18,7 +18,6 @@ import explore.config.VizTimeEditor
 import explore.model.AladinFullScreen
 import explore.model.AppContext
 import explore.model.Asterism
-import explore.model.BasicConfiguration
 import explore.model.ObsIdSet
 import explore.model.PAProperties
 import explore.model.enums.AgsState
