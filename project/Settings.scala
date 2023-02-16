@@ -43,7 +43,7 @@ object Settings {
     val reactAladin            = "0.28.2"
     val refinedAlgebra         = "0.1.0"
     val scalaCollectionContrib = "0.3.0"
-    val scalaJsDom             = "2.3.0"
+    val scalaJsDom             = "2.4.0"
     val scalaJsReact           = "2.1.1"
     val webAppUtil             = "2.0.0-RC12"
   }
