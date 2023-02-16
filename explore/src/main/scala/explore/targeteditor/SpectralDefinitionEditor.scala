@@ -53,6 +53,7 @@ import lucuma.core.util.Of
 import lucuma.core.validation.InputValidSplitEpi
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
+import lucuma.schemas.odb.input.*
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.EnumDropdown
 import lucuma.ui.primereact.EnumDropdownView
@@ -65,7 +66,6 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
 import monocle.std.option
 import org.typelevel.log4cats.Logger
-import queries.schemas.odb.ODBConversions.*
 import react.common.ReactFnProps
 
 import scala.collection.immutable.HashSet

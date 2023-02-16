@@ -33,13 +33,13 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.util.NewType
 import lucuma.schemas.ObservationDB
+import lucuma.schemas.odb.input.*
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import mouse.boolean.*
 import org.typelevel.log4cats.Logger
 import queries.common.TargetQueriesGQL
-import queries.schemas.odb.ODBConversions.*
 import queries.schemas.odb.ObsQueries
 import react.beautifuldnd.*
 import react.common.ReactFnProps

@@ -51,6 +51,7 @@ import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.*
+import lucuma.schemas.odb.input.*
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.FormInputTextView
 import lucuma.ui.primereact.LucumaStyles
@@ -61,7 +62,6 @@ import lucuma.ui.syntax.all.given
 import lucuma.utils.*
 import org.typelevel.log4cats.Logger
 import queries.common.TargetQueriesGQL
-import queries.schemas.odb.ODBConversions.*
 import react.common.*
 import react.primereact.Message
 

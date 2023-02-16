@@ -20,6 +20,7 @@ import lucuma.core.model.SourceProfile
 import lucuma.core.model.SourceProfile.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
+import lucuma.schemas.odb.input.*
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.EnumDropdown
 import lucuma.ui.primereact.FormInputTextView
@@ -29,7 +30,6 @@ import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import queries.schemas.*
-import queries.schemas.odb.ODBConversions.*
 import react.common.ReactFnProps
 
 case class SourceProfileEditor(

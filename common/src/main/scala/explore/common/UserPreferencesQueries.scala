@@ -33,6 +33,7 @@ import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.react.table.*
 import lucuma.refined.*
+import lucuma.schemas.odb.input.*
 import lucuma.typed.highcharts.highchartsStrings.chart_
 import lucuma.typed.{tanstackTableCore => raw}
 import lucuma.ui.table.TableStateStore
@@ -44,7 +45,6 @@ import queries.schemas.UserPreferencesDB.Enums.*
 import queries.schemas.UserPreferencesDB.Scalars.*
 import queries.schemas.UserPreferencesDB.Types.LucumaObservationInsertInput
 import queries.schemas.UserPreferencesDB.Types.*
-import queries.schemas.odb.ODBConversions.*
 import react.gridlayout.{BreakpointName => _, _}
 
 import scala.collection.immutable.SortedMap

@@ -38,7 +38,7 @@ import monocle.Focus
 import monocle.Getter
 import monocle.Lens
 import queries.common.ObsQueriesGQL.*
-import queries.schemas.odb.ODBConversions.*
+import lucuma.schemas.odb.input.*
 import lucuma.core.util.Timestamp
 
 import java.time.Duration

@@ -16,9 +16,9 @@ import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.TargetWithId
 import lucuma.schemas.model.TargetWithOptId
+import lucuma.schemas.odb.input.*
 import org.typelevel.log4cats.Logger
 import queries.common.TargetQueriesGQL.CreateTargetMutation
-import queries.schemas.odb.ODBConversions.*
 
 trait AsterismModifier:
   protected def insertSiderealTarget(
