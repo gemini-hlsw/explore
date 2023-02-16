@@ -557,7 +557,6 @@ private object SpectroscopyModesTable extends TableHooks:
                 (for
                   _       <- Resource.eval(itcProgress.setStateAsync(progressZero))
                   request <-
-                    println("Calling ItcClient.request(ItcMessage.Query)")
                     ItcClient[IO]
                       .request(
                         ItcMessage.Query(w, sn, constraints, t, modes.map(_.entry), signalToNoiseAt)
