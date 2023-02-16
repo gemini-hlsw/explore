@@ -4,19 +4,21 @@
 package explore.model
 
 import cats.Eq
+import cats.data.EitherNec
 import cats.derived.*
-import explore.model.itc.ItcChartExposureTime
+import explore.model.itc.ItcQueryProblems
+import explore.model.itc.ItcResult
 import lucuma.schemas.model.BasicConfiguration
 import monocle.Focus
 import monocle.Lens
 
 case class BasicConfigAndItc(
   configuration: BasicConfiguration,
-  exposureTime:  Option[ItcChartExposureTime]
+  itc:           Option[EitherNec[ItcQueryProblems, ItcResult]]
 ) derives Eq
 
 object BasicConfigAndItc:
-  val configuration: Lens[BasicConfigAndItc, BasicConfiguration]          =
+  val configuration: Lens[BasicConfigAndItc, BasicConfiguration]                   =
     Focus[BasicConfigAndItc](_.configuration)
-  val exposureTime: Lens[BasicConfigAndItc, Option[ItcChartExposureTime]] =
-    Focus[BasicConfigAndItc](_.exposureTime)
+  val itc: Lens[BasicConfigAndItc, Option[EitherNec[ItcQueryProblems, ItcResult]]] =
+    Focus[BasicConfigAndItc](_.itc)

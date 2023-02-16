@@ -303,15 +303,6 @@ private object SpectroscopyModesTable extends TableHooks:
         .setSortUndefined(UndefinedPriority.Lower)
     ).filter { case c => (c.id.toString) != FPUColumnId.value || fpu.isEmpty }
 
-  extension (itc: ItcResult)
-    private def toChartExposureTime: Option[ItcChartExposureTime] = itc match {
-      case ItcResult.Result(time, count) =>
-        (TimeSpan.fromMicroseconds(time.toMicros), NonNegInt.from(count).toOption).mapN((t, c) =>
-          ItcChartExposureTime(OverridenExposureTime.FromItc, t, c)
-        )
-      case _                             => none
-    }
-
   extension (row: SpectroscopyModeRowWithResult)
     private def rowToConf(cw: Option[Wavelength]): Option[BasicConfigAndItc] =
       val config = cw.flatMap(row.entry.intervalCenter).flatMap { cc =>
@@ -338,7 +329,7 @@ private object SpectroscopyModesTable extends TableHooks:
               .some
           case _ => none
       }
-      config.map(c => BasicConfigAndItc(c, row.result.toOption.flatMap(_.toChartExposureTime)))
+      config.map(c => BasicConfigAndItc(c, row.result.some))
 
     private def equalsConf(conf: BasicConfiguration, cw: Option[Wavelength]): Boolean =
       rowToConf(cw).exists(_.configuration === conf)
