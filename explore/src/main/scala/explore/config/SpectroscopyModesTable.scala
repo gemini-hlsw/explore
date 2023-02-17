@@ -505,21 +505,23 @@ private object SpectroscopyModesTable extends TableHooks:
       // atTop
       .useState(false)
       // Recalculate ITC values if the wv or sn change or if the rows get modified
-      .useStreamResourceBy((props, _, _, _, _, _, _, _, _, visibleRows, _) =>
+      .useStreamResourceBy((props, _, _, rows, _, _, _, _, _, _, _) =>
         (
           props.spectroscopyRequirements.wavelength,
           props.spectroscopyRequirements.signalToNoise,
           props.spectroscopyRequirements.signalToNoiseAt,
           props.constraints,
-          props.brightestTarget
+          props.brightestTarget,
+          rows.length
         )
       ) {
-        (_, ctx, itcResults, _, itcProgress, _, _, _, table, visibleRows, _) => (
+        (_, ctx, itcResults, _, itcProgress, _, _, _, table, _, _) => (
           wavelength,
           signalToNoise,
           signalToNoiseAt,
           constraints,
-          brightestTarget
+          brightestTarget,
+          _
         ) =>
           import ctx.given
 
