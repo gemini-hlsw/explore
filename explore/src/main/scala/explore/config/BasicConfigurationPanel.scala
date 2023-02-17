@@ -86,14 +86,20 @@ private object BasicConfigurationPanel:
             UpdateScienceRequirements.spectroscopyRequirements
           )
 
-        val isMissingItc =
-          props.itcTargets.isEmpty || spectroscopy.get.wavelength.isEmpty || spectroscopy.get.signalToNoise.isEmpty
+        val canAccept =
+          props.selectedConfig.get.flatMap(_.itc).flatMap(_.toOption).exists(_.isSuccess)
 
-        val creationWarning: Option[String] =
-          if (isMissingItc) "To create a configuration, enter all information required for ITC".some
-          else if (props.selectedConfig.get.isEmpty)
-            "To create a configuration, select a table row".some
-          else none
+        val message = props.selectedConfig.get match {
+          case Some(BasicConfigAndItc(_, itc)) =>
+            itc match {
+              case Some(Right(r)) if r.isPending => "Waiting for ITC result..."
+              case Some(Right(r)) if r.isSuccess =>
+                "Click `Accept` to create configuration and view details."
+              case _                             => "ITC issues must be fixed before creating a configuration."
+            }
+
+          case None => "To create a configuration, select a table row."
+        }
 
         val buttonIcon =
           if (creating.get.value) Icons.Spinner.withSpin(true)
@@ -119,15 +125,15 @@ private object BasicConfigurationPanel:
             props.confMatrix
           ).when(isSpectroscopy),
           <.div(ExploreStyles.BasicConfigurationButtons)(
-            creationWarning.map(m => Message(text = m)),
+            Message(text = message),
             Button(
               "Accept Configuration",
               icon = buttonIcon,
-              disabled = creating.get.value || creationWarning.isDefined,
+              disabled = creating.get.value || !canAccept,
               severity = Button.Severity.Secondary,
               onClick = (creating.async.set(Creating(true)) >>
                 props.createConfig.guarantee(creating.async.set(Creating(false)))).runAsync
-            ).compact.small
+            ).compact.small.when(canAccept)
           ).when(isSpectroscopy)
         )
       }

@@ -39,24 +39,25 @@ trait ItcPanelProps(
 ):
   // if there is an observingMode, that means a configuration has been created. If not, we'll use the
   // row selected in the spectroscopy modes table if it exists
-  val configAndItc: Option[BasicConfigAndItc] =
-    observingMode
-      .map(m => BasicConfigAndItc(m.toBasicConfiguration, exposure))
-      .orElse(selectedConfig)
+  val (finalConfig, finalExposure) = observingMode match {
+    case Some(m) => (m.toBasicConfiguration.some, exposure)
+    case None    =>
+      selectedConfig match {
+        case Some(b) =>
+          (b.configuration.some, b.itc.flatMap(_.toOption).flatMap(_.toChartExposureTime))
+        case None    => (none, none)
+      }
+  }
 
   val signalToNoiseAt: Option[Wavelength] = spectroscopyRequirements.flatMap(_.signalToNoiseAt)
 
-  val wavelength: Option[CentralWavelength] = configAndItc match
-    case Some(BasicConfigAndItc(c: BasicConfiguration.GmosNorthLongSlit, _)) =>
-      c.centralWavelength.some
+  val wavelength: Option[CentralWavelength] = finalConfig.map {
+    case c: BasicConfiguration.GmosNorthLongSlit => c.centralWavelength
+    case c: BasicConfiguration.GmosSouthLongSlit => c.centralWavelength
+  }
 
-    case Some(BasicConfigAndItc(c: BasicConfiguration.GmosSouthLongSlit, _)) =>
-      c.centralWavelength.some
-
-    case _ => none
-
-    // TODO: Revisit when we have exposure mode in spectroscopy requirements
-  val signalToNoise: Option[PosBigDecimal]  = spectroscopyRequirements.flatMap(_.signalToNoise)
+  // TODO: Revisit when we have exposure mode in spectroscopy requirements
+  val signalToNoise: Option[PosBigDecimal] = spectroscopyRequirements.flatMap(_.signalToNoise)
 
   // val signalToNoise: Option[PosBigDecimal] = observingMode match
   //   case Some(ObservingMode.GmosNorthLongSlit(_, adv)) =>
@@ -78,18 +79,15 @@ trait ItcPanelProps(
   //   case _ =>
   //     spectroscopyRequirements.flatMap(_.signalToNoise)
 
-  val instrumentRow: Option[InstrumentRow]            = configAndItc match
-    case Some(BasicConfigAndItc(c: BasicConfiguration.GmosNorthLongSlit, _)) =>
-      GmosNorthSpectroscopyRow(c.grating, c.fpu, c.filter).some
+  val instrumentRow: Option[InstrumentRow] = finalConfig.map {
+    case c: BasicConfiguration.GmosNorthLongSlit =>
+      GmosNorthSpectroscopyRow(c.grating, c.fpu, c.filter)
+    case c: BasicConfiguration.GmosSouthLongSlit =>
+      GmosSouthSpectroscopyRow(c.grating, c.fpu, c.filter)
+  }
 
-    case Some(BasicConfigAndItc(c: BasicConfiguration.GmosSouthLongSlit, _)) =>
-      GmosSouthSpectroscopyRow(c.grating, c.fpu, c.filter).some
-
-    case _ =>
-      none
-
-    // TODO: Revisit when we have exposure mode in science requirements
-  val chartExposureTime: Option[ItcChartExposureTime] = configAndItc.flatMap(_.exposureTime)
+  // TODO: Revisit when we have exposure mode in science requirements
+  val chartExposureTime: Option[ItcChartExposureTime] = finalExposure
 
   // val chartExposureTime: Option[ItcChartExposureTime] = observingMode match
   //   case Some(ObservingMode.GmosNorthLongSlit(basic, adv)) =>
