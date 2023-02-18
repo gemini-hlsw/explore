@@ -115,6 +115,11 @@ See https://github.com/highcharts/highcharts/issues/13320 */
 // We force these to override highchart's defaults.
 .plot-plot-line-progress {
   stroke-width: 2 !important;
+  stroke: gray !important;
+}
+
+.plot-plot-line-date {
+  stroke-width: 2 !important;
   stroke: green !important;
 }
 

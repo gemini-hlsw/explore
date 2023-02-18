@@ -164,11 +164,8 @@ object ElevationPlotSection:
                       props.visualizationTime
                     )
                   case (site, PlotRange.Semester) =>
-                    val coords   = props.coords
-                    val semester = Semester.fromLocalDate(date.value)
-                    ElevationPlotSemester(site, coords, semester).withKey(
-                      s"${siteView.get}-$coords-$semester"
-                    )
+                    val coords = props.coords
+                    ElevationPlotSemester(site, coords, date.value)
                   case _                          => EmptyVdom
                 }
               },
