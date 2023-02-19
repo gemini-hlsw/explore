@@ -61,6 +61,7 @@ import lucuma.core.model.SiderealTracking
 import lucuma.core.model.User
 import lucuma.core.syntax.all.*
 import lucuma.core.util.Display
+import lucuma.core.util.NewType
 import lucuma.core.util.TimeSpan
 import lucuma.react.syntax.*
 import lucuma.react.table.*
@@ -111,11 +112,21 @@ case class SpectroscopyModesTable(
 private object SpectroscopyModesTable extends TableHooks:
   private type Props = SpectroscopyModesTable
 
+  type ScrollTo = ScrollTo.Type
+  object ScrollTo extends NewType[Boolean]:
+    inline def Scroll   = ScrollTo(true)
+    inline def NoScroll = ScrollTo(false)
+
   private given Reusability[EitherNec[ItcQueryProblems, ItcResult]]                        = Reusability.byEq
   private given Reusability[SpectroscopyModesMatrix]                                       = Reusability.by(_.matrix.length)
   private given Reusability[ItcResultsCache]                                               = Reusability.by(_.cache.size)
   private given Reusability[Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]] =
     Reusability.never
+
+  private given Reusability[ColumnId]      = Reusability.by(_.value)
+  private given Reusability[SortDirection] = Reusability.by(_.toDescending)
+  private given Reusability[ColumnSort]    = Reusability.derive
+  private given Reusability[Sorting]       = Reusability.by(_.value)
 
   private given Eq[Range.Inclusive]          = Eq.by(x => (x.start, x.end, x.step))
   private given Reusability[Range.Inclusive] = Reusability.byEq
@@ -454,31 +465,8 @@ private object SpectroscopyModesTable extends TableHooks:
             itcProgress
           )
       }
-      // selectedIndex
-      .useStateBy((props, _, _, rows, _, _, _) =>
-        selectedRowIndex(
-          props.selectedConfig.get.map(_.configuration),
-          props.spectroscopyRequirements.wavelength,
-          rows
-        )
-      )
-      // Recompute state if conf or requirements change.
-      .useEffectWithDepsBy((props, _, _, _, _, _, _, _) =>
-        (props.selectedConfig.get.map(_.configuration), props.spectroscopyRequirements)
-      ) { (_, _, _, rows, _, _, _, selectedIndex) => (configuration, requirements) =>
-        selectedIndex.setState(selectedRowIndex(configuration, requirements.wavelength, rows))
-      }
-      // Set the selected config if the rows change because it might have different itc data
-      .useEffectWithDepsBy((_, _, _, rows, _, _, _, _) => rows) {
-        (props, _, _, _, _, _, _, selectedIndex) => rows =>
-          val optRow = selectedIndex.value.flatMap(idx => rows.lift(idx))
-          val conf   = optRow.flatMap(_.rowToConf(props.spectroscopyRequirements.wavelength))
-          if (props.selectedConfig.get =!= conf)
-            props.selectedConfig.set(conf)
-          else Callback.empty
-      }
       // table
-      .useReactTableWithStateStoreBy((props, ctx, _, rows, _, _, cols, _) =>
+      .useReactTableWithStateStoreBy((props, ctx, _, rows, _, _, cols) =>
         import ctx.given
 
         TableOptionsWithStateStore(
@@ -491,12 +479,48 @@ private object SpectroscopyModesTable extends TableHooks:
           TableStore(props.userId, TableId.SpectroscopyModes, cols)
         )
       )
+      .useState(ScrollTo.Scroll)
+      .useEffectWithDepsBy((_, _, _, rows, _, _, _, table, _) => (rows, table.getState().sorting)) {
+        (_, _, _, _, _, _, _, _, scrollTo) => _ => scrollTo.setState(ScrollTo.Scroll)
+      }
+      .useMemoBy((_, _, _, rows, _, _, _, table, _) => (rows, table.getState().sorting)) {
+        (_, _, _, _, _, _, _, table, _) => (_, _) =>
+          table.getSortedRowModel().rows.map(_.original).toList
+      }
+      // selectedIndex
+      .useStateBy((props, _, _, _, _, _, _, _, _, sortedRows) =>
+        selectedRowIndex(
+          props.selectedConfig.get.map(_.configuration),
+          props.spectroscopyRequirements.wavelength,
+          sortedRows
+        )
+      )
+      // Recompute index if conf, requirements or sortedRows change.
+      .useEffectWithDepsBy((props, _, _, _, _, _, _, _, _, sortedRows, _) =>
+        (props.selectedConfig.get.map(_.configuration), props.spectroscopyRequirements, sortedRows)
+      ) {
+        (_, _, _, _, _, _, _, _, _, _, selectedIndex) =>
+          (configuration, requirements, sortedRows) =>
+            selectedIndex.setState(
+              selectedRowIndex(configuration, requirements.wavelength, sortedRows)
+            )
+      }
+      // Set the selected config if the rows change because it might have different itc data.
+      // Note, we use rows for the dependency, not sorted rows, because sorted rows also changes with sort.
+      .useEffectWithDepsBy((_, _, _, rows, _, _, _, _, _, _, _) => rows) {
+        (props, _, _, _, _, _, _, _, _, sortedRows, selectedIndex) => _ =>
+          val optRow = selectedIndex.value.flatMap(idx => sortedRows.lift(idx))
+          val conf   = optRow.flatMap(_.rowToConf(props.spectroscopyRequirements.wavelength))
+          if (props.selectedConfig.get =!= conf)
+            props.selectedConfig.set(conf)
+          else Callback.empty
+      }
       // visibleRows
-      .useStateBy((_, _, _, rows, _, _, _, _, _) => none[Range.Inclusive])
+      .useState(none[Range.Inclusive])
       // atTop
       .useState(false)
       // Recalculate ITC values if the wv or sn change or if the rows get modified
-      .useStreamResourceBy((props, _, _, rows, _, _, _, _, _, _, _) =>
+      .useStreamResourceBy((props, _, _, rows, _, _, _, _, _, _, _, _, _) =>
         (
           props.spectroscopyRequirements.wavelength,
           props.spectroscopyRequirements.signalToNoise,
@@ -506,7 +530,7 @@ private object SpectroscopyModesTable extends TableHooks:
           rows.length
         )
       ) {
-        (_, ctx, itcResults, _, itcProgress, _, _, _, table, _, _) => (
+        (_, ctx, itcResults, _, itcProgress, _, _, _, _, sortedRows, _, _, _) => (
           wavelength,
           signalToNoise,
           signalToNoiseAt,
@@ -518,8 +542,6 @@ private object SpectroscopyModesTable extends TableHooks:
 
           (wavelength, signalToNoise, brightestTarget)
             .mapN { (w, sn, t) =>
-              val sortedRows = table.getPreSortedRowModel().rows.map(_.original).toList
-
               val modes =
                 sortedRows
                   .filterNot { row => // Discard modes already in the cache
@@ -573,16 +595,19 @@ private object SpectroscopyModesTable extends TableHooks:
             .getOrElse(Resource.pure(fs2.Stream()))
       }
       .useRef(none[HTMLTableVirtualizer])
-      .useEffectOnMountBy((_, _, _, _, _, _, _, selectedIndex, _, _, _, _, virtualizerRef) =>
-        virtualizerRef.get.flatMap(refOpt =>
-          Callback(
-            for
-              virtualizer <- refOpt
-              idx         <- selectedIndex.value
-            yield virtualizer.scrollToIndex(idx + 1, ScrollOptions)
-          )
-        )
-      )
+      .useEffectWithDepsBy((_, _, _, _, _, _, _, _, scrollTo, _, _, _, _, _, _) => scrollTo) {
+        (_, _, _, _, _, _, _, _, _, _, selectedIndex, _, _, _, virtualizerRef) => scrollTo =>
+          if (scrollTo.value === ScrollTo.Scroll) {
+            virtualizerRef.get.flatMap(refOpt =>
+              Callback(
+                for
+                  virtualizer <- refOpt
+                  idx         <- selectedIndex.value
+                yield virtualizer.scrollToIndex(idx + 1, ScrollOptions)
+              )
+            ) >> scrollTo.setState(ScrollTo.NoScroll)
+          } else Callback.empty
+      }
       .render {
         (
           props,
@@ -592,13 +617,16 @@ private object SpectroscopyModesTable extends TableHooks:
           _,
           errs,
           _,
-          selectedIndex,
           table,
+          _,
+          _,
+          selectedIndex,
           visibleRows,
           atTop,
           _,
           virtualizerRef
         ) =>
+
           def toggleRow(
             row: SpectroscopyModeRowWithResult
           ): Option[explore.model.BasicConfigAndItc] =
@@ -663,11 +691,20 @@ private object SpectroscopyModesTable extends TableHooks:
                   TagMod(
                     ^.disabled := !row.original.entry.enabledRow,
                     ExploreStyles.TableRowSelected
-                      .when_(selectedIndex.value.exists(_ === row.index.toInt)),
-                    (^.onClick --> (
-                      props.selectedConfig.set(toggleRow(row.original)) >>
-                        selectedIndex.setState(row.index.toInt.some)
-                    )).when(row.original.entry.enabledRow)
+                      .when(
+                        props.selectedConfig.get.exists(c =>
+                          row.original.equalsConf(c.configuration,
+                                                  props.spectroscopyRequirements.wavelength
+                          )
+                        )
+                      ),
+                    (
+                      ^.onClick --> (
+                        props.selectedConfig.set(toggleRow(row.original)) >>
+                          selectedIndex.setState(row.index.toInt.some)
+                      )
+                    )
+                      .when(row.original.entry.enabledRow)
                   ),
                 onChange = virtualizer =>
                   visibleRows.setState(
