@@ -123,11 +123,6 @@ private object SpectroscopyModesTable extends TableHooks:
   private given Reusability[Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]] =
     Reusability.never
 
-  private given Reusability[ColumnId]      = Reusability.by(_.value)
-  private given Reusability[SortDirection] = Reusability.by(_.toDescending)
-  private given Reusability[ColumnSort]    = Reusability.derive
-  private given Reusability[Sorting]       = Reusability.by(_.value)
-
   private given Eq[Range.Inclusive]          = Eq.by(x => (x.start, x.end, x.step))
   private given Reusability[Range.Inclusive] = Reusability.byEq
 
