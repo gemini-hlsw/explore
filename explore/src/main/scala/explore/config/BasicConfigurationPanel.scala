@@ -89,17 +89,22 @@ private object BasicConfigurationPanel:
         val canAccept =
           props.selectedConfig.get.flatMap(_.itc).flatMap(_.toOption).exists(_.isSuccess)
 
-        val message = props.selectedConfig.get match {
-          case Some(BasicConfigAndItc(_, itc)) =>
-            itc match {
-              case Some(Right(r)) if r.isPending => "Waiting for ITC result..."
-              case Some(Right(r)) if r.isSuccess =>
-                "Click `Accept` to create configuration and view details."
-              case _                             => "ITC issues must be fixed before creating a configuration."
-            }
+        // wavelength has to be handled special because you can't select a row without a wavelength.
+        val message =
+          spectroscopy.get.wavelength.fold("Wavelength is required for creating a configuration.")(
+            _ =>
+              props.selectedConfig.get match {
+                case Some(BasicConfigAndItc(_, itc)) =>
+                  itc match {
+                    case Some(Right(r)) if r.isPending => "Waiting for ITC result..."
+                    case Some(Right(r)) if r.isSuccess =>
+                      "Click `Accept` to create configuration and view details."
+                    case _                             => "ITC issues must be fixed before creating a configuration."
+                  }
 
-          case None => "To create a configuration, select a table row."
-        }
+                case None => "To create a configuration, select a table row."
+              }
+          )
 
         val buttonIcon =
           if (creating.get.value) Icons.Spinner.withSpin(true)
