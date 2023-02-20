@@ -479,6 +479,11 @@ private object SpectroscopyModesTable extends TableHooks:
           TableStore(props.userId, TableId.SpectroscopyModes, cols)
         )
       )
+      // We need to have an indicator of whether we need to scrollTo the selectedIndex as
+      // a state because otherwise the scrollTo effect below would often run in the same "hook cyle"
+      // as the index change, and it would use the old index so it would scroll to the wrong location.
+      // By having it as state with the following `useEffectWithDepsBy`, the scrollTo effect will run
+      // in the following "hook cycle" and get the proper index.
       .useState(ScrollTo.Scroll)
       .useEffectWithDepsBy((_, _, _, rows, _, _, _, table, _) => (rows, table.getState().sorting)) {
         (_, _, _, _, _, _, _, _, scrollTo) => _ => scrollTo.setState(ScrollTo.Scroll)
@@ -488,6 +493,8 @@ private object SpectroscopyModesTable extends TableHooks:
           table.getSortedRowModel().rows.map(_.original).toList
       }
       // selectedIndex
+      // The selected index needs to be the index into the sorted data, because that is what
+      // the virtualizer uses for scrollTo.
       .useStateBy((props, _, _, _, _, _, _, _, _, sortedRows) =>
         selectedRowIndex(
           props.selectedConfig.get.map(_.configuration),
@@ -595,6 +602,7 @@ private object SpectroscopyModesTable extends TableHooks:
             .getOrElse(Resource.pure(fs2.Stream()))
       }
       .useRef(none[HTMLTableVirtualizer])
+      // scroll to the currently selected row.
       .useEffectWithDepsBy((_, _, _, _, _, _, _, _, scrollTo, _, _, _, _, _, _) => scrollTo) {
         (_, _, _, _, _, _, _, _, _, _, selectedIndex, _, _, _, virtualizerRef) => scrollTo =>
           if (scrollTo.value === ScrollTo.Scroll) {
