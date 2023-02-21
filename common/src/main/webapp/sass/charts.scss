@@ -28,6 +28,14 @@ See https://github.com/highcharts/highcharts/issues/13320 */
   fill: var(--plot-tooltip-background-color);
 }
 
+.elevation-plot-series .highcharts-area {
+  fill-opacity: 0;
+}
+
+.elevation-plot-series .elevation-plot-visualization-period {
+  fill-opacity: 0.75;
+}
+
 /* Target Elevation */
 .highcharts-color-0 {
   fill: hsl(0deg 87% 66%);

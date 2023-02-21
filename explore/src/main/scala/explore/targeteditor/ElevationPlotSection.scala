@@ -134,14 +134,11 @@ object ElevationPlotSection:
       .render { (props, ctx, _, options, date) =>
         import ctx.given
 
-        val siteView =
-          options.zoom(sitePrism)
+        val siteView = options.zoom(sitePrism)
 
-        val timeView =
-          options.zoom(Pot.readyPrism.andThen(ElevationPlotOptions.time))
+        val timeView = options.zoom(Pot.readyPrism.andThen(ElevationPlotOptions.time))
 
-        val rangeView =
-          options.zoom(Pot.readyPrism.andThen(ElevationPlotOptions.range))
+        val rangeView = options.zoom(Pot.readyPrism.andThen(ElevationPlotOptions.range))
 
         def setTime(timeDisplay: TimeDisplay) =
           timeView.set(timeDisplay) *> prefsSetter(props, options, time = _ => timeDisplay)
@@ -149,8 +146,7 @@ object ElevationPlotSection:
         def setRange(timeRange: PlotRange) =
           rangeView.set(timeRange) *> prefsSetter(props, options, range = _ => timeRange)
 
-        def setSite(site: Site) =
-          siteView.set(site)
+        def setSite(site: Site) = siteView.set(site)
 
         val renderPlot: ElevationPlotOptions => VdomNode =
           (opt: ElevationPlotOptions) =>
@@ -159,7 +155,13 @@ object ElevationPlotSection:
               <.div(ExploreStyles.ElevationPlot) {
                 (siteView.get, rangeView.get).mapN[VdomNode] {
                   case (site, PlotRange.Night)    =>
-                    ElevationPlotNight(site, props.coords, date.value, opt.time)
+                    ElevationPlotNight(
+                      site,
+                      props.coords,
+                      date.value,
+                      opt.time,
+                      props.visualizationTime
+                    )
                   case (site, PlotRange.Semester) =>
                     val coords   = props.coords
                     val semester = Semester.fromLocalDate(date.value)
