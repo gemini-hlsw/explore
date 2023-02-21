@@ -44,9 +44,11 @@ import lucuma.core.math.FluxDensityContinuumValueRefinement
 import lucuma.core.math.Wavelength
 import lucuma.core.math.dimensional.Units.*
 import lucuma.core.math.dimensional.*
+import lucuma.core.model.CatalogInfo
 import lucuma.core.model.EmissionLine
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
+import lucuma.core.syntax.display.*
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Of
@@ -55,11 +57,7 @@ import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
 import lucuma.ui.input.ChangeAuditor
-import lucuma.ui.primereact.EnumDropdown
-import lucuma.ui.primereact.EnumDropdownView
-import lucuma.ui.primereact.FormInputTextView
-import lucuma.ui.primereact.FormLabel
-import lucuma.ui.primereact.LucumaStyles
+import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
@@ -73,6 +71,7 @@ import scala.collection.immutable.SortedMap
 
 sealed trait SpectralDefinitionEditor[T, S]:
   def spectralDefinition: Aligner[SpectralDefinition[T], S]
+  def catalogInfo: Option[CatalogInfo]
   def brightnessExpanded: View[IsExpanded]
   def disabled: Boolean
 
@@ -195,6 +194,14 @@ sealed abstract class SpectralDefinitionEditorBuilder[
         )
 
       React.Fragment(
+        props.catalogInfo.flatMap(ci =>
+          ci.objectType.map(ot =>
+            React.Fragment(
+              FormLabel(htmlFor = "catalogInfo".refined)(ci.catalog.shortName),
+              FormInputText(id = "catalogInfo".refined, value = ot, disabled = true)
+            )
+          )
+        ),
         FormLabel(htmlFor = "sed".refined)("SED", HelpIcon("target/main/target-sed.md".refined)),
         EnumDropdown[SEDType[T]](
           id = "sed".refined,
@@ -285,6 +292,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
 
 case class IntegratedSpectralDefinitionEditor(
   spectralDefinition: Aligner[SpectralDefinition[Integrated], SpectralDefinitionIntegratedInput],
+  catalogInfo:        Option[CatalogInfo],
   brightnessExpanded: View[IsExpanded],
   disabled:           Boolean
 )(using Logger[IO])
@@ -386,6 +394,7 @@ object IntegratedSpectralDefinitionEditor
 
 case class SurfaceSpectralDefinitionEditor(
   spectralDefinition: Aligner[SpectralDefinition[Surface], SpectralDefinitionSurfaceInput],
+  catalogInfo:        Option[CatalogInfo],
   brightnessExpanded: View[IsExpanded],
   disabled:           Boolean
 )(using Logger[IO])
