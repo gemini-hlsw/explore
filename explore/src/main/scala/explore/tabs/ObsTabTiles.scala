@@ -184,13 +184,17 @@ object ObsTabTiles:
         // asterism base coordinates at viz time or default to base coordinates
         val targetCoords: Option[CoordinatesAtVizTime] =
           (vizTime, potAsterism.toOption)
-            .mapN((instant, asterism) => asterism.get.flatMap(_.baseTracking.at(instant)))
+            .mapN { (instant, asterism) =>
+              asterism.get.flatMap(
+                _.baseTrackingAt(instant).map(r => CoordinatesAtVizTime(r.baseCoordinates))
+              )
+            }
             .flatten
-            .orElse(
+            .orElse {
               // If e.g. vizTime isn't defined default to the asterism base coordinates
               potAsterism.toOption
                 .flatMap(_.get.map(x => CoordinatesAtVizTime(x.baseTracking.baseCoordinates)))
-            )
+            }
 
         val spectroscopyReqs: Option[ScienceRequirementsData] =
           obsView.toOption.map(_.get.scienceData.requirements)

@@ -20,6 +20,17 @@ import monocle.*
 import java.time.Instant
 
 extension (a: NonEmptyList[TargetWithId])
+  // We calculate the coordinates at a given time by doing PM
+  // correction of each target and finding the center
+  def centerOfAt(vizTime: Instant): Option[Coordinates] =
+    val coords = a
+      .map(_.toSidereal)
+      .collect { case Some(x) =>
+        x.target.tracking.at(vizTime)
+      }
+      .sequence
+    coords.map(Coordinates.centerOf(_))
+
   def centerOf: Coordinates =
     val coords = a.map(_.toSidereal).collect { case Some(x) =>
       x.target.tracking.baseCoordinates
@@ -56,6 +67,11 @@ case class Asterism(private val targets: Zipper[TargetWithId]) derives Eq {
 
   def focusOn(tid: Target.Id): Asterism =
     targets.findFocus(_.id === tid).map(Asterism.apply).getOrElse(this)
+
+  def baseTrackingAt(vizTime: Instant): Option[ObjectTracking] =
+    if (targets.length > 1)
+      targets.toNel.centerOfAt(vizTime).map(ObjectTracking.const(_))
+    else ObjectTracking.fromTarget(targets.focus.target).some
 
   def baseTracking: ObjectTracking =
     if (targets.length > 1)

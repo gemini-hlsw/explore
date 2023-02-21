@@ -102,10 +102,11 @@ object AladinContainer extends AladinCommon {
         ExploreStyles.GuideSpeedSlow
 
   private def baseAndScience(p: Props) = {
-    val base    = p.asterism.baseTracking
-      .at(p.obsConf.vizTime)
-      .map(_.value)
+    val base = p.asterism
+      .baseTrackingAt(p.obsConf.vizTime)
+      .map(_.baseCoordinates)
       .getOrElse(p.asterism.baseTracking.baseCoordinates)
+
     val science = p.asterism.toSidereal
       .map(t =>
         (t.id === p.asterism.focus.id,
