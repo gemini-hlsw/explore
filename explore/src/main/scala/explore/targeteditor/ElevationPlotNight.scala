@@ -23,7 +23,7 @@ import lucuma.core.math.Coordinates
 import lucuma.core.math.skycalc.ImprovedSkyCalc
 import lucuma.core.model.ObservingNight
 import lucuma.core.util.Enumerated
-import lucuma.typed.highcharts.highchartsStrings.line
+import lucuma.typed.highcharts.highchartsStrings.area
 import lucuma.typed.highcharts.mod.XAxisLabelsOptions
 import lucuma.typed.highcharts.mod.*
 import lucuma.ui.syntax.all.*
@@ -48,11 +48,13 @@ import scala.scalajs.js
 import js.JSConverters.*
 
 case class ElevationPlotNight(
-  site:        Site,
-  coords:      CoordinatesAtVizTime,
-  date:        LocalDate,
-  timeDisplay: TimeDisplay
-) extends ReactFnProps(ElevationPlotNight.component)
+  site:              Site,
+  coords:            CoordinatesAtVizTime,
+  date:              LocalDate,
+  timeDisplay:       TimeDisplay,
+  visualizationTime: Option[Instant]
+) extends ReactFnProps(ElevationPlotNight.component):
+  val visualizationDuration: Duration = Duration.ofHours(1)
 
 object ElevationPlotNight {
   private type Props = ElevationPlotNight
@@ -372,16 +374,36 @@ object ElevationPlotNight {
           .setSeries(
             ElevationSeries.values
               .map(series =>
-                SeriesLineOptions((), (), line)
-                  .setName(series.name)
-                  .setYAxis(series.yAxis)
-                  .setData(series.data(seriesData).toJSArray)
-                  .setVisible(shownSeries.value.contains(series))
-                  .setEvents(
-                    SeriesEventsOptionsObject()
-                      .setHide((s, _) => hideSeriesCB(series, s.chart).runNow())
-                      .setShow((s, _) => showSeriesCB(series, s.chart).runNow())
-                  )
+                val zones       =
+                  props.visualizationTime
+                    .map(vt =>
+                      js.Array(
+                        SeriesZonesOptionsObject()
+                          .setValue(vt.toEpochMilli.toDouble),
+                        SeriesZonesOptionsObject()
+                          .setValue(vt.plus(props.visualizationDuration).toEpochMilli.toDouble)
+                          .setClassName("elevation-plot-visualization-period")
+                      )
+                    )
+                val baseSeries  =
+                  SeriesAreaOptions((), (), area, ())
+                    .setName(series.name)
+                    .setClassName("elevation-plot-series")
+                    .setYAxis(series.yAxis)
+                    .setData(series.data(seriesData).toJSArray)
+                    .setVisible(shownSeries.value.contains(series))
+                    .setEvents(
+                      SeriesEventsOptionsObject()
+                        .setHide((s, _) => hideSeriesCB(series, s.chart).runNow())
+                        .setShow((s, _) => showSeriesCB(series, s.chart).runNow())
+                    )
+                    .setFillOpacity(0)
+                    .setZoneAxis("x")
+                val zonedSeries = zones.fold(baseSeries)(z => baseSeries.setZones(z))
+                series match // Adjust fill area to axis
+                  case ElevationSeries.SkyBrightness    => zonedSeries.setThreshold(22)
+                  case ElevationSeries.ParallacticAngle => zonedSeries.setThreshold(-180)
+                  case _                                => zonedSeries
               )
               .map(_.asInstanceOf[SeriesOptionsType])
               .toJSArray
