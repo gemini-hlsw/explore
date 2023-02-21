@@ -480,7 +480,7 @@ private object SpectroscopyModesTable extends TableHooks:
       // By having it as state with the following `useEffectWithDepsBy`, the scrollTo effect will run
       // in the following "hook cycle" and get the proper index.
       .useState(ScrollTo.Scroll)
-      .useEffectWithDepsBy((_, _, _, rows, _, _, _, table, _) => (rows, table.getState().sorting)) {
+      .useEffectWithDepsBy((_, _, _, _, _, _, _, table, _) => table.getState().sorting) {
         (_, _, _, _, _, _, _, _, scrollTo) => _ => scrollTo.setState(ScrollTo.Scroll)
       }
       .useMemoBy((_, _, _, rows, _, _, _, table, _) => (rows, table.getState().sorting)) {
