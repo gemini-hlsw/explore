@@ -12,6 +12,7 @@ import clue.TransactionalClient
 import clue.data.syntax.*
 import eu.timepit.refined.*
 import eu.timepit.refined.numeric.*
+import explore.model.AladinFullScreen
 import explore.model.AladinMouseScroll
 import explore.model.TargetVisualOptions
 import explore.model.UserGlobalPreferences
@@ -142,7 +143,7 @@ object UserPreferencesQueries:
       fovDec:        Option[Angle] = None,
       agsCandidates: Option[Visible] = None,
       agsOverlay:    Option[Visible] = None,
-      fullScreen:    Option[Boolean] = None,
+      fullScreen:    Option[AladinFullScreen] = None,
       saturation:    Option[Int] = None,
       brightness:    Option[Int] = None
     )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
@@ -159,7 +160,7 @@ object UserPreferencesQueries:
                 fovDec = fovDec.map(_.toMicroarcseconds).orIgnore,
                 agsCandidates = agsCandidates.map(Visible.boolIso.reverseGet).orIgnore,
                 agsOverlay = agsOverlay.map(Visible.boolIso.reverseGet).orIgnore,
-                fullScreen = fullScreen.orIgnore,
+                fullScreen = fullScreen.map(_.value).orIgnore,
                 saturation = saturation.orIgnore,
                 brightness = brightness.orIgnore
               )
@@ -254,7 +255,7 @@ object UserPreferencesQueries:
                               offset,
                               agsCandidates,
                               agsOverlay,
-                              fullScreen,
+                              AladinFullScreen(fullScreen),
                               saturation,
                               brightness
           )

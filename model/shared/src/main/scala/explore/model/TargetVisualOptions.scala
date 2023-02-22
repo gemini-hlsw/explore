@@ -9,6 +9,7 @@ import eu.timepit.refined.*
 import eu.timepit.refined.api.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.numeric.*
+import explore.model.AladinFullScreen
 import explore.model.enums.Visible
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
@@ -22,7 +23,7 @@ case class TargetVisualOptions(
   viewOffset:    Offset,
   agsCandidates: Visible,
   agsOverlay:    Visible,
-  fullScreen:    Boolean,
+  fullScreen:    AladinFullScreen,
   saturation:    TargetVisualOptions.ImageFilterRange,
   brightness:    TargetVisualOptions.ImageFilterRange
 ) derives Eq
@@ -45,7 +46,7 @@ object TargetVisualOptions:
                         Offset.Zero,
                         Visible.Inline,
                         Visible.Inline,
-                        false,
+                        AladinFullScreen.Normal,
                         100.refined,
                         100.refined
     )
