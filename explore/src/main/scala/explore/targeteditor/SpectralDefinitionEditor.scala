@@ -31,6 +31,7 @@ import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Band
+import lucuma.core.enums.CatalogName
 import lucuma.core.enums.CoolStarTemperature
 import lucuma.core.enums.GalaxySpectrum
 import lucuma.core.enums.HIIRegionSpectrum
@@ -197,7 +198,10 @@ sealed abstract class SpectralDefinitionEditorBuilder[
         props.catalogInfo.flatMap(ci =>
           ci.objectType.map(ot =>
             React.Fragment(
-              FormLabel(htmlFor = "catalogInfo".refined)(ci.catalog.shortName),
+              FormLabel(htmlFor = "catalogInfo".refined)(ci.catalog match
+                case CatalogName.Import => "Object Type"
+                case other              => other.shortName
+              ),
               FormInputText(id = "catalogInfo".refined, value = ot, disabled = true)
             )
           )
