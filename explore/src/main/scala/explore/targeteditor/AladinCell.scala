@@ -87,7 +87,9 @@ case class AladinCell(
 ) extends ReactFnProps(AladinCell.component) {
   val positions =
     obsConf.configuration.flatMap(c =>
-      obsConf.posAngleConstraint.anglesToTestAt(c.siteFor, asterism.baseTracking, obsConf.vizTime)
+      obsConf.posAngleConstraint.flatMap(
+        _.anglesToTestAt(c.siteFor, asterism.baseTracking, obsConf.vizTime)
+      )
     )
 }
 

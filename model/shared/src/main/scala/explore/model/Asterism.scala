@@ -10,6 +10,7 @@ import cats.syntax.all.*
 import lucuma.core.data.Zipper
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Epoch
+import lucuma.core.model.ObjectTracking
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.refined.*
