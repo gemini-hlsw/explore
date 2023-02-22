@@ -157,4 +157,10 @@ trait DisplayImplicits:
       .mkString(" - ")
   )
 
+  given Display[CatalogName] = Display.byShortName {
+    case CatalogName.Simbad => "SIMBAD"
+    case CatalogName.Gaia   => "GAIA"
+    case _                  => ""
+  }
+
 object display extends DisplayImplicits

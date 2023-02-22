@@ -385,7 +385,11 @@ object SiderealTargetEditor {
                 ExploreStyles.Gaussian
                   .when(SourceProfile.gaussian.getOption(sourceProfileAligner.get).isDefined)
               )(
-                SourceProfileEditor(sourceProfileAligner, disabled = disabled)
+                SourceProfileEditor(
+                  sourceProfileAligner,
+                  targetView.get.target.catalogInfo,
+                  disabled
+                )
               )
             )
           )

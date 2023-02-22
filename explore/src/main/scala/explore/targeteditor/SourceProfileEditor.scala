@@ -16,6 +16,7 @@ import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.validation.MathValidators
+import lucuma.core.model.CatalogInfo
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.SourceProfile.*
 import lucuma.refined.*
@@ -34,6 +35,7 @@ import react.common.ReactFnProps
 
 case class SourceProfileEditor(
   sourceProfile: Aligner[SourceProfile, SourceProfileInput],
+  catalogInfo:   Option[CatalogInfo],
   disabled:      Boolean
 ) extends ReactFnProps(SourceProfileEditor.component)
 
@@ -74,6 +76,7 @@ object SourceProfileEditor:
             .map(pointSpectralDefinitionAccess =>
               IntegratedSpectralDefinitionEditor(
                 pointSpectralDefinitionAccess,
+                props.catalogInfo,
                 brightnessExpanded,
                 props.disabled
               )
@@ -86,6 +89,7 @@ object SourceProfileEditor:
             .map(uniformSpectralDefinitionAccess =>
               SurfaceSpectralDefinitionEditor(
                 uniformSpectralDefinitionAccess,
+                props.catalogInfo,
                 brightnessExpanded,
                 props.disabled
               )
@@ -114,6 +118,7 @@ object SourceProfileEditor:
                       SpectralDefinitionIntegratedInput()
                     )
                   ),
+                  props.catalogInfo,
                   brightnessExpanded,
                   props.disabled
                 )
