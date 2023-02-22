@@ -7,7 +7,6 @@ import clue.PersistentClientStatus
 import explore.data.KeyedIndexedList
 import explore.events.CatalogMessage
 import explore.model.Asterism
-import explore.model.ObjectTracking
 import explore.model.enums.AgsState
 import explore.model.enums.SelectedPanel
 import explore.model.itc.ItcChartExposureTime
@@ -24,6 +23,7 @@ import lucuma.catalog.AngularSize
 import lucuma.catalog.CatalogTargetResult
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.IntPercent
+import lucuma.core.model.ObjectTracking
 import lucuma.core.model.Partner
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target

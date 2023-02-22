@@ -88,7 +88,7 @@ object AgsOverlay {
                     <.div(ExploreStyles.AgsGuideSpeed, speed.tag),
                     <.div(ExploreStyles.AgsGBrightness,
                           analysis.target.gBrightness.map(g =>
-                            s"G: ${g.setScale(1, RoundingMode.HALF_DOWN).toString()}"
+                            s"G: ${g.value.value.setScale(1, RoundingMode.HALF_DOWN).toString()}"
                           )
                     ),
                     <.div(ExploreStyles.AgsCoordinates,
