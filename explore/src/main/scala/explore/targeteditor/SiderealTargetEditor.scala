@@ -382,8 +382,10 @@ object SiderealTargetEditor {
                 ExploreStyles.Compact,
                 LucumaStyles.FormColumnVeryCompact,
                 ExploreStyles.TargetSourceProfileEditor,
-                ExploreStyles.Gaussian
-                  .when(SourceProfile.gaussian.getOption(sourceProfileAligner.get).isDefined)
+                ExploreStyles.WithGaussian
+                  .when(SourceProfile.gaussian.getOption(sourceProfileAligner.get).isDefined),
+                ExploreStyles.WithCatalogInfo
+                  .when(targetView.get.target.catalogInfo.flatMap(_.objectType).isDefined)
               )(
                 SourceProfileEditor(
                   sourceProfileAligner,
