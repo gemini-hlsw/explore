@@ -150,7 +150,8 @@ object ExploreStyles:
   val TargetTileBody: Css            = Css("target-tile-body")
   val TargetTileEditor: Css          = Css("target-tile-editor")
   val TargetSourceProfileEditor: Css = Css("target-source-profile-editor")
-  val Gaussian: Css                  = Css("gaussian")
+  val WithGaussian: Css              = Css("with-gaussian")
+  val WithCatalogInfo: Css           = Css("with-catalog-info")
 
   val ElevationPlotTileBody: Css           = Css("elevation-plot-tile-body")
   val ElevationPlot: Css                   = Css("elevation-plot")
