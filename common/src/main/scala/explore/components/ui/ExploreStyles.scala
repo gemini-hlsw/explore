@@ -436,6 +436,7 @@ object ExploreStyles:
   val PMGSCorrectionLine           = Css("proper-motion-line-gs")
   val AladinToolbox                = Css("explore-aladin-toolbox-button")
   val AladinZoomControl            = Css("explore-aladin-zoom-control")
+  val AladinSearchZoomControl      = Css("explore-aladin-search-zoom-control")
   val ButtonOnAladin               = Css("explore-aladin-button")
   val AladinFullScreenButton       = Css("explore-aladin-fullscreen-button")
   val AladinSettingsMenu           = Css("explore-aladin-settings-menu")

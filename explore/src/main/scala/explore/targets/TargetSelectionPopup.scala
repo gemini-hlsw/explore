@@ -15,7 +15,9 @@ import crystal.react.hooks.*
 import crystal.react.implicits.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
+import explore.aladin.AladinZoomControl
 import explore.components.ui.ExploreStyles
+import explore.model.AladinFullScreen
 import explore.model.AppContext
 import explore.model.Constants
 import explore.model.EmptySiderealTarget
@@ -273,6 +275,7 @@ object TargetSelectionPopup:
                 )
               ),
               <.div(ExploreStyles.TargetSearchPreview)(
+                AladinZoomControl(aladinRef, ExploreStyles.AladinSearchZoomControl),
                 selectedTarget.get
                   .collect { case SelectedTarget(Target.Sidereal(_, tracking, _, _), _, _, _) =>
                     tracking.baseCoordinates
@@ -289,6 +292,9 @@ object TargetSelectionPopup:
                           showLayersControl = false,
                           target = Coordinates.fromHmsDms.reverseGet(coordinates),
                           fov = Constants.PreviewFov,
+                          fullScreen = false,
+                          showZoomControl = false,
+                          showFullscreenControl = false,
                           showGotoControl = false
                         )
                       )

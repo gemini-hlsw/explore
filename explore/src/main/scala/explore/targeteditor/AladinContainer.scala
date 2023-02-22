@@ -9,6 +9,7 @@ import crystal.react.View
 import crystal.react.implicits.*
 import crystal.react.reuse.*
 import explore.Icons
+import explore.aladin.AladinZoomControl
 import explore.components.ui.ExploreStyles
 import explore.model.AladinMouseScroll
 import explore.model.Asterism
@@ -387,19 +388,7 @@ object AladinContainer extends AladinCommon {
             // will make aladin request a large amount of tiles and end up freeze explore.
             if (resize.height.exists(_ >= 100)) {
               ReactFragment(
-                <.div(
-                  ExploreStyles.AladinZoomControl,
-                  Button(
-                    clazz = ExploreStyles.ButtonOnAladin,
-                    icon = Icons.ThinPlus,
-                    onClick = aladinRef.get.asCBO.flatMapCB(_.backend.increaseZoom).toCallback
-                  ).small,
-                  Button(
-                    clazz = ExploreStyles.ButtonOnAladin,
-                    icon = Icons.ThinMinus,
-                    onClick = aladinRef.get.asCBO.flatMapCB(_.backend.decreaseZoom).toCallback
-                  ).small
-                ),
+                AladinZoomControl(aladinRef),
                 (resize.width, resize.height, fov.value)
                   .mapN(
                     TargetsOverlay(_,
