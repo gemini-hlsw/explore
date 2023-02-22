@@ -37,9 +37,7 @@ object ItcTarget:
 
   extension (targets: List[ItcTarget])
     def brightestAt(wv: Wavelength): Option[ItcTarget] =
-      targets
-        .filter(t => selectedBand(t.profile, wv).isDefined)
-        .minByOption(_.brightnessNearestTo(wv).map(_._2))
+      targets.minByOption(_.brightnessNearestTo(wv).map(_._2))
 
   // We may consider adjusting this to consider small variations of RV identical for the
   // purpose of doing ITC calculations

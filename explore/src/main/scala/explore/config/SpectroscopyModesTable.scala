@@ -211,7 +211,10 @@ private object SpectroscopyModesTable extends TableHooks:
     case FocalPlane.MultipleSlit => "Multi"
     case FocalPlane.IFU          => "IFU"
 
-  private def itcCell(c: EitherNec[ItcQueryProblems, ItcResult]): VdomElement = {
+  private def itcCell(
+    c: EitherNec[ItcQueryProblems, ItcResult],
+    w: Option[Wavelength]
+  ): VdomElement = {
     val content: TagMod = c match
       case Left(nel)                        =>
         if (nel.exists(_ == ItcQueryProblems.UnsupportedMode))
@@ -220,10 +223,12 @@ private object SpectroscopyModesTable extends TableHooks:
         else
           val content = nel
             .collect {
-              case ItcQueryProblems.MissingSignalToNoise => <.span("Set S/N")
-              case ItcQueryProblems.MissingWavelength    => <.span("Set Wavelength")
-              case ItcQueryProblems.MissingTargetInfo    => <.span("Missing target info")
-              case ItcQueryProblems.GenericError(e)      => e.split("\\.").mkTagMod(<.br)
+              case ItcQueryProblems.MissingSignalToNoise             => <.span("Set S/N")
+              case ItcQueryProblems.MissingWavelength                => <.span("Set Wavelength")
+              case ItcQueryProblems.MissingTargetInfo if w.isDefined =>
+                <.span("Missing target info")
+              case ItcQueryProblems.MissingBrightness                => <.span("No brightness defined")
+              case ItcQueryProblems.GenericError(e)                  => e.split("\\.").mkTagMod(<.br)
             }
             .toList
             .intersperse(<.br: VdomNode)
@@ -273,7 +278,7 @@ private object SpectroscopyModesTable extends TableHooks:
               )
           )
         )
-        .setCell(cell => itcCell(cell.row.original.result))
+        .setCell(cell => itcCell(cell.row.original.result, cw))
         .setColumnSize(FixedSize(80.toPx))
         .setEnableSorting(progress.isEmpty)
         .setSortUndefined(UndefinedPriority.Lower),
@@ -421,6 +426,7 @@ private object SpectroscopyModesTable extends TableHooks:
           .collect { case Left(p) =>
             p.toList.filter {
               case ItcQueryProblems.MissingTargetInfo => true
+              case ItcQueryProblems.MissingBrightness => true
               case _                                  => false
             }.distinct
           }
@@ -654,8 +660,11 @@ private object SpectroscopyModesTable extends TableHooks:
                 <.label(ExploreStyles.WarningLabel)("Set Wav..")
               case ItcQueryProblems.MissingSignalToNoise =>
                 <.label(ExploreStyles.WarningLabel)("Set S/N")
-              case ItcQueryProblems.MissingTargetInfo    =>
+              case ItcQueryProblems.MissingTargetInfo
+                  if props.spectroscopyRequirements.wavelength.isDefined =>
                 <.label(ExploreStyles.WarningLabel)("Missing Target Info")
+              case ItcQueryProblems.MissingBrightness    =>
+                <.label(ExploreStyles.WarningLabel)("No Brightness Defined")
             }
 
           val selectedTarget =

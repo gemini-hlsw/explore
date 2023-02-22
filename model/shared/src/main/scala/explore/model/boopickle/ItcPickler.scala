@@ -185,6 +185,7 @@ trait ItcPicklers extends CommonPicklers {
   given Pickler[ItcQueryProblems.MissingWavelength.type]    = generatePickler
   given Pickler[ItcQueryProblems.MissingSignalToNoise.type] = generatePickler
   given Pickler[ItcQueryProblems.MissingTargetInfo.type]    = generatePickler
+  given Pickler[ItcQueryProblems.MissingBrightness.type]    = generatePickler
   given Pickler[ItcQueryProblems.GenericError]              = generatePickler
 
   given Pickler[ItcQueryProblems] =
@@ -193,6 +194,7 @@ trait ItcPicklers extends CommonPicklers {
       .addConcreteType[ItcQueryProblems.MissingWavelength.type]
       .addConcreteType[ItcQueryProblems.MissingSignalToNoise.type]
       .addConcreteType[ItcQueryProblems.MissingTargetInfo.type]
+      .addConcreteType[ItcQueryProblems.MissingBrightness.type]
       .addConcreteType[ItcQueryProblems.GenericError]
 
   given Pickler[ItcRequestParams] = generatePickler

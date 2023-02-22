@@ -8,6 +8,7 @@ import cats.syntax.all.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.model.itc.*
+import explore.model.itc.math.*
 import explore.modes.*
 import lucuma.core.enums.*
 import lucuma.core.math.Wavelength
@@ -38,8 +39,16 @@ case class ItcResultsCache(
       NonEmptyChain.of(ItcQueryProblems.UnsupportedMode)
     )
 
-  def targets(r: Option[ItcTarget]): EitherNec[ItcQueryProblems, ItcTarget] =
-    Either.fromOption(r, NonEmptyChain.of(ItcQueryProblems.MissingTargetInfo))
+  def targets(r: Option[ItcTarget], w: Option[Wavelength]): EitherNec[ItcQueryProblems, ItcTarget] =
+    Either.fromOption(r, NonEmptyChain.of(ItcQueryProblems.MissingTargetInfo)).flatMap { t =>
+      // Can't make the brightness check without the wavelength.
+      w.fold(t.rightNec)(wv =>
+        Either.fromOption(
+          selectedBand(t.profile, wv).map(_ => t),
+          NonEmptyChain.of(ItcQueryProblems.MissingBrightness)
+        )
+      )
+    }
 
   def update(
     newEntries: Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]
@@ -60,7 +69,7 @@ case class ItcResultsCache(
     t:    Option[ItcTarget],
     r:    SpectroscopyModeRow
   ): EitherNec[ItcQueryProblems, ItcResult] =
-    (wavelength(w, r), signalToNoise(sn), snAt.validNec.toEither, mode(r), targets(t)).parMapN {
+    (wavelength(w, r), signalToNoise(sn), snAt.validNec.toEither, mode(r), targets(t, w)).parMapN {
       (w, sn, snAt, im, t) =>
         cache
           .get(ItcRequestParams(w, sn, snAt, c, t, im))
