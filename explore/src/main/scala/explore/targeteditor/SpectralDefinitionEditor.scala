@@ -198,9 +198,12 @@ sealed abstract class SpectralDefinitionEditorBuilder[
         props.catalogInfo.flatMap(ci =>
           ci.objectType.map(ot =>
             React.Fragment(
-              FormLabel(htmlFor = "catalogInfo".refined)(ci.catalog match
-                case CatalogName.Import => "Object Type"
-                case other              => other.shortName
+              FormLabel(htmlFor = "catalogInfo".refined)(
+                ci.catalog match
+                  case CatalogName.Import => "Object Type"
+                  case other              => other.shortName
+                ,
+                HelpIcon("target/main/target-catalog-info.md".refined)
               ),
               FormInputText(id = "catalogInfo".refined, value = ot, disabled = true)
             )
