@@ -31,6 +31,7 @@ import lucuma.core.math.Coordinates
 import lucuma.core.model.Semester
 import lucuma.core.model.Target
 import lucuma.core.model.User
+import lucuma.core.syntax.display.given
 import lucuma.core.util.Enumerated
 import lucuma.refined.*
 import lucuma.schemas.model.ObservingMode
@@ -63,114 +64,80 @@ case class ElevationPlotSection(
 object ElevationPlotSection:
   private type Props = ElevationPlotSection
 
-  private given Reusability[Props] =
-    Reusability.by(x => (x.uid, x.tid, x.site, x.visualizationTime, x.coords.value))
-
-  private val preferredSiteFor = (c: Props) =>
-    c.site
-      .getOrElse {
-        if (c.coords.value.dec.toAngle.toSignedDoubleDegrees > -5) Site.GN else Site.GS
-      }
-
-  private def prefsSetter(
-    props:   Props,
-    options: View[Pot[ElevationPlotOptions]],
-    range:   PlotRange => PlotRange = identity,
-    time:    TimeDisplay => TimeDisplay = identity
-  )(using TransactionalClient[IO, UserPreferencesDB], Logger[IO]): Callback =
-    options.get.toOption.map { opts =>
-      ElevationPlotPreference
-        .updatePlotPreferences[IO](props.uid, range(opts.range), time(opts.time))
-        .runAsync
-        .void
-    }.getOrEmpty
-
-  private val sitePrism = Pot.readyPrism.andThen(ElevationPlotOptions.site)
-
-  private inline def calcTime(visualizationTime: Option[Instant], site: Site): LocalDate =
-    visualizationTime
-      .map(LocalDateTime.ofInstant(_, site.timezone).toLocalDate)
-      .getOrElse(ZonedDateTime.now(site.timezone).toLocalDate.plusDays(1))
+  private given Reusability[ElevationPlotOptions] = Reusability.byEq
 
   private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      .useStateBy[Site]((props, _) => preferredSiteFor(props))
-      // plot options, will be read from the user preferences
+      // Plot options, will be read from the user preferences
       .useStateView(Pot.pending[ElevationPlotOptions])
-      .useEffectWithDepsBy((props, _, _, _) => props)((_, ctx, s, options) =>
-        props =>
-          import ctx.given
-
-          s.setState(preferredSiteFor(props)) >>
-            options.modCB(
-              sitePrism.replace(preferredSiteFor(props)),
-              _.map(o => prefsSetter(props, options)).toOption.getOrEmpty
-            )
+      // If predefined site changes, switch to it.
+      .useEffectWithDepsBy((props, _, _) => props.site)((props, _, options) =>
+        _.map(options.zoom(Pot.readyPrism).zoom(ElevationPlotOptions.site).set).orEmpty
       )
-      .useEffectWithDepsBy((props, _, _, _) => (props.uid, props.tid)) {
-        (props, ctx, site, options) => _ =>
+      // If visualization time changes, switch to it.
+      .useEffectWithDepsBy((props, _, _) => props.visualizationTime)((props, _, options) =>
+        _.map(vt => options.zoom(Pot.readyPrism).mod(_.withDateAndSemesterOf(vt))).orEmpty
+      )
+      // Whenever options change, save them in user preferences
+      .useEffectWithDepsBy((_, _, options) => options.get.toOption)((props, ctx, _) =>
+        options =>
           import ctx.given
 
-          ElevationPlotPreference
-            .queryWithDefault[IO](props.uid)
-            .flatMap { case (range, time) =>
-              options
-                .set(
-                  ElevationPlotOptions.Default
-                    .copy(site = site.value, range = range, time = time)
-                    .ready
-                )
-                .to[IO]
-            }
-            .runAsyncAndForget
-      }
-      // Actual date
-      .useStateBy((props, _, site, _) => calcTime(props.visualizationTime, site.value))
-      // Update date if props change
-      .useEffectWithDepsBy((props, _, site, _, _) => (props.visualizationTime, site.value)) {
-        (_, _, _, _, date) => (vizTime, site) => date.setState(calcTime(vizTime, site))
-      }
-      .render { (props, ctx, _, options, date) =>
+          options.map { opts =>
+            ElevationPlotPreference
+              .updatePlotPreferences[IO](props.uid, opts.range, opts.timeDisplay)
+              .runAsync
+              .void
+          }.getOrEmpty
+      )
+      .useEffectWithDepsBy((props, _, _) => (props.uid, props.tid)) { (props, ctx, options) => _ =>
         import ctx.given
 
-        val siteView = options.zoom(sitePrism)
+        ElevationPlotPreference
+          .queryWithDefault[IO](props.uid)
+          .flatMap { case (range, timeDisplay) =>
+            options
+              .set(
+                ElevationPlotOptions
+                  .default(props.site, props.visualizationTime, props.coords)
+                  .copy(range = range, timeDisplay = timeDisplay)
+                  .ready
+              )
+              .to[IO]
+          }
+          .recover(_ =>
+            ElevationPlotOptions.default(props.site, props.visualizationTime, props.coords)
+          )
+          .runAsyncAndForget
+      }
+      .render { (props, ctx, options) =>
+        import ctx.given
 
-        val timeView = options.zoom(Pot.readyPrism.andThen(ElevationPlotOptions.time))
-
-        val rangeView = options.zoom(Pot.readyPrism.andThen(ElevationPlotOptions.range))
-
-        def setTime(timeDisplay: TimeDisplay) =
-          timeView.set(timeDisplay) *> prefsSetter(props, options, time = _ => timeDisplay)
-
-        def setRange(timeRange: PlotRange) =
-          rangeView.set(timeRange) *> prefsSetter(props, options, range = _ => timeRange)
-
-        def setSite(site: Site) = siteView.set(site)
+        val siteView        = options.zoom(Pot.readyPrism.andThen(ElevationPlotOptions.site))
+        val rangeView       = options.zoom(Pot.readyPrism.andThen(ElevationPlotOptions.range))
+        val dateView        = options.zoom(Pot.readyPrism.andThen(ElevationPlotOptions.date))
+        val semesterView    = options.zoom(Pot.readyPrism.andThen(ElevationPlotOptions.semester))
+        val timeDisplayView = options.zoom(Pot.readyPrism.andThen(ElevationPlotOptions.timeDisplay))
 
         val renderPlot: ElevationPlotOptions => VdomNode =
           (opt: ElevationPlotOptions) =>
             <.div(ExploreStyles.ElevationPlotSection)(
               HelpIcon("target/main/elevation-plot.md".refined, ExploreStyles.HelpIconFloating),
               <.div(ExploreStyles.ElevationPlot) {
-                (siteView.get, rangeView.get).mapN[VdomNode] {
-                  case (site, PlotRange.Night)    =>
+                opt.range match
+                  case PlotRange.Night    =>
                     ElevationPlotNight(
-                      site,
+                      opt.site,
                       props.coords,
-                      date.value,
-                      opt.time,
+                      opt.date,
+                      opt.timeDisplay,
                       props.visualizationTime
                     )
-                  case (site, PlotRange.Semester) =>
-                    val coords   = props.coords
-                    val semester = Semester.fromLocalDate(date.value)
-                    ElevationPlotSemester(site, coords, semester).withKey(
-                      s"${siteView.get}-$coords-$semester"
-                    )
-                  case _                          => EmptyVdom
-                }
+                  case PlotRange.Semester =>
+                    val coords = props.coords
+                    ElevationPlotSemester(opt.site, coords, opt.semester, opt.date)
               },
               <.div(
                 ExploreStyles.ElevationPlotControls,
@@ -182,21 +149,38 @@ object ElevationPlotSection:
                   )
                 ),
                 <.div(ExploreStyles.ElevationPlotDatePickerControls)(
-                  Button(onClick = date.modState(_.minusDays(1)),
-                         clazz = ExploreStyles.ElevationPlotDateButton,
-                         text = false,
-                         icon = Icons.ChevronLeftLight
+                  Button(
+                    onClick = opt.range match
+                      case PlotRange.Night    => dateView.mod(_.minusDays(1))
+                      case PlotRange.Semester => semesterView.mod(_.prev)
+                    ,
+                    clazz = ExploreStyles.ElevationPlotDateButton,
+                    text = false,
+                    icon = Icons.ChevronLeftLight
                   ).tiny.compact,
-                  Datepicker(
-                    onChange = (newValue, _) => date.setState(newValue.toLocalDateOpt.get)
-                  )
-                    .selected(date.value.toJsDate)
-                    .dateFormat("yyyy-MM-dd")
-                    .className(ExploreStyles.ElevationPlotDatePicker.htmlClass),
-                  Button(onClick = date.modState(_.plusDays(1)),
-                         clazz = ExploreStyles.ElevationPlotDateButton,
-                         text = false,
-                         icon = Icons.ChevronRightLight
+                  opt.range match
+                    case PlotRange.Night    =>
+                      Datepicker(
+                        onChange = (newValue, _) => dateView.set(newValue.toLocalDateOpt.get)
+                      )
+                        .selected(opt.date.toJsDate)
+                        .dateFormat("yyyy-MM-dd")
+                        .className(ExploreStyles.ElevationPlotDateInput.htmlClass)
+                    case PlotRange.Semester =>
+                      FormInputText(
+                        id = "semester".refined,
+                        value = opt.semester.longName,
+                        inputClass = ExploreStyles.ElevationPlotDateInput
+                      )(^.readOnly := true)
+                  ,
+                  Button(
+                    onClick = opt.range match
+                      case PlotRange.Night    => dateView.mod(_.plusDays(1))
+                      case PlotRange.Semester => semesterView.mod(_.next)
+                    ,
+                    clazz = ExploreStyles.ElevationPlotDateButton,
+                    text = false,
+                    icon = Icons.ChevronRightLight
                   ).tiny.compact
                 ),
                 SelectButtonEnumView(
@@ -206,7 +190,7 @@ object ElevationPlotSection:
                 ),
                 SelectButtonEnumView(
                   "elevation-plot-time".refined,
-                  timeView,
+                  timeDisplayView,
                   buttonClass = LucumaStyles.Tiny |+| LucumaStyles.VeryCompact
                 )(^.visibility.hidden.when(rangeView.contains(PlotRange.Semester)))
               )

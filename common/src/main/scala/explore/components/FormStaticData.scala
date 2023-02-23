@@ -34,8 +34,8 @@ object FormStaticData {
         props.modifiers.toTagMod,
         ^.cls := "field",
         <.label(props.label, ^.htmlFor := props.id),
-        <.div(^.cls                    := "ui input",
-              <.data(props.value, ExploreStyles.StaticData, ^.id := props.id, ^.tabIndex := 0)
+        <.div(
+          <.data(props.value, ExploreStyles.StaticData, ^.id := props.id, ^.tabIndex := 0)
         )
       )
     }
