@@ -36,7 +36,6 @@ case class AppContext[F[_]](
   pageUrl:          (AppTab, Program.Id, Focused) => String,
   setPageVia:       (AppTab, Program.Id, Focused, SetRouteVia) => Callback,
   environment:      ExecutionEnvironment,
-  exploreClipboard: Ref[F, LocalClipboard],
   broadcastChannel: BroadcastChannel[ExploreEvent],
   toastRef:         Deferred[F, ToastRef]
 )(using
@@ -68,7 +67,6 @@ object AppContext:
     pageUrl:              (AppTab, Program.Id, Focused) => String,
     setPageVia:           (AppTab, Program.Id, Focused, SetRouteVia) => Callback,
     workerClients:        WorkerClients[F],
-    exploreClipboard:     Ref[F, LocalClipboard],
     broadcastChannel:     BroadcastChannel[ExploreEvent],
     toastRef:             Deferred[F, ToastRef]
   ): F[AppContext[F]] =
@@ -85,7 +83,6 @@ object AppContext:
       pageUrl,
       setPageVia,
       config.environment,
-      exploreClipboard,
       broadcastChannel,
       toastRef
     )

@@ -9,6 +9,7 @@ import cats.syntax.all.*
 import explore.model.util.NonEmptySetWrapper
 import lucuma.core.model.Target
 import monocle.Iso
+import monocle.Prism
 
 case class TargetIdSet(idSet: NonEmptySet[Target.Id])
 
@@ -27,7 +28,13 @@ object TargetIdSet {
       case head :: tail => TargetIdSet(NonEmptySet.of(head, tail: _*)).some
     }
 
+  val fromString: Prism[String, TargetIdSet] =
+    Prism(parse)(_.idSet.toSortedSet.map(_.toString).mkString(","))
+
   def one(id: Target.Id): TargetIdSet = TargetIdSet(NonEmptySet.one(id))
 
   def of(id: Target.Id, ids: Target.Id*): TargetIdSet = TargetIdSet(NonEmptySet.of(id, ids: _*))
+
+  private def parse(idSetStr: String): Option[TargetIdSet] =
+    idSetStr.split(",").toList.traverse(Target.Id.parse).flatMap(fromTargetIdList)
 }

@@ -686,7 +686,7 @@ object TargetTabContents extends TwoPanels:
           case CopyAlt1 | CopyAlt2 =>
             target.obsSet
               .map(ids =>
-                ctx.exploreClipboard
+                ExploreClipboard
                   .set(LocalClipboard.CopiedObservations(ids))
                   .withToast(ctx)(s"Copied obs ${ids.idSet.toList.mkString(", ")}")
               )
@@ -694,7 +694,7 @@ object TargetTabContents extends TwoPanels:
                 TargetIdSet
                   .fromTargetIdList(selectedIds)
                   .map(tids =>
-                    ctx.exploreClipboard
+                    ExploreClipboard
                       .set(LocalClipboard.CopiedTargets(tids))
                       .withToast(ctx)(s"Copied targets ${tids.toList.mkString(", ")}")
                   )
@@ -703,7 +703,7 @@ object TargetTabContents extends TwoPanels:
               .runAsync
 
           case PasteAlt1 | PasteAlt2 =>
-            ctx.exploreClipboard.get.flatMap {
+            ExploreClipboard.get.flatMap {
               case LocalClipboard.CopiedObservations(id) =>
                 val treeTargets =
                   props.focused.obsSet
