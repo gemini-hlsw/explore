@@ -64,9 +64,6 @@ case class ElevationPlotSection(
 object ElevationPlotSection:
   private type Props = ElevationPlotSection
 
-  // private given Reusability[Props] =
-  //   Reusability.by(x => (x.uid, x.tid, x.site, x.visualizationTime, x.coords.value))
-
   private given Reusability[ElevationPlotOptions] = Reusability.byEq
 
   private val component =
