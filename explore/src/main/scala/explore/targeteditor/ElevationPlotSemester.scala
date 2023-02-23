@@ -40,6 +40,7 @@ import spire.math.Bounded
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -48,14 +49,13 @@ import scala.concurrent.duration.*
 import scala.scalajs.js
 
 import js.JSConverters.*
-import java.time.LocalDateTime
 
 case class ElevationPlotSemester(
-  site:   Site,
-  coords: CoordinatesAtVizTime,
-  date:   LocalDate
-) extends ReactFnProps(ElevationPlotSemester.component):
-  val semester = Semester.fromLocalDate(date)
+  site:     Site,
+  coords:   CoordinatesAtVizTime,
+  semester: Semester,
+  date:     LocalDate
+) extends ReactFnProps(ElevationPlotSemester.component)
 
 object ElevationPlotSemester:
   private type Props = ElevationPlotSemester

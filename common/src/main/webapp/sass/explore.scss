@@ -1837,11 +1837,30 @@ $help-title-height: 40px;
   align-items: center;
 }
 
-.elevation-plot-datepicker {
+.elevation-plot-date-input {
   width: 100px !important;
   text-align: center;
   font-size: small !important;
   font-weight: normal !important;
+
+  background: var(--form-input-background) !important;
+  color: var(--form-input-color) !important;
+  text-shadow: 1px 1px 1px rgb(0 0 0 / 30%);
+  font-weight: bold;
+
+  margin: 0;
+  outline: none;
+  padding: 0.25em 0.4286em;
+  border: 1px solid var(--site-border-color) !important;
+  border-radius: 0.2857rem;
+  box-shadow: 0 0 0 0 transparent inset;
+  transition: color 0.1s ease, border-color 0.1s ease;
+
+  &:focus {
+    color: var(--form-input-focus-color) !important;
+    border-color: var(--form-input-focus-border-color) !important;
+    box-shadow: var(--form-input-focus-box-shadow);
+  }
 }
 
 .p-button.elevation-plot-date-button {

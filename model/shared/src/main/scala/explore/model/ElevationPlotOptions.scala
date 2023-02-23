@@ -5,23 +5,62 @@ package explore.model
 
 import cats.*
 import cats.derived.*
+import cats.syntax.option.given
 import explore.model.enums.PlotRange
 import explore.model.enums.TimeDisplay
 import lucuma.core.enums.Site
+import lucuma.core.model.ObservingNight
+import lucuma.core.model.Semester
 import monocle.Focus
+import org.typelevel.cats.time.given
+
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZonedDateTime
 
 case class ElevationPlotOptions(
-  site:  Site,
-  range: PlotRange,
-  time:  TimeDisplay
-) derives Eq
+  site:        Site,
+  range:       PlotRange,
+  date:        LocalDate,
+  semester:    Semester,
+  timeDisplay: TimeDisplay
+) derives Eq:
+  def withDateAndSemesterOf(visualizationTime: Instant): ElevationPlotOptions =
+    val (date, semester) = ElevationPlotOptions.dateAndSemesterOf(visualizationTime.some, site)
+    copy(date = date, semester = semester)
 
-object ElevationPlotOptions {
-  val site  = Focus[ElevationPlotOptions](_.site)
-  val range = Focus[ElevationPlotOptions](_.range)
-  val time  = Focus[ElevationPlotOptions](_.time)
+object ElevationPlotOptions:
+  val site        = Focus[ElevationPlotOptions](_.site)
+  val range       = Focus[ElevationPlotOptions](_.range)
+  val date        = Focus[ElevationPlotOptions](_.date)
+  val semester    = Focus[ElevationPlotOptions](_.semester)
+  val timeDisplay = Focus[ElevationPlotOptions](_.timeDisplay)
 
-  val Default =
-    ElevationPlotOptions(Site.GS, PlotRange.Night, TimeDisplay.Site)
+  private def dateAndSemesterOf(
+    visualizationTime: Option[Instant],
+    site:              Site
+  ): (LocalDate, Semester) =
+    val date: LocalDate =
+      ObservingNight
+        .fromSiteAndInstant(site, visualizationTime.getOrElse(Instant.now))
+        .toLocalDate
+    (date, Semester.fromLocalDate(date))
 
-}
+  def default(
+    predefinedSite:    Option[Site],
+    visualizationTime: Option[Instant],
+    coords:            CoordinatesAtVizTime
+  ) =
+    val site: Site       = predefinedSite.getOrElse(
+      if (coords.value.dec.toAngle.toSignedDoubleDegrees > -5) Site.GN else Site.GS
+    )
+    val (date, semester) = dateAndSemesterOf(visualizationTime, site)
+
+    ElevationPlotOptions(
+      site,
+      PlotRange.Night,
+      date,
+      Semester.fromLocalDate(date),
+      TimeDisplay.Site
+    )
