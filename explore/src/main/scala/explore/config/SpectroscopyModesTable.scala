@@ -31,7 +31,6 @@ import explore.events.*
 import explore.itc.*
 import explore.model.AppContext
 import explore.model.BasicConfigAndItc
-import explore.model.CoordinatesAtVizTime
 import explore.model.Progress
 import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle.*
@@ -57,6 +56,7 @@ import lucuma.core.math.Coordinates
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units.Micrometer
 import lucuma.core.model.ConstraintSet
+import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.User
 import lucuma.core.syntax.all.*

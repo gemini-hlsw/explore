@@ -17,7 +17,6 @@ import explore.common.UserPreferencesQueries.*
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.CoordinatesAtVizTime
 import explore.model.ElevationPlotOptions
 import explore.model.display.given
 import explore.model.enums.PlotRange
@@ -28,6 +27,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Site
 import lucuma.core.math.Coordinates
+import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.Semester
 import lucuma.core.model.Target
 import lucuma.core.model.User

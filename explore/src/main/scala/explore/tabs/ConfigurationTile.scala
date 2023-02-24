@@ -11,12 +11,12 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.Tile
 import explore.config.ConfigurationPanel
 import explore.model.BasicConfigAndItc
-import explore.model.CoordinatesAtVizTime
 import explore.model.enums.AgsState
 import explore.undo.*
 import explore.utils.*
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
+import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.User
