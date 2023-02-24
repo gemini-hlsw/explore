@@ -30,7 +30,7 @@ object TargetSearchResult {
         none,
         Target.Sidereal.sourceProfile
           .andThen(SourceProfile.unnormalizedSED)
-          .modify(_.orElse(Constants.DefaultSED.some))(r.target) // Ensure SED is always present.
+          .modify(identity)(r.target)
       ),
       r.angularSize
     )

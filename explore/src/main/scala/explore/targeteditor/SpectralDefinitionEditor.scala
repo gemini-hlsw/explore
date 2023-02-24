@@ -96,7 +96,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
   protected def emissionLineEditor
     : (View[SortedMap[Wavelength, EmissionLine[T]]], View[IsExpanded], Boolean) => VdomNode
 
-  protected def currentType: SpectralDefinition[T] => SEDType[T]
+  protected def currentType: SpectralDefinition[T] => Option[SEDType[T]]
   protected def disabledItems: HashSet[SEDType[T]]
 
   val component = ScalaFnComponent
@@ -212,10 +212,13 @@ sealed abstract class SpectralDefinitionEditorBuilder[
           )
         ),
         FormLabel(htmlFor = "sed".refined)("SED", HelpIcon("target/main/target-sed.md".refined)),
-        EnumDropdown[SEDType[T]](
+        EnumOptionalDropdown[SEDType[T]](
           id = "sed".refined,
           value = currentType(props.spectralDefinition.get),
-          onChange = sed => props.spectralDefinition.view(props.toInput).mod(sed.convert),
+          onChange = sed =>
+            props.spectralDefinition
+              .view(props.toInput)
+              .mod(sed.fold(SpectralDefinition.unnormalizedSED.replace(None))(_.convert)),
           disabledItems = disabledItems,
           clazz = LucumaStyles.FormField,
           disabled = props.disabled
@@ -378,7 +381,8 @@ object IntegratedSpectralDefinitionEditor
       SpectralDefinitionIntegratedInput,
       IntegratedSpectralDefinitionEditor
     ] {
-  override protected val currentType: SpectralDefinition[Integrated] => SEDType[Integrated] =
+  override protected val currentType
+    : SpectralDefinition[Integrated] => Option[SEDType[Integrated]] =
     IntegratedSEDType.fromSpectralDefinition
 
   override protected val disabledItems: HashSet[SEDType[Integrated]] =
@@ -474,7 +478,7 @@ object SurfaceSpectralDefinitionEditor
       SpectralDefinitionSurfaceInput,
       SurfaceSpectralDefinitionEditor
     ] {
-  override protected val currentType: SpectralDefinition[Surface] => SEDType[Surface] =
+  override protected val currentType: SpectralDefinition[Surface] => Option[SEDType[Surface]] =
     SurfaceSEDType.fromSpectralDefinition
 
   override protected val disabledItems: HashSet[SEDType[Surface]] =

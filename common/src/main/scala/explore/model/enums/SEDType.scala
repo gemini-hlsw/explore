@@ -47,29 +47,28 @@ sealed abstract class SEDTypeEnum[T](
   import SpectralDefinition.*
 
   private def toBandNormalized[T](
-    sed: UnnormalizedSED
+    sed: Option[UnnormalizedSED]
   ): SpectralDefinition[T] => SpectralDefinition[T] =
-    _ match {
-      case BandNormalized(_, bs) => BandNormalized(sed.some, bs)
-      case EmissionLines(_, _)   => BandNormalized(sed.some, SortedMap.empty)
-    }
+    _ match
+      case BandNormalized(_, bs) => BandNormalized(sed, bs)
+      case EmissionLines(_, _)   => BandNormalized(sed, SortedMap.empty)
 
-  protected sealed abstract class BandNormalizedSED(name: String, sed: UnnormalizedSED)
+  protected sealed abstract class BandNormalizedSED(name: String, sed: Option[UnnormalizedSED])
       extends SEDType[T](name, toBandNormalized(sed))
 
   case object StellarLibraryType
-      extends BandNormalizedSED("Stellar Library", StellarLibrary(StellarLibrarySpectrum.O5V))
+      extends BandNormalizedSED("Stellar Library", StellarLibrary(StellarLibrarySpectrum.O5V).some)
   case object CoolStarModelType
-      extends BandNormalizedSED("Cool Star Model", CoolStarModel(CoolStarTemperature.T400K))
-  case object GalaxyType   extends BandNormalizedSED("Galaxy", Galaxy(GalaxySpectrum.Spiral))
-  case object PlanetType   extends BandNormalizedSED("Planet", Planet(PlanetSpectrum.Mars))
-  case object QuasarType   extends BandNormalizedSED("Quasar", Quasar(QuasarSpectrum.QS0))
+      extends BandNormalizedSED("Cool Star Model", CoolStarModel(CoolStarTemperature.T400K).some)
+  case object GalaxyType   extends BandNormalizedSED("Galaxy", Galaxy(GalaxySpectrum.Spiral).some)
+  case object PlanetType   extends BandNormalizedSED("Planet", Planet(PlanetSpectrum.Mars).some)
+  case object QuasarType   extends BandNormalizedSED("Quasar", Quasar(QuasarSpectrum.QS0).some)
   case object HIIRegionType
-      extends BandNormalizedSED("HII Region", HIIRegion(HIIRegionSpectrum.OrionNebula))
+      extends BandNormalizedSED("HII Region", HIIRegion(HIIRegionSpectrum.OrionNebula).some)
   case object PlanetaryNebulaType
       extends BandNormalizedSED(
         "Planetary Nebula",
-        PlanetaryNebula(PlanetaryNebulaSpectrum.NGC7009)
+        PlanetaryNebula(PlanetaryNebulaSpectrum.NGC7009).some
       )
   case object EmissionLineType
       extends SEDType[T](
@@ -80,32 +79,33 @@ sealed abstract class SEDTypeEnum[T](
             defaultContinuumUnits.withValueTagged(FluxDensityContinuumValue.unsafeFrom(1))
           )
       )
-  case object PowerLawType extends BandNormalizedSED("Power Law", PowerLaw(BigDecimal(0)))
+  case object PowerLawType extends BandNormalizedSED("Power Law", PowerLaw(BigDecimal(0)).some)
   case object BlackBodyType
-      extends BandNormalizedSED("Black Body", BlackBody(1000.refined[Positive].withUnit[Kelvin]))
+      extends BandNormalizedSED("Black Body",
+                                BlackBody(1000.refined[Positive].withUnit[Kelvin]).some
+      )
   case object UserDefinedType
       extends BandNormalizedSED(
         "User Defined",
         UserDefined(
           null.asInstanceOf[NonEmptyMap[Wavelength, PosBigDecimal]]
-        )
+        ).some
       )
 
-  def fromSpectralDefinition(spectralDefinition: SpectralDefinition[T]): SEDType[T] =
-    spectralDefinition match {
-      case BandNormalized(Some(StellarLibrary(_)), _)  => StellarLibraryType
-      case BandNormalized(Some(CoolStarModel(_)), _)   => CoolStarModelType
-      case BandNormalized(Some(Galaxy(_)), _)          => GalaxyType
-      case BandNormalized(Some(Planet(_)), _)          => PlanetType
-      case BandNormalized(Some(Quasar(_)), _)          => QuasarType
-      case BandNormalized(Some(HIIRegion(_)), _)       => HIIRegionType
-      case BandNormalized(Some(PlanetaryNebula(_)), _) => PlanetaryNebulaType
-      case EmissionLines(_, _)                         => EmissionLineType
-      case BandNormalized(Some(PowerLaw(_)), _)        => PowerLawType
-      case BandNormalized(Some(BlackBody(_)), _)       => BlackBodyType
-      case BandNormalized(Some(UserDefined(_)), _)     => UserDefinedType
-      case BandNormalized(_, _)                        => UserDefinedType
-    }
+  def fromSpectralDefinition(spectralDefinition: SpectralDefinition[T]): Option[SEDType[T]] =
+    spectralDefinition match
+      case BandNormalized(Some(StellarLibrary(_)), _)  => StellarLibraryType.some
+      case BandNormalized(Some(CoolStarModel(_)), _)   => CoolStarModelType.some
+      case BandNormalized(Some(Galaxy(_)), _)          => GalaxyType.some
+      case BandNormalized(Some(Planet(_)), _)          => PlanetType.some
+      case BandNormalized(Some(Quasar(_)), _)          => QuasarType.some
+      case BandNormalized(Some(HIIRegion(_)), _)       => HIIRegionType.some
+      case BandNormalized(Some(PlanetaryNebula(_)), _) => PlanetaryNebulaType.some
+      case EmissionLines(_, _)                         => EmissionLineType.some
+      case BandNormalized(Some(PowerLaw(_)), _)        => PowerLawType.some
+      case BandNormalized(Some(BlackBody(_)), _)       => BlackBodyType.some
+      case BandNormalized(Some(UserDefined(_)), _)     => UserDefinedType.some
+      case BandNormalized(_, _)                        => none
 
   protected val enumSEDType: Enumerated[SEDType[T]] =
     Enumerated

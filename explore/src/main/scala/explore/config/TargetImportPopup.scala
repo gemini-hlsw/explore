@@ -89,11 +89,9 @@ object TargetImportPopup:
         TargetImport.csv2targetsAndLookup(client, uri"https://lucuma-cors-proxy.herokuapp.com".some)
       )
       .evalMap {
-        case Left(a)    =>
+        case Left(a)       =>
           stateUpdate(State.targetErrors.modify(e => e :++ a.toList.map(_.displayValue)))
-        case Right(tgt) =>
-          // FIXME The backend needs a SED
-          val target = Target.Sidereal.unnormalizedSED.replace(Constants.DefaultSED.some)(tgt)
+        case Right(target) =>
           TargetQueriesGQL
             .CreateTargetMutation[F]
             .execute(target.toCreateTargetInput(programId))
