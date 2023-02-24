@@ -7,10 +7,6 @@ $tablet-responsive-cutoff: 992px;
 $mobile-responsive-cutoff: 670px;
 
 // Scrollbar
-*::-webkit-scrollbar {
-  width: 0.8em !important;
-}
-
 *::-webkit-scrollbar-track {
   background: var(--scrollbar-background) !important;
 }
