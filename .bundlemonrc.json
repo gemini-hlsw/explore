@@ -2,10 +2,10 @@
   "baseDir": "./heroku/static/assets",
   "files": [
     {
-      "path": "*.<hash>.js"
+      "path": "*-<hash>.js"
     },
     {
-      "path": "*.<hash>.css"
+      "path": "*-<hash>.css"
     }
   ],
   "defaultCompression": "brotli",
