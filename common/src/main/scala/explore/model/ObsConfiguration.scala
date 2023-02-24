@@ -8,11 +8,11 @@ import cats.data.NonEmptyList
 import cats.derived.*
 import cats.syntax.all.*
 import eu.timepit.refined.cats.*
-import explore.model.BasicConfiguration
 import lucuma.ags.*
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.PosAngleConstraint
+import lucuma.schemas.model.BasicConfiguration
 import monocle.Focus
 import org.typelevel.cats.time.instantInstances
 

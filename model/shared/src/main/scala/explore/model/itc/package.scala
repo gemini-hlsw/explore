@@ -29,10 +29,29 @@ object ItcQueryProblems {
   case object MissingWavelength        extends ItcQueryProblems
   case object MissingSignalToNoise     extends ItcQueryProblems
   case object MissingTargetInfo        extends ItcQueryProblems
+  case object MissingBrightness        extends ItcQueryProblems
   case class GenericError(msg: String) extends ItcQueryProblems
 }
 
-sealed trait ItcResult extends Product with Serializable derives Eq
+sealed trait ItcResult extends Product with Serializable derives Eq {
+  def isSuccess: Boolean = this match {
+    case ItcResult.Result(_, _) => true
+    case _                      => false
+  }
+
+  def isPending: Boolean = this match {
+    case ItcResult.Pending => true
+    case _                 => false
+  }
+
+  def toChartExposureTime: Option[ItcChartExposureTime] = this match {
+    case ItcResult.Result(time, count) =>
+      (TimeSpan.fromMicroseconds(time.toMicros), NonNegInt.from(count).toOption).mapN((t, c) =>
+        ItcChartExposureTime(OverridenExposureTime.FromItc, t, c)
+      )
+    case _                             => none
+  }
+}
 
 object ItcResult {
   case object SourceTooBright                                     extends ItcResult

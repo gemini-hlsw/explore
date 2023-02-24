@@ -27,18 +27,20 @@ import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.model.Semester
 import lucuma.core.syntax.time.*
+import lucuma.typed.highcharts.highchartsStrings.line
+import lucuma.typed.highcharts.mod.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import react.common.GenericComponentPAF2VdomNode
 import react.common.ReactFnProps
 import react.highcharts.ResizingChart
 import react.resizeDetector.hooks.*
-import reactST.highcharts.highchartsStrings.line
-import reactST.highcharts.mod.*
 import spire.math.Bounded
 
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -51,7 +53,8 @@ import js.JSConverters.*
 case class ElevationPlotSemester(
   site:     Site,
   coords:   CoordinatesAtVizTime,
-  semester: Semester
+  semester: Semester,
+  date:     LocalDate
 ) extends ReactFnProps(ElevationPlotSemester.component)
 
 object ElevationPlotSemester:
@@ -97,7 +100,7 @@ object ElevationPlotSemester:
                               val visibilityD: Double = visibility / MillisPerHour
 
                               series.addPoint(
-                                PointOptionsObject(accessibility = js.undefined)
+                                PointOptionsObject().setAccessibilityUndefined
                                   .setX(instantD)
                                   // Trick to leave small values out of the plot
                                   .setY(if (visibilityD > MinVisibility) visibilityD else -1),
@@ -142,6 +145,34 @@ object ElevationPlotSemester:
                 )
             }
             .getOrElse(Resource.pure(fs2.Stream()))
+      )
+      .useEffectWithDepsBy((props, _, _, chartOpt, _) => (props.date, chartOpt))(
+        (props, _, _, _, _) =>
+          (date, chartOpt) =>
+            CallbackTo(chartOpt.value.value) >>=
+              (_.map(chart =>
+                Callback {
+                  // 2pm of the selected day, same as for semester start and end
+                  val localDateTime: LocalDateTime =
+                    LocalDateTime.of(date, LocalTime.MIDNIGHT).plusHours(14)
+                  val zonedDateTime: ZonedDateTime =
+                    ZonedDateTime.of(localDateTime, props.site.timezone)
+
+                  // Axes maybe undefined or empty when remounting.
+                  if (!js.isUndefined(chart.axes) && chart.axes.length > 0) {
+                    val xAxis = chart.xAxis(0)
+                    xAxis.removePlotLine("date")
+                    xAxis.addPlotLine(
+                      AxisPlotLinesOptions
+                        .XAxisPlotLinesOptions()
+                        .setId("date")
+                        .setValue(zonedDateTime.toInstant.toEpochMilli.toDouble)
+                        .setZIndex(1000)
+                        .setClassName("plot-plot-line-date")
+                    )
+                  }
+                }
+              ).orEmpty)
       )
       .useEffectWithDepsBy((_, _, resize, _, _) => resize)((_, _, _, chartOpt, _) =>
         resize =>
@@ -232,18 +263,14 @@ object ElevationPlotSemester:
               )
           )
           .setSeries(
-            List(
-              SeriesLineOptions(line)
-                .setName("Visibility")
-                .setYAxis(0)
-            )
+            List(SeriesLineOptions((), (), line).setName("Visibility").setYAxis(0))
               .map(_.asInstanceOf[SeriesOptionsType])
               .toJSArray
           )
 
         <.div(
           ResizingChart(options, c => chartOpt.setState(c.some))
-            .withKey(s"$props")
+            .withKey(s"${props.site}-${props.coords}-${props.semester}")
             .when(resize.height.isDefined)
         ).withRef(resize.ref)
       }

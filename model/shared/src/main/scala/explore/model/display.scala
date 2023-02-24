@@ -12,6 +12,7 @@ import lucuma.core.math.BrightnessValue
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
+import lucuma.core.model.Semester
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
 import lucuma.core.syntax.display.*
@@ -156,5 +157,13 @@ trait DisplayImplicits:
       )
       .mkString(" - ")
   )
+
+  given Display[CatalogName] = Display.byShortName {
+    case CatalogName.Simbad => "SIMBAD"
+    case CatalogName.Gaia   => "GAIA"
+    case CatalogName.Import => "IMPORT"
+  }
+
+  given Display[Semester] = Display.by(_.formatShort, _.format)
 
 object display extends DisplayImplicits

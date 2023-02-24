@@ -22,8 +22,8 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
+import lucuma.schemas.odb.input.*
 import queries.common.TargetQueriesGQL
-import queries.schemas.odb.ODBConversions.*
 
 import scala.annotation.unused
 import scala.collection.immutable.SortedSet

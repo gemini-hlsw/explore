@@ -6,7 +6,6 @@ package explore
 import cats.effect.Async
 import cats.effect.IO
 import cats.effect.IOApp
-import cats.effect.Ref
 import cats.effect.Resource
 import cats.effect.Sync
 import cats.effect.kernel.Deferred
@@ -30,7 +29,6 @@ import explore.model.AppContext
 import explore.model.ExploreLocalPreferences
 import explore.model.Focused
 import explore.model.Help
-import explore.model.LocalClipboard
 import explore.model.RootModel
 import explore.model.RoutingInfo
 import explore.model.UserVault
@@ -173,7 +171,6 @@ object ExploreMain {
         appConfig            <- fetchConfig[IO]
         _                    <- Logger[IO].info(s"Git Commit: [${utils.gitHash.getOrElse("NONE")}]")
         _                    <- Logger[IO].info(s"Config: ${appConfig.show}")
-        clipboard            <- Ref.of[IO, LocalClipboard](LocalClipboard.Empty)
         toastRef             <- Deferred[IO, ToastRef]
         ctx                  <-
           AppContext.from[IO](
@@ -182,7 +179,6 @@ object ExploreMain {
             pageUrl,
             setPageVia,
             workerClients,
-            clipboard,
             bc,
             toastRef
           )

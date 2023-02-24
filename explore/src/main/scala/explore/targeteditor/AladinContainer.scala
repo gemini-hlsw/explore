@@ -9,6 +9,7 @@ import crystal.react.View
 import crystal.react.implicits.*
 import crystal.react.reuse.*
 import explore.Icons
+import explore.aladin.AladinZoomControl
 import explore.components.ui.ExploreStyles
 import explore.model.AladinMouseScroll
 import explore.model.Asterism
@@ -102,10 +103,11 @@ object AladinContainer extends AladinCommon {
         ExploreStyles.GuideSpeedSlow
 
   private def baseAndScience(p: Props) = {
-    val base    = p.asterism.baseTracking
-      .at(p.obsConf.vizTime)
-      .map(_.value)
+    val base = p.asterism
+      .baseTrackingAt(p.obsConf.vizTime)
+      .map(_.baseCoordinates)
       .getOrElse(p.asterism.baseTracking.baseCoordinates)
+
     val science = p.asterism.toSidereal
       .map(t =>
         (t.id === p.asterism.focus.id,
@@ -386,19 +388,7 @@ object AladinContainer extends AladinCommon {
             // will make aladin request a large amount of tiles and end up freeze explore.
             if (resize.height.exists(_ >= 100)) {
               ReactFragment(
-                <.div(
-                  ExploreStyles.AladinZoomControl,
-                  Button(
-                    clazz = ExploreStyles.ButtonOnAladin,
-                    icon = Icons.ThinPlus,
-                    onClick = aladinRef.get.asCBO.flatMapCB(_.backend.increaseZoom).toCallback
-                  ).small,
-                  Button(
-                    clazz = ExploreStyles.ButtonOnAladin,
-                    icon = Icons.ThinMinus,
-                    onClick = aladinRef.get.asCBO.flatMapCB(_.backend.decreaseZoom).toCallback
-                  ).small
-                ),
+                AladinZoomControl(aladinRef),
                 (resize.width, resize.height, fov.value)
                   .mapN(
                     TargetsOverlay(_,

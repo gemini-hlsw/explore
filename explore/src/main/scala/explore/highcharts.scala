@@ -4,9 +4,9 @@
 package explore.highcharts
 
 import japgolly.scalajs.react.*
+import lucuma.typed.highcharts.highchartsStrings
+import lucuma.typed.highcharts.mod.*
 import react.common.style.Css
-import reactST.highcharts.highchartsStrings
-import reactST.highcharts.mod.*
 
 extension (c: Chart_)
   inline def showLoadingCB: Callback = CallbackTo(c.showLoading())
@@ -27,6 +27,6 @@ def commonOptions: ChartOptions =
   ChartOptions()
     .setStyledMode(true)
     .setAlignTicks(false)
-    .setZooming(ChartZoomingOptions().setType(highchartsStrings.xy.toString))
+    .setZooming(ChartZoomingOptions().setType(OptionsChartZoomingTypeValue.xy))
     .setPanning(ChartPanningOptions().setEnabled(true))
-    .setPanKey("shift")
+    .setPanKey(OptionsPanKeyValue.shift)

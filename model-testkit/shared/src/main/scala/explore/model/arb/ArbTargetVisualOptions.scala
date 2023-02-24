@@ -5,6 +5,7 @@ package explore.model.arb
 
 import explore.model.TargetVisualOptions
 import explore.model.enums.Visible
+import explore.model.AladinFullScreen
 import eu.timepit.refined.scalacheck.numeric.*
 import lucuma.core.util.arb.ArbEnumerated.*
 import lucuma.core.math.Angle
@@ -27,7 +28,7 @@ trait ArbTargetVisualOptions:
         vo   <- arbitrary[Offset]
         a    <- arbitrary[Visible]
         o    <- arbitrary[Visible]
-        f    <- arbitrary[Boolean]
+        f    <- arbitrary[Boolean].map(AladinFullScreen.apply(_))
         s    <- arbitrary[TargetVisualOptions.ImageFilterRange]
         b    <- arbitrary[TargetVisualOptions.ImageFilterRange]
       } yield TargetVisualOptions(fra, fdec, vo, a, o, f, s, b)
@@ -35,7 +36,7 @@ trait ArbTargetVisualOptions:
 
   given Cogen[TargetVisualOptions] =
     Cogen[(Angle, Angle, Offset, Visible, Visible, Boolean)].contramap(c =>
-      (c.fovRA, c.fovDec, c.viewOffset, c.agsCandidates, c.agsOverlay, c.fullScreen)
+      (c.fovRA, c.fovDec, c.viewOffset, c.agsCandidates, c.agsOverlay, c.fullScreen.value)
     )
 
 object ArbTargetVisualOptions extends ArbTargetVisualOptions

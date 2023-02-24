@@ -19,7 +19,7 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
-import queries.schemas.odb.ODBConversions.*
+import lucuma.schemas.odb.input.*
 import queries.schemas.odb.ObsQueries
 
 import scala.collection.immutable.SortedSet

@@ -18,8 +18,8 @@ import lucuma.core.math.Offset
 import lucuma.core.math.Parallax
 import lucuma.core.math.ProperMotion
 import lucuma.core.math.Wavelength
+import lucuma.core.math.WavelengthDelta
 import lucuma.core.math.WavelengthDither
-import lucuma.core.math.WavelengthRange
 import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.given
 import lucuma.core.optics.Format
@@ -56,9 +56,9 @@ object ExploreModelValidators:
     λcentral: Wavelength,
     λmin:     Wavelength,
     λmax:     Wavelength,
-    λr:       WavelengthRange
+    λr:       WavelengthDelta
   ): ValidFilterNEC[WavelengthDither] =
-    // min + coverage/2 ≤ CentralWavelength + WavelengthDither ≤ max - coverage/2
+    // min + delta/2 ≤ CentralWavelength + WavelengthDither ≤ max - delta/2
     val minValidPm = λmin.pm.value.value + λr.pm.value.value / 2
     val maxValidPm = λmax.pm.value.value - λr.pm.value.value / 2
     ValidFilter(
@@ -81,7 +81,7 @@ object ExploreModelValidators:
     λcentral: Wavelength,
     λmin:     Wavelength,
     λmax:     Wavelength,
-    λr:       WavelengthRange
+    λr:       WavelengthDelta
   ): InputValidWedge[WavelengthDither] =
     ditherValidWedge.andThen(ditherInRange(λcentral, λmin, λmax, λr).asValidWedge)
 
@@ -110,9 +110,9 @@ object ExploreModelValidators:
           .toErrorsValidWedge
       )
 
-  val wavelengthRangeValidWedge: InputValidWedge[WavelengthRange] =
+  val wavelengthDeltaValidWedge: InputValidWedge[WavelengthDelta] =
     wavelengthValidWedge.andThen(
-      Iso[Wavelength, WavelengthRange](w => WavelengthRange(w.pm))(wc => Wavelength(wc.pm))
+      Iso[Wavelength, WavelengthDelta](w => WavelengthDelta(w.pm))(wc => Wavelength(wc.pm))
     )
 
   // Only support numbers (one or more) with an optional sign and an optional

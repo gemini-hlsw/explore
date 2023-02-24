@@ -5,9 +5,9 @@ package explore.events
 
 import boopickle.DefaultBasic.*
 import boopickle.Pickler
-import explore.model.ObjectTracking
 import explore.model.boopickle.CatalogPicklers
 import lucuma.ags.GuideStarCandidate
+import lucuma.core.model.ObjectTracking
 import workers.WorkerRequest
 
 import java.time.Duration

@@ -33,7 +33,7 @@ import lucuma.core.math.ProperMotion
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.RightAscension
 import lucuma.core.math.Wavelength
-import lucuma.core.math.WavelengthRange
+import lucuma.core.math.WavelengthDelta
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.Semester
@@ -43,6 +43,7 @@ import lucuma.core.model.given
 import lucuma.core.util.Enumerated
 import lucuma.core.util.NewType
 import lucuma.core.util.TimeSpan
+import lucuma.schemas.model.CentralWavelength
 import org.http4s.Uri
 
 import java.time.Duration
@@ -106,9 +107,9 @@ trait CommonPicklers {
         .getOrElse(sys.error("cannot unpickle"))
     )(_.toPicometers.value.value)
 
-  given Pickler[WavelengthRange] =
+  given Pickler[WavelengthDelta] =
     transformPickler((i: Int) =>
-      WavelengthRange
+      WavelengthDelta
         .fromIntPicometers(i)
         .getOrElse(sys.error("cannot unpickle"))
     )(_.toPicometers.value.value)
@@ -203,6 +204,8 @@ trait CommonPicklers {
   given Pickler[Semester] = generatePickler
 
   given Pickler[Place] = generatePickler
+
+  given Pickler[CentralWavelength] = picklerNewType(CentralWavelength)
 }
 
 object CommonPicklers extends CommonPicklers

@@ -22,7 +22,6 @@ import explore.components.undo.UndoButtons
 import explore.model.AladinFullScreen
 import explore.model.AppContext
 import explore.model.Asterism
-import explore.model.BasicConfiguration
 import explore.model.ExploreModelValidators
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
@@ -50,7 +49,9 @@ import lucuma.core.validation.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
+import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.*
+import lucuma.schemas.odb.input.*
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.FormInputTextView
 import lucuma.ui.primereact.LucumaStyles
@@ -61,7 +62,6 @@ import lucuma.ui.syntax.all.given
 import lucuma.utils.*
 import org.typelevel.log4cats.Logger
 import queries.common.TargetQueriesGQL
-import queries.schemas.odb.ODBConversions.*
 import react.common.*
 import react.primereact.Message
 
@@ -382,10 +382,16 @@ object SiderealTargetEditor {
                 ExploreStyles.Compact,
                 LucumaStyles.FormColumnVeryCompact,
                 ExploreStyles.TargetSourceProfileEditor,
-                ExploreStyles.Gaussian
-                  .when(SourceProfile.gaussian.getOption(sourceProfileAligner.get).isDefined)
+                ExploreStyles.WithGaussian
+                  .when(SourceProfile.gaussian.getOption(sourceProfileAligner.get).isDefined),
+                ExploreStyles.WithCatalogInfo
+                  .when(targetView.get.target.catalogInfo.flatMap(_.objectType).isDefined)
               )(
-                SourceProfileEditor(sourceProfileAligner, disabled = disabled)
+                SourceProfileEditor(
+                  sourceProfileAligner,
+                  targetView.get.target.catalogInfo,
+                  disabled
+                )
               )
             )
           )

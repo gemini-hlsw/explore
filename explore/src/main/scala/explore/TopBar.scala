@@ -84,7 +84,7 @@ object TopBar:
           (ExploreLocalPreferences
             .storePreferences[IO](
               props.preferences.copy(level = l)
-            ) *> IO(window.location.reload(false))).runAsync
+            ) *> IO(window.location.reload())).runAsync
 
         val themeMenuItem = themePot
           .map(currentTheme =>

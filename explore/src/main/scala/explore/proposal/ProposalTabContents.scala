@@ -27,13 +27,13 @@ import lucuma.core.model.User
 import lucuma.core.util.TimeSpan
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
+import lucuma.schemas.odb.input.*
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
 import monocle.Focus
 import monocle.Lens
 import org.typelevel.log4cats.Logger
 import queries.common.ProgramQueriesGQL.*
-import queries.schemas.odb.ODBConversions.*
 import react.common.ReactFnProps
 import react.primereact.Button
 import react.primereact.Image

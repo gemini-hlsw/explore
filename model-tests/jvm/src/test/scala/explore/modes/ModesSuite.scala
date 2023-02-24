@@ -21,7 +21,7 @@ import lucuma.core.enums.FocalPlane
 import lucuma.core.enums.ImageQuality
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
-import lucuma.core.math.WavelengthRange
+import lucuma.core.math.WavelengthDelta
 import lucuma.core.math.units.*
 import lucuma.refined.*
 import munit.CatsEffectSuite
@@ -61,7 +61,7 @@ class ModesSuite extends CatsEffectSuite {
           Some(ImageQuality.PointThree),
           Wavelength.fromIntNanometers(500),
           1.refined[Positive].some,
-          WavelengthRange.fromIntPicometers(0),
+          WavelengthDelta.fromIntPicometers(0),
           Angle.fromDoubleArcseconds(1).some,
           declination = none
         )

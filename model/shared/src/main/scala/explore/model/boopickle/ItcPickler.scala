@@ -11,7 +11,6 @@ import eu.timepit.refined.types.numeric.NonNegBigDecimal
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.model.itc.CoverageCenterWavelength
 import explore.model.itc.ItcCcd
 import explore.model.itc.ItcChart
 import explore.model.itc.ItcChartResult
@@ -82,9 +81,7 @@ trait ItcPicklers extends CommonPicklers {
 
   given Pickler[ModeSlitSize] = picklerNewType(ModeSlitSize)
 
-  given Pickler[CoverageCenterWavelength] = picklerNewType(CoverageCenterWavelength)
-
-  given Pickler[ModeWavelengthRange] = picklerNewType(ModeWavelengthRange)
+  given Pickler[ModeWavelengthDelta] = picklerNewType(ModeWavelengthDelta)
 
   given Pickler[SpectroscopyModeRow] = generatePickler
 
@@ -188,6 +185,7 @@ trait ItcPicklers extends CommonPicklers {
   given Pickler[ItcQueryProblems.MissingWavelength.type]    = generatePickler
   given Pickler[ItcQueryProblems.MissingSignalToNoise.type] = generatePickler
   given Pickler[ItcQueryProblems.MissingTargetInfo.type]    = generatePickler
+  given Pickler[ItcQueryProblems.MissingBrightness.type]    = generatePickler
   given Pickler[ItcQueryProblems.GenericError]              = generatePickler
 
   given Pickler[ItcQueryProblems] =
@@ -196,6 +194,7 @@ trait ItcPicklers extends CommonPicklers {
       .addConcreteType[ItcQueryProblems.MissingWavelength.type]
       .addConcreteType[ItcQueryProblems.MissingSignalToNoise.type]
       .addConcreteType[ItcQueryProblems.MissingTargetInfo.type]
+      .addConcreteType[ItcQueryProblems.MissingBrightness.type]
       .addConcreteType[ItcQueryProblems.GenericError]
 
   given Pickler[ItcRequestParams] = generatePickler

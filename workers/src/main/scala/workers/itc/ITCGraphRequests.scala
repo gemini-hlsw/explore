@@ -22,6 +22,7 @@ import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.util.TimeSpan
 import lucuma.refined.*
+import lucuma.schemas.model.CentralWavelength
 import org.typelevel.log4cats.Logger
 import queries.common.ITCQueriesGQL.*
 import queries.schemas.ITC
@@ -47,7 +48,7 @@ object ITCGraphRequests:
     ).assign
 
   def queryItc[F[_]: Concurrent: Parallel: Logger](
-    wavelength:   CoverageCenterWavelength,
+    wavelength:   CentralWavelength,
     exposureTime: TimeSpan,
     exposures:    PosInt,
     constraints:  ConstraintSet,

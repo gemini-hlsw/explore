@@ -306,23 +306,26 @@ object TargetTabContents extends TwoPanels:
 
         // make sure any added targets are in the map and update modified ones.
         val addedIds  = newTargetIds -- targetIds
+        // if the last target is deleted from the asterism, moddedAsterism is None
         val tgUpdate1 =
-          moddedAsterism.map(_.asList.foldRight(targetsWithObs) { case (twid, twobs) =>
-            if (addedIds.contains(twid.id))
-              // it's new to this asterism, but the target itself may or may not be new. So we
-              // either add a new target group or update the existing one.
-              twobs.updatedWith(twid.id)(
-                _.map(_.addObsIds(idsToEdit).copy(target = twid.target))
-                  .orElse(TargetWithObs(twid.target, idsToEdit.toSortedSet).some)
-              )
-            else // just update the current target, observations should be the same
-              twobs.updatedWith(twid.id)(_.map(_.copy(target = twid.target)))
+          moddedAsterism.fold(targetsWithObs)(_.asList.foldRight(targetsWithObs) {
+            case (twid, twobs) =>
+              if (addedIds.contains(twid.id))
+                // it's new to this asterism, but the target itself may or may not be new. So we
+                // either add a new target group or update the existing one.
+                twobs.updatedWith(twid.id)(
+                  _.map(_.addObsIds(idsToEdit).copy(target = twid.target))
+                    .orElse(TargetWithObs(twid.target, idsToEdit.toSortedSet).some)
+                )
+              else // just update the current target, observations should be the same
+                twobs.updatedWith(twid.id)(_.map(_.copy(target = twid.target)))
           })
 
-        val removedIds            = targetIds -- newTargetIds
+        val removedIds = targetIds -- newTargetIds
+
         // If we removed a target, just update the observation ids for that target group
         val updatedTargetsWithObs = removedIds.foldRight(tgUpdate1) { case (id, twobs) =>
-          twobs.map(_.updatedWith(id)(_.map(_.removeObsIds(idsToEdit))))
+          twobs.updatedWith(id)(_.map(_.removeObsIds(idsToEdit)))
         }
 
         val splitAsterisms =
@@ -351,7 +354,7 @@ object TargetTabContents extends TwoPanels:
 
         agwo.copy(
           asterismGroups = updatedAsterismGroups,
-          targetsWithObs = updatedTargetsWithObs.getOrElse(SortedMap.empty)
+          targetsWithObs = updatedTargetsWithObs
         )
       }
 
@@ -683,7 +686,7 @@ object TargetTabContents extends TwoPanels:
           case CopyAlt1 | CopyAlt2 =>
             target.obsSet
               .map(ids =>
-                ctx.exploreClipboard
+                ExploreClipboard
                   .set(LocalClipboard.CopiedObservations(ids))
                   .withToast(ctx)(s"Copied obs ${ids.idSet.toList.mkString(", ")}")
               )
@@ -691,7 +694,7 @@ object TargetTabContents extends TwoPanels:
                 TargetIdSet
                   .fromTargetIdList(selectedIds)
                   .map(tids =>
-                    ctx.exploreClipboard
+                    ExploreClipboard
                       .set(LocalClipboard.CopiedTargets(tids))
                       .withToast(ctx)(s"Copied targets ${tids.toList.mkString(", ")}")
                   )
@@ -700,7 +703,7 @@ object TargetTabContents extends TwoPanels:
               .runAsync
 
           case PasteAlt1 | PasteAlt2 =>
-            ctx.exploreClipboard.get.flatMap {
+            ExploreClipboard.get.flatMap {
               case LocalClipboard.CopiedObservations(id) =>
                 val treeTargets =
                   props.focused.obsSet

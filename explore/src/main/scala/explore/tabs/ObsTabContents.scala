@@ -297,7 +297,7 @@ object ObsTabContents extends TwoPanels:
           case CopyAlt1 | CopyAlt2 =>
             obs
               .map(id =>
-                ctx.exploreClipboard
+                ExploreClipboard
                   .set(LocalClipboard.CopiedObservations(ObsIdSet.one(id)))
                   .withToast(ctx)(s"Copied obs $id")
               )
@@ -305,7 +305,7 @@ object ObsTabContents extends TwoPanels:
               .runAsync
 
           case PasteAlt1 | PasteAlt2 =>
-            ctx.exploreClipboard.get.flatMap {
+            ExploreClipboard.get.flatMap {
               case LocalClipboard.CopiedObservations(idSet) =>
                 obsList.toOption.map { obsWithConstraints =>
                   val observations =

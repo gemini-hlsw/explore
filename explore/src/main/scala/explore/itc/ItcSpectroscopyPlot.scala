@@ -26,14 +26,14 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Wavelength
 import lucuma.core.util.Enumerated
 import lucuma.refined.*
+import lucuma.typed.highcharts.highchartsStrings.line
+import lucuma.typed.highcharts.mod.DashStyleValue
+import lucuma.typed.highcharts.mod.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.highcharts.ResizingChart
 import react.resizeDetector.hooks.*
-import reactST.highcharts.highchartsStrings.line
-import reactST.highcharts.mod.DashStyleValue
-import reactST.highcharts.mod.*
 
 import scala.collection.immutable.HashSet
 import scala.scalajs.js
@@ -154,7 +154,7 @@ object ItcSpectroscopyPlot {
       .setSeries(
         chart.series
           .map(series =>
-            SeriesLineOptions(line)
+            SeriesLineOptions((), (), line)
               .setName(series.title)
               .setYAxis(0)
               .setData(

@@ -20,6 +20,7 @@ import crystal.react.reuse.*
 import eu.timepit.refined.*
 import eu.timepit.refined.auto.*
 import explore.Icons
+import explore.aladin.AladinFullScreenControl
 import explore.common.UserPreferencesQueries.*
 import explore.components.ui.ExploreStyles
 import explore.events.*
@@ -86,7 +87,9 @@ case class AladinCell(
 ) extends ReactFnProps(AladinCell.component) {
   val positions =
     obsConf.configuration.flatMap(c =>
-      obsConf.posAngleConstraint.anglesToTestAt(c.siteFor, asterism.baseTracking, obsConf.vizTime)
+      obsConf.posAngleConstraint.flatMap(
+        _.anglesToTestAt(c.siteFor, asterism.baseTracking, obsConf.vizTime)
+      )
     )
 }
 
@@ -280,7 +283,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                 Some(constraints),
                 Some(wavelength),
                 vizTime,
-                scienceMode,
+                observingMode,
                 candidates
               ) =>
             import ctx.given
@@ -292,7 +295,7 @@ object AladinCell extends ModelOptics with AladinCommon:
               (positions, tracking.at(vizTime), props.paProps.map(_.agsState)).mapN {
                 (angles, base, agsState) =>
                   val positions = angles.map(pa => AgsPosition(pa, Offset.Zero))
-                  val fpu       = scienceMode.flatMap(_.fpuAlternative)
+                  val fpu       = observingMode.flatMap(_.fpuAlternative)
                   val params    = AgsParams.GmosAgsParams(fpu, PortDisposition.Side)
 
                   val sciencePositions =
@@ -378,7 +381,7 @@ object AladinCell extends ModelOptics with AladinCommon:
           def prefsSetter(
             candidates: Option[Visible] = None,
             overlay:    Option[Visible] = None,
-            fullScreen: Option[Boolean] = None,
+            fullScreen: Option[AladinFullScreen] = None,
             saturation: Option[Int] = None,
             brightness: Option[Int] = None
           ): Callback =
@@ -441,7 +444,9 @@ object AladinCell extends ModelOptics with AladinCommon:
               .zoom(
                 Pot.readyPrism.andThen(targetPrefs).andThen(TargetVisualOptions.fullScreen)
               )
-              .withOnMod(v => prefsSetter(fullScreen = v))
+              .withOnMod(v =>
+                v.map(v => props.fullScreen.set(v)).getOrEmpty *> prefsSetter(fullScreen = v)
+              )
 
           val allowMouseZoomView =
             options
@@ -477,10 +482,6 @@ object AladinCell extends ModelOptics with AladinCommon:
 
           val (offsetChangeInAladin, offsetOnCenter) = offsetViews(props, options)(ctx)
 
-          def fullScreenSetter: Callback =
-            props.fullScreen.mod(_.flip) *>
-              fullScreenView.mod(!_)
-
           val selectedGuideStar = selectedGSIndex.get.flatMap(agsResults.value.lift)
           val usableGuideStar   = selectedGuideStar.exists(_.isUsable)
 
@@ -490,7 +491,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                 props.asterism,
                 props.obsConf,
                 u.aladinMouseScroll,
-                t.copy(fullScreen = props.fullScreen.get.value),
+                t.copy(fullScreen = props.fullScreen.get),
                 coordinatesSetter,
                 fovSetter.reuseAlways,
                 offsetChangeInAladin.reuseAlways,
@@ -596,13 +597,7 @@ object AladinCell extends ModelOptics with AladinCommon:
             ExploreStyles.TargetAladinCell,
             <.div(
               ExploreStyles.AladinContainerColumn,
-              Button(onClick = fullScreenSetter)
-                .withMods(
-                  ExploreStyles.ButtonOnAladin |+| ExploreStyles.AladinFullScreenButton,
-                  Icons.ExpandDiagonal.unless(props.fullScreen.get.value),
-                  Icons.ContractDiagonal.when(props.fullScreen.get.value)
-                )
-                .small,
+              AladinFullScreenControl(fullScreenView.value),
               <.div(
                 ExploreStyles.AladinToolbox,
                 Button(onClickE = menuRef.toggle).withMods(

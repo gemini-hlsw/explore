@@ -12,6 +12,7 @@ import clue.TransactionalClient
 import clue.data.syntax.*
 import eu.timepit.refined.*
 import eu.timepit.refined.numeric.*
+import explore.model.AladinFullScreen
 import explore.model.AladinMouseScroll
 import explore.model.TargetVisualOptions
 import explore.model.UserGlobalPreferences
@@ -33,6 +34,9 @@ import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.react.table.*
 import lucuma.refined.*
+import lucuma.schemas.odb.input.*
+import lucuma.typed.highcharts.highchartsStrings.chart_
+import lucuma.typed.{tanstackTableCore => raw}
 import lucuma.ui.table.TableStateStore
 import org.scalablytyped.runtime.StringDictionary
 import org.typelevel.log4cats.Logger
@@ -42,10 +46,7 @@ import queries.schemas.UserPreferencesDB.Enums.*
 import queries.schemas.UserPreferencesDB.Scalars.*
 import queries.schemas.UserPreferencesDB.Types.LucumaObservationInsertInput
 import queries.schemas.UserPreferencesDB.Types.*
-import queries.schemas.odb.ODBConversions.*
 import react.gridlayout.{BreakpointName => _, _}
-import reactST.highcharts.highchartsStrings.chart_
-import reactST.{tanstackTableCore => raw}
 
 import scala.collection.immutable.SortedMap
 import scala.scalajs.js.WrappedDictionary
@@ -142,7 +143,7 @@ object UserPreferencesQueries:
       fovDec:        Option[Angle] = None,
       agsCandidates: Option[Visible] = None,
       agsOverlay:    Option[Visible] = None,
-      fullScreen:    Option[Boolean] = None,
+      fullScreen:    Option[AladinFullScreen] = None,
       saturation:    Option[Int] = None,
       brightness:    Option[Int] = None
     )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
@@ -159,7 +160,7 @@ object UserPreferencesQueries:
                 fovDec = fovDec.map(_.toMicroarcseconds).orIgnore,
                 agsCandidates = agsCandidates.map(Visible.boolIso.reverseGet).orIgnore,
                 agsOverlay = agsOverlay.map(Visible.boolIso.reverseGet).orIgnore,
-                fullScreen = fullScreen.orIgnore,
+                fullScreen = fullScreen.map(_.value).orIgnore,
                 saturation = saturation.orIgnore,
                 brightness = brightness.orIgnore
               )
@@ -254,7 +255,7 @@ object UserPreferencesQueries:
                               offset,
                               agsCandidates,
                               agsOverlay,
-                              fullScreen,
+                              AladinFullScreen(fullScreen),
                               saturation,
                               brightness
           )

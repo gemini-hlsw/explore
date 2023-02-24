@@ -6,13 +6,13 @@ package explore.targeteditor
 import cats.Order
 import cats.data.NonEmptyMap
 import cats.syntax.all.*
-import explore.model.BasicConfiguration
 import lucuma.core.enums.PortDisposition
 import lucuma.core.geom.ShapeExpression
 import lucuma.core.geom.gmos
 import lucuma.core.geom.syntax.shapeexpression.*
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
+import lucuma.schemas.model.BasicConfiguration
 import react.common.implicits.*
 import react.common.style.Css
 

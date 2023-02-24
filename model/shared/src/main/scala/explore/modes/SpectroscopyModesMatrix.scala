@@ -21,7 +21,6 @@ import eu.timepit.refined.cats._
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.types.numeric._
 import eu.timepit.refined.types.string._
-import explore.model.itc.CoverageCenterWavelength
 import explore.model.syntax.all._
 import fs2.data.csv._
 import lucuma.core.enums._
@@ -30,9 +29,10 @@ import lucuma.core.math.BoundedInterval
 import lucuma.core.math.BoundedInterval.*
 import lucuma.core.math.Declination
 import lucuma.core.math.Wavelength
-import lucuma.core.math.WavelengthRange
+import lucuma.core.math.WavelengthDelta
 import lucuma.core.math.units._
 import lucuma.core.util.Enumerated
+import lucuma.schemas.model.CentralWavelength
 import monocle.Getter
 import monocle.Lens
 import monocle.macros.GenLens
@@ -228,24 +228,24 @@ case class SpectroscopyModeRow(
   minWavelength:     ModeWavelength,
   maxWavelength:     ModeWavelength,
   optimalWavelength: ModeWavelength,
-  wavelengthRange:   ModeWavelengthRange,
+  wavelengthDelta:   ModeWavelengthDelta,
   resolution:        PosInt,
   slitLength:        ModeSlitSize,
   slitWidth:         ModeSlitSize
 ) {
-  // inline def calculatedCoverage: Quantity[NonNegBigDecimal, Micrometer] = wavelengthCoverage
+  // inline def calculatedCoverage: Quantity[NonNegBigDecimal, Micrometer] = wavelengthDelta
 
   inline def hasFilter: Boolean = instrument.hasFilter
 
   // This `should` always return a `some`, but if the row is wonky for some reason...
-  def coverageCenter(cw: Wavelength): Option[CoverageCenterWavelength] =
+  def intervalCenter(cw: Wavelength): Option[CentralWavelength] =
     SpectroscopyModeRow
-      .coverageInterval(cw)(this)
-      .map(coverage =>
-        coverage.lower.pm.value.value + (coverage.upper.pm.value.value - coverage.lower.pm.value.value) / 2
+      .wavelengthInterval(cw)(this)
+      .map(interval =>
+        interval.lower.pm.value.value + (interval.upper.pm.value.value - interval.lower.pm.value.value) / 2
       )
       .flatMap(pms => Wavelength.fromIntPicometers(pms))
-      .map(CoverageCenterWavelength(_))
+      .map(CentralWavelength(_))
 }
 
 object SpectroscopyModeRow {
@@ -281,9 +281,11 @@ object SpectroscopyModeRow {
 
   import lucuma.core.math.units.*
 
-  def coverageInterval(λ: Wavelength): SpectroscopyModeRow => Option[BoundedInterval[Wavelength]] =
+  def wavelengthInterval(
+    λ: Wavelength
+  ): SpectroscopyModeRow => Option[BoundedInterval[Wavelength]] =
     r =>
-      val λr      = r.wavelengthRange.value
+      val λr      = r.wavelengthDelta.value
       // Coverage of allowed wavelength
       // Can be simplified once coulomb-refined is available
       val λmin    = r.minWavelength.value
@@ -351,7 +353,7 @@ trait SpectroscopyModesMatrixDecoders extends Decoders {
       min <- row.as[ModeWavelength]("wave min")
       max <- row.as[ModeWavelength]("wave max")
       wo  <- row.as[ModeWavelength]("wave optimal")
-      wr  <- row.as[ModeWavelengthRange]("wave coverage")
+      wr  <- row.as[ModeWavelengthDelta]("wave coverage")
       r   <- row.as[PosInt]("resolution")
       sl  <- row.as[ModeSlitSize]("slit length")
       sw  <- row.as[ModeSlitSize]("slit width")
@@ -371,7 +373,7 @@ case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
     iq:          Option[ImageQuality] = None,
     wavelength:  Option[Wavelength] = None,
     resolution:  Option[PosInt] = None,
-    range:       Option[WavelengthRange] = None,
+    range:       Option[WavelengthDelta] = None,
     slitWidth:   Option[Angle] = None,
     declination: Option[Declination] = None
   ): List[SpectroscopyModeRow] = {
@@ -382,7 +384,7 @@ case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
         iq.forall(i => r.ao =!= ModeAO.AO || (i <= ImageQuality.PointTwo)) &&
         wavelength.forall(w => w >= r.minWavelength.value && w <= r.maxWavelength.value) &&
         resolution.forall(_ <= r.resolution) &&
-        range.forall(_ <= r.wavelengthRange.value) &&
+        range.forall(_ <= r.wavelengthDelta.value) &&
         slitWidth.forall(_.toMicroarcseconds <= r.slitLength.value.toMicroarcseconds) &&
         declination.forall(r.instrument.site.inPreferredDeclination)
 

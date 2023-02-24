@@ -13,7 +13,6 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.config.VizTimeEditor
 import explore.model.Asterism
-import explore.model.BasicConfiguration
 import explore.model.ObsIdSet
 import explore.model.PAProperties
 import explore.model.enums.AgsState
@@ -33,6 +32,7 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.schemas.ObservationDB
+import lucuma.schemas.model.BasicConfiguration
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
