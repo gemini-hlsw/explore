@@ -77,6 +77,14 @@ object SVGTarget {
   ) extends SVGTarget
       derives Eq
 
+  case class OffsetIndicator(
+    coordinates: Coordinates,
+    css:         Css,
+    radius:      Double,
+    title:       Option[String] = None
+  ) extends SVGTarget
+      derives Eq
+
   given Reusability[SVGTarget] = Reusability.byEq
 }
 

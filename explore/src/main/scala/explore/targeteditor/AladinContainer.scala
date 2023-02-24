@@ -60,7 +60,20 @@ case class AladinContainer(
   updateViewOffset:       Offset => Callback,
   selectedGuideStar:      Option[AgsAnalysis],
   guideStarCandidates:    List[AgsAnalysis]
-) extends ReactFnProps(AladinContainer.component)
+) extends ReactFnProps(AladinContainer.component) {
+  // ABBA offset
+  def offsets: List[Offset] = List(
+    Offset.signedDecimalArcseconds.reverseGet((-10.0, -10.0)),
+    Offset.signedDecimalArcseconds.reverseGet((-10.0, 0.0)),
+    Offset.signedDecimalArcseconds.reverseGet((-10.0, 10.0)),
+    Offset.signedDecimalArcseconds.reverseGet((0.0, -10.0)),
+    Offset.signedDecimalArcseconds.reverseGet((0.0, 0.0)),
+    Offset.signedDecimalArcseconds.reverseGet((0.0, 10.0)),
+    Offset.signedDecimalArcseconds.reverseGet((10.0, -10.0)),
+    Offset.signedDecimalArcseconds.reverseGet((10.0, 0.0)),
+    Offset.signedDecimalArcseconds.reverseGet((10.0, 10.0)),
+  )
+}
 
 object AladinContainer extends AladinCommon {
 
@@ -375,6 +388,10 @@ object AladinContainer extends AladinCommon {
                 }
               }
             else Nil
+
+          val offsetIndicators = props.offsets.map { case o =>
+            o
+          }
 
           val screenOffset =
             currentPos.value.map(_.diff(baseCoordinates.value).offset).getOrElse(Offset.Zero)
