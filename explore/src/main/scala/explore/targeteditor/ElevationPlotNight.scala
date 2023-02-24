@@ -10,7 +10,6 @@ import explore.*
 import explore.components.ui.ExploreStyles
 import explore.highcharts.*
 import explore.model.Constants
-import explore.model.CoordinatesAtVizTime
 import explore.model.enums.TimeDisplay
 import explore.syntax.ui.*
 import explore.syntax.ui.given
@@ -21,6 +20,7 @@ import lucuma.core.enums.TwilightType
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.skycalc.ImprovedSkyCalc
+import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.ObservingNight
 import lucuma.core.util.Enumerated
 import lucuma.typed.highcharts.highchartsStrings.area

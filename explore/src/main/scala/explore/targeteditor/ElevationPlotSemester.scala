@@ -13,7 +13,6 @@ import explore.events.PlotMessage.*
 import explore.highcharts.*
 import explore.model.AppContext
 import explore.model.Constants
-import explore.model.CoordinatesAtVizTime
 import explore.model.WorkerClients.PlotClient
 import explore.model.boopickle.CommonPicklers.given
 import explore.syntax.*
@@ -25,6 +24,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Site
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
+import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.Semester
 import lucuma.core.syntax.time.*
 import lucuma.typed.highcharts.highchartsStrings.line

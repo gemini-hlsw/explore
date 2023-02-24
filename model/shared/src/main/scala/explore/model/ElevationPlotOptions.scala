@@ -9,6 +9,7 @@ import cats.syntax.option.given
 import explore.model.enums.PlotRange
 import explore.model.enums.TimeDisplay
 import lucuma.core.enums.Site
+import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.ObservingNight
 import lucuma.core.model.Semester
 import monocle.Focus
