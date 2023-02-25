@@ -13,6 +13,7 @@ import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.refineV
 import eu.timepit.refined.types.numeric.PosInt
 import io.circe.Decoder
+import lucuma.core.math.BoundedInterval
 import lucuma.core.model.given
 import lucuma.core.util.TimeSpan
 import lucuma.refined.*
@@ -22,9 +23,12 @@ import monocle.Optional
 import monocle.POptional
 import monocle.std.either.*
 import monocle.std.option
-import org.typelevel.cats.time.instances.zoneddatetime.*
+import org.typelevel.cats.time.given
+import spire.math.Interval
+import spire.math.extras.interval.IntervalSeq
 
 import java.time.Duration
+import java.time.Instant
 import java.time.ZonedDateTime
 
 case class TimingWindowRepeatPeriod(
@@ -106,6 +110,48 @@ case class TimingWindow private (
 
   def repeatForever: Boolean =
     repetition.exists(_.toOption.exists(_.repeatPeriod.exists(_.repeatFrequency.isEmpty)))
+
+  def toIntervalSeq(within: BoundedInterval[Instant]): IntervalSeq[Instant] = {
+    // Builds a bunch of single-interval `IntervalSeq`s, for each of the `starts` provided, each lasting `duration`.
+    // Returns the union of all of them.
+    def intervalsForStarts(starts: List[Instant], duration: Duration): IntervalSeq[Instant] =
+      starts
+        .map(start => IntervalSeq(Interval(start, start.plus(duration))))
+        .foldLeft(IntervalSeq.empty[Instant])(_ | _)
+
+    val startInstant = startsOn.toInstant
+    val intervals    = repetition match
+      case None                                                 =>
+        IntervalSeq.atOrAbove(startInstant)
+      case Some(Left(endsOn))                                   =>
+        IntervalSeq(Interval(startInstant, endsOn.toInstant))
+      case Some(Right(TimingWindowRepeat(remainOpenFor, None))) =>
+        IntervalSeq(Interval(startInstant, startInstant.plus(remainOpenFor.toDuration)))
+      case Some(
+            Right(
+              TimingWindowRepeat(remainOpenFor, Some(TimingWindowRepeatPeriod(period, Some(times))))
+            )
+          ) =>
+        intervalsForStarts(
+          List.unfold((0, startInstant))(
+            _.some
+              .filter(_._1 <= times.value)
+              .map((iter, start) => (start, (iter + 1, start.plus(period.toDuration))))
+          ),
+          remainOpenFor.toDuration
+        )
+      case Some(
+            Right(TimingWindowRepeat(remainOpenFor, Some(TimingWindowRepeatPeriod(period, None))))
+          ) =>
+        intervalsForStarts(
+          List.unfold(startInstant)(
+            _.some.filter(_ < within.upper).map(start => (start, start.plus(period.toDuration)))
+          ),
+          remainOpenFor.toDuration
+        )
+
+    intervals & IntervalSeq(within)
+  }
 }
 
 object TimingWindow:

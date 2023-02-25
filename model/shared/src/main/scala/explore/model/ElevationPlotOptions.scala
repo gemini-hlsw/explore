@@ -10,6 +10,8 @@ import explore.model.enums.PlotRange
 import explore.model.enums.TimeDisplay
 import lucuma.core.enums.Site
 import lucuma.core.model.CoordinatesAtVizTime
+import lucuma.core.enums.TwilightType
+import lucuma.core.math.BoundedInterval
 import lucuma.core.model.ObservingNight
 import lucuma.core.model.Semester
 import monocle.Focus
@@ -30,6 +32,26 @@ case class ElevationPlotOptions(
   def withDateAndSemesterOf(visualizationTime: Instant): ElevationPlotOptions =
     val (date, semester) = ElevationPlotOptions.dateAndSemesterOf(visualizationTime.some, site)
     copy(date = date, semester = semester)
+
+  def minInstant: Instant =
+    range match
+      case PlotRange.Night    =>
+        ObservingNight
+          .fromSiteAndLocalDate(site, date)
+          .twilightBoundedUnsafe(TwilightType.Official)
+          .start
+      case PlotRange.Semester => semester.start.atSite(site).toInstant
+
+  def maxInstant: Instant =
+    range match
+      case PlotRange.Night    =>
+        ObservingNight
+          .fromSiteAndLocalDate(site, date)
+          .twilightBoundedUnsafe(TwilightType.Official)
+          .`end`
+      case PlotRange.Semester => semester.`end`.atSite(site).toInstant
+
+  def interval: BoundedInterval[Instant] = BoundedInterval.unsafeClosed(minInstant, maxInstant)
 
 object ElevationPlotOptions:
   val site        = Focus[ElevationPlotOptions](_.site)
