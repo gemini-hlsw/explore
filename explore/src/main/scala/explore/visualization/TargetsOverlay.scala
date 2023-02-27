@@ -228,7 +228,7 @@ object TargetsOverlay {
                            title.map(<.title(_))
                   )
                 case (offP, offQ, SVGTarget.OffsetIndicator(_, idx, o, css, radius, title)) =>
-                  val pointCss = ExploreStyles.GuideStarTarget |+| css
+                  val pointCss = ExploreStyles.OffsetPosition |+| css
                   val sx       = p.width / (viewBoxW - viewBoxX).abs
                   val sy       = p.height / (viewBoxH - viewBoxY).abs
                   OffsetSVG(svgRaw, offP, offQ, maxP, radius, pointCss, sx, sy, idx, o): VdomNode

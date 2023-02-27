@@ -387,7 +387,7 @@ object AladinContainer extends AladinCommon {
               pa  <- gs.posAngle
               c   <- baseCoordinates.value.offsetBy(pa, o)
               if props.showScienceOffsets.visible
-            } yield SVGTarget.OffsetIndicator(c, idx, o, ExploreStyles.ScienceTarget, 4)
+            } yield SVGTarget.OffsetIndicator(c, idx, o, Css.Empty, 5)
           }
 
           val screenOffset =
@@ -407,16 +407,6 @@ object AladinContainer extends AladinCommon {
                 AladinZoomControl(aladinRef),
                 (resize.width, resize.height, fov.value)
                   .mapN(
-                    SVGVisualizationOverlay(
-                      _,
-                      _,
-                      _,
-                      screenOffset,
-                      vizShapes
-                    )
-                  ),
-                (resize.width, resize.height, fov.value)
-                  .mapN(
                     TargetsOverlay(
                       _,
                       _,
@@ -424,7 +414,17 @@ object AladinContainer extends AladinCommon {
                       screenOffset,
                       baseCoordinates.value,
                       // Order matters
-                      basePosition ++ candidates ++ sciencePositions ++ offsetIndicators.flattenOption
+                      offsetIndicators.flattenOption ++ candidates ++ basePosition ++ sciencePositions
+                    )
+                  ),
+                (resize.width, resize.height, fov.value)
+                  .mapN(
+                    SVGVisualizationOverlay(
+                      _,
+                      _,
+                      _,
+                      screenOffset,
+                      vizShapes
                     )
                   ),
                 AladinComp

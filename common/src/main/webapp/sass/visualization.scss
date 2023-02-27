@@ -162,6 +162,12 @@ $brightness: var(--aladin-image-brightness);
     isolation: inline;
   }
 
+  .offset-position {
+    stroke-width: 1px;
+    fill: none;
+    stroke: hsla(51deg 100% 50% / 1);
+  }
+
   .guide-star-target,
   .guide-star-candidate-target {
     display: none;
