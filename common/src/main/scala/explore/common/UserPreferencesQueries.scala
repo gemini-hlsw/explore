@@ -41,6 +41,7 @@ import lucuma.ui.table.TableStateStore
 import org.scalablytyped.runtime.StringDictionary
 import org.typelevel.log4cats.Logger
 import queries.common.UserPreferencesQueriesGQL.*
+import queries.common.UserPreferencesQueriesGQL.UserTargetPreferencesQuery.Data.ExploreTargetPreferencesByPk
 import queries.schemas.UserPreferencesDB
 import queries.schemas.UserPreferencesDB.Enums.*
 import queries.schemas.UserPreferencesDB.Scalars.*
@@ -137,15 +138,17 @@ object UserPreferencesQueries:
 
   object TargetPreferences:
     def updateAladinPreferences[F[_]: ApplicativeThrow](
-      uid:           User.Id,
-      targetId:      Target.Id,
-      fovRA:         Option[Angle] = None,
-      fovDec:        Option[Angle] = None,
-      agsCandidates: Option[Visible] = None,
-      agsOverlay:    Option[Visible] = None,
-      fullScreen:    Option[AladinFullScreen] = None,
-      saturation:    Option[Int] = None,
-      brightness:    Option[Int] = None
+      uid:                User.Id,
+      targetId:           Target.Id,
+      fovRA:              Option[Angle] = None,
+      fovDec:             Option[Angle] = None,
+      agsCandidates:      Option[Visible] = None,
+      agsOverlay:         Option[Visible] = None,
+      fullScreen:         Option[AladinFullScreen] = None,
+      saturation:         Option[Int] = None,
+      brightness:         Option[Int] = None,
+      scienceOffsets:     Option[Visible] = None,
+      acquisitionOffsets: Option[Visible] = None
     )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
       import UserTargetPreferencesUpsert.*
 
@@ -162,7 +165,9 @@ object UserPreferencesQueries:
                 agsOverlay = agsOverlay.map(Visible.boolIso.reverseGet).orIgnore,
                 fullScreen = fullScreen.map(_.value).orIgnore,
                 saturation = saturation.orIgnore,
-                brightness = brightness.orIgnore
+                brightness = brightness.orIgnore,
+                scienceOffsets = scienceOffsets.map(Visible.boolIso.reverseGet).orIgnore,
+                acquisitionOffsets = acquisitionOffsets.map(Visible.boolIso.reverseGet).orIgnore
               )
             ),
             onConflict = ExploreTargetPreferencesOnConflict(
@@ -184,6 +189,12 @@ object UserPreferencesQueries:
                 ),
                 ExploreTargetPreferencesUpdateColumn.Brightness.some.filter(_ =>
                   brightness.isDefined
+                ),
+                ExploreTargetPreferencesUpdateColumn.ScienceOffsets.some.filter(_ =>
+                  scienceOffsets.isDefined
+                ),
+                ExploreTargetPreferencesUpdateColumn.AcquisitionOffsets.some.filter(_ =>
+                  acquisitionOffsets.isDefined
                 )
               ).flattenOption
             ).assign
@@ -232,23 +243,23 @@ object UserPreferencesQueries:
             )
             .getOrElse(Offset.Zero)
 
-          val agsCandidates = targetPrefsResult
-            .flatMap(_.agsCandidates)
+          def visibleProp(op: ExploreTargetPreferencesByPk => Option[Boolean]) = targetPrefsResult
+            .flatMap(op)
             .map(Visible.boolIso.get)
             .getOrElse(Visible.Inline)
-          val agsOverlay    = targetPrefsResult
-            .flatMap(_.agsOverlay)
-            .map(Visible.boolIso.get)
-            .getOrElse(Visible.Inline)
-          val fullScreen    = targetPrefsResult.flatMap(_.fullScreen).getOrElse(false)
-          val saturation    = targetPrefsResult
-            .flatMap(_.saturation)
+
+          def rangeProp(op: ExploreTargetPreferencesByPk => Option[Int]) = targetPrefsResult
+            .flatMap(op)
             .flatMap(refineV[Interval.Closed[0, 100]](_).toOption)
             .getOrElse(100.refined[Interval.Closed[0, 100]])
-          val brightness    = targetPrefsResult
-            .flatMap(_.brightness)
-            .flatMap(refineV[Interval.Closed[0, 100]](_).toOption)
-            .getOrElse(100.refined[Interval.Closed[0, 100]])
+
+          val agsCandidates      = visibleProp(_.agsCandidates)
+          val agsOverlay         = visibleProp(_.agsOverlay)
+          val fullScreen         = targetPrefsResult.flatMap(_.fullScreen).getOrElse(false)
+          val saturation         = rangeProp(_.saturation)
+          val brightness         = rangeProp(_.brightness)
+          val scienceOffsets     = visibleProp(_.scienceOffsets)
+          val acquisitionOffsets = visibleProp(_.acquisitionOffsets)
 
           TargetVisualOptions(fovRA,
                               fovDec,
@@ -257,7 +268,9 @@ object UserPreferencesQueries:
                               agsOverlay,
                               AladinFullScreen(fullScreen),
                               saturation,
-                              brightness
+                              brightness,
+                              scienceOffsets,
+                              acquisitionOffsets
           )
         }
         (userPrefs, targetPrefs)

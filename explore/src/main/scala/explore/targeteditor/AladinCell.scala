@@ -379,11 +379,13 @@ object AladinCell extends ModelOptics with AladinCommon:
           )
 
           def prefsSetter(
-            candidates: Option[Visible] = None,
-            overlay:    Option[Visible] = None,
-            fullScreen: Option[AladinFullScreen] = None,
-            saturation: Option[Int] = None,
-            brightness: Option[Int] = None
+            candidates:         Option[Visible] = None,
+            overlay:            Option[Visible] = None,
+            fullScreen:         Option[AladinFullScreen] = None,
+            saturation:         Option[Int] = None,
+            brightness:         Option[Int] = None,
+            scienceOffsets:     Option[Visible] = None,
+            acquisitionOffsets: Option[Visible] = None
           ): Callback =
             TargetPreferences
               .updateAladinPreferences[IO](
@@ -393,24 +395,32 @@ object AladinCell extends ModelOptics with AladinCommon:
                 agsOverlay = overlay,
                 fullScreen = fullScreen,
                 saturation = saturation,
-                brightness = brightness
+                brightness = brightness,
+                scienceOffsets = scienceOffsets,
+                acquisitionOffsets = acquisitionOffsets
               )
               .runAsync
               .void
 
-          val agsCandidatesView =
+          def visiblePropView(
+            get:   Lens[TargetVisualOptions, Visible],
+            onMod: Option[Visible] => Callback
+          ) =
             options
-              .zoom(
-                Pot.readyPrism.andThen(targetPrefs).andThen(TargetVisualOptions.agsCandidates)
-              )
-              .withOnMod(v => prefsSetter(candidates = v))
+              .zoom(Pot.readyPrism.andThen(targetPrefs).andThen(get))
+              .withOnMod(onMod)
+              .zoom(Visible.boolIso.reverse.asLens)
+
+          val agsCandidatesView =
+            visiblePropView(TargetVisualOptions.agsCandidates, v => prefsSetter(candidates = v))
 
           val agsOverlayView =
-            options
-              .zoom(
-                Pot.readyPrism.andThen(targetPrefs).andThen(TargetVisualOptions.agsOverlay)
-              )
-              .withOnMod(v => prefsSetter(overlay = v))
+            visiblePropView(TargetVisualOptions.agsOverlay, v => prefsSetter(overlay = v))
+
+          val scienceOffsetsView =
+            visiblePropView(TargetVisualOptions.scienceOffsets,
+                            v => prefsSetter(scienceOffsets = v)
+            )
 
           val fovView =
             options.zoom(Pot.readyPrism.andThen(targetPrefs).andThen(fovLens))
@@ -496,7 +506,8 @@ object AladinCell extends ModelOptics with AladinCommon:
                 fovSetter.reuseAlways,
                 offsetChangeInAladin.reuseAlways,
                 selectedGuideStar,
-                agsResults.value
+                agsResults.value,
+                t.scienceOffsets
               )
 
           val renderToolbar: ((UserGlobalPreferences, TargetVisualOptions)) => VdomNode =
@@ -528,9 +539,7 @@ object AladinCell extends ModelOptics with AladinCommon:
 
           val menuItems = List(
             MenuItem.Custom(
-              agsCandidatesView
-                .zoom(Visible.boolIso.reverse.asLens)
-                .asView
+              agsCandidatesView.asView
                 .map(view =>
                   CheckboxView(
                     id = "ags-candidates".refined,
@@ -540,14 +549,22 @@ object AladinCell extends ModelOptics with AladinCommon:
                 )
             ),
             MenuItem.Custom(
-              agsOverlayView
-                .zoom(Visible.boolIso.reverse.asLens)
-                .asView
+              agsOverlayView.asView
                 .map(view =>
                   CheckboxView(
                     id = "ags-overlay".refined,
                     value = view,
                     label = "AGS"
+                  )
+                )
+            ),
+            MenuItem.Custom(
+              scienceOffsetsView.asView
+                .map(view =>
+                  CheckboxView(
+                    id = "science-offsets".refined,
+                    value = view,
+                    label = "Sci Offsets"
                   )
                 )
             ),

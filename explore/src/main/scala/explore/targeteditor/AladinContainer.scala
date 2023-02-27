@@ -61,7 +61,8 @@ case class AladinContainer(
   updateFov:              Fov => Callback,
   updateViewOffset:       Offset => Callback,
   selectedGuideStar:      Option[AgsAnalysis],
-  guideStarCandidates:    List[AgsAnalysis]
+  guideStarCandidates:    List[AgsAnalysis],
+  showScienceOffsets:     Visible
 ) extends ReactFnProps(AladinContainer.component) {
   // ABBA offset
   def offsets: List[Offset] = List(
@@ -397,6 +398,7 @@ object AladinContainer extends AladinCommon {
               gs  <- props.selectedGuideStar
               pa  <- gs.posAngle
               c   <- baseCoordinates.value.offsetBy(pa, o)
+              if props.showScienceOffsets.visible
             } yield SVGTarget.OffsetIndicator(c, idx, o, ExploreStyles.ScienceTarget, 4)
           }
 

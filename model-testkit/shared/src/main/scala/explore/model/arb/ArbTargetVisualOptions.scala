@@ -31,12 +31,22 @@ trait ArbTargetVisualOptions:
         f    <- arbitrary[Boolean].map(AladinFullScreen.apply(_))
         s    <- arbitrary[TargetVisualOptions.ImageFilterRange]
         b    <- arbitrary[TargetVisualOptions.ImageFilterRange]
-      } yield TargetVisualOptions(fra, fdec, vo, a, o, f, s, b)
+        so   <- arbitrary[Visible]
+        ao   <- arbitrary[Visible]
+      } yield TargetVisualOptions(fra, fdec, vo, a, o, f, s, b, so, ao)
     }
 
   given Cogen[TargetVisualOptions] =
-    Cogen[(Angle, Angle, Offset, Visible, Visible, Boolean)].contramap(c =>
-      (c.fovRA, c.fovDec, c.viewOffset, c.agsCandidates, c.agsOverlay, c.fullScreen.value)
+    Cogen[(Angle, Angle, Offset, Visible, Visible, Boolean, Visible, Visible)].contramap(c =>
+      (c.fovRA,
+       c.fovDec,
+       c.viewOffset,
+       c.agsCandidates,
+       c.agsOverlay,
+       c.fullScreen.value,
+       c.scienceOffsets,
+       c.acquisitionOffsets
+      )
     )
 
 object ArbTargetVisualOptions extends ArbTargetVisualOptions
