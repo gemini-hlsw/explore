@@ -22,6 +22,7 @@ import fs2.Stream
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Site
+import lucuma.core.math.BoundedInterval
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.model.CoordinatesAtVizTime
@@ -51,10 +52,11 @@ import scala.scalajs.js
 import js.JSConverters.*
 
 case class ElevationPlotSemester(
-  site:     Site,
-  coords:   CoordinatesAtVizTime,
-  semester: Semester,
-  date:     LocalDate
+  site:             Site,
+  coords:           CoordinatesAtVizTime,
+  semester:         Semester,
+  date:             LocalDate,
+  windowsIntervals: List[BoundedInterval[Instant]]
 ) extends ReactFnProps(ElevationPlotSemester.component)
 
 object ElevationPlotSemester:
@@ -237,6 +239,16 @@ object ElevationPlotSemester:
               .setMinorTickInterval(MillisPerDay * 5)
               .setMin(props.semester.start.atSite(props.site).toInstant.toEpochMilli.toDouble)
               .setMax(props.semester.end.atSite(props.site).toInstant.toEpochMilli.toDouble)
+              .setPlotBands(
+                props.windowsIntervals
+                  .map(window =>
+                    XAxisPlotBandsOptions()
+                      .setFrom(window.lower.toEpochMilli.toDouble)
+                      .setTo(window.upper.toEpochMilli.toDouble)
+                      .setClassName("plot-band-timing-window")
+                  )
+                  .toJSArray
+              )
           )
           .setYAxis(
             List(

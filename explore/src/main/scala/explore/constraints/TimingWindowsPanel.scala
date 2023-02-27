@@ -12,8 +12,8 @@ import crystal.react.View
 import crystal.react.implicits.*
 import eu.timepit.refined.cats.*
 import explore.Icons
-import explore.common.TimingQueries
-import explore.common.TimingQueries.*
+import explore.common.TimingWindowQueries
+import explore.common.TimingWindowQueries.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Constants
@@ -203,7 +203,7 @@ object TimingWindowsPanel:
             .zoom(Index.index[List[TimingWindow], Int, TimingWindow](pos))
             .withOnMod {
               case Some(tw) =>
-                TimingQueries.updateTimingWindow[IO](tw).runAsyncAndForget
+                TimingWindowQueries.updateTimingWindow[IO](tw).runAsyncAndForget
               case None     => Callback.empty
             }
 

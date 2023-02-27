@@ -17,7 +17,7 @@ import queries.common.TimingWindowsGQL.given
 import queries.schemas.UserPreferencesDB
 import queries.schemas.UserPreferencesDB.Types.*
 
-object TimingQueries:
+object TimingWindowQueries:
 
   type TimingWindowResult = TimingWindowsQuery.Data
   val TimingWindowResult = TimingWindowsQuery.Data
