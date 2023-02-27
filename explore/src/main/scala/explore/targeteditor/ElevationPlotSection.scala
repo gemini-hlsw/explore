@@ -124,7 +124,6 @@ object ElevationPlotSection:
         TimingWindowsQuery
           .query()
           .map(data => EntryToTimingWindows.get(data.tmpTimingWindows))
-          // _.zoom(TimingWindowsList))
           .reRunOnResourceSignals(TimingWindowSubscription.subscribe[IO]())
       }
       .render { (props, ctx, options, timingWindowsPot) =>
