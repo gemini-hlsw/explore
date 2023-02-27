@@ -95,17 +95,15 @@ case class AladinCell(
   // TODO Link to offsets on the sequence
   def offsets: Option[NonEmptyList[Offset]] = NonEmptyList
     .of(
-      Offset.signedDecimalArcseconds.reverseGet((-10.0, -10.0)),
-      Offset.signedDecimalArcseconds.reverseGet((-10.0, 0.0)),
-      Offset.signedDecimalArcseconds.reverseGet((-10.0, 10.0)),
-      Offset.signedDecimalArcseconds.reverseGet((0.0, -10.0)),
       Offset.signedDecimalArcseconds.reverseGet((0.0, 0.0)),
-      Offset.signedDecimalArcseconds.reverseGet((0.0, 10.0)),
-      Offset.signedDecimalArcseconds.reverseGet((10.0, -10.0)),
-      Offset.signedDecimalArcseconds.reverseGet((10.0, 0.0)),
-      Offset.signedDecimalArcseconds.reverseGet((10.0, 10.0))
+      Offset.signedDecimalArcseconds.reverseGet((0.0, 15.0)),
+      Offset.signedDecimalArcseconds.reverseGet((0.0, 15.0)),
+      Offset.signedDecimalArcseconds.reverseGet((0.0, 0.0))
     )
+    .distinct
     .some
+
+  println(offsets)
 }
 
 trait AladinCommon:
@@ -309,11 +307,14 @@ object AladinCell extends ModelOptics with AladinCommon:
               .whenA(positions.isEmpty) *>
               (positions, tracking.at(vizTime), props.paProps.map(_.agsState)).mapN {
                 (angles, base, agsState) =>
-                  val offsets   = props.offsets.getOrElse(NonEmptyList.of(Offset.Zero))
                   val positions =
-                    angles.zip(offsets).map((pa, off) => AgsPosition(pa, off))
-                  val fpu       = observingMode.flatMap(_.fpuAlternative)
-                  val params    = AgsParams.GmosAgsParams(fpu, PortDisposition.Side)
+                    for {
+                      pa  <- angles
+                      off <- props.offsets.getOrElse(NonEmptyList.of(Offset.Zero))
+                    } yield AgsPosition(pa, off)
+
+                  val fpu    = observingMode.flatMap(_.fpuAlternative)
+                  val params = AgsParams.GmosAgsParams(fpu, PortDisposition.Side)
 
                   val sciencePositions =
                     props.asterism.asList
