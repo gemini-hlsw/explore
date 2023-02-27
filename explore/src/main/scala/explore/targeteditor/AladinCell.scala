@@ -102,8 +102,6 @@ case class AladinCell(
     )
     .distinct
     .some
-
-  println(offsets)
 }
 
 trait AladinCommon:
