@@ -205,6 +205,7 @@ export default defineConfig(({ command, mode }) => {
       rollupOptions: {
         plugins: rollupPlugins,
       },
+      minify: "terser",
       outDir: path.resolve(__dirname, 'heroku/static'),
     },
     worker: {

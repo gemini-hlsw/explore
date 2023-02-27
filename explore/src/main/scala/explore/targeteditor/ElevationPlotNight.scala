@@ -10,7 +10,6 @@ import explore.*
 import explore.components.ui.ExploreStyles
 import explore.highcharts.*
 import explore.model.Constants
-import explore.model.CoordinatesAtVizTime
 import explore.model.enums.TimeDisplay
 import explore.syntax.ui.*
 import explore.syntax.ui.given
@@ -19,8 +18,10 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Site
 import lucuma.core.enums.TwilightType
 import lucuma.core.math.Angle
+import lucuma.core.math.BoundedInterval
 import lucuma.core.math.Coordinates
 import lucuma.core.math.skycalc.ImprovedSkyCalc
+import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.ObservingNight
 import lucuma.core.util.Enumerated
 import lucuma.typed.highcharts.highchartsStrings.area
@@ -52,7 +53,8 @@ case class ElevationPlotNight(
   coords:            CoordinatesAtVizTime,
   date:              LocalDate,
   timeDisplay:       TimeDisplay,
-  visualizationTime: Option[Instant]
+  visualizationTime: Option[Instant],
+  windowsIntervals:  List[BoundedInterval[Instant]]
 ) extends ReactFnProps(ElevationPlotNight.component):
   val visualizationDuration: Duration = Duration.ofHours(1)
 
@@ -285,35 +287,41 @@ object ElevationPlotNight {
                 else XAxisTitleOptions()
               )
               .setPlotBands(
-                List(
+                (props.windowsIntervals.map(window =>
                   XAxisPlotBandsOptions()
-                    .setFrom(tbNauticalNight.start.toEpochMilli.toDouble)
-                    .setTo(tbNauticalNight.end.toEpochMilli.toDouble)
-                    .setClassName("plot-band-twilight-nautical")
-                    // We need z-index > 0 to display over grid. But not too high, or it will display over tooltips.
-                    .setZIndex(1)
-                    .setLabel(
-                      XAxisPlotBandsLabelOptions()
-                        .setText(s"  Evening 12° - Twilight: $sunset")
-                        .setRotation(270)
-                        .setAlign(AlignValue.left)
-                        .setTextAlign(AlignValue.center)
-                        .setVerticalAlign(VerticalAlignValue.middle)
-                    ),
-                  XAxisPlotBandsOptions() // Empty band, just to draw the label
-                    .setFrom(tbNauticalNight.end.toEpochMilli.toDouble)
-                    .setTo(tbNauticalNight.end.toEpochMilli.toDouble)
-                    .setClassName("plot-band-twilight-nautical-end")
-                    .setZIndex(1)
-                    .setLabel(
-                      XAxisPlotBandsLabelOptions()
-                        .setText(s"  Morning 12° - Twilight: $sunrise")
-                        .setRotation(270)
-                        .setAlign(AlignValue.left)
-                        .setTextAlign(AlignValue.center)
-                        .setVerticalAlign(VerticalAlignValue.middle)
-                    )
-                ).toJSArray
+                    .setFrom(window.lower.toEpochMilli.toDouble)
+                    .setTo(window.upper.toEpochMilli.toDouble)
+                    .setClassName("plot-band-timing-window")
+                ) ++
+                  List(
+                    XAxisPlotBandsOptions()
+                      .setFrom(tbNauticalNight.start.toEpochMilli.toDouble)
+                      .setTo(tbNauticalNight.end.toEpochMilli.toDouble)
+                      .setClassName("plot-band-twilight-nautical")
+                      // We need z-index > 0 to display over grid. But not too high, or it will display over tooltips.
+                      .setZIndex(1)
+                      .setLabel(
+                        XAxisPlotBandsLabelOptions()
+                          .setText(s"  Evening 12° - Twilight: $sunset")
+                          .setRotation(270)
+                          .setAlign(AlignValue.left)
+                          .setTextAlign(AlignValue.center)
+                          .setVerticalAlign(VerticalAlignValue.middle)
+                      ),
+                    XAxisPlotBandsOptions() // Empty band, just to draw the label
+                      .setFrom(tbNauticalNight.end.toEpochMilli.toDouble)
+                      .setTo(tbNauticalNight.end.toEpochMilli.toDouble)
+                      .setClassName("plot-band-twilight-nautical-end")
+                      .setZIndex(1)
+                      .setLabel(
+                        XAxisPlotBandsLabelOptions()
+                          .setText(s"  Morning 12° - Twilight: $sunrise")
+                          .setRotation(270)
+                          .setAlign(AlignValue.left)
+                          .setTextAlign(AlignValue.center)
+                          .setVerticalAlign(VerticalAlignValue.middle)
+                      )
+                  )).toJSArray
               )
           )
           .setYAxis(

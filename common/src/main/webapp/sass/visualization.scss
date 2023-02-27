@@ -116,7 +116,7 @@ $brightness: var(--aladin-image-brightness);
 .targets-overlay-svg {
   pointer-events: none; // let aladin get pointer events
   position: absolute;
-  z-index: 30;
+  z-index: 40;
 
   circle,
   line {
@@ -160,6 +160,12 @@ $brightness: var(--aladin-image-brightness);
 
   .overlay-all-targets {
     isolation: inline;
+  }
+
+  .offset-position {
+    stroke-width: 1px;
+    fill: none;
+    stroke: hsla(51deg 100% 50% / 100%);
   }
 
   .guide-star-target,

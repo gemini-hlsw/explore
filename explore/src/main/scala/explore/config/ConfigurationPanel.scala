@@ -25,7 +25,6 @@ import explore.components.undo.UndoButtons
 import explore.events.*
 import explore.model.AppContext
 import explore.model.BasicConfigAndItc
-import explore.model.CoordinatesAtVizTime
 import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.ItcPicklers.given
@@ -40,6 +39,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.model.ConstraintSet
+import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program

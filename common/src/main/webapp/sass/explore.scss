@@ -7,10 +7,6 @@ $tablet-responsive-cutoff: 992px;
 $mobile-responsive-cutoff: 670px;
 
 // Scrollbar
-*::-webkit-scrollbar {
-  width: 0.8em !important;
-}
-
 *::-webkit-scrollbar-track {
   background: var(--scrollbar-background) !important;
 }
@@ -799,7 +795,7 @@ $search-preview-margin: 5px;
   margin-left: 0.5em;
 
   @media (min-width: common.$mobile-responsive-cutoff) {
-    display: block;
+    display: flex;
   }
 }
 
@@ -810,6 +806,7 @@ $search-preview-margin: 5px;
 
   grid-area: guidestar;
   font-size: smaller;
+  align-items: center;
 }
 
 .aladin-status-gs-loading {

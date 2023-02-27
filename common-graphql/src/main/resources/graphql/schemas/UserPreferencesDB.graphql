@@ -344,6 +344,7 @@ input ExplorePlotTimeUpdates {
 columns and relationships of "exploreTargetPreferences"
 """
 type ExploreTargetPreferences {
+  acquisitionOffsets: Boolean
   agsCandidates: Boolean
   agsOverlay: Boolean
   brightness: Int
@@ -355,6 +356,7 @@ type ExploreTargetPreferences {
   """An object relationship"""
   lucuma_target: LucumaTarget!
   saturation: Int
+  scienceOffsets: Boolean
   targetId: String!
   updatedAt: timestamptz
   userId: String!
@@ -431,6 +433,7 @@ input ExploreTargetPreferencesBoolExp {
   _and: [ExploreTargetPreferencesBoolExp!]
   _not: ExploreTargetPreferencesBoolExp
   _or: [ExploreTargetPreferencesBoolExp!]
+  acquisitionOffsets: BooleanComparisonExp
   agsCandidates: BooleanComparisonExp
   agsOverlay: BooleanComparisonExp
   brightness: IntComparisonExp
@@ -440,6 +443,7 @@ input ExploreTargetPreferencesBoolExp {
   fullScreen: BooleanComparisonExp
   lucuma_target: LucumaTargetBoolExp
   saturation: IntComparisonExp
+  scienceOffsets: BooleanComparisonExp
   targetId: StringComparisonExp
   updatedAt: TimestamptzComparisonExp
   userId: StringComparisonExp
@@ -473,6 +477,7 @@ input ExploreTargetPreferencesIncInput {
 input type for inserting data into table "exploreTargetPreferences"
 """
 input ExploreTargetPreferencesInsertInput {
+  acquisitionOffsets: Boolean
   agsCandidates: Boolean
   agsOverlay: Boolean
   brightness: Int
@@ -482,6 +487,7 @@ input ExploreTargetPreferencesInsertInput {
   fullScreen: Boolean
   lucuma_target: LucumaTargetObjRelInsertInput
   saturation: Int
+  scienceOffsets: Boolean
   targetId: String
   updatedAt: timestamptz
   userId: String
@@ -539,6 +545,7 @@ input ExploreTargetPreferencesOnConflict {
 
 """Ordering options when selecting data from "exploreTargetPreferences"."""
 input ExploreTargetPreferencesOrderBy {
+  acquisitionOffsets: OrderBy
   agsCandidates: OrderBy
   agsOverlay: OrderBy
   brightness: OrderBy
@@ -548,6 +555,7 @@ input ExploreTargetPreferencesOrderBy {
   fullScreen: OrderBy
   lucuma_target: LucumaTargetOrderBy
   saturation: OrderBy
+  scienceOffsets: OrderBy
   targetId: OrderBy
   updatedAt: OrderBy
   userId: OrderBy
@@ -565,6 +573,9 @@ input ExploreTargetPreferencesPkColumnsInput {
 select columns of table "exploreTargetPreferences"
 """
 enum ExploreTargetPreferencesSelectColumn {
+  """column name"""
+  acquisitionOffsets
+
   """column name"""
   agsCandidates
 
@@ -590,6 +601,9 @@ enum ExploreTargetPreferencesSelectColumn {
   saturation
 
   """column name"""
+  scienceOffsets
+
+  """column name"""
   targetId
 
   """column name"""
@@ -609,6 +623,7 @@ enum ExploreTargetPreferencesSelectColumn {
 input type for updating data in table "exploreTargetPreferences"
 """
 input ExploreTargetPreferencesSetInput {
+  acquisitionOffsets: Boolean
   agsCandidates: Boolean
   agsOverlay: Boolean
   brightness: Int
@@ -617,6 +632,7 @@ input ExploreTargetPreferencesSetInput {
   fovRA: bigint
   fullScreen: Boolean
   saturation: Int
+  scienceOffsets: Boolean
   targetId: String
   updatedAt: timestamptz
   userId: String
@@ -669,6 +685,9 @@ update columns of table "exploreTargetPreferences"
 """
 enum ExploreTargetPreferencesUpdateColumn {
   """column name"""
+  acquisitionOffsets
+
+  """column name"""
   agsCandidates
 
   """column name"""
@@ -691,6 +710,9 @@ enum ExploreTargetPreferencesUpdateColumn {
 
   """column name"""
   saturation
+
+  """column name"""
+  scienceOffsets
 
   """column name"""
   targetId
@@ -3068,6 +3090,7 @@ input exploreTargetPreferences_streamCursorInput {
 
 """Initial value of the column from where the streaming should start"""
 input exploreTargetPreferences_streamCursorValueInput {
+  acquisitionOffsets: Boolean
   agsCandidates: Boolean
   agsOverlay: Boolean
   brightness: Int
@@ -3076,6 +3099,7 @@ input exploreTargetPreferences_streamCursorValueInput {
   fovRA: bigint
   fullScreen: Boolean
   saturation: Int
+  scienceOffsets: Boolean
   targetId: String
   updatedAt: timestamptz
   userId: String

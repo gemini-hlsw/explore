@@ -8,6 +8,8 @@ import cats.syntax.all.*
 import crystal.react.View
 import crystal.react.implicits.*
 import crystal.react.reuse.*
+import eu.timepit.refined.*
+import eu.timepit.refined.numeric.NonNegative
 import explore.Icons
 import explore.aladin.AladinZoomControl
 import explore.components.ui.ExploreStyles
@@ -32,6 +34,7 @@ import lucuma.core.geom.jts.interpreter.*
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
+import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.SiderealTracking
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
@@ -58,7 +61,9 @@ case class AladinContainer(
   updateFov:              Fov => Callback,
   updateViewOffset:       Offset => Callback,
   selectedGuideStar:      Option[AgsAnalysis],
-  guideStarCandidates:    List[AgsAnalysis]
+  guideStarCandidates:    List[AgsAnalysis],
+  offsets:                List[Offset],
+  showScienceOffsets:     Visible
 ) extends ReactFnProps(AladinContainer.component)
 
 object AladinContainer extends AladinCommon {
@@ -103,10 +108,10 @@ object AladinContainer extends AladinCommon {
         ExploreStyles.GuideSpeedSlow
 
   private def baseAndScience(p: Props) = {
-    val base = p.asterism
+    val base: CoordinatesAtVizTime = p.asterism
       .baseTrackingAt(p.obsConf.vizTime)
-      .map(_.baseCoordinates)
-      .getOrElse(p.asterism.baseTracking.baseCoordinates)
+      .flatMap(_.at(p.obsConf.vizTime))
+      .getOrElse(CoordinatesAtVizTime(p.asterism.baseTracking.baseCoordinates))
 
     val science = p.asterism.toSidereal
       .map(t =>
@@ -126,14 +131,14 @@ object AladinContainer extends AladinCommon {
       .useStateBy(p => baseAndScience(p))
       // View coordinates base coordinates with pm correction + user panning
       .useStateBy { (p, baseCoordinates) =>
-        baseCoordinates.value._1.offsetBy(Angle.Angle0, p.options.viewOffset)
+        baseCoordinates.value._1.value.offsetBy(Angle.Angle0, p.options.viewOffset)
       }
       .useEffectWithDepsBy((p, _, _) => (p.asterism, p.obsConf.vizTime)) {
         (p, baseCoordinates, currentPos) => _ =>
           val (base, science) = baseAndScience(p)
           baseCoordinates.setState((base, science)) *>
             currentPos.setState(
-              base.offsetBy(Angle.Angle0, p.options.viewOffset)
+              base.value.offsetBy(Angle.Angle0, p.options.viewOffset)
             )
       }
       // Ref to the aladin component
@@ -142,7 +147,7 @@ object AladinContainer extends AladinCommon {
       .useEffectWithDepsBy((p, baseCoordinates, _, _) => (baseCoordinates, p.options.viewOffset)) {
         (_, baseCoordinates, viewCoordinates, aladinRef) => (_, offset) =>
           {
-            val newCoords = baseCoordinates.value._1.offsetBy(Angle.Angle0, offset)
+            val newCoords = baseCoordinates.value._1.value.offsetBy(Angle.Angle0, offset)
             newCoords
               .map(coords =>
                 aladinRef.get.asCBO
@@ -167,7 +172,8 @@ object AladinContainer extends AladinCommon {
           ExploreStyles.GuideStarCandidateVisible.when_(options.agsCandidates.visible)
 
         val probeArmShapes = (gs, posAngle).mapN { case (c, posAngle) =>
-          val gsOffset = allCoordinates.value._1.diff(c.target.tracking.baseCoordinates).offset
+          val gsOffset =
+            allCoordinates.value._1.value.diff(c.target.tracking.baseCoordinates).offset
           GmosGeometry.probeShapes(posAngle,
                                    gsOffset,
                                    Offset.Zero,
@@ -265,7 +271,7 @@ object AladinContainer extends AladinCommon {
 
                   (tracking.at(targetEpochInstant), tracking.at(obsInstant)).mapN {
                     (source, dest) =>
-                      val offset = baseCoordinates.diff(dest).offset
+                      val offset = baseCoordinates.value.diff(dest).offset
                       if (candidates.length < 500) {
                         List[SVGTarget](
                           if (selectedGS.forall(_.target.id === g.target.id)) {
@@ -315,7 +321,7 @@ object AladinContainer extends AladinCommon {
            */
           def onPositionChanged(u: PositionChanged): Callback = {
             val viewCoords = Coordinates(u.ra, u.dec)
-            val viewOffset = baseCoordinates.diff(viewCoords).offset
+            val viewOffset = baseCoordinates.value.diff(viewCoords).offset
             currentPos.setState(Some(viewCoords)) *>
               props.updateViewOffset(viewOffset)
           }
@@ -344,13 +350,13 @@ object AladinContainer extends AladinCommon {
           val baseCoordinatesForAladin: String =
             currentPos.value
               .map(Coordinates.fromHmsDms.reverseGet)
-              .getOrElse(Coordinates.fromHmsDms.reverseGet(baseCoordinates))
+              .getOrElse(Coordinates.fromHmsDms.reverseGet(baseCoordinates.value))
 
           val basePosition =
             List(
-              SVGTarget.CrosshairTarget(baseCoordinates, Css.Empty, 10),
-              SVGTarget.CircleTarget(baseCoordinates, ExploreStyles.BaseTarget, 3),
-              SVGTarget.LineTo(baseCoordinates,
+              SVGTarget.CrosshairTarget(baseCoordinates.value, Css.Empty, 10),
+              SVGTarget.CircleTarget(baseCoordinates.value, ExploreStyles.BaseTarget, 3),
+              SVGTarget.LineTo(baseCoordinates.value,
                                props.asterism.baseTracking.baseCoordinates,
                                ExploreStyles.PMCorrectionLine
               )
@@ -374,8 +380,18 @@ object AladinContainer extends AladinCommon {
               }
             else Nil
 
+          val offsetIndicators = props.offsets.zipWithIndex.map { case (o, i) =>
+            for {
+              idx <- refineV[NonNegative](i).toOption
+              gs  <- props.selectedGuideStar
+              pa  <- gs.posAngle
+              c   <- baseCoordinates.value.offsetBy(pa, o)
+              if props.showScienceOffsets.visible
+            } yield SVGTarget.OffsetIndicator(c, idx, o, Css.Empty, 5)
+          }
+
           val screenOffset =
-            currentPos.value.map(_.diff(baseCoordinates).offset).getOrElse(Offset.Zero)
+            currentPos.value.map(_.diff(baseCoordinates.value).offset).getOrElse(Offset.Zero)
 
           val key = s"aladin-${resize.width}-${resize.height}-${props.allowMouseScroll.value}"
 
@@ -391,13 +407,14 @@ object AladinContainer extends AladinCommon {
                 AladinZoomControl(aladinRef),
                 (resize.width, resize.height, fov.value)
                   .mapN(
-                    TargetsOverlay(_,
-                                   _,
-                                   _,
-                                   screenOffset,
-                                   baseCoordinates,
-                                   // Order matters
-                                   basePosition ++ candidates ++ sciencePositions
+                    TargetsOverlay(
+                      _,
+                      _,
+                      _,
+                      screenOffset,
+                      baseCoordinates.value,
+                      // Order matters
+                      offsetIndicators.flattenOption ++ candidates ++ basePosition ++ sciencePositions
                     )
                   ),
                 (resize.width, resize.height, fov.value)

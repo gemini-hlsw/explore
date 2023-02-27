@@ -80,6 +80,8 @@ object UserPreferencesQueriesGQL {
           fullScreen
           saturation
           brightness
+          scienceOffsets
+          acquisitionOffsets
         }
         lucumaUserPreferencesByPk(userId: $userId) {
           aladinMouseScroll

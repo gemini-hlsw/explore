@@ -18,7 +18,6 @@ import explore.model.AppContext
 import explore.model.Asterism
 import explore.model.BasicConfigAndItc
 import explore.model.ConstraintGroup
-import explore.model.CoordinatesAtVizTime
 import explore.model.Focused
 import explore.model.ModelUndoStacks
 import explore.model.ObsIdSet
@@ -42,6 +41,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ags.AgsAnalysis
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
+import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
@@ -186,7 +186,7 @@ object ObsTabTiles:
           (vizTime, potAsterism.toOption)
             .mapN { (instant, asterism) =>
               asterism.get.flatMap(
-                _.baseTrackingAt(instant).map(r => CoordinatesAtVizTime(r.baseCoordinates))
+                _.baseTrackingAt(instant).flatMap(_.at(instant))
               )
             }
             .flatten

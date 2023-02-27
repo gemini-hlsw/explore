@@ -426,6 +426,7 @@ object ExploreStyles:
   val GuideStarCandidateTarget     = Css("guide-star-candidate-target")
   val GuideStarCandidateCrowded    = Css("guide-star-candidate-target-crowded")
   val GuideStarTarget              = Css("guide-star-target")
+  val OffsetPosition               = Css("offset-position")
   val GuideSpeedFast               = Css("guide-star-fast")
   val GuideSpeedMedium             = Css("guide-star-medium")
   val GuideSpeedSlow               = Css("guide-star-slow")

@@ -91,6 +91,17 @@ case class AladinCell(
         _.anglesToTestAt(c.siteFor, asterism.baseTracking, obsConf.vizTime)
       )
     )
+
+  // TODO Link to offsets on the sequence
+  def offsets: Option[NonEmptyList[Offset]] = NonEmptyList
+    .of(
+      Offset.signedDecimalArcseconds.reverseGet((0.0, 0.0)),
+      Offset.signedDecimalArcseconds.reverseGet((0.0, 15.0)),
+      Offset.signedDecimalArcseconds.reverseGet((0.0, 15.0)),
+      Offset.signedDecimalArcseconds.reverseGet((0.0, 0.0))
+    )
+    .distinct
+    .some
 }
 
 trait AladinCommon:
@@ -294,9 +305,14 @@ object AladinCell extends ModelOptics with AladinCommon:
               .whenA(positions.isEmpty) *>
               (positions, tracking.at(vizTime), props.paProps.map(_.agsState)).mapN {
                 (angles, base, agsState) =>
-                  val positions = angles.map(pa => AgsPosition(pa, Offset.Zero))
-                  val fpu       = observingMode.flatMap(_.fpuAlternative)
-                  val params    = AgsParams.GmosAgsParams(fpu, PortDisposition.Side)
+                  val positions =
+                    for {
+                      pa  <- angles
+                      off <- props.offsets.getOrElse(NonEmptyList.of(Offset.Zero))
+                    } yield AgsPosition(pa, off)
+
+                  val fpu    = observingMode.flatMap(_.fpuAlternative)
+                  val params = AgsParams.GmosAgsParams(fpu, PortDisposition.Side)
 
                   val sciencePositions =
                     props.asterism.asList
@@ -379,11 +395,13 @@ object AladinCell extends ModelOptics with AladinCommon:
           )
 
           def prefsSetter(
-            candidates: Option[Visible] = None,
-            overlay:    Option[Visible] = None,
-            fullScreen: Option[AladinFullScreen] = None,
-            saturation: Option[Int] = None,
-            brightness: Option[Int] = None
+            candidates:         Option[Visible] = None,
+            overlay:            Option[Visible] = None,
+            fullScreen:         Option[AladinFullScreen] = None,
+            saturation:         Option[Int] = None,
+            brightness:         Option[Int] = None,
+            scienceOffsets:     Option[Visible] = None,
+            acquisitionOffsets: Option[Visible] = None
           ): Callback =
             TargetPreferences
               .updateAladinPreferences[IO](
@@ -393,24 +411,32 @@ object AladinCell extends ModelOptics with AladinCommon:
                 agsOverlay = overlay,
                 fullScreen = fullScreen,
                 saturation = saturation,
-                brightness = brightness
+                brightness = brightness,
+                scienceOffsets = scienceOffsets,
+                acquisitionOffsets = acquisitionOffsets
               )
               .runAsync
               .void
 
-          val agsCandidatesView =
+          def visiblePropView(
+            get:   Lens[TargetVisualOptions, Visible],
+            onMod: Option[Visible] => Callback
+          ) =
             options
-              .zoom(
-                Pot.readyPrism.andThen(targetPrefs).andThen(TargetVisualOptions.agsCandidates)
-              )
-              .withOnMod(v => prefsSetter(candidates = v))
+              .zoom(Pot.readyPrism.andThen(targetPrefs).andThen(get))
+              .withOnMod(onMod)
+              .zoom(Visible.boolIso.reverse.asLens)
+
+          val agsCandidatesView =
+            visiblePropView(TargetVisualOptions.agsCandidates, v => prefsSetter(candidates = v))
 
           val agsOverlayView =
-            options
-              .zoom(
-                Pot.readyPrism.andThen(targetPrefs).andThen(TargetVisualOptions.agsOverlay)
-              )
-              .withOnMod(v => prefsSetter(overlay = v))
+            visiblePropView(TargetVisualOptions.agsOverlay, v => prefsSetter(overlay = v))
+
+          val scienceOffsetsView =
+            visiblePropView(TargetVisualOptions.scienceOffsets,
+                            v => prefsSetter(scienceOffsets = v)
+            )
 
           val fovView =
             options.zoom(Pot.readyPrism.andThen(targetPrefs).andThen(fovLens))
@@ -496,7 +522,9 @@ object AladinCell extends ModelOptics with AladinCommon:
                 fovSetter.reuseAlways,
                 offsetChangeInAladin.reuseAlways,
                 selectedGuideStar,
-                agsResults.value
+                agsResults.value,
+                props.offsets.foldMap(_.toList),
+                t.scienceOffsets
               )
 
           val renderToolbar: ((UserGlobalPreferences, TargetVisualOptions)) => VdomNode =
@@ -528,9 +556,7 @@ object AladinCell extends ModelOptics with AladinCommon:
 
           val menuItems = List(
             MenuItem.Custom(
-              agsCandidatesView
-                .zoom(Visible.boolIso.reverse.asLens)
-                .asView
+              agsCandidatesView.asView
                 .map(view =>
                   CheckboxView(
                     id = "ags-candidates".refined,
@@ -540,14 +566,22 @@ object AladinCell extends ModelOptics with AladinCommon:
                 )
             ),
             MenuItem.Custom(
-              agsOverlayView
-                .zoom(Visible.boolIso.reverse.asLens)
-                .asView
+              agsOverlayView.asView
                 .map(view =>
                   CheckboxView(
                     id = "ags-overlay".refined,
                     value = view,
                     label = "AGS"
+                  )
+                )
+            ),
+            MenuItem.Custom(
+              scienceOffsetsView.asView
+                .map(view =>
+                  CheckboxView(
+                    id = "science-offsets".refined,
+                    value = view,
+                    label = "Sci Offsets"
                   )
                 )
             ),

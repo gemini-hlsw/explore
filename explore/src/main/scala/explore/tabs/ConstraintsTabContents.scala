@@ -18,7 +18,7 @@ import eu.timepit.refined.types.numeric.NonNegInt
 import explore.Icons
 import explore.*
 import explore.common.ConstraintGroupQueries.*
-import explore.common.TimingQueries.*
+import explore.common.TimingWindowQueries.*
 import explore.common.UserPreferencesQueries.*
 import explore.components.Tile
 import explore.components.TileController

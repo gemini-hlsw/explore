@@ -22,8 +22,8 @@ import lucuma.refined.*
 import scala.collection.immutable.SortedMap
 
 val MaxHourValue = BigDecimal(1000)
-type HourRange            = Interval.Closed[0, 1000]
-type Hours                = BigDecimal Refined HourRange
+type HourRange = Interval.Closed[0, 1000]
+type Hours     = BigDecimal Refined HourRange
 object Hours extends RefinedTypeOps[Hours, BigDecimal] {
   val Max: Hours = Hours.unsafeFrom(MaxHourValue)
 }
@@ -37,7 +37,3 @@ val EmptySiderealTarget =
     SourceProfile.Point(SpectralDefinition.BandNormalized(none, SortedMap.empty)),
     none
   )
-
-// Tag to indicate the coordinates have been corrected for proper motion
-object CoordinatesAtVizTime extends NewType[Coordinates]
-type CoordinatesAtVizTime = CoordinatesAtVizTime.Type

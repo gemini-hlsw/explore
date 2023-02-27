@@ -16,7 +16,6 @@ import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.BasicConfigAndItc
-import explore.model.CoordinatesAtVizTime
 import explore.model.ImagingConfigurationOptions
 import explore.model.display.given
 import explore.model.itc.ItcTarget
@@ -28,6 +27,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ScienceMode
 import lucuma.core.math.Coordinates
 import lucuma.core.model.ConstraintSet
+import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.SiderealTracking
