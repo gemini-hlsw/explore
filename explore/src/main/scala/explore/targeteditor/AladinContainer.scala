@@ -8,6 +8,8 @@ import cats.syntax.all.*
 import crystal.react.View
 import crystal.react.implicits.*
 import crystal.react.reuse.*
+import eu.timepit.refined.*
+import eu.timepit.refined.numeric.NonNegative
 import explore.Icons
 import explore.aladin.AladinZoomControl
 import explore.components.ui.ExploreStyles
@@ -59,7 +61,9 @@ case class AladinContainer(
   updateFov:              Fov => Callback,
   updateViewOffset:       Offset => Callback,
   selectedGuideStar:      Option[AgsAnalysis],
-  guideStarCandidates:    List[AgsAnalysis]
+  guideStarCandidates:    List[AgsAnalysis],
+  offsets:                List[Offset],
+  showScienceOffsets:     Visible
 ) extends ReactFnProps(AladinContainer.component)
 
 object AladinContainer extends AladinCommon {
@@ -376,6 +380,16 @@ object AladinContainer extends AladinCommon {
               }
             else Nil
 
+          val offsetIndicators = props.offsets.zipWithIndex.map { case (o, i) =>
+            for {
+              idx <- refineV[NonNegative](i).toOption
+              gs  <- props.selectedGuideStar
+              pa  <- gs.posAngle
+              c   <- baseCoordinates.value.offsetBy(pa, o)
+              if props.showScienceOffsets.visible
+            } yield SVGTarget.OffsetIndicator(c, idx, o, Css.Empty, 5)
+          }
+
           val screenOffset =
             currentPos.value.map(_.diff(baseCoordinates.value).offset).getOrElse(Offset.Zero)
 
@@ -393,13 +407,14 @@ object AladinContainer extends AladinCommon {
                 AladinZoomControl(aladinRef),
                 (resize.width, resize.height, fov.value)
                   .mapN(
-                    TargetsOverlay(_,
-                                   _,
-                                   _,
-                                   screenOffset,
-                                   baseCoordinates.value,
-                                   // Order matters
-                                   basePosition ++ candidates ++ sciencePositions
+                    TargetsOverlay(
+                      _,
+                      _,
+                      _,
+                      screenOffset,
+                      baseCoordinates.value,
+                      // Order matters
+                      offsetIndicators.flattenOption ++ candidates ++ basePosition ++ sciencePositions
                     )
                   ),
                 (resize.width, resize.height, fov.value)
