@@ -40,8 +40,8 @@ import lucuma.typed.{tanstackTableCore => raw}
 import lucuma.ui.table.TableStateStore
 import org.scalablytyped.runtime.StringDictionary
 import org.typelevel.log4cats.Logger
-import queries.common.UserPreferencesQueriesGQL.*
 import queries.common.UserPreferencesQueriesGQL.UserTargetPreferencesQuery.Data.ExploreTargetPreferencesByPk
+import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.UserPreferencesDB
 import queries.schemas.UserPreferencesDB.Enums.*
 import queries.schemas.UserPreferencesDB.Scalars.*

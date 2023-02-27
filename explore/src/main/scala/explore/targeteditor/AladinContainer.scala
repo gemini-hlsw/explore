@@ -8,9 +8,9 @@ import cats.syntax.all.*
 import crystal.react.View
 import crystal.react.implicits.*
 import crystal.react.reuse.*
-import explore.Icons
 import eu.timepit.refined.*
 import eu.timepit.refined.numeric.NonNegative
+import explore.Icons
 import explore.aladin.AladinZoomControl
 import explore.components.ui.ExploreStyles
 import explore.model.AladinMouseScroll
@@ -62,21 +62,9 @@ case class AladinContainer(
   updateViewOffset:       Offset => Callback,
   selectedGuideStar:      Option[AgsAnalysis],
   guideStarCandidates:    List[AgsAnalysis],
+  offsets:                List[Offset],
   showScienceOffsets:     Visible
-) extends ReactFnProps(AladinContainer.component) {
-  // ABBA offset
-  def offsets: List[Offset] = List(
-    Offset.signedDecimalArcseconds.reverseGet((-10.0, -10.0)),
-    Offset.signedDecimalArcseconds.reverseGet((-10.0, 0.0)),
-    Offset.signedDecimalArcseconds.reverseGet((-10.0, 10.0)),
-    Offset.signedDecimalArcseconds.reverseGet((0.0, -10.0)),
-    Offset.signedDecimalArcseconds.reverseGet((0.0, 0.0)),
-    Offset.signedDecimalArcseconds.reverseGet((0.0, 10.0)),
-    Offset.signedDecimalArcseconds.reverseGet((10.0, -10.0)),
-    Offset.signedDecimalArcseconds.reverseGet((10.0, 0.0)),
-    Offset.signedDecimalArcseconds.reverseGet((10.0, 10.0))
-  )
-}
+) extends ReactFnProps(AladinContainer.component)
 
 object AladinContainer extends AladinCommon {
 

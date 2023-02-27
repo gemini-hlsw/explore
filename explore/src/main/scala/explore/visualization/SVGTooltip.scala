@@ -3,9 +3,11 @@
 
 package explore.visualization
 
+import eu.timepit.refined.types.numeric.NonNegInt
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.svg_<^.*
+import lucuma.core.math.Offset
 import lucuma.ui.syntax.all.given
 import org.scalajs.dom.svg.SVG
 import react.common.Css
@@ -13,8 +15,6 @@ import react.common.ReactFnProps
 import react.common.Style
 import react.floatingui.*
 import react.floatingui.hooks.*
-import eu.timepit.refined.types.numeric.NonNegInt
-import lucuma.core.math.Offset
 
 object SVGTooltip {
 

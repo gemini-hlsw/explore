@@ -6,9 +6,10 @@ package explore.visualization
 import cats.Eq
 import cats.derived.*
 import cats.syntax.all.*
+import eu.timepit.refined.cats.given
+import eu.timepit.refined.types.numeric.NonNegInt
 import explore.components.ui.ExploreStyles
 import explore.utils.*
-import eu.timepit.refined.cats.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.svg_<^.*
 import lucuma.core.math.Coordinates
@@ -21,7 +22,6 @@ import react.common.Css
 import react.common.ReactFnProps
 
 import scala.math.*
-import eu.timepit.refined.types.numeric.NonNegInt
 
 sealed trait SVGTarget derives Eq {
   def coordinates: Coordinates
@@ -233,7 +233,7 @@ object TargetsOverlay {
                   val sy       = p.height / (viewBoxH - viewBoxY).abs
                   OffsetSVG(svgRaw, offP, offQ, maxP, radius, pointCss, sx, sy, idx, o): VdomNode
 
-                case (offP, offQ, SVGTarget.LineTo(_, d, css, title))                       =>
+                case (offP, offQ, SVGTarget.LineTo(_, d, css, title)) =>
                   val destOffset = d.diff(p.baseCoordinates).offset
                   // Offset amount
                   val destP      =

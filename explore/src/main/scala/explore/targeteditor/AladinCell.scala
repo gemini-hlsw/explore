@@ -91,6 +91,21 @@ case class AladinCell(
         _.anglesToTestAt(c.siteFor, asterism.baseTracking, obsConf.vizTime)
       )
     )
+
+  // TODO Link to offsets on the sequence
+  def offsets: Option[NonEmptyList[Offset]] = NonEmptyList
+    .of(
+      Offset.signedDecimalArcseconds.reverseGet((-10.0, -10.0)),
+      Offset.signedDecimalArcseconds.reverseGet((-10.0, 0.0)),
+      Offset.signedDecimalArcseconds.reverseGet((-10.0, 10.0)),
+      Offset.signedDecimalArcseconds.reverseGet((0.0, -10.0)),
+      Offset.signedDecimalArcseconds.reverseGet((0.0, 0.0)),
+      Offset.signedDecimalArcseconds.reverseGet((0.0, 10.0)),
+      Offset.signedDecimalArcseconds.reverseGet((10.0, -10.0)),
+      Offset.signedDecimalArcseconds.reverseGet((10.0, 0.0)),
+      Offset.signedDecimalArcseconds.reverseGet((10.0, 10.0))
+    )
+    .some
 }
 
 trait AladinCommon:
@@ -294,7 +309,9 @@ object AladinCell extends ModelOptics with AladinCommon:
               .whenA(positions.isEmpty) *>
               (positions, tracking.at(vizTime), props.paProps.map(_.agsState)).mapN {
                 (angles, base, agsState) =>
-                  val positions = angles.map(pa => AgsPosition(pa, Offset.Zero))
+                  val offsets   = props.offsets.getOrElse(NonEmptyList.of(Offset.Zero))
+                  val positions =
+                    angles.zip(offsets).map((pa, off) => AgsPosition(pa, off))
                   val fpu       = observingMode.flatMap(_.fpuAlternative)
                   val params    = AgsParams.GmosAgsParams(fpu, PortDisposition.Side)
 
@@ -507,6 +524,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                 offsetChangeInAladin.reuseAlways,
                 selectedGuideStar,
                 agsResults.value,
+                props.offsets.foldMap(_.toList),
                 t.scienceOffsets
               )
 
