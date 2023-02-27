@@ -9,6 +9,8 @@ import crystal.react.View
 import crystal.react.implicits.*
 import crystal.react.reuse.*
 import explore.Icons
+import eu.timepit.refined.*
+import eu.timepit.refined.numeric.NonNegative
 import explore.aladin.AladinZoomControl
 import explore.components.ui.ExploreStyles
 import explore.model.AladinMouseScroll
@@ -71,7 +73,7 @@ case class AladinContainer(
     Offset.signedDecimalArcseconds.reverseGet((0.0, 10.0)),
     Offset.signedDecimalArcseconds.reverseGet((10.0, -10.0)),
     Offset.signedDecimalArcseconds.reverseGet((10.0, 0.0)),
-    Offset.signedDecimalArcseconds.reverseGet((10.0, 10.0)),
+    Offset.signedDecimalArcseconds.reverseGet((10.0, 10.0))
   )
 }
 
@@ -389,8 +391,13 @@ object AladinContainer extends AladinCommon {
               }
             else Nil
 
-          val offsetIndicators = props.offsets.map { case o =>
-            o
+          val offsetIndicators = props.offsets.zipWithIndex.map { case (o, i) =>
+            for {
+              idx <- refineV[NonNegative](i).toOption
+              gs  <- props.selectedGuideStar
+              pa  <- gs.posAngle
+              c   <- baseCoordinates.value.offsetBy(pa, o)
+            } yield SVGTarget.OffsetIndicator(c, idx, o, ExploreStyles.ScienceTarget, 4)
           }
 
           val screenOffset =
@@ -410,23 +417,24 @@ object AladinContainer extends AladinCommon {
                 AladinZoomControl(aladinRef),
                 (resize.width, resize.height, fov.value)
                   .mapN(
-                    TargetsOverlay(_,
-                                   _,
-                                   _,
-                                   screenOffset,
-                                   baseCoordinates.value,
-                                   // Order matters
-                                   basePosition ++ candidates ++ sciencePositions
-                    )
-                  ),
-                (resize.width, resize.height, fov.value)
-                  .mapN(
                     SVGVisualizationOverlay(
                       _,
                       _,
                       _,
                       screenOffset,
                       vizShapes
+                    )
+                  ),
+                (resize.width, resize.height, fov.value)
+                  .mapN(
+                    TargetsOverlay(
+                      _,
+                      _,
+                      _,
+                      screenOffset,
+                      baseCoordinates.value,
+                      // Order matters
+                      basePosition ++ candidates ++ sciencePositions ++ offsetIndicators.flattenOption
                     )
                   ),
                 AladinComp

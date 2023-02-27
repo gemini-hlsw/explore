@@ -8,6 +8,7 @@ import cats.derived.*
 import cats.syntax.all.*
 import explore.components.ui.ExploreStyles
 import explore.utils.*
+import eu.timepit.refined.cats.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.svg_<^.*
 import lucuma.core.math.Coordinates
@@ -20,6 +21,7 @@ import react.common.Css
 import react.common.ReactFnProps
 
 import scala.math.*
+import eu.timepit.refined.types.numeric.NonNegInt
 
 sealed trait SVGTarget derives Eq {
   def coordinates: Coordinates
@@ -79,6 +81,8 @@ object SVGTarget {
 
   case class OffsetIndicator(
     coordinates: Coordinates,
+    pos:         NonNegInt,
+    offset:      Offset,
     css:         Css,
     radius:      Double,
     title:       Option[String] = None
@@ -139,6 +143,8 @@ object TargetsOverlay {
         val (viewBoxX, viewBoxY, viewBoxW, viewBoxH) =
           calculateViewBox(x, y, w, h, p.fov, p.screenOffset)
 
+        val svgRaw = Option(svgRef.raw.current).map(_.asInstanceOf[SVG])
+
         val svg = <.svg(
           JtsSvg,
           ^.untypedRef := svgRef,
@@ -191,7 +197,7 @@ object TargetsOverlay {
                   val sx       = p.width / (viewBoxW - viewBoxX).abs
                   val sy       = p.height / (viewBoxH - viewBoxY).abs
 
-                  CrossTarget(Option(svgRef.raw.current).map(_.asInstanceOf[SVG]),
+                  CrossTarget(svgRaw,
                               offP,
                               offQ,
                               maxP,
@@ -213,7 +219,7 @@ object TargetsOverlay {
                            title.map(<.title(_))
                   )
 
-                case (offP, offQ, SVGTarget.GuideStarTarget(_, css, radius, title)) =>
+                case (offP, offQ, SVGTarget.GuideStarTarget(_, css, radius, title))         =>
                   val pointCss = ExploreStyles.GuideStarTarget |+| css
                   <.circle(^.cx := scale(offP),
                            ^.cy := scale(offQ),
@@ -221,7 +227,13 @@ object TargetsOverlay {
                            pointCss,
                            title.map(<.title(_))
                   )
-                case (offP, offQ, SVGTarget.LineTo(_, d, css, title))               =>
+                case (offP, offQ, SVGTarget.OffsetIndicator(_, idx, o, css, radius, title)) =>
+                  val pointCss = ExploreStyles.GuideStarTarget |+| css
+                  val sx       = p.width / (viewBoxW - viewBoxX).abs
+                  val sy       = p.height / (viewBoxH - viewBoxY).abs
+                  OffsetSVG(svgRaw, offP, offQ, maxP, radius, pointCss, sx, sy, idx, o): VdomNode
+
+                case (offP, offQ, SVGTarget.LineTo(_, d, css, title))                       =>
                   val destOffset = d.diff(p.baseCoordinates).offset
                   // Offset amount
                   val destP      =

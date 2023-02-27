@@ -116,7 +116,7 @@ $brightness: var(--aladin-image-brightness);
 .targets-overlay-svg {
   pointer-events: none; // let aladin get pointer events
   position: absolute;
-  z-index: 30;
+  z-index: 40;
 
   circle,
   line {
