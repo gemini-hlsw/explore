@@ -117,7 +117,7 @@ object AsterismQueries:
       obsR.plannedTime.execution.toDuration,
       obsR.targetEnvironment.asterism.map(_.id).toSet,
       obsR.observingMode,
-      none, // obsR.visualizationTime,
+      obsR.visualizationTime.map(_.toInstant),
       obsR.posAngleConstraint.some,
       obsR.scienceRequirements.spectroscopy.wavelength
     )
