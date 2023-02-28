@@ -112,7 +112,7 @@ object ObsQueries:
   extension (data: ObsEditQuery.Data)
     def asObsEditData: Option[ObsEditData] =
       data.observation.map { obs =>
-        val itcSuccess = data.itc.flatMap(OdbItcResult.success.getOption)
+        val itcSuccess = none[OdbItcResult.Success]
         ObsEditData(
           id = obs.id,
           title = obs.title,

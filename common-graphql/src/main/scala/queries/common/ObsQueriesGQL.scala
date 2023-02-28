@@ -146,22 +146,6 @@ object ObsQueriesGQL {
           }
           observingMode $ObservingModeSubquery
         }
-
-        itc(programId: $$programId, observationId: $$obsId) {
-          result {
-            ... on ItcSuccess {
-              exposureTime $TimeSpanSubquery
-              exposures
-              signalToNoise
-            }
-            ... on ItcMissingParams {
-              params
-            }
-            ... on ItcServiceError {
-              message
-            }
-          }
-        }
       }
     """
 
