@@ -214,7 +214,7 @@ object ProgramTable:
                  icon = Icons.Close,
                  severity = Button.Severity.Danger,
                  onClick = cb
-          ).compact.some
+          ).small.compact.some
         )
 
       <.div(
