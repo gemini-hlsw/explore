@@ -124,7 +124,7 @@ object ConstraintsSummaryTable extends TableHooks:
               column(EditColumnId, ConstraintGroup.obsIds.get)
                 .setCell(cell =>
                   <.a(^.href := obsSetUrl(cell.value),
-                      ^.onClick ==> (_ => goToObsSet(cell.value)),
+                      ^.onClick ==> (_.preventDefaultCB *> goToObsSet(cell.value)),
                       Icons.Edit
                   )
                 )
@@ -209,11 +209,10 @@ object ConstraintsSummaryTable extends TableHooks:
                       .map(obsId =>
                         <.a(
                           ^.href := obsUrl(obsId),
-                          ^.onClick ==> (_ =>
-                            goToObs(obsId)
-                              >> props.expandedIds.mod(_ + cell.value)
-                              >> goToObsSet(ObsIdSet.one(obsId))
-                          ),
+                          ^.onClick ==> (_.preventDefaultCB
+                            >> goToObs(obsId)
+                            >> props.expandedIds.mod(_ + cell.value)
+                            >> goToObsSet(ObsIdSet.one(obsId))),
                           obsId.toString
                         )
                       )
