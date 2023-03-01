@@ -18,61 +18,59 @@ object GeneratedSequenceSQL {
   @GraphQL
   trait SequenceSteps extends GraphQLOperation[ObservationDB] {
     val document = s"""
-      query($$obsId: ObservationId!) {
-        observation(observationId: $$obsId) {
-          execution {
-            config:executionConfig {
-              instrument
-              ... on GmosNorthExecutionConfig {
-                staticN: static {
-                  stageMode
-                  detector
-                  mosPreImaging
-                  nodAndShuffle {
-                    ...nodAndShuffleFields
-                  }
-                }          
-                acquisitionN:acquisition {
-                  nextAtom {
-                    ...northSequenceFields
-                  }
-                  possibleFuture {
-                    ...northSequenceFields
-                  }
+      query($$programId: ProgramId!, $$obsId: ObservationId!) {
+        sequence(programId: $$programId, observationId: $$obsId) {
+          config:executionConfig {
+            instrument
+            ... on GmosNorthExecutionConfig {
+              staticN: static {
+                stageMode
+                detector
+                mosPreImaging
+                nodAndShuffle {
+                  ...nodAndShuffleFields
                 }
-                scienceN:science {
-                  nextAtom {
-                    ...northSequenceFields
-                  }
-                  possibleFuture {
-                    ...northSequenceFields
-                  }
+              }          
+              acquisitionN:acquisition {
+                nextAtom {
+                  ...northSequenceFields
+                }
+                possibleFuture {
+                  ...northSequenceFields
                 }
               }
-              ... on GmosSouthExecutionConfig {
-                staticS: static {
-                  stageMode
-                  detector
-                  mosPreImaging
-                  nodAndShuffle {
-                    ...nodAndShuffleFields
-                  }
-                }          
-                acquisitionS: acquisition {
-                  nextAtom {
-                    ...southSequenceFields
-                  }
-                  possibleFuture {
-                    ...southSequenceFields
-                  }            
+              scienceN:science {
+                nextAtom {
+                  ...northSequenceFields
                 }
-                scienceS:science {
-                  nextAtom {
-                    ...southSequenceFields
-                  }
-                  possibleFuture {
-                    ...southSequenceFields
-                  }
+                possibleFuture {
+                  ...northSequenceFields
+                }
+              }
+            }
+            ... on GmosSouthExecutionConfig {
+              staticS: static {
+                stageMode
+                detector
+                mosPreImaging
+                nodAndShuffle {
+                  ...nodAndShuffleFields
+                }
+              }          
+              acquisitionS: acquisition {
+                nextAtom {
+                  ...southSequenceFields
+                }
+                possibleFuture {
+                  ...southSequenceFields
+                }            
+              }
+              scienceS:science {
+                nextAtom {
+                  ...southSequenceFields
+                }
+                possibleFuture {
+                  ...southSequenceFields
                 }
               }
             }
@@ -197,10 +195,8 @@ object GeneratedSequenceSQL {
     )
 
     object Data {
-      object Observation {
-        object Execution {
-          type Config = FutureExecutionConfig
-        }
+      object Sequence {
+        type Config = FutureExecutionConfig
       }
     }
   }

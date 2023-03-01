@@ -57,6 +57,7 @@ import lucuma.core.math.WavelengthDither
 import lucuma.core.math.units.Micrometer
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.Observation
+import lucuma.core.model.Program
 import lucuma.core.syntax.all.*
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
@@ -93,6 +94,7 @@ import scalajs.js
 import scalajs.js.JSConverters.*
 
 sealed trait AdvancedConfigurationPanel[T <: ObservingMode, Input]:
+  def programId: Program.Id
   def obsId: Observation.Id
   def title: String
   def subtitle: Option[NonEmptyString]
@@ -783,6 +785,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
           ),
           <.div(ExploreStyles.AdvancedConfigurationButtons)(
             SequenceEditorPopup(
+              props.programId,
               props.obsId,
               props.title,
               props.subtitle,
@@ -858,6 +861,7 @@ object AdvancedConfigurationPanel {
 
   // Gmos North Long Slit
   case class GmosNorthLongSlit(
+    programId:                Program.Id,
     obsId:                    Observation.Id,
     title:                    String,
     subtitle:                 Option[NonEmptyString],
@@ -1061,6 +1065,7 @@ object AdvancedConfigurationPanel {
 // Gmos South Long Slit
 
   case class GmosSouthLongSlit(
+    programId:                Program.Id,
     obsId:                    Observation.Id,
     title:                    String,
     subtitle:                 Option[NonEmptyString],

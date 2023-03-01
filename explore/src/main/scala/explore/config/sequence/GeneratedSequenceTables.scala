@@ -24,7 +24,7 @@ object GeneratedSequenceTables:
       .render(props =>
         Panel()(
           <.div(ExploreStyles.SequencesPanel)(
-            VisitsViewer(props.obsId),
+            // VisitsViewer(props.obsId),
             <.h3("Acquisition"),
             GmosSequenceTable(
               props.config.acquisition.nextAtom +: props.config.acquisition.possibleFuture
