@@ -13,6 +13,7 @@ import explore.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
+import lucuma.core.model.Program
 import lucuma.core.util.NewType
 import lucuma.ui.primereact.LucumaStyles
 import lucuma.ui.syntax.all.*
@@ -24,6 +25,7 @@ import react.primereact.Dialog
 import react.primereact.DialogPosition
 
 case class SequenceEditorPopup(
+  programId:      Program.Id,
   obsId:          Observation.Id,
   title:          String,
   subtitle:       Option[NonEmptyString],
@@ -73,7 +75,7 @@ object SequenceEditorPopup:
                 props.offsetsControl(changed.set(Pot.pending))
               )
             ),
-            GeneratedSequenceViewer(props.obsId, changed)
+            GeneratedSequenceViewer(props.programId, props.obsId, changed)
           )
         )
       }

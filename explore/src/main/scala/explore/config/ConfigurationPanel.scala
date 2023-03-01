@@ -241,6 +241,7 @@ object ConfigurationPanel:
                 optNorthAligner.map(northAligner =>
                   AdvancedConfigurationPanel
                     .GmosNorthLongSlit(
+                      props.programId,
                       props.obsId,
                       props.title,
                       props.subtitle,
@@ -256,6 +257,7 @@ object ConfigurationPanel:
                 optSouthAligner.map(southAligner =>
                   AdvancedConfigurationPanel
                     .GmosSouthLongSlit(
+                      props.programId,
                       props.obsId,
                       props.title,
                       props.subtitle,

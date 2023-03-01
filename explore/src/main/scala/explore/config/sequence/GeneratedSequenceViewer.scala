@@ -14,14 +14,18 @@ import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
+import lucuma.core.model.Program
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import queries.common.GeneratedSequenceSQL._
 import queries.common.ObsQueriesGQL
 import react.common.ReactFnProps
 
-case class GeneratedSequenceViewer(obsId: Observation.Id, changed: View[Pot[Unit]])
-    extends ReactFnProps(GeneratedSequenceViewer.component)
+case class GeneratedSequenceViewer(
+  programId: Program.Id,
+  obsId:     Observation.Id,
+  changed:   View[Pot[Unit]]
+) extends ReactFnProps(GeneratedSequenceViewer.component)
 
 object GeneratedSequenceViewer:
   private type Props = GeneratedSequenceViewer
@@ -34,8 +38,8 @@ object GeneratedSequenceViewer:
         import ctx.given
 
         SequenceSteps
-          .query(props.obsId)
-          .map(_.observation.map(_.execution.config))
+          .query(props.programId, props.obsId)
+          .map(_.sequence.map(_.config))
           .attemptPot
           .resetOnResourceSignals(
             ObsQueriesGQL.ObservationEditSubscription.subscribe[IO](props.obsId)
