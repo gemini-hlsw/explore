@@ -32,6 +32,7 @@ import lucuma.core.math.Redshift
 import lucuma.core.math.RightAscension
 import lucuma.core.math.dimensional.Measure
 import lucuma.core.math.validation.MathValidators
+import lucuma.core.model.CatalogInfo
 import lucuma.core.model.Target
 import lucuma.core.syntax.display.*
 import lucuma.core.util.Display
@@ -39,6 +40,7 @@ import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.typed.{tanstackTableCore => raw}
 import lucuma.ui.syntax.all.given
+import monocle.std.option.*
 import org.scalablytyped.runtime.StringDictionary
 
 object TargetColumns:
@@ -55,12 +57,18 @@ object TargetColumns:
   val ParallaxColumnId: ColumnId   = ColumnId("parallax")
   val MorphologyColumnId: ColumnId = ColumnId("morphology")
   val SEDColumnId: ColumnId        = ColumnId("sed")
+  val CatalogName: ColumnId        = ColumnId("catalogName")
+  val CatalogId: ColumnId          = ColumnId("catalogId")
+  val CatalogObjectType: ColumnId  = ColumnId("catalogObjectType")
 
   def bandColumnId(band: Band): ColumnId = ColumnId(s"${band.tag}mag")
 
   val baseColNames: Map[ColumnId, String] = Map(
-    TypeColumnId -> " ",
-    NameColumnId -> "Name"
+    TypeColumnId      -> " ",
+    NameColumnId      -> "Name",
+    CatalogName       -> "Catalog",
+    CatalogId         -> "Catalog Id",
+    CatalogObjectType -> "Catalog Type"
   )
 
   val siderealColNames: Map[ColumnId, String] = Map(
@@ -109,7 +117,42 @@ object TargetColumns:
         baseColumn(NameColumnId, Target.name.get)
           .setCell(_.value.map(_.toString).orEmpty)
           .setSize(120.toPx)
-          .sortableBy(_.toString)
+          .sortableBy(_.map(_.toString))
+      )
+
+    val catalogColumns =
+      List(
+        baseColumn(
+          CatalogName,
+          Target.catalogInfo.andThen(some).andThen(CatalogInfo.catalog).getOption
+        )
+          .setCell(_.value.flatten.map(_.shortName).orEmpty)
+          .setSize(100.toPx)
+          .sortableBy(_.flatten.map(_.toString)),
+        baseColumn(
+          CatalogId,
+          Target.catalogInfo.andThen(some).getOption(_).map(info => (info.id, info.objectUrl))
+        ).setCell(
+          _.value.flatten
+            .map((id, uriOpt) =>
+              uriOpt.fold[VdomNode](id.value)(uri =>
+                <.a(^.href := uri.toString, ^.target.blank)(id.value)
+              )
+            )
+            .orEmpty
+        ).setSize(100.toPx)
+          .sortableBy(_.flatten.map(_._1).toString),
+        baseColumn(
+          CatalogObjectType,
+          Target.catalogInfo
+            .andThen(some)
+            .andThen(CatalogInfo.objectType)
+            .getOption
+            .andThen(_.flatten)
+        )
+          .setCell(_.value.flatten.map(_.value).orEmpty)
+          .setSize(100.toPx)
+          .sortableBy(_.flatten.map(_.toString))
       )
 
   trait SiderealColBuilder[D](
@@ -221,7 +264,7 @@ object TargetColumns:
       extends BaseColBuilder(colDef, getTarget)
       with SiderealColBuilder(colDef, getTarget.andThen(_.flatMap(Target.sidereal.getOption))):
     // with NonsiderealColBuilder:
-    lazy val allColumns = baseColumns ++ siderealColumns
+    lazy val allColumns = baseColumns ++ siderealColumns ++ catalogColumns
 
   case class NonBaseSiderealColumnBuilder[D](
     colDef:    ColumnDef.Applied[D],

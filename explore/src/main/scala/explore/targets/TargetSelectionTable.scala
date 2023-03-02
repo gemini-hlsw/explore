@@ -73,7 +73,6 @@ object TargetSelectionTable:
     .useMemoBy((props, _) => props.targets)((_, _) => identity)
     // table
     .useReactTableBy((_, cols, rows) => TableOptions(cols, rows, enableSorting = true))
-    // .useMemo
     .render((props, _, _, table) =>
       PrimeTable(
         table,
