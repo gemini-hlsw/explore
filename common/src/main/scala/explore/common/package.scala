@@ -30,11 +30,11 @@ package object common {
     def get: A = self.value.get
 
     def viewMod(toInput: A => T => T)(implicit
-      logger:            Logger[DefaultA]
+      logger: Logger[DefaultA]
     ): ReuseView[A] = self.map(_.viewMod(toInput))
 
     def view(toInput: A => T)(implicit
-      logger:         Logger[DefaultA]
+      logger: Logger[DefaultA]
     ): ReuseView[A] = self.map(_.view(toInput))
 
     def zoom[B, S](

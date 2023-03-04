@@ -31,7 +31,7 @@ object GmosSequenceTable:
   private val ColDef = ColumnDef[GmosSequenceRow.FutureStep]
 
   private def drawBracket(rows: Int): VdomElement =
-    svg(^.width   := "1px", ^.height := "15px")(
+    svg(^.width := "1px", ^.height := "15px")(
       use(
         transform := s"scale(1, ${math.pow(rows.toDouble, 1.08)})",
         xlinkHref := "/bracket.svg#bracket"

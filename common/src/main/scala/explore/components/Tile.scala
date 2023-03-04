@@ -39,7 +39,7 @@ case class Tile(
   bodyClass:         Option[Css] = None, // applied to tile body
   tileClass:         Option[Css] = None, // applied to the tile
   tileTitleClass:    Option[Css] = None  // applied to the title
-)(val render:        Tile.RenderInTitle => VdomNode)
+)(val render: Tile.RenderInTitle => VdomNode)
     extends ReactFnProps[Tile](Tile.component) {
   def showMaximize: Boolean =
     state === TileSizeState.Minimized || (canMaximize && state === TileSizeState.Normal)

@@ -17,8 +17,8 @@ import org.typelevel.log4cats.Logger
  * Combines a view of a model `M` and a view of `UndoStacks` over `M`.
  */
 case class UndoContext[M](
-  stacks:              View[UndoStacks[DefaultA, M]],
-  model:               View[M]
+  stacks: View[UndoStacks[DefaultA, M]],
+  model:  View[M]
 )(implicit val logger: Logger[DefaultA])
     extends UndoSetter[M] {
   private lazy val undoStack: View[UndoStack[DefaultA, M]] = stacks.zoom(UndoStacks.undo)
@@ -72,7 +72,7 @@ case class UndoContext[M](
     setter:    A => M => M,
     onSet:     (M, A) => DefaultA[Unit],
     onRestore: (M, A) => DefaultA[Unit]
-  )(v:         A): DefaultS[Unit] =
+  )(v: A): DefaultS[Unit] =
     for {
       _ <- push(undoStack)(Restorer[DefaultA, M, A](model.get, getter, setter, onRestore))
       _ <- reset(redoStack)
@@ -85,7 +85,7 @@ case class UndoContext[M](
     setter:    A => M => M,
     onSet:     (M, A) => DefaultA[Unit],
     onRestore: (M, A) => DefaultA[Unit]
-  )(f:         A => A): DefaultS[Unit] =
+  )(f: A => A): DefaultS[Unit] =
     set(getter, setter, onSet, onRestore)(f(getter(model.get)))
 
   val undo: DefaultS[Unit] = undoStacks >>= restore

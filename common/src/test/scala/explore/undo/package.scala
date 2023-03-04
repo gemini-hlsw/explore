@@ -8,7 +8,7 @@ import crystal.ViewF
 import japgolly.scalajs.react.ReactCats.*
 import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
 
-package object undo                           {
+package object undo {
   type View[A] = ViewF[DefaultS, A]
 
   object View {

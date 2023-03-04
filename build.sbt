@@ -11,7 +11,7 @@ ThisBuild / ScalafixConfig / bspEnabled.withRank(KeyRanks.Invisible) := false
 ThisBuild / evictionErrorLevel := Level.Info
 ThisBuild / resolvers ++= Resolver.sonatypeOssRepos("snapshots")
 
-ThisBuild / coverageEnabled    := false
+ThisBuild / coverageEnabled := false
 
 addCommandAlias(
   "quickTest",
@@ -391,7 +391,7 @@ def runLinters(mode: String) = WorkflowStep.Use(
 )
 
 ThisBuild / githubWorkflowGeneratedUploadSteps := Seq.empty
-ThisBuild / githubWorkflowSbtCommand := "sbt -v -J-Xmx6g"
+ThisBuild / githubWorkflowSbtCommand           := "sbt -v -J-Xmx6g"
 ThisBuild / githubWorkflowBuildPreamble ++= Seq(setupNode, npmInstall)
 ThisBuild / githubWorkflowEnv += faNpmAuthToken
 

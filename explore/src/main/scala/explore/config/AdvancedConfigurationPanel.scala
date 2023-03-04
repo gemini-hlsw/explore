@@ -876,7 +876,7 @@ object AdvancedConfigurationPanel {
       )
       with AdvancedConfigurationPanel[
         ObservingMode.GmosNorthLongSlit,
-        GmosNorthLongSlitInput,
+        GmosNorthLongSlitInput
       ]
 
   object GmosNorthLongSlit
@@ -886,7 +886,7 @@ object AdvancedConfigurationPanel {
         AdvancedConfigurationPanel.GmosNorthLongSlit,
         GmosNorthGrating,
         GmosNorthFilter,
-        GmosNorthFpu,
+        GmosNorthFpu
       ] {
 
     @inline override protected def revertCustomizations(
@@ -1090,7 +1090,7 @@ object AdvancedConfigurationPanel {
         AdvancedConfigurationPanel.GmosSouthLongSlit,
         GmosSouthGrating,
         GmosSouthFilter,
-        GmosSouthFpu,
+        GmosSouthFpu
       ] {
 
     // @inline override protected def isCustomized(aligner: AA): Boolean =

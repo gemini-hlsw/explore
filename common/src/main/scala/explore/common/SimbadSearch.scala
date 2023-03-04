@@ -23,8 +23,8 @@ object SimbadSearch {
   import RetryHelpers.*
 
   def search[F[_]](
-    term:       NonEmptyString,
-    wildcard:   Boolean = false
+    term:     NonEmptyString,
+    wildcard: Boolean = false
   )(implicit F: Async[F], logger: Logger[F]): F[List[CatalogTargetResult]] = {
     val baseURL =
       uri"https://simbad.u-strasbg.fr/simbad/sim-id"

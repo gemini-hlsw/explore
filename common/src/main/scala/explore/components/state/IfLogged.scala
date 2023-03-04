@@ -24,7 +24,7 @@ import queries.schemas.UserPreferencesDB
 import react.common.*
 
 case class IfLogged(view: View[RootModel])(
-  val render:             (UserVault, IO[Unit]) => VdomNode
+  val render: (UserVault, IO[Unit]) => VdomNode
 ) extends ReactFnProps(IfLogged.component)
 
 object IfLogged:

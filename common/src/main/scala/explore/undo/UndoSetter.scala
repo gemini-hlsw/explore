@@ -20,28 +20,28 @@ trait UndoSetter[M] { self =>
     setter:    A => M => M,
     onSet:     (M, A) => DefaultA[Unit],
     onRestore: (M, A) => DefaultA[Unit]
-  )(v:         A): DefaultS[Unit]
+  )(v: A): DefaultS[Unit]
 
   def set[A](
     getter:    M => A,
     setter:    A => M => M,
     onSet:     A => DefaultA[Unit],
     onRestore: A => DefaultA[Unit]
-  )(v:         A): DefaultS[Unit] =
+  )(v: A): DefaultS[Unit] =
     set(getter, setter, (_: M, a: A) => onSet(a), (_: M, a: A) => onRestore(a))(v)
 
   def set[A](
     getter: M => A,
     setter: A => M => M,
     onSet:  (M, A) => DefaultA[Unit]
-  )(v:      A): DefaultS[Unit] =
+  )(v: A): DefaultS[Unit] =
     set(getter, setter, onSet, onSet)(v)
 
   def set[A](
     getter: M => A,
     setter: A => M => M,
     onSet:  A => DefaultA[Unit]
-  )(v:      A): DefaultS[Unit] =
+  )(v: A): DefaultS[Unit] =
     set(getter, setter, (_: M, a: A) => onSet(a))(v)
 
   def mod[A](
@@ -49,28 +49,28 @@ trait UndoSetter[M] { self =>
     setter:    A => M => M,
     onSet:     (M, A) => DefaultA[Unit],
     onRestore: (M, A) => DefaultA[Unit]
-  )(f:         A => A): DefaultS[Unit]
+  )(f: A => A): DefaultS[Unit]
 
   def mod[A](
     getter:    M => A,
     setter:    A => M => M,
     onSet:     A => DefaultA[Unit],
     onRestore: A => DefaultA[Unit]
-  )(f:         A => A): DefaultS[Unit] =
+  )(f: A => A): DefaultS[Unit] =
     mod(getter, setter, (_: M, a: A) => onSet(a), (_: M, a: A) => onRestore(a))(f)
 
   def mod[A](
     getter: M => A,
     setter: A => M => M,
     onSet:  (M, A) => DefaultA[Unit]
-  )(f:      A => A): DefaultS[Unit] =
+  )(f: A => A): DefaultS[Unit] =
     mod(getter, setter, onSet, onSet)(f)
 
   def mod[A](
     getter: M => A,
     setter: A => M => M,
     onSet:  A => DefaultA[Unit]
-  )(f:      A => A): DefaultS[Unit] =
+  )(f: A => A): DefaultS[Unit] =
     mod(getter, setter, (_: M, a: A) => onSet(a))(f)
 
   def zoom[N](getN: M => N, modN: (N => N) => (M => M)): UndoSetter[N] =
@@ -83,7 +83,7 @@ trait UndoSetter[M] { self =>
         setter:    A => (N => N),
         onSet:     (N, A) => DefaultA[Unit],
         onRestore: (N, A) => DefaultA[Unit]
-      )(v:         A): DefaultS[Unit] =
+      )(v: A): DefaultS[Unit] =
         self.set(getter.compose(getN),
                  modN.compose(setter),
                  (m, a) => onSet(getN(m), a),
@@ -95,7 +95,7 @@ trait UndoSetter[M] { self =>
         setter:    A => (N => N),
         onSet:     (N, A) => DefaultA[Unit],
         onRestore: (N, A) => DefaultA[Unit]
-      )(f:         A => A): DefaultS[Unit] =
+      )(f: A => A): DefaultS[Unit] =
         self.mod(getter.compose(getN),
                  modN.compose(setter),
                  (m, a) => onSet(getN(m), a),
