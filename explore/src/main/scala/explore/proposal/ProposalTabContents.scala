@@ -65,10 +65,10 @@ object ProposalTabContents:
         .runAsync
 
   private def renderFn(
-    programId:       Program.Id,
-    user:            Option[User],
-    undoStacks:      View[UndoStacks[IO, Proposal]],
-    ctx:             AppContext[IO]
+    programId:  Program.Id,
+    user:       Option[User],
+    undoStacks: View[UndoStacks[IO, Proposal]],
+    ctx:        AppContext[IO]
   )(optProposalInfo: View[Option[ProposalInfo]]): VdomNode =
     import ctx.given
 

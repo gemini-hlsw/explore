@@ -254,8 +254,8 @@ object ObsTabTiles:
           )
 
         def setCurrentTarget(programId: Program.Id, oid: Option[Observation.Id])(
-          tid:                          Option[Target.Id],
-          via:                          SetRouteVia
+          tid: Option[Target.Id],
+          via: SetRouteVia
         ): Callback =
           (potAsterism.toOption, tid)
             // When selecting the current target focus the asterism zipper

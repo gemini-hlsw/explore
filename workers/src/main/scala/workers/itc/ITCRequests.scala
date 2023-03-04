@@ -43,7 +43,7 @@ object ITCRequests:
   def parTraverseN[F[_]: Concurrent: Parallel, G[_]: Traverse, A, B](
     n:  Long,
     ga: G[A]
-  )(f:  A => F[B]) =
+  )(f: A => F[B]) =
     Semaphore[F](n).flatMap { s =>
       ga.parTraverse(a => s.permit.use(_ => f(a)))
     }

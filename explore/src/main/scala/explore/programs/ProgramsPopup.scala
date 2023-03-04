@@ -42,7 +42,7 @@ object ProgramsPopup {
     onClose:    Option[Callback],
     undoStacks: View[ModelUndoStacks[IO]],
     ctx:        AppContext[IO]
-  )(programId:  Program.Id): Callback =
+  )(programId: Program.Id): Callback =
     onClose.orEmpty >>
       undoStacks.set(ModelUndoStacks[IO]()) >>
       (if (onClose.isEmpty) ctx.replacePage(AppTab.Overview, programId, Focused.None)

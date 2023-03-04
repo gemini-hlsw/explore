@@ -169,13 +169,13 @@ extension [F[_]: Sync](toastRef: Deferred[F, ToastRef])
 
 extension [F[_]: Sync](f: F[Unit])
   def withToast(
-    ctx:  AppContext[F]
+    ctx: AppContext[F]
   )(text: String, severity: Message.Severity = Message.Severity.Info): F[Unit] =
     f <* ctx.toastRef.showToast(text, severity)
 
 extension (f:       Callback)
   def showToastCB(
-    ctx:  AppContext[IO]
+    ctx: AppContext[IO]
   )(text: String, severity: Message.Severity = Message.Severity.Info): Callback =
     import ctx.given
     f.to[IO].withToast(ctx)(text, severity).runAsync

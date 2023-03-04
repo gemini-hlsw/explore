@@ -63,7 +63,7 @@ trait WorkerServer[F[_]: Async, T: Pickler](using Monoid[F[Unit]]):
     self:         DedicatedWorkerGlobalScope,
     handlerFn:    Invocation => F[Unit],
     cancelTokens: Ref[F, Map[WorkerProcessId, F[Unit]]]
-  )(dispatcher:   Dispatcher[F])(using Logger[F]): F[Unit] =
+  )(dispatcher: Dispatcher[F])(using Logger[F]): F[Unit] =
     F.delay(
       self.onmessage = (msg: dom.MessageEvent) =>
         dispatcher.unsafeRunAndForget(

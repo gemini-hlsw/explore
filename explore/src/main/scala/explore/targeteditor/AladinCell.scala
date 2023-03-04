@@ -143,7 +143,7 @@ object AladinCell extends ModelOptics with AladinCommon:
   private def offsetViews(
     props:   Props,
     options: View[Pot[(UserGlobalPreferences, TargetVisualOptions)]]
-  )(ctx:     AppContext[IO]) = {
+  )(ctx: AppContext[IO]) = {
     import ctx.given
 
     val offsetView =

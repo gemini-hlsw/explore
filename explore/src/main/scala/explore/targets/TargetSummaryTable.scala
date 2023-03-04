@@ -249,11 +249,11 @@ object TargetSummaryTable extends TableHooks:
               <.div(
                 ExploreStyles.TableSelectionToolbar,
                 HelpIcon("target/main/target-import.md".refined),
-                <.label(^.cls     := "pl-compact p-component p-button p-fileupload",
+                <.label(^.cls := "pl-compact p-component p-button p-fileupload",
                         ^.htmlFor := "target-import",
                         Icons.FileArrowUp
                 ),
-                <.input(^.tpe     := "file",
+                <.input(^.tpe := "file",
                         ^.onChange ==> onTextChange,
                         ^.id      := "target-import",
                         ^.name    := "file",
