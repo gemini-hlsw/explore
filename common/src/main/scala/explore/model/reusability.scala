@@ -128,3 +128,5 @@ object reusability:
   given Reusability[Visit] = Reusability.byEq
 
   given Reusability[StepRecord] = Reusability.byEq
+
+  given Reusability[ApiKey] = Reusability.byEq

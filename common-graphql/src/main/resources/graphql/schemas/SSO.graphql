@@ -1,0 +1,56 @@
+
+type Query {
+  user: User!
+  role: Role!
+}
+
+type Mutation {
+
+  "Create and return an API key for the specified role, if owned by the current user."
+  createApiKey(role: RoleId!): String!
+
+  "Delete the specified API key, if owned by the current user. Returns the constant value `true`."
+  deleteApiKey(id: ApiKeyId!): Boolean!
+
+}
+
+type Subscription {
+
+  "A subscription that yields revoked API key identifiers."
+  apiKeyRevocation: ApiKeyId!
+
+}
+
+type User {
+  id:           UserId!
+  orcidId:      OrcidId!
+  givenName:    String
+  familyName:   String,
+  creditName:   String,
+  email:        String,
+  roles:        [Role!]!
+  apiKeys:      [ApiKey!]!
+}
+
+type Role {
+  id:      RoleId!
+  type:    RoleType!
+  partner: Partner
+  user:    User!
+}
+
+type ApiKey {
+  id:   ApiKeyId!
+  user: User!
+  role: Role!
+}
+
+scalar UserId
+scalar OrcidId
+scalar RoleId
+scalar ApiKeyId
+
+enum RoleType { PI NGO STAFF ADMIN }
+enum Partner { AR BR CA CL KR UH US }
+
+

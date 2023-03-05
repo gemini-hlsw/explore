@@ -23,6 +23,7 @@ import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB
 import org.typelevel.log4cats.Logger
 import queries.schemas.ITC
+import queries.schemas.SSO
 import queries.schemas.UserPreferencesDB
 import react.primereact.ToastRef
 import workers.WebWorkerF
@@ -52,6 +53,7 @@ case class AppContext[F[_]](
   given WebSocketClient[F, ObservationDB]     = clients.odb
   given WebSocketClient[F, UserPreferencesDB] = clients.preferencesDB
   given TransactionalClient[F, ITC]           = clients.itc
+  given TransactionalClient[F, SSO]           = clients.sso
 
   given itcWorker: WorkerClient[F, ItcMessage.Request]         = workerClients.itc
   given catalogWorker: WorkerClient[F, CatalogMessage.Request] = workerClients.catalog
@@ -73,7 +75,12 @@ object AppContext:
     for {
       clients <-
         GraphQLClients
-          .build[F](config.odbURI, config.preferencesDBURI, config.itcURI, reconnectionStrategy)
+          .build[F](config.odbURI,
+                    config.preferencesDBURI,
+                    config.itcURI,
+                    config.sso.uri,
+                    reconnectionStrategy
+          )
       version  = utils.version(config.environment)
     } yield AppContext[F](
       version,

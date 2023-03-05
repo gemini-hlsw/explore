@@ -66,7 +66,6 @@ import react.aladin.Fov
 import react.common.*
 import react.primereact.Button
 import react.primereact.Checkbox
-import react.primereact.Divider
 import react.primereact.MenuItem
 import react.primereact.PopupMenu
 import react.primereact.PopupMenuRef
