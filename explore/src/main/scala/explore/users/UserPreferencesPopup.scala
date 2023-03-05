@@ -40,14 +40,17 @@ import org.http4s.Headers
 import org.http4s.headers.Authorization
 import org.http4s.syntax.all.*
 import org.typelevel.ci.*
+import org.typelevel.log4cats.Logger
 import queries.common.SSOQueriesGQL.UserQuery.{Data => SSOUser}
 import queries.common.SSOQueriesGQL.*
 import queries.schemas.SSO
 import react.common.ReactFnProps
 import react.primereact.Button
+import react.primereact.ConfirmDialog
 import react.primereact.Dialog
 import react.primereact.DialogPosition
 import react.primereact.Divider
+import react.primereact.PrimeStyles
 
 case class UserPreferencesPopup(onClose: Option[Callback] = none)
     extends ReactFnProps(UserPreferencesPopup.component)
@@ -97,10 +100,25 @@ object UserPreferencesContent:
   private val RoleColumnId: ColumnId    = ColumnId("role")
 
   private def deleteKey(key: String, adding: View[IsAdding])(using
-    TransactionalClient[IO, SSO]
+    TransactionalClient[IO, SSO],
+    Logger[IO]
   ) =
-    (adding.set(IsAdding(true)).to[IO] *>
-      DeleteApiKey.execute[IO](key)).guarantee(adding.set(IsAdding(false)).to[IO]).void
+    ConfirmDialog.confirmDialog(
+      message = <.div(
+        s"This action will delete the key with id: $key. This action cannot be reversed."
+      ),
+      header = "Key delete",
+      acceptLabel = "Yes, delete",
+      position = DialogPosition.Top,
+      accept = (adding.set(IsAdding(true)).to[IO] *>
+        DeleteApiKey.execute[IO](key))
+        .guarantee(adding.set(IsAdding(false)).to[IO])
+        .void
+        .runAsync,
+      acceptClass = PrimeStyles.ButtonSmall,
+      rejectClass = PrimeStyles.ButtonSmall,
+      icon = Icons.SkullCrossBones.withColor("red")
+    )
 
   private def createNewKey(newRoleType: RoleType, adding: View[IsAdding])(using
     TransactionalClient[IO, SSO]
@@ -147,7 +165,7 @@ object UserPreferencesContent:
                   icon = Icons.Trash,
                   clazz = ExploreStyles.BlendedButton,
                   severity = Button.Severity.Secondary,
-                  onClick = deleteKey(keyId, isAdding).runAsync,
+                  onClick = deleteKey(keyId, isAdding),
                   tooltip = "Delete key"
                 ).mini.compact
               )
@@ -181,6 +199,7 @@ object UserPreferencesContent:
           )
 
         React.Fragment(
+          Divider(),
           <.div(LucumaStyles.FormColumnCompact)(
             <.label(LucumaStyles.FormFieldLabel, "ID: "),
             <.label(LucumaStyles.FormField, id),
@@ -216,7 +235,8 @@ object UserPreferencesContent:
               value = newRoleType,
               disabled = adding.get.value
             )
-          )
+          ),
+          ConfirmDialog()
         )
       }(user)
     }
