@@ -43,3 +43,12 @@ object SSOQueriesGQL:
           createApiKey(role: $roleId)
         }
     """
+
+  @GraphQL
+  trait DeleteApiKey extends GraphQLOperation[SSO]:
+    val document =
+      """
+        mutation($keyId: ApiKeyId!) {
+          deleteApiKey(id: $keyId)
+        }
+    """

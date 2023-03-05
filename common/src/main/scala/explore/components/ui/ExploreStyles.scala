@@ -135,6 +135,7 @@ object ExploreStyles:
 
   val ApiKeysPopup = Css("api-keys-popup")
   val ApiKeysTable = Css("api-keys-table")
+  val ApiKeyDelete = Css("api-keys-delete")
 
   val ProgramsPopup                = Css("programs-popup")
   val ProgramTable                 = Css("program-table")

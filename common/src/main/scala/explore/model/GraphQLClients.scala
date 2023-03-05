@@ -54,9 +54,8 @@ object GraphQLClients:
       ssoClient   <-
         val ssoURL =
           Uri(Scheme.fromString(s"wss").toOption,
-              ssoURI.host.map(h => Authority(host = h))
-              // path"graphql"
+              ssoURI.host.map(h => Authority(host = h)),
+              path"ws"
           )
-        println(ssoURI.host)
         ApolloWebSocketClient.of[F, SSO](ssoURL, "SSO", reconnectionStrategy)
     } yield GraphQLClients(odbClient, prefsClient, itcClient, ssoClient)

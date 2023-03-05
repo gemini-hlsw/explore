@@ -1171,6 +1171,15 @@ $search-preview-margin: 5px;
 }
 
 // ------
+// Api keyys Popup
+// ------
+.api-keys-popup.p-dialog {
+  .api-keys-delete {
+    text-align: right;
+  }
+}
+
+// ------
 // About and login dialogs
 // ------
 i.icon.user-astronaut::before {
