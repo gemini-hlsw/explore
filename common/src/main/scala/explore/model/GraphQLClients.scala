@@ -9,12 +9,12 @@ import cats.syntax.all.*
 import clue.*
 import io.circe.Json
 import lucuma.schemas.*
+import org.http4s.Uri.Authority
+import org.http4s.Uri.Scheme
 import org.http4s.*
 import org.http4s.syntax.all.*
 import org.typelevel.log4cats.Logger
 import queries.schemas.*
-import org.http4s.Uri.Scheme
-import org.http4s.Uri.Authority
 
 case class GraphQLClients[F[_]: Async: Parallel] protected (
   odb:           WebSocketClient[F, ObservationDB],

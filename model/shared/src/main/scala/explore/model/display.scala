@@ -5,6 +5,7 @@ package explore.model
 
 import cats.syntax.all.*
 import eu.timepit.refined.cats.*
+import explore.model.enums.RoleType
 import lucuma.core.enums.*
 import lucuma.core.math.BoundedInterval
 import lucuma.core.math.BoundedInterval.*
@@ -20,7 +21,6 @@ import lucuma.core.util.Display
 import lucuma.core.validation.InputValidSplitEpi
 
 import java.text.DecimalFormat
-import explore.model.enums.RoleType
 
 trait DisplayImplicits:
   given Display[Site] =

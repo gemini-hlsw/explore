@@ -23,6 +23,7 @@ import explore.model.enums.ExecutionEnvironment
 import explore.programs.ProgramsPopup
 import explore.syntax.ui.*
 import explore.syntax.ui.given
+import explore.users.UserPreferencesPopup
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.callback.CallbackCatsEffect.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -46,7 +47,6 @@ import react.primereact.PopupTieredMenu
 import react.primereact.Toolbar
 import react.primereact.hooks.all.*
 import typings.loglevel.mod.LogLevelDesc
-import explore.users.UserPreferencesPopup
 
 case class TopBar(
   user:        User,

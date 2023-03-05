@@ -3,52 +3,51 @@
 
 package explore.users
 
-import cats.syntax.all.*
+import cats.effect.IO
 import cats.implicits.catsKernelOrderingForOrder
+import cats.syntax.all.*
+import clue.TransactionalClient
+import crystal.react.View
+import crystal.react.hooks.*
+import crystal.react.implicits.*
+import crystal.react.reuse.*
+import explore.Icons
+import explore.components.ui.ExploreStyles
+import explore.model.ApiKey
+import explore.model.AppContext
+import explore.model.display.given
+import explore.model.enums.RoleType
+import explore.model.reusability.given
+import explore.syntax.ui.given
+import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import crystal.react.hooks.*
-import lucuma.core.util.NewType
-import explore.model.AppContext
-
-import react.primereact.Dialog
-import react.primereact.DialogPosition
-import explore.components.ui.ExploreStyles
-import react.common.ReactFnProps
-import org.http4s.Headers
-import org.typelevel.ci.*
-import org.http4s.syntax.all.*
-import org.http4s.headers.Authorization
-import queries.common.SSOQueriesGQL.*
-import queries.common.SSOQueriesGQL.UserQuery.{Data => SSOUser}
-import queries.schemas.SSO
-import cats.effect.IO
-import org.http4s.Credentials
-import lucuma.ui.primereact.LucumaStyles
 import lucuma.core.syntax.display.*
-import explore.model.display.given
-import explore.model.reusability.given
-import lucuma.ui.table.*
-import crystal.react.View
-import crystal.react.reuse.*
-import crystal.react.implicits.*
+import lucuma.core.util.NewType
 import lucuma.react.syntax.*
 import lucuma.react.table.*
-import explore.Icons
-import lucuma.ui.reusability.given
-import lucuma.ui.table.*
-import explore.model.ApiKey
-import explore.utils.*
-import explore.syntax.ui.given
+import lucuma.refined.*
+import lucuma.ui.primereact.LucumaStyles
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
-import lucuma.refined.*
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
+import lucuma.ui.table.*
+import lucuma.ui.table.*
 import lucuma.ui.utils.*
-import react.primereact.Divider
+import org.http4s.Credentials
+import org.http4s.Headers
+import org.http4s.headers.Authorization
+import org.http4s.syntax.all.*
+import org.typelevel.ci.*
+import queries.common.SSOQueriesGQL.UserQuery.{Data => SSOUser}
+import queries.common.SSOQueriesGQL.*
+import queries.schemas.SSO
+import react.common.ReactFnProps
 import react.primereact.Button
-import explore.model.enums.RoleType
-import clue.TransactionalClient
+import react.primereact.Dialog
+import react.primereact.DialogPosition
+import react.primereact.Divider
 
 case class UserPreferencesPopup(onClose: Option[Callback] = none)
     extends ReactFnProps(UserPreferencesPopup.component)
