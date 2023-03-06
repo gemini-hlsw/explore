@@ -192,11 +192,15 @@ object ObsTabContents extends TwoPanels:
           "observations".refined,
           "Observations Summary",
           backButton.some
-        )(_ =>
-          <.div(
-            ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
-            <.div("Select or add an observation")
+        )(renderInTitle =>
+          ObsSummaryTable(
+            props.userId,
+            props.programId,
+            observations,
+            props.obsListStacks,
+            renderInTitle
           )
+          // TODO: elevation view
         )
       )(obsId =>
         ObsTabTiles(

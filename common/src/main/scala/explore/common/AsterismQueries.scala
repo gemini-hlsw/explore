@@ -114,7 +114,7 @@ object AsterismQueries:
       obsR.constraintSet,
       obsR.status,
       obsR.activeStatus,
-      obsR.plannedTime.execution.toDuration,
+      obsR.plannedTime.execution,
       obsR.targetEnvironment.asterism.map(_.id).toSet,
       obsR.observingMode,
       obsR.visualizationTime.map(_.toInstant),

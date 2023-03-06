@@ -4,9 +4,9 @@
 package queries.schemas.odb
 
 import cats.Eq
+import cats.derived.*
 import cats.effect.Async
 import cats.implicits.*
-import cats.derived.*
 import clue.TransactionalClient
 import clue.data.syntax.*
 import crystal.Pot
@@ -14,13 +14,13 @@ import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.data.KeyedIndexedList
 import explore.model.ConstraintGroup
-import explore.model.OdbItcResult
 import explore.model.ObsIdSet
 import explore.model.ObsSummaryWithTitleAndConstraints
 import explore.model.ObsSummaryWithTitleConstraintsAndConf
+import explore.model.OdbItcResult
 import explore.model.TargetSummary
-import explore.optics.all.*
 import explore.model.syntax.all.*
+import explore.optics.all.*
 import japgolly.scalajs.react.*
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
@@ -28,18 +28,18 @@ import lucuma.core.model.ExposureTimeMode.FixedExposure
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
-import lucuma.core.syntax.time.*
 import lucuma.core.model.Target
+import lucuma.core.syntax.time.*
+import lucuma.core.util.Timestamp
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Enums.*
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.model.ObservingMode
+import lucuma.schemas.odb.input.*
 import monocle.Focus
 import monocle.Getter
 import monocle.Lens
 import queries.common.ObsQueriesGQL.*
-import lucuma.schemas.odb.input.*
-import lucuma.core.util.Timestamp
 
 import java.time.Duration
 import java.time.Instant
@@ -145,7 +145,7 @@ object ObsQueries:
               mtch.constraintSet,
               mtch.status,
               mtch.activeStatus,
-              mtch.plannedTime.execution.toDuration,
+              mtch.plannedTime.execution,
               mtch.observingMode,
               none // mtch.visualizationTime
             )
@@ -253,7 +253,7 @@ object ObsQueries:
         obs.constraintSet,
         obs.status,
         obs.activeStatus,
-        obs.plannedTime.execution.toDuration
+        obs.plannedTime.execution
       )
     }
 
@@ -279,7 +279,7 @@ object ObsQueries:
           obs.constraintSet,
           obs.status,
           obs.activeStatus,
-          obs.plannedTime.execution.toDuration
+          obs.plannedTime.execution
         )
       }
 
@@ -297,7 +297,7 @@ object ObsQueries:
           newObs.constraintSet,
           newObs.status,
           newObs.activeStatus,
-          newObs.plannedTime.execution.toDuration
+          newObs.plannedTime.execution
         )
       }
 
@@ -323,7 +323,7 @@ object ObsQueries:
           newObs.constraintSet,
           newObs.status,
           newObs.activeStatus,
-          newObs.plannedTime.execution.toDuration
+          newObs.plannedTime.execution
         )
       }
 

@@ -9,6 +9,7 @@ import lucuma.core.enums.Site
 import lucuma.core.math.Angle
 import lucuma.core.math.Declination
 import lucuma.core.model.PosAngleConstraint
+import lucuma.core.util.TimeSpan
 
 import scala.collection.immutable.SortedMap
 
@@ -41,3 +42,10 @@ object all:
         case d if d < -40.0 => site === Site.GS
         case d if d > 30.0  => site === Site.GN
         case _              => true
+
+  extension (timespan: TimeSpan)
+    /**
+     * Format a timespan in the format `${hh}hrs ${mm}mins`
+     */
+    def toHoursMinutes: String =
+      s"${timespan.toHours.toLong}hrs ${(timespan.toMinutes.toLong) % 60}mins"

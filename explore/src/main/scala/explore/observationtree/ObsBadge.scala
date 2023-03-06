@@ -33,6 +33,7 @@ import react.floatingui.syntax.*
 import react.primereact.Button
 import react.primereact.InputSwitch
 import react.primereact.TooltipOptions
+import explore.model.syntax.all.*
 
 case class ObsBadge(
   obs:               ObsSummary, // The layout will depend on the mixins of the ObsSummary.
@@ -183,9 +184,7 @@ object ObsBadge {
                 ^.onClick ==> { e => e.preventDefaultCB >> e.stopPropagationCB }
               )
             ),
-            <.span(
-              s"${obs.duration.toHours}hrs ${obs.duration.toMinutes % 60}mins"
-            )
+            <.span(obs.executionTime.toHoursMinutes)
           )
         )
       )

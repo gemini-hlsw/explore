@@ -9,7 +9,8 @@ import lucuma.core.util.Enumerated
  * Enum to give an id to each table
  */
 enum TableId(val tag: String) derives Enumerated:
-  case ConstraintsSummary extends TableId("constraints_summary")
-  case TargetsSummary     extends TableId("targets_summary")
-  case AsterismTargets    extends TableId("asterism_targets")
-  case SpectroscopyModes  extends TableId("spectroscopy_modes")
+  case ObservationsSummary extends TableId("observations_summary")
+  case ConstraintsSummary  extends TableId("constraints_summary")
+  case TargetsSummary      extends TableId("targets_summary")
+  case AsterismTargets     extends TableId("asterism_targets")
+  case SpectroscopyModes   extends TableId("spectroscopy_modes")
