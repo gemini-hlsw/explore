@@ -5,6 +5,7 @@ package explore.model
 
 import cats.syntax.all.*
 import eu.timepit.refined.cats.*
+import explore.model.enums.RoleType
 import lucuma.core.enums.*
 import lucuma.core.math.BoundedInterval
 import lucuma.core.math.BoundedInterval.*
@@ -145,10 +146,10 @@ trait DisplayImplicits:
 
   given Display[GmosRoi] = Display.byShortName(_.longName)
 
-  given Display[SequenceType] = Display.byShortName(_ match
+  given Display[SequenceType] = Display.byShortName {
     case SequenceType.Acquisition => "Acquisition"
     case SequenceType.Science     => "Science"
-  )
+  }
 
   given Display[BoundedInterval[Wavelength]] = Display.byShortName(interval =>
     List(interval.lower, interval.upper)
@@ -165,5 +166,12 @@ trait DisplayImplicits:
   }
 
   given Display[Semester] = Display.by(_.formatShort, _.format)
+
+  given Display[RoleType] = Display.byShortName {
+    case RoleType.Pi    => "Principal Investigator"
+    case RoleType.NGO   => "NGO"
+    case RoleType.Staff => "Staff"
+    case RoleType.Admin => "Administrator"
+  }
 
 object display extends DisplayImplicits
