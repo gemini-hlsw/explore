@@ -12,7 +12,6 @@ import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
 import explore.components.ui.ExploreStyles
-import explore.components.ui.FomanticStyles
 import explore.components.ui.PartnerFlags
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*

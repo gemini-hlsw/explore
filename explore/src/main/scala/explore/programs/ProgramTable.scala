@@ -177,9 +177,9 @@ object ProgramTable:
                 addButtonLabel = ("Add program name": VdomNode).reuseAlways,
                 textClass = ExploreStyles.ProgramName,
                 inputClass = ExploreStyles.ProgramNameInput,
-                editButtonClass = ExploreStyles.BlendedButton |+| ExploreStyles.ProgramNameEdit,
+                editButtonClass = ExploreStyles.ProgramNameEdit,
                 editButtonTooltip = "Edit program name".some,
-                deleteButtonClass = ExploreStyles.BlendedButton |+| ExploreStyles.ProgramNameDelete,
+                deleteButtonClass = ExploreStyles.ProgramNameDelete,
                 deleteButtonTooltip = "Delete program name".some,
                 okButtonTooltip = "Accept".some,
                 discardButtonTooltip = "Discard".some

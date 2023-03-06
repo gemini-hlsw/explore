@@ -99,8 +99,7 @@ object ProposalEditor:
     case a if a.isEmpty =>
       <.span(
         Icons.ExclamationTriangle,
-        "Partner time allocations are required.",
-        FomanticStyles.WarningText
+        "Partner time allocations are required."
       )
     case _              =>
       val ps = sortedSplits(splits)

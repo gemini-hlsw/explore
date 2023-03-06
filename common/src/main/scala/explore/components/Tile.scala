@@ -88,7 +88,7 @@ object Tile {
         val minimizeButton =
           Button(
             text = true,
-            clazz = ExploreStyles.TileStateButton |+| ExploreStyles.BlendedButton,
+            clazz = ExploreStyles.TileStateButton,
             icon = Icons.Minimize,
             onClick = p
               .sizeStateCallback(TileSizeState.Normal)
