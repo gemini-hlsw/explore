@@ -5,9 +5,10 @@ package explore.common
 
 import cats.effect.Async
 import cats.implicits.*
-import clue.TransactionalClient
+import clue.FetchClient
 import clue.data.syntax.*
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.DefaultErrorPolicy
 import japgolly.scalajs.react.*
 import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB
@@ -34,19 +35,19 @@ object ProgramQueries:
       _.programs.matches.map(p => ProgramInfo(p.id, p.name, p.existence === Existence.Deleted))
 
   def createProgram[F[_]: Async](name: Option[NonEmptyString])(using
-    TransactionalClient[F, ObservationDB]
+    FetchClient[F, ?, ObservationDB]
   ): F[ProgramInfo] =
     CreateProgramMutation
-      .execute[F](
+      [F].execute(
         CreateProgramInput(SET = ProgramPropertiesInput(name = name.orIgnore).assign)
       )
       .map(p => ProgramInfo(p.createProgram.program.id, p.createProgram.program.name, false))
 
   def deleteProgram[F[_]: Async](id: Program.Id)(using
-    TransactionalClient[F, ObservationDB]
+    FetchClient[F, ?, ObservationDB]
   ): F[Unit] =
     UpdateProgramsMutation
-      .execute[F](
+      [F].execute(
         UpdateProgramsInput(
           WHERE = id.toWhereProgram.assign,
           SET = ProgramPropertiesInput(existence = Existence.Deleted.assign)
@@ -55,10 +56,10 @@ object ProgramQueries:
       .void
 
   def undeleteProgram[F[_]: Async](id: Program.Id)(using
-    TransactionalClient[F, ObservationDB]
+    FetchClient[F, ?, ObservationDB]
   ): F[Unit] =
     UpdateProgramsMutation
-      .execute[F](
+      [F].execute(
         UpdateProgramsInput(
           WHERE = id.toWhereProgram.assign,
           includeDeleted = true.assign,
@@ -68,10 +69,10 @@ object ProgramQueries:
       .void
 
   def updateProgramName[F[_]: Async](id: Program.Id, name: Option[NonEmptyString])(using
-    TransactionalClient[F, ObservationDB]
+    FetchClient[F, ?, ObservationDB]
   ): F[Unit] =
     UpdateProgramsMutation
-      .execute[F](
+      [F].execute(
         UpdateProgramsInput(
           WHERE = id.toWhereProgram.assign,
           SET = ProgramPropertiesInput(name = name.orUnassign)

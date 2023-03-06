@@ -6,11 +6,12 @@ package explore.constraints
 import cats.Show
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.TransactionalClient
+import clue.FetchClient
 import clue.data.syntax.*
 import crystal.react.View
 import crystal.react.implicits.*
 import eu.timepit.refined.cats.*
+import explore.DefaultErrorPolicy
 import explore.Icons
 import explore.common.TimingWindowQueries
 import explore.common.TimingWindowQueries.*
@@ -117,9 +118,9 @@ object TimingWindowsPanel:
     dbActive: TimingWindowOperating => Callback,
     id:       Int,
     windows:  View[List[TimingWindow]]
-  )(using TransactionalClient[IO, UserPreferencesDB]): Callback =
+  )(using FetchClient[IO, ?, UserPreferencesDB]): Callback =
     dbActive(TimingWindowOperating.Operating) *>
-      DeleteTimingWindow
+      DeleteTimingWindow[IO]
         .execute(id.assign)
         .flatMap(_ => windows.mod(_.filterNot(_.id === id)).to[IO])
         .guarantee(dbActive(TimingWindowOperating.Idle).to[IO])
@@ -128,13 +129,13 @@ object TimingWindowsPanel:
   private def addNewRow(
     dbActive: TimingWindowOperating => Callback,
     windows:  View[List[TimingWindow]]
-  )(using TransactionalClient[IO, UserPreferencesDB]): Callback =
+  )(using FetchClient[IO, ?, UserPreferencesDB]): Callback =
     dbActive(TimingWindowOperating.Operating) *> CallbackTo.now
       .flatMap { i =>
         val startsOn =
           ZonedDateTime.ofInstant(i, ZoneOffset.UTC).withSecond(0).withNano(0)
 
-        InsertTimingWindow
+        InsertTimingWindow[IO]
           .execute(startsOn.assign)
           .flatMap(id =>
             id.insertTmpTimingWindowsOne

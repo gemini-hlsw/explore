@@ -7,7 +7,7 @@ import cats.Order.*
 import cats.*
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.TransactionalClient
+import clue.FetchClient
 import crystal.react.hooks.UseStateView
 import crystal.react.hooks.*
 import crystal.react.implicits.*
@@ -58,7 +58,7 @@ object TileController:
     section:   GridLayoutSection,
     layouts:   Layouts,
     debouncer: Reusable[UseSingleEffect[F]]
-  )(using TransactionalClient[F, UserPreferencesDB]): Callback =
+  )(using FetchClient[F, ?, UserPreferencesDB]): Callback =
     debouncer
       .submit(GridLayouts.storeLayoutsPreference[F](userId, section, layouts))
       .runAsyncAndForget

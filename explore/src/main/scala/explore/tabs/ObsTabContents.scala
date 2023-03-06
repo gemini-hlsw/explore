@@ -280,7 +280,7 @@ object ObsTabContents extends TwoPanels:
       .useStreamResourceViewOnMountBy { (props, ctx, _, _, _, _, _) =>
         import ctx.given
 
-        ProgramObservationsQuery
+        ProgramObservationsQuery[IO]
           .query(props.programId)
           .map(_.asObsSummariesWithConstraints)
           .reRunOnResourceSignals(

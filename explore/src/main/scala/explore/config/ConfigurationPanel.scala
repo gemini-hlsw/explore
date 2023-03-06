@@ -6,7 +6,7 @@ package explore.config
 import cats.Eq
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.TransactionalClient
+import clue.FetchClient
 import clue.data.Assign
 import clue.data.Input
 import clue.data.syntax.*
@@ -17,6 +17,7 @@ import crystal.react.hooks.*
 import crystal.react.implicits.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.DefaultErrorPolicy
 import explore.*
 import explore.common.Aligner
 import explore.components.Tile
@@ -113,7 +114,7 @@ object ConfigurationPanel:
    */
   private def modOrAssignAndMap[A, B](
     ifNotAssigned: => B
-  )(mod: (Input[B] => Input[B]) => A => A): (B => B) => Input[A] => Input[A] =
+  )(mod:           (Input[B] => Input[B]) => A => A): (B => B) => Input[A] => Input[A] =
     f =>
       _.map(mod { ib =>
         val bAssign = ib.orAssign(ifNotAssigned)
@@ -126,10 +127,11 @@ object ConfigurationPanel:
     obsId:         Observation.Id,
     config:        Option[BasicConfiguration],
     observingMode: View[Option[ObservingMode]]
-  )(using TransactionalClient[IO, ObservationDB]): IO[Unit] =
+  )(using FetchClient[IO, ?, ObservationDB]): IO[Unit] =
     config.foldMap(c =>
-      ObsQueriesGQL.CreateConfigurationMutation
-        .execute[IO](
+      ObsQueriesGQL
+        .CreateConfigurationMutation[IO]
+        .execute(
           UpdateObservationsInput(
             programId = programId,
             WHERE = obsId.toWhereObservation.assign,
@@ -173,7 +175,7 @@ object ConfigurationPanel:
               WHERE = props.obsId.toWhereObservation.assign,
               SET = ObservationPropertiesInput(observingMode = ObservingModeInput().assign)
             ),
-            (ObsQueriesGQL.UpdateObservationMutation.execute[IO] _).andThen(_.void)
+            (ObsQueriesGQL.UpdateObservationMutation[IO].execute(_)).andThen(_.void)
           ).zoom(
             ScienceData.mode,
             UpdateObservationsInput.SET.andThen(ObservationPropertiesInput.observingMode).modify

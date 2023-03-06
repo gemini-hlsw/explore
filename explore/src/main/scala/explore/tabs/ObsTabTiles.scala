@@ -6,7 +6,7 @@ package explore.tabs
 import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.TransactionalClient
+import clue.FetchClient
 import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
@@ -88,7 +88,7 @@ object ObsTabTiles:
     programId:        Program.Id,
     constraintGroups: View[ConstraintsList],
     obsView:          Pot[View[ObsEditData]]
-  )(using TransactionalClient[IO, ObservationDB]): VdomNode =
+  )(using FetchClient[IO, ?, ObservationDB]): VdomNode =
     potRender[View[ObsEditData]] { vod =>
       val cgOpt: Option[ConstraintGroup] =
         constraintGroups.get.find(_._1.contains(vod.get.id)).map(_._2)
@@ -135,7 +135,7 @@ object ObsTabTiles:
       .useStreamResourceViewOnMountBy { (props, ctx) =>
         import ctx.given
 
-        ObsEditQuery
+        ObsEditQuery[IO]
           .query(props.programId, props.obsId)
           .map(
             _.asObsEditData
@@ -256,8 +256,8 @@ object ObsTabTiles:
           )
 
         def setCurrentTarget(programId: Program.Id, oid: Option[Observation.Id])(
-          tid: Option[Target.Id],
-          via: SetRouteVia
+          tid:                          Option[Target.Id],
+          via:                          SetRouteVia
         ): Callback =
           (potAsterism.toOption, tid)
             // When selecting the current target focus the asterism zipper

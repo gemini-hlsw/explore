@@ -9,11 +9,12 @@ import cats.data.*
 import cats.effect.*
 import cats.effect.std.Semaphore
 import cats.syntax.all.*
-import clue.TransactionalClient
+import clue.FetchClient
 import clue.data.syntax.*
 import crystal.ViewF
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosBigDecimal
+import explore.DefaultErrorPolicy
 import explore.model.Constants
 import explore.model.Progress
 import explore.model.boopickle.ItcPicklers.given
@@ -43,7 +44,7 @@ object ITCRequests:
   def parTraverseN[F[_]: Concurrent: Parallel, G[_]: Traverse, A, B](
     n:  Long,
     ga: G[A]
-  )(f: A => F[B]) =
+  )(f:  A => F[B]) =
     Semaphore[F](n).flatMap { s =>
       ga.parTraverse(a => s.permit.use(_ => f(a)))
     }
@@ -57,7 +58,7 @@ object ITCRequests:
     signalToNoiseAt: Option[Wavelength],
     cache:           Cache[F],
     callback:        Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]] => F[Unit]
-  )(using Monoid[F[Unit]], TransactionalClient[F, ITC]): F[Unit] = {
+  )(using Monoid[F[Unit]], FetchClient[F, ?, ITC]): F[Unit] = {
     def itcResults(r: ItcResults): List[EitherNec[ItcQueryProblems, ItcResult]] =
       // Convert to usable types
       r.spectroscopy.flatMap(_.results).map { r =>
@@ -75,7 +76,7 @@ object ITCRequests:
           s"ITC: Request for mode: ${params.mode}, centralWavelength: ${params.wavelength} and target count: ${params.target.name.value}"
         ) *> selectedBand(params.target.profile, params.wavelength.value)
         .map { band =>
-          SpectroscopyITCQuery
+          SpectroscopyITCQuery[F]
             .query(
               SpectroscopyModeInput(
                 wavelength = params.wavelength.value.toInput,

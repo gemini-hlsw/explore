@@ -7,10 +7,11 @@ import cats.Order.*
 import cats.effect.Deferred
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.TransactionalClient
+import clue.FetchClient
 import crystal.react.View
 import crystal.react.hooks.*
 import crystal.react.implicits.*
+import explore.DefaultErrorPolicy
 import explore.Icons
 import explore.common.AsterismQueries.*
 import explore.components.ui.ExploreStyles
@@ -141,9 +142,10 @@ object AsterismGroupObsList:
     adding:                View[AddingTargetOrObs],
     selectTargetOrSummary: Option[Target.Id] => Callback,
     toastRef:              Deferred[IO, ToastRef]
-  )(using TransactionalClient[IO, ObservationDB], Logger[IO]): IO[Unit] =
+  )(using FetchClient[IO, ?, ObservationDB], Logger[IO]): IO[Unit] =
     adding.async.set(AddingTargetOrObs(true)) >>
-      TargetQueriesGQL.CreateTargetMutation
+      TargetQueriesGQL
+        .CreateTargetMutation[IO]
         .execute(EmptySiderealTarget.toCreateTargetInput(programId))
         .flatMap { data =>
           val targetId = data.createTarget.target.id
@@ -170,7 +172,7 @@ object AsterismGroupObsList:
     expandedIds:        View[SortedSet[ObsIdSet]],
     selectObsOrSummary: Option[Observation.Id] => Callback,
     toastRef:           Deferred[IO, ToastRef]
-  )(using TransactionalClient[IO, ObservationDB], Logger[IO]): IO[Unit] =
+  )(using FetchClient[IO, ?, ObservationDB], Logger[IO]): IO[Unit] =
     adding.async.set(AddingTargetOrObs(true)) >>
       ObsQueries
         .createObservationWithTargets[IO](programId, targetIds)

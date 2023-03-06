@@ -5,9 +5,10 @@ package explore.observationtree
 
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.TransactionalClient
+import clue.FetchClient
 import clue.data.syntax.*
 import crystal.react.implicits.*
+import explore.DefaultErrorPolicy
 import explore.data.KeyedIndexedList
 import explore.model.AppContext
 import explore.model.Focused
@@ -71,13 +72,13 @@ private def obsWithId(
     .composeOptionLens(Focus[(ObsSummaryWithTitleConstraintsAndConf, Int)](_._1))
 
 def obsEditStatus(programId: Program.Id, obsId: Observation.Id)(using
-  TransactionalClient[IO, ObservationDB]
+  FetchClient[IO, ?, ObservationDB]
 ) = Action(
   access = obsWithId(obsId).composeOptionLens(ObsSummaryWithTitleConstraintsAndConf.status)
 )(onSet =
   (_, status) =>
-    UpdateObservationMutation
-      .execute[IO](
+    UpdateObservationMutation[IO]
+      .execute(
         UpdateObservationsInput(
           programId = programId,
           WHERE = obsId.toWhereObservation.assign,
@@ -88,13 +89,13 @@ def obsEditStatus(programId: Program.Id, obsId: Observation.Id)(using
 )
 
 def obsEditSubtitle(programId: Program.Id, obsId: Observation.Id)(using
-  TransactionalClient[IO, ObservationDB]
+  FetchClient[IO, ?, ObservationDB]
 ) = Action(
   access = obsWithId(obsId).composeOptionLens(ObsSummaryWithTitleConstraintsAndConf.subtitle)
 )(onSet =
   (_, subtitleOpt) =>
-    UpdateObservationMutation
-      .execute[IO](
+    UpdateObservationMutation[IO]
+      .execute(
         UpdateObservationsInput(
           programId = programId,
           WHERE = obsId.toWhereObservation.assign,
@@ -105,13 +106,13 @@ def obsEditSubtitle(programId: Program.Id, obsId: Observation.Id)(using
 )
 
 def obsActiveStatus(programId: Program.Id, obsId: Observation.Id)(using
-  TransactionalClient[IO, ObservationDB]
+  FetchClient[IO, ?, ObservationDB]
 ) = Action(
   access = obsWithId(obsId).composeOptionLens(ObsSummaryWithTitleConstraintsAndConf.activeStatus)
 )(onSet =
   (_, activeStatus) =>
-    UpdateObservationMutation
-      .execute[IO](
+    UpdateObservationMutation[IO]
+      .execute(
         UpdateObservationsInput(
           programId = programId,
           WHERE = obsId.toWhereObservation.assign,
@@ -122,7 +123,7 @@ def obsActiveStatus(programId: Program.Id, obsId: Observation.Id)(using
 )
 
 def obsExistence(programId: Program.Id, obsId: Observation.Id, setObs: Observation.Id => Callback)(
-  using TransactionalClient[IO, ObservationDB]
+  using FetchClient[IO, ?, ObservationDB]
 ) =
   Action(
     access = obsListMod.withKey(obsId)

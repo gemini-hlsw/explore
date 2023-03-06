@@ -7,8 +7,9 @@ import cats.Order
 import cats.data.NonEmptyList
 import cats.effect.Async
 import cats.syntax.all.*
-import clue.TransactionalClient
+import clue.FetchClient
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.DefaultErrorPolicy
 import explore.common.SimbadSearch
 import japgolly.scalajs.react.ReactCats.*
 import japgolly.scalajs.react.Reusability
@@ -27,7 +28,7 @@ sealed trait TargetSource[F[_]]:
 
 object TargetSource:
   case class FromProgram[F[_]: Async](programId: Program.Id)(using
-    TransactionalClient[F, ObservationDB]
+    FetchClient[F, ?, ObservationDB]
   ) extends TargetSource[F]:
     val name: String = s"Program $programId"
 
@@ -35,7 +36,8 @@ object TargetSource:
 
     override def searches(name: NonEmptyString): List[F[List[TargetSearchResult]]] =
       List(
-        TargetQueriesGQL.TargetNameQuery
+        TargetQueriesGQL
+          .TargetNameQuery[F]
           .query(programId)
           .map { data =>
             data.targetGroup.matches

@@ -6,7 +6,7 @@ package explore.targets
 import cats.Order.*
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.TransactionalClient
+import clue.FetchClient
 import crystal.react.View
 import crystal.react.implicits.*
 import explore.common.AsterismQueries.*
@@ -30,7 +30,7 @@ object ObservationInsertAction {
   ): AsterismGroupsWithObs => Option[ObsSummaryWithConstraintsAndConf] = _.observations.get(obsId)
 
   private def setter(obsId: Observation.Id)(
-    optObs: Option[ObsSummaryWithConstraintsAndConf]
+    optObs:                 Option[ObsSummaryWithConstraintsAndConf]
   ): AsterismGroupsWithObs => AsterismGroupsWithObs = agwo =>
     optObs.fold {
       // we're undoing - look to see what the current targets are.
@@ -44,9 +44,9 @@ object ObservationInsertAction {
     }
 
   private def updateExpandedIds(
-    obsId:  Observation.Id,
-    agwo:   AsterismGroupsWithObs,
-    optObs: Option[ObsSummaryWithConstraintsAndConf]
+    obsId:       Observation.Id,
+    agwo:        AsterismGroupsWithObs,
+    optObs:      Option[ObsSummaryWithConstraintsAndConf]
   )(expandedIds: SortedSet[ObsIdSet]) =
     // We'll just expand the associated asterism.
     val setOfOne = ObsIdSet.one(obsId)
@@ -72,7 +72,7 @@ object ObservationInsertAction {
     setPage:     Option[Observation.Id] => IO[Unit],
     postMessage: String => IO[Unit]
   )(using
-    TransactionalClient[IO, ObservationDB]
+    FetchClient[IO, ?, ObservationDB]
   ): Action[AsterismGroupsWithObs, Option[ObsSummaryWithConstraintsAndConf]] =
     Action(getter = getter(obsId), setter = setter(obsId))(
       onSet = (agwo, optObs) =>

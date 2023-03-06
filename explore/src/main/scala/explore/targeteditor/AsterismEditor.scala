@@ -5,7 +5,7 @@ package explore.targeteditor
 
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.TransactionalClient
+import clue.FetchClient
 import crystal.Pot
 import crystal.react.View
 import crystal.react.hooks.*

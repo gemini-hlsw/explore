@@ -5,12 +5,13 @@ package explore.proposal
 
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.TransactionalClient
+import clue.FetchClient
 import clue.data.syntax.*
 import crystal.react.View
 import crystal.react.hooks.*
 import crystal.react.implicits.*
 import eu.timepit.refined.auto.*
+import explore.DefaultErrorPolicy
 import explore.Icons
 import explore.Resources
 import explore.*
@@ -51,11 +52,11 @@ object ProposalTabContents:
     programId:       Program.Id,
     optProposalView: View[Option[ProposalInfo]],
     executionTime:   TimeSpan
-  )(using TransactionalClient[IO, ObservationDB], Logger[IO]): Callback =
+  )(using FetchClient[IO, ?, ObservationDB], Logger[IO]): Callback =
     val proposal = Proposal.Default
     optProposalView.set(ProposalInfo(proposal.some, executionTime).some) >>
-      UpdateProgramsMutation
-        .execute[IO](
+      UpdateProgramsMutation[IO]
+        .execute(
           UpdateProgramsInput(
             WHERE = programId.toWhereProgram.assign,
             SET = ProgramPropertiesInput(proposal = proposal.toInput.assign)
@@ -65,10 +66,10 @@ object ProposalTabContents:
         .runAsync
 
   private def renderFn(
-    programId:  Program.Id,
-    user:       Option[User],
-    undoStacks: View[UndoStacks[IO, Proposal]],
-    ctx:        AppContext[IO]
+    programId:       Program.Id,
+    user:            Option[User],
+    undoStacks:      View[UndoStacks[IO, Proposal]],
+    ctx:             AppContext[IO]
   )(optProposalInfo: View[Option[ProposalInfo]]): VdomNode =
     import ctx.given
 
@@ -122,8 +123,8 @@ object ProposalTabContents:
     .useStreamResourceViewOnMountBy { (props, ctx) =>
       import ctx.given
 
-      ProgramProposalQuery
-        .query[IO](props.programId)
+      ProgramProposalQuery[IO]
+        .query(props.programId)
         .map(data =>
           data.program.map(prog => ProposalInfo(prog.proposal, prog.plannedTime.execution))
         )

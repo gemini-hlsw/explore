@@ -8,10 +8,11 @@ import cats.*
 import cats.data.*
 import cats.effect.*
 import cats.syntax.all.*
-import clue.TransactionalClient
+import clue.FetchClient
 import clue.data.syntax.*
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosInt
+import explore.DefaultErrorPolicy
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.*
 import explore.model.itc.math.*
@@ -56,7 +57,7 @@ object ITCGraphRequests:
     mode:         InstrumentRow,
     cache:        Cache[F],
     callback:     ItcChartResult => F[Unit]
-  )(using Monoid[F[Unit]], TransactionalClient[F, ITC]): F[Unit] =
+  )(using Monoid[F[Unit]], FetchClient[F, ?, ITC]): F[Unit] =
 
     val itcRowsParams = mode match // Only handle known modes
       case m: GmosNorthSpectroscopyRow =>
@@ -74,7 +75,7 @@ object ITCGraphRequests:
         .collect { case (t, Some(band)) =>
           request.mode.toITCInput
             .map(mode =>
-              SpectroscopyGraphITCQuery
+              SpectroscopyGraphITCQuery[F]
                 .query(
                   SpectroscopyGraphModeInput(
                     wavelength = request.wavelength.value.toInput,

@@ -6,8 +6,9 @@ package explore.targets
 import cats.Order.*
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.TransactionalClient
+import clue.FetchClient
 import clue.data.syntax.*
+import explore.DefaultErrorPolicy
 import explore.common.AsterismQueries
 import explore.common.AsterismQueries.*
 import explore.model.AsterismGroup
@@ -34,7 +35,7 @@ object TargetAddDeleteActions {
     targetIds.map(tid => singleTargetGetter(tid)(agwo))
 
   private def singleTargetSetter(targetId: Target.Id)(
-    otwo: Option[TargetWithObs]
+    otwo:                                  Option[TargetWithObs]
   ): AsterismGroupsWithObs => AsterismGroupsWithObs = agwo =>
     otwo.fold(AsterismGroupsWithObs.targetsWithObs.modify(_.removed(targetId))) { tg =>
       AsterismGroupsWithObs.targetsWithObs.modify(_.updated(targetId, tg)) >>>
@@ -47,17 +48,18 @@ object TargetAddDeleteActions {
     }(agwo)
 
   private def targetListSetter(targetIds: List[Target.Id])(
-    twol: List[Option[TargetWithObs]]
+    twol:                                 List[Option[TargetWithObs]]
   ): AsterismGroupsWithObs => AsterismGroupsWithObs = agwo =>
     targetIds.zip(twol).foldLeft(agwo) { case (acc, (tid, otwo)) =>
       singleTargetSetter(tid)(otwo)(acc)
     }
 
   private def remoteDeleteTargets(targetIds: List[Target.Id], programId: Program.Id)(using
-    c: TransactionalClient[IO, ObservationDB]
+    c:                                       FetchClient[IO, ?, ObservationDB]
   ): IO[Unit] =
-    TargetQueriesGQL.UpdateTargetsMutation
-      .execute[IO](
+    TargetQueriesGQL
+      .UpdateTargetsMutation[IO]
+      .execute(
         UpdateTargetsInput(
           WHERE = targetIds.toWhereTargets
             .copy(programId = WhereOrderProgramId(programId.assign).assign)
@@ -68,10 +70,10 @@ object TargetAddDeleteActions {
       .void
 
   private def remoteUndeleteTargets(targetIds: List[Target.Id], programId: Program.Id)(using
-    c: TransactionalClient[IO, ObservationDB]
+    c:                                         FetchClient[IO, ?, ObservationDB]
   ): IO[Unit] =
-    TargetQueriesGQL.UpdateTargetsMutation
-      .execute[IO](
+    TargetQueriesGQL.UpdateTargetsMutation[IO]
+      .execute(
         UpdateTargetsInput(
           WHERE = targetIds.toWhereTargets
             .copy(programId = WhereOrderProgramId(programId.assign).assign)
@@ -88,7 +90,7 @@ object TargetAddDeleteActions {
     setPage:     Option[Target.Id] => IO[Unit],
     postMessage: String => IO[Unit]
   )(using
-    c:           TransactionalClient[IO, ObservationDB]
+    c:           FetchClient[IO, ?, ObservationDB]
   ): Action[AsterismGroupsWithObs, Option[TargetWithObs]] =
     Action[AsterismGroupsWithObs, Option[TargetWithObs]](
       getter = singleTargetGetter(targetId),
@@ -115,7 +117,7 @@ object TargetAddDeleteActions {
     setSummary:  IO[Unit],
     postMessage: String => IO[Unit]
   )(using
-    c:           TransactionalClient[IO, ObservationDB]
+    c:           FetchClient[IO, ?, ObservationDB]
   ): Action[AsterismGroupsWithObs, List[Option[TargetWithObs]]] =
     Action(getter = targetListGetter(targetIds), setter = targetListSetter(targetIds))(
       onSet = (_, lotwo) =>

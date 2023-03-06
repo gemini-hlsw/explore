@@ -7,7 +7,8 @@ import cats.*
 import cats.effect.*
 import cats.syntax.all.*
 import clue.*
-import clue.js.FetchJSBackend
+import clue.js.*
+import clue.websocket.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.SSOClient
 import explore.events.ExploreEvent
@@ -50,20 +51,22 @@ case class AppContext[F[_]](
   def replacePage(appTab: AppTab, programId: Program.Id, focused: Focused): Callback =
     setPageVia(appTab, programId, focused, SetRouteVia.HistoryReplace)
 
-  given WebSocketClient[F, ObservationDB]     = clients.odb
-  given WebSocketClient[F, UserPreferencesDB] = clients.preferencesDB
-  given TransactionalClient[F, ITC]           = clients.itc
-  given TransactionalClient[F, SSO]           = clients.sso
+  given WebSocketJSClient[F, ObservationDB]     = clients.odb
+  given WebSocketJSClient[F, UserPreferencesDB] = clients.preferencesDB
+  given FetchJSClient[F, ITC]                   = clients.itc
+  given WebSocketJSClient[F, SSO]               = clients.sso
 
   given itcWorker: WorkerClient[F, ItcMessage.Request]         = workerClients.itc
   given catalogWorker: WorkerClient[F, CatalogMessage.Request] = workerClients.catalog
   given agsWorker: WorkerClient[F, AgsMessage.Request]         = workerClients.ags
   given plotWorker: WorkerClient[F, PlotMessage.Request]       = workerClients.plot
 
+  export explore.DefaultErrorPolicy
+
 object AppContext:
   val ctx: Context[AppContext[IO]] = React.createContext(null) // No default value
 
-  def from[F[_]: Async: FetchJSBackend: WebSocketBackend: Parallel: Logger](
+  def from[F[_]: Async: FetchJSBackend: WebSocketJSBackend: Parallel: Logger](
     config:               AppConfig,
     reconnectionStrategy: WebSocketReconnectionStrategy,
     pageUrl:              (AppTab, Program.Id, Focused) => String,
@@ -75,11 +78,12 @@ object AppContext:
     for {
       clients <-
         GraphQLClients
-          .build[F](config.odbURI,
-                    config.preferencesDBURI,
-                    config.itcURI,
-                    config.sso.uri,
-                    reconnectionStrategy
+          .build[F](
+            config.odbURI,
+            config.preferencesDBURI,
+            config.itcURI,
+            config.sso.uri,
+            reconnectionStrategy
           )
       version  = utils.version(config.environment)
     } yield AppContext[F](

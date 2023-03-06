@@ -7,10 +7,11 @@ import cats.*
 import cats.effect.*
 import cats.effect.syntax.all.*
 import cats.syntax.all.*
-import clue.TransactionalClient
+import clue.FetchClient
 import crystal.react.View
 import crystal.react.implicits.*
 import crystal.react.reuse.*
+import explore.DefaultErrorPolicy
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
@@ -80,7 +81,7 @@ object TargetImportPopup:
     s:           Stream[F, Byte],
     stateUpdate: (State => State) => F[Unit],
     client:      Client[F]
-  )(using TransactionalClient[F, ObservationDB]): Stream[F, Unit] =
+  )(using FetchClient[F, ?, ObservationDB]): Stream[F, Unit] =
     s
       .through(text.utf8.decode)
       .through(
@@ -92,7 +93,7 @@ object TargetImportPopup:
         case Right(tgt) =>
           // FIXME The backend needs a SED
           val target = Target.Sidereal.unnormalizedSED.replace(Constants.DefaultSED.some)(tgt)
-          CreateTargetMutation
+          CreateTargetMutation[F]
             .execute(target.toCreateTargetInput(programId))
             .map(_.createTarget.target.id.some)
             .flatTap(_ =>

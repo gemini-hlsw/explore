@@ -12,10 +12,10 @@ import cats.effect.kernel.Deferred
 import cats.effect.std.Dispatcher
 import cats.effect.unsafe.implicits.global
 import cats.syntax.all.*
-import clue.WebSocketReconnectionStrategy
 import clue.js.FetchJSBackend
 import clue.js.FetchMethod
 import clue.js.WebSocketJSBackend
+import clue.websocket.WebSocketReconnectionStrategy
 import crystal.react.*
 import crystal.react.hooks.*
 import crystal.react.reuse.*

@@ -5,11 +5,12 @@ package explore.components.state
 
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.TransactionalClient
+import clue.FetchClient
 import clue.data.Input
 import crystal.react.View
 import crystal.react.reuse.*
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.DefaultErrorPolicy
 import explore.components.UserSelectionForm
 import explore.model.AppContext
 import explore.model.RootModel
@@ -24,7 +25,7 @@ import queries.schemas.UserPreferencesDB
 import react.common.*
 
 case class IfLogged(view: View[RootModel])(
-  val render: (UserVault, IO[Unit]) => VdomNode
+  val render:             (UserVault, IO[Unit]) => VdomNode
 ) extends ReactFnProps(IfLogged.component)
 
 object IfLogged:
@@ -32,9 +33,9 @@ object IfLogged:
 
   // Creates a "profile" for user preferences.
   private def createUserPrefs(vault: UserVault)(using
-    TransactionalClient[IO, UserPreferencesDB]
+    FetchClient[IO, ?, UserPreferencesDB]
   ): IO[Unit] =
-    UserInsertMutation.execute(Input(vault.user.id.toString)).start.void
+    UserInsertMutation[IO].execute(Input(vault.user.id.toString)).start.void
 
   private val component =
     ScalaFnComponent

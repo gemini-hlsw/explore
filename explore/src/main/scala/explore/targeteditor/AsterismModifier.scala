@@ -5,9 +5,10 @@ package explore.targeteditor
 
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.TransactionalClient
+import clue.FetchClient
 import crystal.react.View
 import crystal.react.implicits.*
+import explore.DefaultErrorPolicy
 import explore.common.AsterismQueries
 import explore.model.Asterism
 import explore.model.ObsIdSet
@@ -26,11 +27,11 @@ trait AsterismModifier:
     obsIds:          ObsIdSet,
     asterism:        View[Option[Asterism]],
     targetWithOptId: TargetWithOptId
-  )(using TransactionalClient[IO, ObservationDB], Logger[IO]): IO[Option[Target.Id]] =
+  )(using FetchClient[IO, ?, ObservationDB], Logger[IO]): IO[Option[Target.Id]] =
     targetWithOptId match
       case TargetWithOptId(oTargetId, target @ Target.Sidereal(_, _, _, _)) =>
         val targetId: IO[Target.Id] = oTargetId.fold(
-          CreateTargetMutation
+          CreateTargetMutation[IO]
             .execute(target.toCreateTargetInput(programId))
             .map(_.createTarget.target.id)
         )(IO(_))

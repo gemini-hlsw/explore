@@ -6,7 +6,7 @@ package explore.targeteditor
 import cats.Endo
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.TransactionalClient
+import clue.FetchClient
 import clue.data.syntax.*
 import crystal.react.View
 import crystal.react.ViewOpt
@@ -14,6 +14,7 @@ import crystal.react.hooks.*
 import crystal.react.implicits.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.string.*
+import explore.DefaultErrorPolicy
 import explore.common.*
 import explore.components.HelpIcon
 import explore.components.Tile
@@ -91,9 +92,10 @@ object SiderealTargetEditor {
   }
 
   private def cloneTarget(targetId: Target.Id, obsIds: ObsIdSet)(using
-    TransactionalClient[IO, ObservationDB]
-  ): IO[Target.Id] = TargetQueriesGQL.CloneTargetMutation
-    .execute[IO](
+    FetchClient[IO, ?, ObservationDB]
+  ): IO[Target.Id] = TargetQueriesGQL
+    .CloneTargetMutation[IO]
+    .execute(
       CloneTargetInput(targetId = targetId, REPLACE_IN = obsIds.toList.assign)
     )
     .map(_.cloneTarget.newTarget.id)
@@ -105,10 +107,11 @@ object SiderealTargetEditor {
     onClone: TargetWithId => Callback
   )(
     input:   UpdateTargetsInput
-  )(using TransactionalClient[IO, ObservationDB], Logger[IO]): IO[Unit] =
+  )(using FetchClient[IO, ?, ObservationDB], Logger[IO]): IO[Unit] =
     optObs
       .fold(
-        TargetQueriesGQL.UpdateTargetsMutation
+        TargetQueriesGQL
+          .UpdateTargetsMutation[IO]
           .execute(input)
           .void
       ) { obsIds =>
@@ -116,7 +119,8 @@ object SiderealTargetEditor {
           cloneTarget(id, obsIds)
             .flatMap { newId =>
               val newInput = UpdateTargetsInput.WHERE.replace(newId.toWhereTarget.assign)(input)
-              TargetQueriesGQL.UpdateTargetsMutationWithResult
+              TargetQueriesGQL
+                .UpdateTargetsMutationWithResult[IO]
                 .execute(newInput)
                 .flatMap(data => data.updateTargets.targets.headOption.foldMap(onClone(_).to[IO]))
             }

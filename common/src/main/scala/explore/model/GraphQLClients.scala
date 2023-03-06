@@ -7,6 +7,8 @@ import cats.*
 import cats.effect.*
 import cats.syntax.all.*
 import clue.*
+import clue.js.*
+import clue.websocket.*
 import io.circe.Json
 import lucuma.schemas.*
 import org.http4s.Uri.Authority
@@ -17,10 +19,10 @@ import org.typelevel.log4cats.Logger
 import queries.schemas.*
 
 case class GraphQLClients[F[_]: Async: Parallel] protected (
-  odb:           WebSocketClient[F, ObservationDB],
-  preferencesDB: WebSocketClient[F, UserPreferencesDB],
-  itc:           TransactionalClient[F, ITC],
-  sso:           WebSocketClient[F, SSO]
+  odb:           WebSocketJSClient[F, ObservationDB],
+  preferencesDB: WebSocketJSClient[F, UserPreferencesDB],
+  itc:           FetchJSClient[F, ITC],
+  sso:           WebSocketJSClient[F, SSO]
 ):
   def init(payload: Map[String, Json]): F[Unit] =
     (
@@ -37,7 +39,7 @@ case class GraphQLClients[F[_]: Async: Parallel] protected (
     ).sequence.void
 
 object GraphQLClients:
-  def build[F[_]: Async: TransactionalBackend: WebSocketBackend: Parallel: Logger](
+  def build[F[_]: Async: FetchJSBackend: WebSocketJSBackend: Parallel: Logger](
     odbURI:               Uri,
     prefsURI:             Uri,
     itcURI:               Uri,
@@ -46,16 +48,17 @@ object GraphQLClients:
   ): F[GraphQLClients[F]] =
     for {
       odbClient   <-
-        ApolloWebSocketClient.of[F, ObservationDB](odbURI, "ODB", reconnectionStrategy)
+        WebSocketJSClient.of[F, ObservationDB](odbURI.toString, "ODB", reconnectionStrategy)
       prefsClient <-
-        ApolloWebSocketClient.of[F, UserPreferencesDB](prefsURI, "PREFS", reconnectionStrategy)
+        WebSocketJSClient.of[F, UserPreferencesDB](prefsURI.toString, "PREFS", reconnectionStrategy)
       itcClient   <-
-        TransactionalClient.of[F, ITC](itcURI, "ITC")
+        FetchJSClient.of[F, ITC](itcURI.toString, "ITC")
       ssoClient   <-
         val ssoURL =
-          Uri(Scheme.fromString(s"wss").toOption,
-              ssoURI.host.map(h => Authority(host = h)),
-              path"ws"
+          Uri(
+            Scheme.fromString(s"wss").toOption,
+            ssoURI.host.map(h => Authority(host = h)),
+            path"ws"
           )
-        ApolloWebSocketClient.of[F, SSO](ssoURL, "SSO", reconnectionStrategy)
+        WebSocketJSClient.of[F, SSO](ssoURL.toString, "SSO", reconnectionStrategy)
     } yield GraphQLClients(odbClient, prefsClient, itcClient, ssoClient)

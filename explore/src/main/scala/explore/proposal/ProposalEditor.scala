@@ -7,7 +7,7 @@ import cats.Order.*
 import cats.data.Chain
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.TransactionalClient
+import clue.FetchClient
 import clue.data.Input
 import clue.data.syntax.*
 import crystal.react.View
@@ -15,6 +15,7 @@ import crystal.react.hooks.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.DefaultErrorPolicy
 import explore.Icons
 import explore.common.Aligner
 import explore.components.FormStaticData
@@ -373,7 +374,7 @@ object ProposalEditor:
     splitsList:        View[List[PartnerSplit]],
     executionTime:     TimeSpan,
     band3Time:         TimeSpan
-  )(using TransactionalClient[IO, ObservationDB], Logger[IO]) = {
+  )(using FetchClient[IO, ?, ObservationDB], Logger[IO]) = {
     def closePartnerSplitsEditor: Callback = showDialog.set(false)
 
     val undoCtx: UndoContext[Proposal]                   = UndoContext(undoStacks, proposal)
@@ -384,7 +385,7 @@ object ProposalEditor:
           WHERE = programId.toWhereProgram.assign,
           SET = ProgramPropertiesInput(proposal = ProposalInput().assign)
         ),
-        (ProgramQueriesGQL.UpdateProgramsMutation.execute[IO] _).andThen(_.void)
+        (ProgramQueriesGQL.UpdateProgramsMutation[IO].execute(_)).andThen(_.void)
       ).zoom(Iso.id[Proposal].asLens,
              UpdateProgramsInput.SET.andThen(ProgramPropertiesInput.proposal).modify
       )

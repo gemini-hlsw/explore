@@ -5,7 +5,7 @@ package explore.targeteditor
 
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.TransactionalClient
+import clue.FetchClient
 import crystal.Pot
 import crystal.react.View
 import crystal.react.hooks.*
@@ -85,7 +85,7 @@ object TargetTable extends TableHooks:
     programId: Program.Id,
     obsIds:    ObsIdSet,
     targetId:  Target.Id
-  )(using TransactionalClient[IO, ObservationDB]): IO[Unit] =
+  )(using FetchClient[IO, ?, ObservationDB]): IO[Unit] =
     AsterismQueries.removeTargetsFromAsterisms[IO](programId, obsIds.toList, List(targetId))
 
   protected val component =

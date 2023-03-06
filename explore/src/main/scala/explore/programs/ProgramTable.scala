@@ -6,7 +6,7 @@ package explore.programs
 import cats.Order.*
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.TransactionalClient
+import clue.FetchClient
 import crystal.react.View
 import crystal.react.hooks.*
 import crystal.react.implicits.*
@@ -66,7 +66,7 @@ object ProgramTable:
   private type ShowDeleted = ShowDeleted.Type
 
   private def addProgram(programs: View[List[ProgramInfo]], adding: View[IsAdding])(using
-    TransactionalClient[IO, ObservationDB],
+    FetchClient[IO, ?, ObservationDB],
     Logger[IO]
   ): IO[Unit] =
     adding.async.set(IsAdding(true)) >>
@@ -76,20 +76,20 @@ object ProgramTable:
         .guarantee(adding.async.set(IsAdding(false)))
 
   private def deleteProgram(pinf: View[ProgramInfo])(using
-    TransactionalClient[IO, ObservationDB]
+    FetchClient[IO, ?, ObservationDB]
   ): IO[Unit] =
     pinf.zoom(ProgramInfo.deleted).set(true).to[IO] >>
       ProgramQueries.deleteProgram[IO](pinf.get.id)
 
   private def undeleteProgram(pinf: View[ProgramInfo])(using
-    TransactionalClient[IO, ObservationDB],
+    FetchClient[IO, ?, ObservationDB],
     Logger[IO]
   ): IO[Unit] =
     pinf.zoom(ProgramInfo.deleted).set(false).to[IO] >>
       ProgramQueries.undeleteProgram[IO](pinf.get.id)
 
   private def onModName(pinf: ProgramInfo)(using
-    TransactionalClient[IO, ObservationDB],
+    FetchClient[IO, ?, ObservationDB],
     Logger[IO]
   ): Callback =
     ProgramQueries.updateProgramName[IO](pinf.id, pinf.name).runAsync
@@ -116,7 +116,7 @@ object ProgramTable:
       (props, ctx, _, _) => showDeleted =>
         import ctx.given
 
-        ProgramsQuery
+        ProgramsQuery[IO]
           .query(includeDeleted = showDeleted.value)
           .map(ProgramsQuery.Data.asProgramInfoList)
           .flatTap(programs => onNewData(props.isRequired, programs, ctx))
