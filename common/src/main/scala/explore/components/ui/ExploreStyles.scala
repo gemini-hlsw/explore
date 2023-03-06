@@ -130,11 +130,12 @@ object ExploreStyles:
   val TrashIcon: Css               = Css("trash-icon")
   val EraserIcon: Css              = Css("eraser-icon")
 
-  val ApiKeysPopup   = Css("api-keys-popup")
-  val ApiKeysTable   = Css("api-keys-table")
-  val ApiKeyDelete   = Css("api-keys-delete")
-  val NewApiKey      = Css("new-api-key")
-  val NewApiKeyLabel = Css("new-api-key-label")
+  val ApiKeysPopup    = Css("api-keys-popup")
+  val ApiKeysTable    = Css("api-keys-table")
+  val ApiKeyDelete    = Css("api-keys-delete")
+  val ApiKeysTableMod = Css("api-keys-table-mod")
+  val NewApiKey       = Css("new-api-key")
+  val NewApiKeyLabel  = Css("new-api-key-label")
 
   val ProgramsPopup                = Css("programs-popup")
   val ProgramTable                 = Css("program-table")

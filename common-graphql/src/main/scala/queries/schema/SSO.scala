@@ -8,8 +8,8 @@ import clue.annotation.GraphQLSchema
 @GraphQLSchema
 trait SSO:
   object Scalars:
-    type UserId   = String
-    type RoleId   = String
+    type UserId   = lucuma.core.model.User.Id
+    type RoleId   = lucuma.core.model.StandardRole.Id
     type ApiKeyId = String
 
   object Enums:

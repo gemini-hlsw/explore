@@ -23,6 +23,7 @@ import explore.syntax.ui.given
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.model.StandardRole
 import lucuma.core.syntax.display.*
 import lucuma.core.util.Enumerated
 import lucuma.core.util.NewType
@@ -117,7 +118,7 @@ object UserPreferencesContent:
     )
 
   private def createNewKey(
-    keyRoleId: String,
+    keyRoleId: StandardRole.Id,
     active:    View[IsActive],
     newKey:    View[NewKey]
   )(using
@@ -212,7 +213,7 @@ object UserPreferencesContent:
           Divider(),
           <.div(LucumaStyles.FormColumnCompact)(
             <.label(LucumaStyles.FormFieldLabel, "ID: "),
-            <.label(LucumaStyles.FormField, id),
+            <.label(LucumaStyles.FormField, id.show),
             <.label(LucumaStyles.FormFieldLabel, "Name: "),
             <.label(LucumaStyles.FormField, name),
             <.label(LucumaStyles.FormFieldLabel, "Role: "),
@@ -225,8 +226,10 @@ object UserPreferencesContent:
               table,
               estimateSize = _ => 32.toPx,
               striped = true,
+              // containerMod = ^.width := 100.pct,
               compact = Compact.Very,
-              tableMod = ExploreStyles.ExploreTable |+| ExploreStyles.ExploreBorderTable,
+              tableMod =
+                ExploreStyles.ApiKeysTableMod |+| ExploreStyles.ExploreTable |+| ExploreStyles.ExploreBorderTable,
               emptyMessage = "No keys available"
             )
           ),
