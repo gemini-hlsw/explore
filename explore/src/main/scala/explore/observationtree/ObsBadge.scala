@@ -118,10 +118,8 @@ object ObsBadge {
                   inputClass = ExploreStyles.ObsBadgeSubtitleInput,
                   addButtonLabel = "Add description",
                   addButtonClass = ExploreStyles.ObsBadgeSubtitleAdd,
-                  leftButtonClass =
-                    ExploreStyles.BlendedButton |+| ExploreStyles.ObsBadgeSubtitleEdit,
-                  rightButtonClass =
-                    ExploreStyles.BlendedButton |+| ExploreStyles.ObsBadgeSubtitleDelete
+                  leftButtonClass = ExploreStyles.ObsBadgeSubtitleEdit,
+                  rightButtonClass = ExploreStyles.ObsBadgeSubtitleDelete
                 )
               )
               .whenDefined
