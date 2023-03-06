@@ -27,6 +27,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
+import lucuma.core.util.NewType
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
@@ -58,15 +59,21 @@ object ProgramTable:
 
   private val ColDef = ColumnDef[View[ProgramInfo]]
 
-  private def addProgram(programs: View[List[ProgramInfo]], adding: View[Boolean])(using
+  private object IsAdding extends NewType[Boolean]
+  private type IsAdding = IsAdding.Type
+
+  private object ShowDeleted extends NewType[Boolean]
+  private type ShowDeleted = ShowDeleted.Type
+
+  private def addProgram(programs: View[List[ProgramInfo]], adding: View[IsAdding])(using
     TransactionalClient[IO, ObservationDB],
     Logger[IO]
   ): IO[Unit] =
-    adding.async.set(true) >>
+    adding.async.set(IsAdding(true)) >>
       ProgramQueries
         .createProgram[IO](none)
         .flatMap(pi => programs.async.mod(_ :+ pi))
-        .guarantee(adding.async.set(false))
+        .guarantee(adding.async.set(IsAdding(false)))
 
   private def deleteProgram(pinf: View[ProgramInfo])(using
     TransactionalClient[IO, ObservationDB]
@@ -103,14 +110,14 @@ object ProgramTable:
   private val component = ScalaFnComponent
     .withHooks[Props]
     .useContext(AppContext.ctx)
-    .useStateView(false) // Adding new program
-    .useStateView(false) // Show deleted
+    .useStateView(IsAdding(false))    // Adding new program
+    .useStateView(ShowDeleted(false)) // Show deleted
     .useStreamResourceViewBy((_, _, _, showDeleted) => showDeleted.get) {
       (props, ctx, _, _) => showDeleted =>
         import ctx.given
 
         ProgramsQuery
-          .query(includeDeleted = showDeleted)
+          .query(includeDeleted = showDeleted.value)
           .map(ProgramsQuery.Data.asProgramInfoList)
           .flatTap(programs => onNewData(props.isRequired, programs, ctx))
           .reRunOnResourceSignals(ProgramEditSubscription.subscribe[IO]())
@@ -177,9 +184,7 @@ object ProgramTable:
                 addButtonLabel = ("Add program name": VdomNode).reuseAlways,
                 textClass = ExploreStyles.ProgramName,
                 inputClass = ExploreStyles.ProgramNameInput,
-                editButtonClass = ExploreStyles.ProgramNameEdit,
                 editButtonTooltip = "Edit program name".some,
-                deleteButtonClass = ExploreStyles.ProgramNameDelete,
                 deleteButtonTooltip = "Delete program name".some,
                 okButtonTooltip = "Accept".some,
                 discardButtonTooltip = "Discard".some
@@ -197,7 +202,7 @@ object ProgramTable:
       programs
         .map(
           _.value.toListOfViews
-            .filter(vpi => showDeleted || !vpi.get.deleted)
+            .filter(vpi => showDeleted.value || !vpi.get.deleted)
             .sortBy(_.get.id)
         )
         .orEmpty
@@ -236,13 +241,12 @@ object ProgramTable:
                 label = "Program",
                 icon = Icons.New,
                 severity = Button.Severity.Success,
-                clazz = ExploreStyles.ProgramAdd,
-                disabled = adding.get,
-                loading = adding.get,
+                disabled = adding.get.value,
+                loading = adding.get.value,
                 onClick = addProgram(programs, adding).runAsync
               ).small.compact,
               CheckboxView(id = "show-deleted".refined,
-                           value = showDeleted,
+                           value = showDeleted.zoom(ShowDeleted.value.asLens),
                            label = "Show deleted"
               ),
               closeButton

@@ -21,14 +21,10 @@ case class About(isOpen: View[Boolean]) extends ReactFnProps(About.component)
 object About:
   private type Props = About
 
-  private object Copied extends NewType[Boolean]
-  private type Copied = Copied.Type
-
   private val component = ScalaFnComponent
     .withHooks[Props]
     .useContext(AppContext.ctx)
-    .useState(Copied(false))
-    .render((props, ctx, copied) =>
+    .render((props, ctx) =>
       Dialog(
         visible = props.isOpen.get,
         onHide = props.isOpen.set(false),
@@ -37,24 +33,10 @@ object About:
         resizable = false,
         header = Logo()
       )(
-        <.div(
-          <.span(
-            ExploreStyles.Version,
-            ExploreStyles.VersionUncopied.when(!copied.value.value)
-          )(
-            s"Version: ${ctx.version}",
-            CopyToClipboard(
-              text = ctx.version.value,
-              onCopy = (_, copiedCallback) =>
-                copied.setState(Copied(copiedCallback)) *>
-                  copied.setState(Copied(false)).delayMs(1500).toCallback
-            )(
-              <.span(
-                Icons.Clipboard.unless(copied.value.value),
-                Icons.ClipboardCheck.when(copied.value.value)
-              )
-            )
-          )
+        ExploreCopy(s"Version: ${ctx.version}",
+                    ctx.version.value,
+                    ExploreStyles.Version,
+                    ExploreStyles.VersionUncopied
         )
       )
     )

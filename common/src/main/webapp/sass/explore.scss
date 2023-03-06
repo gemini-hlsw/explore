@@ -1138,18 +1138,9 @@ $search-preview-margin: 5px;
 // ------
 // Programs Popup
 // ------
+.api-keys-popup.p-dialog,
 .programs-popup.p-dialog {
-  .ui.button.compact.program-name-edit {
-    margin-left: 0.5em;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-  }
-
-  .ui.button.compact.program-name-delete {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-  }
-
+  .api-keys-table,
   .program-table {
     height: 400px;
   }
@@ -1175,6 +1166,42 @@ $search-preview-margin: 5px;
     .p-button:last-child {
       float: right;
     }
+  }
+}
+
+// ------
+// Api keyys Popup
+// ------
+.api-keys-popup.p-dialog {
+  .api-keys-delete {
+    text-align: right;
+  }
+
+  .api-keys-table-mod {
+    width: 100%;
+  }
+
+  .pl-form-column {
+    grid-template-columns: min-content 1fr min-content;
+  }
+
+  .pl-form-column.pl-compact {
+    div {
+      align-self: center;
+    }
+  }
+
+  .new-api-key-label,
+  .new-api-key {
+    @include common.text-ellipsis;
+
+    font-size: smaller;
+    max-width: 100%;
+  }
+
+  .new-api-key-label {
+    font-weight: bold;
+    grid-column: 1 / -1;
   }
 }
 
