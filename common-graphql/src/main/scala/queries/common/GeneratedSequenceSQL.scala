@@ -14,18 +14,6 @@ import lucuma.schemas.decoders.given
 import lucuma.schemas.odb.*
 
 object GeneratedSequenceSQL {
-  given offsetComponentDecoder[T]: Decoder[Offset.Component[T]] = Decoder.instance(c =>
-    c.downField("microarcseconds")
-      .as[Long]
-      .map(Angle.signedMicroarcseconds.reverse.andThen(Offset.Component.angle[T].reverse).get)
-  )
-
-  given Decoder[Offset] = Decoder.instance(c =>
-    for {
-      p <- c.downField("p").as[Offset.P]
-      q <- c.downField("q").as[Offset.Q]
-    } yield Offset(p, q)
-  )
 
   @GraphQL
   trait SequenceSteps extends GraphQLOperation[ObservationDB] {

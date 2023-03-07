@@ -441,13 +441,7 @@ object TargetTabContents extends TwoPanels:
           idsToEdit,
           Pot(asterismView, configuration),
           Pot(vizTimeView),
-          ObsConfiguration(configuration,
-                           none,
-                           constraints,
-                           wavelength,
-                           none
-                           // NonEmptyList.fromList(o.get.scienceData.offsets)
-          ).some,
+          ObsConfiguration(configuration, none, constraints, wavelength, none).some,
           props.focused.target,
           setCurrentTarget(props.programId, idsToEdit) _,
           otherObsCount(targetMap.get, idsToEdit) _,
