@@ -17,6 +17,7 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Focused
+import explore.model.ObsIdSet
 import explore.model.ObsSummaryWithTitleConstraintsAndConf
 import explore.model.ObsWithConstraints
 import explore.model.enums.AppTab
@@ -33,7 +34,9 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.model.Observation
 import lucuma.core.model.Program
+import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.react.syntax.*
 import lucuma.react.table.ColumnDef
@@ -128,9 +131,28 @@ object ObsSummaryTable extends TableHooks:
           : ColumnDef.Single[ObsSummaryWithTitleConstraintsAndConf, V] =
           ColDef(id, accessor, columnNames(id))
 
+        def obsUrl(obsId: Observation.Id): String =
+          ctx.pageUrl(AppTab.Observations, props.programId, Focused.singleObs(obsId))
+
+        def goToObs(obsId: Observation.Id): Callback =
+          ctx.pushPage(AppTab.Observations, props.programId, Focused.singleObs(obsId))
+
+        def constraintUrl(constraintId: Observation.Id): String =
+          ctx.pageUrl(AppTab.Constraints, props.programId, Focused.singleObs(constraintId))
+
+        def goToConstraint(constraintId: Observation.Id): Callback =
+          ctx.pushPage(AppTab.Constraints, props.programId, Focused.singleObs(constraintId))
+
         List(
           // TODO: GroupsColumnId
-          column(ObservationIdColumnId, _.id).sortable,
+          column(ObservationIdColumnId, _.id)
+            .setCell(cell =>
+              <.a(^.href := obsUrl(cell.value),
+                  ^.onClick ==> (_.preventDefaultCB *> goToObs(cell.value)),
+                  cell.value.toString
+              )
+            )
+            .sortable,
 
           // TODO: ValidationCheckColumnId
           column(StatusColumnId, _.status),
@@ -140,7 +162,13 @@ object ObsSummaryTable extends TableHooks:
             .setCell(_ => Icons.Star.withFixedWidth())
             .setSize(35.toPx),
           column(TargetColumnId, _.title),
-          column(ConstraintsColumnId, _.constraints).setCell(_.value.summaryString),
+          column(ConstraintsColumnId, obs => (obs.id, obs.constraintsSummary)).setCell(cell =>
+            val (id, constraintsSummary) = cell.value
+            <.a(^.href := constraintUrl(id),
+                ^.onClick ==> (_.preventDefaultCB *> goToConstraint(id)),
+                constraintsSummary
+            )
+          ),
           // TODO: FindingChartColumnId
           column(ConfigurationColumnId, _.conf),
           column(DurationColumnId, _.executionTime.toHoursMinutes)
