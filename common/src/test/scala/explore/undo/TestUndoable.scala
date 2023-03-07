@@ -10,6 +10,7 @@ import japgolly.scalajs.react.ReactCats.*
 import japgolly.scalajs.react.util.DefaultEffects.{Async => DefaultA}
 import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
 import org.typelevel.log4cats.Logger
+import crystal.react.View
 
 class TestUndoable[M](
   val valueRef:   VarRef[DefaultS, M],
