@@ -3,37 +3,40 @@
 
 package explore.model.arb
 
-import org.scalacheck.Arbitrary
-import org.scalacheck.Arbitrary.arbitrary
-import org.scalacheck.Cogen
-import eu.timepit.refined.types.string.NonEmptyString
 import eu.timepit.refined.scalacheck.string.*
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.ObsSummaryWithConstraints
-import explore.model.ObsSummaryWithTitleAndConstraints
 import explore.model.ObsSummaryWithConstraintsAndConf
-import explore.model.ObsSummaryWithTitleConstraintsAndConf
 import explore.model.ObsSummaryWithTitleAndConf
+import explore.model.ObsSummaryWithTitleAndConstraints
+import explore.model.ObsSummaryWithTitleConstraintsAndConf
+import lucuma.core.arb.ArbTime
 import lucuma.core.enums.ObsActiveStatus
 import lucuma.core.enums.ObsStatus
-import lucuma.core.model.Observation
-import lucuma.core.model.Target
-import lucuma.core.arb.ArbTime
-import lucuma.core.model.arb.ArbPosAngleConstraint.*
+import lucuma.core.math.Wavelength
 import lucuma.core.math.arb.ArbWavelength.*
-import lucuma.core.util.arb.ArbGid.*
+import lucuma.core.model.Observation
+import lucuma.core.model.PosAngleConstraint
+import lucuma.core.model.Target
+import lucuma.core.model.arb.ArbPosAngleConstraint.*
+import lucuma.core.util.TimeSpan
 import lucuma.core.util.arb.ArbEnumerated.*
+import lucuma.core.util.arb.ArbGid.*
+import lucuma.core.util.arb.ArbTimeSpan
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.ConstraintsSummary
 import lucuma.schemas.model.arb.ArbBasicConfiguration
-import java.time.Duration
-import java.time.Instant
-import lucuma.core.model.PosAngleConstraint
-import lucuma.core.math.Wavelength
 import lucuma.schemas.model.arb.ArbConstraintsSummary
+import org.scalacheck.Arbitrary
+import org.scalacheck.Arbitrary.arbitrary
+import org.scalacheck.Cogen
+
+import java.time.Instant
 
 trait ArbObsSummary {
   import ArbBasicConfiguration.given
   import ArbConstraintsSummary.given
+  import ArbTimeSpan.given
   import ArbTime.*
 
   implicit val arbObsSummaryWithConstraints: Arbitrary[ObsSummaryWithConstraints] =
@@ -43,17 +46,17 @@ trait ArbObsSummary {
         constraints  <- arbitrary[ConstraintsSummary]
         status       <- arbitrary[ObsStatus]
         activeStatus <- arbitrary[ObsActiveStatus]
-        duration     <- arbitrary[Duration]
+        executionTime     <- arbitrary[TimeSpan]
         targets      <- arbitrary[Set[Target.Id]]
-      } yield ObsSummaryWithConstraints(id, constraints, status, activeStatus, duration, targets)
+      } yield ObsSummaryWithConstraints(id, constraints, status, activeStatus, executionTime, targets)
     }
 
   implicit val cogenObsSummaryWithConstraints: Cogen[ObsSummaryWithConstraints] =
     Cogen[
-      (Observation.Id, ConstraintsSummary, ObsStatus, ObsActiveStatus, Duration, List[Target.Id])
+      (Observation.Id, ConstraintsSummary, ObsStatus, ObsActiveStatus, TimeSpan, List[Target.Id])
     ]
       .contramap(o =>
-        (o.id, o.constraints, o.status, o.activeStatus, o.duration, o.scienceTargetIds.toList)
+        (o.id, o.constraints, o.status, o.activeStatus, o.executionTime, o.scienceTargetIds.toList)
       )
 
   implicit val arbObsSummaryWithTitleAndConstraints: Arbitrary[ObsSummaryWithTitleAndConstraints] =
@@ -65,7 +68,7 @@ trait ArbObsSummary {
         constraints  <- arbitrary[ConstraintsSummary]
         status       <- arbitrary[ObsStatus]
         activeStatus <- arbitrary[ObsActiveStatus]
-        duration     <- arbitrary[Duration]
+        executionTime     <- arbitrary[TimeSpan]
       } yield ObsSummaryWithTitleAndConstraints(
         id,
         title,
@@ -73,7 +76,7 @@ trait ArbObsSummary {
         constraints,
         status,
         activeStatus,
-        duration
+        executionTime
       )
     }
 
@@ -85,7 +88,7 @@ trait ArbObsSummary {
        ConstraintsSummary,
        ObsStatus,
        ObsActiveStatus,
-       Duration
+       TimeSpan
       )
     ]
       .contramap(o =>
@@ -95,7 +98,7 @@ trait ArbObsSummary {
          o.constraints,
          o.status,
          o.activeStatus,
-         o.duration
+         o.executionTime
         )
       )
 
@@ -109,7 +112,7 @@ trait ArbObsSummary {
         constraints   <- arbitrary[ConstraintsSummary]
         status        <- arbitrary[ObsStatus]
         activeStatus  <- arbitrary[ObsActiveStatus]
-        duration      <- arbitrary[Duration]
+        executionTime      <- arbitrary[TimeSpan]
         configuration <- arbitrary[Option[BasicConfiguration]]
         vizTime       <- arbitrary[Option[Instant]]
       } yield ObsSummaryWithTitleConstraintsAndConf(
@@ -119,7 +122,7 @@ trait ArbObsSummary {
         constraints,
         status,
         activeStatus,
-        duration,
+        executionTime,
         configuration,
         vizTime
       )
@@ -134,7 +137,7 @@ trait ArbObsSummary {
        ConstraintsSummary,
        ObsStatus,
        ObsActiveStatus,
-       Duration,
+       TimeSpan,
        Option[BasicConfiguration]
       )
     ]
@@ -145,7 +148,7 @@ trait ArbObsSummary {
          o.constraints,
          o.status,
          o.activeStatus,
-         o.duration,
+         o.executionTime,
          o.configuration
         )
       )
@@ -158,7 +161,7 @@ trait ArbObsSummary {
         subtitle      <- arbitrary[Option[NonEmptyString]]
         status        <- arbitrary[ObsStatus]
         activeStatus  <- arbitrary[ObsActiveStatus]
-        duration      <- arbitrary[Duration]
+        executionTime      <- arbitrary[TimeSpan]
         configuration <- arbitrary[Option[BasicConfiguration]]
       } yield ObsSummaryWithTitleAndConf(
         id,
@@ -166,7 +169,7 @@ trait ArbObsSummary {
         subtitle,
         status,
         activeStatus,
-        duration,
+        executionTime,
         configuration
       )
     }
@@ -178,7 +181,7 @@ trait ArbObsSummary {
        Option[String],
        ObsStatus,
        ObsActiveStatus,
-       Duration,
+       TimeSpan,
        Option[BasicConfiguration]
       )
     ]
@@ -188,7 +191,7 @@ trait ArbObsSummary {
          o.subtitle.map(_.value),
          o.status,
          o.activeStatus,
-         o.duration,
+         o.executionTime,
          o.configuration
         )
       )
@@ -200,7 +203,7 @@ trait ArbObsSummary {
         constraints   <- arbitrary[ConstraintsSummary]
         status        <- arbitrary[ObsStatus]
         activeStatus  <- arbitrary[ObsActiveStatus]
-        duration      <- arbitrary[Duration]
+        executionTime      <- arbitrary[TimeSpan]
         targets       <- arbitrary[Set[Target.Id]]
         configuration <- arbitrary[Option[BasicConfiguration]]
         vizTime       <- arbitrary[Option[Instant]]
@@ -211,7 +214,7 @@ trait ArbObsSummary {
         constraints,
         status,
         activeStatus,
-        duration,
+        executionTime,
         targets,
         configuration,
         vizTime,
@@ -226,7 +229,7 @@ trait ArbObsSummary {
        ConstraintsSummary,
        ObsStatus,
        ObsActiveStatus,
-       Duration,
+       TimeSpan,
        Option[BasicConfiguration],
        List[Target.Id],
        Option[Instant],
@@ -239,7 +242,7 @@ trait ArbObsSummary {
          o.constraints,
          o.status,
          o.activeStatus,
-         o.duration,
+         o.executionTime,
          o.configuration,
          o.scienceTargetIds.toList,
          o.visualizationTime,
