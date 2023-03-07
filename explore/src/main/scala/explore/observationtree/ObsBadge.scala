@@ -14,6 +14,7 @@ import explore.model.ObsSummary
 import explore.model.ObsWithConf
 import explore.model.ObsWithConstraints
 import explore.model.ObsWithTitle
+import explore.model.syntax.all.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -33,7 +34,6 @@ import react.floatingui.syntax.*
 import react.primereact.Button
 import react.primereact.InputSwitch
 import react.primereact.TooltipOptions
-import explore.model.syntax.all.*
 
 case class ObsBadge(
   obs:               ObsSummary, // The layout will depend on the mixins of the ObsSummary.
