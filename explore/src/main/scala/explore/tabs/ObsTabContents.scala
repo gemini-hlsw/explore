@@ -197,7 +197,6 @@ object ObsTabContents extends TwoPanels:
             props.userId,
             props.programId,
             observations,
-            props.obsListStacks,
             renderInTitle
           )
           // TODO: elevation view

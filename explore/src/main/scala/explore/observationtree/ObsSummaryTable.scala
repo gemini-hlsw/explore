@@ -28,7 +28,6 @@ import explore.shortcuts.GoToSummary
 import explore.shortcuts.ShortcutCallbacks
 import explore.shortcuts.toHotKeys
 import explore.syntax.ui.*
-import explore.undo.UndoStacks
 import japgolly.scalajs.react.ScalaFnComponent
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
@@ -49,7 +48,6 @@ import lucuma.ui.table.TableHooks
 import lucuma.ui.table.TableOptionsWithStateStore
 import lucuma.ui.table.*
 import org.typelevel.log4cats.Logger
-import queries.schemas.odb.ObsQueries.ConstraintsList
 import queries.schemas.odb.ObsQueries.ObservationList
 import react.common.ReactFnProps
 import react.hotkeys.*
@@ -59,11 +57,8 @@ final case class ObsSummaryTable(
   userId:        Option[User.Id],
   programId:     Program.Id,
   observations:  View[ObservationList],
-  obsListStacks: View[UndoStacks[IO, ObservationList]],
   renderInTitle: Tile.RenderInTitle
-) extends ReactFnProps(
-      ObsSummaryTable.component
-    )
+) extends ReactFnProps(ObsSummaryTable.component)
 
 object ObsSummaryTable extends TableHooks:
   private type Props = ObsSummaryTable
