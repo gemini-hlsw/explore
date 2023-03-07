@@ -40,6 +40,7 @@ import queries.schemas.odb.ObsQueries
 import react.common.ReactFnProps
 
 import java.time.Instant
+import lucuma.core.math.Offset
 
 object AsterismEditorTile:
 
@@ -51,6 +52,7 @@ object AsterismEditorTile:
     potVizTime:      Pot[View[Option[Instant]]],
     constraints:     Option[ConstraintSet],
     wavelength:      Option[Wavelength],
+    offsets:         List[Offset],
     currentTarget:   Option[Target.Id],
     setTarget:       (Option[Target.Id], SetRouteVia) => Callback,
     otherObsCount:   Target.Id => Int,

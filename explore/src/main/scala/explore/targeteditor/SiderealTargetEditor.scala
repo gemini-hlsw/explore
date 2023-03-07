@@ -301,7 +301,8 @@ object SiderealTargetEditor {
                     props.configuration,
                     props.paProps.map(_.constraint.get),
                     props.constraints,
-                    props.wavelength
+                    props.wavelength,
+                    Nil
                   ),
                   props.asterism.get,
                   props.fullScreen,

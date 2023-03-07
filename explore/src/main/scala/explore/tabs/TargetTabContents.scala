@@ -165,7 +165,7 @@ object TargetTabContents extends TwoPanels:
   )
 
   private def otherObsCount(targetMap: TargetWithObsList, obsIds: ObsIdSet)(
-    targetId: Target.Id
+    targetId:                          Target.Id
   ): Int =
     targetMap.get(targetId).fold(0)(tg => (tg.obsIds -- obsIds.toSortedSet).size)
 
@@ -210,8 +210,8 @@ object TargetTabContents extends TwoPanels:
       ctx.pushPage(AppTab.Targets, props.programId, focused)
 
     def selectObservationAndTarget(expandedIds: View[SortedSet[ObsIdSet]])(
-      obsId:    Observation.Id,
-      targetId: Target.Id
+      obsId:                                    Observation.Id,
+      targetId:                                 Target.Id
     ): Callback = {
       val obsIdSet = ObsIdSet.one(obsId)
       findAsterismGroup(obsIdSet, asterismGroupsWithObs.get.asterismGroups)
@@ -226,7 +226,7 @@ object TargetTabContents extends TwoPanels:
     def onModAsterismsWithObs(
       groupIds:  ObsIdSet,
       editedIds: ObsIdSet
-    )(agwo: AsterismGroupsWithObs): Callback =
+    )(agwo:      AsterismGroupsWithObs): Callback =
       findAsterismGroup(editedIds, agwo.asterismGroups).foldMap { tlg =>
         // We should always find the group.
         // If a group was edited while closed and it didn't create a merger, keep it closed,
@@ -428,8 +428,8 @@ object TargetTabContents extends TwoPanels:
       val wavelength                                = obsConf.map(_._4)
 
       def setCurrentTarget(programId: Program.Id, oids: ObsIdSet)(
-        tid: Option[Target.Id],
-        via: SetRouteVia
+        tid:                          Option[Target.Id],
+        via:                          SetRouteVia
       ): Callback =
         ctx.setPageVia(AppTab.Targets, programId, Focused(oids.some, tid), via)
 
@@ -442,6 +442,7 @@ object TargetTabContents extends TwoPanels:
           Pot(vizTimeView),
           constraints,
           wavelength,
+          Nil,
           props.focused.target,
           setCurrentTarget(props.programId, idsToEdit) _,
           otherObsCount(targetMap.get, idsToEdit) _,

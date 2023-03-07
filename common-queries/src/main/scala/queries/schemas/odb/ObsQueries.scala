@@ -44,6 +44,7 @@ import lucuma.core.util.Timestamp
 import java.time.Duration
 import java.time.Instant
 import scala.collection.immutable.SortedMap
+import lucuma.core.math.Offset
 
 object ObsQueries:
   type ObservationList = KeyedIndexedList[Observation.Id, ObsSummaryWithTitleConstraintsAndConf]
@@ -63,6 +64,7 @@ object ObsQueries:
     constraints:  ConstraintSet,
     targets:      Targets,
     posAngle:     PosAngleConstraint,
+    offsets:      List[Offset],
     potITC:       Pot[Option[OdbItcResult.Success]]
   )
 
@@ -125,10 +127,12 @@ object ObsQueries:
             constraints = obs.constraintSet,
             targets = obs.targetEnvironment,
             posAngle = obs.posAngleConstraint,
+            offsets = data.sequence.foldMap(_.executionConfig.allOffsets).distinct,
             potITC = Pot(itcSuccess)
           )
         )
       }
+
   extension (self: OdbItcResult.Success)
     def asFixedExposureTime: FixedExposure =
       FixedExposure(self.exposures, self.exposureTime)

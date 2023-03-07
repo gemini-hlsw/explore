@@ -17,13 +17,15 @@ import monocle.Focus
 import org.typelevel.cats.time.instantInstances
 
 import java.time.Instant
+import lucuma.core.math.Offset
 
 case class ObsConfiguration(
   vizTime:            Instant,
   configuration:      Option[BasicConfiguration],
   posAngleConstraint: Option[PosAngleConstraint],
   constraints:        Option[ConstraintSet],
-  wavelength:         Option[Wavelength]
+  wavelength:         Option[Wavelength],
+  offsets:            List[Offset]
 ) derives Eq
 
 object ObsConfiguration:
@@ -32,3 +34,4 @@ object ObsConfiguration:
   val posAngleConstraint = Focus[ObsConfiguration](_.posAngleConstraint)
   val constraints        = Focus[ObsConfiguration](_.constraints)
   val wavelength         = Focus[ObsConfiguration](_.wavelength)
+  val offsets            = Focus[ObsConfiguration](_.offsets)

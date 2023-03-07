@@ -254,8 +254,8 @@ object ObsTabTiles:
           )
 
         def setCurrentTarget(programId: Program.Id, oid: Option[Observation.Id])(
-          tid: Option[Target.Id],
-          via: SetRouteVia
+          tid:                          Option[Target.Id],
+          via:                          SetRouteVia
         ): Callback =
           (potAsterism.toOption, tid)
             // When selecting the current target focus the asterism zipper
@@ -279,6 +279,7 @@ object ObsTabTiles:
           vizTimeView,
           obsView.toOption.map(_.get.scienceData.constraints),
           obsView.toOption.flatMap(_.get.scienceData.requirements.spectroscopy.wavelength),
+          obsView.toOption.foldMap(_.get.scienceData.offsets),
           props.focusedTarget,
           setCurrentTarget(props.programId, props.obsId.some),
           otherObsCount(props.targetMap, props.obsId, _),
