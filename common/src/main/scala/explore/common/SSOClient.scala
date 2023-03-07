@@ -94,7 +94,6 @@ case class SSOClient[F[_]: Async: Logger](config: SSOConfig) {
                 ).fold(msg => throw new RuntimeException(s"Error decoding the token: $msg"), _.some)
               )
           case r                    =>
-            println(r)
             Applicative[F].pure(none[UserVault])
         }
     }

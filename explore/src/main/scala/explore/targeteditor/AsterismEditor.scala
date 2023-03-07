@@ -18,6 +18,7 @@ import explore.config.VizTimeEditor
 import explore.model.AladinFullScreen
 import explore.model.AppContext
 import explore.model.Asterism
+import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.PAProperties
 import explore.model.enums.AgsState
@@ -67,16 +68,13 @@ case class AsterismEditor(
   sharedInObsIds: ObsIdSet,
   asterism:       View[Option[Asterism]],
   potVizTime:     Pot[View[Option[Instant]]],
-  configuration:  Option[BasicConfiguration],
-  constraints:    Option[ConstraintSet],
-  wavelength:     Option[Wavelength],
+  configuration:  Option[ObsConfiguration],
   currentTarget:  Option[Target.Id],
   setTarget:      (Option[Target.Id], SetRouteVia) => Callback,
   otherObsCount:  Target.Id => Int,
   undoStacks:     View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
   searching:      View[Set[Target.Id]],
-  renderInTitle:  Tile.RenderInTitle,
-  paProps:        Option[PAProperties]
+  renderInTitle:  Tile.RenderInTitle
 ) extends ReactFnProps(AsterismEditor.component)
 
 object AsterismEditor extends AsterismModifier:
@@ -219,8 +217,6 @@ object AsterismEditor extends AsterismModifier:
                           asterism,
                           vizTime,
                           props.configuration,
-                          props.constraints,
-                          props.wavelength,
                           props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
                           props.searching,
                           onClone = onCloneTarget(targetId, props.asterism, props.setTarget) _,
@@ -228,8 +224,7 @@ object AsterismEditor extends AsterismModifier:
                             if (otherObsCount > 0 && editScope.get === EditScope.CurrentOnly)
                               props.sharedInObsIds.some
                             else none,
-                          fullScreen = fullScreen,
-                          props.paProps
+                          fullScreen = fullScreen
                         )
                       )
                     )

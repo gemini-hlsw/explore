@@ -4,6 +4,7 @@
 package explore.tabs
 
 import cats.Order.*
+import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.Pot
@@ -165,7 +166,7 @@ object TargetTabContents extends TwoPanels:
   )
 
   private def otherObsCount(targetMap: TargetWithObsList, obsIds: ObsIdSet)(
-    targetId:                          Target.Id
+    targetId: Target.Id
   ): Int =
     targetMap.get(targetId).fold(0)(tg => (tg.obsIds -- obsIds.toSortedSet).size)
 
@@ -210,8 +211,8 @@ object TargetTabContents extends TwoPanels:
       ctx.pushPage(AppTab.Targets, props.programId, focused)
 
     def selectObservationAndTarget(expandedIds: View[SortedSet[ObsIdSet]])(
-      obsId:                                    Observation.Id,
-      targetId:                                 Target.Id
+      obsId:    Observation.Id,
+      targetId: Target.Id
     ): Callback = {
       val obsIdSet = ObsIdSet.one(obsId)
       findAsterismGroup(obsIdSet, asterismGroupsWithObs.get.asterismGroups)
@@ -226,7 +227,7 @@ object TargetTabContents extends TwoPanels:
     def onModAsterismsWithObs(
       groupIds:  ObsIdSet,
       editedIds: ObsIdSet
-    )(agwo:      AsterismGroupsWithObs): Callback =
+    )(agwo: AsterismGroupsWithObs): Callback =
       findAsterismGroup(editedIds, agwo.asterismGroups).foldMap { tlg =>
         // We should always find the group.
         // If a group was edited while closed and it didn't create a merger, keep it closed,
@@ -428,8 +429,8 @@ object TargetTabContents extends TwoPanels:
       val wavelength                                = obsConf.map(_._4)
 
       def setCurrentTarget(programId: Program.Id, oids: ObsIdSet)(
-        tid:                          Option[Target.Id],
-        via:                          SetRouteVia
+        tid: Option[Target.Id],
+        via: SetRouteVia
       ): Callback =
         ctx.setPageVia(AppTab.Targets, programId, Focused(oids.some, tid), via)
 
@@ -440,16 +441,19 @@ object TargetTabContents extends TwoPanels:
           idsToEdit,
           Pot(asterismView, configuration),
           Pot(vizTimeView),
-          constraints,
-          wavelength,
-          Nil,
+          ObsConfiguration(configuration,
+                           none,
+                           constraints,
+                           wavelength,
+                           none
+                           // NonEmptyList.fromList(o.get.scienceData.offsets)
+          ).some,
           props.focused.target,
           setCurrentTarget(props.programId, idsToEdit) _,
           otherObsCount(targetMap.get, idsToEdit) _,
           props.targetsUndoStacks,
           props.searching,
           title,
-          none,
           backButton.some
         )
 
@@ -499,11 +503,10 @@ object TargetTabContents extends TwoPanels:
 
       val title = s"Editing Target ${target.name.value} [$targetId]"
 
-      val targetTile = SiderealTargetEditorTile.siderealTargetEditorTile(
+      val targetTile = SiderealTargetEditorTile.noObsSiderealTargetEditorTile(
         props.userId,
         targetId,
         targetView,
-        none,
         props.targetsUndoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
         props.searching,
         title,

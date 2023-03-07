@@ -3,6 +3,7 @@
 
 package explore.tabs
 
+import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.TransactionalClient
@@ -20,6 +21,7 @@ import explore.model.BasicConfigAndItc
 import explore.model.ConstraintGroup
 import explore.model.Focused
 import explore.model.ModelUndoStacks
+import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.PAProperties
 import explore.model.TargetSummary
@@ -254,8 +256,8 @@ object ObsTabTiles:
           )
 
         def setCurrentTarget(programId: Program.Id, oid: Option[Observation.Id])(
-          tid:                          Option[Target.Id],
-          via:                          SetRouteVia
+          tid: Option[Target.Id],
+          via: SetRouteVia
         ): Callback =
           (potAsterism.toOption, tid)
             // When selecting the current target focus the asterism zipper
@@ -271,22 +273,29 @@ object ObsTabTiles:
 
         val paProps = posAngle.map(p => PAProperties(props.obsId, selectedPA, agsState, p))
 
+        val obsConf = obsView.toOption.map(o =>
+          ObsConfiguration(
+            o.get.scienceData.mode.map(_.toBasicConfiguration),
+            paProps,
+            o.get.scienceData.constraints.some,
+            o.get.scienceData.requirements.spectroscopy.wavelength,
+            o.get.scienceData.offsets
+          )
+        )
+
         val targetTile = AsterismEditorTile.asterismEditorTile(
           props.userId,
           props.programId,
           ObsIdSet.one(props.obsId),
           potAsterismMode,
           vizTimeView,
-          obsView.toOption.map(_.get.scienceData.constraints),
-          obsView.toOption.flatMap(_.get.scienceData.requirements.spectroscopy.wavelength),
-          obsView.toOption.foldMap(_.get.scienceData.offsets),
+          obsConf,
           props.focusedTarget,
           setCurrentTarget(props.programId, props.obsId.some),
           otherObsCount(props.targetMap, props.obsId, _),
           props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
           props.searching,
           "Targets",
-          paProps,
           backButton = none
         )
 

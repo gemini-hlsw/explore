@@ -79,17 +79,19 @@ import scala.concurrent.duration.*
 case class AladinCell(
   uid:        User.Id,
   tid:        Target.Id,
-  obsConf:    ObsConfiguration,
+  vizTime:    Instant,
+  obsConf:    Option[ObsConfiguration],
   asterism:   Asterism,
-  fullScreen: View[AladinFullScreen],
-  paProps:    Option[PAProperties]
+  fullScreen: View[AladinFullScreen]
 ) extends ReactFnProps(AladinCell.component) {
   val positions =
-    obsConf.configuration.flatMap(c =>
-      obsConf.posAngleConstraint.flatMap(
-        _.anglesToTestAt(c.siteFor, asterism.baseTracking, obsConf.vizTime)
-      )
-    )
+    for {
+      conf          <- obsConf
+      configuration <- conf.configuration
+      paConstraint  <- conf.posAngleConstraint
+      positions     <-
+        paConstraint.anglesToTestAt(configuration.siteFor, asterism.baseTracking, vizTime)
+    } yield positions
 
   // TODO Link to offsets on the sequence
   def offsets: Option[NonEmptyList[Offset]] = NonEmptyList
@@ -126,7 +128,7 @@ object AladinCell extends ModelOptics with AladinCommon:
   }
 
   private given Reusability[Props] =
-    Reusability.by(x => (x.uid, x.tid, x.obsConf, x.paProps, x.asterism, x.fullScreen.reuseByValue))
+    Reusability.by(x => (x.uid, x.tid, x.obsConf, x.asterism, x.fullScreen.reuseByValue))
 
   private val fovLens: Lens[TargetVisualOptions, Fov] =
     Lens[TargetVisualOptions, Fov](t => Fov(t.fovRA, t.fovDec))(f =>
@@ -205,10 +207,11 @@ object AladinCell extends ModelOptics with AladinCommon:
   ): Option[AgsAnalysis] => Callback =
     case Some(AgsAnalysis.Usable(_, _, _, _, pos)) =>
       val angle = pos.head._1.posAngle
-      props.obsConf.posAngleConstraint match
+      props.obsConf.flatMap(_.posAngleConstraint) match
         case Some(PosAngleConstraint.AllowFlip(a)) if a =!= angle =>
-          props.paProps
-            .map(_.constraint.set(PosAngleConstraint.AllowFlip(angle)))
+          props.obsConf
+            .flatMap(_.posAngleConstraintView)
+            .map(_.set(PosAngleConstraint.AllowFlip(angle)))
             .getOrEmpty *> manualOverride.set(ManualAgsOverride(true))
         case _                                                    => Callback.empty
     case _                                         => Callback.empty
@@ -224,17 +227,21 @@ object AladinCell extends ModelOptics with AladinCommon:
       // Analysis results
       .useSerialState(List.empty[AgsAnalysis])
       // Request data again if vizTime changes more than a month
-      .useEffectWithDepsBy((p, _, _, _, _) => (p.obsConf.vizTime, p.asterism.baseTracking)) {
+      .useEffectWithDepsBy((p, _, _, _, _) => (p.vizTime, p.asterism.baseTracking)) {
         (props, ctx, _, gs, _) => (vizTime, baseTracking) =>
           import ctx.given
 
           (for {
-            _          <- props.paProps.foldMap(_.agsState.async.set(AgsState.LoadingCandidates))
+            _          <- props.obsConf
+                            .flatMap(_.agsState)
+                            .foldMap(_.async.set(AgsState.LoadingCandidates))
             candidates <- CatalogClient[IO].requestSingle(
                             CatalogMessage.GSRequest(baseTracking, vizTime)
                           )
             _          <- candidates.map(gs.setStateAsync(_)).orEmpty
-          } yield ()).guarantee(props.paProps.foldMap(_.agsState.async.set(AgsState.Idle)))
+          } yield ()).guarantee(
+            props.obsConf.flatMap(_.agsState).foldMap(_.async.set(AgsState.Idle))
+          )
       }
       // Reference to the root
       .useMemo(())(_ =>
@@ -272,7 +279,7 @@ object AladinCell extends ModelOptics with AladinCommon:
       )
       .useStateView(ManualAgsOverride(false))
       // Reset selection if pos angle changes except for manual selection changes
-      .useEffectWithDepsBy((p, _, _, _, _, _, _, _, _) => p.obsConf.posAngleConstraint)(
+      .useEffectWithDepsBy((p, _, _, _, _, _, _, _, _) => p.obsConf.flatMap(_.posAngleConstraint))(
         (_, _, _, _, _, _, selectedIndex, _, agsOverride) =>
           _ => selectedIndex.set(none).unless_(agsOverride.get.value)
       )
@@ -280,10 +287,10 @@ object AladinCell extends ModelOptics with AladinCommon:
       .useEffectWithDepsBy((p, _, _, candidates, _, _, _, _, _) =>
         (p.asterism.baseTracking,
          p.positions,
-         p.obsConf.constraints,
-         p.obsConf.wavelength,
-         p.obsConf.vizTime,
-         p.obsConf.configuration,
+         p.obsConf.flatMap(_.constraints),
+         p.obsConf.flatMap(_.wavelength),
+         p.vizTime,
+         p.obsConf.flatMap(_.configuration),
          candidates.value
         )
       ) { (props, ctx, _, _, ags, _, selectedIndex, _, agsOverride) =>
@@ -298,11 +305,11 @@ object AladinCell extends ModelOptics with AladinCommon:
               ) =>
             import ctx.given
 
-            (selectedIndex
-              .set(none) *> props.paProps.map(_.selectedGS.set(none)).orEmpty)
+            (selectedIndex.set(none) *>
+              props.obsConf.flatMap(_.selectedGS).map(_.set(none)).orEmpty)
               .to[IO]
               .whenA(positions.isEmpty) *>
-              (positions, tracking.at(vizTime), props.paProps.map(_.agsState)).mapN {
+              (positions, tracking.at(vizTime), props.obsConf.flatMap(_.agsState)).mapN {
                 (angles, base, agsState) =>
                   val positions =
                     for {
@@ -347,10 +354,11 @@ object AladinCell extends ModelOptics with AladinCommon:
                             {
                               val index      = 0.some.filter(_ => r.exists(_.nonEmpty))
                               val selectedGS = index.flatMap(i => r.flatMap(_.lift(i)))
-                              (selectedIndex
-                                .set(index) *> props.paProps
-                                .map(_.selectedGS.set(selectedGS))
-                                .getOrEmpty).unlessA(agsOverride.get.value)
+                              (selectedIndex.set(index) *>
+                                props.obsConf
+                                  .flatMap(_.selectedGS)
+                                  .map(_.set(selectedGS))
+                                  .getOrEmpty).unlessA(agsOverride.get.value)
                             }).to[IO]
                         }
                         .unlessA(candidates.isEmpty)
@@ -386,8 +394,9 @@ object AladinCell extends ModelOptics with AladinCommon:
             idx
               .map(agsResults.value.lift)
               .map(a =>
-                flipAngle(props, agsManualOverride)(a) *> props.paProps
-                  .map(_.selectedGS.set(a))
+                flipAngle(props, agsManualOverride)(a) *> props.obsConf
+                  .flatMap(_.selectedGS)
+                  .map(_.set(a))
                   .getOrEmpty
               )
               .getOrEmpty
@@ -514,6 +523,7 @@ object AladinCell extends ModelOptics with AladinCommon:
             case (u: UserGlobalPreferences, t: TargetVisualOptions) =>
               AladinContainer(
                 props.asterism,
+                props.vizTime,
                 props.obsConf,
                 u.aladinMouseScroll,
                 t.copy(fullScreen = props.fullScreen.get),
@@ -522,13 +532,14 @@ object AladinCell extends ModelOptics with AladinCommon:
                 offsetChangeInAladin.reuseAlways,
                 selectedGuideStar,
                 agsResults.value,
-                props.offsets.foldMap(_.toList),
                 t.scienceOffsets
               )
 
           val renderToolbar: ((UserGlobalPreferences, TargetVisualOptions)) => VdomNode =
             case (_: UserGlobalPreferences, t: TargetVisualOptions) =>
-              val agsState = props.paProps.map(_.agsState.get).getOrElse(AgsState.Idle)
+              val agsState = props.obsConf
+                .flatMap(_.agsState.map(_.get))
+                .getOrElse(AgsState.Idle)
               AladinToolbar(Fov(t.fovRA, t.fovDec),
                             mouseCoords.value,
                             agsState,
@@ -540,17 +551,19 @@ object AladinCell extends ModelOptics with AladinCommon:
           val renderAgsOverlay: ((UserGlobalPreferences, TargetVisualOptions)) => VdomNode =
             case (u: UserGlobalPreferences, t: TargetVisualOptions) =>
               if (t.agsOverlay.visible && usableGuideStar) {
-                props.paProps.map(paProps =>
-                  <.div(
-                    ExploreStyles.AgsOverlay,
-                    AgsOverlay(
-                      selectedGSIndex,
-                      agsResults.value.count(_.isUsable),
-                      selectedGuideStar,
-                      paProps.agsState.get
+                props.obsConf
+                  .flatMap(_.agsState)
+                  .map(agsState =>
+                    <.div(
+                      ExploreStyles.AgsOverlay,
+                      AgsOverlay(
+                        selectedGSIndex,
+                        agsResults.value.count(_.isUsable),
+                        selectedGuideStar,
+                        agsState.get
+                      )
                     )
                   )
-                )
               } else EmptyVdom
 
           val menuItems = List(

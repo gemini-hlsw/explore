@@ -3,11 +3,13 @@
 
 package explore.model
 
+import cats.Eq
 import cats.syntax.all.*
 import crystal.react.View
 import crystal.react.implicits.*
 import explore.model.enums.AgsState
 import explore.model.reusability.given
+import japgolly.scalajs.react.ReactCats.*
 import japgolly.scalajs.react.Reusability
 import lucuma.ags.AgsAnalysis
 import lucuma.core.model.Observation
@@ -24,5 +26,8 @@ case class PAProperties(
 }
 
 object PAProperties:
+  given Eq[PAProperties] =
+    Eq.by(x => (x.oid, x.selectedGS.get, x.agsState.get, x.constraint.get))
+
   given Reusability[PAProperties] =
-    Reusability.by(x => (x.oid, x.selectedGS.get, x.agsState.get, x.constraint.get))
+    Reusability.byEq

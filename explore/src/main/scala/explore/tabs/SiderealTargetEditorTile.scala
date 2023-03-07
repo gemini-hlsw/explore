@@ -25,11 +25,10 @@ import java.time.Instant
 
 object SiderealTargetEditorTile {
 
-  def siderealTargetEditorTile(
+  def noObsSiderealTargetEditorTile(
     userId:     Option[User.Id],
     targetId:   Target.Id,
     target:     View[Target.Sidereal],
-    vizTime:    Option[Instant],
     undoStacks: View[UndoStacks[IO, Target.Sidereal]],
     searching:  View[Set[Target.Id]],
     title:      String,
@@ -52,13 +51,10 @@ object SiderealTargetEditorTile {
             SiderealTargetEditor(
               uid,
               asterism,
-              vizTime,
-              none,
               none,
               none,
               undoStacks,
               searching,
-              paProps = none,
               renderInTitle = renderInTitle.some,
               fullScreen = fullScreen
             )

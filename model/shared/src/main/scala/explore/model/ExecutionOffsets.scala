@@ -3,9 +3,9 @@
 
 package explore.model
 
-import lucuma.core.model.sequence.ExecutionSequence
-import lucuma.core.math.Offset
 import io.circe.Decoder
+import lucuma.core.math.Offset
+import lucuma.core.model.sequence.ExecutionSequence
 import lucuma.schemas.decoders.given
 
 case class StepConfigOffset(offset: Option[Offset]) derives Decoder
