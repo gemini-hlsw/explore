@@ -44,6 +44,8 @@ import queries.common.ObsQueriesGQL.*
 import java.time.Duration
 import java.time.Instant
 import scala.collection.immutable.SortedMap
+import lucuma.core.math.Offset
+import cats.data.NonEmptyList
 
 object ObsQueries:
   type ObservationList = KeyedIndexedList[Observation.Id, ObsSummaryWithTitleConstraintsAndConf]
@@ -63,6 +65,7 @@ object ObsQueries:
     constraints:  ConstraintSet,
     targets:      Targets,
     posAngle:     PosAngleConstraint,
+    offsets:      Option[NonEmptyList[Offset]],
     potITC:       Pot[Option[OdbItcResult.Success]]
   )
 
@@ -79,6 +82,8 @@ object ObsQueries:
       Focus[ScienceData](_.posAngle)
     val potITC: Lens[ScienceData, Pot[Option[OdbItcResult.Success]]] =
       Focus[ScienceData](_.potITC)
+    val offsets: Lens[ScienceData, Option[NonEmptyList[Offset]]]     =
+      Focus[ScienceData](_.offsets)
   }
 
   case class ObsEditData(
@@ -125,10 +130,13 @@ object ObsQueries:
             constraints = obs.constraintSet,
             targets = obs.targetEnvironment,
             posAngle = obs.posAngleConstraint,
+            offsets =
+              NonEmptyList.fromList(data.sequence.foldMap(_.executionConfig.allOffsets).distinct),
             potITC = Pot(itcSuccess)
           )
         )
       }
+
   extension (self: OdbItcResult.Success)
     def asFixedExposureTime: FixedExposure =
       FixedExposure(self.exposures, self.exposureTime)

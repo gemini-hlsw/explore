@@ -47,13 +47,15 @@ import react.common.ReactFnProps
 import react.primereact.Button
 import react.resizeDetector.hooks.*
 
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import scala.concurrent.duration.*
 
 case class AladinContainer(
   asterism:               Asterism,
-  obsConf:                ObsConfiguration,
+  vizTime:                Instant,
+  obsConf:                Option[ObsConfiguration],
   allowMouseScroll:       AladinMouseScroll,
   options:                TargetVisualOptions,
   updateMouseCoordinates: Coordinates => Callback,
@@ -62,7 +64,6 @@ case class AladinContainer(
   updateViewOffset:       Offset => Callback,
   selectedGuideStar:      Option[AgsAnalysis],
   guideStarCandidates:    List[AgsAnalysis],
-  offsets:                List[Offset],
   showScienceOffsets:     Visible
 ) extends ReactFnProps(AladinContainer.component)
 
@@ -109,15 +110,15 @@ object AladinContainer extends AladinCommon {
 
   private def baseAndScience(p: Props) = {
     val base: CoordinatesAtVizTime = p.asterism
-      .baseTrackingAt(p.obsConf.vizTime)
-      .flatMap(_.at(p.obsConf.vizTime))
+      .baseTrackingAt(p.vizTime)
+      .flatMap(_.at(p.vizTime))
       .getOrElse(CoordinatesAtVizTime(p.asterism.baseTracking.baseCoordinates))
 
     val science = p.asterism.toSidereal
       .map(t =>
         (t.id === p.asterism.focus.id,
          t.target.name,
-         t.target.tracking.at(p.obsConf.vizTime),
+         t.target.tracking.at(p.vizTime),
          t.target.tracking.baseCoordinates
         )
       )
@@ -133,7 +134,7 @@ object AladinContainer extends AladinCommon {
       .useStateBy { (p, baseCoordinates) =>
         baseCoordinates.value._1.value.offsetBy(Angle.Angle0, p.options.viewOffset)
       }
-      .useEffectWithDepsBy((p, _, _) => (p.asterism, p.obsConf.vizTime)) {
+      .useEffectWithDepsBy((p, _, _) => (p.asterism, p.vizTime)) {
         (p, baseCoordinates, currentPos) => _ =>
           val (base, science) = baseAndScience(p)
           baseCoordinates.setState((base, science)) *>
@@ -165,7 +166,7 @@ object AladinContainer extends AladinCommon {
       }
       // Memoized svg
       .useMemoBy((p, allCoordinates, _, _) =>
-        (allCoordinates, p.obsConf.configuration, p.options, p.selectedGuideStar)
+        (allCoordinates, p.obsConf.flatMap(_.configuration), p.options, p.selectedGuideStar)
       ) { (_, _, _, _) => (allCoordinates, configuration, options, gs) =>
         val posAngle             = gs.posAngle
         val candidatesVisibility =
@@ -211,8 +212,8 @@ object AladinContainer extends AladinCommon {
          props.options.agsCandidates.visible,
          props.options.fullScreen,
          props.options.fovRA,
-         props.obsConf.vizTime,
-         props.obsConf.configuration,
+         props.vizTime,
+         props.obsConf.flatMap(_.configuration),
          props.selectedGuideStar,
          allCoordinates
         )
@@ -335,7 +336,7 @@ object AladinContainer extends AladinCommon {
               (fov.setState(v.some) *> props.updateFov(v)).unless_(ignore)
             }
 
-          val vizTime = props.obsConf.vizTime
+          val vizTime = props.vizTime
 
           def includeSvg(v: JsAladin): Callback =
             v.onZoom(onZoom) *> // re render on zoom
@@ -380,15 +381,16 @@ object AladinContainer extends AladinCommon {
               }
             else Nil
 
-          val offsetIndicators = props.offsets.zipWithIndex.map { case (o, i) =>
-            for {
-              idx <- refineV[NonNegative](i).toOption
-              gs  <- props.selectedGuideStar
-              pa  <- gs.posAngle
-              c   <- baseCoordinates.value.offsetBy(pa, o)
-              if props.showScienceOffsets.visible
-            } yield SVGTarget.OffsetIndicator(c, idx, o, Css.Empty, 5)
-          }
+          val offsetIndicators =
+            props.obsConf.flatMap(_.offsets).foldMap(_.toList).zipWithIndex.map { case (o, i) =>
+              for {
+                idx <- refineV[NonNegative](i).toOption
+                gs  <- props.selectedGuideStar
+                pa  <- gs.posAngle
+                c   <- baseCoordinates.value.offsetBy(pa, o)
+                if props.showScienceOffsets.visible
+              } yield SVGTarget.OffsetIndicator(c, idx, o, Css.Empty, 5)
+            }
 
           val screenOffset =
             currentPos.value.map(_.diff(baseCoordinates.value).offset).getOrElse(Offset.Zero)

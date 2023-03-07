@@ -4,6 +4,7 @@
 package explore.tabs
 
 import cats.Order.*
+import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.Pot
@@ -440,15 +441,13 @@ object TargetTabContents extends TwoPanels:
           idsToEdit,
           Pot(asterismView, configuration),
           Pot(vizTimeView),
-          constraints,
-          wavelength,
+          ObsConfiguration(configuration, none, constraints, wavelength, none).some,
           props.focused.target,
           setCurrentTarget(props.programId, idsToEdit) _,
           otherObsCount(targetMap.get, idsToEdit) _,
           props.targetsUndoStacks,
           props.searching,
           title,
-          none,
           backButton.some
         )
 
@@ -498,11 +497,10 @@ object TargetTabContents extends TwoPanels:
 
       val title = s"Editing Target ${target.name.value} [$targetId]"
 
-      val targetTile = SiderealTargetEditorTile.siderealTargetEditorTile(
+      val targetTile = SiderealTargetEditorTile.noObsSiderealTargetEditorTile(
         props.userId,
         targetId,
         targetView,
-        none,
         props.targetsUndoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
         props.searching,
         title,

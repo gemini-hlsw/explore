@@ -120,6 +120,24 @@ object ObsQueriesGQL {
   @GraphQL
   trait ObsEditQuery extends GraphQLOperation[ObservationDB] {
     val document = s"""
+      fragment stepDataGN on GmosNorthStep {
+        id
+        stepConfig {
+          ... on Science {
+            offset $OffsetSubquery
+          }
+        }
+      }
+
+      fragment stepDataGS on GmosSouthStep {
+        id
+        stepConfig {
+          ... on Science {
+            offset $OffsetSubquery
+          }
+        }
+      }
+
       query($$programId: ProgramId!, $$obsId: ObservationId!) {
         observation(observationId: $$obsId) {
           id
@@ -146,12 +164,48 @@ object ObsQueriesGQL {
           }
           observingMode $ObservingModeSubquery
         }
+
+        sequence(programId: $$programId, observationId: $$obsId) {
+          executionConfig {
+            ... on GmosSouthExecutionConfig {
+              science {
+                nextAtom {
+                  steps {
+                    ...stepDataGS
+                  }
+                }
+                possibleFuture {
+                  steps {
+                    ...stepDataGS
+                  }
+                }
+              }
+            }
+            ... on GmosNorthExecutionConfig {
+              science {
+                nextAtom {
+                  steps {
+                    ...stepDataGN
+                  }
+                }
+                possibleFuture {
+                  steps {
+                    ...stepDataGN
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     """
 
     object Data {
-      type Itc = explore.model.OdbItcResult
+      object Sequence {
+        type ExecutionConfig = explore.model.ExecutionOffsets
+      }
     }
+
   }
 
   @GraphQL

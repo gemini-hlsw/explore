@@ -71,16 +71,13 @@ case class SiderealTargetEditor(
   userId:        User.Id,
   asterism:      View[Asterism],
   vizTime:       Option[Instant],
-  configuration: Option[BasicConfiguration],
-  constraints:   Option[ConstraintSet],
-  wavelength:    Option[Wavelength],
+  obsConf:       Option[ObsConfiguration],
   undoStacks:    View[UndoStacks[IO, Target.Sidereal]],
   searching:     View[Set[Target.Id]],
   obsIdSubset:   Option[ObsIdSet] = None,
   onClone:       TargetWithId => Callback = _ => Callback.empty,
   renderInTitle: Option[Tile.RenderInTitle] = none,
-  fullScreen:    View[AladinFullScreen],
-  paProps:       Option[PAProperties]
+  fullScreen:    View[AladinFullScreen]
 ) extends ReactFnProps(SiderealTargetEditor.component)
 
 object SiderealTargetEditor {
@@ -296,16 +293,10 @@ object SiderealTargetEditor {
                 AladinCell(
                   props.userId,
                   tid,
-                  ObsConfiguration(
-                    vizTime,
-                    props.configuration,
-                    props.paProps.map(_.constraint.get),
-                    props.constraints,
-                    props.wavelength
-                  ),
+                  vizTime,
+                  props.obsConf,
                   props.asterism.get,
-                  props.fullScreen,
-                  props.paProps
+                  props.fullScreen
                 )
               )(vizTime),
               <.div(LucumaStyles.FormColumnVeryCompact, ExploreStyles.TargetForm)(

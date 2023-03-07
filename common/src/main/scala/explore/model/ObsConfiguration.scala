@@ -7,8 +7,11 @@ import cats.Eq
 import cats.data.NonEmptyList
 import cats.derived.*
 import cats.syntax.all.*
+import crystal.react.View
 import eu.timepit.refined.cats.*
+import explore.model.enums.AgsState
 import lucuma.ags.*
+import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.PosAngleConstraint
@@ -19,16 +22,26 @@ import org.typelevel.cats.time.instantInstances
 import java.time.Instant
 
 case class ObsConfiguration(
-  vizTime:            Instant,
   configuration:      Option[BasicConfiguration],
-  posAngleConstraint: Option[PosAngleConstraint],
+  posAngleProperties: Option[PAProperties],
   constraints:        Option[ConstraintSet],
-  wavelength:         Option[Wavelength]
-) derives Eq
+  wavelength:         Option[Wavelength],
+  offsets:            Option[NonEmptyList[Offset]]
+) derives Eq:
+  def posAngleConstraint: Option[PosAngleConstraint] = posAngleProperties.map(_.constraint.get)
+
+  def posAngleConstraintView: Option[View[PosAngleConstraint]] =
+    posAngleProperties.map(_.constraint)
+
+  def agsState: Option[View[AgsState]] =
+    posAngleProperties.map(_.agsState)
+
+  def selectedGS: Option[View[Option[AgsAnalysis]]] =
+    posAngleProperties.map(_.selectedGS)
 
 object ObsConfiguration:
-  val vizTime            = Focus[ObsConfiguration](_.vizTime)
   val configuration      = Focus[ObsConfiguration](_.configuration)
-  val posAngleConstraint = Focus[ObsConfiguration](_.posAngleConstraint)
+  val posAngleProperties = Focus[ObsConfiguration](_.posAngleProperties)
   val constraints        = Focus[ObsConfiguration](_.constraints)
   val wavelength         = Focus[ObsConfiguration](_.wavelength)
+  val offsets            = Focus[ObsConfiguration](_.offsets)

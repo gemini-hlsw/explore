@@ -30,7 +30,7 @@ object GeneratedSequenceSQL {
                 nodAndShuffle {
                   ...nodAndShuffleFields
                 }
-              }          
+              }
               acquisitionN:acquisition {
                 nextAtom {
                   ...northSequenceFields
@@ -56,14 +56,14 @@ object GeneratedSequenceSQL {
                 nodAndShuffle {
                   ...nodAndShuffleFields
                 }
-              }          
+              }
               acquisitionS: acquisition {
                 nextAtom {
                   ...southSequenceFields
                 }
                 possibleFuture {
                   ...southSequenceFields
-                }            
+                }
               }
               scienceS:science {
                 nextAtom {
