@@ -83,27 +83,24 @@ case class AladinCell(
   obsConf:    Option[ObsConfiguration],
   asterism:   Asterism,
   fullScreen: View[AladinFullScreen]
-) extends ReactFnProps(AladinCell.component) {
-  val positions =
+) extends ReactFnProps(AladinCell.component):
+  val anglesToTest: Option[NonEmptyList[Angle]] =
     for {
       conf          <- obsConf
       configuration <- conf.configuration
       paConstraint  <- conf.posAngleConstraint
-      positions     <-
+      angles        <-
         paConstraint.anglesToTestAt(configuration.siteFor, asterism.baseTracking, vizTime)
-    } yield positions
+    } yield angles
 
-  // TODO Link to offsets on the sequence
-  def offsets: Option[NonEmptyList[Offset]] = NonEmptyList
-    .of(
-      Offset.signedDecimalArcseconds.reverseGet((0.0, 0.0)),
-      Offset.signedDecimalArcseconds.reverseGet((0.0, 15.0)),
-      Offset.signedDecimalArcseconds.reverseGet((0.0, 15.0)),
-      Offset.signedDecimalArcseconds.reverseGet((0.0, 0.0))
-    )
-    .distinct
-    .some
-}
+  val positions: Option[NonEmptyList[AgsPosition]] =
+    (anglesToTest, obsConf.map(_.offsets.getOrElse(NonEmptyList.of(Offset.Zero)))).mapN {
+      (anglesToTest, offsets) =>
+        for {
+          pa  <- anglesToTest
+          off <- offsets
+        } yield AgsPosition(pa, off)
+    }
 
 trait AladinCommon:
   given Reusability[Asterism] = Reusability.by(x => (x.toSiderealTracking, x.focus.id))
@@ -310,12 +307,7 @@ object AladinCell extends ModelOptics with AladinCommon:
               .to[IO]
               .whenA(positions.isEmpty) *>
               (positions, tracking.at(vizTime), props.obsConf.flatMap(_.agsState)).mapN {
-                (angles, base, agsState) =>
-                  val positions =
-                    for {
-                      pa  <- angles
-                      off <- props.offsets.getOrElse(NonEmptyList.of(Offset.Zero))
-                    } yield AgsPosition(pa, off)
+                (positions, base, agsState) =>
 
                   val fpu    = observingMode.flatMap(_.fpuAlternative)
                   val params = AgsParams.GmosAgsParams(fpu, PortDisposition.Side)
