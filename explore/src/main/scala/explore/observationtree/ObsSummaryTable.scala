@@ -178,18 +178,17 @@ object ObsSummaryTable extends TableHooks:
     )
     // Rows
     .useMemoBy((props, _, _) => props.observations.get)((_, _, _) => _.toList)
-    // TODO: useReactTableWithStateStoreBy
-    .useReactTableBy((props, ctx, cols, rows) =>
-      // import ctx.given
-      // TableOptionsWithStateStore(
-      TableOptions(
-        cols,
-        rows,
-        getRowId = (row, _, _) => RowId(row.id.toString),
-        initialState = TableState(columnVisibility = DefaultColVisibility)
-      ),
-      // TableStore(props.userId, TableId.ObservationsSummary, cols)
-      // )
+    .useReactTableWithStateStoreBy((props, ctx, cols, rows) =>
+      import ctx.given
+      TableOptionsWithStateStore(
+        TableOptions(
+          cols,
+          rows,
+          getRowId = (row, _, _) => RowId(row.id.toString),
+          initialState = TableState(columnVisibility = DefaultColVisibility)
+        ),
+        TableStore(props.userId, TableId.ObservationsSummary, cols)
+      )
     )
     .render { (props, _, _, _, table) =>
       <.div(
