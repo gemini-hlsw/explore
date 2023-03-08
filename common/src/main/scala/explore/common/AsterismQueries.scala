@@ -7,8 +7,9 @@ import cats.Eq
 import cats.Order
 import cats.effect.Async
 import cats.implicits.*
-import clue.TransactionalClient
+import clue.FetchClient
 import clue.data.syntax.*
+import explore.DefaultErrorPolicy
 import explore.model.AsterismGroup
 import explore.model.ObsIdSet
 import explore.model.ObsSummaryWithConstraintsAndConf
@@ -150,7 +151,7 @@ object AsterismQueries:
     programId: Program.Id,
     obsIds:    List[Observation.Id],
     targetIds: List[Target.Id]
-  )(using TransactionalClient[F, ObservationDB]) =
+  )(using FetchClient[F, ?, ObservationDB]) =
     val input = UpdateObservationsInput(
       programId = programId,
       WHERE = obsIds.toWhereObservation.assign,
@@ -158,28 +159,28 @@ object AsterismQueries:
         targetEnvironment = TargetEnvironmentInput(asterism = targetIds.assign).assign
       )
     )
-    UpdateObservationMutation.execute[F](input).void
+    UpdateObservationMutation[F].execute(input).void
 
   def addTargetsToAsterisms[F[_]: Async](
     programId: Program.Id,
     obsIds:    List[Observation.Id],
     targetIds: List[Target.Id]
-  )(using TransactionalClient[F, ObservationDB]) =
+  )(using FetchClient[F, ?, ObservationDB]) =
     val input = UpdateAsterismsInput(
       programId = programId,
       WHERE = obsIds.toWhereObservation.assign,
       SET = EditAsterismsPatchInput(ADD = targetIds.assign)
     )
-    UpdateAsterismsMutation.execute[F](input).void
+    UpdateAsterismsMutation[F].execute(input).void
 
   def removeTargetsFromAsterisms[F[_]: Async](
     programId: Program.Id,
     obsIds:    List[Observation.Id],
     targetIds: List[Target.Id]
-  )(using TransactionalClient[F, ObservationDB]) =
+  )(using FetchClient[F, ?, ObservationDB]) =
     val input = UpdateAsterismsInput(
       programId = programId,
       WHERE = obsIds.toWhereObservation.assign,
       SET = EditAsterismsPatchInput(DELETE = targetIds.assign)
     )
-    UpdateAsterismsMutation.execute[F](input).void
+    UpdateAsterismsMutation[F].execute(input).void

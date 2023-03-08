@@ -6,11 +6,12 @@ package explore.users
 import cats.effect.IO
 import cats.implicits.catsKernelOrderingForOrder
 import cats.syntax.all.*
-import clue.TransactionalClient
+import clue.FetchClient
 import crystal.react.View
 import crystal.react.hooks.*
 import crystal.react.implicits.*
 import crystal.react.reuse.*
+import explore.DefaultErrorPolicy
 import explore.Icons
 import explore.components.ExploreCopy
 import explore.components.ui.ExploreStyles
@@ -97,7 +98,7 @@ object UserPreferencesContent:
   private val RoleColumnId: ColumnId    = ColumnId("role")
 
   private def deleteKey(key: String, active: View[IsActive], newKey: View[NewKey])(using
-    TransactionalClient[IO, SSO],
+    FetchClient[IO, ?, SSO],
     Logger[IO]
   ) =
     ConfirmDialog.confirmDialog(
@@ -109,7 +110,7 @@ object UserPreferencesContent:
       position = DialogPosition.Top,
       accept = (for {
         _ <- active.set(IsActive(true)).to[IO]
-        _ <- DeleteApiKey.execute[IO](key)
+        _ <- DeleteApiKey[IO].execute(key)
         _ <- newKey.set(NewKey(none)).to[IO]
       } yield ()).guarantee(active.set(IsActive(false)).to[IO]).runAsync,
       acceptClass = PrimeStyles.ButtonSmall,
@@ -122,11 +123,11 @@ object UserPreferencesContent:
     active:    View[IsActive],
     newKey:    View[NewKey]
   )(using
-    TransactionalClient[IO, SSO]
+    FetchClient[IO, ?, SSO]
   ) =
     (for {
       _            <- active.set(IsActive(true)).to[IO]
-      newKeyResult <- NewApiKey.execute[IO](keyRoleId)
+      newKeyResult <- NewApiKey[IO].execute(keyRoleId)
       _            <- newKey.set(NewKey(newKeyResult.createApiKey.some)).to[IO]
     } yield ()).guarantee(active.set(IsActive(false)).to[IO]).void
 
@@ -136,7 +137,7 @@ object UserPreferencesContent:
     .useStateView(IsActive(false))
     .useEffectResultWithDepsBy((_, ctx, isAdding) => isAdding.get) { (_, ctx, _) => _ =>
       import ctx.given
-      UserQuery.query()
+      UserQuery[IO].query()
     }
     .useStateView(NewKey(none)) // id fo the new role id to create
     // Columns

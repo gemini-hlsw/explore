@@ -41,11 +41,12 @@ object ConnectionsStatus:
     }
 
     if (show) {
-      <.div(ExploreStyles.ConnectionIcon,
-            <.span(Icons.CircleSmall.withClass(clazz)).withTooltip(
-              tooltip = message,
-              placement = Placement.Bottom
-            )
+      <.div(
+        ExploreStyles.ConnectionIcon,
+        <.span(Icons.CircleSmall.withClass(clazz)).withTooltip(
+          tooltip = message,
+          placement = Placement.Bottom
+        )
       )
     } else <.span()
   }

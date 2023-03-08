@@ -6,7 +6,7 @@ package explore.observationtree
 import cats.Order.*
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.TransactionalClient
+import clue.FetchClient
 import clue.data.syntax.*
 import crystal.react.View
 import crystal.react.implicits.*
@@ -102,16 +102,17 @@ object AsterismGroupObsListActions {
     destIds:     ObsIdSet,
     expandedIds: View[SortedSet[ObsIdSet]],
     setObsSet:   ObsIdSet => Callback
-  )(using c: TransactionalClient[IO, ObservationDB]) =
+  )(using c: FetchClient[IO, ?, ObservationDB]) =
     Action(getter = obsDropGetter(draggedIds), setter = obsDropSetter(draggedIds, srcIds, destIds))(
       onSet = (agwo, oAsterismGroup) =>
         oAsterismGroup.foldMap { asterismGroup =>
           // destination ids may not be found when undoing
           val optDestIds =
             agwo.asterismGroups.findWithTargetIds(asterismGroup.targetIds).map(_.obsIds)
-          AsterismQueries.replaceAsterism[IO](programId,
-                                              draggedIds.toList,
-                                              asterismGroup.targetIds.toList
+          AsterismQueries.replaceAsterism[IO](
+            programId,
+            draggedIds.toList,
+            asterismGroup.targetIds.toList
           ) >>
             expandedIds.mod(updateExpandedIds(draggedIds, optDestIds) _).to[IO] >>
             setObsSet(optDestIds.fold(draggedIds)(_ ++ draggedIds)).to[IO]

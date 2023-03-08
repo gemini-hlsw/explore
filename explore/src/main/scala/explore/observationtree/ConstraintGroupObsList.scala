@@ -5,7 +5,7 @@ package explore.observationtree
 
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.TransactionalClient
+import clue.FetchClient
 import crystal.react.View
 import crystal.react.reuse.Reuse
 import explore.Icons
@@ -78,7 +78,7 @@ object ConstraintGroupObsList:
     constraintGroups: ConstraintGroupList,
     setObsSet:        Option[ObsIdSet] => Callback
   )(implicit
-    c:                TransactionalClient[IO, ObservationDB]
+    c:                FetchClient[IO, ?, ObservationDB]
   ): (DropResult, ResponderProvided) => Callback = (result, _) => {
     val oData = for {
       destination <- result.destination.toOption

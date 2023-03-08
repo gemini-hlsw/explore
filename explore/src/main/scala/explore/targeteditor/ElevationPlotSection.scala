@@ -5,7 +5,7 @@ package explore.targeteditor
 
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.TransactionalClient
+import clue.FetchClient
 import crystal.Pot
 import crystal.implicits.*
 import crystal.react.View
@@ -121,7 +121,7 @@ object ElevationPlotSection:
       .useStreamResourceOnMountBy { (props, ctx, _) =>
         import ctx.given
 
-        TimingWindowsQuery
+        TimingWindowsQuery[IO]
           .query()
           .map(data => EntryToTimingWindows.get(data.tmpTimingWindows))
           .reRunOnResourceSignals(TimingWindowSubscription.subscribe[IO]())

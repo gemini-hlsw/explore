@@ -6,7 +6,7 @@ package explore.targets
 import cats.Order.*
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.TransactionalClient
+import clue.FetchClient
 import clue.data.syntax.*
 import crystal.react.View
 import crystal.react.implicits.*
@@ -81,7 +81,7 @@ object ObservationPasteAction {
     ids:         List[(Observation.Id, Target.Id)],
     expandedIds: View[SortedSet[ObsIdSet]]
   )(using
-    c:           TransactionalClient[IO, ObservationDB]
+    c:           FetchClient[IO, ?, ObservationDB]
   ): Action[AsterismGroupsWithObs, Option[List[ObsSummaryWithConstraintsAndConf]]] =
     Action(getter = obsListGetter(ids), setter = obsListSetter(ids))(
       onSet = (agwo, _) => expandedIds.mod(updateExpandedIds(ids, agwo, true)).to[IO],

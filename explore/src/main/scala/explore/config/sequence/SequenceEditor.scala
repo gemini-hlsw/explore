@@ -3,6 +3,7 @@
 
 package explore.config.sequence
 
+import cats.effect.IO
 import crystal.react.hooks.*
 import explore.model.AppContext
 import explore.utils.*
@@ -29,7 +30,7 @@ object SequenceEditor:
       .useEffectResultOnMountBy { (props, ctx) =>
         import ctx.given
 
-        SequenceSteps
+        SequenceSteps[IO]
           .query(props.programId)
           .map(_.observations.matches.headOption.flatMap(_.config))
       }

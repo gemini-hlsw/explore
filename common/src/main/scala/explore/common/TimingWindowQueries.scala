@@ -5,8 +5,9 @@ package explore.common
 
 import cats.ApplicativeThrow
 import cats.syntax.all.*
-import clue.TransactionalClient
+import clue.FetchClient
 import clue.data.syntax.*
+import explore.DefaultErrorPolicy
 import explore.model.TimingWindow
 import explore.model.TimingWindowEntry
 import monocle.Focus
@@ -32,19 +33,21 @@ object TimingWindowQueries:
 
   def updateTimingWindow[F[_]: ApplicativeThrow](
     tw: TimingWindow
-  )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
-    import UpdateTimingWindow.*
+  )(using FetchClient[F, ?, UserPreferencesDB]): F[Unit] =
     val twe = TimingWindowEntry.fromTimingWindow(tw)
 
-    execute[F](
-      twe.id.assign,
-      TmpTimingWindowsSetInput(
-        startsOn = twe.startsOn.assign,
-        forever = tw.openForever.assign,
-        closeOn = twe.closeOn.orUnassign,
-        remainOpenFor = twe.remainOpenFor.orUnassign,
-        repeatPeriod = twe.repeatPeriod.orUnassign,
-        repeatForever = twe.repeatForever.orUnassign,
-        repeatTimes = twe.repeatTimes.orUnassign
-      ).assign
-    ).attempt.void
+    UpdateTimingWindow[F]
+      .execute(
+        twe.id.assign,
+        TmpTimingWindowsSetInput(
+          startsOn = twe.startsOn.assign,
+          forever = tw.openForever.assign,
+          closeOn = twe.closeOn.orUnassign,
+          remainOpenFor = twe.remainOpenFor.orUnassign,
+          repeatPeriod = twe.repeatPeriod.orUnassign,
+          repeatForever = twe.repeatForever.orUnassign,
+          repeatTimes = twe.repeatTimes.orUnassign
+        ).assign
+      )
+      .attempt
+      .void

@@ -5,11 +5,12 @@ package explore.common
 
 import cats.Endo
 import cats.effect.IO
-import clue.TransactionalClient
+import clue.FetchClient
 import clue.data.syntax.*
 import crystal.react.View
 import crystal.react.implicits.*
 import eu.timepit.refined.types.numeric.PosBigDecimal
+import explore.DefaultErrorPolicy
 import explore.undo.UndoContext
 import lucuma.core.enums.*
 import lucuma.core.model.ConstraintSet
@@ -28,7 +29,7 @@ object ConstraintsQueries:
     programId: Program.Id,
     obsIds:    List[Observation.Id],
     undoCtx:   UndoContext[ConstraintSet]
-  )(using TransactionalClient[IO, ObservationDB], Logger[IO]):
+  )(using FetchClient[IO, ?, ObservationDB], Logger[IO]):
     def apply[A](
       modelGet:  ConstraintSet => A,
       modelMod:  (A => A) => ConstraintSet => ConstraintSet,
@@ -37,7 +38,7 @@ object ConstraintsQueries:
       undoCtx
         .undoableView(modelGet, modelMod)
         .withOnMod(value =>
-          UpdateObservationMutation
+          UpdateObservationMutation[IO]
             .execute(
               UpdateObservationsInput(
                 programId = programId,

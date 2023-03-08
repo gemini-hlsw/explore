@@ -37,7 +37,7 @@ object GeneratedSequenceViewer:
       .useStreamResourceOnMountBy { (props, ctx) =>
         import ctx.given
 
-        SequenceSteps
+        SequenceSteps[IO]
           .query(props.programId, props.obsId)
           .map(_.sequence.map(_.config))
           .attemptPot

@@ -3,14 +3,15 @@
 
 package explore.common
 
-import _root_.cats.effect.IO
 import cats.Endo
-import clue.TransactionalClient
+import cats.effect.IO
+import clue.FetchClient
 import clue.data.syntax.*
 import crystal.react.View
 import crystal.react.implicits.*
 import eu.timepit.refined.*
 import eu.timepit.refined.numeric.Positive
+import explore.DefaultErrorPolicy
 import explore.undo.UndoSetter
 import lucuma.core.enums
 import lucuma.core.math.Angle
@@ -34,7 +35,7 @@ object ScienceQueries:
     programId:               Program.Id,
     obsId:                   Observation.Id,
     scienceRequirementsUndo: UndoSetter[ScienceRequirementsData]
-  )(using TransactionalClient[IO, ObservationDB], Logger[IO]):
+  )(using FetchClient[IO, ?, ObservationDB], Logger[IO]):
     def apply[A](
       modelGet:  ScienceRequirementsData => A,
       modelMod:  (A => A) => ScienceRequirementsData => ScienceRequirementsData,
@@ -43,7 +44,7 @@ object ScienceQueries:
       scienceRequirementsUndo
         .undoableView(modelGet, modelMod)
         .withOnMod(value =>
-          UpdateObservationMutation
+          UpdateObservationMutation[IO]
             .execute(
               UpdateObservationsInput(
                 programId = programId,

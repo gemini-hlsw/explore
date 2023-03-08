@@ -7,9 +7,10 @@ import boopickle.DefaultBasic.*
 import cats.effect.*
 import cats.effect.unsafe.implicits.*
 import cats.syntax.all.*
-import clue.TransactionalClient
+import clue.FetchClient
 import clue.*
 import clue.js.FetchJSBackend
+import clue.js.FetchJSClient
 import clue.js.FetchMethod
 import explore.events.*
 import explore.itc.ITCGraphRequests
@@ -57,14 +58,14 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
 
   protected val handler: Logger[IO] ?=> IO[Invocation => IO[Unit]] =
     for {
-      self                               <- IO(dom.DedicatedWorkerGlobalScope.self)
-      cache                              <- Cache.withIDB[IO](self.indexedDB.toOption, "explore-itc")
-      _                                  <- cache.evict(CacheRetention).start
-      matrix                             <- Deferred[IO, SpectroscopyModesMatrix]
-      config                             <- fetchConfig[IO]
-      given TransactionalClient[IO, ITC] <- {
-        given TransactionalBackend[IO] = FetchJSBackend[IO](FetchMethod.GET)
-        TransactionalClient.of[IO, ITC](config.itcURI, "ITC")
+      self                          <- IO(dom.DedicatedWorkerGlobalScope.self)
+      cache                         <- Cache.withIDB[IO](self.indexedDB.toOption, "explore-itc")
+      _                             <- cache.evict(CacheRetention).start
+      matrix                        <- Deferred[IO, SpectroscopyModesMatrix]
+      config                        <- fetchConfig[IO]
+      given FetchClient[IO, ?, ITC] <- {
+        given FetchJSBackend[IO] = FetchJSBackend[IO](FetchMethod.GET)
+        FetchJSClient.of[IO, ITC](config.itcURI.toString, "ITC")
       }
     } yield { invocation =>
       invocation.data match {

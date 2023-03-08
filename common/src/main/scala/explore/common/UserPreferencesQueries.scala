@@ -8,10 +8,11 @@ import cats.MonadThrow
 import cats.Order.*
 import cats.data.OptionT
 import cats.syntax.all.*
-import clue.TransactionalClient
+import clue.FetchClient
 import clue.data.syntax.*
 import eu.timepit.refined.*
 import eu.timepit.refined.numeric.*
+import explore.DefaultErrorPolicy
 import explore.model.AladinFullScreen
 import explore.model.AladinMouseScroll
 import explore.model.TargetVisualOptions
@@ -63,13 +64,14 @@ object UserPreferencesQueries:
     def storePreferences[F[_]: ApplicativeThrow](
       userId:            User.Id,
       aladinMouseScroll: AladinMouseScroll
-    )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
-      import UserPreferencesAladinUpdate.*
-
-      execute[F](
-        userId = userId.show.assign,
-        aladinMouseScroll = aladinMouseScroll.value.assign
-      ).attempt.void
+    )(using FetchClient[F, ?, UserPreferencesDB]): F[Unit] =
+      UserPreferencesAladinUpdate[F]
+        .execute(
+          userId = userId.show.assign,
+          aladinMouseScroll = aladinMouseScroll.value.assign
+        )
+        .attempt
+        .void
   end UserPreferences
 
   object GridLayouts:
@@ -92,13 +94,13 @@ object UserPreferencesQueries:
       userId:        Option[User.Id],
       layoutSection: GridLayoutSection,
       defaultValue:  LayoutsMap
-    )(using TransactionalClient[F, UserPreferencesDB]): F[LayoutsMap] =
+    )(using FetchClient[F, ?, UserPreferencesDB]): F[LayoutsMap] =
       (for {
         uid <- OptionT.fromOption[F](userId)
         r   <-
           OptionT
             .liftF[F, SortedMap[react.gridlayout.BreakpointName, (Int, Int, Layout)]] {
-              UserGridLayoutQuery.query[F](uid.show, layoutSection).map { r =>
+              UserGridLayoutQuery[F].query(uid.show, layoutSection).map { r =>
                 r.lucumaGridLayoutPositions match {
                   case l if l.isEmpty => defaultValue
                   case l              =>
@@ -113,26 +115,27 @@ object UserPreferencesQueries:
       userId:  Option[User.Id],
       section: GridLayoutSection,
       layouts: Layouts
-    )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
-      import UserGridLayoutUpsert.*
+    )(using FetchClient[F, ?, UserPreferencesDB]): F[Unit] =
       userId.traverse { uid =>
-        execute[F](
-          layouts.layouts.flatMap { bl =>
-            bl.layout.l.collect {
-              case i if i.i.nonEmpty =>
-                LucumaGridLayoutPositionsInsertInput(
-                  userId = uid.show.assign,
-                  section = section.assign,
-                  breakpointName = bl.name.name.assign,
-                  width = i.w.assign,
-                  height = i.h.assign,
-                  x = i.x.assign,
-                  y = i.y.assign,
-                  tile = i.i.getOrElse("").assign
-                )
+        UserGridLayoutUpsert[F]
+          .execute(
+            layouts.layouts.flatMap { bl =>
+              bl.layout.l.collect {
+                case i if i.i.nonEmpty =>
+                  LucumaGridLayoutPositionsInsertInput(
+                    userId = uid.show.assign,
+                    section = section.assign,
+                    breakpointName = bl.name.name.assign,
+                    width = i.w.assign,
+                    height = i.h.assign,
+                    x = i.x.assign,
+                    y = i.y.assign,
+                    tile = i.i.getOrElse("").assign
+                  )
+              }
             }
-          }
-        ).attempt
+          )
+          .attempt
       }.void
   end GridLayouts
 
@@ -149,58 +152,59 @@ object UserPreferencesQueries:
       brightness:         Option[Int] = None,
       scienceOffsets:     Option[Visible] = None,
       acquisitionOffsets: Option[Visible] = None
-    )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
-      import UserTargetPreferencesUpsert.*
-
-      execute[F](
-        LucumaTargetInsertInput(
-          targetId = targetId.show.assign,
-          lucuma_target_preferences = ExploreTargetPreferencesArrRelInsertInput(
-            data = List(
-              ExploreTargetPreferencesInsertInput(
-                userId = uid.show.assign,
-                fovRA = fovRA.map(_.toMicroarcseconds).orIgnore,
-                fovDec = fovDec.map(_.toMicroarcseconds).orIgnore,
-                agsCandidates = agsCandidates.map(Visible.boolIso.reverseGet).orIgnore,
-                agsOverlay = agsOverlay.map(Visible.boolIso.reverseGet).orIgnore,
-                fullScreen = fullScreen.map(_.value).orIgnore,
-                saturation = saturation.orIgnore,
-                brightness = brightness.orIgnore,
-                scienceOffsets = scienceOffsets.map(Visible.boolIso.reverseGet).orIgnore,
-                acquisitionOffsets = acquisitionOffsets.map(Visible.boolIso.reverseGet).orIgnore
-              )
-            ),
-            onConflict = ExploreTargetPreferencesOnConflict(
-              constraint = ExploreTargetPreferencesConstraint.LucumaTargetPreferencesPkey,
-              update_columns = List(
-                ExploreTargetPreferencesUpdateColumn.FovRA.some.filter(_ => fovRA.isDefined),
-                ExploreTargetPreferencesUpdateColumn.FovDec.some.filter(_ => fovDec.isDefined),
-                ExploreTargetPreferencesUpdateColumn.AgsCandidates.some.filter(_ =>
-                  agsCandidates.isDefined
-                ),
-                ExploreTargetPreferencesUpdateColumn.AgsOverlay.some.filter(_ =>
-                  agsOverlay.isDefined
-                ),
-                ExploreTargetPreferencesUpdateColumn.FullScreen.some.filter(_ =>
-                  fullScreen.isDefined
-                ),
-                ExploreTargetPreferencesUpdateColumn.Saturation.some.filter(_ =>
-                  saturation.isDefined
-                ),
-                ExploreTargetPreferencesUpdateColumn.Brightness.some.filter(_ =>
-                  brightness.isDefined
-                ),
-                ExploreTargetPreferencesUpdateColumn.ScienceOffsets.some.filter(_ =>
-                  scienceOffsets.isDefined
-                ),
-                ExploreTargetPreferencesUpdateColumn.AcquisitionOffsets.some.filter(_ =>
-                  acquisitionOffsets.isDefined
+    )(using FetchClient[F, ?, UserPreferencesDB]): F[Unit] =
+      UserTargetPreferencesUpsert[F]
+        .execute(
+          LucumaTargetInsertInput(
+            targetId = targetId.show.assign,
+            lucuma_target_preferences = ExploreTargetPreferencesArrRelInsertInput(
+              data = List(
+                ExploreTargetPreferencesInsertInput(
+                  userId = uid.show.assign,
+                  fovRA = fovRA.map(_.toMicroarcseconds).orIgnore,
+                  fovDec = fovDec.map(_.toMicroarcseconds).orIgnore,
+                  agsCandidates = agsCandidates.map(Visible.boolIso.reverseGet).orIgnore,
+                  agsOverlay = agsOverlay.map(Visible.boolIso.reverseGet).orIgnore,
+                  fullScreen = fullScreen.map(_.value).orIgnore,
+                  saturation = saturation.orIgnore,
+                  brightness = brightness.orIgnore,
+                  scienceOffsets = scienceOffsets.map(Visible.boolIso.reverseGet).orIgnore,
+                  acquisitionOffsets = acquisitionOffsets.map(Visible.boolIso.reverseGet).orIgnore
                 )
-              ).flattenOption
+              ),
+              onConflict = ExploreTargetPreferencesOnConflict(
+                constraint = ExploreTargetPreferencesConstraint.LucumaTargetPreferencesPkey,
+                update_columns = List(
+                  ExploreTargetPreferencesUpdateColumn.FovRA.some.filter(_ => fovRA.isDefined),
+                  ExploreTargetPreferencesUpdateColumn.FovDec.some.filter(_ => fovDec.isDefined),
+                  ExploreTargetPreferencesUpdateColumn.AgsCandidates.some.filter(_ =>
+                    agsCandidates.isDefined
+                  ),
+                  ExploreTargetPreferencesUpdateColumn.AgsOverlay.some.filter(_ =>
+                    agsOverlay.isDefined
+                  ),
+                  ExploreTargetPreferencesUpdateColumn.FullScreen.some.filter(_ =>
+                    fullScreen.isDefined
+                  ),
+                  ExploreTargetPreferencesUpdateColumn.Saturation.some.filter(_ =>
+                    saturation.isDefined
+                  ),
+                  ExploreTargetPreferencesUpdateColumn.Brightness.some.filter(_ =>
+                    brightness.isDefined
+                  ),
+                  ExploreTargetPreferencesUpdateColumn.ScienceOffsets.some.filter(_ =>
+                    scienceOffsets.isDefined
+                  ),
+                  ExploreTargetPreferencesUpdateColumn.AcquisitionOffsets.some.filter(_ =>
+                    acquisitionOffsets.isDefined
+                  )
+                ).flattenOption
+              ).assign
             ).assign
-          ).assign
+          )
         )
-      ).attempt.void
+        .attempt
+        .void
 
     // Gets the target properties
     def queryWithDefault[F[_]: ApplicativeThrow](
@@ -208,13 +212,12 @@ object UserPreferencesQueries:
       tid:        Target.Id,
       defaultFov: Angle
     )(using
-      TransactionalClient[F, UserPreferencesDB]
+      FetchClient[F, ?, UserPreferencesDB]
     ): F[(UserGlobalPreferences, TargetVisualOptions)] =
-      import UserTargetPreferencesQuery.*
-
       for {
         r <-
-          query[F](uid.show, tid.show)
+          UserTargetPreferencesQuery[F]
+            .query(uid.show, tid.show)
             .map { r =>
               val userPrefs   =
                 r.lucumaUserPreferencesByPk
@@ -280,30 +283,31 @@ object UserPreferencesQueries:
       uid:      User.Id,
       targetId: Target.Id,
       offset:   Offset
-    )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
-      import UserTargetPreferencesUpsert.*
-
-      execute[F](
-        LucumaTargetInsertInput(
-          targetId = targetId.show.assign,
-          lucuma_target_preferences = ExploreTargetPreferencesArrRelInsertInput(
-            data = List(
-              ExploreTargetPreferencesInsertInput(
-                userId = uid.show.assign,
-                viewOffsetP = offset.p.toAngle.toMicroarcseconds.assign,
-                viewOffsetQ = offset.q.toAngle.toMicroarcseconds.assign
-              )
-            ),
-            onConflict = ExploreTargetPreferencesOnConflict(
-              constraint = ExploreTargetPreferencesConstraint.LucumaTargetPreferencesPkey,
-              update_columns = List(
-                ExploreTargetPreferencesUpdateColumn.ViewOffsetP.some,
-                ExploreTargetPreferencesUpdateColumn.ViewOffsetQ.some
-              ).flattenOption
+    )(using FetchClient[F, ?, UserPreferencesDB]): F[Unit] =
+      UserTargetPreferencesUpsert[F]
+        .execute(
+          LucumaTargetInsertInput(
+            targetId = targetId.show.assign,
+            lucuma_target_preferences = ExploreTargetPreferencesArrRelInsertInput(
+              data = List(
+                ExploreTargetPreferencesInsertInput(
+                  userId = uid.show.assign,
+                  viewOffsetP = offset.p.toAngle.toMicroarcseconds.assign,
+                  viewOffsetQ = offset.q.toAngle.toMicroarcseconds.assign
+                )
+              ),
+              onConflict = ExploreTargetPreferencesOnConflict(
+                constraint = ExploreTargetPreferencesConstraint.LucumaTargetPreferencesPkey,
+                update_columns = List(
+                  ExploreTargetPreferencesUpdateColumn.ViewOffsetP.some,
+                  ExploreTargetPreferencesUpdateColumn.ViewOffsetQ.some
+                ).flattenOption
+              ).assign
             ).assign
-          ).assign
+          )
         )
-      ).attempt.void
+        .attempt
+        .void
 
   end TargetPreferences
 
@@ -312,11 +316,10 @@ object UserPreferencesQueries:
     def queryWithDefault[F[_]: ApplicativeThrow](
       uid: User.Id,
       oid: Observation.Id
-    )(using TransactionalClient[F, UserPreferencesDB]): F[(ItcChartType, PlotDetails)] =
-      import ItcPlotPreferencesQuery.*
-
+    )(using FetchClient[F, ?, UserPreferencesDB]): F[(ItcChartType, PlotDetails)] =
       for r <-
-          query[F](uid.show, oid.show)
+          ItcPlotPreferencesQuery[F]
+            .query(uid.show, oid.show)
             .map { r =>
               r.lucumaItcPlotPreferencesByPk.map(result => (result.chartType, result.detailsOpen))
             }
@@ -332,51 +335,54 @@ object UserPreferencesQueries:
       oid:       Observation.Id,
       chartType: ItcChartType,
       details:   PlotDetails
-    )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
-      import ItcPlotObservationUpsert.*
-      execute[F](
-        LucumaObservationInsertInput(
-          observationId = oid.show.assign,
-          lucuma_itc_plot_preferences = LucumaItcPlotPreferencesArrRelInsertInput(
-            data = List(
-              LucumaItcPlotPreferencesInsertInput(
-                userId = uid.show.assign,
-                chartType = chartType.assign,
-                detailsOpen = details.value.assign
-              )
-            ),
-            onConflict = LucumaItcPlotPreferencesOnConflict(
-              constraint = LucumaItcPlotPreferencesConstraint.LucumaItcPlotPreferencesPkey,
-              update_columns = List(
-                LucumaItcPlotPreferencesUpdateColumn.ChartType,
-                LucumaItcPlotPreferencesUpdateColumn.DetailsOpen
-              )
+    )(using FetchClient[F, ?, UserPreferencesDB]): F[Unit] =
+      ItcPlotObservationUpsert[F]
+        .execute(
+          LucumaObservationInsertInput(
+            observationId = oid.show.assign,
+            lucuma_itc_plot_preferences = LucumaItcPlotPreferencesArrRelInsertInput(
+              data = List(
+                LucumaItcPlotPreferencesInsertInput(
+                  userId = uid.show.assign,
+                  chartType = chartType.assign,
+                  detailsOpen = details.value.assign
+                )
+              ),
+              onConflict = LucumaItcPlotPreferencesOnConflict(
+                constraint = LucumaItcPlotPreferencesConstraint.LucumaItcPlotPreferencesPkey,
+                update_columns = List(
+                  LucumaItcPlotPreferencesUpdateColumn.ChartType,
+                  LucumaItcPlotPreferencesUpdateColumn.DetailsOpen
+                )
+              ).assign
             ).assign
-          ).assign
+          )
         )
-      ).attempt.void
+        .attempt
+        .void
 
   object ElevationPlotPreference:
     def updatePlotPreferences[F[_]: ApplicativeThrow](
       userId: User.Id,
       range:  PlotRange,
       time:   TimeDisplay
-    )(using TransactionalClient[F, UserPreferencesDB]): F[Unit] =
-      import UserPreferencesElevPlotUpdate.*
-
-      execute[F](
-        userId = userId.show.assign,
-        elevationPlotRange = range.assign,
-        elevationPlotTime = time.assign
-      ).attempt.void
+    )(using FetchClient[F, ?, UserPreferencesDB]): F[Unit] =
+      UserPreferencesElevPlotUpdate[F]
+        .execute(
+          userId = userId.show.assign,
+          elevationPlotRange = range.assign,
+          elevationPlotTime = time.assign
+        )
+        .attempt
+        .void
 
     // Gets the prefs for the elevation plot
     def queryWithDefault[F[_]: ApplicativeThrow](uid: User.Id)(using
-      TransactionalClient[F, UserPreferencesDB]
+      FetchClient[F, ?, UserPreferencesDB]
     ): F[(PlotRange, TimeDisplay)] =
-      import UserElevationPlotPreferencesQuery.*
       for r <-
-          query[F](uid.show)
+          UserElevationPlotPreferencesQuery[F]
+            .query(uid.show)
             .map { r =>
               r.lucumaUserPreferencesByPk.map(result =>
                 (result.elevationPlotRange, result.elevationPlotTime)
@@ -393,13 +399,13 @@ object UserPreferencesQueries:
     userId:  Option[User.Id],
     tableId: TableId,
     columns: List[ColumnDef[?, ?]]
-  )(using TransactionalClient[F, UserPreferencesDB], Logger[F])
+  )(using FetchClient[F, ?, UserPreferencesDB], Logger[F])
       extends TableStateStore[F]:
     def load(): F[TableState => TableState] =
       userId
         .traverse { uid =>
-          TableColumnPreferencesQuery
-            .query[F](
+          TableColumnPreferencesQuery[F]
+            .query(
               userId = uid.show.assign,
               tableId = tableId.assign
             )
@@ -421,8 +427,8 @@ object UserPreferencesQueries:
 
     def save(state: TableState): F[Unit] =
       userId.traverse { uid =>
-        TableColumnPreferencesUpsert
-          .execute[F](
+        TableColumnPreferencesUpsert[F]
+          .execute(
             columns.map(col =>
               val sorting: Map[ColumnId, (SortDirection, Int)] = state.sorting.value.zipWithIndex
                 .map((colSort, idx) => colSort.columnId -> (colSort.direction, idx))

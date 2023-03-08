@@ -6,7 +6,7 @@ package explore.tabs
 import cats.effect.IO
 import cats.effect.Resource
 import cats.syntax.all.*
-import clue.TransactionalClient
+import clue.FetchClient
 import crystal.Pot
 import crystal.implicits.*
 import crystal.react.*
@@ -358,7 +358,7 @@ object ConstraintsTabContents extends TwoPanels:
       .useStreamResourceViewOnMountBy { (props, ctx, _, _, _) =>
         import ctx.given
 
-        (TimingWindowsQuery.query(), ConstraintGroupObsQuery.query(props.programId))
+        (TimingWindowsQuery[IO].query(), ConstraintGroupObsQuery[IO].query(props.programId))
           .mapN((tw, cg) => (tw, ConstraintGroupObsQuery.Data.asConstraintSummWithObs.get(cg)))
           .reRunOnResourceSignals(
             ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](props.programId),

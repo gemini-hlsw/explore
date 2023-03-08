@@ -122,8 +122,7 @@ lazy val queries = project
   .settings(commonSettings: _*)
   .settings(commonJsLibSettings: _*)
   .settings(
-    libraryDependencies ++=
-      LucumaSchemas.value,
+    libraryDependencies ++= LucumaSchemas.value,
     Compile / sourceGenerators += Def.taskDyn {
       val root    = (ThisBuild / baseDirectory).value.toURI.toString
       val from    = (graphql / Compile / sourceDirectory).value

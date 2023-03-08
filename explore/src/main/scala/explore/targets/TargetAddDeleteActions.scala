@@ -6,8 +6,9 @@ package explore.targets
 import cats.Order.*
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.TransactionalClient
+import clue.FetchClient
 import clue.data.syntax.*
+import explore.DefaultErrorPolicy
 import explore.common.AsterismQueries
 import explore.common.AsterismQueries.*
 import explore.model.AsterismGroup
@@ -54,10 +55,11 @@ object TargetAddDeleteActions {
     }
 
   private def remoteDeleteTargets(targetIds: List[Target.Id], programId: Program.Id)(using
-    c: TransactionalClient[IO, ObservationDB]
+    c: FetchClient[IO, ?, ObservationDB]
   ): IO[Unit] =
-    TargetQueriesGQL.UpdateTargetsMutation
-      .execute[IO](
+    TargetQueriesGQL
+      .UpdateTargetsMutation[IO]
+      .execute(
         UpdateTargetsInput(
           WHERE = targetIds.toWhereTargets
             .copy(programId = WhereOrderProgramId(programId.assign).assign)
@@ -68,10 +70,11 @@ object TargetAddDeleteActions {
       .void
 
   private def remoteUndeleteTargets(targetIds: List[Target.Id], programId: Program.Id)(using
-    c: TransactionalClient[IO, ObservationDB]
+    c: FetchClient[IO, ?, ObservationDB]
   ): IO[Unit] =
-    TargetQueriesGQL.UpdateTargetsMutation
-      .execute[IO](
+    TargetQueriesGQL
+      .UpdateTargetsMutation[IO]
+      .execute(
         UpdateTargetsInput(
           WHERE = targetIds.toWhereTargets
             .copy(programId = WhereOrderProgramId(programId.assign).assign)
@@ -88,7 +91,7 @@ object TargetAddDeleteActions {
     setPage:     Option[Target.Id] => IO[Unit],
     postMessage: String => IO[Unit]
   )(using
-    c:           TransactionalClient[IO, ObservationDB]
+    c:           FetchClient[IO, ?, ObservationDB]
   ): Action[AsterismGroupsWithObs, Option[TargetWithObs]] =
     Action[AsterismGroupsWithObs, Option[TargetWithObs]](
       getter = singleTargetGetter(targetId),
@@ -115,7 +118,7 @@ object TargetAddDeleteActions {
     setSummary:  IO[Unit],
     postMessage: String => IO[Unit]
   )(using
-    c:           TransactionalClient[IO, ObservationDB]
+    c:           FetchClient[IO, ?, ObservationDB]
   ): Action[AsterismGroupsWithObs, List[Option[TargetWithObs]]] =
     Action(getter = targetListGetter(targetIds), setter = targetListSetter(targetIds))(
       onSet = (_, lotwo) =>

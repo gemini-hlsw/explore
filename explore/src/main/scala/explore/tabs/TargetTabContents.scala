@@ -661,7 +661,7 @@ object TargetTabContents extends TwoPanels:
       .useStreamResourceViewOnMountBy { (props, ctx, _, _, _, _) =>
         import ctx.given
 
-        AsterismGroupObsQuery
+        AsterismGroupObsQuery[IO]
           .query(props.programId)
           .map(AsterismGroupObsQuery.Data.asAsterismGroupWithObs.get)
           .reRunOnResourceSignals(

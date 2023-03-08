@@ -6,7 +6,7 @@ package explore.targets
 import cats.Order.*
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.TransactionalClient
+import clue.FetchClient
 import crystal.react.View
 import crystal.react.implicits.*
 import explore.common.AsterismQueries.*
@@ -72,7 +72,7 @@ object ObservationInsertAction {
     setPage:     Option[Observation.Id] => IO[Unit],
     postMessage: String => IO[Unit]
   )(using
-    TransactionalClient[IO, ObservationDB]
+    FetchClient[IO, ?, ObservationDB]
   ): Action[AsterismGroupsWithObs, Option[ObsSummaryWithConstraintsAndConf]] =
     Action(getter = getter(obsId), setter = setter(obsId))(
       onSet = (agwo, optObs) =>
