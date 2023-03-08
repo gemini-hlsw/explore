@@ -25,7 +25,7 @@ object ConstraintGroupObsListActions {
 
   private def setter(
     draggedIds: ObsIdSet
-  )(ocg:        Option[ConstraintGroup]): ConstraintGroupList => ConstraintGroupList = originalGroupList =>
+  )(ocg: Option[ConstraintGroup]): ConstraintGroupList => ConstraintGroupList = originalGroupList =>
     {
       val constraintGroups = originalGroupList.values
 
@@ -67,7 +67,7 @@ object ConstraintGroupObsListActions {
     draggedIds:  ObsIdSet,
     expandedIds: View[SortedSet[ObsIdSet]],
     setObsSet:   Option[ObsIdSet] => Callback
-  )(implicit c:  FetchClient[IO, ?, ObservationDB]) =
+  )(implicit c: FetchClient[IO, ?, ObservationDB]) =
     Action(getter = getter(draggedIds), setter = setter(draggedIds))(
       onSet = (cgl, ocg) =>
         ocg.fold(IO.unit) { cg =>

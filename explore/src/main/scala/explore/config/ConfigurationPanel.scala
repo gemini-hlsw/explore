@@ -114,7 +114,7 @@ object ConfigurationPanel:
    */
   private def modOrAssignAndMap[A, B](
     ifNotAssigned: => B
-  )(mod:           (Input[B] => Input[B]) => A => A): (B => B) => Input[A] => Input[A] =
+  )(mod: (Input[B] => Input[B]) => A => A): (B => B) => Input[A] => Input[A] =
     f =>
       _.map(mod { ib =>
         val bAssign = ib.orAssign(ifNotAssigned)

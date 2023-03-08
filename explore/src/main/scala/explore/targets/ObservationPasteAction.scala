@@ -36,7 +36,7 @@ object ObservationPasteAction {
     ids.map((obsId, _) => agwo.observations.get(obsId)).sequence
 
   private def obsListSetter(ids: List[(Observation.Id, Target.Id)])(
-    otwol:                       Option[List[ObsSummaryWithConstraintsAndConf]]
+    otwol: Option[List[ObsSummaryWithConstraintsAndConf]]
   ): AsterismGroupsWithObs => AsterismGroupsWithObs = agwo =>
     otwol.fold {
       // the Option[List]] is empty, so we're deleting.

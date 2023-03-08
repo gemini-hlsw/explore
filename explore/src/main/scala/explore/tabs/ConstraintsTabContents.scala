@@ -164,7 +164,7 @@ object ConstraintsTabContents extends TwoPanels:
     def onModSummaryWithObs(
       groupObsIds:  ObsIdSet,
       editedObsIds: ObsIdSet
-    )(cswo:         ConstraintSummaryWithObervations): Callback = {
+    )(cswo: ConstraintSummaryWithObervations): Callback = {
       val groupList = cswo.constraintGroups
 
       val updateExpanded = findConstraintGroup(editedObsIds, groupList).fold(Callback.empty) { cg =>

@@ -35,7 +35,7 @@ object TargetAddDeleteActions {
     targetIds.map(tid => singleTargetGetter(tid)(agwo))
 
   private def singleTargetSetter(targetId: Target.Id)(
-    otwo:                                  Option[TargetWithObs]
+    otwo: Option[TargetWithObs]
   ): AsterismGroupsWithObs => AsterismGroupsWithObs = agwo =>
     otwo.fold(AsterismGroupsWithObs.targetsWithObs.modify(_.removed(targetId))) { tg =>
       AsterismGroupsWithObs.targetsWithObs.modify(_.updated(targetId, tg)) >>>
@@ -48,14 +48,14 @@ object TargetAddDeleteActions {
     }(agwo)
 
   private def targetListSetter(targetIds: List[Target.Id])(
-    twol:                                 List[Option[TargetWithObs]]
+    twol: List[Option[TargetWithObs]]
   ): AsterismGroupsWithObs => AsterismGroupsWithObs = agwo =>
     targetIds.zip(twol).foldLeft(agwo) { case (acc, (tid, otwo)) =>
       singleTargetSetter(tid)(otwo)(acc)
     }
 
   private def remoteDeleteTargets(targetIds: List[Target.Id], programId: Program.Id)(using
-    c:                                       FetchClient[IO, ?, ObservationDB]
+    c: FetchClient[IO, ?, ObservationDB]
   ): IO[Unit] =
     TargetQueriesGQL
       .UpdateTargetsMutation[IO]
@@ -70,9 +70,10 @@ object TargetAddDeleteActions {
       .void
 
   private def remoteUndeleteTargets(targetIds: List[Target.Id], programId: Program.Id)(using
-    c:                                         FetchClient[IO, ?, ObservationDB]
+    c: FetchClient[IO, ?, ObservationDB]
   ): IO[Unit] =
-    TargetQueriesGQL.UpdateTargetsMutation[IO]
+    TargetQueriesGQL
+      .UpdateTargetsMutation[IO]
       .execute(
         UpdateTargetsInput(
           WHERE = targetIds.toWhereTargets

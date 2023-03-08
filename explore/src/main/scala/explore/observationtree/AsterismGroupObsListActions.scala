@@ -35,7 +35,7 @@ object AsterismGroupObsListActions {
     _.asterismGroups.findContainingObsIds(draggedIds)
 
   private def obsDropSetter(draggedIds: ObsIdSet, srcIds: ObsIdSet, destIds: ObsIdSet)(
-    oAsterismGroup:                     Option[AsterismGroup]
+    oAsterismGroup: Option[AsterismGroup]
   ): AsterismGroupsWithObs => AsterismGroupsWithObs = agwo => {
     val origAsterismGroups = agwo.asterismGroups
 
@@ -102,7 +102,7 @@ object AsterismGroupObsListActions {
     destIds:     ObsIdSet,
     expandedIds: View[SortedSet[ObsIdSet]],
     setObsSet:   ObsIdSet => Callback
-  )(using c:     FetchClient[IO, ?, ObservationDB]) =
+  )(using c: FetchClient[IO, ?, ObservationDB]) =
     Action(getter = obsDropGetter(draggedIds), setter = obsDropSetter(draggedIds, srcIds, destIds))(
       onSet = (agwo, oAsterismGroup) =>
         oAsterismGroup.foldMap { asterismGroup =>

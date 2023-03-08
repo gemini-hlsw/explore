@@ -37,8 +37,8 @@ object ProgramQueries:
   def createProgram[F[_]: Async](name: Option[NonEmptyString])(using
     FetchClient[F, ?, ObservationDB]
   ): F[ProgramInfo] =
-    CreateProgramMutation
-      [F].execute(
+    CreateProgramMutation[F]
+      .execute(
         CreateProgramInput(SET = ProgramPropertiesInput(name = name.orIgnore).assign)
       )
       .map(p => ProgramInfo(p.createProgram.program.id, p.createProgram.program.name, false))
@@ -46,8 +46,8 @@ object ProgramQueries:
   def deleteProgram[F[_]: Async](id: Program.Id)(using
     FetchClient[F, ?, ObservationDB]
   ): F[Unit] =
-    UpdateProgramsMutation
-      [F].execute(
+    UpdateProgramsMutation[F]
+      .execute(
         UpdateProgramsInput(
           WHERE = id.toWhereProgram.assign,
           SET = ProgramPropertiesInput(existence = Existence.Deleted.assign)
@@ -58,8 +58,8 @@ object ProgramQueries:
   def undeleteProgram[F[_]: Async](id: Program.Id)(using
     FetchClient[F, ?, ObservationDB]
   ): F[Unit] =
-    UpdateProgramsMutation
-      [F].execute(
+    UpdateProgramsMutation[F]
+      .execute(
         UpdateProgramsInput(
           WHERE = id.toWhereProgram.assign,
           includeDeleted = true.assign,
@@ -71,8 +71,8 @@ object ProgramQueries:
   def updateProgramName[F[_]: Async](id: Program.Id, name: Option[NonEmptyString])(using
     FetchClient[F, ?, ObservationDB]
   ): F[Unit] =
-    UpdateProgramsMutation
-      [F].execute(
+    UpdateProgramsMutation[F]
+      .execute(
         UpdateProgramsInput(
           WHERE = id.toWhereProgram.assign,
           SET = ProgramPropertiesInput(name = name.orUnassign)
