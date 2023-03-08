@@ -7,6 +7,7 @@ import eu.timepit.refined.types.numeric.NonNegInt
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.svg_<^.*
+import lucuma.core.enums.SequenceType
 import lucuma.core.math.Offset
 import lucuma.ui.syntax.all.given
 import org.scalajs.dom.svg.SVG
@@ -15,9 +16,6 @@ import react.common.ReactFnProps
 import react.common.Style
 import react.floatingui.*
 import react.floatingui.hooks.*
-
-enum OffsetType:
-  case Science, Acquisition
 
 case class OffsetSVG(
   svg:      Option[SVG],
@@ -28,7 +26,7 @@ case class OffsetSVG(
   pointCss: Css,
   sx:       Double,
   sy:       Double,
-  oType:    OffsetType,
+  oType:    SequenceType,
   idx:      NonNegInt,
   offset:   Offset
 ) extends ReactFnProps(OffsetSVG.component)
@@ -78,8 +76,8 @@ object OffsetSVG {
 
         val (offP, offQ) = Offset.signedDecimalArcseconds.get(p.offset)
         val prefix       = p.oType match
-          case OffsetType.Science     => "Sci. Offset"
-          case OffsetType.Acquisition => "Acq. Offset"
+          case SequenceType.Science     => "Sci. Offset"
+          case SequenceType.Acquisition => "Acq. Offset"
         val tooltip      = f"$prefix: ${p.idx}%s, p=${offP}%.0f, q=${offQ}%.0f"
 
         val (translateBoxY, translateTextX, translateTextY, path, pf) =

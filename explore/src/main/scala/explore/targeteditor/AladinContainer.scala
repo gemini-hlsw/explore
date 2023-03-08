@@ -30,6 +30,7 @@ import lucuma.ags.AgsAnalysis
 import lucuma.ags.AgsPosition
 import lucuma.core.enums.GuideSpeed
 import lucuma.core.enums.PortDisposition
+import lucuma.core.enums.SequenceType
 import lucuma.core.geom.Area
 import lucuma.core.geom.jts.interpreter.*
 import lucuma.core.math.Angle
@@ -385,7 +386,7 @@ object AladinContainer extends AladinCommon {
 
           def offsetIndicators(
             f:       ObsConfiguration => Option[NonEmptyList[Offset]],
-            oType:   OffsetType,
+            oType:   SequenceType,
             css:     Css,
             visible: Visible
           ) =
@@ -400,14 +401,14 @@ object AladinContainer extends AladinCommon {
             }
           val scienceOffsetIndicators =
             offsetIndicators(_.scienceOffsets,
-                             OffsetType.Science,
+                             SequenceType.Science,
                              ExploreStyles.ScienceOffsetPosition,
                              props.showScienceOffsets
             )
 
           val acquisitionOffsetIndicators =
             offsetIndicators(_.acquisitionOffsets,
-                             OffsetType.Acquisition,
+                             SequenceType.Acquisition,
                              ExploreStyles.AcquisitionOffsetPosition,
                              props.showAcquisitionOffsets
             )

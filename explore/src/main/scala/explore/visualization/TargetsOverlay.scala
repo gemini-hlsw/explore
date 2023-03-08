@@ -12,6 +12,7 @@ import explore.components.ui.ExploreStyles
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.svg_<^.*
+import lucuma.core.enums.SequenceType
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
 import lucuma.ui.reusability.given
@@ -83,7 +84,7 @@ object SVGTarget {
     coordinates: Coordinates,
     pos:         NonNegInt,
     offset:      Offset,
-    oType:       OffsetType,
+    oType:       SequenceType,
     css:         Css,
     radius:      Double,
     title:       Option[String] = None
