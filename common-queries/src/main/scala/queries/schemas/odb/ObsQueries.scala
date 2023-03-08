@@ -60,30 +60,33 @@ object ObsQueries:
   val SpectroscopyRequirementsData = ObservationData.ScienceRequirements.Spectroscopy
 
   case class ScienceData(
-    requirements: ScienceRequirementsData,
-    mode:         Option[ObservingMode],
-    constraints:  ConstraintSet,
-    targets:      Targets,
-    posAngle:     PosAngleConstraint,
-    offsets:      Option[NonEmptyList[Offset]],
-    potITC:       Pot[Option[OdbItcResult.Success]]
+    requirements:       ScienceRequirementsData,
+    mode:               Option[ObservingMode],
+    constraints:        ConstraintSet,
+    targets:            Targets,
+    posAngle:           PosAngleConstraint,
+    scienceOffsets:     Option[NonEmptyList[Offset]],
+    acquisitionOffsets: Option[NonEmptyList[Offset]],
+    potITC:             Pot[Option[OdbItcResult.Success]]
   )
 
   object ScienceData {
-    val requirements: Lens[ScienceData, ScienceRequirementsData]     =
+    val requirements: Lens[ScienceData, ScienceRequirementsData]            =
       Focus[ScienceData](_.requirements)
-    val mode: Lens[ScienceData, Option[ObservingMode]]               =
+    val mode: Lens[ScienceData, Option[ObservingMode]]                      =
       Focus[ScienceData](_.mode)
-    val targets: Lens[ScienceData, Targets]                          =
+    val targets: Lens[ScienceData, Targets]                                 =
       Focus[ScienceData](_.targets)
-    val constraints: Lens[ScienceData, ConstraintSet]                =
+    val constraints: Lens[ScienceData, ConstraintSet]                       =
       Focus[ScienceData](_.constraints)
-    val posAngle: Lens[ScienceData, PosAngleConstraint]              =
+    val posAngle: Lens[ScienceData, PosAngleConstraint]                     =
       Focus[ScienceData](_.posAngle)
-    val potITC: Lens[ScienceData, Pot[Option[OdbItcResult.Success]]] =
+    val potITC: Lens[ScienceData, Pot[Option[OdbItcResult.Success]]]        =
       Focus[ScienceData](_.potITC)
-    val offsets: Lens[ScienceData, Option[NonEmptyList[Offset]]]     =
-      Focus[ScienceData](_.offsets)
+    val scienceOffsets: Lens[ScienceData, Option[NonEmptyList[Offset]]]     =
+      Focus[ScienceData](_.scienceOffsets)
+    val acquisitionOffsets: Lens[ScienceData, Option[NonEmptyList[Offset]]] =
+      Focus[ScienceData](_.acquisitionOffsets)
   }
 
   case class ObsEditData(
@@ -130,8 +133,12 @@ object ObsQueries:
             constraints = obs.constraintSet,
             targets = obs.targetEnvironment,
             posAngle = obs.posAngleConstraint,
-            offsets =
-              NonEmptyList.fromList(data.sequence.foldMap(_.executionConfig.allOffsets).distinct),
+            scienceOffsets = NonEmptyList.fromList(
+              data.sequence.foldMap(_.executionConfig.allScienceOffsets).distinct
+            ),
+            acquisitionOffsets = NonEmptyList.fromList(
+              data.sequence.foldMap(_.executionConfig.allAcquisitionOffsets).distinct
+            ),
             potITC = Pot(itcSuccess)
           )
         )
@@ -172,9 +179,7 @@ object ObsQueries:
     programId:   Program.Id,
     obsIds:      List[Observation.Id],
     constraints: ConstraintSet
-  )(implicit
-    c:           TransactionalClient[F, ObservationDB]
-  ): F[Unit] = {
+  )(using TransactionalClient[F, ObservationDB]): F[Unit] = {
     val createER: ElevationRangeInput = constraints.elevationRange match
       case ElevationRange.AirMass(min, max)   =>
         ElevationRangeInput(airMass =

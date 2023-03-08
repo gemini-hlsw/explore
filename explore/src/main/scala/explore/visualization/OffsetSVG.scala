@@ -16,6 +16,9 @@ import react.common.Style
 import react.floatingui.*
 import react.floatingui.hooks.*
 
+enum OffsetType:
+  case Science, Acquisition
+
 case class OffsetSVG(
   svg:      Option[SVG],
   p:        Double,
@@ -25,6 +28,7 @@ case class OffsetSVG(
   pointCss: Css,
   sx:       Double,
   sy:       Double,
+  oType:    OffsetType,
   idx:      NonNegInt,
   offset:   Offset
 ) extends ReactFnProps(OffsetSVG.component)
@@ -53,6 +57,7 @@ object OffsetSVG {
         val side      = scale(p.maxP * p.radius)
         val areaSize  = scale(p.maxP * (2 * p.radius + 3))
         val targetSvg = <.g(
+          // tooltip area
           <.rect(
             ^.x          := scale(p.p) - areaSize / 2,
             ^.width      := areaSize,
@@ -61,16 +66,22 @@ object OffsetSVG {
             ^.untypedRef := floating.reference,
             ExploreStyles.TargetTooltipArea
           ),
-          <.circle(
-            ^.cx         := scale(p.p),
-            ^.cy         := scale(p.q),
-            ^.r          := scale(p.maxP * p.radius),
+          // mark the offsset pos with a square
+          <.rect(
+            ^.x          := scale(p.p) - areaSize / 2,
+            ^.width      := areaSize,
+            ^.height     := areaSize,
+            ^.y          := scale(p.q) - areaSize / 2,
+            // ExploreStyles.TargetTooltipArea
             p.pointCss
           )
         )
 
         val (offP, offQ) = Offset.signedDecimalArcseconds.get(p.offset)
-        val tooltip      = f"Offset: ${p.idx}%s, p=${offP}%.0f, q=${offQ}%.0f"
+        val prefix       = p.oType match
+          case OffsetType.Science     => "Sci. Offset"
+          case OffsetType.Acquisition => "Acq. Offset"
+        val tooltip      = f"$prefix: ${p.idx}%s, p=${offP}%.0f, q=${offQ}%.0f"
 
         val (translateBoxY, translateTextX, translateTextY, path, pf) =
           SVGTooltip.tooltipTranslationAndContent(floating, p.q, p.sx, p.sy, tooltip)

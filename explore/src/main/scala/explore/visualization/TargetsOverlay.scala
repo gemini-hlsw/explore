@@ -83,6 +83,7 @@ object SVGTarget {
     coordinates: Coordinates,
     pos:         NonNegInt,
     offset:      Offset,
+    oType:       OffsetType,
     css:         Css,
     radius:      Double,
     title:       Option[String] = None
@@ -219,7 +220,7 @@ object TargetsOverlay {
                            title.map(<.title(_))
                   )
 
-                case (offP, offQ, SVGTarget.GuideStarTarget(_, css, radius, title))         =>
+                case (offP, offQ, SVGTarget.GuideStarTarget(_, css, radius, title)) =>
                   val pointCss = ExploreStyles.GuideStarTarget |+| css
                   <.circle(^.cx := scale(offP),
                            ^.cy := scale(offQ),
@@ -227,11 +228,25 @@ object TargetsOverlay {
                            pointCss,
                            title.map(<.title(_))
                   )
-                case (offP, offQ, SVGTarget.OffsetIndicator(_, idx, o, css, radius, title)) =>
+                case (offP,
+                      offQ,
+                      SVGTarget.OffsetIndicator(_, idx, o, oType, css, radius, title)
+                    ) =>
                   val pointCss = ExploreStyles.OffsetPosition |+| css
                   val sx       = p.width / (viewBoxW - viewBoxX).abs
                   val sy       = p.height / (viewBoxH - viewBoxY).abs
-                  OffsetSVG(svgRaw, offP, offQ, maxP, radius, pointCss, sx, sy, idx, o): VdomNode
+                  OffsetSVG(svgRaw,
+                            offP,
+                            offQ,
+                            maxP,
+                            radius,
+                            pointCss,
+                            sx,
+                            sy,
+                            oType,
+                            idx,
+                            o
+                  ): VdomNode
 
                 case (offP, offQ, SVGTarget.LineTo(_, d, css, title)) =>
                   val destOffset = d.diff(p.baseCoordinates).offset

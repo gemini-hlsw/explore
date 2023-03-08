@@ -13,6 +13,7 @@ import eu.timepit.refined.numeric.NonNegative
 import explore.Icons
 import explore.aladin.AladinZoomControl
 import explore.components.ui.ExploreStyles
+import explore.components.ui.ExploreStyles.ExploreTable
 import explore.model.AladinMouseScroll
 import explore.model.Asterism
 import explore.model.ObsConfiguration
@@ -363,7 +364,7 @@ object AladinContainer extends AladinCommon {
               )
             )
 
-          val sciencePositions =
+          val sciencePositions        =
             if (scienceTargets.length > 1)
               scienceTargets.flatMap { (selected, name, pm, base) =>
                 pm.foldMap { pm =>
@@ -381,16 +382,34 @@ object AladinContainer extends AladinCommon {
               }
             else Nil
 
-          val offsetIndicators =
-            props.obsConf.flatMap(_.offsets).foldMap(_.toList).zipWithIndex.map { case (o, i) =>
+          def offsetIndicators(
+            f:     ObsConfiguration => Option[NonEmptyList[Offset]],
+            oType: OffsetType,
+            css:   Css
+          ) =
+            props.obsConf.foldMap(f).foldMap(_.toList).zipWithIndex.map { case (o, i) =>
               for {
                 idx <- refineV[NonNegative](i).toOption
                 gs  <- props.selectedGuideStar
                 pa  <- gs.posAngle
                 c   <- baseCoordinates.value.offsetBy(pa, o)
                 if props.showScienceOffsets.visible
-              } yield SVGTarget.OffsetIndicator(c, idx, o, Css.Empty, 5)
+              } yield SVGTarget.OffsetIndicator(c, idx, o, oType, css, 4)
             }
+          val scienceOffsetIndicators =
+            offsetIndicators(_.scienceOffsets,
+                             OffsetType.Science,
+                             ExploreStyles.ScienceOffsetPosition
+            )
+
+          val acquisitionOffsetIndicators =
+            offsetIndicators(_.acquisitionOffsets,
+                             OffsetType.Acquisition,
+                             ExploreStyles.AcquisitionOffsetPosition
+            )
+
+          val offsetTargets =
+            (scienceOffsetIndicators |+| acquisitionOffsetIndicators).flattenOption
 
           val screenOffset =
             currentPos.value.map(_.diff(baseCoordinates.value).offset).getOrElse(Offset.Zero)
@@ -416,7 +435,7 @@ object AladinContainer extends AladinCommon {
                       screenOffset,
                       baseCoordinates.value,
                       // Order matters
-                      offsetIndicators.flattenOption ++ candidates ++ basePosition ++ sciencePositions
+                      candidates ++ basePosition ++ sciencePositions ++ offsetTargets
                     )
                   ),
                 (resize.width, resize.height, fov.value)

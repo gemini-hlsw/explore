@@ -168,6 +168,18 @@ object ObsQueriesGQL {
         sequence(programId: $$programId, observationId: $$obsId) {
           executionConfig {
             ... on GmosSouthExecutionConfig {
+              acquisition {
+                nextAtom {
+                  steps {
+                    ...stepDataGS
+                  }
+                }
+                possibleFuture {
+                  steps {
+                    ...stepDataGS
+                  }
+                }
+              }
               science {
                 nextAtom {
                   steps {
@@ -182,6 +194,18 @@ object ObsQueriesGQL {
               }
             }
             ... on GmosNorthExecutionConfig {
+              acquisition {
+                nextAtom {
+                  steps {
+                    ...stepDataGN
+                  }
+                }
+                possibleFuture {
+                  steps {
+                    ...stepDataGN
+                  }
+                }
+              }
               science {
                 nextAtom {
                   steps {
