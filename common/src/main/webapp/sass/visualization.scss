@@ -118,6 +118,7 @@ $brightness: var(--aladin-image-brightness);
   position: absolute;
   z-index: 40;
 
+  rect,
   circle,
   line {
     vector-effect: non-scaling-stroke;
@@ -163,9 +164,20 @@ $brightness: var(--aladin-image-brightness);
   }
 
   .offset-position {
-    stroke-width: 1px;
+    stroke-width: 1.5px;
+    stroke-dasharray: 0 1.5 0;
+    stroke-linejoin: bevel;
     fill: none;
-    stroke: hsla(51deg 100% 50% / 100%);
+  }
+
+  .acquisition-offset-position {
+    // tomato color for acq offets
+    stroke: hsl(9deg 70% 63.9%);
+  }
+
+  .science-offset-position {
+    // dark turqoise for science offsets
+    stroke: hsl(181deg 100.0% 41.0% / 100%);
   }
 
   .guide-star-target,

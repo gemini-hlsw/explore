@@ -19,7 +19,12 @@ case class ExecutionSequence(
   possibleFuture: List[AtomOffset]
 ) derives Decoder
 
-case class ExecutionOffsets(science: ExecutionSequence) derives Decoder:
-  def allOffsets: List[Offset] =
+case class ExecutionOffsets(science: ExecutionSequence, acquisition: ExecutionSequence)
+    derives Decoder:
+  def allScienceOffsets: List[Offset] =
     science.nextAtom.steps.flatMap(_.stepConfig.offset) ++
       science.possibleFuture.flatMap(_.steps.flatMap(_.stepConfig.offset))
+
+  def allAcquisitionOffsets: List[Offset] =
+    acquisition.nextAtom.steps.flatMap(_.stepConfig.offset) ++
+      acquisition.possibleFuture.flatMap(_.steps.flatMap(_.stepConfig.offset))

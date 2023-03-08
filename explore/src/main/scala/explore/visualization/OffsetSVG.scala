@@ -7,6 +7,7 @@ import eu.timepit.refined.types.numeric.NonNegInt
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.svg_<^.*
+import lucuma.core.enums.SequenceType
 import lucuma.core.math.Offset
 import lucuma.ui.syntax.all.given
 import org.scalajs.dom.svg.SVG
@@ -25,6 +26,7 @@ case class OffsetSVG(
   pointCss: Css,
   sx:       Double,
   sy:       Double,
+  oType:    SequenceType,
   idx:      NonNegInt,
   offset:   Offset
 ) extends ReactFnProps(OffsetSVG.component)
@@ -53,6 +55,7 @@ object OffsetSVG {
         val side      = scale(p.maxP * p.radius)
         val areaSize  = scale(p.maxP * (2 * p.radius + 3))
         val targetSvg = <.g(
+          // tooltip area
           <.rect(
             ^.x          := scale(p.p) - areaSize / 2,
             ^.width      := areaSize,
@@ -61,16 +64,21 @@ object OffsetSVG {
             ^.untypedRef := floating.reference,
             ExploreStyles.TargetTooltipArea
           ),
-          <.circle(
-            ^.cx         := scale(p.p),
-            ^.cy         := scale(p.q),
-            ^.r          := scale(p.maxP * p.radius),
+          // mark the offsset pos with a square
+          <.rect(
+            ^.x          := scale(p.p) - areaSize / 2,
+            ^.width      := areaSize,
+            ^.height     := areaSize,
+            ^.y          := scale(p.q) - areaSize / 2,
             p.pointCss
           )
         )
 
         val (offP, offQ) = Offset.signedDecimalArcseconds.get(p.offset)
-        val tooltip      = f"Offset: ${p.idx}%s, p=${offP}%.0f, q=${offQ}%.0f"
+        val prefix       = p.oType match
+          case SequenceType.Science     => "Sci. Offset"
+          case SequenceType.Acquisition => "Acq. Offset"
+        val tooltip      = f"$prefix: ${p.idx}%s, p=${offP}%.0f, q=${offQ}%.0f"
 
         val (translateBoxY, translateTextX, translateTextY, path, pf) =
           SVGTooltip.tooltipTranslationAndContent(floating, p.q, p.sx, p.sy, tooltip)

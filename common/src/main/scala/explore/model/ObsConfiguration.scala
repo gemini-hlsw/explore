@@ -26,7 +26,8 @@ case class ObsConfiguration(
   posAngleProperties: Option[PAProperties],
   constraints:        Option[ConstraintSet],
   wavelength:         Option[Wavelength],
-  offsets:            Option[NonEmptyList[Offset]]
+  scienceOffsets:     Option[NonEmptyList[Offset]],
+  acquisitionOffsets: Option[NonEmptyList[Offset]]
 ) derives Eq:
   def posAngleConstraint: Option[PosAngleConstraint] = posAngleProperties.map(_.constraint.get)
 
@@ -38,10 +39,3 @@ case class ObsConfiguration(
 
   def selectedGS: Option[View[Option[AgsAnalysis]]] =
     posAngleProperties.map(_.selectedGS)
-
-object ObsConfiguration:
-  val configuration      = Focus[ObsConfiguration](_.configuration)
-  val posAngleProperties = Focus[ObsConfiguration](_.posAngleProperties)
-  val constraints        = Focus[ObsConfiguration](_.constraints)
-  val wavelength         = Focus[ObsConfiguration](_.wavelength)
-  val offsets            = Focus[ObsConfiguration](_.offsets)

@@ -94,7 +94,7 @@ case class AladinCell(
     } yield angles
 
   val positions: Option[NonEmptyList[AgsPosition]] =
-    (anglesToTest, obsConf.map(_.offsets.getOrElse(NonEmptyList.of(Offset.Zero)))).mapN {
+    (anglesToTest, obsConf.map(_.scienceOffsets.getOrElse(NonEmptyList.of(Offset.Zero)))).mapN {
       (anglesToTest, offsets) =>
         for {
           pa  <- anglesToTest
@@ -438,6 +438,11 @@ object AladinCell extends ModelOptics with AladinCommon:
                             v => prefsSetter(scienceOffsets = v)
             )
 
+          val acquisitionOffsetsView =
+            visiblePropView(TargetVisualOptions.acquisitionOffsets,
+                            v => prefsSetter(acquisitionOffsets = v)
+            )
+
           val fovView =
             options.zoom(Pot.readyPrism.andThen(targetPrefs).andThen(fovLens))
 
@@ -524,7 +529,8 @@ object AladinCell extends ModelOptics with AladinCommon:
                 offsetChangeInAladin.reuseAlways,
                 selectedGuideStar,
                 agsResults.value,
-                t.scienceOffsets
+                t.scienceOffsets,
+                t.acquisitionOffsets
               )
 
           val renderToolbar: ((UserGlobalPreferences, TargetVisualOptions)) => VdomNode =
@@ -585,7 +591,17 @@ object AladinCell extends ModelOptics with AladinCommon:
                   CheckboxView(
                     id = "science-offsets".refined,
                     value = view,
-                    label = "Sci Offsets"
+                    label = "Sci. Offsets"
+                  )
+                )
+            ),
+            MenuItem.Custom(
+              acquisitionOffsetsView.asView
+                .map(view =>
+                  CheckboxView(
+                    id = "acq-offsets".refined,
+                    value = view,
+                    label = "Acq. Offsets"
                   )
                 )
             ),

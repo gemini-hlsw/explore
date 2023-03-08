@@ -279,7 +279,8 @@ object ObsTabTiles:
             paProps,
             o.get.scienceData.constraints.some,
             o.get.scienceData.requirements.spectroscopy.wavelength,
-            o.get.scienceData.offsets
+            o.get.scienceData.scienceOffsets,
+            o.get.scienceData.acquisitionOffsets
           )
         )
 
