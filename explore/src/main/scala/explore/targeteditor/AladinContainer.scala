@@ -65,7 +65,8 @@ case class AladinContainer(
   updateViewOffset:       Offset => Callback,
   selectedGuideStar:      Option[AgsAnalysis],
   guideStarCandidates:    List[AgsAnalysis],
-  showScienceOffsets:     Visible
+  showScienceOffsets:     Visible,
+  showAcquisitionOffsets: Visible
 ) extends ReactFnProps(AladinContainer.component)
 
 object AladinContainer extends AladinCommon {
@@ -383,9 +384,10 @@ object AladinContainer extends AladinCommon {
             else Nil
 
           def offsetIndicators(
-            f:     ObsConfiguration => Option[NonEmptyList[Offset]],
-            oType: OffsetType,
-            css:   Css
+            f:       ObsConfiguration => Option[NonEmptyList[Offset]],
+            oType:   OffsetType,
+            css:     Css,
+            visible: Visible
           ) =
             props.obsConf.foldMap(f).foldMap(_.toList).zipWithIndex.map { case (o, i) =>
               for {
@@ -393,23 +395,26 @@ object AladinContainer extends AladinCommon {
                 gs  <- props.selectedGuideStar
                 pa  <- gs.posAngle
                 c   <- baseCoordinates.value.offsetBy(pa, o)
-                if props.showScienceOffsets.visible
+                if visible.visible
               } yield SVGTarget.OffsetIndicator(c, idx, o, oType, css, 4)
             }
           val scienceOffsetIndicators =
             offsetIndicators(_.scienceOffsets,
                              OffsetType.Science,
-                             ExploreStyles.ScienceOffsetPosition
+                             ExploreStyles.ScienceOffsetPosition,
+                             props.showScienceOffsets
             )
 
           val acquisitionOffsetIndicators =
             offsetIndicators(_.acquisitionOffsets,
                              OffsetType.Acquisition,
-                             ExploreStyles.AcquisitionOffsetPosition
+                             ExploreStyles.AcquisitionOffsetPosition,
+                             props.showAcquisitionOffsets
             )
 
           val offsetTargets =
-            (scienceOffsetIndicators |+| acquisitionOffsetIndicators).flattenOption
+            // order is important, scienc to be drawn above acq
+            (acquisitionOffsetIndicators |+| scienceOffsetIndicators).flattenOption
 
           val screenOffset =
             currentPos.value.map(_.diff(baseCoordinates.value).offset).getOrElse(Offset.Zero)

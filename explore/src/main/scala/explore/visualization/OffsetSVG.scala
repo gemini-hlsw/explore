@@ -72,7 +72,6 @@ object OffsetSVG {
             ^.width      := areaSize,
             ^.height     := areaSize,
             ^.y          := scale(p.q) - areaSize / 2,
-            // ExploreStyles.TargetTooltipArea
             p.pointCss
           )
         )
