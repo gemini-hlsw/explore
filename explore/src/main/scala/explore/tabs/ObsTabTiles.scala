@@ -6,6 +6,7 @@ package explore.tabs
 import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
+import clue.ErrorPolicy
 import clue.FetchClient
 import crystal.Pot
 import crystal.react.*
@@ -136,9 +137,9 @@ object ObsTabTiles:
         import ctx.given
 
         ObsEditQuery[IO]
-          .query(props.programId, props.obsId)
+          .query(props.programId, props.obsId)(ErrorPolicy.RaiseOnNoData)
           .map(
-            _.asObsEditData
+            _.data.asObsEditData
               .getOrElse(throw new Exception(s"Observation [${props.obsId}] not found"))
           )
           .reRunOnResourceSignals(ObservationEditSubscription.subscribe[IO](props.obsId))
