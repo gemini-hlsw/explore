@@ -19,6 +19,7 @@ import explore.model.AppContext
 import explore.model.ExploreLocalPreferences
 import explore.model.ExploreLocalPreferences.*
 import explore.model.ModelUndoStacks
+import explore.model.UserVault
 import explore.model.enums.ExecutionEnvironment
 import explore.programs.ProgramsPopup
 import explore.syntax.ui.*
@@ -31,7 +32,6 @@ import log4cats.loglevel.LogLevelLogger
 import lucuma.core.model.GuestRole
 import lucuma.core.model.GuestUser
 import lucuma.core.model.Program
-import lucuma.core.model.User
 import lucuma.core.util.NewType
 import lucuma.ui.enums.Theme
 import lucuma.ui.reusability.given
@@ -50,7 +50,7 @@ import react.primereact.hooks.all.*
 import typings.loglevel.mod.LogLevelDesc
 
 case class TopBar(
-  user:        User,
+  vault:       UserVault,
   programId:   Option[Program.Id],
   preferences: ExploreLocalPreferences,
   undoStacks:  View[ModelUndoStacks[IO]],
@@ -100,7 +100,7 @@ object TopBar:
         ) =>
           import ctx.given
 
-          val role = props.user.role
+          val role = props.vault.user.role
 
           def logout: IO[Unit] = ctx.sso.logout >> props.onLogout
 
@@ -202,7 +202,7 @@ object TopBar:
               clazz = ExploreStyles.MainHeader,
               left = <.span(ExploreStyles.MainTitle, "Explore"),
               right = React.Fragment(
-                <.span(ExploreStyles.MainUserName, props.user.displayName),
+                <.span(ExploreStyles.MainUserName, props.vault.user.displayName),
                 ConnectionsStatus(),
                 Button(icon = Icons.Bars,
                        text = true,
@@ -222,6 +222,7 @@ object TopBar:
             else EmptyVdom,
             if (isUserPropertiesOpen.value.value)
               UserPreferencesPopup(
+                props.vault,
                 isUserPropertiesOpen.setState(IsUserPropertiesOpen(false)).some
               )
             else EmptyVdom

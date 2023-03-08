@@ -54,7 +54,7 @@ case class AppContext[F[_]](
   given WebSocketJSClient[F, ObservationDB]     = clients.odb
   given WebSocketJSClient[F, UserPreferencesDB] = clients.preferencesDB
   given FetchJSClient[F, ITC]                   = clients.itc
-  given WebSocketJSClient[F, SSO]               = clients.sso
+  given FetchJSClient[F, SSO]                   = clients.sso
 
   given itcWorker: WorkerClient[F, ItcMessage.Request]         = workerClients.itc
   given catalogWorker: WorkerClient[F, CatalogMessage.Request] = workerClients.catalog

@@ -22,20 +22,18 @@ case class GraphQLClients[F[_]: Async: Parallel] protected (
   odb:           WebSocketJSClient[F, ObservationDB],
   preferencesDB: WebSocketJSClient[F, UserPreferencesDB],
   itc:           FetchJSClient[F, ITC],
-  sso:           WebSocketJSClient[F, SSO]
+  sso:           FetchJSClient[F, SSO]
 ):
   def init(payload: Map[String, Json]): F[Unit] =
     (
       preferencesDB.connect() >> preferencesDB.initialize(),
       odb.connect() >> odb.initialize(payload),
-      sso.connect() >> sso.initialize(payload)
     ).parTupled.void
 
   def close(): F[Unit] =
     List(
       preferencesDB.terminate() >> preferencesDB.disconnect(WebSocketCloseParams(code = 1000)),
-      odb.terminate() >> odb.disconnect(WebSocketCloseParams(code = 1000)),
-      sso.terminate() >> sso.disconnect(WebSocketCloseParams(code = 1000))
+      odb.terminate() >> odb.disconnect(WebSocketCloseParams(code = 1000))
     ).sequence.void
 
 object GraphQLClients:
@@ -54,11 +52,5 @@ object GraphQLClients:
       itcClient   <-
         FetchJSClient.of[F, ITC](itcURI.toString, "ITC")
       ssoClient   <-
-        val ssoURL =
-          Uri(
-            Scheme.fromString(s"wss").toOption,
-            ssoURI.host.map(h => Authority(host = h)),
-            path"ws"
-          )
-        WebSocketJSClient.of[F, SSO](ssoURL.toString, "SSO", reconnectionStrategy)
+        FetchJSClient.of[F, SSO](s"${ssoURI.toString}/graphql", "SSO")
     } yield GraphQLClients(odbClient, prefsClient, itcClient, ssoClient)
