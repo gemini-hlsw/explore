@@ -5,18 +5,15 @@ package queries.common
 
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
-import io.circe.Decoder
-import lucuma.core.math.Angle
-import lucuma.core.math.Offset
 import lucuma.core.model.sequence.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.decoders.given
 import lucuma.schemas.odb.*
 
-object GeneratedSequenceSQL {
+object GeneratedSequenceSQL:
 
   @GraphQL
-  trait SequenceSteps extends GraphQLOperation[ObservationDB] {
+  trait SequenceSteps extends GraphQLOperation[ObservationDB]:
     val document = s"""
       query($$programId: ProgramId!, $$obsId: ObservationId!) {
         sequence(programId: $$programId, observationId: $$obsId) {
@@ -181,23 +178,6 @@ object GeneratedSequenceSQL {
       }
     """
 
-    implicit def offsetComponentDecoder[T]: Decoder[Offset.Component[T]] = Decoder.instance(c =>
-      c.downField("microarcseconds")
-        .as[Long]
-        .map(Angle.signedMicroarcseconds.reverse.andThen(Offset.Component.angle[T].reverse).get)
-    )
-
-    implicit val offsetDecoder: Decoder[Offset] = Decoder.instance(c =>
-      for {
-        p <- c.downField("p").as[Offset.P]
-        q <- c.downField("q").as[Offset.Q]
-      } yield Offset(p, q)
-    )
-
-    object Data {
-      object Sequence {
+    object Data:
+      object Sequence:
         type Config = FutureExecutionConfig
-      }
-    }
-  }
-}
