@@ -14,9 +14,9 @@ import java.time
 // gql: import io.circe.refined.*
 // gql: import lucuma.schemas.decoders.given
 
-object ObsQueriesGQL {
+object ObsQueriesGQL:
   @GraphQL
-  trait ProgramObservationsQuery extends GraphQLOperation[ObservationDB] {
+  trait ProgramObservationsQuery extends GraphQLOperation[ObservationDB]:
     // TODO We should do a single observations query and extract the constraint sets and targets from it.
     val document = s"""
       query($$programId: ProgramId!) {
@@ -66,23 +66,17 @@ object ObsQueriesGQL {
       }
     """
 
-    object Data {
-      object ConstraintSetGroup {
+    object Data:
+      object ConstraintSetGroup:
         type Matches = model.ConstraintGroup
-      }
 
-      object TargetGroup {
-        object Matches {
-          object Target {
+      object TargetGroup:
+        object Matches:
+          object Target:
             type Sidereal = lucuma.core.math.Coordinates
-          }
-        }
-      }
-    }
-  }
 
   @GraphQL
-  trait ProgramObservationsEditSubscription extends GraphQLOperation[ObservationDB] {
+  trait ProgramObservationsEditSubscription extends GraphQLOperation[ObservationDB]:
     // We need to include the `value {id}` to avoid a bug in grackle.
     val document = """
       subscription($programId: ProgramId!) {
@@ -94,10 +88,9 @@ object ObsQueriesGQL {
         }
       }
     """
-  }
 
   @GraphQL
-  trait ProgramCreateObservation extends GraphQLOperation[ObservationDB] {
+  trait ProgramCreateObservation extends GraphQLOperation[ObservationDB]:
     val document = s"""
       mutation($$createObservation: CreateObservationInput!) {
         createObservation(input: $$createObservation) {
@@ -115,10 +108,9 @@ object ObsQueriesGQL {
         }
       }
     """
-  }
 
   @GraphQL
-  trait ObsEditQuery extends GraphQLOperation[ObservationDB] {
+  trait ObsEditQuery extends GraphQLOperation[ObservationDB]:
     val document = s"""
       fragment stepDataGN on GmosNorthStep {
         id
@@ -224,16 +216,12 @@ object ObsQueriesGQL {
       }
     """
 
-    object Data {
-      object Sequence {
+    object Data:
+      object Sequence:
         type ExecutionConfig = explore.model.ExecutionOffsets
-      }
-    }
-
-  }
 
   @GraphQL
-  trait ObservationEditSubscription extends GraphQLOperation[ObservationDB] {
+  trait ObservationEditSubscription extends GraphQLOperation[ObservationDB]:
     // We need to include the `value {id}` to avoid a bug in grackle.
     val document = """
       subscription($obsId: ObservationId!) {
@@ -245,10 +233,9 @@ object ObsQueriesGQL {
         }
       }
     """
-  }
 
   @GraphQL
-  trait UpdateObservationMutation extends GraphQLOperation[ObservationDB] {
+  trait UpdateObservationMutation extends GraphQLOperation[ObservationDB]:
     val document = """
       mutation ($input: UpdateObservationsInput!){
         updateObservations(input: $input) {
@@ -258,10 +245,9 @@ object ObsQueriesGQL {
         }
       }
     """
-  }
 
   @GraphQL
-  trait CreateConfigurationMutation extends GraphQLOperation[ObservationDB] {
+  trait CreateConfigurationMutation extends GraphQLOperation[ObservationDB]:
     val document = s"""
       mutation ($$input: UpdateObservationsInput!){
         updateObservations(input: $$input) {
@@ -271,10 +257,9 @@ object ObsQueriesGQL {
         }
       }
     """
-  }
 
   @GraphQL
-  trait CloneObservationMutation extends GraphQLOperation[ObservationDB] {
+  trait CloneObservationMutation extends GraphQLOperation[ObservationDB]:
     val document = s"""
       mutation ($$input: CloneObservationInput!){
         cloneObservation(input: $$input) {
@@ -292,5 +277,3 @@ object ObsQueriesGQL {
         }
       }
     """
-  }
-}
