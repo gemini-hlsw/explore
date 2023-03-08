@@ -195,7 +195,7 @@ object ObsQueries:
           HourAngleRangeInput(minHours = min.value.assign, maxHours = max.value.assign).assign
         )
 
-    val editInput                              = ObservationPropertiesInput(
+    val editInput = ObservationPropertiesInput(
       constraintSet = ConstraintSetInput(
         imageQuality = constraints.imageQuality.assign,
         cloudExtinction = constraints.cloudExtinction.assign,
@@ -204,7 +204,7 @@ object ObsQueries:
         elevationRange = createER.assign
       ).assign
     )
-    val xxx: F[UpdateObservationMutation.Data] = UpdateObservationMutation[F]
+    UpdateObservationMutation[F]
       .execute(
         UpdateObservationsInput(
           programId = programId,
@@ -212,7 +212,7 @@ object ObsQueries:
           SET = editInput
         )
       )
-    xxx.void
+      .void
   }
 
   def updateVisualizationTime[F[_]: Async](
