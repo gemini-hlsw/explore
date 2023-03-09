@@ -6,7 +6,8 @@ package explore.users
 import cats.effect.IO
 import cats.implicits.catsKernelOrderingForOrder
 import cats.syntax.all.*
-import clue.FetchClient
+import clue.js.FetchJSClient
+import clue.js.FetchJSRequest
 import crystal.react.View
 import crystal.react.hooks.*
 import crystal.react.implicits.*
@@ -17,9 +18,11 @@ import explore.components.ExploreCopy
 import explore.components.ui.ExploreStyles
 import explore.model.ApiKey
 import explore.model.AppContext
+import explore.model.UserVault
 import explore.model.display.given
 import explore.model.enums.RoleType
 import explore.model.reusability.given
+import explore.model.userVault.*
 import explore.syntax.ui.given
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -50,7 +53,7 @@ import queries.schemas.SSO
 import react.common.ReactFnProps
 import react.primereact.*
 
-case class UserPreferencesPopup(onClose: Option[Callback] = none)
+case class UserPreferencesPopup(vault: UserVault, onClose: Option[Callback] = none)
     extends ReactFnProps(UserPreferencesPopup.component)
 
 object UserPreferencesPopup:
@@ -75,11 +78,11 @@ object UserPreferencesPopup:
         clazz = ExploreStyles.Dialog.Small |+| ExploreStyles.ApiKeysPopup,
         header = "User Preferences"
       )(
-        UserPreferencesContent(props.onClose)
+        UserPreferencesContent(props.vault, props.onClose)
       )
     )
 
-case class UserPreferencesContent(onClose: Option[Callback] = none)
+case class UserPreferencesContent(vault: UserVault, onClose: Option[Callback] = none)
     extends ReactFnProps(UserPreferencesContent.component)
 
 object UserPreferencesContent:
@@ -97,8 +100,13 @@ object UserPreferencesContent:
   private val IdColumnId: ColumnId      = ColumnId("id")
   private val RoleColumnId: ColumnId    = ColumnId("role")
 
-  private def deleteKey(key: String, active: View[IsActive], newKey: View[NewKey])(using
-    FetchClient[IO, ?, SSO],
+  private def deleteKey(
+    key:    String,
+    active: View[IsActive],
+    newKey: View[NewKey],
+    vault:  UserVault
+  )(using
+    FetchJSClient[IO, SSO],
     Logger[IO]
   ) =
     ConfirmDialog.confirmDialog(
@@ -110,7 +118,7 @@ object UserPreferencesContent:
       position = DialogPosition.Top,
       accept = (for {
         _ <- active.set(IsActive(true)).to[IO]
-        _ <- DeleteApiKey[IO].execute(key)
+        _ <- DeleteApiKey[IO].execute(key, modParams = vault.addAuthorizationHeader)
         _ <- newKey.set(NewKey(none)).to[IO]
       } yield ()).guarantee(active.set(IsActive(false)).to[IO]).runAsync,
       acceptClass = PrimeStyles.ButtonSmall,
@@ -121,13 +129,14 @@ object UserPreferencesContent:
   private def createNewKey(
     keyRoleId: StandardRole.Id,
     active:    View[IsActive],
-    newKey:    View[NewKey]
+    newKey:    View[NewKey],
+    vault:     UserVault
   )(using
-    FetchClient[IO, ?, SSO]
+    FetchJSClient[IO, SSO]
   ) =
     (for {
       _            <- active.set(IsActive(true)).to[IO]
-      newKeyResult <- NewApiKey[IO].execute(keyRoleId)
+      newKeyResult <- NewApiKey[IO].execute(keyRoleId, modParams = vault.addAuthorizationHeader)
       _            <- newKey.set(NewKey(newKeyResult.createApiKey.some)).to[IO]
     } yield ()).guarantee(active.set(IsActive(false)).to[IO]).void
 
@@ -135,13 +144,13 @@ object UserPreferencesContent:
     .withHooks[Props]
     .useContext(AppContext.ctx)
     .useStateView(IsActive(false))
-    .useEffectResultWithDepsBy((_, ctx, isAdding) => isAdding.get) { (_, ctx, _) => _ =>
+    .useEffectResultWithDepsBy((_, ctx, isAdding) => isAdding.get) { (props, ctx, _) => _ =>
       import ctx.given
-      UserQuery[IO].query()
+      UserQuery[IO].query(modParams = props.vault.addAuthorizationHeader)
     }
     .useStateView(NewKey(none)) // id fo the new role id to create
     // Columns
-    .useMemoBy((_, _, isAdding, _, _) => isAdding.get)((_, ctx, isAdding, _, newKey) =>
+    .useMemoBy((_, _, isAdding, _, _) => isAdding.get)((props, ctx, isAdding, _, newKey) =>
       _ =>
         import ctx.given
 
@@ -169,7 +178,7 @@ object UserPreferencesContent:
                 Button(
                   icon = Icons.Trash,
                   severity = Button.Severity.Secondary,
-                  onClick = deleteKey(keyId, isAdding, newKey),
+                  onClick = deleteKey(keyId, isAdding, newKey, props.vault),
                   tooltip = s"Delete key $keyId"
                 ).mini.compact
               )
@@ -198,10 +207,11 @@ object UserPreferencesContent:
 
         val closeButton =
           props.onClose.fold(none)(cb =>
-            Button(label = "Cancel",
-                   icon = Icons.Close,
-                   severity = Button.Severity.Danger,
-                   onClick = cb
+            Button(
+              label = "Cancel",
+              icon = Icons.Close,
+              severity = Button.Severity.Danger,
+              onClick = cb
             ).small.compact.some
           )
 
@@ -250,8 +260,10 @@ object UserPreferencesContent:
               severity = Button.Severity.Success,
               disabled = active.get.value,
               loading = active.get.value,
-              onClick =
-                currentKeyRoleId.map(createNewKey(_, active, newKey)).map(_.runAsync).getOrEmpty
+              onClick = currentKeyRoleId
+                .map(createNewKey(_, active, newKey, props.vault))
+                .map(_.runAsync)
+                .getOrEmpty
             ).small.compact,
             EnumDropdownView(
               id = "new-key-role".refined,

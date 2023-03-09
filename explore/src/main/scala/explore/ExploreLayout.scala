@@ -142,7 +142,7 @@ object ExploreLayout:
             <.div(
               ExploreStyles.MainGrid,
               TopBar(
-                vault.user,
+                vault,
                 routingInfo.optProgramId,
                 props.view.zoom(RootModel.localPreferences).get,
                 props.view.zoom(RootModel.undoStacks),
