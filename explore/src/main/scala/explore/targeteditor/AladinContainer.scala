@@ -36,7 +36,7 @@ import lucuma.core.enums.PortDisposition
 import lucuma.core.enums.SequenceType
 import lucuma.core.geom.Area
 import lucuma.core.geom.ShapeExpression
-import lucuma.core.geom.jts.interpreter.*
+import lucuma.core.geom.jts.interpreter.given
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
@@ -69,9 +69,7 @@ case class AladinContainer(
   updateFov:              Fov => Callback,
   updateViewOffset:       Offset => Callback,
   selectedGuideStar:      Option[AgsAnalysis],
-  guideStarCandidates:    List[AgsAnalysis],
-  showScienceOffsets:     Visible,
-  showAcquisitionOffsets: Visible
+  guideStarCandidates:    List[AgsAnalysis]
 ) extends ReactFnProps(AladinContainer.component)
 
 object AladinContainer extends AladinCommon {
@@ -173,47 +171,25 @@ object AladinContainer extends AladinCommon {
       }
       // Memoized svg
       .useMemoBy((p, allCoordinates, _, _) =>
-        (allCoordinates,
-         p.obsConf.flatMap(_.configuration),
-         p.obsConf.flatMap(_.fallbackPosAngle),
-         p.userPreferences.aladinShowCatalog.visible,
-         p.selectedGuideStar
-        )
-      ) { (_, _, _, _) => (allCoordinates, configuration, unguidedPa, showCatalog, gs) =>
-        val posAngle = gs.posAngle.orElse(unguidedPa)
+        (allCoordinates, p.obsConf, p.userPreferences, p.selectedGuideStar)
+      ) {
+        (_, _, _, _) => (
+          allCoordinates,
+          configuration,
+          userPrefs,
+          gs
+        ) =>
+          val candidatesVisibilityCss =
+            ExploreStyles.GuideStarCandidateVisible.when_(userPrefs.aladinAgsOverlay.visible)
 
-        val candidatesVisibility =
-          ExploreStyles.GuideStarCandidateVisible.when_(showCatalog)
-
-        val probeArmShapes = (gs, posAngle).mapN { case (c, posAngle) =>
-          val gsOffset =
-            allCoordinates.value._1.value.diff(c.target.tracking.baseCoordinates).offset
-          GmosGeometry.probeShapes(posAngle,
-                                   gsOffset,
-                                   Offset.Zero,
-                                   configuration,
-                                   PortDisposition.Side,
-                                   Css.Empty
+          GmosGeometry.gmosGeometry(
+            allCoordinates.value._1.value,
+            configuration,
+            PortDisposition.Side,
+            gs,
+            candidatesVisibilityCss
           )
-        }
 
-        val usableGuideStar = gs.exists(_.isUsable)
-
-        val shapes = posAngle
-          .map { posAngle =>
-            val baseShapes =
-              GmosGeometry.shapesForMode(posAngle, configuration, PortDisposition.Side) ++
-                GmosGeometry.commonShapes(posAngle, candidatesVisibility)
-
-            probeArmShapes
-              .filter(_ => usableGuideStar) // Don't show the probe if there is no usable GS
-              .map { probeArm =>
-                baseShapes ++ probeArm
-              }
-              .getOrElse(baseShapes)
-          }
-          .getOrElse(SortedMap.empty[Css, ShapeExpression])
-        shapes
       }
       // resize detector
       .useResizeDetector()
@@ -249,9 +225,6 @@ object AladinContainer extends AladinCommon {
 
               val candidatesVisibility =
                 ExploreStyles.GuideStarCandidateVisible.when_(visible)
-
-              val patrolField =
-                GmosGeometry.patrolField(posAngle, configuration, PortDisposition.Side).map(_.eval)
 
               candidates
                 // TODO This should be done in AGS proper
@@ -411,14 +384,14 @@ object AladinContainer extends AladinCommon {
             offsetIndicators(_.scienceOffsets,
                              SequenceType.Science,
                              ExploreStyles.ScienceOffsetPosition,
-                             props.showScienceOffsets
+                             props.userPreferences.aladinScienceOffsets
             )
 
           val acquisitionOffsetIndicators =
             offsetIndicators(_.acquisitionOffsets,
                              SequenceType.Acquisition,
                              ExploreStyles.AcquisitionOffsetPosition,
-                             props.showAcquisitionOffsets
+                             props.userPreferences.aladinAcquisitionOffsets
             )
 
           val offsetTargets =
@@ -453,7 +426,11 @@ object AladinContainer extends AladinCommon {
                       candidates ++ basePosition ++ sciencePositions ++ offsetTargets
                     )
                   ),
-                (resize.width, resize.height, fov.value, NonEmptyMap.fromMap(vizShapes.value))
+                (resize.width,
+                 resize.height,
+                 fov.value,
+                 vizShapes.value.flatMap(NonEmptyMap.fromMap)
+                )
                   .mapN(
                     SVGVisualizationOverlay(
                       _,

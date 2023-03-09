@@ -536,15 +536,13 @@ object AladinCell extends ModelOptics with AladinCommon:
                 props.asterism,
                 props.vizTime,
                 props.obsConf,
-                u.copy(fullScreen = props.fullScreen.get),
+                u,
                 t,
                 coordinatesSetter,
                 fovSetter.reuseAlways,
                 offsetChangeInAladin.reuseAlways,
                 selectedGuideStar,
-                agsResults.value,
-                u.aladinScienceOffsets,
-                u.aladinAcquisitionOffsets
+                agsResults.value
               )
 
           val renderToolbar: ((UserGlobalPreferences, TargetVisualOptions)) => VdomNode =
