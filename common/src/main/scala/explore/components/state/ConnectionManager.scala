@@ -11,18 +11,21 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
+import explore.model.UserVault
+import explore.model.userVault.*
 import io.circe.Json
 import io.circe.syntax.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 import react.common.ReactFnPropsWithChildren
 import react.fa.IconSize
 
-case class ConnectionManager(ssoToken: NonEmptyString, onConnect: IO[Unit])
+case class ConnectionManager(vault: UserVault, onConnect: IO[Unit])
     extends ReactFnPropsWithChildren(ConnectionManager.component):
-  val payload: Map[String, Json] = Map("Authorization" -> s"Bearer ${ssoToken.value}".asJson)
+  val payload: Map[String, Json] = Map("Authorization" -> vault.authorizationHeader.asJson)
 
 object ConnectionManager {
   private type Props = ConnectionManager
@@ -33,7 +36,7 @@ object ConnectionManager {
     .useContext(AppContext.ctx)
     .useState(false) // initialized as state, which forces rerender on set
     .useRef(false)   // initialized as ref, which can be read asynchronously by cleanup
-    .useEffectWithDepsBy((props, _, _, _, _) => props.ssoToken.value) {
+    .useEffectWithDepsBy((props, _, _, _, _) => props.vault.token) {
       (props, _, ctx, initializedState, _) => _ =>
         import ctx.given
 

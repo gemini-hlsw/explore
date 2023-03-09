@@ -22,6 +22,7 @@ import explore.model.UserVault
 import explore.model.display.given
 import explore.model.enums.RoleType
 import explore.model.reusability.given
+import explore.model.userVault.*
 import explore.syntax.ui.given
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -99,11 +100,6 @@ object UserPreferencesContent:
   private val IdColumnId: ColumnId      = ColumnId("id")
   private val RoleColumnId: ColumnId    = ColumnId("role")
 
-  private def addToken(vault: UserVault)(request: FetchJSRequest): FetchJSRequest =
-    // DOM Headers are mutable
-    request.headers.set("Authorization", s"Bearer ${vault.token.value}")
-    request
-
   private def deleteKey(
     key:    String,
     active: View[IsActive],
@@ -122,7 +118,7 @@ object UserPreferencesContent:
       position = DialogPosition.Top,
       accept = (for {
         _ <- active.set(IsActive(true)).to[IO]
-        _ <- DeleteApiKey[IO].execute(key, modParams = addToken(vault))
+        _ <- DeleteApiKey[IO].execute(key, modParams = vault.addAuthorizationHeader)
         _ <- newKey.set(NewKey(none)).to[IO]
       } yield ()).guarantee(active.set(IsActive(false)).to[IO]).runAsync,
       acceptClass = PrimeStyles.ButtonSmall,
@@ -140,7 +136,7 @@ object UserPreferencesContent:
   ) =
     (for {
       _            <- active.set(IsActive(true)).to[IO]
-      newKeyResult <- NewApiKey[IO].execute(keyRoleId, modParams = addToken(vault))
+      newKeyResult <- NewApiKey[IO].execute(keyRoleId, modParams = vault.addAuthorizationHeader)
       _            <- newKey.set(NewKey(newKeyResult.createApiKey.some)).to[IO]
     } yield ()).guarantee(active.set(IsActive(false)).to[IO]).void
 
@@ -150,7 +146,7 @@ object UserPreferencesContent:
     .useStateView(IsActive(false))
     .useEffectResultWithDepsBy((_, ctx, isAdding) => isAdding.get) { (props, ctx, _) => _ =>
       import ctx.given
-      UserQuery[IO].query(modParams = addToken(props.vault))
+      UserQuery[IO].query(modParams = props.vault.addAuthorizationHeader)
     }
     .useStateView(NewKey(none)) // id fo the new role id to create
     // Columns

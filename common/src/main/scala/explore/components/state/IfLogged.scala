@@ -55,7 +55,7 @@ object IfLogged:
         ) { vault =>
           React.Fragment(
             SSOManager(vault.expiration, vaultSet, messageSet),
-            ConnectionManager(vault.token, onConnect = vault.curryReusing.in(createUserPrefs _))(
+            ConnectionManager(vault, onConnect = vault.curryReusing.in(createUserPrefs _))(
               LogoutTracker(vaultSet, messageSet)(props.render(vault, _))
             )
           )
