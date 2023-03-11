@@ -7,6 +7,7 @@ import cats.syntax.all.*
 import crystal.react.ViewOpt
 import explore.Icons
 import explore.components.ui.ExploreStyles
+import explore.model.Constants
 import explore.model.TargetVisualOptions
 import explore.model.enums.AgsState
 import explore.model.enums.Visible
@@ -73,7 +74,7 @@ object AladinToolbar {
           props.selectedGuideStar
             .map { case g => s"GS: ${g.target.name.value}" }
             .unless(props.agsOverlay.visible || !usableGuideStar),
-          "No guidestar available".when(!usableGuideStar && props.agsState === AgsState.Idle),
+          Constants.NoGuideStarMessage.when(!usableGuideStar && props.agsState === AgsState.Idle),
           "Calculating...".when(props.agsState === AgsState.Calculating)
         ),
         <.label(

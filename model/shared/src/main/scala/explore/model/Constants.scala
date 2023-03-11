@@ -40,4 +40,6 @@ trait Constants:
 
     hours.map(h => s"${h}h").orEmpty + minutes.map(m => s"${m}m").orEmpty + s"${seconds}s"
 
+  val NoGuideStarMessage = "No guidestar available"
+
 object Constants extends Constants

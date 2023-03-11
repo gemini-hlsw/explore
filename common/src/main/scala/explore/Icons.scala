@@ -267,6 +267,10 @@ object Icons {
   val faSquareXMark: FAIcon = js.native
 
   @js.native
+  @JSImport("@fortawesome/pro-regular-svg-icons", "faXmarkLarge")
+  val faSquareXMarkLarge: FAIcon = js.native
+
+  @js.native
   @JSImport("@fortawesome/pro-solid-svg-icons", "faBug")
   val faBug: FAIcon = js.native
 
@@ -339,6 +343,7 @@ object Icons {
     faContractDiagonal,
     faClone,
     faSquareXMark,
+    faSquareXMarkLarge,
     faBug,
     faSolarSystem
   )
@@ -408,6 +413,7 @@ object Icons {
   val Clone               = FontAwesomeIcon(faClone)
   val CheckDouble         = FontAwesomeIcon(faListCheck)
   val SquareXMark         = FontAwesomeIcon(faSquareXMark)
+  val SquareXMarkLarge    = FontAwesomeIcon(faSquareXMarkLarge)
   val Bug                 = FontAwesomeIcon(faBug)
   val SolarSystem         = FontAwesomeIcon(faSolarSystem)
 }

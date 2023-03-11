@@ -7,6 +7,7 @@ import cats.syntax.all.*
 import crystal.react.View
 import explore.Icons
 import explore.components.ui.ExploreStyles
+import explore.model.Constants
 import explore.model.enums.AgsState
 import explore.model.formats.*
 import japgolly.scalajs.react.*
@@ -18,6 +19,7 @@ import lucuma.core.enums.GuideSpeed
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
+import react.fa.IconSize
 
 import scala.math.BigDecimal.RoundingMode
 
@@ -100,6 +102,12 @@ object AgsOverlay {
             )
           )
         }
-        .getOrElse(EmptyVdom)
+        .getOrElse {
+          <.div(
+            ExploreStyles.AgsDescription,
+            Icons.SquareXMarkLarge.withClass(ExploreStyles.AgsNotFound).withSize(IconSize.LG),
+            <.span(Constants.NoGuideStarMessage)
+          )
+        }
     }
 }

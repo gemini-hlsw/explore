@@ -192,6 +192,7 @@ object ExploreStyles:
   val AgsDescription: Css      = Css("ags-description")
   val AgsGuideSpeed: Css       = Css("ags-guide-speed")
   val AgsFast: Css             = Css("ags-fast-color")
+  val AgsNotFound: Css         = Css("ags-not-found")
   val AgsMedium: Css           = Css("ags-medium-color")
   val AgsSlow: Css             = Css("ags-slow-color")
   val AgsGBrightness: Css      = Css("ags-g-brightness")
