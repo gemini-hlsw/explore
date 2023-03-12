@@ -4,6 +4,8 @@
 package explore.targeteditor
 
 import cats.data.NonEmptyList
+import cats.data.NonEmptyMap
+import cats.implicits.catsKernelOrderingForOrder
 import cats.syntax.all.*
 import crystal.react.View
 import crystal.react.implicits.*
@@ -32,6 +34,7 @@ import lucuma.core.enums.GuideSpeed
 import lucuma.core.enums.PortDisposition
 import lucuma.core.enums.SequenceType
 import lucuma.core.geom.Area
+import lucuma.core.geom.ShapeExpression
 import lucuma.core.geom.jts.interpreter.*
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
@@ -52,6 +55,7 @@ import react.resizeDetector.hooks.*
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import scala.collection.immutable.SortedMap
 import scala.concurrent.duration.*
 
 case class AladinContainer(
@@ -169,9 +173,15 @@ object AladinContainer extends AladinCommon {
       }
       // Memoized svg
       .useMemoBy((p, allCoordinates, _, _) =>
-        (allCoordinates, p.obsConf.flatMap(_.configuration), p.options, p.selectedGuideStar)
-      ) { (_, _, _, _) => (allCoordinates, configuration, options, gs) =>
-        val posAngle             = gs.posAngle
+        (allCoordinates,
+         p.obsConf.flatMap(_.configuration),
+         p.obsConf.flatMap(o => o.fallbackPosAngle(p.asterism.baseTracking, p.vizTime)),
+         p.options,
+         p.selectedGuideStar
+        )
+      ) { (_, _, _, _) => (allCoordinates, configuration, unguidedPa, options, gs) =>
+        val posAngle = gs.posAngle.orElse(unguidedPa)
+
         val candidatesVisibility =
           ExploreStyles.GuideStarCandidateVisible.when_(options.agsCandidates.visible)
 
@@ -202,9 +212,7 @@ object AladinContainer extends AladinCommon {
               }
               .getOrElse(baseShapes)
           }
-          .getOrElse(
-            GmosGeometry.commonShapes(Angle.Angle0, candidatesVisibility)
-          )
+          .getOrElse(SortedMap.empty[Css, ShapeExpression])
         shapes
       }
       // resize detector
@@ -444,14 +452,14 @@ object AladinContainer extends AladinCommon {
                       candidates ++ basePosition ++ sciencePositions ++ offsetTargets
                     )
                   ),
-                (resize.width, resize.height, fov.value)
+                (resize.width, resize.height, fov.value, NonEmptyMap.fromMap(vizShapes.value))
                   .mapN(
                     SVGVisualizationOverlay(
                       _,
                       _,
                       _,
                       screenOffset,
-                      vizShapes
+                      _
                     )
                   ),
                 AladinComp

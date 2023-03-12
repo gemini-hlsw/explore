@@ -11,9 +11,13 @@ import crystal.react.View
 import eu.timepit.refined.cats.*
 import explore.model.enums.AgsState
 import lucuma.ags.*
+import lucuma.core.enums.Site
+import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
+import lucuma.core.math.skycalc.averageParallacticAngle
 import lucuma.core.model.ConstraintSet
+import lucuma.core.model.ObjectTracking
 import lucuma.core.model.PosAngleConstraint
 import lucuma.schemas.model.BasicConfiguration
 import monocle.Focus
@@ -30,6 +34,22 @@ case class ObsConfiguration(
   acquisitionOffsets: Option[NonEmptyList[Offset]]
 ) derives Eq:
   def posAngleConstraint: Option[PosAngleConstraint] = posAngleProperties.map(_.constraint.get)
+
+  // In case there is no guide star we still want to have a posAngle equivalent
+  // To draw visualization
+  def fallbackPosAngle(tracking: ObjectTracking, vizTime: Instant): Option[Angle] =
+    configuration
+      .map(_.siteFor)
+      .flatMap(site =>
+        posAngleConstraint match
+          case Some(PosAngleConstraint.Fixed(a))               => a.some
+          case Some(PosAngleConstraint.AllowFlip(a))           => a.some
+          case Some(PosAngleConstraint.ParallacticOverride(a)) => a.some
+          case Some(PosAngleConstraint.Unbounded)              => Angle.Angle0.some
+          case Some(PosAngleConstraint.AverageParallactic)     =>
+            averageParallacticAngle(site, tracking, vizTime).orElse(Angle.Angle0.some)
+          case _                                               => none
+      )
 
   def posAngleConstraintView: Option[View[PosAngleConstraint]] =
     posAngleProperties.map(_.constraint)
