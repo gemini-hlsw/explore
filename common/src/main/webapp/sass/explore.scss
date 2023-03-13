@@ -2158,11 +2158,9 @@ div.spectroscopy-table-emptymessage {
 
 .explore-single-tile-maximized.react-grid-layout {
   height: 100% !important; // !important overrides element attributes
-  width: 100% !important;
 
   .react-grid-item:first-child {
     height: 100% !important;
-    width: 100% !important;
   }
 }
 
