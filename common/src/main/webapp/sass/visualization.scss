@@ -411,6 +411,10 @@ $brightness: var(--aladin-image-brightness);
     color: var(--ags-fast-guide-speed-color);
   }
 
+  .ags-not-found {
+    color: var(--negative-background-color);
+  }
+
   .ags-medium-color {
     color: var(--ags-medium-guide-speed-color);
   }

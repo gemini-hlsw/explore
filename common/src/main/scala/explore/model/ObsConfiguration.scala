@@ -11,9 +11,13 @@ import crystal.react.View
 import eu.timepit.refined.cats.*
 import explore.model.enums.AgsState
 import lucuma.ags.*
+import lucuma.core.enums.Site
+import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
+import lucuma.core.math.skycalc.averageParallacticAngle
 import lucuma.core.model.ConstraintSet
+import lucuma.core.model.ObjectTracking
 import lucuma.core.model.PosAngleConstraint
 import lucuma.schemas.model.BasicConfiguration
 import monocle.Focus
@@ -27,9 +31,22 @@ case class ObsConfiguration(
   constraints:        Option[ConstraintSet],
   wavelength:         Option[Wavelength],
   scienceOffsets:     Option[NonEmptyList[Offset]],
-  acquisitionOffsets: Option[NonEmptyList[Offset]]
+  acquisitionOffsets: Option[NonEmptyList[Offset]],
+  averagePA:          Option[Angle]
 ) derives Eq:
   def posAngleConstraint: Option[PosAngleConstraint] = posAngleProperties.map(_.constraint.get)
+
+  // In case there is no guide star we still want to have a posAngle equivalent
+  // To draw visualization
+  def fallbackPosAngle: Option[Angle] =
+    posAngleConstraint match
+      case Some(PosAngleConstraint.Fixed(a))               => a.some
+      case Some(PosAngleConstraint.AllowFlip(a))           => a.some
+      case Some(PosAngleConstraint.ParallacticOverride(a)) => a.some
+      case Some(PosAngleConstraint.Unbounded)              => Angle.Angle0.some
+      case Some(PosAngleConstraint.AverageParallactic)     =>
+        averagePA.orElse(Angle.Angle0.some)
+      case _                                               => none
 
   def posAngleConstraintView: Option[View[PosAngleConstraint]] =
     posAngleProperties.map(_.constraint)
@@ -37,5 +54,13 @@ case class ObsConfiguration(
   def agsState: Option[View[AgsState]] =
     posAngleProperties.map(_.agsState)
 
+  // Selected guide star via ags or manual
   def selectedGS: Option[View[Option[AgsAnalysis]]] =
     posAngleProperties.map(_.selectedGS)
+
+  def selectedPA: Option[Angle] =
+    for
+      gs  <- selectedGS
+      gsv <- gs.get
+      ang <- gsv.posAngle
+    yield ang

@@ -40,6 +40,7 @@ case class PAConfigurationPanel(
   obsId:        Observation.Id,
   posAngleView: View[PosAngleConstraint],
   selectedPA:   Option[Angle],
+  averagePA:    Option[Angle],
   agsState:     View[AgsState]
 ) extends ReactFnProps(PAConfigurationPanel.component)
 
@@ -98,6 +99,7 @@ object PAConfigurationPanel:
               .map(a => <.label(f"${a.toDoubleDegrees}%.0f °"))
           case PosAngleConstraint.AverageParallactic =>
             props.selectedPA
+              .orElse(props.averagePA)
               .map(a => <.label(f"${a.toDoubleDegrees}%.2f °"))
               .orElse(<.label("Not Visible").some)
           case _                                     => None
