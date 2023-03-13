@@ -407,7 +407,6 @@ a:hover {
   .p-datatable-tfoot {
     position: sticky;
     inset-block-end: 0;
-
     height: 100%;
 
     > tr > td {
@@ -1637,12 +1636,10 @@ table.explore-border-table {
     "sidebar" #{$top-bottom-space} / 1fr;
 
   @media (min-width: common.$tablet-responsive-cutoff) {
-    grid-template:
-      "header header" $top-bottom-space "sidebar body" minmax(
+    grid-template: "header header" $top-bottom-space "sidebar body" minmax(
         calc(100% - $top-bottom-space),
         1fr
-      )
-      / 50px auto;
+      ) / 50px auto;
   }
 }
 
