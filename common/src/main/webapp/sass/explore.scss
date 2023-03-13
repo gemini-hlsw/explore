@@ -1,4 +1,4 @@
-@use 'common.scss';
+@use "common.scss";
 
 $tree-section-width: 300px;
 
@@ -55,7 +55,7 @@ body {
 
 // Reusability overlays.
 body.hide-reusability {
-  & > div:not(#root)[title^='Last update reason'] {
+  & > div:not(#root)[title^="Last update reason"] {
     display: none;
   }
 }
@@ -350,7 +350,7 @@ a:hover {
     }
 
     label[data-abbrv]::after {
-      content: '';
+      content: "";
     }
 
     label[data-abbrv] > span {
@@ -499,10 +499,10 @@ a:hover {
 .tile-sm-width {
   .target-grid {
     grid-template:
-      'undo           aladin' min-content
-      'coordinates    aladin' min-content
-      'proper-motion  aladin' min-content
-      'source-profile aladin' 1fr
+      "undo           aladin" min-content
+      "coordinates    aladin" min-content
+      "proper-motion  aladin" min-content
+      "source-profile aladin" 1fr
       / 1fr 2fr;
   }
 
@@ -515,9 +515,9 @@ a:hover {
   @include hide-hidden-target-cells(false);
 
   grid-template:
-    'undo' min-content
-    'coordinates' min-content
-    'aladin' 1fr
+    "undo" min-content
+    "coordinates" min-content
+    "aladin" 1fr
     / 1fr;
 }
 
@@ -552,7 +552,7 @@ a:hover {
     @include hide-hidden-target-cells(true);
 
     grid-template:
-      'aladin' 1fr
+      "aladin" 1fr
       / 1fr;
   }
 }
@@ -741,7 +741,7 @@ $search-preview-margin: 5px;
   }
 
   table tr .explore-visit-step-extra {
-    width: '100%';
+    width: "100%";
     display: flex;
     justify-content: space-between;
     padding-left: 5%;
@@ -871,8 +871,8 @@ $search-preview-margin: 5px;
   position: relative;
   row-gap: 0.1em;
   grid-template:
-    'aladin aladin    aladin    aladin aladin' 1fr
-    'fov    agsstatus guidestar curr   center' min-content / max-content min-content 1fr 1fr min-content;
+    "aladin aladin    aladin    aladin aladin" 1fr
+    "fov    agsstatus guidestar curr   center" min-content / max-content min-content 1fr 1fr min-content;
 }
 
 // ------
@@ -1054,8 +1054,8 @@ $search-preview-margin: 5px;
   padding: 0.5em;
   grid-gap: 1em;
   grid-template:
-    'col1 col2 col3' auto
-    'col1 buttons buttons' auto
+    "col1 col2 col3" auto
+    "col1 buttons buttons" auto
     / 1fr 1fr 1fr;
 
   label.explore-indent-label {
@@ -1068,10 +1068,10 @@ $search-preview-margin: 5px;
 .tile-xs-width {
   .explore-advanced-configuration-grid {
     grid-template:
-      'col1' auto
-      'col2' auto
-      'col3' auto
-      'buttons' auto
+      "col1" auto
+      "col2" auto
+      "col3" auto
+      "buttons" auto
       / auto;
   }
 }
@@ -1227,7 +1227,7 @@ $search-preview-margin: 5px;
 // About and login dialogs
 // ------
 i.icon.user-astronaut::before {
-  content: '\f4fb';
+  content: "\f4fb";
 }
 
 .explore-login-box-layout {
@@ -1437,7 +1437,7 @@ img.partner-split-flag {
     background: var(--table-selected-background) !important;
 
     td:first-child::before {
-      content: '';
+      content: "";
       position: absolute;
       width: 0;
       height: 0;
@@ -1517,7 +1517,7 @@ table.explore-border-table {
 }
 
 .p-button.p-fileupload {
-  + input[type='file'] {
+  + input[type="file"] {
     display: none;
   }
 }
@@ -1534,8 +1534,8 @@ table.explore-border-table {
   align-items: center;
   justify-content: space-between;
   grid-template:
-    'progress msg' 1fr
-    'errors   errors' min-content / 1fr 3fr;
+    "progress msg" 1fr
+    "errors   errors" min-content / 1fr 3fr;
   row-gap: 0.5rem;
   min-width: 20vw;
   max-width: 760px;
@@ -1630,15 +1630,15 @@ table.explore-border-table {
   width: 100%;
   overflow: hidden;
   grid-template:
-    'header' $top-bottom-space 'body' minmax(
+    "header" $top-bottom-space "body" minmax(
       calc(100% - $top-bottom-space - $top-bottom-space),
       1fr
     )
-    'sidebar' #{$top-bottom-space} / 1fr;
+    "sidebar" #{$top-bottom-space} / 1fr;
 
   @media (min-width: common.$tablet-responsive-cutoff) {
     grid-template:
-      'header header' $top-bottom-space 'sidebar body' minmax(
+      "header header" $top-bottom-space "sidebar body" minmax(
         calc(100% - $top-bottom-space),
         1fr
       )
@@ -1930,8 +1930,8 @@ $help-title-height: 40px;
   padding: 0.5em;
   display: grid;
   grid-template:
-    'table table' min-content
-    'editor add' min-content / 1fr min-content;
+    "table table" min-content
+    "editor add" min-content / 1fr min-content;
 
   @media (min-width: common.$mobile-responsive-cutoff) {
     --timing-windows-height: 300px;
@@ -2081,9 +2081,9 @@ $help-title-height: 40px;
   display: grid;
   gap: 0.5em;
   grid-template:
-    'form table-header' auto
-    'form table' 1fr
-    'form buttons' auto / 3fr minmax(0, 4fr);
+    "form table-header" auto
+    "form table" 1fr
+    "form buttons" auto / 3fr minmax(0, 4fr);
   grid-template-rows: auto 1fr auto;
 }
 
