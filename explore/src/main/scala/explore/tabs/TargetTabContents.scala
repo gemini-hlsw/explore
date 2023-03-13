@@ -441,7 +441,7 @@ object TargetTabContents extends TwoPanels:
           idsToEdit,
           Pot(asterismView, configuration),
           Pot(vizTimeView),
-          ObsConfiguration(configuration, none, constraints, wavelength, none, none).some,
+          ObsConfiguration(configuration, none, constraints, wavelength, none, none, none).some,
           props.focused.target,
           setCurrentTarget(props.programId, idsToEdit) _,
           otherObsCount(targetMap.get, idsToEdit) _,

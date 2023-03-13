@@ -44,6 +44,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ags.AgsAnalysis
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
+import lucuma.core.math.skycalc.averageParallacticAngle
 import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
@@ -176,8 +177,12 @@ object ObsTabTiles:
             ).zoom(Asterism.fromTargetsListOn(props.focusedTarget).asLens)
           )
 
+        val basicConfiguration = observingMode.map(_.toBasicConfiguration)
+
+        val asterism = potAsterism.toOption.flatMap(_.get)
+
         val potAsterismMode: Pot[(View[Option[Asterism]], Option[BasicConfiguration])] =
-          potAsterism.map(x => (x, observingMode.map(_.toBasicConfiguration)))
+          potAsterism.map(x => (x, basicConfiguration))
 
         val vizTimeView: Pot[View[Option[Instant]]] =
           obsViewPot.map(_.zoom(ObsEditData.visualizationTime))
@@ -274,14 +279,25 @@ object ObsTabTiles:
 
         val paProps = posAngle.map(p => PAProperties(props.obsId, selectedPA, agsState, p))
 
+        val averagePA =
+          (basicConfiguration.map(_.siteFor), asterism, vizTime)
+            .mapN((site, asterism, vizTime) =>
+              posAngle.map(_.get) match
+                case Some(PosAngleConstraint.AverageParallactic) =>
+                  averageParallacticAngle(site, asterism.baseTracking, vizTime)
+                case _                                           => none
+            )
+            .flatten
+
         val obsConf = obsView.toOption.map(o =>
           ObsConfiguration(
-            o.get.scienceData.mode.map(_.toBasicConfiguration),
+            basicConfiguration,
             paProps,
             o.get.scienceData.constraints.some,
             o.get.scienceData.requirements.spectroscopy.wavelength,
             o.get.scienceData.scienceOffsets,
-            o.get.scienceData.acquisitionOffsets
+            o.get.scienceData.acquisitionOffsets,
+            averagePA
           )
         )
 
@@ -333,6 +349,7 @@ object ObsTabTiles:
               .zoom(atMapWithDefault(props.obsId, UndoStacks.empty)),
             targetCoords,
             paProps.flatMap(_.selectedPA),
+            obsConf,
             agsState,
             selectedConfig
           )

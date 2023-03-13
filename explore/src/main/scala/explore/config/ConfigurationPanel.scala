@@ -26,6 +26,7 @@ import explore.components.undo.UndoButtons
 import explore.events.*
 import explore.model.AppContext
 import explore.model.BasicConfigAndItc
+import explore.model.ObsConfiguration
 import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.ItcPicklers.given
@@ -66,10 +67,9 @@ case class ConfigurationPanel(
   title:           String,
   subtitle:        Option[NonEmptyString],
   scienceData:     UndoContext[ScienceData],
-  constraints:     ConstraintSet,
+  obsConf:         Option[ObsConfiguration],
   itcTargets:      List[ItcTarget],
   baseCoordinates: Option[CoordinatesAtVizTime],
-  agsState:        View[AgsState],
   selectedPA:      Option[Angle],
   selectedConfig:  View[Option[BasicConfigAndItc]],
   renderInTitle:   Tile.RenderInTitle
@@ -214,29 +214,38 @@ object ConfigurationPanel:
             <.div(ExploreStyles.TitleUndoButtons)(UndoButtons(props.scienceData))
           ),
           <.div(ExploreStyles.ConfigurationGrid)(
-            PAConfigurationPanel(props.programId,
-                                 props.obsId,
-                                 posAngleView,
-                                 props.selectedPA,
-                                 props.agsState
-            ),
+            props.obsConf
+              .flatMap(_.agsState)
+              .map(agsState =>
+                PAConfigurationPanel(props.programId,
+                                     props.obsId,
+                                     posAngleView,
+                                     props.selectedPA,
+                                     props.obsConf.flatMap(_.averagePA),
+                                     agsState
+                )
+              ),
             if (optModeView.get.isEmpty)
-              BasicConfigurationPanel(
-                props.userId,
-                props.programId,
-                props.obsId,
-                requirementsCtx,
-                props.selectedConfig,
-                props.constraints,
-                props.itcTargets,
-                props.baseCoordinates,
-                createConfiguration(props.programId,
-                                    props.obsId,
-                                    props.selectedConfig.get.map(_.configuration),
-                                    optModeView
-                ),
-                confMatrix
-              )
+              props.obsConf
+                .flatMap(_.constraints)
+                .map(constraints =>
+                  BasicConfigurationPanel(
+                    props.userId,
+                    props.programId,
+                    props.obsId,
+                    requirementsCtx,
+                    props.selectedConfig,
+                    constraints,
+                    props.itcTargets,
+                    props.baseCoordinates,
+                    createConfiguration(props.programId,
+                                        props.obsId,
+                                        props.selectedConfig.get.map(_.configuration),
+                                        optModeView
+                    ),
+                    confMatrix
+                  )
+                )
             else
               React.Fragment(
                 // Gmos North Long Slit

@@ -11,6 +11,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.Tile
 import explore.config.ConfigurationPanel
 import explore.model.BasicConfigAndItc
+import explore.model.ObsConfiguration
 import explore.model.enums.AgsState
 import explore.undo.*
 import explore.utils.*
@@ -35,6 +36,7 @@ object ConfigurationTile {
     undoStacks:      View[UndoStacks[IO, ScienceData]],
     baseCoordinates: Option[CoordinatesAtVizTime],
     selectedPA:      Option[Angle],
+    obsConf:         Option[ObsConfiguration],
     agsState:        View[AgsState],
     selectedConfig:  View[Option[BasicConfigAndItc]]
   )(using Logger[IO]) =
@@ -52,10 +54,9 @@ object ConfigurationTile {
             title,
             subtitle,
             UndoContext(undoStacks, scienceData),
-            scienceData.get.constraints,
+            obsConf,
             scienceData.get.itcTargets,
             baseCoordinates,
-            agsState,
             selectedPA,
             selectedConfig,
             renderInTitle

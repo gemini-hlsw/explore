@@ -31,13 +31,14 @@ case class ObsConfiguration(
   constraints:        Option[ConstraintSet],
   wavelength:         Option[Wavelength],
   scienceOffsets:     Option[NonEmptyList[Offset]],
-  acquisitionOffsets: Option[NonEmptyList[Offset]]
+  acquisitionOffsets: Option[NonEmptyList[Offset]],
+  averagePA:          Option[Angle]
 ) derives Eq:
   def posAngleConstraint: Option[PosAngleConstraint] = posAngleProperties.map(_.constraint.get)
 
   // In case there is no guide star we still want to have a posAngle equivalent
   // To draw visualization
-  def fallbackPosAngle(tracking: ObjectTracking, vizTime: Instant): Option[Angle] =
+  def fallbackPosAngle: Option[Angle] =
     configuration
       .map(_.siteFor)
       .flatMap(site =>
@@ -47,7 +48,7 @@ case class ObsConfiguration(
           case Some(PosAngleConstraint.ParallacticOverride(a)) => a.some
           case Some(PosAngleConstraint.Unbounded)              => Angle.Angle0.some
           case Some(PosAngleConstraint.AverageParallactic)     =>
-            averageParallacticAngle(site, tracking, vizTime).orElse(Angle.Angle0.some)
+            averagePA.orElse(Angle.Angle0.some)
           case _                                               => none
       )
 

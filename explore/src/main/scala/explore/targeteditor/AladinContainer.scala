@@ -175,7 +175,7 @@ object AladinContainer extends AladinCommon {
       .useMemoBy((p, allCoordinates, _, _) =>
         (allCoordinates,
          p.obsConf.flatMap(_.configuration),
-         p.obsConf.flatMap(o => o.fallbackPosAngle(p.asterism.baseTracking, p.vizTime)),
+         p.obsConf.flatMap(_.fallbackPosAngle),
          p.options,
          p.selectedGuideStar
         )
