@@ -165,36 +165,41 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
       )
       .render { (props, state, _, _, table) =>
         val footer =
-          <.div(
-            ExploreStyles.BrightnessesTableFooter,
-            state
-              .zoom(State.newBand)
-              .mapValue { (bandView: View[Band]) =>
-                val addBrightness =
-                  props.brightnesses.mod(brightnesses =>
-                    brightnesses +
-                      (bandView.get ->
-                        defaultBandUnits(bandView.get)
-                          .withValueTagged(BrightnessValue.unsafeFrom(0)))
-                  )
+          <.tr(
+            <.td(
+              ^.colSpan := 4,
+              <.div(
+                ExploreStyles.BrightnessesTableFooter,
+                state
+                  .zoom(State.newBand)
+                  .mapValue { (bandView: View[Band]) =>
+                    val addBrightness =
+                      props.brightnesses.mod(brightnesses =>
+                        brightnesses +
+                          (bandView.get ->
+                            defaultBandUnits(bandView.get)
+                              .withValueTagged(BrightnessValue.unsafeFrom(0)))
+                      )
 
-                React.Fragment(
-                  EnumDropdownView(
-                    id = "NEW_BAND".refined,
-                    value = bandView,
-                    exclude = state.get.usedBands,
-                    clazz = ExploreStyles.FlatFormField, // TODO: Look at this CSS
-                    disabled = props.disabled
-                  ),
-                  Button(
-                    icon = Icons.New,
-                    onClick = addBrightness,
-                    disabled = props.disabled,
-                    severity = Button.Severity.Secondary
-                  ).mini.compact
-                )
-              }
-              .whenDefined
+                    React.Fragment(
+                      EnumDropdownView(
+                        id = "NEW_BAND".refined,
+                        value = bandView,
+                        exclude = state.get.usedBands,
+                        clazz = ExploreStyles.FlatFormField, // TODO: Look at this CSS
+                        disabled = props.disabled
+                      ),
+                      Button(
+                        icon = Icons.New,
+                        onClick = addBrightness,
+                        disabled = props.disabled,
+                        severity = Button.Severity.Secondary
+                      ).mini.compact
+                    )
+                  }
+                  .whenDefined
+              )
+            )
           )
 
         Panel(
@@ -206,13 +211,13 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
           <.div(ExploreStyles.ExploreTable |+| ExploreStyles.BrightnessesContainer)(
             PrimeAutoHeightVirtualizedTable(
               table,
-              estimateSize = _ => 34.toPx,
+              estimateSize = _ => 38.toPx,
               striped = true,
               compact = Compact.Very,
+              footerMod = footer,
               tableMod = ExploreStyles.ExploreBorderTable,
               emptyMessage = "No brightnesses defined"
-            ),
-            footer
+            )
           )
         )
       }

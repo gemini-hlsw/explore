@@ -1,4 +1,4 @@
-@use 'common.scss';
+@use "common.scss";
 
 $tree-section-width: 300px;
 
@@ -55,7 +55,7 @@ body {
 
 // Reusability overlays.
 body.hide-reusability {
-  &>div:not(#root)[title^="Last update reason"] {
+  & > div:not(#root)[title^="Last update reason"] {
     display: none;
   }
 }
@@ -65,7 +65,7 @@ body.hide-reusability {
   line-height: var(--pl-input-line-height);
   border: 1px dashed transparent; // the border makes the sizing work.
   /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
-  padding: var(--pl-input-padding)
+  padding: var(--pl-input-padding);
 }
 
 // taken from SUI
@@ -170,7 +170,6 @@ a:hover {
   flex-grow: 3;
 }
 
-
 .p-button.p-button-text.explore-tile-state-button {
   color: var(--site-text-color);
   filter: brightness(70%);
@@ -273,7 +272,7 @@ a:hover {
   grid-template-rows: repeat(2, min-content);
 
   & *:nth-child(2n) {
-    grid-row: 2
+    grid-row: 2;
   }
 
   label {
@@ -311,7 +310,6 @@ a:hover {
 }
 
 @mixin react-datepicker-input {
-
   /* stylelint-disable-next-line selector-class-pattern */
   & .react-datepicker__input-container input {
     text-shadow: unset;
@@ -342,7 +340,7 @@ a:hover {
     content: attr(data-abbrv);
   }
 
-  label[data-abbrv]>span {
+  label[data-abbrv] > span {
     display: none;
   }
 
@@ -352,10 +350,10 @@ a:hover {
     }
 
     label[data-abbrv]::after {
-      content: '';
+      content: "";
     }
 
-    label[data-abbrv]>span {
+    label[data-abbrv] > span {
       display: unset;
     }
 
@@ -405,6 +403,21 @@ a:hover {
   min-height: 100%;
   display: flex;
   flex-direction: column;
+
+  .p-datatable-tfoot {
+    position: sticky;
+    inset-block-end: 0;
+    height: 100%;
+
+    > tr > td {
+      vertical-align: bottom;
+      padding: 0 !important; // Reset default padding
+    }
+  }
+
+  table {
+    height: 100%;
+  }
 }
 
 .explore-brightnesses-units-dropdown.p-dropdown {
@@ -485,10 +498,10 @@ a:hover {
 .tile-sm-width {
   .target-grid {
     grid-template:
-      'undo           aladin' min-content
-      'coordinates    aladin' min-content
-      'proper-motion  aladin' min-content
-      'source-profile aladin' 1fr
+      "undo           aladin" min-content
+      "coordinates    aladin" min-content
+      "proper-motion  aladin" min-content
+      "source-profile aladin" 1fr
       / 1fr 2fr;
   }
 
@@ -501,17 +514,17 @@ a:hover {
   @include hide-hidden-target-cells(false);
 
   grid-template:
-    'undo' min-content
-    'coordinates' min-content
-    'aladin' 1fr
-    / 1fr
+    "undo" min-content
+    "coordinates" min-content
+    "aladin" 1fr
+    / 1fr;
 }
 
 .target-tile-body {
   display: flex;
   flex-direction: column;
 
-  >div {
+  > div {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
@@ -534,18 +547,18 @@ a:hover {
     display: none;
   }
 
-  >div .target-grid {
+  > div .target-grid {
     @include hide-hidden-target-cells(true);
 
     grid-template:
-      'aladin' 1fr
+      "aladin" 1fr
       / 1fr;
   }
 }
 
 .pl-form-column.target-source-profile-editor {
   align-self: stretch;
-  grid-template-rows: repeat(3, auto) 1fr;
+  grid-template-rows: repeat(2, auto) 1fr;
 
   &.with-gaussian,
   &.with-catalog-info {
@@ -558,8 +571,6 @@ a:hover {
 }
 
 .explore-brightnesses-footer {
-  display: flex;
-  justify-content: flex-start;
   padding: 0.2em;
   border-top: 0.2px solid var(--under-tab-border-color);
   background-color: var(--table-footer-background);
@@ -607,7 +618,7 @@ a:hover {
   flex-direction: column;
   max-height: 85vh; // Don't let the form grow too large
 
-  .p-dialog-footer>div {
+  .p-dialog-footer > div {
     display: flex;
     justify-content: space-between;
   }
@@ -637,7 +648,9 @@ $search-preview-margin: 5px;
 
   @media (min-width: common.$tablet-responsive-cutoff) {
     min-height: calc($search-preview-width + 2 * $search-preview-margin);
-    padding-right: calc($search-preview-width + 3 * $search-preview-margin ) !important;
+    padding-right: calc(
+      $search-preview-width + 3 * $search-preview-margin
+    ) !important;
     padding-bottom: $search-preview-margin;
     grid-template-rows: min-content min-content;
   }
@@ -682,11 +695,13 @@ $search-preview-margin: 5px;
   border-radius: 0.28rem;
   justify-content: center;
   align-items: center;
-  background: repeating-linear-gradient(-45deg,
-      black,
-      black 10px,
-      var(--site-border-color) 10px,
-      var(--site-border-color) 11px);
+  background: repeating-linear-gradient(
+    -45deg,
+    black,
+    black 10px,
+    var(--site-border-color) 10px,
+    var(--site-border-color) 11px
+  );
 }
 
 .explore-target-search-results {
@@ -753,7 +768,7 @@ $search-preview-margin: 5px;
 }
 
 .pl-react-table.pl-celled-table {
-  .p-datatable-tbody>tr>td {
+  .p-datatable-tbody > tr > td {
     &.explore-table-cell-hide-border {
       border-left-width: 0;
     }
@@ -800,7 +815,6 @@ $search-preview-margin: 5px;
     display: flex;
   }
 }
-
 
 .aladin-status-gs {
   @include aladin-gs-status;
@@ -856,8 +870,8 @@ $search-preview-margin: 5px;
   position: relative;
   row-gap: 0.1em;
   grid-template:
-    'aladin aladin    aladin    aladin aladin' 1fr
-    'fov    agsstatus guidestar curr   center' min-content / max-content min-content 1fr 1fr min-content;
+    "aladin aladin    aladin    aladin aladin" 1fr
+    "fov    agsstatus guidestar curr   center" min-content / max-content min-content 1fr 1fr min-content;
 }
 
 // ------
@@ -918,7 +932,8 @@ $search-preview-margin: 5px;
     $active-status-translate-y: 2.5em;
 
     .p-component.p-inputswitch.obs-active-status-toggle {
-      transform: rotate(270deg) scale(0.6) translateY($active-status-translate-y);
+      transform: rotate(270deg) scale(0.6)
+        translateY($active-status-translate-y);
       height: 21px;
 
       &.p-inputswitch-checked .p-inputswitch-slider {
@@ -1006,7 +1021,7 @@ $search-preview-margin: 5px;
 // ------
 // Imaging Configuration
 // ------
-.explore-configuration-filter .p-multiselect-item>span {
+.explore-configuration-filter .p-multiselect-item > span {
   width: 100%;
 
   div {
@@ -1038,8 +1053,8 @@ $search-preview-margin: 5px;
   padding: 0.5em;
   grid-gap: 1em;
   grid-template:
-    'col1 col2 col3' auto
-    'col1 buttons buttons' auto
+    "col1 col2 col3" auto
+    "col1 buttons buttons" auto
     / 1fr 1fr 1fr;
 
   label.explore-indent-label {
@@ -1052,10 +1067,10 @@ $search-preview-margin: 5px;
 .tile-xs-width {
   .explore-advanced-configuration-grid {
     grid-template:
-      'col1' auto
-      'col2' auto
-      'col3' auto
-      'buttons' auto
+      "col1" auto
+      "col2" auto
+      "col3" auto
+      "buttons" auto
       / auto;
   }
 }
@@ -1083,8 +1098,10 @@ $search-preview-margin: 5px;
 
   --column-wide-span: 3;
 
-  grid-template-columns: [label1] max-content [field1] minmax(20ch, 3fr) [label2] max-content [field2] minmax(20ch,
-      3fr);
+  grid-template-columns: [label1] max-content [field1] minmax(20ch, 3fr) [label2] max-content [field2] minmax(
+      20ch,
+      3fr
+    );
 
   .elevation-range-picker {
     width: 9em;
@@ -1148,7 +1165,7 @@ $search-preview-margin: 5px;
   .program-name {
     @include common.text-ellipsis;
 
-    width: 100%
+    width: 100%;
   }
 
   .program-name-input {
@@ -1209,7 +1226,7 @@ $search-preview-margin: 5px;
 // About and login dialogs
 // ------
 i.icon.user-astronaut::before {
-  content: '\f4fb';
+  content: "\f4fb";
 }
 
 .explore-login-box-layout {
@@ -1372,7 +1389,7 @@ img.partner-split-flag {
 
     th:last-child,
     td:last-child,
-    td:last-child>span>div {
+    td:last-child > span > div {
       width: 4em !important;
     }
 
@@ -1425,7 +1442,8 @@ img.partner-split-flag {
       height: 0;
       border-style: solid;
       border-width: 0 10px 10px 0;
-      border-color: transparent var(--explore-selected-box-color) transparent transparent;
+      border-color: transparent var(--explore-selected-box-color) transparent
+        transparent;
       left: 0;
       top: 0;
       transform: rotate(-90deg);
@@ -1434,7 +1452,6 @@ img.partner-split-flag {
 
   .selected-row-ribbon {
     position: absolute;
-    ;
   }
 
   .scroll-button {
@@ -1474,7 +1491,7 @@ table.explore-border-table {
     justify-content: space-between;
 
     /* stylelint-disable-next-line selector-class-pattern */
-    span>svg.svg-inline--fa {
+    span > svg.svg-inline--fa {
       padding-right: 0.5em;
     }
 
@@ -1491,7 +1508,6 @@ table.explore-border-table {
   }
 }
 
-
 // -----
 // Toolbar over summary tables
 // ------
@@ -1499,9 +1515,8 @@ table.explore-border-table {
   padding: 0.25rem;
 }
 
-
 .p-button.p-fileupload {
-  +input[type="file"] {
+  + input[type="file"] {
     display: none;
   }
 }
@@ -1613,14 +1628,20 @@ table.explore-border-table {
   height: 100dvh;
   width: 100%;
   overflow: hidden;
-  grid-template: 'header'$top-bottom-space 'body' minmax(calc(100% - $top-bottom-space - $top-bottom-space), 1fr) 'sidebar'#{$top-bottom-space} / 1fr;
+  grid-template:
+    "header" $top-bottom-space "body" minmax(
+      calc(100% - $top-bottom-space - $top-bottom-space),
+      1fr
+    )
+    "sidebar" #{$top-bottom-space} / 1fr;
 
   @media (min-width: common.$tablet-responsive-cutoff) {
-    grid-template:
-      'header header'$top-bottom-space 'sidebar body' minmax(calc(100% - $top-bottom-space), 1fr) / 50px auto;
+    grid-template: "header header" $top-bottom-space "sidebar body" minmax(
+        calc(100% - $top-bottom-space),
+        1fr
+      ) / 50px auto;
   }
 }
-
 
 // --------------------
 // Main grid definition
@@ -1700,8 +1721,6 @@ table.explore-border-table {
     right: 0.2em;
     left: 0.2em;
   }
-
-  ;
 }
 
 .obs-tree-wrapper {
@@ -1741,10 +1760,9 @@ table.explore-border-table {
     padding: 0;
     overflow-y: unset;
 
-    &>div {
+    & > div {
       height: 100%;
     }
-
   }
 }
 
@@ -1820,7 +1838,7 @@ $help-title-height: 40px;
     fill: hsl(0deg 87% 66%);
   }
 
-  >div {
+  > div {
     height: 100%;
     max-height: 100%;
 
@@ -1909,8 +1927,8 @@ $help-title-height: 40px;
   padding: 0.5em;
   display: grid;
   grid-template:
-    'table table' min-content
-    'editor add' min-content / 1fr min-content;
+    "table table" min-content
+    "editor add" min-content / 1fr min-content;
 
   @media (min-width: common.$mobile-responsive-cutoff) {
     --timing-windows-height: 300px;
@@ -1958,7 +1976,7 @@ $help-title-height: 40px;
       margin-right: 0.3em;
     }
 
-    >* {
+    > * {
       margin-bottom: 0.5em;
     }
 
@@ -2060,9 +2078,9 @@ $help-title-height: 40px;
   display: grid;
   gap: 0.5em;
   grid-template:
-    'form table-header' auto
-    'form table' 1fr
-    'form buttons' auto / 3fr minmax(0, 4fr);
+    "form table-header" auto
+    "form table" 1fr
+    "form buttons" auto / 3fr minmax(0, 4fr);
   grid-template-rows: auto 1fr auto;
 }
 
@@ -2075,7 +2093,6 @@ $help-title-height: 40px;
     min-width: unset;
   }
 }
-
 
 // -----------------
 // Pos angle form
@@ -2240,7 +2257,6 @@ div.spectroscopy-table-emptymessage {
       }
     }
   }
-
 }
 
 .p-component.p-button {
