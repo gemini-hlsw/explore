@@ -35,9 +35,7 @@ object ConfigurationTile {
     obsData:         Pot[(String, Option[NonEmptyString], View[ScienceData])],
     undoStacks:      View[UndoStacks[IO, ScienceData]],
     baseCoordinates: Option[CoordinatesAtVizTime],
-    selectedPA:      Option[Angle],
     obsConf:         Option[ObsConfiguration],
-    agsState:        View[AgsState],
     selectedConfig:  View[Option[BasicConfigAndItc]]
   )(using Logger[IO]) =
     Tile(
@@ -57,7 +55,6 @@ object ConfigurationTile {
             obsConf,
             scienceData.get.itcTargets,
             baseCoordinates,
-            selectedPA,
             selectedConfig,
             renderInTitle
           )

@@ -338,7 +338,6 @@ object AladinCell extends ModelOptics with AladinCommon:
                         .flatMap { r =>
                           // Set the analysis
                           (r.map(ags.setState).getOrEmpty *>
-                            Callback.pprintln(r.orEmpty) *>
                             // If we need to flip change the constraint
                             r
                               .map(_.headOption)

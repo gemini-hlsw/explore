@@ -39,18 +39,14 @@ case class ObsConfiguration(
   // In case there is no guide star we still want to have a posAngle equivalent
   // To draw visualization
   def fallbackPosAngle: Option[Angle] =
-    configuration
-      .map(_.siteFor)
-      .flatMap(site =>
-        posAngleConstraint match
-          case Some(PosAngleConstraint.Fixed(a))               => a.some
-          case Some(PosAngleConstraint.AllowFlip(a))           => a.some
-          case Some(PosAngleConstraint.ParallacticOverride(a)) => a.some
-          case Some(PosAngleConstraint.Unbounded)              => Angle.Angle0.some
-          case Some(PosAngleConstraint.AverageParallactic)     =>
-            averagePA.orElse(Angle.Angle0.some)
-          case _                                               => none
-      )
+    posAngleConstraint match
+      case Some(PosAngleConstraint.Fixed(a))               => a.some
+      case Some(PosAngleConstraint.AllowFlip(a))           => a.some
+      case Some(PosAngleConstraint.ParallacticOverride(a)) => a.some
+      case Some(PosAngleConstraint.Unbounded)              => Angle.Angle0.some
+      case Some(PosAngleConstraint.AverageParallactic)     =>
+        averagePA.orElse(Angle.Angle0.some)
+      case _                                               => none
 
   def posAngleConstraintView: Option[View[PosAngleConstraint]] =
     posAngleProperties.map(_.constraint)
@@ -58,5 +54,13 @@ case class ObsConfiguration(
   def agsState: Option[View[AgsState]] =
     posAngleProperties.map(_.agsState)
 
+  // Selected guide star via ags or manual
   def selectedGS: Option[View[Option[AgsAnalysis]]] =
     posAngleProperties.map(_.selectedGS)
+
+  def selectedPA: Option[Angle] =
+    for
+      gs  <- selectedGS
+      gsv <- gs.get
+      ang <- gsv.posAngle
+    yield ang

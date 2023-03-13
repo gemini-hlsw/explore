@@ -70,7 +70,6 @@ case class ConfigurationPanel(
   obsConf:         Option[ObsConfiguration],
   itcTargets:      List[ItcTarget],
   baseCoordinates: Option[CoordinatesAtVizTime],
-  selectedPA:      Option[Angle],
   selectedConfig:  View[Option[BasicConfigAndItc]],
   renderInTitle:   Tile.RenderInTitle
 ) extends ReactFnProps[ConfigurationPanel](ConfigurationPanel.component)
@@ -220,7 +219,7 @@ object ConfigurationPanel:
                 PAConfigurationPanel(props.programId,
                                      props.obsId,
                                      posAngleView,
-                                     props.selectedPA,
+                                     props.obsConf.flatMap(_.selectedPA),
                                      props.obsConf.flatMap(_.averagePA),
                                      agsState
                 )

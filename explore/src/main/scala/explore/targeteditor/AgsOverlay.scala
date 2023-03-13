@@ -51,6 +51,7 @@ object AgsOverlay {
       }.filter(_ => canGoNext)
 
       props.selectedGuideStar
+        .filter(_.isUsable)
         .map { case analysis =>
           ReactFragment(
             <.div(

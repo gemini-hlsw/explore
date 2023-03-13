@@ -348,9 +348,7 @@ object ObsTabTiles:
               .zoom(ModelUndoStacks.forObservationData[IO])
               .zoom(atMapWithDefault(props.obsId, UndoStacks.empty)),
             targetCoords,
-            paProps.flatMap(_.selectedPA),
             obsConf,
-            agsState,
             selectedConfig
           )
 
