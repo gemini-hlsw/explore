@@ -388,6 +388,8 @@ object ExploreStyles:
   val TargetSummarySubRowCell: Css = Css("explore-target-summary-subrow-cell")
   val ConstraintsSummaryEdit: Css  = Css("explore-constraints-summary-edit")
 
+  val CursorPointer: Css = Css("explore-cursor-pointer")
+
   object Dialog: // SUI has Mini, Tiny, Small, Large and Fullscreen.
     val Small: Css = Css("pl-dialog-small")
     val Large: Css = Css("pl-dialog-large")
