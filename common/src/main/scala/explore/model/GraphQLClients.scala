@@ -32,8 +32,8 @@ case class GraphQLClients[F[_]: Async: Parallel] protected (
 
   def close(): F[Unit] =
     List(
-      preferencesDB.terminate() >> preferencesDB.disconnect(WebSocketCloseParams(code = 1000)),
-      odb.terminate() >> odb.disconnect(WebSocketCloseParams(code = 1000))
+      preferencesDB.terminate() >> preferencesDB.disconnect(CloseParams(code = 1000)),
+      odb.terminate() >> odb.disconnect(CloseParams(code = 1000))
     ).sequence.void
 
 object GraphQLClients:
@@ -42,7 +42,7 @@ object GraphQLClients:
     prefsURI:             Uri,
     itcURI:               Uri,
     ssoURI:               Uri,
-    reconnectionStrategy: WebSocketReconnectionStrategy
+    reconnectionStrategy: ReconnectionStrategy
   ): F[GraphQLClients[F]] =
     for {
       odbClient   <-

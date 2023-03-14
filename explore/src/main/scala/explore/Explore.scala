@@ -15,7 +15,7 @@ import cats.syntax.all.*
 import clue.js.FetchJSBackend
 import clue.js.FetchMethod
 import clue.js.WebSocketJSBackend
-import clue.websocket.WebSocketReconnectionStrategy
+import clue.websocket.ReconnectionStrategy
 import crystal.react.*
 import crystal.react.hooks.*
 import crystal.react.reuse.*
@@ -132,7 +132,7 @@ object ExploreMain {
           IO(japgolly.scalajs.react.extra.ReusabilityOverlay.overrideGloballyInDev())
       } else IO.unit
 
-    val reconnectionStrategy: WebSocketReconnectionStrategy =
+    val reconnectionStrategy: ReconnectionStrategy =
       (attempt, reason) =>
         // Web Socket close codes: https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent
         if (reason.toOption.flatMap(_.toOption.flatMap(_.code)).exists(_ === 1000))

@@ -71,7 +71,7 @@ object AppContext:
 
   def from[F[_]: Async: FetchJSBackend: WebSocketJSBackend: Parallel: Logger](
     config:               AppConfig,
-    reconnectionStrategy: WebSocketReconnectionStrategy,
+    reconnectionStrategy: ReconnectionStrategy,
     pageUrl:              (AppTab, Program.Id, Focused) => String,
     setPageVia:           (AppTab, Program.Id, Focused, SetRouteVia) => Callback,
     workerClients:        WorkerClients[F],
