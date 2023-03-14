@@ -39,6 +39,7 @@ import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
 import lucuma.typed.{tanstackTableCore => raw}
+import lucuma.typed.{tanstackVirtualCore => rawVirtual}
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
@@ -54,7 +55,6 @@ import react.primereact.ConfirmDialog
 import react.primereact.DialogPosition
 import react.primereact.PrimeStyles
 import react.primereact.ToastRef
-import lucuma.typed.{tanstackVirtualCore => rawVirtual}
 
 import scala.collection.immutable.SortedSet
 
