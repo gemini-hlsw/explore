@@ -54,6 +54,7 @@ import react.primereact.ConfirmDialog
 import react.primereact.DialogPosition
 import react.primereact.PrimeStyles
 import react.primereact.ToastRef
+import lucuma.typed.{tanstackVirtualCore => rawVirtual}
 
 import scala.collection.immutable.SortedSet
 
@@ -91,11 +92,17 @@ object TargetSummaryTable extends TableHooks:
     TargetColumns.NameColumnId -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryName |+| ExploreStyles.WithId)
   )
 
-  private val colNames: Map[ColumnId, String] = TargetColumns.allColNames ++ Map(
+  private val ColNames: Map[ColumnId, String] = TargetColumns.allColNames ++ Map(
     IdColumnId           -> "Id",
     CountColumnId        -> "Count",
     ObservationsColumnId -> "Observations"
   )
+
+  private val ScrollOptions =
+    rawVirtual.mod
+      .ScrollToOptions()
+      .setBehavior(rawVirtual.mod.ScrollBehavior.smooth)
+      .setAlign(rawVirtual.mod.ScrollAlignment.center)
 
   protected val component =
     ScalaFnComponent
@@ -104,7 +111,7 @@ object TargetSummaryTable extends TableHooks:
       // cols
       .useMemoBy((_, _) => ()) { (props, ctx) => _ =>
         def column[V](id: ColumnId, accessor: TargetWithIdAndObs => V) =
-          ColDef(id, row => accessor(row), colNames(id))
+          ColDef(id, row => accessor(row), ColNames(id))
 
         def obsUrl(targetId: Target.Id, obsId: Observation.Id): String =
           ctx.pageUrl(AppTab.Targets, props.programId, Focused.singleObs(obsId, targetId.some))
@@ -207,7 +214,22 @@ object TargetSummaryTable extends TableHooks:
               )
               .getOrElse(ctx.pushPage(AppTab.Targets, props.programId, Focused.None))
       )
-      .render((props, ctx, _, _, table, filesToImport, deletingTargets) =>
+      .useRef(none[HTMLTableVirtualizer])
+      .useEffectWithDepsBy((props, _, _, _, _, _, _, _) => props.selectedTargetIds.get.headOption)(
+        (_, _, _, _, table, _, _, virtualizerRef) =>
+          _.foldMap(selectedHead =>
+            virtualizerRef.get.flatMap(refOpt =>
+              val selectedIdStr = selectedHead.toString
+              Callback(
+                for
+                  virtualizer <- refOpt
+                  idx          = table.getRowModel().flatRows.indexWhere(_.id === selectedIdStr)
+                yield virtualizer.scrollToIndex(idx + 1, ScrollOptions)
+              )
+            )
+          )
+      )
+      .render((props, ctx, _, _, table, filesToImport, deletingTargets, virtualizerRef) =>
         import ctx.given
 
         val selectedRows    = table.getSelectedRowModel().rows.toList
@@ -282,11 +304,7 @@ object TargetSummaryTable extends TableHooks:
                 ConfirmDialog()
               ),
               <.span(ExploreStyles.TitleSelectColumns)(
-                ColumnSelector(
-                  table,
-                  colNames,
-                  ExploreStyles.SelectColumns
-                )
+                ColumnSelector(table, ColNames, ExploreStyles.SelectColumns)
               )
             )
           ),
@@ -345,6 +363,7 @@ object TargetSummaryTable extends TableHooks:
                 }
               ),
             cellMod = cell => columnClasses.get(ColumnId(cell.column.id)).orEmpty,
+            virtualizerRef = virtualizerRef,
             emptyMessage = <.div("No targets present")
             // workaround to redraw when files are imported
           ).withKey(s"summary-table-${filesToImport.get.size}")
