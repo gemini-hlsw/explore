@@ -141,19 +141,18 @@ object AsterismGroupObsList:
     programId:             Program.Id,
     undoCtx:               UndoContext[AsterismGroupsWithObs],
     adding:                View[AddingTargetOrObs],
-    selectTargetOrSummary: Option[Target.Id] => Callback,
-    toastRef:              ToastRefF[IO]
-  )(using FetchClient[IO, ?, ObservationDB], Logger[IO]): IO[Unit] =
+    selectTargetOrSummary: Option[Target.Id] => Callback
+  )(using FetchClient[IO, ?, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Unit] =
     adding.async.set(AddingTargetOrObs(true)) >>
       TargetQueries
-        .insertTarget(programId, EmptySiderealTarget, toastRef)
+        .insertTarget[IO](programId, EmptySiderealTarget)
         .flatMap { targetId =>
           TargetAddDeleteActions
             .insertTarget(
               targetId,
               programId,
               selectTargetOrSummary(_).to[IO],
-              toastRef.showToast(_)
+              ToastCtx[IO].showToast(_)
             )
             .set(undoCtx)(
               TargetWithObs(EmptySiderealTarget, SortedSet.empty).some
@@ -168,19 +167,19 @@ object AsterismGroupObsList:
     undoCtx:            UndoContext[AsterismGroupsWithObs],
     adding:             View[AddingTargetOrObs],
     expandedIds:        View[SortedSet[ObsIdSet]],
-    selectObsOrSummary: Option[Observation.Id] => Callback,
-    toastRef:           ToastRefF[IO]
-  )(using FetchClient[IO, ?, ObservationDB], Logger[IO]): IO[Unit] =
+    selectObsOrSummary: Option[Observation.Id] => Callback
+  )(using FetchClient[IO, ?, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Unit] =
     adding.async.set(AddingTargetOrObs(true)) >>
       ObsQueries
         .createObservationWithTargets[IO](programId, targetIds)
         .flatMap { obs =>
           ObservationInsertAction
-            .insert(programId,
-                    obs.id,
-                    expandedIds,
-                    selectObsOrSummary(_).to[IO],
-                    toastRef.showToast(_)
+            .insert(
+              programId,
+              obs.id,
+              expandedIds,
+              selectObsOrSummary(_).to[IO],
+              ToastCtx[IO].showToast(_)
             )
             .set(undoCtx)(obs.toConstraintsAndConf(targetIds).some)
             .to[IO]
@@ -390,8 +389,7 @@ object AsterismGroupObsList:
                 props.undoCtx,
                 addingTargetOrObs,
                 props.expandedIds,
-                selectObsOrSummary,
-                ctx.toastRef
+                selectObsOrSummary
               ).runAsync
             ).compact.mini,
             Button(
@@ -404,8 +402,7 @@ object AsterismGroupObsList:
                 props.programId,
                 props.undoCtx,
                 addingTargetOrObs,
-                props.selectTargetOrSummary,
-                ctx.toastRef
+                props.selectTargetOrSummary
               ).runAsync
             ).compact.mini,
             UndoButtons(props.undoCtx, size = PlSize.Mini)

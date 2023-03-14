@@ -161,9 +161,10 @@ object ObsList:
                       .set(undoCtx) _).compose((_: ObsActiveStatus).some).some,
                     setSubtitleCB = (obsEditSubtitle(props.programId, obs.id)
                       .set(undoCtx) _).compose((_: Option[NonEmptyString]).some).some,
-                    deleteCB = obsExistence(props.programId,
-                                            obs.id,
-                                            o => setObs(props.programId, o.some, ctx)
+                    deleteCB = obsExistence(
+                      props.programId,
+                      obs.id,
+                      o => setObs(props.programId, o.some, ctx)
                     )
                       .mod(undoCtx)(obsListMod.delete)
                       .showToastCB(ctx)(s"Deleted obs ${obs.id.show}")
@@ -177,7 +178,7 @@ object ObsList:
                       adding.async.set(true),
                       adding.async.set(false)
                     )
-                      .withToast(ctx)(s"Duplicating obs ${obs.id}")
+                      .withToast(s"Duplicating obs ${obs.id}")
                       .runAsync
                       .some
                   )

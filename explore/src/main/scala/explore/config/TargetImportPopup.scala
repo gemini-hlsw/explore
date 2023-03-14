@@ -14,10 +14,10 @@ import crystal.react.reuse.*
 import explore.DefaultErrorPolicy
 import explore.Icons
 import explore.common.TargetQueries
-import explore.utils.ToastRefF
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Constants
+import explore.utils.ToastCtx
 import fs2.*
 import fs2.text
 import japgolly.scalajs.react.*
@@ -82,9 +82,8 @@ object TargetImportPopup:
     programId:   Program.Id,
     s:           Stream[F, Byte],
     stateUpdate: (State => State) => F[Unit],
-    client:      Client[F],
-    toastRef:    ToastRefF[F]
-  )(using FetchClient[F, ?, ObservationDB]): Stream[F, Unit] =
+    client:      Client[F]
+  )(using FetchClient[F, ?, ObservationDB], ToastCtx[F]): Stream[F, Unit] =
     s
       .through(text.utf8.decode)
       .through(
@@ -97,7 +96,7 @@ object TargetImportPopup:
           // FIXME The backend needs a SED
           val target = Target.Sidereal.unnormalizedSED.replace(Constants.DefaultSED.some)(tgt)
           TargetQueries
-            .insertTarget(programId, target, toastRef)
+            .insertTarget(programId, target)
             .map(_.some)
             .flatTap(_ =>
               stateUpdate(l => l.copy(current = target.some, loaded = (target :: l.loaded).reverse))
@@ -127,8 +126,7 @@ object TargetImportPopup:
                     props.programId,
                     dom.readReadableStream(IO(f.stream())),
                     state.modState(_).to[IO],
-                    client,
-                    ctx.toastRef
+                    client
                   )
                 )
                 .compile

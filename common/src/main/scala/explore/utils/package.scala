@@ -160,27 +160,16 @@ extension (toastRef: ToastRef)
       )
     )
 
-type ToastRefF[F[_]] = Deferred[F, ToastRef]
-
-extension [F[_]: Sync](toastRef: ToastRefF[F])
-  def showToast(text: String, severity: Message.Severity = Message.Severity.Info): F[Unit] =
-    toastRef.tryGet.flatMap(_.map(_.show(text, severity).to[F]).getOrElse(Applicative[F].unit))
-
-  def clear(): F[Unit] =
-    toastRef.tryGet.flatMap(_.map(_.clear().to[F]).getOrElse(Applicative[F].unit))
-
-extension [F[_]: Sync](f: F[Unit])
-  def withToast(
-    ctx: AppContext[F]
-  )(text: String, severity: Message.Severity = Message.Severity.Info): F[Unit] =
-    f <* ctx.toastRef.showToast(text, severity)
+extension [F[_]: Sync: ToastCtx](f: F[Unit])
+  def withToast(text: String, severity: Message.Severity = Message.Severity.Info): F[Unit] =
+    f <* ToastCtx[F].showToast(text, severity)
 
 extension (f:       Callback)
   def showToastCB(
     ctx: AppContext[IO]
   )(text: String, severity: Message.Severity = Message.Severity.Info): Callback =
     import ctx.given
-    f.to[IO].withToast(ctx)(text, severity).runAsync
+    f.to[IO].withToast(text, severity).runAsync
 
 // TODO Move these to react-datetime
 extension (instant: Instant)

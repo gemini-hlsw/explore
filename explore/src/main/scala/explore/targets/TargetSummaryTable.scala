@@ -228,7 +228,7 @@ object TargetSummaryTable extends TableHooks:
                     selectedRowsIds,
                     props.programId,
                     props.selectTargetOrSummary(none).to[IO],
-                    ctx.toastRef.showToast(_)
+                    ToastCtx[IO].showToast(_)
                   )
                   .set(props.undoCtx)(selectedRowsIds.map(_ => none[TargetWithObs]))
                   .to[IO]

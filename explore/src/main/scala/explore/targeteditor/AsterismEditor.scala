@@ -169,8 +169,7 @@ object AsterismEditor extends AsterismModifier:
                     props.programId,
                     props.sharedInObsIds,
                     props.asterism,
-                    targetWithOptId,
-                    ctx.toastRef
+                    targetWithOptId
                   ).flatMap(oTargetId => targetView.async.set(oTargetId))
                     .guarantee(adding.async.set(AreAdding(false)))).runAsync
             )

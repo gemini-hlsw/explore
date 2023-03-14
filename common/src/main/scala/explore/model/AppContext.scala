@@ -16,6 +16,7 @@ import explore.events.*
 import explore.model.enums.AppTab
 import explore.model.enums.ExecutionEnvironment
 import explore.utils
+import explore.utils.ToastCtx
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.feature.Context
@@ -41,7 +42,7 @@ case class AppContext[F[_]](
   broadcastChannel: BroadcastChannel[ExploreEvent],
   toastRef:         Deferred[F, ToastRef]
 )(using
-  val F:            Applicative[F],
+  val F:            Sync[F],
   val logger:       Logger[F],
   val P:            Parallel[F]
 ):
@@ -60,6 +61,8 @@ case class AppContext[F[_]](
   given catalogWorker: WorkerClient[F, CatalogMessage.Request] = workerClients.catalog
   given agsWorker: WorkerClient[F, AgsMessage.Request]         = workerClients.ags
   given plotWorker: WorkerClient[F, PlotMessage.Request]       = workerClients.plot
+
+  given ToastCtx[F] = new ToastCtx(toastRef)
 
   export explore.DefaultErrorPolicy
 
