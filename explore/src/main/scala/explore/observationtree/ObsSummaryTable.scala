@@ -126,12 +126,6 @@ object ObsSummaryTable extends TableHooks:
           : ColumnDef.Single[ObsSummaryWithTitleConstraintsAndConf, V] =
           ColDef(id, accessor, columnNames(id))
 
-        def obsUrl(obsId: Observation.Id): String =
-          ctx.pageUrl(AppTab.Observations, props.programId, Focused.singleObs(obsId))
-
-        def goToObs(obsId: Observation.Id): Callback =
-          ctx.pushPage(AppTab.Observations, props.programId, Focused.singleObs(obsId))
-
         def constraintUrl(constraintId: Observation.Id): String =
           ctx.pageUrl(AppTab.Constraints, props.programId, Focused.singleObs(constraintId))
 
@@ -140,14 +134,7 @@ object ObsSummaryTable extends TableHooks:
 
         List(
           // TODO: GroupsColumnId
-          column(ObservationIdColumnId, _.id)
-            .setCell(cell =>
-              <.a(^.href := obsUrl(cell.value),
-                  ^.onClick ==> (_.preventDefaultCB *> goToObs(cell.value)),
-                  cell.value.toString
-              )
-            )
-            .sortable,
+          column(ObservationIdColumnId, _.id).sortable,
 
           // TODO: ValidationCheckColumnId
           column(StatusColumnId, _.status),
@@ -190,7 +177,9 @@ object ObsSummaryTable extends TableHooks:
         TableStore(props.userId, TableId.ObservationsSummary, cols)
       )
     )
-    .render { (props, _, _, _, table) =>
+    .render { (props, ctx, _, _, table) =>
+      import ctx.given
+
       <.div(
         props.renderInTitle(
           React.Fragment(
@@ -203,6 +192,19 @@ object ObsSummaryTable extends TableHooks:
         PrimeTable(
           table,
           striped = true,
+          rowMod = row =>
+            TagMod(
+              ExploreStyles.CursorPointer,
+              ExploreStyles.TableRowSelected.when(row.getIsSelected()),
+              ^.role := "link",
+              ^.onClick ==> { (e: ReactMouseEvent) =>
+                e.preventDefaultCB *> ctx.pushPage(
+                  AppTab.Observations,
+                  props.programId,
+                  Focused.singleObs(Observation.Id.parse(row.id).get)
+                )
+              }
+            ),
           compact = Compact.Very,
           tableMod = ExploreStyles.ExploreTable,
           headerCellMod = _ => ExploreStyles.StickyHeader

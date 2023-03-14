@@ -376,6 +376,7 @@ a:hover {
   grid-column: 1 / -1;
   justify-self: stretch;
   align-self: stretch;
+  grid-row-start: 5;
 
   .p-panel.p-panel-toggleable {
     height: 100%;
@@ -558,15 +559,15 @@ a:hover {
 
 .pl-form-column.target-source-profile-editor {
   align-self: stretch;
-  grid-template-rows: repeat(2, auto) 1fr;
+  grid-template-rows: repeat(3, auto) 1fr;
 
   &.with-gaussian,
   &.with-catalog-info {
-    grid-template-rows: repeat(3, auto) 1fr;
+    grid-template-rows: repeat(4, auto) 1fr;
   }
 
   &.with-gaussian.with-catalog-info {
-    grid-template-rows: repeat(4, auto) 1fr;
+    grid-template-rows: repeat(5, auto) 1fr;
   }
 }
 
@@ -1467,6 +1468,10 @@ img.partner-split-flag {
   & .selected-down {
     bottom: 2em;
   }
+}
+
+.explore-cursor-pointer {
+  cursor: pointer;
 }
 
 .explore-border-table,
