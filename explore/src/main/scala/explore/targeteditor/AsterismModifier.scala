@@ -10,8 +10,10 @@ import crystal.react.View
 import crystal.react.implicits.*
 import explore.DefaultErrorPolicy
 import explore.common.AsterismQueries
+import explore.common.TargetQueries
 import explore.model.Asterism
 import explore.model.ObsIdSet
+import explore.utils.ToastCtx
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
@@ -19,7 +21,6 @@ import lucuma.schemas.model.TargetWithId
 import lucuma.schemas.model.TargetWithOptId
 import lucuma.schemas.odb.input.*
 import org.typelevel.log4cats.Logger
-import queries.common.TargetQueriesGQL.CreateTargetMutation
 
 trait AsterismModifier:
   protected def insertSiderealTarget(
@@ -27,13 +28,11 @@ trait AsterismModifier:
     obsIds:          ObsIdSet,
     asterism:        View[Option[Asterism]],
     targetWithOptId: TargetWithOptId
-  )(using FetchClient[IO, ?, ObservationDB], Logger[IO]): IO[Option[Target.Id]] =
+  )(using FetchClient[IO, ?, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Option[Target.Id]] =
     targetWithOptId match
       case TargetWithOptId(oTargetId, target @ Target.Sidereal(_, _, _, _)) =>
         val targetId: IO[Target.Id] = oTargetId.fold(
-          CreateTargetMutation[IO]
-            .execute(target.toCreateTargetInput(programId))
-            .map(_.createTarget.target.id)
+          TargetQueries.insertTarget[IO](programId, target)
         )(IO(_))
 
         targetId

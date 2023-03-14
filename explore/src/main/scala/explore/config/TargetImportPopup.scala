@@ -13,9 +13,11 @@ import crystal.react.implicits.*
 import crystal.react.reuse.*
 import explore.DefaultErrorPolicy
 import explore.Icons
+import explore.common.TargetQueries
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Constants
+import explore.utils.ToastCtx
 import fs2.*
 import fs2.text
 import japgolly.scalajs.react.*
@@ -76,12 +78,12 @@ object TargetImportPopup:
   private given Reusability[DOMFile] = Reusability.by(_.name)
   private val ColDef                 = ColumnDef[String]
 
-  private def importTargets[F[_]: Concurrent: Logger](
+  private def importTargets[F[_]: Async: Logger](
     programId:   Program.Id,
     s:           Stream[F, Byte],
     stateUpdate: (State => State) => F[Unit],
     client:      Client[F]
-  )(using FetchClient[F, ?, ObservationDB]): Stream[F, Unit] =
+  )(using FetchClient[F, ?, ObservationDB], ToastCtx[F]): Stream[F, Unit] =
     s
       .through(text.utf8.decode)
       .through(
@@ -93,9 +95,9 @@ object TargetImportPopup:
         case Right(tgt) =>
           // FIXME The backend needs a SED
           val target = Target.Sidereal.unnormalizedSED.replace(Constants.DefaultSED.some)(tgt)
-          CreateTargetMutation[F]
-            .execute(target.toCreateTargetInput(programId))
-            .map(_.createTarget.target.id.some)
+          TargetQueries
+            .insertTarget(programId, target)
+            .map(_.some)
             .flatTap(_ =>
               stateUpdate(l => l.copy(current = target.some, loaded = (target :: l.loaded).reverse))
             )
@@ -120,10 +122,11 @@ object TargetImportPopup:
             .use { client =>
               files
                 .traverse(f =>
-                  importTargets[IO](props.programId,
-                                    dom.readReadableStream(IO(f.stream())),
-                                    state.modState(_).to[IO],
-                                    client
+                  importTargets[IO](
+                    props.programId,
+                    dom.readReadableStream(IO(f.stream())),
+                    state.modState(_).to[IO],
+                    client
                   )
                 )
                 .compile

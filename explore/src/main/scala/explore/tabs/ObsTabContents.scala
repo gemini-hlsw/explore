@@ -302,7 +302,7 @@ object ObsTabContents extends TwoPanels:
               .map(id =>
                 ExploreClipboard
                   .set(LocalClipboard.CopiedObservations(ObsIdSet.one(id)))
-                  .withToast(ctx)(s"Copied obs $id")
+                  .withToast(s"Copied obs $id")
               )
               .orUnit
               .runAsync
@@ -326,7 +326,7 @@ object ObsTabContents extends TwoPanels:
                       )
                     )
                     .void
-                    .withToast(ctx)(s"Duplicating obs ${idSet.idSet.mkString_(", ")}")
+                    .withToast(s"Duplicating obs ${idSet.idSet.mkString_(", ")}")
                 }.orUnit
               case _                                        => IO.unit
             }.runAsync

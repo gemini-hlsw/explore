@@ -168,7 +168,7 @@ object SiderealTargetEditor {
             ).andThen(
               _.handleErrorWith(t =>
                 Logger[IO].error(t)(s"Error updating target [$tid]") >>
-                  ctx.toastRef.showToast(s"Error saving target [$tid]", Message.Severity.Error)
+                  ToastCtx[IO].showToast(s"Error saving target [$tid]", Message.Severity.Error)
               )
             )
 

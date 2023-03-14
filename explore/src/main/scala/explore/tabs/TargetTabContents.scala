@@ -671,6 +671,9 @@ object TargetTabContents extends TwoPanels:
       }
       // Selected targets on the summary table
       .useStateViewBy((props, _, _, _, _, _, _) => props.focused.target.toList)
+      .useEffectWithDepsBy((props, _, _, _, _, _, _, _) => props.focused.target)(
+        (_, _, _, _, _, _, _, selIds) => _.foldMap(focusedTarget => selIds.set(List(focusedTarget)))
+      )
       .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, asterismGroupWithObs, selIds) =>
         (props.focused, asterismGroupWithObs.toOption.map(_.get.asterismGroups), selIds.get)
       ) { (props, ctx, _, _, _, _, poagwov, _) => (target, asterismGroups, selectedIds) =>
@@ -687,7 +690,7 @@ object TargetTabContents extends TwoPanels:
               .map(ids =>
                 ExploreClipboard
                   .set(LocalClipboard.CopiedObservations(ids))
-                  .withToast(ctx)(s"Copied obs ${ids.idSet.toList.mkString(", ")}")
+                  .withToast(s"Copied obs ${ids.idSet.toList.mkString(", ")}")
               )
               .orElse(
                 TargetIdSet
@@ -695,7 +698,7 @@ object TargetTabContents extends TwoPanels:
                   .map(tids =>
                     ExploreClipboard
                       .set(LocalClipboard.CopiedTargets(tids))
-                      .withToast(ctx)(s"Copied targets ${tids.toList.mkString(", ")}")
+                      .withToast(s"Copied targets ${tids.toList.mkString(", ")}")
                   )
               )
               .orUnit
@@ -721,7 +724,7 @@ object TargetTabContents extends TwoPanels:
                         ctx,
                         props.listUndoStacks,
                         props.expandedIds
-                      ).withToast(ctx)(s"Pasting obs ${id.idSet.toList.mkString(", ")}")
+                      ).withToast(s"Pasting obs ${id.idSet.toList.mkString(", ")}")
                     )
                     .orEmpty
                 else IO.unit
