@@ -160,7 +160,9 @@ extension (toastRef: ToastRef)
       )
     )
 
-extension [F[_]: Sync](toastRef: Deferred[F, ToastRef])
+type ToastRefF[F[_]] = Deferred[F, ToastRef]
+
+extension [F[_]: Sync](toastRef: ToastRefF[F])
   def showToast(text: String, severity: Message.Severity = Message.Severity.Info): F[Unit] =
     toastRef.tryGet.flatMap(_.map(_.show(text, severity).to[F]).getOrElse(Applicative[F].unit))
 

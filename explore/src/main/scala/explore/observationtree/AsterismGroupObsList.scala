@@ -14,6 +14,7 @@ import crystal.react.implicits.*
 import explore.DefaultErrorPolicy
 import explore.Icons
 import explore.common.AsterismQueries.*
+import explore.common.TargetQueries
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.model.AppContext
@@ -141,15 +142,12 @@ object AsterismGroupObsList:
     undoCtx:               UndoContext[AsterismGroupsWithObs],
     adding:                View[AddingTargetOrObs],
     selectTargetOrSummary: Option[Target.Id] => Callback,
-    toastRef:              Deferred[IO, ToastRef]
+    toastRef:              ToastRefF[IO]
   )(using FetchClient[IO, ?, ObservationDB], Logger[IO]): IO[Unit] =
     adding.async.set(AddingTargetOrObs(true)) >>
-      TargetQueriesGQL
-        .CreateTargetMutation[IO]
-        .execute(EmptySiderealTarget.toCreateTargetInput(programId))
-        .flatMap { data =>
-          val targetId = data.createTarget.target.id
-
+      TargetQueries
+        .insertTarget(programId, EmptySiderealTarget, toastRef)
+        .flatMap { targetId =>
           TargetAddDeleteActions
             .insertTarget(
               targetId,
@@ -171,7 +169,7 @@ object AsterismGroupObsList:
     adding:             View[AddingTargetOrObs],
     expandedIds:        View[SortedSet[ObsIdSet]],
     selectObsOrSummary: Option[Observation.Id] => Callback,
-    toastRef:           Deferred[IO, ToastRef]
+    toastRef:           ToastRefF[IO]
   )(using FetchClient[IO, ?, ObservationDB], Logger[IO]): IO[Unit] =
     adding.async.set(AddingTargetOrObs(true)) >>
       ObsQueries

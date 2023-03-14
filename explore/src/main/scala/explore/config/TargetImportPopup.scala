@@ -13,6 +13,8 @@ import crystal.react.implicits.*
 import crystal.react.reuse.*
 import explore.DefaultErrorPolicy
 import explore.Icons
+import explore.common.TargetQueries
+import explore.utils.ToastRefF
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Constants
@@ -76,11 +78,12 @@ object TargetImportPopup:
   private given Reusability[DOMFile] = Reusability.by(_.name)
   private val ColDef                 = ColumnDef[String]
 
-  private def importTargets[F[_]: Concurrent: Logger](
+  private def importTargets[F[_]: Async: Logger](
     programId:   Program.Id,
     s:           Stream[F, Byte],
     stateUpdate: (State => State) => F[Unit],
-    client:      Client[F]
+    client:      Client[F],
+    toastRef:    ToastRefF[F]
   )(using FetchClient[F, ?, ObservationDB]): Stream[F, Unit] =
     s
       .through(text.utf8.decode)
@@ -93,9 +96,9 @@ object TargetImportPopup:
         case Right(tgt) =>
           // FIXME The backend needs a SED
           val target = Target.Sidereal.unnormalizedSED.replace(Constants.DefaultSED.some)(tgt)
-          CreateTargetMutation[F]
-            .execute(target.toCreateTargetInput(programId))
-            .map(_.createTarget.target.id.some)
+          TargetQueries
+            .insertTarget(programId, target, toastRef)
+            .map(_.some)
             .flatTap(_ =>
               stateUpdate(l => l.copy(current = target.some, loaded = (target :: l.loaded).reverse))
             )
@@ -120,10 +123,12 @@ object TargetImportPopup:
             .use { client =>
               files
                 .traverse(f =>
-                  importTargets[IO](props.programId,
-                                    dom.readReadableStream(IO(f.stream())),
-                                    state.modState(_).to[IO],
-                                    client
+                  importTargets[IO](
+                    props.programId,
+                    dom.readReadableStream(IO(f.stream())),
+                    state.modState(_).to[IO],
+                    client,
+                    ctx.toastRef
                   )
                 )
                 .compile
