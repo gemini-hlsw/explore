@@ -55,8 +55,8 @@ trait ObsWithConf extends ObsSummary {
   def configuration: Option[BasicConfiguration]
 
   val conf: String = configuration match {
-    case Some(n: BasicConfiguration.GmosNorthLongSlit) => s"GMOS-N ${n.grating.shortName}"
-    case Some(s: BasicConfiguration.GmosSouthLongSlit) => s"GMOS-S ${s.grating.shortName}"
+    case Some(n: BasicConfiguration.GmosNorthLongSlit) => s"GMOS-N ${n.grating.shortName} ${n.fpu.shortName}"
+    case Some(s: BasicConfiguration.GmosSouthLongSlit) => s"GMOS-S ${s.grating.shortName} ${s.fpu.shortName}"
     case _                                             => s"-"
   }
 }
