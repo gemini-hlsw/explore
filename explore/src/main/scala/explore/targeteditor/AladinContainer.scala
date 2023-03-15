@@ -20,6 +20,7 @@ import explore.model.AladinMouseScroll
 import explore.model.Asterism
 import explore.model.ObsConfiguration
 import explore.model.TargetVisualOptions
+import explore.model.UserGlobalPreferences
 import explore.model.enums.Visible
 import explore.model.reusability.given
 import explore.model.reusability.given
@@ -62,10 +63,9 @@ case class AladinContainer(
   asterism:               Asterism,
   vizTime:                Instant,
   obsConf:                Option[ObsConfiguration],
-  allowMouseScroll:       AladinMouseScroll,
+  userPreferences:        UserGlobalPreferences,
   options:                TargetVisualOptions,
   updateMouseCoordinates: Coordinates => Callback,
-  // TODO Move the functionality of saving the FOV in ALadincell here
   updateFov:              Fov => Callback,
   updateViewOffset:       Offset => Callback,
   selectedGuideStar:      Option[AgsAnalysis],
@@ -91,7 +91,7 @@ object AladinContainer extends AladinCommon {
   })
   private given Reusability[List[AgsAnalysis]]   = Reusability.by(_.length)
   private given Reusability[Props]               =
-    Reusability.by(x => (x.asterism, x.obsConf, x.allowMouseScroll, x.options))
+    Reusability.by(x => (x.asterism, x.obsConf, x.userPreferences, x.options))
   private given Reusability[Fov]                 = Reusability.by(x => (x.y, x.y))
 
   private val AladinComp = Aladin.component
@@ -176,14 +176,14 @@ object AladinContainer extends AladinCommon {
         (allCoordinates,
          p.obsConf.flatMap(_.configuration),
          p.obsConf.flatMap(_.fallbackPosAngle),
-         p.options,
+         p.userPreferences.aladinShowCatalog.visible,
          p.selectedGuideStar
         )
-      ) { (_, _, _, _) => (allCoordinates, configuration, unguidedPa, options, gs) =>
+      ) { (_, _, _, _) => (allCoordinates, configuration, unguidedPa, showCatalog, gs) =>
         val posAngle = gs.posAngle.orElse(unguidedPa)
 
         val candidatesVisibility =
-          ExploreStyles.GuideStarCandidateVisible.when_(options.agsCandidates.visible)
+          ExploreStyles.GuideStarCandidateVisible.when_(showCatalog)
 
         val probeArmShapes = (gs, posAngle).mapN { case (c, posAngle) =>
           val gsOffset =
@@ -220,8 +220,8 @@ object AladinContainer extends AladinCommon {
       // memoized catalog targets with their proper motions corrected
       .useMemoBy((props, allCoordinates, _, _, _, _) =>
         (props.guideStarCandidates,
-         props.options.agsCandidates.visible,
-         props.options.fullScreen,
+         props.userPreferences.aladinShowCatalog.visible,
+         props.userPreferences.fullScreen,
          props.options.fovRA,
          props.vizTime,
          props.obsConf.flatMap(_.configuration),
@@ -428,7 +428,8 @@ object AladinContainer extends AladinCommon {
           val screenOffset =
             currentPos.value.map(_.diff(baseCoordinates.value).offset).getOrElse(Offset.Zero)
 
-          val key = s"aladin-${resize.width}-${resize.height}-${props.allowMouseScroll.value}"
+          val key =
+            s"aladin-${resize.width}-${resize.height}-${props.userPreferences.aladinShowCatalog}"
 
           <.div(
             ExploreStyles.AladinContainerBody,
@@ -466,7 +467,7 @@ object AladinContainer extends AladinCommon {
                   .withRef(aladinRef) {
                     Aladin(
                       ExploreStyles.TargetAladin |+| ExploreStyles.TargetAladinDisableMouse
-                        .unless_(props.allowMouseScroll.value),
+                        .unless_(props.userPreferences.aladinMouseScroll.value),
                       showReticle = false,
                       showLayersControl = false,
                       target = baseCoordinatesForAladin,

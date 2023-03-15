@@ -5,6 +5,7 @@ package explore.model
 
 import cats.Eq
 import cats.derived.*
+import explore.model.enums.Visible
 import lucuma.core.util.NewType
 import monocle.Focus
 
@@ -18,11 +19,27 @@ object AladinMouseScroll extends NewType[Boolean]:
 type AladinMouseScroll = AladinMouseScroll.Type
 
 case class UserGlobalPreferences(
-  aladinMouseScroll: AladinMouseScroll
+  aladinMouseScroll:        AladinMouseScroll,
+  fullScreen:               AladinFullScreen,
+  aladinShowCatalog:        Visible,
+  aladinAgsOverlay:         Visible,
+  aladinScienceOffsets:     Visible,
+  aladinAcquisitionOffsets: Visible
 ) derives Eq
 
 object UserGlobalPreferences:
-  val aladinMouseScroll = Focus[UserGlobalPreferences](_.aladinMouseScroll)
+  val aladinMouseScroll        = Focus[UserGlobalPreferences](_.aladinMouseScroll)
+  val aladinShowCatalog        = Focus[UserGlobalPreferences](_.aladinShowCatalog)
+  val aladinAgsOverlay         = Focus[UserGlobalPreferences](_.aladinAgsOverlay)
+  val aladinScienceOffsets     = Focus[UserGlobalPreferences](_.aladinScienceOffsets)
+  val aladinAcquisitionOffsets = Focus[UserGlobalPreferences](_.aladinAcquisitionOffsets)
+  val fullScreen               = Focus[UserGlobalPreferences](_.fullScreen)
 
   val Default =
-    UserGlobalPreferences(AladinMouseScroll.Allowed)
+    UserGlobalPreferences(AladinMouseScroll.Allowed,
+                          AladinFullScreen.Normal,
+                          Visible.Inline,
+                          Visible.Inline,
+                          Visible.Inline,
+                          Visible.Inline
+    )

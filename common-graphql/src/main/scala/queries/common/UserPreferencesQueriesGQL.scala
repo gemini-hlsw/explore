@@ -75,16 +75,16 @@ object UserPreferencesQueriesGQL {
           fovDec
           viewOffsetP
           viewOffsetQ
-          agsCandidates
-          agsOverlay
-          fullScreen
           saturation
           brightness
-          scienceOffsets
-          acquisitionOffsets
         }
         lucumaUserPreferencesByPk(userId: $userId) {
           aladinMouseScroll
+          showCatalog
+          fullScreen
+          agsOverlay
+          scienceOffsets
+          acquisitionOffsets
         }
       }
     """
@@ -105,21 +105,11 @@ object UserPreferencesQueriesGQL {
   @GraphQL
   trait UserPreferencesAladinUpdate extends GraphQLOperation[UserPreferencesDB] {
     val document = """
-      mutation userPreferencesUpsert($userId: String = "", $aladinMouseScroll: Boolean = false) {
-        insertLucumaUserPreferencesOne(
-          object: {
-            userId: $userId,
-            aladinMouseScroll: $aladinMouseScroll
-          },
-          onConflict: {
-            constraint: lucuma_user_preferences_pkey,
-            update_columns: aladinMouseScroll
-          }
-        ) {
-          userId
-        }
+    mutation aladinUserPreferences($objects: LucumaUserPreferencesInsertInput! = {}) {
+      insertLucumaUserPreferences(objects: [$objects], onConflict: {constraint: lucuma_user_preferences_pkey, update_columns: [fullScreen, showCatalog, aladinMouseScroll, agsOverlay, scienceOffsets, acquisitionOffsets]}) {
+        affected_rows
       }
-    """
+    }"""
   }
 
   @GraphQL

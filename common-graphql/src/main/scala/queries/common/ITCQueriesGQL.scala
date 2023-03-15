@@ -11,10 +11,10 @@ import explore.model.itc.remote.ItcChartGroupRemote
 import queries.schemas.ITC
 // gql: import io.circe.refined.*
 
-object ITCQueriesGQL {
+object ITCQueriesGQL:
 
   @GraphQL
-  trait SpectroscopyITCQuery extends GraphQLOperation[ITC] {
+  trait SpectroscopyITCQuery extends GraphQLOperation[ITC]:
     val document =
       """
       query($input: SpectroscopyModeInput) {
@@ -40,15 +40,12 @@ object ITCQueriesGQL {
       }
     """
 
-    object Data {
-      object Spectroscopy {
+    object Data:
+      object Spectroscopy:
         type ServerVersion = string.NonEmptyString
-      }
-    }
-  }
 
   @GraphQL
-  trait SpectroscopyGraphITCQuery extends GraphQLOperation[ITC] {
+  trait SpectroscopyGraphITCQuery extends GraphQLOperation[ITC]:
     val document =
       """
       query($input: SpectroscopyGraphModeInput) {
@@ -85,13 +82,8 @@ object ITCQueriesGQL {
       }
     """
 
-    object Data {
-      object SpectroscopyGraph {
+    object Data:
+      object SpectroscopyGraph:
         type ServerVersion = string.NonEmptyString
         type Ccds          = ItcCcd
         type Charts        = ItcChartGroupRemote
-      }
-    }
-  }
-
-}
