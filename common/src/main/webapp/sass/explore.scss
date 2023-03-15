@@ -376,7 +376,7 @@ a:hover {
   grid-column: 1 / -1;
   justify-self: stretch;
   align-self: stretch;
-  grid-row-start: 5;
+  grid-row-start: 4;
 
   .p-panel.p-panel-toggleable {
     height: 100%;
@@ -564,6 +564,10 @@ a:hover {
   &.with-gaussian,
   &.with-catalog-info {
     grid-template-rows: repeat(4, auto) 1fr;
+
+    > .explore-brightnesses-wrapper {
+      grid-row-start: 5;
+    }
   }
 
   &.with-gaussian.with-catalog-info {
