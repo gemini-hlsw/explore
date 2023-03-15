@@ -223,7 +223,12 @@ object TargetSummaryTable extends TableHooks:
               Callback(
                 for
                   virtualizer <- refOpt
-                  idx          = table.getRowModel().flatRows.indexWhere(_.id === selectedIdStr)
+                  idx         <- table
+                                   .getRowModel()
+                                   .flatRows
+                                   .indexWhere(_.id === selectedIdStr)
+                                   .some
+                                   .filterNot(_ == -1)
                 yield virtualizer.scrollToIndex(idx + 1, ScrollOptions)
               )
             )
