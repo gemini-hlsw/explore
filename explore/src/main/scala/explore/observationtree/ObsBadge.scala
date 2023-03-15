@@ -60,12 +60,12 @@ object ObsBadge {
     ScalaFnComponent[Props] { props =>
       val obs         = props.obs
       val conf        = obs match {
-        case withConf: ObsWithConf => (withConf.conf: VdomNode).some
-        case _                     => none
+        case withConf: ObsWithConf if withConf.configuration.isDefined => <.div(withConf.conf).some
+        case _                                                         => none
       }
       val constraints = obs match {
         case withConstraints: ObsWithConstraints =>
-          (withConstraints.constraintsSummary: VdomNode).some
+          <.div(withConstraints.constraintsSummary).some
         case _                                   => none
       }
 
