@@ -15,8 +15,10 @@ import lucuma.ui.table.*
 import react.common.*
 import react.fa.FontAwesomeIcon
 import react.primereact.Button
+import lucuma.core.enums.CatalogName
 
 case class TargetSelectionTable(
+  source:              TargetSource[?],
   targets:             List[TargetSearchResult],
   selectExistingLabel: String,
   selectExistingIcon:  FontAwesomeIcon,
@@ -34,10 +36,17 @@ object TargetSelectionTable:
 
   private val SelectColumnId: ColumnId = ColumnId("select")
 
-  private val columnClasses: Map[ColumnId, Css] = Map(
-    SelectColumnId             -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummarySelect),
-    TargetColumns.TypeColumnId -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryType |+| ExploreStyles.WithSelect),
-    TargetColumns.NameColumnId -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryName |+| ExploreStyles.WithSelect)
+  private val ColumnClasses: Map[ColumnId, TargetSource[?] => Css] = Map(
+    SelectColumnId             -> (_ => ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummarySelect),
+    TargetColumns.TypeColumnId -> (_ =>
+      ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryType |+| ExploreStyles.WithSelect
+    ),
+    TargetColumns.NameColumnId -> (source =>
+      (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryName) |+| (source match
+        case TargetSource.FromCatalog(CatalogName.Simbad) => ExploreStyles.WithSelect
+        case _                                            => ExploreStyles.WithSelectAndType
+      )
+    )
   )
 
   private val component = ScalaFnComponent
@@ -64,10 +73,13 @@ object TargetSelectionTable:
           ,
           enableSorting = false
         )
-      ) ++
-        TargetColumns
-          .BaseColumnBuilder(ColDef, _.target.some)
-          .allColumns
+      ) ++ (
+        props.source match
+          case TargetSource.FromCatalog(CatalogName.Simbad) =>
+            TargetColumns.Builder.ForSimbad(ColDef, _.target.some).AllColumns
+          case _                                            =>
+            TargetColumns.Builder.ForProgram(ColDef, _.target.some).AllColumns
+      )
     }
     // rows
     .useMemoBy((props, _) => props.targets)((_, _) => identity)
@@ -80,12 +92,15 @@ object TargetSelectionTable:
         compact = Compact.Very,
         tableMod = ExploreStyles.ExploreTable,
         headerCellMod = headerCell =>
-          columnClasses.get(ColumnId(headerCell.column.id)).orEmpty |+| ExploreStyles.StickyHeader,
+          ColumnClasses
+            .get(ColumnId(headerCell.column.id))
+            .map(_(props.source))
+            .orEmpty |+| ExploreStyles.StickyHeader,
         rowMod = row =>
           TagMod(
             ExploreStyles.TableRowSelected.when_(props.selectedIndex.contains_(row.index.toInt)),
             ^.onClick --> props.onClick(row.original, row.index.toInt)
           ),
-        cellMod = cell => columnClasses.get(ColumnId(cell.column.id)).orEmpty
+        cellMod = cell => ColumnClasses.get(ColumnId(cell.column.id)).map(_(props.source)).orEmpty
       )
     )

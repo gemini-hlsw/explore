@@ -73,7 +73,7 @@ object TargetTable extends TableHooks:
 
   private val columnNames: Map[ColumnId, String] = Map(
     DeleteColumnId -> " "
-  ) ++ TargetColumns.allColNames
+  ) ++ TargetColumns.AllColNames
 
   private val columnClasses: Map[ColumnId, Css] = Map(
     DeleteColumnId             -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryDelete),
@@ -117,9 +117,7 @@ object TargetTable extends TableHooks:
             enableSorting = false
           )
         ) ++
-          TargetColumns
-            .BaseColumnBuilder(ColDef, _.target.some)
-            .allColumns
+          TargetColumns.Builder.ForProgram(ColDef, _.target.some).AllColumns
       }
       // If vizTime is not set, change it to now
       .useEffectResultWithDepsBy((p, _, _) => p.vizTime) { (_, _, _) => vizTime =>

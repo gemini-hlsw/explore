@@ -92,11 +92,12 @@ object TargetSummaryTable extends TableHooks:
     TargetColumns.NameColumnId -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryName |+| ExploreStyles.WithId)
   )
 
-  private val ColNames: Map[ColumnId, String] = TargetColumns.allColNames ++ Map(
-    IdColumnId           -> "Id",
-    CountColumnId        -> "Count",
-    ObservationsColumnId -> "Observations"
-  )
+  private val ColNames: Map[ColumnId, String] =
+    TargetColumns.AllColNames ++ Map(
+      IdColumnId           -> "Id",
+      CountColumnId        -> "Count",
+      ObservationsColumnId -> "Observations"
+    )
 
   private val ScrollOptions =
     rawVirtual.mod
@@ -124,9 +125,7 @@ object TargetSummaryTable extends TableHooks:
             _.value.toString
           ).sortable
         ) ++
-          TargetColumns
-            .BaseColumnBuilder(ColDef, _.target.some)
-            .allColumns ++
+          TargetColumns.Builder.ForProgram(ColDef, _.target.some).AllColumns ++
           List(
             column(CountColumnId, _.obsIds.size) // TODO Right align
               .setCell(_.value.toString),

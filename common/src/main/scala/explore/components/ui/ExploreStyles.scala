@@ -386,6 +386,7 @@ object ExploreStyles:
   val WithDelete: Css              = Css("with-delete")
   val WithExpander: Css            = Css("with-expander")
   val WithSelect: Css              = Css("with-select")
+  val WithSelectAndType: Css       = Css("with-select-and-type")
   val WithId: Css                  = Css("with-id")
   val TargetSummarySubRowCell: Css = Css("explore-target-summary-subrow-cell")
   val ConstraintsSummaryEdit: Css  = Css("explore-constraints-summary-edit")
