@@ -1,8 +1,3 @@
-schema {
-  query: query_root
-  mutation: mutation_root
-  subscription: subscription_root
-}
 
 """whether this query should be cached (Hasura Cloud only)"""
 directive @cached(
@@ -344,19 +339,14 @@ input ExplorePlotTimeUpdates {
 columns and relationships of "exploreTargetPreferences"
 """
 type ExploreTargetPreferences {
-  acquisitionOffsets: Boolean
-  agsCandidates: Boolean
-  agsOverlay: Boolean
   brightness: Int
   createdAt: timestamptz
   fovDec: bigint
   fovRA: bigint
-  fullScreen: Boolean
 
   """An object relationship"""
   lucuma_target: LucumaTarget!
   saturation: Int
-  scienceOffsets: Boolean
   targetId: String!
   updatedAt: timestamptz
   userId: String!
@@ -433,17 +423,12 @@ input ExploreTargetPreferencesBoolExp {
   _and: [ExploreTargetPreferencesBoolExp!]
   _not: ExploreTargetPreferencesBoolExp
   _or: [ExploreTargetPreferencesBoolExp!]
-  acquisitionOffsets: BooleanComparisonExp
-  agsCandidates: BooleanComparisonExp
-  agsOverlay: BooleanComparisonExp
   brightness: IntComparisonExp
   createdAt: TimestamptzComparisonExp
   fovDec: BigintComparisonExp
   fovRA: BigintComparisonExp
-  fullScreen: BooleanComparisonExp
   lucuma_target: LucumaTargetBoolExp
   saturation: IntComparisonExp
-  scienceOffsets: BooleanComparisonExp
   targetId: StringComparisonExp
   updatedAt: TimestamptzComparisonExp
   userId: StringComparisonExp
@@ -477,17 +462,12 @@ input ExploreTargetPreferencesIncInput {
 input type for inserting data into table "exploreTargetPreferences"
 """
 input ExploreTargetPreferencesInsertInput {
-  acquisitionOffsets: Boolean
-  agsCandidates: Boolean
-  agsOverlay: Boolean
   brightness: Int
   createdAt: timestamptz
   fovDec: bigint
   fovRA: bigint
-  fullScreen: Boolean
   lucuma_target: LucumaTargetObjRelInsertInput
   saturation: Int
-  scienceOffsets: Boolean
   targetId: String
   updatedAt: timestamptz
   userId: String
@@ -545,17 +525,12 @@ input ExploreTargetPreferencesOnConflict {
 
 """Ordering options when selecting data from "exploreTargetPreferences"."""
 input ExploreTargetPreferencesOrderBy {
-  acquisitionOffsets: OrderBy
-  agsCandidates: OrderBy
-  agsOverlay: OrderBy
   brightness: OrderBy
   createdAt: OrderBy
   fovDec: OrderBy
   fovRA: OrderBy
-  fullScreen: OrderBy
   lucuma_target: LucumaTargetOrderBy
   saturation: OrderBy
-  scienceOffsets: OrderBy
   targetId: OrderBy
   updatedAt: OrderBy
   userId: OrderBy
@@ -574,15 +549,6 @@ select columns of table "exploreTargetPreferences"
 """
 enum ExploreTargetPreferencesSelectColumn {
   """column name"""
-  acquisitionOffsets
-
-  """column name"""
-  agsCandidates
-
-  """column name"""
-  agsOverlay
-
-  """column name"""
   brightness
 
   """column name"""
@@ -595,13 +561,7 @@ enum ExploreTargetPreferencesSelectColumn {
   fovRA
 
   """column name"""
-  fullScreen
-
-  """column name"""
   saturation
-
-  """column name"""
-  scienceOffsets
 
   """column name"""
   targetId
@@ -623,16 +583,11 @@ enum ExploreTargetPreferencesSelectColumn {
 input type for updating data in table "exploreTargetPreferences"
 """
 input ExploreTargetPreferencesSetInput {
-  acquisitionOffsets: Boolean
-  agsCandidates: Boolean
-  agsOverlay: Boolean
   brightness: Int
   createdAt: timestamptz
   fovDec: bigint
   fovRA: bigint
-  fullScreen: Boolean
   saturation: Int
-  scienceOffsets: Boolean
   targetId: String
   updatedAt: timestamptz
   userId: String
@@ -685,15 +640,6 @@ update columns of table "exploreTargetPreferences"
 """
 enum ExploreTargetPreferencesUpdateColumn {
   """column name"""
-  acquisitionOffsets
-
-  """column name"""
-  agsCandidates
-
-  """column name"""
-  agsOverlay
-
-  """column name"""
   brightness
 
   """column name"""
@@ -706,13 +652,7 @@ enum ExploreTargetPreferencesUpdateColumn {
   fovRA
 
   """column name"""
-  fullScreen
-
-  """column name"""
   saturation
-
-  """column name"""
-  scienceOffsets
 
   """column name"""
   targetId
@@ -2034,6 +1974,7 @@ enum LucumaTableIdsConstraint {
 enum LucumaTableIdsEnum {
   ASTERISM_TARGETS
   CONSTRAINTS_SUMMARY
+  OBSERVATIONS_SUMMARY
   SPECTROSCOPY_MODES
   TARGETS_SUMMARY
 }
@@ -2398,12 +2339,19 @@ input LucumaUserPkColumnsInput {
 columns and relationships of "lucumaUserPreferences"
 """
 type LucumaUserPreferences {
+  acquisitionOffsets: Boolean
+  agsOverlay: Boolean
   aladinMouseScroll: Boolean
+  createdAt: timestamptz
   elevationPlotRange: ExplorePlotRangeEnum
   elevationPlotTime: ExplorePlotTimeEnum
+  fullScreen: Boolean
 
   """An object relationship"""
   lucuma_user: LucumaUser!
+  scienceOffsets: Boolean
+  showCatalog: Boolean
+  updatedAt: timestamptz
   userId: String!
 }
 
@@ -2431,10 +2379,17 @@ input LucumaUserPreferencesBoolExp {
   _and: [LucumaUserPreferencesBoolExp!]
   _not: LucumaUserPreferencesBoolExp
   _or: [LucumaUserPreferencesBoolExp!]
+  acquisitionOffsets: BooleanComparisonExp
+  agsOverlay: BooleanComparisonExp
   aladinMouseScroll: BooleanComparisonExp
+  createdAt: TimestamptzComparisonExp
   elevationPlotRange: ExplorePlotRangeEnumComparisonExp
   elevationPlotTime: ExplorePlotTimeEnumComparisonExp
+  fullScreen: BooleanComparisonExp
   lucuma_user: LucumaUserBoolExp
+  scienceOffsets: BooleanComparisonExp
+  showCatalog: BooleanComparisonExp
+  updatedAt: TimestamptzComparisonExp
   userId: StringComparisonExp
 }
 
@@ -2452,20 +2407,31 @@ enum LucumaUserPreferencesConstraint {
 input type for inserting data into table "lucumaUserPreferences"
 """
 input LucumaUserPreferencesInsertInput {
+  acquisitionOffsets: Boolean
+  agsOverlay: Boolean
   aladinMouseScroll: Boolean
+  createdAt: timestamptz
   elevationPlotRange: ExplorePlotRangeEnum
   elevationPlotTime: ExplorePlotTimeEnum
+  fullScreen: Boolean
   lucuma_user: LucumaUserObjRelInsertInput
+  scienceOffsets: Boolean
+  showCatalog: Boolean
+  updatedAt: timestamptz
   userId: String
 }
 
 """aggregate max on columns"""
 type LucumaUserPreferencesMaxFields {
+  createdAt: timestamptz
+  updatedAt: timestamptz
   userId: String
 }
 
 """aggregate min on columns"""
 type LucumaUserPreferencesMinFields {
+  createdAt: timestamptz
+  updatedAt: timestamptz
   userId: String
 }
 
@@ -2491,10 +2457,17 @@ input LucumaUserPreferencesOnConflict {
 
 """Ordering options when selecting data from "lucumaUserPreferences"."""
 input LucumaUserPreferencesOrderBy {
+  acquisitionOffsets: OrderBy
+  agsOverlay: OrderBy
   aladinMouseScroll: OrderBy
+  createdAt: OrderBy
   elevationPlotRange: OrderBy
   elevationPlotTime: OrderBy
+  fullScreen: OrderBy
   lucuma_user: LucumaUserOrderBy
+  scienceOffsets: OrderBy
+  showCatalog: OrderBy
+  updatedAt: OrderBy
   userId: OrderBy
 }
 
@@ -2508,13 +2481,34 @@ select columns of table "lucumaUserPreferences"
 """
 enum LucumaUserPreferencesSelectColumn {
   """column name"""
+  acquisitionOffsets
+
+  """column name"""
+  agsOverlay
+
+  """column name"""
   aladinMouseScroll
+
+  """column name"""
+  createdAt
 
   """column name"""
   elevationPlotRange
 
   """column name"""
   elevationPlotTime
+
+  """column name"""
+  fullScreen
+
+  """column name"""
+  scienceOffsets
+
+  """column name"""
+  showCatalog
+
+  """column name"""
+  updatedAt
 
   """column name"""
   userId
@@ -2524,9 +2518,16 @@ enum LucumaUserPreferencesSelectColumn {
 input type for updating data in table "lucumaUserPreferences"
 """
 input LucumaUserPreferencesSetInput {
+  acquisitionOffsets: Boolean
+  agsOverlay: Boolean
   aladinMouseScroll: Boolean
+  createdAt: timestamptz
   elevationPlotRange: ExplorePlotRangeEnum
   elevationPlotTime: ExplorePlotTimeEnum
+  fullScreen: Boolean
+  scienceOffsets: Boolean
+  showCatalog: Boolean
+  updatedAt: timestamptz
   userId: String
 }
 
@@ -2535,13 +2536,34 @@ update columns of table "lucumaUserPreferences"
 """
 enum LucumaUserPreferencesUpdateColumn {
   """column name"""
+  acquisitionOffsets
+
+  """column name"""
+  agsOverlay
+
+  """column name"""
   aladinMouseScroll
+
+  """column name"""
+  createdAt
 
   """column name"""
   elevationPlotRange
 
   """column name"""
   elevationPlotTime
+
+  """column name"""
+  fullScreen
+
+  """column name"""
+  scienceOffsets
+
+  """column name"""
+  showCatalog
+
+  """column name"""
+  updatedAt
 
   """column name"""
   userId
@@ -3090,16 +3112,11 @@ input exploreTargetPreferences_streamCursorInput {
 
 """Initial value of the column from where the streaming should start"""
 input exploreTargetPreferences_streamCursorValueInput {
-  acquisitionOffsets: Boolean
-  agsCandidates: Boolean
-  agsOverlay: Boolean
   brightness: Int
   createdAt: timestamptz
   fovDec: bigint
   fovRA: bigint
-  fullScreen: Boolean
   saturation: Int
-  scienceOffsets: Boolean
   targetId: String
   updatedAt: timestamptz
   userId: String
@@ -3333,9 +3350,16 @@ input lucumaUserPreferences_streamCursorInput {
 
 """Initial value of the column from where the streaming should start"""
 input lucumaUserPreferences_streamCursorValueInput {
+  acquisitionOffsets: Boolean
+  agsOverlay: Boolean
   aladinMouseScroll: Boolean
+  createdAt: timestamptz
   elevationPlotRange: ExplorePlotRangeEnum
   elevationPlotTime: ExplorePlotTimeEnum
+  fullScreen: Boolean
+  scienceOffsets: Boolean
+  showCatalog: Boolean
+  updatedAt: timestamptz
   userId: String
 }
 

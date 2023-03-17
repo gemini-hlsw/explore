@@ -397,52 +397,63 @@ object AladinCell extends ModelOptics with AladinCommon:
           )
 
           def prefsSetter(
-            candidates:         Option[Visible] = None,
-            overlay:            Option[Visible] = None,
-            fullScreen:         Option[AladinFullScreen] = None,
-            saturation:         Option[Int] = None,
-            brightness:         Option[Int] = None,
-            scienceOffsets:     Option[Visible] = None,
-            acquisitionOffsets: Option[Visible] = None
+            saturation: Option[Int] = None,
+            brightness: Option[Int] = None
           ): Callback =
             TargetPreferences
               .updateAladinPreferences[IO](
                 props.uid,
                 props.tid,
-                agsCandidates = candidates,
-                agsOverlay = overlay,
-                fullScreen = fullScreen,
                 saturation = saturation,
-                brightness = brightness,
+                brightness = brightness
+              )
+              .runAsync
+              .void
+
+          def userSetter(
+            showCatalog:        Option[Visible] = None,
+            agsOverlay:         Option[Visible] = None,
+            fullScreen:         Option[AladinFullScreen] = None,
+            scienceOffsets:     Option[Visible] = None,
+            acquisitionOffsets: Option[Visible] = None
+          ): Callback =
+            UserPreferences
+              .storePreferences[IO](
+                props.uid,
+                showCatalog = showCatalog,
+                agsOverlay = agsOverlay,
                 scienceOffsets = scienceOffsets,
-                acquisitionOffsets = acquisitionOffsets
+                acquisitionOffsets = acquisitionOffsets,
+                fullScreen = fullScreen
               )
               .runAsync
               .void
 
           def visiblePropView(
-            get:   Lens[TargetVisualOptions, Visible],
+            get:   Lens[UserGlobalPreferences, Visible],
             onMod: Option[Visible] => Callback
           ) =
             options
-              .zoom(Pot.readyPrism.andThen(targetPrefs).andThen(get))
+              .zoom(Pot.readyPrism.andThen(userPrefs).andThen(get))
               .withOnMod(onMod)
               .zoom(Visible.boolIso.reverse.asLens)
 
           val agsCandidatesView =
-            visiblePropView(TargetVisualOptions.agsCandidates, v => prefsSetter(candidates = v))
+            visiblePropView(UserGlobalPreferences.aladinShowCatalog,
+                            v => userSetter(showCatalog = v)
+            )
 
           val agsOverlayView =
-            visiblePropView(TargetVisualOptions.agsOverlay, v => prefsSetter(overlay = v))
+            visiblePropView(UserGlobalPreferences.aladinAgsOverlay, v => userSetter(agsOverlay = v))
 
           val scienceOffsetsView =
-            visiblePropView(TargetVisualOptions.scienceOffsets,
-                            v => prefsSetter(scienceOffsets = v)
+            visiblePropView(UserGlobalPreferences.aladinScienceOffsets,
+                            v => userSetter(scienceOffsets = v)
             )
 
           val acquisitionOffsetsView =
-            visiblePropView(TargetVisualOptions.acquisitionOffsets,
-                            v => prefsSetter(acquisitionOffsets = v)
+            visiblePropView(UserGlobalPreferences.aladinAcquisitionOffsets,
+                            v => userSetter(acquisitionOffsets = v)
             )
 
           val fovView =
@@ -475,10 +486,10 @@ object AladinCell extends ModelOptics with AladinCommon:
           val fullScreenView =
             options
               .zoom(
-                Pot.readyPrism.andThen(targetPrefs).andThen(TargetVisualOptions.fullScreen)
+                Pot.readyPrism.andThen(userPrefs).andThen(UserGlobalPreferences.fullScreen)
               )
               .withOnMod(v =>
-                v.map(v => props.fullScreen.set(v)).getOrEmpty *> prefsSetter(fullScreen = v)
+                v.map(v => props.fullScreen.set(v)).getOrEmpty *> userSetter(fullScreen = v)
               )
 
           val allowMouseZoomView =
@@ -487,7 +498,8 @@ object AladinCell extends ModelOptics with AladinCommon:
                 Pot.readyPrism.andThen(userPrefs).andThen(UserGlobalPreferences.aladinMouseScroll)
               )
               .withOnMod(z =>
-                z.map(z => UserPreferences.storePreferences[IO](props.uid, z).runAsync).getOrEmpty
+                z.map(z => UserPreferences.storePreferences[IO](props.uid, z.some).runAsync)
+                  .getOrEmpty
               )
 
           val coordinatesSetter =
@@ -523,19 +535,19 @@ object AladinCell extends ModelOptics with AladinCommon:
                 props.asterism,
                 props.vizTime,
                 props.obsConf,
-                u.aladinMouseScroll,
-                t.copy(fullScreen = props.fullScreen.get),
+                u.copy(fullScreen = props.fullScreen.get),
+                t,
                 coordinatesSetter,
                 fovSetter.reuseAlways,
                 offsetChangeInAladin.reuseAlways,
                 selectedGuideStar,
                 agsResults.value,
-                t.scienceOffsets,
-                t.acquisitionOffsets
+                u.aladinScienceOffsets,
+                u.aladinAcquisitionOffsets
               )
 
           val renderToolbar: ((UserGlobalPreferences, TargetVisualOptions)) => VdomNode =
-            case (_: UserGlobalPreferences, t: TargetVisualOptions) =>
+            case (u: UserGlobalPreferences, t: TargetVisualOptions) =>
               val agsState = props.obsConf
                 .flatMap(_.agsState.map(_.get))
                 .getOrElse(AgsState.Idle)
@@ -543,13 +555,13 @@ object AladinCell extends ModelOptics with AladinCommon:
                             mouseCoords.value,
                             agsState,
                             selectedGuideStar,
-                            t.agsOverlay,
+                            u.aladinAgsOverlay,
                             offsetOnCenter
               )
 
           val renderAgsOverlay: ((UserGlobalPreferences, TargetVisualOptions)) => VdomNode =
             case (u: UserGlobalPreferences, t: TargetVisualOptions) =>
-              if (t.agsOverlay.visible && props.canRunAGS) {
+              if (u.aladinAgsOverlay.visible && props.canRunAGS) {
                 props.obsConf
                   .flatMap(_.agsState)
                   .map(agsState =>

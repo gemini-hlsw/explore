@@ -47,6 +47,7 @@ import queries.schemas.UserPreferencesDB
 import queries.schemas.UserPreferencesDB.Enums.*
 import queries.schemas.UserPreferencesDB.Scalars.*
 import queries.schemas.UserPreferencesDB.Types.LucumaObservationInsertInput
+import queries.schemas.UserPreferencesDB.Types.LucumaUserPreferencesSetInput
 import queries.schemas.UserPreferencesDB.Types.*
 import react.gridlayout.{BreakpointName => _, _}
 
@@ -62,13 +63,25 @@ object UserPreferencesQueries:
 
   object UserPreferences:
     def storePreferences[F[_]: ApplicativeThrow](
-      userId:            User.Id,
-      aladinMouseScroll: AladinMouseScroll
+      userId:             User.Id,
+      aladinMouseScroll:  Option[AladinMouseScroll] = None,
+      fullScreen:         Option[AladinFullScreen] = None,
+      showCatalog:        Option[Visible] = None,
+      agsOverlay:         Option[Visible] = None,
+      scienceOffsets:     Option[Visible] = None,
+      acquisitionOffsets: Option[Visible] = None
     )(using FetchClient[F, ?, UserPreferencesDB]): F[Unit] =
       UserPreferencesAladinUpdate[F]
         .execute(
-          userId = userId.show.assign,
-          aladinMouseScroll = aladinMouseScroll.value.assign
+          objects = LucumaUserPreferencesInsertInput(
+            userId = userId.show.assign,
+            aladinMouseScroll = aladinMouseScroll.map(_.value).orIgnore,
+            showCatalog = showCatalog.map(_.visible).orIgnore,
+            agsOverlay = agsOverlay.map(_.visible).orIgnore,
+            scienceOffsets = scienceOffsets.map(_.visible).orIgnore,
+            acquisitionOffsets = acquisitionOffsets.map(_.visible).orIgnore,
+            fullScreen = fullScreen.map(_.value).orIgnore
+          )
         )
         .attempt
         .void
@@ -141,17 +154,12 @@ object UserPreferencesQueries:
 
   object TargetPreferences:
     def updateAladinPreferences[F[_]: ApplicativeThrow](
-      uid:                User.Id,
-      targetId:           Target.Id,
-      fovRA:              Option[Angle] = None,
-      fovDec:             Option[Angle] = None,
-      agsCandidates:      Option[Visible] = None,
-      agsOverlay:         Option[Visible] = None,
-      fullScreen:         Option[AladinFullScreen] = None,
-      saturation:         Option[Int] = None,
-      brightness:         Option[Int] = None,
-      scienceOffsets:     Option[Visible] = None,
-      acquisitionOffsets: Option[Visible] = None
+      uid:        User.Id,
+      targetId:   Target.Id,
+      fovRA:      Option[Angle] = None,
+      fovDec:     Option[Angle] = None,
+      saturation: Option[Int] = None,
+      brightness: Option[Int] = None
     )(using FetchClient[F, ?, UserPreferencesDB]): F[Unit] =
       UserTargetPreferencesUpsert[F]
         .execute(
@@ -163,13 +171,8 @@ object UserPreferencesQueries:
                   userId = uid.show.assign,
                   fovRA = fovRA.map(_.toMicroarcseconds).orIgnore,
                   fovDec = fovDec.map(_.toMicroarcseconds).orIgnore,
-                  agsCandidates = agsCandidates.map(Visible.boolIso.reverseGet).orIgnore,
-                  agsOverlay = agsOverlay.map(Visible.boolIso.reverseGet).orIgnore,
-                  fullScreen = fullScreen.map(_.value).orIgnore,
                   saturation = saturation.orIgnore,
-                  brightness = brightness.orIgnore,
-                  scienceOffsets = scienceOffsets.map(Visible.boolIso.reverseGet).orIgnore,
-                  acquisitionOffsets = acquisitionOffsets.map(Visible.boolIso.reverseGet).orIgnore
+                  brightness = brightness.orIgnore
                 )
               ),
               onConflict = ExploreTargetPreferencesOnConflict(
@@ -177,26 +180,11 @@ object UserPreferencesQueries:
                 update_columns = List(
                   ExploreTargetPreferencesUpdateColumn.FovRA.some.filter(_ => fovRA.isDefined),
                   ExploreTargetPreferencesUpdateColumn.FovDec.some.filter(_ => fovDec.isDefined),
-                  ExploreTargetPreferencesUpdateColumn.AgsCandidates.some.filter(_ =>
-                    agsCandidates.isDefined
-                  ),
-                  ExploreTargetPreferencesUpdateColumn.AgsOverlay.some.filter(_ =>
-                    agsOverlay.isDefined
-                  ),
-                  ExploreTargetPreferencesUpdateColumn.FullScreen.some.filter(_ =>
-                    fullScreen.isDefined
-                  ),
                   ExploreTargetPreferencesUpdateColumn.Saturation.some.filter(_ =>
                     saturation.isDefined
                   ),
                   ExploreTargetPreferencesUpdateColumn.Brightness.some.filter(_ =>
                     brightness.isDefined
-                  ),
-                  ExploreTargetPreferencesUpdateColumn.ScienceOffsets.some.filter(_ =>
-                    scienceOffsets.isDefined
-                  ),
-                  ExploreTargetPreferencesUpdateColumn.AcquisitionOffsets.some.filter(_ =>
-                    acquisitionOffsets.isDefined
                   )
                 ).flattenOption
               ).assign
@@ -229,7 +217,12 @@ object UserPreferencesQueries:
         val (userPrefsResult, targetPrefsResult) = r
 
         val userPrefs = UserGlobalPreferences(
-          AladinMouseScroll(userPrefsResult.flatMap(_.aladinMouseScroll).getOrElse(false))
+          AladinMouseScroll(userPrefsResult.flatMap(_.aladinMouseScroll).getOrElse(false)),
+          AladinFullScreen(userPrefsResult.flatMap(_.fullScreen).getOrElse(false)),
+          Visible.boolIso.get(userPrefsResult.flatMap(_.showCatalog).getOrElse(true)),
+          Visible.boolIso.get(userPrefsResult.flatMap(_.agsOverlay).getOrElse(true)),
+          Visible.boolIso.get(userPrefsResult.flatMap(_.scienceOffsets).getOrElse(true)),
+          Visible.boolIso.get(userPrefsResult.flatMap(_.acquisitionOffsets).getOrElse(true))
         )
 
         val targetPrefs = {
@@ -256,25 +249,10 @@ object UserPreferencesQueries:
             .flatMap(refineV[Interval.Closed[0, 100]](_).toOption)
             .getOrElse(100.refined[Interval.Closed[0, 100]])
 
-          val agsCandidates      = visibleProp(_.agsCandidates)
-          val agsOverlay         = visibleProp(_.agsOverlay)
-          val fullScreen         = targetPrefsResult.flatMap(_.fullScreen).getOrElse(false)
-          val saturation         = rangeProp(_.saturation)
-          val brightness         = rangeProp(_.brightness)
-          val scienceOffsets     = visibleProp(_.scienceOffsets)
-          val acquisitionOffsets = visibleProp(_.acquisitionOffsets)
+          val saturation = rangeProp(_.saturation)
+          val brightness = rangeProp(_.brightness)
 
-          TargetVisualOptions(fovRA,
-                              fovDec,
-                              offset,
-                              agsCandidates,
-                              agsOverlay,
-                              AladinFullScreen(fullScreen),
-                              saturation,
-                              brightness,
-                              scienceOffsets,
-                              acquisitionOffsets
-          )
+          TargetVisualOptions(fovRA, fovDec, offset, saturation, brightness)
         }
         (userPrefs, targetPrefs)
       }
