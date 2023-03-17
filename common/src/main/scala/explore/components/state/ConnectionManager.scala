@@ -64,7 +64,23 @@ object ConnectionManager {
       if (initializedState.value)
         children
       else
-        // ProgressSpinner(clazz = ExploreStyles.Loader)
-        Icons.SolarSystem.withSpin(true).withSize(IconSize.X4).withClass(ExploreStyles.Loader)
+        <.div(
+          ^.cls := "solar-system",
+          <.div(
+            ^.cls := "mars-orbit orbit",
+            <.div(^.cls := "planet mars"),
+            <.div(
+              ^.cls := "earth-orbit orbit",
+              <.div(^.cls := "planet earth"),
+              <.div(^.cls := "venus-orbit orbit",
+                    <.div(^.cls := "planet venus"),
+                    <.div(^.cls := "mercury-orbit orbit",
+                          <.div(^.cls := "planet mercury"),
+                          <.div(^.cls := "sun")
+                    )
+              )
+            )
+          )
+        )
     )
 }
