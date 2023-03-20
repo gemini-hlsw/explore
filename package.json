@@ -36,7 +36,7 @@
     "remark-math": "^5.1.1",
     "remark-parse": "^10.0.1",
     "styled-components": "5.3.9",
-    "ua-parser-js": "1.0.33"
+    "ua-parser-js": "1.0.34"
   },
   "devDependencies": {
     "@ronilaukkarinen/stylelint-value-no-unknown-custom-properties": "^4.0.1",
