@@ -33,7 +33,7 @@ object Settings {
     val lucumaReact            = "0.32.0"
     val lucumaRefined          = "0.1.1"
     val lucumaSchemas          = "0.47.0"
-    val lucumaSSO              = "0.5.3"
+    val lucumaSSO              = "0.5.4"
     val lucumaUI               = "0.68.1"
     val monocle                = "3.2.0"
     val mouse                  = "1.2.1"
