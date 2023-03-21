@@ -54,13 +54,7 @@ object ObsQueriesGQL:
                 id
               }
             }
-            target {
-              id
-              sidereal {
-                ra $AngleSubquery
-                dec $AngleSubquery
-              }
-            }
+            target $TargetWithIdSubquery
           }
         }
       }

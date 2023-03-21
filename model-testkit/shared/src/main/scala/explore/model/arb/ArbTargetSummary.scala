@@ -4,27 +4,27 @@
 package explore.model.arb
 
 import explore.model.TargetSummary
+import lucuma.core.model.Observation
+import lucuma.schemas.model.TargetWithId
+import lucuma.schemas.model.arb.ArbTargetWithId.given
 import lucuma.core.util.arb.ArbEnumerated.*
+import lucuma.core.util.arb.ArbGid.*
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.*
 import org.scalacheck.Cogen
 import org.scalacheck.Cogen.*
-import lucuma.core.util.arb.ArbGid.*
-import eu.timepit.refined.scalacheck.*
-import lucuma.core.model.Observation
-import lucuma.core.model.Target
 
 trait ArbTargetSummary {
   implicit val arbTargetSummary: Arbitrary[TargetSummary] =
     Arbitrary[TargetSummary] {
       for {
         obsIds <- arbitrary[Set[Observation.Id]]
-        tid    <- arbitrary[Target.Id]
-      } yield TargetSummary(obsIds, tid)
+        target    <- arbitrary[TargetWithId]
+      } yield TargetSummary(obsIds, target)
     }
 
   implicit val cogenTargetSummary: Cogen[TargetSummary] =
-    Cogen[(List[Observation.Id], Target.Id)].contramap(t => (t.obsIds.toList, t.targetId))
+    Cogen[(List[Observation.Id], TargetWithId)].contramap(t => (t.obsIds.toList, t.target))
 }
 
 object ArbTargetSummary extends ArbTargetSummary

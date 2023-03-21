@@ -8,8 +8,9 @@ import cats.derived.*
 import eu.timepit.refined.cats.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
+import lucuma.schemas.model.TargetWithId
 
 case class TargetSummary(
   obsIds:   Set[Observation.Id],
-  targetId: Target.Id
+  target: TargetWithId
 ) derives Eq
