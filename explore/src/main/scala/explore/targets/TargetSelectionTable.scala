@@ -9,6 +9,7 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.CatalogName
 import lucuma.react.table.*
 import lucuma.ui.primereact.*
 import lucuma.ui.table.*
@@ -17,6 +18,7 @@ import react.fa.FontAwesomeIcon
 import react.primereact.Button
 
 case class TargetSelectionTable(
+  source:              TargetSource[?],
   targets:             List[TargetSearchResult],
   selectExistingLabel: String,
   selectExistingIcon:  FontAwesomeIcon,
@@ -36,8 +38,8 @@ object TargetSelectionTable:
 
   private val columnClasses: Map[ColumnId, Css] = Map(
     SelectColumnId             -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummarySelect),
-    TargetColumns.TypeColumnId -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryType |+| ExploreStyles.WithSelect),
-    TargetColumns.NameColumnId -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryName |+| ExploreStyles.WithSelect)
+    TargetColumns.TypeColumnId -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryType),
+    TargetColumns.NameColumnId -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryName)
   )
 
   private val component = ScalaFnComponent
@@ -64,10 +66,13 @@ object TargetSelectionTable:
           ,
           enableSorting = false
         )
-      ) ++
-        TargetColumns
-          .BaseColumnBuilder(ColDef, _.target.some)
-          .allColumns
+      ) ++ (
+        props.source match
+          case TargetSource.FromCatalog(CatalogName.Simbad) =>
+            TargetColumns.Builder.ForSimbad(ColDef, _.target.some).AllColumns
+          case _                                            =>
+            TargetColumns.Builder.ForProgram(ColDef, _.target.some).AllColumns
+      )
     }
     // rows
     .useMemoBy((props, _) => props.targets)((_, _) => identity)

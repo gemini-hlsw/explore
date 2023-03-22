@@ -314,6 +314,7 @@ object TargetSelectionPopup:
                   <.div(ExploreStyles.SmallHeader, header),
                   <.div(ExploreStyles.TargetSearchResults)(
                     TargetSelectionTable(
+                      source,
                       sourceResults.toList.map(_.target),
                       props.selectExistingLabel,
                       props.selectExistingIcon,
