@@ -16,10 +16,13 @@ import explore.common.UserPreferencesQueries.TableStore
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
+import explore.model.Asterism
 import explore.model.Focused
 import explore.model.ObsIdSet
 import explore.model.ObsSummaryWithTitleConstraintsAndConf
 import explore.model.ObsWithConstraints
+import explore.model.TargetSummary
+import explore.model.display.given
 import explore.model.enums.AppTab
 import explore.model.enums.TableId
 import explore.model.reusability.given
@@ -33,15 +36,19 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
+import lucuma.core.syntax.display.*
 import lucuma.react.syntax.*
 import lucuma.react.table.ColumnDef
 import lucuma.react.table.ColumnId
 import lucuma.react.table.*
+import lucuma.schemas.model.TargetWithId
 import lucuma.typed.tanstackReactTable.tanstackReactTableStrings.columnVisibility
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.TableHooks
@@ -53,23 +60,30 @@ import react.common.ReactFnProps
 import react.hotkeys.*
 import react.hotkeys.hooks.*
 
+import scala.collection.immutable.SortedMap
+import scala.scalajs.js
+
 final case class ObsSummaryTable(
   userId:        Option[User.Id],
   programId:     Program.Id,
   observations:  View[ObservationList],
+  targetsMap:    View[SortedMap[Target.Id, TargetSummary]],
   renderInTitle: Tile.RenderInTitle
 ) extends ReactFnProps(ObsSummaryTable.component)
 
 object ObsSummaryTable extends TableHooks:
+  import ObsSummaryRow.*
+
   private type Props = ObsSummaryTable
 
-  private val ColDef = ColumnDef[ObsSummaryWithTitleConstraintsAndConf]
+  private val ColDef = ColumnDef[Expandable[ObsSummaryRow]]
 
   private val GroupsColumnId          = ColumnId("groups")
   private val ObservationIdColumnId   = ColumnId("observation_id")
   private val ValidationCheckColumnId = ColumnId("validation_check")
   private val StatusColumnId          = ColumnId("status")
   private val CompletionColumnId      = ColumnId("completion")
+  private val ExpanderColumnId        = ColumnId("expander")
   private val TargetTypeColumnId      = ColumnId("target_type")
   private val TargetColumnId          = ColumnId("target")
   private val ConstraintsColumnId     = ColumnId("constraints")
@@ -91,6 +105,7 @@ object ObsSummaryTable extends TableHooks:
     ValidationCheckColumnId -> " ",
     StatusColumnId          -> "Status",
     CompletionColumnId      -> "Completion",
+    ExpanderColumnId        -> " ",
     TargetTypeColumnId      -> " ",
     TargetColumnId          -> "Target",
     ConstraintsColumnId     -> "Constraints",
@@ -116,16 +131,26 @@ object ObsSummaryTable extends TableHooks:
     ChargedTimeColumnId   -> Visibility.Hidden
   )
 
+  private def column[V](
+    id:       ColumnId,
+    accessor: ObsRow => V
+  ): ColumnDef.Single[Expandable[ObsSummaryRow], js.UndefOr[V]] =
+    ColDef(id, v => v.value.fold(_ => js.undefined, accessor), columnNames(id))
+
+  // Column with expanded accessor. For rows that have data in the expanded target row.
+  private def column[V](
+    id:               ColumnId,
+    accessor:         ObsRow => V,
+    expandedAccessor: ExpandedTargetRow => V
+  ): ColumnDef.Single[Expandable[ObsSummaryRow], V] =
+    ColDef(id, v => v.value.fold(expandedAccessor, accessor), columnNames(id))
+
   private val component = ScalaFnComponent
     .withHooks[Props]
     .useContext(AppContext.ctx)
     // Columns
     .useMemoBy((_, _) => ())((props, ctx) =>
       _ =>
-        def column[V](id: ColumnId, accessor: ObsSummaryWithTitleConstraintsAndConf => V)
-          : ColumnDef.Single[ObsSummaryWithTitleConstraintsAndConf, V] =
-          ColDef(id, accessor, columnNames(id))
-
         def constraintUrl(constraintId: Observation.Id): String =
           ctx.pageUrl(AppTab.Constraints, props.programId, Focused.singleObs(constraintId))
 
@@ -134,44 +159,134 @@ object ObsSummaryTable extends TableHooks:
 
         List(
           // TODO: GroupsColumnId
-          column(ObservationIdColumnId, _.id).sortable,
+          column(ObservationIdColumnId, _.obs.id),
 
           // TODO: ValidationCheckColumnId
-          column(StatusColumnId, _.status),
+          column(StatusColumnId, _.obs.status),
           // TODO: CompletionColumnId
           // TODO: TargetTypeColumnId
+          ColDef(
+            ColumnId("expander"),
+            cell = cell =>
+              if (cell.row.getCanExpand())
+                <.span(
+                  ^.cursor.pointer,
+                  ExploreStyles.ExpanderChevron,
+                  ExploreStyles.ExpanderChevronOpen.when(cell.row.getIsExpanded()),
+                  ^.onClick ==> (_.stopPropagationCB *> Callback(
+                    cell.row.getToggleExpandedHandler()()
+                  ))
+                )(Icons.ChevronRightLight.withFixedWidth(true))
+              else "",
+            size = 18.toPx,
+            enableResizing = false
+          ),
           column(TargetTypeColumnId, _ => ())
             .setCell(_ => Icons.Star.withFixedWidth())
             .setSize(35.toPx),
-          column(TargetColumnId, _.title),
-          column(ConstraintsColumnId, obs => (obs.id, obs.constraintsSummary)).setCell(cell =>
-            val (id, constraintsSummary) = cell.value
-            <.a(^.href := constraintUrl(id),
-                ^.onClick ==> (_.preventDefaultCB *> goToConstraint(id)),
-                constraintsSummary
+          column(TargetColumnId, identity, identity).setCell { cell =>
+            def targetUrl(obsId: Observation.Id, tWId: TargetWithId) = <.a(
+              ^.href := ctx.pageUrl(AppTab.Targets, props.programId, Focused.target(tWId.id)),
+              ^.onClick ==> (e =>
+                e.preventDefaultCB *> e.stopPropagationCB *> ctx.pushPage(
+                  AppTab.Observations,
+                  props.programId,
+                  Focused.singleObs(obsId, tWId.id.some)
+                )
+              ),
+              tWId.target.name.value
+            )
+
+            cell.value match {
+              case ExpandedTargetRow(obsId, target) => targetUrl(obsId, target)
+              case ObsRow(obs, _, _)                => obs.title
+            }
+          },
+          column(ConstraintsColumnId, r => (r.obs.id, r.obs.constraintsSummary)).setCell(cell =>
+            cell.value.map((id, constraintsSummary) =>
+              <.a(^.href := constraintUrl(id),
+                  ^.onClick ==> (_.preventDefaultCB *> goToConstraint(id)),
+                  constraintsSummary
+              )
             )
           ),
           // TODO: FindingChartColumnId
-          column(ConfigurationColumnId, _.conf),
-          column(DurationColumnId, _.executionTime.toHoursMinutes)
+          column(ConfigurationColumnId, _.obs.conf),
+          column(DurationColumnId, _.obs.executionTime.toHoursMinutes),
 
           // TODO: PriorityColumnId
-          // TODO: RAColumnId
-          // TODO: DecColumnId
+          column(
+            RAColumnId,
+            r =>
+              r.asterism
+                .map(_.baseTracking.baseCoordinates.ra) // TODO: baseTrackingAt
+                .orElse(r.targetWithId.map(_.target).flatMap(Target.baseRA.getOption)),
+            r => Target.baseRA.getOption(r.targetWithId.target)
+          )
+            .setCell(_.value.map(MathValidators.truncatedRA.reverseGet).orEmpty),
+          column(
+            DecColumnId,
+            v =>
+              v.asterism
+                .map(_.baseTracking.baseCoordinates.dec)
+                .orElse(v.targetWithId.map(_.target).flatMap(Target.baseDec.getOption)),
+            r => Target.baseDec.getOption(r.targetWithId.target)
+          )
+            .setCell(_.value.map(MathValidators.truncatedDec.reverseGet).orEmpty),
           // TODO: TimingColumnId
           // TODO: SEDColumnId
+          column(SEDColumnId, _.targetWithId.map(_.target), _.targetWithId.target.some)
+            .setCell(cell =>
+              cell.value
+                .flatMap(Target.sidereal.getOption)
+                .flatMap(t =>
+                  Target.Sidereal.integratedSpectralDefinition
+                    .getOption(t)
+                    .map(_.shortName)
+                    .orElse(Target.Sidereal.surfaceSpectralDefinition.getOption(t).map(_.shortName))
+                )
+                .filterNot(_ => cell.row.getCanExpand())
+                .orEmpty
+            )
           // TODO: ChargedTimeColumnId
         )
     )
     // Rows
-    .useMemoBy((props, _, _) => props.observations.get)((_, _, _) => _.toList)
+    .useMemoBy((props, _, _) => (props.observations.get.toList, props.targetsMap.get))((_, _, _) =>
+      (obsList, targetsMap) =>
+        obsList.toList
+          .map(obs =>
+            obs -> targetsMap
+              .filter((_, target) => target.obsIds.contains(obs.id))
+              .map((id, target) => target.target)
+              .toList
+          )
+          .map((obs, targets) =>
+            val asterism = Asterism.fromTargets(targets)
+            Expandable(
+              ObsRow(obs, targets.headOption, asterism),
+              // Only expand if there are multiple targets
+              if (targets.sizeIs > 1)
+                targets.map(target => Expandable(ExpandedTargetRow(obs.id, target)))
+              else Nil
+            )
+          )
+    )
     .useReactTableWithStateStoreBy((props, ctx, cols, rows) =>
       import ctx.given
       TableOptionsWithStateStore(
         TableOptions(
           cols,
           rows,
-          getRowId = (row, _, _) => RowId(row.id.toString),
+          enableExpanding = true,
+          getSubRows = (row, _) => row.subRows,
+          getRowId = (row, _, _) =>
+            RowId(
+              row.value.fold(
+                o => o.obsId.toString + o.targetWithId.id.toString,
+                _.obs.id.toString
+              )
+            ),
           initialState = TableState(columnVisibility = DefaultColVisibility)
         ),
         TableStore(props.userId, TableId.ObservationsSummary, cols)
@@ -198,10 +313,12 @@ object ObsSummaryTable extends TableHooks:
               ExploreStyles.TableRowSelected.when(row.getIsSelected()),
               ^.role := "link",
               ^.onClick ==> { (e: ReactMouseEvent) =>
+                val (obsId, targetId) = row.original.value
+                  .fold(o => (o.obsId, o.targetWithId.id.some), o => (o.obs.id, none))
                 e.preventDefaultCB *> ctx.pushPage(
                   AppTab.Observations,
                   props.programId,
-                  Focused.singleObs(Observation.Id.parse(row.id).get)
+                  Focused.singleObs(obsId, targetId)
                 )
               }
             ),
@@ -211,3 +328,19 @@ object ObsSummaryTable extends TableHooks:
         )
       )
     }
+
+  // Helper ADT for table rows type
+  enum ObsSummaryRow(obsId: Observation.Id):
+
+    case ExpandedTargetRow(obsId: Observation.Id, targetWithId: TargetWithId)
+        extends ObsSummaryRow(obsId)
+    case ObsRow(
+      obs:          ObsSummaryWithTitleConstraintsAndConf,
+      targetWithId: Option[TargetWithId],
+      asterism:     Option[Asterism]
+    ) extends ObsSummaryRow(obs.id)
+
+    def fold[A](f: ExpandedTargetRow => A, g: ObsRow => A): A =
+      this match
+        case r: ExpandedTargetRow => f(r)
+        case r: ObsRow            => g(r)

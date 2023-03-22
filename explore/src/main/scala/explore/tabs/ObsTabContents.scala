@@ -172,6 +172,7 @@ object ObsTabContents extends TwoPanels:
 
     val observations     = obsWithConstraints.zoom(ObsSummariesWithConstraints.observations)
     val constraintGroups = obsWithConstraints.zoom(ObsSummariesWithConstraints.constraintGroups)
+    val targetsMap       = obsWithConstraints.zoom(ObsSummariesWithConstraints.targetsMap)
 
     def observationsTree(observations: View[ObservationList]) =
       ObsList(
@@ -197,6 +198,7 @@ object ObsTabContents extends TwoPanels:
             props.userId,
             props.programId,
             observations,
+            targetsMap,
             renderInTitle
           )
           // TODO: elevation view

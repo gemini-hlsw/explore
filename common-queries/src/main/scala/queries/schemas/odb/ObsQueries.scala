@@ -116,6 +116,7 @@ object ObsQueries:
   object ObsSummariesWithConstraints {
     val observations     = Focus[ObsSummariesWithConstraints](_.observations)
     val constraintGroups = Focus[ObsSummariesWithConstraints](_.constraintGroups)
+    val targetsMap       = Focus[ObsSummariesWithConstraints](_.targetMap)
   }
 
   extension (data: ObsEditQuery.Data)
@@ -163,7 +164,7 @@ object ObsQueries:
               mtch.activeStatus,
               mtch.plannedTime.execution,
               mtch.observingMode,
-              none // mtch.visualizationTime
+              mtch.visualizationTime.map(_.toInstant)
             )
           ),
           ObsSummaryWithTitleConstraintsAndConf.id.get
@@ -172,7 +173,11 @@ object ObsQueries:
         data.targetGroup.matches
           .toSortedMap(
             _.target.id,
-            group => TargetSummary(group.observations.matches.map(_.id).toSet, group.target.id)
+            group =>
+              TargetSummary(
+                group.observations.matches.map(_.id).toSet,
+                group.target
+              )
           )
       )
 

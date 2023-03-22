@@ -245,6 +245,20 @@ a:hover {
   }
 }
 
+.expander-chevron {
+  &:hover {
+    color: var(--site-link-color);
+  }
+
+  svg {
+    transition: transform 0.1s ease-in;
+  }
+}
+
+.expander-chevron-open svg {
+  transform: rotate(90deg);
+}
+
 // -------------
 // Itc tile title
 // -------------

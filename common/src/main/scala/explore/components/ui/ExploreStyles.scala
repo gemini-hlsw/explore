@@ -129,6 +129,8 @@ object ExploreStyles:
   val ObsItem: Css                 = Css("obs-item")
   val TrashIcon: Css               = Css("trash-icon")
   val EraserIcon: Css              = Css("eraser-icon")
+  val ExpanderChevron: Css         = Css("expander-chevron")
+  val ExpanderChevronOpen: Css     = Css("expander-chevron-open")
 
   val ApiKeysPopup    = Css("api-keys-popup")
   val ApiKeysTable    = Css("api-keys-table")

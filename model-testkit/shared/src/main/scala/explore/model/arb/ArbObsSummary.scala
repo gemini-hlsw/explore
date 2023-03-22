@@ -42,13 +42,19 @@ trait ArbObsSummary {
   implicit val arbObsSummaryWithConstraints: Arbitrary[ObsSummaryWithConstraints] =
     Arbitrary[ObsSummaryWithConstraints] {
       for {
-        id           <- arbitrary[Observation.Id]
-        constraints  <- arbitrary[ConstraintsSummary]
-        status       <- arbitrary[ObsStatus]
-        activeStatus <- arbitrary[ObsActiveStatus]
-        executionTime     <- arbitrary[TimeSpan]
-        targets      <- arbitrary[Set[Target.Id]]
-      } yield ObsSummaryWithConstraints(id, constraints, status, activeStatus, executionTime, targets)
+        id            <- arbitrary[Observation.Id]
+        constraints   <- arbitrary[ConstraintsSummary]
+        status        <- arbitrary[ObsStatus]
+        activeStatus  <- arbitrary[ObsActiveStatus]
+        executionTime <- arbitrary[TimeSpan]
+        targets       <- arbitrary[Set[Target.Id]]
+      } yield ObsSummaryWithConstraints(id,
+                                        constraints,
+                                        status,
+                                        activeStatus,
+                                        executionTime,
+                                        targets
+      )
     }
 
   implicit val cogenObsSummaryWithConstraints: Cogen[ObsSummaryWithConstraints] =
@@ -62,13 +68,13 @@ trait ArbObsSummary {
   implicit val arbObsSummaryWithTitleAndConstraints: Arbitrary[ObsSummaryWithTitleAndConstraints] =
     Arbitrary[ObsSummaryWithTitleAndConstraints] {
       for {
-        id           <- arbitrary[Observation.Id]
-        title        <- arbitrary[String]
-        subtitle     <- arbitrary[Option[NonEmptyString]]
-        constraints  <- arbitrary[ConstraintsSummary]
-        status       <- arbitrary[ObsStatus]
-        activeStatus <- arbitrary[ObsActiveStatus]
-        executionTime     <- arbitrary[TimeSpan]
+        id            <- arbitrary[Observation.Id]
+        title         <- arbitrary[String]
+        subtitle      <- arbitrary[Option[NonEmptyString]]
+        constraints   <- arbitrary[ConstraintsSummary]
+        status        <- arbitrary[ObsStatus]
+        activeStatus  <- arbitrary[ObsActiveStatus]
+        executionTime <- arbitrary[TimeSpan]
       } yield ObsSummaryWithTitleAndConstraints(
         id,
         title,
@@ -112,7 +118,7 @@ trait ArbObsSummary {
         constraints   <- arbitrary[ConstraintsSummary]
         status        <- arbitrary[ObsStatus]
         activeStatus  <- arbitrary[ObsActiveStatus]
-        executionTime      <- arbitrary[TimeSpan]
+        executionTime <- arbitrary[TimeSpan]
         configuration <- arbitrary[Option[BasicConfiguration]]
         vizTime       <- arbitrary[Option[Instant]]
       } yield ObsSummaryWithTitleConstraintsAndConf(
@@ -161,7 +167,7 @@ trait ArbObsSummary {
         subtitle      <- arbitrary[Option[NonEmptyString]]
         status        <- arbitrary[ObsStatus]
         activeStatus  <- arbitrary[ObsActiveStatus]
-        executionTime      <- arbitrary[TimeSpan]
+        executionTime <- arbitrary[TimeSpan]
         configuration <- arbitrary[Option[BasicConfiguration]]
       } yield ObsSummaryWithTitleAndConf(
         id,
@@ -203,7 +209,7 @@ trait ArbObsSummary {
         constraints   <- arbitrary[ConstraintsSummary]
         status        <- arbitrary[ObsStatus]
         activeStatus  <- arbitrary[ObsActiveStatus]
-        executionTime      <- arbitrary[TimeSpan]
+        executionTime <- arbitrary[TimeSpan]
         targets       <- arbitrary[Set[Target.Id]]
         configuration <- arbitrary[Option[BasicConfiguration]]
         vizTime       <- arbitrary[Option[Instant]]
