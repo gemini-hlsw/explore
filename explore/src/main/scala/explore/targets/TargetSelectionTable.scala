@@ -9,13 +9,13 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.CatalogName
 import lucuma.react.table.*
 import lucuma.ui.primereact.*
 import lucuma.ui.table.*
 import react.common.*
 import react.fa.FontAwesomeIcon
 import react.primereact.Button
-import lucuma.core.enums.CatalogName
 
 case class TargetSelectionTable(
   source:              TargetSource[?],
@@ -36,17 +36,10 @@ object TargetSelectionTable:
 
   private val SelectColumnId: ColumnId = ColumnId("select")
 
-  private val ColumnClasses: Map[ColumnId, TargetSource[?] => Css] = Map(
-    SelectColumnId             -> (_ => ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummarySelect),
-    TargetColumns.TypeColumnId -> (_ =>
-      ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryType |+| ExploreStyles.WithSelect
-    ),
-    TargetColumns.NameColumnId -> (source =>
-      (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryName) |+| (source match
-        case TargetSource.FromCatalog(CatalogName.Simbad) => ExploreStyles.WithSelect
-        case _                                            => ExploreStyles.WithSelectAndType
-      )
-    )
+  private val columnClasses: Map[ColumnId, Css] = Map(
+    SelectColumnId             -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummarySelect),
+    TargetColumns.TypeColumnId -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryType),
+    TargetColumns.NameColumnId -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryName)
   )
 
   private val component = ScalaFnComponent
@@ -92,15 +85,12 @@ object TargetSelectionTable:
         compact = Compact.Very,
         tableMod = ExploreStyles.ExploreTable,
         headerCellMod = headerCell =>
-          ColumnClasses
-            .get(ColumnId(headerCell.column.id))
-            .map(_(props.source))
-            .orEmpty |+| ExploreStyles.StickyHeader,
+          columnClasses.get(ColumnId(headerCell.column.id)).orEmpty |+| ExploreStyles.StickyHeader,
         rowMod = row =>
           TagMod(
             ExploreStyles.TableRowSelected.when_(props.selectedIndex.contains_(row.index.toInt)),
             ^.onClick --> props.onClick(row.original, row.index.toInt)
           ),
-        cellMod = cell => ColumnClasses.get(ColumnId(cell.column.id)).map(_(props.source)).orEmpty
+        cellMod = cell => columnClasses.get(ColumnId(cell.column.id)).orEmpty
       )
     )

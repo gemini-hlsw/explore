@@ -527,6 +527,19 @@ html {
 
 .explore-target-summary-delete {
   left: 0;
+  overflow: hidden;
+
+  ~ .explore-target-summary-type {
+      left: 35px;
+
+    ~ .explore-target-summary-name {
+      left: 70px;
+    }
+  }
+
+  ~ .explore-target-summary-name {
+    left: 35px;
+  }
 }
 
 .explore-target-summary-select {
@@ -538,55 +551,41 @@ html {
     display: flex;
     justify-content: space-evenly;
   }
+
+  ~ .explore-target-summary-type {
+    left: 75px;
+
+    ~ .explore-target-summary-name {
+      left: 109px;
+    }
+  }
+
+  ~ .explore-target-summary-name {
+    left: 75px;
+  }
 }
 
 .explore-target-summary-id {
   left: 0;
   width: 55px;
   min-width: 55px;
+
+  ~ .explore-target-summary-type {
+    left: 55px;
+
+    ~ .explore-target-summary-name {
+      left: 89px;
+    }
+  }
+
+  ~ .explore-target-summary-name {
+    left: 55px;
+  }
 }
 
 .explore-target-summary-type,
 .explore-constraints-summary-edit {
   left: 0;
-
-  &.with-delete {
-    left: 35px;
-  }
-
-  &.with-expander {
-    left: 29px;
-  }
-
-  &.with-select {
-    left: 75px;
-  }
-
-  &.with-id {
-    left: 55px;
-  }
-}
-
-.explore-target-summary-name {
-  &.with-delete {
-    left: 70px;
-  }
-
-  &.with-expander {
-    left: 76px;
-  }
-
-  &.with-select {
-    left: 75px;
-  }
-
-  &.with-select-and-type {
-    left: 109px;
-  }
-
-  &.with-id {
-    left: 89px;
-  }
 }
 
 .explore-target-summary-subrow-cell {
