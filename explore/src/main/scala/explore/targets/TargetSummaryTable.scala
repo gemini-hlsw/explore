@@ -55,6 +55,7 @@ import react.primereact.ConfirmDialog
 import react.primereact.DialogPosition
 import react.primereact.PrimeStyles
 import react.primereact.ToastRef
+import react.resizeDetector.hooks.*
 
 import scala.collection.immutable.SortedSet
 
@@ -214,9 +215,12 @@ object TargetSummaryTable extends TableHooks:
               .getOrElse(ctx.pushPage(AppTab.Targets, props.programId, Focused.None))
       )
       .useRef(none[HTMLTableVirtualizer])
-      .useEffectWithDepsBy((props, _, _, _, _, _, _, _) => props.selectedTargetIds.get.headOption)(
-        (_, _, _, _, table, _, _, virtualizerRef) =>
-          _.foldMap(selectedHead =>
+      .useResizeDetector()
+      .useEffectWithDepsBy((props, _, _, _, _, _, _, _, resizer) =>
+        (props.selectedTargetIds.get.headOption, resizer)
+      )((_, _, _, _, table, _, _, virtualizerRef, _) =>
+        (selectedTargetIds, _) =>
+          selectedTargetIds.foldMap(selectedHead =>
             virtualizerRef.get.flatMap(refOpt =>
               val selectedIdStr = selectedHead.toString
               Callback(
@@ -233,7 +237,7 @@ object TargetSummaryTable extends TableHooks:
             )
           )
       )
-      .render((props, ctx, _, _, table, filesToImport, deletingTargets, virtualizerRef) =>
+      .render((props, ctx, _, _, table, filesToImport, deletingTargets, virtualizerRef, resizer) =>
         import ctx.given
 
         val selectedRows    = table.getSelectedRowModel().rows.toList
@@ -318,6 +322,7 @@ object TargetSummaryTable extends TableHooks:
             striped = true,
             compact = Compact.Very,
             innerContainerMod = ^.width := "100%",
+            containerRef = resizer.ref,
             tableMod = ExploreStyles.ExploreTable |+| ExploreStyles.ExploreSelectableTable,
             headerCellMod = headerCell =>
               columnClasses
