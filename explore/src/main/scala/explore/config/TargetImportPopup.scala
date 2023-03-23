@@ -13,7 +13,6 @@ import crystal.react.implicits.*
 import crystal.react.reuse.*
 import explore.DefaultErrorPolicy
 import explore.Icons
-import explore.common.TargetQueries
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Constants
@@ -41,7 +40,7 @@ import org.http4s.dom.FetchClientBuilder
 import org.http4s.syntax.all.*
 import org.scalajs.dom.{File => DOMFile}
 import org.typelevel.log4cats.Logger
-import queries.common.TargetQueriesGQL.*
+import queries.common.TargetQueriesGQL
 import react.common.ReactFnProps
 import react.fa.IconSize
 import react.primereact.Button
@@ -95,8 +94,9 @@ object TargetImportPopup:
         case Right(tgt) =>
           // FIXME The backend needs a SED
           val target = Target.Sidereal.unnormalizedSED.replace(Constants.DefaultSED.some)(tgt)
-          TargetQueries
-            .insertTarget(programId, target)
+          TargetQueriesGQL
+            .CreateTargetMutation[F]
+            .execute(target.toCreateTargetInput(programId))
             .map(_.some)
             .flatTap(_ =>
               stateUpdate(l => l.copy(current = target.some, loaded = (target :: l.loaded).reverse))
