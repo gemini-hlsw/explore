@@ -19,6 +19,7 @@ import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ElevationPlotOptions
+import explore.model.TimingWindow
 import explore.model.display.given
 import explore.model.enums.PlotRange
 import explore.model.enums.TimeDisplay
@@ -137,13 +138,17 @@ object ElevationPlotSection:
 
         val renderPlot: ElevationPlotOptions => VdomNode =
           (opt: ElevationPlotOptions) =>
-            timingWindowsPot.toPot.render(timingWindows =>
-              val windowsIntervals: List[BoundedInterval[Instant]] =
-                timingWindows
+            timingWindowsPot.renderPotOption(timingWindows =>
+              def windowsToIntervals(windows: List[TimingWindow]): IntervalSeq[Instant] =
+                windows
                   .map(_.toIntervalSeq(opt.interval))
                   .fold(IntervalSeq.empty[Instant])(_ | _)
-                  .intervals
-                  .toList
+
+              val windowsIntervalsParts =
+                timingWindows.partition(_.isInclude).toList.map(windowsToIntervals)
+
+              val windowsIntervals =
+                (windowsIntervalsParts(0) & ~windowsIntervalsParts(1)).intervals.toList
                   .map(BoundedInterval.fromInterval)
                   .flattenOption
 
@@ -228,5 +233,6 @@ object ElevationPlotSection:
               )
             )
 
-        potRenderView[ElevationPlotOptions](renderPlot)(options)
+        options.renderPotView(renderPlot)
+        // potRenderView[ElevationPlotOptions](renderPlot)(options)
       }

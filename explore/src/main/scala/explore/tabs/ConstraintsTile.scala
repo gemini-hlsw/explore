@@ -37,9 +37,7 @@ object ConstraintsTile {
       control = _ => control,
       controllerClass = clazz
     )(renderInTitle =>
-      potRender[View[ConstraintSet]](cs =>
-        ConstraintsPanel(programId, List(obsId), cs, undoStacks, renderInTitle)
-      )(csPot)
+      csPot.renderPot(cs => ConstraintsPanel(programId, List(obsId), cs, undoStacks, renderInTitle))
     )
 
 }

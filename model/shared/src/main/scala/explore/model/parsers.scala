@@ -44,12 +44,15 @@ trait parsers:
       .withContext("seconds")
 
   val durationHMS: Parser[TimeSpan] =
-    (digits ~ colonOrSpace.void ~ AngleParsers.minutes ~ colonOrSpace.void ~ seconds)
-      .mapFilter { case ((((h, _), m), _), (s, ms, _)) =>
+    (digits ~ MiscParsers.colon.void.? ~ AngleParsers.minutes.? ~ MiscParsers.colon.void.? ~ seconds.?)
+      .mapFilter { case ((((h, _), m), _), ss) =>
         MiscParsers
-          .catchNFE[(String, Int, Int, Int), Duration] { case (h, m, s, ms) =>
-            Duration.ofSeconds(h.toLong * 3600 + m.toInt * 60 + s).plusMillis(ms)
-          }(h, m, s, ms)
+          .catchNFE[(String, Option[Int], Option[Int], Option[Int]), Duration] {
+            case (h, m, s, ms) =>
+              Duration
+                .ofSeconds(h.toLong * 3600 + m.foldMap(_.toInt) * 60 + s.orEmpty)
+                .plusMillis(ms.orEmpty)
+          }(h, m, ss.map(_._1), ss.map(_._2))
           .map(TimeSpan.unsafeFromDuration)
       }
       .withContext("duration_hm")

@@ -223,7 +223,7 @@ object ProgramTable:
         )
 
       <.div(
-        programsPot.render(programs =>
+        programsPot.renderPotOption(programs =>
           React.Fragment(
             <.div(ExploreStyles.ProgramTable)(
               PrimeAutoHeightVirtualizedTable(

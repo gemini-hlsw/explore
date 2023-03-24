@@ -40,8 +40,9 @@ object TimingWindowQueries:
       .execute(
         twe.id.assign,
         TmpTimingWindowsSetInput(
+          include = twe.include.assign,
           startsOn = twe.startsOn.assign,
-          forever = tw.openForever.assign,
+          forever = tw.forever.assign,
           closeOn = twe.closeOn.orUnassign,
           remainOpenFor = twe.remainOpenFor.orUnassign,
           repeatPeriod = twe.repeatPeriod.orUnassign,

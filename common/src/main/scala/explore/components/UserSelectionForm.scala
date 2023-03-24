@@ -77,7 +77,7 @@ object UserSelectionForm:
           showHeader = false,
           clazz = ExploreStyles.Dialog.Small
         )(
-          browserInfoPot.render(browserInfo =>
+          browserInfoPot.renderPot(browserInfo =>
             React.Fragment(
               <.div(
                 ExploreStyles.LoginBoxLayout,

@@ -23,7 +23,6 @@ import explore.model.display.given
 import explore.model.enums.RoleType
 import explore.model.reusability.given
 import explore.model.userVault.*
-import explore.syntax.ui.given
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -39,6 +38,7 @@ import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
+import lucuma.ui.syntax.pot.*
 import lucuma.ui.table.*
 import lucuma.ui.utils.*
 import org.http4s.Credentials
@@ -198,7 +198,7 @@ object UserPreferencesContent:
     .render { (props, ctx, active, user, newKey, _, _, table, newRoleType) =>
       import ctx.given
 
-      potRender[SSOUser] { ssoUser =>
+      user.renderPot { ssoUser =>
         val id   = ssoUser.user.id
         val name = s"${ssoUser.user.givenName.orEmpty} ${ssoUser.user.familyName.orEmpty}"
         val role = ssoUser.role.`type`.shortName
@@ -274,5 +274,5 @@ object UserPreferencesContent:
           ),
           ConfirmDialog()
         )
-      }(user)
+      }
     }

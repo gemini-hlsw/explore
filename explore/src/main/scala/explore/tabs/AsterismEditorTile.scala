@@ -90,7 +90,7 @@ object AsterismEditorTile:
       control = s => control.some.filter(_ => s === TileSizeState.Minimized),
       bodyClass = Some(ExploreStyles.TargetTileBody)
     )((renderInTitle: Tile.RenderInTitle) =>
-      potAsterismMode.render((asterism, configuration) =>
+      potAsterismMode.renderPot((asterism, configuration) =>
         userId.map(uid =>
           AsterismEditor(
             uid,

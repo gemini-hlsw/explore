@@ -79,42 +79,6 @@ def version(environment: ExecutionEnvironment): NonEmptyString = {
   )
 }
 
-// TODO All the "potRender" methods should go in lucuma-ui
-val DefaultPendingRender: VdomNode = ProgressSpinner(clazz = ExploreStyles.Loader)
-
-val DefaultErrorRender: Throwable => VdomNode =
-  t => Message(text = t.getMessage, severity = Message.Severity.Error)
-
-def potRender[A](
-  valueRender:   A => VdomNode,
-  pendingRender: => VdomNode = DefaultPendingRender,
-  errorRender:   Throwable => VdomNode = DefaultErrorRender
-): Pot[A] => VdomNode =
-  _.fold(pendingRender, errorRender, valueRender)
-
-def potRenderView[A](
-  valueRender:   A => VdomNode,
-  pendingRender: => VdomNode = DefaultPendingRender,
-  errorRender:   Throwable => VdomNode = DefaultErrorRender
-): View[Pot[A]] => VdomNode =
-  _.get.fold(pendingRender, errorRender, valueRender)
-
-final implicit class PotRenderOps[A](val pot: Pot[A]) extends AnyVal {
-  inline def render(
-    valueRender:   A => VdomNode,
-    pendingRender: => VdomNode = DefaultPendingRender,
-    errorRender:   Throwable => VdomNode = DefaultErrorRender
-  ): VdomNode = potRender(valueRender, pendingRender, errorRender)(pot)
-}
-
-final implicit class PotOptionRenderOps[A](val po: PotOption[A]) extends AnyVal {
-  inline def render(
-    valueRender:   A => VdomNode,
-    pendingRender: => VdomNode = DefaultPendingRender,
-    errorRender:   Throwable => VdomNode = DefaultErrorRender
-  ): VdomNode = po.toPot.render(valueRender, pendingRender, errorRender)
-}
-
 inline def showCount(count: Int, unit: String, plural: String): String =
   if (count == 1) s"$count $unit"
   else s"$count $plural"

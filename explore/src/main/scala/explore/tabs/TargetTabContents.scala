@@ -54,6 +54,7 @@ import lucuma.core.model.Target.Sidereal
 import lucuma.core.model.User
 import lucuma.refined.*
 import lucuma.schemas.model.*
+import lucuma.ui.DefaultPendingRender
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -554,7 +555,7 @@ object TargetTabContents extends TwoPanels:
       val tileList: Option[List[Tile]] = tileListObSelectedOpt.map(_._1)
       val obsSelected: Boolean         = tileListObSelectedOpt.map(_._2).exists(identity)
 
-      layouts.get.render(l =>
+      layouts.renderPotView(l =>
         TileController(
           props.userId,
           resize.width.getOrElse(1),
@@ -777,7 +778,7 @@ object TargetTabContents extends TwoPanels:
           fullScreen
         ) =>
           React.Fragment(
-            asterismGroupsWithObs.render(
+            asterismGroupsWithObs.renderPotOption(
               renderFn(
                 props,
                 twoPanelState,

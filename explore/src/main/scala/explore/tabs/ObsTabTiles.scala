@@ -91,7 +91,7 @@ object ObsTabTiles:
     constraintGroups: View[ConstraintsList],
     obsView:          Pot[View[ObsEditData]]
   )(using FetchClient[IO, ?, ObservationDB]): VdomNode =
-    potRender[View[ObsEditData]] { vod =>
+    obsView.renderPot { vod =>
       val cgOpt: Option[ConstraintGroup] =
         constraintGroups.get.find(_._1.contains(vod.get.id)).map(_._2)
 
@@ -121,7 +121,7 @@ object ObsTabTiles:
           )
           .toList
       )
-    }(obsView)
+    }
 
   private def otherObsCount(
     targetObsMap: SortedMap[Target.Id, TargetSummary],
@@ -352,7 +352,7 @@ object ObsTabTiles:
             selectedConfig
           )
 
-        val rglRender: LayoutsMap => VdomNode = (l: LayoutsMap) =>
+        props.layouts.renderPotView(l =>
           TileController(
             props.userId,
             props.resize.width.getOrElse(0),
@@ -369,6 +369,5 @@ object ObsTabTiles:
             GridLayoutSection.ObservationsLayout,
             clazz = ExploreStyles.ObservationTiles.some
           )
-
-        potRenderView[LayoutsMap](rglRender)(props.layouts)
+        )
       }

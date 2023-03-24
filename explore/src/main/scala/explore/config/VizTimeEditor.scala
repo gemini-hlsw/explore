@@ -32,7 +32,7 @@ object VizTimeEditor {
     ScalaFnComponent[Props] { p =>
       <.div(
         ExploreStyles.ObsInstantTileTitle,
-        potRender[View[Option[Instant]]](
+        p.vizTimeView.renderPot(
           pendingRender = EmptyVdom,
           valueRender = instant =>
             React.Fragment(
@@ -51,7 +51,7 @@ object VizTimeEditor {
                 .dateFormat("yyyy-MM-dd HH:mm"),
               <.label("UTC")
             )
-        )(p.vizTimeView)
+        )
       )
     }
 

@@ -52,6 +52,7 @@ import lucuma.core.model.User
 import lucuma.schemas.model.ObservingMode
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
+import lucuma.ui.syntax.pot.*
 import monocle.Focus
 import monocle.Lens
 import queries.common.UserPreferencesQueriesGQL.*
@@ -180,5 +181,6 @@ object ItcGraphPanel:
               ItcPlotControl(chartTypeView, detailsView)
             )
 
-        potRenderView[ItcGraphProperties](renderPlot)(settings)
+        settings.renderPotView(renderPlot)
+        // potRenderView[ItcGraphProperties](renderPlot)(settings)
       }

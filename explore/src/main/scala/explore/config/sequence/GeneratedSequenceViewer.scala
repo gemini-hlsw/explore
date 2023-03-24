@@ -51,7 +51,7 @@ object GeneratedSequenceViewer:
       .render((props, _, config) =>
         props.changed.get
           .flatMap(_ => config.toPot.flatten)
-          .render(
+          .renderPot(
             _.fold[VdomNode](<.div("Default observation not found"))(config =>
               GeneratedSequenceTables(props.obsId, config)
             )
