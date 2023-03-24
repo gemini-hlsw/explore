@@ -34,6 +34,7 @@ import explore.syntax.ui.*
 import japgolly.scalajs.react.ScalaFnComponent
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
+import japgolly.scalajs.react.vdom.TagOf
 import japgolly.scalajs.react.vdom.html_<^.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.validation.MathValidators
@@ -54,6 +55,7 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.table.TableHooks
 import lucuma.ui.table.TableOptionsWithStateStore
 import lucuma.ui.table.*
+import org.scalajs.dom.html.Anchor
 import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries.ObservationList
 import react.common.ReactFnProps
@@ -149,108 +151,114 @@ object ObsSummaryTable extends TableHooks:
     .withHooks[Props]
     .useContext(AppContext.ctx)
     // Columns
-    .useMemoBy((_, _) => ())((props, ctx) =>
-      _ =>
-        def constraintUrl(constraintId: Observation.Id): String =
-          ctx.pageUrl(AppTab.Constraints, props.programId, Focused.singleObs(constraintId))
+    .useMemoBy((_, _) => ()) { (props, ctx) => _ =>
+      def constraintUrl(constraintId: Observation.Id): String =
+        ctx.pageUrl(AppTab.Constraints, props.programId, Focused.singleObs(constraintId))
 
-        def goToConstraint(constraintId: Observation.Id): Callback =
-          ctx.pushPage(AppTab.Constraints, props.programId, Focused.singleObs(constraintId))
+      def goToConstraint(constraintId: Observation.Id): Callback =
+        ctx.pushPage(AppTab.Constraints, props.programId, Focused.singleObs(constraintId))
 
-        List(
-          // TODO: GroupsColumnId
-          column(ObservationIdColumnId, _.obs.id),
+      def targetUrl(obsId: Observation.Id, tWId: TargetWithId) = <.a(
+        ^.href := ctx.pageUrl(AppTab.Observations,
+                              props.programId,
+                              Focused.singleObs(obsId, tWId.id.some)
+        ),
+        ^.onClick ==> (e =>
+          e.preventDefaultCB *> e.stopPropagationCB *> ctx.pushPage(
+            AppTab.Observations,
+            props.programId,
+            Focused.singleObs(obsId, tWId.id.some)
+          )
+        ),
+        tWId.target.name.value
+      )
 
-          // TODO: ValidationCheckColumnId
-          column(StatusColumnId, _.obs.status),
-          // TODO: CompletionColumnId
-          // TODO: TargetTypeColumnId
-          ColDef(
-            ColumnId("expander"),
-            cell = cell =>
-              if (cell.row.getCanExpand())
-                <.span(
-                  ^.cursor.pointer,
-                  ExploreStyles.ExpanderChevron,
-                  ExploreStyles.ExpanderChevronOpen.when(cell.row.getIsExpanded()),
-                  ^.onClick ==> (_.stopPropagationCB *> Callback(
-                    cell.row.getToggleExpandedHandler()()
-                  ))
-                )(Icons.ChevronRightLight.withFixedWidth(true))
-              else "",
-            size = 18.toPx,
-            enableResizing = false
-          ),
-          column(TargetTypeColumnId, _ => ())
-            .setCell(_ => Icons.Star.withFixedWidth())
-            .setSize(35.toPx),
-          column(TargetColumnId, identity, identity).setCell { cell =>
-            def targetUrl(obsId: Observation.Id, tWId: TargetWithId) = <.a(
-              ^.href := ctx.pageUrl(AppTab.Targets, props.programId, Focused.target(tWId.id)),
-              ^.onClick ==> (e =>
-                e.preventDefaultCB *> e.stopPropagationCB *> ctx.pushPage(
-                  AppTab.Observations,
-                  props.programId,
-                  Focused.singleObs(obsId, tWId.id.some)
-                )
-              ),
-              tWId.target.name.value
-            )
-
-            cell.value match {
-              case ExpandedTargetRow(obsId, target) => targetUrl(obsId, target)
-              case ObsRow(obs, _, _)                => obs.title
-            }
-          },
-          column(ConstraintsColumnId, r => (r.obs.id, r.obs.constraintsSummary)).setCell(cell =>
+      List(
+        // TODO: GroupsColumnId
+        ColDef(
+          ColumnId("expander"),
+          cell = cell =>
+            if (cell.row.getCanExpand())
+              <.span(
+                ^.cursor.pointer,
+                ExploreStyles.ExpanderChevron,
+                ExploreStyles.ExpanderChevronOpen.when(cell.row.getIsExpanded()),
+                ^.onClick ==> (_.stopPropagationCB *> Callback(
+                  cell.row.getToggleExpandedHandler()()
+                ))
+              )(Icons.ChevronRightLight.withFixedWidth(true))
+            else "",
+          enableResizing = false
+        ).setSize(35.toPx),
+        column(ObservationIdColumnId, _.obs.id),
+        // TODO: ValidationCheckColumnId
+        column(StatusColumnId, _.obs.status),
+        // TODO: CompletionColumnId
+        // TODO: TargetTypeColumnId
+        column(TargetTypeColumnId, _ => ())
+          .setCell(_ => Icons.Star.withFixedWidth())
+          .setSize(35.toPx),
+        column[String | TagOf[Anchor]](TargetColumnId,
+                                       _.obs.title,
+                                       r => targetUrl(r.obsId, r.targetWithId)
+        ),
+        column(
+          RAColumnId,
+          r =>
+            r.asterism
+              .map(_.baseTracking.baseCoordinates.ra) // TODO: baseTrackingAt
+              .orElse(r.targetWithId.map(_.target).flatMap(Target.baseRA.getOption)),
+          r => Target.baseRA.getOption(r.targetWithId.target)
+        )
+          .setCell(_.value.map(MathValidators.truncatedRA.reverseGet).orEmpty)
+          .sortable,
+        column(
+          DecColumnId,
+          v =>
+            v.asterism
+              .map(_.baseTracking.baseCoordinates.dec)
+              .orElse(v.targetWithId.map(_.target).flatMap(Target.baseDec.getOption)),
+          r => Target.baseDec.getOption(r.targetWithId.target)
+        )
+          .setCell(_.value.map(MathValidators.truncatedDec.reverseGet).orEmpty)
+          .sortable,
+        // TODO: TimingColumnId
+        // TODO: SEDColumnId
+        ColDef(
+          SEDColumnId,
+          v =>
+            v.value
+              .fold(_.targetWithId.target.some, _.targetWithId.map(_.target))
+              .flatMap(Target.sidereal.getOption)
+              .flatMap(t =>
+                Target.Sidereal.integratedSpectralDefinition
+                  .getOption(t)
+                  .orElse(Target.Sidereal.surfaceSpectralDefinition.getOption(t))
+              )
+              .map(_.shortName),
+          columnNames(SEDColumnId)
+        ).setCell(cell =>
+          cell.value
+            .filterNot(_ => cell.row.getCanExpand())
+            .orEmpty
+        ).sortable,
+        column(ConstraintsColumnId, r => (r.obs.id, r.obs.constraintsSummary))
+          .setCell(cell =>
             cell.value.map((id, constraintsSummary) =>
               <.a(^.href := constraintUrl(id),
                   ^.onClick ==> (_.preventDefaultCB *> goToConstraint(id)),
                   constraintsSummary
               )
             )
-          ),
-          // TODO: FindingChartColumnId
-          column(ConfigurationColumnId, _.obs.conf),
-          column(DurationColumnId, _.obs.executionTime.toHoursMinutes),
-
-          // TODO: PriorityColumnId
-          column(
-            RAColumnId,
-            r =>
-              r.asterism
-                .map(_.baseTracking.baseCoordinates.ra) // TODO: baseTrackingAt
-                .orElse(r.targetWithId.map(_.target).flatMap(Target.baseRA.getOption)),
-            r => Target.baseRA.getOption(r.targetWithId.target)
           )
-            .setCell(_.value.map(MathValidators.truncatedRA.reverseGet).orEmpty),
-          column(
-            DecColumnId,
-            v =>
-              v.asterism
-                .map(_.baseTracking.baseCoordinates.dec)
-                .orElse(v.targetWithId.map(_.target).flatMap(Target.baseDec.getOption)),
-            r => Target.baseDec.getOption(r.targetWithId.target)
-          )
-            .setCell(_.value.map(MathValidators.truncatedDec.reverseGet).orEmpty),
-          // TODO: TimingColumnId
-          // TODO: SEDColumnId
-          column(SEDColumnId, _.targetWithId.map(_.target), _.targetWithId.target.some)
-            .setCell(cell =>
-              cell.value
-                .flatMap(Target.sidereal.getOption)
-                .flatMap(t =>
-                  Target.Sidereal.integratedSpectralDefinition
-                    .getOption(t)
-                    .map(_.shortName)
-                    .orElse(Target.Sidereal.surfaceSpectralDefinition.getOption(t).map(_.shortName))
-                )
-                .filterNot(_ => cell.row.getCanExpand())
-                .orEmpty
-            )
-          // TODO: ChargedTimeColumnId
-        )
-    )
+          .sortableBy(_.toOption.map(_._2)),
+        // TODO: FindingChartColumnId
+        column(ConfigurationColumnId, _.obs.conf),
+        column(DurationColumnId, _.obs.executionTime.toHoursMinutes)
+        // TODO: PriorityColumnId
+        // TODO: ChargedTimeColumnId
+      )
+    }
     // Rows
     .useMemoBy((props, _, _) => (props.observations.get.toList, props.targetsMap.get))((_, _, _) =>
       (obsList, targetsMap) =>
