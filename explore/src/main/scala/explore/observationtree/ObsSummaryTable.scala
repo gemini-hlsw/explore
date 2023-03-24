@@ -198,7 +198,10 @@ object ObsSummaryTable extends TableHooks:
         column(TargetTypeColumnId, _ => ())
           .setCell(_ => Icons.Star.withFixedWidth())
           .setSize(35.toPx),
-        column[String | TagOf[Anchor]](TargetColumnId, _.obs.title, r => targetUrl(r.obsId, r.targetWithId)),
+        column[String | TagOf[Anchor]](TargetColumnId,
+                                       _.obs.title,
+                                       r => targetUrl(r.obsId, r.targetWithId)
+        ),
         column(
           RAColumnId,
           r =>
