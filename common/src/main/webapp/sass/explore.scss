@@ -1961,11 +1961,13 @@ $help-title-height: 40px;
 
   .timing-window-include {
     @include timing-window-type;
+
     color: var(--green-400);
   }
 
   .timing-window-exclude {
     @include timing-window-type;
+
     color: var(--red-400);
   }
 
