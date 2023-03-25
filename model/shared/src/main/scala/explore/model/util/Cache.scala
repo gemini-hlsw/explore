@@ -43,13 +43,10 @@ object SelfUpdatingCache:
   ): F[Cache[F, K, V]] =
     for
       latch        <- Deferred[F, Cache[F, K, V]]
-      _            <- updateStream
-                        .evalMap(stream =>
-                          latch.get.flatMap(cache =>
-                            stream.evalMap(delta => cache.update(delta)).compile.drain
-                          )
-                        )
-                        .useForever
+      _            <-
+        latch.get
+          .flatMap(cache => updateStream.evalTap(_.evalTap(cache.update).compile.drain).useForever)
+          .start
       initialValue <- initial
       cache        <- Cache.init(initialValue)
       _            <- latch.complete(cache) // Allow stream updates to proceed
