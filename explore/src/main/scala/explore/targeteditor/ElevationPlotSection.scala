@@ -148,6 +148,7 @@ object ElevationPlotSection:
                 timingWindows.partition(_.isInclude).toList.map(windowsToIntervals)
 
               val windowsIntervals =
+                // Intersection of "Include" intervals with the complement of "Exclude" intervals
                 (windowsIntervalsParts(0) & ~windowsIntervalsParts(1)).intervals.toList
                   .map(BoundedInterval.fromInterval)
                   .flattenOption
@@ -234,5 +235,4 @@ object ElevationPlotSection:
             )
 
         options.renderPotView(renderPlot)
-        // potRenderView[ElevationPlotOptions](renderPlot)(options)
       }

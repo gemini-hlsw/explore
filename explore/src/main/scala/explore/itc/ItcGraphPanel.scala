@@ -182,5 +182,4 @@ object ItcGraphPanel:
             )
 
         settings.renderPotView(renderPlot)
-        // potRenderView[ItcGraphProperties](renderPlot)(settings)
       }
