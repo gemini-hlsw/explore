@@ -17,12 +17,12 @@ import cats.Order.given
 import explore.model.util.Cache
 
 // TODO, Store TargetWithObs???
-final case class ModelCaches[F[_]] private (target: Cache[F, Target.Id, Target])
+final case class ModelCaches[F[_]] private (target: Cache[F, SortedMap[Target.Id, Target]])
 
 object ModelCaches:
   private def targetCache[F[_]: Concurrent](programId: Program.Id)(using
     StreamingClient[F, ObservationDB]
-  ): F[Cache[F, Target.Id, Target]] =
+  ): F[Cache[F, SortedMap[Target.Id, Target]]] =
     SelfUpdatingCache.init(
       TargetQueriesGQL
         .AllProgramTargets[F]
@@ -34,14 +34,7 @@ object ModelCaches:
         ),
       TargetQueriesGQL.ProgramTargetsDelta
         .subscribe[F](programId)
-        .map(
-          _.map(data =>
-            SortedMap(
-              // TODO DELETIONS!!!!
-              data.targetEdit.value.id -> data.targetEdit.value.target.some
-            )
-          )
-        )
+        .map(_.map(data => _.updated(data.targetEdit.value.id, data.targetEdit.value.target)))
     )
 
   def forProgram[F[_]: Concurrent](programId: Program.Id)(using
