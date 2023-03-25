@@ -40,6 +40,7 @@ import react.primereact.hooks.all.*
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSExportTopLevel
+import explore.cache.ProgramCache
 
 case class ExploreLayout(
   resolution: ResolutionWithProps[Page, View[RootModel]]
@@ -148,14 +149,20 @@ object ExploreLayout:
                 props.view.zoom(RootModel.undoStacks),
                 onLogout >> props.view.zoom(RootModel.vault).set(none).to[IO]
               ),
-              <.div(
-                ExploreStyles.SideTabs,
-                SideTabs(routingInfo)
-              ),
-              <.div(
-                ExploreStyles.MainBody,
-                props.resolution.renderP(props.view)
-              )
+              routingInfo.optProgramId
+                .map(programId =>
+                  ProgramCache.Provider(programId)(
+                    <.div(
+                      ExploreStyles.SideTabs,
+                      SideTabs(routingInfo)
+                    ),
+                    <.div(
+                      ExploreStyles.MainBody,
+                      props.resolution.renderP(props.view)
+                    )
+                  )
+                )
+                .whenDefined
             )
           )
         )

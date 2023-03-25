@@ -105,4 +105,26 @@ object TargetQueriesGQL {
       }
     """
   }
+
+  @GraphQL
+  trait AllProgramTargets extends GraphQLOperation[ObservationDB] {
+    val document = s"""
+      query($$programId: ProgramId!) {
+        targets(WHERE: {programId: {EQ: $$programId}}) {
+          matches $TargetWithIdSubquery
+        }
+      }
+    """
+  }
+
+  @GraphQL
+  trait ProgramTargetsDelta extends GraphQLOperation[ObservationDB] {
+    val document = s"""
+      subscription($$programId: ProgramId!) {
+        targetEdit(input: {programId: $$programId}) {
+          value $TargetWithIdSubquery
+        }
+      }
+    """
+  }
 }
