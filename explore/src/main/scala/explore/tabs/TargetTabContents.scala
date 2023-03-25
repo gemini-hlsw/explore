@@ -77,6 +77,7 @@ import java.time.Instant
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration.*
+import explore.cache.ProgramCache
 
 case class TargetTabContents(
   userId:            Option[User.Id],
@@ -181,15 +182,16 @@ object TargetTabContents extends TwoPanels:
     selectedTargetIds:     View[List[Target.Id]],
     ctx:                   AppContext[IO]
   )(
-    asterismGroupsWithObs: View[AsterismGroupsWithObs]
+    asterismGroupsWithObs: View[AsterismGroupsWithObs],
+    targetMap:             View[TargetWithObsList] // View[SortedMap[Target.Id, Target]]
   ): VdomNode = {
     import ctx.given
 
     val astGrpObsListUndoCtx: UndoContext[AsterismGroupsWithObs] =
       UndoContext(props.listUndoStacks, asterismGroupsWithObs)
 
-    val targetMap: View[TargetWithObsList] =
-      asterismGroupsWithObs.zoom(AsterismGroupsWithObs.targetsWithObs)
+    // val targetMap: View[TargetWithObsList] =
+    //   asterismGroupsWithObs.zoom(AsterismGroupsWithObs.targetsWithObs)
 
     def targetTree(
       objectsWithObs: View[AsterismGroupsWithObs],
@@ -670,14 +672,21 @@ object TargetTabContents extends TwoPanels:
             TargetQueriesGQL.ProgramTargetEditSubscription.subscribe[IO](props.programId)
           )
       }
+      .useContext(ProgramCache.ctx)
+      .useStreamViewOnMountBy { (_, _, _, _, _, _, _, cacheCtx) =>
+        cacheCtx.target.stream.map(targets =>
+          SortedMap.from(targets.view.mapValues(t => TargetWithObs(t, SortedSet.empty)))
+        )
+      }
       // Selected targets on the summary table
-      .useStateViewBy((props, _, _, _, _, _, _) => props.focused.target.toList)
-      .useEffectWithDepsBy((props, _, _, _, _, _, _, _) => props.focused.target)(
-        (_, _, _, _, _, _, _, selIds) => _.foldMap(focusedTarget => selIds.set(List(focusedTarget)))
+      .useStateViewBy((props, _, _, _, _, _, _, _, _) => props.focused.target.toList)
+      .useEffectWithDepsBy((props, _, _, _, _, _, _, _, _, _) => props.focused.target)(
+        (_, _, _, _, _, _, _, _, _, selIds) =>
+          _.foldMap(focusedTarget => selIds.set(List(focusedTarget)))
       )
-      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, asterismGroupWithObs, selIds) =>
+      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, asterismGroupWithObs, _, _, selIds) =>
         (props.focused, asterismGroupWithObs.toOption.map(_.get.asterismGroups), selIds.get)
-      ) { (props, ctx, _, _, _, _, poagwov, _) => (target, asterismGroups, selectedIds) =>
+      ) { (props, ctx, _, _, _, _, poagwov, _, _, _) => (target, asterismGroups, selectedIds) =>
         import ctx.given
 
         val optViewAgwo = poagwov.toOption
@@ -774,11 +783,13 @@ object TargetTabContents extends TwoPanels:
           layout,
           debouncer,
           asterismGroupsWithObs,
+          _,
+          targets,
           selectedTargetIds,
           fullScreen
         ) =>
           React.Fragment(
-            asterismGroupsWithObs.renderPotOption(
+            (asterismGroupsWithObs, targets).tupled.renderPotOption(
               renderFn(
                 props,
                 twoPanelState,

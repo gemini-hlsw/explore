@@ -4,6 +4,7 @@
 package explore.model.util
 
 import cats.syntax.all.given
+import cats.effect.syntax.all.given
 import cats.effect.Concurrent
 import cats.effect.Ref
 import cats.effect.Resource
@@ -43,11 +44,14 @@ object SelfUpdatingCache:
   ): F[Cache[F, K, V]] =
     for
       latch        <- Deferred[F, Cache[F, K, V]]
-      _            <-
-        latch.get
-          .flatMap(cache => updateStream.evalTap(_.evalTap(cache.update).compile.drain).useForever)
+      _            <-                       // Start the update fiber. Will only update once cache is initialized.
+        updateStream
+          .evalTap(
+            _.evalTap(delta => latch.get.flatMap(_.update(delta))).compile.drain
+          )
+          .useForever
           .start
       initialValue <- initial
       cache        <- Cache.init(initialValue)
-      _            <- latch.complete(cache) // Allow stream updates to proceed
+      _            <- latch.complete(cache) // Allow stream updates to proceed.
     yield cache
