@@ -16,6 +16,7 @@ import lucuma.core.model.Target
 import cats.Order.given
 import explore.model.util.Cache
 
+import explore.cache.ModelCaches
 // TODO, Store TargetWithObs???
 final case class ModelCaches[F[_]] private (target: Cache[F, SortedMap[Target.Id, Target]])
 

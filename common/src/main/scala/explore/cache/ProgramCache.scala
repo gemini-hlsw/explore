@@ -12,7 +12,6 @@ import crystal.react.hooks.*
 import lucuma.ui.reusability.given
 import explore.model.AppContext
 import lucuma.ui.syntax.pot.*
-
 object ProgramCache:
   val ctx: Context[ModelCaches[IO]] = React.createContext(null) // No default value
 
