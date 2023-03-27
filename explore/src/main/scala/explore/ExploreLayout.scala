@@ -40,7 +40,7 @@ import react.primereact.hooks.all.*
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSExportTopLevel
-import explore.cache.ProgramCache
+import explore.cache.ProgramCache2
 
 case class ExploreLayout(
   resolution: ResolutionWithProps[Page, View[RootModel]]
@@ -118,7 +118,9 @@ object ExploreLayout:
           ctx.broadcastChannel.postMessage(ExploreEvent.ExploreUIReady)
         }
       }
-      .render { (props, helpCtx, _, toastRef) =>
+      .render { (props, helpCtx, ctx, toastRef) =>
+        import ctx.given
+
         IfLogged(props.view)((vault: UserVault, onLogout: IO[Unit]) =>
           val routingInfo = RoutingInfo.from(props.resolution.page)
 
@@ -151,7 +153,7 @@ object ExploreLayout:
               ),
               routingInfo.optProgramId
                 .map(programId =>
-                  ProgramCache.Provider(programId)(
+                  ProgramCache2.Provider(ProgramCache2(programId))(
                     <.div(
                       ExploreStyles.SideTabs,
                       SideTabs(routingInfo)
