@@ -20,8 +20,9 @@ object TimingWindowsGQL:
   @GraphQL
   trait TimingWindowsQuery extends GraphQLOperation[UserPreferencesDB] {
     val document = """
-      query queryTimingWindwons {
+      query {
         tmpTimingWindows(orderBy: {id: ASC}) {
+          include
           startsOn
           repeatPeriod
           repeatForever

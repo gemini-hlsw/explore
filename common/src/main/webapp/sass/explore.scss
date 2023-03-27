@@ -213,18 +213,6 @@ a:hover {
   box-shadow: -0 0 2px 1px var(--warning-background-color);
 }
 
-.explore-loader {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  margin: 0;
-  text-align: center;
-  z-index: 1000;
-  width: 4rem;
-  height: 4rem;
-  font-size: 1em;
-}
-
 // -----
 // Table toolbar
 // -----
@@ -1967,6 +1955,22 @@ $help-title-height: 40px;
     @include timing-window-list;
   }
 
+  @mixin timing-window-type {
+    font-weight: bold;
+  }
+
+  .timing-window-include {
+    @include timing-window-type;
+
+    color: var(--green-400);
+  }
+
+  .timing-window-exclude {
+    @include timing-window-type;
+
+    color: var(--red-400);
+  }
+
   .timing-window-editor {
     @include react-datepicker-input;
     @include react-datepicker-wrapper;
@@ -1991,32 +1995,50 @@ $help-title-height: 40px;
       margin-bottom: 0.5em;
     }
 
-    .timing-window-repeat-editor {
-      margin-left: 1.5em;
-    }
-
-    .timing-window-remain-open,
-    .timing-window-repeat-editor,
-    .timing-window-repeat-editor-n-times {
+    .timing-window-editor-header {
       display: flex;
-      align-items: baseline;
+      align-items: center;
 
-      label {
-        margin-right: 0.5em;
+      .timing-window-type-editor {
+        display: inline-flex;
+        flex-direction: column;
       }
 
-      .pl-form-field {
-        margin-right: 0.5em;
-        width: 9ch;
+      .timing-window-from-editor {
+        margin-left: 0.5vw;
       }
     }
 
-    .timing-window-repeat-editor-alternatives {
-      display: flex;
-      flex-direction: column;
-      row-gap: 0.5em;
-      margin-top: 0.5em;
-      margin-left: 3em;
+    .timing-window-editor-body {
+      margin-left: 2vw;
+
+      .timing-window-repeat-editor {
+        margin-left: 1.5em;
+      }
+
+      .timing-window-remain-open,
+      .timing-window-repeat-editor,
+      .timing-window-repeat-editor-n-times {
+        display: flex;
+        align-items: baseline;
+
+        label {
+          margin-right: 0.5em;
+        }
+
+        .pl-form-field {
+          margin-right: 0.5em;
+          width: 9ch;
+        }
+      }
+
+      .timing-window-repeat-editor-alternatives {
+        display: flex;
+        flex-direction: column;
+        row-gap: 0.5em;
+        margin-top: 0.5em;
+        margin-left: 3em;
+      }
     }
   }
 

@@ -128,7 +128,7 @@ trait formats:
             "Duration parsing errors".refined[NonEmpty]
           }
           .toEitherErrors,
-      ts => f"${ts.toHoursPart}:${ts.toMinutesPart}%02d"
+      ts => f"${ts.toHours.toLong}:${ts.toMinutesPart}%02d"
     )
 
   val durationHMS: InputValidWedge[TimeSpan] =
@@ -146,7 +146,7 @@ trait formats:
             f"${ts.toSecondsPart}%02d.${ts.toMillisPart}%03d"
           else
             f"${ts.toSecondsPart}%02d"
-        f"${ts.toHoursPart}:${ts.toMinutesPart}%02d:$secs"
+        f"${ts.toHours.toLong}:${ts.toMinutesPart}%02d:$secs"
       }
     )
 

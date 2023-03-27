@@ -12,6 +12,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
 import lucuma.schemas.odb.input.*
 import lucuma.ui.syntax.all.given
+import lucuma.ui.syntax.pot.*
 import queries.common.ManualSequenceGQL.*
 import react.common.ReactFnProps
 
@@ -34,4 +35,4 @@ object SequenceEditor:
           .query(props.programId)
           .map(_.observations.matches.headOption.flatMap(_.config))
       }
-      .render((_, _, config) => potRender(renderFn)(config))
+      .render((_, _, config) => config.renderPot(renderFn))

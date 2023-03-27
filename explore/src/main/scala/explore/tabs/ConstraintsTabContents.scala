@@ -51,6 +51,7 @@ import lucuma.core.model.Program
 import lucuma.core.model.User
 import lucuma.refined.*
 import lucuma.refined.*
+import lucuma.ui.DefaultPendingRender
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -282,7 +283,7 @@ object ConstraintsTabContents extends TwoPanels:
                   .withKey(s"timing-window-${timingWindowsView.get.length}")
             )
 
-          val rglRender: LayoutsMap => VdomNode = (l: LayoutsMap) =>
+          layouts.renderPotView(l =>
             TileController(
               props.userId,
               resize.width.getOrElse(1),
@@ -292,7 +293,7 @@ object ConstraintsTabContents extends TwoPanels:
               GridLayoutSection.ConstraintsLayout,
               None
             )
-          potRender[LayoutsMap](rglRender)(layouts.get)
+          )
         }
 
     makeOneOrTwoPanels(
@@ -369,7 +370,7 @@ object ConstraintsTabContents extends TwoPanels:
       .useResizeDetector()
       .render { (props, ctx, layout, defaultLayout, state, constraintsWithObs, resize) =>
         React.Fragment(
-          constraintsWithObs.render(
+          constraintsWithObs.renderPotOption(
             renderFn(props, state, defaultLayout, layout, resize, ctx) _,
             <.span(DefaultPendingRender).withRef(resize.ref)
           )

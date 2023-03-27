@@ -2698,6 +2698,7 @@ type TmpTimingWindows {
   closeOn: timestamptz
   forever: Boolean
   id: Int!
+  include: Boolean!
   remainOpenFor: Int
   repeatForever: Boolean
   repeatPeriod: Int
@@ -2748,6 +2749,7 @@ input TmpTimingWindowsBoolExp {
   closeOn: TimestamptzComparisonExp
   forever: BooleanComparisonExp
   id: IntComparisonExp
+  include: BooleanComparisonExp
   remainOpenFor: IntComparisonExp
   repeatForever: BooleanComparisonExp
   repeatPeriod: IntComparisonExp
@@ -2782,6 +2784,7 @@ input TmpTimingWindowsInsertInput {
   closeOn: timestamptz
   forever: Boolean
   id: Int
+  include: Boolean
   remainOpenFor: Int
   repeatForever: Boolean
   repeatPeriod: Int
@@ -2834,6 +2837,7 @@ input TmpTimingWindowsOrderBy {
   closeOn: OrderBy
   forever: OrderBy
   id: OrderBy
+  include: OrderBy
   remainOpenFor: OrderBy
   repeatForever: OrderBy
   repeatPeriod: OrderBy
@@ -2860,6 +2864,9 @@ enum TmpTimingWindowsSelectColumn {
   id
 
   """column name"""
+  include
+
+  """column name"""
   remainOpenFor
 
   """column name"""
@@ -2882,6 +2889,7 @@ input TmpTimingWindowsSetInput {
   closeOn: timestamptz
   forever: Boolean
   id: Int
+  include: Boolean
   remainOpenFor: Int
   repeatForever: Boolean
   repeatPeriod: Int
@@ -2933,6 +2941,9 @@ enum TmpTimingWindowsUpdateColumn {
 
   """column name"""
   id
+
+  """column name"""
+  include
 
   """column name"""
   remainOpenFor
@@ -5746,6 +5757,7 @@ input tmpTimingWindows_streamCursorValueInput {
   closeOn: timestamptz
   forever: Boolean
   id: Int
+  include: Boolean
   remainOpenFor: Int
   repeatForever: Boolean
   repeatPeriod: Int

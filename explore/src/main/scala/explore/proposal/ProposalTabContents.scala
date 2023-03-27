@@ -31,6 +31,7 @@ import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
+import lucuma.ui.syntax.pot.*
 import monocle.Focus
 import monocle.Lens
 import org.typelevel.log4cats.Logger
@@ -131,7 +132,7 @@ object ProposalTabContents:
         .reRunOnResourceSignals(ProgramEditSubscription.subscribe[IO](props.programId.assign))
     }
     .render { (props, ctx, optPropInfo) =>
-      optPropInfo.render(renderFn(props.programId, props.user, props.undoStacks, ctx) _)
+      optPropInfo.renderPotOption(renderFn(props.programId, props.user, props.undoStacks, ctx) _)
     }
 
 case class ProposalInfo(optProposal: Option[Proposal], executionTime: TimeSpan)

@@ -31,6 +31,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.schemas.model.ObservingMode
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
+import lucuma.ui.syntax.pot.*
 import queries.schemas.itc.ITCConversions.*
 import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
@@ -123,12 +124,10 @@ object ItcPanelTitle:
           React.Fragment(
             <.label(title),
             if (existTargets) {
-              potRender[ItcChartResult](
+              selectedResult.renderPot(
                 fn,
                 Icons.Spinner.withSpin(true),
                 e => <.span(MissingInfoIcon).withTooltip(e.getMessage)
-              )(
-                selectedResult
               )
             } else {
               <.span(MissingInfoIcon).withTooltip(MissingInfoMsg)

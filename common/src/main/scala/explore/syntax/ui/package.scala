@@ -11,6 +11,7 @@ import explore.model.Constants
 import explore.utils.*
 import japgolly.scalajs.react.callback.Callback
 import japgolly.scalajs.react.util.Effect
+import japgolly.scalajs.react.vdom.VdomNode
 import org.scalablytyped.runtime.StringDictionary
 import org.scalajs.dom.Window
 import org.typelevel.log4cats.Logger

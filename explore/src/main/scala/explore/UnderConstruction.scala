@@ -9,14 +9,12 @@ import explore.syntax.ui.*
 import explore.syntax.ui.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.fa.Flip
 import react.fa.IconSize
 import react.fa.given
 
-object UnderConstruction {
-
+object UnderConstruction:
   protected val component =
     ScalaComponent
       .builder[Unit]
@@ -26,10 +24,11 @@ object UnderConstruction {
           ExploreStyles.HVCenter,
           <.div(
             <.div("Under Construction"),
-            <.div(ExploreStyles.HVCenter,
-                  Icons.Gears
-                    .withSize(IconSize.X5)
-                    .withTitle("Under construction")
+            <.div(
+              ExploreStyles.HVCenter,
+              Icons.Gears
+                .withSize(IconSize.X5)
+                .withTitle("Under construction")
             )
           )
         )
@@ -37,5 +36,3 @@ object UnderConstruction {
       .build
 
   def apply() = component()
-
-}

@@ -33,8 +33,6 @@ object ExploreStyles:
   val TileSMH: Css            = Css("tile-sm-height")
   val TileMDH: Css            = Css("tile-md-height")
 
-  val Loader: Css = Css("explore-loader")
-
   val Accented: Css   = Css("explore-accented")
   val TextPlain: Css  = Css("explore-text-plain")
   val TextNoWrap: Css = Css("explore-text-nowrap")
@@ -468,10 +466,17 @@ object ExploreStyles:
   val TimingWindowsList: Css                    = Css("timing-windows-list")
   val TimingWindowsTable: Css                   = Css("timing-windows-table")
   val TimingWindowEditor: Css                   = Css("timing-window-editor")
+  val TimingWindowEditorHeader: Css             = Css("timing-window-editor-header")
+  val TimingWindowTypeEditor: Css               = Css("timing-window-type-editor")
+  val TimingWindowFromEditor: Css               = Css("timing-window-from-editor")
+  val TimingWindowEditorBody: Css               = Css("timing-window-editor-body")
   val TimingWindowRemainOpen: Css               = Css("timing-window-remain-open")
   val TimingWindowRepeatEditor: Css             = Css("timing-window-repeat-editor")
   val TimingWindowRepeatEditorAlternatives: Css = Css("timing-window-repeat-editor-alternatives")
   val TimingWindowRepeatEditorNTimes: Css       = Css("timing-window-repeat-editor-n-times")
   val TimingWindowsHeader: Css                  = Css("timing-windows-header")
+  val TimingWindowsType: Css                    = Css("timing-windows-type")
+  val TimingWindowInclude: Css                  = Css("timing-window-include")
+  val TimingWindowExclude: Css                  = Css("timing-window-exclude")
 
   val SingleTileMaximized: Css = Css("explore-single-tile-maximized")

@@ -43,21 +43,20 @@ object ConfigurationTile {
       "Configuration",
       canMinimize = true
     )(renderInTitle =>
-      potRender[(String, Option[NonEmptyString], View[ScienceData])] {
-        (title, subtitle, scienceData) =>
-          ConfigurationPanel(
-            userId,
-            programId,
-            obsId,
-            title,
-            subtitle,
-            UndoContext(undoStacks, scienceData),
-            obsConf,
-            scienceData.get.itcTargets,
-            baseCoordinates,
-            selectedConfig,
-            renderInTitle
-          )
-      }(obsData)
+      obsData.renderPot((title, subtitle, scienceData) =>
+        ConfigurationPanel(
+          userId,
+          programId,
+          obsId,
+          title,
+          subtitle,
+          UndoContext(undoStacks, scienceData),
+          obsConf,
+          scienceData.get.itcTargets,
+          baseCoordinates,
+          selectedConfig,
+          renderInTitle
+        )
+      )
     )
 }

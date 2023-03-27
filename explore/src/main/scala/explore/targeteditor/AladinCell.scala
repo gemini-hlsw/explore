@@ -672,11 +672,9 @@ object AladinCell extends ModelOptics with AladinCommon:
                   Icons.ThinSliders
                 )
               ),
-              potRenderView[(UserGlobalPreferences, TargetVisualOptions)](renderCell)(options),
-              potRenderView[(UserGlobalPreferences, TargetVisualOptions)](renderToolbar)(options),
-              potRenderView[(UserGlobalPreferences, TargetVisualOptions)](renderAgsOverlay)(
-                options
-              )
+              options.renderPotView(renderCell),
+              options.renderPotView(renderToolbar),
+              options.renderPotView(renderAgsOverlay)
             ),
             PopupMenu(model = menuItems, clazz = ExploreStyles.AladinSettingsMenu)
               .withRef(menuRef.ref)

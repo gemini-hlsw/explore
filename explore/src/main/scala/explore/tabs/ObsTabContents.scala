@@ -44,6 +44,7 @@ import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB
+import lucuma.ui.DefaultPendingRender
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -385,7 +386,7 @@ object ObsTabContents extends TwoPanels:
           obsWithConstraints
         ) =>
           React.Fragment(
-            obsWithConstraints.render(
+            obsWithConstraints.renderPotOption(
               renderFn(
                 props,
                 twoPanelState,

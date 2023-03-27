@@ -293,16 +293,16 @@ object SiderealTargetEditor {
                 UndoButtons(undoCtx, disabled = disabled)
                   .when(props.renderInTitle.isEmpty && props.obsIdSubset.isEmpty)
               ),
-              potRender[Instant](vizTime =>
+              vizTime.renderPot(vt =>
                 AladinCell(
                   props.userId,
                   tid,
-                  vizTime,
+                  vt,
                   props.obsConf,
                   props.asterism.get,
                   props.fullScreen
                 )
-              )(vizTime),
+              ),
               <.div(LucumaStyles.FormColumnVeryCompact, ExploreStyles.TargetForm)(
                 // Keep the search field and the coords always together
                 SearchForm(
