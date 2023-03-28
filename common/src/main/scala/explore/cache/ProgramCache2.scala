@@ -25,40 +25,48 @@ import monocle.Lens
 import monocle.Focus
 import explore.model.TargetWithObs
 import scala.collection.immutable.SortedSet
+import explore.common.AsterismQueries.*
+import queries.common.AsterismQueriesGQL
+import queries.common.AsterismQueriesGQL.AsterismGroupObsQuery
 
-case class ModelCaches2 protected[cache] (target: SortedMap[Target.Id, TargetWithObs])
+// case class ModelCaches2 protected[cache] (target: SortedMap[Target.Id, TargetWithObs])
 // TargetWithObs(t, SortedSet.empty)
 
-object ModelCaches2:
-  val target: Lens[ModelCaches2, SortedMap[Target.Id, TargetWithObs]] =
-    Focus[ModelCaches2](_.target)
+// object ModelCaches2:
+//   val target: Lens[ModelCaches2, SortedMap[Target.Id, TargetWithObs]] =
+//     Focus[ModelCaches2](_.target)
 
 case class ProgramCache2(programId: Program.Id)(using client: StreamingClient[IO, ObservationDB]):
   given StreamingClient[IO, ObservationDB] = client
 
 given Reusability[ProgramCache2] = Reusability.by(_.programId)
 
-object ProgramCache2 extends CacheComponent[ProgramCache2, ModelCaches2]:
+object ProgramCache2 extends CacheComponent[ProgramCache2, AsterismGroupsWithObs]:
 
-  override protected val initial: ProgramCache2 => IO[ModelCaches2] = props =>
+  override protected val initial: ProgramCache2 => IO[AsterismGroupsWithObs] = props =>
     import props.given
 
-    TargetQueriesGQL
-      .AllProgramTargets[IO]
+    AsterismQueriesGQL
+      .AsterismGroupObsQuery[IO]
       .query(props.programId)
-      .map(data =>
-        ModelCaches2(
-          SortedMap.from(
-            data.targets.matches.map(targetWithId =>
-              targetWithId.id -> TargetWithObs(targetWithId.target, SortedSet.empty)
-            )
-          )
-        )
-      )
+      .map(AsterismGroupObsQuery.Data.asAsterismGroupWithObs.get)
+
+    // TargetQueriesGQL
+    //   .AllProgramTargets[IO]
+    //   .query(props.programId)
+    //   .map(data =>
+    //     ModelCaches2(
+    //       SortedMap.from(
+    //         data.targets.matches.map(targetWithId =>
+    //           targetWithId.id -> TargetWithObs(targetWithId.target, SortedSet.empty)
+    //         )
+    //       )
+    //     )
+    //   )
 
   override protected val updateStream: ProgramCache2 => Resource[
     cats.effect.IO,
-    fs2.Stream[cats.effect.IO, ModelCaches2 => ModelCaches2]
+    fs2.Stream[cats.effect.IO, AsterismGroupsWithObs => AsterismGroupsWithObs]
   ] = props =>
     import props.given
 
@@ -66,10 +74,11 @@ object ProgramCache2 extends CacheComponent[ProgramCache2, ModelCaches2]:
       .subscribe[IO](props.programId)
       .map(
         _.map(data =>
-          ModelCaches2.target
+          AsterismGroupsWithObs.targetsWithObs
             .modify(
-              _.updated(data.targetEdit.value.id,
-                        TargetWithObs(data.targetEdit.value.target, SortedSet.empty)
+              _.updated(
+                data.targetEdit.value.id,
+                TargetWithObs(data.targetEdit.value.target, SortedSet.empty)
               )
             )
         )

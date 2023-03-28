@@ -23,7 +23,7 @@ trait CacheComponent[Props: Reusability, A]:
 
   protected val updateStream: Props => Resource[F, fs2.Stream[F, A => A]]
 
-  val ctx: Context[View[A]] = React.createContext(null) // No default value
+  val view: Context[View[A]] = React.createContext(null) // No default value
 
   val Provider =
     ScalaFnComponent
@@ -48,4 +48,4 @@ trait CacheComponent[Props: Reusability, A]:
       .useStreamViewBy((props, _, cache) => (props, cache.isReady))((_, _, cache) =>
         _ => cache.toOption.map(_.discrete).orEmpty
       )
-      .render((_, children, _, cacheView) => cacheView.renderPotOption(ctx.provide(_)(children)))
+      .render((_, children, _, cacheView) => cacheView.renderPotOption(view.provide(_)(children)))

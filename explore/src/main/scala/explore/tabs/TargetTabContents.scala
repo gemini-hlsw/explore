@@ -78,7 +78,7 @@ import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration.*
 import explore.cache.ProgramCache2
-import explore.cache.ModelCaches2
+// import explore.cache.ModelCaches2
 
 case class TargetTabContents(
   userId:            Option[User.Id],
@@ -175,11 +175,9 @@ object TargetTabContents extends TwoPanels:
 
   private def renderFn(
     props:                 Props,
-    targetMap:             View[TargetWithObsList], // View[SortedMap[Target.Id, Target]]
     selectedView:          View[SelectedPanel],
     layouts:               View[Pot[LayoutsMap]],
     resize:                UseResizeDetectorReturn,
-    debouncer:             Reusable[UseSingleEffect[IO]],
     fullScreen:            View[AladinFullScreen],
     selectedTargetIds:     View[List[Target.Id]],
     ctx:                   AppContext[IO]
@@ -191,8 +189,8 @@ object TargetTabContents extends TwoPanels:
     val astGrpObsListUndoCtx: UndoContext[AsterismGroupsWithObs] =
       UndoContext(props.listUndoStacks, asterismGroupsWithObs)
 
-    // val targetMap: View[TargetWithObsList] =
-    //   asterismGroupsWithObs.zoom(AsterismGroupsWithObs.targetsWithObs)
+    val targetMap: View[TargetWithObsList] =
+      asterismGroupsWithObs.zoom(AsterismGroupsWithObs.targetsWithObs)
 
     def targetTree(
       objectsWithObs: View[AsterismGroupsWithObs],
@@ -496,8 +494,7 @@ object TargetTabContents extends TwoPanels:
           })
         )
 
-      val targetView: View[Target.Sidereal] =
-        asterismGroupsWithObs.zoom(AsterismGroupsWithObs.targetsWithObs).zoom(getTarget)(modTarget)
+      val targetView: View[Target.Sidereal] = targetMap.zoom(getTarget)(modTarget)
 
       val title = s"Editing Target ${target.name.value} [$targetId]"
 
@@ -660,37 +657,16 @@ object TargetTabContents extends TwoPanels:
             case Left(_)         => IO.unit
           }
       }
-      .useSingleEffect(debounce = 1.second)
-      // Shared obs conf (posAngle)
-      .useStreamResourceViewOnMountBy { (props, ctx, _, _, _, _) =>
-        import ctx.given
-
-        AsterismGroupObsQuery[IO]
-          .query(props.programId)
-          .map(AsterismGroupObsQuery.Data.asAsterismGroupWithObs.get)
-          .reRunOnResourceSignals(
-            ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](props.programId),
-            TargetQueriesGQL.ProgramTargetEditSubscription.subscribe[IO](props.programId)
-          )
-      }
-      .useContext(ProgramCache2.ctx)
-      // .useStreamViewOnMountBy { (_, _, _, _, _, _, _, cacheCtx) =>
-      //   cacheCtx.target.stream.map(targets =>
-      //     SortedMap.from(targets.view.mapValues(t => TargetWithObs(t, SortedSet.empty)))
-      //   )
-      // }
+      .useContext(ProgramCache2.view)
       // Selected targets on the summary table
-      .useStateViewBy((props, _, _, _, _, _, _, _) => props.focused.target.toList)
-      .useEffectWithDepsBy((props, _, _, _, _, _, _, _, _) => props.focused.target)(
-        (_, _, _, _, _, _, _, _, selIds) =>
-          _.foldMap(focusedTarget => selIds.set(List(focusedTarget)))
+      .useStateViewBy((props, _, _, _, _, _) => props.focused.target.toList)
+      .useEffectWithDepsBy((props, _, _, _, _, _, _) => props.focused.target)(
+        (_, _, _, _, _, _, selIds) => _.foldMap(focusedTarget => selIds.set(List(focusedTarget)))
       )
-      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, asterismGroupWithObs, _, selIds) =>
-        (props.focused, asterismGroupWithObs.toOption.map(_.get.asterismGroups), selIds.get)
-      ) { (props, ctx, _, _, _, _, poagwov, _, _) => (target, asterismGroups, selectedIds) =>
+      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, asterismGroupWithObs, selIds) =>
+        (props.focused, asterismGroupWithObs.get.asterismGroups, selIds.get)
+      ) { (props, ctx, _, _, _, agwov, _) => (target, asterismGroups, selectedIds) =>
         import ctx.given
-
-        val optViewAgwo = poagwov.toOption
 
         def selectObsIds: ObsIdSet => IO[Unit] =
           obsIds => ctx.pushPage(AppTab.Targets, props.programId, Focused.obsSet(obsIds)).to[IO]
@@ -720,29 +696,25 @@ object TargetTabContents extends TwoPanels:
               case LocalClipboard.CopiedObservations(id) =>
                 val treeTargets =
                   props.focused.obsSet
-                    .flatMap(i => asterismGroups.flatMap(_.get(i).map(_.targetIds.toList)))
+                    .flatMap(i => asterismGroups.get(i).map(_.targetIds.toList))
                     .getOrElse(selectedIds)
 
                 if (treeTargets.nonEmpty)
                   // Apply the obs to selected targets on the tree
-                  optViewAgwo
-                    .map(agwov =>
-                      applyObs(
-                        props.programId,
-                        id.idSet.toList,
-                        treeTargets,
-                        agwov,
-                        ctx,
-                        props.listUndoStacks,
-                        props.expandedIds
-                      ).withToast(s"Pasting obs ${id.idSet.toList.mkString(", ")}")
-                    )
-                    .orEmpty
+                  applyObs(
+                    props.programId,
+                    id.idSet.toList,
+                    treeTargets,
+                    agwov,
+                    ctx,
+                    props.listUndoStacks,
+                    props.expandedIds
+                  ).withToast(s"Pasting obs ${id.idSet.toList.mkString(", ")}")
                 else IO.unit
 
               case LocalClipboard.CopiedTargets(tids) =>
-                (props.focused.obsSet, optViewAgwo).tupled
-                  .foldMap((obsIds, agwov) =>
+                props.focused.obsSet
+                  .foldMap(obsIds =>
                     val undoContext    = UndoContext(props.listUndoStacks, agwov)
                     // Only want to paste targets that aren't already in the target asterism or
                     // undo is messed up.
@@ -782,26 +754,17 @@ object TargetTabContents extends TwoPanels:
           twoPanelState,
           resize,
           layout,
-          debouncer,
           asterismGroupsWithObs,
-          cacheCtx,
           selectedTargetIds,
           fullScreen
         ) =>
-          React.Fragment(
-            asterismGroupsWithObs.renderPotOption(
-              renderFn(
-                props,
-                cacheCtx.zoom(ModelCaches2.target),
-                twoPanelState,
-                layout,
-                resize,
-                debouncer,
-                fullScreen,
-                selectedTargetIds,
-                ctx
-              ),
-              <.span(DefaultPendingRender).withRef(resize.ref)
-            )
-          )
+          renderFn(
+            props,
+            twoPanelState,
+            layout,
+            resize,
+            fullScreen,
+            selectedTargetIds,
+            ctx
+          )(asterismGroupsWithObs)
       }
