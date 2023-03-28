@@ -19,7 +19,7 @@ trait ArbTargetSummary {
     Arbitrary[TargetSummary] {
       for {
         obsIds <- arbitrary[Set[Observation.Id]]
-        target    <- arbitrary[TargetWithId]
+        target <- arbitrary[TargetWithId]
       } yield TargetSummary(obsIds, target)
     }
 
