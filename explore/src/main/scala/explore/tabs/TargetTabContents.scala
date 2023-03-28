@@ -77,7 +77,7 @@ import java.time.Instant
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration.*
-import explore.cache.ProgramCache2
+import explore.cache.ProgramCache
 // import explore.cache.ModelCaches2
 
 case class TargetTabContents(
@@ -657,7 +657,7 @@ object TargetTabContents extends TwoPanels:
             case Left(_)         => IO.unit
           }
       }
-      .useContext(ProgramCache2.view)
+      .useContext(ProgramCache.view)
       // Selected targets on the summary table
       .useStateViewBy((props, _, _, _, _, _) => props.focused.target.toList)
       .useEffectWithDepsBy((props, _, _, _, _, _, _) => props.focused.target)(

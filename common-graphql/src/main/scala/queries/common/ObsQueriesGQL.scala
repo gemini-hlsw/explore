@@ -271,3 +271,14 @@ object ObsQueriesGQL:
         }
       }
     """
+
+    @GraphQL
+    trait ProgramObservationsDelta extends GraphQLOperation[ObservationDB] {
+      val document = s"""
+      subscription($$programId: ProgramId!) {
+        observationEdit(input: {programId: $$programId}) {
+            value $TargetWithIdSubquery
+          }
+        }
+      """
+    }

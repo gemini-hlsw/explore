@@ -103,7 +103,7 @@ object TargetSummaryTable extends TableHooks:
   private val ScrollOptions =
     rawVirtual.mod
       .ScrollToOptions()
-      .setBehavior(rawVirtual.mod.ScrollBehavior.smooth)
+      .setBehavior(rawVirtual.mod.ScrollBehavior.auto)
       .setAlign(rawVirtual.mod.ScrollAlignment.center)
 
   protected val component =

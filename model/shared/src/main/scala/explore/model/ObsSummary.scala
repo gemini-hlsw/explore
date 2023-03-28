@@ -16,12 +16,16 @@ import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target
 import lucuma.core.util.TimeSpan
+import lucuma.schemas.decoders.given
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.ConstraintsSummary
 import monocle.Focus
 import org.typelevel.cats.time.*
+import io.circe.generic.semiauto.*
 
 import java.time.Instant
+import io.circe.Decoder
+import io.circe.JsonObject
 
 trait ObsSummary {
   val id: Observation.Id
@@ -194,8 +198,71 @@ case class ObsSummaryWithConstraintsAndConf(
     with ObsWithConf
     derives Eq
 
-object ObsSummaryWithConstraintsAndConf {
+object ObsSummaryWithConstraintsAndConf:
   val id                = Focus[ObsSummaryWithConstraintsAndConf](_.id)
   val configuration     = Focus[ObsSummaryWithConstraintsAndConf](_.configuration)
   val visualizationTime = Focus[ObsSummaryWithConstraintsAndConf](_.visualizationTime)
-}
+  // id
+  // constraintSet $ConstraintsSummarySubquery
+  // status
+  // activeStatus
+  // visualizationTime
+  // posAngleConstraint $PosAngleConstraintSubquery
+  // plannedTime {
+  //   execution $TimeSpanSubquery
+  // }
+  // targetEnvironment {
+  //   asterism {
+  //     id
+  //   }
+  // }
+  // scienceRequirements {
+  //   spectroscopy {
+  //     wavelength $WavelengthSubquery
+  //   }
+  // }
+  // observingMode $BasicConfigurationSubquery
+
+  // ObsSummaryWithConstraintsAndConf(
+  //     obsR.id,
+  //     obsR.constraintSet,
+  //     obsR.status,
+  //     obsR.activeStatus,
+  //     obsR.plannedTime.execution,
+  //     obsR.targetEnvironment.asterism.map(_.id).toSet,
+  //     obsR.observingMode,
+  //     obsR.visualizationTime.map(_.toInstant),
+  //     obsR.posAngleConstraint.some,
+  //     obsR.scienceRequirements.spectroscopy.wavelength
+  //   )
+
+  private case class TargetIdWrapper(id: Target.Id)
+  private object TargetIdWrapper:
+    given Decoder[TargetIdWrapper] = deriveDecoder
+
+  given Decoder[ObsSummaryWithConstraintsAndConf] = Decoder.instance(c =>
+    for {
+      id               <- c.get[Observation.Id]("id")
+      constraints      <- c.get[ConstraintsSummary]("constraintSet")
+      status           <- c.get[ObsStatus]("status")
+      activeStatus     <- c.get[ObsActiveStatus]("activeStatus")
+      executionTime    <- c.downField("plannedTime").get[TimeSpan]("execution")
+      scienceTargetIds <-
+        c.downField("targetEnvironment").get[List[TargetIdWrapper]]("asterism").map(_.map(_.id))
+      observingMode    <- c.get[Option[BasicConfiguration]]("observingMode")
+      visualizationTime <- c.get[Option[Long]]("visualizationTime").map(_.map(Instant.ofEpochMilli))
+      posAngleConstraint <- c.get[Option[PosAngleConstraint]]("posAngleConstraint")
+      wavelength <- c.downField("scienceRequirements").downField("spectroscopy").get[Option[Wavelength]]("wavelength")
+    } yield ObsSummaryWithConstraintsAndConf(
+      id,
+      constraints,
+      status,
+      activeStatus,
+      executionTime,
+      scienceTargetIds.toSet,
+      observingMode,
+      visualizationTime,
+      posAngleConstraint,
+      wavelength
+    )
+  )

@@ -40,7 +40,7 @@ import react.primereact.hooks.all.*
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSExportTopLevel
-import explore.cache.ProgramCache2
+import explore.cache.ProgramCache
 
 case class ExploreLayout(
   resolution: ResolutionWithProps[Page, View[RootModel]]
@@ -153,7 +153,7 @@ object ExploreLayout:
               ),
               routingInfo.optProgramId
                 .map(programId =>
-                  ProgramCache2.Provider(ProgramCache2(programId))(
+                  ProgramCache.Provider(ProgramCache(programId))(
                     <.div(
                       ExploreStyles.SideTabs,
                       SideTabs(routingInfo)
