@@ -22,6 +22,7 @@ import lucuma.schemas.model.ConstraintsSummary
 import monocle.Focus
 import org.typelevel.cats.time.*
 import io.circe.generic.semiauto.*
+import lucuma.core.util.Timestamp
 
 import java.time.Instant
 import io.circe.Decoder
@@ -202,39 +203,6 @@ object ObsSummaryWithConstraintsAndConf:
   val id                = Focus[ObsSummaryWithConstraintsAndConf](_.id)
   val configuration     = Focus[ObsSummaryWithConstraintsAndConf](_.configuration)
   val visualizationTime = Focus[ObsSummaryWithConstraintsAndConf](_.visualizationTime)
-  // id
-  // constraintSet $ConstraintsSummarySubquery
-  // status
-  // activeStatus
-  // visualizationTime
-  // posAngleConstraint $PosAngleConstraintSubquery
-  // plannedTime {
-  //   execution $TimeSpanSubquery
-  // }
-  // targetEnvironment {
-  //   asterism {
-  //     id
-  //   }
-  // }
-  // scienceRequirements {
-  //   spectroscopy {
-  //     wavelength $WavelengthSubquery
-  //   }
-  // }
-  // observingMode $BasicConfigurationSubquery
-
-  // ObsSummaryWithConstraintsAndConf(
-  //     obsR.id,
-  //     obsR.constraintSet,
-  //     obsR.status,
-  //     obsR.activeStatus,
-  //     obsR.plannedTime.execution,
-  //     obsR.targetEnvironment.asterism.map(_.id).toSet,
-  //     obsR.observingMode,
-  //     obsR.visualizationTime.map(_.toInstant),
-  //     obsR.posAngleConstraint.some,
-  //     obsR.scienceRequirements.spectroscopy.wavelength
-  //   )
 
   private case class TargetIdWrapper(id: Target.Id)
   private object TargetIdWrapper:
@@ -242,17 +210,19 @@ object ObsSummaryWithConstraintsAndConf:
 
   given Decoder[ObsSummaryWithConstraintsAndConf] = Decoder.instance(c =>
     for {
-      id               <- c.get[Observation.Id]("id")
-      constraints      <- c.get[ConstraintsSummary]("constraintSet")
-      status           <- c.get[ObsStatus]("status")
-      activeStatus     <- c.get[ObsActiveStatus]("activeStatus")
-      executionTime    <- c.downField("plannedTime").get[TimeSpan]("execution")
-      scienceTargetIds <-
+      id                 <- c.get[Observation.Id]("id")
+      constraints        <- c.get[ConstraintsSummary]("constraintSet")
+      status             <- c.get[ObsStatus]("status")
+      activeStatus       <- c.get[ObsActiveStatus]("activeStatus")
+      executionTime      <- c.downField("plannedTime").get[TimeSpan]("execution")
+      scienceTargetIds   <-
         c.downField("targetEnvironment").get[List[TargetIdWrapper]]("asterism").map(_.map(_.id))
-      observingMode    <- c.get[Option[BasicConfiguration]]("observingMode")
-      visualizationTime <- c.get[Option[Long]]("visualizationTime").map(_.map(Instant.ofEpochMilli))
+      observingMode      <- c.get[Option[BasicConfiguration]]("observingMode")
+      visualizationTime  <- c.get[Option[Timestamp]]("visualizationTime")
       posAngleConstraint <- c.get[Option[PosAngleConstraint]]("posAngleConstraint")
-      wavelength <- c.downField("scienceRequirements").downField("spectroscopy").get[Option[Wavelength]]("wavelength")
+      wavelength         <- c.downField("scienceRequirements")
+                              .downField("spectroscopy")
+                              .get[Option[Wavelength]]("wavelength")
     } yield ObsSummaryWithConstraintsAndConf(
       id,
       constraints,
@@ -261,7 +231,7 @@ object ObsSummaryWithConstraintsAndConf:
       executionTime,
       scienceTargetIds.toSet,
       observingMode,
-      visualizationTime,
+      visualizationTime.map(_.toInstant),
       posAngleConstraint,
       wavelength
     )

@@ -37,8 +37,8 @@ object AsterismQueries:
   // else, we can remove this.
   given Order[ObsIdSet] = ObsIdSet.given_Order_ObsIdSet
 
-  type ObservationResult = AsterismGroupObsQuery.Data.Observations.Matches
-  val ObservationResult = AsterismGroupObsQuery.Data.Observations.Matches
+  // type ObservationResult = AsterismGroupObsQuery.Data.Observations.Matches
+  // val ObservationResult = AsterismGroupObsQuery.Data.Observations.Matches
 
   type AsterismGroupList = SortedMap[ObsIdSet, AsterismGroup]
   type TargetWithObsList = SortedMap[Target.Id, TargetWithObs]
@@ -109,19 +109,19 @@ object AsterismQueries:
     def findWithTargetIds(targetIds: SortedSet[Target.Id]): Option[AsterismGroup] =
       self.find { case (_, ag) => ag.targetIds === targetIds }.map(_._2)
 
-  private def obsResultToSummary(obsR: ObservationResult): ObsSummaryWithConstraintsAndConf =
-    ObsSummaryWithConstraintsAndConf(
-      obsR.id,
-      obsR.constraintSet,
-      obsR.status,
-      obsR.activeStatus,
-      obsR.plannedTime.execution,
-      obsR.targetEnvironment.asterism.map(_.id).toSet,
-      obsR.observingMode,
-      obsR.visualizationTime.map(_.toInstant),
-      obsR.posAngleConstraint.some,
-      obsR.scienceRequirements.spectroscopy.wavelength
-    )
+  // private def obsResultToSummary(obsR: ObservationResult): ObsSummaryWithConstraintsAndConf =
+  //   ObsSummaryWithConstraintsAndConf(
+  //     obsR.id,
+  //     obsR.constraintSet,
+  //     obsR.status,
+  //     obsR.activeStatus,
+  //     obsR.plannedTime.execution,
+  //     obsR.targetEnvironment.asterism.map(_.id).toSet,
+  //     obsR.observingMode,
+  //     obsR.visualizationTime.map(_.toInstant),
+  //     obsR.posAngleConstraint.some,
+  //     obsR.scienceRequirements.spectroscopy.wavelength
+  //   )
 
   private val queryToAsterismGroupWithObsGetter
     : Getter[AsterismGroupObsQuery.Data, AsterismGroupsWithObs] = data =>
@@ -140,7 +140,7 @@ object AsterismQueries:
       asterismGroups,
       targetsWithObs,
       data.observations.matches
-        .map(obsResultToSummary)
+        // .map(obsResultToSummary)
         .toSortedMap(ObsSummaryWithConstraintsAndConf.id.get)
     )
 

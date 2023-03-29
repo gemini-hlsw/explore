@@ -4,6 +4,7 @@
 package explore.cache
 
 import cats.effect.IO
+import cats.syntax.all.given
 import japgolly.scalajs.react.*
 // import japgolly.scalajs.react.feature.Context
 // import japgolly.scalajs.react.vdom.html_<^.*
@@ -51,18 +52,29 @@ object ProgramCache extends CacheComponent[ProgramCache, AsterismGroupsWithObs]:
   ] = props =>
     import props.given
 
-    // TargetQueriesGQL.ProgramTargetsDelta
-    //   .subscribe[IO](props.programId)
-    //   .map(
-    //     _.map(data =>
-    //       AsterismGroupsWithObs.targetsWithObs
-    //         .modify(
-    //           _.updated(
-    //             data.targetEdit.value.id,
-    //             TargetWithObs(data.targetEdit.value.target, SortedSet.empty)
-    //           )
-    //         )
-    //     )
-    //   )
+    val updateTargets =
+      TargetQueriesGQL.ProgramTargetsDelta
+        .subscribe[IO](props.programId)
+        .map(
+          _.map(data =>
+            AsterismGroupsWithObs.targetsWithObs
+              .modify(
+                _.updated(
+                  data.targetEdit.value.id,
+                  TargetWithObs(data.targetEdit.value.target, SortedSet.empty)
+                )
+              )
+          )
+        )
 
-    ObsQueriesGQL.ObservationEditSubscription
+    val updateObservations =
+      ObsQueriesGQL.ProgramObservationsDelta
+        .subscribe[IO](props.programId)
+        .map(
+          _.map(data =>
+            AsterismGroupsWithObs.observations
+              .modify(_.updated(data.observationEdit.value.id, data.observationEdit.value))
+          )
+        )
+
+    (updateTargets, updateObservations).mapN(_.merge(_))

@@ -43,28 +43,7 @@ object AsterismQueriesGQL {
         }
 
         observations(programId: $$programId) {
-          matches {
-            id
-            constraintSet $ConstraintsSummarySubquery
-            status
-            activeStatus
-            visualizationTime
-            posAngleConstraint $PosAngleConstraintSubquery
-            plannedTime {
-              execution $TimeSpanSubquery
-            }
-            targetEnvironment {
-              asterism {
-                id
-              }
-            }
-            scienceRequirements {
-              spectroscopy {
-                wavelength $WavelengthSubquery
-              }
-            }
-            observingMode $BasicConfigurationSubquery
-          }
+          matches $ObservationSummarySubquery
         }
       }
     """
