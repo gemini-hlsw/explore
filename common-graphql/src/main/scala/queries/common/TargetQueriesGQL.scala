@@ -123,6 +123,9 @@ object TargetQueriesGQL {
       subscription($$programId: ProgramId!) {
         targetEdit(input: {programId: $$programId}) {
           value $TargetWithIdSubquery
+          meta:value {
+            existence
+          }
         }
       }
     """

@@ -30,6 +30,7 @@ import explore.common.AsterismQueries.*
 import queries.common.AsterismQueriesGQL
 import queries.common.AsterismQueriesGQL.AsterismGroupObsQuery
 import queries.common.ObsQueriesGQL
+import lucuma.schemas.ObservationDB.Enums.Existence
 
 case class ProgramCache(programId: Program.Id)(using client: StreamingClient[IO, ObservationDB]):
   given StreamingClient[IO, ObservationDB] = client
@@ -58,11 +59,14 @@ object ProgramCache extends CacheComponent[ProgramCache, AsterismGroupsWithObs]:
         .map(
           _.map(data =>
             AsterismGroupsWithObs.targetsWithObs
-              .modify(
-                _.updated(
-                  data.targetEdit.value.id,
-                  TargetWithObs(data.targetEdit.value.target, SortedSet.empty)
-                )
+              .modify(targets =>
+                if (data.targetEdit.meta.existence === Existence.Present)
+                  targets.updated(
+                    data.targetEdit.value.id,
+                    TargetWithObs(data.targetEdit.value.target, SortedSet.empty)
+                  )
+                else
+                  targets.removed(data.targetEdit.value.id)
               )
           )
         )
@@ -73,7 +77,12 @@ object ProgramCache extends CacheComponent[ProgramCache, AsterismGroupsWithObs]:
         .map(
           _.map(data =>
             AsterismGroupsWithObs.observations
-              .modify(_.updated(data.observationEdit.value.id, data.observationEdit.value))
+              .modify(observations =>
+                if (data.observationEdit.meta.existence === Existence.Present)
+                  observations.updated(data.observationEdit.value.id, data.observationEdit.value)
+                else
+                  observations.removed(data.observationEdit.value.id)
+              )
           )
         )
 

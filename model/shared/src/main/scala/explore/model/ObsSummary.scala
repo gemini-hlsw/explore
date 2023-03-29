@@ -215,8 +215,7 @@ object ObsSummaryWithConstraintsAndConf:
       status             <- c.get[ObsStatus]("status")
       activeStatus       <- c.get[ObsActiveStatus]("activeStatus")
       executionTime      <- c.downField("plannedTime").get[TimeSpan]("execution")
-      scienceTargetIds   <-
-        c.downField("targetEnvironment").get[List[TargetIdWrapper]]("asterism").map(_.map(_.id))
+      scienceTargetIds   <- c.downField("targetEnvironment").get[List[TargetIdWrapper]]("asterism")
       observingMode      <- c.get[Option[BasicConfiguration]]("observingMode")
       visualizationTime  <- c.get[Option[Timestamp]]("visualizationTime")
       posAngleConstraint <- c.get[Option[PosAngleConstraint]]("posAngleConstraint")
@@ -229,10 +228,12 @@ object ObsSummaryWithConstraintsAndConf:
       status,
       activeStatus,
       executionTime,
-      scienceTargetIds.toSet,
+      scienceTargetIds.map(_.id).toSet,
       observingMode,
       visualizationTime.map(_.toInstant),
       posAngleConstraint,
       wavelength
     )
   )
+
+// TODO: Update target's observations; deletions, creations?

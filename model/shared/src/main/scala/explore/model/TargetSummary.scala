@@ -10,7 +10,4 @@ import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.schemas.model.TargetWithId
 
-case class TargetSummary(
-  obsIds: Set[Observation.Id],
-  target: TargetWithId
-) derives Eq
+case class TargetSummary(obsIds: Set[Observation.Id], target: TargetWithId) derives Eq

@@ -278,6 +278,9 @@ object ObsQueriesGQL:
       subscription($$programId: ProgramId!) {
         observationEdit(input: {programId: $$programId}) {
           value $ObservationSummarySubquery
+          meta:value {
+            existence
+          }
         }
       }
     """
