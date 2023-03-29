@@ -235,5 +235,3 @@ object ObsSummaryWithConstraintsAndConf:
       wavelength
     )
   )
-
-// TODO: Update target's observations; deletions, creations?

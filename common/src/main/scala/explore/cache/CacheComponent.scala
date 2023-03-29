@@ -33,7 +33,12 @@ trait CacheComponent[Props: Reusability, A]:
         props =>
           for
             latch        <- Deferred[F, SignallingRef[F, A]]
-            _            <-                       // Start the update fiber. Will only update once cache is initialized (via latch)
+            // Start the update fiber. We want subscriptions to start before initial query.
+            // This way we don't miss updates.
+            // The update fiber Will only update the cache once it is initialized (via latch).
+            // TODO: STOP FIBER AND CLEANUP WHEN THE PROGRAM CHANGES.
+            // TODO: RESTART CACHE IN CASE OF INTERRUPTED SUBSCRIPTION.
+            _            <-
               updateStream(props)
                 .evalTap(
                   _.evalTap(mod => latch.get.flatMap(_.update(mod))).compile.drain

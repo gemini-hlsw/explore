@@ -13,6 +13,8 @@ import explore.DefaultErrorPolicy
 import explore.model.AsterismGroup
 import explore.model.ObsIdSet
 import explore.model.ObsSummaryWithConstraintsAndConf
+import cats.data.NonEmptySet
+
 import explore.model.TargetWithObs
 import explore.model.syntax.all.*
 import japgolly.scalajs.react.*
@@ -30,15 +32,14 @@ import queries.common.ObsQueriesGQL.*
 
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
+import explore.model.Focused.obsSet
+import explore.model.TargetWithIdAndObs.targetWithObs
 
 object AsterismQueries:
   // The default cats ordering for sorted set sorts by size first, then contents. That's not what we want.
   // This is used for sorting the AsterismGroupObsList. If we change to sort by name or something
   // else, we can remove this.
   given Order[ObsIdSet] = ObsIdSet.given_Order_ObsIdSet
-
-  // type ObservationResult = AsterismGroupObsQuery.Data.Observations.Matches
-  // val ObservationResult = AsterismGroupObsQuery.Data.Observations.Matches
 
   type AsterismGroupList = SortedMap[ObsIdSet, AsterismGroup]
   type TargetWithObsList = SortedMap[Target.Id, TargetWithObs]
@@ -93,13 +94,45 @@ object AsterismQueries:
       }
       AsterismGroupsWithObs(newAsterismGroups, newTargetsWithObs, newObservations)
     }
+
+    // Rebuilds asterism groups and observation list for each target, based on the
+    // observations asterisms.
+    def rebuildAsterismGroups: AsterismGroupsWithObs = {
+      val targetObservations: Map[Target.Id, SortedSet[Observation.Id]] =
+        observations.values
+          .flatMap(obs => obs.scienceTargetIds.map(targetId => targetId -> obs.id))
+          .groupMap(_._1)(_._2)
+          .view
+          .mapValues(obsIds => SortedSet.from(obsIds))
+          .toMap
+
+      val updatedTargets: TargetWithObsList =
+        targetsWithObs.map((targetId, targetWithObs) =>
+          targetId ->
+            TargetWithObs.obsIds.replace(targetObservations.get(targetId).orEmpty)(targetWithObs)
+        )
+
+      val observationTargets: AsterismGroupList =
+        observations.values
+          .map(obs => obs.id -> obs.scienceTargetIds)
+          .groupMap(_._2)(_._1)
+          .map((targets, observations) =>
+            AsterismGroup(
+              ObsIdSet(NonEmptySet.of(observations.head, observations.tail.toList: _*)),
+              SortedSet.from(targets)
+            )
+          )
+          .toSortedMap(_.obsIds)
+
+      (AsterismGroupsWithObs.asterismGroups.replace(observationTargets) >>>
+        AsterismGroupsWithObs.targetsWithObs.replace(updatedTargets))(this)
+    }
   }
 
-  object AsterismGroupsWithObs {
+  object AsterismGroupsWithObs:
     val asterismGroups = Focus[AsterismGroupsWithObs](_.asterismGroups)
     val targetsWithObs = Focus[AsterismGroupsWithObs](_.targetsWithObs)
     val observations   = Focus[AsterismGroupsWithObs](_.observations)
-  }
 
   // Some helper methods on AsterismGroupList
   extension (self: AsterismGroupList)
@@ -108,20 +141,6 @@ object AsterismQueries:
 
     def findWithTargetIds(targetIds: SortedSet[Target.Id]): Option[AsterismGroup] =
       self.find { case (_, ag) => ag.targetIds === targetIds }.map(_._2)
-
-  // private def obsResultToSummary(obsR: ObservationResult): ObsSummaryWithConstraintsAndConf =
-  //   ObsSummaryWithConstraintsAndConf(
-  //     obsR.id,
-  //     obsR.constraintSet,
-  //     obsR.status,
-  //     obsR.activeStatus,
-  //     obsR.plannedTime.execution,
-  //     obsR.targetEnvironment.asterism.map(_.id).toSet,
-  //     obsR.observingMode,
-  //     obsR.visualizationTime.map(_.toInstant),
-  //     obsR.posAngleConstraint.some,
-  //     obsR.scienceRequirements.spectroscopy.wavelength
-  //   )
 
   private val queryToAsterismGroupWithObsGetter
     : Getter[AsterismGroupObsQuery.Data, AsterismGroupsWithObs] = data =>
@@ -139,9 +158,7 @@ object AsterismQueries:
     AsterismGroupsWithObs(
       asterismGroups,
       targetsWithObs,
-      data.observations.matches
-        // .map(obsResultToSummary)
-        .toSortedMap(ObsSummaryWithConstraintsAndConf.id.get)
+      data.observations.matches.toSortedMap(ObsSummaryWithConstraintsAndConf.id.get)
     )
 
   extension (self: AsterismGroupObsQuery.Data.type)

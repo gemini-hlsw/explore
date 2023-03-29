@@ -6,13 +6,7 @@ package explore.cache
 import cats.effect.IO
 import cats.syntax.all.given
 import japgolly.scalajs.react.*
-// import japgolly.scalajs.react.feature.Context
-// import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
-// import crystal.react.hooks.*
-// import lucuma.ui.reusability.given
-// import explore.model.AppContext
-// import lucuma.ui.syntax.pot.*
 import scala.collection.immutable.SortedMap
 import lucuma.core.model.Target
 import cats.effect.kernel.Resource
@@ -83,6 +77,7 @@ object ProgramCache extends CacheComponent[ProgramCache, AsterismGroupsWithObs]:
                 else
                   observations.removed(data.observationEdit.value.id)
               )
+              .andThen(_.rebuildAsterismGroups)
           )
         )
 
