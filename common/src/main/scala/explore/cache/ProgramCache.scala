@@ -83,6 +83,7 @@ object ProgramCache extends CacheComponent[ProgramCache, AsterismGroupsWithObs]:
                 else
                   observations.removed(data.observationEdit.value.id)
               )
+              .andThen(_.rebuildAsterismGroups)
           )
         )
 

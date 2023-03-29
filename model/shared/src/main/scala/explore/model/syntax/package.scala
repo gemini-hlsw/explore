@@ -31,7 +31,7 @@ object all:
       case PosAngleConstraint.ParallacticOverride(_) => PosAngleOptions.ParallacticOverride
       case PosAngleConstraint.Unbounded              => PosAngleOptions.Unconstrained
 
-  extension [A](list: List[A])
+  extension [A](list: Iterable[A])
     def toSortedMap[K: Ordering, V](getKey: A => K, getValue: A => V = identity[A](_)) =
       SortedMap.from(list.map(a => (getKey(a), getValue(a))))
 
