@@ -41,9 +41,6 @@ object AsterismQueries:
   // else, we can remove this.
   given Order[ObsIdSet] = ObsIdSet.given_Order_ObsIdSet
 
-  // type ObservationResult = AsterismGroupObsQuery.Data.Observations.Matches
-  // val ObservationResult = AsterismGroupObsQuery.Data.Observations.Matches
-
   type AsterismGroupList = SortedMap[ObsIdSet, AsterismGroup]
   type TargetWithObsList = SortedMap[Target.Id, TargetWithObs]
   type ObsList           = SortedMap[Observation.Id, ObsSummaryWithConstraintsAndConf]
@@ -127,7 +124,7 @@ object AsterismQueries:
           )
           .toSortedMap(_.obsIds)
 
-      (AsterismGroupsWithObs.asterismGroups.replace(observationTargets) >>> 
+      (AsterismGroupsWithObs.asterismGroups.replace(observationTargets) >>>
         AsterismGroupsWithObs.targetsWithObs.replace(updatedTargets))(this)
     }
   }

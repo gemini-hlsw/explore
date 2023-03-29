@@ -78,7 +78,6 @@ import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration.*
 import explore.cache.ProgramCache
-// import explore.cache.ModelCaches2
 
 case class TargetTabContents(
   userId:            Option[User.Id],
