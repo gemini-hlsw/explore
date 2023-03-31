@@ -253,13 +253,16 @@ case class ObsSummary(
   posAngleConstraint: Option[PosAngleConstraint],
   wavelength:         Option[Wavelength]
 ) derives Eq:
-  val conf: String = configuration match
+  lazy val configurationSummary: String = configuration match
     case Some(n: BasicConfiguration.GmosNorthLongSlit) =>
       s"GMOS-N ${n.grating.shortName} ${n.fpu.shortName}"
     case Some(s: BasicConfiguration.GmosSouthLongSlit) =>
       s"GMOS-S ${s.grating.shortName} ${s.fpu.shortName}"
     case _                                             =>
       s"-"
+
+  lazy val constraintsSummary: String =
+    s"${constraints.imageQuality.label} ${constraints.cloudExtinction.label} ${constraints.skyBackground.label} ${constraints.waterVapor.label}"
 
 object ObsSummary:
   val id                 = Focus[ObsSummary](_.id)

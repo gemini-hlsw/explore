@@ -34,10 +34,12 @@ import react.floatingui.syntax.*
 import react.primereact.Button
 import react.primereact.InputSwitch
 import react.primereact.TooltipOptions
+import cats.Eq
+import cats.derived.*
 
 case class ObsBadge(
-  obs:               ObsSummary, // The layout will depend on the mixins of the ObsSummary.
-  // TODO Another parameter with the layout
+  obs:               ObsSummary,
+  layout:            ObsBadge.Layout,
   selected:          Boolean = false,
   setStatusCB:       Option[ObsStatus => Callback] = none,
   setActiveStatusCB: Option[ObsActiveStatus => Callback] = none,
@@ -46,8 +48,19 @@ case class ObsBadge(
   cloneCB:           Option[Callback] = none
 ) extends ReactFnProps(ObsBadge.component)
 
-object ObsBadge {
+object ObsBadge:
   private type Props = ObsBadge
+
+  case class Layout(showTitle: Boolean, showConfiguration: Boolean, showConstraints: Boolean)
+      derives Eq
+
+  object Layout:
+    val ObservationsTab: Layout =
+      Layout(showTitle = true, showConfiguration = true, showConstraints = true)
+    val TargetsTab: Layout      =
+      Layout(showTitle = false, showConfiguration = false, showConstraints = true)
+    val ConstraintsTab: Layout  =
+      Layout(showTitle = false, showConfiguration = false, showConstraints = false)
 
   // TODO Make this a component similar to the one in the docs.
   private def renderEnumProgress[A: Enumerated](value: A): VdomNode = {
@@ -59,16 +72,8 @@ object ObsBadge {
 
   private val component =
     ScalaFnComponent[Props] { props =>
-      val obs         = props.obs
-      val conf        = obs match {
-        case withConf: ObsWithConf if withConf.configuration.isDefined => <.div(withConf.conf).some
-        case _                                                         => none
-      }
-      val constraints = obs match {
-        case withConstraints: ObsWithConstraints =>
-          <.div(withConstraints.constraintsSummary).some
-        case _                                   => none
-      }
+      val obs    = props.obs
+      val layout = props.layout
 
       val deleteButton =
         Button(
@@ -89,27 +94,25 @@ object ObsBadge {
         ).small
 
       def titleAndId(title: String) =
-        <.div(
-          ExploreStyles.ObsBadgeTargetAndId,
+        <.div(ExploreStyles.ObsBadgeTargetAndId)(
           <.div(title),
           <.div(ExploreStyles.ObsBadgeId, s"[${idIso.get(obs.id).value.toHexString}]")
         )
 
-      val header = <.div(
-        ExploreStyles.ObsBadgeHeader,
-        obs match {
-          case withTitle: ObsWithTitle => titleAndId(withTitle.title)
-          case withConf: ObsWithConf   => titleAndId(withConf.conf)
-          case _                       => titleAndId("")
-        },
-        props.cloneCB.whenDefined(_ => duplicateButton),
-        props.deleteCB.whenDefined(_ => deleteButton)
-      )
+      val header =
+        <.div(ExploreStyles.ObsBadgeHeader)(
+          titleAndId(obs.title).when(layout.showTitle),
+          titleAndId(obs.configurationSummary).when(layout.showConfiguration),
+          // obs match {
+          //   case withTitle: ObsWithTitle => titleAndId(withTitle.title)
+          //   case withConf: ObsWithConf   => titleAndId(withConf.conf)
+          //   case _                       => titleAndId("")
+          // },
+          props.cloneCB.whenDefined(_ => duplicateButton),
+          props.deleteCB.whenDefined(_ => deleteButton)
+        )
 
-      val meta = <.div(
-        ExploreStyles.ObsBadgeMeta,
-        // obs match {
-        // case withTitle: ObsWithTitle =>
+      val meta = <.div(ExploreStyles.ObsBadgeMeta)(
         props.setSubtitleCB
           .map(setCB =>
             EditableLabel(
@@ -125,9 +128,7 @@ object ObsBadge {
             )
           )
           .whenDefined
-        // case _                       => TagMod.empty
-        // },
-        ,
+          .when(layout.showTitle),
         renderEnumProgress(obs.status)
       )
 
@@ -137,15 +138,9 @@ object ObsBadge {
           meta,
           <.div(ExploreStyles.ObsBadgeDescription)(
             props.setActiveStatusCB.map(_ => ExploreStyles.ObsBadgeHasActiveStatus).orEmpty,
-            // obs match {
-            // case _: ObsWithTitle                     =>
-            <.span(List(conf, constraints).flatten: _*)
-            // case withConstraints: ObsWithConstraints =>
-            // <.span(withConstraints.constraintsSummary)
-            // case _                                   =>
-            // <.span(obs.id.toString)
-            // },
-            ,
+            <.span(obs.configurationSummary).when(layout.showConfiguration),
+            <.span(obs.constraintsSummary).when(layout.showConstraints),
+            // <.span(obs.id.toString),
             props.setActiveStatusCB.map(setActiveStatus =>
               <.span(
                 InputSwitch(
@@ -192,4 +187,3 @@ object ObsBadge {
         )
       )
     }
-}

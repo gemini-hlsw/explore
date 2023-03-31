@@ -154,6 +154,7 @@ object ObsList:
                 )(
                   ObsBadge(
                     obs,
+                    ObsBadge.Layout.ObservationsTab,
                     selected = selected,
                     setStatusCB = (obsEditStatus(props.programId, obs.id)
                       .set(undoCtx) _).compose((_: ObsStatus).some).some,
