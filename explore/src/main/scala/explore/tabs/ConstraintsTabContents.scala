@@ -17,7 +17,6 @@ import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.numeric.NonNegInt
 import explore.Icons
 import explore.*
-// import explore.common.ConstraintGroupQueries.*
 import explore.common.TimingWindowQueries.*
 import explore.common.UserPreferencesQueries.*
 import explore.components.Tile
@@ -83,13 +82,11 @@ import lucuma.core.model.Observation
 import explore.data.KeyedIndexedList
 
 case class ConstraintsTabContents(
-  userId:         Option[User.Id],
-  programId:      Program.Id,
-  focusedObsSet:  Option[ObsIdSet],
-  expandedIds:    View[SortedSet[ObsIdSet]],
-  listUndoStacks: View[UndoStacks[IO, ObservationList]],
-  // TODO: Clean up the groupUndoStack somewhere, somehow?
-  groupUndoStack: View[Map[ObsIdSet, UndoStacks[IO, ConstraintSet]]]
+  userId:        Option[User.Id],
+  programId:     Program.Id,
+  focusedObsSet: Option[ObsIdSet],
+  expandedIds:   View[SortedSet[ObsIdSet]],
+  obsUndoStacks: View[UndoStacks[IO, ObservationList]]
 ) extends ReactFnProps(ConstraintsTabContents.component)
 
 object ConstraintsTabContents extends TwoPanels:
@@ -144,25 +141,6 @@ object ConstraintsTabContents extends TwoPanels:
   )(
     timingWindows:    View[TimingWindowResult]
   ): VdomNode = {
-
-    // val constraintsWithObs = constraintsAndWindows.zoom(
-    //   Focus[(TimingWindowResult, ConstraintSummaryWithObervations)](_._2)
-    // )
-
-    // val timingWindows = constraintsAndWindows.zoom(
-    //   Focus[(TimingWindowResult, ConstraintSummaryWithObervations)](_._1)
-    // )
-
-    // def constraintsTree(constraintWithObs: View[ConstraintSummaryWithObervations]) =
-    //   ConstraintGroupObsList(
-    //     programSummaries,
-    //     props.programId,
-    //     props.focusedObsSet,
-    //     state.set(SelectedPanel.Summary),
-    //     props.expandedIds,
-    //     props.listUndoStacks
-    //   )
-
     def findConstraintGroup(obsIds: ObsIdSet, cgl: ConstraintGroupList): Option[ConstraintGroup] =
       cgl.find(_._1.intersect(obsIds).nonEmpty).map(ConstraintGroup.fromTuple)
 
@@ -217,63 +195,9 @@ object ConstraintsTabContents extends TwoPanels:
         } { case (idsToEdit, constraintGroup) =>
           val groupObsIds   = constraintGroup.obsIds
           val constraintSet = constraintGroup.constraintSet
-          val cglView       = programSummaries
-            .withOnMod(onModSummaryWithObs(groupObsIds, idsToEdit))
-          // .zoom(ProgramSummaries.constraintGroups)
+          val psView        = programSummaries.withOnMod(onModSummaryWithObs(groupObsIds, idsToEdit))
 
-          // val getCs: ConstraintGroupList => ConstraintSet = _ => constraintSet
-
-          // def modCs(
-          //   mod: ConstraintSet => ConstraintSet
-          // ): ConstraintGroupList => ConstraintGroupList =
-          //   cgl =>
-          //     findConstraintGroup(idsToEdit, cgl)
-          //       .map { cg =>
-          //         val newCg        = ConstraintGroup.constraintSet.modify(mod)(cg)
-          //         // see if the edit caused a merger
-          //         val mergeWithIds = cgl
-          //           .find { case (ids, cs) =>
-          //             !ids.intersects(idsToEdit) && cs === newCg.constraintSet
-          //           }
-          //           .map(_._1)
-
-          //         // If we're editing an observation within a larger group, we need a split
-          //         val splitList =
-          //           if (idsToEdit === groupObsIds)
-          //             cgl.updated(groupObsIds, newCg) // otherwise, just update current group
-          //           else {
-          //             val diffIds = groupObsIds.removeUnsafe(idsToEdit)
-          //             cgl
-          //               .removed(groupObsIds)
-          //               .updated(idsToEdit, ConstraintGroup(newCg.constraintSet, idsToEdit))
-          //               .updated(diffIds, ConstraintGroup(cg.constraintSet, diffIds))
-          //           }
-
-          //         mergeWithIds.fold(splitList) { idsToMerge =>
-          //           val combined = idsToMerge ++ idsToEdit
-          //           splitList
-          //             .removed(idsToMerge)
-          //             .removed(idsToEdit)
-          //             .updated(combined, ConstraintGroup(newCg.constraintSet, combined))
-          //         }
-          //       }
-          //       .getOrElse(cgl) // shouldn't happen
-
-          // val csView: View[ConstraintSet] = cglView.zoom(getCs)(modCs)
-
-          import explore.constraints.ViewList
-          import explore.constraints.CloneListView
-
-          val csView: ViewList[ConstraintSet] =
-            cglView.zoom(
-              ProgramSummaries.observations
-                .filterIndex((id: Observation.Id) => idsToEdit.contains(id))
-                .andThen(KeyedIndexedList.value)
-                .andThen(ObsSummary.constraints)
-            )
-
-          val csUndo: View[UndoStacks[IO, ConstraintSet]] =
-            props.groupUndoStack.zoom(atMapWithDefault(idsToEdit, UndoStacks.empty))
+          val csView: View[ObservationList] = psView.zoom(ProgramSummaries.observations)
 
           val constraintsTitle = idsToEdit.single match
             case Some(id) => s"Observation $id"
@@ -287,9 +211,9 @@ object ConstraintsTabContents extends TwoPanels:
           )(renderInTitle =>
             ConstraintsPanel(
               props.programId,
-              idsToEdit.toList,
-              CloneListView(csView),
-              csUndo,
+              idsToEdit,
+              csView,
+              props.obsUndoStacks,
               renderInTitle
             )
           )
@@ -315,13 +239,17 @@ object ConstraintsTabContents extends TwoPanels:
           )
         }
 
-    makeOneOrTwoPanels(
-      state,
-      <.div("hello"), // constraintsTree(constraintsWithObs),
-      rightSide,
-      RightSideCardinality.Multi,
-      resize
-    )
+    val constraintsTree =
+      ConstraintGroupObsList(
+        programSummaries,
+        props.programId,
+        props.focusedObsSet,
+        state.set(SelectedPanel.Summary),
+        props.expandedIds,
+        props.obsUndoStacks
+      )
+
+    makeOneOrTwoPanels(state, constraintsTree, rightSide, RightSideCardinality.Multi, resize)
   }
 
   private val component =

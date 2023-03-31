@@ -23,6 +23,8 @@ type ViewList[A] = ViewListF[DefaultS, A]
 //       modCB = (mod, cb) => underlying.modCB(_.map(mod), l => cb(l.head))
 //     )
 
+/////// I THINK WE ARE NOT USING THIS AFTER ALL
+
 // Turn a ViewList into a View, assuming all returned objects are clones,
 // and therefore just returning the head upon get.
 final class CloneListView[F[_]: Monad, A](val underlying: ViewListF[F, A])

@@ -35,12 +35,15 @@ import react.common.ReactFnProps
 import react.fa.FontAwesomeIcon
 import react.primereact.Button
 import explore.common.AsterismQueries.ProgramSummaries
+import explore.model.syntax.all.*
 
 import scala.collection.immutable.SortedSet
 import explore.common.AsterismQueries.ObservationList
 import explore.common.AsterismQueries.ConstraintGroupList
 import lucuma.core.model.ConstraintSet
-// import explore.common.ConstraintsQueries.UndoView.obsIds
+import explore.common.ConstraintsQueries
+import org.typelevel.log4cats.Logger
+import lucuma.schemas.odb.input.*
 
 case class ConstraintGroupObsList(
   programSummaries: View[ProgramSummaries],
@@ -82,16 +85,28 @@ object ConstraintGroupObsList:
     focusedObsSet:    Option[ObsIdSet],
     constraintGroups: ConstraintGroupList,
     setObsSet:        Option[ObsIdSet] => Callback
-  )(implicit
-    c:                FetchClient[IO, ?, ObservationDB]
+  )(using
+    FetchClient[IO, ?, ObservationDB],
+    Logger[IO]
   ): (DropResult, ResponderProvided) => Callback = (result, _) => {
     val oData = for {
       destination <- result.destination.toOption
       destIds     <- ObsIdSet.fromString.getOption(destination.droppableId)
       draggedIds  <- getDraggedIds(result.draggableId, focusedObsSet)
       if !destIds.intersects(draggedIds)
-      destCg      <- constraintGroups.get(destIds)
-    } yield (destCg, draggedIds)
+      newCs       <- constraintGroups.get(destIds)
+    } yield (newCs, draggedIds)
+
+    oData.foldMap { case (newCs, draggedIds) =>
+      ConstraintsQueries
+        .UndoView(programId, draggedIds, undoCtx)(
+          // There should be a better way to do this.
+          identity,
+          identity,
+          cs => _ => cs.toInput
+        )
+        .set(newCs)
+    }
 
     // Oh, this will be fun... we have to change the whole approach to edit observations.
     // We will probably need a Traversal
@@ -101,7 +116,6 @@ object ConstraintGroupObsList:
     //     .obsConstraintGroup(programId, draggedIds, expandedIds, setObsSet)
     //     .set(undoCtx)(destCg.some)
     // }
-    Callback.empty
   }
 
   private val component = ScalaFnComponent
@@ -141,7 +155,8 @@ object ConstraintGroupObsList:
 
       val observations = props.programSummaries.get.observations
 
-      val constraintGroups = props.programSummaries.get.constraintGroups
+      val constraintGroups =
+        props.programSummaries.get.constraintGroups.toList.sortBy(_._2.summaryString)
 
       val undoCtx = UndoContext(
         props.undoStacks,
