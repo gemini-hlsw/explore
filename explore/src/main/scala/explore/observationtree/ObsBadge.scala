@@ -51,16 +51,20 @@ case class ObsBadge(
 object ObsBadge:
   private type Props = ObsBadge
 
-  case class Layout(showTitle: Boolean, showConfiguration: Boolean, showConstraints: Boolean)
-      derives Eq
+  enum Section derives Eq:
+    case None, Header, Detail
+
+  case class Layout(
+    showTitle:         Boolean,
+    showSubtitle:      Boolean,
+    showConfiguration: Section,
+    showConstraints:   Boolean
+  ) derives Eq
 
   object Layout:
-    val ObservationsTab: Layout =
-      Layout(showTitle = true, showConfiguration = true, showConstraints = true)
-    val TargetsTab: Layout      =
-      Layout(showTitle = false, showConfiguration = false, showConstraints = true)
-    val ConstraintsTab: Layout  =
-      Layout(showTitle = false, showConfiguration = false, showConstraints = false)
+    val ObservationsTab: Layout = Layout(true, true, Section.Detail, true)
+    val TargetsTab: Layout      = Layout(false, false, Section.Header, true)
+    val ConstraintsTab: Layout  = Layout(true, false, Section.Detail, false)
 
   // TODO Make this a component similar to the one in the docs.
   private def renderEnumProgress[A: Enumerated](value: A): VdomNode = {
@@ -93,21 +97,14 @@ object ObsBadge:
           onClickE = e => e.preventDefaultCB *> e.stopPropagationCB *> props.cloneCB.getOrEmpty
         ).small
 
-      def titleAndId(title: String) =
-        <.div(ExploreStyles.ObsBadgeTargetAndId)(
-          <.div(title),
-          <.div(ExploreStyles.ObsBadgeId, s"[${idIso.get(obs.id).value.toHexString}]")
-        )
-
       val header =
         <.div(ExploreStyles.ObsBadgeHeader)(
-          titleAndId(obs.title).when(layout.showTitle),
-          titleAndId(obs.configurationSummary).when(layout.showConfiguration),
-          // obs match {
-          //   case withTitle: ObsWithTitle => titleAndId(withTitle.title)
-          //   case withConf: ObsWithConf   => titleAndId(withConf.conf)
-          //   case _                       => titleAndId("")
-          // },
+          <.div(ExploreStyles.ObsBadgeTargetAndId)(
+            <.div(obs.title).when(layout.showTitle),
+            <.div(obs.configurationSummary.getOrElse("-"))
+              .when(layout.showConfiguration === Section.Header),
+            <.div(ExploreStyles.ObsBadgeId, s"[${idIso.get(obs.id).value.toHexString}]")
+          ),
           props.cloneCB.whenDefined(_ => duplicateButton),
           props.deleteCB.whenDefined(_ => deleteButton)
         )
@@ -128,7 +125,7 @@ object ObsBadge:
             )
           )
           .whenDefined
-          .when(layout.showTitle),
+          .when(layout.showSubtitle),
         renderEnumProgress(obs.status)
       )
 
@@ -138,9 +135,13 @@ object ObsBadge:
           meta,
           <.div(ExploreStyles.ObsBadgeDescription)(
             props.setActiveStatusCB.map(_ => ExploreStyles.ObsBadgeHasActiveStatus).orEmpty,
-            <.span(obs.configurationSummary).when(layout.showConfiguration),
-            <.span(obs.constraintsSummary).when(layout.showConstraints),
-            // <.span(obs.id.toString),
+            <.span(
+              obs.configurationSummary
+                .map(conf => <.div(conf))
+                .whenDefined
+                .when(layout.showConfiguration === Section.Detail),
+              <.div(obs.constraintsSummary).when(layout.showConstraints)
+            ),
             props.setActiveStatusCB.map(setActiveStatus =>
               <.span(
                 InputSwitch(

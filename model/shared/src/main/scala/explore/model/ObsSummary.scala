@@ -253,13 +253,13 @@ case class ObsSummary(
   posAngleConstraint: Option[PosAngleConstraint],
   wavelength:         Option[Wavelength]
 ) derives Eq:
-  lazy val configurationSummary: String = configuration match
-    case Some(n: BasicConfiguration.GmosNorthLongSlit) =>
-      s"GMOS-N ${n.grating.shortName} ${n.fpu.shortName}"
-    case Some(s: BasicConfiguration.GmosSouthLongSlit) =>
-      s"GMOS-S ${s.grating.shortName} ${s.fpu.shortName}"
-    case _                                             =>
-      s"-"
+  lazy val configurationSummary: Option[String] = configuration match
+    case Some(BasicConfiguration.GmosNorthLongSlit(grating, _, fpu, _)) =>
+      s"GMOS-N ${grating.shortName} ${fpu.shortName}".some
+    case Some(BasicConfiguration.GmosSouthLongSlit(grating, _, fpu, _)) =>
+      s"GMOS-S ${grating.shortName} ${fpu.shortName}".some
+    case _                                                              =>
+      none
 
   lazy val constraintsSummary: String =
     s"${constraints.imageQuality.label} ${constraints.cloudExtinction.label} ${constraints.skyBackground.label} ${constraints.waterVapor.label}"
