@@ -79,11 +79,14 @@ import scala.collection.immutable.SortedSet
 import scala.concurrent.duration.*
 import explore.cache.ProgramCache
 
+import explore.model.ObsSummary
+import explore.data.KeyedIndexedList
+
 case class TargetTabContents(
   userId:            Option[User.Id],
   programId:         Program.Id,
   focused:           Focused,
-  listUndoStacks:    View[UndoStacks[IO, AsterismGroupsWithObs]],
+  listUndoStacks:    View[UndoStacks[IO, ProgramSummaries]],
   targetsUndoStacks: View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
   searching:         View[Set[Target.Id]],
   expandedIds:       View[SortedSet[ObsIdSet]]
@@ -173,27 +176,26 @@ object TargetTabContents extends TwoPanels:
     targetMap.get(targetId).fold(0)(tg => (tg.obsIds -- obsIds.toSortedSet).size)
 
   private def renderFn(
-    props:                 Props,
-    selectedView:          View[SelectedPanel],
-    layouts:               View[Pot[LayoutsMap]],
-    resize:                UseResizeDetectorReturn,
-    fullScreen:            View[AladinFullScreen],
-    selectedTargetIds:     View[List[Target.Id]],
-    ctx:                   AppContext[IO]
-  )(
-    asterismGroupsWithObs: View[AsterismGroupsWithObs]
+    props:             Props,
+    programSummaries:  View[ProgramSummaries],
+    selectedView:      View[SelectedPanel],
+    layouts:           View[Pot[LayoutsMap]],
+    resize:            UseResizeDetectorReturn,
+    fullScreen:        View[AladinFullScreen],
+    selectedTargetIds: View[List[Target.Id]],
+    ctx:               AppContext[IO]
   ): VdomNode = {
     import ctx.given
 
-    val astGrpObsListUndoCtx: UndoContext[AsterismGroupsWithObs] =
-      UndoContext(props.listUndoStacks, asterismGroupsWithObs)
+    val astGrpObsListUndoCtx: UndoContext[ProgramSummaries] =
+      UndoContext(props.listUndoStacks, programSummaries)
 
     val targetMap: View[TargetWithObsList] =
-      asterismGroupsWithObs.zoom(AsterismGroupsWithObs.targetsWithObs)
+      programSummaries.zoom(ProgramSummaries.targetsWithObs)
 
     def targetTree(
-      objectsWithObs: View[AsterismGroupsWithObs],
-      undoCtx:        UndoContext[AsterismGroupsWithObs]
+      objectsWithObs: View[ProgramSummaries],
+      undoCtx:        UndoContext[ProgramSummaries]
     ) =
       AsterismGroupObsList(
         objectsWithObs,
@@ -216,7 +218,7 @@ object TargetTabContents extends TwoPanels:
       targetId: Target.Id
     ): Callback = {
       val obsIdSet = ObsIdSet.one(obsId)
-      findAsterismGroup(obsIdSet, asterismGroupsWithObs.get.asterismGroups)
+      findAsterismGroup(obsIdSet, programSummaries.get.asterismGroups)
         .map(ag => expandedIds.mod(_ + ag.obsIds))
         .orEmpty >>
         setPage(Focused(obsIdSet.some, targetId.some))
@@ -228,7 +230,7 @@ object TargetTabContents extends TwoPanels:
     def onModAsterismsWithObs(
       groupIds:  ObsIdSet,
       editedIds: ObsIdSet
-    )(agwo: AsterismGroupsWithObs): Callback =
+    )(agwo: ProgramSummaries): Callback =
       findAsterismGroup(editedIds, agwo.asterismGroups).foldMap { tlg =>
         // We should always find the group.
         // If a group was edited while closed and it didn't create a merger, keep it closed,
@@ -297,11 +299,11 @@ object TargetTabContents extends TwoPanels:
           )
           .map(a => props.focused.target.map(t => a.focusOn(t)).getOrElse(a))
 
-      val getAsterism: AsterismGroupsWithObs => Option[Asterism] = _ => asterism
+      val getAsterism: ProgramSummaries => Option[Asterism] = _ => asterism
 
       def modAsterism(
         mod: Option[Asterism] => Option[Asterism]
-      ): AsterismGroupsWithObs => AsterismGroupsWithObs = agwo => {
+      ): ProgramSummaries => ProgramSummaries = agwo => {
         val asterismGroups = agwo.asterismGroups
         val targetsWithObs = agwo.targetsWithObs
         val moddedAsterism = mod(asterism)
@@ -361,32 +363,33 @@ object TargetTabContents extends TwoPanels:
         )
       }
 
-      val getVizTime: AsterismGroupsWithObs => Option[Instant] = a =>
+      val getVizTime: ProgramSummaries => Option[Instant] = a =>
         for
           id <- idsToEdit.single
-          o  <- a.observations.get(id)
+          o  <- a.observations.getValue(id)
           t  <- o.visualizationTime
         yield t
 
       def modVizTime(
         mod: Option[Instant] => Option[Instant]
-      ): AsterismGroupsWithObs => AsterismGroupsWithObs = awgo =>
+      ): ProgramSummaries => ProgramSummaries = ps =>
         idsToEdit.single
           .map(i =>
-            AsterismGroupsWithObs.observations
+            ProgramSummaries.observations
               .filterIndex((id: Observation.Id) => id === i)
-              .andThen(ObsSummaryWithConstraintsAndConf.visualizationTime)
-              .modify(mod)(awgo)
+              .andThen(KeyedIndexedList.value)
+              .andThen(ObsSummary.visualizationTime)
+              .modify(mod)(ps)
           )
-          .getOrElse(awgo)
+          .getOrElse(ps)
 
       val asterismView: View[Option[Asterism]] =
-        asterismGroupsWithObs
+        programSummaries
           .withOnMod(onModAsterismsWithObs(groupIds, idsToEdit))
           .zoom(getAsterism)(modAsterism)
 
       val vizTimeView: View[Option[Instant]] =
-        asterismGroupsWithObs
+        programSummaries
           .zoom(getVizTime)(modVizTime)
 
       val title = idsToEdit.single match {
@@ -401,27 +404,23 @@ object TargetTabContents extends TwoPanels:
 
       val obsConf = idsToEdit.single match {
         case Some(id) =>
-          asterismGroupsWithObs
-            .zoom(AsterismGroupsWithObs.observations)
-            .get
-            .collect {
-              case (k,
-                    ObsSummaryWithConstraintsAndConf(
-                      _,
-                      const,
-                      _,
-                      _,
-                      _,
-                      _,
-                      Some(conf),
-                      _,
-                      Some(posAngle),
-                      Some(wavelength)
-                    )
-                  ) if k === id =>
-                (const.withDefaultElevationRange, conf, posAngle, wavelength)
-            }
-            .headOption
+          programSummaries.get.observations.values.collect {
+            case ObsSummary(
+                  obsId,
+                  _,
+                  _,
+                  _,
+                  _,
+                  _,
+                  _,
+                  const,
+                  Some(conf),
+                  _,
+                  Some(posAngle),
+                  Some(wavelength)
+                ) if obsId === id =>
+              (const, conf, posAngle, wavelength)
+          }.headOption
         case _        => None
       }
 
@@ -547,7 +546,7 @@ object TargetTabContents extends TwoPanels:
                     (renderSiderealTargetEditor(resize, targetId, s), false)
               )
           case Right(obsIds)  =>
-            findAsterismGroup(obsIds, asterismGroupsWithObs.get.asterismGroups)
+            findAsterismGroup(obsIds, programSummaries.get.asterismGroups)
               .map(asterismGroup => (renderAsterismEditor(resize, obsIds, asterismGroup), true))
       )
 
@@ -572,7 +571,7 @@ object TargetTabContents extends TwoPanels:
 
     makeOneOrTwoPanels(
       selectedView,
-      targetTree(asterismGroupsWithObs, astGrpObsListUndoCtx),
+      targetTree(programSummaries, astGrpObsListUndoCtx),
       rightSide,
       RightSideCardinality.Multi,
       resize
@@ -580,24 +579,21 @@ object TargetTabContents extends TwoPanels:
   }
 
   private def applyObs(
-    programId:             Program.Id,
-    obsIds:                List[Observation.Id],
-    targetIds:             List[Target.Id],
-    asterismGroupsWithObs: View[AsterismGroupsWithObs],
-    ctx:                   AppContext[IO],
-    listUndoStacks:        View[UndoStacks[IO, AsterismGroupsWithObs]],
-    expandedIds:           View[SortedSet[ObsIdSet]]
+    programId:        Program.Id,
+    obsIds:           List[Observation.Id],
+    targetIds:        List[Target.Id],
+    programSummaries: View[ProgramSummaries],
+    ctx:              AppContext[IO],
+    listUndoStacks:   View[UndoStacks[IO, ProgramSummaries]],
+    expandedIds:      View[SortedSet[ObsIdSet]]
   ): IO[Unit] =
     import ctx.given
-    val undoContext = UndoContext(listUndoStacks, asterismGroupsWithObs)
+    val undoContext = UndoContext(listUndoStacks, programSummaries)
     (obsIds, targetIds).tupled
       .traverse((obsId, tid) =>
         ObsQueries
           .applyObservation[IO](obsId, List(tid))
-          .map { o =>
-            asterismGroupsWithObs.get
-              .cloneObsWithTargets(obsId, o.id, List(tid))
-          }
+          .map(o => programSummaries.get.cloneObsWithTargets(obsId, o.id, List(tid)))
           .map(_.map(summ => (summ, tid)))
       )
       .flatMap(olist =>
@@ -662,8 +658,8 @@ object TargetTabContents extends TwoPanels:
       .useEffectWithDepsBy((props, _, _, _, _, _, _) => props.focused.target)(
         (_, _, _, _, _, _, selIds) => _.foldMap(focusedTarget => selIds.set(List(focusedTarget)))
       )
-      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, asterismGroupWithObs, selIds) =>
-        (props.focused, asterismGroupWithObs.get.asterismGroups, selIds.get)
+      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, programSummaries, selIds) =>
+        (props.focused, programSummaries.get.asterismGroups, selIds.get)
       ) { (props, ctx, _, _, _, agwov, _) => (target, asterismGroups, selectedIds) =>
         import ctx.given
 
@@ -753,17 +749,18 @@ object TargetTabContents extends TwoPanels:
           twoPanelState,
           resize,
           layout,
-          asterismGroupsWithObs,
+          programSummaries,
           selectedTargetIds,
           fullScreen
         ) =>
           renderFn(
             props,
+            programSummaries,
             twoPanelState,
             layout,
             resize,
             fullScreen,
             selectedTargetIds,
             ctx
-          )(asterismGroupsWithObs)
+          )
       }

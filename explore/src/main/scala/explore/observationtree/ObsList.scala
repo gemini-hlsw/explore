@@ -68,7 +68,7 @@ object ObsList:
       createObservation[IO](programId)
         .flatMap { obs =>
           obsExistence(programId, obs.id, o => setObs(programId, o.some, ctx))
-            .mod(undoCtx)(obsListMod.upsert(obs.toTitleAndConstraints, pos))
+            .mod(undoCtx)(obsListMod.upsert(obs, pos))
             .to[IO]
         }
         .guarantee(adding.async.set(false))

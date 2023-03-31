@@ -51,7 +51,7 @@ import lucuma.ui.table.*
 import lucuma.ui.utils.Render
 import monocle.Optional
 import monocle.Traversal
-import monocle.function.FilterIndex.filterIndex
+// import monocle.function.FilterIndex.filterIndex
 import monocle.function.Index
 import monocle.function.Index.*
 import queries.common.TimingWindowsGQL.*

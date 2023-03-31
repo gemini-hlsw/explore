@@ -15,6 +15,7 @@ import java.time
 // gql: import lucuma.schemas.decoders.given
 
 object ObsQueriesGQL:
+  // TODO Remove?
   @GraphQL
   trait ProgramObservationsQuery extends GraphQLOperation[ObservationDB]:
     // TODO We should do a single observations query and extract the constraint sets and targets from it.
@@ -88,17 +89,7 @@ object ObsQueriesGQL:
     val document = s"""
       mutation($$createObservation: CreateObservationInput!) {
         createObservation(input: $$createObservation) {
-          observation {
-            id
-            title
-            subtitle
-            constraintSet $ConstraintsSummarySubquery
-            status
-            activeStatus
-            plannedTime {
-              execution $TimeSpanSubquery
-            }
-          }
+          observation $ObservationSummarySubquery
         }
       }
     """
@@ -257,17 +248,7 @@ object ObsQueriesGQL:
     val document = s"""
       mutation ($$input: CloneObservationInput!){
         cloneObservation(input: $$input) {
-          newObservation {
-            id
-            title
-            subtitle
-            constraintSet $ConstraintsSummarySubquery
-            status
-            activeStatus
-            plannedTime {
-              execution $TimeSpanSubquery
-            }
-          }
+          newObservation $ObservationSummarySubquery
         }
       }
     """

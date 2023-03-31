@@ -69,7 +69,7 @@ case class TargetSummaryTable(
   selectTargetOrSummary: Option[Target.Id] => Callback,
   renderInTitle:         Tile.RenderInTitle,
   selectedTargetIds:     View[List[Target.Id]],
-  undoCtx:               UndoContext[AsterismGroupsWithObs]
+  undoCtx:               UndoContext[ProgramSummaries]
 ) extends ReactFnProps(TargetSummaryTable.component)
 
 object TargetSummaryTable extends TableHooks:

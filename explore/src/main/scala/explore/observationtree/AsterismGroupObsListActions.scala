@@ -31,12 +31,12 @@ import scala.collection.immutable.SortedSet
 object AsterismGroupObsListActions {
   private def obsDropGetter(
     draggedIds: ObsIdSet
-  ): AsterismGroupsWithObs => Option[AsterismGroup] =
+  ): ProgramSummaries => Option[AsterismGroup] =
     _.asterismGroups.findContainingObsIds(draggedIds)
 
   private def obsDropSetter(draggedIds: ObsIdSet, srcIds: ObsIdSet, destIds: ObsIdSet)(
     oAsterismGroup: Option[AsterismGroup]
-  ): AsterismGroupsWithObs => AsterismGroupsWithObs = agwo => {
+  ): ProgramSummaries => ProgramSummaries = agwo => {
     val origAsterismGroups = agwo.asterismGroups
 
     // should always have an asterism group and be able to find the dragged Ids in the list

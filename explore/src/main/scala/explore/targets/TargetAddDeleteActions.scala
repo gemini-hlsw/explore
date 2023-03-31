@@ -27,19 +27,19 @@ import queries.common.TargetQueriesGQL
 object TargetAddDeleteActions {
   private def singleTargetGetter(
     targetId: Target.Id
-  ): AsterismGroupsWithObs => Option[TargetWithObs] = _.targetsWithObs.get(targetId)
+  ): ProgramSummaries => Option[TargetWithObs] = _.targetsWithObs.get(targetId)
 
   private def targetListGetter(
     targetIds: List[Target.Id]
-  ): AsterismGroupsWithObs => List[Option[TargetWithObs]] = agwo =>
+  ): ProgramSummaries => List[Option[TargetWithObs]] = agwo =>
     targetIds.map(tid => singleTargetGetter(tid)(agwo))
 
   private def singleTargetSetter(targetId: Target.Id)(
     otwo: Option[TargetWithObs]
-  ): AsterismGroupsWithObs => AsterismGroupsWithObs = agwo =>
-    otwo.fold(AsterismGroupsWithObs.targetsWithObs.modify(_.removed(targetId))) { tg =>
-      AsterismGroupsWithObs.targetsWithObs.modify(_.updated(targetId, tg)) >>>
-        AsterismGroupsWithObs.asterismGroups.modify(
+  ): ProgramSummaries => ProgramSummaries = agwo =>
+    otwo.fold(ProgramSummaries.targetsWithObs.modify(_.removed(targetId))) { tg =>
+      ProgramSummaries.targetsWithObs.modify(_.updated(targetId, tg)) >>>
+        ProgramSummaries.asterismGroups.modify(
           _.map { case (_, ag) =>
             if (ag.obsIds.toSortedSet.intersect(tg.obsIds).nonEmpty) ag.addTargetId(targetId)
             else ag
@@ -49,7 +49,7 @@ object TargetAddDeleteActions {
 
   private def targetListSetter(targetIds: List[Target.Id])(
     twol: List[Option[TargetWithObs]]
-  ): AsterismGroupsWithObs => AsterismGroupsWithObs = agwo =>
+  ): ProgramSummaries => ProgramSummaries = agwo =>
     targetIds.zip(twol).foldLeft(agwo) { case (acc, (tid, otwo)) =>
       singleTargetSetter(tid)(otwo)(acc)
     }
@@ -92,8 +92,8 @@ object TargetAddDeleteActions {
     postMessage: String => IO[Unit]
   )(using
     c:           FetchClient[IO, ?, ObservationDB]
-  ): Action[AsterismGroupsWithObs, Option[TargetWithObs]] =
-    Action[AsterismGroupsWithObs, Option[TargetWithObs]](
+  ): Action[ProgramSummaries, Option[TargetWithObs]] =
+    Action[ProgramSummaries, Option[TargetWithObs]](
       getter = singleTargetGetter(targetId),
       setter = singleTargetSetter(targetId)
     )(
@@ -119,7 +119,7 @@ object TargetAddDeleteActions {
     postMessage: String => IO[Unit]
   )(using
     c:           FetchClient[IO, ?, ObservationDB]
-  ): Action[AsterismGroupsWithObs, List[Option[TargetWithObs]]] =
+  ): Action[ProgramSummaries, List[Option[TargetWithObs]]] =
     Action(getter = targetListGetter(targetIds), setter = targetListSetter(targetIds))(
       onSet = (_, lotwo) =>
         lotwo.sequence.fold(remoteDeleteTargets(targetIds, programId))(_ =>

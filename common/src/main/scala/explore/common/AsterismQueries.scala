@@ -12,7 +12,7 @@ import clue.data.syntax.*
 import explore.DefaultErrorPolicy
 import explore.model.AsterismGroup
 import explore.model.ObsIdSet
-import explore.model.ObsSummaryWithConstraintsAndConf
+import explore.model.ObsSummary
 import cats.data.NonEmptySet
 
 import explore.model.TargetWithObs
@@ -34,6 +34,8 @@ import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 import explore.model.Focused.obsSet
 import explore.model.TargetWithIdAndObs.targetWithObs
+import explore.data.KeyedIndexedList
+import lucuma.core.model.ConstraintSet
 
 object AsterismQueries:
   // The default cats ordering for sorted set sorts by size first, then contents. That's not what we want.
@@ -41,24 +43,39 @@ object AsterismQueries:
   // else, we can remove this.
   given Order[ObsIdSet] = ObsIdSet.given_Order_ObsIdSet
 
-  type AsterismGroupList = SortedMap[ObsIdSet, AsterismGroup]
-  type TargetWithObsList = SortedMap[Target.Id, TargetWithObs]
-  type ObsList           = SortedMap[Observation.Id, ObsSummaryWithConstraintsAndConf]
+  type AsterismGroupList   = SortedMap[ObsIdSet, AsterismGroup]
+  type TargetWithObsList   = SortedMap[Target.Id, TargetWithObs]
+  // KeyedIndexedList is only useful is manual order is going to matter.
+  // For the moment I'm keeping it because it seems it will matter at some point.
+  // Otherwise, we should change to a SortedMap.
+  type ObservationList     = KeyedIndexedList[Observation.Id, ObsSummary]
+  type ConstraintGroupList = SortedMap[ObsIdSet, ConstraintSet]
 
-  case class AsterismGroupsWithObs(
+  case class ProgramSummaries(
     asterismGroups: AsterismGroupList,
     targetsWithObs: TargetWithObsList,
-    observations:   ObsList
+    observations:   ObservationList
   ) {
+    lazy val constraintGroups: ConstraintGroupList =
+      SortedMap.from(
+        observations.values
+          .groupMap(_.constraints)(_.id)
+          .map((c, obsIds) => ObsIdSet.of(obsIds.head, obsIds.tail.toList: _*) -> c)
+      )
+
     def cloneObsWithTargets(
       originalId: Observation.Id,
       clonedId:   Observation.Id,
       targetIds:  List[Target.Id]
-    ): Option[ObsSummaryWithConstraintsAndConf] =
-      observations.get(originalId).map(_.copy(id = clonedId, scienceTargetIds = targetIds.toSet))
+    ): Option[ObsSummary] =
+      // observations.get(originalId).map(_.copy(id = clonedId, scienceTargetIds = targetIds.toSet))
+      observations
+        .getValue(originalId)
+        .map(_.copy(id = clonedId, scienceTargetIds = targetIds.toSet))
 
-    def insertObs(obsSummary: ObsSummaryWithConstraintsAndConf): AsterismGroupsWithObs = {
-      val newObservations   = observations + (obsSummary.id -> obsSummary)
+    def insertObs(obsSummary: ObsSummary): ProgramSummaries = {
+      // val newObservations   = observations + (obsSummary.id -> obsSummary)
+      val newObservations   = observations.inserted(obsSummary.id, obsSummary, observations.length)
       val newTargetsWithObs = obsSummary.scienceTargetIds.foldLeft(targetsWithObs)((twos, id) =>
         twos.updatedWith(id)(_.map(r => r.copy(obsIds = r.obsIds + obsSummary.id)))
       )
@@ -72,14 +89,15 @@ object AsterismQueries:
           asterismGroups - ids + AsterismGroup(ids ++ newIdSet, targetIds).asObsKeyValue
         )
 
-      AsterismGroupsWithObs(newAsterismGroups, newTargetsWithObs, newObservations)
+      ProgramSummaries(newAsterismGroups, newTargetsWithObs, newObservations)
     }
 
     def removeObsWithTargets(
       obsId:     Observation.Id,
       targetIds: SortedSet[Target.Id]
-    ): AsterismGroupsWithObs = {
-      val newObservations   = observations - obsId
+    ): ProgramSummaries = {
+      // val newObservations   = observations - obsId
+      val newObservations   = observations.removed(obsId)
       val newTargetsWithObs = targetIds.foldLeft(targetsWithObs)((twos, id) =>
         twos.updatedWith(id)(_.map(r => r.copy(obsIds = r.obsIds - obsId)))
       )
@@ -92,13 +110,14 @@ object AsterismQueries:
         )
         tmpGroups - currentIds
       }
-      AsterismGroupsWithObs(newAsterismGroups, newTargetsWithObs, newObservations)
+      ProgramSummaries(newAsterismGroups, newTargetsWithObs, newObservations)
     }
 
     // Rebuilds asterism groups and observation list for each target, based on the
     // observations asterisms.
-    def rebuildAsterismGroups: AsterismGroupsWithObs = {
+    def rebuildAsterismGroups: ProgramSummaries = {
       val targetObservations: Map[Target.Id, SortedSet[Observation.Id]] =
+        // observations.values
         observations.values
           .flatMap(obs => obs.scienceTargetIds.map(targetId => targetId -> obs.id))
           .groupMap(_._1)(_._2)
@@ -113,6 +132,7 @@ object AsterismQueries:
         )
 
       val observationTargets: AsterismGroupList =
+        // observations.values
         observations.values
           .map(obs => obs.id -> obs.scienceTargetIds)
           .groupMap(_._2)(_._1)
@@ -124,15 +144,15 @@ object AsterismQueries:
           )
           .toSortedMap(_.obsIds)
 
-      (AsterismGroupsWithObs.asterismGroups.replace(observationTargets) >>>
-        AsterismGroupsWithObs.targetsWithObs.replace(updatedTargets))(this)
+      (ProgramSummaries.asterismGroups.replace(observationTargets) >>>
+        ProgramSummaries.targetsWithObs.replace(updatedTargets))(this)
     }
   }
 
-  object AsterismGroupsWithObs:
-    val asterismGroups = Focus[AsterismGroupsWithObs](_.asterismGroups)
-    val targetsWithObs = Focus[AsterismGroupsWithObs](_.targetsWithObs)
-    val observations   = Focus[AsterismGroupsWithObs](_.observations)
+  object ProgramSummaries:
+    val asterismGroups = Focus[ProgramSummaries](_.asterismGroups)
+    val targetsWithObs = Focus[ProgramSummaries](_.targetsWithObs)
+    val observations   = Focus[ProgramSummaries](_.observations)
 
   // Some helper methods on AsterismGroupList
   extension (self: AsterismGroupList)
@@ -143,7 +163,7 @@ object AsterismQueries:
       self.find { case (_, ag) => ag.targetIds === targetIds }.map(_._2)
 
   private val queryToAsterismGroupWithObsGetter
-    : Getter[AsterismGroupObsQuery.Data, AsterismGroupsWithObs] = data =>
+    : Getter[AsterismGroupObsQuery.Data, ProgramSummaries] = data =>
     val asterismGroups = data.asterismGroup.matches
       .map { mtch =>
         ObsIdSet.fromList(mtch.observations.matches.map(_.id)).map { obsIdSet =>
@@ -155,10 +175,11 @@ object AsterismQueries:
 
     val targetsWithObs = data.targetGroup.matches.toSortedMap(_.id, _.targetWithObs)
 
-    AsterismGroupsWithObs(
+    ProgramSummaries(
       asterismGroups,
       targetsWithObs,
-      data.observations.matches.toSortedMap(ObsSummaryWithConstraintsAndConf.id.get)
+      // data.observations.matches.toSortedMap(ObsSummary.id.get)
+      KeyedIndexedList.fromList(data.observations.matches, ObsSummary.id.get)
     )
 
   extension (self: AsterismGroupObsQuery.Data.type)

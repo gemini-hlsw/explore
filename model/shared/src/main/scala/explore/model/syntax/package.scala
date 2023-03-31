@@ -12,6 +12,7 @@ import lucuma.core.model.PosAngleConstraint
 import lucuma.core.util.TimeSpan
 
 import scala.collection.immutable.SortedMap
+import lucuma.core.model.ConstraintSet
 
 object all:
 
@@ -49,3 +50,7 @@ object all:
      */
     def toHoursMinutes: String =
       s"${timespan.toHours.toLong}hrs ${(timespan.toMinutes.toLong) % 60}mins"
+
+  extension (cs: ConstraintSet)
+    def summaryString: String =
+      s"${cs.imageQuality.label} ${cs.cloudExtinction.label} ${cs.skyBackground.label} ${cs.waterVapor.label}"

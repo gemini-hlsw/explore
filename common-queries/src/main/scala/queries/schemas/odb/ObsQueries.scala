@@ -16,10 +16,10 @@ import explore.DefaultErrorPolicy
 import explore.data.KeyedIndexedList
 import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
+import explore.model.ObsSummary
 import explore.model.ObsSummaryWithTitleAndConstraints
 import explore.model.ObsSummaryWithTitleConstraintsAndConf
 import explore.model.OdbItcResult
-import explore.model.TargetSummary
 import explore.model.syntax.all.*
 import explore.optics.all.*
 import japgolly.scalajs.react.*
@@ -49,7 +49,7 @@ import lucuma.core.math.Offset
 import cats.data.NonEmptyList
 
 object ObsQueries:
-  type ObservationList = KeyedIndexedList[Observation.Id, ObsSummaryWithTitleConstraintsAndConf]
+  type ObservationList = KeyedIndexedList[Observation.Id, ObsSummary]
   type ConstraintsList = SortedMap[ObsIdSet, ConstraintGroup]
 
   type ObservationData = ObsEditQuery.Data.Observation
@@ -107,17 +107,17 @@ object ObsQueries:
     val scienceData: Lens[ObsEditData, ScienceData]           = Focus[ObsEditData](_.scienceData)
   }
 
-  case class ObsSummariesWithConstraints(
-    observations:     ObservationList,
-    constraintGroups: ConstraintsList,
-    targetMap:        SortedMap[Target.Id, TargetSummary]
-  ) derives Eq
+  // case class ObsSummariesWithConstraints(
+  //   observations:     ObservationList,
+  //   constraintGroups: ConstraintsList,
+  //   targetMap:        SortedMap[Target.Id, TargetSummary]
+  // ) derives Eq
 
-  object ObsSummariesWithConstraints {
-    val observations     = Focus[ObsSummariesWithConstraints](_.observations)
-    val constraintGroups = Focus[ObsSummariesWithConstraints](_.constraintGroups)
-    val targetsMap       = Focus[ObsSummariesWithConstraints](_.targetMap)
-  }
+  // object ObsSummariesWithConstraints {
+  //   val observations     = Focus[ObsSummariesWithConstraints](_.observations)
+  //   val constraintGroups = Focus[ObsSummariesWithConstraints](_.constraintGroups)
+  //   val targetsMap       = Focus[ObsSummariesWithConstraints](_.targetMap)
+  // }
 
   extension (data: ObsEditQuery.Data)
     def asObsEditData: Option[ObsEditData] =
@@ -150,36 +150,36 @@ object ObsQueries:
     def asFixedExposureTime: FixedExposure =
       FixedExposure(self.exposures, self.exposureTime)
 
-  extension (data: ProgramObservationsQuery.Data)
-    def asObsSummariesWithConstraints: ObsSummariesWithConstraints =
-      ObsSummariesWithConstraints(
-        KeyedIndexedList.fromList(
-          data.observations.matches.map(mtch =>
-            ObsSummaryWithTitleConstraintsAndConf(
-              mtch.id,
-              mtch.title,
-              mtch.subtitle,
-              mtch.constraintSet,
-              mtch.status,
-              mtch.activeStatus,
-              mtch.plannedTime.execution,
-              mtch.observingMode,
-              mtch.visualizationTime.map(_.toInstant)
-            )
-          ),
-          ObsSummaryWithTitleConstraintsAndConf.id.get
-        ),
-        data.constraintSetGroup.matches.toSortedMap(ConstraintGroup.obsIds.get),
-        data.targetGroup.matches
-          .toSortedMap(
-            _.target.id,
-            group =>
-              TargetSummary(
-                group.observations.matches.map(_.id).toSet,
-                group.target
-              )
-          )
-      )
+  // extension (data: ProgramObservationsQuery.Data)
+  //   def asObsSummariesWithConstraints: ObsSummariesWithConstraints =
+  //     ObsSummariesWithConstraints(
+  //       KeyedIndexedList.fromList(
+  //         data.observations.matches.map(mtch =>
+  //           ObsSummaryWithTitleConstraintsAndConf(
+  //             mtch.id,
+  //             mtch.title,
+  //             mtch.subtitle,
+  //             mtch.constraintSet,
+  //             mtch.status,
+  //             mtch.activeStatus,
+  //             mtch.plannedTime.execution,
+  //             mtch.observingMode,
+  //             mtch.visualizationTime.map(_.toInstant)
+  //           )
+  //         ),
+  //         ObsSummaryWithTitleConstraintsAndConf.id.get
+  //       ),
+  //       data.constraintSetGroup.matches.toSortedMap(ConstraintGroup.obsIds.get),
+  //       data.targetGroup.matches
+  //         .toSortedMap(
+  //           _.target.id,
+  //           group =>
+  //             TargetSummary(
+  //               group.observations.matches.map(_.id).toSet,
+  //               group.target
+  //             )
+  //         )
+  //     )
 
   def updateObservationConstraintSet[F[_]: Async](
     programId:   Program.Id,
@@ -263,26 +263,17 @@ object ObsQueries:
 
   def createObservation[F[_]: Async](
     programId: Program.Id
-  )(using FetchClient[F, ?, ObservationDB]): F[ObsSummaryWithTitleAndConstraints] =
-    ProgramCreateObservation[F].execute(CreateObservationInput(programId = programId)).map { data =>
-      val obs = data.createObservation.observation
-      ObsSummaryWithTitleAndConstraints(
-        obs.id,
-        obs.title,
-        obs.subtitle,
-        obs.constraintSet,
-        obs.status,
-        obs.activeStatus,
-        obs.plannedTime.execution
-      )
-    }
+  )(using FetchClient[F, ?, ObservationDB]): F[ObsSummary] =
+    ProgramCreateObservation[F]
+      .execute(CreateObservationInput(programId = programId))
+      .map(_.createObservation.observation)
 
   def createObservationWithTargets[F[_]: Async](
     programId: Program.Id,
     targetIds: Set[Target.Id]
   )(using
     FetchClient[F, ?, ObservationDB]
-  ): F[ObsSummaryWithTitleAndConstraints] =
+  ): F[ObsSummary] =
     ProgramCreateObservation[F]
       .execute(
         CreateObservationInput(
@@ -292,45 +283,23 @@ object ObsQueries:
           ).assign
         )
       )
-      .map { data =>
-        val obs = data.createObservation.observation
-        ObsSummaryWithTitleAndConstraints(
-          obs.id,
-          obs.title,
-          obs.subtitle,
-          obs.constraintSet,
-          obs.status,
-          obs.activeStatus,
-          obs.plannedTime.execution
-        )
-      }
+      .map(_.createObservation.observation)
 
   def cloneObservation[F[_]: Async](
     obsId: Observation.Id
   )(using
     FetchClient[F, ?, ObservationDB]
-  ): F[ObsSummaryWithTitleAndConstraints] =
+  ): F[ObsSummary] =
     CloneObservationMutation[F]
       .execute(CloneObservationInput(observationId = obsId))
-      .map { o =>
-        val newObs = o.cloneObservation.newObservation
-        ObsSummaryWithTitleAndConstraints(
-          newObs.id,
-          newObs.title,
-          newObs.subtitle,
-          newObs.constraintSet,
-          newObs.status,
-          newObs.activeStatus,
-          newObs.plannedTime.execution
-        )
-      }
+      .map(_.cloneObservation.newObservation)
 
   def applyObservation[F[_]: Async](
     obsId:     Observation.Id,
     targetIds: List[Target.Id]
   )(using
     FetchClient[F, ?, ObservationDB]
-  ): F[ObsSummaryWithTitleAndConstraints] =
+  ): F[ObsSummary] =
     CloneObservationMutation[F]
       .execute(
         CloneObservationInput(
@@ -340,18 +309,7 @@ object ObsQueries:
           ).assign
         )
       )
-      .map { o =>
-        val newObs = o.cloneObservation.newObservation
-        ObsSummaryWithTitleAndConstraints(
-          newObs.id,
-          newObs.title,
-          newObs.subtitle,
-          newObs.constraintSet,
-          newObs.status,
-          newObs.activeStatus,
-          newObs.plannedTime.execution
-        )
-      }
+      .map(_.cloneObservation.newObservation)
 
   def deleteObservation[F[_]: Async](
     programId: Program.Id,
