@@ -1,0 +1,11 @@
+things that may not be used anymore:
+
+ConstraintsSummary
+ObsSummaryOld and subtypes
+the whole ConstraintQueriesGQL
+classes in ConstraintQueries
+some queries and classes in ObsQueriesGQL, ObsQueries
+
+
+Put ProgramSummaries somewhere else
+

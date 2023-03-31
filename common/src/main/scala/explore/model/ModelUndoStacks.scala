@@ -4,7 +4,7 @@
 package explore.model
 
 import cats.Eq
-import explore.common.AsterismQueries.AsterismGroupsWithObs
+import explore.common.AsterismQueries.ProgramSummaries
 import explore.common.ConstraintGroupQueries.ConstraintGroupList
 import explore.model.ObsIdSet
 import explore.undo.UndoStacks
@@ -18,16 +18,18 @@ import queries.schemas.odb.ObsQueries.ScienceData
 
 case class ModelUndoStacks[F[_]](
   forObsList:           UndoStacks[F, ObservationList] = UndoStacks.empty[F, ObservationList],
-  forAsterismGroupList: UndoStacks[F, AsterismGroupsWithObs] =
-    UndoStacks.empty[F, AsterismGroupsWithObs],
+  forAsterismGroupList: UndoStacks[F, ProgramSummaries] = UndoStacks.empty[F, ProgramSummaries],
   forSiderealTarget:    Map[Target.Id, UndoStacks[F, Target.Sidereal]] =
     Map.empty[Target.Id, UndoStacks[F, Target.Sidereal]],
-  forConstraintList:    UndoStacks[F, ConstraintGroupList] = UndoStacks.empty[F, ConstraintGroupList],
-  forConstraintGroup:   Map[ObsIdSet, UndoStacks[F, ConstraintSet]] =
+  forConstraintList:    UndoStacks[F, ConstraintGroupList] =
+    UndoStacks.empty[F, ConstraintGroupList], // TODO Maybe we don't need this?
+  forConstraintGroup:   Map[ObsIdSet, UndoStacks[F,
+                                               ConstraintSet
+  ]] = // TODO Maybe we don't need this?
     Map.empty[ObsIdSet, UndoStacks[F, ConstraintSet]],
-  forObservationData:   Map[Observation.Id, UndoStacks[F, ScienceData]] =
+  forObservationData: Map[Observation.Id, UndoStacks[F, ScienceData]] =
     Map.empty[Observation.Id, UndoStacks[F, ScienceData]],
-  forProposal:          UndoStacks[F, Proposal] = UndoStacks.empty[F, Proposal]
+  forProposal:        UndoStacks[F, Proposal] = UndoStacks.empty[F, Proposal]
 )
 
 object ModelUndoStacks {

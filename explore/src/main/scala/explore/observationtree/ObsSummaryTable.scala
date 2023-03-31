@@ -19,9 +19,8 @@ import explore.model.AppContext
 import explore.model.Asterism
 import explore.model.Focused
 import explore.model.ObsIdSet
-import explore.model.ObsSummaryWithTitleConstraintsAndConf
+import explore.model.ObsSummary
 import explore.model.ObsWithConstraints
-import explore.model.TargetSummary
 import explore.model.display.given
 import explore.model.enums.AppTab
 import explore.model.enums.TableId
@@ -64,12 +63,13 @@ import react.hotkeys.hooks.*
 
 import scala.collection.immutable.SortedMap
 import scala.scalajs.js
+import explore.model.TargetWithObs
 
 final case class ObsSummaryTable(
   userId:        Option[User.Id],
   programId:     Program.Id,
   observations:  View[ObservationList],
-  targetsMap:    View[SortedMap[Target.Id, TargetSummary]],
+  targetsMap:    View[SortedMap[Target.Id, TargetWithObs]],
   renderInTitle: Tile.RenderInTitle
 ) extends ReactFnProps(ObsSummaryTable.component)
 
@@ -240,12 +240,13 @@ object ObsSummaryTable extends TableHooks:
             .filterNot(_ => cell.row.getCanExpand())
             .orEmpty
         ).sortable,
-        column(ConstraintsColumnId, r => (r.obs.id, r.obs.constraintsSummary))
+        column(ConstraintsColumnId, r => (r.obs.id, r.obs.constraints.summaryString))
           .setCell(cell =>
             cell.value.map((id, constraintsSummary) =>
-              <.a(^.href := constraintUrl(id),
-                  ^.onClick ==> (_.preventDefaultCB *> goToConstraint(id)),
-                  constraintsSummary
+              <.a(
+                ^.href := constraintUrl(id),
+                ^.onClick ==> (_.preventDefaultCB *> goToConstraint(id)),
+                constraintsSummary
               )
             )
           )
@@ -264,7 +265,7 @@ object ObsSummaryTable extends TableHooks:
           .map(obs =>
             obs -> targetsMap
               .filter((_, target) => target.obsIds.contains(obs.id))
-              .map((id, target) => target.target)
+              .map((id, target) => TargetWithId(id, target.target))
               .toList
           )
           .map((obs, targets) =>
@@ -341,7 +342,7 @@ object ObsSummaryTable extends TableHooks:
     case ExpandedTargetRow(obsId: Observation.Id, targetWithId: TargetWithId)
         extends ObsSummaryRow(obsId)
     case ObsRow(
-      obs:          ObsSummaryWithTitleConstraintsAndConf,
+      obs:          ObsSummary,
       targetWithId: Option[TargetWithId],
       asterism:     Option[Asterism]
     ) extends ObsSummaryRow(obs.id)

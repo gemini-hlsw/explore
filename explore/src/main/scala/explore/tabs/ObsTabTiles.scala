@@ -25,7 +25,6 @@ import explore.model.ModelUndoStacks
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.PAProperties
-import explore.model.TargetSummary
 import explore.model.display.given
 import explore.model.enums.AgsState
 import explore.model.enums.AppTab
@@ -67,15 +66,17 @@ import react.resizeDetector.*
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
+import explore.model.TargetWithObs
+import explore.common.AsterismQueries.ProgramSummaries
 
 case class ObsTabTiles(
   userId:           Option[User.Id],
   programId:        Program.Id,
   obsId:            Observation.Id,
   backButton:       VdomNode,
-  constraintGroups: View[ConstraintsList],
+  programSummaries: View[ProgramSummaries],
   focusedTarget:    Option[Target.Id],
-  targetMap:        SortedMap[Target.Id, TargetSummary],
+  targetMap:        SortedMap[Target.Id, TargetWithObs],
   undoStacks:       View[ModelUndoStacks[IO]],
   searching:        View[Set[Target.Id]],
   defaultLayouts:   LayoutsMap,
@@ -88,12 +89,15 @@ object ObsTabTiles:
 
   private def makeConstraintsSelector(
     programId:        Program.Id,
-    constraintGroups: View[ConstraintsList],
+    programSummaries: View[ProgramSummaries],
     obsView:          Pot[View[ObsEditData]]
   )(using FetchClient[IO, ?, ObservationDB]): VdomNode =
     obsView.renderPot { vod =>
+      val constraintGroups               = programSummaries.get.constraintGroups
       val cgOpt: Option[ConstraintGroup] =
-        constraintGroups.get.find(_._1.contains(vod.get.id)).map(_._2)
+        constraintGroups
+          .find(_._1.contains(vod.get.id))
+          .map(ConstraintGroup.fromTuple)
 
       Dropdown(
         clazz = ExploreStyles.ConstraintsTileSelector,
@@ -102,21 +106,23 @@ object ObsTabTiles:
           val newCgOpt =
             ObsIdSet.fromString
               .getOption(p)
-              .flatMap(ids => constraintGroups.get.get(ids))
-          newCgOpt.map { cg =>
-            vod
-              .zoom(ObsEditData.scienceData.andThen(ScienceData.constraints))
-              .set(cg.constraintSet) >>
-              ObsQueries
-                .updateObservationConstraintSet[IO](programId, List(vod.get.id), cg.constraintSet)
-                .runAsyncAndForget
-          }.getOrEmpty
+              .flatMap(ids => constraintGroups.get(ids))
+          newCgOpt
+            .map(cs =>
+              vod
+                .zoom(ObsEditData.scienceData.andThen(ScienceData.constraints))
+                .set(cs) >>
+                ObsQueries
+                  .updateObservationConstraintSet[IO](programId, List(vod.get.id), cs)
+                  .runAsyncAndForget
+            )
+            .getOrEmpty
         },
-        options = constraintGroups.get
+        options = constraintGroups
           .map(kv =>
             new SelectItem[String](
               value = ObsIdSet.fromString.reverseGet(kv._1),
-              label = kv._2.constraintSet.shortName
+              label = kv._2.shortName
             )
           )
           .toList
@@ -124,7 +130,7 @@ object ObsTabTiles:
     }
 
   private def otherObsCount(
-    targetObsMap: SortedMap[Target.Id, TargetSummary],
+    targetObsMap: SortedMap[Target.Id, TargetWithObs],
     obsId:        Observation.Id,
     targetId:     Target.Id
   ): Int =
@@ -245,7 +251,7 @@ object ObsTabTiles:
           )
 
         val constraintsSelector =
-          makeConstraintsSelector(props.programId, props.constraintGroups, obsViewPot)
+          makeConstraintsSelector(props.programId, props.programSummaries, obsViewPot)
 
         // first target of the obs. We can use it in case there is no target focus
         val firstTarget = props.targetMap.collect {

@@ -7,13 +7,16 @@ import clue.GraphQLSubquery
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.odb.*
 import explore.model.ObsSummaryWithConstraintsAndConf
+import explore.model.ObsSummary
 
+// TODO THIS IS TWICE!!! SHOULD WE MOVE UPSTREAM? MAKE SOMETHING THAT COPIES IT OVER WITH GENERATION?
 object ObservationSummarySubquery
-    extends GraphQLSubquery.Typed[ObservationDB, ObsSummaryWithConstraintsAndConf]("Observation"):
+    extends GraphQLSubquery.Typed[ObservationDB, ObsSummary]("Observation"):
   override val subquery: String = s"""
         {
           id
-          constraintSet $ConstraintsSummarySubquery
+          title
+          subtitle
           status
           activeStatus
           visualizationTime
@@ -26,6 +29,7 @@ object ObservationSummarySubquery
               id
             }
           }
+          constraintSet $ConstraintSetSubquery
           scienceRequirements {
             spectroscopy {
               wavelength $WavelengthSubquery

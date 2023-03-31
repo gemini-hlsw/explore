@@ -37,6 +37,7 @@ import react.primereact.TooltipOptions
 
 case class ObsBadge(
   obs:               ObsSummary, // The layout will depend on the mixins of the ObsSummary.
+  // TODO Another parameter with the layout
   selected:          Boolean = false,
   setStatusCB:       Option[ObsStatus => Callback] = none,
   setActiveStatusCB: Option[ObsActiveStatus => Callback] = none,
@@ -107,25 +108,26 @@ object ObsBadge {
 
       val meta = <.div(
         ExploreStyles.ObsBadgeMeta,
-        obs match {
-          case withTitle: ObsWithTitle =>
-            props.setSubtitleCB
-              .map(setCB =>
-                EditableLabel(
-                  value = withTitle.subtitle,
-                  mod = setCB,
-                  editOnClick = false,
-                  textClass = ExploreStyles.ObsBadgeSubtitle,
-                  inputClass = ExploreStyles.ObsBadgeSubtitleInput,
-                  addButtonLabel = "Add description",
-                  addButtonClass = ExploreStyles.ObsBadgeSubtitleAdd,
-                  leftButtonClass = ExploreStyles.ObsBadgeSubtitleEdit,
-                  rightButtonClass = ExploreStyles.ObsBadgeSubtitleDelete
-                )
-              )
-              .whenDefined
-          case _                       => TagMod.empty
-        },
+        // obs match {
+        // case withTitle: ObsWithTitle =>
+        props.setSubtitleCB
+          .map(setCB =>
+            EditableLabel(
+              value = obs.subtitle,
+              mod = setCB,
+              editOnClick = false,
+              textClass = ExploreStyles.ObsBadgeSubtitle,
+              inputClass = ExploreStyles.ObsBadgeSubtitleInput,
+              addButtonLabel = "Add description",
+              addButtonClass = ExploreStyles.ObsBadgeSubtitleAdd,
+              leftButtonClass = ExploreStyles.ObsBadgeSubtitleEdit,
+              rightButtonClass = ExploreStyles.ObsBadgeSubtitleDelete
+            )
+          )
+          .whenDefined
+        // case _                       => TagMod.empty
+        // },
+        ,
         renderEnumProgress(obs.status)
       )
 
@@ -135,14 +137,15 @@ object ObsBadge {
           meta,
           <.div(ExploreStyles.ObsBadgeDescription)(
             props.setActiveStatusCB.map(_ => ExploreStyles.ObsBadgeHasActiveStatus).orEmpty,
-            obs match {
-              case _: ObsWithTitle                     =>
-                <.span(List(conf, constraints).flatten: _*)
-              case withConstraints: ObsWithConstraints =>
-                <.span(withConstraints.constraintsSummary)
-              case _                                   =>
-                <.span(obs.id.toString)
-            },
+            // obs match {
+            // case _: ObsWithTitle                     =>
+            <.span(List(conf, constraints).flatten: _*)
+            // case withConstraints: ObsWithConstraints =>
+            // <.span(withConstraints.constraintsSummary)
+            // case _                                   =>
+            // <.span(obs.id.toString)
+            // },
+            ,
             props.setActiveStatusCB.map(setActiveStatus =>
               <.span(
                 InputSwitch(

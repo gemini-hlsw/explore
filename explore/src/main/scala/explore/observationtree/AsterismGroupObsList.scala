@@ -50,13 +50,14 @@ import react.primereact.Button
 import react.primereact.ToastRef
 
 import scala.collection.immutable.SortedSet
+import explore.model.ObsSummary
 
 case class AsterismGroupObsList(
-  asterismsWithObs:       View[AsterismGroupsWithObs],
+  asterismsWithObs:       View[ProgramSummaries],
   programId:              Program.Id,
   focused:                Focused,
   expandedIds:            View[SortedSet[ObsIdSet]],
-  undoCtx:                UndoContext[AsterismGroupsWithObs],
+  undoCtx:                UndoContext[ProgramSummaries],
   selectTargetOrSummary:  Option[Target.Id] => Callback,
   selectedSummaryTargets: View[List[Target.Id]]
 ) extends ReactFnProps[AsterismGroupObsList](AsterismGroupObsList.component)
@@ -139,7 +140,7 @@ object AsterismGroupObsList:
 
   private def insertSiderealTarget(
     programId:             Program.Id,
-    undoCtx:               UndoContext[AsterismGroupsWithObs],
+    undoCtx:               UndoContext[ProgramSummaries],
     adding:                View[AddingTargetOrObs],
     selectTargetOrSummary: Option[Target.Id] => Callback
   )(using FetchClient[IO, ?, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Unit] =
@@ -164,7 +165,7 @@ object AsterismGroupObsList:
   private def insertObs(
     programId:          Program.Id,
     targetIds:          SortedSet[Target.Id],
-    undoCtx:            UndoContext[AsterismGroupsWithObs],
+    undoCtx:            UndoContext[ProgramSummaries],
     adding:             View[AddingTargetOrObs],
     expandedIds:        View[SortedSet[ObsIdSet]],
     selectObsOrSummary: Option[Observation.Id] => Callback
@@ -181,7 +182,7 @@ object AsterismGroupObsList:
               selectObsOrSummary(_).to[IO],
               ToastCtx[IO].showToast(_)
             )
-            .set(undoCtx)(obs.toConstraintsAndConf(targetIds).some)
+            .set(undoCtx)(ObsSummary.scienceTargetIds.replace(targetIds)(obs).some)
             .to[IO]
         }
         .guarantee(adding.async.set(AddingTargetOrObs(false)))
@@ -259,7 +260,7 @@ object AsterismGroupObsList:
             )
           )
           div.some
-        }(obsId => observations.get(obsId).map(summ => props.renderObsBadge(summ)))
+        }(obsId => observations.getValue(obsId).map(summ => props.renderObsBadge(summ)))
 
       val renderClone: Draggable.Render = (provided, snapshot, rubric) =>
         <.div(
@@ -296,7 +297,7 @@ object AsterismGroupObsList:
 
       def renderAsterismGroup(asterismGroup: AsterismGroup, names: List[String]): VdomNode = {
         val obsIds        = asterismGroup.obsIds
-        val cgObs         = obsIds.toList.map(id => observations.get(id)).flatten
+        val cgObs         = obsIds.toList.map(id => observations.getValue(id)).flatten
         // if this group or something in it is selected
         val groupSelected = props.focusedObsSet.exists(_.subsetOf(obsIds))
 

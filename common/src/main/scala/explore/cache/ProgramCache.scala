@@ -25,15 +25,16 @@ import queries.common.AsterismQueriesGQL
 import queries.common.AsterismQueriesGQL.AsterismGroupObsQuery
 import queries.common.ObsQueriesGQL
 import lucuma.schemas.ObservationDB.Enums.Existence
+import queries.common.ObsQueriesGQL.ObsEditQuery.Data.observation
 
 case class ProgramCache(programId: Program.Id)(using client: StreamingClient[IO, ObservationDB]):
   given StreamingClient[IO, ObservationDB] = client
 
 given Reusability[ProgramCache] = Reusability.by(_.programId)
 
-object ProgramCache extends CacheComponent[ProgramCache, AsterismGroupsWithObs]:
+object ProgramCache extends CacheComponent[ProgramCache, ProgramSummaries]:
 
-  override protected val initial: ProgramCache => IO[AsterismGroupsWithObs] = props =>
+  override protected val initial: ProgramCache => IO[ProgramSummaries] = props =>
     import props.given
 
     AsterismQueriesGQL
@@ -43,7 +44,7 @@ object ProgramCache extends CacheComponent[ProgramCache, AsterismGroupsWithObs]:
 
   override protected val updateStream: ProgramCache => Resource[
     cats.effect.IO,
-    fs2.Stream[cats.effect.IO, AsterismGroupsWithObs => AsterismGroupsWithObs]
+    fs2.Stream[cats.effect.IO, ProgramSummaries => ProgramSummaries]
   ] = props =>
     import props.given
 
@@ -52,7 +53,7 @@ object ProgramCache extends CacheComponent[ProgramCache, AsterismGroupsWithObs]:
         .subscribe[IO](props.programId)
         .map(
           _.map(data =>
-            AsterismGroupsWithObs.targetsWithObs
+            ProgramSummaries.targetsWithObs
               .modify(targets =>
                 if (data.targetEdit.meta.existence === Existence.Present)
                   targets.updated(
@@ -70,12 +71,18 @@ object ProgramCache extends CacheComponent[ProgramCache, AsterismGroupsWithObs]:
         .subscribe[IO](props.programId)
         .map(
           _.map(data =>
-            AsterismGroupsWithObs.observations
+            val obsId = data.observationEdit.value.id
+            ProgramSummaries.observations
               .modify(observations =>
                 if (data.observationEdit.meta.existence === Existence.Present)
-                  observations.updated(data.observationEdit.value.id, data.observationEdit.value)
+                  // observations.updated(obsId data.observationEdit.value)
+                  observations.inserted(
+                    obsId,
+                    data.observationEdit.value,
+                    observations.getIndex(obsId).getOrElse(observations.length)
+                  )
                 else
-                  observations.removed(data.observationEdit.value.id)
+                  observations.removed(obsId)
               )
               .andThen(_.rebuildAsterismGroups)
           )

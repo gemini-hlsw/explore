@@ -3,7 +3,7 @@
 
 package explore.observationtree
 
-import explore.model.ObsSummary
+import explore.model.ObsSummaryOld
 import monocle.Lens
 import monocle.macros.GenLens
 
@@ -14,7 +14,7 @@ sealed trait ObsNode {
 }
 
 object ObsNode {
-  case class Obs(id: UUID, value: ObsSummary) extends ObsNode
+  case class Obs(id: UUID, value: ObsSummaryOld) extends ObsNode
 
   object Obs {
     val id: Lens[Obs, UUID] = GenLens[Obs](_.id)

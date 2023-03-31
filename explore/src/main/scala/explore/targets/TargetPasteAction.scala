@@ -14,7 +14,7 @@ import explore.common.AsterismQueries
 import explore.common.AsterismQueries.*
 import explore.model.AsterismGroup
 import explore.model.ObsIdSet
-import explore.model.ObsSummaryWithConstraintsAndConf
+import explore.model.ObsSummary
 import explore.model.TargetIdSet
 import explore.model.TargetWithObs
 import explore.model.syntax.all.*
@@ -31,14 +31,14 @@ import scala.collection.immutable.SortedSet
 
 object TargetPasteAction {
   // This never turns out to be useful, so we'll just use Unit
-  private def getter: AsterismGroupsWithObs => Unit = _ => ()
+  private def getter: ProgramSummaries => Unit = _ => ()
 
   private def setter(
     obsIds:       ObsIdSet,
     targetIds:    TargetIdSet
   )(
     @unused unit: Unit
-  ): AsterismGroupsWithObs => AsterismGroupsWithObs = agwo =>
+  ): ProgramSummaries => ProgramSummaries = agwo =>
     // the groups should always exist unless something changed outside the scope of this context, in which case
     // we do nothing
     val origAsterismGroups = agwo.asterismGroups
@@ -53,7 +53,8 @@ object TargetPasteAction {
         else currentGroup.targetIds ++ tidSet
 
       val newObservations = obsIds.idSet.foldLeft(agwo.observations)((acc, obsId) =>
-        acc.updatedWith(obsId)(_.map(_.copy(scienceTargetIds = newTargetIds)))
+        // acc.updatedWith(obsId)(_.map(_.copy(scienceTargetIds = newTargetIds)))
+        acc.updatedValueWith(obsId, _.copy(scienceTargetIds = newTargetIds))
       )
 
       val updatedTargetsWithObs = targetIds.idSet.foldLeft(agwo.targetsWithObs)((acc, tid) =>
@@ -80,9 +81,9 @@ object TargetPasteAction {
           splitAsterismGroups - obsIds - grp.obsIds + grp.addObsIds(obsIds).asObsKeyValue
         }
 
-      AsterismGroupsWithObs(asterismGroups = updatedAsterismGroups,
-                            targetsWithObs = updatedTargetsWithObs,
-                            observations = newObservations
+      ProgramSummaries(asterismGroups = updatedAsterismGroups,
+                       targetsWithObs = updatedTargetsWithObs,
+                       observations = newObservations
       )
     )
 
@@ -113,7 +114,7 @@ object TargetPasteAction {
     expandedIds:  View[SortedSet[ObsIdSet]]
   )(using
     FetchClient[IO, ?, ObservationDB]
-  ): Action[AsterismGroupsWithObs, Unit] =
+  ): Action[ProgramSummaries, Unit] =
     Action(getter = getter, setter = setter(obsIds, targetIds))(
       onSet = (agwo, _) =>
         val agl           = agwo.asterismGroups

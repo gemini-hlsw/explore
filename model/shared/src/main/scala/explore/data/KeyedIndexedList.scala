@@ -6,22 +6,34 @@ package explore.data
 import cats.Eq
 
 import scala.collection.immutable.TreeSeqMap
+import monocle.function.FilterIndex
+import monocle.Traversal
+import cats.Applicative
+import cats.syntax.all.given
+import monocle.Focus
+import monocle.Lens
 
 // Each element has a unique Key.
 // Efficient loookup of elements and positions by Key.
-case class KeyedIndexedList[K, A] private (private val list: TreeSeqMap[K, (A, Int)]) {
-  def getElemAndIndex(key: K): Option[(A, Int)] = list.get(key)
-  def getElement(key:      K): Option[A]        = list.get(key).map(_._1)
-  def getIndex(key:        K): Option[Int]      = list.get(key).map(_._2)
+case class KeyedIndexedList[K, A] private (private val list: TreeSeqMap[K, (A, Int)]):
+  def getValueAndIndex(key: K): Option[(A, Int)] = list.get(key)
+  def getValue(key:         K): Option[A]        = list.get(key).map(_._1)
+  def getIndex(key:         K): Option[Int]      = list.get(key).map(_._2)
 
-  def elements: Iterable[A] = list.values.map(_._1)
+  def values: Iterable[A] = list.values.map(_._1)
 
-  def toList: List[A] = elements.toList
+  def toList: List[A] = values.toList
+
+  def toMap: Map[K, A] = list.map { case (k, (v, _)) => k -> v }
 
   def collect[B](pf: PartialFunction[(K, (A, Int)), B]): List[B] =
     list.collect(pf).toList
 
   def length: Int = list.size
+
+  def empty: Boolean = length == 0
+
+  def nonEmpty: Boolean = !empty
 
   def removed(key: K): KeyedIndexedList[K, A] =
     getIndex(key)
@@ -38,7 +50,7 @@ case class KeyedIndexedList[K, A] private (private val list: TreeSeqMap[K, (A, I
 
   def contains(key: K): Boolean = list.contains(key)
 
-  def exists(p: A => Boolean): Boolean = elements.exists(p)
+  def exists(p: A => Boolean): Boolean = values.exists(p)
 
   def take(n: Int): KeyedIndexedList[K, A] = KeyedIndexedList.unsafeFromTreeSeqMap(list.take(n))
 
@@ -70,9 +82,17 @@ case class KeyedIndexedList[K, A] private (private val list: TreeSeqMap[K, (A, I
       inserted(key, value, idx)
     else
       this
-}
 
-object KeyedIndexedList {
+  def updatedWith(key: K, f: (A, Int) => (A, Int)): KeyedIndexedList[K, A] =
+    getValueAndIndex(key).fold(this)((oldV, oldI) =>
+      val (v, i) = f(oldV, oldI)
+      inserted(key, v, i)
+    )
+
+  def updatedValueWith(key: K, f: A => A): KeyedIndexedList[K, A] =
+    updatedWith(key, (v, i) => (f(v), i))
+
+object KeyedIndexedList:
   def empty[K, A]: KeyedIndexedList[K, A] = KeyedIndexedList[K, A](TreeSeqMap.empty)
 
   def fromList[K, A](list: List[A], getKey: A => K): KeyedIndexedList[K, A] =
@@ -83,6 +103,30 @@ object KeyedIndexedList {
   def unsafeFromTreeSeqMap[K, A](list: TreeSeqMap[K, (A, Int)]): KeyedIndexedList[K, A] =
     KeyedIndexedList(list)
 
-  implicit def eqKeyedIndexedList[K, A: Eq]: Eq[KeyedIndexedList[K, A]] =
+  def value[A]: Lens[(A, Int), A] = Focus[(A, Int)](_._1)
+
+  given eqKeyedIndexedList[K, A: Eq]: Eq[KeyedIndexedList[K, A]] =
     Eq.by(_.list: Map[K, (A, Int)])
-}
+
+  given filterIndexIndexedList[K, A]: FilterIndex[KeyedIndexedList[K, A], K, (A, Int)] =
+    new FilterIndex[KeyedIndexedList[K, A], K, (A, Int)]:
+      import cats.syntax.applicative._
+      import cats.syntax.functor._
+
+      def filterIndex(predicate: K => Boolean) =
+        new Traversal[KeyedIndexedList[K, A], (A, Int)] {
+          def modifyA[F[_]: Applicative](
+            f: ((A, Int)) => F[(A, Int)]
+          )(s: KeyedIndexedList[K, A]): F[KeyedIndexedList[K, A]] =
+            s.list.toList
+              .traverse { case (k, (v, i)) =>
+                (if (predicate(k)) f(v, i) else (v, i).pure[F]).tupleLeft(k)
+              }
+              .map(list =>
+                KeyedIndexedList.unsafeFromTreeSeqMap(
+                  TreeSeqMap.from(
+                    list.sortBy { case (_, (_, i)) => i }
+                  )
+                )
+              )
+        }

@@ -14,7 +14,7 @@ import explore.common.AsterismQueries
 import explore.common.AsterismQueries.*
 import explore.model.AsterismGroup
 import explore.model.ObsIdSet
-import explore.model.ObsSummaryWithConstraintsAndConf
+import explore.model.ObsSummary
 import explore.model.TargetWithObs
 import explore.model.syntax.all.*
 import explore.undo.*
@@ -32,18 +32,18 @@ import scala.collection.immutable.SortedSet
 object ObservationPasteAction {
   private def obsListGetter(
     ids: List[(Observation.Id, Target.Id)]
-  ): AsterismGroupsWithObs => Option[List[ObsSummaryWithConstraintsAndConf]] = agwo =>
-    ids.map((obsId, _) => agwo.observations.get(obsId)).sequence
+  ): ProgramSummaries => Option[List[ObsSummary]] = agwo =>
+    ids.map((obsId, _) => agwo.observations.getValue(obsId)).sequence
 
   private def obsListSetter(ids: List[(Observation.Id, Target.Id)])(
-    otwol: Option[List[ObsSummaryWithConstraintsAndConf]]
-  ): AsterismGroupsWithObs => AsterismGroupsWithObs = agwo =>
+    otwol: Option[List[ObsSummary]]
+  ): ProgramSummaries => ProgramSummaries = agwo =>
     otwol.fold {
       // the Option[List]] is empty, so we're deleting.
       ids.foldLeft(agwo) { case (grps, (obsId, tid)) =>
         // the target list could have been edited, so we'll look for the current list
         val targetIds = grps.observations
-          .get(obsId)
+          .getValue(obsId)
           .fold(SortedSet(tid))(o => SortedSet.from(o.scienceTargetIds))
         grps.removeObsWithTargets(obsId, targetIds)
       }
@@ -55,7 +55,7 @@ object ObservationPasteAction {
 
   private def updateExpandedIds(
     ids:         List[(Observation.Id, Target.Id)],
-    agwo:        AsterismGroupsWithObs,
+    agwo:        ProgramSummaries,
     adding:      Boolean
   )(
     expandedIds: SortedSet[ObsIdSet]
@@ -82,7 +82,7 @@ object ObservationPasteAction {
     expandedIds: View[SortedSet[ObsIdSet]]
   )(using
     c:           FetchClient[IO, ?, ObservationDB]
-  ): Action[AsterismGroupsWithObs, Option[List[ObsSummaryWithConstraintsAndConf]]] =
+  ): Action[ProgramSummaries, Option[List[ObsSummary]]] =
     Action(getter = obsListGetter(ids), setter = obsListSetter(ids))(
       onSet = (agwo, _) => expandedIds.mod(updateExpandedIds(ids, agwo, true)).to[IO],
       onRestore = (agwo, olObsSumm) =>

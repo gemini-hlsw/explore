@@ -34,16 +34,21 @@ import react.beautifuldnd.*
 import react.common.ReactFnProps
 import react.fa.FontAwesomeIcon
 import react.primereact.Button
+import explore.common.AsterismQueries.ProgramSummaries
 
 import scala.collection.immutable.SortedSet
+import explore.common.AsterismQueries.ObservationList
+import explore.common.AsterismQueries.ConstraintGroupList
+import lucuma.core.model.ConstraintSet
+// import explore.common.ConstraintsQueries.UndoView.obsIds
 
 case class ConstraintGroupObsList(
-  constraintsWithObs: View[ConstraintSummaryWithObervations],
-  programId:          Program.Id,
-  focusedObsSet:      Option[ObsIdSet],
-  setSummaryPanel:    Callback,
-  expandedIds:        View[SortedSet[ObsIdSet]],
-  undoStacks:         View[UndoStacks[IO, ConstraintGroupList]]
+  programSummaries: View[ProgramSummaries],
+  programId:        Program.Id,
+  focusedObsSet:    Option[ObsIdSet],
+  setSummaryPanel:  Callback,
+  expandedIds:      View[SortedSet[ObsIdSet]],
+  undoStacks:       View[UndoStacks[IO, ObservationList]]
 ) extends ReactFnProps[ConstraintGroupObsList](ConstraintGroupObsList.component)
     with ViewCommon
 
@@ -71,7 +76,7 @@ object ConstraintGroupObsList:
     }
 
   private def onDragEnd(
-    undoCtx:          UndoContext[ConstraintGroupList],
+    undoCtx:          UndoContext[ObservationList],
     programId:        Program.Id,
     expandedIds:      View[SortedSet[ObsIdSet]],
     focusedObsSet:    Option[ObsIdSet],
@@ -88,11 +93,15 @@ object ConstraintGroupObsList:
       destCg      <- constraintGroups.get(destIds)
     } yield (destCg, draggedIds)
 
-    oData.foldMap { case (destCg, draggedIds) =>
-      ConstraintGroupObsListActions
-        .obsConstraintGroup(programId, draggedIds, expandedIds, setObsSet)
-        .set(undoCtx)(destCg.some)
-    }
+    // Oh, this will be fun... we have to change the whole approach to edit observations.
+    // We will probably need a Traversal
+
+    // oData.foldMap { case (destCg, draggedIds) =>
+    //   ConstraintGroupObsListActions
+    //     .obsConstraintGroup(programId, draggedIds, expandedIds, setObsSet)
+    //     .set(undoCtx)(destCg.some)
+    // }
+    Callback.empty
   }
 
   private val component = ScalaFnComponent
@@ -100,22 +109,23 @@ object ConstraintGroupObsList:
     .useContext(AppContext.ctx)
     .useState(false) // dragging
     .useEffectOnMountBy { (props, ctx, _) =>
-      val constraintsWithObs = props.constraintsWithObs.get
-      val constraintGroups   = constraintsWithObs.constraintGroups
-      val expandedIds        = props.expandedIds
+      val programSummaries = props.programSummaries.get
+      val constraintGroups =
+        programSummaries.constraintGroups // SortedMap[ObsIdSet, ConstraintSet]
+      val expandedIds = props.expandedIds
 
-      val selectedGroup =
+      val selectedGroupObsIds =
         props.focusedObsSet
           .flatMap(idSet => constraintGroups.find { case (key, _) => idSet.subsetOf(key) })
-          .map(_._2)
+          .map(_._1)
 
       // Unfocus the group with observations doesn't exist
       val unfocus =
-        if (props.focusedObsSet.nonEmpty && selectedGroup.isEmpty)
+        if (props.focusedObsSet.nonEmpty && selectedGroupObsIds.isEmpty)
           ctx.replacePage(AppTab.Constraints, props.programId, Focused.None)
         else Callback.empty
 
-      val expandSelected = selectedGroup.foldMap(cg => expandedIds.mod(_ + cg.obsIds))
+      val expandSelected = selectedGroupObsIds.foldMap(obsIds => expandedIds.mod(_ + obsIds))
 
       val cleanupExpandedIds =
         expandedIds.mod(_.filter(ids => constraintGroups.contains(ids)))
@@ -129,13 +139,13 @@ object ConstraintGroupObsList:
     .render { (props, ctx, dragging) =>
       import ctx.given
 
-      val observations = props.constraintsWithObs.get.observations
+      val observations = props.programSummaries.get.observations
 
-      val constraintGroups = props.constraintsWithObs.get.constraintGroups.map(_._2)
+      val constraintGroups = props.programSummaries.get.constraintGroups
 
       val undoCtx = UndoContext(
         props.undoStacks,
-        props.constraintsWithObs.zoom(ConstraintSummaryWithObervations.constraintGroups)
+        props.programSummaries.zoom(ProgramSummaries.observations)
       )
 
       val renderClone: Draggable.Render = (provided, snapshot, rubric) =>
@@ -148,7 +158,7 @@ object ConstraintGroupObsList:
           getDraggedIds(rubric.draggableId, props.focusedObsSet)
             .flatMap(obsIds =>
               if (obsIds.size === 1)
-                observations.get(obsIds.head).map(obs => props.renderObsBadge(obs))
+                observations.getValue(obsIds.head).map(obs => props.renderObsBadge(obs))
               else
                 <.div(obsIds.toList.toTagMod(id => <.div(id.show))).some
             )
@@ -169,7 +179,7 @@ object ConstraintGroupObsList:
         props.programId,
         props.expandedIds,
         props.focusedObsSet,
-        props.constraintsWithObs.get.constraintGroups,
+        props.programSummaries.get.constraintGroups,
         setObsSet
       )
 
@@ -182,9 +192,8 @@ object ConstraintGroupObsList:
           } else Callback.empty // Not in the same group
         }
 
-      def renderGroup(constraintGroup: ConstraintGroup): VdomNode = {
-        val obsIds        = constraintGroup.obsIds
-        val cgObs         = obsIds.toList.map(id => observations.get(id)).flatten
+      def renderGroup(obsIds: ObsIdSet, constraintSet: ConstraintSet): VdomNode = {
+        val cgObs         = obsIds.toList.map(id => observations.getValue(id)).flatten
         // if this group or something in it is selected
         val groupSelected = props.focusedObsSet.exists(_.subsetOf(obsIds))
 
@@ -206,9 +215,7 @@ object ConstraintGroupObsList:
           case (provided, snapshot) =>
             val csHeader = <.span(ExploreStyles.ObsTreeGroupHeader)(
               icon,
-              <.span(ExploreStyles.ObsGroupTitleWithWrap)(
-                constraintGroup.constraintSet.shortName
-              ),
+              <.span(ExploreStyles.ObsGroupTitleWithWrap)(constraintSet.shortName),
               <.span(ExploreStyles.ObsCount, s"${obsIds.size} Obs")
             )
 
@@ -226,7 +233,7 @@ object ConstraintGroupObsList:
                     Option.when(!dragging.value)(ExploreStyles.UnselectedObsTreeGroup)
                   )
                   .orEmpty
-              )(^.cursor.pointer, ^.onClick --> setObsSet(constraintGroup.obsIds.some))(
+              )(^.cursor.pointer, ^.onClick --> setObsSet(obsIds.some))(
                 csHeader,
                 TagMod.when(props.expandedIds.get.contains(obsIds))(
                   cgObs.zipWithIndex.toTagMod { case (obs, idx) =>
@@ -266,7 +273,7 @@ object ConstraintGroupObsList:
           ),
           <.div(ExploreStyles.ObsTree)(
             <.div(ExploreStyles.ObsScrollTree)(
-              constraintGroups.toTagMod(renderGroup)
+              constraintGroups.map((obsIds, c) => renderGroup(obsIds, c)).toTagMod
             )
           )
         )

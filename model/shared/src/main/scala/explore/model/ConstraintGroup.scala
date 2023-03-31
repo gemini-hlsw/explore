@@ -15,6 +15,7 @@ import monocle.Focus
 import scala.annotation.unused
 
 case class ConstraintGroup(constraintSet: ConstraintSet, obsIds: ObsIdSet) derives Eq {
+  // TODO Remove all these methods
   def addObsId(obsId: Observation.Id): ConstraintGroup =
     ConstraintGroup.obsIds.modify(_.add(obsId))(this)
 
@@ -30,6 +31,9 @@ case class ConstraintGroup(constraintSet: ConstraintSet, obsIds: ObsIdSet) deriv
 object ConstraintGroup {
   val constraintSet = Focus[ConstraintGroup](_.constraintSet)
   val obsIds        = Focus[ConstraintGroup](_.obsIds)
+
+  def fromTuple(tuple: (ObsIdSet, ConstraintSet)): ConstraintGroup =
+    ConstraintGroup(tuple._2, tuple._1)
 
   private case class ObsMatch(id: Observation.Id)
   @unused("used but compiler can't figure it out")

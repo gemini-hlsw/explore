@@ -66,15 +66,17 @@ object Routing:
       routingInfo.programId,
       routingInfo.focused.obsSet,
       model.zoom(RootModel.expandedIds.andThen(ExpandedIds.constraintSetObsIds)),
-      model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forConstraintList),
+      model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forObsList),
+      // model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forConstraintList),
       model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forConstraintGroup)
     )
 
   private def proposalTab(page: Page, model: View[RootModel]): VdomElement =
     val routingInfo = RoutingInfo.from(page)
-    ProposalTabContents(routingInfo.programId,
-                        model.zoom(RootModel.user).get,
-                        model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forProposal)
+    ProposalTabContents(
+      routingInfo.programId,
+      model.zoom(RootModel.user).get,
+      model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forProposal)
     )
 
   private def configurationsTab(page: Page): VdomElement =

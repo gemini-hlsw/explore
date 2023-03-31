@@ -62,6 +62,8 @@ import react.resizeDetector.*
 import react.resizeDetector.hooks.*
 
 import scala.concurrent.duration.*
+import explore.cache.ProgramCache
+import explore.common.AsterismQueries.ProgramSummaries
 
 case class ObsTabContents(
   userId:     Option[User.Id],
@@ -159,21 +161,19 @@ object ObsTabContents extends TwoPanels:
     )
 
   private def renderFn(
-    props:              Props,
-    selectedView:       View[SelectedPanel],
-    defaultLayouts:     LayoutsMap,
-    layouts:            View[Pot[LayoutsMap]],
-    resize:             UseResizeDetectorReturn,
-    debouncer:          Reusable[UseSingleEffect[IO]],
-    ctx:                AppContext[IO]
-  )(
-    obsWithConstraints: View[ObsSummariesWithConstraints]
+    props:            Props,
+    programSummaries: View[ProgramSummaries],
+    selectedView:     View[SelectedPanel],
+    defaultLayouts:   LayoutsMap,
+    layouts:          View[Pot[LayoutsMap]],
+    resize:           UseResizeDetectorReturn,
+    ctx:              AppContext[IO]
   ): VdomNode = {
     import ctx.given
 
-    val observations     = obsWithConstraints.zoom(ObsSummariesWithConstraints.observations)
-    val constraintGroups = obsWithConstraints.zoom(ObsSummariesWithConstraints.constraintGroups)
-    val targetsMap       = obsWithConstraints.zoom(ObsSummariesWithConstraints.targetsMap)
+    val observations = programSummaries.zoom(ProgramSummaries.observations)
+    // val constraintGroups = cache.zoom(ProgramSummaries.constraintGroups)
+    val targets      = programSummaries.zoom(ProgramSummaries.targetsWithObs)
 
     def observationsTree(observations: View[ObservationList]) =
       ObsList(
@@ -195,13 +195,7 @@ object ObsTabContents extends TwoPanels:
           "Observations Summary",
           backButton.some
         )(renderInTitle =>
-          ObsSummaryTable(
-            props.userId,
-            props.programId,
-            observations,
-            targetsMap,
-            renderInTitle
-          )
+          ObsSummaryTable(props.userId, props.programId, observations, targets, renderInTitle)
           // TODO: elevation view
         )
       )(obsId =>
@@ -210,9 +204,9 @@ object ObsTabContents extends TwoPanels:
           props.programId,
           obsId,
           backButton,
-          constraintGroups,
+          programSummaries,
           props.focusedTarget,
-          obsWithConstraints.get.targetMap,
+          targets.get,
           props.undoStacks,
           props.searching,
           defaultLayouts,
@@ -279,22 +273,20 @@ object ObsTabContents extends TwoPanels:
               }
           }
       )
-      .useSingleEffect(debounce = 1.second)
-      .useStreamResourceViewOnMountBy { (props, ctx, _, _, _, _, _) =>
-        import ctx.given
+      .useContext(ProgramCache.view)
+      // .useStreamResourceViewOnMountBy { (props, ctx, _, _, _, _, _) =>
+      //   import ctx.given
 
-        ProgramObservationsQuery[IO]
-          .query(props.programId)
-          .map(_.asObsSummariesWithConstraints)
-          .reRunOnResourceSignals(
-            ProgramObservationsEditSubscription.subscribe[IO](props.programId)
-          )
-      }
-      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, _, obsList) =>
-        (props.focusedObs,
-         obsList.foldMap(_.get.observations.elements.map(_.id).zipWithIndex.toList)
-        )
-      ) { (props, ctx, _, _, _, _, _, obsList) => (obs, observationIds) =>
+      //   ProgramObservationsQuery[IO]
+      //     .query(props.programId)
+      //     .map(_.asObsSummariesWithConstraints)
+      //     .reRunOnResourceSignals(
+      //       ProgramObservationsEditSubscription.subscribe[IO](props.programId)
+      //     )
+      // }
+      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, programSummaries) =>
+        (props.focusedObs, programSummaries.get.observations.values.map(_.id).zipWithIndex.toList)
+      ) { (props, ctx, _, _, _, _, programSummaries) => (obs, observationIds) =>
         import ctx.given
 
         val obsPos = observationIds.find(a => obs.forall(_ === a._1)).map(_._2)
@@ -313,37 +305,38 @@ object ObsTabContents extends TwoPanels:
           case PasteAlt1 | PasteAlt2 =>
             ExploreClipboard.get.flatMap {
               case LocalClipboard.CopiedObservations(idSet) =>
-                obsList.toOption.map { obsWithConstraints =>
-                  val observations =
-                    obsWithConstraints.zoom(ObsSummariesWithConstraints.observations)
-                  val undoCtx      =
-                    UndoContext(props.obsListStacks, observations)
-                  idSet.idSet.toList
-                    .traverse(oid =>
-                      cloneObs(
-                        props.programId,
-                        oid,
-                        observationIds.length,
-                        undoCtx,
-                        ctx
-                      )
+                // obsList.toOption.map { obsWithConstraints =>
+                val observations = programSummaries.zoom(ProgramSummaries.observations)
+                // obsWithConstraints.zoom(ObsSummariesWithConstraints.observations)
+                // TODO Is this a dummy undoCtx??
+                val undoCtx      = UndoContext(props.obsListStacks, observations)
+                idSet.idSet.toList
+                  .traverse(oid =>
+                    cloneObs(
+                      props.programId,
+                      oid,
+                      observationIds.length,
+                      undoCtx,
+                      ctx
                     )
-                    .void
-                    .withToast(s"Duplicating obs ${idSet.idSet.mkString_(", ")}")
-                }.orUnit
+                  )
+                  .void
+                  .withToast(s"Duplicating obs ${idSet.idSet.mkString_(", ")}")
+              // }.orUnit
               case _                                        => IO.unit
             }.runAsync
 
           case Down =>
             obsPos
-              .filter(_ < observationIds.length && obsList.nonEmpty)
+              .filter(_ < observationIds.length)
               .flatMap { p =>
                 val next = if (props.focusedObs.isEmpty) 0 else p + 1
                 observationIds.lift(next).map { (obsId, _) =>
-                  ctx.setPageVia(AppTab.Observations,
-                                 props.programId,
-                                 Focused.singleObs(obsId),
-                                 SetRouteVia.HistoryPush
+                  ctx.setPageVia(
+                    AppTab.Observations,
+                    props.programId,
+                    Focused.singleObs(obsId),
+                    SetRouteVia.HistoryPush
                   )
                 }
               }
@@ -374,29 +367,6 @@ object ObsTabContents extends TwoPanels:
                         callbacks
         )
       }
-      .render {
-        (
-          props,
-          ctx,
-          twoPanelState,
-          resize,
-          layouts,
-          defaultLayout,
-          debouncer,
-          obsWithConstraints
-        ) =>
-          React.Fragment(
-            obsWithConstraints.renderPotOption(
-              renderFn(
-                props,
-                twoPanelState,
-                defaultLayout,
-                layouts,
-                resize,
-                debouncer,
-                ctx
-              ) _,
-              <.span(DefaultPendingRender).withRef(resize.ref)
-            )
-          )
-      }
+      .render((props, ctx, twoPanelState, resize, layouts, defaultLayout, programSummaries) =>
+        renderFn(props, programSummaries, twoPanelState, defaultLayout, layouts, resize, ctx)
+      )

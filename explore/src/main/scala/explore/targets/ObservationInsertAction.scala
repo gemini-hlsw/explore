@@ -11,7 +11,7 @@ import crystal.react.View
 import crystal.react.implicits.*
 import explore.common.AsterismQueries.*
 import explore.model.ObsIdSet
-import explore.model.ObsSummaryWithConstraintsAndConf
+import explore.model.ObsSummary
 import explore.model.syntax.all.*
 import explore.undo.*
 import lucuma.core.model.Observation
@@ -25,18 +25,17 @@ import queries.schemas.odb.ObsQueries
 import scala.collection.immutable.SortedSet
 
 object ObservationInsertAction {
-  private def getter(
-    obsId: Observation.Id
-  ): AsterismGroupsWithObs => Option[ObsSummaryWithConstraintsAndConf] = _.observations.get(obsId)
+  private def getter(obsId: Observation.Id): ProgramSummaries => Option[ObsSummary] =
+    _.observations.getValue(obsId)
 
   private def setter(obsId: Observation.Id)(
-    optObs: Option[ObsSummaryWithConstraintsAndConf]
-  ): AsterismGroupsWithObs => AsterismGroupsWithObs = agwo =>
+    optObs: Option[ObsSummary]
+  ): ProgramSummaries => ProgramSummaries = agwo =>
     optObs.fold {
       // we're undoing - look to see what the current targets are.
       val targets =
         agwo.observations
-          .get(obsId)
+          .getValue(obsId)
           .fold(SortedSet.empty[Target.Id])(o => SortedSet.from(o.scienceTargetIds))
       agwo.removeObsWithTargets(obsId, targets)
     } { // do or re-do
@@ -45,8 +44,8 @@ object ObservationInsertAction {
 
   private def updateExpandedIds(
     obsId:  Observation.Id,
-    agwo:   AsterismGroupsWithObs,
-    optObs: Option[ObsSummaryWithConstraintsAndConf]
+    agwo:   ProgramSummaries,
+    optObs: Option[ObsSummary]
   )(expandedIds: SortedSet[ObsIdSet]) =
     // We'll just expand the associated asterism.
     val setOfOne = ObsIdSet.one(obsId)
@@ -73,7 +72,7 @@ object ObservationInsertAction {
     postMessage: String => IO[Unit]
   )(using
     FetchClient[IO, ?, ObservationDB]
-  ): Action[AsterismGroupsWithObs, Option[ObsSummaryWithConstraintsAndConf]] =
+  ): Action[ProgramSummaries, Option[ObsSummary]] =
     Action(getter = getter(obsId), setter = setter(obsId))(
       onSet = (agwo, optObs) =>
         expandedIds.mod(updateExpandedIds(obsId, agwo, optObs)).to[IO] >> setPage(obsId.some),
