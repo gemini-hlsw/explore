@@ -45,6 +45,9 @@ import monocle.Lens
 import react.common.ReactFnProps
 import react.primereact.PrimeStyles
 
+// TODO Consider passing the whole ObsList, and a list of obs ids.
+// So that we can reuse the ObsList UndoStacks ???
+// This is a step towards a global undo....
 case class ConstraintsPanel(
   programId:     Program.Id,
   obsIds:        List[Observation.Id],

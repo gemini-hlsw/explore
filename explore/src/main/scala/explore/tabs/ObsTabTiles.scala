@@ -97,7 +97,7 @@ object ObsTabTiles:
       val cgOpt: Option[ConstraintGroup] =
         constraintGroups
           .find(_._1.contains(vod.get.id))
-          .map((obsIds, cs) => ConstraintGroup(cs, obsIds))
+          .map(ConstraintGroup.fromTuple)
 
       Dropdown(
         clazz = ExploreStyles.ConstraintsTileSelector,

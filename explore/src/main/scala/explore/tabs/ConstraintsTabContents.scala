@@ -79,15 +79,17 @@ import explore.common.AsterismQueries.ObservationList
 import explore.common.AsterismQueries.ProgramSummaries
 import explore.common.AsterismQueries.ConstraintGroupList
 import explore.cache.ProgramCache
+import lucuma.core.model.Observation
+import explore.data.KeyedIndexedList
 
 case class ConstraintsTabContents(
   userId:         Option[User.Id],
   programId:      Program.Id,
   focusedObsSet:  Option[ObsIdSet],
   expandedIds:    View[SortedSet[ObsIdSet]],
-  listUndoStacks: View[UndoStacks[IO, ObservationList]]
+  listUndoStacks: View[UndoStacks[IO, ObservationList]],
   // TODO: Clean up the groupUndoStack somewhere, somehow?
-  // groupUndoStack: View[Map[ObsIdSet, UndoStacks[IO, ConstraintSet]]]
+  groupUndoStack: View[Map[ObsIdSet, UndoStacks[IO, ConstraintSet]]]
 ) extends ReactFnProps(ConstraintsTabContents.component)
 
 object ConstraintsTabContents extends TwoPanels:
@@ -162,7 +164,7 @@ object ConstraintsTabContents extends TwoPanels:
     //   )
 
     def findConstraintGroup(obsIds: ObsIdSet, cgl: ConstraintGroupList): Option[ConstraintGroup] =
-      cgl.find(_._1.intersect(obsIds).nonEmpty).map((obsIds, cs) => ConstraintGroup(cs, obsIds))
+      cgl.find(_._1.intersect(obsIds).nonEmpty).map(ConstraintGroup.fromTuple)
 
     def onModSummaryWithObs(
       groupObsIds:  ObsIdSet,
@@ -204,14 +206,13 @@ object ConstraintsTabContents extends TwoPanels:
             "Constraints Summary",
             backButton.some
           )(renderInTitle =>
-            <.div("hello")
-            // ConstraintsSummaryTable(
-            //   props.userId,
-            //   props.programId,
-            //   programSummaries.get.constraintGroups,
-            //   props.expandedIds,
-            //   renderInTitle
-            // )
+            ConstraintsSummaryTable(
+              props.userId,
+              props.programId,
+              programSummaries.get.constraintGroups,
+              props.expandedIds,
+              renderInTitle
+            )
           )
         } { case (idsToEdit, constraintGroup) =>
           val groupObsIds   = constraintGroup.obsIds
@@ -260,8 +261,19 @@ object ConstraintsTabContents extends TwoPanels:
 
           // val csView: View[ConstraintSet] = cglView.zoom(getCs)(modCs)
 
-          // val csUndo: View[UndoStacks[IO, ConstraintSet]] =
-          //   props.groupUndoStack.zoom(atMapWithDefault(idsToEdit, UndoStacks.empty))
+          import explore.constraints.ViewList
+          import explore.constraints.CloneListView
+
+          val csView: ViewList[ConstraintSet] =
+            cglView.zoom(
+              ProgramSummaries.observations
+                .filterIndex((id: Observation.Id) => idsToEdit.contains(id))
+                .andThen(KeyedIndexedList.value)
+                .andThen(ObsSummary.constraints)
+            )
+
+          val csUndo: View[UndoStacks[IO, ConstraintSet]] =
+            props.groupUndoStack.zoom(atMapWithDefault(idsToEdit, UndoStacks.empty))
 
           val constraintsTitle = idsToEdit.single match
             case Some(id) => s"Observation $id"
@@ -273,8 +285,13 @@ object ConstraintsTabContents extends TwoPanels:
             backButton.some,
             canMinimize = true
           )(renderInTitle =>
-            <.div("hello")
-            // ConstraintsPanel(props.programId, idsToEdit.toList, csView, csUndo, renderInTitle)
+            ConstraintsPanel(
+              props.programId,
+              idsToEdit.toList,
+              CloneListView(csView),
+              csUndo,
+              renderInTitle
+            )
           )
 
           val timingWindowsView = timingWindows.zoom(TimingWindowsList)
