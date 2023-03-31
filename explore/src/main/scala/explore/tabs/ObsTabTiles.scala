@@ -68,6 +68,7 @@ import java.time.Instant
 import scala.collection.immutable.SortedMap
 import explore.model.TargetWithObs
 import explore.common.AsterismQueries.ProgramSummaries
+import explore.constraints.ConstraintsPanel
 
 case class ObsTabTiles(
   userId:           Option[User.Id],
@@ -328,15 +329,20 @@ object ObsTabTiles:
         // than one tile ends up having dropdowns in the tile header, we'll need something more complex such
         // as changing the css classes on the various tiles when the dropdown is clicked to control z-index.
         val constraintsTile =
-          ConstraintsTile.constraintsTile(
-            props.programId,
-            props.obsId,
-            constraints,
-            props.undoStacks
-              .zoom(ModelUndoStacks.forConstraintGroup[IO])
-              .zoom(atMapWithDefault(ObsIdSet.one(props.obsId), UndoStacks.empty)),
-            control = constraintsSelector.some,
-            clazz = ExploreStyles.ConstraintsTile.some
+          Tile(
+            ObsTabTilesIds.ConstraintsId.id,
+            "Constraints",
+            canMinimize = true,
+            control = _ => constraintsSelector.some,
+            controllerClass = ExploreStyles.ConstraintsTile.some
+          )(renderInTitle =>
+            ConstraintsPanel(
+              props.programId,
+              ObsIdSet.one(props.obsId),
+              props.programSummaries.zoom(ProgramSummaries.observations),
+              props.undoStacks.zoom(ModelUndoStacks.forObsList[IO]),
+              renderInTitle
+            )
           )
 
         val configurationTile =

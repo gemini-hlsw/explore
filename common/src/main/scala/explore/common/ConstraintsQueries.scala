@@ -5,6 +5,7 @@ package explore.common
 
 import cats.Endo
 import cats.effect.IO
+import cats.syntax.all.given
 import clue.FetchClient
 import clue.data.syntax.*
 import crystal.react.View
@@ -23,26 +24,41 @@ import lucuma.schemas.odb.input.*
 import monocle.Lens
 import org.typelevel.log4cats.Logger
 import queries.common.ObsQueriesGQL.*
+import explore.common.AsterismQueries.ObservationList
+import explore.common.AsterismQueries.ProgramSummaries
+import explore.data.KeyedIndexedList
+import explore.model.ObsSummary
+import monocle.Iso
+import explore.model.ObsIdSet
 
 object ConstraintsQueries:
   case class UndoView(
     programId: Program.Id,
-    obsIds:    List[Observation.Id],
-    undoCtx:   UndoContext[ConstraintSet]
+    obsIds:    ObsIdSet,
+    undoCtx:   UndoContext[ObservationList]
   )(using FetchClient[IO, ?, ObservationDB], Logger[IO]):
     def apply[A](
       modelGet:  ConstraintSet => A,
       modelMod:  (A => A) => ConstraintSet => ConstraintSet,
       remoteSet: A => ConstraintSetInput => ConstraintSetInput
     ): View[A] =
+      val traversal =
+        Iso
+          .id[ObservationList]
+          .filterIndex((id: Observation.Id) => obsIds.idSet.contains_(id))
+          .andThen(KeyedIndexedList.value)
+          .andThen(ObsSummary.constraints)
+
       undoCtx
+        .zoom(traversal.getAll.andThen(_.head), traversal.modify)
         .undoableView(modelGet, modelMod)
         .withOnMod(value =>
           UpdateObservationMutation[IO]
             .execute(
               UpdateObservationsInput(
                 programId = programId,
-                WHERE = obsIds.toWhereObservation.assign,
+                WHERE =
+                  obsIds.toList.toWhereObservation.assign, // TODO should toWhereObservation accept NEL???
                 SET = ObservationPropertiesInput(
                   constraintSet = remoteSet(value)(ConstraintSetInput()).assign
                 )

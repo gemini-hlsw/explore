@@ -44,15 +44,21 @@ import lucuma.ui.utils.given
 import monocle.Lens
 import react.common.ReactFnProps
 import react.primereact.PrimeStyles
+import explore.common.AsterismQueries.ObservationList
+// import cats.data.NonEmptyList
+import explore.model.ObsIdSet
 
 // TODO Consider passing the whole ObsList, and a list of obs ids.
 // So that we can reuse the ObsList UndoStacks ???
 // This is a step towards a global undo....
 case class ConstraintsPanel(
   programId:     Program.Id,
-  obsIds:        List[Observation.Id],
-  constraintSet: View[ConstraintSet],
-  undoStacks:    View[UndoStacks[IO, ConstraintSet]],
+  obsIds:        ObsIdSet,
+  // constraintSet: View[ConstraintSet],
+  obsList:       View[ObservationList],
+  // undoStacks:    View[UndoStacks[IO, ConstraintSet]],
+  undoStacks:    View[UndoStacks[IO, ObservationList]],
+  // undoCtx:   UndoContext[ObservationList],
   renderInTitle: Tile.RenderInTitle
 ) extends ReactFnProps(ConstraintsPanel.component)
 
@@ -97,16 +103,19 @@ object ConstraintsPanel:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .useStateBy((props, _) =>
-        ElevationRangeOptions.fromElevationRange(props.constraintSet.get.elevationRange)
+        ElevationRangeOptions.fromElevationRange(
+          props.obsList.get.getValue(props.obsIds.head).get.constraints.elevationRange
+        )
       )
-      .useEffectWithDepsBy((props, _, _) => props.constraintSet.get.elevationRange)(
-        (_, _, elevationRangeOptions) =>
-          elevationRange => elevationRangeOptions.modState(_.toElevationRange(elevationRange))
+      .useEffectWithDepsBy((props, _, _) =>
+        props.obsList.get.getValue(props.obsIds.head).get.constraints.elevationRange
+      )((_, _, elevationRangeOptions) =>
+        elevationRange => elevationRangeOptions.modState(_.toElevationRange(elevationRange))
       )
       .render { (props, ctx, elevationRangeOptions) =>
         import ctx.given
 
-        val undoCtx: UndoContext[ConstraintSet] = UndoContext(props.undoStacks, props.constraintSet)
+        val undoCtx: UndoContext[ObservationList] = UndoContext(props.undoStacks, props.obsList)
 
         val undoViewSet = UndoView(props.programId, props.obsIds, undoCtx)
 
