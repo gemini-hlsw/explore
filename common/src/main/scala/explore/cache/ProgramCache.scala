@@ -88,4 +88,5 @@ object ProgramCache extends CacheComponent[ProgramCache, ProgramSummaries]:
           )
         )
 
+    // TODO Handle errors, disable transparent resubscription upon connection loss.
     (updateTargets, updateObservations).mapN(_.merge(_))

@@ -6,7 +6,6 @@ package queries.common
 import clue.GraphQLSubquery
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.odb.*
-import explore.model.ObsSummaryWithConstraintsAndConf
 import explore.model.ObsSummary
 
 // TODO THIS IS TWICE!!! SHOULD WE MOVE UPSTREAM? MAKE SOMETHING THAT COPIES IT OVER WITH GENERATION?

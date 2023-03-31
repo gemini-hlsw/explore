@@ -30,17 +30,10 @@ import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.model.*
 import lucuma.ui.reusability.given
-// import queries.schemas.odb.ObsQueries.ObsSummariesWithConstraints
 import queries.schemas.odb.ObsQueries.SpectroscopyRequirementsData
 
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.TreeSeqMap
-
-import explore.model.{
-  ObsSummaryWithConstraints,
-  ObsSummaryWithTitleAndConstraints,
-  ObsSummaryWithTitleConstraintsAndConf
-}
 
 /**
  * Reusability instances for model classes
@@ -71,10 +64,6 @@ object reusability:
   /**
    */
   given Reusability[PosAngleConstraint] = Reusability.byEq
-  // given Reusability[ObsSummaryWithConstraints]             =
-  //   Reusability.byEq
-  // given Reusability[ObsSummaryWithTitleAndConstraints]     = Reusability.byEq
-  // given Reusability[ObsSummaryWithTitleConstraintsAndConf] = Reusability.byEq
 
   // Undo
   given undoStacksReuse[F[_], M]: Reusability[UndoStacks[F, M]] =

@@ -260,7 +260,11 @@ object AsterismGroupObsList:
             )
           )
           div.some
-        }(obsId => observations.getValue(obsId).map(summ => props.renderObsBadge(summ)))
+        }(obsId =>
+          observations
+            .getValue(obsId)
+            .map(summ => props.renderObsBadge(summ, ObsBadge.Layout.TargetsTab))
+        )
 
       val renderClone: Draggable.Render = (provided, snapshot, rubric) =>
         <.div(
@@ -350,6 +354,7 @@ object AsterismGroupObsList:
                   TagMod(
                     cgObs.zipWithIndex.toTagMod { case (obs, idx) =>
                       props.renderObsBadgeItem(
+                        ObsBadge.Layout.TargetsTab,
                         selectable = true,
                         highlightSelected = true,
                         forceHighlight = isObsSelected(obs.id),

@@ -68,13 +68,11 @@ object AsterismQueries:
       clonedId:   Observation.Id,
       targetIds:  List[Target.Id]
     ): Option[ObsSummary] =
-      // observations.get(originalId).map(_.copy(id = clonedId, scienceTargetIds = targetIds.toSet))
       observations
         .getValue(originalId)
         .map(_.copy(id = clonedId, scienceTargetIds = targetIds.toSet))
 
     def insertObs(obsSummary: ObsSummary): ProgramSummaries = {
-      // val newObservations   = observations + (obsSummary.id -> obsSummary)
       val newObservations   = observations.inserted(obsSummary.id, obsSummary, observations.length)
       val newTargetsWithObs = obsSummary.scienceTargetIds.foldLeft(targetsWithObs)((twos, id) =>
         twos.updatedWith(id)(_.map(r => r.copy(obsIds = r.obsIds + obsSummary.id)))
@@ -96,7 +94,6 @@ object AsterismQueries:
       obsId:     Observation.Id,
       targetIds: SortedSet[Target.Id]
     ): ProgramSummaries = {
-      // val newObservations   = observations - obsId
       val newObservations   = observations.removed(obsId)
       val newTargetsWithObs = targetIds.foldLeft(targetsWithObs)((twos, id) =>
         twos.updatedWith(id)(_.map(r => r.copy(obsIds = r.obsIds - obsId)))
@@ -117,7 +114,6 @@ object AsterismQueries:
     // observations asterisms.
     def rebuildAsterismGroups: ProgramSummaries = {
       val targetObservations: Map[Target.Id, SortedSet[Observation.Id]] =
-        // observations.values
         observations.values
           .flatMap(obs => obs.scienceTargetIds.map(targetId => targetId -> obs.id))
           .groupMap(_._1)(_._2)
@@ -132,7 +128,6 @@ object AsterismQueries:
         )
 
       val observationTargets: AsterismGroupList =
-        // observations.values
         observations.values
           .map(obs => obs.id -> obs.scienceTargetIds)
           .groupMap(_._2)(_._1)
@@ -178,7 +173,6 @@ object AsterismQueries:
     ProgramSummaries(
       asterismGroups,
       targetsWithObs,
-      // data.observations.matches.toSortedMap(ObsSummary.id.get)
       KeyedIndexedList.fromList(data.observations.matches, ObsSummary.id.get)
     )
 

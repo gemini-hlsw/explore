@@ -67,8 +67,6 @@ object Routing:
       routingInfo.focused.obsSet,
       model.zoom(RootModel.expandedIds.andThen(ExpandedIds.constraintSetObsIds)),
       model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forObsList)
-      // model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forConstraintList),
-      // model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forConstraintGroup)
     )
 
   private def proposalTab(page: Page, model: View[RootModel]): VdomElement =

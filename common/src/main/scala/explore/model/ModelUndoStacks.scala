@@ -5,8 +5,6 @@ package explore.model
 
 import cats.Eq
 import explore.common.AsterismQueries.ProgramSummaries
-import explore.common.ConstraintGroupQueries.ConstraintGroupList
-import explore.model.ObsIdSet
 import explore.undo.UndoStacks
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
@@ -21,35 +19,25 @@ case class ModelUndoStacks[F[_]](
   forAsterismGroupList: UndoStacks[F, ProgramSummaries] = UndoStacks.empty[F, ProgramSummaries],
   forSiderealTarget:    Map[Target.Id, UndoStacks[F, Target.Sidereal]] =
     Map.empty[Target.Id, UndoStacks[F, Target.Sidereal]],
-  forConstraintList:    UndoStacks[F, ConstraintGroupList] =
-    UndoStacks.empty[F, ConstraintGroupList], // TODO Maybe we don't need this?
-  forConstraintGroup:   Map[ObsIdSet, UndoStacks[F,
-                                               ConstraintSet
-  ]] = // TODO Maybe we don't need this?
-    Map.empty[ObsIdSet, UndoStacks[F, ConstraintSet]],
-  forObservationData: Map[Observation.Id, UndoStacks[F, ScienceData]] =
+  forObservationData:   Map[Observation.Id, UndoStacks[F, ScienceData]] =
     Map.empty[Observation.Id, UndoStacks[F, ScienceData]],
-  forProposal:        UndoStacks[F, Proposal] = UndoStacks.empty[F, Proposal]
+  forProposal:          UndoStacks[F, Proposal] = UndoStacks.empty[F, Proposal]
 )
 
-object ModelUndoStacks {
+object ModelUndoStacks:
   def forObsList[F[_]]           = Focus[ModelUndoStacks[F]](_.forObsList)
   def forAsterismGroupList[F[_]] = Focus[ModelUndoStacks[F]](_.forAsterismGroupList)
   def forSiderealTarget[F[_]]    = Focus[ModelUndoStacks[F]](_.forSiderealTarget)
-  def forConstraintList[F[_]]    = Focus[ModelUndoStacks[F]](_.forConstraintList)
-  def forConstraintGroup[F[_]]   = Focus[ModelUndoStacks[F]](_.forConstraintGroup)
   def forObservationData[F[_]]   = Focus[ModelUndoStacks[F]](_.forObservationData)
   def forProposal[F[_]]          = Focus[ModelUndoStacks[F]](_.forProposal)
 
-  implicit def eqModelUndoStacks[F[_]]: Eq[ModelUndoStacks[F]] =
+  given eqModelUndoStacks[F[_]]: Eq[ModelUndoStacks[F]] =
     Eq.by(u =>
       (u.forObsList,
        u.forAsterismGroupList,
        u.forSiderealTarget,
-       u.forConstraintList,
-       u.forConstraintGroup,
        u.forObservationData,
        u.forProposal
       )
     )
-}
+// }

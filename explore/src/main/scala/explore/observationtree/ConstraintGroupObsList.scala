@@ -9,7 +9,6 @@ import clue.FetchClient
 import crystal.react.View
 import crystal.react.reuse.Reuse
 import explore.Icons
-import explore.common.ConstraintGroupQueries.*
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.model.AppContext
@@ -173,7 +172,9 @@ object ConstraintGroupObsList:
           getDraggedIds(rubric.draggableId, props.focusedObsSet)
             .flatMap(obsIds =>
               if (obsIds.size === 1)
-                observations.getValue(obsIds.head).map(obs => props.renderObsBadge(obs))
+                observations
+                  .getValue(obsIds.head)
+                  .map(obs => props.renderObsBadge(obs, ObsBadge.Layout.ConstraintsTab))
               else
                 <.div(obsIds.toList.toTagMod(id => <.div(id.show))).some
             )
@@ -253,6 +254,7 @@ object ConstraintGroupObsList:
                 TagMod.when(props.expandedIds.get.contains(obsIds))(
                   cgObs.zipWithIndex.toTagMod { case (obs, idx) =>
                     props.renderObsBadgeItem(
+                      ObsBadge.Layout.ConstraintsTab,
                       selectable = true,
                       highlightSelected = true,
                       forceHighlight = isObsSelected(obs.id),

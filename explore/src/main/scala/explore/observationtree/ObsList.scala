@@ -15,7 +15,6 @@ import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.model.AppContext
 import explore.model.Focused
-import explore.model.ObsSummaryWithTitleConstraintsAndConf
 import explore.model.enums.AppTab
 import explore.model.reusability.given
 import explore.observationtree.ObsBadge
@@ -154,6 +153,7 @@ object ObsList:
                 )(
                   ObsBadge(
                     obs,
+                    ObsBadge.Layout.ObservationsTab,
                     selected = selected,
                     setStatusCB = (obsEditStatus(props.programId, obs.id)
                       .set(undoCtx) _).compose((_: ObsStatus).some).some,
