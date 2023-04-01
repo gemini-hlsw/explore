@@ -9,7 +9,6 @@ import clue.FetchClient
 import crystal.react.View
 import crystal.react.reuse.Reuse
 import explore.Icons
-import explore.common.ConstraintGroupQueries.*
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.model.AppContext

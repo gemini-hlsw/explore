@@ -11,9 +11,6 @@ import explore.EditableLabel
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.ObsSummary
-import explore.model.ObsWithConf
-import explore.model.ObsWithConstraints
-import explore.model.ObsWithTitle
 import explore.model.syntax.all.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment

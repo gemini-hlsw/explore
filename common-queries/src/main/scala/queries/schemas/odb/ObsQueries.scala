@@ -17,8 +17,6 @@ import explore.data.KeyedIndexedList
 import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
 import explore.model.ObsSummary
-import explore.model.ObsSummaryWithTitleAndConstraints
-import explore.model.ObsSummaryWithTitleConstraintsAndConf
 import explore.model.OdbItcResult
 import explore.model.syntax.all.*
 import explore.optics.all.*

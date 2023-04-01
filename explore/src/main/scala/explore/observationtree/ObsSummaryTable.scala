@@ -11,7 +11,6 @@ import crystal.react.hooks.*
 import crystal.react.implicits.*
 import crystal.react.reuse.*
 import explore.Icons
-import explore.common.ConstraintGroupQueries.*
 import explore.common.UserPreferencesQueries.TableStore
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
@@ -20,7 +19,6 @@ import explore.model.Asterism
 import explore.model.Focused
 import explore.model.ObsIdSet
 import explore.model.ObsSummary
-import explore.model.ObsWithConstraints
 import explore.model.display.given
 import explore.model.enums.AppTab
 import explore.model.enums.TableId
