@@ -1,7 +1,6 @@
 things that may not be used anymore:
 
 ConstraintsSummary in lucuma-schemas?
-ObsSummaryOld and subtypes
 the whole ConstraintQueriesGQL
 classes in ConstraintQueries
 some queries and classes in ObsQueriesGQL, ObsQueries
