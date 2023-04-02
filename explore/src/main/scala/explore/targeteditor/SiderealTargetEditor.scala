@@ -30,6 +30,7 @@ import explore.model.PAProperties
 import explore.model.enums.AgsState
 import explore.model.formats.*
 import explore.model.util.*
+import explore.optics.all.given
 import explore.undo.UndoContext
 import explore.undo.UndoStacks
 import explore.utils.*
@@ -67,18 +68,21 @@ import react.common.*
 import react.primereact.Message
 
 import java.time.Instant
+import scala.collection.immutable.TreeSeqMap
+import cats.data.NonEmptyList
 
 case class SiderealTargetEditor(
-  userId:        User.Id,
-  asterism:      View[Asterism],
-  vizTime:       Option[Instant],
-  obsConf:       Option[ObsConfiguration],
-  undoStacks:    View[UndoStacks[IO, Target.Sidereal]],
-  searching:     View[Set[Target.Id]],
-  obsIdSubset:   Option[ObsIdSet] = None,
-  onClone:       TargetWithId => Callback = _ => Callback.empty,
-  renderInTitle: Option[Tile.RenderInTitle] = none,
-  fullScreen:    View[AladinFullScreen]
+  userId:          User.Id,
+  asterism:        View[TreeSeqMap[Target.Id, Target]],
+  focusedTargetId: Target.Id,
+  vizTime:         Option[Instant],
+  obsConf:         Option[ObsConfiguration],
+  undoStacks:      View[UndoStacks[IO, Target.Sidereal]],
+  searching:       View[Set[Target.Id]],
+  obsIdSubset:     Option[ObsIdSet] = None,
+  onClone:         TargetWithId => Callback = _ => Callback.empty,
+  renderInTitle:   Option[Tile.RenderInTitle] = none,
+  fullScreen:      View[AladinFullScreen]
 ) extends ReactFnProps(SiderealTargetEditor.component)
 
 object SiderealTargetEditor {
@@ -146,8 +150,15 @@ object SiderealTargetEditor {
       .render { (props, ctx, cloning, vizTime) =>
         import ctx.given
 
-        val focusedTarget = props.asterism.zoom(Asterism.focus)
-        focusedTarget.zoom(TargetWithId.sidereal).asView.map { selectedTargetView =>
+        val focusedTarget =
+          props.asterism.zoom(
+            monocle.Iso
+              .id[TreeSeqMap[Target.Id, Target]]
+              .index(props.focusedTargetId)
+          )
+
+        // focusedTarget.zoom(TargetWithId.sidereal).asView.map { selectedTargetView =>
+        focusedTarget.zoom(Target.sidereal).asView.map { selectedTargetView =>
 
           val (targetView, undoStackView) =
             props.obsIdSubset.fold((selectedTargetView, props.undoStacks))(_ =>
@@ -155,9 +166,9 @@ object SiderealTargetEditor {
             )
 
           val undoCtx: UndoContext[Target.Sidereal] =
-            UndoContext(undoStackView, targetView.zoom(SiderealTargetWithId.target))
+            UndoContext(undoStackView, targetView)
 
-          val tid = selectedTargetView.get.id
+          val tid = props.focusedTargetId
 
           val remoteOnMod: UpdateTargetsInput => IO[Unit] =
             getRemoteOnMod(
@@ -231,8 +242,9 @@ object SiderealTargetEditor {
                 siderealToTargetEndo.compose(SiderealInput.properMotion.modify)
               )
               .view((pmRA: Option[ProperMotion.RA]) =>
-                buildProperMotion(pmRA,
-                                  Target.Sidereal.properMotionDec.getOption(targetView.get.target)
+                buildProperMotion(
+                  pmRA,
+                  Target.Sidereal.properMotionDec.getOption(targetView.get)
                 )
                   .map(_.toInput)
                   .orUnassign
@@ -252,8 +264,9 @@ object SiderealTargetEditor {
                 siderealToTargetEndo.compose(SiderealInput.properMotion.modify)
               )
               .view((pmDec: Option[ProperMotion.Dec]) =>
-                buildProperMotion(Target.Sidereal.properMotionRA.getOption(targetView.get.target),
-                                  pmDec
+                buildProperMotion(
+                  Target.Sidereal.properMotionRA.getOption(targetView.get),
+                  pmDec
                 )
                   .map(_.toInput)
                   .orUnassign
@@ -299,7 +312,8 @@ object SiderealTargetEditor {
                   tid,
                   vt,
                   props.obsConf,
-                  props.asterism.get,
+                  NonEmptyList.fromListUnsafe(props.asterism.get.toList.map(TargetWithId(_, _))),
+                  props.focusedTargetId,
                   props.fullScreen
                 )
               ),
@@ -380,11 +394,11 @@ object SiderealTargetEditor {
                 ExploreStyles.WithGaussian
                   .when(SourceProfile.gaussian.getOption(sourceProfileAligner.get).isDefined),
                 ExploreStyles.WithCatalogInfo
-                  .when(targetView.get.target.catalogInfo.flatMap(_.objectType).isDefined)
+                  .when(targetView.get.catalogInfo.flatMap(_.objectType).isDefined)
               )(
                 SourceProfileEditor(
                   sourceProfileAligner,
-                  targetView.get.target.catalogInfo,
+                  targetView.get.catalogInfo,
                   disabled
                 )
               )

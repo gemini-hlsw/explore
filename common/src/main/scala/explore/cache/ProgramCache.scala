@@ -53,13 +53,10 @@ object ProgramCache extends CacheComponent[ProgramCache, ProgramSummaries]:
         .subscribe[IO](props.programId)
         .map(
           _.map(data =>
-            ProgramSummaries.targetsWithObs
+            ProgramSummaries.targets
               .modify(targets =>
                 if (data.targetEdit.meta.existence === Existence.Present)
-                  targets.updated(
-                    data.targetEdit.value.id,
-                    TargetWithObs(data.targetEdit.value.target, SortedSet.empty)
-                  )
+                  targets.updated(data.targetEdit.value.id, data.targetEdit.value.target)
                 else
                   targets.removed(data.targetEdit.value.id)
               )
@@ -75,7 +72,6 @@ object ProgramCache extends CacheComponent[ProgramCache, ProgramSummaries]:
             ProgramSummaries.observations
               .modify(observations =>
                 if (data.observationEdit.meta.existence === Existence.Present)
-                  // observations.updated(obsId data.observationEdit.value)
                   observations.inserted(
                     obsId,
                     data.observationEdit.value,
@@ -84,7 +80,6 @@ object ProgramCache extends CacheComponent[ProgramCache, ProgramSummaries]:
                 else
                   observations.removed(obsId)
               )
-              .andThen(_.rebuildAsterismGroups)
           )
         )
 

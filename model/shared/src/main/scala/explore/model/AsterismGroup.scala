@@ -32,6 +32,9 @@ case class AsterismGroup(obsIds: ObsIdSet, targetIds: SortedSet[Target.Id]) deri
   def asObsKeyValue: (ObsIdSet, AsterismGroup) = (this.obsIds, this)
 
 object AsterismGroup:
+  def fromTuple(obsIds: ObsIdSet, targetIds: SortedSet[Target.Id]): AsterismGroup =
+    AsterismGroup(obsIds, targetIds)
+
   given Semigroup[AsterismGroup] =
     Semigroup.instance((a, b) => AsterismGroup(a.obsIds |+| b.obsIds, a.targetIds |+| b.targetIds))
 

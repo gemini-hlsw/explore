@@ -75,14 +75,16 @@ import react.primereact.hooks.all.*
 import java.time.Duration
 import java.time.Instant
 import scala.concurrent.duration.*
+import lucuma.schemas.model.TargetWithId
 
 case class AladinCell(
-  uid:        User.Id,
-  tid:        Target.Id,
-  vizTime:    Instant,
-  obsConf:    Option[ObsConfiguration],
-  asterism:   Asterism,
-  fullScreen: View[AladinFullScreen]
+  uid:             User.Id,
+  tid:             Target.Id,
+  vizTime:         Instant,
+  obsConf:         Option[ObsConfiguration],
+  asterism:        NonEmptyList[TargetWithId],
+  focusedTargetId: Target.Id,
+  fullScreen:      View[AladinFullScreen]
 ) extends ReactFnProps(AladinCell.component):
   val anglesToTest: Option[NonEmptyList[Angle]] =
     for {
@@ -315,23 +317,24 @@ object AladinCell extends ModelOptics with AladinCommon:
                   val params = AgsParams.GmosAgsParams(fpu, PortDisposition.Side)
 
                   val sciencePositions =
-                    props.asterism.asList
-                      .flatMap(_.toSidereal)
-                      .flatMap(_.target.tracking.at(vizTime))
+                    props.asterism.toList
+                      .map(_.toSidereal.map(_.target).flatMap(_.tracking.at(vizTime)))
+                      .flattenOption
 
                   val process = for
                     _ <- agsState.set(AgsState.Calculating).to[IO]
                     _ <-
                       AgsClient[IO]
                         .requestSingle(
-                          AgsMessage.Request(props.tid,
-                                             constraints,
-                                             wavelength,
-                                             base.value,
-                                             sciencePositions,
-                                             positions,
-                                             params,
-                                             candidates
+                          AgsMessage.Request(
+                            props.tid,
+                            constraints,
+                            wavelength,
+                            base.value,
+                            sciencePositions,
+                            positions,
+                            params,
+                            candidates
                           )
                         )
                         .map(_.map(_.sortPositions(positions)))
@@ -533,6 +536,7 @@ object AladinCell extends ModelOptics with AladinCommon:
             case (u: UserGlobalPreferences, t: TargetVisualOptions) =>
               AladinContainer(
                 props.asterism,
+                props.focusedTargetId,
                 props.vizTime,
                 props.obsConf,
                 u.copy(fullScreen = props.fullScreen.get),
@@ -551,12 +555,13 @@ object AladinCell extends ModelOptics with AladinCommon:
               val agsState = props.obsConf
                 .flatMap(_.agsState.map(_.get))
                 .getOrElse(AgsState.Idle)
-              AladinToolbar(Fov(t.fovRA, t.fovDec),
-                            mouseCoords.value,
-                            agsState,
-                            selectedGuideStar,
-                            u.aladinAgsOverlay,
-                            offsetOnCenter
+              AladinToolbar(
+                Fov(t.fovRA, t.fovDec),
+                mouseCoords.value,
+                agsState,
+                selectedGuideStar,
+                u.aladinAgsOverlay,
+                offsetOnCenter
               )
 
           val renderAgsOverlay: ((UserGlobalPreferences, TargetVisualOptions)) => VdomNode =

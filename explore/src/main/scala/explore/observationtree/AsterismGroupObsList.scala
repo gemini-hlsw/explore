@@ -114,7 +114,7 @@ object AsterismGroupObsList:
       draggedIds  <- getDraggedIds(result.draggableId, props)
       destAg      <- props.asterismsWithObs.get.asterismGroups.get(destIds)
       srcAg       <- props.asterismsWithObs.get.asterismGroups.findContainingObsIds(draggedIds)
-    } yield (destAg, draggedIds, srcAg.obsIds)
+    } yield (destIds, destAg, draggedIds, srcAg.obsIds)
 
     def setObsSet(obsIds: ObsIdSet) =
       // if focused is empty, we're looking at the target summary table and don't want to
@@ -122,15 +122,15 @@ object AsterismGroupObsList:
       if (props.focused.isEmpty) Callback.empty
       else ctx.pushPage(AppTab.Targets, props.programId, Focused(obsIds.some))
 
-    oData.foldMap { (destAg, draggedIds, srcIds) =>
-      if (destAg.obsIds.intersects(draggedIds)) Callback.empty
+    oData.foldMap { (destIds, destAg, draggedIds, srcIds) =>
+      if (destIds.intersects(draggedIds)) Callback.empty
       else
         AsterismGroupObsListActions
           .dropObservations(
             props.programId,
             draggedIds,
             srcIds,
-            destAg.obsIds,
+            destIds,
             props.expandedIds,
             setObsSet
           )
@@ -199,7 +199,7 @@ object AsterismGroupObsList:
 
       val selectedAG = props.focusedObsSet
         .flatMap(idSet => asterismGroups.find { case (key, _) => idSet.subsetOf(key) })
-        .map(_._2)
+        .map(AsterismGroup.fromTuple)
 
       def replacePage(focused: Focused): Callback =
         ctx.replacePage(AppTab.Targets, props.programId, focused)
@@ -233,13 +233,13 @@ object AsterismGroupObsList:
       import ctx.given
 
       val observations     = props.asterismsWithObs.get.observations
-      val asterismGroups   = props.asterismsWithObs.get.asterismGroups.map(_._2)
+      val asterismGroups   = props.asterismsWithObs.get.asterismGroups.map(AsterismGroup.fromTuple)
       val targetWithObsMap = props.asterismsWithObs.get.targetsWithObs
 
       // first look to see if something is focused in the tree, else see if something is focused in the summary
       val selectedTargetIds: SortedSet[Target.Id] =
         props.focused.obsSet
-          .flatMap(ids => props.asterismsWithObs.get.asterismGroups.get(ids).map(_.targetIds))
+          .flatMap(ids => props.asterismsWithObs.get.asterismGroups.get(ids))
           .getOrElse(SortedSet.from(props.selectedSummaryTargets.get))
 
       def isObsSelected(obsId: Observation.Id): Boolean =

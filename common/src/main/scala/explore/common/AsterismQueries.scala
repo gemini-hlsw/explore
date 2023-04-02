@@ -43,7 +43,10 @@ object AsterismQueries:
   // else, we can remove this.
   given Order[ObsIdSet] = ObsIdSet.given_Order_ObsIdSet
 
-  type AsterismGroupList   = SortedMap[ObsIdSet, AsterismGroup]
+  type AsterismIds = SortedSet[Target.Id]
+
+  type AsterismGroupList   = SortedMap[ObsIdSet, AsterismIds]
+  type TargetList          = SortedMap[Target.Id, Target]
   type TargetWithObsList   = SortedMap[Target.Id, TargetWithObs]
   // KeyedIndexedList is only useful is manual order is going to matter.
   // For the moment I'm keeping it because it seems it will matter at some point.
@@ -52,10 +55,35 @@ object AsterismQueries:
   type ConstraintGroupList = SortedMap[ObsIdSet, ConstraintSet]
 
   case class ProgramSummaries(
-    asterismGroups: AsterismGroupList,
-    targetsWithObs: TargetWithObsList,
-    observations:   ObservationList
+    // asterismGroups: AsterismGroupList,
+    // targetsWithObs: TargetWithObsList,
+    targets:      TargetList,
+    observations: ObservationList
   ) {
+    lazy val asterismGroups: AsterismGroupList =
+      SortedMap.from(
+        observations.values
+          .map(obs => obs.id -> obs.scienceTargetIds)
+          .groupMap(_._2)(_._1)
+          .map((targets, observations) =>
+            ObsIdSet(NonEmptySet.of(observations.head, observations.tail.toList: _*)) -> SortedSet
+              .from(targets)
+          )
+      )
+
+    lazy val targetObservations: Map[Target.Id, SortedSet[Observation.Id]] =
+      observations.values
+        .flatMap(obs => obs.scienceTargetIds.map(targetId => targetId -> obs.id))
+        .groupMap(_._1)(_._2)
+        .view
+        .mapValues(obsIds => SortedSet.from(obsIds))
+        .toMap
+
+    lazy val targetsWithObs: TargetWithObsList =
+      targets.map((targetId, target) =>
+        targetId -> TargetWithObs(target, targetObservations.get(targetId).orEmpty)
+      )
+
     lazy val constraintGroups: ConstraintGroupList =
       SortedMap.from(
         observations.values
@@ -72,107 +100,66 @@ object AsterismQueries:
         .getValue(originalId)
         .map(_.copy(id = clonedId, scienceTargetIds = targetIds.toSet))
 
-    def insertObs(obsSummary: ObsSummary): ProgramSummaries = {
-      val newObservations   = observations.inserted(obsSummary.id, obsSummary, observations.length)
-      val newTargetsWithObs = obsSummary.scienceTargetIds.foldLeft(targetsWithObs)((twos, id) =>
-        twos.updatedWith(id)(_.map(r => r.copy(obsIds = r.obsIds + obsSummary.id)))
-      )
+    def insertObs(obsSummary: ObsSummary): ProgramSummaries =
+      // val newObservations   = observations.inserted(obsSummary.id, obsSummary, observations.length)
+      // val newTargetsWithObs = obsSummary.scienceTargetIds.foldLeft(targetsWithObs)((twos, id) =>
+      //   twos.updatedWith(id)(_.map(r => r.copy(obsIds = r.obsIds + obsSummary.id)))
+      // )
 
-      val targetIds         = SortedSet.from(obsSummary.scienceTargetIds)
-      val newIdSet          = ObsIdSet.one(obsSummary.id)
-      val newAsterismGr     = AsterismGroup(newIdSet, targetIds)
-      val currentAsterismGr = asterismGroups.find((ids, grp) => grp.targetIds === targetIds)
-      val newAsterismGroups =
-        currentAsterismGr.fold(asterismGroups + newAsterismGr.asObsKeyValue)((ids, _) =>
-          asterismGroups - ids + AsterismGroup(ids ++ newIdSet, targetIds).asObsKeyValue
-        )
+      // val targetIds         = SortedSet.from(obsSummary.scienceTargetIds)
+      // val newIdSet          = ObsIdSet.one(obsSummary.id)
+      // val newAsterismGr     = AsterismGroup(newIdSet, targetIds)
+      // val currentAsterismGr = asterismGroups.find((ids, grpIds) => grpIds === targetIds)
+      // val newAsterismGroups =
+      //   currentAsterismGr.fold(asterismGroups + newAsterismGr.asObsKeyValue)((ids, _) =>
+      //     asterismGroups - ids + AsterismGroup(ids ++ newIdSet, targetIds).asObsKeyValue
+      //   )
 
-      ProgramSummaries(newAsterismGroups, newTargetsWithObs, newObservations)
-    }
+      // ProgramSummaries(newAsterismGroups, newTargetsWithObs, newObservations)
+      ProgramSummaries.observations.modify(
+        _.inserted(obsSummary.id, obsSummary, observations.length)
+      )(this)
 
     def removeObsWithTargets(
       obsId:     Observation.Id,
       targetIds: SortedSet[Target.Id]
-    ): ProgramSummaries = {
-      val newObservations   = observations.removed(obsId)
-      val newTargetsWithObs = targetIds.foldLeft(targetsWithObs)((twos, id) =>
-        twos.updatedWith(id)(_.map(r => r.copy(obsIds = r.obsIds - obsId)))
-      )
+    ): ProgramSummaries =
+      ProgramSummaries.observations.modify(_.removed(obsId))(this)
 
-      val currentAsterismGr = asterismGroups.find((ids, grp) => grp.targetIds === targetIds)
-      val newAsterismGroups = currentAsterismGr.fold(asterismGroups) { (currentIds, _) =>
-        val remainingIds = currentIds.removeOne(obsId)
-        val tmpGroups    = remainingIds.fold(asterismGroups)(remaining =>
-          asterismGroups + AsterismGroup(remaining, targetIds).asObsKeyValue
-        )
-        tmpGroups - currentIds
-      }
-      ProgramSummaries(newAsterismGroups, newTargetsWithObs, newObservations)
-    }
+      // val newObservations   = observations.removed(obsId)
+      // val newTargetsWithObs = targetIds.foldLeft(targetsWithObs)((twos, id) =>
+      //   twos.updatedWith(id)(_.map(r => r.copy(obsIds = r.obsIds - obsId)))
+      // )
 
-    // Rebuilds asterism groups and observation list for each target, based on the
-    // observations asterisms.
-    def rebuildAsterismGroups: ProgramSummaries = {
-      val targetObservations: Map[Target.Id, SortedSet[Observation.Id]] =
-        observations.values
-          .flatMap(obs => obs.scienceTargetIds.map(targetId => targetId -> obs.id))
-          .groupMap(_._1)(_._2)
-          .view
-          .mapValues(obsIds => SortedSet.from(obsIds))
-          .toMap
-
-      val updatedTargets: TargetWithObsList =
-        targetsWithObs.map((targetId, targetWithObs) =>
-          targetId ->
-            TargetWithObs.obsIds.replace(targetObservations.get(targetId).orEmpty)(targetWithObs)
-        )
-
-      val observationTargets: AsterismGroupList =
-        observations.values
-          .map(obs => obs.id -> obs.scienceTargetIds)
-          .groupMap(_._2)(_._1)
-          .map((targets, observations) =>
-            AsterismGroup(
-              ObsIdSet(NonEmptySet.of(observations.head, observations.tail.toList: _*)),
-              SortedSet.from(targets)
-            )
-          )
-          .toSortedMap(_.obsIds)
-
-      (ProgramSummaries.asterismGroups.replace(observationTargets) >>>
-        ProgramSummaries.targetsWithObs.replace(updatedTargets))(this)
-    }
+      // val currentAsterismGr = asterismGroups.find((ids, grpIds) => grpIds === targetIds)
+      // val newAsterismGroups = currentAsterismGr.fold(asterismGroups) { (currentIds, _) =>
+      //   val remainingIds = currentIds.removeOne(obsId)
+      //   val tmpGroups    = remainingIds.fold(asterismGroups)(remaining =>
+      //     asterismGroups + AsterismGroup(remaining, targetIds).asObsKeyValue
+      //   )
+      //   tmpGroups - currentIds
+      // }
+      // ProgramSummaries(newAsterismGroups, newTargetsWithObs, newObservations)
   }
 
   object ProgramSummaries:
-    val asterismGroups = Focus[ProgramSummaries](_.asterismGroups)
-    val targetsWithObs = Focus[ProgramSummaries](_.targetsWithObs)
-    val observations   = Focus[ProgramSummaries](_.observations)
+    // val asterismGroups = Focus[ProgramSummaries](_.asterismGroups)
+    // val targetsWithObs = Focus[ProgramSummaries](_.targetsWithObs)
+    val targets      = Focus[ProgramSummaries](_.targets)
+    val observations = Focus[ProgramSummaries](_.observations)
 
   // Some helper methods on AsterismGroupList
   extension (self: AsterismGroupList)
     def findContainingObsIds(obsIds: ObsIdSet): Option[AsterismGroup] =
-      self.find { case (ids, _) => obsIds.subsetOf(ids) }.map(_._2)
+      self.find { case (ids, _) => obsIds.subsetOf(ids) }.map(AsterismGroup.fromTuple)
 
     def findWithTargetIds(targetIds: SortedSet[Target.Id]): Option[AsterismGroup] =
-      self.find { case (_, ag) => ag.targetIds === targetIds }.map(_._2)
+      self.find { case (_, grpIds) => grpIds === targetIds }.map(AsterismGroup.fromTuple)
 
   private val queryToAsterismGroupWithObsGetter
     : Getter[AsterismGroupObsQuery.Data, ProgramSummaries] = data =>
-    val asterismGroups = data.asterismGroup.matches
-      .map { mtch =>
-        ObsIdSet.fromList(mtch.observations.matches.map(_.id)).map { obsIdSet =>
-          AsterismGroup(obsIdSet, SortedSet.from(mtch.asterism.map(_.id)))
-        }
-      }
-      .flatten
-      .toSortedMap(_.obsIds)
-
-    val targetsWithObs = data.targetGroup.matches.toSortedMap(_.id, _.targetWithObs)
-
     ProgramSummaries(
-      asterismGroups,
-      targetsWithObs,
+      data.targets.matches.toSortedMap(_.id, _.target),
       KeyedIndexedList.fromList(data.observations.matches, ObsSummary.id.get)
     )
 

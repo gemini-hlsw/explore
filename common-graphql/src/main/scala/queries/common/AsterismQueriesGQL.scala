@@ -13,33 +13,12 @@ import java.time
 // gql: import lucuma.schemas.decoders.given
 
 object AsterismQueriesGQL {
-
   @GraphQL
   trait AsterismGroupObsQuery extends GraphQLOperation[ObservationDB] {
     val document: String = s"""
       query($$programId: ProgramId!) {
-        asterismGroup(programId: $$programId) {
-          matches {
-            observations {
-              matches {
-                id
-              }
-            }
-            asterism {
-              id
-            }
-          }
-        }
-
-        targetGroup(programId: $$programId) {
-          matches {
-            observations {
-              matches {
-                id
-              }
-            }
-            target $TargetWithIdSubquery
-          }
+        targets(WHERE: {programId: { EQ: $$programId }}) {
+          matches $TargetWithIdSubquery
         }
 
         observations(programId: $$programId) {
@@ -47,12 +26,6 @@ object AsterismQueriesGQL {
         }
       }
     """
-
-    object Data {
-      object TargetGroup {
-        type Matches = explore.model.TargetWithIdAndObs
-      }
-    }
   }
 
   @GraphQL

@@ -56,7 +56,7 @@ case class TargetTable(
   userId:         Option[User.Id],
   programId:      Program.Id,
   obsIds:         ObsIdSet,
-  targets:        View[Option[Asterism]],
+  targets:        View[List[TargetWithId]],
   selectedTarget: View[Option[Target.Id]],
   vizTime:        Option[Instant],
   renderInTitle:  Tile.RenderInTitle,

@@ -43,7 +43,7 @@ object Routing:
       model.zoom(RootModel.userId).get,
       routingInfo.programId,
       routingInfo.focused,
-      model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forAsterismGroupList),
+      model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forProgramSummaries),
       model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forSiderealTarget),
       model.zoom(RootModel.searchingTarget),
       model.zoom(RootModel.expandedIds.andThen(ExpandedIds.asterismObsIds))

@@ -20,23 +20,44 @@ import monocle.*
 
 import java.time.Instant
 
-extension (a: NonEmptyList[TargetWithId])
+// extension (targets: NonEmptyList[Target])
+extension (targets: NonEmptyList[TargetWithId])
   // We calculate the coordinates at a given time by doing PM
   // correction of each target and finding the center
   def centerOfAt(vizTime: Instant): Option[Coordinates] =
-    val coords = a
-      .map(_.toSidereal)
-      .collect { case Some(x) =>
-        x.target.tracking.at(vizTime)
+    val coords = targets
+      .map(TargetWithId.target.get)
+      .map(Target.sidereal.getOption)
+      .collect { case Some(target) =>
+        target.tracking.at(vizTime)
       }
       .sequence
     coords.map(Coordinates.centerOf(_))
 
   def centerOf: Coordinates =
-    val coords = a.map(_.toSidereal).collect { case Some(x) =>
-      x.target.tracking.baseCoordinates
+    val coords = targets.map(TargetWithId.target.get).map(Target.sidereal.getOption).collect {
+      case Some(target) =>
+        target.tracking.baseCoordinates
     }
     Coordinates.centerOf(coords)
+
+  def baseTrackingAt(vizTime: Instant): Option[ObjectTracking] =
+    if (targets.length > 1)
+      targets.centerOfAt(vizTime).map(ObjectTracking.const(_))
+    else
+      ObjectTracking.fromTarget(targets.head.target).some
+
+  def baseTracking: ObjectTracking =
+    if (targets.length > 1)
+      ObjectTracking.const(centerOf)
+    else
+      ObjectTracking.fromTarget(targets.head.target)
+
+  // def toSidereal: List[Target.Sidereal] =
+  //   targets.toList.map(Target.sidereal.getOption).flattenOption
+
+  def toSidereal: List[SiderealTargetWithId] =
+    targets.toList.map(_.toSidereal).flattenOption
 
 /**
  * Contains a list of targets focused on the selected one on the UI
@@ -46,7 +67,7 @@ case class Asterism(private val targets: Zipper[TargetWithId]) derives Eq {
     targets.traverse(_.toSidereal.map(_.at(vizTime))).foldMap(_.toList)
 
   def toSidereal: List[SiderealTargetWithId] =
-    targets.traverse(_.toSidereal).foldMap(_.toList)
+    targets.toNel.toSidereal
 
   def toSiderealTracking: List[SiderealTracking] =
     targets.traverse(_.toSidereal.map(_.target.tracking)).foldMap(_.toList)
@@ -70,14 +91,9 @@ case class Asterism(private val targets: Zipper[TargetWithId]) derives Eq {
     targets.findFocus(_.id === tid).map(Asterism.apply).getOrElse(this)
 
   def baseTrackingAt(vizTime: Instant): Option[ObjectTracking] =
-    if (targets.length > 1)
-      targets.toNel.centerOfAt(vizTime).map(ObjectTracking.const(_))
-    else ObjectTracking.fromTarget(targets.focus.target).some
+    targets.toNel.baseTrackingAt(vizTime)
 
-  def baseTracking: ObjectTracking =
-    if (targets.length > 1)
-      ObjectTracking.const(targets.toNel.centerOf)
-    else ObjectTracking.fromTarget(targets.focus.target)
+  def baseTracking: ObjectTracking = targets.toNel.baseTracking
 
   def hasId(id: Target.Id): Boolean = targets.exists(_.id === id)
 }
