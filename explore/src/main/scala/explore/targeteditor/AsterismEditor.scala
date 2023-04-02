@@ -61,17 +61,24 @@ import react.common.ReactFnProps
 import react.primereact.Button
 
 import java.time.Instant
+import monocle.Traversal
+import monocle.Optional
 
 case class AsterismEditor(
   userId:         User.Id,
   programId:      Program.Id,
   sharedInObsIds: ObsIdSet,
-  asterism:       View[Option[Asterism]],
+  // This shouldn't be a View over Asterism. Asterism wraps a Zipper and the focus
+  // can't be changed from here, attempts are ignored.
+  // Let's pass the View[Targets] on one side, and a read-only focus on the other.
+  // asterism:       View[Option[Asterism]], // ....
+  asterism:       View[List[TargetWithId]],
   potVizTime:     Pot[View[Option[Instant]]],
   configuration:  Option[ObsConfiguration],
   currentTarget:  Option[Target.Id],
   setTarget:      (Option[Target.Id], SetRouteVia) => Callback,
   otherObsCount:  Target.Id => Int,
+  // undoStacks:     View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
   undoStacks:     View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
   searching:      View[Set[Target.Id]],
   renderInTitle:  Tile.RenderInTitle
@@ -111,17 +118,22 @@ object AsterismEditor extends AsterismModifier:
         (props, _, _, _) => (asterism, oTargetId) =>
           // if the selected targetId is None, or not in the asterism, select the first target (if any)
           // Need to replace history here.
-          oTargetId match {
-            case None                                                     =>
-              asterism.foldMap(a => props.setTarget(a.focus.id.some, SetRouteVia.HistoryReplace))
-            case Some(current) if asterism.exists(_.focus.id === current) => Callback.empty
-            case current @ Some(_)                                        =>
-              val inAsterism = current.exists(id => props.asterism.get.exists(_.hasId(id)))
-              val focus      = props.asterism.get.map(_.focus.id)
-              if (!inAsterism)
-                props.setTarget(focus, SetRouteVia.HistoryReplace)
-              else props.setTarget(current, SetRouteVia.HistoryReplace)
-          }
+
+          // TODO Let's deal with this later
+          Callback.empty
+
+            // oTargetId match {
+            //   case None                                                     =>
+            //     asterism.foldMap(a => props.setTarget(a.focus.id.some, SetRouteVia.HistoryReplace))
+            //   case Some(current) if asterism.exists(_.focus.id === current) => Callback.empty
+            //   case current @ Some(_)                                        =>
+            //     val inAsterism = current.exists(id => props.asterism.get.exists(_.hasId(id)))
+            //     val focus      = props.asterism.get.map(_.focus.id)
+            //     if (!inAsterism)
+            //       props.setTarget(focus, SetRouteVia.HistoryReplace)
+            //     else
+            //       props.setTarget(current, SetRouteVia.HistoryReplace)
+            // }
       }
       // full screen aladin
       .useStateView(AladinFullScreen.Normal)
@@ -187,7 +199,16 @@ object AsterismEditor extends AsterismModifier:
           ),
           props.currentTarget
             .flatMap[VdomElement] { targetId =>
-              val targetInAsterism   = Asterism.targetOptional(targetId)
+              // TODO Move this somewhere else, it's always the same
+              // Also do we want to contemplate target order in an asterism?
+              // If so, we should move to a KeyedIndexedList instead of just a List.
+              val targetInAsterism =
+                Optional[List[TargetWithId], TargetWithId](
+                  _.find(_.id === targetId)
+                )(target =>
+                  _.map(astTarget => if (astTarget.id === target.id) target else astTarget)
+                )
+
               val selectedTargetView = props.asterism.zoom(targetInAsterism)
 
               val otherObsCount = props.otherObsCount(targetId)

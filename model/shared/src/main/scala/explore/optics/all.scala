@@ -11,6 +11,8 @@ import monocle.function.Index
 import monocle.function.Index.fromAt
 
 import scala.collection.immutable.TreeSeqMap
+import monocle.function.FilterIndex
+import cats.Applicative
 
 object all extends ModelOptics {
 
@@ -176,11 +178,27 @@ object all extends ModelOptics {
   def atMapWithDefault[K, V](k: K, default: => V): Lens[Map[K, V], V] =
     atMap.at(k).andThen(getWithDefault(default))
 
-  implicit def atTreeSeqMap[K, V]: At[TreeSeqMap[K, V], K, Option[V]] =
+  given treeSeqMapAt[K, V]: At[TreeSeqMap[K, V], K, Option[V]] =
     At(i =>
       Lens((_: TreeSeqMap[K, V]).get(i))(optV => map => optV.fold(map - i)(v => map + (i -> v)))
     )
 
-  implicit def indexTreeSeqMap[K, V]: Index[TreeSeqMap[K, V], K, V] =
-    fromAt(atTreeSeqMap)
+  given treeSeqMapIndex[K, V]: Index[TreeSeqMap[K, V], K, V] = fromAt
+
+  // Not used after all, is it worth keeping?
+  given treeSeqMapFilterIndex[K, V]: FilterIndex[TreeSeqMap[K, V], K, V] =
+    new FilterIndex[TreeSeqMap[K, V], K, V] {
+      import cats.syntax.applicative._
+      import cats.syntax.functor._
+
+      def filterIndex(predicate: K => Boolean) =
+        new Traversal[TreeSeqMap[K, V], V] {
+          def modifyA[F[_]: Applicative](f: V => F[V])(s: TreeSeqMap[K, V]): F[TreeSeqMap[K, V]] =
+            s.toList
+              .traverse { case (k, v) =>
+                (if (predicate(k)) f(v) else v.pure[F]).tupleLeft(k)
+              }
+              .map(kvs => TreeSeqMap(kvs: _*))
+        }
+    }
 }

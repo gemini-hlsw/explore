@@ -81,9 +81,10 @@ object TargetPasteAction {
           splitAsterismGroups - obsIds - grp.obsIds + grp.addObsIds(obsIds).asObsKeyValue
         }
 
-      ProgramSummaries(asterismGroups = updatedAsterismGroups,
-                       targetsWithObs = updatedTargetsWithObs,
-                       observations = newObservations
+      ProgramSummaries(
+        asterismGroups = updatedAsterismGroups,
+        targetsWithObs = updatedTargetsWithObs,
+        observations = newObservations
       )
     )
 

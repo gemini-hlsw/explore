@@ -20,7 +20,6 @@ import explore.optics.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.*
 import lucuma.schemas.*
-import monocle.function.At
 import org.scalajs.dom
 import org.typelevel.log4cats.Logger
 import queries.schemas.*

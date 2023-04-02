@@ -26,7 +26,7 @@ trait AsterismModifier:
   protected def insertSiderealTarget(
     programId:       Program.Id,
     obsIds:          ObsIdSet,
-    asterism:        View[Option[Asterism]],
+    asterism:        View[List[TargetWithId]],
     targetWithOptId: TargetWithOptId
   )(using FetchClient[IO, ?, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Option[Target.Id]] =
     targetWithOptId match
