@@ -123,7 +123,9 @@ object ObsQueriesGQL:
           visualizationTime
           posAngleConstraint $PosAngleConstraintSubquery
           targetEnvironment {
-            asterism $TargetWithIdSubquery
+            asterism {
+              id
+            }
           }
           constraintSet $ConstraintSetSubquery
           scienceRequirements {

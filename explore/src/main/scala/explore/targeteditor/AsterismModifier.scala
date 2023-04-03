@@ -11,7 +11,6 @@ import crystal.react.implicits.*
 import explore.DefaultErrorPolicy
 import explore.common.AsterismQueries
 import explore.common.TargetQueries
-import explore.model.Asterism
 import explore.model.ObsIdSet
 import explore.utils.ToastCtx
 import lucuma.core.model.Program
@@ -21,32 +20,38 @@ import lucuma.schemas.model.TargetWithId
 import lucuma.schemas.model.TargetWithOptId
 import lucuma.schemas.odb.input.*
 import org.typelevel.log4cats.Logger
+import explore.model.TargetList
+import explore.model.AsterismIds
 
 trait AsterismModifier:
+
+  // In the future, we could unify all this into an operation over ProgramSummaries,
+  // and add undo.
+  // We have to be careful with undo, though. The inserted target could be in use in
+  // another asterism by the time we undo its creation. What happens then?
+  // Can the DB handle this (ie: keep the target if it's in use)?
+  // Does the DB remove it from all asterisms?
+  // If we keep it, what happens if we redo?
   protected def insertSiderealTarget(
     programId:       Program.Id,
     obsIds:          ObsIdSet,
-    asterism:        View[List[TargetWithId]],
+    asterismIds:     View[AsterismIds],
+    allTargets:      View[TargetList],
     targetWithOptId: TargetWithOptId
   )(using FetchClient[IO, ?, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Option[Target.Id]] =
     targetWithOptId match
       case TargetWithOptId(oTargetId, target @ Target.Sidereal(_, _, _, _)) =>
         val targetId: IO[Target.Id] = oTargetId.fold(
-          TargetQueries.insertTarget[IO](programId, target)
+          TargetQueries
+            .insertTarget[IO](programId, target)
+            .flatTap(id => allTargets.async.mod(_ + (id -> target)))
         )(IO(_))
 
         targetId
           .flatTap(tid =>
             AsterismQueries.addTargetsToAsterisms[IO](programId, obsIds.toList, List(tid))
           )
-          .flatTap { tid =>
-            val newTarget = TargetWithId(tid, target)
-
-            asterism.async.mod {
-              case a @ Some(_) => a.map(_.add(newTarget))
-              case _           => Asterism.one(newTarget).some
-            }
-          }
+          .flatTap(tid => asterismIds.async.mod(_ + tid))
           .map(_.some)
       case _                                                                =>
         IO(none)

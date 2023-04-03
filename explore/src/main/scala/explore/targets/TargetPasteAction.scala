@@ -25,6 +25,7 @@ import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
 import queries.common.TargetQueriesGQL
+import explore.model.AsterismGroupList
 
 import scala.annotation.unused
 import scala.collection.immutable.SortedSet

@@ -112,7 +112,8 @@ object AsterismGroupObsList:
       destination <- result.destination.toOption
       destIds     <- ObsIdSet.fromString.getOption(destination.droppableId)
       draggedIds  <- getDraggedIds(result.draggableId, props)
-      destAg      <- props.asterismsWithObs.get.asterismGroups.get(destIds)
+      destAg      <-
+        props.asterismsWithObs.get.asterismGroups.get(destIds).map(AsterismGroup(destIds, _))
       srcAg       <- props.asterismsWithObs.get.asterismGroups.findContainingObsIds(draggedIds)
     } yield (destIds, destAg, draggedIds, srcAg.obsIds)
 

@@ -10,7 +10,7 @@ import clue.data.syntax.*
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosLong
 import eu.timepit.refined.types.numeric.NonNegBigDecimal
-import explore.model.Asterism
+import explore.model.AsterismZipper
 import explore.model.itc.ItcTarget
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
@@ -29,6 +29,7 @@ import queries.common.ITCQueriesGQL
 import queries.schemas.odb.ObsQueries
 import queries.schemas.ITC
 import queries.schemas.ITC.Types.*
+import explore.model.TargetList
 
 // There is a lot of duplication here with the odb.conversions package
 trait ITCConversions:
@@ -209,12 +210,17 @@ trait ITCConversions:
 
   extension (s: ObsQueries.ScienceData)
     // From the list of targets selects the ones relevant for ITC
-    def itcTargets: List[ItcTarget] = s.targets.asterism
-      .map { case TargetWithId(_, target) =>
-        targetRV
-          .getOption(target)
-          .map(r => ItcTarget(target.name, r, Target.sourceProfile.get(target)))
-      }
+    def itcTargets(allTargets: TargetList): List[ItcTarget] = s.targets.asterism
+      .map(_.id)
+      .map(targetId =>
+        allTargets
+          .get(targetId)
+          .flatMap(target =>
+            targetRV
+              .getOption(target)
+              .map(r => ItcTarget(target.name, r, Target.sourceProfile.get(target)))
+          )
+      )
       .flatten
       .hashDistinct
 

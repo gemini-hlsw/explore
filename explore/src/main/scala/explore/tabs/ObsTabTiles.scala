@@ -17,7 +17,7 @@ import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.Asterism
+import explore.model.AsterismZipper
 import explore.model.BasicConfigAndItc
 import explore.model.ConstraintGroup
 import explore.model.Focused
@@ -69,6 +69,12 @@ import scala.collection.immutable.SortedMap
 import explore.model.TargetWithObs
 import explore.common.AsterismQueries.ProgramSummaries
 import explore.constraints.ConstraintsPanel
+import explore.model.Asterism
+import explore.model.Asterism.*
+import explore.model.extensions.*
+import explore.model.AsterismIds
+import lucuma.schemas.model.TargetWithId
+import cats.Order.given
 
 case class ObsTabTiles(
   userId:           Option[User.Id],
@@ -175,41 +181,42 @@ object ObsTabTiles:
               _.zoom(ObsEditData.scienceData.andThen(ScienceData.posAngle))
             )
 
-        val potAsterism: Pot[View[Option[Asterism]]] =
+        val potAsterismIds: Pot[View[AsterismIds]] =
           obsViewPot.map(v =>
             v.zoom(
               ObsEditData.scienceData
                 .andThen(ScienceData.targets)
                 .andThen(ObservationData.TargetEnvironment.asterism)
-            ).zoom(Asterism.fromTargetsListOn(props.focusedTarget).asLens)
+                .andThen(ObsQueries.targetIdsFromAsterism)
+            ).zoomSplitEpi(sortedSetFromList)
           )
 
         val basicConfiguration = observingMode.map(_.toBasicConfiguration)
-
-        val asterism = potAsterism.toOption.flatMap(_.get)
-
-        val potAsterismMode: Pot[(View[Option[Asterism]], Option[BasicConfiguration])] =
-          potAsterism.map(x => (x, basicConfiguration))
 
         val vizTimeView: Pot[View[Option[Instant]]] =
           obsViewPot.map(_.zoom(ObsEditData.visualizationTime))
 
         val vizTime = vizTimeView.toOption.flatMap(_.get)
 
+        val asterismAsNel: Option[NonEmptyList[TargetWithId]] =
+          potAsterismIds.toOption.flatMap(asterismIdsView =>
+            Asterism
+              .fromIdsAndTargets(asterismIdsView.get, props.programSummaries.get.targets)
+              .toTargetWithIdNel
+          )
+
         // asterism base coordinates at viz time or default to base coordinates
         val targetCoords: Option[CoordinatesAtVizTime] =
-          (vizTime, potAsterism.toOption)
-            .mapN { (instant, asterism) =>
-              asterism.get.flatMap(
-                _.baseTrackingAt(instant).flatMap(_.at(instant))
-              )
-            }
+          (vizTime, asterismAsNel)
+            .mapN((instant, asterismNel) =>
+              asterismNel.baseTrackingAt(instant).flatMap(_.at(instant))
+            )
             .flatten
-            .orElse {
-              // If e.g. vizTime isn't defined default to the asterism base coordinates
-              potAsterism.toOption
-                .flatMap(_.get.map(x => CoordinatesAtVizTime(x.baseTracking.baseCoordinates)))
-            }
+            // If e.g. vizTime isn't defined default to the asterism base coordinates
+            .orElse(
+              asterismAsNel
+                .map(asterismNel => CoordinatesAtVizTime(asterismNel.baseTracking.baseCoordinates))
+            )
 
         val spectroscopyReqs: Option[ScienceRequirementsData] =
           obsView.toOption.map(_.get.scienceData.requirements)
@@ -248,7 +255,8 @@ object ObsTabTiles:
                   .map(r => ItcChartExposureTime(OverridenExposureTime.FromItc, r.time, r.count))
               ),
             itcTarget,
-            selectedConfig.get
+            selectedConfig.get,
+            props.programSummaries.get.targets
           )
 
         val constraintsSelector =
@@ -272,22 +280,22 @@ object ObsTabTiles:
           tid: Option[Target.Id],
           via: SetRouteVia
         ): Callback =
-          (potAsterism.toOption, tid)
-            // When selecting the current target focus the asterism zipper
-            .mapN((pot, tid) => pot.mod(_.map(_.focusOn(tid))))
-            .getOrEmpty *>
-            // Set the route base on the selected target
-            ctx.setPageVia(
-              AppTab.Observations,
-              programId,
-              Focused(oid.map(ObsIdSet.one), tid),
-              via
-            )
+          // (potAsterism.toOption, tid)
+          //   // When selecting the current target focus the asterism zipper
+          //   .mapN((pot, tid) => pot.mod(_.map(_.focusOn(tid))))
+          //   .getOrEmpty *>
+          // Set the route base on the selected target
+          ctx.setPageVia(
+            AppTab.Observations,
+            programId,
+            Focused(oid.map(ObsIdSet.one), tid),
+            via
+          )
 
         val paProps = posAngle.map(p => PAProperties(props.obsId, selectedPA, agsState, p))
 
-        val averagePA =
-          (basicConfiguration.map(_.siteFor), asterism, vizTime)
+        val averagePA: Option[Angle] =
+          (basicConfiguration.map(_.siteFor), asterismAsNel, vizTime)
             .mapN((site, asterism, vizTime) =>
               posAngle.map(_.get) match
                 case Some(PosAngleConstraint.AverageParallactic) =>
@@ -312,7 +320,9 @@ object ObsTabTiles:
           props.userId,
           props.programId,
           ObsIdSet.one(props.obsId),
-          potAsterismMode,
+          potAsterismIds,
+          props.programSummaries.zoom(ProgramSummaries.targets),
+          basicConfiguration,
           vizTimeView,
           obsConf,
           props.focusedTarget,
@@ -361,7 +371,8 @@ object ObsTabTiles:
               .zoom(atMapWithDefault(props.obsId, UndoStacks.empty)),
             targetCoords,
             obsConf,
-            selectedConfig
+            selectedConfig,
+            props.programSummaries.get.targets
           )
 
         props.layouts.renderPotView(l =>

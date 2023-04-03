@@ -18,11 +18,11 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AladinFullScreen
 import explore.model.AppContext
-import explore.model.Asterism
+import explore.model.AsterismZipper
 import explore.model.ObsIdSet
 import explore.model.enums.TableId
 import explore.model.reusability.given
-import explore.model.reusability.given
+import explore.model.extensions.*
 import explore.syntax.ui.*
 import explore.targets.TargetColumns
 import japgolly.scalajs.react.*
@@ -51,13 +51,19 @@ import react.primereact.Button
 import java.time.Instant
 
 import scalajs.js.JSConverters.*
+import explore.model.TargetList
+import explore.model.AsterismIds
 
 case class TargetTable(
   userId:         Option[User.Id],
   programId:      Program.Id,
-  obsIds:         ObsIdSet,
-  targets:        View[List[TargetWithId]],
+  obsIds:         ObsIdSet, // Only used to invoke DB
+  // Targets are not modified here, we only modify which ones belong to the Asterism.
+  targetIds:      View[AsterismIds],
+  targetInfo:     TargetList,
   selectedTarget: View[Option[Target.Id]],
+  // selectedTarget: Option[Target.Id],
+  // setSelected:       (Option[Target.Id], SetRouteVia) => Callback,
   vizTime:        Option[Instant],
   renderInTitle:  Tile.RenderInTitle,
   fullScreen:     AladinFullScreen
@@ -92,7 +98,7 @@ object TargetTable extends TableHooks:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       // cols
-      .useMemoBy((props, _) => (props.obsIds, props.targets.get)) { (props, ctx) => _ =>
+      .useMemoBy((props, _) => (props.obsIds, props.targetIds.get)) { (props, ctx) => _ =>
         import ctx.given
 
         List(
@@ -109,7 +115,7 @@ object TargetTable extends TableHooks:
                 onClickE = (e: ReactMouseEvent) =>
                   e.preventDefaultCB >>
                     e.stopPropagationCB >>
-                    props.targets.mod(_.flatMap(_.remove(cell.value))) >>
+                    props.targetIds.mod(_ - cell.value) >>
                     deleteSiderealTarget(props.programId, props.obsIds, cell.value).runAsync
               ).tiny.compact,
             size = 35.toPx,
@@ -123,9 +129,18 @@ object TargetTable extends TableHooks:
         IO(vizTime.getOrElse(Instant.now()))
       }
       // rows
-      .useMemoBy((props, _, _, vizTime) => (props.targets.get, vizTime))((_, _, _, _) =>
-        case (targets, Pot.Ready(vizTime)) => targets.foldMap(_.toSiderealAt(vizTime))
-        case _                             => Nil
+      .useMemoBy((props, _, _, vizTime) => (props.targetIds.get, props.targetInfo, vizTime))(
+        (_, _, _, _) =>
+          case (targetIds, targetInfo, Pot.Ready(vizTime)) =>
+            targetIds.toList
+              .map(id =>
+                targetInfo
+                  .get(id)
+                  .flatMap(_.toSiderealAt(vizTime))
+                  .map(st => SiderealTargetWithId(id, st))
+              )
+              .flattenOption
+          case _                                           => Nil
       )
       .useReactTableWithStateStoreBy((props, ctx, cols, _, rows) =>
         import ctx.given

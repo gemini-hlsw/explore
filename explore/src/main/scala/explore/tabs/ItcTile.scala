@@ -19,6 +19,7 @@ import lucuma.core.model.User
 import lucuma.schemas.model.ObservingMode
 import lucuma.ui.syntax.all.given
 import queries.schemas.odb.ObsQueries.*
+import explore.model.TargetList
 
 object ItcTile:
 
@@ -30,7 +31,8 @@ object ItcTile:
     scienceData:              Option[ScienceData],
     itcExposureTime:          Option[ItcChartExposureTime],
     selectedTarget:           View[Option[ItcTarget]],
-    selectedConfig:           Option[BasicConfigAndItc]
+    selectedConfig:           Option[BasicConfigAndItc],
+    allTargets:               TargetList
   ) =
     Tile(
       ObsTabTilesIds.ItcId.id,
@@ -43,7 +45,8 @@ object ItcTile:
           scienceData,
           itcExposureTime,
           selectedTarget,
-          selectedConfig
+          selectedConfig,
+          allTargets
         ): VdomNode).some,
       bodyClass = ExploreStyles.ItcTileBody.some
     )(_ =>
@@ -56,7 +59,8 @@ object ItcTile:
           scienceData,
           itcExposureTime,
           selectedTarget,
-          selectedConfig
+          selectedConfig,
+          allTargets
         )
       )
     )

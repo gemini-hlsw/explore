@@ -29,6 +29,8 @@ import java.time.Instant
 import io.circe.Decoder
 import io.circe.JsonObject
 import lucuma.core.model.ConstraintSet
+import scala.collection.immutable.SortedSet
+import cats.Order.given
 
 case class ObsSummary(
   id:                 Observation.Id,
@@ -37,7 +39,7 @@ case class ObsSummary(
   status:             ObsStatus,
   activeStatus:       ObsActiveStatus,
   executionTime:      TimeSpan,
-  scienceTargetIds:   Set[Target.Id],
+  scienceTargetIds:   SortedSet[Target.Id],
   constraints:        ConstraintSet,
   configuration:      Option[BasicConfiguration],
   visualizationTime:  Option[Instant],
@@ -95,7 +97,7 @@ object ObsSummary:
       status,
       activeStatus,
       executionTime,
-      scienceTargetIds.map(_.id).toSet,
+      SortedSet.from(scienceTargetIds.map(_.id)),
       constraints,
       observingMode,
       visualizationTime.map(_.toInstant),

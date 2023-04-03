@@ -25,9 +25,11 @@ import lucuma.schemas.model.arb.ArbBasicConfiguration
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Cogen
+import cats.Order.given
 
 import java.time.Instant
 import lucuma.core.model.ConstraintSet
+import scala.collection.immutable.SortedSet
 
 trait ArbObsSummary:
   import ArbBasicConfiguration.given
@@ -56,7 +58,7 @@ trait ArbObsSummary:
         status,
         activeStatus,
         executionTime,
-        scienceTargetIds,
+        SortedSet.from(scienceTargetIds),
         constraints,
         configuration,
         vizTime,
@@ -64,18 +66,6 @@ trait ArbObsSummary:
         wavelength
       )
     )
-  //       id:                 Observation.Id,
-  // title:              String,
-  // subtitle:           Option[NonEmptyString],
-  // status:             ObsStatus,
-  // activeStatus:       ObsActiveStatus,
-  // executionTime:      TimeSpan,
-  // scienceTargetIds:   Set[Target.Id],
-  // constraints:        ConstraintSet,
-  // configuration:      Option[BasicConfiguration],
-  // visualizationTime:  Option[Instant],
-  // posAngleConstraint: Option[PosAngleConstraint],
-  // wavelength:         Option[Wavelength]
 
   given Cogen[ObsSummary] =
     Cogen[

@@ -44,7 +44,7 @@ import lucuma.ui.utils.given
 import monocle.Lens
 import react.common.ReactFnProps
 import react.primereact.PrimeStyles
-import explore.common.AsterismQueries.ObservationList
+import explore.model.ObservationList
 // import cats.data.NonEmptyList
 import explore.model.ObsIdSet
 

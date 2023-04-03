@@ -61,6 +61,7 @@ import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
 
 import java.util.UUID
+import explore.model.TargetList
 
 case class ItcGraphPanel(
   uid:                      User.Id,
@@ -70,13 +71,16 @@ case class ItcGraphPanel(
   scienceData:              Option[ScienceData],
   exposure:                 Option[ItcChartExposureTime],
   selectedTarget:           View[Option[ItcTarget]],
-  selectedConfig:           Option[BasicConfigAndItc] // selected row in spectroscopy modes table
+  selectedConfig:           Option[BasicConfigAndItc], // selected row in spectroscopy modes table
+  allTargets:               TargetList
 ) extends ReactFnProps(ItcGraphPanel.component)
-    with ItcPanelProps(observingMode,
-                       spectroscopyRequirements,
-                       scienceData,
-                       exposure,
-                       selectedConfig
+    with ItcPanelProps(
+      observingMode,
+      spectroscopyRequirements,
+      scienceData,
+      exposure,
+      selectedConfig,
+      allTargets
     )
 
 case class ItcGraphProperties(chartType: ItcChartType, detailsShown: PlotDetails)

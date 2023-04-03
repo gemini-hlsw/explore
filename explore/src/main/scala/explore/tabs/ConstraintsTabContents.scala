@@ -74,9 +74,9 @@ import react.resizeDetector.hooks.*
 
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration.*
-import explore.common.AsterismQueries.ObservationList
+import explore.model.ObservationList
 import explore.common.AsterismQueries.ProgramSummaries
-import explore.common.AsterismQueries.ConstraintGroupList
+import explore.model.ConstraintGroupList
 import explore.cache.ProgramCache
 import lucuma.core.model.Observation
 import explore.data.KeyedIndexedList

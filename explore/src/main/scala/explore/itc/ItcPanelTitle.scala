@@ -40,6 +40,7 @@ import react.primereact.Dropdown
 import react.primereact.SelectItem
 
 import scala.scalajs.js.JSConverters.*
+import explore.model.TargetList
 
 case class ItcPanelTitle(
   observingMode:            Option[ObservingMode],
@@ -47,13 +48,16 @@ case class ItcPanelTitle(
   scienceData:              Option[ScienceData],
   exposure:                 Option[ItcChartExposureTime],
   selectedTarget:           View[Option[ItcTarget]],
-  selectedConfig:           Option[BasicConfigAndItc]
+  selectedConfig:           Option[BasicConfigAndItc],
+  allTargets:               TargetList
 ) extends ReactFnProps(ItcPanelTitle.component)
-    with ItcPanelProps(observingMode,
-                       spectroscopyRequirements,
-                       scienceData,
-                       exposure,
-                       selectedConfig
+    with ItcPanelProps(
+      observingMode,
+      spectroscopyRequirements,
+      scienceData,
+      exposure,
+      selectedConfig,
+      allTargets
     )
 
 object ItcPanelTitle:
@@ -72,10 +76,10 @@ object ItcPanelTitle:
         val r = for
           w <- props.wavelength
           s <- props.scienceData
-          t  = s.itcTargets
+          t  = s.itcTargets(props.allTargets)
           b <- t.brightestAt(w.value)
         yield b
-        r.orElse(props.scienceData.flatMap(_.itcTargets.headOption))
+        r.orElse(props.scienceData.flatMap(_.itcTargets(props.allTargets).headOption))
       }((props, _) => t => props.selectedTarget.set(t))
       .useStateBy((props, _) =>
         props.itcTargets.map(_.toList.map(t => t -> MissingInfo).toMap).getOrElse(Map.empty)

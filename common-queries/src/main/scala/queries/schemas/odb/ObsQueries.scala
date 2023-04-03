@@ -45,6 +45,7 @@ import java.time.Instant
 import scala.collection.immutable.SortedMap
 import lucuma.core.math.Offset
 import cats.data.NonEmptyList
+import monocle.Iso
 
 object ObsQueries:
   type ObservationList = KeyedIndexedList[Observation.Id, ObsSummary]
@@ -54,9 +55,13 @@ object ObsQueries:
   val ObservationData = ObsEditQuery.Data.Observation
   type ScienceRequirementsData = ObservationData.ScienceRequirements
   val ScienceRequirementsData = ObservationData.ScienceRequirements
-  type Targets                      = ObservationData.TargetEnvironment
+  type Targets = ObservationData.TargetEnvironment
+  val Targets = ObservationData.TargetEnvironment
   type SpectroscopyRequirementsData = ObservationData.ScienceRequirements.Spectroscopy
   val SpectroscopyRequirementsData = ObservationData.ScienceRequirements.Spectroscopy
+
+  val targetIdsFromAsterism: Iso[List[Targets.Asterism], List[Target.Id]] =
+    Iso[List[Targets.Asterism], List[Target.Id]](_.map(_.id))(_.map(Targets.Asterism(_)))
 
   case class ScienceData(
     requirements:       ScienceRequirementsData,

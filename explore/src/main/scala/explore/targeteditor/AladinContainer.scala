@@ -17,7 +17,7 @@ import explore.aladin.AladinZoomControl
 import explore.components.ui.ExploreStyles
 import explore.components.ui.ExploreStyles.ExploreTable
 import explore.model.AladinMouseScroll
-import explore.model.Asterism
+import explore.model.AsterismZipper
 import explore.model.ObsConfiguration
 import explore.model.TargetVisualOptions
 import explore.model.UserGlobalPreferences
@@ -58,13 +58,9 @@ import java.time.LocalDate
 import java.time.ZoneId
 import scala.collection.immutable.SortedMap
 import scala.concurrent.duration.*
-import lucuma.core.model.Target
-import explore.model.*
-import lucuma.schemas.model.TargetWithId
 
 case class AladinContainer(
-  asterism:               NonEmptyList[TargetWithId],
-  focusedTargetId:        Target.Id,
+  asterism:               AsterismZipper,
   vizTime:                Instant,
   obsConf:                Option[ObsConfiguration],
   userPreferences:        UserGlobalPreferences,
@@ -127,7 +123,7 @@ object AladinContainer extends AladinCommon {
 
     val science = p.asterism.toSidereal
       .map(t =>
-        (t.id === p.focusedTargetId,
+        (t.id === p.asterism.focus.id,
          t.target.name,
          t.target.tracking.at(p.vizTime),
          t.target.tracking.baseCoordinates
@@ -372,10 +368,9 @@ object AladinContainer extends AladinCommon {
             List(
               SVGTarget.CrosshairTarget(baseCoordinates.value, Css.Empty, 10),
               SVGTarget.CircleTarget(baseCoordinates.value, ExploreStyles.BaseTarget, 3),
-              SVGTarget.LineTo(
-                baseCoordinates.value,
-                props.asterism.baseTracking.baseCoordinates,
-                ExploreStyles.PMCorrectionLine
+              SVGTarget.LineTo(baseCoordinates.value,
+                               props.asterism.baseTracking.baseCoordinates,
+                               ExploreStyles.PMCorrectionLine
               )
             )
 

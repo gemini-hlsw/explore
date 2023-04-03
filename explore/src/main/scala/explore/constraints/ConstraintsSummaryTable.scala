@@ -46,6 +46,7 @@ import react.common.ReactFnProps
 import scala.collection.immutable.SortedSet
 
 import scalajs.js.JSConverters.*
+import explore.model.ConstraintGroupList
 
 case class ConstraintsSummaryTable(
   userId:         Option[User.Id],

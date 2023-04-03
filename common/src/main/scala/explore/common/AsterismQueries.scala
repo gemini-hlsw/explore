@@ -5,6 +5,7 @@ package explore.common
 
 import cats.Eq
 import cats.Order
+import cats.Order.given
 import cats.effect.Async
 import cats.implicits.*
 import clue.FetchClient
@@ -29,34 +30,36 @@ import monocle.Focus
 import monocle.Getter
 import queries.common.AsterismQueriesGQL.*
 import queries.common.ObsQueriesGQL.*
+import explore.model.TargetList
+import explore.model.ObservationList
+import explore.model.AsterismGroupList
+import explore.model.TargetWithObsList
+import explore.model.ConstraintGroupList
 
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
-import explore.model.Focused.obsSet
-import explore.model.TargetWithIdAndObs.targetWithObs
+// import explore.model.Focused.obsSet
+// import explore.model.TargetWithIdAndObs.targetWithObs
 import explore.data.KeyedIndexedList
-import lucuma.core.model.ConstraintSet
+import explore.model.AsterismIds
+// import lucuma.core.model.ConstraintSet
+// import lucuma.schemas.model.TargetWithId
+// import monocle.Iso
+// import lucuma.core.optics.SplitEpi
+// import cats.data.NonEmptyList
+// import java.time.Instant
+// import lucuma.core.model.ObjectTracking
+// import scala.annotation.targetName
+// import explore.model.extensions.*
 
 object AsterismQueries:
   // The default cats ordering for sorted set sorts by size first, then contents. That's not what we want.
   // This is used for sorting the AsterismGroupObsList. If we change to sort by name or something
   // else, we can remove this.
-  given Order[ObsIdSet] = ObsIdSet.given_Order_ObsIdSet
-
-  type AsterismIds = SortedSet[Target.Id]
-
-  type AsterismGroupList   = SortedMap[ObsIdSet, AsterismIds]
-  type TargetList          = SortedMap[Target.Id, Target]
-  type TargetWithObsList   = SortedMap[Target.Id, TargetWithObs]
-  // KeyedIndexedList is only useful is manual order is going to matter.
-  // For the moment I'm keeping it because it seems it will matter at some point.
-  // Otherwise, we should change to a SortedMap.
-  type ObservationList     = KeyedIndexedList[Observation.Id, ObsSummary]
-  type ConstraintGroupList = SortedMap[ObsIdSet, ConstraintSet]
+  // TODO IS this necessary now?
+  // given Order[ObsIdSet] = ObsIdSet.given_Order_ObsIdSet
 
   case class ProgramSummaries(
-    // asterismGroups: AsterismGroupList,
-    // targetsWithObs: TargetWithObsList,
     targets:      TargetList,
     observations: ObservationList
   ) {
@@ -79,6 +82,7 @@ object AsterismQueries:
         .mapValues(obsIds => SortedSet.from(obsIds))
         .toMap
 
+    // Might not be used after all
     lazy val targetsWithObs: TargetWithObsList =
       targets.map((targetId, target) =>
         targetId -> TargetWithObs(target, targetObservations.get(targetId).orEmpty)
@@ -98,24 +102,9 @@ object AsterismQueries:
     ): Option[ObsSummary] =
       observations
         .getValue(originalId)
-        .map(_.copy(id = clonedId, scienceTargetIds = targetIds.toSet))
+        .map(_.copy(id = clonedId, scienceTargetIds = SortedSet.from(targetIds)))
 
     def insertObs(obsSummary: ObsSummary): ProgramSummaries =
-      // val newObservations   = observations.inserted(obsSummary.id, obsSummary, observations.length)
-      // val newTargetsWithObs = obsSummary.scienceTargetIds.foldLeft(targetsWithObs)((twos, id) =>
-      //   twos.updatedWith(id)(_.map(r => r.copy(obsIds = r.obsIds + obsSummary.id)))
-      // )
-
-      // val targetIds         = SortedSet.from(obsSummary.scienceTargetIds)
-      // val newIdSet          = ObsIdSet.one(obsSummary.id)
-      // val newAsterismGr     = AsterismGroup(newIdSet, targetIds)
-      // val currentAsterismGr = asterismGroups.find((ids, grpIds) => grpIds === targetIds)
-      // val newAsterismGroups =
-      //   currentAsterismGr.fold(asterismGroups + newAsterismGr.asObsKeyValue)((ids, _) =>
-      //     asterismGroups - ids + AsterismGroup(ids ++ newIdSet, targetIds).asObsKeyValue
-      //   )
-
-      // ProgramSummaries(newAsterismGroups, newTargetsWithObs, newObservations)
       ProgramSummaries.observations.modify(
         _.inserted(obsSummary.id, obsSummary, observations.length)
       )(this)
@@ -125,26 +114,9 @@ object AsterismQueries:
       targetIds: SortedSet[Target.Id]
     ): ProgramSummaries =
       ProgramSummaries.observations.modify(_.removed(obsId))(this)
-
-      // val newObservations   = observations.removed(obsId)
-      // val newTargetsWithObs = targetIds.foldLeft(targetsWithObs)((twos, id) =>
-      //   twos.updatedWith(id)(_.map(r => r.copy(obsIds = r.obsIds - obsId)))
-      // )
-
-      // val currentAsterismGr = asterismGroups.find((ids, grpIds) => grpIds === targetIds)
-      // val newAsterismGroups = currentAsterismGr.fold(asterismGroups) { (currentIds, _) =>
-      //   val remainingIds = currentIds.removeOne(obsId)
-      //   val tmpGroups    = remainingIds.fold(asterismGroups)(remaining =>
-      //     asterismGroups + AsterismGroup(remaining, targetIds).asObsKeyValue
-      //   )
-      //   tmpGroups - currentIds
-      // }
-      // ProgramSummaries(newAsterismGroups, newTargetsWithObs, newObservations)
   }
 
   object ProgramSummaries:
-    // val asterismGroups = Focus[ProgramSummaries](_.asterismGroups)
-    // val targetsWithObs = Focus[ProgramSummaries](_.targetsWithObs)
     val targets      = Focus[ProgramSummaries](_.targets)
     val observations = Focus[ProgramSummaries](_.observations)
 

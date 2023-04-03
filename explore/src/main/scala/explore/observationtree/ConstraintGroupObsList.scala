@@ -37,8 +37,8 @@ import explore.common.AsterismQueries.ProgramSummaries
 import explore.model.syntax.all.*
 
 import scala.collection.immutable.SortedSet
-import explore.common.AsterismQueries.ObservationList
-import explore.common.AsterismQueries.ConstraintGroupList
+import explore.model.ObservationList
+import explore.model.ConstraintGroupList
 import lucuma.core.model.ConstraintSet
 import explore.common.ConstraintsQueries
 import org.typelevel.log4cats.Logger

@@ -19,7 +19,6 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Focused
-import explore.model.TargetWithIdAndObs
 import explore.model.TargetWithObs
 import explore.model.enums.AppTab
 import explore.model.enums.TableId
@@ -60,11 +59,14 @@ import react.resizeDetector.hooks.*
 import scala.collection.immutable.SortedSet
 
 import scalajs.js.JSConverters.*
+import lucuma.schemas.model.TargetWithId
+import explore.model.TargetList
 
 case class TargetSummaryTable(
   userId:                Option[User.Id],
   programId:             Program.Id,
-  targets:               View[TargetWithObsList],
+  targets:               View[TargetList],
+  targetObservations:    Map[Target.Id, SortedSet[Observation.Id]],
   selectObservation:     (Observation.Id, Target.Id) => Callback,
   selectTargetOrSummary: Option[Target.Id] => Callback,
   renderInTitle:         Tile.RenderInTitle,
@@ -75,7 +77,7 @@ case class TargetSummaryTable(
 object TargetSummaryTable extends TableHooks:
   private type Props = TargetSummaryTable
 
-  private val ColDef = ColumnDef[TargetWithIdAndObs]
+  private val ColDef = ColumnDef[TargetWithId]
 
   private val IdColumnId: ColumnId           = ColumnId("id")
   private val CountColumnId: ColumnId        = ColumnId("count")
@@ -112,7 +114,7 @@ object TargetSummaryTable extends TableHooks:
       .useContext(AppContext.ctx)
       // cols
       .useMemoBy((_, _) => ()) { (props, ctx) => _ =>
-        def column[V](id: ColumnId, accessor: TargetWithIdAndObs => V) =
+        def column[V](id: ColumnId, accessor: TargetWithId => V) =
           ColDef(id, row => accessor(row), ColNames(id))
 
         def obsUrl(targetId: Target.Id, obsId: Observation.Id): String =
@@ -128,9 +130,9 @@ object TargetSummaryTable extends TableHooks:
         ) ++
           TargetColumns.Builder.ForProgram(ColDef, _.target.some).AllColumns ++
           List(
-            column(CountColumnId, _.obsIds.size) // TODO Right align
+            column(CountColumnId, x => props.targetObservations(x.id).size) // TODO Right align
               .setCell(_.value.toString),
-            column(ObservationsColumnId, x => (x.id, x.obsIds.toList))
+            column(ObservationsColumnId, x => (x.id, props.targetObservations(x.id).toList))
               .setCell(cell =>
                 val (tid, obsIds) = cell.value
                 <.span(
@@ -153,7 +155,7 @@ object TargetSummaryTable extends TableHooks:
       }
       // rows
       .useMemoBy((props, _, _) => props.targets.get)((_, _, _) =>
-        _.toList.map((id, targetWithObs) => TargetWithIdAndObs(id, targetWithObs))
+        _.toList.map((id, target) => TargetWithId(id, target))
       )
       .useReactTableWithStateStoreBy((props, ctx, cols, rows) =>
         import ctx.given
