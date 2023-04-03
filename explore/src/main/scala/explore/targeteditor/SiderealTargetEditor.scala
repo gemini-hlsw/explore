@@ -12,6 +12,7 @@ import crystal.react.View
 import crystal.react.ViewOpt
 import crystal.react.hooks.*
 import crystal.react.implicits.*
+import crystal.implicits.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.string.*
 import explore.DefaultErrorPolicy
@@ -150,7 +151,7 @@ object SiderealTargetEditor {
       .render { (props, ctx, cloning, vizTime) =>
         import ctx.given
 
-        val focusedTarget =
+        val focusedTarget: ViewOpt[Target] =
           props.asterism.zoom(
             monocle.Iso
               .id[TreeSeqMap[Target.Id, Target]]
@@ -296,6 +297,9 @@ object SiderealTargetEditor {
 
           val disabled = props.searching.get.exists(_ === tid) || cloning.value
 
+          val asterismZipperOpt =
+            Asterism.fromTargets(props.asterism.get.toList.map(TargetWithId(_, _)))
+
           React.Fragment(
             props.renderInTitle
               .map(_.apply(<.span(ExploreStyles.TitleUndoButtons)(UndoButtons(undoCtx)))),
@@ -306,14 +310,15 @@ object SiderealTargetEditor {
                 UndoButtons(undoCtx, disabled = disabled)
                   .when(props.renderInTitle.isEmpty && props.obsIdSubset.isEmpty)
               ),
-              vizTime.renderPot(vt =>
+              (vizTime, asterismZipperOpt.toPot).tupled.renderPot((vt, asterismZipper) =>
                 AladinCell(
                   props.userId,
                   tid,
                   vt,
                   props.obsConf,
-                  NonEmptyList.fromListUnsafe(props.asterism.get.toList.map(TargetWithId(_, _))),
-                  props.focusedTargetId,
+                  asterismZipper.focusOn(props.focusedTargetId),
+                  // NonEmptyList.fromListUnsafe(props.asterism.get.toList.map(TargetWithId(_, _))),
+                  // props.focusedTargetId,
                   props.fullScreen
                 )
               ),

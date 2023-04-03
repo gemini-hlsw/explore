@@ -65,23 +65,23 @@ import monocle.Traversal
 import monocle.Optional
 
 case class AsterismEditor(
-  userId:         User.Id,
-  programId:      Program.Id,
-  sharedInObsIds: ObsIdSet,
+  userId:          User.Id,
+  programId:       Program.Id,
+  sharedInObsIds:  ObsIdSet,
   // This shouldn't be a View over Asterism. Asterism wraps a Zipper and the focus
   // can't be changed from here, attempts are ignored.
   // Let's pass the View[Targets] on one side, and a read-only focus on the other.
   // asterism:       View[Option[Asterism]], // ....
-  asterism:       View[List[TargetWithId]],
-  potVizTime:     Pot[View[Option[Instant]]],
-  configuration:  Option[ObsConfiguration],
-  currentTarget:  Option[Target.Id],
-  setTarget:      (Option[Target.Id], SetRouteVia) => Callback,
-  otherObsCount:  Target.Id => Int,
+  asterism:        View[List[TargetWithId]],
+  potVizTime:      Pot[View[Option[Instant]]],
+  configuration:   Option[ObsConfiguration],
+  focusedTargetId: Option[Target.Id],
+  setTarget:       (Option[Target.Id], SetRouteVia) => Callback,
+  otherObsCount:   Target.Id => Int,
   // undoStacks:     View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
-  undoStacks:     View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
-  searching:      View[Set[Target.Id]],
-  renderInTitle:  Tile.RenderInTitle
+  undoStacks:      View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
+  searching:       View[Set[Target.Id]],
+  renderInTitle:   Tile.RenderInTitle
 ) extends ReactFnProps(AsterismEditor.component)
 
 object AsterismEditor extends AsterismModifier:
@@ -98,13 +98,12 @@ object AsterismEditor extends AsterismModifier:
 
   private def onCloneTarget(
     id:        Target.Id,
-    asterism:  View[Option[Asterism]],
+    asterism:  View[List[TargetWithId]],
     setTarget: (Option[Target.Id], SetRouteVia) => Callback
   )(
     newTwid:   TargetWithId
   ): Callback =
     asterism
-      .zoom(Asterism.fromTargetsList.reverse.asLens)
       .mod(_.map(twid => if (twid.id === id) newTwid else twid)) >>
       setTarget(newTwid.id.some, SetRouteVia.HistoryPush)
 
@@ -114,7 +113,7 @@ object AsterismEditor extends AsterismModifier:
       .useContext(AppContext.ctx)
       .useStateView(AreAdding(false))
       .useStateView(EditScope.CurrentOnly)
-      .useEffectWithDepsBy((props, _, _, _) => (props.asterism.get, props.currentTarget)) {
+      .useEffectWithDepsBy((props, _, _, _) => (props.asterism.get, props.focusedTargetId)) {
         (props, _, _, _) => (asterism, oTargetId) =>
           // if the selected targetId is None, or not in the asterism, select the first target (if any)
           // Need to replace history here.
@@ -142,9 +141,9 @@ object AsterismEditor extends AsterismModifier:
 
         val targetView: View[Option[Target.Id]] =
           View[Option[Target.Id]](
-            props.currentTarget,
+            props.focusedTargetId,
             { (f, cb) =>
-              val newValue = f(props.currentTarget)
+              val newValue = f(props.focusedTargetId)
               props.setTarget(newValue, SetRouteVia.HistoryPush) >> cb(newValue)
             }
           )
@@ -197,7 +196,7 @@ object AsterismEditor extends AsterismModifier:
             props.renderInTitle,
             fullScreen.get
           ),
-          props.currentTarget
+          props.focusedTargetId
             .flatMap[VdomElement] { targetId =>
               // TODO Move this somewhere else, it's always the same
               // Also do we want to contemplate target order in an asterism?
@@ -216,7 +215,7 @@ object AsterismEditor extends AsterismModifier:
 
               selectedTargetView.mapValue(targetView =>
                 targetView.get match {
-                  case TargetWithId(_, t @ Target.Sidereal(_, _, _, _)) =>
+                  case TargetWithId(targetId, t @ Target.Sidereal(_, _, _, _)) =>
                     <.div(
                       ExploreStyles.TargetTileEditor,
                       <.div(
@@ -236,6 +235,7 @@ object AsterismEditor extends AsterismModifier:
                         SiderealTargetEditor(
                           props.userId,
                           asterism,
+                          targetId,
                           vizTime,
                           props.configuration,
                           props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
@@ -249,7 +249,7 @@ object AsterismEditor extends AsterismModifier:
                         )
                       )
                     )
-                  case _                                                =>
+                  case _                                                       =>
                     <.div("Non-sidereal targets not supported")
                 }
               )
