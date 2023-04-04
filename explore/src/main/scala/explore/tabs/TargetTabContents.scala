@@ -190,8 +190,12 @@ object TargetTabContents extends TwoPanels:
     val psUndoCtx: UndoContext[ProgramSummaries] =
       UndoContext(props.psUndoStacks, programSummaries)
 
-    val targetMap: View[TargetWithObsList] = // This can't be done anymore
-      programSummaries.zoom(ProgramSummaries.targets)
+    // val targetsWithObs: TargetWithObsList = programSummaries.get.targetsWithObs
+
+    // val targetMap: View[TargetWithObsList] = // This can't be done anymore
+    //   programSummaries.zoom(ProgramSummaries.targets)
+
+    val targets: View[TargetList] = programSummaries.zoom(ProgramSummaries.targets)
 
     def targetTree(
       objectsWithObs: View[ProgramSummaries],
@@ -208,7 +212,7 @@ object TargetTabContents extends TwoPanels:
       )
 
     def findAsterismGroup(obsIds: ObsIdSet, agl: AsterismGroupList): Option[AsterismGroup] =
-      agl.find((agObsIds, targetIds) => obsIds.subsetOf(agObsIds))
+      agl.find((agObsIds, targetIds) => obsIds.subsetOf(agObsIds)).map(AsterismGroup.fromTuple)
 
     def setPage(focused: Focused): Callback =
       ctx.pushPage(AppTab.Targets, props.programId, focused)
@@ -263,12 +267,13 @@ object TargetTabContents extends TwoPanels:
         TargetSummaryTable(
           props.userId,
           props.programId,
-          targetMap,
+          targets,
+          programSummaries.get.targetObservations,
           selectObservationAndTarget(props.expandedIds) _,
           selectTargetOrSummary _,
           renderInTitle,
           selectedTargetIds,
-          astGrpObsListUndoCtx
+          psUndoCtx
         )
       )
 
@@ -290,14 +295,12 @@ object TargetTabContents extends TwoPanels:
       val groupIds  = asterismGroup.obsIds
       val targetIds = asterismGroup.targetIds
 
-      val asterism: Option[Asterism] =
-        Asterism
-          .fromTargets(
-            targetIds.toList.flatMap(id =>
-              targetMap.get.get(id).map(two => TargetWithId(id, two.target))
-            )
-          )
-          .map(a => props.focused.target.map(t => a.focusOn(t)).getOrElse(a))
+      // val asterism: Option[Asterism] =
+      //   Asterism.fromSet
+      //     .get(
+      //       targetIds.map(id => targets.get.get(id).map(t => TargetWithId(id, t)))
+      //     )
+      // .map(a => props.focused.target.map(t => a.focusOn(t)).getOrElse(a))
 
       // val getAsterism: ProgramSummaries => Option[Asterism] = _ => asterism
 
@@ -383,10 +386,10 @@ object TargetTabContents extends TwoPanels:
           )
           .getOrElse(ps)
 
-      val asterismView: View[Option[Asterism]] =
-        programSummaries
-          .withOnMod(onModAsterismsWithObs(groupIds, idsToEdit))
-          .zoom(getAsterism)(modAsterism)
+      // val asterismView: View[Option[Asterism]] =
+      //   programSummaries
+      //     .withOnMod(onModAsterismsWithObs(groupIds, idsToEdit))
+      //     .zoom(getAsterism)(modAsterism)
 
       val vizTimeView: View[Option[Instant]] =
         programSummaries.zoom(getVizTime)(modVizTime)
@@ -536,7 +539,7 @@ object TargetTabContents extends TwoPanels:
       val tileListObSelectedOpt: Option[(List[Tile], Boolean)] = optSelected.flatMap(
         _ match
           case Left(targetId) =>
-            targetMap.get
+            targets.get
               .get(targetId)
               .map(u =>
                 u.target match

@@ -6,7 +6,7 @@ package explore.model
 import clue.PersistentClientStatus
 import explore.data.KeyedIndexedList
 import explore.events.CatalogMessage
-import explore.model.Asterism
+import explore.model.AsterismZipper
 import explore.model.enums.AgsState
 import explore.model.enums.SelectedPanel
 import explore.model.itc.ItcChartExposureTime
@@ -32,9 +32,6 @@ import lucuma.schemas.model.*
 import lucuma.ui.reusability.given
 import queries.schemas.odb.ObsQueries.SpectroscopyRequirementsData
 
-import scala.collection.immutable.SortedMap
-import scala.collection.immutable.TreeSeqMap
-
 /**
  * Reusability instances for model classes
  */
@@ -49,17 +46,15 @@ object reusability:
   given idListReuse[Id, A: Reusability]: Reusability[KeyedIndexedList[Id, A]] =
     Reusability.by(_.toList)
 
-  given Reusability[TreeSeqMap[Target.Id, Target]] =
-    Reusability.by((_: TreeSeqMap[Target.Id, Target]).toMap)(Reusability.map)
-  given Reusability[ObsIdSet]                      = Reusability.byEq
-  given Reusability[TargetIdSet]                   = Reusability.byEq
-  given Reusability[TargetWithId]                  = Reusability.byEq
-  given Reusability[TargetWithIdAndObs]            = Reusability.byEq
-  given Reusability[TargetWithObs]                 = Reusability.byEq
-  given Reusability[ConstraintsSummary]            = Reusability.byEq
-  given Reusability[ConstraintGroup]               = Reusability.byEq
-  given Reusability[ObsSummary]                    = Reusability.byEq
-  given Reusability[ExploreLocalPreferences]       = Reusability.byEq
+  given Reusability[ObsIdSet]                = Reusability.byEq
+  given Reusability[TargetIdSet]             = Reusability.byEq
+  given Reusability[TargetWithId]            = Reusability.byEq
+  given Reusability[TargetWithIdAndObs]      = Reusability.byEq
+  given Reusability[TargetWithObs]           = Reusability.byEq
+  given Reusability[ConstraintsSummary]      = Reusability.byEq
+  given Reusability[ConstraintGroup]         = Reusability.byEq
+  given Reusability[ObsSummary]              = Reusability.byEq
+  given Reusability[ExploreLocalPreferences] = Reusability.byEq
 
   /**
    */
@@ -106,7 +101,7 @@ object reusability:
 
   given Reusability[ObjectTracking] = Reusability.byEq
 
-  given Reusability[Asterism] = Reusability.byEq[Asterism]
+  given Reusability[AsterismZipper] = Reusability.byEq[AsterismZipper]
 
   given Reusability[TargetWithOptId] = Reusability.byEq
 

@@ -5,7 +5,7 @@ package explore.model.arb
 
 import cats.data.NonEmptyList
 import cats.laws.discipline.arbitrary.*
-import explore.model.Asterism
+import explore.model.AsterismZipper
 import lucuma.core.data.Zipper
 import lucuma.core.model.Target
 import lucuma.core.model.arb.ArbTarget.given
@@ -17,11 +17,11 @@ import org.scalacheck.Arbitrary.*
 import org.scalacheck.Cogen
 
 trait ArbAsterism:
-  given arbAsterism: Arbitrary[Asterism] = Arbitrary {
-    arbitrary[NonEmptyList[TargetWithId]].map(n => Asterism(Zipper.fromNel(n)))
+  given arbAsterism: Arbitrary[AsterismZipper] = Arbitrary {
+    arbitrary[NonEmptyList[TargetWithId]].map(n => AsterismZipper(Zipper.fromNel(n)))
   }
 
-  given Cogen[Asterism] =
+  given Cogen[AsterismZipper] =
     Cogen[List[TargetWithId]].contramap(_.asList)
 
 object ArbAsterism extends ArbAsterism

@@ -36,6 +36,14 @@ import explore.model.Focused.obsSet
 import explore.model.TargetWithIdAndObs.targetWithObs
 import explore.data.KeyedIndexedList
 import lucuma.core.model.ConstraintSet
+import lucuma.schemas.model.TargetWithId
+import monocle.Iso
+import lucuma.core.optics.SplitEpi
+import cats.data.NonEmptyList
+import java.time.Instant
+import lucuma.core.model.ObjectTracking
+import scala.annotation.targetName
+import explore.model.extensions.*
 
 object AsterismQueries:
   // The default cats ordering for sorted set sorts by size first, then contents. That's not what we want.
@@ -44,6 +52,30 @@ object AsterismQueries:
   given Order[ObsIdSet] = ObsIdSet.given_Order_ObsIdSet
 
   type AsterismIds = SortedSet[Target.Id]
+  type Asterism    = SortedMap[Target.Id, Target]
+  object Asterism:
+    // TODO TEST
+    val fromSet: Iso[Set[TargetWithId], Asterism] = Iso[Set[TargetWithId], Asterism](targets =>
+      SortedMap.from(targets.map(t => t.id -> t.target))
+    )(_.toSet.map((id, t) => TargetWithId(id, t)))
+
+    // TODO TEST
+    // The list is normalized: duplicates are removed and it's sorted by target id.
+    val fromList: SplitEpi[List[TargetWithId], Asterism] =
+      SplitEpi[List[TargetWithId], Asterism](
+        targets => SortedMap.from(targets.map(t => t.id -> t.target)),
+        _.toList.map((id, t) => TargetWithId(id, t))
+      )
+
+    def one(id: Target.Id, target: Target): Asterism =
+      SortedMap(id -> target)
+
+    extension (a: Asterism)
+      def toTargetWithIdNel: Option[NonEmptyList[TargetWithId]] =
+        NonEmptyList.fromList(Asterism.fromList.reverseGet(a))
+
+      // def baseTrackingAt(vizTime: Instant): Option[ObjectTracking] =
+      //   toTargetWithIdNel.flatMap(_.baseTrackingAt(vizTime))
 
   type AsterismGroupList   = SortedMap[ObsIdSet, AsterismIds]
   type TargetList          = SortedMap[Target.Id, Target]
@@ -79,6 +111,7 @@ object AsterismQueries:
         .mapValues(obsIds => SortedSet.from(obsIds))
         .toMap
 
+    // Might not be used after all
     lazy val targetsWithObs: TargetWithObsList =
       targets.map((targetId, target) =>
         targetId -> TargetWithObs(target, targetObservations.get(targetId).orEmpty)

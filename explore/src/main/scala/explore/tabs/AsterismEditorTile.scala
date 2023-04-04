@@ -13,7 +13,7 @@ import crystal.react.implicits.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.config.VizTimeEditor
-import explore.model.Asterism
+import explore.model.AsterismZipper
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.PAProperties
@@ -43,6 +43,7 @@ import queries.schemas.odb.ObsQueries
 import react.common.ReactFnProps
 
 import java.time.Instant
+import explore.common.AsterismQueries.Asterism
 
 object AsterismEditorTile:
 
@@ -50,7 +51,7 @@ object AsterismEditorTile:
     userId:          Option[User.Id],
     programId:       Program.Id,
     sharedInObsIds:  ObsIdSet,
-    potAsterismMode: Pot[(View[Option[Asterism]], Option[BasicConfiguration])],
+    potAsterismMode: Pot[(View[Asterism], Option[BasicConfiguration])],
     potVizTime:      Pot[View[Option[Instant]]],
     obsConf:         Option[ObsConfiguration],
     currentTarget:   Option[Target.Id],

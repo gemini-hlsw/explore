@@ -82,7 +82,7 @@ case class AladinCell(
   tid:        Target.Id,
   vizTime:    Instant,
   obsConf:    Option[ObsConfiguration],
-  asterism:   Asterism,
+  asterism:   AsterismZipper,
   fullScreen: View[AladinFullScreen]
 ) extends ReactFnProps(AladinCell.component):
   val anglesToTest: Option[NonEmptyList[Angle]] =
@@ -106,7 +106,7 @@ case class AladinCell(
   def canRunAGS: Boolean = obsConf.exists(o => o.constraints.isDefined && o.wavelength.isDefined)
 
 trait AladinCommon:
-  given Reusability[Asterism] = Reusability.by(x => (x.toSiderealTracking, x.focus.id))
+  given Reusability[AsterismZipper] = Reusability.by(x => (x.toSiderealTracking, x.focus.id))
   given Reusability[AgsState] = Reusability.byEq
 
 object AladinCell extends ModelOptics with AladinCommon:

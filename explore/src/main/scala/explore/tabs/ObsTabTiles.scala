@@ -17,7 +17,7 @@ import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.Asterism
+import explore.model.AsterismZipper
 import explore.model.BasicConfigAndItc
 import explore.model.ConstraintGroup
 import explore.model.Focused
@@ -69,6 +69,9 @@ import scala.collection.immutable.SortedMap
 import explore.model.TargetWithObs
 import explore.common.AsterismQueries.ProgramSummaries
 import explore.constraints.ConstraintsPanel
+import explore.common.AsterismQueries.Asterism
+import explore.common.AsterismQueries.Asterism.*
+import explore.model.extensions.*
 
 case class ObsTabTiles(
   userId:           Option[User.Id],
@@ -175,20 +178,20 @@ object ObsTabTiles:
               _.zoom(ObsEditData.scienceData.andThen(ScienceData.posAngle))
             )
 
-        val potAsterism: Pot[View[Option[Asterism]]] =
+        val potAsterism: Pot[View[Asterism]] =
           obsViewPot.map(v =>
             v.zoom(
               ObsEditData.scienceData
                 .andThen(ScienceData.targets)
                 .andThen(ObservationData.TargetEnvironment.asterism)
-            ).zoom(Asterism.fromTargetsListOn(props.focusedTarget).asLens)
+            ).zoomSplitEpi(Asterism.fromList)
           )
 
         val basicConfiguration = observingMode.map(_.toBasicConfiguration)
 
-        val asterism = potAsterism.toOption.flatMap(_.get)
+        val asterism = potAsterism.toOption.map(_.get)
 
-        val potAsterismMode: Pot[(View[Option[Asterism]], Option[BasicConfiguration])] =
+        val potAsterismMode: Pot[(View[Asterism], Option[BasicConfiguration])] =
           potAsterism.map(x => (x, basicConfiguration))
 
         val vizTimeView: Pot[View[Option[Instant]]] =
@@ -200,15 +203,18 @@ object ObsTabTiles:
         val targetCoords: Option[CoordinatesAtVizTime] =
           (vizTime, potAsterism.toOption)
             .mapN { (instant, asterism) =>
-              asterism.get.flatMap(
-                _.baseTrackingAt(instant).flatMap(_.at(instant))
-              )
+              asterism.get.toTargetWithIdNel
+                .flatMap(_.baseTrackingAt(instant))
+                .flatMap(_.at(instant))
             }
             .flatten
             .orElse {
               // If e.g. vizTime isn't defined default to the asterism base coordinates
               potAsterism.toOption
-                .flatMap(_.get.map(x => CoordinatesAtVizTime(x.baseTracking.baseCoordinates)))
+                .flatMap(
+                  _.get.toTargetWithIdNel
+                    .map(x => CoordinatesAtVizTime(x.baseTracking.baseCoordinates))
+                )
             }
 
         val spectroscopyReqs: Option[ScienceRequirementsData] =
@@ -272,22 +278,22 @@ object ObsTabTiles:
           tid: Option[Target.Id],
           via: SetRouteVia
         ): Callback =
-          (potAsterism.toOption, tid)
-            // When selecting the current target focus the asterism zipper
-            .mapN((pot, tid) => pot.mod(_.map(_.focusOn(tid))))
-            .getOrEmpty *>
-            // Set the route base on the selected target
-            ctx.setPageVia(
-              AppTab.Observations,
-              programId,
-              Focused(oid.map(ObsIdSet.one), tid),
-              via
-            )
+          // (potAsterism.toOption, tid)
+          //   // When selecting the current target focus the asterism zipper
+          //   .mapN((pot, tid) => pot.mod(_.map(_.focusOn(tid))))
+          //   .getOrEmpty *>
+          // Set the route base on the selected target
+          ctx.setPageVia(
+            AppTab.Observations,
+            programId,
+            Focused(oid.map(ObsIdSet.one), tid),
+            via
+          )
 
         val paProps = posAngle.map(p => PAProperties(props.obsId, selectedPA, agsState, p))
 
         val averagePA =
-          (basicConfiguration.map(_.siteFor), asterism, vizTime)
+          (basicConfiguration.map(_.siteFor), asterism.flatMap(_.toTargetWithIdNel), vizTime)
             .mapN((site, asterism, vizTime) =>
               posAngle.map(_.get) match
                 case Some(PosAngleConstraint.AverageParallactic) =>

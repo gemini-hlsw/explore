@@ -23,7 +23,7 @@ import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.model.AladinFullScreen
 import explore.model.AppContext
-import explore.model.Asterism
+import explore.model.AsterismZipper
 import explore.model.ExploreModelValidators
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
@@ -71,10 +71,13 @@ import react.primereact.Message
 import java.time.Instant
 import scala.collection.immutable.TreeSeqMap
 import cats.data.NonEmptyList
+import explore.common.AsterismQueries.Asterism
 
 case class SiderealTargetEditor(
   userId:          User.Id,
-  asterism:        View[TreeSeqMap[Target.Id, Target]],
+  // TODO We should pass a View[TargetWithId] and then the Asterism just to plot it.
+  // The rest of the asterism is not modified here.
+  asterism:        View[Asterism],
   focusedTargetId: Target.Id,
   vizTime:         Option[Instant],
   obsConf:         Option[ObsConfiguration],
@@ -86,7 +89,7 @@ case class SiderealTargetEditor(
   fullScreen:      View[AladinFullScreen]
 ) extends ReactFnProps(SiderealTargetEditor.component)
 
-object SiderealTargetEditor {
+object SiderealTargetEditor:
   private type Props = SiderealTargetEditor
 
   private def readonlyView[A](view: View[A]): View[A] = {
@@ -152,11 +155,7 @@ object SiderealTargetEditor {
         import ctx.given
 
         val focusedTarget: ViewOpt[Target] =
-          props.asterism.zoom(
-            monocle.Iso
-              .id[TreeSeqMap[Target.Id, Target]]
-              .index(props.focusedTargetId)
-          )
+          props.asterism.zoom(monocle.Iso.id[Asterism].index(props.focusedTargetId))
 
         // focusedTarget.zoom(TargetWithId.sidereal).asView.map { selectedTargetView =>
         focusedTarget.zoom(Target.sidereal).asView.map { selectedTargetView =>
@@ -298,7 +297,7 @@ object SiderealTargetEditor {
           val disabled = props.searching.get.exists(_ === tid) || cloning.value
 
           val asterismZipperOpt =
-            Asterism.fromTargets(props.asterism.get.toList.map(TargetWithId(_, _)))
+            AsterismZipper.fromTargets(props.asterism.get.toList.map(TargetWithId(_, _)))
 
           React.Fragment(
             props.renderInTitle
@@ -317,8 +316,6 @@ object SiderealTargetEditor {
                   vt,
                   props.obsConf,
                   asterismZipper.focusOn(props.focusedTargetId),
-                  // NonEmptyList.fromListUnsafe(props.asterism.get.toList.map(TargetWithId(_, _))),
-                  // props.focusedTargetId,
                   props.fullScreen
                 )
               ),
@@ -411,5 +408,3 @@ object SiderealTargetEditor {
           )
         }
       }
-
-}

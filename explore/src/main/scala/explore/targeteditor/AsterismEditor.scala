@@ -17,7 +17,7 @@ import explore.components.ui.ExploreStyles
 import explore.config.VizTimeEditor
 import explore.model.AladinFullScreen
 import explore.model.AppContext
-import explore.model.Asterism
+import explore.model.AsterismZipper
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.PAProperties
@@ -63,6 +63,7 @@ import react.primereact.Button
 import java.time.Instant
 import monocle.Traversal
 import monocle.Optional
+import explore.common.AsterismQueries.Asterism
 
 case class AsterismEditor(
   userId:          User.Id,
@@ -72,7 +73,7 @@ case class AsterismEditor(
   // can't be changed from here, attempts are ignored.
   // Let's pass the View[Targets] on one side, and a read-only focus on the other.
   // asterism:       View[Option[Asterism]], // ....
-  asterism:        View[List[TargetWithId]],
+  asterism:        View[Asterism],
   potVizTime:      Pot[View[Option[Instant]]],
   configuration:   Option[ObsConfiguration],
   focusedTargetId: Option[Target.Id],
@@ -98,13 +99,13 @@ object AsterismEditor extends AsterismModifier:
 
   private def onCloneTarget(
     id:        Target.Id,
-    asterism:  View[List[TargetWithId]],
+    asterism:  View[Asterism],
     setTarget: (Option[Target.Id], SetRouteVia) => Callback
   )(
     newTwid:   TargetWithId
   ): Callback =
     asterism
-      .mod(_.map(twid => if (twid.id === id) newTwid else twid)) >>
+      .mod(_.updated(newTwid.id, newTwid.target)) >>
       setTarget(newTwid.id.some, SetRouteVia.HistoryPush)
 
   private val component =
@@ -197,25 +198,21 @@ object AsterismEditor extends AsterismModifier:
             fullScreen.get
           ),
           props.focusedTargetId
-            .flatMap[VdomElement] { targetId =>
+            .flatMap[VdomElement] { focusedTargetId =>
               // TODO Move this somewhere else, it's always the same
-              // Also do we want to contemplate target order in an asterism?
-              // If so, we should move to a KeyedIndexedList instead of just a List.
               val targetInAsterism =
-                Optional[List[TargetWithId], TargetWithId](
-                  _.find(_.id === targetId)
-                )(target =>
-                  _.map(astTarget => if (astTarget.id === target.id) target else astTarget)
-                )
+                Optional[Asterism, TargetWithId](
+                  _.get(focusedTargetId).map(t => TargetWithId(focusedTargetId, t))
+                )(targetWithId => _.updated(targetWithId.id, targetWithId.target))
 
               val selectedTargetView = props.asterism.zoom(targetInAsterism)
 
-              val otherObsCount = props.otherObsCount(targetId)
+              val otherObsCount = props.otherObsCount(focusedTargetId)
               val plural        = if (otherObsCount === 1) "" else "s"
 
               selectedTargetView.mapValue(targetView =>
                 targetView.get match {
-                  case TargetWithId(targetId, t @ Target.Sidereal(_, _, _, _)) =>
+                  case TargetWithId(focusedTargetId, t @ Target.Sidereal(_, _, _, _)) =>
                     <.div(
                       ExploreStyles.TargetTileEditor,
                       <.div(
@@ -231,25 +228,24 @@ object AsterismEditor extends AsterismModifier:
                             else "only the current observations".refined,
                         ).toFalseTrueFragment
                       ).when(otherObsCount > 0),
-                      props.asterism.mapValue(asterism =>
-                        SiderealTargetEditor(
-                          props.userId,
-                          asterism,
-                          targetId,
-                          vizTime,
-                          props.configuration,
-                          props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
-                          props.searching,
-                          onClone = onCloneTarget(targetId, props.asterism, props.setTarget) _,
-                          obsIdSubset =
-                            if (otherObsCount > 0 && editScope.get === EditScope.CurrentOnly)
-                              props.sharedInObsIds.some
-                            else none,
-                          fullScreen = fullScreen
-                        )
+                      SiderealTargetEditor(
+                        props.userId,
+                        props.asterism,
+                        focusedTargetId,
+                        vizTime,
+                        props.configuration,
+                        props.undoStacks
+                          .zoom(atMapWithDefault(focusedTargetId, UndoStacks.empty)),
+                        props.searching,
+                        onClone = onCloneTarget(focusedTargetId, props.asterism, props.setTarget) _,
+                        obsIdSubset =
+                          if (otherObsCount > 0 && editScope.get === EditScope.CurrentOnly)
+                            props.sharedInObsIds.some
+                          else none,
+                        fullScreen = fullScreen
                       )
                     )
-                  case _                                                       =>
+                  case _                                                              =>
                     <.div("Non-sidereal targets not supported")
                 }
               )
