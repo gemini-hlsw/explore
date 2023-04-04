@@ -63,23 +63,23 @@ import react.primereact.Button
 import java.time.Instant
 import monocle.Traversal
 import monocle.Optional
-import explore.common.AsterismQueries.Asterism
+import explore.model.Asterism
+import explore.model.TargetList
+import explore.model.AsterismIds
+import monocle.Iso
+import explore.model.AsterismZipper.siderealTargetsEach
 
 case class AsterismEditor(
   userId:          User.Id,
   programId:       Program.Id,
-  sharedInObsIds:  ObsIdSet,
-  // This shouldn't be a View over Asterism. Asterism wraps a Zipper and the focus
-  // can't be changed from here, attempts are ignored.
-  // Let's pass the View[Targets] on one side, and a read-only focus on the other.
-  // asterism:       View[Option[Asterism]], // ....
-  asterism:        View[Asterism],
+  obsIds:          ObsIdSet,
+  asterismIds:     View[AsterismIds],
+  allTargets:      View[TargetList],
   potVizTime:      Pot[View[Option[Instant]]],
   configuration:   Option[ObsConfiguration],
   focusedTargetId: Option[Target.Id],
   setTarget:       (Option[Target.Id], SetRouteVia) => Callback,
   otherObsCount:   Target.Id => Int,
-  // undoStacks:     View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
   undoStacks:      View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
   searching:       View[Set[Target.Id]],
   renderInTitle:   Tile.RenderInTitle
@@ -97,15 +97,27 @@ object AsterismEditor extends AsterismModifier:
   private object AreAdding extends NewType[Boolean]
   private type AreAdding = AreAdding.Type
 
+  // private def onCloneTarget(
+  //   id:        Target.Id,
+  //   asterism:  View[Asterism],
+  //   setTarget: (Option[Target.Id], SetRouteVia) => Callback
+  // )(
+  //   newTwid:   TargetWithId
+  // ): Callback =
+  //   asterism
+  //     .mod(_.updated(newTwid.id, newTwid.target)) >>
+  //     setTarget(newTwid.id.some, SetRouteVia.HistoryPush)
+
   private def onCloneTarget(
-    id:        Target.Id,
-    asterism:  View[Asterism],
-    setTarget: (Option[Target.Id], SetRouteVia) => Callback
+    id:          Target.Id,
+    asterismIds: View[AsterismIds],
+    allTargets:  View[TargetList],
+    setTarget:   (Option[Target.Id], SetRouteVia) => Callback
   )(
-    newTwid:   TargetWithId
+    newTwid:     TargetWithId
   ): Callback =
-    asterism
-      .mod(_.updated(newTwid.id, newTwid.target)) >>
+    allTargets.mod(_ + (newTwid.id -> newTwid.target)) >>
+      asterismIds.mod(_ + newTwid.id) >>
       setTarget(newTwid.id.some, SetRouteVia.HistoryPush)
 
   private val component =
@@ -114,27 +126,25 @@ object AsterismEditor extends AsterismModifier:
       .useContext(AppContext.ctx)
       .useStateView(AreAdding(false))
       .useStateView(EditScope.CurrentOnly)
-      .useEffectWithDepsBy((props, _, _, _) => (props.asterism.get, props.focusedTargetId)) {
-        (props, _, _, _) => (asterism, oTargetId) =>
-          // if the selected targetId is None, or not in the asterism, select the first target (if any)
-          // Need to replace history here.
+      // TODO Let's deal with this later
+      // .useEffectWithDepsBy((props, _, _, _) => (props.asterism.get, props.focusedTargetId)) {
+      //   (props, _, _, _) => (asterism, oTargetId) =>
+      // if the selected targetId is None, or not in the asterism, select the first target (if any)
+      // Need to replace history here.
 
-          // TODO Let's deal with this later
-          Callback.empty
-
-            // oTargetId match {
-            //   case None                                                     =>
-            //     asterism.foldMap(a => props.setTarget(a.focus.id.some, SetRouteVia.HistoryReplace))
-            //   case Some(current) if asterism.exists(_.focus.id === current) => Callback.empty
-            //   case current @ Some(_)                                        =>
-            //     val inAsterism = current.exists(id => props.asterism.get.exists(_.hasId(id)))
-            //     val focus      = props.asterism.get.map(_.focus.id)
-            //     if (!inAsterism)
-            //       props.setTarget(focus, SetRouteVia.HistoryReplace)
-            //     else
-            //       props.setTarget(current, SetRouteVia.HistoryReplace)
-            // }
-      }
+      // oTargetId match {
+      //   case None                                                     =>
+      //     asterism.foldMap(a => props.setTarget(a.focus.id.some, SetRouteVia.HistoryReplace))
+      //   case Some(current) if asterism.exists(_.focus.id === current) => Callback.empty
+      //   case current @ Some(_)                                        =>
+      //     val inAsterism = current.exists(id => props.asterism.get.exists(_.hasId(id)))
+      //     val focus      = props.asterism.get.map(_.focus.id)
+      //     if (!inAsterism)
+      //       props.setTarget(focus, SetRouteVia.HistoryReplace)
+      //     else
+      //       props.setTarget(current, SetRouteVia.HistoryReplace)
+      // }
+      // }
       // full screen aladin
       .useStateView(AladinFullScreen.Normal)
       .render { (props, ctx, adding, editScope, fullScreen) =>
@@ -152,11 +162,19 @@ object AsterismEditor extends AsterismModifier:
         // Save the time here. this works for the obs and target tabs
         val vizTimeView = props.potVizTime.map(_.withOnMod { t =>
           ObsQueries
-            .updateVisualizationTime[IO](props.programId, props.sharedInObsIds.toList, t)
+            .updateVisualizationTime[IO](props.programId, props.obsIds.toList, t)
             .runAsync
         })
 
         val vizTime = props.potVizTime.toOption.flatMap(_.get)
+
+        val selectedTargetView: View[Option[Target.Id]] =
+          View(
+            props.focusedTargetId,
+            (mod, cb) =>
+              val newValue = mod(props.focusedTargetId)
+              props.setTarget(newValue, SetRouteVia.HistoryPush) >> cb(newValue)
+          )
 
         <.div(
           ExploreStyles.AladinFullScreen.when(fullScreen.get.value),
@@ -179,8 +197,9 @@ object AsterismEditor extends AsterismModifier:
                 (adding.async.set(AreAdding(true)) >>
                   insertSiderealTarget(
                     props.programId,
-                    props.sharedInObsIds,
-                    props.asterism,
+                    props.obsIds,
+                    props.asterismIds,
+                    props.allTargets,
                     targetWithOptId
                   ).flatMap(oTargetId => targetView.async.set(oTargetId))
                     .guarantee(adding.async.set(AreAdding(false)))).runAsync
@@ -190,65 +209,66 @@ object AsterismEditor extends AsterismModifier:
           TargetTable(
             props.userId.some,
             props.programId,
-            props.sharedInObsIds,
-            props.asterism,
-            targetView,
+            props.obsIds,
+            props.asterismIds,
+            props.allTargets.get,
+            selectedTargetView,
             vizTime,
             props.renderInTitle,
             fullScreen.get
           ),
-          props.focusedTargetId
-            .flatMap[VdomElement] { focusedTargetId =>
-              // TODO Move this somewhere else, it's always the same
-              val targetInAsterism =
-                Optional[Asterism, TargetWithId](
-                  _.get(focusedTargetId).map(t => TargetWithId(focusedTargetId, t))
-                )(targetWithId => _.updated(targetWithId.id, targetWithId.target))
+          props.focusedTargetId.map { focusedTargetId =>
+            val selectedTargetView =
+              props.allTargets.zoom(Iso.id[TargetList].index(focusedTargetId))
 
-              val selectedTargetView = props.asterism.zoom(targetInAsterism)
+            val otherObsCount = props.otherObsCount(focusedTargetId)
+            val plural        = if (otherObsCount === 1) "" else "s"
 
-              val otherObsCount = props.otherObsCount(focusedTargetId)
-              val plural        = if (otherObsCount === 1) "" else "s"
-
-              selectedTargetView.mapValue(targetView =>
-                targetView.get match {
-                  case TargetWithId(focusedTargetId, t @ Target.Sidereal(_, _, _, _)) =>
-                    <.div(
-                      ExploreStyles.TargetTileEditor,
-                      <.div(
-                        ExploreStyles.SharedEditWarning,
-                        s"${t.name.value} is in ${otherObsCount} other observation$plural. Edits here should apply to:",
-                        BooleanRadioButtons(
-                          view = editScope.as(EditScope.value),
-                          idBase = "editscope".refined,
-                          name = "editScope".refined,
-                          trueLabel = "all observations of this target".refined,
-                          falseLabel =
-                            if (props.sharedInObsIds.size === 1) "only this observation".refined
-                            else "only the current observations".refined,
-                        ).toFalseTrueFragment
-                      ).when(otherObsCount > 0),
-                      SiderealTargetEditor(
-                        props.userId,
-                        props.asterism,
-                        focusedTargetId,
-                        vizTime,
-                        props.configuration,
-                        props.undoStacks
-                          .zoom(atMapWithDefault(focusedTargetId, UndoStacks.empty)),
-                        props.searching,
-                        onClone = onCloneTarget(focusedTargetId, props.asterism, props.setTarget) _,
-                        obsIdSubset =
-                          if (otherObsCount > 0 && editScope.get === EditScope.CurrentOnly)
-                            props.sharedInObsIds.some
-                          else none,
-                        fullScreen = fullScreen
-                      )
-                    )
-                  case _                                                              =>
-                    <.div("Non-sidereal targets not supported")
-                }
+            selectedTargetView
+              .zoom(Target.sidereal)
+              .mapValue[VdomElement](siderealTargetView =>
+                <.div(
+                  ExploreStyles.TargetTileEditor,
+                  <.div(
+                    ExploreStyles.SharedEditWarning,
+                    s"${siderealTargetView.get.name.value} is in ${otherObsCount} other observation$plural. Edits here should apply to:",
+                    BooleanRadioButtons(
+                      view = editScope.as(EditScope.value),
+                      idBase = "editscope".refined,
+                      name = "editScope".refined,
+                      trueLabel = "all observations of this target".refined,
+                      falseLabel =
+                        if (props.obsIds.size === 1) "only this observation".refined
+                        else "only the current observations".refined,
+                    ).toFalseTrueFragment
+                  ).when(otherObsCount > 0),
+                  SiderealTargetEditor(
+                    props.userId,
+                    focusedTargetId,
+                    siderealTargetView,
+                    Asterism.fromIdsAndTargets(props.asterismIds.get, props.allTargets.get),
+                    vizTime,
+                    props.configuration,
+                    props.undoStacks
+                      .zoom(atMapWithDefault(focusedTargetId, UndoStacks.empty)),
+                    props.searching,
+                    onClone = onCloneTarget(
+                      focusedTargetId,
+                      props.asterismIds,
+                      props.allTargets,
+                      props.setTarget
+                    ) _,
+                    obsIdSubset =
+                      if (otherObsCount > 0 && editScope.get === EditScope.CurrentOnly)
+                        props.obsIds.some
+                      else none,
+                    fullScreen = fullScreen
+                  )
+                )
               )
-            }
+              .getOrElse[VdomElement](
+                <.div("Non-sidereal targets not supported")
+              )
+          }
         )
       }

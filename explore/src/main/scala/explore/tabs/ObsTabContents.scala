@@ -172,8 +172,7 @@ object ObsTabContents extends TwoPanels:
     import ctx.given
 
     val observations = programSummaries.zoom(ProgramSummaries.observations)
-    // val constraintGroups = cache.zoom(ProgramSummaries.constraintGroups)
-    val targets      = programSummaries.zoom(ProgramSummaries.targetsWithObs)
+    val targets      = programSummaries.zoom(ProgramSummaries.targets)
 
     def observationsTree(observations: View[ObservationList]) =
       ObsList(

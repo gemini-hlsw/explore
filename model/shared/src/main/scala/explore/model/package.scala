@@ -20,6 +20,21 @@ import lucuma.core.util.NewType
 import lucuma.refined.*
 
 import scala.collection.immutable.SortedMap
+import scala.collection.immutable.SortedSet
+import explore.data.KeyedIndexedList
+import lucuma.core.model.ConstraintSet
+import lucuma.schemas.model.TargetWithId
+import monocle.Iso
+import lucuma.core.optics.SplitEpi
+import cats.data.NonEmptyList
+// import java.time.Instant
+// import lucuma.core.model.ObjectTracking
+// import explore.model.extensions.*
+import cats.Order.given
+import explore.model.syntax.all.*
+
+import scala.collection.immutable.SortedMap
+import lucuma.core.model.Observation
 
 val MaxHourValue = BigDecimal(1000)
 type HourRange = Interval.Closed[0, 1000]
@@ -37,3 +52,42 @@ val EmptySiderealTarget =
     SourceProfile.Point(SpectralDefinition.BandNormalized(none, SortedMap.empty)),
     none
   )
+
+type AsterismIds = SortedSet[Target.Id]
+type Asterism    = TargetList
+
+object Asterism:
+  // TODO TEST
+  val fromSet: Iso[Set[TargetWithId], Asterism] = Iso[Set[TargetWithId], Asterism](targets =>
+    SortedMap.from(targets.map(t => t.id -> t.target))
+  )(_.toSet.map((id, t) => TargetWithId(id, t)))
+
+  // TODO TEST
+  // The list is normalized: duplicates are removed and it's sorted by target id.
+  val fromList: SplitEpi[List[TargetWithId], Asterism] =
+    SplitEpi[List[TargetWithId], Asterism](
+      targets => SortedMap.from(targets.map(t => t.id -> t.target)),
+      _.toList.map((id, t) => TargetWithId(id, t))
+    )
+
+  def fromIdsAndTargets(ids: AsterismIds, targets: TargetList): Asterism =
+    ids.toList.map(id => targets.get(id).map(t => id -> t)).flattenOption.toSortedMap(_._1, _._2)
+
+  def one(id: Target.Id, target: Target): Asterism =
+    SortedMap(id -> target)
+
+  extension (a: Asterism)
+    def toTargetWithIdNel: Option[NonEmptyList[TargetWithId]] =
+      NonEmptyList.fromList(Asterism.fromList.reverseGet(a))
+
+    // def baseTrackingAt(vizTime: Instant): Option[ObjectTracking] =
+    //   toTargetWithIdNel.flatMap(_.baseTrackingAt(vizTime))
+
+type AsterismGroupList   = SortedMap[ObsIdSet, AsterismIds]
+type TargetList          = SortedMap[Target.Id, Target]
+type TargetWithObsList   = SortedMap[Target.Id, TargetWithObs]
+// KeyedIndexedList is only useful is manual order is going to matter.
+// For the moment I'm keeping it because it seems it will matter at some point.
+// Otherwise, we should change to a SortedMap.
+type ObservationList     = KeyedIndexedList[Observation.Id, ObsSummary]
+type ConstraintGroupList = SortedMap[ObsIdSet, ConstraintSet]

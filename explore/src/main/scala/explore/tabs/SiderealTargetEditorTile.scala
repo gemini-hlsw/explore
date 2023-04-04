@@ -25,7 +25,7 @@ import cats.Order.given
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
-import explore.common.AsterismQueries.Asterism
+import explore.model.Asterism
 
 object SiderealTargetEditorTile {
 
@@ -46,11 +46,6 @@ object SiderealTargetEditorTile {
       canMinimize = true,
       bodyClass = Some(ExploreStyles.TargetTileBody)
     ) { (renderInTitle: Tile.RenderInTitle) =>
-      val asterism =
-        target // See comment on SiderealTargetEditor, maybe we shouldn't do this
-          .zoom[Asterism](t => SortedMap(targetId -> t))(mod =>
-            t => mod(SortedMap(targetId -> t)).values.head.toSidereal.get
-          )
       <.div(
         ExploreStyles.AladinFullScreen.when(fullScreen.get.value),
         <.div(
@@ -58,8 +53,9 @@ object SiderealTargetEditorTile {
           userId.map(uid =>
             SiderealTargetEditor(
               uid,
-              asterism,
               targetId,
+              target,
+              Asterism.one(targetId, target.get),
               none,
               none,
               undoStacks,

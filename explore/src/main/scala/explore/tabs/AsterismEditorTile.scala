@@ -9,6 +9,7 @@ import cats.syntax.all.*
 import clue.FetchClient
 import crystal.Pot
 import crystal.react.View
+import crystal.implicits.*
 import crystal.react.implicits.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
@@ -43,32 +44,36 @@ import queries.schemas.odb.ObsQueries
 import react.common.ReactFnProps
 
 import java.time.Instant
-import explore.common.AsterismQueries.Asterism
+import explore.model.Asterism
+import explore.model.AsterismIds
+import explore.model.TargetList
 
 object AsterismEditorTile:
 
   def asterismEditorTile(
-    userId:          Option[User.Id],
-    programId:       Program.Id,
-    sharedInObsIds:  ObsIdSet,
-    potAsterismMode: Pot[(View[Asterism], Option[BasicConfiguration])],
-    potVizTime:      Pot[View[Option[Instant]]],
-    obsConf:         Option[ObsConfiguration],
-    currentTarget:   Option[Target.Id],
-    setTarget:       (Option[Target.Id], SetRouteVia) => Callback,
-    otherObsCount:   Target.Id => Int,
-    undoStacks:      View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
-    searching:       View[Set[Target.Id]],
-    title:           String,
-    backButton:      Option[VdomNode] = none
+    userId:        Option[User.Id],
+    programId:     Program.Id,
+    obsIds:        ObsIdSet,
+    asterismIds:   Pot[View[AsterismIds]],
+    allTargets:    View[TargetList],
+    configuration: Option[BasicConfiguration],
+    potVizTime:    Pot[View[Option[Instant]]],
+    obsConf:       Option[ObsConfiguration],
+    currentTarget: Option[Target.Id],
+    setTarget:     (Option[Target.Id], SetRouteVia) => Callback,
+    otherObsCount: Target.Id => Int,
+    undoStacks:    View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
+    searching:     View[Set[Target.Id]],
+    title:         String,
+    backButton:    Option[VdomNode] = none
   )(using FetchClient[IO, ?, ObservationDB], Logger[IO]): Tile = {
     // Save the time here. this works for the obs and target tabs
     val vizTimeView = potVizTime.map(_.withOnMod { t =>
-      ObsQueries.updateVisualizationTime[IO](programId, sharedInObsIds.toList, t).runAsync
+      ObsQueries.updateVisualizationTime[IO](programId, obsIds.toList, t).runAsync
     })
 
     // Store the pos angle on the db
-    val updatableObsConf =
+    val updatableObsConf: Option[ObsConfiguration] =
       obsConf.map(_.copy(posAngleProperties = obsConf.flatMap(_.posAngleProperties).map {
         case p @ PAProperties(oid, _, agsStateView, paView) =>
           p.copy(constraint =
@@ -91,22 +96,21 @@ object AsterismEditorTile:
       control = s => control.some.filter(_ => s === TileSizeState.Minimized),
       bodyClass = Some(ExploreStyles.TargetTileBody)
     )((renderInTitle: Tile.RenderInTitle) =>
-      potAsterismMode.renderPot((asterism, configuration) =>
-        userId.map(uid =>
-          AsterismEditor(
-            uid,
-            programId,
-            sharedInObsIds,
-            asterism,
-            potVizTime,
-            updatableObsConf,
-            currentTarget,
-            setTarget,
-            otherObsCount,
-            undoStacks,
-            searching,
-            renderInTitle
-          )
+      (asterismIds, obsConf.toPot, userId.toPot).tupled.renderPot((astIds, _, uid) =>
+        AsterismEditor(
+          uid,
+          programId,
+          obsIds,
+          astIds,
+          allTargets,
+          potVizTime,
+          updatableObsConf,
+          currentTarget,
+          setTarget,
+          otherObsCount,
+          undoStacks,
+          searching,
+          renderInTitle
         )
       )
     )

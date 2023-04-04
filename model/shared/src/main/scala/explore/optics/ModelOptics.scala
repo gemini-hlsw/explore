@@ -30,6 +30,7 @@ import monocle.*
 
 import java.time.Duration
 import scala.collection.immutable.SortedMap
+import scala.collection.immutable.SortedSet
 
 /**
  * Contains a set of useful optics to explore the model
@@ -74,4 +75,8 @@ trait ModelOptics {
     ts => NonNegInt.unsafeFrom(math.min(ts.toSeconds.longValue, Int.MaxValue.toLong).toInt),
     secs => TimeSpan.unsafeFromDuration(secs.value.toLong.seconds)
   )
+
+  // TODO TEST
+  def sortedSetFromList[A: Ordering]: SplitEpi[List[A], SortedSet[A]] =
+    SplitEpi[List[A], SortedSet[A]](SortedSet.from(_), _.toList)
 }

@@ -60,6 +60,7 @@ import scala.collection.immutable.SortedSet
 
 import scalajs.js.JSConverters.*
 import lucuma.schemas.model.TargetWithId
+import explore.model.TargetList
 
 case class TargetSummaryTable(
   userId:                Option[User.Id],

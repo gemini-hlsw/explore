@@ -29,13 +29,15 @@ import queries.schemas.itc.ITCConversions.*
 import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
 import workers.WorkerClient
+import explore.model.TargetList
 
 trait ItcPanelProps(
   observingMode:            Option[ObservingMode],
   spectroscopyRequirements: Option[SpectroscopyRequirementsData],
   scienceData:              Option[ScienceData],
   exposure:                 Option[ItcChartExposureTime],
-  selectedConfig:           Option[BasicConfigAndItc] // selected row in spectroscopy modes table
+  selectedConfig:           Option[BasicConfigAndItc], // selected row in spectroscopy modes table
+  allTargets:               TargetList
 ):
   // if there is an observingMode, that means a configuration has been created. If not, we'll use the
   // row selected in the spectroscopy modes table if it exists
@@ -115,7 +117,8 @@ trait ItcPanelProps(
   //   case _ =>
   //     exposure
 
-  val itcTargets: Option[NonEmptyList[ItcTarget]] = scienceData.flatMap(_.itcTargets.toNel)
+  val itcTargets: Option[NonEmptyList[ItcTarget]] =
+    scienceData.flatMap(_.itcTargets(allTargets).toNel)
 
   val targets: List[ItcTarget] = itcTargets.foldMap(_.toList)
 
