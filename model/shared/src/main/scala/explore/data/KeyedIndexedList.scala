@@ -12,6 +12,9 @@ import cats.Applicative
 import cats.syntax.all.given
 import monocle.Focus
 import monocle.Lens
+import monocle.function.Index
+import monocle.function.At
+import monocle.function.Index.fromAt
 
 // Each element has a unique Key.
 // Efficient loookup of elements and positions by Key.
@@ -105,10 +108,20 @@ object KeyedIndexedList:
 
   def value[A]: Lens[(A, Int), A] = Focus[(A, Int)](_._1)
 
+  // Should we have an Order?
   given eqKeyedIndexedList[K, A: Eq]: Eq[KeyedIndexedList[K, A]] =
     Eq.by(_.list: Map[K, (A, Int)])
 
-  given filterIndexIndexedList[K, A]: FilterIndex[KeyedIndexedList[K, A], K, (A, Int)] =
+  given keyIndexedListAt[K, A]: At[KeyedIndexedList[K, A], K, Option[(A, Int)]] =
+    At(i =>
+      Lens((_: KeyedIndexedList[K, A]).getValueAndIndex(i))(optV =>
+        kil => optV.fold(kil.removed(i))((v, idx) => kil.inserted(i, v, idx))
+      )
+    )
+
+  given treeSeqMapIndex[K, A]: Index[KeyedIndexedList[K, A], K, (A, Int)] = fromAt
+
+  given keyIndexedListFilterIndex[K, A]: FilterIndex[KeyedIndexedList[K, A], K, (A, Int)] =
     new FilterIndex[KeyedIndexedList[K, A], K, (A, Int)]:
       import cats.syntax.applicative._
       import cats.syntax.functor._

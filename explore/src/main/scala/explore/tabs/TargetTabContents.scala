@@ -213,7 +213,7 @@ object TargetTabContents extends TwoPanels:
       undoCtx:        UndoContext[ProgramSummaries]
     ) =
       AsterismGroupObsList(
-        objectsWithObs,
+        // objectsWithObs,
         props.programId,
         props.focused,
         props.expandedIds,

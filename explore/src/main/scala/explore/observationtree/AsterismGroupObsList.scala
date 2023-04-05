@@ -53,15 +53,16 @@ import scala.collection.immutable.SortedSet
 import explore.model.ObsSummary
 
 case class AsterismGroupObsList(
-  asterismsWithObs:       View[ProgramSummaries],
+  // programSummaries:       View[ProgramSummaries], // TODO Targets are not modified here
   programId:              Program.Id,
   focused:                Focused,
   expandedIds:            View[SortedSet[ObsIdSet]],
-  undoCtx:                UndoContext[ProgramSummaries],
+  undoCtx:                UndoContext[ProgramSummaries], // TODO Targets are not modified here
   selectTargetOrSummary:  Option[Target.Id] => Callback,
   selectedSummaryTargets: View[List[Target.Id]]
 ) extends ReactFnProps[AsterismGroupObsList](AsterismGroupObsList.component)
     with ViewCommon:
+  val programSummaries                         = undoCtx.model
   override val focusedObsSet: Option[ObsIdSet] = focused.obsSet
 
 object AsterismGroupObsList:
@@ -112,10 +113,10 @@ object AsterismGroupObsList:
       destination <- result.destination.toOption
       destIds     <- ObsIdSet.fromString.getOption(destination.droppableId)
       draggedIds  <- getDraggedIds(result.draggableId, props)
-      destAg      <-
-        props.asterismsWithObs.get.asterismGroups.get(destIds).map(AsterismGroup(destIds, _))
-      srcAg       <- props.asterismsWithObs.get.asterismGroups.findContainingObsIds(draggedIds)
-    } yield (destIds, destAg, draggedIds, srcAg.obsIds)
+      destAstIds  <-
+        props.programSummaries.get.asterismGroups.get(destIds) // .map(AsterismGroup(destIds, _))
+      srcAg       <- props.programSummaries.get.asterismGroups.findContainingObsIds(draggedIds)
+    } yield (destIds, destAstIds, draggedIds, srcAg.obsIds)
 
     def setObsSet(obsIds: ObsIdSet) =
       // if focused is empty, we're looking at the target summary table and don't want to
@@ -123,7 +124,7 @@ object AsterismGroupObsList:
       if (props.focused.isEmpty) Callback.empty
       else ctx.pushPage(AppTab.Targets, props.programId, Focused(obsIds.some))
 
-    oData.foldMap { (destIds, destAg, draggedIds, srcIds) =>
+    oData.foldMap { (destIds, destAstIds, draggedIds, srcIds) =>
       if (destIds.intersects(draggedIds)) Callback.empty
       else
         AsterismGroupObsListActions
@@ -133,9 +134,10 @@ object AsterismGroupObsList:
             srcIds,
             destIds,
             props.expandedIds,
-            setObsSet
+            setObsSet,
+            props.programSummaries.get.targets
           )
-          .set(props.undoCtx)(destAg.some)
+          .set(props.undoCtx.zoom(ProgramSummaries.observations))(destAstIds)
     }
   }
 
@@ -194,8 +196,8 @@ object AsterismGroupObsList:
     .useState(Dragging(false))
     .useStateView(AddingTargetOrObs(false))
     .useEffectOnMountBy { (props, ctx, _, _) =>
-      val asterismsWithObs = props.asterismsWithObs.get
-      val asterismGroups   = asterismsWithObs.asterismGroups
+      val programSummaries = props.programSummaries.get
+      val asterismGroups   = programSummaries.asterismGroups
       val expandedIds      = props.expandedIds
 
       val selectedAG = props.focusedObsSet
@@ -208,7 +210,7 @@ object AsterismGroupObsList:
       val obsMissing    = props.focused.obsSet.nonEmpty && selectedAG.isEmpty
       val targetMissing =
         props.focused.target.fold(false)(tid =>
-          !asterismsWithObs.targetsWithObs.keySet.contains(tid)
+          !programSummaries.targetsWithObs.keySet.contains(tid)
         )
 
       val (newFocused, needNewPage) = (obsMissing, targetMissing) match {
@@ -233,14 +235,14 @@ object AsterismGroupObsList:
     .render { (props, ctx, dragging, addingTargetOrObs) =>
       import ctx.given
 
-      val observations     = props.asterismsWithObs.get.observations
-      val asterismGroups   = props.asterismsWithObs.get.asterismGroups.map(AsterismGroup.fromTuple)
-      val targetWithObsMap = props.asterismsWithObs.get.targetsWithObs
+      val observations     = props.programSummaries.get.observations
+      val asterismGroups   = props.programSummaries.get.asterismGroups.map(AsterismGroup.fromTuple)
+      val targetWithObsMap = props.programSummaries.get.targetsWithObs
 
       // first look to see if something is focused in the tree, else see if something is focused in the summary
       val selectedTargetIds: SortedSet[Target.Id] =
         props.focused.obsSet
-          .flatMap(ids => props.asterismsWithObs.get.asterismGroups.get(ids))
+          .flatMap(ids => props.programSummaries.get.asterismGroups.get(ids))
           .getOrElse(SortedSet.from(props.selectedSummaryTargets.get))
 
       def isObsSelected(obsId: Observation.Id): Boolean =

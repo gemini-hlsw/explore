@@ -64,6 +64,8 @@ import react.resizeDetector.hooks.*
 import scala.concurrent.duration.*
 import explore.cache.ProgramCache
 import explore.common.AsterismQueries.ProgramSummaries
+import monocle.Iso
+import explore.data.KeyedIndexedList
 
 case class ObsTabContents(
   userId:     Option[User.Id],
@@ -194,24 +196,32 @@ object ObsTabContents extends TwoPanels:
           "Observations Summary",
           backButton.some
         )(renderInTitle =>
-          ObsSummaryTable(props.userId, props.programId, observations, targets, renderInTitle)
+          ObsSummaryTable(props.userId, props.programId, observations, targets.get, renderInTitle)
           // TODO: elevation view
         )
       )(obsId =>
-        ObsTabTiles(
-          props.userId,
-          props.programId,
-          obsId,
-          backButton,
-          programSummaries,
-          props.focusedTarget,
-          targets.get,
-          props.undoStacks,
-          props.searching,
-          defaultLayouts,
-          layouts,
-          resize
-        ).withKey(s"${obsId.show}")
+        //       val obsView: View[ObsSummary] =
+        // observations.zoom(Iso.id[ObservationList].index(obsId))
+        observations
+          .zoom(Iso.id[ObservationList].index(obsId).andThen(KeyedIndexedList.value))
+          .mapValue(obsView =>
+            ObsTabTiles(
+              props.userId,
+              props.programId,
+              backButton,
+              obsView,
+              targets,
+              // maybe we want constraintGroups, so we can get saner ids?
+              programSummaries.get.constraintGroups.map(_._2).toSet,
+              programSummaries.get.targetObservations,
+              props.focusedTarget,
+              props.undoStacks,
+              props.searching,
+              defaultLayouts,
+              layouts,
+              resize
+            ).withKey(s"${obsId.show}")
+          )
       )
 
     makeOneOrTwoPanels(

@@ -133,7 +133,6 @@ object ConstraintsPanel:
             FormLabel(htmlFor = id)(label, HelpIcon(helpId)),
             EnumDropdownView(id = id, value = undoViewSet(lens, remoteSet))
           )
-
         }
 
         val erTypeView: View[ElevationRangeType] =

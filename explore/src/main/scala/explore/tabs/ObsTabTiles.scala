@@ -75,73 +75,75 @@ import explore.model.extensions.*
 import explore.model.AsterismIds
 import lucuma.schemas.model.TargetWithId
 import cats.Order.given
+import explore.model.TargetList
+import scala.collection.immutable.SortedSet
+import explore.model.ObsSummary
+import lucuma.core.model.ConstraintSet
 
 case class ObsTabTiles(
-  userId:           Option[User.Id],
-  programId:        Program.Id,
-  obsId:            Observation.Id,
-  backButton:       VdomNode,
-  programSummaries: View[ProgramSummaries],
-  focusedTarget:    Option[Target.Id],
-  targetMap:        SortedMap[Target.Id, TargetWithObs],
-  undoStacks:       View[ModelUndoStacks[IO]],
-  searching:        View[Set[Target.Id]],
-  defaultLayouts:   LayoutsMap,
-  layouts:          View[Pot[LayoutsMap]],
-  resize:           UseResizeDetectorReturn
-) extends ReactFnProps(ObsTabTiles.component)
+  userId:             Option[User.Id],
+  programId:          Program.Id,
+  // obsId:            Observation.Id,
+  backButton:         VdomNode,
+  observation:        View[ObsSummary],
+  allTargets:         View[TargetList],
+  allConstraintSets:  Set[ConstraintSet],
+  targetObservations: Map[Target.Id, SortedSet[Observation.Id]],
+  // programSummaries: ProgramSummaries,
+  focusedTarget:      Option[Target.Id],
+  // asterism:           Asterism,
+  // targetObservations: Map[Target.Id, SortedSet[Observation.Id]],
+  undoStacks:         View[ModelUndoStacks[IO]],
+  searching:          View[Set[Target.Id]],
+  defaultLayouts:     LayoutsMap,
+  layouts:            View[Pot[LayoutsMap]],
+  resize:             UseResizeDetectorReturn
+) extends ReactFnProps(ObsTabTiles.component):
+  val obsId: Observation.Id = observation.get.id
 
 object ObsTabTiles:
   private type Props = ObsTabTiles
 
   private def makeConstraintsSelector(
-    programId:        Program.Id,
-    programSummaries: View[ProgramSummaries],
-    obsView:          Pot[View[ObsEditData]]
+    programId:         Program.Id,
+    observationId:     Observation.Id,
+    // programSummaries: View[ProgramSummaries],
+    // obsView:          Pot[View[ObsEditData]]
+    constraintSet:     View[ConstraintSet],
+    allConstraintSets: Set[ConstraintSet]
   )(using FetchClient[IO, ?, ObservationDB]): VdomNode =
-    obsView.renderPot { vod =>
-      val constraintGroups               = programSummaries.get.constraintGroups
-      val cgOpt: Option[ConstraintGroup] =
-        constraintGroups
-          .find(_._1.contains(vod.get.id))
-          .map(ConstraintGroup.fromTuple)
+    // obsView.renderPot { vod =>
+    //   val constraintGroups               = programSummaries.get.constraintGroups
+    //   val cgOpt: Option[ConstraintGroup] =
+    //     constraintGroups
+    //       .find(_._1.contains(vod.get.id))
+    //       .map(ConstraintGroup.fromTuple)
+    // val csByName: Map[String, ConstraintSet] = allConstraintSets.map(cs => cs.shortName -> cs)
 
-      Dropdown(
-        clazz = ExploreStyles.ConstraintsTileSelector,
-        value = cgOpt.map(cg => ObsIdSet.fromString.reverseGet(cg.obsIds)).orEmpty,
-        onChange = (p: String) => {
-          val newCgOpt =
-            ObsIdSet.fromString
-              .getOption(p)
-              .flatMap(ids => constraintGroups.get(ids))
-          newCgOpt
-            .map(cs =>
-              vod
-                .zoom(ObsEditData.scienceData.andThen(ScienceData.constraints))
-                .set(cs) >>
-                ObsQueries
-                  .updateObservationConstraintSet[IO](programId, List(vod.get.id), cs)
-                  .runAsyncAndForget
-            )
-            .getOrEmpty
-        },
-        options = constraintGroups
-          .map(kv =>
-            new SelectItem[String](
-              value = ObsIdSet.fromString.reverseGet(kv._1),
-              label = kv._2.shortName
-            )
-          )
-          .toList
-      )
-    }
-
-  private def otherObsCount(
-    targetObsMap: SortedMap[Target.Id, TargetWithObs],
-    obsId:        Observation.Id,
-    targetId:     Target.Id
-  ): Int =
-    targetObsMap.get(targetId).fold(0)(summary => (summary.obsIds - obsId).size)
+    Dropdown[ConstraintSet](
+      clazz = ExploreStyles.ConstraintsTileSelector,
+      value = constraintSet.get,
+      onChange = (cs: ConstraintSet) =>
+        // val newCgOpt =
+        //   ObsIdSet.fromString
+        //     .getOption(p)
+        //     .flatMap(ids => constraintGroups.get(ids))
+        // newCgOpt
+        //   .map(cs =>
+        //     vod
+        //       .zoom(ObsEditData.scienceData.andThen(ScienceData.constraints))
+        constraintSet.set(cs) >>
+          ObsQueries
+            .updateObservationConstraintSet[IO](programId, List(observationId), cs)
+            .runAsyncAndForget
+        // )
+        // .getOrEmpty
+      ,
+      options = allConstraintSets
+        .map(cs => new SelectItem[ConstraintSet](value = cs, label = cs.shortName))
+        .toList
+    )
+  // }
 
   private val component =
     ScalaFnComponent
@@ -201,7 +203,7 @@ object ObsTabTiles:
         val asterismAsNel: Option[NonEmptyList[TargetWithId]] =
           potAsterismIds.toOption.flatMap(asterismIdsView =>
             Asterism
-              .fromIdsAndTargets(asterismIdsView.get, props.programSummaries.get.targets)
+              .fromIdsAndTargets(asterismIdsView.get, props.allTargets.get)
               .toTargetWithIdNel
           )
 
@@ -256,21 +258,21 @@ object ObsTabTiles:
               ),
             itcTarget,
             selectedConfig.get,
-            props.programSummaries.get.targets
+            props.allTargets.get
           )
 
         val constraintsSelector =
-          makeConstraintsSelector(props.programId, props.programSummaries, obsViewPot)
-
-        // first target of the obs. We can use it in case there is no target focus
-        val firstTarget = props.targetMap.collect {
-          case (tid, ts) if ts.obsIds.contains(props.obsId) => tid
-        }.headOption
+          makeConstraintsSelector(
+            props.programId,
+            props.obsId,
+            props.observation.zoom(ObsSummary.constraints),
+            props.allConstraintSets
+          )
 
         val skyPlotTile =
           ElevationPlotTile.elevationPlotTile(
             props.userId,
-            props.focusedTarget.orElse(firstTarget),
+            props.focusedTarget.orElse(props.observation.get.scienceTargetIds.headOption),
             observingMode.map(_.siteFor),
             targetCoords,
             vizTime
@@ -316,18 +318,21 @@ object ObsTabTiles:
           )
         )
 
+        def otherObsCount(obsId: Observation.Id, targetId: Target.Id): Int =
+          props.targetObservations.get(targetId).fold(0)(obsIds => (obsIds - obsId).size)
+
         val targetTile = AsterismEditorTile.asterismEditorTile(
           props.userId,
           props.programId,
           ObsIdSet.one(props.obsId),
           potAsterismIds,
-          props.programSummaries.zoom(ProgramSummaries.targets),
+          props.allTargets,
           basicConfiguration,
           vizTimeView,
           obsConf,
           props.focusedTarget,
           setCurrentTarget(props.programId, props.obsId.some),
-          otherObsCount(props.targetMap, props.obsId, _),
+          otherObsCount(props.obsId, _),
           props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
           props.searching,
           "Targets",
@@ -346,13 +351,20 @@ object ObsTabTiles:
             control = _ => constraintsSelector.some,
             controllerClass = ExploreStyles.ConstraintsTile.some
           )(renderInTitle =>
-            ConstraintsPanel(
-              props.programId,
-              ObsIdSet.one(props.obsId),
-              props.programSummaries.zoom(ProgramSummaries.observations),
-              props.undoStacks.zoom(ModelUndoStacks.forObsList[IO]),
-              renderInTitle
-            )
+            <.div
+              // We should probably change the configuration tile to receive a CloneListView
+              // instead of the whole ProgramSummary.
+              // We need to reinstate the UndoStack[ConstraintSet] for that.
+              // For now at least. Eventually we should have a whole UndoCtx[ProgramSummaries]
+              // globally.
+
+              // ConstraintsPanel(
+              //   props.programId,
+              //   ObsIdSet.one(props.obsId),
+              //   props.programSummaries.zoom(ProgramSummaries.observations),
+              //   props.undoStacks.zoom(ModelUndoStacks.forObsList[IO]),
+              //   renderInTitle
+              // )
           )
 
         val configurationTile =
@@ -372,7 +384,7 @@ object ObsTabTiles:
             targetCoords,
             obsConf,
             selectedConfig,
-            props.programSummaries.get.targets
+            props.allTargets.get
           )
 
         props.layouts.renderPotView(l =>

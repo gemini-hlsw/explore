@@ -62,12 +62,13 @@ import react.hotkeys.hooks.*
 import scala.collection.immutable.SortedMap
 import scala.scalajs.js
 import explore.model.TargetWithObs
+import explore.model.TargetList
 
 final case class ObsSummaryTable(
   userId:        Option[User.Id],
   programId:     Program.Id,
   observations:  View[ObservationList],
-  targetsMap:    View[SortedMap[Target.Id, TargetWithObs]],
+  allTargets:    TargetList,
   renderInTitle: Tile.RenderInTitle
 ) extends ReactFnProps(ObsSummaryTable.component)
 
@@ -157,9 +158,10 @@ object ObsSummaryTable extends TableHooks:
         ctx.pushPage(AppTab.Constraints, props.programId, Focused.singleObs(constraintId))
 
       def targetUrl(obsId: Observation.Id, tWId: TargetWithId) = <.a(
-        ^.href := ctx.pageUrl(AppTab.Observations,
-                              props.programId,
-                              Focused.singleObs(obsId, tWId.id.some)
+        ^.href := ctx.pageUrl(
+          AppTab.Observations,
+          props.programId,
+          Focused.singleObs(obsId, tWId.id.some)
         ),
         ^.onClick ==> (e =>
           e.preventDefaultCB *> e.stopPropagationCB *> ctx.pushPage(
@@ -257,14 +259,13 @@ object ObsSummaryTable extends TableHooks:
       )
     }
     // Rows
-    .useMemoBy((props, _, _) => (props.observations.get.toList, props.targetsMap.get))((_, _, _) =>
-      (obsList, targetsMap) =>
+    .useMemoBy((props, _, _) => (props.observations.get.toList, props.allTargets))((_, _, _) =>
+      (obsList, allTargets) =>
         obsList.toList
           .map(obs =>
-            obs -> targetsMap
-              .filter((_, target) => target.obsIds.contains(obs.id))
-              .map((id, target) => TargetWithId(id, target.target))
-              .toList
+            obs -> obs.scienceTargetIds.toList
+              .map(id => allTargets.get(id).map(t => TargetWithId(id, t)))
+              .flattenOption
           )
           .map((obs, targets) =>
             val asterism = AsterismZipper.fromTargets(targets)
