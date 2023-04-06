@@ -3,6 +3,7 @@
 
 package explore.tabs
 
+import cats.Order.given
 import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
@@ -13,10 +14,15 @@ import crystal.react.*
 import crystal.react.hooks.*
 import crystal.react.implicits.*
 import explore.*
+import explore.common.AsterismQueries.ProgramSummaries
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
+import explore.constraints.ConstraintsPanel
 import explore.model.AppContext
+import explore.model.Asterism
+import explore.model.Asterism.*
+import explore.model.AsterismIds
 import explore.model.AsterismZipper
 import explore.model.BasicConfigAndItc
 import explore.model.ConstraintGroup
@@ -24,11 +30,15 @@ import explore.model.Focused
 import explore.model.ModelUndoStacks
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
+import explore.model.ObsSummary
 import explore.model.PAProperties
+import explore.model.TargetList
+import explore.model.TargetWithObs
 import explore.model.display.given
 import explore.model.enums.AgsState
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
+import explore.model.extensions.*
 import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.ItcTarget
 import explore.model.itc.OverridenExposureTime
@@ -44,6 +54,7 @@ import lucuma.ags.AgsAnalysis
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.skycalc.averageParallacticAngle
+import lucuma.core.model.ConstraintSet
 import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
@@ -54,6 +65,7 @@ import lucuma.core.syntax.all.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.ObservingMode
+import lucuma.schemas.model.TargetWithId
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import queries.common.ObsQueriesGQL.*
@@ -66,19 +78,7 @@ import react.resizeDetector.*
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
-import explore.model.TargetWithObs
-import explore.common.AsterismQueries.ProgramSummaries
-import explore.constraints.ConstraintsPanel
-import explore.model.Asterism
-import explore.model.Asterism.*
-import explore.model.extensions.*
-import explore.model.AsterismIds
-import lucuma.schemas.model.TargetWithId
-import cats.Order.given
-import explore.model.TargetList
 import scala.collection.immutable.SortedSet
-import explore.model.ObsSummary
-import lucuma.core.model.ConstraintSet
 
 case class ObsTabTiles(
   userId:             Option[User.Id],

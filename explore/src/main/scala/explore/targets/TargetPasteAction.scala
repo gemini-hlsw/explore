@@ -12,9 +12,12 @@ import crystal.react.View
 import crystal.react.implicits.*
 import explore.common.AsterismQueries
 import explore.common.AsterismQueries.*
+import explore.data.KeyedIndexedList
 import explore.model.AsterismGroup
+import explore.model.AsterismGroupList
 import explore.model.ObsIdSet
 import explore.model.ObsSummary
+import explore.model.ObservationList
 import explore.model.TargetIdSet
 import explore.model.TargetWithObs
 import explore.model.syntax.all.*
@@ -24,8 +27,8 @@ import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
+import monocle.Iso
 import queries.common.TargetQueriesGQL
-import explore.model.AsterismGroupList
 
 import scala.annotation.unused
 import scala.collection.immutable.SortedSet
@@ -39,54 +42,65 @@ object TargetPasteAction {
     targetIds:    TargetIdSet
   )(
     @unused unit: Unit
-  ): ProgramSummaries => ProgramSummaries = agwo =>
+  ): ProgramSummaries => ProgramSummaries = ps =>
     // the groups should always exist unless something changed outside the scope of this context, in which case
     // we do nothing
-    val origAsterismGroups = agwo.asterismGroups
+    val origAsterismGroups = ps.asterismGroups
     val oCurrentGroup      = origAsterismGroups.findContainingObsIds(obsIds)
     val tidSet             = targetIds.toSortedSet
 
-    oCurrentGroup.fold(agwo)(currentGroup =>
+    // Maybe this can be simplified even further?
+
+    oCurrentGroup.fold(ps)(currentGroup =>
       // if the current contains the target ids, that means we are undoing
       val isUndo       = tidSet.subsetOf(currentGroup.targetIds)
       val newTargetIds =
         if (isUndo) currentGroup.targetIds -- tidSet
         else currentGroup.targetIds ++ tidSet
 
-      val newObservations = obsIds.idSet.foldLeft(agwo.observations)((acc, obsId) =>
-        // acc.updatedWith(obsId)(_.map(_.copy(scienceTargetIds = newTargetIds)))
-        acc.updatedValueWith(obsId, _.copy(scienceTargetIds = newTargetIds))
-      )
+      // val newObservations = obsIds.idSet.foldLeft(ps.observations)((acc, obsId) =>
+      //   acc.updatedValueWith(obsId, _.copy(scienceTargetIds = newTargetIds))
+      // )
 
-      val updatedTargetsWithObs = targetIds.idSet.foldLeft(agwo.targetsWithObs)((acc, tid) =>
-        acc.updatedWith(tid)(
-          _.map(two => if (isUndo) two.removeObsIds(obsIds) else two.addObsIds(obsIds))
-        )
-      )
+      // val updatedTargetsWithObs = targetIds.idSet.foldLeft(ps.targetsWithObs)((acc, tid) =>
+      //   acc.updatedWith(tid)(
+      //     _.map(two => if (isUndo) two.removeObsIds(obsIds) else two.addObsIds(obsIds))
+      //   )
+      // )
 
-      // if we're not changing the entire group, we need to split up the group
-      val splitAsterismGroups: AsterismGroupList =
-        if (currentGroup.obsIds === obsIds)
-          origAsterismGroups + currentGroup
-            .copy(targetIds = newTargetIds)
-            .asObsKeyValue // just update
-        else
-          origAsterismGroups - currentGroup.obsIds + currentGroup
-            .removeObsIdsUnsafe(obsIds)
-            .asObsKeyValue +
-            AsterismGroup(obsIds, newTargetIds).asObsKeyValue
+      // // if we're not changing the entire group, we need to split up the group
+      // val splitAsterismGroups: AsterismGroupList =
+      //   if (currentGroup.obsIds === obsIds)
+      //     origAsterismGroups + currentGroup
+      //       .copy(targetIds = newTargetIds)
+      //       .asObsKeyValue // just update
+      //   else
+      //     origAsterismGroups - currentGroup.obsIds + currentGroup
+      //       .removeObsIdsUnsafe(obsIds)
+      //       .asObsKeyValue +
+      //       AsterismGroup(obsIds, newTargetIds).asObsKeyValue
 
-        // if there is already a current group with the same targets, join them
-      val updatedAsterismGroups =
-        origAsterismGroups.findWithTargetIds(newTargetIds).fold(splitAsterismGroups) { grp =>
-          splitAsterismGroups - obsIds - grp.obsIds + grp.addObsIds(obsIds).asObsKeyValue
-        }
+      //   // if there is already a current group with the same targets, join them
+      // val updatedAsterismGroups =
+      //   origAsterismGroups.findWithTargetIds(newTargetIds).fold(splitAsterismGroups) { grp =>
+      //     splitAsterismGroups - obsIds - grp.obsIds + grp.addObsIds(obsIds).asObsKeyValue
+      // }
 
-      ProgramSummaries(
-        asterismGroups = updatedAsterismGroups,
-        targetsWithObs = updatedTargetsWithObs,
-        observations = newObservations
-      )
+      ProgramSummaries.observations
+        .andThen(Iso.id[ObservationList].filterIndex(obsIds.idSet.contains))
+        .andThen(KeyedIndexedList.value)
+        .andThen(ObsSummary.scienceTargetIds)
+        .replace(newTargetIds)(ps)
+
+    // .modify(obsList =>
+    //   obsIds.idSet.foldLeft(obsList)((acc, obsId) =>
+    //     acc.updatedValueWith(obsId, _.copy(scienceTargetIds = newTargetIds))
+    //   )
+
+    // ProgramSummaries(
+    //   targetsWithObs = updatedTargetsWithObs,
+    //   observations = newObservations
+    // )
     )
 
   private def modExpanded(
@@ -118,8 +132,8 @@ object TargetPasteAction {
     FetchClient[IO, ?, ObservationDB]
   ): Action[ProgramSummaries, Unit] =
     Action(getter = getter, setter = setter(obsIds, targetIds))(
-      onSet = (agwo, _) =>
-        val agl           = agwo.asterismGroups
+      onSet = (ps, _) =>
+        val agl           = ps.asterismGroups
         val oCurrentGroup = agl.findContainingObsIds(obsIds)
         oCurrentGroup.foldMap(currentGroup =>
           val isUndo = targetIds.toSortedSet.subsetOf(currentGroup.targetIds)

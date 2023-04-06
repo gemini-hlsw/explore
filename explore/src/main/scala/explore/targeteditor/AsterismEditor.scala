@@ -17,10 +17,14 @@ import explore.components.ui.ExploreStyles
 import explore.config.VizTimeEditor
 import explore.model.AladinFullScreen
 import explore.model.AppContext
+import explore.model.Asterism
+import explore.model.AsterismIds
 import explore.model.AsterismZipper
+import explore.model.AsterismZipper.siderealTargetsEach
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.PAProperties
+import explore.model.TargetList
 import explore.model.enums.AgsState
 import explore.model.reusability.given
 import explore.model.reusability.given
@@ -52,7 +56,10 @@ import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import monocle.Iso
 import monocle.Lens
+import monocle.Optional
+import monocle.Traversal
 import monocle.std.option.some
 import org.typelevel.log4cats.Logger
 import queries.common.TargetQueriesGQL.*
@@ -61,13 +68,6 @@ import react.common.ReactFnProps
 import react.primereact.Button
 
 import java.time.Instant
-import monocle.Traversal
-import monocle.Optional
-import explore.model.Asterism
-import explore.model.TargetList
-import explore.model.AsterismIds
-import monocle.Iso
-import explore.model.AsterismZipper.siderealTargetsEach
 
 case class AsterismEditor(
   userId:          User.Id,

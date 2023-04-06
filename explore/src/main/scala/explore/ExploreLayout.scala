@@ -8,6 +8,7 @@ import cats.syntax.all.*
 import crystal.react.View
 import crystal.react.implicits.*
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.cache.ProgramCache
 import explore.components.state.IfLogged
 import explore.components.ui.ExploreStyles
 import explore.events.ExploreEvent
@@ -40,7 +41,6 @@ import react.primereact.hooks.all.*
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSExportTopLevel
-import explore.cache.ProgramCache
 
 case class ExploreLayout(
   resolution: ResolutionWithProps[Page, View[RootModel]]

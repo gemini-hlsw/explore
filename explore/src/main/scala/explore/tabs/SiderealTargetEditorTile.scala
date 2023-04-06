@@ -3,15 +3,17 @@
 
 package explore.tabs
 
+import cats.Order.given
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.View
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AladinFullScreen
+import explore.model.Asterism
 import explore.model.AsterismZipper
-import explore.model.util.*
 import explore.model.extensions.*
+import explore.model.util.*
 import explore.targeteditor.SiderealTargetEditor
 import explore.undo.UndoStacks
 import japgolly.scalajs.react.*
@@ -21,11 +23,9 @@ import lucuma.core.model.User
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.std.option.some
-import cats.Order.given
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
-import explore.model.Asterism
 
 object SiderealTargetEditorTile {
 

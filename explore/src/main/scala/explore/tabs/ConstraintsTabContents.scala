@@ -17,6 +17,8 @@ import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.numeric.NonNegInt
 import explore.Icons
 import explore.*
+import explore.cache.ProgramCache
+import explore.common.AsterismQueries.ProgramSummaries
 import explore.common.TimingWindowQueries.*
 import explore.common.UserPreferencesQueries.*
 import explore.components.Tile
@@ -25,6 +27,9 @@ import explore.components.ui.ExploreStyles
 import explore.constraints.ConstraintsPanel
 import explore.constraints.ConstraintsSummaryTable
 import explore.constraints.TimingWindowsPanel
+import explore.data.KeyedIndexedList
+import explore.model.ConstraintGroupList
+import explore.model.ObservationList
 import explore.model.*
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
@@ -46,6 +51,7 @@ import japgolly.scalajs.react.callback.CallbackCatsEffect.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ConstraintSet
+import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.User
 import lucuma.refined.*
@@ -74,12 +80,6 @@ import react.resizeDetector.hooks.*
 
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration.*
-import explore.model.ObservationList
-import explore.common.AsterismQueries.ProgramSummaries
-import explore.model.ConstraintGroupList
-import explore.cache.ProgramCache
-import lucuma.core.model.Observation
-import explore.data.KeyedIndexedList
 
 case class ConstraintsTabContents(
   userId:        Option[User.Id],

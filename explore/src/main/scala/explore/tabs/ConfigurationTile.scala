@@ -12,6 +12,7 @@ import explore.components.Tile
 import explore.config.ConfigurationPanel
 import explore.model.BasicConfigAndItc
 import explore.model.ObsConfiguration
+import explore.model.TargetList
 import explore.model.enums.AgsState
 import explore.undo.*
 import explore.utils.*
@@ -26,7 +27,6 @@ import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 import queries.schemas.itc.ITCConversions.*
 import queries.schemas.odb.ObsQueries.*
-import explore.model.TargetList
 
 object ConfigurationTile {
   def configurationTile(

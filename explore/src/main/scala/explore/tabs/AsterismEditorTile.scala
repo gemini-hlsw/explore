@@ -8,16 +8,19 @@ import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
 import crystal.Pot
-import crystal.react.View
 import crystal.implicits.*
+import crystal.react.View
 import crystal.react.implicits.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.config.VizTimeEditor
+import explore.model.Asterism
+import explore.model.AsterismIds
 import explore.model.AsterismZipper
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.PAProperties
+import explore.model.TargetList
 import explore.model.enums.AgsState
 import explore.model.enums.TileSizeState
 import explore.targeteditor.AsterismEditor
@@ -44,9 +47,6 @@ import queries.schemas.odb.ObsQueries
 import react.common.ReactFnProps
 
 import java.time.Instant
-import explore.model.Asterism
-import explore.model.AsterismIds
-import explore.model.TargetList
 
 object AsterismEditorTile:
 

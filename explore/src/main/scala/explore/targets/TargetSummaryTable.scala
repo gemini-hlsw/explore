@@ -19,6 +19,7 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Focused
+import explore.model.TargetList
 import explore.model.TargetWithObs
 import explore.model.enums.AppTab
 import explore.model.enums.TableId
@@ -37,6 +38,7 @@ import lucuma.core.util.NewType
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
+import lucuma.schemas.model.TargetWithId
 import lucuma.typed.{tanstackTableCore => raw}
 import lucuma.typed.{tanstackVirtualCore => rawVirtual}
 import lucuma.ui.primereact.*
@@ -59,8 +61,6 @@ import react.resizeDetector.hooks.*
 import scala.collection.immutable.SortedSet
 
 import scalajs.js.JSConverters.*
-import lucuma.schemas.model.TargetWithId
-import explore.model.TargetList
 
 case class TargetSummaryTable(
   userId:                Option[User.Id],
@@ -130,9 +130,15 @@ object TargetSummaryTable extends TableHooks:
         ) ++
           TargetColumns.Builder.ForProgram(ColDef, _.target.some).AllColumns ++
           List(
-            column(CountColumnId, x => props.targetObservations(x.id).size) // TODO Right align
+            column(
+              CountColumnId,
+              x => props.targetObservations.get(x.id).map(_.size).orEmpty
+            ) // TODO Right align
               .setCell(_.value.toString),
-            column(ObservationsColumnId, x => (x.id, props.targetObservations(x.id).toList))
+            column(
+              ObservationsColumnId,
+              x => (x.id, props.targetObservations.get(x.id).orEmpty.toList)
+            )
               .setCell(cell =>
                 val (tid, obsIds) = cell.value
                 <.span(
@@ -262,7 +268,7 @@ object TargetSummaryTable extends TableHooks:
                     props.selectTargetOrSummary(none).to[IO],
                     ToastCtx[IO].showToast(_)
                   )
-                  .set(props.undoCtx)(selectedRowsIds.map(_ => none[TargetWithObs]))
+                  .set(props.undoCtx)(selectedRowsIds.map(_ => none))
                   .to[IO]
                   .guarantee(deletingTargets.async.set(DeletingTargets(false)))).runAsyncAndForget,
             acceptClass = PrimeStyles.ButtonSmall,
@@ -281,15 +287,17 @@ object TargetSummaryTable extends TableHooks:
               <.div(
                 ExploreStyles.TableSelectionToolbar,
                 HelpIcon("target/main/target-import.md".refined),
-                <.label(^.cls := "pl-compact p-component p-button p-fileupload",
-                        ^.htmlFor := "target-import",
-                        Icons.FileArrowUp
+                <.label(
+                  ^.cls     := "pl-compact p-component p-button p-fileupload",
+                  ^.htmlFor := "target-import",
+                  Icons.FileArrowUp
                 ),
-                <.input(^.tpe := "file",
-                        ^.onChange ==> onTextChange,
-                        ^.id      := "target-import",
-                        ^.name    := "file",
-                        ^.accept  := ".csv"
+                <.input(
+                  ^.tpe     := "file",
+                  ^.onChange ==> onTextChange,
+                  ^.id      := "target-import",
+                  ^.name    := "file",
+                  ^.accept  := ".csv"
                 ),
                 TargetImportPopup(props.programId, filesToImport),
                 Button(

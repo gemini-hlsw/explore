@@ -8,11 +8,11 @@ import explore.model.enums.PosAngleOptions
 import lucuma.core.enums.Site
 import lucuma.core.math.Angle
 import lucuma.core.math.Declination
+import lucuma.core.model.ConstraintSet
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.util.TimeSpan
 
 import scala.collection.immutable.SortedMap
-import lucuma.core.model.ConstraintSet
 
 object all:
 

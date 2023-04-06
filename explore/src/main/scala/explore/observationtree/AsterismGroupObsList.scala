@@ -22,6 +22,7 @@ import explore.model.AsterismGroup
 import explore.model.EmptySiderealTarget
 import explore.model.Focused
 import explore.model.ObsIdSet
+import explore.model.ObsSummary
 import explore.model.TargetWithObs
 import explore.model.enums.AppTab
 import explore.targets.ObservationInsertAction
@@ -50,7 +51,6 @@ import react.primereact.Button
 import react.primereact.ToastRef
 
 import scala.collection.immutable.SortedSet
-import explore.model.ObsSummary
 
 case class AsterismGroupObsList(
   // programSummaries:       View[ProgramSummaries], // TODO Targets are not modified here
@@ -158,9 +158,7 @@ object AsterismGroupObsList:
               selectTargetOrSummary(_).to[IO],
               ToastCtx[IO].showToast(_)
             )
-            .set(undoCtx)(
-              TargetWithObs(EmptySiderealTarget, SortedSet.empty).some
-            )
+            .set(undoCtx)(EmptySiderealTarget.some)
             .to[IO]
         }
         .guarantee(adding.async.set(AddingTargetOrObs(false)))

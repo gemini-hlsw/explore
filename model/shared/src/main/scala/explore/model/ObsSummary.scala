@@ -4,33 +4,33 @@
 package explore.model
 
 import cats.Eq
+import cats.Order.given
 import cats.derived.*
 import cats.syntax.all.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
+import io.circe.Decoder
+import io.circe.JsonObject
+import io.circe.generic.semiauto.*
+import io.circe.refined.given
 import lucuma.core.enums.ObsActiveStatus
 import lucuma.core.enums.ObsStatus
 import lucuma.core.math.Wavelength
+import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target
 import lucuma.core.util.TimeSpan
+import lucuma.core.util.Timestamp
 import lucuma.schemas.decoders.given
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.ConstraintsSummary
 import monocle.Focus
 import org.typelevel.cats.time.*
-import io.circe.generic.semiauto.*
-import lucuma.core.util.Timestamp
-import io.circe.refined.given
 
 import java.time.Instant
-import io.circe.Decoder
-import io.circe.JsonObject
-import lucuma.core.model.ConstraintSet
 import scala.collection.immutable.SortedSet
-import cats.Order.given
 
 case class ObsSummary(
   id:                 Observation.Id,

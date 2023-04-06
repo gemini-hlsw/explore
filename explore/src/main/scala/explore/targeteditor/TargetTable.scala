@@ -18,11 +18,13 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AladinFullScreen
 import explore.model.AppContext
+import explore.model.AsterismIds
 import explore.model.AsterismZipper
 import explore.model.ObsIdSet
+import explore.model.TargetList
 import explore.model.enums.TableId
-import explore.model.reusability.given
 import explore.model.extensions.*
+import explore.model.reusability.given
 import explore.syntax.ui.*
 import explore.targets.TargetColumns
 import japgolly.scalajs.react.*
@@ -51,8 +53,6 @@ import react.primereact.Button
 import java.time.Instant
 
 import scalajs.js.JSConverters.*
-import explore.model.TargetList
-import explore.model.AsterismIds
 
 case class TargetTable(
   userId:         Option[User.Id],

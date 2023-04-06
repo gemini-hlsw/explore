@@ -9,3 +9,12 @@ some queries and classes in ObsQueriesGQL, ObsQueries
 Put ProgramSummaries somewhere else
 
 most methods of AsterismGroup, ConstraintGroup
+
+
+
+idea: ConditionalAligner??
+
+a condition accumulator....???
+maybe afterwards.....
+
+

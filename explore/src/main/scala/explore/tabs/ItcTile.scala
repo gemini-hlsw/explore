@@ -11,6 +11,7 @@ import explore.itc.ItcGraphPanel
 import explore.itc.ItcPanelProps
 import explore.itc.ItcPanelTitle
 import explore.model.BasicConfigAndItc
+import explore.model.TargetList
 import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.ItcTarget
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -19,7 +20,6 @@ import lucuma.core.model.User
 import lucuma.schemas.model.ObservingMode
 import lucuma.ui.syntax.all.given
 import queries.schemas.odb.ObsQueries.*
-import explore.model.TargetList
 
 object ItcTile:
 

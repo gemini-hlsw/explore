@@ -17,9 +17,12 @@ import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.*
+import explore.cache.ProgramCache
+import explore.common.AsterismQueries.ProgramSummaries
 import explore.common.UserPreferencesQueries.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
+import explore.data.KeyedIndexedList
 import explore.model.*
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
@@ -49,6 +52,7 @@ import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
+import monocle.Iso
 import org.scalajs.dom.window
 import queries.common.ObsQueriesGQL.*
 import queries.common.UserPreferencesQueriesGQL.*
@@ -62,10 +66,6 @@ import react.resizeDetector.*
 import react.resizeDetector.hooks.*
 
 import scala.concurrent.duration.*
-import explore.cache.ProgramCache
-import explore.common.AsterismQueries.ProgramSummaries
-import monocle.Iso
-import explore.data.KeyedIndexedList
 
 case class ObsTabContents(
   userId:     Option[User.Id],

@@ -18,6 +18,7 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ConstraintGroup
+import explore.model.ConstraintGroupList
 import explore.model.Focused
 import explore.model.ObsIdSet
 import explore.model.enums.AppTab
@@ -46,7 +47,6 @@ import react.common.ReactFnProps
 import scala.collection.immutable.SortedSet
 
 import scalajs.js.JSConverters.*
-import explore.model.ConstraintGroupList
 
 case class ConstraintsSummaryTable(
   userId:         Option[User.Id],

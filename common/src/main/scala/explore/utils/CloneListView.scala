@@ -3,10 +3,10 @@
 
 package explore.utils
 
-import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
-import crystal.ViewListF
-import crystal.ViewF
 import cats.Monad
+import crystal.ViewF
+import crystal.ViewListF
+import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
 // import cats.data.NonEmptyList
 
 // TODO Move to crystal

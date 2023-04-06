@@ -7,6 +7,7 @@ import cats.Eq
 import cats.data.NonEmptyList
 import cats.derived.*
 import cats.syntax.all.*
+import explore.model.extensions.*
 import lucuma.core.data.Zipper
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Epoch
@@ -17,7 +18,6 @@ import lucuma.refined.*
 import lucuma.schemas.model.TargetWithId
 import lucuma.schemas.model.*
 import monocle.*
-import explore.model.extensions.*
 
 import java.time.Instant
 

@@ -4,15 +4,16 @@
 package explore.targeteditor
 
 import cats.Endo
+import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
+import crystal.implicits.*
 import crystal.react.View
 import crystal.react.ViewOpt
 import crystal.react.hooks.*
 import crystal.react.implicits.*
-import crystal.implicits.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.string.*
 import explore.DefaultErrorPolicy
@@ -23,6 +24,7 @@ import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.model.AladinFullScreen
 import explore.model.AppContext
+import explore.model.Asterism
 import explore.model.AsterismZipper
 import explore.model.ExploreModelValidators
 import explore.model.ObsConfiguration
@@ -70,8 +72,6 @@ import react.primereact.Message
 
 import java.time.Instant
 import scala.collection.immutable.TreeSeqMap
-import cats.data.NonEmptyList
-import explore.model.Asterism
 
 case class SiderealTargetEditor(
   userId:        User.Id,

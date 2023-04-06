@@ -19,6 +19,8 @@ import explore.model.AsterismZipper
 import explore.model.Focused
 import explore.model.ObsIdSet
 import explore.model.ObsSummary
+import explore.model.TargetList
+import explore.model.TargetWithObs
 import explore.model.display.given
 import explore.model.enums.AppTab
 import explore.model.enums.TableId
@@ -61,8 +63,6 @@ import react.hotkeys.hooks.*
 
 import scala.collection.immutable.SortedMap
 import scala.scalajs.js
-import explore.model.TargetWithObs
-import explore.model.TargetList
 
 final case class ObsSummaryTable(
   userId:        Option[User.Id],

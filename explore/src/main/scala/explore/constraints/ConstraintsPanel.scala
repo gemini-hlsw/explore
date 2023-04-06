@@ -17,6 +17,8 @@ import explore.components.undo.UndoButtons
 import explore.given
 import explore.model.AppContext
 import explore.model.Help
+import explore.model.ObsIdSet
+import explore.model.ObservationList
 import explore.model.display.*
 import explore.undo.UndoContext
 import explore.undo.*
@@ -44,9 +46,6 @@ import lucuma.ui.utils.given
 import monocle.Lens
 import react.common.ReactFnProps
 import react.primereact.PrimeStyles
-import explore.model.ObservationList
-// import cats.data.NonEmptyList
-import explore.model.ObsIdSet
 
 // TODO Consider passing the whole ObsList, and a list of obs ids.
 // So that we can reuse the ObsList UndoStacks ???

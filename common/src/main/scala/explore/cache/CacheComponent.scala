@@ -3,18 +3,18 @@
 
 package explore.cache
 
+import cats.effect.Resource
+import cats.effect.kernel.Deferred
+import cats.effect.syntax.all.given
+import cats.syntax.all.given
+import crystal.react.View
+import crystal.react.hooks.*
+import fs2.concurrent.SignallingRef
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.Context
-import japgolly.scalajs.react.vdom.html_<^.*
-import crystal.react.hooks.*
-import lucuma.ui.syntax.pot.*
-import cats.effect.Resource
 import japgolly.scalajs.react.util.DefaultEffects.{Async => DefaultA}
-import fs2.concurrent.SignallingRef
-import cats.effect.kernel.Deferred
-import cats.syntax.all.given
-import cats.effect.syntax.all.given
-import crystal.react.View
+import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.ui.syntax.pot.*
 
 trait CacheComponent[Props: Reusability, A]:
   private type F[T] = DefaultA[T]

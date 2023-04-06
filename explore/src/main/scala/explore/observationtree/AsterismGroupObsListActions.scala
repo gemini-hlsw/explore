@@ -12,27 +12,27 @@ import crystal.react.View
 import crystal.react.implicits.*
 import explore.common.AsterismQueries
 import explore.common.AsterismQueries.*
+import explore.data.KeyedIndexedList
 import explore.model.AsterismGroup
 import explore.model.ObsIdSet
+import explore.model.ObsSummary
+import explore.model.ObservationList
+import explore.model.TargetList
 import explore.model.TargetWithObs
 import explore.model.syntax.all.*
 import explore.undo.*
 import japgolly.scalajs.react.callback.Callback
+import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
+import monocle.Iso
 import queries.common.TargetQueriesGQL
 
 import scala.annotation.unused
 import scala.collection.immutable.SortedSet
-import monocle.Iso
-import lucuma.core.model.Observation
-import explore.model.ObservationList
-import explore.data.KeyedIndexedList
-import explore.model.ObsSummary
-import explore.model.TargetList
 
 object AsterismGroupObsListActions {
   // private def obsDropGetter(

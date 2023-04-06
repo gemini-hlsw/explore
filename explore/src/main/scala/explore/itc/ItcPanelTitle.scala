@@ -17,6 +17,7 @@ import explore.components.ui.ExploreStyles
 import explore.events.*
 import explore.model.AppContext
 import explore.model.BasicConfigAndItc
+import explore.model.TargetList
 import explore.model.WorkerClients.*
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.ItcChartExposureTime
@@ -40,7 +41,6 @@ import react.primereact.Dropdown
 import react.primereact.SelectItem
 
 import scala.scalajs.js.JSConverters.*
-import explore.model.TargetList
 
 case class ItcPanelTitle(
   observingMode:            Option[ObservingMode],

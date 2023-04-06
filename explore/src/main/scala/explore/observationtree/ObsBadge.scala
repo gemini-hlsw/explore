@@ -3,6 +3,8 @@
 
 package explore.observationtree
 
+import cats.Eq
+import cats.derived.*
 import cats.syntax.all.*
 import crystal.react.View
 import crystal.react.reuse.*
@@ -31,8 +33,6 @@ import react.floatingui.syntax.*
 import react.primereact.Button
 import react.primereact.InputSwitch
 import react.primereact.TooltipOptions
-import cats.Eq
-import cats.derived.*
 
 case class ObsBadge(
   obs:               ObsSummary,

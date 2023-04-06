@@ -26,6 +26,7 @@ import explore.events.*
 import explore.model.AppContext
 import explore.model.BasicConfigAndItc
 import explore.model.LoadingState
+import explore.model.TargetList
 import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.ItcPicklers.given
@@ -61,7 +62,6 @@ import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
 
 import java.util.UUID
-import explore.model.TargetList
 
 case class ItcGraphPanel(
   uid:                      User.Id,

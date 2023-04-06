@@ -50,6 +50,7 @@ import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.util.NewType
 import lucuma.refined.*
+import lucuma.schemas.model.TargetWithId
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
@@ -75,7 +76,6 @@ import react.primereact.hooks.all.*
 import java.time.Duration
 import java.time.Instant
 import scala.concurrent.duration.*
-import lucuma.schemas.model.TargetWithId
 
 case class AladinCell(
   uid:        User.Id,
@@ -107,7 +107,7 @@ case class AladinCell(
 
 trait AladinCommon:
   given Reusability[AsterismZipper] = Reusability.by(x => (x.toSiderealTracking, x.focus.id))
-  given Reusability[AgsState] = Reusability.byEq
+  given Reusability[AgsState]       = Reusability.byEq
 
 object AladinCell extends ModelOptics with AladinCommon:
   private object ManualAgsOverride extends NewType[Boolean]

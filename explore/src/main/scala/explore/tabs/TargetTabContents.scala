@@ -18,12 +18,15 @@ import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.numeric.NonNegInt
 import explore.Icons
 import explore.*
+import explore.cache.ProgramCache
 import explore.common.AsterismQueries.*
 import explore.common.UserPreferencesQueries.*
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
+import explore.data.KeyedIndexedList
 import explore.given
+import explore.model.ObsSummary
 import explore.model.*
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
@@ -61,6 +64,8 @@ import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
+import monocle.Iso
+import monocle.Traversal
 import org.scalajs.dom.window
 import queries.common.AsterismQueriesGQL.*
 import queries.common.ObsQueriesGQL
@@ -79,12 +84,6 @@ import java.time.Instant
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration.*
-import explore.cache.ProgramCache
-
-import explore.model.ObsSummary
-import explore.data.KeyedIndexedList
-import monocle.Iso
-import monocle.Traversal
 
 case class TargetTabContents(
   userId:            Option[User.Id],
@@ -480,10 +479,10 @@ object TargetTabContents extends TwoPanels:
           targets.get
             .get(id)
             .flatMap {
-              case TargetWithId(_, t @ Target.Sidereal(_, _, _, _)) =>
+              case t @ Target.Sidereal(_, _, _, _) =>
                 // TODO PM correction
                 Target.Sidereal.baseCoordinates.get(t).some
-              case _                                                => none
+              case _                               => none
             }
         )
 

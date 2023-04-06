@@ -6,17 +6,23 @@ package explore.common
 import cats.Eq
 import cats.Order
 import cats.Order.given
+import cats.data.NonEmptySet
 import cats.effect.Async
 import cats.implicits.*
 import clue.FetchClient
 import clue.data.syntax.*
 import explore.DefaultErrorPolicy
+import explore.data.KeyedIndexedList
 import explore.model.AsterismGroup
+import explore.model.AsterismGroupList
+import explore.model.AsterismIds
+import explore.model.ConstraintGroupList
 import explore.model.ObsIdSet
 import explore.model.ObsSummary
-import cats.data.NonEmptySet
-
+import explore.model.ObservationList
+import explore.model.TargetList
 import explore.model.TargetWithObs
+import explore.model.TargetWithObsList
 import explore.model.syntax.all.*
 import japgolly.scalajs.react.*
 import lucuma.core.model.Observation
@@ -30,18 +36,9 @@ import monocle.Focus
 import monocle.Getter
 import queries.common.AsterismQueriesGQL.*
 import queries.common.ObsQueriesGQL.*
-import explore.model.TargetList
-import explore.model.ObservationList
-import explore.model.AsterismGroupList
-import explore.model.TargetWithObsList
-import explore.model.ConstraintGroupList
 
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
-// import explore.model.Focused.obsSet
-// import explore.model.TargetWithIdAndObs.targetWithObs
-import explore.data.KeyedIndexedList
-import explore.model.AsterismIds
 // import lucuma.core.model.ConstraintSet
 // import lucuma.schemas.model.TargetWithId
 // import monocle.Iso

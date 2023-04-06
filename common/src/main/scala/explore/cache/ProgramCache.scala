@@ -3,29 +3,30 @@
 
 package explore.cache
 
+import cats.Order.given
 import cats.effect.IO
+import cats.effect.kernel.Resource
 import cats.syntax.all.given
+import clue.StreamingClient
+import explore.DefaultErrorPolicy
+import explore.common.AsterismQueries.*
+import explore.model.TargetWithObs
 import japgolly.scalajs.react.*
 import lucuma.core.model.Program
-import scala.collection.immutable.SortedMap
 import lucuma.core.model.Target
-import cats.effect.kernel.Resource
-import queries.common.TargetQueriesGQL
-import explore.DefaultErrorPolicy
-import lucuma.ui.reusability.given
-import clue.StreamingClient
 import lucuma.schemas.ObservationDB
-import cats.Order.given
-import monocle.Lens
+import lucuma.schemas.ObservationDB.Enums.Existence
+import lucuma.ui.reusability.given
 import monocle.Focus
-import explore.model.TargetWithObs
-import scala.collection.immutable.SortedSet
-import explore.common.AsterismQueries.*
+import monocle.Lens
 import queries.common.AsterismQueriesGQL
 import queries.common.AsterismQueriesGQL.AsterismGroupObsQuery
 import queries.common.ObsQueriesGQL
-import lucuma.schemas.ObservationDB.Enums.Existence
 import queries.common.ObsQueriesGQL.ObsEditQuery.Data.observation
+import queries.common.TargetQueriesGQL
+
+import scala.collection.immutable.SortedMap
+import scala.collection.immutable.SortedSet
 
 case class ProgramCache(programId: Program.Id)(using client: StreamingClient[IO, ObservationDB]):
   given StreamingClient[IO, ObservationDB] = client

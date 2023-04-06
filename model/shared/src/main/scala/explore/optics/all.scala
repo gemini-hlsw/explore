@@ -3,16 +3,16 @@
 
 package explore.optics
 
+import cats.Applicative
 import cats.syntax.all.*
 import monocle.*
 import monocle.function.At
 import monocle.function.At.atMap
+import monocle.function.FilterIndex
 import monocle.function.Index
 import monocle.function.Index.fromAt
 
 import scala.collection.immutable.TreeSeqMap
-import monocle.function.FilterIndex
-import cats.Applicative
 
 object all extends ModelOptics {
 

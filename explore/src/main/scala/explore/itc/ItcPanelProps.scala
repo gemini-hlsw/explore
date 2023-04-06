@@ -11,6 +11,7 @@ import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.events.ItcMessage
 import explore.model.BasicConfigAndItc
+import explore.model.TargetList
 import explore.model.WorkerClients.ItcClient
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.ItcChartExposureTime
@@ -29,7 +30,6 @@ import queries.schemas.itc.ITCConversions.*
 import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
 import workers.WorkerClient
-import explore.model.TargetList
 
 trait ItcPanelProps(
   observingMode:            Option[ObservingMode],

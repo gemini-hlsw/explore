@@ -3,18 +3,18 @@
 
 package explore.data
 
-import cats.Eq
-
-import scala.collection.immutable.TreeSeqMap
-import monocle.function.FilterIndex
-import monocle.Traversal
 import cats.Applicative
+import cats.Eq
 import cats.syntax.all.given
 import monocle.Focus
 import monocle.Lens
-import monocle.function.Index
+import monocle.Traversal
 import monocle.function.At
+import monocle.function.FilterIndex
+import monocle.function.Index
 import monocle.function.Index.fromAt
+
+import scala.collection.immutable.TreeSeqMap
 
 // Each element has a unique Key.
 // Efficient loookup of elements and positions by Key.
