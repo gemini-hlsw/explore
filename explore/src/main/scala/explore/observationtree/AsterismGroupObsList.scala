@@ -13,7 +13,6 @@ import crystal.react.hooks.*
 import crystal.react.implicits.*
 import explore.DefaultErrorPolicy
 import explore.Icons
-import explore.common.AsterismQueries.*
 import explore.common.TargetQueries
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
@@ -23,8 +22,10 @@ import explore.model.EmptySiderealTarget
 import explore.model.Focused
 import explore.model.ObsIdSet
 import explore.model.ObsSummary
+import explore.model.ProgramSummaries
 import explore.model.TargetWithObs
 import explore.model.enums.AppTab
+import explore.model.syntax.all.*
 import explore.targets.ObservationInsertAction
 import explore.targets.TargetAddDeleteActions
 import explore.undo.*
@@ -53,7 +54,6 @@ import react.primereact.ToastRef
 import scala.collection.immutable.SortedSet
 
 case class AsterismGroupObsList(
-  // programSummaries:       View[ProgramSummaries], // TODO Targets are not modified here
   programId:              Program.Id,
   focused:                Focused,
   expandedIds:            View[SortedSet[ObsIdSet]],
@@ -114,7 +114,7 @@ object AsterismGroupObsList:
       destIds     <- ObsIdSet.fromString.getOption(destination.droppableId)
       draggedIds  <- getDraggedIds(result.draggableId, props)
       destAstIds  <-
-        props.programSummaries.get.asterismGroups.get(destIds) // .map(AsterismGroup(destIds, _))
+        props.programSummaries.get.asterismGroups.get(destIds)
       srcAg       <- props.programSummaries.get.asterismGroups.findContainingObsIds(draggedIds)
     } yield (destIds, destAstIds, draggedIds, srcAg.obsIds)
 

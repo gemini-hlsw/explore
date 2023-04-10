@@ -18,9 +18,8 @@ import explore.config.VizTimeEditor
 import explore.model.AladinFullScreen
 import explore.model.AppContext
 import explore.model.Asterism
-import explore.model.AsterismIds
-import explore.model.Asterism
 import explore.model.Asterism.siderealTargetsEach
+import explore.model.AsterismIds
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.PAProperties
@@ -96,17 +95,6 @@ object AsterismEditor extends AsterismModifier:
 
   private object AreAdding extends NewType[Boolean]
   private type AreAdding = AreAdding.Type
-
-  // private def onCloneTarget(
-  //   id:        Target.Id,
-  //   asterism:  View[Asterism],
-  //   setTarget: (Option[Target.Id], SetRouteVia) => Callback
-  // )(
-  //   newTwid:   TargetWithId
-  // ): Callback =
-  //   asterism
-  //     .mod(_.updated(newTwid.id, newTwid.target)) >>
-  //     setTarget(newTwid.id.some, SetRouteVia.HistoryPush)
 
   private def onCloneTarget(
     id:          Target.Id,

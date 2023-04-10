@@ -9,9 +9,9 @@ import cats.syntax.all.*
 import clue.FetchClient
 import crystal.react.View
 import crystal.react.implicits.*
-import explore.common.AsterismQueries.*
 import explore.model.ObsIdSet
 import explore.model.ObsSummary
+import explore.model.ProgramSummaries
 import explore.model.syntax.all.*
 import explore.undo.*
 import lucuma.core.model.Observation

@@ -14,14 +14,13 @@ import crystal.react.*
 import crystal.react.hooks.*
 import crystal.react.implicits.*
 import explore.*
-import explore.common.AsterismQueries.ProgramSummaries
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
 import explore.constraints.ConstraintsPanel
 import explore.model.AppContext
-import explore.model.AsterismIds
 import explore.model.Asterism
+import explore.model.AsterismIds
 import explore.model.BasicConfigAndItc
 import explore.model.ConstraintGroup
 import explore.model.Focused
@@ -30,6 +29,7 @@ import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.ObsSummary
 import explore.model.PAProperties
+import explore.model.ProgramSummaries
 import explore.model.TargetList
 import explore.model.TargetWithObs
 import explore.model.display.given
@@ -43,6 +43,8 @@ import explore.model.itc.OverridenExposureTime
 import explore.model.layout.*
 import explore.optics.*
 import explore.optics.all.*
+import explore.undo.UndoContext
+import explore.undo.UndoSetter
 import explore.undo.UndoStacks
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -66,6 +68,7 @@ import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.model.TargetWithId
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import monocle.Iso
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ObsQueries
 import queries.schemas.odb.ObsQueries.*
@@ -77,25 +80,16 @@ import react.resizeDetector.*
 import java.time.Instant
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
-import monocle.Iso
-import explore.undo.UndoContext
-import explore.undo.UndoSetter
 
 case class ObsTabTiles(
   userId:             Option[User.Id],
   programId:          Program.Id,
-  // obsId:            Observation.Id,
   backButton:         VdomNode,
-  // observation:        View[ObsSummary],
   obsUndoCtx:         UndoSetter[ObsSummary],
-  // allTargets:         View[TargetList],
   allTargetsUndoCtx:  UndoSetter[TargetList],
   allConstraintSets:  Set[ConstraintSet],
   targetObservations: Map[Target.Id, SortedSet[Observation.Id]],
-  // programSummaries: ProgramSummaries,
   focusedTarget:      Option[Target.Id],
-  // asterism:           Asterism,
-  // targetObservations: Map[Target.Id, SortedSet[Observation.Id]],
   undoStacks:         View[ModelUndoStacks[IO]],
   searching:          View[Set[Target.Id]],
   defaultLayouts:     LayoutsMap,
@@ -112,38 +106,17 @@ object ObsTabTiles:
   private def makeConstraintsSelector(
     programId:         Program.Id,
     observationId:     Observation.Id,
-    // programSummaries: View[ProgramSummaries],
-    // obsView:          Pot[View[ObsEditData]]
     constraintSet:     View[ConstraintSet],
     allConstraintSets: Set[ConstraintSet]
   )(using FetchClient[IO, ?, ObservationDB]): VdomNode =
-    // obsView.renderPot { vod =>
-    //   val constraintGroups               = programSummaries.get.constraintGroups
-    //   val cgOpt: Option[ConstraintGroup] =
-    //     constraintGroups
-    //       .find(_._1.contains(vod.get.id))
-    //       .map(ConstraintGroup.fromTuple)
-    // val csByName: Map[String, ConstraintSet] = allConstraintSets.map(cs => cs.shortName -> cs)
-
     Dropdown[ConstraintSet](
       clazz = ExploreStyles.ConstraintsTileSelector,
       value = constraintSet.get,
       onChange = (cs: ConstraintSet) =>
-        // val newCgOpt =
-        //   ObsIdSet.fromString
-        //     .getOption(p)
-        //     .flatMap(ids => constraintGroups.get(ids))
-        // newCgOpt
-        //   .map(cs =>
-        //     vod
-        //       .zoom(ObsEditData.scienceData.andThen(ScienceData.constraints))
         constraintSet.set(cs) >>
           ObsQueries
             .updateObservationConstraintSet[IO](programId, List(observationId), cs)
-            .runAsyncAndForget
-        // )
-        // .getOrEmpty
-      ,
+            .runAsyncAndForget,
       options = allConstraintSets
         .map(cs => new SelectItem[ConstraintSet](value = cs, label = cs.shortName))
         .toList
@@ -289,10 +262,6 @@ object ObsTabTiles:
           tid: Option[Target.Id],
           via: SetRouteVia
         ): Callback =
-          // (potAsterism.toOption, tid)
-          //   // When selecting the current target focus the asterism zipper
-          //   .mapN((pot, tid) => pot.mod(_.map(_.focusOn(tid))))
-          //   .getOrEmpty *>
           // Set the route base on the selected target
           ctx.setPageVia(
             AppTab.Observations,
@@ -346,17 +315,6 @@ object ObsTabTiles:
           backButton = none
         )
 
-        // val obsUndoCtx: UndoContext[ObsSummary] =
-        //   UndoContext(
-        //     props.undoStacks.zoom(
-        //       ModelUndoStacks
-        //         .forObsList[IO]
-        //         .andThen(Iso.id[ObservationList].at(props.obsId))
-        //         .andThen(KeyedIndexedList.value)
-        //     ),
-        //     props.observation
-        //   )
-
         // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper
         // so that the constraints selector dropdown always appears in front of any other tiles. If more
         // than one tile ends up having dropdowns in the tile header, we'll need something more complex such
@@ -374,10 +332,6 @@ object ObsTabTiles:
               props.programId,
               ObsIdSet.one(props.obsId),
               props.obsUndoCtx.zoom(ObsSummary.constraints),
-              // props.observation.zoom(ObsSummary.constraints),
-              // props.undoStacks
-              //   .zoom(ModelUndoStacks.forConstraintGroup[IO])
-              //   .zoom(atMapWithDefault(ObsIdSet.one(props.obsId), UndoStacks.empty)),
               renderInTitle
             )
           )

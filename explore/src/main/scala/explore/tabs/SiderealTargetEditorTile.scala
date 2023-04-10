@@ -11,7 +11,6 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AladinFullScreen
 import explore.model.Asterism
-import explore.model.Asterism
 import explore.model.extensions.*
 import explore.model.util.*
 import explore.targeteditor.SiderealTargetEditor
@@ -20,13 +19,13 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Target
 import lucuma.core.model.User
+import lucuma.schemas.model.TargetWithId
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.std.option.some
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
-import lucuma.schemas.model.TargetWithId
 
 object SiderealTargetEditorTile {
 

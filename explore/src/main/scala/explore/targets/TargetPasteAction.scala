@@ -11,13 +11,13 @@ import clue.data.syntax.*
 import crystal.react.View
 import crystal.react.implicits.*
 import explore.common.AsterismQueries
-import explore.common.AsterismQueries.*
 import explore.data.KeyedIndexedList
 import explore.model.AsterismGroup
 import explore.model.AsterismGroupList
 import explore.model.ObsIdSet
 import explore.model.ObsSummary
 import explore.model.ObservationList
+import explore.model.ProgramSummaries
 import explore.model.TargetIdSet
 import explore.model.TargetWithObs
 import explore.model.syntax.all.*
@@ -58,49 +58,11 @@ object TargetPasteAction {
         if (isUndo) currentGroup.targetIds -- tidSet
         else currentGroup.targetIds ++ tidSet
 
-      // val newObservations = obsIds.idSet.foldLeft(ps.observations)((acc, obsId) =>
-      //   acc.updatedValueWith(obsId, _.copy(scienceTargetIds = newTargetIds))
-      // )
-
-      // val updatedTargetsWithObs = targetIds.idSet.foldLeft(ps.targetsWithObs)((acc, tid) =>
-      //   acc.updatedWith(tid)(
-      //     _.map(two => if (isUndo) two.removeObsIds(obsIds) else two.addObsIds(obsIds))
-      //   )
-      // )
-
-      // // if we're not changing the entire group, we need to split up the group
-      // val splitAsterismGroups: AsterismGroupList =
-      //   if (currentGroup.obsIds === obsIds)
-      //     origAsterismGroups + currentGroup
-      //       .copy(targetIds = newTargetIds)
-      //       .asObsKeyValue // just update
-      //   else
-      //     origAsterismGroups - currentGroup.obsIds + currentGroup
-      //       .removeObsIdsUnsafe(obsIds)
-      //       .asObsKeyValue +
-      //       AsterismGroup(obsIds, newTargetIds).asObsKeyValue
-
-      //   // if there is already a current group with the same targets, join them
-      // val updatedAsterismGroups =
-      //   origAsterismGroups.findWithTargetIds(newTargetIds).fold(splitAsterismGroups) { grp =>
-      //     splitAsterismGroups - obsIds - grp.obsIds + grp.addObsIds(obsIds).asObsKeyValue
-      // }
-
       ProgramSummaries.observations
         .andThen(Iso.id[ObservationList].filterIndex(obsIds.idSet.contains))
         .andThen(KeyedIndexedList.value)
         .andThen(ObsSummary.scienceTargetIds)
         .replace(newTargetIds)(ps)
-
-    // .modify(obsList =>
-    //   obsIds.idSet.foldLeft(obsList)((acc, obsId) =>
-    //     acc.updatedValueWith(obsId, _.copy(scienceTargetIds = newTargetIds))
-    //   )
-
-    // ProgramSummaries(
-    //   targetsWithObs = updatedTargetsWithObs,
-    //   observations = newObservations
-    // )
     )
 
   private def modExpanded(

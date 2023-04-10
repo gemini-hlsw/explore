@@ -18,7 +18,6 @@ import eu.timepit.refined.types.numeric.NonNegInt
 import explore.Icons
 import explore.*
 import explore.cache.ProgramCache
-import explore.common.AsterismQueries.ProgramSummaries
 import explore.common.TimingWindowQueries.*
 import explore.common.UserPreferencesQueries.*
 import explore.components.Tile
@@ -30,6 +29,7 @@ import explore.constraints.TimingWindowsPanel
 import explore.data.KeyedIndexedList
 import explore.model.ConstraintGroupList
 import explore.model.ObservationList
+import explore.model.ProgramSummaries
 import explore.model.*
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
@@ -62,6 +62,7 @@ import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
 import monocle.Focus
+import monocle.Iso
 import org.scalajs.dom.window
 import org.typelevel.log4cats.Logger
 import queries.common.ObsQueriesGQL
@@ -79,7 +80,6 @@ import react.resizeDetector.hooks.*
 
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration.*
-import monocle.Iso
 
 case class ConstraintsTabContents(
   userId:        Option[User.Id],

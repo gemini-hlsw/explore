@@ -34,6 +34,7 @@ import explore.model.enums.SelectedPanel
 import explore.model.layout.*
 import explore.model.layout.unsafe.given
 import explore.model.reusability.given
+import explore.model.syntax.all.*
 import explore.observationtree.AsterismGroupObsList
 import explore.optics.*
 import explore.optics.all.*
@@ -173,11 +174,6 @@ object TargetTabContents extends TwoPanels:
     )
   )
 
-  // private def otherObsCount(targetMap: TargetWithObsList, obsIds: ObsIdSet)(
-  //   targetId: Target.Id
-  // ): Int =
-  //   targetMap.get(targetId).fold(0)(tg => (tg.obsIds -- obsIds.toSortedSet).size)
-
   private def renderFn(
     props:             Props,
     programSummaries:  View[ProgramSummaries],
@@ -192,11 +188,6 @@ object TargetTabContents extends TwoPanels:
 
     val psUndoCtx: UndoContext[ProgramSummaries] =
       UndoContext(props.psUndoStacks, programSummaries)
-
-    // val targetsWithObs: TargetWithObsList = programSummaries.get.targetsWithObs
-
-    // val targetMap: View[TargetWithObsList] = // This can't be done anymore
-    //   programSummaries.zoom(ProgramSummaries.targets)
 
     val targets: View[TargetList] = programSummaries.zoom(ProgramSummaries.targets)
 
@@ -305,77 +296,6 @@ object TargetTabContents extends TwoPanels:
       val groupIds  = asterismGroup.obsIds
       val targetIds = asterismGroup.targetIds
 
-      // val asterism: Option[Asterism] =
-      //   Asterism.fromSet
-      //     .get(
-      //       targetIds.map(id => targets.get.get(id).map(t => TargetWithId(id, t)))
-      //     )
-      // .map(a => props.focused.target.map(t => a.focusOn(t)).getOrElse(a))
-
-      // val getAsterism: ProgramSummaries => Option[Asterism] = _ => asterism
-
-      // def modAsterism(
-      //   mod: Option[Asterism] => Option[Asterism]
-      // ): ProgramSummaries => ProgramSummaries = ps =>
-      // val asterismGroups = ps.asterismGroups
-      // val targetsWithObs = ps.targetsWithObs
-      // val moddedAsterism = mod(asterism)
-      // val newTargetIds   = SortedSet.from(moddedAsterism.foldMap(_.ids.toList))
-
-      // // make sure any added targets are in the map and update modified ones.
-      // val addedIds  = newTargetIds -- targetIds
-      // // if the last target is deleted from the asterism, moddedAsterism is None
-      // val tgUpdate1 =
-      //   moddedAsterism.fold(targetsWithObs)(_.asList.foldRight(targetsWithObs) {
-      //     case (twid, twobs) =>
-      //       if (addedIds.contains(twid.id))
-      //         // it's new to this asterism, but the target itself may or may not be new. So we
-      //         // either add a new target group or update the existing one.
-      //         twobs.updatedWith(twid.id)(
-      //           _.map(_.addObsIds(idsToEdit).copy(target = twid.target))
-      //             .orElse(TargetWithObs(twid.target, idsToEdit.toSortedSet).some)
-      //         )
-      //       else // just update the current target, observations should be the same
-      //         twobs.updatedWith(twid.id)(_.map(_.copy(target = twid.target)))
-      //   })
-
-      // val removedIds = targetIds -- newTargetIds
-
-      // If we removed a target, just update the observation ids for that target group
-      // val updatedTargetsWithObs = removedIds.foldRight(tgUpdate1) { case (id, twobs) =>
-      //   twobs.updatedWith(id)(_.map(_.removeObsIds(idsToEdit)))
-      // }
-
-      // val splitAsterisms =
-      //   if (targetIds === newTargetIds)
-      //     asterismGroups
-      //   else if (idsToEdit === groupIds) {
-      //     asterismGroups + asterismGroup.copy(targetIds = newTargetIds).asObsKeyValue
-      //   } else {
-      //     // Since we're editing a subgroup, actions such as adding/removing a target will result in a split
-      //     asterismGroups - groupIds +
-      //       asterismGroup.removeObsIdsUnsafe(idsToEdit).asObsKeyValue +
-      //       AsterismGroup(idsToEdit, newTargetIds).asObsKeyValue
-      //   }
-
-      // see if the edit caused a merger - note that we're searching the original lists.
-      // val oMergeWithAg = asterismGroups.find { case (obsIds, targetIds) =>
-      //   obsIds =!= groupIds && targetIds === newTargetIds
-      // }
-
-      // val updatedAsterismGroups = oMergeWithAg.fold(
-      //   splitAsterisms
-      // ) { mergeWithAg =>
-      //   splitAsterisms - idsToEdit - mergeWithAg._1 +
-      //     mergeWithAg._2.addObsIds(groupIds).asObsKeyValue
-      // }
-
-      // ps.copy(
-      //   // asterismGroups = updatedAsterismGroups,
-      //   // targetsWithObs = updatedTargetsWithObs
-      //   targets = updatedTargets
-      // )
-
       val getVizTime: ProgramSummaries => Option[Instant] = a =>
         for
           id <- idsToEdit.single
@@ -417,11 +337,6 @@ object TargetTabContents extends TwoPanels:
         case Some(id) => s"Observation $id"
         case None     => s"Editing ${idsToEdit.size} Asterisms"
       }
-
-      // val selectedTarget: Option[ViewOpt[TargetWithId]] =
-      //   props.focused.target.map { targetId =>
-      //     asterismView.zoom(Asterism.targetOptional(targetId))
-      //   }
 
       val obsConf = idsToEdit.single match {
         case Some(id) =>

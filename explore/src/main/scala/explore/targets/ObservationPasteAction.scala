@@ -11,10 +11,10 @@ import clue.data.syntax.*
 import crystal.react.View
 import crystal.react.implicits.*
 import explore.common.AsterismQueries
-import explore.common.AsterismQueries.*
 import explore.model.AsterismGroup
 import explore.model.ObsIdSet
 import explore.model.ObsSummary
+import explore.model.ProgramSummaries
 import explore.model.TargetWithObs
 import explore.model.syntax.all.*
 import explore.undo.*

@@ -7,18 +7,6 @@ import cats.Monad
 import crystal.ViewF
 import crystal.ViewListF
 import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
-// import cats.data.NonEmptyList
-
-// TODO Move to crystal
-// type ViewList[A] = ViewListF[DefaultS, A]
-
-// View into a non-empty list of cloned objects.
-// Allows treating them as a single object.
-// final class CloneListView[F[_]: Monad, A](val underlying: ViewF[F, Iterable[A]])
-//     extends ViewF[F, A](
-//       get = underlying.get.head,
-//       modCB = (mod, cb) => underlying.modCB(_.map(mod), l => cb(l.head))
-//     )
 
 // Turn a ViewList into a View, assuming all returned objects are clones.
 // and therefore just returning the head upon get.

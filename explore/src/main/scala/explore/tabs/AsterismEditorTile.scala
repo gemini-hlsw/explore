@@ -14,8 +14,8 @@ import crystal.react.implicits.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.config.VizTimeEditor
-import explore.model.AsterismIds
 import explore.model.Asterism
+import explore.model.AsterismIds
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.PAProperties

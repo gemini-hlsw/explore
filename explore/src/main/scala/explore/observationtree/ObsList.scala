@@ -110,7 +110,6 @@ object ObsList:
       .render { (props, ctx, _, adding) =>
         import ctx.given
 
-        // val undoCtx      = UndoContext(props.undoStacks, props.observations)
         val observations = props.observations.toList
 
         <.div(ExploreStyles.ObsTreeWrapper)(
@@ -121,11 +120,12 @@ object ObsList:
               label = "Obs",
               disabled = adding.get,
               loading = adding.get,
-              onClick = insertObs(props.programId,
-                                  observations.length,
-                                  props.obsUndoCtx,
-                                  adding,
-                                  ctx
+              onClick = insertObs(
+                props.programId,
+                observations.length,
+                props.obsUndoCtx,
+                adding,
+                ctx
               ).runAsync
             ).mini.compact,
             UndoButtons(props.obsUndoCtx, size = PlSize.Mini, disabled = adding.get)

@@ -10,6 +10,7 @@ import cats.syntax.all.given
 import clue.StreamingClient
 import explore.DefaultErrorPolicy
 import explore.common.AsterismQueries.*
+import explore.model.ProgramSummaries
 import explore.model.TargetWithObs
 import japgolly.scalajs.react.*
 import lucuma.core.model.Program

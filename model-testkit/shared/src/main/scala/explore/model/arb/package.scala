@@ -3,7 +3,6 @@
 
 package explore.model.arb
 
-import explore.model.arb.ArbAsterism
 object all
     extends ArbTargetVisualOptions
     with CogenUUID

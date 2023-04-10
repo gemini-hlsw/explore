@@ -4,15 +4,15 @@
 package explore.model
 
 import cats.Eq
-import explore.common.AsterismQueries.ProgramSummaries
+import explore.model.ProgramSummaries
 import explore.undo.UndoStacks
+import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
 import lucuma.core.model.Proposal
 import lucuma.core.model.Target
 import monocle.Focus
 import queries.schemas.odb.ObsQueries.ObservationList
 import queries.schemas.odb.ObsQueries.ScienceData
-import lucuma.core.model.ConstraintSet
 
 case class ModelUndoStacks[F[_]](
   forObsList:          UndoStacks[F, ObservationList] =
@@ -36,4 +36,3 @@ object ModelUndoStacks:
     Eq.by(u =>
       (u.forObsList, u.forProgramSummaries, u.forSiderealTarget, u.forObsScienceData, u.forProposal)
     )
-// }

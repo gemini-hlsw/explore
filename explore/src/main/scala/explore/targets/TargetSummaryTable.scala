@@ -12,13 +12,13 @@ import crystal.react.hooks.*
 import crystal.react.implicits.*
 import crystal.react.reuse.*
 import explore.Icons
-import explore.common.AsterismQueries.*
 import explore.common.UserPreferencesQueries.TableStore
 import explore.components.HelpIcon
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Focused
+import explore.model.ProgramSummaries
 import explore.model.TargetList
 import explore.model.TargetWithObs
 import explore.model.enums.AppTab

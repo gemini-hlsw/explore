@@ -51,8 +51,6 @@ case class ConstraintsPanel(
   programId:     Program.Id,
   obsIds:        ObsIdSet,
   undoCtx:       UndoSetter[ConstraintSet],
-  // constraintSet: View[ConstraintSet],
-  // undoStacks:    View[UndoStacks[IO, ConstraintSet]],
   renderInTitle: Tile.RenderInTitle
 ) extends ReactFnProps(ConstraintsPanel.component):
   val constraintSet: ConstraintSet = undoCtx.model.get
@@ -106,8 +104,6 @@ object ConstraintsPanel:
       )
       .render { (props, ctx, elevationRangeOptions) =>
         import ctx.given
-
-        // val undoCtx: UndoContext[ConstraintSet] = UndoContext(props.undoStacks, props.constraintSet)
 
         val undoViewSet = UndoView(props.programId, props.obsIds, props.undoCtx)
 
@@ -163,9 +159,6 @@ object ConstraintsPanel:
           )
 
         React.Fragment(
-          // props.renderInTitle(
-          //   <.span(ExploreStyles.TitleUndoButtons)(UndoButtons(props.undoCtx))
-          // ),
           <.div(ExploreStyles.ConstraintsGrid)(
             selectEnum(
               "Image Quality".refined,

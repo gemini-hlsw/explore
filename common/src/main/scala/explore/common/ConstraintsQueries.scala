@@ -12,12 +12,13 @@ import crystal.react.View
 import crystal.react.implicits.*
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.DefaultErrorPolicy
-import explore.common.AsterismQueries.ProgramSummaries
 import explore.data.KeyedIndexedList
 import explore.model.ObsIdSet
 import explore.model.ObsSummary
 import explore.model.ObservationList
+import explore.model.ProgramSummaries
 import explore.undo.UndoContext
+import explore.undo.UndoSetter
 import lucuma.core.enums.*
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
@@ -30,7 +31,6 @@ import monocle.Iso
 import monocle.Lens
 import org.typelevel.log4cats.Logger
 import queries.common.ObsQueriesGQL.*
-import explore.undo.UndoSetter
 
 object ConstraintsQueries:
   case class UndoView(

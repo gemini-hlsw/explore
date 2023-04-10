@@ -18,11 +18,11 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.*
 import explore.cache.ProgramCache
-import explore.common.AsterismQueries.ProgramSummaries
 import explore.common.UserPreferencesQueries.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.data.KeyedIndexedList
+import explore.model.ProgramSummaries
 import explore.model.*
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
@@ -36,6 +36,7 @@ import explore.shortcuts.*
 import explore.shortcuts.given
 import explore.syntax.ui.*
 import explore.undo.UndoContext
+import explore.undo.UndoSetter
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.callback.CallbackCatsEffect.*
@@ -66,7 +67,6 @@ import react.resizeDetector.*
 import react.resizeDetector.hooks.*
 
 import scala.concurrent.duration.*
-import explore.undo.UndoSetter
 
 case class ObsTabContents(
   userId:     Option[User.Id],
@@ -293,16 +293,6 @@ object ObsTabContents extends TwoPanels:
           }
       )
       .useContext(ProgramCache.view)
-      // .useStreamResourceViewOnMountBy { (props, ctx, _, _, _, _, _) =>
-      //   import ctx.given
-
-      //   ProgramObservationsQuery[IO]
-      //     .query(props.programId)
-      //     .map(_.asObsSummariesWithConstraints)
-      //     .reRunOnResourceSignals(
-      //       ProgramObservationsEditSubscription.subscribe[IO](props.programId)
-      //     )
-      // }
       .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, programSummaries) =>
         (props.focusedObs, programSummaries.get.observations.values.map(_.id).zipWithIndex.toList)
       ) { (props, ctx, _, _, _, _, programSummaries) => (obs, observationIds) =>
@@ -324,9 +314,7 @@ object ObsTabContents extends TwoPanels:
           case PasteAlt1 | PasteAlt2 =>
             ExploreClipboard.get.flatMap {
               case LocalClipboard.CopiedObservations(idSet) =>
-                // obsList.toOption.map { obsWithConstraints =>
                 val observations = programSummaries.zoom(ProgramSummaries.observations)
-                // obsWithConstraints.zoom(ObsSummariesWithConstraints.observations)
                 // TODO Is this a dummy undoCtx??
                 val undoCtx      = UndoContext(props.obsUndoStacks, observations)
                 idSet.idSet.toList
@@ -341,7 +329,6 @@ object ObsTabContents extends TwoPanels:
                   )
                   .void
                   .withToast(s"Duplicating obs ${idSet.idSet.mkString_(", ")}")
-              // }.orUnit
               case _                                        => IO.unit
             }.runAsync
 

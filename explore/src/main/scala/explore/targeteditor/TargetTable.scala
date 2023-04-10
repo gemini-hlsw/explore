@@ -18,8 +18,8 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AladinFullScreen
 import explore.model.AppContext
-import explore.model.AsterismIds
 import explore.model.Asterism
+import explore.model.AsterismIds
 import explore.model.ObsIdSet
 import explore.model.TargetList
 import explore.model.enums.TableId
@@ -62,8 +62,6 @@ case class TargetTable(
   targetIds:      View[AsterismIds],
   targetInfo:     TargetList,
   selectedTarget: View[Option[Target.Id]],
-  // selectedTarget: Option[Target.Id],
-  // setSelected:       (Option[Target.Id], SetRouteVia) => Callback,
   vizTime:        Option[Instant],
   renderInTitle:  Tile.RenderInTitle,
   fullScreen:     AladinFullScreen

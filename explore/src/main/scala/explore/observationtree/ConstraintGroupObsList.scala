@@ -9,16 +9,18 @@ import clue.FetchClient
 import crystal.react.View
 import crystal.react.reuse.Reuse
 import explore.Icons
-import explore.common.AsterismQueries.ProgramSummaries
 import explore.common.ConstraintsQueries
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
+import explore.data.KeyedIndexedList
 import explore.model.AppContext
 import explore.model.ConstraintGroup
 import explore.model.ConstraintGroupList
 import explore.model.Focused
 import explore.model.ObsIdSet
+import explore.model.ObsSummary
 import explore.model.ObservationList
+import explore.model.ProgramSummaries
 import explore.model.display.given
 import explore.model.enums.AppTab
 import explore.model.syntax.all.*
@@ -35,6 +37,7 @@ import lucuma.schemas.odb.input.*
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import monocle.Iso
 import mouse.boolean.*
 import org.typelevel.log4cats.Logger
 import react.beautifuldnd.*
@@ -43,9 +46,6 @@ import react.fa.FontAwesomeIcon
 import react.primereact.Button
 
 import scala.collection.immutable.SortedSet
-import monocle.Iso
-import explore.data.KeyedIndexedList
-import explore.model.ObsSummary
 
 case class ConstraintGroupObsList(
   programId:        Program.Id,
@@ -119,15 +119,6 @@ object ConstraintGroupObsList:
         )
         .set(newCs)
     }
-
-    // Oh, this will be fun... we have to change the whole approach to edit observations.
-    // We will probably need a Traversal
-
-    // oData.foldMap { case (destCg, draggedIds) =>
-    //   ConstraintGroupObsListActions
-    //     .obsConstraintGroup(programId, draggedIds, expandedIds, setObsSet)
-    //     .set(undoCtx)(destCg.some)
-    // }
   }
 
   private val component = ScalaFnComponent
@@ -135,8 +126,6 @@ object ConstraintGroupObsList:
     .useContext(AppContext.ctx)
     .useState(false) // dragging
     .useEffectOnMountBy { (props, ctx, _) =>
-      // val programSummaries = props.programSummaries.get
-      // val constraintGroups = programSummaries.constraintGroups
       val expandedIds = props.expandedIds
 
       val selectedGroupObsIds =
@@ -165,8 +154,6 @@ object ConstraintGroupObsList:
       import ctx.given
 
       val constraintGroups = props.constraintGroups.toList.sortBy(_._2.summaryString)
-
-      // val undoCtx = UndoContext(props.undoStacks, props.observations)
 
       val renderClone: Draggable.Render = (provided, snapshot, rubric) =>
         <.div(

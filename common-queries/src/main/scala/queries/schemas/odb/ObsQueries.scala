@@ -110,18 +110,6 @@ object ObsQueries:
     val scienceData: Lens[ObsEditData, ScienceData]           = Focus[ObsEditData](_.scienceData)
   }
 
-  // case class ObsSummariesWithConstraints(
-  //   observations:     ObservationList,
-  //   constraintGroups: ConstraintsList,
-  //   targetMap:        SortedMap[Target.Id, TargetSummary]
-  // ) derives Eq
-
-  // object ObsSummariesWithConstraints {
-  //   val observations     = Focus[ObsSummariesWithConstraints](_.observations)
-  //   val constraintGroups = Focus[ObsSummariesWithConstraints](_.constraintGroups)
-  //   val targetsMap       = Focus[ObsSummariesWithConstraints](_.targetMap)
-  // }
-
   extension (data: ObsEditQuery.Data)
     def asObsEditData: Option[ObsEditData] =
       data.observation.map { obs =>

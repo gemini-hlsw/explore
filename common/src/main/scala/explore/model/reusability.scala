@@ -106,8 +106,6 @@ object reusability:
 
   given Reusability[UserGlobalPreferences] = Reusability.byEq
 
-  // given Reusability[ObsSummariesWithConstraints] = Reusability.byEq
-
   given Reusability[SelectedPanel] = Reusability.byEq
 
   given Reusability[TimingWindowRepeat] = Reusability.byEq

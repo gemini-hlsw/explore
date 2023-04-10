@@ -72,8 +72,5 @@ object extensions:
       else
         ObjectTracking.fromTarget(targets.head.target)
 
-    // def toSidereal: List[Target.Sidereal] =
-    //   targets.toList.map(Target.sidereal.getOption).flattenOption
-
     def toSidereal: List[SiderealTargetWithId] =
       targets.toList.map(_.toSidereal).flattenOption
