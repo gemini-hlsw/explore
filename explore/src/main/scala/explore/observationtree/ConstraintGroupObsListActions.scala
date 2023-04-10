@@ -8,7 +8,7 @@
 // import clue.FetchClient
 // import crystal.react.View
 // import crystal.react.implicits.*
-// import explore.common.ConstraintGroupQueries.*
+// // import explore.common.ConstraintGroupQueries.*
 // import explore.model.ConstraintGroup
 // import explore.model.ObsIdSet
 // import explore.undo.*
@@ -18,34 +18,33 @@
 // import queries.schemas.odb.ObsQueries
 
 // import scala.collection.immutable.SortedSet
+// import explore.model.ConstraintGroupList
 
 // object ConstraintGroupObsListActions {
-//   private def getter(draggedIds: ObsIdSet): ConstraintGroupList => Option[ConstraintGroup] =
-//     _.values.find(cg => draggedIds.subsetOf(cg.obsIds))
+//   private def getter(draggedIds: ObsIdSet): ObservationList => Option[ConstraintGroup] =
+//     _.find((obsIds, _) => draggedIds.subsetOf(obsIds)).map(_._2)
 
 //   private def setter(
 //     draggedIds: ObsIdSet
-//   )(ocg: Option[ConstraintGroup]): ConstraintGroupList => ConstraintGroupList = originalGroupList =>
-//     {
-//       val constraintGroups = originalGroupList.values
+//   )(ocg: Option[ConstraintGroup]): ObservationList => ObservationList = originalGroupList =>
+//     // val constraintGroups = originalGroupList.values
 
-//       // should always have a constraint group and be able to find the dragged ids in the list
-//       (ocg, constraintGroups.find(cg => draggedIds.subsetOf(cg.obsIds)))
-//         .mapN { case (destCg, srcCg) =>
-//           val tempList    = originalGroupList - srcCg.obsIds
-//           val updatedList =
-//             srcCg
-//               .removeObsIds(draggedIds)
-//               .fold(tempList)(updatedCg => tempList + updatedCg.asKeyValue)
+//     // should always have a constraint group and be able to find the dragged ids in the list
+//     (ocg, originalGroupList.find((obsIds, cs) => draggedIds.subsetOf(obsIds)))
+//       .mapN { case (destCg, (srcObsIds, srcCs)) =>
+//         val tempList    = originalGroupList - srcObsIds
+//         val updatedList =
+//           srcCg
+//             .removeObsIds(draggedIds)
+//             .fold(tempList)(updatedCg => tempList + updatedCg.asKeyValue)
 
-//           constraintGroups
-//             .find(_.constraintSet == destCg.constraintSet) // see if we're merging
-//             .fold(updatedList + destCg.asKeyValue) { newCg =>
-//               updatedList - newCg.obsIds + newCg.addObsIds(draggedIds).asKeyValue
-//             }
-//         }
-//         .getOrElse(originalGroupList)
-//     }
+//         originalGroupList
+//           .find((_, cs) => cs == destCg.constraintSet) // see if we're merging
+//           .fold(updatedList + destCg.asKeyValue) { newCg =>
+//             updatedList - newCg.obsIds + newCg.addObsIds(draggedIds).asKeyValue
+//           }
+//       }
+//       .getOrElse(originalGroupList)
 
 //   private def updateExpandedIds(
 //     draggedIds: ObsIdSet,
@@ -86,4 +85,4 @@
 //     )
 // }
 
-// TODO We are probably missing the expandedIds part
+// TODO.We(are).probably(missing).the(expandedIds) part

@@ -30,40 +30,27 @@ import monocle.Iso
 import monocle.Lens
 import org.typelevel.log4cats.Logger
 import queries.common.ObsQueriesGQL.*
+import explore.undo.UndoSetter
 
 object ConstraintsQueries:
   case class UndoView(
     programId: Program.Id,
     obsIds:    ObsIdSet,
-    undoCtx:   UndoContext[ObservationList]
+    undoCtx:   UndoSetter[ConstraintSet]
   )(using FetchClient[IO, ?, ObservationDB], Logger[IO]):
     def apply[A](
       modelGet:  ConstraintSet => A,
       modelMod:  (A => A) => ConstraintSet => ConstraintSet,
       remoteSet: A => ConstraintSetInput => ConstraintSetInput
     ): View[A] =
-      val traversal =
-        Iso
-          .id[ObservationList]
-          .filterIndex((id: Observation.Id) => obsIds.idSet.contains_(id))
-          .andThen(KeyedIndexedList.value)
-          .andThen(ObsSummary.constraints)
-
       undoCtx
-        // This deserves an explanation:
-        // The traversal provides a View over observations that have the same
-        // ConstraintSet. Therefore, we can see this as a view over a single
-        // ConstraintSet. We get the value from any of them (eg: head), and
-        // we set it in all of them.
-        .zoom(traversal.getAll.andThen(_.head), traversal.modify)
         .undoableView(modelGet, modelMod)
         .withOnMod(value =>
           UpdateObservationMutation[IO]
             .execute(
               UpdateObservationsInput(
                 programId = programId,
-                WHERE =
-                  obsIds.toList.toWhereObservation.assign, // TODO should toWhereObservation accept NEL???
+                WHERE = obsIds.toList.toWhereObservation.assign,
                 SET = ObservationPropertiesInput(
                   constraintSet = remoteSet(value)(ConstraintSetInput()).assign
                 )

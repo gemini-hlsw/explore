@@ -43,13 +43,13 @@ import react.primereact.Button
 import ObsQueries.*
 
 case class ObsList(
-  observations:    View[ObservationList],
+  obsUndoCtx:      UndoContext[ObservationList],
   programId:       Program.Id,
   focusedObs:      Option[Observation.Id],
   focusedTarget:   Option[Target.Id],
-  setSummaryPanel: Callback,
-  undoStacks:      View[UndoStacks[IO, ObservationList]]
-) extends ReactFnProps(ObsList.component) {}
+  setSummaryPanel: Callback
+) extends ReactFnProps(ObsList.component):
+  val observations: ObservationList = obsUndoCtx.model.get
 
 object ObsList:
   private type Props = ObsList
@@ -78,7 +78,7 @@ object ObsList:
       .useContext(AppContext.ctx)
       // Saved index into the observation list
       .useState(none[Int])
-      .useEffectWithDepsBy((props, _, _) => (props.focusedObs, props.observations.get)) {
+      .useEffectWithDepsBy((props, _, _) => (props.focusedObs, props.observations)) {
         (props, ctx, optIndex) => params =>
           import ctx.given
 
@@ -110,8 +110,8 @@ object ObsList:
       .render { (props, ctx, _, adding) =>
         import ctx.given
 
-        val undoCtx      = UndoContext(props.undoStacks, props.observations)
-        val observations = props.observations.get.toList
+        // val undoCtx      = UndoContext(props.undoStacks, props.observations)
+        val observations = props.observations.toList
 
         <.div(ExploreStyles.ObsTreeWrapper)(
           <.div(ExploreStyles.TreeToolbar)(
@@ -121,10 +121,14 @@ object ObsList:
               label = "Obs",
               disabled = adding.get,
               loading = adding.get,
-              onClick =
-                insertObs(props.programId, observations.length, undoCtx, adding, ctx).runAsync
+              onClick = insertObs(props.programId,
+                                  observations.length,
+                                  props.obsUndoCtx,
+                                  adding,
+                                  ctx
+              ).runAsync
             ).mini.compact,
-            UndoButtons(undoCtx, size = PlSize.Mini, disabled = adding.get)
+            UndoButtons(props.obsUndoCtx, size = PlSize.Mini, disabled = adding.get)
           ),
           <.div(
             Button(
@@ -156,24 +160,24 @@ object ObsList:
                     ObsBadge.Layout.ObservationsTab,
                     selected = selected,
                     setStatusCB = (obsEditStatus(props.programId, obs.id)
-                      .set(undoCtx) _).compose((_: ObsStatus).some).some,
+                      .set(props.obsUndoCtx) _).compose((_: ObsStatus).some).some,
                     setActiveStatusCB = (obsActiveStatus(props.programId, obs.id)
-                      .set(undoCtx) _).compose((_: ObsActiveStatus).some).some,
+                      .set(props.obsUndoCtx) _).compose((_: ObsActiveStatus).some).some,
                     setSubtitleCB = (obsEditSubtitle(props.programId, obs.id)
-                      .set(undoCtx) _).compose((_: Option[NonEmptyString]).some).some,
+                      .set(props.obsUndoCtx) _).compose((_: Option[NonEmptyString]).some).some,
                     deleteCB = obsExistence(
                       props.programId,
                       obs.id,
                       o => setObs(props.programId, o.some, ctx)
                     )
-                      .mod(undoCtx)(obsListMod.delete)
+                      .mod(props.obsUndoCtx)(obsListMod.delete)
                       .showToastCB(ctx)(s"Deleted obs ${obs.id.show}")
                       .some,
                     cloneCB = cloneObs(
                       props.programId,
                       obs.id,
                       observations.length,
-                      undoCtx,
+                      props.obsUndoCtx,
                       ctx,
                       adding.async.set(true),
                       adding.async.set(false)

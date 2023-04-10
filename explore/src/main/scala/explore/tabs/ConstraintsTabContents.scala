@@ -80,6 +80,7 @@ import react.resizeDetector.hooks.*
 
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration.*
+import monocle.Iso
 
 case class ConstraintsTabContents(
   userId:        Option[User.Id],
@@ -141,6 +142,8 @@ object ConstraintsTabContents extends TwoPanels:
   )(
     timingWindows:    View[TimingWindowResult]
   ): VdomNode = {
+    import ctx.given
+
     def findConstraintGroup(obsIds: ObsIdSet, cgl: ConstraintGroupList): Option[ConstraintGroup] =
       cgl.find(_._1.intersect(obsIds).nonEmpty).map(ConstraintGroup.fromTuple)
 
@@ -173,6 +176,13 @@ object ConstraintsTabContents extends TwoPanels:
     val backButton: VdomNode =
       makeBackButton(props.programId, AppTab.Constraints, state, ctx)
 
+    val obsView: View[ObservationList] = programSummaries
+      // TODO Find another mechanism to update expandeds
+      // .withOnMod(onModSummaryWithObs(groupObsIds, idsToEdit))
+      .zoom(ProgramSummaries.observations)
+
+    val obsUndoCtx: UndoContext[ObservationList] = UndoContext(props.obsUndoStacks, obsView)
+
     val rightSide = (_: UseResizeDetectorReturn) =>
       props.focusedObsSet
         .flatMap(ids =>
@@ -193,11 +203,16 @@ object ConstraintsTabContents extends TwoPanels:
             )
           )
         } { case (idsToEdit, constraintGroup) =>
-          val groupObsIds   = constraintGroup.obsIds
-          val constraintSet = constraintGroup.constraintSet
-          val psView        = programSummaries.withOnMod(onModSummaryWithObs(groupObsIds, idsToEdit))
+          val groupObsIds: ObsIdSet = constraintGroup.obsIds
 
-          val csView: View[ObservationList] = psView.zoom(ProgramSummaries.observations)
+          val traversal = Iso
+            .id[ObservationList]
+            .filterIndex((id: Observation.Id) => idsToEdit.contains(id))
+            .andThen(KeyedIndexedList.value)
+            .andThen(ObsSummary.constraints)
+
+          val csUndoCtx: UndoSetter[ConstraintSet] =
+            obsUndoCtx.zoom(traversal.getAll.andThen(_.head), traversal.modify)
 
           val constraintsTitle = idsToEdit.single match
             case Some(id) => s"Observation $id"
@@ -212,8 +227,7 @@ object ConstraintsTabContents extends TwoPanels:
             ConstraintsPanel(
               props.programId,
               idsToEdit,
-              csView,
-              props.obsUndoStacks,
+              csUndoCtx,
               renderInTitle
             )
           )
@@ -241,12 +255,12 @@ object ConstraintsTabContents extends TwoPanels:
 
     val constraintsTree =
       ConstraintGroupObsList(
-        programSummaries,
         props.programId,
+        obsUndoCtx,
+        programSummaries.get.constraintGroups,
         props.focusedObsSet,
         state.set(SelectedPanel.Summary),
-        props.expandedIds,
-        props.obsUndoStacks
+        props.expandedIds
       )
 
     makeOneOrTwoPanels(state, constraintsTree, rightSide, RightSideCardinality.Multi, resize)
@@ -307,12 +321,6 @@ object ConstraintsTabContents extends TwoPanels:
       .useStreamResourceViewOnMountBy { (props, ctx, _, _, _, _) =>
         import ctx.given
 
-        // (TimingWindowsQuery[IO].query(), ConstraintGroupObsQuery[IO].query(props.programId))
-        //   .mapN((tw, cg) => (tw, ConstraintGroupObsQuery.Data.asConstraintSummWithObs.get(cg)))
-        //   .reRunOnResourceSignals(
-        //     ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](props.programId),
-        //     TimingWindowSubscription.subscribe[IO]()
-        //   )
         TimingWindowsQuery[IO]
           .query()
           .reRunOnResourceSignals(

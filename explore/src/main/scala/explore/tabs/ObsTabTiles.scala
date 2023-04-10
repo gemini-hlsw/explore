@@ -79,14 +79,19 @@ import react.resizeDetector.*
 import java.time.Instant
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
+import monocle.Iso
+import explore.undo.UndoContext
+import explore.undo.UndoSetter
 
 case class ObsTabTiles(
   userId:             Option[User.Id],
   programId:          Program.Id,
   // obsId:            Observation.Id,
   backButton:         VdomNode,
-  observation:        View[ObsSummary],
-  allTargets:         View[TargetList],
+  // observation:        View[ObsSummary],
+  obsUndoCtx:         UndoSetter[ObsSummary],
+  // allTargets:         View[TargetList],
+  allTargetsUndoCtx:  UndoSetter[TargetList],
   allConstraintSets:  Set[ConstraintSet],
   targetObservations: Map[Target.Id, SortedSet[Observation.Id]],
   // programSummaries: ProgramSummaries,
@@ -99,7 +104,9 @@ case class ObsTabTiles(
   layouts:            View[Pot[LayoutsMap]],
   resize:             UseResizeDetectorReturn
 ) extends ReactFnProps(ObsTabTiles.component):
-  val obsId: Observation.Id = observation.get.id
+  val observation: ObsSummary = obsUndoCtx.model.get
+  val obsId: Observation.Id   = observation.id
+  val allTargets: TargetList  = allTargetsUndoCtx.model.get
 
 object ObsTabTiles:
   private type Props = ObsTabTiles
@@ -203,7 +210,7 @@ object ObsTabTiles:
         val asterismAsNel: Option[NonEmptyList[TargetWithId]] =
           potAsterismIds.toOption.flatMap(asterismIdsView =>
             Asterism
-              .fromIdsAndTargets(asterismIdsView.get, props.allTargets.get)
+              .fromIdsAndTargets(asterismIdsView.get, props.allTargets)
               .toTargetWithIdNel
           )
 
@@ -258,21 +265,21 @@ object ObsTabTiles:
               ),
             itcTarget,
             selectedConfig.get,
-            props.allTargets.get
+            props.allTargets
           )
 
         val constraintsSelector =
           makeConstraintsSelector(
             props.programId,
             props.obsId,
-            props.observation.zoom(ObsSummary.constraints),
+            props.obsUndoCtx.model.zoom(ObsSummary.constraints),
             props.allConstraintSets
           )
 
         val skyPlotTile =
           ElevationPlotTile.elevationPlotTile(
             props.userId,
-            props.focusedTarget.orElse(props.observation.get.scienceTargetIds.headOption),
+            props.focusedTarget.orElse(props.observation.scienceTargetIds.headOption),
             observingMode.map(_.siteFor),
             targetCoords,
             vizTime
@@ -326,7 +333,7 @@ object ObsTabTiles:
           props.programId,
           ObsIdSet.one(props.obsId),
           potAsterismIds,
-          props.allTargets,
+          props.allTargetsUndoCtx.model,
           basicConfiguration,
           vizTimeView,
           obsConf,
@@ -338,6 +345,17 @@ object ObsTabTiles:
           "Targets",
           backButton = none
         )
+
+        // val obsUndoCtx: UndoContext[ObsSummary] =
+        //   UndoContext(
+        //     props.undoStacks.zoom(
+        //       ModelUndoStacks
+        //         .forObsList[IO]
+        //         .andThen(Iso.id[ObservationList].at(props.obsId))
+        //         .andThen(KeyedIndexedList.value)
+        //     ),
+        //     props.observation
+        //   )
 
         // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper
         // so that the constraints selector dropdown always appears in front of any other tiles. If more
@@ -352,19 +370,16 @@ object ObsTabTiles:
             controllerClass = ExploreStyles.ConstraintsTile.some
           )(renderInTitle =>
             <.div
-              // We should probably change the configuration tile to receive a CloneListView
-              // instead of the whole ProgramSummary.
-              // We need to reinstate the UndoStack[ConstraintSet] for that.
-              // For now at least. Eventually we should have a whole UndoCtx[ProgramSummaries]
-              // globally.
-
-              // ConstraintsPanel(
-              //   props.programId,
-              //   ObsIdSet.one(props.obsId),
-              //   props.programSummaries.zoom(ProgramSummaries.observations),
-              //   props.undoStacks.zoom(ModelUndoStacks.forObsList[IO]),
-              //   renderInTitle
-              // )
+            ConstraintsPanel(
+              props.programId,
+              ObsIdSet.one(props.obsId),
+              props.obsUndoCtx.zoom(ObsSummary.constraints),
+              // props.observation.zoom(ObsSummary.constraints),
+              // props.undoStacks
+              //   .zoom(ModelUndoStacks.forConstraintGroup[IO])
+              //   .zoom(atMapWithDefault(ObsIdSet.one(props.obsId), UndoStacks.empty)),
+              renderInTitle
+            )
           )
 
         val configurationTile =
@@ -379,12 +394,12 @@ object ObsTabTiles:
               )
             ),
             props.undoStacks
-              .zoom(ModelUndoStacks.forObservationData[IO])
+              .zoom(ModelUndoStacks.forObsScienceData[IO])
               .zoom(atMapWithDefault(props.obsId, UndoStacks.empty)),
             targetCoords,
             obsConf,
             selectedConfig,
-            props.allTargets.get
+            props.allTargets
           )
 
         props.layouts.renderPotView(l =>

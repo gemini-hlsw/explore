@@ -12,6 +12,7 @@ import lucuma.core.model.Target
 import monocle.Focus
 import queries.schemas.odb.ObsQueries.ObservationList
 import queries.schemas.odb.ObsQueries.ScienceData
+import lucuma.core.model.ConstraintSet
 
 case class ModelUndoStacks[F[_]](
   forObsList:          UndoStacks[F, ObservationList] =
@@ -19,7 +20,7 @@ case class ModelUndoStacks[F[_]](
   forProgramSummaries: UndoStacks[F, ProgramSummaries] = UndoStacks.empty[F, ProgramSummaries],
   forSiderealTarget:   Map[Target.Id, UndoStacks[F, Target.Sidereal]] =
     Map.empty[Target.Id, UndoStacks[F, Target.Sidereal]],
-  forObservationData:  Map[Observation.Id, UndoStacks[F, ScienceData]] =
+  forObsScienceData:   Map[Observation.Id, UndoStacks[F, ScienceData]] =
     Map.empty[Observation.Id, UndoStacks[F, ScienceData]],
   forProposal:         UndoStacks[F, Proposal] = UndoStacks.empty[F, Proposal]
 )
@@ -28,16 +29,11 @@ object ModelUndoStacks:
   def forObsList[F[_]]          = Focus[ModelUndoStacks[F]](_.forObsList)
   def forProgramSummaries[F[_]] = Focus[ModelUndoStacks[F]](_.forProgramSummaries)
   def forSiderealTarget[F[_]]   = Focus[ModelUndoStacks[F]](_.forSiderealTarget)
-  def forObservationData[F[_]]  = Focus[ModelUndoStacks[F]](_.forObservationData)
+  def forObsScienceData[F[_]]   = Focus[ModelUndoStacks[F]](_.forObsScienceData)
   def forProposal[F[_]]         = Focus[ModelUndoStacks[F]](_.forProposal)
 
   given eqModelUndoStacks[F[_]]: Eq[ModelUndoStacks[F]] =
     Eq.by(u =>
-      (u.forObsList,
-       u.forProgramSummaries,
-       u.forSiderealTarget,
-       u.forObservationData,
-       u.forProposal
-      )
+      (u.forObsList, u.forProgramSummaries, u.forSiderealTarget, u.forObsScienceData, u.forProposal)
     )
 // }

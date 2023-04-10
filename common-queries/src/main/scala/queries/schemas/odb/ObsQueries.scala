@@ -153,37 +153,6 @@ object ObsQueries:
     def asFixedExposureTime: FixedExposure =
       FixedExposure(self.exposures, self.exposureTime)
 
-  // extension (data: ProgramObservationsQuery.Data)
-  //   def asObsSummariesWithConstraints: ObsSummariesWithConstraints =
-  //     ObsSummariesWithConstraints(
-  //       KeyedIndexedList.fromList(
-  //         data.observations.matches.map(mtch =>
-  //           ObsSummaryWithTitleConstraintsAndConf(
-  //             mtch.id,
-  //             mtch.title,
-  //             mtch.subtitle,
-  //             mtch.constraintSet,
-  //             mtch.status,
-  //             mtch.activeStatus,
-  //             mtch.plannedTime.execution,
-  //             mtch.observingMode,
-  //             mtch.visualizationTime.map(_.toInstant)
-  //           )
-  //         ),
-  //         ObsSummaryWithTitleConstraintsAndConf.id.get
-  //       ),
-  //       data.constraintSetGroup.matches.toSortedMap(ConstraintGroup.obsIds.get),
-  //       data.targetGroup.matches
-  //         .toSortedMap(
-  //           _.target.id,
-  //           group =>
-  //             TargetSummary(
-  //               group.observations.matches.map(_.id).toSet,
-  //               group.target
-  //             )
-  //         )
-  //     )
-
   def updateObservationConstraintSet[F[_]: Async](
     programId:   Program.Id,
     obsIds:      List[Observation.Id],

@@ -66,6 +66,7 @@ import react.resizeDetector.*
 import react.resizeDetector.hooks.*
 
 import scala.concurrent.duration.*
+import explore.undo.UndoSetter
 
 case class ObsTabContents(
   userId:     Option[User.Id],
@@ -73,11 +74,11 @@ case class ObsTabContents(
   focused:    Focused,
   undoStacks: View[ModelUndoStacks[IO]],
   searching:  View[Set[Target.Id]]
-) extends ReactFnProps(ObsTabContents.component) {
+) extends ReactFnProps(ObsTabContents.component):
   val focusedObs: Option[Observation.Id] = focused.obsSet.map(_.head)
   val focusedTarget: Option[Target.Id]   = focused.target
-  val obsListStacks                      = undoStacks.zoom(ModelUndoStacks.forObsList)
-}
+  val obsUndoStacks                      = undoStacks.zoom(ModelUndoStacks.forObsList)
+  val psUndoStacks                       = undoStacks.zoom(ModelUndoStacks.forProgramSummaries)
 
 object ObsTabContents extends TwoPanels:
   private type Props = ObsTabContents
@@ -173,17 +174,18 @@ object ObsTabContents extends TwoPanels:
   ): VdomNode = {
     import ctx.given
 
-    val observations = programSummaries.zoom(ProgramSummaries.observations)
-    val targets      = programSummaries.zoom(ProgramSummaries.targets)
+    val observations                             = programSummaries.zoom(ProgramSummaries.observations)
+    val obsUndoCtx: UndoContext[ObservationList] = UndoContext(props.obsUndoStacks, observations)
+    val psUndoCtx: UndoContext[ProgramSummaries] = UndoContext(props.psUndoStacks, programSummaries)
+    val targetsUndoCtx: UndoSetter[TargetList]   = psUndoCtx.zoom(ProgramSummaries.targets)
 
     def observationsTree(observations: View[ObservationList]) =
       ObsList(
-        observations,
+        obsUndoCtx,
         props.programId,
         props.focusedObs,
         props.focusedTarget,
-        selectedView.set(SelectedPanel.Summary),
-        props.obsListStacks
+        selectedView.set(SelectedPanel.Summary)
       )
 
     val backButton: VdomNode =
@@ -196,21 +198,29 @@ object ObsTabContents extends TwoPanels:
           "Observations Summary",
           backButton.some
         )(renderInTitle =>
-          ObsSummaryTable(props.userId, props.programId, observations, targets.get, renderInTitle)
+          ObsSummaryTable(
+            props.userId,
+            props.programId,
+            observations,
+            targetsUndoCtx.model.get,
+            renderInTitle
+          )
           // TODO: elevation view
         )
       )(obsId =>
-        //       val obsView: View[ObsSummary] =
-        // observations.zoom(Iso.id[ObservationList].index(obsId))
+        val indexValue = Iso.id[ObservationList].index(obsId).andThen(KeyedIndexedList.value)
+
         observations
-          .zoom(Iso.id[ObservationList].index(obsId).andThen(KeyedIndexedList.value))
+          .zoom(indexValue)
           .mapValue(obsView =>
             ObsTabTiles(
               props.userId,
               props.programId,
               backButton,
-              obsView,
-              targets,
+              // FIXME Find a better mechanism for this.
+              // Something like .mapValue but for UndoContext
+              obsUndoCtx.zoom(indexValue.getOption.andThen(_.get), indexValue.modify),
+              psUndoCtx.zoom(ProgramSummaries.targets),
               // maybe we want constraintGroups, so we can get saner ids?
               programSummaries.get.constraintGroups.map(_._2).toSet,
               programSummaries.get.targetObservations,
@@ -318,7 +328,7 @@ object ObsTabContents extends TwoPanels:
                 val observations = programSummaries.zoom(ProgramSummaries.observations)
                 // obsWithConstraints.zoom(ObsSummariesWithConstraints.observations)
                 // TODO Is this a dummy undoCtx??
-                val undoCtx      = UndoContext(props.obsListStacks, observations)
+                val undoCtx      = UndoContext(props.obsUndoStacks, observations)
                 idSet.idSet.toList
                   .traverse(oid =>
                     cloneObs(

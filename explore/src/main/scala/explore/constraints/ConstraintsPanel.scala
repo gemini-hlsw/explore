@@ -47,19 +47,15 @@ import monocle.Lens
 import react.common.ReactFnProps
 import react.primereact.PrimeStyles
 
-// TODO Consider passing the whole ObsList, and a list of obs ids.
-// So that we can reuse the ObsList UndoStacks ???
-// This is a step towards a global undo....
 case class ConstraintsPanel(
   programId:     Program.Id,
   obsIds:        ObsIdSet,
+  undoCtx:       UndoSetter[ConstraintSet],
   // constraintSet: View[ConstraintSet],
-  obsList:       View[ObservationList],
   // undoStacks:    View[UndoStacks[IO, ConstraintSet]],
-  undoStacks:    View[UndoStacks[IO, ObservationList]],
-  // undoCtx:   UndoContext[ObservationList],
   renderInTitle: Tile.RenderInTitle
-) extends ReactFnProps(ConstraintsPanel.component)
+) extends ReactFnProps(ConstraintsPanel.component):
+  val constraintSet: ConstraintSet = undoCtx.model.get
 
 object ConstraintsPanel:
   private type Props = ConstraintsPanel
@@ -102,21 +98,18 @@ object ConstraintsPanel:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .useStateBy((props, _) =>
-        ElevationRangeOptions.fromElevationRange(
-          props.obsList.get.getValue(props.obsIds.head).get.constraints.elevationRange
-        )
+        ElevationRangeOptions.fromElevationRange(props.constraintSet.elevationRange)
       )
-      .useEffectWithDepsBy((props, _, _) =>
-        props.obsList.get.getValue(props.obsIds.head).get.constraints.elevationRange
-      )((_, _, elevationRangeOptions) =>
-        elevationRange => elevationRangeOptions.modState(_.toElevationRange(elevationRange))
+      .useEffectWithDepsBy((props, _, _) => props.constraintSet.elevationRange)(
+        (_, _, elevationRangeOptions) =>
+          elevationRange => elevationRangeOptions.modState(_.toElevationRange(elevationRange))
       )
       .render { (props, ctx, elevationRangeOptions) =>
         import ctx.given
 
-        val undoCtx: UndoContext[ObservationList] = UndoContext(props.undoStacks, props.obsList)
+        // val undoCtx: UndoContext[ConstraintSet] = UndoContext(props.undoStacks, props.constraintSet)
 
-        val undoViewSet = UndoView(props.programId, props.obsIds, undoCtx)
+        val undoViewSet = UndoView(props.programId, props.obsIds, props.undoCtx)
 
         val erView =
           undoViewSet(ConstraintSet.elevationRange, UpdateConstraintSet.elevationRange)
@@ -170,9 +163,9 @@ object ConstraintsPanel:
           )
 
         React.Fragment(
-          props.renderInTitle(
-            <.span(ExploreStyles.TitleUndoButtons)(UndoButtons(undoCtx))
-          ),
+          // props.renderInTitle(
+          //   <.span(ExploreStyles.TitleUndoButtons)(UndoButtons(props.undoCtx))
+          // ),
           <.div(ExploreStyles.ConstraintsGrid)(
             selectEnum(
               "Image Quality".refined,
