@@ -64,7 +64,6 @@ import lucuma.ui.utils.*
 import monocle.Focus
 import org.scalajs.dom.window
 import org.typelevel.log4cats.Logger
-import queries.common.ConstraintGroupQueriesGQL.*
 import queries.common.ObsQueriesGQL
 import queries.common.TimingWindowsGQL.*
 import queries.common.UserPreferencesQueriesGQL.*

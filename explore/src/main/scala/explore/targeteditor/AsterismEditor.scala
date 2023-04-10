@@ -19,8 +19,8 @@ import explore.model.AladinFullScreen
 import explore.model.AppContext
 import explore.model.Asterism
 import explore.model.AsterismIds
-import explore.model.AsterismZipper
-import explore.model.AsterismZipper.siderealTargetsEach
+import explore.model.Asterism
+import explore.model.Asterism.siderealTargetsEach
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.PAProperties
@@ -246,7 +246,9 @@ object AsterismEditor extends AsterismModifier:
                     props.userId,
                     focusedTargetId,
                     siderealTargetView,
-                    Asterism.fromIdsAndTargets(props.asterismIds.get, props.allTargets.get),
+                    Asterism
+                      .fromIdsAndTargets(props.asterismIds.get, props.allTargets.get)
+                      .map(_.focusOn(focusedTargetId)),
                     vizTime,
                     props.configuration,
                     props.undoStacks

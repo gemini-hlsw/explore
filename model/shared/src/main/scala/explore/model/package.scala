@@ -49,34 +49,6 @@ val EmptySiderealTarget =
   )
 
 type AsterismIds = SortedSet[Target.Id]
-type Asterism    = TargetList
-
-object Asterism:
-  // TODO TEST
-  val fromSet: Iso[Set[TargetWithId], Asterism] = Iso[Set[TargetWithId], Asterism](targets =>
-    SortedMap.from(targets.map(t => t.id -> t.target))
-  )(_.toSet.map((id, t) => TargetWithId(id, t)))
-
-  // TODO TEST
-  // The list is normalized: duplicates are removed and it's sorted by target id.
-  val fromList: SplitEpi[List[TargetWithId], Asterism] =
-    SplitEpi[List[TargetWithId], Asterism](
-      targets => SortedMap.from(targets.map(t => t.id -> t.target)),
-      _.toList.map((id, t) => TargetWithId(id, t))
-    )
-
-  def fromIdsAndTargets(ids: AsterismIds, targets: TargetList): Asterism =
-    ids.toList.map(id => targets.get(id).map(t => id -> t)).flattenOption.toSortedMap(_._1, _._2)
-
-  def one(id: Target.Id, target: Target): Asterism =
-    SortedMap(id -> target)
-
-  extension (a: Asterism)
-    def toTargetWithIdNel: Option[NonEmptyList[TargetWithId]] =
-      NonEmptyList.fromList(Asterism.fromList.reverseGet(a))
-
-    // def baseTrackingAt(vizTime: Instant): Option[ObjectTracking] =
-    //   toTargetWithIdNel.flatMap(_.baseTrackingAt(vizTime))
 
 type AsterismGroupList   = SortedMap[ObsIdSet, AsterismIds]
 type TargetList          = SortedMap[Target.Id, Target]

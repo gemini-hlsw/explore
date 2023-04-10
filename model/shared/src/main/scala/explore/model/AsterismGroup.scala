@@ -13,23 +13,7 @@ import monocle.Lens
 
 import scala.collection.immutable.SortedSet
 
-case class AsterismGroup(obsIds: ObsIdSet, targetIds: SortedSet[Target.Id]) derives Eq:
-  def addTargetId(targetId: Target.Id): AsterismGroup =
-    AsterismGroup.targetIds.modify(_ + targetId)(this)
-
-  def addTargetIds(targetIds: Set[Target.Id]): AsterismGroup =
-    AsterismGroup.targetIds.modify(_ ++ targetIds)(this)
-
-  def addObsIds(newIds: ObsIdSet): AsterismGroup =
-    AsterismGroup.obsIds.modify(_ ++ newIds)(this)
-
-  def removeObsIds(toExclude: ObsIdSet): Option[AsterismGroup] =
-    this.obsIds.remove(toExclude).map(newIds => this.copy(obsIds = newIds))
-
-  def removeObsIdsUnsafe(toExclude: ObsIdSet): AsterismGroup =
-    this.copy(obsIds = this.obsIds.removeUnsafe(toExclude))
-
-  def asObsKeyValue: (ObsIdSet, AsterismGroup) = (this.obsIds, this)
+case class AsterismGroup(obsIds: ObsIdSet, targetIds: SortedSet[Target.Id]) derives Eq
 
 object AsterismGroup:
   def fromTuple(obsIds: ObsIdSet, targetIds: SortedSet[Target.Id]): AsterismGroup =

@@ -11,7 +11,7 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AladinFullScreen
 import explore.model.Asterism
-import explore.model.AsterismZipper
+import explore.model.Asterism
 import explore.model.extensions.*
 import explore.model.util.*
 import explore.targeteditor.SiderealTargetEditor
@@ -26,6 +26,7 @@ import monocle.std.option.some
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
+import lucuma.schemas.model.TargetWithId
 
 object SiderealTargetEditorTile {
 
@@ -55,7 +56,7 @@ object SiderealTargetEditorTile {
               uid,
               targetId,
               target,
-              Asterism.one(targetId, target.get),
+              Asterism.one(TargetWithId(targetId, target.get)).some,
               none,
               none,
               undoStacks,

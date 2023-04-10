@@ -15,7 +15,7 @@ import explore.common.UserPreferencesQueries.TableStore
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.AsterismZipper
+import explore.model.Asterism
 import explore.model.Focused
 import explore.model.ObsIdSet
 import explore.model.ObsSummary
@@ -268,7 +268,7 @@ object ObsSummaryTable extends TableHooks:
               .flattenOption
           )
           .map((obs, targets) =>
-            val asterism = AsterismZipper.fromTargets(targets)
+            val asterism = Asterism.fromTargets(targets)
             Expandable(
               ObsRow(obs, targets.headOption, asterism),
               // Only expand if there are multiple targets
@@ -343,7 +343,7 @@ object ObsSummaryTable extends TableHooks:
     case ObsRow(
       obs:          ObsSummary,
       targetWithId: Option[TargetWithId],
-      asterism:     Option[AsterismZipper]
+      asterism:     Option[Asterism]
     ) extends ObsSummaryRow(obs.id)
 
     def fold[A](f: ExpandedTargetRow => A, g: ObsRow => A): A =

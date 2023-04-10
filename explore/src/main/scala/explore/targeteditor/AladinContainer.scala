@@ -17,7 +17,7 @@ import explore.aladin.AladinZoomControl
 import explore.components.ui.ExploreStyles
 import explore.components.ui.ExploreStyles.ExploreTable
 import explore.model.AladinMouseScroll
-import explore.model.AsterismZipper
+import explore.model.Asterism
 import explore.model.ObsConfiguration
 import explore.model.TargetVisualOptions
 import explore.model.UserGlobalPreferences
@@ -60,7 +60,7 @@ import scala.collection.immutable.SortedMap
 import scala.concurrent.duration.*
 
 case class AladinContainer(
-  asterism:               AsterismZipper,
+  asterism:               Asterism,
   vizTime:                Instant,
   obsConf:                Option[ObsConfiguration],
   userPreferences:        UserGlobalPreferences,

@@ -10,7 +10,7 @@ import clue.data.syntax.*
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosLong
 import eu.timepit.refined.types.numeric.NonNegBigDecimal
-import explore.model.AsterismZipper
+import explore.model.Asterism
 import explore.model.itc.ItcTarget
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow

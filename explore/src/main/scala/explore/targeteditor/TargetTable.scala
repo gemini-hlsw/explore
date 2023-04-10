@@ -19,7 +19,7 @@ import explore.components.ui.ExploreStyles
 import explore.model.AladinFullScreen
 import explore.model.AppContext
 import explore.model.AsterismIds
-import explore.model.AsterismZipper
+import explore.model.Asterism
 import explore.model.ObsIdSet
 import explore.model.TargetList
 import explore.model.enums.TableId

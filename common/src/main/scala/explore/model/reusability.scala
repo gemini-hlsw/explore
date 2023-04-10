@@ -6,7 +6,7 @@ package explore.model
 import clue.PersistentClientStatus
 import explore.data.KeyedIndexedList
 import explore.events.CatalogMessage
-import explore.model.AsterismZipper
+import explore.model.Asterism
 import explore.model.enums.AgsState
 import explore.model.enums.SelectedPanel
 import explore.model.itc.ItcChartExposureTime
@@ -51,7 +51,6 @@ object reusability:
   given Reusability[TargetWithId]            = Reusability.byEq
   given Reusability[TargetWithIdAndObs]      = Reusability.byEq
   given Reusability[TargetWithObs]           = Reusability.byEq
-  given Reusability[ConstraintsSummary]      = Reusability.byEq
   given Reusability[ConstraintGroup]         = Reusability.byEq
   given Reusability[ObsSummary]              = Reusability.byEq
   given Reusability[ExploreLocalPreferences] = Reusability.byEq
@@ -101,7 +100,7 @@ object reusability:
 
   given Reusability[ObjectTracking] = Reusability.byEq
 
-  given Reusability[AsterismZipper] = Reusability.byEq[AsterismZipper]
+  given Reusability[Asterism] = Reusability.byEq[Asterism]
 
   given Reusability[TargetWithOptId] = Reusability.byEq
 

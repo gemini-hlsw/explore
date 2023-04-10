@@ -25,7 +25,7 @@ import explore.components.undo.UndoButtons
 import explore.model.AladinFullScreen
 import explore.model.AppContext
 import explore.model.Asterism
-import explore.model.AsterismZipper
+import explore.model.Asterism
 import explore.model.ExploreModelValidators
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
@@ -75,9 +75,9 @@ import scala.collection.immutable.TreeSeqMap
 
 case class SiderealTargetEditor(
   userId:        User.Id,
-  targetId:      Target.Id, // Used to call DB mutations and focus in Aladin.
+  targetId:      Target.Id,        // Used to call DB mutations and focus in Aladin.
   target:        View[Target.Sidereal],
-  asterism:      Asterism,  // This is passed through to Aladin, to plot the entire Asterism.
+  asterism:      Option[Asterism], // This is passed through to Aladin, to plot the entire Asterism.
   vizTime:       Option[Instant],
   obsConf:       Option[ObsConfiguration],
   undoStacks:    View[UndoStacks[IO, Target.Sidereal]],
@@ -153,12 +153,6 @@ object SiderealTargetEditor:
       .render { (props, ctx, cloning, vizTime) =>
         import ctx.given
 
-        // val focusedTarget: ViewOpt[Target] =
-        //   props.asterism.zoom(monocle.Iso.id[Asterism].index(props.focusedTargetId))
-
-        // focusedTarget.zoom(TargetWithId.sidereal).asView.map { selectedTargetView =>
-        // focusedTarget.zoom(Target.sidereal).asView.map { selectedTargetView =>
-
         val (targetView, undoStackView) =
           props.obsIdSubset.fold((props.target, props.undoStacks))(_ =>
             (readonlyView(props.target), readonlyView(props.undoStacks))
@@ -166,8 +160,6 @@ object SiderealTargetEditor:
 
         val undoCtx: UndoContext[Target.Sidereal] =
           UndoContext(undoStackView, targetView)
-
-        // val tid = props.targetId
 
         val remoteOnMod: UpdateTargetsInput => IO[Unit] =
           getRemoteOnMod(
@@ -298,9 +290,6 @@ object SiderealTargetEditor:
 
         val disabled = props.searching.get.exists(_ === props.targetId) || cloning.value
 
-        val asterismZipperOpt =
-          AsterismZipper.fromTargets(props.asterism.toList.map(TargetWithId(_, _)))
-
         React.Fragment(
           props.renderInTitle
             .map(_.apply(<.span(ExploreStyles.TitleUndoButtons)(UndoButtons(undoCtx)))),
@@ -311,13 +300,13 @@ object SiderealTargetEditor:
               UndoButtons(undoCtx, disabled = disabled)
                 .when(props.renderInTitle.isEmpty && props.obsIdSubset.isEmpty)
             ),
-            (vizTime, asterismZipperOpt.toPot).tupled.renderPot((vt, asterismZipper) =>
+            (vizTime, props.asterism.toPot).tupled.renderPot((vt, asterism) =>
               AladinCell(
                 props.userId,
                 props.targetId,
                 vt,
                 props.obsConf,
-                asterismZipper.focusOn(props.targetId),
+                asterism,
                 props.fullScreen
               )
             ),

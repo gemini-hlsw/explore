@@ -20,10 +20,8 @@ import explore.components.TileController
 import explore.components.ui.ExploreStyles
 import explore.constraints.ConstraintsPanel
 import explore.model.AppContext
-import explore.model.Asterism
-import explore.model.Asterism.*
 import explore.model.AsterismIds
-import explore.model.AsterismZipper
+import explore.model.Asterism
 import explore.model.BasicConfigAndItc
 import explore.model.ConstraintGroup
 import explore.model.Focused
@@ -209,9 +207,11 @@ object ObsTabTiles:
 
         val asterismAsNel: Option[NonEmptyList[TargetWithId]] =
           potAsterismIds.toOption.flatMap(asterismIdsView =>
-            Asterism
-              .fromIdsAndTargets(asterismIdsView.get, props.allTargets)
-              .toTargetWithIdNel
+            NonEmptyList.fromList(
+              asterismIdsView.get.toList
+                .map(id => props.allTargets.get(id).map(t => TargetWithId(id, t)))
+                .flattenOption
+            )
           )
 
         // asterism base coordinates at viz time or default to base coordinates
