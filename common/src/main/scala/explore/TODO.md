@@ -1,0 +1,12 @@
+- Unify UndoStacks for ProgramSummaries and ObservationList (and SiderealTarget).
+- Deduplicate ObservationSummarySubquery.scala (make clue plugin just copy it).
+- STOP FIBER AND CLEANUP WHEN THE PROGRAM CHANGES.
+- RESTART CACHE IN CASE OF INTERRUPTED SUBSCRIPTION.
+- Revise is ProgramSummaries should be a context or passed as parameters.
+- Pass UndoContext[ProgramSummaries] everywhere?
+- Reinstate auto expanding ids on clone & drag'n'drop.
+- UndoContext.mapValue mechanism, or similar.
+- Deal with setting a valid target in the URL (via replace) when entering an asterism.
+- Test all optics.
+
+- Pass more refined parameters to AsterismGroupObsList.

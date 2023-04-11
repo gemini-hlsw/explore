@@ -5,13 +5,20 @@ package explore.common
 
 import cats.Endo
 import cats.effect.IO
+import cats.syntax.all.given
 import clue.FetchClient
 import clue.data.syntax.*
 import crystal.react.View
 import crystal.react.implicits.*
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.DefaultErrorPolicy
+import explore.data.KeyedIndexedList
+import explore.model.ObsIdSet
+import explore.model.ObsSummary
+import explore.model.ObservationList
+import explore.model.ProgramSummaries
 import explore.undo.UndoContext
+import explore.undo.UndoSetter
 import lucuma.core.enums.*
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
@@ -20,6 +27,7 @@ import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
+import monocle.Iso
 import monocle.Lens
 import org.typelevel.log4cats.Logger
 import queries.common.ObsQueriesGQL.*
@@ -27,8 +35,8 @@ import queries.common.ObsQueriesGQL.*
 object ConstraintsQueries:
   case class UndoView(
     programId: Program.Id,
-    obsIds:    List[Observation.Id],
-    undoCtx:   UndoContext[ConstraintSet]
+    obsIds:    ObsIdSet,
+    undoCtx:   UndoSetter[ConstraintSet]
   )(using FetchClient[IO, ?, ObservationDB], Logger[IO]):
     def apply[A](
       modelGet:  ConstraintSet => A,
@@ -42,7 +50,7 @@ object ConstraintsQueries:
             .execute(
               UpdateObservationsInput(
                 programId = programId,
-                WHERE = obsIds.toWhereObservation.assign,
+                WHERE = obsIds.toList.toWhereObservation.assign,
                 SET = ObservationPropertiesInput(
                   constraintSet = remoteSet(value)(ConstraintSetInput()).assign
                 )

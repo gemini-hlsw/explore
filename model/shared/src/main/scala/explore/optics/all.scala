@@ -3,10 +3,12 @@
 
 package explore.optics
 
+import cats.Applicative
 import cats.syntax.all.*
 import monocle.*
 import monocle.function.At
 import monocle.function.At.atMap
+import monocle.function.FilterIndex
 import monocle.function.Index
 import monocle.function.Index.fromAt
 
@@ -175,12 +177,4 @@ object all extends ModelOptics {
   // This should be safe to use with Maps that have .withDefault(...)
   def atMapWithDefault[K, V](k: K, default: => V): Lens[Map[K, V], V] =
     atMap.at(k).andThen(getWithDefault(default))
-
-  implicit def atTreeSeqMap[K, V]: At[TreeSeqMap[K, V], K, Option[V]] =
-    At(i =>
-      Lens((_: TreeSeqMap[K, V]).get(i))(optV => map => optV.fold(map - i)(v => map + (i -> v)))
-    )
-
-  implicit def indexTreeSeqMap[K, V]: Index[TreeSeqMap[K, V], K, V] =
-    fromAt(atTreeSeqMap)
 }

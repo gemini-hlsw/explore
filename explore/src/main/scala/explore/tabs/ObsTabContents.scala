@@ -17,9 +17,12 @@ import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.*
+import explore.cache.ProgramCache
 import explore.common.UserPreferencesQueries.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
+import explore.data.KeyedIndexedList
+import explore.model.ProgramSummaries
 import explore.model.*
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
@@ -33,6 +36,7 @@ import explore.shortcuts.*
 import explore.shortcuts.given
 import explore.syntax.ui.*
 import explore.undo.UndoContext
+import explore.undo.UndoSetter
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.callback.CallbackCatsEffect.*
@@ -49,6 +53,7 @@ import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
+import monocle.Iso
 import org.scalajs.dom.window
 import queries.common.ObsQueriesGQL.*
 import queries.common.UserPreferencesQueriesGQL.*
@@ -69,11 +74,11 @@ case class ObsTabContents(
   focused:    Focused,
   undoStacks: View[ModelUndoStacks[IO]],
   searching:  View[Set[Target.Id]]
-) extends ReactFnProps(ObsTabContents.component) {
+) extends ReactFnProps(ObsTabContents.component):
   val focusedObs: Option[Observation.Id] = focused.obsSet.map(_.head)
   val focusedTarget: Option[Target.Id]   = focused.target
-  val obsListStacks                      = undoStacks.zoom(ModelUndoStacks.forObsList)
-}
+  val obsUndoStacks                      = undoStacks.zoom(ModelUndoStacks.forObsList)
+  val psUndoStacks                       = undoStacks.zoom(ModelUndoStacks.forProgramSummaries)
 
 object ObsTabContents extends TwoPanels:
   private type Props = ObsTabContents
@@ -159,30 +164,28 @@ object ObsTabContents extends TwoPanels:
     )
 
   private def renderFn(
-    props:              Props,
-    selectedView:       View[SelectedPanel],
-    defaultLayouts:     LayoutsMap,
-    layouts:            View[Pot[LayoutsMap]],
-    resize:             UseResizeDetectorReturn,
-    debouncer:          Reusable[UseSingleEffect[IO]],
-    ctx:                AppContext[IO]
-  )(
-    obsWithConstraints: View[ObsSummariesWithConstraints]
+    props:            Props,
+    programSummaries: View[ProgramSummaries],
+    selectedView:     View[SelectedPanel],
+    defaultLayouts:   LayoutsMap,
+    layouts:          View[Pot[LayoutsMap]],
+    resize:           UseResizeDetectorReturn,
+    ctx:              AppContext[IO]
   ): VdomNode = {
     import ctx.given
 
-    val observations     = obsWithConstraints.zoom(ObsSummariesWithConstraints.observations)
-    val constraintGroups = obsWithConstraints.zoom(ObsSummariesWithConstraints.constraintGroups)
-    val targetsMap       = obsWithConstraints.zoom(ObsSummariesWithConstraints.targetsMap)
+    val observations                             = programSummaries.zoom(ProgramSummaries.observations)
+    val obsUndoCtx: UndoContext[ObservationList] = UndoContext(props.obsUndoStacks, observations)
+    val psUndoCtx: UndoContext[ProgramSummaries] = UndoContext(props.psUndoStacks, programSummaries)
+    val targetsUndoCtx: UndoSetter[TargetList]   = psUndoCtx.zoom(ProgramSummaries.targets)
 
     def observationsTree(observations: View[ObservationList]) =
       ObsList(
-        observations,
+        obsUndoCtx,
         props.programId,
         props.focusedObs,
         props.focusedTarget,
-        selectedView.set(SelectedPanel.Summary),
-        props.obsListStacks
+        selectedView.set(SelectedPanel.Summary)
       )
 
     val backButton: VdomNode =
@@ -199,26 +202,36 @@ object ObsTabContents extends TwoPanels:
             props.userId,
             props.programId,
             observations,
-            targetsMap,
+            targetsUndoCtx.model.get,
             renderInTitle
           )
           // TODO: elevation view
         )
       )(obsId =>
-        ObsTabTiles(
-          props.userId,
-          props.programId,
-          obsId,
-          backButton,
-          constraintGroups,
-          props.focusedTarget,
-          obsWithConstraints.get.targetMap,
-          props.undoStacks,
-          props.searching,
-          defaultLayouts,
-          layouts,
-          resize
-        ).withKey(s"${obsId.show}")
+        val indexValue = Iso.id[ObservationList].index(obsId).andThen(KeyedIndexedList.value)
+
+        observations
+          .zoom(indexValue)
+          .mapValue(obsView =>
+            ObsTabTiles(
+              props.userId,
+              props.programId,
+              backButton,
+              // FIXME Find a better mechanism for this.
+              // Something like .mapValue but for UndoContext
+              obsUndoCtx.zoom(indexValue.getOption.andThen(_.get), indexValue.modify),
+              psUndoCtx.zoom(ProgramSummaries.targets),
+              // maybe we want constraintGroups, so we can get saner ids?
+              programSummaries.get.constraintGroups.map(_._2).toSet,
+              programSummaries.get.targetObservations,
+              props.focusedTarget,
+              props.undoStacks,
+              props.searching,
+              defaultLayouts,
+              layouts,
+              resize
+            ).withKey(s"${obsId.show}")
+          )
       )
 
     makeOneOrTwoPanels(
@@ -279,22 +292,10 @@ object ObsTabContents extends TwoPanels:
               }
           }
       )
-      .useSingleEffect(debounce = 1.second)
-      .useStreamResourceViewOnMountBy { (props, ctx, _, _, _, _, _) =>
-        import ctx.given
-
-        ProgramObservationsQuery[IO]
-          .query(props.programId)
-          .map(_.asObsSummariesWithConstraints)
-          .reRunOnResourceSignals(
-            ProgramObservationsEditSubscription.subscribe[IO](props.programId)
-          )
-      }
-      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, _, obsList) =>
-        (props.focusedObs,
-         obsList.foldMap(_.get.observations.elements.map(_.id).zipWithIndex.toList)
-        )
-      ) { (props, ctx, _, _, _, _, _, obsList) => (obs, observationIds) =>
+      .useContext(ProgramCache.view)
+      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, programSummaries) =>
+        (props.focusedObs, programSummaries.get.observations.values.map(_.id).zipWithIndex.toList)
+      ) { (props, ctx, _, _, _, _, programSummaries) => (obs, observationIds) =>
         import ctx.given
 
         val obsPos = observationIds.find(a => obs.forall(_ === a._1)).map(_._2)
@@ -313,37 +314,35 @@ object ObsTabContents extends TwoPanels:
           case PasteAlt1 | PasteAlt2 =>
             ExploreClipboard.get.flatMap {
               case LocalClipboard.CopiedObservations(idSet) =>
-                obsList.toOption.map { obsWithConstraints =>
-                  val observations =
-                    obsWithConstraints.zoom(ObsSummariesWithConstraints.observations)
-                  val undoCtx      =
-                    UndoContext(props.obsListStacks, observations)
-                  idSet.idSet.toList
-                    .traverse(oid =>
-                      cloneObs(
-                        props.programId,
-                        oid,
-                        observationIds.length,
-                        undoCtx,
-                        ctx
-                      )
+                val observations = programSummaries.zoom(ProgramSummaries.observations)
+                // TODO Is this a dummy undoCtx??
+                val undoCtx      = UndoContext(props.obsUndoStacks, observations)
+                idSet.idSet.toList
+                  .traverse(oid =>
+                    cloneObs(
+                      props.programId,
+                      oid,
+                      observationIds.length,
+                      undoCtx,
+                      ctx
                     )
-                    .void
-                    .withToast(s"Duplicating obs ${idSet.idSet.mkString_(", ")}")
-                }.orUnit
+                  )
+                  .void
+                  .withToast(s"Duplicating obs ${idSet.idSet.mkString_(", ")}")
               case _                                        => IO.unit
             }.runAsync
 
           case Down =>
             obsPos
-              .filter(_ < observationIds.length && obsList.nonEmpty)
+              .filter(_ < observationIds.length)
               .flatMap { p =>
                 val next = if (props.focusedObs.isEmpty) 0 else p + 1
                 observationIds.lift(next).map { (obsId, _) =>
-                  ctx.setPageVia(AppTab.Observations,
-                                 props.programId,
-                                 Focused.singleObs(obsId),
-                                 SetRouteVia.HistoryPush
+                  ctx.setPageVia(
+                    AppTab.Observations,
+                    props.programId,
+                    Focused.singleObs(obsId),
+                    SetRouteVia.HistoryPush
                   )
                 }
               }
@@ -374,29 +373,6 @@ object ObsTabContents extends TwoPanels:
                         callbacks
         )
       }
-      .render {
-        (
-          props,
-          ctx,
-          twoPanelState,
-          resize,
-          layouts,
-          defaultLayout,
-          debouncer,
-          obsWithConstraints
-        ) =>
-          React.Fragment(
-            obsWithConstraints.renderPotOption(
-              renderFn(
-                props,
-                twoPanelState,
-                defaultLayout,
-                layouts,
-                resize,
-                debouncer,
-                ctx
-              ) _,
-              <.span(DefaultPendingRender).withRef(resize.ref)
-            )
-          )
-      }
+      .render((props, ctx, twoPanelState, resize, layouts, defaultLayout, programSummaries) =>
+        renderFn(props, programSummaries, twoPanelState, defaultLayout, layouts, resize, ctx)
+      )

@@ -11,7 +11,6 @@ import crystal.react.hooks.*
 import crystal.react.implicits.*
 import crystal.react.reuse.*
 import explore.Icons
-import explore.common.ConstraintGroupQueries.*
 import explore.common.UserPreferencesQueries.TableStore
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
@@ -19,9 +18,9 @@ import explore.model.AppContext
 import explore.model.Asterism
 import explore.model.Focused
 import explore.model.ObsIdSet
-import explore.model.ObsSummaryWithTitleConstraintsAndConf
-import explore.model.ObsWithConstraints
-import explore.model.TargetSummary
+import explore.model.ObsSummary
+import explore.model.TargetList
+import explore.model.TargetWithObs
 import explore.model.display.given
 import explore.model.enums.AppTab
 import explore.model.enums.TableId
@@ -69,7 +68,7 @@ final case class ObsSummaryTable(
   userId:        Option[User.Id],
   programId:     Program.Id,
   observations:  View[ObservationList],
-  targetsMap:    View[SortedMap[Target.Id, TargetSummary]],
+  allTargets:    TargetList,
   renderInTitle: Tile.RenderInTitle
 ) extends ReactFnProps(ObsSummaryTable.component)
 
@@ -159,9 +158,10 @@ object ObsSummaryTable extends TableHooks:
         ctx.pushPage(AppTab.Constraints, props.programId, Focused.singleObs(constraintId))
 
       def targetUrl(obsId: Observation.Id, tWId: TargetWithId) = <.a(
-        ^.href := ctx.pageUrl(AppTab.Observations,
-                              props.programId,
-                              Focused.singleObs(obsId, tWId.id.some)
+        ^.href := ctx.pageUrl(
+          AppTab.Observations,
+          props.programId,
+          Focused.singleObs(obsId, tWId.id.some)
         ),
         ^.onClick ==> (e =>
           e.preventDefaultCB *> e.stopPropagationCB *> ctx.pushPage(
@@ -240,32 +240,32 @@ object ObsSummaryTable extends TableHooks:
             .filterNot(_ => cell.row.getCanExpand())
             .orEmpty
         ).sortable,
-        column(ConstraintsColumnId, r => (r.obs.id, r.obs.constraintsSummary))
+        column(ConstraintsColumnId, r => (r.obs.id, r.obs.constraints.summaryString))
           .setCell(cell =>
             cell.value.map((id, constraintsSummary) =>
-              <.a(^.href := constraintUrl(id),
-                  ^.onClick ==> (_.preventDefaultCB *> goToConstraint(id)),
-                  constraintsSummary
+              <.a(
+                ^.href := constraintUrl(id),
+                ^.onClick ==> (_.preventDefaultCB *> goToConstraint(id)),
+                constraintsSummary
               )
             )
           )
           .sortableBy(_.toOption.map(_._2)),
         // TODO: FindingChartColumnId
-        column(ConfigurationColumnId, _.obs.conf),
+        column(ConfigurationColumnId, _.obs.configurationSummary),
         column(DurationColumnId, _.obs.executionTime.toHoursMinutes)
         // TODO: PriorityColumnId
         // TODO: ChargedTimeColumnId
       )
     }
     // Rows
-    .useMemoBy((props, _, _) => (props.observations.get.toList, props.targetsMap.get))((_, _, _) =>
-      (obsList, targetsMap) =>
+    .useMemoBy((props, _, _) => (props.observations.get.toList, props.allTargets))((_, _, _) =>
+      (obsList, allTargets) =>
         obsList.toList
           .map(obs =>
-            obs -> targetsMap
-              .filter((_, target) => target.obsIds.contains(obs.id))
-              .map((id, target) => target.target)
-              .toList
+            obs -> obs.scienceTargetIds.toList
+              .map(id => allTargets.get(id).map(t => TargetWithId(id, t)))
+              .flattenOption
           )
           .map((obs, targets) =>
             val asterism = Asterism.fromTargets(targets)
@@ -341,7 +341,7 @@ object ObsSummaryTable extends TableHooks:
     case ExpandedTargetRow(obsId: Observation.Id, targetWithId: TargetWithId)
         extends ObsSummaryRow(obsId)
     case ObsRow(
-      obs:          ObsSummaryWithTitleConstraintsAndConf,
+      obs:          ObsSummary,
       targetWithId: Option[TargetWithId],
       asterism:     Option[Asterism]
     ) extends ObsSummaryRow(obs.id)

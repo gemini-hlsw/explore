@@ -11,6 +11,7 @@ import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.events.ItcMessage
 import explore.model.BasicConfigAndItc
+import explore.model.TargetList
 import explore.model.WorkerClients.ItcClient
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.ItcChartExposureTime
@@ -35,7 +36,8 @@ trait ItcPanelProps(
   spectroscopyRequirements: Option[SpectroscopyRequirementsData],
   scienceData:              Option[ScienceData],
   exposure:                 Option[ItcChartExposureTime],
-  selectedConfig:           Option[BasicConfigAndItc] // selected row in spectroscopy modes table
+  selectedConfig:           Option[BasicConfigAndItc], // selected row in spectroscopy modes table
+  allTargets:               TargetList
 ):
   // if there is an observingMode, that means a configuration has been created. If not, we'll use the
   // row selected in the spectroscopy modes table if it exists
@@ -115,7 +117,8 @@ trait ItcPanelProps(
   //   case _ =>
   //     exposure
 
-  val itcTargets: Option[NonEmptyList[ItcTarget]] = scienceData.flatMap(_.itcTargets.toNel)
+  val itcTargets: Option[NonEmptyList[ItcTarget]] =
+    scienceData.flatMap(_.itcTargets(allTargets).toNel)
 
   val targets: List[ItcTarget] = itcTargets.foldMap(_.toList)
 

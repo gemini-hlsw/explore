@@ -16,89 +16,11 @@ import java.time
 
 object ObsQueriesGQL:
   @GraphQL
-  trait ProgramObservationsQuery extends GraphQLOperation[ObservationDB]:
-    // TODO We should do a single observations query and extract the constraint sets and targets from it.
-    val document = s"""
-      query($$programId: ProgramId!) {
-        observations(programId: $$programId) {
-          matches {
-            id
-            title
-            subtitle
-            constraintSet $ConstraintsSummarySubquery
-            status
-            activeStatus
-            visualizationTime
-            plannedTime {
-              execution $TimeSpanSubquery
-            }
-            observingMode $BasicConfigurationSubquery
-          }
-        }
-
-        constraintSetGroup(programId: $$programId) {
-          matches {
-            constraintSet $ConstraintSetSubquery
-            observations {
-              matches {
-                id
-              }
-            }
-          }
-        }
-
-        targetGroup(programId: $$programId) {
-          matches {
-            observations {
-              matches {
-                id
-              }
-            }
-            target $TargetWithIdSubquery
-          }
-        }
-      }
-    """
-
-    object Data:
-      object ConstraintSetGroup:
-        type Matches = model.ConstraintGroup
-
-      object TargetGroup:
-        object Matches:
-          object Target:
-            type Sidereal = lucuma.core.math.Coordinates
-
-  @GraphQL
-  trait ProgramObservationsEditSubscription extends GraphQLOperation[ObservationDB]:
-    // We need to include the `value {id}` to avoid a bug in grackle.
-    val document = """
-      subscription($programId: ProgramId!) {
-        observationEdit(input: {programId: $programId}) {
-          id
-          value {
-            id
-          }
-        }
-      }
-    """
-
-  @GraphQL
   trait ProgramCreateObservation extends GraphQLOperation[ObservationDB]:
     val document = s"""
       mutation($$createObservation: CreateObservationInput!) {
         createObservation(input: $$createObservation) {
-          observation {
-            id
-            title
-            subtitle
-            constraintSet $ConstraintsSummarySubquery
-            status
-            activeStatus
-            plannedTime {
-              execution $TimeSpanSubquery
-            }
-          }
+          observation $ObservationSummarySubquery
         }
       }
     """
@@ -132,7 +54,9 @@ object ObsQueriesGQL:
           visualizationTime
           posAngleConstraint $PosAngleConstraintSubquery
           targetEnvironment {
-            asterism $TargetWithIdSubquery
+            asterism {
+              id
+            }
           }
           constraintSet $ConstraintSetSubquery
           scienceRequirements {
@@ -257,17 +181,21 @@ object ObsQueriesGQL:
     val document = s"""
       mutation ($$input: CloneObservationInput!){
         cloneObservation(input: $$input) {
-          newObservation {
-            id
-            title
-            subtitle
-            constraintSet $ConstraintsSummarySubquery
-            status
-            activeStatus
-            plannedTime {
-              execution $TimeSpanSubquery
-            }
+          newObservation $ObservationSummarySubquery
+        }
+      }
+    """
+
+  @GraphQL
+  trait ProgramObservationsDelta extends GraphQLOperation[ObservationDB] {
+    val document = s"""
+      subscription($$programId: ProgramId!) {
+        observationEdit(input: {programId: $$programId}) {
+          value $ObservationSummarySubquery
+          meta:value {
+            existence
           }
         }
       }
     """
+  }

@@ -13,30 +13,11 @@ import monocle.Lens
 
 import scala.collection.immutable.SortedSet
 
-case class AsterismGroup(
-  obsIds:    ObsIdSet,
-  targetIds: SortedSet[Target.Id]
-) derives Eq {
+case class AsterismGroup(obsIds: ObsIdSet, targetIds: SortedSet[Target.Id]) derives Eq
 
-  def addTargetId(targetId: Target.Id): AsterismGroup =
-    AsterismGroup.targetIds.modify(_ + targetId)(this)
-
-  def addTargetIds(targetIds: Set[Target.Id]): AsterismGroup =
-    AsterismGroup.targetIds.modify(_ ++ targetIds)(this)
-
-  def addObsIds(newIds: ObsIdSet): AsterismGroup =
-    AsterismGroup.obsIds.modify(_ ++ newIds)(this)
-
-  def removeObsIds(toExclude: ObsIdSet): Option[AsterismGroup] =
-    this.obsIds.remove(toExclude).map(newIds => this.copy(obsIds = newIds))
-
-  def removeObsIdsUnsafe(toExclude: ObsIdSet): AsterismGroup =
-    this.copy(obsIds = this.obsIds.removeUnsafe(toExclude))
-
-  def asObsKeyValue: (ObsIdSet, AsterismGroup) = (this.obsIds, this)
-}
-
-object AsterismGroup {
+object AsterismGroup:
+  def fromTuple(obsIds: ObsIdSet, targetIds: SortedSet[Target.Id]): AsterismGroup =
+    AsterismGroup(obsIds, targetIds)
 
   given Semigroup[AsterismGroup] =
     Semigroup.instance((a, b) => AsterismGroup(a.obsIds |+| b.obsIds, a.targetIds |+| b.targetIds))
@@ -44,4 +25,3 @@ object AsterismGroup {
   val obsIds: Lens[AsterismGroup, ObsIdSet] = Focus[AsterismGroup](_.obsIds)
 
   val targetIds: Lens[AsterismGroup, SortedSet[Target.Id]] = Focus[AsterismGroup](_.targetIds)
-}

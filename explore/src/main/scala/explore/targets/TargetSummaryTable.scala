@@ -12,14 +12,14 @@ import crystal.react.hooks.*
 import crystal.react.implicits.*
 import crystal.react.reuse.*
 import explore.Icons
-import explore.common.AsterismQueries.*
 import explore.common.UserPreferencesQueries.TableStore
 import explore.components.HelpIcon
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Focused
-import explore.model.TargetWithIdAndObs
+import explore.model.ProgramSummaries
+import explore.model.TargetList
 import explore.model.TargetWithObs
 import explore.model.enums.AppTab
 import explore.model.enums.TableId
@@ -38,6 +38,7 @@ import lucuma.core.util.NewType
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
+import lucuma.schemas.model.TargetWithId
 import lucuma.typed.{tanstackTableCore => raw}
 import lucuma.typed.{tanstackVirtualCore => rawVirtual}
 import lucuma.ui.primereact.*
@@ -64,18 +65,19 @@ import scalajs.js.JSConverters.*
 case class TargetSummaryTable(
   userId:                Option[User.Id],
   programId:             Program.Id,
-  targets:               View[TargetWithObsList],
+  targets:               View[TargetList],
+  targetObservations:    Map[Target.Id, SortedSet[Observation.Id]],
   selectObservation:     (Observation.Id, Target.Id) => Callback,
   selectTargetOrSummary: Option[Target.Id] => Callback,
   renderInTitle:         Tile.RenderInTitle,
   selectedTargetIds:     View[List[Target.Id]],
-  undoCtx:               UndoContext[AsterismGroupsWithObs]
+  undoCtx:               UndoContext[ProgramSummaries]
 ) extends ReactFnProps(TargetSummaryTable.component)
 
 object TargetSummaryTable extends TableHooks:
   private type Props = TargetSummaryTable
 
-  private val ColDef = ColumnDef[TargetWithIdAndObs]
+  private val ColDef = ColumnDef[TargetWithId]
 
   private val IdColumnId: ColumnId           = ColumnId("id")
   private val CountColumnId: ColumnId        = ColumnId("count")
@@ -103,7 +105,7 @@ object TargetSummaryTable extends TableHooks:
   private val ScrollOptions =
     rawVirtual.mod
       .ScrollToOptions()
-      .setBehavior(rawVirtual.mod.ScrollBehavior.smooth)
+      .setBehavior(rawVirtual.mod.ScrollBehavior.auto)
       .setAlign(rawVirtual.mod.ScrollAlignment.center)
 
   protected val component =
@@ -112,7 +114,7 @@ object TargetSummaryTable extends TableHooks:
       .useContext(AppContext.ctx)
       // cols
       .useMemoBy((_, _) => ()) { (props, ctx) => _ =>
-        def column[V](id: ColumnId, accessor: TargetWithIdAndObs => V) =
+        def column[V](id: ColumnId, accessor: TargetWithId => V) =
           ColDef(id, row => accessor(row), ColNames(id))
 
         def obsUrl(targetId: Target.Id, obsId: Observation.Id): String =
@@ -128,9 +130,15 @@ object TargetSummaryTable extends TableHooks:
         ) ++
           TargetColumns.Builder.ForProgram(ColDef, _.target.some).AllColumns ++
           List(
-            column(CountColumnId, _.obsIds.size) // TODO Right align
+            column(
+              CountColumnId,
+              x => props.targetObservations.get(x.id).map(_.size).orEmpty
+            ) // TODO Right align
               .setCell(_.value.toString),
-            column(ObservationsColumnId, x => (x.id, x.obsIds.toList))
+            column(
+              ObservationsColumnId,
+              x => (x.id, props.targetObservations.get(x.id).orEmpty.toList)
+            )
               .setCell(cell =>
                 val (tid, obsIds) = cell.value
                 <.span(
@@ -153,7 +161,7 @@ object TargetSummaryTable extends TableHooks:
       }
       // rows
       .useMemoBy((props, _, _) => props.targets.get)((_, _, _) =>
-        _.toList.map((id, targetWithObs) => TargetWithIdAndObs(id, targetWithObs))
+        _.toList.map((id, target) => TargetWithId(id, target))
       )
       .useReactTableWithStateStoreBy((props, ctx, cols, rows) =>
         import ctx.given
@@ -260,7 +268,7 @@ object TargetSummaryTable extends TableHooks:
                     props.selectTargetOrSummary(none).to[IO],
                     ToastCtx[IO].showToast(_)
                   )
-                  .set(props.undoCtx)(selectedRowsIds.map(_ => none[TargetWithObs]))
+                  .set(props.undoCtx)(selectedRowsIds.map(_ => none))
                   .to[IO]
                   .guarantee(deletingTargets.async.set(DeletingTargets(false)))).runAsyncAndForget,
             acceptClass = PrimeStyles.ButtonSmall,
@@ -279,15 +287,17 @@ object TargetSummaryTable extends TableHooks:
               <.div(
                 ExploreStyles.TableSelectionToolbar,
                 HelpIcon("target/main/target-import.md".refined),
-                <.label(^.cls := "pl-compact p-component p-button p-fileupload",
-                        ^.htmlFor := "target-import",
-                        Icons.FileArrowUp
+                <.label(
+                  ^.cls     := "pl-compact p-component p-button p-fileupload",
+                  ^.htmlFor := "target-import",
+                  Icons.FileArrowUp
                 ),
-                <.input(^.tpe := "file",
-                        ^.onChange ==> onTextChange,
-                        ^.id      := "target-import",
-                        ^.name    := "file",
-                        ^.accept  := ".csv"
+                <.input(
+                  ^.tpe     := "file",
+                  ^.onChange ==> onTextChange,
+                  ^.id      := "target-import",
+                  ^.name    := "file",
+                  ^.accept  := ".csv"
                 ),
                 TargetImportPopup(props.programId, filesToImport),
                 Button(

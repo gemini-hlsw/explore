@@ -13,7 +13,6 @@ import crystal.react.hooks.*
 import crystal.react.implicits.*
 import explore.DefaultErrorPolicy
 import explore.Icons
-import explore.common.AsterismQueries.*
 import explore.common.TargetQueries
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
@@ -22,8 +21,11 @@ import explore.model.AsterismGroup
 import explore.model.EmptySiderealTarget
 import explore.model.Focused
 import explore.model.ObsIdSet
+import explore.model.ObsSummary
+import explore.model.ProgramSummaries
 import explore.model.TargetWithObs
 import explore.model.enums.AppTab
+import explore.model.syntax.all.*
 import explore.targets.ObservationInsertAction
 import explore.targets.TargetAddDeleteActions
 import explore.undo.*
@@ -52,15 +54,15 @@ import react.primereact.ToastRef
 import scala.collection.immutable.SortedSet
 
 case class AsterismGroupObsList(
-  asterismsWithObs:       View[AsterismGroupsWithObs],
   programId:              Program.Id,
   focused:                Focused,
   expandedIds:            View[SortedSet[ObsIdSet]],
-  undoCtx:                UndoContext[AsterismGroupsWithObs],
+  undoCtx:                UndoContext[ProgramSummaries], // TODO Targets are not modified here
   selectTargetOrSummary:  Option[Target.Id] => Callback,
   selectedSummaryTargets: View[List[Target.Id]]
 ) extends ReactFnProps[AsterismGroupObsList](AsterismGroupObsList.component)
     with ViewCommon:
+  val programSummaries                         = undoCtx.model
   override val focusedObsSet: Option[ObsIdSet] = focused.obsSet
 
 object AsterismGroupObsList:
@@ -111,9 +113,10 @@ object AsterismGroupObsList:
       destination <- result.destination.toOption
       destIds     <- ObsIdSet.fromString.getOption(destination.droppableId)
       draggedIds  <- getDraggedIds(result.draggableId, props)
-      destAg      <- props.asterismsWithObs.get.asterismGroups.get(destIds)
-      srcAg       <- props.asterismsWithObs.get.asterismGroups.findContainingObsIds(draggedIds)
-    } yield (destAg, draggedIds, srcAg.obsIds)
+      destAstIds  <-
+        props.programSummaries.get.asterismGroups.get(destIds)
+      srcAg       <- props.programSummaries.get.asterismGroups.findContainingObsIds(draggedIds)
+    } yield (destIds, destAstIds, draggedIds, srcAg.obsIds)
 
     def setObsSet(obsIds: ObsIdSet) =
       // if focused is empty, we're looking at the target summary table and don't want to
@@ -121,25 +124,26 @@ object AsterismGroupObsList:
       if (props.focused.isEmpty) Callback.empty
       else ctx.pushPage(AppTab.Targets, props.programId, Focused(obsIds.some))
 
-    oData.foldMap { (destAg, draggedIds, srcIds) =>
-      if (destAg.obsIds.intersects(draggedIds)) Callback.empty
+    oData.foldMap { (destIds, destAstIds, draggedIds, srcIds) =>
+      if (destIds.intersects(draggedIds)) Callback.empty
       else
         AsterismGroupObsListActions
           .dropObservations(
             props.programId,
             draggedIds,
             srcIds,
-            destAg.obsIds,
+            destIds,
             props.expandedIds,
-            setObsSet
+            setObsSet,
+            props.programSummaries.get.targets
           )
-          .set(props.undoCtx)(destAg.some)
+          .set(props.undoCtx.zoom(ProgramSummaries.observations))(destAstIds)
     }
   }
 
   private def insertSiderealTarget(
     programId:             Program.Id,
-    undoCtx:               UndoContext[AsterismGroupsWithObs],
+    undoCtx:               UndoContext[ProgramSummaries],
     adding:                View[AddingTargetOrObs],
     selectTargetOrSummary: Option[Target.Id] => Callback
   )(using FetchClient[IO, ?, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Unit] =
@@ -154,9 +158,7 @@ object AsterismGroupObsList:
               selectTargetOrSummary(_).to[IO],
               ToastCtx[IO].showToast(_)
             )
-            .set(undoCtx)(
-              TargetWithObs(EmptySiderealTarget, SortedSet.empty).some
-            )
+            .set(undoCtx)(EmptySiderealTarget.some)
             .to[IO]
         }
         .guarantee(adding.async.set(AddingTargetOrObs(false)))
@@ -164,7 +166,7 @@ object AsterismGroupObsList:
   private def insertObs(
     programId:          Program.Id,
     targetIds:          SortedSet[Target.Id],
-    undoCtx:            UndoContext[AsterismGroupsWithObs],
+    undoCtx:            UndoContext[ProgramSummaries],
     adding:             View[AddingTargetOrObs],
     expandedIds:        View[SortedSet[ObsIdSet]],
     selectObsOrSummary: Option[Observation.Id] => Callback
@@ -181,7 +183,7 @@ object AsterismGroupObsList:
               selectObsOrSummary(_).to[IO],
               ToastCtx[IO].showToast(_)
             )
-            .set(undoCtx)(obs.toConstraintsAndConf(targetIds).some)
+            .set(undoCtx)(ObsSummary.scienceTargetIds.replace(targetIds)(obs).some)
             .to[IO]
         }
         .guarantee(adding.async.set(AddingTargetOrObs(false)))
@@ -192,13 +194,13 @@ object AsterismGroupObsList:
     .useState(Dragging(false))
     .useStateView(AddingTargetOrObs(false))
     .useEffectOnMountBy { (props, ctx, _, _) =>
-      val asterismsWithObs = props.asterismsWithObs.get
-      val asterismGroups   = asterismsWithObs.asterismGroups
+      val programSummaries = props.programSummaries.get
+      val asterismGroups   = programSummaries.asterismGroups
       val expandedIds      = props.expandedIds
 
       val selectedAG = props.focusedObsSet
         .flatMap(idSet => asterismGroups.find { case (key, _) => idSet.subsetOf(key) })
-        .map(_._2)
+        .map(AsterismGroup.fromTuple)
 
       def replacePage(focused: Focused): Callback =
         ctx.replacePage(AppTab.Targets, props.programId, focused)
@@ -206,7 +208,7 @@ object AsterismGroupObsList:
       val obsMissing    = props.focused.obsSet.nonEmpty && selectedAG.isEmpty
       val targetMissing =
         props.focused.target.fold(false)(tid =>
-          !asterismsWithObs.targetsWithObs.keySet.contains(tid)
+          !programSummaries.targetsWithObs.keySet.contains(tid)
         )
 
       val (newFocused, needNewPage) = (obsMissing, targetMissing) match {
@@ -231,14 +233,14 @@ object AsterismGroupObsList:
     .render { (props, ctx, dragging, addingTargetOrObs) =>
       import ctx.given
 
-      val observations     = props.asterismsWithObs.get.observations
-      val asterismGroups   = props.asterismsWithObs.get.asterismGroups.map(_._2)
-      val targetWithObsMap = props.asterismsWithObs.get.targetsWithObs
+      val observations     = props.programSummaries.get.observations
+      val asterismGroups   = props.programSummaries.get.asterismGroups.map(AsterismGroup.fromTuple)
+      val targetWithObsMap = props.programSummaries.get.targetsWithObs
 
       // first look to see if something is focused in the tree, else see if something is focused in the summary
       val selectedTargetIds: SortedSet[Target.Id] =
         props.focused.obsSet
-          .flatMap(ids => props.asterismsWithObs.get.asterismGroups.get(ids).map(_.targetIds))
+          .flatMap(ids => props.programSummaries.get.asterismGroups.get(ids))
           .getOrElse(SortedSet.from(props.selectedSummaryTargets.get))
 
       def isObsSelected(obsId: Observation.Id): Boolean =
@@ -259,7 +261,11 @@ object AsterismGroupObsList:
             )
           )
           div.some
-        }(obsId => observations.get(obsId).map(summ => props.renderObsBadge(summ)))
+        }(obsId =>
+          observations
+            .getValue(obsId)
+            .map(summ => props.renderObsBadge(summ, ObsBadge.Layout.TargetsTab))
+        )
 
       val renderClone: Draggable.Render = (provided, snapshot, rubric) =>
         <.div(
@@ -296,7 +302,7 @@ object AsterismGroupObsList:
 
       def renderAsterismGroup(asterismGroup: AsterismGroup, names: List[String]): VdomNode = {
         val obsIds        = asterismGroup.obsIds
-        val cgObs         = obsIds.toList.map(id => observations.get(id)).flatten
+        val cgObs         = obsIds.toList.map(id => observations.getValue(id)).flatten
         // if this group or something in it is selected
         val groupSelected = props.focusedObsSet.exists(_.subsetOf(obsIds))
 
@@ -349,6 +355,7 @@ object AsterismGroupObsList:
                   TagMod(
                     cgObs.zipWithIndex.toTagMod { case (obs, idx) =>
                       props.renderObsBadgeItem(
+                        ObsBadge.Layout.TargetsTab,
                         selectable = true,
                         highlightSelected = true,
                         forceHighlight = isObsSelected(obs.id),

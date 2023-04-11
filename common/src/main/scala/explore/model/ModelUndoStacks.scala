@@ -4,9 +4,7 @@
 package explore.model
 
 import cats.Eq
-import explore.common.AsterismQueries.AsterismGroupsWithObs
-import explore.common.ConstraintGroupQueries.ConstraintGroupList
-import explore.model.ObsIdSet
+import explore.model.ProgramSummaries
 import explore.undo.UndoStacks
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
@@ -17,37 +15,24 @@ import queries.schemas.odb.ObsQueries.ObservationList
 import queries.schemas.odb.ObsQueries.ScienceData
 
 case class ModelUndoStacks[F[_]](
-  forObsList:           UndoStacks[F, ObservationList] = UndoStacks.empty[F, ObservationList],
-  forAsterismGroupList: UndoStacks[F, AsterismGroupsWithObs] =
-    UndoStacks.empty[F, AsterismGroupsWithObs],
-  forSiderealTarget:    Map[Target.Id, UndoStacks[F, Target.Sidereal]] =
+  forObsList:          UndoStacks[F, ObservationList] =
+    UndoStacks.empty[F, ObservationList], // FIXME This is inside programsummaries!
+  forProgramSummaries: UndoStacks[F, ProgramSummaries] = UndoStacks.empty[F, ProgramSummaries],
+  forSiderealTarget:   Map[Target.Id, UndoStacks[F, Target.Sidereal]] =
     Map.empty[Target.Id, UndoStacks[F, Target.Sidereal]],
-  forConstraintList:    UndoStacks[F, ConstraintGroupList] = UndoStacks.empty[F, ConstraintGroupList],
-  forConstraintGroup:   Map[ObsIdSet, UndoStacks[F, ConstraintSet]] =
-    Map.empty[ObsIdSet, UndoStacks[F, ConstraintSet]],
-  forObservationData:   Map[Observation.Id, UndoStacks[F, ScienceData]] =
+  forObsScienceData:   Map[Observation.Id, UndoStacks[F, ScienceData]] =
     Map.empty[Observation.Id, UndoStacks[F, ScienceData]],
-  forProposal:          UndoStacks[F, Proposal] = UndoStacks.empty[F, Proposal]
+  forProposal:         UndoStacks[F, Proposal] = UndoStacks.empty[F, Proposal]
 )
 
-object ModelUndoStacks {
-  def forObsList[F[_]]           = Focus[ModelUndoStacks[F]](_.forObsList)
-  def forAsterismGroupList[F[_]] = Focus[ModelUndoStacks[F]](_.forAsterismGroupList)
-  def forSiderealTarget[F[_]]    = Focus[ModelUndoStacks[F]](_.forSiderealTarget)
-  def forConstraintList[F[_]]    = Focus[ModelUndoStacks[F]](_.forConstraintList)
-  def forConstraintGroup[F[_]]   = Focus[ModelUndoStacks[F]](_.forConstraintGroup)
-  def forObservationData[F[_]]   = Focus[ModelUndoStacks[F]](_.forObservationData)
-  def forProposal[F[_]]          = Focus[ModelUndoStacks[F]](_.forProposal)
+object ModelUndoStacks:
+  def forObsList[F[_]]          = Focus[ModelUndoStacks[F]](_.forObsList)
+  def forProgramSummaries[F[_]] = Focus[ModelUndoStacks[F]](_.forProgramSummaries)
+  def forSiderealTarget[F[_]]   = Focus[ModelUndoStacks[F]](_.forSiderealTarget)
+  def forObsScienceData[F[_]]   = Focus[ModelUndoStacks[F]](_.forObsScienceData)
+  def forProposal[F[_]]         = Focus[ModelUndoStacks[F]](_.forProposal)
 
-  implicit def eqModelUndoStacks[F[_]]: Eq[ModelUndoStacks[F]] =
+  given eqModelUndoStacks[F[_]]: Eq[ModelUndoStacks[F]] =
     Eq.by(u =>
-      (u.forObsList,
-       u.forAsterismGroupList,
-       u.forSiderealTarget,
-       u.forConstraintList,
-       u.forConstraintGroup,
-       u.forObservationData,
-       u.forProposal
-      )
+      (u.forObsList, u.forProgramSummaries, u.forSiderealTarget, u.forObsScienceData, u.forProposal)
     )
-}

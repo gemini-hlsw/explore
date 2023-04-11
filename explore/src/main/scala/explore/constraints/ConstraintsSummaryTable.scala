@@ -12,12 +12,13 @@ import crystal.react.hooks.*
 import crystal.react.implicits.*
 import crystal.react.reuse.*
 import explore.Icons
-import explore.common.ConstraintGroupQueries.*
+import explore.common.AsterismQueries.*
 import explore.common.UserPreferencesQueries.TableStore
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ConstraintGroup
+import explore.model.ConstraintGroupList
 import explore.model.Focused
 import explore.model.ObsIdSet
 import explore.model.enums.AppTab
@@ -223,7 +224,9 @@ object ConstraintsSummaryTable extends TableHooks:
             )
       )
       // Memo rows
-      .useMemoBy((props, _, _) => props.constraintList)((_, _, _) => _.values.toList)
+      .useMemoBy((props, _, _) => props.constraintList)((_, _, _) =>
+        _.map(ConstraintGroup.fromTuple).toList
+      )
       .useReactTableWithStateStoreBy((props, ctx, cols, rows) =>
         import ctx.given
 

@@ -11,6 +11,7 @@ import explore.itc.ItcGraphPanel
 import explore.itc.ItcPanelProps
 import explore.itc.ItcPanelTitle
 import explore.model.BasicConfigAndItc
+import explore.model.TargetList
 import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.ItcTarget
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -30,7 +31,8 @@ object ItcTile:
     scienceData:              Option[ScienceData],
     itcExposureTime:          Option[ItcChartExposureTime],
     selectedTarget:           View[Option[ItcTarget]],
-    selectedConfig:           Option[BasicConfigAndItc]
+    selectedConfig:           Option[BasicConfigAndItc],
+    allTargets:               TargetList
   ) =
     Tile(
       ObsTabTilesIds.ItcId.id,
@@ -43,7 +45,8 @@ object ItcTile:
           scienceData,
           itcExposureTime,
           selectedTarget,
-          selectedConfig
+          selectedConfig,
+          allTargets
         ): VdomNode).some,
       bodyClass = ExploreStyles.ItcTileBody.some
     )(_ =>
@@ -56,7 +59,8 @@ object ItcTile:
           scienceData,
           itcExposureTime,
           selectedTarget,
-          selectedConfig
+          selectedConfig,
+          allTargets
         )
       )
     )

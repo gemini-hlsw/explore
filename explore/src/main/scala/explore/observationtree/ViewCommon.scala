@@ -23,15 +23,18 @@ trait ViewCommon {
 
   def renderObsBadge(
     obs:               ObsSummary,
+    layout:            ObsBadge.Layout,
     highlightSelected: Boolean = true,
     forceHighlight:    Boolean = false // if true, overrides highlightSelected
   ): TagMod =
     ObsBadge(
       obs,
+      layout,
       selected = forceHighlight || (highlightSelected && focusedObsSet.exists(_.contains(obs.id)))
     )
 
   def renderObsBadgeItem(
+    layout:            ObsBadge.Layout,
     selectable:        Boolean,
     onSelect:          Observation.Id => Callback,
     highlightSelected: Boolean = true,
@@ -58,7 +61,11 @@ trait ViewCommon {
           (^.onDoubleClick ==> { (e: ReactEvent) =>
             e.stopPropagationCB >> setObs(programId, obs.id.some, ctx)
           }).when(linkToObsTab)
-        )(<.span(provided.dragHandleProps)(renderObsBadge(obs, highlightSelected, forceHighlight)))
+        )(
+          <.span(provided.dragHandleProps)(
+            renderObsBadge(obs, layout, highlightSelected, forceHighlight)
+          )
+        )
       }
     )
 

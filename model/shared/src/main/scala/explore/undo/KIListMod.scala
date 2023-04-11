@@ -15,7 +15,7 @@ case class KIListMod[A, K](protected val keyLens: Lens[A, K])
   override protected val pureNode              = identity
 
   override def getterForKey(key: K): Getter[KeyedIndexedList[K, A], Option[(A, Int)]] =
-    Getter[KeyedIndexedList[K, A], Option[(A, Int)]](_.getElemAndIndex(key))
+    Getter[KeyedIndexedList[K, A], Option[(A, Int)]](_.getValueAndIndex(key))
 
   override def removeWithKey(kiList: KeyedIndexedList[K, A], key: K): KeyedIndexedList[K, A] =
     kiList.removed(key)

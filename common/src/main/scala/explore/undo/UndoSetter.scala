@@ -84,10 +84,11 @@ trait UndoSetter[M] { self =>
         onSet:     (N, A) => DefaultA[Unit],
         onRestore: (N, A) => DefaultA[Unit]
       )(v: A): DefaultS[Unit] =
-        self.set(getter.compose(getN),
-                 modN.compose(setter),
-                 (m, a) => onSet(getN(m), a),
-                 (m, a) => onRestore(getN(m), a)
+        self.set(
+          getter.compose(getN),
+          modN.compose(setter),
+          (m, a) => onSet(getN(m), a),
+          (m, a) => onRestore(getN(m), a)
         )(v)
 
       override def mod[A](
@@ -96,10 +97,11 @@ trait UndoSetter[M] { self =>
         onSet:     (N, A) => DefaultA[Unit],
         onRestore: (N, A) => DefaultA[Unit]
       )(f: A => A): DefaultS[Unit] =
-        self.mod(getter.compose(getN),
-                 modN.compose(setter),
-                 (m, a) => onSet(getN(m), a),
-                 (m, a) => onRestore(getN(m), a)
+        self.mod(
+          getter.compose(getN),
+          modN.compose(setter),
+          (m, a) => onSet(getN(m), a),
+          (m, a) => onRestore(getN(m), a)
         )(f)
     }
 

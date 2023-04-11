@@ -26,6 +26,7 @@ import explore.events.*
 import explore.model.AppContext
 import explore.model.BasicConfigAndItc
 import explore.model.LoadingState
+import explore.model.TargetList
 import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.ItcPicklers.given
@@ -70,13 +71,16 @@ case class ItcGraphPanel(
   scienceData:              Option[ScienceData],
   exposure:                 Option[ItcChartExposureTime],
   selectedTarget:           View[Option[ItcTarget]],
-  selectedConfig:           Option[BasicConfigAndItc] // selected row in spectroscopy modes table
+  selectedConfig:           Option[BasicConfigAndItc], // selected row in spectroscopy modes table
+  allTargets:               TargetList
 ) extends ReactFnProps(ItcGraphPanel.component)
-    with ItcPanelProps(observingMode,
-                       spectroscopyRequirements,
-                       scienceData,
-                       exposure,
-                       selectedConfig
+    with ItcPanelProps(
+      observingMode,
+      spectroscopyRequirements,
+      scienceData,
+      exposure,
+      selectedConfig,
+      allTargets
     )
 
 case class ItcGraphProperties(chartType: ItcChartType, detailsShown: PlotDetails)

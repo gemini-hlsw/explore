@@ -7,6 +7,7 @@ import cats.Order.*
 import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
+import cats.syntax.all.given
 import crystal.Pot
 import crystal.implicits.*
 import crystal.react.*
@@ -17,12 +18,15 @@ import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.numeric.NonNegInt
 import explore.Icons
 import explore.*
+import explore.cache.ProgramCache
 import explore.common.AsterismQueries.*
 import explore.common.UserPreferencesQueries.*
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
+import explore.data.KeyedIndexedList
 import explore.given
+import explore.model.ObsSummary
 import explore.model.*
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
@@ -30,6 +34,7 @@ import explore.model.enums.SelectedPanel
 import explore.model.layout.*
 import explore.model.layout.unsafe.given
 import explore.model.reusability.given
+import explore.model.syntax.all.*
 import explore.observationtree.AsterismGroupObsList
 import explore.optics.*
 import explore.optics.all.*
@@ -45,6 +50,7 @@ import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.math.Coordinates
 import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
@@ -59,6 +65,8 @@ import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
+import monocle.Iso
+import monocle.Traversal
 import org.scalajs.dom.window
 import queries.common.AsterismQueriesGQL.*
 import queries.common.ObsQueriesGQL
@@ -82,7 +90,7 @@ case class TargetTabContents(
   userId:            Option[User.Id],
   programId:         Program.Id,
   focused:           Focused,
-  listUndoStacks:    View[UndoStacks[IO, AsterismGroupsWithObs]],
+  psUndoStacks:      View[UndoStacks[IO, ProgramSummaries]],
   targetsUndoStacks: View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
   searching:         View[Set[Target.Id]],
   expandedIds:       View[SortedSet[ObsIdSet]]
@@ -166,37 +174,36 @@ object TargetTabContents extends TwoPanels:
     )
   )
 
-  private def otherObsCount(targetMap: TargetWithObsList, obsIds: ObsIdSet)(
-    targetId: Target.Id
-  ): Int =
-    targetMap.get(targetId).fold(0)(tg => (tg.obsIds -- obsIds.toSortedSet).size)
-
   private def renderFn(
-    props:                 Props,
-    selectedView:          View[SelectedPanel],
-    layouts:               View[Pot[LayoutsMap]],
-    resize:                UseResizeDetectorReturn,
-    debouncer:             Reusable[UseSingleEffect[IO]],
-    fullScreen:            View[AladinFullScreen],
-    selectedTargetIds:     View[List[Target.Id]],
-    ctx:                   AppContext[IO]
-  )(
-    asterismGroupsWithObs: View[AsterismGroupsWithObs]
+    props:             Props,
+    programSummaries:  View[ProgramSummaries],
+    selectedView:      View[SelectedPanel],
+    layouts:           View[Pot[LayoutsMap]],
+    resize:            UseResizeDetectorReturn,
+    fullScreen:        View[AladinFullScreen],
+    selectedTargetIds: View[List[Target.Id]],
+    ctx:               AppContext[IO]
   ): VdomNode = {
     import ctx.given
 
-    val astGrpObsListUndoCtx: UndoContext[AsterismGroupsWithObs] =
-      UndoContext(props.listUndoStacks, asterismGroupsWithObs)
+    val psUndoCtx: UndoContext[ProgramSummaries] =
+      UndoContext(props.psUndoStacks, programSummaries)
 
-    val targetMap: View[TargetWithObsList] =
-      asterismGroupsWithObs.zoom(AsterismGroupsWithObs.targetsWithObs)
+    val targets: View[TargetList] = programSummaries.zoom(ProgramSummaries.targets)
+
+    def otherObsCount(obsIds: ObsIdSet)(targetId: Target.Id): Int =
+      targets.get
+        .get(targetId)
+        .fold(0)(tg =>
+          (programSummaries.get.targetObservations.get(targetId).orEmpty -- obsIds.toSortedSet).size
+        )
 
     def targetTree(
-      objectsWithObs: View[AsterismGroupsWithObs],
-      undoCtx:        UndoContext[AsterismGroupsWithObs]
+      objectsWithObs: View[ProgramSummaries],
+      undoCtx:        UndoContext[ProgramSummaries]
     ) =
       AsterismGroupObsList(
-        objectsWithObs,
+        // objectsWithObs,
         props.programId,
         props.focused,
         props.expandedIds,
@@ -206,7 +213,7 @@ object TargetTabContents extends TwoPanels:
       )
 
     def findAsterismGroup(obsIds: ObsIdSet, agl: AsterismGroupList): Option[AsterismGroup] =
-      agl.values.find(ag => obsIds.subsetOf(ag.obsIds))
+      agl.find((agObsIds, targetIds) => obsIds.subsetOf(agObsIds)).map(AsterismGroup.fromTuple)
 
     def setPage(focused: Focused): Callback =
       ctx.pushPage(AppTab.Targets, props.programId, focused)
@@ -216,7 +223,7 @@ object TargetTabContents extends TwoPanels:
       targetId: Target.Id
     ): Callback = {
       val obsIdSet = ObsIdSet.one(obsId)
-      findAsterismGroup(obsIdSet, asterismGroupsWithObs.get.asterismGroups)
+      findAsterismGroup(obsIdSet, programSummaries.get.asterismGroups)
         .map(ag => expandedIds.mod(_ + ag.obsIds))
         .orEmpty >>
         setPage(Focused(obsIdSet.some, targetId.some))
@@ -228,7 +235,7 @@ object TargetTabContents extends TwoPanels:
     def onModAsterismsWithObs(
       groupIds:  ObsIdSet,
       editedIds: ObsIdSet
-    )(agwo: AsterismGroupsWithObs): Callback =
+    )(agwo: ProgramSummaries): Callback =
       findAsterismGroup(editedIds, agwo.asterismGroups).foldMap { tlg =>
         // We should always find the group.
         // If a group was edited while closed and it didn't create a merger, keep it closed,
@@ -261,12 +268,13 @@ object TargetTabContents extends TwoPanels:
         TargetSummaryTable(
           props.userId,
           props.programId,
-          targetMap,
+          targets,
+          programSummaries.get.targetObservations,
           selectObservationAndTarget(props.expandedIds) _,
           selectTargetOrSummary _,
           renderInTitle,
           selectedTargetIds,
-          astGrpObsListUndoCtx
+          psUndoCtx
         )
       )
 
@@ -288,140 +296,67 @@ object TargetTabContents extends TwoPanels:
       val groupIds  = asterismGroup.obsIds
       val targetIds = asterismGroup.targetIds
 
-      val asterism: Option[Asterism] =
-        Asterism
-          .fromTargets(
-            targetIds.toList.flatMap(id =>
-              targetMap.get.get(id).map(two => TargetWithId(id, two.target))
-            )
-          )
-          .map(a => props.focused.target.map(t => a.focusOn(t)).getOrElse(a))
-
-      val getAsterism: AsterismGroupsWithObs => Option[Asterism] = _ => asterism
-
-      def modAsterism(
-        mod: Option[Asterism] => Option[Asterism]
-      ): AsterismGroupsWithObs => AsterismGroupsWithObs = agwo => {
-        val asterismGroups = agwo.asterismGroups
-        val targetsWithObs = agwo.targetsWithObs
-        val moddedAsterism = mod(asterism)
-        val newTargetIds   = SortedSet.from(moddedAsterism.foldMap(_.ids.toList))
-
-        // make sure any added targets are in the map and update modified ones.
-        val addedIds  = newTargetIds -- targetIds
-        // if the last target is deleted from the asterism, moddedAsterism is None
-        val tgUpdate1 =
-          moddedAsterism.fold(targetsWithObs)(_.asList.foldRight(targetsWithObs) {
-            case (twid, twobs) =>
-              if (addedIds.contains(twid.id))
-                // it's new to this asterism, but the target itself may or may not be new. So we
-                // either add a new target group or update the existing one.
-                twobs.updatedWith(twid.id)(
-                  _.map(_.addObsIds(idsToEdit).copy(target = twid.target))
-                    .orElse(TargetWithObs(twid.target, idsToEdit.toSortedSet).some)
-                )
-              else // just update the current target, observations should be the same
-                twobs.updatedWith(twid.id)(_.map(_.copy(target = twid.target)))
-          })
-
-        val removedIds = targetIds -- newTargetIds
-
-        // If we removed a target, just update the observation ids for that target group
-        val updatedTargetsWithObs = removedIds.foldRight(tgUpdate1) { case (id, twobs) =>
-          twobs.updatedWith(id)(_.map(_.removeObsIds(idsToEdit)))
-        }
-
-        val splitAsterisms =
-          if (targetIds === newTargetIds)
-            asterismGroups
-          else if (idsToEdit === groupIds) {
-            asterismGroups + asterismGroup.copy(targetIds = newTargetIds).asObsKeyValue
-          } else {
-            // Since we're editing a subgroup, actions such as adding/removing a target will result in a split
-            asterismGroups - groupIds +
-              asterismGroup.removeObsIdsUnsafe(idsToEdit).asObsKeyValue +
-              AsterismGroup(idsToEdit, newTargetIds).asObsKeyValue
-          }
-
-        // see if the edit caused a merger - note that we're searching the original lists.
-        val oMergeWithAg = asterismGroups.find { case (obsIds, ag) =>
-          obsIds =!= groupIds && ag.targetIds === newTargetIds
-        }
-
-        val updatedAsterismGroups = oMergeWithAg.fold(
-          splitAsterisms
-        ) { mergeWithAg =>
-          splitAsterisms - idsToEdit - mergeWithAg._1 +
-            mergeWithAg._2.addObsIds(groupIds).asObsKeyValue
-        }
-
-        agwo.copy(
-          asterismGroups = updatedAsterismGroups,
-          targetsWithObs = updatedTargetsWithObs
-        )
-      }
-
-      val getVizTime: AsterismGroupsWithObs => Option[Instant] = a =>
+      val getVizTime: ProgramSummaries => Option[Instant] = a =>
         for
           id <- idsToEdit.single
-          o  <- a.observations.get(id)
+          o  <- a.observations.getValue(id)
           t  <- o.visualizationTime
         yield t
 
       def modVizTime(
         mod: Option[Instant] => Option[Instant]
-      ): AsterismGroupsWithObs => AsterismGroupsWithObs = awgo =>
+      ): ProgramSummaries => ProgramSummaries = ps =>
         idsToEdit.single
           .map(i =>
-            AsterismGroupsWithObs.observations
+            ProgramSummaries.observations
               .filterIndex((id: Observation.Id) => id === i)
-              .andThen(ObsSummaryWithConstraintsAndConf.visualizationTime)
-              .modify(mod)(awgo)
+              .andThen(KeyedIndexedList.value)
+              .andThen(ObsSummary.visualizationTime)
+              .modify(mod)(ps)
           )
-          .getOrElse(awgo)
+          .getOrElse(ps)
 
-      val asterismView: View[Option[Asterism]] =
-        asterismGroupsWithObs
-          .withOnMod(onModAsterismsWithObs(groupIds, idsToEdit))
-          .zoom(getAsterism)(modAsterism)
+      val traversal: Traversal[ObservationList, AsterismIds] =
+        Iso
+          .id[ObservationList]
+          .filterIndex((id: Observation.Id) => idsToEdit.contains(id))
+          .andThen(KeyedIndexedList.value)
+          .andThen(ObsSummary.scienceTargetIds)
+
+      val asterismView: View[AsterismIds] =
+        CloneListView(
+          programSummaries
+            .withOnMod(onModAsterismsWithObs(groupIds, idsToEdit))
+            .zoom(ProgramSummaries.observations.andThen(traversal))
+        )
 
       val vizTimeView: View[Option[Instant]] =
-        asterismGroupsWithObs
-          .zoom(getVizTime)(modVizTime)
+        programSummaries.zoom(getVizTime)(modVizTime)
 
       val title = idsToEdit.single match {
         case Some(id) => s"Observation $id"
         case None     => s"Editing ${idsToEdit.size} Asterisms"
       }
 
-      val selectedTarget: Option[ViewOpt[TargetWithId]] =
-        props.focused.target.map { targetId =>
-          asterismView.zoom(Asterism.targetOptional(targetId))
-        }
-
       val obsConf = idsToEdit.single match {
         case Some(id) =>
-          asterismGroupsWithObs
-            .zoom(AsterismGroupsWithObs.observations)
-            .get
-            .collect {
-              case (k,
-                    ObsSummaryWithConstraintsAndConf(
-                      _,
-                      const,
-                      _,
-                      _,
-                      _,
-                      _,
-                      Some(conf),
-                      _,
-                      Some(posAngle),
-                      Some(wavelength)
-                    )
-                  ) if k === id =>
-                (const.withDefaultElevationRange, conf, posAngle, wavelength)
-            }
-            .headOption
+          programSummaries.get.observations.values.collect {
+            case ObsSummary(
+                  obsId,
+                  _,
+                  _,
+                  _,
+                  _,
+                  _,
+                  _,
+                  const,
+                  Some(conf),
+                  _,
+                  Some(posAngle),
+                  Some(wavelength)
+                ) if obsId === id =>
+              (const, conf, posAngle, wavelength)
+          }.headOption
         case _        => None
       }
 
@@ -440,28 +375,30 @@ object TargetTabContents extends TwoPanels:
           props.userId,
           props.programId,
           idsToEdit,
-          Pot(asterismView, configuration),
+          Pot(asterismView),
+          programSummaries.zoom(ProgramSummaries.targets),
+          configuration,
           Pot(vizTimeView),
           ObsConfiguration(configuration, none, constraints, wavelength, none, none, none).some,
           props.focused.target,
           setCurrentTarget(props.programId, idsToEdit) _,
-          otherObsCount(targetMap.get, idsToEdit) _,
+          otherObsCount(idsToEdit) _,
           props.targetsUndoStacks,
           props.searching,
           title,
           backButton.some
         )
 
-      val selectedCoordinates = selectedTarget
-        .flatMap(
-          _.mapValue(targetView =>
-            targetView.get match {
-              case TargetWithId(_, t @ Target.Sidereal(_, _, _, _)) =>
+      val selectedCoordinates: Option[Coordinates] =
+        props.focused.target.flatMap(id =>
+          targets.get
+            .get(id)
+            .flatMap {
+              case t @ Target.Sidereal(_, _, _, _) =>
                 // TODO PM correction
                 Target.Sidereal.baseCoordinates.get(t).some
-              case _                                                => none
+              case _                               => none
             }
-          )
         )
 
       val skyPlotTile =
@@ -469,7 +406,7 @@ object TargetTabContents extends TwoPanels:
           props.userId,
           props.focused.target,
           configuration.map(_.siteFor),
-          selectedCoordinates.flatten.map(CoordinatesAtVizTime(_)),
+          selectedCoordinates.map(CoordinatesAtVizTime(_)),
           vizTimeView.get
         )
 
@@ -481,20 +418,15 @@ object TargetTabContents extends TwoPanels:
       targetId: Target.Id,
       target:   Target.Sidereal
     ): List[Tile] = {
-      val getTarget: TargetWithObsList => Target.Sidereal = _ => target
+      val getTarget: TargetList => Target.Sidereal = _ => target
 
-      def modTarget(
-        mod: Target.Sidereal => Target.Sidereal
-      ): TargetWithObsList => TargetWithObsList =
-        _.updatedWith(targetId)(
-          _.map(TargetWithObs.target.modify {
-            case s @ Target.Sidereal(_, _, _, _) => mod(s)
-            case other                           => other
-          })
-        )
+      def modTarget(mod: Target.Sidereal => Target.Sidereal): TargetList => TargetList =
+        _.updatedWith(targetId) {
+          case Some(s @ Target.Sidereal(_, _, _, _)) => mod(s).some
+          case other                                 => other
+        }
 
-      val targetView: View[Target.Sidereal] =
-        asterismGroupsWithObs.zoom(AsterismGroupsWithObs.targetsWithObs).zoom(getTarget)(modTarget)
+      val targetView: View[Target.Sidereal] = targets.zoom(getTarget)(modTarget)
 
       val title = s"Editing Target ${target.name.value} [$targetId]"
 
@@ -539,16 +471,15 @@ object TargetTabContents extends TwoPanels:
       val tileListObSelectedOpt: Option[(List[Tile], Boolean)] = optSelected.flatMap(
         _ match
           case Left(targetId) =>
-            targetMap.get
+            targets.get
               .get(targetId)
-              .map(u =>
-                u.target match
-                  case Nonsidereal(_, _, _)     => (renderNonSiderealTargetEditor, false)
-                  case s @ Sidereal(_, _, _, _) =>
-                    (renderSiderealTargetEditor(resize, targetId, s), false)
-              )
+              .map {
+                case Nonsidereal(_, _, _)     => (renderNonSiderealTargetEditor, false)
+                case s @ Sidereal(_, _, _, _) =>
+                  (renderSiderealTargetEditor(resize, targetId, s), false)
+              }
           case Right(obsIds)  =>
-            findAsterismGroup(obsIds, asterismGroupsWithObs.get.asterismGroups)
+            findAsterismGroup(obsIds, programSummaries.get.asterismGroups)
               .map(asterismGroup => (renderAsterismEditor(resize, obsIds, asterismGroup), true))
       )
 
@@ -573,7 +504,7 @@ object TargetTabContents extends TwoPanels:
 
     makeOneOrTwoPanels(
       selectedView,
-      targetTree(asterismGroupsWithObs, astGrpObsListUndoCtx),
+      targetTree(programSummaries, psUndoCtx),
       rightSide,
       RightSideCardinality.Multi,
       resize
@@ -581,24 +512,21 @@ object TargetTabContents extends TwoPanels:
   }
 
   private def applyObs(
-    programId:             Program.Id,
-    obsIds:                List[Observation.Id],
-    targetIds:             List[Target.Id],
-    asterismGroupsWithObs: View[AsterismGroupsWithObs],
-    ctx:                   AppContext[IO],
-    listUndoStacks:        View[UndoStacks[IO, AsterismGroupsWithObs]],
-    expandedIds:           View[SortedSet[ObsIdSet]]
+    programId:        Program.Id,
+    obsIds:           List[Observation.Id],
+    targetIds:        List[Target.Id],
+    programSummaries: View[ProgramSummaries],
+    ctx:              AppContext[IO],
+    listUndoStacks:   View[UndoStacks[IO, ProgramSummaries]],
+    expandedIds:      View[SortedSet[ObsIdSet]]
   ): IO[Unit] =
     import ctx.given
-    val undoContext = UndoContext(listUndoStacks, asterismGroupsWithObs)
+    val undoContext = UndoContext(listUndoStacks, programSummaries)
     (obsIds, targetIds).tupled
       .traverse((obsId, tid) =>
         ObsQueries
           .applyObservation[IO](obsId, List(tid))
-          .map { o =>
-            asterismGroupsWithObs.get
-              .cloneObsWithTargets(obsId, o.id, List(tid))
-          }
+          .map(o => programSummaries.get.cloneObsWithTargets(obsId, o.id, List(tid)))
           .map(_.map(summ => (summ, tid)))
       )
       .flatMap(olist =>
@@ -657,30 +585,16 @@ object TargetTabContents extends TwoPanels:
             case Left(_)         => IO.unit
           }
       }
-      .useSingleEffect(debounce = 1.second)
-      // Shared obs conf (posAngle)
-      .useStreamResourceViewOnMountBy { (props, ctx, _, _, _, _) =>
-        import ctx.given
-
-        AsterismGroupObsQuery[IO]
-          .query(props.programId)
-          .map(AsterismGroupObsQuery.Data.asAsterismGroupWithObs.get)
-          .reRunOnResourceSignals(
-            ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](props.programId),
-            TargetQueriesGQL.ProgramTargetEditSubscription.subscribe[IO](props.programId)
-          )
-      }
+      .useContext(ProgramCache.view)
       // Selected targets on the summary table
-      .useStateViewBy((props, _, _, _, _, _, _) => props.focused.target.toList)
-      .useEffectWithDepsBy((props, _, _, _, _, _, _, _) => props.focused.target)(
-        (_, _, _, _, _, _, _, selIds) => _.foldMap(focusedTarget => selIds.set(List(focusedTarget)))
+      .useStateViewBy((props, _, _, _, _, _) => props.focused.target.toList)
+      .useEffectWithDepsBy((props, _, _, _, _, _, _) => props.focused.target)(
+        (_, _, _, _, _, _, selIds) => _.foldMap(focusedTarget => selIds.set(List(focusedTarget)))
       )
-      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, asterismGroupWithObs, selIds) =>
-        (props.focused, asterismGroupWithObs.toOption.map(_.get.asterismGroups), selIds.get)
-      ) { (props, ctx, _, _, _, _, poagwov, _) => (target, asterismGroups, selectedIds) =>
+      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, programSummaries, selIds) =>
+        (props.focused, programSummaries.get.asterismGroups, selIds.get)
+      ) { (props, ctx, _, _, _, programSummaries, _) => (target, asterismGroups, selectedIds) =>
         import ctx.given
-
-        val optViewAgwo = poagwov.toOption
 
         def selectObsIds: ObsIdSet => IO[Unit] =
           obsIds => ctx.pushPage(AppTab.Targets, props.programId, Focused.obsSet(obsIds)).to[IO]
@@ -710,35 +624,31 @@ object TargetTabContents extends TwoPanels:
               case LocalClipboard.CopiedObservations(id) =>
                 val treeTargets =
                   props.focused.obsSet
-                    .flatMap(i => asterismGroups.flatMap(_.get(i).map(_.targetIds.toList)))
+                    .flatMap(i => asterismGroups.get(i).map(_.toList))
                     .getOrElse(selectedIds)
 
                 if (treeTargets.nonEmpty)
                   // Apply the obs to selected targets on the tree
-                  optViewAgwo
-                    .map(agwov =>
-                      applyObs(
-                        props.programId,
-                        id.idSet.toList,
-                        treeTargets,
-                        agwov,
-                        ctx,
-                        props.listUndoStacks,
-                        props.expandedIds
-                      ).withToast(s"Pasting obs ${id.idSet.toList.mkString(", ")}")
-                    )
-                    .orEmpty
+                  applyObs(
+                    props.programId,
+                    id.idSet.toList,
+                    treeTargets,
+                    programSummaries,
+                    ctx,
+                    props.psUndoStacks,
+                    props.expandedIds
+                  ).withToast(s"Pasting obs ${id.idSet.toList.mkString(", ")}")
                 else IO.unit
 
               case LocalClipboard.CopiedTargets(tids) =>
-                (props.focused.obsSet, optViewAgwo).tupled
-                  .foldMap((obsIds, agwov) =>
-                    val undoContext    = UndoContext(props.listUndoStacks, agwov)
+                props.focused.obsSet
+                  .foldMap(obsIds =>
+                    val undoContext    = UndoContext(props.psUndoStacks, programSummaries)
                     // Only want to paste targets that aren't already in the target asterism or
                     // undo is messed up.
                     // If all the targets are already there, do nothing.
-                    val targetAsterism = agwov.get.asterismGroups
-                      .findContainingObsIds(obsIds)
+                    val targetAsterism =
+                      programSummaries.get.asterismGroups.findContainingObsIds(obsIds)
                     targetAsterism
                       .flatMap(ag => tids.removeSet(ag.targetIds))
                       .foldMap(uniqueTids =>
@@ -772,24 +682,18 @@ object TargetTabContents extends TwoPanels:
           twoPanelState,
           resize,
           layout,
-          debouncer,
-          asterismGroupsWithObs,
+          programSummaries,
           selectedTargetIds,
           fullScreen
         ) =>
-          React.Fragment(
-            asterismGroupsWithObs.renderPotOption(
-              renderFn(
-                props,
-                twoPanelState,
-                layout,
-                resize,
-                debouncer,
-                fullScreen,
-                selectedTargetIds,
-                ctx
-              ),
-              <.span(DefaultPendingRender).withRef(resize.ref)
-            )
+          renderFn(
+            props,
+            programSummaries,
+            twoPanelState,
+            layout,
+            resize,
+            fullScreen,
+            selectedTargetIds,
+            ctx
           )
       }

@@ -17,7 +17,7 @@ import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.numeric.NonNegInt
 import explore.Icons
 import explore.*
-import explore.common.ConstraintGroupQueries.*
+import explore.cache.ProgramCache
 import explore.common.TimingWindowQueries.*
 import explore.common.UserPreferencesQueries.*
 import explore.components.Tile
@@ -26,6 +26,10 @@ import explore.components.ui.ExploreStyles
 import explore.constraints.ConstraintsPanel
 import explore.constraints.ConstraintsSummaryTable
 import explore.constraints.TimingWindowsPanel
+import explore.data.KeyedIndexedList
+import explore.model.ConstraintGroupList
+import explore.model.ObservationList
+import explore.model.ProgramSummaries
 import explore.model.*
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
@@ -47,6 +51,7 @@ import japgolly.scalajs.react.callback.CallbackCatsEffect.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ConstraintSet
+import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.User
 import lucuma.refined.*
@@ -57,9 +62,9 @@ import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
 import monocle.Focus
+import monocle.Iso
 import org.scalajs.dom.window
 import org.typelevel.log4cats.Logger
-import queries.common.ConstraintGroupQueriesGQL.*
 import queries.common.ObsQueriesGQL
 import queries.common.TimingWindowsGQL.*
 import queries.common.UserPreferencesQueriesGQL.*
@@ -77,13 +82,11 @@ import scala.collection.immutable.SortedSet
 import scala.concurrent.duration.*
 
 case class ConstraintsTabContents(
-  userId:         Option[User.Id],
-  programId:      Program.Id,
-  focusedObsSet:  Option[ObsIdSet],
-  expandedIds:    View[SortedSet[ObsIdSet]],
-  listUndoStacks: View[UndoStacks[IO, ConstraintGroupList]],
-  // TODO: Clean up the groupUndoStack somewhere, somehow?
-  groupUndoStack: View[Map[ObsIdSet, UndoStacks[IO, ConstraintSet]]]
+  userId:        Option[User.Id],
+  programId:     Program.Id,
+  focusedObsSet: Option[ObsIdSet],
+  expandedIds:   View[SortedSet[ObsIdSet]],
+  obsUndoStacks: View[UndoStacks[IO, ObservationList]]
 ) extends ReactFnProps(ConstraintsTabContents.component)
 
 object ConstraintsTabContents extends TwoPanels:
@@ -128,45 +131,26 @@ object ConstraintsTabContents extends TwoPanels:
   )
 
   private def renderFn(
-    props:                 Props,
-    state:                 View[SelectedPanel],
-    defaultLayouts:        LayoutsMap,
-    layouts:               View[Pot[LayoutsMap]],
-    resize:                UseResizeDetectorReturn,
-    ctx:                   AppContext[IO]
+    props:            Props,
+    programSummaries: View[ProgramSummaries],
+    state:            View[SelectedPanel],
+    defaultLayouts:   LayoutsMap,
+    layouts:          View[Pot[LayoutsMap]],
+    resize:           UseResizeDetectorReturn,
+    ctx:              AppContext[IO]
   )(
-    constraintsAndWindows: View[(TimingWindowResult, ConstraintSummaryWithObervations)]
+    timingWindows:    View[TimingWindowResult]
   ): VdomNode = {
+    import ctx.given
 
-    val constraintsWithObs = constraintsAndWindows.zoom(
-      Focus[(TimingWindowResult, ConstraintSummaryWithObervations)](_._2)
-    )
-
-    val timingWindows = constraintsAndWindows.zoom(
-      Focus[(TimingWindowResult, ConstraintSummaryWithObervations)](_._1)
-    )
-
-    def constraintsTree(constraintWithObs: View[ConstraintSummaryWithObervations]) =
-      ConstraintGroupObsList(
-        constraintWithObs,
-        props.programId,
-        props.focusedObsSet,
-        state.set(SelectedPanel.Summary),
-        props.expandedIds,
-        props.listUndoStacks
-      )
-
-    def findConstraintGroup(
-      obsIds: ObsIdSet,
-      cgl:    ConstraintGroupList
-    ): Option[ConstraintGroup] =
-      cgl.find(_._1.intersect(obsIds).nonEmpty).map(_._2)
+    def findConstraintGroup(obsIds: ObsIdSet, cgl: ConstraintGroupList): Option[ConstraintGroup] =
+      cgl.find(_._1.intersect(obsIds).nonEmpty).map(ConstraintGroup.fromTuple)
 
     def onModSummaryWithObs(
       groupObsIds:  ObsIdSet,
       editedObsIds: ObsIdSet
-    )(cswo: ConstraintSummaryWithObervations): Callback = {
-      val groupList = cswo.constraintGroups
+    )(programSummaries: ProgramSummaries): Callback = {
+      val groupList: ConstraintGroupList = programSummaries.constraintGroups
 
       val updateExpanded = findConstraintGroup(editedObsIds, groupList).fold(Callback.empty) { cg =>
         // We should always find the constraint group.
@@ -191,10 +175,17 @@ object ConstraintsTabContents extends TwoPanels:
     val backButton: VdomNode =
       makeBackButton(props.programId, AppTab.Constraints, state, ctx)
 
+    val obsView: View[ObservationList] = programSummaries
+      // TODO Find another mechanism to update expandeds
+      // .withOnMod(onModSummaryWithObs(groupObsIds, idsToEdit))
+      .zoom(ProgramSummaries.observations)
+
+    val obsUndoCtx: UndoContext[ObservationList] = UndoContext(props.obsUndoStacks, obsView)
+
     val rightSide = (_: UseResizeDetectorReturn) =>
       props.focusedObsSet
         .flatMap(ids =>
-          findConstraintGroup(ids, constraintsWithObs.get.constraintGroups).map(cg => (ids, cg))
+          findConstraintGroup(ids, programSummaries.get.constraintGroups).map(cg => (ids, cg))
         )
         .fold[VdomNode] {
           Tile(
@@ -205,62 +196,22 @@ object ConstraintsTabContents extends TwoPanels:
             ConstraintsSummaryTable(
               props.userId,
               props.programId,
-              constraintsWithObs.get.constraintGroups,
+              programSummaries.get.constraintGroups,
               props.expandedIds,
               renderInTitle
             )
           )
         } { case (idsToEdit, constraintGroup) =>
-          val groupObsIds   = constraintGroup.obsIds
-          val constraintSet = constraintGroup.constraintSet
-          val cglView       = constraintsWithObs
-            .withOnMod(onModSummaryWithObs(groupObsIds, idsToEdit))
-            .zoom(ConstraintSummaryWithObervations.constraintGroups)
+          val groupObsIds: ObsIdSet = constraintGroup.obsIds
 
-          val getCs: ConstraintGroupList => ConstraintSet = _ => constraintSet
+          val traversal = Iso
+            .id[ObservationList]
+            .filterIndex((id: Observation.Id) => idsToEdit.contains(id))
+            .andThen(KeyedIndexedList.value)
+            .andThen(ObsSummary.constraints)
 
-          def modCs(
-            mod: ConstraintSet => ConstraintSet
-          ): ConstraintGroupList => ConstraintGroupList =
-            cgl =>
-              findConstraintGroup(idsToEdit, cgl)
-                .map { cg =>
-                  val newCg        = ConstraintGroup.constraintSet.modify(mod)(cg)
-                  // see if the edit caused a merger
-                  val mergeWithIds = cgl
-                    .find { case (ids, group) =>
-                      !ids.intersects(idsToEdit) && group.constraintSet === newCg.constraintSet
-                    }
-                    .map(_._1)
-
-                  // If we're editing an observation within a larger group, we need a split
-                  val splitList =
-                    if (idsToEdit === groupObsIds)
-                      cgl.updated(groupObsIds, newCg) // otherwise, just update current group
-                    else {
-                      val diffIds = groupObsIds.removeUnsafe(idsToEdit)
-                      cgl
-                        .removed(groupObsIds)
-                        .updated(idsToEdit, ConstraintGroup(newCg.constraintSet, idsToEdit))
-                        .updated(diffIds, ConstraintGroup(cg.constraintSet, diffIds))
-                    }
-
-                  mergeWithIds.fold(splitList) { idsToMerge =>
-                    val combined = idsToMerge ++ idsToEdit
-                    splitList
-                      .removed(idsToMerge)
-                      .removed(idsToEdit)
-                      .updated(combined, ConstraintGroup(newCg.constraintSet, combined))
-                  }
-                }
-                .getOrElse(cgl) // shouldn't happen
-
-          val csView: View[ConstraintSet] =
-            cglView
-              .zoom(getCs)(modCs)
-
-          val csUndo: View[UndoStacks[IO, ConstraintSet]] =
-            props.groupUndoStack.zoom(atMapWithDefault(idsToEdit, UndoStacks.empty))
+          val csUndoCtx: UndoSetter[ConstraintSet] =
+            obsUndoCtx.zoom(traversal.getAll.andThen(_.head), traversal.modify)
 
           val constraintsTitle = idsToEdit.single match
             case Some(id) => s"Observation $id"
@@ -272,7 +223,12 @@ object ConstraintsTabContents extends TwoPanels:
             backButton.some,
             canMinimize = true
           )(renderInTitle =>
-            ConstraintsPanel(props.programId, idsToEdit.toList, csView, csUndo, renderInTitle)
+            ConstraintsPanel(
+              props.programId,
+              idsToEdit,
+              csUndoCtx,
+              renderInTitle
+            )
           )
 
           val timingWindowsView = timingWindows.zoom(TimingWindowsList)
@@ -296,13 +252,17 @@ object ConstraintsTabContents extends TwoPanels:
           )
         }
 
-    makeOneOrTwoPanels(
-      state,
-      constraintsTree(constraintsWithObs),
-      rightSide,
-      RightSideCardinality.Multi,
-      resize
-    )
+    val constraintsTree =
+      ConstraintGroupObsList(
+        props.programId,
+        obsUndoCtx,
+        programSummaries.get.constraintGroups,
+        props.focusedObsSet,
+        state.set(SelectedPanel.Summary),
+        props.expandedIds
+      )
+
+    makeOneOrTwoPanels(state, constraintsTree, rightSide, RightSideCardinality.Multi, resize)
   }
 
   private val component =
@@ -356,24 +316,25 @@ object ConstraintsTabContents extends TwoPanels:
             case _                            => Callback.empty
           }
       }
-      .useStreamResourceViewOnMountBy { (props, ctx, _, _, _) =>
+      .useContext(ProgramCache.view)
+      .useStreamResourceViewOnMountBy { (props, ctx, _, _, _, _) =>
         import ctx.given
 
-        (TimingWindowsQuery[IO].query(), ConstraintGroupObsQuery[IO].query(props.programId))
-          .mapN((tw, cg) => (tw, ConstraintGroupObsQuery.Data.asConstraintSummWithObs.get(cg)))
+        TimingWindowsQuery[IO]
+          .query()
           .reRunOnResourceSignals(
-            ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](props.programId),
             TimingWindowSubscription.subscribe[IO]()
           )
       }
       // Measure its size
       .useResizeDetector()
-      .render { (props, ctx, layout, defaultLayout, state, constraintsWithObs, resize) =>
-        React.Fragment(
-          constraintsWithObs.renderPotOption(
-            renderFn(props, state, defaultLayout, layout, resize, ctx) _,
-            <.span(DefaultPendingRender).withRef(resize.ref)
+      .render {
+        (props, ctx, layout, defaultLayout, state, programSummaries, timingWindows, resize) =>
+          React.Fragment(
+            timingWindows.renderPotOption(
+              renderFn(props, programSummaries, state, defaultLayout, layout, resize, ctx) _,
+              <.span(DefaultPendingRender).withRef(resize.ref)
+            )
           )
-        )
 
       }

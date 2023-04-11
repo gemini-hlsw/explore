@@ -12,8 +12,7 @@ import explore.DefaultErrorPolicy
 import explore.data.KeyedIndexedList
 import explore.model.AppContext
 import explore.model.Focused
-import explore.model.ObsSummaryWithTitleAndConstraints
-import explore.model.ObsSummaryWithTitleConstraintsAndConf
+import explore.model.ObsSummary
 import explore.model.enums.AppTab
 import explore.optics.GetAdjust
 import explore.optics.all.*
@@ -30,10 +29,7 @@ import monocle.Focus
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ObsQueries.*
 
-val obsListMod =
-  KIListMod[ObsSummaryWithTitleConstraintsAndConf, Observation.Id](
-    ObsSummaryWithTitleConstraintsAndConf.id
-  )
+val obsListMod = KIListMod[ObsSummary, Observation.Id](ObsSummary.id)
 
 def setObs[F[_]](
   programId: Program.Id,
@@ -57,24 +53,24 @@ def cloneObs(
     cloneObservation[IO](obsId)
       .flatMap { obs =>
         obsExistence(programId, obs.id, o => setObs(programId, o.some, ctx))
-          .mod(undoCtx)(obsListMod.upsert(obs.toTitleAndConstraints, pos))
+          .mod(undoCtx)(obsListMod.upsert(obs, pos))
           .to[IO]
       }
       .guarantee(after)
 
 private def obsWithId(
   obsId: Observation.Id
-): GetAdjust[KeyedIndexedList[Observation.Id, ObsSummaryWithTitleConstraintsAndConf], Option[
-  ObsSummaryWithTitleConstraintsAndConf
+): GetAdjust[KeyedIndexedList[Observation.Id, ObsSummary], Option[
+  ObsSummary
 ]] =
   obsListMod
     .withKey(obsId)
-    .composeOptionLens(Focus[(ObsSummaryWithTitleConstraintsAndConf, Int)](_._1))
+    .composeOptionLens(Focus[(ObsSummary, Int)](_._1))
 
 def obsEditStatus(programId: Program.Id, obsId: Observation.Id)(using
   FetchClient[IO, ?, ObservationDB]
 ) = Action(
-  access = obsWithId(obsId).composeOptionLens(ObsSummaryWithTitleConstraintsAndConf.status)
+  access = obsWithId(obsId).composeOptionLens(ObsSummary.status)
 )(onSet =
   (_, status) =>
     UpdateObservationMutation[IO]
@@ -91,7 +87,7 @@ def obsEditStatus(programId: Program.Id, obsId: Observation.Id)(using
 def obsEditSubtitle(programId: Program.Id, obsId: Observation.Id)(using
   FetchClient[IO, ?, ObservationDB]
 ) = Action(
-  access = obsWithId(obsId).composeOptionLens(ObsSummaryWithTitleConstraintsAndConf.subtitle)
+  access = obsWithId(obsId).composeOptionLens(ObsSummary.subtitle)
 )(onSet =
   (_, subtitleOpt) =>
     UpdateObservationMutation[IO]
@@ -108,7 +104,7 @@ def obsEditSubtitle(programId: Program.Id, obsId: Observation.Id)(using
 def obsActiveStatus(programId: Program.Id, obsId: Observation.Id)(using
   FetchClient[IO, ?, ObservationDB]
 ) = Action(
-  access = obsWithId(obsId).composeOptionLens(ObsSummaryWithTitleConstraintsAndConf.activeStatus)
+  access = obsWithId(obsId).composeOptionLens(ObsSummary.activeStatus)
 )(onSet =
   (_, activeStatus) =>
     UpdateObservationMutation[IO]

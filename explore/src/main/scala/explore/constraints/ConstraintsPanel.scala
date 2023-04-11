@@ -17,6 +17,8 @@ import explore.components.undo.UndoButtons
 import explore.given
 import explore.model.AppContext
 import explore.model.Help
+import explore.model.ObsIdSet
+import explore.model.ObservationList
 import explore.model.display.*
 import explore.undo.UndoContext
 import explore.undo.*
@@ -47,11 +49,11 @@ import react.primereact.PrimeStyles
 
 case class ConstraintsPanel(
   programId:     Program.Id,
-  obsIds:        List[Observation.Id],
-  constraintSet: View[ConstraintSet],
-  undoStacks:    View[UndoStacks[IO, ConstraintSet]],
+  obsIds:        ObsIdSet,
+  undoCtx:       UndoSetter[ConstraintSet],
   renderInTitle: Tile.RenderInTitle
-) extends ReactFnProps(ConstraintsPanel.component)
+) extends ReactFnProps(ConstraintsPanel.component):
+  val constraintSet: ConstraintSet = undoCtx.model.get
 
 object ConstraintsPanel:
   private type Props = ConstraintsPanel
@@ -94,18 +96,16 @@ object ConstraintsPanel:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .useStateBy((props, _) =>
-        ElevationRangeOptions.fromElevationRange(props.constraintSet.get.elevationRange)
+        ElevationRangeOptions.fromElevationRange(props.constraintSet.elevationRange)
       )
-      .useEffectWithDepsBy((props, _, _) => props.constraintSet.get.elevationRange)(
+      .useEffectWithDepsBy((props, _, _) => props.constraintSet.elevationRange)(
         (_, _, elevationRangeOptions) =>
           elevationRange => elevationRangeOptions.modState(_.toElevationRange(elevationRange))
       )
       .render { (props, ctx, elevationRangeOptions) =>
         import ctx.given
 
-        val undoCtx: UndoContext[ConstraintSet] = UndoContext(props.undoStacks, props.constraintSet)
-
-        val undoViewSet = UndoView(props.programId, props.obsIds, undoCtx)
+        val undoViewSet = UndoView(props.programId, props.obsIds, props.undoCtx)
 
         val erView =
           undoViewSet(ConstraintSet.elevationRange, UpdateConstraintSet.elevationRange)
@@ -121,7 +121,6 @@ object ConstraintsPanel:
             FormLabel(htmlFor = id)(label, HelpIcon(helpId)),
             EnumDropdownView(id = id, value = undoViewSet(lens, remoteSet))
           )
-
         }
 
         val erTypeView: View[ElevationRangeType] =
@@ -160,9 +159,6 @@ object ConstraintsPanel:
           )
 
         React.Fragment(
-          props.renderInTitle(
-            <.span(ExploreStyles.TitleUndoButtons)(UndoButtons(undoCtx))
-          ),
           <.div(ExploreStyles.ConstraintsGrid)(
             selectEnum(
               "Image Quality".refined,
