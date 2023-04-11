@@ -70,7 +70,6 @@ import react.common.*
 import react.primereact.Message
 
 import java.time.Instant
-import scala.collection.immutable.TreeSeqMap
 
 case class SiderealTargetEditor(
   userId:        User.Id,
