@@ -3,6 +3,7 @@
 
 package explore.tabs
 
+import cats.Order.given
 import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
@@ -16,26 +17,34 @@ import explore.*
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
+import explore.constraints.ConstraintsPanel
 import explore.model.AppContext
 import explore.model.Asterism
+import explore.model.AsterismIds
 import explore.model.BasicConfigAndItc
 import explore.model.ConstraintGroup
 import explore.model.Focused
 import explore.model.ModelUndoStacks
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
+import explore.model.ObsSummary
 import explore.model.PAProperties
-import explore.model.TargetSummary
+import explore.model.ProgramSummaries
+import explore.model.TargetList
+import explore.model.TargetWithObs
 import explore.model.display.given
 import explore.model.enums.AgsState
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
+import explore.model.extensions.*
 import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.ItcTarget
 import explore.model.itc.OverridenExposureTime
 import explore.model.layout.*
 import explore.optics.*
 import explore.optics.all.*
+import explore.undo.UndoContext
+import explore.undo.UndoSetter
 import explore.undo.UndoStacks
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -45,6 +54,7 @@ import lucuma.ags.AgsAnalysis
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.skycalc.averageParallacticAngle
+import lucuma.core.model.ConstraintSet
 import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
@@ -55,8 +65,10 @@ import lucuma.core.syntax.all.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.ObservingMode
+import lucuma.schemas.model.TargetWithId
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import monocle.Iso
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ObsQueries
 import queries.schemas.odb.ObsQueries.*
@@ -67,68 +79,49 @@ import react.resizeDetector.*
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
+import scala.collection.immutable.SortedSet
 
 case class ObsTabTiles(
-  userId:           Option[User.Id],
-  programId:        Program.Id,
-  obsId:            Observation.Id,
-  backButton:       VdomNode,
-  constraintGroups: View[ConstraintsList],
-  focusedTarget:    Option[Target.Id],
-  targetMap:        SortedMap[Target.Id, TargetSummary],
-  undoStacks:       View[ModelUndoStacks[IO]],
-  searching:        View[Set[Target.Id]],
-  defaultLayouts:   LayoutsMap,
-  layouts:          View[Pot[LayoutsMap]],
-  resize:           UseResizeDetectorReturn
-) extends ReactFnProps(ObsTabTiles.component)
+  userId:             Option[User.Id],
+  programId:          Program.Id,
+  backButton:         VdomNode,
+  obsUndoCtx:         UndoSetter[ObsSummary],
+  allTargetsUndoCtx:  UndoSetter[TargetList],
+  allConstraintSets:  Set[ConstraintSet],
+  targetObservations: Map[Target.Id, SortedSet[Observation.Id]],
+  focusedTarget:      Option[Target.Id],
+  undoStacks:         View[ModelUndoStacks[IO]],
+  searching:          View[Set[Target.Id]],
+  defaultLayouts:     LayoutsMap,
+  layouts:            View[Pot[LayoutsMap]],
+  resize:             UseResizeDetectorReturn
+) extends ReactFnProps(ObsTabTiles.component):
+  val observation: ObsSummary = obsUndoCtx.model.get
+  val obsId: Observation.Id   = observation.id
+  val allTargets: TargetList  = allTargetsUndoCtx.model.get
 
 object ObsTabTiles:
   private type Props = ObsTabTiles
 
   private def makeConstraintsSelector(
-    programId:        Program.Id,
-    constraintGroups: View[ConstraintsList],
-    obsView:          Pot[View[ObsEditData]]
+    programId:         Program.Id,
+    observationId:     Observation.Id,
+    constraintSet:     View[ConstraintSet],
+    allConstraintSets: Set[ConstraintSet]
   )(using FetchClient[IO, ?, ObservationDB]): VdomNode =
-    obsView.renderPot { vod =>
-      val cgOpt: Option[ConstraintGroup] =
-        constraintGroups.get.find(_._1.contains(vod.get.id)).map(_._2)
-
-      Dropdown(
-        clazz = ExploreStyles.ConstraintsTileSelector,
-        value = cgOpt.map(cg => ObsIdSet.fromString.reverseGet(cg.obsIds)).orEmpty,
-        onChange = (p: String) => {
-          val newCgOpt =
-            ObsIdSet.fromString
-              .getOption(p)
-              .flatMap(ids => constraintGroups.get.get(ids))
-          newCgOpt.map { cg =>
-            vod
-              .zoom(ObsEditData.scienceData.andThen(ScienceData.constraints))
-              .set(cg.constraintSet) >>
-              ObsQueries
-                .updateObservationConstraintSet[IO](programId, List(vod.get.id), cg.constraintSet)
-                .runAsyncAndForget
-          }.getOrEmpty
-        },
-        options = constraintGroups.get
-          .map(kv =>
-            new SelectItem[String](
-              value = ObsIdSet.fromString.reverseGet(kv._1),
-              label = kv._2.constraintSet.shortName
-            )
-          )
-          .toList
-      )
-    }
-
-  private def otherObsCount(
-    targetObsMap: SortedMap[Target.Id, TargetSummary],
-    obsId:        Observation.Id,
-    targetId:     Target.Id
-  ): Int =
-    targetObsMap.get(targetId).fold(0)(summary => (summary.obsIds - obsId).size)
+    Dropdown[ConstraintSet](
+      clazz = ExploreStyles.ConstraintsTileSelector,
+      value = constraintSet.get,
+      onChange = (cs: ConstraintSet) =>
+        constraintSet.set(cs) >>
+          ObsQueries
+            .updateObservationConstraintSet[IO](programId, List(observationId), cs)
+            .runAsyncAndForget,
+      options = allConstraintSets
+        .map(cs => new SelectItem[ConstraintSet](value = cs, label = cs.shortName))
+        .toList
+    )
+  // }
 
   private val component =
     ScalaFnComponent
@@ -168,41 +161,44 @@ object ObsTabTiles:
               _.zoom(ObsEditData.scienceData.andThen(ScienceData.posAngle))
             )
 
-        val potAsterism: Pot[View[Option[Asterism]]] =
+        val potAsterismIds: Pot[View[AsterismIds]] =
           obsViewPot.map(v =>
             v.zoom(
               ObsEditData.scienceData
                 .andThen(ScienceData.targets)
                 .andThen(ObservationData.TargetEnvironment.asterism)
-            ).zoom(Asterism.fromTargetsListOn(props.focusedTarget).asLens)
+                .andThen(ObsQueries.targetIdsFromAsterism)
+            ).zoomSplitEpi(sortedSetFromList)
           )
 
         val basicConfiguration = observingMode.map(_.toBasicConfiguration)
-
-        val asterism = potAsterism.toOption.flatMap(_.get)
-
-        val potAsterismMode: Pot[(View[Option[Asterism]], Option[BasicConfiguration])] =
-          potAsterism.map(x => (x, basicConfiguration))
 
         val vizTimeView: Pot[View[Option[Instant]]] =
           obsViewPot.map(_.zoom(ObsEditData.visualizationTime))
 
         val vizTime = vizTimeView.toOption.flatMap(_.get)
 
+        val asterismAsNel: Option[NonEmptyList[TargetWithId]] =
+          potAsterismIds.toOption.flatMap(asterismIdsView =>
+            NonEmptyList.fromList(
+              asterismIdsView.get.toList
+                .map(id => props.allTargets.get(id).map(t => TargetWithId(id, t)))
+                .flattenOption
+            )
+          )
+
         // asterism base coordinates at viz time or default to base coordinates
         val targetCoords: Option[CoordinatesAtVizTime] =
-          (vizTime, potAsterism.toOption)
-            .mapN { (instant, asterism) =>
-              asterism.get.flatMap(
-                _.baseTrackingAt(instant).flatMap(_.at(instant))
-              )
-            }
+          (vizTime, asterismAsNel)
+            .mapN((instant, asterismNel) =>
+              asterismNel.baseTrackingAt(instant).flatMap(_.at(instant))
+            )
             .flatten
-            .orElse {
-              // If e.g. vizTime isn't defined default to the asterism base coordinates
-              potAsterism.toOption
-                .flatMap(_.get.map(x => CoordinatesAtVizTime(x.baseTracking.baseCoordinates)))
-            }
+            // If e.g. vizTime isn't defined default to the asterism base coordinates
+            .orElse(
+              asterismAsNel
+                .map(asterismNel => CoordinatesAtVizTime(asterismNel.baseTracking.baseCoordinates))
+            )
 
         val spectroscopyReqs: Option[ScienceRequirementsData] =
           obsView.toOption.map(_.get.scienceData.requirements)
@@ -241,21 +237,22 @@ object ObsTabTiles:
                   .map(r => ItcChartExposureTime(OverridenExposureTime.FromItc, r.time, r.count))
               ),
             itcTarget,
-            selectedConfig.get
+            selectedConfig.get,
+            props.allTargets
           )
 
         val constraintsSelector =
-          makeConstraintsSelector(props.programId, props.constraintGroups, obsViewPot)
-
-        // first target of the obs. We can use it in case there is no target focus
-        val firstTarget = props.targetMap.collect {
-          case (tid, ts) if ts.obsIds.contains(props.obsId) => tid
-        }.headOption
+          makeConstraintsSelector(
+            props.programId,
+            props.obsId,
+            props.obsUndoCtx.model.zoom(ObsSummary.constraints),
+            props.allConstraintSets
+          )
 
         val skyPlotTile =
           ElevationPlotTile.elevationPlotTile(
             props.userId,
-            props.focusedTarget.orElse(firstTarget),
+            props.focusedTarget.orElse(props.observation.scienceTargetIds.headOption),
             observingMode.map(_.siteFor),
             targetCoords,
             vizTime
@@ -265,22 +262,18 @@ object ObsTabTiles:
           tid: Option[Target.Id],
           via: SetRouteVia
         ): Callback =
-          (potAsterism.toOption, tid)
-            // When selecting the current target focus the asterism zipper
-            .mapN((pot, tid) => pot.mod(_.map(_.focusOn(tid))))
-            .getOrEmpty *>
-            // Set the route base on the selected target
-            ctx.setPageVia(
-              AppTab.Observations,
-              programId,
-              Focused(oid.map(ObsIdSet.one), tid),
-              via
-            )
+          // Set the route base on the selected target
+          ctx.setPageVia(
+            AppTab.Observations,
+            programId,
+            Focused(oid.map(ObsIdSet.one), tid),
+            via
+          )
 
         val paProps = posAngle.map(p => PAProperties(props.obsId, selectedPA, agsState, p))
 
-        val averagePA =
-          (basicConfiguration.map(_.siteFor), asterism, vizTime)
+        val averagePA: Option[Angle] =
+          (basicConfiguration.map(_.siteFor), asterismAsNel, vizTime)
             .mapN((site, asterism, vizTime) =>
               posAngle.map(_.get) match
                 case Some(PosAngleConstraint.AverageParallactic) =>
@@ -301,16 +294,21 @@ object ObsTabTiles:
           )
         )
 
+        def otherObsCount(obsId: Observation.Id, targetId: Target.Id): Int =
+          props.targetObservations.get(targetId).fold(0)(obsIds => (obsIds - obsId).size)
+
         val targetTile = AsterismEditorTile.asterismEditorTile(
           props.userId,
           props.programId,
           ObsIdSet.one(props.obsId),
-          potAsterismMode,
+          potAsterismIds,
+          props.allTargetsUndoCtx.model,
+          basicConfiguration,
           vizTimeView,
           obsConf,
           props.focusedTarget,
           setCurrentTarget(props.programId, props.obsId.some),
-          otherObsCount(props.targetMap, props.obsId, _),
+          otherObsCount(props.obsId, _),
           props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
           props.searching,
           "Targets",
@@ -322,15 +320,20 @@ object ObsTabTiles:
         // than one tile ends up having dropdowns in the tile header, we'll need something more complex such
         // as changing the css classes on the various tiles when the dropdown is clicked to control z-index.
         val constraintsTile =
-          ConstraintsTile.constraintsTile(
-            props.programId,
-            props.obsId,
-            constraints,
-            props.undoStacks
-              .zoom(ModelUndoStacks.forConstraintGroup[IO])
-              .zoom(atMapWithDefault(ObsIdSet.one(props.obsId), UndoStacks.empty)),
-            control = constraintsSelector.some,
-            clazz = ExploreStyles.ConstraintsTile.some
+          Tile(
+            ObsTabTilesIds.ConstraintsId.id,
+            "Constraints",
+            canMinimize = true,
+            control = _ => constraintsSelector.some,
+            controllerClass = ExploreStyles.ConstraintsTile.some
+          )(renderInTitle =>
+            <.div
+            ConstraintsPanel(
+              props.programId,
+              ObsIdSet.one(props.obsId),
+              props.obsUndoCtx.zoom(ObsSummary.constraints),
+              renderInTitle
+            )
           )
 
         val configurationTile =
@@ -345,11 +348,12 @@ object ObsTabTiles:
               )
             ),
             props.undoStacks
-              .zoom(ModelUndoStacks.forObservationData[IO])
+              .zoom(ModelUndoStacks.forObsScienceData[IO])
               .zoom(atMapWithDefault(props.obsId, UndoStacks.empty)),
             targetCoords,
             obsConf,
-            selectedConfig
+            selectedConfig,
+            props.allTargets
           )
 
         props.layouts.renderPotView(l =>

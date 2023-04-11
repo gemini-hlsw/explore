@@ -8,6 +8,7 @@ import cats.syntax.all.*
 import crystal.react.View
 import crystal.react.implicits.*
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.cache.ProgramCache
 import explore.components.state.IfLogged
 import explore.components.ui.ExploreStyles
 import explore.events.ExploreEvent
@@ -117,7 +118,9 @@ object ExploreLayout:
           ctx.broadcastChannel.postMessage(ExploreEvent.ExploreUIReady)
         }
       }
-      .render { (props, helpCtx, _, toastRef) =>
+      .render { (props, helpCtx, ctx, toastRef) =>
+        import ctx.given
+
         IfLogged(props.view)((vault: UserVault, onLogout: IO[Unit]) =>
           val routingInfo = RoutingInfo.from(props.resolution.page)
 
@@ -148,14 +151,20 @@ object ExploreLayout:
                 props.view.zoom(RootModel.undoStacks),
                 onLogout >> props.view.zoom(RootModel.vault).set(none).to[IO]
               ),
-              <.div(
-                ExploreStyles.SideTabs,
-                SideTabs(routingInfo)
-              ),
-              <.div(
-                ExploreStyles.MainBody,
-                props.resolution.renderP(props.view)
-              )
+              routingInfo.optProgramId
+                .map(programId =>
+                  ProgramCache.Provider(ProgramCache(programId))(
+                    <.div(
+                      ExploreStyles.SideTabs,
+                      SideTabs(routingInfo)
+                    ),
+                    <.div(
+                      ExploreStyles.MainBody,
+                      props.resolution.renderP(props.view)
+                    )
+                  )
+                )
+                .whenDefined
             )
           )
         )

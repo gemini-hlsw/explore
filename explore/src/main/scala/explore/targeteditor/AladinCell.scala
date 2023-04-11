@@ -50,6 +50,7 @@ import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.util.NewType
 import lucuma.refined.*
+import lucuma.schemas.model.TargetWithId
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given

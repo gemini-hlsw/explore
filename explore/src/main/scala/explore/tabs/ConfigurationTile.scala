@@ -12,6 +12,7 @@ import explore.components.Tile
 import explore.config.ConfigurationPanel
 import explore.model.BasicConfigAndItc
 import explore.model.ObsConfiguration
+import explore.model.TargetList
 import explore.model.enums.AgsState
 import explore.undo.*
 import explore.utils.*
@@ -36,7 +37,8 @@ object ConfigurationTile {
     undoStacks:      View[UndoStacks[IO, ScienceData]],
     baseCoordinates: Option[CoordinatesAtVizTime],
     obsConf:         Option[ObsConfiguration],
-    selectedConfig:  View[Option[BasicConfigAndItc]]
+    selectedConfig:  View[Option[BasicConfigAndItc]],
+    allTargets:      TargetList
   )(using Logger[IO]) =
     Tile(
       ObsTabTilesIds.ConfigurationId.id,
@@ -52,7 +54,7 @@ object ConfigurationTile {
           subtitle,
           UndoContext(undoStacks, scienceData),
           obsConf,
-          scienceData.get.itcTargets,
+          scienceData.get.itcTargets(allTargets),
           baseCoordinates,
           selectedConfig,
           renderInTitle

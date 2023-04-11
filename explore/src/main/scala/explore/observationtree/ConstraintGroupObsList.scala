@@ -9,27 +9,37 @@ import clue.FetchClient
 import crystal.react.View
 import crystal.react.reuse.Reuse
 import explore.Icons
-import explore.common.ConstraintGroupQueries.*
+import explore.common.ConstraintsQueries
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
+import explore.data.KeyedIndexedList
 import explore.model.AppContext
 import explore.model.ConstraintGroup
+import explore.model.ConstraintGroupList
 import explore.model.Focused
 import explore.model.ObsIdSet
+import explore.model.ObsSummary
+import explore.model.ObservationList
+import explore.model.ProgramSummaries
 import explore.model.display.given
 import explore.model.enums.AppTab
+import explore.model.syntax.all.*
 import explore.undo.UndoContext
 import explore.undo.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.syntax.all.*
 import lucuma.schemas.ObservationDB
+import lucuma.schemas.odb.input.*
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import monocle.Iso
 import mouse.boolean.*
+import org.typelevel.log4cats.Logger
 import react.beautifuldnd.*
 import react.common.ReactFnProps
 import react.fa.FontAwesomeIcon
@@ -38,14 +48,15 @@ import react.primereact.Button
 import scala.collection.immutable.SortedSet
 
 case class ConstraintGroupObsList(
-  constraintsWithObs: View[ConstraintSummaryWithObervations],
-  programId:          Program.Id,
-  focusedObsSet:      Option[ObsIdSet],
-  setSummaryPanel:    Callback,
-  expandedIds:        View[SortedSet[ObsIdSet]],
-  undoStacks:         View[UndoStacks[IO, ConstraintGroupList]]
+  programId:        Program.Id,
+  undoCtx:          UndoContext[ObservationList],
+  constraintGroups: ConstraintGroupList,
+  focusedObsSet:    Option[ObsIdSet],
+  setSummaryPanel:  Callback,
+  expandedIds:      View[SortedSet[ObsIdSet]]
 ) extends ReactFnProps[ConstraintGroupObsList](ConstraintGroupObsList.component)
-    with ViewCommon
+    with ViewCommon:
+  val observations: ObservationList = undoCtx.model.get
 
 object ConstraintGroupObsList:
   private type Props = ConstraintGroupObsList
@@ -71,27 +82,42 @@ object ConstraintGroupObsList:
     }
 
   private def onDragEnd(
-    undoCtx:          UndoContext[ConstraintGroupList],
+    undoCtx:          UndoContext[ObservationList],
     programId:        Program.Id,
     expandedIds:      View[SortedSet[ObsIdSet]],
     focusedObsSet:    Option[ObsIdSet],
     constraintGroups: ConstraintGroupList,
     setObsSet:        Option[ObsIdSet] => Callback
-  )(implicit
-    c:                FetchClient[IO, ?, ObservationDB]
+  )(using
+    FetchClient[IO, ?, ObservationDB],
+    Logger[IO]
   ): (DropResult, ResponderProvided) => Callback = (result, _) => {
     val oData = for {
       destination <- result.destination.toOption
       destIds     <- ObsIdSet.fromString.getOption(destination.droppableId)
       draggedIds  <- getDraggedIds(result.draggableId, focusedObsSet)
       if !destIds.intersects(draggedIds)
-      destCg      <- constraintGroups.get(destIds)
-    } yield (destCg, draggedIds)
+      newCs       <- constraintGroups.get(destIds)
+    } yield (newCs, draggedIds)
 
-    oData.foldMap { case (destCg, draggedIds) =>
-      ConstraintGroupObsListActions
-        .obsConstraintGroup(programId, draggedIds, expandedIds, setObsSet)
-        .set(undoCtx)(destCg.some)
+    val traversal = Iso
+      .id[ObservationList]
+      .filterIndex((id: Observation.Id) => oData.exists((_, draggedIds) => draggedIds.contains(id)))
+      .andThen(KeyedIndexedList.value)
+      .andThen(ObsSummary.constraints)
+
+    val csUndoCtx =
+      undoCtx.zoom(traversal.getAll.andThen(_.head), traversal.modify)
+
+    oData.foldMap { case (newCs, draggedIds) =>
+      ConstraintsQueries
+        .UndoView(programId, draggedIds, csUndoCtx)(
+          // There should be a better way to do this.
+          identity,
+          identity,
+          cs => _ => cs.toInput
+        )
+        .set(newCs)
     }
   }
 
@@ -100,25 +126,23 @@ object ConstraintGroupObsList:
     .useContext(AppContext.ctx)
     .useState(false) // dragging
     .useEffectOnMountBy { (props, ctx, _) =>
-      val constraintsWithObs = props.constraintsWithObs.get
-      val constraintGroups   = constraintsWithObs.constraintGroups
-      val expandedIds        = props.expandedIds
+      val expandedIds = props.expandedIds
 
-      val selectedGroup =
+      val selectedGroupObsIds =
         props.focusedObsSet
-          .flatMap(idSet => constraintGroups.find { case (key, _) => idSet.subsetOf(key) })
-          .map(_._2)
+          .flatMap(idSet => props.constraintGroups.find { case (key, _) => idSet.subsetOf(key) })
+          .map(_._1)
 
       // Unfocus the group with observations doesn't exist
       val unfocus =
-        if (props.focusedObsSet.nonEmpty && selectedGroup.isEmpty)
+        if (props.focusedObsSet.nonEmpty && selectedGroupObsIds.isEmpty)
           ctx.replacePage(AppTab.Constraints, props.programId, Focused.None)
         else Callback.empty
 
-      val expandSelected = selectedGroup.foldMap(cg => expandedIds.mod(_ + cg.obsIds))
+      val expandSelected = selectedGroupObsIds.foldMap(obsIds => expandedIds.mod(_ + obsIds))
 
       val cleanupExpandedIds =
-        expandedIds.mod(_.filter(ids => constraintGroups.contains(ids)))
+        expandedIds.mod(_.filter(ids => props.constraintGroups.contains(ids)))
 
       for {
         _ <- unfocus
@@ -129,14 +153,7 @@ object ConstraintGroupObsList:
     .render { (props, ctx, dragging) =>
       import ctx.given
 
-      val observations = props.constraintsWithObs.get.observations
-
-      val constraintGroups = props.constraintsWithObs.get.constraintGroups.map(_._2)
-
-      val undoCtx = UndoContext(
-        props.undoStacks,
-        props.constraintsWithObs.zoom(ConstraintSummaryWithObervations.constraintGroups)
-      )
+      val constraintGroups = props.constraintGroups.toList.sortBy(_._2.summaryString)
 
       val renderClone: Draggable.Render = (provided, snapshot, rubric) =>
         <.div(
@@ -148,7 +165,9 @@ object ConstraintGroupObsList:
           getDraggedIds(rubric.draggableId, props.focusedObsSet)
             .flatMap(obsIds =>
               if (obsIds.size === 1)
-                observations.get(obsIds.head).map(obs => props.renderObsBadge(obs))
+                props.observations
+                  .getValue(obsIds.head)
+                  .map(obs => props.renderObsBadge(obs, ObsBadge.Layout.ConstraintsTab))
               else
                 <.div(obsIds.toList.toTagMod(id => <.div(id.show))).some
             )
@@ -165,11 +184,11 @@ object ConstraintGroupObsList:
         setObsSet(ObsIdSet.one(obsId).some)
 
       val handleDragEnd = onDragEnd(
-        undoCtx,
+        props.undoCtx,
         props.programId,
         props.expandedIds,
         props.focusedObsSet,
-        props.constraintsWithObs.get.constraintGroups,
+        props.constraintGroups,
         setObsSet
       )
 
@@ -182,9 +201,8 @@ object ConstraintGroupObsList:
           } else Callback.empty // Not in the same group
         }
 
-      def renderGroup(constraintGroup: ConstraintGroup): VdomNode = {
-        val obsIds        = constraintGroup.obsIds
-        val cgObs         = obsIds.toList.map(id => observations.get(id)).flatten
+      def renderGroup(obsIds: ObsIdSet, constraintSet: ConstraintSet): VdomNode = {
+        val cgObs         = obsIds.toList.map(id => props.observations.getValue(id)).flatten
         // if this group or something in it is selected
         val groupSelected = props.focusedObsSet.exists(_.subsetOf(obsIds))
 
@@ -206,9 +224,7 @@ object ConstraintGroupObsList:
           case (provided, snapshot) =>
             val csHeader = <.span(ExploreStyles.ObsTreeGroupHeader)(
               icon,
-              <.span(ExploreStyles.ObsGroupTitleWithWrap)(
-                constraintGroup.constraintSet.shortName
-              ),
+              <.span(ExploreStyles.ObsGroupTitleWithWrap)(constraintSet.shortName),
               <.span(ExploreStyles.ObsCount, s"${obsIds.size} Obs")
             )
 
@@ -226,11 +242,12 @@ object ConstraintGroupObsList:
                     Option.when(!dragging.value)(ExploreStyles.UnselectedObsTreeGroup)
                   )
                   .orEmpty
-              )(^.cursor.pointer, ^.onClick --> setObsSet(constraintGroup.obsIds.some))(
+              )(^.cursor.pointer, ^.onClick --> setObsSet(obsIds.some))(
                 csHeader,
                 TagMod.when(props.expandedIds.get.contains(obsIds))(
                   cgObs.zipWithIndex.toTagMod { case (obs, idx) =>
                     props.renderObsBadgeItem(
+                      ObsBadge.Layout.ConstraintsTab,
                       selectable = true,
                       highlightSelected = true,
                       forceHighlight = isObsSelected(obs.id),
@@ -253,7 +270,7 @@ object ConstraintGroupObsList:
           (result, provided) => dragging.setState(false) >> handleDragEnd(result, provided)
       )(
         <.div(ExploreStyles.ObsTreeWrapper)(
-          <.div(ExploreStyles.TreeToolbar)(UndoButtons(undoCtx, size = PlSize.Mini)),
+          <.div(ExploreStyles.TreeToolbar)(UndoButtons(props.undoCtx, size = PlSize.Mini)),
           <.div(
             Button(
               onClick = setObsSet(none) >> props.setSummaryPanel,
@@ -266,7 +283,7 @@ object ConstraintGroupObsList:
           ),
           <.div(ExploreStyles.ObsTree)(
             <.div(ExploreStyles.ObsScrollTree)(
-              constraintGroups.toTagMod(renderGroup)
+              constraintGroups.map((obsIds, c) => renderGroup(obsIds, c)).toTagMod
             )
           )
         )

@@ -10,9 +10,9 @@ import clue.FetchClient
 import clue.data.syntax.*
 import explore.DefaultErrorPolicy
 import explore.common.AsterismQueries
-import explore.common.AsterismQueries.*
 import explore.model.AsterismGroup
 import explore.model.ObsIdSet
+import explore.model.ProgramSummaries
 import explore.model.TargetWithObs
 import explore.model.syntax.all.*
 import explore.undo.*
@@ -25,33 +25,24 @@ import lucuma.schemas.odb.input.*
 import queries.common.TargetQueriesGQL
 
 object TargetAddDeleteActions {
-  private def singleTargetGetter(
-    targetId: Target.Id
-  ): AsterismGroupsWithObs => Option[TargetWithObs] = _.targetsWithObs.get(targetId)
+  private def singleTargetGetter(targetId: Target.Id): ProgramSummaries => Option[Target] =
+    _.targets.get(targetId)
 
   private def targetListGetter(
     targetIds: List[Target.Id]
-  ): AsterismGroupsWithObs => List[Option[TargetWithObs]] = agwo =>
-    targetIds.map(tid => singleTargetGetter(tid)(agwo))
+  ): ProgramSummaries => List[Option[Target]] =
+    ps => targetIds.map(tid => singleTargetGetter(tid)(ps))
 
   private def singleTargetSetter(targetId: Target.Id)(
-    otwo: Option[TargetWithObs]
-  ): AsterismGroupsWithObs => AsterismGroupsWithObs = agwo =>
-    otwo.fold(AsterismGroupsWithObs.targetsWithObs.modify(_.removed(targetId))) { tg =>
-      AsterismGroupsWithObs.targetsWithObs.modify(_.updated(targetId, tg)) >>>
-        AsterismGroupsWithObs.asterismGroups.modify(
-          _.map { case (_, ag) =>
-            if (ag.obsIds.toSortedSet.intersect(tg.obsIds).nonEmpty) ag.addTargetId(targetId)
-            else ag
-          }.toList.toSortedMap(_.obsIds)
-        )
-    }(agwo)
+    targetOpt: Option[Target]
+  ): ProgramSummaries => ProgramSummaries =
+    ProgramSummaries.targets.modify(_.updatedWith(targetId)(_ => targetOpt))
 
   private def targetListSetter(targetIds: List[Target.Id])(
-    twol: List[Option[TargetWithObs]]
-  ): AsterismGroupsWithObs => AsterismGroupsWithObs = agwo =>
-    targetIds.zip(twol).foldLeft(agwo) { case (acc, (tid, otwo)) =>
-      singleTargetSetter(tid)(otwo)(acc)
+    targetOpts: List[Option[Target]]
+  ): ProgramSummaries => ProgramSummaries = ps =>
+    targetIds.zip(targetOpts).foldLeft(ps) { case (acc, (tid, targetOpt)) =>
+      singleTargetSetter(tid)(targetOpt)(acc)
     }
 
   private def remoteDeleteTargets(targetIds: List[Target.Id], programId: Program.Id)(using
@@ -92,8 +83,8 @@ object TargetAddDeleteActions {
     postMessage: String => IO[Unit]
   )(using
     c:           FetchClient[IO, ?, ObservationDB]
-  ): Action[AsterismGroupsWithObs, Option[TargetWithObs]] =
-    Action[AsterismGroupsWithObs, Option[TargetWithObs]](
+  ): Action[ProgramSummaries, Option[Target]] =
+    Action[ProgramSummaries, Option[Target]](
       getter = singleTargetGetter(targetId),
       setter = singleTargetSetter(targetId)
     )(
@@ -119,7 +110,7 @@ object TargetAddDeleteActions {
     postMessage: String => IO[Unit]
   )(using
     c:           FetchClient[IO, ?, ObservationDB]
-  ): Action[AsterismGroupsWithObs, List[Option[TargetWithObs]]] =
+  ): Action[ProgramSummaries, List[Option[Target]]] =
     Action(getter = targetListGetter(targetIds), setter = targetListSetter(targetIds))(
       onSet = (_, lotwo) =>
         lotwo.sequence.fold(remoteDeleteTargets(targetIds, programId))(_ =>

@@ -43,7 +43,7 @@ object Routing:
       model.zoom(RootModel.userId).get,
       routingInfo.programId,
       routingInfo.focused,
-      model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forAsterismGroupList),
+      model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forProgramSummaries),
       model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forSiderealTarget),
       model.zoom(RootModel.searchingTarget),
       model.zoom(RootModel.expandedIds.andThen(ExpandedIds.asterismObsIds))
@@ -66,15 +66,15 @@ object Routing:
       routingInfo.programId,
       routingInfo.focused.obsSet,
       model.zoom(RootModel.expandedIds.andThen(ExpandedIds.constraintSetObsIds)),
-      model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forConstraintList),
-      model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forConstraintGroup)
+      model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forObsList)
     )
 
   private def proposalTab(page: Page, model: View[RootModel]): VdomElement =
     val routingInfo = RoutingInfo.from(page)
-    ProposalTabContents(routingInfo.programId,
-                        model.zoom(RootModel.user).get,
-                        model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forProposal)
+    ProposalTabContents(
+      routingInfo.programId,
+      model.zoom(RootModel.user).get,
+      model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forProposal)
     )
 
   private def configurationsTab(page: Page): VdomElement =

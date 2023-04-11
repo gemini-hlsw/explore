@@ -7,6 +7,7 @@ import cats.Eq
 import cats.data.NonEmptyList
 import cats.derived.*
 import cats.syntax.all.*
+import explore.model.extensions.*
 import lucuma.core.data.Zipper
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Epoch
@@ -20,33 +21,17 @@ import monocle.*
 
 import java.time.Instant
 
-extension (a: NonEmptyList[TargetWithId])
-  // We calculate the coordinates at a given time by doing PM
-  // correction of each target and finding the center
-  def centerOfAt(vizTime: Instant): Option[Coordinates] =
-    val coords = a
-      .map(_.toSidereal)
-      .collect { case Some(x) =>
-        x.target.tracking.at(vizTime)
-      }
-      .sequence
-    coords.map(Coordinates.centerOf(_))
-
-  def centerOf: Coordinates =
-    val coords = a.map(_.toSidereal).collect { case Some(x) =>
-      x.target.tracking.baseCoordinates
-    }
-    Coordinates.centerOf(coords)
-
 /**
  * Contains a list of targets focused on the selected one on the UI
  */
+// Can this be an opaque type?
+// Maybe this can be a wrapper for a View[Asterism] and a selected id that must be in the view
 case class Asterism(private val targets: Zipper[TargetWithId]) derives Eq {
   def toSiderealAt(vizTime: Instant): List[SiderealTargetWithId] =
     targets.traverse(_.toSidereal.map(_.at(vizTime))).foldMap(_.toList)
 
   def toSidereal: List[SiderealTargetWithId] =
-    targets.traverse(_.toSidereal).foldMap(_.toList)
+    targets.toNel.toSidereal
 
   def toSiderealTracking: List[SiderealTracking] =
     targets.traverse(_.toSidereal.map(_.target.tracking)).foldMap(_.toList)
@@ -70,14 +55,9 @@ case class Asterism(private val targets: Zipper[TargetWithId]) derives Eq {
     targets.findFocus(_.id === tid).map(Asterism.apply).getOrElse(this)
 
   def baseTrackingAt(vizTime: Instant): Option[ObjectTracking] =
-    if (targets.length > 1)
-      targets.toNel.centerOfAt(vizTime).map(ObjectTracking.const(_))
-    else ObjectTracking.fromTarget(targets.focus.target).some
+    targets.toNel.baseTrackingAt(vizTime)
 
-  def baseTracking: ObjectTracking =
-    if (targets.length > 1)
-      ObjectTracking.const(targets.toNel.centerOf)
-    else ObjectTracking.fromTarget(targets.focus.target)
+  def baseTracking: ObjectTracking = targets.toNel.baseTracking
 
   def hasId(id: Target.Id): Boolean = targets.exists(_.id === id)
 }
@@ -88,6 +68,7 @@ object Asterism {
       Asterism(Zipper.fromNel(s))
     ).reverse
 
+  // TODO I think this is unlawful. Not all Asterisms have one element.
   def oneTarget(id: Target.Id): Iso[Asterism, Target] =
     Iso[Asterism, Target](_.targets.focus.target)(t => Asterism.one(TargetWithId(id, t)))
 
@@ -128,5 +109,8 @@ object Asterism {
         Asterism.targetsEach.modify(twid => if (twid.id === targetId) target else twid)
       )
     )
+
+  def fromIdsAndTargets(ids: AsterismIds, targets: TargetList): Option[Asterism] =
+    fromTargets(ids.toList.map(id => targets.get(id).map(t => TargetWithId(id, t))).flattenOption)
 
 }

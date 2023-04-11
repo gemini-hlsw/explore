@@ -105,4 +105,33 @@ object TargetQueriesGQL {
       }
     """
   }
+
+  @GraphQL
+  // This is not used for the moment, since we are getting all targets via
+  // AsterismQueriesGQL.AsterismGroupObsQuery.targetGroup.
+  // But we could use this instead and build the groups manually, which we now know
+  // how to do. Is it worth it?
+  trait AllProgramTargets extends GraphQLOperation[ObservationDB] {
+    val document = s"""
+      query($$programId: ProgramId!) {
+        targets(WHERE: {programId: {EQ: $$programId}}) {
+          matches $TargetWithIdSubquery
+        }
+      }
+    """
+  }
+
+  @GraphQL
+  trait ProgramTargetsDelta extends GraphQLOperation[ObservationDB] {
+    val document = s"""
+      subscription($$programId: ProgramId!) {
+        targetEdit(input: {programId: $$programId}) {
+          value $TargetWithIdSubquery
+          meta:value {
+            existence
+          }
+        }
+      }
+    """
+  }
 }

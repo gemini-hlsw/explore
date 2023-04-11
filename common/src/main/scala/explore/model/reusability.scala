@@ -30,11 +30,7 @@ import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.model.*
 import lucuma.ui.reusability.given
-import queries.schemas.odb.ObsQueries.ObsSummariesWithConstraints
 import queries.schemas.odb.ObsQueries.SpectroscopyRequirementsData
-
-import scala.collection.immutable.SortedMap
-import scala.collection.immutable.TreeSeqMap
 
 /**
  * Reusability instances for model classes
@@ -50,25 +46,18 @@ object reusability:
   given idListReuse[Id, A: Reusability]: Reusability[KeyedIndexedList[Id, A]] =
     Reusability.by(_.toList)
 
-  given Reusability[TreeSeqMap[Target.Id, Target]] =
-    Reusability.by((_: TreeSeqMap[Target.Id, Target]).toMap)(Reusability.map)
-  given Reusability[ObsIdSet]                      = Reusability.byEq
-  given Reusability[TargetIdSet]                   = Reusability.byEq
-  given Reusability[TargetWithId]                  = Reusability.byEq
-  given Reusability[TargetWithIdAndObs]            = Reusability.byEq
-  given Reusability[TargetWithObs]                 = Reusability.byEq
-  given Reusability[ConstraintsSummary]            = Reusability.byEq
-  given Reusability[ConstraintGroup]               = Reusability.byEq
-  given Reusability[ObsSummary]                    = Reusability.byEq
-  given Reusability[ExploreLocalPreferences]       = Reusability.byEq
+  given Reusability[ObsIdSet]                = Reusability.byEq
+  given Reusability[TargetIdSet]             = Reusability.byEq
+  given Reusability[TargetWithId]            = Reusability.byEq
+  given Reusability[TargetWithIdAndObs]      = Reusability.byEq
+  given Reusability[TargetWithObs]           = Reusability.byEq
+  given Reusability[ConstraintGroup]         = Reusability.byEq
+  given Reusability[ObsSummary]              = Reusability.byEq
+  given Reusability[ExploreLocalPreferences] = Reusability.byEq
 
   /**
    */
-  given Reusability[PosAngleConstraint]                    = Reusability.byEq
-  given Reusability[ObsSummaryWithConstraints]             =
-    Reusability.byEq
-  given Reusability[ObsSummaryWithTitleAndConstraints]     = Reusability.byEq
-  given Reusability[ObsSummaryWithTitleConstraintsAndConf] = Reusability.byEq
+  given Reusability[PosAngleConstraint] = Reusability.byEq
 
   // Undo
   given undoStacksReuse[F[_], M]: Reusability[UndoStacks[F, M]] =
@@ -116,8 +105,6 @@ object reusability:
   given Reusability[TargetWithOptId] = Reusability.byEq
 
   given Reusability[UserGlobalPreferences] = Reusability.byEq
-
-  given Reusability[ObsSummariesWithConstraints] = Reusability.byEq
 
   given Reusability[SelectedPanel] = Reusability.byEq
 
