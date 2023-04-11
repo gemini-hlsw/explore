@@ -2152,8 +2152,8 @@ $help-title-height: 40px;
 
 // Move to lucuma-ui?
 .explore-table:has(.p-datatable-emptymessage) {
-  tr.p-datatable-emptymessage {
-    background: none;
+  tr > td.p-datatable-emptymessage {
+    padding: 0;
   }
 }
 
@@ -2164,9 +2164,9 @@ $help-title-height: 40px;
 .p-datatable-emptymessage {
   div {
     position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, 100%);
+    left: calc(min(50%, 50dvw));
+    top: 100%;
+    transform: translate(calc(min(-50%, 50dvw)), 100%);
     font-size: 1.3em;
     border-bottom: var(--explore-accent-color) solid 2px;
   }

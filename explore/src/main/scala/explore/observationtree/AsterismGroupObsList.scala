@@ -411,7 +411,8 @@ object AsterismGroupObsList:
             Button(
               severity = Button.Severity.Secondary,
               onClick =
-                ctx.pushPage(AppTab.Targets, props.programId, props.focused.withoutObsSet) >>
+                ctx.pushPage(AppTab.Targets, props.programId, props.focused.withoutObsSet) *>
+                  props.selectTargetOrSummary(None) *>
                   props.selectedSummaryTargets.set(props.focused.target.toList),
               clazz = ExploreStyles.ButtonSummary
             )(
