@@ -230,7 +230,10 @@ object TargetTabContents extends TwoPanels:
     }
 
     def selectTargetOrSummary(oTargetId: Option[Target.Id]): Callback =
-      oTargetId.fold(setPage(Focused.None))(targetId => setPage(Focused.target(targetId)))
+      oTargetId.fold(
+        selectedView.set(SelectedPanel.Summary) *>
+          setPage(Focused.None)
+      )(targetId => setPage(Focused.target(targetId)))
 
     def onModAsterismsWithObs(
       groupIds:  ObsIdSet,

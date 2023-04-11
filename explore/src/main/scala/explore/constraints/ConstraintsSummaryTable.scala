@@ -260,6 +260,7 @@ object ConstraintsSummaryTable extends TableHooks:
             striped = true,
             compact = Compact.Very,
             tableMod = ExploreStyles.ExploreTable,
+            emptyMessage = <.div("No constraints present"),
             headerCellMod = headerCell =>
               columnClasses
                 .get(ColumnId(headerCell.column.id))

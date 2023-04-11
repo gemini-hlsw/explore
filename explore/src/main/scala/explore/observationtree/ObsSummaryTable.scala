@@ -328,6 +328,7 @@ object ObsSummaryTable extends TableHooks:
                 )
               }
             ),
+          emptyMessage = <.div("No observations found"),
           compact = Compact.Very,
           tableMod = ExploreStyles.ExploreTable,
           headerCellMod = _ => ExploreStyles.StickyHeader
