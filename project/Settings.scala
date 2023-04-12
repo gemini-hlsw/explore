@@ -15,7 +15,7 @@ object Settings {
     val circeGolden            = "0.3.0"
     val coulomb                = "0.7.3"
     val clue                   = "0.28.2"
-    val crystal                = "0.33.10"
+    val crystal                = "0.33.11"
     val discipline             = "1.5.1"
     val disciplineMUnit        = "1.0.9"
     val fs2                    = "3.6.1"
