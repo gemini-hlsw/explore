@@ -3126,6 +3126,12 @@ enum GmosNorthFilter {
   """GmosNorthFilter OIIIC"""
   OIIIC
 
+  """GmosNorthFilter OVI"""
+  OVI
+
+  """GmosNorthFilter OVIC"""
+  OVIC
+
   """GmosNorthFilter HeII"""
   HE_II
 
@@ -3155,6 +3161,9 @@ enum GmosNorthFilter {
 
   """GmosNorthFilter UPrime"""
   U_PRIME
+
+  """GmosNorthFilter RI"""
+  RI
 }
 
 """GMOS North Grating"""
@@ -3347,6 +3356,12 @@ enum GmosSouthFilter {
 
   """GmosSouthFilter Lya395"""
   LYA395
+
+  """GmosSouthFilter OVI"""
+  OVI
+
+  """GmosSouthFilter OVIC"""
+  OVIC
 }
 
 """GMOS South Grating"""
@@ -4091,7 +4106,7 @@ type SpectroscopyScienceRequirements {
   resolution: PosInt
 
   """Requested signal to noise ratio"""
-  signalToNoise: PosBigDecimal
+  signalToNoise: SignalToNoise
 
   """Requested wavelength for the requested signal to noise"""
   signalToNoiseAt: Wavelength
@@ -4588,7 +4603,7 @@ type ItcSuccess implements ItcResult {
   exposures: Int!
 
   # Signal/Noise ratio
-  signalToNoise: PosBigDecimal!
+  signalToNoise: SignalToNoise!
 
   # Result type
   resultType: String!
@@ -4699,7 +4714,7 @@ input SpectroscopyModeInput {
   signalToNoiseAt: WavelengthInput
 
   # Minimum desired signal-to-noise ratio.
-  signalToNoise: PosBigDecimal!
+  signalToNoise: SignalToNoise!
 
   # Spatial profile PointSource/UniformSource/GaussianSource.
   sourceProfile: SourceProfileInput!
@@ -4942,6 +4957,11 @@ enum SNResultType {
   CALCULATION_ERROR
 }
 
+"""
+Signal to noise in the range 0.001 to 9999999.999
+"""
+scalar SignalToNoise
+
 interface SignalToNoiseResult {
 
   # ITC result type
@@ -4952,7 +4972,7 @@ type SNCalcSuccess implements SignalToNoiseResult {
   resultType: SNResultType!
 
   # Resulting signal to noise
-  signalToNoise: BigDecimal!
+  signalToNoise: SignalToNoise!
 }
 
 type SNWavelengthAtBelowRange implements SignalToNoiseResult {

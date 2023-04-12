@@ -8,6 +8,8 @@ import cats.data.NonEmptyList
 import cats.syntax.all.*
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.collection.NonEmpty
+import eu.timepit.refined.numeric.Positive
+import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.HourRange
 import explore.model.display.given
@@ -17,6 +19,7 @@ import lucuma.core.math.BrightnessValueRefinement
 import lucuma.core.math.Offset
 import lucuma.core.math.Parallax
 import lucuma.core.math.ProperMotion
+import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDelta
 import lucuma.core.math.WavelengthDither
@@ -32,6 +35,7 @@ import lucuma.core.validation.*
 import lucuma.refined.*
 import lucuma.utils.*
 import monocle.Iso
+import monocle.Prism
 import spire.math.Bounded
 
 import scala.util.Try
@@ -50,6 +54,19 @@ object ExploreModelValidators:
         .getValid
         .andThen(_.map(BrightnessValue(_))),
       n => Try(n.shortName).toOption.orEmpty
+    )
+
+  val snPosBigDecimal: Prism[PosBigDecimal, SignalToNoise] =
+    Prism[PosBigDecimal, SignalToNoise](bd =>
+      SignalToNoise.FromBigDecimalExact.getOption(bd.value)
+    )(
+      _.toPosBigDecimal
+    )
+
+  val signalToNoiseValidSplitEpi =
+    InputValidSplitEpi.posBigDecimal.andThen(
+      snPosBigDecimal,
+      _ => NonEmptyChain("Invalid signal to noise".refined[NonEmpty])
     )
 
   private def ditherInRange(

@@ -59,8 +59,14 @@ object ImagingConfigurationOptions {
       f.obsolete || f.filterType === FilterType.Spectroscopic || f.filterType === FilterType.Engineering
     )
     .map { f =>
-      val l: Option[Wavelength] = f.width.map(_.lowerBound).collect { case ValueBound(a) => a }
-      val u: Option[Wavelength] = f.width.map(_.upperBound).collect { case ValueBound(a) => a }
+      val l: Option[Wavelength] = f.width.lowerBound match {
+        case ValueBound(a) => a.some
+        case _             => none
+      }
+      val u: Option[Wavelength] = f.width.upperBound match {
+        case ValueBound(a) => a.some
+        case _             => none
+      }
       new AvailableFilter {
         val filterType        = f.filterType
         val tag               = f.tag
@@ -77,8 +83,14 @@ object ImagingConfigurationOptions {
       f.obsolete || f.filterType === FilterType.Spectroscopic || f.filterType === FilterType.Engineering
     )
     .map { f =>
-      val l: Option[Wavelength] = f.width.map(_.lowerBound).collect { case ValueBound(a) => a }
-      val u: Option[Wavelength] = f.width.map(_.upperBound).collect { case ValueBound(a) => a }
+      val l: Option[Wavelength] = f.width.lowerBound match {
+        case ValueBound(a) => a.some
+        case _             => none
+      }
+      val u: Option[Wavelength] = f.width.upperBound match {
+        case ValueBound(a) => a.some
+        case _             => none
+      }
       new AvailableFilter {
         val filterType        = f.filterType
         val tag               = f.tag

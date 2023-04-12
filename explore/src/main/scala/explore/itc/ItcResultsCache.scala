@@ -11,6 +11,7 @@ import explore.model.itc.*
 import explore.model.itc.math.*
 import explore.modes.*
 import lucuma.core.enums.*
+import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.schemas.model.CentralWavelength
@@ -30,7 +31,7 @@ case class ItcResultsCache(
       NonEmptyChain.of(ItcQueryProblems.MissingWavelength)
     )
 
-  def signalToNoise(w: Option[PosBigDecimal]): EitherNec[ItcQueryProblems, PosBigDecimal] =
+  def signalToNoise(w: Option[SignalToNoise]): EitherNec[ItcQueryProblems, SignalToNoise] =
     Either.fromOption(w, NonEmptyChain.of(ItcQueryProblems.MissingSignalToNoise))
 
   def mode(r: SpectroscopyModeRow): EitherNec[ItcQueryProblems, InstrumentRow] =
@@ -63,7 +64,7 @@ case class ItcResultsCache(
   // Read the cache value or a default
   def forRow(
     w:    Option[Wavelength],
-    sn:   Option[PosBigDecimal],
+    sn:   Option[SignalToNoise],
     snAt: Option[Wavelength],
     c:    ConstraintSet,
     t:    Option[ItcTarget],

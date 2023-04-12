@@ -1,6 +1,6 @@
 {
   "environment": "DEVELOPMENT",
-  "odbURI": "wss://lucuma-postgres-odb-staging.herokuapp.com/ws",
+  "odbURI": "wss://lucuma-postgres-odb-dev.herokuapp.com/ws",
   "preferencesDBURI": "wss://user-prefs-development.herokuapp.com/v1/graphql",
   "itcURI": "https://itc-development.herokuapp.com/itc",
   "sso": {

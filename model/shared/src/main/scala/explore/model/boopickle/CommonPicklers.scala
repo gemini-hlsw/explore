@@ -32,6 +32,7 @@ import lucuma.core.math.Place
 import lucuma.core.math.ProperMotion
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.RightAscension
+import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDelta
 import lucuma.core.model.ConstraintSet
@@ -206,6 +207,11 @@ trait CommonPicklers {
   given Pickler[Place] = generatePickler
 
   given Pickler[CentralWavelength] = picklerNewType(CentralWavelength)
+
+  given Pickler[SignalToNoise] =
+    transformPickler[SignalToNoise, BigDecimal](v =>
+      SignalToNoise.FromBigDecimalExact.getOption(v).getOrElse(sys.error("Cannot unpickle"))
+    )(_.toBigDecimal)
 }
 
 object CommonPicklers extends CommonPicklers

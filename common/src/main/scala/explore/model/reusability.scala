@@ -21,6 +21,7 @@ import lucuma.ags.AgsPosition
 import lucuma.ags.GuideStarCandidate
 import lucuma.catalog.AngularSize
 import lucuma.catalog.CatalogTargetResult
+import lucuma.core.math.SignalToNoise
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.IntPercent
 import lucuma.core.model.ObjectTracking
@@ -117,3 +118,5 @@ object reusability:
   given Reusability[StepRecord] = Reusability.byEq
 
   given Reusability[ApiKey] = Reusability.byEq
+
+  given Reusability[SignalToNoise] = Reusability.byEq

@@ -7,6 +7,8 @@ import cats.syntax.all.*
 import crystal.react.View
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
+import eu.timepit.refined.types.numeric.PosBigDecimal
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.itc.requiredForITC
@@ -17,6 +19,7 @@ import explore.syntax.ui.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.validation.*
 import lucuma.refined.*
@@ -94,7 +97,7 @@ object SpectroscopyConfigurationPanel {
             id = "signal-to-noise".refined,
             value = signalToNoise,
             groupClass = ExploreStyles.WarningInput.when_(signalToNoise.get.isEmpty),
-            validFormat = InputValidSplitEpi.posBigDecimal.optional,
+            validFormat = ExploreModelValidators.signalToNoiseValidSplitEpi.optional,
             postAddons = signalToNoise.get.fold(List(requiredForITC))(_ => Nil),
             changeAuditor = ChangeAuditor.posBigDecimal().optional
           ).withMods(^.autoComplete := "off").clearable,

@@ -21,6 +21,7 @@ import explore.model.itc.OverridenExposureTime
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
+import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ExposureTimeMode
 import lucuma.schemas.model.BasicConfiguration
@@ -59,7 +60,7 @@ trait ItcPanelProps(
   }
 
   // TODO: Revisit when we have exposure mode in spectroscopy requirements
-  val signalToNoise: Option[PosBigDecimal] = spectroscopyRequirements.flatMap(_.signalToNoise)
+  val signalToNoise: Option[SignalToNoise] = spectroscopyRequirements.flatMap(_.signalToNoise)
 
   // val signalToNoise: Option[PosBigDecimal] = observingMode match
   //   case Some(ObservingMode.GmosNorthLongSlit(_, adv)) =>
