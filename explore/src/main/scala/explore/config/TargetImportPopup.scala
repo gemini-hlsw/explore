@@ -82,7 +82,7 @@ object TargetImportPopup:
     s:           Stream[F, Byte],
     stateUpdate: (State => State) => F[Unit],
     client:      Client[F]
-  )(using FetchClient[F, ?, ObservationDB], ToastCtx[F]): Stream[F, Unit] =
+  )(using FetchClient[F, ObservationDB], ToastCtx[F]): Stream[F, Unit] =
     s
       .through(text.utf8.decode)
       .through(

@@ -58,12 +58,12 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
 
   protected val handler: Logger[IO] ?=> IO[Invocation => IO[Unit]] =
     for {
-      self                          <- IO(dom.DedicatedWorkerGlobalScope.self)
-      cache                         <- Cache.withIDB[IO](self.indexedDB.toOption, "explore-itc")
-      _                             <- cache.evict(CacheRetention).start
-      matrix                        <- Deferred[IO, SpectroscopyModesMatrix]
-      config                        <- fetchConfig[IO]
-      given FetchClient[IO, ?, ITC] <- {
+      self                       <- IO(dom.DedicatedWorkerGlobalScope.self)
+      cache                      <- Cache.withIDB[IO](self.indexedDB.toOption, "explore-itc")
+      _                          <- cache.evict(CacheRetention).start
+      matrix                     <- Deferred[IO, SpectroscopyModesMatrix]
+      config                     <- fetchConfig[IO]
+      given FetchClient[IO, ITC] <- {
         given FetchJSBackend[IO] = FetchJSBackend[IO](FetchMethod.GET)
         FetchJSClient.of[IO, ITC](config.itcURI.toString, "ITC")
       }

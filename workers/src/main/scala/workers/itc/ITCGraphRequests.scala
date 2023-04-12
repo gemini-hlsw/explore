@@ -57,7 +57,7 @@ object ITCGraphRequests:
     mode:         InstrumentRow,
     cache:        Cache[F],
     callback:     ItcChartResult => F[Unit]
-  )(using Monoid[F[Unit]], FetchClient[F, ?, ITC]): F[Unit] =
+  )(using Monoid[F[Unit]], FetchClient[F, ITC]): F[Unit] =
 
     val itcRowsParams = mode match // Only handle known modes
       case m: GmosNorthSpectroscopyRow =>

@@ -35,7 +35,7 @@ object ScienceQueries:
     programId:               Program.Id,
     obsId:                   Observation.Id,
     scienceRequirementsUndo: UndoSetter[ScienceRequirementsData]
-  )(using FetchClient[IO, ?, ObservationDB], Logger[IO]):
+  )(using FetchClient[IO, ObservationDB], Logger[IO]):
     def apply[A](
       modelGet:  ScienceRequirementsData => A,
       modelMod:  (A => A) => ScienceRequirementsData => ScienceRequirementsData,

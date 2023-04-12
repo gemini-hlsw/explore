@@ -97,7 +97,7 @@ object SiderealTargetEditor:
   }
 
   private def cloneTarget(targetId: Target.Id, obsIds: ObsIdSet)(using
-    FetchClient[IO, ?, ObservationDB]
+    FetchClient[IO, ObservationDB]
   ): IO[Target.Id] = TargetQueriesGQL
     .CloneTargetMutation[IO]
     .execute(
@@ -112,7 +112,7 @@ object SiderealTargetEditor:
     onClone: TargetWithId => Callback
   )(
     input:   UpdateTargetsInput
-  )(using FetchClient[IO, ?, ObservationDB], Logger[IO]): IO[Unit] =
+  )(using FetchClient[IO, ObservationDB], Logger[IO]): IO[Unit] =
     optObs
       .fold(
         TargetQueriesGQL

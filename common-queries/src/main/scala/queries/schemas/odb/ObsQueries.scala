@@ -145,7 +145,7 @@ object ObsQueries:
     programId:   Program.Id,
     obsIds:      List[Observation.Id],
     constraints: ConstraintSet
-  )(using FetchClient[F, ?, ObservationDB]): F[Unit] = {
+  )(using FetchClient[F, ObservationDB]): F[Unit] = {
     val createER: ElevationRangeInput = constraints.elevationRange match
       case ElevationRange.AirMass(min, max)   =>
         ElevationRangeInput(airMass =
@@ -184,7 +184,7 @@ object ObsQueries:
     programId:         Program.Id,
     obsIds:            List[Observation.Id],
     visualizationTime: Option[Instant]
-  )(using FetchClient[F, ?, ObservationDB]): F[Unit] = {
+  )(using FetchClient[F, ObservationDB]): F[Unit] = {
 
     val editInput = ObservationPropertiesInput(visualizationTime =
       visualizationTime.flatMap(Timestamp.fromInstantTruncated).orUnassign
@@ -205,7 +205,7 @@ object ObsQueries:
     programId:          Program.Id,
     obsIds:             List[Observation.Id],
     posAngleConstraint: PosAngleConstraint
-  )(using FetchClient[F, ?, ObservationDB]): F[Unit] = {
+  )(using FetchClient[F, ObservationDB]): F[Unit] = {
 
     val editInput =
       ObservationPropertiesInput(posAngleConstraint = posAngleConstraint.toInput.assign)
@@ -223,7 +223,7 @@ object ObsQueries:
 
   def createObservation[F[_]: Async](
     programId: Program.Id
-  )(using FetchClient[F, ?, ObservationDB]): F[ObsSummary] =
+  )(using FetchClient[F, ObservationDB]): F[ObsSummary] =
     ProgramCreateObservation[F]
       .execute(CreateObservationInput(programId = programId))
       .map(_.createObservation.observation)
@@ -232,7 +232,7 @@ object ObsQueries:
     programId: Program.Id,
     targetIds: Set[Target.Id]
   )(using
-    FetchClient[F, ?, ObservationDB]
+    FetchClient[F, ObservationDB]
   ): F[ObsSummary] =
     ProgramCreateObservation[F]
       .execute(
@@ -248,7 +248,7 @@ object ObsQueries:
   def cloneObservation[F[_]: Async](
     obsId: Observation.Id
   )(using
-    FetchClient[F, ?, ObservationDB]
+    FetchClient[F, ObservationDB]
   ): F[ObsSummary] =
     CloneObservationMutation[F]
       .execute(CloneObservationInput(observationId = obsId))
@@ -258,7 +258,7 @@ object ObsQueries:
     obsId:     Observation.Id,
     targetIds: List[Target.Id]
   )(using
-    FetchClient[F, ?, ObservationDB]
+    FetchClient[F, ObservationDB]
   ): F[ObsSummary] =
     CloneObservationMutation[F]
       .execute(
@@ -274,19 +274,19 @@ object ObsQueries:
   def deleteObservation[F[_]: Async](
     programId: Program.Id,
     obsId:     Observation.Id
-  )(using FetchClient[F, ?, ObservationDB]): F[Unit] =
+  )(using FetchClient[F, ObservationDB]): F[Unit] =
     deleteObservations(programId, List(obsId))
 
   def undeleteObservation[F[_]: Async](
     programId: Program.Id,
     obsId:     Observation.Id
-  )(using FetchClient[F, ?, ObservationDB]): F[Unit] =
+  )(using FetchClient[F, ObservationDB]): F[Unit] =
     undeleteObservations(programId, List(obsId))
 
   def deleteObservations[F[_]: Async](
     programId: Program.Id,
     obsIds:    List[Observation.Id]
-  )(using FetchClient[F, ?, ObservationDB]): F[Unit] =
+  )(using FetchClient[F, ObservationDB]): F[Unit] =
     UpdateObservationMutation[F]
       .execute(
         UpdateObservationsInput(
@@ -300,7 +300,7 @@ object ObsQueries:
   def undeleteObservations[F[_]: Async](
     programId: Program.Id,
     obsIds:    List[Observation.Id]
-  )(using FetchClient[F, ?, ObservationDB]): F[Unit] =
+  )(using FetchClient[F, ObservationDB]): F[Unit] =
     UpdateObservationMutation[F]
       .execute(
         UpdateObservationsInput(

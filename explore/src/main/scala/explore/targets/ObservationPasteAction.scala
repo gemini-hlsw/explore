@@ -81,7 +81,7 @@ object ObservationPasteAction {
     ids:         List[(Observation.Id, Target.Id)],
     expandedIds: View[SortedSet[ObsIdSet]]
   )(using
-    c:           FetchClient[IO, ?, ObservationDB]
+    c:           FetchClient[IO, ObservationDB]
   ): Action[ProgramSummaries, Option[List[ObsSummary]]] =
     Action(getter = obsListGetter(ids), setter = obsListSetter(ids))(
       onSet = (agwo, _) => expandedIds.mod(updateExpandedIds(ids, agwo, true)).to[IO],

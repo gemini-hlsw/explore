@@ -46,7 +46,7 @@ object TargetAddDeleteActions {
     }
 
   private def remoteDeleteTargets(targetIds: List[Target.Id], programId: Program.Id)(using
-    c: FetchClient[IO, ?, ObservationDB]
+    c: FetchClient[IO, ObservationDB]
   ): IO[Unit] =
     TargetQueriesGQL
       .UpdateTargetsMutation[IO]
@@ -61,7 +61,7 @@ object TargetAddDeleteActions {
       .void
 
   private def remoteUndeleteTargets(targetIds: List[Target.Id], programId: Program.Id)(using
-    c: FetchClient[IO, ?, ObservationDB]
+    c: FetchClient[IO, ObservationDB]
   ): IO[Unit] =
     TargetQueriesGQL
       .UpdateTargetsMutation[IO]
@@ -82,7 +82,7 @@ object TargetAddDeleteActions {
     setPage:     Option[Target.Id] => IO[Unit],
     postMessage: String => IO[Unit]
   )(using
-    c:           FetchClient[IO, ?, ObservationDB]
+    c:           FetchClient[IO, ObservationDB]
   ): Action[ProgramSummaries, Option[Target]] =
     Action[ProgramSummaries, Option[Target]](
       getter = singleTargetGetter(targetId),
@@ -109,7 +109,7 @@ object TargetAddDeleteActions {
     setSummary:  IO[Unit],
     postMessage: String => IO[Unit]
   )(using
-    c:           FetchClient[IO, ?, ObservationDB]
+    c:           FetchClient[IO, ObservationDB]
   ): Action[ProgramSummaries, List[Option[Target]]] =
     Action(getter = targetListGetter(targetIds), setter = targetListSetter(targetIds))(
       onSet = (_, lotwo) =>

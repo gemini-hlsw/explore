@@ -149,7 +149,7 @@ object TimingWindowsPanel:
     dbActive: TimingWindowOperating => Callback,
     id:       Int,
     windows:  View[List[TimingWindow]]
-  )(using FetchClient[IO, ?, UserPreferencesDB]): Callback =
+  )(using FetchClient[IO, UserPreferencesDB]): Callback =
     dbActive(TimingWindowOperating.Operating) *>
       DeleteTimingWindow[IO]
         .execute(id.assign)
@@ -160,7 +160,7 @@ object TimingWindowsPanel:
   private def addNewRow(
     dbActive: TimingWindowOperating => Callback,
     windows:  View[List[TimingWindow]]
-  )(using FetchClient[IO, ?, UserPreferencesDB]): Callback =
+  )(using FetchClient[IO, UserPreferencesDB]): Callback =
     dbActive(TimingWindowOperating.Operating) *> CallbackTo.now
       .flatMap { i =>
         val from =

@@ -58,7 +58,7 @@ object TileController:
     section:   GridLayoutSection,
     layouts:   Layouts,
     debouncer: Reusable[UseSingleEffect[F]]
-  )(using FetchClient[F, ?, UserPreferencesDB]): Callback =
+  )(using FetchClient[F, UserPreferencesDB]): Callback =
     debouncer
       .submit(GridLayouts.storeLayoutsPreference[F](userId, section, layouts))
       .runAsyncAndForget

@@ -66,7 +66,7 @@ object ProgramTable:
   private type ShowDeleted = ShowDeleted.Type
 
   private def addProgram(programs: View[List[ProgramInfo]], adding: View[IsAdding])(using
-    FetchClient[IO, ?, ObservationDB],
+    FetchClient[IO, ObservationDB],
     Logger[IO]
   ): IO[Unit] =
     adding.async.set(IsAdding(true)) >>
@@ -76,20 +76,20 @@ object ProgramTable:
         .guarantee(adding.async.set(IsAdding(false)))
 
   private def deleteProgram(pinf: View[ProgramInfo])(using
-    FetchClient[IO, ?, ObservationDB]
+    FetchClient[IO, ObservationDB]
   ): IO[Unit] =
     pinf.zoom(ProgramInfo.deleted).set(true).to[IO] >>
       ProgramQueries.deleteProgram[IO](pinf.get.id)
 
   private def undeleteProgram(pinf: View[ProgramInfo])(using
-    FetchClient[IO, ?, ObservationDB],
+    FetchClient[IO, ObservationDB],
     Logger[IO]
   ): IO[Unit] =
     pinf.zoom(ProgramInfo.deleted).set(false).to[IO] >>
       ProgramQueries.undeleteProgram[IO](pinf.get.id)
 
   private def onModName(pinf: ProgramInfo)(using
-    FetchClient[IO, ?, ObservationDB],
+    FetchClient[IO, ObservationDB],
     Logger[IO]
   ): Callback =
     ProgramQueries.updateProgramName[IO](pinf.id, pinf.name).runAsync

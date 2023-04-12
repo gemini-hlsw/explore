@@ -21,7 +21,7 @@ object TargetQueries:
     programId: Program.Id,
     target:    Target.Sidereal
   )(using
-    FetchClient[F, ?, ObservationDB],
+    FetchClient[F, ObservationDB],
     ToastCtx[F]
   ): F[Target.Id] =
     TargetQueriesGQL

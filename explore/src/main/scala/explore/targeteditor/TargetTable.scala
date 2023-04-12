@@ -88,7 +88,7 @@ object TargetTable extends TableHooks:
     programId: Program.Id,
     obsIds:    ObsIdSet,
     targetId:  Target.Id
-  )(using FetchClient[IO, ?, ObservationDB]): IO[Unit] =
+  )(using FetchClient[IO, ObservationDB]): IO[Unit] =
     AsterismQueries.removeTargetsFromAsterisms[IO](programId, obsIds.toList, List(targetId))
 
   protected val component =

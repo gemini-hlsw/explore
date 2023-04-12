@@ -146,7 +146,7 @@ object AsterismGroupObsList:
     undoCtx:               UndoContext[ProgramSummaries],
     adding:                View[AddingTargetOrObs],
     selectTargetOrSummary: Option[Target.Id] => Callback
-  )(using FetchClient[IO, ?, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Unit] =
+  )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Unit] =
     adding.async.set(AddingTargetOrObs(true)) >>
       TargetQueries
         .insertTarget[IO](programId, EmptySiderealTarget)
@@ -170,7 +170,7 @@ object AsterismGroupObsList:
     adding:             View[AddingTargetOrObs],
     expandedIds:        View[SortedSet[ObsIdSet]],
     selectObsOrSummary: Option[Observation.Id] => Callback
-  )(using FetchClient[IO, ?, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Unit] =
+  )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Unit] =
     adding.async.set(AddingTargetOrObs(true)) >>
       ObsQueries
         .createObservationWithTargets[IO](programId, targetIds)

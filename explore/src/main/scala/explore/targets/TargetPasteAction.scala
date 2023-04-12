@@ -91,7 +91,7 @@ object TargetPasteAction {
     selectObsIds: ObsIdSet => IO[Unit],
     expandedIds:  View[SortedSet[ObsIdSet]]
   )(using
-    FetchClient[IO, ?, ObservationDB]
+    FetchClient[IO, ObservationDB]
   ): Action[ProgramSummaries, Unit] =
     Action(getter = getter, setter = setter(obsIds, targetIds))(
       onSet = (ps, _) =>
