@@ -26,9 +26,10 @@ import lucuma.ags.AgsParams
 import lucuma.ags.AgsPosition
 import lucuma.ags.GuideStarCandidate
 import lucuma.core.math.Coordinates
+import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
-import lucuma.core.model.ExposureTimeMode.FixedExposure
+import lucuma.core.model.ExposureTimeMode.FixedExposureMode
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.core.util.TimeSpan
@@ -49,7 +50,7 @@ object ItcMessage extends ItcPicklers {
 
   case class Query(
     wavelength:      Wavelength,
-    signalToNoise:   PosBigDecimal,
+    signalToNoise:   SignalToNoise,
     constraints:     ConstraintSet,
     targets:         ItcTarget,
     modes:           List[SpectroscopyModeRow],
@@ -73,7 +74,7 @@ object ItcMessage extends ItcPicklers {
 
   private given Pickler[Query] = generatePickler
 
-  private given Pickler[FixedExposure] = generatePickler
+  private given Pickler[FixedExposureMode] = generatePickler
 
   private given Pickler[GraphQuery] = generatePickler
 

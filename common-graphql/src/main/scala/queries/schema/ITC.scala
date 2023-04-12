@@ -91,6 +91,7 @@ trait ITC {
     type PosInt           = numeric.PosInt
     type PosLong          = numeric.PosLong
     type PosBigDecimal    = numeric.PosBigDecimal
+    type SignalToNoise    = lucuma.core.math.SignalToNoise
     type NonNegBigDecimal = numeric.NonNegBigDecimal
   }
 

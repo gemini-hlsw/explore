@@ -23,7 +23,7 @@ import explore.optics.all.*
 import japgolly.scalajs.react.*
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
-import lucuma.core.model.ExposureTimeMode.FixedExposure
+import lucuma.core.model.ExposureTimeMode.FixedExposureMode
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
@@ -99,7 +99,7 @@ object ObsQueries:
     subtitle:          Option[NonEmptyString],
     visualizationTime: Option[Instant],
     scienceData:       ScienceData,
-    itcExposureTime:   Option[FixedExposure]
+    itcExposureTime:   Option[FixedExposureMode]
   )
 
   object ObsEditData {
@@ -138,8 +138,8 @@ object ObsQueries:
       }
 
   extension (self: OdbItcResult.Success)
-    def asFixedExposureTime: FixedExposure =
-      FixedExposure(self.exposures, self.exposureTime)
+    def asFixedExposureTime: FixedExposureMode =
+      FixedExposureMode(self.exposures, self.exposureTime)
 
   def updateObservationConstraintSet[F[_]: Async](
     programId:   Program.Id,

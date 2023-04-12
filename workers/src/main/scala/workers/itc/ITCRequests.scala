@@ -25,6 +25,7 @@ import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.SpectroscopyModeRow
 import lucuma.core.enums.Band
 import lucuma.core.math.BrightnessUnits.*
+import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.SourceProfile
@@ -51,7 +52,7 @@ object ITCRequests:
 
   def queryItc[F[_]: Concurrent: Parallel: Logger](
     wavelength:      Wavelength,
-    signalToNoise:   PosBigDecimal,
+    signalToNoise:   SignalToNoise,
     constraints:     ConstraintSet,
     targets:         ItcTarget,
     modes:           List[SpectroscopyModeRow],
@@ -124,7 +125,9 @@ object ITCRequests:
         .sequence
         .map(_.flatten)
 
-    val cacheableRequest = Cacheable(CacheName("itcQuery"), CacheVersion(1), doRequest)
+    val cacheVersion = CacheVersion(2)
+
+    val cacheableRequest = Cacheable(CacheName("itcQuery"), cacheVersion, doRequest)
 
     val itcRowsParams = modes
       .map(x => (x.intervalCenter(wavelength), x.instrument))

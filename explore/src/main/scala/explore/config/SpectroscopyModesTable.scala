@@ -53,6 +53,7 @@ import lucuma.core.enums.FocalPlane
 import lucuma.core.enums.*
 import lucuma.core.math.BoundedInterval
 import lucuma.core.math.Coordinates
+import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units.Micrometer
 import lucuma.core.model.ConstraintSet
@@ -253,7 +254,7 @@ private object SpectroscopyModesTable extends TableHooks:
   private def columns(
     cw:          Option[Wavelength],
     fpu:         Option[FocalPlane],
-    sn:          Option[PosBigDecimal],
+    sn:          Option[SignalToNoise],
     snAt:        Option[Wavelength],
     constraints: ConstraintSet,
     target:      Option[ItcTarget],
