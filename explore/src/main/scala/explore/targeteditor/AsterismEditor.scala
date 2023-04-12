@@ -114,25 +114,14 @@ object AsterismEditor extends AsterismModifier:
       .useContext(AppContext.ctx)
       .useStateView(AreAdding(false))
       .useStateView(EditScope.CurrentOnly)
-      // TODO Let's deal with this later
-      // .useEffectWithDepsBy((props, _, _, _) => (props.asterism.get, props.focusedTargetId)) {
-      //   (props, _, _, _) => (asterism, oTargetId) =>
-      // if the selected targetId is None, or not in the asterism, select the first target (if any)
-      // Need to replace history here.
-
-      // oTargetId match {
-      //   case None                                                     =>
-      //     asterism.foldMap(a => props.setTarget(a.focus.id.some, SetRouteVia.HistoryReplace))
-      //   case Some(current) if asterism.exists(_.focus.id === current) => Callback.empty
-      //   case current @ Some(_)                                        =>
-      //     val inAsterism = current.exists(id => props.asterism.get.exists(_.hasId(id)))
-      //     val focus      = props.asterism.get.map(_.focus.id)
-      //     if (!inAsterism)
-      //       props.setTarget(focus, SetRouteVia.HistoryReplace)
-      //     else
-      //       props.setTarget(current, SetRouteVia.HistoryReplace)
-      // }
-      // }
+      .useEffectWithDepsBy((props, _, _, _) => (props.asterismIds.get, props.focusedTargetId)) {
+        (props, _, _, _) => (asterismIds, focusedTargetId) =>
+          // If the selected targetId is None, or not in the asterism, select the first target (if any).
+          // Need to replace history here.
+          focusedTargetId.filter(asterismIds.contains_) match
+            case None => props.setTarget(asterismIds.headOption, SetRouteVia.HistoryReplace)
+            case _    => Callback.empty
+      }
       // full screen aladin
       .useStateView(AladinFullScreen.Normal)
       .render { (props, ctx, adding, editScope, fullScreen) =>

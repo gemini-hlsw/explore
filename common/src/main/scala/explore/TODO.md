@@ -1,14 +1,13 @@
 - Unify UndoStacks for ProgramSummaries and ObservationList (and SiderealTarget).
 - STOP FIBER AND CLEANUP WHEN THE PROGRAM CHANGES.
 - RESTART CACHE IN CASE OF INTERRUPTED SUBSCRIPTION.
-- Revise is ProgramSummaries should be a context or passed as parameters.
+- Revise if ProgramSummaries should be a context or passed as parameters.
 - Pass UndoContext[ProgramSummaries] everywhere?
 - Reinstate auto expanding ids on clone & drag'n'drop.
 - UndoContext.mapValue mechanism, or similar.
-- Deal with setting a valid target in the URL (via replace) when entering an asterism.
 - Test all optics.
 - URL storing mechanism in undo history.
 - Root URL doesn't work.
-- observations:  View[ObservationList], should not be a view in ObsSummaryTable.
 
+- observations:  View[ObservationList], should not be a view in ObsSummaryTable.
 - Pass more refined parameters to AsterismGroupObsList.
