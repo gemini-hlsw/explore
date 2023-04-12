@@ -4,6 +4,7 @@
 package queries.schemas.odb
 
 import cats.Eq
+import cats.data.NonEmptyList
 import cats.derived.*
 import cats.effect.Async
 import cats.implicits.*
@@ -21,6 +22,7 @@ import explore.model.OdbItcResult
 import explore.model.syntax.all.*
 import explore.optics.all.*
 import japgolly.scalajs.react.*
+import lucuma.core.math.Offset
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.ExposureTimeMode.FixedExposureMode
@@ -37,15 +39,13 @@ import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.odb.input.*
 import monocle.Focus
 import monocle.Getter
+import monocle.Iso
 import monocle.Lens
 import queries.common.ObsQueriesGQL.*
 
 import java.time.Duration
 import java.time.Instant
 import scala.collection.immutable.SortedMap
-import lucuma.core.math.Offset
-import cats.data.NonEmptyList
-import monocle.Iso
 
 object ObsQueries:
   type ObservationList = KeyedIndexedList[Observation.Id, ObsSummary]

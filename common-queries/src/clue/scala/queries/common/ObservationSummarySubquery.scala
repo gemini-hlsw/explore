@@ -7,8 +7,9 @@ import clue.GraphQLSubquery
 import explore.model.ObsSummary
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.odb.*
+import clue.annotation.GraphQL
 
-// TODO THIS IS TWICE!!! SHOULD WE MOVE UPSTREAM? MAKE SOMETHING THAT COPIES IT OVER WITH GENERATION?
+@GraphQL
 object ObservationSummarySubquery
     extends GraphQLSubquery.Typed[ObservationDB, ObsSummary]("Observation"):
   override val subquery: String = s"""

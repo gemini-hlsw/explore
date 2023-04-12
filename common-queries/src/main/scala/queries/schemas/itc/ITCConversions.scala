@@ -7,10 +7,11 @@ import cats.data.NonEmptyList
 import cats.syntax.all.*
 import clue.data.Input
 import clue.data.syntax.*
+import eu.timepit.refined.types.numeric.NonNegBigDecimal
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosLong
-import eu.timepit.refined.types.numeric.NonNegBigDecimal
 import explore.model.Asterism
+import explore.model.TargetList
 import explore.model.itc.ItcTarget
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
@@ -26,10 +27,9 @@ import lucuma.core.optics.syntax.lens.*
 import lucuma.core.util.TimeSpan
 import lucuma.schemas.model.TargetWithId
 import queries.common.ITCQueriesGQL
-import queries.schemas.odb.ObsQueries
 import queries.schemas.ITC
 import queries.schemas.ITC.Types.*
-import explore.model.TargetList
+import queries.schemas.odb.ObsQueries
 
 // There is a lot of duplication here with the odb.conversions package
 trait ITCConversions:
