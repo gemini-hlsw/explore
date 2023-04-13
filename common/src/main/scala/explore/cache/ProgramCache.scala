@@ -12,6 +12,7 @@ import explore.DefaultErrorPolicy
 import explore.common.AsterismQueries.*
 import explore.model.ProgramSummaries
 import explore.model.TargetWithObs
+import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import lucuma.core.model.Program
 import lucuma.core.model.Target
@@ -25,16 +26,23 @@ import queries.common.AsterismQueriesGQL.AsterismGroupObsQuery
 import queries.common.ObsQueriesGQL
 import queries.common.ObsQueriesGQL.ObsEditQuery.Data.observation
 import queries.common.TargetQueriesGQL
+import react.common.ReactFnProps
 
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 
-case class ProgramCache(programId: Program.Id)(using client: StreamingClient[IO, ObservationDB]):
+case class ProgramCache(
+  programId:           Program.Id,
+  setProgramSummaries: Option[ProgramSummaries] => Callback
+)(using client: StreamingClient[IO, ObservationDB])
+    extends ReactFnProps[ProgramCache](ProgramCache.component)
+    with CacheComponent.Props[ProgramSummaries]:
+  val setState                             = setProgramSummaries
   given StreamingClient[IO, ObservationDB] = client
 
 given Reusability[ProgramCache] = Reusability.by(_.programId)
 
-object ProgramCache extends CacheComponent[ProgramCache, ProgramSummaries]:
+object ProgramCache extends CacheComponent[ProgramSummaries, ProgramCache]:
 
   override protected val initial: ProgramCache => IO[ProgramSummaries] = props =>
     import props.given

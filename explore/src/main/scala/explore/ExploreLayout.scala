@@ -153,18 +153,17 @@ object ExploreLayout:
               ),
               routingInfo.optProgramId
                 .map(programId =>
-                  ProgramCache.Provider(ProgramCache(programId))(
-                    <.div(
-                      ExploreStyles.SideTabs,
-                      SideTabs(routingInfo)
-                    ),
-                    <.div(
-                      ExploreStyles.MainBody,
-                      props.resolution.renderP(props.view)
-                    )
-                  )
+                  ProgramCache(programId, props.view.zoom(RootModel.programSummaries).set)
                 )
-                .whenDefined
+                .whenDefined,
+              <.div(
+                ExploreStyles.SideTabs,
+                SideTabs(routingInfo)
+              ),
+              <.div(
+                ExploreStyles.MainBody,
+                props.resolution.renderP(props.view)
+              )
             )
           )
         )

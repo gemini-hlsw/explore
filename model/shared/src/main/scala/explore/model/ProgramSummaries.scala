@@ -3,8 +3,10 @@
 
 package explore.model
 
+import cats.Eq
 import cats.Order.given
 import cats.data.NonEmptySet
+import cats.derived.*
 import cats.implicits.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
@@ -17,7 +19,7 @@ import scala.collection.immutable.SortedSet
 case class ProgramSummaries(
   targets:      TargetList,
   observations: ObservationList
-) {
+) derives Eq:
   lazy val asterismGroups: AsterismGroupList =
     SortedMap.from(
       observations.values
@@ -66,7 +68,6 @@ case class ProgramSummaries(
 
   def removeObs(obsId: Observation.Id): ProgramSummaries =
     ProgramSummaries.observations.modify(_.removed(obsId))(this)
-}
 
 object ProgramSummaries:
   val targets: Lens[ProgramSummaries, TargetList]           = Focus[ProgramSummaries](_.targets)

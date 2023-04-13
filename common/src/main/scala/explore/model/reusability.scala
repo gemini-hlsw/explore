@@ -38,6 +38,7 @@ import queries.schemas.odb.ObsQueries.SpectroscopyRequirementsData
  */
 object reusability:
   // Model
+  given Reusability[ProgramSummaries]                                         = Reusability.byEq
   given Reusability[ItcTarget]                                                = Reusability.byEq
   given Reusability[PersistentClientStatus]                                   = Reusability.byEq
   given Reusability[TargetVisualOptions]                                      = Reusability.byEq

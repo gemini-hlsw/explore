@@ -69,11 +69,12 @@ import react.resizeDetector.hooks.*
 import scala.concurrent.duration.*
 
 case class ObsTabContents(
-  userId:     Option[User.Id],
-  programId:  Program.Id,
-  focused:    Focused,
-  undoStacks: View[ModelUndoStacks[IO]],
-  searching:  View[Set[Target.Id]]
+  userId:           Option[User.Id],
+  programId:        Program.Id,
+  programSummaries: View[ProgramSummaries],
+  focused:          Focused,
+  undoStacks:       View[ModelUndoStacks[IO]],
+  searching:        View[Set[Target.Id]]
 ) extends ReactFnProps(ObsTabContents.component):
   val focusedObs: Option[Observation.Id] = focused.obsSet.map(_.head)
   val focusedTarget: Option[Target.Id]   = focused.target
@@ -164,17 +165,17 @@ object ObsTabContents extends TwoPanels:
     )
 
   private def renderFn(
-    props:            Props,
-    programSummaries: View[ProgramSummaries],
-    selectedView:     View[SelectedPanel],
-    defaultLayouts:   LayoutsMap,
-    layouts:          View[Pot[LayoutsMap]],
-    resize:           UseResizeDetectorReturn,
-    ctx:              AppContext[IO]
+    props:          Props,
+    selectedView:   View[SelectedPanel],
+    defaultLayouts: LayoutsMap,
+    layouts:        View[Pot[LayoutsMap]],
+    resize:         UseResizeDetectorReturn,
+    ctx:            AppContext[IO]
   ): VdomNode = {
     import ctx.given
 
-    val observations                             = programSummaries.zoom(ProgramSummaries.observations)
+    val programSummaries: View[ProgramSummaries] = props.programSummaries
+    val observations: View[ObservationList]      = programSummaries.zoom(ProgramSummaries.observations)
     val obsUndoCtx: UndoContext[ObservationList] = UndoContext(props.obsUndoStacks, observations)
     val psUndoCtx: UndoContext[ProgramSummaries] = UndoContext(props.psUndoStacks, programSummaries)
     val targetsUndoCtx: UndoSetter[TargetList]   = psUndoCtx.zoom(ProgramSummaries.targets)
@@ -292,10 +293,11 @@ object ObsTabContents extends TwoPanels:
               }
           }
       )
-      .useContext(ProgramCache.view)
-      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _, programSummaries) =>
-        (props.focusedObs, programSummaries.get.observations.values.map(_.id).zipWithIndex.toList)
-      ) { (props, ctx, _, _, _, _, programSummaries) => (obs, observationIds) =>
+      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _) =>
+        (props.focusedObs,
+         props.programSummaries.get.observations.values.map(_.id).zipWithIndex.toList
+        )
+      ) { (props, ctx, _, _, _, _) => (obs, observationIds) =>
         import ctx.given
 
         val obsPos = observationIds.find(a => obs.forall(_ === a._1)).map(_._2)
@@ -314,7 +316,7 @@ object ObsTabContents extends TwoPanels:
           case PasteAlt1 | PasteAlt2 =>
             ExploreClipboard.get.flatMap {
               case LocalClipboard.CopiedObservations(idSet) =>
-                val observations = programSummaries.zoom(ProgramSummaries.observations)
+                val observations = props.programSummaries.zoom(ProgramSummaries.observations)
                 // TODO Is this a dummy undoCtx??
                 val undoCtx      = UndoContext(props.obsUndoStacks, observations)
                 idSet.idSet.toList
@@ -353,10 +355,11 @@ object ObsTabContents extends TwoPanels:
               .filter(_ > 0)
               .flatMap { p =>
                 observationIds.lift(p - 1).map { (obsId, _) =>
-                  ctx.setPageVia(AppTab.Observations,
-                                 props.programId,
-                                 Focused.singleObs(obsId),
-                                 SetRouteVia.HistoryPush
+                  ctx.setPageVia(
+                    AppTab.Observations,
+                    props.programId,
+                    Focused.singleObs(obsId),
+                    SetRouteVia.HistoryPush
                   )
                 }
               }
@@ -373,6 +376,6 @@ object ObsTabContents extends TwoPanels:
                         callbacks
         )
       }
-      .render((props, ctx, twoPanelState, resize, layouts, defaultLayout, programSummaries) =>
-        renderFn(props, programSummaries, twoPanelState, defaultLayout, layouts, resize, ctx)
+      .render((props, ctx, twoPanelState, resize, layouts, defaultLayout) =>
+        renderFn(props, twoPanelState, defaultLayout, layouts, resize, ctx)
       )
