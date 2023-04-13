@@ -53,7 +53,7 @@ object ProposalTabContents:
     programId:       Program.Id,
     optProposalView: View[Option[ProposalInfo]],
     executionTime:   TimeSpan
-  )(using FetchClient[IO, ?, ObservationDB], Logger[IO]): Callback =
+  )(using FetchClient[IO, ObservationDB], Logger[IO]): Callback =
     val proposal = Proposal.Default
     optProposalView.set(ProposalInfo(proposal.some, executionTime).some) >>
       UpdateProgramsMutation[IO]

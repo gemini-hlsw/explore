@@ -28,7 +28,7 @@ sealed trait TargetSource[F[_]]:
 
 object TargetSource:
   case class FromProgram[F[_]: Async](programId: Program.Id)(using
-    FetchClient[F, ?, ObservationDB]
+    FetchClient[F, ObservationDB]
   ) extends TargetSource[F]:
     val name: String = s"Program $programId"
 

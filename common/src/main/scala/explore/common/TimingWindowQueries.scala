@@ -33,7 +33,7 @@ object TimingWindowQueries:
 
   def updateTimingWindow[F[_]: ApplicativeThrow](
     tw: TimingWindow
-  )(using FetchClient[F, ?, UserPreferencesDB]): F[Unit] =
+  )(using FetchClient[F, UserPreferencesDB]): F[Unit] =
     val twe = TimingWindowEntry.fromTimingWindow(tw)
 
     UpdateTimingWindow[F]

@@ -50,7 +50,7 @@ object AsterismQueries:
     programId: Program.Id,
     obsIds:    List[Observation.Id],
     targetIds: List[Target.Id]
-  )(using FetchClient[F, ?, ObservationDB]) =
+  )(using FetchClient[F, ObservationDB]) =
     val input = UpdateObservationsInput(
       programId = programId,
       WHERE = obsIds.toWhereObservation.assign,
@@ -64,7 +64,7 @@ object AsterismQueries:
     programId: Program.Id,
     obsIds:    List[Observation.Id],
     targetIds: List[Target.Id]
-  )(using FetchClient[F, ?, ObservationDB]) =
+  )(using FetchClient[F, ObservationDB]) =
     val input = UpdateAsterismsInput(
       programId = programId,
       WHERE = obsIds.toWhereObservation.assign,
@@ -76,7 +76,7 @@ object AsterismQueries:
     programId: Program.Id,
     obsIds:    List[Observation.Id],
     targetIds: List[Target.Id]
-  )(using FetchClient[F, ?, ObservationDB]) =
+  )(using FetchClient[F, ObservationDB]) =
     val input = UpdateAsterismsInput(
       programId = programId,
       WHERE = obsIds.toWhereObservation.assign,

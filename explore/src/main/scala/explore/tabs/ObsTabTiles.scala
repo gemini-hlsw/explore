@@ -108,7 +108,7 @@ object ObsTabTiles:
     observationId:     Observation.Id,
     constraintSet:     View[ConstraintSet],
     allConstraintSets: Set[ConstraintSet]
-  )(using FetchClient[IO, ?, ObservationDB]): VdomNode =
+  )(using FetchClient[IO, ObservationDB]): VdomNode =
     Dropdown[ConstraintSet](
       clazz = ExploreStyles.ConstraintsTileSelector,
       value = constraintSet.get,

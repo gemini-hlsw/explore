@@ -374,7 +374,7 @@ object ProposalEditor:
     splitsList:        View[List[PartnerSplit]],
     executionTime:     TimeSpan,
     band3Time:         TimeSpan
-  )(using FetchClient[IO, ?, ObservationDB], Logger[IO]) = {
+  )(using FetchClient[IO, ObservationDB], Logger[IO]) = {
     def closePartnerSplitsEditor: Callback = showDialog.set(false)
 
     val undoCtx: UndoContext[Proposal]                   = UndoContext(undoStacks, proposal)

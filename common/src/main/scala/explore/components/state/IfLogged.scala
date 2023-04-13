@@ -33,7 +33,7 @@ object IfLogged:
 
   // Creates a "profile" for user preferences.
   private def createUserPrefs(vault: UserVault)(using
-    FetchClient[IO, ?, UserPreferencesDB]
+    FetchClient[IO, UserPreferencesDB]
   ): IO[Unit] =
     UserInsertMutation[IO].execute(Input(vault.user.id.toString)).start.void
 

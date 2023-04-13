@@ -38,7 +38,7 @@ trait AsterismModifier:
     asterismIds:     View[AsterismIds],
     allTargets:      View[TargetList],
     targetWithOptId: TargetWithOptId
-  )(using FetchClient[IO, ?, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Option[Target.Id]] =
+  )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Option[Target.Id]] =
     targetWithOptId match
       case TargetWithOptId(oTargetId, target @ Target.Sidereal(_, _, _, _)) =>
         val targetId: IO[Target.Id] = oTargetId.fold(

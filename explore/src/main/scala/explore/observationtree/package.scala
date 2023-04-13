@@ -68,7 +68,7 @@ private def obsWithId(
     .composeOptionLens(Focus[(ObsSummary, Int)](_._1))
 
 def obsEditStatus(programId: Program.Id, obsId: Observation.Id)(using
-  FetchClient[IO, ?, ObservationDB]
+  FetchClient[IO, ObservationDB]
 ) = Action(
   access = obsWithId(obsId).composeOptionLens(ObsSummary.status)
 )(onSet =
@@ -85,7 +85,7 @@ def obsEditStatus(programId: Program.Id, obsId: Observation.Id)(using
 )
 
 def obsEditSubtitle(programId: Program.Id, obsId: Observation.Id)(using
-  FetchClient[IO, ?, ObservationDB]
+  FetchClient[IO, ObservationDB]
 ) = Action(
   access = obsWithId(obsId).composeOptionLens(ObsSummary.subtitle)
 )(onSet =
@@ -102,7 +102,7 @@ def obsEditSubtitle(programId: Program.Id, obsId: Observation.Id)(using
 )
 
 def obsActiveStatus(programId: Program.Id, obsId: Observation.Id)(using
-  FetchClient[IO, ?, ObservationDB]
+  FetchClient[IO, ObservationDB]
 ) = Action(
   access = obsWithId(obsId).composeOptionLens(ObsSummary.activeStatus)
 )(onSet =
@@ -119,7 +119,7 @@ def obsActiveStatus(programId: Program.Id, obsId: Observation.Id)(using
 )
 
 def obsExistence(programId: Program.Id, obsId: Observation.Id, setObs: Observation.Id => Callback)(
-  using FetchClient[IO, ?, ObservationDB]
+  using FetchClient[IO, ObservationDB]
 ) =
   Action(
     access = obsListMod.withKey(obsId)

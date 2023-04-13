@@ -71,7 +71,7 @@ object ObservationInsertAction {
     setPage:     Option[Observation.Id] => IO[Unit],
     postMessage: String => IO[Unit]
   )(using
-    FetchClient[IO, ?, ObservationDB]
+    FetchClient[IO, ObservationDB]
   ): Action[ProgramSummaries, Option[ObsSummary]] =
     Action(getter = getter(obsId), setter = setter(obsId))(
       onSet = (agwo, optObs) =>

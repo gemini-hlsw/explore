@@ -58,7 +58,7 @@ object AsterismGroupObsListActions {
     expandedIds: View[SortedSet[ObsIdSet]],
     setObsSet:   ObsIdSet => Callback,
     allTargets:  TargetList
-  )(using c: FetchClient[IO, ?, ObservationDB]) =
+  )(using c: FetchClient[IO, ObservationDB]) =
     val traversal =
       Iso
         .id[ObservationList]

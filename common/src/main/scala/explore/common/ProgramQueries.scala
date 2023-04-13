@@ -35,7 +35,7 @@ object ProgramQueries:
       _.programs.matches.map(p => ProgramInfo(p.id, p.name, p.existence === Existence.Deleted))
 
   def createProgram[F[_]: Async](name: Option[NonEmptyString])(using
-    FetchClient[F, ?, ObservationDB]
+    FetchClient[F, ObservationDB]
   ): F[ProgramInfo] =
     CreateProgramMutation[F]
       .execute(
@@ -44,7 +44,7 @@ object ProgramQueries:
       .map(p => ProgramInfo(p.createProgram.program.id, p.createProgram.program.name, false))
 
   def deleteProgram[F[_]: Async](id: Program.Id)(using
-    FetchClient[F, ?, ObservationDB]
+    FetchClient[F, ObservationDB]
   ): F[Unit] =
     UpdateProgramsMutation[F]
       .execute(
@@ -56,7 +56,7 @@ object ProgramQueries:
       .void
 
   def undeleteProgram[F[_]: Async](id: Program.Id)(using
-    FetchClient[F, ?, ObservationDB]
+    FetchClient[F, ObservationDB]
   ): F[Unit] =
     UpdateProgramsMutation[F]
       .execute(
@@ -69,7 +69,7 @@ object ProgramQueries:
       .void
 
   def updateProgramName[F[_]: Async](id: Program.Id, name: Option[NonEmptyString])(using
-    FetchClient[F, ?, ObservationDB]
+    FetchClient[F, ObservationDB]
   ): F[Unit] =
     UpdateProgramsMutation[F]
       .execute(

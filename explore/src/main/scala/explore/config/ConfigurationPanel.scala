@@ -126,7 +126,7 @@ object ConfigurationPanel:
     obsId:         Observation.Id,
     config:        Option[BasicConfiguration],
     observingMode: View[Option[ObservingMode]]
-  )(using FetchClient[IO, ?, ObservationDB]): IO[Unit] =
+  )(using FetchClient[IO, ObservationDB]): IO[Unit] =
     config.foldMap(c =>
       ObsQueriesGQL
         .CreateConfigurationMutation[IO]

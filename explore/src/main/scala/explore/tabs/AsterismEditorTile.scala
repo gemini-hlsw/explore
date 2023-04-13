@@ -65,7 +65,7 @@ object AsterismEditorTile:
     searching:     View[Set[Target.Id]],
     title:         String,
     backButton:    Option[VdomNode] = none
-  )(using FetchClient[IO, ?, ObservationDB], Logger[IO]): Tile = {
+  )(using FetchClient[IO, ObservationDB], Logger[IO]): Tile = {
     // Save the time here. this works for the obs and target tabs
     val vizTimeView = potVizTime.map(_.withOnMod { t =>
       ObsQueries.updateVisualizationTime[IO](programId, obsIds.toList, t).runAsync

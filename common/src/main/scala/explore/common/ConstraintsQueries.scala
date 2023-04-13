@@ -37,7 +37,7 @@ object ConstraintsQueries:
     programId: Program.Id,
     obsIds:    ObsIdSet,
     undoCtx:   UndoSetter[ConstraintSet]
-  )(using FetchClient[IO, ?, ObservationDB], Logger[IO]):
+  )(using FetchClient[IO, ObservationDB], Logger[IO]):
     def apply[A](
       modelGet:  ConstraintSet => A,
       modelMod:  (A => A) => ConstraintSet => ConstraintSet,

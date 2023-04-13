@@ -70,7 +70,7 @@ object UserPreferencesQueries:
       agsOverlay:         Option[Visible] = None,
       scienceOffsets:     Option[Visible] = None,
       acquisitionOffsets: Option[Visible] = None
-    )(using FetchClient[F, ?, UserPreferencesDB]): F[Unit] =
+    )(using FetchClient[F, UserPreferencesDB]): F[Unit] =
       UserPreferencesAladinUpdate[F]
         .execute(
           objects = LucumaUserPreferencesInsertInput(
@@ -107,7 +107,7 @@ object UserPreferencesQueries:
       userId:        Option[User.Id],
       layoutSection: GridLayoutSection,
       defaultValue:  LayoutsMap
-    )(using FetchClient[F, ?, UserPreferencesDB]): F[LayoutsMap] =
+    )(using FetchClient[F, UserPreferencesDB]): F[LayoutsMap] =
       (for {
         uid <- OptionT.fromOption[F](userId)
         r   <-
@@ -128,7 +128,7 @@ object UserPreferencesQueries:
       userId:  Option[User.Id],
       section: GridLayoutSection,
       layouts: Layouts
-    )(using FetchClient[F, ?, UserPreferencesDB]): F[Unit] =
+    )(using FetchClient[F, UserPreferencesDB]): F[Unit] =
       userId.traverse { uid =>
         UserGridLayoutUpsert[F]
           .execute(
@@ -160,7 +160,7 @@ object UserPreferencesQueries:
       fovDec:     Option[Angle] = None,
       saturation: Option[Int] = None,
       brightness: Option[Int] = None
-    )(using FetchClient[F, ?, UserPreferencesDB]): F[Unit] =
+    )(using FetchClient[F, UserPreferencesDB]): F[Unit] =
       UserTargetPreferencesUpsert[F]
         .execute(
           LucumaTargetInsertInput(
@@ -200,7 +200,7 @@ object UserPreferencesQueries:
       tid:        Target.Id,
       defaultFov: Angle
     )(using
-      FetchClient[F, ?, UserPreferencesDB]
+      FetchClient[F, UserPreferencesDB]
     ): F[(UserGlobalPreferences, TargetVisualOptions)] =
       for {
         r <-
@@ -261,7 +261,7 @@ object UserPreferencesQueries:
       uid:      User.Id,
       targetId: Target.Id,
       offset:   Offset
-    )(using FetchClient[F, ?, UserPreferencesDB]): F[Unit] =
+    )(using FetchClient[F, UserPreferencesDB]): F[Unit] =
       UserTargetPreferencesUpsert[F]
         .execute(
           LucumaTargetInsertInput(
@@ -294,7 +294,7 @@ object UserPreferencesQueries:
     def queryWithDefault[F[_]: ApplicativeThrow](
       uid: User.Id,
       oid: Observation.Id
-    )(using FetchClient[F, ?, UserPreferencesDB]): F[(ItcChartType, PlotDetails)] =
+    )(using FetchClient[F, UserPreferencesDB]): F[(ItcChartType, PlotDetails)] =
       for r <-
           ItcPlotPreferencesQuery[F]
             .query(uid.show, oid.show)
@@ -313,7 +313,7 @@ object UserPreferencesQueries:
       oid:       Observation.Id,
       chartType: ItcChartType,
       details:   PlotDetails
-    )(using FetchClient[F, ?, UserPreferencesDB]): F[Unit] =
+    )(using FetchClient[F, UserPreferencesDB]): F[Unit] =
       ItcPlotObservationUpsert[F]
         .execute(
           LucumaObservationInsertInput(
@@ -344,7 +344,7 @@ object UserPreferencesQueries:
       userId: User.Id,
       range:  PlotRange,
       time:   TimeDisplay
-    )(using FetchClient[F, ?, UserPreferencesDB]): F[Unit] =
+    )(using FetchClient[F, UserPreferencesDB]): F[Unit] =
       UserPreferencesElevPlotUpdate[F]
         .execute(
           userId = userId.show.assign,
@@ -356,7 +356,7 @@ object UserPreferencesQueries:
 
     // Gets the prefs for the elevation plot
     def queryWithDefault[F[_]: ApplicativeThrow](uid: User.Id)(using
-      FetchClient[F, ?, UserPreferencesDB]
+      FetchClient[F, UserPreferencesDB]
     ): F[(PlotRange, TimeDisplay)] =
       for r <-
           UserElevationPlotPreferencesQuery[F]
@@ -377,7 +377,7 @@ object UserPreferencesQueries:
     userId:  Option[User.Id],
     tableId: TableId,
     columns: List[ColumnDef[?, ?]]
-  )(using FetchClient[F, ?, UserPreferencesDB], Logger[F])
+  )(using FetchClient[F, UserPreferencesDB], Logger[F])
       extends TableStateStore[F]:
     def load(): F[TableState => TableState] =
       userId

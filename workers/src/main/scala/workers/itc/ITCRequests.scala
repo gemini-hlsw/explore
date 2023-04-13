@@ -59,7 +59,7 @@ object ITCRequests:
     signalToNoiseAt: Option[Wavelength],
     cache:           Cache[F],
     callback:        Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]] => F[Unit]
-  )(using Monoid[F[Unit]], FetchClient[F, ?, ITC]): F[Unit] = {
+  )(using Monoid[F[Unit]], FetchClient[F, ITC]): F[Unit] = {
     def itcResults(r: ItcResults): List[EitherNec[ItcQueryProblems, ItcResult]] =
       // Convert to usable types
       r.spectroscopy.flatMap(_.results).map { r =>

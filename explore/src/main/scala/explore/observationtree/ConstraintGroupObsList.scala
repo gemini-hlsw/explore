@@ -89,7 +89,7 @@ object ConstraintGroupObsList:
     constraintGroups: ConstraintGroupList,
     setObsSet:        Option[ObsIdSet] => Callback
   )(using
-    FetchClient[IO, ?, ObservationDB],
+    FetchClient[IO, ObservationDB],
     Logger[IO]
   ): (DropResult, ResponderProvided) => Callback = (result, _) => {
     val oData = for {
