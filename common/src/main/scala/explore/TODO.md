@@ -8,6 +8,3 @@
 - Test all optics.
 - URL storing mechanism in undo history.
 - Root URL doesn't work.
-
-- observations:  View[ObservationList], should not be a view in ObsSummaryTable.
-- Pass more refined parameters to AsterismGroupObsList.

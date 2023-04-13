@@ -67,7 +67,7 @@ import scala.scalajs.js
 final case class ObsSummaryTable(
   userId:        Option[User.Id],
   programId:     Program.Id,
-  observations:  View[ObservationList],
+  observations:  ObservationList,
   allTargets:    TargetList,
   renderInTitle: Tile.RenderInTitle
 ) extends ReactFnProps(ObsSummaryTable.component)
@@ -259,7 +259,7 @@ object ObsSummaryTable extends TableHooks:
       )
     }
     // Rows
-    .useMemoBy((props, _, _) => (props.observations.get.toList, props.allTargets))((_, _, _) =>
+    .useMemoBy((props, _, _) => (props.observations.toList, props.allTargets))((_, _, _) =>
       (obsList, allTargets) =>
         obsList.toList
           .map(obs =>

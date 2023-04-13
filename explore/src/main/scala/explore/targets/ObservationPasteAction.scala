@@ -40,13 +40,7 @@ object ObservationPasteAction {
   ): ProgramSummaries => ProgramSummaries = agwo =>
     otwol.fold {
       // the Option[List]] is empty, so we're deleting.
-      ids.foldLeft(agwo) { case (grps, (obsId, tid)) =>
-        // the target list could have been edited, so we'll look for the current list
-        val targetIds = grps.observations
-          .getValue(obsId)
-          .fold(SortedSet(tid))(o => SortedSet.from(o.scienceTargetIds))
-        grps.removeObsWithTargets(obsId, targetIds)
-      }
+      ids.foldLeft(agwo) { case (grps, (obsId, tid)) => grps.removeObs(obsId) }
 
     } {
       // we insert the ones we received back into the agwo

@@ -31,13 +31,8 @@ object ObservationInsertAction {
   private def setter(obsId: Observation.Id)(
     optObs: Option[ObsSummary]
   ): ProgramSummaries => ProgramSummaries = agwo =>
-    optObs.fold {
-      // we're undoing - look to see what the current targets are.
-      val targets =
-        agwo.observations
-          .getValue(obsId)
-          .fold(SortedSet.empty[Target.Id])(o => SortedSet.from(o.scienceTargetIds))
-      agwo.removeObsWithTargets(obsId, targets)
+    optObs.fold { // undo
+      agwo.removeObs(obsId)
     } { // do or re-do
       agwo.insertObs
     }
