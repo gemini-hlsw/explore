@@ -6,6 +6,7 @@ package explore
 import cats.Order.*
 import cats.data.NonEmptySet
 import cats.syntax.all.*
+import crystal.implicits.*
 import crystal.react.View
 import explore.components.ui.ExploreStyles
 import explore.config.sequence.SequenceEditor
@@ -23,6 +24,7 @@ import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.util.Gid
+import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 
 import scala.collection.immutable.SortedSet
@@ -37,36 +39,58 @@ object Routing:
 
   private def homeTab(): VdomElement = UnderConstruction()
 
+  private def withProgramSummaries(model: View[RootModel])(
+    render: View[ProgramSummaries] => VdomNode
+  ): VdomElement =
+    model
+      .zoom(RootModel.programSummaries)
+      .mapValue(render)
+      .toPot
+      .renderPot(identity)
+      .asInstanceOf[VdomElement]
+    // Not sure why the router's renderer requires VdomElement instead of VdomNode
+    // In any case, in all of our uses here we are returning a valid VdomElement.
+
   private def targetTab(page: Page, model: View[RootModel]): VdomElement =
-    val routingInfo = RoutingInfo.from(page)
-    TargetTabContents(
-      model.zoom(RootModel.userId).get,
-      routingInfo.programId,
-      routingInfo.focused,
-      model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forProgramSummaries),
-      model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forSiderealTarget),
-      model.zoom(RootModel.searchingTarget),
-      model.zoom(RootModel.expandedIds.andThen(ExpandedIds.asterismObsIds))
+    withProgramSummaries(model)(programSummaries =>
+      val routingInfo = RoutingInfo.from(page)
+
+      TargetTabContents(
+        model.zoom(RootModel.userId).get,
+        routingInfo.programId,
+        programSummaries,
+        routingInfo.focused,
+        model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forProgramSummaries),
+        model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forSiderealTarget),
+        model.zoom(RootModel.searchingTarget),
+        model.zoom(RootModel.expandedIds.andThen(ExpandedIds.asterismObsIds))
+      )
     )
 
   private def obsTab(page: Page, model: View[RootModel]): VdomElement =
-    val routingInfo = RoutingInfo.from(page)
-    ObsTabContents(
-      model.zoom(RootModel.userId).get,
-      routingInfo.programId,
-      routingInfo.focused,
-      model.zoom(RootModel.undoStacks),
-      model.zoom(RootModel.searchingTarget)
+    withProgramSummaries(model)(programSummaries =>
+      val routingInfo = RoutingInfo.from(page)
+      ObsTabContents(
+        model.zoom(RootModel.userId).get,
+        routingInfo.programId,
+        programSummaries,
+        routingInfo.focused,
+        model.zoom(RootModel.undoStacks),
+        model.zoom(RootModel.searchingTarget)
+      )
     )
 
   private def constraintSetTab(page: Page, model: View[RootModel]): VdomElement =
-    val routingInfo = RoutingInfo.from(page)
-    ConstraintsTabContents(
-      model.zoom(RootModel.userId).get,
-      routingInfo.programId,
-      routingInfo.focused.obsSet,
-      model.zoom(RootModel.expandedIds.andThen(ExpandedIds.constraintSetObsIds)),
-      model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forObsList)
+    withProgramSummaries(model)(programSummaries =>
+      val routingInfo = RoutingInfo.from(page)
+      ConstraintsTabContents(
+        model.zoom(RootModel.userId).get,
+        routingInfo.programId,
+        programSummaries,
+        routingInfo.focused.obsSet,
+        model.zoom(RootModel.expandedIds.andThen(ExpandedIds.constraintSetObsIds)),
+        model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forObsList)
+      )
     )
 
   private def proposalTab(page: Page, model: View[RootModel]): VdomElement =

@@ -82,11 +82,12 @@ import scala.collection.immutable.SortedSet
 import scala.concurrent.duration.*
 
 case class ConstraintsTabContents(
-  userId:        Option[User.Id],
-  programId:     Program.Id,
-  focusedObsSet: Option[ObsIdSet],
-  expandedIds:   View[SortedSet[ObsIdSet]],
-  obsUndoStacks: View[UndoStacks[IO, ObservationList]]
+  userId:           Option[User.Id],
+  programId:        Program.Id,
+  programSummaries: View[ProgramSummaries],
+  focusedObsSet:    Option[ObsIdSet],
+  expandedIds:      View[SortedSet[ObsIdSet]],
+  obsUndoStacks:    View[UndoStacks[IO, ObservationList]]
 ) extends ReactFnProps(ConstraintsTabContents.component)
 
 object ConstraintsTabContents extends TwoPanels:
@@ -131,17 +132,18 @@ object ConstraintsTabContents extends TwoPanels:
   )
 
   private def renderFn(
-    props:            Props,
-    programSummaries: View[ProgramSummaries],
-    state:            View[SelectedPanel],
-    defaultLayouts:   LayoutsMap,
-    layouts:          View[Pot[LayoutsMap]],
-    resize:           UseResizeDetectorReturn,
-    ctx:              AppContext[IO]
+    props:          Props,
+    state:          View[SelectedPanel],
+    defaultLayouts: LayoutsMap,
+    layouts:        View[Pot[LayoutsMap]],
+    resize:         UseResizeDetectorReturn,
+    ctx:            AppContext[IO]
   )(
-    timingWindows:    View[TimingWindowResult]
+    timingWindows:  View[TimingWindowResult]
   ): VdomNode = {
     import ctx.given
+
+    val programSummaries: View[ProgramSummaries] = props.programSummaries
 
     def findConstraintGroup(obsIds: ObsIdSet, cgl: ConstraintGroupList): Option[ConstraintGroup] =
       cgl.find(_._1.intersect(obsIds).nonEmpty).map(ConstraintGroup.fromTuple)
@@ -316,8 +318,7 @@ object ConstraintsTabContents extends TwoPanels:
             case _                            => Callback.empty
           }
       }
-      .useContext(ProgramCache.view)
-      .useStreamResourceViewOnMountBy { (props, ctx, _, _, _, _) =>
+      .useStreamResourceViewOnMountBy { (props, ctx, _, _, _) =>
         import ctx.given
 
         TimingWindowsQuery[IO]
@@ -328,13 +329,12 @@ object ConstraintsTabContents extends TwoPanels:
       }
       // Measure its size
       .useResizeDetector()
-      .render {
-        (props, ctx, layout, defaultLayout, state, programSummaries, timingWindows, resize) =>
-          React.Fragment(
-            timingWindows.renderPotOption(
-              renderFn(props, programSummaries, state, defaultLayout, layout, resize, ctx) _,
-              <.span(DefaultPendingRender).withRef(resize.ref)
-            )
+      .render { (props, ctx, layout, defaultLayout, state, timingWindows, resize) =>
+        React.Fragment(
+          timingWindows.renderPotOption(
+            renderFn(props, state, defaultLayout, layout, resize, ctx) _,
+            <.span(DefaultPendingRender).withRef(resize.ref)
           )
+        )
 
       }

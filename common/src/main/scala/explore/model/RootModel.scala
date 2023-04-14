@@ -7,6 +7,7 @@ import cats.Eq
 import cats.derived.*
 import cats.effect.IO
 import cats.syntax.all.*
+import crystal.react.View
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.enums.Band
@@ -20,23 +21,24 @@ import monocle.Lens
 import monocle.Optional
 
 import scala.collection.immutable.HashSet
-
 case class RootModel(
   vault:                Option[UserVault],
   localPreferences:     ExploreLocalPreferences,
   expandedIds:          ExpandedIds = ExpandedIds(),
   searchingTarget:      Set[Target.Id] = HashSet.empty,
   userSelectionMessage: Option[NonEmptyString] = none,
+  programSummaries:     Option[ProgramSummaries] = none,
   undoStacks:           ModelUndoStacks[IO] = ModelUndoStacks[IO]()
 ) derives Eq
 
-object RootModel {
+object RootModel:
   val vault                = Focus[RootModel](_.vault)
-  val userSelectionMessage = Focus[RootModel](_.userSelectionMessage)
-  val searchingTarget      = Focus[RootModel](_.searchingTarget)
-  val undoStacks           = Focus[RootModel](_.undoStacks)
-  val expandedIds          = Focus[RootModel](_.expandedIds)
   val localPreferences     = Focus[RootModel](_.localPreferences)
+  val expandedIds          = Focus[RootModel](_.expandedIds)
+  val searchingTarget      = Focus[RootModel](_.searchingTarget)
+  val userSelectionMessage = Focus[RootModel](_.userSelectionMessage)
+  val programSummaries     = Focus[RootModel](_.programSummaries)
+  val undoStacks           = Focus[RootModel](_.undoStacks)
 
   val userUserId = Lens[User, User.Id](_.id)(s =>
     a =>
@@ -52,5 +54,3 @@ object RootModel {
 
   val userId: Optional[RootModel, User.Id] =
     user.andThen(userUserId)
-
-}
