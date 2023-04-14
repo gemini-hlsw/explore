@@ -201,7 +201,7 @@ object ObsTabContents extends TwoPanels:
           ObsSummaryTable(
             props.userId,
             props.programId,
-            observations,
+            observations.get,
             targetsUndoCtx.model.get,
             renderInTitle
           )

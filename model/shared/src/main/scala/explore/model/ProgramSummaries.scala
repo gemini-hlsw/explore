@@ -64,10 +64,7 @@ case class ProgramSummaries(
       _.inserted(obsSummary.id, obsSummary, observations.length)
     )(this)
 
-  def removeObsWithTargets(
-    obsId:     Observation.Id,
-    targetIds: SortedSet[Target.Id]
-  ): ProgramSummaries =
+  def removeObs(obsId: Observation.Id): ProgramSummaries =
     ProgramSummaries.observations.modify(_.removed(obsId))(this)
 }
 

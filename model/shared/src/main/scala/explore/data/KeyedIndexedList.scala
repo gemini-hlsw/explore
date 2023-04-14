@@ -112,16 +112,16 @@ object KeyedIndexedList:
   given eqKeyedIndexedList[K, A: Eq]: Eq[KeyedIndexedList[K, A]] =
     Eq.by(_.list: Map[K, (A, Int)])
 
-  given keyIndexedListAt[K, A]: At[KeyedIndexedList[K, A], K, Option[(A, Int)]] =
+  given keyedIndexedListAt[K, A]: At[KeyedIndexedList[K, A], K, Option[(A, Int)]] =
     At(i =>
       Lens((_: KeyedIndexedList[K, A]).getValueAndIndex(i))(optV =>
         kil => optV.fold(kil.removed(i))((v, idx) => kil.inserted(i, v, idx))
       )
     )
 
-  given treeSeqMapIndex[K, A]: Index[KeyedIndexedList[K, A], K, (A, Int)] = fromAt
+  given keyedIndexedIndex[K, A]: Index[KeyedIndexedList[K, A], K, (A, Int)] = fromAt
 
-  given keyIndexedListFilterIndex[K, A]: FilterIndex[KeyedIndexedList[K, A], K, (A, Int)] =
+  given keyedIndexedListFilterIndex[K, A]: FilterIndex[KeyedIndexedList[K, A], K, (A, Int)] =
     new FilterIndex[KeyedIndexedList[K, A], K, (A, Int)]:
       import cats.syntax.applicative._
       import cats.syntax.functor._
