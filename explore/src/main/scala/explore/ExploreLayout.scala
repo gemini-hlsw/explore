@@ -153,7 +153,7 @@ object ExploreLayout:
               ),
               routingInfo.optProgramId
                 .map(programId =>
-                  ProgramCache(programId, props.view.zoom(RootModel.programSummaries).set)
+                  ProgramCache(programId, props.view.zoom(RootModel.programSummaries).async.set)
                 )
                 .whenDefined,
               <.div(

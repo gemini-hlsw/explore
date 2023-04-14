@@ -13,13 +13,10 @@ import fs2.concurrent.SignallingRef
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.Context
 import japgolly.scalajs.react.util.DefaultEffects.{Async => DefaultA}
-import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.syntax.pot.*
 
-import scala.tools.nsc.doc.model.Def
-
-trait CacheComponent[S: Reusability, P <: CacheComponent.Props[S]: Reusability]:
+trait CacheComponent[S, P <: CacheComponent.Props[S]: Reusability]:
   private type F[T] = DefaultA[T]
 
   protected val initial: P => F[S]
@@ -49,14 +46,14 @@ trait CacheComponent[S: Reusability, P <: CacheComponent.Props[S]: Reusability]:
             _            <- latch.complete(cache) // Allow stream updates to proceed.
           yield cache
       )
-      .useStreamBy((props, cache) => (props, cache.isReady))((_, cache) =>
-        _ => cache.toOption.map(_.discrete).orEmpty
+      .useStreamBy((props, cache) => (props, cache.isReady))((props, cache) =>
+        _ => cache.toOption.map(_.discrete).orEmpty.evalTap(value => props.setState(value.some))
       )
-      .useEffectWithDepsBy((_, _, value) => value.toOption)((props, _, _) =>
-        value => props.setState(value)
-      )
+      // .useEffectWithDepsBy((_, _, value) => value.toOption)((props, _, _) =>
+      //   value => props.setState(value)
+      // )
       .render((_, _, _) => React.Fragment())
 
 object CacheComponent:
   trait Props[S]:
-    val setState: Option[S] => DefaultS[Unit]
+    val setState: Option[S] => DefaultA[Unit]

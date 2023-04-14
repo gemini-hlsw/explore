@@ -53,8 +53,6 @@ object ProgramsPopup {
     .useContext(AppContext.ctx)
     .useStateView(IsOpen(true))
     .render { (props, ctx, isOpen) =>
-      println("hello")
-
       val onHide = props.onClose.map(oc => isOpen.set(IsOpen(false)) >> oc)
 
       Dialog(

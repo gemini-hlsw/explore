@@ -33,16 +33,15 @@ import scala.collection.immutable.SortedSet
 
 case class ProgramCache(
   programId:           Program.Id,
-  setProgramSummaries: Option[ProgramSummaries] => Callback
+  setProgramSummaries: Option[ProgramSummaries] => IO[Unit]
 )(using client: StreamingClient[IO, ObservationDB])
     extends ReactFnProps[ProgramCache](ProgramCache.component)
     with CacheComponent.Props[ProgramSummaries]:
   val setState                             = setProgramSummaries
   given StreamingClient[IO, ObservationDB] = client
 
-given Reusability[ProgramCache] = Reusability.by(_.programId)
-
 object ProgramCache extends CacheComponent[ProgramSummaries, ProgramCache]:
+  given Reusability[ProgramCache] = Reusability.by(_.programId)
 
   override protected val initial: ProgramCache => IO[ProgramSummaries] = props =>
     import props.given
