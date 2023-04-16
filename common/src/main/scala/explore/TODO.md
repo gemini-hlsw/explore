@@ -1,10 +1,7 @@
 - Unify UndoStacks for ProgramSummaries and ObservationList (and SiderealTarget).
-- STOP FIBER AND CLEANUP WHEN THE PROGRAM CHANGES.
 - RESTART CACHE IN CASE OF INTERRUPTED SUBSCRIPTION.
-- Revise if ProgramSummaries should be a context or passed as parameters.
-- Pass UndoContext[ProgramSummaries] everywhere?
-- Reinstate auto expanding ids on clone & drag'n'drop.
+- Pass UndoContext[ProgramSummaries] everywhere? (instead of a View).
 - UndoContext.mapValue mechanism, or similar.
 - Test all optics.
 - URL storing mechanism in undo history.
-- Root URL doesn't work.
+- Check if auto expanding ids on clone works.
