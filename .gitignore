@@ -46,3 +46,6 @@ stats.html
 .firebase/
 .direnv
 .jvmopts
+
+# Local development environment
+local.conf.json
