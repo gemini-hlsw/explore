@@ -6,6 +6,8 @@ package explore.model.syntax
 import cats.syntax.all.*
 import explore.model.AsterismGroup
 import explore.model.AsterismGroupList
+import explore.model.ConstraintGroup
+import explore.model.ConstraintGroupList
 import explore.model.ObsIdSet
 import explore.model.enums.PosAngleOptions
 import lucuma.core.enums.Site
@@ -16,6 +18,7 @@ import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target
 import lucuma.core.util.TimeSpan
 
+import scala.annotation.targetName
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 
@@ -43,6 +46,11 @@ object all:
 
     def findWithTargetIds(targetIds: SortedSet[Target.Id]): Option[AsterismGroup] =
       self.find { case (_, grpIds) => grpIds === targetIds }.map(AsterismGroup.fromTuple)
+
+  extension (self: ConstraintGroupList)
+    @targetName("findContainingObsIdsCS")
+    def findContainingObsIds(obsIds: ObsIdSet): Option[ConstraintGroup] =
+      self.find { case (ids, _) => obsIds.subsetOf(ids) }.map(ConstraintGroup.fromTuple)
 
   extension [A](list: Iterable[A])
     def toSortedMap[K: Ordering, V](getKey: A => K, getValue: A => V = identity[A](_)) =
