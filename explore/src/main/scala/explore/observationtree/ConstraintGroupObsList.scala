@@ -98,26 +98,33 @@ object ConstraintGroupObsList:
       draggedIds  <- getDraggedIds(result.draggableId, focusedObsSet)
       if !destIds.intersects(draggedIds)
       newCs       <- constraintGroups.get(destIds)
-    } yield (newCs, draggedIds)
+      srcIds      <- constraintGroups.findContainingObsIds(draggedIds)
+    } yield (newCs, destIds, draggedIds, srcIds.obsIds)
 
     val traversal = Iso
       .id[ObservationList]
-      .filterIndex((id: Observation.Id) => oData.exists((_, draggedIds) => draggedIds.contains(id)))
+      .filterIndex((id: Observation.Id) =>
+        oData.exists((_, _, draggedIds, _) => draggedIds.contains(id))
+      )
       .andThen(KeyedIndexedList.value)
       .andThen(ObsSummary.constraints)
 
     val csUndoCtx =
       undoCtx.zoom(traversal.getAll.andThen(_.head), traversal.modify)
 
-    oData.foldMap { case (newCs, draggedIds) =>
-      ConstraintsQueries
-        .UndoView(programId, draggedIds, csUndoCtx)(
-          // There should be a better way to do this.
-          identity,
-          identity,
-          cs => _ => cs.toInput
-        )
-        .set(newCs)
+    oData.foldMap { case (newCs, destIds, draggedIds, srcIds) =>
+      expandedIds.mod(ids =>
+        val base = ids - draggedIds - destIds + (destIds ++ draggedIds)
+        (srcIds -- draggedIds).fold(base)(base + _)
+      ) >>
+        ConstraintsQueries
+          .UndoView(programId, draggedIds, csUndoCtx)(
+            // There should be a better way to do this.
+            identity,
+            identity,
+            cs => _ => cs.toInput
+          )
+          .set(newCs)
     }
   }
 

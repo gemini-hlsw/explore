@@ -92,8 +92,11 @@ export default defineConfig(({ command, mode }) => {
   const publicDirDev = path.resolve(common, 'src/main/publicdev');
   const lucumaCss = path.resolve(__dirname, 'explore/target/lucuma-css')
   fs.mkdir(publicDirDev, (err) => {
+    const localConf = path.resolve(publicDirProd, 'local.conf.json');
+    const devConf = path.resolve(publicDirProd, 'development.conf.json');
+
     fs.copyFileSync(
-      path.resolve(publicDirProd, 'development.conf.json'),
+      fs.existsSync(localConf) ? localConf : devConf,
       path.resolve(publicDirDev, 'conf.json')
     );
     fs.copyFileSync(

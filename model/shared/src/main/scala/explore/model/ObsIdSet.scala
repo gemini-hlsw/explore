@@ -15,7 +15,10 @@ import monocle.Prism
 
 import scala.collection.immutable.SortedSet
 
-case class ObsIdSet(idSet: NonEmptySet[Observation.Id])
+case class ObsIdSet(idSet: NonEmptySet[Observation.Id]):
+  def ++(other: ObsIdSet): ObsIdSet = ObsIdSet(idSet ++ other.idSet)
+  def --(other: ObsIdSet): Option[ObsIdSet] =
+    NonEmptySet.fromSet(idSet -- (other.idSet)).map(ObsIdSet(_))
 
 object ObsIdSet {
   given Order[ObsIdSet] = Order.by(_.idSet)

@@ -225,7 +225,7 @@ object ConstraintsSummaryTable extends TableHooks:
       )
       // Memo rows
       .useMemoBy((props, _, _) => props.constraintList)((_, _, _) =>
-        _.map(ConstraintGroup.fromTuple).toList
+        _.map(ConstraintGroup.fromTuple).toList.sortBy(_.constraintSet.summaryString)
       )
       .useReactTableWithStateStoreBy((props, ctx, cols, rows) =>
         import ctx.given
