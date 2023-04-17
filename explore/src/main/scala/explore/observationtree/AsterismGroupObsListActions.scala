@@ -29,6 +29,7 @@ import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
 import monocle.Iso
+import org.typelevel.log4cats.Logger
 import queries.common.TargetQueriesGQL
 
 import scala.annotation.unused
@@ -58,7 +59,7 @@ object AsterismGroupObsListActions {
     expandedIds: View[SortedSet[ObsIdSet]],
     setObsSet:   ObsIdSet => Callback,
     allTargets:  TargetList
-  )(using c: FetchClient[IO, ObservationDB]) =
+  )(using FetchClient[IO, ObservationDB], Logger[IO]) =
     val traversal =
       Iso
         .id[ObservationList]
@@ -69,14 +70,18 @@ object AsterismGroupObsListActions {
     Action(getter = traversal.getAll.andThen(_.head), setter = traversal.replace)(
       onSet = (observationList, asterismIds) =>
         // destination ids may not be found when undoing
-        val filteredTargetIds = asterismIds.filter(allTargets.contains)
-        AsterismQueries.replaceAsterism[IO](
-          programId,
-          draggedIds.toList,
-          filteredTargetIds.toList
-        ) // >> TODO THIS 2 THINGS. WE SHOULD FILTER OBS IDs TO STILL EXISTING ONES
-        // expandedIds.mod(updateExpandedIds(draggedIds, optDestIds) _).to[IO] >>
-        // setObsSet(optDestIds.fold(draggedIds)(_ ++ draggedIds)).to[IO]
-      // }
+        val filteredTargetIds: SortedSet[Target.Id] = asterismIds.filter(allTargets.contains)
+        val destGroup: ObsIdSet                     = destIds ++ draggedIds
+
+        expandedIds.async.mod(ids =>
+          val base = ids - draggedIds - destIds + destGroup
+          (srcIds -- draggedIds).fold(base)(base + _)
+        ) >>
+          AsterismQueries.replaceAsterism[IO](
+            programId,
+            draggedIds.toList,
+            filteredTargetIds.toList
+          ) >>
+          setObsSet(destGroup).to[IO]
     )
 }

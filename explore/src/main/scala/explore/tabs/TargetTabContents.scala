@@ -89,6 +89,7 @@ import scala.concurrent.duration.*
 case class TargetTabContents(
   userId:            Option[User.Id],
   programId:         Program.Id,
+  programSummaries:  View[ProgramSummaries],
   focused:           Focused,
   psUndoStacks:      View[UndoStacks[IO, ProgramSummaries]],
   targetsUndoStacks: View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
@@ -176,7 +177,6 @@ object TargetTabContents extends TwoPanels:
 
   private def renderFn(
     props:             Props,
-    programSummaries:  View[ProgramSummaries],
     selectedView:      View[SelectedPanel],
     layouts:           View[Pot[LayoutsMap]],
     resize:            UseResizeDetectorReturn,
@@ -185,6 +185,8 @@ object TargetTabContents extends TwoPanels:
     ctx:               AppContext[IO]
   ): VdomNode = {
     import ctx.given
+
+    val programSummaries: View[ProgramSummaries] = props.programSummaries
 
     val psUndoCtx: UndoContext[ProgramSummaries] =
       UndoContext(props.psUndoStacks, programSummaries)
@@ -203,7 +205,6 @@ object TargetTabContents extends TwoPanels:
       undoCtx:        UndoContext[ProgramSummaries]
     ) =
       AsterismGroupObsList(
-        // objectsWithObs,
         props.programId,
         props.focused,
         props.expandedIds,
@@ -588,15 +589,14 @@ object TargetTabContents extends TwoPanels:
             case Left(_)         => IO.unit
           }
       }
-      .useContext(ProgramCache.view)
       // Selected targets on the summary table
-      .useStateViewBy((props, _, _, _, _, _) => props.focused.target.toList)
-      .useEffectWithDepsBy((props, _, _, _, _, _, _) => props.focused.target)(
-        (_, _, _, _, _, _, selIds) => _.foldMap(focusedTarget => selIds.set(List(focusedTarget)))
+      .useStateViewBy((props, _, _, _, _) => props.focused.target.toList)
+      .useEffectWithDepsBy((props, _, _, _, _, _) => props.focused.target)(
+        (_, _, _, _, _, selIds) => _.foldMap(focusedTarget => selIds.set(List(focusedTarget)))
       )
-      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, programSummaries, selIds) =>
-        (props.focused, programSummaries.get.asterismGroups, selIds.get)
-      ) { (props, ctx, _, _, _, programSummaries, _) => (target, asterismGroups, selectedIds) =>
+      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, selIds) =>
+        (props.focused, props.programSummaries.get.asterismGroups, selIds.get)
+      ) { (props, ctx, _, _, _, _) => (target, asterismGroups, selectedIds) =>
         import ctx.given
 
         def selectObsIds: ObsIdSet => IO[Unit] =
@@ -636,7 +636,7 @@ object TargetTabContents extends TwoPanels:
                     props.programId,
                     id.idSet.toList,
                     treeTargets,
-                    programSummaries,
+                    props.programSummaries,
                     ctx,
                     props.psUndoStacks,
                     props.expandedIds
@@ -646,12 +646,12 @@ object TargetTabContents extends TwoPanels:
               case LocalClipboard.CopiedTargets(tids) =>
                 props.focused.obsSet
                   .foldMap(obsIds =>
-                    val undoContext    = UndoContext(props.psUndoStacks, programSummaries)
+                    val undoContext    = UndoContext(props.psUndoStacks, props.programSummaries)
                     // Only want to paste targets that aren't already in the target asterism or
                     // undo is messed up.
                     // If all the targets are already there, do nothing.
                     val targetAsterism =
-                      programSummaries.get.asterismGroups.findContainingObsIds(obsIds)
+                      props.programSummaries.get.asterismGroups.findContainingObsIds(obsIds)
                     targetAsterism
                       .flatMap(ag => tids.removeSet(ag.targetIds))
                       .foldMap(uniqueTids =>
@@ -685,13 +685,11 @@ object TargetTabContents extends TwoPanels:
           twoPanelState,
           resize,
           layout,
-          programSummaries,
           selectedTargetIds,
           fullScreen
         ) =>
           renderFn(
             props,
-            programSummaries,
             twoPanelState,
             layout,
             resize,

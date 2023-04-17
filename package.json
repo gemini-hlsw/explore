@@ -57,9 +57,9 @@
     "stylelint-config-prettier": "^9.0.4",
     "stylelint-config-standard-scss": "^6.1.0",
     "terser": "5.16.8",
-    "vite": "4.1.4",
+    "vite": "4.2.1",
     "vite-plugin-fonts": "^0.7.0",
-    "vite-plugin-mkcert": "^1.13.4",
+    "vite-plugin-mkcert": "^1.14.0",
     "vite-plugin-pwa": "^0.14.1"
   },
   "scripts": {

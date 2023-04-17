@@ -55,9 +55,14 @@ $brightness: var(--aladin-image-brightness);
 
   .gmos-patrol-field {
     stroke: hsl(120deg 100% 50%);
-    fill: none;
     stroke-width: 1px;
     stroke-dasharray: 10;
+  }
+
+  .patrol-field-intersection {
+    stroke: hsl(33deg 100% 50%);
+    stroke-width: 1.5px;
+    stroke-dasharray: 5;
   }
 
   .gmos-fpu>polygon {
