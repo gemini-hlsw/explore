@@ -5,11 +5,12 @@ package explore.visualization
 
 import cats.data.NonEmptyMap
 import cats.syntax.all.*
+import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.svg_<^.*
 import lucuma.core.geom.ShapeExpression
 import lucuma.core.geom.jts.JtsShape
-import lucuma.core.geom.jts.interpreter.*
+import lucuma.core.geom.jts.interpreter.given
 import lucuma.core.math.Offset
 import lucuma.ui.syntax.all.given
 import org.locationtech.jts.geom.Geometry
@@ -51,9 +52,6 @@ object SVGVisualizationOverlay {
       case _                     => EmptyVdom
     }
 
-  private val canvasWidth  = VdomAttr("width")
-  private val canvasHeight = VdomAttr("height")
-
   private val component =
     ScalaFnComponent[Props] { p =>
       // Render the svg
@@ -63,7 +61,8 @@ object SVGVisualizationOverlay {
           case jts: JtsShape => jts
           case x             => sys.error(s"Whoa unexpected shape type: $x")
         }
-      val composite                         = evald
+
+      val composite = evald
         .map(_.g)
         .reduce(geometryUnionSemigroup)
 

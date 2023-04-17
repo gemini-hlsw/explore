@@ -22,8 +22,7 @@ import lucuma.catalog.votable.*
 import lucuma.core.enums.*
 import lucuma.core.enums.*
 import lucuma.core.geom.gmos.probeArm
-import lucuma.core.geom.jts.interpreter.*
-import lucuma.core.geom.jts.interpreter.*
+import lucuma.core.geom.jts.interpreter.given
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet

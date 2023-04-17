@@ -4,13 +4,17 @@
 package explore.targeteditor
 
 import cats.Order
+import cats.data.NonEmptyList
 import cats.implicits.catsKernelOrderingForOrder
 import cats.syntax.all.*
+import explore.model.ObsConfiguration
+import lucuma.ags.AgsAnalysis
 import lucuma.core.enums.PortDisposition
 import lucuma.core.geom.ShapeExpression
 import lucuma.core.geom.gmos
 import lucuma.core.geom.syntax.shapeexpression.*
 import lucuma.core.math.Angle
+import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
 import lucuma.schemas.model.BasicConfiguration
 import react.common.implicits.*
@@ -26,6 +30,7 @@ object GmosGeometry:
   // Shape to display for a specific mode
   def shapesForMode(
     posAngle:      Angle,
+    offset:        Offset,
     configuration: Option[BasicConfiguration],
     port:          PortDisposition
   ): SortedMap[Css, ShapeExpression] =
@@ -33,17 +38,17 @@ object GmosGeometry:
       case Some(m: BasicConfiguration.GmosNorthLongSlit) =>
         SortedMap(
           (Css("gmos-science-ccd"), gmos.scienceArea.imaging ⟲ posAngle),
-          (Css("gmos-fpu"), gmos.scienceArea.shapeAt(posAngle, Offset.Zero, m.fpu.asLeft.some)),
+          (Css("gmos-fpu"), gmos.scienceArea.shapeAt(posAngle, offset, m.fpu.asLeft.some)),
           (Css("gmos-patrol-field"),
-           gmos.probeArm.patrolFieldAt(posAngle, Offset.Zero, m.fpu.asLeft.some, port)
+           gmos.probeArm.patrolFieldAt(posAngle, offset, m.fpu.asLeft.some, port)
           )
         )
       case Some(m: BasicConfiguration.GmosSouthLongSlit) =>
         SortedMap(
           (Css("gmos-science-ccd"), gmos.scienceArea.imaging ⟲ posAngle),
-          (Css("gmos-fpu"), gmos.scienceArea.shapeAt(posAngle, Offset.Zero, m.fpu.asRight.some)),
+          (Css("gmos-fpu"), gmos.scienceArea.shapeAt(posAngle, offset, m.fpu.asRight.some)),
           (Css("gmos-patrol-field"),
-           gmos.probeArm.patrolFieldAt(posAngle, Offset.Zero, m.fpu.asRight.some, port)
+           gmos.probeArm.patrolFieldAt(posAngle, offset, m.fpu.asRight.some, port)
           )
         )
       case _                                             =>
@@ -52,17 +57,38 @@ object GmosGeometry:
         )
     }
 
-  // Shape for the patrol field
+  // Shape for the intersection of patrol fields at each offset
+  def patrolFieldIntersection(
+    posAngle:      Angle,
+    offsets:       NonEmptyList[Offset],
+    configuration: Option[BasicConfiguration],
+    port:          PortDisposition,
+    extraCss:      Css = Css.Empty
+  ): (Css, ShapeExpression) = {
+    pprint.pprintln(
+      offsets
+        .map(patrolField(posAngle, _, configuration, port))
+        .collect { case Some(s) => s }
+    )
+    (Css("patrol-field-intersection") |+| extraCss) ->
+      offsets
+        .map(patrolField(posAngle, _, configuration, port))
+        .collect { case Some(s) => s }
+        .reduce(_ ∩ _)
+  }
+
+  // Shape for the patrol field at a single position
   def patrolField(
     posAngle:      Angle,
+    offset:        Offset,
     configuration: Option[BasicConfiguration],
     port:          PortDisposition
   ): Option[ShapeExpression] =
     configuration match {
       case Some(m: BasicConfiguration.GmosNorthLongSlit) =>
-        gmos.probeArm.patrolFieldAt(posAngle, Offset.Zero, m.fpu.asLeft.some, port).some
+        gmos.probeArm.patrolFieldAt(posAngle, offset, m.fpu.asLeft.some, port).some
       case Some(m: BasicConfiguration.GmosSouthLongSlit) =>
-        gmos.probeArm.patrolFieldAt(posAngle, Offset.Zero, m.fpu.asRight.some, port).some
+        gmos.probeArm.patrolFieldAt(posAngle, offset, m.fpu.asRight.some, port).some
       case _                                             =>
         none
     }
@@ -101,3 +127,43 @@ object GmosGeometry:
         SortedMap(
           (Css("gmos-science-ccd"), gmos.scienceArea.imaging ⟲ posAngle)
         )
+
+  // Full geometry for GMOS
+  def gmosGeometry(
+    referenceCoordinates:    Coordinates,
+    configuration:           Option[ObsConfiguration],
+    port:                    PortDisposition,
+    gs:                      Option[AgsAnalysis],
+    candidatesVisibilityCss: Css
+  ): Option[SortedMap[Css, ShapeExpression]] =
+    gs.flatMap(_.posAngle)
+      .orElse(configuration.flatMap(_.fallbackPosAngle))
+      .map { posAngle =>
+        val basicConf = configuration.flatMap(_.configuration)
+
+        // Shapes at base position
+        val baseShapes: SortedMap[Css, ShapeExpression] =
+          GmosGeometry.shapesForMode(posAngle, Offset.Zero, basicConf, port) ++
+            GmosGeometry.commonShapes(posAngle, candidatesVisibilityCss)
+
+        // Don't show the probe if there is no usable GS
+        baseShapes ++ gs
+          .filter(_.isUsable)
+          .map { gs =>
+            val gsOffset   =
+              referenceCoordinates.diff(gs.target.tracking.baseCoordinates).offset
+            val probeShape =
+              GmosGeometry.probeShapes(posAngle, gsOffset, Offset.Zero, basicConf, port, Css.Empty)
+
+            val offsets = configuration.flatMap(_.scienceOffsets) |+|
+              configuration.flatMap(_.acquisitionOffsets)
+
+            val offsetIntersection = offsets.map(o =>
+              GmosGeometry
+                .patrolFieldIntersection(posAngle, o.distinct, basicConf, port)
+            )
+
+            offsetIntersection.fold(probeShape)(probeShape + _)
+          }
+          .getOrElse(SortedMap.empty[Css, ShapeExpression])
+      }
