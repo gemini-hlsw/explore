@@ -131,8 +131,8 @@ private object SpectroscopyModesTable extends TableHooks:
     entry:  SpectroscopyModeRow,
     result: EitherNec[ItcQueryProblems, ItcResult]
   ):
-    lazy val exposureTime: Option[Int] =
-      result.toOption.collect { case ItcResult.Result(e, t) => e.toMillis.toInt * t }
+    lazy val totalItcTime: Option[Double] =
+      result.toOption.collect { case ItcResult.Result(e, t) => e.toMillis.toDouble * t }
 
   private val ColDef = ColumnDef[SpectroscopyModeRowWithResult]
 
@@ -199,9 +199,9 @@ private object SpectroscopyModesTable extends TableHooks:
     case _: None.type             => "none"
     case r                        => r.toString
 
-  given Order[InstrumentRow#Grating] = Order.by(_.toString)
-  given Order[InstrumentRow#Filter]  = Order.by(_.toString)
-  given Order[InstrumentRow#FPU]     = Order.by(_.toString)
+  private given Order[InstrumentRow#Grating] = Order.by(_.toString)
+  private given Order[InstrumentRow#Filter]  = Order.by(_.toString)
+  private given Order[InstrumentRow#FPU]     = Order.by(_.toString)
 
   private def formatInstrument(r: (Instrument, NonEmptyString)): String = r match
     case (i @ Instrument.Gnirs, m) => s"${i.longName} $m"
@@ -265,7 +265,7 @@ private object SpectroscopyModesTable extends TableHooks:
       column(InstrumentColumnId, row => SpectroscopyModeRow.instrumentAndConfig.get(row.entry))
         .setCell(cell => formatInstrument(cell.value))
         .setColumnSize(Resizable(120.toPx, min = 50.toPx, max = 150.toPx)),
-      column(TimeColumnId, _.exposureTime.orUndefined)
+      column(TimeColumnId, _.totalItcTime.orUndefined)
         .setHeader(_ =>
           <.div(ExploreStyles.ITCHeaderCell)(
             "Time",

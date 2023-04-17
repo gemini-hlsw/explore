@@ -36,7 +36,7 @@ import lucuma.core.enums.PortDisposition
 import lucuma.core.enums.SequenceType
 import lucuma.core.geom.Area
 import lucuma.core.geom.ShapeExpression
-import lucuma.core.geom.jts.interpreter.*
+import lucuma.core.geom.jts.interpreter.given
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset

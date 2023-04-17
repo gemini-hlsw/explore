@@ -76,7 +76,7 @@ object SpectroscopyConfigurationPanel {
           units = "μm",
           validFormat = wvMicroInput,
           changeAuditor = wvChangeAuditor
-        ).clearable,
+        ).clearable(^.autoComplete.off),
         FormInputTextView(
           id = "configuration-resolution-power".refined,
           value = resolution,
@@ -86,7 +86,7 @@ object SpectroscopyConfigurationPanel {
           ),
           validFormat = InputValidSplitEpi.posInt.optional,
           changeAuditor = ChangeAuditor.posInt.optional
-        ).clearable,
+        ).clearable(^.autoComplete.off),
         FormLabel("signal-to-noise".refined)(
           "S / N",
           HelpIcon("configuration/signal_to_noise.md".refined)
@@ -99,8 +99,8 @@ object SpectroscopyConfigurationPanel {
             groupClass = ExploreStyles.WarningInput.when_(signalToNoise.get.isEmpty),
             validFormat = ExploreModelValidators.signalToNoiseValidSplitEpi.optional,
             postAddons = signalToNoise.get.fold(List(requiredForITC))(_ => Nil),
-            changeAuditor = ChangeAuditor.posBigDecimal().optional
-          ).withMods(^.autoComplete := "off").clearable,
+            changeAuditor = ChangeAuditor.posBigDecimal(1.refined).optional
+          ).withMods(^.autoComplete.off),
           FormLabel("signal-to-noise-at".refined)("at"),
           FormInputTextView(
             id = "signal-to-noise-at".refined,
@@ -108,7 +108,7 @@ object SpectroscopyConfigurationPanel {
             units = "μm",
             validFormat = wvMicroInput,
             changeAuditor = wvChangeAuditor
-          ).clearable
+          ).clearable(^.autoComplete.off)
         ),
         FormInputTextView(
           id = "wavelength-range".refined,
@@ -120,7 +120,7 @@ object SpectroscopyConfigurationPanel {
           ),
           validFormat = wvcMicroInput,
           changeAuditor = wvChangeAuditor
-        ).clearable,
+        ).clearable(^.autoComplete.off),
         FormLabel("focal-plane".refined)("Focal Plane",
                                          HelpIcon("configuration/focal_plane.md".refined)
         ),
@@ -137,7 +137,7 @@ object SpectroscopyConfigurationPanel {
             units = "arcsec",
             validFormat = InputValidWedge.fromFormat(formatArcsec).optional,
             changeAuditor = ChangeAuditor.fromFormat(formatArcsec).optional
-          ).clearable
+          ).clearable(^.autoComplete.off)
         ),
         FormEnumDropdownOptionalView(
           id = "spectroscopy-capability".refined,

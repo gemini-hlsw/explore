@@ -9,7 +9,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.svg_<^.*
 import lucuma.core.geom.ShapeExpression
 import lucuma.core.geom.jts.JtsShape
-import lucuma.core.geom.jts.interpreter.*
+import lucuma.core.geom.jts.interpreter.given
 import lucuma.core.math.Offset
 import lucuma.ui.syntax.all.given
 import org.locationtech.jts.geom.Geometry
