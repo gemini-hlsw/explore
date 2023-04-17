@@ -56,16 +56,9 @@ object ExploreModelValidators:
       n => Try(n.shortName).toOption.orEmpty
     )
 
-  val snPosBigDecimal: Prism[PosBigDecimal, SignalToNoise] =
-    Prism[PosBigDecimal, SignalToNoise](bd =>
-      SignalToNoise.FromBigDecimalExact.getOption(bd.value)
-    )(
-      _.toPosBigDecimal
-    )
-
-  val signalToNoiseValidSplitEpi =
+  val signalToNoiseValidSplitEpi: InputValidSplitEpi[SignalToNoise] =
     InputValidSplitEpi.posBigDecimal.andThen(
-      snPosBigDecimal,
+      SignalToNoise.FromPosBigDecimalExact,
       _ => NonEmptyChain("Invalid signal to noise".refined[NonEmpty])
     )
 
