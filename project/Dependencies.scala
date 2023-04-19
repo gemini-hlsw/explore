@@ -12,11 +12,11 @@ object Dependencies {
   def In(configuration: Configuration)(dependencies: Seq[ModuleID]): Seq[ModuleID] =
     dependencies.map(_ % configuration)
 
-    val Boopickle = Def.setting(
-      deps(
-        "io.suzaku" %%% "boopickle"
-      )(boopickle)
-    )
+  val Boopickle = Def.setting(
+    deps(
+      "io.suzaku" %%% "boopickle"
+    )(boopickle)
+  )
 
   val Cats = Def.setting(
     deps(
