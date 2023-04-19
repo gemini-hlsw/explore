@@ -10,8 +10,12 @@ target/
 lib_managed/
 src_managed/
 project/boot/
-project/project/
 project/plugins/project/
+
+# Exclude everything in !project/project/ except for Versions.scala (which should be a symlink)
+!project/project/
+project/project/*
+!project/project/Versions.scala
 
 # IDE specific
 .scala_dependencies
