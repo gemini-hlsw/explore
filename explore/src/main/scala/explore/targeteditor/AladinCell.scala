@@ -95,12 +95,14 @@ case class AladinCell(
     } yield angles
 
   val positions: Option[NonEmptyList[AgsPosition]] =
-    (anglesToTest, obsConf.map(_.scienceOffsets.getOrElse(NonEmptyList.of(Offset.Zero)))).mapN {
-      (anglesToTest, offsets) =>
-        for {
-          pa  <- anglesToTest
-          off <- offsets
-        } yield AgsPosition(pa, off)
+    val offsets: NonEmptyList[Offset] = obsConf.flatMap(_.scienceOffsets) match
+      case Some(offsets) => offsets.prepend(Offset.Zero)
+      case None          => NonEmptyList.of(Offset.Zero)
+    anglesToTest.map { anglesToTest =>
+      for {
+        pa  <- anglesToTest
+        off <- offsets
+      } yield AgsPosition(pa, off)
     }
 
   def canRunAGS: Boolean = obsConf.exists(o => o.constraints.isDefined && o.wavelength.isDefined)
