@@ -1,6 +1,6 @@
 import org.scalajs.linker.interface.ModuleSplitStyle
-import Settings.Libraries.*
 import scala.sys.process.*
+import Dependencies.*
 
 val reactJS = "17.0.2"
 val FUILess = "2.8.7"
@@ -31,7 +31,7 @@ addCommandAlias(
 ThisBuild / description                := "Explore"
 Global / onChangedBuildSource          := ReloadOnSourceChanges
 ThisBuild / scalafixDependencies ++= ClueGenerator.value ++ Seq(
-  "edu.gemini" % "lucuma-schemas_3" % Settings.LibraryVersions.lucumaSchemas
+  "edu.gemini" % "lucuma-schemas_3" % Versions.lucumaSchemas
 )
 ThisBuild / scalafixScalaBinaryVersion := "2.13"
 ThisBuild / scalaVersion               := "3.2.2"
