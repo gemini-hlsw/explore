@@ -217,36 +217,36 @@ private object SpectroscopyModesTable extends TableHooks:
     w: Option[Wavelength]
   ): VdomElement = {
     val content: TagMod = c match
-      case Left(nel)                        =>
+      case Left(nel)                  =>
         if (nel.exists(_ == ItcQueryProblems.UnsupportedMode))
           <.span(Icons.Ban.withColor("red"))
             .withTooltip(tooltip = "Mode not supported", placement = Placement.RightStart)
         else
           val content = nel
             .collect {
-              case ItcQueryProblems.MissingSignalToNoise             => <.span("Set S/N")
-              case ItcQueryProblems.MissingWavelength                => <.span("Set Wavelength")
-              case ItcQueryProblems.MissingTargetInfo if w.isDefined =>
+              case ItcQueryProblems.MissingSignalToNoise                          => <.span("Set S/N")
+              case ItcQueryProblems.MissingWavelength                             => <.span("Set Wavelength")
+              case ItcQueryProblems.MissingTargetInfo if w.isDefined              =>
                 <.span("Missing target info")
-              case ItcQueryProblems.MissingBrightness                => <.span("No brightness defined")
-              case ItcQueryProblems.GenericError(e)                  => e.split("\\.").mkTagMod(<.br)
+              case ItcQueryProblems.MissingBrightness                             => <.span("No brightness defined")
+              case ItcQueryProblems.GenericError(e) if e.startsWith("Source too") =>
+                <.span(Icons.SunBright.addClass(ExploreStyles.ItcSourceTooBrightIcon), e)
+              case ItcQueryProblems.GenericError(e)                               =>
+                <.span(e)
             }
             .toList
             .intersperse(<.br: VdomNode)
 
-          <.span(Icons.TriangleSolid)
+          <.span(Icons.TriangleSolid.addClass(ExploreStyles.ItcErrorIcon))
             .withTooltip(tooltip = <.div(content.mkTagMod(<.span)), placement = Placement.RightEnd)
-      case Right(r: ItcResult.Result)       =>
+      case Right(r: ItcResult.Result) =>
         <.span(formatDuration(r.duration.toSeconds))
           .withTooltip(
             placement = Placement.RightStart,
             tooltip = s"${r.exposures} × ${formatDuration(r.exposureTime.toSeconds)}"
           )
-      case Right(ItcResult.Pending)         =>
+      case Right(ItcResult.Pending)   =>
         Icons.Spinner.withSpin(true)
-      case Right(ItcResult.SourceTooBright) =>
-        <.span(Icons.SunBright.withColor("yellow"))
-          .withTooltip(tooltip = "Source too bright")
 
     <.div(ExploreStyles.ITCCell, content)
   }

@@ -33,20 +33,16 @@ import queries.schemas.odb.ObsQueries
 
 // There is a lot of duplication here with the odb.conversions package
 trait ITCConversions:
-  type SpectroscopyModeInput = ITC.Types.SpectroscopyModeInput
-  val SpectroscopyModeInput = ITC.Types.SpectroscopyModeInput
+  type SpectroscopyIntegrationTimeInput = ITC.Types.SpectroscopyIntegrationTimeInput
+  val SpectroscopyIntegrationTimeInput = ITC.Types.SpectroscopyIntegrationTimeInput
   type GmosNorthFpuInput = ITC.Types.GmosNorthFpuInput
   val GmosNorthFpuInput = ITC.Types.GmosNorthFpuInput
   type GmosSouthFpuInput = ITC.Types.GmosSouthFpuInput
   val GmosSouthFpuInput = ITC.Types.GmosSouthFpuInput
   type ItcResults = ITCQueriesGQL.SpectroscopyITCQuery.Data
-  type ItcError   = ITCQueriesGQL.SpectroscopyITCQuery.Data.Spectroscopy.Results.Itc.ItcError
-  val ItcError = ITCQueriesGQL.SpectroscopyITCQuery.Data.Spectroscopy.Results.Itc.ItcError
-  type ItcSuccess = ITCQueriesGQL.SpectroscopyITCQuery.Data.Spectroscopy.Results.Itc.ItcSuccess
-  val ItcSuccess = ITCQueriesGQL.SpectroscopyITCQuery.Data.Spectroscopy.Results.Itc.ItcSuccess
 
-  type SpectroscopyGraphModeInput = ITC.Types.SpectroscopyGraphModeInput
-  val SpectroscopyGraphModeInput = ITC.Types.SpectroscopyGraphModeInput
+  type SpectroscopyGraphModeInput = ITC.Types.SpectroscopyGraphInput
+  val SpectroscopyGraphModeInput = ITC.Types.SpectroscopyGraphInput
   type SignificantFiguresInput = ITC.Types.SignificantFiguresInput
   val SignificantFiguresInput = ITC.Types.SignificantFiguresInput
   type ItcGraphResults = ITCQueriesGQL.SpectroscopyGraphITCQuery.Data

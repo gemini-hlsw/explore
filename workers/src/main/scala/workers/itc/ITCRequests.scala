@@ -10,7 +10,9 @@ import cats.effect.*
 import cats.effect.std.Semaphore
 import cats.syntax.all.*
 import clue.FetchClient
+import clue.ResponseException
 import clue.data.syntax.*
+import clue.model.GraphQLErrors
 import crystal.ViewF
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosBigDecimal
@@ -60,14 +62,10 @@ object ITCRequests:
     cache:           Cache[F],
     callback:        Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]] => F[Unit]
   )(using Monoid[F[Unit]], FetchClient[F, ITC]): F[Unit] = {
-    def itcResults(r: ItcResults): List[EitherNec[ItcQueryProblems, ItcResult]] =
+    def itcResults(r: ItcResults): EitherNec[ItcQueryProblems, ItcResult] =
       // Convert to usable types
-      r.spectroscopy.flatMap(_.results).map { r =>
-        r.itc match {
-          case ItcError(m)      => ItcQueryProblems.GenericError(m).leftNec
-          case ItcSuccess(e, t) => ItcResult.Result(t.microseconds.microseconds, e).rightNec
-        }
-      }
+      val result = r.spectroscopyIntegrationTime.result
+      ItcResult.Result(result.exposureTime.microseconds.microseconds, result.exposures).rightNec
 
     def doRequest(
       params: ItcRequestParams
@@ -75,55 +73,30 @@ object ITCRequests:
       Logger[F]
         .debug(
           s"ITC: Request for mode: ${params.mode}, centralWavelength: ${params.wavelength} and target count: ${params.target.name.value}"
-        ) *> selectedBand(params.target.profile, params.wavelength.value)
-        .map { band =>
-          SpectroscopyITCQuery[F]
-            .query(
-              SpectroscopyModeInput(
-                wavelength = params.wavelength.value.toInput,
-                signalToNoise = params.signalToNoise,
-                sourceProfile = params.target.profile.toInput,
-                signalToNoiseAt = params.signalToNoiseAt.map(_.toInput).orIgnore,
-                band = band,
-                radialVelocity = params.target.rv.toITCInput,
-                constraints = params.constraints,
-                modes = params.mode.toITCInput.map(_.assign).toList
-              ).assign
-            )
-            .flatTap { r =>
-              val prefix = s"ITC: Result for mode ${params.mode}:"
-              itcResults(r).traverse(_ match {
-                case Left(errors)                                     =>
-                  Logger[F].error(s"$prefix ERRORS: $errors")
-                case Right(ItcResult.Result(exposureTime, exposures)) =>
-                  Logger[F].debug(s"$prefix $exposures x ${exposureTime.toSeconds}")
-                case Right(other)                                     =>
-                  Logger[F].debug(s"$prefix $other")
-              })
-            }
-            .map(r =>
-              itcResults(r) match {
-                case Nil => none
-                case l   =>
-                  Map(
-                    params ->
-                      l.maxBy {
-                        case Right(ItcResult.Result(exposureTime, _)) => exposureTime.toMicros
-                        case _                                        => Long.MinValue
-                      }
-                  ).some
-              }
-            )
-            .handleErrorWith(e =>
-              Map(
-                params -> (ItcQueryProblems
-                  .GenericError("Error calling ITC service"): ItcQueryProblems)
-                  .leftNec[ItcResult]
-              ).some.pure[F]
-            )
-        }
-        .sequence
-        .map(_.flatten)
+        ) *> selectedBand(params.target.profile, params.wavelength.value).map { band =>
+        SpectroscopyITCQuery[F]
+          .query(
+            SpectroscopyIntegrationTimeInput(
+              wavelength = params.wavelength.value.toInput,
+              signalToNoise = params.signalToNoise,
+              sourceProfile = params.target.profile.toInput,
+              signalToNoiseAt = params.signalToNoiseAt.map(_.toInput).orIgnore,
+              band = band,
+              radialVelocity = params.target.rv.toITCInput,
+              constraints = params.constraints,
+              mode = params.mode.toITCInput.orIgnore
+            ).assign
+          )
+          .map(r => Map(params -> itcResults(r)))
+          .handleError { e =>
+            val msg = e match
+              case ResponseException(errors) =>
+                errors.map(_.message).mkString_("\n")
+              case e                         =>
+                e.getMessage
+            Map(params -> (ItcQueryProblems.GenericError(msg): ItcQueryProblems).leftNec[ItcResult])
+          }
+      }.sequence
 
     val cacheVersion = CacheVersion(2)
 
