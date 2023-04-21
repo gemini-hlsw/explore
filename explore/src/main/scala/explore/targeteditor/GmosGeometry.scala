@@ -64,18 +64,12 @@ object GmosGeometry:
     configuration: Option[BasicConfiguration],
     port:          PortDisposition,
     extraCss:      Css = Css.Empty
-  ): (Css, ShapeExpression) = {
-    pprint.pprintln(
-      offsets
-        .map(patrolField(posAngle, _, configuration, port))
-        .collect { case Some(s) => s }
-    )
+  ): (Css, ShapeExpression) =
     (Css("patrol-field-intersection") |+| extraCss) ->
       offsets
         .map(patrolField(posAngle, _, configuration, port))
         .collect { case Some(s) => s }
         .reduce(_ ∩ _)
-  }
 
   // Shape for the patrol field at a single position
   def patrolField(
@@ -158,12 +152,12 @@ object GmosGeometry:
             val offsets = configuration.flatMap(_.scienceOffsets) |+|
               configuration.flatMap(_.acquisitionOffsets)
 
-            val offsetIntersection = offsets.map(o =>
+            val patrolFieldIntersection = offsets.map(o =>
               GmosGeometry
                 .patrolFieldIntersection(posAngle, o.distinct, basicConf, port)
             )
 
-            offsetIntersection.fold(probeShape)(probeShape + _)
+            patrolFieldIntersection.fold(probeShape)(probeShape + _)
           }
           .getOrElse(SortedMap.empty[Css, ShapeExpression])
       }
