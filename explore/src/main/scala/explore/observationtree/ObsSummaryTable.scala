@@ -252,7 +252,7 @@ object ObsSummaryTable extends TableHooks:
           )
           .sortableBy(_.toOption.map(_._2)),
         // TODO: FindingChartColumnId
-        column(ConfigurationColumnId, _.obs.configurationSummary),
+        column(ConfigurationColumnId, _.obs.configurationSummary.orEmpty),
         column(DurationColumnId, _.obs.executionTime.toHoursMinutes)
         // TODO: PriorityColumnId
         // TODO: ChargedTimeColumnId
