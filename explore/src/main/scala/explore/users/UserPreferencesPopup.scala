@@ -22,7 +22,7 @@ import explore.model.UserVault
 import explore.model.display.given
 import explore.model.enums.RoleType
 import explore.model.reusability.given
-import explore.model.userVault.*
+import explore.syntax.ui.*
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*

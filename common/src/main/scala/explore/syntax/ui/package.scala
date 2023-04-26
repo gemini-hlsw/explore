@@ -5,9 +5,11 @@ package explore.syntax.ui
 
 import cats.*
 import cats.syntax.all.*
+import clue.js.FetchJSRequest
 import crystal.react.implicits.*
 import explore.components.ui.ExploreStyles
 import explore.model.Constants
+import explore.model.UserVault
 import explore.utils.*
 import japgolly.scalajs.react.callback.Callback
 import japgolly.scalajs.react.util.Effect
@@ -38,3 +40,11 @@ extension [F[_]: MonadThrow](c: Logger[F])
 
   def pinfoCB[T](a: T)(using Effect.Dispatch[F]): Callback =
     c.info(_root_.pprint.apply(a).render).runAsyncAndForget
+
+extension (vault: UserVault)
+  def authorizationHeader: String = s"Bearer ${vault.token.value}"
+
+  def addAuthorizationHeader(request: FetchJSRequest): FetchJSRequest =
+    // DOM Headers are mutable
+    request.headers.set("Authorization", authorizationHeader)
+    request

@@ -12,7 +12,7 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.UserVault
-import explore.model.userVault.*
+import explore.syntax.ui.*
 import io.circe.Json
 import io.circe.syntax.*
 import japgolly.scalajs.react.*
