@@ -73,7 +73,7 @@ object ITCRequests:
       Logger[F]
         .debug(
           s"ITC: Request for mode: ${params.mode}, centralWavelength: ${params.wavelength} and target count: ${params.target.name.value}"
-        ) *> selectedBand(params.target.profile, params.wavelength.value).map { band =>
+        ) *> selectedBand(params.target.profile, params.wavelength.value).traverse { band =>
         SpectroscopyITCQuery[F]
           .query(
             SpectroscopyIntegrationTimeInput(
@@ -96,7 +96,7 @@ object ITCRequests:
                 e.getMessage
             Map(params -> (ItcQueryProblems.GenericError(msg): ItcQueryProblems).leftNec[ItcResult])
           }
-      }.sequence
+      }
 
     val cacheVersion = CacheVersion(2)
 
