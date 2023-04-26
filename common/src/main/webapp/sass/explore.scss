@@ -617,6 +617,19 @@ a:hover {
 }
 
 // ------
+// Spectroscopy table
+// ------
+.itc-source-too-bright-icon,
+.itc-error-icon {
+  color: var(--warning-background-color);
+}
+
+.itc-source-too-bright-icon {
+  margin-right: 0.5em;
+}
+
+
+// ------
 // Target search popup styles
 // ------
 

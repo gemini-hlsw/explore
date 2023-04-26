@@ -17,23 +17,13 @@ object ITCQueriesGQL:
   trait SpectroscopyITCQuery extends GraphQLOperation[ITC]:
     val document =
       """
-      query($input: SpectroscopyModeInput) {
-        spectroscopy(input: $input) {
-          serverVersion
-          results {
-            mode {
-              instrument
-            }
-            itc {
-              ... on ItcSuccess {
-                exposures
-                exposureTime {
-                  microseconds
-                }
-              }
-              ... on ItcError {
-                msg
-              }
+      query($input: SpectroscopyIntegrationTimeInput) {
+        spectroscopyIntegrationTime(input: $input) {
+          dataVersion
+          result {
+            exposures
+            exposureTime {
+              microseconds
             }
           }
         }
@@ -48,7 +38,7 @@ object ITCQueriesGQL:
   trait SpectroscopyGraphITCQuery extends GraphQLOperation[ITC]:
     val document =
       """
-      query($input: SpectroscopyGraphModeInput) {
+      query($input: SpectroscopyGraphInput) {
         spectroscopyGraph(input: $input) {
           serverVersion
           ccds {

@@ -2106,7 +2106,7 @@ input SpectroscopyScienceRequirementsInput {
   """
   The signalToNoise field may be unset by assigning a null value, or ignored by skipping it altogether
   """
-  signalToNoise: BigDecimal
+  signalToNoise: SignalToNoise
 
   """
   The signalToNoiseAt field may be unset by assigning a null value, or ignored by skipping it altogether
@@ -4576,39 +4576,53 @@ scalar NonNegBigDecimal
 """An `Long` in the range from 1 to 9223372036854775807"""
 scalar PosLong
 
+# Equivalent time amount in several unit options (e.g., 120 seconds or 2 minutes)
+type TimeSpan {
+  # TimeSpan in µs
+  microseconds: Long!
+
+  # TimeSpan in ms
+  milliseconds: BigDecimal!
+
+  # TimeSpan in seconds
+  seconds: BigDecimal!
+
+  # TimeSpan in minutes
+  minutes: BigDecimal!
+
+  # TimeSpan in hours
+  hours: BigDecimal!
+
+  # TimeSpan as an ISO-8601 string
+  iso: String!
+}
+
 ##############
 # ITC schema
 ##############
 
-# ITC error result
-type ItcError implements ItcResult {
-  # Message
-  msg: String!
+type Query {
+  # Given an instrument and a mode, return an the integration time and the estimated S/N
+  spectroscopyIntegrationTime(
+    input: SpectroscopyIntegrationTimeInput!
+  ): IntegrationTimeCalculationResult!
 
-  # Result type
-  resultType: String!
+  spectroscopySignalToNoise(
+    input: SpectroscopySignalToNoiseInput!
+  ): SignalToNoiseResult!
+
+  spectroscopyGraph(
+    input: SpectroscopyGraphInput!
+  ): SpectroscopyGraphResult!
+
+  versions: ItcVersions
 }
 
-# Possible itc result
-interface ItcResult {
-  # Result type
-  resultType: String!
+type ImagingMode {
+  # instrument
+  instrument: InstrumentType
 }
 
-type ItcSuccess implements ItcResult {
-  # Exposure time duration
-  exposureTime: Duration!
-
-  # Exposures
-  exposures: Int!
-
-  # Signal/Noise ratio
-  signalToNoise: SignalToNoise!
-
-  # Result type
-  resultType: String!
-}
-#
 type ObservingModeSpectroscopy {
   # Wavelength in appropriate units
   wavelength: Wavelength!
@@ -4631,22 +4645,6 @@ type ItcVersions {
   dataVersion: String
 }
 
-type Query {
-  spectroscopy(
-    # Query multiple modes in spectroscopy mode
-    input: SpectroscopyModeInput!
-  ): [SpectroscopyResult!]!
-
-  spectroscopySignalToNoiseBeta(
-    input: SpectroscopySNInput!
-  ): SignalToNoiseResult!
-
-  spectroscopyGraph(
-    input: SpectroscopyGraphModeInput!
-  ): SpectroscopyGraphResult!
-
-  versions: ItcVersions
-}
 
 type GmosSITCParams {
   # Gmos South disperser
@@ -4706,7 +4704,7 @@ input InstrumentModesInput {
 }
 
 # Configuration alternatives query
-input SpectroscopyModeInput {
+input SpectroscopyIntegrationTimeInput {
   # Observing wavelength.
   wavelength: WavelengthInput!
 
@@ -4729,7 +4727,7 @@ input SpectroscopyModeInput {
   constraints: ConstraintSetInput!
 
   # Instrument modes
-  modes: [InstrumentModesInput]!
+  mode: InstrumentModesInput
 }
 
 # Params for significant figures on each axis
@@ -4745,7 +4743,7 @@ input SignificantFiguresInput {
 }
 
 # Parameters to retrieve graph data
-input SpectroscopyGraphModeInput {
+input SpectroscopyGraphInput {
   # Observing wavelength.
   wavelength: WavelengthInput!
 
@@ -4778,7 +4776,7 @@ input SpectroscopyGraphModeInput {
 }
 
 # Parameters to calculate signal to noise
-input SpectroscopySNInput {
+input SpectroscopySignalToNoiseInput {
   # Observing wavelength.
   wavelength: WavelengthInput!
 
@@ -4810,25 +4808,47 @@ input SpectroscopySNInput {
   significantFigures: SignificantFiguresInput
 }
 
-type Result {
-  # Spectroscopy mode
-  mode: ObservingModeSpectroscopy!
+type IntegrationTime {
+  # Exposure time duration
+  exposureTime: TimeSpan!
 
-  # ITC results
-  itc: ItcResult!
+  # Exposures
+  exposures: PosInt!
+
+  # Signal/Noise ratio
+  signalToNoise: SignalToNoise!
 }
 
-type SpectroscopyResult {
+type SpectroscopyMode {
+  # Wavelength in appropriate units
+  wavelength: Wavelength!
+
+  # Resolution
+  resolution: BigDecimal!
+
+  # params
+  params: InstrumentITCParams!
+
+  # instrument
+  instrument: InstrumentType
+}
+
+type IntegrationTimeCalculationResult {
 
   # id of the backend server
-  serverVersion: String!
+  serverVersion: String
 
   # token for the itc data version, can be null
   dataVersion: String
 
-  # Search results
-  results: [Result!]!
+  # queried mode
+  mode: ObservingMode!
+
+  # ITC results
+  result: IntegrationTime!
 }
+
+union ObservingMode = SpectroscopyMode | ImagingMode
 
 """Chart data types"""
 enum ItcSeriesType {

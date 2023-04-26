@@ -171,13 +171,11 @@ trait ItcPicklers extends CommonPicklers {
 
   given Pickler[ItcTarget] = generatePickler
 
-  given Pickler[ItcResult.SourceTooBright.type] = generatePickler
-  given Pickler[ItcResult.Pending.type]         = generatePickler
-  given Pickler[ItcResult.Result]               = generatePickler
+  given Pickler[ItcResult.Pending.type] = generatePickler
+  given Pickler[ItcResult.Result]       = generatePickler
 
   given Pickler[ItcResult] =
     compositePickler[ItcResult]
-      .addConcreteType[ItcResult.SourceTooBright.type]
       .addConcreteType[ItcResult.Pending.type]
       .addConcreteType[ItcResult.Result]
 
