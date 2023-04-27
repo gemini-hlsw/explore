@@ -13,26 +13,26 @@ import queries.schemas.ITC
 
 object ITCQueriesGQL:
 
-  @GraphQL
-  trait SpectroscopyITCQuery extends GraphQLOperation[ITC]:
-    val document =
-      """
-      query($input: SpectroscopyIntegrationTimeInput) {
-        spectroscopyIntegrationTime(input: $input) {
-          dataVersion
-          result {
-            exposures
-            exposureTime {
-              microseconds
-            }
-          }
-        }
-      }
-    """
-
-    object Data:
-      object Spectroscopy:
-        type ServerVersion = string.NonEmptyString
+  // @GraphQL
+  // trait SpectroscopyITCQuery extends GraphQLOperation[ITC]:
+  //   val document =
+  //     """
+  //     query($input: SpectroscopyIntegrationTimeInput) {
+  //       spectroscopyIntegrationTime(input: $input) {
+  //         dataVersion
+  //         result {
+  //           exposures
+  //           exposureTime {
+  //             microseconds
+  //           }
+  //         }
+  //       }
+  //     }
+  //   """
+  //
+  //   object Data:
+  //     object Spectroscopy:
+  //       type ServerVersion = string.NonEmptyString
 
   @GraphQL
   trait SpectroscopyGraphITCQuery extends GraphQLOperation[ITC]:

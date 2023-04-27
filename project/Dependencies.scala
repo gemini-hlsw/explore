@@ -243,6 +243,12 @@ object Dependencies {
     )(lucumaUI)
   )
 
+  val LucumaITCClient = Def.setting(
+    deps(
+      "edu.gemini" %%% "lucuma-itc-client"
+    )(lucumaITC)
+  )
+
   val Monocle = Def.setting(
     deps(
       "dev.optics" %%% "monocle-core",

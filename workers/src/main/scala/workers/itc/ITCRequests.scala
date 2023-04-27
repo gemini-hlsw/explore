@@ -25,6 +25,7 @@ import explore.model.itc.math.*
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.SpectroscopyModeRow
+import explore.modes.InstrumentRow
 import lucuma.core.enums.Band
 import lucuma.core.math.BrightnessUnits.*
 import lucuma.core.math.SignalToNoise
@@ -32,6 +33,12 @@ import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.SpectralDefinition
+import lucuma.itc.IntegrationTime
+import lucuma.itc.client.ItcClient
+import lucuma.itc.client.InstrumentMode
+import lucuma.itc.client.GmosFpu
+import lucuma.itc.client.SpectroscopyIntegrationTimeInput
+import lucuma.itc.client.SpectroscopyResult
 import org.scalajs.dom
 import org.typelevel.log4cats.Logger
 import queries.common.ITCQueriesGQL.*
@@ -52,6 +59,15 @@ object ITCRequests:
       ga.parTraverse(a => s.permit.use(_ => f(a)))
     }
 
+  extension (row: InstrumentRow)
+    def toItcClientMode: Option[InstrumentMode] = row match {
+      case g: GmosNorthSpectroscopyRow =>
+        InstrumentMode.GmosNorth(g.grating, g.filter, GmosFpu.North(g.fpu.asRight)).some
+      case g: GmosSouthSpectroscopyRow =>
+        InstrumentMode.GmosSouth(g.grating, g.filter, GmosFpu.South(g.fpu.asRight)).some
+      case _                           => None
+    }
+
   def queryItc[F[_]: Concurrent: Parallel: Logger](
     wavelength:      Wavelength,
     signalToNoise:   SignalToNoise,
@@ -61,11 +77,17 @@ object ITCRequests:
     signalToNoiseAt: Option[Wavelength],
     cache:           Cache[F],
     callback:        Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]] => F[Unit]
-  )(using Monoid[F[Unit]], FetchClient[F, ITC]): F[Unit] = {
-    def itcResults(r: ItcResults): EitherNec[ItcQueryProblems, ItcResult] =
+  )(using Monoid[F[Unit]], ItcClient[F]): F[Unit] = {
+    def itcResults(r: SpectroscopyResult): EitherNec[ItcQueryProblems, ItcResult] =
       // Convert to usable types
-      val result = r.spectroscopyIntegrationTime.result
-      ItcResult.Result(result.exposureTime.microseconds.microseconds, result.exposures).rightNec
+      r.result match
+        case Some(r: IntegrationTime) =>
+          ItcResult
+            .Result(r.exposureTime, r.exposures)
+            .rightNec
+        case None                     =>
+          (ItcQueryProblems.GenericError("No response from the ITC server"): ItcQueryProblems)
+            .leftNec[ItcResult]
 
     def doRequest(
       params: ItcRequestParams
@@ -73,30 +95,36 @@ object ITCRequests:
       Logger[F]
         .debug(
           s"ITC: Request for mode: ${params.mode}, centralWavelength: ${params.wavelength} and target count: ${params.target.name.value}"
-        ) *> selectedBand(params.target.profile, params.wavelength.value).traverse { band =>
-        SpectroscopyITCQuery[F]
-          .query(
-            SpectroscopyIntegrationTimeInput(
-              wavelength = params.wavelength.value.toInput,
-              signalToNoise = params.signalToNoise,
-              sourceProfile = params.target.profile.toInput,
-              signalToNoiseAt = params.signalToNoiseAt.map(_.toInput).orIgnore,
-              band = band,
-              radialVelocity = params.target.rv.toITCInput,
-              constraints = params.constraints,
-              mode = params.mode.toITCInput.orIgnore
-            ).assign
-          )
-          .map(r => Map(params -> itcResults(r)))
-          .handleError { e =>
-            val msg = e match
-              case ResponseException(errors) =>
-                errors.map(_.message).mkString_("\n")
-              case e                         =>
-                e.getMessage
-            Map(params -> (ItcQueryProblems.GenericError(msg): ItcQueryProblems).leftNec[ItcResult])
-          }
-      }
+        ) *> (selectedBand(params.target.profile, params.wavelength.value),
+              params.mode.toItcClientMode
+      )
+        .traverseN { (band, mode) =>
+          summon[ItcClient[F]]
+            .spectroscopy(
+              SpectroscopyIntegrationTimeInput(
+                wavelength = params.wavelength.value,
+                signalToNoise = params.signalToNoise,
+                sourceProfile = params.target.profile,
+                signalToNoiseAt = params.signalToNoiseAt,
+                band = band,
+                radialVelocity = params.target.rv,
+                constraints = params.constraints,
+                mode = mode
+              ),
+              false
+            )
+            .map(r => Map(params -> itcResults(r)))
+            .handleError { e =>
+              val msg = e match
+                case ResponseException(errors, _) =>
+                  errors.map(_.message).mkString_("\n")
+                case e                            =>
+                  e.getMessage
+              Map(
+                params -> (ItcQueryProblems.GenericError(msg): ItcQueryProblems).leftNec[ItcResult]
+              )
+            }
+        }
 
     val cacheVersion = CacheVersion(2)
 

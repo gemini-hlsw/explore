@@ -39,7 +39,7 @@ trait ITCConversions:
   val GmosNorthFpuInput = ITC.Types.GmosNorthFpuInput
   type GmosSouthFpuInput = ITC.Types.GmosSouthFpuInput
   val GmosSouthFpuInput = ITC.Types.GmosSouthFpuInput
-  type ItcResults = ITCQueriesGQL.SpectroscopyITCQuery.Data
+  // type ItcResults = ITCQueriesGQL.SpectroscopyITCQuery.Data
 
   type SpectroscopyGraphModeInput = ITC.Types.SpectroscopyGraphInput
   val SpectroscopyGraphModeInput = ITC.Types.SpectroscopyGraphInput

@@ -46,17 +46,18 @@ sealed trait ItcResult extends Product with Serializable derives Eq {
 
   def toChartExposureTime: Option[ItcChartExposureTime] = this match {
     case ItcResult.Result(time, count) =>
-      (TimeSpan.fromMicroseconds(time.toMicros), NonNegInt.from(count.value).toOption).mapN(
-        (t, c) => ItcChartExposureTime(OverridenExposureTime.FromItc, t, c)
-      )
+      NonNegInt
+        .from(count.value)
+        .toOption
+        .map(c => ItcChartExposureTime(OverridenExposureTime.FromItc, time, c))
     case _                             => none
   }
 }
 
 object ItcResult {
-  case object Pending                                                extends ItcResult
-  case class Result(exposureTime: FiniteDuration, exposures: PosInt) extends ItcResult:
-    val duration: FiniteDuration = exposureTime * exposures.value.toLong
+  case object Pending                                          extends ItcResult
+  case class Result(exposureTime: TimeSpan, exposures: PosInt) extends ItcResult:
+    val duration: TimeSpan = exposureTime *| exposures.value
 }
 
 case class YAxis(min: Double, max: Double):
