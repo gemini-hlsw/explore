@@ -36,7 +36,7 @@ object Versions {
   val reactAladin            = "0.29.1"
   val refinedAlgebra         = "0.1.0"
   val sbtBuildInfo           = "0.11.0"
-  val sbtLucuma              = "0.10.12"
+  val sbtLucuma              = "0.10.13"
   val scalaCollectionContrib = "0.3.0"
   val scalaJsDom             = "2.4.0"
   val scalaJsReact           = "2.1.1"
