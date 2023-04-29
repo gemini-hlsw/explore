@@ -9,10 +9,7 @@ import cats.data.*
 import cats.effect.*
 import cats.effect.std.Semaphore
 import cats.syntax.all.*
-import clue.FetchClient
 import clue.ResponseException
-import clue.data.syntax.*
-import clue.model.GraphQLErrors
 import crystal.ViewF
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosBigDecimal
@@ -24,8 +21,8 @@ import explore.model.itc.*
 import explore.model.itc.math.*
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
-import explore.modes.SpectroscopyModeRow
 import explore.modes.InstrumentRow
+import explore.modes.SpectroscopyModeRow
 import lucuma.core.enums.Band
 import lucuma.core.math.BrightnessUnits.*
 import lucuma.core.math.SignalToNoise
@@ -34,15 +31,13 @@ import lucuma.core.model.ConstraintSet
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.SpectralDefinition
 import lucuma.itc.IntegrationTime
-import lucuma.itc.client.ItcClient
-import lucuma.itc.client.InstrumentMode
 import lucuma.itc.client.GmosFpu
+import lucuma.itc.client.InstrumentMode
+import lucuma.itc.client.ItcClient
 import lucuma.itc.client.SpectroscopyIntegrationTimeInput
 import lucuma.itc.client.SpectroscopyResult
 import org.scalajs.dom
 import org.typelevel.log4cats.Logger
-import queries.common.ITCQueriesGQL.*
-import queries.schemas.ITC
 import queries.schemas.itc.ITCConversions.*
 import workers.*
 
@@ -57,15 +52,6 @@ object ITCRequests:
   )(f: A => F[B]) =
     Semaphore[F](n).flatMap { s =>
       ga.parTraverse(a => s.permit.use(_ => f(a)))
-    }
-
-  extension (row: InstrumentRow)
-    def toItcClientMode: Option[InstrumentMode] = row match {
-      case g: GmosNorthSpectroscopyRow =>
-        InstrumentMode.GmosNorth(g.grating, g.filter, GmosFpu.North(g.fpu.asRight)).some
-      case g: GmosSouthSpectroscopyRow =>
-        InstrumentMode.GmosSouth(g.grating, g.filter, GmosFpu.South(g.fpu.asRight)).some
-      case _                           => None
     }
 
   def queryItc[F[_]: Concurrent: Parallel: Logger](
@@ -99,7 +85,7 @@ object ITCRequests:
               params.mode.toItcClientMode
       )
         .traverseN { (band, mode) =>
-          summon[ItcClient[F]]
+          ItcClient[F]
             .spectroscopy(
               SpectroscopyIntegrationTimeInput(
                 wavelength = params.wavelength.value,

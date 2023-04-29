@@ -25,184 +25,192 @@ import lucuma.core.math.dimensional.Measure
 import lucuma.core.model.*
 import lucuma.core.optics.syntax.lens.*
 import lucuma.core.util.TimeSpan
+import lucuma.itc.client.GmosFpu
+import lucuma.itc.client.InstrumentMode
 import lucuma.schemas.model.TargetWithId
-import queries.common.ITCQueriesGQL
-import queries.schemas.ITC
-import queries.schemas.ITC.Types.*
 import queries.schemas.odb.ObsQueries
 
 // There is a lot of duplication here with the odb.conversions package
 trait ITCConversions:
-  type SpectroscopyIntegrationTimeInput = ITC.Types.SpectroscopyIntegrationTimeInput
-  val SpectroscopyIntegrationTimeInput = ITC.Types.SpectroscopyIntegrationTimeInput
-  type GmosNorthFpuInput = ITC.Types.GmosNorthFpuInput
-  val GmosNorthFpuInput = ITC.Types.GmosNorthFpuInput
-  type GmosSouthFpuInput = ITC.Types.GmosSouthFpuInput
-  val GmosSouthFpuInput = ITC.Types.GmosSouthFpuInput
-  // type ItcResults = ITCQueriesGQL.SpectroscopyITCQuery.Data
+  // type SpectroscopyIntegrationTimeInput = ITC.Types.SpectroscopyIntegrationTimeInput
+  // val SpectroscopyIntegrationTimeInput = ITC.Types.SpectroscopyIntegrationTimeInput
+  // type GmosNorthFpuInput = ITC.Types.GmosNorthFpuInput
+  // val GmosNorthFpuInput = ITC.Types.GmosNorthFpuInput
+  // type GmosSouthFpuInput = ITC.Types.GmosSouthFpuInput
+  // val GmosSouthFpuInput = ITC.Types.GmosSouthFpuInput
+  // // type ItcResults = ITCQueriesGQL.SpectroscopyITCQuery.Data
+  //
+  // type SpectroscopyGraphModeInput = ITC.Types.SpectroscopyGraphInput
+  // val SpectroscopyGraphModeInput = ITC.Types.SpectroscopyGraphInput
+  // type SignificantFiguresInput = ITC.Types.SignificantFiguresInput
+  // val SignificantFiguresInput = ITC.Types.SignificantFiguresInput
+  // type ItcGraphResults = ITCQueriesGQL.SpectroscopyGraphITCQuery.Data
 
-  type SpectroscopyGraphModeInput = ITC.Types.SpectroscopyGraphInput
-  val SpectroscopyGraphModeInput = ITC.Types.SpectroscopyGraphInput
-  type SignificantFiguresInput = ITC.Types.SignificantFiguresInput
-  val SignificantFiguresInput = ITC.Types.SignificantFiguresInput
-  type ItcGraphResults = ITCQueriesGQL.SpectroscopyGraphITCQuery.Data
+  // extension (a: Angle)
+  //   def toInput: AngleInput =
+  //     AngleInput(microarcseconds = a.toMicroarcseconds.assign)
+  //
+  // extension (w: Wavelength)
+  //   def toInput: WavelengthInput =
+  //     (WavelengthInput.nanometers := Wavelength.decimalNanometers
+  //       .reverseGet(w)
+  //       .assign)
+  //       .runS(WavelengthInput())
+  //       .value
+  //
+  // extension (ts: TimeSpan)
+  //   def toInput: NonNegDurationInput =
+  //     NonNegDurationInput(microseconds = PosLong.unsafeFrom(ts.toMicroseconds).assign)
+  //
+  // // These are copied from the odb side
+  // extension (u: UnnormalizedSED)
+  //   def toInput: UnnormalizedSedInput =
+  //     u match
+  //       case UnnormalizedSED.StellarLibrary(librarySpectrum)          =>
+  //         UnnormalizedSedInput(stellarLibrary = librarySpectrum.assign)
+  //       case UnnormalizedSED.CoolStarModel(temperature)               =>
+  //         UnnormalizedSedInput(coolStar = temperature.assign)
+  //       case UnnormalizedSED.Galaxy(galaxySpectrum)                   =>
+  //         UnnormalizedSedInput(galaxy = galaxySpectrum.assign)
+  //       case UnnormalizedSED.Planet(planetSpectrum)                   =>
+  //         UnnormalizedSedInput(planet = planetSpectrum.assign)
+  //       case UnnormalizedSED.Quasar(quasarSpectrum)                   =>
+  //         UnnormalizedSedInput(quasar = quasarSpectrum.assign)
+  //       case UnnormalizedSED.HIIRegion(hiiRegionSpectrum)             =>
+  //         UnnormalizedSedInput(hiiRegion = hiiRegionSpectrum.assign)
+  //       case UnnormalizedSED.PlanetaryNebula(planetaryNebulaSpectrum) =>
+  //         UnnormalizedSedInput(planetaryNebula = planetaryNebulaSpectrum.assign)
+  //       case UnnormalizedSED.PowerLaw(index)                          =>
+  //         UnnormalizedSedInput(powerLaw = index.assign)
+  //       case UnnormalizedSED.BlackBody(temperature)                   =>
+  //         UnnormalizedSedInput(blackBodyTempK = temperature.value.assign)
+  //       case UnnormalizedSED.UserDefined(fluxDensities)               =>
+  //         UnnormalizedSedInput(fluxDensities = fluxDensities.toSortedMap.toList.map {
+  //           case (wavelength, value) => FluxDensity(wavelength.toInput, value)
+  //         }.assign)
+  //
+  // extension (b: SpectralDefinition.BandNormalized[Integrated])
+  //   def toCreateInput: BandNormalizedIntegratedInput =
+  //     BandNormalizedIntegratedInput(
+  //       sed = b.sed.map(_.toInput).orUnassign,
+  //       brightnesses = b.brightnesses.toList.map { (band, measure) =>
+  //         BandBrightnessIntegratedInput(
+  //           band = band,
+  //           value = measure.value.value.value.assign,
+  //           units = Measure.unitsTagged.get(measure).assign,
+  //           error = measure.error.map(_.value.value).orIgnore
+  //         )
+  //       }.assign
+  //     )
 
-  extension (a: Angle)
-    def toInput: AngleInput =
-      AngleInput(microarcseconds = a.toMicroarcseconds.assign)
+  extension (row: InstrumentRow)
+    def toItcClientMode: Option[InstrumentMode] = row match {
+      case g: GmosNorthSpectroscopyRow =>
+        InstrumentMode.GmosNorth(g.grating, g.filter, GmosFpu.North(g.fpu.asRight)).some
+      case g: GmosSouthSpectroscopyRow =>
+        InstrumentMode.GmosSouth(g.grating, g.filter, GmosFpu.South(g.fpu.asRight)).some
+      case _                           => None
+    }
 
-  extension (w: Wavelength)
-    def toInput: WavelengthInput =
-      (WavelengthInput.nanometers := Wavelength.decimalNanometers
-        .reverseGet(w)
-        .assign)
-        .runS(WavelengthInput())
-        .value
+  // extension (b: SpectralDefinition.BandNormalized[Surface])
+  //   def toCreateInput: BandNormalizedSurfaceInput =
+  //     BandNormalizedSurfaceInput(
+  //       sed = b.sed.map(_.toInput).orUnassign,
+  //       brightnesses = b.brightnesses.toList.map { (band, measure) =>
+  //         BandBrightnessSurfaceInput(
+  //           band = band,
+  //           value = measure.value.value.value.assign,
+  //           units = Measure.unitsTagged.get(measure).assign,
+  //           error = measure.error.map(_.value.value).orIgnore
+  //         )
+  //       }.assign
+  //     )
+  //
+  // extension (e: SpectralDefinition.EmissionLines[Integrated])
+  //   def toCreateInput: EmissionLinesIntegratedInput =
+  //     EmissionLinesIntegratedInput(
+  //       lines = e.lines.toList.map { (wavelength, line) =>
+  //         EmissionLineIntegratedInput(
+  //           wavelength = wavelength.toInput,
+  //           lineWidth = PosBigDecimal.unsafeFrom(line.lineWidth.value.value.value).assign,
+  //           lineFlux = LineFluxIntegratedInput(
+  //             PosBigDecimal.unsafeFrom(line.lineFlux.value.value.value),
+  //             Measure.unitsTagged.get(line.lineFlux)
+  //           ).assign
+  //         )
+  //       }.assign,
+  //       fluxDensityContinuum = FluxDensityContinuumIntegratedInput(
+  //         value = PosBigDecimal.unsafeFrom(e.fluxDensityContinuum.value.value.value),
+  //         units = Measure.unitsTagged.get(e.fluxDensityContinuum)
+  //       ).assign
+  //     )
+  //
+  // extension (e: GmosNorthFpu)
+  //   def toInput: GmosNorthFpuInput =
+  //     GmosNorthFpuInput(builtin = e.assign)
+  //
+  // extension (e: GmosSouthFpu)
+  //   def toInput: GmosSouthFpuInput =
+  //     GmosSouthFpuInput(builtin = e.assign)
+  //
+  // extension (e: SpectralDefinition.EmissionLines[Surface])
+  //   def toCreateInput: EmissionLinesSurfaceInput =
+  //     EmissionLinesSurfaceInput(
+  //       lines = e.lines.toList.map { (wavelength, line) =>
+  //         EmissionLineSurfaceInput(
+  //           wavelength = wavelength.toInput,
+  //           lineWidth = PosBigDecimal.unsafeFrom(line.lineWidth.value.value.value).assign,
+  //           lineFlux = LineFluxSurfaceInput(
+  //             PosBigDecimal.unsafeFrom(line.lineFlux.value.value.value),
+  //             Measure.unitsTagged.get(line.lineFlux)
+  //           ).assign
+  //         )
+  //       }.assign,
+  //       fluxDensityContinuum = FluxDensityContinuumSurfaceInput(
+  //         value = PosBigDecimal.unsafeFrom(e.fluxDensityContinuum.value.value.value),
+  //         units = Measure.unitsTagged.get(e.fluxDensityContinuum)
+  //       ).assign
+  //     )
+  //
+  // extension (s: SpectralDefinition[Integrated])
+  //   def toCreateInput: SpectralDefinitionIntegratedInput =
+  //     s match
+  //       case b @ SpectralDefinition.BandNormalized(_, _) =>
+  //         SpectralDefinitionIntegratedInput(bandNormalized = b.toCreateInput.assign)
+  //       case e @ SpectralDefinition.EmissionLines(_, _)  =>
+  //         SpectralDefinitionIntegratedInput(emissionLines = e.toCreateInput.assign)
+  //
+  // extension (s: SpectralDefinition[Surface])
+  //   def toCreateInput: SpectralDefinitionSurfaceInput =
+  //     s match
+  //       case b @ SpectralDefinition.BandNormalized(_, _) =>
+  //         SpectralDefinitionSurfaceInput(bandNormalized = b.toCreateInput.assign)
+  //       case e @ SpectralDefinition.EmissionLines(_, _)  =>
+  //         SpectralDefinitionSurfaceInput(emissionLines = e.toCreateInput.assign)
+  //
+  // extension (s: SourceProfile)
+  //   def toInput: SourceProfileInput =
+  //     s match
+  //       case SourceProfile.Point(definition)          =>
+  //         SourceProfileInput(point = definition.toCreateInput.assign)
+  //       case SourceProfile.Uniform(definition)        =>
+  //         SourceProfileInput(uniform = definition.toCreateInput.assign)
+  //       case SourceProfile.Gaussian(fwhm, definition) =>
+  //         SourceProfileInput(gaussian =
+  //           GaussianInput(fwhm.toInput.assign, definition.toCreateInput.assign).assign
+  //         )
 
-  extension (ts: TimeSpan)
-    def toInput: NonNegDurationInput =
-      NonNegDurationInput(microseconds = PosLong.unsafeFrom(ts.toMicroseconds).assign)
-
-  // These are copied from the odb side
-  extension (u: UnnormalizedSED)
-    def toInput: UnnormalizedSedInput =
-      u match
-        case UnnormalizedSED.StellarLibrary(librarySpectrum)          =>
-          UnnormalizedSedInput(stellarLibrary = librarySpectrum.assign)
-        case UnnormalizedSED.CoolStarModel(temperature)               =>
-          UnnormalizedSedInput(coolStar = temperature.assign)
-        case UnnormalizedSED.Galaxy(galaxySpectrum)                   =>
-          UnnormalizedSedInput(galaxy = galaxySpectrum.assign)
-        case UnnormalizedSED.Planet(planetSpectrum)                   =>
-          UnnormalizedSedInput(planet = planetSpectrum.assign)
-        case UnnormalizedSED.Quasar(quasarSpectrum)                   =>
-          UnnormalizedSedInput(quasar = quasarSpectrum.assign)
-        case UnnormalizedSED.HIIRegion(hiiRegionSpectrum)             =>
-          UnnormalizedSedInput(hiiRegion = hiiRegionSpectrum.assign)
-        case UnnormalizedSED.PlanetaryNebula(planetaryNebulaSpectrum) =>
-          UnnormalizedSedInput(planetaryNebula = planetaryNebulaSpectrum.assign)
-        case UnnormalizedSED.PowerLaw(index)                          =>
-          UnnormalizedSedInput(powerLaw = index.assign)
-        case UnnormalizedSED.BlackBody(temperature)                   =>
-          UnnormalizedSedInput(blackBodyTempK = temperature.value.assign)
-        case UnnormalizedSED.UserDefined(fluxDensities)               =>
-          UnnormalizedSedInput(fluxDensities = fluxDensities.toSortedMap.toList.map {
-            case (wavelength, value) => FluxDensity(wavelength.toInput, value)
-          }.assign)
-
-  extension (b: SpectralDefinition.BandNormalized[Integrated])
-    def toCreateInput: BandNormalizedIntegratedInput =
-      BandNormalizedIntegratedInput(
-        sed = b.sed.map(_.toInput).orUnassign,
-        brightnesses = b.brightnesses.toList.map { (band, measure) =>
-          BandBrightnessIntegratedInput(
-            band = band,
-            value = measure.value.value.value.assign,
-            units = Measure.unitsTagged.get(measure).assign,
-            error = measure.error.map(_.value.value).orIgnore
-          )
-        }.assign
-      )
-
-  extension (b: SpectralDefinition.BandNormalized[Surface])
-    def toCreateInput: BandNormalizedSurfaceInput =
-      BandNormalizedSurfaceInput(
-        sed = b.sed.map(_.toInput).orUnassign,
-        brightnesses = b.brightnesses.toList.map { (band, measure) =>
-          BandBrightnessSurfaceInput(
-            band = band,
-            value = measure.value.value.value.assign,
-            units = Measure.unitsTagged.get(measure).assign,
-            error = measure.error.map(_.value.value).orIgnore
-          )
-        }.assign
-      )
-
-  extension (e: SpectralDefinition.EmissionLines[Integrated])
-    def toCreateInput: EmissionLinesIntegratedInput =
-      EmissionLinesIntegratedInput(
-        lines = e.lines.toList.map { (wavelength, line) =>
-          EmissionLineIntegratedInput(
-            wavelength = wavelength.toInput,
-            lineWidth = PosBigDecimal.unsafeFrom(line.lineWidth.value.value.value).assign,
-            lineFlux = LineFluxIntegratedInput(
-              PosBigDecimal.unsafeFrom(line.lineFlux.value.value.value),
-              Measure.unitsTagged.get(line.lineFlux)
-            ).assign
-          )
-        }.assign,
-        fluxDensityContinuum = FluxDensityContinuumIntegratedInput(
-          value = PosBigDecimal.unsafeFrom(e.fluxDensityContinuum.value.value.value),
-          units = Measure.unitsTagged.get(e.fluxDensityContinuum)
-        ).assign
-      )
-
-  extension (e: GmosNorthFpu)
-    def toInput: GmosNorthFpuInput =
-      GmosNorthFpuInput(builtin = e.assign)
-
-  extension (e: GmosSouthFpu)
-    def toInput: GmosSouthFpuInput =
-      GmosSouthFpuInput(builtin = e.assign)
-
-  extension (e: SpectralDefinition.EmissionLines[Surface])
-    def toCreateInput: EmissionLinesSurfaceInput =
-      EmissionLinesSurfaceInput(
-        lines = e.lines.toList.map { (wavelength, line) =>
-          EmissionLineSurfaceInput(
-            wavelength = wavelength.toInput,
-            lineWidth = PosBigDecimal.unsafeFrom(line.lineWidth.value.value.value).assign,
-            lineFlux = LineFluxSurfaceInput(
-              PosBigDecimal.unsafeFrom(line.lineFlux.value.value.value),
-              Measure.unitsTagged.get(line.lineFlux)
-            ).assign
-          )
-        }.assign,
-        fluxDensityContinuum = FluxDensityContinuumSurfaceInput(
-          value = PosBigDecimal.unsafeFrom(e.fluxDensityContinuum.value.value.value),
-          units = Measure.unitsTagged.get(e.fluxDensityContinuum)
-        ).assign
-      )
-
-  extension (s: SpectralDefinition[Integrated])
-    def toCreateInput: SpectralDefinitionIntegratedInput =
-      s match
-        case b @ SpectralDefinition.BandNormalized(_, _) =>
-          SpectralDefinitionIntegratedInput(bandNormalized = b.toCreateInput.assign)
-        case e @ SpectralDefinition.EmissionLines(_, _)  =>
-          SpectralDefinitionIntegratedInput(emissionLines = e.toCreateInput.assign)
-
-  extension (s: SpectralDefinition[Surface])
-    def toCreateInput: SpectralDefinitionSurfaceInput =
-      s match
-        case b @ SpectralDefinition.BandNormalized(_, _) =>
-          SpectralDefinitionSurfaceInput(bandNormalized = b.toCreateInput.assign)
-        case e @ SpectralDefinition.EmissionLines(_, _)  =>
-          SpectralDefinitionSurfaceInput(emissionLines = e.toCreateInput.assign)
-
-  extension (s: SourceProfile)
-    def toInput: SourceProfileInput =
-      s match
-        case SourceProfile.Point(definition)          =>
-          SourceProfileInput(point = definition.toCreateInput.assign)
-        case SourceProfile.Uniform(definition)        =>
-          SourceProfileInput(uniform = definition.toCreateInput.assign)
-        case SourceProfile.Gaussian(fwhm, definition) =>
-          SourceProfileInput(gaussian =
-            GaussianInput(fwhm.toInput.assign, definition.toCreateInput.assign).assign
-          )
-
-  extension (r: GmosNorthSpectroscopyRow)
-    def toGmosNITCInput: Input[GmosNITCInput] =
-      GmosNITCInput(r.grating, r.fpu.toInput, filter = r.filter.orIgnore).assign
-
-  extension (r: GmosSouthSpectroscopyRow)
-    def toGmosSITCInput: Input[GmosSITCInput] =
-      GmosSITCInput(r.grating, r.fpu.toInput, filter = r.filter.orIgnore).assign
-
-  extension (r: RadialVelocity)
-    def toITCInput: RadialVelocityInput =
-      RadialVelocityInput(metersPerSecond = r.rv.value.assign)
+  // extension (r: GmosNorthSpectroscopyRow)
+  //   def toGmosNITCInput: Input[GmosNITCInput] =
+  //     GmosNITCInput(r.grating, r.fpu.toInput, filter = r.filter.orIgnore).assign
+  //
+  // extension (r: GmosSouthSpectroscopyRow)
+  //   def toGmosSITCInput: Input[GmosSITCInput] =
+  //     GmosSITCInput(r.grating, r.fpu.toInput, filter = r.filter.orIgnore).assign
+  //
+  // extension (r: RadialVelocity)
+  //   def toITCInput: RadialVelocityInput =
+  //     RadialVelocityInput(metersPerSecond = r.rv.value.assign)
 
   extension (s: ObsQueries.ScienceData)
     // From the list of targets selects the ones relevant for ITC
@@ -220,12 +228,12 @@ trait ITCConversions:
       .flatten
       .hashDistinct
 
-  extension (m: InstrumentRow)
-    def toITCInput: Option[InstrumentModesInput] = m match
-      case r: GmosNorthSpectroscopyRow =>
-        InstrumentModesInput(gmosN = r.toGmosNITCInput).some
-      case r: GmosSouthSpectroscopyRow =>
-        InstrumentModesInput(gmosS = r.toGmosSITCInput).some
-      case _                           => none
+  // extension (m: InstrumentRow)
+  //   def toITCInput: Option[InstrumentModesInput] = m match
+  //     case r: GmosNorthSpectroscopyRow =>
+  //       InstrumentModesInput(gmosN = r.toGmosNITCInput).some
+  //     case r: GmosSouthSpectroscopyRow =>
+  //       InstrumentModesInput(gmosS = r.toGmosSITCInput).some
+  //     case _                           => none
 
 object ITCConversions extends ITCConversions

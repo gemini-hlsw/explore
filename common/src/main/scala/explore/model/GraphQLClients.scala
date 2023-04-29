@@ -21,7 +21,6 @@ import queries.schemas.*
 case class GraphQLClients[F[_]: Async: Parallel] protected (
   odb:           WebSocketJSClient[F, ObservationDB],
   preferencesDB: WebSocketJSClient[F, UserPreferencesDB],
-  itc:           FetchJSClient[F, ITC],
   sso:           FetchJSClient[F, SSO]
 ):
   def init(payload: Map[String, Json]): F[Unit] =
@@ -49,8 +48,6 @@ object GraphQLClients:
         WebSocketJSClient.of[F, ObservationDB](odbURI.toString, "ODB", reconnectionStrategy)
       prefsClient <-
         WebSocketJSClient.of[F, UserPreferencesDB](prefsURI.toString, "PREFS", reconnectionStrategy)
-      itcClient   <-
-        FetchJSClient.of[F, ITC](itcURI.toString, "ITC")
       ssoClient   <-
         FetchJSClient.of[F, SSO](s"${ssoURI.toString}/graphql", "SSO")
-    } yield GraphQLClients(odbClient, prefsClient, itcClient, ssoClient)
+    } yield GraphQLClients(odbClient, prefsClient, ssoClient)

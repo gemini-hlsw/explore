@@ -26,10 +26,11 @@ import log4cats.loglevel.LogLevelLogger
 import lucuma.ags.Ags
 import lucuma.ags.AgsAnalysis
 import lucuma.itc.client.ItcClient
+import org.http4s.client.Client
+import org.http4s.dom.FetchClient
 import org.http4s.dom.FetchClientBuilder
 import org.scalajs.dom
 import org.typelevel.log4cats.Logger
-import queries.schemas.ITC
 import typings.loglevel.mod.LogLevelDesc
 
 import java.time.Duration
@@ -37,8 +38,6 @@ import scala.concurrent.duration.*
 import scala.scalajs.js
 
 import js.annotation.*
-import org.http4s.dom.FetchClient
-import org.http4s.client.Client
 
 /**
  * Web worker that can query gaia and store results locally
@@ -113,18 +112,18 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
                                    targets,
                                    mode
             ) =>
-          Logger[IO].debug(s"ITC graph query ${mode}") // *>
-        // ITCGraphRequests
-        //       .queryItc[IO](
-        //         wavelength,
-        //         exposureTime,
-        //         exposures,
-        //         constraint,
-        //         targets,
-        //         mode,
-        //         cache,
-        //         r => invocation.respond(r)
-        //       )
+          Logger[IO].debug(s"ITC graph query ${mode}") *>
+            ITCGraphRequests
+              .queryItc[IO](
+                wavelength,
+                exposureTime,
+                exposures,
+                constraint,
+                targets,
+                mode,
+                cache,
+                r => invocation.respond(r)
+              )
       }
     }
 }

@@ -19,6 +19,7 @@ import lucuma.core.model.UnnormalizedSED
 import lucuma.core.syntax.display.*
 import lucuma.core.util.Display
 import lucuma.core.validation.InputValidSplitEpi
+import lucuma.itc.ChartType
 
 import java.text.DecimalFormat
 
@@ -172,6 +173,11 @@ trait DisplayImplicits:
     case RoleType.NGO   => "NGO"
     case RoleType.Staff => "Staff"
     case RoleType.Admin => "Administrator"
+  }
+
+  given Display[ChartType] = Display.byShortName {
+    case ChartType.SignalChart => "Signal"
+    case ChartType.S2NChart    => "S/N"
   }
 
 object display extends DisplayImplicits

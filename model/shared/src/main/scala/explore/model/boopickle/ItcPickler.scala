@@ -11,19 +11,12 @@ import eu.timepit.refined.types.numeric.NonNegBigDecimal
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.model.itc.ItcCcd
-import explore.model.itc.ItcChart
 import explore.model.itc.ItcChartResult
 import explore.model.itc.ItcGraphRequestParams
 import explore.model.itc.ItcQueryProblems
 import explore.model.itc.ItcRequestParams
 import explore.model.itc.ItcResult
-import explore.model.itc.ItcSeries
 import explore.model.itc.ItcTarget
-import explore.model.itc.YAxis
-import explore.model.itc.remote.ItcChartGroupRemote
-import explore.model.itc.remote.ItcChartRemote
-import explore.model.itc.remote.XAxis
 import explore.modes.InstrumentRow
 import explore.modes.ModeAO
 import explore.modes.ModeSlitSize
@@ -50,6 +43,12 @@ import lucuma.core.model.SourceProfile
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
 import lucuma.core.util.Of
+import lucuma.itc.ItcAxis
+import lucuma.itc.ItcCcd
+import lucuma.itc.ItcWarning
+import lucuma.itc.client.OptimizedChartResult
+import lucuma.itc.client.OptimizedSeriesResult
+import lucuma.itc.client.OptimizedSpectroscopyGraphResult
 
 import scala.collection.immutable.SortedMap
 
@@ -197,23 +196,24 @@ trait ItcPicklers extends CommonPicklers {
 
   given Pickler[ItcRequestParams] = generatePickler
 
-  given Pickler[YAxis] = generatePickler
+  given Pickler[ItcAxis] = generatePickler
 
-  given Pickler[ItcSeries] = generatePickler
+  given Pickler[OptimizedSeriesResult] = generatePickler
 
-  given Pickler[ItcCcd] = generatePickler
-
-  given Pickler[ItcChart] = generatePickler
+  given Pickler[OptimizedChartResult] = generatePickler
 
   given Pickler[ItcChartResult] = generatePickler
 
   given Pickler[ItcGraphRequestParams] = generatePickler
 
-  given Pickler[XAxis] = generatePickler
+  given Pickler[ItcWarning] = generatePickler
 
-  given Pickler[ItcChartRemote] = generatePickler
+  given Pickler[ItcCcd] = generatePickler
 
-  given Pickler[ItcChartGroupRemote] = generatePickler
+  given Pickler[OptimizedSpectroscopyGraphResult] = generatePickler
+
+  given Pickler[Either[ItcQueryProblems, ItcChartResult]] = generatePickler
+
 }
 
 object ItcPicklers extends ItcPicklers

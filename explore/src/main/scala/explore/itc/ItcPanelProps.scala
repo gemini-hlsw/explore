@@ -16,6 +16,7 @@ import explore.model.WorkerClients.ItcClient
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.ItcChartResult
+import explore.model.itc.ItcQueryProblems
 import explore.model.itc.ItcTarget
 import explore.model.itc.OverridenExposureTime
 import explore.modes.GmosNorthSpectroscopyRow
@@ -24,6 +25,7 @@ import explore.modes.InstrumentRow
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ExposureTimeMode
+import lucuma.itc.client.OptimizedChartResult
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.CentralWavelength
 import lucuma.schemas.model.ObservingMode
@@ -127,7 +129,7 @@ trait ItcPanelProps(
     (wavelength, scienceData.map(_.constraints), itcTargets, instrumentRow, chartExposureTime)
 
   def requestITCData(
-    onComplete:  ItcChartResult => IO[Unit],
+    onComplete:  Either[ItcQueryProblems, ItcChartResult] => IO[Unit],
     orElse:      IO[Unit],
     beforeStart: IO[Unit]
   )(using WorkerClient[IO, ItcMessage.Request]): IO[Unit] =

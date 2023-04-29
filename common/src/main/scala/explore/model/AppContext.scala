@@ -24,7 +24,6 @@ import lucuma.broadcastchannel.*
 import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB
 import org.typelevel.log4cats.Logger
-import queries.schemas.ITC
 import queries.schemas.SSO
 import queries.schemas.UserPreferencesDB
 import react.primereact.ToastRef
@@ -54,7 +53,6 @@ case class AppContext[F[_]](
 
   given WebSocketJSClient[F, ObservationDB]     = clients.odb
   given WebSocketJSClient[F, UserPreferencesDB] = clients.preferencesDB
-  given FetchJSClient[F, ITC]                   = clients.itc
   given FetchJSClient[F, SSO]                   = clients.sso
 
   given itcWorker: WorkerClient[F, ItcMessage.Request]         = workerClients.itc

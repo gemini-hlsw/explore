@@ -91,7 +91,10 @@ object ItcPanelTitle:
         props.requestITCData(
           m =>
             charts.modStateAsync { r =>
-              r + (m.target -> m.ready)
+              m.bimap(
+                e => Map.empty,
+                v => r + (v.target -> v.ready)
+              ).merge
             },
           charts
             .setState(
