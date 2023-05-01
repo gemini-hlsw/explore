@@ -10,14 +10,7 @@ import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.highcharts.*
 import explore.model.LoadingState
-import explore.model.enums.ItcChartType
-import explore.model.enums.ItcSeriesType
-import explore.model.itc.ItcCcd
-import explore.model.itc.ItcChart
-import explore.model.itc.ItcSeries
-import explore.model.itc.PlotDetails
-import explore.model.itc.YAxis
-import explore.model.itc.math.roundToSignificantFigures
+import explore.model.itc.*
 import explore.syntax.ui.*
 import explore.syntax.ui.given
 import explore.utils.*
@@ -25,6 +18,12 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Wavelength
 import lucuma.core.util.Enumerated
+import lucuma.itc.ChartType
+import lucuma.itc.ItcCcd
+import lucuma.itc.SeriesDataType
+import lucuma.itc.client.OptimizedChartResult
+import lucuma.itc.client.OptimizedSeriesResult
+import lucuma.itc.math.roundToSignificantFigures
 import lucuma.refined.*
 import lucuma.typed.highcharts.highchartsStrings.line
 import lucuma.typed.highcharts.mod.DashStyleValue
@@ -41,9 +40,9 @@ import scala.scalajs.js.JSConverters.*
 
 case class ItcSpectroscopyPlot(
   ccds:            Option[NonEmptyList[ItcCcd]],
-  charts:          Option[NonEmptyList[ItcChart]],
+  charts:          Option[NonEmptyList[OptimizedChartResult]],
   error:           Option[String],
-  chartType:       ItcChartType,
+  chartType:       ChartType,
   targetName:      Option[String],
   signalToNoiseAt: Option[Wavelength],
   loading:         LoadingState,
@@ -54,7 +53,7 @@ object ItcSpectroscopyPlot {
   private type Props = ItcSpectroscopyPlot
 
   private def chartOptions(
-    chart:           ItcChart,
+    chart:           OptimizedChartResult,
     targetName:      Option[String],
     loading:         LoadingState,
     details:         PlotDetails,
@@ -62,10 +61,10 @@ object ItcSpectroscopyPlot {
     maxSNWavelength: Option[Wavelength],
     height:          Double
   ) = {
-    val yAxis            = chart.series.foldLeft(YAxis.Empty)(_ ∪ _.yAxis)
+    val yAxis            = chart.series.foldLeft(YAxis.Empty)(_ ∪ _.yAxis.yAxis)
     val title            = chart.chartType match
-      case ItcChartType.SignalChart => "𝐞⁻ per exposure per spectral pixel"
-      case ItcChartType.S2NChart    => "S/N per spectral pixel"
+      case ChartType.SignalChart => "𝐞⁻ per exposure per spectral pixel"
+      case ChartType.S2NChart    => "S/N per spectral pixel"
     val (min, max, tick) = yAxis.ticks(10)
 
     val yAxes = YAxisOptions()
@@ -90,16 +89,16 @@ object ItcSpectroscopyPlot {
       (ctx: TooltipFormatterContextObject, t: Tooltip) =>
         val x        = rounded(ctx.x)
         val y        = rounded(ctx.y)
-        val measUnit = if (chart.chartType === ItcChartType.SignalChart) " 𝐞⁻" else ""
+        val measUnit = if (chart.chartType === ChartType.SignalChart) " 𝐞⁻" else ""
         s"""<strong>$x nm</strong><br/><span class="$chartClassName highcharts-color-${ctx.colorIndex.toInt}">●</span> ${ctx.series.name}: <strong>$y$measUnit</strong>"""
 
     val chartTitle = chart.chartType match
-      case ItcChartType.SignalChart => "Signal in 1-pixel"
-      case ItcChartType.S2NChart    => "Signal / Noise"
+      case ChartType.SignalChart => "Signal in 1-pixel"
+      case ChartType.S2NChart    => "Signal / Noise"
 
     val plotLines = chart.chartType match
-      case ItcChartType.SignalChart => js.Array()
-      case ItcChartType.S2NChart    =>
+      case ChartType.SignalChart => js.Array()
+      case ChartType.S2NChart    =>
         val value = signalToNoiseAt.orElse(maxSNWavelength).map(_.toNanometers.value.value.toDouble)
 
         value
@@ -216,7 +215,7 @@ object ItcSpectroscopyPlot {
     .render { (props, resize) =>
       val loading = props.loading.value
 
-      val series: List[ItcChart] =
+      val series: List[OptimizedChartResult] =
         props.charts.filterNot(_ => loading).foldMap(_.toList)
 
       val height                              = resize.height.getOrElse(1).toDouble
@@ -238,6 +237,12 @@ object ItcSpectroscopyPlot {
         )
       }.toMap
 
+      def formatErrorMessage(c: Chart_): Callback =
+        c.showLoadingCB.when_(loading) *>
+          props.error
+            .map(e => c.showLoadingCB(e).unless_(loading))
+            .orEmpty
+
       <.div(
         ExploreStyles.ItcPlotBody,
         HelpIcon("target/main/itc-spectroscopy-plot.md".refined, ExploreStyles.HelpIconFloating),
@@ -248,23 +253,14 @@ object ItcSpectroscopyPlot {
               opt,
               onCreate = c =>
                 c.reflowCB *>
-                  c.showLoadingCB.when_(loading) *>
-                  props.error
-                    .map(e => c.showLoadingCB(e).unless_(loading))
-                    .orEmpty,
+                  formatErrorMessage(c),
               wrapperCss = ExploreStyles.ItcPlotWrapper
             )
               .withKey(s"$props-$resize")
               .when(resize.height.isDefined)
           }
           .getOrElse(
-            ResizingChart(emptyChartOptions(height),
-                          onCreate = c =>
-                            c.showLoadingCB.when_(loading) *>
-                              props.error
-                                .map(e => c.showLoadingCB(e).unless_(loading))
-                                .orEmpty
-            )
+            ResizingChart(emptyChartOptions(height), onCreate = formatErrorMessage)
               .withKey(s"$props-$resize")
               .when(resize.height.isDefined)
           )

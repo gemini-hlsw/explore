@@ -18,7 +18,6 @@ import explore.model.AladinMouseScroll
 import explore.model.TargetVisualOptions
 import explore.model.UserGlobalPreferences
 import explore.model.enums.GridLayoutSection
-import explore.model.enums.ItcChartType
 import explore.model.enums.PlotRange
 import explore.model.enums.TableId
 import explore.model.enums.TimeDisplay
@@ -33,6 +32,7 @@ import lucuma.core.math.Offset
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.model.User
+import lucuma.itc.ChartType
 import lucuma.react.table.*
 import lucuma.refined.*
 import lucuma.schemas.odb.input.*
@@ -294,7 +294,7 @@ object UserPreferencesQueries:
     def queryWithDefault[F[_]: ApplicativeThrow](
       uid: User.Id,
       oid: Observation.Id
-    )(using FetchClient[F, UserPreferencesDB]): F[(ItcChartType, PlotDetails)] =
+    )(using FetchClient[F, UserPreferencesDB]): F[(ChartType, PlotDetails)] =
       for r <-
           ItcPlotPreferencesQuery[F]
             .query(uid.show, oid.show)
@@ -303,7 +303,7 @@ object UserPreferencesQueries:
             }
             .handleError(_ => none)
       yield
-        val chartType = r.map(_._1).getOrElse(ItcChartType.S2NChart)
+        val chartType = r.map(_._1).getOrElse(ChartType.S2NChart)
         val details   = r.map(x => PlotDetails(x._2)).getOrElse(PlotDetails.Shown)
 
         (chartType, details)
@@ -311,7 +311,7 @@ object UserPreferencesQueries:
     def updatePlotPreferences[F[_]: ApplicativeThrow](
       uid:       User.Id,
       oid:       Observation.Id,
-      chartType: ItcChartType,
+      chartType: ChartType,
       details:   PlotDetails
     )(using FetchClient[F, UserPreferencesDB]): F[Unit] =
       ItcPlotObservationUpsert[F]

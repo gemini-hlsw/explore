@@ -131,8 +131,8 @@ private object SpectroscopyModesTable extends TableHooks:
     entry:  SpectroscopyModeRow,
     result: EitherNec[ItcQueryProblems, ItcResult]
   ):
-    lazy val totalItcTime: Option[Double] =
-      result.toOption.collect { case ItcResult.Result(e, t) => e.toMillis.toDouble * t }
+    lazy val totalItcTime: Option[TimeSpan] =
+      result.toOption.collect { case ItcResult.Result(e, t) => e *| t.value }
 
   private val ColDef = ColumnDef[SpectroscopyModeRowWithResult]
 
@@ -240,10 +240,10 @@ private object SpectroscopyModesTable extends TableHooks:
           <.span(Icons.TriangleSolid.addClass(ExploreStyles.ItcErrorIcon))
             .withTooltip(tooltip = <.div(content.mkTagMod(<.span)), placement = Placement.RightEnd)
       case Right(r: ItcResult.Result) =>
-        <.span(formatDuration(r.duration.toSeconds))
+        <.span(formatDuration(r.duration))
           .withTooltip(
             placement = Placement.RightStart,
-            tooltip = s"${r.exposures} × ${formatDuration(r.exposureTime.toSeconds)}"
+            tooltip = s"${r.exposures} × ${formatDuration(r.exposureTime)}"
           )
       case Right(ItcResult.Pending)   =>
         Icons.Spinner.withSpin(true)

@@ -6,10 +6,11 @@ package explore.itc
 import cats.syntax.all.*
 import crystal.react.ViewOpt
 import explore.components.ui.ExploreStyles
-import explore.model.enums.ItcChartType
+import explore.model.display.given
 import explore.model.itc.PlotDetails
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.itc.ChartType
 import lucuma.refined.*
 import lucuma.ui.primereact.SelectButtonEnumView
 import lucuma.ui.primereact.*
@@ -22,7 +23,7 @@ import react.primereact.SelectButton
 import react.primereact.SelectItem
 
 case class ItcPlotControl(
-  chartType:   ViewOpt[ItcChartType],
+  chartType:   ViewOpt[ChartType],
   showDetails: ViewOpt[PlotDetails]
 ) extends ReactFnProps[ItcPlotControl](ItcPlotControl.component)
 
@@ -30,10 +31,10 @@ object ItcPlotControl:
   private type Props = ItcPlotControl
 
   private val component = ScalaFnComponent[Props] { props =>
-    val descText                = if (props.showDetails.get.exists(_.value)) "Hide details" else "Show details"
-    def label(ch: ItcChartType) = ch match
-      case ItcChartType.S2NChart    => "S/N"
-      case ItcChartType.SignalChart => "Signal"
+    val descText             = if (props.showDetails.get.exists(_.value)) "Hide details" else "Show details"
+    def label(ch: ChartType) = ch match
+      case ChartType.S2NChart    => "S/N"
+      case ChartType.SignalChart => "Signal"
 
     <.div(
       ExploreStyles.ItcPlotControls,

@@ -33,7 +33,7 @@ import lucuma.schemas.model.ObservingMode
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.pot.*
-import queries.schemas.itc.ITCConversions.*
+import queries.schemas.itc.syntax.*
 import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
 import react.floatingui.syntax.*
@@ -91,7 +91,10 @@ object ItcPanelTitle:
         props.requestITCData(
           m =>
             charts.modStateAsync { r =>
-              r + (m.target -> m.ready)
+              m.bimap(
+                e => Map.empty,
+                v => r + (v.target -> v.ready)
+              ).merge
             },
           charts
             .setState(

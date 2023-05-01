@@ -5,12 +5,12 @@ package explore.model.itc.math
 
 import cats.data.NonEmptyList
 import cats.syntax.all.*
-import explore.model.itc.ItcCcd
 import lucuma.core.enums.Band
 import lucuma.core.math.BrightnessUnits.*
 import lucuma.core.math.Wavelength
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.SpectralDefinition
+import lucuma.itc.ItcCcd
 
 import scala.math.*
 
@@ -19,16 +19,6 @@ extension (ccds: NonEmptyList[ItcCcd])
   def maxSingleSNRatio: Double = ccds.maximumBy(_.singleSNRatio).singleSNRatio
   def maxTotalSNRatio: Double  = ccds.maximumBy(_.totalSNRatio).totalSNRatio
   def maxADU: Int              = ccds.maximumBy(_.adu).adu
-
-def roundToSignificantFigures(num: Double, n: Int): Double =
-  if num == 0 then 0
-  else
-    val d     = ceil(log10(abs(num)))
-    val power = n - d.toInt
-
-    val magnitude = pow(10, power)
-    val shifted   = round(num * magnitude)
-    shifted / magnitude
 
 /**
  * Returns a "nice" number approximately equal to range Rounds the number if round = true Takes the

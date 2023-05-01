@@ -16,7 +16,6 @@ import explore.model.itc.ItcChartResult
 import explore.model.itc.ItcQueryProblems
 import explore.model.itc.ItcRequestParams
 import explore.model.itc.ItcResult
-import explore.model.itc.ItcSeries
 import explore.model.itc.ItcTarget
 import explore.modes.InstrumentRow
 import explore.modes.SpectroscopyModeRow
@@ -33,6 +32,7 @@ import lucuma.core.model.ExposureTimeMode.FixedExposureMode
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.core.util.TimeSpan
+import lucuma.itc.client.OptimizedSeriesResult
 import lucuma.schemas.model.CentralWavelength
 import org.http4s.Uri
 import workers.WorkerRequest
@@ -67,7 +67,7 @@ object ItcMessage extends ItcPicklers {
     targets:      NonEmptyList[ItcTarget],
     modes:        InstrumentRow
   ) extends Request {
-    type ResponseType = ItcChartResult
+    type ResponseType = Either[ItcQueryProblems, ItcChartResult]
   }
 
   private given Pickler[SpectroscopyMatrixRequest] = generatePickler

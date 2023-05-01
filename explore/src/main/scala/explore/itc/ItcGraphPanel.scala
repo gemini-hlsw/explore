@@ -30,10 +30,9 @@ import explore.model.TargetList
 import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.ItcPicklers.given
-import explore.model.enums.ItcChartType
 import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.ItcChartResult
-import explore.model.itc.ItcSeries
+import explore.model.itc.ItcQueryProblems
 import explore.model.itc.ItcTarget
 import explore.model.itc.OverridenExposureTime
 import explore.model.itc.PlotDetails
@@ -50,6 +49,11 @@ import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.Observation
 import lucuma.core.model.User
+import lucuma.core.syntax.display.*
+import lucuma.core.util.Display
+import lucuma.itc.ChartType
+import lucuma.itc.client.OptimizedChartResult
+import lucuma.itc.client.OptimizedSeriesResult
 import lucuma.schemas.model.ObservingMode
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
@@ -57,7 +61,7 @@ import lucuma.ui.syntax.pot.*
 import monocle.Focus
 import monocle.Lens
 import queries.common.UserPreferencesQueriesGQL.*
-import queries.schemas.itc.ITCConversions.*
+import queries.schemas.itc.syntax.*
 import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
 
@@ -83,9 +87,9 @@ case class ItcGraphPanel(
       allTargets
     )
 
-case class ItcGraphProperties(chartType: ItcChartType, detailsShown: PlotDetails)
+case class ItcGraphProperties(chartType: ChartType, detailsShown: PlotDetails)
 object ItcGraphProperties:
-  val chartType: Lens[ItcGraphProperties, ItcChartType] =
+  val chartType: Lens[ItcGraphProperties, ChartType] =
     Focus[ItcGraphProperties](_.chartType)
 
   val detailsShown: Lens[ItcGraphProperties, PlotDetails] =
@@ -96,6 +100,15 @@ object ItcGraphPanel:
 
   private given Reusability[PlotDetails]        = Reusability.byEq
   private given Reusability[ItcGraphProperties] = Reusability.by(x => (x.chartType, x.detailsShown))
+
+  private given Display[ItcQueryProblems] = Display.byShortName {
+    case ItcQueryProblems.UnsupportedMode      => "Mode not supported"
+    case ItcQueryProblems.MissingWavelength    => "Provide a wavelength"
+    case ItcQueryProblems.MissingSignalToNoise => "Provide a signal to noise"
+    case ItcQueryProblems.MissingTargetInfo    => "Target information is missing"
+    case ItcQueryProblems.MissingBrightness    => "Target brightness is missing"
+    case ItcQueryProblems.GenericError(e)      => e
+  }
 
   private val component =
     ScalaFnComponent
@@ -113,8 +126,16 @@ object ItcGraphPanel:
             .requestITCData(
               m =>
                 charts.modStateAsync {
-                  case Pot.Ready(r) => Pot.Ready(r + (m.target -> m))
-                  case u            => Pot.Ready(Map(m.target -> m))
+                  case Pot.Ready(r) =>
+                    m.bimap(
+                      e => Pot.error(new RuntimeException(e.shortName)),
+                      v => Pot.Ready(r + (v.target -> v))
+                    ).merge
+                  case _            =>
+                    m.bimap(
+                      e => Pot.error(new RuntimeException(e.shortName)),
+                      v => Pot.Ready(Map(v.target -> v))
+                    ).merge
                 } *> loading.setState(LoadingState.Done).to[IO],
               (charts.setState(
                 Pot.error(new RuntimeException("Not enough information to calculate the ITC graph"))

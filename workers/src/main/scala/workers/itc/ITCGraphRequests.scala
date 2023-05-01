@@ -8,7 +8,7 @@ import cats.*
 import cats.data.*
 import cats.effect.*
 import cats.syntax.all.*
-import clue.FetchClient
+import clue.ResponseException
 import clue.data.syntax.*
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosInt
@@ -22,31 +22,24 @@ import explore.modes.InstrumentRow
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.util.TimeSpan
+import lucuma.itc.client.ItcClient
+import lucuma.itc.client.OptimizedChartResult
+import lucuma.itc.client.OptimizedSpectroscopyGraphInput
+import lucuma.itc.client.OptimizedSpectroscopyGraphResult
+import lucuma.itc.client.SignificantFiguresInput
+import lucuma.refined.*
 import lucuma.refined.*
 import lucuma.schemas.model.CentralWavelength
 import org.typelevel.log4cats.Logger
-import queries.common.ITCQueriesGQL.*
-import queries.schemas.ITC
-import queries.schemas.itc.ITCConversions.*
+import queries.schemas.itc.syntax.*
 import workers.*
 
 import java.util.UUID
 import scala.concurrent.duration.*
-//
-object ITCGraphRequests:
-  // Picklers for generated types not in the model.
-  private given Pickler[SpectroscopyGraphITCQuery.Data.SpectroscopyGraph.Ccds]   = generatePickler
-  private given Pickler[SpectroscopyGraphITCQuery.Data.SpectroscopyGraph.Charts] =
-    generatePickler
-  private given Pickler[SpectroscopyGraphITCQuery.Data.SpectroscopyGraph]        = generatePickler
-  private given Pickler[SpectroscopyGraphITCQuery.Data]                          = generatePickler
 
+object ITCGraphRequests:
   private val significantFigures =
-    SignificantFiguresInput(
-      6.refined[Positive].assign,
-      6.refined[Positive].assign,
-      3.refined[Positive].assign
-    ).assign
+    SignificantFiguresInput(6.refined, 6.refined, 3.refined)
 
   def queryItc[F[_]: Concurrent: Parallel: Logger](
     wavelength:   CentralWavelength,
@@ -56,8 +49,8 @@ object ITCGraphRequests:
     targets:      NonEmptyList[ItcTarget],
     mode:         InstrumentRow,
     cache:        Cache[F],
-    callback:     ItcChartResult => F[Unit]
-  )(using Monoid[F[Unit]], FetchClient[F, ITC]): F[Unit] =
+    callback:     Either[ItcQueryProblems, ItcChartResult] => F[Unit]
+  )(using Monoid[F[Unit]], ItcClient[F]): F[Unit] =
 
     val itcRowsParams = mode match // Only handle known modes
       case m: GmosNorthSpectroscopyRow =>
@@ -69,51 +62,55 @@ object ITCGraphRequests:
 
     def doRequest(
       request: ItcGraphRequestParams
-    ): F[List[(ItcTarget, SpectroscopyGraphITCQuery.Data)]] =
+    ): F[List[Either[ItcQueryProblems, ItcChartResult]]] =
       request.target
-        .fproduct(t => selectedBand(t.profile, request.wavelength.value))
-        .collect { case (t, Some(band)) =>
-          request.mode.toITCInput
-            .map(mode =>
-              SpectroscopyGraphITCQuery[F]
-                .query(
-                  SpectroscopyGraphModeInput(
-                    wavelength = request.wavelength.value.toInput,
-                    exposureTime = request.exposureTime.toInput,
+        .traverse(t =>
+          (selectedBand(t.profile, request.wavelength.value), request.mode.toItcClientMode)
+            .traverseN { (band, mode) =>
+              ItcClient[F]
+                .optimizedSpectroscopyGraph(
+                  OptimizedSpectroscopyGraphInput(
+                    wavelength = request.wavelength.value,
+                    exposureTime = request.exposureTime,
                     exposures = request.exposures,
-                    sourceProfile = t.profile.toInput,
+                    sourceProfile = t.profile,
                     band = band,
-                    radialVelocity = t.rv.toITCInput,
+                    radialVelocity = t.rv,
                     constraints = request.constraints,
                     mode = mode,
-                    significantFigures = significantFigures
-                  ).assign
+                    significantFigures = significantFigures.some
+                  ),
+                  false
                 )
-                .map(r => t -> r)
-            )
-        }
-        .flatten
-        .sequence
+                .map(chartResult => ItcChartResult(t, chartResult.ccds, chartResult.charts).asRight)
+                .handleError { e =>
+                  val msg = e match
+                    case ResponseException(errors, _)                               =>
+                      errors.map(_.message).mkString_("\n")
+                    case e if e.getMessage.startsWith("TypeError: Failed to fetch") =>
+                      "ITC Server unreachable"
+                    case e                                                          =>
+                      e.getMessage
+                  ItcQueryProblems.GenericError(msg).asLeft
+                }
+            }
+        )
+        .map(_.toList.flattenOption)
 
     // We cache unexpanded results, exactly as received from server.
-    val cacheableRequest = Cacheable(CacheName("itcGraphQuery"), CacheVersion(2), doRequest)
+    val cacheableRequest = Cacheable(CacheName("itcGraphQuery"), CacheVersion(3), doRequest)
 
-    itcRowsParams.map { request =>
-      Logger[F].debug(
-        s"ITC: Request for mode ${request.mode} and target count: ${request.target.length}"
-      ) *>
-        cache
-          .eval(cacheableRequest)
-          .apply(request)
-          .flatMap {
-            _.map { case (t, r) =>
-              val charts = r.spectroscopyGraph.charts.map(_.toItcChart)
-              val ccds   = r.spectroscopyGraph.ccds
-
-              (ccds.toNel, charts.toNel)
-                .mapN((ccds, charts) => ItcChartResult(t, ccds, charts))
-                .map(callback)
-                .orEmpty
-            }.sequence.void
-          }
-    }.orEmpty
+    itcRowsParams
+      .traverse { request =>
+        Logger[F].debug(
+          s"ITC: Request for mode ${request.mode} and target count: ${request.target.length}"
+        ) *>
+          cache
+            .eval(cacheableRequest)
+            .apply(request)
+      }
+      .flatMap {
+        _.orEmpty
+          .traverse(callback)
+          .void
+      }

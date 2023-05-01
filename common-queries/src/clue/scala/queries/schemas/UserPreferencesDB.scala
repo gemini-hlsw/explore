@@ -43,7 +43,7 @@ trait UserPreferencesDB:
     type Bigint         = Long
 
   object Enums:
-    type ItcChartType            = enums.ItcChartType
+    type ItcChartType            = lucuma.itc.ChartType
     type LucumaTableIdsEnum      = explore.model.enums.TableId
     type LucumaSortDirectionEnum = SortDirection
     type LucumaGridLayoutIdEnum  = explore.model.enums.GridLayoutSection

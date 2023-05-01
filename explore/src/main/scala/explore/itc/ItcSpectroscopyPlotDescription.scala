@@ -6,11 +6,11 @@ package explore.itc
 import cats.data.NonEmptyList
 import cats.syntax.all.*
 import explore.components.ui.ExploreStyles
-import explore.model.itc.ItcCcd
 import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.math.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.itc.ItcCcd
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
