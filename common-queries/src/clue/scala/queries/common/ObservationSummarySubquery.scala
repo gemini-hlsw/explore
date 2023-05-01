@@ -12,6 +12,7 @@ import clue.annotation.GraphQL
 @GraphQL
 object ObservationSummarySubquery
     extends GraphQLSubquery.Typed[ObservationDB, ObsSummary]("Observation"):
+
   override val subquery: String = s"""
         {
           id
@@ -30,6 +31,7 @@ object ObservationSummarySubquery
             }
           }
           constraintSet $ConstraintSetSubquery
+          timingWindows $TimingWindowSubquery
           scienceRequirements {
             spectroscopy {
               wavelength $WavelengthSubquery

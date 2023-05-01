@@ -28,6 +28,7 @@ import lucuma.core.model.ObjectTracking
 import lucuma.core.model.Partner
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target
+import lucuma.core.model.TimingWindow
 import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.model.*
 import lucuma.ui.reusability.given
@@ -109,8 +110,6 @@ object reusability:
   given Reusability[UserGlobalPreferences] = Reusability.byEq
 
   given Reusability[SelectedPanel] = Reusability.byEq
-
-  given Reusability[TimingWindowRepeat] = Reusability.byEq
 
   given Reusability[TimingWindow] = Reusability.byEq
 

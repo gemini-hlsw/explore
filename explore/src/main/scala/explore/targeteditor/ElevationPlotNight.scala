@@ -54,7 +54,7 @@ case class ElevationPlotNight(
   date:              LocalDate,
   timeDisplay:       TimeDisplay,
   visualizationTime: Option[Instant],
-  windowsIntervals:  List[BoundedInterval[Instant]]
+  excludeIntervals:  List[BoundedInterval[Instant]]
 ) extends ReactFnProps(ElevationPlotNight.component):
   val visualizationDuration: Duration = Duration.ofHours(1)
 
@@ -287,11 +287,11 @@ object ElevationPlotNight {
                 else XAxisTitleOptions()
               )
               .setPlotBands(
-                (props.windowsIntervals.map(window =>
+                (props.excludeIntervals.map(window =>
                   XAxisPlotBandsOptions()
                     .setFrom(window.lower.toEpochMilli.toDouble)
                     .setTo(window.upper.toEpochMilli.toDouble)
-                    .setClassName("plot-band-timing-window")
+                    .setClassName("plot-band-exclude-window")
                 ) ++
                   List(
                     XAxisPlotBandsOptions()

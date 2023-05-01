@@ -21,6 +21,7 @@ import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target
+import lucuma.core.model.TimingWindow
 import lucuma.core.util.TimeSpan
 import lucuma.core.util.Timestamp
 import lucuma.schemas.decoders.given
@@ -40,6 +41,7 @@ case class ObsSummary(
   executionTime:      TimeSpan,
   scienceTargetIds:   SortedSet[Target.Id],
   constraints:        ConstraintSet,
+  timingWindows:      List[TimingWindow],
   configuration:      Option[BasicConfiguration],
   visualizationTime:  Option[Instant],
   posAngleConstraint: Option[PosAngleConstraint],
@@ -64,6 +66,7 @@ object ObsSummary:
   val activeStatus       = Focus[ObsSummary](_.activeStatus)
   val scienceTargetIds   = Focus[ObsSummary](_.scienceTargetIds)
   val constraints        = Focus[ObsSummary](_.constraints)
+  val timingWindows      = Focus[ObsSummary](_.timingWindows)
   val configuration      = Focus[ObsSummary](_.configuration)
   val visualizationTime  = Focus[ObsSummary](_.visualizationTime)
   val posAngleConstraint = Focus[ObsSummary](_.posAngleConstraint)
@@ -78,11 +81,12 @@ object ObsSummary:
       id                 <- c.get[Observation.Id]("id")
       title              <- c.get[String]("title")
       subtitle           <- c.get[Option[NonEmptyString]]("subtitle")
-      constraints        <- c.get[ConstraintSet]("constraintSet")
       status             <- c.get[ObsStatus]("status")
       activeStatus       <- c.get[ObsActiveStatus]("activeStatus")
       executionTime      <- c.downField("plannedTime").get[TimeSpan]("execution")
       scienceTargetIds   <- c.downField("targetEnvironment").get[List[TargetIdWrapper]]("asterism")
+      constraints        <- c.get[ConstraintSet]("constraintSet")
+      timingWindows      <- c.get[List[TimingWindow]]("timingWindows")
       observingMode      <- c.get[Option[BasicConfiguration]]("observingMode")
       visualizationTime  <- c.get[Option[Timestamp]]("visualizationTime")
       posAngleConstraint <- c.get[Option[PosAngleConstraint]]("posAngleConstraint")
@@ -98,6 +102,7 @@ object ObsSummary:
       executionTime,
       SortedSet.from(scienceTargetIds.map(_.id)),
       constraints,
+      timingWindows,
       observingMode,
       visualizationTime.map(_.toInstant),
       posAngleConstraint,

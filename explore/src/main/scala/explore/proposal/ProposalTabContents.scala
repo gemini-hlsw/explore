@@ -17,6 +17,7 @@ import explore.Resources
 import explore.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
+import explore.syntax.ui.*
 import explore.undo.*
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -53,7 +54,7 @@ object ProposalTabContents:
     programId:       Program.Id,
     optProposalView: View[Option[ProposalInfo]],
     executionTime:   TimeSpan
-  )(using FetchClient[IO, ObservationDB], Logger[IO]): Callback =
+  )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): Callback =
     val proposal = Proposal.Default
     optProposalView.set(ProposalInfo(proposal.some, executionTime).some) >>
       UpdateProgramsMutation[IO]
@@ -63,6 +64,7 @@ object ProposalTabContents:
             SET = ProgramPropertiesInput(proposal = proposal.toInput.assign)
           )
         )
+        .toastErrors
         .void
         .runAsync
 

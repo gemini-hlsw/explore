@@ -354,6 +354,7 @@ object TargetTabContents extends TwoPanels:
                   _,
                   _,
                   const,
+                  _,
                   Some(conf),
                   _,
                   Some(posAngle),

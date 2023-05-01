@@ -86,9 +86,9 @@ See https://github.com/highcharts/highcharts/issues/13320 */
   fill: hsl(209deg 75% 71%);
 }
 
-.plot-band-timing-window {
-  fill: var(--plot-plot-band-timing-window-color);
-  fill-opacity: var(--plot-plot-band-timing-window-opacity);
+.plot-band-exclude-window {
+  fill: var(--plot-plot-band-exclude-window-color);
+  fill-opacity: var(--plot-plot-band-exclude-window-opacity);
 }
 
 .plot-band-twilight-nautical {

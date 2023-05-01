@@ -89,8 +89,10 @@ object ObsTabContents extends TwoPanels:
   private val TargetMinHeight: NonNegInt        = 15.refined
   private val SkyPlotHeight: NonNegInt          = 9.refined
   private val SkyPlotMinHeight: NonNegInt       = 6.refined
-  private val ConstraintsMinHeight: NonNegInt   = 3.refined
+  private val ConstraintsMinHeight: NonNegInt   = 4.refined
   private val ConstraintsMaxHeight: NonNegInt   = 7.refined
+  private val TimingWindowsMinHeight: NonNegInt = 8.refined
+  private val TimingWindowsMaxHeight: NonNegInt = 12.refined
   private val ConfigurationMaxHeight: NonNegInt = 10.refined
   private val ItcMinHeight: NonNegInt           = 6.refined
   private val ItcMaxHeight: NonNegInt           = 9.refined
@@ -140,13 +142,24 @@ object ObsTabContents extends TwoPanels:
         x = 0,
         y = (NotesMaxHeight |+| TargetHeight |+| SkyPlotHeight |+| ConstraintsMaxHeight).value,
         w = DefaultWidth.value,
+        h = TimingWindowsMaxHeight.value,
+        minH = TimingWindowsMinHeight.value,
+        maxH = TimingWindowsMaxHeight.value,
+        minW = TileMinWidth.value,
+        i = ObsTabTilesIds.TimingWindowsId.id.value
+      ),
+      LayoutItem(
+        x = 0,
+        y =
+          (NotesMaxHeight |+| TargetHeight |+| SkyPlotHeight |+| ConstraintsMaxHeight |+| TimingWindowsMaxHeight).value,
+        w = DefaultWidth.value,
         h = ConfigurationMaxHeight.value,
         i = ObsTabTilesIds.ConfigurationId.id.value
       ),
       LayoutItem(
         x = 0,
         y =
-          (NotesMaxHeight |+| TargetHeight |+| SkyPlotHeight |+| ConstraintsMaxHeight |+| ConfigurationMaxHeight).value,
+          (NotesMaxHeight |+| TargetHeight |+| SkyPlotHeight |+| ConstraintsMaxHeight |+| TimingWindowsMaxHeight |+| ConfigurationMaxHeight).value,
         w = DefaultWidth.value,
         h = ItcMaxHeight.value,
         i = ObsTabTilesIds.ItcId.id.value

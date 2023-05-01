@@ -12,7 +12,9 @@ import crystal.react.implicits.*
 import eu.timepit.refined.*
 import eu.timepit.refined.numeric.Positive
 import explore.DefaultErrorPolicy
+import explore.syntax.ui.*
 import explore.undo.UndoSetter
+import explore.utils.ToastCtx
 import lucuma.core.enums
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
@@ -35,7 +37,7 @@ object ScienceQueries:
     programId:               Program.Id,
     obsId:                   Observation.Id,
     scienceRequirementsUndo: UndoSetter[ScienceRequirementsData]
-  )(using FetchClient[IO, ObservationDB], Logger[IO]):
+  )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]):
     def apply[A](
       modelGet:  ScienceRequirementsData => A,
       modelMod:  (A => A) => ScienceRequirementsData => ScienceRequirementsData,
@@ -55,6 +57,7 @@ object ScienceQueries:
               )
             )
             .void
+            .toastErrors
             .runAsync
         )
 

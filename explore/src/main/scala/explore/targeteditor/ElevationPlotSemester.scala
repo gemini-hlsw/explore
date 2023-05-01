@@ -56,7 +56,7 @@ case class ElevationPlotSemester(
   coords:           CoordinatesAtVizTime,
   semester:         Semester,
   date:             LocalDate,
-  windowsIntervals: List[BoundedInterval[Instant]]
+  excludeIntervals: List[BoundedInterval[Instant]]
 ) extends ReactFnProps(ElevationPlotSemester.component)
 
 object ElevationPlotSemester:
@@ -240,12 +240,12 @@ object ElevationPlotSemester:
               .setMin(props.semester.start.atSite(props.site).toInstant.toEpochMilli.toDouble)
               .setMax(props.semester.end.atSite(props.site).toInstant.toEpochMilli.toDouble)
               .setPlotBands(
-                props.windowsIntervals
+                props.excludeIntervals
                   .map(window =>
                     XAxisPlotBandsOptions()
                       .setFrom(window.lower.toEpochMilli.toDouble)
                       .setTo(window.upper.toEpochMilli.toDouble)
-                      .setClassName("plot-band-timing-window")
+                      .setClassName("plot-band-exclude-window")
                   )
                   .toJSArray
               )
