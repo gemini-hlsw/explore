@@ -31,7 +31,7 @@ import lucuma.refined.*
 import lucuma.refined.*
 import lucuma.schemas.model.CentralWavelength
 import org.typelevel.log4cats.Logger
-import queries.schemas.itc.ITCConversions.*
+import queries.schemas.itc.syntax.*
 import workers.*
 
 import java.util.UUID

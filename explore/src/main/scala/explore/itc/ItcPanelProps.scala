@@ -29,7 +29,7 @@ import lucuma.itc.client.OptimizedChartResult
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.CentralWavelength
 import lucuma.schemas.model.ObservingMode
-import queries.schemas.itc.ITCConversions.*
+import queries.schemas.itc.syntax.*
 import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
 import workers.WorkerClient

@@ -25,7 +25,7 @@ import lucuma.core.model.User
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
-import queries.schemas.itc.ITCConversions.*
+import queries.schemas.itc.syntax.*
 import queries.schemas.odb.ObsQueries.*
 
 object ConfigurationTile {

@@ -61,7 +61,7 @@ import lucuma.ui.syntax.pot.*
 import monocle.Focus
 import monocle.Lens
 import queries.common.UserPreferencesQueriesGQL.*
-import queries.schemas.itc.ITCConversions.*
+import queries.schemas.itc.syntax.*
 import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
 

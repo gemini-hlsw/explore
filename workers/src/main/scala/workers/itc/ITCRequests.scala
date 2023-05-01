@@ -38,7 +38,7 @@ import lucuma.itc.client.SpectroscopyIntegrationTimeInput
 import lucuma.itc.client.SpectroscopyResult
 import org.scalajs.dom
 import org.typelevel.log4cats.Logger
-import queries.schemas.itc.ITCConversions.*
+import queries.schemas.itc.syntax.*
 import workers.*
 
 import java.util.UUID
