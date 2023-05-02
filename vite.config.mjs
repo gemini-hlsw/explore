@@ -169,6 +169,10 @@ export default defineConfig(async ({ mode }) => {
           replacement: workersSjs,
         },
         {
+          find: '@odbRestURL',
+          replacement: 'hello',
+        },
+        {
           find: '/common',
           replacement: webappCommon,
         },

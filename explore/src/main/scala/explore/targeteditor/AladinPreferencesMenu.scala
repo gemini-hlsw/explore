@@ -9,9 +9,11 @@ import crystal.*
 import crystal.react.*
 import eu.timepit.refined.*
 import eu.timepit.refined.auto.*
+import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.GlobalUserPreferences
 import explore.common.UserPreferencesQueries.TargetPreferences
 import explore.components.ui.ExploreStyles
+import explore.model.AppContext
 import explore.model.*
 import explore.model.enums.Visible
 import explore.optics.ModelOptics

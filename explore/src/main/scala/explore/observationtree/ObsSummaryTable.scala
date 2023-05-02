@@ -7,6 +7,7 @@ import cats.Order.*
 import cats.effect.IO
 import cats.syntax.all.*
 import explore.Icons
+import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.TableStore
 import explore.components.Tile
 import explore.components.ui.ExploreStyles

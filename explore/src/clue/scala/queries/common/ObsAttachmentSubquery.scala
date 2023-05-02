@@ -7,6 +7,7 @@ import clue.GraphQLSubquery
 import explore.model.ObsAttachment
 import lucuma.schemas.ObservationDB
 import clue.annotation.GraphQL
+import explore.DynamicEnums.given
 
 @GraphQL
 object ObsAttachmentSubquery

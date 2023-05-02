@@ -13,6 +13,8 @@ import crystal.react.hooks.*
 import crystal.react.reuse.*
 import eu.timepit.refined.types.numeric.NonNegLong
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.DynamicEnums
+import explore.DynamicEnums.given
 import explore.EditableLabel
 import explore.Icons
 import explore.common.ProgramQueries
@@ -25,6 +27,7 @@ import explore.model.ObsAttachment
 import explore.model.ObsAttachmentAssignmentMap
 import explore.model.ObsAttachmentList
 import explore.model.enums.AppTab
+import explore.model.enums.ObsAttachmentType
 import explore.model.syntax.all.*
 import explore.syntax.ui.*
 import explore.utils.OdbRestClient
@@ -36,7 +39,6 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.{ObsAttachment => ObsAtt}
-import lucuma.core.syntax.all.*
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Timestamp
 import lucuma.react.common.ReactFnProps
@@ -49,7 +51,6 @@ import lucuma.react.primereact.Dialog
 import lucuma.react.primereact.PrimeStyles
 import lucuma.react.table.*
 import lucuma.refined.*
-import lucuma.schemas.ObservationDB.Enums.ObsAttachmentType
 import lucuma.ui.primereact.CheckboxView
 import lucuma.ui.primereact.EnumDropdownView
 import lucuma.ui.primereact.given
@@ -87,11 +88,6 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
   )
 
   private val tableLabelButtonClasses = LabelButtonClasses |+| PrimeStyles.ButtonSecondary
-
-  extension (t: ObsAttachmentType)
-    def getEnum: AttachmentType =
-      Enumerated[AttachmentType].all.find(_.gql === t).get
-    def accept: String          = getEnum.accept
 
   given Reusability[UrlMap]                     = Reusability.map
   given Reusability[ObsAttachmentAssignmentMap] = Reusability.map
@@ -259,7 +255,7 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
               .setCell(_.value.value)
               .sortableBy(_.value.toUpperCase),
             column(AttachmentTypeColumnId, ObsAttachment.attachmentType.get)
-              .setCell(_.value.getEnum.name),
+              .setCell(_.value.shortName),
             column(SizeColumnId, ObsAttachment.fileSize.get)
               .setCell(cell =>
                 // The fileSize will always be > 0, the api should be changed to reflect this
@@ -340,7 +336,7 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
           getRowId = (row, _, _) => RowId(row.get.id.toString)
         )
       )
-      .useStateView(Enumerated[AttachmentType].all.head)
+      .useStateView(Enumerated[ObsAttachmentType].all.head)
       .render { (props, ctx, client, action, _, _, _, table, newAttType) =>
         import ctx.given
 

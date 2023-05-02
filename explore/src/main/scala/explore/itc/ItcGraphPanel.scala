@@ -8,6 +8,7 @@ import cats.syntax.all.*
 import crystal.*
 import crystal.react.*
 import eu.timepit.refined.*
+import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext

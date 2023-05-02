@@ -29,15 +29,39 @@ if (import.meta.env.DEV) {
   process.env = { CATS_EFFECT_TRACING_MODE: 'none' };
 }
 
-Explore.runIOApp();
+// Get dynamic enums static data from ODB rest point and into a global variable.
+// ODB rest URL is resolved from environments.conf.json.
+fetch("/environments.conf.json").then(response => {
 
-// Setup the Service Worker, after Explore is started
-if ('serviceWorker' in navigator && !/local.lucuma.xyz/.test(window.location)) {
-  ExplorePWA.runServiceWorker();
-}
+  response.json().then(environments => {
 
-// Setting this here shouldn't be necessary if we get `vite-plugin-environment` to work.
+    const getODBRestURLForHost = host => {
+      const filtered = environments.filter(e => e.hostName === host)
+      return filtered.length ? filtered[0].odbRestURI : null;
+    }
 
-if (import.meta.hot) {
-  import.meta.hot.accept();
-}
+    const specificHostURL = getODBRestURLForHost(window.location.host);
+    const url = specificHostURL ? specificHostURL : getODBRestURLForHost('*');
+
+    // Suppress vite warning about dynamic imports it can't handle.
+    import(/* @vite-ignore */ `${url}/export/enumMetadata`).then(enumMetadataModule => {
+      // Set it globally so it can be read in Scala code.
+      window.enumMetadataString = enumMetadataModule.enumMetadata;
+
+      Explore.runIOApp();
+
+      // Setup the Service Worker, after Explore is started
+      if ('serviceWorker' in navigator && !/local.lucuma.xyz/.test(window.location)) {
+        ExplorePWA.runServiceWorker();
+      }
+
+      // Setting this here shouldn't be necessary if we get `vite-plugin-environment` to work.
+
+      if (import.meta.hot) {
+        import.meta.hot.accept();
+      }
+    })
+
+  })
+
+})

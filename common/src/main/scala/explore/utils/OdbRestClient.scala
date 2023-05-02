@@ -8,12 +8,12 @@ import cats.effect.Resource
 import cats.syntax.all.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.AppConfig
+import explore.model.enums.ObsAttachmentType
 import fs2.Stream
 import fs2.text.utf8
 import lucuma.core.model.ObsAttachment
 import lucuma.core.model.Program
 import lucuma.core.syntax.string.*
-import lucuma.schemas.ObservationDB.Enums.ObsAttachmentType
 import lucuma.ui.enums.ExecutionEnvironment
 import org.http4s.*
 import org.http4s.client.Client

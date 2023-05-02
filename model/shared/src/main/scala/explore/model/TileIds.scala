@@ -21,7 +21,7 @@ enum ObsTabTilesIds:
     case TimingWindowsId     => "timingWindows".refined
     case WarningsAndErrorsId => "warningsAndErrors".refined
     case ObsAttachmentsId    => "obsAttachments".refined
-    case FinderChartsId      => "finderChartes".refined
+    case FinderChartsId      => "finderCharts".refined
     case SequenceId          => "sequence".refined
 
 enum ProgramTabTileIds:

@@ -9,6 +9,7 @@ import cats.syntax.all.*
 import clue.FetchClient
 import crystal.react.*
 import crystal.react.hooks.*
+import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext

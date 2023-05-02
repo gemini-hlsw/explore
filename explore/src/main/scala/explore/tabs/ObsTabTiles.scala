@@ -20,6 +20,7 @@ import explore.components.ui.ExploreStyles
 import explore.config.sequence.SequenceEditorTile
 import explore.constraints.ConstraintsPanel
 import explore.itc.ItcProps
+import explore.model.AppContext
 import explore.model.LoadingState
 import explore.model.ObsSummary.observingMode
 import explore.model.*
