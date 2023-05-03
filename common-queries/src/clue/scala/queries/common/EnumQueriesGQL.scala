@@ -8,6 +8,8 @@ import clue.annotation.GraphQL
 import explore.model
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.odb.*
+import io.circe.Decoder
+import io.circe.generic.semiauto
 
 object EnumQueriesGQL:
   @GraphQL
@@ -22,5 +24,8 @@ object EnumQueriesGQL:
       }
     """
 
+    given Decoder[explore.model.enums.ObsAttachmentType] =
+      semiauto.deriveDecoder
+
     object Data:
-      type ObsAttachmentTypeMeta = explore.model.enums.ObsAttachmentTypeMeta
+      type ObsAttachmentTypeMeta = explore.model.enums.ObsAttachmentType
