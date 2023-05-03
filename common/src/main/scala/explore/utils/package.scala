@@ -108,7 +108,7 @@ extension (toastRef: ToastRef)
       )
     )
 
-  def prompt(text: String, callback: Callback): Callback =
+  def upgradePrompt(text: VdomNode, callback: Callback): Callback =
     toastRef.show(
       MessageItem(
         content = <.div(
