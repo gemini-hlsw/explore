@@ -1517,6 +1517,10 @@ table.explore-border-table {
       align-items: start;
       width: 100%;
 
+      span {
+        padding-bottom: 0.9em;
+      }
+
       button {
         align-self: end;
       }
@@ -2443,4 +2447,15 @@ div.spectroscopy-table-emptymessage {
   .explore-constraints-summary-edit {
     left: 0;
   }
+}
+
+// Needed to make sure the PWA update toast is always on top
+.p-toast:has(.explore-prompt-toast) {
+  z-index: 2000;
+}
+
+a.explore-upgrade-link {
+  /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
+  color: var(--text-secondary-color);
+  text-decoration: underline;
 }

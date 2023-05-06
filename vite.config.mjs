@@ -39,6 +39,7 @@ const imageCache = ({ name, pattern }) => ({
   options: {
     cacheName: name,
     expiration: {
+      purgeOnQuotaError: true,
       maxEntries: 2500,
       maxAgeSeconds: 60 * 60 * 24 * 14, // 1week
     },
@@ -55,6 +56,7 @@ const itcCache = ({ name, pattern }) => ({
   options: {
     cacheName: name,
     expiration: {
+      purgeOnQuotaError: true,
       maxEntries: 5000,
       maxAgeSeconds: 60 * 60 * 24 * 7, // 1week
     },
@@ -233,14 +235,9 @@ export default defineConfig(({ command, mode }) => {
             }),
             itcCache({
               pattern:
-                /^https:\/\/(itc-staging.lucuma.xyz|itc.gpp.gemini.edu)\/itc/,
-              name: 'itc-cache',
-            }),
-            itcCache({
-              pattern:
                 /^https:\/\/cors-proxy.(lucuma.xyz|gpp.gemini.edu)\/http:\/\/aladin.unistra.fr\/java\/nph-aladin.*/,
               name: 'cors-cache',
-            }),
+            })
           ],
         },
       }),

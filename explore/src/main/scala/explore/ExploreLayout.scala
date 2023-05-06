@@ -102,14 +102,27 @@ object ExploreLayout:
               x.event match {
                 // TODO: Handle logout events
                 case ExploreEvent.PWAUpdateId =>
-                  toastRef
-                    .prompt(
-                      "A new version of explore is available!",
-                      IO(
-                        ctx.broadcastChannel.postMessage(ExploreEvent.PWAReload)
-                      ).runAsyncAndForget
-                    )
-                    .to[IO]
+                  // Clear other toasts first
+                  toastRef.clear().to[IO] *>
+                    toastRef
+                      .upgradePrompt(
+                        <.span(
+                          "A new version of ",
+                          <.a(
+                            ExploreStyles.UpgradeLink,
+                            "Explore",
+                            ^.href   := s"https://github.com/gemini-hlsw/explore/compare/${utils.gitHash.orEmpty}...HEAD",
+                            ^.target := "_blank"
+                          ),
+                          " is available!"
+                        ),
+                        IO(
+                          ctx.broadcastChannel.postMessage(ExploreEvent.PWAReload)
+                        )
+                          .handleErrorWith(e => IO(e.printStackTrace()))
+                          .runAsyncAndForget
+                      )
+                      .to[IO]
                 case _                        => IO.unit
               }
           ): (ExploreEvent => IO[Unit])
@@ -127,7 +140,7 @@ object ExploreLayout:
           val helpView = helpCtx.displayedHelp
 
           React.Fragment(
-            Toast(Toast.Position.BottomRight).withRef(toastRef.ref),
+            Toast(Toast.Position.BottomRight, baseZIndex = 2000).withRef(toastRef.ref),
             Sidebar(
               position = Sidebar.Position.Right,
               size = Sidebar.Size.Medium,
