@@ -20,9 +20,9 @@ trait syntax:
   extension (row: InstrumentRow)
     def toItcClientMode: Option[InstrumentMode] = row match {
       case g: GmosNorthSpectroscopyRow =>
-        InstrumentMode.GmosNorth(g.grating, g.filter, GmosFpu.North(g.fpu.asRight)).some
+        InstrumentMode.GmosNorthSpectroscopy(g.grating, g.filter, GmosFpu.North(g.fpu.asRight)).some
       case g: GmosSouthSpectroscopyRow =>
-        InstrumentMode.GmosSouth(g.grating, g.filter, GmosFpu.South(g.fpu.asRight)).some
+        InstrumentMode.GmosSouthSpectroscopy(g.grating, g.filter, GmosFpu.South(g.fpu.asRight)).some
       case _                           => None
     }
 

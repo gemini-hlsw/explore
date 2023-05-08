@@ -33,9 +33,9 @@ import lucuma.core.model.SpectralDefinition
 import lucuma.itc.IntegrationTime
 import lucuma.itc.client.GmosFpu
 import lucuma.itc.client.InstrumentMode
+import lucuma.itc.client.IntegrationTimeResult
 import lucuma.itc.client.ItcClient
 import lucuma.itc.client.SpectroscopyIntegrationTimeInput
-import lucuma.itc.client.SpectroscopyResult
 import org.scalajs.dom
 import org.typelevel.log4cats.Logger
 import queries.schemas.itc.syntax.*
@@ -64,16 +64,12 @@ object ITCRequests:
     cache:           Cache[F],
     callback:        Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]] => F[Unit]
   )(using Monoid[F[Unit]], ItcClient[F]): F[Unit] = {
-    def itcResults(r: SpectroscopyResult): EitherNec[ItcQueryProblems, ItcResult] =
+    def itcResults(r: IntegrationTimeResult): EitherNec[ItcQueryProblems, ItcResult] =
       // Convert to usable types
-      r.result match
-        case Some(r: IntegrationTime) =>
-          ItcResult
-            .Result(r.exposureTime, r.exposures)
-            .rightNec
-        case None                     =>
-          (ItcQueryProblems.GenericError("No response from the ITC server"): ItcQueryProblems)
-            .leftNec[ItcResult]
+      val i = r.result.head
+      ItcResult
+        .Result(i.exposureTime, i.exposures)
+        .rightNec
 
     def doRequest(
       params: ItcRequestParams
