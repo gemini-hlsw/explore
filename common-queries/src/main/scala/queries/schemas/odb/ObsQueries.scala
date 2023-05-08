@@ -11,6 +11,7 @@ import cats.implicits.*
 import clue.FetchClient
 import clue.data.syntax.*
 import crystal.Pot
+import crystal.implicits.given
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.DefaultErrorPolicy
@@ -72,7 +73,7 @@ object ObsQueries:
     scienceOffsets:     Option[NonEmptyList[Offset]],
     acquisitionOffsets: Option[NonEmptyList[Offset]],
     potITC:             Pot[Option[OdbItcResult.Success]]
-  )
+  ) derives Eq
 
   object ScienceData {
     val requirements: Lens[ScienceData, ScienceRequirementsData]            =

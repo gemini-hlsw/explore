@@ -73,7 +73,8 @@ object reusability:
           b.get(k).exists(stacksB => undoStacksReuse.test(stacksA, stacksB))
         }
     )
-  given modelUndoStacksReuse[F[_]]: Reusability[ModelUndoStacks[F]]           = Reusability.byEq
+
+  given modelUndoStacksReuse[F[_]]: Reusability[ModelUndoStacks[F]] = Reusability.byEq
 
   given Reusability[AvailableFilter]             = Reusability.byEq
   given Reusability[ImagingConfigurationOptions] = Reusability.byEq

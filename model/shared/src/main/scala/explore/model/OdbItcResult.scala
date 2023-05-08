@@ -3,6 +3,9 @@
 
 package explore.model
 
+import cats.Eq
+import cats.derived.*
+import eu.timepit.refined.cats.given
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import io.circe.Decoder
@@ -25,6 +28,7 @@ object OdbItcResult {
     exposures:     NonNegInt,
     signalToNoise: PosBigDecimal
   ) extends OdbItcResult
+      derives Eq
 
   case class MissingParams(
     params: List[String]

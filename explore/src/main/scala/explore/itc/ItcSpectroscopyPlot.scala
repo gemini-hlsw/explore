@@ -221,7 +221,8 @@ object ItcSpectroscopyPlot {
       val series: List[OptimizedChartResult] =
         props.charts.filterNot(_ => loading).foldMap(_.toList)
 
-      val height                              = resize.height.getOrElse(1).toDouble
+      val height = resize.height.getOrElse(1).toDouble
+
       val maxSNWavelength: Option[Wavelength] =
         props.ccds
           .foldMap(_.toList)
