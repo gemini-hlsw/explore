@@ -176,8 +176,9 @@ trait DisplayImplicits:
   }
 
   given Display[ChartType] = Display.byShortName {
-    case ChartType.SignalChart => "Signal"
-    case ChartType.S2NChart    => "S/N"
+    case ChartType.SignalChart      => "Signal"
+    case ChartType.SignalPixelChart => "Pixel"
+    case ChartType.S2NChart         => "S/N"
   }
 
 object display extends DisplayImplicits

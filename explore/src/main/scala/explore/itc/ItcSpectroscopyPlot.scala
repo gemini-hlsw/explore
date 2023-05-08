@@ -63,8 +63,9 @@ object ItcSpectroscopyPlot {
   ) = {
     val yAxis            = chart.series.foldLeft(YAxis.Empty)(_ ∪ _.yAxis.yAxis)
     val title            = chart.chartType match
-      case ChartType.SignalChart => "𝐞⁻ per exposure per spectral pixel"
-      case ChartType.S2NChart    => "S/N per spectral pixel"
+      case ChartType.SignalChart      => "𝐞⁻ per exposure per spectral pixel"
+      case ChartType.S2NChart         => "S/N per spectral pixel"
+      case ChartType.SignalPixelChart => "S/N per pixel"
     val (min, max, tick) = yAxis.ticks(10)
 
     val yAxes = YAxisOptions()
@@ -93,12 +94,14 @@ object ItcSpectroscopyPlot {
         s"""<strong>$x nm</strong><br/><span class="$chartClassName highcharts-color-${ctx.colorIndex.toInt}">●</span> ${ctx.series.name}: <strong>$y$measUnit</strong>"""
 
     val chartTitle = chart.chartType match
-      case ChartType.SignalChart => "Signal in 1-pixel"
-      case ChartType.S2NChart    => "Signal / Noise"
+      case ChartType.SignalChart      => "Signal in 1-pixel"
+      case ChartType.S2NChart         => "Signal / Noise"
+      case ChartType.SignalPixelChart => "Pixel"
 
     val plotLines = chart.chartType match
-      case ChartType.SignalChart => js.Array()
-      case ChartType.S2NChart    =>
+      case ChartType.SignalChart      => js.Array()
+      case ChartType.SignalPixelChart => js.Array()
+      case ChartType.S2NChart         =>
         val value = signalToNoiseAt.orElse(maxSNWavelength).map(_.toNanometers.value.value.toDouble)
 
         value

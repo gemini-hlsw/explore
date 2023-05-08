@@ -33,8 +33,9 @@ object ItcPlotControl:
   private val component = ScalaFnComponent[Props] { props =>
     val descText             = if (props.showDetails.get.exists(_.value)) "Hide details" else "Show details"
     def label(ch: ChartType) = ch match
-      case ChartType.S2NChart    => "S/N"
-      case ChartType.SignalChart => "Signal"
+      case ChartType.S2NChart         => "S/N"
+      case ChartType.SignalPixelChart => "Pixel"
+      case ChartType.SignalChart      => "Signal"
 
     <.div(
       ExploreStyles.ItcPlotControls,
