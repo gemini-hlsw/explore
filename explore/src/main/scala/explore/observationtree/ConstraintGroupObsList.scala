@@ -26,6 +26,7 @@ import explore.model.enums.AppTab
 import explore.model.syntax.all.*
 import explore.undo.UndoContext
 import explore.undo.*
+import explore.utils.ToastCtx
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ConstraintSet
@@ -90,7 +91,8 @@ object ConstraintGroupObsList:
     setObsSet:        Option[ObsIdSet] => Callback
   )(using
     FetchClient[IO, ObservationDB],
-    Logger[IO]
+    Logger[IO],
+    ToastCtx[IO]
   ): (DropResult, ResponderProvided) => Callback = (result, _) => {
     val oData = for {
       destination <- result.destination.toOption

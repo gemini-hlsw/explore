@@ -14,8 +14,10 @@ import lucuma.core.math.arb.ArbWavelength.given
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target
+import lucuma.core.model.TimingWindow
 import lucuma.core.model.arb.ArbPosAngleConstraint.given
 import lucuma.core.model.arb.ArbConstraintSet.given
+import lucuma.core.model.arb.ArbTimingWindow.given
 import lucuma.core.util.TimeSpan
 import lucuma.core.util.arb.ArbEnumerated.given
 import lucuma.core.util.arb.ArbGid.given
@@ -47,6 +49,7 @@ trait ArbObsSummary:
         executionTime      <- arbitrary[TimeSpan]
         scienceTargetIds   <- arbitrary[Set[Target.Id]]
         constraints        <- arbitrary[ConstraintSet]
+        timingWindows      <- arbitrary[List[TimingWindow]]
         configuration      <- arbitrary[Option[BasicConfiguration]]
         vizTime            <- arbitrary[Option[Instant]]
         posAngleConstraint <- arbitrary[Option[PosAngleConstraint]]
@@ -60,6 +63,7 @@ trait ArbObsSummary:
         executionTime,
         SortedSet.from(scienceTargetIds),
         constraints,
+        timingWindows,
         configuration,
         vizTime,
         posAngleConstraint,
@@ -77,6 +81,7 @@ trait ArbObsSummary:
        TimeSpan,
        List[Target.Id],
        ConstraintSet,
+       List[TimingWindow],
        Option[BasicConfiguration],
        Option[Instant],
        Option[PosAngleConstraint],
@@ -92,6 +97,7 @@ trait ArbObsSummary:
          o.executionTime,
          o.scienceTargetIds.toList,
          o.constraints,
+         o.timingWindows,
          o.configuration,
          o.visualizationTime,
          o.posAngleConstraint,

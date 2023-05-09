@@ -99,11 +99,16 @@ def forceAssign[T, S](mod: Endo[Input[S]] => Endo[T])(base: S): Endo[S] => Endo[
 
 // TODO Move these to lucuma-ui
 extension (toastRef: ToastRef)
-  def show(text: String, severity: Message.Severity = Message.Severity.Info): Callback =
+  def show(
+    text:     String,
+    severity: Message.Severity = Message.Severity.Info,
+    sticky:   Boolean = false
+  ): Callback =
     toastRef.show(
       MessageItem(
         content = <.span(Icons.InfoLight.withSize(IconSize.LG), text),
         severity = severity,
+        sticky = sticky,
         clazz = ExploreStyles.ExploreToast
       )
     )

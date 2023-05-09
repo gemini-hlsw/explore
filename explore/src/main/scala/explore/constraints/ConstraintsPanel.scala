@@ -20,7 +20,6 @@ import explore.model.Help
 import explore.model.ObsIdSet
 import explore.model.ObservationList
 import explore.model.display.*
-import explore.undo.UndoContext
 import explore.undo.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*

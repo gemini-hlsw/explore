@@ -14,6 +14,7 @@ import crystal.react.*
 import crystal.react.hooks.*
 import crystal.react.implicits.*
 import explore.*
+import explore.common.TimingWindowsQueries
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
@@ -43,6 +44,7 @@ import explore.model.itc.OverridenExposureTime
 import explore.model.layout.*
 import explore.optics.*
 import explore.optics.all.*
+import explore.timingwindows.TimingWindowsPanel
 import explore.undo.UndoContext
 import explore.undo.UndoSetter
 import explore.undo.UndoStacks
@@ -60,6 +62,7 @@ import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.Target
+import lucuma.core.model.TimingWindow
 import lucuma.core.model.User
 import lucuma.core.syntax.all.*
 import lucuma.schemas.ObservationDB
@@ -255,7 +258,8 @@ object ObsTabTiles:
             props.focusedTarget.orElse(props.observation.scienceTargetIds.headOption),
             observingMode.map(_.siteFor),
             targetCoords,
-            vizTime
+            vizTime,
+            props.observation.timingWindows
           )
 
         def setCurrentTarget(programId: Program.Id, oid: Option[Observation.Id])(
@@ -327,13 +331,24 @@ object ObsTabTiles:
             control = _ => constraintsSelector.some,
             controllerClass = ExploreStyles.ConstraintsTile.some
           )(renderInTitle =>
-            <.div
             ConstraintsPanel(
               props.programId,
               ObsIdSet.one(props.obsId),
               props.obsUndoCtx.zoom(ObsSummary.constraints),
               renderInTitle
             )
+          )
+
+        val timingWindows: View[List[TimingWindow]] =
+          TimingWindowsQueries.viewWithRemoteMod(
+            props.programId,
+            ObsIdSet.one(props.obsId),
+            props.obsUndoCtx.undoableView[List[TimingWindow]](ObsSummary.timingWindows)
+          )
+
+        val timingWindowsTile =
+          Tile(ObsTabTilesIds.TimingWindowsId.id, "Timing Windows", canMinimize = true)(
+            renderInTitle => TimingWindowsPanel(timingWindows, renderInTitle)
           )
 
         val configurationTile =
@@ -367,6 +382,7 @@ object ObsTabTiles:
               targetTile,
               skyPlotTile,
               constraintsTile,
+              timingWindowsTile,
               configurationTile,
               itcTile
             ),

@@ -13,6 +13,7 @@ import lucuma.core.enums.Site
 import lucuma.core.math.Coordinates
 import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.Target
+import lucuma.core.model.TimingWindow
 import lucuma.core.model.User
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -22,11 +23,12 @@ import java.time.Instant
 object ElevationPlotTile:
 
   def elevationPlotTile(
-    uid:         Option[User.Id],
-    tid:         Option[Target.Id],
-    site:        Option[Site],
-    coordinates: Option[CoordinatesAtVizTime],
-    vizTime:     Option[Instant]
+    uid:           Option[User.Id],
+    tid:           Option[Target.Id],
+    site:          Option[Site],
+    coordinates:   Option[CoordinatesAtVizTime],
+    vizTime:       Option[Instant],
+    timingWindows: List[TimingWindow] = List.empty
   ) =
     Tile(
       ObsTabTilesIds.PlotId.id,
@@ -36,7 +38,7 @@ object ElevationPlotTile:
     ) { _ =>
       (uid, tid, coordinates)
         .mapN { (uid, targetId, coordinates) =>
-          ElevationPlotSection(uid, targetId, site, vizTime, coordinates): VdomNode
+          ElevationPlotSection(uid, targetId, site, vizTime, coordinates, timingWindows): VdomNode
         }
         .getOrElse {
           <.div(

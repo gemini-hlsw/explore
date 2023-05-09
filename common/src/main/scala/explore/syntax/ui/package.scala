@@ -5,6 +5,7 @@ package explore.syntax.ui
 
 import cats.*
 import cats.syntax.all.*
+import clue.ResponseException
 import clue.js.FetchJSRequest
 import crystal.react.implicits.*
 import explore.components.ui.ExploreStyles
@@ -18,6 +19,7 @@ import org.scalablytyped.runtime.StringDictionary
 import org.scalajs.dom.Window
 import org.typelevel.log4cats.Logger
 import react.common.Css
+import react.primereact.Message
 
 import scala.scalajs.js
 import scala.scalajs.js.UndefOr
@@ -48,3 +50,19 @@ extension (vault: UserVault)
     // DOM Headers are mutable
     request.headers.set("Authorization", authorizationHeader)
     request
+
+extension [F[_]: ApplicativeThrow: ToastCtx, A](f: F[A])
+  def toastErrors: F[A] =
+    f.onError {
+      case ResponseException(errors, _) =>
+        errors
+          .map(e =>
+            ToastCtx[F]
+              .showToast(e.message, Message.Severity.Error, sticky = true)
+          )
+          .sequence
+          .void
+      case throwable                    =>
+        ToastCtx[F]
+          .showToast(throwable.getMessage, Message.Severity.Error, sticky = true)
+    }

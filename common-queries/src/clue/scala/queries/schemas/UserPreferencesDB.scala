@@ -5,7 +5,6 @@ package queries.schemas
 
 import clue.annotation.GraphQLSchema
 import explore.model.Constants
-import explore.model.TimingWindowEntry
 import explore.model.enums
 import io.circe.Decoder
 import io.circe.Encoder
@@ -24,8 +23,6 @@ trait UserPreferencesDB:
 
   given Encoder[ZonedDateTime] =
     Encoder.encodeZonedDateTimeWithFormatter(Constants.IsoUTCFormatter)
-
-  given Decoder[TimingWindowEntry] = deriveDecoder
 
   type Timestamptz = java.time.ZonedDateTime
 

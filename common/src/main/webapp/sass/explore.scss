@@ -1932,23 +1932,15 @@ $help-title-height: 40px;
 @mixin timing-window-list {
   margin-bottom: 0.5em;
   border: solid 1px var(--under-tab-border-color);
-  min-height: var(--timing-windows-height);
-  height: var(--timing-windows-height);
   grid-area: table;
 }
 
 .timing-windows-body {
-  --timing-windows-height: 200px;
-
   padding: 0.5em;
   display: grid;
   grid-template:
     "table table" min-content
     "editor add" min-content / 1fr min-content;
-
-  @media (min-width: common.$mobile-responsive-cutoff) {
-    --timing-windows-height: 300px;
-  }
 
   .timing-windows-header {
     display: none;
@@ -1970,20 +1962,22 @@ $help-title-height: 40px;
 
   .timing-windows-table {
     @include timing-window-list;
+
+    table-layout: auto;
   }
 
-  @mixin timing-window-type {
+  @mixin timing-window-inclusion {
     font-weight: bold;
   }
 
   .timing-window-include {
-    @include timing-window-type;
+    @include timing-window-inclusion;
 
     color: var(--green-400);
   }
 
   .timing-window-exclude {
-    @include timing-window-type;
+    @include timing-window-inclusion;
 
     color: var(--red-400);
   }
@@ -2016,7 +2010,7 @@ $help-title-height: 40px;
       display: flex;
       align-items: center;
 
-      .timing-window-type-editor {
+      .timing-window-inclusion-editor {
         display: inline-flex;
         flex-direction: column;
       }
@@ -2033,7 +2027,7 @@ $help-title-height: 40px;
         margin-left: 1.5em;
       }
 
-      .timing-window-remain-open,
+      .timing-window-end-after,
       .timing-window-repeat-editor,
       .timing-window-repeat-editor-n-times {
         display: flex;
@@ -2169,7 +2163,7 @@ $help-title-height: 40px;
 
 // Move to lucuma-ui?
 .explore-table:has(.p-datatable-emptymessage) {
-  tr > td.p-datatable-emptymessage {
+  tr>td.p-datatable-emptymessage {
     padding: 0;
   }
 }

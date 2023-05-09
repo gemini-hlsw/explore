@@ -12,8 +12,14 @@ import react.primereact.Message
 import react.primereact.ToastRef
 
 class ToastCtx[F[_]: Sync](toastRef: Deferred[F, ToastRef]):
-  def showToast(text: String, severity: Message.Severity = Message.Severity.Info): F[Unit] =
-    toastRef.tryGet.flatMap(_.map(_.show(text, severity).to[F]).getOrElse(Applicative[F].unit))
+  def showToast(
+    text:     String,
+    severity: Message.Severity = Message.Severity.Info,
+    sticky:   Boolean = false
+  ): F[Unit] =
+    toastRef.tryGet.flatMap(
+      _.map(_.show(text, severity, sticky).to[F]).getOrElse(Applicative[F].unit)
+    )
 
   def clear(): F[Unit] =
     toastRef.tryGet.flatMap(_.map(_.clear().to[F]).getOrElse(Applicative[F].unit))

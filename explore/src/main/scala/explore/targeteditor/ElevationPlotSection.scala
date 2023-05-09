@@ -13,13 +13,11 @@ import crystal.react.hooks.*
 import crystal.react.implicits.*
 import eu.timepit.refined.auto.*
 import explore.*
-import explore.common.TimingWindowQueries.*
 import explore.common.UserPreferencesQueries.*
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ElevationPlotOptions
-import explore.model.TimingWindow
 import explore.model.display.given
 import explore.model.enums.PlotRange
 import explore.model.enums.TimeDisplay
@@ -28,11 +26,13 @@ import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Site
+import lucuma.core.enums.TimingWindowInclusion
 import lucuma.core.math.BoundedInterval
 import lucuma.core.math.Coordinates
 import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.Semester
 import lucuma.core.model.Target
+import lucuma.core.model.TimingWindow
 import lucuma.core.model.User
 import lucuma.core.syntax.display.given
 import lucuma.core.util.Enumerated
@@ -47,7 +47,6 @@ import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import org.typelevel.cats.time.given
 import org.typelevel.log4cats.Logger
-import queries.common.TimingWindowsGQL.*
 import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.UserPreferencesDB
 import react.common.ReactFnProps
@@ -64,7 +63,8 @@ case class ElevationPlotSection(
   tid:               Target.Id,
   site:              Option[Site],
   visualizationTime: Option[Instant],
-  coords:            CoordinatesAtVizTime
+  coords:            CoordinatesAtVizTime,
+  timingWindows:     List[TimingWindow]
 ) extends ReactFnProps(ElevationPlotSection.component)
 
 object ElevationPlotSection:
@@ -118,16 +118,7 @@ object ElevationPlotSection:
           )
           .runAsyncAndForget
       }
-      // FIXME This will be provided by the caller when timing windows are in the ODB
-      .useStreamResourceOnMountBy { (props, ctx, _) =>
-        import ctx.given
-
-        TimingWindowsQuery[IO]
-          .query()
-          .map(data => EntryToTimingWindows.get(data.tmpTimingWindows))
-          .reRunOnResourceSignals(TimingWindowSubscription.subscribe[IO]())
-      }
-      .render { (props, ctx, options, timingWindowsPot) =>
+      .render { (props, ctx, options) =>
         import ctx.given
 
         val siteView        = options.zoom(Pot.readyPrism.andThen(ElevationPlotOptions.site))
@@ -136,103 +127,109 @@ object ElevationPlotSection:
         val semesterView    = options.zoom(Pot.readyPrism.andThen(ElevationPlotOptions.semester))
         val timeDisplayView = options.zoom(Pot.readyPrism.andThen(ElevationPlotOptions.timeDisplay))
 
-        val renderPlot: ElevationPlotOptions => VdomNode =
-          (opt: ElevationPlotOptions) =>
-            timingWindowsPot.renderPotOption(timingWindows =>
-              def windowsToIntervals(windows: List[TimingWindow]): IntervalSeq[Instant] =
-                windows
-                  .map(_.toIntervalSeq(opt.interval))
-                  .fold(IntervalSeq.empty[Instant])(_ | _)
+        options.renderPotView { opt =>
 
-              val windowsIntervalsParts =
-                timingWindows.partition(_.isInclude).toList.map(windowsToIntervals)
+          def windowsToIntervals(windows: List[TimingWindow]): IntervalSeq[Instant] =
+            windows
+              .map(_.toIntervalSeq(opt.interval))
+              .fold(IntervalSeq.empty[Instant])(_ | _)
 
-              val windowsIntervals =
-                // Intersection of "Include" intervals with the complement of "Exclude" intervals
-                (windowsIntervalsParts(0) & ~windowsIntervalsParts(1)).intervals.toList
+          val windowsIntervalsParts =
+            props.timingWindows
+              .partition(_.inclusion === TimingWindowInclusion.Include)
+              .toList
+              .map(windowsToIntervals)
+
+          val windowsNetIncludeIntervals: IntervalSeq[Instant] =
+            // Intersection of "Include" intervals with the complement of "Exclude" intervals
+            windowsIntervalsParts(0) & ~windowsIntervalsParts(1)
+
+          val windowsNetExcludeIntervals: List[BoundedInterval[Instant]] =
+            props.timingWindows match
+              case Nil => Nil // No exclusions if no windows are defined.
+              case _   =>
+                (IntervalSeq(opt.interval) & ~windowsNetIncludeIntervals).intervals.toList
                   .map(BoundedInterval.fromInterval)
                   .flattenOption
 
-              <.div(ExploreStyles.ElevationPlotSection)(
-                HelpIcon("target/main/elevation-plot.md".refined, ExploreStyles.HelpIconFloating),
-                <.div(ExploreStyles.ElevationPlot) {
-                  opt.range match
-                    case PlotRange.Night    =>
-                      ElevationPlotNight(
-                        opt.site,
-                        props.coords,
-                        opt.date,
-                        opt.timeDisplay,
-                        props.visualizationTime,
-                        windowsIntervals
-                      )
-                    case PlotRange.Semester =>
-                      val coords = props.coords
-                      ElevationPlotSemester(
-                        opt.site,
-                        coords,
-                        opt.semester,
-                        opt.date,
-                        windowsIntervals
-                      )
-                },
-                <.div(
-                  ExploreStyles.ElevationPlotControls,
-                  siteView.asView.map(siteView =>
-                    SelectButtonEnumView(
-                      "elevation-plot-site".refined,
-                      siteView,
-                      buttonClass = LucumaStyles.Tiny |+| LucumaStyles.VeryCompact
-                    )
-                  ),
-                  <.div(ExploreStyles.ElevationPlotDatePickerControls)(
-                    Button(
-                      onClick = opt.range match
-                        case PlotRange.Night    => dateView.mod(_.minusDays(1))
-                        case PlotRange.Semester => semesterView.mod(_.prev)
-                      ,
-                      clazz = ExploreStyles.ElevationPlotDateButton,
-                      text = false,
-                      icon = Icons.ChevronLeftLight
-                    ).tiny.compact,
-                    opt.range match
-                      case PlotRange.Night    =>
-                        Datepicker(
-                          onChange = (newValue, _) => dateView.set(newValue.toLocalDateOpt.get)
-                        )
-                          .selected(opt.date.toJsDate)
-                          .dateFormat("yyyy-MM-dd")
-                          .className(ExploreStyles.ElevationPlotDateInput.htmlClass)
-                      case PlotRange.Semester =>
-                        FormInputText(
-                          id = "semester".refined,
-                          value = opt.semester.longName,
-                          inputClass = ExploreStyles.ElevationPlotDateInput
-                        )(^.readOnly := true)
-                    ,
-                    Button(
-                      onClick = opt.range match
-                        case PlotRange.Night    => dateView.mod(_.plusDays(1))
-                        case PlotRange.Semester => semesterView.mod(_.next)
-                      ,
-                      clazz = ExploreStyles.ElevationPlotDateButton,
-                      text = false,
-                      icon = Icons.ChevronRightLight
-                    ).tiny.compact
-                  ),
-                  SelectButtonEnumView(
-                    "elevation-plot-range".refined,
-                    rangeView,
-                    buttonClass = LucumaStyles.Tiny |+| LucumaStyles.VeryCompact
-                  ),
-                  SelectButtonEnumView(
-                    "elevation-plot-time".refined,
-                    timeDisplayView,
-                    buttonClass = LucumaStyles.Tiny |+| LucumaStyles.VeryCompact
-                  )(^.visibility.hidden.when(rangeView.contains(PlotRange.Semester)))
+          <.div(ExploreStyles.ElevationPlotSection)(
+            HelpIcon("target/main/elevation-plot.md".refined, ExploreStyles.HelpIconFloating),
+            <.div(ExploreStyles.ElevationPlot) {
+              opt.range match
+                case PlotRange.Night    =>
+                  ElevationPlotNight(
+                    opt.site,
+                    props.coords,
+                    opt.date,
+                    opt.timeDisplay,
+                    props.visualizationTime,
+                    windowsNetExcludeIntervals
+                  )
+                case PlotRange.Semester =>
+                  val coords = props.coords
+                  ElevationPlotSemester(
+                    opt.site,
+                    coords,
+                    opt.semester,
+                    opt.date,
+                    windowsNetExcludeIntervals
+                  )
+            },
+            <.div(
+              ExploreStyles.ElevationPlotControls,
+              siteView.asView.map(siteView =>
+                SelectButtonEnumView(
+                  "elevation-plot-site".refined,
+                  siteView,
+                  buttonClass = LucumaStyles.Tiny |+| LucumaStyles.VeryCompact
                 )
-              )
+              ),
+              <.div(ExploreStyles.ElevationPlotDatePickerControls)(
+                Button(
+                  onClick = opt.range match
+                    case PlotRange.Night    => dateView.mod(_.minusDays(1))
+                    case PlotRange.Semester => semesterView.mod(_.prev)
+                  ,
+                  clazz = ExploreStyles.ElevationPlotDateButton,
+                  text = false,
+                  icon = Icons.ChevronLeftLight
+                ).tiny.compact,
+                opt.range match
+                  case PlotRange.Night    =>
+                    Datepicker(
+                      onChange = (newValue, _) => dateView.set(newValue.toLocalDateOpt.get)
+                    )
+                      .selected(opt.date.toJsDate)
+                      .dateFormat("yyyy-MM-dd")
+                      .className(ExploreStyles.ElevationPlotDateInput.htmlClass)
+                  case PlotRange.Semester =>
+                    FormInputText(
+                      id = "semester".refined,
+                      value = opt.semester.longName,
+                      inputClass = ExploreStyles.ElevationPlotDateInput
+                    )(^.readOnly := true)
+                ,
+                Button(
+                  onClick = opt.range match
+                    case PlotRange.Night    => dateView.mod(_.plusDays(1))
+                    case PlotRange.Semester => semesterView.mod(_.next)
+                  ,
+                  clazz = ExploreStyles.ElevationPlotDateButton,
+                  text = false,
+                  icon = Icons.ChevronRightLight
+                ).tiny.compact
+              ),
+              SelectButtonEnumView(
+                "elevation-plot-range".refined,
+                rangeView,
+                buttonClass = LucumaStyles.Tiny |+| LucumaStyles.VeryCompact
+              ),
+              SelectButtonEnumView(
+                "elevation-plot-time".refined,
+                timeDisplayView,
+                buttonClass = LucumaStyles.Tiny |+| LucumaStyles.VeryCompact
+              )(^.visibility.hidden.when(rangeView.contains(PlotRange.Semester)))
             )
-
-        options.renderPotView(renderPlot)
+          )
+        }
       }

@@ -17,8 +17,10 @@ import explore.model.ObsIdSet
 import explore.model.ObsSummary
 import explore.model.ObservationList
 import explore.model.ProgramSummaries
+import explore.syntax.ui.*
 import explore.undo.UndoContext
 import explore.undo.UndoSetter
+import explore.utils.ToastCtx
 import lucuma.core.enums.*
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
@@ -37,7 +39,7 @@ object ConstraintsQueries:
     programId: Program.Id,
     obsIds:    ObsIdSet,
     undoCtx:   UndoSetter[ConstraintSet]
-  )(using FetchClient[IO, ObservationDB], Logger[IO]):
+  )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]):
     def apply[A](
       modelGet:  ConstraintSet => A,
       modelMod:  (A => A) => ConstraintSet => ConstraintSet,
@@ -56,6 +58,7 @@ object ConstraintsQueries:
                 )
               )
             )
+            .toastErrors
             .void
             .runAsync
         )
