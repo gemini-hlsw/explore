@@ -11,6 +11,7 @@ import cats.syntax.all.*
 import eu.timepit.refined.*
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosBigDecimal
+import eu.timepit.refined.types.numeric.PosInt
 import explore.events.ItcMessage
 import explore.model.BasicConfigAndItc
 import explore.model.TargetList
@@ -19,6 +20,7 @@ import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.ItcChartResult
 import explore.model.itc.ItcQueryProblems
+import explore.model.itc.ItcResult
 import explore.model.itc.ItcTarget
 import explore.model.itc.OverridenExposureTime
 import explore.modes.GmosNorthSpectroscopyRow
@@ -57,6 +59,11 @@ case class ItcPanelProps(
         case None    => (none, none)
       }
   }
+
+  val finalSelectedConfig =
+    (finalConfig, finalExposure).mapN((c, t) =>
+      BasicConfigAndItc(c, ItcResult.Result(t.time, PosInt.unsafeFrom(t.count.value)).asRight.some)
+    )
 
   val signalToNoiseAt: Option[Wavelength] = spectroscopyRequirements.flatMap(_.signalToNoiseAt)
 
