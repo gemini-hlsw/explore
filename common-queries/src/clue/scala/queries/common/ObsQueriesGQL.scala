@@ -145,14 +145,10 @@ object ObsQueriesGQL:
       }
     """
 
-    object Scalars:
-      type SignalToNoise = lucuma.core.math.SignalToNoise
-
     object Data:
       object Itc:
         object Result:
           type ExposureTime = lucuma.core.util.TimeSpan
-          type Exposures    = NonNegInt
 
       object Sequence:
         type ExecutionConfig = explore.model.ExecutionOffsets
