@@ -22,7 +22,6 @@ import explore.model.ProgramSummaries
 import explore.model.TargetList
 import explore.model.TargetWithObs
 import explore.model.TargetWithObsList
-import explore.model.syntax.all.*
 import japgolly.scalajs.react.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
@@ -36,15 +35,6 @@ import queries.common.AsterismQueriesGQL.*
 import queries.common.ObsQueriesGQL.*
 
 object AsterismQueries:
-  private val queryToAsterismGroupWithObsGetter
-    : Getter[AsterismGroupObsQuery.Data, ProgramSummaries] = data =>
-    ProgramSummaries(
-      data.targets.matches.toSortedMap(_.id, _.target),
-      KeyedIndexedList.fromList(data.observations.matches, ObsSummary.id.get)
-    )
-
-  extension (self: AsterismGroupObsQuery.Data.type)
-    def asAsterismGroupWithObs = queryToAsterismGroupWithObsGetter
 
   def replaceAsterism[F[_]: Async](
     programId: Program.Id,

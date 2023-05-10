@@ -5,29 +5,12 @@ package queries.common
 
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
-import explore.model
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.odb.*
 
-import java.time
 // gql: import lucuma.schemas.decoders.given
 
 object AsterismQueriesGQL {
-  @GraphQL
-  trait AsterismGroupObsQuery extends GraphQLOperation[ObservationDB] {
-    val document: String = s"""
-      query($$programId: ProgramId!) {
-        targets(WHERE: {programId: { EQ: $$programId }}) {
-          matches $TargetWithIdSubquery
-        }
-
-        observations(programId: $$programId) {
-          matches $ObservationSummarySubquery
-        }
-      }
-    """
-  }
-
   @GraphQL
   trait UpdateAsterismsMutation extends GraphQLOperation[ObservationDB] {
     val document = """

@@ -8,8 +8,11 @@ import cats.Order.given
 import cats.data.NonEmptySet
 import cats.derived.*
 import cats.implicits.*
+import explore.data.KeyedIndexedList
+import explore.model.syntax.all.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
+import lucuma.schemas.model.TargetWithId
 import monocle.Focus
 import monocle.Lens
 
@@ -73,3 +76,9 @@ object ProgramSummaries:
   val targets: Lens[ProgramSummaries, TargetList]           = Focus[ProgramSummaries](_.targets)
   val observations: Lens[ProgramSummaries, ObservationList] =
     Focus[ProgramSummaries](_.observations)
+
+  def fromLists(targetList: List[TargetWithId], obsList: List[ObsSummary]): ProgramSummaries =
+    ProgramSummaries(
+      targetList.toSortedMap(_.id, _.target),
+      KeyedIndexedList.fromList(obsList, ObsSummary.id.get)
+    )
