@@ -108,7 +108,7 @@ object ITCRequests:
             }
         }
 
-    val cacheVersion = CacheVersion(2)
+    val cacheVersion = CacheVersion(3)
 
     val cacheableRequest = Cacheable(CacheName("itcQuery"), cacheVersion, doRequest)
 
