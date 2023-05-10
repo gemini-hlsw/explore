@@ -6,6 +6,7 @@ package explore.model
 import cats.syntax.all.*
 import eu.timepit.refined.cats.*
 import explore.model.enums.RoleType
+import explore.model.itc.ItcQueryProblems
 import lucuma.core.enums.*
 import lucuma.core.math.BoundedInterval
 import lucuma.core.math.BoundedInterval.*
@@ -179,6 +180,15 @@ trait DisplayImplicits:
     case ChartType.SignalChart      => "Signal"
     case ChartType.SignalPixelChart => "Pixel"
     case ChartType.S2NChart         => "S/N"
+  }
+
+  given Display[ItcQueryProblems] = Display.byShortName {
+    case ItcQueryProblems.UnsupportedMode      => "Mode not supported"
+    case ItcQueryProblems.MissingWavelength    => "Provide a wavelength"
+    case ItcQueryProblems.MissingSignalToNoise => "Provide a signal to noise"
+    case ItcQueryProblems.MissingTargetInfo    => "Target information is missing"
+    case ItcQueryProblems.MissingBrightness    => "Target brightness is missing"
+    case ItcQueryProblems.GenericError(e)      => e
   }
 
 object display extends DisplayImplicits

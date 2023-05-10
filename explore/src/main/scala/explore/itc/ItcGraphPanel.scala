@@ -30,6 +30,7 @@ import explore.model.TargetList
 import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.ItcPicklers.given
+import explore.model.display.given
 import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.ItcChartResult
 import explore.model.itc.ItcQueryProblems
@@ -54,7 +55,6 @@ import lucuma.core.util.Display
 import lucuma.itc.ChartType
 import lucuma.itc.client.OptimizedChartResult
 import lucuma.itc.client.OptimizedSeriesResult
-import lucuma.schemas.model.ObservingMode
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.pot.*
@@ -62,30 +62,19 @@ import monocle.Focus
 import monocle.Lens
 import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.itc.syntax.*
-import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
 
 import java.util.UUID
 
 case class ItcGraphPanel(
-  uid:                      User.Id,
-  oid:                      Observation.Id,
-  observingMode:            Option[ObservingMode],
-  spectroscopyRequirements: Option[SpectroscopyRequirementsData],
-  scienceData:              Option[ScienceData],
-  exposure:                 Option[ItcChartExposureTime],
-  selectedTarget:           View[Option[ItcTarget]],
-  selectedConfig:           Option[BasicConfigAndItc], // selected row in spectroscopy modes table
-  allTargets:               TargetList
+  uid:             User.Id,
+  oid:             Observation.Id,
+  selectedTarget:  View[Option[ItcTarget]],
+  selectedConfig:  Option[BasicConfigAndItc], // selected row in spectroscopy modes table
+  itcProps:        ItcPanelProps,
+  itcChartResults: Pot[Map[ItcTarget, ItcChartResult]],
+  itcLoading:      LoadingState
 ) extends ReactFnProps(ItcGraphPanel.component)
-    with ItcPanelProps(
-      observingMode,
-      spectroscopyRequirements,
-      scienceData,
-      exposure,
-      selectedConfig,
-      allTargets
-    )
 
 case class ItcGraphProperties(chartType: ChartType, detailsShown: PlotDetails)
 object ItcGraphProperties:
@@ -96,86 +85,45 @@ object ItcGraphProperties:
     Focus[ItcGraphProperties](_.detailsShown)
 
 object ItcGraphPanel:
-  private type Props = ItcGraphPanel with ItcPanelProps
+  private type Props = ItcGraphPanel
 
   private given Reusability[PlotDetails]        = Reusability.byEq
   private given Reusability[ItcGraphProperties] = Reusability.by(x => (x.chartType, x.detailsShown))
-
-  private given Display[ItcQueryProblems] = Display.byShortName {
-    case ItcQueryProblems.UnsupportedMode      => "Mode not supported"
-    case ItcQueryProblems.MissingWavelength    => "Provide a wavelength"
-    case ItcQueryProblems.MissingSignalToNoise => "Provide a signal to noise"
-    case ItcQueryProblems.MissingTargetInfo    => "Target information is missing"
-    case ItcQueryProblems.MissingBrightness    => "Target brightness is missing"
-    case ItcQueryProblems.GenericError(e)      => e
-  }
 
   private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      .useState(Pot.pending[Map[ItcTarget, ItcChartResult]])
-      // loading
-      .useState(LoadingState.Done)
-      // Request ITC graph data
-      .useEffectWithDepsBy((props, _, _, _) => props.queryProps) {
-        (props, ctx, charts, loading) => _ =>
-          import ctx.given
-
-          props
-            .requestITCData(
-              m =>
-                charts.modStateAsync {
-                  case Pot.Ready(r) =>
-                    m.bimap(
-                      e => Pot.error(new RuntimeException(e.shortName)),
-                      v => Pot.Ready(r + (v.target -> v))
-                    ).merge
-                  case _            =>
-                    m.bimap(
-                      e => Pot.error(new RuntimeException(e.shortName)),
-                      v => Pot.Ready(Map(v.target -> v))
-                    ).merge
-                } *> loading.setState(LoadingState.Done).to[IO],
-              (charts.setState(
-                Pot.error(new RuntimeException("Not enough information to calculate the ITC graph"))
-              ) *> loading.setState(LoadingState.Done)).to[IO],
-              loading.setState(LoadingState.Loading).to[IO]
-            )
-            .runAsyncAndForget
-      }
       // Graph properties
       .useStateView(Pot.pending[ItcGraphProperties])
       // Read preferences
-      .useEffectWithDepsBy((props, _, _, _, _) => (props.uid, props.oid)) {
-        (props, ctx, _, _, settings) => _ =>
-          import ctx.given
+      .useEffectWithDepsBy((props, _, _) => (props.uid, props.oid)) { (props, ctx, settings) => _ =>
+        import ctx.given
 
-          ItcPlotPreferences
-            .queryWithDefault[IO](props.uid, props.oid)
-            .flatMap { (plotType, showDetails) =>
-              settings.set(ItcGraphProperties(plotType, showDetails).ready).to[IO]
-            }
-            .runAsyncAndForget
+        ItcPlotPreferences
+          .queryWithDefault[IO](props.uid, props.oid)
+          .flatMap { (plotType, showDetails) =>
+            settings.set(ItcGraphProperties(plotType, showDetails).ready).to[IO]
+          }
+          .runAsyncAndForget
       }
       // Write preferences
-      .useEffectWithDepsBy((_, _, _, _, settings) => settings.get) {
-        (props, ctx, _, _, _) => settings =>
-          import ctx.given
+      .useEffectWithDepsBy((_, _, settings) => settings.get) { (props, ctx, _) => settings =>
+        import ctx.given
 
-          settings.toOption
-            .map(settings =>
-              ItcPlotPreferences
-                .updatePlotPreferences[IO](props.uid,
-                                           props.oid,
-                                           settings.chartType,
-                                           settings.detailsShown
-                )
-                .runAsyncAndForget
-            )
-            .getOrEmpty
+        settings.toOption
+          .map(settings =>
+            ItcPlotPreferences
+              .updatePlotPreferences[IO](props.uid,
+                                         props.oid,
+                                         settings.chartType,
+                                         settings.detailsShown
+              )
+              .runAsyncAndForget
+          )
+          .getOrEmpty
       }
-      .render { (props, _, results, loading, settings) =>
+      .render { (props, _, settings) =>
         val chartTypeView =
           settings.zoom(Pot.readyPrism.andThen(ItcGraphProperties.chartType))
 
@@ -184,23 +132,32 @@ object ItcGraphPanel:
 
         val renderPlot: ItcGraphProperties => VdomNode =
           (opt: ItcGraphProperties) =>
-            val error: Option[String] = results.value.fold(none, _.getMessage.some, _ => none)
+            val isModeSelected        = props.selectedConfig.isDefined
+            val error: Option[String] =
+              props.itcChartResults.fold(
+                "Select a mode to plot".some.filterNot(_ => isModeSelected),
+                _.getMessage.some,
+                _ => none
+              )
 
             val selectedResult: Option[ItcChartResult] =
-              props.selectedTarget.get.flatMap(t => results.value.toOption.flatMap(_.get(t)))
+              props.selectedTarget.get
+                .flatMap(t => props.itcChartResults.toOption.flatMap(_.get(t)))
 
             <.div(
               ExploreStyles.ItcPlotSection,
               ExploreStyles.ItcPlotDetailsHidden.unless(opt.detailsShown.value),
-              ItcSpectroscopyPlotDescription(props.chartExposureTime, selectedResult.map(_.ccds)),
+              ItcSpectroscopyPlotDescription(props.itcProps.chartExposureTime,
+                                             selectedResult.map(_.ccds)
+              ),
               ItcSpectroscopyPlot(
                 selectedResult.map(_.ccds),
                 selectedResult.map(_.charts),
                 error,
                 opt.chartType,
                 props.selectedTarget.get.map(_.name.value),
-                props.signalToNoiseAt,
-                loading.value,
+                props.itcProps.signalToNoiseAt,
+                props.itcLoading,
                 opt.detailsShown
               ),
               ItcPlotControl(chartTypeView, detailsView)

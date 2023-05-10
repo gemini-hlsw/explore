@@ -10,6 +10,8 @@ import explore.model.display.given
 import explore.model.itc.PlotDetails
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.util.Display
+import lucuma.core.util.Enumerated
 import lucuma.itc.ChartType
 import lucuma.refined.*
 import lucuma.ui.primereact.SelectButtonEnumView
@@ -17,6 +19,7 @@ import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import monocle.Prism
 import react.common.ReactFnProps
 import react.primereact.Button
 import react.primereact.SelectButton
@@ -27,15 +30,30 @@ case class ItcPlotControl(
   showDetails: ViewOpt[PlotDetails]
 ) extends ReactFnProps[ItcPlotControl](ItcPlotControl.component)
 
+enum AllowedChartType(val tag: String) derives Enumerated:
+  case S2N    extends AllowedChartType("sn")
+  case Signal extends AllowedChartType("signal")
+
 object ItcPlotControl:
   private type Props = ItcPlotControl
 
+  private given Display[AllowedChartType] = Display.byShortName {
+    case AllowedChartType.S2N    => "S/N"
+    case AllowedChartType.Signal => "Signal"
+  }
+
+  private val typePrism: Prism[ChartType, AllowedChartType] = Prism[ChartType, AllowedChartType] {
+    case ChartType.S2NChart    => Some(AllowedChartType.S2N)
+    case ChartType.SignalChart => Some(AllowedChartType.Signal)
+    case _                     => None
+  } {
+    case AllowedChartType.S2N    => ChartType.S2NChart
+    case AllowedChartType.Signal => ChartType.SignalChart
+  }
+
   private val component = ScalaFnComponent[Props] { props =>
-    val descText             = if (props.showDetails.get.exists(_.value)) "Hide details" else "Show details"
-    def label(ch: ChartType) = ch match
-      case ChartType.S2NChart         => "S/N"
-      case ChartType.SignalPixelChart => "Pixel"
-      case ChartType.SignalChart      => "Signal"
+    val descText     = if (props.showDetails.get.exists(_.value)) "Hide details" else "Show details"
+    val allowedChart = props.chartType.zoom(typePrism).asView
 
     <.div(
       ExploreStyles.ItcPlotControls,
@@ -46,7 +64,7 @@ object ItcPlotControl:
         },
         label = descText
       ).tiny.compact,
-      props.chartType.asView.map { ct =>
+      allowedChart.map { ct =>
         SelectButtonEnumView(
           "itc-plot-type".refined,
           ct,

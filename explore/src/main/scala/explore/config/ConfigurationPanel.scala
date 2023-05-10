@@ -86,7 +86,7 @@ object ConfigurationPanel:
 
   extension [A](input: Input[A])
     /**
-     * If the Input is not `Assing[A]`, create a new Input with the parameter and `assign` it.
+     * If the Input is not `Assign[A]`, create a new Input with the parameter and `assign` it.
      */
     def orAssign(ifNotAssigned: => A): Input[A] = input match
       case Assign(_) => input
