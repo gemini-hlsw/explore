@@ -6,30 +6,30 @@ package explore.cache
 import cats.Order.given
 import cats.effect.IO
 import cats.effect.kernel.Resource
-import cats.syntax.all.given
+import cats.syntax.all.*
 import clue.StreamingClient
+import clue.data.syntax.*
 import explore.DefaultErrorPolicy
 import explore.common.AsterismQueries.*
+import explore.model.ObsSummary
 import explore.model.ProgramSummaries
 import explore.model.TargetWithObs
 import explore.model.reusability.given
 import japgolly.scalajs.react.*
+import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Enums.Existence
+import lucuma.schemas.model.TargetWithId
 import lucuma.ui.reusability.given
 import monocle.Focus
 import monocle.Lens
-import queries.common.AsterismQueriesGQL
-import queries.common.AsterismQueriesGQL.AsterismGroupObsQuery
 import queries.common.ObsQueriesGQL
 import queries.common.ObsQueriesGQL.ObsEditQuery.Data.observation
+import queries.common.ProgramSummaryQueriesGQL
 import queries.common.TargetQueriesGQL
 import react.common.ReactFnProps
-
-import scala.collection.immutable.SortedMap
-import scala.collection.immutable.SortedSet
 
 case class ProgramCache(
   programId:           Program.Id,
@@ -43,13 +43,47 @@ case class ProgramCache(
 object ProgramCache extends CacheComponent[ProgramSummaries, ProgramCache]:
   given Reusability[ProgramCache] = Reusability.by(_.programId)
 
+  private def drain[A, Id, R](
+    fetch:      Option[Id] => IO[R],
+    getList:    R => List[A],
+    getHasMore: R => Boolean,
+    getId:      A => Id
+  ): IO[List[A]] = {
+    def go(id: Option[Id], accum: List[A]): IO[List[A]] =
+      fetch(id).flatMap(result =>
+        val list = getList(result)
+        if (getHasMore(result)) go(list.lastOption.map(getId), list)
+        // Fetching with offset includes the offset, so .dropRight(1) ensures we don't include it twice.
+        else (accum.dropRight(1) ++ list).pure[IO]
+      )
+
+    go(none, List.empty)
+  }
+
   override protected val initial: ProgramCache => IO[ProgramSummaries] = props =>
     import props.given
 
-    AsterismQueriesGQL
-      .AsterismGroupObsQuery[IO]
-      .query(props.programId)
-      .map(AsterismGroupObsQuery.Data.asAsterismGroupWithObs.get)
+    val targets: IO[List[TargetWithId]] =
+      drain[TargetWithId, Target.Id, ProgramSummaryQueriesGQL.AllProgramTargets.Data](
+        offset =>
+          ProgramSummaryQueriesGQL.AllProgramTargets[IO].query(props.programId, offset.orUnassign),
+        _.targets.matches,
+        _.targets.hasMore,
+        _.id
+      )
+
+    val observations: IO[List[ObsSummary]] =
+      drain[ObsSummary, Observation.Id, ProgramSummaryQueriesGQL.AllProgramObservations.Data](
+        offset =>
+          ProgramSummaryQueriesGQL
+            .AllProgramObservations[IO]
+            .query(props.programId, offset.orUnassign),
+        _.observations.matches,
+        _.observations.hasMore,
+        _.id
+      )
+
+    (targets, observations).mapN(ProgramSummaries.fromLists)
 
   override protected val updateStream: ProgramCache => Resource[
     cats.effect.IO,
