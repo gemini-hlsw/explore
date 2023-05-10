@@ -71,8 +71,7 @@ object ObsQueries:
     targets:            Targets,
     posAngle:           PosAngleConstraint,
     scienceOffsets:     Option[NonEmptyList[Offset]],
-    acquisitionOffsets: Option[NonEmptyList[Offset]],
-    potITC:             Pot[Option[OdbItcResult.Success]]
+    acquisitionOffsets: Option[NonEmptyList[Offset]]
   ) derives Eq
 
   object ScienceData {
@@ -86,8 +85,6 @@ object ObsQueries:
       Focus[ScienceData](_.constraints)
     val posAngle: Lens[ScienceData, PosAngleConstraint]                     =
       Focus[ScienceData](_.posAngle)
-    val potITC: Lens[ScienceData, Pot[Option[OdbItcResult.Success]]]        =
-      Focus[ScienceData](_.potITC)
     val scienceOffsets: Lens[ScienceData, Option[NonEmptyList[Offset]]]     =
       Focus[ScienceData](_.scienceOffsets)
     val acquisitionOffsets: Lens[ScienceData, Option[NonEmptyList[Offset]]] =
@@ -100,7 +97,8 @@ object ObsQueries:
     subtitle:          Option[NonEmptyString],
     visualizationTime: Option[Instant],
     scienceData:       ScienceData,
-    itcExposureTime:   Option[FixedExposureMode]
+    itcExposureTime:   Option[FixedExposureMode],
+    itc:               Option[OdbItcResult.Success]
   )
 
   object ObsEditData {
@@ -109,18 +107,23 @@ object ObsQueries:
     val visualizationTime: Lens[ObsEditData, Option[Instant]] =
       Focus[ObsEditData](_.visualizationTime)
     val scienceData: Lens[ObsEditData, ScienceData]           = Focus[ObsEditData](_.scienceData)
+    val itc: Lens[ObsEditData, Option[OdbItcResult.Success]]  =
+      Focus[ObsEditData](_.itc)
   }
 
   extension (data: ObsEditQuery.Data)
     def asObsEditData: Option[ObsEditData] =
+      val itc = data.itc.map(i =>
+        OdbItcResult.Success(i.result.exposureTime, i.result.exposures, i.result.signalToNoise)
+      )
       data.observation.map { obs =>
-        val itcSuccess = none[OdbItcResult.Success]
         ObsEditData(
           id = obs.id,
           title = obs.title,
           subtitle = obs.subtitle,
           visualizationTime = obs.visualizationTime.map(_.toInstant),
-          itcExposureTime = itcSuccess.map(_.asFixedExposureTime),
+          itcExposureTime = none,
+          itc = itc,
           scienceData = ScienceData(
             requirements = obs.scienceRequirements,
             mode = obs.observingMode,
@@ -132,8 +135,7 @@ object ObsQueries:
             ),
             acquisitionOffsets = NonEmptyList.fromList(
               data.sequence.foldMap(_.executionConfig.allAcquisitionOffsets).distinct
-            ),
-            potITC = Pot(itcSuccess)
+            )
           )
         )
       }

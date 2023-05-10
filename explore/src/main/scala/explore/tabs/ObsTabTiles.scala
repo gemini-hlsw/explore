@@ -15,6 +15,7 @@ import crystal.implicits.*
 import crystal.react.*
 import crystal.react.hooks.*
 import crystal.react.implicits.*
+import eu.timepit.refined.types.numeric.PosInt
 import explore.*
 import explore.common.TimingWindowsQueries
 import explore.components.Tile
@@ -130,6 +131,7 @@ object ObsTabTiles:
         _.get.itcExposureTime
           .map(r => ItcChartExposureTime(OverridenExposureTime.FromItc, r.time, r.count))
       )
+      .orElse(obsView.toOption.flatMap(_.get.itc.map(_.toItcChartExposureTime)))
     (obsViewPot, scienceData, observingMode, scienceReqs, chartExposureTime)
 
   private def itcQueryProps(
@@ -297,7 +299,7 @@ object ObsTabTiles:
               props.userId,
               props.obsId,
               chartExposureTime,
-              selectedConfig.get,
+              selectedConfig.get.orElse(itcProps.value.finalSelectedConfig),
               selectedItcTarget,
               props.allTargets,
               itcProps.value,

@@ -8,9 +8,12 @@ import cats.derived.*
 import eu.timepit.refined.cats.given
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosBigDecimal
+import explore.model.itc.ItcChartExposureTime
+import explore.model.itc.OverridenExposureTime
 import io.circe.Decoder
 import io.circe.generic.semiauto
 import io.circe.refined.*
+import lucuma.core.math.SignalToNoise
 import lucuma.core.util.TimeSpan
 import lucuma.schemas.decoders.given
 import monocle.Focus
@@ -26,9 +29,12 @@ object OdbItcResult {
   case class Success(
     exposureTime:  TimeSpan,
     exposures:     NonNegInt,
-    signalToNoise: PosBigDecimal
+    signalToNoise: SignalToNoise
   ) extends OdbItcResult
-      derives Eq
+      derives Eq {
+    def toItcChartExposureTime =
+      ItcChartExposureTime(OverridenExposureTime.FromItc, exposureTime, exposures)
+  }
 
   case class MissingParams(
     params: List[String]

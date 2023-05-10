@@ -100,7 +100,6 @@ sealed trait AdvancedConfigurationPanel[T <: ObservingMode, Input]:
   def subtitle: Option[NonEmptyString]
   def observingMode: Aligner[T, Input]
   def spectroscopyRequirements: SpectroscopyRequirementsData
-  def potITC: View[Pot[Option[OdbItcResult.Success]]]
   def deleteConfig: Callback
   def confMatrix: SpectroscopyModesMatrix
   def selectedConfig: View[Option[BasicConfigAndItc]]
@@ -544,7 +543,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
         }
 
         val invalidateITC: Callback =
-          props.potITC.set(Pot.pending[Option[OdbItcResult.Success]])
+          Callback.empty
 
         // val originalSignalToNoiseText =
         //   props.spectroscopyRequirements.signalToNoise.fold("None")(sn =>
@@ -867,7 +866,6 @@ object AdvancedConfigurationPanel {
     subtitle:                 Option[NonEmptyString],
     observingMode:            Aligner[ObservingMode.GmosNorthLongSlit, GmosNorthLongSlitInput],
     spectroscopyRequirements: SpectroscopyRequirementsData,
-    potITC:                   View[Pot[Option[OdbItcResult.Success]]],
     deleteConfig:             Callback,
     confMatrix:               SpectroscopyModesMatrix,
     selectedConfig:           View[Option[BasicConfigAndItc]]
@@ -1071,7 +1069,6 @@ object AdvancedConfigurationPanel {
     subtitle:                 Option[NonEmptyString],
     observingMode:            Aligner[ObservingMode.GmosSouthLongSlit, GmosSouthLongSlitInput],
     spectroscopyRequirements: SpectroscopyRequirementsData,
-    potITC:                   View[Pot[Option[OdbItcResult.Success]]],
     deleteConfig:             Callback,
     confMatrix:               SpectroscopyModesMatrix,
     selectedConfig:           View[Option[BasicConfigAndItc]]

@@ -257,7 +257,6 @@ object ConfigurationPanel:
                       props.subtitle,
                       northAligner,
                       requirementsCtx.model.get.spectroscopy,
-                      props.scienceData.model.zoom(ScienceData.potITC),
                       deleteConfiguration,
                       confMatrix,
                       props.selectedConfig
@@ -273,7 +272,6 @@ object ConfigurationPanel:
                       props.subtitle,
                       southAligner,
                       requirementsCtx.model.get.spectroscopy,
-                      props.scienceData.model.zoom(ScienceData.potITC),
                       deleteConfiguration,
                       confMatrix,
                       props.selectedConfig

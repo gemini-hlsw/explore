@@ -6,6 +6,7 @@ package queries.common
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import explore.model
+import eu.timepit.refined.types.numeric.NonNegInt
 import lucuma.core.{model => coreModel}
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.odb.*
@@ -75,6 +76,16 @@ object ObsQueriesGQL:
           observingMode $ObservingModeSubquery
         }
 
+        itc(programId: $$programId, observationId: $$obsId) {
+          result {
+            exposureTime {
+              milliseconds
+            }
+            exposures
+            signalToNoise
+          }
+        }
+
         sequence(programId: $$programId, observationId: $$obsId) {
           executionConfig {
             ... on GmosSouthExecutionConfig {
@@ -134,7 +145,15 @@ object ObsQueriesGQL:
       }
     """
 
+    object Scalars:
+      type SignalToNoise = lucuma.core.math.SignalToNoise
+
     object Data:
+      object Itc:
+        object Result:
+          type ExposureTime = lucuma.core.util.TimeSpan
+          type Exposures    = NonNegInt
+
       object Sequence:
         type ExecutionConfig = explore.model.ExecutionOffsets
 
