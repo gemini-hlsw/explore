@@ -529,7 +529,7 @@ private object SpectroscopyModesTable extends TableHooks:
       // atTop
       .useState(false)
       // Recalculate ITC values if the wv or sn change or if the rows get modified
-      .useStreamResourceBy((props, _, _, rows, _, _, _, _, _, _, _, _, _) =>
+      .useEffectWithDepsBy((props, _, _, rows, _, _, _, _, _, _, _, _, _) =>
         (
           props.spectroscopyRequirements.wavelength,
           props.spectroscopyRequirements.signalToNoise,
@@ -602,11 +602,12 @@ private object SpectroscopyModesTable extends TableHooks:
             }
             .flatten
             .getOrElse(Resource.pure(fs2.Stream()))
+            .use(_.compile.drain)
       }
       .useRef(none[HTMLTableVirtualizer])
       // scroll to the currently selected row.
-      .useEffectWithDepsBy((_, _, _, _, _, _, _, _, scrollTo, _, _, _, _, _, _) => scrollTo) {
-        (_, _, _, _, _, _, _, _, _, _, selectedIndex, _, _, _, virtualizerRef) => scrollTo =>
+      .useEffectWithDepsBy((_, _, _, _, _, _, _, _, scrollTo, _, _, _, _, _) => scrollTo) {
+        (_, _, _, _, _, _, _, _, _, _, selectedIndex, _, _, virtualizerRef) => scrollTo =>
           if (scrollTo.value === ScrollTo.Scroll) {
             virtualizerRef.get.flatMap(refOpt =>
               Callback(
@@ -633,7 +634,6 @@ private object SpectroscopyModesTable extends TableHooks:
           selectedIndex,
           visibleRows,
           atTop,
-          _,
           virtualizerRef
         ) =>
 

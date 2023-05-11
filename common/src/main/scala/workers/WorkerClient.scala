@@ -29,10 +29,8 @@ class WorkerClient[F[_]: Concurrent: UUIDGen: Logger, R: Pickler] private (
     worker.streamResource
       .use(
         _.map(decodeFromTransferableEither[FromServer]).rethrow
-          .collectFirst { case FromServer.ServerReady =>
-            initLatch.complete(())
-          }
-          .evalMap(identity)
+          .collectFirst { case FromServer.ServerReady => initLatch.complete(()) }
+          .evalMap(identity) // Runs latch.complete
           .compile
           .drain
       )
@@ -70,7 +68,7 @@ class WorkerClient[F[_]: Concurrent: UUIDGen: Logger, R: Pickler] private (
         case FromServer.Complete(mid) if mid === id      =>
           none
         case FromServer.Error(mid, error) if mid === id  =>
-          throw error
+          error.asLeft.some
       }
       .evalTap(msg => Logger[F].debug(s"<<< Received msg from server with id [$id]: [$msg]"))
       .unNoneTerminate
