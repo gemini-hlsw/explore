@@ -125,10 +125,12 @@ case class ItcPanelProps(
         mode        <- instrumentRow
       yield beforeStart *>
         ItcClient[IO]
-          .request(
-            ItcMessage.GraphQuery(w, ex.time, exposures, constraints, t, mode)
+          .requestSingle(ItcMessage.GraphQuery(w, ex.time, exposures, constraints, t, mode))
+          .flatMap(
+            _.fold(
+              onComplete(ItcQueryProblems.GenericError("No response from ITC server").asLeft)
+            )(onComplete)
           )
-          .use(_.evalMap(onComplete).compile.drain)
     action.getOrElse(orElse)
 
 object ItcPanelProps:
