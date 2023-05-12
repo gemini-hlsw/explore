@@ -35,8 +35,15 @@ object ObservationSummarySubquery
           scienceRequirements {
             spectroscopy {
               wavelength $WavelengthSubquery
+              resolution
+              signalToNoise
+              signalToNoiseAt $WavelengthSubquery
+              wavelengthCoverage $WavelengthDeltaSubquery
+              focalPlane
+              focalPlaneAngle $AngleSubquery
+              capability
             }
           }
-          observingMode $BasicConfigurationSubquery
+          observingMode $ObservingModeSubquery
         }
       """

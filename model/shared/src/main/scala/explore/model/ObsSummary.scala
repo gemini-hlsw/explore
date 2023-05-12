@@ -32,40 +32,53 @@ import org.typelevel.cats.time.*
 
 import java.time.Instant
 import scala.collection.immutable.SortedSet
+import lucuma.schemas.ObservationDB.Types.ScienceRequirementsInput
+import lucuma.schemas.model.ObservingMode
 
+// TODO Rename to Observation??
 case class ObsSummary(
-  id:                 Observation.Id,
-  title:              String,
-  subtitle:           Option[NonEmptyString],
-  status:             ObsStatus,
-  activeStatus:       ObsActiveStatus,
-  executionTime:      TimeSpan,
-  scienceTargetIds:   SortedSet[Target.Id],
-  constraints:        ConstraintSet,
-  timingWindows:      List[TimingWindow],
-  configuration:      Option[BasicConfiguration],
-  visualizationTime:  Option[Instant],
-  posAngleConstraint: Option[PosAngleConstraint],
-  wavelength:         Option[Wavelength]
+  id:                  Observation.Id,
+  title:               String,
+  subtitle:            Option[NonEmptyString],
+  status:              ObsStatus,
+  activeStatus:        ObsActiveStatus,
+  executionTime:       TimeSpan,
+  scienceTargetIds:    SortedSet[Target.Id],
+  constraints:         ConstraintSet,
+  timingWindows:       List[TimingWindow],
+  //
+  scienceRequirements: ScienceRequirements,
+  observingMode:       Option[ObservingMode],
+  //
+  visualizationTime:   Option[Instant],
+  posAngleConstraint:  Option[PosAngleConstraint],
+  wavelength:          Option[Wavelength]
 ) derives Eq:
-  lazy val configurationSummary: Option[String] = configuration.map(_.configurationSummary)
+  lazy val configurationSummary: Option[String] = observingMode.map(_.toBasicConfiguration) match
+    case Some(BasicConfiguration.GmosNorthLongSlit(grating, _, fpu, _)) =>
+      s"GMOS-N ${grating.shortName} ${fpu.shortName}".some
+    case Some(BasicConfiguration.GmosSouthLongSlit(grating, _, fpu, _)) =>
+      s"GMOS-S ${grating.shortName} ${fpu.shortName}".some
+    case _                                                              =>
+      none
 
   lazy val constraintsSummary: String =
     s"${constraints.imageQuality.label} ${constraints.cloudExtinction.label} ${constraints.skyBackground.label} ${constraints.waterVapor.label}"
 
 object ObsSummary:
-  val id                 = Focus[ObsSummary](_.id)
-  val title              = Focus[ObsSummary](_.title)
-  val subtitle           = Focus[ObsSummary](_.subtitle)
-  val status             = Focus[ObsSummary](_.status)
-  val activeStatus       = Focus[ObsSummary](_.activeStatus)
-  val scienceTargetIds   = Focus[ObsSummary](_.scienceTargetIds)
-  val constraints        = Focus[ObsSummary](_.constraints)
-  val timingWindows      = Focus[ObsSummary](_.timingWindows)
-  val configuration      = Focus[ObsSummary](_.configuration)
-  val visualizationTime  = Focus[ObsSummary](_.visualizationTime)
-  val posAngleConstraint = Focus[ObsSummary](_.posAngleConstraint)
-  val wavelength         = Focus[ObsSummary](_.wavelength)
+  val id                  = Focus[ObsSummary](_.id)
+  val title               = Focus[ObsSummary](_.title)
+  val subtitle            = Focus[ObsSummary](_.subtitle)
+  val status              = Focus[ObsSummary](_.status)
+  val activeStatus        = Focus[ObsSummary](_.activeStatus)
+  val scienceTargetIds    = Focus[ObsSummary](_.scienceTargetIds)
+  val constraints         = Focus[ObsSummary](_.constraints)
+  val timingWindows       = Focus[ObsSummary](_.timingWindows)
+  val scienceRequirements = Focus[ObsSummary](_.scienceRequirements)
+  val observingMode       = Focus[ObsSummary](_.observingMode)
+  val visualizationTime   = Focus[ObsSummary](_.visualizationTime)
+  val posAngleConstraint  = Focus[ObsSummary](_.posAngleConstraint)
+  val wavelength          = Focus[ObsSummary](_.wavelength)
 
   private case class TargetIdWrapper(id: Target.Id)
   private object TargetIdWrapper:
@@ -73,21 +86,22 @@ object ObsSummary:
 
   given Decoder[ObsSummary] = Decoder.instance(c =>
     for {
-      id                 <- c.get[Observation.Id]("id")
-      title              <- c.get[String]("title")
-      subtitle           <- c.get[Option[NonEmptyString]]("subtitle")
-      status             <- c.get[ObsStatus]("status")
-      activeStatus       <- c.get[ObsActiveStatus]("activeStatus")
-      executionTime      <- c.downField("plannedTime").get[TimeSpan]("execution")
-      scienceTargetIds   <- c.downField("targetEnvironment").get[List[TargetIdWrapper]]("asterism")
-      constraints        <- c.get[ConstraintSet]("constraintSet")
-      timingWindows      <- c.get[List[TimingWindow]]("timingWindows")
-      observingMode      <- c.get[Option[BasicConfiguration]]("observingMode")
-      visualizationTime  <- c.get[Option[Timestamp]]("visualizationTime")
-      posAngleConstraint <- c.get[Option[PosAngleConstraint]]("posAngleConstraint")
-      wavelength         <- c.downField("scienceRequirements")
-                              .downField("spectroscopy")
-                              .get[Option[Wavelength]]("wavelength")
+      id                  <- c.get[Observation.Id]("id")
+      title               <- c.get[String]("title")
+      subtitle            <- c.get[Option[NonEmptyString]]("subtitle")
+      status              <- c.get[ObsStatus]("status")
+      activeStatus        <- c.get[ObsActiveStatus]("activeStatus")
+      executionTime       <- c.downField("plannedTime").get[TimeSpan]("execution")
+      scienceTargetIds    <- c.downField("targetEnvironment").get[List[TargetIdWrapper]]("asterism")
+      constraints         <- c.get[ConstraintSet]("constraintSet")
+      timingWindows       <- c.get[List[TimingWindow]]("timingWindows")
+      scienceRequirements <- c.get[ScienceRequirements]("scienceRequirements")
+      observingMode       <- c.get[Option[ObservingMode]]("observingMode")
+      visualizationTime   <- c.get[Option[Timestamp]]("visualizationTime")
+      posAngleConstraint  <- c.get[Option[PosAngleConstraint]]("posAngleConstraint")
+      wavelength          <- c.downField("scienceRequirements")
+                               .downField("spectroscopy")
+                               .get[Option[Wavelength]]("wavelength")
     } yield ObsSummary(
       id,
       title,
@@ -98,6 +112,7 @@ object ObsSummary:
       SortedSet.from(scienceTargetIds.map(_.id)),
       constraints,
       timingWindows,
+      scienceRequirements,
       observingMode,
       visualizationTime.map(_.toInstant),
       posAngleConstraint,
