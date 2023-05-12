@@ -16,6 +16,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.util.Display
+import lucuma.core.util.Enumerated
 import lucuma.refined.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
@@ -40,7 +41,7 @@ object SideTabs:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      .useStateView(AppTab.all.head)
+      .useStateView(Enumerated[AppTab].all.head)
       .useEffectWithDepsBy((p, _, _) => p.routingInfo.appTab)((_, _, selected) =>
         focus => selected.set(focus)
       )

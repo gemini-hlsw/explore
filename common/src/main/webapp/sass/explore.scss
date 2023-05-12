@@ -2082,22 +2082,6 @@ $help-title-height: 40px;
     table-layout: auto;
   }
 
-  @mixin timing-window-inclusion {
-    font-weight: bold;
-  }
-
-  .timing-window-include {
-    @include timing-window-inclusion;
-
-    color: var(--green-400);
-  }
-
-  .timing-window-exclude {
-    @include timing-window-inclusion;
-
-    color: var(--red-400);
-  }
-
   .timing-window-editor {
     @include react-datepicker-input;
     @include react-datepicker-wrapper;
@@ -2173,6 +2157,22 @@ $help-title-height: 40px;
     grid-area: add;
     align-self: start;
   }
+}
+
+@mixin timing-window-inclusion {
+  font-weight: bold;
+}
+
+.timing-window-include {
+  @include timing-window-inclusion;
+
+  color: var(--green-400);
+}
+
+.timing-window-exclude {
+  @include timing-window-inclusion;
+
+  color: var(--red-400);
 }
 
 // -------------------------
@@ -2592,4 +2592,34 @@ a.explore-upgrade-link {
   /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
   color: var(--text-secondary-color);
   text-decoration: underline;
+}
+
+@mixin obs-group-title-mixin {
+  flex-grow: 2;
+  margin-right: 5px;
+}
+
+.obs-group-title {
+  @include obs-group-title-mixin;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.obs-group-title-with-wrap {
+  @include obs-group-title-mixin;
+
+  white-space: normal;
+  overflow: visible;
+  max-width: 80%;
+  word-wrap: break-word;
+}
+
+.obs-group-title-with-list {
+  @include obs-group-title-mixin;
+
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
 }

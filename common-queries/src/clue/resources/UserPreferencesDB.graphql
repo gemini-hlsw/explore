@@ -1,3 +1,8 @@
+schema {
+  query: query_root
+  mutation: mutation_root
+  subscription: subscription_root
+}
 
 """whether this query should be cached (Hasura Cloud only)"""
 directive @cached(
@@ -786,6 +791,7 @@ enum LucumaGridLayoutIdConstraint {
 enum LucumaGridLayoutIdEnum {
   CONSTRAINTS
   OBSERVATIONS
+  SCHEDULING
   TARGETS
 }
 
@@ -2693,307 +2699,6 @@ input TimestamptzComparisonExp {
   _nin: [timestamptz!]
 }
 
-"""Temporary"""
-type TmpTimingWindows {
-  closeOn: timestamptz
-  forever: Boolean
-  id: Int!
-  include: Boolean!
-  remainOpenFor: Int
-  repeatForever: Boolean
-  repeatPeriod: Int
-  repeatTimes: Int
-  startsOn: timestamptz!
-}
-
-"""
-aggregated selection of "tmpTimingWindows"
-"""
-type TmpTimingWindowsAggregate {
-  aggregate: TmpTimingWindowsAggregateFields
-  nodes: [TmpTimingWindows!]!
-}
-
-"""
-aggregate fields of "tmpTimingWindows"
-"""
-type TmpTimingWindowsAggregateFields {
-  avg: TmpTimingWindowsAvgFields
-  count(columns: [TmpTimingWindowsSelectColumn!], distinct: Boolean): Int!
-  max: TmpTimingWindowsMaxFields
-  min: TmpTimingWindowsMinFields
-  stddev: TmpTimingWindowsStddevFields
-  stddevPop: TmpTimingWindowsStddev_popFields
-  stddevSamp: TmpTimingWindowsStddev_sampFields
-  sum: TmpTimingWindowsSumFields
-  varPop: TmpTimingWindowsVar_popFields
-  varSamp: TmpTimingWindowsVar_sampFields
-  variance: TmpTimingWindowsVarianceFields
-}
-
-"""aggregate avg on columns"""
-type TmpTimingWindowsAvgFields {
-  id: Float
-  remainOpenFor: Float
-  repeatPeriod: Float
-  repeatTimes: Float
-}
-
-"""
-Boolean expression to filter rows from the table "tmpTimingWindows". All fields are combined with a logical 'AND'.
-"""
-input TmpTimingWindowsBoolExp {
-  _and: [TmpTimingWindowsBoolExp!]
-  _not: TmpTimingWindowsBoolExp
-  _or: [TmpTimingWindowsBoolExp!]
-  closeOn: TimestamptzComparisonExp
-  forever: BooleanComparisonExp
-  id: IntComparisonExp
-  include: BooleanComparisonExp
-  remainOpenFor: IntComparisonExp
-  repeatForever: BooleanComparisonExp
-  repeatPeriod: IntComparisonExp
-  repeatTimes: IntComparisonExp
-  startsOn: TimestamptzComparisonExp
-}
-
-"""
-unique or primary key constraints on table "tmpTimingWindows"
-"""
-enum TmpTimingWindowsConstraint {
-  """
-  unique or primary key constraint on columns "id"
-  """
-  tmpTimingWindows_pkey
-}
-
-"""
-input type for incrementing numeric columns in table "tmpTimingWindows"
-"""
-input TmpTimingWindowsIncInput {
-  id: Int
-  remainOpenFor: Int
-  repeatPeriod: Int
-  repeatTimes: Int
-}
-
-"""
-input type for inserting data into table "tmpTimingWindows"
-"""
-input TmpTimingWindowsInsertInput {
-  closeOn: timestamptz
-  forever: Boolean
-  id: Int
-  include: Boolean
-  remainOpenFor: Int
-  repeatForever: Boolean
-  repeatPeriod: Int
-  repeatTimes: Int
-  startsOn: timestamptz
-}
-
-"""aggregate max on columns"""
-type TmpTimingWindowsMaxFields {
-  closeOn: timestamptz
-  id: Int
-  remainOpenFor: Int
-  repeatPeriod: Int
-  repeatTimes: Int
-  startsOn: timestamptz
-}
-
-"""aggregate min on columns"""
-type TmpTimingWindowsMinFields {
-  closeOn: timestamptz
-  id: Int
-  remainOpenFor: Int
-  repeatPeriod: Int
-  repeatTimes: Int
-  startsOn: timestamptz
-}
-
-"""
-response of any mutation on the table "tmpTimingWindows"
-"""
-type TmpTimingWindowsMutationResponse {
-  """number of rows affected by the mutation"""
-  affected_rows: Int!
-
-  """data from the rows affected by the mutation"""
-  returning: [TmpTimingWindows!]!
-}
-
-"""
-on_conflict condition type for table "tmpTimingWindows"
-"""
-input TmpTimingWindowsOnConflict {
-  constraint: TmpTimingWindowsConstraint!
-  update_columns: [TmpTimingWindowsUpdateColumn!]! = []
-  where: TmpTimingWindowsBoolExp
-}
-
-"""Ordering options when selecting data from "tmpTimingWindows"."""
-input TmpTimingWindowsOrderBy {
-  closeOn: OrderBy
-  forever: OrderBy
-  id: OrderBy
-  include: OrderBy
-  remainOpenFor: OrderBy
-  repeatForever: OrderBy
-  repeatPeriod: OrderBy
-  repeatTimes: OrderBy
-  startsOn: OrderBy
-}
-
-"""primary key columns input for table: tmpTimingWindows"""
-input TmpTimingWindowsPkColumnsInput {
-  id: Int!
-}
-
-"""
-select columns of table "tmpTimingWindows"
-"""
-enum TmpTimingWindowsSelectColumn {
-  """column name"""
-  closeOn
-
-  """column name"""
-  forever
-
-  """column name"""
-  id
-
-  """column name"""
-  include
-
-  """column name"""
-  remainOpenFor
-
-  """column name"""
-  repeatForever
-
-  """column name"""
-  repeatPeriod
-
-  """column name"""
-  repeatTimes
-
-  """column name"""
-  startsOn
-}
-
-"""
-input type for updating data in table "tmpTimingWindows"
-"""
-input TmpTimingWindowsSetInput {
-  closeOn: timestamptz
-  forever: Boolean
-  id: Int
-  include: Boolean
-  remainOpenFor: Int
-  repeatForever: Boolean
-  repeatPeriod: Int
-  repeatTimes: Int
-  startsOn: timestamptz
-}
-
-"""aggregate stddev on columns"""
-type TmpTimingWindowsStddevFields {
-  id: Float
-  remainOpenFor: Float
-  repeatPeriod: Float
-  repeatTimes: Float
-}
-
-"""aggregate stddev_pop on columns"""
-type TmpTimingWindowsStddev_popFields {
-  id: Float
-  remainOpenFor: Float
-  repeatPeriod: Float
-  repeatTimes: Float
-}
-
-"""aggregate stddev_samp on columns"""
-type TmpTimingWindowsStddev_sampFields {
-  id: Float
-  remainOpenFor: Float
-  repeatPeriod: Float
-  repeatTimes: Float
-}
-
-"""aggregate sum on columns"""
-type TmpTimingWindowsSumFields {
-  id: Int
-  remainOpenFor: Int
-  repeatPeriod: Int
-  repeatTimes: Int
-}
-
-"""
-update columns of table "tmpTimingWindows"
-"""
-enum TmpTimingWindowsUpdateColumn {
-  """column name"""
-  closeOn
-
-  """column name"""
-  forever
-
-  """column name"""
-  id
-
-  """column name"""
-  include
-
-  """column name"""
-  remainOpenFor
-
-  """column name"""
-  repeatForever
-
-  """column name"""
-  repeatPeriod
-
-  """column name"""
-  repeatTimes
-
-  """column name"""
-  startsOn
-}
-
-input TmpTimingWindowsUpdates {
-  """increments the numeric columns with given value of the filtered values"""
-  _inc: TmpTimingWindowsIncInput
-
-  """sets the columns of the filtered rows to the given values"""
-  _set: TmpTimingWindowsSetInput
-  where: TmpTimingWindowsBoolExp!
-}
-
-"""aggregate var_pop on columns"""
-type TmpTimingWindowsVar_popFields {
-  id: Float
-  remainOpenFor: Float
-  repeatPeriod: Float
-  repeatTimes: Float
-}
-
-"""aggregate var_samp on columns"""
-type TmpTimingWindowsVar_sampFields {
-  id: Float
-  remainOpenFor: Float
-  repeatPeriod: Float
-  repeatTimes: Float
-}
-
-"""aggregate variance on columns"""
-type TmpTimingWindowsVarianceFields {
-  id: Float
-  remainOpenFor: Float
-  repeatPeriod: Float
-  repeatTimes: Float
-}
-
 scalar bigint
 
 scalar breakpoint_name
@@ -3391,7 +3096,7 @@ input lucumaUser_streamCursorValueInput {
 }
 
 """mutation root"""
-type Mutation {
+type mutation_root {
   """
   delete data from the table: "explorePlotRange"
   """
@@ -3560,19 +3265,6 @@ type Mutation {
   delete single row from the table: "lucumaUserPreferences"
   """
   deleteLucumaUserPreferencesByPk(userId: String!): LucumaUserPreferences
-
-  """
-  delete data from the table: "tmpTimingWindows"
-  """
-  deleteTmpTimingWindows(
-    """filter the rows which have to be deleted"""
-    where: TmpTimingWindowsBoolExp!
-  ): TmpTimingWindowsMutationResponse
-
-  """
-  delete single row from the table: "tmpTimingWindows"
-  """
-  deleteTmpTimingWindowsByPk(id: Int!): TmpTimingWindows
 
   """
   insert data into the table: "explorePlotRange"
@@ -3859,28 +3551,6 @@ type Mutation {
     """upsert condition"""
     onConflict: LucumaUserPreferencesOnConflict
   ): LucumaUserPreferences
-
-  """
-  insert data into the table: "tmpTimingWindows"
-  """
-  insertTmpTimingWindows(
-    """the rows to be inserted"""
-    objects: [TmpTimingWindowsInsertInput!]!
-
-    """upsert condition"""
-    onConflict: TmpTimingWindowsOnConflict
-  ): TmpTimingWindowsMutationResponse
-
-  """
-  insert a single row into the table: "tmpTimingWindows"
-  """
-  insertTmpTimingWindowsOne(
-    """the row to be inserted"""
-    object: TmpTimingWindowsInsertInput!
-
-    """upsert condition"""
-    onConflict: TmpTimingWindowsOnConflict
-  ): TmpTimingWindows
 
   """
   update data of the table: "explorePlotRange"
@@ -4263,43 +3933,9 @@ type Mutation {
     """updates to execute, in order"""
     updates: [LucumaUserPreferencesUpdates!]!
   ): [LucumaUserPreferencesMutationResponse]
-
-  """
-  update data of the table: "tmpTimingWindows"
-  """
-  updateTmpTimingWindows(
-    """increments the numeric columns with given value of the filtered values"""
-    _inc: TmpTimingWindowsIncInput
-
-    """sets the columns of the filtered rows to the given values"""
-    _set: TmpTimingWindowsSetInput
-
-    """filter the rows which have to be updated"""
-    where: TmpTimingWindowsBoolExp!
-  ): TmpTimingWindowsMutationResponse
-
-  """
-  update single row of the table: "tmpTimingWindows"
-  """
-  updateTmpTimingWindowsByPk(
-    """increments the numeric columns with given value of the filtered values"""
-    _inc: TmpTimingWindowsIncInput
-
-    """sets the columns of the filtered rows to the given values"""
-    _set: TmpTimingWindowsSetInput
-    pk_columns: TmpTimingWindowsPkColumnsInput!
-  ): TmpTimingWindows
-
-  """
-  update multiples rows of table: "tmpTimingWindows"
-  """
-  updateTmpTimingWindowsMany(
-    """updates to execute, in order"""
-    updates: [TmpTimingWindowsUpdates!]!
-  ): [TmpTimingWindowsMutationResponse]
 }
 
-type Query {
+type query_root {
   """
   fetch data from the table: "explorePlotRange"
   """
@@ -4874,54 +4510,9 @@ type Query {
   fetch data from the table: "lucumaUserPreferences" using primary key columns
   """
   lucumaUserPreferencesByPk(userId: String!): LucumaUserPreferences
-
-  """
-  fetch data from the table: "tmpTimingWindows"
-  """
-  tmpTimingWindows(
-    """distinct select on columns"""
-    distinctOn: [TmpTimingWindowsSelectColumn!]
-
-    """limit the number of rows returned"""
-    limit: Int
-
-    """skip the first n rows. Use only with order_by"""
-    offset: Int
-
-    """sort the rows by one or more columns"""
-    orderBy: [TmpTimingWindowsOrderBy!]
-
-    """filter the rows returned"""
-    where: TmpTimingWindowsBoolExp
-  ): [TmpTimingWindows!]!
-
-  """
-  fetch aggregated fields from the table: "tmpTimingWindows"
-  """
-  tmpTimingWindowsAggregate(
-    """distinct select on columns"""
-    distinctOn: [TmpTimingWindowsSelectColumn!]
-
-    """limit the number of rows returned"""
-    limit: Int
-
-    """skip the first n rows. Use only with order_by"""
-    offset: Int
-
-    """sort the rows by one or more columns"""
-    orderBy: [TmpTimingWindowsOrderBy!]
-
-    """filter the rows returned"""
-    where: TmpTimingWindowsBoolExp
-  ): TmpTimingWindowsAggregate!
-
-  """
-  fetch data from the table: "tmpTimingWindows" using primary key columns
-  """
-  tmpTimingWindowsByPk(id: Int!): TmpTimingWindows
 }
 
-type Subscription {
+type subscription_root {
   """
   fetch data from the table: "explorePlotRange"
   """
@@ -5678,90 +5269,7 @@ type Subscription {
     """filter the rows returned"""
     where: LucumaUserBoolExp
   ): [LucumaUser!]!
-
-  """
-  fetch data from the table: "tmpTimingWindows"
-  """
-  tmpTimingWindows(
-    """distinct select on columns"""
-    distinctOn: [TmpTimingWindowsSelectColumn!]
-
-    """limit the number of rows returned"""
-    limit: Int
-
-    """skip the first n rows. Use only with order_by"""
-    offset: Int
-
-    """sort the rows by one or more columns"""
-    orderBy: [TmpTimingWindowsOrderBy!]
-
-    """filter the rows returned"""
-    where: TmpTimingWindowsBoolExp
-  ): [TmpTimingWindows!]!
-
-  """
-  fetch aggregated fields from the table: "tmpTimingWindows"
-  """
-  tmpTimingWindowsAggregate(
-    """distinct select on columns"""
-    distinctOn: [TmpTimingWindowsSelectColumn!]
-
-    """limit the number of rows returned"""
-    limit: Int
-
-    """skip the first n rows. Use only with order_by"""
-    offset: Int
-
-    """sort the rows by one or more columns"""
-    orderBy: [TmpTimingWindowsOrderBy!]
-
-    """filter the rows returned"""
-    where: TmpTimingWindowsBoolExp
-  ): TmpTimingWindowsAggregate!
-
-  """
-  fetch data from the table: "tmpTimingWindows" using primary key columns
-  """
-  tmpTimingWindowsByPk(id: Int!): TmpTimingWindows
-
-  """
-  fetch data from the table in a streaming manner : "tmpTimingWindows"
-  """
-  tmpTimingWindowsStream(
-    """maximum number of rows returned in a single batch"""
-    batchSize: Int!
-
-    """cursor to stream the results returned by the query"""
-    cursor: [tmpTimingWindows_streamCursorInput]!
-
-    """filter the rows returned"""
-    where: TmpTimingWindowsBoolExp
-  ): [TmpTimingWindows!]!
 }
 
 scalar timestamptz
-
-"""
-Streaming cursor of the table "tmpTimingWindows"
-"""
-input tmpTimingWindows_streamCursorInput {
-  """Stream column input with initial value"""
-  initialValue: tmpTimingWindows_streamCursorValueInput!
-
-  """cursor ordering"""
-  ordering: CursorOrdering
-}
-
-"""Initial value of the column from where the streaming should start"""
-input tmpTimingWindows_streamCursorValueInput {
-  closeOn: timestamptz
-  forever: Boolean
-  id: Int
-  include: Boolean
-  remainOpenFor: Int
-  repeatForever: Boolean
-  repeatPeriod: Int
-  repeatTimes: Int
-  startsOn: timestamptz
-}
 

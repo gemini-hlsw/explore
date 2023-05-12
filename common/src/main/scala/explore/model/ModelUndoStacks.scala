@@ -15,10 +15,10 @@ import queries.schemas.odb.ObsQueries.ObservationList
 
 case class ModelUndoStacks[F[_]](
   forObsList:          UndoStacks[F, ObservationList] =
-    UndoStacks.empty[F, ObservationList], // FIXME This is inside programsummaries!
+    UndoStacks.empty[F, ObservationList],                 // FIXME This is inside programsummaries!
   forProgramSummaries: UndoStacks[F, ProgramSummaries] = UndoStacks.empty[F, ProgramSummaries],
   forSiderealTarget:   Map[Target.Id, UndoStacks[F, Target.Sidereal]] =
-    Map.empty[Target.Id, UndoStacks[F, Target.Sidereal]],
+    Map.empty[Target.Id, UndoStacks[F, Target.Sidereal]], // FIXME This is inside programsummaries!
   forProposal:         UndoStacks[F, Proposal] = UndoStacks.empty[F, Proposal]
 )
 

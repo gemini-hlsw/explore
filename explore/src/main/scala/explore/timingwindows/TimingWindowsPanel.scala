@@ -3,7 +3,7 @@
 
 package explore.timingwindows
 
-import cats.Show
+import cats.Order.given
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
@@ -23,6 +23,7 @@ import explore.model.Constants
 import explore.model.Constants.DurationLongFormatter
 import explore.model.formats.*
 import explore.model.reusability.given
+import explore.model.syntax.all.*
 import explore.syntax.ui.*
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -79,10 +80,6 @@ object TimingWindowsPanel:
 
   private val ColDef = ColumnDef[(TimingWindow, Int)]
 
-  private def formatTimestap(ts: Timestamp): String =
-    s"${Constants.GppDateFormatter.format(ts.toInstant.atOffset(ZoneOffset.UTC))} @ " +
-      s"${Constants.GppTimeTZFormatter.format(ts.toInstant.atOffset(ZoneOffset.UTC))}"
-
   private given Render[TimingWindowRepeat] = Render.by {
     case TimingWindowRepeat(period, None)                     =>
       React.Fragment(
@@ -126,14 +123,14 @@ object TimingWindowsPanel:
       React.Fragment(
         inclusion.renderVdom,
         " ",
-        <.b(formatTimestap(start)),
+        <.b(start.formatUTCWithZone),
         " through ",
-        <.b(formatTimestap(endAt))
+        <.b(endAt.formatUTCWithZone)
       )
     case tw @ TimingWindow(inclusion, start, Some(after @ TimingWindowEnd.After(_, _))) =>
-      React.Fragment(inclusion.renderVdom, " ", <.b(formatTimestap(start)), " ", after.renderVdom)
+      React.Fragment(inclusion.renderVdom, " ", <.b(start.formatUTCWithZone), " ", after.renderVdom)
     case tw @ TimingWindow(inclusion, start, None)                                      =>
-      React.Fragment(inclusion.renderVdom, " ", <.b(formatTimestap(start)), " forever")
+      React.Fragment(inclusion.renderVdom, " ", <.b(start.formatUTCWithZone), " forever")
   }
 
   private val DeleteColWidth = 20
@@ -167,7 +164,7 @@ object TimingWindowsPanel:
         )
       }
       // rows
-      .useMemoBy((props, _, _) => props.windows.get)((_, _, _) => _.zipWithIndex)
+      .useMemoBy((props, _, _) => props.windows.get)((_, _, _) => _.zipWithIndex.sorted)
       .useReactTableBy((props, _, cols, rows) =>
         TableOptions(
           cols,
@@ -212,7 +209,7 @@ object TimingWindowsPanel:
                 case _           => TagMod.empty
               ,
               // If cmd is pressed add to the selection
-              emptyMessage = <.div(ExploreStyles.ExploreTableEmpty, "No timing windows defined")
+              emptyMessage = <.div(ExploreStyles.ExploreTableEmpty, "No scheduling windows defined")
             )
           ).withRef(resize.ref),
           selectedTW.map { tw =>

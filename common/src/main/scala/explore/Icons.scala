@@ -19,6 +19,26 @@ object Icons {
   val faArrowDownLeft: FAIcon = js.native
 
   @js.native
+  @JSImport("@fortawesome/pro-thin-svg-icons", "faArrowLeftFromLine")
+  val faArrowLeftFromLine: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-regular-svg-icons", "faArrowRight")
+  val faArrowRight: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-thin-svg-icons", "faArrowRightFromLine")
+  val faArrowRightFromLine: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-regular-svg-icons", "faArrowRightToLine")
+  val faArrowRightToLine: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-regular-svg-icons", "faArrowsRepeat")
+  val faArrowsRepeat: FAIcon = js.native
+
+  @js.native
   @JSImport("@fortawesome/pro-duotone-svg-icons", "faGears")
   val faGears: FAIcon = js.native
 
@@ -279,14 +299,6 @@ object Icons {
   val faBug: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-thin-svg-icons", "faArrowLeftFromLine")
-  val faArrowLeftFromLine: FAIcon = js.native
-
-  @js.native
-  @JSImport("@fortawesome/pro-thin-svg-icons", "faArrowRightFromLine")
-  val faArrowRightFromLine: FAIcon = js.native
-
-  @js.native
   @JSImport("@fortawesome/pro-light-svg-icons", "faArrowsFromLine")
   val faArrowsFromLine: FAIcon = js.native
 
@@ -321,6 +333,11 @@ object Icons {
   // This is tedious but lets us do proper tree-shaking
   IconLibrary.add(
     faArrowDownLeft,
+    faArrowLeftFromLine,
+    faArrowRight,
+    faArrowRightFromLine,
+    faArrowRightToLine,
+    faArrowsRepeat,
     faGears,
     faBars,
     faBarCodeRead,
@@ -386,8 +403,6 @@ object Icons {
     faSquareXMark,
     faSquareXMarkLarge,
     faBug,
-    faArrowLeftFromLine,
-    faArrowRightFromLine,
     faArrowsFromLine,
     faWrench,
     faArrowRotateLeft,
@@ -399,6 +414,11 @@ object Icons {
   )
 
   val ArrowDownLeft        = FontAwesomeIcon(faArrowDownLeft)
+  val ArrowLeftFromLine    = FontAwesomeIcon(faArrowLeftFromLine)
+  val ArrowRight           = FontAwesomeIcon(faArrowRight)
+  val ArrowRightFromLine   = FontAwesomeIcon(faArrowRightFromLine)
+  val ArrowRightToLine     = FontAwesomeIcon(faArrowRightToLine)
+  val ArrowsRepeat         = FontAwesomeIcon(faArrowsRepeat)
   val Bars                 = FontAwesomeIcon(faBars)
   val BarCodeRead          = FontAwesomeIcon(faBarCodeRead)
   val StarExclamation      = FontAwesomeIcon(faStarExclamation)
@@ -466,8 +486,6 @@ object Icons {
   val SquareXMark          = FontAwesomeIcon(faSquareXMark)
   val SquareXMarkLarge     = FontAwesomeIcon(faSquareXMarkLarge)
   val Bug                  = FontAwesomeIcon(faBug)
-  val ArrowLeftFromLine    = FontAwesomeIcon(faArrowLeftFromLine)
-  val ArrowRightFromLine   = FontAwesomeIcon(faArrowRightFromLine)
   val ArrowsFromLine       = FontAwesomeIcon(faArrowsFromLine)
   val Wrench               = FontAwesomeIcon(faWrench)
   val ArrowRotateLeft      = FontAwesomeIcon(faArrowRotateLeft)

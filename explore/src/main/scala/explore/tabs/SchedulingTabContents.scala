@@ -23,10 +23,7 @@ import explore.common.UserPreferencesQueries.*
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
-import explore.constraints.ConstraintsPanel
-import explore.constraints.ConstraintsSummaryTable
 import explore.data.KeyedIndexedList
-import explore.model.ConstraintGroupList
 import explore.model.ObservationList
 import explore.model.ProgramSummaries
 import explore.model.*
@@ -37,13 +34,12 @@ import explore.model.layout.*
 import explore.model.layout.unsafe.given
 import explore.model.reusability.given
 import explore.model.reusability.given
-import explore.observationtree.ConstraintGroupObsList
+import explore.observationtree.SchedulingGroupObsList
 import explore.optics.*
 import explore.optics.all.*
 import explore.shortcuts.*
 import explore.shortcuts.given
 import explore.syntax.ui.*
-import explore.tabs.ConstraintsTabContents
 import explore.timingwindows.TimingWindowsPanel
 import explore.undo.*
 import explore.utils.*
@@ -51,7 +47,6 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.callback.CallbackCatsEffect.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.TimingWindow
@@ -84,46 +79,37 @@ import react.resizeDetector.hooks.*
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration.*
 
-case class ConstraintsTabContents(
+case class SchedulingTabContents(
   userId:           Option[User.Id],
   programId:        Program.Id,
   programSummaries: View[ProgramSummaries],
   focusedObsSet:    Option[ObsIdSet],
   expandedIds:      View[SortedSet[ObsIdSet]],
   obsUndoStacks:    View[UndoStacks[IO, ObservationList]]
-) extends ReactFnProps(ConstraintsTabContents.component)
+) extends ReactFnProps(SchedulingTabContents.component)
 
-object ConstraintsTabContents extends TwoPanels:
-  private type Props = ConstraintsTabContents
+object SchedulingTabContents extends TwoPanels:
+  private type Props = SchedulingTabContents
 
-  private val ConstraintsHeight: NonNegInt   = 4.refined
-  private val TimingWindowsHeight: NonNegInt = 14.refined
-  private val TileMinWidth: NonNegInt        = 6.refined
-  private val DefaultWidth: NonNegInt        = 10.refined
-  private val DefaultLargeWidth: NonNegInt   = 12.refined
+  private val SchedulingHeight: NonNegInt  = 14.refined
+  private val TileMinWidth: NonNegInt      = 6.refined
+  private val DefaultWidth: NonNegInt      = 10.refined
+  private val DefaultLargeWidth: NonNegInt = 12.refined
 
   private val layoutMedium: Layout = Layout(
     List(
       LayoutItem(
-        i = ObsTabTilesIds.ConstraintsId.id.value,
+        i = ObsTabTilesIds.TimingWindowsId.id.value,
         x = 0,
         y = 0,
         w = DefaultWidth.value,
-        h = ConstraintsHeight.value,
-        isResizable = false
-      ),
-      LayoutItem(
-        i = ObsTabTilesIds.TimingWindowsId.id.value,
-        x = 0,
-        y = ConstraintsHeight.value,
-        w = DefaultWidth.value,
-        h = TimingWindowsHeight.value,
+        h = SchedulingHeight.value,
         isResizable = false
       )
     )
   )
 
-  private val defaultConstraintsLayouts = defineStdLayouts(
+  private val defaultSchedulingLayouts = defineStdLayouts(
     Map(
       (BreakpointName.lg,
        layoutItems.andThen(layoutItemWidth).replace(DefaultLargeWidth)(layoutMedium)
@@ -140,14 +126,14 @@ object ConstraintsTabContents extends TwoPanels:
         import ctx.given
 
         def callbacks: ShortcutCallbacks = { case GoToSummary =>
-          ctx.setPageVia(AppTab.Constraints, pid, Focused.None, SetRouteVia.HistoryPush)
+          ctx.setPageVia(AppTab.Scheduling, pid, Focused.None, SetRouteVia.HistoryPush)
         }
         UseHotkeysProps(List(GoToSummary).toHotKeys, callbacks)
       }
       // Initial target layout
       .useStateView(Pot.pending[LayoutsMap])
       // Keep a record of the initial target layout
-      .useMemo(())(_ => defaultConstraintsLayouts)
+      .useMemo(())(_ => defaultSchedulingLayouts)
       // Load the config from user prefrences
       .useEffectWithDepsBy((p, _, _, _) => p.userId) { (props, ctx, layout, defaultLayout) => _ =>
         import ctx.given
@@ -155,7 +141,7 @@ object ConstraintsTabContents extends TwoPanels:
         GridLayouts
           .queryWithDefault[IO](
             props.userId,
-            GridLayoutSection.ConstraintsLayout,
+            GridLayoutSection.SchedulingLayout,
             defaultLayout
           )
           .attempt
@@ -190,21 +176,21 @@ object ConstraintsTabContents extends TwoPanels:
 
         val programSummaries: View[ProgramSummaries] = props.programSummaries
 
-        def findConstraintGroup(
+        def findSchedulingGroup(
           obsIds: ObsIdSet,
-          cgl:    ConstraintGroupList
-        ): Option[ConstraintGroup] =
-          cgl.find(_._1.intersect(obsIds).nonEmpty).map(ConstraintGroup.fromTuple)
+          cgl:    SchedulingGroupList
+        ): Option[SchedulingGroup] =
+          cgl.find(_._1.intersect(obsIds).nonEmpty).map(SchedulingGroup.fromTuple)
 
         def onModSummaryWithObs(
           groupObsIds:  ObsIdSet,
           editedObsIds: ObsIdSet
         )(programSummaries: ProgramSummaries): Callback = {
-          val groupList: ConstraintGroupList = programSummaries.constraintGroups
+          val groupList: SchedulingGroupList = programSummaries.schedulingGroups
 
-          val updateExpanded = findConstraintGroup(editedObsIds, groupList).fold(Callback.empty) {
-            cg =>
-              // We should always find the constraint group.
+          val updateExpanded =
+            findSchedulingGroup(editedObsIds, groupList).fold(Callback.empty) { cg =>
+              // We should always find the scheduling group.
               // If a group was edited while closed and it didn't create a merger, keep it closed,
               // otherwise expand all affected groups.
               props.expandedIds
@@ -218,13 +204,13 @@ object ConstraintsTabContents extends TwoPanels:
 
                   withOldAndNew.filter(ids => groupList.contains(ids)) // clean up
                 }
-          }
+            }
 
           updateExpanded
         }
 
         val backButton: VdomNode =
-          makeBackButton(props.programId, AppTab.Constraints, state, ctx)
+          makeBackButton(props.programId, AppTab.Scheduling, state, ctx)
 
         val obsView: View[ObservationList] = programSummaries
           // TODO Find another mechanism to update expandeds
@@ -236,52 +222,18 @@ object ConstraintsTabContents extends TwoPanels:
         val rightSide = (_: UseResizeDetectorReturn) =>
           props.focusedObsSet
             .flatMap(ids =>
-              findConstraintGroup(ids, programSummaries.get.constraintGroups).map(cg => (ids, cg))
+              findSchedulingGroup(ids, programSummaries.get.schedulingGroups)
+                .map(cg => (ids, cg))
             )
             .fold[VdomNode] {
-              Tile(
-                "constraints".refined,
-                "Constraints Summary",
-                backButton.some
-              )(renderInTitle =>
-                ConstraintsSummaryTable(
-                  props.userId,
-                  props.programId,
-                  programSummaries.get.constraintGroups,
-                  props.expandedIds,
-                  renderInTitle
-                )
-              )
-            } { case (idsToEdit, constraintGroup) =>
-              val groupObsIds: ObsIdSet = constraintGroup.obsIds
+              <.div("Nothing selected - Will we have a summary table?")
+            } { case (idsToEdit, schedulingGroup) =>
+              val groupObsIds: ObsIdSet = schedulingGroup.obsIds
 
               val obsTraversal = Iso
                 .id[ObservationList]
                 .filterIndex((id: Observation.Id) => idsToEdit.contains(id))
                 .andThen(KeyedIndexedList.value)
-
-              val csTraversal = obsTraversal.andThen(ObsSummary.constraints)
-
-              val csUndoCtx: UndoSetter[ConstraintSet] =
-                obsUndoCtx.zoom(csTraversal.getAll.andThen(_.head), csTraversal.modify)
-
-              val constraintsTitle = idsToEdit.single match
-                case Some(id) => s"Observation $id"
-                case None     => s"Editing Constraints for ${idsToEdit.size} Observations"
-
-              val constraintsTile = Tile(
-                ObsTabTilesIds.ConstraintsId.id,
-                constraintsTitle,
-                backButton.some,
-                canMinimize = true
-              )(renderInTitle =>
-                ConstraintsPanel(
-                  props.programId,
-                  idsToEdit,
-                  csUndoCtx,
-                  renderInTitle
-                )
-              )
 
               val twTraversal = obsTraversal.andThen(ObsSummary.timingWindows)
 
@@ -307,22 +259,22 @@ object ConstraintsTabContents extends TwoPanels:
                   resize.width.getOrElse(1),
                   defaultLayouts,
                   l,
-                  List(constraintsTile, timingWindowsTile),
-                  GridLayoutSection.ConstraintsLayout,
+                  List(timingWindowsTile),
+                  GridLayoutSection.SchedulingLayout,
                   None
                 )
               )
             }
 
-        val constraintsTree =
-          ConstraintGroupObsList(
+        val schedulingTree =
+          SchedulingGroupObsList(
             props.programId,
             obsUndoCtx,
-            programSummaries.get.constraintGroups,
+            programSummaries.get.schedulingGroups,
             props.focusedObsSet,
             state.set(SelectedPanel.Summary),
             props.expandedIds
           )
 
-        makeOneOrTwoPanels(state, constraintsTree, rightSide, RightSideCardinality.Multi, resize)
+        makeOneOrTwoPanels(state, schedulingTree, rightSide, RightSideCardinality.Multi, resize)
       }

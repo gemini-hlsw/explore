@@ -26,7 +26,7 @@ object RoutingInfo {
   // Option[Program.Id], we'll just associate a dummy id with it. NoProgramPage will need special handling, anyways.
   val dummyProgramId = Program.Id(Long.MaxValue.refined)
 
-  def from(page: Page): RoutingInfo = page match {
+  def from(page: Page): RoutingInfo = page match
     case NoProgramPage                         => RoutingInfo(AppTab.Overview, none, Focused.None)
     case HomePage(p)                           => RoutingInfo(AppTab.Overview, p.some, Focused.None)
     case ProposalPage(p)                       => RoutingInfo(AppTab.Proposal, p.some, Focused.None)
@@ -39,11 +39,13 @@ object RoutingInfo {
     case TargetPage(p, targetId)               => RoutingInfo(AppTab.Targets, p.some, Focused.target(targetId))
     case TargetWithObsPage(p, obsId, targetId) =>
       RoutingInfo(AppTab.Targets, p.some, Focused(obsId.some, targetId.some))
-    case ConfigurationsPage(p)                 => RoutingInfo(AppTab.Configurations, p.some, Focused.None)
+    // case ConfigurationsPage(p)                 => RoutingInfo(AppTab.Configurations, p.some, Focused.None)
     case ConstraintsBasePage(p)                => RoutingInfo(AppTab.Constraints, p.some, Focused.None)
     case ConstraintsObsPage(p, obsIds)         =>
       RoutingInfo(AppTab.Constraints, p.some, Focused.obsSet(obsIds))
-  }
+    case SchedulingBasePage(p)                 => RoutingInfo(AppTab.Scheduling, p.some, Focused.None)
+    case SchedulingObsPage(p, obsIds)          =>
+      RoutingInfo(AppTab.Scheduling, p.some, Focused.obsSet(obsIds))
 
   def getPage(
     tab:       AppTab,
@@ -51,16 +53,16 @@ object RoutingInfo {
     focused:   Focused
   ): Page =
     tab match {
-      case AppTab.Proposal       => ProposalPage(programId)
-      case AppTab.Overview       => HomePage(programId)
-      case AppTab.Observations   =>
+      case AppTab.Proposal     => ProposalPage(programId)
+      case AppTab.Overview     => HomePage(programId)
+      case AppTab.Observations =>
         focused match {
           case Focused(Some(obsIds), Some(targetId)) if obsIds.length === 1 =>
             ObsTargetPage(programId, obsIds.head, targetId)
           case Focused(Some(obsIds), _) if obsIds.length === 1              => ObsPage(programId, obsIds.head)
           case _                                                            => ObservationsBasePage(programId)
         }
-      case AppTab.Targets        =>
+      case AppTab.Targets      =>
         focused match {
           case Focused(Some(obsIds), Some(targetId)) =>
             TargetWithObsPage(programId, obsIds, targetId)
@@ -68,10 +70,14 @@ object RoutingInfo {
           case Focused(_, Some(targetId))            => TargetPage(programId, targetId)
           case _                                     => TargetsBasePage(programId)
         }
-      case AppTab.Configurations => ConfigurationsPage(programId)
-      case AppTab.Constraints    =>
+      // case AppTab.Configurations => ConfigurationsPage(programId)
+      case AppTab.Constraints  =>
         focused.obsSet
           .map(ConstraintsObsPage(programId, _))
           .getOrElse(ConstraintsBasePage(programId))
+      case AppTab.Scheduling   =>
+        focused.obsSet
+          .map(SchedulingObsPage(programId, _))
+          .getOrElse(SchedulingBasePage(programId))
     }
 }

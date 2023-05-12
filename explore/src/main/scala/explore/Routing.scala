@@ -14,6 +14,7 @@ import explore.model.Page.*
 import explore.model.*
 import explore.programs.ProgramsPopup
 import explore.proposal.ProposalTabContents
+import explore.tabs.ConstraintsTabContents
 import explore.tabs.*
 import japgolly.scalajs.react.ReactMonocle.*
 import japgolly.scalajs.react.extra.router.*
@@ -32,28 +33,12 @@ import scala.util.Random
 
 object Routing:
 
-  private def withProgramSummaries(pid: Option[Program.Id], model: View[RootModel])(
+  private def withProgramSummaries(model: View[RootModel])(
     render: View[ProgramSummaries] => VdomNode
   ): VdomElement =
     model
       .zoom(RootModel.programSummaries)
-      .mapValue { (pss: View[ProgramSummaries]) =>
-        val (showProgsPopup, msg) = pid.fold((true, none)) { id =>
-          if (pss.get.programs.get(id).exists(!_.deleted)) (false, none)
-          else
-            (true,
-             s"The program id in the url, '$id', either does not exist, is deleted, or you do not have authorization to view it.".some
-            )
-        }
-        if (showProgsPopup)
-          ProgramsPopup(
-            currentProgramId = none,
-            pss.zoom(ProgramSummaries.programs).asViewOpt,
-            undoStacks = model.zoom(RootModel.undoStacks),
-            message = msg
-          ): VdomElement
-        else render(pss)
-      }
+      .mapValue(render)
       .toPot
       .renderPot(identity)
       .asInstanceOf[VdomElement]
@@ -61,19 +46,19 @@ object Routing:
     // In any case, in all of our uses here we are returning a valid VdomElement.
 
   private def overviewTab(page: Page, model: View[RootModel]): VdomElement =
-    val routingInfo = RoutingInfo.from(page)
-    withProgramSummaries(routingInfo.programId.some, model)(programSummaries =>
-      OverviewTabContents(
-        routingInfo.programId,
-        model.zoom(RootModel.vault).get,
-        programSummaries.zoom(ProgramSummaries.obsAttachments),
-        programSummaries.get.obsAttachmentAssignments
+    withProgramSummaries(model)(programSummaries =>
+      val routingInfo = RoutingInfo.from(page)
+
+      OverviewTabContents(routingInfo.programId,
+                          model.zoom(RootModel.vault).get,
+                          programSummaries.zoom(ProgramSummaries.obsAttachments)
       )
     )
 
   private def targetTab(page: Page, model: View[RootModel]): VdomElement =
-    val routingInfo = RoutingInfo.from(page)
-    withProgramSummaries(routingInfo.programId.some, model)(programSummaries =>
+    withProgramSummaries(model)(programSummaries =>
+      val routingInfo = RoutingInfo.from(page)
+
       TargetTabContents(
         model.zoom(RootModel.userId).get,
         routingInfo.programId,
@@ -87,8 +72,8 @@ object Routing:
     )
 
   private def obsTab(page: Page, model: View[RootModel]): VdomElement =
-    val routingInfo = RoutingInfo.from(page)
-    withProgramSummaries(routingInfo.programId.some, model)(programSummaries =>
+    withProgramSummaries(model)(programSummaries =>
+      val routingInfo = RoutingInfo.from(page)
       ObsTabContents(
         model.zoom(RootModel.userId).get,
         routingInfo.programId,
@@ -101,8 +86,8 @@ object Routing:
     )
 
   private def constraintSetTab(page: Page, model: View[RootModel]): VdomElement =
-    val routingInfo = RoutingInfo.from(page)
-    withProgramSummaries(routingInfo.programId.some, model)(programSummaries =>
+    withProgramSummaries(model)(programSummaries =>
+      val routingInfo = RoutingInfo.from(page)
       ConstraintsTabContents(
         model.zoom(RootModel.userId).get,
         routingInfo.programId,
@@ -113,20 +98,32 @@ object Routing:
       )
     )
 
-  private def proposalTab(page: Page, model: View[RootModel]): VdomElement =
-    val routingInfo = RoutingInfo.from(page)
-    // we don't need the summaries, but we still want to validate the progam id
-    withProgramSummaries(routingInfo.programId.some, model)(_ =>
-      ProposalTabContents(
+  private def schedulingTab(page: Page, model: View[RootModel]): VdomElement =
+    withProgramSummaries(model)(programSummaries =>
+      val routingInfo = RoutingInfo.from(page)
+      SchedulingTabContents(
+        model.zoom(RootModel.userId).get,
         routingInfo.programId,
-        model.zoom(RootModel.user).get,
-        model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forProposal)
+        programSummaries,
+        routingInfo.focused.obsSet,
+        model.zoom(RootModel.expandedIds.andThen(ExpandedIds.schedulingObsIds)),
+        model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forObsList)
       )
     )
 
+  private def proposalTab(page: Page, model: View[RootModel]): VdomElement =
+    val routingInfo = RoutingInfo.from(page)
+    ProposalTabContents(
+      routingInfo.programId,
+      model.zoom(RootModel.user).get,
+      model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forProposal)
+    )
+
   private def showProgramSelectionPopup(model: View[RootModel]): VdomElement =
-    // Because we are not supplying a program id, the ProgramsPopup will be displayed
-    withProgramSummaries(none, model)(_ => <.div("Programmer error!"))
+    ProgramsPopup(
+      currentProgramId = none,
+      undoStacks = model.zoom(RootModel.undoStacks)
+    )
 
   def config: RouterWithPropsConfig[Page, View[RootModel]] =
     RouterWithPropsConfigDsl[Page, View[RootModel]].buildConfig { dsl =>
@@ -200,7 +197,16 @@ object Routing:
           | dynamicRouteCT(
             (root / id[Program.Id] / "constraints/obs" / idList[Observation.Id])
               .xmapL(ConstraintsObsPage.iso)
-          ) ~> dynRenderP { case (p, m) => constraintSetTab(p, m) })
+          ) ~> dynRenderP { case (p, m) => constraintSetTab(p, m) }
+
+          | dynamicRouteCT(
+            (root / id[Program.Id] / "scheduling").xmapL(SchedulingBasePage.iso)
+          ) ~> dynRenderP { case (p, m) => schedulingTab(p, m) }
+
+          | dynamicRouteCT(
+            (root / id[Program.Id] / "scheduling/obs" / idList[Observation.Id])
+              .xmapL(SchedulingObsPage.iso)
+          ) ~> dynRenderP { case (p, m) => schedulingTab(p, m) })
 
       val configuration =
         rules
@@ -236,11 +242,15 @@ object Routing:
             TargetsObsPage(pid, twoObs),
             TargetsObsPage(pid, threeObs),
             TargetPage(pid, tid),
-            ConfigurationsPage(pid),
+            // ConfigurationsPage(pid),
             ConstraintsBasePage(pid),
             ConstraintsObsPage(pid, oneObs),
             ConstraintsObsPage(pid, twoObs),
-            ConstraintsObsPage(pid, threeObs)
+            ConstraintsObsPage(pid, threeObs),
+            SchedulingBasePage(pid),
+            SchedulingObsPage(pid, oneObs),
+            SchedulingObsPage(pid, twoObs),
+            SchedulingObsPage(pid, threeObs)
           )
       }
 

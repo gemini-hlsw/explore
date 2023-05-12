@@ -15,6 +15,7 @@ import scala.collection.immutable.SortedSet
 case class ExpandedIds(
   targetIds:           SortedSet[Target.Id] = SortedSet.empty,
   constraintSetObsIds: SortedSet[ObsIdSet] = SortedSet.empty,
+  schedulingObsIds:    SortedSet[ObsIdSet] = SortedSet.empty,
   asterismObsIds:      SortedSet[ObsIdSet] = SortedSet.empty,
   obsListGroupIds:     Set[Group.Id] = Set.empty
 ) derives Eq
@@ -22,6 +23,7 @@ case class ExpandedIds(
 object ExpandedIds {
   val targetIds           = Focus[ExpandedIds](_.targetIds)
   val constraintSetObsIds = Focus[ExpandedIds](_.constraintSetObsIds)
+  val schedulingObsIds    = Focus[ExpandedIds](_.schedulingObsIds)
   val asterismObsIds      = Focus[ExpandedIds](_.asterismObsIds)
   val obsListGroupIds     = Focus[ExpandedIds](_.obsListGroupIds)
 
