@@ -3,7 +3,7 @@
 
 package explore.modes
 
-import cats.effect.Async
+import cats.effect.Concurrent
 import cats.syntax.all.*
 import fs2.data.csv.*
 import fs2.io.file.*
@@ -11,7 +11,7 @@ import fs2.text
 
 trait ModesMatrixPlatform extends ModesMatrixDecoders {
 
-  def loadMatrix[F[_]: Async](path: Path): F[List[ModeRow]] =
+  def loadMatrix[F[_]: Concurrent: Files](path: Path): F[List[ModeRow]] =
     Files[F]
       .readAll(path)
       .through(text.utf8.decode)
@@ -19,5 +19,6 @@ trait ModesMatrixPlatform extends ModesMatrixDecoders {
       .compile
       .toList
 
-  def apply[F[_]: Async](path: Path): F[ModesMatrix] = loadMatrix(path).map(ModesMatrix(_))
+  def apply[F[_]: Concurrent: Files](path: Path): F[ModesMatrix] =
+    loadMatrix(path).map(ModesMatrix(_))
 }
