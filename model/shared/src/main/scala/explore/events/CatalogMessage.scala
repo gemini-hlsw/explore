@@ -14,7 +14,10 @@ import java.time.Duration
 import java.time.Instant
 
 object CatalogMessage extends CatalogPicklers {
-  sealed trait Request extends WorkerRequest
+  sealed trait Request   extends WorkerRequest
+  case object CleanCache extends Request {
+    type ResponseType = Unit
+  }
 
   case class GSRequest(
     tracking: ObjectTracking,
@@ -30,6 +33,8 @@ object CatalogMessage extends CatalogPicklers {
   private given Pickler[GSRequest] = generatePickler
 
   private given Pickler[GSCacheCleanupRequest] = generatePickler
+
+  given Pickler[CleanCache.type] = generatePickler
 
   given Pickler[Request] = generatePickler
 }

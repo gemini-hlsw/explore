@@ -12,6 +12,7 @@ import explore.events.CatalogMessage
 import explore.model.boopickle.CatalogPicklers.given
 import explore.model.boopickle.CommonPicklers.given
 import japgolly.webapputil.indexeddb.IndexedDb
+import japgolly.webapputil.indexeddb.IndexedDb.Database
 import lucuma.ags.Ags
 import lucuma.ags.AgsAnalysis
 import org.http4s.dom.FetchClientBuilder
@@ -39,6 +40,8 @@ object CatalogServer extends WorkerServer[IO, CatalogMessage.Request] with Catal
       client   = FetchClientBuilder[IO].create
     yield invocation =>
       invocation.data match
+        case CatalogMessage.CleanCache            =>
+          cacheDb.traverse(stores.clean(_).toF[IO]).void
         case req @ CatalogMessage.GSRequest(_, _) =>
           readFromGaia(client, cacheDb, stores, req, c => invocation.respond(c)) *>
             expireGuideStarCandidates(cacheDb, stores, Expiration)

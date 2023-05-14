@@ -32,6 +32,7 @@ import org.http4s.dom.FetchClientBuilder
 import org.scalajs.dom
 import org.typelevel.log4cats.Logger
 import typings.loglevel.mod.LogLevelDesc
+import workers.given
 
 import java.time.Duration
 import scala.concurrent.duration.*
@@ -73,6 +74,8 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
       given ItcClient[IO] <- ItcClient.create[IO](config.itcURI, client)
     } yield { invocation =>
       invocation.data match {
+        case ItcMessage.CleanCache                     =>
+          cache.clear *> invocation.respond(())
         case ItcMessage.SpectroscopyMatrixRequest(uri) =>
           matrix.tryGet.flatMap {
             case Some(m) =>

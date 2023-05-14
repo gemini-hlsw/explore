@@ -55,6 +55,7 @@ sealed trait Cache[F[_]](using F: Sync[F]):
   def evict(until:                              Instant): F[Unit]
   def evict(retention: Duration): F[Unit] =
     F.delay(Instant.now) >>= (now => evict(now.minus(retention)))
+  def clear: F[Unit]                      = F.unit
 
 /**
  * `NoCache` is used when, for some reason, a cache could not be initialized.
@@ -101,6 +102,9 @@ case class IDBCache[F[_]](
         )(pickledOutput => F.pure(fromBytes[O](pickledOutput.value)).rethrow)
       )
   }
+
+  override def clear: F[Unit] =
+    cacheDB.clear(store).toF
 
   override def evict(until: Instant): F[Unit] =
     F.async_ { cb =>

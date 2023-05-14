@@ -118,6 +118,8 @@ object PlotServer extends WorkerServer[IO, PlotMessage.Request] {
       _     <- cache.evict(CacheRetention).start
     yield invocation =>
       invocation.data match {
+        case PlotMessage.CleanCache                                               =>
+          cache.clear *> invocation.respond(())
         case PlotMessage.RequestSemesterSidereal(semester, site, coords, dayRate) =>
           SemesterPlotCalc(semester, site, cache)
             .siderealSamples(coords, dayRate)
