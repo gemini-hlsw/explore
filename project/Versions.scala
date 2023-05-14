@@ -13,7 +13,7 @@ object Versions {
   val disciplineMUnit        = "1.0.9"
   val fs2                    = "3.7.0"
   val fs2Data                = "1.7.1"
-  val fs2Dom                 = "0.1.0"
+  val fs2Dom                 = "0.2.0"
   val geminiLocales          = "0.7.0"
   val http4s                 = "0.23.19"
   val http4sDom              = "0.2.9"
