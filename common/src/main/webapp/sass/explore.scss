@@ -55,7 +55,7 @@ body {
 
 // Reusability overlays.
 body.hide-reusability {
-  &>div:not(#root)[title^="Last update reason"] {
+  & > div:not(#root)[title^="Last update reason"] {
     display: none;
   }
 }
@@ -342,7 +342,7 @@ a:hover {
     content: attr(data-abbrv);
   }
 
-  label[data-abbrv]>span {
+  label[data-abbrv] > span {
     display: none;
   }
 
@@ -355,7 +355,7 @@ a:hover {
       content: "";
     }
 
-    label[data-abbrv]>span {
+    label[data-abbrv] > span {
       display: unset;
     }
 
@@ -412,7 +412,7 @@ a:hover {
     inset-block-end: 0;
     height: 100%;
 
-    >tr>td {
+    > tr > td {
       vertical-align: bottom;
       padding: 0 !important; // Reset default padding
     }
@@ -527,7 +527,7 @@ a:hover {
   display: flex;
   flex-direction: column;
 
-  >div {
+  > div {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
@@ -550,7 +550,7 @@ a:hover {
     display: none;
   }
 
-  >div .target-grid {
+  > div .target-grid {
     @include hide-hidden-target-cells(true);
 
     grid-template:
@@ -567,7 +567,7 @@ a:hover {
   &.with-catalog-info {
     grid-template-rows: repeat(4, auto) 1fr;
 
-    >.explore-brightnesses-wrapper {
+    > .explore-brightnesses-wrapper {
       grid-row-start: 5;
     }
   }
@@ -628,7 +628,6 @@ a:hover {
   margin-right: 0.5em;
 }
 
-
 // ------
 // Target search popup styles
 // ------
@@ -638,7 +637,7 @@ a:hover {
   flex-direction: column;
   max-height: 85vh; // Don't let the form grow too large
 
-  .p-dialog-footer>div {
+  .p-dialog-footer > div {
     display: flex;
     justify-content: space-between;
   }
@@ -668,7 +667,9 @@ $search-preview-margin: 5px;
 
   @media (min-width: common.$tablet-responsive-cutoff) {
     min-height: calc($search-preview-width + 2 * $search-preview-margin);
-    padding-right: calc($search-preview-width + 3 * $search-preview-margin ) !important;
+    padding-right: calc(
+      $search-preview-width + 3 * $search-preview-margin
+    ) !important;
     padding-bottom: $search-preview-margin;
     grid-template-rows: min-content min-content;
   }
@@ -713,11 +714,13 @@ $search-preview-margin: 5px;
   border-radius: 0.28rem;
   justify-content: center;
   align-items: center;
-  background: repeating-linear-gradient(-45deg,
-      black,
-      black 10px,
-      var(--site-border-color) 10px,
-      var(--site-border-color) 11px);
+  background: repeating-linear-gradient(
+    -45deg,
+    black,
+    black 10px,
+    var(--site-border-color) 10px,
+    var(--site-border-color) 11px
+  );
 }
 
 .explore-target-search-results {
@@ -784,7 +787,7 @@ $search-preview-margin: 5px;
 }
 
 .pl-react-table.pl-celled-table {
-  .p-datatable-tbody>tr>td {
+  .p-datatable-tbody > tr > td {
     &.explore-table-cell-hide-border {
       border-left-width: 0;
     }
@@ -948,7 +951,8 @@ $search-preview-margin: 5px;
     $active-status-translate-y: 2.5em;
 
     .p-component.p-inputswitch.obs-active-status-toggle {
-      transform: rotate(270deg) scale(0.6) translateY($active-status-translate-y);
+      transform: rotate(270deg) scale(0.6)
+        translateY($active-status-translate-y);
       height: 21px;
 
       &.p-inputswitch-checked .p-inputswitch-slider {
@@ -1036,7 +1040,7 @@ $search-preview-margin: 5px;
 // ------
 // Imaging Configuration
 // ------
-.explore-configuration-filter .p-multiselect-item>span {
+.explore-configuration-filter .p-multiselect-item > span {
   width: 100%;
 
   div {
@@ -1113,8 +1117,10 @@ $search-preview-margin: 5px;
 
   --column-wide-span: 3;
 
-  grid-template-columns: [label1] max-content [field1] minmax(20ch, 3fr) [label2] max-content [field2] minmax(20ch,
-      3fr);
+  grid-template-columns: [label1] max-content [field1] minmax(20ch, 3fr) [label2] max-content [field2] minmax(
+      20ch,
+      3fr
+    );
 
   .elevation-range-picker {
     width: 9em;
@@ -1402,7 +1408,7 @@ img.partner-split-flag {
 
     th:last-child,
     td:last-child,
-    td:last-child>span>div {
+    td:last-child > span > div {
       width: 4em !important;
     }
 
@@ -1455,7 +1461,8 @@ img.partner-split-flag {
       height: 0;
       border-style: solid;
       border-width: 0 10px 10px 0;
-      border-color: transparent var(--explore-selected-box-color) transparent transparent;
+      border-color: transparent var(--explore-selected-box-color) transparent
+        transparent;
       left: 0;
       top: 0;
       transform: rotate(-90deg);
@@ -1507,7 +1514,7 @@ table.explore-border-table {
     justify-content: space-between;
 
     /* stylelint-disable-next-line selector-class-pattern */
-    span>svg.svg-inline--fa {
+    span > svg.svg-inline--fa {
       padding-right: 0.5em;
     }
 
@@ -1536,7 +1543,7 @@ table.explore-border-table {
 }
 
 .p-button.p-fileupload {
-  +input[type="file"] {
+  + input[type="file"] {
     display: none;
   }
 }
@@ -1648,14 +1655,20 @@ table.explore-border-table {
   height: 100dvh;
   width: 100%;
   overflow: hidden;
-  grid-template: "header"$top-bottom-space "body" minmax(calc(100% - $top-bottom-space - $top-bottom-space),
-    1fr
-  ) "sidebar"#{$top-bottom-space} / 1fr;
+  grid-template:
+    "header" $top-bottom-space "body" minmax(
+      calc(100% - $top-bottom-space - $top-bottom-space),
+      1fr
+    )
+    "sidebar" #{$top-bottom-space} / 1fr;
 
   @media (min-width: common.$tablet-responsive-cutoff) {
-    grid-template: "header header"$top-bottom-space "sidebar body" minmax(calc(100% - $top-bottom-space),
+    grid-template:
+      "header header" $top-bottom-space "sidebar body" minmax(
+        calc(100% - $top-bottom-space),
         1fr
-      ) / 50px auto;
+      )
+      / 50px auto;
   }
 }
 
@@ -1746,6 +1759,32 @@ table.explore-border-table {
   min-height: 0;
   height: 100%;
   overflow: hidden;
+
+  // Remove indent on _first_ level tree nodes (observations)
+  .p-tree-container > .p-treenode.p-treenode-leaf {
+    .p-tree-toggler {
+      display: none;
+    }
+    // .obs-tree-group-leaf {
+    //   margin: 8px;
+    // }
+  }
+  .p-tree-container > .p-treenode > .p-treenode-content {
+    >.obs-tree-group-leaf {
+      margin: 8px;
+    }
+  }
+
+  .p-treenode-content {
+    width: 100%;
+  }
+  .obs-item {
+    width: 100%;
+  }
+  .p-tree.p-component {
+    padding: 0;
+    border: none;
+  }
 }
 
 // -------
@@ -1776,7 +1815,7 @@ table.explore-border-table {
     padding: 0;
     overflow-y: unset;
 
-    &>div {
+    & > div {
       height: 100%;
     }
   }
@@ -1854,7 +1893,7 @@ $help-title-height: 40px;
     fill: hsl(0deg 87% 66%);
   }
 
-  >div {
+  > div {
     height: 100%;
     max-height: 100%;
 
@@ -2002,7 +2041,7 @@ $help-title-height: 40px;
       margin-right: 0.3em;
     }
 
-    >* {
+    > * {
       margin-bottom: 0.5em;
     }
 
@@ -2163,7 +2202,7 @@ $help-title-height: 40px;
 
 // Move to lucuma-ui?
 .explore-table:has(.p-datatable-emptymessage) {
-  tr>td.p-datatable-emptymessage {
+  tr > td.p-datatable-emptymessage {
     padding: 0;
   }
 }
@@ -2383,15 +2422,15 @@ div.spectroscopy-table-emptymessage {
   .explore-target-summary-delete {
     left: 0;
 
-    ~.explore-target-summary-type {
+    ~ .explore-target-summary-type {
       left: 35px;
 
-      ~.explore-target-summary-name {
+      ~ .explore-target-summary-name {
         left: 70px;
       }
     }
 
-    ~.explore-target-summary-name {
+    ~ .explore-target-summary-name {
       left: 35px;
     }
   }
@@ -2406,15 +2445,15 @@ div.spectroscopy-table-emptymessage {
       justify-content: space-evenly;
     }
 
-    ~.explore-target-summary-type {
+    ~ .explore-target-summary-type {
       left: 75px;
 
-      ~.explore-target-summary-name {
+      ~ .explore-target-summary-name {
         left: 109px;
       }
     }
 
-    ~.explore-target-summary-name {
+    ~ .explore-target-summary-name {
       left: 75px;
     }
   }
@@ -2424,15 +2463,15 @@ div.spectroscopy-table-emptymessage {
     width: 55px;
     min-width: 55px;
 
-    ~.explore-target-summary-type {
+    ~ .explore-target-summary-type {
       left: 55px;
 
-      ~.explore-target-summary-name {
+      ~ .explore-target-summary-name {
         left: 89px;
       }
     }
 
-    ~.explore-target-summary-name {
+    ~ .explore-target-summary-name {
       left: 55px;
     }
   }

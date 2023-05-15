@@ -103,6 +103,7 @@ object ExploreStyles:
   val UnselectedObsTreeGroup: Css  = Css("unselected-obs-tree-group")
   val ObsTreeGroupHeader: Css      = Css("obs-tree-group-header")
   val ObsTreeItem: Css             = Css("obs-tree-item")
+  val ObsTreeGroupLeaf: Css        = Css("obs-tree-group-leaf")
   val TreeToolbar: Css             = Css("tree-toolbar")
   val ObsBadge: Css                = Css("obs-badge")
   val ObsBadgeSubtitle: Css        = Css("obs-badge-subtitle")
