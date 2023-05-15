@@ -34,50 +34,15 @@ object ObsListTree:
   private type Props[A] = ObsListTree[A]
 
   private val ColDef = ColumnDef[Expandable[ObsNode]]
-  // private def treeToData(
-  //   tree:             KeyedIndexedTree[ObsNode.Id, ObsNode],
-  //   collapsedItemIds: Set[AtlasTree.ItemId]
-  // ): AtlasTree.Data[ObsNode] =
-  //   def valueChildrenToData(
-  //     keyValue: Option[(ObsNode.Id, ObsNode)],
-  //     children: List[Node[(ObsNode.Id, ObsNode)]],
-  //     accum:    List[(String, AtlasTree.Item[ObsNode])] = List.empty
-  //   ): List[(String, AtlasTree.Item[ObsNode])] = {
-  //     val getKey: ((ObsNode.Id, ObsNode)) => String = (id, _) => id.fold(_.toString, _.toString)
-  //     val key                                       = keyValue.map(getKey).getOrElse("")
-  //     children.foldLeft(
-  //       accum :+
-  //         (key -> AtlasTree.Item[ObsNode](
-  //           key,
-  //           children.map(node => getKey(node.value)),
-  //           hasChildren = children.nonEmpty,
-  //           isExpanded = !collapsedItemIds.contains(key),
-  //           isChildrenLoading = false,
-  //           keyValue.map(_._2).orUndefined
-  //         ))
-  //     )((nodeAccum, node) => valueChildrenToData(node.value.some, node.children, nodeAccum))
-  //   }
-  //   AtlasTree.Data(
-  //     rootId = "",
-  //     items = valueChildrenToData(none, tree.toKeyedTree.children).toMap
-  //   )
 
   private def component[A] =
     ScalaFnComponent
       .withHooks[Props[A]]
-      .render((props) =>
-        // val onCollapse =
-        //   (itemId: AtlasTree.ItemId, _: AtlasTree.Path) => collapsedItemIds.modState(_ + itemId)
-
-        // val onExpand =
-        //   (itemId: AtlasTree.ItemId, _: AtlasTree.Path) => collapsedItemIds.modState(_ - itemId)
-
+      .render(props =>
         <.div(
           Tree(
             props.obsList,
             nodeTemplate = props.renderItem
           )
-
         )
       )
-
