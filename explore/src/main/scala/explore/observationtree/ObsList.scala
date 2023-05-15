@@ -62,22 +62,6 @@ case class ObsList(
   groups:          Pot[View[List[AllGroupElements]]]
 ) extends ReactFnProps(ObsList.component):
   val observations: ObservationList = obsUndoCtx.model.get
-  // val groupings: KeyedIndexedList[Group.Elements, Group] = ???
-  //   KeyedIndexedList.fromListMany(
-  //   List(
-  //     Group(Group.Id(12L.refined),
-  //              "Name 1".some,
-  //              observations.toList.take(2).map(o => GroupElement(o.id.asRight))
-  //     ),
-  //     Group(Group.Id(13L.refined),
-  //              "Name 2".some,
-  //              observations.toList.drop(2).map(o => GroupElement(o.id.asRight)) :+ GroupElement(
-  //                Grouping.Id(12L.refined).asLeft
-  //              )
-  //     )
-  //   ),
-  //   _.elements
-  // )
 
 object ObsList:
   private type Props = ObsList

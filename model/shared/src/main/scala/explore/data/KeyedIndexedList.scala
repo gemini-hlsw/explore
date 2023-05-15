@@ -103,11 +103,6 @@ object KeyedIndexedList:
       (getKey(a), (a, idx))
     }))
 
-  def fromListMany[K, A](list: List[A], getKey: A => Seq[K]): KeyedIndexedList[K, A] =
-    KeyedIndexedList(TreeSeqMap.from(list.flatMap(a => getKey(a).tupleRight(a)).zipWithIndex.map {
-      case ((k, a), idx) => (k, (a, idx))
-    }))
-
   def unsafeFromTreeSeqMap[K, A](list: TreeSeqMap[K, (A, Int)]): KeyedIndexedList[K, A] =
     KeyedIndexedList(list)
 
