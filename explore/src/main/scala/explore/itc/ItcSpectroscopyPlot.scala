@@ -258,7 +258,6 @@ object ItcSpectroscopyPlot {
               onCreate = c =>
                 c.reflowCB *>
                   formatErrorMessage(c),
-              wrapperCss = ExploreStyles.ItcPlotWrapper
             )
               .withKey(s"$props-$resize")
               .when(resize.height.isDefined)

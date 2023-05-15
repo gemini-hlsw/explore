@@ -176,7 +176,6 @@ object ExploreStyles:
   val ItcPlotDescription: Css     = Css("itc-plot-description")
   val ItcPlotBody: Css            = Css("itc-plot-body")
   val ItcPlotControls: Css        = Css("itc-plot-controls")
-  val ItcPlotWrapper: Css         = Css("itc-plot-wrapper")
   val ItcTileBody: Css            = Css("explore-itc-tile-body")
   val ItcTileTitle: Css           = Css("explore-itc-tile-title")
   val ItcTileTargetSelector: Css  = Css("explore-itc-tile-target-selector")
