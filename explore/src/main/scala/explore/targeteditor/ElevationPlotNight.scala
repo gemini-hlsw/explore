@@ -256,8 +256,8 @@ object ElevationPlotNight {
             s"<strong>$time ($timeDisplay)</strong><br/>${ctx.series.name}: $value"
         }
 
-        val sunset  = instantFormat(tbNauticalNight.start)
-        val sunrise = instantFormat(tbNauticalNight.end)
+        val dusk = instantFormat(tbNauticalNight.start)
+        val dawn = instantFormat(tbNauticalNight.end)
 
         val targetBelowHorizon =
           ElevationSeries.Elevation
@@ -302,7 +302,7 @@ object ElevationPlotNight {
                       .setZIndex(1)
                       .setLabel(
                         XAxisPlotBandsLabelOptions()
-                          .setText(s"  Evening 12° - Twilight: $sunset")
+                          .setText(s"  Evening 12° - Twilight: $dusk")
                           .setRotation(270)
                           .setAlign(AlignValue.left)
                           .setTextAlign(AlignValue.center)
@@ -315,7 +315,7 @@ object ElevationPlotNight {
                       .setZIndex(1)
                       .setLabel(
                         XAxisPlotBandsLabelOptions()
-                          .setText(s"  Morning 12° - Twilight: $sunrise")
+                          .setText(s"  Morning 12° - Twilight: $dawn")
                           .setRotation(270)
                           .setAlign(AlignValue.left)
                           .setTextAlign(AlignValue.center)
@@ -423,10 +423,9 @@ object ElevationPlotNight {
         val moonIllum = midOfNightResult.lunarIlluminatedFraction.toDouble
 
         dom.console.log(
-          s"Moon brightness computed at [${midOfNight.atZone(ZoneOffset.UTC)}]: [$moonIllum]\n",
-          s"Official Twilights:\n",
-          s" >>> [${start.atZone(ZoneOffset.UTC)}]\n",
-          s" <<< [${end.atZone(ZoneOffset.UTC)}]"
+          s"Nautical Twilights:\n",
+          s" >>> [${tbNauticalNight.start.atZone(ZoneOffset.UTC)}]\n",
+          s" <<< [${tbNauticalNight.end.atZone(ZoneOffset.UTC)}]"
         )
 
         <.div(

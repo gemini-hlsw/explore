@@ -317,13 +317,21 @@ object ObsTabTiles:
               props.allConstraintSets
             )
 
+          val timingWindows: View[List[TimingWindow]] =
+            TimingWindowsQueries.viewWithRemoteMod(
+              props.programId,
+              ObsIdSet.one(props.obsId),
+              props.obsUndoCtx.undoableView[List[TimingWindow]](ObsSummary.timingWindows)
+            )
+
           val skyPlotTile =
             ElevationPlotTile.elevationPlotTile(
               props.userId,
               props.focusedTarget.orElse(props.observation.scienceTargetIds.headOption),
               observingMode.map(_.siteFor),
               targetCoords,
-              vizTime
+              vizTime,
+              timingWindows.get
             )
 
           def setCurrentTarget(programId: Program.Id, oid: Option[Observation.Id])(
@@ -402,13 +410,6 @@ object ObsTabTiles:
                 props.obsUndoCtx.zoom(ObsSummary.constraints),
                 renderInTitle
               )
-            )
-
-          val timingWindows: View[List[TimingWindow]] =
-            TimingWindowsQueries.viewWithRemoteMod(
-              props.programId,
-              ObsIdSet.one(props.obsId),
-              props.obsUndoCtx.undoableView[List[TimingWindow]](ObsSummary.timingWindows)
             )
 
           val timingWindowsTile =
