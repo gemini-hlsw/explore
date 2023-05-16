@@ -4,26 +4,18 @@
 package explore.observationtree
 
 import explore.data.tree.KeyedIndexedTree
-import react.common.ReactFnProps
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import cats.syntax.all.*
-import explore.data.tree.Node
-import scala.scalajs.js
+import lucuma.react.table.*
+import lucuma.typed.primereact.treeTreeMod.TreeNodeTemplateOptions
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import js.JSConverters._
-import lucuma.react.table.Expandable
 import lucuma.ui.table.*
-import explore.model.reusability.given
-import lucuma.ui.reusability.given
-import lucuma.react.table.*
-import lucuma.react.table.ColumnDef
 import org.scalajs.dom.HTMLDivElement
-import explore.observationtree.ObsNode.given
-import explore.components.ui.ExploreStyles
+import react.common.ReactFnProps
 import react.primereact.Tree
-import lucuma.typed.primereact.treeTreeMod.TreeNodeTemplateOptions
+
+import scala.scalajs.js
 
 case class ObsListTree[A](
   obsList:    Seq[Tree.Node[A]],

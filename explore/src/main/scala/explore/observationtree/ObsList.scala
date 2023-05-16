@@ -6,6 +6,7 @@ package explore.observationtree
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
+import crystal.Pot
 import crystal.react.View
 import crystal.react.hooks.*
 import crystal.react.implicits.*
@@ -30,28 +31,20 @@ import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
+import lucuma.typed.primereact.treeTreeMod.TreeNodeTemplateOptions
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
 import org.typelevel.log4cats.Logger
+import queries.common.ProgramQueriesGQL.ProgramGroupsQuery.Data.Program.AllGroupElements
+import queries.common.ProgramQueriesGQL.ProgramGroupsQuery.Data.Program.AllGroupElements.Group
 import queries.schemas.odb.ObsQueries
 import react.common.ReactFnProps
 import react.primereact.Button
 
 import ObsQueries.*
-import explore.model.ObsSummary
-import explore.data.KeyedIndexedList
-import lucuma.typed.primereact.treeTreeMod.TreeNodeTemplateOptions
-import explore.observationtree.ObsNode.Obs
-import explore.observationtree.ObsNode.And
-import explore.observationtree.ObsNode.Or
-import eu.timepit.refined.*
-import lucuma.refined.*
-import queries.common.ProgramQueriesGQL.ProgramGroupsQuery.Data.Program.AllGroupElements.Group
-import queries.common.ProgramQueriesGQL.ProgramGroupsQuery.Data.Program.AllGroupElements
-import crystal.Pot
 
 case class ObsList(
   obsUndoCtx:      UndoContext[ObservationList],
@@ -134,7 +127,7 @@ object ObsList:
 
         def renderItem(node: ObsNode, options: TreeNodeTemplateOptions) =
           node match
-            case Obs(obs)   =>
+            case ObsNode.Obs(obs)   =>
               val id       = obs.id
               val selected = props.focusedObs.exists(_ === id)
               <.a(
@@ -180,8 +173,8 @@ object ObsList:
                     .some
                 )
               )
-            case And(group) => renderGroup("AND", group)
-            case Or(group)  => renderGroup("OR", group)
+            case ObsNode.And(group) => renderGroup("AND", group)
+            case ObsNode.Or(group)  => renderGroup("OR", group)
 
         def renderGroup(title: String, group: Group) =
           <.span(title,

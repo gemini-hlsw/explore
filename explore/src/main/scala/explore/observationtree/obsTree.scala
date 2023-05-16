@@ -3,6 +3,8 @@
 
 package explore.observationtree
 
+import cats.Eq
+import cats.derived.*
 import cats.syntax.all.*
 import explore.data.KeyedIndexedList
 import explore.model.ObsSummary
@@ -18,11 +20,9 @@ import queries.common.ProgramQueriesGQL.ProgramGroupsQuery.Data.Program.AllGroup
 import queries.common.ProgramQueriesGQL.ProgramGroupsQuery.Data.Program.AllGroupElements.Group.Elements
 import react.primereact.Tree
 import react.primereact.Tree.Node
-import cats.derived.*
 
 import java.util.UUID
 import scala.scalajs.js.JSConverters._
-import cats.Eq
 
 enum ObsNode derives Eq:
   case Obs(value: ObsSummary)
