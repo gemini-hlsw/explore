@@ -174,7 +174,7 @@ object ObsTabTiles:
         itcQueryProps(obsView, selectedConfig.get, props.allTargets)
       )
       // Chart results
-      .useState(Pot.pending[Map[ItcTarget, ItcChartResult]])
+      .useState(Map.empty[ItcTarget, Pot[ItcChartResult]])
       // itc loading
       .useState(LoadingState.Done)
       .useEffectWithDepsBy((props, _, obsView, _, _, selectedConfig, _, _, _) =>
@@ -185,21 +185,23 @@ object ObsTabTiles:
         oldItcProps.setState(itcProps) *>
           itcProps
             .requestITCData(
-              m =>
-                charts.modStateAsync {
-                  case Pot.Ready(r) =>
-                    m.bimap(
-                      e => Pot.error(new RuntimeException(e.shortName)),
-                      v => Pot.Ready(r + (v.target -> v))
-                    ).merge
-                  case _            =>
-                    m.bimap(
-                      e => Pot.error(new RuntimeException(e.shortName)),
-                      v => Pot.Ready(Map(v.target -> v))
-                    ).merge
-                } *> loading.setState(LoadingState.Done).to[IO],
+              m => {
+                val r = m.map {
+                  case (k, Left(e))  =>
+                    k -> (Pot.error(new RuntimeException(e.shortName)): Pot[ItcChartResult])
+                  case (k, Right(e)) =>
+                    k -> (Pot.Ready(e): Pot[ItcChartResult])
+                }.toMap
+                charts.setStateAsync(r) *> loading.setState(LoadingState.Done).to[IO]
+              },
               (charts.setState(
-                Pot.error(new RuntimeException("Not enough information to calculate the ITC graph"))
+                itcProps.targets
+                  .map(t =>
+                    t -> Pot.error(
+                      new RuntimeException("Not enough information to calculate the ITC graph")
+                    )
+                  )
+                  .toMap
               ) *> loading.setState(LoadingState.Done)).to[IO],
               loading.setState(LoadingState.Loading).to[IO]
             )

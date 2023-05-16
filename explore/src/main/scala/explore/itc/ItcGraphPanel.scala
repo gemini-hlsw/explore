@@ -33,7 +33,6 @@ import explore.model.boopickle.ItcPicklers.given
 import explore.model.display.given
 import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.ItcChartResult
-import explore.model.itc.ItcQueryProblems
 import explore.model.itc.ItcTarget
 import explore.model.itc.OverridenExposureTime
 import explore.model.itc.PlotDetails
@@ -72,7 +71,7 @@ case class ItcGraphPanel(
   selectedTarget:  View[Option[ItcTarget]],
   selectedConfig:  Option[BasicConfigAndItc], // selected row in spectroscopy modes table
   itcProps:        ItcPanelProps,
-  itcChartResults: Pot[Map[ItcTarget, ItcChartResult]],
+  itcChartResults: Map[ItcTarget, Pot[ItcChartResult]],
   itcLoading:      LoadingState
 ) extends ReactFnProps(ItcGraphPanel.component)
 
@@ -130,19 +129,27 @@ object ItcGraphPanel:
         val detailsView =
           settings.zoom(Pot.readyPrism.andThen(ItcGraphProperties.detailsShown))
 
+        val selectedTarget = props.selectedTarget.get
+
         val renderPlot: ItcGraphProperties => VdomNode =
           (opt: ItcGraphProperties) =>
             val isModeSelected        = props.selectedConfig.isDefined
             val error: Option[String] =
-              props.itcChartResults.fold(
-                "Select a mode to plot".some.filterNot(_ => isModeSelected),
+              (for {
+                t <- selectedTarget
+                r <- props.itcChartResults.get(t)
+              } yield r.fold(
+                "Select .a mode to plot".some.filterNot(_ => isModeSelected),
                 _.getMessage.some,
                 _ => none
-              )
+              )).flatten
 
             val selectedResult: Option[ItcChartResult] =
-              props.selectedTarget.get
-                .flatMap(t => props.itcChartResults.toOption.flatMap(_.get(t)))
+              for {
+                t <- selectedTarget
+                r <- props.itcChartResults.get(t)
+                c <- r.toOption
+              } yield c
 
             <.div(
               ExploreStyles.ItcPlotSection,

@@ -28,7 +28,6 @@ import lucuma.itc.client.OptimizedSpectroscopyGraphInput
 import lucuma.itc.client.OptimizedSpectroscopyGraphResult
 import lucuma.itc.client.SignificantFiguresInput
 import lucuma.refined.*
-import lucuma.refined.*
 import lucuma.schemas.model.CentralWavelength
 import org.typelevel.log4cats.Logger
 import queries.schemas.itc.syntax.*
@@ -49,7 +48,7 @@ object ITCGraphRequests:
     targets:      NonEmptyList[ItcTarget],
     mode:         InstrumentRow,
     cache:        Cache[F],
-    callback:     Either[ItcQueryProblems, ItcChartResult] => F[Unit]
+    callback:     Map[ItcTarget, Either[ItcQueryProblems, ItcChartResult]] => F[Unit]
   )(using Monoid[F[Unit]], ItcClient[F]): F[Unit] =
 
     val itcRowsParams = mode match // Only handle known modes
@@ -62,7 +61,7 @@ object ITCGraphRequests:
 
     def doRequest(
       request: ItcGraphRequestParams
-    ): F[List[Either[ItcQueryProblems, ItcChartResult]]] =
+    ): F[Map[ItcTarget, Either[ItcQueryProblems, ItcChartResult]]] =
       request.target
         .traverse(t =>
           (selectedBand(t.profile, request.wavelength.value), request.mode.toItcClientMode)
@@ -82,7 +81,9 @@ object ITCGraphRequests:
                   ),
                   false
                 )
-                .map(chartResult => ItcChartResult(t, chartResult.ccds, chartResult.charts).asRight)
+                .map(chartResult =>
+                  t -> ItcChartResult(t, chartResult.ccds, chartResult.charts).asRight
+                )
                 .handleError { e =>
                   val msg = e match
                     case ResponseException(errors, _)                               =>
@@ -91,14 +92,14 @@ object ITCGraphRequests:
                       "ITC Server unreachable"
                     case e                                                          =>
                       e.getMessage
-                  ItcQueryProblems.GenericError(msg).asLeft
+                  t -> ItcQueryProblems.GenericError(msg).asLeft
                 }
             }
         )
-        .map(_.toList.flattenOption)
+        .map(_.toList.flattenOption.toMap)
 
     // We cache unexpanded results, exactly as received from server.
-    val cacheableRequest = Cacheable(CacheName("itcGraphQuery"), CacheVersion(3), doRequest)
+    val cacheableRequest = Cacheable(CacheName("itcGraphQuery"), CacheVersion(4), doRequest)
 
     itcRowsParams
       .traverse { request =>
@@ -110,7 +111,5 @@ object ITCGraphRequests:
             .apply(request)
       }
       .flatMap {
-        _.orEmpty
-          .traverse(callback)
-          .void
+        _.traverse(callback).void
       }

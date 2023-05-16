@@ -3,6 +3,8 @@
 
 package explore.itc
 
+import boopickle.Default.eitherPickler
+import boopickle.Default.mapPickler
 import cats.Eq
 import cats.data.NonEmptyList
 import cats.derived.*
@@ -111,7 +113,7 @@ case class ItcPanelProps(
   val isExecutable: Boolean = queryProps.forall(_.isDefined)
 
   def requestITCData(
-    onComplete:  Either[ItcQueryProblems, ItcChartResult] => IO[Unit],
+    onComplete:  Map[ItcTarget, Either[ItcQueryProblems, ItcChartResult]] => IO[Unit],
     orElse:      IO[Unit],
     beforeStart: IO[Unit]
   )(using WorkerClient[IO, ItcMessage.Request]): IO[Unit] =
@@ -128,7 +130,11 @@ case class ItcPanelProps(
           .requestSingle(ItcMessage.GraphQuery(w, ex.time, exposures, constraints, t, mode))
           .flatMap(
             _.fold(
-              onComplete(ItcQueryProblems.GenericError("No response from ITC server").asLeft)
+              onComplete(
+                targets
+                  .map(_ -> ItcQueryProblems.GenericError("No response from ITC server").asLeft)
+                  .toMap
+              )
             )(onComplete)
           )
     action.getOrElse(orElse)

@@ -67,7 +67,7 @@ object ItcMessage extends ItcPicklers {
     targets:      NonEmptyList[ItcTarget],
     modes:        InstrumentRow
   ) extends Request {
-    type ResponseType = Either[ItcQueryProblems, ItcChartResult]
+    type ResponseType = Map[ItcTarget, Either[ItcQueryProblems, ItcChartResult]]
   }
 
   private given Pickler[SpectroscopyMatrixRequest] = generatePickler
