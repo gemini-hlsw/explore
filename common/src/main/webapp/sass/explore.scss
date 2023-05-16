@@ -1752,10 +1752,12 @@ table.explore-border-table {
     .p-tree-toggler {
       display: none;
     }
+
     // .obs-tree-group-leaf {
     //   margin: 8px;
     // }
   }
+
   .p-tree-container > .p-treenode > .p-treenode-content {
     >.obs-tree-group-leaf {
       margin: 8px;
@@ -1765,9 +1767,11 @@ table.explore-border-table {
   .p-treenode-content {
     width: 100%;
   }
+
   .obs-item {
     width: 100%;
   }
+
   .p-tree.p-component {
     padding: 0;
     border: none;
