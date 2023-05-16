@@ -105,10 +105,52 @@ object ProgramQueriesGQL {
   }
 
   @GraphQL
+  trait ProgramGroupsQuery extends GraphQLOperation[ObservationDB] {
+    val document: String = """#graphql
+      query ($programId: ProgramId!) {
+        program(programId: $programId) {
+          allGroupElements {
+            observation {
+              id
+            }
+            group {
+              id
+              name
+              minimumRequired
+              elements {
+                group {
+                  id
+                }
+                observation {
+                  id
+                }
+              }
+            }
+            parentGroupId
+          }
+        }
+      }
+    """
+  }
+
+  @GraphQL
   trait ProgramEditSubscription extends GraphQLOperation[ObservationDB] {
     val document: String = """
       subscription($programId: ProgramId) {
         programEdit(input: {programId: $programId}) {
+          value {
+            id
+          }
+        }
+      }
+    """
+  }
+
+  @GraphQL
+  trait GroupEditSubscription extends GraphQLOperation[ObservationDB] {
+    val document: String = """
+      subscription($programId: ProgramId) {
+        groupEdit(input: { programId: $programId }) {
           value {
             id
           }

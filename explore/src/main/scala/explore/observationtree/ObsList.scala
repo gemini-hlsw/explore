@@ -6,6 +6,7 @@ package explore.observationtree
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
+import crystal.Pot
 import crystal.react.View
 import crystal.react.hooks.*
 import crystal.react.implicits.*
@@ -30,12 +31,15 @@ import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
+import lucuma.typed.primereact.treeTreeMod.TreeNodeTemplateOptions
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
 import org.typelevel.log4cats.Logger
+import queries.common.ProgramQueriesGQL.ProgramGroupsQuery.Data.Program.AllGroupElements
+import queries.common.ProgramQueriesGQL.ProgramGroupsQuery.Data.Program.AllGroupElements.Group
 import queries.schemas.odb.ObsQueries
 import react.common.ReactFnProps
 import react.primereact.Button
@@ -47,12 +51,15 @@ case class ObsList(
   programId:       Program.Id,
   focusedObs:      Option[Observation.Id],
   focusedTarget:   Option[Target.Id],
-  setSummaryPanel: Callback
+  setSummaryPanel: Callback,
+  groups:          Pot[View[List[AllGroupElements]]]
 ) extends ReactFnProps(ObsList.component):
   val observations: ObservationList = obsUndoCtx.model.get
 
 object ObsList:
   private type Props = ObsList
+
+  private given Reusability[AllGroupElements] = Reusability.byEq
 
   private def insertObs(
     programId: Program.Id,
@@ -107,10 +114,74 @@ object ObsList:
       }
       // adding new observation
       .useStateView(false)
-      .render { (props, ctx, _, adding) =>
+      .useMemoBy((props, _, _, _) => (props.observations, props.groups.map(_.reuseByValue)))(
+        (_, _, _, _) =>
+          (observations, groupsPot) =>
+            groupsPot.map(groups => ObsNode.fromList(observations, groups.value.get))
+      )
+      .render { (props, ctx, _, adding, treeNodesPot) =>
+
         import ctx.given
 
         val observations = props.observations.toList
+
+        def renderItem(node: ObsNode, options: TreeNodeTemplateOptions) =
+          node match
+            case ObsNode.Obs(obs)   =>
+              val id       = obs.id
+              val selected = props.focusedObs.exists(_ === id)
+              <.a(
+                ^.href := ctx.pageUrl(
+                  AppTab.Observations,
+                  props.programId,
+                  Focused.singleObs(id, props.focusedTarget)
+                ),
+                ExploreStyles.ObsItem |+| ExploreStyles.SelectedObsItem.when_(selected),
+                ^.onClick ==> linkOverride(
+                  setObs(props.programId, id.some, ctx)
+                )
+              )(
+                ObsBadge(
+                  obs,
+                  ObsBadge.Layout.ObservationsTab,
+                  selected = selected,
+                  setStatusCB = (obsEditStatus(props.programId, id)
+                    .set(props.obsUndoCtx) _).compose((_: ObsStatus).some).some,
+                  setActiveStatusCB = (obsActiveStatus(props.programId, id)
+                    .set(props.obsUndoCtx) _).compose((_: ObsActiveStatus).some).some,
+                  setSubtitleCB = (obsEditSubtitle(props.programId, id)
+                    .set(props.obsUndoCtx) _).compose((_: Option[NonEmptyString]).some).some,
+                  deleteCB = obsExistence(
+                    props.programId,
+                    id,
+                    o => setObs(props.programId, o.some, ctx)
+                  )
+                    .mod(props.obsUndoCtx)(obsListMod.delete)
+                    .showToastCB(ctx)(s"Deleted obs ${id.show}")
+                    .some,
+                  cloneCB = cloneObs(
+                    props.programId,
+                    id,
+                    observations.length,
+                    props.obsUndoCtx,
+                    ctx,
+                    adding.async.set(true),
+                    adding.async.set(false)
+                  )
+                    .withToast(s"Duplicating obs ${id}")
+                    .runAsync
+                    .some
+                )
+              )
+            case ObsNode.And(group) => renderGroup("AND", group)
+            case ObsNode.Or(group)  => renderGroup("OR", group)
+
+        def renderGroup(title: String, group: Group) =
+          <.span(title,
+                 ExploreStyles.ObsTreeGroupLeaf,
+                 group.name.map(<.em(_, ^.marginLeft := "8px")),
+                 ^.title := group.id.show
+          )
 
         <.div(ExploreStyles.ObsTreeWrapper)(
           <.div(ExploreStyles.TreeToolbar)(
@@ -139,56 +210,10 @@ object ObsList:
               clazz = ExploreStyles.ButtonSummary
             )
           ),
-          <.div(ExploreStyles.ObsTree)(
-            <.div(ExploreStyles.ObsScrollTree)(
-              observations.toTagMod { obs =>
-                val focusedObs = obs.id
-                val selected   = props.focusedObs.exists(_ === focusedObs)
-                <.a(
-                  ^.href := ctx.pageUrl(
-                    AppTab.Observations,
-                    props.programId,
-                    Focused.singleObs(focusedObs, props.focusedTarget)
-                  ),
-                  ExploreStyles.ObsItem |+| ExploreStyles.SelectedObsItem.when_(selected),
-                  ^.onClick ==> linkOverride(
-                    setObs(props.programId, focusedObs.some, ctx)
-                  )
-                )(
-                  ObsBadge(
-                    obs,
-                    ObsBadge.Layout.ObservationsTab,
-                    selected = selected,
-                    setStatusCB = (obsEditStatus(props.programId, obs.id)
-                      .set(props.obsUndoCtx) _).compose((_: ObsStatus).some).some,
-                    setActiveStatusCB = (obsActiveStatus(props.programId, obs.id)
-                      .set(props.obsUndoCtx) _).compose((_: ObsActiveStatus).some).some,
-                    setSubtitleCB = (obsEditSubtitle(props.programId, obs.id)
-                      .set(props.obsUndoCtx) _).compose((_: Option[NonEmptyString]).some).some,
-                    deleteCB = obsExistence(
-                      props.programId,
-                      obs.id,
-                      o => setObs(props.programId, o.some, ctx)
-                    )
-                      .mod(props.obsUndoCtx)(obsListMod.delete)
-                      .showToastCB(ctx)(s"Deleted obs ${obs.id.show}")
-                      .some,
-                    cloneCB = cloneObs(
-                      props.programId,
-                      obs.id,
-                      observations.length,
-                      props.obsUndoCtx,
-                      ctx,
-                      adding.async.set(true),
-                      adding.async.set(false)
-                    )
-                      .withToast(s"Duplicating obs ${obs.id}")
-                      .runAsync
-                      .some
-                  )
-                )
-              }
+          treeNodesPot.renderPot { treeNodes =>
+            <.div()(
+              ObsListTree(treeNodes, renderItem)
             )
-          )
+          }
         )
       }

@@ -1746,6 +1746,36 @@ table.explore-border-table {
   min-height: 0;
   height: 100%;
   overflow: hidden;
+
+  // Remove indent on _first_ level tree nodes (observations)
+  .p-tree-container > .p-treenode.p-treenode-leaf {
+    .p-tree-toggler {
+      display: none;
+    }
+
+    // .obs-tree-group-leaf {
+    //   margin: 8px;
+    // }
+  }
+
+  .p-tree-container > .p-treenode > .p-treenode-content {
+    >.obs-tree-group-leaf {
+      margin: 8px;
+    }
+  }
+
+  .p-treenode-content {
+    width: 100%;
+  }
+
+  .obs-item {
+    width: 100%;
+  }
+
+  .p-tree.p-component {
+    padding: 0;
+    border: none;
+  }
 }
 
 // -------

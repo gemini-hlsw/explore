@@ -22,6 +22,7 @@ import explore.common.UserPreferencesQueries.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.data.KeyedIndexedList
+import explore.given
 import explore.model.ProgramSummaries
 import explore.model.*
 import explore.model.enums.AppTab
@@ -56,6 +57,9 @@ import lucuma.ui.utils.*
 import monocle.Iso
 import org.scalajs.dom.window
 import queries.common.ObsQueriesGQL.*
+import queries.common.ProgramQueriesGQL.GroupEditSubscription
+import queries.common.ProgramQueriesGQL.ProgramGroupsQuery
+import queries.common.ProgramQueriesGQL.ProgramGroupsQuery.Data.Program.AllGroupElements
 import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.odb.ObsQueries.*
 import react.common.*
@@ -183,7 +187,8 @@ object ObsTabContents extends TwoPanels:
     defaultLayouts: LayoutsMap,
     layouts:        View[Pot[LayoutsMap]],
     resize:         UseResizeDetectorReturn,
-    ctx:            AppContext[IO]
+    ctx:            AppContext[IO],
+    groups:         Pot[View[List[AllGroupElements]]]
   ): VdomNode = {
     import ctx.given
 
@@ -199,7 +204,8 @@ object ObsTabContents extends TwoPanels:
         props.programId,
         props.focusedObs,
         props.focusedTarget,
-        selectedView.set(SelectedPanel.Summary)
+        selectedView.set(SelectedPanel.Summary),
+        groups
       )
 
     val backButton: VdomNode =
@@ -389,6 +395,16 @@ object ObsTabContents extends TwoPanels:
                         callbacks
         )
       }
-      .render((props, ctx, twoPanelState, resize, layouts, defaultLayout) =>
-        renderFn(props, twoPanelState, defaultLayout, layouts, resize, ctx)
+      .useStreamResourceViewBy((props, _, _, _, _, _) => props.programId) {
+        (props, ctx, _, _, _, _) => programId =>
+          import ctx.given
+
+          ProgramGroupsQuery[IO]
+            .query(programId)
+            .map(_.program.toList.flatMap(_.allGroupElements))
+            .reRunOnResourceSignals(GroupEditSubscription.subscribe[IO]())
+
+      }
+      .render((props, ctx, twoPanelState, resize, layouts, defaultLayout, groups) =>
+        renderFn(props, twoPanelState, defaultLayout, layouts, resize, ctx, groups.toPot)
       )
