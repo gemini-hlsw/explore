@@ -18,21 +18,18 @@ import queries.common.ProgramQueriesGQL.ProgramGroupsQuery.Data.Program.AllGroup
 import queries.common.ProgramQueriesGQL.ProgramGroupsQuery.Data.Program.AllGroupElements.Group.Elements
 import react.primereact.Tree
 import react.primereact.Tree.Node
+import cats.derived.*
 
 import java.util.UUID
 import scala.scalajs.js.JSConverters._
+import cats.Eq
 
-sealed trait ObsNode
+enum ObsNode derives Eq:
+  case Obs(value: ObsSummary)
+  case And(group: Group)
+  case Or(group: Group)
 
 object ObsNode {
-
-  // given Reusability[ObsNode] = Reusability.byEq
-
-  case class Obs(value: ObsSummary) extends ObsNode
-
-  case class And(group: Group) extends ObsNode
-
-  case class Or(group: Group) extends ObsNode
 
   def fromList(
     obsList: KeyedIndexedList[Observation.Id, ObsSummary],
@@ -74,14 +71,14 @@ object ObsNode {
     }
 
     // Uncomment to debug trees
-    pprint
-      .copy(additionalHandlers = {
-        case _: ObsSummary      =>
-          pprint.Tree.Apply("ObsSummary", List(pprint.Tree.Literal("...")).iterator)
-        case id: GroupId        => pprint.Tree.Literal(pprint.Util.literalize(id.toString()))
-        case id: Observation.Id => pprint.Tree.Literal(pprint.Util.literalize(id.toString()))
-      })
-      .pprintln(treeNodes)
+    // pprint
+    //   .copy(additionalHandlers = {
+    //     case _: ObsSummary      =>
+    //       pprint.Tree.Apply("ObsSummary", List(pprint.Tree.Literal("...")).iterator)
+    //     case id: GroupId        => pprint.Tree.Literal(pprint.Util.literalize(id.toString()))
+    //     case id: Observation.Id => pprint.Tree.Literal(pprint.Util.literalize(id.toString()))
+    //   })
+    //   .pprintln(treeNodes)
     treeNodes
 
 }

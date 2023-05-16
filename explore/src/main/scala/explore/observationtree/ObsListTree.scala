@@ -25,7 +25,7 @@ import explore.components.ui.ExploreStyles
 import react.primereact.Tree
 import lucuma.typed.primereact.treeTreeMod.TreeNodeTemplateOptions
 
-final case class ObsListTree[A](
+case class ObsListTree[A](
   obsList:    Seq[Tree.Node[A]],
   renderItem: (A, TreeNodeTemplateOptions) => VdomNode
 ) extends ReactFnProps(ObsListTree.component)
