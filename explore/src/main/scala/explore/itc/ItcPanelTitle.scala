@@ -21,14 +21,15 @@ import explore.model.LoadingState
 import explore.model.TargetList
 import explore.model.WorkerClients.*
 import explore.model.boopickle.ItcPicklers.given
+import explore.model.display.given
 import explore.model.itc.ItcChartResult
 import explore.model.itc.ItcTarget
 import explore.model.itc.math.*
 import explore.model.reusability.given
-import explore.model.reusability.given
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.syntax.display.given
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.pot.*
@@ -44,7 +45,7 @@ case class ItcPanelTitle(
   selectedTarget:  View[Option[ItcTarget]],
   allTargets:      TargetList,
   itcPanelProps:   ItcPanelProps,
-  itcChartResults: Pot[Map[ItcTarget, ItcChartResult]],
+  itcChartResults: Map[ItcTarget, Pot[ItcChartResult]],
   itcLoading:      LoadingState
 ) extends ReactFnProps(ItcPanelTitle.component)
 
@@ -55,6 +56,7 @@ object ItcPanelTitle:
   val MissingInfo: Pot[ItcChartResult] =
     Pot.error(new RuntimeException(MissingInfoMsg))
   val MissingInfoIcon                  = Icons.ExclamationTriangle.withClass(ExploreStyles.WarningIcon)
+  val pendingChart                     = Pot.pending[ItcChartResult]
 
   private val component =
     ScalaFnComponent[Props] { props =>
@@ -64,15 +66,7 @@ object ItcPanelTitle:
       val selectedResult: Pot[ItcChartResult] =
         Pot
           .fromOption(props.selectedTarget.get)
-          .flatMap(t =>
-            props.itcChartResults match {
-              case Pot.Ready(m) =>
-                m.get(t).map(Pot.Ready(_)).getOrElse(Pot.pending[ItcChartResult])
-
-              case _ =>
-                Pot.pending[ItcChartResult]
-            }
-          )
+          .flatMap(t => props.itcChartResults.getOrElse(t, pendingChart))
 
       val selected       = props.selectedTarget.get.map(_.name.value)
       val selectedTarget = props.selectedTarget.get
@@ -82,7 +76,8 @@ object ItcPanelTitle:
       val idx                 = itcTargets.indexWhere(props.selectedTarget.get.contains)
       val itcTargetsWithIndex = itcTargets.zipWithIndex
 
-      val ccds                                 = selectedResult.map(_._2)
+      val ccds = selectedResult.map(_._2)
+
       def singleSN: ItcChartResult => VdomNode =
         (r: ItcChartResult) => <.span(formatCcds(r.ccds.some, _.maxSingleSNRatio.toString))
       def totalSN: ItcChartResult => VdomNode  =

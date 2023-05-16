@@ -32,7 +32,7 @@ object ItcTile:
     selectedTarget:  View[Option[ItcTarget]],
     allTargets:      TargetList,
     itcProps:        ItcPanelProps,
-    itcChartResults: Pot[Map[ItcTarget, ItcChartResult]],
+    itcChartResults: Map[ItcTarget, Pot[ItcChartResult]],
     itcLoading:      LoadingState
   ) =
     Tile(
