@@ -80,8 +80,9 @@ object ItcPanelTitle:
 
       def singleSN: ItcChartResult => VdomNode =
         (r: ItcChartResult) => <.span(formatCcds(r.ccds.some, _.maxSingleSNRatio.toString))
-      def totalSN: ItcChartResult => VdomNode  =
-        (r: ItcChartResult) => <.span(formatCcds(r.ccds.some, _.maxTotalSNRatio.toString))
+
+      def totalSN: ItcChartResult => VdomNode =
+        (r: ItcChartResult) => <.span(formatSN(r.atWavelengthSNRatio.getOrElse(r.peakSNRatio)))
 
       def snSection(title: String, fn: ItcChartResult => VdomNode) =
         React.Fragment(

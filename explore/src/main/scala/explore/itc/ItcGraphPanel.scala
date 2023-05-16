@@ -154,8 +154,10 @@ object ItcGraphPanel:
             <.div(
               ExploreStyles.ItcPlotSection,
               ExploreStyles.ItcPlotDetailsHidden.unless(opt.detailsShown.value),
-              ItcSpectroscopyPlotDescription(props.itcProps.chartExposureTime,
-                                             selectedResult.map(_.ccds)
+              ItcSpectroscopyPlotDescription(
+                props.itcProps.chartExposureTime,
+                selectedResult.map(_.ccds),
+                selectedResult.map(r => r.atWavelengthSNRatio.getOrElse(r.peakSNRatio))
               ),
               ItcSpectroscopyPlot(
                 selectedResult.map(_.ccds),

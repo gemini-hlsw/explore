@@ -106,6 +106,7 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
               )
 
         case ItcMessage.GraphQuery(wavelength,
+                                   signalToNoiseAt,
                                    exposureTime,
                                    exposures,
                                    constraint,
@@ -118,6 +119,7 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
                 wavelength,
                 exposureTime,
                 exposures,
+                signalToNoiseAt,
                 constraint,
                 targets,
                 mode,

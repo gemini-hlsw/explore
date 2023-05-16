@@ -8,6 +8,7 @@ import eu.timepit.refined.types.numeric.NonNegInt
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.math.SignalToNoise
 import lucuma.core.util.NewType
 import lucuma.core.util.TimeSpan
 import lucuma.itc.ItcCcd
@@ -40,8 +41,10 @@ def formatDuration(ts: TimeSpan): String =
 def format(time: TimeSpan, count: NonNegInt): String =
   s"$count × ${formatDuration(time)} = ${formatDuration(time *| count.value)}"
 
-def formatCcds(
+inline def formatCcds(
   ccds:      Option[NonEmptyList[ItcCcd]],
   extractor: NonEmptyList[ItcCcd] => String
 ): String =
   ccds.fold("-")(extractor)
+
+inline def formatSN(sn: SignalToNoise): String = f"${sn.toBigDecimal.toDouble}%.1f"

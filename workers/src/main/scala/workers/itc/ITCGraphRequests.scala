@@ -41,21 +41,36 @@ object ITCGraphRequests:
     SignificantFiguresInput(6.refined, 6.refined, 3.refined)
 
   def queryItc[F[_]: Concurrent: Parallel: Logger](
-    wavelength:   CentralWavelength,
-    exposureTime: TimeSpan,
-    exposures:    PosInt,
-    constraints:  ConstraintSet,
-    targets:      NonEmptyList[ItcTarget],
-    mode:         InstrumentRow,
-    cache:        Cache[F],
-    callback:     Map[ItcTarget, Either[ItcQueryProblems, ItcChartResult]] => F[Unit]
+    wavelength:      CentralWavelength,
+    exposureTime:    TimeSpan,
+    exposures:       PosInt,
+    signalToNoiseAt: Option[Wavelength],
+    constraints:     ConstraintSet,
+    targets:         NonEmptyList[ItcTarget],
+    mode:            InstrumentRow,
+    cache:           Cache[F],
+    callback:        Map[ItcTarget, Either[ItcQueryProblems, ItcChartResult]] => F[Unit]
   )(using Monoid[F[Unit]], ItcClient[F]): F[Unit] =
 
     val itcRowsParams = mode match // Only handle known modes
       case m: GmosNorthSpectroscopyRow =>
-        ItcGraphRequestParams(wavelength, exposureTime, exposures, constraints, targets, m).some
+        ItcGraphRequestParams(wavelength,
+                              signalToNoiseAt,
+                              exposureTime,
+                              exposures,
+                              constraints,
+                              targets,
+                              m
+        ).some
       case m: GmosSouthSpectroscopyRow =>
-        ItcGraphRequestParams(wavelength, exposureTime, exposures, constraints, targets, m).some
+        ItcGraphRequestParams(wavelength,
+                              signalToNoiseAt,
+                              exposureTime,
+                              exposures,
+                              constraints,
+                              targets,
+                              m
+        ).some
       case _                           =>
         none
 
@@ -70,6 +85,7 @@ object ITCGraphRequests:
                 .optimizedSpectroscopyGraph(
                   OptimizedSpectroscopyGraphInput(
                     wavelength = request.wavelength.value,
+                    signalToNoiseAt = request.signalToNoiseAt,
                     exposureTime = request.exposureTime,
                     exposures = request.exposures,
                     sourceProfile = t.profile,
@@ -82,7 +98,12 @@ object ITCGraphRequests:
                   false
                 )
                 .map(chartResult =>
-                  t -> ItcChartResult(t, chartResult.ccds, chartResult.charts).asRight
+                  t -> ItcChartResult(t,
+                                      chartResult.ccds,
+                                      chartResult.charts,
+                                      chartResult.peakSNRatio,
+                                      chartResult.atWavelengthSNRatio
+                  ).asRight
                 )
                 .handleError { e =>
                   val msg = e match
@@ -99,7 +120,7 @@ object ITCGraphRequests:
         .map(_.toList.flattenOption.toMap)
 
     // We cache unexpanded results, exactly as received from server.
-    val cacheableRequest = Cacheable(CacheName("itcGraphQuery"), CacheVersion(4), doRequest)
+    val cacheableRequest = Cacheable(CacheName("itcGraphQuery"), CacheVersion(5), doRequest)
 
     itcRowsParams
       .traverse { request =>

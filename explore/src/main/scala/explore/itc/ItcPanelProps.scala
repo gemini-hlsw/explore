@@ -127,7 +127,9 @@ case class ItcPanelProps(
         mode        <- instrumentRow
       yield beforeStart *>
         ItcClient[IO]
-          .requestSingle(ItcMessage.GraphQuery(w, ex.time, exposures, constraints, t, mode))
+          .requestSingle(
+            ItcMessage.GraphQuery(w, signalToNoiseAt, ex.time, exposures, constraints, t, mode)
+          )
           .flatMap(
             _.fold(
               onComplete(
