@@ -133,16 +133,19 @@ object ItcGraphPanel:
 
         val renderPlot: ItcGraphProperties => VdomNode =
           (opt: ItcGraphProperties) =>
-            val isModeSelected        = props.selectedConfig.isDefined
+            val isModeSelected = props.selectedConfig.isDefined
+            val selectMode     = "Select a mode to plot".some.filterNot(_ => isModeSelected)
+
             val error: Option[String] =
-              (for {
-                t <- selectedTarget
-                r <- props.itcChartResults.get(t)
-              } yield r.fold(
-                "Select a mode to plot".some.filterNot(_ => isModeSelected),
-                _.getMessage.some,
-                _ => none
-              )).flatten
+              selectedTarget
+                .fold("No target available".some)(t =>
+                  props.itcChartResults
+                    .get(t)
+                    .flatMap { r =>
+                      r.fold(selectMode, _.getMessage.some, _ => none)
+                    }
+                    .orElse(selectMode)
+                )
 
             val selectedResult: Option[ItcChartResult] =
               for {
