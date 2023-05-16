@@ -8,6 +8,7 @@ import eu.timepit.refined.types.numeric.NonNegInt
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.math.SignalToNoise
 import lucuma.core.util.NewType
 import lucuma.core.util.TimeSpan
 import lucuma.itc.ItcCcd
@@ -45,3 +46,5 @@ def formatCcds(
   extractor: NonEmptyList[ItcCcd] => String
 ): String =
   ccds.fold("-")(extractor)
+
+def formatSN(sn: SignalToNoise): String = f"${sn.toBigDecimal.toDouble}%.1f"

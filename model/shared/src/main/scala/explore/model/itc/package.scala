@@ -11,6 +11,7 @@ import eu.timepit.refined.cats.refTypeEq
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosInt
 import io.circe.Decoder
+import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.model.given
 import lucuma.core.util.Enumerated
@@ -108,7 +109,9 @@ case class ItcChartExposureTime(
 ) derives Eq
 
 case class ItcChartResult(
-  target: ItcTarget,
-  ccds:   NonEmptyList[ItcCcd],
-  charts: NonEmptyList[OptimizedChartResult]
+  target:              ItcTarget,
+  ccds:                NonEmptyList[ItcCcd],
+  charts:              NonEmptyList[OptimizedChartResult],
+  peakSNRatio:         SignalToNoise,
+  atWavelengthSNRatio: Option[SignalToNoise]
 )

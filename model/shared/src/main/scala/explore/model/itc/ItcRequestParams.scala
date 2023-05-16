@@ -25,10 +25,11 @@ case class ItcRequestParams(
 )
 
 case class ItcGraphRequestParams(
-  wavelength:   CentralWavelength,
-  exposureTime: TimeSpan,
-  exposures:    PosInt,
-  constraints:  ConstraintSet,
-  target:       NonEmptyList[ItcTarget],
-  mode:         InstrumentRow
+  wavelength:      CentralWavelength,
+  signalToNoiseAt: Option[Wavelength],
+  exposureTime:    TimeSpan,
+  exposures:       PosInt,
+  constraints:     ConstraintSet,
+  target:          NonEmptyList[ItcTarget],
+  mode:            InstrumentRow
 )
