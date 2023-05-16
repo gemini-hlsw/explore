@@ -13,7 +13,7 @@ import fs2.text
 
 trait SpectroscopyModesMatrixPlatform extends SpectroscopyModesMatrixDecoders {
 
-  def loadMatrix[F[_]: Async](path: Path): F[List[SpectroscopyModeRow]] =
+  def loadMatrix[F[_]: Async: Files](path: Path): F[List[SpectroscopyModeRow]] =
     Files[F]
       .readAll(path)
       .through(text.utf8.decode)
@@ -26,6 +26,6 @@ trait SpectroscopyModesMatrixPlatform extends SpectroscopyModesMatrixDecoders {
       .compile
       .toList
 
-  def apply[F[_]: Async](path: Path): F[SpectroscopyModesMatrix] =
+  def apply[F[_]: Async: Files](path: Path): F[SpectroscopyModesMatrix] =
     loadMatrix(path).map(SpectroscopyModesMatrix(_))
 }
