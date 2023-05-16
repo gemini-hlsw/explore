@@ -139,7 +139,7 @@ object ItcGraphPanel:
                 t <- selectedTarget
                 r <- props.itcChartResults.get(t)
               } yield r.fold(
-                "Select .a mode to plot".some.filterNot(_ => isModeSelected),
+                "Select a mode to plot".some.filterNot(_ => isModeSelected),
                 _.getMessage.some,
                 _ => none
               )).flatten
