@@ -166,9 +166,6 @@ object ConfigurationPanel:
       .render { (props, ctx, matrix) =>
         import ctx.given
 
-        // val requirementsCtx: UndoSetter[ScienceRequirements] =
-        //   props.scienceData.zoom(ScienceData.requirements)
-
         val modeAligner: Aligner[Option[ObservingMode], Input[ObservingModeInput]] =
           Aligner(
             props.mode,
@@ -192,7 +189,6 @@ object ConfigurationPanel:
 
         val posAngleView: View[PosAngleConstraint] =
           props.posAngle.undoableView(Iso.id) // We need a convenience method for this.
-          // props.scienceData.undoableView(ScienceData.posAngle)
 
         val optNorthAligner = optModeAligner.flatMap {
           _.zoomOpt(

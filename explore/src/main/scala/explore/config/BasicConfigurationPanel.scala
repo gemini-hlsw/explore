@@ -82,8 +82,6 @@ private object BasicConfigurationPanel:
         val requirementsViewSet: ScienceRequirementsUndoView =
           ScienceRequirementsUndoView(props.programId, props.obsId, props.requirementsCtx)
 
-        // val isSpectroscopy: Boolean = mode.get === ScienceMode.Spectroscopy
-
         val requirementsView: View[ScienceRequirements] =
           requirementsViewSet(
             Iso.id.asLens,
@@ -126,6 +124,7 @@ private object BasicConfigurationPanel:
             <.label("Mode", HelpIcon("configuration/mode.md".refined)),
             FormEnumDropdownView(id = "configuration-mode".refined, value = mode),
             spectroscopyView.mapValue(SpectroscopyConfigurationPanel(_))
+            // TODO Pending reinstate
             // ImagingConfigurationPanel(imaging)
             //   .unless(isSpectroscopy)
           ),
