@@ -20,9 +20,11 @@ import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 
 case class ProgramSummaries(
-  targets:      TargetList,
-  observations: ObservationList,
-  groups:       GroupList
+  targets:             TargetList,
+  observations:        ObservationList,
+  groups:              GroupList,
+  obsAttachments:      List[ObsAttachment],
+  proposalAttachments: List[ProposalAttachment]
 ) derives Eq:
   lazy val asterismGroups: AsterismGroupList =
     SortedMap.from(
@@ -74,18 +76,26 @@ case class ProgramSummaries(
     ProgramSummaries.observations.modify(_.removed(obsId))(this)
 
 object ProgramSummaries:
-  val targets: Lens[ProgramSummaries, TargetList]           = Focus[ProgramSummaries](_.targets)
-  val observations: Lens[ProgramSummaries, ObservationList] =
+  val targets: Lens[ProgramSummaries, TargetList]                           = Focus[ProgramSummaries](_.targets)
+  val observations: Lens[ProgramSummaries, ObservationList]                 =
     Focus[ProgramSummaries](_.observations)
-  val groups: Lens[ProgramSummaries, GroupList]             = Focus[ProgramSummaries](_.groups)
+  val groups: Lens[ProgramSummaries, GroupList]                             = Focus[ProgramSummaries](_.groups)
+  val obsAttachments: Lens[ProgramSummaries, List[ObsAttachment]]           =
+    Focus[ProgramSummaries](_.obsAttachments)
+  val proposalAttachments: Lens[ProgramSummaries, List[ProposalAttachment]] =
+    Focus[ProgramSummaries](_.proposalAttachments)
 
   def fromLists(
-    targetList: List[TargetWithId],
-    obsList:    List[ObsSummary],
-    groups:     List[GroupElement]
+    targetList:          List[TargetWithId],
+    obsList:             List[ObsSummary],
+    groups:              List[GroupElement],
+    obsAttachments:      List[ObsAttachment],
+    proposalAttachments: List[ProposalAttachment]
   ): ProgramSummaries =
     ProgramSummaries(
       targetList.toSortedMap(_.id, _.target),
       KeyedIndexedList.fromList(obsList, ObsSummary.id.get),
-      groups
+      groups,
+      obsAttachments,
+      proposalAttachments
     )

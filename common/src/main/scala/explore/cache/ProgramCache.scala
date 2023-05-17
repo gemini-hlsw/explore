@@ -14,8 +14,10 @@ import explore.common.AsterismQueries.*
 import explore.model.GroupElement
 import explore.model.GroupObs
 import explore.model.Grouping
+import explore.model.ObsAttachment
 import explore.model.ObsSummary
 import explore.model.ProgramSummaries
+import explore.model.ProposalAttachment
 import explore.model.TargetWithObs
 import explore.model.reusability.given
 import japgolly.scalajs.react.*
@@ -95,7 +97,15 @@ object ProgramCache extends CacheComponent[ProgramSummaries, ProgramCache]:
         .query(props.programId)
         .map(_.program.toList.flatMap(_.allGroupElements))
 
-    (targets, observations, groups).mapN(ProgramSummaries.fromLists)
+    val attachments: IO[(List[ObsAttachment], List[ProposalAttachment])] =
+      ProgramSummaryQueriesGQL
+        .AllProgramAttachments[IO]
+        .query(props.programId)
+        .map(_.program.fold(List.empty, List.empty)(p => (p.obsAttachments, p.proposalAttachments)))
+
+    (targets, observations, groups, attachments).mapN { case (ts, os, gs, (oas, pas)) =>
+      ProgramSummaries.fromLists(ts, os, gs, oas, pas)
+    }
 
   override protected val updateStream: ProgramCache => Resource[
     cats.effect.IO,

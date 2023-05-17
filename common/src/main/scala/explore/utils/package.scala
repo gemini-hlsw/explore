@@ -18,6 +18,7 @@ import crystal.react.View
 import crystal.react.implicits.*
 import crystal.react.reuse.*
 import eu.timepit.refined.*
+import eu.timepit.refined.types.numeric.NonNegLong
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.BuildInfo
 import explore.Icons
@@ -176,6 +177,19 @@ extension [A](value: js.UndefOr[DateOrRange])
 
   def fromDatePickerToZDTOpt(using ev: A <:< js.Date): Option[ZonedDateTime] =
     fromDatePickerToInstantOpt.map(i => ZonedDateTime.ofInstant(i, ZoneOffset.UTC))
+
+extension (bytes: NonNegLong)
+  // modified from: https://gist.github.com/BlinkoWang/38b706cb24fa91b1d761
+  def toHumanReadableByteCount: String = {
+    val base = 1000
+    if (bytes.value < base) s"$bytes B"
+    else {
+      val exp   = (Math.log(bytes.value.toDouble) / Math.log(base)).toInt
+      val pre   = "kMGTPE".charAt(exp - 1)
+      val value = bytes.value / Math.pow(base, exp)
+      f"$value%.2f ${pre}B"
+    }
+  }
 
 object IsExpanded extends NewType[Boolean]
 type IsExpanded = IsExpanded.Type

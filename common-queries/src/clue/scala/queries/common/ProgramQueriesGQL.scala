@@ -55,6 +55,19 @@ object ProgramQueriesGQL {
   }
 
   @GraphQL
+  trait UpdateObsAttachmentMutation extends GraphQLOperation[ObservationDB] {
+    val document: String = """
+    mutation($input: UpdateObsAttachmentsInput!) {
+      updateObsAttachments(input: $input) {
+        obsAttachments {
+          id
+        }
+      }
+    }
+   """
+  }
+
+  @GraphQL
   trait ProgramProposalQuery extends GraphQLOperation[ObservationDB] {
     val document: String = """
       query($programId: ProgramId!) {

@@ -295,6 +295,13 @@ object ExploreStyles:
   val BrightnessesTableDeletButtonWrapper: Css = Css("explore-brightnesses-delete-button-wrapper")
   val EmptyTreeContent: Css                    = Css("explore-empty-tree-content")
 
+  val AttachmentsTable: Css       = Css("explore-attachments-table")
+  val AttachmentsTableFooter: Css = Css("explore-attachments-footer")
+  val AttachmentName: Css         = Css("explore-attachment-name")
+  val AttachmentNameInput: Css    = Css("explore-attachment-name-input")
+
+  val FileUpload: Css = Css("explore-fileupload")
+
   // This is rendered without React, so we include SUI classes.
   val CrashMessage: Css = Css(List("ui", "large", "label", "crash-message"))
 

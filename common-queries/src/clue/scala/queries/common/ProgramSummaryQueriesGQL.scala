@@ -32,4 +32,16 @@ object ProgramSummaryQueriesGQL {
       }
     """
   }
+
+  @GraphQL
+  trait AllProgramAttachments extends GraphQLOperation[ObservationDB] {
+    val document: String = s"""
+      query($$programId: ProgramId!) {
+        program(programId: $$programId) {
+          obsAttachments $ObsAttachmentSubquery
+          proposalAttachments $ProposalAttachmentSubquery
+        }
+      }
+    """
+  }
 }

@@ -10,6 +10,7 @@ import clue.data.syntax.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.DefaultErrorPolicy
 import japgolly.scalajs.react.*
+import lucuma.core.model.ObsAttachment
 import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Enums.*
@@ -76,6 +77,36 @@ object ProgramQueries:
         UpdateProgramsInput(
           WHERE = id.toWhereProgram.assign,
           SET = ProgramPropertiesInput(name = name.orUnassign)
+        )
+      )
+      .void
+
+  def updateObsAttachmentDescription[F[_]: Async](
+    pid:  Program.Id,
+    oid:  ObsAttachment.Id,
+    desc: Option[NonEmptyString]
+  )(using FetchClient[F, ObservationDB]): F[Unit] =
+    UpdateObsAttachmentMutation[F]
+      .execute(
+        UpdateObsAttachmentsInput(
+          programId = pid,
+          WHERE = WhereObsAttachment(id = WhereOrderObsAttachmentId(EQ = oid.assign).assign).assign,
+          SET = ObsAttachmentPropertiesInput(description = desc.orUnassign)
+        )
+      )
+      .void
+
+  def updateObsAttachmentChecked[F[_]: Async](
+    pid:     Program.Id,
+    oid:     ObsAttachment.Id,
+    checked: Boolean
+  )(using FetchClient[F, ObservationDB]): F[Unit] =
+    UpdateObsAttachmentMutation[F]
+      .execute(
+        UpdateObsAttachmentsInput(
+          programId = pid,
+          WHERE = WhereObsAttachment(id = WhereOrderObsAttachmentId(EQ = oid.assign).assign).assign,
+          SET = ObsAttachmentPropertiesInput(checked = checked.assign)
         )
       )
       .void
