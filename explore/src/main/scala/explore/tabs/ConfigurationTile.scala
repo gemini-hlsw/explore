@@ -27,38 +27,46 @@ import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 import queries.schemas.itc.syntax.*
 import queries.schemas.odb.ObsQueries.*
+import explore.model.ScienceRequirements
+import lucuma.schemas.model.ObservingMode
+import lucuma.core.model.PosAngleConstraint
+import explore.model.ObsSummary.scienceTargetIds
+import explore.model.AsterismIds
 
 object ConfigurationTile {
   def configurationTile(
-    userId:          Option[User.Id],
-    programId:       Program.Id,
-    obsId:           Observation.Id,
-    obsData:         Pot[(String, Option[NonEmptyString], View[ScienceData])],
-    undoStacks:      View[UndoStacks[IO, ScienceData]],
-    baseCoordinates: Option[CoordinatesAtVizTime],
-    obsConf:         Option[ObsConfiguration],
-    selectedConfig:  View[Option[BasicConfigAndItc]],
-    allTargets:      TargetList
+    userId:           Option[User.Id],
+    programId:        Program.Id,
+    obsId:            Observation.Id,
+    title:            String,
+    subtitle:         Option[NonEmptyString],
+    requirements:     UndoSetter[ScienceRequirements],
+    mode:             UndoSetter[Option[ObservingMode]],
+    posAngle:         UndoSetter[PosAngleConstraint],
+    scienceTargetIds: AsterismIds,
+    baseCoordinates:  Option[CoordinatesAtVizTime],
+    obsConf:          ObsConfiguration,
+    selectedConfig:   View[Option[BasicConfigAndItc]],
+    allTargets:       TargetList
   )(using Logger[IO]) =
     Tile(
       ObsTabTilesIds.ConfigurationId.id,
       "Configuration",
       canMinimize = true
-    )(renderInTitle =>
-      obsData.renderPot((title, subtitle, scienceData) =>
-        ConfigurationPanel(
-          userId,
-          programId,
-          obsId,
-          title,
-          subtitle,
-          UndoContext(undoStacks, scienceData),
-          obsConf,
-          scienceData.get.itcTargets(allTargets),
-          baseCoordinates,
-          selectedConfig,
-          renderInTitle
-        )
+    )(_ =>
+      ConfigurationPanel(
+        userId,
+        programId,
+        obsId,
+        title,
+        subtitle,
+        requirements,
+        mode,
+        posAngle,
+        obsConf,
+        scienceTargetIds.itcTargets(allTargets),
+        baseCoordinates,
+        selectedConfig
       )
     )
 }

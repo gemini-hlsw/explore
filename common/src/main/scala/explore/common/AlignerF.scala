@@ -7,7 +7,7 @@ import cats.MonadError
 import cats.syntax.all.*
 import crystal.react.View
 import crystal.react.implicits.*
-import explore.undo.UndoContext
+import explore.undo.UndoSetter
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.util.Effect
 import monocle.Lens
@@ -34,9 +34,9 @@ trait AlignerF[F[_], B, S]:
   protected type _A // Base model type
   protected type _T // Base delta structure type
 
-  protected val _undoCtx: UndoContext[_A] // Base model instance within an `UndoContext`
-  protected val _remoteBaseInput: _T      // Base delta structure instance
-  protected val _onMod: _T => F[Unit]     // Effect to send the delta structure to the remote server
+  protected val _undoCtx: UndoSetter[_A] // Base model instance within an `UndoContext`
+  protected val _remoteBaseInput: _T     // Base delta structure instance
+  protected val _onMod: _T => F[Unit]    // Effect to send the delta structure to the remote server
 
   protected val _modelGet: _A => B               // Model drill-down getter function
   protected val _modelMod: (B => B) => _A => _A  // Model drill-down modifier function
@@ -141,7 +141,7 @@ object AlignerF:
    * Build a `AlignerF` for property `B` of base model `A` and property `S` of delta structure `T`
    */
   def apply[F[_], A, B, S, T](
-    undoCtx:         UndoContext[A],
+    undoCtx:         UndoSetter[A],
     remoteBaseInput: T,
     onMod:           T => F[Unit],
     modelGet:        A => B,
@@ -152,9 +152,9 @@ object AlignerF:
       protected type _A = A
       protected type _T = T
 
-      protected val _undoCtx: UndoContext[A] = undoCtx
-      protected val _remoteBaseInput: T      = remoteBaseInput
-      protected val _onMod: T => F[Unit]     = onMod
+      protected val _undoCtx: UndoSetter[A] = undoCtx
+      protected val _remoteBaseInput: T     = remoteBaseInput
+      protected val _onMod: T => F[Unit]    = onMod
 
       protected val _modelGet: A => B              = modelGet
       protected val _modelMod: (B => B) => A => A  = modelMod
@@ -163,7 +163,7 @@ object AlignerF:
 
   /** Build a base `AlignerF` for model `A` and delta structure `T` */
   def apply[F[_], A, T](
-    undoCtx:         UndoContext[A],
+    undoCtx:         UndoSetter[A],
     remoteBaseInput: T,
     onMod:           T => F[Unit]
   ): AlignerF[F, A, T] =

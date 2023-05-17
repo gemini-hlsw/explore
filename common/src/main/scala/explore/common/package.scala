@@ -5,7 +5,7 @@ package explore
 
 import crystal.react.ReuseView
 import crystal.react.reuse.Reuse
-import explore.undo.UndoContext
+import explore.undo.UndoSetter
 import japgolly.scalajs.react.util.DefaultEffects.{Async => DefaultA}
 import monocle.Lens
 import monocle.Optional
@@ -17,7 +17,7 @@ package object common {
 
   object Aligner {
     def apply[A, T](
-      undoCtx:         UndoContext[A],
+      undoCtx:         UndoSetter[A],
       remoteBaseInput: T,
       onMod:           T => DefaultA[Unit]
     ): Aligner[A, T] =

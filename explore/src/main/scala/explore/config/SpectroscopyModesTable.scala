@@ -92,6 +92,7 @@ import java.text.DecimalFormat
 import java.util.UUID
 import scala.collection.decorators.*
 import scala.concurrent.duration.*
+import explore.model.ScienceRequirements
 
 import scalajs.js
 import scalajs.js.JSConverters.*
@@ -99,7 +100,7 @@ import scalajs.js.JSConverters.*
 case class SpectroscopyModesTable(
   userId:                   Option[User.Id],
   selectedConfig:           View[Option[BasicConfigAndItc]],
-  spectroscopyRequirements: SpectroscopyRequirementsData,
+  spectroscopyRequirements: ScienceRequirements.Spectroscopy,
   constraints:              ConstraintSet,
   targets:                  Option[List[ItcTarget]],
   baseCoordinates:          Option[CoordinatesAtVizTime],

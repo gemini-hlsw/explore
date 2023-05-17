@@ -14,6 +14,7 @@ import lucuma.core.model.*
 import lucuma.itc.client.GmosFpu
 import lucuma.itc.client.InstrumentMode
 import queries.schemas.odb.ObsQueries
+import explore.model.AsterismIds
 
 trait syntax:
 
@@ -26,20 +27,20 @@ trait syntax:
       case _                           => None
     }
 
-  extension (s: ObsQueries.ScienceData)
+  extension (targetIds: AsterismIds)
     // From the list of targets selects the ones relevant for ITC
-    def itcTargets(allTargets: TargetList): List[ItcTarget] = s.targets.asterism
-      .map(_.id)
-      .map(targetId =>
-        allTargets
-          .get(targetId)
-          .flatMap(target =>
-            targetRV
-              .getOption(target)
-              .map(r => ItcTarget(target.name, r, Target.sourceProfile.get(target)))
-          )
-      )
-      .flatten
-      .hashDistinct
+    def itcTargets(allTargets: TargetList): List[ItcTarget] =
+      targetIds.toList
+        .map(targetId =>
+          allTargets
+            .get(targetId)
+            .flatMap(target =>
+              targetRV
+                .getOption(target)
+                .map(r => ItcTarget(target.name, r, Target.sourceProfile.get(target)))
+            )
+        )
+        .flatten
+        .hashDistinct
 
 object syntax extends syntax

@@ -27,55 +27,9 @@ object ObsQueriesGQL:
     """
 
   @GraphQL
-  trait ObsEditQuery extends GraphQLOperation[ObservationDB]:
+  trait ObsItcQuery extends GraphQLOperation[ObservationDB]:
     val document = s"""
-      fragment stepDataGN on GmosNorthStep {
-        id
-        stepConfig {
-          ... on Science {
-            offset $OffsetSubquery
-          }
-        }
-      }
-
-      fragment stepDataGS on GmosSouthStep {
-        id
-        stepConfig {
-          ... on Science {
-            offset $OffsetSubquery
-          }
-        }
-      }
-
       query($$programId: ProgramId!, $$obsId: ObservationId!) {
-        observation(observationId: $$obsId) {
-          id
-          title
-          subtitle
-          visualizationTime
-          posAngleConstraint $PosAngleConstraintSubquery
-          targetEnvironment {
-            asterism {
-              id
-            }
-          }
-          constraintSet $ConstraintSetSubquery
-          scienceRequirements {
-            mode
-            spectroscopy {
-              wavelength $WavelengthSubquery
-              resolution
-              signalToNoise
-              signalToNoiseAt $WavelengthSubquery
-              wavelengthCoverage $WavelengthDeltaSubquery
-              focalPlane
-              focalPlaneAngle $AngleSubquery
-              capability
-            }
-          }
-          observingMode $ObservingModeSubquery
-        }
-
         itc(programId: $$programId, observationId: $$obsId) {
           result {
             exposureTime {
@@ -83,63 +37,6 @@ object ObsQueriesGQL:
             }
             exposures
             signalToNoise
-          }
-        }
-
-        sequence(programId: $$programId, observationId: $$obsId) {
-          executionConfig {
-            ... on GmosSouthExecutionConfig {
-              acquisition {
-                nextAtom {
-                  steps {
-                    ...stepDataGS
-                  }
-                }
-                possibleFuture {
-                  steps {
-                    ...stepDataGS
-                  }
-                }
-              }
-              science {
-                nextAtom {
-                  steps {
-                    ...stepDataGS
-                  }
-                }
-                possibleFuture {
-                  steps {
-                    ...stepDataGS
-                  }
-                }
-              }
-            }
-            ... on GmosNorthExecutionConfig {
-              acquisition {
-                nextAtom {
-                  steps {
-                    ...stepDataGN
-                  }
-                }
-                possibleFuture {
-                  steps {
-                    ...stepDataGN
-                  }
-                }
-              }
-              science {
-                nextAtom {
-                  steps {
-                    ...stepDataGN
-                  }
-                }
-                possibleFuture {
-                  steps {
-                    ...stepDataGN
-                  }
-                }
-              }
-            }
           }
         }
       }
@@ -150,8 +47,132 @@ object ObsQueriesGQL:
         object Result:
           type ExposureTime = lucuma.core.util.TimeSpan
 
-      object Sequence:
-        type ExecutionConfig = explore.model.ExecutionOffsets
+  // @GraphQL
+  // trait ObsEditQuery extends GraphQLOperation[ObservationDB]:
+  //   val document = s"""
+  //     fragment stepDataGN on GmosNorthStep {
+  //       id
+  //       stepConfig {
+  //         ... on Science {
+  //           offset $OffsetSubquery
+  //         }
+  //       }
+  //     }
+
+  //     fragment stepDataGS on GmosSouthStep {
+  //       id
+  //       stepConfig {
+  //         ... on Science {
+  //           offset $OffsetSubquery
+  //         }
+  //       }
+  //     }
+
+  //     query($$programId: ProgramId!, $$obsId: ObservationId!) {
+  //       observation(observationId: $$obsId) {
+  //         id
+  //         title
+  //         subtitle
+  //         visualizationTime
+  //         posAngleConstraint $PosAngleConstraintSubquery
+  //         targetEnvironment {
+  //           asterism {
+  //             id
+  //           }
+  //         }
+  //         constraintSet $ConstraintSetSubquery
+  //         scienceRequirements {
+  //           mode
+  //           spectroscopy {
+  //             wavelength $WavelengthSubquery
+  //             resolution
+  //             signalToNoise
+  //             signalToNoiseAt $WavelengthSubquery
+  //             wavelengthCoverage $WavelengthDeltaSubquery
+  //             focalPlane
+  //             focalPlaneAngle $AngleSubquery
+  //             capability
+  //           }
+  //         }
+  //         observingMode $ObservingModeSubquery
+  //       }
+
+  //       itc(programId: $$programId, observationId: $$obsId) {
+  //         result {
+  //           exposureTime {
+  //             milliseconds
+  //           }
+  //           exposures
+  //           signalToNoise
+  //         }
+  //       }
+
+  //       sequence(programId: $$programId, observationId: $$obsId) {
+  //         executionConfig {
+  //           ... on GmosSouthExecutionConfig {
+  //             acquisition {
+  //               nextAtom {
+  //                 steps {
+  //                   ...stepDataGS
+  //                 }
+  //               }
+  //               possibleFuture {
+  //                 steps {
+  //                   ...stepDataGS
+  //                 }
+  //               }
+  //             }
+  //             science {
+  //               nextAtom {
+  //                 steps {
+  //                   ...stepDataGS
+  //                 }
+  //               }
+  //               possibleFuture {
+  //                 steps {
+  //                   ...stepDataGS
+  //                 }
+  //               }
+  //             }
+  //           }
+  //           ... on GmosNorthExecutionConfig {
+  //             acquisition {
+  //               nextAtom {
+  //                 steps {
+  //                   ...stepDataGN
+  //                 }
+  //               }
+  //               possibleFuture {
+  //                 steps {
+  //                   ...stepDataGN
+  //                 }
+  //               }
+  //             }
+  //             science {
+  //               nextAtom {
+  //                 steps {
+  //                   ...stepDataGN
+  //                 }
+  //               }
+  //               possibleFuture {
+  //                 steps {
+  //                   ...stepDataGN
+  //                 }
+  //               }
+  //             }
+  //           }
+  //         }
+  //       }
+  //     }
+  //   """
+
+  //   object Data:
+  //     object Itc:
+  //       object Result:
+  //         type ExposureTime = lucuma.core.util.TimeSpan
+
+  //     object Sequence:
+  //       type ExecutionConfig = explore.model.ExecutionOffsets
 
   @GraphQL
   trait ObservationEditSubscription extends GraphQLOperation[ObservationDB]:

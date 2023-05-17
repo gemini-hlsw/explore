@@ -32,7 +32,7 @@ import lucuma.core.model.TimingWindow
 import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.model.*
 import lucuma.ui.reusability.given
-import queries.schemas.odb.ObsQueries.SpectroscopyRequirementsData
+// import queries.schemas.odb.ObsQueries.SpectroscopyRequirementsData
 
 /**
  * Reusability instances for model classes
@@ -93,8 +93,8 @@ object reusability:
 
   given Reusability[ObsConfiguration] = Reusability.byEq
 
-  given Reusability[Existence]                    = Reusability.byEq
-  given Reusability[SpectroscopyRequirementsData] = Reusability.byEq
+  given Reusability[Existence] = Reusability.byEq
+  // given Reusability[SpectroscopyRequirementsData] = Reusability.byEq
 
   given Reusability[ItcChartExposureTime] = Reusability.byEq
 
@@ -121,3 +121,7 @@ object reusability:
   given Reusability[ApiKey] = Reusability.byEq
 
   given Reusability[SignalToNoise] = Reusability.byEq
+
+  given Reusability[ScienceRequirements.Spectroscopy] = Reusability.byEq
+
+  given Reusability[ScienceRequirements] = Reusability.byEq

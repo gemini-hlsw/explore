@@ -30,17 +30,18 @@ import monocle.Lens
 import org.typelevel.log4cats.Logger
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ObsQueries.*
+import explore.model.ScienceRequirements
 
 object ScienceQueries:
 
   case class ScienceRequirementsUndoView(
     programId:               Program.Id,
     obsId:                   Observation.Id,
-    scienceRequirementsUndo: UndoSetter[ScienceRequirementsData]
+    scienceRequirementsUndo: UndoSetter[ScienceRequirements]
   )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]):
     def apply[A](
-      modelGet:  ScienceRequirementsData => A,
-      modelMod:  (A => A) => ScienceRequirementsData => ScienceRequirementsData,
+      modelGet:  ScienceRequirements => A,
+      modelMod:  (A => A) => ScienceRequirements => ScienceRequirements,
       remoteSet: A => ScienceRequirementsInput => ScienceRequirementsInput
     ): View[A] =
       scienceRequirementsUndo
@@ -62,7 +63,7 @@ object ScienceQueries:
         )
 
     def apply[A](
-      lens:      Lens[ScienceRequirementsData, A],
+      lens:      Lens[ScienceRequirements, A],
       remoteSet: A => ScienceRequirementsInput => ScienceRequirementsInput
     ): View[A] =
       apply(lens.get, lens.modify, remoteSet)
@@ -87,7 +88,7 @@ object ScienceQueries:
       wavelength(Wavelength(wc.pm))
 
     def spectroscopyRequirements(
-      op: SpectroscopyRequirementsData
+      op: ScienceRequirements.Spectroscopy
     ): Endo[ScienceRequirementsInput] = {
       val input =
         for {

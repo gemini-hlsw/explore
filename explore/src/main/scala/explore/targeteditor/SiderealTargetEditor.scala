@@ -82,7 +82,7 @@ case class SiderealTargetEditor(
   searching:     View[Set[Target.Id]],
   obsIdSubset:   Option[ObsIdSet] = None,
   onClone:       TargetWithId => Callback = _ => Callback.empty,
-  renderInTitle: Option[Tile.RenderInTitle] = none,
+  renderInTitle: Option[Tile.RenderInTitle] = None,
   fullScreen:    View[AladinFullScreen]
 ) extends ReactFnProps(SiderealTargetEditor.component)
 

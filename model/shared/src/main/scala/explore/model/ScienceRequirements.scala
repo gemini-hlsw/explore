@@ -18,11 +18,14 @@ import cats.syntax.all.*
 import lucuma.schemas.decoders.given
 import io.circe.refined.given
 import eu.timepit.refined.cats.given
+import monocle.macros.GenPrism
+import monocle.Prism
+import monocle.Lens
+import monocle.Focus
 
 sealed trait ScienceRequirements derives Eq
 
-object ScienceRequirements:
-
+object ScienceRequirements {
   case class Spectroscopy(
     wavelength:         Option[Wavelength],
     resolution:         Option[PosInt],
@@ -35,9 +38,25 @@ object ScienceRequirements:
   ) extends ScienceRequirements
       derives Eq
 
-  object Spectroscopy:
+  object Spectroscopy {
     given Decoder[Spectroscopy] = deriveDecoder
-    // TODO LENSES
 
-  given Decoder[ScienceRequirements] =
-    Decoder[Spectroscopy].widen
+    val wavelength: Lens[Spectroscopy, Option[Wavelength]]               = Focus[Spectroscopy](_.wavelength)
+    val resolution: Lens[Spectroscopy, Option[PosInt]]                   = Focus[Spectroscopy](_.resolution)
+    val signalToNoise: Lens[Spectroscopy, Option[SignalToNoise]]         =
+      Focus[Spectroscopy](_.signalToNoise)
+    val signalToNoiseAt: Lens[Spectroscopy, Option[Wavelength]]          =
+      Focus[Spectroscopy](_.signalToNoiseAt)
+    val wavelengthCoverage: Lens[Spectroscopy, Option[WavelengthDelta]]  =
+      Focus[Spectroscopy](_.wavelengthCoverage)
+    val focalPlane: Lens[Spectroscopy, Option[FocalPlane]]               = Focus[Spectroscopy](_.focalPlane)
+    val focalPlaneAngle: Lens[Spectroscopy, Option[Angle]]               = Focus[Spectroscopy](_.focalPlaneAngle)
+    val capability: Lens[Spectroscopy, Option[SpectroscopyCapabilities]] =
+      Focus[Spectroscopy](_.capability)
+  }
+
+  val spectroscopy: Prism[ScienceRequirements, ScienceRequirements.Spectroscopy] =
+    GenPrism[ScienceRequirements, ScienceRequirements.Spectroscopy]
+
+  given Decoder[ScienceRequirements] = Decoder.instance(c => c.get[Spectroscopy]("spectroscopy"))
+}

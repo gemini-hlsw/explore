@@ -74,8 +74,8 @@ case class AsterismEditor(
   obsIds:          ObsIdSet,
   asterismIds:     View[AsterismIds],
   allTargets:      View[TargetList],
-  potVizTime:      Pot[View[Option[Instant]]],
-  configuration:   Option[ObsConfiguration],
+  vizTime:         View[Option[Instant]],
+  configuration:   ObsConfiguration,
   focusedTargetId: Option[Target.Id],
   setTarget:       (Option[Target.Id], SetRouteVia) => Callback,
   otherObsCount:   Target.Id => Int,
@@ -137,13 +137,13 @@ object AsterismEditor extends AsterismModifier:
           )
 
         // Save the time here. this works for the obs and target tabs
-        val vizTimeView = props.potVizTime.map(_.withOnMod { t =>
+        val vizTimeView = props.vizTime.withOnMod(t =>
           ObsQueries
             .updateVisualizationTime[IO](props.programId, props.obsIds.toList, t)
             .runAsync
-        })
+        )
 
-        val vizTime = props.potVizTime.toOption.flatMap(_.get)
+        val vizTime = props.vizTime.get
 
         val selectedTargetView: View[Option[Target.Id]] =
           View(
@@ -227,7 +227,7 @@ object AsterismEditor extends AsterismModifier:
                       .fromIdsAndTargets(props.asterismIds.get, props.allTargets.get)
                       .map(_.focusOn(focusedTargetId)),
                     vizTime,
-                    props.configuration,
+                    props.configuration.some,
                     props.undoStacks
                       .zoom(atMapWithDefault(focusedTargetId, UndoStacks.empty)),
                     props.searching,

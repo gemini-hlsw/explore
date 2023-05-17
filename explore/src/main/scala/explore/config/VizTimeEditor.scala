@@ -22,35 +22,31 @@ import java.time.Instant
 
 import scalajs.js
 
-case class VizTimeEditor(vizTimeView: Pot[View[Option[Instant]]])
+case class VizTimeEditor(vizTimeView: View[Option[Instant]])
     extends ReactFnProps(VizTimeEditor.component)
 
 object VizTimeEditor {
   private type Props = VizTimeEditor
 
   private val component =
-    ScalaFnComponent[Props] { p =>
-      <.div(
-        ExploreStyles.ObsInstantTileTitle,
-        p.vizTimeView.renderPot(
-          pendingRender = EmptyVdom,
-          valueRender = instant =>
-            React.Fragment(
-              <.label(dataAbbrv := "Time",
-                      <.span("Observation time"),
-                      HelpIcon("configuration/obstime.md".refined)
-              ),
-              Datepicker(onChange =
-                (newValue, _) =>
-                  newValue.fromDatePickerToInstantOpt.foldMap { i =>
-                    instant.set(i.some)
-                  }
-              )
-                .showTimeInput(true)
-                .selected(instant.get.getOrElse(Instant.now).toDatePickerJsDate)
-                .dateFormat("yyyy-MM-dd HH:mm"),
-              <.label("UTC")
-            )
+    ScalaFnComponent[Props] { props =>
+      <.div(ExploreStyles.ObsInstantTileTitle)(
+        React.Fragment(
+          <.label(
+            dataAbbrv := "Time",
+            <.span("Observation time"),
+            HelpIcon("configuration/obstime.md".refined)
+          ),
+          Datepicker(onChange =
+            (newValue, _) =>
+              newValue.fromDatePickerToInstantOpt.foldMap { i =>
+                props.vizTimeView.set(i.some)
+              }
+          )
+            .showTimeInput(true)
+            .selected(props.vizTimeView.get.getOrElse(Instant.now).toDatePickerJsDate)
+            .dateFormat("yyyy-MM-dd HH:mm"),
+          <.label("UTC")
         )
       )
     }

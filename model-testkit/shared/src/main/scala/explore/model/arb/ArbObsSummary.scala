@@ -60,7 +60,7 @@ trait ArbObsSummary:
         scienceRequirements <- arbitrary[ScienceRequirements]
         observingMode       <- arbitrary[Option[ObservingMode]]
         vizTime             <- arbitrary[Option[Instant]]
-        posAngleConstraint  <- arbitrary[Option[PosAngleConstraint]]
+        posAngleConstraint  <- arbitrary[PosAngleConstraint]
         wavelength          <- arbitrary[Option[Wavelength]]
       yield ObsSummary(
         id,
@@ -94,7 +94,7 @@ trait ArbObsSummary:
        ScienceRequirements,
        Option[ObservingMode],
        Option[Instant],
-       Option[PosAngleConstraint],
+       PosAngleConstraint,
        Option[Wavelength]
       )
     ]

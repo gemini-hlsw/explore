@@ -52,93 +52,93 @@ object ObsQueries:
   type ObservationList = KeyedIndexedList[Observation.Id, ObsSummary]
   type ConstraintsList = SortedMap[ObsIdSet, ConstraintGroup]
 
-  type ObservationData = ObsEditQuery.Data.Observation
-  val ObservationData = ObsEditQuery.Data.Observation
-  type ScienceRequirementsData = ObservationData.ScienceRequirements
-  val ScienceRequirementsData = ObservationData.ScienceRequirements
-  type Targets = ObservationData.TargetEnvironment
-  val Targets = ObservationData.TargetEnvironment
-  type SpectroscopyRequirementsData = ObservationData.ScienceRequirements.Spectroscopy
-  val SpectroscopyRequirementsData = ObservationData.ScienceRequirements.Spectroscopy
+  // type ObservationData = ObsEditQuery.Data.Observation
+  // val ObservationData = ObsEditQuery.Data.Observation
+  // type ScienceRequirementsData = ObservationData.ScienceRequirements
+  // val ScienceRequirementsData = ObservationData.ScienceRequirements
+  // type Targets = ObservationData.TargetEnvironment
+  // val Targets = ObservationData.TargetEnvironment
+  // type SpectroscopyRequirementsData = ObservationData.ScienceRequirements.Spectroscopy
+  // val SpectroscopyRequirementsData = ObservationData.ScienceRequirements.Spectroscopy
 
-  val targetIdsFromAsterism: Iso[List[Targets.Asterism], List[Target.Id]] =
-    Iso[List[Targets.Asterism], List[Target.Id]](_.map(_.id))(_.map(Targets.Asterism(_)))
+  // val targetIdsFromAsterism: Iso[List[Targets.Asterism], List[Target.Id]] =
+  //   Iso[List[Targets.Asterism], List[Target.Id]](_.map(_.id))(_.map(Targets.Asterism(_)))
 
-  case class ScienceData(
-    requirements:       ScienceRequirementsData,
-    mode:               Option[ObservingMode],
-    constraints:        ConstraintSet,
-    targets:            Targets,
-    posAngle:           PosAngleConstraint,
-    scienceOffsets:     Option[NonEmptyList[Offset]],
-    acquisitionOffsets: Option[NonEmptyList[Offset]]
-  ) derives Eq
+  // case class ScienceData(
+  //   requirements:       ScienceRequirementsData,
+  //   mode:               Option[ObservingMode],
+  //   constraints:        ConstraintSet,
+  //   targets:            Targets,
+  //   posAngle:           PosAngleConstraint,
+  //   scienceOffsets:     Option[NonEmptyList[Offset]],
+  //   acquisitionOffsets: Option[NonEmptyList[Offset]]
+  // ) derives Eq
 
-  object ScienceData {
-    val requirements: Lens[ScienceData, ScienceRequirementsData]            =
-      Focus[ScienceData](_.requirements)
-    val mode: Lens[ScienceData, Option[ObservingMode]]                      =
-      Focus[ScienceData](_.mode)
-    val targets: Lens[ScienceData, Targets]                                 =
-      Focus[ScienceData](_.targets)
-    val constraints: Lens[ScienceData, ConstraintSet]                       =
-      Focus[ScienceData](_.constraints)
-    val posAngle: Lens[ScienceData, PosAngleConstraint]                     =
-      Focus[ScienceData](_.posAngle)
-    val scienceOffsets: Lens[ScienceData, Option[NonEmptyList[Offset]]]     =
-      Focus[ScienceData](_.scienceOffsets)
-    val acquisitionOffsets: Lens[ScienceData, Option[NonEmptyList[Offset]]] =
-      Focus[ScienceData](_.acquisitionOffsets)
-  }
+  // object ScienceData {
+  //   val requirements: Lens[ScienceData, ScienceRequirementsData]            =
+  //     Focus[ScienceData](_.requirements)
+  //   val mode: Lens[ScienceData, Option[ObservingMode]]                      =
+  //     Focus[ScienceData](_.mode)
+  //   val targets: Lens[ScienceData, Targets]                                 =
+  //     Focus[ScienceData](_.targets)
+  //   val constraints: Lens[ScienceData, ConstraintSet]                       =
+  //     Focus[ScienceData](_.constraints)
+  //   val posAngle: Lens[ScienceData, PosAngleConstraint]                     =
+  //     Focus[ScienceData](_.posAngle)
+  //   val scienceOffsets: Lens[ScienceData, Option[NonEmptyList[Offset]]]     =
+  //     Focus[ScienceData](_.scienceOffsets)
+  //   val acquisitionOffsets: Lens[ScienceData, Option[NonEmptyList[Offset]]] =
+  //     Focus[ScienceData](_.acquisitionOffsets)
+  // }
 
-  case class ObsEditData(
-    id:                Observation.Id,
-    title:             String,
-    subtitle:          Option[NonEmptyString],
-    visualizationTime: Option[Instant],
-    scienceData:       ScienceData,
-    itcExposureTime:   Option[FixedExposureMode],
-    itc:               Option[OdbItcResult.Success]
-  )
+  // case class ObsEditData(
+  //   id:                Observation.Id,
+  //   title:             String,
+  //   subtitle:          Option[NonEmptyString],
+  //   visualizationTime: Option[Instant],
+  //   scienceData:       ScienceData,
+  //   itcExposureTime:   Option[FixedExposureMode],
+  //   itc:               Option[OdbItcResult.Success]
+  // )
 
-  object ObsEditData {
-    val title: Lens[ObsEditData, String]                      = Focus[ObsEditData](_.title)
-    val subtitle: Lens[ObsEditData, Option[NonEmptyString]]   = Focus[ObsEditData](_.subtitle)
-    val visualizationTime: Lens[ObsEditData, Option[Instant]] =
-      Focus[ObsEditData](_.visualizationTime)
-    val scienceData: Lens[ObsEditData, ScienceData]           = Focus[ObsEditData](_.scienceData)
-    val itc: Lens[ObsEditData, Option[OdbItcResult.Success]]  =
-      Focus[ObsEditData](_.itc)
-  }
+  // object ObsEditData {
+  //   val title: Lens[ObsEditData, String]                      = Focus[ObsEditData](_.title)
+  //   val subtitle: Lens[ObsEditData, Option[NonEmptyString]]   = Focus[ObsEditData](_.subtitle)
+  //   val visualizationTime: Lens[ObsEditData, Option[Instant]] =
+  //     Focus[ObsEditData](_.visualizationTime)
+  //   val scienceData: Lens[ObsEditData, ScienceData]           = Focus[ObsEditData](_.scienceData)
+  //   val itc: Lens[ObsEditData, Option[OdbItcResult.Success]]  =
+  //     Focus[ObsEditData](_.itc)
+  // }
 
-  extension (data: ObsEditQuery.Data)
-    def asObsEditData: Option[ObsEditData] =
-      val itc = data.itc.map(i =>
-        OdbItcResult.Success(i.result.exposureTime, i.result.exposures, i.result.signalToNoise)
-      )
-      data.observation.map { obs =>
-        ObsEditData(
-          id = obs.id,
-          title = obs.title,
-          subtitle = obs.subtitle,
-          visualizationTime = obs.visualizationTime.map(_.toInstant),
-          itcExposureTime = none,
-          itc = itc,
-          scienceData = ScienceData(
-            requirements = obs.scienceRequirements,
-            mode = obs.observingMode,
-            constraints = obs.constraintSet,
-            targets = obs.targetEnvironment,
-            posAngle = obs.posAngleConstraint,
-            scienceOffsets = NonEmptyList.fromList(
-              data.sequence.foldMap(_.executionConfig.allScienceOffsets).distinct
-            ),
-            acquisitionOffsets = NonEmptyList.fromList(
-              data.sequence.foldMap(_.executionConfig.allAcquisitionOffsets).distinct
-            )
-          )
-        )
-      }
+  // extension (data: ObsEditQuery.Data)
+  //   def asObsEditData: Option[ObsEditData] =
+  //     val itc = data.itc.map(i =>
+  //       OdbItcResult.Success(i.result.exposureTime, i.result.exposures, i.result.signalToNoise)
+  //     )
+  //     data.observation.map { obs =>
+  //       ObsEditData(
+  //         id = obs.id,
+  //         title = obs.title,
+  //         subtitle = obs.subtitle,
+  //         visualizationTime = obs.visualizationTime.map(_.toInstant),
+  //         itcExposureTime = none,
+  //         itc = itc,
+  //         scienceData = ScienceData(
+  //           requirements = obs.scienceRequirements,
+  //           mode = obs.observingMode,
+  //           constraints = obs.constraintSet,
+  //           targets = obs.targetEnvironment,
+  //           posAngle = obs.posAngleConstraint,
+  //           scienceOffsets = NonEmptyList.fromList(
+  //             data.sequence.foldMap(_.executionConfig.allScienceOffsets).distinct
+  //           ),
+  //           acquisitionOffsets = NonEmptyList.fromList(
+  //             data.sequence.foldMap(_.executionConfig.allAcquisitionOffsets).distinct
+  //           )
+  //         )
+  //       )
+  //     }
 
   extension (self: OdbItcResult.Success)
     def asFixedExposureTime: FixedExposureMode =

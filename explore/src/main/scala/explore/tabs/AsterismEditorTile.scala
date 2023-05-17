@@ -53,11 +53,11 @@ object AsterismEditorTile:
     userId:        Option[User.Id],
     programId:     Program.Id,
     obsIds:        ObsIdSet,
-    asterismIds:   Pot[View[AsterismIds]],
+    asterismIds:   View[AsterismIds],
     allTargets:    View[TargetList],
     configuration: Option[BasicConfiguration],
-    potVizTime:    Pot[View[Option[Instant]]],
-    obsConf:       Option[ObsConfiguration],
+    vizTime:       View[Option[Instant]],
+    obsConf:       ObsConfiguration,
     currentTarget: Option[Target.Id],
     setTarget:     (Option[Target.Id], SetRouteVia) => Callback,
     otherObsCount: Target.Id => Int,
@@ -67,13 +67,13 @@ object AsterismEditorTile:
     backButton:    Option[VdomNode] = none
   )(using FetchClient[IO, ObservationDB], Logger[IO]): Tile = {
     // Save the time here. this works for the obs and target tabs
-    val vizTimeView = potVizTime.map(_.withOnMod { t =>
+    val vizTimeView = vizTime.withOnMod(t =>
       ObsQueries.updateVisualizationTime[IO](programId, obsIds.toList, t).runAsync
-    })
+    )
 
     // Store the pos angle on the db
-    val updatableObsConf: Option[ObsConfiguration] =
-      obsConf.map(_.copy(posAngleProperties = obsConf.flatMap(_.posAngleProperties).map {
+    val updatableObsConf: ObsConfiguration =
+      obsConf.copy(posAngleProperties = obsConf.posAngleProperties.map {
         case p @ PAProperties(oid, _, agsStateView, paView) =>
           p.copy(constraint =
             paView.withOnMod(pa =>
@@ -83,9 +83,9 @@ object AsterismEditorTile:
                 .runAsync
             )
           )
-      }))
+      })
 
-    def control: VdomNode = <.div(VizTimeEditor(vizTimeView))
+    val control: VdomNode = <.div(VizTimeEditor(vizTimeView))
 
     Tile(
       ObsTabTilesIds.TargetId.id,
@@ -95,14 +95,14 @@ object AsterismEditorTile:
       control = s => control.some.filter(_ => s === TileSizeState.Minimized),
       bodyClass = Some(ExploreStyles.TargetTileBody)
     )((renderInTitle: Tile.RenderInTitle) =>
-      (asterismIds, obsConf.toPot, userId.toPot).tupled.renderPot((astIds, _, uid) =>
+      userId.map(uid =>
         AsterismEditor(
           uid,
           programId,
           obsIds,
-          astIds,
+          asterismIds,
           allTargets,
-          potVizTime,
+          vizTime,
           updatableObsConf,
           currentTarget,
           setTarget,

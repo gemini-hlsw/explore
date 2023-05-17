@@ -43,15 +43,13 @@ case class ObsSummary(
   status:              ObsStatus,
   activeStatus:        ObsActiveStatus,
   executionTime:       TimeSpan,
-  scienceTargetIds:    SortedSet[Target.Id],
+  scienceTargetIds:    AsterismIds,
   constraints:         ConstraintSet,
   timingWindows:       List[TimingWindow],
-  //
   scienceRequirements: ScienceRequirements,
   observingMode:       Option[ObservingMode],
-  //
   visualizationTime:   Option[Instant],
-  posAngleConstraint:  Option[PosAngleConstraint],
+  posAngleConstraint:  PosAngleConstraint,
   wavelength:          Option[Wavelength]
 ) derives Eq:
   lazy val configurationSummary: Option[String] = observingMode.map(_.toBasicConfiguration) match
@@ -98,7 +96,7 @@ object ObsSummary:
       scienceRequirements <- c.get[ScienceRequirements]("scienceRequirements")
       observingMode       <- c.get[Option[ObservingMode]]("observingMode")
       visualizationTime   <- c.get[Option[Timestamp]]("visualizationTime")
-      posAngleConstraint  <- c.get[Option[PosAngleConstraint]]("posAngleConstraint")
+      posAngleConstraint  <- c.get[PosAngleConstraint]("posAngleConstraint")
       wavelength          <- c.downField("scienceRequirements")
                                .downField("spectroscopy")
                                .get[Option[Wavelength]]("wavelength")

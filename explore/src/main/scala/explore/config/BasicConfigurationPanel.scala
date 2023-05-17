@@ -43,14 +43,18 @@ import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
 import react.primereact.Button
 import react.primereact.Message
+import explore.model.ScienceRequirements
 
 import scalajs.js.JSConverters.*
+import react.fa.FontAwesomeIcon
+import monocle.Iso
+import explore.model.ScienceRequirements.Spectroscopy
 
 case class BasicConfigurationPanel(
   userId:          Option[User.Id],
   programId:       Program.Id,
   obsId:           Observation.Id,
-  requirementsCtx: UndoSetter[ScienceRequirementsData],
+  requirementsCtx: UndoSetter[ScienceRequirements],
   selectedConfig:  View[Option[BasicConfigAndItc]],
   constraints:     ConstraintSet,
   itcTargets:      List[ItcTarget],
@@ -78,21 +82,27 @@ private object BasicConfigurationPanel:
         val requirementsViewSet: ScienceRequirementsUndoView =
           ScienceRequirementsUndoView(props.programId, props.obsId, props.requirementsCtx)
 
-        val isSpectroscopy: Boolean = mode.get === ScienceMode.Spectroscopy
+        // val isSpectroscopy: Boolean = mode.get === ScienceMode.Spectroscopy
 
-        val spectroscopy: View[ScienceRequirementsData.Spectroscopy] =
+        val requirementsView: View[ScienceRequirements] =
           requirementsViewSet(
-            ScienceRequirementsData.spectroscopy,
-            UpdateScienceRequirements.spectroscopyRequirements
+            Iso.id.asLens,
+            _ match
+              case s @ ScienceRequirements.Spectroscopy(_, _, _, _, _, focalPlane, _, _) =>
+                UpdateScienceRequirements.spectroscopyRequirements(s)
           )
 
-        val canAccept =
+        val spectroscopyView: ViewOpt[Spectroscopy] =
+          requirementsView.zoom(ScienceRequirements.spectroscopy)
+
+        val canAccept: Boolean =
           props.selectedConfig.get.flatMap(_.itc).flatMap(_.toOption).exists(_.isSuccess)
 
         // wavelength has to be handled special because you can't select a row without a wavelength.
-        val message =
-          spectroscopy.get.wavelength.fold("Wavelength is required for creating a configuration.")(
-            _ =>
+        val message: String =
+          spectroscopyView.get
+            .map(_.wavelength)
+            .fold("Wavelength is required for creating a configuration.")(_ =>
               props.selectedConfig.get match {
                 case Some(BasicConfigAndItc(_, itc)) =>
                   itc match {
@@ -104,9 +114,9 @@ private object BasicConfigurationPanel:
 
                 case None => "To create a configuration, select a table row."
               }
-          )
+            )
 
-        val buttonIcon =
+        val buttonIcon: FontAwesomeIcon =
           if (creating.get.value) Icons.Spinner.withSpin(true)
           else Icons.Gears
 
@@ -115,20 +125,21 @@ private object BasicConfigurationPanel:
             ExploreStyles.BasicConfigurationForm,
             <.label("Mode", HelpIcon("configuration/mode.md".refined)),
             FormEnumDropdownView(id = "configuration-mode".refined, value = mode),
-            SpectroscopyConfigurationPanel(spectroscopy)
-              .when(isSpectroscopy),
-            ImagingConfigurationPanel(imaging)
-              .unless(isSpectroscopy)
+            spectroscopyView.mapValue(SpectroscopyConfigurationPanel(_))
+            // ImagingConfigurationPanel(imaging)
+            //   .unless(isSpectroscopy)
           ),
-          SpectroscopyModesTable(
-            props.userId,
-            props.selectedConfig,
-            spectroscopy.get,
-            props.constraints,
-            if (props.itcTargets.isEmpty) none else props.itcTargets.some,
-            props.baseCoordinates,
-            props.confMatrix
-          ).when(isSpectroscopy),
+          spectroscopyView.mapValue(spectroscopy =>
+            SpectroscopyModesTable(
+              props.userId,
+              props.selectedConfig,
+              spectroscopy.get,
+              props.constraints,
+              if (props.itcTargets.isEmpty) none else props.itcTargets.some,
+              props.baseCoordinates,
+              props.confMatrix
+            )
+          ),
           <.div(ExploreStyles.BasicConfigurationButtons)(
             Message(text = message),
             Button(
@@ -139,6 +150,6 @@ private object BasicConfigurationPanel:
               onClick = (creating.async.set(Creating(true)) >>
                 props.createConfig.guarantee(creating.async.set(Creating(false)))).runAsync
             ).compact.small.when(canAccept)
-          ).when(isSpectroscopy)
+          ).when(spectroscopyView.get.isDefined)
         )
       }
