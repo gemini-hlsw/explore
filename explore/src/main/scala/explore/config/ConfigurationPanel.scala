@@ -27,6 +27,7 @@ import explore.events.*
 import explore.model.AppContext
 import explore.model.BasicConfigAndItc
 import explore.model.ObsConfiguration
+import explore.model.ScienceRequirements
 import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.ItcPicklers.given
@@ -55,12 +56,11 @@ import lucuma.schemas.odb.input.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import monocle.Iso
 import org.http4s.syntax.all.*
 import queries.common.ObsQueriesGQL
 import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
-import explore.model.ScienceRequirements
-import monocle.Iso
 
 case class ConfigurationPanel(
   userId:          Option[User.Id],
@@ -213,9 +213,6 @@ object ConfigurationPanel:
         val confMatrix = matrix.toOption.flatten.getOrElse(SpectroscopyModesMatrix.empty)
 
         React.Fragment(
-          // props.renderInTitle(
-          //   <.div(ExploreStyles.TitleUndoButtons)(UndoButtons(props.scienceData))
-          // ),
           <.div(ExploreStyles.ConfigurationGrid)(
             props.obsConf.agsState
               .map(agsState =>

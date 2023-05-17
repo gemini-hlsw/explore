@@ -24,6 +24,7 @@ import explore.components.ui.ExploreStyles
 import explore.constraints.ConstraintsPanel
 import explore.itc.ItcPanelProps
 import explore.model.LoadingState
+import explore.model.ObsSummary.observingMode
 import explore.model.*
 import explore.model.display.given
 import explore.model.enums.AgsState
@@ -48,6 +49,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ags.AgsAnalysis
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
+import lucuma.core.math.Offset
 import lucuma.core.math.skycalc.averageParallacticAngle
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.CoordinatesAtVizTime
@@ -76,8 +78,6 @@ import react.resizeDetector.*
 import java.time.Instant
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
-import explore.model.ObsSummary.observingMode
-import lucuma.core.math.Offset
 
 case class ObsTabTiles(
   userId:             Option[User.Id],
@@ -121,23 +121,6 @@ object ObsTabTiles:
         .toList
     )
 
-  // private def obsProperties(obsView: View[ObsSummary]) =
-  //   // val obsViewPot                                   = obsView.toPot
-  //   val scienceData: Option[ScienceData]         = obsView.get.scienceData
-  //   val observingMode: Option[ObservingMode]     =
-  //     scienceData.flatMap(_.mode)
-  //   val scienceReqs: Option[ScienceRequirements] =
-  //     scienceData.map(_.requirements)
-  //   val chartExposureTime                        = obsView.toOption
-  //     .flatMap(
-  //       _.get.itcExposureTime
-  //         .map(r => ItcChartExposureTime(OverridenExposureTime.FromItc, r.time, r.count))
-  //     )
-  //     .orElse(obsView.toOption.flatMap(_.get.itc.map(_.toItcChartExposureTime)))
-  //   (obsViewPot, scienceData, observingMode, scienceReqs, chartExposureTime)
-
-  // itcExposureTime was always null???
-
   private def itcQueryProps(
     obs:            ObsSummary,
     itc:            Option[OdbItcResult.Success],
@@ -153,6 +136,11 @@ object ObsTabTiles:
       selectedConfig,
       targetsList
     )
+
+  private case class Offsets(
+    science:     Option[NonEmptyList[Offset]],
+    acquisition: Option[NonEmptyList[Offset]]
+  )
 
   private val component =
     ScalaFnComponent
@@ -175,6 +163,24 @@ object ObsTabTiles:
           // TODO Could we get the edit signal from ProgramCache instead of doing another subscritpion??
           .reRunOnResourceSignals(ObservationEditSubscription.subscribe[IO](props.obsId))
       }
+      .useStreamResourceOnMountBy { (props, ctx, _) =>
+        import ctx.given
+
+        SequenceOffsets[IO]
+          .query(props.programId, props.obsId)
+          .map(data =>
+            Offsets(
+              science = NonEmptyList.fromList(
+                data.sequence.foldMap(_.executionConfig.allScienceOffsets).distinct
+              ),
+              acquisition = NonEmptyList.fromList(
+                data.sequence.foldMap(_.executionConfig.allAcquisitionOffsets).distinct
+              )
+            )
+          )
+          // TODO Could we get the edit signal from ProgramCache instead of doing another subscritpion??
+          .reRunOnResourceSignals(ObservationEditSubscription.subscribe[IO](props.obsId))
+      }
       // Ags state
       .useStateView[AgsState](AgsState.Idle)
       // Selected GS. to share the PA chosen for Unconstrained and average modes
@@ -182,16 +188,16 @@ object ObsTabTiles:
       .useStateView(none[AgsAnalysis])
       // the configuration the user has selected from the spectroscopy modes table, if any
       .useStateView(none[BasicConfigAndItc])
-      .useStateBy((props, _, itc, _, _, selectedConfig) =>
+      .useStateBy((props, _, itc, _, _, _, selectedConfig) =>
         itcQueryProps(props.observation, itc.toOption.flatten, selectedConfig.get, props.allTargets)
       )
       // Chart results
       .useState(Map.empty[ItcTarget, Pot[ItcChartResult]])
       // itc loading
       .useState(LoadingState.Done)
-      .useEffectWithDepsBy((props, _, itc, _, _, selectedConfig, _, _, _) =>
+      .useEffectWithDepsBy((props, _, itc, _, _, _, selectedConfig, _, _, _) =>
         itcQueryProps(props.observation, itc.toOption.flatten, selectedConfig.get, props.allTargets)
-      ) { (props, ctx, _, _, _, _, oldItcProps, charts, loading) => itcProps =>
+      ) { (props, ctx, _, _, _, _, _, oldItcProps, charts, loading) => itcProps =>
         import ctx.given
 
         oldItcProps.setState(itcProps) *>
@@ -223,8 +229,8 @@ object ObsTabTiles:
       // ITC selected target. Here to be shared by the ITC tile body and title
       .useStateView(none[ItcTarget])
       // Reset the selected target if itcProps changes
-      .useEffectWithDepsBy((_, _, _, _, _, _, itcProps, _, _, _) => itcProps.value)(
-        (_, _, _, _, _, _, _, _, _, selectedTarget) =>
+      .useEffectWithDepsBy((_, _, _, _, _, _, _, itcProps, _, _, _) => itcProps.value)(
+        (_, _, _, _, _, _, _, _, _, _, selectedTarget) =>
           itcProps => selectedTarget.set(itcProps.defaultSelectedTarget)
       )
       .render {
@@ -232,6 +238,7 @@ object ObsTabTiles:
           props,
           ctx,
           itc,
+          sequenceOffsets,
           agsState,
           selectedPA,
           selectedConfig,
@@ -369,21 +376,6 @@ object ObsTabTiles:
               )
               .flatten
 
-          val scienceOffsets: Option[NonEmptyList[Offset]] = none
-          // FOLLOWING CODE IS WRONG
-          // props.observation.observingMode.flatMap(obsMode =>
-          //   ObservingMode.gmosNorthLongSlit
-          //     .getOption(obsMode)
-          //     .map(gnls => gnls.explicitSpatialOffsets.getOrElse(gnls.defaultSpatialOffsets))
-          //     .orElse(
-          //       ObservingMode.gmosSouthLongSlit
-          //         .getOption(obsMode)
-          //         .map(gnls => gnls.explicitSpatialOffsets.getOrElse(gnls.defaultSpatialOffsets))
-          //     )
-          // )
-
-          val acquisitionOffsets: Option[NonEmptyList[Offset]] = none
-
           val obsConf =
             ObsConfiguration(
               basicConfiguration,
@@ -392,9 +384,8 @@ object ObsTabTiles:
               ScienceRequirements.spectroscopy
                 .getOption(props.observation.scienceRequirements)
                 .flatMap(_.wavelength),
-              // TODO!!!! Do we really need to query the whole sequence for this???
-              scienceOffsets,
-              acquisitionOffsets,
+              sequenceOffsets.toOption.flatMap(_.science),
+              sequenceOffsets.toOption.flatMap(_.acquisition),
               averagePA
             )
 

@@ -13,6 +13,7 @@ import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.itc.requiredForITC
 import explore.model.ExploreModelValidators
+import explore.model.ScienceRequirements
 import explore.model.display.given
 import explore.model.formats.*
 import explore.syntax.ui.*
@@ -33,7 +34,6 @@ import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 import react.common.Css
 import react.common.ReactFnProps
-import explore.model.ScienceRequirements
 
 case class SpectroscopyConfigurationPanel(
   options: View[ScienceRequirements.Spectroscopy]

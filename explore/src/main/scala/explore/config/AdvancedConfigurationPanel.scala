@@ -34,6 +34,7 @@ import explore.model.AppContext
 import explore.model.BasicConfigAndItc
 import explore.model.ExploreModelValidators
 import explore.model.OdbItcResult
+import explore.model.ScienceRequirements
 import explore.model.display.given
 import explore.model.reusability.given
 import explore.modes.GmosNorthSpectroscopyRow
@@ -92,7 +93,6 @@ import java.time.Duration
 
 import scalajs.js
 import scalajs.js.JSConverters.*
-import explore.model.ScienceRequirements
 
 sealed trait AdvancedConfigurationPanel[T <: ObservingMode, Input]:
   def programId: Program.Id

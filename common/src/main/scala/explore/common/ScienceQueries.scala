@@ -12,6 +12,7 @@ import crystal.react.implicits.*
 import eu.timepit.refined.*
 import eu.timepit.refined.numeric.Positive
 import explore.DefaultErrorPolicy
+import explore.model.ScienceRequirements
 import explore.syntax.ui.*
 import explore.undo.UndoSetter
 import explore.utils.ToastCtx
@@ -30,7 +31,6 @@ import monocle.Lens
 import org.typelevel.log4cats.Logger
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ObsQueries.*
-import explore.model.ScienceRequirements
 
 object ScienceQueries:
 

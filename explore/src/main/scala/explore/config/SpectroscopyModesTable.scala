@@ -33,6 +33,7 @@ import explore.itc.*
 import explore.model.AppContext
 import explore.model.BasicConfigAndItc
 import explore.model.Progress
+import explore.model.ScienceRequirements
 import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.ItcPicklers.given
@@ -92,7 +93,6 @@ import java.text.DecimalFormat
 import java.util.UUID
 import scala.collection.decorators.*
 import scala.concurrent.duration.*
-import explore.model.ScienceRequirements
 
 import scalajs.js
 import scalajs.js.JSConverters.*

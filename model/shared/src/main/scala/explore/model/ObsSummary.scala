@@ -25,15 +25,15 @@ import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
 import lucuma.core.util.TimeSpan
 import lucuma.core.util.Timestamp
+import lucuma.schemas.ObservationDB.Types.ScienceRequirementsInput
 import lucuma.schemas.decoders.given
 import lucuma.schemas.model.BasicConfiguration
+import lucuma.schemas.model.ObservingMode
 import monocle.Focus
 import org.typelevel.cats.time.*
 
 import java.time.Instant
 import scala.collection.immutable.SortedSet
-import lucuma.schemas.ObservationDB.Types.ScienceRequirementsInput
-import lucuma.schemas.model.ObservingMode
 
 // TODO Rename to Observation??
 case class ObsSummary(

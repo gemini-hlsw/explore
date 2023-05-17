@@ -5,23 +5,23 @@ package explore.model
 
 import cats.Eq
 import cats.derived.*
+import cats.syntax.all.*
+import eu.timepit.refined.cats.given
 import eu.timepit.refined.types.numeric.PosInt
+import io.circe.Decoder
+import io.circe.generic.semiauto.*
+import io.circe.refined.given
 import lucuma.core.enums.FocalPlane
 import lucuma.core.enums.SpectroscopyCapabilities
+import lucuma.core.math.Angle
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDelta
-import lucuma.core.math.Angle
-import io.circe.generic.semiauto.*
-import io.circe.Decoder
-import cats.syntax.all.*
 import lucuma.schemas.decoders.given
-import io.circe.refined.given
-import eu.timepit.refined.cats.given
-import monocle.macros.GenPrism
-import monocle.Prism
-import monocle.Lens
 import monocle.Focus
+import monocle.Lens
+import monocle.Prism
+import monocle.macros.GenPrism
 
 sealed trait ScienceRequirements derives Eq
 

@@ -4,6 +4,7 @@
 package queries.schemas.itc
 
 import cats.syntax.all.*
+import explore.model.AsterismIds
 import explore.model.TargetList
 import explore.model.itc.ItcTarget
 import explore.modes.GmosNorthSpectroscopyRow
@@ -14,7 +15,6 @@ import lucuma.core.model.*
 import lucuma.itc.client.GmosFpu
 import lucuma.itc.client.InstrumentMode
 import queries.schemas.odb.ObsQueries
-import explore.model.AsterismIds
 
 trait syntax:
 

@@ -17,6 +17,8 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.BasicConfigAndItc
 import explore.model.ImagingConfigurationOptions
+import explore.model.ScienceRequirements
+import explore.model.ScienceRequirements.Spectroscopy
 import explore.model.display.given
 import explore.model.itc.ItcTarget
 import explore.modes.SpectroscopyModesMatrix
@@ -39,16 +41,14 @@ import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import monocle.Iso
 import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
+import react.fa.FontAwesomeIcon
 import react.primereact.Button
 import react.primereact.Message
-import explore.model.ScienceRequirements
 
 import scalajs.js.JSConverters.*
-import react.fa.FontAwesomeIcon
-import monocle.Iso
-import explore.model.ScienceRequirements.Spectroscopy
 
 case class BasicConfigurationPanel(
   userId:          Option[User.Id],

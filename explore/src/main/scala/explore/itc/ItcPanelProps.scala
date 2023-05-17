@@ -15,7 +15,9 @@ import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
 import explore.events.ItcMessage
+import explore.model.AsterismIds
 import explore.model.BasicConfigAndItc
+import explore.model.ScienceRequirements
 import explore.model.TargetList
 import explore.model.WorkerClients.ItcClient
 import explore.model.boopickle.ItcPicklers.given
@@ -35,6 +37,7 @@ import lucuma.core.math.BrightnessValue
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.math.dimensional.Units
+import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ExposureTimeMode
 import lucuma.itc.client.OptimizedChartResult
 import lucuma.schemas.model.BasicConfiguration
@@ -44,9 +47,6 @@ import queries.schemas.itc.syntax.*
 import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
 import workers.WorkerClient
-import explore.model.ScienceRequirements
-import lucuma.core.model.ConstraintSet
-import explore.model.AsterismIds
 
 case class ItcPanelProps(
   observingMode:            Option[ObservingMode],
