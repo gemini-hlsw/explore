@@ -30,8 +30,11 @@ import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
 import japgolly.scalajs.react.ReactCats.*
 import japgolly.scalajs.react.Reusability
+import lucuma.core.enums.Band
+import lucuma.core.math.BrightnessValue
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
+import lucuma.core.math.dimensional.Units
 import lucuma.core.model.ExposureTimeMode
 import lucuma.itc.client.OptimizedChartResult
 import lucuma.schemas.model.BasicConfiguration
@@ -101,6 +104,16 @@ case class ItcPanelProps(
      chartExposureTime
     )
 
+  val isExecutable: Boolean = queryProps.forall(_.isDefined)
+
+  def targetBrightness(target: ItcTarget): Option[(Band, BrightnessValue, Units)] =
+    for
+      w <- wavelength
+      s <- scienceData
+      t <- s.itcTargets(allTargets).find(_ === target)
+      b <- t.brightnessNearestTo(w.value)
+    yield b
+
   val defaultSelectedTarget: Option[ItcTarget] =
     val r = for
       w <- wavelength
@@ -109,8 +122,6 @@ case class ItcPanelProps(
       b <- t.brightestAt(w.value)
     yield b
     r.orElse(scienceData.flatMap(_.itcTargets(allTargets).headOption))
-
-  val isExecutable: Boolean = queryProps.forall(_.isDefined)
 
   def requestITCData(
     onComplete:  Map[ItcTarget, Either[ItcQueryProblems, ItcChartResult]] => IO[Unit],

@@ -158,6 +158,7 @@ object ItcGraphPanel:
               ExploreStyles.ItcPlotSection,
               ExploreStyles.ItcPlotDetailsHidden.unless(opt.detailsShown.value),
               ItcSpectroscopyPlotDescription(
+                selectedTarget.flatMap(props.itcProps.targetBrightness),
                 props.itcProps.chartExposureTime,
                 selectedResult.map(_.ccds),
                 selectedResult.map(r => r.atWavelengthSNRatio.getOrElse(r.peakSNRatio))

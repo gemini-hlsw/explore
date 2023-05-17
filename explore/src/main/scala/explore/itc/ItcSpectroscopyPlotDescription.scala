@@ -7,16 +7,21 @@ import cats.data.NonEmptyList
 import cats.syntax.all.*
 import explore.components.ui.ExploreStyles
 import explore.model.itc.ItcChartExposureTime
+import explore.model.itc.ItcTarget
 import explore.model.itc.math.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.Band
+import lucuma.core.math.BrightnessValue
 import lucuma.core.math.SignalToNoise
+import lucuma.core.math.dimensional.Units
 import lucuma.itc.ItcCcd
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 
 case class ItcSpectroscopyPlotDescription(
+  brightness:    Option[(Band, BrightnessValue, Units)],
   exposureTime:  Option[ItcChartExposureTime],
   ccds:          Option[NonEmptyList[ItcCcd]],
   signalToNoise: Option[SignalToNoise]
@@ -27,6 +32,10 @@ object ItcSpectroscopyPlotDescription {
 
   val component = ScalaFnComponent[Props] { props =>
     val sn: String = props.signalToNoise.fold("-")(formatSN)
+    val brightness = props.brightness.fold("-") { case (band, value, units) =>
+      f"${band.shortName}: $value%.2f  $units"
+    }
+
     <.div(
       ExploreStyles.ItcPlotDescription,
       <.label("Integration Time:"),
@@ -38,7 +47,9 @@ object ItcSpectroscopyPlotDescription {
       <.label("Total S/N:"),
       <.span(sn),
       <.label("Peak (signal + background):"),
-      <.span(formatCcds(props.ccds, ccds => s"${ccds.maxPeakPixelFlux} 𝐞⁻ (${ccds.maxADU} ADU)"))
+      <.span(formatCcds(props.ccds, ccds => s"${ccds.maxPeakPixelFlux} 𝐞⁻ (${ccds.maxADU} ADU)")),
+      <.label("Input brightness:"),
+      <.span(brightness)
     )
   }
 }
