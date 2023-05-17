@@ -21,6 +21,7 @@ import lucuma.core.syntax.display.*
 import lucuma.core.util.Display
 import lucuma.core.validation.InputValidSplitEpi
 import lucuma.itc.ChartType
+import lucuma.schemas.model.BasicConfiguration
 
 import java.text.DecimalFormat
 
@@ -190,5 +191,12 @@ trait DisplayImplicits:
     case ItcQueryProblems.MissingBrightness    => "Target brightness is missing"
     case ItcQueryProblems.GenericError(e)      => e
   }
+
+  extension (configuration: BasicConfiguration)
+    def configurationSummary: String = configuration match
+      case BasicConfiguration.GmosNorthLongSlit(grating, _, fpu, _) =>
+        s"GMOS-N ${grating.shortName} ${fpu.shortName}"
+      case BasicConfiguration.GmosSouthLongSlit(grating, _, fpu, _) =>
+        s"GMOS-S ${grating.shortName} ${fpu.shortName}"
 
 object display extends DisplayImplicits

@@ -19,6 +19,7 @@ import crystal.react.hooks.*
 import crystal.react.implicits.*
 import crystal.react.reuse.*
 import eu.timepit.refined.auto.*
+import eu.timepit.refined.cats.given
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosBigDecimal
@@ -36,6 +37,7 @@ import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.boopickle.*
+import explore.model.display.*
 import explore.model.display.given
 import explore.model.enums.TableId
 import explore.model.itc.ItcTarget
@@ -202,6 +204,9 @@ private object SpectroscopyModesTable extends TableHooks:
   private given Order[InstrumentRow#Grating] = Order.by(_.toString)
   private given Order[InstrumentRow#Filter]  = Order.by(_.toString)
   private given Order[InstrumentRow#FPU]     = Order.by(_.toString)
+  private given Order[BasicConfigAndItc]     = Order.by(_.configuration.configurationSummary)
+
+  private given Order[TimeSpan | Unit] = Order.by(_.toOption)
 
   private def formatInstrument(r: (Instrument, NonEmptyString)): String = r match
     case (i @ Instrument.Gnirs, m) => s"${i.longName} $m"
@@ -282,13 +287,16 @@ private object SpectroscopyModesTable extends TableHooks:
         .setCell(cell => itcCell(cell.row.original.result, cw))
         .setColumnSize(FixedSize(80.toPx))
         .setEnableSorting(progress.isEmpty)
-        .setSortUndefined(UndefinedPriority.Lower),
+        .setSortUndefined(UndefinedPriority.Lower)
+        .sortable,
       column(SlitWidthColumnId, row => SpectroscopyModeRow.slitWidth.get(row.entry))
         .setCell(cell => formatSlitWidth(cell.value))
-        .setColumnSize(FixedSize(100.toPx)),
+        .setColumnSize(FixedSize(100.toPx))
+        .sortable,
       column(SlitLengthColumnId, row => SpectroscopyModeRow.slitLength.get(row.entry))
         .setCell(cell => formatSlitLength(cell.value))
-        .setColumnSize(FixedSize(105.toPx)),
+        .setColumnSize(FixedSize(105.toPx))
+        .sortable,
       column(GratingColumnId, row => SpectroscopyModeRow.grating.get(row.entry))
         .setCell(cell => formatGrating(cell.value))
         .setColumnSize(FixedSize(96.toPx))
@@ -308,11 +316,13 @@ private object SpectroscopyModesTable extends TableHooks:
         .setColumnSize(FixedSize(100.toPx)),
       column(ResolutionColumnId, row => SpectroscopyModeRow.resolution.get(row.entry))
         .setCell(_.value.toString)
-        .setColumnSize(FixedSize(70.toPx)),
+        .setColumnSize(FixedSize(70.toPx))
+        .sortable,
       column(AvailablityColumnId, row => row.rowToConf(cw))
         .setCell(_.value.fold("No")(_ => "Yes"))
         .setColumnSize(FixedSize(66.toPx))
         .setSortUndefined(UndefinedPriority.Lower)
+        .sortable
     ).filter { case c => (c.id.toString) != FPUColumnId.value || fpu.isEmpty }
 
   extension (row: SpectroscopyModeRowWithResult)

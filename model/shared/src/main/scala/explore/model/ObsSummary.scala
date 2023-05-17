@@ -10,6 +10,7 @@ import cats.syntax.all.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.model.display.*
 import io.circe.Decoder
 import io.circe.JsonObject
 import io.circe.generic.semiauto.*
@@ -47,13 +48,7 @@ case class ObsSummary(
   posAngleConstraint: Option[PosAngleConstraint],
   wavelength:         Option[Wavelength]
 ) derives Eq:
-  lazy val configurationSummary: Option[String] = configuration match
-    case Some(BasicConfiguration.GmosNorthLongSlit(grating, _, fpu, _)) =>
-      s"GMOS-N ${grating.shortName} ${fpu.shortName}".some
-    case Some(BasicConfiguration.GmosSouthLongSlit(grating, _, fpu, _)) =>
-      s"GMOS-S ${grating.shortName} ${fpu.shortName}".some
-    case _                                                              =>
-      none
+  lazy val configurationSummary: Option[String] = configuration.map(_.configurationSummary)
 
   lazy val constraintsSummary: String =
     s"${constraints.imageQuality.label} ${constraints.cloudExtinction.label} ${constraints.skyBackground.label} ${constraints.waterVapor.label}"

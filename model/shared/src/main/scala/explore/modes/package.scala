@@ -4,6 +4,7 @@
 package explore
 
 import cats.Eq
+import cats.Order
 import cats.derived.*
 import cats.syntax.all.*
 import coulomb.policy.spire.standard.given
@@ -37,6 +38,8 @@ package modes {
         .imapB(_.underlying.movePointRight(3).intValue,
                n => new java.math.BigDecimal(n).movePointLeft(3)
         )
+
+    given Order[ModeSlitSize] = Order.by(_.value.toMicroarcseconds)
 
     extension (size: ModeSlitSize)
       def toString: String = s"${Angle.milliarcseconds.get(size.value) / 1000.0} arcsec"
