@@ -14,25 +14,26 @@ import lucuma.core.enums.Band
 import lucuma.core.math.BrightnessValue
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.Wavelength
+import lucuma.core.math.dimensional.Units
 import lucuma.core.model.SourceProfile
 
 case class ItcTarget(name: NonEmptyString, rv: RadialVelocity, profile: SourceProfile)
 
 object ItcTarget:
   extension (target: ItcTarget)
-    def brightnessNearestTo(w: Wavelength): Option[(Band, BrightnessValue)] =
+    def brightnessNearestTo(w: Wavelength): Option[(Band, BrightnessValue, Units)] =
       val integrated = SourceProfile.integratedBrightnesses
         .getOption(target.profile)
         .flatMap { sb =>
           sb.minByOption { case (b, _) => (b.center.pm - w.pm).abs }
         }
-        .map((b, v) => (b, v.value))
+        .map((b, v) => (b, v.value, v.units))
       val surface    = SourceProfile.surfaceBrightnesses
         .getOption(target.profile)
         .flatMap { sb =>
           sb.minByOption { case (b, _) => (b.center.pm - w.pm).abs }
         }
-        .map((b, v) => (b, v.value))
+        .map((b, v) => (b, v.value, v.units))
       integrated.orElse(surface)
 
   extension (targets: List[ItcTarget])
