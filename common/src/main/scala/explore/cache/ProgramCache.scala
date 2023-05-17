@@ -11,6 +11,7 @@ import clue.StreamingClient
 import clue.data.syntax.*
 import explore.DefaultErrorPolicy
 import explore.common.AsterismQueries.*
+import explore.model.GroupElement
 import explore.model.ObsSummary
 import explore.model.ProgramSummaries
 import explore.model.TargetWithObs
@@ -20,13 +21,19 @@ import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
+import lucuma.schemas.ObservationDB.Enums.EditType
+import lucuma.schemas.ObservationDB.Enums.EditType.Created
+import lucuma.schemas.ObservationDB.Enums.EditType.Updated
 import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.model.TargetWithId
 import lucuma.ui.reusability.given
 import monocle.Focus
 import monocle.Lens
+import monocle.Traversal
 import queries.common.ObsQueriesGQL
 import queries.common.ObsQueriesGQL.ObsEditQuery.Data.observation
+import queries.common.ProgramQueriesGQL.GroupEditSubscription
+import queries.common.ProgramQueriesGQL.ProgramGroupsQuery
 import queries.common.ProgramSummaryQueriesGQL
 import queries.common.TargetQueriesGQL
 import react.common.ReactFnProps
@@ -83,7 +90,14 @@ object ProgramCache extends CacheComponent[ProgramSummaries, ProgramCache]:
         _.id
       )
 
-    (targets, observations).mapN(ProgramSummaries.fromLists)
+    val groups: IO[List[GroupElement]] = drain[GroupElement, Unit, ProgramGroupsQuery.Data](
+      _ => ProgramGroupsQuery[IO].query(props.programId),
+      _.program.toList.flatMap(_.allGroupElements),
+      _ => false,
+      _ => ()
+    )
+
+    (targets, observations, groups).mapN(ProgramSummaries.fromLists)
 
   override protected val updateStream: ProgramCache => Resource[
     cats.effect.IO,
@@ -126,5 +140,25 @@ object ProgramCache extends CacheComponent[ProgramSummaries, ProgramCache]:
           )
         )
 
+    val updateGroups = GroupEditSubscription
+      .subscribe[IO](props.programId)
+      .map(_.map(data =>
+        val groupId  = data.groupEdit.value.id
+        val editType = data.groupEdit.editType
+        // TODO: parent id and index
+
+        // TODO: update elements (like when a group is added to another group)
+        editType match
+          case Created =>
+            ProgramSummaries.groups.modify(groupElements =>
+              groupElements :+ GroupElement(data.groupEdit.value.asRight, none)
+            )
+          case Updated =>
+            ProgramSummaries.groups.andThen(Traversal.fromTraverse[List, GroupElement])
+              .andThen(GroupElement.grouping)
+              .filter(_.id === groupId)
+              .replace(data.groupEdit.value)
+      ))
+
     // TODO Handle errors, disable transparent resubscription upon connection loss.
-    (updateTargets, updateObservations).mapN(_.merge(_))
+    (updateTargets, updateObservations, updateGroups).mapN(_.merge(_).merge(_))

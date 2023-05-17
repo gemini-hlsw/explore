@@ -21,7 +21,8 @@ import scala.collection.immutable.SortedSet
 
 case class ProgramSummaries(
   targets:      TargetList,
-  observations: ObservationList
+  observations: ObservationList,
+  groups:       GroupList
 ) derives Eq:
   lazy val asterismGroups: AsterismGroupList =
     SortedMap.from(
@@ -76,9 +77,15 @@ object ProgramSummaries:
   val targets: Lens[ProgramSummaries, TargetList]           = Focus[ProgramSummaries](_.targets)
   val observations: Lens[ProgramSummaries, ObservationList] =
     Focus[ProgramSummaries](_.observations)
+  val groups: Lens[ProgramSummaries, GroupList]             = Focus[ProgramSummaries](_.groups)
 
-  def fromLists(targetList: List[TargetWithId], obsList: List[ObsSummary]): ProgramSummaries =
+  def fromLists(
+    targetList: List[TargetWithId],
+    obsList:    List[ObsSummary],
+    groups:     List[GroupElement]
+  ): ProgramSummaries =
     ProgramSummaries(
       targetList.toSortedMap(_.id, _.target),
-      KeyedIndexedList.fromList(obsList, ObsSummary.id.get)
+      KeyedIndexedList.fromList(obsList, ObsSummary.id.get),
+      groups
     )

@@ -16,6 +16,9 @@ import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.model.AppContext
 import explore.model.Focused
+import explore.model.GroupElement
+import explore.model.GroupList
+import explore.model.Grouping
 import explore.model.enums.AppTab
 import explore.model.reusability.given
 import explore.observationtree.ObsBadge
@@ -38,11 +41,10 @@ import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
 import org.typelevel.log4cats.Logger
-import queries.common.ProgramQueriesGQL.ProgramGroupsQuery.Data.Program.AllGroupElements
-import queries.common.ProgramQueriesGQL.ProgramGroupsQuery.Data.Program.AllGroupElements.Group
 import queries.schemas.odb.ObsQueries
 import react.common.ReactFnProps
 import react.primereact.Button
+import react.primereact.Tree
 
 import ObsQueries.*
 
@@ -52,14 +54,14 @@ case class ObsList(
   focusedObs:      Option[Observation.Id],
   focusedTarget:   Option[Target.Id],
   setSummaryPanel: Callback,
-  groups:          Pot[View[List[AllGroupElements]]]
+  groups:          GroupList
 ) extends ReactFnProps(ObsList.component):
   val observations: ObservationList = obsUndoCtx.model.get
 
 object ObsList:
   private type Props = ObsList
 
-  private given Reusability[AllGroupElements] = Reusability.byEq
+  private given Reusability[GroupElement] = Reusability.byEq
 
   private def insertObs(
     programId: Program.Id,
@@ -114,12 +116,10 @@ object ObsList:
       }
       // adding new observation
       .useStateView(false)
-      .useMemoBy((props, _, _, _) => (props.observations, props.groups.map(_.reuseByValue)))(
-        (_, _, _, _) =>
-          (observations, groupsPot) =>
-            groupsPot.map(groups => ObsNode.fromList(observations, groups.value.get))
+      .useMemoBy((props, _, _, _) => (props.observations, props.groups))((_, _, _, _) =>
+        ObsNode.fromList
       )
-      .render { (props, ctx, _, adding, treeNodesPot) =>
+      .render { (props, ctx, _, adding, treeNodes) =>
 
         import ctx.given
 
@@ -176,7 +176,7 @@ object ObsList:
             case ObsNode.And(group) => renderGroup("AND", group)
             case ObsNode.Or(group)  => renderGroup("OR", group)
 
-        def renderGroup(title: String, group: Group) =
+        def renderGroup(title: String, group: Grouping) =
           <.span(title,
                  ExploreStyles.ObsTreeGroupLeaf,
                  group.name.map(<.em(_, ^.marginLeft := "8px")),
@@ -210,10 +210,9 @@ object ObsList:
               clazz = ExploreStyles.ButtonSummary
             )
           ),
-          treeNodesPot.renderPot { treeNodes =>
-            <.div()(
-              ObsListTree(treeNodes, renderItem)
-            )
-          }
+          Tree(
+            treeNodes,
+            renderItem
+          )
         )
       }
