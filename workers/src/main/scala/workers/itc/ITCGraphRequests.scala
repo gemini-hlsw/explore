@@ -98,11 +98,12 @@ object ITCGraphRequests:
                   false
                 )
                 .map(chartResult =>
-                  t -> ItcChartResult(t,
-                                      chartResult.ccds,
-                                      chartResult.charts,
-                                      chartResult.peakSNRatio,
-                                      chartResult.atWavelengthSNRatio
+                  t -> ItcChartResult(
+                    t,
+                    chartResult.ccds,
+                    chartResult.charts,
+                    chartResult.peakSNRatio,
+                    chartResult.atWavelengthSNRatio
                   ).asRight
                 )
                 .handleError { e =>

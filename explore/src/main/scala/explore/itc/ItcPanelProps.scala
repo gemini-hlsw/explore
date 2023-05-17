@@ -107,8 +107,7 @@ case class ItcPanelProps(
   def targetBrightness(target: ItcTarget): Option[(Band, BrightnessValue, Units)] =
     for
       w <- wavelength
-      s <- scienceData
-      t <- s.itcTargets(allTargets).find(_ === target)
+      t <- itcTargets.flatMap(_.find(_ === target))
       b <- t.brightnessNearestTo(w.value)
     yield b
 
