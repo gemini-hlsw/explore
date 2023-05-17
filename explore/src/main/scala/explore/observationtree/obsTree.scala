@@ -4,10 +4,16 @@
 package explore.observationtree
 
 import cats.Eq
+import cats.Order.*
 import cats.derived.*
 import cats.syntax.all.*
 import explore.data.KeyedIndexedList
+import explore.model.GroupList
+import explore.model.GroupObs
+import explore.model.Grouping
+import explore.model.GroupingElement
 import explore.model.ObsSummary
+import explore.model.syntax.all.*
 import japgolly.scalajs.react.Reusability
 import lucuma.core.model.Group.{Id => GroupId}
 import lucuma.core.model.Observation
@@ -15,59 +21,46 @@ import lucuma.refined.*
 import lucuma.ui.reusability.given
 import monocle.Lens
 import monocle.macros.GenLens
-import queries.common.ProgramQueriesGQL.ProgramGroupsQuery.Data.Program.AllGroupElements
-import queries.common.ProgramQueriesGQL.ProgramGroupsQuery.Data.Program.AllGroupElements.Group
-import queries.common.ProgramQueriesGQL.ProgramGroupsQuery.Data.Program.AllGroupElements.Group.Elements
 import react.primereact.Tree
 import react.primereact.Tree.Node
 
 import java.util.UUID
+import scala.collection.SortedMap
 import scala.scalajs.js.JSConverters._
 
 enum ObsNode derives Eq:
   case Obs(value: ObsSummary)
-  case And(group: Group)
-  case Or(group: Group)
+  case And(group: Grouping)
+  case Or(group: Grouping)
 
-object ObsNode {
+object ObsNode:
 
   def fromList(
     obsList: KeyedIndexedList[Observation.Id, ObsSummary],
-    groups:  List[AllGroupElements]
+    groups:  GroupList
   ): Seq[Node[ObsNode]] =
 
-    val rootGroups = groups.filter(_.parentGroupId.isEmpty)
-    val groupings  = groups.flatMap(_.group)
+    val rootGroups =
+      groups.mapFilter(g => if g.parentGroupId.isEmpty then g.value.some else none)
+    val groupings  = groups.flatMap(_.value.toOption).toSortedMap(_.id)
 
-    def createGroupFromIds(
-      maybeGroup: Option[GroupId],
-      maybeObs:   Option[Observation.Id]
-    ): Seq[Node[ObsNode]] =
-      val groupNodes =
-        maybeGroup.flatMap(group => groupings.find(_.id === group).map(createGroup))
-      val obsNodes   = maybeObs.flatMap(groupObs =>
-        obsList.getValue(groupObs).map(n => Tree.Node(Tree.Id(n.id.toString), Obs(n)))
-      )
-      (groupNodes ++ obsNodes).toSeq
+    def createObsNode(groupObs: GroupObs): Option[Node[ObsNode]] =
+      obsList.getValue(groupObs.id).map(n => Tree.Node(Tree.Id(n.id.toString), Obs(n)))
 
-    def createGroup(group: Group): Node[ObsNode] =
-      val children = group.elements.flatMap { case Elements(maybeGroup, maybeObs) =>
-        createGroupFromIds(maybeGroup.map(_.id), maybeObs.map(_.id))
+    def createGroup(group: Grouping): Node[ObsNode] =
+      val children = group.elements.flatMap {
+        case Left(groupObs)  => createObsNode(groupObs)
+        case Right(grouping) => groupings.get(grouping.id).map(createGroup)
       }
-      // is and if minimumRequired is not defined, or same length as group.elements
       val isAnd    = group.minimumRequired.forall(_.value == group.elements.length)
       val data     = if isAnd then And(group) else Or(group)
       Tree.Node(Tree.Id(group.id.toString), data, children = children)
 
-    val treeNodes = rootGroups.flatMap { case AllGroupElements(maybeObs, maybeGroup, _) =>
-      createGroupFromIds(maybeGroup.map(_.id), maybeObs.map(_.id))
-      val groupNode = maybeGroup
-        .flatMap(group => groupings.find(g => g.id === group.id).map(createGroup))
-      val obsNode   = maybeObs
-        .flatMap(groupObs =>
-          obsList.getValue(groupObs.id).map(n => Tree.Node(Tree.Id(n.id.toString), Obs(n)))
-        )
-      groupNode ++ obsNode
+    val treeNodes = rootGroups.flatMap {
+
+      case Left(groupObs)  => createObsNode(groupObs)
+      case Right(grouping) => groupings.get(grouping.id).map(createGroup)
+
     }
 
     // Uncomment to debug trees
@@ -80,5 +73,3 @@ object ObsNode {
     //   })
     //   .pprintln(treeNodes)
     treeNodes
-
-}

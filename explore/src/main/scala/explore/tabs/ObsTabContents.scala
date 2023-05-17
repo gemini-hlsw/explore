@@ -59,7 +59,6 @@ import org.scalajs.dom.window
 import queries.common.ObsQueriesGQL.*
 import queries.common.ProgramQueriesGQL.GroupEditSubscription
 import queries.common.ProgramQueriesGQL.ProgramGroupsQuery
-import queries.common.ProgramQueriesGQL.ProgramGroupsQuery.Data.Program.AllGroupElements
 import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.odb.ObsQueries.*
 import react.common.*
@@ -187,8 +186,7 @@ object ObsTabContents extends TwoPanels:
     defaultLayouts: LayoutsMap,
     layouts:        View[Pot[LayoutsMap]],
     resize:         UseResizeDetectorReturn,
-    ctx:            AppContext[IO],
-    groups:         Pot[View[List[AllGroupElements]]]
+    ctx:            AppContext[IO]
   ): VdomNode = {
     import ctx.given
 
@@ -196,6 +194,7 @@ object ObsTabContents extends TwoPanels:
     val observations: View[ObservationList]      = programSummaries.zoom(ProgramSummaries.observations)
     val obsUndoCtx: UndoContext[ObservationList] = UndoContext(props.obsUndoStacks, observations)
     val psUndoCtx: UndoContext[ProgramSummaries] = UndoContext(props.psUndoStacks, programSummaries)
+    val groupsUndoCtx                            = psUndoCtx.zoom(ProgramSummaries.groups)
     val targetsUndoCtx: UndoSetter[TargetList]   = psUndoCtx.zoom(ProgramSummaries.targets)
 
     def observationsTree(observations: View[ObservationList]) =
@@ -205,7 +204,7 @@ object ObsTabContents extends TwoPanels:
         props.focusedObs,
         props.focusedTarget,
         selectedView.set(SelectedPanel.Summary),
-        groups
+        groupsUndoCtx.model.get
       )
 
     val backButton: VdomNode =
@@ -395,16 +394,6 @@ object ObsTabContents extends TwoPanels:
                         callbacks
         )
       }
-      .useStreamResourceViewBy((props, _, _, _, _, _) => props.programId) {
-        (props, ctx, _, _, _, _) => programId =>
-          import ctx.given
-
-          ProgramGroupsQuery[IO]
-            .query(programId)
-            .map(_.program.toList.flatMap(_.allGroupElements))
-            .reRunOnResourceSignals(GroupEditSubscription.subscribe[IO]())
-
-      }
-      .render((props, ctx, twoPanelState, resize, layouts, defaultLayout, groups) =>
-        renderFn(props, twoPanelState, defaultLayout, layouts, resize, ctx, groups.toPot)
+      .render((props, ctx, twoPanelState, resize, layouts, defaultLayout) =>
+        renderFn(props, twoPanelState, defaultLayout, layouts, resize, ctx)
       )

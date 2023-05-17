@@ -16,6 +16,7 @@ import explore.model.syntax.all.*
 import lucuma.core.enums.StellarLibrarySpectrum
 import lucuma.core.math.Coordinates
 import lucuma.core.model.ConstraintSet
+import lucuma.core.model.Group
 import lucuma.core.model.Observation
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.SourceProfile
@@ -58,3 +59,5 @@ type TargetWithObsList   = SortedMap[Target.Id, TargetWithObs]
 // Otherwise, we should change to a SortedMap.
 type ObservationList     = KeyedIndexedList[Observation.Id, ObsSummary]
 type ConstraintGroupList = SortedMap[ObsIdSet, ConstraintSet]
+
+type GroupList = List[GroupElement]
