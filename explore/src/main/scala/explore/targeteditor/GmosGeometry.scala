@@ -61,30 +61,27 @@ object GmosGeometry:
   def patrolFieldIntersection(
     posAngle:      Angle,
     offsets:       NonEmptyList[Offset],
-    configuration: Option[BasicConfiguration],
+    configuration: BasicConfiguration,
     port:          PortDisposition,
     extraCss:      Css = Css.Empty
   ): (Css, ShapeExpression) =
     (Css("patrol-field-intersection") |+| extraCss) ->
       offsets
         .map(patrolField(posAngle, _, configuration, port))
-        .collect { case Some(s) => s }
         .reduce(_ ∩ _)
 
   // Shape for the patrol field at a single position
   def patrolField(
     posAngle:      Angle,
     offset:        Offset,
-    configuration: Option[BasicConfiguration],
+    configuration: BasicConfiguration,
     port:          PortDisposition
-  ): Option[ShapeExpression] =
+  ): ShapeExpression =
     configuration match {
-      case Some(m: BasicConfiguration.GmosNorthLongSlit) =>
-        gmos.probeArm.patrolFieldAt(posAngle, offset, m.fpu.asLeft.some, port).some
-      case Some(m: BasicConfiguration.GmosSouthLongSlit) =>
-        gmos.probeArm.patrolFieldAt(posAngle, offset, m.fpu.asRight.some, port).some
-      case _                                             =>
-        none
+      case m: BasicConfiguration.GmosNorthLongSlit =>
+        gmos.probeArm.patrolFieldAt(posAngle, offset, m.fpu.asLeft.some, port)
+      case m: BasicConfiguration.GmosSouthLongSlit =>
+        gmos.probeArm.patrolFieldAt(posAngle, offset, m.fpu.asRight.some, port)
     }
 
   // Shape to display always
@@ -152,10 +149,12 @@ object GmosGeometry:
             val offsets = configuration.flatMap(_.scienceOffsets) |+|
               configuration.flatMap(_.acquisitionOffsets)
 
-            val patrolFieldIntersection = offsets.map(o =>
-              GmosGeometry
-                .patrolFieldIntersection(posAngle, o.distinct, basicConf, port)
-            )
+            val patrolFieldIntersection =
+              for {
+                conf <- basicConf
+                o    <- offsets
+              } yield GmosGeometry
+                .patrolFieldIntersection(posAngle, o.distinct, conf, port)
 
             patrolFieldIntersection.fold(probeShape)(probeShape + _)
           }
