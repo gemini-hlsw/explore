@@ -90,7 +90,6 @@ import react.primereact.Button
 
 import java.text.DecimalFormat
 import java.util.UUID
-import scala.annotation.nowarn
 import scala.collection.decorators.*
 import scala.concurrent.duration.*
 
@@ -207,11 +206,7 @@ private object SpectroscopyModesTable extends TableHooks:
   private given Order[InstrumentRow#FPU]     = Order.by(_.toString)
   private given Order[BasicConfigAndItc]     = Order.by(_.configuration.configurationSummary)
 
-  @nowarn // it produces a warning because reasons
-  private given Order[TimeSpan | Unit] = Order.by(_ match {
-    case t: TimeSpan => t.toMicroseconds
-    case _           => Long.MinValue
-  })
+  private given Order[TimeSpan | Unit] = Order.by(_.toOption)
 
   private def formatInstrument(r: (Instrument, NonEmptyString)): String = r match
     case (i @ Instrument.Gnirs, m) => s"${i.longName} $m"
