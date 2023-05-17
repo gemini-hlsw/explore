@@ -24,8 +24,6 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Enums.EditType
-import lucuma.schemas.ObservationDB.Enums.EditType.Created
-import lucuma.schemas.ObservationDB.Enums.EditType.Updated
 import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.model.TargetWithId
 import lucuma.ui.reusability.given
@@ -92,12 +90,10 @@ object ProgramCache extends CacheComponent[ProgramSummaries, ProgramCache]:
         _.id
       )
 
-    val groups: IO[List[GroupElement]] = drain[GroupElement, Unit, ProgramGroupsQuery.Data](
-      _ => ProgramGroupsQuery[IO].query(props.programId),
-      _.program.toList.flatMap(_.allGroupElements),
-      _ => false,
-      _ => ()
-    )
+    val groups: IO[List[GroupElement]] =
+      ProgramGroupsQuery[IO]
+        .query(props.programId)
+        .map(_.program.toList.flatMap(_.allGroupElements))
 
     (targets, observations, groups).mapN(ProgramSummaries.fromLists)
 
@@ -173,11 +169,11 @@ object ProgramCache extends CacheComponent[ProgramSummaries, ProgramCache]:
         // TODO: remove groups (data not available yet)
         // TODO: ordering using indices (data not available yet)
         editType match
-          case Created =>
+          case EditType.Created =>
             ProgramSummaries.groups.modify(groupElements =>
               groupElements :+ GroupElement(data.groupEdit.value.asRight, none)
             )
-          case Updated =>
+          case EditType.Updated =>
             ProgramSummaries.groups
               .andThen(Traversal.fromTraverse[List, GroupElement])
               .andThen(GroupElement.grouping)
