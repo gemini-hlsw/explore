@@ -29,6 +29,9 @@ object GroupElement extends WithGroupObsOr:
 
   val grouping = value.andThen(Prism[Either[GroupObs, Grouping], Grouping](_.toOption)(_.asRight))
 
+  val parentGroupId: Lens[GroupElement, Option[Group.Id]] =
+    Focus[GroupElement](_.parentGroupId)
+
   given Decoder[GroupElement] = Decoder.instance(c =>
     for {
       value         <- groupObsOr(_.get[Grouping]("group"))(c)

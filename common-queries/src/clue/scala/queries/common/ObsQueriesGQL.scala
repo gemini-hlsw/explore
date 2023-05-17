@@ -210,6 +210,7 @@ object ObsQueriesGQL:
           meta:value {
             existence
           }
+          editType
         }
       }
     """
