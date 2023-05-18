@@ -24,6 +24,7 @@ import explore.components.ui.ExploreStyles
 import explore.constraints.ConstraintsPanel
 import explore.itc.ItcPanelProps
 import explore.model.LoadingState
+import explore.model.ObsSummary.observingMode
 import explore.model.*
 import explore.model.display.given
 import explore.model.enums.AgsState
@@ -48,6 +49,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ags.AgsAnalysis
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
+import lucuma.core.math.Offset
 import lucuma.core.math.skycalc.averageParallacticAngle
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.CoordinatesAtVizTime
@@ -92,9 +94,10 @@ case class ObsTabTiles(
   layouts:            View[Pot[LayoutsMap]],
   resize:             UseResizeDetectorReturn
 ) extends ReactFnProps(ObsTabTiles.component):
-  val observation: ObsSummary = obsUndoCtx.model.get
-  val obsId: Observation.Id   = observation.id
-  val allTargets: TargetList  = allTargetsUndoCtx.model.get
+  val obsView: View[ObsSummary] = obsUndoCtx.model
+  val observation: ObsSummary   = obsView.get
+  val obsId: Observation.Id     = observation.id
+  val allTargets: TargetList    = allTargetsUndoCtx.model.get
 
 object ObsTabTiles:
   private type Props = ObsTabTiles
@@ -118,49 +121,64 @@ object ObsTabTiles:
         .toList
     )
 
-  private def obsProperties(obsView: PotOption[View[ObsEditData]]) =
-    val obsViewPot                                   = obsView.toPot
-    val scienceData: Option[ScienceData]             =
-      obsView.toOption.map(_.get.scienceData)
-    val observingMode: Option[ObservingMode]         =
-      scienceData.flatMap(_.mode)
-    val scienceReqs: Option[ScienceRequirementsData] =
-      scienceData.map(_.requirements)
-    val chartExposureTime                            = obsView.toOption
-      .flatMap(
-        _.get.itcExposureTime
-          .map(r => ItcChartExposureTime(OverridenExposureTime.FromItc, r.time, r.count))
-      )
-      .orElse(obsView.toOption.flatMap(_.get.itc.map(_.toItcChartExposureTime)))
-    (obsViewPot, scienceData, observingMode, scienceReqs, chartExposureTime)
-
   private def itcQueryProps(
-    obsView:        PotOption[View[ObsEditData]],
+    obs:            ObsSummary,
+    itc:            Option[OdbItcResult.Success],
     selectedConfig: Option[BasicConfigAndItc],
     targetsList:    TargetList
   ): ItcPanelProps =
-    val props = obsProperties(obsView)
-    ItcPanelProps(props._3,
-                  props._4.map(_.spectroscopy),
-                  props._2,
-                  props._5,
-                  selectedConfig,
-                  targetsList
+    ItcPanelProps(
+      obs.observingMode,
+      ScienceRequirements.spectroscopy.getOption(obs.scienceRequirements),
+      obs.constraints,
+      obs.scienceTargetIds,
+      itc.map(_.toItcChartExposureTime),
+      selectedConfig,
+      targetsList
     )
+
+  private case class Offsets(
+    science:     Option[NonEmptyList[Offset]],
+    acquisition: Option[NonEmptyList[Offset]]
+  )
 
   private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      .useStreamResourceViewOnMountBy { (props, ctx) =>
+      .useStreamResourceOnMountBy { (props, ctx) =>
         import ctx.given
 
-        ObsEditQuery[IO]
+        ObsItcQuery[IO]
           .query(props.programId, props.obsId)(ErrorPolicy.RaiseOnNoData)
           .map(
-            _.data.asObsEditData
-              .getOrElse(throw new Exception(s"Observation [${props.obsId}] not found"))
+            _.data.itc.map(i =>
+              OdbItcResult.Success(
+                i.result.exposureTime,
+                i.result.exposures,
+                i.result.signalToNoise
+              )
+            )
           )
+          // TODO Could we get the edit signal from ProgramCache instead of doing another subscritpion??
+          .reRunOnResourceSignals(ObservationEditSubscription.subscribe[IO](props.obsId))
+      }
+      .useStreamResourceOnMountBy { (props, ctx, _) =>
+        import ctx.given
+
+        SequenceOffsets[IO]
+          .query(props.programId, props.obsId)
+          .map(data =>
+            Offsets(
+              science = NonEmptyList.fromList(
+                data.sequence.foldMap(_.executionConfig.allScienceOffsets).distinct
+              ),
+              acquisition = NonEmptyList.fromList(
+                data.sequence.foldMap(_.executionConfig.allAcquisitionOffsets).distinct
+              )
+            )
+          )
+          // TODO Could we get the edit signal from ProgramCache instead of doing another subscritpion??
           .reRunOnResourceSignals(ObservationEditSubscription.subscribe[IO](props.obsId))
       }
       // Ags state
@@ -170,16 +188,16 @@ object ObsTabTiles:
       .useStateView(none[AgsAnalysis])
       // the configuration the user has selected from the spectroscopy modes table, if any
       .useStateView(none[BasicConfigAndItc])
-      .useStateBy((props, _, obsView, _, _, selectedConfig) =>
-        itcQueryProps(obsView, selectedConfig.get, props.allTargets)
+      .useStateBy((props, _, itc, _, _, _, selectedConfig) =>
+        itcQueryProps(props.observation, itc.toOption.flatten, selectedConfig.get, props.allTargets)
       )
       // Chart results
       .useState(Map.empty[ItcTarget, Pot[ItcChartResult]])
       // itc loading
       .useState(LoadingState.Done)
-      .useEffectWithDepsBy((props, _, obsView, _, _, selectedConfig, _, _, _) =>
-        itcQueryProps(obsView, selectedConfig.get, props.allTargets)
-      ) { (props, ctx, _, _, _, _, oldItcProps, charts, loading) => itcProps =>
+      .useEffectWithDepsBy((props, _, itc, _, _, _, selectedConfig, _, _, _) =>
+        itcQueryProps(props.observation, itc.toOption.flatten, selectedConfig.get, props.allTargets)
+      ) { (props, ctx, _, _, _, _, _, oldItcProps, charts, loading) => itcProps =>
         import ctx.given
 
         oldItcProps.setState(itcProps) *>
@@ -211,15 +229,16 @@ object ObsTabTiles:
       // ITC selected target. Here to be shared by the ITC tile body and title
       .useStateView(none[ItcTarget])
       // Reset the selected target if itcProps changes
-      .useEffectWithDepsBy((_, _, _, _, _, _, itcProps, _, _, _) => itcProps.value)(
-        (_, _, _, _, _, _, _, _, _, selectedTarget) =>
+      .useEffectWithDepsBy((_, _, _, _, _, _, _, itcProps, _, _, _) => itcProps.value)(
+        (_, _, _, _, _, _, _, _, _, _, selectedTarget) =>
           itcProps => selectedTarget.set(itcProps.defaultSelectedTarget)
       )
       .render {
         (
           props,
           ctx,
-          obsView,
+          itc,
+          sequenceOffsets,
           agsState,
           selectedPA,
           selectedConfig,
@@ -230,39 +249,36 @@ object ObsTabTiles:
         ) =>
           import ctx.given
 
-          val (obsViewPot, _, observingMode, scienceReqs, chartExposureTime) =
-            obsProperties(obsView)
+          // PREVIOUS CODE WAS: (BUT WE ALWAYS HAD "none" IN itcExposureTime
+          //   val chartExposureTime                        = obsView.toOption
+          //     .flatMap(
+          //       _.get.itcExposureTime
+          //         .map(r => ItcChartExposureTime(OverridenExposureTime.FromItc, r.time, r.count))
+          //     )
+          //     .orElse(obsView.toOption.flatMap(_.get.itc.map(_.toItcChartExposureTime)))
+          //   (obsViewPot, scienceData, observingMode, scienceReqs, chartExposureTime)
+          var chartExposureTime: Option[ItcChartExposureTime] =
+            itc.toOption.flatten.map(_.toItcChartExposureTime)
 
-          val posAngle: Option[View[PosAngleConstraint]] =
-            obsView.toOption
-              .map(
-                _.zoom(ObsEditData.scienceData.andThen(ScienceData.posAngle))
-              )
+          val posAngle: View[PosAngleConstraint] =
+            props.obsView.zoom(ObsSummary.posAngleConstraint)
 
-          val potAsterismIds: Pot[View[AsterismIds]] =
-            obsViewPot.map(v =>
-              v.zoom(
-                ObsEditData.scienceData
-                  .andThen(ScienceData.targets)
-                  .andThen(ObservationData.TargetEnvironment.asterism)
-                  .andThen(ObsQueries.targetIdsFromAsterism)
-              ).zoomSplitEpi(sortedSetFromList)
-            )
+          val asterismIds: View[AsterismIds] =
+            props.obsView.zoom(ObsSummary.scienceTargetIds)
 
-          val basicConfiguration = observingMode.map(_.toBasicConfiguration)
+          val basicConfiguration: Option[BasicConfiguration] =
+            props.observation.observingMode.map(_.toBasicConfiguration)
 
-          val vizTimeView: Pot[View[Option[Instant]]] =
-            obsViewPot.map(_.zoom(ObsEditData.visualizationTime))
+          val vizTimeView: View[Option[Instant]] =
+            props.obsView.zoom(ObsSummary.visualizationTime)
 
-          val vizTime = vizTimeView.toOption.flatMap(_.get)
+          val vizTime: Option[Instant] = vizTimeView.get
 
           val asterismAsNel: Option[NonEmptyList[TargetWithId]] =
-            potAsterismIds.toOption.flatMap(asterismIdsView =>
-              NonEmptyList.fromList(
-                asterismIdsView.get.toList
-                  .map(id => props.allTargets.get(id).map(t => TargetWithId(id, t)))
-                  .flattenOption
-              )
+            NonEmptyList.fromList(
+              props.observation.scienceTargetIds.toList
+                .map(id => props.allTargets.get(id).map(t => TargetWithId(id, t)))
+                .flattenOption
             )
 
           // asterism base coordinates at viz time or default to base coordinates
@@ -296,7 +312,7 @@ object ObsTabTiles:
               )
             )
 
-          val itcTile =
+          val itcTile: Tile =
             ItcTile.itcTile(
               props.userId,
               props.obsId,
@@ -309,9 +325,8 @@ object ObsTabTiles:
               itcLoading.value
             )
 
-          val constraints         =
-            obsViewPot.map(_.zoom(ObsEditData.scienceData.andThen(ScienceData.constraints)))
-          val constraintsSelector =
+          val constraints: View[ConstraintSet] = props.obsView.zoom(ObsSummary.constraints)
+          val constraintsSelector: VdomNode    =
             makeConstraintsSelector(
               props.programId,
               props.obsId,
@@ -326,11 +341,11 @@ object ObsTabTiles:
               props.obsUndoCtx.undoableView[List[TimingWindow]](ObsSummary.timingWindows)
             )
 
-          val skyPlotTile =
+          val skyPlotTile: Tile =
             ElevationPlotTile.elevationPlotTile(
               props.userId,
               props.focusedTarget.orElse(props.observation.scienceTargetIds.headOption),
-              observingMode.map(_.siteFor),
+              props.observation.observingMode.map(_.siteFor),
               targetCoords,
               vizTime,
               timingWindows.get
@@ -348,50 +363,53 @@ object ObsTabTiles:
               via
             )
 
-          val paProps = posAngle.map(p => PAProperties(props.obsId, selectedPA, agsState, p))
+          val paProps: PAProperties =
+            PAProperties(props.obsId, selectedPA, agsState, posAngle)
 
           val averagePA: Option[Angle] =
             (basicConfiguration.map(_.siteFor), asterismAsNel, vizTime)
               .mapN((site, asterism, vizTime) =>
-                posAngle.map(_.get) match
-                  case Some(PosAngleConstraint.AverageParallactic) =>
+                posAngle.get match
+                  case PosAngleConstraint.AverageParallactic =>
                     averageParallacticAngle(site, asterism.baseTracking, vizTime)
-                  case _                                           => none
+                  case _                                     => none
               )
               .flatten
 
-          val obsConf = obsView.toOption.map(o =>
+          val obsConf =
             ObsConfiguration(
               basicConfiguration,
-              paProps,
-              o.get.scienceData.constraints.some,
-              o.get.scienceData.requirements.spectroscopy.wavelength,
-              o.get.scienceData.scienceOffsets,
-              o.get.scienceData.acquisitionOffsets,
+              paProps.some,
+              constraints.get.some,
+              ScienceRequirements.spectroscopy
+                .getOption(props.observation.scienceRequirements)
+                .flatMap(_.wavelength),
+              sequenceOffsets.toOption.flatMap(_.science),
+              sequenceOffsets.toOption.flatMap(_.acquisition),
               averagePA
             )
-          )
 
           def otherObsCount(obsId: Observation.Id, targetId: Target.Id): Int =
             props.targetObservations.get(targetId).fold(0)(obsIds => (obsIds - obsId).size)
 
-          val targetTile = AsterismEditorTile.asterismEditorTile(
-            props.userId,
-            props.programId,
-            ObsIdSet.one(props.obsId),
-            potAsterismIds,
-            props.allTargetsUndoCtx.model,
-            basicConfiguration,
-            vizTimeView,
-            obsConf,
-            props.focusedTarget,
-            setCurrentTarget(props.programId, props.obsId.some),
-            otherObsCount(props.obsId, _),
-            props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
-            props.searching,
-            "Targets",
-            backButton = none
-          )
+          val targetTile: Tile =
+            AsterismEditorTile.asterismEditorTile(
+              props.userId,
+              props.programId,
+              ObsIdSet.one(props.obsId),
+              asterismIds,
+              props.allTargetsUndoCtx.model,
+              basicConfiguration,
+              vizTimeView,
+              obsConf,
+              props.focusedTarget,
+              setCurrentTarget(props.programId, props.obsId.some),
+              otherObsCount(props.obsId, _),
+              props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
+              props.searching,
+              "Targets",
+              backButton = none
+            )
 
           // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper
           // so that the constraints selector dropdown always appears in front of any other tiles. If more
@@ -424,15 +442,12 @@ object ObsTabTiles:
               props.userId,
               props.programId,
               props.obsId,
-              obsViewPot.map(obsEditData =>
-                (obsEditData.get.title,
-                 obsEditData.get.subtitle,
-                 obsEditData.zoom(ObsEditData.scienceData)
-                )
-              ),
-              props.undoStacks
-                .zoom(ModelUndoStacks.forObsScienceData[IO])
-                .zoom(atMapWithDefault(props.obsId, UndoStacks.empty)),
+              props.observation.title,
+              props.observation.subtitle,
+              props.obsUndoCtx.zoom(ObsSummary.scienceRequirements),
+              props.obsUndoCtx.zoom(ObsSummary.observingMode),
+              props.obsUndoCtx.zoom(ObsSummary.posAngleConstraint),
+              props.observation.scienceTargetIds,
               targetCoords,
               obsConf,
               selectedConfig,

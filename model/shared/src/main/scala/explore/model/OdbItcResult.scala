@@ -32,7 +32,7 @@ object OdbItcResult {
     signalToNoise: SignalToNoise
   ) extends OdbItcResult
       derives Eq {
-    def toItcChartExposureTime =
+    def toItcChartExposureTime: ItcChartExposureTime =
       ItcChartExposureTime(OverridenExposureTime.FromItc, exposureTime, exposures)
   }
 

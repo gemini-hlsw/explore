@@ -15,7 +15,9 @@ import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
 import explore.events.ItcMessage
+import explore.model.AsterismIds
 import explore.model.BasicConfigAndItc
+import explore.model.ScienceRequirements
 import explore.model.TargetList
 import explore.model.WorkerClients.ItcClient
 import explore.model.boopickle.ItcPicklers.given
@@ -35,6 +37,7 @@ import lucuma.core.math.BrightnessValue
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.math.dimensional.Units
+import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ExposureTimeMode
 import lucuma.itc.client.OptimizedChartResult
 import lucuma.schemas.model.BasicConfiguration
@@ -47,8 +50,9 @@ import workers.WorkerClient
 
 case class ItcPanelProps(
   observingMode:            Option[ObservingMode],
-  spectroscopyRequirements: Option[SpectroscopyRequirementsData],
-  val scienceData:          Option[ScienceData],
+  spectroscopyRequirements: Option[ScienceRequirements.Spectroscopy],
+  constraints:              ConstraintSet,
+  asterismIds:              AsterismIds,
   exposure:                 Option[ItcChartExposureTime],
   selectedConfig:           Option[BasicConfigAndItc], // selected row in spectroscopy modes table
   allTargets:               TargetList
@@ -91,37 +95,30 @@ case class ItcPanelProps(
   val chartExposureTime: Option[ItcChartExposureTime] = finalExposure
 
   val itcTargets: Option[NonEmptyList[ItcTarget]] =
-    scienceData.flatMap(_.itcTargets(allTargets).toNel)
+    asterismIds.itcTargets(allTargets).toNel
 
   val targets: List[ItcTarget] = itcTargets.foldMap(_.toList)
 
   private val queryProps =
-    (observingMode,
-     wavelength,
-     scienceData.map(_.constraints),
-     itcTargets,
-     instrumentRow,
-     chartExposureTime
-    )
+    (observingMode, wavelength, constraints, itcTargets, instrumentRow, chartExposureTime)
 
   val isExecutable: Boolean = queryProps.forall(_.isDefined)
 
   def targetBrightness(target: ItcTarget): Option[(Band, BrightnessValue, Units)] =
     for
       w <- wavelength
-      s <- scienceData
-      t <- s.itcTargets(allTargets).find(_ === target)
+      t <- itcTargets.flatMap(_.find(_ === target))
       b <- t.brightnessNearestTo(w.value)
     yield b
 
   val defaultSelectedTarget: Option[ItcTarget] =
-    val r = for
-      w <- wavelength
-      s <- scienceData
-      t  = s.itcTargets(allTargets)
-      b <- t.brightestAt(w.value)
-    yield b
-    r.orElse(scienceData.flatMap(_.itcTargets(allTargets).headOption))
+    val t = asterismIds.itcTargets(allTargets)
+    val r =
+      for
+        w <- wavelength
+        b <- t.brightestAt(w.value)
+      yield b
+    r.orElse(t.headOption)
 
   def requestITCData(
     onComplete:  Map[ItcTarget, Either[ItcQueryProblems, ItcChartResult]] => IO[Unit],
@@ -130,12 +127,11 @@ case class ItcPanelProps(
   )(using WorkerClient[IO, ItcMessage.Request]): IO[Unit] =
     val action: Option[IO[Unit]] =
       for
-        w           <- wavelength
-        ex          <- chartExposureTime
-        exposures   <- refineV[Positive](ex.count.value).toOption
-        constraints <- scienceData.map(_.constraints)
-        t           <- itcTargets
-        mode        <- instrumentRow
+        w         <- wavelength
+        ex        <- chartExposureTime
+        exposures <- refineV[Positive](ex.count.value).toOption
+        t         <- itcTargets
+        mode      <- instrumentRow
       yield beforeStart *>
         ItcClient[IO]
           .requestSingle(

@@ -33,7 +33,6 @@ import monocle.Focus
 import monocle.Lens
 import monocle.Traversal
 import queries.common.ObsQueriesGQL
-import queries.common.ObsQueriesGQL.ObsEditQuery.Data.observation
 import queries.common.ProgramQueriesGQL.GroupEditSubscription
 import queries.common.ProgramQueriesGQL.ProgramGroupsQuery
 import queries.common.ProgramSummaryQueriesGQL

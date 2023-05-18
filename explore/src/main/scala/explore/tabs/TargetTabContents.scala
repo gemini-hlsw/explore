@@ -355,12 +355,13 @@ object TargetTabContents extends TwoPanels:
                   _,
                   const,
                   _,
+                  _,
                   Some(conf),
                   _,
-                  Some(posAngle),
+                  posAngle,
                   Some(wavelength)
                 ) if obsId === id =>
-              (const, conf, posAngle, wavelength)
+              (const, conf.toBasicConfiguration, posAngle, wavelength)
           }.headOption
         case _        => None
       }
@@ -380,11 +381,11 @@ object TargetTabContents extends TwoPanels:
           props.userId,
           props.programId,
           idsToEdit,
-          Pot(asterismView),
+          asterismView,
           programSummaries.zoom(ProgramSummaries.targets),
           configuration,
-          Pot(vizTimeView),
-          ObsConfiguration(configuration, none, constraints, wavelength, none, none, none).some,
+          vizTimeView,
+          ObsConfiguration(configuration, none, constraints, wavelength, none, none, none),
           props.focused.target,
           setCurrentTarget(props.programId, idsToEdit) _,
           otherObsCount(idsToEdit) _,

@@ -34,6 +34,7 @@ import explore.model.AppContext
 import explore.model.BasicConfigAndItc
 import explore.model.ExploreModelValidators
 import explore.model.OdbItcResult
+import explore.model.ScienceRequirements
 import explore.model.display.given
 import explore.model.reusability.given
 import explore.modes.GmosNorthSpectroscopyRow
@@ -99,7 +100,7 @@ sealed trait AdvancedConfigurationPanel[T <: ObservingMode, Input]:
   def title: String
   def subtitle: Option[NonEmptyString]
   def observingMode: Aligner[T, Input]
-  def spectroscopyRequirements: SpectroscopyRequirementsData
+  def spectroscopyRequirements: ScienceRequirements.Spectroscopy
   def deleteConfig: Callback
   def confMatrix: SpectroscopyModesMatrix
   def selectedConfig: View[Option[BasicConfigAndItc]]
@@ -865,7 +866,7 @@ object AdvancedConfigurationPanel {
     title:                    String,
     subtitle:                 Option[NonEmptyString],
     observingMode:            Aligner[ObservingMode.GmosNorthLongSlit, GmosNorthLongSlitInput],
-    spectroscopyRequirements: SpectroscopyRequirementsData,
+    spectroscopyRequirements: ScienceRequirements.Spectroscopy,
     deleteConfig:             Callback,
     confMatrix:               SpectroscopyModesMatrix,
     selectedConfig:           View[Option[BasicConfigAndItc]]
@@ -1068,7 +1069,7 @@ object AdvancedConfigurationPanel {
     title:                    String,
     subtitle:                 Option[NonEmptyString],
     observingMode:            Aligner[ObservingMode.GmosSouthLongSlit, GmosSouthLongSlitInput],
-    spectroscopyRequirements: SpectroscopyRequirementsData,
+    spectroscopyRequirements: ScienceRequirements.Spectroscopy,
     deleteConfig:             Callback,
     confMatrix:               SpectroscopyModesMatrix,
     selectedConfig:           View[Option[BasicConfigAndItc]]

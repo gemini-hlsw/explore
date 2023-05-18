@@ -33,6 +33,7 @@ import explore.itc.*
 import explore.model.AppContext
 import explore.model.BasicConfigAndItc
 import explore.model.Progress
+import explore.model.ScienceRequirements
 import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.ItcPicklers.given
@@ -99,7 +100,7 @@ import scalajs.js.JSConverters.*
 case class SpectroscopyModesTable(
   userId:                   Option[User.Id],
   selectedConfig:           View[Option[BasicConfigAndItc]],
-  spectroscopyRequirements: SpectroscopyRequirementsData,
+  spectroscopyRequirements: ScienceRequirements.Spectroscopy,
   constraints:              ConstraintSet,
   targets:                  Option[List[ItcTarget]],
   baseCoordinates:          Option[CoordinatesAtVizTime],

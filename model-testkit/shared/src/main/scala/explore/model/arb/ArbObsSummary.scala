@@ -32,29 +32,37 @@ import cats.Order.given
 import java.time.Instant
 import lucuma.core.model.ConstraintSet
 import scala.collection.immutable.SortedSet
+import explore.model.ObsSummary.scienceRequirements
+import explore.model.ObsSummary.observingMode
+import explore.model.ScienceRequirements
+import lucuma.schemas.model.ObservingMode
+import lucuma.schemas.model.arb.ArbObservingMode
 
 trait ArbObsSummary:
   import ArbBasicConfiguration.given
   import ArbTimeSpan.given
   import ArbTime.given
+  import ArbScienceRequirements.given
+  import ArbObservingMode.given
 
   given Arbitrary[ObsSummary] =
     Arbitrary(
-      for {
-        id                 <- arbitrary[Observation.Id]
-        title              <- arbitrary[String]
-        subtitle           <- arbitrary[Option[NonEmptyString]]
-        status             <- arbitrary[ObsStatus]
-        activeStatus       <- arbitrary[ObsActiveStatus]
-        executionTime      <- arbitrary[TimeSpan]
-        scienceTargetIds   <- arbitrary[Set[Target.Id]]
-        constraints        <- arbitrary[ConstraintSet]
-        timingWindows      <- arbitrary[List[TimingWindow]]
-        configuration      <- arbitrary[Option[BasicConfiguration]]
-        vizTime            <- arbitrary[Option[Instant]]
-        posAngleConstraint <- arbitrary[Option[PosAngleConstraint]]
-        wavelength         <- arbitrary[Option[Wavelength]]
-      } yield ObsSummary(
+      for
+        id                  <- arbitrary[Observation.Id]
+        title               <- arbitrary[String]
+        subtitle            <- arbitrary[Option[NonEmptyString]]
+        status              <- arbitrary[ObsStatus]
+        activeStatus        <- arbitrary[ObsActiveStatus]
+        executionTime       <- arbitrary[TimeSpan]
+        scienceTargetIds    <- arbitrary[Set[Target.Id]]
+        constraints         <- arbitrary[ConstraintSet]
+        timingWindows       <- arbitrary[List[TimingWindow]]
+        scienceRequirements <- arbitrary[ScienceRequirements]
+        observingMode       <- arbitrary[Option[ObservingMode]]
+        vizTime             <- arbitrary[Option[Instant]]
+        posAngleConstraint  <- arbitrary[PosAngleConstraint]
+        wavelength          <- arbitrary[Option[Wavelength]]
+      yield ObsSummary(
         id,
         title,
         subtitle,
@@ -64,7 +72,8 @@ trait ArbObsSummary:
         SortedSet.from(scienceTargetIds),
         constraints,
         timingWindows,
-        configuration,
+        scienceRequirements,
+        observingMode,
         vizTime,
         posAngleConstraint,
         wavelength
@@ -82,9 +91,10 @@ trait ArbObsSummary:
        List[Target.Id],
        ConstraintSet,
        List[TimingWindow],
-       Option[BasicConfiguration],
+       ScienceRequirements,
+       Option[ObservingMode],
        Option[Instant],
-       Option[PosAngleConstraint],
+       PosAngleConstraint,
        Option[Wavelength]
       )
     ]
@@ -98,7 +108,8 @@ trait ArbObsSummary:
          o.scienceTargetIds.toList,
          o.constraints,
          o.timingWindows,
-         o.configuration,
+         o.scienceRequirements,
+         o.observingMode,
          o.visualizationTime,
          o.posAngleConstraint,
          o.wavelength

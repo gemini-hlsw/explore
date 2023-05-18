@@ -27,6 +27,7 @@ import explore.events.*
 import explore.model.AppContext
 import explore.model.BasicConfigAndItc
 import explore.model.ObsConfiguration
+import explore.model.ScienceRequirements
 import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.ItcPicklers.given
@@ -55,6 +56,7 @@ import lucuma.schemas.odb.input.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import monocle.Iso
 import org.http4s.syntax.all.*
 import queries.common.ObsQueriesGQL
 import queries.schemas.odb.ObsQueries.*
@@ -66,12 +68,13 @@ case class ConfigurationPanel(
   obsId:           Observation.Id,
   title:           String,
   subtitle:        Option[NonEmptyString],
-  scienceData:     UndoContext[ScienceData],
-  obsConf:         Option[ObsConfiguration],
+  requirements:    UndoSetter[ScienceRequirements],
+  mode:            UndoSetter[Option[ObservingMode]],
+  posAngle:        UndoSetter[PosAngleConstraint],
+  obsConf:         ObsConfiguration,
   itcTargets:      List[ItcTarget],
   baseCoordinates: Option[CoordinatesAtVizTime],
-  selectedConfig:  View[Option[BasicConfigAndItc]],
-  renderInTitle:   Tile.RenderInTitle
+  selectedConfig:  View[Option[BasicConfigAndItc]]
 ) extends ReactFnProps[ConfigurationPanel](ConfigurationPanel.component)
 
 object ConfigurationPanel:
@@ -163,20 +166,17 @@ object ConfigurationPanel:
       .render { (props, ctx, matrix) =>
         import ctx.given
 
-        val requirementsCtx: UndoSetter[ScienceRequirementsData] =
-          props.scienceData.zoom(ScienceData.requirements)
-
         val modeAligner: Aligner[Option[ObservingMode], Input[ObservingModeInput]] =
           Aligner(
-            props.scienceData,
+            props.mode,
             UpdateObservationsInput(
               props.programId,
               WHERE = props.obsId.toWhereObservation.assign,
               SET = ObservationPropertiesInput(observingMode = ObservingModeInput().assign)
             ),
             (ObsQueriesGQL.UpdateObservationMutation[IO].execute(_)).andThen(_.void)
-          ).zoom(
-            ScienceData.mode,
+          ).zoom( // Can we avoid the zoom and make an Aligner constructor that takes an input value?
+            Iso.id,
             UpdateObservationsInput.SET.andThen(ObservationPropertiesInput.observingMode).modify
           )
 
@@ -188,7 +188,7 @@ object ConfigurationPanel:
         val optModeAligner = modeAligner.toOption
 
         val posAngleView: View[PosAngleConstraint] =
-          props.scienceData.undoableView(ScienceData.posAngle)
+          props.posAngle.undoableView(Iso.id) // We need a convenience method for this.
 
         val optNorthAligner = optModeAligner.flatMap {
           _.zoomOpt(
@@ -209,75 +209,76 @@ object ConfigurationPanel:
         val confMatrix = matrix.toOption.flatten.getOrElse(SpectroscopyModesMatrix.empty)
 
         React.Fragment(
-          props.renderInTitle(
-            <.div(ExploreStyles.TitleUndoButtons)(UndoButtons(props.scienceData))
-          ),
           <.div(ExploreStyles.ConfigurationGrid)(
-            props.obsConf
-              .flatMap(_.agsState)
+            props.obsConf.agsState
               .map(agsState =>
-                PAConfigurationPanel(props.programId,
-                                     props.obsId,
-                                     posAngleView,
-                                     props.obsConf.flatMap(_.selectedPA),
-                                     props.obsConf.flatMap(_.averagePA),
-                                     agsState
+                PAConfigurationPanel(
+                  props.programId,
+                  props.obsId,
+                  posAngleView,
+                  props.obsConf.selectedPA,
+                  props.obsConf.averagePA,
+                  agsState
                 )
               ),
             if (optModeView.get.isEmpty)
-              props.obsConf
-                .flatMap(_.constraints)
+              props.obsConf.constraints
                 .map(constraints =>
                   BasicConfigurationPanel(
                     props.userId,
                     props.programId,
                     props.obsId,
-                    requirementsCtx,
+                    props.requirements,
                     props.selectedConfig,
                     constraints,
                     props.itcTargets,
                     props.baseCoordinates,
-                    createConfiguration(props.programId,
-                                        props.obsId,
-                                        props.selectedConfig.get.map(_.configuration),
-                                        optModeView
+                    createConfiguration(
+                      props.programId,
+                      props.obsId,
+                      props.selectedConfig.get.map(_.configuration),
+                      optModeView
                     ),
                     confMatrix
                   )
                 )
             else
-              React.Fragment(
-                // Gmos North Long Slit
-                optNorthAligner.map(northAligner =>
-                  AdvancedConfigurationPanel
-                    .GmosNorthLongSlit(
-                      props.programId,
-                      props.obsId,
-                      props.title,
-                      props.subtitle,
-                      northAligner,
-                      requirementsCtx.model.get.spectroscopy,
-                      deleteConfiguration,
-                      confMatrix,
-                      props.selectedConfig
+              ScienceRequirements.spectroscopy
+                .getOption(props.requirements.model.get)
+                .map(spectroscopyRequirements =>
+                  React.Fragment(
+                    // Gmos North Long Slit
+                    optNorthAligner.map(northAligner =>
+                      AdvancedConfigurationPanel
+                        .GmosNorthLongSlit(
+                          props.programId,
+                          props.obsId,
+                          props.title,
+                          props.subtitle,
+                          northAligner,
+                          spectroscopyRequirements,
+                          deleteConfiguration,
+                          confMatrix,
+                          props.selectedConfig
+                        )
+                    ),
+                    // Gmos South Long Slit
+                    optSouthAligner.map(southAligner =>
+                      AdvancedConfigurationPanel
+                        .GmosSouthLongSlit(
+                          props.programId,
+                          props.obsId,
+                          props.title,
+                          props.subtitle,
+                          southAligner,
+                          spectroscopyRequirements,
+                          deleteConfiguration,
+                          confMatrix,
+                          props.selectedConfig
+                        )
                     )
-                ),
-                // Gmos South Long Slit
-                optSouthAligner.map(southAligner =>
-                  AdvancedConfigurationPanel
-                    .GmosSouthLongSlit(
-                      props.programId,
-                      props.obsId,
-                      props.title,
-                      props.subtitle,
-                      southAligner,
-                      requirementsCtx.model.get.spectroscopy,
-                      deleteConfiguration,
-                      confMatrix,
-                      props.selectedConfig
-                    )
+                  )
                 )
-              )
           )
         )
       }
