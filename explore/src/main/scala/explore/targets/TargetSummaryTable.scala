@@ -288,7 +288,7 @@ object TargetSummaryTable extends TableHooks:
                 ExploreStyles.TableSelectionToolbar,
                 HelpIcon("target/main/target-import.md".refined),
                 <.label(
-                  ^.cls     := "pl-compact p-component p-button p-fileupload",
+                  PrimeStyles.Component |+| PrimeStyles.Button |+| LucumaStyles.Compact |+| ExploreStyles.FileUpload,
                   ^.htmlFor := "target-import",
                   Icons.FileArrowUp
                 ),

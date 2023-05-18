@@ -251,6 +251,10 @@ object Icons {
   val faFileArrowUp: FAIcon = js.native
 
   @js.native
+  @JSImport("@fortawesome/pro-light-svg-icons", "faFileArrowDown")
+  val faFileArrowDown: FAIcon = js.native
+
+  @js.native
   @JSImport("@fortawesome/pro-thin-svg-icons", "faArrowUpRightAndArrowDownLeftFromCenter")
   val faExpandDiagonal: FAIcon = js.native
 
@@ -334,6 +338,7 @@ object Icons {
     faCircleSmall,
     faBahai,
     faFileArrowUp,
+    faFileArrowDown,
     faFileCirclePlus,
     faExpandDiagonal,
     faContractDiagonal,
@@ -403,6 +408,7 @@ object Icons {
   val Bahai               = FontAwesomeIcon(faBahai)
   val FileCirclePlus      = FontAwesomeIcon(faFileCirclePlus)
   val FileArrowUp         = FontAwesomeIcon(faFileArrowUp)
+  val FileArrowDown       = FontAwesomeIcon(faFileArrowDown)
   val ExpandDiagonal      = FontAwesomeIcon(faExpandDiagonal)
   val ContractDiagonal    = FontAwesomeIcon(faContractDiagonal)
   val Clone               = FontAwesomeIcon(faClone)

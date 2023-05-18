@@ -37,8 +37,6 @@ case object LabelsElement extends ElementItem
 
 object Routing:
 
-  private def homeTab(): VdomElement = UnderConstruction()
-
   private def withProgramSummaries(model: View[RootModel])(
     render: View[ProgramSummaries] => VdomNode
   ): VdomElement =
@@ -50,6 +48,16 @@ object Routing:
       .asInstanceOf[VdomElement]
     // Not sure why the router's renderer requires VdomElement instead of VdomNode
     // In any case, in all of our uses here we are returning a valid VdomElement.
+
+  private def overviewTab(page: Page, model: View[RootModel]): VdomElement =
+    withProgramSummaries(model)(programSummaries =>
+      val routingInfo = RoutingInfo.from(page)
+
+      OverviewTabContents(routingInfo.programId,
+                          model.zoom(RootModel.vault).get,
+                          programSummaries.zoom(ProgramSummaries.obsAttachments)
+      )
+    )
 
   private def targetTab(page: Page, model: View[RootModel]): VdomElement =
     withProgramSummaries(model)(programSummaries =>
@@ -137,7 +145,7 @@ object Routing:
           | staticRoute(root, NoProgramPage) ~> renderP(showProgramSelectionPopup _)
 
           | dynamicRouteCT((root / id[Program.Id]).xmapL(HomePage.iso)) ~> dynRenderP {
-            case (_, _) => homeTab()
+            case (p, m) => overviewTab(p, m)
           }
 
           | dynamicRouteCT(
