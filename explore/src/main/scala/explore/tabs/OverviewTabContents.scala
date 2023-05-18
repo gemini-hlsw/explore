@@ -127,7 +127,7 @@ object OverviewTabContents {
 
             val proposalAttachmentsTile = Tile(
               ObsTabTilesIds.ProposalAttachmentsId.id,
-              "Warnings And Errors",
+              "Proposal Attachments",
               none,
               canMinimize = true
             )(_ => UnderConstruction())

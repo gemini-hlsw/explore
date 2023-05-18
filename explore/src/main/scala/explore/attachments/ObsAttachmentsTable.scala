@@ -278,8 +278,7 @@ object ObsAttachmentsTable extends TableHooks:
             column(LastUpdateColumnId, ObsAttachment.updatedAt.get)
               .setCell(cell =>
                 Constants.GppDateFormatter
-                  .withZone(ZoneId.systemDefault())
-                  .format(cell.value.toInstant)
+                  .format(cell.value.toLocalDateTime)
               ),
             ColDef(
               DescriptionColumnId,
