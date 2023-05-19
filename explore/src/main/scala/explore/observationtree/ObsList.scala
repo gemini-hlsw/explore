@@ -41,6 +41,7 @@ import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
+import monocle.Lens
 import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries
 import react.common.ReactFnProps
@@ -66,6 +67,11 @@ object ObsList:
   private type Props = ObsList
 
   private given Reusability[GroupElement] = Reusability.byEq
+
+  private val groupTreeIdLens: Lens[Set[Group.Id], Set[Tree.Id]] =
+    Lens[Set[Group.Id], Set[Tree.Id]](_.map(k => Tree.Id(k.toString)))(a =>
+      _ => a.flatMap(v => Group.Id.parse(v.value))
+    )
 
   private def insertObs(
     programId: Program.Id,
@@ -159,16 +165,7 @@ object ObsList:
 
         val observations = props.observations.toList
 
-        // TODO: remove after https://github.com/gemini-hlsw/lucuma-react/pull/465 is merged and released
-        val expandedGroups =
-          props.expandedGroups.zoom(_.map(k => Tree.Id(k.toString) -> true).toMap)(f =>
-            b =>
-              f(b.map(k => Tree.Id(k.toString) -> true).toMap)
-                .filter(_._2)
-                .keySet
-                .toSet
-                .flatMap(v => Group.Id.parse(v.value))
-          )
+        val expandedGroups = props.expandedGroups.zoom(groupTreeIdLens)
 
         def renderItem(node: ObsNode, options: TreeNodeTemplateOptions) =
           node match
