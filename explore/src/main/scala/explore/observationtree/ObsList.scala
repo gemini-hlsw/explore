@@ -159,6 +159,17 @@ object ObsList:
 
         val observations = props.observations.toList
 
+        // TODO: remove after https://github.com/gemini-hlsw/lucuma-react/pull/465 is merged and released
+        val expandedGroups =
+          props.expandedGroups.zoom(_.map(k => Tree.Id(k.toString) -> true).toMap)(f =>
+            b =>
+              f(b.map(k => Tree.Id(k.toString) -> true).toMap)
+                .filter(_._2)
+                .keySet
+                .toSet
+                .flatMap(v => Group.Id.parse(v.value))
+          )
+
         def renderItem(node: ObsNode, options: TreeNodeTemplateOptions) =
           node match
             case ObsNode.Obs(obs)   =>
@@ -247,8 +258,8 @@ object ObsList:
           Tree(
             treeNodes,
             renderItem,
-            expandedKeys = props.expandedGroups.get,
-            onToggle = props.expandedGroups.set
+            expandedKeys = expandedGroups.get,
+            onToggle = expandedGroups.set
           )
         )
       }
