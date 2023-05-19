@@ -43,6 +43,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.callback.CallbackCatsEffect.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.model.Group
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
@@ -66,7 +67,6 @@ import react.draggable.Axis
 import react.gridlayout.*
 import react.hotkeys.*
 import react.hotkeys.hooks.*
-import react.primereact.Tree
 import react.resizeDetector.*
 import react.resizeDetector.hooks.*
 
@@ -79,7 +79,7 @@ case class ObsTabContents(
   focused:               Focused,
   undoStacks:            View[ModelUndoStacks[IO]],
   searching:             View[Set[Target.Id]],
-  expandedObsListGroups: View[Map[Tree.Id, Boolean]]
+  expandedGroups: View[Set[Group.Id]]
 ) extends ReactFnProps(ObsTabContents.component):
   val focusedObs: Option[Observation.Id] = focused.obsSet.map(_.head)
   val focusedTarget: Option[Target.Id]   = focused.target
@@ -207,7 +207,7 @@ object ObsTabContents extends TwoPanels:
         props.focusedTarget,
         selectedView.set(SelectedPanel.Summary),
         groupsUndoCtx.model.get,
-        props.expandedObsListGroups
+        props.expandedGroups
       )
 
     val backButton: VdomNode =

@@ -85,7 +85,7 @@ object Routing:
         routingInfo.focused,
         model.zoom(RootModel.undoStacks),
         model.zoom(RootModel.searchingTarget),
-        model.zoom(RootModel.expandedObsListGroups)
+        model.zoom(RootModel.expandedIds.andThen(ExpandedIds.obsListGroupIds))
       )
     )
 

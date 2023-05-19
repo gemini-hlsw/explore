@@ -52,13 +52,13 @@ import scala.annotation.tailrec
 import ObsQueries.*
 
 case class ObsList(
-  obsUndoCtx:            UndoContext[ObservationList],
-  programId:             Program.Id,
-  focusedObs:            Option[Observation.Id],
-  focusedTarget:         Option[Target.Id],
-  setSummaryPanel:       Callback,
-  groups:                GroupList,
-  expandedObsListGroups: View[Map[Tree.Id, Boolean]]
+  obsUndoCtx:      UndoContext[ObservationList],
+  programId:       Program.Id,
+  focusedObs:      Option[Observation.Id],
+  focusedTarget:   Option[Target.Id],
+  setSummaryPanel: Callback,
+  groups:          GroupList,
+  expandedGroups:  View[Set[Group.Id]]
 ) extends ReactFnProps(ObsList.component):
   val observations: ObservationList = obsUndoCtx.model.get
 
@@ -130,8 +130,8 @@ object ObsList:
             @tailrec
             def findParentGroups(
               groupElementId: Either[Observation.Id, Group.Id],
-              acc:            List[Group.Id]
-            ): List[Group.Id] = {
+              acc:            Set[Group.Id]
+            ): Set[Group.Id] = {
               val parentGroup = groups.find(
                 GroupElement.grouping
                   .exist(_.elements.exists(_.bimap(_.id, _.id) === groupElementId))
@@ -141,16 +141,16 @@ object ObsList:
                 case None                                                => acc
                 case Some(GroupElement(Left(_), _))                      => acc
                 // We've found the 'root' group, so we're done
-                case Some(GroupElement(Right(grouping), None))           => grouping.id +: acc
+                case Some(GroupElement(Right(grouping), None))           => acc + grouping.id
                 case Some(GroupElement(Right(grouping), Some(parentId))) =>
-                  findParentGroups(parentId.asRight, List(parentId, grouping.id) ++ acc)
+                  findParentGroups(parentId.asRight, acc ++ Set(parentId, grouping.id))
             }
 
             val groupsToAddFocus =
-              findParentGroups(obsId.asLeft, List.empty).map(g => Tree.Id(g.toString) -> false)
+              findParentGroups(obsId.asLeft, Set.empty)
 
             Callback.when(groupsToAddFocus.nonEmpty)(
-              props.expandedObsListGroups.mod(_ ++ groupsToAddFocus)
+              props.expandedGroups.mod(_ ++ groupsToAddFocus)
             )
       )
       .render { (props, ctx, _, adding, treeNodes) =>
@@ -247,8 +247,8 @@ object ObsList:
           Tree(
             treeNodes,
             renderItem,
-            expandedKeys = props.expandedObsListGroups.get,
-            onToggle = props.expandedObsListGroups.set
+            expandedKeys = props.expandedGroups.get,
+            onToggle = props.expandedGroups.set
           )
         )
       }
