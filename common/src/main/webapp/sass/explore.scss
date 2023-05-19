@@ -2156,6 +2156,7 @@ $help-title-height: 40px;
 .explore-basic-configuration-sn-at {
   display: flex;
   justify-content: stretch;
+  align-items: baseline;
   grid-gap: 0.5em;
 
   div:first-child {
@@ -2167,7 +2168,7 @@ $help-title-height: 40px;
   }
 
   #signal-to-noise-at {
-    width: 7ch;
+    width: 8ch;
   }
 }
 
