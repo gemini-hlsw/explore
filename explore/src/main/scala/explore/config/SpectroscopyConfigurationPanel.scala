@@ -55,12 +55,16 @@ object SpectroscopyConfigurationPanel {
       val spectroscopyCapability =
         p.options.zoom(ScienceRequirements.Spectroscopy.capability)
 
-      val wvMicroInput    = ExploreModelValidators.wavelengthValidWedge.optional
-      val wvcMicroInput   = ExploreModelValidators.wavelengthDeltaValidWedge.optional
-      val wvChangeAuditor = ChangeAuditor
+      val wvMicroInput        = ExploreModelValidators.wavelengthValidWedge.optional
+      val wvcMicroInput       = ExploreModelValidators.wavelengthDeltaValidWedge.optional
+      val wvBaseAuditor       = ChangeAuditor
         .fromInputValidWedge(ExploreModelValidators.wavelengthValidWedge)
         .allow(s => s === "0" || s === "0.")
+      val wvChangeAuditor     = wvBaseAuditor
         .decimal(3.refined)
+        .optional
+      val snAtWvChangeAuditor = wvBaseAuditor
+        .decimal(4.refined)
         .optional
 
       ReactFragment(
@@ -107,7 +111,7 @@ object SpectroscopyConfigurationPanel {
             value = signalToNoiseAt,
             units = "μm",
             validFormat = wvMicroInput,
-            changeAuditor = wvChangeAuditor
+            changeAuditor = snAtWvChangeAuditor
           ).clearable(^.autoComplete.off)
         ),
         FormInputTextView(
