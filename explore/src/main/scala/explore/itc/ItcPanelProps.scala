@@ -21,12 +21,13 @@ import explore.model.ScienceRequirements
 import explore.model.TargetList
 import explore.model.WorkerClients.ItcClient
 import explore.model.boopickle.ItcPicklers.given
-import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.ItcChartResult
+import explore.model.itc.ItcExposureTime
 import explore.model.itc.ItcQueryProblems
 import explore.model.itc.ItcResult
 import explore.model.itc.ItcTarget
 import explore.model.itc.OverridenExposureTime
+import explore.model.reusability.given
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
@@ -53,21 +54,24 @@ case class ItcPanelProps(
   spectroscopyRequirements: Option[ScienceRequirements.Spectroscopy],
   constraints:              ConstraintSet,
   asterismIds:              AsterismIds,
-  exposure:                 Option[ItcChartExposureTime],
+  remoteExposureTime:       Option[ItcExposureTime],   // time provided by the db
   selectedConfig:           Option[BasicConfigAndItc], // selected row in spectroscopy modes table
   allTargets:               TargetList
 ) derives Eq:
+  val currentSelectedExposure =
+    for {
+      conf <- selectedConfig
+      itc  <- conf.itcResult
+      res  <- itc.toOption
+      t    <- res.toItcExposureTime
+    } yield t
+
+  val finalExposure = currentSelectedExposure.orElse(remoteExposureTime)
+
   // if there is an observingMode, that means a configuration has been created. If not, we'll use the
   // row selected in the spectroscopy modes table if it exists
-  val (finalConfig, finalExposure) = observingMode match {
-    case Some(m) => (m.toBasicConfiguration.some, exposure)
-    case None    =>
-      selectedConfig match {
-        case Some(b) =>
-          (b.configuration.some, b.itc.flatMap(_.toOption).flatMap(_.toChartExposureTime))
-        case None    => (none, none)
-      }
-  }
+  val finalConfig =
+    observingMode.map(_.toBasicConfiguration).orElse(selectedConfig.map(_.configuration))
 
   val finalSelectedConfig =
     (finalConfig, finalExposure).mapN((c, t) =>
@@ -92,7 +96,7 @@ case class ItcPanelProps(
   }
 
   // TODO: Revisit when we have exposure mode in science requirements
-  val chartExposureTime: Option[ItcChartExposureTime] = finalExposure
+  val chartExposureTime: Option[ItcExposureTime] = finalExposure
 
   val itcTargets: Option[NonEmptyList[ItcTarget]] =
     asterismIds.itcTargets(allTargets).toNel

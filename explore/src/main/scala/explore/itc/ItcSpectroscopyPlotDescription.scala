@@ -6,7 +6,7 @@ package explore.itc
 import cats.data.NonEmptyList
 import cats.syntax.all.*
 import explore.components.ui.ExploreStyles
-import explore.model.itc.ItcChartExposureTime
+import explore.model.itc.ItcExposureTime
 import explore.model.itc.ItcTarget
 import explore.model.itc.math.*
 import japgolly.scalajs.react.*
@@ -22,7 +22,7 @@ import react.common.ReactFnProps
 
 case class ItcSpectroscopyPlotDescription(
   brightness:    Option[(Band, BrightnessValue, Units)],
-  exposureTime:  Option[ItcChartExposureTime],
+  exposureTime:  Option[ItcExposureTime],
   ccds:          Option[NonEmptyList[ItcCcd]],
   signalToNoise: Option[SignalToNoise]
 ) extends ReactFnProps[ItcSpectroscopyPlotDescription](ItcSpectroscopyPlotDescription.component)
@@ -39,7 +39,7 @@ object ItcSpectroscopyPlotDescription {
     <.div(
       ExploreStyles.ItcPlotDescription,
       <.label("Integration Time:"),
-      <.span(props.exposureTime.fold("-") { case ItcChartExposureTime(_, time, count) =>
+      <.span(props.exposureTime.fold("-") { case ItcExposureTime(_, time, count) =>
         format(time, count)
       }),
       <.label("S/N per exposure:"),

@@ -14,11 +14,12 @@ import monocle.Lens
 
 case class BasicConfigAndItc(
   configuration: BasicConfiguration,
-  itc:           Option[EitherNec[ItcQueryProblems, ItcResult]]
+  itcResult:     Option[EitherNec[ItcQueryProblems, ItcResult]]
 ) derives Eq
 
 object BasicConfigAndItc:
-  val configuration: Lens[BasicConfigAndItc, BasicConfiguration]                   =
+  val configuration: Lens[BasicConfigAndItc, BasicConfiguration] =
     Focus[BasicConfigAndItc](_.configuration)
-  val itc: Lens[BasicConfigAndItc, Option[EitherNec[ItcQueryProblems, ItcResult]]] =
-    Focus[BasicConfigAndItc](_.itc)
+
+  val itcResult: Lens[BasicConfigAndItc, Option[EitherNec[ItcQueryProblems, ItcResult]]] =
+    Focus[BasicConfigAndItc](_.itcResult)

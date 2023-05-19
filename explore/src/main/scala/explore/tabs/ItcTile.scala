@@ -14,8 +14,8 @@ import explore.itc.ItcPanelTitle
 import explore.model.BasicConfigAndItc
 import explore.model.LoadingState
 import explore.model.TargetList
-import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.ItcChartResult
+import explore.model.itc.ItcExposureTime
 import explore.model.itc.ItcTarget
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
@@ -27,7 +27,6 @@ object ItcTile:
   def itcTile(
     uid:             Option[User.Id],
     oid:             Observation.Id,
-    itcExposureTime: Option[ItcChartExposureTime],
     selectedConfig:  Option[BasicConfigAndItc],
     selectedTarget:  View[Option[ItcTarget]],
     allTargets:      TargetList,
@@ -42,7 +41,6 @@ object ItcTile:
       control = _ =>
         (ItcPanelTitle(
           selectedTarget,
-          allTargets,
           itcProps,
           itcChartResults,
           itcLoading

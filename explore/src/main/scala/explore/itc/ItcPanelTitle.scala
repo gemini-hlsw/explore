@@ -43,7 +43,6 @@ import scala.scalajs.js.JSConverters.*
 
 case class ItcPanelTitle(
   selectedTarget:  View[Option[ItcTarget]],
-  allTargets:      TargetList,
   itcPanelProps:   ItcPanelProps,
   itcChartResults: Map[ItcTarget, Pot[ItcChartResult]],
   itcLoading:      LoadingState

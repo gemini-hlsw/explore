@@ -94,7 +94,7 @@ private object BasicConfigurationPanel:
           requirementsView.zoom(ScienceRequirements.spectroscopy)
 
         val canAccept: Boolean =
-          props.selectedConfig.get.flatMap(_.itc).flatMap(_.toOption).exists(_.isSuccess)
+          props.selectedConfig.get.flatMap(_.itcResult).flatMap(_.toOption).exists(_.isSuccess)
 
         // wavelength has to be handled special because you can't select a row without a wavelength.
         val message: String =

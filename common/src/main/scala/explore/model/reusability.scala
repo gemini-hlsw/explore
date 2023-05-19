@@ -9,7 +9,7 @@ import explore.events.CatalogMessage
 import explore.model.Asterism
 import explore.model.enums.AgsState
 import explore.model.enums.SelectedPanel
-import explore.model.itc.ItcChartExposureTime
+import explore.model.itc.ItcExposureTime
 import explore.model.itc.ItcTarget
 import explore.modes.InstrumentRow
 import explore.undo.UndoStacks
@@ -96,7 +96,7 @@ object reusability:
 
   given Reusability[Existence] = Reusability.byEq
 
-  given Reusability[ItcChartExposureTime] = Reusability.byEq
+  given Reusability[ItcExposureTime] = Reusability.byEq
 
   given Reusability[InstrumentRow] = Reusability.byEq
 
@@ -125,3 +125,5 @@ object reusability:
   given Reusability[ScienceRequirements.Spectroscopy] = Reusability.byEq
 
   given Reusability[ScienceRequirements] = Reusability.byEq
+
+  given Reusability[OdbItcResult.Success] = Reusability.byEq

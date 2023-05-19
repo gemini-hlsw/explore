@@ -31,8 +31,8 @@ import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.display.given
-import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.ItcChartResult
+import explore.model.itc.ItcExposureTime
 import explore.model.itc.ItcTarget
 import explore.model.itc.OverridenExposureTime
 import explore.model.itc.PlotDetails

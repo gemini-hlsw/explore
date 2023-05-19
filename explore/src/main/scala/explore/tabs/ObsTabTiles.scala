@@ -31,8 +31,8 @@ import explore.model.enums.AgsState
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
 import explore.model.extensions.*
-import explore.model.itc.ItcChartExposureTime
 import explore.model.itc.ItcChartResult
+import explore.model.itc.ItcExposureTime
 import explore.model.itc.ItcTarget
 import explore.model.itc.OverridenExposureTime
 import explore.model.layout.*
@@ -132,7 +132,7 @@ object ObsTabTiles:
       ScienceRequirements.spectroscopy.getOption(obs.scienceRequirements),
       obs.constraints,
       obs.scienceTargetIds,
-      itc.map(_.toItcChartExposureTime),
+      itc.map(_.toItcExposureTime),
       selectedConfig,
       targetsList
     )
@@ -257,8 +257,6 @@ object ObsTabTiles:
           //     )
           //     .orElse(obsView.toOption.flatMap(_.get.itc.map(_.toItcChartExposureTime)))
           //   (obsViewPot, scienceData, observingMode, scienceReqs, chartExposureTime)
-          var chartExposureTime: Option[ItcChartExposureTime] =
-            itc.toOption.flatten.map(_.toItcChartExposureTime)
 
           val posAngle: View[PosAngleConstraint] =
             props.obsView.zoom(ObsSummary.posAngleConstraint)
@@ -316,7 +314,6 @@ object ObsTabTiles:
             ItcTile.itcTile(
               props.userId,
               props.obsId,
-              chartExposureTime,
               selectedConfig.get.orElse(itcProps.value.finalSelectedConfig),
               selectedItcTarget,
               props.allTargets,

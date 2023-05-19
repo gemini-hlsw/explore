@@ -800,8 +800,11 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               label = "Revert Configuration",
               icon = Icons.ListIcon,
               severity = Button.Severity.Secondary,
-              onClick = props.selectedConfig.set(
-                BasicConfigAndItc(props.observingMode.get.toBasicConfiguration, none).some
+              onClick = props.selectedConfig.mod(c =>
+                BasicConfigAndItc(
+                  props.observingMode.get.toBasicConfiguration,
+                  c.flatMap(_.itcResult.flatMap(_.toOption.map(_.asRight)))
+                ).some
               )
                 >> props.deleteConfig
             ).compact.small
