@@ -73,13 +73,13 @@ import react.resizeDetector.hooks.*
 import scala.concurrent.duration.*
 
 case class ObsTabContents(
-  userId:                Option[User.Id],
-  programId:             Program.Id,
-  programSummaries:      View[ProgramSummaries],
-  focused:               Focused,
-  undoStacks:            View[ModelUndoStacks[IO]],
-  searching:             View[Set[Target.Id]],
-  expandedGroups: View[Set[Group.Id]]
+  userId:           Option[User.Id],
+  programId:        Program.Id,
+  programSummaries: View[ProgramSummaries],
+  focused:          Focused,
+  undoStacks:       View[ModelUndoStacks[IO]],
+  searching:        View[Set[Target.Id]],
+  expandedGroups:   View[Set[Group.Id]]
 ) extends ReactFnProps(ObsTabContents.component):
   val focusedObs: Option[Observation.Id] = focused.obsSet.map(_.head)
   val focusedTarget: Option[Target.Id]   = focused.target
