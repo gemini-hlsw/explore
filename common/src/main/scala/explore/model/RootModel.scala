@@ -19,7 +19,6 @@ import lucuma.core.model.User
 import monocle.Focus
 import monocle.Lens
 import monocle.Optional
-import react.primereact.Tree
 
 import scala.collection.immutable.HashSet
 case class RootModel(
