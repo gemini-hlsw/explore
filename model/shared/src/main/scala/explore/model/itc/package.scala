@@ -49,12 +49,12 @@ sealed trait ItcResult extends Product with Serializable derives Eq {
     case _                 => false
   }
 
-  def toChartExposureTime: Option[ItcChartExposureTime] = this match {
+  def toItcExposureTime: Option[ItcExposureTime] = this match {
     case ItcResult.Result(time, count) =>
       NonNegInt
         .from(count.value)
         .toOption
-        .map(c => ItcChartExposureTime(OverridenExposureTime.FromItc, time, c))
+        .map(c => ItcExposureTime(OverridenExposureTime.FromItc, time, c))
     case _                             => none
   }
 }
@@ -102,7 +102,7 @@ object OverridenExposureTime:
 
   given Eq[OverridenExposureTime] = Eq.catsKernelInstancesForBoolean
 
-case class ItcChartExposureTime(
+case class ItcExposureTime(
   overriden: OverridenExposureTime,
   time:      TimeSpan,
   count:     NonNegInt
