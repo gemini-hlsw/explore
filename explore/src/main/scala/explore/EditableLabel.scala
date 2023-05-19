@@ -117,7 +117,7 @@ object EditableLabel {
           severity = Button.Severity.Secondary,
           clazz = props.rightButtonClass,
           onClickE = e => e.stopPropagationCB >> e.preventDefaultCB >> props.mod(none),
-          tooltip = props.leftButtonTooltip.orUndefined
+          tooltip = props.rightButtonTooltip.orUndefined
         ).mini.compact
 
         val acceptButton: VdomNode = Button(
