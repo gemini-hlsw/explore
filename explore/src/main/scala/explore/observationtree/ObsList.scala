@@ -30,6 +30,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ObsActiveStatus
 import lucuma.core.enums.ObsStatus
+import lucuma.core.model.Group
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
@@ -46,15 +47,18 @@ import react.common.ReactFnProps
 import react.primereact.Button
 import react.primereact.Tree
 
+import scala.annotation.tailrec
+
 import ObsQueries.*
 
 case class ObsList(
-  obsUndoCtx:      UndoContext[ObservationList],
-  programId:       Program.Id,
-  focusedObs:      Option[Observation.Id],
-  focusedTarget:   Option[Target.Id],
-  setSummaryPanel: Callback,
-  groups:          GroupList
+  obsUndoCtx:            UndoContext[ObservationList],
+  programId:             Program.Id,
+  focusedObs:            Option[Observation.Id],
+  focusedTarget:         Option[Target.Id],
+  setSummaryPanel:       Callback,
+  groups:                GroupList,
+  expandedObsListGroups: View[Map[Tree.Id, Boolean]]
 ) extends ReactFnProps(ObsList.component):
   val observations: ObservationList = obsUndoCtx.model.get
 
@@ -118,6 +122,36 @@ object ObsList:
       .useStateView(false)
       .useMemoBy((props, _, _, _) => (props.observations, props.groups))((_, _, _, _) =>
         ObsNode.fromList
+      )
+      .useEffectWithDepsBy((props, _, _, _, _) => (props.focusedObs, props.groups))(
+        (props, _, _, _, _) =>
+          case (None, _)             => Callback.empty
+          case (Some(obsId), groups) =>
+            @tailrec
+            def findParentGroups(
+              groupElementId: Either[Observation.Id, Group.Id],
+              acc:            List[Group.Id]
+            ): List[Group.Id] = {
+              val parentGroup = groups.find(
+                GroupElement.grouping
+                  .exist(_.elements.exists(_.bimap(_.id, _.id) === groupElementId))
+              )
+
+              parentGroup match
+                case None                                                => acc
+                case Some(GroupElement(Left(_), _))                      => acc
+                // We've found the 'root' group, so we're done
+                case Some(GroupElement(Right(grouping), None))           => grouping.id +: acc
+                case Some(GroupElement(Right(grouping), Some(parentId))) =>
+                  findParentGroups(parentId.asRight, List(parentId, grouping.id) ++ acc)
+            }
+
+            val groupsToAddFocus =
+              findParentGroups(obsId.asLeft, List.empty).map(g => Tree.Id(g.toString) -> false)
+
+            Callback.when(groupsToAddFocus.nonEmpty)(
+              props.expandedObsListGroups.mod(_ ++ groupsToAddFocus)
+            )
       )
       .render { (props, ctx, _, adding, treeNodes) =>
 
@@ -212,7 +246,9 @@ object ObsList:
           ),
           Tree(
             treeNodes,
-            renderItem
+            renderItem,
+            expandedKeys = props.expandedObsListGroups.get,
+            onToggle = props.expandedObsListGroups.set
           )
         )
       }

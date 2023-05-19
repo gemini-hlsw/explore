@@ -19,26 +19,29 @@ import lucuma.core.model.User
 import monocle.Focus
 import monocle.Lens
 import monocle.Optional
+import react.primereact.Tree
 
 import scala.collection.immutable.HashSet
 case class RootModel(
-  vault:                Option[UserVault],
-  localPreferences:     ExploreLocalPreferences,
-  expandedIds:          ExpandedIds = ExpandedIds(),
-  searchingTarget:      Set[Target.Id] = HashSet.empty,
-  userSelectionMessage: Option[NonEmptyString] = none,
-  programSummaries:     Option[ProgramSummaries] = none,
-  undoStacks:           ModelUndoStacks[IO] = ModelUndoStacks[IO]()
+  vault:                 Option[UserVault],
+  localPreferences:      ExploreLocalPreferences,
+  expandedIds:           ExpandedIds = ExpandedIds(),
+  searchingTarget:       Set[Target.Id] = HashSet.empty,
+  userSelectionMessage:  Option[NonEmptyString] = none,
+  programSummaries:      Option[ProgramSummaries] = none,
+  undoStacks:            ModelUndoStacks[IO] = ModelUndoStacks[IO](),
+  expandedObsListGroups: Map[Tree.Id, Boolean] = Map.empty
 ) derives Eq
 
 object RootModel:
-  val vault                = Focus[RootModel](_.vault)
-  val localPreferences     = Focus[RootModel](_.localPreferences)
-  val expandedIds          = Focus[RootModel](_.expandedIds)
-  val searchingTarget      = Focus[RootModel](_.searchingTarget)
-  val userSelectionMessage = Focus[RootModel](_.userSelectionMessage)
-  val programSummaries     = Focus[RootModel](_.programSummaries)
-  val undoStacks           = Focus[RootModel](_.undoStacks)
+  val vault                 = Focus[RootModel](_.vault)
+  val localPreferences      = Focus[RootModel](_.localPreferences)
+  val expandedIds           = Focus[RootModel](_.expandedIds)
+  val searchingTarget       = Focus[RootModel](_.searchingTarget)
+  val userSelectionMessage  = Focus[RootModel](_.userSelectionMessage)
+  val programSummaries      = Focus[RootModel](_.programSummaries)
+  val undoStacks            = Focus[RootModel](_.undoStacks)
+  val expandedObsListGroups = Focus[RootModel](_.expandedObsListGroups)
 
   val userUserId = Lens[User, User.Id](_.id)(s =>
     a =>

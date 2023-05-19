@@ -66,18 +66,20 @@ import react.draggable.Axis
 import react.gridlayout.*
 import react.hotkeys.*
 import react.hotkeys.hooks.*
+import react.primereact.Tree
 import react.resizeDetector.*
 import react.resizeDetector.hooks.*
 
 import scala.concurrent.duration.*
 
 case class ObsTabContents(
-  userId:           Option[User.Id],
-  programId:        Program.Id,
-  programSummaries: View[ProgramSummaries],
-  focused:          Focused,
-  undoStacks:       View[ModelUndoStacks[IO]],
-  searching:        View[Set[Target.Id]]
+  userId:                Option[User.Id],
+  programId:             Program.Id,
+  programSummaries:      View[ProgramSummaries],
+  focused:               Focused,
+  undoStacks:            View[ModelUndoStacks[IO]],
+  searching:             View[Set[Target.Id]],
+  expandedObsListGroups: View[Map[Tree.Id, Boolean]]
 ) extends ReactFnProps(ObsTabContents.component):
   val focusedObs: Option[Observation.Id] = focused.obsSet.map(_.head)
   val focusedTarget: Option[Target.Id]   = focused.target
@@ -204,7 +206,8 @@ object ObsTabContents extends TwoPanels:
         props.focusedObs,
         props.focusedTarget,
         selectedView.set(SelectedPanel.Summary),
-        groupsUndoCtx.model.get
+        groupsUndoCtx.model.get,
+        props.expandedObsListGroups
       )
 
     val backButton: VdomNode =
