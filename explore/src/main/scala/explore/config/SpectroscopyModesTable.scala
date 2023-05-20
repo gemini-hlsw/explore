@@ -625,7 +625,10 @@ private object SpectroscopyModesTable extends TableHooks:
                 for
                   virtualizer <- refOpt
                   idx         <- selectedIndex.value
-                yield virtualizer.scrollToIndex(idx + 1, ScrollOptions)
+                yield {
+                  println(s"Scroll to  $idx")
+                  virtualizer.scrollToIndex(idx + 1, ScrollOptions)
+                }
               )
             ) >> scrollTo.setState(ScrollTo.NoScroll)
           } else Callback.empty

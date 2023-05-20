@@ -48,9 +48,11 @@ import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
+import lucuma.core.util.NewType
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB
 import lucuma.ui.DefaultPendingRender
+import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -67,10 +69,21 @@ import react.draggable.Axis
 import react.gridlayout.*
 import react.hotkeys.*
 import react.hotkeys.hooks.*
+import react.primereact.Button
 import react.resizeDetector.*
 import react.resizeDetector.hooks.*
 
 import scala.concurrent.duration.*
+
+object DeckShown extends NewType[Boolean]:
+  inline def Shown: DeckShown  = DeckShown(true)
+  inline def Hidden: DeckShown = DeckShown(false)
+
+  extension (s: DeckShown)
+    def flip: DeckShown =
+      if (s.value) DeckShown.Hidden else DeckShown.Shown
+
+type DeckShown = DeckShown.Type
 
 case class ObsTabContents(
   userId:           Option[User.Id],
@@ -188,6 +201,7 @@ object ObsTabContents extends TwoPanels:
     defaultLayouts: LayoutsMap,
     layouts:        View[Pot[LayoutsMap]],
     resize:         UseResizeDetectorReturn,
+    deckShown:      View[DeckShown],
     ctx:            AppContext[IO]
   ): VdomNode = {
     import ctx.given
@@ -200,15 +214,26 @@ object ObsTabContents extends TwoPanels:
     val targetsUndoCtx: UndoSetter[TargetList]   = psUndoCtx.zoom(ProgramSummaries.targets)
 
     def observationsTree(observations: View[ObservationList]) =
-      ObsList(
-        obsUndoCtx,
-        props.programId,
-        props.focusedObs,
-        props.focusedTarget,
-        selectedView.set(SelectedPanel.Summary),
-        groupsUndoCtx.model.get,
-        props.expandedGroups
-      )
+      if (deckShown.get === DeckShown.Shown) {
+        ObsList(
+          obsUndoCtx,
+          props.programId,
+          props.focusedObs,
+          props.focusedTarget,
+          selectedView.set(SelectedPanel.Summary),
+          groupsUndoCtx.model.get,
+          props.expandedGroups,
+          deckShown
+        ): VdomNode
+      } else
+        <.div(ExploreStyles.TreeToolbar)(
+          Button(severity = Button.Severity.Secondary,
+                 outlined = true,
+                 disabled = false,
+                 icon = Icons.ArrowRightFromLine,
+                 onClick = deckShown.mod(_.flip)
+          ).mini.compact
+        )
 
     val backButton: VdomNode =
       makeBackButton(props.programId, AppTab.Observations, selectedView, ctx)
@@ -261,7 +286,8 @@ object ObsTabContents extends TwoPanels:
       observationsTree(observations),
       rightSide,
       RightSideCardinality.Multi,
-      resize
+      resize,
+      ExploreStyles.ObsHiddenToolbar
     )
   }
 
@@ -397,6 +423,7 @@ object ObsTabContents extends TwoPanels:
                         callbacks
         )
       }
-      .render((props, ctx, twoPanelState, resize, layouts, defaultLayout) =>
-        renderFn(props, twoPanelState, defaultLayout, layouts, resize, ctx)
+      .useStateView(DeckShown.Shown)
+      .render((props, ctx, twoPanelState, resize, layouts, defaultLayout, deckShown) =>
+        renderFn(props, twoPanelState, defaultLayout, layouts, resize, deckShown, ctx)
       )

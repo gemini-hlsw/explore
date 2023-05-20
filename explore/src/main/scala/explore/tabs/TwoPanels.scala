@@ -30,6 +30,7 @@ import org.scalajs.dom.window
 import org.typelevel.log4cats.Logger
 import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.UserPreferencesDB
+import react.common.Css
 import react.draggable.Axis
 import react.primereact.Button
 import react.resizeDetector.*
@@ -54,26 +55,27 @@ trait TwoPanels {
         pv.set(SelectedPanel.Tree)
     ).mini.compact
 
-  private def tree(panel: VdomNode, cardinality: RightSideCardinality) =
+  private def tree(panel: VdomNode, cardinality: RightSideCardinality, extraCss: Css) =
     <.div(
       ExploreStyles.Tree,
-      treeInner(panel)
+      treeInner(panel, extraCss)
     )
 
-  private def treeInner(panel: VdomNode): VdomNode =
-    <.div(ExploreStyles.TreeBody)(panel)
+  private def treeInner(panel: VdomNode, extraCss: Css): VdomNode =
+    <.div(ExploreStyles.TreeBody |+| extraCss)(panel)
 
   def makeOneOrTwoPanels(
-    pv:          View[SelectedPanel],
-    leftPanel:   VdomNode,
-    rightSide:   UseResizeDetectorReturn => VdomNode,
-    cardinality: RightSideCardinality,
-    resize:      UseResizeDetectorReturn
+    pv:           View[SelectedPanel],
+    leftPanel:    VdomNode,
+    rightSide:    UseResizeDetectorReturn => VdomNode,
+    cardinality:  RightSideCardinality,
+    resize:       UseResizeDetectorReturn,
+    bodyExtraCss: Css = Css.Empty
   ): VdomNode =
     if (window.canFitTwoPanels) {
       <.div(
         ExploreStyles.TreeRGL,
-        tree(leftPanel, cardinality),
+        tree(leftPanel, cardinality, bodyExtraCss),
         <.div(
           ExploreStyles.SinglePanelTile.when(cardinality == RightSideCardinality.Single),
           ExploreStyles.MultiPanelTile.when(cardinality == RightSideCardinality.Multi)
@@ -84,7 +86,7 @@ trait TwoPanels {
     } else {
       <.div(
         ExploreStyles.TreeRGL,
-        <.div(ExploreStyles.Tree, treeInner(leftPanel))
+        <.div(ExploreStyles.Tree, treeInner(leftPanel, bodyExtraCss))
           .when(pv.get.leftPanelVisible),
         <.div(
           ExploreStyles.SinglePanelTile.when(cardinality == RightSideCardinality.Single),
