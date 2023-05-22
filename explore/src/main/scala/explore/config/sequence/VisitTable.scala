@@ -55,6 +55,7 @@ object VisitTable:
           compact = Compact.Very,
           hoverableRows = true,
           celled = true,
+          tableMod = ExploreStyles.SequenceTable,
           renderSubComponent = row =>
             val step = row.original._1
             (<.div(ExploreStyles.VisitStepExtra)(

@@ -81,6 +81,7 @@ object GmosSequenceTable:
           compact = Compact.Very,
           hoverableRows = true,
           celled = true,
+          tableMod = ExploreStyles.SequenceTable,
           cellMod = // Hide border between bracket column and next one
             _.column.id match
               case colId if colId === AtomStepsColumnId.value                =>

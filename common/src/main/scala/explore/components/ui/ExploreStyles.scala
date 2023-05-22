@@ -363,6 +363,7 @@ object ExploreStyles:
   // Sequence Viewer
   val SequenceObsSutitle               = Css("explore-sequence-obs-subtitle")
   val SequencesPanel                   = Css("explore-sequences-panel")
+  val SequenceTable                    = Css("explore-sequence-table")
   val CellHideBorder                   = Css("explore-table-cell-hide-border")
   val SequenceBracketCell              = Css("explore-sequence-bracket-cell")
   val VisitSection                     = Css("explore-visit-section")
