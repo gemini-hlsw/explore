@@ -60,7 +60,7 @@ import react.primereact.Message
 import react.primereact.PrimeStyles
 
 import java.time.Instant
-import java.time.ZoneId
+import java.time.ZoneOffset
 
 case class ObsAttachmentsTable(
   pid:            Program.Id,

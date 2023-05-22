@@ -430,7 +430,7 @@ object ObsTabTiles:
             )
 
           val timingWindowsTile =
-            Tile(ObsTabTilesIds.TimingWindowsId.id, "Timing Windows", canMinimize = true)(
+            Tile(ObsTabTilesIds.TimingWindowsId.id, "Scheduling Windows", canMinimize = true)(
               renderInTitle => TimingWindowsPanel(timingWindows, renderInTitle)
             )
 

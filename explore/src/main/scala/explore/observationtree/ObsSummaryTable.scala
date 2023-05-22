@@ -118,7 +118,7 @@ object ObsSummaryTable extends TableHooks:
     PriorityColumnId      -> "Priority",
     RAColumnId            -> "RA",
     DecColumnId           -> "Dec",
-    TimingWindowsColumnId -> "Timing Windows",
+    TimingWindowsColumnId -> "Scheduling Windows",
     SEDColumnId           -> "SED",
     ChargedTimeColumnId   -> "ChargedTime"
   )
