@@ -458,8 +458,9 @@ a:hover {
     grid-area: coordinates;
   }
 
-  .target-proper-motion-form {
+  .pl-form-column.target-proper-motion-form {
     grid-area: proper-motion;
+    grid-template-columns: max-content min-content;
   }
 
   .target-source-profile-editor {
@@ -2141,16 +2142,38 @@ $help-title-height: 40px;
   align-self: start;
   padding: 0.5em;
   row-gap: 0.5em;
-  grid-template-columns: [label] minmax(110px, 10%) [field] 1fr;
+  grid-template-columns: [label] minmax(100px, 10%) [field] min-content;
 
   .pl-form-field {
     justify-self: stretch;
   }
 
-  .p-input-text,
-  .p-dropdown {
-    min-width: 100%;
+  #focal-plane-angle {
+    max-width: 11ch;
   }
+
+}
+
+.explore-modes-table-count {
+  flex-shrink: 1;
+  @include common.text-ellipsis;
+}
+
+.explore-modes-table-info {
+  flex-grow: 0;
+  overflow: hidden;
+  justify-self: flex-end;
+}
+
+.explore-modes-table-title {
+  grid-area: table-header;
+  display: flex;
+  gap: 0.5em;
+  justify-content: space-between;
+}
+
+.explore-modes-table {
+  grid-area: table;
 }
 
 .explore-basic-configuration-sn-at {
@@ -2167,8 +2190,9 @@ $help-title-height: 40px;
     flex-grow: 1;
   }
 
+  #signal-to-noise,
   #signal-to-noise-at {
-    width: 8ch;
+    max-width: 9ch;
   }
 }
 
@@ -2180,8 +2204,7 @@ $help-title-height: 40px;
   grid-template:
     "form table-header" auto
     "form table" 1fr
-    "form buttons" auto / 3fr minmax(0, 4fr);
-  grid-template-rows: auto 1fr auto;
+    "form buttons" auto / min-content minmax(0, 4fr);
 }
 
 .explore-basic-configuration-focal-plane {
