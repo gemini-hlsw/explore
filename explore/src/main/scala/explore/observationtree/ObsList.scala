@@ -9,6 +9,7 @@ import clue.FetchClient
 import crystal.Pot
 import crystal.react.View
 import crystal.react.hooks.*
+import crystal.react.reuse.given
 import crystal.react.implicits.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
@@ -48,10 +49,12 @@ import queries.schemas.odb.ObsQueries
 import react.common.ReactFnProps
 import react.primereact.Button
 import react.primereact.Tree
+import react.visibility.hooks.*
 
 import scala.annotation.tailrec
 
 import ObsQueries.*
+import org.scalajs.dom
 
 case class ObsList(
   obsUndoCtx:      UndoContext[ObservationList],
@@ -63,12 +66,19 @@ case class ObsList(
   expandedGroups:  View[Set[Group.Id]],
   deckShown:       View[DeckShown]
 ) extends ReactFnProps(ObsList.component):
-  val observations: ObservationList = obsUndoCtx.model.get
+  def observations: ObservationList = obsUndoCtx.model.get
 
 object ObsList:
   private type Props = ObsList
 
-  private given Reusability[GroupElement] = Reusability.byEq
+  private given Reusability[GroupElement]       = Reusability.byEq
+  private given Reusability[ObservationList]    = Reusability.byEq
+  private given Reusability[ObsNode]            = Reusability.byEq
+  private given Reusability[Tree.Id]            = Reusability.by(_.value)
+  // private given reuseNode[A: Reusability]: Reusability[Tree.Node[A]] = Reusability.derive
+  private given Reusability[Tree.Node[ObsNode]] = Reusability.by(x => (x.id, x.data))
+  private given Reusability[ObsList]            =
+    Reusability.caseClassExcept("expandedGroups", "obsUndoCtx", "deckShown", "setSummaryPanel")
 
   private val groupTreeIdLens: Lens[Set[Group.Id], Set[Tree.Id]] =
     Lens[Set[Group.Id], Set[Tree.Id]](_.map(k => Tree.Id(k.toString)))(a =>
@@ -128,6 +138,7 @@ object ObsList:
       }
       // adding new observation
       .useStateView(false)
+      // tree nodes
       .useMemoBy((props, _, _, _) => (props.observations, props.groups))((_, _, _, _) =>
         ObsNode.fromList
       )
@@ -161,20 +172,38 @@ object ObsList:
               props.expandedGroups.mod(_ ++ groupsToAddFocus)
             )
       )
-      .render { (props, ctx, _, adding, treeNodes) =>
+      .useRefToVdom[dom.html.Element]
+      // .useVisibilityHookBy { (props, ctx, _, adding, treeNodes, ref) =>
+      //   println("Setup"); ref
+      // }
+      // .useEffectOnMountBy((props, ctx, _, adding, treeNodes, badgeRef, visible) =>
+      //   Callback {
+      //     // println(s"Into view ${props.obs.id} ${(props.selected && !visible)}")
+      //     Option(badgeRef.raw.current).foreach(_.domAsHtml.scrollIntoView())
+      //   }.when_(!visible)
+      //   // }.when_(props.selected && !visible)
+      // )
+      .render { (props, ctx, _, adding, treeNodes, ref) => // , visible) =>
 
         import ctx.given
+        // org.scalajs.dom.window.console.log(badgeRef.raw.current)
 
         val observations = props.observations.toList
 
         val expandedGroups = props.expandedGroups.zoom(groupTreeIdLens)
 
+        println("render")
+        // println(visible)
+        org.scalajs.dom.window.console.log(ref.raw)
+        // pprint.pprintln(props.obsUndoCtx.model.get)
         def renderItem(node: ObsNode, options: TreeNodeTemplateOptions) =
           node match
             case ObsNode.Obs(obs)   =>
               val id       = obs.id
               val selected = props.focusedObs.exists(_ === id)
+              val optRef   = Option(ref).filter(_ => selected)
               <.a(
+                ^.untypedRef :=? optRef,
                 ^.href := ctx.pageUrl(
                   AppTab.Observations,
                   props.programId,
@@ -216,6 +245,9 @@ object ObsList:
                     .runAsync
                     .some
                 )
+                // ).withMods(
+                //   ^.untypedRef :=? Option(badgeRef).filter(_ => selected)
+                // )
               )
             case ObsNode.And(group) => renderGroup("AND", group)
             case ObsNode.Or(group)  => renderGroup("OR", group)
@@ -276,5 +308,11 @@ object ObsList:
             )
           } else EmptyVdom
 
-        <.div(ExploreStyles.ObsTreeWrapper)(tree)
+        Tree(
+          treeNodes,
+          renderItem,
+          expandedKeys = expandedGroups.get,
+          onToggle = expandedGroups.set,
+          onSelect = (a, _) => Callback.log(a)
+        )
       }

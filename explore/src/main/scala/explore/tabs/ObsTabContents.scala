@@ -79,6 +79,8 @@ object DeckShown extends NewType[Boolean]:
   inline def Shown: DeckShown  = DeckShown(true)
   inline def Hidden: DeckShown = DeckShown(false)
 
+  given Reusability[DeckShown] = Reusability.byEq
+
   extension (s: DeckShown)
     def flip: DeckShown =
       if (s.value) DeckShown.Hidden else DeckShown.Shown

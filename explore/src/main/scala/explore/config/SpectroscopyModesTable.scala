@@ -647,6 +647,7 @@ private object SpectroscopyModesTable extends TableHooks:
           atTop,
           virtualizerRef
         ) =>
+          table.getSortedRowModel()
 
           def toggleRow(
             row: SpectroscopyModeRowWithResult
@@ -731,13 +732,15 @@ private object SpectroscopyModesTable extends TableHooks:
                       .when(row.original.entry.enabledRow)
                   ),
                 onChange = virtualizer =>
-                  visibleRows.setState(
-                    virtualizer
-                      .getVirtualItems()
-                      .some
-                      .filter(_.nonEmpty)
-                      .map(items => items.head.index.toInt to items.last.index.toInt)
-                  ) >> atTop.setState(virtualizer.scrollElement.scrollTop < 32),
+                  Callback.log("On change") *>
+                    visibleRows.setState(
+                      virtualizer
+                        .getVirtualItems()
+                        .some
+                        .filter(_.nonEmpty)
+                        .map(items => items.head.index.toInt to items.last.index.toInt)
+                    ) >> atTop.setState(virtualizer.scrollElement.scrollTop < 32) *> selectedIndex
+                      .setState(none),
                 virtualizerRef = virtualizerRef,
                 emptyMessage = <.div(ExploreStyles.SpectroscopyTableEmpty, "No matching modes")
               ),

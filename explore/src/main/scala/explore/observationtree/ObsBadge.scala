@@ -33,6 +33,8 @@ import react.floatingui.syntax.*
 import react.primereact.Button
 import react.primereact.InputSwitch
 import react.primereact.TooltipOptions
+import react.visibility.hooks.*
+import org.scalajs.dom
 
 case class ObsBadge(
   obs:               ObsSummary,
@@ -42,8 +44,12 @@ case class ObsBadge(
   setActiveStatusCB: Option[ObsActiveStatus => Callback] = none,
   setSubtitleCB:     Option[Option[NonEmptyString] => Callback] = none,
   deleteCB:          Option[Callback] = none,
-  cloneCB:           Option[Callback] = none
-) extends ReactFnProps(ObsBadge.component)
+  cloneCB:           Option[Callback] = none,
+  modifiers:         Seq[TagMod] = Seq.empty
+) extends ReactFnProps(ObsBadge.component) {
+  def addModifiers(modifiers: Seq[TagMod]) = copy(modifiers = this.modifiers ++ modifiers)
+  def withMods(mods:          TagMod*)     = addModifiers(mods)
+}
 
 object ObsBadge:
   private type Props = ObsBadge
@@ -72,119 +78,142 @@ object ObsBadge:
   private val idIso = Gid[Observation.Id].isoPosLong
 
   private val component =
-    ScalaFnComponent[Props] { props =>
-      val obs    = props.obs
-      val layout = props.layout
+    ScalaFnComponent
+      .withHooks[Props]
+      .useRefToVdom[dom.html.Element]
+      .useVisibilityHookBy((props, badgeRef) => badgeRef)
+      .useEffectOnMountBy((props, badgeRef, visible) =>
+        // if (props.selected && !visible)
+        println(s"Scroll ${props.obs.id} ${props.selected} $visible ${props.selected && !visible}")
+        Callback {
+          println("Into view")
+          Option(badgeRef.raw.current).foreach(_.domAsHtml.scrollIntoView())
+        }.when(props.selected && !visible).void
+      )
+      .render { (props, badgeRef, visible) =>
+        val obs    = props.obs
+        val layout = props.layout
+        // println(badgeRef.raw)
+        // org.scalajs.dom.console.log(badgeRef.raw)
 
-      val deleteButton =
-        Button(
-          text = true,
-          clazz = ExploreStyles.DeleteButton |+| ExploreStyles.ObsDeleteButton,
-          icon = Icons.Trash,
-          tooltip = "Delete",
-          onClickE = e => e.preventDefaultCB *> e.stopPropagationCB *> props.deleteCB.getOrEmpty
-        ).small
+        val deleteButton =
+          Button(
+            text = true,
+            clazz = ExploreStyles.DeleteButton |+| ExploreStyles.ObsDeleteButton,
+            icon = Icons.Trash,
+            tooltip = "Delete",
+            onClickE = e => e.preventDefaultCB *> e.stopPropagationCB *> props.deleteCB.getOrEmpty
+          ).small
 
-      val duplicateButton =
-        Button(
-          text = true,
-          clazz = ExploreStyles.ObsCloneButton,
-          icon = Icons.Clone,
-          tooltip = "Duplicate",
-          onClickE = e => e.preventDefaultCB *> e.stopPropagationCB *> props.cloneCB.getOrEmpty
-        ).small
+        val duplicateButton =
+          Button(
+            text = true,
+            clazz = ExploreStyles.ObsCloneButton,
+            icon = Icons.Clone,
+            tooltip = "Duplicate",
+            onClickE = e => e.preventDefaultCB *> e.stopPropagationCB *> props.cloneCB.getOrEmpty
+          ).small
 
-      val header =
-        <.div(ExploreStyles.ObsBadgeHeader)(
-          <.div(ExploreStyles.ObsBadgeTargetAndId)(
-            <.div(obs.title).when(layout.showTitle),
-            <.div(obs.configurationSummary.getOrElse("-"))
-              .when(layout.showConfiguration === Section.Header),
-            <.div(
-              ExploreStyles.ObsBadgeId,
-              s"[${idIso.get(obs.id).value.toHexString}]",
-              props.cloneCB.whenDefined(_ => duplicateButton),
-              props.deleteCB.whenDefined(_ => deleteButton)
+        val header =
+          <.div(ExploreStyles.ObsBadgeHeader)(
+            <.div(ExploreStyles.ObsBadgeTargetAndId)(
+              <.div(obs.title).when(layout.showTitle),
+              <.div(obs.configurationSummary.getOrElse("-"))
+                .when(layout.showConfiguration === Section.Header),
+              <.div(
+                ExploreStyles.ObsBadgeId,
+                s"[${idIso.get(obs.id).value.toHexString}]",
+                props.cloneCB.whenDefined(_ => duplicateButton),
+                props.deleteCB.whenDefined(_ => deleteButton)
+              )
+            )
+          )
+
+        val meta = <.div(ExploreStyles.ObsBadgeMeta)(
+          props.setSubtitleCB
+            .map(setCB =>
+              EditableLabel(
+                value = obs.subtitle,
+                mod = setCB,
+                editOnClick = false,
+                textClass = ExploreStyles.ObsBadgeSubtitle,
+                inputClass = ExploreStyles.ObsBadgeSubtitleInput,
+                addButtonLabel = "Add description",
+                addButtonClass = ExploreStyles.ObsBadgeSubtitleAdd,
+                leftButtonClass = ExploreStyles.ObsBadgeSubtitleEdit,
+                rightButtonClass = ExploreStyles.ObsBadgeSubtitleDelete
+              )
+            )
+            .whenDefined
+            .when(layout.showSubtitle),
+          renderEnumProgress(obs.status)
+        )
+
+        <.div(^.untypedRef := badgeRef)(
+          <.div(ExploreStyles.ObsBadge, ExploreStyles.ObsBadgeSelected.when(props.selected))(
+            <.a(^.href := "#", "Link"),
+            header,
+            meta,
+            <.div(ExploreStyles.ObsBadgeDescription)(
+              props.setActiveStatusCB.map(_ => ExploreStyles.ObsBadgeHasActiveStatus).orEmpty,
+              <.span(
+                ^.untypedRef := badgeRef,
+                obs.configurationSummary
+                  .map(conf => <.div(conf))
+                  .whenDefined
+                  .when(layout.showConfiguration === Section.Detail),
+                <.div(obs.constraintsSummary).when(layout.showConstraints)
+              ),
+              <.span(
+                obs.configurationSummary
+                  .map(conf => <.div(conf))
+                  .whenDefined
+                  .when(layout.showConfiguration === Section.Detail),
+                <.div(obs.constraintsSummary).when(layout.showConstraints)
+              ),
+              props.setActiveStatusCB.map(setActiveStatus =>
+                <.span(
+                  InputSwitch(
+                    checked = obs.activeStatus.toBoolean,
+                    onChange = _ =>
+                      setActiveStatus(ObsActiveStatus.FromBoolean.get(!obs.activeStatus.toBoolean)),
+                    clazz = ExploreStyles.ObsActiveStatusToggle,
+                    tooltip = obs.activeStatus match
+                      case ObsActiveStatus.Active   => "Observation is active"
+                      case ObsActiveStatus.Inactive => "Observation is not active"
+                    ,
+                    tooltipOptions = TooltipOptions(position = TooltipOptions.Position.Left)
+                  )
+                )(
+                  // don't select the observation when changing the active status
+                  ^.onClick ==> { e => e.preventDefaultCB >> e.stopPropagationCB }
+                )
+              )
+            ),
+            <.div(ExploreStyles.ObsBadgeExtra)(
+              props.setStatusCB.map(setStatus =>
+                <.span(
+                  ExploreStyles.ObsStatusSelectWrapper,
+                  EnumDropdownView(
+                    id = NonEmptyString.unsafeFrom(s"obs-status-${obs.id}-2"),
+                    value = View[ObsStatus](
+                      obs.status,
+                      { (f, cb) =>
+                        val newValue = f(obs.status)
+                        setStatus(newValue) >> cb(newValue)
+                      }
+                    ),
+                    size = PlSize.Mini,
+                    clazz = ExploreStyles.ObsStatusSelect,
+                    panelClass = ExploreStyles.ObsStatusSelectPanel
+                  )
+                )(
+                  // don't select the observation when changing the status
+                  ^.onClick ==> { e => e.preventDefaultCB >> e.stopPropagationCB }
+                )
+              ),
+              <.span(obs.executionTime.toHoursMinutes)
             )
           )
         )
-
-      val meta = <.div(ExploreStyles.ObsBadgeMeta)(
-        props.setSubtitleCB
-          .map(setCB =>
-            EditableLabel(
-              value = obs.subtitle,
-              mod = setCB,
-              editOnClick = false,
-              textClass = ExploreStyles.ObsBadgeSubtitle,
-              inputClass = ExploreStyles.ObsBadgeSubtitleInput,
-              addButtonLabel = "Add description",
-              addButtonClass = ExploreStyles.ObsBadgeSubtitleAdd,
-              leftButtonClass = ExploreStyles.ObsBadgeSubtitleEdit,
-              rightButtonClass = ExploreStyles.ObsBadgeSubtitleDelete
-            )
-          )
-          .whenDefined
-          .when(layout.showSubtitle),
-        renderEnumProgress(obs.status)
-      )
-
-      <.div(
-        <.div(ExploreStyles.ObsBadge, ExploreStyles.ObsBadgeSelected.when(props.selected))(
-          header,
-          meta,
-          <.div(ExploreStyles.ObsBadgeDescription)(
-            props.setActiveStatusCB.map(_ => ExploreStyles.ObsBadgeHasActiveStatus).orEmpty,
-            <.span(
-              obs.configurationSummary
-                .map(conf => <.div(conf))
-                .whenDefined
-                .when(layout.showConfiguration === Section.Detail),
-              <.div(obs.constraintsSummary).when(layout.showConstraints)
-            ),
-            props.setActiveStatusCB.map(setActiveStatus =>
-              <.span(
-                InputSwitch(
-                  checked = obs.activeStatus.toBoolean,
-                  onChange = _ =>
-                    setActiveStatus(ObsActiveStatus.FromBoolean.get(!obs.activeStatus.toBoolean)),
-                  clazz = ExploreStyles.ObsActiveStatusToggle,
-                  tooltip = obs.activeStatus match
-                    case ObsActiveStatus.Active   => "Observation is active"
-                    case ObsActiveStatus.Inactive => "Observation is not active"
-                  ,
-                  tooltipOptions = TooltipOptions(position = TooltipOptions.Position.Left)
-                )
-              )(
-                // don't select the observation when changing the active status
-                ^.onClick ==> { e => e.preventDefaultCB >> e.stopPropagationCB }
-              )
-            )
-          ),
-          <.div(ExploreStyles.ObsBadgeExtra)(
-            props.setStatusCB.map(setStatus =>
-              <.span(
-                ExploreStyles.ObsStatusSelectWrapper,
-                EnumDropdownView(
-                  id = NonEmptyString.unsafeFrom(s"obs-status-${obs.id}-2"),
-                  value = View[ObsStatus](
-                    obs.status,
-                    { (f, cb) =>
-                      val newValue = f(obs.status)
-                      setStatus(newValue) >> cb(newValue)
-                    }
-                  ),
-                  size = PlSize.Mini,
-                  clazz = ExploreStyles.ObsStatusSelect,
-                  panelClass = ExploreStyles.ObsStatusSelectPanel
-                )
-              )(
-                // don't select the observation when changing the status
-                ^.onClick ==> { e => e.preventDefaultCB >> e.stopPropagationCB }
-              )
-            ),
-            <.span(obs.executionTime.toHoursMinutes)
-          )
-        )
-      )
-    }
+      }
