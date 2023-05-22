@@ -52,4 +52,4 @@ stats.html
 .jvmopts
 
 # Local development environment
-local.conf.json
+local.conf.json*
