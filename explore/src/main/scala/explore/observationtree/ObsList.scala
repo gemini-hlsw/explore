@@ -22,6 +22,7 @@ import explore.model.Grouping
 import explore.model.enums.AppTab
 import explore.model.reusability.given
 import explore.observationtree.ObsBadge
+import explore.tabs.DeckShown
 import explore.undo.KIListMod
 import explore.undo.UndoContext
 import explore.undo.UndoStacks
@@ -59,7 +60,8 @@ case class ObsList(
   focusedTarget:   Option[Target.Id],
   setSummaryPanel: Callback,
   groups:          GroupList,
-  expandedGroups:  View[Set[Group.Id]]
+  expandedGroups:  View[Set[Group.Id]],
+  deckShown:       View[DeckShown]
 ) extends ReactFnProps(ObsList.component):
   val observations: ObservationList = obsUndoCtx.model.get
 
@@ -225,38 +227,54 @@ object ObsList:
                  ^.title := group.id.show
           )
 
-        <.div(ExploreStyles.ObsTreeWrapper)(
-          <.div(ExploreStyles.TreeToolbar)(
-            Button(
-              severity = Button.Severity.Success,
-              icon = Icons.New,
-              label = "Obs",
-              disabled = adding.get,
-              loading = adding.get,
-              onClick = insertObs(
-                props.programId,
-                observations.length,
-                props.obsUndoCtx,
-                adding,
-                ctx
-              ).runAsync
-            ).mini.compact,
-            UndoButtons(props.obsUndoCtx, size = PlSize.Mini, disabled = adding.get)
-          ),
-          <.div(
-            Button(
-              severity = Button.Severity.Secondary,
-              icon = Icons.ListIcon,
-              label = "Observations Summary",
-              onClick = setObs(props.programId, none, ctx) >> props.setSummaryPanel,
-              clazz = ExploreStyles.ButtonSummary
+        val tree =
+          if (props.deckShown.get === DeckShown.Shown) {
+            React.Fragment(
+              <.div(ExploreStyles.TreeToolbar)(
+                Button(
+                  severity = Button.Severity.Success,
+                  icon = Icons.New,
+                  label = "Obs",
+                  disabled = adding.get,
+                  loading = adding.get,
+                  onClick = insertObs(
+                    props.programId,
+                    observations.length,
+                    props.obsUndoCtx,
+                    adding,
+                    ctx
+                  ).runAsync
+                ).mini.compact,
+                <.div(
+                  ExploreStyles.ObsTreeButtons,
+                  Button(
+                    severity = Button.Severity.Secondary,
+                    outlined = true,
+                    disabled = false,
+                    icon = Icons.ArrowLeftFromLine,
+                    clazz = ExploreStyles.ObsTreeHideShow,
+                    onClick = props.deckShown.mod(_.flip)
+                  ).mini.compact,
+                  UndoButtons(props.obsUndoCtx, size = PlSize.Mini, disabled = adding.get)
+                )
+              ),
+              <.div(
+                Button(
+                  severity = Button.Severity.Secondary,
+                  icon = Icons.ListIcon,
+                  label = "Observations Summary",
+                  onClick = setObs(props.programId, none, ctx) >> props.setSummaryPanel,
+                  clazz = ExploreStyles.ButtonSummary
+                )
+              ),
+              Tree(
+                treeNodes,
+                renderItem,
+                expandedKeys = expandedGroups.get,
+                onToggle = expandedGroups.set
+              )
             )
-          ),
-          Tree(
-            treeNodes,
-            renderItem,
-            expandedKeys = expandedGroups.get,
-            onToggle = expandedGroups.set
-          )
-        )
+          } else EmptyVdom
+
+        <.div(ExploreStyles.ObsTreeWrapper)(tree)
       }

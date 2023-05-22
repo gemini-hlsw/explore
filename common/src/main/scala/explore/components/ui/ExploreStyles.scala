@@ -92,6 +92,9 @@ object ExploreStyles:
   val FullHeightWidth: Css = Css("full-height-width")
 
   val ObsTree: Css                 = Css("obs-tree")
+  val ObsTreeHideShow: Css         = Css("obs-hide-show-button")
+  val ObsTreeButtons: Css          = Css("obs-tree-buttons")
+  val ObsHiddenToolbar: Css        = Css("obs-tree-hidden-toolbar")
   val ObsTreeWrapper: Css          = Css("obs-tree-wrapper")
   val ObsScrollTree: Css           = Css("obs-scroll-tree")
   val ObsUnassigned: Css           = Css("obs-unassigned")
