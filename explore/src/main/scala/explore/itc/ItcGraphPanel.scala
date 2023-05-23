@@ -31,11 +31,7 @@ import explore.model.WorkerClients.*
 import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.display.given
-import explore.model.itc.ItcChartResult
-import explore.model.itc.ItcExposureTime
-import explore.model.itc.ItcTarget
-import explore.model.itc.OverridenExposureTime
-import explore.model.itc.PlotDetails
+import explore.model.itc.*
 import explore.model.reusability.given
 import explore.model.reusability.given
 import explore.modes.GmosNorthSpectroscopyRow
@@ -69,8 +65,7 @@ case class ItcGraphPanel(
   uid:             User.Id,
   oid:             Observation.Id,
   selectedTarget:  View[Option[ItcTarget]],
-  selectedConfig:  Option[BasicConfigAndItc], // selected row in spectroscopy modes table
-  itcProps:        ItcPanelProps,
+  itcProps:        ItcProps,
   itcChartResults: Map[ItcTarget, Pot[ItcChartResult]],
   itcLoading:      LoadingState
 ) extends ReactFnProps(ItcGraphPanel.component)
@@ -133,7 +128,7 @@ object ItcGraphPanel:
 
         val renderPlot: ItcGraphProperties => VdomNode =
           (opt: ItcGraphProperties) =>
-            val isModeSelected = props.selectedConfig.isDefined
+            val isModeSelected = props.itcProps.finalConfig.isDefined
             val selectMode     = "Select a mode to plot".some.filterNot(_ => isModeSelected)
 
             val error: Option[String] =
@@ -159,7 +154,7 @@ object ItcGraphPanel:
               ExploreStyles.ItcPlotDetailsHidden.unless(opt.detailsShown.value),
               ItcSpectroscopyPlotDescription(
                 selectedTarget.flatMap(props.itcProps.targetBrightness),
-                props.itcProps.chartExposureTime,
+                selectedResult.map(_.itcExposureTime),
                 selectedResult.map(_.ccds),
                 selectedResult.map(r => r.atWavelengthSNRatio.getOrElse(r.peakSNRatio))
               ),

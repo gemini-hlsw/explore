@@ -17,6 +17,7 @@ import eu.timepit.refined.types.numeric.PosInt
 import explore.events.ItcMessage
 import explore.model.AsterismIds
 import explore.model.BasicConfigAndItc
+import explore.model.ObsSummary
 import explore.model.ScienceRequirements
 import explore.model.TargetList
 import explore.model.WorkerClients.ItcClient
@@ -49,54 +50,48 @@ import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
 import workers.WorkerClient
 
-case class ItcPanelProps(
-  observingMode:            Option[ObservingMode],
-  spectroscopyRequirements: Option[ScienceRequirements.Spectroscopy],
-  constraints:              ConstraintSet,
-  asterismIds:              AsterismIds,
-  remoteExposureTime:       Option[ItcExposureTime],   // time provided by the db
-  selectedConfig:           Option[BasicConfigAndItc], // selected row in spectroscopy modes table
-  allTargets:               TargetList
+case class ItcProps(
+  obsSummary:         ObsSummary,
+  remoteExposureTime: Option[ItcExposureTime],   // time provided by the db
+  selectedConfig:     Option[BasicConfigAndItc], // selected row in spectroscopy modes table
+  allTargets:         TargetList
 ) derives Eq:
-  val currentSelectedExposure =
-    for {
-      conf <- selectedConfig
-      itc  <- conf.itcResult
-      res  <- itc.toOption
-      t    <- res.toItcExposureTime
-    } yield t
+  private val spectroscopyRequirements: Option[ScienceRequirements.Spectroscopy] =
+    ScienceRequirements.spectroscopy.getOption(obsSummary.scienceRequirements)
 
-  val finalExposure = currentSelectedExposure.orElse(remoteExposureTime)
+  private val observingMode = obsSummary.observingMode
+  private val constraints   = obsSummary.constraints
+  private val asterismIds   = obsSummary.scienceTargetIds
 
+  private val remoteConfig                   = obsSummary.observingMode.map { o =>
+    BasicConfigAndItc(o.toBasicConfiguration,
+                      remoteExposureTime.map(ItcResult.fromItcExposureTime(_).rightNec)
+    )
+  }
+  //
   // if there is an observingMode, that means a configuration has been created. If not, we'll use the
   // row selected in the spectroscopy modes table if it exists
-  val finalConfig =
-    observingMode.map(_.toBasicConfiguration).orElse(selectedConfig.map(_.configuration))
+  val finalConfig: Option[BasicConfigAndItc] =
+    selectedConfig.orElse(remoteConfig)
 
-  val finalSelectedConfig =
-    (finalConfig, finalExposure).mapN((c, t) =>
-      BasicConfigAndItc(c, ItcResult.Result(t.time, PosInt.unsafeFrom(t.count.value)).asRight.some)
-    )
+  val signalToNoiseAt: Option[Wavelength] =
+    spectroscopyRequirements.flatMap(_.signalToNoiseAt)
 
-  val signalToNoiseAt: Option[Wavelength] = spectroscopyRequirements.flatMap(_.signalToNoiseAt)
-
-  val wavelength: Option[CentralWavelength] = finalConfig.map {
-    case c: BasicConfiguration.GmosNorthLongSlit => c.centralWavelength
-    case c: BasicConfiguration.GmosSouthLongSlit => c.centralWavelength
+  private val wavelength: Option[CentralWavelength] = finalConfig.map {
+    case BasicConfigAndItc(c: BasicConfiguration.GmosNorthLongSlit, _) => c.centralWavelength
+    case BasicConfigAndItc(c: BasicConfiguration.GmosSouthLongSlit, _) => c.centralWavelength
   }
 
   // TODO: Revisit when we have exposure mode in spectroscopy requirements
-  val signalToNoise: Option[SignalToNoise] = spectroscopyRequirements.flatMap(_.signalToNoise)
+  private val signalToNoise: Option[SignalToNoise] =
+    spectroscopyRequirements.flatMap(_.signalToNoise)
 
-  val instrumentRow: Option[InstrumentRow] = finalConfig.map {
-    case c: BasicConfiguration.GmosNorthLongSlit =>
+  private val instrumentRow: Option[InstrumentRow] = finalConfig.map {
+    case BasicConfigAndItc(c: BasicConfiguration.GmosNorthLongSlit, _) =>
       GmosNorthSpectroscopyRow(c.grating, c.fpu, c.filter)
-    case c: BasicConfiguration.GmosSouthLongSlit =>
+    case BasicConfigAndItc(c: BasicConfiguration.GmosSouthLongSlit, _) =>
       GmosSouthSpectroscopyRow(c.grating, c.fpu, c.filter)
   }
-
-  // TODO: Revisit when we have exposure mode in science requirements
-  val chartExposureTime: Option[ItcExposureTime] = finalExposure
 
   val itcTargets: Option[NonEmptyList[ItcTarget]] =
     asterismIds.itcTargets(allTargets).toNel
@@ -104,7 +99,7 @@ case class ItcPanelProps(
   val targets: List[ItcTarget] = itcTargets.foldMap(_.toList)
 
   private val queryProps =
-    (observingMode, wavelength, constraints, itcTargets, instrumentRow, chartExposureTime)
+    (observingMode, finalConfig, wavelength, constraints, itcTargets, instrumentRow, signalToNoise)
 
   val isExecutable: Boolean = queryProps.forall(_.isDefined)
 
@@ -131,15 +126,14 @@ case class ItcPanelProps(
   )(using WorkerClient[IO, ItcMessage.Request]): IO[Unit] =
     val action: Option[IO[Unit]] =
       for
-        w         <- wavelength
-        ex        <- chartExposureTime
-        exposures <- refineV[Positive](ex.count.value).toOption
-        t         <- itcTargets
-        mode      <- instrumentRow
+        w    <- wavelength
+        sn   <- signalToNoise
+        t    <- itcTargets
+        mode <- instrumentRow
       yield beforeStart *>
         ItcClient[IO]
           .requestSingle(
-            ItcMessage.GraphQuery(w, signalToNoiseAt, ex.time, exposures, constraints, t, mode)
+            ItcMessage.GraphQuery(w, sn, signalToNoiseAt, constraints, t, mode)
           )
           .flatMap(
             _.fold(
@@ -152,5 +146,5 @@ case class ItcPanelProps(
           )
     action.getOrElse(orElse)
 
-object ItcPanelProps:
-  given Reusability[ItcPanelProps] = Reusability.byEq
+object ItcProps:
+  given Reusability[ItcProps] = Reusability.byEq

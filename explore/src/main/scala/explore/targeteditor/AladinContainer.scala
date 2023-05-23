@@ -18,6 +18,7 @@ import explore.components.ui.ExploreStyles
 import explore.components.ui.ExploreStyles.ExploreTable
 import explore.model.AladinMouseScroll
 import explore.model.Asterism
+import explore.model.Constants
 import explore.model.ObsConfiguration
 import explore.model.TargetVisualOptions
 import explore.model.UserGlobalPreferences
@@ -236,7 +237,7 @@ object AladinContainer extends AladinCommon {
                   val targetEpochInstant =
                     LocalDate
                       .of(targetEpoch.toInt, 6, 1)
-                      .atStartOfDay(ZoneId.of("UTC"))
+                      .atStartOfDay(Constants.UTC)
                       .toInstant()
 
                   val vignettesScience = g match

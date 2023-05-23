@@ -22,7 +22,7 @@ import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
 import explore.constraints.ConstraintsPanel
-import explore.itc.ItcPanelProps
+import explore.itc.ItcProps
 import explore.model.LoadingState
 import explore.model.ObsSummary.observingMode
 import explore.model.*
@@ -123,16 +123,13 @@ object ObsTabTiles:
 
   private def itcQueryProps(
     obs:            ObsSummary,
-    itc:            Option[OdbItcResult.Success],
+    odbItc:         Option[OdbItcResult.Success],
     selectedConfig: Option[BasicConfigAndItc],
     targetsList:    TargetList
-  ): ItcPanelProps =
-    ItcPanelProps(
-      obs.observingMode,
-      ScienceRequirements.spectroscopy.getOption(obs.scienceRequirements),
-      obs.constraints,
-      obs.scienceTargetIds,
-      itc.map(_.toItcExposureTime),
+  ): ItcProps =
+    ItcProps(
+      obs,
+      odbItc.map(_.toItcExposureTime),
       selectedConfig,
       targetsList
     )
@@ -141,6 +138,8 @@ object ObsTabTiles:
     science:     Option[NonEmptyList[Offset]],
     acquisition: Option[NonEmptyList[Offset]]
   )
+
+  given Reusability[LoadingState] = Reusability.byEq
 
   private val component =
     ScalaFnComponent
@@ -188,19 +187,27 @@ object ObsTabTiles:
       .useStateView(none[AgsAnalysis])
       // the configuration the user has selected from the spectroscopy modes table, if any
       .useStateView(none[BasicConfigAndItc])
-      .useStateBy((props, _, itc, _, _, _, selectedConfig) =>
-        itcQueryProps(props.observation, itc.toOption.flatten, selectedConfig.get, props.allTargets)
+      .useStateWithReuseBy((props, _, odbItc, _, _, _, selectedConfig) =>
+        itcQueryProps(props.observation,
+                      odbItc.toOption.flatten,
+                      selectedConfig.get,
+                      props.allTargets
+        )
       )
       // Chart results
       .useState(Map.empty[ItcTarget, Pot[ItcChartResult]])
       // itc loading
-      .useState(LoadingState.Done)
-      .useEffectWithDepsBy((props, _, itc, _, _, _, selectedConfig, _, _, _) =>
-        itcQueryProps(props.observation, itc.toOption.flatten, selectedConfig.get, props.allTargets)
-      ) { (props, ctx, _, _, _, _, _, oldItcProps, charts, loading) => itcProps =>
+      .useStateWithReuse(LoadingState.Done)
+      .useEffectWithDepsBy { (props, _, odbItc, _, _, _, selectedConfig, _, _, _) =>
+        itcQueryProps(props.observation,
+                      odbItc.toOption.flatten,
+                      selectedConfig.get,
+                      props.allTargets
+        )
+      } { (props, ctx, _, _, _, _, _, oldItcProps, charts, loading) => itcProps =>
         import ctx.given
 
-        oldItcProps.setState(itcProps) *>
+        oldItcProps.setState(itcProps).when_(itcProps.isExecutable) *>
           itcProps
             .requestITCData(
               m => {
@@ -210,7 +217,8 @@ object ObsTabTiles:
                   case (k, Right(e)) =>
                     k -> (Pot.Ready(e): Pot[ItcChartResult])
                 }.toMap
-                charts.setStateAsync(r) *> loading.setState(LoadingState.Done).to[IO]
+                charts
+                  .setStateAsync(r) *> loading.setState(LoadingState.Done).value.to[IO]
               },
               (charts.setState(
                 itcProps.targets
@@ -221,7 +229,7 @@ object ObsTabTiles:
                   )
                   .toMap
               ) *> loading.setState(LoadingState.Done)).to[IO],
-              loading.setState(LoadingState.Loading).to[IO]
+              loading.setState(LoadingState.Loading).value.to[IO]
             )
             .whenA(itcProps.isExecutable)
             .runAsyncAndForget
@@ -248,15 +256,6 @@ object ObsTabTiles:
           selectedItcTarget
         ) =>
           import ctx.given
-
-          // PREVIOUS CODE WAS: (BUT WE ALWAYS HAD "none" IN itcExposureTime
-          //   val chartExposureTime                        = obsView.toOption
-          //     .flatMap(
-          //       _.get.itcExposureTime
-          //         .map(r => ItcChartExposureTime(OverridenExposureTime.FromItc, r.time, r.count))
-          //     )
-          //     .orElse(obsView.toOption.flatMap(_.get.itc.map(_.toItcChartExposureTime)))
-          //   (obsViewPot, scienceData, observingMode, scienceReqs, chartExposureTime)
 
           val posAngle: View[PosAngleConstraint] =
             props.obsView.zoom(ObsSummary.posAngleConstraint)
@@ -314,7 +313,6 @@ object ObsTabTiles:
             ItcTile.itcTile(
               props.userId,
               props.obsId,
-              selectedConfig.get.orElse(itcProps.value.finalSelectedConfig),
               selectedItcTarget,
               props.allTargets,
               itcProps.value,

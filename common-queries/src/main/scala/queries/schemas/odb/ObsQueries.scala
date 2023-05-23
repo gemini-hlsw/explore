@@ -12,6 +12,7 @@ import clue.FetchClient
 import clue.data.syntax.*
 import crystal.Pot
 import crystal.implicits.given
+import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.DefaultErrorPolicy
@@ -54,7 +55,7 @@ object ObsQueries:
 
   extension (self: OdbItcResult.Success)
     def asFixedExposureTime: FixedExposureMode =
-      FixedExposureMode(self.exposures, self.exposureTime)
+      FixedExposureMode(NonNegInt.unsafeFrom(self.exposures.value), self.exposureTime)
 
   def updateObservationConstraintSet[F[_]: Async](
     programId:   Program.Id,

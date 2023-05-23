@@ -43,7 +43,7 @@ import scala.scalajs.js.JSConverters.*
 
 case class ItcPanelTitle(
   selectedTarget:  View[Option[ItcTarget]],
-  itcPanelProps:   ItcPanelProps,
+  itcPanelProps:   ItcProps,
   itcChartResults: Map[ItcTarget, Pot[ItcChartResult]],
   itcLoading:      LoadingState
 ) extends ReactFnProps(ItcPanelTitle.component)

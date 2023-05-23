@@ -13,6 +13,7 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 trait Constants:
+  val UTC                      = ZoneOffset.UTC
   val TwoPanelCutoff           = 576.0
   val InitialTreeWidth         = 300.0
   val MinLeftPanelWidth        = 270.0

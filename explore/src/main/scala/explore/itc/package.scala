@@ -4,7 +4,7 @@
 package explore.itc
 
 import cats.data.NonEmptyList
-import eu.timepit.refined.types.numeric.NonNegInt
+import eu.timepit.refined.types.numeric.PosInt
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -38,7 +38,7 @@ def formatDuration(ts: TimeSpan): String =
   else
     f"${seconds / 3600.0}%.2f hr"
 
-def format(time: TimeSpan, count: NonNegInt): String =
+def format(time: TimeSpan, count: PosInt): String =
   s"$count × ${formatDuration(time)} = ${formatDuration(time *| count.value)}"
 
 def formatCcds(
