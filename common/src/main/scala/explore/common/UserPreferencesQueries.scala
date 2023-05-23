@@ -76,10 +76,10 @@ object UserPreferencesQueries:
           objects = LucumaUserPreferencesInsertInput(
             userId = userId.show.assign,
             aladinMouseScroll = aladinMouseScroll.map(_.value).orIgnore,
-            showCatalog = showCatalog.map(_.visible).orIgnore,
-            agsOverlay = agsOverlay.map(_.visible).orIgnore,
-            scienceOffsets = scienceOffsets.map(_.visible).orIgnore,
-            acquisitionOffsets = acquisitionOffsets.map(_.visible).orIgnore,
+            showCatalog = showCatalog.map(_.isVisible).orIgnore,
+            agsOverlay = agsOverlay.map(_.isVisible).orIgnore,
+            scienceOffsets = scienceOffsets.map(_.isVisible).orIgnore,
+            acquisitionOffsets = acquisitionOffsets.map(_.isVisible).orIgnore,
             fullScreen = fullScreen.map(_.value).orIgnore
           )
         )
@@ -219,10 +219,10 @@ object UserPreferencesQueries:
         val userPrefs = UserGlobalPreferences(
           AladinMouseScroll(userPrefsResult.flatMap(_.aladinMouseScroll).getOrElse(false)),
           AladinFullScreen(userPrefsResult.flatMap(_.fullScreen).getOrElse(false)),
-          Visible.boolIso.get(userPrefsResult.flatMap(_.showCatalog).getOrElse(true)),
-          Visible.boolIso.get(userPrefsResult.flatMap(_.agsOverlay).getOrElse(true)),
-          Visible.boolIso.get(userPrefsResult.flatMap(_.scienceOffsets).getOrElse(true)),
-          Visible.boolIso.get(userPrefsResult.flatMap(_.acquisitionOffsets).getOrElse(true))
+          Visible.value.reverseGet(userPrefsResult.flatMap(_.showCatalog).getOrElse(true)),
+          Visible.value.reverseGet(userPrefsResult.flatMap(_.agsOverlay).getOrElse(true)),
+          Visible.value.reverseGet(userPrefsResult.flatMap(_.scienceOffsets).getOrElse(true)),
+          Visible.value.reverseGet(userPrefsResult.flatMap(_.acquisitionOffsets).getOrElse(true))
         )
 
         val targetPrefs = {
@@ -241,8 +241,8 @@ object UserPreferencesQueries:
 
           def visibleProp(op: ExploreTargetPreferencesByPk => Option[Boolean]) = targetPrefsResult
             .flatMap(op)
-            .map(Visible.boolIso.get)
-            .getOrElse(Visible.Inline)
+            .map(Visible.value.reverseGet)
+            .getOrElse(Visible.Shown)
 
           def rangeProp(op: ExploreTargetPreferencesByPk => Option[Int]) = targetPrefsResult
             .flatMap(op)

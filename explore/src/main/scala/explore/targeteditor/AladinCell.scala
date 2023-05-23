@@ -439,7 +439,7 @@ object AladinCell extends ModelOptics with AladinCommon:
             options
               .zoom(Pot.readyPrism.andThen(userPrefs).andThen(get))
               .withOnMod(onMod)
-              .zoom(Visible.boolIso.reverse.asLens)
+              .zoom(Visible.value.asLens)
 
           val agsCandidatesView =
             visiblePropView(UserGlobalPreferences.aladinShowCatalog,
@@ -562,7 +562,7 @@ object AladinCell extends ModelOptics with AladinCommon:
 
           val renderAgsOverlay: ((UserGlobalPreferences, TargetVisualOptions)) => VdomNode =
             case (u: UserGlobalPreferences, t: TargetVisualOptions) =>
-              if (u.aladinAgsOverlay.visible && props.canRunAGS) {
+              if (u.aladinAgsOverlay.isVisible && props.canRunAGS) {
                 props.obsConf
                   .flatMap(_.agsState)
                   .map(agsState =>

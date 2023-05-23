@@ -4,34 +4,23 @@
 package explore.model.enums
 
 import cats.data.NonEmptyList
+import explore.model.extensions
 import lucuma.core.util.Enumerated
+import lucuma.core.util.NewType
 import monocle.Iso
 
-/**
- * Enum to indicate visibility of an item, roughly equivalent to css display
- */
-enum Visible:
-  case Hidden, Inline
+/** Visibility of an item. */
+type Visible = Visible.Type
+object Visible extends NewType[Boolean]:
+  val Hidden: Visible = Visible(false)
+  val Shown: Visible  = Visible(true)
 
-  def fold[A](hidden: => A, inline: => A): A =
-    this match {
-      case Visible.Hidden => hidden
-      case Visible.Inline => inline
-    }
+  extension (self: Visible)
+    def fold[A](hidden: => A, shown: => A): A =
+      self match
+        case Visible.Hidden => hidden
+        case Visible.Shown  => shown
 
-  def visible: Boolean = fold(false, true)
+    def isVisible: Boolean = fold(false, true)
 
-  def flip: Visible = fold(Visible.Inline, Visible.Hidden)
-
-object Visible:
-
-  val boolIso: Iso[Boolean, Visible] = Iso[Boolean, Visible] { b =>
-    if (b) Inline else Hidden
-  } {
-    case Hidden => false
-    case Inline => true
-  }
-
-  /** @group Typeclass Instances */
-  given Enumerated[Visible] =
-    Enumerated.from(Hidden, Inline).withTag(_.visible.toString)
+    def flip: Visible = fold(Visible.Shown, Visible.Hidden)

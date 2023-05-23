@@ -36,10 +36,11 @@ object UserGlobalPreferences:
   val fullScreen               = Focus[UserGlobalPreferences](_.fullScreen)
 
   val Default =
-    UserGlobalPreferences(AladinMouseScroll.Allowed,
-                          AladinFullScreen.Normal,
-                          Visible.Inline,
-                          Visible.Inline,
-                          Visible.Inline,
-                          Visible.Inline
+    UserGlobalPreferences(
+      AladinMouseScroll.Allowed,
+      AladinFullScreen.Normal,
+      Visible.Shown,
+      Visible.Shown,
+      Visible.Shown,
+      Visible.Shown
     )

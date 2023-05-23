@@ -73,7 +73,7 @@ object AladinToolbar {
           ExploreStyles.AladinGuideStar,
           props.selectedGuideStar
             .map { case g => s"GS: ${g.target.name.value}" }
-            .unless(props.agsOverlay.visible || !usableGuideStar),
+            .unless(props.agsOverlay.isVisible || !usableGuideStar),
           Constants.NoGuideStarMessage.when(!usableGuideStar && props.agsState === AgsState.Idle),
           "Calculating...".when(props.agsState === AgsState.Calculating)
         ),

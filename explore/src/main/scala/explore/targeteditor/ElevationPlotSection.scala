@@ -21,6 +21,7 @@ import explore.model.ElevationPlotOptions
 import explore.model.display.given
 import explore.model.enums.PlotRange
 import explore.model.enums.TimeDisplay
+import explore.model.enums.Visible
 import explore.model.reusability.given
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -54,6 +55,7 @@ import react.datepicker.*
 import react.primereact.Button
 import react.primereact.SelectButton
 import react.primereact.SelectItem
+import react.primereact.ToggleButton
 import spire.math.extras.interval.IntervalSeq
 
 import java.time.*
@@ -121,11 +123,13 @@ object ElevationPlotSection:
       .render { (props, ctx, options) =>
         import ctx.given
 
-        val siteView        = options.zoom(Pot.readyPrism.andThen(ElevationPlotOptions.site))
-        val rangeView       = options.zoom(Pot.readyPrism.andThen(ElevationPlotOptions.range))
-        val dateView        = options.zoom(Pot.readyPrism.andThen(ElevationPlotOptions.date))
-        val semesterView    = options.zoom(Pot.readyPrism.andThen(ElevationPlotOptions.semester))
-        val timeDisplayView = options.zoom(Pot.readyPrism.andThen(ElevationPlotOptions.timeDisplay))
+        val siteView           = options.zoom(Pot.readyPrism.andThen(ElevationPlotOptions.site))
+        val rangeView          = options.zoom(Pot.readyPrism.andThen(ElevationPlotOptions.range))
+        val dateView           = options.zoom(Pot.readyPrism.andThen(ElevationPlotOptions.date))
+        val semesterView       = options.zoom(Pot.readyPrism.andThen(ElevationPlotOptions.semester))
+        val timeDisplayView    = options.zoom(Pot.readyPrism.andThen(ElevationPlotOptions.timeDisplay))
+        val showSchedulingView =
+          options.zoom(Pot.readyPrism.andThen(ElevationPlotOptions.showScheduling))
 
         options.renderPotView { opt =>
 
@@ -145,9 +149,10 @@ object ElevationPlotSection:
             windowsIntervalsParts(0) & ~windowsIntervalsParts(1)
 
           val windowsNetExcludeIntervals: List[BoundedInterval[Instant]] =
-            props.timingWindows match
-              case Nil => Nil // No exclusions if no windows are defined.
-              case _   =>
+            (props.timingWindows, showSchedulingView.get) match
+              case (Nil, _)                  => Nil // No exclusions if no windows are defined.
+              case (_, Some(Visible.Hidden)) => Nil
+              case (_, _)                    =>
                 (IntervalSeq(opt.interval) & ~windowsNetIncludeIntervals).intervals.toList
                   .map(BoundedInterval.fromInterval)
                   .flattenOption
@@ -228,7 +233,14 @@ object ElevationPlotSection:
                 "elevation-plot-time".refined,
                 timeDisplayView,
                 buttonClass = LucumaStyles.Tiny |+| LucumaStyles.VeryCompact
-              )(^.visibility.hidden.when(rangeView.contains(PlotRange.Semester)))
+              )(^.visibility.hidden.when(rangeView.contains(PlotRange.Semester))),
+              ToggleButton(
+                onLabel = "Scheduling: On",
+                offLabel = "Scheduling: Off",
+                checked = showSchedulingView.get.getOrElse(Visible.Shown).isVisible,
+                onChange = showSchedulingView.set.compose(Visible.value.reverseGet),
+                clazz = LucumaStyles.Tiny |+| LucumaStyles.VeryCompact
+              )
             )
           )
         }
