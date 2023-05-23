@@ -343,6 +343,7 @@ object ExploreStyles:
   val AdvancedConfigurationButtons: Css = Css("explore-advanced-configuration-buttons")
   val ConfigurationFilter: Css          = Css("explore-configuration-filter") |+| Css("field")
   val ExploreTable: Css                 = Css("explore-table")
+  val ObsSummaryTable: Css              = Css("explore-obs-summary-table")
   val ExploreTableEmpty: Css            = Css("explore-table-emptymessage")
   val SpectroscopyTableEmpty: Css       = Css("spectroscopy-table-emptymessage")
   val ExploreSelectableTable: Css       = Css("explore-selectable-table")
