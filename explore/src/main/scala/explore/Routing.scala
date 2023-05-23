@@ -31,10 +31,6 @@ import scala.collection.immutable.SortedSet
 import scala.scalajs.LinkingInfo
 import scala.util.Random
 
-sealed trait ElementItem  extends Product with Serializable
-case object IconsElement  extends ElementItem
-case object LabelsElement extends ElementItem
-
 object Routing:
 
   private def withProgramSummaries(model: View[RootModel])(
