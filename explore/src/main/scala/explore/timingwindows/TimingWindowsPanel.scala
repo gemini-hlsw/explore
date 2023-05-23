@@ -145,7 +145,7 @@ object TimingWindowsPanel:
       .withHooks[Props]
       .useResizeDetector()
       // cols
-      .useMemoBy((_, resize) => resize) { (props, _) => resize =>
+      .useMemoBy((props, resize) => (props.windows.get, resize)) { (props, _) => (_, resize) =>
         List(
           ColDef(
             ColumnId(WindowColId),
