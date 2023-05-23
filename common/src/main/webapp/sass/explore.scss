@@ -460,7 +460,7 @@ a:hover {
 
   .pl-form-column.target-proper-motion-form {
     grid-area: proper-motion;
-    grid-template-columns: max-content min-content;
+    grid-template-columns: [label] auto [field] 1fr;
   }
 
   .target-source-profile-editor {
@@ -2161,12 +2161,11 @@ $help-title-height: 40px;
   grid-area: form;
   grid-row-end: span 2;
   display: grid;
-  justify-items: start;
   align-items: baseline;
   align-self: start;
   padding: 0.5em;
   row-gap: 0.5em;
-  grid-template-columns: [label] minmax(100px, 10%) [field] min-content;
+  grid-template-columns: [label] minmax(100px, 10%) [field] max-content;
 
   .pl-form-field {
     justify-self: stretch;
@@ -2202,8 +2201,8 @@ $help-title-height: 40px;
 
 .explore-basic-configuration-sn-at {
   display: flex;
-  justify-content: stretch;
   align-items: baseline;
+  justify-items: stretch;
   grid-gap: 0.5em;
 
   div:first-child {
@@ -2216,7 +2215,7 @@ $help-title-height: 40px;
 
   #signal-to-noise,
   #signal-to-noise-at {
-    max-width: 9ch;
+    width: 9ch;
   }
 }
 
@@ -2228,7 +2227,7 @@ $help-title-height: 40px;
   grid-template:
     "form table-header" auto
     "form table" 1fr
-    "form buttons" auto / min-content minmax(0, 4fr);
+    "form buttons" auto / 1fr minmax(0, 4fr);
 }
 
 .explore-basic-configuration-focal-plane {
