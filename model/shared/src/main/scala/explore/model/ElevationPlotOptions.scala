@@ -8,6 +8,7 @@ import cats.derived.*
 import cats.syntax.option.given
 import explore.model.enums.PlotRange
 import explore.model.enums.TimeDisplay
+import explore.model.enums.Visible
 import lucuma.core.enums.Site
 import lucuma.core.enums.TwilightType
 import lucuma.core.math.BoundedInterval
@@ -23,11 +24,12 @@ import java.time.LocalDateTime
 import java.time.ZonedDateTime
 
 case class ElevationPlotOptions(
-  site:        Site,
-  range:       PlotRange,
-  date:        LocalDate,
-  semester:    Semester,
-  timeDisplay: TimeDisplay
+  site:           Site,
+  range:          PlotRange,
+  date:           LocalDate,
+  semester:       Semester,
+  timeDisplay:    TimeDisplay,
+  showScheduling: Visible
 ) derives Eq:
   def withDateAndSemesterOf(visualizationTime: Instant): ElevationPlotOptions =
     val (date, semester) = ElevationPlotOptions.dateAndSemesterOf(visualizationTime.some, site)
@@ -54,11 +56,12 @@ case class ElevationPlotOptions(
   def interval: BoundedInterval[Instant] = BoundedInterval.unsafeClosed(minInstant, maxInstant)
 
 object ElevationPlotOptions:
-  val site        = Focus[ElevationPlotOptions](_.site)
-  val range       = Focus[ElevationPlotOptions](_.range)
-  val date        = Focus[ElevationPlotOptions](_.date)
-  val semester    = Focus[ElevationPlotOptions](_.semester)
-  val timeDisplay = Focus[ElevationPlotOptions](_.timeDisplay)
+  val site           = Focus[ElevationPlotOptions](_.site)
+  val range          = Focus[ElevationPlotOptions](_.range)
+  val date           = Focus[ElevationPlotOptions](_.date)
+  val semester       = Focus[ElevationPlotOptions](_.semester)
+  val timeDisplay    = Focus[ElevationPlotOptions](_.timeDisplay)
+  val showScheduling = Focus[ElevationPlotOptions](_.showScheduling)
 
   private def dateAndSemesterOf(
     visualizationTime: Option[Instant],
@@ -85,5 +88,6 @@ object ElevationPlotOptions:
       PlotRange.Night,
       date,
       Semester.fromLocalDate(date),
-      TimeDisplay.Site
+      TimeDisplay.Site,
+      Visible.Shown
     )

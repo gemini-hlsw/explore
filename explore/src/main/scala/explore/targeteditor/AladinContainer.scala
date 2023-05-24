@@ -180,7 +180,7 @@ object AladinContainer extends AladinCommon {
           gs
         ) =>
           val candidatesVisibilityCss =
-            ExploreStyles.GuideStarCandidateVisible.when_(userPrefs.aladinAgsOverlay.visible)
+            ExploreStyles.GuideStarCandidateVisible.when_(userPrefs.aladinAgsOverlay.isVisible)
 
           GmosGeometry.gmosGeometry(
             allCoordinates.value._1.value,
@@ -196,7 +196,7 @@ object AladinContainer extends AladinCommon {
       // memoized catalog targets with their proper motions corrected
       .useMemoBy((props, allCoordinates, _, _, _, _) =>
         (props.guideStarCandidates,
-         props.userPreferences.aladinShowCatalog.visible,
+         props.userPreferences.aladinShowCatalog.isVisible,
          props.userPreferences.fullScreen,
          props.options.fovRA,
          props.vizTime,
@@ -377,7 +377,7 @@ object AladinContainer extends AladinCommon {
                 gs  <- props.selectedGuideStar
                 pa  <- gs.posAngle
                 c   <- baseCoordinates.value.offsetBy(pa, o)
-                if visible.visible
+                if visible.isVisible
               } yield SVGTarget.OffsetIndicator(c, idx, o, oType, css, 4)
             }
           val scienceOffsetIndicators =

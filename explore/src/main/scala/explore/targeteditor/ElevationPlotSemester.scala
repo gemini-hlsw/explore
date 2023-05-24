@@ -282,7 +282,7 @@ object ElevationPlotSemester:
 
         <.div(
           ResizingChart(options, c => chartOpt.setState(c.some))
-            .withKey(s"${props.site}-${props.coords}-${props.semester}")
+            .withKey(s"${props.site}-${props.coords}-${props.semester}-${props.excludeIntervals}")
             .when(resize.height.isDefined)
         ).withRef(resize.ref)
       }
