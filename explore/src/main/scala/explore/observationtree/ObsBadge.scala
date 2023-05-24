@@ -100,10 +100,13 @@ object ObsBadge:
             <.div(obs.title).when(layout.showTitle),
             <.div(obs.configurationSummary.getOrElse("-"))
               .when(layout.showConfiguration === Section.Header),
-            <.div(ExploreStyles.ObsBadgeId, s"[${idIso.get(obs.id).value.toHexString}]")
-          ),
-          props.cloneCB.whenDefined(_ => duplicateButton),
-          props.deleteCB.whenDefined(_ => deleteButton)
+            <.div(
+              ExploreStyles.ObsBadgeId,
+              s"[${idIso.get(obs.id).value.toHexString}]",
+              props.cloneCB.whenDefined(_ => duplicateButton),
+              props.deleteCB.whenDefined(_ => deleteButton)
+            )
+          )
         )
 
       val meta = <.div(ExploreStyles.ObsBadgeMeta)(
