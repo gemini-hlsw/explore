@@ -247,9 +247,7 @@ object ObsAttachmentsTable extends TableHooks:
               }
               .to[IO]
           val getUrls      =
-            newOas
-              .traverse(oa => getAttachmentUrl(props, oa, urlMap))
-              .void
+            newOas.traverse_(oa => getAttachmentUrl(props, oa, urlMap))
 
           updateUrlMap *> getUrls
       )
