@@ -252,7 +252,7 @@ object ObsAttachmentsTable extends TableHooks:
           updateUrlMap *> getUrls
       )
       // Columns
-      .useMemoBy((_, _, _, urlMap) => urlMap.reuseByValue)((props, ctx, action, _) =>
+      .useMemoBy((_, _, _, urlMap) => urlMap.get)((props, ctx, action, _) =>
         urlMap =>
           import ctx.given
 
@@ -298,7 +298,7 @@ object ObsAttachmentsTable extends TableHooks:
                     ^.id   := s"attachment-replace-$id",
                     ^.name := "file"
                   ),
-                  urlMap.get.get(thisOa.toMapKey).foldMap {
+                  urlMap.get(thisOa.toMapKey).foldMap {
                     case Pot.Ready(url) =>
                       <.a(Icons.FileArrowDown, ^.href := url, labelButtonClasses)
                         .withTooltip("Download File")
