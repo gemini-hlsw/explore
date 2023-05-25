@@ -263,28 +263,6 @@ tfoot {
   color: var(--negative-icon-color);
 }
 
-.obs-group-title-mixin() {
-  flex-grow: 2;
-  margin-right: 5px;
-}
-
-.obs-group-title {
-  .obs-group-title-mixin();
-
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.obs-group-title-with-wrap {
-  .obs-group-title-mixin();
-
-  white-space: normal;
-  overflow: visible;
-  max-width: 80%;
-  word-wrap: break-word;
-}
-
 .dragging-over {
   background-color: var(--explore-group-dragging) !important;
 }
@@ -467,17 +445,6 @@ html {
 
 .observer-notes {
   padding: 1em;
-}
-
-.obs-badge-header {
-  display: flex;
-  align-items: center;
-}
-
-.obs-badge-description {
-  display: flex;
-  justify-content: space-between;
-  text-overflow: ellipsis;
 }
 
 .crash-message {

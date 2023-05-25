@@ -907,12 +907,10 @@ $search-preview-margin: 5px;
 // Obs badge
 // ------
 .obs-badge {
-  width: 100%;
-  margin: 0;
-  padding: 1em;
+  padding: 0.7em;
   background-color: var(--obs-badge-background);
   border: solid 1px var(--site-border-color);
-  border-radius: 5px;
+  border-radius: 3px;
 
   // defined in lucuma-ui.scss. Linting doesn't capture that.
   /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
@@ -939,11 +937,12 @@ $search-preview-margin: 5px;
 
   .obs-badge-header {
     .obs-badge-target-and-id {
+      color: var(--obs-badge-color);
       display: flex;
-      width: 100%;
+      justify-content: space-between;
       /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
       font-size: var(--pl-large-font-size);
-      font-weight: 700;
+      font-weight: 400;
     }
 
     .p-component.p-button.obs-clone-button,
@@ -953,15 +952,29 @@ $search-preview-margin: 5px;
     }
   }
 
+  .obs-badge-id {
+    justify-self: end;
+    display: flex;
+    align-items: start;
+    font-weight: normal;
+    font-size: small;
+    opacity: 0.5;
+  }
+
   .obs-badge-description {
+    @include common.text-ellipsis;
+
+    display: flex;
+    justify-content: space-between;
     /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
     font-size: var(--pl-tiny-font-size);
 
     // because of the rotate, Y is X
-    $active-status-translate-y: 2.5em;
+    $active-status-translate-x: -1em;
+    $active-status-translate-y: 2em;
 
     .p-component.p-inputswitch.obs-active-status-toggle {
-      transform: rotate(270deg) scale(0.6) translateY($active-status-translate-y);
+      transform: rotate(270deg) scale(0.6) translateX($active-status-translate-x) translateY($active-status-translate-y);
       height: 21px;
 
       &.p-inputswitch-checked .p-inputswitch-slider {
@@ -1021,19 +1034,32 @@ $search-preview-margin: 5px;
     padding-right: 0 !important;
   }
 
-  .obs-badge-id {
-    margin-left: auto;
-    margin-right: 1em;
-    font-weight: normal;
-    font-size: small;
-    opacity: 0.5;
-  }
-
   .obs-status-select {
     width: 100%;
     background-color: var(--obs-selected-badge-background);
   }
 }
+
+
+@mixin obs-group-title-mixin {
+  flex-grow: 2;
+  margin-right: 5px;
+}
+
+.obs-group-title {
+  @include obs-group-title-mixin;
+  @include common.text-ellipsis;
+}
+
+.obs-group-title-with-wrap {
+  @include obs-group-title-mixin;
+
+  white-space: normal;
+  overflow: visible;
+  max-width: 80%;
+  word-wrap: break-word;
+}
+
 
 // The panel is not nested in the obs badge
 .obs-status-select-panel.p-dropdown-panel {
@@ -1043,7 +1069,7 @@ $search-preview-margin: 5px;
 .selected-obs-item .obs-badge,
 .obs-tree-item .obs-badge.obs-badge-selected {
   background-color: var(--obs-selected-badge-background);
-  box-shadow: 0 0 0 2px var(--site-solid-border-color);
+  box-shadow: 0 0 0 1.5px var(--site-solid-border-color);
 }
 
 // ------
@@ -1777,13 +1803,6 @@ input[type="file"].explore-fileupload {
     justify-self: start;
   }
 }
-
-.tree-body.obs-tree-hidden-toolbar {
-  @media (min-width: common.$mobile-responsive-cutoff) {
-    width: unset;
-  }
-}
-
 
 .obs-scroll-tree {
   height: 100%;
