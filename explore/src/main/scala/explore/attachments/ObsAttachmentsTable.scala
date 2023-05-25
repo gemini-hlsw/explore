@@ -6,6 +6,7 @@ package explore.attachments
 import cats.Order.*
 import cats.effect.IO
 import cats.syntax.all.*
+import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
 import crystal.react.implicits.*
@@ -24,6 +25,7 @@ import explore.syntax.ui.*
 import explore.utils.OdbRestClient
 import explore.utils.*
 import fs2.dom
+import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
@@ -41,6 +43,7 @@ import lucuma.ui.primereact.CheckboxView
 import lucuma.ui.primereact.EnumDropdownView
 import lucuma.ui.primereact.LucumaStyles
 import lucuma.ui.primereact.given
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
@@ -71,6 +74,9 @@ case class ObsAttachmentsTable(
 object ObsAttachmentsTable extends TableHooks:
   private type Props = ObsAttachmentsTable
 
+  private type UrlMapKey = (ObsAtt.Id, Timestamp)
+  private type UrlMap    = Map[UrlMapKey, Pot[String]]
+
   private enum Action:
     case None, Insert, Replace, Download
 
@@ -94,6 +100,8 @@ object ObsAttachmentsTable extends TableHooks:
     CheckedColumnId        -> "Checked"
   )
 
+  extension (oa: ObsAttachment) def toMapKey: UrlMapKey = (oa.id, oa.updatedAt)
+
   private val labelButtonClasses =
     PrimeStyles.Component |+| PrimeStyles.Button |+| PrimeStyles.ButtonIconOnly
       |+| PrimeStyles.ButtonSecondary |+| LucumaStyles.Tiny |+| LucumaStyles.Compact
@@ -104,6 +112,8 @@ object ObsAttachmentsTable extends TableHooks:
       .from(ObsAttachmentType.Finder, ObsAttachmentType.MosMask, ObsAttachmentType.PreImaging)
       .withTag(_.toString)
   given Display[ObsAttachmentType]    = Display.byShortName(_.toString)
+
+  given Reusability[UrlMap] = Reusability.map
 
   // TODO: Maybe we can have a graphql query for getting information such as this? This is a config var in ODB.
   private val maxFileSize: NonNegLong = 10000000.refined
@@ -191,6 +201,20 @@ object ObsAttachmentsTable extends TableHooks:
     props.obsAttachments.mod(_.filter(_.id =!= aid)).to[IO] *>
       props.client.deleteAttachment(props.pid, aid).toastErrors
 
+  def getAttachmentUrl(
+    props:  Props,
+    oa:     ObsAttachment,
+    urlMap: View[UrlMap]
+  ): IO[Unit] =
+    props.client
+      .getPresignedUrl(props.pid, oa.id)
+      .attempt
+      .map {
+        case Right(url) => Pot(url)
+        case Left(t)    => Pot.error(t)
+      }
+      .flatMap(p => urlMap.mod(_.updated(oa.toMapKey, p)).to[IO])
+
   def deletePrompt(props: Props, aid: ObsAtt.Id)(
     e: ReactMouseEvent
   )(using Logger[IO], ToastCtx[IO]): Callback =
@@ -209,9 +233,27 @@ object ObsAttachmentsTable extends TableHooks:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .useStateView(Action.None)
+      .useStateView[UrlMap](Map.empty)
+      .useEffectWithDepsBy((props, _, _, _) => props.obsAttachments.get)((props, _, _, urlMap) =>
+        obsAttachments =>
+          val newOas         = obsAttachments.filter(oa => !urlMap.get.contains(oa.toMapKey))
+          val allCurrentKeys = obsAttachments.map(_.toMapKey).toSet
+
+          val updateUrlMap =
+            urlMap
+              .mod { umap =>
+                val filteredMap = umap.filter((k, v) => allCurrentKeys.contains(k))
+                newOas.foldRight(filteredMap)((oa, m) => m.updated(oa.toMapKey, Pot.pending))
+              }
+              .to[IO]
+          val getUrls      =
+            newOas.traverse_(oa => getAttachmentUrl(props, oa, urlMap))
+
+          updateUrlMap *> getUrls
+      )
       // Columns
-      .useMemoBy((_, _, _) => ())((props, ctx, action) =>
-        _ =>
+      .useMemoBy((_, _, _, urlMap) => urlMap.get)((props, ctx, action, _) =>
+        urlMap =>
           import ctx.given
 
           def column[V](id: ColumnId, accessor: ObsAttachment => V)
@@ -250,18 +292,19 @@ object ObsAttachmentsTable extends TableHooks:
                     placement = Placement.Right
                   ),
                   <.input(
-                    ExploreStyles.FileUpload |+| ExploreStyles.FileUpload,
+                    ExploreStyles.FileUpload,
                     ^.tpe  := "file",
                     ^.onChange ==> onUpdateFileSelected,
                     ^.id   := s"attachment-replace-$id",
                     ^.name := "file"
-                  )
-                  // TODO: Implement file download...
-                  // <.label(
-                  // labelButtonClasses,
-                  //   ^.cls := labelButtonClasses,
-                  //   Icons.FileArrowDown
-                  // ).withTooltip("Download attachment")
+                  ),
+                  urlMap.get(thisOa.toMapKey).foldMap {
+                    case Pot.Ready(url) =>
+                      <.a(Icons.FileArrowDown, ^.href := url, labelButtonClasses)
+                        .withTooltip("Download File")
+                    case Pot.Pending    => <.span(Icons.Spinner.withSpin(true))
+                    case Pot.Error(t)   => <.span(Icons.ExclamationTriangle).withTooltip(t.getMessage)
+                  }
                 )
               )
               .setEnableSorting(false),
@@ -322,10 +365,10 @@ object ObsAttachmentsTable extends TableHooks:
           )
       )
       // Rows
-      .useMemoBy((props, _, _, _) => props.obsAttachments.reuseByValue)((_, _, _, _) =>
+      .useMemoBy((props, _, _, _, _) => props.obsAttachments.reuseByValue)((_, _, _, _, _) =>
         _.value.toListOfViews.sortBy(_.get.id)
       )
-      .useReactTableBy((prop, ctx, _, cols, rows) =>
+      .useReactTableBy((prop, ctx, _, _, cols, rows) =>
         TableOptions(
           cols,
           rows,
@@ -333,7 +376,7 @@ object ObsAttachmentsTable extends TableHooks:
         )
       )
       .useStateView(Enumerated[ObsAttachmentType].all.head)
-      .render { (props, ctx, action, _, _, table, newAttType) =>
+      .render { (props, ctx, action, _, _, _, table, newAttType) =>
         import ctx.given
 
         val dialogHeader = action.get match
