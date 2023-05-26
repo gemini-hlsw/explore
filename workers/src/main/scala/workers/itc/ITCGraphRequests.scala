@@ -131,7 +131,7 @@ object ITCGraphRequests:
             g.get(t).forall {
               case Right(_)                               => true
               case Left(ItcQueryProblems.GenericError(_)) => false
-              case Left(_)                                => false
+              case Left(_)                                => true
             }
           )
       )

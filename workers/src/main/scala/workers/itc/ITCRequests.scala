@@ -119,7 +119,7 @@ object ITCRequests:
           g.exists(_.get(r).forall {
             case Right(_)                               => true
             case Left(ItcQueryProblems.GenericError(_)) => false
-            case Left(_)                                => false
+            case Left(_)                                => true
           })
       )
 
