@@ -152,4 +152,18 @@ object ProgramQueriesGQL {
       }
     """
   }
+
+  @GraphQL
+  trait ProgramEditAttachmentSubscription extends GraphQLOperation[ObservationDB] {
+    val document: String = s"""
+      subscription($$programId: ProgramId!) {
+        programEdit(input: {programId: $$programId}) {
+          value {
+            obsAttachments $ObsAttachmentSubquery
+            proposalAttachments $ProposalAttachmentSubquery
+          }
+        }
+      }
+    """
+  }
 }
