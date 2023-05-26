@@ -63,14 +63,16 @@ case class ItcProps(
   private val constraints   = obsSummary.constraints
   private val asterismIds   = obsSummary.scienceTargetIds
 
-  private val remoteConfig                   = obsSummary.observingMode.map { o =>
+  // The remote configuration is read in a different query than the itc results
+  // This will work even in the case the user has overriden some parameters
+  private val remoteConfig = obsSummary.observingMode.map { o =>
     BasicConfigAndItc(o.toBasicConfiguration,
                       remoteExposureTime.map(ItcResult.fromItcExposureTime(_).rightNec)
     )
   }
-  //
-  // if there is an observingMode, that means a configuration has been created. If not, we'll use the
-  // row selected in the spectroscopy modes table if it exists
+
+  // The user may select a configuration on the modes tables, we'd prefer than but if not
+  // we can try with the remote confiiguration provided by the database
   val finalConfig: Option[BasicConfigAndItc] =
     selectedConfig.orElse(remoteConfig)
 
