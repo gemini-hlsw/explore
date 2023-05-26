@@ -61,9 +61,8 @@ object ItcMessage extends ItcPicklers {
 
   case class GraphQuery(
     wavelength:      CentralWavelength,
+    signalToNoise:   SignalToNoise,
     signalToNoiseAt: Option[Wavelength],
-    exposureTime:    TimeSpan,
-    exposures:       PosInt,
     constraints:     ConstraintSet,
     targets:         NonEmptyList[ItcTarget],
     modes:           InstrumentRow

@@ -12,11 +12,13 @@ import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.itc.ItcChartResult
+import explore.model.itc.ItcExposureTime
 import explore.model.itc.ItcGraphRequestParams
 import explore.model.itc.ItcQueryProblems
 import explore.model.itc.ItcRequestParams
 import explore.model.itc.ItcResult
 import explore.model.itc.ItcTarget
+import explore.model.itc.OverridenExposureTime
 import explore.modes.InstrumentRow
 import explore.modes.ModeAO
 import explore.modes.ModeSlitSize
@@ -43,6 +45,7 @@ import lucuma.core.model.SourceProfile
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
 import lucuma.core.util.Of
+import lucuma.core.util.TimeSpan
 import lucuma.itc.ItcAxis
 import lucuma.itc.ItcCcd
 import lucuma.itc.ItcWarning
@@ -201,6 +204,10 @@ trait ItcPicklers extends CommonPicklers {
   given Pickler[OptimizedSeriesResult] = generatePickler
 
   given Pickler[OptimizedChartResult] = generatePickler
+
+  given Pickler[OverridenExposureTime] = picklerNewType(OverridenExposureTime)
+
+  given Pickler[ItcExposureTime] = generatePickler
 
   given Pickler[ItcChartResult] = generatePickler
 

@@ -9,13 +9,14 @@ import crystal.react.View
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.itc.ItcGraphPanel
-import explore.itc.ItcPanelProps
 import explore.itc.ItcPanelTitle
+import explore.itc.ItcProps
 import explore.model.BasicConfigAndItc
 import explore.model.LoadingState
 import explore.model.TargetList
 import explore.model.itc.ItcChartResult
 import explore.model.itc.ItcExposureTime
+import explore.model.itc.ItcResult
 import explore.model.itc.ItcTarget
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
@@ -27,10 +28,9 @@ object ItcTile:
   def itcTile(
     uid:             Option[User.Id],
     oid:             Observation.Id,
-    selectedConfig:  Option[BasicConfigAndItc],
     selectedTarget:  View[Option[ItcTarget]],
     allTargets:      TargetList,
-    itcProps:        ItcPanelProps,
+    itcProps:        ItcProps,
     itcChartResults: Map[ItcTarget, Pot[ItcChartResult]],
     itcLoading:      LoadingState
   ) =
@@ -52,7 +52,6 @@ object ItcTile:
           _,
           oid,
           selectedTarget,
-          selectedConfig,
           itcProps,
           itcChartResults,
           itcLoading

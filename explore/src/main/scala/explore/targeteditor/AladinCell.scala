@@ -32,7 +32,6 @@ import explore.model.boopickle.*
 import explore.model.enums.AgsState
 import explore.model.enums.Visible
 import explore.model.reusability.given
-import explore.model.reusability.given
 import explore.optics.ModelOptics
 import explore.syntax.ui.*
 import explore.utils.*

@@ -15,12 +15,14 @@ import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.model.given
 import lucuma.core.util.Enumerated
+import lucuma.core.util.NewType
 import lucuma.core.util.TimeSpan
 import lucuma.itc.ItcAxis
 import lucuma.itc.ItcCcd
 import lucuma.itc.ItcSeries
 import lucuma.itc.client.OptimizedChartResult
 import lucuma.itc.client.OptimizedSeriesResult
+import lucuma.itc.client.SpectroscopyIntegrationTimeAndGraphResult
 import lucuma.itc.math.roundToSignificantFigures
 import lucuma.schemas.decoders.given
 
@@ -51,10 +53,7 @@ sealed trait ItcResult extends Product with Serializable derives Eq {
 
   def toItcExposureTime: Option[ItcExposureTime] = this match {
     case ItcResult.Result(time, count) =>
-      NonNegInt
-        .from(count.value)
-        .toOption
-        .map(c => ItcExposureTime(OverridenExposureTime.FromItc, time, c))
+      ItcExposureTime(OverridenExposureTime.FromItc, time, count).some
     case _                             => none
   }
 }
@@ -62,7 +61,11 @@ sealed trait ItcResult extends Product with Serializable derives Eq {
 object ItcResult {
   case object Pending                                          extends ItcResult
   case class Result(exposureTime: TimeSpan, exposures: PosInt) extends ItcResult:
-    val duration: TimeSpan = exposureTime *| exposures.value
+    val duration: TimeSpan        = exposureTime *| exposures.value
+    override def toString: String = s"${exposures.value} x ${exposureTime.toMinutes}"
+
+  def fromItcExposureTime(e: ItcExposureTime): ItcResult =
+    Result(e.time, e.count)
 }
 
 case class YAxis(min: Double, max: Double):
@@ -94,24 +97,27 @@ extension (a: OptimizedSeriesResult)
     val start = a.xAxis.map(_.start).getOrElse(1.0)
     a.dataY.zipWithIndex.map((y, i) => (roundToSignificantFigures(step * i + start, 6), y))
 
-opaque type OverridenExposureTime = Boolean
+object OverridenExposureTime extends NewType[Boolean]:
+  val Overriden: OverridenExposureTime = OverridenExposureTime(true)
+  val FromItc: OverridenExposureTime   = OverridenExposureTime(false)
 
-object OverridenExposureTime:
-  val Overriden: OverridenExposureTime = true
-  val FromItc: OverridenExposureTime   = false
-
-  given Eq[OverridenExposureTime] = Eq.catsKernelInstancesForBoolean
+type OverridenExposureTime = OverridenExposureTime.Type
 
 case class ItcExposureTime(
   overriden: OverridenExposureTime,
   time:      TimeSpan,
-  count:     NonNegInt
+  count:     PosInt
 ) derives Eq
 
 case class ItcChartResult(
   target:              ItcTarget,
+  itcExposureTime:     ItcExposureTime,
   ccds:                NonEmptyList[ItcCcd],
   charts:              NonEmptyList[OptimizedChartResult],
   peakSNRatio:         SignalToNoise,
   atWavelengthSNRatio: Option[SignalToNoise]
 )
+
+extension (a: SpectroscopyIntegrationTimeAndGraphResult)
+  def toItcExposureTime: ItcExposureTime =
+    ItcExposureTime(OverridenExposureTime.FromItc, a.exposureTime, a.exposures)

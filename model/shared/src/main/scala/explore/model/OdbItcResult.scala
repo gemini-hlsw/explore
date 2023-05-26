@@ -8,6 +8,7 @@ import cats.derived.*
 import eu.timepit.refined.cats.given
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosBigDecimal
+import eu.timepit.refined.types.numeric.PosInt
 import explore.model.itc.ItcExposureTime
 import explore.model.itc.OverridenExposureTime
 import io.circe.Decoder
@@ -33,7 +34,10 @@ object OdbItcResult {
   ) extends OdbItcResult
       derives Eq {
     def toItcExposureTime: ItcExposureTime =
-      ItcExposureTime(OverridenExposureTime.FromItc, exposureTime, exposures)
+      ItcExposureTime(OverridenExposureTime.FromItc,
+                      exposureTime,
+                      PosInt.unsafeFrom(exposures.value)
+      )
   }
 
   case class MissingParams(
