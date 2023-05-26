@@ -26,6 +26,8 @@ import scala.util.control.NoStackTrace
 trait OdbRestClient[F[_]] {
   def getObsAttachment(programId: Program.Id, attachmentId: ObsAttachment.Id): F[Stream[F, Byte]]
 
+  def getPresignedUrl(programId: Program.Id, attachmentId: ObsAttachment.Id): F[String]
+
   def insertObsAttachment(
     programId:      Program.Id,
     attachmentType: ObsAttachmentType,
@@ -83,8 +85,8 @@ object OdbRestClient {
       def getBody: F[String]             = response.body.through(utf8.decode).compile.string
       def error[A](action: String): F[A] =
         getBody.flatMap { b =>
-          val bodyMsg = if (b.isEmpty) "" else s": $b"
-          mkError(s"Error $action Attachment: ${response.status.reason}$bodyMsg")
+          val bodyMsg = if (b.isEmpty) response.status.reason else b
+          mkError(s"Error $action: $bodyMsg")
         }
 
     new OdbRestClient[F] {
@@ -92,13 +94,24 @@ object OdbRestClient {
         programId:    Program.Id,
         attachmentId: ObsAttachment.Id
       ): F[Stream[F, Byte]] =
-        runRequest("Getting")(baseUri =>
+        runRequest("Getting Attachment")(baseUri =>
           Request[F](
             method = Method.GET,
             uri = baseUri / "obs" / programId.show / attachmentId.show,
             headers = authHeader
           )
         ).use(r => Async[F].pure(r.body))
+
+      def getPresignedUrl(programId: Program.Id, attachmentId: ObsAttachment.Id): F[String] =
+        runRequest("Getting URL")(baseUri =>
+          Request[F](
+            method = Method.GET,
+            uri = baseUri / "obs" / "url" / programId.show / attachmentId.show,
+            headers = authHeader
+          )
+        ).use(
+          _.getBody
+        )
 
       def insertObsAttachment(
         programId:      Program.Id,
@@ -107,7 +120,7 @@ object OdbRestClient {
         description:    Option[NonEmptyString],
         data:           Stream[F, Byte]
       ): F[ObsAttachment.Id] =
-        runRequest("Adding") { baseUri =>
+        runRequest("Adding Attachment") { baseUri =>
           val uri = (baseUri / "obs" / programId.show)
             .withQueryParam("fileName", fileName)
             .withQueryParam("attachmentType", attachmentType.toString.toScreamingSnakeCase)
@@ -131,7 +144,7 @@ object OdbRestClient {
         description:  Option[NonEmptyString],
         data:         Stream[F, Byte]
       ): F[Unit] =
-        runRequest("Updating") { baseUri =>
+        runRequest("Updating Attachment") { baseUri =>
           val uri = (baseUri / "obs" / programId.show / attachmentId.show)
             .withQueryParam("fileName", fileName)
             .withOptionQueryParam("description", description)
@@ -144,7 +157,7 @@ object OdbRestClient {
         }.use(_ => Async[F].unit)
 
       def deleteAttachment(programId: Program.Id, attachmentId: ObsAttachment.Id): F[Unit] =
-        runRequest("Deleting") { baseUri =>
+        runRequest("Deleting Attachment") { baseUri =>
           val uri = baseUri / "obs" / programId.show / attachmentId.show
           Request[F](
             method = Method.DELETE,
