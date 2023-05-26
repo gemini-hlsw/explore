@@ -40,7 +40,12 @@ type CacheVersion = CacheVersion.Type
 /**
  * Cacheable computation.
  */
-case class Cacheable[F[_], I, O](name: CacheName, version: CacheVersion, invoke: I => F[O])
+case class Cacheable[F[_], I, O](
+  name:    CacheName,
+  version: CacheVersion,
+  invoke:  I => F[O],
+  doStore: (I, O) => Boolean = (_: I, _: O) => true
+)
 
 /**
  * Generic cache interface.
@@ -90,6 +95,7 @@ case class IDBCache[F[_]](
               cacheDB
                 .put(store)(pickledInput, Pickled(asBytes(output)))
                 .toF
+                .whenA(computation.doStore(input, output))
                 .handleError(_ => ()) // Ignore errors
             )
         )(pickledOutput => F.pure(fromBytes[O](pickledOutput.value)).rethrow)

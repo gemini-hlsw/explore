@@ -110,7 +110,18 @@ object ITCRequests:
 
     val cacheVersion = CacheVersion(3)
 
-    val cacheableRequest = Cacheable(CacheName("itcQuery"), cacheVersion, doRequest)
+    val cacheableRequest =
+      Cacheable(
+        CacheName("itcQuery"),
+        cacheVersion,
+        doRequest,
+        (r, g) =>
+          g.exists(_.get(r).forall {
+            case Right(_)                               => true
+            case Left(ItcQueryProblems.GenericError(_)) => false
+            case Left(_)                                => false
+          })
+      )
 
     val itcRowsParams = modes
       .map(x => (x.intervalCenter(wavelength), x.instrument))

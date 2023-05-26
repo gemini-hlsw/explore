@@ -121,7 +121,20 @@ object ITCGraphRequests:
         .map(_.toList.flattenOption.toMap)
 
     // We cache unexpanded results, exactly as received from server.
-    val cacheableRequest = Cacheable(CacheName("itcGraphQuery"), CacheVersion(5), doRequest)
+    val cacheableRequest =
+      Cacheable(
+        CacheName("itcGraphQuery"),
+        CacheVersion(5),
+        doRequest,
+        (r, g) =>
+          r.target.forall(t =>
+            g.get(t).forall {
+              case Right(_)                               => true
+              case Left(ItcQueryProblems.GenericError(_)) => false
+              case Left(_)                                => false
+            }
+          )
+      )
 
     itcRowsParams
       .traverse { request =>
