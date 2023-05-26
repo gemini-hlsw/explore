@@ -34,6 +34,7 @@ import monocle.Lens
 import monocle.Traversal
 import queries.common.ObsQueriesGQL
 import queries.common.ProgramQueriesGQL.GroupEditSubscription
+import queries.common.ProgramQueriesGQL.ProgramEditAttachmentSubscription
 import queries.common.ProgramQueriesGQL.ProgramGroupsQuery
 import queries.common.ProgramSummaryQueriesGQL
 import queries.common.TargetQueriesGQL
@@ -190,5 +191,20 @@ object ProgramCache extends CacheComponent[ProgramSummaries, ProgramCache]:
               .replace(data.groupEdit.value)
       ))
 
+    // Right now the programEdit subsription isn't fine grained enough to
+    // differentiate what got updated, so we alway update all the attachments.
+    // Hopefully this will change in the future.
+    val updateAttachments = ProgramEditAttachmentSubscription
+      .subscribe[IO](props.programId)
+      .map(_.map(data =>
+        val obsAttachments      = data.programEdit.value.obsAttachments
+        val proposalAttachments = data.programEdit.value.proposalAttachments
+        ProgramSummaries.obsAttachments
+          .replace(obsAttachments)
+          .compose(ProgramSummaries.proposalAttachments.replace(proposalAttachments))
+      ))
+
     // TODO Handle errors, disable transparent resubscription upon connection loss.
-    (updateTargets, updateObservations, updateGroups).mapN(_.merge(_).merge(_))
+    (updateTargets, updateObservations, updateGroups, updateAttachments).mapN(
+      _.merge(_).merge(_).merge(_)
+    )
