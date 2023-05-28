@@ -69,7 +69,7 @@ object PlotServer extends WorkerServer[IO, PlotMessage.Request] {
 
       Cacheable(
         CacheName("siderealVisibility"),
-        CacheVersion(2),
+        CacheVersion(3),
         (site, date, _) =>
           IO {
             val instant = date.atTime(LocalTime.MIDNIGHT).atZone(site.timezone).toInstant
