@@ -22,6 +22,7 @@ import org.scalajs.dom
 import org.scalajs.dom.CacheStorage
 import org.scalajs.dom.IDBFactory
 import org.scalajs.dom.{Cache => JsCache}
+import workers.compression.*
 
 import java.time.Duration
 import java.time.Instant
@@ -79,7 +80,7 @@ case class IDBCache[F[_]](
 ) extends Cache[F]:
   override def eval[I: Pickler, O: Pickler](computation: Cacheable[F, I, O]): I => F[O] = { input =>
     val pickledInput: Pickled = Pickled(
-      asBytes((computation.name.value, computation.version.value, input))
+      compressBytes(asBytes((computation.name.value, computation.version.value, input)))
     )
 
     cacheDB
@@ -93,12 +94,12 @@ case class IDBCache[F[_]](
             .invoke(input)
             .flatTap(output =>
               cacheDB
-                .put(store)(pickledInput, Pickled(asBytes(output)))
+                .put(store)(pickledInput, Pickled(compressBytes(asBytes(output))))
                 .toF
                 .whenA(computation.doStore(input, output))
                 .handleError(_ => ()) // Ignore errors
             )
-        )(pickledOutput => F.pure(fromBytes[O](pickledOutput.value)).rethrow)
+        )(pickledOutput => F.pure(fromBytes[O](decompressBytes(pickledOutput))).rethrow)
       )
   }
 
@@ -135,37 +136,6 @@ case class IDBCache[F[_]](
       }
     }
 
-/**
- * Cache backed up by a JS `Cache`.
- */
-case class JsCacheCache[F[_]: PromiseConverter](cache: JsCache)(using F: Sync[F]) extends Cache[F]:
-  def eval[I: Pickler, O: Pickler](computation: Cacheable[F, I, O]): I => F[O] = { input =>
-    val pickledInput: Array[Byte] = asBytes(input)
-    val base64Input: String       = Base64.getEncoder.encode(pickledInput).map(_.toChar).mkString
-    val stringInput: String       =
-      s"http://request/${computation.name}/v${computation.version}?$base64Input"
-
-    PromiseConverter[F]
-      .convert(cache.`match`(stringInput))
-      .flatMap(
-        _.fold(
-          computation
-            .invoke(input)
-            .flatTap(output =>
-              PromiseConverter[F].convert(
-                cache.put(stringInput, new dom.Response(asTypedArray(output)))
-              )
-            )
-        )(response =>
-          PromiseConverter[F]
-            .convert(response.arrayBuffer())
-            .flatMap(ab => F.pure(fromTypedArray[O](new Int8Array(ab))).rethrow)
-        )
-      )
-  }
-
-  override def evict(until: Instant): F[Unit] = F.unit
-
 object Cache:
   def withIDB[F[_]: Async](dbFactory: Option[IDBFactory], dbName: String): F[Cache[F]] =
     dbFactory.fold(Sync[F].delay(NoCache[F]())) { factory =>
@@ -184,7 +154,10 @@ object Cache:
             CallbackTo(Instant.now) >>= (i =>
               CallbackTo(js.Tuple3(o.value.toJSArray, i.getEpochSecond.toInt, i.getNano))
             ),
-          v => CallbackTo(Pickled(v.asInstanceOf[js.Tuple3[js.Array[Byte], Int, Int]]._1.toArray))
+          v =>
+            CallbackTo(
+              v.asInstanceOf[js.Tuple3[js.Array[Short], Int, Int]]._1.toJSArray.toPickled
+            )
         )
       )
 
@@ -196,14 +169,4 @@ object Cache:
         )
         .toF
         .map(db => IDBCache[F](db, store, factory, dbName, DBVersion))
-    }
-
-  def withJsCache[F[_]: Async: PromiseConverter](
-    cacheStorage: Option[CacheStorage],
-    cacheName:    String
-  ): F[Cache[F]] =
-    cacheStorage.fold(Sync[F].delay(NoCache[F]())) { caches =>
-      PromiseConverter[F]
-        .convert(caches.open(cacheName))
-        .map(cache => JsCacheCache(cache))
     }
