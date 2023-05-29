@@ -103,8 +103,10 @@ object ITCGraphRequests:
                     ),
                     chartResult.ccds,
                     chartResult.charts,
-                    chartResult.peakSNRatio,
-                    chartResult.atWavelengthSNRatio
+                    chartResult.peakFinalSNRatio,
+                    chartResult.atWavelengthFinalSNRatio,
+                    chartResult.peakSingleSNRatio,
+                    chartResult.atWavelengthSingleSNRatio
                   ).asRight
                 )
                 .handleError { e =>
@@ -125,7 +127,7 @@ object ITCGraphRequests:
     val cacheableRequest =
       Cacheable(
         CacheName("itcGraphQuery"),
-        CacheVersion(6),
+        CacheVersion(7),
         doRequest,
         (r, g) =>
           r.target.forall(t =>

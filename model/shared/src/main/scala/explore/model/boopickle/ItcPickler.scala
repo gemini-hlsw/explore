@@ -37,6 +37,7 @@ import lucuma.core.math.FluxDensityContinuumValue
 import lucuma.core.math.LineFluxValue
 import lucuma.core.math.LineWidthValue
 import lucuma.core.math.RadialVelocity
+import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.math.dimensional.*
 import lucuma.core.math.units.*
@@ -46,9 +47,11 @@ import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
 import lucuma.core.util.Of
 import lucuma.core.util.TimeSpan
+import lucuma.itc.FinalSN
 import lucuma.itc.ItcAxis
 import lucuma.itc.ItcCcd
 import lucuma.itc.ItcWarning
+import lucuma.itc.SingleSN
 import lucuma.itc.client.OptimizedChartResult
 import lucuma.itc.client.OptimizedSeriesResult
 import lucuma.itc.client.OptimizedSpectroscopyGraphResult
@@ -57,6 +60,9 @@ import scala.collection.immutable.SortedMap
 
 // Boopicklers for itc related types
 trait ItcPicklers extends CommonPicklers {
+
+  given Pickler[FinalSN]  = transformPickler((s: SignalToNoise) => FinalSN(s))(_.value)
+  given Pickler[SingleSN] = transformPickler((s: SignalToNoise) => SingleSN(s))(_.value)
 
   given Pickler[GmosNorthSpectroscopyRow] = generatePickler
 
