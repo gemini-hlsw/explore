@@ -78,10 +78,10 @@ object ItcPanelTitle:
       val ccds = selectedResult.map(_._2)
 
       def singleSN: ItcChartResult => VdomNode =
-        (r: ItcChartResult) => <.span(formatCcds(r.ccds.some, _.maxSingleSNRatio.toString))
+        (r: ItcChartResult) => <.span(formatSN(r.singleSNRatio.value))
 
       def totalSN: ItcChartResult => VdomNode =
-        (r: ItcChartResult) => <.span(formatSN(r.atWavelengthSNRatio.getOrElse(r.peakSNRatio)))
+        (r: ItcChartResult) => <.span(formatSN(r.finalSNRatio.value))
 
       def snSection(title: String, fn: ItcChartResult => VdomNode) =
         React.Fragment(

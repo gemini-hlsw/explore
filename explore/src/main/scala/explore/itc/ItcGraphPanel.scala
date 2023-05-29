@@ -156,7 +156,8 @@ object ItcGraphPanel:
                 selectedTarget.flatMap(props.itcProps.targetBrightness),
                 selectedResult.map(_.itcExposureTime),
                 selectedResult.map(_.ccds),
-                selectedResult.map(r => r.atWavelengthSNRatio.getOrElse(r.peakSNRatio))
+                selectedResult.map(_.finalSNRatio),
+                selectedResult.map(_.singleSNRatio)
               ),
               ItcSpectroscopyPlot(
                 selectedResult.map(_.ccds),

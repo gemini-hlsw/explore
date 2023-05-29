@@ -17,9 +17,11 @@ import lucuma.core.model.given
 import lucuma.core.util.Enumerated
 import lucuma.core.util.NewType
 import lucuma.core.util.TimeSpan
+import lucuma.itc.FinalSN
 import lucuma.itc.ItcAxis
 import lucuma.itc.ItcCcd
 import lucuma.itc.ItcSeries
+import lucuma.itc.SingleSN
 import lucuma.itc.client.OptimizedChartResult
 import lucuma.itc.client.OptimizedSeriesResult
 import lucuma.itc.client.SpectroscopyIntegrationTimeAndGraphResult
@@ -110,13 +112,18 @@ case class ItcExposureTime(
 ) derives Eq
 
 case class ItcChartResult(
-  target:              ItcTarget,
-  itcExposureTime:     ItcExposureTime,
-  ccds:                NonEmptyList[ItcCcd],
-  charts:              NonEmptyList[OptimizedChartResult],
-  peakSNRatio:         SignalToNoise,
-  atWavelengthSNRatio: Option[SignalToNoise]
-)
+  target:                    ItcTarget,
+  itcExposureTime:           ItcExposureTime,
+  ccds:                      NonEmptyList[ItcCcd],
+  charts:                    NonEmptyList[OptimizedChartResult],
+  peakFinalSNRatio:          FinalSN,
+  atWavelengthFinalSNRatio:  Option[FinalSN],
+  peakSingleSNRatio:         SingleSN,
+  atWavelengthSingleSNRatio: Option[SingleSN]
+) {
+  val finalSNRatio  = atWavelengthFinalSNRatio.getOrElse(peakFinalSNRatio)
+  val singleSNRatio = atWavelengthSingleSNRatio.getOrElse(peakSingleSNRatio)
+}
 
 extension (a: SpectroscopyIntegrationTimeAndGraphResult)
   def toItcExposureTime: ItcExposureTime =
