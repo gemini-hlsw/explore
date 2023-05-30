@@ -288,7 +288,19 @@ object Icons {
 
   @js.native
   @JSImport("@fortawesome/pro-light-svg-icons", "faArrowsFromLine")
-  val faArrowsRepeat: FAIcon = js.native
+  val faArrowsFromLine: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-light-svg-icons", "faWrench")
+  val faWrench: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-light-svg-icons", "faArrowRotateLeft")
+  val faArrowRotateLeft: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-light-svg-icons", "faArrowRotateRight")
+  val faArrowRotateRight: FAIcon = js.native
 
   // This is tedious but lets us do proper tree-shaking
   IconLibrary.add(
@@ -360,7 +372,10 @@ object Icons {
     faBug,
     faArrowLeftFromLine,
     faArrowRightFromLine,
-    faArrowsRepeat
+    faArrowsFromLine,
+    faWrench,
+    faArrowRotateLeft,
+    faArrowRotateRight
   )
 
   val ArrowDownLeft       = FontAwesomeIcon(faArrowDownLeft)
@@ -433,5 +448,8 @@ object Icons {
   val Bug                 = FontAwesomeIcon(faBug)
   val ArrowLeftFromLine   = FontAwesomeIcon(faArrowLeftFromLine)
   val ArrowRightFromLine  = FontAwesomeIcon(faArrowRightFromLine)
-  val ArrowsRepeat        = FontAwesomeIcon(faArrowsRepeat)
+  val ArrowsFromLine      = FontAwesomeIcon(faArrowsFromLine)
+  val Wrench              = FontAwesomeIcon(faWrench)
+  val ArrowRotateLeft     = FontAwesomeIcon(faArrowRotateLeft)
+  val ArrowRotateRight    = FontAwesomeIcon(faArrowRotateRight)
 }

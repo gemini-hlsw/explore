@@ -18,12 +18,14 @@ import japgolly.scalajs.react.feature.ReactFragment
 import explore.Icons
 import react.fa.Rotation
 import crystal.react.View
+import react.primereact.Divider
 
 sealed trait ChartOp derives Eq
 
 object ChartOp:
-  case object Flip         extends ChartOp
-  case object VerticalFlip extends ChartOp
+  case object Flip            extends ChartOp
+  case object VerticalFlip    extends ChartOp
+  case class Rotate(deg: Int) extends ChartOp
 
   def calcTransform(ops: List[ChartOp]): List[String] =
     ops
@@ -31,6 +33,7 @@ object ChartOp:
         op match {
           case Flip         => "scaleX(-1)" :: acc
           case VerticalFlip => "scaleY(-1)" :: acc
+          case Rotate(x)    => s"rotate(${x}deg)" :: acc
         }
       }
       .reverse
@@ -43,7 +46,7 @@ object FinderCharts:
   private val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStateView(List.empty[ChartOp])
+      .useStateView(List[ChartOp](ChartOp.Rotate(0)))
       .render { (_, ops) =>
         val transforms = ChartOp.calcTransform(ops.get)
         println(ops.get)
@@ -69,6 +72,18 @@ object FinderChartsControlOverlay {
     def flip: List[ChartOp] =
       if (ops.exists(_ === ChartOp.Flip)) ops.filterNot(_ === ChartOp.Flip) else ops :+ ChartOp.Flip
 
+    def rotateLeft: List[ChartOp] =
+      ops.collect {
+        case ChartOp.Rotate(deg) => ChartOp.Rotate(deg - 90)
+        case l                   => l
+      }
+
+    def rotateRight: List[ChartOp] =
+      ops.collect {
+        case ChartOp.Rotate(deg) => ChartOp.Rotate(deg + 90)
+        case l                   => l
+      }
+
     def vflip: List[ChartOp] =
       if (ops.exists(_ === ChartOp.VerticalFlip)) ops.filterNot(_ === ChartOp.VerticalFlip)
       else ops :+ ChartOp.VerticalFlip
@@ -78,14 +93,16 @@ object FinderChartsControlOverlay {
       ReactFragment(
         <.div(
           ExploreStyles.FinderChartsTools,
-          <.span(Icons.Bahai, "Viewer Controls"),
+          <.span(Icons.Wrench, " Viewer Controls"),
+          Divider(),
+          <.div(^.onClick --> p.ops.mod(_.rotateLeft), Icons.ArrowRotateLeft),
+          <.div("Rotate"),
+          <.div(^.onClick --> p.ops.mod(_.rotateRight), Icons.ArrowRotateRight),
           <.div(^.onClick --> p.ops.mod(_.flip),
-                Icons.ArrowsRepeat.withRotation(Rotation.Rotate90)
+                Icons.ArrowsFromLine.withRotation(Rotation.Rotate90)
           ),
           <.div("Flip"),
-          <.div(^.onClick --> p.ops.mod(_.vflip),
-                Icons.ArrowsRepeat
-          )
+          <.div(^.onClick --> p.ops.mod(_.vflip), Icons.ArrowsFromLine)
         )
       )
     }
