@@ -293,7 +293,9 @@ object ObsTabTiles:
                   )
               )
 
-          val notesTile =
+          val finderChartsTile = FinderChartsTile.finderChartsTile
+
+          val notesTile        =
             Tile(
               ObsTabTilesIds.NotesId.id,
               s"Note for Observer",
@@ -458,6 +460,7 @@ object ObsTabTiles:
               List(
                 notesTile,
                 targetTile,
+                finderChartsTile,
                 skyPlotTile,
                 constraintsTile,
                 timingWindowsTile,

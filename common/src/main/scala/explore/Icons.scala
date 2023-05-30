@@ -286,6 +286,10 @@ object Icons {
   @JSImport("@fortawesome/pro-thin-svg-icons", "faArrowRightFromLine")
   val faArrowRightFromLine: FAIcon = js.native
 
+  @js.native
+  @JSImport("@fortawesome/pro-light-svg-icons", "faArrowsFromLine")
+  val faArrowsRepeat: FAIcon = js.native
+
   // This is tedious but lets us do proper tree-shaking
   IconLibrary.add(
     faArrowDownLeft,
@@ -355,7 +359,8 @@ object Icons {
     faSquareXMarkLarge,
     faBug,
     faArrowLeftFromLine,
-    faArrowRightFromLine
+    faArrowRightFromLine,
+    faArrowsRepeat
   )
 
   val ArrowDownLeft       = FontAwesomeIcon(faArrowDownLeft)
@@ -428,4 +433,5 @@ object Icons {
   val Bug                 = FontAwesomeIcon(faBug)
   val ArrowLeftFromLine   = FontAwesomeIcon(faArrowLeftFromLine)
   val ArrowRightFromLine  = FontAwesomeIcon(faArrowRightFromLine)
+  val ArrowsRepeat        = FontAwesomeIcon(faArrowsRepeat)
 }

@@ -351,17 +351,22 @@ $brightness: var(--aladin-image-brightness);
   }
 }
 
-.ags-overlay {
+@mixin hud {
   position: absolute;
   z-index: 120;
-  margin: 1em;
   padding: 0.3em 1em;
-  font-size: smaller;
-  bottom: 30px;
+  margin: 1em;
   color: var(--hud-color);
   border: 1px solid var(--hud-color);
   border-radius: 3px;
   background: var(--hud-background-color);
+}
+
+.ags-overlay {
+  @include hud;
+
+  bottom: 30px;
+  font-size: smaller;
 
   .fa-bahai {
     color: var(--ags-icon-color);
@@ -428,4 +433,43 @@ $brightness: var(--aladin-image-brightness);
   .ags-slow-color {
     color: var(--ags-slow-guide-speed-color);
   }
+}
+
+.finder-charts-tile {
+  display: flex;
+  justify-content: center;
+  align-content: center;
+}
+
+.finder-charts-tools {
+  @include hud;
+
+  display: grid;
+  user-select: none;
+  grid-template-columns: min-content 1fr min-content;
+  align-content: space-around;
+  color: var(--text-color);
+  left: 0px;
+  span:first-child {
+    grid-column: 1 / 4;
+  }
+  div:nth-child(2),
+  div:nth-child(4) {
+    cursor: pointer;
+  }
+  div:nth-child(3) {
+    justify-self: center;
+  }
+}
+
+.finder-charts-body {
+  display: flex;
+  position: relative;
+  justify-content: center;
+  align-content: center;
+}
+
+.finder-charts-image {
+  // filter: invert(1);
+  // transform: rotate(23deg);
 }

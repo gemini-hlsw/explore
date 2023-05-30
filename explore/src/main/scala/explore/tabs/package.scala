@@ -8,7 +8,7 @@ import lucuma.refined.*
 
 enum ObsTabTilesIds:
   case NotesId, TargetSummaryId, TargetId, PlotId, ConstraintsId, ConfigurationId, ItcId,
-    TimingWindowsId, WarningsAndErrorsId, ObsAttachmentsId, ProposalAttachmentsId
+    TimingWindowsId, WarningsAndErrorsId, ObsAttachmentsId, ProposalAttachmentsId, FinderChartsId
 
   def id: NonEmptyString = this match
     case NotesId               => "notes".refined
@@ -22,3 +22,4 @@ enum ObsTabTilesIds:
     case WarningsAndErrorsId   => "warningsAndErrors".refined
     case ObsAttachmentsId      => "obsAttachments".refined
     case ProposalAttachmentsId => "proposalAttachments".refined
+    case FinderChartsId        => "finderChartes".refined

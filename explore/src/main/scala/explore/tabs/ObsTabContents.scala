@@ -114,6 +114,8 @@ object ObsTabContents extends TwoPanels:
   private val ConfigurationMaxHeight: NonNegInt = 10.refined
   private val ItcMinHeight: NonNegInt           = 6.refined
   private val ItcMaxHeight: NonNegInt           = 9.refined
+  private val FinderChartMinHeight: NonNegInt   = 6.refined
+  private val FinderChartHeight: NonNegInt      = 9.refined
   private val DefaultWidth: NonNegInt           = 10.refined
   private val TileMinWidth: NonNegInt           = 6.refined
   private val DefaultLargeWidth: NonNegInt      = 12.refined
@@ -141,6 +143,15 @@ object ObsTabContents extends TwoPanels:
         x = 0,
         y = (NotesMaxHeight |+| TargetHeight).value,
         w = DefaultWidth.value,
+        h = FinderChartHeight.value,
+        minH = FinderChartMinHeight.value,
+        minW = TileMinWidth.value,
+        i = ObsTabTilesIds.FinderChartsId.id.value
+      ),
+      LayoutItem(
+        x = 0,
+        y = (NotesMaxHeight |+| TargetHeight |+| FinderChartHeight).value,
+        w = DefaultWidth.value,
         h = SkyPlotHeight.value,
         minH = SkyPlotMinHeight.value,
         minW = TileMinWidth.value,
@@ -148,7 +159,7 @@ object ObsTabContents extends TwoPanels:
       ),
       LayoutItem(
         x = 0,
-        y = (NotesMaxHeight |+| TargetHeight |+| SkyPlotHeight).value,
+        y = (NotesMaxHeight |+| TargetHeight |+| FinderChartHeight |+| SkyPlotHeight).value,
         w = DefaultWidth.value,
         h = ConstraintsMaxHeight.value,
         minH = ConstraintsMinHeight.value,
@@ -158,7 +169,8 @@ object ObsTabContents extends TwoPanels:
       ),
       LayoutItem(
         x = 0,
-        y = (NotesMaxHeight |+| TargetHeight |+| SkyPlotHeight |+| ConstraintsMaxHeight).value,
+        y =
+          (NotesMaxHeight |+| TargetHeight |+| FinderChartHeight |+| SkyPlotHeight |+| ConstraintsMaxHeight).value,
         w = DefaultWidth.value,
         h = TimingWindowsMaxHeight.value,
         minH = TimingWindowsMinHeight.value,
@@ -169,7 +181,7 @@ object ObsTabContents extends TwoPanels:
       LayoutItem(
         x = 0,
         y =
-          (NotesMaxHeight |+| TargetHeight |+| SkyPlotHeight |+| ConstraintsMaxHeight |+| TimingWindowsMaxHeight).value,
+          (NotesMaxHeight |+| TargetHeight |+| FinderChartHeight |+| SkyPlotHeight |+| ConstraintsMaxHeight |+| TimingWindowsMaxHeight).value,
         w = DefaultWidth.value,
         h = ConfigurationMaxHeight.value,
         i = ObsTabTilesIds.ConfigurationId.id.value
@@ -177,7 +189,7 @@ object ObsTabContents extends TwoPanels:
       LayoutItem(
         x = 0,
         y =
-          (NotesMaxHeight |+| TargetHeight |+| SkyPlotHeight |+| ConstraintsMaxHeight |+| TimingWindowsMaxHeight |+| ConfigurationMaxHeight).value,
+          (NotesMaxHeight |+| TargetHeight |+| FinderChartHeight |+| SkyPlotHeight |+| ConstraintsMaxHeight |+| TimingWindowsMaxHeight |+| ConfigurationMaxHeight).value,
         w = DefaultWidth.value,
         h = ItcMaxHeight.value,
         i = ObsTabTilesIds.ItcId.id.value
