@@ -111,6 +111,7 @@ case class SpectroscopyModesTable(
       w  <- spectroscopyRequirements.wavelength
       tg <- targets
       b  <- tg.brightestAt(w)
+      if b.canQueryITC
     yield b
 
 private object SpectroscopyModesTable extends TableHooks:

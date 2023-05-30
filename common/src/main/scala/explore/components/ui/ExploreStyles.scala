@@ -248,14 +248,14 @@ object ExploreStyles:
   val AsterismTable: Css  = Css("target-asterism-table")
   val BrightnessCell: Css = Css("target-brightness-cell")
 
-  val TargetAladinCell: Css         = Css("target-aladin-cell")
-  val TargetAladin: Css             = Css("aladin-target")
-  val TargetAladinDisableMouse: Css = Css("aladin-target-disable-mouse")
-  val TargetForm: Css               = Css("target-form")
-  val TargetProperMotionForm: Css   = Css("target-proper-motion-form")
-  val TargetRVControls: Css         = Css("target-rv-controls")
-  val CatalogueForm: Css            = Css("catalogue-form")
-
+  val TargetAladinCell: Css          = Css("target-aladin-cell")
+  val TargetAladin: Css              = Css("aladin-target")
+  val TargetAladinDisableMouse: Css  = Css("aladin-target-disable-mouse")
+  val TargetForm: Css                = Css("target-form")
+  val TargetProperMotionForm: Css    = Css("target-proper-motion-form")
+  val TargetRVControls: Css          = Css("target-rv-controls")
+  val CatalogueForm: Css             = Css("catalogue-form")
+  val SEDTypeDropdown: Css           = Css("target-sed-type-dropdown")
   // The Constraints tab contents
   val ConstraintsGrid                = Css("constraints-grid")
   val ConstraintsNameField           = Css("constraints-name-field")
