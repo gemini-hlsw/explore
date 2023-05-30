@@ -23,17 +23,17 @@ import react.primereact.Divider
 sealed trait ChartOp derives Eq
 
 object ChartOp:
-  case object Flip            extends ChartOp
-  case object VerticalFlip    extends ChartOp
-  case class Rotate(deg: Int) extends ChartOp
+  case class Rotate(deg: Int)      extends ChartOp
+  case class ScaleX(scale: Double) extends ChartOp
+  case class ScaleY(scale: Double) extends ChartOp
 
   def calcTransform(ops: List[ChartOp]): List[String] =
     ops
       .foldLeft(List.empty[String]) { (acc, op) =>
         op match {
-          case Flip         => "scaleX(-1)" :: acc
-          case VerticalFlip => "scaleY(-1)" :: acc
-          case Rotate(x)    => s"rotate(${x}deg)" :: acc
+          case ScaleX(x) => s"scaleX($x)" :: acc
+          case ScaleY(y) => s"scaleY($y)" :: acc
+          case Rotate(x) => s"rotate(${x}deg)" :: acc
         }
       }
       .reverse
@@ -46,7 +46,7 @@ object FinderCharts:
   private val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStateView(List[ChartOp](ChartOp.Rotate(0)))
+      .useStateView(List[ChartOp](ChartOp.ScaleX(1), ChartOp.ScaleY(1), ChartOp.Rotate(0)))
       .render { (_, ops) =>
         val transforms = ChartOp.calcTransform(ops.get)
         println(ops.get)
@@ -70,7 +70,10 @@ object FinderChartsControlOverlay {
 
   extension (ops: List[ChartOp])
     def flip: List[ChartOp] =
-      if (ops.exists(_ === ChartOp.Flip)) ops.filterNot(_ === ChartOp.Flip) else ops :+ ChartOp.Flip
+      ops.collect {
+        case ChartOp.ScaleX(x) => ChartOp.ScaleX(-1 * x)
+        case l                 => l
+      }
 
     def rotateLeft: List[ChartOp] =
       ops.collect {
@@ -85,8 +88,24 @@ object FinderChartsControlOverlay {
       }
 
     def vflip: List[ChartOp] =
-      if (ops.exists(_ === ChartOp.VerticalFlip)) ops.filterNot(_ === ChartOp.VerticalFlip)
-      else ops :+ ChartOp.VerticalFlip
+      ops.collect {
+        case ChartOp.ScaleY(x) => ChartOp.ScaleY(-1 * x)
+        case l                 => l
+      }
+
+    def zoomOut: List[ChartOp] =
+      ops.collect {
+        case ChartOp.ScaleY(x) => ChartOp.ScaleY(x * 0.8)
+        case ChartOp.ScaleX(x) => ChartOp.ScaleX(x * 0.8)
+        case l                 => l
+      }
+
+    def zoomIn: List[ChartOp] =
+      ops.collect {
+        case ChartOp.ScaleY(x) => ChartOp.ScaleY(x * 1.2)
+        case ChartOp.ScaleX(x) => ChartOp.ScaleX(x * 1.2)
+        case l                 => l
+      }
 
   val component =
     ScalaFnComponent[Props] { p =>
@@ -95,6 +114,9 @@ object FinderChartsControlOverlay {
           ExploreStyles.FinderChartsTools,
           <.span(Icons.Wrench, " Viewer Controls"),
           Divider(),
+          <.div(^.onClick --> p.ops.mod(_.zoomOut), Icons.MagnifyingGlassMinus),
+          <.div("Zoom"),
+          <.div(^.onClick --> p.ops.mod(_.zoomIn), Icons.MagnifyingGlassPlus),
           <.div(^.onClick --> p.ops.mod(_.rotateLeft), Icons.ArrowRotateLeft),
           <.div("Rotate"),
           <.div(^.onClick --> p.ops.mod(_.rotateRight), Icons.ArrowRotateRight),
