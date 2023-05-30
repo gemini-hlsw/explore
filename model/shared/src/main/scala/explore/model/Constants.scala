@@ -25,7 +25,6 @@ trait Constants:
   val InitialFov: Angle        = PreviewFov
   val SimbadResultLimit        = 50
   val MaxConcurrentItcRequests = 4
-  val DefaultSED               = UnnormalizedSED.StellarLibrary(StellarLibrarySpectrum.O5V)
 
   val GppDateFormatter: DateTimeFormatter       = DateTimeFormatter.ofPattern("yyyy-MMM-dd")
   val GppTimeFormatter: DateTimeFormatter       = DateTimeFormatter.ofPattern("HH:mm")

@@ -26,12 +26,7 @@ case class TargetSearchResult(
 object TargetSearchResult {
   def fromCatalogTargetResult(r: CatalogTargetResult): TargetSearchResult =
     TargetSearchResult(
-      TargetWithOptId(
-        none,
-        Target.Sidereal.sourceProfile
-          .andThen(SourceProfile.unnormalizedSED)
-          .modify(_.orElse(Constants.DefaultSED.some))(r.target) // Ensure SED is always present.
-      ),
+      TargetWithOptId(none, r.target),
       r.angularSize
     )
 
