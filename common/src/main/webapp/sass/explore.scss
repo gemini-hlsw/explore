@@ -209,6 +209,7 @@ a:hover {
   background-color: var(--warning-background-color);
 }
 
+.target-sed-type-dropdown.explore-warning-input,
 .p-inputgroup.explore-warning-input {
   box-shadow: -0 0 2px 1px var(--warning-background-color);
 }
@@ -474,6 +475,16 @@ a:hover {
   .explore-grow-1 {
     margin-left: 0.3em !important;
   }
+}
+
+.target-sed-type-dropdown {
+  display: flex;
+
+  .p-dropdown {
+    flex-grow: 1;
+  }
+
+  justify-self: stretch;
 }
 
 @mixin hide-hidden-target-cells($all) {

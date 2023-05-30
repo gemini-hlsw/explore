@@ -20,6 +20,7 @@ import explore.*
 import explore.common.*
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
+import explore.itc.requiredForITC
 import explore.model.AppContext
 import explore.model.display.given
 import explore.model.enums.IntegratedSEDType
@@ -66,6 +67,7 @@ import lucuma.ui.utils.*
 import monocle.std.option
 import org.typelevel.log4cats.Logger
 import react.common.ReactFnProps
+import react.primereact.PrimeStyles
 
 import scala.collection.immutable.HashSet
 import scala.collection.immutable.SortedMap
@@ -194,6 +196,8 @@ sealed abstract class SpectralDefinitionEditorBuilder[
           disabled = props.disabled
         )
 
+      val sed = currentType(props.spectralDefinition.get)
+
       React.Fragment(
         props.catalogInfo.flatMap(ci =>
           ci.objectType.map(ot =>
@@ -212,16 +216,21 @@ sealed abstract class SpectralDefinitionEditorBuilder[
           )
         ),
         FormLabel(htmlFor = "sed".refined)("SED", HelpIcon("target/main/target-sed.md".refined)),
-        EnumOptionalDropdown[SEDType[T]](
-          id = "sed".refined,
-          value = currentType(props.spectralDefinition.get),
-          onChange = sed =>
-            props.spectralDefinition
-              .view(props.toInput)
-              .mod(sed.fold(SpectralDefinition.unnormalizedSED.replace(None))(_.convert)),
-          disabledItems = disabledItems,
-          clazz = LucumaStyles.FormField,
-          disabled = props.disabled
+        <.div(
+          ExploreStyles.SEDTypeDropdown |+| ExploreStyles.WarningInput.when_(sed.isEmpty),
+          EnumOptionalDropdown[SEDType[T]](
+            id = "sed".refined,
+            value = sed,
+            onChange = sed =>
+              props.spectralDefinition
+                .view(props.toInput)
+                .mod(sed.fold(SpectralDefinition.unnormalizedSED.replace(None))(_.convert)),
+            disabledItems = disabledItems,
+            clazz = LucumaStyles.FormField,
+            disabled = props.disabled
+          ),
+          <.span(PrimeStyles.InputGroupAddon, ^.borderRight := 0.px, requiredForITC)
+            .when(sed.isEmpty)
         ),
         stellarLibrarySpectrumAlignerOpt
           .map(rsu => spectrumRow("slSpectrum".refined, rsu.view(_.assign))),

@@ -96,12 +96,12 @@ case class ItcProps(
   }
 
   val itcTargets: Option[NonEmptyList[ItcTarget]] =
-    asterismIds.itcTargets(allTargets).toNel
+    asterismIds.itcTargets(allTargets).filter(_.canQueryITC).toNel
 
   val targets: List[ItcTarget] = itcTargets.foldMap(_.toList)
 
-  private val queryProps =
-    (observingMode, finalConfig, wavelength, constraints, itcTargets, instrumentRow, signalToNoise)
+  private val queryProps: List[Option[?]] =
+    List(itcTargets, observingMode, finalConfig, wavelength, instrumentRow, signalToNoise)
 
   val isExecutable: Boolean = queryProps.forall(_.isDefined)
 

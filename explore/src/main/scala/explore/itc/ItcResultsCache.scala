@@ -40,7 +40,10 @@ case class ItcResultsCache(
       NonEmptyChain.of(ItcQueryProblems.UnsupportedMode)
     )
 
-  def targets(r: Option[ItcTarget], w: Option[Wavelength]): EitherNec[ItcQueryProblems, ItcTarget] =
+  private def targets(
+    r: Option[ItcTarget],
+    w: Option[Wavelength]
+  ): EitherNec[ItcQueryProblems, ItcTarget] =
     Either.fromOption(r, NonEmptyChain.of(ItcQueryProblems.MissingTargetInfo)).flatMap { t =>
       // Can't make the brightness check without the wavelength.
       w.fold(t.rightNec)(wv =>

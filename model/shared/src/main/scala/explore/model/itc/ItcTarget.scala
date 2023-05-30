@@ -17,8 +17,20 @@ import lucuma.core.math.RadialVelocity
 import lucuma.core.math.Wavelength
 import lucuma.core.math.dimensional.Units
 import lucuma.core.model.SourceProfile
+import lucuma.core.model.SpectralDefinition
+import lucuma.core.model.SpectralDefinition.BandNormalized
+import lucuma.core.model.SpectralDefinition.EmissionLines
 
-case class ItcTarget(name: NonEmptyString, rv: RadialVelocity, profile: SourceProfile) derives Eq
+case class ItcTarget(name: NonEmptyString, rv: RadialVelocity, profile: SourceProfile) derives Eq:
+  private def canQuerySD[A](sd: SpectralDefinition[A]): Boolean =
+    sd match
+      case BandNormalized(sed, _) => sed.isDefined
+      case EmissionLines(_, _)    => false // No emission line support yet
+
+  def canQueryITC: Boolean = profile match
+    case SourceProfile.Point(sd)       => canQuerySD(sd)
+    case SourceProfile.Uniform(sd)     => canQuerySD(sd)
+    case SourceProfile.Gaussian(_, sd) => canQuerySD(sd)
 
 object ItcTarget:
   extension (target: ItcTarget)
