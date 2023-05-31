@@ -44,6 +44,8 @@ object ChartOp:
   case class Rotate(deg: Int)          extends ChartOp
   case class ScaleX(scale: BigDecimal) extends ChartOp
   case class ScaleY(scale: BigDecimal) extends ChartOp
+  case class FlipY(flip: Boolean)      extends ChartOp
+  case class FlipX(flip: Boolean)      extends ChartOp
 
   val rotate: Lens[Rotate, Int] =
     Focus[Rotate](_.deg)
@@ -54,33 +56,39 @@ object ChartOp:
   val scaleY: Lens[ScaleY, BigDecimal] =
     Focus[ScaleY](_.scale)
 
-  extension (self: ChartOp)
-    def fold[A](rotate: Int => A, scaleX: BigDecimal => A, scaleY: BigDecimal => A): A =
-      self match
-        case Rotate(deg)   => rotate(deg)
-        case ScaleX(scale) => scaleX(scale)
-        case ScaleY(scale) => scaleY(scale)
-
   val opScaleX: Prism[ChartOp, BigDecimal] =
     Prism[ChartOp, BigDecimal] {
       case ScaleX(x) => Some(x)
       case _         => None
     }(ScaleX(_))
 
-case class Transformation(rotate: ChartOp.Rotate, scaleX: ChartOp.ScaleX, scaleY: ChartOp.ScaleY):
+case class Transformation(
+  rotate: ChartOp.Rotate,
+  scaleX: ChartOp.ScaleX,
+  scaleY: ChartOp.ScaleY,
+  flipX:  ChartOp.FlipX,
+  flipY:  ChartOp.FlipY
+):
+  private def normalizeFlips: Transformation =
+    val p1 = if flipX.flip then copy(scaleX = ChartOp.ScaleX(-1 * this.scaleX.scale)) else this
+    val p2 = if flipY.flip then p1.copy(scaleY = ChartOp.ScaleY(-1 * this.scaleY.scale)) else p1
+    p2
+
   def calcTransform: List[String] =
-    List(rotate, scaleX, scaleY)
+    val p = normalizeFlips
+    List(p.rotate, p.scaleX, p.scaleY)
       .foldLeft(List.empty[String]) { (acc, op) =>
         op match {
           case ChartOp.ScaleX(x) => s"scaleX(${x})" :: acc
           case ChartOp.ScaleY(y) => s"scaleY(${y})" :: acc
           case ChartOp.Rotate(x) => s"rotate(${x}deg)" :: acc
+          case _                 => acc
         }
       }
       .reverse
 
   inline def flip: Transformation =
-    copy(scaleX = ChartOp.ScaleX(-1 * this.scaleX.scale))
+    copy(flipX = ChartOp.FlipX(!this.flipX.flip))
 
   inline def rotateLeft: Transformation =
     copy(rotate = ChartOp.Rotate((this.rotate.deg - 90) % 360))
@@ -89,7 +97,7 @@ case class Transformation(rotate: ChartOp.Rotate, scaleX: ChartOp.ScaleX, scaleY
     copy(rotate = ChartOp.Rotate((this.rotate.deg + 90) % 360))
 
   inline def vflip: Transformation =
-    copy(scaleY = ChartOp.ScaleY(-1 * this.scaleY.scale))
+    copy(flipY = ChartOp.FlipY(!this.flipY.flip))
 
   inline def zoomOut: Transformation =
     copy(scaleX = ChartOp.ScaleX((this.scaleX.scale * 8) / 10),
@@ -104,7 +112,12 @@ case class Transformation(rotate: ChartOp.Rotate, scaleX: ChartOp.ScaleX, scaleY
   inline def reset: Transformation = Transformation.Default
 
 object Transformation:
-  val Default = Transformation(ChartOp.Rotate(0), ChartOp.ScaleX(1), ChartOp.ScaleY(1))
+  val Default = Transformation(ChartOp.Rotate(0),
+                               ChartOp.ScaleX(1),
+                               ChartOp.ScaleY(1),
+                               ChartOp.FlipX(false),
+                               ChartOp.FlipY(false)
+  )
 
   val rotate: Lens[Transformation, ChartOp.Rotate] =
     Focus[Transformation](_.rotate)
