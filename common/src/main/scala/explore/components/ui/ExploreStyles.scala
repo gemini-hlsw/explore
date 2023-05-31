@@ -151,10 +151,11 @@ object ExploreStyles:
   val ObserverNotes: Css = Css("observer-notes")
   val NotesWrapper: Css  = Css("observer-notes-wrapper")
 
-  val FinderChartsTile: Css  = Css("finder-charts-tile")
-  val FinderChartsBody: Css  = Css("finder-charts-body")
-  val FinderChartsImage: Css = Css("finder-charts-image")
-  val FinderChartsTools: Css      = Css("finder-charts-tools")
+  val FinderChartsTile: Css   = Css("finder-charts-tile")
+  val FinderChartsBody: Css   = Css("finder-charts-body")
+  val FinderChartsImage: Css  = Css("finder-charts-image")
+  val FinderChartsTools: Css  = Css("finder-charts-tools")
+  val FinderChartsButton: Css = Css("finder-charts-button")
 
   val DraggingOver: Css = Css("dragging-over")
 

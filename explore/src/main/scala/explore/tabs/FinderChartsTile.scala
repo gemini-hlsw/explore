@@ -19,6 +19,9 @@ import explore.Icons
 import react.fa.Rotation
 import crystal.react.View
 import react.primereact.Divider
+import lucuma.ui.primereact.*
+import react.primereact.Button
+import react.fa.Transform
 
 sealed trait ChartOp derives Eq
 
@@ -43,10 +46,12 @@ case class FinderCharts() extends ReactFnProps(FinderCharts.component)
 object FinderCharts:
   private type Props = FinderCharts
 
+  val DefaultOps = List[ChartOp](ChartOp.ScaleX(1), ChartOp.ScaleY(1), ChartOp.Rotate(0))
+
   private val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStateView(List[ChartOp](ChartOp.ScaleX(1), ChartOp.ScaleY(1), ChartOp.Rotate(0)))
+      .useStateView(DefaultOps)
       .render { (_, ops) =>
         val transforms = ChartOp.calcTransform(ops.get)
         println(ops.get)
@@ -69,43 +74,45 @@ object FinderChartsControlOverlay {
   type Props = FinderChartsControlOverlay
 
   extension (ops: List[ChartOp])
-    def flip: List[ChartOp] =
+    inline def flip: List[ChartOp] =
       ops.collect {
         case ChartOp.ScaleX(x) => ChartOp.ScaleX(-1 * x)
         case l                 => l
       }
 
-    def rotateLeft: List[ChartOp] =
+    inline def rotateLeft: List[ChartOp] =
       ops.collect {
         case ChartOp.Rotate(deg) => ChartOp.Rotate(deg - 90)
         case l                   => l
       }
 
-    def rotateRight: List[ChartOp] =
+    inline def rotateRight: List[ChartOp] =
       ops.collect {
         case ChartOp.Rotate(deg) => ChartOp.Rotate(deg + 90)
         case l                   => l
       }
 
-    def vflip: List[ChartOp] =
+    inline def vflip: List[ChartOp] =
       ops.collect {
         case ChartOp.ScaleY(x) => ChartOp.ScaleY(-1 * x)
         case l                 => l
       }
 
-    def zoomOut: List[ChartOp] =
+    inline def zoomOut: List[ChartOp] =
       ops.collect {
         case ChartOp.ScaleY(x) => ChartOp.ScaleY(x * 0.8)
         case ChartOp.ScaleX(x) => ChartOp.ScaleX(x * 0.8)
         case l                 => l
       }
 
-    def zoomIn: List[ChartOp] =
+    inline def zoomIn: List[ChartOp] =
       ops.collect {
         case ChartOp.ScaleY(x) => ChartOp.ScaleY(x * 1.2)
         case ChartOp.ScaleX(x) => ChartOp.ScaleX(x * 1.2)
         case l                 => l
       }
+
+    inline def reset: List[ChartOp] = FinderCharts.DefaultOps
 
   val component =
     ScalaFnComponent[Props] { p =>
@@ -114,17 +121,43 @@ object FinderChartsControlOverlay {
           ExploreStyles.FinderChartsTools,
           <.span(Icons.Wrench, " Viewer Controls"),
           Divider(),
-          <.div(^.onClick --> p.ops.mod(_.zoomOut), Icons.MagnifyingGlassMinus),
+          <.div(ExploreStyles.FinderChartsButton,
+                ^.onClick --> p.ops.mod(_.zoomOut),
+                Icons.MagnifyingGlassMinus.withBorder(true).withFixedWidth(true)
+          ),
           <.div("Zoom"),
-          <.div(^.onClick --> p.ops.mod(_.zoomIn), Icons.MagnifyingGlassPlus),
-          <.div(^.onClick --> p.ops.mod(_.rotateLeft), Icons.ArrowRotateLeft),
+          <.div(ExploreStyles.FinderChartsButton,
+                ^.onClick --> p.ops.mod(_.zoomIn),
+                Icons.MagnifyingGlassPlus.withBorder(true).withFixedWidth(true)
+          ),
+          <.div(ExploreStyles.FinderChartsButton,
+                ^.onClick --> p.ops.mod(_.rotateLeft),
+                Icons.ArrowRotateLeft.withBorder(true).withFixedWidth(true)
+          ),
           <.div("Rotate"),
-          <.div(^.onClick --> p.ops.mod(_.rotateRight), Icons.ArrowRotateRight),
-          <.div(^.onClick --> p.ops.mod(_.flip),
-                Icons.ArrowsFromLine.withRotation(Rotation.Rotate90)
+          <.div(ExploreStyles.FinderChartsButton,
+                ^.onClick --> p.ops.mod(_.rotateRight),
+                Icons.ArrowRotateRight.withBorder(true).withFixedWidth(true)
+          ),
+          <.div(ExploreStyles.FinderChartsButton,
+                ^.onClick --> p.ops.mod(_.vflip),
+                Icons.ArrowsFromLine.withBorder(true).withFixedWidth(true)
           ),
           <.div("Flip"),
-          <.div(^.onClick --> p.ops.mod(_.vflip), Icons.ArrowsFromLine)
+          <.div(
+            ExploreStyles.FinderChartsButton,
+            ^.onClick --> p.ops.mod(_.flip),
+            Icons.ArrowsFromLine
+              .withBorder(true)
+              .withFixedWidth(true)
+              .withTransform(Transform(rotate = 90))
+          ),
+          <.div(
+            ExploreStyles.FinderChartsButton,
+            Icons.ArrowsRetweet.withBorder(true).withFixedWidth(true),
+            ^.onClick --> p.ops.mod(_.reset)
+          ),
+          <.div("Reset")
         )
       )
     }

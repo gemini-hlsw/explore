@@ -454,14 +454,25 @@ $brightness: var(--aladin-image-brightness);
   .p-divider.p-divider-horizontal {
     margin: 0.3rem 0;
   }
+
   .p-divider,
   span:first-child {
     grid-column: 1 / -1;
   }
-  div:nth-child(2n + 1),
-  div:nth-child(4n + 1) {
+
+  .finder-charts-button {
     cursor: pointer;
+
+    .fa-border {
+      border-color: var(--hud-background-color);
+
+      &:hover {
+        border-color: var(--text-color);
+      }
+    }
+
   }
+
   div:nth-child(3n + 1) {
     justify-self: center;
   }
@@ -475,6 +486,8 @@ $brightness: var(--aladin-image-brightness);
 }
 
 .finder-charts-image {
+  transition-property: transform;
+  transition: 0.15s ease;
   // filter: invert(1);
   // transform: rotate(23deg);
 }
