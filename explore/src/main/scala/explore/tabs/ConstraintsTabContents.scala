@@ -43,7 +43,6 @@ import explore.optics.all.*
 import explore.shortcuts.*
 import explore.shortcuts.given
 import explore.syntax.ui.*
-import explore.tabs.ConstraintsTabContents
 import explore.timingwindows.TimingWindowsPanel
 import explore.undo.*
 import explore.utils.*

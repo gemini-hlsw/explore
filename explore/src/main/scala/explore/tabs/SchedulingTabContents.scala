@@ -15,7 +15,6 @@ import crystal.react.implicits.*
 import crystal.react.reuse.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.numeric.NonNegInt
-import explore.Icons
 import explore.*
 import explore.cache.ProgramCache
 import explore.common.TimingWindowsQueries

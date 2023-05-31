@@ -64,16 +64,41 @@ object SchedulingGroupObsList:
 
   private given Render[TimingWindowInclusion] = Render.by(twt =>
     <.span(twt match
-      case TimingWindowInclusion.Include => ExploreStyles.TimingWindowInclude
-      case TimingWindowInclusion.Exclude => ExploreStyles.TimingWindowExclude
+      case TimingWindowInclusion.Include =>
+        ExploreStyles.TimingWindowIncludewithTooltip(
+          tooltip = message,
+          placement = Placement.Bottom
+        )
+      case TimingWindowInclusion.Exclude =>
+        ExploreStyles.TimingWindowExcludewithTooltip(
+          tooltip = message,
+          placement = Placement.Bottom
+        )
     )(Icons.Circle)
   )
 
   private given Render[Option[TimingWindowEnd]] = Render.by {
-    case None                                    => Icons.ArrowRight
-    case Some(TimingWindowEnd.At(_))             => Icons.ArrowRightToLine
-    case Some(TimingWindowEnd.After(_, None))    => Icons.ArrowRightToLine
-    case Some(TimingWindowEnd.After(_, Some(_))) => Icons.ArrowsRepeat
+    // TOOLTIPS!!!!
+    case None                                    =>
+      Icons.ArrowRightwithTooltip(
+        tooltip = message,
+        placement = Placement.Bottom
+      )
+    case Some(TimingWindowEnd.At(_))             =>
+      Icons.ArrowRightToLinewithTooltip(
+        tooltip = message,
+        placement = Placement.Bottom
+      )
+    case Some(TimingWindowEnd.After(_, None))    =>
+      Icons.ArrowRightToLinewithTooltip(
+        tooltip = message,
+        placement = Placement.Bottom
+      )
+    case Some(TimingWindowEnd.After(_, Some(_))) =>
+      Icons.ArrowsRepeatwithTooltip(
+        tooltip = message,
+        placement = Placement.Bottom
+      )
   }
 
   private given Render[TimingWindow] = Render.by { case tw @ TimingWindow(inclusion, start, end) =>
