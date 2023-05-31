@@ -23,25 +23,101 @@ import lucuma.ui.primereact.*
 import react.primereact.Button
 import react.fa.Transform
 import lucuma.core.util.NewType
+import lucuma.refined.*
 import explore.utils.*
+
+import lucuma.ui.primereact.given
+import lucuma.core.optics.ValidFormat
+import lucuma.ui.input.ChangeAuditor
+import lucuma.core.validation.InputValidSplitEpi
+import lucuma.core.validation.InputValidWedge
+import eu.timepit.refined.types.numeric.PosBigDecimal
+import monocle.Traversal
+import monocle.Focus
+import monocle.Prism
+import scala.math.*
+import monocle.Lens
 
 sealed trait ChartOp derives Eq
 
 object ChartOp:
-  case class Rotate(deg: Int)      extends ChartOp
-  case class ScaleX(scale: Double) extends ChartOp
-  case class ScaleY(scale: Double) extends ChartOp
+  case class Rotate(deg: Int)          extends ChartOp
+  case class ScaleX(scale: BigDecimal) extends ChartOp
+  case class ScaleY(scale: BigDecimal) extends ChartOp
 
-  def calcTransform(ops: List[ChartOp]): List[String] =
-    ops
+  val rotate: Lens[Rotate, Int] =
+    Focus[Rotate](_.deg)
+
+  val scaleX: Lens[ScaleX, BigDecimal] =
+    Focus[ScaleX](_.scale)
+
+  val scaleY: Lens[ScaleY, BigDecimal] =
+    Focus[ScaleY](_.scale)
+
+  extension (self: ChartOp)
+    def fold[A](rotate: Int => A, scaleX: BigDecimal => A, scaleY: BigDecimal => A): A =
+      self match
+        case Rotate(deg)   => rotate(deg)
+        case ScaleX(scale) => scaleX(scale)
+        case ScaleY(scale) => scaleY(scale)
+
+  val opScaleX: Prism[ChartOp, BigDecimal] =
+    Prism[ChartOp, BigDecimal] {
+      case ScaleX(x) => Some(x)
+      case _         => None
+    }(ScaleX(_))
+
+case class Transformation(rotate: ChartOp.Rotate, scaleX: ChartOp.ScaleX, scaleY: ChartOp.ScaleY):
+  def calcTransform: List[String] =
+    List(rotate, scaleX, scaleY)
       .foldLeft(List.empty[String]) { (acc, op) =>
         op match {
-          case ScaleX(x) => s"scaleX($x)" :: acc
-          case ScaleY(y) => s"scaleY($y)" :: acc
-          case Rotate(x) => s"rotate(${x}deg)" :: acc
+          case ChartOp.ScaleX(x) => s"scaleX(${x})" :: acc
+          case ChartOp.ScaleY(y) => s"scaleY(${y})" :: acc
+          case ChartOp.Rotate(x) => s"rotate(${x}deg)" :: acc
         }
       }
       .reverse
+
+  inline def flip: Transformation =
+    copy(scaleX = ChartOp.ScaleX(-1 * this.scaleX.scale))
+
+  inline def rotateLeft: Transformation =
+    copy(rotate = ChartOp.Rotate((this.rotate.deg - 90) % 360))
+
+  inline def rotateRight: Transformation =
+    copy(rotate = ChartOp.Rotate((this.rotate.deg + 90) % 360))
+
+  inline def vflip: Transformation =
+    copy(scaleY = ChartOp.ScaleY(-1 * this.scaleY.scale))
+
+  inline def zoomOut: Transformation =
+    copy(scaleX = ChartOp.ScaleX((this.scaleX.scale * 8) / 10),
+         scaleY = ChartOp.ScaleY((this.scaleY.scale * 8) / 10)
+    )
+
+  inline def zoomIn: Transformation =
+    copy(scaleX = ChartOp.ScaleX((this.scaleX.scale * 12) / 10),
+         scaleY = ChartOp.ScaleY((this.scaleY.scale * 12) / 10)
+    )
+
+  inline def reset: Transformation = Transformation.Default
+
+object Transformation:
+  val Default = Transformation(ChartOp.Rotate(0), ChartOp.ScaleX(1), ChartOp.ScaleY(1))
+
+  val rotate: Lens[Transformation, ChartOp.Rotate] =
+    Focus[Transformation](_.rotate)
+
+  val scaleX: Lens[Transformation, ChartOp.ScaleX] =
+    Focus[Transformation](_.scaleX)
+
+  val scaleY: Lens[Transformation, ChartOp.ScaleY] =
+    Focus[Transformation](_.scaleY)
+
+  val rotateDeg = rotate.andThen(ChartOp.rotate)
+  val scaleXVal = scaleX.andThen(ChartOp.scaleX)
+  val scaleYVal = scaleY.andThen(ChartOp.scaleY)
 
 object ColorsInverted extends NewType[Boolean]:
   val No: ColorsInverted  = ColorsInverted(false)
@@ -62,17 +138,13 @@ case class FinderCharts() extends ReactFnProps(FinderCharts.component)
 object FinderCharts:
   private type Props = FinderCharts
 
-  val DefaultOps = List[ChartOp](ChartOp.ScaleX(1), ChartOp.ScaleY(1), ChartOp.Rotate(0))
-
   private val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStateView(DefaultOps)
+      .useStateView(Transformation.Default)
       .useStateView(ColorsInverted.No)
       .render { (_, ops, inverted) =>
-        val transforms = ChartOp.calcTransform(ops.get)
-        println(ops.get)
-        println(inverted.get)
+        val transforms = ops.get.calcTransform
         ReactFragment(
           FinderChartsControlOverlay(ops, inverted),
           <.div(
@@ -87,110 +159,85 @@ object FinderCharts:
         )
       }
 
-case class FinderChartsControlOverlay(ops: View[List[ChartOp]], inverted: View[ColorsInverted])
+case class FinderChartsControlOverlay(ops: View[Transformation], inverted: View[ColorsInverted])
     extends ReactFnProps[FinderChartsControlOverlay](FinderChartsControlOverlay.component)
 
 object FinderChartsControlOverlay {
   type Props = FinderChartsControlOverlay
 
-  extension (ops: List[ChartOp])
-    inline def flip: List[ChartOp] =
-      ops.collect {
-        case ChartOp.ScaleX(x) => ChartOp.ScaleX(-1 * x)
-        case l                 => l
-      }
-
-    inline def rotateLeft: List[ChartOp] =
-      ops.collect {
-        case ChartOp.Rotate(deg) => ChartOp.Rotate(deg - 90)
-        case l                   => l
-      }
-
-    inline def rotateRight: List[ChartOp] =
-      ops.collect {
-        case ChartOp.Rotate(deg) => ChartOp.Rotate(deg + 90)
-        case l                   => l
-      }
-
-    inline def vflip: List[ChartOp] =
-      ops.collect {
-        case ChartOp.ScaleY(x) => ChartOp.ScaleY(-1 * x)
-        case l                 => l
-      }
-
-    inline def zoomOut: List[ChartOp] =
-      ops.collect {
-        case ChartOp.ScaleY(x) => ChartOp.ScaleY(x * 0.8)
-        case ChartOp.ScaleX(x) => ChartOp.ScaleX(x * 0.8)
-        case l                 => l
-      }
-
-    inline def zoomIn: List[ChartOp] =
-      ops.collect {
-        case ChartOp.ScaleY(x) => ChartOp.ScaleY(x * 1.2)
-        case ChartOp.ScaleX(x) => ChartOp.ScaleX(x * 1.2)
-        case l                 => l
-      }
-
-    inline def reset: List[ChartOp] = FinderCharts.DefaultOps
-
   val component =
-    ScalaFnComponent[Props] { p =>
-      ReactFragment(
-        <.div(
-          ExploreStyles.FinderChartsTools,
-          <.span(Icons.Wrench, " Viewer Controls"),
-          Divider(),
-          <.div(ExploreStyles.FinderChartsButton,
-                ^.onClick --> p.ops.mod(_.zoomOut),
-                Icons.MagnifyingGlassMinus.withBorder(true).withFixedWidth(true)
-          ),
-          <.div("Zoom"),
-          <.div(ExploreStyles.FinderChartsButton,
-                ^.onClick --> p.ops.mod(_.zoomIn),
-                Icons.MagnifyingGlassPlus.withBorder(true).withFixedWidth(true)
-          ),
-          <.div(ExploreStyles.FinderChartsButton,
-                ^.onClick --> p.ops.mod(_.rotateLeft),
-                Icons.ArrowRotateLeft.withBorder(true).withFixedWidth(true)
-          ),
-          <.div("Rotate"),
-          <.div(ExploreStyles.FinderChartsButton,
-                ^.onClick --> p.ops.mod(_.rotateRight),
-                Icons.ArrowRotateRight.withBorder(true).withFixedWidth(true)
-          ),
-          <.div(ExploreStyles.FinderChartsButton,
-                ^.onClick --> p.ops.mod(_.vflip),
-                Icons.ArrowsFromLine.withBorder(true).withFixedWidth(true)
-          ),
-          <.div("Flip"),
+    ScalaFnComponent
+      .withHooks[Props]
+      .render { p =>
+        val rotateDeg = p.ops.zoom(Transformation.rotateDeg)
+        val scaleY    = p.ops.zoom(Transformation.scaleYVal)
+        val scaleX    =
+          p.ops.zoom(Transformation.scaleXVal).withOnMod(x => scaleY.mod(y => y.signum * x))
+
+        ReactFragment(
           <.div(
-            ExploreStyles.FinderChartsButton,
-            ^.onClick --> p.ops.mod(_.flip),
-            Icons.ArrowsFromLine
-              .withBorder(true)
-              .withFixedWidth(true)
-              .withTransform(Transform(rotate = 90))
-          ),
-          <.div(
-            ExploreStyles.FinderChartsButton,
-            Icons.ArrowsRetweet.withBorder(true).withFixedWidth(true),
-            ^.onClick --> p.ops.mod(_.reset) *> p.inverted.set(ColorsInverted.No)
-          ),
-          <.div("Reset"),
-          <.div(),
-          <.div(
-            ExploreStyles.FinderChartsButton,
-            Icons.CircleHalfStroke
-              .withBorder(true)
-              .withFixedWidth(true)
-              .withTransform(Transform(rotate = p.inverted.get.fold(0, 180))),
-            ^.onClick --> p.inverted.mod(_.flip)
-          ),
-          <.div("Invert")
+            ExploreStyles.FinderChartsTools,
+            <.span(Icons.Wrench, " Viewer Controls"),
+            Divider(),
+            <.div(ExploreStyles.FinderChartsButton,
+                  ^.onClick --> p.ops.mod(_.zoomOut),
+                  Icons.MagnifyingGlassMinus.withBorder(true).withFixedWidth(true)
+            ),
+            <.div("Zoom"),
+            <.div(ExploreStyles.FinderChartsButton,
+                  ^.onClick --> p.ops.mod(_.zoomIn),
+                  Icons.MagnifyingGlassPlus.withBorder(true).withFixedWidth(true)
+            ),
+            FormInputTextView("zoom".refined,
+                              value = scaleX,
+                              validFormat = InputValidWedge.truncatedBigDecimal(2.refined),
+                              changeAuditor = ChangeAuditor.accept.decimal(2.refined)
+            ),
+            <.div(ExploreStyles.FinderChartsButton,
+                  ^.onClick --> p.ops.mod(_.rotateLeft),
+                  Icons.ArrowRotateLeft.withBorder(true).withFixedWidth(true)
+            ),
+            <.div("Rotate"),
+            <.div(ExploreStyles.FinderChartsButton,
+                  ^.onClick --> p.ops.mod(_.rotateRight),
+                  Icons.ArrowRotateRight.withBorder(true).withFixedWidth(true)
+            ),
+            FormInputTextView("rotate".refined,
+                              value = rotateDeg,
+                              validFormat = InputValidSplitEpi.int,
+                              changeAuditor = ChangeAuditor.accept
+            ),
+            <.div(ExploreStyles.FinderChartsButton,
+                  ^.onClick --> p.ops.mod(_.vflip),
+                  Icons.ArrowsFromLine.withBorder(true).withFixedWidth(true)
+            ),
+            <.div("Flip"),
+            <.div(
+              ExploreStyles.FinderChartsButton,
+              ^.onClick --> p.ops.mod(_.flip),
+              Icons.ArrowsFromLine
+                .withBorder(true)
+                .withFixedWidth(true)
+                .withTransform(Transform(rotate = 90))
+            ),
+            <.div(
+              ExploreStyles.FinderChartsButton,
+              Icons.ArrowsRetweet.withBorder(true).withFixedWidth(true),
+              ^.onClick --> p.ops.mod(_.reset) *> p.inverted.set(ColorsInverted.No)
+            ),
+            <.div("Reset"),
+            <.div(
+              ExploreStyles.FinderChartsButton,
+              Icons.CircleHalfStroke
+                .withBorder(true)
+                .withFixedWidth(true)
+                .withTransform(Transform(rotate = p.inverted.get.fold(0, 180))),
+              ^.onClick --> p.inverted.mod(_.flip)
+            ),
+            <.div("Invert")
+          )
         )
-      )
-    }
+      }
 }
 
 object FinderChartsTile:
