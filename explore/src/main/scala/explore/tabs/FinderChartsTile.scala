@@ -22,6 +22,8 @@ import react.primereact.Divider
 import lucuma.ui.primereact.*
 import react.primereact.Button
 import react.fa.Transform
+import lucuma.core.util.NewType
+import explore.utils.*
 
 sealed trait ChartOp derives Eq
 
@@ -41,6 +43,20 @@ object ChartOp:
       }
       .reverse
 
+object ColorsInverted extends NewType[Boolean]:
+  val No: ColorsInverted  = ColorsInverted(false)
+  val Yes: ColorsInverted = ColorsInverted(true)
+
+  extension (self: ColorsInverted)
+    def fold[A](no: => A, yes: => A): A =
+      self match
+        case ColorsInverted.Yes => yes
+        case ColorsInverted.No  => no
+
+    def flip: ColorsInverted = fold(ColorsInverted.Yes, ColorsInverted.No)
+
+type ColorsInverted = ColorsInverted.Type
+
 case class FinderCharts() extends ReactFnProps(FinderCharts.component)
 
 object FinderCharts:
@@ -52,22 +68,26 @@ object FinderCharts:
     ScalaFnComponent
       .withHooks[Props]
       .useStateView(DefaultOps)
-      .render { (_, ops) =>
+      .useStateView(ColorsInverted.No)
+      .render { (_, ops, inverted) =>
         val transforms = ChartOp.calcTransform(ops.get)
         println(ops.get)
+        println(inverted.get)
         ReactFragment(
-          FinderChartsControlOverlay(ops),
+          FinderChartsControlOverlay(ops, inverted),
           <.div(
             ExploreStyles.FinderChartsBody,
-            <.img(ExploreStyles.FinderChartsImage,
-                  ^.transform := transforms.mkString(" "),
-                  ^.src       := Resources.DemoFinderChart1
+            <.img(
+              ExploreStyles.FinderChartsImage,
+              ExploreStyles.FinderChartsImageInverted.when(inverted.get.value),
+              ^.transform := transforms.mkString(" "),
+              ^.src       := Resources.DemoFinderChart1
             )
           )
         )
       }
 
-case class FinderChartsControlOverlay(ops: View[List[ChartOp]])
+case class FinderChartsControlOverlay(ops: View[List[ChartOp]], inverted: View[ColorsInverted])
     extends ReactFnProps[FinderChartsControlOverlay](FinderChartsControlOverlay.component)
 
 object FinderChartsControlOverlay {
@@ -155,9 +175,19 @@ object FinderChartsControlOverlay {
           <.div(
             ExploreStyles.FinderChartsButton,
             Icons.ArrowsRetweet.withBorder(true).withFixedWidth(true),
-            ^.onClick --> p.ops.mod(_.reset)
+            ^.onClick --> p.ops.mod(_.reset) *> p.inverted.set(ColorsInverted.No)
           ),
-          <.div("Reset")
+          <.div("Reset"),
+          <.div(),
+          <.div(
+            ExploreStyles.FinderChartsButton,
+            Icons.CircleHalfStroke
+              .withBorder(true)
+              .withFixedWidth(true)
+              .withTransform(Transform(rotate = p.inverted.get.fold(0, 180))),
+            ^.onClick --> p.inverted.mod(_.flip)
+          ),
+          <.div("Invert")
         )
       )
     }

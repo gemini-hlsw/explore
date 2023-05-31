@@ -486,8 +486,10 @@ $brightness: var(--aladin-image-brightness);
 }
 
 .finder-charts-image {
-  transition-property: transform;
-  transition: 0.15s ease;
-  // filter: invert(1);
-  // transform: rotate(23deg);
+  transition: transform 0.2s ease,
+              filter 0.85s ease;
+}
+
+.finder-charts-image-inverted {
+  filter: invert(1);
 }
