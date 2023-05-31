@@ -448,10 +448,9 @@ $brightness: var(--aladin-image-brightness);
   user-select: none;
   grid-template-columns: min-content 1fr min-content 6ch;
   grid-template-rows: [header] min-content [divider] min-content [zoom] min-content [rotate] min-content [flip] min-content [reset] min-content [invert] min-content;
-  // align-content: space-around;
   justify-items: center;
   color: var(--text-color);
-  left: 0px;
+  left: 0;
 
   .p-divider.p-divider-horizontal {
     margin: 0.3rem 0;
@@ -462,6 +461,7 @@ $brightness: var(--aladin-image-brightness);
   :nth-child(15) {
     grid-row-start: reset;
   }
+
   // invert row
   :nth-child(16),
   :nth-child(17) {
@@ -489,10 +489,6 @@ $brightness: var(--aladin-image-brightness);
     }
 
   }
-
-  div:nth-child(3n + 1) {
-    // justify-self: center;
-  }
 }
 
 .finder-charts-body {
@@ -509,6 +505,4 @@ $brightness: var(--aladin-image-brightness);
 
 .finder-charts-image-inverted {
   filter: invert(1);
-  // transition: 1.15s ease;
-  // transform: rotate(23deg);
 }

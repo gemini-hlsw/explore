@@ -203,7 +203,7 @@ object SiderealTargetEditor:
         val coordsRAView: View[RightAscension] =
           siderealTargetAligner
             .zoom(Target.Sidereal.baseRA, siderealToTargetEndo.compose(SiderealInput.ra.modify))
-              .view(_.toInput.assign)
+            .view(_.toInput.assign)
 
         val coordsDecView: View[Declination] =
           siderealTargetAligner

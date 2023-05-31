@@ -4,39 +4,39 @@
 package explore.tabs
 
 import cats.Eq
-import cats.syntax.all.*
 import cats.derived.*
+import cats.syntax.all.*
+import crystal.react.View
 import crystal.react.hooks.*
+import eu.timepit.refined.types.numeric.PosBigDecimal
+import explore.Icons
+import explore.Resources
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
-import japgolly.scalajs.react.vdom.html_<^.*
-import japgolly.scalajs.react.*
-import explore.Resources
-import react.common.ReactFnProps
-import lucuma.ui.syntax.all.given
-import japgolly.scalajs.react.feature.ReactFragment
-import explore.Icons
-import react.fa.Rotation
-import crystal.react.View
-import react.primereact.Divider
-import lucuma.ui.primereact.*
-import react.primereact.Button
-import react.fa.Transform
-import lucuma.core.util.NewType
-import lucuma.refined.*
 import explore.utils.*
-
-import lucuma.ui.primereact.given
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.feature.ReactFragment
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.optics.ValidFormat
-import lucuma.ui.input.ChangeAuditor
+import lucuma.core.util.NewType
 import lucuma.core.validation.InputValidSplitEpi
 import lucuma.core.validation.InputValidWedge
-import eu.timepit.refined.types.numeric.PosBigDecimal
-import monocle.Traversal
+import lucuma.refined.*
+import lucuma.ui.input.ChangeAuditor
+import lucuma.ui.primereact.*
+import lucuma.ui.primereact.given
+import lucuma.ui.syntax.all.given
 import monocle.Focus
-import monocle.Prism
-import scala.math.*
 import monocle.Lens
+import monocle.Prism
+import monocle.Traversal
+import react.common.ReactFnProps
+import react.fa.Rotation
+import react.fa.Transform
+import react.primereact.Button
+import react.primereact.Divider
+
+import scala.math.*
 
 sealed trait ChartOp derives Eq
 
