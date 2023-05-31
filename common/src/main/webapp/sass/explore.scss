@@ -25,6 +25,20 @@ $mobile-responsive-cutoff: 670px;
   background: var(--control-background-color);
 }
 
+// React-datepicker shows Aria messages without this.
+// https://github.com/Hacker0x01/react-datepicker/issues/3924#issuecomment-1430907381
+.react-datepicker__aria-live {
+  position: absolute;
+  clip-path: circle(0);
+  border: 0;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  width: 1px;
+  white-space: nowrap;
+}
+
 // Full viewport settings taken from https://dev.to/lennythedev/css-gotcha-how-to-fill-page-with-a-div-270j
 
 html,

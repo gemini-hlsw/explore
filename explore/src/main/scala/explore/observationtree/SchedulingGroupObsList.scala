@@ -24,6 +24,7 @@ import explore.model.SchedulingGroupList
 import explore.model.enums.AppTab
 import explore.model.syntax.all.*
 import explore.model.syntax.all.*
+import explore.render.given
 import explore.undo.UndoContext
 import explore.utils.ToastCtx
 import japgolly.scalajs.react.*
@@ -33,6 +34,7 @@ import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.TimingWindowEnd
+import lucuma.core.syntax.display.*
 import lucuma.schemas.ObservationDB
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.render.*
@@ -44,6 +46,7 @@ import org.typelevel.log4cats.Logger
 import react.beautifuldnd.*
 import react.common.*
 import react.fa.FontAwesomeIcon
+import react.floatingui.syntax.*
 import react.primereact.Button
 
 import scala.collection.immutable.SortedSet
@@ -64,48 +67,29 @@ object SchedulingGroupObsList:
 
   private given Render[TimingWindowInclusion] = Render.by(twt =>
     <.span(twt match
-      case TimingWindowInclusion.Include =>
-        ExploreStyles.TimingWindowIncludewithTooltip(
-          tooltip = message,
-          placement = Placement.Bottom
-        )
-      case TimingWindowInclusion.Exclude =>
-        ExploreStyles.TimingWindowExcludewithTooltip(
-          tooltip = message,
-          placement = Placement.Bottom
-        )
-    )(Icons.Circle)
+      case TimingWindowInclusion.Include => ExploreStyles.TimingWindowInclude
+      case TimingWindowInclusion.Exclude => ExploreStyles.TimingWindowExclude
+    )(
+      <.span(Icons.Circle).withTooltip(tooltip = twt.shortName)
+    )
   )
 
   private given Render[Option[TimingWindowEnd]] = Render.by {
-    // TOOLTIPS!!!!
-    case None                                    =>
-      Icons.ArrowRightwithTooltip(
-        tooltip = message,
-        placement = Placement.Bottom
-      )
-    case Some(TimingWindowEnd.At(_))             =>
-      Icons.ArrowRightToLinewithTooltip(
-        tooltip = message,
-        placement = Placement.Bottom
-      )
-    case Some(TimingWindowEnd.After(_, None))    =>
-      Icons.ArrowRightToLinewithTooltip(
-        tooltip = message,
-        placement = Placement.Bottom
-      )
-    case Some(TimingWindowEnd.After(_, Some(_))) =>
-      Icons.ArrowsRepeatwithTooltip(
-        tooltip = message,
-        placement = Placement.Bottom
-      )
+    case None                                             =>
+      <.span(Icons.ArrowRight).withTooltip(tooltip = "forever")
+    case Some(TimingWindowEnd.At(endUtc))                 =>
+      <.span(Icons.ArrowRightToLine).withTooltip(tooltip = s"through ${endUtc.formatUtc}")
+    case Some(after @ TimingWindowEnd.After(ts, None))    =>
+      <.span(Icons.ArrowRightToLine).withTooltip(tooltip = after.renderVdom)
+    case Some(after @ TimingWindowEnd.After(ts, Some(_))) =>
+      <.span(Icons.ArrowsRepeat).withTooltip(tooltip = after.renderVdom)
   }
 
   private given Render[TimingWindow] = Render.by { case tw @ TimingWindow(inclusion, start, end) =>
     React.Fragment(
       inclusion.renderVdom,
       " ",
-      start.formatUTC,
+      start.formatUtc,
       " ",
       end.renderVdom
     )

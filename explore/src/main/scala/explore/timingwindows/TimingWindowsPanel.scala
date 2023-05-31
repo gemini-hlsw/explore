@@ -24,6 +24,7 @@ import explore.model.Constants.DurationLongFormatter
 import explore.model.formats.*
 import explore.model.reusability.given
 import explore.model.syntax.all.*
+import explore.render.given
 import explore.syntax.ui.*
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -80,37 +81,6 @@ object TimingWindowsPanel:
 
   private val ColDef = ColumnDef[(TimingWindow, Int)]
 
-  private given Render[TimingWindowRepeat] = Render.by {
-    case TimingWindowRepeat(period, None)                     =>
-      React.Fragment(
-        "repeat ",
-        <.b("forever"),
-        " with a period of ",
-        <.b(durationHMS.reverseGet(period))
-      )
-    case TimingWindowRepeat(period, Some(n)) if n.value === 1 =>
-      React.Fragment(s"repeat ", <.b("once"), " after ", <.b(durationHMS.reverseGet(period)))
-    case TimingWindowRepeat(period, Some(n))                  =>
-      React.Fragment(
-        "repeat ",
-        <.b(n.value, " times"),
-        " with a period of ",
-        <.b(durationHMS.reverseGet(period))
-      )
-  }
-
-  private given Render[TimingWindowEnd.After] = Render.by {
-    case TimingWindowEnd.After(duration, None)         =>
-      React.Fragment("for ", <.b(DurationLongFormatter(duration.toDuration)))
-    case TimingWindowEnd.After(duration, Some(repeat)) =>
-      React.Fragment(
-        "for ",
-        <.b(DurationLongFormatter(duration.toDuration)),
-        ", ",
-        repeat.renderVdom
-      )
-  }
-
   private given Render[TimingWindowInclusion] = Render.by(twt =>
     <.span(twt match
       case TimingWindowInclusion.Include => ExploreStyles.TimingWindowInclude
@@ -123,14 +93,14 @@ object TimingWindowsPanel:
       React.Fragment(
         inclusion.renderVdom,
         " ",
-        <.b(start.formatUTCWithZone),
+        <.b(start.formatUtcWithZone),
         " through ",
-        <.b(endAt.formatUTCWithZone)
+        <.b(endAt.formatUtcWithZone)
       )
     case tw @ TimingWindow(inclusion, start, Some(after @ TimingWindowEnd.After(_, _))) =>
-      React.Fragment(inclusion.renderVdom, " ", <.b(start.formatUTCWithZone), " ", after.renderVdom)
+      React.Fragment(inclusion.renderVdom, " ", <.b(start.formatUtcWithZone), " ", after.renderVdom)
     case tw @ TimingWindow(inclusion, start, None)                                      =>
-      React.Fragment(inclusion.renderVdom, " ", <.b(start.formatUTCWithZone), " forever")
+      React.Fragment(inclusion.renderVdom, " ", <.b(start.formatUtcWithZone), " forever")
   }
 
   private val DeleteColWidth = 20

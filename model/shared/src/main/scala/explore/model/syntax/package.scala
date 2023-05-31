@@ -86,10 +86,10 @@ object all:
       s"${cs.imageQuality.label} ${cs.cloudExtinction.label} ${cs.skyBackground.label} ${cs.waterVapor.label}"
 
   extension (ts: Timestamp)
-    def formatUTC: String =
+    def formatUtc: String =
       s"${Constants.GppDateFormatter.format(ts.toInstant.atOffset(ZoneOffset.UTC))} @ " +
         s"${Constants.GppTimeTZFormatter.format(ts.toInstant.atOffset(ZoneOffset.UTC))}"
 
-    def formatUTCWithZone: String =
+    def formatUtcWithZone: String =
       s"${Constants.GppDateFormatter.format(ts.toInstant.atOffset(ZoneOffset.UTC))} @ " +
         s"${Constants.GppTimeTZFormatterWithZone.format(ts.toInstant.atOffset(ZoneOffset.UTC))}"
