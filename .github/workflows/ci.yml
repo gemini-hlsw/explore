@@ -195,6 +195,7 @@ jobs:
         uses: wearerequired/lint-action@v2.3.0
         with:
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -206,6 +207,8 @@ jobs:
 >>>>>>> 1b8c3519c (Switch to esbuild)
 =======
 >>>>>>> e68f67a3e (Rebased onto master)
+=======
+>>>>>>> a59d103d9 (Rebase onto master)
           github_token: ${{ secrets.GITHUB_TOKEN }}
 >>>>>>> b48e41c5c (Switch to esbuild)
           stylelint: true
@@ -225,6 +228,7 @@ jobs:
         uses: wearerequired/lint-action@v2.3.0
         with:
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -236,6 +240,8 @@ jobs:
 >>>>>>> 1b8c3519c (Switch to esbuild)
 =======
 >>>>>>> e68f67a3e (Rebased onto master)
+=======
+>>>>>>> a59d103d9 (Rebase onto master)
           github_token: ${{ secrets.GITHUB_TOKEN }}
 >>>>>>> b48e41c5c (Switch to esbuild)
           stylelint: true
