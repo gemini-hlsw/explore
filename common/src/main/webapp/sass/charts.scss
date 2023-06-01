@@ -7,6 +7,21 @@ See https://github.com/highcharts/highcharts/issues/13320 */
   font-family: inherit;
 }
 
+.highcharts-graph {
+  stroke-width: 1.5px;
+}
+
+.highcharts-tooltip-box {
+  /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
+  stroke: var(--plot-tooltip-border-color);
+  stroke-width: 0.9px;
+}
+
+.highcharts-point-inactive,
+.highcharts-series-inactive {
+  opacity: 0.5;
+}
+
 .highcharts-background {
   fill: var(--plot-background-color);
 }
@@ -22,10 +37,6 @@ See https://github.com/highcharts/highcharts/issues/13320 */
 .highcharts-minor-grid-line {
   stroke: var(--plot-grid-color);
   stroke-dasharray: 2, 2;
-}
-
-.highcharts-tooltip-box {
-  fill: var(--plot-tooltip-background-color);
 }
 
 .elevation-plot-series .highcharts-area {
