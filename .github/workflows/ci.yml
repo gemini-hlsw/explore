@@ -55,7 +55,11 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v3
         with:
+<<<<<<< HEAD
           node-version: 20
+=======
+          node-version: 18
+>>>>>>> 362a29076 (Update requested node version)
           cache: npm
 
       - name: npm clean-install
@@ -114,7 +118,11 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v3
         with:
+<<<<<<< HEAD
           node-version: 20
+=======
+          node-version: 18
+>>>>>>> 362a29076 (Update requested node version)
           cache: npm
 
       - name: Stage
@@ -142,11 +150,45 @@ jobs:
         if: github.ref == 'refs/heads/master'
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
+<<<<<<< HEAD
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EXPLORE_GEMINI }}
           projectId: explore-gemini
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           target: dev
           channelId: live
+=======
+          distribution: temurin
+          java-version: 17
+          cache: sbt
+
+      - name: sbt update
+        if: matrix.java == 'temurin@17' && steps.setup-java-temurin-17.outputs.cache-hit == 'false'
+        run: sbt -v -J-Xmx6g '++ ${{ matrix.scala }}' reload +update
+
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: npm
+
+      - name: Stage
+        run: sbt -v -J-Xmx6g '++ ${{ matrix.scala }}' stage
+
+      - name: npm clean-install
+        run: npm clean-install
+
+      - name: Build application
+        env:
+          NODE_OPTIONS: '--max-old-space-size=8192'
+        run: npm run build
+
+      - name: Heroku - Deploy
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        run: |
+          cd ./heroku
+          heroku static:deploy -a ${{ secrets.HEROKU_APP_NAME }}
+>>>>>>> 362a29076 (Update requested node version)
 
   lint:
     name: Run linters
@@ -177,7 +219,11 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v3
         with:
+<<<<<<< HEAD
           node-version: 20
+=======
+          node-version: 18
+>>>>>>> 362a29076 (Update requested node version)
           cache: npm
 
       - name: npm clean-install
