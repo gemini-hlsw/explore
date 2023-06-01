@@ -267,9 +267,14 @@ lazy val sbtStage = WorkflowStep.Sbt(List("stage"), name = Some("Stage"))
 lazy val lucumaCssStep = WorkflowStep.Sbt(List("lucumaCss"), name = Some("Extract CSS files"))
 
 // https://stackoverflow.com/a/55610612
-lazy val npmInstall = WorkflowStep.Run(
+lazy val npmCleanInstall = WorkflowStep.Run(
   List("npm clean-install"),
   name = Some("npm clean-install")
+)
+
+lazy val npmInstall = WorkflowStep.Run(
+  List("npm install"),
+  name = Some("npm install")
 )
 
 lazy val npmBuild = WorkflowStep.Run(
@@ -348,7 +353,7 @@ def runLinters(mode: String) = WorkflowStep.Use(
 
 ThisBuild / githubWorkflowGeneratedUploadSteps := Seq.empty
 ThisBuild / githubWorkflowSbtCommand           := "sbt -v -J-Xmx6g"
-ThisBuild / githubWorkflowBuildPreamble ++= Seq(setupNode, npmInstall)
+ThisBuild / githubWorkflowBuildPreamble ++= Seq(setupNode, npmCleanInstall)
 ThisBuild / githubWorkflowEnv += faNpmAuthToken
 
 ThisBuild / githubWorkflowAddedJobs +=
@@ -379,7 +384,7 @@ ThisBuild / githubWorkflowAddedJobs +=
     WorkflowStep.Checkout ::
       WorkflowStep.SetupJava(githubWorkflowJavaVersions.value.toList.take(1)) :::
       setupNode ::
-      npmInstall ::
+      npmCleanInstall ::
       lucumaCssStep ::
       setupVars("dark") ::
       runLinters("dark") ::

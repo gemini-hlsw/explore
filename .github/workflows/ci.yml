@@ -128,8 +128,8 @@ jobs:
       - name: Stage
         run: sbt -v -J-Xmx6g '++ ${{ matrix.scala }}' stage
 
-      - name: npm clean-install
-        run: npm clean-install
+      - name: npm install
+        run: npm install
 
       - name: Build application
         env:
