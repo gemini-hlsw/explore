@@ -49,24 +49,24 @@ function runTerserOn(fileName, length) {
   const original = fs.readFileSync(absolute, 'utf8');
   minify(original, terserOptions).then((minified) => {
     fs.writeFileSync(absolute, minified.code, 'utf8');
-    const fromSize = original.length;
-    const toSize = minified.code.length;
-    const ratio = (toSize / fromSize) * 100;
-    const fromBrotli = brotliSize.sync(original);
-    const toBrotli = brotliSize.sync(minified.code);
-    const brotliRatio = (toBrotli / fromBrotli) * 100;
-    process.stdout.write(
-      ` ${humanFormat.bytes(fromSize, {
-        prefix: 'Ki',
-      })} --> ${humanFormat.bytes(toSize, { prefix: 'Ki' })} (${ratio.toFixed(
-        2
-      )}%)` +
-        ` / brotli: ${humanFormat.bytes(fromBrotli, {
-          prefix: 'Ki',
-        })} --> ${humanFormat.bytes(toBrotli, {
-          prefix: 'Ki',
-        })} (${brotliRatio.toFixed(2)}%) \n`
-    );
+    // const fromSize = original.length;
+    // const toSize = minified.code.length;
+    // const ratio = (toSize / fromSize) * 100;
+    // const fromBrotli = brotliSize.sync(original);
+    // const toBrotli = brotliSize.sync(minified.code);
+    // const brotliRatio = (toBrotli / fromBrotli) * 100;
+    // process.stdout.write(
+    //   ` ${humanFormat.bytes(fromSize, {
+    //     prefix: 'Ki',
+    //   })} --> ${humanFormat.bytes(toSize, { prefix: 'Ki' })} (${ratio.toFixed(
+    //     2
+    //   )}%)` +
+    //     ` / brotli: ${humanFormat.bytes(fromBrotli, {
+    //       prefix: 'Ki',
+    //     })} --> ${humanFormat.bytes(toBrotli, {
+    //       prefix: 'Ki',
+    //     })} (${brotliRatio.toFixed(2)}%) \n`
+    // );
   });
 }
 
