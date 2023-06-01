@@ -22,7 +22,6 @@ import org.scalajs.dom
 import org.scalajs.dom.CacheStorage
 import org.scalajs.dom.IDBFactory
 import org.scalajs.dom.{Cache => JsCache}
-import workers.compression.*
 
 import java.time.Duration
 import java.time.Instant
@@ -80,7 +79,7 @@ case class IDBCache[F[_]](
 ) extends Cache[F]:
   override def eval[I: Pickler, O: Pickler](computation: Cacheable[F, I, O]): I => F[O] = { input =>
     val pickledInput: Pickled = Pickled(
-      compressBytes(asBytes((computation.name.value, computation.version.value, input)))
+      asBytes((computation.name.value, computation.version.value, input))
     )
 
     cacheDB
@@ -94,12 +93,12 @@ case class IDBCache[F[_]](
             .invoke(input)
             .flatTap(output =>
               cacheDB
-                .put(store)(pickledInput, Pickled(compressBytes(asBytes(output))))
+                .put(store)(pickledInput, Pickled(asBytes(output)))
                 .toF
                 .whenA(computation.doStore(input, output))
                 .handleError(_ => ()) // Ignore errors
             )
-        )(pickledOutput => F.pure(fromBytes[O](decompressBytes(pickledOutput))).rethrow)
+        )(pickledOutput => F.pure(fromBytes[O](pickledOutput.value)).rethrow)
       )
   }
 
@@ -156,7 +155,7 @@ object Cache:
             ),
           v =>
             CallbackTo(
-              v.asInstanceOf[js.Tuple3[js.Array[Short], Int, Int]]._1.toJSArray.toPickled
+              Pickled(v.asInstanceOf[js.Tuple3[js.Array[Byte], Int, Int]]._1.toArray)
             )
         )
       )
