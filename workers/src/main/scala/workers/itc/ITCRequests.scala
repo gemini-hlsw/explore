@@ -108,7 +108,7 @@ object ITCRequests:
             }
         }
 
-    val cacheVersion = CacheVersion(5)
+    val cacheVersion = CacheVersion(6)
 
     val cacheableRequest =
       Cacheable(
