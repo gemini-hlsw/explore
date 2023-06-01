@@ -59,6 +59,6 @@ object AladinFullScreenControl {
           Icons.ExpandDiagonal.unless(p.fullScreen.get.map(_.value).getOrElse(true)),
           Icons.ContractDiagonal.when(p.fullScreen.get.map(_.value).getOrElse(false))
         )
-        .small,
+        .small
     )
 }

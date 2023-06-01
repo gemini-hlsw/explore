@@ -286,6 +286,38 @@ object Icons {
   @JSImport("@fortawesome/pro-thin-svg-icons", "faArrowRightFromLine")
   val faArrowRightFromLine: FAIcon = js.native
 
+  @js.native
+  @JSImport("@fortawesome/pro-light-svg-icons", "faArrowsFromLine")
+  val faArrowsFromLine: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-light-svg-icons", "faWrench")
+  val faWrench: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-light-svg-icons", "faArrowRotateLeft")
+  val faArrowRotateLeft: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-light-svg-icons", "faArrowRotateRight")
+  val faArrowRotateRight: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-light-svg-icons", "faMagnifyingGlassPlus")
+  val faMagnifyingGlassPlus: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-light-svg-icons", "faMagnifyingGlassMinus")
+  val faMagnifyingGlassMinus: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-light-svg-icons", "faArrowsRepeat")
+  val faArrowsRepeatLight: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-regular-svg-icons", "faCircleHalfStroke")
+  val faCircleHalfStroke: FAIcon = js.native
+
   // This is tedious but lets us do proper tree-shaking
   IconLibrary.add(
     faArrowDownLeft,
@@ -355,77 +387,93 @@ object Icons {
     faSquareXMarkLarge,
     faBug,
     faArrowLeftFromLine,
-    faArrowRightFromLine
+    faArrowRightFromLine,
+    faArrowsFromLine,
+    faWrench,
+    faArrowRotateLeft,
+    faArrowRotateRight,
+    faMagnifyingGlassPlus,
+    faMagnifyingGlassMinus,
+    faArrowsRepeatLight,
+    faCircleHalfStroke
   )
 
-  val ArrowDownLeft       = FontAwesomeIcon(faArrowDownLeft)
-  val Bars                = FontAwesomeIcon(faBars)
-  val BarCodeRead         = FontAwesomeIcon(faBarCodeRead)
-  val StarExclamation     = FontAwesomeIcon(faStarExclamation)
-  val Gears               = FontAwesomeIcon(faGears)
-  val Undo                = FontAwesomeIcon(faUndo)
-  val Redo                = FontAwesomeIcon(faRedo)
-  val New                 = FontAwesomeIcon(faPlus)
-  val Link                = FontAwesomeIcon(faLink)
-  val ThinPlus            = FontAwesomeIcon(faThinPlus)
-  val ThinMinus           = FontAwesomeIcon(faThinMinus)
-  val TrashUnstyled       = FontAwesomeIcon(faTrash)
-  val Trash               = TrashUnstyled.withClass(ExploreStyles.TrashIcon)
-  val TrashUndo           = FontAwesomeIcon(faTrashUndo)
-  val Bullseye            = FontAwesomeIcon(faBullseye)
-  val Crosshairs          = FontAwesomeIcon(faCrosshairs)
-  val Edit                = FontAwesomeIcon(faEdit)
-  val Eraser              = FontAwesomeIcon(faEraser).withClass(ExploreStyles.EraserIcon)
-  val Search              = FontAwesomeIcon(faSearch)
-  val ChevronRight        = FontAwesomeIcon(faChevronRight)
-  val ChevronRightLight   = FontAwesomeIcon(faChevronRightLight)
-  val ChevronLeft         = FontAwesomeIcon(faChevronLeft)
-  val ChevronLeftLight    = FontAwesomeIcon(faChevronLeftLight)
-  val ChevronsLeft        = FontAwesomeIcon(faChevronsLeft)
-  val ChevronDown         = FontAwesomeIcon(faChevronDown)
-  val ChevronDoubleUp     = FontAwesomeIcon(faChevronDoubleUp)
-  val ChevronDoubleDown   = FontAwesomeIcon(faChevronDoubleDown)
-  val Ban                 = FontAwesomeIcon(faBan)
-  val ExclamationTriangle = FontAwesomeIcon(faExclamationTriangle)
-  val ExclamationDiamond  = FontAwesomeIcon(faExclamationDiamond)
-  val UserAstronaut       = FontAwesomeIcon(faUserAstronaut)
-  val UserGears           = FontAwesomeIcon(faUserGears)
-  val Logout              = FontAwesomeIcon(faSignOutAlt)
-  val SkullCrossBones     = FontAwesomeIcon(faSkullCrossbones)
-  val Info                = FontAwesomeIcon(faInfoCircle)
-  val InfoLight           = FontAwesomeIcon(faInfoCircleLight)
-  val Clipboard           = FontAwesomeIcon(faClipboard)
-  val ClipboardCheck      = FontAwesomeIcon(faClipboardCheck)
-  val Close               = FontAwesomeIcon(faTimes)
-  val MousePointer        = FontAwesomeIcon(faMousePointer)
-  val Minimize            = FontAwesomeIcon(faCompress)
-  val Maximize            = FontAwesomeIcon(faExpand)
-  val Checkmark           = FontAwesomeIcon(faCheck)
-  val ListIcon            = FontAwesomeIcon(faListAlt)
-  val ListCheck           = FontAwesomeIcon(faListCheck)
-  val Star                = FontAwesomeIcon(faStar)
-  val Stars               = FontAwesomeIcon(faStars)
-  val Spinner             = FontAwesomeIcon(faSpinner)
-  val Thumbtack           = FontAwesomeIcon(faThumbtack)
-  val SunBright           = FontAwesomeIcon(faSunBright)
-  val Moon                = FontAwesomeIcon(faMoon)
-  val Eclipse             = FontAwesomeIcon(faEclipse)
-  val TriangleSolid       = FontAwesomeIcon(faTriangleSolid)
-  val CrystalBall         = FontAwesomeIcon(faCrystalBall)
-  val ThinSliders         = FontAwesomeIcon(faThinSliders)
-  val Circle              = FontAwesomeIcon(faCircle)
-  val CircleSmall         = FontAwesomeIcon(faCircleSmall)
-  val Bahai               = FontAwesomeIcon(faBahai)
-  val FileCirclePlus      = FontAwesomeIcon(faFileCirclePlus)
-  val FileArrowUp         = FontAwesomeIcon(faFileArrowUp)
-  val FileArrowDown       = FontAwesomeIcon(faFileArrowDown)
-  val ExpandDiagonal      = FontAwesomeIcon(faExpandDiagonal)
-  val ContractDiagonal    = FontAwesomeIcon(faContractDiagonal)
-  val Clone               = FontAwesomeIcon(faClone)
-  val CheckDouble         = FontAwesomeIcon(faListCheck)
-  val SquareXMark         = FontAwesomeIcon(faSquareXMark)
-  val SquareXMarkLarge    = FontAwesomeIcon(faSquareXMarkLarge)
-  val Bug                 = FontAwesomeIcon(faBug)
-  val ArrowLeftFromLine   = FontAwesomeIcon(faArrowLeftFromLine)
-  val ArrowRightFromLine  = FontAwesomeIcon(faArrowRightFromLine)
+  val ArrowDownLeft        = FontAwesomeIcon(faArrowDownLeft)
+  val Bars                 = FontAwesomeIcon(faBars)
+  val BarCodeRead          = FontAwesomeIcon(faBarCodeRead)
+  val StarExclamation      = FontAwesomeIcon(faStarExclamation)
+  val Gears                = FontAwesomeIcon(faGears)
+  val Undo                 = FontAwesomeIcon(faUndo)
+  val Redo                 = FontAwesomeIcon(faRedo)
+  val New                  = FontAwesomeIcon(faPlus)
+  val Link                 = FontAwesomeIcon(faLink)
+  val ThinPlus             = FontAwesomeIcon(faThinPlus)
+  val ThinMinus            = FontAwesomeIcon(faThinMinus)
+  val TrashUnstyled        = FontAwesomeIcon(faTrash)
+  val Trash                = TrashUnstyled.withClass(ExploreStyles.TrashIcon)
+  val TrashUndo            = FontAwesomeIcon(faTrashUndo)
+  val Bullseye             = FontAwesomeIcon(faBullseye)
+  val Crosshairs           = FontAwesomeIcon(faCrosshairs)
+  val Edit                 = FontAwesomeIcon(faEdit)
+  val Eraser               = FontAwesomeIcon(faEraser).withClass(ExploreStyles.EraserIcon)
+  val Search               = FontAwesomeIcon(faSearch)
+  val ChevronRight         = FontAwesomeIcon(faChevronRight)
+  val ChevronRightLight    = FontAwesomeIcon(faChevronRightLight)
+  val ChevronLeft          = FontAwesomeIcon(faChevronLeft)
+  val ChevronLeftLight     = FontAwesomeIcon(faChevronLeftLight)
+  val ChevronsLeft         = FontAwesomeIcon(faChevronsLeft)
+  val ChevronDown          = FontAwesomeIcon(faChevronDown)
+  val ChevronDoubleUp      = FontAwesomeIcon(faChevronDoubleUp)
+  val ChevronDoubleDown    = FontAwesomeIcon(faChevronDoubleDown)
+  val Ban                  = FontAwesomeIcon(faBan)
+  val ExclamationTriangle  = FontAwesomeIcon(faExclamationTriangle)
+  val ExclamationDiamond   = FontAwesomeIcon(faExclamationDiamond)
+  val UserAstronaut        = FontAwesomeIcon(faUserAstronaut)
+  val UserGears            = FontAwesomeIcon(faUserGears)
+  val Logout               = FontAwesomeIcon(faSignOutAlt)
+  val SkullCrossBones      = FontAwesomeIcon(faSkullCrossbones)
+  val Info                 = FontAwesomeIcon(faInfoCircle)
+  val InfoLight            = FontAwesomeIcon(faInfoCircleLight)
+  val Clipboard            = FontAwesomeIcon(faClipboard)
+  val ClipboardCheck       = FontAwesomeIcon(faClipboardCheck)
+  val Close                = FontAwesomeIcon(faTimes)
+  val MousePointer         = FontAwesomeIcon(faMousePointer)
+  val Minimize             = FontAwesomeIcon(faCompress)
+  val Maximize             = FontAwesomeIcon(faExpand)
+  val Checkmark            = FontAwesomeIcon(faCheck)
+  val ListIcon             = FontAwesomeIcon(faListAlt)
+  val ListCheck            = FontAwesomeIcon(faListCheck)
+  val Star                 = FontAwesomeIcon(faStar)
+  val Stars                = FontAwesomeIcon(faStars)
+  val Spinner              = FontAwesomeIcon(faSpinner)
+  val Thumbtack            = FontAwesomeIcon(faThumbtack)
+  val SunBright            = FontAwesomeIcon(faSunBright)
+  val Moon                 = FontAwesomeIcon(faMoon)
+  val Eclipse              = FontAwesomeIcon(faEclipse)
+  val TriangleSolid        = FontAwesomeIcon(faTriangleSolid)
+  val CrystalBall          = FontAwesomeIcon(faCrystalBall)
+  val ThinSliders          = FontAwesomeIcon(faThinSliders)
+  val Circle               = FontAwesomeIcon(faCircle)
+  val CircleSmall          = FontAwesomeIcon(faCircleSmall)
+  val Bahai                = FontAwesomeIcon(faBahai)
+  val FileCirclePlus       = FontAwesomeIcon(faFileCirclePlus)
+  val FileArrowUp          = FontAwesomeIcon(faFileArrowUp)
+  val FileArrowDown        = FontAwesomeIcon(faFileArrowDown)
+  val ExpandDiagonal       = FontAwesomeIcon(faExpandDiagonal)
+  val ContractDiagonal     = FontAwesomeIcon(faContractDiagonal)
+  val Clone                = FontAwesomeIcon(faClone)
+  val CheckDouble          = FontAwesomeIcon(faListCheck)
+  val SquareXMark          = FontAwesomeIcon(faSquareXMark)
+  val SquareXMarkLarge     = FontAwesomeIcon(faSquareXMarkLarge)
+  val Bug                  = FontAwesomeIcon(faBug)
+  val ArrowLeftFromLine    = FontAwesomeIcon(faArrowLeftFromLine)
+  val ArrowRightFromLine   = FontAwesomeIcon(faArrowRightFromLine)
+  val ArrowsFromLine       = FontAwesomeIcon(faArrowsFromLine)
+  val Wrench               = FontAwesomeIcon(faWrench)
+  val ArrowRotateLeft      = FontAwesomeIcon(faArrowRotateLeft)
+  val ArrowRotateRight     = FontAwesomeIcon(faArrowRotateRight)
+  val MagnifyingGlassPlus  = FontAwesomeIcon(faMagnifyingGlassPlus)
+  val MagnifyingGlassMinus = FontAwesomeIcon(faMagnifyingGlassMinus)
+  val ArrowsRepeatLight    = FontAwesomeIcon(faArrowsRepeatLight)
+  val CircleHalfStroke     = FontAwesomeIcon(faCircleHalfStroke)
 }
