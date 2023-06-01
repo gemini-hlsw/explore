@@ -312,7 +312,7 @@ object Icons {
 
   @js.native
   @JSImport("@fortawesome/pro-light-svg-icons", "faArrowsRepeat")
-  val faArrowsRetweet: FAIcon = js.native
+  val faArrowsRepeatLight: FAIcon = js.native
 
   @js.native
   @JSImport("@fortawesome/pro-regular-svg-icons", "faCircleHalfStroke")
@@ -394,7 +394,7 @@ object Icons {
     faArrowRotateRight,
     faMagnifyingGlassPlus,
     faMagnifyingGlassMinus,
-    faArrowsRetweet,
+    faArrowsRepeatLight,
     faCircleHalfStroke
   )
 
@@ -474,6 +474,6 @@ object Icons {
   val ArrowRotateRight     = FontAwesomeIcon(faArrowRotateRight)
   val MagnifyingGlassPlus  = FontAwesomeIcon(faMagnifyingGlassPlus)
   val MagnifyingGlassMinus = FontAwesomeIcon(faMagnifyingGlassMinus)
-  val ArrowsRetweet        = FontAwesomeIcon(faArrowsRetweet)
+  val ArrowsRepeatLight    = FontAwesomeIcon(faArrowsRepeatLight)
   val CircleHalfStroke     = FontAwesomeIcon(faCircleHalfStroke)
 }

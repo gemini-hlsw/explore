@@ -235,7 +235,7 @@ object FinderChartsControlOverlay {
             ),
             <.div(
               ExploreStyles.FinderChartsButton,
-              Icons.ArrowsRetweet.withBorder(true).withFixedWidth(true),
+              Icons.ArrowsRepeatLight.withBorder(true).withFixedWidth(true),
               ^.onClick --> p.ops.mod(_.reset) *> p.inverted.set(ColorsInverted.No)
             ),
             <.div("Reset"),
