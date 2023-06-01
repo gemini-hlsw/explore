@@ -59,9 +59,8 @@ case class ItcProps(
   private val spectroscopyRequirements: Option[ScienceRequirements.Spectroscopy] =
     ScienceRequirements.spectroscopy.getOption(obsSummary.scienceRequirements)
 
-  private val observingMode = obsSummary.observingMode
-  private val constraints   = obsSummary.constraints
-  private val asterismIds   = obsSummary.scienceTargetIds
+  private val constraints = obsSummary.constraints
+  private val asterismIds = obsSummary.scienceTargetIds
 
   // The remote configuration is read in a different query than the itc results
   // This will work even in the case the user has overriden some parameters
@@ -101,7 +100,7 @@ case class ItcProps(
   val targets: List[ItcTarget] = itcTargets.foldMap(_.toList)
 
   private val queryProps: List[Option[?]] =
-    List(itcTargets, observingMode, finalConfig, wavelength, instrumentRow, signalToNoise)
+    List(itcTargets, finalConfig, wavelength, instrumentRow, signalToNoise)
 
   val isExecutable: Boolean = queryProps.forall(_.isDefined)
 
