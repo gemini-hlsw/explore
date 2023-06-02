@@ -287,6 +287,7 @@ object AladinCell extends ModelOptics with AladinCommon:
       // Request ags calculation
       .useEffectWithDepsBy((p, _, _, candidates, _, _, _, _, _) =>
         (p.asterism.baseTracking,
+         p.asterism.focus.id,
          p.positions,
          p.obsConf.flatMap(_.constraints),
          p.obsConf.flatMap(_.wavelength),
@@ -297,6 +298,7 @@ object AladinCell extends ModelOptics with AladinCommon:
       ) { (props, ctx, _, _, ags, _, selectedIndex, _, agsOverride) =>
         {
           case (tracking,
+                _,
                 positions,
                 Some(constraints),
                 Some(wavelength),
