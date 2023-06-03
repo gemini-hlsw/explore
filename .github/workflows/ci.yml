@@ -27,8 +27,13 @@ jobs:
     name: Build and Test
     strategy:
       matrix:
+<<<<<<< HEAD
         os: [ubuntu-latest]
         scala: [3]
+=======
+        os: [macos-latest]
+        scala: [3.2.2]
+>>>>>>> 810bc4fd6 (Switch to build on macos)
         java: [temurin@17]
         project: [rootJS, rootJVM]
     runs-on: ${{ matrix.os }}
@@ -83,6 +88,13 @@ jobs:
       - name: Test
         run: sbt -v -J-Xmx6g 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' test
 
+<<<<<<< HEAD
+=======
+      - name: Check scalafix lints
+        if: matrix.java == 'temurin@17' && matrix.os == 'macos-latest'
+        run: sbt -v -J-Xmx6g 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' 'scalafixAll --check'
+
+>>>>>>> 810bc4fd6 (Switch to build on macos)
       - name: Aggregate coverage reports
         run: sbt -v -J-Xmx6g 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' coverageReport coverageAggregate
 
@@ -128,8 +140,8 @@ jobs:
       - name: Stage
         run: sbt -v -J-Xmx6g '++ ${{ matrix.scala }}' stage
 
-      - name: npm install
-        run: npm install
+      - name: npm clean-install
+        run: npm clean-install
 
       - name: Build application
         env:

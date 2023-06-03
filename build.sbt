@@ -351,10 +351,12 @@ def runLinters(mode: String) = WorkflowStep.Use(
   cond = if (mode == "dark") None else Some("github.event_name != 'pull_request'")
 )
 
-ThisBuild / githubWorkflowGeneratedUploadSteps := Seq.empty
-ThisBuild / githubWorkflowSbtCommand           := "sbt -v -J-Xmx6g"
+ThisBuild / githubWorkflowGeneratedUploadSteps           := Seq.empty
+ThisBuild / githubWorkflowSbtCommand                     := "sbt -v -J-Xmx6g"
 ThisBuild / githubWorkflowBuildPreamble ++= Seq(setupNode, npmCleanInstall)
 ThisBuild / githubWorkflowEnv += faNpmAuthToken
+ThisBuild / githubWorkflowOSes                           := Seq("macos-latest")
+ThisBuild / githubWorkflowAddedJobs / githubWorkflowOSes := Seq("macos-latest")
 
 ThisBuild / githubWorkflowAddedJobs +=
   WorkflowJob(
@@ -365,7 +367,7 @@ ThisBuild / githubWorkflowAddedJobs +=
       setupNode ::
       githubWorkflowGeneratedCacheSteps.value.toList :::
       sbtStage ::
-      npmInstall ::
+      npmCleanInstall ::
       npmBuild ::
       overrideCiCommit ::
       bundlemon ::
