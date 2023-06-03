@@ -39,6 +39,9 @@ import explore.model.display.given
 import explore.model.reusability.given
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
+import explore.modes.ModeCommonWavelengths
+import explore.modes.ModeWavelength
+import explore.modes.ModeWavelengthDelta
 import explore.modes.SpectroscopyModeRow
 import explore.modes.SpectroscopyModesMatrix
 import explore.optics.*
@@ -204,13 +207,13 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
   @inline protected val obsoleteFilters: Set[Filter]
   @inline protected val obsoleteRois: Set[Roi]
 
-  protected implicit val displayBinning: Display[(XBinning, YBinning)] =
+  protected given Display[(XBinning, YBinning)] =
     Display.by(
       { case (x, y) => s"${x.shortName} x ${y.shortName}" },
       { case (x, y) => s"${x.longName} x ${y.longName}" }
     )
 
-  protected implicit val displayReadModeGain: Display[(ReadMode, Gain)] =
+  protected given Display[(ReadMode, Gain)] =
     Display.by( // Shortname is in lower case for some reason
       { case (r, g) => s"${r.longName}, ${g.shortName} Gain" },
       { case (r, g) => s"${r.longName}, ${g.longName} Gain" }
@@ -224,27 +227,29 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
       .allow(s => s === "0" || s === "0.")
       .decimal(3.refined)
 
-  private case class ModeData(
-    interval:   BoundedInterval[Wavelength],
-    resolution: PosInt,
-    λmin:       Wavelength,
-    λmax:       Wavelength,
-    delta:      WavelengthDelta
-  )
+  private case class ModeData private (
+    centralWavelength: Wavelength,
+    interval:          BoundedInterval[Wavelength],
+    resolution:        PosInt,
+    λmin:              ModeWavelength,
+    λmax:              ModeWavelength,
+    λdelta:            ModeWavelengthDelta
+  ) extends ModeCommonWavelengths
 
   private object ModeData {
     def build(row: SpectroscopyModeRow, wavelength: Option[Wavelength]): Option[ModeData] =
       wavelength.flatMap { cw =>
-        if (cw >= row.minWavelength.value && cw <= row.maxWavelength.value)
-          SpectroscopyModeRow
+        if (cw >= row.λmin.value && cw <= row.λmax.value)
+          ModeCommonWavelengths
             .wavelengthInterval(cw)(row)
             .map(interval =>
               ModeData(
+                cw,
                 interval,
                 row.resolution,
-                row.minWavelength.value,
-                row.maxWavelength.value,
-                row.wavelengthDelta.value
+                row.λmin,
+                row.λmax,
+                row.λdelta
               )
             )
         else
@@ -372,7 +377,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
       validFormat = validFormat,
       changeAuditor = changeAuditor,
       disabled = disabled
-    )
+    ).withMods(^.autoComplete.off)
 
   private def customizableInputTextOptional[A: Eq](
     id:            NonEmptyString,
@@ -395,7 +400,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
       validFormat = validFormat,
       changeAuditor = changeAuditor,
       disabled = disabled
-    )
+    ).clearable(^.autoComplete.off)
 
   val component =
     ScalaFnComponent
@@ -425,10 +430,11 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
          props.spectroscopyRequirements.capability,
          props.spectroscopyRequirements.focalPlaneAngle,
          props.spectroscopyRequirements.resolution,
-         props.spectroscopyRequirements.wavelengthCoverage
+         props.spectroscopyRequirements.wavelengthCoverage,
+         props.confMatrix.matrix.length
         )
       ) { (props, _) =>
-        { case (fp, cap, fpa, res, rng) =>
+        { case (fp, cap, fpa, res, rng, _) =>
           props.confMatrix.filtered(
             focalPlane = fp,
             capability = cap,
@@ -481,8 +487,13 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
         val disableSimpleEdit   =
           disableAdvancedEdit && editState.get =!= ConfigEditState.SimpleEdit
 
-        val wavelengthView           = centralWavelength(props.observingMode)
+        val centralWavelengthView    = centralWavelength(props.observingMode)
         val initialCentralWavelength = initialCentralWavelengthLens.get(props.observingMode.get)
+
+        val adjustedInterval =
+          modeData.value.flatMap(
+            ModeCommonWavelengths.wavelengthInterval(centralWavelengthView.get)
+          )
 
         val defaultBinning      = defaultBinningLens.get(props.observingMode.get)
         val defaultReadModeGain = defaultReadModeGainLens.get(props.observingMode.get)
@@ -491,10 +502,10 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
         val validDithers = modeData.value
           .map(mode =>
             ExploreModelValidators.dithersValidWedge(
-              wavelengthView.get,
-              mode.λmin,
-              mode.λmax,
-              mode.delta
+              centralWavelengthView.get,
+              mode.λmin.value,
+              mode.λmax.value,
+              mode.λdelta.value
             )
           )
           .getOrElse(
@@ -621,7 +632,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
           <.div(LucumaStyles.FormColumnCompact, ExploreStyles.AdvancedConfigurationCol2)(
             customizableInputText(
               id = "central-wavelength".refined,
-              value = wavelengthView.withOnMod(_ => invalidateITC),
+              value = centralWavelengthView.withOnMod(_ => invalidateITC),
               label = React.Fragment("Central Wavelength",
                                      HelpIcon("configuration/central=wavelength.md".refined)
               ),
@@ -778,7 +789,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             FormLabel(htmlFor = "lambdaInterval".refined)("λ Interval"),
             FormInputText(
               id = "lambdaInterval".refined,
-              value = modeData.value.fold("Unknown")(_.interval.shortName),
+              value = adjustedInterval.fold("Unknown")(_.shortName),
               disabled = true,
               units = "nm"
             )

@@ -313,7 +313,7 @@ private object SpectroscopyModesTable extends TableHooks:
         .sortable,
       column(
         WavelengthIntervalColumnId,
-        row => cw.map(w => SpectroscopyModeRow.wavelengthInterval(w)(row.entry))
+        row => cw.map(w => ModeCommonWavelengths.wavelengthInterval(w)(row.entry))
       ).setCell(cell => cell.value.flatten.fold("-")(_.shortName))
         .setColumnSize(FixedSize(100.toPx)),
       column(ResolutionColumnId, row => SpectroscopyModeRow.resolution.get(row.entry))
