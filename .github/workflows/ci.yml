@@ -106,8 +106,17 @@ jobs:
     if: ((github.ref == 'refs/heads/master' || github.event_name == 'pull_request') && startsWith(github.repository, 'gemini'))
     strategy:
       matrix:
+<<<<<<< HEAD
         os: [ubuntu-latest]
+<<<<<<< HEAD
         scala: [3.3.1]
+=======
+        scala: [3.3.0]
+=======
+        os: [macos-latest]
+        scala: [3.2.2]
+>>>>>>> c02b65945 (Use `macOS` for `full` job)
+>>>>>>> 3df0cabea (Use `macOS` for `full` job)
         java: [temurin@17]
     runs-on: ${{ matrix.os }}
     steps:
