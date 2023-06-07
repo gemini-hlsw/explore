@@ -222,16 +222,19 @@ object ObsAttachmentsTable extends TableHooks:
       }
       .flatMap(p => urlMap.mod(_.updated(oa.toMapKey, p)).to[IO])
 
-  def deletePrompt(props: Props, aid: ObsAtt.Id)(
+  def deletePrompt(props: Props, oa: ObsAttachment)(
     e: ReactMouseEvent
   )(using Logger[IO], ToastCtx[IO]): Callback =
+    val msg =
+      if (oa.observations.isEmpty) ""
+      else s"It is assigned to ${oa.observations.size} observations. "
     ConfirmPopup
       .confirmPopup(
         e.currentTarget.domAsHtml,
-        "Delete attachment? This action is not undoable.",
+        s"Delete attachment? ${msg}This action is not undoable.",
         acceptLabel = "Delete",
         rejectLabel = "Cancel",
-        accept = deleteAttachment(props, aid).runAsync
+        accept = deleteAttachment(props, oa.id).runAsync
       )
       .show
 
@@ -294,7 +297,7 @@ object ObsAttachmentsTable extends TableHooks:
                   <.label(
                     labelButtonClasses,
                     Icons.Trash,
-                    ^.onClick ==> deletePrompt(props, id)
+                    ^.onClick ==> deletePrompt(props, thisOa)
                   ).withTooltip("Delete attachment"),
                   <.label(
                     labelButtonClasses,
@@ -425,7 +428,7 @@ object ObsAttachmentsTable extends TableHooks:
         val footer =
           <.tr(
             <.td(
-              ^.colSpan := 7,
+              ^.colSpan := 8,
               <.div(
                 ExploreStyles.AttachmentsTableFooter,
                 EnumDropdownView(
