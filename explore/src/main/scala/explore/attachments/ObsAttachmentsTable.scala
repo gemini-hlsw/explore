@@ -19,7 +19,9 @@ import explore.common.ProgramQueries
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Constants
+import explore.model.Focused
 import explore.model.ObsAttachment
+import explore.model.enums.AppTab
 import explore.model.reusability.given
 import explore.syntax.ui.*
 import explore.utils.OdbRestClient
@@ -28,6 +30,7 @@ import fs2.dom
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.{ObsAttachment => ObsAtt}
 import lucuma.core.syntax.all.*
@@ -64,6 +67,7 @@ import react.primereact.PrimeStyles
 
 import java.time.Instant
 import java.time.ZoneOffset
+import scala.collection.immutable.SortedSet
 
 case class ObsAttachmentsTable(
   pid:            Program.Id,
@@ -87,6 +91,7 @@ object ObsAttachmentsTable extends TableHooks:
   private val AttachmentTypeColumnId: ColumnId = ColumnId("attachment-type")
   private val SizeColumnId                     = ColumnId("filesize")
   private val LastUpdateColumnId               = ColumnId("last-update")
+  private val ObservationsColumnId: ColumnId   = ColumnId("observations")
   private val DescriptionColumnId: ColumnId    = ColumnId("description")
   private val CheckedColumnId: ColumnId        = ColumnId("checked")
 
@@ -96,6 +101,7 @@ object ObsAttachmentsTable extends TableHooks:
     AttachmentTypeColumnId -> "Type",
     SizeColumnId           -> "Size",
     LastUpdateColumnId     -> "LastUpdate",
+    ObservationsColumnId   -> "Observations",
     DescriptionColumnId    -> "Description",
     CheckedColumnId        -> "Checked"
   )
@@ -153,7 +159,8 @@ object ObsAttachmentsTable extends TableHooks:
                     None,
                     false,
                     f.size.toLong,
-                    Timestamp.unsafeFromInstantTruncated(Instant.now())
+                    Timestamp.unsafeFromInstantTruncated(Instant.now()),
+                    SortedSet.empty
                   )
                 )
                 .to[IO]
@@ -260,6 +267,12 @@ object ObsAttachmentsTable extends TableHooks:
             : ColumnDef.Single[View[ObsAttachment], V] =
             ColDef(id, v => accessor(v.get), columnNames(id))
 
+          def goToObs(obsId: Observation.Id): Callback =
+            ctx.pushPage(AppTab.Constraints, props.pid, Focused.singleObs(obsId))
+
+          def obsUrl(obsId: Observation.Id): String =
+            ctx.pageUrl(AppTab.Constraints, props.pid, Focused.singleObs(obsId))
+
           List(
             column(ActionsColumnId, identity)
               .setCell(cell =>
@@ -323,6 +336,21 @@ object ObsAttachmentsTable extends TableHooks:
                 Constants.GppDateFormatter
                   .format(cell.value.toLocalDateTime)
               ),
+            column(ObservationsColumnId, ObsAttachment.observations.get)
+              .setCell(cell =>
+                <.span(
+                  cell.value.toList
+                    .map(obsId =>
+                      <.a(
+                        ^.href := obsUrl(obsId),
+                        ^.onClick ==> (_.preventDefaultCB >> goToObs(obsId)),
+                        obsId.toString
+                      )
+                    )
+                    .mkReactFragment(", ")
+                )
+              )
+              .setEnableSorting(false),
             ColDef(
               DescriptionColumnId,
               _.withOnMod(oa =>
