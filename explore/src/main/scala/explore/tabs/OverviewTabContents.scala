@@ -41,15 +41,13 @@ case class OverviewTabContents(
 object OverviewTabContents {
   private type Props = OverviewTabContents
 
-  private val WarningsAndErrorsHeight: NonNegInt      = 8.refined
-  private val WarningsAndErrorsMinHeight: NonNegInt   = 6.refined
-  private val ObsAttachmentsHeight: NonNegInt         = 8.refined
-  private val ObsAttachmentsMinHeight: NonNegInt      = 6.refined
-  private val ProposalAttachmentsHeight: NonNegInt    = 6.refined
-  private val ProposalAttachmentsMinHeight: NonNegInt = 4.refined
-  private val TileMinWidth: NonNegInt                 = 4.refined
-  private val DefaultWidth: NonNegInt                 = 10.refined
-  private val DefaultLargeWidth: NonNegInt            = 12.refined
+  private val WarningsAndErrorsHeight: NonNegInt    = 8.refined
+  private val WarningsAndErrorsMinHeight: NonNegInt = 6.refined
+  private val ObsAttachmentsHeight: NonNegInt       = 8.refined
+  private val ObsAttachmentsMinHeight: NonNegInt    = 6.refined
+  private val TileMinWidth: NonNegInt               = 4.refined
+  private val DefaultWidth: NonNegInt               = 10.refined
+  private val DefaultLargeWidth: NonNegInt          = 12.refined
 
   private val layoutMedium: Layout = Layout(
     List(
@@ -69,15 +67,6 @@ object OverviewTabContents {
         w = DefaultWidth.value,
         h = ObsAttachmentsHeight.value,
         minH = ObsAttachmentsMinHeight.value,
-        minW = TileMinWidth.value
-      ),
-      LayoutItem(
-        i = ObsTabTilesIds.ProposalAttachmentsId.id.value,
-        x = 0,
-        y = WarningsAndErrorsHeight.value + ObsAttachmentsHeight.value,
-        w = DefaultWidth.value,
-        h = ProposalAttachmentsHeight.value,
-        minH = ProposalAttachmentsMinHeight.value,
         minW = TileMinWidth.value
       )
     )
@@ -125,19 +114,12 @@ object OverviewTabContents {
               )
             )
 
-            val proposalAttachmentsTile = Tile(
-              ObsTabTilesIds.ProposalAttachmentsId.id,
-              "Proposal Attachments",
-              none,
-              canMinimize = true
-            )(_ => UnderConstruction())
-
             TileController(
               props.userVault.map(_.user.id),
               resize.width.getOrElse(1),
               defaultLayouts,
               l,
-              List(warningsAndErrorsTile, obsAttachmentsTile, proposalAttachmentsTile),
+              List(warningsAndErrorsTile, obsAttachmentsTile),
               GridLayoutSection.OverviewLayout,
               storeLayout = false
             )
