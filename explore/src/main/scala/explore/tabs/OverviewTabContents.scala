@@ -32,6 +32,7 @@ import react.common.ReactFnProps
 import react.gridlayout.*
 import react.primereact.Button
 import react.resizeDetector.hooks.*
+
 case class OverviewTabContents(
   programId:      Program.Id,
   userVault:      Option[UserVault],
@@ -108,10 +109,8 @@ object OverviewTabContents {
               "Observation Attachments",
               none,
               canMinimize = true
-            )(_ =>
-              <.div(
-                ObsAttachmentsTable(props.programId, client, props.obsAttachments)
-              )
+            )(renderInTitle =>
+              ObsAttachmentsTable(props.programId, client, props.obsAttachments, renderInTitle)
             )
 
             TileController(

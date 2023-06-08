@@ -17,6 +17,7 @@ import explore.EditableLabel
 import explore.Icons
 import explore.common.ProgramQueries
 import explore.components.ui.ExploreStyles
+import explore.components.Tile
 import explore.model.AppContext
 import explore.model.Constants
 import explore.model.Focused
@@ -72,7 +73,8 @@ import scala.collection.immutable.SortedSet
 case class ObsAttachmentsTable(
   pid:            Program.Id,
   client:         OdbRestClient[IO],
-  obsAttachments: View[List[ObsAttachment]]
+  obsAttachments: View[List[ObsAttachment]],
+  renderInTitle:  Tile.RenderInTitle
 ) extends ReactFnProps(ObsAttachmentsTable.component)
 
 object ObsAttachmentsTable extends TableHooks:
@@ -110,7 +112,9 @@ object ObsAttachmentsTable extends TableHooks:
 
   private val labelButtonClasses =
     PrimeStyles.Component |+| PrimeStyles.Button |+| PrimeStyles.ButtonIconOnly
-      |+| PrimeStyles.ButtonSecondary |+| LucumaStyles.Tiny |+| LucumaStyles.Compact
+      |+| LucumaStyles.Tiny |+| LucumaStyles.Compact
+
+  private val tableLabelButtonClasses = labelButtonClasses |+| PrimeStyles.ButtonSecondary
 
   // TEMPORARY until we get the graphql enums worked out
   given Enumerated[ObsAttachmentType] =
@@ -295,12 +299,12 @@ object ObsAttachmentsTable extends TableHooks:
                   // The upload "button" needs to be a label. In order to make
                   // the styling consistent they're all labels.
                   <.label(
-                    labelButtonClasses,
+                    tableLabelButtonClasses,
                     Icons.Trash,
                     ^.onClick ==> deletePrompt(props, thisOa)
                   ).withTooltip("Delete attachment"),
                   <.label(
-                    labelButtonClasses,
+                    tableLabelButtonClasses,
                     ^.htmlFor := s"attachment-replace-$id",
                     Icons.FileArrowUp
                   ).withTooltip(
@@ -316,7 +320,7 @@ object ObsAttachmentsTable extends TableHooks:
                   ),
                   urlMap.get(thisOa.toMapKey).foldMap {
                     case Pot.Ready(url) =>
-                      <.a(Icons.FileArrowDown, ^.href := url, labelButtonClasses)
+                      <.a(Icons.FileArrowDown, ^.href := url, tableLabelButtonClasses)
                         .withTooltip("Download File")
                     case Pot.Pending    => <.span(Icons.Spinner.withSpin(true))
                     case Pot.Error(t)   => <.span(Icons.ExclamationTriangle).withTooltip(t.getMessage)
@@ -425,42 +429,36 @@ object ObsAttachmentsTable extends TableHooks:
               .runAsync)
             .when_(files.nonEmpty)
 
-        val footer =
-          <.tr(
-            <.td(
-              ^.colSpan := 8,
-              <.div(
-                ExploreStyles.AttachmentsTableFooter,
-                EnumDropdownView(
-                  id = "attachment-type".refined,
-                  value = newAttType,
-                  clazz = ExploreStyles.FlatFormField
-                ),
-                <.label(
-                  labelButtonClasses,
-                  ^.htmlFor := "attachment-upload",
-                  Icons.FileArrowUp
-                ).withTooltip(
-                  tooltip = s"Upload new ${newAttType.get.shortName} attachment",
-                  placement = Placement.Right
-                ),
-                <.input(
-                  ExploreStyles.FileUpload,
-                  ^.tpe  := "file",
-                  ^.onChange ==> onInsertFileSelected,
-                  ^.id   := "attachment-upload",
-                  ^.name := "file"
-                )
+        React.Fragment(
+          props.renderInTitle(
+            <.div(
+              ExploreStyles.TableSelectionToolbar,
+              EnumDropdownView(
+                id = "attachment-type".refined,
+                value = newAttType,
+                clazz = ExploreStyles.FlatFormField |+| ExploreStyles.AttachmentsTableTypeSelect
+              ),
+              <.label(
+                labelButtonClasses,
+                ^.htmlFor := "attachment-upload",
+                Icons.FileArrowUp
+              ).withTooltip(
+                tooltip = s"Upload new ${newAttType.get.shortName} attachment",
+                placement = Placement.Right
+              ),
+              <.input(
+                ExploreStyles.FileUpload,
+                ^.tpe  := "file",
+                ^.onChange ==> onInsertFileSelected,
+                ^.id   := "attachment-upload",
+                ^.name := "file"
               )
             )
-          )
-
-        <.div(
+          ),
           PrimeTable(
             table,
             striped = true,
             compact = Compact.Very,
-            footerMod = footer,
             emptyMessage = <.div("No observation attachments uploaded"),
             tableMod = ExploreStyles.AttachmentsTable
           ),
