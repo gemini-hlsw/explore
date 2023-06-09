@@ -17,12 +17,11 @@ import explore.components.Tile
 import explore.components.TileController
 import explore.model.AppContext
 import explore.model.ObsAttachment
-import explore.model.ObsAttachmentList
 import explore.model.ObsAttachmentAssignmentMap
+import explore.model.ObsAttachmentList
 import explore.model.UserVault
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.*
-import explore.utils.OdbRestClient
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
@@ -88,50 +87,50 @@ object OverviewTabContents {
   private val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useMemoBy(_.userVault.map(_.token))(_ => _.map(OdbRestClient[IO]))
       .useContext(AppContext.ctx)
       // TODO: Save/restore the layout in user prefs.
       .useStateView(Pot(defaultLayouts))
       .useResizeDetector()
-      .render { (props, oRestClient, ctx, layouts, resize) =>
+      .render { (props, ctx, layouts, resize) =>
 
         import ctx.given
 
-        oRestClient.value.map(client =>
-          layouts.renderPotView { l =>
+        layouts.renderPotView { l =>
 
-            val warningsAndErrorsTile = Tile(
-              ObsTabTilesIds.WarningsAndErrorsId.id,
-              "Warnings And Errors",
-              none,
-              canMinimize = true
-            )(_ => UnderConstruction())
+          val warningsAndErrorsTile = Tile(
+            ObsTabTilesIds.WarningsAndErrorsId.id,
+            "Warnings And Errors",
+            none,
+            canMinimize = true
+          )(_ => UnderConstruction())
 
-            val obsAttachmentsTile = Tile(
-              ObsTabTilesIds.ObsAttachmentsId.id,
-              "Observation Attachments",
-              none,
-              canMinimize = true
-            )(renderInTitle =>
-              ObsAttachmentsTable(props.programId,
-                                  client,
-                                  props.obsAttachments,
-                                  props.obsAttachmentAssignments,
-                                  renderInTitle
+          val obsAttachmentsTile = Tile(
+            ObsTabTilesIds.ObsAttachmentsId.id,
+            "Observation Attachments",
+            none,
+            canMinimize = true
+          )(renderInTitle =>
+            Pot
+              .fromOption(props.userVault)
+              .renderPot(vault =>
+                ObsAttachmentsTable(props.programId,
+                                    vault.token,
+                                    props.obsAttachments,
+                                    props.obsAttachmentAssignments,
+                                    renderInTitle
+                )
               )
-            )
+          )
 
-            TileController(
-              props.userVault.map(_.user.id),
-              resize.width.getOrElse(1),
-              defaultLayouts,
-              l,
-              List(warningsAndErrorsTile, obsAttachmentsTile),
-              GridLayoutSection.OverviewLayout,
-              storeLayout = false
-            )
-
-          }
-        )
+          TileController(
+            props.userVault.map(_.user.id),
+            resize.width.getOrElse(1),
+            defaultLayouts,
+            l,
+            List(warningsAndErrorsTile, obsAttachmentsTile),
+            GridLayoutSection.OverviewLayout,
+            storeLayout = false
+          )
+        }
       }
 }

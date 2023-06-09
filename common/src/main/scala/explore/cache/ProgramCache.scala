@@ -19,8 +19,8 @@ import explore.model.ObsSummary
 import explore.model.ProgramSummaries
 import explore.model.ProposalAttachment
 import explore.model.TargetWithObs
-import explore.model.syntax.all.*
 import explore.model.reusability.given
+import explore.model.syntax.all.*
 import japgolly.scalajs.react.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Program

@@ -17,13 +17,13 @@ import lucuma.core.enums.StellarLibrarySpectrum
 import lucuma.core.math.Coordinates
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Group
-import lucuma.core.model.{ObsAttachment => ObsAtt}
 import lucuma.core.model.Observation
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.Target
 import lucuma.core.model.UnnormalizedSED
+import lucuma.core.model.{ObsAttachment => ObsAtt}
 import lucuma.core.optics.SplitEpi
 import lucuma.core.util.NewType
 import lucuma.refined.*
