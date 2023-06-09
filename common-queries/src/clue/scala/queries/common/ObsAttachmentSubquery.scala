@@ -21,10 +21,5 @@ object ObsAttachmentSubquery
       checked
       fileSize
       updatedAt
-      observations {
-        matches {
-          id
-        }
-      }
     }
   """

@@ -17,6 +17,7 @@ import lucuma.core.enums.StellarLibrarySpectrum
 import lucuma.core.math.Coordinates
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Group
+import lucuma.core.model.{ObsAttachment => ObsAtt}
 import lucuma.core.model.Observation
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.SourceProfile
@@ -51,13 +52,15 @@ val EmptySiderealTarget =
 
 type AsterismIds = SortedSet[Target.Id]
 
-type AsterismGroupList   = SortedMap[ObsIdSet, AsterismIds]
-type TargetList          = SortedMap[Target.Id, Target]
-type TargetWithObsList   = SortedMap[Target.Id, TargetWithObs]
+type AsterismGroupList          = SortedMap[ObsIdSet, AsterismIds]
+type TargetList                 = SortedMap[Target.Id, Target]
+type TargetWithObsList          = SortedMap[Target.Id, TargetWithObs]
 // KeyedIndexedList is only useful is manual order is going to matter.
 // For the moment I'm keeping it because it seems it will matter at some point.
 // Otherwise, we should change to a SortedMap.
-type ObservationList     = KeyedIndexedList[Observation.Id, ObsSummary]
-type ConstraintGroupList = SortedMap[ObsIdSet, ConstraintSet]
+type ObservationList            = KeyedIndexedList[Observation.Id, ObsSummary]
+type ConstraintGroupList        = SortedMap[ObsIdSet, ConstraintSet]
+type ObsAttachmentList          = SortedMap[ObsAtt.Id, ObsAttachment]
+type ObsAttachmentAssignmentMap = Map[ObsAtt.Id, SortedSet[Observation.Id]]
 
 type GroupList = List[GroupElement]

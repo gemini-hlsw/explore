@@ -17,6 +17,8 @@ import explore.components.Tile
 import explore.components.TileController
 import explore.model.AppContext
 import explore.model.ObsAttachment
+import explore.model.ObsAttachmentList
+import explore.model.ObsAttachmentAssignmentMap
 import explore.model.UserVault
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.*
@@ -34,9 +36,10 @@ import react.primereact.Button
 import react.resizeDetector.hooks.*
 
 case class OverviewTabContents(
-  programId:      Program.Id,
-  userVault:      Option[UserVault],
-  obsAttachments: View[List[ObsAttachment]]
+  programId:                Program.Id,
+  userVault:                Option[UserVault],
+  obsAttachments:           View[ObsAttachmentList],
+  obsAttachmentAssignments: ObsAttachmentAssignmentMap
 ) extends ReactFnProps(OverviewTabContents.component)
 
 object OverviewTabContents {
@@ -110,7 +113,12 @@ object OverviewTabContents {
               none,
               canMinimize = true
             )(renderInTitle =>
-              ObsAttachmentsTable(props.programId, client, props.obsAttachments, renderInTitle)
+              ObsAttachmentsTable(props.programId,
+                                  client,
+                                  props.obsAttachments,
+                                  props.obsAttachmentAssignments,
+                                  renderInTitle
+              )
             )
 
             TileController(
