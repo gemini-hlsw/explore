@@ -8,18 +8,17 @@ import lucuma.refined.*
 
 enum ObsTabTilesIds:
   case NotesId, TargetSummaryId, TargetId, PlotId, ConstraintsId, ConfigurationId, ItcId,
-    TimingWindowsId, WarningsAndErrorsId, ObsAttachmentsId, ProposalAttachmentsId, FinderChartsId
+    TimingWindowsId, WarningsAndErrorsId, ObsAttachmentsId, FinderChartsId
 
   def id: NonEmptyString = this match
-    case NotesId               => "notes".refined
-    case TargetSummaryId       => "targetSummary".refined
-    case TargetId              => "target".refined
-    case PlotId                => "elevationPlot".refined
-    case ConstraintsId         => "constraints".refined
-    case ConfigurationId       => "configuration".refined
-    case ItcId                 => "itc".refined
-    case TimingWindowsId       => "timingWindows".refined
-    case WarningsAndErrorsId   => "warningsAndErrors".refined
-    case ObsAttachmentsId      => "obsAttachments".refined
-    case ProposalAttachmentsId => "proposalAttachments".refined
-    case FinderChartsId        => "finderChartes".refined
+    case NotesId             => "notes".refined
+    case TargetSummaryId     => "targetSummary".refined
+    case TargetId            => "target".refined
+    case PlotId              => "elevationPlot".refined
+    case ConstraintsId       => "constraints".refined
+    case ConfigurationId     => "configuration".refined
+    case ItcId               => "itc".refined
+    case TimingWindowsId     => "timingWindows".refined
+    case WarningsAndErrorsId => "warningsAndErrors".refined
+    case ObsAttachmentsId    => "obsAttachments".refined
+    case FinderChartsId      => "finderChartes".refined

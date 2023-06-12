@@ -20,6 +20,7 @@ import explore.model.ProgramSummaries
 import explore.model.ProposalAttachment
 import explore.model.TargetWithObs
 import explore.model.reusability.given
+import explore.model.syntax.all.*
 import japgolly.scalajs.react.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
@@ -197,7 +198,7 @@ object ProgramCache extends CacheComponent[ProgramSummaries, ProgramCache]:
     val updateAttachments = ProgramEditAttachmentSubscription
       .subscribe[IO](props.programId)
       .map(_.map(data =>
-        val obsAttachments      = data.programEdit.value.obsAttachments
+        val obsAttachments      = data.programEdit.value.obsAttachments.toSortedMap(_.id)
         val proposalAttachments = data.programEdit.value.proposalAttachments
         ProgramSummaries.obsAttachments
           .replace(obsAttachments)

@@ -49,9 +49,11 @@ object Routing:
     withProgramSummaries(model)(programSummaries =>
       val routingInfo = RoutingInfo.from(page)
 
-      OverviewTabContents(routingInfo.programId,
-                          model.zoom(RootModel.vault).get,
-                          programSummaries.zoom(ProgramSummaries.obsAttachments)
+      OverviewTabContents(
+        routingInfo.programId,
+        model.zoom(RootModel.vault).get,
+        programSummaries.zoom(ProgramSummaries.obsAttachments),
+        programSummaries.get.obsAttachmentAssignments
       )
     )
 

@@ -24,6 +24,9 @@ import scala.concurrent.duration.*
 import scala.util.control.NoStackTrace
 
 trait OdbRestClient[F[_]] {
+  // Allows us to have a reuse - needed for memoization, etc.
+  def authToken: NonEmptyString
+
   def getObsAttachment(programId: Program.Id, attachmentId: ObsAttachment.Id): F[Stream[F, Byte]]
 
   def getPresignedUrl(programId: Program.Id, attachmentId: ObsAttachment.Id): F[String]
@@ -90,6 +93,8 @@ object OdbRestClient {
         }
 
     new OdbRestClient[F] {
+      val authToken: NonEmptyString = authToken
+
       def getObsAttachment(
         programId:    Program.Id,
         attachmentId: ObsAttachment.Id

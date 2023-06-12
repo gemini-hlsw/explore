@@ -11,6 +11,7 @@ import lucuma.core.enums.ObsActiveStatus
 import lucuma.core.enums.ObsStatus
 import lucuma.core.math.Wavelength
 import lucuma.core.math.arb.ArbWavelength.given
+import lucuma.core.model.ObsAttachment
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target
@@ -57,6 +58,7 @@ trait ArbObsSummary:
         scienceTargetIds    <- arbitrary[Set[Target.Id]]
         constraints         <- arbitrary[ConstraintSet]
         timingWindows       <- arbitrary[List[TimingWindow]]
+        attachmentIds       <- arbitrary[Set[ObsAttachment.Id]]
         scienceRequirements <- arbitrary[ScienceRequirements]
         observingMode       <- arbitrary[Option[ObservingMode]]
         vizTime             <- arbitrary[Option[Instant]]
@@ -72,6 +74,7 @@ trait ArbObsSummary:
         SortedSet.from(scienceTargetIds),
         constraints,
         timingWindows,
+        SortedSet.from(attachmentIds),
         scienceRequirements,
         observingMode,
         vizTime,

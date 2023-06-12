@@ -13,6 +13,7 @@ import explore.model.itc.ItcExposureTime
 import explore.model.itc.ItcTarget
 import explore.modes.InstrumentRow
 import explore.undo.UndoStacks
+import explore.utils.OdbRestClient
 import japgolly.scalajs.react.ReactCats.*
 import japgolly.scalajs.react.Reusability
 import lucuma.ags.AgsAnalysis
@@ -127,3 +128,5 @@ object reusability:
   given Reusability[ScienceRequirements] = Reusability.byEq
 
   given Reusability[OdbItcResult.Success] = Reusability.byEq
+
+  given odbRestClientReuse[F[_]]: Reusability[OdbRestClient[F]] = Reusability.by(_.authToken)

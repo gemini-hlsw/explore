@@ -23,6 +23,7 @@ import lucuma.core.model.SourceProfile
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.Target
 import lucuma.core.model.UnnormalizedSED
+import lucuma.core.model.{ObsAttachment => ObsAtt}
 import lucuma.core.optics.SplitEpi
 import lucuma.core.util.NewType
 import lucuma.refined.*
@@ -51,13 +52,15 @@ val EmptySiderealTarget =
 
 type AsterismIds = SortedSet[Target.Id]
 
-type AsterismGroupList   = SortedMap[ObsIdSet, AsterismIds]
-type TargetList          = SortedMap[Target.Id, Target]
-type TargetWithObsList   = SortedMap[Target.Id, TargetWithObs]
+type AsterismGroupList          = SortedMap[ObsIdSet, AsterismIds]
+type TargetList                 = SortedMap[Target.Id, Target]
+type TargetWithObsList          = SortedMap[Target.Id, TargetWithObs]
 // KeyedIndexedList is only useful is manual order is going to matter.
 // For the moment I'm keeping it because it seems it will matter at some point.
 // Otherwise, we should change to a SortedMap.
-type ObservationList     = KeyedIndexedList[Observation.Id, ObsSummary]
-type ConstraintGroupList = SortedMap[ObsIdSet, ConstraintSet]
+type ObservationList            = KeyedIndexedList[Observation.Id, ObsSummary]
+type ConstraintGroupList        = SortedMap[ObsIdSet, ConstraintSet]
+type ObsAttachmentList          = SortedMap[ObsAtt.Id, ObsAttachment]
+type ObsAttachmentAssignmentMap = Map[ObsAtt.Id, SortedSet[Observation.Id]]
 
 type GroupList = List[GroupElement]

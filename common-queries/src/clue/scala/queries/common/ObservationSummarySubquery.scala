@@ -32,6 +32,9 @@ object ObservationSummarySubquery
           }
           constraintSet $ConstraintSetSubquery
           timingWindows $TimingWindowSubquery
+          obsAttachments {
+            id
+          }
           scienceRequirements {
             spectroscopy {
               wavelength $WavelengthSubquery

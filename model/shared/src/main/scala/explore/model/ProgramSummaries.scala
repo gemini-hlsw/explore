@@ -10,6 +10,7 @@ import cats.derived.*
 import cats.implicits.*
 import explore.data.KeyedIndexedList
 import explore.model.syntax.all.*
+import lucuma.core.model.ObsAttachment
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.schemas.model.TargetWithId
@@ -23,7 +24,7 @@ case class ProgramSummaries(
   targets:             TargetList,
   observations:        ObservationList,
   groups:              GroupList,
-  obsAttachments:      List[ObsAttachment],
+  obsAttachments:      ObsAttachmentList,
   proposalAttachments: List[ProposalAttachment]
 ) derives Eq:
   lazy val asterismGroups: AsterismGroupList =
@@ -40,6 +41,14 @@ case class ProgramSummaries(
   lazy val targetObservations: Map[Target.Id, SortedSet[Observation.Id]] =
     observations.values
       .flatMap(obs => obs.scienceTargetIds.map(targetId => targetId -> obs.id))
+      .groupMap(_._1)(_._2)
+      .view
+      .mapValues(obsIds => SortedSet.from(obsIds))
+      .toMap
+
+  lazy val obsAttachmentAssignments: ObsAttachmentAssignmentMap =
+    observations.values
+      .flatMap(obs => obs.attachmentIds.map(_ -> obs.id))
       .groupMap(_._1)(_._2)
       .view
       .mapValues(obsIds => SortedSet.from(obsIds))
@@ -80,7 +89,7 @@ object ProgramSummaries:
   val observations: Lens[ProgramSummaries, ObservationList]                 =
     Focus[ProgramSummaries](_.observations)
   val groups: Lens[ProgramSummaries, GroupList]                             = Focus[ProgramSummaries](_.groups)
-  val obsAttachments: Lens[ProgramSummaries, List[ObsAttachment]]           =
+  val obsAttachments: Lens[ProgramSummaries, ObsAttachmentList]             =
     Focus[ProgramSummaries](_.obsAttachments)
   val proposalAttachments: Lens[ProgramSummaries, List[ProposalAttachment]] =
     Focus[ProgramSummaries](_.proposalAttachments)
@@ -96,6 +105,6 @@ object ProgramSummaries:
       targetList.toSortedMap(_.id, _.target),
       KeyedIndexedList.fromList(obsList, ObsSummary.id.get),
       groups,
-      obsAttachments,
+      obsAttachments.toSortedMap(_.id),
       proposalAttachments
     )

@@ -19,6 +19,7 @@ import lucuma.core.enums.ObsActiveStatus
 import lucuma.core.enums.ObsStatus
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
+import lucuma.core.model.ObsAttachment
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target
@@ -46,6 +47,7 @@ case class ObsSummary(
   scienceTargetIds:    AsterismIds,
   constraints:         ConstraintSet,
   timingWindows:       List[TimingWindow],
+  attachmentIds:       SortedSet[ObsAttachment.Id],
   scienceRequirements: ScienceRequirements,
   observingMode:       Option[ObservingMode],
   visualizationTime:   Option[Instant],
@@ -72,6 +74,7 @@ object ObsSummary:
   val scienceTargetIds    = Focus[ObsSummary](_.scienceTargetIds)
   val constraints         = Focus[ObsSummary](_.constraints)
   val timingWindows       = Focus[ObsSummary](_.timingWindows)
+  val attachmentIds       = Focus[ObsSummary](_.attachmentIds)
   val scienceRequirements = Focus[ObsSummary](_.scienceRequirements)
   val observingMode       = Focus[ObsSummary](_.observingMode)
   val visualizationTime   = Focus[ObsSummary](_.visualizationTime)
@@ -81,6 +84,10 @@ object ObsSummary:
   private case class TargetIdWrapper(id: Target.Id)
   private object TargetIdWrapper:
     given Decoder[TargetIdWrapper] = deriveDecoder
+
+  private case class AttachmentIdWrapper(id: ObsAttachment.Id)
+  private object AttachmentIdWrapper:
+    given Decoder[AttachmentIdWrapper] = deriveDecoder
 
   given Decoder[ObsSummary] = Decoder.instance(c =>
     for {
@@ -93,6 +100,7 @@ object ObsSummary:
       scienceTargetIds    <- c.downField("targetEnvironment").get[List[TargetIdWrapper]]("asterism")
       constraints         <- c.get[ConstraintSet]("constraintSet")
       timingWindows       <- c.get[List[TimingWindow]]("timingWindows")
+      attachmentIds       <- c.get[List[AttachmentIdWrapper]]("obsAttachments")
       scienceRequirements <- c.get[ScienceRequirements]("scienceRequirements")
       observingMode       <- c.get[Option[ObservingMode]]("observingMode")
       visualizationTime   <- c.get[Option[Timestamp]]("visualizationTime")
@@ -110,6 +118,7 @@ object ObsSummary:
       SortedSet.from(scienceTargetIds.map(_.id)),
       constraints,
       timingWindows,
+      SortedSet.from(attachmentIds.map(_.id)),
       scienceRequirements,
       observingMode,
       visualizationTime.map(_.toInstant),
