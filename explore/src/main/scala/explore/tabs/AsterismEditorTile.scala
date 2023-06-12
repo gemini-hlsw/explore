@@ -71,20 +71,6 @@ object AsterismEditorTile:
       ObsQueries.updateVisualizationTime[IO](programId, obsIds.toList, t).runAsync
     )
 
-    // Store the pos angle on the db
-    val updatableObsConf: ObsConfiguration =
-      obsConf.copy(posAngleProperties = obsConf.posAngleProperties.map {
-        case p @ PAProperties(oid, _, agsStateView, paView) =>
-          p.copy(constraint =
-            paView.withOnMod(pa =>
-              agsStateView.set(AgsState.Saving) *> ObsQueries
-                .updatePosAngle[IO](programId, List(oid), pa)
-                .guarantee(agsStateView.async.set(AgsState.Idle))
-                .runAsync
-            )
-          )
-      })
-
     val control: VdomNode = <.div(VizTimeEditor(vizTimeView))
 
     Tile(
@@ -103,7 +89,7 @@ object AsterismEditorTile:
           asterismIds,
           allTargets,
           vizTime,
-          updatableObsConf,
+          obsConf,
           currentTarget,
           setTarget,
           otherObsCount,

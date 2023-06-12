@@ -257,8 +257,17 @@ object ObsTabTiles:
         ) =>
           import ctx.given
 
-          val posAngle: View[PosAngleConstraint] =
-            props.obsView.zoom(ObsSummary.posAngleConstraint)
+          // This view is shared between AGS and the configuration editor
+          // when PA changes it gets saved to the db
+          val posAngleConstraintView: View[PosAngleConstraint] =
+            props.obsView
+              .zoom(ObsSummary.posAngleConstraint)
+              .withOnMod(pa =>
+                agsState.set(AgsState.Saving) *> ObsQueries
+                  .updatePosAngle[IO](props.programId, List(props.obsId), pa)
+                  .guarantee(agsState.async.set(AgsState.Idle))
+                  .runAsync
+              )
 
           val asterismIds: View[AsterismIds] =
             props.obsView.zoom(ObsSummary.scienceTargetIds)
@@ -361,12 +370,12 @@ object ObsTabTiles:
             )
 
           val paProps: PAProperties =
-            PAProperties(props.obsId, selectedPA, agsState, posAngle)
+            PAProperties(props.obsId, selectedPA, agsState, posAngleConstraintView)
 
           val averagePA: Option[Angle] =
             (basicConfiguration.map(_.siteFor), asterismAsNel, vizTime)
               .mapN((site, asterism, vizTime) =>
-                posAngle.get match
+                posAngleConstraintView.get match
                   case PosAngleConstraint.AverageParallactic =>
                     averageParallacticAngle(site, asterism.baseTracking, vizTime)
                   case _                                     => none
