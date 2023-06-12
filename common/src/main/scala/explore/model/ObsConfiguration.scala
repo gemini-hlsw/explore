@@ -34,7 +34,8 @@ case class ObsConfiguration(
   acquisitionOffsets: Option[NonEmptyList[Offset]],
   averagePA:          Option[Angle]
 ) derives Eq:
-  def posAngleConstraint: Option[PosAngleConstraint] = posAngleProperties.map(_.constraint.get)
+  def posAngleConstraint: Option[PosAngleConstraint] =
+    posAngleProperties.map(_.posAngleConstraint.get)
 
   // In case there is no guide star we still want to have a posAngle equivalent
   // To draw visualization
@@ -49,7 +50,7 @@ case class ObsConfiguration(
       case _                                               => none
 
   def posAngleConstraintView: Option[View[PosAngleConstraint]] =
-    posAngleProperties.map(_.constraint)
+    posAngleProperties.map(_.posAngleConstraint)
 
   def agsState: Option[View[AgsState]] =
     posAngleProperties.map(_.agsState)

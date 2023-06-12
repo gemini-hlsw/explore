@@ -46,12 +46,13 @@ import queries.schemas.odb.ObsQueries
 import react.common.ReactFnProps
 
 import java.time.Instant
+import explore.config.PAConstraintUpdater
 
 object AsterismEditorTile:
 
   def asterismEditorTile(
-    userId:        Option[User.Id],
     programId:     Program.Id,
+    userId:        Option[User.Id],
     obsIds:        ObsIdSet,
     asterismIds:   View[AsterismIds],
     allTargets:    View[TargetList],
@@ -71,20 +72,6 @@ object AsterismEditorTile:
       ObsQueries.updateVisualizationTime[IO](programId, obsIds.toList, t).runAsync
     )
 
-    // Store the pos angle on the db
-    val updatableObsConf: ObsConfiguration =
-      obsConf.copy(posAngleProperties = obsConf.posAngleProperties.map {
-        case p @ PAProperties(oid, _, agsStateView, paView) =>
-          p.copy(constraint =
-            paView.withOnMod(pa =>
-              agsStateView.set(AgsState.Saving) *> ObsQueries
-                .updatePosAngle[IO](programId, List(oid), pa)
-                .guarantee(agsStateView.async.set(AgsState.Idle))
-                .runAsync
-            )
-          )
-      })
-
     val control: VdomNode = <.div(VizTimeEditor(vizTimeView))
 
     Tile(
@@ -97,13 +84,13 @@ object AsterismEditorTile:
     )((renderInTitle: Tile.RenderInTitle) =>
       userId.map(uid =>
         AsterismEditor(
-          uid,
           programId,
+          uid,
           obsIds,
           asterismIds,
           allTargets,
           vizTime,
-          updatableObsConf,
+          obsConf,
           currentTarget,
           setTarget,
           otherObsCount,

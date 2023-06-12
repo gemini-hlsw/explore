@@ -72,6 +72,7 @@ import react.primereact.Message
 import java.time.Instant
 
 case class SiderealTargetEditor(
+  programId:     Program.Id,
   userId:        User.Id,
   targetId:      Target.Id,        // Used to call DB mutations and focus in Aladin.
   target:        View[Target.Sidereal],
@@ -300,6 +301,7 @@ object SiderealTargetEditor:
             ),
             (vizTime, props.asterism.toPot).tupled.renderPot((vt, asterism) =>
               AladinCell(
+                props.programId,
                 props.userId,
                 props.targetId,
                 vt,

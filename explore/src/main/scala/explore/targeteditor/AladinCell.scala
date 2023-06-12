@@ -71,12 +71,18 @@ import react.primereact.PopupMenu
 import react.primereact.PopupMenuRef
 import react.primereact.ProgressBar
 import react.primereact.hooks.all.*
+import clue.FetchClient
 
 import java.time.Duration
 import java.time.Instant
 import scala.concurrent.duration.*
+import clue.FetchClient
+import lucuma.schemas.ObservationDB
+import explore.config.PAConstraintUpdater
+import lucuma.core.model.Program
 
 case class AladinCell(
+  programId:  Program.Id,
   uid:        User.Id,
   tid:        Target.Id,
   vizTime:    Instant,
@@ -95,14 +101,23 @@ case class AladinCell(
 
   val positions: Option[NonEmptyList[AgsPosition]] =
     val offsets: NonEmptyList[Offset] = obsConf.flatMap(_.scienceOffsets) match
-      case Some(offsets) => offsets.prepend(Offset.Zero)
+      case Some(offsets) => NonEmptyList.of(Offset.Zero) // offsets.prepend(Offset.Zero)
       case None          => NonEmptyList.of(Offset.Zero)
-    anglesToTest.map { anglesToTest =>
+    given Order[Angle]                = Angle.AngleOrder
+    anglesToTest.map(_.sorted).map { anglesToTest =>
       for {
         pa  <- anglesToTest
         off <- offsets
       } yield AgsPosition(pa, off)
     }
+
+  def posAngleAndSaveView(using
+    Logger[IO],
+    FetchClient[IO, ObservationDB]
+  ): Option[View[PosAngleConstraint]] =
+    obsConf.flatMap(_.posAngleProperties.map { case PAProperties(obsId, _, agsState, paView) =>
+      PAConstraintUpdater.posAngleAndSaveView(programId, obsId, paView, agsState)
+    })
 
   def canRunAGS: Boolean = obsConf.exists(o => o.constraints.isDefined && o.wavelength.isDefined)
 
@@ -202,16 +217,40 @@ object AladinCell extends ModelOptics with AladinCommon:
           .getOrElse(y) // Ignore invalid updates
     )
 
+  extension (results: List[AgsAnalysis])
+    /**
+     * This method will sort the analysis for quality and internally for positions that give the
+     * lowest vignetting.
+     */
+    def sortPositions1(positions: NonEmptyList[AgsPosition]): List[AgsAnalysis] = {
+      val (usable, nonUsable)                = results.partition(_.isUsable)
+      println(s"Usable: ${usable.size} Non usable: ${nonUsable.size}")
+      val usablePerTarget: List[AgsAnalysis] =
+        usable
+          .groupBy(_.target.id)
+          .map { (id, analyses) =>
+            analyses
+              .collect { case u: AgsAnalysis.Usable =>
+                u
+              }
+              .reduce((a, b) => a.copy(vignetting = a.vignetting.concatNel(b.vignetting)))
+              .sortedVignetting
+          }
+          .toList
+      println(s"Usable: ${usablePerTarget.headOption.flatMap(_.posAngle).map(_.toDoubleDegrees)}")
+      usablePerTarget.sorted(AgsAnalysis.rankingOrdering) ::: nonUsable
+    }
+
   private def flipAngle(
     props:          Props,
     manualOverride: View[ManualAgsOverride]
-  ): Option[AgsAnalysis] => Callback =
+  )(using Logger[IO], FetchClient[IO, ObservationDB]): Option[AgsAnalysis] => Callback =
     case Some(AgsAnalysis.Usable(_, _, _, _, pos)) =>
       val angle = pos.head._1.posAngle
       props.obsConf.flatMap(_.posAngleConstraint) match
         case Some(PosAngleConstraint.AllowFlip(a)) if a =!= angle =>
-          props.obsConf
-            .flatMap(_.posAngleConstraintView)
+          println(s"Flipping angle to ${angle.toMicroarcseconds} ${angle.toDoubleDegrees}")
+          props.posAngleAndSaveView
             .map(_.set(PosAngleConstraint.AllowFlip(angle)))
             .getOrEmpty *> manualOverride.set(ManualAgsOverride(true))
         case _                                                    => Callback.empty
@@ -314,6 +353,7 @@ object AladinCell extends ModelOptics with AladinCommon:
               .whenA(positions.isEmpty) *>
               (positions, tracking.at(vizTime), props.obsConf.flatMap(_.agsState)).mapN {
                 (positions, base, agsState) =>
+                  // println(positions.map(_.posAngle.toDoubleDegrees))
 
                   val fpu    = observingMode.flatMap(_.fpuAlternative)
                   val params = AgsParams.GmosAgsParams(fpu, PortDisposition.Side)
@@ -322,6 +362,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                     props.asterism.asList
                       .flatMap(_.toSidereal)
                       .flatMap(_.target.tracking.at(vizTime))
+                  // println(s"constraints: ${props.obsConf.flatMap(_.posAngleConstraint)}")
 
                   val process = for
                     _ <- agsState.set(AgsState.Calculating).to[IO]
@@ -338,7 +379,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                                              candidates
                           )
                         )
-                        .map(_.map(_.sortPositions(positions)))
+                        .map(_.map(_.sortPositions1(positions)))
                         .flatMap { r =>
                           // Set the analysis
                           (r.map(ags.setState).getOrEmpty *>

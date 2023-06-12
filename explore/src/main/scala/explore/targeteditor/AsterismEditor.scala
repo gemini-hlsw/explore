@@ -69,13 +69,13 @@ import react.primereact.Button
 import java.time.Instant
 
 case class AsterismEditor(
-  userId:          User.Id,
   programId:       Program.Id,
+  userId:          User.Id,
   obsIds:          ObsIdSet,
   asterismIds:     View[AsterismIds],
   allTargets:      View[TargetList],
   vizTime:         View[Option[Instant]],
-  configuration:   ObsConfiguration,
+  obsConf:         ObsConfiguration,
   focusedTargetId: Option[Target.Id],
   setTarget:       (Option[Target.Id], SetRouteVia) => Callback,
   otherObsCount:   Target.Id => Int,
@@ -220,6 +220,7 @@ object AsterismEditor extends AsterismModifier:
                     ).toFalseTrueFragment
                   ).when(otherObsCount > 0),
                   SiderealTargetEditor(
+                    props.programId,
                     props.userId,
                     focusedTargetId,
                     siderealTargetView,
@@ -227,7 +228,7 @@ object AsterismEditor extends AsterismModifier:
                       .fromIdsAndTargets(props.asterismIds.get, props.allTargets.get)
                       .map(_.focusOn(focusedTargetId)),
                     vizTime,
-                    props.configuration.some,
+                    props.obsConf.some,
                     props.undoStacks
                       .zoom(atMapWithDefault(focusedTargetId, UndoStacks.empty)),
                     props.searching,

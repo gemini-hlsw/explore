@@ -34,15 +34,45 @@ import monocle.std.option
 import queries.schemas.odb.ObsQueries
 import react.common.Css
 import react.common.ReactFnProps
+import japgolly.scalajs.react.util.DefaultEffects.{Async => DefaultA}
+import org.typelevel.log4cats.Logger
+import clue.FetchClient
+import lucuma.schemas.ObservationDB
+
+object PAConstraintUpdater {
+
+  def posAngleAndSaveView(
+    programId:              Program.Id,
+    obsId:                  Observation.Id,
+    posAngleConstraintView: View[PosAngleConstraint],
+    agsState:               View[AgsState]
+  )(using
+    Logger[IO],
+    FetchClient[IO, ObservationDB]
+  ): View[PosAngleConstraint] =
+    posAngleConstraintView
+      .withOnMod(c =>
+        (agsState.async.set(AgsState.Saving) >>
+          ObsQueries
+            .updatePosAngle[IO](programId, List(obsId), c)
+            .guarantee(agsState.async.set(AgsState.Idle))).runAsync
+      )
+}
 
 case class PAConfigurationPanel(
-  programId:    Program.Id,
-  obsId:        Observation.Id,
-  posAngleView: View[PosAngleConstraint],
-  selectedPA:   Option[Angle],
-  averagePA:    Option[Angle],
-  agsState:     View[AgsState]
-) extends ReactFnProps(PAConfigurationPanel.component)
+  programId:              Program.Id,
+  obsId:                  Observation.Id,
+  posAngleConstraintView: View[PosAngleConstraint],
+  selectedPA:             Option[Angle],
+  averagePA:              Option[Angle],
+  agsState:               View[AgsState]
+) extends ReactFnProps(PAConfigurationPanel.component) {
+  def posAngleAndSaveView(using
+    Logger[IO],
+    FetchClient[IO, ObservationDB]
+  ): View[PosAngleConstraint] =
+    PAConstraintUpdater.posAngleAndSaveView(programId, obsId, posAngleConstraintView, agsState)
+}
 
 object PAConfigurationPanel:
   private type Props = PAConfigurationPanel
@@ -70,13 +100,7 @@ object PAConfigurationPanel:
       .render { (props, ctx) =>
         import ctx.given
 
-        val paView = props.posAngleView
-          .withOnMod(c =>
-            (props.agsState.async.set(AgsState.Saving) >>
-              ObsQueries.updatePosAngle[IO](props.programId, List(props.obsId), c))
-              .guarantee(props.agsState.async.set(AgsState.Idle))
-              .runAsync
-          )
+        val paView = props.posAngleAndSaveView
 
         val posAngleOptionsView: View[PosAngleOptions] =
           paView.zoom(unsafePosOptionsLens)
@@ -93,7 +117,7 @@ object PAConfigurationPanel:
           paView
             .zoom(PosAngleConstraint.parallacticOverrideAngle)
 
-        val selectedAngle = props.posAngleView.get match
+        val selectedAngle = paView.get match
           case PosAngleConstraint.Unbounded          =>
             props.selectedPA
               .map(a => <.label(f"${a.toDoubleDegrees}%.0f °"))

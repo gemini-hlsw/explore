@@ -378,8 +378,8 @@ object TargetTabContents extends TwoPanels:
 
       val asterismEditorTile =
         AsterismEditorTile.asterismEditorTile(
-          props.userId,
           props.programId,
+          props.userId,
           idsToEdit,
           asterismView,
           programSummaries.zoom(ProgramSummaries.targets),
@@ -437,6 +437,7 @@ object TargetTabContents extends TwoPanels:
       val title = s"Editing Target ${target.name.value} [$targetId]"
 
       val targetTile = SiderealTargetEditorTile.noObsSiderealTargetEditorTile(
+        props.programId,
         props.userId,
         targetId,
         targetView,

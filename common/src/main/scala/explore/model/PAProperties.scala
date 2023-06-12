@@ -17,17 +17,17 @@ import lucuma.core.model.PosAngleConstraint
 import lucuma.ui.reusability.given
 
 case class PAProperties(
-  oid:        Observation.Id,
-  selectedGS: View[Option[AgsAnalysis]],
-  agsState:   View[AgsState],
-  constraint: View[PosAngleConstraint]
+  oid:                Observation.Id,
+  selectedGS:         View[Option[AgsAnalysis]],
+  agsState:           View[AgsState],
+  posAngleConstraint: View[PosAngleConstraint]
 ) {
   val selectedPA = selectedGS.get.posAngle
 }
 
 object PAProperties:
   given Eq[PAProperties] =
-    Eq.by(x => (x.oid, x.selectedGS.get, x.agsState.get, x.constraint.get))
+    Eq.by(x => (x.oid, x.selectedGS.get, x.agsState.get, x.posAngleConstraint.get))
 
   given Reusability[PAProperties] =
     Reusability.byEq

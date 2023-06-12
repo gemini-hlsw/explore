@@ -26,10 +26,12 @@ import monocle.std.option.some
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
+import lucuma.core.model.Program
 
 object SiderealTargetEditorTile {
 
   def noObsSiderealTargetEditorTile(
+    programId:  Program.Id,
     userId:     Option[User.Id],
     targetId:   Target.Id,
     target:     View[Target.Sidereal],
@@ -52,6 +54,7 @@ object SiderealTargetEditorTile {
           ExploreStyles.TargetTileEditor,
           userId.map(uid =>
             SiderealTargetEditor(
+              programId,
               uid,
               targetId,
               target,

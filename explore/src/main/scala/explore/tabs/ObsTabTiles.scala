@@ -391,8 +391,8 @@ object ObsTabTiles:
 
           val targetTile: Tile =
             AsterismEditorTile.asterismEditorTile(
-              props.userId,
               props.programId,
+              props.userId,
               ObsIdSet.one(props.obsId),
               asterismIds,
               props.allTargetsUndoCtx.model,
