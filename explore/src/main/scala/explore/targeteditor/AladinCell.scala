@@ -6,6 +6,7 @@ package explore.targeteditor
 import boopickle.DefaultBasic.*
 import cats.Order
 import cats.data.NonEmptyList
+import cats.data.OptionT
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.Pot
@@ -237,6 +238,12 @@ object AladinCell extends ModelOptics with AladinCommon:
               .sortedVignetting
           }
           .toList
+      println(
+        s"Angles 77: ${Angle.fromDoubleDegrees(77).toMicroarcseconds}"
+      )
+      println(
+        s"Angles 257: ${Angle.fromDoubleDegrees(257).toMicroarcseconds}"
+      )
       println(s"Usable: ${usablePerTarget.headOption.flatMap(_.posAngle).map(_.toDoubleDegrees)}")
       usablePerTarget.sorted(AgsAnalysis.rankingOrdering) ::: nonUsable
     }
@@ -250,10 +257,26 @@ object AladinCell extends ModelOptics with AladinCommon:
       props.obsConf.flatMap(_.posAngleConstraint) match
         case Some(PosAngleConstraint.AllowFlip(a)) if a =!= angle =>
           println(s"Flipping angle to ${angle.toMicroarcseconds} ${angle.toDoubleDegrees}")
-          props.posAngleAndSaveView
-            .map(_.set(PosAngleConstraint.AllowFlip(angle)))
-            .getOrEmpty *> manualOverride.set(ManualAgsOverride(true))
-        case _                                                    => Callback.empty
+          val constraint = PosAngleConstraint.AllowFlip(angle)
+          (for {
+            conf <- OptionT.pure[IO](props.obsConf.flatMap(_.posAngleProperties))
+            _    <- OptionT.liftF(
+                      ObsQueries.updatePosAngle[IO](
+                        props.programId,
+                        conf.map(_.oid).toList,
+                        constraint
+                      )
+                    )
+            pa   <- OptionT.pure(props.obsConf.flatMap(_.posAngleConstraintView))
+          } yield pa.value.set(constraint) *> manualOverride.set(
+            ManualAgsOverride(true)
+          )).getOrEmpty
+
+        // props.posAngleAndSaveView
+        //   .map(_.set(PosAngleConstraint.AllowFlip(angle)))
+        //   .getOrEmpty *>
+        // manualOverride.set(ManualAgsOverride(true))
+        case _ => Callback.empty
     case _                                         => Callback.empty
 
   private val component =
@@ -429,17 +452,18 @@ object AladinCell extends ModelOptics with AladinCommon:
           import ctx.given
 
           // If the selected GS changes do a flip when necessary
-          val selectedGSIndex = selectedGSIndexView.withOnMod(idx =>
+          val selectedGSIndex = selectedGSIndexView /*.withOnMod(idx =>
             idx
               .map(agsResults.value.lift)
               .map(a =>
-                flipAngle(props, agsManualOverride)(a) *> props.obsConf
+                props.obsConf
                   .flatMap(_.selectedGS)
                   .map(_.set(a))
-                  .getOrEmpty
+                  .getOrEmpty *>
+                  flipAngle(props, agsManualOverride)(a)
               )
               .getOrEmpty
-          )
+          )*/
 
           def prefsSetter(
             saturation: Option[Int] = None,

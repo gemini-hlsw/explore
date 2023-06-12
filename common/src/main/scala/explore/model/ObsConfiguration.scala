@@ -8,6 +8,7 @@ import cats.data.NonEmptyList
 import cats.derived.*
 import cats.syntax.all.*
 import crystal.react.View
+import crystal.react.implicits.*
 import eu.timepit.refined.cats.*
 import explore.model.enums.AgsState
 import lucuma.ags.*
@@ -22,8 +23,16 @@ import lucuma.core.model.PosAngleConstraint
 import lucuma.schemas.model.BasicConfiguration
 import monocle.Focus
 import org.typelevel.cats.time.instantInstances
+import queries.schemas.odb.ObsQueries
 
 import java.time.Instant
+import lucuma.core.model.Program
+import org.typelevel.log4cats.Logger
+import clue.FetchClient
+import lucuma.schemas.ObservationDB
+import cats.effect.IO
+import monocle.Lens
+import monocle.Focus
 
 case class ObsConfiguration(
   configuration:      Option[BasicConfiguration],
@@ -34,8 +43,6 @@ case class ObsConfiguration(
   acquisitionOffsets: Option[NonEmptyList[Offset]],
   averagePA:          Option[Angle]
 ) derives Eq:
-  def posAngleConstraint: Option[PosAngleConstraint] =
-    posAngleProperties.map(_.posAngleConstraint.get)
 
   // In case there is no guide star we still want to have a posAngle equivalent
   // To draw visualization
@@ -52,6 +59,9 @@ case class ObsConfiguration(
   def posAngleConstraintView: Option[View[PosAngleConstraint]] =
     posAngleProperties.map(_.posAngleConstraint)
 
+  def posAngleConstraint: Option[PosAngleConstraint] =
+    posAngleConstraintView.map(_.get)
+
   def agsState: Option[View[AgsState]] =
     posAngleProperties.map(_.agsState)
 
@@ -60,8 +70,27 @@ case class ObsConfiguration(
     posAngleProperties.map(_.selectedGS)
 
   def selectedPA: Option[Angle] =
-    for
-      gs  <- selectedGS
-      gsv <- gs.get
-      ang <- gsv.posAngle
-    yield ang
+    posAngleProperties.flatMap(_.selectedPA)
+
+  def updatePA(
+    programId:          Program.Id,
+    posAngleConstraint: PosAngleConstraint,
+    agsState:           View[AgsState]
+  )(using
+    Logger[IO],
+    FetchClient[IO, ObservationDB]
+  ): ObsConfiguration =
+    posAngleConstraintView
+      .withOnMod(c =>
+        (agsState.async.set(AgsState.Saving) >>
+          IO.println(s"Updating pos angle to $c") >>
+          ObsQueries
+            .updatePosAngle[IO](programId, List(obsId), c)
+            .guarantee(agsState.async.set(AgsState.Idle))).runAsync
+      )
+
+// object ObsConfiguration:
+//   val posAngleConstraint: Lens[ObsConfiguration, Option[PosAngleConstraint]] =
+//     Focus[ObsConfiguration](
+//       _.posAngleProperties
+//     ) // .andThen(Focus[PAProperties](_.posAngleConstraint))

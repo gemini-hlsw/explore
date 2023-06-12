@@ -53,6 +53,7 @@ object PAConstraintUpdater {
     posAngleConstraintView
       .withOnMod(c =>
         (agsState.async.set(AgsState.Saving) >>
+          IO.println(s"Updating pos angle to $c") >>
           ObsQueries
             .updatePosAngle[IO](programId, List(obsId), c)
             .guarantee(agsState.async.set(AgsState.Idle))).runAsync
