@@ -91,12 +91,10 @@ case class AladinCell(
       paConstraint  <- conf.posAngleConstraint
       angles        <-
         paConstraint.anglesToTestAt(configuration.siteFor, asterism.baseTracking, vizTime)
-    } yield {
-      // We sort the angles or we could end up in a loop where the angles are tested back and forth
-      // This is rare but can happen if each angle finds an equivalent guide star
-      given Order[Angle] = Angle.AngleOrder
-      angles.sorted
-    }
+    } yield
+    // We sort the angles or we could end up in a loop where the angles are tested back and forth
+    // This is rare but can happen if each angle finds an equivalent guide star
+    angles.sorted(using Angle.AngleOrder)
 
   val positions: Option[NonEmptyList[AgsPosition]] =
     val offsets: NonEmptyList[Offset] = obsConf.flatMap(_.scienceOffsets) match
