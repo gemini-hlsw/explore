@@ -252,22 +252,19 @@ object ObsTabContents extends TwoPanels:
 
     def rightSide = (resize: UseResizeDetectorReturn) =>
       props.focusedObs.fold[VdomNode](
-        <.div(
-          ExploreStyles.ObsSummaryTable,
-          Tile(
-            "observations".refined,
-            "Observations Summary",
-            backButton.some
-          )(renderInTitle =>
-            ObsSummaryTable(
-              props.userId,
-              props.programId,
-              observations.get,
-              targetsUndoCtx.model.get,
-              renderInTitle
-            )
-          // TODO: elevation view
+        Tile(
+          "observations".refined,
+          "Observations Summary",
+          backButton.some
+        )(renderInTitle =>
+          ObsSummaryTable(
+            props.userId,
+            props.programId,
+            observations.get,
+            targetsUndoCtx.model.get,
+            renderInTitle
           )
+        // TODO: elevation view
         )
       )(obsId =>
         val indexValue = Iso.id[ObservationList].index(obsId).andThen(KeyedIndexedList.value)
