@@ -481,6 +481,7 @@ object ExploreStyles:
   val SmallHeader: Css = Header |+| lucuma.ui.primereact.LucumaStyles.Small
   // Move to PrimeReactStyles
   val Disabled: Css    = Css("p-disabled")
+  val FormValue: Css   = Css("explore-value-field")
 
   // Timing Windows
   val TimingWindowsBody: Css                    = Css("timing-windows-body")

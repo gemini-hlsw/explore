@@ -780,18 +780,15 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               disabled = disableAdvancedEdit,
               exclude = obsoleteRois
             ),
-            FormInputText(
-              id = "lambda".refined,
-              value = modeData.value.fold("Unknown")(_.resolution.toString),
-              label = "λ / Δλ",
-              disabled = true
+            FormLabel(htmlFor = "lambda".refined)("λ / Δλ"),
+            <.label(^.id := "lambda",
+                    ExploreStyles.FormValue,
+                    s"${modeData.value.fold("Unknown")(_.resolution.toString)}"
             ),
             FormLabel(htmlFor = "lambdaInterval".refined)("λ Interval"),
-            FormInputText(
-              id = "lambdaInterval".refined,
-              value = adjustedInterval.fold("Unknown")(_.shortName),
-              disabled = true,
-              units = "nm"
+            <.label(^.id := "lambdaInterval",
+                    ExploreStyles.FormValue,
+                    s"${adjustedInterval.fold("Unknown")(_.shortName)} nm"
             )
           ),
           <.div(ExploreStyles.AdvancedConfigurationButtons)(
