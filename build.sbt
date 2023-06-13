@@ -3,7 +3,6 @@ import scala.sys.process.*
 import Dependencies.*
 
 val reactJS = "17.0.2"
-val FUILess = "2.8.7"
 
 ThisBuild / Test / bspEnabled                                        := false
 ThisBuild / ScalafixConfig / bspEnabled.withRank(KeyRanks.Invisible) := false

@@ -91,12 +91,16 @@ case class AladinCell(
       paConstraint  <- conf.posAngleConstraint
       angles        <-
         paConstraint.anglesToTestAt(configuration.siteFor, asterism.baseTracking, vizTime)
-    } yield angles
+    } yield
+    // We sort the angles or we could end up in a loop where the angles are tested back and forth
+    // This is rare but can happen if each angle finds an equivalent guide star
+    angles.sorted(using Angle.AngleOrder)
 
   val positions: Option[NonEmptyList[AgsPosition]] =
     val offsets: NonEmptyList[Offset] = obsConf.flatMap(_.scienceOffsets) match
       case Some(offsets) => offsets.prepend(Offset.Zero)
       case None          => NonEmptyList.of(Offset.Zero)
+
     anglesToTest.map { anglesToTest =>
       for {
         pa  <- anglesToTest
@@ -212,7 +216,7 @@ object AladinCell extends ModelOptics with AladinCommon:
         case Some(PosAngleConstraint.AllowFlip(a)) if a =!= angle =>
           props.obsConf
             .flatMap(_.posAngleConstraintView)
-            .map(_.set(PosAngleConstraint.AllowFlip(angle)))
+            .map(_.set(PosAngleConstraint.AllowFlip(a.flip)))
             .getOrEmpty *> manualOverride.set(ManualAgsOverride(true))
         case _                                                    => Callback.empty
     case _                                         => Callback.empty
