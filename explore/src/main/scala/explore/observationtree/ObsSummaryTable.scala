@@ -299,9 +299,8 @@ object ObsSummaryTable extends TableHooks:
         TableStore(props.userId, TableId.ObservationsSummary, cols)
       )
     )
-    .useRef(none[HTMLTableVirtualizer])
     .useResizeDetector()
-    .render { (props, ctx, _, _, table, virtualizerRef, resizer) =>
+    .render { (props, ctx, _, _, table, resizer) =>
       import ctx.given
 
       React.Fragment(
@@ -337,7 +336,6 @@ object ObsSummaryTable extends TableHooks:
                 )
               }
             ),
-          virtualizerRef = virtualizerRef,
           emptyMessage = <.div("No observations found")
         )
       )
