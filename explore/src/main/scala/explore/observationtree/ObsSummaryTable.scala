@@ -60,6 +60,7 @@ import queries.schemas.odb.ObsQueries.ObservationList
 import react.common.ReactFnProps
 import react.hotkeys.*
 import react.hotkeys.hooks.*
+import react.resizeDetector.hooks.*
 
 import scala.collection.immutable.SortedMap
 import scala.scalajs.js
@@ -298,10 +299,12 @@ object ObsSummaryTable extends TableHooks:
         TableStore(props.userId, TableId.ObservationsSummary, cols)
       )
     )
-    .render { (props, ctx, _, _, table) =>
+    .useRef(none[HTMLTableVirtualizer])
+    .useResizeDetector()
+    .render { (props, ctx, _, _, table, virtualizerRef, resizer) =>
       import ctx.given
 
-      <.div(
+      React.Fragment(
         props.renderInTitle(
           React.Fragment(
             <.span(), // Push column selector to right
@@ -310,9 +313,15 @@ object ObsSummaryTable extends TableHooks:
             )
           )
         ),
-        PrimeTable(
+        PrimeAutoHeightVirtualizedTable(
           table,
+          _ => 32.toPx,
           striped = true,
+          compact = Compact.Very,
+          innerContainerMod = ^.width := "100%",
+          containerRef = resizer.ref,
+          tableMod = ExploreStyles.ExploreTable,
+          headerCellMod = _ => ExploreStyles.StickyHeader,
           rowMod = row =>
             TagMod(
               ExploreStyles.CursorPointer,
@@ -328,10 +337,8 @@ object ObsSummaryTable extends TableHooks:
                 )
               }
             ),
-          emptyMessage = <.div("No observations found"),
-          compact = Compact.Very,
-          tableMod = ExploreStyles.ExploreTable,
-          headerCellMod = _ => ExploreStyles.StickyHeader
+          virtualizerRef = virtualizerRef,
+          emptyMessage = <.div("No observations found")
         )
       )
     }
