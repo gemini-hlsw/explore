@@ -16,6 +16,7 @@ import explore.model.GroupObs
 import explore.model.Grouping
 import explore.model.ObsAttachment
 import explore.model.ObsSummary
+import explore.model.ProgramInfo
 import explore.model.ProgramSummaries
 import explore.model.ProposalAttachment
 import explore.model.TargetWithObs
@@ -34,9 +35,7 @@ import monocle.Focus
 import monocle.Lens
 import monocle.Traversal
 import queries.common.ObsQueriesGQL
-import queries.common.ProgramQueriesGQL.GroupEditSubscription
-import queries.common.ProgramQueriesGQL.ProgramEditAttachmentSubscription
-import queries.common.ProgramQueriesGQL.ProgramGroupsQuery
+import queries.common.ProgramQueriesGQL
 import queries.common.ProgramSummaryQueriesGQL
 import queries.common.TargetQueriesGQL
 import react.common.ReactFnProps
@@ -94,7 +93,8 @@ object ProgramCache extends CacheComponent[ProgramSummaries, ProgramCache]:
       )
 
     val groups: IO[List[GroupElement]] =
-      ProgramGroupsQuery[IO]
+      ProgramQueriesGQL
+        .ProgramGroupsQuery[IO]
         .query(props.programId)
         .map(_.program.toList.flatMap(_.allGroupElements))
 
@@ -104,8 +104,20 @@ object ProgramCache extends CacheComponent[ProgramSummaries, ProgramCache]:
         .query(props.programId)
         .map(_.program.fold(List.empty, List.empty)(p => (p.obsAttachments, p.proposalAttachments)))
 
-    (targets, observations, groups, attachments).mapN { case (ts, os, gs, (oas, pas)) =>
-      ProgramSummaries.fromLists(ts, os, gs, oas, pas)
+    val programs: IO[List[ProgramInfo]] =
+      drain[ProgramInfo, Program.Id, ProgramSummaryQueriesGQL.AllPrograms.Data](
+        offset =>
+          ProgramSummaryQueriesGQL
+            .AllPrograms[IO]
+            .query(offset.orUnassign),
+        _.programs.matches,
+        _.programs.hasMore,
+        _.id
+      )
+
+    (targets, observations, groups, attachments, programs).mapN {
+      case (ts, os, gs, (oas, pas), ps) =>
+        ProgramSummaries.fromLists(ts, os, gs, oas, pas, ps)
     }
 
   override protected val updateStream: ProgramCache => Resource[
@@ -170,7 +182,7 @@ object ProgramCache extends CacheComponent[ProgramSummaries, ProgramCache]:
           )
         )
 
-    val updateGroups = GroupEditSubscription
+    val updateGroups = ProgramQueriesGQL.GroupEditSubscription
       .subscribe[IO](props.programId)
       .map(_.map(data =>
         val groupId  = data.groupEdit.value.id
@@ -195,7 +207,7 @@ object ProgramCache extends CacheComponent[ProgramSummaries, ProgramCache]:
     // Right now the programEdit subsription isn't fine grained enough to
     // differentiate what got updated, so we alway update all the attachments.
     // Hopefully this will change in the future.
-    val updateAttachments = ProgramEditAttachmentSubscription
+    val updateAttachments = ProgramQueriesGQL.ProgramEditAttachmentSubscription
       .subscribe[IO](props.programId)
       .map(_.map(data =>
         val obsAttachments      = data.programEdit.value.obsAttachments.toSortedMap(_.id)
@@ -205,7 +217,17 @@ object ProgramCache extends CacheComponent[ProgramSummaries, ProgramCache]:
           .compose(ProgramSummaries.proposalAttachments.replace(proposalAttachments))
       ))
 
+    val updatePrograms =
+      ProgramQueriesGQL.ProgramInfoDelta
+        .subscribe[IO]()
+        .map(
+          _.map(data =>
+            ProgramSummaries.programs
+              .modify(_.updated(data.programEdit.value.id, data.programEdit.value))
+          )
+        )
+
     // TODO Handle errors, disable transparent resubscription upon connection loss.
-    (updateTargets, updateObservations, updateGroups, updateAttachments).mapN(
-      _.merge(_).merge(_).merge(_)
+    (updateTargets, updateObservations, updateGroups, updateAttachments, updatePrograms).mapN(
+      _.merge(_).merge(_).merge(_).merge(_)
     )

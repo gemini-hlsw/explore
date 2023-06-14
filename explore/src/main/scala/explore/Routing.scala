@@ -33,12 +33,28 @@ import scala.util.Random
 
 object Routing:
 
-  private def withProgramSummaries(model: View[RootModel])(
+  private def withProgramSummaries(pid: Option[Program.Id], model: View[RootModel])(
     render: View[ProgramSummaries] => VdomNode
   ): VdomElement =
     model
       .zoom(RootModel.programSummaries)
-      .mapValue(render)
+      .mapValue { (pss: View[ProgramSummaries]) =>
+        val (showProgsPopup, msg) = pid.fold((true, none)) { id =>
+          if (pss.get.programs.get(id).exists(!_.deleted)) (false, none)
+          else
+            (true,
+             s"The program id in the url, '$id', either does not exist, is deleted, or you do not have authorization to view it.".some
+            )
+        }
+        if (showProgsPopup)
+          ProgramsPopup(
+            currentProgramId = none,
+            pss.zoom(ProgramSummaries.programs).asViewOpt,
+            undoStacks = model.zoom(RootModel.undoStacks),
+            message = msg
+          ): VdomElement
+        else render(pss)
+      }
       .toPot
       .renderPot(identity)
       .asInstanceOf[VdomElement]
@@ -46,9 +62,8 @@ object Routing:
     // In any case, in all of our uses here we are returning a valid VdomElement.
 
   private def overviewTab(page: Page, model: View[RootModel]): VdomElement =
-    withProgramSummaries(model)(programSummaries =>
-      val routingInfo = RoutingInfo.from(page)
-
+    val routingInfo = RoutingInfo.from(page)
+    withProgramSummaries(routingInfo.programId.some, model)(programSummaries =>
       OverviewTabContents(
         routingInfo.programId,
         model.zoom(RootModel.vault).get,
@@ -58,9 +73,8 @@ object Routing:
     )
 
   private def targetTab(page: Page, model: View[RootModel]): VdomElement =
-    withProgramSummaries(model)(programSummaries =>
-      val routingInfo = RoutingInfo.from(page)
-
+    val routingInfo = RoutingInfo.from(page)
+    withProgramSummaries(routingInfo.programId.some, model)(programSummaries =>
       TargetTabContents(
         model.zoom(RootModel.userId).get,
         routingInfo.programId,
@@ -74,8 +88,8 @@ object Routing:
     )
 
   private def obsTab(page: Page, model: View[RootModel]): VdomElement =
-    withProgramSummaries(model)(programSummaries =>
-      val routingInfo = RoutingInfo.from(page)
+    val routingInfo = RoutingInfo.from(page)
+    withProgramSummaries(routingInfo.programId.some, model)(programSummaries =>
       ObsTabContents(
         model.zoom(RootModel.userId).get,
         routingInfo.programId,
@@ -88,8 +102,8 @@ object Routing:
     )
 
   private def constraintSetTab(page: Page, model: View[RootModel]): VdomElement =
-    withProgramSummaries(model)(programSummaries =>
-      val routingInfo = RoutingInfo.from(page)
+    val routingInfo = RoutingInfo.from(page)
+    withProgramSummaries(routingInfo.programId.some, model)(programSummaries =>
       ConstraintsTabContents(
         model.zoom(RootModel.userId).get,
         routingInfo.programId,
@@ -102,20 +116,25 @@ object Routing:
 
   private def proposalTab(page: Page, model: View[RootModel]): VdomElement =
     val routingInfo = RoutingInfo.from(page)
-    ProposalTabContents(
-      routingInfo.programId,
-      model.zoom(RootModel.user).get,
-      model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forProposal)
+    // we don't need the summaries, but we still want to validate the progam id
+    withProgramSummaries(routingInfo.programId.some, model)(_ =>
+      ProposalTabContents(
+        routingInfo.programId,
+        model.zoom(RootModel.user).get,
+        model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forProposal)
+      )
     )
 
-  private def configurationsTab(page: Page): VdomElement =
-    SequenceEditor(RoutingInfo.from(page).programId)
+  private def configurationsTab(page: Page, model: View[RootModel]): VdomElement =
+    val routingInfo = RoutingInfo.from(page)
+    // we don't need the summaries, but we still want to validate the progam id
+    withProgramSummaries(routingInfo.programId.some, model)(_ =>
+      SequenceEditor(routingInfo.programId)
+    )
 
   private def showProgramSelectionPopup(model: View[RootModel]): VdomElement =
-    ProgramsPopup(
-      currentProgramId = none,
-      undoStacks = model.zoom(RootModel.undoStacks)
-    )
+    // Because we are not supplying a program id, the ProgramsPopup will be displayed
+    withProgramSummaries(none, model)(_ => <.div("Programmer error!"))
 
   def config: RouterWithPropsConfig[Page, View[RootModel]] =
     RouterWithPropsConfigDsl[Page, View[RootModel]].buildConfig { dsl =>
@@ -184,7 +203,7 @@ object Routing:
 
           | dynamicRouteCT(
             (root / id[Program.Id] / "configurations").xmapL(ConfigurationsPage.iso)
-          ) ~> dynRenderP { case (p, _) => configurationsTab(p) }
+          ) ~> dynRenderP { case (p, m) => configurationsTab(p, m) }
 
           | dynamicRouteCT(
             (root / id[Program.Id] / "constraints").xmapL(ConstraintsBasePage.iso)

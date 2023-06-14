@@ -13,29 +13,11 @@ import lucuma.schemas.ObservationDB
 
 object ProgramQueriesGQL {
   @GraphQL
-  trait ProgramsQuery extends GraphQLOperation[ObservationDB] {
-    val document: String = """
-      query($includeDeleted: Boolean!) {
-        programs(includeDeleted: $includeDeleted) {
-          matches {
-            id
-            name
-            existence
-          }
-        }
-      }
-    """
-  }
-
-  @GraphQL
   trait CreateProgramMutation extends GraphQLOperation[ObservationDB] {
-    val document: String = """
-      mutation($input: CreateProgramInput!) {
-        createProgram(input: $input) {
-          program {
-            id
-            name
-          }
+    val document: String = s"""
+      mutation($$input: CreateProgramInput!) {
+        createProgram(input: $$input) {
+          program $ProgramInfoSubquery
         }
       }
     """
@@ -162,6 +144,17 @@ object ProgramQueriesGQL {
             obsAttachments $ObsAttachmentSubquery
             proposalAttachments $ProposalAttachmentSubquery
           }
+        }
+      }
+    """
+  }
+
+  @GraphQL
+  trait ProgramInfoDelta extends GraphQLOperation[ObservationDB] {
+    val document = s"""
+      subscription {
+        programEdit {
+          value $ProgramInfoSubquery
         }
       }
     """

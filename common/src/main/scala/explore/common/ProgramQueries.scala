@@ -9,6 +9,7 @@ import clue.FetchClient
 import clue.data.syntax.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.DefaultErrorPolicy
+import explore.model.ProgramInfo
 import japgolly.scalajs.react.*
 import lucuma.core.model.ObsAttachment
 import lucuma.core.model.Program
@@ -22,19 +23,6 @@ import monocle.Lens
 import queries.common.ProgramQueriesGQL.*
 
 object ProgramQueries:
-  case class ProgramInfo(id: Program.Id, name: Option[NonEmptyString], deleted: Boolean)
-
-  object ProgramInfo:
-    given Reusability[ProgramInfo] = Reusability.derive
-
-    val id: Lens[ProgramInfo, Program.Id]               = Focus[ProgramInfo](_.id)
-    val name: Lens[ProgramInfo, Option[NonEmptyString]] = Focus[ProgramInfo](_.name)
-    val deleted: Lens[ProgramInfo, Boolean]             = Focus[ProgramInfo](_.deleted)
-
-  extension (self: ProgramsQuery.Data.type)
-    def asProgramInfoList: ProgramsQuery.Data => List[ProgramInfo] =
-      _.programs.matches.map(p => ProgramInfo(p.id, p.name, p.existence === Existence.Deleted))
-
   def createProgram[F[_]: Async](name: Option[NonEmptyString])(using
     FetchClient[F, ObservationDB]
   ): F[ProgramInfo] =
@@ -42,7 +30,7 @@ object ProgramQueries:
       .execute(
         CreateProgramInput(SET = ProgramPropertiesInput(name = name.orIgnore).assign)
       )
-      .map(p => ProgramInfo(p.createProgram.program.id, p.createProgram.program.name, false))
+      .map(_.createProgram.program)
 
   def deleteProgram[F[_]: Async](id: Program.Id)(using
     FetchClient[F, ObservationDB]
