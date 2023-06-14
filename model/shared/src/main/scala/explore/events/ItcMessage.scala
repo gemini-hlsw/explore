@@ -44,6 +44,10 @@ import java.util.UUID
 object ItcMessage extends ItcPicklers {
   sealed trait Request extends WorkerRequest
 
+  case object CleanCache extends Request {
+    type ResponseType = Unit
+  }
+
   case class SpectroscopyMatrixRequest(uri: Uri) extends Request {
     type ResponseType = SpectroscopyModesMatrix
   }
@@ -78,5 +82,8 @@ object ItcMessage extends ItcPicklers {
 
   private given Pickler[GraphQuery] = generatePickler
 
+  private given Pickler[CleanCache.type] = generatePickler
+
   given Pickler[Request] = generatePickler
+
 }

@@ -42,6 +42,9 @@ trait CacheIDBStores {
   // object-store for storing the cache indexes and expiration date
   val cacheStore: ObjectStoreDef.Sync[String, CacheEntry]
 
+  final def clean(idb: IndexedDb.Database): AsyncCallback[Unit] =
+    idb.clear(candidatesStore) *> idb.clear(cacheStore)
+
   final def open(idb: IndexedDb): AsyncCallback[IndexedDb.Database] =
     idb.open(dbName, DBVersion)(IndexedDb.OpenCallbacks(onUpgradeNeeded))
 }

@@ -69,7 +69,7 @@ object PlotServer extends WorkerServer[IO, PlotMessage.Request] {
 
       Cacheable(
         CacheName("siderealVisibility"),
-        CacheVersion(4),
+        CacheVersion(5),
         (site, date, _) =>
           IO {
             val instant = date.atTime(LocalTime.MIDNIGHT).atZone(site.timezone).toInstant
@@ -118,6 +118,8 @@ object PlotServer extends WorkerServer[IO, PlotMessage.Request] {
       _     <- cache.evict(CacheRetention).start
     yield invocation =>
       invocation.data match {
+        case PlotMessage.CleanCache                                               =>
+          cache.clear *> invocation.respond(())
         case PlotMessage.RequestSemesterSidereal(semester, site, coords, dayRate) =>
           SemesterPlotCalc(semester, site, cache)
             .siderealSamples(coords, dayRate)

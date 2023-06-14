@@ -18,7 +18,13 @@ import lucuma.core.model.Target
 import workers.WorkerRequest
 
 object AgsMessage {
-  case class Request(
+  sealed trait Request extends WorkerRequest
+
+  case object CleanCache extends Request {
+    type ResponseType = Unit
+  }
+
+  case class AgsRequest(
     id:                 Target.Id,
     constraints:        ConstraintSet,
     wavelength:         Wavelength,
@@ -27,9 +33,13 @@ object AgsMessage {
     positions:          NonEmptyList[AgsPosition],
     params:             AgsParams,
     candidates:         List[GuideStarCandidate]
-  ) extends WorkerRequest {
+  ) extends Request {
     type ResponseType = List[AgsAnalysis]
   }
+
+  private given Pickler[CleanCache.type] = generatePickler
+
+  given Pickler[AgsRequest] = generatePickler
 
   given Pickler[Request] = generatePickler
 }

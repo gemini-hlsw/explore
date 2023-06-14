@@ -3,6 +3,7 @@
 
 package explore.users
 
+import boopickle.DefaultBasic.*
 import cats.effect.IO
 import cats.implicits.catsKernelOrderingForOrder
 import cats.syntax.all.*
@@ -90,6 +91,9 @@ object UserPreferencesContent:
 
   private object IsActive extends NewType[Boolean]
   private type IsActive = IsActive.Type
+
+  private object IsCleaningTheCache extends NewType[Boolean]
+  private type IsCleaningTheCache = IsCleaningTheCache.Type
 
   private object NewKey extends NewType[Option[String]]
   private type NewKey = NewKey.Type
@@ -195,7 +199,8 @@ object UserPreferencesContent:
       TableOptions(cols, rows, enableSorting = true, enableColumnResizing = false)
     )
     .useStateView(RoleType.Pi)
-    .render { (props, ctx, active, user, newKey, _, _, table, newRoleType) =>
+    .useState(IsCleaningTheCache(false))
+    .render { (props, ctx, active, user, newKey, _, _, table, newRoleType, isCleaningTheCache) =>
       import ctx.given
 
       user.renderPot { ssoUser =>
@@ -205,15 +210,21 @@ object UserPreferencesContent:
 
         val allRoles = ssoUser.user.roles
 
-        val closeButton =
-          props.onClose.fold(none)(cb =>
-            Button(
-              label = "Cancel",
-              icon = Icons.Close,
-              severity = Button.Severity.Danger,
-              onClick = cb
-            ).small.compact.some
-          )
+        val requestCacheClean =
+          for {
+            _ <- isCleaningTheCache.setState(IsCleaningTheCache(true)).to[IO]
+            _ <- ctx.workerClients.clearAll(
+                   isCleaningTheCache.setState(IsCleaningTheCache(false)).to[IO]
+                 )
+          } yield ()
+
+        val cleanCacheButton =
+          Button(
+            label = "Clean local cache",
+            disabled = isCleaningTheCache.value.value,
+            icon = Icons.Trash,
+            onClick = requestCacheClean.runAsyncAndForget
+          ).small.compact
 
         val unsupportedRoles = Enumerated[RoleType].all.filterNot { rt =>
           allRoles.exists(r => r.`type` === rt)
@@ -237,7 +248,6 @@ object UserPreferencesContent:
               table,
               estimateSize = _ => 32.toPx,
               striped = true,
-              // containerMod = ^.width := 100.pct,
               compact = Compact.Very,
               tableMod =
                 ExploreStyles.ApiKeysTableMod |+| ExploreStyles.ExploreTable |+| ExploreStyles.ExploreBorderTable,
@@ -272,6 +282,8 @@ object UserPreferencesContent:
               disabled = active.get.value
             )
           ),
+          Divider(),
+          cleanCacheButton,
           ConfirmDialog()
         )
       }

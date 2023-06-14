@@ -3,11 +3,14 @@
 
 package explore.model
 
+import _root_.boopickle.DefaultBasic.*
+import cats.FlatMap
 import cats.effect.Async
 import cats.effect.Resource
 import cats.effect.std.Dispatcher
 import cats.syntax.all.*
 import explore.events.*
+import explore.model.boopickle.ItcPicklers.given
 import org.scalajs.dom
 import org.typelevel.log4cats.Logger
 import workers.WorkerClient
@@ -21,7 +24,16 @@ case class WorkerClients[F[_]](
   catalog: WorkerClient[F, CatalogMessage.Request],
   ags:     WorkerClient[F, AgsMessage.Request],
   plot:    WorkerClient[F, PlotMessage.Request]
-)
+) {
+  def clearAll(andThen: F[Unit])(using FlatMap[F]): F[Unit] =
+    for {
+      _ <- itc.requestSingle(ItcMessage.CleanCache)
+      _ <- plot.requestSingle(PlotMessage.CleanCache)
+      _ <- ags.requestSingle(AgsMessage.CleanCache)
+      _ <- catalog.requestSingle(CatalogMessage.CleanCache)
+      _ <- andThen
+    } yield ()
+}
 
 object WorkerClients {
 

@@ -224,7 +224,6 @@ trait ItcPicklers extends CommonPicklers {
   given Pickler[ItcCcd] = generatePickler
 
   given Pickler[OptimizedSpectroscopyGraphResult] = generatePickler
-
 }
 
 object ItcPicklers extends ItcPicklers

@@ -212,6 +212,7 @@ trait CommonPicklers {
     transformPickler[SignalToNoise, BigDecimal](v =>
       SignalToNoise.FromBigDecimalExact.getOption(v).getOrElse(sys.error("Cannot unpickle"))
     )(_.toBigDecimal)
+
 }
 
 object CommonPicklers extends CommonPicklers

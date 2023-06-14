@@ -332,14 +332,14 @@ object AladinCell extends ModelOptics with AladinCommon:
                     _ <-
                       AgsClient[IO]
                         .requestSingle(
-                          AgsMessage.Request(props.tid,
-                                             constraints,
-                                             wavelength,
-                                             base.value,
-                                             sciencePositions,
-                                             positions,
-                                             params,
-                                             candidates
+                          AgsMessage.AgsRequest(props.tid,
+                                                constraints,
+                                                wavelength,
+                                                base.value,
+                                                sciencePositions,
+                                                positions,
+                                                params,
+                                                candidates
                           )
                         )
                         .map(_.map(_.sortPositions(positions)))
