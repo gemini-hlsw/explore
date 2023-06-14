@@ -15,14 +15,16 @@ import explore.EditableLabel
 import explore.Icons
 import explore.*
 import explore.common.ProgramQueries
-import explore.common.ProgramQueries.ProgramInfo
-import explore.common.ProgramQueries.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Focused
+import explore.model.ProgramInfo
+import explore.model.ProgramInfoList
 import explore.model.enums.AppTab
+import explore.model.reusability.given
 import explore.syntax.ui.given
 import explore.utils.*
+import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -49,6 +51,7 @@ import react.primereact.Button
 
 case class ProgramTable(
   currentProgramId: Option[Program.Id],
+  programInfos:     View[ProgramInfoList],
   selectProgram:    Program.Id => Callback,
   isRequired:       Boolean,
   onClose:          Option[Callback]
@@ -65,14 +68,17 @@ object ProgramTable:
   private object ShowDeleted extends NewType[Boolean]
   private type ShowDeleted = ShowDeleted.Type
 
-  private def addProgram(programs: View[List[ProgramInfo]], adding: View[IsAdding])(using
+  private given Reusability[Map[Program.Id, ProgramInfo]] = Reusability.map
+  private given Reusability[ProgramInfoList]              = Reusability.by(_.unsorted)
+
+  private def addProgram(programs: View[ProgramInfoList], adding: View[IsAdding])(using
     FetchClient[IO, ObservationDB],
     Logger[IO]
   ): IO[Unit] =
     adding.async.set(IsAdding(true)) >>
       ProgramQueries
         .createProgram[IO](none)
-        .flatMap(pi => programs.async.mod(_ :+ pi))
+        .flatMap(pi => programs.async.mod(_.updated(pi.id, pi)))
         .guarantee(adding.async.set(IsAdding(false)))
 
   private def deleteProgram(pinf: View[ProgramInfo])(using
@@ -112,105 +118,91 @@ object ProgramTable:
     .useContext(AppContext.ctx)
     .useStateView(IsAdding(false))    // Adding new program
     .useStateView(ShowDeleted(false)) // Show deleted
-    .useStreamResourceViewBy((_, _, _, showDeleted) => showDeleted.get) {
-      (props, ctx, _, _) => showDeleted =>
+    // Columns
+    .useMemoBy((props, _, _, _) => (props.currentProgramId, props.programInfos.get.size)) {
+      (props, ctx, _, _) => (currentProgramId, programCount) =>
         import ctx.given
 
-        ProgramsQuery[IO]
-          .query(includeDeleted = showDeleted.value)
-          .map(ProgramsQuery.Data.asProgramInfoList)
-          .flatTap(programs => onNewData(props.isRequired, programs, ctx))
-          .reRunOnResourceSignals(ProgramEditSubscription.subscribe[IO]())
-    }
-    // Columns
-    .useMemoBy((props, _, _, _, programs) =>
-      (props.currentProgramId, programs.toOption.map(_.get.length).orEmpty)
-    ) { (props, ctx, _, _, _) => (currentProgramId, programCount) =>
-      import ctx.given
-
-      List(
-        ColDef(
-          ActionsColumnId,
-          identity[View[ProgramInfo]] _,
-          "Actions",
-          cell = { cell =>
-            val programId = cell.value.get.id
-            val isDeleted = cell.value.get.deleted
-            <.div(
-              Button(
-                label = "Select",
-                icon = Icons.Checkmark,
-                severity = Button.Severity.Secondary,
-                disabled = currentProgramId.exists(_ === programId),
-                onClick = props.selectProgram(programId)
-              ).compact.mini.unless(cell.row.original.get.deleted),
-              Button(
-                icon = Icons.Trash,
-                severity = Button.Severity.Secondary,
-                disabled = currentProgramId.exists(_ === programId) || programCount < 2,
-                onClick = deleteProgram(cell.value).runAsync,
-                tooltip = "Delete program"
-              ).mini.compact.unless(isDeleted),
-              Button(
-                label = "Undelete",
-                icon = Icons.TrashUndo,
-                severity = Button.Severity.Secondary,
-                onClick = undeleteProgram(cell.value).runAsync,
-                tooltip = "Undelete program"
-              ).mini.compact.when(isDeleted)
-            )
-          },
-          size = 100.toPx,
-          minSize = 100.toPx,
-          maxSize = 120.toPx
-        ).sortableBy(_.get.deleted),
-        ColDef(
-          IdColumnId,
-          _.get.id,
-          "Id",
-          _.value.toString,
-          size = 50.toPx,
-          minSize = 50.toPx,
-          maxSize = 70.toPx
-        ).sortable,
-        ColDef(
-          NameColumnId,
-          _.withOnMod(onModName).zoom(ProgramInfo.name),
-          "Name",
-          cell =>
-            EditableLabel
-              .fromView(
-                value = cell.value,
-                addButtonLabel = ("Add program name": VdomNode).reuseAlways,
-                textClass = ExploreStyles.ProgramName,
-                inputClass = ExploreStyles.ProgramNameInput,
-                editButtonTooltip = "Edit program name".some,
-                deleteButtonTooltip = "Delete program name".some,
-                okButtonTooltip = "Accept".some,
-                discardButtonTooltip = "Discard".some
-              ),
-          size = 500.toPx,
-          minSize = 200.toPx,
-          maxSize = 1000.toPx
-        ).sortableBy(_.get.foldMap(_.value))
-      )
+        List(
+          ColDef(
+            ActionsColumnId,
+            identity[View[ProgramInfo]] _,
+            "Actions",
+            cell = { cell =>
+              val programId = cell.value.get.id
+              val isDeleted = cell.value.get.deleted
+              <.div(
+                Button(
+                  label = "Select",
+                  icon = Icons.Checkmark,
+                  severity = Button.Severity.Secondary,
+                  disabled = currentProgramId.exists(_ === programId),
+                  onClick = props.selectProgram(programId)
+                ).compact.mini.unless(cell.row.original.get.deleted),
+                Button(
+                  icon = Icons.Trash,
+                  severity = Button.Severity.Secondary,
+                  disabled = currentProgramId.exists(_ === programId) || programCount < 2,
+                  onClick = deleteProgram(cell.value).runAsync,
+                  tooltip = "Delete program"
+                ).mini.compact.unless(isDeleted),
+                Button(
+                  label = "Undelete",
+                  icon = Icons.TrashUndo,
+                  severity = Button.Severity.Secondary,
+                  onClick = undeleteProgram(cell.value).runAsync,
+                  tooltip = "Undelete program"
+                ).mini.compact.when(isDeleted)
+              )
+            },
+            size = 100.toPx,
+            minSize = 100.toPx,
+            maxSize = 120.toPx
+          ).sortableBy(_.get.deleted),
+          ColDef(
+            IdColumnId,
+            _.get.id,
+            "Id",
+            _.value.toString,
+            size = 50.toPx,
+            minSize = 50.toPx,
+            maxSize = 70.toPx
+          ).sortable,
+          ColDef(
+            NameColumnId,
+            _.withOnMod(onModName).zoom(ProgramInfo.name),
+            "Name",
+            cell =>
+              EditableLabel
+                .fromView(
+                  value = cell.value,
+                  addButtonLabel = ("Add program name": VdomNode).reuseAlways,
+                  textClass = ExploreStyles.ProgramName,
+                  inputClass = ExploreStyles.ProgramNameInput,
+                  editButtonTooltip = "Edit program name".some,
+                  deleteButtonTooltip = "Delete program name".some,
+                  okButtonTooltip = "Accept".some,
+                  discardButtonTooltip = "Discard".some
+                ),
+            size = 500.toPx,
+            minSize = 200.toPx,
+            maxSize = 1000.toPx
+          ).sortableBy(_.get.foldMap(_.value))
+        )
     }
     // Rows
-    .useMemoBy((_, _, _, showDeleted, programs, _) =>
-      (programs.toOption.map(_.reuseByValue), showDeleted.get)
-    ) { (_, _, _, _, _, _) => (programs, showDeleted) =>
-      programs
-        .map(
-          _.value.toListOfViews
-            .filter(vpi => showDeleted.value || !vpi.get.deleted)
-            .sortBy(_.get.id)
-        )
-        .orEmpty
+    .useMemoBy((props, _, _, showDeleted, _) =>
+      (props.programInfos.reuseByValue, showDeleted.get)
+    ) { (_, _, _, _, _) => (programs, showDeleted) =>
+      programs.value.toListOfViews
+        .map(_._2)
+        .filter(vpi => showDeleted.value || !vpi.get.deleted)
+        .sortBy(_.get.id)
     }
-    .useReactTableBy((_, _, _, _, _, cols, rows) =>
+    .useReactTableBy((_, _, _, _, cols, rows) =>
       TableOptions(cols, rows, enableSorting = true, enableColumnResizing = false)
     )
-    .render { (props, ctx, adding, showDeleted, programsPot, _, _, table) =>
+    .render { (props, ctx, adding, showDeleted, _, _, table) =>
       import ctx.given
 
       val closeButton =
@@ -223,34 +215,32 @@ object ProgramTable:
         )
 
       <.div(
-        programsPot.renderPotOption(programs =>
-          React.Fragment(
-            <.div(ExploreStyles.ProgramTable)(
-              PrimeAutoHeightVirtualizedTable(
-                table,
-                estimateSize = _ => 32.toPx,
-                striped = true,
-                compact = Compact.Very,
-                tableMod = ExploreStyles.ExploreTable |+| ExploreStyles.ExploreBorderTable,
-                emptyMessage = "No programs available"
-              )
-            ),
-            // Since we can't add a footer to the Dialog here, we pretend to be one.
-            <.div(ExploreStyles.ProgramsPopupFauxFooter)(
-              Button(
-                label = "Program",
-                icon = Icons.New,
-                severity = Button.Severity.Success,
-                disabled = adding.get.value,
-                loading = adding.get.value,
-                onClick = addProgram(programs, adding).runAsync
-              ).small.compact,
-              CheckboxView(id = "show-deleted".refined,
-                           value = showDeleted.zoom(ShowDeleted.value.asLens),
-                           label = "Show deleted"
-              ),
-              closeButton
+        React.Fragment(
+          <.div(ExploreStyles.ProgramTable)(
+            PrimeAutoHeightVirtualizedTable(
+              table,
+              estimateSize = _ => 32.toPx,
+              striped = true,
+              compact = Compact.Very,
+              tableMod = ExploreStyles.ExploreTable |+| ExploreStyles.ExploreBorderTable,
+              emptyMessage = "No programs available"
             )
+          ),
+          // Since we can't add a footer to the Dialog here, we pretend to be one.
+          <.div(ExploreStyles.ProgramsPopupFauxFooter)(
+            Button(
+              label = "Program",
+              icon = Icons.New,
+              severity = Button.Severity.Success,
+              disabled = adding.get.value,
+              loading = adding.get.value,
+              onClick = addProgram(props.programInfos, adding).runAsync
+            ).small.compact,
+            CheckboxView(id = "show-deleted".refined,
+                         value = showDeleted.zoom(ShowDeleted.value.asLens),
+                         label = "Show deleted"
+            ),
+            closeButton
           )
         )
       )

@@ -6,7 +6,6 @@ package explore.model
 import clue.PersistentClientStatus
 import explore.data.KeyedIndexedList
 import explore.events.CatalogMessage
-import explore.model.Asterism
 import explore.model.enums.AgsState
 import explore.model.enums.SelectedPanel
 import explore.model.itc.ItcExposureTime
@@ -59,6 +58,7 @@ object reusability:
   given Reusability[ExploreLocalPreferences] = Reusability.byEq
   given Reusability[ObsAttachment]           = Reusability.byEq
   given Reusability[ProposalAttachment]      = Reusability.byEq
+  given Reusability[ProgramInfo]             = Reusability.byEq
 
   /**
    */

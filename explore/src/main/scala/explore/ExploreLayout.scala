@@ -157,18 +157,21 @@ object ExploreLayout:
             ),
             <.div(
               ExploreStyles.MainGrid,
+              // This might use the `RoutingInfo.dummyProgramId` if the URL had no
+              // no program id in it. But, that's OK, because the list of user
+              // programs will still load and they will be redirected to the program
+              // selection popup.
+              ProgramCache(routingInfo.programId,
+                           props.view.zoom(RootModel.programSummaries).async.set
+              ),
               TopBar(
                 vault,
                 routingInfo.optProgramId,
                 props.view.zoom(RootModel.localPreferences).get,
                 props.view.zoom(RootModel.undoStacks),
+                props.view.zoom(RootModel.programSummaries.some).zoom(ProgramSummaries.programs),
                 onLogout >> props.view.zoom(RootModel.vault).set(none).to[IO]
               ),
-              routingInfo.optProgramId
-                .map(programId =>
-                  ProgramCache(programId, props.view.zoom(RootModel.programSummaries).async.set)
-                )
-                .whenDefined,
               <.div(
                 ExploreStyles.SideTabs,
                 SideTabs(routingInfo)

@@ -6,6 +6,7 @@ package explore
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.View
+import crystal.react.ViewOpt
 import crystal.react.hooks.*
 import crystal.react.implicits.*
 import crystal.react.reuse.Reuse
@@ -19,6 +20,7 @@ import explore.model.AppContext
 import explore.model.ExploreLocalPreferences
 import explore.model.ExploreLocalPreferences.*
 import explore.model.ModelUndoStacks
+import explore.model.ProgramInfoList
 import explore.model.UserVault
 import explore.model.enums.ExecutionEnvironment
 import explore.programs.ProgramsPopup
@@ -50,11 +52,12 @@ import react.primereact.hooks.all.*
 import typings.loglevel.mod.LogLevelDesc
 
 case class TopBar(
-  vault:       UserVault,
-  programId:   Option[Program.Id],
-  preferences: ExploreLocalPreferences,
-  undoStacks:  View[ModelUndoStacks[IO]],
-  onLogout:    IO[Unit]
+  vault:        UserVault,
+  programId:    Option[Program.Id],
+  preferences:  ExploreLocalPreferences,
+  undoStacks:   View[ModelUndoStacks[IO]],
+  programInfos: ViewOpt[ProgramInfoList],
+  onLogout:     IO[Unit]
 ) extends ReactFnProps(TopBar.component)
 
 object TopBar:
@@ -216,6 +219,7 @@ object TopBar:
             else EmptyVdom,
             if (isProgramsOpen.value.value)
               ProgramsPopup(props.programId,
+                            props.programInfos,
                             props.undoStacks,
                             isProgramsOpen.setState(IsProgramOpen(false)).some
               )

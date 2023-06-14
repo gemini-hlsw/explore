@@ -25,7 +25,8 @@ case class ProgramSummaries(
   observations:        ObservationList,
   groups:              GroupList,
   obsAttachments:      ObsAttachmentList,
-  proposalAttachments: List[ProposalAttachment]
+  proposalAttachments: List[ProposalAttachment],
+  programs:            ProgramInfoList
 ) derives Eq:
   lazy val asterismGroups: AsterismGroupList =
     SortedMap.from(
@@ -93,18 +94,21 @@ object ProgramSummaries:
     Focus[ProgramSummaries](_.obsAttachments)
   val proposalAttachments: Lens[ProgramSummaries, List[ProposalAttachment]] =
     Focus[ProgramSummaries](_.proposalAttachments)
+  val programs: Lens[ProgramSummaries, ProgramInfoList]                     = Focus[ProgramSummaries](_.programs)
 
   def fromLists(
     targetList:          List[TargetWithId],
     obsList:             List[ObsSummary],
     groups:              List[GroupElement],
     obsAttachments:      List[ObsAttachment],
-    proposalAttachments: List[ProposalAttachment]
+    proposalAttachments: List[ProposalAttachment],
+    programs:            List[ProgramInfo]
   ): ProgramSummaries =
     ProgramSummaries(
       targetList.toSortedMap(_.id, _.target),
       KeyedIndexedList.fromList(obsList, ObsSummary.id.get),
       groups,
       obsAttachments.toSortedMap(_.id),
-      proposalAttachments
+      proposalAttachments,
+      programs.toSortedMap(_.id)
     )

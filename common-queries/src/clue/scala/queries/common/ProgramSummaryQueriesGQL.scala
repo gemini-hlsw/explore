@@ -44,4 +44,16 @@ object ProgramSummaryQueriesGQL {
       }
     """
   }
+
+  @GraphQL
+  trait AllPrograms extends GraphQLOperation[ObservationDB] {
+    val document: String = s"""
+      query($$OFFSET: ProgramId) {
+        programs(OFFSET: $$OFFSET, includeDeleted: true) {
+          matches $ProgramInfoSubquery
+          hasMore
+        }
+      }
+    """
+  }
 }

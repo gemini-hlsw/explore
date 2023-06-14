@@ -5,13 +5,16 @@ package explore.programs
 
 import cats.effect.IO
 import cats.syntax.all.*
+import crystal.implicits.*
 import crystal.react.View
+import crystal.react.ViewOpt
 import crystal.react.hooks.*
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Focused
 import explore.model.ModelUndoStacks
+import explore.model.ProgramInfoList
 import explore.model.enums.AppTab
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -23,13 +26,16 @@ import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.primereact.Dialog
 import react.primereact.DialogPosition
+import react.primereact.Message
 
 import scalajs.js.JSConverters.*
 
 case class ProgramsPopup(
   currentProgramId: Option[Program.Id],
+  programInfos:     ViewOpt[ProgramInfoList],
   undoStacks:       View[ModelUndoStacks[IO]],
-  onClose:          Option[Callback] = none
+  onClose:          Option[Callback] = none,
+  message:          Option[String] = none
 ) extends ReactFnProps(ProgramsPopup.component)
 
 object ProgramsPopup {
@@ -66,11 +72,22 @@ object ProgramsPopup {
         clazz = ExploreStyles.Dialog.Small |+| ExploreStyles.ProgramsPopup,
         header = "Programs"
       )(
-        ProgramTable(
-          props.currentProgramId,
-          selectProgram = selectProgram(props.onClose, props.undoStacks, ctx),
-          props.onClose.isEmpty,
-          onHide
+        <.div(
+          props.programInfos
+            .mapValue(pis =>
+              ProgramTable(
+                props.currentProgramId,
+                pis,
+                selectProgram = selectProgram(props.onClose, props.undoStacks, ctx),
+                props.onClose.isEmpty,
+                onHide
+              )
+            )
+            .toPot
+            .renderPot(identity)
+        ),
+        props.message.map(msg =>
+          Message(text = msg, severity = Message.Severity.Warning, icon = Icons.ExclamationTriangle)
         )
       )
     }

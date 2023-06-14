@@ -18,6 +18,7 @@ import lucuma.core.math.Coordinates
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Group
 import lucuma.core.model.Observation
+import lucuma.core.model.Program
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.SpectralDefinition
@@ -62,5 +63,6 @@ type ObservationList            = KeyedIndexedList[Observation.Id, ObsSummary]
 type ConstraintGroupList        = SortedMap[ObsIdSet, ConstraintSet]
 type ObsAttachmentList          = SortedMap[ObsAtt.Id, ObsAttachment]
 type ObsAttachmentAssignmentMap = Map[ObsAtt.Id, SortedSet[Observation.Id]]
+type ProgramInfoList            = SortedMap[Program.Id, ProgramInfo]
 
 type GroupList = List[GroupElement]
