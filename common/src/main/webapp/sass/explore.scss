@@ -744,7 +744,7 @@ $search-preview-margin: 5px;
   overflow-x: auto;
 }
 
-.explore-sequence-table {
+table.pl-react-table.explore-sequence-table {
   table-layout: auto;
 }
 
@@ -2582,7 +2582,8 @@ div.spectroscopy-table-emptymessage {
 }
 
 // Needed to make sure the PWA update toast is always on top
-.p-toast, // has not working properely on FF
+.p-toast,
+// has not working properely on FF
 .p-toast:has(.explore-prompt-toast) {
   z-index: 2000;
 }

@@ -15,6 +15,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
+import lucuma.core.model.sequence.InstrumentExecutionConfig
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import queries.common.GeneratedSequenceSQL._
@@ -39,7 +40,7 @@ object GeneratedSequenceViewer:
 
         SequenceSteps[IO]
           .query(props.programId, props.obsId)
-          .map(_.sequence.map(_.config))
+          .map(_.sequence.map(_.executionConfig))
           .attemptPot
           .resetOnResourceSignals(
             ObsQueriesGQL.ObservationEditSubscription.subscribe[IO](props.obsId)
@@ -52,8 +53,11 @@ object GeneratedSequenceViewer:
         props.changed.get
           .flatMap(_ => config.toPot.flatten)
           .renderPot(
-            _.fold[VdomNode](<.div("Default observation not found"))(config =>
-              GeneratedSequenceTables(props.obsId, config)
-            )
+            _.fold[VdomNode](<.div("Default observation not found")) {
+              case InstrumentExecutionConfig.GmosNorth(config) =>
+                GmosNorthGeneratedSequenceTables(props.obsId, config)
+              case InstrumentExecutionConfig.GmosSouth(config) =>
+                GmosSouthGeneratedSequenceTables(props.obsId, config)
+            }
           )
       )

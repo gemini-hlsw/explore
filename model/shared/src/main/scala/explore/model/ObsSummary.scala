@@ -26,6 +26,8 @@ import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
 import lucuma.core.util.TimeSpan
 import lucuma.core.util.Timestamp
+import lucuma.odb.json.time.decoder.given
+import lucuma.odb.json.wavelength.decoder.given
 import lucuma.schemas.ObservationDB.Types.ScienceRequirementsInput
 import lucuma.schemas.decoders.given
 import lucuma.schemas.model.BasicConfiguration

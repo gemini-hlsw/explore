@@ -14,6 +14,7 @@ import lucuma.schemas.odb.*
 import java.time
 // gql: import io.circe.refined.*
 // gql: import lucuma.schemas.decoders.given
+// gql: import lucuma.odb.json.time.decoder.given
 
 object ObsQueriesGQL:
   @GraphQL
