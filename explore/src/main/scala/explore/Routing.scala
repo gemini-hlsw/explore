@@ -9,7 +9,6 @@ import cats.syntax.all.*
 import crystal.implicits.*
 import crystal.react.View
 import explore.components.ui.ExploreStyles
-import explore.config.sequence.SequenceEditor
 import explore.model.Page
 import explore.model.Page.*
 import explore.model.*
@@ -125,13 +124,6 @@ object Routing:
       )
     )
 
-  private def configurationsTab(page: Page, model: View[RootModel]): VdomElement =
-    val routingInfo = RoutingInfo.from(page)
-    // we don't need the summaries, but we still want to validate the progam id
-    withProgramSummaries(routingInfo.programId.some, model)(_ =>
-      SequenceEditor(routingInfo.programId)
-    )
-
   private def showProgramSelectionPopup(model: View[RootModel]): VdomElement =
     // Because we are not supplying a program id, the ProgramsPopup will be displayed
     withProgramSummaries(none, model)(_ => <.div("Programmer error!"))
@@ -200,10 +192,6 @@ object Routing:
             (root / id[Program.Id] / "targets/obs" / idList[Observation.Id])
               .xmapL(TargetsObsPage.iso)
           ) ~> dynRenderP { case (p, m) => targetTab(p, m) }
-
-          | dynamicRouteCT(
-            (root / id[Program.Id] / "configurations").xmapL(ConfigurationsPage.iso)
-          ) ~> dynRenderP { case (p, m) => configurationsTab(p, m) }
 
           | dynamicRouteCT(
             (root / id[Program.Id] / "constraints").xmapL(ConstraintsBasePage.iso)

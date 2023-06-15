@@ -3,6 +3,8 @@
 
 package explore.model
 
+import cats.Eq
+import cats.kernel.Eq
 import clue.PersistentClientStatus
 import explore.data.KeyedIndexedList
 import explore.events.CatalogMessage
@@ -29,6 +31,7 @@ import lucuma.core.model.Partner
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
+import lucuma.core.model.sequence.Atom
 import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.model.*
 import lucuma.ui.reusability.given
@@ -129,4 +132,6 @@ object reusability:
 
   given Reusability[OdbItcResult.Success] = Reusability.byEq
 
-  given odbRestClientReuse[F[_]]: Reusability[OdbRestClient[F]] = Reusability.by(_.authToken)
+  given [F[_]]: Reusability[OdbRestClient[F]] = Reusability.by(_.authToken)
+
+  given [D: Eq]: Reusability[Atom[D]] = Reusability.byEq

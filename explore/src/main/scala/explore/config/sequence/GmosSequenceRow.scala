@@ -9,6 +9,8 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
 import lucuma.core.model.sequence.*
+import lucuma.core.model.sequence.gmos.DynamicConfig
+import lucuma.core.model.sequence.gmos.GmosFpuMask
 import lucuma.core.util.TimeSpan
 import lucuma.schemas.model.StepRecord
 import lucuma.schemas.model.Visit
@@ -35,14 +37,14 @@ sealed trait GmosSequenceRow:
   // TODO Not in model yet, we are just simulating
   lazy val guided: Boolean                                  =
     stepConfig match
-      case Some(StepConfig.Science(_)) => true
-      case _                           => false
+      case Some(StepConfig.Science(_, _)) => true
+      case _                              => false
   lazy val (p, q): (Option[BigDecimal], Option[BigDecimal]) =
     stepConfig match
-      case Some(StepConfig.Science(Offset(p, q))) =>
+      case Some(StepConfig.Science(Offset(p, q), _)) =>
         (p, q).bimap(componentToArcSec, componentToArcSec).bimap(_.some, _.some)
-      case Some(_)                                => (BigDecimal(0).some, BigDecimal(0).some)
-      case _                                      => (none, none)
+      case Some(_)                                   => (BigDecimal(0).some, BigDecimal(0).some)
+      case _                                         => (none, none)
   lazy val wavelength: Option[BigDecimal]                   =
     instrumentConfig
       .flatMap(_ match
@@ -101,7 +103,11 @@ object GmosSequenceRow:
     override lazy val stepConfig: Option[StepConfig]          = futureStepConfig.some
 
   object FutureStep:
-    def fromStep(step: Step, atomId: Atom.Id, firstOf: Option[Int]): GmosSequenceRow.FutureStep =
+    def fromStep[D <: DynamicConfig](
+      step:    Step[D],
+      atomId:  Atom.Id,
+      firstOf: Option[Int]
+    ): GmosSequenceRow.FutureStep =
       FutureStep(step.id, step.instrumentConfig, step.stepConfig, atomId, firstOf)
 
   sealed trait Executed extends GmosSequenceRow:

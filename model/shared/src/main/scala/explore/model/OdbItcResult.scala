@@ -16,6 +16,7 @@ import io.circe.generic.semiauto
 import io.circe.refined.*
 import lucuma.core.math.SignalToNoise
 import lucuma.core.util.TimeSpan
+import lucuma.odb.json.time.decoder.given
 import lucuma.schemas.decoders.given
 import monocle.Focus
 import monocle.Prism
@@ -34,9 +35,10 @@ object OdbItcResult {
   ) extends OdbItcResult
       derives Eq {
     def toItcExposureTime: ItcExposureTime =
-      ItcExposureTime(OverridenExposureTime.FromItc,
-                      exposureTime,
-                      PosInt.unsafeFrom(exposures.value)
+      ItcExposureTime(
+        OverridenExposureTime.FromItc,
+        exposureTime,
+        PosInt.unsafeFrom(exposures.value)
       )
   }
 

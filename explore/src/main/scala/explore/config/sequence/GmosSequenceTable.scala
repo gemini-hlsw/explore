@@ -3,10 +3,12 @@
 
 package explore.config.sequence
 
+import cats.Eq
 import cats.syntax.all.*
 import crystal.react.reuse.*
 import explore.Icons
 import explore.components.ui.ExploreStyles
+import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.all.svg.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -14,6 +16,7 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
 import lucuma.core.model.sequence.*
+import lucuma.core.model.sequence.gmos.DynamicConfig
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.typed.{tanstackTableCore => raw}
@@ -23,10 +26,20 @@ import lucuma.ui.table.*
 import react.common.Css
 import react.common.ReactFnProps
 
-case class GmosSequenceTable(atoms: List[Atom]) extends ReactFnProps(GmosSequenceTable.component)
+sealed trait GmosSequenceTable[D] {
+  def atoms: List[Atom[D]]
+}
+
+case class GmosNorthSequenceTable(atoms: List[Atom[DynamicConfig.GmosNorth]])
+    extends ReactFnProps(GmosSequenceTable.gmosNorthComponent)
+    with GmosSequenceTable[DynamicConfig.GmosNorth]
+
+case class GmosSouthSequenceTable(atoms: List[Atom[DynamicConfig.GmosSouth]])
+    extends ReactFnProps(GmosSequenceTable.gmosSouthComponent)
+    with GmosSequenceTable[DynamicConfig.GmosSouth]
 
 object GmosSequenceTable:
-  private type Props = GmosSequenceTable
+  private type Props[D] = GmosSequenceTable[D]
 
   private val ColDef = ColumnDef[GmosSequenceRow.FutureStep]
 
@@ -49,20 +62,20 @@ object GmosSequenceTable:
     )
       +: SequenceColumns.gmosColumns(ColDef, _.some)
 
-  private def buildLines(atoms: List[Atom]): List[GmosSequenceRow.FutureStep] =
+  private def buildLines[D <: DynamicConfig](
+    atoms: List[Atom[D]]
+  ): List[GmosSequenceRow.FutureStep] =
     atoms
       .map(atom =>
-        atom.steps.headOption
-          .map(head =>
-            GmosSequenceRow.FutureStep.fromStep(head, atom.id, atom.steps.length.some.filter(_ > 1))
-          ) ++
+        GmosSequenceRow.FutureStep
+          .fromStep(atom.steps.head, atom.id, atom.steps.length.some.filter(_ > 1)) +:
           atom.steps.tail.map(step => GmosSequenceRow.FutureStep.fromStep(step, atom.id, none))
       )
       .flatten
 
-  private val component =
+  private def componentBuilder[D <: DynamicConfig: Eq] =
     ScalaFnComponent
-      .withHooks[Props]
+      .withHooks[Props[D]]
       .useMemo(())(_ => columns)
       .useMemoBy((props, _) => props.atoms)((_, _) => buildLines)
       .useReactTableBy((props, cols, rows) =>
@@ -91,3 +104,7 @@ object GmosSequenceTable:
               case _                                                         => Css.Empty
         )
       }
+
+  protected[sequence] val gmosNorthComponent = componentBuilder[DynamicConfig.GmosNorth]
+
+  protected[sequence] val gmosSouthComponent = componentBuilder[DynamicConfig.GmosSouth]
