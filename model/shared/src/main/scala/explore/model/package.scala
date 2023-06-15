@@ -23,6 +23,7 @@ import lucuma.core.model.SiderealTracking
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.Target
+import lucuma.core.model.TimingWindow
 import lucuma.core.model.UnnormalizedSED
 import lucuma.core.model.{ObsAttachment => ObsAtt}
 import lucuma.core.optics.SplitEpi
@@ -61,6 +62,7 @@ type TargetWithObsList          = SortedMap[Target.Id, TargetWithObs]
 // Otherwise, we should change to a SortedMap.
 type ObservationList            = KeyedIndexedList[Observation.Id, ObsSummary]
 type ConstraintGroupList        = SortedMap[ObsIdSet, ConstraintSet]
+type SchedulingGroupList        = SortedMap[ObsIdSet, List[TimingWindow]]
 type ObsAttachmentList          = SortedMap[ObsAtt.Id, ObsAttachment]
 type ObsAttachmentAssignmentMap = Map[ObsAtt.Id, SortedSet[Observation.Id]]
 type ProgramInfoList            = SortedMap[Program.Id, ProgramInfo]

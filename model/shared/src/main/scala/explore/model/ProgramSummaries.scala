@@ -68,6 +68,13 @@ case class ProgramSummaries(
         .map((c, obsIds) => ObsIdSet.of(obsIds.head, obsIds.tail.toList: _*) -> c)
     )
 
+  lazy val schedulingGroups: SchedulingGroupList =
+    SortedMap.from(
+      observations.values
+        .groupMap(_.timingWindows.sorted)(_.id)
+        .map((tws, obsIds) => ObsIdSet.of(obsIds.head, obsIds.tail.toList: _*) -> tws.sorted)
+    )
+
   def cloneObsWithTargets(
     originalId: Observation.Id,
     clonedId:   Observation.Id,

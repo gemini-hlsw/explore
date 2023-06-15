@@ -7,17 +7,17 @@ import cats.Eq
 import cats.derived.*
 import io.circe.Decoder
 import io.circe.generic.semiauto.*
-import lucuma.core.model.ConstraintSet
+import lucuma.core.model.TimingWindow
 import lucuma.schemas.decoders.given
 import monocle.Focus
 
 import scala.annotation.unused
 
-case class ConstraintGroup(constraintSet: ConstraintSet, obsIds: ObsIdSet) derives Eq
+case class SchedulingGroup(timingWindows: List[TimingWindow], obsIds: ObsIdSet) derives Eq
 
-object ConstraintGroup:
-  val constraintSet = Focus[ConstraintGroup](_.constraintSet)
-  val obsIds        = Focus[ConstraintGroup](_.obsIds)
+object SchedulingGroup:
+  val timingWindows = Focus[SchedulingGroup](_.timingWindows)
+  val obsIds        = Focus[SchedulingGroup](_.obsIds)
 
-  def fromTuple(tuple: (ObsIdSet, ConstraintSet)): ConstraintGroup =
-    ConstraintGroup(tuple._2, tuple._1)
+  def fromTuple(tuple: (ObsIdSet, List[TimingWindow])): SchedulingGroup =
+    SchedulingGroup(tuple._2, tuple._1)

@@ -71,6 +71,7 @@ object ExploreStyles:
   val TabSelector: Css           = Css("bottom-tab-selector")
   val ObsGroupTitle: Css         = Css("obs-group-title")
   val ObsGroupTitleWithWrap: Css = Css("obs-group-title-with-wrap")
+  val ObsGroupTitleWithList: Css = Css("obs-group-title-with-list")
   val DeleteButton: Css          = Css("delete-button")
 
   val ResizeHandle: Css       = Css("resize-handle")

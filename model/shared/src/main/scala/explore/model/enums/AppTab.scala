@@ -17,19 +17,13 @@ import lucuma.core.util.Enumerated
  * Within a button group, order is determined by the AppTab Order instance, which is determined by
  * the order in AppTab.all.
  */
-enum AppTab(val title: String, val buttonGroup: Int):
+enum AppTab(val title: String, val buttonGroup: Int) derives Enumerated:
+  case Proposal     extends AppTab("Proposal", 1)
+  case Overview     extends AppTab("Overview", 2)
+  case Observations extends AppTab("Observations", 3)
+  case Targets      extends AppTab("Targets", 3)
+  // case Configurations extends AppTab("Configurations", 3)
+  case Constraints  extends AppTab("Constraints", 3)
+  case Scheduling   extends AppTab("Scheduling", 3)
 
-  case Proposal       extends AppTab("Proposal", 1)
-  case Overview       extends AppTab("Overview", 2)
-  case Observations   extends AppTab("Observations", 3)
-  case Targets        extends AppTab("Targets", 3)
-  case Configurations extends AppTab("Configurations", 3)
-  case Constraints    extends AppTab("Constraints", 3)
-
-object AppTab:
-  val all =
-    NonEmptyList.of(Proposal, Overview, Observations, Targets, /*Configurations,*/ Constraints)
-
-  /** @group Typeclass Instances */
-  given Enumerated[AppTab] =
-    Enumerated.fromNEL(all).withTag(_.title)
+  def tag: String = title

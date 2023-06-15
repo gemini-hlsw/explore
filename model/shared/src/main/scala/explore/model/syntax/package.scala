@@ -6,9 +6,12 @@ package explore.model.syntax
 import cats.syntax.all.*
 import explore.model.AsterismGroup
 import explore.model.AsterismGroupList
+import explore.model.Constants
 import explore.model.ConstraintGroup
 import explore.model.ConstraintGroupList
 import explore.model.ObsIdSet
+import explore.model.SchedulingGroup
+import explore.model.SchedulingGroupList
 import explore.model.enums.PosAngleOptions
 import lucuma.core.enums.Site
 import lucuma.core.math.Angle
@@ -17,7 +20,9 @@ import lucuma.core.model.ConstraintSet
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target
 import lucuma.core.util.TimeSpan
+import lucuma.core.util.Timestamp
 
+import java.time.ZoneOffset
 import scala.annotation.targetName
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
@@ -52,6 +57,11 @@ object all:
     def findContainingObsIds(obsIds: ObsIdSet): Option[ConstraintGroup] =
       self.find { case (ids, _) => obsIds.subsetOf(ids) }.map(ConstraintGroup.fromTuple)
 
+  extension (self: SchedulingGroupList)
+    @targetName("findContainingObsIdsScheduling")
+    def findContainingObsIds(obsIds: ObsIdSet): Option[SchedulingGroup] =
+      self.find { case (ids, _) => obsIds.subsetOf(ids) }.map(SchedulingGroup.fromTuple)
+
   extension [A](list: Iterable[A])
     def toSortedMap[K: Ordering, V](getKey: A => K, getValue: A => V = identity[A](_)) =
       SortedMap.from(list.map(a => (getKey(a), getValue(a))))
@@ -74,3 +84,12 @@ object all:
   extension (cs: ConstraintSet)
     def summaryString: String =
       s"${cs.imageQuality.label} ${cs.cloudExtinction.label} ${cs.skyBackground.label} ${cs.waterVapor.label}"
+
+  extension (ts: Timestamp)
+    def formatUtc: String =
+      s"${Constants.GppDateFormatter.format(ts.toInstant.atOffset(ZoneOffset.UTC))} @ " +
+        s"${Constants.GppTimeTZFormatter.format(ts.toInstant.atOffset(ZoneOffset.UTC))}"
+
+    def formatUtcWithZone: String =
+      s"${Constants.GppDateFormatter.format(ts.toInstant.atOffset(ZoneOffset.UTC))} @ " +
+        s"${Constants.GppTimeTZFormatterWithZone.format(ts.toInstant.atOffset(ZoneOffset.UTC))}"

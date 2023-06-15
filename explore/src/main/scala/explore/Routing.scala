@@ -14,6 +14,7 @@ import explore.model.Page.*
 import explore.model.*
 import explore.programs.ProgramsPopup
 import explore.proposal.ProposalTabContents
+import explore.tabs.ConstraintsTabContents
 import explore.tabs.*
 import japgolly.scalajs.react.ReactMonocle.*
 import japgolly.scalajs.react.extra.router.*
@@ -113,6 +114,20 @@ object Routing:
       )
     )
 
+  private def schedulingTab(page: Page, model: View[RootModel]): VdomElement =
+    val routingInfo = RoutingInfo.from(page)
+    withProgramSummaries(routingInfo.programId.some, model)(programSummaries =>
+      val routingInfo = RoutingInfo.from(page)
+      SchedulingTabContents(
+        model.zoom(RootModel.userId).get,
+        routingInfo.programId,
+        programSummaries,
+        routingInfo.focused.obsSet,
+        model.zoom(RootModel.expandedIds.andThen(ExpandedIds.schedulingObsIds)),
+        model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forObsList)
+      )
+    )
+
   private def proposalTab(page: Page, model: View[RootModel]): VdomElement =
     val routingInfo = RoutingInfo.from(page)
     // we don't need the summaries, but we still want to validate the progam id
@@ -200,7 +215,16 @@ object Routing:
           | dynamicRouteCT(
             (root / id[Program.Id] / "constraints/obs" / idList[Observation.Id])
               .xmapL(ConstraintsObsPage.iso)
-          ) ~> dynRenderP { case (p, m) => constraintSetTab(p, m) })
+          ) ~> dynRenderP { case (p, m) => constraintSetTab(p, m) }
+
+          | dynamicRouteCT(
+            (root / id[Program.Id] / "scheduling").xmapL(SchedulingBasePage.iso)
+          ) ~> dynRenderP { case (p, m) => schedulingTab(p, m) }
+
+          | dynamicRouteCT(
+            (root / id[Program.Id] / "scheduling/obs" / idList[Observation.Id])
+              .xmapL(SchedulingObsPage.iso)
+          ) ~> dynRenderP { case (p, m) => schedulingTab(p, m) })
 
       val configuration =
         rules
@@ -236,11 +260,15 @@ object Routing:
             TargetsObsPage(pid, twoObs),
             TargetsObsPage(pid, threeObs),
             TargetPage(pid, tid),
-            ConfigurationsPage(pid),
+            // ConfigurationsPage(pid),
             ConstraintsBasePage(pid),
             ConstraintsObsPage(pid, oneObs),
             ConstraintsObsPage(pid, twoObs),
-            ConstraintsObsPage(pid, threeObs)
+            ConstraintsObsPage(pid, threeObs),
+            SchedulingBasePage(pid),
+            SchedulingObsPage(pid, oneObs),
+            SchedulingObsPage(pid, twoObs),
+            SchedulingObsPage(pid, threeObs)
           )
       }
 
