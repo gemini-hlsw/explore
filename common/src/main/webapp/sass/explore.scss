@@ -1058,27 +1058,6 @@ table.pl-react-table.explore-sequence-table {
   }
 }
 
-
-@mixin obs-group-title-mixin {
-  flex-grow: 2;
-  margin-right: 5px;
-}
-
-.obs-group-title {
-  @include obs-group-title-mixin;
-  @include common.text-ellipsis;
-}
-
-.obs-group-title-with-wrap {
-  @include obs-group-title-mixin;
-
-  white-space: normal;
-  overflow: visible;
-  max-width: 80%;
-  word-wrap: break-word;
-}
-
-
 // The panel is not nested in the obs badge
 .obs-status-select-panel.p-dropdown-panel {
   background-color: var(--obs-selected-badge-background);
@@ -2615,10 +2594,7 @@ a.explore-upgrade-link {
 
 .obs-group-title {
   @include obs-group-title-mixin;
-
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  @include common.text-ellipsis;
 }
 
 .obs-group-title-with-wrap {
