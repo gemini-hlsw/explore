@@ -27,6 +27,7 @@ $mobile-responsive-cutoff: 670px;
 
 // React-datepicker shows Aria messages without this.
 // https://github.com/Hacker0x01/react-datepicker/issues/3924#issuecomment-1430907381
+/* stylelint-disable selector-class-pattern */
 .react-datepicker__aria-live {
   position: absolute;
   clip-path: circle(0);
@@ -38,6 +39,7 @@ $mobile-responsive-cutoff: 670px;
   width: 1px;
   white-space: nowrap;
 }
+/* stylelint-enable selector-class-pattern */
 
 // Full viewport settings taken from https://dev.to/lennythedev/css-gotcha-how-to-fill-page-with-a-div-270j
 
