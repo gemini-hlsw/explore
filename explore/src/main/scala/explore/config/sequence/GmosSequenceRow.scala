@@ -4,6 +4,7 @@
 package explore.config.sequence
 
 import cats.syntax.all.*
+import lucuma.core.enums.GuideState
 import lucuma.core.enums.StepType
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
@@ -34,11 +35,10 @@ sealed trait GmosSequenceRow:
       case DynamicConfig.GmosNorth(exposure, _, _, _, _, _, _) => exposure.toSeconds.longValue
       case DynamicConfig.GmosSouth(exposure, _, _, _, _, _, _) => exposure.toSeconds.longValue
     )
-  // TODO Not in model yet, we are just simulating
   lazy val guided: Boolean                                  =
     stepConfig match
-      case Some(StepConfig.Science(_, _)) => true
-      case _                              => false
+      case Some(StepConfig.Science(_, guiding)) => guiding === GuideState.Enabled
+      case _                                    => false
   lazy val (p, q): (Option[BigDecimal], Option[BigDecimal]) =
     stepConfig match
       case Some(StepConfig.Science(Offset(p, q), _)) =>
