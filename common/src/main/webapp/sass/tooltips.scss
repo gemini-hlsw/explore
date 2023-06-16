@@ -25,7 +25,12 @@
   font-size: smaller;
   display: inline;
   min-width: 100px;
-  max-width: 300px;
+  width: max-content;
+  word-break: break-word;
+
+  span {
+    word-wrap: break-word;
+  }
 }
 
 .arrow {
