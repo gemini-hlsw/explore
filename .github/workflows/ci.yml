@@ -162,6 +162,16 @@ jobs:
           BUNDLEMON_PROJECT_APIKEY: ${{ secrets.BUNDLEMON_PROJECT_APIKEY }}
         run: yarn bundlemon
 
+      - name: Deploy review app to Firebase
+        if: (github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' && github.event.pull_request.head.repo.full_name == github.repository)
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EXPLORE_GEMINI }}
+          projectId: explore-gemini
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          target: development
+          channelId: live
+
   heroku:
     name: Deploy to Heroku
     if: (github.event_name == 'push' && github.ref == 'refs/heads/master' && startsWith(github.repository, 'gemini'))

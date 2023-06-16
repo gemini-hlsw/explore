@@ -312,7 +312,7 @@ def firebaseDeploy(name: String, cond: String, live: Boolean) = WorkflowStep.Use
     "repoToken"              -> "${{ secrets.GITHUB_TOKEN }}",
     "firebaseServiceAccount" -> "${{ secrets.FIREBASE_SERVICE_ACCOUNT_EXPLORE_GEMINI }}",
     "projectId"              -> "explore-gemini",
-    "target"                 -> "staging"
+    "target"                 -> "development"
   ) ++ (if (live) Map("channelId" -> "live") else Map.empty)
 )
 
@@ -322,7 +322,7 @@ lazy val firebaseDeployReview = firebaseDeploy(
            notDependabotCond,
            "github.event.pull_request.head.repo.full_name == github.repository"
   ),
-  live = false
+  live = true
 )
 
 lazy val firebaseDeployStaging = firebaseDeploy(
@@ -381,7 +381,7 @@ ThisBuild / githubWorkflowAddedJobs +=
       npmBuild ::
       overrideCiCommit ::
       bundlemon ::
-      // firebaseDeployReview ::
+      firebaseDeployReview ::
       // firebaseDeployStaging ::
       Nil,
     scalas = List(scalaVersion.value),
