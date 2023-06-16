@@ -201,18 +201,7 @@ private object SpectroscopyModesTable extends TableHooks:
   private given Order[InstrumentRow#Filter]  = Order.by(_.toString)
   private given Order[InstrumentRow#FPU]     = Order.by(_.toString)
   private given Order[BasicConfigAndItc]     = Order.by(_.configuration.configurationSummary)
-
-  private def timeOrder(sort: Option[ColumnSort]): Order[Option[TimeSpan]] =
-    Order.from {
-      case (Some(a), Some(b)) =>
-        a.toMicroseconds.compareTo(b.toMicroseconds)
-      case (Some(a), None)    =>
-        if (sort.exists(_.direction == SortDirection.Descending)) 1 else -1
-      case (None, Some(a))    =>
-        if (sort.exists(_.direction == SortDirection.Descending)) -1 else 1
-      case (None, None)       =>
-        -1
-    }
+  private given Order[TimeSpan | Unit]       = Order.by(_.toOption)
 
   private def formatInstrument(r: (Instrument, NonEmptyString)): String = r match
     case (i @ Instrument.Gnirs, m) => s"${i.longName} $m"
@@ -263,21 +252,25 @@ private object SpectroscopyModesTable extends TableHooks:
   }
 
   private def columns(
-    cw:          Option[Wavelength],
-    fpu:         Option[FocalPlane],
-    sn:          Option[SignalToNoise],
-    snAt:        Option[Wavelength],
-    constraints: ConstraintSet,
-    target:      Option[ItcTarget],
-    itc:         ItcResultsCache,
-    progress:    Option[Progress],
-    timeSort:    Option[ColumnSort]
+    cw:                Option[Wavelength],
+    fpu:               Option[FocalPlane],
+    sn:                Option[SignalToNoise],
+    snAt:              Option[Wavelength],
+    constraints:       ConstraintSet,
+    target:            Option[ItcTarget],
+    itc:               ItcResultsCache,
+    progress:          Option[Progress],
+    timeSortDirection: Option[SortDirection]
   ) =
     List(
-      column(InstrumentColumnId, row => SpectroscopyModeRow.instrumentAndConfig.get(row.entry))
-        .setCell(cell => formatInstrument(cell.value))
-        .setColumnSize(Resizable(120.toPx, min = 50.toPx, max = 150.toPx)),
-      column(TimeColumnId, _.totalItcTime)
+      column(
+        InstrumentColumnId,
+        row => formatInstrument(SpectroscopyModeRow.instrumentAndConfig.get(row.entry))
+      )
+        .setCell(_.value: String)
+        .setColumnSize(Resizable(120.toPx, min = 50.toPx, max = 150.toPx))
+        .sortable,
+      column(TimeColumnId, _.totalItcTime.orUndefined)
         .setHeader(_ =>
           <.div(ExploreStyles.ITCHeaderCell)(
             "Time",
@@ -294,7 +287,13 @@ private object SpectroscopyModesTable extends TableHooks:
         .setCell(cell => itcCell(cell.row.original.result, cw))
         .setColumnSize(FixedSize(80.toPx))
         .setEnableSorting(progress.isEmpty)
-        .sortable(using timeOrder(timeSort).toOrdering),
+        .setEnableSorting(true)
+        .setSortUndefined {
+          timeSortDirection match
+            case Some(SortDirection.Descending) => UndefinedPriority.Higher
+            case _                              => UndefinedPriority.Lower
+        }
+        .sortable,
       column(SlitWidthColumnId, row => SpectroscopyModeRow.slitWidth.get(row.entry))
         .setCell(cell => formatSlitWidth(cell.value))
         .setColumnSize(FixedSize(100.toPx))
@@ -319,7 +318,8 @@ private object SpectroscopyModesTable extends TableHooks:
         WavelengthIntervalColumnId,
         row => cw.map(w => ModeCommonWavelengths.wavelengthInterval(w)(row.entry))
       ).setCell(cell => cell.value.flatten.fold("-")(_.shortName))
-        .setColumnSize(FixedSize(100.toPx)),
+        .setColumnSize(FixedSize(100.toPx))
+        .sortableBy(_.flatMap(_.map(_.lower))),
       column(ResolutionColumnId, row => SpectroscopyModeRow.resolution.get(row.entry))
         .setCell(_.value.toString)
         .setColumnSize(FixedSize(70.toPx))
@@ -327,7 +327,6 @@ private object SpectroscopyModesTable extends TableHooks:
       column(AvailablityColumnId, row => row.rowToConf(cw))
         .setCell(_.value.fold("No")(_ => "Yes"))
         .setColumnSize(FixedSize(66.toPx))
-        .setSortUndefined(UndefinedPriority.Lower)
         .sortable
     ).filter { case c => (c.id.toString) != FPUColumnId.value || fpu.isEmpty }
 
@@ -451,9 +450,9 @@ private object SpectroscopyModesTable extends TableHooks:
           .toList
           .distinct
       }
-      // Time sort needs special treatment
-      .useState(none[ColumnSort])
-      .useMemoBy { (props, _, itcResults, _, itcProgress, _, timeSort) => // Memo Cols
+      // timeSortDescending: Time sort needs special treatment
+      .useState(none[SortDirection])
+      .useMemoBy { (props, _, itcResults, _, itcProgress, _, timeSortDirection) => // Memo Cols
         (props.spectroscopyRequirements.wavelength,
          props.spectroscopyRequirements.focalPlane,
          props.spectroscopyRequirements.signalToNoise,
@@ -462,7 +461,7 @@ private object SpectroscopyModesTable extends TableHooks:
          props.constraints,
          itcResults.value,
          itcProgress.value,
-         timeSort.value
+         timeSortDirection.value
         )
       } {
         (_, _, _, _, _, _, _) => (
@@ -474,7 +473,7 @@ private object SpectroscopyModesTable extends TableHooks:
           constraints,
           itcResults,
           itcProgress,
-          timeSort
+          timeSortDirection
         ) =>
           columns(
             wavelength,
@@ -485,7 +484,7 @@ private object SpectroscopyModesTable extends TableHooks:
             targets,
             itcResults,
             itcProgress,
-            timeSort.filter(_.columnId == TimeColumnId)
+            timeSortDirection
           )
       }
       // table
@@ -509,10 +508,12 @@ private object SpectroscopyModesTable extends TableHooks:
       // in the following "hook cycle" and get the proper index.
       .useState(ScrollTo.Scroll)
       .useEffectWithDepsBy((_, _, _, _, _, _, _, _, table, _) => table.getState().sorting) {
-        (_, _, _, _, _, _, sorting, _, table, scrollTo) => s =>
-          table.setSorting(s) *>
-            sorting.setState(s.value.headOption) *> scrollTo
-              .setState(ScrollTo.Scroll)
+        (_, _, _, _, _, _, timeSortDirection, _, table, scrollTo) => sorting =>
+          table.setSorting(sorting) *> // Necessary to restore sorting after page reload
+            timeSortDirection.setState(sorting.value.collectFirst {
+              case ColumnSort(colId, direction) if colId == TimeColumnId => direction
+            }) *>
+            scrollTo.setState(ScrollTo.Scroll)
       }
       .useMemoBy((_, _, _, rows, _, _, timeSort, _, table, _) =>
         (rows, timeSort.value, table.getState().sorting)
