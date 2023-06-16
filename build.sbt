@@ -267,7 +267,7 @@ val faNpmAuthToken = "FONTAWESOME_NPM_AUTH_TOKEN" -> "${{ secrets.FONTAWESOME_NP
 lazy val setupNode = WorkflowStep.Use(
   UseRef.Public("actions", "setup-node", "v3"),
   name = Some("Use Node.js"),
-  params = Map("node-version" -> "16", "cache" -> "npm")
+  params = Map("node-version" -> "18", "cache" -> "npm")
 )
 
 lazy val sbtStage = WorkflowStep.Sbt(List("stage"), name = Some("Stage"))
@@ -367,6 +367,7 @@ ThisBuild / githubWorkflowGeneratedUploadSteps := Seq.empty
 ThisBuild / githubWorkflowSbtCommand           := "sbt -v -J-Xmx6g"
 ThisBuild / githubWorkflowBuildPreamble ++= Seq(setupNode, npmInstall)
 ThisBuild / githubWorkflowEnv += faNpmAuthToken
+ThisBuild / githubWorkflowOSes                 := Seq("macos-latest")
 
 ThisBuild / githubWorkflowAddedJobs +=
   WorkflowJob(
@@ -386,6 +387,7 @@ ThisBuild / githubWorkflowAddedJobs +=
       Nil,
     scalas = List(scalaVersion.value),
     javas = githubWorkflowJavaVersions.value.toList.take(1),
+    oses = List("macos-latest"),
     cond = Some(allConds(anyConds(masterCond, prCond), geminiRepoCond))
   )
 

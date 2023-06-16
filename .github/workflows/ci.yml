@@ -22,7 +22,7 @@ jobs:
     name: Build and Test
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [macos-latest]
         scala: [3.2.2]
         java: [temurin@17]
         project: [rootJS, rootJVM]
@@ -64,7 +64,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
           cache: npm
 
       - name: npm clean-install
@@ -85,7 +85,7 @@ jobs:
         run: sbt -v -J-Xmx6g 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' test
 
       - name: Check scalafix lints
-        if: matrix.java == 'temurin@17' && matrix.os == 'ubuntu-latest'
+        if: matrix.java == 'temurin@17' && matrix.os == 'macos-latest'
         run: sbt -v -J-Xmx6g 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' 'scalafixAll --check'
 
       - name: Aggregate coverage reports
@@ -99,7 +99,7 @@ jobs:
     if: ((github.ref == 'refs/heads/master' || github.event_name == 'pull_request') && startsWith(github.repository, 'gemini'))
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [macos-latest]
         scala: [3.2.2]
         java: [temurin@17]
     runs-on: ${{ matrix.os }}
@@ -126,7 +126,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
           cache: npm
 
       - name: Cache sbt
@@ -197,7 +197,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
           cache: npm
 
       - name: Cache sbt
@@ -246,7 +246,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
           cache: npm
 
       - name: npm clean-install
