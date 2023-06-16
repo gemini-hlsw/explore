@@ -233,7 +233,7 @@ private object SpectroscopyModesTable extends TableHooks:
               case ItcQueryProblems.GenericError(e) if e.startsWith("Source too") =>
                 <.span(Icons.SunBright.addClass(ExploreStyles.ItcSourceTooBrightIcon), e)
               case ItcQueryProblems.GenericError(e)                               =>
-                <.span(e)
+                e.split("\n").map(u => <.span(u)).intersperse(<.br: VdomNode).mkTagMod(<.span)
             }
             .toList
             .intersperse(<.br: VdomNode)
