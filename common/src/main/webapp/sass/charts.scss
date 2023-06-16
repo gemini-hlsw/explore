@@ -15,6 +15,10 @@ See https://github.com/highcharts/highcharts/issues/13320 */
   /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
   stroke: var(--plot-tooltip-border-color);
   stroke-width: 0.9px;
+  // This is tricky. Without this the background will change depending on the system
+  // appeareance like dark mode. But with this, the background will be the correct color
+  // regardless
+  fill: var(--plot-tooltip-background-color);
 }
 
 .highcharts-point-inactive,
