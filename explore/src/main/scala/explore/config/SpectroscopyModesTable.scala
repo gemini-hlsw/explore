@@ -516,7 +516,7 @@ private object SpectroscopyModesTable extends TableHooks:
       }
       .useMemoBy((_, _, _, rows, _, _, timeSort, _, table, _) =>
         (rows, timeSort.value, table.getState().sorting)
-      ) { (_, _, _, _, _, _, sorting, _, table, _) => (_, s, _) =>
+      ) { (_, _, _, _, _, _, sorting, _, table, _) => (_, _, _) =>
         table.getSortedRowModel().rows.map(_.original).toList
       }
       // selectedIndex
@@ -541,7 +541,7 @@ private object SpectroscopyModesTable extends TableHooks:
       }
       // Set the selected config if the rows change because it might have different itc data.
       // Note, we use rows for the dependency, not sorted rows, because sorted rows also changes with sort.
-      .useEffectWithDepsBy((_, _, _, rows, _, _, timeSort, _, _, _, _, _) => rows) {
+      .useEffectWithDepsBy((_, _, _, rows, _, _, _, _, _, _, _, _) => rows) {
         (props, _, _, _, _, _, _, _, _, _, sortedRows, selectedIndex) => _ =>
           val optRow = selectedIndex.value.flatMap(idx => sortedRows.lift(idx))
           val conf   = optRow.flatMap(_.rowToConf(props.spectroscopyRequirements.wavelength))
