@@ -333,6 +333,7 @@ object ExploreStyles:
   val SeqGenParametersForm: Css    = Css("seq-gen-parameters-form")
 
   // Configuration tile
+  val ConfigurationTileBody: Css        = Css("explore-configuration-tile-body")
   val PAConfigurationForm: Css          = Css("explore-pa-configuration-form")
   val PAConfigurationAngle: Css         = Css("explore-pa-configuration-angle")
   val ObsInstantTileTitle: Css          = Css("explore-obs-instant-tile-title")

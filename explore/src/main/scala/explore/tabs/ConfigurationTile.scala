@@ -4,11 +4,14 @@
 package explore.tabs
 
 import cats.effect.IO
+import cats.syntax.all.*
+import cats.syntax.all.*
 import crystal.Pot
 import crystal.react.View
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.Tile
+import explore.components.ui.ExploreStyles
 import explore.config.ConfigurationPanel
 import explore.model.AsterismIds
 import explore.model.BasicConfigAndItc
@@ -52,6 +55,7 @@ object ConfigurationTile {
     Tile(
       ObsTabTilesIds.ConfigurationId.id,
       "Configuration",
+      bodyClass = ExploreStyles.ConfigurationTileBody.some,
       canMinimize = true
     )(_ =>
       ConfigurationPanel(

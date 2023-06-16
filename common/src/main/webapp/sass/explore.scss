@@ -1072,6 +1072,22 @@ table.pl-react-table.explore-sequence-table {
 }
 
 // ------
+// Configuration Tile
+// ------
+.explore-configuration-grid {
+  padding: 0.5em;
+  width: 100%;
+  gap: 0.3em;
+  display: flex;
+  flex-direction: column;
+}
+
+.explore-configuration-tile-body {
+  display: flex;
+  background-color: var(--surface-card);
+}
+
+// ------
 // Imaging Configuration
 // ------
 .explore-configuration-filter .p-multiselect-item>span {
@@ -1096,10 +1112,6 @@ table.pl-react-table.explore-sequence-table {
 // ------
 // Advanced Configuration
 // ------
-
-.explore-configuration-grid {
-  padding: 0.5em;
-}
 
 .explore-advanced-configuration-buttons {
   grid-area: buttons;
@@ -2251,9 +2263,10 @@ $help-title-height: 40px;
 }
 
 .explore-basic-configuration-grid {
+  flex-grow: 1;
   min-height: 0;
-  height: 100%;
   display: grid;
+  max-height: 100%;
   gap: 0.5em;
   grid-template:
     "form table-header" auto
@@ -2275,13 +2288,13 @@ $help-title-height: 40px;
 // Pos angle form
 // -----------------
 .explore-pa-configuration-form {
-  grid-area: obs-props;
-  display: flex;
-  gap: 0.3em;
+  flex-shrink: 1;
+  align-self: stretch;
   align-items: baseline;
+  gap: 0.3em;
+  display: flex;
   padding-bottom: 0.3em;
   border-bottom: 1px solid var(--site-border-color);
-  align-self: stretch;
 
   .explore-pa-configuration-angle {
     input {

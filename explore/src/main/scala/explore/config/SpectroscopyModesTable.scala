@@ -54,15 +54,9 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.FocalPlane
 import lucuma.core.enums.*
-import lucuma.core.math.BoundedInterval
-import lucuma.core.math.Coordinates
-import lucuma.core.math.SignalToNoise
-import lucuma.core.math.Wavelength
+import lucuma.core.math.*
 import lucuma.core.math.units.Micrometer
-import lucuma.core.model.ConstraintSet
-import lucuma.core.model.CoordinatesAtVizTime
-import lucuma.core.model.SiderealTracking
-import lucuma.core.model.User
+import lucuma.core.model.*
 import lucuma.core.syntax.all.*
 import lucuma.core.util.Display
 import lucuma.core.util.NewType
@@ -208,8 +202,7 @@ private object SpectroscopyModesTable extends TableHooks:
   private given Order[InstrumentRow#Filter]  = Order.by(_.toString)
   private given Order[InstrumentRow#FPU]     = Order.by(_.toString)
   private given Order[BasicConfigAndItc]     = Order.by(_.configuration.configurationSummary)
-
-  private given Order[TimeSpan | Unit] = Order.by(_.toOption)
+  private given Order[TimeSpan | Unit]       = Order.by(_.toOption)
 
   private def formatInstrument(r: (Instrument, NonEmptyString)): String = r match
     case (i @ Instrument.Gnirs, m) => s"${i.longName} $m"
@@ -260,19 +253,24 @@ private object SpectroscopyModesTable extends TableHooks:
   }
 
   private def columns(
-    cw:          Option[Wavelength],
-    fpu:         Option[FocalPlane],
-    sn:          Option[SignalToNoise],
-    snAt:        Option[Wavelength],
-    constraints: ConstraintSet,
-    target:      Option[ItcTarget],
-    itc:         ItcResultsCache,
-    progress:    Option[Progress]
+    cw:                Option[Wavelength],
+    fpu:               Option[FocalPlane],
+    sn:                Option[SignalToNoise],
+    snAt:              Option[Wavelength],
+    constraints:       ConstraintSet,
+    target:            Option[ItcTarget],
+    itc:               ItcResultsCache,
+    progress:          Option[Progress],
+    timeSortDirection: Option[SortDirection]
   ) =
     List(
-      column(InstrumentColumnId, row => SpectroscopyModeRow.instrumentAndConfig.get(row.entry))
-        .setCell(cell => formatInstrument(cell.value))
-        .setColumnSize(Resizable(120.toPx, min = 50.toPx, max = 150.toPx)),
+      column(
+        InstrumentColumnId,
+        row => formatInstrument(SpectroscopyModeRow.instrumentAndConfig.get(row.entry))
+      )
+        .setCell(_.value: String)
+        .setColumnSize(Resizable(120.toPx, min = 50.toPx, max = 150.toPx))
+        .sortable,
       column(TimeColumnId, _.totalItcTime.orUndefined)
         .setHeader(_ =>
           <.div(ExploreStyles.ITCHeaderCell)(
@@ -290,7 +288,12 @@ private object SpectroscopyModesTable extends TableHooks:
         .setCell(cell => itcCell(cell.row.original.result, cw))
         .setColumnSize(FixedSize(80.toPx))
         .setEnableSorting(progress.isEmpty)
-        .setSortUndefined(UndefinedPriority.Lower)
+        .setEnableSorting(true)
+        .setSortUndefined {
+          timeSortDirection match
+            case Some(SortDirection.Descending) => UndefinedPriority.Higher
+            case _                              => UndefinedPriority.Lower
+        }
         .sortable,
       column(SlitWidthColumnId, row => SpectroscopyModeRow.slitWidth.get(row.entry))
         .setCell(cell => formatSlitWidth(cell.value))
@@ -316,7 +319,8 @@ private object SpectroscopyModesTable extends TableHooks:
         WavelengthIntervalColumnId,
         row => cw.map(w => ModeCommonWavelengths.wavelengthInterval(w)(row.entry))
       ).setCell(cell => cell.value.flatten.fold("-")(_.shortName))
-        .setColumnSize(FixedSize(100.toPx)),
+        .setColumnSize(FixedSize(100.toPx))
+        .sortableBy(_.flatMap(_.map(_.lower))),
       column(ResolutionColumnId, row => SpectroscopyModeRow.resolution.get(row.entry))
         .setCell(_.value.toString)
         .setColumnSize(FixedSize(70.toPx))
@@ -324,7 +328,6 @@ private object SpectroscopyModesTable extends TableHooks:
       column(AvailablityColumnId, row => row.rowToConf(cw))
         .setCell(_.value.fold("No")(_ => "Yes"))
         .setColumnSize(FixedSize(66.toPx))
-        .setSortUndefined(UndefinedPriority.Lower)
         .sortable
     ).filter { case c => (c.id.toString) != FPUColumnId.value || fpu.isEmpty }
 
@@ -448,7 +451,9 @@ private object SpectroscopyModesTable extends TableHooks:
           .toList
           .distinct
       }
-      .useMemoBy { (props, _, itcResults, _, itcProgress, _) => // Memo Cols
+      // timeSortDescending: Time sort needs special treatment
+      .useState(none[SortDirection])
+      .useMemoBy { (props, _, itcResults, _, itcProgress, _, timeSortDirection) => // Memo Cols
         (props.spectroscopyRequirements.wavelength,
          props.spectroscopyRequirements.focalPlane,
          props.spectroscopyRequirements.signalToNoise,
@@ -456,10 +461,11 @@ private object SpectroscopyModesTable extends TableHooks:
          props.brightestTarget,
          props.constraints,
          itcResults.value,
-         itcProgress.value
+         itcProgress.value,
+         timeSortDirection.value
         )
       } {
-        (_, _, _, _, _, _) => (
+        (_, _, _, _, _, _, _) => (
           wavelength,
           focalPlane,
           sn,
@@ -467,7 +473,8 @@ private object SpectroscopyModesTable extends TableHooks:
           targets,
           constraints,
           itcResults,
-          itcProgress
+          itcProgress,
+          timeSortDirection
         ) =>
           columns(
             wavelength,
@@ -477,11 +484,12 @@ private object SpectroscopyModesTable extends TableHooks:
             constraints,
             targets,
             itcResults,
-            itcProgress
+            itcProgress,
+            timeSortDirection
           )
       }
       // table
-      .useReactTableWithStateStoreBy((props, ctx, _, rows, _, _, cols) =>
+      .useReactTableWithStateStoreBy((props, ctx, _, rows, _, _, _, cols) =>
         import ctx.given
 
         TableOptionsWithStateStore(
@@ -500,17 +508,23 @@ private object SpectroscopyModesTable extends TableHooks:
       // By having it as state with the following `useEffectWithDepsBy`, the scrollTo effect will run
       // in the following "hook cycle" and get the proper index.
       .useState(ScrollTo.Scroll)
-      .useEffectWithDepsBy((_, _, _, _, _, _, _, table, _) => table.getState().sorting) {
-        (_, _, _, _, _, _, _, _, scrollTo) => _ => scrollTo.setState(ScrollTo.Scroll)
+      .useEffectWithDepsBy((_, _, _, _, _, _, _, _, table, _) => table.getState().sorting) {
+        (_, _, _, _, _, _, timeSortDirection, _, table, scrollTo) => sorting =>
+          table.setSorting(sorting) *> // Necessary to restore sorting after page reload
+            timeSortDirection.setState(sorting.value.collectFirst {
+              case ColumnSort(colId, direction) if colId == TimeColumnId => direction
+            }) *>
+            scrollTo.setState(ScrollTo.Scroll)
       }
-      .useMemoBy((_, _, _, rows, _, _, _, table, _) => (rows, table.getState().sorting)) {
-        (_, _, _, _, _, _, _, table, _) => (_, _) =>
-          table.getSortedRowModel().rows.map(_.original).toList
+      .useMemoBy((_, _, _, rows, _, _, timeSort, _, table, _) =>
+        (rows, timeSort.value, table.getState().sorting)
+      ) { (_, _, _, _, _, _, sorting, _, table, _) => (_, _, _) =>
+        table.getSortedRowModel().rows.map(_.original).toList
       }
       // selectedIndex
       // The selected index needs to be the index into the sorted data, because that is what
       // the virtualizer uses for scrollTo.
-      .useStateBy((props, _, _, _, _, _, _, _, _, sortedRows) =>
+      .useStateBy((props, _, _, _, _, _, _, _, _, _, sortedRows) =>
         selectedRowIndex(
           props.selectedConfig.get.map(_.configuration),
           props.spectroscopyRequirements.wavelength,
@@ -518,10 +532,10 @@ private object SpectroscopyModesTable extends TableHooks:
         )
       )
       // Recompute index if conf, requirements or sortedRows change.
-      .useEffectWithDepsBy((props, _, _, _, _, _, _, _, _, sortedRows, _) =>
+      .useEffectWithDepsBy((props, _, _, _, _, _, _, _, _, _, sortedRows, _) =>
         (props.selectedConfig.get.map(_.configuration), props.spectroscopyRequirements, sortedRows)
       ) {
-        (_, _, _, _, _, _, _, _, _, _, selectedIndex) =>
+        (_, _, _, _, _, _, _, _, _, _, _, selectedIndex) =>
           (configuration, requirements, sortedRows) =>
             selectedIndex.setState(
               selectedRowIndex(configuration, requirements.wavelength, sortedRows)
@@ -529,8 +543,8 @@ private object SpectroscopyModesTable extends TableHooks:
       }
       // Set the selected config if the rows change because it might have different itc data.
       // Note, we use rows for the dependency, not sorted rows, because sorted rows also changes with sort.
-      .useEffectWithDepsBy((_, _, _, rows, _, _, _, _, _, _, _) => rows) {
-        (props, _, _, _, _, _, _, _, _, sortedRows, selectedIndex) => _ =>
+      .useEffectWithDepsBy((_, _, _, rows, _, _, _, _, _, _, _, _) => rows) {
+        (props, _, _, _, _, _, _, _, _, _, sortedRows, selectedIndex) => _ =>
           val optRow = selectedIndex.value.flatMap(idx => sortedRows.lift(idx))
           val conf   = optRow.flatMap(_.rowToConf(props.spectroscopyRequirements.wavelength))
           if (props.selectedConfig.get =!= conf)
@@ -542,7 +556,7 @@ private object SpectroscopyModesTable extends TableHooks:
       // atTop
       .useState(false)
       // Recalculate ITC values if the wv or sn change or if the rows get modified
-      .useEffectWithDepsBy((props, _, _, rows, _, _, _, _, _, _, _, _, _) =>
+      .useEffectWithDepsBy((props, _, _, rows, _, _, _, _, _, _, _, _, _, _) =>
         (
           props.spectroscopyRequirements.wavelength,
           props.spectroscopyRequirements.signalToNoise,
@@ -552,7 +566,7 @@ private object SpectroscopyModesTable extends TableHooks:
           rows.length
         )
       ) {
-        (_, ctx, itcResults, _, itcProgress, _, _, _, _, sortedRows, _, _, _) => (
+        (_, ctx, itcResults, _, itcProgress, _, _, _, _, _, sortedRows, _, _, _) => (
           wavelength,
           signalToNoise,
           signalToNoiseAt,
@@ -619,8 +633,8 @@ private object SpectroscopyModesTable extends TableHooks:
       }
       .useRef(none[HTMLTableVirtualizer])
       // scroll to the currently selected row.
-      .useEffectWithDepsBy((_, _, _, _, _, _, _, _, scrollTo, _, _, _, _, _) => scrollTo) {
-        (_, _, _, _, _, _, _, _, _, _, selectedIndex, _, _, virtualizerRef) => scrollTo =>
+      .useEffectWithDepsBy((_, _, _, _, _, _, _, _, _, scrollTo, _, _, _, _, _) => scrollTo) {
+        (_, _, _, _, _, _, _, _, _, _, _, selectedIndex, _, _, virtualizerRef) => scrollTo =>
           if (scrollTo.value === ScrollTo.Scroll) {
             virtualizerRef.get.flatMap(refOpt =>
               Callback(
@@ -640,6 +654,7 @@ private object SpectroscopyModesTable extends TableHooks:
           rows,
           _,
           errs,
+          _,
           _,
           table,
           _,
