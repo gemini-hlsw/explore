@@ -443,6 +443,12 @@ $brightness: var(--aladin-image-brightness);
   align-content: center;
 }
 
+.finder-charts-attachments {
+  @include hud;
+  right: 0;
+  bottom: 0;
+}
+
 .finder-charts-tools {
   @include hud;
 

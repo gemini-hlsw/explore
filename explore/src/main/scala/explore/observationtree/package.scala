@@ -28,6 +28,7 @@ import lucuma.schemas.odb.input.*
 import monocle.Focus
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ObsQueries.*
+import lucuma.core.model.ObsAttachment
 
 val obsListMod = KIListMod[ObsSummary, Observation.Id](ObsSummary.id)
 
@@ -100,6 +101,23 @@ def obsEditSubtitle(programId: Program.Id, obsId: Observation.Id)(using
       )
       .void
 )
+
+def obsEditAttachments(
+  programId:     Program.Id,
+  obsId:         Observation.Id,
+  attachmentIds: Set[ObsAttachment.Id]
+)(using
+  FetchClient[IO, ObservationDB]
+) =
+  UpdateObservationMutation[IO]
+    .execute(
+      UpdateObservationsInput(
+        programId = programId,
+        WHERE = obsId.toWhereObservation.assign,
+        SET = ObservationPropertiesInput(obsAttachments = attachmentIds.toList.assign)
+      )
+    )
+    .void
 
 def obsActiveStatus(programId: Program.Id, obsId: Observation.Id)(using
   FetchClient[IO, ObservationDB]

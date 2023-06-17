@@ -91,13 +91,16 @@ object Routing:
     val routingInfo = RoutingInfo.from(page)
     withProgramSummaries(routingInfo.programId.some, model)(programSummaries =>
       ObsTabContents(
+        model.zoom(RootModel.vault).get,
         model.zoom(RootModel.userId).get,
         routingInfo.programId,
         programSummaries,
         routingInfo.focused,
         model.zoom(RootModel.undoStacks),
         model.zoom(RootModel.searchingTarget),
-        model.zoom(RootModel.expandedIds.andThen(ExpandedIds.obsListGroupIds))
+        model.zoom(RootModel.expandedIds.andThen(ExpandedIds.obsListGroupIds)),
+        programSummaries.zoom(ProgramSummaries.obsAttachments),
+        programSummaries.get.obsAttachmentAssignments
       )
     )
 

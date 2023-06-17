@@ -169,8 +169,6 @@ object ExploreMain {
       for {
         _                    <- Theme.init[IO]
         host                 <- IO(dom.window.location.host)
-        // for debugging, remove later
-        _                    <- Logger[IO].info(s"href: ${dom.window.location.host}")
         appConfig            <- fetchConfig[IO](host)
         _                    <- Logger[IO].info(s"Git Commit: [${utils.gitHash.getOrElse("NONE")}]")
         _                    <- Logger[IO].info(s"Config: ${appConfig.show}")

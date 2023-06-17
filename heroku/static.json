@@ -3,11 +3,6 @@
   "root": "static/",
   "clean_urls": false,
   "brotli": "on",
-  "redirects": {
-    "/conf.json": {
-      "url": "\" /${ENVIRONMENT}.conf.json\""
-    }
-  },
   "routes": {
     "/*.csv": "/",
     "/**": "index.html"

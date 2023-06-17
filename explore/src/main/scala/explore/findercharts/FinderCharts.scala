@@ -16,6 +16,12 @@ import monocle.Focus
 import monocle.Lens
 import monocle.Prism
 import react.common.ReactFnProps
+import explore.model.ObsAttachmentList
+import lucuma.core.model.Program
+import crystal.react.View
+import eu.timepit.refined.types.string.NonEmptyString
+import scala.collection.immutable.SortedSet
+import lucuma.core.model.ObsAttachment
 
 sealed trait ChartOp derives Eq
 
@@ -111,7 +117,12 @@ object Transformation:
   val scaleXVal = scaleX.andThen(ChartOp.scaleX)
   val scaleYVal = scaleY.andThen(ChartOp.scaleY)
 
-case class FinderCharts() extends ReactFnProps(FinderCharts.component)
+case class FinderCharts(
+  programId:        Program.Id,
+  authToken:        NonEmptyString,
+  obsAttachmentIds: View[SortedSet[ObsAttachment.Id]],
+  obsAttachments:   View[ObsAttachmentList]
+) extends ReactFnProps(FinderCharts.component)
 
 object FinderCharts:
   private type Props = FinderCharts
@@ -121,10 +132,15 @@ object FinderCharts:
       .withHooks[Props]
       .useStateView(Transformation.Default)
       .useStateView(ColorsInverted.No)
-      .render { (_, ops, inverted) =>
+      .render { (props, ops, inverted) =>
         val transforms = ops.get.calcTransform
         ReactFragment(
           ControlOverlay(ops, inverted),
+          AttachmentsOverlay(props.programId,
+                             props.authToken,
+                             props.obsAttachmentIds,
+                             props.obsAttachments
+          ),
           <.div(
             ExploreStyles.FinderChartsBody,
             <.img(

@@ -78,21 +78,26 @@ import react.resizeDetector.*
 import java.time.Instant
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
+import lucuma.schemas.ObservationDB.Enums.ObsAttachmentType
+import explore.observationtree.obsEditAttachments
 
 case class ObsTabTiles(
-  userId:             Option[User.Id],
-  programId:          Program.Id,
-  backButton:         VdomNode,
-  obsUndoCtx:         UndoSetter[ObsSummary],
-  allTargetsUndoCtx:  UndoSetter[TargetList],
-  allConstraintSets:  Set[ConstraintSet],
-  targetObservations: Map[Target.Id, SortedSet[Observation.Id]],
-  focusedTarget:      Option[Target.Id],
-  undoStacks:         View[ModelUndoStacks[IO]],
-  searching:          View[Set[Target.Id]],
-  defaultLayouts:     LayoutsMap,
-  layouts:            View[Pot[LayoutsMap]],
-  resize:             UseResizeDetectorReturn
+  vault:                    Option[UserVault],
+  userId:                   Option[User.Id],
+  programId:                Program.Id,
+  backButton:               VdomNode,
+  obsUndoCtx:               UndoSetter[ObsSummary],
+  allTargetsUndoCtx:        UndoSetter[TargetList],
+  allConstraintSets:        Set[ConstraintSet],
+  targetObservations:       Map[Target.Id, SortedSet[Observation.Id]],
+  focusedTarget:            Option[Target.Id],
+  undoStacks:               View[ModelUndoStacks[IO]],
+  searching:                View[Set[Target.Id]],
+  defaultLayouts:           LayoutsMap,
+  layouts:                  View[Pot[LayoutsMap]],
+  resize:                   UseResizeDetectorReturn,
+  obsAttachments:           View[ObsAttachmentList],
+  obsAttachmentAssignments: ObsAttachmentAssignmentMap
 ) extends ReactFnProps(ObsTabTiles.component):
   val obsView: View[ObsSummary] = obsUndoCtx.model
   val observation: ObsSummary   = obsView.get
@@ -302,7 +307,16 @@ object ObsTabTiles:
                   )
               )
 
-          val finderChartsTile = FinderChartsTile.finderChartsTile
+          val attachmentsView = props.obsView.zoom(ObsSummary.attachmentIds).withOnMod { ids =>
+            obsEditAttachments(props.programId, props.obsId, ids).runAsyncAndForget
+          }
+
+          val finderChartsTile =
+            FinderChartsTile.finderChartsTile(props.programId,
+                                              attachmentsView,
+                                              props.vault.map(_.token),
+                                              props.obsAttachments
+            )
 
           val notesTile =
             Tile(

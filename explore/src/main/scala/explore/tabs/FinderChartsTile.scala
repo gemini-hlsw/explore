@@ -8,13 +8,29 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.findercharts.FinderCharts
 import lucuma.ui.syntax.all.given
+import explore.model.ObsAttachmentList
+import japgolly.scalajs.react.vdom.html_<^.*
+import eu.timepit.refined.types.string.NonEmptyString
+import lucuma.core.model.Program
+import crystal.react.View
+import scala.collection.immutable.SortedSet
+import lucuma.core.model.ObsAttachment
 
 object FinderChartsTile:
 
-  def finderChartsTile =
+  def finderChartsTile(
+    programId:        Program.Id,
+    obsAttachmentIds: View[SortedSet[ObsAttachment.Id]],
+    authToken:        Option[NonEmptyString],
+    obsAttachments:   View[ObsAttachmentList]
+  ) =
     Tile(
       ObsTabTilesIds.FinderChartsId.id,
       s"Finder Charts",
       bodyClass = ExploreStyles.FinderChartsTile.some,
       canMinimize = true
-    )(_ => FinderCharts())
+    )(_ =>
+      authToken
+        .map(t => FinderCharts(programId, t, obsAttachmentIds, obsAttachments): VdomNode)
+        .getOrElse(EmptyVdom)
+    )
