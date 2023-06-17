@@ -367,6 +367,8 @@ ThisBuild / githubWorkflowGeneratedUploadSteps := Seq.empty
 ThisBuild / githubWorkflowSbtCommand           := "sbt -v -J-Xmx6g"
 ThisBuild / githubWorkflowBuildPreamble ++= Seq(setupNode, npmInstall)
 ThisBuild / githubWorkflowEnv += faNpmAuthToken
+ThisBuild / githubWorkflowOSes                 := Seq("self-hosted")
+ThisBuild / githubWorkflowGeneratedCacheSteps  := Seq()
 
 ThisBuild / githubWorkflowAddedJobs +=
   WorkflowJob(
@@ -386,6 +388,7 @@ ThisBuild / githubWorkflowAddedJobs +=
       Nil,
     scalas = List(scalaVersion.value),
     javas = githubWorkflowJavaVersions.value.toList.take(1),
+    oses = List("self-hosted"),
     cond = Some(allConds(anyConds(masterCond, prCond), geminiRepoCond))
   )
 
