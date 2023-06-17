@@ -1,0 +1,11 @@
+task:
+  container:
+    image: sbtscala/scala-sbt:eclipse-temurin-jammy-17.0.5_8_1.9.0_3.3.0
+    cpu: 4
+    memory: 16G
+  environment:
+    NODE_OPTIONS: '--max-old-space-size=8192'
+  script:
+    - sbt -v -J-Xmx6g '++ ${{ matrix.scala }}' stage
+    - npm clean-install
+    - npm run build 
