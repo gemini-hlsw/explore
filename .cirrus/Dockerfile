@@ -1,7 +1,5 @@
-FROM sbtscala/scala-sbt:eclipse-temurin-jammy-17.0.5_8_1.9.0_3.3.0
+FROM node:latest
 
-RUN apt-get update && apt-get install -y nodejs npm
-RUN npm i -g --force node
-RUN npm install -g npm
-RUN apt-get remove -y npm
-RUN apt-get install -y npm
+RUN apt-get update && apt-get install -y default-jre
+RUN wget -q https://github.com/sbt/sbt/releases/download/v1.9.0/sbt-1.9.0.tgz && tar xvfz sbt-1.9.0.tgz
+ENV PATH="$PATH:sbt/bin"
