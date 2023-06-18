@@ -1,12 +1,10 @@
-task:
-  container:
-    dockerfile: .cirrus/Dockerfile
-    cpu: 4
-    memory: 16G
+macos_instance:
+  image: ghcr.io/cirruslabs/macos-ventura-base:latest
   environment:
     NODE_OPTIONS: '--max-old-space-size=8192'
     FONTAWESOME_NPM_AUTH_TOKEN: ENCRYPTED[!fe2a40fa773536496971484bb59a07226d86e8aba729f59ebee5aab269e8185400d16a533a7b24d8c20841de8ea81ef3!]
   script:
+    - brew install sbt
     - sbt -v -J-Xmx15g stage
     - npm clean-install
     - npm run build 
