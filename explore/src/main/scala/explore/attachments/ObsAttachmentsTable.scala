@@ -291,12 +291,14 @@ object ObsAttachmentsTable extends TableHooks:
   private val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useMemoBy(_.authToken)(p => OdbRestClient[IO](_))
       .useContext(AppContext.ctx)
+      .useMemoBy((p, _) => p.authToken)((_, ctx) =>
+        token => OdbRestClient[IO](ctx.environment, token)
+      )
       .useStateView(Action.None)
       .useStateView[UrlMap](Map.empty)
       .useEffectWithDepsBy((props, _, _, _, _) => props.obsAttachments.get)(
-        (props, client, _, _, urlMap) =>
+        (props, _, client, _, urlMap) =>
           obsAttachments =>
             val allCurrentKeys = obsAttachments.values.map(_.toMapKey).toSet
             val newOas         = allCurrentKeys.filter(key => !urlMap.get.contains(key)).toList
@@ -314,9 +316,9 @@ object ObsAttachmentsTable extends TableHooks:
             updateUrlMap *> getUrls
       )
       // Columns
-      .useMemoBy((props, client, _, _, urlMap) =>
+      .useMemoBy((props, _, client, _, urlMap) =>
         (client, props.obsAttachmentAssignments, urlMap.get)
-      )((props, _, ctx, action, _) =>
+      )((props, ctx, _, action, _) =>
         (client, assignments, urlMap) =>
           import ctx.given
 
@@ -458,7 +460,7 @@ object ObsAttachmentsTable extends TableHooks:
       .useMemoBy((props, _, _, _, _, _) => props.obsAttachments.reuseByValue)((_, _, _, _, _, _) =>
         _.value.toListOfViews.map(_._2)
       )
-      .useReactTableBy((prop, _, ctx, _, _, cols, rows) =>
+      .useReactTableBy((prop, _, _, _, _, cols, rows) =>
         TableOptions(
           cols,
           rows,
@@ -466,7 +468,7 @@ object ObsAttachmentsTable extends TableHooks:
         )
       )
       .useStateView(Enumerated[AttachmentType].all.head)
-      .render { (props, client, ctx, action, _, _, _, table, newAttType) =>
+      .render { (props, ctx, client, action, _, _, _, table, newAttType) =>
         import ctx.given
 
         val dialogHeader = action.get match

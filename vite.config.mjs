@@ -92,28 +92,9 @@ export default defineConfig(({ command, mode }) => {
   const themeConfig = path.resolve(webappCommon, 'theme/theme.config');
   const themeSite = path.resolve(webappCommon, 'theme');
   const suithemes = path.resolve(webappCommon, 'suithemes');
-  const publicDirProd = path.resolve(common, 'src/main/public');
-  const publicDirDev = path.resolve(common, 'src/main/publicdev');
+  const publicDir = path.resolve(common, 'src/main/public');
   const lucumaCss = path.resolve(__dirname, 'explore/target/lucuma-css')
-  fs.mkdir(publicDirDev, (err) => {
-    const localConf = path.resolve(publicDirProd, 'local.conf.json');
-    const devConf = path.resolve(publicDirProd, 'development.conf.json');
 
-    fs.copyFileSync(
-      fs.existsSync(localConf) ? localConf : devConf,
-      path.resolve(publicDirDev, 'conf.json')
-    );
-    fs.copyFileSync(
-      path.resolve(publicDirProd, 'instrument_spectroscopy_matrix.csv'),
-      path.resolve(publicDirDev, 'instrument_spectroscopy_matrix.csv')
-    );
-    fs.copyFileSync(
-      path.resolve(publicDirProd, 'bracket.svg'),
-      path.resolve(publicDirDev, 'bracket.svg')
-    );
-  });
-
-  const publicDir = mode == 'production' ? publicDirProd : publicDirDev;
   return {
     // TODO Remove this if we get EnvironmentPlugin to work.
     root: 'explore/src/main/webapp',
@@ -189,13 +170,6 @@ export default defineConfig(({ command, mode }) => {
             return sjsIgnored;
           },
         ],
-      },
-      proxy: {
-        'conf.json': {
-          rewrite: (path) => {
-            path.replace(/^\/conf.json$/, '/conf/development.conf.json');
-          },
-        },
       },
     },
     build: {

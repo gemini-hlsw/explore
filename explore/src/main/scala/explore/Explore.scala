@@ -73,13 +73,13 @@ object ExploreMain {
     LogLevelLogger.createForRoot[F]
   }
 
-  def fetchConfig[F[_]: Async]: F[AppConfig] =
+  def fetchConfig[F[_]: Async](host: String): F[AppConfig] =
     // We want to avoid caching the static server redirect and the config files (they are not fingerprinted by vite).
-    AppConfig.fetchConfig(
-      FetchClientBuilder[F]
-        .withRequestTimeout(5.seconds)
-        .withCache(RequestCache.`no-store`)
-        .create
+    AppConfig.fetchConfig[F](host,
+                             FetchClientBuilder[F]
+                               .withRequestTimeout(5.seconds)
+                               .withCache(RequestCache.`no-store`)
+                               .create
     )
 
   def initialModel(vault: Option[UserVault], pref: ExploreLocalPreferences) =
@@ -168,7 +168,10 @@ object ExploreMain {
 
       for {
         _                    <- Theme.init[IO]
-        appConfig            <- fetchConfig[IO]
+        host                 <- IO(dom.window.location.host)
+        // for debugging, remove later
+        _                    <- Logger[IO].info(s"href: ${dom.window.location.host}")
+        appConfig            <- fetchConfig[IO](host)
         _                    <- Logger[IO].info(s"Git Commit: [${utils.gitHash.getOrElse("NONE")}]")
         _                    <- Logger[IO].info(s"Config: ${appConfig.show}")
         toastRef             <- Deferred[IO, ToastRef]
