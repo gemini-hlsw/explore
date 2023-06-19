@@ -187,7 +187,7 @@ object GeneratedSequenceSQL:
         atomCount
       }
 
-      fragment gmosSouthAtomFields on GmosNorthAtom {
+      fragment gmosSouthAtomFields on GmosSouthAtom {
         id
         description
         steps {
@@ -224,7 +224,7 @@ object GeneratedSequenceSQL:
         }
       }
 
-      fragment gmosSouthSequenceFields on GmosNorthExecutionSequence {
+      fragment gmosSouthSequenceFields on GmosSouthExecutionSequence {
         digest {
           ...sequenceDigestFields
         }
