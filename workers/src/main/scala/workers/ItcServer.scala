@@ -50,13 +50,13 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
 
   private val CacheRetention: Duration = Duration.ofDays(30)
 
-  private def fetchConfig[F[_]: Async]: F[AppConfig] =
+  private def fetchConfig[F[_]: Async](host: String): F[AppConfig] =
     // We want to avoid caching the static server redirect and the config files (they are not fingerprinted by vite).
-    AppConfig.fetchConfig(
-      FetchClientBuilder[F]
-        .withRequestTimeout(5.seconds)
-        .withCache(dom.RequestCache.`no-store`)
-        .create
+    AppConfig.fetchConfig(host,
+                          FetchClientBuilder[F]
+                            .withRequestTimeout(5.seconds)
+                            .withCache(dom.RequestCache.`no-store`)
+                            .create
     )
 
   private def client[F[_]: Async]: Client[F] =
@@ -70,7 +70,7 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
       cache               <- Cache.withIDB[IO](self.indexedDB.toOption, "explore-itc")
       _                   <- cache.evict(CacheRetention).start
       matrix              <- Deferred[IO, SpectroscopyModesMatrix]
-      config              <- fetchConfig[IO]
+      config              <- fetchConfig[IO](self.location.host)
       given ItcClient[IO] <- ItcClient.create[IO](config.itcURI, client)
     } yield { invocation =>
       invocation.data match {

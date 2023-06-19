@@ -8,6 +8,7 @@ import cats.effect.Resource
 import cats.syntax.all.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.AppConfig
+import explore.model.enums.ExecutionEnvironment
 import fs2.Stream
 import fs2.text.utf8
 import lucuma.core.model.ObsAttachment
@@ -51,7 +52,7 @@ trait OdbRestClient[F[_]] {
 }
 
 object OdbRestClient {
-  def apply[F[_]: Async](authToken: NonEmptyString): OdbRestClient[F] = {
+  def apply[F[_]: Async](env: ExecutionEnvironment, authToken: NonEmptyString): OdbRestClient[F] = {
 
     val authHeader = Headers(
       Authorization(Credentials.Token(AuthScheme.Bearer, authToken.value))
@@ -62,11 +63,11 @@ object OdbRestClient {
 
     def getURI: F[Uri] =
       AppConfig
-        .fetchConfig(
-          FetchClientBuilder[F]
-            .withRequestTimeout(5.seconds)
-            .withCache(dom.RequestCache.`no-store`)
-            .create
+        .fetchConfig(env,
+                     FetchClientBuilder[F]
+                       .withRequestTimeout(5.seconds)
+                       .withCache(dom.RequestCache.`no-store`)
+                       .create
         )
         .map(_.odbRestURI / "attachment")
 
