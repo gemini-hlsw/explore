@@ -85,17 +85,6 @@ object ObsAttachmentsTable extends TableHooks with ObsAttachmentUtils:
   private type UrlMapKey = (ObsAtt.Id, Timestamp)
   private type UrlMap    = Map[UrlMapKey, Pot[String]]
 
-  private val ColDef = ColumnDef[View[ObsAttachment]]
-
-  private val ActionsColumnId: ColumnId        = ColumnId("actions")
-  private val FileNameColumnId: ColumnId       = ColumnId("filename")
-  private val AttachmentTypeColumnId: ColumnId = ColumnId("attachment-type")
-  private val SizeColumnId                     = ColumnId("filesize")
-  private val LastUpdateColumnId               = ColumnId("last-update")
-  private val ObservationsColumnId: ColumnId   = ColumnId("observations")
-  private val DescriptionColumnId: ColumnId    = ColumnId("description")
-  private val CheckedColumnId: ColumnId        = ColumnId("checked")
-
   private val columnNames: Map[ColumnId, String] = Map(
     ActionsColumnId        -> "Actions",
     FileNameColumnId       -> "File",
