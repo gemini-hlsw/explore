@@ -27,14 +27,12 @@ addCommandAlias(
   "; prePR; fixCSS"
 )
 
-ThisBuild / description                := "Explore"
-Global / onChangedBuildSource          := ReloadOnSourceChanges
-ThisBuild / scalafixDependencies ++= ClueGenerator.value ++ Seq(
-  "edu.gemini" % "lucuma-schemas_3" % Versions.lucumaSchemas
-)
-ThisBuild / scalafixScalaBinaryVersion := "2.13"
-ThisBuild / scalaVersion               := "3.2.2"
-ThisBuild / crossScalaVersions         := Seq("3.2.2")
+ThisBuild / description                         := "Explore"
+Global / onChangedBuildSource                   := ReloadOnSourceChanges
+ThisBuild / scalafixDependencies += "edu.gemini" % "lucuma-schemas_3" % Versions.lucumaSchemas
+ThisBuild / scalafixScalaBinaryVersion          := "2.13"
+ThisBuild / scalaVersion                        := "3.2.2"
+ThisBuild / crossScalaVersions                  := Seq("3.2.2")
 ThisBuild / scalacOptions ++= Seq(
   "-language:implicitConversions"
 )
