@@ -1,0 +1,44 @@
+[
+  {
+    "hostName": "*",
+    "environment": "DEVELOPMENT",
+    "odbURI": "wss://lucuma-postgres-odb-dev.herokuapp.com/ws",
+    "odbRestURI": "https://lucuma-postgres-odb-dev.herokuapp.com",
+    "preferencesDBURI": "wss://user-prefs-development.herokuapp.com/v1/graphql",
+    "itcURI": "https://itc-development.herokuapp.com/itc",
+    "sso": {
+      "uri": "https://sso.gpp.lucuma.xyz",
+      "readTimeoutSeconds": 10,
+      "refreshTimeoutDeltaSeconds": 10,
+      "refreshIntervalFactor": 1
+    }
+  },
+  {
+    "hostName": "explore.lucuma.xyz",
+    "environment": "STAGING", 
+    "odbURI": "wss://lucuma-postgres-odb-staging.herokuapp.com/ws",
+    "odbRestURI": "https://lucuma-postgres-odb-staging.herokuapp.com",
+    "preferencesDBURI": "wss://user-prefs-staging.herokuapp.com/v1/graphql",
+    "itcURI": "https://itc-staging.lucuma.xyz/itc",
+    "sso": {
+      "uri": "https://sso.gpp.lucuma.xyz",
+      "readTimeoutSeconds": 10,
+      "refreshTimeoutDeltaSeconds": 10,
+      "refreshIntervalFactor": 1
+    }
+  },
+  {
+    "hostName": "explore.gemini.edu",
+    "environment": "PRODUCTION",
+    "odbURI": "wss://lucuma-odb.herokuapp.com/ws",
+    "odbRestURI": "https://lucuma-odb.herokuapp.com",
+    "preferencesDBURI": "wss://user-prefs.herokuapp.com/v1/graphql",
+    "itcURI": "https://itc.gpp.gemini.edu/itc",
+    "sso": {
+      "uri": "https://sso.gpp.gemini.edu",
+      "readTimeoutSeconds": 10,
+      "refreshTimeoutDeltaSeconds": 10,
+      "refreshIntervalFactor": 1
+    }
+  }
+]
