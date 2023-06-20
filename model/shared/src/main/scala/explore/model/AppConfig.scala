@@ -46,31 +46,35 @@ case class AppConfig(
 object AppConfig {
   private val configFile = uri"/environments.conf.json"
 
-  def fetchConfig[F[_]: Async](host: String, client: Client[F]): F[AppConfig] =
+  private def fetchHelper[F[_]: Async](
+    client:   Client[F],
+    selector: List[AppConfig] => F[AppConfig]
+  ): F[AppConfig] =
     client
       .get(configFile)(_.decodeJson[List[AppConfig]])
       .adaptError { case t =>
         new Exception("Could not retrieve configuration.", t)
       }
-      .flatMap(confs =>
+      .flatMap(selector)
+
+  def fetchConfig[F[_]: Async](host: String, client: Client[F]): F[AppConfig] =
+    fetchHelper(
+      client,
+      confs =>
         confs
           .find(conf => host.startsWith(conf.hostName))
           .orElse(confs.find(_.hostName === "*"))
           .fold(
             Async[F].raiseError(new Exception("Host not found in configuration."))
           )(_.pure)
-      )
+    )
 
   def fetchConfig[F[_]: Async](env: ExecutionEnvironment, client: Client[F]): F[AppConfig] =
-    client
-      .get(configFile)(_.decodeJson[List[AppConfig]])
-      .adaptError { case t =>
-        new Exception("Could not retrieve configuration.", t)
-      }
-      .flatMap(
-        _.find(_.environment === env)
-          .fold(
-            Async[F].raiseError(new Exception("Environment not found in configuration."))
-          )(_.pure)
-      )
+    fetchHelper(
+      client,
+      _.find(_.environment === env)
+        .fold(
+          Async[F].raiseError(new Exception("Environment not found in configuration."))
+        )(_.pure)
+    )
 }
