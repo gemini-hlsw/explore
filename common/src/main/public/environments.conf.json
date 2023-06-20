@@ -14,7 +14,7 @@
     }
   },
   {
-    "hostName": "explore.lucuma.xyz",
+    "hostName": "explore-staging.lucuma.xyz",
     "environment": "STAGING",
     "odbURI": "wss://lucuma-postgres-odb-staging.herokuapp.com/ws",
     "odbRestURI": "https://lucuma-postgres-odb-staging.herokuapp.com",
