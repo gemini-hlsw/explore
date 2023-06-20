@@ -10,7 +10,6 @@ import cats.effect.Async
 import cats.syntax.all.*
 import explore.model.enums.ExecutionEnvironment
 import io.circe.*
-import io.circe.generic.semiauto.*
 import org.http4s.Uri
 import org.http4s.circe.*
 import org.http4s.client.Client
@@ -26,7 +25,6 @@ case class SSOConfig(
   refreshIntervalFactor:      Long = 1
 ) derives Eq,
       Show,
-      Encoder.AsObject,
       Decoder {
   val readTimeout: FiniteDuration         = FiniteDuration(readTimeoutSeconds, TimeUnit.SECONDS)
   val refreshTimeoutDelta: FiniteDuration =
@@ -34,6 +32,7 @@ case class SSOConfig(
 }
 
 case class AppConfig(
+  hostName:         String,
   environment:      ExecutionEnvironment,
   preferencesDBURI: Uri,
   odbURI:           Uri,
@@ -42,34 +41,36 @@ case class AppConfig(
   sso:              SSOConfig
 ) derives Eq,
       Show,
-      Encoder.AsObject,
       Decoder {}
 
 object AppConfig {
-
-  def confEnvironment(host: String): ExecutionEnvironment = host match {
-    case host if host.startsWith("explore.gemini.edu") => ExecutionEnvironment.Production
-    case host if host.startsWith("explore.lucuma.xyz") => ExecutionEnvironment.Staging
-    case _                                             => ExecutionEnvironment.Development
-  }
-
-  def confName(env: ExecutionEnvironment) = env match {
-    case ExecutionEnvironment.Development => uri"/development.conf.json"
-    case ExecutionEnvironment.Staging     => uri"/staging.conf.json"
-    case ExecutionEnvironment.Production  => uri"/production.conf.json"
-  }
+  private val configFile = uri"/environments.conf.json"
 
   def fetchConfig[F[_]: Async](host: String, client: Client[F]): F[AppConfig] =
     client
-      .get(confName(confEnvironment(host)))(_.decodeJson[AppConfig])
+      .get(configFile)(_.decodeJson[List[AppConfig]])
       .adaptError { case t =>
         new Exception("Could not retrieve configuration.", t)
       }
+      .flatMap(confs =>
+        confs
+          .find(conf => host.startsWith(conf.hostName))
+          .orElse(confs.find(_.hostName === "*"))
+          .fold(
+            Async[F].raiseError(new Exception("Host not found in configuration."))
+          )(_.pure)
+      )
 
   def fetchConfig[F[_]: Async](env: ExecutionEnvironment, client: Client[F]): F[AppConfig] =
     client
-      .get(confName(env))(_.decodeJson[AppConfig])
+      .get(configFile)(_.decodeJson[List[AppConfig]])
       .adaptError { case t =>
         new Exception("Could not retrieve configuration.", t)
       }
+      .flatMap(
+        _.find(_.environment === env)
+          .fold(
+            Async[F].raiseError(new Exception("Environment not found in configuration."))
+          )(_.pure)
+      )
 }
