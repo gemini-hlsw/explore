@@ -458,10 +458,6 @@ $brightness: var(--aladin-image-brightness);
   color: var(--text-color);
   left: 0;
 
-  .p-divider.p-divider-horizontal {
-    margin: 0.3rem 0;
-  }
-
   // reset row
   :nth-child(14),
   :nth-child(15) {
@@ -478,6 +474,10 @@ $brightness: var(--aladin-image-brightness);
 
 .finder-charts-attachments,
 .finder-charts-tools {
+  @include hud;
+
+  padding: 0.3em 0.5em;
+
   .finder-charts-button {
     cursor: pointer;
 
@@ -489,6 +489,10 @@ $brightness: var(--aladin-image-brightness);
       }
     }
 
+  }
+
+  .p-divider.p-divider-horizontal {
+    margin: 0.3rem 0;
   }
 
   .p-divider,
@@ -503,10 +507,12 @@ $brightness: var(--aladin-image-brightness);
 }
 
 .finder-charts-attachments {
-  @include hud;
-
   right: 0;
   bottom: 0;
+  width: min(30%, 200px);
+  height: max(30%, 150px);
+  display: flex;
+  flex-direction: column;
 
   span:first-child {
     justify-content: space-between;
@@ -521,6 +527,14 @@ $brightness: var(--aladin-image-brightness);
 
     .p-datatable-tbody > tr {
       opacity: 0.7;
+    }
+  }
+
+  .finder-charts-table-disabled {
+    pointer-events: none;
+
+    .p-datatable-tbody > tr {
+      opacity: 0.4;
     }
   }
 

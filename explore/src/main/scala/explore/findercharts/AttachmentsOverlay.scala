@@ -14,6 +14,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.attachments.AttachmentType
 import explore.attachments.ObsAttachmentUtils
+import explore.components.SolarProgress
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ObsAttachment
@@ -24,6 +25,7 @@ import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
 import lucuma.core.model.{ObsAttachment => ObsAtt}
+import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.schemas.ObservationDB.Enums.ObsAttachmentType
 import lucuma.ui.primereact.LucumaStyles
@@ -36,6 +38,7 @@ import react.floatingui.Placement
 import react.floatingui.syntax.*
 import react.primereact.Divider
 import react.primereact.PrimeStyles
+import react.resizeDetector.hooks.*
 
 import scala.collection.immutable.SortedSet
 
@@ -100,7 +103,8 @@ object AttachmentsOverlay extends ObsAttachmentUtils with FinderChartsAttachment
           .headOption
           .map(_.getValue[ObsAtt.Id](AttIdColumnId.value))
       )((props, _, _, _, _, _) => selected => props.selectedAttachment.set(selected))
-      .render { (p, ctx, action, _, _, table) =>
+      .useResizeDetector()
+      .render { (p, ctx, action, _, _, table, resizer) =>
         import ctx.given
 
         def addNewFinderChart(e: ReactEventFromInput) =
@@ -115,6 +119,8 @@ object AttachmentsOverlay extends ObsAttachmentUtils with FinderChartsAttachment
         ReactFragment(
           <.div(
             ExploreStyles.FinderChartsAttachments,
+            SolarProgress(ExploreStyles.FinderChartsTableProgress)
+              .unless(action.get === Action.None),
             <.span(
               Icons.Files.withFixedWidth(true),
               "Attachments",
@@ -136,14 +142,18 @@ object AttachmentsOverlay extends ObsAttachmentUtils with FinderChartsAttachment
               )
             ),
             Divider(),
-            PrimeTable(
+            PrimeAutoHeightVirtualizedTable(
               table,
+              _ => 32.toPx,
               striped = true,
               compact = Compact.Very,
               emptyMessage = "No charts",
+              containerRef = resizer.ref,
+              innerContainerMod = ^.width := "100%",
               headerMod = ExploreStyles.FinderChartsTableHeader,
               tableMod =
-                ExploreStyles.FinderChartsTable |+| ExploreStyles.ExploreTable |+| ExploreStyles.ExploreSelectableTable,
+                ExploreStyles.FinderChartsTable |+| ExploreStyles.ExploreTable |+| ExploreStyles.ExploreSelectableTable |+| ExploreStyles.FinderChartsTableDisabled
+                  .unless_(action.get === Action.None),
               rowMod = row =>
                 TagMod(
                   ExploreStyles.TableRowSelected.when_(row.getIsSelected()),

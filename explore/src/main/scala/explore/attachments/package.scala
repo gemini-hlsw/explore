@@ -3,6 +3,8 @@
 
 package explore.attachments
 
+import cats.Eq
+import cats.derived.*
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.Pot
@@ -40,7 +42,11 @@ enum AttachmentType(
   val extensions: List[String]
 ) derives Enumerated {
   case Finder
-      extends AttachmentType("FINDER", "Finder Chart", ObsAttachmentType.Finder, List("jpg", "png"))
+      extends AttachmentType("FINDER",
+                             "Finder Chart",
+                             ObsAttachmentType.Finder,
+                             List("jpeg", "jpg", "png")
+      )
   case MosMask
       extends AttachmentType("MOS_MASK", "MOS Mask", ObsAttachmentType.MosMask, List("fits"))
   case PreImaging
@@ -69,7 +75,7 @@ trait ObsAttachmentUtils:
 
   given Display[AttachmentType] = Display.byShortName(_.name)
 
-  enum Action:
+  enum Action derives Eq:
     case None, Insert, Replace, Download
 
   // TODO: Maybe we can have a graphql query for getting information such as this? This is a config var in ODB.
