@@ -20,6 +20,7 @@ import explore.undo.Action
 import explore.undo.KIListMod
 import explore.undo.UndoContext
 import japgolly.scalajs.react.*
+import lucuma.core.model.ObsAttachment
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB
@@ -28,7 +29,6 @@ import lucuma.schemas.odb.input.*
 import monocle.Focus
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ObsQueries.*
-import lucuma.core.model.ObsAttachment
 
 val obsListMod = KIListMod[ObsSummary, Observation.Id](ObsSummary.id)
 

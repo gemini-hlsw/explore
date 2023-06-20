@@ -159,7 +159,7 @@ object ExploreStyles:
   val FinderChartsTools: Css         = Css("finder-charts-tools")
   val FinderChartsAttachments: Css   = Css("finder-charts-attachments")
   val FinderChartsButton: Css        = Css("finder-charts-button")
-  val FinderChartsTable: Css   = Css("finder-charts-table")
+  val FinderChartsTable: Css         = Css("finder-charts-table")
   val FinderChartsTableHeader: Css   = Css("finder-charts-table-header")
 
   val DraggingOver: Css = Css("dragging-over")

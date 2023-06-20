@@ -23,7 +23,6 @@ import org.scalajs.dom
 
 import scala.concurrent.duration.*
 import scala.util.control.NoStackTrace
-import explore.model.enums.ExecutionEnvironment
 
 trait OdbRestClient[F[_]] {
   // Allows us to have a reuse - needed for memoization, etc.

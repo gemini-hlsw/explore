@@ -4,125 +4,114 @@
 package explore.findercharts
 
 import cats.Order.*
+import cats.effect.IO
 import cats.syntax.all.*
+import crystal.react.View
+import crystal.react.hooks.*
+import crystal.react.implicits.*
+import crystal.react.reuse.*
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
+import explore.attachments.AttachmentType
+import explore.attachments.ObsAttachmentUtils
 import explore.components.ui.ExploreStyles
+import explore.model.AppContext
+import explore.model.ObsAttachment
+import explore.model.ObsAttachmentList
+import explore.utils.OdbRestClient
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
-import crystal.react.hooks.*
-import crystal.react.implicits.*
+import lucuma.core.model.Program
+import lucuma.core.model.{ObsAttachment => ObsAtt}
+import lucuma.react.table.*
+import lucuma.schemas.ObservationDB.Enums.ObsAttachmentType
+import lucuma.ui.primereact.LucumaStyles
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
+import lucuma.ui.table.*
+import lucuma.ui.utils.*
 import react.common.ReactFnProps
-import react.primereact.Divider
-import explore.model.ObsAttachmentList
-import explore.attachments.AttachmentType
 import react.floatingui.Placement
 import react.floatingui.syntax.*
-import lucuma.core.model.Program
-import explore.attachments.ObsAttachmentUtils
-import crystal.react.View
-import explore.model.AppContext
-import cats.effect.IO
-import explore.utils.OdbRestClient
-import eu.timepit.refined.types.string.NonEmptyString
-import lucuma.ui.reusability.given
-import scala.collection.immutable.SortedSet
-import explore.model.ObsAttachment
-import lucuma.core.model.{ObsAttachment => ObsAtt}
-import lucuma.schemas.ObservationDB.Enums.ObsAttachmentType
+import react.primereact.Divider
 import react.primereact.PrimeStyles
-import lucuma.ui.primereact.LucumaStyles
-import lucuma.react.table.*
-import crystal.react.reuse.*
-import lucuma.ui.table.*
-// import explore.utils.*
-// import explore.syntax.ui.*
-// import lucuma.react.syntax.*
-// import lucuma.ui.table.*
-import lucuma.ui.utils.*
+
+import scala.collection.immutable.SortedSet
 
 case class AttachmentsOverlay(
-  programId:        Program.Id,
-  authToken:        NonEmptyString,
-  obsAttachmentIds: View[SortedSet[ObsAtt.Id]],
-  obsAttachments:   View[ObsAttachmentList]
+  programId:          Program.Id,
+  client:             OdbRestClient[IO],
+  selectedAttachment: View[Option[ObsAtt.Id]],
+  obsAttachmentIds:   View[SortedSet[ObsAtt.Id]],
+  obsAttachments:     View[ObsAttachmentList]
 ) extends ReactFnProps[AttachmentsOverlay](AttachmentsOverlay.component)
 
-object AttachmentsOverlay extends ObsAttachmentUtils {
+object AttachmentsOverlay extends ObsAttachmentUtils with FinderChartsAttachmentUtils {
   private type Props = AttachmentsOverlay
 
   private val columnNames: Map[ColumnId, String] = Map(
-    ActionsColumnId  -> "Actions",
+    AttIdColumnId    -> "ID",
     FileNameColumnId -> "File"
   )
+
+  private val ColDef = ColumnDef[ObsAttachment]
 
   private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      .useMemoBy((p, _) => p.authToken)((_, ctx) =>
-        token => OdbRestClient[IO](ctx.environment, token)
-      )
       .useStateView(Action.None)
-      .useMemoBy((props, _, _, _) => ())((_, _, _, _) =>
+      .useMemoBy((props, _, _) => ())((_, _, _) =>
         _ =>
-          // import ctx.given
 
           def column[V](id: ColumnId, accessor: ObsAttachment => V)
-            : ColumnDef.Single[View[ObsAttachment], V] =
-            ColDef(id, v => accessor(v.get), columnNames(id))
+            : ColumnDef.Single[ObsAttachment, V] =
+            ColDef(id, v => accessor(v), columnNames(id))
 
           List(
-            // column(ActionsColumnId, identity)
-            //   .setCell(cell =>
-            //     val thisOa = cell.getValue()
-            //     val id     = thisOa.id
-            //
-            //     <.div(
-            //       // The upload "button" needs to be a label. In order to make
-            //       // the styling consistent they're all labels.
-            //       <.label(
-            //         Icons.Trash
-            //           // ^.onClick ==> deletePrompt(props, client, thisOa, assignments.get(id).orEmpty)
-            //       ).withTooltip("Delete attachment")
-            //     )
-            //   )
-            //   .setEnableSorting(false),
+            column(AttIdColumnId, _.id)
+              .setCell(cell => cell.value.show)
+              .setEnableSorting(false),
             column(FileNameColumnId, ObsAttachment.fileName.get)
               .setCell(_.value.value)
               .sortableBy(_.value.toUpperCase)
           )
       )
       // Rows
-      .useMemoBy((props, _, _, _, _) => props.obsAttachments.reuseByValue)((_, _, _, _, _) =>
-        _.value.toListOfViews.map(_._2)
+      .useMemoBy((props, _, _, _) =>
+        (props.obsAttachmentIds.reuseByValue, props.obsAttachments.reuseByValue)
+      )((_, _, _, _) =>
+        (obsAttachmentIds, obsAttachments) =>
+          validAttachments(obsAttachments.get, obsAttachmentIds.get).map(_._2).toList
       )
-      .useReactTableBy((prop, _, _, _, cols, rows) =>
+      .useReactTableBy((prop, _, _, cols, rows) =>
         TableOptions(
           cols,
           rows,
-          getRowId = (row, _, _) => RowId(row.get.id.toString)
+          getRowId = (row, _, _) => RowId(row.id.show)
         )
       )
-      .render { (p, ctx, odbRestClient, action, _, _, table) =>
+      // Propagate the selected attachment
+      .useEffectWithDepsBy((_, _, _, _, _, table) =>
+        table
+          .getSelectedRowModel()
+          .rows
+          .headOption
+          .map(_.getValue[ObsAtt.Id](AttIdColumnId.value))
+      )((props, _, _, _, _, _) => selected => props.selectedAttachment.set(selected))
+      .render { (p, ctx, action, _, _, table) =>
         import ctx.given
 
         def addNewFinderChart(e: ReactEventFromInput) =
           onInsertFileSelected(p.programId,
                                p.obsAttachments,
                                AttachmentType.Finder,
-                               odbRestClient,
+                               p.client,
                                action,
                                id => p.obsAttachmentIds.mod(_ + id)
           )(e)
-        val obsAttachments                            = p.obsAttachments.get.filter { case (_, attachment) =>
-          (attachment.attachmentType === ObsAttachmentType.Finder) && p.obsAttachmentIds.get
-            .contains(attachment.id)
-        }
 
-        pprint.pprintln(obsAttachments)
-        pprint.pprintln(p.obsAttachmentIds.get)
         ReactFragment(
           <.div(
             ExploreStyles.FinderChartsAttachments,
@@ -151,9 +140,16 @@ object AttachmentsOverlay extends ObsAttachmentUtils {
               table,
               striped = true,
               compact = Compact.Very,
-              emptyMessage = <.div("No observation attachments uploaded"),
+              emptyMessage = "No charts",
               headerMod = ExploreStyles.FinderChartsTableHeader,
-              tableMod = ExploreStyles.FinderChartsTable
+              tableMod =
+                ExploreStyles.FinderChartsTable |+| ExploreStyles.ExploreTable |+| ExploreStyles.ExploreSelectableTable,
+              rowMod = row =>
+                TagMod(
+                  ExploreStyles.TableRowSelected.when_(row.getIsSelected()),
+                  ^.onClick -->
+                    (table.toggleAllRowsSelected(false) >> Callback(row.toggleSelected()))
+                )
             )
           )
         )

@@ -43,6 +43,7 @@ import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
 import lucuma.typed.tanstackTableCore.buildLibTypesMod.Column
+import lucuma.typed.tanstackTableCore.buildLibTypesMod.RowModel
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given

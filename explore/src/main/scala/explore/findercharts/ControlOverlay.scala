@@ -9,6 +9,7 @@ import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.util.NewType
 import lucuma.core.validation.InputValidSplitEpi
 import lucuma.core.validation.InputValidWedge
 import lucuma.refined.*
@@ -20,7 +21,6 @@ import react.common.ReactFnProps
 import react.fa.Transform
 import react.primereact.Button
 import react.primereact.Divider
-import lucuma.core.util.NewType
 
 object ColorsInverted extends NewType[Boolean]:
   val No: ColorsInverted  = ColorsInverted(false)

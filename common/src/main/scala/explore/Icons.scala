@@ -499,5 +499,5 @@ object Icons {
   val MagnifyingGlassMinus = FontAwesomeIcon(faMagnifyingGlassMinus)
   val ArrowsRepeatLight    = FontAwesomeIcon(faArrowsRepeatLight)
   val CircleHalfStroke     = FontAwesomeIcon(faCircleHalfStroke)
-  val Files     = FontAwesomeIcon(faFiles)
+  val Files                = FontAwesomeIcon(faFiles)
 }

@@ -5,23 +5,35 @@ package explore.findercharts
 
 import cats.Eq
 import cats.derived.*
+import cats.effect.IO
+import cats.syntax.all.*
+import crystal.Pot
+import crystal.react.View
 import crystal.react.hooks.*
+import crystal.react.implicits.*
+import crystal.react.reuse.*
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.Resources
+import explore.attachments.ObsAttachmentUtils
 import explore.components.ui.ExploreStyles
+import explore.model.AppContext
+import explore.model.ObsAttachmentList
+import explore.utils.OdbRestClient
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.model.ObsAttachment
+import lucuma.core.model.Program
+import lucuma.schemas.ObservationDB.Enums.ObsAttachmentType
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
+import lucuma.ui.syntax.pot.*
 import monocle.Focus
 import monocle.Lens
 import monocle.Prism
 import react.common.ReactFnProps
-import explore.model.ObsAttachmentList
-import lucuma.core.model.Program
-import crystal.react.View
-import eu.timepit.refined.types.string.NonEmptyString
+
 import scala.collection.immutable.SortedSet
-import lucuma.core.model.ObsAttachment
 
 sealed trait ChartOp derives Eq
 
@@ -124,31 +136,75 @@ case class FinderCharts(
   obsAttachments:   View[ObsAttachmentList]
 ) extends ReactFnProps(FinderCharts.component)
 
-object FinderCharts:
+trait FinderChartsAttachmentUtils:
+  def validAttachments(
+    allAttachments:   ObsAttachmentList,
+    obsAttachmentIds: SortedSet[ObsAttachment.Id]
+  ): ObsAttachmentList =
+    allAttachments.filter { case (_, attachment) =>
+      (attachment.attachmentType === ObsAttachmentType.Finder) && obsAttachmentIds
+        .contains(attachment.id)
+    }
+
+object FinderCharts extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
   private type Props = FinderCharts
 
   private val component =
     ScalaFnComponent
       .withHooks[Props]
+      .useContext(AppContext.ctx)
+      .useMemoBy((p, _) => p.authToken)((_, ctx) =>
+        token => OdbRestClient[IO](ctx.environment, token)
+      )
       .useStateView(Transformation.Default)
       .useStateView(ColorsInverted.No)
-      .render { (props, ops, inverted) =>
+      .useStateView(none[ObsAttachment.Id])
+      .useStateView[UrlMap](Map.empty)
+      .useEffectWithDepsBy((props, _, _, _, _, selected, _) =>
+        (selected.get, props.obsAttachments.get, props.obsAttachmentIds.get)
+      )((props, _, client, _, _, _, urlMap) =>
+        (sel, obsAttachments, obsAttachmentIds) =>
+          val allCurrentKeys =
+            validAttachments(obsAttachments, obsAttachmentIds).values.map(_.toMapKey).toSet
+          val newOas         = allCurrentKeys.filter(key => !urlMap.get.contains(key)).toList
+
+          val updateUrlMap =
+            urlMap
+              .mod { umap =>
+                val filteredMap = umap.filter((k, v) => allCurrentKeys.contains(k))
+                newOas.foldRight(filteredMap)((key, m) => m.updated(key, Pot.pending))
+              }
+              .to[IO]
+
+          val getUrls =
+            newOas.traverse_(key => getAttachmentUrl(props.programId, client, key, urlMap))
+
+          updateUrlMap *> getUrls
+      )
+      .render { (props, _, client, ops, inverted, selectedAttachment, urls) =>
         val transforms = ops.get.calcTransform
         ReactFragment(
           ControlOverlay(ops, inverted),
           AttachmentsOverlay(props.programId,
-                             props.authToken,
+                             client,
+                             selectedAttachment,
                              props.obsAttachmentIds,
                              props.obsAttachments
           ),
           <.div(
             ExploreStyles.FinderChartsBody,
-            <.img(
-              ExploreStyles.FinderChartsImage,
-              ExploreStyles.FinderChartsImageInverted.when(inverted.get.value),
-              ^.transform := transforms.mkString(" "),
-              ^.src       := Resources.DemoFinderChart1
-            )
+            selectedAttachment.get.map { attId =>
+              urls.get.find { case ((i, _), _) => i === attId }.map { url =>
+                url._2.renderPot(url =>
+                  <.img(
+                    ExploreStyles.FinderChartsImage,
+                    ExploreStyles.FinderChartsImageInverted.when(inverted.get.value),
+                    ^.transform := transforms.mkString(" "),
+                    ^.src       := url
+                  )
+                )
+              }
+            }
           )
         )
       }

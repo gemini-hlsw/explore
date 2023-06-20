@@ -82,8 +82,7 @@ case class ObsAttachmentsTable(
 object ObsAttachmentsTable extends TableHooks with ObsAttachmentUtils:
   private type Props = ObsAttachmentsTable
 
-  private type UrlMapKey = (ObsAtt.Id, Timestamp)
-  private type UrlMap    = Map[UrlMapKey, Pot[String]]
+  private val ColDef = ColumnDef[View[ObsAttachment]]
 
   private val columnNames: Map[ColumnId, String] = Map(
     ActionsColumnId        -> "Actions",
@@ -95,8 +94,6 @@ object ObsAttachmentsTable extends TableHooks with ObsAttachmentUtils:
     DescriptionColumnId    -> "Description",
     CheckedColumnId        -> "Checked"
   )
-
-  extension (oa: ObsAttachment) def toMapKey: UrlMapKey = (oa.id, oa.updatedAt)
 
   private val labelButtonClasses =
     PrimeStyles.Component |+| PrimeStyles.Button |+| PrimeStyles.ButtonIconOnly
@@ -156,21 +153,6 @@ object ObsAttachmentsTable extends TableHooks with ObsAttachmentUtils:
     props.obsAttachments.mod(_.removed(aid)).to[IO] *>
       client.deleteAttachment(props.pid, aid).toastErrors
 
-  def getAttachmentUrl(
-    props:  Props,
-    client: OdbRestClient[IO],
-    mapKey: UrlMapKey,
-    urlMap: View[UrlMap]
-  ): IO[Unit] =
-    client
-      .getPresignedUrl(props.pid, mapKey._1)
-      .attempt
-      .map {
-        case Right(url) => Pot(url)
-        case Left(t)    => Pot.error(t)
-      }
-      .flatMap(p => urlMap.mod(_.updated(mapKey, p)).to[IO])
-
   def deletePrompt(
     props:  Props,
     client: OdbRestClient[IO],
@@ -215,7 +197,7 @@ object ObsAttachmentsTable extends TableHooks with ObsAttachmentUtils:
                 }
                 .to[IO]
             val getUrls      =
-              newOas.traverse_(key => getAttachmentUrl(props, client, key, urlMap))
+              newOas.traverse_(key => getAttachmentUrl(props.pid, client, key, urlMap))
 
             updateUrlMap *> getUrls
       )

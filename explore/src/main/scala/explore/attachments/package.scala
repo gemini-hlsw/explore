@@ -3,12 +3,10 @@
 
 package explore.attachments
 
-// import cats.Order.*
 import cats.effect.IO
 import cats.syntax.all.*
-// import crystal.Pot
+import crystal.Pot
 import crystal.react.*
-// import crystal.react.hooks.*
 import crystal.react.implicits.*
 import eu.timepit.refined.types.numeric.NonNegLong
 import eu.timepit.refined.types.string.NonEmptyString
@@ -24,14 +22,15 @@ import lucuma.core.model.{ObsAttachment => ObsAtt}
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Timestamp
+import lucuma.react.table.ColumnDef
+import lucuma.react.table.ColumnId
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Enums.ObsAttachmentType
 import org.scalajs.dom.{File => DomFile}
 import org.typelevel.log4cats.Logger
 import react.primereact.Message
+
 import java.time.Instant
-import lucuma.react.table.ColumnDef
-import lucuma.react.table.ColumnId
 
 // TEMPORARY until we get the graphql enums worked out
 enum AttachmentType(
@@ -55,8 +54,10 @@ enum AttachmentType(
 }
 
 trait ObsAttachmentUtils:
-  val ColDef = ColumnDef[View[ObsAttachment]]
+  type UrlMapKey = (ObsAtt.Id, Timestamp)
+  type UrlMap    = Map[UrlMapKey, Pot[String]]
 
+  val AttIdColumnId: ColumnId          = ColumnId("id")
   val ActionsColumnId: ColumnId        = ColumnId("actions")
   val FileNameColumnId: ColumnId       = ColumnId("filename")
   val AttachmentTypeColumnId: ColumnId = ColumnId("attachment-type")
@@ -73,6 +74,8 @@ trait ObsAttachmentUtils:
 
   // TODO: Maybe we can have a graphql query for getting information such as this? This is a config var in ODB.
   private val maxFileSize: NonNegLong = 10000000.refined
+
+  extension (oa: ObsAttachment) def toMapKey: UrlMapKey = (oa.id, oa.updatedAt)
 
   def checkFileSize(file: DomFile)(f: => IO[Unit])(using tx: ToastCtx[IO]): IO[Unit] =
     if (file.size.toLong === 0)
@@ -147,3 +150,18 @@ trait ObsAttachmentUtils:
         .guarantee(action.async.set(Action.None))
         .runAsync)
       .when_(files.nonEmpty)
+
+  def getAttachmentUrl(
+    pid:    Program.Id,
+    client: OdbRestClient[IO],
+    mapKey: UrlMapKey,
+    urlMap: View[UrlMap]
+  ): IO[Unit] =
+    client
+      .getPresignedUrl(pid, mapKey._1)
+      .attempt
+      .map {
+        case Right(url) => Pot(url)
+        case Left(t)    => Pot.error(t)
+      }
+      .flatMap(p => urlMap.mod(_.updated(mapKey, p)).to[IO])

@@ -440,7 +440,11 @@ $brightness: var(--aladin-image-brightness);
   height: 100%;
   display: flex;
   justify-content: center;
-  align-content: center;
+  background: repeating-linear-gradient(-45deg,
+      var(--hud-background-color),
+      var(--hud-background-color) 10px,
+      var(--hud-stripe-color) 10px,
+      var(--hud-stripe-color) 11px);
 }
 
 .finder-charts-tools {
@@ -503,7 +507,6 @@ $brightness: var(--aladin-image-brightness);
 
   right: 0;
   bottom: 0;
-  max-width: 50%;
 
   span:first-child {
     justify-content: space-between;
@@ -527,12 +530,15 @@ $brightness: var(--aladin-image-brightness);
   display: flex;
   position: relative;
   justify-content: center;
-  align-content: center;
 }
 
 .finder-charts-image {
   transition: transform 0.2s ease,
               filter 0.85s ease;
+
+  max-height: 100%;
+  max-width: 100%;
+  object-fit: contain;
 }
 
 .finder-charts-image-inverted {

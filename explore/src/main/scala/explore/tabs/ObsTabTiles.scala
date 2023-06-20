@@ -36,6 +36,7 @@ import explore.model.itc.ItcExposureTime
 import explore.model.itc.ItcTarget
 import explore.model.itc.OverridenExposureTime
 import explore.model.layout.*
+import explore.observationtree.obsEditAttachments
 import explore.optics.*
 import explore.optics.all.*
 import explore.timingwindows.TimingWindowsPanel
@@ -61,6 +62,7 @@ import lucuma.core.model.TimingWindow
 import lucuma.core.model.User
 import lucuma.core.syntax.all.*
 import lucuma.schemas.ObservationDB
+import lucuma.schemas.ObservationDB.Enums.ObsAttachmentType
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.model.TargetWithId
@@ -78,8 +80,6 @@ import react.resizeDetector.*
 import java.time.Instant
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
-import lucuma.schemas.ObservationDB.Enums.ObsAttachmentType
-import explore.observationtree.obsEditAttachments
 
 case class ObsTabTiles(
   vault:                    Option[UserVault],
