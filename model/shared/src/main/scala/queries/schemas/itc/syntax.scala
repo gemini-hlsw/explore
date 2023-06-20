@@ -17,7 +17,6 @@ import lucuma.core.math.RadialVelocity
 import lucuma.core.model.*
 import lucuma.itc.client.GmosFpu
 import lucuma.itc.client.InstrumentMode
-import queries.schemas.odb.ObsQueries
 
 trait syntax:
 

@@ -27,14 +27,12 @@ addCommandAlias(
   "; prePR; fixCSS"
 )
 
-ThisBuild / description                := "Explore"
-Global / onChangedBuildSource          := ReloadOnSourceChanges
-ThisBuild / scalafixDependencies ++= ClueGenerator.value ++ Seq(
-  "edu.gemini" % "lucuma-schemas_3" % Versions.lucumaSchemas
-)
-ThisBuild / scalafixScalaBinaryVersion := "2.13"
-ThisBuild / scalaVersion               := "3.2.2"
-ThisBuild / crossScalaVersions         := Seq("3.2.2")
+ThisBuild / description                         := "Explore"
+Global / onChangedBuildSource                   := ReloadOnSourceChanges
+ThisBuild / scalafixDependencies += "edu.gemini" % "lucuma-schemas_3" % Versions.lucumaSchemas
+ThisBuild / scalafixScalaBinaryVersion          := "2.13"
+ThisBuild / scalaVersion                        := "3.2.2"
+ThisBuild / crossScalaVersions                  := Seq("3.2.2")
 ThisBuild / scalacOptions ++= Seq(
   "-language:implicitConversions"
 )
@@ -56,7 +54,7 @@ stage := {
 }
 
 lazy val root = tlCrossRootProject
-  .aggregate(model, modelTests, queries, common, explore, workers)
+  .aggregate(model, modelTests, common, explore, workers)
   .settings(name := "explore-root")
 
 lazy val model = crossProject(JVMPlatform, JSPlatform)
@@ -102,18 +100,11 @@ lazy val workers = project
     }
   )
   .enablePlugins(ScalaJSPlugin)
-  .dependsOn(model.js, queries)
-
-lazy val queries = project
-  .in(file("common-queries"))
-  .dependsOn(model.jvm)
-  .settings(commonSettings: _*)
-  .settings(commonJsLibSettings: _*)
-  .enablePlugins(ScalaJSPlugin, CluePlugin)
+  .dependsOn(model.js)
 
 lazy val common = project
   .in(file("common"))
-  .dependsOn(modelTestkit.js, queries)
+  .dependsOn(modelTestkit.js)
   .settings(commonSettings: _*)
   .settings(commonJsLibSettings: _*)
   .settings(commonModuleTest: _*)
@@ -133,7 +124,7 @@ lazy val common = project
     ),
     buildInfoPackage := "explore"
   )
-  .enablePlugins(ScalaJSPlugin, BuildInfoPlugin)
+  .enablePlugins(ScalaJSPlugin, BuildInfoPlugin, CluePlugin)
 
 lazy val explore: Project = project
   .in(file("explore"))

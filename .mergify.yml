@@ -25,21 +25,13 @@ pull_request_rules:
       add:
       - common
       remove: []
-- name: Label common-queries PRs
+- name: Label common-clue PRs
   conditions:
-  - files~=^common-queries/
+  - files~=^common-clue/
   actions:
     label:
       add:
-      - common-queries
-      remove: []
-- name: Label common-queries-clue PRs
-  conditions:
-  - files~=^common-queries-clue/
-  actions:
-    label:
-      add:
-      - common-queries-clue
+      - common-clue
       remove: []
 - name: Label explore PRs
   conditions:
