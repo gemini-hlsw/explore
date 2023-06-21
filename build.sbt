@@ -128,23 +128,18 @@ lazy val common = project
 
 lazy val explore: Project = project
   .in(file("explore"))
-  .dependsOn(model.js, common)
+  .dependsOn(model.js, common, workers)
   .settings(commonSettings: _*)
   .settings(commonJsLibSettings: _*)
   .settings(esModule: _*)
   .enablePlugins(ScalaJSPlugin, LucumaCssPlugin)
   .settings(
-    Test / test          := {},
-    coverageEnabled      := false,
+    Test / test     := {},
+    coverageEnabled := false,
     libraryDependencies ++=
       GeminiLocales.value ++
         ReactAladin.value ++
-        LucumaReact.value,
-    // Build workers when you build explore
-    Compile / fastLinkJS := (Compile / fastLinkJS)
-      .dependsOn(workers / Compile / fastLinkJS)
-      .value,
-    Compile / fullLinkJS := (Compile / fullLinkJS).dependsOn(workers / Compile / fullLinkJS).value
+        LucumaReact.value
   )
 
 lazy val commonSettings = lucumaGlobalSettings ++ Seq(

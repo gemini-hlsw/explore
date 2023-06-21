@@ -1,6 +1,6 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
-import fs from 'fs';
+import fs from 'fs/promises';
 import process from 'process';
 import { build } from 'vite';
 import { minify } from 'terser';
@@ -18,7 +18,7 @@ const terserOptions = {
   nameCache: {},
   format: {
     comments: false,
-    ecma: 2015,
+    ecma: 2020,
   },
   mangle: {
     properties: {
@@ -42,32 +42,33 @@ const terserOptions = {
   },
 };
 
-var i = 1;
-function runTerserOn(fileName, length) {
+let i = 1;
+async function runTerserOn(fileName, length) {
   process.stdout.write(`Minifying ${i++}/${length}: ${fileName}...`);
   const absolute = path.join(outDir, fileName);
-  const original = fs.readFileSync(absolute, 'utf8');
-  minify(original, terserOptions).then((minified) => {
-    fs.writeFileSync(absolute, minified.code, 'utf8');
-    const fromSize = original.length;
-    const toSize = minified.code.length;
-    const ratio = (toSize / fromSize) * 100;
-    const fromBrotli = brotliSize.sync(original);
-    const toBrotli = brotliSize.sync(minified.code);
-    const brotliRatio = (toBrotli / fromBrotli) * 100;
-    process.stdout.write(
-      ` ${humanFormat.bytes(fromSize, {
+  const original = await fs.readFile(absolute, 'utf8');
+  const minified = await minify(original, terserOptions);
+  await fs.writeFile(absolute, minified.code, 'utf8');
+  const fromSize = original.length;
+  const toSize = minified.code.length;
+  const ratio = (toSize / fromSize) * 100;
+  const [fromBrotli, toBrotli] = await Promise.all([
+    brotliSize.default(original),
+    brotliSize.default(minified.code),
+  ]);
+  const brotliRatio = (toBrotli / fromBrotli) * 100;
+  process.stdout.write(
+    ` ${humanFormat.bytes(fromSize, {
+      prefix: 'Ki',
+    })} --> ${humanFormat.bytes(toSize, { prefix: 'Ki' })} (${ratio.toFixed(
+      2
+    )}%)` +
+      ` / brotli: ${humanFormat.bytes(fromBrotli, {
         prefix: 'Ki',
-      })} --> ${humanFormat.bytes(toSize, { prefix: 'Ki' })} (${ratio.toFixed(
-        2
-      )}%)` +
-        ` / brotli: ${humanFormat.bytes(fromBrotli, {
-          prefix: 'Ki',
-        })} --> ${humanFormat.bytes(toBrotli, {
-          prefix: 'Ki',
-        })} (${brotliRatio.toFixed(2)}%) \n`
-    );
-  });
+      })} --> ${humanFormat.bytes(toBrotli, {
+        prefix: 'Ki',
+      })} (${brotliRatio.toFixed(2)}%) \n`
+  );
 }
 
 (async () => {
