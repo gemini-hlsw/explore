@@ -62,7 +62,7 @@ import scala.scalajs.js
 
 import js.annotation.*
 
-@JSExportTopLevel("Explore")
+@JSExportTopLevel("Explore", moduleID = "explore")
 object ExploreMain {
 
   @JSExport
