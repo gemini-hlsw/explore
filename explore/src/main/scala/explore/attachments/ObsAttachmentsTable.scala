@@ -358,10 +358,10 @@ object ObsAttachmentsTable extends TableHooks with ObsAttachmentUtils:
         import ctx.given
 
         val dialogHeader = action.get match
-          case Action.None     => ""
           case Action.Insert   => "Uploading Attachment"
           case Action.Replace  => "Uploading Replacement"
           case Action.Download => "Downloading Attachment"
+          case _               => ""
 
         React.Fragment(
           props.renderInTitle(

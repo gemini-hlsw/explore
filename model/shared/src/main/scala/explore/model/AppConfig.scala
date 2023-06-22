@@ -6,7 +6,6 @@ package explore.model
 import cats.Eq
 import cats.Show
 import cats.derived.*
-import cats.derived.*
 import cats.effect.Async
 import cats.syntax.all.*
 import explore.model.enums.ExecutionEnvironment

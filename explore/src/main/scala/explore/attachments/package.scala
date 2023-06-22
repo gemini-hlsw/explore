@@ -76,7 +76,7 @@ trait ObsAttachmentUtils:
   given Display[AttachmentType] = Display.byShortName(_.name)
 
   enum Action derives Eq:
-    case None, Insert, Replace, Download
+    case None, Insert, Replace, Download, Unlink
 
   // TODO: Maybe we can have a graphql query for getting information such as this? This is a config var in ODB.
   private val maxFileSize: NonNegLong = 10000000.refined

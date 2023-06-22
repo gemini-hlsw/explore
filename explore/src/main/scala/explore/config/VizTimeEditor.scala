@@ -37,22 +37,12 @@ object VizTimeEditor {
             <.span("Observation time"),
             HelpIcon("configuration/obstime.md".refined)
           ),
-          Datepicker(onChange = (newValue, _) =>
-            println(newValue)
-            newValue.fromDatePickerToInstantOpt.foldMap { i =>
-              props.vizTimeView.set(i.some)
-            }
+          Datepicker(onChange =
+            (newValue, _) =>
+              newValue.fromDatePickerToInstantOpt.foldMap { i =>
+                props.vizTimeView.set(i.some)
+              }
           )
-            .customTimeInput(
-              <.input(
-                ^.className   := "react-datepicker_time__input",
-                ^.placeholder := "Time",
-                ^.required    := true,
-                ^.tpe         := "text"
-                // ^.pattern     := "[0-9]{2}:[0-9]{2}",
-                // ^.onChange --> Callback.log("change")
-              )
-            )
             .showTimeInput(true)
             .selected(props.vizTimeView.get.getOrElse(Instant.now).toDatePickerJsDate)
             .dateFormat("yyyy-MM-dd HH:mm"),

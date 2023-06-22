@@ -509,7 +509,7 @@ $brightness: var(--aladin-image-brightness);
 .finder-charts-attachments {
   right: 0;
   bottom: 0;
-  width: min(30%, 200px);
+  width: min(40%, 300px);
   height: max(30%, 150px);
   display: flex;
   flex-direction: column;
@@ -549,7 +549,6 @@ $brightness: var(--aladin-image-brightness);
 .finder-charts-image {
   transition: transform 0.2s ease,
               filter 0.85s ease;
-
   max-height: 100%;
   max-width: 100%;
   object-fit: contain;

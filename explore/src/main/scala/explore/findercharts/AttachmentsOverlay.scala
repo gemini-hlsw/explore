@@ -65,7 +65,7 @@ object AttachmentsOverlay extends ObsAttachmentUtils with FinderChartsAttachment
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .useStateView(Action.None)
-      .useMemoBy((props, _, _) => ())((_, _, _) =>
+      .useMemoBy((props, _, _) => ())((p, _, action) =>
         _ =>
 
           def column[V](id: ColumnId, accessor: ObsAttachment => V)
@@ -74,7 +74,19 @@ object AttachmentsOverlay extends ObsAttachmentUtils with FinderChartsAttachment
 
           List(
             column(AttIdColumnId, _.id)
-              .setCell(cell => cell.value.show)
+              .setCell(cell =>
+                <.label(
+                  Icons.LinkSlash.withClass(ExploreStyles.TrashIcon),
+                  ^.onClick ==> { (e: ReactEvent) =>
+                    for {
+                      _ <- e.preventDefaultCB
+                      _ <- action.set(Action.Unlink)
+                      _ <- p.obsAttachmentIds.mod(_ - cell.value)
+                      _ <- action.set(Action.None)
+                    } yield ()
+                  }
+                ).withTooltip("Unlink from observation", Placement.Right)
+              )
               .setEnableSorting(false),
             column(FileNameColumnId, ObsAttachment.fileName.get)
               .setCell(_.value.value)
