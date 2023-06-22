@@ -43,6 +43,8 @@ import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
 import monocle.Lens
+import org.scalajs.dom
+import org.scalajs.dom.Element
 import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries
 import react.common.ReactFnProps
@@ -50,6 +52,7 @@ import react.primereact.Button
 import react.primereact.Tree
 
 import scala.annotation.tailrec
+import scala.scalajs.js
 
 import ObsQueries.*
 
@@ -75,6 +78,18 @@ object ObsList:
       _ => a.flatMap(v => Group.Id.parse(v.value))
     )
 
+  private def scrollIfNeeded(targetObs: Observation.Id) =
+    Callback {
+      // 'getElementById' does not return any optional type, so coerce to js.UndefOr
+      val target: js.UndefOr[Element] =
+        dom.document.getElementById(s"obs-list-${targetObs.toString}")
+      target.foreach { t =>
+        val rect = t.getBoundingClientRect()
+        if (rect.top < 0) t.scrollIntoView()
+        if (rect.bottom > dom.window.innerHeight) t.scrollIntoView(false)
+      }
+    }
+
   private def insertObs(
     programId: Program.Id,
     pos:       Int,
@@ -87,8 +102,8 @@ object ObsList:
     adding.async.set(true) >>
       createObservation[IO](programId)
         .flatMap { obs =>
-          obsExistence(programId, obs.id, o => setObs(programId, o.some, ctx))
-            .mod(undoCtx)(obsListMod.upsert(obs, pos))
+          (obsExistence(programId, obs.id, o => setObs(programId, o.some, ctx))
+            .mod(undoCtx)(obsListMod.upsert(obs, pos)) <* scrollIfNeeded(obs.id))
             .to[IO]
         }
         .guarantee(adding.async.set(false))
@@ -175,6 +190,7 @@ object ObsList:
               val id       = obs.id
               val selected = props.focusedObs.exists(_ === id)
               <.a(
+                ^.id   := s"obs-list-${id.toString}",
                 ^.href := ctx.pageUrl(
                   AppTab.Observations,
                   props.programId,
@@ -267,11 +283,14 @@ object ObsList:
                   clazz = ExploreStyles.ButtonSummary
                 )
               ),
-              Tree(
-                treeNodes,
-                renderItem,
-                expandedKeys = expandedGroups.get,
-                onToggle = expandedGroups.set
+              <.div(
+                ^.overflow := "auto",
+                Tree(
+                  treeNodes,
+                  renderItem,
+                  expandedKeys = expandedGroups.get,
+                  onToggle = expandedGroups.set
+                )
               )
             )
           } else EmptyVdom
