@@ -267,11 +267,14 @@ object ObsList:
                   clazz = ExploreStyles.ButtonSummary
                 )
               ),
-              Tree(
-                treeNodes,
-                renderItem,
-                expandedKeys = expandedGroups.get,
-                onToggle = expandedGroups.set
+              <.div(
+                ^.overflow := "auto",
+                Tree(
+                  treeNodes,
+                  renderItem,
+                  expandedKeys = expandedGroups.get,
+                  onToggle = expandedGroups.set
+                )
               )
             )
           } else EmptyVdom
