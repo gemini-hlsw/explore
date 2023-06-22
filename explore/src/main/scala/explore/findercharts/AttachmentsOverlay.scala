@@ -108,12 +108,15 @@ object AttachmentsOverlay extends ObsAttachmentUtils with FinderChartsAttachment
         import ctx.given
 
         def addNewFinderChart(e: ReactEventFromInput) =
-          onInsertFileSelected(p.programId,
-                               p.obsAttachments,
-                               AttachmentType.Finder,
-                               p.client,
-                               action,
-                               id => p.obsAttachmentIds.mod(_ + id)
+          onInsertFileSelected(
+            p.programId,
+            p.obsAttachments,
+            AttachmentType.Finder,
+            p.client,
+            action,
+            id =>
+              p.obsAttachmentIds.mod(_ + id) *> p.selectedAttachment.set(Some(id)) *> table
+                .setRowSelection(RowSelection(Map(RowId(id.show) -> true)))
           )(e)
 
         ReactFragment(
