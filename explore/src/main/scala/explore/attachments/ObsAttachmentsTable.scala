@@ -79,25 +79,10 @@ case class ObsAttachmentsTable(
   renderInTitle:            Tile.RenderInTitle
 ) extends ReactFnProps(ObsAttachmentsTable.component)
 
-object ObsAttachmentsTable extends TableHooks:
+object ObsAttachmentsTable extends TableHooks with ObsAttachmentUtils:
   private type Props = ObsAttachmentsTable
 
-  private type UrlMapKey = (ObsAtt.Id, Timestamp)
-  private type UrlMap    = Map[UrlMapKey, Pot[String]]
-
-  private enum Action:
-    case None, Insert, Replace, Download
-
   private val ColDef = ColumnDef[View[ObsAttachment]]
-
-  private val ActionsColumnId: ColumnId        = ColumnId("actions")
-  private val FileNameColumnId: ColumnId       = ColumnId("filename")
-  private val AttachmentTypeColumnId: ColumnId = ColumnId("attachment-type")
-  private val SizeColumnId                     = ColumnId("filesize")
-  private val LastUpdateColumnId               = ColumnId("last-update")
-  private val ObservationsColumnId: ColumnId   = ColumnId("observations")
-  private val DescriptionColumnId: ColumnId    = ColumnId("description")
-  private val CheckedColumnId: ColumnId        = ColumnId("checked")
 
   private val columnNames: Map[ColumnId, String] = Map(
     ActionsColumnId        -> "Actions",
@@ -110,40 +95,11 @@ object ObsAttachmentsTable extends TableHooks:
     CheckedColumnId        -> "Checked"
   )
 
-  extension (oa: ObsAttachment) def toMapKey: UrlMapKey = (oa.id, oa.updatedAt)
-
   private val labelButtonClasses =
     PrimeStyles.Component |+| PrimeStyles.Button |+| PrimeStyles.ButtonIconOnly
       |+| LucumaStyles.Tiny |+| LucumaStyles.Compact
 
   private val tableLabelButtonClasses = labelButtonClasses |+| PrimeStyles.ButtonSecondary
-
-  // TEMPORARY until we get the graphql enums worked out
-  enum AttachmentType(
-    val tag:        String,
-    val name:       String,
-    val gql:        ObsAttachmentType,
-    val extensions: List[String]
-  ) derives Enumerated {
-    case Finder
-        extends AttachmentType("FINDER",
-                               "Finder Chart",
-                               ObsAttachmentType.Finder,
-                               List("jpg", "png")
-        )
-    case MosMask
-        extends AttachmentType("MOS_MASK", "MOS Mask", ObsAttachmentType.MosMask, List("fits"))
-    case PreImaging
-        extends AttachmentType("PRE_IMAGING",
-                               "Pre-Imaging",
-                               ObsAttachmentType.PreImaging,
-                               List("fits")
-        )
-
-    def accept: String = extensions.map("." + _).mkString(",")
-  }
-
-  given Display[AttachmentType] = Display.byShortName(_.name)
 
   extension (t: ObsAttachmentType)
     def getEnum: AttachmentType =
@@ -152,61 +108,6 @@ object ObsAttachmentsTable extends TableHooks:
 
   given Reusability[UrlMap]                     = Reusability.map
   given Reusability[ObsAttachmentAssignmentMap] = Reusability.map
-
-  // TODO: Maybe we can have a graphql query for getting information such as this? This is a config var in ODB.
-  private val maxFileSize: NonNegLong = 10000000.refined
-
-  def checkFileSize(file: DomFile)(f: => IO[Unit])(using tx: ToastCtx[IO]): IO[Unit] =
-    if (file.size.toLong === 0)
-      tx.showToast("Attachment files cannot be empty", Message.Severity.Error, true)
-    else if (file.size.toLong > maxFileSize.value)
-      tx.showToast(
-        s"Attachment files cannot be larger than ${maxFileSize.toHumanReadableByteCount}",
-        Message.Severity.Error,
-        true
-      )
-    else f
-
-  def insertAttachment(
-    props:   Props,
-    client:  OdbRestClient[IO],
-    attType: ObsAttachmentType,
-    files:   List[DomFile]
-  )(using
-    ToastCtx[IO]
-  ): IO[Unit] =
-    files.headOption
-      .map(f =>
-        checkFileSize(f) {
-          val name = NonEmptyString.unsafeFrom(f.name)
-          client
-            .insertObsAttachment(props.pid,
-                                 attType,
-                                 name,
-                                 None,
-                                 dom.readReadableStream(IO(f.stream()))
-            )
-            .flatMap(id =>
-              props.obsAttachments
-                .mod(
-                  _.updated(id,
-                            ObsAttachment(
-                              id,
-                              attType,
-                              name,
-                              None,
-                              false,
-                              f.size.toLong,
-                              Timestamp.unsafeFromInstantTruncated(Instant.now())
-                            )
-                  )
-                )
-                .to[IO]
-            )
-            .toastErrors
-        }
-      )
-      .orEmpty
 
   def updateAttachment(
     props:  Props,
@@ -252,21 +153,6 @@ object ObsAttachmentsTable extends TableHooks:
     props.obsAttachments.mod(_.removed(aid)).to[IO] *>
       client.deleteAttachment(props.pid, aid).toastErrors
 
-  def getAttachmentUrl(
-    props:  Props,
-    client: OdbRestClient[IO],
-    mapKey: UrlMapKey,
-    urlMap: View[UrlMap]
-  ): IO[Unit] =
-    client
-      .getPresignedUrl(props.pid, mapKey._1)
-      .attempt
-      .map {
-        case Right(url) => Pot(url)
-        case Left(t)    => Pot.error(t)
-      }
-      .flatMap(p => urlMap.mod(_.updated(mapKey, p)).to[IO])
-
   def deletePrompt(
     props:  Props,
     client: OdbRestClient[IO],
@@ -311,7 +197,7 @@ object ObsAttachmentsTable extends TableHooks:
                 }
                 .to[IO]
             val getUrls      =
-              newOas.traverse_(key => getAttachmentUrl(props, client, key, urlMap))
+              newOas.traverse_(key => getAttachmentUrl(props.pid, client, key, urlMap))
 
             updateUrlMap *> getUrls
       )
@@ -472,19 +358,10 @@ object ObsAttachmentsTable extends TableHooks:
         import ctx.given
 
         val dialogHeader = action.get match
-          case Action.None     => ""
           case Action.Insert   => "Uploading Attachment"
           case Action.Replace  => "Uploading Replacement"
           case Action.Download => "Downloading Attachment"
-
-        def onInsertFileSelected(e: ReactEventFromInput): Callback =
-          val files = e.target.files.toList
-          (Callback(e.target.value = null) *>
-            action.set(Action.Insert) *>
-            insertAttachment(props, client, newAttType.get.gql, files)
-              .guarantee(action.async.set(Action.None))
-              .runAsync)
-            .when_(files.nonEmpty)
+          case _               => ""
 
         React.Fragment(
           props.renderInTitle(
@@ -506,7 +383,12 @@ object ObsAttachmentsTable extends TableHooks:
               <.input(
                 ExploreStyles.FileUpload,
                 ^.tpe    := "file",
-                ^.onChange ==> onInsertFileSelected,
+                ^.onChange ==> onInsertFileSelected(props.pid,
+                                                    props.obsAttachments,
+                                                    newAttType.get,
+                                                    client,
+                                                    action
+                ),
                 ^.id     := "attachment-upload",
                 ^.name   := "file",
                 ^.accept := newAttType.get.accept

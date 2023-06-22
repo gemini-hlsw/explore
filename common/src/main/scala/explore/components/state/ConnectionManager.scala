@@ -9,6 +9,7 @@ import crystal.react.hooks.*
 import crystal.react.implicits.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
+import explore.components.SolarProgress
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.UserVault
@@ -64,23 +65,6 @@ object ConnectionManager {
       if (initializedState.value)
         children
       else
-        <.div(
-          ^.cls := "solar-system",
-          <.div(
-            ^.cls := "mars-orbit orbit",
-            <.div(^.cls := "planet mars"),
-            <.div(
-              ^.cls := "earth-orbit orbit",
-              <.div(^.cls := "planet earth"),
-              <.div(^.cls := "venus-orbit orbit",
-                    <.div(^.cls := "planet venus"),
-                    <.div(^.cls := "mercury-orbit orbit",
-                          <.div(^.cls := "planet mercury"),
-                          <.div(^.cls := "sun")
-                    )
-              )
-            )
-          )
-        )
+        SolarProgress()
     )
 }

@@ -86,13 +86,16 @@ object DeckShown extends NewType[Boolean]:
 type DeckShown = DeckShown.Type
 
 case class ObsTabContents(
-  userId:           Option[User.Id],
-  programId:        Program.Id,
-  programSummaries: View[ProgramSummaries],
-  focused:          Focused,
-  undoStacks:       View[ModelUndoStacks[IO]],
-  searching:        View[Set[Target.Id]],
-  expandedGroups:   View[Set[Group.Id]]
+  vault:                    Option[UserVault],
+  userId:                   Option[User.Id],
+  programId:                Program.Id,
+  programSummaries:         View[ProgramSummaries],
+  focused:                  Focused,
+  undoStacks:               View[ModelUndoStacks[IO]],
+  searching:                View[Set[Target.Id]],
+  expandedGroups:           View[Set[Group.Id]],
+  obsAttachments:           View[ObsAttachmentList],
+  obsAttachmentAssignments: ObsAttachmentAssignmentMap
 ) extends ReactFnProps(ObsTabContents.component):
   val focusedObs: Option[Observation.Id] = focused.obsSet.map(_.head)
   val focusedTarget: Option[Target.Id]   = focused.target
@@ -273,6 +276,7 @@ object ObsTabContents extends TwoPanels:
           .zoom(indexValue)
           .mapValue(obsView =>
             ObsTabTiles(
+              props.vault,
               props.userId,
               props.programId,
               backButton,
@@ -288,7 +292,9 @@ object ObsTabContents extends TwoPanels:
               props.searching,
               defaultLayouts,
               layouts,
-              resize
+              resize,
+              props.obsAttachments,
+              props.obsAttachmentAssignments
             ).withKey(s"${obsId.show}")
           )
       )
