@@ -26,6 +26,7 @@ import explore.model.ProgramSummaries
 import explore.model.TargetWithObs
 import explore.model.enums.AppTab
 import explore.model.syntax.all.*
+import explore.syntax.ui.*
 import explore.targets.ObservationInsertAction
 import explore.targets.TargetAddDeleteActions
 import explore.undo.*
@@ -147,7 +148,7 @@ object AsterismGroupObsList:
     adding:                View[AddingTargetOrObs],
     selectTargetOrSummary: Option[Target.Id] => Callback
   )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Unit] =
-    adding.async.set(AddingTargetOrObs(true)) >>
+    adding.async.useBoolSwitchBy(AddingTargetOrObs(_))(
       TargetQueries
         .insertTarget[IO](programId, EmptySiderealTarget)
         .flatMap { targetId =>
@@ -161,7 +162,7 @@ object AsterismGroupObsList:
             .set(undoCtx)(EmptySiderealTarget.some)
             .to[IO]
         }
-        .guarantee(adding.async.set(AddingTargetOrObs(false)))
+    )
 
   private def insertObs(
     programId:          Program.Id,
@@ -171,7 +172,7 @@ object AsterismGroupObsList:
     expandedIds:        View[SortedSet[ObsIdSet]],
     selectObsOrSummary: Option[Observation.Id] => Callback
   )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Unit] =
-    adding.async.set(AddingTargetOrObs(true)) >>
+    adding.async.useBoolSwitchBy(AddingTargetOrObs(_))(
       ObsQueries
         .createObservationWithTargets[IO](programId, targetIds)
         .flatMap { obs =>
@@ -186,7 +187,7 @@ object AsterismGroupObsList:
             .set(undoCtx)(ObsSummary.scienceTargetIds.replace(targetIds)(obs).some)
             .to[IO]
         }
-        .guarantee(adding.async.set(AddingTargetOrObs(false)))
+    )
 
   private val component = ScalaFnComponent
     .withHooks[Props]

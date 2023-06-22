@@ -22,7 +22,7 @@ import explore.model.ProgramInfo
 import explore.model.ProgramInfoList
 import explore.model.enums.AppTab
 import explore.model.reusability.given
-import explore.syntax.ui.given
+import explore.syntax.ui.*
 import explore.utils.*
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.*
@@ -75,11 +75,11 @@ object ProgramTable:
     FetchClient[IO, ObservationDB],
     Logger[IO]
   ): IO[Unit] =
-    adding.async.set(IsAdding(true)) >>
+    adding.async.useBoolSwitchBy(IsAdding(_))(
       ProgramQueries
         .createProgram[IO](none)
         .flatMap(pi => programs.async.mod(_.updated(pi.id, pi)))
-        .guarantee(adding.async.set(IsAdding(false)))
+    )
 
   private def deleteProgram(pinf: View[ProgramInfo])(using
     FetchClient[IO, ObservationDB]

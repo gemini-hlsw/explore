@@ -22,6 +22,7 @@ import explore.model.Grouping
 import explore.model.enums.AppTab
 import explore.model.reusability.given
 import explore.observationtree.ObsBadge
+import explore.syntax.ui.*
 import explore.tabs.DeckShown
 import explore.undo.KIListMod
 import explore.undo.UndoContext
@@ -99,14 +100,14 @@ object ObsList:
   ): IO[Unit] =
     import ctx.given
 
-    adding.async.set(true) >>
+    adding.async.useBoolSwitch(
       createObservation[IO](programId)
         .flatMap { obs =>
           (obsExistence(programId, obs.id, o => setObs(programId, o.some, ctx))
             .mod(undoCtx)(obsListMod.upsert(obs, pos)) <* scrollIfNeeded(obs.id))
             .to[IO]
         }
-        .guarantee(adding.async.set(false))
+    )
 
   private val component =
     ScalaFnComponent

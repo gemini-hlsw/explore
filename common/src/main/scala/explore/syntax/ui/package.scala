@@ -4,9 +4,11 @@
 package explore.syntax.ui
 
 import cats.*
+import cats.effect.MonadCancel
 import cats.syntax.all.*
 import clue.ResponseException
 import clue.js.FetchJSRequest
+import crystal.ViewF
 import crystal.react.implicits.*
 import explore.components.ui.ExploreStyles
 import explore.model.Constants
@@ -52,7 +54,7 @@ extension (vault: UserVault)
     request
 
 extension [F[_]: ApplicativeThrow: ToastCtx, A](f: F[A])
-  def toastErrors: F[A] =
+  def toastErrors: F[A]                                                                          =
     f.onError {
       case ResponseException(errors, _) =>
         errors
@@ -66,3 +68,21 @@ extension [F[_]: ApplicativeThrow: ToastCtx, A](f: F[A])
         ToastCtx[F]
           .showToast(throwable.getMessage, Message.Severity.Error, sticky = true)
     }
+
+/**
+ * Switch the value of a ViewF to true-ish (by the function) while executing the given effect, then
+ * switch it back to false when the effect is finished
+ */
+extension [F[_]: Monad, A](adding: ViewF[F, A])
+  def useBoolSwitchBy[B](makeBool: Boolean => A)(f: F[B])(using MonadCancel[F, Throwable]): F[B] =
+    MonadCancel[F, Throwable].bracket(adding.set(makeBool(true)))(_ => f)(_ =>
+      adding.set(makeBool(false))
+    )
+
+/**
+ * Switch the value of a ViewF to true while executing the given effect, then switch it back to
+ * false when the effect is finished
+ */
+extension [F[_]: Monad](adding: ViewF[F, Boolean])
+  def useBoolSwitch[A](f: F[A])(using MonadCancel[F, Throwable]): F[A] =
+    adding.useBoolSwitchBy(identity)(f)
