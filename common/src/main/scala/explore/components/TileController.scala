@@ -5,14 +5,10 @@ package explore.components
 
 import cats.Order.*
 import cats.*
-import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
 import crystal.react.*
-import crystal.react.hooks.UseStateView
 import crystal.react.hooks.*
-import crystal.react.reuse.*
-import eu.timepit.refined.auto.*
 import explore.common.UserPreferencesQueries.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
@@ -29,7 +25,6 @@ import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.Traversal
-import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.UserPreferencesDB
 import react.common.ReactFnProps
 import react.common.implicits.given

@@ -14,19 +14,9 @@ import explore.model.Grouping
 import explore.model.GroupingElement
 import explore.model.ObsSummary
 import explore.model.syntax.all.*
-import japgolly.scalajs.react.Reusability
-import lucuma.core.model.Group.{Id => GroupId}
 import lucuma.core.model.Observation
-import lucuma.refined.*
-import lucuma.ui.reusability.given
-import monocle.Lens
-import monocle.macros.GenLens
 import react.primereact.Tree
 import react.primereact.Tree.Node
-
-import java.util.UUID
-import scala.collection.SortedMap
-import scala.scalajs.js.JSConverters._
 
 enum ObsNode derives Eq:
   case Obs(value: ObsSummary)

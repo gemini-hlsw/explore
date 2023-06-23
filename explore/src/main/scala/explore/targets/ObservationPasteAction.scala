@@ -7,23 +7,16 @@ import cats.Order.*
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
-import clue.data.syntax.*
 import crystal.react.*
-import explore.common.AsterismQueries
-import explore.model.AsterismGroup
 import explore.model.ObsIdSet
 import explore.model.ObsSummary
 import explore.model.ProgramSummaries
-import explore.model.TargetWithObs
 import explore.model.syntax.all.*
 import explore.undo.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
-import lucuma.schemas.ObservationDB.Types.*
-import lucuma.schemas.odb.input.*
-import queries.common.TargetQueriesGQL
 import queries.schemas.odb.ObsQueries
 
 import scala.collection.immutable.SortedSet

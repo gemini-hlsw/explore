@@ -7,7 +7,6 @@ import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
 import crystal.react.*
-import explore.DefaultErrorPolicy
 import explore.common.AsterismQueries
 import explore.common.TargetQueries
 import explore.model.AsterismIds
@@ -17,9 +16,7 @@ import explore.utils.ToastCtx
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
-import lucuma.schemas.model.TargetWithId
 import lucuma.schemas.model.TargetWithOptId
-import lucuma.schemas.odb.input.*
 import org.typelevel.log4cats.Logger
 
 trait AsterismModifier:

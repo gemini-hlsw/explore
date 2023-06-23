@@ -13,12 +13,10 @@ import crystal.react.reuse.*
 import eu.timepit.refined.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.numeric.Positive
-import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.*
 import explore.components.ui.ExploreStyles
-import explore.model.enums.*
 import explore.model.formats.*
 import explore.utils.IsExpanded
 import japgolly.scalajs.react.*
@@ -38,12 +36,10 @@ import lucuma.core.validation.*
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
-import lucuma.typed.{tanstackTableCore => raw}
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.utils.*
@@ -53,8 +49,6 @@ import react.primereact.Panel
 
 import scala.collection.immutable.SortedMap
 import scala.math.BigDecimal.RoundingMode
-
-import scalajs.js.JSConverters.*
 
 sealed trait EmissionLineEditor[T]:
   def emissionLines: View[SortedMap[Wavelength, EmissionLine[T]]]

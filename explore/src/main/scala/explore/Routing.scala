@@ -9,7 +9,6 @@ import cats.effect.IO
 import cats.syntax.all.*
 import crystal.*
 import crystal.react.View
-import explore.components.ui.ExploreStyles
 import explore.model.Page
 import explore.model.Page.*
 import explore.model.*
@@ -268,6 +267,7 @@ object Routing:
             SchedulingObsPage(pid, twoObs),
             SchedulingObsPage(pid, threeObs)
           )
+        ()
       }
 
       configuration

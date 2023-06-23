@@ -3,12 +3,10 @@
 
 package explore.common
 
-import cats.effect.IO
 import cats.effect.Sync
 import cats.syntax.all.given
 import clue.FetchClient
 import explore.DefaultErrorPolicy
-import explore.model.AppContext
 import explore.utils.*
 import lucuma.core.model.Program
 import lucuma.core.model.Target

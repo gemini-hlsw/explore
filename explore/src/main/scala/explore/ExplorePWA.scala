@@ -4,19 +4,13 @@
 package explore
 
 import cats.effect.IO
-import explore.components.ui.ExploreStyles
 import explore.events.ExploreEvent
 import japgolly.scalajs.react.callback.AsyncCallback
 import japgolly.scalajs.react.callback.Callback
-import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.broadcastchannel.*
-import lucuma.typed.std.RequestInit
 import lucuma.ui.syntax.all.*
-import lucuma.ui.syntax.all.given
 import org.scalajs.dom
-import org.scalajs.dom.Fetch
 import org.scalajs.dom.Request
-import react.fa.IconSize
 
 import scala.annotation.nowarn
 import scala.concurrent.ExecutionContext
@@ -119,9 +113,9 @@ object ExplorePWA {
           // This is coming from the client
           x.event match {
             case ExploreEvent.PWAReloadId      =>
-              IO(updateSW(true))
+              IO(updateSW(true)).void
             case ExploreEvent.ExploreUIReadyId =>
-              IO(updateSW)
+              IO(updateSW).void
             case a                             => IO.unit
           }
       ): (ExploreEvent => IO[Unit])
@@ -145,7 +139,9 @@ object ExplorePWA {
               val isOffline =
                 !(!(r.installing && !js.isUndefined(org.scalajs.dom.window.navigator))) ||
                   (dom.window.navigator.hasOwnProperty("connection") && dom.window.navigator.onLine)
-              Callback.log(s"Service worker registered, setup self update task") *>
+              Callback.log(
+                s"Service worker registered, setup self update task, offline: $isOffline"
+              ) *>
                 pingSW(u)
                   .flatMap(go =>
                     Callback(r.update())

@@ -15,7 +15,6 @@ import lucuma.core.math.arb.ArbOffset.*
 import lucuma.core.math.arb.ArbParallax.*
 import lucuma.core.math.arb.ArbProperMotion.given
 import lucuma.core.math.arb.ArbWavelengthDither.given
-import lucuma.core.optics.laws.discipline.ValidSplitEpiTests
 import lucuma.core.optics.laws.discipline.ValidWedgeTests
 import munit.DisciplineSuite
 import org.scalacheck.Arbitrary

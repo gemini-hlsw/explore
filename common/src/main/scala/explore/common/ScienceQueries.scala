@@ -17,7 +17,6 @@ import explore.undo.UndoSetter
 import explore.utils.ToastCtx
 import lucuma.core.enums
 import lucuma.core.math.Angle
-import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDelta
 import lucuma.core.model.Observation
@@ -29,7 +28,6 @@ import lucuma.schemas.odb.input.*
 import monocle.Lens
 import org.typelevel.log4cats.Logger
 import queries.common.ObsQueriesGQL.*
-import queries.schemas.odb.ObsQueries.*
 
 object ScienceQueries:
 

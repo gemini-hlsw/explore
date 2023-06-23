@@ -5,12 +5,9 @@ package explore.model
 
 import cats.kernel.laws.discipline.*
 import cats.laws.discipline.arbitrary.*
-import explore.model.arb.all.*
 import explore.model.arb.all.given
-import lucuma.core.data.arb.ArbZipper.*
 import lucuma.core.model.Target
 import lucuma.core.model.arb.ArbTarget.given
-import lucuma.core.util.arb.ArbEnumerated.*
 import lucuma.core.util.arb.ArbGid.*
 import lucuma.schemas.model.TargetWithId
 import lucuma.schemas.model.arb.ArbTargetWithId.given

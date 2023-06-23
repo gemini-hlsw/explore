@@ -27,7 +27,6 @@ import org.typelevel.log4cats.Logger
 import queries.schemas.SSO
 import queries.schemas.UserPreferencesDB
 import react.primereact.ToastRef
-import workers.WebWorkerF
 import workers.WorkerClient
 
 case class AppContext[F[_]](

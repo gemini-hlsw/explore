@@ -4,9 +4,6 @@
 package explore
 
 import cats.Applicative
-import crystal.react.View
-import japgolly.scalajs.react.ReactCats.*
-import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
 
 package undo {
   class VarRef[F[_]: Applicative, A](init: A) {

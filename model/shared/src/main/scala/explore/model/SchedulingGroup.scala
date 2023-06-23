@@ -5,13 +5,9 @@ package explore.model
 
 import cats.Eq
 import cats.derived.*
-import io.circe.Decoder
 import io.circe.generic.semiauto.*
 import lucuma.core.model.TimingWindow
-import lucuma.schemas.decoders.given
 import monocle.Focus
-
-import scala.annotation.unused
 
 case class SchedulingGroup(timingWindows: List[TimingWindow], obsIds: ObsIdSet) derives Eq
 

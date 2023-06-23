@@ -5,64 +5,37 @@ package explore.targeteditor
 
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.FetchClient
-import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
 import explore.Icons
-import explore.common.AsterismQueries
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.config.VizTimeEditor
 import explore.model.AladinFullScreen
 import explore.model.AppContext
 import explore.model.Asterism
-import explore.model.Asterism.siderealTargetsEach
 import explore.model.AsterismIds
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
-import explore.model.PAProperties
 import explore.model.TargetList
-import explore.model.enums.AgsState
-import explore.model.reusability.given
-import explore.model.reusability.given
-import explore.optics.*
-import explore.optics.all.*
 import explore.syntax.ui.*
 import explore.targets.TargetSelectionPopup
 import explore.targets.TargetSource
 import explore.undo.UndoSetter
-import explore.undo.UndoStacks
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
-import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.data.Zipper
-import lucuma.core.math.Angle
-import lucuma.core.math.Wavelength
-import lucuma.core.model.ConstraintSet
-import lucuma.core.model.Observation
-import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.util.NewType
 import lucuma.refined.*
-import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.*
-import lucuma.schemas.odb.input.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.Iso
-import monocle.Lens
-import monocle.Optional
-import monocle.Traversal
-import monocle.std.option.some
-import org.typelevel.log4cats.Logger
-import queries.common.TargetQueriesGQL.*
 import queries.schemas.odb.ObsQueries
 import react.common.ReactFnProps
 import react.primereact.Button
@@ -94,10 +67,8 @@ object AsterismEditor extends AsterismModifier:
   private type EditScope = EditScope.Type
 
   private object AreAdding extends NewType[Boolean]
-  private type AreAdding = AreAdding.Type
 
   private def onCloneTarget(
-    id:          Target.Id,
     asterismIds: View[AsterismIds],
     allTargets:  View[TargetList],
     setTarget:   (Option[Target.Id], SetRouteVia) => Callback
@@ -230,7 +201,6 @@ object AsterismEditor extends AsterismModifier:
                     props.configuration.some,
                     props.searching,
                     onClone = onCloneTarget(
-                      focusedTargetId,
                       props.asterismIds,
                       props.allTargets.model,
                       props.setTarget

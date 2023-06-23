@@ -3,7 +3,6 @@
 
 package explore.targeteditor
 
-import cats.Order
 import cats.data.NonEmptyList
 import cats.implicits.catsKernelOrderingForOrder
 import cats.syntax.all.*
@@ -17,7 +16,6 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
 import lucuma.schemas.model.BasicConfiguration
-import react.common.implicits.*
 import react.common.style.Css
 
 import scala.collection.immutable.SortedMap

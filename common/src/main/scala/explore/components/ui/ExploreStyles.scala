@@ -6,7 +6,6 @@ package explore.components.ui
 import cats.syntax.all.*
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Interval
-import react.common.implicits.*
 import react.common.style.*
 
 object ExploreStyles:

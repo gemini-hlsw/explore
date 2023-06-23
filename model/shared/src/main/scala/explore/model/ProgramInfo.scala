@@ -9,11 +9,9 @@ import cats.syntax.all.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.Decoder
-import io.circe.generic.semiauto.*
 import io.circe.refined.given
 import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB.Enums.Existence
-import lucuma.schemas.decoders.given
 import monocle.Focus
 import monocle.Lens
 

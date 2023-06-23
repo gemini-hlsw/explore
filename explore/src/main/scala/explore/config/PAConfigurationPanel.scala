@@ -3,13 +3,10 @@
 
 package explore.config
 
-import cats.effect.*
 import cats.syntax.all.*
 import crystal.react.*
-import eu.timepit.refined.auto.*
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
-import explore.model.AppContext
 import explore.model.enums.AgsState
 import explore.model.enums.PosAngleOptions
 import explore.model.syntax.all.*
@@ -26,11 +23,8 @@ import lucuma.ui.primereact.FormEnumDropdownView
 import lucuma.ui.primereact.FormInputTextView
 import lucuma.ui.primereact.LucumaStyles
 import lucuma.ui.primereact.given
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.Lens
-import monocle.std.option
-import queries.schemas.odb.ObsQueries
 import react.common.Css
 import react.common.ReactFnProps
 
@@ -63,67 +57,62 @@ object PAConfigurationPanel:
     )
 
   private val component =
-    ScalaFnComponent
-      .withHooks[Props]
-      .useContext(AppContext.ctx)
-      .render { (props, ctx) =>
-        import ctx.given
+    ScalaFnComponent[Props] { props =>
+      val paView = props.posAngleView
 
-        val paView = props.posAngleView
+      val posAngleOptionsView: View[PosAngleOptions] =
+        paView.zoom(unsafePosOptionsLens)
 
-        val posAngleOptionsView: View[PosAngleOptions] =
-          paView.zoom(unsafePosOptionsLens)
+      val fixedView: ViewOpt[Angle] =
+        paView
+          .zoom(PosAngleConstraint.fixedAngle)
 
-        val fixedView: ViewOpt[Angle] =
-          paView
-            .zoom(PosAngleConstraint.fixedAngle)
+      val allowedFlipView: ViewOpt[Angle] =
+        paView
+          .zoom(PosAngleConstraint.allowFlipAngle)
 
-        val allowedFlipView: ViewOpt[Angle] =
-          paView
-            .zoom(PosAngleConstraint.allowFlipAngle)
+      val parallacticOverrideView: ViewOpt[Angle] =
+        paView
+          .zoom(PosAngleConstraint.parallacticOverrideAngle)
 
-        val parallacticOverrideView: ViewOpt[Angle] =
-          paView
-            .zoom(PosAngleConstraint.parallacticOverrideAngle)
+      val selectedAngle = props.posAngleView.get match
+        case PosAngleConstraint.Unbounded          =>
+          props.selectedPA
+            .map(a => <.label(f"${a.toDoubleDegrees}%.0f °"))
+        case PosAngleConstraint.AverageParallactic =>
+          props.selectedPA
+            .orElse(props.averagePA)
+            .map(a => <.label(f"${a.toDoubleDegrees}%.2f °"))
+            .orElse(<.label("Not Visible").some)
+        case _                                     => None
 
-        val selectedAngle = props.posAngleView.get match
-          case PosAngleConstraint.Unbounded          =>
-            props.selectedPA
-              .map(a => <.label(f"${a.toDoubleDegrees}%.0f °"))
-          case PosAngleConstraint.AverageParallactic =>
-            props.selectedPA
-              .orElse(props.averagePA)
-              .map(a => <.label(f"${a.toDoubleDegrees}%.2f °"))
-              .orElse(<.label("Not Visible").some)
-          case _                                     => None
-
-        def posAngleEditor(pa: View[Angle]) =
-          <.div(
-            FormInputTextView(
-              id = "pos-angle-value".refined,
-              groupClass = ExploreStyles.PAConfigurationAngle,
-              value = pa,
-              units = "° E of N",
-              disabled = !props.agsState.get.canRecalculate,
-              validFormat = MathValidators.truncatedAngleDegrees,
-              changeAuditor = ChangeAuditor.bigDecimal(3.refined, 2.refined)
-            )
-          )
-
+      def posAngleEditor(pa: View[Angle]) =
         <.div(
-          LucumaStyles.FormColumnCompact,
-          ExploreStyles.PAConfigurationForm
-        )(
-          FormEnumDropdownView(
-            id = "pos-angle-alternative".refined,
-            label =
-              React.Fragment("Position Angle", HelpIcon("configuration/positionangle.md".refined)),
-            value = posAngleOptionsView,
-            disabled = !props.agsState.get.canRecalculate
-          ),
-          fixedView.mapValue(posAngleEditor),
-          allowedFlipView.mapValue(posAngleEditor),
-          parallacticOverrideView.mapValue(posAngleEditor),
-          selectedAngle
+          FormInputTextView(
+            id = "pos-angle-value".refined,
+            groupClass = ExploreStyles.PAConfigurationAngle,
+            value = pa,
+            units = "° E of N",
+            disabled = !props.agsState.get.canRecalculate,
+            validFormat = MathValidators.truncatedAngleDegrees,
+            changeAuditor = ChangeAuditor.bigDecimal(3.refined, 2.refined)
+          )
         )
-      }
+
+      <.div(
+        LucumaStyles.FormColumnCompact,
+        ExploreStyles.PAConfigurationForm
+      )(
+        FormEnumDropdownView(
+          id = "pos-angle-alternative".refined,
+          label =
+            React.Fragment("Position Angle", HelpIcon("configuration/positionangle.md".refined)),
+          value = posAngleOptionsView,
+          disabled = !props.agsState.get.canRecalculate
+        ),
+        fixedView.mapValue(posAngleEditor),
+        allowedFlipView.mapValue(posAngleEditor),
+        parallacticOverrideView.mapValue(posAngleEditor),
+        selectedAngle
+      )
+    }

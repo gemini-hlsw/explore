@@ -4,33 +4,25 @@
 package explore.tabs
 
 import _root_.react.common.*
-import _root_.react.draggable.Axis
 import _root_.react.gridlayout.*
 import _root_.react.hotkeys.*
 import _root_.react.hotkeys.hooks.*
 import _root_.react.resizeDetector.*
 import _root_.react.resizeDetector.hooks.*
-import cats.Order.*
-import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
-import cats.syntax.all.given
 import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
 import crystal.react.reuse.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.numeric.NonNegInt
-import explore.Icons
 import explore.*
-import explore.cache.ProgramCache
-import explore.common.AsterismQueries.*
 import explore.common.UserPreferencesQueries.*
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
 import explore.data.KeyedIndexedList
-import explore.given
 import explore.model.ObsSummary
 import explore.model.*
 import explore.model.enums.AppTab
@@ -41,12 +33,8 @@ import explore.model.layout.unsafe.given
 import explore.model.reusability.given
 import explore.model.syntax.all.*
 import explore.observationtree.AsterismGroupObsList
-import explore.optics.*
-import explore.optics.all.*
 import explore.shortcuts.*
 import explore.shortcuts.given
-import explore.syntax.ui.*
-import explore.syntax.ui.given
 import explore.targets.ObservationPasteAction
 import explore.targets.TargetPasteAction
 import explore.targets.TargetSummaryTable
@@ -65,24 +53,16 @@ import lucuma.core.model.Target.Sidereal
 import lucuma.core.model.User
 import lucuma.refined.*
 import lucuma.schemas.model.*
-import lucuma.ui.DefaultPendingRender
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import lucuma.ui.utils.*
 import monocle.Iso
 import monocle.Traversal
-import org.scalajs.dom.window
-import queries.common.AsterismQueriesGQL.*
-import queries.common.ObsQueriesGQL
-import queries.common.TargetQueriesGQL
-import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.odb.ObsQueries
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
-import scala.concurrent.duration.*
 
 case class TargetTabContents(
   userId:           Option[User.Id],
@@ -203,7 +183,7 @@ object TargetTabContents extends TwoPanels:
       )
 
     def findAsterismGroup(obsIds: ObsIdSet, agl: AsterismGroupList): Option[AsterismGroup] =
-      agl.find((agObsIds, targetIds) => obsIds.subsetOf(agObsIds)).map(AsterismGroup.fromTuple)
+      agl.find((agObsIds, _) => obsIds.subsetOf(agObsIds)).map(AsterismGroup.fromTuple)
 
     def setPage(focused: Focused): Callback =
       ctx.pushPage(AppTab.Targets, props.programId, focused)
@@ -286,8 +266,7 @@ object TargetTabContents extends TwoPanels:
       idsToEdit:     ObsIdSet,
       asterismGroup: AsterismGroup
     ): List[Tile] = {
-      val groupIds  = asterismGroup.obsIds
-      val targetIds = asterismGroup.targetIds
+      val groupIds = asterismGroup.obsIds
 
       val getVizTime: ProgramSummaries => Option[Instant] = a =>
         for

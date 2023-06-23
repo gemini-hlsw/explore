@@ -6,7 +6,6 @@ package explore.model.boopickle
 import boopickle.DefaultBasic.*
 import cats.effect.*
 import cats.syntax.all.*
-import fs2.Chunk.ByteBuffer.apply
 import org.scalajs.dom
 
 import java.nio.ByteBuffer

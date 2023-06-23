@@ -10,7 +10,6 @@ import crystal.Pot
 import crystal.react.*
 import crystal.react.given
 import crystal.react.hooks.*
-import crystal.react.reuse.*
 import explore.Icons
 import explore.common.AsterismQueries
 import explore.common.UserPreferencesQueries.TableStore
@@ -18,14 +17,12 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AladinFullScreen
 import explore.model.AppContext
-import explore.model.Asterism
 import explore.model.AsterismIds
 import explore.model.ObsIdSet
 import explore.model.TargetList
 import explore.model.enums.TableId
 import explore.model.extensions.*
 import explore.model.reusability.given
-import explore.syntax.ui.*
 import explore.targets.TargetColumns
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -36,23 +33,18 @@ import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.SiderealTargetWithId
-import lucuma.typed.{tanstackTableCore => raw}
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.*
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.TableHooks
 import lucuma.ui.table.TableOptionsWithStateStore
 import lucuma.ui.table.*
-import org.scalablytyped.runtime.StringDictionary
 import react.common.Css
 import react.common.ReactFnProps
 import react.primereact.Button
 
 import java.time.Instant
-
-import scalajs.js.JSConverters.*
 
 case class TargetTable(
   userId:         Option[User.Id],

@@ -4,7 +4,6 @@
 package explore.tabs
 
 import _root_.react.common.*
-import _root_.react.draggable.Axis
 import _root_.react.gridlayout.*
 import _root_.react.hotkeys.*
 import _root_.react.hotkeys.hooks.*
@@ -20,15 +19,12 @@ import crystal.react.reuse.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.numeric.NonNegInt
-import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.*
-import explore.cache.ProgramCache
 import explore.common.UserPreferencesQueries.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.data.KeyedIndexedList
-import explore.given
 import explore.model.ProgramSummaries
 import explore.model.*
 import explore.model.enums.AppTab
@@ -37,11 +33,9 @@ import explore.model.enums.SelectedPanel
 import explore.model.layout.*
 import explore.model.layout.unsafe.given
 import explore.model.reusability.given
-import explore.model.reusability.given
 import explore.observationtree.*
 import explore.shortcuts.*
 import explore.shortcuts.given
-import explore.syntax.ui.*
 import explore.undo.UndoContext
 import explore.undo.UndoSetter
 import explore.utils.*
@@ -56,22 +50,10 @@ import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.util.NewType
 import lucuma.refined.*
-import lucuma.schemas.ObservationDB
-import lucuma.ui.DefaultPendingRender
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import lucuma.ui.utils.*
 import monocle.Iso
-import org.scalajs.dom.window
-import queries.common.ObsQueriesGQL.*
-import queries.common.ProgramQueriesGQL.GroupEditSubscription
-import queries.common.ProgramQueriesGQL.ProgramGroupsQuery
-import queries.common.UserPreferencesQueriesGQL.*
-import queries.schemas.odb.ObsQueries.*
-
-import scala.concurrent.duration.*
 
 object DeckShown extends NewType[Boolean]:
   inline def Shown: DeckShown  = DeckShown(true)
@@ -116,7 +98,6 @@ object ObsTabContents extends TwoPanels:
   private val TimingWindowsMinHeight: NonNegInt = 8.refined
   private val TimingWindowsMaxHeight: NonNegInt = 12.refined
   private val ConfigurationMaxHeight: NonNegInt = 10.refined
-  private val ItcMinHeight: NonNegInt           = 6.refined
   private val ItcMaxHeight: NonNegInt           = 9.refined
   private val FinderChartMinHeight: NonNegInt   = 6.refined
   private val FinderChartHeight: NonNegInt      = 9.refined
@@ -220,7 +201,6 @@ object ObsTabContents extends TwoPanels:
     deckShown:      View[DeckShown],
     ctx:            AppContext[IO]
   ): VdomNode = {
-    import ctx.given
 
     def observationsTree(observations: View[ObservationList]) =
       if (deckShown.get === DeckShown.Shown) {
@@ -376,7 +356,6 @@ object ObsTabContents extends TwoPanels:
           case PasteAlt1 | PasteAlt2 =>
             ExploreClipboard.get.flatMap {
               case LocalClipboard.CopiedObservations(idSet) =>
-                val observations = props.programSummaries.zoom(ProgramSummaries.observations)
                 idSet.idSet.toList
                   .traverse(oid =>
                     cloneObs(

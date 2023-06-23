@@ -10,7 +10,6 @@ import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.numeric.NonNegShort
 import io.circe.Decoder
 import io.circe.HCursor
-import io.circe.generic.semiauto.*
 import io.circe.refined.given
 import lucuma.core.model.Group
 import lucuma.core.model.Observation

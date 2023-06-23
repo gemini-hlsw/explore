@@ -4,8 +4,6 @@
 package explore.targets
 
 import cats.syntax.all.*
-import crystal.react.reuse.*
-import explore.Icons
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*

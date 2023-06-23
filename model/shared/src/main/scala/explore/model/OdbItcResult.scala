@@ -7,7 +7,6 @@ import cats.Eq
 import cats.derived.*
 import eu.timepit.refined.cats.given
 import eu.timepit.refined.types.numeric.NonNegInt
-import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
 import explore.model.itc.ItcExposureTime
 import explore.model.itc.OverridenExposureTime
@@ -17,7 +16,6 @@ import io.circe.refined.*
 import lucuma.core.math.SignalToNoise
 import lucuma.core.util.TimeSpan
 import lucuma.odb.json.time.decoder.given
-import lucuma.schemas.decoders.given
 import monocle.Focus
 import monocle.Prism
 import monocle.macros.GenPrism

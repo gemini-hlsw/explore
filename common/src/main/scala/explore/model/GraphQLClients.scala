@@ -11,10 +11,7 @@ import clue.js.*
 import clue.websocket.*
 import io.circe.Json
 import lucuma.schemas.*
-import org.http4s.Uri.Authority
-import org.http4s.Uri.Scheme
 import org.http4s.*
-import org.http4s.syntax.all.*
 import org.typelevel.log4cats.Logger
 import queries.schemas.*
 

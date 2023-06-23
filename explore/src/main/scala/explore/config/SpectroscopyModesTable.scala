@@ -8,20 +8,12 @@ import cats.Eq
 import cats.Order
 import cats.data.*
 import cats.effect.*
-import cats.effect.std.UUIDGen
 import cats.implicits.catsKernelOrderingForOrder
 import cats.syntax.all.*
 import coulomb.Quantity
-import coulomb.policy.spire.standard.given
-import coulomb.syntax.*
 import crystal.react.*
-import crystal.react.hooks.*
-import crystal.react.reuse.*
-import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.given
-import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.types.numeric.NonNegInt
-import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.UserPreferencesQueries.TableStore
@@ -34,7 +26,6 @@ import explore.model.BasicConfigAndItc
 import explore.model.Progress
 import explore.model.ScienceRequirements
 import explore.model.WorkerClients.*
-import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.boopickle.*
 import explore.model.display.*
@@ -44,47 +35,34 @@ import explore.model.itc.ItcTarget
 import explore.model.itc.*
 import explore.model.reusability.given
 import explore.modes.*
-import explore.syntax.ui.*
-import explore.syntax.ui.*
-import explore.syntax.ui.given
-import explore.utils.*
-import japgolly.scalajs.react.Reusability.apply
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.FocalPlane
 import lucuma.core.enums.*
 import lucuma.core.math.*
-import lucuma.core.math.units.Micrometer
 import lucuma.core.model.*
 import lucuma.core.syntax.all.*
-import lucuma.core.util.Display
 import lucuma.core.util.NewType
 import lucuma.core.util.TimeSpan
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
 import lucuma.schemas.model.BasicConfiguration
-import lucuma.typed.{tanstackTableCore => raw}
 import lucuma.typed.{tanstackVirtualCore => rawVirtual}
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.ColumnSize.*
 import lucuma.ui.table.TableHooks
 import lucuma.ui.table.*
-import lucuma.utils.*
-import queries.schemas.odb.ObsQueries.*
 import react.circularprogressbar.CircularProgressbar
 import react.common.Css
 import react.common.ReactFnProps
 import react.floatingui.Placement
 import react.floatingui.syntax.*
 import react.primereact.Button
-import workers.given
 
 import java.text.DecimalFormat
-import java.util.UUID
 import scala.collection.decorators.*
 import scala.concurrent.duration.*
 
@@ -116,14 +94,8 @@ private object SpectroscopyModesTable extends TableHooks:
     inline def Scroll   = ScrollTo(true)
     inline def NoScroll = ScrollTo(false)
 
-  private given Reusability[EitherNec[ItcQueryProblems, ItcResult]]                        = Reusability.byEq
-  private given Reusability[SpectroscopyModesMatrix]                                       = Reusability.by(_.matrix.length)
-  private given Reusability[ItcResultsCache]                                               = Reusability.by(_.cache.size)
-  private given Reusability[Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]] =
-    Reusability.never
-
-  private given Eq[Range.Inclusive]          = Eq.by(x => (x.start, x.end, x.step))
-  private given Reusability[Range.Inclusive] = Reusability.byEq
+  private given Reusability[SpectroscopyModesMatrix] = Reusability.by(_.matrix.length)
+  private given Reusability[ItcResultsCache]         = Reusability.by(_.cache.size)
 
   private case class SpectroscopyModeRowWithResult(
     entry:  SpectroscopyModeRow,
@@ -136,18 +108,12 @@ private object SpectroscopyModesTable extends TableHooks:
 
   private val decFormat = new DecimalFormat("0.###")
 
-  private val gratingDisplay: Display[ModeGrating] = Display.byShortName {
-    case ModeGrating.NoGrating      => "-"
-    case ModeGrating.SomeGrating(t) => t
-  }
-
   private def column[V](
     id:       ColumnId,
     accessor: SpectroscopyModeRowWithResult => V
   ): ColumnDef.Single[SpectroscopyModeRowWithResult, V] =
     ColDef(id, accessor, columnNames.getOrElse(id, id.value))
 
-  private val SelectedColumnId: ColumnId           = ColumnId("selected")
   private val InstrumentColumnId: ColumnId         = ColumnId("instrument")
   private val SlitWidthColumnId: ColumnId          = ColumnId("slit_width")
   private val SlitLengthColumnId: ColumnId         = ColumnId("slit_length")
@@ -199,7 +165,6 @@ private object SpectroscopyModesTable extends TableHooks:
 
   private given Order[InstrumentRow#Grating] = Order.by(_.toString)
   private given Order[InstrumentRow#Filter]  = Order.by(_.toString)
-  private given Order[InstrumentRow#FPU]     = Order.by(_.toString)
   private given Order[BasicConfigAndItc]     = Order.by(_.configuration.configurationSummary)
   private given Order[TimeSpan | Unit]       = Order.by(_.toOption)
 
@@ -254,11 +219,6 @@ private object SpectroscopyModesTable extends TableHooks:
   private def columns(
     cw:                Option[Wavelength],
     fpu:               Option[FocalPlane],
-    sn:                Option[SignalToNoise],
-    snAt:              Option[Wavelength],
-    constraints:       ConstraintSet,
-    target:            Option[ItcTarget],
-    itc:               ItcResultsCache,
     progress:          Option[Progress],
     timeSortDirection: Option[SortDirection]
   ) =
@@ -375,13 +335,6 @@ private object SpectroscopyModesTable extends TableHooks:
       .map(selected => rows.indexWhere(_.equalsConf(selected, cw)))
       .filterNot(_ === -1)
 
-  private def getVisibleOriginalRows(
-    visibleRange: Range,
-    rows:         List[SpectroscopyModeRow]
-  ): List[SpectroscopyModeRow] =
-    (for i <- visibleRange.start to visibleRange.end
-    yield rows.get(i)).toList.flattenOption
-
   private val ScrollOptions =
     rawVirtual.mod
       .ScrollToOptions()
@@ -436,7 +389,7 @@ private object SpectroscopyModesTable extends TableHooks:
          rows,
          itcResults.value
         )
-      } { (_, _, _, _, _) => (wavelength, sn, snAt, targets, constraints, rows, itcResults) =>
+      } { (_, _, _, _, _) => (_, _, _, _, _, rows, _) =>
         rows.value
           .map(_.result)
           .collect { case Left(p) =>
@@ -455,11 +408,6 @@ private object SpectroscopyModesTable extends TableHooks:
       .useMemoBy { (props, _, itcResults, _, itcProgress, _, timeSortDirection) => // Memo Cols
         (props.spectroscopyRequirements.wavelength,
          props.spectroscopyRequirements.focalPlane,
-         props.spectroscopyRequirements.signalToNoise,
-         props.spectroscopyRequirements.signalToNoiseAt,
-         props.brightestTarget,
-         props.constraints,
-         itcResults.value,
          itcProgress.value,
          timeSortDirection.value
         )
@@ -467,22 +415,12 @@ private object SpectroscopyModesTable extends TableHooks:
         (_, _, _, _, _, _, _) => (
           wavelength,
           focalPlane,
-          sn,
-          signalToNoiseAt,
-          targets,
-          constraints,
-          itcResults,
           itcProgress,
           timeSortDirection
         ) =>
           columns(
             wavelength,
             focalPlane,
-            sn,
-            signalToNoiseAt,
-            constraints,
-            targets,
-            itcResults,
             itcProgress,
             timeSortDirection
           )

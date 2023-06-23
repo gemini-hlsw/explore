@@ -16,13 +16,10 @@ import explore.*
 import explore.common.ProgramQueries
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.Focused
 import explore.model.ProgramInfo
 import explore.model.ProgramInfoList
-import explore.model.enums.AppTab
 import explore.model.reusability.given
 import explore.syntax.ui.*
-import explore.utils.*
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.VdomNode
@@ -33,19 +30,14 @@ import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB
-import lucuma.typed.{tanstackTableCore => raw}
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.utils.*
 import org.typelevel.log4cats.Logger
-import queries.common.ProgramQueriesGQL.*
 import react.common.ReactFnProps
-import react.floatingui.Placement
-import react.floatingui.syntax.*
 import react.primereact.Button
 
 case class ProgramTable(
@@ -65,7 +57,6 @@ object ProgramTable:
   private type IsAdding = IsAdding.Type
 
   private object ShowDeleted extends NewType[Boolean]
-  private type ShowDeleted = ShowDeleted.Type
 
   private given Reusability[Map[Program.Id, ProgramInfo]] = Reusability.map
   private given Reusability[ProgramInfoList]              = Reusability.by(_.unsorted)
@@ -97,15 +88,6 @@ object ProgramTable:
     Logger[IO]
   ): Callback =
     ProgramQueries.updateProgramName[IO](pinf.id, pinf.name).runAsync
-
-  private def onNewData(
-    isRequired: Boolean,
-    programs:   List[ProgramInfo],
-    ctx:        AppContext[IO]
-  ): IO[Unit] =
-    (isRequired, programs) match
-      case (true, head :: Nil) => ctx.replacePage(AppTab.Overview, head.id, Focused.None).toAsync
-      case _                   => IO.unit
 
   private val ActionsColumnId: ColumnId = ColumnId("actions")
   private val IdColumnId: ColumnId      = ColumnId("id")

@@ -10,33 +10,21 @@ import cats.effect.IO
 import cats.syntax.all.*
 import clue.data.syntax.*
 import coulomb.Quantity
-import coulomb.ops.algebra.spire.all.given
-import coulomb.policy.spire.standard.given
-import coulomb.syntax.*
-import crystal.Pot
 import crystal.react.View
 import crystal.react.hooks.*
 import eu.timepit.refined.api.Refined
-import eu.timepit.refined.auto.*
-import eu.timepit.refined.cats.*
-import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.Aligner
-import explore.common.ScienceQueries.*
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
-import explore.config.ExposureTimeModeType.*
 import explore.config.sequence.SequenceEditorPopup
-import explore.given
 import explore.model.AppContext
 import explore.model.BasicConfigAndItc
 import explore.model.ExploreModelValidators
-import explore.model.OdbItcResult
 import explore.model.ScienceRequirements
 import explore.model.display.given
-import explore.model.reusability.given
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.ModeCommonWavelengths
@@ -46,26 +34,20 @@ import explore.modes.SpectroscopyModeRow
 import explore.modes.SpectroscopyModesMatrix
 import explore.optics.*
 import explore.optics.all.*
-import explore.utils.*
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.util.Effect
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.*
 import lucuma.core.math.BoundedInterval
-import lucuma.core.math.BoundedInterval.*
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDelta
 import lucuma.core.math.WavelengthDither
-import lucuma.core.math.units.Micrometer
-import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.syntax.all.*
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
-import lucuma.core.util.TimeSpan
 import lucuma.core.validation.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.WavelengthInput
@@ -77,22 +59,17 @@ import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.given
-import lucuma.utils.*
 import monocle.Lens
 import mouse.boolean.*
 import org.typelevel.log4cats.Logger
-import queries.schemas.odb.ObsQueries.*
 import react.common.Css
 import react.common.ReactFnProps
 import react.fa.IconSize
 import react.floatingui.syntax.*
 import react.primereact.Button
 import react.primereact.PrimeStyles
-
-import java.time.Duration
 
 import scalajs.js
 import scalajs.js.JSConverters.*
@@ -219,8 +196,6 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
       { case (r, g) => s"${r.longName}, ${g.longName} Gain" }
     )
 
-  private val itcNoneMsg = "No ITC Results"
-
   private val wavelengthChangeAuditor =
     ChangeAuditor
       .fromInputValidWedge(ExploreModelValidators.wavelengthValidWedge)
@@ -283,15 +258,9 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
   // If the view contains `none`, `get` returns the default value. When setting,
   // if the new value is the default value, set it to none.
   extension [A: Eq](view: View[Option[A]])
-    private def withDefault(default: A): View[Option[A]]                 =
+    private def withDefault(default: A): View[Option[A]] =
       view.zoom(_.orElse(default.some))(f =>
         b => f(b).flatMap(newB => if (newB === default) none else newB.some)
-      )
-    private def withOptionalDefault(default: Option[A]): View[Option[A]] =
-      default.fold(view)(d =>
-        view.zoom(_.orElse(default))(f =>
-          b => f(b).flatMap(newB => if (newB === d) none else newB.some)
-        )
       )
 
   private def customized(original: String, toRevert: Callback): VdomNode =

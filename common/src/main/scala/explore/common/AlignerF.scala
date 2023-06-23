@@ -4,7 +4,6 @@
 package explore.common
 
 import cats.MonadError
-import cats.syntax.all.*
 import crystal.react.*
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.Reusability

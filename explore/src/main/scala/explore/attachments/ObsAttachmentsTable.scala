@@ -8,7 +8,6 @@ import cats.effect.IO
 import cats.syntax.all.*
 import crystal.Pot
 import crystal.react.*
-import crystal.react.*
 import crystal.react.given
 import crystal.react.hooks.*
 import crystal.react.reuse.*
@@ -26,7 +25,6 @@ import explore.model.ObsAttachment
 import explore.model.ObsAttachmentAssignmentMap
 import explore.model.ObsAttachmentList
 import explore.model.enums.AppTab
-import explore.model.reusability.given
 import explore.syntax.ui.*
 import explore.utils.OdbRestClient
 import explore.utils.*
@@ -38,11 +36,8 @@ import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.{ObsAttachment => ObsAtt}
 import lucuma.core.syntax.all.*
-import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
-import lucuma.core.util.NewType
 import lucuma.core.util.Timestamp
-import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Enums.ObsAttachmentType
@@ -51,12 +46,9 @@ import lucuma.ui.primereact.EnumDropdownView
 import lucuma.ui.primereact.LucumaStyles
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.utils.*
-import monocle.Iso
-import monocle.Lens
 import org.scalajs.dom.{File => DomFile}
 import org.typelevel.log4cats.Logger
 import react.common.ReactFnProps
@@ -66,7 +58,6 @@ import react.floatingui.syntax.*
 import react.primereact.Button
 import react.primereact.ConfirmPopup
 import react.primereact.Dialog
-import react.primereact.Message
 import react.primereact.PrimeStyles
 
 import java.time.Instant
@@ -192,7 +183,7 @@ object ObsAttachmentsTable extends TableHooks with ObsAttachmentUtils:
 
             val updateUrlMap =
               urlMap.mod { umap =>
-                val filteredMap = umap.filter((k, v) => allCurrentKeys.contains(k))
+                val filteredMap = umap.filter((k, _) => allCurrentKeys.contains(k))
                 newOas.foldRight(filteredMap)((key, m) => m.updated(key, Pot.pending))
               }.toAsync
             val getUrls      =

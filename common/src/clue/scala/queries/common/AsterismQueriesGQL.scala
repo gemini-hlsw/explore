@@ -6,9 +6,6 @@ package queries.common
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import lucuma.schemas.ObservationDB
-import lucuma.schemas.odb.*
-
-// gql: import lucuma.schemas.decoders.given
 
 object AsterismQueriesGQL {
   @GraphQL

@@ -3,19 +3,12 @@
 
 package explore.utils
 
-import cats.Applicative
 import cats.Endo
-import cats.Monad
-import cats.Monoid
 import cats.effect.*
-import cats.effect.syntax.all.*
 import cats.syntax.all.*
 import clue.data.*
 import clue.data.syntax.*
-import crystal.Pot
-import crystal.PotOption
 import crystal.react.*
-import crystal.react.reuse.*
 import eu.timepit.refined.*
 import eu.timepit.refined.types.numeric.NonNegLong
 import eu.timepit.refined.types.string.NonEmptyString
@@ -28,8 +21,6 @@ import explore.model.enums.ExecutionEnvironment.Development
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.util.NewType
-import lucuma.ui.enums.Theme
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.versionDateFormatter
 import lucuma.ui.utils.versionDateTimeFormatter
@@ -45,9 +36,7 @@ import react.primereact.ToastRef
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
-import scala.concurrent.duration.*
 import scala.scalajs.js
-import scala.scalajs.js.JSConverters.*
 
 val canvasWidth  = VdomAttr("width")
 val canvasHeight = VdomAttr("height")

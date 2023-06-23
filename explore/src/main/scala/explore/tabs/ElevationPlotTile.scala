@@ -10,12 +10,10 @@ import explore.targeteditor.ElevationPlotSection
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Site
-import lucuma.core.math.Coordinates
 import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.User
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 
 import java.time.Instant

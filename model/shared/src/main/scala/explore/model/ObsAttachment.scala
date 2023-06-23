@@ -4,9 +4,7 @@
 package explore.model
 
 import cats.Eq
-import cats.Order.*
 import cats.derived.*
-import cats.syntax.all.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.Decoder
@@ -17,8 +15,6 @@ import lucuma.core.util.Timestamp
 import lucuma.schemas.ObservationDB.Enums.ObsAttachmentType
 import monocle.Focus
 import monocle.Lens
-
-import scala.collection.immutable.SortedSet
 
 case class ObsAttachment(
   id:             model.ObsAttachment.Id,

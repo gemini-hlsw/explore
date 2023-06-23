@@ -6,7 +6,6 @@ package explore.targeteditor
 import _root_.react.common.*
 import _root_.react.primereact.Message
 import cats.Endo
-import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
@@ -14,38 +13,26 @@ import clue.data.syntax.*
 import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
-import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.string.*
 import explore.DefaultErrorPolicy
 import explore.common.*
 import explore.components.HelpIcon
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
-import explore.components.undo.UndoButtons
 import explore.model.AladinFullScreen
 import explore.model.AppContext
 import explore.model.Asterism
 import explore.model.ExploreModelValidators
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
-import explore.model.PAProperties
-import explore.model.enums.AgsState
-import explore.model.formats.*
-import explore.model.util.*
-import explore.optics.all.given
 import explore.syntax.ui.*
 import explore.undo.UndoSetter
 import explore.utils.*
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.hooks.Hooks
 import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.data.Zipper
 import lucuma.core.math.*
 import lucuma.core.math.validation.MathValidators
-import lucuma.core.model.ConstraintSet
-import lucuma.core.model.PosAngleConstraint
-import lucuma.core.model.Program
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.Target
 import lucuma.core.model.User
@@ -53,7 +40,6 @@ import lucuma.core.validation.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
-import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.*
 import lucuma.schemas.odb.input.*
 import lucuma.ui.input.ChangeAuditor
@@ -85,13 +71,6 @@ case class SiderealTargetEditor(
 
 object SiderealTargetEditor:
   private type Props = SiderealTargetEditor
-
-  private def readonlyView[A](view: View[A]): View[A] = {
-    val getA: A => A               = identity
-    val noModA: (A => A) => A => A = _ => identity
-
-    view.zoom(getA)(noModA)
-  }
 
   private def cloneTarget(targetId: Target.Id, obsIds: ObsIdSet)(using
     FetchClient[IO, ObservationDB]

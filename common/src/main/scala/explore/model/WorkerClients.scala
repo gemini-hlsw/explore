@@ -10,7 +10,6 @@ import cats.effect.Resource
 import cats.effect.std.Dispatcher
 import cats.syntax.all.*
 import explore.events.*
-import explore.model.boopickle.ItcPicklers.given
 import org.scalajs.dom
 import org.typelevel.log4cats.Logger
 import workers.WorkerClient

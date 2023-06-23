@@ -3,34 +3,17 @@
 
 package explore.common
 
-import cats.Eq
-import cats.Order
 import cats.effect.Async
 import cats.implicits.*
 import clue.FetchClient
 import clue.data.syntax.*
 import explore.DefaultErrorPolicy
-import explore.data.KeyedIndexedList
-import explore.model.AsterismGroup
-import explore.model.AsterismGroupList
-import explore.model.AsterismIds
-import explore.model.ConstraintGroupList
-import explore.model.ObsIdSet
-import explore.model.ObsSummary
-import explore.model.ObservationList
-import explore.model.ProgramSummaries
-import explore.model.TargetList
-import explore.model.TargetWithObs
-import explore.model.TargetWithObsList
-import japgolly.scalajs.react.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
-import lucuma.ui.reusability.given
-import monocle.Getter
 import queries.common.AsterismQueriesGQL.*
 import queries.common.ObsQueriesGQL.*
 

@@ -3,10 +3,8 @@
 
 package explore.shortcuts
 
-import eu.timepit.refined.types.string.NonEmptyString
 import japgolly.scalajs.react.Callback
 import lucuma.core.util.NewType
-import lucuma.refined.*
 import react.hotkeys.HotkeysCallback
 import react.hotkeys.HotkeysEvent
 

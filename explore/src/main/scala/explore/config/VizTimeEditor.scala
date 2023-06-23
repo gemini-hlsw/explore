@@ -4,16 +4,13 @@
 package explore.config
 
 import cats.syntax.all.*
-import crystal.Pot
 import crystal.react.View
-import eu.timepit.refined.auto.*
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.refined.*
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.datepicker.*

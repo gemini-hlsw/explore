@@ -7,8 +7,6 @@ import explore.model.ExploreLocalPreferences
 import explore.model.RootModel
 import explore.model.UserVault
 import explore.model.arb.all.*
-import lucuma.core.util.arb.ArbEnumerated.*
-import lucuma.core.util.arb.ArbGid.*
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.*
 import org.scalacheck.Cogen

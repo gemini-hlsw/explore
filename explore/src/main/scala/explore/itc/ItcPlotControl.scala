@@ -6,7 +6,6 @@ package explore.itc
 import cats.syntax.all.*
 import crystal.react.ViewOpt
 import explore.components.ui.ExploreStyles
-import explore.model.display.given
 import explore.model.itc.PlotDetails
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -17,13 +16,10 @@ import lucuma.refined.*
 import lucuma.ui.primereact.SelectButtonEnumView
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.Prism
 import react.common.ReactFnProps
 import react.primereact.Button
-import react.primereact.SelectButton
-import react.primereact.SelectItem
 
 case class ItcPlotControl(
   chartType:   ViewOpt[ChartType],

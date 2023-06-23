@@ -11,12 +11,9 @@ import explore.components.ui.ExploreStyles
 import explore.itc.ItcGraphPanel
 import explore.itc.ItcPanelTitle
 import explore.itc.ItcProps
-import explore.model.BasicConfigAndItc
 import explore.model.LoadingState
 import explore.model.TargetList
 import explore.model.itc.ItcChartResult
-import explore.model.itc.ItcExposureTime
-import explore.model.itc.ItcResult
 import explore.model.itc.ItcTarget
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation

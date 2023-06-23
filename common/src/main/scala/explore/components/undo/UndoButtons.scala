@@ -5,14 +5,10 @@ package explore.components.undo
 
 import explore.Icons
 import explore.components.ui.ExploreStyles
-import explore.syntax.ui.*
-import explore.syntax.ui.given
 import explore.undo.Undoer
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.typed.primereact.primereactStrings.outlined
 import lucuma.ui.primereact.*
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.primereact.Button

@@ -17,7 +17,6 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Focused
-import explore.model.ModelUndoStacks
 import explore.model.ProgramInfoList
 import explore.model.ProgramSummaries
 import explore.model.enums.AppTab
@@ -26,11 +25,8 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
 import lucuma.core.util.NewType
-import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-
-import scalajs.js.JSConverters.*
 
 case class ProgramsPopup(
   currentProgramId: Option[Program.Id],
@@ -44,7 +40,6 @@ object ProgramsPopup {
   private type Props = ProgramsPopup
 
   private object IsOpen extends NewType[Boolean]
-  private type IsOpen = IsOpen.Type
 
   private def selectProgram(
     onClose:    Option[Callback],

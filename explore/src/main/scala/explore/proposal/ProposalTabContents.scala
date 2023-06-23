@@ -9,7 +9,6 @@ import clue.FetchClient
 import clue.data.syntax.*
 import crystal.react.*
 import crystal.react.hooks.*
-import eu.timepit.refined.auto.*
 import explore.DefaultErrorPolicy
 import explore.Icons
 import explore.Resources
@@ -39,8 +38,6 @@ import queries.common.ProgramQueriesGQL.*
 import react.common.ReactFnProps
 import react.primereact.Button
 import react.primereact.Image
-
-import java.time.Duration
 
 case class ProposalTabContents(
   programId:  Program.Id,

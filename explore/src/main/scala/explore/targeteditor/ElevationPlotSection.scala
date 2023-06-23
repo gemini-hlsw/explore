@@ -6,16 +6,12 @@ package explore.targeteditor
 import _root_.react.common.ReactFnProps
 import _root_.react.datepicker.*
 import _root_.react.primereact.Button
-import _root_.react.primereact.SelectButton
-import _root_.react.primereact.SelectItem
 import _root_.react.primereact.ToggleButton
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.FetchClient
 import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
-import eu.timepit.refined.auto.*
 import explore.*
 import explore.common.UserPreferencesQueries.*
 import explore.components.HelpIcon
@@ -26,23 +22,17 @@ import explore.model.display.given
 import explore.model.enums.PlotRange
 import explore.model.enums.TimeDisplay
 import explore.model.enums.Visible
-import explore.model.reusability.given
-import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Site
 import lucuma.core.enums.TimingWindowInclusion
 import lucuma.core.math.BoundedInterval
-import lucuma.core.math.Coordinates
 import lucuma.core.model.CoordinatesAtVizTime
-import lucuma.core.model.Semester
 import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.User
 import lucuma.core.syntax.display.given
-import lucuma.core.util.Enumerated
 import lucuma.refined.*
-import lucuma.schemas.model.ObservingMode
 import lucuma.ui.primereact.LucumaStyles
 import lucuma.ui.primereact.SelectButtonEnumView
 import lucuma.ui.primereact.*
@@ -51,9 +41,6 @@ import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import org.typelevel.cats.time.given
-import org.typelevel.log4cats.Logger
-import queries.common.UserPreferencesQueriesGQL.*
-import queries.schemas.UserPreferencesDB
 import spire.math.extras.interval.IntervalSeq
 
 import java.time.*
@@ -118,8 +105,7 @@ object ElevationPlotSection:
           )
           .runAsyncAndForget
       }
-      .render { (props, ctx, options) =>
-        import ctx.given
+      .render { (props, _, options) =>
 
         val siteView           = options.zoom(Pot.readyPrism.andThen(ElevationPlotOptions.site))
         val rangeView          = options.zoom(Pot.readyPrism.andThen(ElevationPlotOptions.range))

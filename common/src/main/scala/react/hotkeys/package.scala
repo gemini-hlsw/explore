@@ -5,7 +5,6 @@ package react.hotkeys
 
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.facade.React.HookDeps
-import japgolly.scalajs.react.vdom.TopNode
 import org.scalajs.dom
 
 import scala.scalajs.js

@@ -5,7 +5,6 @@ package explore.proposal
 
 import cats.syntax.all.*
 import crystal.react.*
-import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
@@ -21,11 +20,9 @@ import lucuma.refined.*
 import lucuma.ui.input.*
 import lucuma.ui.primereact.FormInputTextView
 import lucuma.ui.primereact.given
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.utils.*
-import monocle.function.Index
 import react.common.ReactFnProps
 import react.primereact.Button
 import react.primereact.Dialog

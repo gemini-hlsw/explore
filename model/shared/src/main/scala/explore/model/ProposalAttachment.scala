@@ -5,7 +5,6 @@ package explore.model
 
 import cats.Eq
 import cats.derived.*
-import cats.syntax.all.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.Decoder

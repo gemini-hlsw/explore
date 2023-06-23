@@ -10,7 +10,6 @@ import explore.model.Transformation
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.util.NewType
 import lucuma.core.validation.InputValidSplitEpi
 import lucuma.core.validation.InputValidWedge
 import lucuma.refined.*
@@ -20,7 +19,6 @@ import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.fa.Transform
-import react.primereact.Button
 import react.primereact.Divider
 
 case class ControlOverlay(ops: View[Transformation])

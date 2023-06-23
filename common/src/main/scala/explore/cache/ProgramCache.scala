@@ -10,7 +10,6 @@ import cats.syntax.all.*
 import clue.StreamingClient
 import clue.data.syntax.*
 import explore.DefaultErrorPolicy
-import explore.common.AsterismQueries.*
 import explore.model.GroupElement
 import explore.model.GroupObs
 import explore.model.Grouping
@@ -19,8 +18,6 @@ import explore.model.ObsSummary
 import explore.model.ProgramInfo
 import explore.model.ProgramSummaries
 import explore.model.ProposalAttachment
-import explore.model.TargetWithObs
-import explore.model.reusability.given
 import explore.model.syntax.all.*
 import japgolly.scalajs.react.*
 import lucuma.core.model.Observation
@@ -31,8 +28,6 @@ import lucuma.schemas.ObservationDB.Enums.EditType
 import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.model.TargetWithId
 import lucuma.ui.reusability.given
-import monocle.Focus
-import monocle.Lens
 import monocle.Traversal
 import queries.common.ObsQueriesGQL
 import queries.common.ProgramQueriesGQL

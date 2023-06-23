@@ -9,7 +9,6 @@ import cats.syntax.all.*
 import crystal.react.*
 import crystal.react.hooks.*
 import crystal.react.reuse.*
-import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.attachments.AttachmentType
 import explore.attachments.ObsAttachmentUtils
@@ -26,12 +25,9 @@ import lucuma.core.model.Program
 import lucuma.core.model.{ObsAttachment => ObsAtt}
 import lucuma.react.syntax.*
 import lucuma.react.table.*
-import lucuma.schemas.ObservationDB.Enums.ObsAttachmentType
-import lucuma.ui.primereact.LucumaStyles
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
-import lucuma.ui.utils.*
 import react.common.ReactFnProps
 import react.floatingui.Placement
 import react.floatingui.syntax.*
@@ -64,7 +60,7 @@ object AttachmentsOverlay extends ObsAttachmentUtils with FinderChartsAttachment
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .useStateView(Action.None)
-      .useMemoBy((props, _, _) => ())((p, _, action) =>
+      .useMemoBy((_, _, _) => ())((p, _, action) =>
         _ =>
 
           def column[V](id: ColumnId, accessor: ObsAttachment => V)

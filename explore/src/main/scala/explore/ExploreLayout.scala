@@ -6,7 +6,6 @@ package explore
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.*
-import eu.timepit.refined.types.string.NonEmptyString
 import explore.cache.ProgramCache
 import explore.components.state.IfLogged
 import explore.components.ui.ExploreStyles
@@ -15,8 +14,6 @@ import explore.model.*
 import explore.model.enums.AppTab
 import explore.shortcuts.*
 import explore.shortcuts.given
-import explore.syntax.ui.*
-import explore.syntax.ui.given
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.ResolutionWithProps
@@ -24,22 +21,14 @@ import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.broadcastchannel.*
 import lucuma.refined.*
-import lucuma.refined.*
-import lucuma.ui.primereact.*
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.*
-import react.fa.IconSize
 import react.hotkeys.*
 import react.hotkeys.hooks.*
-import react.primereact.MessageItem
 import react.primereact.Sidebar
 import react.primereact.Toast
 import react.primereact.ToastRef
 import react.primereact.hooks.all.*
-
-import scala.scalajs.js
-import scala.scalajs.js.annotation.JSExportTopLevel
 
 case class ExploreLayout(
   resolution: ResolutionWithProps[Page, View[RootModel]]

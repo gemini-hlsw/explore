@@ -7,7 +7,6 @@ import boopickle.DefaultBasic.*
 import cats.effect.Concurrent
 import cats.effect.Deferred
 import cats.effect.Resource
-import cats.effect.Sync
 import cats.effect.std.UUIDGen
 import cats.effect.syntax.all.*
 import cats.syntax.all.*

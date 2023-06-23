@@ -3,13 +3,10 @@
 
 package explore.targeteditor
 
-import cats.syntax.all.*
 import clue.data.syntax.*
 import crystal.react.hooks.*
-import eu.timepit.refined.auto.*
 import explore.common.*
 import explore.components.HelpIcon
-import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.enums.SourceProfileType
 import explore.utils.*
@@ -28,9 +25,7 @@ import lucuma.ui.primereact.FormInputTextView
 import lucuma.ui.primereact.FormLabel
 import lucuma.ui.primereact.LucumaStyles
 import lucuma.ui.primereact.given
-import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
-import queries.schemas.*
 import react.common.ReactFnProps
 
 case class SourceProfileEditor(

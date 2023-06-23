@@ -3,15 +3,12 @@
 
 package explore.users
 
-import boopickle.DefaultBasic.*
 import cats.effect.IO
 import cats.implicits.catsKernelOrderingForOrder
 import cats.syntax.all.*
 import clue.js.FetchJSClient
-import clue.js.FetchJSRequest
 import crystal.react.*
 import crystal.react.hooks.*
-import crystal.react.reuse.*
 import explore.DefaultErrorPolicy
 import explore.Icons
 import explore.components.ExploreCopy
@@ -23,7 +20,6 @@ import explore.model.display.given
 import explore.model.enums.RoleType
 import explore.model.reusability.given
 import explore.syntax.ui.*
-import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.StandardRole
@@ -40,14 +36,7 @@ import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.pot.*
 import lucuma.ui.table.*
-import lucuma.ui.utils.*
-import org.http4s.Credentials
-import org.http4s.Headers
-import org.http4s.headers.Authorization
-import org.http4s.syntax.all.*
-import org.typelevel.ci.*
 import org.typelevel.log4cats.Logger
-import queries.common.SSOQueriesGQL.UserQuery.{Data => SSOUser}
 import queries.common.SSOQueriesGQL.*
 import queries.schemas.SSO
 import react.common.ReactFnProps
@@ -60,7 +49,6 @@ object UserPreferencesPopup:
   private type Props = UserPreferencesPopup
 
   private object IsOpen extends NewType[Boolean]
-  private type IsOpen = IsOpen.Type
 
   private val component = ScalaFnComponent
     .withHooks[Props]
@@ -92,7 +80,6 @@ object UserPreferencesContent:
   private type IsActive = IsActive.Type
 
   private object IsCleaningTheCache extends NewType[Boolean]
-  private type IsCleaningTheCache = IsCleaningTheCache.Type
 
   private object NewKey extends NewType[Option[String]]
   private type NewKey = NewKey.Type

@@ -11,7 +11,6 @@ import explore.model.AladinFullScreen
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.primereact.*
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.aladin.Aladin
 import react.common.ReactFnProps

@@ -3,7 +3,6 @@
 
 package explore.syntax.ui
 
-import _root_.react.common.Css
 import _root_.react.primereact.Message
 import cats.*
 import cats.effect.MonadCancelThrow
@@ -12,14 +11,11 @@ import clue.ResponseException
 import clue.js.FetchJSRequest
 import crystal.*
 import crystal.react.*
-import explore.components.ui.ExploreStyles
 import explore.model.Constants
 import explore.model.UserVault
 import explore.utils.*
 import japgolly.scalajs.react.callback.Callback
 import japgolly.scalajs.react.util.Effect
-import japgolly.scalajs.react.vdom.VdomNode
-import org.scalablytyped.runtime.StringDictionary
 import org.scalajs.dom.Window
 import org.typelevel.log4cats.Logger
 

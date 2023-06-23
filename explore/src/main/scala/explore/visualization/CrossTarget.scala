@@ -10,7 +10,6 @@ import lucuma.ui.syntax.all.given
 import org.scalajs.dom.svg.SVG
 import react.common.Css
 import react.common.ReactFnProps
-import react.common.Style
 import react.floatingui.*
 import react.floatingui.hooks.*
 
@@ -49,7 +48,6 @@ object CrossTarget {
         List(middleware.useHover(h.context))
       }
       .render { (p, open, floating, _) =>
-        val side      = scale(p.maxP * p.radius)
         val areaSize  = scale(p.maxP * (2 * p.radius + 3))
         val targetSvg = <.g(
           <.rect(

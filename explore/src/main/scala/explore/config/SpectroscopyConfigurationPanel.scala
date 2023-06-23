@@ -5,9 +5,7 @@ package explore.config
 
 import cats.syntax.all.*
 import crystal.react.View
-import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
-import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
@@ -16,7 +14,6 @@ import explore.model.ExploreModelValidators
 import explore.model.ScienceRequirements
 import explore.model.display.given
 import explore.model.formats.*
-import explore.syntax.ui.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*

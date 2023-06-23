@@ -8,7 +8,6 @@ import cats.effect.*
 import cats.implicits.*
 import eu.timepit.refined.*
 import eu.timepit.refined.collection.NonEmpty
-import explore.common.RetryHelpers
 import explore.model.SSOConfig
 import explore.model.UserVault
 import io.circe.Decoder

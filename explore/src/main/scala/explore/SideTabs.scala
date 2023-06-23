@@ -3,17 +3,13 @@
 
 package explore
 
-import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.hooks.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.RoutingInfo
 import explore.model.enums.AppTab
-import explore.syntax.ui.*
-import explore.syntax.ui.given
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
@@ -21,14 +17,9 @@ import lucuma.refined.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import lucuma.ui.utils.*
 import react.common.Css
 import react.common.ReactFnProps
-import react.primereact.Button
-import react.primereact.Divider
-import react.primereact.SelectButton
 
 case class SideTabs(routingInfo: RoutingInfo) extends ReactFnProps(SideTabs.component)
 
@@ -46,8 +37,7 @@ object SideTabs:
         focus => selected.set(focus)
       )
       .render { (p, ctx, tabs) =>
-        val focus = p.routingInfo.appTab
-        val ri    = p.routingInfo
+        val ri = p.routingInfo
 
         val tabView = tabs.withOnMod(tab => ctx.pushPage(tab, ri.programId, ri.focused))
 

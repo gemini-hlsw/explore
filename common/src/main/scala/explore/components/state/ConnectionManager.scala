@@ -7,10 +7,7 @@ import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.*
 import crystal.react.hooks.*
-import eu.timepit.refined.types.string.NonEmptyString
-import explore.Icons
 import explore.components.SolarProgress
-import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.UserVault
 import explore.syntax.ui.*
@@ -22,7 +19,6 @@ import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 import react.common.ReactFnPropsWithChildren
-import react.fa.IconSize
 
 case class ConnectionManager(vault: UserVault, onConnect: IO[Unit])
     extends ReactFnPropsWithChildren(ConnectionManager.component):

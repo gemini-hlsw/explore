@@ -7,9 +7,7 @@ import clue.GraphQLSubquery
 import explore.model.GroupElement
 import explore.model.Grouping
 import lucuma.schemas.ObservationDB
-import lucuma.schemas.odb.*
 import clue.annotation.GraphQL
-// gql: import lucuma.schemas.decoders.given
 
 object GroupQueriesGQL:
 

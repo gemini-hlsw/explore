@@ -9,10 +9,6 @@ import eu.timepit.refined.scalacheck.all.given
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.boopickle.PicklerTests
-import explore.events.*
-import explore.model.boopickle.CatalogPicklers
-import explore.model.boopickle.CommonPicklers
-import explore.model.boopickle.ItcPicklers
 import lucuma.ags.GuideStarCandidate
 import lucuma.ags.arb.ArbGuideStarCandidate.given
 import lucuma.core.math.*

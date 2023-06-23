@@ -6,7 +6,6 @@ package explore.components.state
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.*
-import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.events.*
 import explore.model.UserVault

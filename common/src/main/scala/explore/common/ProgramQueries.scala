@@ -10,16 +10,12 @@ import clue.data.syntax.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.DefaultErrorPolicy
 import explore.model.ProgramInfo
-import japgolly.scalajs.react.*
 import lucuma.core.model.ObsAttachment
 import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Enums.*
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
-import lucuma.ui.reusability.given
-import monocle.Focus
-import monocle.Lens
 import queries.common.ProgramQueriesGQL.*
 
 object ProgramQueries:

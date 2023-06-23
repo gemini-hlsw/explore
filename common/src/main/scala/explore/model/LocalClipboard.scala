@@ -3,8 +3,6 @@
 
 package explore.model
 
-import lucuma.core.model.Observation
-
 sealed trait LocalClipboard
 
 object LocalClipboard:

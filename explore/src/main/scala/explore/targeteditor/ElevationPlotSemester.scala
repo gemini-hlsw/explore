@@ -6,37 +6,26 @@ package explore.targeteditor
 import cats.effect.IO
 import cats.effect.Resource
 import cats.syntax.all.*
-import crystal.react.given
 import crystal.react.hooks.*
-import crystal.react.reuse.*
 import explore.events.PlotMessage.*
 import explore.highcharts.*
 import explore.model.AppContext
 import explore.model.Constants
 import explore.model.WorkerClients.PlotClient
-import explore.model.boopickle.CommonPicklers.given
-import explore.syntax.*
-import explore.syntax.given
-import explore.syntax.ui.given
 import fs2.Stream
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Site
 import lucuma.core.math.BoundedInterval
 import lucuma.core.math.Coordinates
-import lucuma.core.math.Declination
 import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.Semester
-import lucuma.core.syntax.time.*
 import lucuma.typed.highcharts.highchartsStrings.line
 import lucuma.typed.highcharts.mod.*
-import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
-import react.common.GenericComponentPAF2VdomNode
 import react.common.ReactFnProps
 import react.highcharts.ResizingChart
 import react.resizeDetector.hooks.*
-import spire.math.Bounded
 
 import java.time.Duration
 import java.time.Instant
@@ -45,7 +34,6 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
-import scala.collection.immutable.TreeMap
 import scala.concurrent.duration.*
 import scala.scalajs.js
 
@@ -173,6 +161,7 @@ object ElevationPlotSemester:
                       .setZIndex(1000)
                       .setClassName("plot-plot-line-date")
                   )
+                  ()
                 }
               }
             ).orEmpty)

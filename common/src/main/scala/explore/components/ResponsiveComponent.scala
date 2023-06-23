@@ -6,8 +6,6 @@ package explore.components
 import cats.syntax.all.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.ui.syntax.all.*
-import lucuma.ui.syntax.all.given
 import react.common.Css
 import react.common.ReactFnPropsWithChildren
 import react.resizeDetector.hooks.*

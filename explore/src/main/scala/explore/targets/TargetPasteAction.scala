@@ -3,11 +3,9 @@
 
 package explore.targets
 
-import cats.Order.*
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
-import clue.data.syntax.*
 import crystal.react.*
 import explore.common.AsterismQueries
 import explore.data.KeyedIndexedList
@@ -18,16 +16,11 @@ import explore.model.ObsSummary
 import explore.model.ObservationList
 import explore.model.ProgramSummaries
 import explore.model.TargetIdSet
-import explore.model.TargetWithObs
 import explore.model.syntax.all.*
 import explore.undo.*
 import lucuma.core.model.Program
-import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
-import lucuma.schemas.ObservationDB.Types.*
-import lucuma.schemas.odb.input.*
 import monocle.Iso
-import queries.common.TargetQueriesGQL
 
 import scala.annotation.unused
 import scala.collection.immutable.SortedSet

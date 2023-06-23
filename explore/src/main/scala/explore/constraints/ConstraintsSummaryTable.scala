@@ -3,15 +3,10 @@
 
 package explore.constraints
 
-import cats.Functor
 import cats.Order.*
-import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.*
-import crystal.react.hooks.*
-import crystal.react.reuse.*
 import explore.Icons
-import explore.common.AsterismQueries.*
 import explore.common.UserPreferencesQueries.TableStore
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
@@ -22,9 +17,7 @@ import explore.model.Focused
 import explore.model.ObsIdSet
 import explore.model.enums.AppTab
 import explore.model.enums.TableId
-import explore.model.reusability.given
 import explore.model.syntax.all.*
-import explore.syntax.ui.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ConstraintSet
@@ -32,20 +25,14 @@ import lucuma.core.model.ElevationRange
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.User
-import lucuma.react.syntax.*
 import lucuma.react.table.*
-import lucuma.typed.{tanstackTableCore => raw}
 import lucuma.ui.reusability.given
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
-import org.scalablytyped.runtime.StringDictionary
 import react.common.Css
 import react.common.ReactFnProps
 
 import scala.collection.immutable.SortedSet
-
-import scalajs.js.JSConverters.*
 
 case class ConstraintsSummaryTable(
   userId:         Option[User.Id],
@@ -242,9 +229,7 @@ object ConstraintsSummaryTable extends TableHooks:
           TableStore(props.userId, TableId.ConstraintsSummary, cols)
         )
       )
-      .render { (props, ctx, _, _, table) =>
-        import ctx.given
-
+      .render { (props, _, _, _, table) =>
         <.div(
           props.renderInTitle(
             React.Fragment(

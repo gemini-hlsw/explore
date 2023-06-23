@@ -15,7 +15,6 @@ import explore.attachments.ObsAttachmentsTable
 import explore.components.Tile
 import explore.components.TileController
 import explore.model.AppContext
-import explore.model.ObsAttachment
 import explore.model.ObsAttachmentAssignmentMap
 import explore.model.ObsAttachmentList
 import explore.model.UserVault
@@ -25,12 +24,10 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
 import lucuma.refined.*
-import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.gridlayout.*
-import react.primereact.Button
 import react.resizeDetector.hooks.*
 
 case class OverviewTabContents(
@@ -90,10 +87,7 @@ object OverviewTabContents {
       // TODO: Save/restore the layout in user prefs.
       .useStateView(Pot(defaultLayouts))
       .useResizeDetector()
-      .render { (props, ctx, layouts, resize) =>
-
-        import ctx.given
-
+      .render { (props, _, layouts, resize) =>
         layouts.renderPotView { l =>
 
           val warningsAndErrorsTile = Tile(

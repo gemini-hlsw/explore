@@ -18,8 +18,6 @@ import explore.model.UserVault
 import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.ui.syntax.all.*
-import lucuma.ui.syntax.all.given
 import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.UserPreferencesDB
 import react.common.*
@@ -39,7 +37,7 @@ object IfLogged:
 
   private val component =
     ScalaFnComponent
-      .withHooks[IfLogged]
+      .withHooks[Props]
       .useContext(AppContext.ctx)
       .render { (props, ctx) =>
         import ctx.given

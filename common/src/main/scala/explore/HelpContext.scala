@@ -6,13 +6,10 @@ package explore
 import cats.syntax.all.*
 import crystal.react.View
 import crystal.react.hooks.*
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined.string.*
 import explore.model.Help
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.Context
 import japgolly.scalajs.react.vdom.html_<^.*
-import monocle.Focus
 import org.http4s.Uri
 import org.http4s.implicits.*
 

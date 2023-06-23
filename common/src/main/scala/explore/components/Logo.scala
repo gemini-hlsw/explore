@@ -4,16 +4,13 @@
 package explore.components
 
 import explore.components.ui.ExploreStyles
-import explore.syntax.ui.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 
 object Logo {
-  def apply() = component()
 
-  protected val component = ScalaComponent.static(
+  val component = ScalaComponent.static(
     <.div(ExploreStyles.LoginTitleWrapper)(
       <.div(ExploreStyles.LoginTitle, "Explore")
     )

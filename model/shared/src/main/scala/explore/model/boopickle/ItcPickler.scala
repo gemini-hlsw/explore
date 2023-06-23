@@ -4,10 +4,8 @@
 package explore.model.boopickle
 
 import boopickle.DefaultBasic.*
-import cats.data.NonEmptyMap
 import cats.implicits.*
 import coulomb.Quantity
-import eu.timepit.refined.types.numeric.NonNegBigDecimal
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string.NonEmptyString

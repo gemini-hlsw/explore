@@ -7,7 +7,6 @@ import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import lucuma.core.model.sequence.*
 import lucuma.schemas.ObservationDB
-import lucuma.schemas.decoders.given
 import lucuma.schemas.odb.*
 // gql: import lucuma.odb.json.sequence.given
 
@@ -58,7 +57,7 @@ object GeneratedSequenceSQL:
               }
               setup {
                 ...setupTimeFields
-              }        
+              }
             }
           }
         }
@@ -91,8 +90,8 @@ object GeneratedSequenceSQL:
         }
       }
 
-      fragment stepConfigFields on StepConfig { 
-        stepType  
+      fragment stepConfigFields on StepConfig {
+        stepType
         ... on Gcal {
           continuum
           arcs
@@ -113,7 +112,7 @@ object GeneratedSequenceSQL:
       }
 
       fragment stepEstimateFields on StepEstimate {
-        configChange { 
+        configChange {
           all {
             name
             description

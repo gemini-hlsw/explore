@@ -4,7 +4,6 @@
 package explore.model.enums
 
 import cats.syntax.all.*
-import eu.timepit.refined.auto.*
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.util.Enumerated

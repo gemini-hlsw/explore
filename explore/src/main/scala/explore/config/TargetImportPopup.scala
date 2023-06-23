@@ -5,31 +5,25 @@ package explore.targets
 
 import cats.*
 import cats.effect.*
-import cats.effect.syntax.all.*
 import cats.syntax.all.*
 import clue.FetchClient
 import crystal.react.*
-import crystal.react.reuse.*
 import explore.DefaultErrorPolicy
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.Constants
 import explore.utils.ToastCtx
 import fs2.*
 import fs2.text
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.catalog.csv.TargetImport
-import lucuma.core.enums.StellarLibrarySpectrum
 import lucuma.core.model.Program
 import lucuma.core.model.Target
-import lucuma.core.model.UnnormalizedSED
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.odb.input.*
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import monocle.Focus
@@ -149,9 +143,7 @@ object TargetImportPopup:
       .useMemoBy((_, _, state, _) => state.value.targetErrors.length) { (props, _, state, _) => _ =>
         state.value.targetErrors
       }
-      .useReactTableBy((props, ctx, _, cols, rows) =>
-        import ctx.given
-
+      .useReactTableBy((props, _, _, cols, rows) =>
         TableOptions(
           cols,
           rows,

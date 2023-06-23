@@ -4,10 +4,8 @@
 package explore.itc
 
 import cats.data.NonEmptyList
-import cats.syntax.all.*
 import explore.components.ui.ExploreStyles
 import explore.model.itc.ItcExposureTime
-import explore.model.itc.ItcTarget
 import explore.model.itc.math.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -18,7 +16,6 @@ import lucuma.core.math.dimensional.Units
 import lucuma.itc.FinalSN
 import lucuma.itc.ItcCcd
 import lucuma.itc.SingleSN
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 

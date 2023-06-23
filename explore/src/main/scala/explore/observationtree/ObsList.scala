@@ -5,8 +5,6 @@ package explore.observationtree
 
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.FetchClient
-import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
@@ -20,10 +18,8 @@ import explore.model.GroupList
 import explore.model.Grouping
 import explore.model.enums.AppTab
 import explore.model.reusability.given
-import explore.observationtree.ObsBadge
 import explore.syntax.ui.*
 import explore.tabs.DeckShown
-import explore.undo.KIListMod
 import explore.undo.UndoSetter
 import explore.undo.Undoer
 import explore.utils.*
@@ -35,17 +31,14 @@ import lucuma.core.model.Group
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
-import lucuma.schemas.ObservationDB
 import lucuma.typed.primereact.treeTreeMod.TreeNodeTemplateOptions
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
 import monocle.Lens
 import org.scalajs.dom
 import org.scalajs.dom.Element
-import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries
 import react.common.ReactFnProps
 import react.primereact.Button
@@ -114,8 +107,6 @@ object ObsList:
       .useState(none[Int])
       .useEffectWithDepsBy((props, _, _) => (props.focusedObs, props.observations.get)) {
         (props, ctx, optIndex) => params =>
-          import ctx.given
-
           val (focusedObs, obsList) = params
 
           focusedObs.fold(optIndex.setState(none)) { obsId =>

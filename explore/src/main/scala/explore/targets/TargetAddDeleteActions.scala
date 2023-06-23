@@ -3,18 +3,12 @@
 
 package explore.targets
 
-import cats.Order.*
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
 import explore.DefaultErrorPolicy
-import explore.common.AsterismQueries
-import explore.model.AsterismGroup
-import explore.model.ObsIdSet
 import explore.model.ProgramSummaries
-import explore.model.TargetWithObs
-import explore.model.syntax.all.*
 import explore.undo.*
 import lucuma.core.model.Program
 import lucuma.core.model.Target

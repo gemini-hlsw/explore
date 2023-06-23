@@ -4,7 +4,6 @@
 package explore.model
 
 import cats.kernel.laws.discipline.EqTests
-import explore.model.RootModel
 import explore.model.arb.ArbRootModel
 import munit.DisciplineSuite
 

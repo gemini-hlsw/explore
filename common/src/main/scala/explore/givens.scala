@@ -8,25 +8,16 @@ import cats.data.NonEmptyList
 import cats.effect.Temporal
 import cats.effect.kernel.Resource
 import cats.syntax.all.*
-import clue.*
 import crystal.*
 import crystal.react.ReuseViewF
 import crystal.react.ReuseViewOptF
 import crystal.react.reuse.*
-import explore.events.*
-import explore.model.AppContext
 import explore.optics.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.*
-import lucuma.schemas.*
 import org.scalajs.dom
-import org.typelevel.log4cats.Logger
-import queries.schemas.*
-import workers.WorkerClient
 
 import scala.annotation.targetName
-import scala.annotation.unused
-import scala.collection.immutable.SortedMap
 import scala.concurrent.duration.*
 
 extension [F[_], A](view: ReuseViewF[F, A])

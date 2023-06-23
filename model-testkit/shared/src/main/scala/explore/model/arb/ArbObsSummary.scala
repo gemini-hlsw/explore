@@ -23,8 +23,6 @@ import lucuma.core.util.TimeSpan
 import lucuma.core.util.arb.ArbEnumerated.given
 import lucuma.core.util.arb.ArbGid.given
 import lucuma.core.util.arb.ArbTimeSpan
-import lucuma.schemas.model.BasicConfiguration
-import lucuma.schemas.model.arb.ArbBasicConfiguration
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Cogen
@@ -33,14 +31,11 @@ import cats.Order.given
 import java.time.Instant
 import lucuma.core.model.ConstraintSet
 import scala.collection.immutable.SortedSet
-import explore.model.ObsSummary.scienceRequirements
-import explore.model.ObsSummary.observingMode
 import explore.model.ScienceRequirements
 import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.model.arb.ArbObservingMode
 
 trait ArbObsSummary:
-  import ArbBasicConfiguration.given
   import ArbTimeSpan.given
   import ArbTime.given
   import ArbScienceRequirements.given

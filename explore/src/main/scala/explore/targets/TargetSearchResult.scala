@@ -5,13 +5,11 @@ package explore.targets
 
 import cats.Eq
 import cats.syntax.all.*
-import explore.model.Constants
 import japgolly.scalajs.react.ReactCats.*
 import japgolly.scalajs.react.Reusability
 import lucuma.catalog.AngularSize
 import lucuma.catalog.CatalogTargetResult
 import lucuma.core.model.CatalogInfo
-import lucuma.core.model.SourceProfile
 import lucuma.core.model.Target
 import lucuma.schemas.model.TargetWithOptId
 

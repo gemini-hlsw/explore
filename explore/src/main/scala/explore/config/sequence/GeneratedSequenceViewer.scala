@@ -10,7 +10,6 @@ import crystal.react.given
 import crystal.react.hooks.*
 import explore.*
 import explore.model.AppContext
-import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation

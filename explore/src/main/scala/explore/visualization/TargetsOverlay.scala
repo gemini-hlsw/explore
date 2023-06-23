@@ -15,7 +15,6 @@ import japgolly.scalajs.react.vdom.svg_<^.*
 import lucuma.core.enums.SequenceType
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
-import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import org.scalajs.dom.svg.SVG
 import react.aladin.Fov

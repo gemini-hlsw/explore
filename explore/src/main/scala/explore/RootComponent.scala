@@ -6,7 +6,6 @@ package explore
 import cats.effect.IO
 import crystal.react.View
 import crystal.react.hooks.*
-import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Page
 import explore.model.RootModel

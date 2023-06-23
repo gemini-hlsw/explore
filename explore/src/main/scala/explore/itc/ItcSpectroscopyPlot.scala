@@ -5,36 +5,27 @@ package explore.itc
 
 import cats.data.NonEmptyList
 import cats.syntax.all.*
-import crystal.Pot
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.highcharts.*
 import explore.model.LoadingState
 import explore.model.itc.*
-import explore.syntax.ui.*
-import explore.syntax.ui.given
-import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Wavelength
-import lucuma.core.util.Enumerated
 import lucuma.itc.ChartType
 import lucuma.itc.ItcCcd
-import lucuma.itc.SeriesDataType
 import lucuma.itc.client.OptimizedChartResult
-import lucuma.itc.client.OptimizedSeriesResult
 import lucuma.itc.math.roundToSignificantFigures
 import lucuma.refined.*
 import lucuma.typed.highcharts.highchartsStrings.line
 import lucuma.typed.highcharts.mod.DashStyleValue
 import lucuma.typed.highcharts.mod.*
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.highcharts.ResizingChart
 import react.resizeDetector.hooks.*
 
-import scala.collection.immutable.HashSet
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters.*
 
@@ -56,7 +47,6 @@ object ItcSpectroscopyPlot {
     chart:           OptimizedChartResult,
     targetName:      Option[String],
     loading:         LoadingState,
-    details:         PlotDetails,
     signalToNoiseAt: Option[Wavelength],
     maxSNWavelength: Option[Wavelength],
     height:          Double
@@ -234,7 +224,6 @@ object ItcSpectroscopyPlot {
         chart.chartType -> chartOptions(chart,
                                         props.targetName,
                                         props.loading,
-                                        props.details,
                                         props.signalToNoiseAt,
                                         maxSNWavelength,
                                         height
