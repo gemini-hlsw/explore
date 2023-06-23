@@ -172,16 +172,14 @@ object AsterismEditor extends AsterismModifier:
                 label = "Add"
               ).tiny.compact,
               onSelected = targetWithOptId =>
-                adding.async
-                  .useBoolSwitchBy(AreAdding(_))(
-                    insertSiderealTarget(
-                      props.programId,
-                      props.obsIds,
-                      props.asterismIds,
-                      props.allTargets,
-                      targetWithOptId
-                    ).flatMap(oTargetId => targetView.async.set(oTargetId))
-                  )
+                insertSiderealTarget(
+                  props.programId,
+                  props.obsIds,
+                  props.asterismIds,
+                  props.allTargets,
+                  targetWithOptId
+                ).flatMap(oTargetId => targetView.async.set(oTargetId))
+                  .switching(adding.async, AreAdding(_))
                   .runAsync
             )
           ),

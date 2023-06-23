@@ -147,7 +147,7 @@ private object BasicConfigurationPanel:
               icon = buttonIcon,
               disabled = creating.get.value || !canAccept,
               severity = Button.Severity.Secondary,
-              onClick = creating.async.useBoolSwitchBy(Creating(_))(props.createConfig).runAsync
+              onClick = props.createConfig.switching(creating.async, Creating(_)).runAsync
             ).compact.small.when(canAccept)
           ).when(spectroscopyView.get.isDefined)
         )

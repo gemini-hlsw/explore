@@ -100,14 +100,13 @@ object ObsList:
   ): IO[Unit] =
     import ctx.given
 
-    adding.async.useBoolSwitch(
-      createObservation[IO](programId)
-        .flatMap { obs =>
-          (obsExistence(programId, obs.id, o => setObs(programId, o.some, ctx))
-            .mod(undoCtx)(obsListMod.upsert(obs, pos)) <* scrollIfNeeded(obs.id))
-            .to[IO]
-        }
-    )
+    createObservation[IO](programId)
+      .flatMap { obs =>
+        (obsExistence(programId, obs.id, o => setObs(programId, o.some, ctx))
+          .mod(undoCtx)(obsListMod.upsert(obs, pos)) <* scrollIfNeeded(obs.id))
+          .to[IO]
+      }
+      .switching(adding.async)
 
   private val component =
     ScalaFnComponent

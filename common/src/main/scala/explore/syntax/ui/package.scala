@@ -4,7 +4,7 @@
 package explore.syntax.ui
 
 import cats.*
-import cats.effect.MonadCancel
+import cats.effect.MonadCancelThrow
 import cats.syntax.all.*
 import clue.ResponseException
 import clue.js.FetchJSRequest
@@ -54,7 +54,7 @@ extension (vault: UserVault)
     request
 
 extension [F[_]: ApplicativeThrow: ToastCtx, A](f: F[A])
-  def toastErrors: F[A]                                                                          =
+  def toastErrors: F[A] =
     f.onError {
       case ResponseException(errors, _) =>
         errors
@@ -69,20 +69,18 @@ extension [F[_]: ApplicativeThrow: ToastCtx, A](f: F[A])
           .showToast(throwable.getMessage, Message.Severity.Error, sticky = true)
     }
 
-/**
- * Switch the value of a ViewF to true-ish (by the function) while executing the given effect, then
- * switch it back to false when the effect is finished
- */
-extension [F[_]: Monad, A](adding: ViewF[F, A])
-  def useBoolSwitchBy[B](makeBool: Boolean => A)(f: F[B])(using MonadCancel[F, Throwable]): F[B] =
-    MonadCancel[F, Throwable].bracket(adding.set(makeBool(true)))(_ => f)(_ =>
-      adding.set(makeBool(false))
-    )
+extension [F[_]: MonadCancelThrow, A](f: F[A])
+  /**
+   * Switch the value of a ViewF to true while executing the given effect, then switch it back to
+   * false when the effect is finished
+   */
+  def switching(
+    view: ViewF[F, Boolean]
+  ): F[A] = switching(view, identity)
 
-/**
- * Switch the value of a ViewF to true while executing the given effect, then switch it back to
- * false when the effect is finished
- */
-extension [F[_]: Monad](adding: ViewF[F, Boolean])
-  def useBoolSwitch[A](f: F[A])(using MonadCancel[F, Throwable]): F[A] =
-    adding.useBoolSwitchBy(identity)(f)
+  /**
+   * Switch the value of a ViewF to true-ish (by the function) while executing the given effect,
+   * then switch it back to false when the effect is finished
+   */
+  def switching[B](view: ViewF[F, B], boolToB: Boolean => B): F[A] =
+    MonadCancelThrow[F].bracket(view.set(boolToB(true)))(_ => f)(_ => view.set(boolToB(false)))

@@ -148,21 +148,20 @@ object AsterismGroupObsList:
     adding:                View[AddingTargetOrObs],
     selectTargetOrSummary: Option[Target.Id] => Callback
   )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Unit] =
-    adding.async.useBoolSwitchBy(AddingTargetOrObs(_))(
-      TargetQueries
-        .insertTarget[IO](programId, EmptySiderealTarget)
-        .flatMap { targetId =>
-          TargetAddDeleteActions
-            .insertTarget(
-              targetId,
-              programId,
-              selectTargetOrSummary(_).to[IO],
-              ToastCtx[IO].showToast(_)
-            )
-            .set(undoCtx)(EmptySiderealTarget.some)
-            .to[IO]
-        }
-    )
+    TargetQueries
+      .insertTarget[IO](programId, EmptySiderealTarget)
+      .flatMap { targetId =>
+        TargetAddDeleteActions
+          .insertTarget(
+            targetId,
+            programId,
+            selectTargetOrSummary(_).to[IO],
+            ToastCtx[IO].showToast(_)
+          )
+          .set(undoCtx)(EmptySiderealTarget.some)
+          .to[IO]
+      }
+      .switching(adding.async, AddingTargetOrObs(_))
 
   private def insertObs(
     programId:          Program.Id,
@@ -172,22 +171,21 @@ object AsterismGroupObsList:
     expandedIds:        View[SortedSet[ObsIdSet]],
     selectObsOrSummary: Option[Observation.Id] => Callback
   )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Unit] =
-    adding.async.useBoolSwitchBy(AddingTargetOrObs(_))(
-      ObsQueries
-        .createObservationWithTargets[IO](programId, targetIds)
-        .flatMap { obs =>
-          ObservationInsertAction
-            .insert(
-              programId,
-              obs.id,
-              expandedIds,
-              selectObsOrSummary(_).to[IO],
-              ToastCtx[IO].showToast(_)
-            )
-            .set(undoCtx)(ObsSummary.scienceTargetIds.replace(targetIds)(obs).some)
-            .to[IO]
-        }
-    )
+    ObsQueries
+      .createObservationWithTargets[IO](programId, targetIds)
+      .flatMap { obs =>
+        ObservationInsertAction
+          .insert(
+            programId,
+            obs.id,
+            expandedIds,
+            selectObsOrSummary(_).to[IO],
+            ToastCtx[IO].showToast(_)
+          )
+          .set(undoCtx)(ObsSummary.scienceTargetIds.replace(targetIds)(obs).some)
+          .to[IO]
+      }
+      .switching(adding.async, AddingTargetOrObs(_))
 
   private val component = ScalaFnComponent
     .withHooks[Props]

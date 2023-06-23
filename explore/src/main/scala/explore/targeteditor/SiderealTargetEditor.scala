@@ -122,16 +122,16 @@ object SiderealTargetEditor:
           .execute(input)
           .void
       ) { obsIds =>
-        cloning.async.useBoolSwitch(
-          cloneTarget(id, obsIds)
-            .flatMap { newId =>
-              val newInput = UpdateTargetsInput.WHERE.replace(newId.toWhereTarget.assign)(input)
-              TargetQueriesGQL
-                .UpdateTargetsMutationWithResult[IO]
-                .execute(newInput)
-                .flatMap(data => data.updateTargets.targets.headOption.foldMap(onClone(_).to[IO]))
-            }
-        )
+        cloneTarget(id, obsIds)
+          .flatMap { newId =>
+            val newInput = UpdateTargetsInput.WHERE.replace(newId.toWhereTarget.assign)(input)
+            TargetQueriesGQL
+              .UpdateTargetsMutationWithResult[IO]
+              .execute(newInput)
+              .flatMap(data => data.updateTargets.targets.headOption.foldMap(onClone(_).to[IO]))
+          }
+          .switching(cloning.async)
+
       }
 
   private def buildProperMotion(

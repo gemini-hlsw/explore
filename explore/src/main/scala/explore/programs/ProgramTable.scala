@@ -75,11 +75,10 @@ object ProgramTable:
     FetchClient[IO, ObservationDB],
     Logger[IO]
   ): IO[Unit] =
-    adding.async.useBoolSwitchBy(IsAdding(_))(
-      ProgramQueries
-        .createProgram[IO](none)
-        .flatMap(pi => programs.async.mod(_.updated(pi.id, pi)))
-    )
+    ProgramQueries
+      .createProgram[IO](none)
+      .flatMap(pi => programs.async.mod(_.updated(pi.id, pi)))
+      .switching(adding.async, IsAdding(_))
 
   private def deleteProgram(pinf: View[ProgramInfo])(using
     FetchClient[IO, ObservationDB]
