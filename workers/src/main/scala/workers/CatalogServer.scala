@@ -7,14 +7,9 @@ import boopickle.DefaultBasic.*
 import cats.effect.IO
 import cats.effect.unsafe.implicits.*
 import cats.syntax.all.*
-import explore.events.AgsMessage
 import explore.events.CatalogMessage
 import explore.model.boopickle.CatalogPicklers.given
-import explore.model.boopickle.CommonPicklers.given
 import japgolly.webapputil.indexeddb.IndexedDb
-import japgolly.webapputil.indexeddb.IndexedDb.Database
-import lucuma.ags.Ags
-import lucuma.ags.AgsAnalysis
 import org.http4s.dom.FetchClientBuilder
 import org.scalajs.dom
 import org.typelevel.log4cats.Logger

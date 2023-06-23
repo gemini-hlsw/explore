@@ -5,7 +5,6 @@ package workers
 
 import boopickle.DefaultBasic.*
 import boopickle.Pickler
-import cats.Applicative
 import cats.effect.kernel.Async
 import cats.effect.kernel.Sync
 import cats.syntax.all.*
@@ -19,17 +18,13 @@ import japgolly.webapputil.indexeddb.ObjectStoreDef
 import japgolly.webapputil.indexeddb.ValueCodec
 import lucuma.core.util.NewType
 import org.scalajs.dom
-import org.scalajs.dom.CacheStorage
 import org.scalajs.dom.IDBFactory
-import org.scalajs.dom.{Cache => JsCache}
 
 import java.time.Duration
 import java.time.Instant
-import java.util.Base64
 
 import scalajs.js
 import scalajs.js.JSConverters.*
-import scalajs.js.typedarray.Int8Array
 
 object CacheName extends NewType[String]
 type CacheName = CacheName.Type
@@ -129,6 +124,7 @@ case class IDBCache[F[_]](
 
             if (timestamp.isBefore(until))
               objectStore.delete(cursor.key)
+              ()
 
             cursor.continue()
           } else {

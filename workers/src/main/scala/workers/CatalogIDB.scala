@@ -4,7 +4,6 @@
 package workers
 
 import cats.syntax.all.*
-import explore.events.CatalogMessage
 import japgolly.scalajs.react.callback.*
 import japgolly.webapputil.indexeddb.*
 import lucuma.ags.GuideStarCandidate

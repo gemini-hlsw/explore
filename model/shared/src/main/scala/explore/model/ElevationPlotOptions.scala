@@ -20,8 +20,6 @@ import org.typelevel.cats.time.given
 
 import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.ZonedDateTime
 
 case class ElevationPlotOptions(
   site:           Site,

@@ -4,7 +4,6 @@
 package explore.model
 
 import cats.Eq
-import cats.Order.given
 import cats.data.NonEmptySet
 import cats.derived.*
 import cats.implicits.*

@@ -3,19 +3,12 @@
 
 package explore.modes
 
-import algebra.instances.all.given
 import cats.Eq
 import cats.data.NonEmptyList
 import cats.derived.*
 import cats.implicits._
 import coulomb._
 import coulomb.conversion.ValueConversion
-import coulomb.conversion.spire.*
-import coulomb.ops.algebra.cats.quantity.given
-import coulomb.ops.algebra.spire.all.given
-import coulomb.policy.overlay.refined.algebraic.given
-import coulomb.policy.spire.standard.given
-import coulomb.syntax.*
 import eu.timepit.refined._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.collection.NonEmpty

@@ -4,9 +4,7 @@
 package workers
 
 import boopickle.DefaultBasic.*
-import cats.Eval
 import cats.effect.IO
-import cats.effect.IOApp
 import cats.effect.unsafe.implicits.given
 import cats.syntax.all.given
 import explore.events.PlotMessage
@@ -16,16 +14,12 @@ import lucuma.core.enums.TwilightType
 import lucuma.core.math.BoundedInterval
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
-import lucuma.core.math.Place
-import lucuma.core.math.skycalc.ImprovedSkyCalc
-import lucuma.core.math.skycalc.ImprovedSkyCalc.apply
 import lucuma.core.math.skycalc.SkyCalcResults
 import lucuma.core.math.skycalc.solver.ElevationSolver
 import lucuma.core.math.skycalc.solver.Samples
 import lucuma.core.model.Semester
 import lucuma.core.model.TwilightBoundedNight
 import lucuma.core.syntax.time.*
-import lucuma.core.util.Enumerated
 import org.scalajs.dom
 import org.typelevel.cats.time.given
 import org.typelevel.log4cats.Logger
@@ -36,7 +30,6 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import scala.ContextFunction1
-import scala.collection.immutable.TreeMap
 import scala.scalajs.js.annotation.JSExport
 import scala.scalajs.js.annotation.JSExportTopLevel
 
@@ -52,12 +45,7 @@ object PlotServer extends WorkerServer[IO, PlotMessage.Request] {
 
   private val MinTargetElevation = Declination.fromDoubleDegrees(30.0).get
 
-  private val skyCalcForSite: Map[Site, ImprovedSkyCalc] =
-    Enumerated[Site].all.map(s => s -> ImprovedSkyCalc(s.place)).toMap
-
   private val CacheRetention: Duration = Duration.ofDays(30)
-
-  private given Pickler[SkyCalcResults] = generatePickler
 
   private case class SemesterPlotCalc(semester: Semester, site: Site, cache: Cache[IO]) {
 

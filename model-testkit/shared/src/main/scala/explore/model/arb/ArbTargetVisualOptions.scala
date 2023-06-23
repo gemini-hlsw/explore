@@ -5,7 +5,6 @@ package explore.model.arb
 
 import explore.model.TargetVisualOptions
 import eu.timepit.refined.scalacheck.numeric.*
-import lucuma.core.util.arb.ArbEnumerated.*
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.arb.ArbAngle.*

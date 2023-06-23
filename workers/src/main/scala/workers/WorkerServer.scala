@@ -7,14 +7,11 @@ import boopickle.Pickler
 import cats.Monoid
 import cats.effect.Async
 import cats.effect.Fiber
-import cats.effect.IO
 import cats.effect.Ref
 import cats.effect.Resource
 import cats.effect.Sync
 import cats.effect.std.Dispatcher
-import cats.effect.std.Dispatcher.apply
 import cats.effect.syntax.all.*
-import cats.effect.unsafe.implicits.*
 import cats.syntax.all.*
 import explore.model.boopickle.Boopickle.*
 import log4cats.loglevel.LogLevelLogger
@@ -22,8 +19,6 @@ import org.scalajs.dom
 import org.scalajs.dom.DedicatedWorkerGlobalScope
 import org.typelevel.log4cats.Logger
 import typings.loglevel.mod.LogLevelDesc
-
-import scala.scalajs.js.annotation.JSExport
 
 import WorkerMessage.*
 

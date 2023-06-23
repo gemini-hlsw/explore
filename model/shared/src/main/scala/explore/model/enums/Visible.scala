@@ -3,11 +3,7 @@
 
 package explore.model.enums
 
-import cats.data.NonEmptyList
-import explore.model.extensions
-import lucuma.core.util.Enumerated
 import lucuma.core.util.NewType
-import monocle.Iso
 
 /** Visibility of an item. */
 type Visible = Visible.Type

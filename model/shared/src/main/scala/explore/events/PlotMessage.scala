@@ -7,16 +7,9 @@ import boopickle.DefaultBasic.*
 import boopickle.Pickler
 import explore.model.boopickle.CatalogPicklers.given
 import explore.model.boopickle.CommonPicklers
-import lucuma.ags.AgsAnalysis
-import lucuma.ags.AgsParams
-import lucuma.ags.AgsPosition
-import lucuma.ags.GuideStarCandidate
 import lucuma.core.enums.Site
 import lucuma.core.math.Coordinates
-import lucuma.core.math.Wavelength
-import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Semester
-import lucuma.core.model.Target
 import workers.WorkerRequest
 
 object PlotMessage extends CommonPicklers {

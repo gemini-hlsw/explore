@@ -3,7 +3,6 @@
 
 package explore.model
 
-import cats.Eq
 import eu.timepit.refined.types.string
 
 object Help {

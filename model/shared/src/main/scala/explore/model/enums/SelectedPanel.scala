@@ -4,7 +4,6 @@
 package explore.model.enums
 
 import cats.Eq
-import cats.derived.*
 
 enum SelectedPanel:
   case Uninitialized, Tree, Summary, Editor

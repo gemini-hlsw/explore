@@ -5,7 +5,6 @@ package explore.optics
 
 import cats.syntax.all.*
 import coulomb.*
-import coulomb.ops.algebra.spire.all.given
 import coulomb.policy.spire.standard.given
 import coulomb.syntax.*
 import coulomb.units.constants.*
@@ -28,7 +27,6 @@ import monocle.Getter
 import monocle.Optional
 import monocle.*
 
-import java.time.Duration
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 

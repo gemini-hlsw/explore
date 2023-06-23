@@ -3,7 +3,6 @@
 
 package workers
 
-import algebra.instances.array.*
 import boopickle.DefaultBasic.*
 import lucuma.core.util.NewType
 

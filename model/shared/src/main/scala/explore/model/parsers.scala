@@ -9,8 +9,6 @@ import cats.parse.Parser.char
 import cats.parse.Rfc5234.sp
 import cats.parse.*
 import cats.syntax.all.*
-import eu.timepit.refined.numeric.NonNegative
-import eu.timepit.refined.refineV
 import lucuma.core.math.parser.AngleParsers
 import lucuma.core.parser.MiscParsers
 import lucuma.core.util.TimeSpan

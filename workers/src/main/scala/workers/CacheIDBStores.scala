@@ -5,7 +5,6 @@ package workers
 
 import boopickle.DefaultBasic.*
 import boopickle.Pickler
-import explore.events.CatalogMessage
 import explore.model.boopickle.CatalogPicklers.given
 import japgolly.scalajs.react.callback.*
 import japgolly.webapputil.binary.*

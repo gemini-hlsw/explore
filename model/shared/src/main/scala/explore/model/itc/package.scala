@@ -8,27 +8,18 @@ import cats.data.NonEmptyList
 import cats.derived.*
 import cats.syntax.all.*
 import eu.timepit.refined.cats.refTypeEq
-import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosInt
-import io.circe.Decoder
-import lucuma.core.math.SignalToNoise
-import lucuma.core.math.Wavelength
-import lucuma.core.model.given
-import lucuma.core.util.Enumerated
 import lucuma.core.util.NewType
 import lucuma.core.util.TimeSpan
 import lucuma.itc.FinalSN
 import lucuma.itc.ItcAxis
 import lucuma.itc.ItcCcd
-import lucuma.itc.ItcSeries
 import lucuma.itc.SingleSN
 import lucuma.itc.client.OptimizedChartResult
 import lucuma.itc.client.OptimizedSeriesResult
 import lucuma.itc.client.SpectroscopyIntegrationTimeAndGraphResult
 import lucuma.itc.math.roundToSignificantFigures
-import lucuma.schemas.decoders.given
 
-import scala.concurrent.duration.*
 import scala.math.*
 
 sealed trait ItcQueryProblems extends Product with Serializable derives Eq

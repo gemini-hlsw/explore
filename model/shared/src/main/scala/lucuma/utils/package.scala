@@ -9,7 +9,6 @@ import cats.syntax.all.*
 import coulomb.*
 import eu.timepit.refined.api.*
 import lucuma.core.math.units.*
-import lucuma.core.optics.SplitEpi
 
 def attemptCombine[A: Eq: Monoid, B: Eq: Monoid](a: Option[A], b: Option[B]): Option[(A, B)] =
   (a.filterNot(_.isEmpty), b.filterNot(_.isEmpty)) match
