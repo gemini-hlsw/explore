@@ -70,7 +70,7 @@ case class ConfigurationPanel(
   subtitle:        Option[NonEmptyString],
   requirements:    UndoSetter[ScienceRequirements],
   mode:            UndoSetter[Option[ObservingMode]],
-  posAngle:        UndoSetter[PosAngleConstraint],
+  posAngle:        View[PosAngleConstraint],
   obsConf:         ObsConfiguration,
   itcTargets:      List[ItcTarget],
   baseCoordinates: Option[CoordinatesAtVizTime],
@@ -187,9 +187,6 @@ object ConfigurationPanel:
 
         val optModeAligner = modeAligner.toOption
 
-        val posAngleView: View[PosAngleConstraint] =
-          props.posAngle.undoableView(Iso.id) // We need a convenience method for this.
-
         val optNorthAligner = optModeAligner.flatMap {
           _.zoomOpt(
             ObservingMode.gmosNorthLongSlit,
@@ -215,7 +212,7 @@ object ConfigurationPanel:
                 PAConfigurationPanel(
                   props.programId,
                   props.obsId,
-                  posAngleView,
+                  props.posAngle,
                   props.obsConf.selectedPA,
                   props.obsConf.averagePA,
                   agsState

@@ -466,7 +466,7 @@ object ObsTabTiles:
               props.observation.subtitle,
               props.obsUndoCtx.zoom(ObsSummary.scienceRequirements),
               props.obsUndoCtx.zoom(ObsSummary.observingMode),
-              props.obsUndoCtx.zoom(ObsSummary.posAngleConstraint),
+              posAngleConstraintView,
               props.observation.scienceTargetIds,
               targetCoords,
               obsConf,

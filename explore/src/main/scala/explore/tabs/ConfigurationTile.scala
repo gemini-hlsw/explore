@@ -45,7 +45,7 @@ object ConfigurationTile {
     subtitle:         Option[NonEmptyString],
     requirements:     UndoSetter[ScienceRequirements],
     mode:             UndoSetter[Option[ObservingMode]],
-    posAngle:         UndoSetter[PosAngleConstraint],
+    posAngle:         View[PosAngleConstraint],
     scienceTargetIds: AsterismIds,
     baseCoordinates:  Option[CoordinatesAtVizTime],
     obsConf:          ObsConfiguration,
