@@ -20,6 +20,7 @@ import explore.undo.Action
 import explore.undo.KIListMod
 import explore.undo.UndoContext
 import japgolly.scalajs.react.*
+import lucuma.core.model.ObsAttachment
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB
@@ -100,6 +101,23 @@ def obsEditSubtitle(programId: Program.Id, obsId: Observation.Id)(using
       )
       .void
 )
+
+def obsEditAttachments(
+  programId:     Program.Id,
+  obsId:         Observation.Id,
+  attachmentIds: Set[ObsAttachment.Id]
+)(using
+  FetchClient[IO, ObservationDB]
+) =
+  UpdateObservationMutation[IO]
+    .execute(
+      UpdateObservationsInput(
+        programId = programId,
+        WHERE = obsId.toWhereObservation.assign,
+        SET = ObservationPropertiesInput(obsAttachments = attachmentIds.toList.assign)
+      )
+    )
+    .void
 
 def obsActiveStatus(programId: Program.Id, obsId: Observation.Id)(using
   FetchClient[IO, ObservationDB]

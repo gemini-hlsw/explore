@@ -13,13 +13,4 @@ object Resources {
   @JSImport("/images/ORCID-iD_icon-vector.svg", JSImport.Default)
   val OrcidLogo: String = js.native
 
-  @nowarn
-  @js.native
-  @JSImport("/images/NGC1055.jpg", JSImport.Default)
-  val DemoFinderChart1: String = js.native
-
-  @nowarn
-  @js.native
-  @JSImport("/images/NGC1055.png", JSImport.Default)
-  val DemoFinderChart2: String = js.native
 }

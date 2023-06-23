@@ -87,6 +87,10 @@ object Icons {
   val faLink: FAIcon = js.native
 
   @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faLinkSlash")
+  val faLinkSlash: FAIcon = js.native
+
+  @js.native
   @JSImport("@fortawesome/pro-light-svg-icons", "faPlus")
   val faThinPlus: FAIcon = js.native
 
@@ -330,6 +334,10 @@ object Icons {
   @JSImport("@fortawesome/pro-regular-svg-icons", "faCircleHalfStroke")
   val faCircleHalfStroke: FAIcon = js.native
 
+  @js.native
+  @JSImport("@fortawesome/pro-regular-svg-icons", "faFiles")
+  val faFiles: FAIcon = js.native
+
   // This is tedious but lets us do proper tree-shaking
   IconLibrary.add(
     faArrowDownLeft,
@@ -346,6 +354,7 @@ object Icons {
     faRedo,
     faPlus,
     faLink,
+    faLinkSlash,
     faThinPlus,
     faThinMinus,
     faTrash,
@@ -410,7 +419,8 @@ object Icons {
     faMagnifyingGlassPlus,
     faMagnifyingGlassMinus,
     faArrowsRepeatLight,
-    faCircleHalfStroke
+    faCircleHalfStroke,
+    faFiles
   )
 
   val ArrowDownLeft        = FontAwesomeIcon(faArrowDownLeft)
@@ -427,6 +437,7 @@ object Icons {
   val Redo                 = FontAwesomeIcon(faRedo)
   val New                  = FontAwesomeIcon(faPlus)
   val Link                 = FontAwesomeIcon(faLink)
+  val LinkSlash            = FontAwesomeIcon(faLinkSlash)
   val ThinPlus             = FontAwesomeIcon(faThinPlus)
   val ThinMinus            = FontAwesomeIcon(faThinMinus)
   val TrashUnstyled        = FontAwesomeIcon(faTrash)
@@ -494,4 +505,5 @@ object Icons {
   val MagnifyingGlassMinus = FontAwesomeIcon(faMagnifyingGlassMinus)
   val ArrowsRepeatLight    = FontAwesomeIcon(faArrowsRepeatLight)
   val CircleHalfStroke     = FontAwesomeIcon(faCircleHalfStroke)
+  val Files                = FontAwesomeIcon(faFiles)
 }

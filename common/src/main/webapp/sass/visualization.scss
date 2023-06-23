@@ -440,7 +440,11 @@ $brightness: var(--aladin-image-brightness);
   height: 100%;
   display: flex;
   justify-content: center;
-  align-content: center;
+  background: repeating-linear-gradient(-45deg,
+      var(--hud-background-color),
+      var(--hud-background-color) 10px,
+      var(--hud-stripe-color) 10px,
+      var(--hud-stripe-color) 11px);
 }
 
 .finder-charts-tools {
@@ -454,10 +458,6 @@ $brightness: var(--aladin-image-brightness);
   color: var(--text-color);
   left: 0;
 
-  .p-divider.p-divider-horizontal {
-    margin: 0.3rem 0;
-  }
-
   // reset row
   :nth-child(14),
   :nth-child(15) {
@@ -470,14 +470,13 @@ $brightness: var(--aladin-image-brightness);
     grid-row-start: invert;
   }
 
-  .p-divider,
-  span:first-child {
-    grid-column: 1 / -1;
-    justify-self: stretch;
-    display: flex;
-    justify-content: space-evenly;
-    align-items: center;
-  }
+}
+
+.finder-charts-attachments,
+.finder-charts-tools {
+  @include hud;
+
+  padding: 0.3em 0.5em;
 
   .finder-charts-button {
     cursor: pointer;
@@ -491,18 +490,68 @@ $brightness: var(--aladin-image-brightness);
     }
 
   }
+
+  .p-divider.p-divider-horizontal {
+    margin: 0.3rem 0;
+  }
+
+  .p-divider,
+  span:first-child {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+  }
+
+}
+
+.finder-charts-attachments {
+  right: 0;
+  bottom: 0;
+  width: min(40%, 300px);
+  height: max(30%, 150px);
+  display: flex;
+  flex-direction: column;
+
+  span:first-child {
+    justify-content: space-between;
+  }
+
+  .finder-charts-table-header {
+    display: none;
+  }
+
+  .finder-charts-table {
+    width: max-content;
+
+    .p-datatable-tbody > tr {
+      opacity: 0.7;
+    }
+  }
+
+  .finder-charts-table-disabled {
+    pointer-events: none;
+
+    .p-datatable-tbody > tr {
+      opacity: 0.4;
+    }
+  }
+
 }
 
 .finder-charts-body {
   display: flex;
   position: relative;
   justify-content: center;
-  align-content: center;
 }
 
 .finder-charts-image {
   transition: transform 0.2s ease,
               filter 0.85s ease;
+  max-height: 100%;
+  max-width: 100%;
+  object-fit: contain;
 }
 
 .finder-charts-image-inverted {

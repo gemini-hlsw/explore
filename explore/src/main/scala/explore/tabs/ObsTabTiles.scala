@@ -36,6 +36,7 @@ import explore.model.itc.ItcExposureTime
 import explore.model.itc.ItcTarget
 import explore.model.itc.OverridenExposureTime
 import explore.model.layout.*
+import explore.observationtree.obsEditAttachments
 import explore.optics.*
 import explore.optics.all.*
 import explore.timingwindows.TimingWindowsPanel
@@ -61,6 +62,7 @@ import lucuma.core.model.TimingWindow
 import lucuma.core.model.User
 import lucuma.core.syntax.all.*
 import lucuma.schemas.ObservationDB
+import lucuma.schemas.ObservationDB.Enums.ObsAttachmentType
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.model.TargetWithId
@@ -80,19 +82,22 @@ import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 
 case class ObsTabTiles(
-  userId:             Option[User.Id],
-  programId:          Program.Id,
-  backButton:         VdomNode,
-  obsUndoCtx:         UndoSetter[ObsSummary],
-  allTargetsUndoCtx:  UndoSetter[TargetList],
-  allConstraintSets:  Set[ConstraintSet],
-  targetObservations: Map[Target.Id, SortedSet[Observation.Id]],
-  focusedTarget:      Option[Target.Id],
-  undoStacks:         View[ModelUndoStacks[IO]],
-  searching:          View[Set[Target.Id]],
-  defaultLayouts:     LayoutsMap,
-  layouts:            View[Pot[LayoutsMap]],
-  resize:             UseResizeDetectorReturn
+  vault:                    Option[UserVault],
+  userId:                   Option[User.Id],
+  programId:                Program.Id,
+  backButton:               VdomNode,
+  obsUndoCtx:               UndoSetter[ObsSummary],
+  allTargetsUndoCtx:        UndoSetter[TargetList],
+  allConstraintSets:        Set[ConstraintSet],
+  targetObservations:       Map[Target.Id, SortedSet[Observation.Id]],
+  focusedTarget:            Option[Target.Id],
+  undoStacks:               View[ModelUndoStacks[IO]],
+  searching:                View[Set[Target.Id]],
+  defaultLayouts:           LayoutsMap,
+  layouts:                  View[Pot[LayoutsMap]],
+  resize:                   UseResizeDetectorReturn,
+  obsAttachments:           View[ObsAttachmentList],
+  obsAttachmentAssignments: ObsAttachmentAssignmentMap
 ) extends ReactFnProps(ObsTabTiles.component):
   val obsView: View[ObsSummary] = obsUndoCtx.model
   val observation: ObsSummary   = obsView.get
@@ -302,7 +307,16 @@ object ObsTabTiles:
                   )
               )
 
-          val finderChartsTile = FinderChartsTile.finderChartsTile
+          val attachmentsView = props.obsView.zoom(ObsSummary.attachmentIds).withOnMod { ids =>
+            obsEditAttachments(props.programId, props.obsId, ids).runAsyncAndForget
+          }
+
+          val finderChartsTile =
+            FinderChartsTile.finderChartsTile(props.programId,
+                                              attachmentsView,
+                                              props.vault.map(_.token),
+                                              props.obsAttachments
+            )
 
           val notesTile =
             Tile(
