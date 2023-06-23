@@ -30,11 +30,13 @@ import lucuma.ui.syntax.all.given
 import scala.collection.immutable.SortedSet
 import scala.scalajs.LinkingInfo
 import scala.util.Random
+import cats.effect.IO
+import explore.undo.UndoContext
 
 object Routing:
 
   private def withProgramSummaries(pid: Option[Program.Id], model: View[RootModel])(
-    render: View[ProgramSummaries] => VdomNode
+    render: UndoContext[ProgramSummaries] => VdomNode
   ): VdomElement =
     model
       .zoom(RootModel.programSummaries)
@@ -53,7 +55,7 @@ object Routing:
             undoStacks = model.zoom(RootModel.undoStacks),
             message = msg
           ): VdomElement
-        else render(pss)
+        else render(UndoContext(model.zoom(RootModel.undoStacks), pss))
       }
       .toPot
       .renderPot(identity)
@@ -67,8 +69,8 @@ object Routing:
       OverviewTabContents(
         routingInfo.programId,
         model.zoom(RootModel.vault).get,
-        programSummaries.zoom(ProgramSummaries.obsAttachments),
-        programSummaries.get.obsAttachmentAssignments
+        programSummaries.model.zoom(ProgramSummaries.obsAttachments),
+        programSummaries.model.get.obsAttachmentAssignments
       )
     )
 
@@ -80,8 +82,8 @@ object Routing:
         routingInfo.programId,
         programSummaries,
         routingInfo.focused,
-        model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forProgramSummaries),
-        model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forSiderealTarget),
+        // model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forProgramSummaries),
+        // model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forSiderealTarget),
         model.zoom(RootModel.searchingTarget),
         model.zoom(RootModel.expandedIds.andThen(ExpandedIds.asterismObsIds))
       )
@@ -96,11 +98,11 @@ object Routing:
         routingInfo.programId,
         programSummaries,
         routingInfo.focused,
-        model.zoom(RootModel.undoStacks),
+        // model.zoom(RootModel.undoStacks),
         model.zoom(RootModel.searchingTarget),
-        model.zoom(RootModel.expandedIds.andThen(ExpandedIds.obsListGroupIds)),
-        programSummaries.zoom(ProgramSummaries.obsAttachments),
-        programSummaries.get.obsAttachmentAssignments
+        model.zoom(RootModel.expandedIds.andThen(ExpandedIds.obsListGroupIds))
+        // programSummaries.zoom(ProgramSummaries.obsAttachments),
+        // programSummaries.get.obsAttachmentAssignments
       )
     )
 
@@ -112,8 +114,8 @@ object Routing:
         routingInfo.programId,
         programSummaries,
         routingInfo.focused.obsSet,
-        model.zoom(RootModel.expandedIds.andThen(ExpandedIds.constraintSetObsIds)),
-        model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forObsList)
+        model.zoom(RootModel.expandedIds.andThen(ExpandedIds.constraintSetObsIds))
+        // model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forObsList)
       )
     )
 
@@ -126,8 +128,8 @@ object Routing:
         routingInfo.programId,
         programSummaries,
         routingInfo.focused.obsSet,
-        model.zoom(RootModel.expandedIds.andThen(ExpandedIds.schedulingObsIds)),
-        model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forObsList)
+        model.zoom(RootModel.expandedIds.andThen(ExpandedIds.schedulingObsIds))
+        // model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forProgramSummaries)
       )
     )
 
@@ -137,8 +139,8 @@ object Routing:
     withProgramSummaries(routingInfo.programId.some, model)(_ =>
       ProposalTabContents(
         routingInfo.programId,
-        model.zoom(RootModel.user).get,
-        model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forProposal)
+        model.zoom(RootModel.user).get
+        // model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forProposal)
       )
     )
 

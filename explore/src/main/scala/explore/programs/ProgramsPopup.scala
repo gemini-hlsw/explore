@@ -27,13 +27,15 @@ import lucuma.core.util.NewType
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import explore.undo.UndoStacks
+import explore.model.ProgramSummaries
 
 import scalajs.js.JSConverters.*
 
 case class ProgramsPopup(
   currentProgramId: Option[Program.Id],
   programInfos:     ViewOpt[ProgramInfoList],
-  undoStacks:       View[ModelUndoStacks[IO]],
+  undoStacks:       View[UndoStacks[IO, ProgramSummaries]],
   onClose:          Option[Callback] = none,
   message:          Option[String] = none
 ) extends ReactFnProps(ProgramsPopup.component)
@@ -46,11 +48,11 @@ object ProgramsPopup {
 
   private def selectProgram(
     onClose:    Option[Callback],
-    undoStacks: View[ModelUndoStacks[IO]],
+    undoStacks: View[UndoStacks[IO, ProgramSummaries]],
     ctx:        AppContext[IO]
   )(programId: Program.Id): Callback =
     onClose.orEmpty >>
-      undoStacks.set(ModelUndoStacks[IO]()) >>
+      undoStacks.set(UndoStacks.empty[IO, ProgramSummaries]) >>
       (if (onClose.isEmpty) ctx.replacePage(AppTab.Overview, programId, Focused.None)
        else ctx.pushPage(AppTab.Overview, programId, Focused.None))
 

@@ -85,14 +85,14 @@ import scala.collection.immutable.SortedSet
 import scala.concurrent.duration.*
 
 case class TargetTabContents(
-  userId:            Option[User.Id],
-  programId:         Program.Id,
-  programSummaries:  View[ProgramSummaries],
-  focused:           Focused,
-  psUndoStacks:      View[UndoStacks[IO, ProgramSummaries]],
-  targetsUndoStacks: View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
-  searching:         View[Set[Target.Id]],
-  expandedIds:       View[SortedSet[ObsIdSet]]
+  userId:                  Option[User.Id],
+  programId:               Program.Id,
+  programSummariesUndoCtx: UndoContext[ProgramSummaries],
+  focused:                 Focused,
+  // psUndoStacks:      View[UndoStacks[IO, ProgramSummaries]],
+  // targetsUndoStacks: View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
+  searching:               View[Set[Target.Id]],
+  expandedIds:             View[SortedSet[ObsIdSet]]
 ) extends ReactFnProps(TargetTabContents.component)
 
 object TargetTabContents extends TwoPanels:
@@ -184,10 +184,10 @@ object TargetTabContents extends TwoPanels:
   ): VdomNode = {
     import ctx.given
 
-    val programSummaries: View[ProgramSummaries] = props.programSummaries
+    val programSummaries: View[ProgramSummaries] = props.programSummariesUndoCtx.model
 
-    val psUndoCtx: UndoContext[ProgramSummaries] =
-      UndoContext(props.psUndoStacks, programSummaries)
+    // val psUndoCtx: UndoContext[ProgramSummaries] =
+    //   UndoContext(props.psUndoStacks, programSummaries)
 
     val targets: View[TargetList] = programSummaries.zoom(ProgramSummaries.targets)
 
@@ -237,8 +237,8 @@ object TargetTabContents extends TwoPanels:
     def onModAsterismsWithObs(
       groupIds:  ObsIdSet,
       editedIds: ObsIdSet
-    )(agwo: ProgramSummaries): Callback =
-      findAsterismGroup(editedIds, agwo.asterismGroups).foldMap { tlg =>
+    )(ps: ProgramSummaries): Callback =
+      findAsterismGroup(editedIds, ps.asterismGroups).foldMap { tlg =>
         // We should always find the group.
         // If a group was edited while closed and it didn't create a merger, keep it closed,
         // otherwise expand all affected groups.
@@ -251,7 +251,7 @@ object TargetTabContents extends TwoPanels:
               if (editedIds === tlg.obsIds && editedIds === groupIds) withOld
               else withOld + tlg.obsIds
 
-            withOldAndNew.filter(ids => agwo.asterismGroups.contains(ids)) // clean up
+            withOldAndNew.filter(ids => ps.asterismGroups.contains(ids)) // clean up
           }
       }
 
@@ -276,7 +276,7 @@ object TargetTabContents extends TwoPanels:
           selectTargetOrSummary _,
           renderInTitle,
           selectedTargetIds,
-          psUndoCtx
+          props.programSummariesUndoCtx
         )
       )
 
@@ -596,7 +596,7 @@ object TargetTabContents extends TwoPanels:
         (_, _, _, _, _, selIds) => _.foldMap(focusedTarget => selIds.set(List(focusedTarget)))
       )
       .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, selIds) =>
-        (props.focused, props.programSummaries.get.asterismGroups, selIds.get)
+        (props.focused, programSummaries.get.asterismGroups, selIds.get)
       ) { (props, ctx, _, _, _, _) => (target, asterismGroups, selectedIds) =>
         import ctx.given
 
@@ -637,7 +637,7 @@ object TargetTabContents extends TwoPanels:
                     props.programId,
                     id.idSet.toList,
                     treeTargets,
-                    props.programSummaries,
+                    programSummaries,
                     ctx,
                     props.psUndoStacks,
                     props.expandedIds
@@ -647,7 +647,6 @@ object TargetTabContents extends TwoPanels:
               case LocalClipboard.CopiedTargets(tids) =>
                 props.focused.obsSet
                   .foldMap(obsIds =>
-                    val undoContext    = UndoContext(props.psUndoStacks, props.programSummaries)
                     // Only want to paste targets that aren't already in the target asterism or
                     // undo is messed up.
                     // If all the targets are already there, do nothing.
@@ -664,7 +663,7 @@ object TargetTabContents extends TwoPanels:
                             selectObsIds,
                             props.expandedIds
                           )
-                          .set(undoContext)(())
+                          .set(props.programSummariesUndoCtx)(())
                           .toAsync
                       )
                   )

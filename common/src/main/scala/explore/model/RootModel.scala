@@ -19,6 +19,7 @@ import lucuma.core.model.User
 import monocle.Focus
 import monocle.Lens
 import monocle.Optional
+import explore.undo.UndoStacks
 
 import scala.collection.immutable.HashSet
 case class RootModel(
@@ -28,7 +29,7 @@ case class RootModel(
   searchingTarget:      Set[Target.Id] = HashSet.empty,
   userSelectionMessage: Option[NonEmptyString] = none,
   programSummaries:     Option[ProgramSummaries] = none,
-  undoStacks:           ModelUndoStacks[IO] = ModelUndoStacks[IO]()
+  undoStacks:           UndoStacks[IO, ProgramSummaries] = UndoStacks.empty[IO, ProgramSummaries]
 ) derives Eq
 
 object RootModel:

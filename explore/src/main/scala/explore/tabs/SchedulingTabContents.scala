@@ -82,7 +82,7 @@ case class SchedulingTabContents(
   programSummaries: View[ProgramSummaries],
   focusedObsSet:    Option[ObsIdSet],
   expandedIds:      View[SortedSet[ObsIdSet]],
-  obsUndoStacks:    View[UndoStacks[IO, ObservationList]]
+  undoStacks:       View[UndoStacks[IO, ProgramSummaries]]
 ) extends ReactFnProps(SchedulingTabContents.component)
 
 object SchedulingTabContents extends TwoPanels:
@@ -214,7 +214,7 @@ object SchedulingTabContents extends TwoPanels:
           // .withOnMod(onModSummaryWithObs(groupObsIds, idsToEdit))
           .zoom(ProgramSummaries.observations)
 
-        val obsUndoCtx: UndoContext[ObservationList] = UndoContext(props.obsUndoStacks, obsView)
+        val obsUndoCtx: UndoContext[ObservationList] = UndoContext(props.undoStacks, obsView)
 
         val rightSide = (_: UseResizeDetectorReturn) =>
           props.focusedObsSet

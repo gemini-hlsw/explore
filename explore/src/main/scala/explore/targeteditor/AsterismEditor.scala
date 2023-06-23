@@ -67,21 +67,23 @@ import react.common.ReactFnProps
 import react.primereact.Button
 
 import java.time.Instant
+import explore.undo.UndoSetter
 
 case class AsterismEditor(
-  userId:          User.Id,
-  programId:       Program.Id,
-  obsIds:          ObsIdSet,
-  asterismIds:     View[AsterismIds],
-  allTargets:      View[TargetList],
-  vizTime:         View[Option[Instant]],
-  configuration:   ObsConfiguration,
-  focusedTargetId: Option[Target.Id],
-  setTarget:       (Option[Target.Id], SetRouteVia) => Callback,
-  otherObsCount:   Target.Id => Int,
-  undoStacks:      View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
-  searching:       View[Set[Target.Id]],
-  renderInTitle:   Tile.RenderInTitle
+  userId:            User.Id,
+  programId:         Program.Id,
+  obsIds:            ObsIdSet,
+  asterismIds:       View[AsterismIds],
+  // allTargets:      View[TargetList],
+  targetsUndoSetter: UndoSetter[TargetList],
+  vizTime:           View[Option[Instant]],
+  configuration:     ObsConfiguration,
+  focusedTargetId:   Option[Target.Id],
+  setTarget:         (Option[Target.Id], SetRouteVia) => Callback,
+  otherObsCount:     Target.Id => Int,
+  // undoStacks:      View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
+  searching:         View[Set[Target.Id]],
+  renderInTitle:     Tile.RenderInTitle
 ) extends ReactFnProps(AsterismEditor.component)
 
 object AsterismEditor extends AsterismModifier:
@@ -188,7 +190,7 @@ object AsterismEditor extends AsterismModifier:
             props.programId,
             props.obsIds,
             props.asterismIds,
-            props.allTargets.get,
+            props.targetsUndoSetter.model.get,
             selectedTargetView,
             vizTime,
             props.renderInTitle,
@@ -196,7 +198,7 @@ object AsterismEditor extends AsterismModifier:
           ),
           props.focusedTargetId.map { focusedTargetId =>
             val selectedTargetView =
-              props.allTargets.zoom(Iso.id[TargetList].index(focusedTargetId))
+              props.targetsUndoSetter.model.zoom(Iso.id[TargetList].index(focusedTargetId))
 
             val otherObsCount = props.otherObsCount(focusedTargetId)
             val plural        = if (otherObsCount === 1) "" else "s"
