@@ -203,10 +203,10 @@ object ObsAttachmentsTable extends TableHooks with ObsAttachmentUtils:
             ColDef(id, v => accessor(v.get), columnNames(id))
 
           def goToObs(obsId: Observation.Id): Callback =
-            ctx.pushPage(AppTab.Constraints, props.pid, Focused.singleObs(obsId))
+            ctx.pushPage(AppTab.Observations, props.pid, Focused.singleObs(obsId))
 
           def obsUrl(obsId: Observation.Id): String =
-            ctx.pageUrl(AppTab.Constraints, props.pid, Focused.singleObs(obsId))
+            ctx.pageUrl(AppTab.Observations, props.pid, Focused.singleObs(obsId))
 
           List(
             column(ActionsColumnId, identity)
