@@ -44,7 +44,7 @@ val stage = taskKey[Unit]("Prepare static files to deploy to Heroku")
 
 // For simplicity, the build's stage only deals with the explore app.
 stage := {
-  val jsFiles = (explore / Compile / fullLinkJS).value
+  val jsFiles = (webapp / Compile / fullLinkJS).value
   if (sys.env.getOrElse("POST_STAGE_CLEAN", "false").equals("true")) {
     println("Cleaning up...")
     // Remove coursier cache
@@ -54,7 +54,7 @@ stage := {
 }
 
 lazy val root = tlCrossRootProject
-  .aggregate(model, modelTests, common, explore, workers)
+  .aggregate(model, modelTests, common, explore, workers, webapp)
   .settings(name := "explore-root")
 
 lazy val model = crossProject(JVMPlatform, JSPlatform)
@@ -104,7 +104,7 @@ lazy val workers = project
 
 lazy val common = project
   .in(file("common"))
-  .dependsOn(modelTestkit.js)
+  .dependsOn(model.js, modelTestkit.js % Test)
   .settings(commonSettings: _*)
   .settings(commonJsLibSettings: _*)
   .settings(commonModuleTest: _*)
@@ -128,11 +128,11 @@ lazy val common = project
 
 lazy val explore: Project = project
   .in(file("explore"))
-  .dependsOn(model.js, common, workers)
+  .dependsOn(model.js, common)
   .settings(commonSettings: _*)
   .settings(commonJsLibSettings: _*)
   .settings(esModule: _*)
-  .enablePlugins(ScalaJSPlugin, LucumaCssPlugin)
+  .enablePlugins(ScalaJSPlugin)
   .settings(
     Test / test     := {},
     coverageEnabled := false,
@@ -140,6 +140,17 @@ lazy val explore: Project = project
       GeminiLocales.value ++
         ReactAladin.value ++
         LucumaReact.value
+  )
+
+lazy val webapp: Project = project
+  .in(file("webapp"))
+  .dependsOn(explore, workers)
+  .settings(commonSettings: _*)
+  .settings(esModule: _*)
+  .enablePlugins(ScalaJSPlugin, LucumaCssPlugin)
+  .settings(
+    Test / test     := {},
+    coverageEnabled := false
   )
 
 lazy val commonSettings = lucumaGlobalSettings ++ Seq(

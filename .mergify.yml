@@ -65,6 +65,14 @@ pull_request_rules:
       add:
       - model-tests
       remove: []
+- name: Label webapp PRs
+  conditions:
+  - files~=^webapp/
+  actions:
+    label:
+      add:
+      - webapp
+      remove: []
 - name: Label workers PRs
   conditions:
   - files~=^workers/
