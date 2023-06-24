@@ -4,9 +4,11 @@
 package explore.syntax.ui
 
 import cats.*
+import cats.effect.MonadCancelThrow
 import cats.syntax.all.*
 import clue.ResponseException
 import clue.js.FetchJSRequest
+import crystal.ViewF
 import crystal.react.implicits.*
 import explore.components.ui.ExploreStyles
 import explore.model.Constants
@@ -66,3 +68,19 @@ extension [F[_]: ApplicativeThrow: ToastCtx, A](f: F[A])
         ToastCtx[F]
           .showToast(throwable.getMessage, Message.Severity.Error, sticky = true)
     }
+
+extension [F[_]: MonadCancelThrow, A](f: F[A])
+  /**
+   * Switch the value of a ViewF to true while executing the given effect, then switch it back to
+   * false when the effect is finished
+   */
+  def switching(
+    view: ViewF[F, Boolean]
+  ): F[A] = switching(view, identity)
+
+  /**
+   * Switch the value of a ViewF to true-ish (by the function) while executing the given effect,
+   * then switch it back to false when the effect is finished
+   */
+  def switching[B](view: ViewF[F, B], boolToB: Boolean => B): F[A] =
+    MonadCancelThrow[F].bracket(view.set(boolToB(true)))(_ => f)(_ => view.set(boolToB(false)))

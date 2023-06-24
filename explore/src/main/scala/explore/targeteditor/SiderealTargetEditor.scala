@@ -9,6 +9,7 @@ import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
+import crystal.ViewF
 import crystal.implicits.*
 import crystal.react.View
 import crystal.react.ViewOpt
@@ -33,6 +34,7 @@ import explore.model.enums.AgsState
 import explore.model.formats.*
 import explore.model.util.*
 import explore.optics.all.given
+import explore.syntax.ui.*
 import explore.undo.UndoContext
 import explore.undo.UndoStacks
 import explore.utils.*
@@ -108,7 +110,7 @@ object SiderealTargetEditor:
   private def getRemoteOnMod(
     id:      Target.Id,
     optObs:  Option[ObsIdSet],
-    cloning: Hooks.UseStateF[DefaultS, Boolean],
+    cloning: View[Boolean],
     onClone: TargetWithId => Callback
   )(
     input:   UpdateTargetsInput
@@ -120,16 +122,16 @@ object SiderealTargetEditor:
           .execute(input)
           .void
       ) { obsIds =>
-        cloning.setStateAsync(true) >>
-          cloneTarget(id, obsIds)
-            .flatMap { newId =>
-              val newInput = UpdateTargetsInput.WHERE.replace(newId.toWhereTarget.assign)(input)
-              TargetQueriesGQL
-                .UpdateTargetsMutationWithResult[IO]
-                .execute(newInput)
-                .flatMap(data => data.updateTargets.targets.headOption.foldMap(onClone(_).to[IO]))
-            }
-            .guarantee(cloning.setStateAsync(false))
+        cloneTarget(id, obsIds)
+          .flatMap { newId =>
+            val newInput = UpdateTargetsInput.WHERE.replace(newId.toWhereTarget.assign)(input)
+            TargetQueriesGQL
+              .UpdateTargetsMutationWithResult[IO]
+              .execute(newInput)
+              .flatMap(data => data.updateTargets.targets.headOption.foldMap(onClone(_).to[IO]))
+          }
+          .switching(cloning.async)
+
       }
 
   private def buildProperMotion(
@@ -143,7 +145,7 @@ object SiderealTargetEditor:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      .useState(false) // cloning
+      .useStateView(false) // cloning
       // If vizTime is not set, change it to now
       .useEffectResultWithDepsBy((p, _, _) => p.vizTime) { (_, _, _) => vizTime =>
         IO(vizTime.getOrElse(Instant.now()))
@@ -286,7 +288,7 @@ object SiderealTargetEditor:
             forceAssign(sourceProfileLens.modify)(SourceProfileInput())
           )
 
-        val disabled = props.searching.get.exists(_ === props.targetId) || cloning.value
+        val disabled = props.searching.get.exists(_ === props.targetId) || cloning.get
 
         React.Fragment(
           props.renderInTitle
