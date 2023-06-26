@@ -5,11 +5,9 @@ package explore.itc
 
 import cats.effect.IO
 import cats.syntax.all.*
-import crystal.Pot
-import crystal.implicits.*
-import crystal.react.View
+import crystal.*
 import crystal.react.hooks.*
-import crystal.react.implicits.*
+import crystal.react.*
 import eu.timepit.refined.*
 import eu.timepit.refined.numeric.Positive
 import explore.Icons
@@ -34,10 +32,10 @@ import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.pot.*
 import queries.schemas.itc.syntax.*
-import react.common.ReactFnProps
-import react.floatingui.syntax.*
-import react.primereact.Dropdown
-import react.primereact.SelectItem
+import _root_.react.common.ReactFnProps
+import _root_.react.floatingui.syntax.*
+import _root_.react.primereact.Dropdown
+import _root_.react.primereact.SelectItem
 
 import scala.scalajs.js.JSConverters.*
 

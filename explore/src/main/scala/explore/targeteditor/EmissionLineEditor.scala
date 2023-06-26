@@ -7,9 +7,8 @@ import cats.Order.*
 import cats.syntax.all.*
 import coulomb.*
 import coulomb.syntax.*
-import crystal.react.View
 import crystal.react.hooks.*
-import crystal.react.implicits.*
+import crystal.react.*
 import crystal.react.reuse.*
 import eu.timepit.refined.*
 import eu.timepit.refined.cats.*

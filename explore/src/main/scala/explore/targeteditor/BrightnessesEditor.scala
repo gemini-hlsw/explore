@@ -7,7 +7,7 @@ import cats.Order.*
 import cats.syntax.all.*
 import crystal.react.*
 import crystal.react.hooks.*
-import crystal.react.implicits.*
+import crystal.react.*
 import crystal.react.reuse.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.given

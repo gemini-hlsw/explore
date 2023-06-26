@@ -7,9 +7,8 @@ import cats.Order.*
 import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
-import crystal.react.View
 import crystal.react.hooks.*
-import crystal.react.implicits.*
+import crystal.react.*
 import crystal.react.reuse.*
 import explore.Icons
 import explore.common.UserPreferencesQueries.TableStore

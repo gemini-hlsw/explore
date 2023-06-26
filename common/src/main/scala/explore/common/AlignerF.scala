@@ -5,8 +5,7 @@ package explore.common
 
 import cats.MonadError
 import cats.syntax.all.*
-import crystal.react.View
-import crystal.react.implicits.*
+import crystal.react.*
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.util.Effect

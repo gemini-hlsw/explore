@@ -6,11 +6,9 @@ package explore.targeteditor
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
-import crystal.Pot
-import crystal.implicits.*
-import crystal.react.View
+import crystal.*
 import crystal.react.hooks.*
-import crystal.react.implicits.*
+import crystal.react.*
 import eu.timepit.refined.auto.*
 import explore.*
 import explore.common.UserPreferencesQueries.*
@@ -50,12 +48,12 @@ import org.typelevel.cats.time.given
 import org.typelevel.log4cats.Logger
 import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.UserPreferencesDB
-import react.common.ReactFnProps
-import react.datepicker.*
-import react.primereact.Button
-import react.primereact.SelectButton
-import react.primereact.SelectItem
-import react.primereact.ToggleButton
+import _root_.react.common.ReactFnProps
+import _root_.react.datepicker.*
+import _root_.react.primereact.Button
+import _root_.react.primereact.SelectButton
+import _root_.react.primereact.SelectItem
+import _root_.react.primereact.ToggleButton
 import spire.math.extras.interval.IntervalSeq
 
 import java.time.*
@@ -113,7 +111,7 @@ object ElevationPlotSection:
                   .copy(range = range, timeDisplay = timeDisplay)
                   .ready
               )
-              .to[IO]
+              .toAsync
           }
           .recover(_ =>
             ElevationPlotOptions.default(props.site, props.visualizationTime, props.coords)

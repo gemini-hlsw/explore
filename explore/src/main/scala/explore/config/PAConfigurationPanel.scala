@@ -6,7 +6,6 @@ package explore.config
 import cats.effect.*
 import cats.syntax.all.*
 import crystal.react.*
-import crystal.react.implicits.*
 import eu.timepit.refined.auto.*
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles

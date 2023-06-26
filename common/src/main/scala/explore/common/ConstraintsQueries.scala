@@ -8,8 +8,7 @@ import cats.effect.IO
 import cats.syntax.all.given
 import clue.FetchClient
 import clue.data.syntax.*
-import crystal.react.View
-import crystal.react.implicits.*
+import crystal.react.*
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.DefaultErrorPolicy
 import explore.data.KeyedIndexedList

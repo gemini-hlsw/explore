@@ -5,8 +5,7 @@ package explore
 
 import cats.effect.IO
 import cats.syntax.all.*
-import crystal.react.View
-import crystal.react.implicits.*
+import crystal.react.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.cache.ProgramCache
 import explore.components.state.IfLogged
@@ -103,7 +102,7 @@ object ExploreLayout:
                 // TODO: Handle logout events
                 case ExploreEvent.PWAUpdateId =>
                   // Clear other toasts first
-                  toastRef.clear().to[IO] *>
+                  toastRef.clear().toAsync *>
                     toastRef
                       .upgradePrompt(
                         <.span(
@@ -122,7 +121,7 @@ object ExploreLayout:
                           .handleErrorWith(e => IO(e.printStackTrace()))
                           .runAsyncAndForget
                       )
-                      .to[IO]
+                      .toAsync
                 case _                        => IO.unit
               }
           ): (ExploreEvent => IO[Unit])
@@ -170,7 +169,7 @@ object ExploreLayout:
                 props.view.zoom(RootModel.localPreferences).get,
                 props.view.zoom(RootModel.undoStacks),
                 props.view.zoom(RootModel.programSummaries.some).zoom(ProgramSummaries.programs),
-                onLogout >> props.view.zoom(RootModel.vault).set(none).to[IO]
+                onLogout >> props.view.zoom(RootModel.vault).set(none).toAsync
               ),
               <.div(
                 ExploreStyles.SideTabs,

@@ -8,9 +8,8 @@ import cats.derived.*
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.Pot
-import crystal.react.View
 import crystal.react.hooks.*
-import crystal.react.implicits.*
+import crystal.react.*
 import crystal.react.reuse.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Resources
@@ -169,12 +168,10 @@ object FinderCharts extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
           val newOas         = allCurrentKeys.filter(key => !urlMap.get.contains(key)).toList
 
           val updateUrlMap =
-            urlMap
-              .mod { umap =>
-                val filteredMap = umap.filter((k, v) => allCurrentKeys.contains(k))
-                newOas.foldRight(filteredMap)((key, m) => m.updated(key, Pot.pending))
-              }
-              .to[IO]
+            urlMap.mod { umap =>
+              val filteredMap = umap.filter((k, v) => allCurrentKeys.contains(k))
+              newOas.foldRight(filteredMap)((key, m) => m.updated(key, Pot.pending))
+            }.toAsync
 
           val getUrls =
             newOas.traverse_(key => getAttachmentUrl(props.programId, client, key, urlMap))

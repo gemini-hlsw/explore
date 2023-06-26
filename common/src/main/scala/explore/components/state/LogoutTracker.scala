@@ -5,7 +5,7 @@ package explore.components.state
 
 import cats.effect.IO
 import cats.syntax.all.*
-import crystal.react.implicits.*
+import crystal.react.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.events.*
@@ -41,7 +41,7 @@ object LogoutTracker:
             case ExploreEvent.LogoutEvent.event =>
               (props.setVault(none) >> props.setMessage(
                 "You logged out in another instance".refined
-              )).to[IO].whenA(x.value.toString =!= nonce.value.toString)
+              )).toAsync.whenA(x.value.toString =!= nonce.value.toString)
             case _                              => IO.unit
           }
       ): (ExploreEvent => IO[Unit]) // Scala 3 infers the return type as Any if we don't ascribe

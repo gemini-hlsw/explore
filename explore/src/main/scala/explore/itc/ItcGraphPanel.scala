@@ -9,11 +9,10 @@ import cats.data.OptionT
 import cats.effect.IO
 import cats.effect.std.UUIDGen
 import cats.syntax.all.*
-import crystal.Pot
-import crystal.implicits.*
-import crystal.react.View
+import crystal.*
 import crystal.react.hooks.*
-import crystal.react.implicits.*
+import crystal.react.*
+import crystal.react.given
 import eu.timepit.refined.*
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosBigDecimal
@@ -57,7 +56,7 @@ import monocle.Focus
 import monocle.Lens
 import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.itc.syntax.*
-import react.common.ReactFnProps
+import _root_.react.common.ReactFnProps
 
 import java.util.UUID
 
@@ -97,7 +96,7 @@ object ItcGraphPanel:
         ItcPlotPreferences
           .queryWithDefault[IO](props.uid, props.oid)
           .flatMap { (plotType, showDetails) =>
-            settings.set(ItcGraphProperties(plotType, showDetails).ready).to[IO]
+            settings.set(ItcGraphProperties(plotType, showDetails).ready).toAsync
           }
           .runAsyncAndForget
       }

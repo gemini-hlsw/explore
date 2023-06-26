@@ -8,11 +8,9 @@ import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
 import cats.syntax.all.given
-import crystal.Pot
-import crystal.implicits.*
+import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
-import crystal.react.implicits.*
 import crystal.react.reuse.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.numeric.NonNegInt
@@ -73,13 +71,13 @@ import queries.common.ObsQueriesGQL
 import queries.common.TargetQueriesGQL
 import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.odb.ObsQueries
-import react.common.*
-import react.draggable.Axis
-import react.gridlayout.*
-import react.hotkeys.*
-import react.hotkeys.hooks.*
-import react.resizeDetector.*
-import react.resizeDetector.hooks.*
+import _root_.react.common.*
+import _root_.react.draggable.Axis
+import _root_.react.gridlayout.*
+import _root_.react.hotkeys.*
+import _root_.react.hotkeys.hooks.*
+import _root_.react.resizeDetector.*
+import _root_.react.resizeDetector.hooks.*
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
@@ -544,7 +542,7 @@ object TargetTabContents extends TwoPanels:
             ObservationPasteAction
               .paste(programId, newIds, expandedIds)
               .set(undoContext)(summaries.some)
-              .to[IO]
+              .toAsync
           )
       )
       .void
@@ -588,7 +586,7 @@ object TargetTabContents extends TwoPanels:
                     cur => mergeMap(dbLayout, cur).ready
                   )
                 )
-                .to[IO]
+                .toAsync
             case Left(_)         => IO.unit
           }
       }
@@ -603,7 +601,7 @@ object TargetTabContents extends TwoPanels:
         import ctx.given
 
         def selectObsIds: ObsIdSet => IO[Unit] =
-          obsIds => ctx.pushPage(AppTab.Targets, props.programId, Focused.obsSet(obsIds)).to[IO]
+          obsIds => ctx.pushPage(AppTab.Targets, props.programId, Focused.obsSet(obsIds)).toAsync
 
         def callbacks: ShortcutCallbacks = {
           case CopyAlt1 | CopyAlt2 =>
@@ -667,7 +665,7 @@ object TargetTabContents extends TwoPanels:
                             props.expandedIds
                           )
                           .set(undoContext)(())
-                          .to[IO]
+                          .toAsync
                       )
                   )
 

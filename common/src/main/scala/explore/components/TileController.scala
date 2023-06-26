@@ -10,7 +10,7 @@ import cats.syntax.all.*
 import clue.FetchClient
 import crystal.react.hooks.UseStateView
 import crystal.react.hooks.*
-import crystal.react.implicits.*
+import crystal.react.*
 import crystal.react.reuse.*
 import eu.timepit.refined.auto.*
 import explore.common.UserPreferencesQueries.*

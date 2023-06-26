@@ -7,9 +7,8 @@ import cats.Order.*
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
-import crystal.react.View
 import crystal.react.hooks.*
-import crystal.react.implicits.*
+import crystal.react.*
 import crystal.react.reuse.*
 import explore.EditableLabel
 import explore.Icons
@@ -83,14 +82,14 @@ object ProgramTable:
   private def deleteProgram(pinf: View[ProgramInfo])(using
     FetchClient[IO, ObservationDB]
   ): IO[Unit] =
-    pinf.zoom(ProgramInfo.deleted).set(true).to[IO] >>
+    pinf.zoom(ProgramInfo.deleted).set(true).toAsync >>
       ProgramQueries.deleteProgram[IO](pinf.get.id)
 
   private def undeleteProgram(pinf: View[ProgramInfo])(using
     FetchClient[IO, ObservationDB],
     Logger[IO]
   ): IO[Unit] =
-    pinf.zoom(ProgramInfo.deleted).set(false).to[IO] >>
+    pinf.zoom(ProgramInfo.deleted).set(false).toAsync >>
       ProgramQueries.undeleteProgram[IO](pinf.get.id)
 
   private def onModName(pinf: ProgramInfo)(using
@@ -105,7 +104,7 @@ object ProgramTable:
     ctx:        AppContext[IO]
   ): IO[Unit] =
     (isRequired, programs) match
-      case (true, head :: Nil) => ctx.replacePage(AppTab.Overview, head.id, Focused.None).to[IO]
+      case (true, head :: Nil) => ctx.replacePage(AppTab.Overview, head.id, Focused.None).toAsync
       case _                   => IO.unit
 
   private val ActionsColumnId: ColumnId = ColumnId("actions")

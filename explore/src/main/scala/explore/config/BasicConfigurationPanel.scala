@@ -8,7 +8,6 @@ import cats.syntax.all.*
 import coulomb.ops.algebra.spire.all.given
 import crystal.react.*
 import crystal.react.hooks.*
-import crystal.react.implicits.*
 import eu.timepit.refined.auto.*
 import explore.Icons
 import explore.common.ScienceQueries.*

@@ -14,8 +14,7 @@ import clue.data.*
 import clue.data.syntax.*
 import crystal.Pot
 import crystal.PotOption
-import crystal.react.View
-import crystal.react.implicits.*
+import crystal.react.*
 import crystal.react.reuse.*
 import eu.timepit.refined.*
 import eu.timepit.refined.types.numeric.NonNegLong
@@ -139,7 +138,7 @@ extension (f:       Callback)
     ctx: AppContext[IO]
   )(text: String, severity: Message.Severity = Message.Severity.Info): Callback =
     import ctx.given
-    f.to[IO].withToast(text, severity).runAsync
+    f.toAsync.withToast(text, severity).runAsync
 
 // TODO Move these to react-datetime
 extension (instant: Instant)

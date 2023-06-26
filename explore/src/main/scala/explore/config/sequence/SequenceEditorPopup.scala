@@ -3,8 +3,7 @@
 
 package explore.config.sequence
 
-import crystal.Pot
-import crystal.implicits.*
+import crystal.*
 import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
@@ -19,10 +18,10 @@ import lucuma.ui.primereact.LucumaStyles
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.given
-import react.common.ReactFnProps
-import react.primereact.Button
-import react.primereact.Dialog
-import react.primereact.DialogPosition
+import _root_.react.common.ReactFnProps
+import _root_.react.primereact.Button
+import _root_.react.primereact.Dialog
+import _root_.react.primereact.DialogPosition
 
 case class SequenceEditorPopup(
   programId:      Program.Id,

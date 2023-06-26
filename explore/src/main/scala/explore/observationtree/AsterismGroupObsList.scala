@@ -8,9 +8,8 @@ import cats.effect.Deferred
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
-import crystal.react.View
 import crystal.react.hooks.*
-import crystal.react.implicits.*
+import crystal.react.*
 import explore.DefaultErrorPolicy
 import explore.Icons
 import explore.common.TargetQueries

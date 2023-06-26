@@ -10,9 +10,8 @@ import cats.derived.*
 import cats.effect.IO
 import cats.effect.kernel.Outcome
 import cats.syntax.all.*
-import crystal.react.View
 import crystal.react.hooks.*
-import crystal.react.implicits.*
+import crystal.react.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.aladin.AladinZoomControl
@@ -201,7 +200,7 @@ object TargetSelectionPopup:
           inputValue.set("") >> searching.set(SearchingState.Idle) >> cleanResults
 
         def searchName(name: String): IO[Unit] =
-          cleanResults.to[IO] >>
+          cleanResults.toAsync >>
             search(name, props.targetSources, results, selectedTarget, searching)
 
         val onOpen: Callback =

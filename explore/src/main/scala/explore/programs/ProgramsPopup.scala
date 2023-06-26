@@ -5,7 +5,7 @@ package explore.programs
 
 import cats.effect.IO
 import cats.syntax.all.*
-import crystal.implicits.*
+import crystal.*
 import crystal.react.View
 import crystal.react.ViewOpt
 import crystal.react.hooks.*
@@ -23,10 +23,10 @@ import lucuma.core.util.NewType
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import react.common.ReactFnProps
-import react.primereact.Dialog
-import react.primereact.DialogPosition
-import react.primereact.Message
+import _root_.react.common.ReactFnProps
+import _root_.react.primereact.Dialog
+import _root_.react.primereact.DialogPosition
+import _root_.react.primereact.Message
 
 import scalajs.js.JSConverters.*
 

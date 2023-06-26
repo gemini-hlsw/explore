@@ -7,9 +7,8 @@ import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
 import crystal.Pot
-import crystal.react.View
 import crystal.react.hooks.*
-import crystal.react.implicits.*
+import crystal.react.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles

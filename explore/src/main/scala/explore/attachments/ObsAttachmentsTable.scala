@@ -9,7 +9,8 @@ import cats.syntax.all.*
 import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
-import crystal.react.implicits.*
+import crystal.react.*
+import crystal.react.given
 import crystal.react.reuse.*
 import eu.timepit.refined.types.numeric.NonNegLong
 import eu.timepit.refined.types.string.NonEmptyString
@@ -139,7 +140,7 @@ object ObsAttachmentsTable extends TableHooks with ObsAttachmentUtils:
                   )
                 )
               )
-              .to[IO]
+              .toAsync
               .toastErrors
         }
       )
@@ -150,7 +151,7 @@ object ObsAttachmentsTable extends TableHooks with ObsAttachmentUtils:
     client: OdbRestClient[IO],
     aid:    ObsAtt.Id
   )(using ToastCtx[IO]): IO[Unit] =
-    props.obsAttachments.mod(_.removed(aid)).to[IO] *>
+    props.obsAttachments.mod(_.removed(aid)).toAsync *>
       client.deleteAttachment(props.pid, aid).toastErrors
 
   def deletePrompt(
@@ -190,12 +191,10 @@ object ObsAttachmentsTable extends TableHooks with ObsAttachmentUtils:
             val newOas         = allCurrentKeys.filter(key => !urlMap.get.contains(key)).toList
 
             val updateUrlMap =
-              urlMap
-                .mod { umap =>
-                  val filteredMap = umap.filter((k, v) => allCurrentKeys.contains(k))
-                  newOas.foldRight(filteredMap)((key, m) => m.updated(key, Pot.pending))
-                }
-                .to[IO]
+              urlMap.mod { umap =>
+                val filteredMap = umap.filter((k, v) => allCurrentKeys.contains(k))
+                newOas.foldRight(filteredMap)((key, m) => m.updated(key, Pot.pending))
+              }.toAsync
             val getUrls      =
               newOas.traverse_(key => getAttachmentUrl(props.pid, client, key, urlMap))
 
@@ -230,7 +229,7 @@ object ObsAttachmentsTable extends TableHooks with ObsAttachmentUtils:
                     action.set(Action.Replace) *>
                     updateAttachment(props, client, thisOa, files)
                       .guarantee(action.async.set(Action.None))
-                      .runAsync())
+                      .runAsync)
                     .when_(files.nonEmpty)
 
                 <.div(

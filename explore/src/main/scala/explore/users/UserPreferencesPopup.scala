@@ -9,9 +9,8 @@ import cats.implicits.catsKernelOrderingForOrder
 import cats.syntax.all.*
 import clue.js.FetchJSClient
 import clue.js.FetchJSRequest
-import crystal.react.View
 import crystal.react.hooks.*
-import crystal.react.implicits.*
+import crystal.react.*
 import crystal.react.reuse.*
 import explore.DefaultErrorPolicy
 import explore.Icons
@@ -211,9 +210,9 @@ object UserPreferencesContent:
 
         val requestCacheClean =
           for {
-            _ <- isCleaningTheCache.setState(IsCleaningTheCache(true)).to[IO]
+            _ <- isCleaningTheCache.setState(IsCleaningTheCache(true)).toAsync
             _ <- ctx.workerClients.clearAll(
-                   isCleaningTheCache.setState(IsCleaningTheCache(false)).to[IO]
+                   isCleaningTheCache.setState(IsCleaningTheCache(false)).toAsync
                  )
           } yield ()
 

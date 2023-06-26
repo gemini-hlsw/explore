@@ -10,11 +10,9 @@ import clue.FetchClient
 import clue.data.Assign
 import clue.data.Input
 import clue.data.syntax.*
-import crystal.PotOption
-import crystal.implicits.*
+import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
-import crystal.react.implicits.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.DefaultErrorPolicy
@@ -60,7 +58,7 @@ import monocle.Iso
 import org.http4s.syntax.all.*
 import queries.common.ObsQueriesGQL
 import queries.schemas.odb.ObsQueries.*
-import react.common.ReactFnProps
+import _root_.react.common.ReactFnProps
 
 case class ConfigurationPanel(
   userId:          Option[User.Id],
@@ -143,7 +141,7 @@ object ConfigurationPanel:
         .flatMap(data =>
           observingMode
             .set(data.updateObservations.observations.headOption.flatMap(_.observingMode))
-            .to[IO]
+            .toAsync
         )
     )
 

@@ -6,7 +6,7 @@ package explore.components.state
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.hooks.*
-import crystal.react.implicits.*
+import crystal.react.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.SolarProgress

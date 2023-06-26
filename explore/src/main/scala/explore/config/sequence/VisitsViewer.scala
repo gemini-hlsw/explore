@@ -6,9 +6,8 @@
 // import cats.effect.IO
 // import cats.syntax.all.*
 // import crystal.Pot
-// import crystal.react.View
 // import crystal.react.hooks.*
-// import crystal.react.implicits.*
+// import crystal.react.*
 // import explore.*
 // import explore.components.ui.ExploreStyles
 // import explore.model.AppContext
