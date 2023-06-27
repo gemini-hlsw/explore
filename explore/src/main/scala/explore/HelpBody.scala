@@ -6,8 +6,8 @@ package explore
 import cats.effect.*
 import cats.syntax.all.*
 import crystal.Pot
-import crystal.react.hooks.*
 import crystal.react.*
+import crystal.react.hooks.*
 import explore.components.ui.ExploreStyles
 import explore.model.Help
 import explore.shortcuts.*

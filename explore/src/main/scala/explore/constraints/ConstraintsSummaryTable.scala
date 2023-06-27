@@ -7,8 +7,8 @@ import cats.Functor
 import cats.Order.*
 import cats.effect.IO
 import cats.syntax.all.*
-import crystal.react.hooks.*
 import crystal.react.*
+import crystal.react.hooks.*
 import crystal.react.reuse.*
 import explore.Icons
 import explore.common.AsterismQueries.*

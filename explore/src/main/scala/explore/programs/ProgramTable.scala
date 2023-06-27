@@ -7,8 +7,8 @@ import cats.Order.*
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
-import crystal.react.hooks.*
 import crystal.react.*
+import crystal.react.hooks.*
 import crystal.react.reuse.*
 import explore.EditableLabel
 import explore.Icons

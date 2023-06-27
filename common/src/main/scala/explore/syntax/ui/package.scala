@@ -3,6 +3,8 @@
 
 package explore.syntax.ui
 
+import _root_.react.common.Css
+import _root_.react.primereact.Message
 import cats.*
 import cats.effect.MonadCancelThrow
 import cats.syntax.all.*
@@ -20,8 +22,6 @@ import japgolly.scalajs.react.vdom.VdomNode
 import org.scalablytyped.runtime.StringDictionary
 import org.scalajs.dom.Window
 import org.typelevel.log4cats.Logger
-import react.common.Css
-import react.primereact.Message
 
 import scala.scalajs.js
 import scala.scalajs.js.UndefOr

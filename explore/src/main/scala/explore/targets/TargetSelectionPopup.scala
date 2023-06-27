@@ -10,8 +10,8 @@ import cats.derived.*
 import cats.effect.IO
 import cats.effect.kernel.Outcome
 import cats.syntax.all.*
-import crystal.react.hooks.*
 import crystal.react.*
+import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.aladin.AladinZoomControl

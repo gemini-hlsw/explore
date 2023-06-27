@@ -7,8 +7,8 @@ import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
 import crystal.Pot
-import crystal.react.hooks.*
 import crystal.react.*
+import crystal.react.hooks.*
 import explore.Icons
 import explore.common.AsterismQueries
 import explore.components.Tile

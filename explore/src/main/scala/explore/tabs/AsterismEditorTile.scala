@@ -3,6 +3,7 @@
 
 package explore.tabs
 
+import _root_.react.common.ReactFnProps
 import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
@@ -41,7 +42,6 @@ import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries
-import _root_.react.common.ReactFnProps
 
 import java.time.Instant
 

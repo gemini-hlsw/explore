@@ -3,6 +3,10 @@
 
 package explore.tabs
 
+import _root_.react.common.ReactFnProps
+import _root_.react.primereact.Dropdown
+import _root_.react.primereact.SelectItem
+import _root_.react.resizeDetector.*
 import cats.Order.given
 import cats.data.NonEmptyList
 import cats.effect.IO
@@ -69,10 +73,6 @@ import monocle.Iso
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ObsQueries
 import queries.schemas.odb.ObsQueries.*
-import _root_.react.common.ReactFnProps
-import _root_.react.primereact.Dropdown
-import _root_.react.primereact.SelectItem
-import _root_.react.resizeDetector.*
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap

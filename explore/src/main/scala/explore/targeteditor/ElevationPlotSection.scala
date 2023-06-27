@@ -3,12 +3,18 @@
 
 package explore.targeteditor
 
+import _root_.react.common.ReactFnProps
+import _root_.react.datepicker.*
+import _root_.react.primereact.Button
+import _root_.react.primereact.SelectButton
+import _root_.react.primereact.SelectItem
+import _root_.react.primereact.ToggleButton
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
 import crystal.*
-import crystal.react.hooks.*
 import crystal.react.*
+import crystal.react.hooks.*
 import eu.timepit.refined.auto.*
 import explore.*
 import explore.common.UserPreferencesQueries.*
@@ -48,12 +54,6 @@ import org.typelevel.cats.time.given
 import org.typelevel.log4cats.Logger
 import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.UserPreferencesDB
-import _root_.react.common.ReactFnProps
-import _root_.react.datepicker.*
-import _root_.react.primereact.Button
-import _root_.react.primereact.SelectButton
-import _root_.react.primereact.SelectItem
-import _root_.react.primereact.ToggleButton
 import spire.math.extras.interval.IntervalSeq
 
 import java.time.*

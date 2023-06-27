@@ -3,6 +3,14 @@
 
 package explore.tabs
 
+import _root_.react.common.*
+import _root_.react.draggable.Axis
+import _root_.react.gridlayout.*
+import _root_.react.hotkeys.*
+import _root_.react.hotkeys.hooks.*
+import _root_.react.primereact.Button
+import _root_.react.resizeDetector.*
+import _root_.react.resizeDetector.hooks.*
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.*
@@ -62,14 +70,6 @@ import queries.common.ProgramQueriesGQL.GroupEditSubscription
 import queries.common.ProgramQueriesGQL.ProgramGroupsQuery
 import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.odb.ObsQueries.*
-import _root_.react.common.*
-import _root_.react.draggable.Axis
-import _root_.react.gridlayout.*
-import _root_.react.hotkeys.*
-import _root_.react.hotkeys.hooks.*
-import _root_.react.primereact.Button
-import _root_.react.resizeDetector.*
-import _root_.react.resizeDetector.hooks.*
 
 import scala.concurrent.duration.*
 

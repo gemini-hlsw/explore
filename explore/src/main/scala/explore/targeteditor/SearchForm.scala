@@ -5,8 +5,8 @@ package explore.targeteditor
 
 import cats.effect.IO
 import cats.syntax.all.*
-import crystal.react.hooks.*
 import crystal.react.*
+import crystal.react.hooks.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.types.string.NonEmptyString

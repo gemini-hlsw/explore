@@ -8,9 +8,9 @@ import cats.effect.IO
 import cats.syntax.all.*
 import crystal.Pot
 import crystal.react.*
-import crystal.react.hooks.*
 import crystal.react.*
 import crystal.react.given
+import crystal.react.hooks.*
 import crystal.react.reuse.*
 import eu.timepit.refined.types.numeric.NonNegLong
 import eu.timepit.refined.types.string.NonEmptyString

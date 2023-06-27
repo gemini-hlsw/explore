@@ -3,6 +3,15 @@
 
 package explore.targeteditor
 
+import _root_.react.aladin.Fov
+import _root_.react.common.*
+import _root_.react.primereact.Button
+import _root_.react.primereact.Checkbox
+import _root_.react.primereact.MenuItem
+import _root_.react.primereact.PopupMenu
+import _root_.react.primereact.PopupMenuRef
+import _root_.react.primereact.ProgressBar
+import _root_.react.primereact.hooks.all.*
 import boopickle.DefaultBasic.*
 import cats.Order
 import cats.data.NonEmptyList
@@ -12,9 +21,9 @@ import crystal.Pot
 import crystal.PotOption
 import crystal.ViewOptF
 import crystal.*
-import crystal.react.hooks.*
 import crystal.react.*
 import crystal.react.given
+import crystal.react.hooks.*
 import crystal.react.reuse.*
 import eu.timepit.refined.*
 import eu.timepit.refined.auto.*
@@ -61,15 +70,6 @@ import org.scalajs.dom.document
 import org.typelevel.log4cats.Logger
 import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.odb.ObsQueries
-import _root_.react.aladin.Fov
-import _root_.react.common.*
-import _root_.react.primereact.Button
-import _root_.react.primereact.Checkbox
-import _root_.react.primereact.MenuItem
-import _root_.react.primereact.PopupMenu
-import _root_.react.primereact.PopupMenuRef
-import _root_.react.primereact.ProgressBar
-import _root_.react.primereact.hooks.all.*
 
 import java.time.Duration
 import java.time.Instant

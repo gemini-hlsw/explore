@@ -3,6 +3,14 @@
 
 package explore.tabs
 
+import _root_.react.common.ReactFnProps
+import _root_.react.draggable.Axis
+import _root_.react.fa.*
+import _root_.react.gridlayout.*
+import _root_.react.hotkeys.*
+import _root_.react.hotkeys.hooks.*
+import _root_.react.resizeDetector.*
+import _root_.react.resizeDetector.hooks.*
 import cats.effect.IO
 import cats.effect.Resource
 import cats.syntax.all.*
@@ -64,14 +72,6 @@ import queries.common.ObsQueriesGQL
 import queries.common.ObsQueriesGQL.UpdateObservationMutation
 import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.UserPreferencesDB
-import _root_.react.common.ReactFnProps
-import _root_.react.draggable.Axis
-import _root_.react.fa.*
-import _root_.react.gridlayout.*
-import _root_.react.hotkeys.*
-import _root_.react.hotkeys.hooks.*
-import _root_.react.resizeDetector.*
-import _root_.react.resizeDetector.hooks.*
 
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration.*

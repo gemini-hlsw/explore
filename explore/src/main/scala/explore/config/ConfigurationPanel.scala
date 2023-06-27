@@ -3,6 +3,7 @@
 
 package explore.config
 
+import _root_.react.common.ReactFnProps
 import cats.Eq
 import cats.effect.IO
 import cats.syntax.all.*
@@ -58,7 +59,6 @@ import monocle.Iso
 import org.http4s.syntax.all.*
 import queries.common.ObsQueriesGQL
 import queries.schemas.odb.ObsQueries.*
-import _root_.react.common.ReactFnProps
 
 case class ConfigurationPanel(
   userId:          Option[User.Id],

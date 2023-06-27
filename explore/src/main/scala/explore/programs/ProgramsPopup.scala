@@ -3,6 +3,10 @@
 
 package explore.programs
 
+import _root_.react.common.ReactFnProps
+import _root_.react.primereact.Dialog
+import _root_.react.primereact.DialogPosition
+import _root_.react.primereact.Message
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.*
@@ -23,10 +27,6 @@ import lucuma.core.util.NewType
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import _root_.react.common.ReactFnProps
-import _root_.react.primereact.Dialog
-import _root_.react.primereact.DialogPosition
-import _root_.react.primereact.Message
 
 import scalajs.js.JSConverters.*
 

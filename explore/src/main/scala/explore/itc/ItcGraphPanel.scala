@@ -3,6 +3,7 @@
 
 package explore.itc
 
+import _root_.react.common.ReactFnProps
 import boopickle.DefaultBasic.*
 import cats.data.NonEmptyList
 import cats.data.OptionT
@@ -10,9 +11,9 @@ import cats.effect.IO
 import cats.effect.std.UUIDGen
 import cats.syntax.all.*
 import crystal.*
-import crystal.react.hooks.*
 import crystal.react.*
 import crystal.react.given
+import crystal.react.hooks.*
 import eu.timepit.refined.*
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosBigDecimal
@@ -56,7 +57,6 @@ import monocle.Focus
 import monocle.Lens
 import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.itc.syntax.*
-import _root_.react.common.ReactFnProps
 
 import java.util.UUID
 

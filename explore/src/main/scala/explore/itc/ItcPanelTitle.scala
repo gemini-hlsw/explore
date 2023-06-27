@@ -3,11 +3,15 @@
 
 package explore.itc
 
+import _root_.react.common.ReactFnProps
+import _root_.react.floatingui.syntax.*
+import _root_.react.primereact.Dropdown
+import _root_.react.primereact.SelectItem
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.*
-import crystal.react.hooks.*
 import crystal.react.*
+import crystal.react.hooks.*
 import eu.timepit.refined.*
 import eu.timepit.refined.numeric.Positive
 import explore.Icons
@@ -32,10 +36,6 @@ import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.pot.*
 import queries.schemas.itc.syntax.*
-import _root_.react.common.ReactFnProps
-import _root_.react.floatingui.syntax.*
-import _root_.react.primereact.Dropdown
-import _root_.react.primereact.SelectItem
 
 import scala.scalajs.js.JSConverters.*
 

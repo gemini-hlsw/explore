@@ -8,8 +8,8 @@ import cats.effect.Deferred
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
-import crystal.react.hooks.*
 import crystal.react.*
+import crystal.react.hooks.*
 import explore.DefaultErrorPolicy
 import explore.Icons
 import explore.common.TargetQueries
@@ -154,11 +154,11 @@ object AsterismGroupObsList:
           .insertTarget(
             targetId,
             programId,
-            selectTargetOrSummary(_).to[IO],
+            selectTargetOrSummary(_).toAsync,
             ToastCtx[IO].showToast(_)
           )
           .set(undoCtx)(EmptySiderealTarget.some)
-          .to[IO]
+          .toAsync
       }
       .switching(adding.async, AddingTargetOrObs(_))
 
@@ -178,11 +178,11 @@ object AsterismGroupObsList:
             programId,
             obs.id,
             expandedIds,
-            selectObsOrSummary(_).to[IO],
+            selectObsOrSummary(_).toAsync,
             ToastCtx[IO].showToast(_)
           )
           .set(undoCtx)(ObsSummary.scienceTargetIds.replace(targetIds)(obs).some)
-          .to[IO]
+          .toAsync
       }
       .switching(adding.async, AddingTargetOrObs(_))
 

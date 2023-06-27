@@ -14,8 +14,8 @@ import cats.syntax.all.*
 import coulomb.Quantity
 import coulomb.policy.spire.standard.given
 import coulomb.syntax.*
-import crystal.react.hooks.*
 import crystal.react.*
+import crystal.react.hooks.*
 import crystal.react.reuse.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.given

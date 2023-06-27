@@ -6,8 +6,8 @@ package explore
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.View
-import crystal.react.hooks.*
 import crystal.react.*
+import crystal.react.hooks.*
 import crystal.react.reuse.Reuse
 import crystal.react.reuse.*
 import explore.Icons
