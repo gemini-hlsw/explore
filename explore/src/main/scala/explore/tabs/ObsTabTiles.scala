@@ -256,9 +256,9 @@ object ObsTabTiles:
             props.observation.model
               .zoom(ObsSummary.posAngleConstraint)
               .withOnMod(pa =>
-                agsState.set(AgsState.Saving) *> ObsQueries
+                ObsQueries
                   .updatePosAngle[IO](props.programId, List(props.obsId), pa)
-                  .guarantee(agsState.async.set(AgsState.Idle))
+                  .switching(agsState.async, AgsState.Saving, AgsState.Idle)
                   .runAsync
               )
 

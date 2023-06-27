@@ -32,6 +32,16 @@ class SwitchingSpec extends munit.CatsEffectSuite {
     }
   }
 
+  test("should switch between two given values") {
+    mkView.flatMap { (ref, view) =>
+      for {
+        _ <- ref.get.assertEquals(false)
+        _ <- ref.get.assertEquals(true).switching(view, true, false)
+        _ <- ref.get.assertEquals(false)
+      } yield ()
+    }
+  }
+
   /**
    * Make a ViewF[IO, Boolean], backed by a `Ref`
    */

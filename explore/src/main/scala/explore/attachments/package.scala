@@ -154,9 +154,8 @@ trait ObsAttachmentUtils:
   ): Callback =
     val files = e.target.files.toList
     (Callback(e.target.value = null) *>
-      action.set(Action.Insert) *>
       insertAttachment(programId, obsAttachments, client, newAttType.gql, files, onSuccess)
-        .guarantee(action.async.set(Action.None))
+        .switching(action.async, Action.Insert, Action.None)
         .runAsync)
       .when_(files.nonEmpty)
 

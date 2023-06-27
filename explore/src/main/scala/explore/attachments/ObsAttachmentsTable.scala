@@ -212,9 +212,8 @@ object ObsAttachmentsTable extends TableHooks with ObsAttachmentUtils:
                 def onUpdateFileSelected(e: ReactEventFromInput): Callback =
                   val files = e.target.files.toList
                   (Callback(e.target.value = null) *>
-                    action.set(Action.Replace) *>
                     updateAttachment(props, client, thisOa, files)
-                      .guarantee(action.async.set(Action.None))
+                      .switching(action.async, Action.Replace, Action.None)
                       .runAsync)
                     .when_(files.nonEmpty)
 
