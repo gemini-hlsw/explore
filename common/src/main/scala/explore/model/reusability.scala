@@ -132,6 +132,8 @@ object reusability:
 
   given Reusability[OdbItcResult.Success] = Reusability.byEq
 
+  given Reusability[Transformation] = Reusability.byEq
+
   given [F[_]]: Reusability[OdbRestClient[F]] = Reusability.by(_.authToken)
 
   given [D: Eq]: Reusability[Atom[D]] = Reusability.byEq

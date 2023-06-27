@@ -1,4 +1,5 @@
 - "!include public_exploreChartType.yaml"
+- "!include public_exploreFinderChart.yaml"
 - "!include public_explorePlotRange.yaml"
 - "!include public_explorePlotTime.yaml"
 - "!include public_exploreTargetPreferences.yaml"
