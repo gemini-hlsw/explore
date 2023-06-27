@@ -42,7 +42,6 @@ import explore.optics.*
 import explore.optics.all.*
 import explore.timingwindows.TimingWindowsPanel
 import explore.undo.UndoSetter
-// import explore.undo.UndoStacks
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia

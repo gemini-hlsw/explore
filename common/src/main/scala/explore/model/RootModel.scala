@@ -10,6 +10,7 @@ import cats.syntax.all.*
 import crystal.react.View
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.undo.UndoStacks
 import lucuma.core.enums.Band
 import lucuma.core.model.GuestUser
 import lucuma.core.model.ServiceUser
@@ -19,7 +20,6 @@ import lucuma.core.model.User
 import monocle.Focus
 import monocle.Lens
 import monocle.Optional
-import explore.undo.UndoStacks
 
 import scala.collection.immutable.HashSet
 case class RootModel(

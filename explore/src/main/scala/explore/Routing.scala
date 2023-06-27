@@ -5,6 +5,7 @@ package explore
 
 import cats.Order.*
 import cats.data.NonEmptySet
+import cats.effect.IO
 import cats.syntax.all.*
 import crystal.*
 import crystal.react.View
@@ -16,6 +17,7 @@ import explore.programs.ProgramsPopup
 import explore.proposal.ProposalTabContents
 import explore.tabs.ConstraintsTabContents
 import explore.tabs.*
+import explore.undo.UndoContext
 import japgolly.scalajs.react.ReactMonocle.*
 import japgolly.scalajs.react.extra.router.*
 import japgolly.scalajs.react.vdom.VdomElement
@@ -30,8 +32,6 @@ import lucuma.ui.syntax.all.given
 import scala.collection.immutable.SortedSet
 import scala.scalajs.LinkingInfo
 import scala.util.Random
-import cats.effect.IO
-import explore.undo.UndoContext
 
 object Routing:
 

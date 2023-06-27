@@ -19,7 +19,9 @@ import explore.model.AppContext
 import explore.model.Focused
 import explore.model.ModelUndoStacks
 import explore.model.ProgramInfoList
+import explore.model.ProgramSummaries
 import explore.model.enums.AppTab
+import explore.undo.UndoStacks
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
@@ -27,8 +29,6 @@ import lucuma.core.util.NewType
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import explore.undo.UndoStacks
-import explore.model.ProgramSummaries
 
 import scalajs.js.JSConverters.*
 

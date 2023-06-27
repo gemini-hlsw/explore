@@ -22,6 +22,7 @@ import explore.model.TargetList
 import explore.model.enums.AgsState
 import explore.model.enums.TileSizeState
 import explore.targeteditor.AsterismEditor
+import explore.undo.UndoSetter
 import explore.utils.*
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.extra.router.SetRouteVia
@@ -43,7 +44,6 @@ import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries
 
 import java.time.Instant
-import explore.undo.UndoSetter
 
 object AsterismEditorTile:
 

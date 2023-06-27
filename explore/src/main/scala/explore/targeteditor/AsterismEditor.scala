@@ -31,6 +31,7 @@ import explore.optics.all.*
 import explore.syntax.ui.*
 import explore.targets.TargetSelectionPopup
 import explore.targets.TargetSource
+import explore.undo.UndoSetter
 import explore.undo.UndoStacks
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
@@ -67,7 +68,6 @@ import react.common.ReactFnProps
 import react.primereact.Button
 
 import java.time.Instant
-import explore.undo.UndoSetter
 
 case class AsterismEditor(
   userId:          User.Id,

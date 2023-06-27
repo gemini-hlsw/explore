@@ -26,6 +26,7 @@ import explore.model.enums.ExecutionEnvironment
 import explore.programs.ProgramsPopup
 import explore.syntax.ui.*
 import explore.syntax.ui.given
+import explore.undo.UndoStacks
 import explore.users.UserPreferencesPopup
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.callback.CallbackCatsEffect.*
@@ -50,7 +51,6 @@ import react.primereact.PopupTieredMenu
 import react.primereact.Toolbar
 import react.primereact.hooks.all.*
 import typings.loglevel.mod.LogLevelDesc
-import explore.undo.UndoStacks
 
 case class TopBar(
   vault:        UserVault,

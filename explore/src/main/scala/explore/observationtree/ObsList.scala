@@ -24,6 +24,8 @@ import explore.observationtree.ObsBadge
 import explore.syntax.ui.*
 import explore.tabs.DeckShown
 import explore.undo.KIListMod
+import explore.undo.UndoSetter
+import explore.undo.Undoer
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -53,8 +55,6 @@ import scala.annotation.tailrec
 import scala.scalajs.js
 
 import ObsQueries.*
-import explore.undo.UndoSetter
-import explore.undo.Undoer
 
 case class ObsList(
   obsUndoCtx:      UndoSetter[ObservationList],
