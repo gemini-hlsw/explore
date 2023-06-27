@@ -7,9 +7,8 @@ import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
 import crystal.Pot
-import crystal.react.View
+import crystal.react.*
 import crystal.react.hooks.*
-import crystal.react.implicits.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
@@ -103,8 +102,7 @@ object ObsList:
     createObservation[IO](programId)
       .flatMap { obs =>
         (obsExistence(programId, obs.id, o => setObs(programId, o.some, ctx))
-          .mod(undoCtx)(obsListMod.upsert(obs, pos)) <* scrollIfNeeded(obs.id))
-          .to[IO]
+          .mod(undoCtx)(obsListMod.upsert(obs, pos)) <* scrollIfNeeded(obs.id)).toAsync
       }
       .switching(adding.async)
 

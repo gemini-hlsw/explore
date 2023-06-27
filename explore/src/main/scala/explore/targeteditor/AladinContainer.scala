@@ -7,8 +7,8 @@ import cats.data.NonEmptyList
 import cats.data.NonEmptyMap
 import cats.implicits.catsKernelOrderingForOrder
 import cats.syntax.all.*
-import crystal.react.View
-import crystal.react.implicits.*
+import crystal.react.*
+import crystal.react.given
 import crystal.react.reuse.*
 import eu.timepit.refined.*
 import eu.timepit.refined.numeric.NonNegative

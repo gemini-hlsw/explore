@@ -4,9 +4,7 @@
 package explore.proposal
 
 import cats.syntax.all.*
-import crystal.react.View
-import crystal.react.ViewOpt
-import crystal.react.implicits.*
+import crystal.react.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString

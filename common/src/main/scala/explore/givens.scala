@@ -9,8 +9,7 @@ import cats.effect.Temporal
 import cats.effect.kernel.Resource
 import cats.syntax.all.*
 import clue.*
-import crystal.Pot
-import crystal.implicits.*
+import crystal.*
 import crystal.react.ReuseViewF
 import crystal.react.ReuseViewOptF
 import crystal.react.reuse.*

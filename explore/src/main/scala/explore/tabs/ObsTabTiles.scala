@@ -3,18 +3,19 @@
 
 package explore.tabs
 
+import _root_.react.common.ReactFnProps
+import _root_.react.primereact.Dropdown
+import _root_.react.primereact.SelectItem
+import _root_.react.resizeDetector.*
 import cats.Order.given
 import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.ErrorPolicy
 import clue.FetchClient
-import crystal.Pot
-import crystal.PotOption
-import crystal.implicits.*
+import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
-import crystal.react.implicits.*
 import eu.timepit.refined.types.numeric.PosInt
 import explore.*
 import explore.common.TimingWindowsQueries
@@ -72,10 +73,6 @@ import monocle.Iso
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ObsQueries
 import queries.schemas.odb.ObsQueries.*
-import react.common.ReactFnProps
-import react.primereact.Dropdown
-import react.primereact.SelectItem
-import react.resizeDetector.*
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
@@ -223,7 +220,7 @@ object ObsTabTiles:
                     k -> (Pot.Ready(e): Pot[ItcChartResult])
                 }.toMap
                 charts
-                  .setStateAsync(r) *> loading.setState(LoadingState.Done).value.to[IO]
+                  .setStateAsync(r) *> loading.setState(LoadingState.Done).value.toAsync
               },
               (charts.setState(
                 itcProps.targets
@@ -233,8 +230,8 @@ object ObsTabTiles:
                     )
                   )
                   .toMap
-              ) *> loading.setState(LoadingState.Done)).to[IO],
-              loading.setState(LoadingState.Loading).value.to[IO]
+              ) *> loading.setState(LoadingState.Done)).toAsync,
+              loading.setState(LoadingState.Loading).value.toAsync
             )
             .whenA(itcProps.isExecutable)
             .runAsyncAndForget

@@ -5,8 +5,7 @@ package explore.model
 
 import cats.Eq
 import cats.syntax.all.*
-import crystal.react.View
-import crystal.react.implicits.*
+import crystal.react.*
 import explore.model.enums.AgsState
 import explore.model.reusability.given
 import japgolly.scalajs.react.ReactCats.*

@@ -3,13 +3,19 @@
 
 package explore.tabs
 
+import _root_.react.common.*
+import _root_.react.draggable.Axis
+import _root_.react.gridlayout.*
+import _root_.react.hotkeys.*
+import _root_.react.hotkeys.hooks.*
+import _root_.react.primereact.Button
+import _root_.react.resizeDetector.*
+import _root_.react.resizeDetector.hooks.*
 import cats.effect.IO
 import cats.syntax.all.*
-import crystal.Pot
-import crystal.implicits.*
+import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
-import crystal.react.implicits.*
 import crystal.react.reuse.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
@@ -64,14 +70,6 @@ import queries.common.ProgramQueriesGQL.GroupEditSubscription
 import queries.common.ProgramQueriesGQL.ProgramGroupsQuery
 import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.odb.ObsQueries.*
-import react.common.*
-import react.draggable.Axis
-import react.gridlayout.*
-import react.hotkeys.*
-import react.hotkeys.hooks.*
-import react.primereact.Button
-import react.resizeDetector.*
-import react.resizeDetector.hooks.*
 
 import scala.concurrent.duration.*
 
@@ -353,7 +351,7 @@ object ObsTabContents extends TwoPanels:
                         cur => mergeMap(dbLayout, cur).ready
                       )
                     )
-                    .to[IO]
+                    .toAsync
                 case Left(_)         => IO.unit
               }
           }

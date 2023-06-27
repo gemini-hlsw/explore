@@ -7,7 +7,7 @@ import cats.Applicative
 import cats.effect.Deferred
 import cats.effect.Sync
 import cats.syntax.all.given
-import crystal.react.implicits.*
+import crystal.react.*
 import react.primereact.Message
 import react.primereact.ToastRef
 

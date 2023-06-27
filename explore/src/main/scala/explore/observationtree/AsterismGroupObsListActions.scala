@@ -8,8 +8,7 @@ import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
-import crystal.react.View
-import crystal.react.implicits.*
+import crystal.react.*
 import explore.common.AsterismQueries
 import explore.common.AsterismQueries.*
 import explore.data.KeyedIndexedList
@@ -82,6 +81,6 @@ object AsterismGroupObsListActions {
             draggedIds.toList,
             filteredTargetIds.toList
           ) >>
-          setObsSet(destGroup).to[IO]
+          setObsSet(destGroup).toAsync
     )
 }

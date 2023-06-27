@@ -5,9 +5,9 @@ package explore.config.sequence
 
 import cats.effect.IO
 import crystal.Pot
-import crystal.react.View
-import crystal.react.hooks._
-import crystal.react.implicits._
+import crystal.react.*
+import crystal.react.given
+import crystal.react.hooks.*
 import explore.*
 import explore.model.AppContext
 import explore.utils._

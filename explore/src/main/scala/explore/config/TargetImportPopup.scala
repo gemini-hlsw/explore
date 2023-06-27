@@ -8,8 +8,7 @@ import cats.effect.*
 import cats.effect.syntax.all.*
 import cats.syntax.all.*
 import clue.FetchClient
-import crystal.react.View
-import crystal.react.implicits.*
+import crystal.react.*
 import crystal.react.reuse.*
 import explore.DefaultErrorPolicy
 import explore.Icons
@@ -113,7 +112,7 @@ object TargetImportPopup:
       .useEffectWithDepsBy((props, _, _) => props.files.get) { (props, ctx, state) => files =>
         import ctx.given
 
-        state.setState(State.Default).to[IO] *>
+        state.setState(State.Default).toAsync *>
           FetchClientBuilder[IO]
             .withRequestTimeout(15.seconds)
             .resource
@@ -123,14 +122,14 @@ object TargetImportPopup:
                   importTargets[IO](
                     props.programId,
                     dom.readReadableStream(IO(f.stream())),
-                    state.modState(_).to[IO],
+                    state.modState(_).toAsync,
                     client
                   )
                 )
                 .compile
                 .toList
             }
-            .guarantee(state.modState(State.done.replace(true)).to[IO])
+            .guarantee(state.modState(State.done.replace(true)).toAsync)
             .void
             .whenA(files.nonEmpty)
       }

@@ -9,7 +9,7 @@ import cats.effect.IO
 import cats.syntax.all.*
 import crystal.Pot
 import crystal.react.*
-import crystal.react.implicits.*
+import crystal.react.*
 import eu.timepit.refined.types.numeric.NonNegLong
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.ObsAttachment
@@ -131,8 +131,7 @@ trait ObsAttachmentUtils:
                                 Timestamp.unsafeFromInstantTruncated(Instant.now())
                               )
                     )
-                  ))
-                .to[IO]
+                  )).toAsync
             )
         }
       )
@@ -170,4 +169,4 @@ trait ObsAttachmentUtils:
         case Right(url) => Pot(url)
         case Left(t)    => Pot.error(t)
       }
-      .flatMap(p => urlMap.mod(_.updated(mapKey, p)).to[IO])
+      .flatMap(p => urlMap.mod(_.updated(mapKey, p)).toAsync)

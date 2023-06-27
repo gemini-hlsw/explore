@@ -3,15 +3,21 @@
 
 package explore.tabs
 
+import _root_.react.common.ReactFnProps
+import _root_.react.draggable.Axis
+import _root_.react.fa.*
+import _root_.react.gridlayout.*
+import _root_.react.hotkeys.*
+import _root_.react.hotkeys.hooks.*
+import _root_.react.resizeDetector.*
+import _root_.react.resizeDetector.hooks.*
 import cats.effect.IO
 import cats.effect.Resource
 import cats.syntax.all.*
 import clue.FetchClient
-import crystal.Pot
-import crystal.implicits.*
+import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
-import crystal.react.implicits.*
 import crystal.react.reuse.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.numeric.NonNegInt
@@ -71,14 +77,6 @@ import queries.common.ObsQueriesGQL
 import queries.common.ObsQueriesGQL.UpdateObservationMutation
 import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.UserPreferencesDB
-import react.common.ReactFnProps
-import react.draggable.Axis
-import react.fa.*
-import react.gridlayout.*
-import react.hotkeys.*
-import react.hotkeys.hooks.*
-import react.resizeDetector.*
-import react.resizeDetector.hooks.*
 
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration.*
@@ -168,7 +166,7 @@ object ConstraintsTabContents extends TwoPanels:
                     cur => mergeMap(dbLayout, cur).ready
                   )
                 )
-                .to[IO]
+                .toAsync
             case Left(_)         => IO.unit
           }
       }

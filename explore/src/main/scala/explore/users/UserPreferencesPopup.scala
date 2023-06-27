@@ -9,9 +9,8 @@ import cats.implicits.catsKernelOrderingForOrder
 import cats.syntax.all.*
 import clue.js.FetchJSClient
 import clue.js.FetchJSRequest
-import crystal.react.View
+import crystal.react.*
 import crystal.react.hooks.*
-import crystal.react.implicits.*
 import crystal.react.reuse.*
 import explore.DefaultErrorPolicy
 import explore.Icons
@@ -122,7 +121,7 @@ object UserPreferencesContent:
       position = DialogPosition.Top,
       accept = (for {
         _ <- DeleteApiKey[IO].execute(key, modParams = vault.addAuthorizationHeader)
-        _ <- newKey.set(NewKey(none)).to[IO]
+        _ <- newKey.set(NewKey(none)).toAsync
       } yield ()).switching(active.async, IsActive(_)).runAsync,
       acceptClass = PrimeStyles.ButtonSmall,
       rejectClass = PrimeStyles.ButtonSmall,
@@ -140,7 +139,7 @@ object UserPreferencesContent:
   ) =
     (for {
       newKeyResult <- NewApiKey[IO].execute(keyRoleId, modParams = vault.addAuthorizationHeader)
-      _            <- newKey.set(NewKey(newKeyResult.createApiKey.some)).to[IO]
+      _            <- newKey.set(NewKey(newKeyResult.createApiKey.some)).toAsync
     } yield ()).switching(active.async, IsActive(_))
 
   private val component = ScalaFnComponent
@@ -211,9 +210,9 @@ object UserPreferencesContent:
 
         val requestCacheClean =
           for {
-            _ <- isCleaningTheCache.setState(IsCleaningTheCache(true)).to[IO]
+            _ <- isCleaningTheCache.setState(IsCleaningTheCache(true)).toAsync
             _ <- ctx.workerClients.clearAll(
-                   isCleaningTheCache.setState(IsCleaningTheCache(false)).to[IO]
+                   isCleaningTheCache.setState(IsCleaningTheCache(false)).toAsync
                  )
           } yield ()
 

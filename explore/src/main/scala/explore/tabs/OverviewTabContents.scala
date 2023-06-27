@@ -8,7 +8,6 @@ import cats.syntax.all.*
 import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
-import crystal.react.implicits.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.numeric.NonNegInt
 import explore.UnderConstruction

@@ -7,8 +7,7 @@ import cats.MonadThrow
 import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
-import crystal.react.View
-import crystal.react.implicits.*
+import crystal.react.*
 import explore.DefaultErrorPolicy
 import explore.model.ObsIdSet
 import explore.syntax.ui.*

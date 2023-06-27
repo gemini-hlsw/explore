@@ -6,8 +6,7 @@ package explore.targeteditor
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
-import crystal.react.View
-import crystal.react.implicits.*
+import crystal.react.*
 import explore.DefaultErrorPolicy
 import explore.common.AsterismQueries
 import explore.common.TargetQueries
