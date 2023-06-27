@@ -29,6 +29,7 @@ import explore.model.reusability.given
 import explore.model.reusability.given
 import explore.optics.*
 import explore.optics.all.*
+import explore.syntax.ui.*
 import explore.targets.TargetSelectionPopup
 import explore.targets.TargetSource
 import explore.undo.UndoStacks
@@ -171,15 +172,15 @@ object AsterismEditor extends AsterismModifier:
                 label = "Add"
               ).tiny.compact,
               onSelected = targetWithOptId =>
-                (adding.async.set(AreAdding(true)) >>
-                  insertSiderealTarget(
-                    props.programId,
-                    props.obsIds,
-                    props.asterismIds,
-                    props.allTargets,
-                    targetWithOptId
-                  ).flatMap(oTargetId => targetView.async.set(oTargetId))
-                    .guarantee(adding.async.set(AreAdding(false)))).runAsync
+                insertSiderealTarget(
+                  props.programId,
+                  props.obsIds,
+                  props.asterismIds,
+                  props.allTargets,
+                  targetWithOptId
+                ).flatMap(oTargetId => targetView.async.set(oTargetId))
+                  .switching(adding.async, AreAdding(_))
+                  .runAsync
             )
           ),
           props.renderInTitle(VizTimeEditor(vizTimeView)),

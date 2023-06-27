@@ -260,17 +260,17 @@ object TargetSummaryTable extends TableHooks:
             accept = props.targets
               .mod(_.filter((id, _) => !selectedRowsIds.contains(id))) *>
               table.toggleAllRowsSelected(false) *>
-              (deletingTargets.async.set(DeletingTargets(true)) >>
-                TargetAddDeleteActions
-                  .deleteTargets(
-                    selectedRowsIds,
-                    props.programId,
-                    props.selectTargetOrSummary(none).to[IO],
-                    ToastCtx[IO].showToast(_)
-                  )
-                  .set(props.undoCtx)(selectedRowsIds.map(_ => none))
-                  .to[IO]
-                  .guarantee(deletingTargets.async.set(DeletingTargets(false)))).runAsyncAndForget,
+              TargetAddDeleteActions
+                .deleteTargets(
+                  selectedRowsIds,
+                  props.programId,
+                  props.selectTargetOrSummary(none).to[IO],
+                  ToastCtx[IO].showToast(_)
+                )
+                .set(props.undoCtx)(selectedRowsIds.map(_ => none))
+                .to[IO]
+                .switching(deletingTargets.async, DeletingTargets(_))
+                .runAsyncAndForget,
             acceptClass = PrimeStyles.ButtonSmall,
             rejectClass = PrimeStyles.ButtonSmall,
             icon = Icons.SkullCrossBones.withColor("red")

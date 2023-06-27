@@ -22,6 +22,7 @@ import explore.model.ScienceRequirements.Spectroscopy
 import explore.model.display.given
 import explore.model.itc.ItcTarget
 import explore.modes.SpectroscopyModesMatrix
+import explore.syntax.ui.*
 import explore.undo.*
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -146,8 +147,7 @@ private object BasicConfigurationPanel:
               icon = buttonIcon,
               disabled = creating.get.value || !canAccept,
               severity = Button.Severity.Secondary,
-              onClick = (creating.async.set(Creating(true)) >>
-                props.createConfig.guarantee(creating.async.set(Creating(false)))).runAsync
+              onClick = props.createConfig.switching(creating.async, Creating(_)).runAsync
             ).compact.small.when(canAccept)
           ).when(spectroscopyView.get.isDefined)
         )

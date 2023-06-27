@@ -121,10 +121,9 @@ object UserPreferencesContent:
       acceptLabel = "Yes, delete",
       position = DialogPosition.Top,
       accept = (for {
-        _ <- active.set(IsActive(true)).to[IO]
         _ <- DeleteApiKey[IO].execute(key, modParams = vault.addAuthorizationHeader)
         _ <- newKey.set(NewKey(none)).to[IO]
-      } yield ()).guarantee(active.set(IsActive(false)).to[IO]).runAsync,
+      } yield ()).switching(active.async, IsActive(_)).runAsync,
       acceptClass = PrimeStyles.ButtonSmall,
       rejectClass = PrimeStyles.ButtonSmall,
       icon = Icons.SkullCrossBones.withColor("red")
@@ -136,13 +135,13 @@ object UserPreferencesContent:
     newKey:    View[NewKey],
     vault:     UserVault
   )(using
-    FetchJSClient[IO, SSO]
+    FetchJSClient[IO, SSO],
+    Logger[IO]
   ) =
     (for {
-      _            <- active.set(IsActive(true)).to[IO]
       newKeyResult <- NewApiKey[IO].execute(keyRoleId, modParams = vault.addAuthorizationHeader)
       _            <- newKey.set(NewKey(newKeyResult.createApiKey.some)).to[IO]
-    } yield ()).guarantee(active.set(IsActive(false)).to[IO]).void
+    } yield ()).switching(active.async, IsActive(_))
 
   private val component = ScalaFnComponent
     .withHooks[Props]
