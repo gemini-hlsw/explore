@@ -1,0 +1,4 @@
+table:
+  name: lucumaGridBreakpointName
+  schema: public
+is_enum: true

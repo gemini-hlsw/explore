@@ -1,0 +1,4 @@
+table:
+  name: exploreChartType
+  schema: public
+is_enum: true
