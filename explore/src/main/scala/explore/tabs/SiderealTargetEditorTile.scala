@@ -33,7 +33,6 @@ object SiderealTargetEditorTile {
     userId:     Option[User.Id],
     targetId:   Target.Id,
     target:     UndoSetter[Target.Sidereal],
-    // undoStacks: View[UndoStacks[IO, Target.Sidereal]],
     searching:  View[Set[Target.Id]],
     title:      String,
     fullScreen: View[AladinFullScreen],
@@ -58,7 +57,6 @@ object SiderealTargetEditorTile {
               Asterism.one(TargetWithId(targetId, target.get)).some,
               none,
               none,
-              // undoStacks,
               searching,
               renderInTitle = renderInTitle.some,
               fullScreen = fullScreen

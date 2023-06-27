@@ -74,18 +74,15 @@ case class AsterismEditor(
   programId:       Program.Id,
   obsIds:          ObsIdSet,
   asterismIds:     View[AsterismIds],
-  // allTargets:      View[TargetList],
-  targets:         UndoSetter[TargetList],
+  allTargets:      UndoSetter[TargetList],
   vizTime:         View[Option[Instant]],
   configuration:   ObsConfiguration,
   focusedTargetId: Option[Target.Id],
   setTarget:       (Option[Target.Id], SetRouteVia) => Callback,
   otherObsCount:   Target.Id => Int,
-  // undoStacks:      View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
   searching:       View[Set[Target.Id]],
   renderInTitle:   Tile.RenderInTitle
-) extends ReactFnProps(AsterismEditor.component):
-  val allTargets: View[TargetList] = targets.model
+) extends ReactFnProps(AsterismEditor.component)
 
 object AsterismEditor extends AsterismModifier:
   private type Props = AsterismEditor
@@ -178,7 +175,7 @@ object AsterismEditor extends AsterismModifier:
                   props.programId,
                   props.obsIds,
                   props.asterismIds,
-                  props.allTargets,
+                  props.allTargets.model,
                   targetWithOptId
                 ).flatMap(oTargetId => targetView.async.set(oTargetId))
                   .switching(adding.async, AreAdding(_))
@@ -191,7 +188,7 @@ object AsterismEditor extends AsterismModifier:
             props.programId,
             props.obsIds,
             props.asterismIds,
-            props.targets.get,
+            props.allTargets.get,
             selectedTargetView,
             vizTime,
             props.renderInTitle,
@@ -199,7 +196,8 @@ object AsterismEditor extends AsterismModifier:
           ),
           props.focusedTargetId.map { focusedTargetId =>
             val selectedTargetOpt: Option[UndoSetter[Target.Sidereal]] =
-              props.targets.zoom(Iso.id[TargetList].index(focusedTargetId).andThen(Target.sidereal))
+              props.allTargets
+                .zoom(Iso.id[TargetList].index(focusedTargetId).andThen(Target.sidereal))
 
             val otherObsCount = props.otherObsCount(focusedTargetId)
             val plural        = if (otherObsCount === 1) "" else "s"
@@ -230,13 +228,11 @@ object AsterismEditor extends AsterismModifier:
                       .map(_.focusOn(focusedTargetId)),
                     vizTime,
                     props.configuration.some,
-                    // props.undoStacks
-                    //   .zoom(atMapWithDefault(focusedTargetId, UndoStacks.empty)),
                     props.searching,
                     onClone = onCloneTarget(
                       focusedTargetId,
                       props.asterismIds,
-                      props.allTargets,
+                      props.allTargets.model,
                       props.setTarget
                     ) _,
                     obsIdSubset =

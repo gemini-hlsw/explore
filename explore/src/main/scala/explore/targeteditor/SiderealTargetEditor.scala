@@ -76,7 +76,6 @@ case class SiderealTargetEditor(
   asterism:      Option[Asterism], // This is passed through to Aladin, to plot the entire Asterism.
   vizTime:       Option[Instant],
   obsConf:       Option[ObsConfiguration],
-  // undoStacks:    View[UndoStacks[IO, Target.Sidereal]],
   searching:     View[Set[Target.Id]],
   obsIdSubset:   Option[ObsIdSet] = None,
   onClone:       TargetWithId => Callback = _ => Callback.empty,
@@ -148,14 +147,6 @@ object SiderealTargetEditor:
       }
       .render { (props, ctx, cloning, vizTime) =>
         import ctx.given
-
-        // val (targetView, undoStackView) =
-        //   props.obsIdSubset.fold((props.target, props.undoStacks))(_ =>
-        //     (readonlyView(props.target), readonlyView(props.undoStacks))
-        //   )
-
-        // val undoCtx: UndoContext[Target.Sidereal] =
-        //   UndoContext(undoStackView, targetView)
 
         val remoteOnMod: UpdateTargetsInput => IO[Unit] =
           getRemoteOnMod(
@@ -287,15 +278,7 @@ object SiderealTargetEditor:
         val disabled = props.searching.get.exists(_ === props.targetId) || cloning.get
 
         React.Fragment(
-          // props.renderInTitle
-          //   .map(_.apply(<.span(ExploreStyles.TitleUndoButtons)(UndoButtons(undoCtx)))),
           <.div(ExploreStyles.TargetGrid)(
-            // <.div(
-            //   ExploreStyles.TitleUndoButtons,
-            //   // Don't show the undo/redo buttons if we are in cloning mode or they are in the title bar.
-            //   UndoButtons(undoCtx, disabled = disabled)
-            //     .when(props.renderInTitle.isEmpty && props.obsIdSubset.isEmpty)
-            // ),
             (vizTime, props.asterism.toPot).tupled.renderPot((vt, asterism) =>
               AladinCell(
                 props.userId,

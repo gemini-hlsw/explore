@@ -82,8 +82,6 @@ object Routing:
         routingInfo.programId,
         programSummaries,
         routingInfo.focused,
-        // model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forProgramSummaries),
-        // model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forSiderealTarget),
         model.zoom(RootModel.searchingTarget),
         model.zoom(RootModel.expandedIds.andThen(ExpandedIds.asterismObsIds))
       )
@@ -98,11 +96,8 @@ object Routing:
         routingInfo.programId,
         programSummaries,
         routingInfo.focused,
-        // model.zoom(RootModel.undoStacks),
         model.zoom(RootModel.searchingTarget),
         model.zoom(RootModel.expandedIds.andThen(ExpandedIds.obsListGroupIds))
-        // programSummaries.zoom(ProgramSummaries.obsAttachments),
-        // programSummaries.get.obsAttachmentAssignments
       )
     )
 
@@ -115,7 +110,6 @@ object Routing:
         programSummaries,
         routingInfo.focused.obsSet,
         model.zoom(RootModel.expandedIds.andThen(ExpandedIds.constraintSetObsIds))
-        // model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forObsList)
       )
     )
 
@@ -129,7 +123,6 @@ object Routing:
         programSummaries,
         routingInfo.focused.obsSet,
         model.zoom(RootModel.expandedIds.andThen(ExpandedIds.schedulingObsIds))
-        // model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forProgramSummaries)
       )
     )
 

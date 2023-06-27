@@ -40,13 +40,13 @@ def setObs[F[_]](
   ctx.pushPage(AppTab.Observations, programId, obsId.fold(Focused.None)(Focused.singleObs(_)))
 
 def cloneObs(
-  programId: Program.Id,
-  obsId:     Observation.Id,
-  pos:       Int,
-  undoCtx:   UndoSetter[ObservationList],
-  ctx:       AppContext[IO],
-  before:    IO[Unit] = IO.unit,
-  after:     IO[Unit] = IO.unit
+  programId:    Program.Id,
+  obsId:        Observation.Id,
+  pos:          Int,
+  observations: UndoSetter[ObservationList],
+  ctx:          AppContext[IO],
+  before:       IO[Unit] = IO.unit,
+  after:        IO[Unit] = IO.unit
 ): IO[Unit] =
   import ctx.given
 
@@ -54,7 +54,7 @@ def cloneObs(
     cloneObservation[IO](obsId)
       .flatMap { obs =>
         obsExistence(programId, obs.id, o => setObs(programId, o.some, ctx))
-          .mod(undoCtx)(obsListMod.upsert(obs, pos))
+          .mod(observations)(obsListMod.upsert(obs, pos))
           .toAsync
       }
       .guarantee(after)

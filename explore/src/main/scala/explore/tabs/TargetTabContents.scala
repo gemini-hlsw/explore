@@ -85,17 +85,14 @@ import scala.collection.immutable.SortedSet
 import scala.concurrent.duration.*
 
 case class TargetTabContents(
-  userId:                  Option[User.Id],
-  programId:               Program.Id,
-  programSummariesUndoCtx: UndoContext[ProgramSummaries],
-  focused:                 Focused,
-  // psUndoStacks:      View[UndoStacks[IO, ProgramSummaries]],
-  // targetsUndoStacks: View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
-  searching:               View[Set[Target.Id]],
-  expandedIds:             View[SortedSet[ObsIdSet]]
+  userId:           Option[User.Id],
+  programId:        Program.Id,
+  programSummaries: UndoContext[ProgramSummaries],
+  focused:          Focused,
+  searching:        View[Set[Target.Id]],
+  expandedIds:      View[SortedSet[ObsIdSet]]
 ) extends ReactFnProps(TargetTabContents.component):
-  val programSummaries: View[ProgramSummaries] = programSummariesUndoCtx.model
-  val targets: UndoSetter[TargetList]          = props.programSummariesUndoCtx.zoom(ProgramSummaries.targets)
+  val targets: UndoSetter[TargetList] = props.programSummaries.zoom(ProgramSummaries.targets)
 
 object TargetTabContents extends TwoPanels:
   private type Props = TargetTabContents
@@ -186,29 +183,21 @@ object TargetTabContents extends TwoPanels:
   ): VdomNode = {
     import ctx.given
 
-    val programSummaries: View[ProgramSummaries] = props.programSummariesUndoCtx.model
-
-    // val psUndoCtx: UndoContext[ProgramSummaries] =
-    //   UndoContext(props.psUndoStacks, programSummaries)
-
-    val targets: View[TargetList] = programSummaries.zoom(ProgramSummaries.targets)
-
     def otherObsCount(obsIds: ObsIdSet)(targetId: Target.Id): Int =
-      targets.get
+      props.targets.get
         .get(targetId)
         .fold(0)(tg =>
-          (programSummaries.get.targetObservations.get(targetId).orEmpty -- obsIds.toSortedSet).size
+          (props.programSummaries.get.targetObservations
+            .get(targetId)
+            .orEmpty -- obsIds.toSortedSet).size
         )
 
-    def targetTree(
-      objectsWithObs: View[ProgramSummaries],
-      undoCtx:        UndoContext[ProgramSummaries]
-    ) =
+    def targetTree(programSummaries: UndoContext[ProgramSummaries]) =
       AsterismGroupObsList(
         props.programId,
         props.focused,
         props.expandedIds,
-        undoCtx,
+        programSummaries,
         selectTargetOrSummary _,
         selectedTargetIds
       )
@@ -224,7 +213,7 @@ object TargetTabContents extends TwoPanels:
       targetId: Target.Id
     ): Callback = {
       val obsIdSet = ObsIdSet.one(obsId)
-      findAsterismGroup(obsIdSet, programSummaries.get.asterismGroups)
+      findAsterismGroup(obsIdSet, props.programSummaries.get.asterismGroups)
         .map(ag => expandedIds.mod(_ + ag.obsIds))
         .orEmpty >>
         setPage(Focused(obsIdSet.some, targetId.some))
@@ -272,13 +261,13 @@ object TargetTabContents extends TwoPanels:
         TargetSummaryTable(
           props.userId,
           props.programId,
-          targets,
-          programSummaries.get.targetObservations,
+          props.targets.model,
+          props.programSummaries.get.targetObservations,
           selectObservationAndTarget(props.expandedIds) _,
           selectTargetOrSummary _,
           renderInTitle,
           selectedTargetIds,
-          props.programSummariesUndoCtx
+          props.programSummaries
         )
       )
 
@@ -329,13 +318,13 @@ object TargetTabContents extends TwoPanels:
 
       val asterismView: View[AsterismIds] =
         CloneListView(
-          programSummaries
+          props.programSummaries.model
             .withOnMod(onModAsterismsWithObs(groupIds, idsToEdit))
             .zoom(ProgramSummaries.observations.andThen(traversal))
         )
 
       val vizTimeView: View[Option[Instant]] =
-        programSummaries.zoom(getVizTime)(modVizTime)
+        props.programSummaries.model.zoom(getVizTime)(modVizTime)
 
       val title = idsToEdit.single match {
         case Some(id) => s"Observation $id"
@@ -344,7 +333,7 @@ object TargetTabContents extends TwoPanels:
 
       val obsConf = idsToEdit.single match {
         case Some(id) =>
-          programSummaries.get.observations.values.collect {
+          props.programSummaries.get.observations.values.collect {
             case ObsSummary(
                   obsId,
                   _,
@@ -383,14 +372,13 @@ object TargetTabContents extends TwoPanels:
           props.programId,
           idsToEdit,
           asterismView,
-          props.programSummariesUndoCtx.zoom(ProgramSummaries.targets),
+          props.targets,
           configuration,
           vizTimeView,
           ObsConfiguration(configuration, none, constraints, wavelength, none, none, none),
           props.focused.target,
           setCurrentTarget(props.programId, idsToEdit) _,
           otherObsCount(idsToEdit) _,
-          // props.targetsUndoStacks,
           props.searching,
           title,
           backButton.some
@@ -398,7 +386,7 @@ object TargetTabContents extends TwoPanels:
 
       val selectedCoordinates: Option[Coordinates] =
         props.focused.target.flatMap(id =>
-          targets.get
+          props.targets.get
             .get(id)
             .flatMap {
               case t @ Target.Sidereal(_, _, _, _) =>
@@ -433,16 +421,12 @@ object TargetTabContents extends TwoPanels:
           case other                                 => other
         }
 
-      val targetUndoSetter: UndoSetter[Target.Sidereal] =
-        props.programSummariesUndoCtx.zoom(ProgramSummaries.targets).zoom(getTarget, modTarget)
-
       val title = s"Editing Target ${target.name.value} [$targetId]"
 
       val targetTile = SiderealTargetEditorTile.noObsSiderealTargetEditorTile(
         props.userId,
         targetId,
-        targetUndoSetter,
-        // props.targets.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
+        props.targets.zoom(getTarget, modTarget),
         props.searching,
         title,
         fullScreen,
@@ -479,7 +463,7 @@ object TargetTabContents extends TwoPanels:
       val tileListObSelectedOpt: Option[(List[Tile], Boolean)] = optSelected.flatMap(
         _ match
           case Left(targetId) =>
-            targets.get
+            props.targets.get
               .get(targetId)
               .map {
                 case Nonsidereal(_, _, _)     => (renderNonSiderealTargetEditor, false)
@@ -487,7 +471,7 @@ object TargetTabContents extends TwoPanels:
                   (renderSiderealTargetEditor(resize, targetId, s), false)
               }
           case Right(obsIds)  =>
-            findAsterismGroup(obsIds, programSummaries.get.asterismGroups)
+            findAsterismGroup(obsIds, props.programSummaries.get.asterismGroups)
               .map(asterismGroup => (renderAsterismEditor(resize, obsIds, asterismGroup), true))
       )
 
@@ -512,7 +496,7 @@ object TargetTabContents extends TwoPanels:
 
     makeOneOrTwoPanels(
       selectedView,
-      targetTree(programSummaries, props.programSummariesUndoCtx),
+      targetTree(props.programSummaries),
       rightSide,
       RightSideCardinality.Multi,
       resize
@@ -525,11 +509,9 @@ object TargetTabContents extends TwoPanels:
     targetIds:        List[Target.Id],
     programSummaries: UndoSetter[ProgramSummaries],
     ctx:              AppContext[IO],
-    // listUndoStacks:   View[UndoStacks[IO, ProgramSummaries]],
     expandedIds:      View[SortedSet[ObsIdSet]]
   ): IO[Unit] =
     import ctx.given
-    // val undoContext = UndoContext(listUndoStacks, programSummaries)
     (obsIds, targetIds).tupled
       .traverse((obsId, tid) =>
         ObsQueries
@@ -640,9 +622,8 @@ object TargetTabContents extends TwoPanels:
                     props.programId,
                     id.idSet.toList,
                     treeTargets,
-                    props.programSummariesUndoCtx,
+                    props.programSummaries,
                     ctx,
-                    // props.psUndoStacks,
                     props.expandedIds
                   ).withToast(s"Pasting obs ${id.idSet.toList.mkString(", ")}")
                 else IO.unit
@@ -666,7 +647,7 @@ object TargetTabContents extends TwoPanels:
                             selectObsIds,
                             props.expandedIds
                           )
-                          .set(props.programSummariesUndoCtx)(())
+                          .set(props.programSummaries)(())
                           .toAsync
                       )
                   )

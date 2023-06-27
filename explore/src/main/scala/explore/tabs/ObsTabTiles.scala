@@ -81,12 +81,11 @@ case class ObsTabTiles(
   userId:                   Option[User.Id],
   programId:                Program.Id,
   backButton:               VdomNode,
-  obsUndoCtx:               UndoSetter[ObsSummary],
-  allTargetsUndoCtx:        UndoSetter[TargetList],
+  observation:              UndoSetter[ObsSummary],
+  allTargets:               UndoSetter[TargetList],
   allConstraintSets:        Set[ConstraintSet],
   targetObservations:       Map[Target.Id, SortedSet[Observation.Id]],
   focusedTarget:            Option[Target.Id],
-  // undoStacks:               View[ModelUndoStacks[IO]],
   searching:                View[Set[Target.Id]],
   defaultLayouts:           LayoutsMap,
   layouts:                  View[Pot[LayoutsMap]],
@@ -94,10 +93,7 @@ case class ObsTabTiles(
   obsAttachments:           View[ObsAttachmentList],
   obsAttachmentAssignments: ObsAttachmentAssignmentMap
 ) extends ReactFnProps(ObsTabTiles.component):
-  val obsView: View[ObsSummary] = obsUndoCtx.model
-  val observation: ObsSummary   = obsView.get
-  val obsId: Observation.Id     = observation.id
-  val allTargets: TargetList    = allTargetsUndoCtx.model.get
+  val obsId: Observation.Id = observation.get.id
 
 object ObsTabTiles:
   private type Props = ObsTabTiles
@@ -188,10 +184,11 @@ object ObsTabTiles:
       // the configuration the user has selected from the spectroscopy modes table, if any
       .useStateView(none[BasicConfigAndItc])
       .useStateWithReuseBy((props, _, odbItc, _, _, _, selectedConfig) =>
-        itcQueryProps(props.observation,
-                      odbItc.toOption.flatten,
-                      selectedConfig.get,
-                      props.allTargets
+        itcQueryProps(
+          props.observation.get,
+          odbItc.toOption.flatten,
+          selectedConfig.get,
+          props.allTargets.get
         )
       )
       // Chart results
@@ -199,10 +196,11 @@ object ObsTabTiles:
       // itc loading
       .useStateWithReuse(LoadingState.Done)
       .useEffectWithDepsBy { (props, _, odbItc, _, _, _, selectedConfig, _, _, _) =>
-        itcQueryProps(props.observation,
-                      odbItc.toOption.flatten,
-                      selectedConfig.get,
-                      props.allTargets
+        itcQueryProps(
+          props.observation.get,
+          odbItc.toOption.flatten,
+          selectedConfig.get,
+          props.allTargets.get
         )
       } { (props, ctx, _, _, _, _, _, oldItcProps, charts, loading) => itcProps =>
         import ctx.given
@@ -260,7 +258,7 @@ object ObsTabTiles:
           // This view is shared between AGS and the configuration editor
           // when PA changes it gets saved to the db
           val posAngleConstraintView: View[PosAngleConstraint] =
-            props.obsView
+            props.observation.model
               .zoom(ObsSummary.posAngleConstraint)
               .withOnMod(pa =>
                 agsState.set(AgsState.Saving) *> ObsQueries
@@ -270,20 +268,20 @@ object ObsTabTiles:
               )
 
           val asterismIds: View[AsterismIds] =
-            props.obsView.zoom(ObsSummary.scienceTargetIds)
+            props.observation.model.zoom(ObsSummary.scienceTargetIds)
 
           val basicConfiguration: Option[BasicConfiguration] =
-            props.observation.observingMode.map(_.toBasicConfiguration)
+            props.observation.get.observingMode.map(_.toBasicConfiguration)
 
           val vizTimeView: View[Option[Instant]] =
-            props.obsView.zoom(ObsSummary.visualizationTime)
+            props.observation.model.zoom(ObsSummary.visualizationTime)
 
           val vizTime: Option[Instant] = vizTimeView.get
 
           val asterismAsNel: Option[NonEmptyList[TargetWithId]] =
             NonEmptyList.fromList(
-              props.observation.scienceTargetIds.toList
-                .map(id => props.allTargets.get(id).map(t => TargetWithId(id, t)))
+              props.observation.get.scienceTargetIds.toList
+                .map(id => props.allTargets.get.get(id).map(t => TargetWithId(id, t)))
                 .flattenOption
             )
 
@@ -302,16 +300,17 @@ object ObsTabTiles:
                   )
               )
 
-          val attachmentsView = props.obsView.zoom(ObsSummary.attachmentIds).withOnMod { ids =>
-            obsEditAttachments(props.programId, props.obsId, ids).runAsyncAndForget
-          }
+          val attachmentsView =
+            props.observation.model.zoom(ObsSummary.attachmentIds).withOnMod { ids =>
+              obsEditAttachments(props.programId, props.obsId, ids).runAsyncAndForget
+            }
 
           val finderChartsTile =
-            FinderChartsTile.finderChartsTile(props.programId,
-                                              props.obsId,
-                                              attachmentsView,
-                                              props.vault.map(_.token),
-                                              props.obsAttachments
+            FinderChartsTile.finderChartsTile(
+              props.programId,
+              attachmentsView,
+              props.vault.map(_.token),
+              props.obsAttachments
             )
 
           val notesTile =
@@ -335,18 +334,20 @@ object ObsTabTiles:
               props.userId,
               props.obsId,
               selectedItcTarget,
-              props.allTargets,
+              props.allTargets.get,
               itcProps.value,
               itcChartResults.value,
               itcLoading.value
             )
 
-          val constraints: View[ConstraintSet] = props.obsView.zoom(ObsSummary.constraints)
-          val constraintsSelector: VdomNode    =
+          val constraints: View[ConstraintSet] =
+            props.observation.model.zoom(ObsSummary.constraints)
+
+          val constraintsSelector: VdomNode =
             makeConstraintsSelector(
               props.programId,
               props.obsId,
-              props.obsUndoCtx.model.zoom(ObsSummary.constraints),
+              props.observation.model.zoom(ObsSummary.constraints),
               props.allConstraintSets
             )
 
@@ -354,14 +355,14 @@ object ObsTabTiles:
             TimingWindowsQueries.viewWithRemoteMod(
               props.programId,
               ObsIdSet.one(props.obsId),
-              props.obsUndoCtx.undoableView[List[TimingWindow]](ObsSummary.timingWindows)
+              props.observation.undoableView[List[TimingWindow]](ObsSummary.timingWindows)
             )
 
           val skyPlotTile: Tile =
             ElevationPlotTile.elevationPlotTile(
               props.userId,
-              props.focusedTarget.orElse(props.observation.scienceTargetIds.headOption),
-              props.observation.observingMode.map(_.siteFor),
+              props.focusedTarget.orElse(props.observation.get.scienceTargetIds.headOption),
+              props.observation.get.observingMode.map(_.siteFor),
               targetCoords,
               vizTime,
               timingWindows.get
@@ -398,7 +399,7 @@ object ObsTabTiles:
               paProps.some,
               constraints.get.some,
               ScienceRequirements.spectroscopy
-                .getOption(props.observation.scienceRequirements)
+                .getOption(props.observation.get.scienceRequirements)
                 .flatMap(_.wavelength),
               sequenceOffsets.toOption.flatMap(_.science),
               sequenceOffsets.toOption.flatMap(_.acquisition),
@@ -414,14 +415,13 @@ object ObsTabTiles:
               props.programId,
               ObsIdSet.one(props.obsId),
               asterismIds,
-              props.allTargetsUndoCtx,
+              props.allTargets,
               basicConfiguration,
               vizTimeView,
               obsConf,
               props.focusedTarget,
               setCurrentTarget(props.programId, props.obsId.some),
               otherObsCount(props.obsId, _),
-              // props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
               props.searching,
               "Targets",
               backButton = none
@@ -443,7 +443,7 @@ object ObsTabTiles:
               ConstraintsPanel(
                 props.programId,
                 ObsIdSet.one(props.obsId),
-                props.obsUndoCtx.zoom(ObsSummary.constraints),
+                props.observation.zoom(ObsSummary.constraints),
                 renderInTitle
               )
             )
@@ -458,16 +458,16 @@ object ObsTabTiles:
               props.userId,
               props.programId,
               props.obsId,
-              props.observation.title,
-              props.observation.subtitle,
-              props.obsUndoCtx.zoom(ObsSummary.scienceRequirements),
-              props.obsUndoCtx.zoom(ObsSummary.observingMode),
+              props.observation.get.title,
+              props.observation.get.subtitle,
+              props.observation.zoom(ObsSummary.scienceRequirements),
+              props.observation.zoom(ObsSummary.observingMode),
               posAngleConstraintView,
-              props.observation.scienceTargetIds,
+              props.observation.get.scienceTargetIds,
               targetCoords,
               obsConf,
               selectedConfig,
-              props.allTargets
+              props.allTargets.get
             )
 
           props.layouts.renderPotView(l =>
