@@ -10,7 +10,6 @@ import cats.syntax.all.*
 import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
-import crystal.react.reuse.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Resources
 import explore.attachments.ObsAttachmentUtils
