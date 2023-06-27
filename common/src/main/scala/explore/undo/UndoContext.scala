@@ -18,7 +18,8 @@ import org.typelevel.log4cats.Logger
 case class UndoContext[M](
   stacks: View[UndoStacks[DefaultA, M]],
   model:  View[M]
-) extends UndoSetter[M] {
+) extends UndoSetter[M]
+    with Undoer {
   private lazy val undoStack: View[UndoStack[DefaultA, M]] = stacks.zoom(UndoStacks.undo)
   private lazy val redoStack: View[UndoStack[DefaultA, M]] = stacks.zoom(UndoStacks.redo)
 

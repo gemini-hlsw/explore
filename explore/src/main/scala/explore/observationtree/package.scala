@@ -18,7 +18,7 @@ import explore.optics.GetAdjust
 import explore.optics.all.*
 import explore.undo.Action
 import explore.undo.KIListMod
-import explore.undo.UndoContext
+import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
 import lucuma.core.model.ObsAttachment
 import lucuma.core.model.Observation
@@ -43,7 +43,7 @@ def cloneObs(
   programId: Program.Id,
   obsId:     Observation.Id,
   pos:       Int,
-  undoCtx:   UndoContext[ObservationList],
+  undoCtx:   UndoSetter[ObservationList],
   ctx:       AppContext[IO],
   before:    IO[Unit] = IO.unit,
   after:     IO[Unit] = IO.unit

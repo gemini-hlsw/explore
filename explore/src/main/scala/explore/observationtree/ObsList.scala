@@ -24,8 +24,6 @@ import explore.observationtree.ObsBadge
 import explore.syntax.ui.*
 import explore.tabs.DeckShown
 import explore.undo.KIListMod
-import explore.undo.UndoContext
-import explore.undo.UndoStacks
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -55,9 +53,12 @@ import scala.annotation.tailrec
 import scala.scalajs.js
 
 import ObsQueries.*
+import explore.undo.UndoSetter
+import explore.undo.Undoer
 
 case class ObsList(
-  obsUndoCtx:      UndoContext[ObservationList],
+  obsUndoCtx:      UndoSetter[ObservationList],
+  undoer:          Undoer,
   programId:       Program.Id,
   focusedObs:      Option[Observation.Id],
   focusedTarget:   Option[Target.Id],
@@ -93,7 +94,7 @@ object ObsList:
   private def insertObs(
     programId: Program.Id,
     pos:       Int,
-    undoCtx:   UndoContext[ObservationList],
+    undoCtx:   UndoSetter[ObservationList],
     adding:    View[Boolean],
     ctx:       AppContext[IO]
   ): IO[Unit] =
@@ -269,7 +270,7 @@ object ObsList:
                     clazz = ExploreStyles.ObsTreeHideShow,
                     onClick = props.deckShown.mod(_.flip)
                   ).mini.compact,
-                  UndoButtons(props.obsUndoCtx, size = PlSize.Mini, disabled = adding.get)
+                  UndoButtons(props.undoer, size = PlSize.Mini, disabled = adding.get)
                 )
               ),
               <.div(

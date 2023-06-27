@@ -22,7 +22,6 @@ import explore.model.TargetList
 import explore.model.enums.AgsState
 import explore.model.enums.TileSizeState
 import explore.targeteditor.AsterismEditor
-import explore.undo.UndoStacks
 import explore.utils.*
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.extra.router.SetRouteVia
@@ -44,24 +43,25 @@ import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries
 
 import java.time.Instant
+import explore.undo.UndoSetter
 
 object AsterismEditorTile:
 
   def asterismEditorTile(
-    userId:            Option[User.Id],
-    programId:         Program.Id,
-    obsIds:            ObsIdSet,
-    asterismIds:       View[AsterismIds],
-    targetsUndoSetter: UndoSetter[TargetList],
-    configuration:     Option[BasicConfiguration],
-    vizTime:           View[Option[Instant]],
-    obsConf:           ObsConfiguration,
-    currentTarget:     Option[Target.Id],
-    setTarget:         (Option[Target.Id], SetRouteVia) => Callback,
-    otherObsCount:     Target.Id => Int,
-    searching:         View[Set[Target.Id]],
-    title:             String,
-    backButton:        Option[VdomNode] = none
+    userId:        Option[User.Id],
+    programId:     Program.Id,
+    obsIds:        ObsIdSet,
+    asterismIds:   View[AsterismIds],
+    targets:       UndoSetter[TargetList],
+    configuration: Option[BasicConfiguration],
+    vizTime:       View[Option[Instant]],
+    obsConf:       ObsConfiguration,
+    currentTarget: Option[Target.Id],
+    setTarget:     (Option[Target.Id], SetRouteVia) => Callback,
+    otherObsCount: Target.Id => Int,
+    searching:     View[Set[Target.Id]],
+    title:         String,
+    backButton:    Option[VdomNode] = none
   )(using FetchClient[IO, ObservationDB], Logger[IO]): Tile = {
     // Save the time here. this works for the obs and target tabs
     val vizTimeView = vizTime.withOnMod(t =>
@@ -84,7 +84,7 @@ object AsterismEditorTile:
           programId,
           obsIds,
           asterismIds,
-          targetsUndoSetter,
+          targets,
           vizTime,
           obsConf,
           currentTarget,

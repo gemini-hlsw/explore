@@ -84,21 +84,38 @@ object DeckShown extends NewType[Boolean]:
 type DeckShown = DeckShown.Type
 
 case class ObsTabContents(
-  vault:                    Option[UserVault],
-  userId:                   Option[User.Id],
-  programId:                Program.Id,
-  programSummaries:         View[ProgramSummaries],
-  focused:                  Focused,
-  undoStacks:               View[ModelUndoStacks[IO]],
-  searching:                View[Set[Target.Id]],
-  expandedGroups:           View[Set[Group.Id]],
-  obsAttachments:           View[ObsAttachmentList],
-  obsAttachmentAssignments: ObsAttachmentAssignmentMap
+  vault:                   Option[UserVault],
+  userId:                  Option[User.Id],
+  programId:               Program.Id,
+  // programSummaries:         View[ProgramSummaries],
+  programSummariesUndoCtx: UndoContext[ProgramSummaries],
+  focused:                 Focused,
+  // undoStacks:              View[ModelUndoStacks[IO]],
+  searching:               View[Set[Target.Id]],
+  expandedGroups:          View[Set[Group.Id]]
+  // obsAttachments:           View[ObsAttachmentList],
+  // obsAttachmentAssignments: ObsAttachmentAssignmentMap
 ) extends ReactFnProps(ObsTabContents.component):
-  val focusedObs: Option[Observation.Id] = focused.obsSet.map(_.head)
-  val focusedTarget: Option[Target.Id]   = focused.target
-  val obsUndoStacks                      = undoStacks.zoom(ModelUndoStacks.forObsList)
-  val psUndoStacks                       = undoStacks.zoom(ModelUndoStacks.forProgramSummaries)
+  val focusedObs: Option[Observation.Id]                   = focused.obsSet.map(_.head)
+  val focusedTarget: Option[Target.Id]                     = focused.target
+  val programSummaries: View[ProgramSummaries]             = programSummariesUndoCtx.model
+  val obsAttachments: View[ObsAttachmentList]              =
+    programSummaries.zoom(ProgramSummaries.obsAttachments)
+  val obsAttachmentAssignments: ObsAttachmentAssignmentMap =
+    programSummaries.get.obsAttachmentAssignments
+
+  // val programSummaries: View[ProgramSummaries] = props.programSummaries
+  val observations: View[ObservationList]     = programSummaries.zoom(ProgramSummaries.observations)
+  // val obsUndoCtx: UndoContext[ObservationList] = UndoContext(props.obsUndoStacks, observations)
+  // val psUndoCtx: UndoContext[ProgramSummaries] = UndoContext(props.psUndoStacks, programSummaries)
+  val obsUndoCtx: UndoSetter[ObservationList] =
+    programSummariesUndoCtx.zoom(ProgramSummaries.observations)
+  val groupsUndoCtx: UndoSetter[GroupList]    = programSummariesUndoCtx.zoom(ProgramSummaries.groups)
+  val targetsUndoCtx: UndoSetter[TargetList]  =
+    programSummariesUndoCtx.zoom(ProgramSummaries.targets)
+
+  // val obsUndoStacks                            = undoStacks.zoom(ModelUndoStacks.forObsList)
+  // val psUndoStacks                             = undoStacks.zoom(ModelUndoStacks.forProgramSummaries)
 
 object ObsTabContents extends TwoPanels:
   private type Props = ObsTabContents
@@ -219,22 +236,16 @@ object ObsTabContents extends TwoPanels:
   ): VdomNode = {
     import ctx.given
 
-    val programSummaries: View[ProgramSummaries] = props.programSummaries
-    val observations: View[ObservationList]      = programSummaries.zoom(ProgramSummaries.observations)
-    val obsUndoCtx: UndoContext[ObservationList] = UndoContext(props.obsUndoStacks, observations)
-    val psUndoCtx: UndoContext[ProgramSummaries] = UndoContext(props.psUndoStacks, programSummaries)
-    val groupsUndoCtx                            = psUndoCtx.zoom(ProgramSummaries.groups)
-    val targetsUndoCtx: UndoSetter[TargetList]   = psUndoCtx.zoom(ProgramSummaries.targets)
-
     def observationsTree(observations: View[ObservationList]) =
       if (deckShown.get === DeckShown.Shown) {
         ObsList(
-          obsUndoCtx,
+          props.obsUndoCtx,
+          props.programSummariesUndoCtx,
           props.programId,
           props.focusedObs,
           props.focusedTarget,
           selectedView.set(SelectedPanel.Summary),
-          groupsUndoCtx.model.get,
+          props.groupsUndoCtx.model.get,
           props.expandedGroups,
           deckShown
         ): VdomNode
@@ -261,8 +272,8 @@ object ObsTabContents extends TwoPanels:
           ObsSummaryTable(
             props.userId,
             props.programId,
-            observations.get,
-            targetsUndoCtx.model.get,
+            props.observations.get,
+            props.targetsUndoCtx.model.get,
             renderInTitle
           )
         // TODO: elevation view
@@ -270,7 +281,7 @@ object ObsTabContents extends TwoPanels:
       )(obsId =>
         val indexValue = Iso.id[ObservationList].index(obsId).andThen(KeyedIndexedList.value)
 
-        observations
+        props.observations
           .zoom(indexValue)
           .mapValue(obsView =>
             ObsTabTiles(
@@ -280,13 +291,14 @@ object ObsTabContents extends TwoPanels:
               backButton,
               // FIXME Find a better mechanism for this.
               // Something like .mapValue but for UndoContext
-              obsUndoCtx.zoom(indexValue.getOption.andThen(_.get), indexValue.modify),
-              psUndoCtx.zoom(ProgramSummaries.targets),
+              props.obsUndoCtx.zoom(indexValue.getOption.andThen(_.get), indexValue.modify),
+              // psUndoCtx.zoom(ProgramSummaries.targets),
+              props.targetsUndoCtx,
               // maybe we want constraintGroups, so we can get saner ids?
-              programSummaries.get.constraintGroups.map(_._2).toSet,
-              programSummaries.get.targetObservations,
+              props.programSummaries.get.constraintGroups.map(_._2).toSet,
+              props.programSummaries.get.targetObservations,
               props.focusedTarget,
-              props.undoStacks,
+              // props.undoStacks,
               props.searching,
               defaultLayouts,
               layouts,
@@ -299,7 +311,7 @@ object ObsTabContents extends TwoPanels:
 
     makeOneOrTwoPanels(
       selectedView,
-      observationsTree(observations),
+      observationsTree(props.observations),
       rightSide,
       RightSideCardinality.Multi,
       resize,
@@ -380,15 +392,13 @@ object ObsTabContents extends TwoPanels:
             ExploreClipboard.get.flatMap {
               case LocalClipboard.CopiedObservations(idSet) =>
                 val observations = props.programSummaries.zoom(ProgramSummaries.observations)
-                // TODO Is this a dummy undoCtx??
-                val undoCtx      = UndoContext(props.obsUndoStacks, observations)
                 idSet.idSet.toList
                   .traverse(oid =>
                     cloneObs(
                       props.programId,
                       oid,
                       observationIds.length,
-                      undoCtx,
+                      props.obsUndoCtx,
                       ctx
                     )
                   )

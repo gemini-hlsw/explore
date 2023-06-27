@@ -139,8 +139,8 @@ object Routing:
     withProgramSummaries(routingInfo.programId.some, model)(_ =>
       ProposalTabContents(
         routingInfo.programId,
-        model.zoom(RootModel.user).get
-        // model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forProposal)
+        model.zoom(RootModel.user).get,
+        model.zoom(RootModel.otherUndoStacks).zoom(ModelUndoStacks.forProposal)
       )
     )
 

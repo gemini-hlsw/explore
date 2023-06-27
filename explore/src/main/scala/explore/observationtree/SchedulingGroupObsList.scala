@@ -25,7 +25,8 @@ import explore.model.enums.AppTab
 import explore.model.syntax.all.*
 import explore.model.syntax.all.*
 import explore.render.given
-import explore.undo.UndoContext
+import explore.undo.UndoSetter
+import explore.undo.Undoer
 import explore.utils.ToastCtx
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -53,7 +54,8 @@ import scala.collection.immutable.SortedSet
 
 case class SchedulingGroupObsList(
   programId:        Program.Id,
-  undoCtx:          UndoContext[ObservationList],
+  undoCtx:          UndoSetter[ObservationList],
+  undoer:           Undoer,
   schedulingGroups: SchedulingGroupList,
   focusedObsSet:    Option[ObsIdSet],
   setSummaryPanel:  Callback,
@@ -116,7 +118,7 @@ object SchedulingGroupObsList:
     }
 
   private def onDragEnd(
-    undoCtx:          UndoContext[ObservationList],
+    undoCtx:          UndoSetter[ObservationList],
     programId:        Program.Id,
     expandedIds:      View[SortedSet[ObsIdSet]],
     focusedObsSet:    Option[ObsIdSet],
@@ -313,7 +315,7 @@ object SchedulingGroupObsList:
           (result, provided) => dragging.setState(false) >> handleDragEnd(result, provided)
       )(
         <.div(ExploreStyles.ObsTreeWrapper)(
-          <.div(ExploreStyles.TreeToolbar)(UndoButtons(props.undoCtx, size = PlSize.Mini)),
+          <.div(ExploreStyles.TreeToolbar)(UndoButtons(props.undoer, size = PlSize.Mini)),
           <.div(ExploreStyles.ObsTree)(
             <.div(ExploreStyles.ObsScrollTree)(
               schedulingGroups.map((obsIds, c) => renderGroup(obsIds, c)).toTagMod

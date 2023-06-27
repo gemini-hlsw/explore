@@ -29,7 +29,8 @@ case class RootModel(
   searchingTarget:      Set[Target.Id] = HashSet.empty,
   userSelectionMessage: Option[NonEmptyString] = none,
   programSummaries:     Option[ProgramSummaries] = none,
-  undoStacks:           UndoStacks[IO, ProgramSummaries] = UndoStacks.empty[IO, ProgramSummaries]
+  undoStacks:           UndoStacks[IO, ProgramSummaries] = UndoStacks.empty[IO, ProgramSummaries],
+  otherUndoStacks:      ModelUndoStacks[IO] = ModelUndoStacks[IO]()
 ) derives Eq
 
 object RootModel:
@@ -40,6 +41,7 @@ object RootModel:
   val userSelectionMessage = Focus[RootModel](_.userSelectionMessage)
   val programSummaries     = Focus[RootModel](_.programSummaries)
   val undoStacks           = Focus[RootModel](_.undoStacks)
+  val otherUndoStacks      = Focus[RootModel](_.otherUndoStacks)
 
   val userUserId = Lens[User, User.Id](_.id)(s =>
     a =>

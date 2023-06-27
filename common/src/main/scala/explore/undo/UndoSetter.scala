@@ -7,12 +7,16 @@ import crystal.react.*
 import japgolly.scalajs.react.util.DefaultEffects.{Async => DefaultA}
 import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
 import monocle.Lens
+import monocle.Optional
+import monocle.Prism
 
 /*
  * Allows modifying values in an undo context, but doesn't give access to undo and redo operations.
  */
 trait UndoSetter[M] { self =>
   def model: View[M]
+
+  def get: M = model.get
 
   def set[A](
     getter:    M => A,
@@ -105,6 +109,12 @@ trait UndoSetter[M] { self =>
     }
 
   def zoom[N](lens: Lens[M, N]): UndoSetter[N] = zoom(lens.get, lens.modify)
+
+  def zoom[N](optional: Optional[M, N]): Option[UndoSetter[N]] =
+    optional.getOption(get).map(n => zoom(_ => n, optional.modify))
+
+  def zoom[N](prism: Prism[M, N]): Option[UndoSetter[N]] =
+    prism.getOption(get).map(n => zoom(_ => n, prism.modify))
 
   /**
    * Allows accessing the `UndoSetter` as a `View`.

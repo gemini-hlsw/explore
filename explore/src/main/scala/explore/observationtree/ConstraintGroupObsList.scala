@@ -50,7 +50,8 @@ import scala.collection.immutable.SortedSet
 
 case class ConstraintGroupObsList(
   programId:        Program.Id,
-  undoCtx:          UndoContext[ObservationList],
+  undoCtx:          UndoSetter[ObservationList],
+  undoer:           Undoer,
   constraintGroups: ConstraintGroupList,
   focusedObsSet:    Option[ObsIdSet],
   setSummaryPanel:  Callback,
@@ -83,7 +84,7 @@ object ConstraintGroupObsList:
     }
 
   private def onDragEnd(
-    undoCtx:          UndoContext[ObservationList],
+    undoCtx:          UndoSetter[ObservationList],
     programId:        Program.Id,
     expandedIds:      View[SortedSet[ObsIdSet]],
     focusedObsSet:    Option[ObsIdSet],
@@ -279,7 +280,7 @@ object ConstraintGroupObsList:
           (result, provided) => dragging.setState(false) >> handleDragEnd(result, provided)
       )(
         <.div(ExploreStyles.ObsTreeWrapper)(
-          <.div(ExploreStyles.TreeToolbar)(UndoButtons(props.undoCtx, size = PlSize.Mini)),
+          <.div(ExploreStyles.TreeToolbar)(UndoButtons(props.undoer, size = PlSize.Mini)),
           <.div(
             Button(
               onClick = setObsSet(none) >> props.setSummaryPanel,

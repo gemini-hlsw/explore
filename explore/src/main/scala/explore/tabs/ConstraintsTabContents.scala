@@ -82,13 +82,15 @@ import scala.collection.immutable.SortedSet
 import scala.concurrent.duration.*
 
 case class ConstraintsTabContents(
-  userId:           Option[User.Id],
-  programId:        Program.Id,
-  programSummaries: View[ProgramSummaries],
-  focusedObsSet:    Option[ObsIdSet],
-  expandedIds:      View[SortedSet[ObsIdSet]],
-  obsUndoStacks:    View[UndoStacks[IO, ObservationList]]
-) extends ReactFnProps(ConstraintsTabContents.component)
+  userId:                  Option[User.Id],
+  programId:               Program.Id,
+  // programSummaries: View[ProgramSummaries],
+  programSummariesUndoCtx: UndoContext[ProgramSummaries],
+  focusedObsSet:           Option[ObsIdSet],
+  expandedIds:             View[SortedSet[ObsIdSet]]
+  // obsUndoStacks:    View[UndoStacks[IO, ObservationList]]
+) extends ReactFnProps(ConstraintsTabContents.component):
+  val programSummaries: View[ProgramSummaries] = programSummariesUndoCtx.model
 
 object ConstraintsTabContents extends TwoPanels:
   private type Props = ConstraintsTabContents
@@ -228,7 +230,8 @@ object ConstraintsTabContents extends TwoPanels:
           // .withOnMod(onModSummaryWithObs(groupObsIds, idsToEdit))
           .zoom(ProgramSummaries.observations)
 
-        val obsUndoCtx: UndoContext[ObservationList] = UndoContext(props.obsUndoStacks, obsView)
+        val obsUndoCtx: UndoSetter[ObservationList] =
+          props.programSummariesUndoCtx.zoom(ProgramSummaries.observations)
 
         val rightSide = (_: UseResizeDetectorReturn) =>
           props.focusedObsSet
@@ -315,6 +318,7 @@ object ConstraintsTabContents extends TwoPanels:
           ConstraintGroupObsList(
             props.programId,
             obsUndoCtx,
+            props.programSummariesUndoCtx,
             programSummaries.get.constraintGroups,
             props.focusedObsSet,
             state.set(SelectedPanel.Summary),

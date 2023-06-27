@@ -41,9 +41,8 @@ import explore.observationtree.obsEditAttachments
 import explore.optics.*
 import explore.optics.all.*
 import explore.timingwindows.TimingWindowsPanel
-import explore.undo.UndoContext
 import explore.undo.UndoSetter
-import explore.undo.UndoStacks
+// import explore.undo.UndoStacks
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
@@ -88,7 +87,7 @@ case class ObsTabTiles(
   allConstraintSets:        Set[ConstraintSet],
   targetObservations:       Map[Target.Id, SortedSet[Observation.Id]],
   focusedTarget:            Option[Target.Id],
-  undoStacks:               View[ModelUndoStacks[IO]],
+  // undoStacks:               View[ModelUndoStacks[IO]],
   searching:                View[Set[Target.Id]],
   defaultLayouts:           LayoutsMap,
   layouts:                  View[Pot[LayoutsMap]],
@@ -416,14 +415,14 @@ object ObsTabTiles:
               props.programId,
               ObsIdSet.one(props.obsId),
               asterismIds,
-              props.allTargetsUndoCtx.model,
+              props.allTargetsUndoCtx,
               basicConfiguration,
               vizTimeView,
               obsConf,
               props.focusedTarget,
               setCurrentTarget(props.programId, props.obsId.some),
               otherObsCount(props.obsId, _),
-              props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
+              // props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
               props.searching,
               "Targets",
               backButton = none
