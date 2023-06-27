@@ -52,13 +52,24 @@ object SVGTooltip {
     sx:       Double,
     sy:       Double,
     tooltip:  String
-  ) = {
+  ): (Double, Double, Double, String, Double) = {
+    val (textWidth, textHeight) = textDomSize(tooltip)
+    tooltipTranslationAndContent(floating, q, sx, sy, textWidth, textHeight)
+  }
+
+  def tooltipTranslationAndContent(
+    floating:   UseFloatingReturn,
+    q:          Double,
+    sx:         Double,
+    sy:         Double,
+    textWidth:  Double,
+    textHeight: Double
+  ): (Double, Double, Double, String, Double) = {
     val pf = sx.max(sy)
 
-    val (textWidth, textHeight) = textDomSize(tooltip)
-    val tooltipWidth            = textWidth / pf
-    val tooltipHeight           = textHeight / pf
-    val tooltipOffset           = tooltipHeight * 0.1;
+    val tooltipWidth  = textWidth / pf
+    val tooltipHeight = textHeight / pf
+    val tooltipOffset = tooltipHeight * 0.1;
 
     val translateTextX                        = -tooltipWidth / 2
     val (translateBoxY, translateTextY, path) = Placement.fromString(floating.placement) match
