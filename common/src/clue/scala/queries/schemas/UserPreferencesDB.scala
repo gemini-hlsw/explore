@@ -33,16 +33,15 @@ trait UserPreferencesDB:
     }
 
   object Scalars:
-    type UserId         = User.Id
-    type ResizableArea  = String
-    type BreakpointName = String
-    type Site           = lucuma.core.enums.Site
-    type Bigint         = Long
+    type UserId        = User.Id
+    type ResizableArea = String
+    type Bigint        = Long
 
   object Enums:
-    type ItcChartType            = lucuma.itc.ChartType
-    type LucumaTableIdsEnum      = explore.model.enums.TableId
-    type LucumaSortDirectionEnum = SortDirection
-    type LucumaGridLayoutIdEnum  = explore.model.enums.GridLayoutSection
-    type ExplorePlotRangeEnum    = explore.model.enums.PlotRange
-    type ExplorePlotTimeEnum     = explore.model.enums.TimeDisplay
+    type ExploreChartTypeEnum         = lucuma.itc.ChartType
+    type LucumaTableIdsEnum           = explore.model.enums.TableId
+    type LucumaSortDirectionEnum      = SortDirection
+    type LucumaGridLayoutIdEnum       = explore.model.enums.GridLayoutSection
+    type LucumaGridBreakpointNameEnum = explore.model.enums.GridBreakpointName
+    type ExplorePlotRangeEnum         = explore.model.enums.PlotRange
+    type ExplorePlotTimeEnum          = explore.model.enums.TimeDisplay

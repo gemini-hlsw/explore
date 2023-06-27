@@ -17,6 +17,7 @@ import explore.model.AladinFullScreen
 import explore.model.AladinMouseScroll
 import explore.model.TargetVisualOptions
 import explore.model.UserGlobalPreferences
+import explore.model.enums.GridBreakpointName
 import explore.model.enums.GridLayoutSection
 import explore.model.enums.PlotRange
 import explore.model.enums.TableId
@@ -32,6 +33,7 @@ import lucuma.core.math.Offset
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.model.User
+import lucuma.core.util.Enumerated
 import lucuma.itc.ChartType
 import lucuma.react.table.*
 import lucuma.refined.*
@@ -88,12 +90,15 @@ object UserPreferencesQueries:
   end UserPreferences
 
   object GridLayouts:
+    extension (e: react.gridlayout.BreakpointName)
+      def toGridBreakpointName: GridBreakpointName =
+        Enumerated[GridBreakpointName].unsafeFromTag(e.name)
 
     def positions2LayoutMap(
-      g: (BreakpointName, List[UserGridLayoutQuery.Data.LucumaGridLayoutPositions])
+      g: (GridBreakpointName, List[UserGridLayoutQuery.Data.LucumaGridLayoutPositions])
     ): (react.gridlayout.BreakpointName, (Int, Int, Layout)) =
       import UserGridLayoutUpsert.*
-      val bn = breakpointNameFromString(g._1)
+      val bn = breakpointNameFromString(g._1.tag)
       bn -> ((breakpointWidth(bn),
               breakpointCols(bn),
               Layout(
@@ -138,7 +143,7 @@ object UserPreferencesQueries:
                   LucumaGridLayoutPositionsInsertInput(
                     userId = uid.show.assign,
                     section = section.assign,
-                    breakpointName = bl.name.name.assign,
+                    breakpointName = bl.name.toGridBreakpointName.assign,
                     width = i.w.assign,
                     height = i.h.assign,
                     x = i.x.assign,

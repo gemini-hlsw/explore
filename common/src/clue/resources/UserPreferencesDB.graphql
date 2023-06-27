@@ -1,3 +1,4 @@
+
 """whether this query should be cached (Hasura Cloud only)"""
 directive @cached(
   """measured in seconds"""
@@ -37,21 +38,6 @@ input BooleanComparisonExp {
   _nin: [Boolean!]
 }
 
-"""
-Boolean expression to compare columns of type "breakpoint_name". All fields are combined with logical 'AND'.
-"""
-input BreakpointNameComparisonExp {
-  _eq: breakpoint_name
-  _gt: breakpoint_name
-  _gte: breakpoint_name
-  _in: [breakpoint_name!]
-  _isNull: Boolean
-  _lt: breakpoint_name
-  _lte: breakpoint_name
-  _neq: breakpoint_name
-  _nin: [breakpoint_name!]
-}
-
 """ordering argument of a cursor"""
 enum CursorOrdering {
   """ascending ordering of the cursor"""
@@ -59,6 +45,142 @@ enum CursorOrdering {
 
   """descending ordering of the cursor"""
   DESC
+}
+
+"""
+columns and relationships of "exploreChartType"
+"""
+type ExploreChartType {
+  id: String!
+}
+
+"""
+aggregated selection of "exploreChartType"
+"""
+type ExploreChartTypeAggregate {
+  aggregate: ExploreChartTypeAggregateFields
+  nodes: [ExploreChartType!]!
+}
+
+"""
+aggregate fields of "exploreChartType"
+"""
+type ExploreChartTypeAggregateFields {
+  count(columns: [ExploreChartTypeSelectColumn!], distinct: Boolean): Int!
+  max: ExploreChartTypeMaxFields
+  min: ExploreChartTypeMinFields
+}
+
+"""
+Boolean expression to filter rows from the table "exploreChartType". All fields are combined with a logical 'AND'.
+"""
+input ExploreChartTypeBoolExp {
+  _and: [ExploreChartTypeBoolExp!]
+  _not: ExploreChartTypeBoolExp
+  _or: [ExploreChartTypeBoolExp!]
+  id: StringComparisonExp
+}
+
+"""
+unique or primary key constraints on table "exploreChartType"
+"""
+enum ExploreChartTypeConstraint {
+  """
+  unique or primary key constraint on columns "id"
+  """
+  exploreChartType_pkey
+}
+
+enum ExploreChartTypeEnum {
+  S2N_CHART
+  SIGNAL_CHART
+}
+
+"""
+Boolean expression to compare columns of type "ExploreChartTypeEnum". All fields are combined with logical 'AND'.
+"""
+input ExploreChartTypeEnumComparisonExp {
+  _eq: ExploreChartTypeEnum
+  _in: [ExploreChartTypeEnum!]
+  _isNull: Boolean
+  _neq: ExploreChartTypeEnum
+  _nin: [ExploreChartTypeEnum!]
+}
+
+"""
+input type for inserting data into table "exploreChartType"
+"""
+input ExploreChartTypeInsertInput {
+  id: String
+}
+
+"""aggregate max on columns"""
+type ExploreChartTypeMaxFields {
+  id: String
+}
+
+"""aggregate min on columns"""
+type ExploreChartTypeMinFields {
+  id: String
+}
+
+"""
+response of any mutation on the table "exploreChartType"
+"""
+type ExploreChartTypeMutationResponse {
+  """number of rows affected by the mutation"""
+  affected_rows: Int!
+
+  """data from the rows affected by the mutation"""
+  returning: [ExploreChartType!]!
+}
+
+"""
+on_conflict condition type for table "exploreChartType"
+"""
+input ExploreChartTypeOnConflict {
+  constraint: ExploreChartTypeConstraint!
+  update_columns: [ExploreChartTypeUpdateColumn!]! = []
+  where: ExploreChartTypeBoolExp
+}
+
+"""Ordering options when selecting data from "exploreChartType"."""
+input ExploreChartTypeOrderBy {
+  id: OrderBy
+}
+
+"""primary key columns input for table: exploreChartType"""
+input ExploreChartTypePkColumnsInput {
+  id: String!
+}
+
+"""
+select columns of table "exploreChartType"
+"""
+enum ExploreChartTypeSelectColumn {
+  """column name"""
+  id
+}
+
+"""
+input type for updating data in table "exploreChartType"
+"""
+input ExploreChartTypeSetInput {
+  id: String
+}
+
+"""
+update columns of table "exploreChartType"
+"""
+enum ExploreChartTypeUpdateColumn {
+  """column name"""
+  id
+}
+
+input ExploreChartTypeUpdates {
+  """sets the columns of the filtered rows to the given values"""
+  _set: ExploreChartTypeSetInput
+  where: ExploreChartTypeBoolExp!
 }
 
 """
@@ -724,18 +846,144 @@ input IntComparisonExp {
 }
 
 """
-Boolean expression to compare columns of type "itc_chart_type". All fields are combined with logical 'AND'.
+columns and relationships of "lucumaGridBreakpointName"
 """
-input ItcChartTypeComparisonExp {
-  _eq: itc_chart_type
-  _gt: itc_chart_type
-  _gte: itc_chart_type
-  _in: [itc_chart_type!]
+type LucumaGridBreakpointName {
+  id: String!
+}
+
+"""
+aggregated selection of "lucumaGridBreakpointName"
+"""
+type LucumaGridBreakpointNameAggregate {
+  aggregate: LucumaGridBreakpointNameAggregateFields
+  nodes: [LucumaGridBreakpointName!]!
+}
+
+"""
+aggregate fields of "lucumaGridBreakpointName"
+"""
+type LucumaGridBreakpointNameAggregateFields {
+  count(columns: [LucumaGridBreakpointNameSelectColumn!], distinct: Boolean): Int!
+  max: LucumaGridBreakpointNameMaxFields
+  min: LucumaGridBreakpointNameMinFields
+}
+
+"""
+Boolean expression to filter rows from the table "lucumaGridBreakpointName". All fields are combined with a logical 'AND'.
+"""
+input LucumaGridBreakpointNameBoolExp {
+  _and: [LucumaGridBreakpointNameBoolExp!]
+  _not: LucumaGridBreakpointNameBoolExp
+  _or: [LucumaGridBreakpointNameBoolExp!]
+  id: StringComparisonExp
+}
+
+"""
+unique or primary key constraints on table "lucumaGridBreakpointName"
+"""
+enum LucumaGridBreakpointNameConstraint {
+  """
+  unique or primary key constraint on columns "id"
+  """
+  lucumaGridBreakpointName_pkey
+}
+
+enum LucumaGridBreakpointNameEnum {
+  LG
+  MD
+  SM
+  XL
+  XS
+  XSS
+  XXL
+}
+
+"""
+Boolean expression to compare columns of type "LucumaGridBreakpointNameEnum". All fields are combined with logical 'AND'.
+"""
+input LucumaGridBreakpointNameEnumComparisonExp {
+  _eq: LucumaGridBreakpointNameEnum
+  _in: [LucumaGridBreakpointNameEnum!]
   _isNull: Boolean
-  _lt: itc_chart_type
-  _lte: itc_chart_type
-  _neq: itc_chart_type
-  _nin: [itc_chart_type!]
+  _neq: LucumaGridBreakpointNameEnum
+  _nin: [LucumaGridBreakpointNameEnum!]
+}
+
+"""
+input type for inserting data into table "lucumaGridBreakpointName"
+"""
+input LucumaGridBreakpointNameInsertInput {
+  id: String
+}
+
+"""aggregate max on columns"""
+type LucumaGridBreakpointNameMaxFields {
+  id: String
+}
+
+"""aggregate min on columns"""
+type LucumaGridBreakpointNameMinFields {
+  id: String
+}
+
+"""
+response of any mutation on the table "lucumaGridBreakpointName"
+"""
+type LucumaGridBreakpointNameMutationResponse {
+  """number of rows affected by the mutation"""
+  affected_rows: Int!
+
+  """data from the rows affected by the mutation"""
+  returning: [LucumaGridBreakpointName!]!
+}
+
+"""
+on_conflict condition type for table "lucumaGridBreakpointName"
+"""
+input LucumaGridBreakpointNameOnConflict {
+  constraint: LucumaGridBreakpointNameConstraint!
+  update_columns: [LucumaGridBreakpointNameUpdateColumn!]! = []
+  where: LucumaGridBreakpointNameBoolExp
+}
+
+"""Ordering options when selecting data from "lucumaGridBreakpointName"."""
+input LucumaGridBreakpointNameOrderBy {
+  id: OrderBy
+}
+
+"""primary key columns input for table: lucumaGridBreakpointName"""
+input LucumaGridBreakpointNamePkColumnsInput {
+  id: String!
+}
+
+"""
+select columns of table "lucumaGridBreakpointName"
+"""
+enum LucumaGridBreakpointNameSelectColumn {
+  """column name"""
+  id
+}
+
+"""
+input type for updating data in table "lucumaGridBreakpointName"
+"""
+input LucumaGridBreakpointNameSetInput {
+  id: String
+}
+
+"""
+update columns of table "lucumaGridBreakpointName"
+"""
+enum LucumaGridBreakpointNameUpdateColumn {
+  """column name"""
+  id
+}
+
+input LucumaGridBreakpointNameUpdates {
+  """sets the columns of the filtered rows to the given values"""
+  _set: LucumaGridBreakpointNameSetInput
+  where: LucumaGridBreakpointNameBoolExp!
 }
 
 """
@@ -880,7 +1128,7 @@ input LucumaGridLayoutIdUpdates {
 columns and relationships of "lucumaGridLayoutPositions"
 """
 type LucumaGridLayoutPositions {
-  breakpointName: breakpoint_name!
+  breakpointName: LucumaGridBreakpointNameEnum!
   height: Int!
   section: LucumaGridLayoutIdEnum!
   tile: String!
@@ -930,7 +1178,7 @@ input LucumaGridLayoutPositionsBoolExp {
   _and: [LucumaGridLayoutPositionsBoolExp!]
   _not: LucumaGridLayoutPositionsBoolExp
   _or: [LucumaGridLayoutPositionsBoolExp!]
-  breakpointName: BreakpointNameComparisonExp
+  breakpointName: LucumaGridBreakpointNameEnumComparisonExp
   height: IntComparisonExp
   section: LucumaGridLayoutIdEnumComparisonExp
   tile: StringComparisonExp
@@ -964,7 +1212,7 @@ input LucumaGridLayoutPositionsIncInput {
 input type for inserting data into table "lucumaGridLayoutPositions"
 """
 input LucumaGridLayoutPositionsInsertInput {
-  breakpointName: breakpoint_name
+  breakpointName: LucumaGridBreakpointNameEnum
   height: Int
   section: LucumaGridLayoutIdEnum
   tile: String
@@ -976,7 +1224,6 @@ input LucumaGridLayoutPositionsInsertInput {
 
 """aggregate max on columns"""
 type LucumaGridLayoutPositionsMaxFields {
-  breakpointName: breakpoint_name
   height: Int
   tile: String
   userId: String
@@ -987,7 +1234,6 @@ type LucumaGridLayoutPositionsMaxFields {
 
 """aggregate min on columns"""
 type LucumaGridLayoutPositionsMinFields {
-  breakpointName: breakpoint_name
   height: Int
   tile: String
   userId: String
@@ -1030,7 +1276,7 @@ input LucumaGridLayoutPositionsOrderBy {
 
 """primary key columns input for table: lucumaGridLayoutPositions"""
 input LucumaGridLayoutPositionsPkColumnsInput {
-  breakpointName: breakpoint_name!
+  breakpointName: LucumaGridBreakpointNameEnum!
   section: LucumaGridLayoutIdEnum!
   tile: String!
   userId: String!
@@ -1069,7 +1315,7 @@ enum LucumaGridLayoutPositionsSelectColumn {
 input type for updating data in table "lucumaGridLayoutPositions"
 """
 input LucumaGridLayoutPositionsSetInput {
-  breakpointName: breakpoint_name
+  breakpointName: LucumaGridBreakpointNameEnum
   height: Int
   section: LucumaGridLayoutIdEnum
   tile: String
@@ -1177,7 +1423,7 @@ type LucumaGridLayoutPositionsVarianceFields {
 columns and relationships of "lucumaItcPlotPreferences"
 """
 type LucumaItcPlotPreferences {
-  chartType: itc_chart_type!
+  chartType: ExploreChartTypeEnum!
   detailsOpen: Boolean!
 
   """An object relationship"""
@@ -1229,7 +1475,7 @@ input LucumaItcPlotPreferencesBoolExp {
   _and: [LucumaItcPlotPreferencesBoolExp!]
   _not: LucumaItcPlotPreferencesBoolExp
   _or: [LucumaItcPlotPreferencesBoolExp!]
-  chartType: ItcChartTypeComparisonExp
+  chartType: ExploreChartTypeEnumComparisonExp
   detailsOpen: BooleanComparisonExp
   lucuma_observation: LucumaObservationBoolExp
   observationId: StringComparisonExp
@@ -1250,7 +1496,7 @@ enum LucumaItcPlotPreferencesConstraint {
 input type for inserting data into table "lucumaItcPlotPreferences"
 """
 input LucumaItcPlotPreferencesInsertInput {
-  chartType: itc_chart_type
+  chartType: ExploreChartTypeEnum
   detailsOpen: Boolean
   lucuma_observation: LucumaObservationObjRelInsertInput
   observationId: String
@@ -1259,14 +1505,12 @@ input LucumaItcPlotPreferencesInsertInput {
 
 """aggregate max on columns"""
 type LucumaItcPlotPreferencesMaxFields {
-  chartType: itc_chart_type
   observationId: String
   userId: String
 }
 
 """aggregate min on columns"""
 type LucumaItcPlotPreferencesMinFields {
-  chartType: itc_chart_type
   observationId: String
   userId: String
 }
@@ -1327,7 +1571,7 @@ enum LucumaItcPlotPreferencesSelectColumn {
 input type for updating data in table "lucumaItcPlotPreferences"
 """
 input LucumaItcPlotPreferencesSetInput {
-  chartType: itc_chart_type
+  chartType: ExploreChartTypeEnum
   detailsOpen: Boolean
   observationId: String
   userId: String
@@ -2695,7 +2939,21 @@ input TimestamptzComparisonExp {
 
 scalar bigint
 
-scalar breakpoint_name
+"""
+Streaming cursor of the table "exploreChartType"
+"""
+input exploreChartType_streamCursorInput {
+  """Stream column input with initial value"""
+  initialValue: exploreChartType_streamCursorValueInput!
+
+  """cursor ordering"""
+  ordering: CursorOrdering
+}
+
+"""Initial value of the column from where the streaming should start"""
+input exploreChartType_streamCursorValueInput {
+  id: String
+}
 
 """
 Streaming cursor of the table "explorePlotRange"
@@ -2882,7 +3140,21 @@ input exploreTargetPreferences_variance_order_by {
   viewOffsetQ: OrderBy
 }
 
-scalar itc_chart_type
+"""
+Streaming cursor of the table "lucumaGridBreakpointName"
+"""
+input lucumaGridBreakpointName_streamCursorInput {
+  """Stream column input with initial value"""
+  initialValue: lucumaGridBreakpointName_streamCursorValueInput!
+
+  """cursor ordering"""
+  ordering: CursorOrdering
+}
+
+"""Initial value of the column from where the streaming should start"""
+input lucumaGridBreakpointName_streamCursorValueInput {
+  id: String
+}
 
 """
 Streaming cursor of the table "lucumaGridLayoutId"
@@ -2913,7 +3185,7 @@ input lucumaGridLayoutPositions_streamCursorInput {
 
 """Initial value of the column from where the streaming should start"""
 input lucumaGridLayoutPositions_streamCursorValueInput {
-  breakpointName: breakpoint_name
+  breakpointName: LucumaGridBreakpointNameEnum
   height: Int
   section: LucumaGridLayoutIdEnum
   tile: String
@@ -2927,7 +3199,6 @@ input lucumaGridLayoutPositions_streamCursorValueInput {
 order by max() on columns of table "lucumaItcPlotPreferences"
 """
 input lucumaItcPlotPreferences_max_order_by {
-  chartType: OrderBy
   observationId: OrderBy
   userId: OrderBy
 }
@@ -2936,7 +3207,6 @@ input lucumaItcPlotPreferences_max_order_by {
 order by min() on columns of table "lucumaItcPlotPreferences"
 """
 input lucumaItcPlotPreferences_min_order_by {
-  chartType: OrderBy
   observationId: OrderBy
   userId: OrderBy
 }
@@ -2954,7 +3224,7 @@ input lucumaItcPlotPreferences_streamCursorInput {
 
 """Initial value of the column from where the streaming should start"""
 input lucumaItcPlotPreferences_streamCursorValueInput {
-  chartType: itc_chart_type
+  chartType: ExploreChartTypeEnum
   detailsOpen: Boolean
   observationId: String
   userId: String
@@ -3092,6 +3362,19 @@ input lucumaUser_streamCursorValueInput {
 """mutation root"""
 type Mutation {
   """
+  delete data from the table: "exploreChartType"
+  """
+  deleteExploreChartType(
+    """filter the rows which have to be deleted"""
+    where: ExploreChartTypeBoolExp!
+  ): ExploreChartTypeMutationResponse
+
+  """
+  delete single row from the table: "exploreChartType"
+  """
+  deleteExploreChartTypeByPk(id: String!): ExploreChartType
+
+  """
   delete data from the table: "explorePlotRange"
   """
   deleteExplorePlotRange(
@@ -3131,6 +3414,19 @@ type Mutation {
   deleteExploreTargetPreferencesByPk(targetId: String!, userId: String!): ExploreTargetPreferences
 
   """
+  delete data from the table: "lucumaGridBreakpointName"
+  """
+  deleteLucumaGridBreakpointName(
+    """filter the rows which have to be deleted"""
+    where: LucumaGridBreakpointNameBoolExp!
+  ): LucumaGridBreakpointNameMutationResponse
+
+  """
+  delete single row from the table: "lucumaGridBreakpointName"
+  """
+  deleteLucumaGridBreakpointNameByPk(id: String!): LucumaGridBreakpointName
+
+  """
   delete data from the table: "lucumaGridLayoutId"
   """
   deleteLucumaGridLayoutId(
@@ -3154,7 +3450,7 @@ type Mutation {
   """
   delete single row from the table: "lucumaGridLayoutPositions"
   """
-  deleteLucumaGridLayoutPositionsByPk(breakpointName: breakpoint_name!, section: LucumaGridLayoutIdEnum!, tile: String!, userId: String!): LucumaGridLayoutPositions
+  deleteLucumaGridLayoutPositionsByPk(breakpointName: LucumaGridBreakpointNameEnum!, section: LucumaGridLayoutIdEnum!, tile: String!, userId: String!): LucumaGridLayoutPositions
 
   """
   delete data from the table: "lucumaItcPlotPreferences"
@@ -3261,6 +3557,28 @@ type Mutation {
   deleteLucumaUserPreferencesByPk(userId: String!): LucumaUserPreferences
 
   """
+  insert data into the table: "exploreChartType"
+  """
+  insertExploreChartType(
+    """the rows to be inserted"""
+    objects: [ExploreChartTypeInsertInput!]!
+
+    """upsert condition"""
+    onConflict: ExploreChartTypeOnConflict
+  ): ExploreChartTypeMutationResponse
+
+  """
+  insert a single row into the table: "exploreChartType"
+  """
+  insertExploreChartTypeOne(
+    """the row to be inserted"""
+    object: ExploreChartTypeInsertInput!
+
+    """upsert condition"""
+    onConflict: ExploreChartTypeOnConflict
+  ): ExploreChartType
+
+  """
   insert data into the table: "explorePlotRange"
   """
   insertExplorePlotRange(
@@ -3325,6 +3643,28 @@ type Mutation {
     """upsert condition"""
     onConflict: ExploreTargetPreferencesOnConflict
   ): ExploreTargetPreferences
+
+  """
+  insert data into the table: "lucumaGridBreakpointName"
+  """
+  insertLucumaGridBreakpointName(
+    """the rows to be inserted"""
+    objects: [LucumaGridBreakpointNameInsertInput!]!
+
+    """upsert condition"""
+    onConflict: LucumaGridBreakpointNameOnConflict
+  ): LucumaGridBreakpointNameMutationResponse
+
+  """
+  insert a single row into the table: "lucumaGridBreakpointName"
+  """
+  insertLucumaGridBreakpointNameOne(
+    """the row to be inserted"""
+    object: LucumaGridBreakpointNameInsertInput!
+
+    """upsert condition"""
+    onConflict: LucumaGridBreakpointNameOnConflict
+  ): LucumaGridBreakpointName
 
   """
   insert data into the table: "lucumaGridLayoutId"
@@ -3547,6 +3887,34 @@ type Mutation {
   ): LucumaUserPreferences
 
   """
+  update data of the table: "exploreChartType"
+  """
+  updateExploreChartType(
+    """sets the columns of the filtered rows to the given values"""
+    _set: ExploreChartTypeSetInput
+
+    """filter the rows which have to be updated"""
+    where: ExploreChartTypeBoolExp!
+  ): ExploreChartTypeMutationResponse
+
+  """
+  update single row of the table: "exploreChartType"
+  """
+  updateExploreChartTypeByPk(
+    """sets the columns of the filtered rows to the given values"""
+    _set: ExploreChartTypeSetInput
+    pk_columns: ExploreChartTypePkColumnsInput!
+  ): ExploreChartType
+
+  """
+  update multiples rows of table: "exploreChartType"
+  """
+  updateExploreChartTypeMany(
+    """updates to execute, in order"""
+    updates: [ExploreChartTypeUpdates!]!
+  ): [ExploreChartTypeMutationResponse]
+
+  """
   update data of the table: "explorePlotRange"
   """
   updateExplorePlotRange(
@@ -3635,6 +4003,34 @@ type Mutation {
     """updates to execute, in order"""
     updates: [ExploreTargetPreferencesUpdates!]!
   ): [ExploreTargetPreferencesMutationResponse]
+
+  """
+  update data of the table: "lucumaGridBreakpointName"
+  """
+  updateLucumaGridBreakpointName(
+    """sets the columns of the filtered rows to the given values"""
+    _set: LucumaGridBreakpointNameSetInput
+
+    """filter the rows which have to be updated"""
+    where: LucumaGridBreakpointNameBoolExp!
+  ): LucumaGridBreakpointNameMutationResponse
+
+  """
+  update single row of the table: "lucumaGridBreakpointName"
+  """
+  updateLucumaGridBreakpointNameByPk(
+    """sets the columns of the filtered rows to the given values"""
+    _set: LucumaGridBreakpointNameSetInput
+    pk_columns: LucumaGridBreakpointNamePkColumnsInput!
+  ): LucumaGridBreakpointName
+
+  """
+  update multiples rows of table: "lucumaGridBreakpointName"
+  """
+  updateLucumaGridBreakpointNameMany(
+    """updates to execute, in order"""
+    updates: [LucumaGridBreakpointNameUpdates!]!
+  ): [LucumaGridBreakpointNameMutationResponse]
 
   """
   update data of the table: "lucumaGridLayoutId"
@@ -3931,6 +4327,51 @@ type Mutation {
 
 type Query {
   """
+  fetch data from the table: "exploreChartType"
+  """
+  exploreChartType(
+    """distinct select on columns"""
+    distinctOn: [ExploreChartTypeSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [ExploreChartTypeOrderBy!]
+
+    """filter the rows returned"""
+    where: ExploreChartTypeBoolExp
+  ): [ExploreChartType!]!
+
+  """
+  fetch aggregated fields from the table: "exploreChartType"
+  """
+  exploreChartTypeAggregate(
+    """distinct select on columns"""
+    distinctOn: [ExploreChartTypeSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [ExploreChartTypeOrderBy!]
+
+    """filter the rows returned"""
+    where: ExploreChartTypeBoolExp
+  ): ExploreChartTypeAggregate!
+
+  """
+  fetch data from the table: "exploreChartType" using primary key columns
+  """
+  exploreChartTypeByPk(id: String!): ExploreChartType
+
+  """
   fetch data from the table: "explorePlotRange"
   """
   explorePlotRange(
@@ -4064,6 +4505,51 @@ type Query {
   exploreTargetPreferencesByPk(targetId: String!, userId: String!): ExploreTargetPreferences
 
   """
+  fetch data from the table: "lucumaGridBreakpointName"
+  """
+  lucumaGridBreakpointName(
+    """distinct select on columns"""
+    distinctOn: [LucumaGridBreakpointNameSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [LucumaGridBreakpointNameOrderBy!]
+
+    """filter the rows returned"""
+    where: LucumaGridBreakpointNameBoolExp
+  ): [LucumaGridBreakpointName!]!
+
+  """
+  fetch aggregated fields from the table: "lucumaGridBreakpointName"
+  """
+  lucumaGridBreakpointNameAggregate(
+    """distinct select on columns"""
+    distinctOn: [LucumaGridBreakpointNameSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [LucumaGridBreakpointNameOrderBy!]
+
+    """filter the rows returned"""
+    where: LucumaGridBreakpointNameBoolExp
+  ): LucumaGridBreakpointNameAggregate!
+
+  """
+  fetch data from the table: "lucumaGridBreakpointName" using primary key columns
+  """
+  lucumaGridBreakpointNameByPk(id: String!): LucumaGridBreakpointName
+
+  """
   fetch data from the table: "lucumaGridLayoutId"
   """
   lucumaGridLayoutId(
@@ -4151,7 +4637,7 @@ type Query {
   """
   fetch data from the table: "lucumaGridLayoutPositions" using primary key columns
   """
-  lucumaGridLayoutPositionsByPk(breakpointName: breakpoint_name!, section: LucumaGridLayoutIdEnum!, tile: String!, userId: String!): LucumaGridLayoutPositions
+  lucumaGridLayoutPositionsByPk(breakpointName: LucumaGridBreakpointNameEnum!, section: LucumaGridLayoutIdEnum!, tile: String!, userId: String!): LucumaGridLayoutPositions
 
   """
   fetch data from the table: "lucumaItcPlotPreferences"
@@ -4508,6 +4994,65 @@ type Query {
 
 type Subscription {
   """
+  fetch data from the table: "exploreChartType"
+  """
+  exploreChartType(
+    """distinct select on columns"""
+    distinctOn: [ExploreChartTypeSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [ExploreChartTypeOrderBy!]
+
+    """filter the rows returned"""
+    where: ExploreChartTypeBoolExp
+  ): [ExploreChartType!]!
+
+  """
+  fetch aggregated fields from the table: "exploreChartType"
+  """
+  exploreChartTypeAggregate(
+    """distinct select on columns"""
+    distinctOn: [ExploreChartTypeSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [ExploreChartTypeOrderBy!]
+
+    """filter the rows returned"""
+    where: ExploreChartTypeBoolExp
+  ): ExploreChartTypeAggregate!
+
+  """
+  fetch data from the table: "exploreChartType" using primary key columns
+  """
+  exploreChartTypeByPk(id: String!): ExploreChartType
+
+  """
+  fetch data from the table in a streaming manner : "exploreChartType"
+  """
+  exploreChartTypeStream(
+    """maximum number of rows returned in a single batch"""
+    batchSize: Int!
+
+    """cursor to stream the results returned by the query"""
+    cursor: [exploreChartType_streamCursorInput]!
+
+    """filter the rows returned"""
+    where: ExploreChartTypeBoolExp
+  ): [ExploreChartType!]!
+
+  """
   fetch data from the table: "explorePlotRange"
   """
   explorePlotRange(
@@ -4683,6 +5228,65 @@ type Subscription {
   ): [ExploreTargetPreferences!]!
 
   """
+  fetch data from the table: "lucumaGridBreakpointName"
+  """
+  lucumaGridBreakpointName(
+    """distinct select on columns"""
+    distinctOn: [LucumaGridBreakpointNameSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [LucumaGridBreakpointNameOrderBy!]
+
+    """filter the rows returned"""
+    where: LucumaGridBreakpointNameBoolExp
+  ): [LucumaGridBreakpointName!]!
+
+  """
+  fetch aggregated fields from the table: "lucumaGridBreakpointName"
+  """
+  lucumaGridBreakpointNameAggregate(
+    """distinct select on columns"""
+    distinctOn: [LucumaGridBreakpointNameSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [LucumaGridBreakpointNameOrderBy!]
+
+    """filter the rows returned"""
+    where: LucumaGridBreakpointNameBoolExp
+  ): LucumaGridBreakpointNameAggregate!
+
+  """
+  fetch data from the table: "lucumaGridBreakpointName" using primary key columns
+  """
+  lucumaGridBreakpointNameByPk(id: String!): LucumaGridBreakpointName
+
+  """
+  fetch data from the table in a streaming manner : "lucumaGridBreakpointName"
+  """
+  lucumaGridBreakpointNameStream(
+    """maximum number of rows returned in a single batch"""
+    batchSize: Int!
+
+    """cursor to stream the results returned by the query"""
+    cursor: [lucumaGridBreakpointName_streamCursorInput]!
+
+    """filter the rows returned"""
+    where: LucumaGridBreakpointNameBoolExp
+  ): [LucumaGridBreakpointName!]!
+
+  """
   fetch data from the table: "lucumaGridLayoutId"
   """
   lucumaGridLayoutId(
@@ -4784,7 +5388,7 @@ type Subscription {
   """
   fetch data from the table: "lucumaGridLayoutPositions" using primary key columns
   """
-  lucumaGridLayoutPositionsByPk(breakpointName: breakpoint_name!, section: LucumaGridLayoutIdEnum!, tile: String!, userId: String!): LucumaGridLayoutPositions
+  lucumaGridLayoutPositionsByPk(breakpointName: LucumaGridBreakpointNameEnum!, section: LucumaGridLayoutIdEnum!, tile: String!, userId: String!): LucumaGridLayoutPositions
 
   """
   fetch data from the table in a streaming manner : "lucumaGridLayoutPositions"
