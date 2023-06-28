@@ -10,4 +10,4 @@ task:
     - sbt -v -J-Xmx15g stage
     - npm clean-install
     - npm run build 
-    - firebase deploy --token "$FIREBASE_TOKEN"
+    - firebase deploy --token "$FIREBASE_TOKEN" --only hosting:staging
