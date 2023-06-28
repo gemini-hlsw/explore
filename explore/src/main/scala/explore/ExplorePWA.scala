@@ -17,7 +17,7 @@ import scala.concurrent.ExecutionContext
 import scala.scalajs.js
 import scala.scalajs.js.annotation.*
 
-@JSExportTopLevel("ExplorePWA")
+@JSExportTopLevel("ExplorePWA", moduleID = "explore")
 object ExplorePWA {
   type UpdateSW = Boolean => js.Any
 

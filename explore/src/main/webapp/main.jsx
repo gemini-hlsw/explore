@@ -13,7 +13,7 @@ import "/common/sass/solar-system.scss";
 import "github-markdown-css/github-markdown-light.css";
 import "react-circular-progressbar/dist/styles.css";
 
-import { Explore, ExplorePWA } from "@sjs/main.js";
+import { Explore, ExplorePWA } from '@sjs/explore.js';
 
 import { registerSW } from "virtual:pwa-register";
 

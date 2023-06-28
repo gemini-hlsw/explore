@@ -111,7 +111,7 @@ lazy val workers = project
 
 lazy val common = project
   .in(file("common"))
-  .dependsOn(modelTestkit.js)
+  .dependsOn(model.js, modelTestkit.js % Test)
   .settings(commonSettings: _*)
   .settings(commonJsLibSettings: _*)
   .settings(commonModuleTest: _*)
