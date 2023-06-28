@@ -97,15 +97,18 @@ const pathExists = async (path) => {
 
 // https://vitejs.dev/config/
 export default defineConfig(async ({ mode }) => {
-  const module = 'webapp';
-  const scalaClassesDir = path.resolve(
-    __dirname,
-    `${module}/target/scala-3.3.0`
-  );
+  const scalaClassesDir = path.resolve(__dirname, `explore/target/scala-3.3.0`);
   const isProduction = mode === 'production';
   const sjs = isProduction
-    ? path.resolve(scalaClassesDir, `${module}-opt`)
-    : path.resolve(scalaClassesDir, `${module}-fastopt`);
+    ? path.resolve(scalaClassesDir, `explore-opt`)
+    : path.resolve(scalaClassesDir, `explore-fastopt`);
+  const workersScalaClassesDir = path.resolve(
+    __dirname,
+    'workers/target/scala-3.3.0'
+  );
+  const workersSjs = isProduction
+    ? path.resolve(workersScalaClassesDir, 'workers-opt')
+    : path.resolve(workersScalaClassesDir, 'workers-fastopt');
   const rollupPlugins = isProduction ? [] : [visualizer()];
   const common = path.resolve(__dirname, 'common/');
   const webappCommon = path.resolve(common, 'src/main/webapp/');
@@ -115,7 +118,7 @@ export default defineConfig(async ({ mode }) => {
   const suithemes = path.resolve(webappCommon, 'suithemes');
   const publicDirProd = path.resolve(common, 'src/main/public');
   const publicDirDev = path.resolve(common, 'src/main/publicdev');
-  const lucumaCss = path.resolve(__dirname, `${module}/target/lucuma-css`);
+  const lucumaCss = path.resolve(__dirname, `explore/target/lucuma-css`);
 
   if (!(await pathExists(publicDirDev))) {
     await fs.mkdir(publicDirDev);
@@ -147,7 +150,7 @@ export default defineConfig(async ({ mode }) => {
 
   return {
     // TODO Remove this if we get EnvironmentPlugin to work.
-    root: 'webapp/src/main/webapp',
+    root: 'explore/src/main/webapp',
     publicDir: publicDir,
     envPrefix: ['VITE_', 'CATS_EFFECT_'],
     resolve: {
@@ -160,6 +163,10 @@ export default defineConfig(async ({ mode }) => {
         {
           find: '@sjs',
           replacement: sjs,
+        },
+        {
+          find: '@workers',
+          replacement: workersSjs,
         },
         {
           find: '/common',
