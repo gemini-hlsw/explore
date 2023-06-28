@@ -4,8 +4,10 @@ task:
   environment:
     NODE_OPTIONS: '--max-old-space-size=8192'
     FONTAWESOME_NPM_AUTH_TOKEN: ENCRYPTED[!fe2a40fa773536496971484bb59a07226d86e8aba729f59ebee5aab269e8185400d16a533a7b24d8c20841de8ea81ef3!]
+    FIREBASE_TOKEN: ENCRYPTED[faed781a1e9b6e7665e7b2b8dba65a8b12d99c30ac972256949314879a9a49710ac8a953c10372bb3489b64f6cdfc9eb]
   script:
-    - brew install sbt
+    - brew install sbt firebase-cli
     - sbt -v -J-Xmx15g stage
     - npm clean-install
     - npm run build 
+    - firebase deploy --token "$FIREBASE_TOKEN"
