@@ -7,7 +7,7 @@ import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
-import crystal.react.implicits.*
+import crystal.react.*
 import explore.DefaultErrorPolicy
 import explore.data.KeyedIndexedList
 import explore.model.AppContext
@@ -55,7 +55,7 @@ def cloneObs(
       .flatMap { obs =>
         obsExistence(programId, obs.id, o => setObs(programId, o.some, ctx))
           .mod(undoCtx)(obsListMod.upsert(obs, pos))
-          .to[IO]
+          .toAsync
       }
       .guarantee(after)
 
@@ -147,13 +147,13 @@ def obsExistence(programId: Program.Id, obsId: Observation.Id, setObs: Observati
         deleteObservation[IO](programId, obsId)
       } { case (obs, _) =>
         // Not much to do here, the observation must be created before we get here
-        setObs(obs.id).to[IO]
+        setObs(obs.id).toAsync
       },
     onRestore = (_, elemWithIndexOpt) =>
       elemWithIndexOpt.fold {
         deleteObservation[IO](programId, obsId)
       } { case (obs, _) =>
         undeleteObservation[IO](programId, obs.id) >>
-          setObs(obs.id).to[IO]
+          setObs(obs.id).toAsync
       }
   )

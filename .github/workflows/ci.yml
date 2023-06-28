@@ -23,7 +23,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [3.2.2]
+        scala: [3.3.0]
         java: [temurin@17]
         project: [rootJS, rootJVM]
     runs-on: ${{ matrix.os }}
@@ -100,7 +100,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [3.2.2]
+        scala: [3.3.0]
         java: [temurin@17]
     runs-on: ${{ matrix.os }}
     steps:
@@ -168,7 +168,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [3.2.2]
+        scala: [3.3.0]
         java: [temurin@17]
     runs-on: ${{ matrix.os }}
     steps:
@@ -236,12 +236,28 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [3.2.2]
+        scala: [3.3.0]
         java: [temurin@17]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout current branch (fast)
         uses: actions/checkout@v3
+
+      - name: Download Java (temurin@17)
+        id: download-java-temurin-17
+        if: matrix.java == 'temurin@17'
+        uses: typelevel/download-java@v2
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Java (temurin@17)
+        if: matrix.java == 'temurin@17'
+        uses: actions/setup-java@v3
+        with:
+          distribution: jdkfile
+          java-version: 17
+          jdkFile: ${{ steps.download-java-temurin-17.outputs.jdkFile }}
 
       - name: Use Node.js
         uses: actions/setup-node@v3

@@ -5,9 +5,8 @@ package explore.components
 
 import cats.effect.IO
 import cats.syntax.all.*
-import crystal.react.View
+import crystal.react.*
 import crystal.react.hooks.*
-import crystal.react.implicits.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.Resources
@@ -64,7 +63,7 @@ object UserSelectionForm:
       .render((props, ctx, isOpen, browserInfoPot) =>
         import ctx.given
 
-        val guest: Callback = ctx.sso.guest.flatMap(v => props.vault.set(v.some).to[IO]).runAsync
+        val guest: Callback = ctx.sso.guest.flatMap(v => props.vault.set(v.some).toAsync).runAsync
 
         val login: Callback = ctx.sso.redirectToLogin.runAsync
 

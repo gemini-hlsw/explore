@@ -6,8 +6,8 @@ package explore.targeteditor
 import cats.effect.IO
 import cats.effect.Resource
 import cats.syntax.all.*
+import crystal.react.given
 import crystal.react.hooks.*
-import crystal.react.implicits.given
 import crystal.react.reuse.*
 import explore.events.PlotMessage.*
 import explore.highcharts.*

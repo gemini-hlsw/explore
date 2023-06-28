@@ -5,8 +5,8 @@ package explore.components.state
 
 import cats.effect.IO
 import cats.syntax.all.*
+import crystal.react.*
 import crystal.react.hooks.*
-import crystal.react.implicits.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.AppContext
@@ -36,8 +36,8 @@ object SSOManager:
   ): IO[Unit] =
     for {
       vaultOpt <- ctx.sso.refreshToken(expiration)
-      _        <- setVault(vaultOpt).to[IO]
-      _        <- vaultOpt.fold(setMessage("Your session has expired".refined).to[IO])(vault =>
+      _        <- setVault(vaultOpt).toAsync
+      _        <- vaultOpt.fold(setMessage("Your session has expired".refined).toAsync)(vault =>
                     tokenRefresher(vault.expiration, setVault, setMessage, ctx)
                   )
     } yield ()
@@ -55,14 +55,13 @@ object SSOManager:
             (props.setVault(none) >>
               props.setMessage(
                 "There was an error while checking the validity of your session".refined
-              ))
-              .to[IO]
+              )).toAsync
         )
         .start
         .flatMap(fiber => cancelToken.setAsync(fiber.cancel.some))
         .as(
           cancelToken.getAsync >>= (cancelOpt =>
-            cancelOpt.foldMap(_ >> props.setVault(none).to[IO])
+            cancelOpt.foldMap(_ >> props.setVault(none).toAsync)
           )
         )
     }

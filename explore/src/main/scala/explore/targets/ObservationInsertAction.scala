@@ -7,8 +7,7 @@ import cats.Order.*
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
-import crystal.react.View
-import crystal.react.implicits.*
+import crystal.react.*
 import explore.model.ObsIdSet
 import explore.model.ObsSummary
 import explore.model.ProgramSummaries
@@ -70,9 +69,9 @@ object ObservationInsertAction {
   ): Action[ProgramSummaries, Option[ObsSummary]] =
     Action(getter = getter(obsId), setter = setter(obsId))(
       onSet = (agwo, optObs) =>
-        expandedIds.mod(updateExpandedIds(obsId, agwo, optObs)).to[IO] >> setPage(obsId.some),
+        expandedIds.mod(updateExpandedIds(obsId, agwo, optObs)).toAsync >> setPage(obsId.some),
       onRestore = (agwo, optObs) =>
-        expandedIds.mod(updateExpandedIds(obsId, agwo, optObs)).to[IO] >>
+        expandedIds.mod(updateExpandedIds(obsId, agwo, optObs)).toAsync >>
           optObs.fold(
             ObsQueries.deleteObservation[IO](programId, obsId) >>
               setPage(none) >>

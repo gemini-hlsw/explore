@@ -10,8 +10,7 @@ import cats.effect.Async
 import cats.implicits.*
 import clue.FetchClient
 import clue.data.syntax.*
-import crystal.Pot
-import crystal.implicits.given
+import crystal.*
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string.NonEmptyString

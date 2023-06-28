@@ -6,8 +6,8 @@ package explore
 import cats.effect.*
 import cats.syntax.all.*
 import crystal.Pot
+import crystal.react.*
 import crystal.react.hooks.*
-import crystal.react.implicits.*
 import explore.components.ui.ExploreStyles
 import explore.model.Help
 import explore.shortcuts.*
@@ -67,7 +67,7 @@ object HelpBody:
       .useContext(HelpContext.ctx)
       .useStateView(Pot.pending[String])
       .useEffectOnMountBy { (props, _, state) =>
-        load(props.url).flatMap(v => state.set(Pot.fromTry(v)).to[IO])
+        load(props.url).flatMap(v => state.set(Pot.fromTry(v)).toAsync)
       }
       .render { (props, helpCtx, state) =>
         val imageConv = (s: Uri) => props.baseUrl.addPath(s.path)

@@ -3,6 +3,15 @@
 
 package explore.targeteditor
 
+import _root_.react.aladin.Fov
+import _root_.react.common.*
+import _root_.react.primereact.Button
+import _root_.react.primereact.Checkbox
+import _root_.react.primereact.MenuItem
+import _root_.react.primereact.PopupMenu
+import _root_.react.primereact.PopupMenuRef
+import _root_.react.primereact.ProgressBar
+import _root_.react.primereact.hooks.all.*
 import boopickle.DefaultBasic.*
 import cats.Order
 import cats.data.NonEmptyList
@@ -11,11 +20,10 @@ import cats.syntax.all.*
 import crystal.Pot
 import crystal.PotOption
 import crystal.ViewOptF
-import crystal.implicits.*
-import crystal.react.ReuseView
-import crystal.react.View
+import crystal.*
+import crystal.react.*
+import crystal.react.given
 import crystal.react.hooks.*
-import crystal.react.implicits.*
 import crystal.react.reuse.*
 import eu.timepit.refined.*
 import eu.timepit.refined.auto.*
@@ -62,15 +70,6 @@ import org.scalajs.dom.document
 import org.typelevel.log4cats.Logger
 import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.odb.ObsQueries
-import react.aladin.Fov
-import react.common.*
-import react.primereact.Button
-import react.primereact.Checkbox
-import react.primereact.MenuItem
-import react.primereact.PopupMenu
-import react.primereact.PopupMenuRef
-import react.primereact.ProgressBar
-import react.primereact.hooks.all.*
 
 import java.time.Duration
 import java.time.Instant
@@ -133,7 +132,7 @@ object AladinCell extends ModelOptics with AladinCommon:
   }
 
   private given Reusability[Props] =
-    Reusability.by(x => (x.uid, x.tid, x.obsConf, x.asterism, x.fullScreen.reuseByValue))
+    Reusability.by(x => (x.uid, x.tid, x.obsConf, x.asterism, x.fullScreen.get))
 
   private val fovLens: Lens[TargetVisualOptions, Fov] =
     Lens[TargetVisualOptions, Fov](t => Fov(t.fovRA, t.fovDec))(f =>
@@ -263,7 +262,7 @@ object AladinCell extends ModelOptics with AladinCommon:
             .flatMap { (up, tp) =>
               (options.set((up, tp).ready) *>
                 setVariable(root, "saturation", tp.saturation) *>
-                setVariable(root, "brightness", tp.brightness)).to[IO]
+                setVariable(root, "brightness", tp.brightness)).toAsync
             }
       }
       // Selected GS index. Should be stored in the db
@@ -313,8 +312,7 @@ object AladinCell extends ModelOptics with AladinCommon:
             import ctx.given
 
             (selectedIndex.set(none) *>
-              props.obsConf.flatMap(_.selectedGS).map(_.set(none)).orEmpty)
-              .to[IO]
+              props.obsConf.flatMap(_.selectedGS).map(_.set(none)).orEmpty).toAsync
               .whenA(positions.isEmpty) *>
               (positions, tracking.at(vizTime), props.obsConf.flatMap(_.agsState)).mapN {
                 (positions, base, agsState) =>
@@ -328,7 +326,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                       .flatMap(_.target.tracking.at(vizTime))
 
                   val process = for
-                    _ <- agsState.set(AgsState.Calculating).to[IO]
+                    _ <- agsState.set(AgsState.Calculating).toAsync
                     _ <-
                       AgsClient[IO]
                         .requestSingle(
@@ -361,7 +359,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                                   .flatMap(_.selectedGS)
                                   .map(_.set(selectedGS))
                                   .getOrEmpty).unlessA(agsOverride.get.value)
-                            }).to[IO]
+                            }).toAsync
                         }
                         .unlessA(candidates.isEmpty)
                         .handleErrorWith(t => Logger[IO].error(t)("ERROR IN AGS REQUEST"))

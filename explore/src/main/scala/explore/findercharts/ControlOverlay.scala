@@ -6,6 +6,7 @@ package explore.findercharts
 import crystal.react.View
 import explore.Icons
 import explore.components.ui.ExploreStyles
+import explore.model.Transformation
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -22,27 +23,13 @@ import react.fa.Transform
 import react.primereact.Button
 import react.primereact.Divider
 
-object ColorsInverted extends NewType[Boolean]:
-  val No: ColorsInverted  = ColorsInverted(false)
-  val Yes: ColorsInverted = ColorsInverted(true)
-
-  extension (self: ColorsInverted)
-    def fold[A](no: => A, yes: => A): A =
-      self match
-        case ColorsInverted.Yes => yes
-        case ColorsInverted.No  => no
-
-    def flip: ColorsInverted = fold(ColorsInverted.Yes, ColorsInverted.No)
-
-type ColorsInverted = ColorsInverted.Type
-
-case class ControlOverlay(ops: View[Transformation], inverted: View[ColorsInverted])
+case class ControlOverlay(ops: View[Transformation])
     extends ReactFnProps[ControlOverlay](ControlOverlay.component)
 
 object ControlOverlay {
   type Props = ControlOverlay
 
-  val component =
+  private val component =
     ScalaFnComponent
       .withHooks[Props]
       .render { p =>
@@ -50,6 +37,7 @@ object ControlOverlay {
         val scaleY    = p.ops.zoom(Transformation.scaleYVal)
         val scaleX    =
           p.ops.zoom(Transformation.scaleXVal).withOnMod(x => scaleY.mod(y => y.signum * x))
+        val inverted  = p.ops.zoom(Transformation.inverted)
 
         ReactFragment(
           <.div(
@@ -100,7 +88,7 @@ object ControlOverlay {
             <.div(
               ExploreStyles.FinderChartsButton,
               Icons.ArrowsRepeatLight.withBorder(true).withFixedWidth(true),
-              ^.onClick --> p.ops.mod(_.reset) *> p.inverted.set(ColorsInverted.No)
+              ^.onClick --> p.ops.mod(_.reset)
             ),
             <.div("Reset"),
             <.div(
@@ -108,8 +96,8 @@ object ControlOverlay {
               Icons.CircleHalfStroke
                 .withBorder(true)
                 .withFixedWidth(true)
-                .withTransform(Transform(rotate = p.inverted.get.fold(0, 180))),
-              ^.onClick --> p.inverted.mod(_.flip)
+                .withTransform(Transform(rotate = inverted.get.fold(0, 180))),
+              ^.onClick --> inverted.mod(_.flip)
             ),
             <.div("Invert")
           )

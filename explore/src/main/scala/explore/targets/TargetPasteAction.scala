@@ -8,8 +8,7 @@ import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
-import crystal.react.View
-import crystal.react.implicits.*
+import crystal.react.*
 import explore.common.AsterismQueries
 import explore.data.KeyedIndexedList
 import explore.model.AsterismGroup
@@ -101,7 +100,7 @@ object TargetPasteAction {
           val isUndo = targetIds.toSortedSet.subsetOf(currentGroup.targetIds)
           expandedIds
             .mod(modExpanded(obsIds, targetIds, currentGroup, agl, isUndo))
-            .to[IO] >>
+            .toAsync >>
             selectObsIds(obsIds) >>
             (if (isUndo)
                AsterismQueries

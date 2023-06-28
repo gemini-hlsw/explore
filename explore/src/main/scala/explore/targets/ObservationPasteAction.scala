@@ -8,8 +8,7 @@ import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
-import crystal.react.View
-import crystal.react.implicits.*
+import crystal.react.*
 import explore.common.AsterismQueries
 import explore.model.AsterismGroup
 import explore.model.ObsIdSet
@@ -78,14 +77,14 @@ object ObservationPasteAction {
     c:           FetchClient[IO, ObservationDB]
   ): Action[ProgramSummaries, Option[List[ObsSummary]]] =
     Action(getter = obsListGetter(ids), setter = obsListSetter(ids))(
-      onSet = (agwo, _) => expandedIds.mod(updateExpandedIds(ids, agwo, true)).to[IO],
+      onSet = (agwo, _) => expandedIds.mod(updateExpandedIds(ids, agwo, true)).toAsync,
       onRestore = (agwo, olObsSumm) =>
         val obsIds = ids.map(_._1)
         olObsSumm.fold(
-          expandedIds.mod(updateExpandedIds(ids, agwo, false)).to[IO] >>
+          expandedIds.mod(updateExpandedIds(ids, agwo, false)).toAsync >>
             ObsQueries.deleteObservations[IO](programId, obsIds)
         )(_ =>
-          expandedIds.mod(updateExpandedIds(ids, agwo, true)).to[IO] >>
+          expandedIds.mod(updateExpandedIds(ids, agwo, true)).toAsync >>
             ObsQueries.undeleteObservations[IO](programId, obsIds)
         )
     )

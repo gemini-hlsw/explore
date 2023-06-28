@@ -12,6 +12,7 @@ import explore.findercharts.FinderCharts
 import explore.model.ObsAttachmentList
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ObsAttachment
+import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.ui.syntax.all.given
 
@@ -21,6 +22,7 @@ object FinderChartsTile:
 
   def finderChartsTile(
     programId:        Program.Id,
+    oid:              Observation.Id,
     obsAttachmentIds: View[SortedSet[ObsAttachment.Id]],
     authToken:        Option[NonEmptyString],
     obsAttachments:   View[ObsAttachmentList]
@@ -32,6 +34,6 @@ object FinderChartsTile:
       canMinimize = true
     )(_ =>
       authToken
-        .map(t => FinderCharts(programId, t, obsAttachmentIds, obsAttachments): VdomNode)
+        .map(t => FinderCharts(programId, oid, t, obsAttachmentIds, obsAttachments): VdomNode)
         .getOrElse(EmptyVdom)
     )

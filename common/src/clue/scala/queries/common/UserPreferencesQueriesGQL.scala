@@ -37,6 +37,36 @@ object UserPreferencesQueriesGQL {
    * Read the grid layout for a given section
    */
   @GraphQL
+  trait FinderChartTransformationQuery extends GraphQLOperation[UserPreferencesDB] {
+    val document = """
+      query finderCharById($attachmentId: String!, $observationId: String!) {
+        exploreFinderChartByPk(attachmentId: $attachmentId, observationId: $observationId) {
+          flipX
+          flipY
+          rotate
+          scaleX
+          scaleY
+          inverted
+        }
+      }
+    """
+  }
+
+  @GraphQL
+  trait FinderChartUpsert extends GraphQLOperation[UserPreferencesDB] {
+    val document = """
+      mutation finderChartUpsert($object: ExploreFinderChartInsertInput!) {
+        insertExploreFinderChartOne(onConflict: {constraint: exploreFinderChart_pkey, update_columns: [flipX, flipY, rotate, scaleX, scaleY, inverted]}, object: $object) {
+          attachmentId
+        }
+      }
+      """
+  }
+
+  /**
+   * Read the grid layout for a given section
+   */
+  @GraphQL
   trait UserGridLayoutQuery extends GraphQLOperation[UserPreferencesDB] {
     val document = """
       query tabPositions($userId: String!, $section: LucumaGridLayoutIdEnum!){

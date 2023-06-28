@@ -100,7 +100,7 @@ export default defineConfig(async ({ mode }) => {
   const module = 'webapp';
   const scalaClassesDir = path.resolve(
     __dirname,
-    `${module}/target/scala-3.2.2`
+    `${module}/target/scala-3.3.0`
   );
   const isProduction = mode === 'production';
   const sjs = isProduction

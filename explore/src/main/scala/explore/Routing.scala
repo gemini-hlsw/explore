@@ -6,7 +6,7 @@ package explore
 import cats.Order.*
 import cats.data.NonEmptySet
 import cats.syntax.all.*
-import crystal.implicits.*
+import crystal.*
 import crystal.react.View
 import explore.components.ui.ExploreStyles
 import explore.model.Page

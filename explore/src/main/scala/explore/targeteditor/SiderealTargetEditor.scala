@@ -3,18 +3,17 @@
 
 package explore.targeteditor
 
+import _root_.react.common.*
+import _root_.react.primereact.Message
 import cats.Endo
 import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
-import crystal.ViewF
-import crystal.implicits.*
-import crystal.react.View
-import crystal.react.ViewOpt
+import crystal.*
+import crystal.react.*
 import crystal.react.hooks.*
-import crystal.react.implicits.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.string.*
 import explore.DefaultErrorPolicy
@@ -68,8 +67,6 @@ import lucuma.ui.syntax.all.given
 import lucuma.utils.*
 import org.typelevel.log4cats.Logger
 import queries.common.TargetQueriesGQL
-import react.common.*
-import react.primereact.Message
 
 import java.time.Instant
 
@@ -128,7 +125,7 @@ object SiderealTargetEditor:
             TargetQueriesGQL
               .UpdateTargetsMutationWithResult[IO]
               .execute(newInput)
-              .flatMap(data => data.updateTargets.targets.headOption.foldMap(onClone(_).to[IO]))
+              .flatMap(data => data.updateTargets.targets.headOption.foldMap(onClone(_).toAsync))
           }
           .switching(cloning.async)
 

@@ -8,9 +8,7 @@ import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
-import crystal.react.View
-import crystal.react.ViewOpt
-import crystal.react.implicits.*
+import crystal.react.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosInt

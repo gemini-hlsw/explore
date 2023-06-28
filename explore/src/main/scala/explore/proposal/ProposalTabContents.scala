@@ -7,9 +7,8 @@ import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
-import crystal.react.View
+import crystal.react.*
 import crystal.react.hooks.*
-import crystal.react.implicits.*
 import eu.timepit.refined.auto.*
 import explore.DefaultErrorPolicy
 import explore.Icons
