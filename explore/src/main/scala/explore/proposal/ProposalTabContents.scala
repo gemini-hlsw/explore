@@ -30,6 +30,7 @@ import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
+import lucuma.ui.syntax.effect.*
 import lucuma.ui.syntax.pot.*
 import monocle.Focus
 import monocle.Lens
