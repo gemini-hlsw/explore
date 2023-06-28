@@ -31,6 +31,7 @@ import explore.optics.all.*
 import explore.syntax.ui.*
 import explore.targets.TargetSelectionPopup
 import explore.targets.TargetSource
+import explore.undo.UndoSetter
 import explore.undo.UndoStacks
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
@@ -73,13 +74,12 @@ case class AsterismEditor(
   programId:       Program.Id,
   obsIds:          ObsIdSet,
   asterismIds:     View[AsterismIds],
-  allTargets:      View[TargetList],
+  allTargets:      UndoSetter[TargetList],
   vizTime:         View[Option[Instant]],
   configuration:   ObsConfiguration,
   focusedTargetId: Option[Target.Id],
   setTarget:       (Option[Target.Id], SetRouteVia) => Callback,
   otherObsCount:   Target.Id => Int,
-  undoStacks:      View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
   searching:       View[Set[Target.Id]],
   renderInTitle:   Tile.RenderInTitle
 ) extends ReactFnProps(AsterismEditor.component)
@@ -175,7 +175,7 @@ object AsterismEditor extends AsterismModifier:
                   props.programId,
                   props.obsIds,
                   props.asterismIds,
-                  props.allTargets,
+                  props.allTargets.model,
                   targetWithOptId
                 ).flatMap(oTargetId => targetView.async.set(oTargetId))
                   .switching(adding.async, AreAdding(_))
@@ -195,20 +195,20 @@ object AsterismEditor extends AsterismModifier:
             fullScreen.get
           ),
           props.focusedTargetId.map { focusedTargetId =>
-            val selectedTargetView =
-              props.allTargets.zoom(Iso.id[TargetList].index(focusedTargetId))
+            val selectedTargetOpt: Option[UndoSetter[Target.Sidereal]] =
+              props.allTargets
+                .zoom(Iso.id[TargetList].index(focusedTargetId).andThen(Target.sidereal))
 
             val otherObsCount = props.otherObsCount(focusedTargetId)
             val plural        = if (otherObsCount === 1) "" else "s"
 
-            selectedTargetView
-              .zoom(Target.sidereal)
-              .mapValue[VdomElement](siderealTargetView =>
+            selectedTargetOpt
+              .map(siderealTarget =>
                 <.div(
                   ExploreStyles.TargetTileEditor,
                   <.div(
                     ExploreStyles.SharedEditWarning,
-                    s"${siderealTargetView.get.name.value} is in ${otherObsCount} other observation$plural. Edits here should apply to:",
+                    s"${siderealTarget.get.name.value} is in ${otherObsCount} other observation$plural. Edits here should apply to:",
                     BooleanRadioButtons(
                       view = editScope.as(EditScope.value),
                       idBase = "editscope".refined,
@@ -222,19 +222,17 @@ object AsterismEditor extends AsterismModifier:
                   SiderealTargetEditor(
                     props.userId,
                     focusedTargetId,
-                    siderealTargetView,
+                    siderealTarget,
                     Asterism
                       .fromIdsAndTargets(props.asterismIds.get, props.allTargets.get)
                       .map(_.focusOn(focusedTargetId)),
                     vizTime,
                     props.configuration.some,
-                    props.undoStacks
-                      .zoom(atMapWithDefault(focusedTargetId, UndoStacks.empty)),
                     props.searching,
                     onClone = onCloneTarget(
                       focusedTargetId,
                       props.asterismIds,
-                      props.allTargets,
+                      props.allTargets.model,
                       props.setTarget
                     ) _,
                     obsIdSubset =

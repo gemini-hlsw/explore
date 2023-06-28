@@ -84,10 +84,9 @@ import scala.concurrent.duration.*
 case class ConstraintsTabContents(
   userId:           Option[User.Id],
   programId:        Program.Id,
-  programSummaries: View[ProgramSummaries],
+  programSummaries: UndoContext[ProgramSummaries],
   focusedObsSet:    Option[ObsIdSet],
-  expandedIds:      View[SortedSet[ObsIdSet]],
-  obsUndoStacks:    View[UndoStacks[IO, ObservationList]]
+  expandedIds:      View[SortedSet[ObsIdSet]]
 ) extends ReactFnProps(ConstraintsTabContents.component)
 
 object ConstraintsTabContents extends TwoPanels:
@@ -185,7 +184,7 @@ object ConstraintsTabContents extends TwoPanels:
       .render { (props, ctx, layouts, defaultLayouts, state, resize) =>
         import ctx.given
 
-        val programSummaries: View[ProgramSummaries] = props.programSummaries
+        // val programSummaries: View[ProgramSummaries] = props.programSummaries
 
         def findConstraintGroup(
           obsIds: ObsIdSet,
@@ -223,17 +222,19 @@ object ConstraintsTabContents extends TwoPanels:
         val backButton: VdomNode =
           makeBackButton(props.programId, AppTab.Constraints, state, ctx)
 
-        val obsView: View[ObservationList] = programSummaries
-          // TODO Find another mechanism to update expandeds
-          // .withOnMod(onModSummaryWithObs(groupObsIds, idsToEdit))
-          .zoom(ProgramSummaries.observations)
+        // val obsView: View[ObservationList] = programSummaries
+        // TODO Find another mechanism to update expandeds
+        // .withOnMod(onModSummaryWithObs(groupObsIds, idsToEdit))
+        // .zoom(ProgramSummaries.observations)
 
-        val obsUndoCtx: UndoContext[ObservationList] = UndoContext(props.obsUndoStacks, obsView)
+        val observations: UndoSetter[ObservationList] =
+          props.programSummaries.zoom(ProgramSummaries.observations)
 
         val rightSide = (_: UseResizeDetectorReturn) =>
           props.focusedObsSet
             .flatMap(ids =>
-              findConstraintGroup(ids, programSummaries.get.constraintGroups).map(cg => (ids, cg))
+              findConstraintGroup(ids, props.programSummaries.get.constraintGroups)
+                .map(cg => (ids, cg))
             )
             .fold[VdomNode] {
               Tile(
@@ -244,7 +245,7 @@ object ConstraintsTabContents extends TwoPanels:
                 ConstraintsSummaryTable(
                   props.userId,
                   props.programId,
-                  programSummaries.get.constraintGroups,
+                  props.programSummaries.get.constraintGroups,
                   props.expandedIds,
                   renderInTitle
                 )
@@ -259,8 +260,8 @@ object ConstraintsTabContents extends TwoPanels:
 
               val csTraversal = obsTraversal.andThen(ObsSummary.constraints)
 
-              val csUndoCtx: UndoSetter[ConstraintSet] =
-                obsUndoCtx.zoom(csTraversal.getAll.andThen(_.head), csTraversal.modify)
+              val constraintSet: UndoSetter[ConstraintSet] =
+                observations.zoom(csTraversal.getAll.andThen(_.head), csTraversal.modify)
 
               val constraintsTitle = idsToEdit.single match
                 case Some(id) => s"Observation $id"
@@ -275,7 +276,7 @@ object ConstraintsTabContents extends TwoPanels:
                 ConstraintsPanel(
                   props.programId,
                   idsToEdit,
-                  csUndoCtx,
+                  constraintSet,
                   renderInTitle
                 )
               )
@@ -286,7 +287,7 @@ object ConstraintsTabContents extends TwoPanels:
                 TimingWindowsQueries.viewWithRemoteMod(
                   props.programId,
                   idsToEdit,
-                  obsUndoCtx
+                  observations
                     .undoableView[List[TimingWindow]](
                       twTraversal.getAll.andThen(_.head),
                       twTraversal.modify
@@ -314,8 +315,9 @@ object ConstraintsTabContents extends TwoPanels:
         val constraintsTree =
           ConstraintGroupObsList(
             props.programId,
-            obsUndoCtx,
-            programSummaries.get.constraintGroups,
+            observations,
+            props.programSummaries,
+            props.programSummaries.get.constraintGroups,
             props.focusedObsSet,
             state.set(SelectedPanel.Summary),
             props.expandedIds

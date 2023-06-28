@@ -34,8 +34,7 @@ import explore.model.formats.*
 import explore.model.util.*
 import explore.optics.all.given
 import explore.syntax.ui.*
-import explore.undo.UndoContext
-import explore.undo.UndoStacks
+import explore.undo.UndoSetter
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.hooks.Hooks
@@ -73,11 +72,10 @@ import java.time.Instant
 case class SiderealTargetEditor(
   userId:        User.Id,
   targetId:      Target.Id,        // Used to call DB mutations and focus in Aladin.
-  target:        View[Target.Sidereal],
+  target:        UndoSetter[Target.Sidereal],
   asterism:      Option[Asterism], // This is passed through to Aladin, to plot the entire Asterism.
   vizTime:       Option[Instant],
   obsConf:       Option[ObsConfiguration],
-  undoStacks:    View[UndoStacks[IO, Target.Sidereal]],
   searching:     View[Set[Target.Id]],
   obsIdSubset:   Option[ObsIdSet] = None,
   onClone:       TargetWithId => Callback = _ => Callback.empty,
@@ -150,14 +148,6 @@ object SiderealTargetEditor:
       .render { (props, ctx, cloning, vizTime) =>
         import ctx.given
 
-        val (targetView, undoStackView) =
-          props.obsIdSubset.fold((props.target, props.undoStacks))(_ =>
-            (readonlyView(props.target), readonlyView(props.undoStacks))
-          )
-
-        val undoCtx: UndoContext[Target.Sidereal] =
-          UndoContext(undoStackView, targetView)
-
         val remoteOnMod: UpdateTargetsInput => IO[Unit] =
           getRemoteOnMod(
             props.targetId,
@@ -176,7 +166,7 @@ object SiderealTargetEditor:
 
         val siderealTargetAligner: Aligner[Target.Sidereal, UpdateTargetsInput] =
           Aligner(
-            undoCtx,
+            props.target,
             UpdateTargetsInput(
               WHERE = props.targetId.toWhereTarget.assign,
               SET = TargetPropertiesInput()
@@ -235,7 +225,7 @@ object SiderealTargetEditor:
             .view((pmRA: Option[ProperMotion.RA]) =>
               buildProperMotion(
                 pmRA,
-                Target.Sidereal.properMotionDec.getOption(targetView.get)
+                Target.Sidereal.properMotionDec.getOption(props.target.get)
               )
                 .map(_.toInput)
                 .orUnassign
@@ -256,7 +246,7 @@ object SiderealTargetEditor:
             )
             .view((pmDec: Option[ProperMotion.Dec]) =>
               buildProperMotion(
-                Target.Sidereal.properMotionRA.getOption(targetView.get),
+                Target.Sidereal.properMotionRA.getOption(props.target.get),
                 pmDec
               )
                 .map(_.toInput)
@@ -288,15 +278,7 @@ object SiderealTargetEditor:
         val disabled = props.searching.get.exists(_ === props.targetId) || cloning.get
 
         React.Fragment(
-          props.renderInTitle
-            .map(_.apply(<.span(ExploreStyles.TitleUndoButtons)(UndoButtons(undoCtx)))),
           <.div(ExploreStyles.TargetGrid)(
-            <.div(
-              ExploreStyles.TitleUndoButtons,
-              // Don't show the undo/redo buttons if we are in cloning mode or they are in the title bar.
-              UndoButtons(undoCtx, disabled = disabled)
-                .when(props.renderInTitle.isEmpty && props.obsIdSubset.isEmpty)
-            ),
             (vizTime, props.asterism.toPot).tupled.renderPot((vt, asterism) =>
               AladinCell(
                 props.userId,
@@ -384,11 +366,11 @@ object SiderealTargetEditor:
               ExploreStyles.WithGaussian
                 .when(SourceProfile.gaussian.getOption(sourceProfileAligner.get).isDefined),
               ExploreStyles.WithCatalogInfo
-                .when(targetView.get.catalogInfo.flatMap(_.objectType).isDefined)
+                .when(props.target.get.catalogInfo.flatMap(_.objectType).isDefined)
             )(
               SourceProfileEditor(
                 sourceProfileAligner,
-                targetView.get.catalogInfo,
+                props.target.get.catalogInfo,
                 disabled
               )
             )

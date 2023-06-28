@@ -50,14 +50,14 @@ import scala.collection.immutable.SortedSet
 
 case class ConstraintGroupObsList(
   programId:        Program.Id,
-  undoCtx:          UndoContext[ObservationList],
+  observations:     UndoSetter[ObservationList],
+  undoer:           Undoer,
   constraintGroups: ConstraintGroupList,
   focusedObsSet:    Option[ObsIdSet],
   setSummaryPanel:  Callback,
   expandedIds:      View[SortedSet[ObsIdSet]]
 ) extends ReactFnProps[ConstraintGroupObsList](ConstraintGroupObsList.component)
-    with ViewCommon:
-  val observations: ObservationList = undoCtx.model.get
+    with ViewCommon
 
 object ConstraintGroupObsList:
   private type Props = ConstraintGroupObsList
@@ -83,7 +83,7 @@ object ConstraintGroupObsList:
     }
 
   private def onDragEnd(
-    undoCtx:          UndoContext[ObservationList],
+    observations:     UndoSetter[ObservationList],
     programId:        Program.Id,
     expandedIds:      View[SortedSet[ObsIdSet]],
     focusedObsSet:    Option[ObsIdSet],
@@ -111,8 +111,8 @@ object ConstraintGroupObsList:
       .andThen(KeyedIndexedList.value)
       .andThen(ObsSummary.constraints)
 
-    val csUndoCtx =
-      undoCtx.zoom(traversal.getAll.andThen(_.head), traversal.modify)
+    val constraintSet =
+      observations.zoom(traversal.getAll.andThen(_.head), traversal.modify)
 
     oData.foldMap { case (newCs, destIds, draggedIds, srcIds) =>
       expandedIds.mod(ids =>
@@ -120,7 +120,7 @@ object ConstraintGroupObsList:
         (srcIds -- draggedIds).fold(base)(base + _)
       ) >>
         ConstraintsQueries
-          .UndoView(programId, draggedIds, csUndoCtx)(
+          .UndoView(programId, draggedIds, constraintSet)(
             // There should be a better way to do this.
             identity,
             identity,
@@ -174,7 +174,7 @@ object ConstraintGroupObsList:
           getDraggedIds(rubric.draggableId, props.focusedObsSet)
             .flatMap(obsIds =>
               if (obsIds.size === 1)
-                props.observations
+                props.observations.get
                   .getValue(obsIds.head)
                   .map(obs => props.renderObsBadge(obs, ObsBadge.Layout.ConstraintsTab))
               else
@@ -193,7 +193,7 @@ object ConstraintGroupObsList:
         setObsSet(ObsIdSet.one(obsId).some)
 
       val handleDragEnd = onDragEnd(
-        props.undoCtx,
+        props.observations,
         props.programId,
         props.expandedIds,
         props.focusedObsSet,
@@ -211,7 +211,7 @@ object ConstraintGroupObsList:
         }
 
       def renderGroup(obsIds: ObsIdSet, constraintSet: ConstraintSet): VdomNode = {
-        val cgObs         = obsIds.toList.map(id => props.observations.getValue(id)).flatten
+        val cgObs         = obsIds.toList.map(id => props.observations.get.getValue(id)).flatten
         // if this group or something in it is selected
         val groupSelected = props.focusedObsSet.exists(_.subsetOf(obsIds))
 
@@ -279,7 +279,7 @@ object ConstraintGroupObsList:
           (result, provided) => dragging.setState(false) >> handleDragEnd(result, provided)
       )(
         <.div(ExploreStyles.ObsTreeWrapper)(
-          <.div(ExploreStyles.TreeToolbar)(UndoButtons(props.undoCtx, size = PlSize.Mini)),
+          <.div(ExploreStyles.TreeToolbar)(UndoButtons(props.undoer, size = PlSize.Mini)),
           <.div(
             Button(
               onClick = setObsSet(none) >> props.setSummaryPanel,

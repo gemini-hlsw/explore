@@ -79,10 +79,9 @@ import scala.concurrent.duration.*
 case class SchedulingTabContents(
   userId:           Option[User.Id],
   programId:        Program.Id,
-  programSummaries: View[ProgramSummaries],
+  programSummaries: UndoContext[ProgramSummaries],
   focusedObsSet:    Option[ObsIdSet],
-  expandedIds:      View[SortedSet[ObsIdSet]],
-  obsUndoStacks:    View[UndoStacks[IO, ObservationList]]
+  expandedIds:      View[SortedSet[ObsIdSet]]
 ) extends ReactFnProps(SchedulingTabContents.component)
 
 object SchedulingTabContents extends TwoPanels:
@@ -171,8 +170,6 @@ object SchedulingTabContents extends TwoPanels:
       .render { (props, ctx, layouts, defaultLayouts, state, resize) =>
         import ctx.given
 
-        val programSummaries: View[ProgramSummaries] = props.programSummaries
-
         def findSchedulingGroup(
           obsIds: ObsIdSet,
           cgl:    SchedulingGroupList
@@ -209,17 +206,13 @@ object SchedulingTabContents extends TwoPanels:
         val backButton: VdomNode =
           makeBackButton(props.programId, AppTab.Scheduling, state, ctx)
 
-        val obsView: View[ObservationList] = programSummaries
-          // TODO Find another mechanism to update expandeds
-          // .withOnMod(onModSummaryWithObs(groupObsIds, idsToEdit))
-          .zoom(ProgramSummaries.observations)
-
-        val obsUndoCtx: UndoContext[ObservationList] = UndoContext(props.obsUndoStacks, obsView)
+        val observations: UndoSetter[ObservationList] =
+          props.programSummaries.zoom(ProgramSummaries.observations)
 
         val rightSide = (_: UseResizeDetectorReturn) =>
           props.focusedObsSet
             .flatMap(ids =>
-              findSchedulingGroup(ids, programSummaries.get.schedulingGroups)
+              findSchedulingGroup(ids, props.programSummaries.get.schedulingGroups)
                 .map(cg => (ids, cg))
             )
             .fold[VdomNode] {
@@ -238,7 +231,7 @@ object SchedulingTabContents extends TwoPanels:
                 TimingWindowsQueries.viewWithRemoteMod(
                   props.programId,
                   idsToEdit,
-                  obsUndoCtx
+                  observations
                     .undoableView[List[TimingWindow]](
                       twTraversal.getAll.andThen(_.head),
                       twTraversal.modify
@@ -266,8 +259,9 @@ object SchedulingTabContents extends TwoPanels:
         val schedulingTree =
           SchedulingGroupObsList(
             props.programId,
-            obsUndoCtx,
-            programSummaries.get.schedulingGroups,
+            observations,
+            props.programSummaries,
+            props.programSummaries.get.schedulingGroups,
             props.focusedObsSet,
             state.set(SelectedPanel.Summary),
             props.expandedIds

@@ -14,7 +14,7 @@ import explore.model.Asterism
 import explore.model.extensions.*
 import explore.model.util.*
 import explore.targeteditor.SiderealTargetEditor
-import explore.undo.UndoStacks
+import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Target
@@ -32,8 +32,7 @@ object SiderealTargetEditorTile {
   def noObsSiderealTargetEditorTile(
     userId:     Option[User.Id],
     targetId:   Target.Id,
-    target:     View[Target.Sidereal],
-    undoStacks: View[UndoStacks[IO, Target.Sidereal]],
+    target:     UndoSetter[Target.Sidereal],
     searching:  View[Set[Target.Id]],
     title:      String,
     fullScreen: View[AladinFullScreen],
@@ -58,7 +57,6 @@ object SiderealTargetEditorTile {
               Asterism.one(TargetWithId(targetId, target.get)).some,
               none,
               none,
-              undoStacks,
               searching,
               renderInTitle = renderInTitle.some,
               fullScreen = fullScreen

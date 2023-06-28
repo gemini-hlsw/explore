@@ -25,7 +25,8 @@ import explore.model.enums.AppTab
 import explore.model.syntax.all.*
 import explore.model.syntax.all.*
 import explore.render.given
-import explore.undo.UndoContext
+import explore.undo.UndoSetter
+import explore.undo.Undoer
 import explore.utils.ToastCtx
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -53,14 +54,14 @@ import scala.collection.immutable.SortedSet
 
 case class SchedulingGroupObsList(
   programId:        Program.Id,
-  undoCtx:          UndoContext[ObservationList],
+  observations:     UndoSetter[ObservationList],
+  undoer:           Undoer,
   schedulingGroups: SchedulingGroupList,
   focusedObsSet:    Option[ObsIdSet],
   setSummaryPanel:  Callback,
   expandedIds:      View[SortedSet[ObsIdSet]]
 ) extends ReactFnProps[SchedulingGroupObsList](SchedulingGroupObsList.component)
-    with ViewCommon:
-  val observations: ObservationList = undoCtx.model.get
+    with ViewCommon
 
 object SchedulingGroupObsList:
   private type Props = SchedulingGroupObsList
@@ -116,7 +117,7 @@ object SchedulingGroupObsList:
     }
 
   private def onDragEnd(
-    undoCtx:          UndoContext[ObservationList],
+    undoCtx:          UndoSetter[ObservationList],
     programId:        Program.Id,
     expandedIds:      View[SortedSet[ObsIdSet]],
     focusedObsSet:    Option[ObsIdSet],
@@ -206,7 +207,7 @@ object SchedulingGroupObsList:
           getDraggedIds(rubric.draggableId, props.focusedObsSet)
             .flatMap(obsIds =>
               if (obsIds.size === 1)
-                props.observations
+                props.observations.get
                   .getValue(obsIds.head)
                   .map(obs => props.renderObsBadge(obs, ObsBadge.Layout.ConstraintsTab))
               else
@@ -225,7 +226,7 @@ object SchedulingGroupObsList:
         setObsSet(ObsIdSet.one(obsId).some)
 
       val handleDragEnd = onDragEnd(
-        props.undoCtx,
+        props.observations,
         props.programId,
         props.expandedIds,
         props.focusedObsSet,
@@ -243,7 +244,7 @@ object SchedulingGroupObsList:
         }
 
       def renderGroup(obsIds: ObsIdSet, timingWindows: List[TimingWindow]): VdomNode = {
-        val cgObs         = obsIds.toList.map(id => props.observations.getValue(id)).flatten
+        val cgObs         = obsIds.toList.map(id => props.observations.get.getValue(id)).flatten
         // if this group or something in it is selected
         val groupSelected = props.focusedObsSet.exists(_.subsetOf(obsIds))
 
@@ -313,7 +314,7 @@ object SchedulingGroupObsList:
           (result, provided) => dragging.setState(false) >> handleDragEnd(result, provided)
       )(
         <.div(ExploreStyles.ObsTreeWrapper)(
-          <.div(ExploreStyles.TreeToolbar)(UndoButtons(props.undoCtx, size = PlSize.Mini)),
+          <.div(ExploreStyles.TreeToolbar)(UndoButtons(props.undoer, size = PlSize.Mini)),
           <.div(ExploreStyles.ObsTree)(
             <.div(ExploreStyles.ObsScrollTree)(
               schedulingGroups.map((obsIds, c) => renderGroup(obsIds, c)).toTagMod

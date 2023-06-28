@@ -24,8 +24,8 @@ import explore.observationtree.ObsBadge
 import explore.syntax.ui.*
 import explore.tabs.DeckShown
 import explore.undo.KIListMod
-import explore.undo.UndoContext
-import explore.undo.UndoStacks
+import explore.undo.UndoSetter
+import explore.undo.Undoer
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -57,7 +57,8 @@ import scala.scalajs.js
 import ObsQueries.*
 
 case class ObsList(
-  obsUndoCtx:      UndoContext[ObservationList],
+  observations:    UndoSetter[ObservationList],
+  undoer:          Undoer,
   programId:       Program.Id,
   focusedObs:      Option[Observation.Id],
   focusedTarget:   Option[Target.Id],
@@ -65,8 +66,7 @@ case class ObsList(
   groups:          GroupList,
   expandedGroups:  View[Set[Group.Id]],
   deckShown:       View[DeckShown]
-) extends ReactFnProps(ObsList.component):
-  val observations: ObservationList = obsUndoCtx.model.get
+) extends ReactFnProps(ObsList.component)
 
 object ObsList:
   private type Props = ObsList
@@ -91,18 +91,18 @@ object ObsList:
     }
 
   private def insertObs(
-    programId: Program.Id,
-    pos:       Int,
-    undoCtx:   UndoContext[ObservationList],
-    adding:    View[Boolean],
-    ctx:       AppContext[IO]
+    programId:    Program.Id,
+    pos:          Int,
+    observations: UndoSetter[ObservationList],
+    adding:       View[Boolean],
+    ctx:          AppContext[IO]
   ): IO[Unit] =
     import ctx.given
 
     createObservation[IO](programId)
       .flatMap { obs =>
         (obsExistence(programId, obs.id, o => setObs(programId, o.some, ctx))
-          .mod(undoCtx)(obsListMod.upsert(obs, pos)) <* scrollIfNeeded(obs.id)).toAsync
+          .mod(observations)(obsListMod.upsert(obs, pos)) <* scrollIfNeeded(obs.id)).toAsync
       }
       .switching(adding.async)
 
@@ -112,7 +112,7 @@ object ObsList:
       .useContext(AppContext.ctx)
       // Saved index into the observation list
       .useState(none[Int])
-      .useEffectWithDepsBy((props, _, _) => (props.focusedObs, props.observations)) {
+      .useEffectWithDepsBy((props, _, _) => (props.focusedObs, props.observations.get)) {
         (props, ctx, optIndex) => params =>
           import ctx.given
 
@@ -141,7 +141,7 @@ object ObsList:
       }
       // adding new observation
       .useStateView(false)
-      .useMemoBy((props, _, _, _) => (props.observations, props.groups))((_, _, _, _) =>
+      .useMemoBy((props, _, _, _) => (props.observations.get, props.groups))((_, _, _, _) =>
         ObsNode.fromList
       )
       .useEffectWithDepsBy((props, _, _, _, _) => (props.focusedObs, props.groups))(
@@ -175,10 +175,7 @@ object ObsList:
             )
       )
       .render { (props, ctx, _, adding, treeNodes) =>
-
         import ctx.given
-
-        val observations = props.observations.toList
 
         val expandedGroups = props.expandedGroups.zoom(groupTreeIdLens)
 
@@ -204,24 +201,24 @@ object ObsList:
                   ObsBadge.Layout.ObservationsTab,
                   selected = selected,
                   setStatusCB = (obsEditStatus(props.programId, id)
-                    .set(props.obsUndoCtx) _).compose((_: ObsStatus).some).some,
+                    .set(props.observations) _).compose((_: ObsStatus).some).some,
                   setActiveStatusCB = (obsActiveStatus(props.programId, id)
-                    .set(props.obsUndoCtx) _).compose((_: ObsActiveStatus).some).some,
+                    .set(props.observations) _).compose((_: ObsActiveStatus).some).some,
                   setSubtitleCB = (obsEditSubtitle(props.programId, id)
-                    .set(props.obsUndoCtx) _).compose((_: Option[NonEmptyString]).some).some,
+                    .set(props.observations) _).compose((_: Option[NonEmptyString]).some).some,
                   deleteCB = obsExistence(
                     props.programId,
                     id,
                     o => setObs(props.programId, o.some, ctx)
                   )
-                    .mod(props.obsUndoCtx)(obsListMod.delete)
+                    .mod(props.observations)(obsListMod.delete)
                     .showToastCB(ctx)(s"Deleted obs ${id.show}")
                     .some,
                   cloneCB = cloneObs(
                     props.programId,
                     id,
-                    observations.length,
-                    props.obsUndoCtx,
+                    props.observations.get.length,
+                    props.observations,
                     ctx,
                     adding.async.set(true),
                     adding.async.set(false)
@@ -253,8 +250,8 @@ object ObsList:
                   loading = adding.get,
                   onClick = insertObs(
                     props.programId,
-                    observations.length,
-                    props.obsUndoCtx,
+                    props.observations.get.length,
+                    props.observations,
                     adding,
                     ctx
                   ).runAsync
@@ -269,7 +266,7 @@ object ObsList:
                     clazz = ExploreStyles.ObsTreeHideShow,
                     onClick = props.deckShown.mod(_.flip)
                   ).mini.compact,
-                  UndoButtons(props.obsUndoCtx, size = PlSize.Mini, disabled = adding.get)
+                  UndoButtons(props.undoer, size = PlSize.Mini, disabled = adding.get)
                 )
               ),
               <.div(

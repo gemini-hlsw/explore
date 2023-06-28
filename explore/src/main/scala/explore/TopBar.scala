@@ -20,11 +20,13 @@ import explore.model.ExploreLocalPreferences
 import explore.model.ExploreLocalPreferences.*
 import explore.model.ModelUndoStacks
 import explore.model.ProgramInfoList
+import explore.model.ProgramSummaries
 import explore.model.UserVault
 import explore.model.enums.ExecutionEnvironment
 import explore.programs.ProgramsPopup
 import explore.syntax.ui.*
 import explore.syntax.ui.given
+import explore.undo.UndoStacks
 import explore.users.UserPreferencesPopup
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.callback.CallbackCatsEffect.*
@@ -54,7 +56,7 @@ case class TopBar(
   vault:        UserVault,
   programId:    Option[Program.Id],
   preferences:  ExploreLocalPreferences,
-  undoStacks:   View[ModelUndoStacks[IO]],
+  undoStacks:   View[UndoStacks[IO, ProgramSummaries]],
   programInfos: ViewOpt[ProgramInfoList],
   onLogout:     IO[Unit]
 ) extends ReactFnProps(TopBar.component)
@@ -217,10 +219,11 @@ object TopBar:
             if (isAboutOpen.get.value) About(isAboutOpen.zoom(IsAboutOpen.value))
             else EmptyVdom,
             if (isProgramsOpen.value.value)
-              ProgramsPopup(props.programId,
-                            props.programInfos,
-                            props.undoStacks,
-                            isProgramsOpen.setState(IsProgramOpen(false)).some
+              ProgramsPopup(
+                props.programId,
+                props.programInfos,
+                props.undoStacks,
+                isProgramsOpen.setState(IsProgramOpen(false)).some
               )
             else EmptyVdom,
             if (isUserPropertiesOpen.value.value)
