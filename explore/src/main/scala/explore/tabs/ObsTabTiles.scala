@@ -308,6 +308,7 @@ object ObsTabTiles:
           val finderChartsTile =
             FinderChartsTile.finderChartsTile(
               props.programId,
+              props.obsId,
               attachmentsView,
               props.vault.map(_.token),
               props.obsAttachments
