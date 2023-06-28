@@ -3,7 +3,6 @@
 
 package explore.config.sequence
 
-import cats.syntax.all.*
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*

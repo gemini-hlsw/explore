@@ -7,7 +7,6 @@ import _root_.react.common.ReactFnProps
 import _root_.react.primereact.Dropdown
 import _root_.react.primereact.SelectItem
 import _root_.react.resizeDetector.*
-import cats.Order.given
 import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
@@ -16,7 +15,6 @@ import clue.FetchClient
 import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
-import eu.timepit.refined.types.numeric.PosInt
 import explore.*
 import explore.common.TimingWindowsQueries
 import explore.components.Tile
@@ -33,16 +31,11 @@ import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
 import explore.model.extensions.*
 import explore.model.itc.ItcChartResult
-import explore.model.itc.ItcExposureTime
 import explore.model.itc.ItcTarget
-import explore.model.itc.OverridenExposureTime
 import explore.model.layout.*
 import explore.observationtree.obsEditAttachments
-import explore.optics.*
-import explore.optics.all.*
 import explore.timingwindows.TimingWindowsPanel
 import explore.undo.UndoSetter
-import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -61,13 +54,10 @@ import lucuma.core.model.TimingWindow
 import lucuma.core.model.User
 import lucuma.core.syntax.all.*
 import lucuma.schemas.ObservationDB
-import lucuma.schemas.ObservationDB.Enums.ObsAttachmentType
 import lucuma.schemas.model.BasicConfiguration
-import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.model.TargetWithId
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import monocle.Iso
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ObsQueries
 import queries.schemas.odb.ObsQueries.*

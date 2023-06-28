@@ -5,8 +5,6 @@ package explore.config
 
 import cats.implicits.*
 import coulomb.Quantity
-import coulomb.ops.algebra.spire.all.given
-import coulomb.policy.spire.standard.given
 import crystal.react.View
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
@@ -34,23 +32,18 @@ import lucuma.ui.syntax.all.given
 import react.common.Css
 import react.common.ReactFnProps
 import react.primereact.MultiSelect
-import react.primereact.PrimeStyles
 import react.primereact.SelectItem
 import react.primereact.SelectItemGroup
 import react.primereact.SelectItemGroups
-import spire.math.Rational
 
 import scala.collection.immutable.SortedSet
-import scala.scalajs.js
-import scala.scalajs.js.JSConverters.*
 
 case class ImagingConfigurationPanel(
   options: View[ImagingConfigurationOptions]
 ) extends ReactFnProps(ImagingConfigurationPanel.component)
 
 object ImagingConfigurationPanel {
-  private type Props         = ImagingConfigurationPanel
-  private type SectionHeader = String
+  private type Props = ImagingConfigurationPanel
 
   private given Display[ImagingCapabilities] = Display.by(_.label, _.label)
 

@@ -8,23 +8,15 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.components.ui.ExploreStyles.*
-import explore.model.Constants
 import explore.model.enums.TileSizeState
 import explore.model.layout
-import explore.syntax.ui.*
-import explore.syntax.ui.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.ui.primereact.*
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import org.scalajs.dom
 import react.common.ReactFnProps
 import react.common.style.*
-import react.fa.given
 import react.primereact.Button
-
-import scalajs.js
 
 case class Tile(
   id:                Tile.TileId,

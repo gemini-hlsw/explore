@@ -3,7 +3,6 @@
 
 package explore.model
 
-import cats.kernel.laws.discipline.*
 import cats.syntax.all.*
 import eu.timepit.refined.cats.given
 import explore.model.formats.*
@@ -13,9 +12,6 @@ import lucuma.core.util.TimeSpan
 import lucuma.core.util.arb.ArbTimeSpan.given
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
-import org.scalacheck.Prop.*
-import org.typelevel.cats.time.arb.TimeArbitraries.*
-import org.typelevel.cats.time.instances.all.*
 
 import java.time.Duration
 

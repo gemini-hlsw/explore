@@ -7,7 +7,6 @@ import cats.Eq
 import cats.derived.*
 import cats.syntax.all.*
 import crystal.react.View
-import crystal.react.reuse.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.EditableLabel
 import explore.Icons
@@ -15,7 +14,6 @@ import explore.components.ui.ExploreStyles
 import explore.model.ObsSummary
 import explore.model.syntax.all.*
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ObsActiveStatus
 import lucuma.core.enums.ObsStatus
@@ -25,11 +23,8 @@ import lucuma.core.util.Gid
 import lucuma.ui.primereact.EnumDropdownView
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
-import react.floatingui.Placement
-import react.floatingui.syntax.*
 import react.primereact.Button
 import react.primereact.InputSwitch
 import react.primereact.TooltipOptions

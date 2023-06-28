@@ -4,7 +4,6 @@
 package explore.model
 
 import cats.kernel.laws.discipline.*
-import explore.model.arb.all.*
 import explore.model.arb.all.given
 import explore.model.enums.AppTab
 import lucuma.core.util.arb.ArbEnumerated.*

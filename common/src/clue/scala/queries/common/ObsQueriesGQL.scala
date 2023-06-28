@@ -6,14 +6,10 @@ package queries.common
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import explore.model
-import eu.timepit.refined.types.numeric.NonNegInt
-import lucuma.core.{model => coreModel}
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.odb.*
 
-import java.time
 // gql: import io.circe.refined.*
-// gql: import lucuma.schemas.decoders.given
 // gql: import lucuma.odb.json.time.decoder.given
 
 object ObsQueriesGQL:

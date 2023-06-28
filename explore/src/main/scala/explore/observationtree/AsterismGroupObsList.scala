@@ -4,13 +4,11 @@
 package explore.observationtree
 
 import cats.Order.*
-import cats.effect.Deferred
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
 import crystal.react.*
 import crystal.react.hooks.*
-import explore.DefaultErrorPolicy
 import explore.Icons
 import explore.common.TargetQueries
 import explore.components.ui.ExploreStyles
@@ -22,7 +20,6 @@ import explore.model.Focused
 import explore.model.ObsIdSet
 import explore.model.ObsSummary
 import explore.model.ProgramSummaries
-import explore.model.TargetWithObs
 import explore.model.enums.AppTab
 import explore.model.syntax.all.*
 import explore.syntax.ui.*
@@ -37,19 +34,15 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.util.NewType
 import lucuma.schemas.ObservationDB
-import lucuma.schemas.odb.input.*
 import lucuma.ui.primereact.*
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import mouse.boolean.*
 import org.typelevel.log4cats.Logger
-import queries.common.TargetQueriesGQL
 import queries.schemas.odb.ObsQueries
 import react.beautifuldnd.*
 import react.common.ReactFnProps
 import react.fa.FontAwesomeIcon
 import react.primereact.Button
-import react.primereact.ToastRef
 
 import scala.collection.immutable.SortedSet
 
@@ -72,7 +65,6 @@ object AsterismGroupObsList:
   private type AddingTargetOrObs = AddingTargetOrObs.Type
 
   private object Dragging extends NewType[Boolean]
-  private type Dragging = Dragging.Type
 
   private def toggleExpanded(
     obsIds:      ObsIdSet,

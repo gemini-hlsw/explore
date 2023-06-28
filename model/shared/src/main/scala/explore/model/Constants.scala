@@ -4,9 +4,7 @@
 package explore.model
 
 import cats.syntax.all.*
-import lucuma.core.enums.StellarLibrarySpectrum
 import lucuma.core.math.Angle
-import lucuma.core.model.UnnormalizedSED
 
 import java.time.Duration
 import java.time.ZoneOffset

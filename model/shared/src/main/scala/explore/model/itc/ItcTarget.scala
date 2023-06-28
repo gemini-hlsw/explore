@@ -7,7 +7,6 @@ import cats.Eq
 import cats.Order.given
 import cats.derived.*
 import cats.syntax.all.*
-import coulomb.syntax.*
 import eu.timepit.refined.cats.given
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.itc.math.*

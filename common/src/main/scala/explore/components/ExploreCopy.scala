@@ -4,7 +4,6 @@
 package explore.components
 
 import explore.Icons
-import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.util.NewType
@@ -20,7 +19,6 @@ object ExploreCopy:
   private type Props = ExploreCopy
 
   private object Copied extends NewType[Boolean]
-  private type Copied = Copied.Type
 
   private val component = ScalaFnComponent
     .withHooks[Props]

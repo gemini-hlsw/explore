@@ -8,37 +8,27 @@ import cats.syntax.all.*
 import crystal.react.View
 import crystal.react.*
 import crystal.react.hooks.*
-import crystal.react.reuse.Reuse
-import crystal.react.reuse.*
-import explore.Icons
-import explore.Resources
 import explore.components.About
 import explore.components.ConnectionsStatus
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ExploreLocalPreferences
 import explore.model.ExploreLocalPreferences.*
-import explore.model.ModelUndoStacks
 import explore.model.ProgramInfoList
 import explore.model.ProgramSummaries
 import explore.model.UserVault
 import explore.model.enums.ExecutionEnvironment
 import explore.programs.ProgramsPopup
-import explore.syntax.ui.*
-import explore.syntax.ui.given
 import explore.undo.UndoStacks
 import explore.users.UserPreferencesPopup
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.callback.CallbackCatsEffect.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import log4cats.loglevel.LogLevelLogger
 import lucuma.core.model.GuestRole
-import lucuma.core.model.GuestUser
 import lucuma.core.model.Program
 import lucuma.core.util.NewType
 import lucuma.ui.enums.Theme
 import lucuma.ui.reusability.given
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import org.scalajs.dom
 import org.scalajs.dom.window
@@ -65,13 +55,10 @@ object TopBar:
   private type Props = TopBar
 
   private object IsAboutOpen extends NewType[Boolean]
-  private type IsAboutOpen = IsAboutOpen.Type
 
   private object IsProgramOpen extends NewType[Boolean]
-  private type IsProgramOpen = IsProgramOpen.Type
 
   private object IsUserPropertiesOpen extends NewType[Boolean]
-  private type IsUserPropertiesOpen = IsUserPropertiesOpen.Type
 
   private type ForceRerender = ForceRerender.Type
   private object ForceRerender extends NewType[Boolean]:

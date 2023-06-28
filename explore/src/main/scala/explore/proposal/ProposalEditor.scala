@@ -27,7 +27,6 @@ import explore.model.AppContext
 import explore.model.ExploreModelValidators
 import explore.model.Hours
 import explore.model.display.given
-import explore.model.reusability.given
 import explore.optics.all.*
 import explore.proposal.ProposalClassType.*
 import explore.undo.*
@@ -40,7 +39,6 @@ import lucuma.core.model.Program
 import lucuma.core.model.Proposal
 import lucuma.core.model.ProposalClass
 import lucuma.core.model.ZeroTo100
-import lucuma.core.syntax.time.*
 import lucuma.core.util.Enumerated
 import lucuma.core.util.TimeSpan
 import lucuma.core.validation.*
@@ -52,7 +50,6 @@ import lucuma.ui.input.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.Iso
 import org.typelevel.log4cats.Logger
@@ -61,14 +58,10 @@ import react.common.Css
 import react.common.ReactFnProps
 import react.primereact.Button
 import react.primereact.Divider
-import react.primereact.Dropdown
 import react.primereact.SelectItem
 import spire.std.any.*
 
 import scala.collection.immutable.SortedMap
-
-import scalajs.js
-import scalajs.js.JSConverters.*
 
 case class ProposalEditor(
   programId:     Program.Id,

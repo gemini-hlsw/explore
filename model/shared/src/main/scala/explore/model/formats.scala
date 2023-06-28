@@ -5,27 +5,18 @@ package explore.model
 
 import cats.syntax.all.*
 import coulomb.*
-import coulomb.ops.algebra.spire.all.given
-import coulomb.policy.spire.standard.given
-import coulomb.syntax.*
 import eu.timepit.refined.collection.NonEmpty
-import eu.timepit.refined.refineV
 import explore.optics.all.*
 import lucuma.core.math.HourAngle.HMS
-import lucuma.core.math.Parallax
-import lucuma.core.math.ProperMotion.AngularVelocity
 import lucuma.core.math.*
 import lucuma.core.math.units.*
-import lucuma.core.model.given
 import lucuma.core.optics.*
 import lucuma.core.syntax.string.*
 import lucuma.core.util.TimeSpan
 import lucuma.core.validation.*
 import lucuma.refined.*
-import spire.math.Rational
 
 import java.text.NumberFormat
-import java.time.Duration
 import java.util.Locale
 import scala.math.*
 

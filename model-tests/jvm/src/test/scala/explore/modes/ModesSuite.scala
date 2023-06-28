@@ -8,13 +8,10 @@ import cats.effect.Resource
 import cats.syntax.all.*
 import coulomb.*
 import coulomb.conversion.spire.*
-import coulomb.ops.algebra.cats.quantity.given
-import coulomb.ops.algebra.spire.all.given
 import coulomb.policy.spire.standard.given
 import coulomb.syntax.*
 import coulomb.units.time.*
 import eu.timepit.refined.*
-import eu.timepit.refined.auto.*
 import eu.timepit.refined.numeric.*
 import fs2.io.file.Path
 import lucuma.core.enums.FocalPlane
@@ -25,7 +22,6 @@ import lucuma.core.math.WavelengthDelta
 import lucuma.core.math.units.*
 import lucuma.refined.*
 import munit.CatsEffectSuite
-import spire.math.Rational
 
 class ModesSuite extends CatsEffectSuite {
   val allModesPath = IO {

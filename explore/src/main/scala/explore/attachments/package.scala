@@ -9,7 +9,6 @@ import cats.effect.IO
 import cats.syntax.all.*
 import crystal.Pot
 import crystal.react.*
-import crystal.react.*
 import eu.timepit.refined.types.numeric.NonNegLong
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.ObsAttachment
@@ -24,7 +23,6 @@ import lucuma.core.model.{ObsAttachment => ObsAtt}
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Timestamp
-import lucuma.react.table.ColumnDef
 import lucuma.react.table.ColumnId
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Enums.ObsAttachmentType

@@ -4,14 +4,9 @@
 package explore.model
 
 import cats.Eq
-import explore.model.ProgramSummaries
 import explore.undo.UndoStacks
-import lucuma.core.model.ConstraintSet
-import lucuma.core.model.Observation
 import lucuma.core.model.Proposal
-import lucuma.core.model.Target
 import monocle.Focus
-import queries.schemas.odb.ObsQueries.ObservationList
 
 case class ModelUndoStacks[F[_]](
   forProposal: UndoStacks[F, Proposal] = UndoStacks.empty[F, Proposal]

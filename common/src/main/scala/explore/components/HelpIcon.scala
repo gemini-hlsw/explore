@@ -4,14 +4,12 @@
 package explore.components
 
 import cats.syntax.all.*
-import eu.timepit.refined.types.string.*
 import explore.HelpContext
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.Help
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.Css
 import react.common.ReactFnProps

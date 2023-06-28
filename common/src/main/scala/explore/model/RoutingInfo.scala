@@ -5,15 +5,10 @@ package explore.model
 
 import cats.syntax.all.*
 import eu.timepit.refined.*
-import eu.timepit.refined.numeric.Positive
-import eu.timepit.refined.types.numeric.PosLong
-import explore.model.Page
 import explore.model.Page.*
 import explore.model.enums.AppTab
-import japgolly.scalajs.react.Reusability
 import lucuma.core.model.Program
 import lucuma.refined.*
-import lucuma.ui.reusability.given
 
 case class RoutingInfo(appTab: AppTab, optProgramId: Option[Program.Id], focused: Focused) {
   // The only Page that doesn't have a program ID is the NoProgramPage, so instead of forcing everyplace to deal

@@ -7,37 +7,19 @@ import _root_.react.common.ReactFnProps
 import _root_.react.floatingui.syntax.*
 import _root_.react.primereact.Dropdown
 import _root_.react.primereact.SelectItem
-import cats.effect.IO
 import cats.syntax.all.*
 import crystal.*
 import crystal.react.*
-import crystal.react.hooks.*
 import eu.timepit.refined.*
-import eu.timepit.refined.numeric.Positive
 import explore.Icons
 import explore.components.ui.ExploreStyles
-import explore.events.*
-import explore.model.AppContext
-import explore.model.BasicConfigAndItc
 import explore.model.LoadingState
-import explore.model.TargetList
-import explore.model.WorkerClients.*
-import explore.model.boopickle.ItcPicklers.given
-import explore.model.display.given
 import explore.model.itc.ItcChartResult
 import explore.model.itc.ItcTarget
-import explore.model.itc.math.*
-import explore.model.reusability.given
-import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.syntax.display.given
-import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.pot.*
-import queries.schemas.itc.syntax.*
-
-import scala.scalajs.js.JSConverters.*
 
 case class ItcPanelTitle(
   selectedTarget:  View[Option[ItcTarget]],
@@ -65,15 +47,12 @@ object ItcPanelTitle:
           .fromOption(props.selectedTarget.get)
           .flatMap(t => props.itcChartResults.getOrElse(t, pendingChart))
 
-      val selected       = props.selectedTarget.get.map(_.name.value)
       val selectedTarget = props.selectedTarget.get
       val existTargets   = props.itcPanelProps.targets.nonEmpty && selectedTarget.isDefined
 
       val itcTargets          = props.itcPanelProps.itcTargets.foldMap(_.toList)
       val idx                 = itcTargets.indexWhere(props.selectedTarget.get.contains)
       val itcTargetsWithIndex = itcTargets.zipWithIndex
-
-      val ccds = selectedResult.map(_._2)
 
       def singleSN: ItcChartResult => VdomNode =
         (r: ItcChartResult) => <.span(formatSN(r.singleSNRatio.value))

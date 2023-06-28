@@ -4,26 +4,18 @@
 package explore.timingwindows
 
 import cats.Order.given
-import cats.effect.IO
 import cats.syntax.all.*
-import clue.FetchClient
-import clue.data.syntax.*
 import crystal.react.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosInt
-import explore.DefaultErrorPolicy
 import explore.Icons
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
-import explore.model.AppContext
-import explore.model.Constants
-import explore.model.Constants.DurationLongFormatter
 import explore.model.formats.*
 import explore.model.reusability.given
 import explore.model.syntax.all.*
 import explore.render.given
-import explore.syntax.ui.*
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -31,34 +23,25 @@ import lucuma.core.enums.TimingWindowInclusion
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.TimingWindowEnd
 import lucuma.core.model.TimingWindowRepeat
-import lucuma.core.model.given
 import lucuma.core.syntax.display.given
-import lucuma.core.util.NewType
 import lucuma.core.util.TimeSpan
 import lucuma.core.util.Timestamp
 import lucuma.core.validation.InputValidSplitEpi
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
-import lucuma.typed.tanstackTableCore.buildLibTypesMod.Column
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
-import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.render.*
-import lucuma.ui.syntax.util.*
 import lucuma.ui.table.PrimeTable
 import lucuma.ui.table.*
 import lucuma.ui.utils.Render
 import monocle.Iso
-import monocle.Optional
-import monocle.Traversal
 import monocle.function.Index
 import monocle.function.Index.*
-import queries.schemas.UserPreferencesDB
 import react.common.ReactFnProps
-import react.common.Style
 import react.datepicker.Datepicker
 import react.primereact.*
 import react.resizeDetector.hooks.*
@@ -67,9 +50,6 @@ import java.time.Duration
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
-import scala.concurrent.duration.FiniteDuration
-
-import scalajs.js.timers
 
 case class TimingWindowsPanel(windows: View[List[TimingWindow]], renderInTitle: Tile.RenderInTitle)
     extends ReactFnProps(TimingWindowsPanel.component)

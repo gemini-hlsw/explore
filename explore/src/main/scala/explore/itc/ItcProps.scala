@@ -10,12 +10,7 @@ import cats.data.NonEmptyList
 import cats.derived.*
 import cats.effect.IO
 import cats.syntax.all.*
-import eu.timepit.refined.*
-import eu.timepit.refined.numeric.Positive
-import eu.timepit.refined.types.numeric.PosBigDecimal
-import eu.timepit.refined.types.numeric.PosInt
 import explore.events.ItcMessage
-import explore.model.AsterismIds
 import explore.model.BasicConfigAndItc
 import explore.model.ObsSummary
 import explore.model.ScienceRequirements
@@ -27,8 +22,6 @@ import explore.model.itc.ItcExposureTime
 import explore.model.itc.ItcQueryProblems
 import explore.model.itc.ItcResult
 import explore.model.itc.ItcTarget
-import explore.model.itc.OverridenExposureTime
-import explore.model.reusability.given
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
@@ -39,15 +32,9 @@ import lucuma.core.math.BrightnessValue
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.math.dimensional.Units
-import lucuma.core.model.ConstraintSet
-import lucuma.core.model.ExposureTimeMode
-import lucuma.itc.client.OptimizedChartResult
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.CentralWavelength
-import lucuma.schemas.model.ObservingMode
 import queries.schemas.itc.syntax.*
-import queries.schemas.odb.ObsQueries.*
-import react.common.ReactFnProps
 import workers.WorkerClient
 
 case class ItcProps(

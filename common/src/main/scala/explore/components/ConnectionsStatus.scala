@@ -11,11 +11,8 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.components.ui.ExploreStyles.*
 import explore.model.AppContext
-import explore.syntax.ui.*
-import explore.syntax.ui.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.floatingui.Placement
@@ -26,7 +23,7 @@ case class ConnectionsStatus() extends ReactFnProps(ConnectionsStatus.component)
 object ConnectionsStatus:
   private type Props = ConnectionsStatus
 
-  private def renderStatus(name: String, status: Pot[PersistentClientStatus]): VdomNode = {
+  private def renderStatus(status: Pot[PersistentClientStatus]): VdomNode = {
     val (message, (clazz, show)) = status match {
       case Pot.Pending      => ("Mounting...", (IndicatorWarning, true))
       case Pot.Error(t)     => (t.getMessage, (IndicatorFail, true))
@@ -56,4 +53,4 @@ object ConnectionsStatus:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .useStreamOnMountBy((_, ctx) => ctx.clients.odb.statusStream)
-      .render((_, _, status) => renderStatus("ODB", status.toPot))
+      .render((_, _, status) => renderStatus(status.toPot))

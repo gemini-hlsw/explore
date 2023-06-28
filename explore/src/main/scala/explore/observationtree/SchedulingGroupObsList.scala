@@ -5,7 +5,6 @@ package explore.observationtree
 
 import cats.Order.given
 import cats.effect.IO
-import cats.syntax.all.*
 import cats.syntax.all.given
 import clue.FetchClient
 import crystal.react.View
@@ -19,10 +18,8 @@ import explore.model.Focused
 import explore.model.ObsIdSet
 import explore.model.ObsSummary
 import explore.model.ObservationList
-import explore.model.SchedulingGroup
 import explore.model.SchedulingGroupList
 import explore.model.enums.AppTab
-import explore.model.syntax.all.*
 import explore.model.syntax.all.*
 import explore.render.given
 import explore.undo.UndoSetter
@@ -42,13 +39,11 @@ import lucuma.ui.syntax.render.*
 import lucuma.ui.utils.Render
 import monocle.Iso
 import mouse.boolean.*
-import org.http4s.dom.FetchClient
 import org.typelevel.log4cats.Logger
 import react.beautifuldnd.*
 import react.common.*
 import react.fa.FontAwesomeIcon
 import react.floatingui.syntax.*
-import react.primereact.Button
 
 import scala.collection.immutable.SortedSet
 
@@ -121,8 +116,7 @@ object SchedulingGroupObsList:
     programId:        Program.Id,
     expandedIds:      View[SortedSet[ObsIdSet]],
     focusedObsSet:    Option[ObsIdSet],
-    schedulingGroups: SchedulingGroupList,
-    setObsSet:        Option[ObsIdSet] => Callback
+    schedulingGroups: SchedulingGroupList
   )(using
     FetchClient[IO, ObservationDB],
     Logger[IO],
@@ -230,8 +224,7 @@ object SchedulingGroupObsList:
         props.programId,
         props.expandedIds,
         props.focusedObsSet,
-        props.schedulingGroups,
-        setObsSet
+        props.schedulingGroups
       )
 
       def handleCtrlClick(obsId: Observation.Id, groupIds: ObsIdSet) =

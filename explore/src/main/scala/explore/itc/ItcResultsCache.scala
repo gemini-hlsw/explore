@@ -5,8 +5,6 @@ package explore.model.itc
 
 import cats.data.*
 import cats.syntax.all.*
-import eu.timepit.refined.auto.*
-import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.model.itc.*
 import explore.model.itc.math.*
 import explore.modes.*

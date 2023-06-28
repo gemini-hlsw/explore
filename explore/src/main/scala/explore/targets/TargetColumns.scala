@@ -12,12 +12,10 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.ExploreModelValidators.*
 import explore.model.conversions.*
-import explore.model.display.*
 import explore.model.display.given
 import explore.model.enums.SourceProfileType
 import explore.model.formats.*
 import explore.optics.all.*
-import explore.utils.given
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Band
 import lucuma.core.math.ApparentRadialVelocity
@@ -25,8 +23,6 @@ import lucuma.core.math.BrightnessValue
 import lucuma.core.math.Declination
 import lucuma.core.math.Epoch
 import lucuma.core.math.Parallax
-import lucuma.core.math.ProperMotion.Dec
-import lucuma.core.math.ProperMotion.RA
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.Redshift
 import lucuma.core.math.RightAscension
@@ -38,10 +34,8 @@ import lucuma.core.syntax.display.*
 import lucuma.core.util.Display
 import lucuma.react.syntax.*
 import lucuma.react.table.*
-import lucuma.typed.{tanstackTableCore => raw}
 import lucuma.ui.syntax.all.given
 import monocle.std.option.*
-import org.scalablytyped.runtime.StringDictionary
 
 object TargetColumns:
   val TypeColumnId: ColumnId       = ColumnId("type")

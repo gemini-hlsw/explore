@@ -25,7 +25,6 @@ import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDelta
 import lucuma.core.math.WavelengthDither
 import lucuma.core.math.validation.MathValidators
-import lucuma.core.model.given
 import lucuma.core.optics.Format
 import lucuma.core.optics.ValidFilter
 import lucuma.core.optics.ValidSplitEpi
@@ -34,18 +33,12 @@ import lucuma.core.syntax.display.*
 import lucuma.core.syntax.string.*
 import lucuma.core.validation.*
 import lucuma.refined.*
-import lucuma.utils.*
 import monocle.Iso
-import monocle.Prism
-import spire.math.Bounded
 
 import scala.util.Try
 
 object ExploreModelValidators:
   type ValidFilterNEC[A] = ValidFilter[NonEmptyChain[NonEmptyString], A]
-
-  private val i = ValidSplitEpi
-    .forRefined[String, BigDecimal, HourRange](_ => "Invalid hour value")
 
   val brightnessValidWedge: InputValidWedge[BrightnessValue] =
     InputValidWedge(

@@ -58,8 +58,7 @@ object OdbRestClient {
       Authorization(Credentials.Token(AuthScheme.Bearer, authToken.value))
     )
 
-    given QueryParamEncoder[NonEmptyString]    = QueryParamEncoder[String].contramap(_.value)
-    given QueryParamEncoder[ObsAttachmentType] = QueryParamEncoder[String].contramap(_.show)
+    given QueryParamEncoder[NonEmptyString] = QueryParamEncoder[String].contramap(_.value)
 
     def getURI: F[Uri] =
       AppConfig

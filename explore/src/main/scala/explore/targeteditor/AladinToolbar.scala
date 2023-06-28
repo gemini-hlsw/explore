@@ -8,17 +8,14 @@ import crystal.react.ViewOpt
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.Constants
-import explore.model.TargetVisualOptions
 import explore.model.enums.AgsState
 import explore.model.enums.Visible
 import explore.model.formats.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ags.AgsAnalysis
-import lucuma.ags.GuideStarCandidate
 import lucuma.core.math.*
 import lucuma.ui.primereact.*
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.aladin.Fov
 import react.common.ReactFnProps

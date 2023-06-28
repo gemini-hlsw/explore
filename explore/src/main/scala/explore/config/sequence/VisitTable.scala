@@ -4,8 +4,6 @@
 package explore.config.sequence
 
 import cats.syntax.all.*
-import crystal.react.*
-import crystal.react.hooks.*
 import explore.*
 import explore.components.ui.ExploreStyles
 import explore.model.Constants

@@ -5,9 +5,7 @@ package explore
 
 import cats.Eq
 import cats.Order
-import cats.derived.*
 import cats.syntax.all.*
-import coulomb.policy.spire.standard.given
 import eu.timepit.refined.*
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.numeric.Positive
@@ -20,8 +18,6 @@ import lucuma.core.math.WavelengthDelta
 import lucuma.core.optics.Wedge
 import lucuma.core.util.Enumerated
 import lucuma.core.util.NewType
-import monocle.Lens
-import monocle.macros.GenLens
 
 package modes {
   object ModeWavelength extends NewType[Wavelength]:

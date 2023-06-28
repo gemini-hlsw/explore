@@ -5,7 +5,6 @@ package explore.model
 
 import cats.Eq
 import cats.syntax.all.*
-import explore.model.ObsIdSet
 import japgolly.scalajs.react.ReactCats.*
 import japgolly.scalajs.react.Reusability
 import lucuma.core.model.Observation

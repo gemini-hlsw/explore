@@ -11,7 +11,6 @@ import coulomb.syntax.*
 import coulomb.units.si.Kelvin
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosBigDecimal
-import eu.timepit.refined.types.numeric.PosInt
 import lucuma.core.enums.CoolStarTemperature
 import lucuma.core.enums.GalaxySpectrum
 import lucuma.core.enums.HIIRegionSpectrum
@@ -40,8 +39,6 @@ sealed abstract class SEDType[T](
 
 sealed abstract class SEDTypeEnum[T](
   defaultContinuumUnits: Units Of FluxDensityContinuum[T]
-)(using
-  enumFDCUnits:          Enumerated[Units Of FluxDensityContinuum[T]]
 ) {
   import UnnormalizedSED.*
   import SpectralDefinition.*

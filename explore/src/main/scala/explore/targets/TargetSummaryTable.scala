@@ -4,12 +4,10 @@
 package explore.targets
 
 import cats.Order.*
-import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.*
 import crystal.react.hooks.*
-import crystal.react.reuse.*
 import explore.Icons
 import explore.common.UserPreferencesQueries.TableStore
 import explore.components.HelpIcon
@@ -19,16 +17,13 @@ import explore.model.AppContext
 import explore.model.Focused
 import explore.model.ProgramSummaries
 import explore.model.TargetList
-import explore.model.TargetWithObs
 import explore.model.enums.AppTab
 import explore.model.enums.TableId
 import explore.syntax.ui.*
 import explore.undo.UndoContext
 import explore.utils.*
-import fs2.dom
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.enums.Band
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
@@ -38,28 +33,21 @@ import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
 import lucuma.schemas.model.TargetWithId
-import lucuma.typed.{tanstackTableCore => raw}
 import lucuma.typed.{tanstackVirtualCore => rawVirtual}
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
-import org.scalablytyped.runtime.StringDictionary
 import org.scalajs.dom.{File => DOMFile}
 import react.common.Css
 import react.common.ReactFnProps
-import react.hotkeys.*
 import react.primereact.Button
 import react.primereact.ConfirmDialog
 import react.primereact.DialogPosition
 import react.primereact.PrimeStyles
-import react.primereact.ToastRef
 import react.resizeDetector.hooks.*
 
 import scala.collection.immutable.SortedSet
-
-import scalajs.js.JSConverters.*
 
 case class TargetSummaryTable(
   userId:                Option[User.Id],
@@ -83,10 +71,8 @@ object TargetSummaryTable extends TableHooks:
   private val ObservationsColumnId: ColumnId = ColumnId("observations")
 
   private object IsImportOpen extends NewType[Boolean]
-  private type IsImportOpen = IsImportOpen.Type
 
   private object DeletingTargets extends NewType[Boolean]
-  private type DeletingTargets = DeletingTargets.Type
 
   private val columnClasses: Map[ColumnId, Css] = Map(
     IdColumnId                 -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryId),

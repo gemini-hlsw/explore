@@ -3,15 +3,12 @@
 
 package explore.findercharts
 
-import cats.Eq
-import cats.derived.*
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.Resources
 import explore.attachments.ObsAttachmentUtils
 import explore.common.UserPreferencesQueries.FinderChartPreferences
 import explore.components.ui.ExploreStyles
@@ -30,9 +27,6 @@ import lucuma.schemas.ObservationDB.Enums.ObsAttachmentType
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.pot.*
-import monocle.Focus
-import monocle.Lens
-import monocle.Prism
 import react.common.ReactFnProps
 
 import scala.collection.immutable.SortedSet
@@ -71,14 +65,14 @@ object FinderCharts extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
       .useEffectWithDepsBy((props, _, _, _, selected, _) =>
         (selected.get, props.obsAttachments.get, props.obsAttachmentIds.get)
       )((props, _, client, _, _, urlMap) =>
-        (sel, obsAttachments, obsAttachmentIds) =>
+        (_, obsAttachments, obsAttachmentIds) =>
           val allCurrentKeys =
             validAttachments(obsAttachments, obsAttachmentIds).values.map(_.toMapKey).toSet
           val newOas         = allCurrentKeys.filter(key => !urlMap.get.contains(key)).toList
 
           val updateUrlMap =
             urlMap.mod { umap =>
-              val filteredMap = umap.filter((k, v) => allCurrentKeys.contains(k))
+              val filteredMap = umap.filter((k, _) => allCurrentKeys.contains(k))
               newOas.foldRight(filteredMap)((key, m) => m.updated(key, Pot.pending))
             }.toAsync
 

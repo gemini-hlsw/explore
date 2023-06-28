@@ -8,7 +8,6 @@ import cats.Order
 import cats.derived.*
 import cats.syntax.all.*
 import coulomb.*
-import coulomb.ops.algebra.spire.all.given
 import coulomb.policy.spire.standard.given
 import coulomb.syntax.*
 import coulomb.units.si.Second
@@ -20,14 +19,11 @@ import fs2.data.csv.*
 import lucuma.core.enums.Instrument
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
-import lucuma.core.math.WavelengthDither
 import lucuma.core.math.units.*
 import lucuma.core.math.units.given
-import lucuma.core.util.Enumerated
 import lucuma.core.util.NewType
 import monocle.Lens
 import monocle.macros.GenLens
-import spire.math.Rational
 
 enum ObservationMode derives Order:
   case Spectroscopy, Imaging, Polarimetry

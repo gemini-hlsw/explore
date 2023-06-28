@@ -6,9 +6,6 @@ package explore.observationtree
 import cats.Order.*
 import cats.effect.IO
 import cats.syntax.all.*
-import crystal.react.*
-import crystal.react.hooks.*
-import crystal.react.reuse.*
 import explore.Icons
 import explore.common.UserPreferencesQueries.TableStore
 import explore.components.Tile
@@ -16,24 +13,16 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Asterism
 import explore.model.Focused
-import explore.model.ObsIdSet
 import explore.model.ObsSummary
 import explore.model.TargetList
-import explore.model.TargetWithObs
 import explore.model.display.given
 import explore.model.enums.AppTab
 import explore.model.enums.TableId
 import explore.model.reusability.given
 import explore.model.syntax.all.*
-import explore.shortcuts.GoToSummary
-import explore.shortcuts.ShortcutCallbacks
-import explore.shortcuts.toHotKeys
-import explore.syntax.ui.*
 import japgolly.scalajs.react.ScalaFnComponent
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.TagOf
-import japgolly.scalajs.react.vdom.html_<^.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.Observation
@@ -46,22 +35,16 @@ import lucuma.react.table.ColumnDef
 import lucuma.react.table.ColumnId
 import lucuma.react.table.*
 import lucuma.schemas.model.TargetWithId
-import lucuma.typed.tanstackReactTable.tanstackReactTableStrings.columnVisibility
 import lucuma.ui.reusability.given
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.TableHooks
 import lucuma.ui.table.TableOptionsWithStateStore
 import lucuma.ui.table.*
 import org.scalajs.dom.html.Anchor
-import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries.ObservationList
 import react.common.ReactFnProps
-import react.hotkeys.*
-import react.hotkeys.hooks.*
 import react.resizeDetector.hooks.*
 
-import scala.collection.immutable.SortedMap
 import scala.scalajs.js
 
 final case class ObsSummaryTable(
@@ -300,8 +283,6 @@ object ObsSummaryTable extends TableHooks:
     )
     .useResizeDetector()
     .render { (props, ctx, _, _, table, resizer) =>
-      import ctx.given
-
       React.Fragment(
         props.renderInTitle(
           React.Fragment(
@@ -341,15 +322,14 @@ object ObsSummaryTable extends TableHooks:
     }
 
   // Helper ADT for table rows type
-  enum ObsSummaryRow(obsId: Observation.Id):
+  enum ObsSummaryRow:
 
-    case ExpandedTargetRow(obsId: Observation.Id, targetWithId: TargetWithId)
-        extends ObsSummaryRow(obsId)
+    case ExpandedTargetRow(obsId: Observation.Id, targetWithId: TargetWithId) extends ObsSummaryRow
     case ObsRow(
       obs:          ObsSummary,
       targetWithId: Option[TargetWithId],
       asterism:     Option[Asterism]
-    ) extends ObsSummaryRow(obs.id)
+    )                                                                         extends ObsSummaryRow
 
     def fold[A](f: ExpandedTargetRow => A, g: ObsRow => A): A =
       this match

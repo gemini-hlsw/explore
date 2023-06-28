@@ -3,53 +3,28 @@
 
 package explore.observationtree
 
-import cats.Order.*
 import cats.effect.IO
-import cats.syntax.all.*
 import clue.FetchClient
-import clue.data.syntax.*
 import crystal.react.*
 import explore.common.AsterismQueries
 import explore.common.AsterismQueries.*
 import explore.data.KeyedIndexedList
-import explore.model.AsterismGroup
 import explore.model.ObsIdSet
 import explore.model.ObsSummary
 import explore.model.ObservationList
 import explore.model.TargetList
-import explore.model.TargetWithObs
-import explore.model.syntax.all.*
 import explore.undo.*
 import japgolly.scalajs.react.callback.Callback
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
-import lucuma.schemas.ObservationDB.Types.*
-import lucuma.schemas.odb.input.*
 import monocle.Iso
 import org.typelevel.log4cats.Logger
-import queries.common.TargetQueriesGQL
 
-import scala.annotation.unused
 import scala.collection.immutable.SortedSet
 
 object AsterismGroupObsListActions {
-  private def updateExpandedIds(
-    draggedIds: ObsIdSet,
-    optDestIds: Option[ObsIdSet]
-  )(
-    eids:       SortedSet[ObsIdSet]
-  ) =
-    optDestIds.fold(
-      eids.flatMap(ids => ids.remove(draggedIds)) + draggedIds
-    ) { destIds =>
-      eids.flatMap(ids =>
-        if (ids === destIds) none
-        else ids.remove(draggedIds)
-      ) + (destIds ++ draggedIds)
-    }
-
   def dropObservations(
     programId:   Program.Id,
     draggedIds:  ObsIdSet,

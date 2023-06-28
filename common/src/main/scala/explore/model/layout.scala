@@ -6,10 +6,6 @@ package explore.model
 import cats.Order.*
 import cats.*
 import cats.syntax.all.*
-import eu.timepit.refined.cats.*
-import eu.timepit.refined.types.string.NonEmptyString
-import japgolly.scalajs.react.ReactCats.*
-import japgolly.scalajs.react.Reusability
 import monocle.Focus
 import monocle.Lens
 import monocle.Traversal

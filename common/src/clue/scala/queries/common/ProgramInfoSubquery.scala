@@ -6,7 +6,6 @@ package queries.common
 import clue.GraphQLSubquery
 import explore.model.ProgramInfo
 import lucuma.schemas.ObservationDB
-import lucuma.schemas.odb.*
 import clue.annotation.GraphQL
 
 @GraphQL

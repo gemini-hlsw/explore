@@ -10,10 +10,8 @@ import clue.data.syntax.*
 import coulomb.*
 import coulomb.units.si.Kelvin
 import crystal.react.View
-import crystal.react.hooks.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
-import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string
 import explore.*
@@ -44,7 +42,6 @@ import lucuma.core.math.BrightnessUnits.*
 import lucuma.core.math.FluxDensityContinuumValue
 import lucuma.core.math.FluxDensityContinuumValueRefinement
 import lucuma.core.math.Wavelength
-import lucuma.core.math.dimensional.Units.*
 import lucuma.core.math.dimensional.*
 import lucuma.core.model.CatalogInfo
 import lucuma.core.model.EmissionLine
@@ -61,10 +58,8 @@ import lucuma.schemas.odb.input.*
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
-import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
-import monocle.std.option
 import org.typelevel.log4cats.Logger
 import react.common.ReactFnProps
 import react.primereact.PrimeStyles

@@ -3,8 +3,6 @@
 
 package explore.tabs
 
-import _root_.react.common.ReactFnProps
-import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
@@ -13,32 +11,21 @@ import crystal.react.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.config.VizTimeEditor
-import explore.model.Asterism
 import explore.model.AsterismIds
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
-import explore.model.PAProperties
 import explore.model.TargetList
-import explore.model.enums.AgsState
 import explore.model.enums.TileSizeState
 import explore.targeteditor.AsterismEditor
 import explore.undo.UndoSetter
-import explore.utils.*
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.math.Angle
-import lucuma.core.math.Offset
-import lucuma.core.math.Wavelength
-import lucuma.core.model.ConstraintSet
-import lucuma.core.model.Observation
-import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.BasicConfiguration
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries

@@ -5,7 +5,6 @@ package explore
 
 import cats.effect.Async
 import cats.effect.IO
-import cats.effect.IOApp
 import cats.effect.Resource
 import cats.effect.Sync
 import cats.effect.kernel.Deferred
@@ -16,11 +15,6 @@ import clue.js.FetchJSBackend
 import clue.js.FetchMethod
 import clue.js.WebSocketJSBackend
 import clue.websocket.ReconnectionStrategy
-import crystal.react.*
-import crystal.react.hooks.*
-import crystal.react.reuse.*
-import eu.timepit.refined.collection.NonEmpty
-import explore.*
 import explore.components.ui.ExploreStyles
 import explore.events.ExploreEvent
 import explore.events.*
@@ -28,15 +22,12 @@ import explore.model.AppConfig
 import explore.model.AppContext
 import explore.model.ExploreLocalPreferences
 import explore.model.Focused
-import explore.model.Help
 import explore.model.RootModel
 import explore.model.RoutingInfo
 import explore.model.UserVault
 import explore.model.WorkerClients
 import explore.model.enums.AppTab
 import explore.model.enums.ExecutionEnvironment
-import explore.model.reusability.given
-import explore.syntax.ui.given
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.*
@@ -44,11 +35,8 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import log4cats.loglevel.LogLevelLogger
 import lucuma.broadcastchannel.*
 import lucuma.core.model.Program
-import lucuma.refined.*
 import lucuma.ui.enums.Theme
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import org.http4s.circe.*
 import org.http4s.dom.FetchClientBuilder
 import org.scalajs.dom
 import org.scalajs.dom.Element
@@ -117,11 +105,11 @@ object ExploreMain {
     // Order is important you need to import Highcharts first
     react.highcharts.Highcharts
     react.highcharts.HighchartsAccesibility
-  }
+  }.void
 
   def broadcastChannel[F[_]: Sync]: Resource[F, BroadcastChannel[ExploreEvent]] =
     Resource.make(Sync[F].delay(new BroadcastChannel[ExploreEvent]("explore")))(c =>
-      Sync[F].delay(c.close())
+      Sync[F].delay(c.close()).void
     )
 
   def run: IO[Unit] = {

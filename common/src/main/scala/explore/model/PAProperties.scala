@@ -4,16 +4,13 @@
 package explore.model
 
 import cats.Eq
-import cats.syntax.all.*
 import crystal.react.*
 import explore.model.enums.AgsState
-import explore.model.reusability.given
 import japgolly.scalajs.react.ReactCats.*
 import japgolly.scalajs.react.Reusability
 import lucuma.ags.AgsAnalysis
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
-import lucuma.ui.reusability.given
 
 case class PAProperties(
   oid:        Observation.Id,

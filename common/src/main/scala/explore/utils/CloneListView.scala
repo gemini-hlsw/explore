@@ -6,7 +6,6 @@ package explore.utils
 import cats.Monad
 import crystal.ViewF
 import crystal.ViewListF
-import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
 
 // Turn a ViewList into a View, assuming all returned objects are clones.
 // and therefore just returning the head upon get.

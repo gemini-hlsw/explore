@@ -3,14 +3,10 @@
 
 package queries.schemas.odb
 
-import cats.Eq
-import cats.data.NonEmptyList
-import cats.derived.*
 import cats.effect.Async
 import cats.implicits.*
 import clue.FetchClient
 import clue.data.syntax.*
-import crystal.*
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string.NonEmptyString
@@ -20,10 +16,6 @@ import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
 import explore.model.ObsSummary
 import explore.model.OdbItcResult
-import explore.model.syntax.all.*
-import explore.optics.all.*
-import japgolly.scalajs.react.*
-import lucuma.core.math.Offset
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.ExposureTimeMode.FixedExposureMode
@@ -31,20 +23,13 @@ import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.Target
-import lucuma.core.syntax.time.*
 import lucuma.core.util.Timestamp
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Enums.*
 import lucuma.schemas.ObservationDB.Types.*
-import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.odb.input.*
-import monocle.Focus
-import monocle.Getter
-import monocle.Iso
-import monocle.Lens
 import queries.common.ObsQueriesGQL.*
 
-import java.time.Duration
 import java.time.Instant
 import scala.collection.immutable.SortedMap
 

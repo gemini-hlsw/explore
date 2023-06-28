@@ -7,12 +7,9 @@ import cats.Eq
 import cats.Order.given
 import cats.derived.*
 import cats.syntax.all.*
-import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.model.display.*
 import io.circe.Decoder
-import io.circe.JsonObject
 import io.circe.generic.semiauto.*
 import io.circe.refined.given
 import lucuma.core.enums.ObsActiveStatus
@@ -28,7 +25,6 @@ import lucuma.core.util.TimeSpan
 import lucuma.core.util.Timestamp
 import lucuma.odb.json.time.decoder.given
 import lucuma.odb.json.wavelength.decoder.given
-import lucuma.schemas.ObservationDB.Types.ScienceRequirementsInput
 import lucuma.schemas.decoders.given
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.ObservingMode

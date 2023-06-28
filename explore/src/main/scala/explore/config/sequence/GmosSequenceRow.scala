@@ -16,7 +16,6 @@ import lucuma.core.util.TimeSpan
 import lucuma.schemas.model.StepRecord
 import lucuma.schemas.model.Visit
 
-import java.time.Duration
 import java.time.Instant
 
 sealed trait GmosSequenceRow:

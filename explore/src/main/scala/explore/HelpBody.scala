@@ -4,20 +4,15 @@
 package explore
 
 import cats.effect.*
-import cats.syntax.all.*
 import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
 import explore.components.ui.ExploreStyles
 import explore.model.Help
-import explore.shortcuts.*
-import explore.syntax.ui.*
-import explore.syntax.ui.given
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.primereact.*
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import org.http4s.*
 import org.http4s.dom.FetchClientBuilder

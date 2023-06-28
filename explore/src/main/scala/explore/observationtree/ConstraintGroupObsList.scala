@@ -7,24 +7,20 @@ import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
 import crystal.react.View
-import crystal.react.reuse.Reuse
 import explore.Icons
 import explore.common.ConstraintsQueries
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.data.KeyedIndexedList
 import explore.model.AppContext
-import explore.model.ConstraintGroup
 import explore.model.ConstraintGroupList
 import explore.model.Focused
 import explore.model.ObsIdSet
 import explore.model.ObsSummary
 import explore.model.ObservationList
-import explore.model.ProgramSummaries
 import explore.model.display.given
 import explore.model.enums.AppTab
 import explore.model.syntax.all.*
-import explore.undo.UndoContext
 import explore.undo.*
 import explore.utils.ToastCtx
 import japgolly.scalajs.react.*
@@ -36,7 +32,6 @@ import lucuma.core.syntax.all.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.odb.input.*
 import lucuma.ui.primereact.*
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.Iso
 import mouse.boolean.*
@@ -87,8 +82,7 @@ object ConstraintGroupObsList:
     programId:        Program.Id,
     expandedIds:      View[SortedSet[ObsIdSet]],
     focusedObsSet:    Option[ObsIdSet],
-    constraintGroups: ConstraintGroupList,
-    setObsSet:        Option[ObsIdSet] => Callback
+    constraintGroups: ConstraintGroupList
   )(using
     FetchClient[IO, ObservationDB],
     Logger[IO],
@@ -197,8 +191,7 @@ object ConstraintGroupObsList:
         props.programId,
         props.expandedIds,
         props.focusedObsSet,
-        props.constraintGroups,
-        setObsSet
+        props.constraintGroups
       )
 
       def handleCtrlClick(obsId: Observation.Id, groupIds: ObsIdSet) =

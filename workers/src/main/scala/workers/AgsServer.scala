@@ -6,7 +6,6 @@ package workers
 import boopickle.DefaultBasic.*
 import cats.effect.IO
 import cats.effect.unsafe.implicits.*
-import cats.syntax.all.*
 import explore.events.AgsMessage
 import explore.model.boopickle.CatalogPicklers.given
 import lucuma.ags.Ags
@@ -16,8 +15,6 @@ import org.typelevel.log4cats.Logger
 import workers.*
 
 import java.time.Duration
-import java.time.Instant
-import scala.concurrent.duration.*
 import scala.scalajs.js.annotation.JSExport
 import scala.scalajs.js.annotation.JSExportTopLevel
 

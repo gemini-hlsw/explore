@@ -12,7 +12,6 @@ import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
 import explore.optics.all.*
-import lucuma.core.enums.Band
 import lucuma.core.math.RadialVelocity
 import lucuma.core.model.*
 import lucuma.itc.client.GmosFpu
@@ -32,7 +31,6 @@ trait syntax:
   // We may consider adjusting this to consider small variations of RV identical for the
   // purpose of doing ITC calculations
   private given Hash[RadialVelocity] = Hash.by(_.rv.value)
-  private given Hash[Band]           = Hash.by(_.tag)
   private given Hash[SourceProfile]  = Hash.fromUniversalHashCode
   private given Hash[ItcTarget]      = Hash.by(x => (x.name.value, x.rv, x.profile))
 

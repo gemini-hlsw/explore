@@ -9,7 +9,6 @@ import explore.optics.all.*
 import lucuma.core.math.arb.ArbRadialVelocity
 import lucuma.core.math.arb.ArbRedshift
 import lucuma.core.model.arb.ArbTarget
-import lucuma.core.model.given
 import lucuma.core.optics.laws.discipline.SplitEpiTests
 import lucuma.core.util.arb.ArbTimeSpan
 import monocle.law.discipline.IsoTests

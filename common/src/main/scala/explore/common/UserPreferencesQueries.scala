@@ -30,7 +30,6 @@ import explore.model.itc.PlotDetails
 import explore.model.itc.*
 import explore.model.layout.*
 import explore.model.layout.given
-import lucuma.core.enums.Site
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.model.ObsAttachment
@@ -41,11 +40,7 @@ import lucuma.core.util.Enumerated
 import lucuma.itc.ChartType
 import lucuma.react.table.*
 import lucuma.refined.*
-import lucuma.schemas.odb.input.*
-import lucuma.typed.highcharts.highchartsStrings.chart_
-import lucuma.typed.{tanstackTableCore => raw}
 import lucuma.ui.table.TableStateStore
-import org.scalablytyped.runtime.StringDictionary
 import org.typelevel.log4cats.Logger
 import queries.common.UserPreferencesQueriesGQL.UserTargetPreferencesQuery.Data.ExploreTargetPreferencesByPk
 import queries.common.UserPreferencesQueriesGQL.*
@@ -53,14 +48,11 @@ import queries.schemas.UserPreferencesDB
 import queries.schemas.UserPreferencesDB.Enums.*
 import queries.schemas.UserPreferencesDB.Scalars.*
 import queries.schemas.UserPreferencesDB.Types.LucumaObservationInsertInput
-import queries.schemas.UserPreferencesDB.Types.LucumaUserPreferencesSetInput
 import queries.schemas.UserPreferencesDB.Types.*
 import react.gridlayout.{BreakpointName => _, _}
 
 import scala.collection.immutable.SortedMap
-import scala.scalajs.js.WrappedDictionary
 
-import scalajs.js.JSConverters.*
 import scalajs.js
 
 object UserPreferencesQueries:
@@ -101,7 +93,6 @@ object UserPreferencesQueries:
     def positions2LayoutMap(
       g: (GridBreakpointName, List[UserGridLayoutQuery.Data.LucumaGridLayoutPositions])
     ): (react.gridlayout.BreakpointName, (Int, Int, Layout)) =
-      import UserGridLayoutUpsert.*
       val bn = breakpointNameFromString(g._1.tag)
       bn -> ((breakpointWidth(bn),
               breakpointCols(bn),
@@ -247,11 +238,6 @@ object UserPreferencesQueries:
                 .mapN(Offset.apply)
             )
             .getOrElse(Offset.Zero)
-
-          def visibleProp(op: ExploreTargetPreferencesByPk => Option[Boolean]) = targetPrefsResult
-            .flatMap(op)
-            .map(Visible.value.reverseGet)
-            .getOrElse(Visible.Shown)
 
           def rangeProp(op: ExploreTargetPreferencesByPk => Option[Int]) = targetPrefsResult
             .flatMap(op)

@@ -5,17 +5,11 @@ package explore.targeteditor
 
 import cats.data.NonEmptyList
 import cats.data.NonEmptyMap
-import cats.implicits.catsKernelOrderingForOrder
 import cats.syntax.all.*
-import crystal.react.*
-import crystal.react.given
-import crystal.react.reuse.*
 import eu.timepit.refined.*
 import eu.timepit.refined.numeric.NonNegative
-import explore.Icons
 import explore.aladin.AladinZoomControl
 import explore.components.ui.ExploreStyles
-import explore.components.ui.ExploreStyles.ExploreTable
 import explore.model.AladinMouseScroll
 import explore.model.Asterism
 import explore.model.Constants
@@ -36,26 +30,19 @@ import lucuma.core.enums.PortDisposition
 import lucuma.core.enums.SequenceType
 import lucuma.core.geom.Area
 import lucuma.core.geom.ShapeExpression
-import lucuma.core.geom.jts.interpreter.given
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
 import lucuma.core.model.CoordinatesAtVizTime
-import lucuma.core.model.SiderealTracking
-import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import org.scalajs.dom.Element
 import react.aladin.*
 import react.common.Css
 import react.common.ReactFnProps
-import react.primereact.Button
 import react.resizeDetector.hooks.*
 
 import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
 import scala.collection.immutable.SortedMap
 import scala.concurrent.duration.*
 
@@ -76,8 +63,6 @@ object AladinContainer extends AladinCommon {
 
   private type Props = AladinContainer
 
-  // This is used for screen coordinates, thus it doesn't need a lot of precission
-  private given Reusability[Double]              = Reusability.double(1.0)
   // We need to dectect if the selected GS deserves a refresh, this could be if the
   // selected target changes or if e.g. the pos angle change for the same target
   private given Reusability[Option[AgsAnalysis]] = Reusability.by(_ match {
@@ -93,16 +78,6 @@ object AladinContainer extends AladinCommon {
   private given Reusability[Fov]                 = Reusability.by(x => (x.y, x.y))
 
   private val AladinComp = Aladin.component
-
-  private def toggleVisibility(g: Element, selector: String, option: Visible): Unit =
-    g.querySelectorAll(selector).foreach {
-      case e: Element =>
-        option.fold(
-          e.classList.remove("visualization-display"),
-          e.classList.add("visualization-display")
-        )
-      case null       => ()
-    }
 
   private def speedCss(gs: GuideSpeed): Css =
     gs match
@@ -239,10 +214,6 @@ object AladinContainer extends AladinCommon {
                       .atStartOfDay(Constants.UTC)
                       .toInstant()
 
-                  val vignettesScience = g match
-                    case AgsAnalysis.VignettesScience(_, _) => true
-                    case _                                  => false
-
                   val candidateCss = g.match
                     case _ if configuration.isEmpty                           =>
                       // Don't color the stars for guide speed if there is no mode selected
@@ -256,7 +227,6 @@ object AladinContainer extends AladinCommon {
 
                   (tracking.at(targetEpochInstant), tracking.at(obsInstant)).mapN {
                     (source, dest) =>
-                      val offset = baseCoordinates.value.diff(dest).offset
                       if (candidates.length < 500) {
                         List[SVGTarget](
                           if (selectedGS.forall(_.target.id === g.target.id)) {
@@ -319,8 +289,6 @@ object AladinContainer extends AladinCommon {
                   fov.value.exists(_.isDifferentEnough(v))
               (fov.setState(v.some) *> props.updateFov(v)).unless_(ignore)
             }
-
-          val vizTime = props.vizTime
 
           def includeSvg(v: JsAladin): Callback =
             v.onZoom(onZoom) *> // re render on zoom

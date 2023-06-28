@@ -10,12 +10,7 @@ import cats.effect.*
 import cats.effect.std.Semaphore
 import cats.syntax.all.*
 import clue.ResponseException
-import crystal.ViewF
-import eu.timepit.refined.types.numeric.NonNegInt
-import eu.timepit.refined.types.numeric.PosBigDecimal
-import explore.DefaultErrorPolicy
 import explore.model.Constants
-import explore.model.Progress
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.*
 import explore.model.itc.math.*
@@ -23,26 +18,15 @@ import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
 import explore.modes.SpectroscopyModeRow
-import lucuma.core.enums.Band
-import lucuma.core.math.BrightnessUnits.*
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
-import lucuma.core.model.SourceProfile
-import lucuma.core.model.SpectralDefinition
-import lucuma.itc.IntegrationTime
-import lucuma.itc.client.GmosFpu
-import lucuma.itc.client.InstrumentMode
 import lucuma.itc.client.IntegrationTimeResult
 import lucuma.itc.client.ItcClient
 import lucuma.itc.client.SpectroscopyIntegrationTimeInput
-import org.scalajs.dom
 import org.typelevel.log4cats.Logger
 import queries.schemas.itc.syntax.*
 import workers.*
-
-import java.util.UUID
-import scala.concurrent.duration.*
 
 object ITCRequests:
   // Copied from https://gist.github.com/gvolpe/44e2263f9068efe298a1f30390de6d22

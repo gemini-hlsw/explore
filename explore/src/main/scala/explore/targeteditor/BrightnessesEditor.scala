@@ -6,22 +6,17 @@ package explore.targeteditor
 import cats.Order.*
 import cats.syntax.all.*
 import crystal.react.*
-import crystal.react.*
 import crystal.react.hooks.*
 import crystal.react.reuse.*
-import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.given
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.*
 import explore.components.ui.ExploreStyles
-import explore.given
 import explore.model.ExploreModelValidators
 import explore.model.display.given
-import explore.model.reusability.given
 import explore.utils.IsExpanded
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.callback.CallbackCats.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Band
 import lucuma.core.math.BrightnessUnits.*
@@ -32,12 +27,10 @@ import lucuma.core.util.Of
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
-import lucuma.typed.{tanstackTableCore => raw}
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.utils.*
@@ -47,8 +40,6 @@ import react.primereact.Button
 import react.primereact.Panel
 
 import scala.collection.immutable.SortedMap
-
-import scalajs.js.JSConverters.*
 
 sealed trait BrightnessesEditor[T]:
   def brightnesses: View[SortedMap[Band, BrightnessMeasure[T]]]

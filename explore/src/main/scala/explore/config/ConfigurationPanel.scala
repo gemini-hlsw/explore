@@ -4,7 +4,6 @@
 package explore.config
 
 import _root_.react.common.ReactFnProps
-import cats.Eq
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
@@ -14,51 +13,38 @@ import clue.data.syntax.*
 import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
-import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.DefaultErrorPolicy
 import explore.*
 import explore.common.Aligner
-import explore.components.Tile
 import explore.components.ui.ExploreStyles
-import explore.components.undo.UndoButtons
 import explore.events.*
 import explore.model.AppContext
 import explore.model.BasicConfigAndItc
 import explore.model.ObsConfiguration
 import explore.model.ScienceRequirements
 import explore.model.WorkerClients.*
-import explore.model.boopickle.Boopickle.*
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.boopickle.*
-import explore.model.enums.AgsState
 import explore.model.itc.ItcTarget
-import explore.model.reusability.given
 import explore.modes.SpectroscopyModesMatrix
 import explore.undo.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.math.Angle
-import lucuma.core.math.Coordinates
-import lucuma.core.model.ConstraintSet
 import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
-import lucuma.core.model.SiderealTracking
 import lucuma.core.model.User
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.odb.input.*
-import lucuma.ui.reusability.given
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.Iso
 import org.http4s.syntax.all.*
 import queries.common.ObsQueriesGQL
-import queries.schemas.odb.ObsQueries.*
 
 case class ConfigurationPanel(
   userId:          Option[User.Id],
@@ -97,7 +83,7 @@ object ConfigurationPanel:
    * Handles the case where `A.Input[B]` not have an assigned value, but it needs to be created for
    * the `mod` function to work on.
    */
-  private def mapModOrAssign[A, B](
+  def mapModOrAssign[A, B](
     ifNotAssigned: => B
   )(
     mod:           (Input[B] => Input[B]) => A => A
@@ -144,10 +130,6 @@ object ConfigurationPanel:
             .toAsync
         )
     )
-
-  private given Eq[SpectroscopyModesMatrix] = Eq.by(_.matrix.isEmpty)
-
-  private given Reusability[SpectroscopyModesMatrix] = Reusability.byEq
 
   private val component =
     ScalaFnComponent

@@ -14,9 +14,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ags.AgsAnalysis
-import lucuma.ags.AgsGuideQuality
 import lucuma.core.enums.GuideSpeed
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.fa.IconSize

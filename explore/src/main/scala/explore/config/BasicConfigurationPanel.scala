@@ -5,10 +5,8 @@ package explore.config
 
 import cats.effect.IO
 import cats.syntax.all.*
-import coulomb.ops.algebra.spire.all.given
 import crystal.react.*
 import crystal.react.hooks.*
-import eu.timepit.refined.auto.*
 import explore.Icons
 import explore.common.ScienceQueries.*
 import explore.components.HelpIcon
@@ -23,32 +21,25 @@ import explore.model.itc.ItcTarget
 import explore.modes.SpectroscopyModesMatrix
 import explore.syntax.ui.*
 import explore.undo.*
-import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ScienceMode
-import lucuma.core.math.Coordinates
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
-import lucuma.core.model.SiderealTracking
 import lucuma.core.model.User
 import lucuma.core.util.NewType
 import lucuma.refined.*
 import lucuma.ui.primereact.FormEnumDropdownView
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.Iso
-import queries.schemas.odb.ObsQueries.*
 import react.common.ReactFnProps
 import react.fa.FontAwesomeIcon
 import react.primereact.Button
 import react.primereact.Message
-
-import scalajs.js.JSConverters.*
 
 case class BasicConfigurationPanel(
   userId:          Option[User.Id],
@@ -67,7 +58,6 @@ private object BasicConfigurationPanel:
   private type Props = BasicConfigurationPanel
 
   private object Creating extends NewType[Boolean]
-  private type Creating = Creating.Type
 
   private val component =
     ScalaFnComponent

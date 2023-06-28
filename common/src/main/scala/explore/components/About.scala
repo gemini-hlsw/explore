@@ -4,15 +4,11 @@
 package explore.components
 
 import crystal.react.View
-import crystal.react.reuse.*
-import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.util.NewType
 import lucuma.ui.syntax.all.given
-import react.clipboard.CopyToClipboard
 import react.common.ReactFnProps
 import react.primereact.Dialog
 
@@ -31,7 +27,7 @@ object About:
         dismissableMask = true,
         clazz = ExploreStyles.Dialog.Small,
         resizable = false,
-        header = Logo()
+        header = Logo.component()
       )(
         ExploreCopy(s"Version: ${ctx.version}",
                     ctx.version.value,

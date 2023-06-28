@@ -5,22 +5,15 @@ package explore.config.sequence
 
 import cats.Eq
 import cats.syntax.all.*
-import crystal.react.reuse.*
-import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.all.svg.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.math.Angle
-import lucuma.core.math.Offset
-import lucuma.core.math.Wavelength
 import lucuma.core.model.sequence.*
 import lucuma.core.model.sequence.gmos.DynamicConfig
 import lucuma.react.syntax.*
 import lucuma.react.table.*
-import lucuma.typed.{tanstackTableCore => raw}
-import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import react.common.Css

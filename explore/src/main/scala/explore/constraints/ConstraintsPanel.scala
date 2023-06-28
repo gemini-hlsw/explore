@@ -3,29 +3,22 @@
 
 package explore.constraints
 
-import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.View
-import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.ConstraintsQueries.*
 import explore.components.HelpIcon
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
-import explore.components.undo.UndoButtons
-import explore.given
 import explore.model.AppContext
 import explore.model.Help
 import explore.model.ObsIdSet
-import explore.model.ObservationList
-import explore.model.display.*
 import explore.undo.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
-import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.validation.ModelValidators
 import lucuma.core.util.Display
@@ -39,12 +32,10 @@ import lucuma.ui.primereact.FormInputTextView
 import lucuma.ui.primereact.FormLabel
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.given
 import monocle.Lens
 import react.common.ReactFnProps
-import react.primereact.PrimeStyles
 
 case class ConstraintsPanel(
   programId:     Program.Id,

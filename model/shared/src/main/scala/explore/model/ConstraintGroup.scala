@@ -5,13 +5,9 @@ package explore.model
 
 import cats.Eq
 import cats.derived.*
-import io.circe.Decoder
 import io.circe.generic.semiauto.*
 import lucuma.core.model.ConstraintSet
-import lucuma.schemas.decoders.given
 import monocle.Focus
-
-import scala.annotation.unused
 
 case class ConstraintGroup(constraintSet: ConstraintSet, obsIds: ObsIdSet) derives Eq
 

@@ -8,22 +8,14 @@ import cats.data.NonEmptyList
 import cats.derived.*
 import cats.syntax.all.*
 import crystal.react.View
-import eu.timepit.refined.cats.*
 import explore.model.enums.AgsState
 import lucuma.ags.*
-import lucuma.core.enums.Site
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
-import lucuma.core.math.skycalc.averageParallacticAngle
 import lucuma.core.model.ConstraintSet
-import lucuma.core.model.ObjectTracking
 import lucuma.core.model.PosAngleConstraint
 import lucuma.schemas.model.BasicConfiguration
-import monocle.Focus
-import org.typelevel.cats.time.instantInstances
-
-import java.time.Instant
 
 case class ObsConfiguration(
   configuration:      Option[BasicConfiguration],

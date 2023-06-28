@@ -13,7 +13,6 @@ import explore.Resources
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.UserVault
-import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.util.NewType
@@ -37,7 +36,6 @@ object UserSelectionForm:
   private type Props = UserSelectionForm
 
   private object IsOpen extends NewType[Boolean]
-  private type IsOpen = IsOpen.Type
 
   private case class BrowserInfo(supportedOrcidBrowser: Boolean, warnBrowser: Boolean):
     @inline def showButtons: Boolean = supportedOrcidBrowser
@@ -80,7 +78,7 @@ object UserSelectionForm:
             React.Fragment(
               <.div(
                 ExploreStyles.LoginBoxLayout,
-                Logo(),
+                Logo.component(),
                 <.div(
                   ExploreStyles.UserSelectionButtons,
                   Button(

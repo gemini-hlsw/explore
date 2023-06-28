@@ -4,17 +4,12 @@
 package explore.tabs
 
 import _root_.react.common.ReactFnProps
-import _root_.react.draggable.Axis
-import _root_.react.fa.*
 import _root_.react.gridlayout.*
 import _root_.react.hotkeys.*
 import _root_.react.hotkeys.hooks.*
 import _root_.react.resizeDetector.*
 import _root_.react.resizeDetector.hooks.*
 import cats.effect.IO
-import cats.effect.Resource
-import cats.syntax.all.*
-import clue.FetchClient
 import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
@@ -22,12 +17,10 @@ import crystal.react.reuse.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.numeric.NonNegInt
 import explore.*
-import explore.cache.ProgramCache
 import explore.common.TimingWindowsQueries
 import explore.common.UserPreferencesQueries.*
 import explore.components.Tile
 import explore.components.TileController
-import explore.components.ui.ExploreStyles
 import explore.data.KeyedIndexedList
 import explore.model.ObservationList
 import explore.model.ProgramSummaries
@@ -38,16 +31,11 @@ import explore.model.enums.SelectedPanel
 import explore.model.layout.*
 import explore.model.layout.unsafe.given
 import explore.model.reusability.given
-import explore.model.reusability.given
 import explore.observationtree.SchedulingGroupObsList
-import explore.optics.*
-import explore.optics.all.*
 import explore.shortcuts.*
 import explore.shortcuts.given
-import explore.syntax.ui.*
 import explore.timingwindows.TimingWindowsPanel
 import explore.undo.*
-import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.callback.CallbackCatsEffect.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
@@ -57,24 +45,12 @@ import lucuma.core.model.Program
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.User
 import lucuma.refined.*
-import lucuma.refined.*
-import lucuma.schemas.ObservationDB.Types.*
-import lucuma.ui.DefaultPendingRender
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import lucuma.ui.utils.*
-import monocle.Focus
 import monocle.Iso
-import org.scalajs.dom.window
-import org.typelevel.log4cats.Logger
-import queries.common.ObsQueriesGQL
-import queries.common.ObsQueriesGQL.UpdateObservationMutation
-import queries.common.UserPreferencesQueriesGQL.*
-import queries.schemas.UserPreferencesDB
 
 import scala.collection.immutable.SortedSet
-import scala.concurrent.duration.*
 
 case class SchedulingTabContents(
   userId:           Option[User.Id],
@@ -88,7 +64,6 @@ object SchedulingTabContents extends TwoPanels:
   private type Props = SchedulingTabContents
 
   private val SchedulingHeight: NonNegInt  = 14.refined
-  private val TileMinWidth: NonNegInt      = 6.refined
   private val DefaultWidth: NonNegInt      = 10.refined
   private val DefaultLargeWidth: NonNegInt = 12.refined
 
@@ -119,7 +94,6 @@ object SchedulingTabContents extends TwoPanels:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .useGlobalHotkeysWithDepsBy((props, ctx) => props.programId) { (props, ctx) => pid =>
-        import ctx.given
 
         def callbacks: ShortcutCallbacks = { case GoToSummary =>
           ctx.setPageVia(AppTab.Scheduling, pid, Focused.None, SetRouteVia.HistoryPush)
@@ -176,36 +150,6 @@ object SchedulingTabContents extends TwoPanels:
         ): Option[SchedulingGroup] =
           cgl.find(_._1.intersect(obsIds).nonEmpty).map(SchedulingGroup.fromTuple)
 
-        def onModSummaryWithObs(
-          groupObsIds:  ObsIdSet,
-          editedObsIds: ObsIdSet
-        )(programSummaries: ProgramSummaries): Callback = {
-          val groupList: SchedulingGroupList = programSummaries.schedulingGroups
-
-          val updateExpanded =
-            findSchedulingGroup(editedObsIds, groupList).fold(Callback.empty) { cg =>
-              // We should always find the scheduling group.
-              // If a group was edited while closed and it didn't create a merger, keep it closed,
-              // otherwise expand all affected groups.
-              props.expandedIds
-                .mod { eids =>
-                  val withOld       =
-                    if (groupObsIds === editedObsIds) eids
-                    else eids + groupObsIds.removeUnsafe(editedObsIds)
-                  val withOldAndNew =
-                    if (editedObsIds === cg.obsIds && editedObsIds === groupObsIds) withOld
-                    else withOld + cg.obsIds
-
-                  withOldAndNew.filter(ids => groupList.contains(ids)) // clean up
-                }
-            }
-
-          updateExpanded
-        }
-
-        val backButton: VdomNode =
-          makeBackButton(props.programId, AppTab.Scheduling, state, ctx)
-
         val observations: UndoSetter[ObservationList] =
           props.programSummaries.zoom(ProgramSummaries.observations)
 
@@ -218,8 +162,6 @@ object SchedulingTabContents extends TwoPanels:
             .fold[VdomNode] {
               <.div("Nothing selected - Will we have a summary table?")
             } { case (idsToEdit, schedulingGroup) =>
-              val groupObsIds: ObsIdSet = schedulingGroup.obsIds
-
               val obsTraversal = Iso
                 .id[ObservationList]
                 .filterIndex((id: Observation.Id) => idsToEdit.contains(id))

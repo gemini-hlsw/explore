@@ -11,8 +11,6 @@ import explore.components.ui.ExploreStyles
 import explore.highcharts.*
 import explore.model.Constants
 import explore.model.enums.TimeDisplay
-import explore.syntax.ui.*
-import explore.syntax.ui.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Site
@@ -23,11 +21,9 @@ import lucuma.core.math.Coordinates
 import lucuma.core.math.skycalc.ImprovedSkyCalc
 import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.ObservingNight
-import lucuma.core.util.Enumerated
 import lucuma.typed.highcharts.highchartsStrings.area
 import lucuma.typed.highcharts.mod.XAxisLabelsOptions
 import lucuma.typed.highcharts.mod.*
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
 import org.scalajs.dom
