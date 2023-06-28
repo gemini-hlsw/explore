@@ -404,6 +404,7 @@ ThisBuild / githubWorkflowAddedJobs +=
     "lint",
     "Run linters",
     WorkflowStep.Checkout ::
+      WorkflowStep.SetupJava(githubWorkflowJavaVersions.value.toList.take(1)) :::
       setupNode ::
       npmInstall ::
       lucumaCssStep ::
