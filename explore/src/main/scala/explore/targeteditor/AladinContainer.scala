@@ -230,12 +230,13 @@ object AladinContainer extends AladinCommon {
                       if (candidates.length < 500) {
                         List[SVGTarget](
                           if (selectedGS.forall(_.target.id === g.target.id)) {
-                            SVGTarget.GuideStarTarget(dest, candidateCss, calcSize(4))
+                            SVGTarget.GuideStarTarget(dest, candidateCss, calcSize(4), g)
                           } else {
                             SVGTarget.GuideStarCandidateTarget(
                               dest,
                               candidateCss |+| candidatesVisibility,
-                              calcSize(3)
+                              calcSize(3),
+                              g
                             )
                           },
                           SVGTarget.LineTo(
@@ -247,12 +248,13 @@ object AladinContainer extends AladinCommon {
                       } else {
                         List[SVGTarget](
                           if (selectedGS.forall(_.target.id === g.target.id)) {
-                            SVGTarget.GuideStarTarget(dest, candidateCss, calcSize(4))
+                            SVGTarget.GuideStarTarget(dest, candidateCss, calcSize(4), g)
                           } else {
                             SVGTarget.GuideStarCandidateTarget(
                               dest,
                               ExploreStyles.GuideStarCandidateCrowded |+| candidateCss |+| candidatesVisibility,
-                              calcSize(2.7)
+                              calcSize(2.7),
+                              g
                             )
                           }
                         )

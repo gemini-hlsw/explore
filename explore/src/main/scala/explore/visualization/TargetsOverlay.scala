@@ -12,6 +12,7 @@ import explore.components.ui.ExploreStyles
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.svg_<^.*
+import lucuma.ags.AgsAnalysis
 import lucuma.core.enums.SequenceType
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
@@ -20,6 +21,8 @@ import org.scalajs.dom.svg.SVG
 import react.aladin.Fov
 import react.common.Css
 import react.common.ReactFnProps
+import react.floatingui.*
+import react.floatingui.hooks.*
 
 import scala.math.*
 
@@ -67,6 +70,7 @@ object SVGTarget {
     coordinates: Coordinates,
     css:         Css,
     radius:      Double,
+    analysis:    AgsAnalysis,
     title:       Option[String] = None
   ) extends SVGTarget
       derives Eq
@@ -75,6 +79,7 @@ object SVGTarget {
     coordinates: Coordinates,
     css:         Css,
     radius:      Double,
+    analysis:    AgsAnalysis,
     title:       Option[String] = None
   ) extends SVGTarget
       derives Eq
@@ -112,8 +117,22 @@ object TargetsOverlay {
   val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useRefToVdom[SVG] // svg
-      .render { (p, svgRef) =>
+      .useRefToVdom[SVG]             // svg
+      .useState(TooltipState.Closed) // isOpen
+      .useFloatingBy { (_, _, open) =>
+        UseFloatingProps(
+          placement = Placement.Top,
+          open = open.value.value,
+          onOpenChange = s => open.setState(TooltipState(s)),
+          middleware = List(
+            middleware.flip()
+          )
+        )
+      }
+      .useInteractionsBy { (_, _, _, h) =>
+        List(middleware.useHover(h.context))
+      }
+      .render { (p, svgRef, _, floating, _) =>
         val pixx = p.fov.x.toMicroarcseconds / p.width
         val pixy = p.fov.y.toMicroarcseconds / p.height
         val maxP = max(pixx, pixy)
@@ -211,23 +230,22 @@ object TargetsOverlay {
                               selected
                   ): VdomNode
 
-                case (offP, offQ, SVGTarget.GuideStarCandidateTarget(_, css, radius, title)) =>
+                case (offP, offQ, SVGTarget.GuideStarCandidateTarget(_, css, radius, ags, _)) =>
                   val pointCss = ExploreStyles.GuideStarCandidateTarget |+| css
                   <.circle(^.cx := scale(offP),
                            ^.cy := scale(offQ),
                            ^.r  := scale(maxP * radius),
-                           pointCss,
-                           title.map(<.title(_))
+                           pointCss
                   )
+                  val sx = p.width / (viewBoxW - viewBoxX).abs
+                  val sy = p.height / (viewBoxH - viewBoxY).abs
+                  GuideStarTarget(svgRaw, offP, offQ, maxP, radius, pointCss, sx, sy, ags): VdomNode
 
-                case (offP, offQ, SVGTarget.GuideStarTarget(_, css, radius, title)) =>
+                case (offP, offQ, SVGTarget.GuideStarTarget(_, css, radius, ags, _)) =>
                   val pointCss = ExploreStyles.GuideStarTarget |+| css
-                  <.circle(^.cx := scale(offP),
-                           ^.cy := scale(offQ),
-                           ^.r  := scale(maxP * radius),
-                           pointCss,
-                           title.map(<.title(_))
-                  )
+                  val sx       = p.width / (viewBoxW - viewBoxX).abs
+                  val sy       = p.height / (viewBoxH - viewBoxY).abs
+                  GuideStarTarget(svgRaw, offP, offQ, maxP, radius, pointCss, sx, sy, ags): VdomNode
                 case (offP,
                       offQ,
                       SVGTarget.OffsetIndicator(_, idx, o, oType, css, radius, title)

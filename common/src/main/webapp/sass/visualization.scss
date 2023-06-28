@@ -186,6 +186,32 @@ $brightness: var(--aladin-image-brightness);
     stroke: hsl(181deg 100.0% 41.0% / 100%);
   }
 
+  .svg-target-tooltip {
+    .ags-fast-color {
+      fill: var(--ags-fast-guide-speed-color);
+      color: var(--ags-fast-guide-speed-color);
+      stroke: var(--ags-fast-guide-speed-color);
+    }
+
+    .ags-not-found {
+      fill: var(--negative-background-color);
+      color: var(--negative-background-color);
+      stroke: var(--negative-background-color);
+    }
+
+    .ags-medium-color {
+      fill: var(--ags-medium-guide-speed-color);
+      color: var(--ags-medium-guide-speed-color);
+      stroke: var(--ags-medium-guide-speed-color);
+    }
+
+    .ags-slow-color {
+      fill: var(--ags-slow-guide-speed-color);
+      color: var(--ags-slow-guide-speed-color);
+      stroke: var(--ags-slow-guide-speed-color);
+    }
+  }
+
   .guide-star-target,
   .guide-star-candidate-target {
     display: none;
