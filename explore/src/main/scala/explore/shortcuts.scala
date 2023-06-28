@@ -4,6 +4,7 @@
 package explore.shortcuts
 
 import japgolly.scalajs.react.Callback
+import japgolly.scalajs.react.*
 import lucuma.core.util.NewType
 import react.hotkeys.HotkeysCallback
 import react.hotkeys.HotkeysEvent
@@ -40,7 +41,7 @@ given Conversion[PartialFunction[Shortcut, Callback], HotkeysCallback] with
             p.applyOrElse(s, _ => Callback.empty)
         }
         .headOption
-        .getOrElse(Callback.empty)
+        .getOrEmpty
 
 val GoToObs         = Shortcut("o")
 val GoToTargets     = Shortcut("t")

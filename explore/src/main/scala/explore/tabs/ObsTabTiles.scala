@@ -34,6 +34,7 @@ import explore.model.itc.ItcChartResult
 import explore.model.itc.ItcTarget
 import explore.model.layout.*
 import explore.observationtree.obsEditAttachments
+import explore.syntax.ui.*
 import explore.timingwindows.TimingWindowsPanel
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
