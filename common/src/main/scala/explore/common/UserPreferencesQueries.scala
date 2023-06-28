@@ -15,7 +15,10 @@ import eu.timepit.refined.numeric.*
 import explore.DefaultErrorPolicy
 import explore.model.AladinFullScreen
 import explore.model.AladinMouseScroll
+import explore.model.ChartOp
+import explore.model.ColorsInverted
 import explore.model.TargetVisualOptions
+import explore.model.Transformation
 import explore.model.UserGlobalPreferences
 import explore.model.enums.GridBreakpointName
 import explore.model.enums.GridLayoutSection
@@ -30,6 +33,7 @@ import explore.model.layout.given
 import lucuma.core.enums.Site
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
+import lucuma.core.model.ObsAttachment
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.model.User
@@ -294,6 +298,49 @@ object UserPreferencesQueries:
 
   end TargetPreferences
 
+  object FinderChartPreferences:
+    // Gets the prefs for the itc plot
+    def queryWithDefault[F[_]: ApplicativeThrow](
+      oid: Observation.Id,
+      aid: ObsAttachment.Id
+    )(using FetchClient[F, UserPreferencesDB]): F[Transformation] =
+      FinderChartTransformationQuery[F]
+        .query(aid.show, oid.show)
+        .map { r =>
+          r.exploreFinderChartByPk.map(r =>
+            Transformation(
+              ChartOp.Rotate(r.rotate),
+              ChartOp.ScaleX(r.scaleX.toDouble / 100),
+              ChartOp.ScaleY(r.scaleY.toDouble / 100),
+              ChartOp.FlipX(r.flipX),
+              ChartOp.FlipY(r.flipY),
+              ColorsInverted.fromBoolean(r.inverted)
+            )
+          )
+        }
+        .handleError(_ => none)
+        .map(_.getOrElse(Transformation.Default))
+
+    def updateTransformation[F[_]: ApplicativeThrow](
+      oid:       Observation.Id,
+      aid:       ObsAttachment.Id,
+      transform: Transformation
+    )(using FetchClient[F, UserPreferencesDB]): F[Unit] =
+      FinderChartUpsert[F]
+        .execute(
+          ExploreFinderChartInsertInput(
+            observationId = oid.show.assign,
+            attachmentId = aid.show.assign,
+            flipX = transform.flipX.flip.assign,
+            flipY = transform.flipY.flip.assign,
+            rotate = transform.rotate.deg.assign,
+            scaleX = (transform.scaleX.scale * 100).toInt.assign,
+            scaleY = (transform.scaleY.scale * 100).toInt.assign,
+            inverted = transform.inverted.value.assign
+          )
+        )
+        .attempt
+        .void
   object ItcPlotPreferences:
     // Gets the prefs for the itc plot
     def queryWithDefault[F[_]: ApplicativeThrow](

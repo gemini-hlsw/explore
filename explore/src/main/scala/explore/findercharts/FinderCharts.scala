@@ -10,18 +10,21 @@ import cats.syntax.all.*
 import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
-import crystal.react.reuse.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Resources
 import explore.attachments.ObsAttachmentUtils
+import explore.common.UserPreferencesQueries.FinderChartPreferences
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ObsAttachmentList
+import explore.model.Transformation
+import explore.model.reusability.given
 import explore.utils.OdbRestClient
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ObsAttachment
+import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB.Enums.ObsAttachmentType
 import lucuma.ui.reusability.given
@@ -34,102 +37,9 @@ import react.common.ReactFnProps
 
 import scala.collection.immutable.SortedSet
 
-sealed trait ChartOp derives Eq
-
-object ChartOp:
-  case class Rotate(deg: Int)          extends ChartOp
-  case class ScaleX(scale: BigDecimal) extends ChartOp
-  case class ScaleY(scale: BigDecimal) extends ChartOp
-  case class FlipY(flip: Boolean)      extends ChartOp
-  case class FlipX(flip: Boolean)      extends ChartOp
-
-  val rotate: Lens[Rotate, Int] =
-    Focus[Rotate](_.deg)
-
-  val scaleX: Lens[ScaleX, BigDecimal] =
-    Focus[ScaleX](_.scale)
-
-  val scaleY: Lens[ScaleY, BigDecimal] =
-    Focus[ScaleY](_.scale)
-
-  val opScaleX: Prism[ChartOp, BigDecimal] =
-    Prism[ChartOp, BigDecimal] {
-      case ScaleX(x) => Some(x)
-      case _         => None
-    }(ScaleX(_))
-
-case class Transformation(
-  rotate: ChartOp.Rotate,
-  scaleX: ChartOp.ScaleX,
-  scaleY: ChartOp.ScaleY,
-  flipX:  ChartOp.FlipX,
-  flipY:  ChartOp.FlipY
-):
-  private def normalizeFlips: Transformation =
-    val p1 = if flipX.flip then copy(scaleX = ChartOp.ScaleX(-1 * this.scaleX.scale)) else this
-    val p2 = if flipY.flip then p1.copy(scaleY = ChartOp.ScaleY(-1 * this.scaleY.scale)) else p1
-    p2
-
-  def calcTransform: List[String] =
-    val p = normalizeFlips
-    List(p.rotate, p.scaleX, p.scaleY)
-      .foldLeft(List.empty[String]) { (acc, op) =>
-        op match {
-          case ChartOp.ScaleX(x) => s"scaleX(${x})" :: acc
-          case ChartOp.ScaleY(y) => s"scaleY(${y})" :: acc
-          case ChartOp.Rotate(x) => s"rotate(${x}deg)" :: acc
-          case _                 => acc
-        }
-      }
-      .reverse
-
-  inline def flip: Transformation =
-    copy(flipX = ChartOp.FlipX(!this.flipX.flip))
-
-  inline def rotateLeft: Transformation =
-    copy(rotate = ChartOp.Rotate((this.rotate.deg - 90) % 360))
-
-  inline def rotateRight: Transformation =
-    copy(rotate = ChartOp.Rotate((this.rotate.deg + 90) % 360))
-
-  inline def vflip: Transformation =
-    copy(flipY = ChartOp.FlipY(!this.flipY.flip))
-
-  inline def zoomOut: Transformation =
-    copy(scaleX = ChartOp.ScaleX((this.scaleX.scale * 8) / 10),
-         scaleY = ChartOp.ScaleY((this.scaleY.scale * 8) / 10)
-    )
-
-  inline def zoomIn: Transformation =
-    copy(scaleX = ChartOp.ScaleX((this.scaleX.scale * 12) / 10),
-         scaleY = ChartOp.ScaleY((this.scaleY.scale * 12) / 10)
-    )
-
-  inline def reset: Transformation = Transformation.Default
-
-object Transformation:
-  val Default = Transformation(ChartOp.Rotate(0),
-                               ChartOp.ScaleX(1),
-                               ChartOp.ScaleY(1),
-                               ChartOp.FlipX(false),
-                               ChartOp.FlipY(false)
-  )
-
-  val rotate: Lens[Transformation, ChartOp.Rotate] =
-    Focus[Transformation](_.rotate)
-
-  val scaleX: Lens[Transformation, ChartOp.ScaleX] =
-    Focus[Transformation](_.scaleX)
-
-  val scaleY: Lens[Transformation, ChartOp.ScaleY] =
-    Focus[Transformation](_.scaleY)
-
-  val rotateDeg = rotate.andThen(ChartOp.rotate)
-  val scaleXVal = scaleX.andThen(ChartOp.scaleX)
-  val scaleYVal = scaleY.andThen(ChartOp.scaleY)
-
 case class FinderCharts(
   programId:        Program.Id,
+  oid:              Observation.Id,
   authToken:        NonEmptyString,
   obsAttachmentIds: View[SortedSet[ObsAttachment.Id]],
   obsAttachments:   View[ObsAttachmentList]
@@ -156,12 +66,11 @@ object FinderCharts extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
         token => OdbRestClient[IO](ctx.environment, token)
       )
       .useStateView(Transformation.Default)
-      .useStateView(ColorsInverted.No)
       .useStateView(none[ObsAttachment.Id])
       .useStateView[UrlMap](Map.empty)
-      .useEffectWithDepsBy((props, _, _, _, _, selected, _) =>
+      .useEffectWithDepsBy((props, _, _, _, selected, _) =>
         (selected.get, props.obsAttachments.get, props.obsAttachmentIds.get)
-      )((props, _, client, _, _, _, urlMap) =>
+      )((props, _, client, _, _, urlMap) =>
         (sel, obsAttachments, obsAttachmentIds) =>
           val allCurrentKeys =
             validAttachments(obsAttachments, obsAttachmentIds).values.map(_.toMapKey).toSet
@@ -178,10 +87,39 @@ object FinderCharts extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
 
           updateUrlMap *> getUrls
       )
-      .render { (props, _, client, ops, inverted, selectedAttachment, urls) =>
+      // Read preferences
+      .useEffectWithDepsBy((props, _, _, _, selected, _) => (props.oid, selected.get)) {
+        (props, ctx, _, transform, _, _) => (oid, aid) =>
+          import ctx.given
+
+          aid
+            .map(aid =>
+              FinderChartPreferences
+                .queryWithDefault[IO](oid, aid)
+                .flatMap { t =>
+                  transform.set(t).to[IO]
+                }
+                .runAsyncAndForget
+            )
+            .getOrEmpty
+      }
+      // Write preferences
+      .useEffectWithDepsBy((props, _, _, transform, _, _) => transform.get) {
+        (props, ctx, _, transform, selected, _) => transform =>
+          import ctx.given
+
+          selected.get
+            .map(aid =>
+              FinderChartPreferences
+                .updateTransformation[IO](props.oid, aid, transform)
+                .runAsyncAndForget
+            )
+            .getOrEmpty
+      }
+      .render { (props, _, client, ops, selectedAttachment, urls) =>
         val transforms = ops.get.calcTransform
         ReactFragment(
-          ControlOverlay(ops, inverted),
+          ControlOverlay(ops),
           AttachmentsOverlay(props.programId,
                              client,
                              selectedAttachment,
@@ -195,7 +133,7 @@ object FinderCharts extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
                 url._2.renderPot(url =>
                   <.img(
                     ExploreStyles.FinderChartsImage,
-                    ExploreStyles.FinderChartsImageInverted.when(inverted.get.value),
+                    ExploreStyles.FinderChartsImageInverted.when(ops.get.inverted.value),
                     ^.transform := transforms.mkString(" "),
                     ^.src       := url
                   )

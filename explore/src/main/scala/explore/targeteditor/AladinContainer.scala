@@ -24,7 +24,6 @@ import explore.model.TargetVisualOptions
 import explore.model.UserGlobalPreferences
 import explore.model.enums.Visible
 import explore.model.reusability.given
-import explore.model.reusability.given
 import explore.visualization.*
 import japgolly.scalajs.react.Reusability.*
 import japgolly.scalajs.react.*

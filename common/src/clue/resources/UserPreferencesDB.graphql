@@ -184,6 +184,315 @@ input ExploreChartTypeUpdates {
 }
 
 """
+columns and relationships of "exploreFinderChart"
+"""
+type ExploreFinderChart {
+  attachmentId: String!
+  flipX: Boolean!
+  flipY: Boolean!
+  inverted: Boolean!
+  observationId: String!
+  rotate: Int!
+  scaleX: Int!
+  scaleY: Int!
+}
+
+"""
+aggregated selection of "exploreFinderChart"
+"""
+type ExploreFinderChartAggregate {
+  aggregate: ExploreFinderChartAggregateFields
+  nodes: [ExploreFinderChart!]!
+}
+
+"""
+aggregate fields of "exploreFinderChart"
+"""
+type ExploreFinderChartAggregateFields {
+  avg: ExploreFinderChartAvgFields
+  count(columns: [ExploreFinderChartSelectColumn!], distinct: Boolean): Int!
+  max: ExploreFinderChartMaxFields
+  min: ExploreFinderChartMinFields
+  stddev: ExploreFinderChartStddevFields
+  stddevPop: ExploreFinderChartStddev_popFields
+  stddevSamp: ExploreFinderChartStddev_sampFields
+  sum: ExploreFinderChartSumFields
+  varPop: ExploreFinderChartVar_popFields
+  varSamp: ExploreFinderChartVar_sampFields
+  variance: ExploreFinderChartVarianceFields
+}
+
+"""
+order by aggregate values of table "exploreFinderChart"
+"""
+input ExploreFinderChartAggregateOrderBy {
+  avg: exploreFinderChart_avg_order_by
+  count: OrderBy
+  max: exploreFinderChart_max_order_by
+  min: exploreFinderChart_min_order_by
+  stddev: exploreFinderChart_stddev_order_by
+  stddev_pop: exploreFinderChart_stddev_pop_order_by
+  stddev_samp: exploreFinderChart_stddev_samp_order_by
+  sum: exploreFinderChart_sum_order_by
+  var_pop: exploreFinderChart_var_pop_order_by
+  var_samp: exploreFinderChart_var_samp_order_by
+  variance: exploreFinderChart_variance_order_by
+}
+
+"""
+input type for inserting array relation for remote table "exploreFinderChart"
+"""
+input ExploreFinderChartArrRelInsertInput {
+  data: [ExploreFinderChartInsertInput!]!
+
+  """upsert condition"""
+  onConflict: ExploreFinderChartOnConflict
+}
+
+"""aggregate avg on columns"""
+type ExploreFinderChartAvgFields {
+  rotate: Float
+  scaleX: Float
+  scaleY: Float
+}
+
+"""
+Boolean expression to filter rows from the table "exploreFinderChart". All fields are combined with a logical 'AND'.
+"""
+input ExploreFinderChartBoolExp {
+  _and: [ExploreFinderChartBoolExp!]
+  _not: ExploreFinderChartBoolExp
+  _or: [ExploreFinderChartBoolExp!]
+  attachmentId: StringComparisonExp
+  flipX: BooleanComparisonExp
+  flipY: BooleanComparisonExp
+  inverted: BooleanComparisonExp
+  observationId: StringComparisonExp
+  rotate: IntComparisonExp
+  scaleX: IntComparisonExp
+  scaleY: IntComparisonExp
+}
+
+"""
+unique or primary key constraints on table "exploreFinderChart"
+"""
+enum ExploreFinderChartConstraint {
+  """
+  unique or primary key constraint on columns "observationId", "attachmentId"
+  """
+  exploreFinderChart_pkey
+}
+
+"""
+input type for incrementing numeric columns in table "exploreFinderChart"
+"""
+input ExploreFinderChartIncInput {
+  rotate: Int
+  scaleX: Int
+  scaleY: Int
+}
+
+"""
+input type for inserting data into table "exploreFinderChart"
+"""
+input ExploreFinderChartInsertInput {
+  attachmentId: String
+  flipX: Boolean
+  flipY: Boolean
+  inverted: Boolean
+  observationId: String
+  rotate: Int
+  scaleX: Int
+  scaleY: Int
+}
+
+"""aggregate max on columns"""
+type ExploreFinderChartMaxFields {
+  attachmentId: String
+  observationId: String
+  rotate: Int
+  scaleX: Int
+  scaleY: Int
+}
+
+"""aggregate min on columns"""
+type ExploreFinderChartMinFields {
+  attachmentId: String
+  observationId: String
+  rotate: Int
+  scaleX: Int
+  scaleY: Int
+}
+
+"""
+response of any mutation on the table "exploreFinderChart"
+"""
+type ExploreFinderChartMutationResponse {
+  """number of rows affected by the mutation"""
+  affected_rows: Int!
+
+  """data from the rows affected by the mutation"""
+  returning: [ExploreFinderChart!]!
+}
+
+"""
+on_conflict condition type for table "exploreFinderChart"
+"""
+input ExploreFinderChartOnConflict {
+  constraint: ExploreFinderChartConstraint!
+  update_columns: [ExploreFinderChartUpdateColumn!]! = []
+  where: ExploreFinderChartBoolExp
+}
+
+"""Ordering options when selecting data from "exploreFinderChart"."""
+input ExploreFinderChartOrderBy {
+  attachmentId: OrderBy
+  flipX: OrderBy
+  flipY: OrderBy
+  inverted: OrderBy
+  observationId: OrderBy
+  rotate: OrderBy
+  scaleX: OrderBy
+  scaleY: OrderBy
+}
+
+"""primary key columns input for table: exploreFinderChart"""
+input ExploreFinderChartPkColumnsInput {
+  attachmentId: String!
+  observationId: String!
+}
+
+"""
+select columns of table "exploreFinderChart"
+"""
+enum ExploreFinderChartSelectColumn {
+  """column name"""
+  attachmentId
+
+  """column name"""
+  flipX
+
+  """column name"""
+  flipY
+
+  """column name"""
+  inverted
+
+  """column name"""
+  observationId
+
+  """column name"""
+  rotate
+
+  """column name"""
+  scaleX
+
+  """column name"""
+  scaleY
+}
+
+"""
+input type for updating data in table "exploreFinderChart"
+"""
+input ExploreFinderChartSetInput {
+  attachmentId: String
+  flipX: Boolean
+  flipY: Boolean
+  inverted: Boolean
+  observationId: String
+  rotate: Int
+  scaleX: Int
+  scaleY: Int
+}
+
+"""aggregate stddev on columns"""
+type ExploreFinderChartStddevFields {
+  rotate: Float
+  scaleX: Float
+  scaleY: Float
+}
+
+"""aggregate stddev_pop on columns"""
+type ExploreFinderChartStddev_popFields {
+  rotate: Float
+  scaleX: Float
+  scaleY: Float
+}
+
+"""aggregate stddev_samp on columns"""
+type ExploreFinderChartStddev_sampFields {
+  rotate: Float
+  scaleX: Float
+  scaleY: Float
+}
+
+"""aggregate sum on columns"""
+type ExploreFinderChartSumFields {
+  rotate: Int
+  scaleX: Int
+  scaleY: Int
+}
+
+"""
+update columns of table "exploreFinderChart"
+"""
+enum ExploreFinderChartUpdateColumn {
+  """column name"""
+  attachmentId
+
+  """column name"""
+  flipX
+
+  """column name"""
+  flipY
+
+  """column name"""
+  inverted
+
+  """column name"""
+  observationId
+
+  """column name"""
+  rotate
+
+  """column name"""
+  scaleX
+
+  """column name"""
+  scaleY
+}
+
+input ExploreFinderChartUpdates {
+  """increments the numeric columns with given value of the filtered values"""
+  _inc: ExploreFinderChartIncInput
+
+  """sets the columns of the filtered rows to the given values"""
+  _set: ExploreFinderChartSetInput
+  where: ExploreFinderChartBoolExp!
+}
+
+"""aggregate var_pop on columns"""
+type ExploreFinderChartVar_popFields {
+  rotate: Float
+  scaleX: Float
+  scaleY: Float
+}
+
+"""aggregate var_samp on columns"""
+type ExploreFinderChartVar_sampFields {
+  rotate: Float
+  scaleX: Float
+  scaleY: Float
+}
+
+"""aggregate variance on columns"""
+type ExploreFinderChartVarianceFields {
+  rotate: Float
+  scaleX: Float
+  scaleY: Float
+}
+
+"""
 columns and relationships of "explorePlotRange"
 """
 type ExplorePlotRange {
@@ -1604,6 +1913,42 @@ input LucumaItcPlotPreferencesUpdates {
 columns and relationships of "lucumaObservation"
 """
 type LucumaObservation {
+  """An array relationship"""
+  exploreFinderCharts(
+    """distinct select on columns"""
+    distinctOn: [ExploreFinderChartSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [ExploreFinderChartOrderBy!]
+
+    """filter the rows returned"""
+    where: ExploreFinderChartBoolExp
+  ): [ExploreFinderChart!]!
+
+  """An aggregate relationship"""
+  exploreFinderChartsAggregate(
+    """distinct select on columns"""
+    distinctOn: [ExploreFinderChartSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [ExploreFinderChartOrderBy!]
+
+    """filter the rows returned"""
+    where: ExploreFinderChartBoolExp
+  ): ExploreFinderChartAggregate!
+
   """An aggregate relationship"""
   lucumaItcPlotPreferencesAggregate(
     """distinct select on columns"""
@@ -1666,6 +2011,7 @@ input LucumaObservationBoolExp {
   _and: [LucumaObservationBoolExp!]
   _not: LucumaObservationBoolExp
   _or: [LucumaObservationBoolExp!]
+  exploreFinderCharts: ExploreFinderChartBoolExp
   lucuma_itc_plot_preferences: LucumaItcPlotPreferencesBoolExp
   observationId: StringComparisonExp
 }
@@ -1684,6 +2030,7 @@ enum LucumaObservationConstraint {
 input type for inserting data into table "lucumaObservation"
 """
 input LucumaObservationInsertInput {
+  exploreFinderCharts: ExploreFinderChartArrRelInsertInput
   lucuma_itc_plot_preferences: LucumaItcPlotPreferencesArrRelInsertInput
   observationId: String
 }
@@ -1730,6 +2077,7 @@ input LucumaObservationOnConflict {
 
 """Ordering options when selecting data from "lucumaObservation"."""
 input LucumaObservationOrderBy {
+  exploreFinderChartsAggregate: ExploreFinderChartAggregateOrderBy
   lucuma_itc_plot_preferencesAggregate: LucumaItcPlotPreferencesAggregateOrderBy
   observationId: OrderBy
 }
@@ -2956,6 +3304,123 @@ input exploreChartType_streamCursorValueInput {
 }
 
 """
+order by avg() on columns of table "exploreFinderChart"
+"""
+input exploreFinderChart_avg_order_by {
+  rotate: OrderBy
+  scaleX: OrderBy
+  scaleY: OrderBy
+}
+
+"""
+order by max() on columns of table "exploreFinderChart"
+"""
+input exploreFinderChart_max_order_by {
+  attachmentId: OrderBy
+  observationId: OrderBy
+  rotate: OrderBy
+  scaleX: OrderBy
+  scaleY: OrderBy
+}
+
+"""
+order by min() on columns of table "exploreFinderChart"
+"""
+input exploreFinderChart_min_order_by {
+  attachmentId: OrderBy
+  observationId: OrderBy
+  rotate: OrderBy
+  scaleX: OrderBy
+  scaleY: OrderBy
+}
+
+"""
+order by stddev() on columns of table "exploreFinderChart"
+"""
+input exploreFinderChart_stddev_order_by {
+  rotate: OrderBy
+  scaleX: OrderBy
+  scaleY: OrderBy
+}
+
+"""
+order by stddev_pop() on columns of table "exploreFinderChart"
+"""
+input exploreFinderChart_stddev_pop_order_by {
+  rotate: OrderBy
+  scaleX: OrderBy
+  scaleY: OrderBy
+}
+
+"""
+order by stddev_samp() on columns of table "exploreFinderChart"
+"""
+input exploreFinderChart_stddev_samp_order_by {
+  rotate: OrderBy
+  scaleX: OrderBy
+  scaleY: OrderBy
+}
+
+"""
+Streaming cursor of the table "exploreFinderChart"
+"""
+input exploreFinderChart_streamCursorInput {
+  """Stream column input with initial value"""
+  initialValue: exploreFinderChart_streamCursorValueInput!
+
+  """cursor ordering"""
+  ordering: CursorOrdering
+}
+
+"""Initial value of the column from where the streaming should start"""
+input exploreFinderChart_streamCursorValueInput {
+  attachmentId: String
+  flipX: Boolean
+  flipY: Boolean
+  inverted: Boolean
+  observationId: String
+  rotate: Int
+  scaleX: Int
+  scaleY: Int
+}
+
+"""
+order by sum() on columns of table "exploreFinderChart"
+"""
+input exploreFinderChart_sum_order_by {
+  rotate: OrderBy
+  scaleX: OrderBy
+  scaleY: OrderBy
+}
+
+"""
+order by var_pop() on columns of table "exploreFinderChart"
+"""
+input exploreFinderChart_var_pop_order_by {
+  rotate: OrderBy
+  scaleX: OrderBy
+  scaleY: OrderBy
+}
+
+"""
+order by var_samp() on columns of table "exploreFinderChart"
+"""
+input exploreFinderChart_var_samp_order_by {
+  rotate: OrderBy
+  scaleX: OrderBy
+  scaleY: OrderBy
+}
+
+"""
+order by variance() on columns of table "exploreFinderChart"
+"""
+input exploreFinderChart_variance_order_by {
+  rotate: OrderBy
+  scaleX: OrderBy
+  scaleY: OrderBy
+}
+
+"""
 Streaming cursor of the table "explorePlotRange"
 """
 input explorePlotRange_streamCursorInput {
@@ -3375,6 +3840,19 @@ type Mutation {
   deleteExploreChartTypeByPk(id: String!): ExploreChartType
 
   """
+  delete data from the table: "exploreFinderChart"
+  """
+  deleteExploreFinderChart(
+    """filter the rows which have to be deleted"""
+    where: ExploreFinderChartBoolExp!
+  ): ExploreFinderChartMutationResponse
+
+  """
+  delete single row from the table: "exploreFinderChart"
+  """
+  deleteExploreFinderChartByPk(attachmentId: String!, observationId: String!): ExploreFinderChart
+
+  """
   delete data from the table: "explorePlotRange"
   """
   deleteExplorePlotRange(
@@ -3577,6 +4055,28 @@ type Mutation {
     """upsert condition"""
     onConflict: ExploreChartTypeOnConflict
   ): ExploreChartType
+
+  """
+  insert data into the table: "exploreFinderChart"
+  """
+  insertExploreFinderChart(
+    """the rows to be inserted"""
+    objects: [ExploreFinderChartInsertInput!]!
+
+    """upsert condition"""
+    onConflict: ExploreFinderChartOnConflict
+  ): ExploreFinderChartMutationResponse
+
+  """
+  insert a single row into the table: "exploreFinderChart"
+  """
+  insertExploreFinderChartOne(
+    """the row to be inserted"""
+    object: ExploreFinderChartInsertInput!
+
+    """upsert condition"""
+    onConflict: ExploreFinderChartOnConflict
+  ): ExploreFinderChart
 
   """
   insert data into the table: "explorePlotRange"
@@ -3913,6 +4413,40 @@ type Mutation {
     """updates to execute, in order"""
     updates: [ExploreChartTypeUpdates!]!
   ): [ExploreChartTypeMutationResponse]
+
+  """
+  update data of the table: "exploreFinderChart"
+  """
+  updateExploreFinderChart(
+    """increments the numeric columns with given value of the filtered values"""
+    _inc: ExploreFinderChartIncInput
+
+    """sets the columns of the filtered rows to the given values"""
+    _set: ExploreFinderChartSetInput
+
+    """filter the rows which have to be updated"""
+    where: ExploreFinderChartBoolExp!
+  ): ExploreFinderChartMutationResponse
+
+  """
+  update single row of the table: "exploreFinderChart"
+  """
+  updateExploreFinderChartByPk(
+    """increments the numeric columns with given value of the filtered values"""
+    _inc: ExploreFinderChartIncInput
+
+    """sets the columns of the filtered rows to the given values"""
+    _set: ExploreFinderChartSetInput
+    pk_columns: ExploreFinderChartPkColumnsInput!
+  ): ExploreFinderChart
+
+  """
+  update multiples rows of table: "exploreFinderChart"
+  """
+  updateExploreFinderChartMany(
+    """updates to execute, in order"""
+    updates: [ExploreFinderChartUpdates!]!
+  ): [ExploreFinderChartMutationResponse]
 
   """
   update data of the table: "explorePlotRange"
@@ -4370,6 +4904,51 @@ type Query {
   fetch data from the table: "exploreChartType" using primary key columns
   """
   exploreChartTypeByPk(id: String!): ExploreChartType
+
+  """
+  fetch data from the table: "exploreFinderChart"
+  """
+  exploreFinderChart(
+    """distinct select on columns"""
+    distinctOn: [ExploreFinderChartSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [ExploreFinderChartOrderBy!]
+
+    """filter the rows returned"""
+    where: ExploreFinderChartBoolExp
+  ): [ExploreFinderChart!]!
+
+  """
+  fetch aggregated fields from the table: "exploreFinderChart"
+  """
+  exploreFinderChartAggregate(
+    """distinct select on columns"""
+    distinctOn: [ExploreFinderChartSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [ExploreFinderChartOrderBy!]
+
+    """filter the rows returned"""
+    where: ExploreFinderChartBoolExp
+  ): ExploreFinderChartAggregate!
+
+  """
+  fetch data from the table: "exploreFinderChart" using primary key columns
+  """
+  exploreFinderChartByPk(attachmentId: String!, observationId: String!): ExploreFinderChart
 
   """
   fetch data from the table: "explorePlotRange"
@@ -5051,6 +5630,65 @@ type Subscription {
     """filter the rows returned"""
     where: ExploreChartTypeBoolExp
   ): [ExploreChartType!]!
+
+  """
+  fetch data from the table: "exploreFinderChart"
+  """
+  exploreFinderChart(
+    """distinct select on columns"""
+    distinctOn: [ExploreFinderChartSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [ExploreFinderChartOrderBy!]
+
+    """filter the rows returned"""
+    where: ExploreFinderChartBoolExp
+  ): [ExploreFinderChart!]!
+
+  """
+  fetch aggregated fields from the table: "exploreFinderChart"
+  """
+  exploreFinderChartAggregate(
+    """distinct select on columns"""
+    distinctOn: [ExploreFinderChartSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [ExploreFinderChartOrderBy!]
+
+    """filter the rows returned"""
+    where: ExploreFinderChartBoolExp
+  ): ExploreFinderChartAggregate!
+
+  """
+  fetch data from the table: "exploreFinderChart" using primary key columns
+  """
+  exploreFinderChartByPk(attachmentId: String!, observationId: String!): ExploreFinderChart
+
+  """
+  fetch data from the table in a streaming manner : "exploreFinderChart"
+  """
+  exploreFinderChartStream(
+    """maximum number of rows returned in a single batch"""
+    batchSize: Int!
+
+    """cursor to stream the results returned by the query"""
+    cursor: [exploreFinderChart_streamCursorInput]!
+
+    """filter the rows returned"""
+    where: ExploreFinderChartBoolExp
+  ): [ExploreFinderChart!]!
 
   """
   fetch data from the table: "explorePlotRange"
