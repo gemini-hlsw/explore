@@ -19,18 +19,19 @@ import react.common.style.*
 import react.primereact.Button
 
 case class Tile(
-  id:                Tile.TileId,
-  title:             String,
-  back:              Option[VdomNode] = None,
-  control:           TileSizeState => Option[VdomNode] = _ => None,
-  canMinimize:       Boolean = false,
-  canMaximize:       Boolean = false,
-  state:             TileSizeState = TileSizeState.Normal,
-  sizeStateCallback: TileSizeState => Callback = _ => Callback.empty,
-  controllerClass:   Option[Css] = None, // applied to wrapping div when in a TileController.
-  bodyClass:         Option[Css] = None, // applied to tile body
-  tileClass:         Option[Css] = None, // applied to the tile
-  tileTitleClass:    Option[Css] = None  // applied to the title
+  id:                 Tile.TileId,
+  title:              String,
+  back:               Option[VdomNode] = None,
+  control:            TileSizeState => Option[VdomNode] = _ => None,
+  canMinimize:        Boolean = false,
+  canMaximize:        Boolean = false,
+  state:              TileSizeState = TileSizeState.Normal,
+  sizeStateCallback:  TileSizeState => Callback = _ => Callback.empty,
+  controllerClass:    Option[Css] = None, // applied to wrapping div when in a TileController.
+  bodyClass:          Option[Css] = None, // applied to tile body
+  tileClass:          Option[Css] = None, // applied to the tile
+  tileTitleClass:     Option[Css] = None, // applied to the title
+  renderInTitleClass: Option[Css] = None  // applied to the portal in the title
 )(val render: Tile.RenderInTitle => VdomNode)
     extends ReactFnProps[Tile](Tile.component) {
   def showMaximize: Boolean =
@@ -112,7 +113,7 @@ object Tile {
               ),
               p.control(p.state).map(b => <.div(ExploreStyles.TileControl, b)),
               <.span(^.key := "tileTitle", ^.untypedRef(setInfoRef).when(infoRef.value.isEmpty))(
-                ExploreStyles.TileTitleStrip,
+                ExploreStyles.TileTitleStrip |+| p.renderInTitleClass.orEmpty,
                 ExploreStyles.FixedSizeTileTitle.when(!p.canMinimize && !p.canMaximize)
               ),
               <.div(

@@ -11,9 +11,9 @@ import explore.components.ui.ExploreStyles
 import explore.findercharts.FinderCharts
 import explore.model.ObsAttachmentList
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.model.ObsAttachment
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
+import lucuma.core.model.{ObsAttachment => ObsAtt}
 import lucuma.ui.syntax.all.given
 
 import scala.collection.immutable.SortedSet
@@ -23,7 +23,7 @@ object FinderChartsTile:
   def finderChartsTile(
     programId:        Program.Id,
     oid:              Observation.Id,
-    obsAttachmentIds: View[SortedSet[ObsAttachment.Id]],
+    obsAttachmentIds: View[SortedSet[ObsAtt.Id]],
     authToken:        Option[NonEmptyString],
     obsAttachments:   View[ObsAttachmentList]
   ) =
@@ -31,9 +31,12 @@ object FinderChartsTile:
       ObsTabTilesIds.FinderChartsId.id,
       s"Finder Charts",
       bodyClass = ExploreStyles.FinderChartsTile.some,
-      canMinimize = true
-    )(_ =>
+      canMinimize = true,
+      renderInTitleClass = ExploreStyles.FinderChartsInTitle.some
+    )(renderInTitle =>
       authToken
-        .map(t => FinderCharts(programId, oid, t, obsAttachmentIds, obsAttachments): VdomNode)
+        .map(t =>
+          FinderCharts(programId, oid, t, obsAttachmentIds, obsAttachments, renderInTitle): VdomNode
+        )
         .getOrElse(EmptyVdom)
     )

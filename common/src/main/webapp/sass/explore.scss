@@ -2628,3 +2628,15 @@ a.explore-upgrade-link {
   padding-left: 0;
   margin: 0;
 }
+
+.finder-charts-in-title {
+  flex-grow: 1;
+  display: flex;
+  justify-content: end;
+}
+
+.finder-charts-selector-section {
+  .p-dropdown {
+    min-width: 20ch;
+  }
+}

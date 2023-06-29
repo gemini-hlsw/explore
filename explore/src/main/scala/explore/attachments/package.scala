@@ -26,9 +26,11 @@ import lucuma.core.util.Timestamp
 import lucuma.react.table.ColumnId
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Enums.ObsAttachmentType
+import lucuma.ui.primereact.LucumaStyles
 import org.scalajs.dom.{File => DomFile}
 import org.typelevel.log4cats.Logger
 import react.primereact.Message
+import react.primereact.PrimeStyles
 
 import java.time.Instant
 
@@ -72,6 +74,10 @@ trait ObsAttachmentUtils:
   val CheckedColumnId: ColumnId        = ColumnId("checked")
 
   given Display[AttachmentType] = Display.byShortName(_.name)
+
+  val LabelButtonClasses =
+    PrimeStyles.Component |+| PrimeStyles.Button |+| PrimeStyles.ButtonIconOnly
+      |+| LucumaStyles.Tiny |+| LucumaStyles.Compact
 
   enum Action derives Eq:
     case None, Insert, Replace, Download, Unlink
