@@ -31,6 +31,8 @@ import org.typelevel.log4cats.Logger
 import react.primereact.Message
 
 import java.time.Instant
+import react.primereact.PrimeStyles
+import lucuma.ui.primereact.LucumaStyles
 
 // TEMPORARY until we get the graphql enums worked out
 enum AttachmentType(
@@ -72,6 +74,10 @@ trait ObsAttachmentUtils:
   val CheckedColumnId: ColumnId        = ColumnId("checked")
 
   given Display[AttachmentType] = Display.byShortName(_.name)
+
+  val LabelButtonClasses =
+    PrimeStyles.Component |+| PrimeStyles.Button |+| PrimeStyles.ButtonIconOnly
+      |+| LucumaStyles.Tiny |+| LucumaStyles.Compact
 
   enum Action derives Eq:
     case None, Insert, Replace, Download, Unlink
@@ -115,7 +121,7 @@ trait ObsAttachmentUtils:
             )
             .toastErrors
             .flatMap(id =>
-              (onSuccess(id) *>
+              (Callback.log(s"Inserted attachment update $id") *>
                 obsAttachments
                   .mod(
                     _.updated(id,
@@ -129,7 +135,8 @@ trait ObsAttachmentUtils:
                                 Timestamp.unsafeFromInstantTruncated(Instant.now())
                               )
                     )
-                  )).toAsync
+                  )
+                  .when_(false) *> onSuccess(id)).toAsync
             )
         }
       )
@@ -148,9 +155,9 @@ trait ObsAttachmentUtils:
   ): Callback =
     val files = e.target.files.toList
     (Callback(e.target.value = null) *>
-      action.set(Action.Insert) *>
+      // Callback.log("Start insert") *> action.set(Action.Insert) *>
       insertAttachment(programId, obsAttachments, client, newAttType.gql, files, onSuccess)
-        .guarantee(action.async.set(Action.None))
+        // .guarantee(IO.println("Completted") *> action.async.set(Action.None))
         .runAsync)
       .when_(files.nonEmpty)
 

@@ -2628,3 +2628,9 @@ a.explore-upgrade-link {
   padding-left: 0;
   margin: 0;
 }
+
+.finder-charts-selector-section {
+  .p-dropdown {
+    min-width: 20ch;
+  }
+}

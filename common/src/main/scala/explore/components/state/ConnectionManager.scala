@@ -7,7 +7,6 @@ import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.*
 import crystal.react.hooks.*
-import explore.components.SolarProgress
 import explore.model.AppContext
 import explore.model.UserVault
 import explore.syntax.ui.*
@@ -19,6 +18,7 @@ import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 import react.common.ReactFnPropsWithChildren
+import lucuma.ui.components.SolarProgress
 
 case class ConnectionManager(vault: UserVault, onConnect: IO[Unit])
     extends ReactFnPropsWithChildren(ConnectionManager.component):

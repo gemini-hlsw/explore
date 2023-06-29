@@ -292,7 +292,8 @@ object ObsTabTiles:
 
           val attachmentsView =
             props.observation.model.zoom(ObsSummary.attachmentIds).withOnMod { ids =>
-              obsEditAttachments(props.programId, props.obsId, ids).runAsyncAndForget
+              println(s"With on mod $ids")
+              obsEditAttachments(props.programId, props.obsId, ids).runAsync
             }
 
           val finderChartsTile =

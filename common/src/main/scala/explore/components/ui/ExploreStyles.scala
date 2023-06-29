@@ -161,7 +161,9 @@ object ExploreStyles:
   val FinderChartsTable: Css         = Css("finder-charts-table")
   val FinderChartsTableDisabled: Css = Css("finder-charts-table-disabled")
   val FinderChartsTableHeader: Css   = Css("finder-charts-table-header")
-  val FinderChartsTableProgress: Css = Css("finder-charts-table-progggress")
+  val FinderChartsTableProgress: Css = Css("finder-charts-table-progress")
+
+  val FinderChartsSelectorSection: Css = Css("finder-charts-selector-section")
 
   val DraggingOver: Css = Css("dragging-over")
 

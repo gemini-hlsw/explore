@@ -43,7 +43,6 @@ import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Enums.ObsAttachmentType
 import lucuma.ui.primereact.CheckboxView
 import lucuma.ui.primereact.EnumDropdownView
-import lucuma.ui.primereact.LucumaStyles
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
@@ -87,11 +86,7 @@ object ObsAttachmentsTable extends TableHooks with ObsAttachmentUtils:
     CheckedColumnId        -> "Checked"
   )
 
-  private val labelButtonClasses =
-    PrimeStyles.Component |+| PrimeStyles.Button |+| PrimeStyles.ButtonIconOnly
-      |+| LucumaStyles.Tiny |+| LucumaStyles.Compact
-
-  private val tableLabelButtonClasses = labelButtonClasses |+| PrimeStyles.ButtonSecondary
+  private val tableLabelButtonClasses = LabelButtonClasses |+| PrimeStyles.ButtonSecondary
 
   extension (t: ObsAttachmentType)
     def getEnum: AttachmentType =
@@ -363,7 +358,7 @@ object ObsAttachmentsTable extends TableHooks with ObsAttachmentUtils:
                 clazz = ExploreStyles.FlatFormField |+| ExploreStyles.AttachmentsTableTypeSelect
               ),
               <.label(
-                labelButtonClasses,
+                LabelButtonClasses,
                 ^.htmlFor := "attachment-upload",
                 Icons.FileArrowUp
               ).withTooltip(

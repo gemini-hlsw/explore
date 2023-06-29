@@ -13,6 +13,7 @@ import explore.attachments.ObsAttachmentUtils
 import explore.common.UserPreferencesQueries.FinderChartPreferences
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
+import explore.model.ObsAttachment
 import explore.model.ObsAttachmentList
 import explore.model.Transformation
 import explore.model.reusability.given
@@ -20,7 +21,6 @@ import explore.utils.OdbRestClient
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.model.ObsAttachment
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB.Enums.ObsAttachmentType
@@ -28,21 +28,32 @@ import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.pot.*
 import react.common.ReactFnProps
+import lucuma.core.model.{ObsAttachment => ObsAtt}
 
 import scala.collection.immutable.SortedSet
+import explore.components.Tile
+import react.primereact.SelectItem
+import lucuma.ui.primereact.FormDropdownOptional
+import lucuma.refined.*
+import explore.Icons
+import react.floatingui.Placement
+import explore.attachments.AttachmentType
+import react.floatingui.syntax.*
+import lucuma.ui.components.SolarProgress
 
 case class FinderCharts(
   programId:        Program.Id,
   oid:              Observation.Id,
   authToken:        NonEmptyString,
-  obsAttachmentIds: View[SortedSet[ObsAttachment.Id]],
-  obsAttachments:   View[ObsAttachmentList]
+  obsAttachmentIds: View[SortedSet[ObsAtt.Id]],
+  obsAttachments:   View[ObsAttachmentList],
+  renderInTitle:    Tile.RenderInTitle
 ) extends ReactFnProps(FinderCharts.component)
 
 trait FinderChartsAttachmentUtils:
   def validAttachments(
     allAttachments:   ObsAttachmentList,
-    obsAttachmentIds: SortedSet[ObsAttachment.Id]
+    obsAttachmentIds: SortedSet[ObsAtt.Id]
   ): ObsAttachmentList =
     allAttachments.filter { case (_, attachment) =>
       (attachment.attachmentType === ObsAttachmentType.Finder) && obsAttachmentIds
@@ -52,6 +63,65 @@ trait FinderChartsAttachmentUtils:
 object FinderCharts extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
   private type Props = FinderCharts
 
+  private def attachmentSelector(
+    props:    Props,
+    ctx:      AppContext[IO],
+    client:   OdbRestClient[IO],
+    selected: View[Option[ObsAtt.Id]],
+    action:   View[Action]
+  ): VdomNode = {
+    import ctx.given
+
+    def addNewFinderChart(e: ReactEventFromInput) =
+      onInsertFileSelected(
+        props.programId,
+        props.obsAttachments,
+        AttachmentType.Finder,
+        client,
+        action,
+        id =>
+          props.obsAttachmentIds
+            .modCB(
+              k => { println(s"As in here $k $id"); k + id },
+              newR => Callback.log(s"set $newR selected $id")
+            )
+      )(e)
+
+    <.div(
+      ExploreStyles.FinderChartsSelectorSection,
+      <.span(
+        <.label(
+          LabelButtonClasses,
+          ^.htmlFor := "attachment-upload",
+          Icons.FileArrowUp.withFixedWidth(true)
+        ).withTooltip(
+          tooltip = s"Upload new finder chart",
+          placement = Placement.Right
+        ),
+        <.input(
+          ExploreStyles.FileUpload,
+          ^.tpe    := "file",
+          ^.onChange ==> addNewFinderChart,
+          ^.id     := "attachment-upload",
+          ^.name   := "file",
+          ^.accept := AttachmentType.Finder.accept
+        )
+      ),
+      FormDropdownOptional(
+        id = "attachment-selector".refined,
+        placeholder = "Select finder chart",
+        options = validAttachments(props.obsAttachments.get, props.obsAttachmentIds.get)
+          .map(_._2)
+          .map { attachment =>
+            new SelectItem[ObsAttachment](value = attachment, label = attachment.fileName.value)
+          }
+          .toList,
+        value = props.obsAttachments.get.find(i => selected.get.exists(_ === i._2.id)).map(_._2),
+        onChange = (att: Option[ObsAttachment]) => selected.set(att.map(_.id))
+      )
+    )
+  }
+
   private val component =
     ScalaFnComponent
       .withHooks[Props]
@@ -60,15 +130,17 @@ object FinderCharts extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
         token => OdbRestClient[IO](ctx.environment, token)
       )
       .useStateView(Transformation.Default)
-      .useStateView(none[ObsAttachment.Id])
+      .useStateView(none[ObsAtt.Id])
       .useStateView[UrlMap](Map.empty)
       .useEffectWithDepsBy((props, _, _, _, selected, _) =>
-        (selected.get, props.obsAttachments.get, props.obsAttachmentIds.get)
-      )((props, _, client, _, _, urlMap) =>
+        (props.authToken, props.obsAttachments.get, props.obsAttachmentIds.get)
+      )((props, _, client, _, selected, urlMap) =>
         (_, obsAttachments, obsAttachmentIds) =>
+          println(s"here ${selected.get} ${obsAttachments.map(_._1)} $obsAttachmentIds")
           val allCurrentKeys =
             validAttachments(obsAttachments, obsAttachmentIds).values.map(_.toMapKey).toSet
-          val newOas         = allCurrentKeys.filter(key => !urlMap.get.contains(key)).toList
+
+          val newOas = allCurrentKeys.filter(key => !urlMap.get.contains(key)).toList
 
           val updateUrlMap =
             urlMap.mod { umap =>
@@ -79,7 +151,11 @@ object FinderCharts extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
           val getUrls =
             newOas.traverse_(key => getAttachmentUrl(props.programId, client, key, urlMap))
 
-          updateUrlMap *> getUrls
+          val defaultSelected =
+            if (allCurrentKeys.size === 1) selected.set(allCurrentKeys.headOption.map(_._1))
+            else Callback.empty
+
+          updateUrlMap *> getUrls *> defaultSelected.to[IO]
       )
       // Read preferences
       .useEffectWithDepsBy((props, _, _, _, selected, _) => (props.oid, selected.get)) {
@@ -110,16 +186,24 @@ object FinderCharts extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
             )
             .getOrEmpty
       }
-      .render { (props, _, client, ops, selectedAttachment, urls) =>
+      .useStateView(Action.None)
+      .render { (props, ctx, client, ops, selectedAttachment, urls, action) =>
         val transforms = ops.get.calcTransform
+        println(action.get)
+
         ReactFragment(
-          ControlOverlay(ops),
-          AttachmentsOverlay(props.programId,
-                             client,
-                             selectedAttachment,
-                             props.obsAttachmentIds,
-                             props.obsAttachments
+          props.renderInTitle(attachmentSelector(props, ctx, client, selectedAttachment, action)),
+          <.div(
+            SolarProgress(ExploreStyles.FinderChartsTableProgress)
+              .unless(action.get === Action.None)
           ),
+          ControlOverlay(ops),
+          // AttachmentsOverlay(props.programId,
+          //                    client,
+          //                    selectedAttachment,
+          //                    props.obsAttachmentIds,
+          //                    props.obsAttachments
+          // ),
           <.div(
             ExploreStyles.FinderChartsBody,
             selectedAttachment.get.map { attId =>
