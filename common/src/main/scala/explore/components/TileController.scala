@@ -195,7 +195,7 @@ object TileController:
                     }
                 }
                 .getOrElse(EmptyVdom),
-              t.controllerClass.orEmpty,
+              t.controllerClass,
               t.withState(unsafeSizeToState(currentLayout.get, t.id), sizeState(t.id))
             )
           }.toVdomArray

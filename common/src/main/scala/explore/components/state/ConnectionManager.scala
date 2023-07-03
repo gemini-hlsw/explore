@@ -7,7 +7,6 @@ import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.*
 import crystal.react.hooks.*
-import explore.components.SolarProgress
 import explore.model.AppContext
 import explore.model.UserVault
 import explore.syntax.ui.*
@@ -15,6 +14,7 @@ import io.circe.Json
 import io.circe.syntax.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.ui.components.SolarProgress
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger

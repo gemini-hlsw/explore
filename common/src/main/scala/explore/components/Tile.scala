@@ -19,18 +19,19 @@ import react.common.style.*
 import react.primereact.Button
 
 case class Tile(
-  id:                Tile.TileId,
-  title:             String,
-  back:              Option[VdomNode] = None,
-  control:           TileSizeState => Option[VdomNode] = _ => None,
-  canMinimize:       Boolean = false,
-  canMaximize:       Boolean = false,
-  state:             TileSizeState = TileSizeState.Normal,
-  sizeStateCallback: TileSizeState => Callback = _ => Callback.empty,
-  controllerClass:   Option[Css] = None, // applied to wrapping div when in a TileController.
-  bodyClass:         Option[Css] = None, // applied to tile body
-  tileClass:         Option[Css] = None, // applied to the tile
-  tileTitleClass:    Option[Css] = None  // applied to the title
+  id:                 Tile.TileId,
+  title:              String,
+  back:               Option[VdomNode] = None,
+  control:            TileSizeState => Option[VdomNode] = _ => None,
+  canMinimize:        Boolean = false,
+  canMaximize:        Boolean = false,
+  state:              TileSizeState = TileSizeState.Normal,
+  sizeStateCallback:  TileSizeState => Callback = _ => Callback.empty,
+  controllerClass:    Css = Css.Empty, // applied to wrapping div when in a TileController.
+  bodyClass:          Css = Css.Empty, // applied to tile body
+  tileClass:          Css = Css.Empty, // applied to the tile
+  tileTitleClass:     Css = Css.Empty, // applied to the title
+  renderInTitleClass: Css = Css.Empty  // applied to the portal in the title
 )(val render: Tile.RenderInTitle => VdomNode)
     extends ReactFnProps[Tile](Tile.component) {
   def showMaximize: Boolean =
@@ -95,14 +96,14 @@ object Tile {
             .runNow()
 
         <.div(
-          ExploreStyles.Tile |+| ExploreStyles.FadeIn |+| p.tileClass.orEmpty,
+          ExploreStyles.Tile |+| ExploreStyles.FadeIn |+| p.tileClass,
           ^.key := p.id.value
         )(
           // Tile title, set classes based on size
           ResponsiveComponent(
             widthBreakpoints,
             heightBreakpoints,
-            clazz = ExploreStyles.TileTitle |+| p.tileTitleClass.orEmpty
+            clazz = ExploreStyles.TileTitle |+| p.tileTitleClass
           )(
             React.Fragment(
               p.back.map(b => <.div(ExploreStyles.TileButton, b)),
@@ -112,7 +113,7 @@ object Tile {
               ),
               p.control(p.state).map(b => <.div(ExploreStyles.TileControl, b)),
               <.span(^.key := "tileTitle", ^.untypedRef(setInfoRef).when(infoRef.value.isEmpty))(
-                ExploreStyles.TileTitleStrip,
+                ExploreStyles.TileTitleStrip |+| p.renderInTitleClass,
                 ExploreStyles.FixedSizeTileTitle.when(!p.canMinimize && !p.canMaximize)
               ),
               <.div(
@@ -127,7 +128,7 @@ object Tile {
               ResponsiveComponent(
                 widthBreakpoints,
                 heightBreakpoints,
-                clazz = ExploreStyles.TileBody |+| p.bodyClass.orEmpty
+                clazz = ExploreStyles.TileBody |+| p.bodyClass
               )(
                 p.render(info => ReactPortal(info, node))
               ).when(p.state =!= TileSizeState.Minimized)

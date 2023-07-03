@@ -12,7 +12,6 @@ import crystal.react.reuse.*
 import explore.Icons
 import explore.attachments.AttachmentType
 import explore.attachments.ObsAttachmentUtils
-import explore.components.SolarProgress
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ObsAttachment
@@ -25,6 +24,7 @@ import lucuma.core.model.Program
 import lucuma.core.model.{ObsAttachment => ObsAtt}
 import lucuma.react.syntax.*
 import lucuma.react.table.*
+import lucuma.ui.components.SolarProgress
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
@@ -73,12 +73,12 @@ object AttachmentsOverlay extends ObsAttachmentUtils with FinderChartsAttachment
                 <.label(
                   Icons.LinkSlash.withClass(ExploreStyles.TrashIcon),
                   ^.onClick ==> { (e: ReactEvent) =>
-                    for {
+                    (for {
                       _ <- e.preventDefaultCB
                       _ <- action.set(Action.Unlink)
                       _ <- p.obsAttachmentIds.mod(_ - cell.value)
                       _ <- action.set(Action.None)
-                    } yield ()
+                    } yield ()).handleErrorWith(_ => action.set(Action.None))
                   }
                 ).withTooltip("Unlink from observation", Placement.Right)
               )
@@ -129,7 +129,7 @@ object AttachmentsOverlay extends ObsAttachmentUtils with FinderChartsAttachment
         ReactFragment(
           <.div(
             ExploreStyles.FinderChartsAttachments,
-            SolarProgress(ExploreStyles.FinderChartsTableProgress)
+            SolarProgress(ExploreStyles.FinderChartsLoadProgress)
               .unless(action.get === Action.None),
             <.span(
               Icons.Files.withFixedWidth(true),

@@ -292,7 +292,7 @@ object ObsTabTiles:
 
           val attachmentsView =
             props.observation.model.zoom(ObsSummary.attachmentIds).withOnMod { ids =>
-              obsEditAttachments(props.programId, props.obsId, ids).runAsyncAndForget
+              obsEditAttachments(props.programId, props.obsId, ids).runAsync
             }
 
           val finderChartsTile =
@@ -428,7 +428,7 @@ object ObsTabTiles:
               "Constraints",
               canMinimize = true,
               control = _ => constraintsSelector.some,
-              controllerClass = ExploreStyles.ConstraintsTile.some
+              controllerClass = ExploreStyles.ConstraintsTile
             )(renderInTitle =>
               <.div
               ConstraintsPanel(
