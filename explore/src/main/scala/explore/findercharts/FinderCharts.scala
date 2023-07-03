@@ -99,9 +99,12 @@ object FinderCharts extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
 
     <.div(
       ExploreStyles.FinderChartsSelectorSection,
-      Button(severity = Button.Severity.Secondary,
-             icon = Icons.Link.withFixedWidth(false),
-             onClick = chartSelector.modState(_.flip)
+      Button(
+        severity = Button.Severity.Secondary,
+        outlined = chartSelector.value.value,
+        icon = Icons.Link.withFixedWidth(false).withInverse(chartSelector.value.value),
+        onClick = chartSelector.modState(_.flip),
+        tooltip = s"Select charts"
       ).tiny.compact,
       <.label(
         LabelButtonClasses,
@@ -216,7 +219,7 @@ object FinderCharts extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
             .getOrEmpty
       }
       .useStateView(Action.None)
-      .useState(ChartSelector.Open)
+      .useState(ChartSelector.Closed)
       .render { (props, ctx, client, ops, selectedAttachment, urls, added, action, selector) =>
         val transforms = ops.get.calcTransform
         ReactFragment(
