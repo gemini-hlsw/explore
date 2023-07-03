@@ -428,7 +428,7 @@ object ObsTabTiles:
               "Constraints",
               canMinimize = true,
               control = _ => constraintsSelector.some,
-              controllerClass = ExploreStyles.ConstraintsTile.some
+              controllerClass = ExploreStyles.ConstraintsTile
             )(renderInTitle =>
               <.div
               ConstraintsPanel(

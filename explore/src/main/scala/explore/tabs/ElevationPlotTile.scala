@@ -32,7 +32,7 @@ object ElevationPlotTile:
       ObsTabTilesIds.PlotId.id,
       "Elevation Plot",
       canMinimize = true,
-      bodyClass = ExploreStyles.ElevationPlotTileBody.some
+      bodyClass = ExploreStyles.ElevationPlotTileBody
     ) { _ =>
       (uid, tid, coordinates)
         .mapN { (uid, targetId, coordinates) =>

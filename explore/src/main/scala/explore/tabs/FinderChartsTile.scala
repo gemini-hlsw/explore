@@ -3,7 +3,6 @@
 
 package explore.tabs
 
-import cats.syntax.all.*
 import crystal.react.View
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.Tile
@@ -30,9 +29,9 @@ object FinderChartsTile:
     Tile(
       ObsTabTilesIds.FinderChartsId.id,
       s"Finder Charts",
-      bodyClass = ExploreStyles.FinderChartsTile.some,
+      bodyClass = ExploreStyles.FinderChartsTile,
       canMinimize = true,
-      renderInTitleClass = ExploreStyles.FinderChartsInTitle.some
+      renderInTitleClass = ExploreStyles.FinderChartsInTitle
     )(renderInTitle =>
       authToken
         .map(t =>

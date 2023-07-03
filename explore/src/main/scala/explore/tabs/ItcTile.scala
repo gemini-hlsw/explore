@@ -42,7 +42,7 @@ object ItcTile:
           itcChartResults,
           itcLoading
         ): VdomNode).some,
-      bodyClass = ExploreStyles.ItcTileBody.some
+      bodyClass = ExploreStyles.ItcTileBody
     )(_ =>
       uid.map(
         ItcGraphPanel(
