@@ -1,4 +1,4 @@
-@use "common.scss";
+@use "common.scss" as common;
 
 $tree-section-width: 300px;
 
@@ -154,7 +154,7 @@ a:hover {
   display: flex;
   flex-direction: row;
   align-items: center;
-  min-height: 36px;
+  min-height: common.$tile-title-height;
 
   & .tabular.menu .item {
     color: var(--tile-title-color);
@@ -2631,11 +2631,12 @@ a.explore-upgrade-link {
 
 .finder-charts-in-title {
   flex-grow: 1;
-  display: flex;
   justify-content: end;
 }
 
 .finder-charts-selector-section {
+  display: flex;
+
   .p-dropdown {
     min-width: 20ch;
   }

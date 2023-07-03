@@ -1,6 +1,7 @@
 // media queries cutoff
 $tablet-responsive-cutoff: 992px;
 $mobile-responsive-cutoff: 670px;
+$tile-title-height: 36px;
 
 @mixin text-ellipsis {
   overflow: hidden;
