@@ -534,7 +534,7 @@ $brightness: var(--aladin-image-brightness);
 
 .finder-charts-attachments {
   right: 0;
-  bottom: 0;
+  top: common.$tile-title-height;
   width: min(40%, 300px);
   height: max(30%, 150px);
   display: flex;
