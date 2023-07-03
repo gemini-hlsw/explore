@@ -10,14 +10,14 @@ import crystal.react.given
 import crystal.react.hooks.*
 import explore.*
 import explore.model.AppContext
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.sequence.InstrumentExecutionConfig
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import queries.common.GeneratedSequenceSQL._
+import lucuma.schemas.odb.SequenceSQL.*
 import queries.common.ObsQueriesGQL
 import react.common.ReactFnProps
 
@@ -37,9 +37,9 @@ object GeneratedSequenceViewer:
       .useStreamResourceOnMountBy { (props, ctx) =>
         import ctx.given
 
-        SequenceSteps[IO]
-          .query(props.programId, props.obsId)
-          .map(_.sequence.map(_.executionConfig))
+        SequenceQuery[IO]
+          .query(props.obsId)
+          .map(_.observation.flatMap(_.sequence.map(_.executionConfig)))
           .attemptPot
           .resetOnResourceSignals(
             ObsQueriesGQL.ObservationEditSubscription.subscribe[IO](props.obsId)
