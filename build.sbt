@@ -33,16 +33,7 @@ ThisBuild / scalafixDependencies += "edu.gemini" % "lucuma-schemas_3" % Versions
 ThisBuild / scalafixScalaBinaryVersion          := "2.13"
 ThisBuild / scalaVersion                        := "3.3.0"
 ThisBuild / crossScalaVersions                  := Seq("3.3.0")
-ThisBuild / scalacOptions ++= Seq(
-  "-language:implicitConversions",
-  "-Wunused:implicits",
-  "-Wunused:explicits",
-  "-Wunused:imports",
-  "-Wunused:locals",
-  "-Wunused:params",
-  "-Wunused:privates",
-  "-Wvalue-discard"
-)
+ThisBuild / scalacOptions ++= Seq("-language:implicitConversions")
 ThisBuild / scalafixResolvers += coursierapi.MavenRepository.of(
   "https://s01.oss.sonatype.org/content/repositories/snapshots/"
 )
