@@ -5,9 +5,12 @@ task:
     NODE_OPTIONS: '--max-old-space-size=8192'
     FONTAWESOME_NPM_AUTH_TOKEN: ENCRYPTED[!fe2a40fa773536496971484bb59a07226d86e8aba729f59ebee5aab269e8185400d16a533a7b24d8c20841de8ea81ef3!]
     FIREBASE_TOKEN: ENCRYPTED[faed781a1e9b6e7665e7b2b8dba65a8b12d99c30ac972256949314879a9a49710ac8a953c10372bb3489b64f6cdfc9eb]
+    BUNDLEMON_PROJECT_ID: 64a32515fe29cfe9f7a07316
+    BUNDLEMON_PROJECT_APIKEY: ENCRYPTED[c4d2693e6ce96ed0d99ff9f7e0a527a10789fa68d4a2773e94ed429dca79045abdea84215768d7347f9ad220e356138b]
   script:
     - brew install sbt firebase-cli
     - sbt -v -J-Xmx15g stage
     - npm clean-install
     - npm run build 
+    - npx bundlemon
     - firebase deploy --only hosting:staging
