@@ -15,9 +15,9 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.sequence.InstrumentExecutionConfig
+import lucuma.schemas.odb.SequenceSQL.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import lucuma.schemas.odb.SequenceSQL.*
 import queries.common.ObsQueriesGQL
 import react.common.ReactFnProps
 
