@@ -23,7 +23,7 @@ object AgsServer extends WorkerServer[IO, AgsMessage.Request] {
   @JSExport
   def runWorker(): Unit = run.unsafeRunAndForget()
 
-  private val AgsCacheVersion: Int = 15
+  private val AgsCacheVersion: Int = 16
 
   private val CacheRetention: Duration = Duration.ofDays(60)
 
@@ -38,7 +38,7 @@ object AgsServer extends WorkerServer[IO, AgsMessage.Request] {
                      r.params,
                      r.candidates
         )
-        .sorted(AgsAnalysis.rankingOrdering)
+        .sortUsablePositions(r.positions)
     )
 
   protected val handler: Logger[IO] ?=> IO[Invocation => IO[Unit]] =

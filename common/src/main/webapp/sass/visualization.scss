@@ -466,6 +466,7 @@ $brightness: var(--aladin-image-brightness);
   height: 100%;
   display: flex;
   justify-content: center;
+  /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
   background: repeating-linear-gradient(-45deg,
       var(--hud-background-color),
       var(--hud-background-color) 10px,
