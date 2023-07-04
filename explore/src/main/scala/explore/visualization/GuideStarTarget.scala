@@ -81,7 +81,7 @@ object GuideStarTarget {
         }
 
         val (guideSpeedIcon, speedText) = p.analysis match {
-          case AgsAnalysis.Usable(_, _, Some(guideSpeed), _, _)              =>
+          case AgsAnalysis.Usable(_, _, guideSpeed, _, _)                    =>
             (speedIcon(guideSpeed).some, guideSpeed.tag.toSentenceCase)
           case AgsAnalysis.NotReachableAtPosition(_, _, Some(guideSpeed), _) =>
             (speedIcon(guideSpeed).some, guideSpeed.tag.toSentenceCase)

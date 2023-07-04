@@ -85,7 +85,7 @@ case class AladinCell(
 
   val positions: Option[NonEmptyList[AgsPosition]] =
     val offsets: NonEmptyList[Offset] = obsConf.flatMap(_.scienceOffsets) match
-      case Some(offsets) => offsets.prepend(Offset.Zero)
+      case Some(offsets) => offsets.prepend(Offset.Zero).distinct
       case None          => NonEmptyList.of(Offset.Zero)
 
     anglesToTest.map { anglesToTest =>
@@ -328,7 +328,6 @@ object AladinCell extends ModelOptics with AladinCommon:
                                                 candidates
                           )
                         )
-                        .map(_.map(_.sortPositions(positions)))
                         .flatMap { r =>
                           // Set the analysis
                           (r.map(ags.setState).getOrEmpty *>
