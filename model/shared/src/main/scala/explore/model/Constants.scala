@@ -50,5 +50,6 @@ trait Constants:
       .mkString(", ")
 
   val NoGuideStarMessage = "No guidestar available"
+  val MissingInfo        = "No mode or target information available"
 
 object Constants extends Constants

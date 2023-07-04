@@ -95,7 +95,9 @@ case class AladinCell(
       } yield AgsPosition(pa, off)
     }
 
-  def canRunAGS: Boolean = obsConf.exists(o => o.constraints.isDefined && o.wavelength.isDefined)
+  def canRunAGS: Boolean = obsConf.exists(o =>
+    o.constraints.isDefined && o.configuration.isDefined && o.wavelength.isDefined && positions.isDefined
+  )
 
 trait AladinCommon:
   given Reusability[Asterism] = Reusability.by(x => (x.toSiderealTracking, x.focus.id))
@@ -367,7 +369,7 @@ object AladinCell extends ModelOptics with AladinCommon:
           props,
           ctx,
           options,
-          _,
+          candidates,
           agsResults,
           root,
           selectedGSIndexView,
@@ -553,7 +555,7 @@ object AladinCell extends ModelOptics with AladinCommon:
 
           val renderAgsOverlay: ((UserGlobalPreferences, TargetVisualOptions)) => VdomNode =
             case (u: UserGlobalPreferences, t: TargetVisualOptions) =>
-              if (u.aladinAgsOverlay.isVisible && props.canRunAGS) {
+              if (u.aladinAgsOverlay.isVisible) {
                 props.obsConf
                   .flatMap(_.agsState)
                   .map(agsState =>
@@ -563,7 +565,8 @@ object AladinCell extends ModelOptics with AladinCommon:
                         selectedGSIndex,
                         agsResults.value.count(_.isUsable),
                         selectedGuideStar,
-                        agsState.get
+                        agsState.get,
+                        props.canRunAGS && candidates.value.nonEmpty
                       )
                     )
                   )
