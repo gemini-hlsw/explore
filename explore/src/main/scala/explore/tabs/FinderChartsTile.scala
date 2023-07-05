@@ -8,6 +8,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.findercharts.FinderCharts
+import explore.findercharts.finderChartsSelector
 import explore.model.ObsAttachmentList
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
@@ -24,18 +25,31 @@ object FinderChartsTile:
     oid:              Observation.Id,
     obsAttachmentIds: View[SortedSet[ObsAtt.Id]],
     authToken:        Option[NonEmptyString],
-    obsAttachments:   View[ObsAttachmentList]
+    obsAttachments:   View[ObsAttachmentList],
+    selected:         View[Option[ObsAtt.Id]]
   ) =
+    val control = <.div(ExploreStyles.JustifiedEndTileControl,
+                        finderChartsSelector(obsAttachments.get, obsAttachmentIds.get, selected)
+    )
+
     Tile(
       ObsTabTilesIds.FinderChartsId.id,
       s"Finder Charts",
       bodyClass = ExploreStyles.FinderChartsTile,
       canMinimize = true,
-      renderInTitleClass = ExploreStyles.FinderChartsInTitle
+      renderInTitleClass = ExploreStyles.FinderChartsInTitle,
+      control = state => Some(control).filter(_ => state.isMinimized)
     )(renderInTitle =>
       authToken
         .map(t =>
-          FinderCharts(programId, oid, t, obsAttachmentIds, obsAttachments, renderInTitle): VdomNode
+          FinderCharts(programId,
+                       oid,
+                       t,
+                       obsAttachmentIds,
+                       obsAttachments,
+                       selected,
+                       renderInTitle
+          ): VdomNode
         )
         .getOrElse(EmptyVdom)
     )

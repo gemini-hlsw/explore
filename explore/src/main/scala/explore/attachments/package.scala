@@ -174,3 +174,5 @@ trait ObsAttachmentUtils:
         case Left(t)    => Pot.error(t)
       }
       .flatMap(p => urlMap.mod(_.updated(mapKey, p)).toAsync)
+
+object ObsAttachmentUtils extends ObsAttachmentUtils

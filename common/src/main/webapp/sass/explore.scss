@@ -149,28 +149,16 @@ a:hover {
 }
 
 .explore-tile-title {
-  flex-grow: 0;
   background-color: var(--tile-title-background);
   display: flex;
-  flex-direction: row;
   align-items: center;
-  min-height: common.$tile-title-height;
+  justify-content: space-between;
+  height: common.$tile-title-height;
 
   & .tabular.menu .item {
     color: var(--tile-title-color);
     letter-spacing: 0.1em;
   }
-}
-
-.explore-tile-title-strip {
-  flex-grow: 2;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.explore-fixed-size-tile-title {
-  margin-right: 1em;
 }
 
 .explore-tile-title-menu {
@@ -179,11 +167,44 @@ a:hover {
   cursor: move;
   padding: 0.5em;
   letter-spacing: 2px;
+  min-width: min-content;
+}
+
+.explore-tile-title-control-area {
+  flex-grow: 1;
 }
 
 .explore-tile-control {
-  margin-right: auto;
-  flex-grow: 3;
+  display: flex;
+}
+
+.explore-tile-title-strip {
+  flex-grow: 1;
+  flex-shrink: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.explore-tile-control-buttons {
+  justify-self: end;
+  max-width: max-content;
+}
+
+.justified-end-tile-control {
+  flex-grow: 1;
+  display: flex;
+  justify-content: end;
+}
+
+.justified-center-tile-control {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.explore-fixed-size-tile-title {
+  margin-right: 1em;
 }
 
 .p-button.p-button-text.explore-tile-state-button {
@@ -283,6 +304,7 @@ a:hover {
 }
 
 .explore-itc-tile-title {
+  flex-grow: 1;
   display: grid;
   column-gap: 0.5em;
   row-gap: 0;
@@ -1160,6 +1182,7 @@ table.pl-react-table.explore-sequence-table {
 // ------
 // Constraints
 // ------
+
 .constraints-grid {
   padding: 0.5em;
   display: grid;
@@ -2641,3 +2664,4 @@ a.explore-upgrade-link {
     min-width: 20ch;
   }
 }
+
