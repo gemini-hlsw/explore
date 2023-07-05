@@ -25,7 +25,8 @@ case class AgsOverlay(
   selectedGSIndex:   View[Option[Int]],
   maxIndex:          Int,
   selectedGuideStar: Option[AgsAnalysis],
-  agsState:          AgsState
+  agsState:          AgsState,
+  canCalculate:      Boolean
 ) extends ReactFnProps[AgsOverlay](AgsOverlay.component)
 
 object AgsOverlay {
@@ -104,8 +105,16 @@ object AgsOverlay {
         .getOrElse {
           <.div(
             ExploreStyles.AgsDescription,
-            Icons.SquareXMarkLarge.withClass(ExploreStyles.AgsNotFound).withSize(IconSize.LG),
-            <.span(Constants.NoGuideStarMessage)
+            Icons.SquareXMarkLarge
+              .withClass(ExploreStyles.AgsNotFound)
+              .withSize(IconSize.LG)
+              .when(props.canCalculate),
+            Icons.TriangleSolid
+              .addClass(ExploreStyles.ItcErrorIcon)
+              .withSize(IconSize.LG)
+              .unless(props.canCalculate),
+            <.span(Constants.NoGuideStarMessage).when(props.canCalculate),
+            <.span(Constants.MissingInfo).unless(props.canCalculate)
           )
         }
     }
