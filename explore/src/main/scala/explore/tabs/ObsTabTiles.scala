@@ -52,6 +52,7 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.User
+import lucuma.core.model.{ObsAttachment => ObsAtt}
 import lucuma.core.syntax.all.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.BasicConfiguration
@@ -94,17 +95,19 @@ object ObsTabTiles:
     constraintSet:     View[ConstraintSet],
     allConstraintSets: Set[ConstraintSet]
   )(using FetchClient[IO, ObservationDB]): VdomNode =
-    Dropdown[ConstraintSet](
-      clazz = ExploreStyles.ConstraintsTileSelector,
-      value = constraintSet.get,
-      onChange = (cs: ConstraintSet) =>
-        constraintSet.set(cs) >>
-          ObsQueries
-            .updateObservationConstraintSet[IO](programId, List(observationId), cs)
-            .runAsyncAndForget,
-      options = allConstraintSets
-        .map(cs => new SelectItem[ConstraintSet](value = cs, label = cs.shortName))
-        .toList
+    <.div(
+      ExploreStyles.JustifiedEndTileControl,
+      Dropdown[ConstraintSet](
+        value = constraintSet.get,
+        onChange = (cs: ConstraintSet) =>
+          constraintSet.set(cs) >>
+            ObsQueries
+              .updateObservationConstraintSet[IO](programId, List(observationId), cs)
+              .runAsyncAndForget,
+        options = allConstraintSets
+          .map(cs => new SelectItem[ConstraintSet](value = cs, label = cs.shortName))
+          .toList
+      )
     )
 
   private def itcQueryProps(
@@ -229,6 +232,8 @@ object ObsTabTiles:
         (_, _, _, _, _, _, _, _, _, _, selectedTarget) =>
           itcProps => selectedTarget.set(itcProps.defaultSelectedTarget)
       )
+      // selected attachment
+      .useStateView(none[ObsAtt.Id])
       .render {
         (
           props,
@@ -241,7 +246,8 @@ object ObsTabTiles:
           itcProps,
           itcChartResults,
           itcLoading,
-          selectedItcTarget
+          selectedItcTarget,
+          selectedAttachment
         ) =>
           import ctx.given
 
@@ -301,7 +307,8 @@ object ObsTabTiles:
               props.obsId,
               attachmentsView,
               props.vault.map(_.token),
-              props.obsAttachments
+              props.obsAttachments,
+              selectedAttachment
             )
 
           val notesTile =

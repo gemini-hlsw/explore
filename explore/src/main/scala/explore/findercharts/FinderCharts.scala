@@ -50,6 +50,7 @@ case class FinderCharts(
   authToken:        NonEmptyString,
   obsAttachmentIds: View[SortedSet[ObsAtt.Id]],
   obsAttachments:   View[ObsAttachmentList],
+  selected:         View[Option[ObsAtt.Id]],
   renderInTitle:    Tile.RenderInTitle
 ) extends ReactFnProps(FinderCharts.component)
 
@@ -63,6 +64,8 @@ trait FinderChartsAttachmentUtils:
         .contains(attachment.id)
     }
 
+object FinderChartsAttachmentUtils extends FinderChartsAttachmentUtils
+
 object ChartSelector extends NewType[Boolean]:
   inline def Open: ChartSelector   = ChartSelector(true)
   inline def Closed: ChartSelector = ChartSelector(false)
@@ -71,6 +74,25 @@ object ChartSelector extends NewType[Boolean]:
       if (s.value) ChartSelector.Closed else ChartSelector.Open
 
 type ChartSelector = ChartSelector.Type
+
+def finderChartsSelector(
+  obsAttachments:   ObsAttachmentList,
+  obsAttachmentIds: SortedSet[ObsAtt.Id],
+  selected:         View[Option[ObsAtt.Id]]
+): VdomNode =
+  FormDropdownOptional(
+    id = "attachment-selector".refined,
+    placeholder = if (obsAttachmentIds.nonEmpty) "Select finder chart" else "No finder charts",
+    options = FinderChartsAttachmentUtils
+      .validAttachments(obsAttachments, obsAttachmentIds)
+      .map(_._2)
+      .map { attachment =>
+        new SelectItem[ObsAttachment](value = attachment, label = attachment.fileName.value)
+      }
+      .toList,
+    value = obsAttachments.find(i => selected.get.exists(_ === i._2.id)).map(_._2),
+    onChange = (att: Option[ObsAttachment]) => selected.set(att.map(_.id))
+  )
 
 object FinderCharts extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
   private type Props = FinderCharts
@@ -122,18 +144,7 @@ object FinderCharts extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
         ^.name   := "file",
         ^.accept := AttachmentType.Finder.accept
       ),
-      FormDropdownOptional(
-        id = "attachment-selector".refined,
-        placeholder = "Select finder chart",
-        options = validAttachments(props.obsAttachments.get, props.obsAttachmentIds.get)
-          .map(_._2)
-          .map { attachment =>
-            new SelectItem[ObsAttachment](value = attachment, label = attachment.fileName.value)
-          }
-          .toList,
-        value = props.obsAttachments.get.find(i => selected.get.exists(_ === i._2.id)).map(_._2),
-        onChange = (att: Option[ObsAttachment]) => selected.set(att.map(_.id))
-      )
+      finderChartsSelector(props.obsAttachments.get, props.obsAttachmentIds.get, selected)
     )
   }
 
@@ -146,28 +157,26 @@ object FinderCharts extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
       )
       // Current transformation
       .useStateView(Transformation.Default)
-      // selected attachment
-      .useStateView(none[ObsAtt.Id])
       .useStateView[UrlMap](Map.empty)
       // added attachment, FIXME once we can upload and assign in one step
       .useState(
         none[ObsAtt.Id]
       )
       // If added associate with the observation
-      .useEffectWithDepsBy((_, _, _, _, _, _, added) => added.value)(
-        (props, _, _, transform, selected, _, added) =>
+      .useEffectWithDepsBy((_, _, _, _, _, added) => added.value)(
+        (props, _, _, transform, _, added) =>
           _ =>
             // Associate the newly added attachment with the observation and select it
             added.value.map { newlyAdded =>
               props.obsAttachmentIds.mod(_ + newlyAdded) *> transform.set(
                 Transformation.Default
-              ) *> selected.set(newlyAdded.some) *> added
+              ) *> props.selected.set(newlyAdded.some) *> added
                 .setState(none)
             }.getOrEmpty
       )
-      .useEffectWithDepsBy((props, _, _, _, selected, _, _) =>
+      .useEffectWithDepsBy((props, _, _, _, _, _) =>
         (props.authToken, props.obsAttachments.get, props.obsAttachmentIds.get)
-      )((props, _, client, _, selected, urlMap, _) =>
+      )((props, _, client, _, urlMap, _) =>
         (_, obsAttachments, obsAttachmentIds) =>
           val allCurrentKeys =
             validAttachments(obsAttachments, obsAttachmentIds).values.map(_.toMapKey).toSet
@@ -184,14 +193,14 @@ object FinderCharts extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
             newOas.traverse_(key => getAttachmentUrl(props.programId, client, key, urlMap))
 
           val defaultSelected =
-            if (allCurrentKeys.size === 1) selected.set(allCurrentKeys.headOption.map(_._1))
+            if (allCurrentKeys.size === 1) props.selected.set(allCurrentKeys.headOption.map(_._1))
             else Callback.empty
 
           updateUrlMap *> getUrls *> defaultSelected.to[IO]
       )
       // Read preferences
-      .useEffectWithDepsBy((props, _, _, _, selected, _, _) => (props.oid, selected.get)) {
-        (props, ctx, _, transform, _, _, _) => (oid, aid) =>
+      .useEffectWithDepsBy((props, _, _, _, _, _) => (props.oid, props.selected.get)) {
+        (props, ctx, _, transform, _, _) => (oid, aid) =>
           import ctx.given
 
           aid
@@ -206,11 +215,11 @@ object FinderCharts extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
             .getOrEmpty
       }
       // Write preferences
-      .useEffectWithDepsBy((props, _, _, transform, _, _, _) => transform.get) {
-        (props, ctx, _, transform, selected, _, _) => transform =>
+      .useEffectWithDepsBy((props, _, _, transform, _, _) => transform.get) {
+        (props, ctx, _, transform, _, _) => transform =>
           import ctx.given
 
-          selected.get
+          props.selected.get
             .map(aid =>
               FinderChartPreferences
                 .updateTransformation[IO](props.oid, aid, transform)
@@ -220,11 +229,11 @@ object FinderCharts extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
       }
       .useStateView(Action.None)
       .useState(ChartSelector.Closed)
-      .render { (props, ctx, client, ops, selectedAttachment, urls, added, action, selector) =>
+      .render { (props, ctx, client, ops, urls, added, action, selector) =>
         val transforms = ops.get.calcTransform
         ReactFragment(
           props.renderInTitle(
-            attachmentSelector(props, ctx, client, selectedAttachment, action, added, selector)
+            attachmentSelector(props, ctx, client, props.selected, action, added, selector)
           ),
           <.div(
             SolarProgress(ExploreStyles.FinderChartsLoadProgress)
@@ -234,14 +243,14 @@ object FinderCharts extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
           if (selector.value.value) {
             FinderChartLinker(props.programId,
                               client,
-                              selectedAttachment,
+                              props.selected,
                               props.obsAttachmentIds,
                               props.obsAttachments.get
             )
           } else EmptyVdom,
           <.div(
             ExploreStyles.FinderChartsBody,
-            selectedAttachment.get.map { attId =>
+            props.selected.get.map { attId =>
               urls.get.find { case ((i, _), _) => i === attId }.map { url =>
                 url._2.renderPot(url =>
                   <.img(

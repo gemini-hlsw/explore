@@ -106,19 +106,23 @@ object Tile {
             clazz = ExploreStyles.TileTitle |+| p.tileTitleClass
           )(
             React.Fragment(
-              p.back.map(b => <.div(ExploreStyles.TileButton, b)),
               <.div(
+                p.back.map(b => <.div(ExploreStyles.TileButton, b)),
                 ExploreStyles.TileTitleMenu,
                 p.title
               ),
-              p.control(p.state).map(b => <.div(ExploreStyles.TileControl, b)),
-              <.span(^.key := "tileTitle", ^.untypedRef(setInfoRef).when(infoRef.value.isEmpty))(
-                ExploreStyles.TileTitleStrip |+| p.renderInTitleClass,
-                ExploreStyles.FixedSizeTileTitle.when(!p.canMinimize && !p.canMaximize)
-              ),
               <.div(
-                minimizeButton.when(p.showMinimize),
-                maximizeButton.when(p.showMaximize)
+                ExploreStyles.TileTitleControlArea,
+                p.control(p.state)
+                  .map(b => <.div(ExploreStyles.TileControl, b)),
+                <.div(^.key := "tileTitle", ^.untypedRef(setInfoRef).when(infoRef.value.isEmpty))(
+                  ExploreStyles.TileTitleStrip |+| p.renderInTitleClass,
+                  ExploreStyles.FixedSizeTileTitle.when(!p.canMinimize && !p.canMaximize)
+                )
+              ),
+              <.div(ExploreStyles.TileControlButtons,
+                    minimizeButton.when(p.showMinimize),
+                    maximizeButton.when(p.showMaximize)
               )
             )
           ),

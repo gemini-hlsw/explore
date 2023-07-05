@@ -12,3 +12,8 @@ enum TileSizeState:
 
 object TileSizeState:
   given Eq[TileSizeState] = Eq.fromUniversalEquals
+
+  extension (s: TileSizeState)
+    inline def isMinimized = s == Minimized
+    inline def isMaximized = s == Maximized
+    inline def isNormal    = s == Normal
