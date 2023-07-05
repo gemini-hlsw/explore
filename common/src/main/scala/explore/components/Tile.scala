@@ -107,12 +107,11 @@ object Tile {
           )(
             React.Fragment(
               <.div(
-                p.back.map(b => <.div(ExploreStyles.TileButton, b)),
                 ExploreStyles.TileTitleMenu,
-                p.title
+                p.back.map(b => <.div(ExploreStyles.TileButton, b)),
+                <.span(ExploreStyles.TileTitleControlArea, p.title)
               ),
               <.div(
-                ExploreStyles.TileTitleControlArea,
                 p.control(p.state)
                   .map(b => <.div(ExploreStyles.TileControl, b)),
                 <.div(^.key := "tileTitle", ^.untypedRef(setInfoRef).when(infoRef.value.isEmpty))(

@@ -359,8 +359,7 @@ object TargetTabContents extends TwoPanels:
           setCurrentTarget(props.programId, idsToEdit) _,
           otherObsCount(idsToEdit) _,
           props.searching,
-          title,
-          backButton.some
+          title
         )
 
       val selectedCoordinates: Option[Coordinates] =
@@ -408,8 +407,7 @@ object TargetTabContents extends TwoPanels:
         props.targets.zoom(getTarget, modTarget),
         props.searching,
         title,
-        fullScreen,
-        backButton.some
+        fullScreen
       )
 
       val skyPlotTile =
@@ -465,6 +463,7 @@ object TargetTabContents extends TwoPanels:
           tileList.fold(defaultSingleLayouts)(_ => l),
           tileList.getOrElse(List(renderSummary(true))),
           GridLayoutSection.TargetLayout,
+          backButton.some,
           Option.when(tileList.isEmpty)(ExploreStyles.SingleTileMaximized),
           storeLayout = tileList.nonEmpty
         ).withKey(if (obsSelected) "target-obs-controller" else "target-summary-controller")

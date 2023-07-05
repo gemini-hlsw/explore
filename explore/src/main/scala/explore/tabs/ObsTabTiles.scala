@@ -315,7 +315,6 @@ object ObsTabTiles:
             Tile(
               ObsTabTilesIds.NotesId.id,
               s"Note for Observer",
-              props.backButton.some,
               canMinimize = true
             )(_ =>
               <.div(
@@ -421,8 +420,7 @@ object ObsTabTiles:
               setCurrentTarget(props.programId, props.obsId.some),
               otherObsCount(props.obsId, _),
               props.searching,
-              "Targets",
-              backButton = none
+              "Targets"
             )
 
           // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper
@@ -485,6 +483,7 @@ object ObsTabTiles:
                 itcTile
               ),
               GridLayoutSection.ObservationsLayout,
+              props.backButton.some,
               clazz = ExploreStyles.ObservationTiles.some
             )
           )

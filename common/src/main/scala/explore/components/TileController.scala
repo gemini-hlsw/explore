@@ -41,6 +41,7 @@ case class TileController(
   layoutMap:     LayoutsMap,
   tiles:         List[Tile],
   section:       GridLayoutSection,
+  backButton:    Option[VdomNode] = None,
   clazz:         Option[Css] = None,
   storeLayout:   Boolean = true
 ) extends ReactFnProps(TileController.component)
@@ -132,6 +133,21 @@ object TileController:
               case l                               => l
             }
 
+        def addBackButton: List[Tile] = {
+          val topTile =
+            currentLayout.get.get(breakpoint.value).flatMap(_._3.l.sortBy(_.y).headOption)
+          (topTile, p.backButton)
+            .mapN((t, b) =>
+              p.tiles
+                .map {
+                  case ti if t.i.toOption.exists(_ === ti.id.value) =>
+                    ti.copy(back = p.backButton)(ti.render)
+                  case ti                                           => ti
+                }
+            )
+            .getOrElse(p.tiles)
+        }
+
         ResponsiveReactGridLayout(
           width = p.gridWidth.toDouble,
           autoSize = true,
@@ -141,7 +157,7 @@ object TileController:
           margin = (Constants.GridRowPadding, Constants.GridRowPadding),
           containerPadding = (Constants.GridRowPadding, 0),
           rowHeight = Constants.GridRowHeight,
-          draggableHandle = s".${ExploreStyles.TileTitleMenu.htmlClass}",
+          draggableHandle = s".${ExploreStyles.TileTitleControlArea.htmlClass}",
           onBreakpointChange = (bk: BreakpointName, _: Int) => breakpoint.setState(bk),
           onLayoutChange = (_: Layout, newLayouts: Layouts) => {
             // We need to sort the layouts to do proper comparision
@@ -169,7 +185,7 @@ object TileController:
           layouts = currentLayout.get,
           className = p.clazz.map(_.htmlClass).orUndefined
         )(
-          p.tiles.map { t =>
+          addBackButton.map { t =>
             <.div(
               ^.key := t.id.value,
               // Show tile proprties on the title if enabled
