@@ -185,18 +185,20 @@ trait ItcPicklers extends CommonPicklers {
       .addConcreteType[ItcResult.Pending.type]
       .addConcreteType[ItcResult.Result]
 
-  given Pickler[ItcQueryProblems.UnsupportedMode.type]      = generatePickler
-  given Pickler[ItcQueryProblems.MissingWavelength.type]    = generatePickler
-  given Pickler[ItcQueryProblems.MissingSignalToNoise.type] = generatePickler
-  given Pickler[ItcQueryProblems.MissingTargetInfo.type]    = generatePickler
-  given Pickler[ItcQueryProblems.MissingBrightness.type]    = generatePickler
-  given Pickler[ItcQueryProblems.GenericError]              = generatePickler
+  given Pickler[ItcQueryProblems.UnsupportedMode.type]        = generatePickler
+  given Pickler[ItcQueryProblems.MissingWavelength.type]      = generatePickler
+  given Pickler[ItcQueryProblems.MissingSignalToNoise.type]   = generatePickler
+  given Pickler[ItcQueryProblems.MissingSignalToNoiseAt.type] = generatePickler
+  given Pickler[ItcQueryProblems.MissingTargetInfo.type]      = generatePickler
+  given Pickler[ItcQueryProblems.MissingBrightness.type]      = generatePickler
+  given Pickler[ItcQueryProblems.GenericError]                = generatePickler
 
   given Pickler[ItcQueryProblems] =
     compositePickler[ItcQueryProblems]
       .addConcreteType[ItcQueryProblems.UnsupportedMode.type]
       .addConcreteType[ItcQueryProblems.MissingWavelength.type]
       .addConcreteType[ItcQueryProblems.MissingSignalToNoise.type]
+      .addConcreteType[ItcQueryProblems.MissingSignalToNoiseAt.type]
       .addConcreteType[ItcQueryProblems.MissingTargetInfo.type]
       .addConcreteType[ItcQueryProblems.MissingBrightness.type]
       .addConcreteType[ItcQueryProblems.GenericError]

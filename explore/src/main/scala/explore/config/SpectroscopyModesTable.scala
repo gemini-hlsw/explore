@@ -190,6 +190,8 @@ private object SpectroscopyModesTable extends TableHooks:
           val content = nel
             .collect {
               case ItcQueryProblems.MissingSignalToNoise                          => <.span("Set S/N")
+              case ItcQueryProblems.MissingSignalToNoiseAt                        =>
+                <.span("Set Wavelength to measure S/N at")
               case ItcQueryProblems.MissingWavelength                             => <.span("Set Wavelength")
               case ItcQueryProblems.MissingTargetInfo if w.isDefined              =>
                 <.span("Missing target info")
@@ -513,8 +515,8 @@ private object SpectroscopyModesTable extends TableHooks:
         ) =>
           import ctx.given
 
-          (wavelength, signalToNoise, brightestTarget)
-            .mapN { (w, sn, t) =>
+          (wavelength, signalToNoise, signalToNoiseAt, brightestTarget)
+            .mapN { (w, sn, snAt, t) =>
               val modes =
                 sortedRows
                   .filterNot { row => // Discard modes already in the cache
@@ -525,14 +527,7 @@ private object SpectroscopyModesTable extends TableHooks:
                       row.entry.instrument.instrument match
                         case Instrument.GmosNorth | Instrument.GmosSouth =>
                           cache.contains(
-                            ItcRequestParams(
-                              w,
-                              sn,
-                              signalToNoiseAt,
-                              constraints,
-                              t,
-                              row.entry.instrument
-                            )
+                            ItcRequestParams(w, sn, snAt, constraints, t, row.entry.instrument)
                           )
                         case _                                           => true
                     )
@@ -545,7 +540,7 @@ private object SpectroscopyModesTable extends TableHooks:
                   request <-
                     ItcClient[IO]
                       .request(
-                        ItcMessage.Query(w, sn, constraints, t, modes.map(_.entry), signalToNoiseAt)
+                        ItcMessage.Query(w, sn, constraints, t, modes.map(_.entry), snAt)
                       )
                       .map(
                         // Avoid rerendering on every single result, it's slow.
@@ -622,14 +617,16 @@ private object SpectroscopyModesTable extends TableHooks:
 
           val errLabel: List[VdomNode] = errs
             .collect {
-              case ItcQueryProblems.MissingWavelength    =>
+              case ItcQueryProblems.MissingWavelength      =>
                 <.label(ExploreStyles.WarningLabel)("Set Wav..")
-              case ItcQueryProblems.MissingSignalToNoise =>
+              case ItcQueryProblems.MissingSignalToNoise   =>
                 <.label(ExploreStyles.WarningLabel)("Set S/N")
+              case ItcQueryProblems.MissingSignalToNoiseAt =>
+                <.label(ExploreStyles.WarningLabel)("Set S/N at")
               case ItcQueryProblems.MissingTargetInfo
                   if props.spectroscopyRequirements.wavelength.isDefined =>
                 <.label(ExploreStyles.WarningLabel)("Missing Target Info")
-              case ItcQueryProblems.MissingBrightness    =>
+              case ItcQueryProblems.MissingBrightness      =>
                 <.label(ExploreStyles.WarningLabel)("No Brightness Defined")
             }
 

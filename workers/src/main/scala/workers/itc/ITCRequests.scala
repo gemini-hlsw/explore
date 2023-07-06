@@ -44,7 +44,7 @@ object ITCRequests:
     constraints:     ConstraintSet,
     targets:         ItcTarget,
     modes:           List[SpectroscopyModeRow],
-    signalToNoiseAt: Option[Wavelength],
+    signalToNoiseAt: Wavelength,
     cache:           Cache[F],
     callback:        Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]] => F[Unit]
   )(using Monoid[F[Unit]], ItcClient[F]): F[Unit] = {
@@ -71,7 +71,7 @@ object ITCRequests:
                 wavelength = params.wavelength.value,
                 signalToNoise = params.signalToNoise,
                 sourceProfile = params.target.profile,
-                signalToNoiseAt = params.signalToNoiseAt,
+                signalToNoiseAt = params.signalToNoiseAt.some,
                 band = band,
                 radialVelocity = params.target.rv,
                 constraints = params.constraints,
@@ -92,7 +92,7 @@ object ITCRequests:
             }
         }
 
-    val cacheVersion = CacheVersion(7)
+    val cacheVersion = CacheVersion(8)
 
     val cacheableRequest =
       Cacheable(

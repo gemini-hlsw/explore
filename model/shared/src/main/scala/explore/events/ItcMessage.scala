@@ -38,7 +38,7 @@ object ItcMessage extends ItcPicklers {
     constraints:     ConstraintSet,
     targets:         ItcTarget,
     modes:           List[SpectroscopyModeRow],
-    signalToNoiseAt: Option[Wavelength]
+    signalToNoiseAt: Wavelength
   ) extends Request {
     type ResponseType = Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]
   }
@@ -46,7 +46,7 @@ object ItcMessage extends ItcPicklers {
   case class GraphQuery(
     wavelength:      CentralWavelength,
     signalToNoise:   SignalToNoise,
-    signalToNoiseAt: Option[Wavelength],
+    signalToNoiseAt: Wavelength,
     constraints:     ConstraintSet,
     targets:         NonEmptyList[ItcTarget],
     modes:           InstrumentRow

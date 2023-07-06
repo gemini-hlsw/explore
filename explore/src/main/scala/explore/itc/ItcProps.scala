@@ -116,12 +116,13 @@ case class ItcProps(
       for
         w    <- wavelength
         sn   <- signalToNoise
+        snAt <- signalToNoiseAt
         t    <- itcTargets
         mode <- instrumentRow
       yield beforeStart *>
         ItcClient[IO]
           .requestSingle(
-            ItcMessage.GraphQuery(w, sn, signalToNoiseAt, constraints, t, mode)
+            ItcMessage.GraphQuery(w, sn, snAt, constraints, t, mode)
           )
           .flatMap(
             _.fold(
