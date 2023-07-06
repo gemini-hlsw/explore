@@ -34,7 +34,7 @@ object ITCGraphRequests:
   def queryItc[F[_]: Concurrent: Parallel: Logger](
     wavelength:      CentralWavelength,
     signalToNoise:   SignalToNoise,
-    signalToNoiseAt: Option[Wavelength],
+    signalToNoiseAt: Wavelength,
     constraints:     ConstraintSet,
     targets:         NonEmptyList[ItcTarget],
     mode:            InstrumentRow,
@@ -73,7 +73,7 @@ object ITCGraphRequests:
                 .spectroscopyIntegrationTimeAndGraph(
                   SpectroscopyIntegrationTimeAndGraphInput(
                     wavelength = request.wavelength.value,
-                    signalToNoiseAt = request.signalToNoiseAt,
+                    signalToNoiseAt = request.signalToNoiseAt.some,
                     signalToNoise = request.signalToNoise,
                     sourceProfile = t.profile,
                     band = band,
@@ -117,7 +117,7 @@ object ITCGraphRequests:
     val cacheableRequest =
       Cacheable(
         CacheName("itcGraphQuery"),
-        CacheVersion(8),
+        CacheVersion(9),
         doRequest,
         (r, g) =>
           r.target.forall(t =>

@@ -14,7 +14,7 @@ import lucuma.schemas.model.CentralWavelength
 case class ItcRequestParams(
   wavelength:      CentralWavelength,
   signalToNoise:   SignalToNoise,
-  signalToNoiseAt: Option[Wavelength],
+  signalToNoiseAt: Wavelength,
   constraints:     ConstraintSet,
   target:          ItcTarget,
   mode:            InstrumentRow
@@ -23,7 +23,7 @@ case class ItcRequestParams(
 case class ItcGraphRequestParams(
   wavelength:      CentralWavelength,
   signalToNoise:   SignalToNoise,
-  signalToNoiseAt: Option[Wavelength],
+  signalToNoiseAt: Wavelength,
   constraints:     ConstraintSet,
   target:          NonEmptyList[ItcTarget],
   mode:            InstrumentRow

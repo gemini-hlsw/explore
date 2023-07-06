@@ -41,16 +41,24 @@ object SpectroscopyConfigurationPanel {
 
   protected val component =
     ScalaFnComponent[Props] { p =>
-      val wv                     = p.options.zoom(ScienceRequirements.Spectroscopy.wavelength)
-      val resolution             = p.options.zoom(ScienceRequirements.Spectroscopy.resolution)
-      val signalToNoise          = p.options.zoom(ScienceRequirements.Spectroscopy.signalToNoise)
-      val signalToNoiseAt        = p.options.zoom(ScienceRequirements.Spectroscopy.signalToNoiseAt)
-      val wavelengthDelta        =
-        p.options.zoom(ScienceRequirements.Spectroscopy.wavelengthCoverage)
-      val focalPlane             = p.options.zoom(ScienceRequirements.Spectroscopy.focalPlane)
-      val focalPlaneAngle        = p.options.zoom(ScienceRequirements.Spectroscopy.focalPlaneAngle)
+      val prevSignalToNoiseAt = p.options.get.signalToNoiseAt
+
+      // Set SignalToNoiseAt to wavelength if it is empty
+      val options = p.options.withOnMod(s =>
+        if (s.wavelength =!= prevSignalToNoiseAt && prevSignalToNoiseAt.isEmpty)
+          p.options.set(s.copy(signalToNoiseAt = s.wavelength))
+        else Callback.empty
+      )
+
+      val resolution             = options.zoom(ScienceRequirements.Spectroscopy.resolution)
+      val signalToNoise          = options.zoom(ScienceRequirements.Spectroscopy.signalToNoise)
+      val signalToNoiseAt        = options.zoom(ScienceRequirements.Spectroscopy.signalToNoiseAt)
+      val wv                     = options.zoom(ScienceRequirements.Spectroscopy.wavelength)
+      val wavelengthDelta        = options.zoom(ScienceRequirements.Spectroscopy.wavelengthCoverage)
+      val focalPlane             = options.zoom(ScienceRequirements.Spectroscopy.focalPlane)
+      val focalPlaneAngle        = options.zoom(ScienceRequirements.Spectroscopy.focalPlaneAngle)
       val spectroscopyCapability =
-        p.options.zoom(ScienceRequirements.Spectroscopy.capability)
+        options.zoom(ScienceRequirements.Spectroscopy.capability)
 
       val wvMicroInput        = ExploreModelValidators.wavelengthValidWedge.optional
       val wvcMicroInput       = ExploreModelValidators.wavelengthDeltaValidWedge.optional
@@ -105,6 +113,8 @@ object SpectroscopyConfigurationPanel {
           FormLabel("signal-to-noise-at".refined)("at"),
           FormInputTextView(
             id = "signal-to-noise-at".refined,
+            groupClass = ExploreStyles.WarningInput.when_(signalToNoiseAt.get.isEmpty),
+            postAddons = signalToNoiseAt.get.fold(List(requiredForITC))(_ => Nil),
             value = signalToNoiseAt,
             units = "μm",
             validFormat = wvMicroInput,

@@ -28,6 +28,7 @@ object ItcQueryProblems {
   case object UnsupportedMode          extends ItcQueryProblems
   case object MissingWavelength        extends ItcQueryProblems
   case object MissingSignalToNoise     extends ItcQueryProblems
+  case object MissingSignalToNoiseAt   extends ItcQueryProblems
   case object MissingTargetInfo        extends ItcQueryProblems
   case object MissingBrightness        extends ItcQueryProblems
   case class GenericError(msg: String) extends ItcQueryProblems

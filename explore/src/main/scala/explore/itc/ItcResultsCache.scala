@@ -32,6 +32,9 @@ case class ItcResultsCache(
   def signalToNoise(w: Option[SignalToNoise]): EitherNec[ItcQueryProblems, SignalToNoise] =
     Either.fromOption(w, NonEmptyChain.of(ItcQueryProblems.MissingSignalToNoise))
 
+  def signalToNoiseAt(w: Option[Wavelength]): EitherNec[ItcQueryProblems, Wavelength] =
+    Either.fromOption(w, NonEmptyChain.of(ItcQueryProblems.MissingSignalToNoiseAt))
+
   def mode(r: SpectroscopyModeRow): EitherNec[ItcQueryProblems, InstrumentRow] =
     Either.fromOption(
       ItcResultsCache.enabledRow(r).option(r.instrument),
@@ -71,7 +74,7 @@ case class ItcResultsCache(
     t:    Option[ItcTarget],
     r:    SpectroscopyModeRow
   ): EitherNec[ItcQueryProblems, ItcResult] =
-    (wavelength(w, r), signalToNoise(sn), snAt.validNec.toEither, mode(r), targets(t, w)).parMapN {
+    (wavelength(w, r), signalToNoise(sn), signalToNoiseAt(snAt), mode(r), targets(t, w)).parMapN {
       (w, sn, snAt, im, t) =>
         cache
           .get(ItcRequestParams(w, sn, snAt, c, t, im))
