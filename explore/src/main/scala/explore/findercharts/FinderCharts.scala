@@ -22,7 +22,6 @@ import explore.model.Transformation
 import explore.model.reusability.given
 import explore.utils.OdbRestClient
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.hooks.Hooks.UseState
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
@@ -231,7 +230,11 @@ object FinderCharts extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
       .useState(ChartSelector.Closed)
       .render { (props, ctx, client, ops, urls, added, action, selector) =>
         val transforms = ops.get.calcTransform
-        ReactFragment(
+        <.div(
+          ExploreStyles.FinderChartsBackground,
+          ^.onClick ==> { e =>
+            selector.setState(ChartSelector.Closed).when_(selector.value.value)
+          },
           props.renderInTitle(
             attachmentSelector(props, ctx, client, props.selected, action, added, selector)
           ),

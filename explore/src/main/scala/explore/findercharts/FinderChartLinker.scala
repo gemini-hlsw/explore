@@ -116,6 +116,9 @@ object FinderChartLinker extends ObsAttachmentUtils with FinderChartsAttachmentU
         ReactFragment(
           <.div(
             ExploreStyles.FinderChartsAttachments,
+            ^.onClick ==> { e =>
+              e.stopPropagationCB
+            },
             <.span(
               Icons.Files.withFixedWidth(true),
               "Available charts"

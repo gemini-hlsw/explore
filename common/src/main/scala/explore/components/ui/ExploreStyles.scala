@@ -166,6 +166,7 @@ object ExploreStyles:
   val FinderChartsTableDisabled: Css = Css("finder-charts-table-disabled")
   val FinderChartsTableHeader: Css   = Css("finder-charts-table-header")
   val FinderChartsLoadProgress: Css  = Css("finder-charts-table-progress")
+  val FinderChartsBackground: Css    = Css("finder-charts-background")
 
   val FinderChartsSelectorSection: Css = Css("finder-charts-selector-section")
   val FinderChartsInTitle: Css         = Css("finder-charts-in-title")
