@@ -208,7 +208,6 @@ object Dependencies {
       "edu.gemini" %%% "lucuma-react-hotkeys-hooks",
       "edu.gemini" %%% "lucuma-react-markdown",
       "edu.gemini" %%% "lucuma-react-resize-detector",
-      "edu.gemini" %%% "lucuma-react-moon",
       "edu.gemini" %%% "lucuma-react-prime-react"
     )(lucumaReact)
   )

@@ -1,7 +1,6 @@
 {
   "dependencies": {
     "@cquiroz/aladin-lite": "0.7.7",
-    "@cquiroz/react-moon": "2.0.2",
     "@floating-ui/react-dom-interactions": "^0.13.3",
     "@fortawesome/fontawesome-pro": "^6.4.0",
     "@fortawesome/fontawesome-svg-core": "^6.4.0",
@@ -36,7 +35,6 @@
     "remark-gfm": "^3.0.1",
     "remark-math": "^5.1.1",
     "remark-parse": "^10.0.2",
-    "styled-components": "6.0.1",
     "ua-parser-js": "1.0.35"
   },
   "devDependencies": {

@@ -12,6 +12,7 @@ import explore.highcharts.*
 import explore.model.Constants
 import explore.model.enums.TimeDisplay
 import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Site
 import lucuma.core.enums.TwilightType
@@ -29,7 +30,6 @@ import lucuma.ui.utils.*
 import org.scalajs.dom
 import react.common.ReactFnProps
 import react.highcharts.ResizingChart
-import react.moon.MoonPhase
 import react.resizeDetector.hooks.*
 
 import java.time.Duration
@@ -428,15 +428,17 @@ object ElevationPlotNight {
           // Include the size in the key
           ResizingChart(options).withKey(s"$props-$resize").when(resize.height.isDefined),
           <.div(ExploreStyles.MoonPhase)(
-            <.span(
-              MoonPhase(
-                phase = moonPhase,
-                size = 20,
-                border = "1px solid black",
-                darkColor = "#303030"
-              ),
-              <.small("%1.0f%%".format(moonIllum * 100))
-            )
+            // Adapted from https://dev.to/thormeier/use-your-i-moon-gination-lets-build-a-moon-phase-visualizer-with-css-and-js-aih
+            <.div(ExploreStyles.MoonSphere)(
+              <.div(ExploreStyles.MoonDark).when(moonPhase < 0.5),
+              <.div(ExploreStyles.MoonLight).when(moonPhase > 0.5),
+              <.div(ExploreStyles.MoonDark).when(moonPhase > 0.5),
+              <.div(ExploreStyles.MoonLight).when(moonPhase < 0.5),
+              <.div(ExploreStyles.MoonDivider,
+                    html_<^.^.transform := s"rotate3d(0, 1, 0, ${360 * moonPhase}deg"
+              )
+            ),
+            <.small("%1.0f%%".format(moonIllum * 100))
           )
         )
           .withRef(resize.ref)
