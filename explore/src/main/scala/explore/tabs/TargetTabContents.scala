@@ -4,7 +4,6 @@
 package explore.tabs
 
 import _root_.react.common.*
-import _root_.react.gridlayout.*
 import _root_.react.hotkeys.*
 import _root_.react.hotkeys.hooks.*
 import _root_.react.resizeDetector.*
@@ -15,10 +14,7 @@ import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
 import crystal.react.reuse.*
-import eu.timepit.refined.auto.*
-import eu.timepit.refined.types.numeric.NonNegInt
 import explore.*
-import explore.common.UserPreferencesQueries.*
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
@@ -28,8 +24,6 @@ import explore.model.*
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
 import explore.model.enums.SelectedPanel
-import explore.model.layout.*
-import explore.model.layout.unsafe.given
 import explore.model.reusability.given
 import explore.model.syntax.all.*
 import explore.observationtree.AsterismGroupObsList
@@ -54,20 +48,19 @@ import lucuma.core.model.User
 import lucuma.refined.*
 import lucuma.schemas.model.*
 import lucuma.ui.reusability.given
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.Iso
 import monocle.Traversal
 import queries.schemas.odb.ObsQueries
 
 import java.time.Instant
-import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 
 case class TargetTabContents(
   userId:           Option[User.Id],
   programId:        Program.Id,
   programSummaries: UndoContext[ProgramSummaries],
+  userPreferences:  UserPreferences,
   focused:          Focused,
   searching:        View[Set[Target.Id]],
   expandedIds:      View[SortedSet[ObsIdSet]]
@@ -77,85 +70,9 @@ case class TargetTabContents(
 object TargetTabContents extends TwoPanels:
   private type Props = TargetTabContents
 
-  private val SummaryHeight: NonNegInt     = 6.refined
-  private val SummaryMinHeight: NonNegInt  = 4.refined
-  private val TargetHeight: NonNegInt      = 18.refined
-  private val TargetMinHeight: NonNegInt   = 15.refined
-  private val SkyPlotHeight: NonNegInt     = 9.refined
-  private val SkyPlotMinHeight: NonNegInt  = 6.refined
-  private val TileMinWidth: NonNegInt      = 5.refined
-  private val DefaultWidth: NonNegInt      = 10.refined
-  private val DefaultLargeWidth: NonNegInt = 12.refined
-
-  private val layoutMedium: Layout = Layout(
-    List(
-      LayoutItem(
-        i = ObsTabTilesIds.TargetSummaryId.id.value,
-        x = 0,
-        y = 0,
-        w = DefaultWidth.value,
-        h = SummaryHeight.value,
-        minH = SummaryMinHeight.value,
-        minW = TileMinWidth.value
-      ),
-      LayoutItem(
-        i = ObsTabTilesIds.TargetId.id.value,
-        x = 0,
-        y = SummaryHeight.value,
-        w = DefaultWidth.value,
-        h = TargetHeight.value,
-        minH = TargetMinHeight.value,
-        minW = TileMinWidth.value
-      ),
-      LayoutItem(
-        i = ObsTabTilesIds.PlotId.id.value,
-        x = 0,
-        y = SummaryHeight.value + TargetHeight.value,
-        w = DefaultWidth.value,
-        h = SkyPlotHeight.value,
-        minH = SkyPlotMinHeight.value,
-        minW = TileMinWidth.value
-      )
-    )
-  )
-
-  private val defaultLayouts = defineStdLayouts(
-    Map(
-      (BreakpointName.lg,
-       layoutItems.andThen(layoutItemWidth).replace(DefaultLargeWidth)(layoutMedium)
-      ),
-      (BreakpointName.md, layoutMedium)
-    )
-  )
-
-  private val singleLayoutMedium: Layout = Layout(
-    List(
-      LayoutItem(
-        i = ObsTabTilesIds.TargetSummaryId.id.value,
-        x = 0,
-        y = 0,
-        w = DefaultWidth.value,
-        h = 0, // This doesn't matter, we are forcing 100%.
-        minH = SummaryMinHeight.value,
-        minW = TileMinWidth.value,
-        static = true
-      )
-    )
-  )
-
-  private val defaultSingleLayouts = defineStdLayouts(
-    Map(
-      (BreakpointName.lg,
-       layoutItems.andThen(layoutItemWidth).replace(DefaultLargeWidth)(singleLayoutMedium)
-      ),
-      (BreakpointName.md, singleLayoutMedium)
-    )
-  )
-
   private def renderFn(
     props:             Props,
     selectedView:      View[SelectedPanel],
-    layouts:           View[Pot[LayoutsMap]],
     resize:            UseResizeDetectorReturn,
     fullScreen:        View[AladinFullScreen],
     selectedTargetIds: View[List[Target.Id]],
@@ -455,21 +372,23 @@ object TargetTabContents extends TwoPanels:
       val tileList: Option[List[Tile]] = tileListObSelectedOpt.map(_._1)
       val obsSelected: Boolean         = tileListObSelectedOpt.map(_._2).exists(identity)
 
-      layouts.renderPotView(l =>
-        TileController(
-          props.userId,
-          resize.width.getOrElse(1),
-          tileList.fold(defaultSingleLayouts)(_ => defaultLayouts),
-          tileList.fold(defaultSingleLayouts)(_ => l),
-          tileList.getOrElse(List(renderSummary(true))),
-          GridLayoutSection.TargetLayout,
-          backButton.some,
-          Option.when(tileList.isEmpty)(ExploreStyles.SingleTileMaximized),
-          storeLayout = tileList.nonEmpty
-        ).withKey(if (obsSelected) "target-obs-controller" else "target-summary-controller")
-        // We need different tile controller keys when in observations than when in target summary,
-        // so that it clears its internal state.
-      )
+      TileController(
+        props.userId,
+        resize.width.getOrElse(1),
+        tileList.fold(ExploreGridLayouts.targets.defaultSingleLayouts)(_ =>
+          ExploreGridLayouts.targets.defaultTargetLayouts
+        ),
+        tileList.fold(ExploreGridLayouts.targets.defaultSingleLayouts)(_ =>
+          props.userPreferences.targetTabLayout
+        ),
+        tileList.getOrElse(List(renderSummary(true))),
+        GridLayoutSection.TargetLayout,
+        backButton.some,
+        Option.when(tileList.isEmpty)(ExploreStyles.SingleTileMaximized),
+        storeLayout = tileList.nonEmpty
+      ).withKey(if (obsSelected) "target-obs-controller" else "target-summary-controller"): VdomNode
+      // We need different tile controller keys when in observations than when in target summary,
+      // so that it clears its internal state.
     }
 
     makeOneOrTwoPanels(
@@ -526,41 +445,13 @@ object TargetTabContents extends TwoPanels:
       }
       // Measure its size
       .useResizeDetector()
-      // Initial target layout
-      .useStateView(Pot.pending[LayoutsMap])
-      // Load the config from user prefrences
-      .useEffectWithDepsBy((p, _, _, _, _) => p.userId) { (props, ctx, _, _, layout) => _ =>
-        import ctx.given
-
-        GridLayouts
-          .queryWithDefault[IO](
-            props.userId,
-            GridLayoutSection.TargetLayout,
-            defaultLayouts
-          )
-          .attempt
-          .flatMap {
-            case Right(dbLayout) =>
-              layout
-                .mod(
-                  _.fold(
-                    mergeMap(dbLayout, defaultLayouts).ready,
-                    _ => mergeMap(dbLayout, defaultLayouts).ready,
-                    cur => mergeMap(dbLayout, cur).ready
-                  )
-                )
-                .toAsync
-            case Left(_)         => IO.unit
-          }
-      }
-      // Selected targets on the summary table
-      .useStateViewBy((props, _, _, _, _) => props.focused.target.toList)
-      .useEffectWithDepsBy((props, _, _, _, _, _) => props.focused.target)(
-        (_, _, _, _, _, selIds) => _.foldMap(focusedTarget => selIds.set(List(focusedTarget)))
+      .useStateViewBy((props, _, _, _) => props.focused.target.toList)
+      .useEffectWithDepsBy((props, _, _, _, _) => props.focused.target)((_, _, _, _, selIds) =>
+        _.foldMap(focusedTarget => selIds.set(List(focusedTarget)))
       )
-      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, selIds) =>
+      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, selIds) =>
         (props.focused, props.programSummaries.get.asterismGroups, selIds.get)
-      ) { (props, ctx, _, _, _, _) => (target, asterismGroups, selectedIds) =>
+      ) { (props, ctx, _, _, _) => (target, asterismGroups, selectedIds) =>
         import ctx.given
 
         def selectObsIds: ObsIdSet => IO[Unit] =
@@ -646,14 +537,12 @@ object TargetTabContents extends TwoPanels:
           ctx,
           twoPanelState,
           resize,
-          layout,
           selectedTargetIds,
           fullScreen
         ) =>
           renderFn(
             props,
             twoPanelState,
-            layout,
             resize,
             fullScreen,
             selectedTargetIds,

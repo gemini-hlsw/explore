@@ -12,6 +12,7 @@ import explore.config.ConfigurationPanel
 import explore.model.AsterismIds
 import explore.model.BasicConfigAndItc
 import explore.model.ObsConfiguration
+import explore.model.ObsTabTilesIds
 import explore.model.ScienceRequirements
 import explore.model.TargetList
 import explore.undo.*

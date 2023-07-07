@@ -64,7 +64,6 @@ import queries.schemas.odb.ObsQueries
 import queries.schemas.odb.ObsQueries.*
 
 import java.time.Instant
-import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 
 case class ObsTabTiles(
@@ -79,7 +78,7 @@ case class ObsTabTiles(
   focusedTarget:            Option[Target.Id],
   searching:                View[Set[Target.Id]],
   defaultLayouts:           LayoutsMap,
-  layouts:                  View[Pot[LayoutsMap]],
+  layouts:                  LayoutsMap,
   resize:                   UseResizeDetectorReturn,
   obsAttachments:           View[ObsAttachmentList],
   obsAttachmentAssignments: ObsAttachmentAssignmentMap
@@ -466,25 +465,23 @@ object ObsTabTiles:
               props.allTargets.get
             )
 
-          props.layouts.renderPotView(l =>
-            TileController(
-              props.userId,
-              props.resize.width.getOrElse(0),
-              props.defaultLayouts,
-              l,
-              List(
-                notesTile,
-                targetTile,
-                finderChartsTile,
-                skyPlotTile,
-                constraintsTile,
-                timingWindowsTile,
-                configurationTile,
-                itcTile
-              ),
-              GridLayoutSection.ObservationsLayout,
-              props.backButton.some,
-              clazz = ExploreStyles.ObservationTiles.some
-            )
+          TileController(
+            props.userId,
+            props.resize.width.getOrElse(0),
+            props.defaultLayouts,
+            props.layouts,
+            List(
+              notesTile,
+              targetTile,
+              finderChartsTile,
+              skyPlotTile,
+              constraintsTile,
+              timingWindowsTile,
+              configurationTile,
+              itcTile
+            ),
+            GridLayoutSection.ObservationsLayout,
+            props.backButton.some,
+            clazz = ExploreStyles.ObservationTiles.some
           )
       }

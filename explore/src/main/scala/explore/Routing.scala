@@ -73,6 +73,9 @@ object Routing:
       )
     )
 
+  def userPreferences(model: View[RootModel]): UserPreferences =
+    model.zoom(RootModel.userPreferences).get.getOrElse(UserPreferences.Default)
+
   private def targetTab(page: Page, model: View[RootModel]): VdomElement =
     val routingInfo = RoutingInfo.from(page)
     withProgramSummaries(routingInfo.programId.some, model)(programSummaries =>
@@ -80,6 +83,7 @@ object Routing:
         model.zoom(RootModel.userId).get,
         routingInfo.programId,
         programSummaries,
+        userPreferences(model),
         routingInfo.focused,
         model.zoom(RootModel.searchingTarget),
         model.zoom(RootModel.expandedIds.andThen(ExpandedIds.asterismObsIds))
@@ -94,6 +98,7 @@ object Routing:
         model.zoom(RootModel.userId).get,
         routingInfo.programId,
         programSummaries,
+        userPreferences(model),
         routingInfo.focused,
         model.zoom(RootModel.searchingTarget),
         model.zoom(RootModel.expandedIds.andThen(ExpandedIds.obsListGroupIds))
@@ -107,6 +112,7 @@ object Routing:
         model.zoom(RootModel.userId).get,
         routingInfo.programId,
         programSummaries,
+        userPreferences(model),
         routingInfo.focused.obsSet,
         model.zoom(RootModel.expandedIds.andThen(ExpandedIds.constraintSetObsIds))
       )
@@ -120,6 +126,7 @@ object Routing:
         model.zoom(RootModel.userId).get,
         routingInfo.programId,
         programSummaries,
+        userPreferences(model),
         routingInfo.focused.obsSet,
         model.zoom(RootModel.expandedIds.andThen(ExpandedIds.schedulingObsIds))
       )

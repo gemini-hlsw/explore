@@ -14,6 +14,7 @@ import explore.config.VizTimeEditor
 import explore.model.AsterismIds
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
+import explore.model.ObsTabTilesIds
 import explore.model.TargetList
 import explore.model.enums.TileSizeState
 import explore.targeteditor.AsterismEditor

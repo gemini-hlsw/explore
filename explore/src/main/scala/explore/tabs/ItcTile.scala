@@ -12,6 +12,7 @@ import explore.itc.ItcGraphPanel
 import explore.itc.ItcPanelTitle
 import explore.itc.ItcProps
 import explore.model.LoadingState
+import explore.model.ObsTabTilesIds
 import explore.model.TargetList
 import explore.model.itc.ItcChartResult
 import explore.model.itc.ItcTarget
