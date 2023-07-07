@@ -64,20 +64,38 @@ object UserPreferencesQueriesGQL {
   }
 
   /**
-   * Read the grid layout for a given section
+   * Read the grid layout or a given section
    */
   @GraphQL
   trait UserGridLayoutQuery extends GraphQLOperation[UserPreferencesDB] {
     val document = """
-      query tabPositions($userId: String!, $section: LucumaGridLayoutIdEnum!){
-        lucumaGridLayoutPositions(where: {section: {_eq: $section}, userId: {_eq: $userId}}) {
+      query tabPositions($userId: String!){
+        lucumaGridLayoutPositions(where: {userId: {_eq: $userId}}) {
           breakpointName
+          section
           height
           width
           x
           y
           tile
           userId
+        }
+      }
+    """
+  }
+
+  @GraphQL
+  trait UserGridLayoutUpdates extends GraphQLOperation[UserPreferencesDB] {
+    val document = """
+      subscription gridLayoutPositions($userId: String!) {
+        lucumaGridLayoutPositions(where: {userId: {_eq: $userId}}) {
+          breakpointName
+          height
+          section
+          tile
+          width
+          x
+          y
         }
       }
     """

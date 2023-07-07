@@ -9,6 +9,7 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AladinFullScreen
 import explore.model.Asterism
+import explore.model.ObsTabTilesIds
 import explore.targeteditor.SiderealTargetEditor
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*

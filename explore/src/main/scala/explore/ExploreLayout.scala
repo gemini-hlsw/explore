@@ -6,6 +6,7 @@ package explore
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.*
+import explore.cache.PreferencesCache
 import explore.cache.ProgramCache
 import explore.components.state.IfLogged
 import explore.components.ui.ExploreStyles
@@ -152,6 +153,7 @@ object ExploreLayout:
               ProgramCache(routingInfo.programId,
                            props.view.zoom(RootModel.programSummaries).async.set
               ),
+              PreferencesCache(vault.user.id, props.view.zoom(RootModel.userPreferences).async.set),
               TopBar(
                 vault,
                 routingInfo.optProgramId,

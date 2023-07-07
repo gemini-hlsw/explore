@@ -42,6 +42,7 @@ import lucuma.react.table.*
 import lucuma.refined.*
 import lucuma.ui.table.TableStateStore
 import org.typelevel.log4cats.Logger
+import queries.common.UserPreferencesQueriesGQL.UserGridLayoutUpdates.Data.LucumaGridLayoutPositions
 import queries.common.UserPreferencesQueriesGQL.UserTargetPreferencesQuery.Data.ExploreTargetPreferencesByPk
 import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.UserPreferencesDB
@@ -49,6 +50,7 @@ import queries.schemas.UserPreferencesDB.Enums.*
 import queries.schemas.UserPreferencesDB.Scalars.*
 import queries.schemas.UserPreferencesDB.Types.LucumaObservationInsertInput
 import queries.schemas.UserPreferencesDB.Types.*
+import react.gridlayout.BreakpointName
 import react.gridlayout.{BreakpointName => _, _}
 
 import scala.collection.immutable.SortedMap
@@ -59,7 +61,7 @@ object UserPreferencesQueries:
   type TableColumnPreferences = TableColumnPreferencesQuery.Data
   val TableColumnPreferences = TableColumnPreferencesQuery.Data
 
-  object UserPreferences:
+  object GlobalUserPreferences:
     def storePreferences[F[_]: ApplicativeThrow](
       userId:             User.Id,
       aladinMouseScroll:  Option[AladinMouseScroll] = None,
@@ -83,46 +85,80 @@ object UserPreferencesQueries:
         )
         .attempt
         .void
-  end UserPreferences
+  end GlobalUserPreferences
 
   object GridLayouts:
     extension (e: react.gridlayout.BreakpointName)
       def toGridBreakpointName: GridBreakpointName =
         Enumerated[GridBreakpointName].unsafeFromTag(e.name)
 
-    def positions2LayoutMap(
-      g: (GridBreakpointName, List[UserGridLayoutQuery.Data.LucumaGridLayoutPositions])
-    ): (react.gridlayout.BreakpointName, (Int, Int, Layout)) =
+    private trait DBLayoutPosition[A]:
+      extension (a: A)
+        def breapointName: BreakpointName
+        def layoutItem: LayoutItem
+
+    private given dataPos: DBLayoutPosition[UserGridLayoutQuery.Data.LucumaGridLayoutPositions] with
+      extension (a: UserGridLayoutQuery.Data.LucumaGridLayoutPositions)
+        def breapointName: BreakpointName = breakpointNameFromString(a.breakpointName.tag)
+        def layoutItem: LayoutItem        = LayoutItem(a.width, a.height, a.x, a.y, a.tile)
+
+    private given subsPos: DBLayoutPosition[UserGridLayoutUpdates.Data.LucumaGridLayoutPositions]
+    with
+      extension (a: UserGridLayoutUpdates.Data.LucumaGridLayoutPositions)
+        def breapointName: BreakpointName = breakpointNameFromString(a.breakpointName.tag)
+        def layoutItem: LayoutItem        = LayoutItem(a.width, a.height, a.x, a.y, a.tile)
+
+    private def positions2LayoutMap[A](
+      g: (GridBreakpointName, List[A])
+    )(using dbPos: DBLayoutPosition[A]): (react.gridlayout.BreakpointName, (Int, Int, Layout)) =
       val bn = breakpointNameFromString(g._1.tag)
       bn -> ((breakpointWidth(bn),
               breakpointCols(bn),
               Layout(
-                g._2.map(p => LayoutItem(p.width, p.height, p.x, p.y, p.tile))
+                g._2.map(_.layoutItem)
               )
       ))
 
     // Gets the layout of a section.
     // This will return a default in case there is no data or errors
     def queryWithDefault[F[_]: MonadThrow](
-      userId:        Option[User.Id],
-      layoutSection: GridLayoutSection,
-      defaultValue:  LayoutsMap
-    )(using FetchClient[F, UserPreferencesDB]): F[LayoutsMap] =
+      userId:       Option[User.Id],
+      defaultValue: Map[GridLayoutSection, LayoutsMap]
+    )(using FetchClient[F, UserPreferencesDB]): F[Map[GridLayoutSection, LayoutsMap]] =
       (for {
         uid <- OptionT.fromOption[F](userId)
         r   <-
           OptionT
-            .liftF[F, SortedMap[react.gridlayout.BreakpointName, (Int, Int, Layout)]] {
-              UserGridLayoutQuery[F].query(uid.show, layoutSection).map { r =>
+            .liftF[F, Map[GridLayoutSection, SortedMap[react.gridlayout.BreakpointName,
+                                                       (Int, Int, Layout)
+            ]]] {
+              UserGridLayoutQuery[F].query(uid.show).map { r =>
                 r.lucumaGridLayoutPositions match {
-                  case l if l.isEmpty => defaultValue
+                  case l if l.isEmpty => Map.empty
                   case l              =>
-                    SortedMap(l.groupBy(_.breakpointName).map(positions2LayoutMap).toList: _*)
+                    l.groupBy(_.section).map { case (s, l) =>
+                      s -> SortedMap(
+                        l.groupBy(_.breakpointName).map(positions2LayoutMap).toList: _*
+                      )
+                    }
                 }
               }
             }
             .handleErrorWith(_ => OptionT.none)
       } yield r).getOrElse(defaultValue)
+
+    def updateLayouts(
+      data: List[LucumaGridLayoutPositions]
+    ): Map[GridLayoutSection, LayoutsMap] => Map[GridLayoutSection, LayoutsMap] = original =>
+      data match {
+        case l if l.isEmpty => original
+        case l              =>
+          l.groupBy(_.section).map { case (s, l) =>
+            s -> SortedMap(
+              l.groupBy(_.breakpointName).map(positions2LayoutMap).toList: _*
+            )
+          }
+      }
 
     def storeLayoutsPreference[F[_]: ApplicativeThrow](
       userId:  Option[User.Id],
@@ -327,6 +363,7 @@ object UserPreferencesQueries:
         )
         .attempt
         .void
+
   object ItcPlotPreferences:
     // Gets the prefs for the itc plot
     def queryWithDefault[F[_]: ApplicativeThrow](

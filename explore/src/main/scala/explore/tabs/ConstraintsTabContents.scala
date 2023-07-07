@@ -4,7 +4,6 @@
 package explore.tabs
 
 import _root_.react.common.ReactFnProps
-import _root_.react.gridlayout.*
 import _root_.react.hotkeys.*
 import _root_.react.hotkeys.hooks.*
 import _root_.react.resizeDetector.*
@@ -15,11 +14,8 @@ import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
 import crystal.react.reuse.*
-import eu.timepit.refined.auto.*
-import eu.timepit.refined.types.numeric.NonNegInt
 import explore.*
 import explore.common.TimingWindowsQueries
-import explore.common.UserPreferencesQueries.*
 import explore.components.Tile
 import explore.components.TileController
 import explore.constraints.ConstraintsPanel
@@ -32,8 +28,6 @@ import explore.model.*
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
 import explore.model.enums.SelectedPanel
-import explore.model.layout.*
-import explore.model.layout.unsafe.given
 import explore.model.reusability.given
 import explore.observationtree.ConstraintGroupObsList
 import explore.shortcuts.*
@@ -51,7 +45,6 @@ import lucuma.core.model.TimingWindow
 import lucuma.core.model.User
 import lucuma.refined.*
 import lucuma.ui.reusability.given
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.Iso
 
@@ -61,47 +54,13 @@ case class ConstraintsTabContents(
   userId:           Option[User.Id],
   programId:        Program.Id,
   programSummaries: UndoContext[ProgramSummaries],
+  userPreferences:  UserPreferences,
   focusedObsSet:    Option[ObsIdSet],
   expandedIds:      View[SortedSet[ObsIdSet]]
 ) extends ReactFnProps(ConstraintsTabContents.component)
 
 object ConstraintsTabContents extends TwoPanels:
   private type Props = ConstraintsTabContents
-
-  private val ConstraintsHeight: NonNegInt   = 4.refined
-  private val TimingWindowsHeight: NonNegInt = 14.refined
-  private val DefaultWidth: NonNegInt        = 10.refined
-  private val DefaultLargeWidth: NonNegInt   = 12.refined
-
-  private val layoutMedium: Layout = Layout(
-    List(
-      LayoutItem(
-        i = ObsTabTilesIds.ConstraintsId.id.value,
-        x = 0,
-        y = 0,
-        w = DefaultWidth.value,
-        h = ConstraintsHeight.value,
-        isResizable = false
-      ),
-      LayoutItem(
-        i = ObsTabTilesIds.TimingWindowsId.id.value,
-        x = 0,
-        y = ConstraintsHeight.value,
-        w = DefaultWidth.value,
-        h = TimingWindowsHeight.value,
-        isResizable = false
-      )
-    )
-  )
-
-  private val defaultConstraintsLayouts = defineStdLayouts(
-    Map(
-      (BreakpointName.lg,
-       layoutItems.andThen(layoutItemWidth).replace(DefaultLargeWidth)(layoutMedium)
-      ),
-      (BreakpointName.md, layoutMedium)
-    )
-  )
 
   private val component =
     ScalaFnComponent
@@ -113,38 +72,9 @@ object ConstraintsTabContents extends TwoPanels:
         }
         UseHotkeysProps(List(GoToSummary).toHotKeys, callbacks)
       }
-      // Initial target layout
-      .useStateView(Pot.pending[LayoutsMap])
-      // Keep a record of the initial target layout
-      .useMemo(())(_ => defaultConstraintsLayouts)
-      // Load the config from user prefrences
-      .useEffectWithDepsBy((p, _, _, _) => p.userId) { (props, ctx, layout, defaultLayout) => _ =>
-        import ctx.given
-
-        GridLayouts
-          .queryWithDefault[IO](
-            props.userId,
-            GridLayoutSection.ConstraintsLayout,
-            defaultLayout
-          )
-          .attempt
-          .flatMap {
-            case Right(dbLayout) =>
-              layout
-                .mod(
-                  _.fold(
-                    mergeMap(dbLayout, defaultLayout).ready,
-                    _ => mergeMap(dbLayout, defaultLayout).ready,
-                    cur => mergeMap(dbLayout, cur).ready
-                  )
-                )
-                .toAsync
-            case Left(_)         => IO.unit
-          }
-      }
       .useStateView[SelectedPanel](SelectedPanel.Uninitialized)
-      .useEffectWithDepsBy((props, _, _, _, state) => (props.focusedObsSet, state.reuseByValue)) {
-        (_, _, _, _, _) => params =>
+      .useEffectWithDepsBy((props, _, state) => (props.focusedObsSet, state.reuseByValue)) {
+        (_, _, _) => params =>
           val (focusedObsSet, selected) = params
           (focusedObsSet, selected.get) match {
             case (Some(_), _)                 => selected.set(SelectedPanel.Editor)
@@ -154,10 +84,8 @@ object ConstraintsTabContents extends TwoPanels:
       }
       // Measure its size
       .useResizeDetector()
-      .render { (props, ctx, layouts, defaultLayouts, state, resize) =>
+      .render { (props, ctx, state, resize) =>
         import ctx.given
-
-        // val programSummaries: View[ProgramSummaries] = props.programSummaries
 
         def findConstraintGroup(
           obsIds: ObsIdSet,
@@ -167,11 +95,6 @@ object ConstraintsTabContents extends TwoPanels:
 
         val backButton: VdomNode =
           makeBackButton(props.programId, AppTab.Constraints, state, ctx)
-
-        // val obsView: View[ObservationList] = programSummaries
-        // TODO Find another mechanism to update expandeds
-        // .withOnMod(onModSummaryWithObs(groupObsIds, idsToEdit))
-        // .zoom(ProgramSummaries.observations)
 
         val observations: UndoSetter[ObservationList] =
           props.programSummaries.zoom(ProgramSummaries.observations)
@@ -243,16 +166,14 @@ object ConstraintsTabContents extends TwoPanels:
                   renderInTitle => TimingWindowsPanel(twView, renderInTitle)
                 )
 
-              layouts.renderPotView(l =>
-                TileController(
-                  props.userId,
-                  resize.width.getOrElse(1),
-                  defaultLayouts,
-                  l,
-                  List(constraintsTile, timingWindowsTile),
-                  GridLayoutSection.ConstraintsLayout,
-                  None
-                )
+              TileController(
+                props.userId,
+                resize.width.getOrElse(1),
+                ExploreGridLayouts.sectionLayout(GridLayoutSection.ConstraintsLayout),
+                props.userPreferences.constraintsTabLayout,
+                List(constraintsTile, timingWindowsTile),
+                GridLayoutSection.ConstraintsLayout,
+                None
               )
             }
 

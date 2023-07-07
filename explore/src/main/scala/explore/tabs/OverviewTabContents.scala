@@ -17,6 +17,7 @@ import explore.components.TileController
 import explore.model.AppContext
 import explore.model.ObsAttachmentAssignmentMap
 import explore.model.ObsAttachmentList
+import explore.model.ObsTabTilesIds
 import explore.model.UserVault
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.*

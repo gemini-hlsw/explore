@@ -31,7 +31,6 @@ import react.common.implicits.given
 import react.common.style.Css
 import react.gridlayout.*
 
-import scala.concurrent.duration.*
 import scala.scalajs.js.JSConverters.*
 
 case class TileController(
@@ -50,14 +49,11 @@ object TileController:
   private type Props = TileController
 
   private def storeLayouts[F[_]: MonadThrow: Dispatch](
-    userId:    Option[User.Id],
-    section:   GridLayoutSection,
-    layouts:   Layouts,
-    debouncer: Reusable[UseSingleEffect[F]]
+    userId:  Option[User.Id],
+    section: GridLayoutSection,
+    layouts: Layouts
   )(using FetchClient[F, UserPreferencesDB]): Callback =
-    debouncer
-      .submit(GridLayouts.storeLayoutsPreference[F](userId, section, layouts))
-      .runAsyncAndForget
+    GridLayouts.storeLayoutsPreference[F](userId, section, layouts).runAsyncAndForget
 
   // Calculate the state out of the height
   private def unsafeSizeToState(
@@ -98,18 +94,17 @@ object TileController:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      .useSingleEffect(debounce = 1.second)
       // Get the breakpoint from the layout
-      .useStateBy { (p, _, _) =>
+      .useStateBy { (p, _) =>
         getBreakpointFromWidth(p.layoutMap.map { case (x, (w, _, _)) => x -> w }, p.gridWidth)
       }
       // Make a local copy of the layout fixing the state of minimized layouts
-      .useStateViewBy((p, _, _, _) => updateResizableState(p.layoutMap))
+      .useStateViewBy((p, _, _) => updateResizableState(p.layoutMap))
       // Update the current layout if it changes upstream
-      .useEffectWithDepsBy((p, _, _, _, _) => p.layoutMap)((_, _, _, _, currentLayout) =>
+      .useEffectWithDepsBy((p, _, _, _) => p.layoutMap)((_, _, _, currentLayout) =>
         layout => currentLayout.set(updateResizableState(layout))
       )
-      .render { (p, ctx, debouncer, breakpoint, currentLayout) =>
+      .render { (p, ctx, breakpoint, currentLayout) =>
         import ctx.given
 
         def sizeState(id: Tile.TileId) = (st: TileSizeState) =>
@@ -159,36 +154,18 @@ object TileController:
           rowHeight = Constants.GridRowHeight,
           draggableHandle = s".${ExploreStyles.TileTitleControlArea.htmlClass}",
           onBreakpointChange = (bk: BreakpointName, _: Int) => breakpoint.setState(bk),
-          onLayoutChange = (_: Layout, newLayouts: Layouts) => {
-            // We need to sort the layouts to do proper comparision
-            val cur     =
-              newLayouts.layouts.map(x => (x.name, x.layout)).sortBy(_._1).map { case (n, l) =>
-                (n, l.l.sortBy(_.i.toString))
-              }
-            val next    = currentLayout.get
-              .map { case (breakpoint, (_, _, layout)) =>
-                (breakpoint, layout.l.sortBy(_.i.toString))
-              }
-              .toList
-              .sortBy(_._1)
-            val changed = cur =!= next
-
-            {
-              val le = newLayouts.layouts.find(_.name.name === breakpoint.value.name).map(_.layout)
-
-              // Store the current layout in the state for debugging
-              le.map(l => currentLayout.mod(breakpointLayout(breakpoint.value).replace(l)))
-            }.getOrEmpty *>
-              storeLayouts(p.userId, p.section, newLayouts, debouncer)
-                .when_(changed && p.storeLayout)
-          },
+          onLayoutChange = (m: Layout, newLayouts: Layouts) =>
+            // Store the current layout in the state for debugging
+            currentLayout.mod(breakpointLayout(breakpoint.value).replace(m)) *>
+              storeLayouts(p.userId, p.section, newLayouts)
+                .when_(p.storeLayout),
           layouts = currentLayout.get,
           className = p.clazz.map(_.htmlClass).orUndefined
         )(
           addBackButton.map { t =>
             <.div(
               ^.key := t.id.value,
-              // Show tile proprties on the title if enabled
+              // Show tile properties on the title if enabled
               currentLayout.get
                 .get(breakpoint.value)
                 .flatMap { case (_, _, l) =>

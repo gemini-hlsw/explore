@@ -25,7 +25,8 @@ import eu.timepit.refined.*
 import eu.timepit.refined.auto.*
 import explore.Icons
 import explore.aladin.AladinFullScreenControl
-import explore.common.UserPreferencesQueries.*
+import explore.common.UserPreferencesQueries.GlobalUserPreferences
+import explore.common.UserPreferencesQueries.TargetPreferences
 import explore.components.ui.ExploreStyles
 import explore.events.*
 import explore.model.WorkerClients.*
@@ -412,7 +413,7 @@ object AladinCell extends ModelOptics with AladinCommon:
             scienceOffsets:     Option[Visible] = None,
             acquisitionOffsets: Option[Visible] = None
           ): Callback =
-            UserPreferences
+            GlobalUserPreferences
               .storePreferences[IO](
                 props.uid,
                 showCatalog = showCatalog,
@@ -493,7 +494,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                 Pot.readyPrism.andThen(userPrefs).andThen(UserGlobalPreferences.aladinMouseScroll)
               )
               .withOnMod(z =>
-                z.map(z => UserPreferences.storePreferences[IO](props.uid, z.some).runAsync)
+                z.map(z => GlobalUserPreferences.storePreferences[IO](props.uid, z.some).runAsync)
                   .getOrEmpty
               )
 

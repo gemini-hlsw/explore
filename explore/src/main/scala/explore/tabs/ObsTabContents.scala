@@ -4,7 +4,6 @@
 package explore.tabs
 
 import _root_.react.common.*
-import _root_.react.gridlayout.*
 import _root_.react.hotkeys.*
 import _root_.react.hotkeys.hooks.*
 import _root_.react.primereact.Button
@@ -16,12 +15,8 @@ import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
 import crystal.react.reuse.*
-import eu.timepit.refined.auto.*
-import eu.timepit.refined.cats.*
-import eu.timepit.refined.types.numeric.NonNegInt
 import explore.Icons
 import explore.*
-import explore.common.UserPreferencesQueries.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.data.KeyedIndexedList
@@ -30,8 +25,6 @@ import explore.model.*
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
 import explore.model.enums.SelectedPanel
-import explore.model.layout.*
-import explore.model.layout.unsafe.given
 import explore.model.reusability.given
 import explore.observationtree.*
 import explore.shortcuts.*
@@ -70,6 +63,7 @@ case class ObsTabContents(
   userId:           Option[User.Id],
   programId:        Program.Id,
   programSummaries: UndoContext[ProgramSummaries],
+  userPreferences:  UserPreferences,
   focused:          Focused,
   searching:        View[Set[Target.Id]],
   expandedGroups:   View[Set[Group.Id]]
@@ -88,118 +82,12 @@ case class ObsTabContents(
 object ObsTabContents extends TwoPanels:
   private type Props = ObsTabContents
 
-  private val NotesMaxHeight: NonNegInt         = 3.refined
-  private val TargetHeight: NonNegInt           = 18.refined
-  private val TargetMinHeight: NonNegInt        = 15.refined
-  private val SkyPlotHeight: NonNegInt          = 9.refined
-  private val SkyPlotMinHeight: NonNegInt       = 6.refined
-  private val ConstraintsMinHeight: NonNegInt   = 4.refined
-  private val ConstraintsMaxHeight: NonNegInt   = 7.refined
-  private val TimingWindowsMinHeight: NonNegInt = 8.refined
-  private val TimingWindowsMaxHeight: NonNegInt = 12.refined
-  private val ConfigurationMaxHeight: NonNegInt = 10.refined
-  private val ItcMaxHeight: NonNegInt           = 9.refined
-  private val FinderChartMinHeight: NonNegInt   = 6.refined
-  private val FinderChartHeight: NonNegInt      = 9.refined
-  private val DefaultWidth: NonNegInt           = 10.refined
-  private val TileMinWidth: NonNegInt           = 6.refined
-  private val DefaultLargeWidth: NonNegInt      = 12.refined
-
-  private val layoutMedium: Layout = Layout(
-    List(
-      LayoutItem(
-        x = 0,
-        y = 0,
-        w = DefaultWidth.value,
-        h = NotesMaxHeight.value,
-        i = ObsTabTilesIds.NotesId.id.value,
-        isResizable = false
-      ),
-      LayoutItem(
-        x = 0,
-        y = NotesMaxHeight.value,
-        w = DefaultWidth.value,
-        h = TargetHeight.value,
-        minH = TargetMinHeight.value,
-        minW = TileMinWidth.value,
-        i = ObsTabTilesIds.TargetId.id.value
-      ),
-      LayoutItem(
-        x = 0,
-        y = (NotesMaxHeight |+| TargetHeight).value,
-        w = DefaultWidth.value,
-        h = FinderChartHeight.value,
-        minH = FinderChartMinHeight.value,
-        minW = TileMinWidth.value,
-        i = ObsTabTilesIds.FinderChartsId.id.value
-      ),
-      LayoutItem(
-        x = 0,
-        y = (NotesMaxHeight |+| TargetHeight |+| FinderChartHeight).value,
-        w = DefaultWidth.value,
-        h = SkyPlotHeight.value,
-        minH = SkyPlotMinHeight.value,
-        minW = TileMinWidth.value,
-        i = ObsTabTilesIds.PlotId.id.value
-      ),
-      LayoutItem(
-        x = 0,
-        y = (NotesMaxHeight |+| TargetHeight |+| FinderChartHeight |+| SkyPlotHeight).value,
-        w = DefaultWidth.value,
-        h = ConstraintsMaxHeight.value,
-        minH = ConstraintsMinHeight.value,
-        maxH = ConstraintsMaxHeight.value,
-        minW = TileMinWidth.value,
-        i = ObsTabTilesIds.ConstraintsId.id.value
-      ),
-      LayoutItem(
-        x = 0,
-        y =
-          (NotesMaxHeight |+| TargetHeight |+| FinderChartHeight |+| SkyPlotHeight |+| ConstraintsMaxHeight).value,
-        w = DefaultWidth.value,
-        h = TimingWindowsMaxHeight.value,
-        minH = TimingWindowsMinHeight.value,
-        maxH = TimingWindowsMaxHeight.value,
-        minW = TileMinWidth.value,
-        i = ObsTabTilesIds.TimingWindowsId.id.value
-      ),
-      LayoutItem(
-        x = 0,
-        y =
-          (NotesMaxHeight |+| TargetHeight |+| FinderChartHeight |+| SkyPlotHeight |+| ConstraintsMaxHeight |+| TimingWindowsMaxHeight).value,
-        w = DefaultWidth.value,
-        h = ConfigurationMaxHeight.value,
-        i = ObsTabTilesIds.ConfigurationId.id.value
-      ),
-      LayoutItem(
-        x = 0,
-        y =
-          (NotesMaxHeight |+| TargetHeight |+| FinderChartHeight |+| SkyPlotHeight |+| ConstraintsMaxHeight |+| TimingWindowsMaxHeight |+| ConfigurationMaxHeight).value,
-        w = DefaultWidth.value,
-        h = ItcMaxHeight.value,
-        i = ObsTabTilesIds.ItcId.id.value
-      )
-    )
-  )
-
-  private val defaultObsLayouts: LayoutsMap =
-    defineStdLayouts(
-      Map(
-        (BreakpointName.lg,
-         layoutItems.andThen(layoutItemWidth).replace(DefaultLargeWidth)(layoutMedium)
-        ),
-        (BreakpointName.md, layoutMedium)
-      )
-    )
-
   private def renderFn(
-    props:          Props,
-    selectedView:   View[SelectedPanel],
-    defaultLayouts: LayoutsMap,
-    layouts:        View[Pot[LayoutsMap]],
-    resize:         UseResizeDetectorReturn,
-    deckShown:      View[DeckShown],
-    ctx:            AppContext[IO]
+    props:        Props,
+    selectedView: View[SelectedPanel],
+    resize:       UseResizeDetectorReturn,
+    deckShown:    View[DeckShown],
+    ctx:          AppContext[IO]
   ): VdomNode = {
 
     def observationsTree(observations: View[ObservationList]) =
@@ -265,8 +153,8 @@ object ObsTabContents extends TwoPanels:
               props.programSummaries.get.targetObservations,
               props.focusedTarget,
               props.searching,
-              defaultLayouts,
-              layouts,
+              ExploreGridLayouts.sectionLayout(GridLayoutSection.ObservationsLayout),
+              props.userPreferences.observationsTabLayout,
               resize,
               props.obsAttachments,
               props.obsAttachmentAssignments
@@ -300,44 +188,11 @@ object ObsTabContents extends TwoPanels:
       }
       // Measure its size
       .useResizeDetector()
-      // Layout
-      .useStateView(Pot.pending[LayoutsMap])
-      // Keep a record of the initial target layout
-      .useMemo(())(_ => defaultObsLayouts)
-      // Restore positions from the db
-      .useEffectWithDepsBy((p, _, _, _, _, _) => (p.userId, p.focusedObs))(
-        (props, ctx, panels, _, layout, defaultLayout) =>
-          _ => {
-            import ctx.given
-
-            GridLayouts
-              .queryWithDefault[IO](
-                props.userId,
-                GridLayoutSection.ObservationsLayout,
-                defaultLayout
-              )
-              .attempt
-              .flatMap {
-                case Right(dbLayout) =>
-                  layoutPprint(dbLayout)
-                  layout
-                    .mod(
-                      _.fold(
-                        mergeMap(dbLayout, defaultLayout).ready,
-                        _ => mergeMap(dbLayout, defaultLayout).ready,
-                        cur => mergeMap(dbLayout, cur).ready
-                      )
-                    )
-                    .toAsync
-                case Left(_)         => IO.unit
-              }
-          }
-      )
-      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, _, _) =>
+      .useGlobalHotkeysWithDepsBy((props, ctx, _, _) =>
         (props.focusedObs,
          props.programSummaries.get.observations.values.map(_.id).zipWithIndex.toList
         )
-      ) { (props, ctx, _, _, _, _) => (obs, observationIds) =>
+      ) { (props, ctx, _, _) => (obs, observationIds) =>
         import ctx.given
 
         val obsPos = observationIds.find(a => obs.forall(_ === a._1)).map(_._2)
@@ -415,6 +270,6 @@ object ObsTabContents extends TwoPanels:
         )
       }
       .useStateView(DeckShown.Shown)
-      .render((props, ctx, twoPanelState, resize, layouts, defaultLayout, deckShown) =>
-        renderFn(props, twoPanelState, defaultLayout, layouts, resize, deckShown, ctx)
+      .render((props, ctx, twoPanelState, resize, deckShown) =>
+        renderFn(props, twoPanelState, resize, deckShown, ctx)
       )

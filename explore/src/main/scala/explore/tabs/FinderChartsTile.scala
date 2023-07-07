@@ -10,6 +10,7 @@ import explore.components.ui.ExploreStyles
 import explore.findercharts.FinderCharts
 import explore.findercharts.finderChartsSelector
 import explore.model.ObsAttachmentList
+import explore.model.ObsTabTilesIds
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Program

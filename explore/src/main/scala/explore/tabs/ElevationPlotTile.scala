@@ -6,6 +6,7 @@ package explore.tabs
 import cats.syntax.all.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
+import explore.model.ObsTabTilesIds
 import explore.targeteditor.ElevationPlotSection
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
