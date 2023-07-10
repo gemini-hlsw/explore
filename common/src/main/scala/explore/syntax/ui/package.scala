@@ -66,17 +66,25 @@ extension [F[_]: ApplicativeThrow: ToastCtx, A](f: F[A])
     }
 
 extension [F[_]: MonadCancelThrow, A](f: F[A])
+
   /**
    * Switch the value of a ViewF to true while executing the given effect, then switch it back to
    * false when the effect is finished
    */
   def switching(
     view: ViewF[F, Boolean]
-  ): F[A] = switching(view, identity)
+  ): F[A] = switching(view, true, false)
 
   /**
    * Switch the value of a ViewF to true-ish (by the function) while executing the given effect,
    * then switch it back to false when the effect is finished
    */
   def switching[B](view: ViewF[F, B], boolToB: Boolean => B): F[A] =
-    MonadCancelThrow[F].bracket(view.set(boolToB(true)))(_ => f)(_ => view.set(boolToB(false)))
+    switching(view, boolToB(true), boolToB(false))
+
+  /**
+   * Switch the value of a ViewF to the @param acquire value while executing the given effect, then
+   * switch it back to @param release when the effect is finished
+   */
+  def switching[B](view: ViewF[F, B], acquire: B, release: B): F[A] =
+    MonadCancelThrow[F].bracket(view.set(acquire))(_ => f)(_ => view.set(release))

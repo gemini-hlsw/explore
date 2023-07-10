@@ -36,6 +36,7 @@ import explore.model.itc.*
 import explore.model.reusability.given
 import explore.modes.*
 import japgolly.scalajs.react.*
+import japgolly.scalajs.react.hooks.Hooks.UseRef
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.FocalPlane
 import lucuma.core.enums.*
@@ -94,6 +95,7 @@ private object SpectroscopyModesTable extends TableHooks:
     inline def Scroll   = ScrollTo(true)
     inline def NoScroll = ScrollTo(false)
 
+  private given Reusability[SpectroscopyModeRow]     = Reusability.by(_.id)
   private given Reusability[SpectroscopyModesMatrix] = Reusability.by(_.matrix.length)
   private given Reusability[ItcResultsCache]         = Reusability.by(_.cache.size)
 
@@ -328,20 +330,19 @@ private object SpectroscopyModesTable extends TableHooks:
       List(Instrument.GmosNorth, Instrument.GmosSouth).contains_(row.instrument.instrument) &&
         row.focalPlane === FocalPlane.SingleSlit
 
-  private def selectedRowIndex(
-    configuration: Option[BasicConfiguration],
-    cw:            Option[Wavelength],
-    rows:          List[SpectroscopyModeRowWithResult]
-  ): Option[Int] =
-    configuration
-      .map(selected => rows.indexWhere(_.equalsConf(selected, cw)))
-      .filterNot(_ === -1)
-
   private val ScrollOptions =
     rawVirtual.mod
       .ScrollToOptions()
       .setBehavior(rawVirtual.mod.ScrollBehavior.smooth)
       .setAlign(rawVirtual.mod.ScrollAlignment.center)
+
+  def scrollToVirtualizedIndex(
+    selectedIndex:  Int,
+    virtualizerRef: UseRef[Option[HTMLTableVirtualizer]]
+  ): Callback =
+    virtualizerRef.get.flatMap(refOpt =>
+      Callback(refOpt.map(_.scrollToIndex(selectedIndex, ScrollOptions)))
+    )
 
   private val component =
     ScalaFnComponent
@@ -361,7 +362,7 @@ private object SpectroscopyModesTable extends TableHooks:
          props.constraints
         )
       ) { (_, _, _) => (matrix, s, dec, itc, target, constraints) =>
-        val rows                =
+        val rows       =
           matrix
             .filtered(
               focalPlane = s.focalPlane,
@@ -372,8 +373,8 @@ private object SpectroscopyModesTable extends TableHooks:
               range = s.wavelengthCoverage,
               declination = dec
             )
-        val (enabled, disabled) = rows.partition(_.enabledRow)
-        (enabled ++ disabled).map(row =>
+        val sortedRows = rows.sortBy(_.enabledRow)
+        sortedRows.map(row =>
           SpectroscopyModeRowWithResult(
             row,
             itc.forRow(s.wavelength, s.signalToNoise, s.signalToNoiseAt, constraints, target, row)
@@ -460,30 +461,22 @@ private object SpectroscopyModesTable extends TableHooks:
       ) { (_, _, _, _, _, _, sorting, _, table, _) => (_, _, _) =>
         table.getSortedRowModel().rows.map(_.original).toList
       }
+      // selectedRow
+      .useState(none[SpectroscopyModeRow])
       // selectedIndex
       // The selected index needs to be the index into the sorted data, because that is what
       // the virtualizer uses for scrollTo.
-      .useStateBy((props, _, _, _, _, _, _, _, _, _, sortedRows) =>
-        selectedRowIndex(
-          props.selectedConfig.get.map(_.configuration),
-          props.spectroscopyRequirements.wavelength,
-          sortedRows
-        )
+      .useMemoBy((props, _, _, _, _, _, _, _, _, _, sortedRows, selectedRow) =>
+        (sortedRows, selectedRow.value)
+      )((_, _, _, _, _, _, _, _, _, _, _, _) =>
+        (sortedRows, selectedRow) =>
+          selectedRow.map(sRow => sortedRows.indexWhere(row => row.entry == sRow))
       )
-      // Recompute index if conf, requirements or sortedRows change.
-      .useEffectWithDepsBy((props, _, _, _, _, _, _, _, _, _, sortedRows, _) =>
-        (props.selectedConfig.get.map(_.configuration), props.spectroscopyRequirements, sortedRows)
-      ) {
-        (_, _, _, _, _, _, _, _, _, _, _, selectedIndex) =>
-          (configuration, requirements, sortedRows) =>
-            selectedIndex.setState(
-              selectedRowIndex(configuration, requirements.wavelength, sortedRows)
-            )
-      }
+
       // Set the selected config if the rows change because it might have different itc data.
       // Note, we use rows for the dependency, not sorted rows, because sorted rows also changes with sort.
-      .useEffectWithDepsBy((_, _, _, rows, _, _, _, _, _, _, _, _) => rows) {
-        (props, _, _, _, _, _, _, _, _, _, sortedRows, selectedIndex) => _ =>
+      .useEffectWithDepsBy((_, _, _, rows, _, _, _, _, _, _, _, _, _) => rows) {
+        (props, _, _, _, _, _, _, _, _, _, sortedRows, _, selectedIndex) => _ =>
           val optRow = selectedIndex.value.flatMap(idx => sortedRows.lift(idx))
           val conf   = optRow.flatMap(_.rowToConf(props.spectroscopyRequirements.wavelength))
           if (props.selectedConfig.get =!= conf)
@@ -495,7 +488,7 @@ private object SpectroscopyModesTable extends TableHooks:
       // atTop
       .useState(false)
       // Recalculate ITC values if the wv or sn change or if the rows get modified
-      .useEffectWithDepsBy((props, _, _, rows, _, _, _, _, _, _, _, _, _, _) =>
+      .useEffectWithDepsBy((props, _, _, rows, _, _, _, _, _, _, _, _, _, _, _) =>
         (
           props.spectroscopyRequirements.wavelength,
           props.spectroscopyRequirements.signalToNoise,
@@ -505,7 +498,23 @@ private object SpectroscopyModesTable extends TableHooks:
           rows.length
         )
       ) {
-        (_, ctx, itcResults, _, itcProgress, _, _, _, _, _, sortedRows, _, _, _) => (
+        (
+          _,
+          ctx,
+          itcResults,
+          _,
+          itcProgress,
+          _,
+          _,
+          _,
+          _,
+          scrollTo,
+          sortedRows,
+          _,
+          _,
+          _,
+          _
+        ) => (
           wavelength,
           signalToNoise,
           signalToNoiseAt,
@@ -552,7 +561,9 @@ private object SpectroscopyModesTable extends TableHooks:
                                   .filterNot(_.complete)
                               ) >>
                               // Update the cache
-                              itcResults.modStateAsync(_.updateN(itcResponseChunk.toList))
+                              itcResults.modStateAsync(_.updateN(itcResponseChunk.toList)) >>
+                              // Enable scrolling to the selected row (which might have moved due to sorting)
+                              scrollTo.setState(ScrollTo.Scroll).to[IO]
                           )
                           .onComplete(fs2.Stream.eval(itcProgress.setStateAsync(none)))
                       )
@@ -565,18 +576,32 @@ private object SpectroscopyModesTable extends TableHooks:
       }
       .useRef(none[HTMLTableVirtualizer])
       // scroll to the currently selected row.
-      .useEffectWithDepsBy((_, _, _, _, _, _, _, _, _, scrollTo, _, _, _, _, _) => scrollTo) {
-        (_, _, _, _, _, _, _, _, _, _, _, selectedIndex, _, _, virtualizerRef) => scrollTo =>
-          if (scrollTo.value === ScrollTo.Scroll) {
-            virtualizerRef.get.flatMap(refOpt =>
-              Callback(
-                for
-                  virtualizer <- refOpt
-                  idx         <- selectedIndex.value
-                yield virtualizer.scrollToIndex(idx + 1, ScrollOptions)
-              )
-            ) >> scrollTo.setState(ScrollTo.NoScroll)
-          } else Callback.empty
+      .useEffectWithDepsBy(
+        (_, _, _, _, _, sortedRows, _, _, _, scrollTo, _, _, selectedIndex, _, _, _) =>
+          (scrollTo, selectedIndex.value, sortedRows)
+      ) {
+        (
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          virtualizerRef
+        ) => (scrollTo, selectedIndex, _) =>
+          Callback.when(scrollTo.value === ScrollTo.Scroll)(
+            selectedIndex.traverse_(scrollToVirtualizedIndex(_, virtualizerRef)) >>
+              scrollTo.setState(ScrollTo.NoScroll)
+          )
       }
       .render {
         (
@@ -591,6 +616,7 @@ private object SpectroscopyModesTable extends TableHooks:
           table,
           _,
           _,
+          selectedRow,
           selectedIndex,
           visibleRows,
           atTop,
@@ -609,9 +635,7 @@ private object SpectroscopyModesTable extends TableHooks:
               Button(
                 clazz = ExploreStyles.ScrollButton |+| style,
                 severity = Button.Severity.Secondary,
-                onClick = virtualizerRef.get.flatMap(ref =>
-                  Callback(ref.foreach(_.scrollToIndex(idx + 1, ScrollOptions)))
-                )
+                onClick = scrollToVirtualizedIndex(idx, virtualizerRef)
               ).withMods(content).compact.when(indexCondition(idx))
             )
 
@@ -676,7 +700,7 @@ private object SpectroscopyModesTable extends TableHooks:
                     (
                       ^.onClick --> (
                         props.selectedConfig.set(toggleRow(row.original)) >>
-                          selectedIndex.setState(row.index.toInt.some)
+                          selectedRow.setState(row.original.entry.some)
                       )
                     )
                       .when(row.original.entry.enabledRow)
