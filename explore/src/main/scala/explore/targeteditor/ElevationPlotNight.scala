@@ -7,7 +7,7 @@ import cats.Eq
 import cats.derived.*
 import cats.syntax.all.*
 import explore.*
-import explore.components.ui.ExploreStyles
+import explore.components.MoonPhase
 import explore.highcharts.*
 import explore.model.Constants
 import explore.model.enums.TimeDisplay
@@ -427,17 +427,7 @@ object ElevationPlotNight {
         <.div(
           // Include the size in the key
           ResizingChart(options).withKey(s"$props-$resize").when(resize.height.isDefined),
-          <.div(ExploreStyles.MoonPhase)(
-            // Adapted from https://dev.to/thormeier/use-your-i-moon-gination-lets-build-a-moon-phase-visualizer-with-css-and-js-aih
-            <.div(ExploreStyles.MoonSphere)(
-              <.div(ExploreStyles.MoonDark).when(moonPhase < 0.5),
-              <.div(ExploreStyles.MoonLight).when(moonPhase > 0.5),
-              <.div(ExploreStyles.MoonDark).when(moonPhase > 0.5),
-              <.div(ExploreStyles.MoonLight).when(moonPhase < 0.5),
-              <.div(ExploreStyles.MoonDivider,
-                    html_<^.^.transform := s"rotate3d(0, 1, 0, ${360 * moonPhase}deg"
-              )
-            ),
+          MoonPhase(moonPhase)(
             <.small("%1.0f%%".format(moonIllum * 100))
           )
         )
