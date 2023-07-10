@@ -94,8 +94,9 @@ object ObsList:
 
     createObservation[IO](programId)
       .flatMap { obs =>
-        (obsExistence(programId, obs.id, o => setObs(programId, o.some, ctx))
-          .mod(observations)(obsListMod.upsert(obs, pos)) <* scrollIfNeeded(obs.id)).toAsync
+        obsExistence(programId, obs.id, o => setObs(programId, o.some, ctx))
+          .mod(observations)(obsListMod.upsert(obs, pos))
+          .toAsync
       }
       .switching(adding.async)
 
@@ -134,6 +135,10 @@ object ObsList:
       .useStateView(false)
       .useMemoBy((props, _, _, _) => (props.observations.get, props.groups))((_, _, _, _) =>
         ObsNode.fromList
+      )
+      // Scroll to newly created/selected observation
+      .useEffectWithDepsBy((props, _, _, _, _) => props.focusedObs)((_, _, _, _, _) =>
+        focusedObs => focusedObs.map(scrollIfNeeded).getOrEmpty
       )
       .useEffectWithDepsBy((props, _, _, _, _) => (props.focusedObs, props.groups))(
         (props, _, _, _, _) =>
