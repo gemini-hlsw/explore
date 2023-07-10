@@ -7,11 +7,12 @@ import cats.Eq
 import cats.derived.*
 import cats.syntax.all.*
 import explore.*
-import explore.components.ui.ExploreStyles
+import explore.components.MoonPhase
 import explore.highcharts.*
 import explore.model.Constants
 import explore.model.enums.TimeDisplay
 import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Site
 import lucuma.core.enums.TwilightType
@@ -29,7 +30,6 @@ import lucuma.ui.utils.*
 import org.scalajs.dom
 import react.common.ReactFnProps
 import react.highcharts.ResizingChart
-import react.moon.MoonPhase
 import react.resizeDetector.hooks.*
 
 import java.time.Duration
@@ -427,16 +427,8 @@ object ElevationPlotNight {
         <.div(
           // Include the size in the key
           ResizingChart(options).withKey(s"$props-$resize").when(resize.height.isDefined),
-          <.div(ExploreStyles.MoonPhase)(
-            <.span(
-              MoonPhase(
-                phase = moonPhase,
-                size = 20,
-                border = "1px solid black",
-                darkColor = "#303030"
-              ),
-              <.small("%1.0f%%".format(moonIllum * 100))
-            )
+          MoonPhase(moonPhase)(
+            <.small("%1.0f%%".format(moonIllum * 100))
           )
         )
           .withRef(resize.ref)

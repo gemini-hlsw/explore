@@ -1,0 +1,48 @@
+:root {
+  --moon-size: 20px;
+  --moon-light-background: hsl(80deg 25% 95%);
+  --moon-dark-background: hsl(0deg 0% 19%);
+}
+
+.moon-sphere {
+  width: var(--moon-size);
+  height: var(--moon-size);
+  border-radius: 100%;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+
+  .moon-light {
+    width: 50%;
+    height: 100%;
+    background-color: var(--moon-light-background);
+  }
+
+  .moon-dark {
+    width: 50%;
+    height: 100%;
+    background-color: var(--moon-dark-background);
+  }
+
+  .moon-divider,
+  .moon-divider::after {
+    top: 0;
+    left: 0;
+    width: var(--moon-size);
+    height: var(--moon-size);
+    position: absolute;
+    border-radius: 100%;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+  }
+
+  .moon-divider {
+    background-color: var(--moon-dark-background);
+  }
+
+  .moon-divider::after {
+    content: '';
+    background-color: var(--moon-light-background);
+    transform: rotateY(180deg);
+  }
+}
