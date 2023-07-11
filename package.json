@@ -39,7 +39,7 @@
   },
   "devDependencies": {
     "@ronilaukkarinen/stylelint-value-no-unknown-custom-properties": "^4.0.1",
-    "@vitejs/plugin-react": "^4.0.1",
+    "@vitejs/plugin-react": "^4.0.3",
     "assert": "^2.0.0",
     "brotli-size": "4.0.0",
     "bundlemon": "^2.0.2",
