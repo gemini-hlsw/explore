@@ -7,7 +7,6 @@ import cats.Eq
 import cats.derived.*
 import cats.syntax.all.*
 import explore.*
-import explore.components.MoonPhase
 import explore.highcharts.*
 import explore.model.Constants
 import explore.model.enums.TimeDisplay
@@ -25,6 +24,7 @@ import lucuma.core.model.ObservingNight
 import lucuma.typed.highcharts.highchartsStrings.area
 import lucuma.typed.highcharts.mod.XAxisLabelsOptions
 import lucuma.typed.highcharts.mod.*
+import lucuma.ui.components.MoonPhase
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
 import org.scalajs.dom
