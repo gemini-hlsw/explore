@@ -1,6 +1,7 @@
 import "/common/sass/explore-primereact.scss";
 import "/lucuma-css/lucuma-ui-table.scss";
 import "/lucuma-css/solar-system.scss";
+import "/lucuma-css/moon.scss";
 import "primereact/resources/primereact.min.css"
 import "primeicons/primeicons.css"
 import "/common/less/style.less";
@@ -10,7 +11,6 @@ import "/common/sass/aladin.scss";
 import "/common/sass/charts.scss";
 import "/common/sass/datepicker.scss";
 import "/common/sass/explore.scss";
-import "/common/sass/moon.scss";
 import "github-markdown-css/github-markdown-light.css";
 import "react-circular-progressbar/dist/styles.css";
 

@@ -226,13 +226,6 @@ object ExploreStyles:
   val AgsNavigationButton: Css = Css("ags-navigation-button")
   val AgsNavigation: Css       = Css("ags-navigation")
 
-  // Move to lucuma-ui
-  val MoonSphere: Css  = Css("moon-sphere")
-  val MoonLight: Css   = Css("moon-light")
-  val MoonDark: Css    = Css("moon-dark")
-  val MoonDivider: Css = Css("moon-divider")
-  val MoonPhase: Css   = Css("moon-phase")
-
   val ProposalDetailsGrid: Css = Css("explore-proposal-details-grid")
   val ProposalAbstract: Css    = Css("explore-proposal-abstract")
 
