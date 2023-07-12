@@ -72,17 +72,14 @@ object ObsList:
     )
 
   private def scrollIfNeeded(targetObs: Observation.Id) =
-    Callback.suspend {
+    Callback {
       Option(dom.document.getElementById(s"obs-list-${targetObs.toString}"))
         .filterNot(js.isUndefined)
-        .map { target =>
-          Callback {
-            val rect = target.getBoundingClientRect()
-            if (rect.top < 0) target.scrollIntoView()
-            if (rect.bottom > dom.window.innerHeight) target.scrollIntoView(false)
-          }
+        .map { obsListElement =>
+          val rect = obsListElement.getBoundingClientRect()
+          if (rect.top < 0) obsListElement.scrollIntoView()
+          if (rect.bottom > dom.window.innerHeight) obsListElement.scrollIntoView(false)
         }
-        .getOrEmpty
     }
 
   private def insertObs(
