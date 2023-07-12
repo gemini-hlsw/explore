@@ -3,7 +3,7 @@
 
 package explore.common
 
-import _root_.cats.Applicative
+import cats.Applicative
 import cats.effect.*
 import cats.implicits.*
 import eu.timepit.refined.*
@@ -11,8 +11,8 @@ import eu.timepit.refined.collection.NonEmpty
 import explore.model.SSOConfig
 import explore.model.UserVault
 import io.circe.Decoder
-import io.circe.generic.semiauto.*
 import io.circe.parser.*
+import lucuma.core.model.StandardRole
 import lucuma.core.model.User
 import lucuma.sso.client.codec.user.*
 import org.http4s.*
@@ -27,11 +27,7 @@ import java.time.temporal.ChronoUnit
 import java.{util => ju}
 import scala.concurrent.duration.*
 
-case class JwtOrcidProfile(exp: Long, `lucuma-user`: User)
-
-object JwtOrcidProfile {
-  implicit val decoder: Decoder[JwtOrcidProfile] = deriveDecoder
-}
+case class JwtOrcidProfile(exp: Long, `lucuma-user`: User) derives Decoder
 
 case class SSOClient[F[_]: Async: Logger](config: SSOConfig) {
   import RetryHelpers.*
@@ -92,13 +88,27 @@ case class SSOClient[F[_]: Async: Logger](config: SSOConfig) {
                   } yield UserVault(u.`lucuma-user`, Instant.ofEpochSecond(u.exp), t)
                 ).fold(msg => throw new RuntimeException(s"Error decoding the token: $msg"), _.some)
               )
-          case r                    =>
+          case _                    =>
             Applicative[F].pure(none[UserVault])
         }
     }
       .adaptError { case t =>
         new Exception("Error connecting to authentication server.", t)
       }
+
+  def switchRole(roleId: StandardRole.Id): F[Option[UserVault]] =
+    retryingOnAllErrors(retryPolicy[F], logError[F]("Switching role")) {
+      client
+        .flatMap(
+          _.run(
+            Request(Method.GET,
+                    (config.uri / "auth" / "v1" / "set-role").withQueryParam("role", roleId.show)
+            )
+          )
+        )
+        .use_ *> whoami
+
+    }
 
   def refreshToken(expiration: Instant): F[Option[UserVault]] =
     Sync[F].delay(Instant.now).flatMap { n =>

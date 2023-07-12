@@ -20,6 +20,7 @@ import monocle.Lens
 import monocle.Optional
 
 import scala.collection.immutable.HashSet
+
 case class RootModel(
   vault:                Option[UserVault],
   localPreferences:     ExploreLocalPreferences,

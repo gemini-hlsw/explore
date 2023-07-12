@@ -16,4 +16,5 @@ import java.time.Instant
 case class UserVault(user: User, expiration: Instant, token: NonEmptyString) derives Eq
 
 object UserVault:
-  val user = Focus[UserVault](_.user)
+  val user  = Focus[UserVault](_.user)
+  val token = Focus[UserVault](_.token)

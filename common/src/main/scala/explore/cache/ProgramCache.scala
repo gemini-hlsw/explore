@@ -37,6 +37,7 @@ import react.common.ReactFnProps
 
 case class ProgramCache(
   programId:           Program.Id,
+  roleId:              Option[String], // Just to refresh if the role has changed
   setProgramSummaries: Option[ProgramSummaries] => IO[Unit]
 )(using client: StreamingClient[IO, ObservationDB])
     extends ReactFnProps[ProgramCache](ProgramCache.component)
@@ -45,7 +46,7 @@ case class ProgramCache(
   given StreamingClient[IO, ObservationDB] = client
 
 object ProgramCache extends CacheComponent[ProgramSummaries, ProgramCache]:
-  given Reusability[ProgramCache] = Reusability.by(_.programId)
+  given Reusability[ProgramCache] = Reusability.by(p => (p.programId, p.roleId))
 
   private def drain[A, Id, R](
     fetch:      Option[Id] => IO[R],
