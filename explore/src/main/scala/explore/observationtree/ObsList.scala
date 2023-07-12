@@ -73,14 +73,13 @@ object ObsList:
 
   private def scrollIfNeeded(targetObs: Observation.Id) =
     Callback {
-      // 'getElementById' does not return any optional type, so coerce to js.UndefOr
-      val target: js.UndefOr[Element] =
-        dom.document.getElementById(s"obs-list-${targetObs.toString}")
-      target.foreach { t =>
-        val rect = t.getBoundingClientRect()
-        if (rect.top < 0) t.scrollIntoView()
-        if (rect.bottom > dom.window.innerHeight) t.scrollIntoView(false)
-      }
+      Option(dom.document.getElementById(s"obs-list-${targetObs.toString}"))
+        .filterNot(js.isUndefined)
+        .map { obsListElement =>
+          val rect = obsListElement.getBoundingClientRect()
+          if (rect.top < 0) obsListElement.scrollIntoView()
+          if (rect.bottom > dom.window.innerHeight) obsListElement.scrollIntoView(false)
+        }
     }
 
   private def insertObs(
