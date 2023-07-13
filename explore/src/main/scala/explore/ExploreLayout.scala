@@ -151,17 +151,24 @@ object ExploreLayout:
               // programs will still load and they will be redirected to the program
               // selection popup.
               ProgramCache(routingInfo.programId,
+                           props.view.zoom(RootModel.user).get.map(_.role.name),
                            props.view.zoom(RootModel.programSummaries).async.set
               ),
               PreferencesCache(vault.user.id, props.view.zoom(RootModel.userPreferences).async.set),
-              TopBar(
-                vault,
-                routingInfo.optProgramId,
-                props.view.zoom(RootModel.localPreferences).get,
-                props.view.zoom(RootModel.undoStacks),
-                props.view.zoom(RootModel.programSummaries.some).zoom(ProgramSummaries.programs),
-                onLogout >> props.view.zoom(RootModel.vault).set(none).toAsync
-              ),
+              props.view
+                .zoom(RootModel.vault)
+                .mapValue(vault =>
+                  TopBar(
+                    vault,
+                    routingInfo.optProgramId,
+                    props.view.zoom(RootModel.localPreferences).get,
+                    props.view.zoom(RootModel.undoStacks),
+                    props.view
+                      .zoom(RootModel.programSummaries.some)
+                      .zoom(ProgramSummaries.programs),
+                    onLogout >> props.view.zoom(RootModel.vault).set(none).toAsync
+                  )
+                ),
               <.div(
                 ExploreStyles.SideTabs,
                 SideTabs(routingInfo)

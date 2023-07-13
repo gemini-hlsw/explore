@@ -1455,27 +1455,30 @@ i.icon.user-astronaut::before {
 
 .main-user-name {
   margin-left: auto;
+  margin-right: 0.5em;
   letter-spacing: 0.1em;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  @include common.text-ellipsis;
 }
 
 .main-header.p-toolbar {
   grid-area: header;
-  width: 100vw;
-  min-width: 100vw;
+  width: 100dvw;
+  min-width: 100dvw;
   padding: 0.2rem 1rem 0.2rem 1.5rem;
+  flex-wrap: nowrap;
+
+  .p-toolbar-group-right {
+    overflow: hidden;
+  }
 
   .p-toolbar-group-right,
   .p-toolbar-group-left {
     display: flex;
-    flex-direction: row;
-    column-gap: 1.5em;
 
     .p-component.p-button.p-button-text {
       margin: 0;
       padding: 0;
+      min-width: min-content;
 
       &:not(:hover) {
         color: var(--site-text-color);
@@ -2486,7 +2489,6 @@ div.spectroscopy-table-emptymessage {
     border: 1px solid var(--under-tab-border-color);
     background-color: var(--under-tab-background-color);
     display: flex;
-    justify-content: center;
     align-items: flex-end;
   }
 }

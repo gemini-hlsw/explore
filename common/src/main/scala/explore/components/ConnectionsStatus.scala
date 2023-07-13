@@ -45,7 +45,7 @@ object ConnectionsStatus:
           placement = Placement.Bottom
         )
       )
-    } else <.span()
+    } else EmptyVdom
   }
 
   private val component =

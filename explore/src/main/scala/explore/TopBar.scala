@@ -43,7 +43,7 @@ import react.primereact.hooks.all.*
 import typings.loglevel.mod.LogLevelDesc
 
 case class TopBar(
-  vault:        UserVault,
+  vault:        View[UserVault],
   programId:    Option[Program.Id],
   preferences:  ExploreLocalPreferences,
   undoStacks:   View[UndoStacks[IO, ProgramSummaries]],
@@ -91,19 +91,18 @@ object TopBar:
         ) =>
           import ctx.given
 
-          val role = props.vault.user.role
+          val user  = props.vault.get.user
+          val role  = user.role
+          val level = props.preferences.level
 
           def logout: IO[Unit] = ctx.sso.logout >> props.onLogout
-
-          val level = props.preferences.level
 
           def setLogLevel(l: LogLevelDesc): Callback =
             (ExploreLocalPreferences
               .storePreferences[IO](
                 props.preferences.copy(level = l)
               ) *> IO(window.location.reload())).runAsync
-
-          val themeMenuItem = themePot
+          val themeMenuItem                          = themePot
             .map(currentTheme =>
               MenuItem.SubMenu(label = "Theme",
                                icon = Icons.Eclipse,
@@ -193,7 +192,7 @@ object TopBar:
               clazz = ExploreStyles.MainHeader,
               left = <.span(ExploreStyles.MainTitle, "Explore"),
               right = React.Fragment(
-                <.span(ExploreStyles.MainUserName, props.vault.user.displayName),
+                RoleSwitch(props.vault),
                 ConnectionsStatus(),
                 Button(icon = Icons.Bars,
                        text = true,
@@ -215,7 +214,7 @@ object TopBar:
             else EmptyVdom,
             if (isUserPropertiesOpen.value.value)
               UserPreferencesPopup(
-                props.vault,
+                props.vault.get,
                 isUserPropertiesOpen.setState(IsUserPropertiesOpen(false)).some
               )
             else EmptyVdom
