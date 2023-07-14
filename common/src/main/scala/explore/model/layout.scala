@@ -6,6 +6,7 @@ package explore.model
 import cats.Order.*
 import cats.*
 import cats.syntax.all.*
+import explore.model.enums.GridLayoutSection
 import monocle.Focus
 import monocle.Lens
 import monocle.Traversal
@@ -19,10 +20,11 @@ import scala.collection.immutable.SortedMap
  * Utilities related to react-grid-layout
  */
 object layout {
-  type LayoutWidth = Int
-  type LayoutCols  = Int
-  type LayoutEntry = (LayoutWidth, LayoutCols, Layout)
-  type LayoutsMap  = SortedMap[BreakpointName, (LayoutWidth, LayoutCols, Layout)]
+  type LayoutWidth       = Int
+  type LayoutCols        = Int
+  type LayoutEntry       = (LayoutWidth, LayoutCols, Layout)
+  type LayoutsMap        = SortedMap[BreakpointName, LayoutEntry]
+  type SectionLayoutsMap = Map[GridLayoutSection, LayoutsMap]
 
   val LargeCutoff     = 1200
   val MediumCutoff    = 996
@@ -67,7 +69,8 @@ object layout {
   def breakpointLayout(bn: BreakpointName): Traversal[LayoutsMap, Layout] =
     at[LayoutsMap, BreakpointName, Option[LayoutEntry]](bn).some.andThen(Focus[LayoutEntry](_._3))
 
-  val layoutItem: Lens[Layout, List[LayoutItem]] = Focus[Layout](_.l)
+  val layoutItem: Lens[Layout, List[LayoutItem]] =
+    Lens[Layout, List[LayoutItem]](_.asList)(list => _ => Layout(list))
   val layoutItems: Traversal[Layout, LayoutItem] = layoutItem.each
 
   val layoutItemName      = Focus[LayoutItem](_.i)
@@ -81,35 +84,47 @@ object layout {
 
   val layoutsItemHeight = layoutItems.andThen(layoutItemHeight)
 
-  object unsafe {
-    given Semigroup[Layout] = Semigroup.instance { case (a, b) =>
-      val result = a.l.foldLeft(List.empty[LayoutItem]) { case (l, la) =>
-        b.l
-          .find(_.i.exists(_ === la.i.get))
-          .map { lb =>
-            la |+| lb
-          }
-          .getOrElse(la) :: l
-      }
-      Layout(result)
+  // Only the x, y, width and height are saved in user preferences.
+  def mergeLayoutItems(current: LayoutItem, fromDb: LayoutItem): LayoutItem =
+    current.copy(w = fromDb.w, h = fromDb.h, x = fromDb.x, y = fromDb.y)
+
+  // As with the other merges, the current Layout is expected to have all
+  // of required LayoutItems since it originates with the DefaultLayout.
+  // So, any extra LayoutItems from the db are ignored.
+  def mergeLayouts(current: Layout, fromDb: Layout): Layout =
+    val list = current.asList.foldLeft(List.empty[LayoutItem]) { (acc, currentItem) =>
+      fromDb.asList
+        .find(_.i === currentItem.i)
+        .map(dbItem => mergeLayoutItems(currentItem, dbItem))
+        .getOrElse(currentItem) :: acc
+    }
+    Layout(list.reverse)
+
+  def mergeLayoutEntries(current: LayoutEntry, fromDb: LayoutEntry): LayoutEntry =
+    (current._1, current._2, mergeLayouts(current._3, fromDb._3))
+
+  def mergeLayoutsMaps(current: LayoutsMap, fromDb: LayoutsMap) =
+    fromDb.foldLeft(current) { case (acc, (breakpoint, dbEntry)) =>
+      acc
+        .get(breakpoint)
+        .fold(acc)(currentEntry =>
+          acc.updated(breakpoint, mergeLayoutEntries(currentEntry, dbEntry))
+        )
     }
 
-    given Semigroup[LayoutItem] = Semigroup.instance { case (a, b) =>
-      a.copy(w = b.w, h = b.h, x = b.x, y = b.y)
+  // Updates the x, y, width, height of the layout items in `current` from the ones in `fromDb`.
+  // The `current` map is expected to have all of the required sections, layouts, entries, and items
+  // because it originated with the DefaultLayouts. Anything "extra" in `fromDb` will be ignored.
+  def mergeSectionLayoutsMaps(
+    current: SectionLayoutsMap,
+    fromDb:  SectionLayoutsMap
+  ): SectionLayoutsMap =
+    fromDb.foldLeft(current) { case (acc, (section, dbLayouts)) =>
+      acc
+        .get(section)
+        .fold(acc)(currentLayouts =>
+          acc.updated(section, mergeLayoutsMaps(currentLayouts, dbLayouts))
+        )
+
     }
-
-    given Semigroup[(Int, Int, Layout)] =
-      Semigroup.instance { case ((a, b, c), (_, _, d)) =>
-        (a, b, c |+| d)
-      }
-  }
-
-  def optionCombine[A: Semigroup](a: A, opt: Option[A]): A =
-    opt.map(a |+| _).getOrElse(a)
-
-  def mergeMap[K, V: Semigroup](lhs: SortedMap[K, V], rhs: SortedMap[K, V]): SortedMap[K, V] =
-    rhs.foldLeft(lhs) { case (acc, (k, v)) =>
-      acc.get(k).fold(acc)(_ => acc.updated(k, optionCombine(v, acc.get(k))))
-    }
-
 }

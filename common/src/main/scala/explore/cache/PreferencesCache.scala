@@ -12,6 +12,7 @@ import explore.common.UserPreferencesQueries.GridLayouts
 import explore.model.ExploreGridLayouts
 import explore.model.UserPreferences
 import explore.model.enums.GridLayoutSection
+import explore.model.layout
 import explore.model.layout.LayoutsMap
 import japgolly.scalajs.react.*
 import lucuma.core.model.User
@@ -36,7 +37,13 @@ object PreferencesCache extends CacheComponent[UserPreferences, PreferencesCache
     import props.given
 
     val grids: IO[Map[GridLayoutSection, LayoutsMap]] =
-      GridLayouts.queryWithDefault[IO](props.userId.some, ExploreGridLayouts.DefaultLayouts)
+      GridLayouts
+        .queryLayouts[IO](props.userId.some)
+        .map(
+          _.fold(ExploreGridLayouts.DefaultLayouts)(l =>
+            layout.mergeSectionLayoutsMaps(ExploreGridLayouts.DefaultLayouts, l)
+          )
+        )
 
     grids.map(UserPreferences.apply)
 
