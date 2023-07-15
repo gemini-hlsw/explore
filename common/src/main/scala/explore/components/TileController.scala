@@ -27,7 +27,6 @@ import lucuma.ui.syntax.all.given
 import monocle.Traversal
 import queries.schemas.UserPreferencesDB
 import react.common.ReactFnProps
-import react.common.implicits.given
 import react.common.style.Css
 import react.gridlayout.*
 
@@ -61,7 +60,7 @@ object TileController:
     tileId:     Tile.TileId
   ): TileSizeState = {
     val k = allTiles
-      .filter(s => s.i.forall(_ === tileId.value))
+      .filter(s => s.i === tileId.value)
       .getAll(layoutsMap)
       .headOption
 
@@ -74,12 +73,12 @@ object TileController:
 
   private def unsafeTileHeight(id: Tile.TileId): Traversal[LayoutsMap, Int] =
     allTiles
-      .filter(_.i.forall(_ === id.value))
+      .filter(_.i === id.value)
       .andThen(layoutItemHeight)
 
   private def tileResizable(id: Tile.TileId): Traversal[LayoutsMap, Boolean | Unit] =
     allTiles
-      .filter(_.i.forall(_ === id.value))
+      .filter(_.i === id.value)
       .andThen(layoutItemResizable)
 
   private def updateResizableState(p: LayoutsMap): LayoutsMap =
@@ -111,7 +110,7 @@ object TileController:
           currentLayout
             .zoom(allTiles)
             .mod {
-              case l if l.i.forall(_ === id.value) =>
+              case l if l.i === id.value =>
                 if (st === TileSizeState.Minimized) l.copy(h = 1, minH = 1, isResizable = false)
                 else if (st === TileSizeState.Normal) {
                   val defaultHeight =
@@ -125,19 +124,19 @@ object TileController:
                          minH = scala.math.max(l.minH.getOrElse(1), defaultHeight)
                   )
                 } else l
-              case l                               => l
+              case l                     => l
             }
 
         def addBackButton: List[Tile] = {
           val topTile =
-            currentLayout.get.get(breakpoint.value).flatMap(_._3.l.sortBy(_.y).headOption)
+            currentLayout.get.get(breakpoint.value).flatMap(_._3.asList.sortBy(_.y).headOption)
           (topTile, p.backButton)
             .mapN((t, b) =>
               p.tiles
                 .map {
-                  case ti if t.i.toOption.exists(_ === ti.id.value) =>
+                  case ti if t.i === ti.id.value =>
                     ti.copy(back = p.backButton)(ti.render)
-                  case ti                                           => ti
+                  case ti                        => ti
                 }
             )
             .getOrElse(p.tiles)
@@ -169,7 +168,7 @@ object TileController:
               currentLayout.get
                 .get(breakpoint.value)
                 .flatMap { case (_, _, l) =>
-                  l.l
+                  l.asList
                     .find(_.i === t.id.value)
                     .flatMap { i =>
                       TagMod

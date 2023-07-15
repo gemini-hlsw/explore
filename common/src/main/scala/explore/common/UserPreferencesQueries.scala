@@ -29,7 +29,6 @@ import explore.model.enums.Visible
 import explore.model.itc.PlotDetails
 import explore.model.itc.*
 import explore.model.layout.*
-import explore.model.layout.given
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.model.ObsAttachment
@@ -54,8 +53,6 @@ import react.gridlayout.BreakpointName
 import react.gridlayout.{BreakpointName => _, _}
 
 import scala.collection.immutable.SortedMap
-
-import scalajs.js
 
 object UserPreferencesQueries:
   type TableColumnPreferences = TableColumnPreferencesQuery.Data
@@ -119,12 +116,10 @@ object UserPreferencesQueries:
               )
       ))
 
-    // Gets the layout of a section.
-    // This will return a default in case there is no data or errors
-    def queryWithDefault[F[_]: MonadThrow](
-      userId:       Option[User.Id],
-      defaultValue: Map[GridLayoutSection, LayoutsMap]
-    )(using FetchClient[F, UserPreferencesDB]): F[Map[GridLayoutSection, LayoutsMap]] =
+    // Gets the layouts for all of the sections.
+    def queryLayouts[F[_]: MonadThrow](
+      userId: Option[User.Id]
+    )(using FetchClient[F, UserPreferencesDB]): F[Option[Map[GridLayoutSection, LayoutsMap]]] =
       (for {
         uid <- OptionT.fromOption[F](userId)
         r   <-
@@ -145,7 +140,7 @@ object UserPreferencesQueries:
               }
             }
             .handleErrorWith(_ => OptionT.none)
-      } yield r).getOrElse(defaultValue)
+      } yield r).value
 
     def updateLayouts(
       data: List[LucumaGridLayoutPositions]
@@ -153,11 +148,12 @@ object UserPreferencesQueries:
       data match {
         case l if l.isEmpty => original
         case l              =>
-          l.groupBy(_.section).map { case (s, l) =>
+          val newMap = l.groupBy(_.section).map { case (s, l) =>
             s -> SortedMap(
               l.groupBy(_.breakpointName).map(positions2LayoutMap).toList: _*
             )
           }
+          mergeSectionLayoutsMaps(original, newMap)
       }
 
     def storeLayoutsPreference[F[_]: ApplicativeThrow](
@@ -169,7 +165,7 @@ object UserPreferencesQueries:
         UserGridLayoutUpsert[F]
           .execute(
             layouts.layouts.flatMap { bl =>
-              bl.layout.l.collect {
+              bl.layout.asList.collect {
                 case i if i.i.nonEmpty =>
                   LucumaGridLayoutPositionsInsertInput(
                     userId = uid.show.assign,
@@ -179,7 +175,7 @@ object UserPreferencesQueries:
                     height = i.h.assign,
                     x = i.x.assign,
                     y = i.y.assign,
-                    tile = i.i.getOrElse("").assign
+                    tile = i.i.assign
                   )
               }
             }

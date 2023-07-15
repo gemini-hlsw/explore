@@ -78,7 +78,6 @@ object UserPreferencesQueriesGQL {
           x
           y
           tile
-          userId
         }
       }
     """
@@ -90,12 +89,12 @@ object UserPreferencesQueriesGQL {
       subscription gridLayoutPositions($userId: String!) {
         lucumaGridLayoutPositions(where: {userId: {_eq: $userId}}) {
           breakpointName
-          height
           section
-          tile
+          height
           width
           x
           y
+          tile
         }
       }
     """
