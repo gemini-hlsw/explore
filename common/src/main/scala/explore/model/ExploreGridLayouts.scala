@@ -26,6 +26,7 @@ object ExploreGridLayouts:
   private given Order[BreakpointName] = Order.by(_.name)
 
   def sectionLayout: GridLayoutSection => LayoutsMap = _ match {
+    case GridLayoutSection.ProgramsLayout     => programs.defaultProgramsLayouts
     case GridLayoutSection.ConstraintsLayout  => constraints.defaultConstraintsLayouts
     case GridLayoutSection.SchedulingLayout   => scheduling.defaultSchedulingLayouts
     case GridLayoutSection.TargetLayout       => targets.defaultTargetLayouts
@@ -279,3 +280,55 @@ object ExploreGridLayouts:
           (BreakpointName.md, layoutMedium)
         )
       )
+
+  object programs:
+    private val DetailsHeight: NonNegInt           = 6.refined
+    private val DetailsMinHeight: NonNegInt        = 4.refined
+    private val NotesHeight: NonNegInt             = 6.refined
+    private val NotesMinHeight: NonNegInt          = 4.refined
+    private val ChangeRequestsHeight: NonNegInt    = 6.refined
+    private val ChangeRequestsMinHeight: NonNegInt = 4.refined
+    private val TileMinWidth: NonNegInt            = 8.refined
+    private val DefaultWidth: NonNegInt            = 10.refined
+    private val DefaultLargeWidth: NonNegInt       = 12.refined
+
+    private val layoutMedium: Layout = Layout(
+      List(
+        LayoutItem(
+          i = ProgramTabTileIds.DetailsId.id.value,
+          x = 0,
+          y = 0,
+          w = DefaultWidth.value,
+          h = DetailsHeight.value,
+          minH = DetailsMinHeight.value,
+          minW = TileMinWidth.value
+        ),
+        LayoutItem(
+          i = ProgramTabTileIds.NotesId.id.value,
+          x = 0,
+          y = DetailsHeight.value,
+          w = DefaultWidth.value,
+          h = NotesHeight.value,
+          minH = NotesMinHeight.value,
+          minW = TileMinWidth.value
+        ),
+        LayoutItem(
+          i = ProgramTabTileIds.ChangeRequestsId.id.value,
+          x = 0,
+          y = (DetailsHeight |+| NotesHeight).value,
+          w = DefaultWidth.value,
+          h = ChangeRequestsHeight.value,
+          minH = ChangeRequestsMinHeight.value,
+          minW = TileMinWidth.value
+        )
+      )
+    )
+
+    val defaultProgramsLayouts = defineStdLayouts(
+      Map(
+        (BreakpointName.lg,
+         layoutItems.andThen(layoutItemWidth).replace(DefaultLargeWidth)(layoutMedium)
+        ),
+        (BreakpointName.md, layoutMedium)
+      )
+    )

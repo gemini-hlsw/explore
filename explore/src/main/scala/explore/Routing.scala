@@ -15,6 +15,7 @@ import explore.model.*
 import explore.programs.ProgramsPopup
 import explore.proposal.ProposalTabContents
 import explore.tabs.ConstraintsTabContents
+import explore.tabs.ProgramTabContents
 import explore.tabs.*
 import explore.undo.UndoContext
 import japgolly.scalajs.react.ReactMonocle.*
@@ -143,6 +144,14 @@ object Routing:
       )
     )
 
+  private def programTab(page: Page, model: View[RootModel]): VdomElement =
+    val routingInfo = RoutingInfo.from(page)
+    ProgramTabContents(
+      routingInfo.programId,
+      model.zoom(RootModel.vault).get,
+      userPreferences(model)
+    )
+
   private def showProgramSelectionPopup(model: View[RootModel]): VdomElement =
     // Because we are not supplying a program id, the ProgramsPopup will be displayed
     withProgramSummaries(none, model)(_ => <.div("Programmer error!"))
@@ -176,6 +185,10 @@ object Routing:
           | dynamicRouteCT((root / id[Program.Id]).xmapL(HomePage.iso)) ~> dynRenderP {
             case (p, m) => overviewTab(p, m)
           }
+
+          | dynamicRouteCT(
+            (root / id[Program.Id] / "program").xmapL(ProgramPage.iso)
+          ) ~> dynRenderP { case (p, m) => programTab(p, m) }
 
           | dynamicRouteCT(
             (root / id[Program.Id] / "proposal").xmapL(ProposalPage.iso)
@@ -252,6 +265,7 @@ object Routing:
           .verify(
             NoProgramPage,
             HomePage(pid),
+            ProgramPage(pid),
             ProposalPage(pid),
             ObservationsBasePage(pid),
             ObsPage(pid, oid),

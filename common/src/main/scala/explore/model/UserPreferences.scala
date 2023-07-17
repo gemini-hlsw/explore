@@ -27,6 +27,9 @@ case class UserPreferences(
 
   val observationsTabLayout =
     tabLayout(GridLayoutSection.ObservationsLayout)
+
+  val programsTabLayout =
+    tabLayout(GridLayoutSection.ProgramsLayout)
 }
 
 object UserPreferences:
