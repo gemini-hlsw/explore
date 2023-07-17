@@ -83,7 +83,7 @@ jobs:
         run: sbt -v -J-Xmx6g 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' coverageReport coverageAggregate
 
       - name: Upload code coverage data
-        run: 'bash <(curl -s https://codecov.io/bash)'
+        uses: codecov/codecov-action@v3
 
   full:
     name: full
