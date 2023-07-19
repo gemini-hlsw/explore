@@ -2,6 +2,6 @@ table:
   name: lucuma_itc_plot_preferences
   schema: public
 object_relationships:
-- name: lucuma_observation
-  using:
-    foreign_key_constraint_on: observationId
+  - name: lucuma_observation
+    using:
+      foreign_key_constraint_on: observationId

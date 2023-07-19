@@ -15,7 +15,7 @@
   },
   {
     "hostName": "explore.lucuma.xyz",
-    "environment": "STAGING", 
+    "environment": "STAGING",
     "odbURI": "wss://lucuma-postgres-odb-staging.herokuapp.com/ws",
     "odbRestURI": "https://lucuma-postgres-odb-staging.herokuapp.com",
     "preferencesDBURI": "wss://user-prefs-staging.herokuapp.com/v1/graphql",

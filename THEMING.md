@@ -1,7 +1,6 @@
 # Explore Theme
 
-Explore uses `SemanticUI` as the css framework. `SemanticUI` supports themes and comes with a 
-few predefined ones, whose settings can be further overridden for customization.
+Explore uses `SemanticUI` as the css framework. `SemanticUI` supports themes and comes with a few predefined ones, whose settings can be further overridden for customization.
 
 The theme used in `explore` is based on `default`, existing at `common/src/main/webapp/suithemes/default` overridden with values at `common/src/main/webapp/theme`.
 
@@ -20,7 +19,7 @@ Naming variables in a way that is more or less understandable and matching `Sema
 
 The convention taken is to name variables using a prefix that corresponds to the section in `SUI` and the original name of the less variable. e.g.
 
-In the default *theme/menu.variables* file there is:
+In the default _theme/menu.variables_ file there is:
 
 ```less
 @hoverItemBackground: var(--menu-hover-item-background);
@@ -28,20 +27,23 @@ In the default *theme/menu.variables* file there is:
 
 This is replaced by a variable :
 
-* Dark theme:
-```css
-  --menu-hover-item-background: var(--color-background-light-10);
-````
+- Dark theme:
 
-* Light theme:
 ```css
-  --menu-hover-item-background: @subtleTransparentBlack;
-````
+--menu-hover-item-background: var(--color-background-light-10);
+```
+
+- Light theme:
+
+```css
+--menu-hover-item-background: @subtleTransparentBlack;
+```
 
 Note that in the example above on the light theme we use the original definition, while
 on the dark theme we are further referring another color in a css variable.
 
 Furthermore groups or variables are grouped using less mixins like
+
 ```less
 .menu-dark() {
   --menu-hover-item-background: var(--color-background-light-10);
@@ -52,9 +54,11 @@ We use a mixin as this needs to be referred twice.
 For each mixin we have a light and a dark version
 
 # Calculated colors
+
 The approach of further referring colors in css variables is used because, in general, dark themes use variations on lightness of a base color.
 
 This was originally handled in less using e.g.:
+
 ```less
 @hoverItemBackground: lighten(@pageBackground, 10%);
 ```

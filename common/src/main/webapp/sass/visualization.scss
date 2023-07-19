@@ -1,5 +1,5 @@
 @use 'common.scss';
-@use "sass:string";
+@use 'sass:string';
 
 :root {
   --aladin-image-saturation: 1;
@@ -11,7 +11,7 @@ $brightness: var(--aladin-image-brightness);
 
 /* stylelint-disable-next-line selector-class-pattern */
 .aladin-imageCanvas {
-  filter: #{saturate}(string.unquote($saturation)) brightness(string.unquote($brightness));
+  filter: #{saturate }(string.unquote($saturation)) brightness(string.unquote($brightness));
 }
 
 .aladin-container {
@@ -66,7 +66,7 @@ $brightness: var(--aladin-image-brightness);
     stroke-dasharray: 3;
   }
 
-  .gmos-fpu>polygon {
+  .gmos-fpu > polygon {
     stroke: blue;
     stroke-width: 0.8px;
     fill: lightgray;
@@ -140,14 +140,14 @@ $brightness: var(--aladin-image-brightness);
   }
 
   .science-target {
-    fill: hsl(240deg 100.0% 60.2%);
-    stroke: hsl(240deg 100.0% 60.2%);
+    fill: hsl(240deg 100% 60.2%);
+    stroke: hsl(240deg 100% 60.2%);
     stroke-width: 1px;
   }
 
   .science-selected-target {
     fill: none;
-    stroke: hsl(33deg 100.0% 50.0%);
+    stroke: hsl(33deg 100% 50%);
     stroke-width: 1px;
   }
 
@@ -183,7 +183,7 @@ $brightness: var(--aladin-image-brightness);
 
   .science-offset-position {
     // dark turqoise for science offsets
-    stroke: hsl(181deg 100.0% 41.0% / 100%);
+    stroke: hsl(181deg 100% 41% / 100%);
   }
 
   .svg-target-tooltip {
@@ -245,7 +245,7 @@ $brightness: var(--aladin-image-brightness);
     // medium -> yellow
     &.guide-star-medium {
       stroke-width: 1px;
-      stroke: hsl(43deg 74.4% 69.0%);
+      stroke: hsl(43deg 74.4% 69%);
       fill: var(--ags-medium-guide-speed-color);
       fill-opacity: 0.8;
     }
@@ -253,7 +253,7 @@ $brightness: var(--aladin-image-brightness);
     // slow -> orange
     &.guide-star-slow {
       stroke-width: 1px;
-      stroke: hsl(39deg 100.0% 50.0%);
+      stroke: hsl(39deg 100% 50%);
       fill: var(--ags-slow-guide-speed-color);
       fill-opacity: 0.8;
     }
@@ -261,11 +261,10 @@ $brightness: var(--aladin-image-brightness);
     // faint -> red
     &.guide-star-too-faint {
       stroke-width: 1px;
-      stroke: hsl(9deg 100.0% 63.9%);
-      fill: hsl(0deg 100.0% 50.0%);
+      stroke: hsl(9deg 100% 63.9%);
+      fill: hsl(0deg 100% 50%);
       fill-opacity: 0.5;
     }
-
   }
 
   .guide-star-target {
@@ -467,11 +466,13 @@ $brightness: var(--aladin-image-brightness);
   display: flex;
   justify-content: center;
   /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
-  background: repeating-linear-gradient(-45deg,
-      var(--hud-background-color),
-      var(--hud-background-color) 10px,
-      var(--hud-stripe-color) 10px,
-      var(--hud-stripe-color) 11px);
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--hud-background-color),
+    var(--hud-background-color) 10px,
+    var(--hud-stripe-color) 10px,
+    var(--hud-stripe-color) 11px
+  );
 }
 
 .finder-charts-tools {
@@ -496,7 +497,6 @@ $brightness: var(--aladin-image-brightness);
   :nth-child(17) {
     grid-row-start: invert;
   }
-
 }
 
 .finder-charts-attachments,
@@ -515,7 +515,6 @@ $brightness: var(--aladin-image-brightness);
         border-color: var(--text-color);
       }
     }
-
   }
 
   .p-divider.p-divider-horizontal {
@@ -530,7 +529,6 @@ $brightness: var(--aladin-image-brightness);
     justify-content: space-evenly;
     align-items: center;
   }
-
 }
 
 .finder-charts-attachments {
@@ -564,7 +562,6 @@ $brightness: var(--aladin-image-brightness);
       opacity: 0.4;
     }
   }
-
 }
 
 .finder-charts-body {
@@ -574,8 +571,9 @@ $brightness: var(--aladin-image-brightness);
 }
 
 .finder-charts-image {
-  transition: transform 0.2s ease,
-              filter 0.85s ease;
+  transition:
+    transform 0.2s ease,
+    filter 0.85s ease;
   max-height: 100%;
   max-width: 100%;
   object-fit: contain;

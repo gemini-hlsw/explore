@@ -12,19 +12,22 @@ makes the transition simpler.
 
 We use the graphql naming convention for hasura, thus we need to set the following enn variables:
 
-* HASURA_GRAPHQL_EXPERIMENTAL_FEATURES naming_convention
-* HASURA_GRAPHQL_DEFAULT_NAMING_CONVENTION graphql-default
+- HASURA_GRAPHQL_EXPERIMENTAL_FEATURES naming_convention
+- HASURA_GRAPHQL_DEFAULT_NAMING_CONVENTION graphql-default
 
 For more details see:
 https://hasura.io/docs/latest/schema/postgres/naming-convention/
 
 ## Environments
+
 We have three environments with a respective db and heroku app:
-* development
-* staging
-* production
+
+- development
+- staging
+- production
 
 ## Copy the database
+
 To copy the database between instances you can create a backup on the postgress page under the
 durability tab. From there pick the backup id you want to copy and then upload to the destination
 environment with the command:
@@ -40,24 +43,26 @@ Where:
     * DATABASE_URL is the env var that Heroku generated for the new database
     * new_env is the new application ID that has the DATABASE_URL attached to it
 
-
 ## Update hasura
+
 Checkout the original code from:
 https://git.heroku.com/user-prefs-staging.git
 
 then push this via git to the url of each environment
 
 ## Migrations
+
 Migrations are being handled via hasura tools with the migration and metadata files at
 
 [hasura](hasura/user-prefs)
 
-*Note* unset NODE_OPTIONS before running `hasura console`
+_Note_ unset NODE_OPTIONS before running `hasura console`
 
 Changes should be first tested on user-prefs-master to be later applied to
-* user-prefs-development
-* user-prefs-staging
-* user-prefs
+
+- user-prefs-development
+- user-prefs-staging
+- user-prefs
 
 ```
 hasura migrate apply --endpoint https://user-prefs-development.herokuapp.com
