@@ -45,6 +45,7 @@ import lucuma.core.util.NewType
 import lucuma.refined.*
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
+import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import monocle.Iso
 

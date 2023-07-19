@@ -24,7 +24,6 @@ import explore.model.ExploreLocalPreferences
 import explore.model.Focused
 import explore.model.RootModel
 import explore.model.RoutingInfo
-import explore.model.UserVault
 import explore.model.WorkerClients
 import explore.model.enums.AppTab
 import explore.model.enums.ExecutionEnvironment
@@ -36,6 +35,7 @@ import log4cats.loglevel.LogLevelLogger
 import lucuma.broadcastchannel.*
 import lucuma.core.model.Program
 import lucuma.ui.enums.Theme
+import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import org.http4s.dom.FetchClientBuilder
 import org.scalajs.dom
@@ -158,6 +158,7 @@ object ExploreMain {
         _                    <- Theme.init[IO]
         host                 <- IO(dom.window.location.host)
         appConfig            <- fetchConfig[IO](host)
+        _                    <- workerClients.itc.requestAndForget(ItcMessage.Initialize(appConfig.itcURI))
         _                    <- Logger[IO].info(s"Git Commit: [${utils.gitHash.getOrElse("NONE")}]")
         _                    <- Logger[IO].info(s"Config: ${appConfig.show}")
         toastRef             <- Deferred[IO, ToastRef]

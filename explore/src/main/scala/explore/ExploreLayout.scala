@@ -5,12 +5,14 @@ package explore
 
 import cats.effect.IO
 import cats.syntax.all.*
+import clue.data.syntax.*
 import crystal.react.*
 import explore.cache.PreferencesCache
 import explore.cache.ProgramCache
-import explore.components.state.IfLogged
+import explore.components.UserSelectionForm
 import explore.components.ui.ExploreStyles
 import explore.events.ExploreEvent
+import explore.events.ExploreEvent.LogoutEventId
 import explore.model.*
 import explore.model.enums.AppTab
 import explore.shortcuts.*
@@ -22,7 +24,10 @@ import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.broadcastchannel.*
 import lucuma.refined.*
+import lucuma.ui.components.state.IfLogged
+import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
+import queries.common.UserPreferencesQueriesGQL.*
 import react.common.*
 import react.hotkeys.*
 import react.hotkeys.hooks.*
@@ -123,7 +128,24 @@ object ExploreLayout:
       .render { (props, helpCtx, ctx, toastRef) =>
         import ctx.given
 
-        IfLogged(props.view)((vault: UserVault, onLogout: IO[Unit]) =>
+        // Creates a "profile" for user preferences.
+        def createUserPrefs: IO[Unit] =
+          props.view.get.vault.foldMap(vault =>
+            UserInsertMutation[IO].execute(vault.user.id.toString.assign).start.void
+          )
+
+        IfLogged[ExploreEvent](
+          ctx.sso,
+          props.view.zoom(RootModel.vault),
+          UserSelectionForm(_, _),
+          ctx.clients.init(_),
+          ctx.clients.close(),
+          createUserPrefs,
+          "explore".refined,
+          _.event === ExploreEvent.LogoutEventId,
+          _.value.toString,
+          ExploreEvent.LogoutEvent(_)
+        )((vault: UserVault, onLogout: IO[Unit]) =>
           val routingInfo = RoutingInfo.from(props.resolution.page)
 
           val helpView = helpCtx.displayedHelp

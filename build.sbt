@@ -112,7 +112,8 @@ lazy val common = project
         LucumaBC.value ++
         LucumaCatalog.value ++
         LucumaSchemas.value ++
-        LucumaReact.value,
+        LucumaReact.value ++
+        In(Test)(LucumaUITestKit.value),
     buildInfoKeys    := Seq[BuildInfoKey](
       scalaVersion,
       sbtVersion,

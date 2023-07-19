@@ -5,8 +5,8 @@ package explore.model
 
 import cats.effect.*
 import cats.syntax.all.*
-import explore.common.RetryHelpers.*
 import explore.modes.SpectroscopyModesMatrix
+import lucuma.ui.utils.RetryHelpers.*
 import org.http4s.*
 import org.http4s.dom.FetchClientBuilder
 import org.typelevel.log4cats.Logger

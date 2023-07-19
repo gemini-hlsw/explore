@@ -12,11 +12,11 @@ import explore.Icons
 import explore.Resources
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.UserVault
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.util.NewType
 import lucuma.ui.primereact.*
+import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.UAParser

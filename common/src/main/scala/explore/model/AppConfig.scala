@@ -10,26 +10,11 @@ import cats.effect.Async
 import cats.syntax.all.*
 import explore.model.enums.ExecutionEnvironment
 import io.circe.*
+import lucuma.ui.sso.SSOConfig
 import org.http4s.Uri
 import org.http4s.circe.*
 import org.http4s.client.Client
 import org.http4s.syntax.all.*
-
-import java.util.concurrent.TimeUnit
-import scala.concurrent.duration.FiniteDuration
-
-case class SSOConfig(
-  uri:                        Uri,
-  readTimeoutSeconds:         Long = 3,
-  refreshTimeoutDeltaSeconds: Long = 10, // time before expiration to renew
-  refreshIntervalFactor:      Long = 1
-) derives Eq,
-      Show,
-      Decoder {
-  val readTimeout: FiniteDuration         = FiniteDuration(readTimeoutSeconds, TimeUnit.SECONDS)
-  val refreshTimeoutDelta: FiniteDuration =
-    FiniteDuration(refreshTimeoutDeltaSeconds, TimeUnit.SECONDS)
-}
 
 case class AppConfig(
   hostName:         String,

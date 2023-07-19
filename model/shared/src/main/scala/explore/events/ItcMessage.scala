@@ -21,16 +21,17 @@ import lucuma.schemas.model.CentralWavelength
 import org.http4s.Uri
 import workers.WorkerRequest
 
-object ItcMessage extends ItcPicklers {
+object ItcMessage extends ItcPicklers:
   sealed trait Request extends WorkerRequest
 
-  case object CleanCache extends Request {
-    type ResponseType = Unit
-  }
+  case class Initialize(itcURI: Uri) extends Request:
+    type ResponseType = Nothing
 
-  case class SpectroscopyMatrixRequest(uri: Uri) extends Request {
+  case object CleanCache extends Request:
+    type ResponseType = Unit
+
+  case class SpectroscopyMatrixRequest(uri: Uri) extends Request:
     type ResponseType = SpectroscopyModesMatrix
-  }
 
   case class Query(
     wavelength:      Wavelength,
@@ -39,9 +40,8 @@ object ItcMessage extends ItcPicklers {
     targets:         ItcTarget,
     modes:           List[SpectroscopyModeRow],
     signalToNoiseAt: Wavelength
-  ) extends Request {
+  ) extends Request:
     type ResponseType = Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]
-  }
 
   case class GraphQuery(
     wavelength:      CentralWavelength,
@@ -50,9 +50,8 @@ object ItcMessage extends ItcPicklers {
     constraints:     ConstraintSet,
     targets:         NonEmptyList[ItcTarget],
     modes:           InstrumentRow
-  ) extends Request {
+  ) extends Request:
     type ResponseType = Map[ItcTarget, Either[ItcQueryProblems, ItcChartResult]]
-  }
 
   private given Pickler[SpectroscopyMatrixRequest] = generatePickler
 
@@ -60,8 +59,8 @@ object ItcMessage extends ItcPicklers {
 
   private given Pickler[GraphQuery] = generatePickler
 
+  private given Pickler[Initialize] = generatePickler
+
   private given Pickler[CleanCache.type] = generatePickler
 
   given Pickler[Request] = generatePickler
-
-}

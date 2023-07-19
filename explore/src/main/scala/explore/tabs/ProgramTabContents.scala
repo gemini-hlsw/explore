@@ -9,11 +9,11 @@ import explore.components.TileController
 import explore.model.ExploreGridLayouts
 import explore.model.ProgramTabTileIds
 import explore.model.UserPreferences
-import explore.model.UserVault
 import explore.model.enums.GridLayoutSection
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.VdomNode
 import lucuma.core.model.Program
+import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.resizeDetector.hooks.*
