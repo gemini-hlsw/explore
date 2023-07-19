@@ -5,8 +5,8 @@ package explore.model.arb
 
 import explore.model.ExploreLocalPreferences
 import explore.model.RootModel
-import explore.model.UserVault
-import explore.model.arb.all.*
+import lucuma.ui.sso.UserVault
+import lucuma.ui.sso.arb.ArbUserVault.given
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.*
 import org.scalacheck.Cogen

@@ -243,6 +243,12 @@ object Dependencies {
     )(lucumaUI)
   )
 
+  val LucumaUITestKit = Def.setting(
+    deps(
+      "edu.gemini" %%% "lucuma-ui-testkit"
+    )(lucumaUI)
+  )
+
   val LucumaITCClient = Def.setting(
     deps(
       "edu.gemini" %%% "lucuma-itc-client"

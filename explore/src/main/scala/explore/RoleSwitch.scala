@@ -9,7 +9,6 @@ import crystal.react.View
 import crystal.react.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.UserVault
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.StandardRole
@@ -17,6 +16,7 @@ import lucuma.core.model.StandardUser
 import lucuma.core.model.User
 import lucuma.refined.*
 import lucuma.ui.primereact.FormDropdown
+import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import react.common.*
 import react.primereact.SelectItem

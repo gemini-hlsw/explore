@@ -16,7 +16,6 @@ import explore.model.ExploreLocalPreferences
 import explore.model.ExploreLocalPreferences.*
 import explore.model.ProgramInfoList
 import explore.model.ProgramSummaries
-import explore.model.UserVault
 import explore.model.enums.ExecutionEnvironment
 import explore.programs.ProgramsPopup
 import explore.undo.UndoStacks
@@ -29,6 +28,7 @@ import lucuma.core.model.Program
 import lucuma.core.util.NewType
 import lucuma.ui.enums.Theme
 import lucuma.ui.reusability.given
+import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import org.scalajs.dom
 import org.scalajs.dom.window

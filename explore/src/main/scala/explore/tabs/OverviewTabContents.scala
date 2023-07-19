@@ -18,13 +18,13 @@ import explore.model.AppContext
 import explore.model.ObsAttachmentAssignmentMap
 import explore.model.ObsAttachmentList
 import explore.model.ObsTabTilesIds
-import explore.model.UserVault
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
 import lucuma.refined.*
+import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps

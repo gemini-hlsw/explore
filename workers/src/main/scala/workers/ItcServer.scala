@@ -6,10 +6,10 @@ package workers
 import boopickle.DefaultBasic.*
 import cats.effect.*
 import cats.effect.unsafe.implicits.*
+import cats.syntax.all.*
 import explore.events.*
 import explore.itc.ITCGraphRequests
 import explore.itc.ITCRequests
-import explore.model.AppConfig
 import explore.model.StaticData
 import explore.model.boopickle.ItcPicklers
 import explore.modes.SpectroscopyModesMatrix
@@ -35,32 +35,26 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
 
   private val CacheRetention: Duration = Duration.ofDays(30)
 
-  private def fetchConfig[F[_]: Async](host: String): F[AppConfig] =
-    // We want to avoid caching the static server redirect and the config files (they are not fingerprinted by vite).
-    AppConfig.fetchConfig(host,
-                          FetchClientBuilder[F]
-                            .withRequestTimeout(5.seconds)
-                            .withCache(dom.RequestCache.`no-store`)
-                            .create
-    )
-
-  private def client[F[_]: Async]: Client[F] =
+  private def createClient[F[_]: Async]: Client[F] =
     FetchClientBuilder[F]
       .withRequestTimeout(5.seconds)
       .create
 
   protected val handler: Logger[IO] ?=> IO[Invocation => IO[Unit]] =
     for {
-      self                <- IO(dom.DedicatedWorkerGlobalScope.self)
-      cache               <- Cache.withIDB[IO](self.indexedDB.toOption, "explore-itc")
-      _                   <- cache.evict(CacheRetention).start
-      matrix              <- Deferred[IO, SpectroscopyModesMatrix]
-      config              <- fetchConfig[IO](self.location.host)
-      given ItcClient[IO] <- ItcClient.create[IO](config.itcURI, client)
+      self      <- IO(dom.DedicatedWorkerGlobalScope.self)
+      cache     <- Cache.withIDB[IO](self.indexedDB.toOption, "explore-itc")
+      _         <- cache.evict(CacheRetention).start
+      matrix    <- Deferred[IO, SpectroscopyModesMatrix]
+      itcClient <- Deferred[IO, ItcClient[IO]]
     } yield { invocation =>
-      invocation.data match {
-        case ItcMessage.CleanCache                     =>
+      invocation.data match
+        case ItcMessage.Initialize(itcURI) =>
+          ItcClient.create[IO](itcURI, createClient) >>= (client => itcClient.complete(client).void)
+
+        case ItcMessage.CleanCache =>
           cache.clear *> invocation.respond(())
+
         case ItcMessage.SpectroscopyMatrixRequest(uri) =>
           matrix.tryGet.flatMap {
             case Some(m) =>
@@ -73,14 +67,16 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
                 }
           }
 
-        case ItcMessage.Query(wavelength,
-                              signalToNoise,
-                              constraint,
-                              targets,
-                              rows,
-                              signalToNoiseAt
+        case ItcMessage.Query(
+              wavelength,
+              signalToNoise,
+              constraint,
+              targets,
+              rows,
+              signalToNoiseAt
             ) =>
-          Logger[IO].debug(s"ITC query ${rows.length}") *>
+          Logger[IO].debug(s"ITC query ${rows.length}") >>
+            itcClient.get >>= (implicit client =>
             ITCRequests
               .queryItc[IO](
                 wavelength,
@@ -92,6 +88,7 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
                 cache,
                 r => invocation.respond(r)
               )
+          )
 
         case ItcMessage.GraphQuery(wavelength,
                                    signalToNoise,
@@ -100,7 +97,8 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
                                    targets,
                                    mode
             ) =>
-          Logger[IO].debug(s"ITC graph query ${mode}") *>
+          Logger[IO].debug(s"ITC graph query ${mode}") >>
+            itcClient.get >>= (implicit client =>
             ITCGraphRequests
               .queryItc[IO](
                 wavelength,
@@ -112,6 +110,6 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
                 cache,
                 r => invocation.respond(r)
               )
-      }
+          )
     }
 }

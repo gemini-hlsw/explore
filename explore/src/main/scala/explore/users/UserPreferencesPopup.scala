@@ -15,7 +15,6 @@ import explore.components.ExploreCopy
 import explore.components.ui.ExploreStyles
 import explore.model.ApiKey
 import explore.model.AppContext
-import explore.model.UserVault
 import explore.model.display.given
 import explore.model.enums.RoleType
 import explore.model.reusability.given
@@ -33,6 +32,7 @@ import lucuma.ui.primereact.LucumaStyles
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
+import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.pot.*
 import lucuma.ui.table.*
@@ -107,7 +107,7 @@ object UserPreferencesContent:
       acceptLabel = "Yes, delete",
       position = DialogPosition.Top,
       accept = (for {
-        _ <- DeleteApiKey[IO].execute(key, modParams = vault.addAuthorizationHeader)
+        _ <- DeleteApiKey[IO].execute(key, modParams = vault.addAuthorizationHeaderTo)
         _ <- newKey.set(NewKey(none)).toAsync
       } yield ()).switching(active.async, IsActive(_)).runAsync,
       acceptClass = PrimeStyles.ButtonSmall,
@@ -125,7 +125,7 @@ object UserPreferencesContent:
     Logger[IO]
   ) =
     (for {
-      newKeyResult <- NewApiKey[IO].execute(keyRoleId, modParams = vault.addAuthorizationHeader)
+      newKeyResult <- NewApiKey[IO].execute(keyRoleId, modParams = vault.addAuthorizationHeaderTo)
       _            <- newKey.set(NewKey(newKeyResult.createApiKey.some)).toAsync
     } yield ()).switching(active.async, IsActive(_))
 
@@ -135,7 +135,7 @@ object UserPreferencesContent:
     .useStateView(IsActive(false))
     .useEffectResultWithDepsBy((_, ctx, isAdding) => isAdding.get) { (props, ctx, _) => _ =>
       import ctx.given
-      UserQuery[IO].query(modParams = props.vault.addAuthorizationHeader)
+      UserQuery[IO].query(modParams = props.vault.addAuthorizationHeaderTo)
     }
     .useStateView(NewKey(none)) // id fo the new role id to create
     // Columns

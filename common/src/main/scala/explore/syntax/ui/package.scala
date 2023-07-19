@@ -12,10 +12,10 @@ import clue.js.FetchJSRequest
 import crystal.*
 import crystal.react.*
 import explore.model.Constants
-import explore.model.UserVault
 import explore.utils.*
 import japgolly.scalajs.react.callback.Callback
 import japgolly.scalajs.react.util.Effect
+import lucuma.ui.sso.UserVault
 import org.scalajs.dom.Window
 import org.typelevel.log4cats.Logger
 
@@ -42,11 +42,9 @@ extension [F[_]: MonadThrow](c: Logger[F])
     c.info(_root_.pprint.apply(a).render).runAsyncAndForget
 
 extension (vault: UserVault)
-  def authorizationHeader: String = s"Bearer ${vault.token.value}"
-
-  def addAuthorizationHeader(request: FetchJSRequest): FetchJSRequest =
+  def addAuthorizationHeaderTo(request: FetchJSRequest): FetchJSRequest =
     // DOM Headers are mutable
-    request.headers.set("Authorization", authorizationHeader)
+    request.headers.set("Authorization", vault.authorizationHeader)
     request
 
 extension [F[_]: ApplicativeThrow: ToastCtx, A](f: F[A])
