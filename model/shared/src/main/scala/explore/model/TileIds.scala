@@ -22,3 +22,11 @@ enum ObsTabTilesIds:
     case WarningsAndErrorsId => "warningsAndErrors".refined
     case ObsAttachmentsId    => "obsAttachments".refined
     case FinderChartsId      => "finderChartes".refined
+
+enum ProgramTabTileIds:
+  case DetailsId, NotesId, ChangeRequestsId
+
+  def id: NonEmptyString = this match
+    case DetailsId        => "programDetails".refined
+    case NotesId          => "programNotes".refined
+    case ChangeRequestsId => "programChangeRequests".refined

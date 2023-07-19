@@ -2450,9 +2450,9 @@ div.spectroscopy-table-emptymessage {
     &:focus-visible {
       border-left: var(--explore-accent-color) solid 3px;
       border: {
-        top: none;
-        right: none;
-        bottom: none;
+        top: 1px solid transparent;
+        right: 1px solid transparent;
+        bottom: 1px solid transparent;
       }
     }
   }
@@ -2467,9 +2467,9 @@ div.spectroscopy-table-emptymessage {
     &:focus-visible {
       border-top: var(--explore-accent-color) solid 3px;
       border: {
-        left: none;
-        right: none;
-        bottom: none;
+        left: 1px solid transparent;
+        right: 1px solid transparent;
+        bottom: 1px solid transparent;
       }
     }
   }
@@ -2526,14 +2526,16 @@ div.spectroscopy-table-emptymessage {
   }
 }
 
+.sidetabs-body-horizontal-container {
+  display: flex;
+  overflow-x: auto;
+}
+
 .sidetabs-body-horizontal {
   height: 100%;
   display: flex;
-  overflow: hidden;
   padding-top: 0.2em;
   padding-bottom: 0;
-  width: 100svw;
-  max-width: 100svw;
   justify-content: space-between;
   align-items: stretch;
   border-top: 1px solid var(--under-tab-border-color);

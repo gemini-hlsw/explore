@@ -17,6 +17,7 @@ sealed trait Page extends Product with Serializable derives Eq
 object Page:
   case object NoProgramPage                                             extends Page
   case class HomePage(programId: Program.Id)                            extends Page
+  case class ProgramPage(programId: Program.Id)                         extends Page
   case class ProposalPage(programId: Program.Id)                        extends Page
   case class ObservationsBasePage(programId: Program.Id)                extends Page
   case class ObsPage(programId: Program.Id, obsId: Observation.Id)      extends Page
@@ -36,6 +37,10 @@ object Page:
   object HomePage:
     final val iso: Iso[Program.Id, HomePage] =
       Iso[Program.Id, HomePage](HomePage.apply)(_.programId)
+
+  object ProgramPage:
+    final val iso: Iso[Program.Id, ProgramPage] =
+      Iso[Program.Id, ProgramPage](ProgramPage.apply)(_.programId)
 
   object ProposalPage:
     final val iso: Iso[Program.Id, ProposalPage] =

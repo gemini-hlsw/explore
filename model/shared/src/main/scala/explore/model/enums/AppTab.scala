@@ -18,6 +18,7 @@ import lucuma.core.util.Enumerated
  * the order in AppTab.all.
  */
 enum AppTab(val title: String, val buttonGroup: Int) derives Enumerated:
+  case Program      extends AppTab("Program", 1)
   case Proposal     extends AppTab("Proposal", 1)
   case Overview     extends AppTab("Overview", 2)
   case Observations extends AppTab("Observations", 3)

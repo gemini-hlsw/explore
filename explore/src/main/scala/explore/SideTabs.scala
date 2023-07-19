@@ -68,6 +68,7 @@ object SideTabs:
             )
           ),
           <.div(
+            ExploreStyles.SideTabsHorizontalContainer,
             SelectButtonEnumView(
               "side-tabs".refined,
               tabView,

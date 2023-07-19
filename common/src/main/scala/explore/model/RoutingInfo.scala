@@ -23,6 +23,7 @@ object RoutingInfo {
 
   def from(page: Page): RoutingInfo = page match
     case NoProgramPage                         => RoutingInfo(AppTab.Overview, none, Focused.None)
+    case ProgramPage(p)                        => RoutingInfo(AppTab.Program, p.some, Focused.None)
     case HomePage(p)                           => RoutingInfo(AppTab.Overview, p.some, Focused.None)
     case ProposalPage(p)                       => RoutingInfo(AppTab.Proposal, p.some, Focused.None)
     case ObservationsBasePage(p)               => RoutingInfo(AppTab.Observations, p.some, Focused.None)
@@ -48,6 +49,7 @@ object RoutingInfo {
     focused:   Focused
   ): Page =
     tab match {
+      case AppTab.Program      => ProgramPage(programId)
       case AppTab.Proposal     => ProposalPage(programId)
       case AppTab.Overview     => HomePage(programId)
       case AppTab.Observations =>
