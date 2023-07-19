@@ -22,7 +22,6 @@ project/project/*
 .worksheet
 .idea/
 out/
-.vscode/
 .bloop/
 .metals/
 metals.sbt
