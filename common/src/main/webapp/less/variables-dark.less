@@ -7,8 +7,8 @@
   --color-background-base-h: 0;
   --color-background-base-s: 0%;
   --color-background-base-l: 7.06%;
-  --color-background-base-hsl: var(--color-background-base-h),
-    var(--color-background-base-s), var(--color-background-base-l);
+  --color-background-base-hsl: var(--color-background-base-h), var(--color-background-base-s),
+    var(--color-background-base-l);
   --color-background: hsl(var(--color-background-base-hsl));
   // Variations of the background color
   // Light shades
@@ -90,9 +90,8 @@
   --color-text-base-s: 0%;
   --color-text-base-l: 100%;
   --color-text-base-a: 0.87;
-  --color-text-base-hsla: var(--color-background-base-h),
-    var(--color-background-base-s), var(--color-text-base-l),
-    var(--color-text-base-a);
+  --color-text-base-hsla: var(--color-background-base-h), var(--color-background-base-s),
+    var(--color-text-base-l), var(--color-text-base-a);
   --color-text-base: hsla(var(--color-text-base-hsla));
   // Light shades
   --color-text-light-45: hsl(
@@ -116,8 +115,8 @@
     var(--color-text-base-l),
     1
   );
-  --color-text-alt-hsla: var(--color-background-base-h),
-    var(--color-background-base-s), var(--color-text-base-l), 1;
+  --color-text-alt-hsla: var(--color-background-base-h), var(--color-background-base-s),
+    var(--color-text-base-l), 1;
   --color-text-alt: hsla(var(--color-text-alt-hsla));
   // dark shades
   --color-text-dark-8-hsla: var(--color-text-base-h), var(--color-text-base-s),
@@ -133,27 +132,15 @@
   --gray-hsla: var(--gray-h), var(--gray-s), var(--gray-l), var(--gray-a);
   --gray: hsla(var(--gray-hsla));
   // dark grays
-  --gray-dark-5: hsla(
-    var(--gray-h),
-    var(--gray-s),
-    calc(var(--gray-l) - 5%),
-    var(--gray-a)
-  );
-  --gray-dark-10: hsla(
-    var(--gray-h),
-    var(--gray-s),
-    calc(var(--gray-l) - 10%),
-    var(--gray-a)
-  );
+  --gray-dark-5: hsla(var(--gray-h), var(--gray-s), calc(var(--gray-l) - 5%), var(--gray-a));
+  --gray-dark-10: hsla(var(--gray-h), var(--gray-s), calc(var(--gray-l) - 10%), var(--gray-a));
   --gray-dark-h: 210;
   --gray-dark-s: 7.9%;
   --gray-dark-l: 24.7%;
   --gray-dark-a: 1;
-  --gray-dark-hsla: var(--gray-dark-h), var(--gray-dark-s), var(--gray-dark-l),
-    var(--gray-dark-a);
+  --gray-dark-hsla: var(--gray-dark-h), var(--gray-dark-s), var(--gray-dark-l), var(--gray-dark-a);
   --gray-dark: hsla(var(--gray-dark-hsla));
-  --gray-dark-semi-hsla: var(--gray-dark-h), var(--gray-dark-s),
-    var(--gray-dark-l), 75%;
+  --gray-dark-semi-hsla: var(--gray-dark-h), var(--gray-dark-s), var(--gray-dark-l), 75%;
   --gray-dark-semi: hsla(var(--gray-dark-semi-hsla));
   --negative-color: hsla(2, 81.2%, 64.5%, 80%);
 }
@@ -212,9 +199,9 @@
   );
   // AGS colors
   --ags-icon-color: hsla(60, 100%, 50%, 80%);
-  --ags-fast-guide-speed-color: hsl(120deg 100.0% 25.1%);
-  --ags-medium-guide-speed-color: hsl(51, 100.0%, 50.0%);
-  --ags-slow-guide-speed-color: hsl(33, 100.0%, 50.0%);
+  --ags-fast-guide-speed-color: hsl(120deg 100% 25.1%);
+  --ags-medium-guide-speed-color: hsl(51, 100%, 50%);
+  --ags-slow-guide-speed-color: hsl(33, 100%, 50%);
   // Tooltip colors
   --tooltip-background-color: var(--color-background-light-3);
   --tooltip-viz-background-color: var(--color-background-light-3-a);
@@ -258,9 +245,7 @@
   --date-picker-selected-color: var(--color-background);
   --date-picker-selected-color-darken-5: var(--color-background-dark-5);
   --date-picker-selected-color-lighten-5: var(--color-background-light-5);
-  --date-picker-keyboard-selected-background-color: var(
-    --color-background-light-6
-  );
+  --date-picker-keyboard-selected-background-color: var(--color-background-light-6);
   --date-picker-keyboard-selected-color: var(--text-color);
 }
 

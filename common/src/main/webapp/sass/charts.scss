@@ -1,4 +1,4 @@
-@use "highcharts/css/highcharts.css";
+@use 'highcharts/css/highcharts.css';
 
 /* Using custom classes for series works, but messes up tooltip border colors.
 See https://github.com/highcharts/highcharts/issues/13320 */
@@ -170,8 +170,7 @@ See https://github.com/highcharts/highcharts/issues/13320 */
   width: 100%;
   overflow: hidden;
   min-height: 0;
-  grid-template:
-    'description plot' minmax(0, 1fr) // minmax is required to properly shrink
+  grid-template: 'description plot' minmax(0, 1fr) // minmax is required to properly shrink
     'description plot-controls' / minmax(min-content, 2fr) minmax(0, 5fr);
 }
 
@@ -196,7 +195,7 @@ See https://github.com/highcharts/highcharts/issues/13320 */
 $description-column-count: 2;
 
 @mixin first-row {
-  &:nth-child(-n+#{$description-column-count}) {
+  &:nth-child(-n + #{$description-column-count}) {
     @content;
   }
 }
@@ -239,10 +238,9 @@ $description-column-count: 2;
 
 .tile-xs-width {
   .itc-plot-description {
-    display: none
+    display: none;
   }
 }
-
 
 .highcharts-reset-zoom {
   fill: var(--button-background-color-semi);
@@ -256,11 +254,11 @@ $description-column-count: 2;
   --itc-plot-lightgreen: hsl(98deg 40.6% 68.8%);
   --itc-plot-red: hsl(359deg 79.5% 49.8%);
   --itc-plot-lightred: hsl(339deg 79.5% 69.8%);
-  --itc-plot-wavelength-line: hsl(0deg 10.0% 90.0%);
+  --itc-plot-wavelength-line: hsl(0deg 10% 90%);
 
   .itc-plot-wavelength-line {
     stroke: var(--itc-plot-wavelength-line);
-    stroke-dasharray: 2 2
+    stroke-dasharray: 2 2;
   }
 
   .highcharts-title {
@@ -338,5 +336,4 @@ $description-column-count: 2;
       stroke: var(--itc-plot-lightred);
     }
   }
-
 }

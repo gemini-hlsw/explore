@@ -1,8 +1,5 @@
 {
-  "extends": [
-    "stylelint-config-standard-scss",
-    "stylelint-config-prettier"
-  ],
+  "extends": ["stylelint-config-standard-scss"],
   "plugins": [
     "@ronilaukkarinen/stylelint-value-no-unknown-custom-properties",
     "stylelint-color-format"
@@ -17,6 +14,6 @@
         "importFrom": ["vars.css", "explore/target/lucuma-css/dark-theme.css"]
       }
     ],
-    "no-descending-specificity": null 
+    "no-descending-specificity": null
   }
 }

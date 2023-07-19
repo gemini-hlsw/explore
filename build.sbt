@@ -345,6 +345,7 @@ def runLinters(mode: String) = WorkflowStep.Use(
   name = Some(s"Run linters in $mode mode"),
   params = Map(
     "github_token"         -> "${{ secrets.GITHUB_TOKEN }}",
+    "prettier"             -> "true",
     "stylelint"            -> "true",
     "stylelint_args"       -> "common/src/main/webapp/sass",
     "stylelint_extensions" -> "css,sass,scss"

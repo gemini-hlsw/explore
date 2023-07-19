@@ -16,7 +16,6 @@
 @tablet-responsive-cutoff: 992px;
 @mobile-responsive-cutoff: 670px;
 
-
 a {
   color: var(--site-link-color);
 }
@@ -34,7 +33,6 @@ a {
 
 /*** iPhone and iOS Form Input Zoom Fixes ***/
 @media screen and (device-aspect-ratio: 2/3) {
-
   select,
   textarea,
   input[type='text'],
@@ -53,7 +51,6 @@ a {
 }
 
 @media screen and (device-aspect-ratio: 40/71) {
-
   select,
   textarea,
   input[type='text'],
@@ -72,7 +69,6 @@ a {
 }
 
 @media screen and (device-aspect-ratio: 375/667) {
-
   select,
   textarea,
   input[type='text'],
@@ -92,7 +88,6 @@ a {
 }
 
 @media screen and (device-aspect-ratio: 9/16) {
-
   select,
   textarea,
   input[type='text'],
@@ -120,7 +115,6 @@ body.light-theme {
 }
 
 @media (prefers-color-scheme: dark) {
-
   /* defaults to dark theme */
   body {
     .dark-theme();
@@ -345,7 +339,6 @@ tfoot {
 
 // The split edit button and the band totals
 .partner-split-data {
-
   &,
   div& data {
     width: 6em;
@@ -358,7 +351,7 @@ tfoot {
   }
 
   // The div containing the flag and percent text.
-  data>div {
+  data > div {
     display: flex;
 
     // The percent text
@@ -370,13 +363,12 @@ tfoot {
 }
 
 div.partner-split-total {
-
   &,
-  &>div>data {
+  & > div > data {
     width: 5.5em;
   }
 
-  &>div>data {
+  & > div > data {
     text-align: end;
   }
 }
@@ -427,7 +419,8 @@ i.icon.explore-button-icon:hover,
 i.icon.explore-button-icon:focus {
   outline: none;
   opacity: 1;
-  box-shadow: 0 0 0 0.1rem var(--focus-inner-color),
+  box-shadow:
+    0 0 0 0.1rem var(--focus-inner-color),
     0 0 0 0.2rem var(--focus-outer-color);
 }
 

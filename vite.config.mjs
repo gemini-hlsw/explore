@@ -102,10 +102,7 @@ export default defineConfig(async ({ mode }) => {
   const sjs = isProduction
     ? path.resolve(scalaClassesDir, `explore-opt`)
     : path.resolve(scalaClassesDir, `explore-fastopt`);
-  const workersScalaClassesDir = path.resolve(
-    __dirname,
-    'workers/target/scala-3.3.0'
-  );
+  const workersScalaClassesDir = path.resolve(__dirname, 'workers/target/scala-3.3.0');
   const workersSjs = isProduction
     ? path.resolve(workersScalaClassesDir, 'workers-opt')
     : path.resolve(workersScalaClassesDir, 'workers-fastopt');
@@ -130,19 +127,16 @@ export default defineConfig(async ({ mode }) => {
     (file) =>
       !file.endsWith('local.conf.json') &&
       !file.endsWith('environments.conf.json') &&
-      !file.endsWith('README.txt')
+      !file.endsWith('README.txt'),
   );
 
   await Promise.all([
     fs.copyFile(
       (await pathExists(localConf)) ? localConf : devConf,
-      path.resolve(publicDirDev, 'environments.conf.json')
+      path.resolve(publicDirDev, 'environments.conf.json'),
     ),
     ...publicDirProdFiles.map((file) =>
-      fs.copyFile(
-        path.resolve(publicDirProd, file),
-        path.resolve(publicDirDev, file)
-      )
+      fs.copyFile(path.resolve(publicDirProd, file), path.resolve(publicDirDev, file)),
     ),
   ]);
 

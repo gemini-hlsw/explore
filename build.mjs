@@ -60,14 +60,12 @@ async function runTerserOn(fileName, length) {
   process.stdout.write(
     ` ${humanFormat.bytes(fromSize, {
       prefix: 'Ki',
-    })} --> ${humanFormat.bytes(toSize, { prefix: 'Ki' })} (${ratio.toFixed(
-      2
-    )}%)` +
+    })} --> ${humanFormat.bytes(toSize, { prefix: 'Ki' })} (${ratio.toFixed(2)}%)` +
       ` / brotli: ${humanFormat.bytes(fromBrotli, {
         prefix: 'Ki',
       })} --> ${humanFormat.bytes(toBrotli, {
         prefix: 'Ki',
-      })} (${brotliRatio.toFixed(2)}%) \n`
+      })} (${brotliRatio.toFixed(2)}%) \n`,
   );
 }
 
