@@ -20,8 +20,9 @@ https://hasura.io/docs/latest/schema/postgres/naming-convention/
 
 ## Environments
 
-We have three environments with a respective db and heroku app:
+We have four environments with a respective db and heroku app:
 
+- master
 - development
 - staging
 - production

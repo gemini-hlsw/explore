@@ -63,6 +63,9 @@ object Routing:
     // Not sure why the router's renderer requires VdomElement instead of VdomNode
     // In any case, in all of our uses here we are returning a valid VdomElement.
 
+  def userPreferences(model: View[RootModel]): UserPreferences =
+    model.zoom(RootModel.userPreferences).get.getOrElse(UserPreferences.Default)
+
   private def overviewTab(page: Page, model: View[RootModel]): VdomElement =
     val routingInfo = RoutingInfo.from(page)
     withProgramSummaries(routingInfo.programId.some, model)(programSummaries =>
@@ -70,12 +73,10 @@ object Routing:
         routingInfo.programId,
         model.zoom(RootModel.vault).get,
         programSummaries.model.zoom(ProgramSummaries.obsAttachments),
-        programSummaries.model.get.obsAttachmentAssignments
+        programSummaries.model.get.obsAttachmentAssignments,
+        userPreferences(model)
       )
     )
-
-  def userPreferences(model: View[RootModel]): UserPreferences =
-    model.zoom(RootModel.userPreferences).get.getOrElse(UserPreferences.Default)
 
   private def targetTab(page: Page, model: View[RootModel]): VdomElement =
     val routingInfo = RoutingInfo.from(page)

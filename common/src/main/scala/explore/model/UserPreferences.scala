@@ -30,6 +30,9 @@ case class UserPreferences(
 
   val programsTabLayout =
     tabLayout(GridLayoutSection.ProgramsLayout)
+
+  val overviewTabLayout =
+    tabLayout(GridLayoutSection.OverviewLayout)
 }
 
 object UserPreferences:

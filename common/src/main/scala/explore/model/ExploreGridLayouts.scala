@@ -3,7 +3,6 @@
 
 package explore.model
 
-import cats.Order
 import cats.implicits.catsKernelOrderingForOrder
 import cats.syntax.all.*
 import eu.timepit.refined.auto.*
@@ -23,7 +22,6 @@ import scala.collection.immutable.SortedMap
  * Default grid layout defiinitions
  */
 object ExploreGridLayouts:
-  private given Order[BreakpointName] = Order.by(_.name)
 
   def sectionLayout: GridLayoutSection => LayoutsMap = _ match {
     case GridLayoutSection.ProgramsLayout     => programs.defaultProgramsLayouts
@@ -31,7 +29,7 @@ object ExploreGridLayouts:
     case GridLayoutSection.SchedulingLayout   => scheduling.defaultSchedulingLayouts
     case GridLayoutSection.TargetLayout       => targets.defaultTargetLayouts
     case GridLayoutSection.ObservationsLayout => observations.defaultObsLayouts
-    case _                                    => SortedMap.empty
+    case GridLayoutSection.OverviewLayout     => overview.defaultOverviewLayouts
   }
 
   val DefaultLayouts: Map[GridLayoutSection, LayoutsMap] =
@@ -325,6 +323,47 @@ object ExploreGridLayouts:
     )
 
     val defaultProgramsLayouts = defineStdLayouts(
+      Map(
+        (BreakpointName.lg,
+         layoutItems.andThen(layoutItemWidth).replace(DefaultLargeWidth)(layoutMedium)
+        ),
+        (BreakpointName.md, layoutMedium)
+      )
+    )
+
+  object overview:
+    private val WarningsAndErrorsHeight: NonNegInt    = 8.refined
+    private val WarningsAndErrorsMinHeight: NonNegInt = 6.refined
+    private val ObsAttachmentsHeight: NonNegInt       = 8.refined
+    private val ObsAttachmentsMinHeight: NonNegInt    = 6.refined
+    private val TileMinWidth: NonNegInt               = 8.refined
+    private val DefaultWidth: NonNegInt               = 10.refined
+    private val DefaultLargeWidth: NonNegInt          = 12.refined
+
+    private val layoutMedium: Layout = Layout(
+      List(
+        LayoutItem(
+          i = ObsTabTilesIds.WarningsAndErrorsId.id.value,
+          x = 0,
+          y = 0,
+          w = DefaultWidth.value,
+          h = WarningsAndErrorsHeight.value,
+          minH = WarningsAndErrorsMinHeight.value,
+          minW = TileMinWidth.value
+        ),
+        LayoutItem(
+          i = ObsTabTilesIds.ObsAttachmentsId.id.value,
+          x = 0,
+          y = WarningsAndErrorsHeight.value,
+          w = DefaultWidth.value,
+          h = ObsAttachmentsHeight.value,
+          minH = ObsAttachmentsMinHeight.value,
+          minW = TileMinWidth.value
+        )
+      )
+    )
+
+    val defaultOverviewLayouts = defineStdLayouts(
       Map(
         (BreakpointName.lg,
          layoutItems.andThen(layoutItemWidth).replace(DefaultLargeWidth)(layoutMedium)
