@@ -5,7 +5,6 @@ package explore.tabs
 
 import cats.effect.IO
 import cats.syntax.all.*
-import crystal.Pot
 import crystal.react.*
 import explore.UnderConstruction
 import explore.attachments.ObsAttachmentsTable
@@ -22,7 +21,6 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
 import lucuma.ui.sso.UserVault
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
 import react.resizeDetector.hooks.*
@@ -60,16 +58,14 @@ object OverviewTabContents {
           none,
           canMinimize = true
         )(renderInTitle =>
-          Pot
-            .fromOption(props.userVault)
-            .renderPot(vault =>
-              ObsAttachmentsTable(props.programId,
-                                  vault.token,
-                                  props.obsAttachments,
-                                  props.obsAttachmentAssignments,
-                                  renderInTitle
-              )
+          props.userVault.map(vault =>
+            ObsAttachmentsTable(props.programId,
+                                vault.token,
+                                props.obsAttachments,
+                                props.obsAttachmentAssignments,
+                                renderInTitle
             )
+          )
         )
 
         TileController(
