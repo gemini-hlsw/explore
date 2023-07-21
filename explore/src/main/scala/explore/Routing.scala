@@ -63,7 +63,7 @@ object Routing:
     // Not sure why the router's renderer requires VdomElement instead of VdomNode
     // In any case, in all of our uses here we are returning a valid VdomElement.
 
-  def userPreferences(model: View[RootModel]): UserPreferences =
+  private def userPreferences(model: View[RootModel]): UserPreferences =
     model.zoom(RootModel.userPreferences).get.getOrElse(UserPreferences.Default)
 
   private def overviewTab(page: Page, model: View[RootModel]): VdomElement =
@@ -81,30 +81,38 @@ object Routing:
   private def targetTab(page: Page, model: View[RootModel]): VdomElement =
     val routingInfo = RoutingInfo.from(page)
     withProgramSummaries(routingInfo.programId.some, model)(programSummaries =>
-      TargetTabContents(
-        model.zoom(RootModel.userId).get,
-        routingInfo.programId,
-        programSummaries,
-        userPreferences(model),
-        routingInfo.focused,
-        model.zoom(RootModel.searchingTarget),
-        model.zoom(RootModel.expandedIds.andThen(ExpandedIds.asterismObsIds))
-      )
+      model
+        .zoom(RootModel.userPreferences)
+        .mapValue(userPrefs =>
+          TargetTabContents(
+            model.zoom(RootModel.userId).get,
+            routingInfo.programId,
+            programSummaries,
+            userPrefs,
+            routingInfo.focused,
+            model.zoom(RootModel.searchingTarget),
+            model.zoom(RootModel.expandedIds.andThen(ExpandedIds.asterismObsIds))
+          )
+        )
     )
 
   private def obsTab(page: Page, model: View[RootModel]): VdomElement =
     val routingInfo = RoutingInfo.from(page)
     withProgramSummaries(routingInfo.programId.some, model)(programSummaries =>
-      ObsTabContents(
-        model.zoom(RootModel.vault).get,
-        model.zoom(RootModel.userId).get,
-        routingInfo.programId,
-        programSummaries,
-        userPreferences(model),
-        routingInfo.focused,
-        model.zoom(RootModel.searchingTarget),
-        model.zoom(RootModel.expandedIds.andThen(ExpandedIds.obsListGroupIds))
-      )
+      model
+        .zoom(RootModel.userPreferences)
+        .mapValue(userPrefs =>
+          ObsTabContents(
+            model.zoom(RootModel.vault).get,
+            model.zoom(RootModel.userId).get,
+            routingInfo.programId,
+            programSummaries,
+            userPrefs,
+            routingInfo.focused,
+            model.zoom(RootModel.searchingTarget),
+            model.zoom(RootModel.expandedIds.andThen(ExpandedIds.obsListGroupIds))
+          )
+        )
     )
 
   private def constraintSetTab(page: Page, model: View[RootModel]): VdomElement =

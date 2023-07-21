@@ -17,9 +17,9 @@ import explore.model.AladinFullScreen
 import explore.model.AladinMouseScroll
 import explore.model.ChartOp
 import explore.model.ColorsInverted
+import explore.model.GlobalPreferences
 import explore.model.TargetVisualOptions
 import explore.model.Transformation
-import explore.model.UserGlobalPreferences
 import explore.model.enums.GridBreakpointName
 import explore.model.enums.GridLayoutSection
 import explore.model.enums.PlotRange
@@ -38,10 +38,11 @@ import lucuma.core.model.User
 import lucuma.core.util.Enumerated
 import lucuma.itc.ChartType
 import lucuma.react.table.*
-import lucuma.refined.*
 import lucuma.ui.table.TableStateStore
 import org.typelevel.log4cats.Logger
 import queries.common.UserPreferencesQueriesGQL.UserGridLayoutUpdates.Data.LucumaGridLayoutPositions
+import queries.common.UserPreferencesQueriesGQL.UserPreferencesQuery
+import queries.common.UserPreferencesQueriesGQL.UserPreferencesQuery.Data.LucumaUserPreferencesByPk
 import queries.common.UserPreferencesQueriesGQL.UserTargetPreferencesQuery.Data.ExploreTargetPreferencesByPk
 import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.UserPreferencesDB
@@ -59,7 +60,17 @@ object UserPreferencesQueries:
   val TableColumnPreferences = TableColumnPreferencesQuery.Data
 
   object GlobalUserPreferences:
-    def storePreferences[F[_]: ApplicativeThrow](
+    def loadPreferences[F[_]: ApplicativeThrow](
+      userId: User.Id
+    )(using FetchClient[F, UserPreferencesDB]): F[GlobalPreferences] =
+      UserPreferencesQuery[F]
+        .query(userId.show)
+        .map(_.lucumaUserPreferencesByPk.flatMap(a => toGlobalPreferences(a.some)))
+        .handleError(_ => none)
+        .map(_.getOrElse(GlobalPreferences.Default))
+
+    // We could pass the full prefs but this is more efficient
+    def storeAladinPreferences[F[_]: ApplicativeThrow](
       userId:             User.Id,
       aladinMouseScroll:  Option[AladinMouseScroll] = None,
       fullScreen:         Option[AladinFullScreen] = None,
@@ -82,6 +93,30 @@ object UserPreferencesQueries:
         )
         .attempt
         .void
+
+    def toGlobalPreferences(
+      lucumaUserPreferencesByPk: Option[LucumaUserPreferencesByPk]
+    ): Option[GlobalPreferences] =
+      lucumaUserPreferencesByPk.flatMap { userPrefsResult =>
+        val mouseScroll        = userPrefsResult.aladinMouseScroll.map(AladinMouseScroll(_))
+        val fullScreen         = userPrefsResult.fullScreen.map(AladinFullScreen(_))
+        val showCatalog        = userPrefsResult.showCatalog.map(Visible.value.reverseGet)
+        val agsOverlay         = userPrefsResult.agsOverlay.map(Visible.value.reverseGet)
+        val scienceOffsets     = userPrefsResult.scienceOffsets.map(Visible.value.reverseGet)
+        val acquisitionOffsets = userPrefsResult.acquisitionOffsets.map(Visible.value.reverseGet)
+        val plotRange          = userPrefsResult.elevationPlotRange
+        val timeRange          = userPrefsResult.elevationPlotTime
+        (mouseScroll,
+         fullScreen,
+         showCatalog,
+         agsOverlay,
+         scienceOffsets,
+         acquisitionOffsets,
+         plotRange,
+         timeRange
+        ).mapN(GlobalPreferences.apply)
+      }
+
   end GlobalUserPreferences
 
   object GridLayouts:
@@ -233,31 +268,12 @@ object UserPreferencesQueries:
       defaultFov: Angle
     )(using
       FetchClient[F, UserPreferencesDB]
-    ): F[(UserGlobalPreferences, TargetVisualOptions)] =
-      for {
-        r <-
-          UserTargetPreferencesQuery[F]
-            .query(uid.show, tid.show)
-            .map { r =>
-              val userPrefs   =
-                r.lucumaUserPreferencesByPk
-              val targetPrefs = r.exploreTargetPreferencesByPk
-              (userPrefs, targetPrefs)
-            }
-            .handleError(_ => (none, none))
-      } yield {
-        val (userPrefsResult, targetPrefsResult) = r
+    ): F[TargetVisualOptions] =
+      UserTargetPreferencesQuery[F]
+        .query(uid.show, tid.show)
+        .map { r =>
+          val targetPrefsResult = r.exploreTargetPreferencesByPk
 
-        val userPrefs = UserGlobalPreferences(
-          AladinMouseScroll(userPrefsResult.flatMap(_.aladinMouseScroll).getOrElse(false)),
-          AladinFullScreen(userPrefsResult.flatMap(_.fullScreen).getOrElse(false)),
-          Visible.value.reverseGet(userPrefsResult.flatMap(_.showCatalog).getOrElse(true)),
-          Visible.value.reverseGet(userPrefsResult.flatMap(_.agsOverlay).getOrElse(true)),
-          Visible.value.reverseGet(userPrefsResult.flatMap(_.scienceOffsets).getOrElse(true)),
-          Visible.value.reverseGet(userPrefsResult.flatMap(_.acquisitionOffsets).getOrElse(true))
-        )
-
-        val targetPrefs = {
           val fovRA  =
             targetPrefsResult.flatMap(_.fovRA.map(Angle.fromMicroarcseconds)).getOrElse(defaultFov)
           val fovDec =
@@ -269,20 +285,20 @@ object UserPreferencesQueries:
               )
                 .mapN(Offset.apply)
             )
-            .getOrElse(Offset.Zero)
+            .getOrElse(TargetVisualOptions.Default.viewOffset)
 
           def rangeProp(op: ExploreTargetPreferencesByPk => Option[Int]) = targetPrefsResult
             .flatMap(op)
             .flatMap(refineV[Interval.Closed[0, 100]](_).toOption)
-            .getOrElse(100.refined[Interval.Closed[0, 100]])
+            .getOrElse(TargetVisualOptions.Default.saturation)
 
           val saturation = rangeProp(_.saturation)
           val brightness = rangeProp(_.brightness)
 
-          TargetVisualOptions(fovRA, fovDec, offset, saturation, brightness)
+          TargetVisualOptions(fovRA, fovDec, offset, saturation, brightness).some
         }
-        (userPrefs, targetPrefs)
-      }
+        .handleError(_ => none)
+        .map(_.getOrElse(TargetVisualOptions.Default))
 
     def updateViewOffset[F[_]: ApplicativeThrow](
       uid:      User.Id,
@@ -424,25 +440,7 @@ object UserPreferencesQueries:
         )
         .attempt
         .void
-
-    // Gets the prefs for the elevation plot
-    def queryWithDefault[F[_]: ApplicativeThrow](uid: User.Id)(using
-      FetchClient[F, UserPreferencesDB]
-    ): F[(PlotRange, TimeDisplay)] =
-      for r <-
-          UserElevationPlotPreferencesQuery[F]
-            .query(uid.show)
-            .map { r =>
-              r.lucumaUserPreferencesByPk.map(result =>
-                (result.elevationPlotRange, result.elevationPlotTime)
-              )
-            }
-            .handleError(_ => none)
-      yield
-        val range = r.flatMap(_._1).getOrElse(PlotRange.Night)
-        val time  = r.flatMap(_._2).getOrElse(TimeDisplay.Site)
-
-        (range, time)
+  end ElevationPlotPreference
 
   case class TableStore[F[_]: MonadThrow](
     userId:  Option[User.Id],

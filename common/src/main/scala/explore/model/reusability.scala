@@ -105,7 +105,7 @@ object reusability:
 
   given Reusability[TargetWithOptId] = Reusability.byEq
 
-  given Reusability[UserGlobalPreferences] = Reusability.byEq
+  given Reusability[GlobalPreferences] = Reusability.byEq
 
   given Reusability[SelectedPanel] = Reusability.byEq
 

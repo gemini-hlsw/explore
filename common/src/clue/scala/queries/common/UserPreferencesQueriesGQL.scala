@@ -6,6 +6,9 @@ package queries.common
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import queries.schemas.UserPreferencesDB
+import explore.model.enums.PlotRange
+import explore.model.enums.TimeDisplay
+import io.circe.Decoder
 // gql: import queries.schemas.UserPreferencesDB.given
 
 object UserPreferencesQueriesGQL {
@@ -125,6 +128,25 @@ object UserPreferencesQueriesGQL {
           saturation
           brightness
         }
+      }
+    """
+  }
+
+  case class LucumaUserPreferences(
+    val aladinMouseScroll:  Option[Boolean],
+    val showCatalog:        Option[Boolean],
+    val fullScreen:         Option[Boolean],
+    val agsOverlay:         Option[Boolean],
+    val scienceOffsets:     Option[Boolean],
+    val acquisitionOffsets: Option[Boolean],
+    val elevationPlotRange: Option[PlotRange],
+    val elevationPlotTime:  Option[TimeDisplay]
+  ) derives Decoder
+
+  @GraphQL
+  trait UserPreferencesQuery extends GraphQLOperation[UserPreferencesDB] {
+    val document = """
+      query userPreferences($userId: String!) {
         lucumaUserPreferencesByPk(userId: $userId) {
           aladinMouseScroll
           showCatalog
@@ -132,21 +154,35 @@ object UserPreferencesQueriesGQL {
           agsOverlay
           scienceOffsets
           acquisitionOffsets
-        }
-      }
-    """
-  }
-
-  @GraphQL
-  trait UserElevationPlotPreferencesQuery extends GraphQLOperation[UserPreferencesDB] {
-    val document = """
-      query plotPreferences($userId: String! = "") {
-        lucumaUserPreferencesByPk(userId: $userId) {
           elevationPlotRange
           elevationPlotTime
         }
       }
     """
+
+    object Data:
+      type LucumaUserPreferencesByPk = LucumaUserPreferences
+  }
+
+  @GraphQL
+  trait UserPreferencesUpdates extends GraphQLOperation[UserPreferencesDB] {
+    val document = """
+      subscription userPreferences($userId: String!) {
+        lucumaUserPreferencesByPk(userId: $userId) {
+          aladinMouseScroll
+          showCatalog
+          fullScreen
+          agsOverlay
+          scienceOffsets
+          acquisitionOffsets
+          elevationPlotRange
+          elevationPlotTime
+        }
+      }
+    """
+
+    object Data:
+      type LucumaUserPreferencesByPk = LucumaUserPreferences
   }
 
   @GraphQL

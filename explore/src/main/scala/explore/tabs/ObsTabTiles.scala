@@ -83,7 +83,8 @@ case class ObsTabTiles(
   layouts:                  LayoutsMap,
   resize:                   UseResizeDetectorReturn,
   obsAttachments:           View[ObsAttachmentList],
-  obsAttachmentAssignments: ObsAttachmentAssignmentMap
+  obsAttachmentAssignments: ObsAttachmentAssignmentMap,
+  globalPreferences:        View[GlobalPreferences]
 ) extends ReactFnProps(ObsTabTiles.component):
   val obsId: Observation.Id = observation.get.id
 
@@ -363,7 +364,8 @@ object ObsTabTiles:
               props.observation.get.observingMode.map(_.siteFor),
               targetCoords,
               vizTime,
-              timingWindows.get
+              timingWindows.get,
+              props.globalPreferences.get
             )
 
           def setCurrentTarget(programId: Program.Id, oid: Option[Observation.Id])(
@@ -421,7 +423,8 @@ object ObsTabTiles:
               setCurrentTarget(props.programId, props.obsId.some),
               otherObsCount(props.obsId, _),
               props.searching,
-              "Targets"
+              "Targets",
+              props.globalPreferences
             )
 
           // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper

@@ -5,6 +5,8 @@ package explore.model
 
 import cats.Eq
 import cats.derived.*
+import explore.model.enums.PlotRange
+import explore.model.enums.TimeDisplay
 import explore.model.enums.Visible
 import lucuma.core.util.NewType
 import monocle.Focus
@@ -18,29 +20,35 @@ object AladinMouseScroll extends NewType[Boolean]:
 
 type AladinMouseScroll = AladinMouseScroll.Type
 
-case class UserGlobalPreferences(
+case class GlobalPreferences(
   aladinMouseScroll:        AladinMouseScroll,
   fullScreen:               AladinFullScreen,
   aladinShowCatalog:        Visible,
   aladinAgsOverlay:         Visible,
   aladinScienceOffsets:     Visible,
-  aladinAcquisitionOffsets: Visible
+  aladinAcquisitionOffsets: Visible,
+  plotRange:                PlotRange,
+  timeDisplay:              TimeDisplay
 ) derives Eq
 
-object UserGlobalPreferences:
-  val aladinMouseScroll        = Focus[UserGlobalPreferences](_.aladinMouseScroll)
-  val aladinShowCatalog        = Focus[UserGlobalPreferences](_.aladinShowCatalog)
-  val aladinAgsOverlay         = Focus[UserGlobalPreferences](_.aladinAgsOverlay)
-  val aladinScienceOffsets     = Focus[UserGlobalPreferences](_.aladinScienceOffsets)
-  val aladinAcquisitionOffsets = Focus[UserGlobalPreferences](_.aladinAcquisitionOffsets)
-  val fullScreen               = Focus[UserGlobalPreferences](_.fullScreen)
+object GlobalPreferences:
+  val aladinMouseScroll        = Focus[GlobalPreferences](_.aladinMouseScroll)
+  val aladinShowCatalog        = Focus[GlobalPreferences](_.aladinShowCatalog)
+  val aladinAgsOverlay         = Focus[GlobalPreferences](_.aladinAgsOverlay)
+  val aladinScienceOffsets     = Focus[GlobalPreferences](_.aladinScienceOffsets)
+  val aladinAcquisitionOffsets = Focus[GlobalPreferences](_.aladinAcquisitionOffsets)
+  val fullScreen               = Focus[GlobalPreferences](_.fullScreen)
+  val plotRange                = Focus[GlobalPreferences](_.plotRange)
+  val timeDisplay              = Focus[GlobalPreferences](_.timeDisplay)
 
   val Default =
-    UserGlobalPreferences(
+    GlobalPreferences(
       AladinMouseScroll.Allowed,
       AladinFullScreen.Normal,
       Visible.Shown,
       Visible.Shown,
       Visible.Shown,
-      Visible.Shown
+      Visible.Shown,
+      PlotRange.Night,
+      TimeDisplay.Site
     )

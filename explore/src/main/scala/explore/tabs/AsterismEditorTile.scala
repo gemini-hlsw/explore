@@ -12,6 +12,7 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.config.VizTimeEditor
 import explore.model.AsterismIds
+import explore.model.GlobalPreferences
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.ObsTabTilesIds
@@ -36,20 +37,21 @@ import java.time.Instant
 object AsterismEditorTile:
 
   def asterismEditorTile(
-    userId:        Option[User.Id],
-    programId:     Program.Id,
-    obsIds:        ObsIdSet,
-    asterismIds:   View[AsterismIds],
-    allTargets:    UndoSetter[TargetList],
-    configuration: Option[BasicConfiguration],
-    vizTime:       View[Option[Instant]],
-    obsConf:       ObsConfiguration,
-    currentTarget: Option[Target.Id],
-    setTarget:     (Option[Target.Id], SetRouteVia) => Callback,
-    otherObsCount: Target.Id => Int,
-    searching:     View[Set[Target.Id]],
-    title:         String,
-    backButton:    Option[VdomNode] = none
+    userId:            Option[User.Id],
+    programId:         Program.Id,
+    obsIds:            ObsIdSet,
+    asterismIds:       View[AsterismIds],
+    allTargets:        UndoSetter[TargetList],
+    configuration:     Option[BasicConfiguration],
+    vizTime:           View[Option[Instant]],
+    obsConf:           ObsConfiguration,
+    currentTarget:     Option[Target.Id],
+    setTarget:         (Option[Target.Id], SetRouteVia) => Callback,
+    otherObsCount:     Target.Id => Int,
+    searching:         View[Set[Target.Id]],
+    title:             String,
+    globalPreferences: View[GlobalPreferences],
+    backButton:        Option[VdomNode] = none
   )(using FetchClient[IO, ObservationDB], Logger[IO]): Tile = {
     // Save the time here. this works for the obs and target tabs
     val vizTimeView = vizTime.withOnMod(t =>
@@ -80,7 +82,8 @@ object AsterismEditorTile:
           setTarget,
           otherObsCount,
           searching,
-          renderInTitle
+          renderInTitle,
+          globalPreferences
         )
       )
     )
