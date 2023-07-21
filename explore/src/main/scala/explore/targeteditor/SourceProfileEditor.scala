@@ -23,7 +23,7 @@ import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.EnumDropdown
 import lucuma.ui.primereact.FormInputTextView
 import lucuma.ui.primereact.FormLabel
-import lucuma.ui.primereact.LucumaStyles
+import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
@@ -60,7 +60,7 @@ object SourceProfileEditor:
             id = "profile-type".refined,
             value = SourceProfileType.fromSourceProfile(props.sourceProfile.get),
             onChange = sp => props.sourceProfile.view(_.toInput).mod(sp.convert),
-            clazz = LucumaStyles.FormField,
+            clazz = LucumaPrimeStyles.FormField,
             disabled = props.disabled
           ),
           props.sourceProfile

@@ -283,7 +283,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
   ) =
     val originalText = original.shortName
     <.span(
-      LucumaStyles.FormField,
+      LucumaPrimeStyles.FormField,
       PrimeStyles.InputGroup,
       FormEnumDropdownView(
         id = id,
@@ -308,7 +308,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
   ) =
     val originalText = original.map(_.shortName).getOrElse("None")
     <.span(
-      LucumaStyles.FormField,
+      LucumaPrimeStyles.FormField,
       PrimeStyles.InputGroup,
       FormEnumDropdownOptionalView(
         id = id,
@@ -559,7 +559,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
           ExploreStyles.AdvancedConfigurationGrid
         )(
           <.div(
-            LucumaStyles.FormColumnCompact,
+            LucumaPrimeStyles.FormColumnCompact,
             ExploreStyles.AdvancedConfigurationCol1
           )(
             FormLabel(htmlFor = "grating".refined)(
@@ -598,7 +598,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             ),
             offsetsControl(Callback.empty)
           ),
-          <.div(LucumaStyles.FormColumnCompact, ExploreStyles.AdvancedConfigurationCol2)(
+          <.div(LucumaPrimeStyles.FormColumnCompact, ExploreStyles.AdvancedConfigurationCol2)(
             customizableInputText(
               id = "central-wavelength".refined,
               value = centralWavelengthView.withOnMod(_ => invalidateITC),
@@ -617,7 +617,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             //   HelpIcon("configuration/exposure-mode.md".refined)
             // ),
             // <.span(
-            //   LucumaStyles.FormField,
+            //   LucumaPrimeStyles.FormField,
             //   PrimeStyles.InputGroup,
             //   FormEnumDropdownOptionalView(
             //     id = "exposureMode".refined,
@@ -718,7 +718,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             //     )(props.potITC.get.map(_.map(_.exposures)))
             //   )
           ),
-          <.div(LucumaStyles.FormColumnCompact, ExploreStyles.AdvancedConfigurationCol3)(
+          <.div(LucumaPrimeStyles.FormColumnCompact, ExploreStyles.AdvancedConfigurationCol3)(
             FormLabel(htmlFor = "explicitXBin".refined)(
               "Binning",
               HelpIcon("configuration/binning.md".refined)

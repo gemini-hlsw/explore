@@ -215,7 +215,7 @@ object TargetSelectionPopup:
         React.Fragment(
           <.span(^.onClick --> onOpen, props.trigger),
           Dialog(
-            clazz = ExploreStyles.TargetSearchForm |+| ExploreStyles.Dialog.Large,
+            clazz = ExploreStyles.TargetSearchForm |+| LucumaPrimeStyles.Dialog.Large,
             contentClass = ExploreStyles.TargetSearchContent,
             footer = <.div(
               Button(

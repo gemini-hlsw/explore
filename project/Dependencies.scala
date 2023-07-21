@@ -197,7 +197,6 @@ object Dependencies {
       "edu.gemini" %%% "lucuma-react-common",
       "edu.gemini" %%% "lucuma-react-tanstack-table",
       "edu.gemini" %%% "lucuma-react-beautiful-dnd",
-      "edu.gemini" %%% "lucuma-react-clipboard",
       "edu.gemini" %%% "lucuma-react-circular-progressbar",
       "edu.gemini" %%% "lucuma-react-datepicker",
       "edu.gemini" %%% "lucuma-react-draggable",

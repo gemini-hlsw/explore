@@ -9,7 +9,6 @@ import clue.data.syntax.*
 import crystal.react.*
 import explore.cache.PreferencesCache
 import explore.cache.ProgramCache
-import explore.components.UserSelectionForm
 import explore.components.ui.ExploreStyles
 import explore.events.ExploreEvent
 import explore.events.ExploreEvent.LogoutEventId
@@ -129,15 +128,17 @@ object ExploreLayout:
         import ctx.given
 
         // Creates a "profile" for user preferences.
-        def createUserPrefs: IO[Unit] =
+        val createUserPrefs: IO[Unit] =
           props.view.get.vault.foldMap(vault =>
             UserInsertMutation[IO].execute(vault.user.id.toString.assign).start.void
           )
 
         IfLogged[ExploreEvent](
+          "Explore".refined,
+          ExploreStyles.LoginTitle,
+          allowGuest = true,
           ctx.sso,
           props.view.zoom(RootModel.vault),
-          UserSelectionForm(_, _),
           ctx.clients.init(_),
           ctx.clients.close(),
           createUserPrefs,

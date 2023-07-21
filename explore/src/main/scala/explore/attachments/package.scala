@@ -26,7 +26,7 @@ import lucuma.core.util.Timestamp
 import lucuma.react.table.ColumnId
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Enums.ObsAttachmentType
-import lucuma.ui.primereact.LucumaStyles
+import lucuma.ui.primereact.LucumaPrimeStyles
 import org.scalajs.dom.{File => DomFile}
 import org.typelevel.log4cats.Logger
 import react.primereact.Message
@@ -77,7 +77,7 @@ trait ObsAttachmentUtils:
 
   val LabelButtonClasses =
     PrimeStyles.Component |+| PrimeStyles.Button |+| PrimeStyles.ButtonIconOnly
-      |+| LucumaStyles.Tiny |+| LucumaStyles.Compact
+      |+| LucumaPrimeStyles.Tiny |+| LucumaPrimeStyles.Compact
 
   enum Action derives Eq:
     case None, Insert, Replace, Download, Unlink

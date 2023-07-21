@@ -1344,60 +1344,8 @@ table.pl-react-table.explore-sequence-table {
   }
 }
 
-// ------
-// About and login dialogs
-// ------
-i.icon.user-astronaut::before {
-  content: '\f4fb';
-}
-
-.explore-login-box-layout {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.explore-login-messages-layout {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  row-gap: 1em;
-
-  .p-inline-message:first-child {
-    margin-top: 2em;
-  }
-}
-
-// This style is also used on the proposal tab
-.explore-login-button {
-  &.p-button {
-    margin-bottom: 1em;
-
-    &:first-child {
-      margin-top: 2em;
-    }
-  }
-}
-
-.explore-login-title-wrapper {
-  overflow: hidden;
-  margin-bottom: 2em;
-  line-height: 1.4;
-}
-
 .explore-login-title {
-  $spacing: 20px;
-
-  transform: translate(-100%, 0%);
-  font-weight: 300;
-  font-size: 3rem;
-  text-transform: uppercase;
-  letter-spacing: $spacing;
-  text-indent: $spacing;
-  animation: show-top-text 0.8s;
-  animation-delay: 0.2s;
-  animation-fill-mode: forwards;
-  border-bottom: var(--explore-accent-color) solid 4px;
+  border-bottom-color: var(--explore-accent-color);
 }
 
 @keyframes show-top-text {
@@ -1412,16 +1360,6 @@ i.icon.user-astronaut::before {
   }
 }
 
-.explore-orcid-icon-menu,
-.explore-login-orcid-icon {
-  $logosize: 1.18em;
-
-  margin-right: 0.42em;
-  vertical-align: baseline;
-  width: $logosize;
-  height: $logosize;
-}
-
 .explore-orcid-menu {
   display: flex;
   flex-direction: row;
@@ -1431,24 +1369,6 @@ i.icon.user-astronaut::before {
 
 .explore-orcid-icon-menu {
   vertical-align: middle;
-}
-
-.version {
-  font-size: smaller;
-  float: right;
-
-  // CopyToClipboard
-  div {
-    display: inline-block;
-    margin-left: 5px;
-  }
-
-  .uncopied {
-    // CopyToClipboard
-    div {
-      cursor: pointer;
-    }
-  }
 }
 
 // ------

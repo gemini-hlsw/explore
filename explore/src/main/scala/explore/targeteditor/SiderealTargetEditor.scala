@@ -44,7 +44,7 @@ import lucuma.schemas.model.*
 import lucuma.schemas.odb.input.*
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.FormInputTextView
-import lucuma.ui.primereact.LucumaStyles
+import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
@@ -268,7 +268,7 @@ object SiderealTargetEditor:
                 props.fullScreen
               )
             ),
-            <.div(LucumaStyles.FormColumnVeryCompact, ExploreStyles.TargetForm)(
+            <.div(LucumaPrimeStyles.FormColumnVeryCompact, ExploreStyles.TargetForm)(
               // Keep the search field and the coords always together
               SearchForm(
                 props.targetId,
@@ -297,7 +297,7 @@ object SiderealTargetEditor:
               )
             ),
             <.div(
-              LucumaStyles.FormColumnVeryCompact,
+              LucumaPrimeStyles.FormColumnVeryCompact,
               ExploreStyles.TargetProperMotionForm,
               FormInputTextView(
                 id = "epoch".refined,
@@ -340,7 +340,7 @@ object SiderealTargetEditor:
             <.div(
               ExploreStyles.Grid,
               ExploreStyles.Compact,
-              LucumaStyles.FormColumnVeryCompact,
+              LucumaPrimeStyles.FormColumnVeryCompact,
               ExploreStyles.TargetSourceProfileEditor,
               ExploreStyles.WithGaussian
                 .when(SourceProfile.gaussian.getOption(sourceProfileAligner.get).isDefined),

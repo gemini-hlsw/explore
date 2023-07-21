@@ -25,7 +25,7 @@ import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.FormEnumDropdownOptionalView
 import lucuma.ui.primereact.FormInputTextView
 import lucuma.ui.primereact.FormLabel
-import lucuma.ui.primereact.LucumaStyles
+import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.primereact.clearable
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
@@ -101,7 +101,7 @@ object SpectroscopyConfigurationPanel {
           HelpIcon("configuration/signal_to_noise.md".refined)
         ),
         <.div(
-          LucumaStyles.FormField |+| ExploreStyles.BasicConfigurationSNAt,
+          LucumaPrimeStyles.FormField |+| ExploreStyles.BasicConfigurationSNAt,
           FormInputTextView(
             id = "signal-to-noise".refined,
             value = signalToNoise,
@@ -136,7 +136,7 @@ object SpectroscopyConfigurationPanel {
                                          HelpIcon("configuration/focal_plane.md".refined)
         ),
         <.div(
-          LucumaStyles.FormField |+| ExploreStyles.BasicConfigurationFocalPlane,
+          LucumaPrimeStyles.FormField |+| ExploreStyles.BasicConfigurationFocalPlane,
           FormEnumDropdownOptionalView(
             id = "focal-plane".refined,
             placeholder = "Any",

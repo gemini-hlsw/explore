@@ -288,15 +288,8 @@ object ExploreStyles:
   val FormSectionLabel: Css = Css("explore-section-label")
   val UnitsTableLabel: Css  = Css("explore-table-units-label")
 
-  // Login box
-  val LoginBoxLayout: Css      = Css("explore-login-box-layout")
-  val LoginMessagesLayout: Css = Css("explore-login-messages-layout")
-  val LoginTitle: Css          = Css("explore-login-title")
-  val LoginTitleWrapper: Css   = Css("explore-login-title-wrapper")
-  val LoginBoxButton: Css      = Css("explore-login-button")
-  val OrcidIcon: Css           = Css("explore-login-orcid-icon")
-  val OrcidIconMenu: Css       = Css("explore-orcid-icon-menu")
-  val OrcidMenu: Css           = Css("explore-orcid-menu")
+  val LoginTitle: Css    = Css("explore-login-title")
+  val OrcidIconMenu: Css = Css("explore-orcid-icon-menu")
 
   // Labels
   val WarningLabel: Css = Css("explore-warning-label")
@@ -304,10 +297,6 @@ object ExploreStyles:
   val WarningInput: Css = Css("explore-warning-input")
   val ErrorIcon: Css    = Css("explore-error-icon")
   val IndentLabel: Css  = Css("explore-indent-label")
-
-  // Version with copy icon
-  val Version: Css         = Css("version")
-  val VersionUncopied: Css = Css("uncopied")
 
   val BrightnessesTableWrapper: Css            = Css("explore-brightnesses-wrapper")
   val BrightnessesContainer: Css               = Css("explore-brightnesses-container")
@@ -420,13 +409,8 @@ object ExploreStyles:
 
   val CursorPointer: Css = Css("explore-cursor-pointer")
 
-  object Dialog: // SUI has Mini, Tiny, Small, Large and Fullscreen.
-    val Small: Css = Css("pl-dialog-small")
-    val Large: Css = Css("pl-dialog-large")
-
-  val ModalCloseButton: Css     = Css("modal-close-button")
-  val UserSelectionButtons: Css = Css("user-selection-buttons")
-  val PaddedRightIcon: Css      = Css("padded-right-icon")
+  val ModalCloseButton: Css = Css("modal-close-button")
+  val PaddedRightIcon: Css  = Css("padded-right-icon")
 
   val Table: Css   = Css("tble")
   val THead: Css   = Css("thead")
@@ -490,7 +474,7 @@ object ExploreStyles:
 
   // TODO: to lucuma-ui
   val Header: Css      = Css("pl-header")
-  val SmallHeader: Css = Header |+| lucuma.ui.primereact.LucumaStyles.Small
+  val SmallHeader: Css = Header |+| lucuma.ui.primereact.LucumaPrimeStyles.Small
   // Move to PrimeReactStyles
   val Disabled: Css    = Css("p-disabled")
   val FormValue: Css   = Css("explore-value-field")

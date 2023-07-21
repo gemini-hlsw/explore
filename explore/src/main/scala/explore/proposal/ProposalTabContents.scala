@@ -11,7 +11,6 @@ import crystal.react.*
 import crystal.react.hooks.*
 import explore.DefaultErrorPolicy
 import explore.Icons
-import explore.Resources
 import explore.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
@@ -28,6 +27,8 @@ import lucuma.core.util.TimeSpan
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
+import lucuma.ui.Resources
+import lucuma.ui.components.LoginStyles
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.effect.*
@@ -94,8 +95,8 @@ object ProposalTabContents:
                 ExploreStyles.HVCenter,
                 Button(
                   label = "Create a Proposal",
-                  icon = Icons.FileCirclePlus.withClass(ExploreStyles.OrcidIcon),
-                  clazz = ExploreStyles.LoginBoxButton,
+                  icon = Icons.FileCirclePlus.withClass(LoginStyles.LoginOrcidIcon),
+                  clazz = LoginStyles.LoginBoxButton,
                   severity = Button.Severity.Secondary,
                   onClick = createProposal(programId, optProposalInfo, executionTime)
                 ).big
@@ -105,8 +106,8 @@ object ProposalTabContents:
                 ExploreStyles.HVCenter,
                 Button(
                   label = "Login with ORCID to create a Proposal",
-                  icon = Image(src = Resources.OrcidLogo, clazz = ExploreStyles.OrcidIcon),
-                  clazz = ExploreStyles.LoginBoxButton,
+                  icon = Image(src = Resources.OrcidLogo, clazz = LoginStyles.LoginOrcidIcon),
+                  clazz = LoginStyles.LoginBoxButton,
                   severity = Button.Severity.Secondary,
                   onClick = ctx.sso.switchToORCID.runAsync
                 ).big

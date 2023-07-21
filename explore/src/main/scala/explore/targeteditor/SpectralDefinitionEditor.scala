@@ -187,7 +187,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
         EnumDropdownView(
           id = id,
           value = view,
-          clazz = LucumaStyles.FormField,
+          clazz = LucumaPrimeStyles.FormField,
           disabled = props.disabled
         )
 
@@ -221,7 +221,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
                 .view(props.toInput)
                 .mod(sed.fold(SpectralDefinition.unnormalizedSED.replace(None))(_.convert)),
             disabledItems = disabledItems,
-            clazz = LucumaStyles.FormField,
+            clazz = LucumaPrimeStyles.FormField,
             disabled = props.disabled
           ),
           <.span(PrimeStyles.InputGroupAddon, ^.borderRight := 0.px, requiredForITC)
@@ -277,7 +277,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
             React.Fragment(
               FormLabel(htmlFor = "fluxValue".refined)("Continuum"),
               <.div(
-                ExploreStyles.FlexContainer |+| LucumaStyles.FormField,
+                ExploreStyles.FlexContainer |+| LucumaPrimeStyles.FormField,
                 FormInputTextView(
                   id = "fluxValue".refined,
                   value = fluxDensityContinuum.zoom(Measure.valueTagged),

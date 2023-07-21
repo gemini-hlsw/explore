@@ -13,7 +13,6 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.events.ExploreEvent
 import explore.events.*
 import explore.model.enums.AppTab
-import explore.model.enums.ExecutionEnvironment
 import explore.utils
 import explore.utils.ToastCtx
 import japgolly.scalajs.react.*
@@ -22,6 +21,7 @@ import japgolly.scalajs.react.feature.Context
 import lucuma.broadcastchannel.*
 import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB
+import lucuma.ui.enums.ExecutionEnvironment
 import lucuma.ui.sso.SSOClient
 import org.typelevel.log4cats.Logger
 import queries.schemas.SSO

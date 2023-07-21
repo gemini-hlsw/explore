@@ -64,7 +64,7 @@ object ItcPlotControl:
         SelectButtonEnumView(
           "itc-plot-type".refined,
           ct,
-          buttonClass = LucumaStyles.Tiny |+| LucumaStyles.VeryCompact
+          buttonClass = LucumaPrimeStyles.Tiny |+| LucumaPrimeStyles.VeryCompact
         )
       }
     )

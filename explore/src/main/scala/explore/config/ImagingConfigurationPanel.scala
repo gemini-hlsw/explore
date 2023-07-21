@@ -26,7 +26,7 @@ import lucuma.refined.*
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.FormEnumDropdownOptionalView
 import lucuma.ui.primereact.FormInputTextView
-import lucuma.ui.primereact.LucumaStyles
+import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 import react.common.Css
@@ -84,12 +84,15 @@ object ImagingConfigurationPanel {
       val capabilities  = p.options.zoom(ImagingConfigurationOptions.capabilities)
 
       ReactFragment(
-        <.label("Filter", HelpIcon("configuration/filter.md".refined), LucumaStyles.FormFieldLabel),
+        <.label("Filter",
+                HelpIcon("configuration/filter.md".refined),
+                LucumaPrimeStyles.FormFieldLabel
+        ),
         MultiSelect(
           id = "filters",
           value = filters.get.toList,
           options = filterGroups,
-          clazz = LucumaStyles.FormField,
+          clazz = LucumaPrimeStyles.FormField,
           panelClass = ExploreStyles.ConfigurationFilter,
           filter = true,
           showSelectAll = false,

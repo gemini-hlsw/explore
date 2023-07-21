@@ -26,7 +26,6 @@ import explore.model.RootModel
 import explore.model.RoutingInfo
 import explore.model.WorkerClients
 import explore.model.enums.AppTab
-import explore.model.enums.ExecutionEnvironment
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.*
@@ -34,6 +33,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import log4cats.loglevel.LogLevelLogger
 import lucuma.broadcastchannel.*
 import lucuma.core.model.Program
+import lucuma.ui.enums.ExecutionEnvironment
 import lucuma.ui.enums.Theme
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
