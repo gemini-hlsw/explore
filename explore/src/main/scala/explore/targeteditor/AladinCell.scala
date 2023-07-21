@@ -7,6 +7,7 @@ import boopickle.DefaultBasic.*
 import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
+import clue.FetchClient
 import crystal.Pot
 import crystal.ViewOptF
 import crystal.*
@@ -44,13 +45,8 @@ import lucuma.core.util.NewType
 import lucuma.react.aladin.Fov
 import lucuma.react.common.*
 import lucuma.react.primereact.Button
-import lucuma.react.primereact.MenuItem
-import lucuma.react.primereact.PopupMenu
 import lucuma.react.primereact.PopupMenuRef
 import lucuma.react.primereact.hooks.all.*
-import lucuma.refined.*
-import lucuma.ui.primereact.*
-import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -58,6 +54,7 @@ import monocle.Lens
 import org.scalajs.dom.HTMLElement
 import org.scalajs.dom.document
 import org.typelevel.log4cats.Logger
+import queries.schemas.UserPreferencesDB
 
 import java.time.Duration
 import java.time.Instant
@@ -101,6 +98,35 @@ case class AladinCell(
 trait AladinCommon:
   given Reusability[Asterism] = Reusability.by(x => (x.toSiderealTracking, x.focus.id))
   given Reusability[AgsState] = Reusability.byEq
+
+  def setVariable(root: Option[HTMLElement], variableName: String, value: Int): Callback =
+    root
+      .map(root =>
+        Callback(
+          root.style.setProperty(s"--aladin-image-$variableName", s"${value / 100.0}")
+        )
+      )
+      .getOrEmpty
+
+  def userPrefsSetter(
+    uid:                User.Id,
+    showCatalog:        Option[Visible] = None,
+    agsOverlay:         Option[Visible] = None,
+    fullScreen:         Option[AladinFullScreen] = None,
+    scienceOffsets:     Option[Visible] = None,
+    acquisitionOffsets: Option[Visible] = None
+  )(using Logger[IO], FetchClient[IO, UserPreferencesDB]): Callback =
+    GlobalUserPreferences
+      .storeAladinPreferences[IO](
+        uid,
+        showCatalog = showCatalog,
+        agsOverlay = agsOverlay,
+        scienceOffsets = scienceOffsets,
+        acquisitionOffsets = acquisitionOffsets,
+        fullScreen = fullScreen
+      )
+      .runAsync
+      .void
 
 object AladinCell extends ModelOptics with AladinCommon:
   private object ManualAgsOverride extends NewType[Boolean]
@@ -174,22 +200,6 @@ object AladinCell extends ModelOptics with AladinCommon:
     (offsetChangeInAladin, offsetOnCenter)
   }
 
-  private def setVariable(root: Option[HTMLElement], variableName: String, value: Int): Callback =
-    root
-      .map(root =>
-        Callback(
-          root.style.setProperty(s"--aladin-image-$variableName", s"${value / 100.0}")
-        )
-      )
-      .getOrEmpty
-
-  private val unsafeRangeLens: Lens[TargetVisualOptions.ImageFilterRange, Double] =
-    Lens[TargetVisualOptions.ImageFilterRange, Double](_.value.toDouble)(x =>
-      y =>
-        refineV[TargetVisualOptions.FilterRange](x.toInt).toOption
-          .getOrElse(y) // Ignore invalid updates
-    )
-
   private def flipAngle(
     props:          Props,
     manualOverride: View[ManualAgsOverride]
@@ -242,6 +252,7 @@ object AladinCell extends ModelOptics with AladinCommon:
       .useEffectWithDepsBy((p, _, _, _, _, _) => (p.uid, p.tid)) {
         (props, ctx, options, _, _, root) => _ =>
           import ctx.given
+
           TargetPreferences
             .queryWithDefault[IO](props.uid, props.tid, Constants.InitialFov)
             .flatMap { tp =>
@@ -257,14 +268,15 @@ object AladinCell extends ModelOptics with AladinCommon:
       // Reset offset and gs if asterism change
       .useEffectWithDepsBy((p, _, _, _, _, _, _, _) => p.asterism)(
         (props, ctx, options, _, _, _, gs, mouseCoords) =>
-          _ => {
+          _ =>
             val (_, offsetOnCenter) = offsetViews(props, options)(ctx)
 
             // if the coordinates change, reset ags, offset and mouse coordinates
-            gs.set(none) *> offsetOnCenter.set(Offset.Zero) *> mouseCoords.setState(
-              props.asterism.baseTracking.baseCoordinates
-            )
-          }
+            for {
+              _ <- gs.set(none)
+              _ <- offsetOnCenter.set(Offset.Zero)
+              _ <- mouseCoords.setState(props.asterism.baseTracking.baseCoordinates)
+            } yield ()
       )
       .useStateView(ManualAgsOverride(false))
       // Reset selection if pos angle changes except for manual selection changes
@@ -296,64 +308,69 @@ object AladinCell extends ModelOptics with AladinCommon:
               ) =>
             import ctx.given
 
+            val runAgs = (positions, tracking.at(vizTime), props.obsConf.flatMap(_.agsState)).mapN {
+              (positions, base, agsState) =>
+
+                val fpu    = observingMode.flatMap(_.fpuAlternative)
+                val params = AgsParams.GmosAgsParams(fpu, PortDisposition.Side)
+
+                val sciencePositions =
+                  props.asterism.asList
+                    .flatMap(_.toSidereal)
+                    .flatMap(_.target.tracking.at(vizTime))
+
+                val request = AgsMessage.AgsRequest(props.tid,
+                                                    constraints,
+                                                    wavelength,
+                                                    base.value,
+                                                    sciencePositions,
+                                                    positions,
+                                                    params,
+                                                    candidates
+                )
+
+                def processResults(r: Option[List[AgsAnalysis]]): IO[Unit] =
+                  (for {
+                    // Set the analysis
+                    _ <- r.map(ags.setState).getOrEmpty
+                    // If we need to flip change the constraint
+                    _ <- r
+                           .map(_.headOption)
+                           .map(flipAngle(props, agsOverride))
+                           .orEmpty
+                           .unlessA(agsOverride.get.value)
+                    // set the selected index to the first entry
+                    _ <- {
+                      val index      = 0.some.filter(_ => r.exists(_.nonEmpty))
+                      val selectedGS = index.flatMap(i => r.flatMap(_.lift(i)))
+                      (selectedIndex.set(index) *>
+                        props.obsConf
+                          .flatMap(_.selectedGS)
+                          .map(_.set(selectedGS))
+                          .getOrEmpty).unlessA(agsOverride.get.value)
+                    }
+                  } yield ()).toAsync
+
+                val process: IO[Unit] = for
+                  _ <- agsState.set(AgsState.Calculating).toAsync
+                  _ <-
+                    AgsClient[IO]
+                      .requestSingle(request)
+                      .flatMap(processResults(_))
+                      .unlessA(candidates.isEmpty)
+                      .handleErrorWith(t => Logger[IO].error(t)("ERROR IN AGS REQUEST"))
+                yield ()
+
+                process.guarantee(
+                  agsOverride.async.set(ManualAgsOverride(false)) *> agsState.async.set(
+                    AgsState.Idle
+                  )
+                )
+            }.orEmpty
+
             (selectedIndex.set(none) *>
               props.obsConf.flatMap(_.selectedGS).map(_.set(none)).orEmpty).toAsync
-              .whenA(positions.isEmpty) *>
-              (positions, tracking.at(vizTime), props.obsConf.flatMap(_.agsState)).mapN {
-                (positions, base, agsState) =>
-
-                  val fpu    = observingMode.flatMap(_.fpuAlternative)
-                  val params = AgsParams.GmosAgsParams(fpu, PortDisposition.Side)
-
-                  val sciencePositions =
-                    props.asterism.asList
-                      .flatMap(_.toSidereal)
-                      .flatMap(_.target.tracking.at(vizTime))
-
-                  val process = for
-                    _ <- agsState.set(AgsState.Calculating).toAsync
-                    _ <-
-                      AgsClient[IO]
-                        .requestSingle(
-                          AgsMessage.AgsRequest(props.tid,
-                                                constraints,
-                                                wavelength,
-                                                base.value,
-                                                sciencePositions,
-                                                positions,
-                                                params,
-                                                candidates
-                          )
-                        )
-                        .flatMap { r =>
-                          // Set the analysis
-                          (r.map(ags.setState).getOrEmpty *>
-                            // If we need to flip change the constraint
-                            r
-                              .map(_.headOption)
-                              .map(flipAngle(props, agsOverride))
-                              .orEmpty
-                              .unlessA(agsOverride.get.value) *>
-                            // set the selected index to the first entry
-                            {
-                              val index      = 0.some.filter(_ => r.exists(_.nonEmpty))
-                              val selectedGS = index.flatMap(i => r.flatMap(_.lift(i)))
-                              (selectedIndex.set(index) *>
-                                props.obsConf
-                                  .flatMap(_.selectedGS)
-                                  .map(_.set(selectedGS))
-                                  .getOrEmpty).unlessA(agsOverride.get.value)
-                            }).toAsync
-                        }
-                        .unlessA(candidates.isEmpty)
-                        .handleErrorWith(t => Logger[IO].error(t)("ERROR IN AGS REQUEST"))
-                  yield ()
-                  process.guarantee(
-                    agsOverride.async.set(ManualAgsOverride(false)) *> agsState.async.set(
-                      AgsState.Idle
-                    )
-                  )
-              }.orEmpty
+              .whenA(positions.isEmpty) *> runAgs
           case _ => IO.unit
         }
       }
@@ -365,7 +382,7 @@ object AladinCell extends ModelOptics with AladinCommon:
           options,
           candidates,
           agsResults,
-          root,
+          _,
           selectedGSIndexView,
           mouseCoords,
           agsManualOverride,
@@ -386,99 +403,14 @@ object AladinCell extends ModelOptics with AladinCommon:
               .getOrEmpty
           )
 
-          def prefsSetter(
-            saturation: Option[Int] = None,
-            brightness: Option[Int] = None
-          ): Callback =
-            TargetPreferences
-              .updateAladinPreferences[IO](
-                props.uid,
-                props.tid,
-                saturation = saturation,
-                brightness = brightness
-              )
-              .runAsync
-              .void
-
-          def userSetter(
-            showCatalog:        Option[Visible] = None,
-            agsOverlay:         Option[Visible] = None,
-            fullScreen:         Option[AladinFullScreen] = None,
-            scienceOffsets:     Option[Visible] = None,
-            acquisitionOffsets: Option[Visible] = None
-          ): Callback =
-            GlobalUserPreferences
-              .storeAladinPreferences[IO](
-                props.uid,
-                showCatalog = showCatalog,
-                agsOverlay = agsOverlay,
-                scienceOffsets = scienceOffsets,
-                acquisitionOffsets = acquisitionOffsets,
-                fullScreen = fullScreen
-              )
-              .runAsync
-              .void
-
-          def visiblePropView(
-            get:   Lens[GlobalPreferences, Visible],
-            onMod: Visible => Callback
-          ) =
-            props.globalPreferences
-              .zoom(get)
-              .withOnMod(onMod)
-              .zoom(Visible.value.asLens)
-
-          val agsCandidatesView =
-            visiblePropView(GlobalPreferences.showCatalog, v => userSetter(showCatalog = v.some))
-
-          val agsOverlayView =
-            visiblePropView(GlobalPreferences.agsOverlay, v => userSetter(agsOverlay = v.some))
-
-          val scienceOffsetsView =
-            visiblePropView(GlobalPreferences.scienceOffsets,
-                            v => userSetter(scienceOffsets = v.some)
-            )
-
-          val acquisitionOffsetsView =
-            visiblePropView(GlobalPreferences.acquisitionOffsets,
-                            v => userSetter(acquisitionOffsets = v.some)
-            )
-
           val fovView =
             options.zoom(Pot.readyPrism.andThen(fovLens))
-
-          def cssVarView(
-            varLens:        Lens[TargetVisualOptions, TargetVisualOptions.ImageFilterRange],
-            variableName:   String,
-            updateCallback: Int => Callback
-          ) =
-            options
-              .zoom(Pot.readyPrism.andThen(varLens))
-              .withOnMod(s =>
-                s.map(s => setVariable(root, variableName, s) *> updateCallback(s)).getOrEmpty
-              )
-
-          val saturationView =
-            cssVarView(TargetVisualOptions.saturation,
-                       "saturation",
-                       s => prefsSetter(saturation = s.some)
-            )
-          val brightnessView =
-            cssVarView(TargetVisualOptions.brightness,
-                       "brightness",
-                       s => prefsSetter(brightness = s.some)
-            )
 
           val fullScreenView =
             props.globalPreferences
               .zoom(GlobalPreferences.fullScreen)
-              .withOnMod(v => props.fullScreen.set(v) *> userSetter(fullScreen = v.some))
-
-          val allowMouseZoomView =
-            props.globalPreferences
-              .zoom(GlobalPreferences.aladinMouseScroll)
-              .withOnMod(z =>
-                GlobalUserPreferences.storeAladinPreferences[IO](props.uid, z.some).runAsync
+              .withOnMod(v =>
+                props.fullScreen.set(v) *> userPrefsSetter(props.uid, fullScreen = v.some)
               )
 
           val coordinatesSetter =
@@ -555,73 +487,6 @@ object AladinCell extends ModelOptics with AladinCommon:
                   )
               } else EmptyVdom
 
-          val menuItems = List(
-            MenuItem.Custom(
-              CheckboxView(
-                id = "ags-candidates".refined,
-                value = agsCandidatesView,
-                label = "Show Catalog"
-              )
-            ),
-            MenuItem.Custom(
-              CheckboxView(
-                id = "ags-overlay".refined,
-                value = agsOverlayView,
-                label = "AGS"
-              )
-            ),
-            MenuItem.Custom(
-              CheckboxView(
-                id = "science-offsets".refined,
-                value = scienceOffsetsView,
-                label = "Sci. Offsets"
-              )
-            ),
-            MenuItem.Custom(
-              CheckboxView(
-                id = "acq-offsets".refined,
-                value = acquisitionOffsetsView,
-                label = "Acq. Offsets"
-              )
-            ),
-            MenuItem.Separator,
-            MenuItem.Custom(
-              saturationView
-                .zoom(unsafeRangeLens)
-                .asView
-                .map(view =>
-                  SliderView(
-                    id = "saturation".refined,
-                    label = "Saturation",
-                    clazz = ExploreStyles.AladinRangeControl,
-                    value = view
-                  )
-                )
-            ),
-            MenuItem.Custom(
-              brightnessView
-                .zoom(unsafeRangeLens)
-                .asView
-                .map(view =>
-                  SliderView(
-                    id = "brightness".refined,
-                    label = "Brightness",
-                    clazz = ExploreStyles.AladinRangeControl,
-                    value = view
-                  )
-                )
-            ),
-            MenuItem.Separator,
-            MenuItem.Custom(
-              CheckboxView(
-                id = "allow-zoom".refined,
-                value = allowMouseZoomView
-                  .zoom(AladinMouseScroll.value.asLens),
-                label = "Scroll to zoom"
-              )
-            )
-          )
-
           <.div(
             ExploreStyles.TargetAladinCell,
             <.div(
@@ -638,7 +503,15 @@ object AladinCell extends ModelOptics with AladinCommon:
               options.renderPotView(renderToolbar),
               options.renderPotView(renderAgsOverlay)
             ),
-            PopupMenu(model = menuItems, clazz = ExploreStyles.AladinSettingsMenu)
-              .withRef(menuRef.ref)
+            options
+              .zoom(Pot.readyPrism[TargetVisualOptions])
+              .mapValue(options =>
+                AladinPreferencesMenu(props.uid,
+                                      props.tid,
+                                      props.globalPreferences,
+                                      options,
+                                      menuRef
+                )
+              )
           )
       }
