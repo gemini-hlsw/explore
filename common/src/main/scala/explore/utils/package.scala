@@ -16,11 +16,10 @@ import explore.BuildInfo
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.enums.ExecutionEnvironment
-import explore.model.enums.ExecutionEnvironment.Development
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.util.NewType
+import lucuma.ui.enums.ExecutionEnvironment
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.versionDateFormatter
 import lucuma.ui.utils.versionDateTimeFormatter
@@ -56,12 +55,13 @@ val gitHash = BuildInfo.gitHeadCommit
 def version(environment: ExecutionEnvironment): NonEmptyString = {
   val instant = Instant.ofEpochMilli(BuildInfo.buildDateTime)
   NonEmptyString.unsafeFrom(
-    (environment match {
-      case Development => versionDateTimeFormatter.format(instant)
-      case _           =>
+    (environment match
+      case ExecutionEnvironment.Development =>
+        versionDateTimeFormatter.format(instant)
+      case _                                =>
         versionDateFormatter.format(instant) +
           "-" + gitHash.map(_.take(7)).getOrElse("NONE")
-    })
+    )
       + environment.suffix
         .map(suffix => s"-$suffix")
         .orEmpty
@@ -81,10 +81,9 @@ extension (uri: Uri)
 
 def forceAssign[T, S](mod: Endo[Input[S]] => Endo[T])(base: S): Endo[S] => Endo[T] =
   modS =>
-    mod {
+    mod:
       case Assign(edit) => modS(edit).assign
       case _            => modS(base).assign
-    }
 
 // TODO Move these to lucuma-ui
 extension (toastRef: ToastRef)

@@ -21,7 +21,7 @@ import lucuma.refined.*
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.FormEnumDropdownView
 import lucuma.ui.primereact.FormInputTextView
-import lucuma.ui.primereact.LucumaStyles
+import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 import monocle.Lens
@@ -100,7 +100,7 @@ object PAConfigurationPanel:
         )
 
       <.div(
-        LucumaStyles.FormColumnCompact,
+        LucumaPrimeStyles.FormColumnCompact,
         ExploreStyles.PAConfigurationForm
       )(
         FormEnumDropdownView(

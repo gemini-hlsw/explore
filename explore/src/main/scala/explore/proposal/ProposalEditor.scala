@@ -269,7 +269,7 @@ object ProposalEditor:
       renderInTitle(<.div(ExploreStyles.TitleUndoButtons)(UndoButtons(undoCtx))),
       <.form(
         <.div(ExploreStyles.ProposalDetailsGrid)(
-          <.div(LucumaStyles.FormColumnCompact, LucumaStyles.LinearColumn)(
+          <.div(LucumaPrimeStyles.FormColumnCompact, LucumaPrimeStyles.LinearColumn)(
             FormInputTextView(
               id = "title".refined,
               inputClass = Css("inverse"),
@@ -323,7 +323,7 @@ object ProposalEditor:
               )
             }
           ),
-          <.div(LucumaStyles.FormColumnCompact, LucumaStyles.LinearColumn)(
+          <.div(LucumaPrimeStyles.FormColumnCompact, LucumaPrimeStyles.LinearColumn)(
             FormEnumDropdownView(
               id = "proposal-class".refined,
               value = proposalClassType.withOnMod(onClassTypeMod _),

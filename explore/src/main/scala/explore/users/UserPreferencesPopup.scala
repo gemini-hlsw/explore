@@ -11,7 +11,6 @@ import crystal.react.*
 import crystal.react.hooks.*
 import explore.DefaultErrorPolicy
 import explore.Icons
-import explore.components.ExploreCopy
 import explore.components.ui.ExploreStyles
 import explore.model.ApiKey
 import explore.model.AppContext
@@ -28,7 +27,8 @@ import lucuma.core.util.NewType
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
-import lucuma.ui.primereact.LucumaStyles
+import lucuma.ui.components.CopyControl
+import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
@@ -63,7 +63,7 @@ object UserPreferencesPopup:
         closable = props.onClose.isDefined,
         dismissableMask = props.onClose.isDefined,
         resizable = false,
-        clazz = ExploreStyles.Dialog.Small |+| ExploreStyles.ApiKeysPopup,
+        clazz = LucumaPrimeStyles.Dialog.Small |+| ExploreStyles.ApiKeysPopup,
         header = "User Preferences"
       )(
         UserPreferencesContent(props.vault, props.onClose)
@@ -218,13 +218,13 @@ object UserPreferencesContent:
 
         React.Fragment(
           Divider(),
-          <.div(LucumaStyles.FormColumnCompact)(
-            <.label(LucumaStyles.FormFieldLabel, "ID: "),
-            <.label(LucumaStyles.FormField, id.show),
-            <.label(LucumaStyles.FormFieldLabel, "Name: "),
-            <.label(LucumaStyles.FormField, name),
-            <.label(LucumaStyles.FormFieldLabel, "Role: "),
-            <.label(LucumaStyles.FormField, role)
+          <.div(LucumaPrimeStyles.FormColumnCompact)(
+            <.label(LucumaPrimeStyles.FormFieldLabel, "ID: "),
+            <.label(LucumaPrimeStyles.FormField, id.show),
+            <.label(LucumaPrimeStyles.FormFieldLabel, "Name: "),
+            <.label(LucumaPrimeStyles.FormField, name),
+            <.label(LucumaPrimeStyles.FormFieldLabel, "Role: "),
+            <.label(LucumaPrimeStyles.FormField, role)
           ),
           Divider(),
           <.h4("API Keys:"),
@@ -241,10 +241,10 @@ object UserPreferencesContent:
           ),
           Divider(),
           newKey.get.value.map { k =>
-            <.div(LucumaStyles.FormColumnCompact)(
-              <.label(LucumaStyles.FormFieldLabel, "Key: "),
+            <.div(LucumaPrimeStyles.FormColumnCompact)(
+              <.label(LucumaPrimeStyles.FormFieldLabel, "Key: "),
               <.label(ExploreStyles.NewApiKey, k),
-              ExploreCopy("", k, ExploreStyles.Version, ExploreStyles.VersionUncopied),
+              CopyControl("", k),
               <.label(ExploreStyles.NewApiKeyLabel, "This API key won't be displayed again.")
             )
           },

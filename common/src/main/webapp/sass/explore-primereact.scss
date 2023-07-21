@@ -9,31 +9,13 @@
   @import '/lucuma-css/dark-theme';
 }
 
-@import '/lucuma-css/lucuma-ui';
+@import '/lucuma-css/lucuma-ui-prime';
 /* stylelint-enable no-invalid-position-at-import-rule */
 
 // specific to Explore - may be able to remove this when we're fully primereact - may have to apply to tiles or something
 .constraints-tile .explore-tile-body,
 .explore-configuration-grid {
   background-color: var(--surface-card);
-}
-
-.p-component.p-dialog {
-  &.pl-dialog-small {
-    width: 95%;
-
-    @media (min-width: common.$tablet-responsive-cutoff) {
-      width: 760px;
-    }
-  }
-
-  &.pl-dialog-large {
-    width: 95%;
-
-    @media (width >= 1200px) {
-      width: 1080px;
-    }
-  }
 }
 
 // TODO: Move to lucuma-ui

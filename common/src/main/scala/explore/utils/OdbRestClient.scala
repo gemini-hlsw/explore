@@ -8,13 +8,13 @@ import cats.effect.Resource
 import cats.syntax.all.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.AppConfig
-import explore.model.enums.ExecutionEnvironment
 import fs2.Stream
 import fs2.text.utf8
 import lucuma.core.model.ObsAttachment
 import lucuma.core.model.Program
 import lucuma.core.syntax.string.*
 import lucuma.schemas.ObservationDB.Enums.ObsAttachmentType
+import lucuma.ui.enums.ExecutionEnvironment
 import org.http4s.*
 import org.http4s.client.Client
 import org.http4s.dom.FetchClientBuilder
@@ -62,11 +62,12 @@ object OdbRestClient {
 
     def getURI: F[Uri] =
       AppConfig
-        .fetchConfig(env,
-                     FetchClientBuilder[F]
-                       .withRequestTimeout(5.seconds)
-                       .withCache(dom.RequestCache.`no-store`)
-                       .create
+        .fetchConfig(
+          env,
+          FetchClientBuilder[F]
+            .withRequestTimeout(5.seconds)
+            .withCache(dom.RequestCache.`no-store`)
+            .create
         )
         .map(_.odbRestURI / "attachment")
 

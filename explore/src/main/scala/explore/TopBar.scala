@@ -8,7 +8,6 @@ import cats.syntax.all.*
 import crystal.react.View
 import crystal.react.*
 import crystal.react.hooks.*
-import explore.components.About
 import explore.components.ConnectionsStatus
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
@@ -16,7 +15,6 @@ import explore.model.ExploreLocalPreferences
 import explore.model.ExploreLocalPreferences.*
 import explore.model.ProgramInfoList
 import explore.model.ProgramSummaries
-import explore.model.enums.ExecutionEnvironment
 import explore.programs.ProgramsPopup
 import explore.undo.UndoStacks
 import explore.users.UserPreferencesPopup
@@ -26,6 +24,11 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.GuestRole
 import lucuma.core.model.Program
 import lucuma.core.util.NewType
+import lucuma.refined.*
+import lucuma.ui.Resources
+import lucuma.ui.components.About
+import lucuma.ui.components.LoginStyles
+import lucuma.ui.enums.ExecutionEnvironment
 import lucuma.ui.enums.Theme
 import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
@@ -104,9 +107,10 @@ object TopBar:
               ) *> IO(window.location.reload())).runAsync
           val themeMenuItem                          = themePot
             .map(currentTheme =>
-              MenuItem.SubMenu(label = "Theme",
-                               icon = Icons.Eclipse,
-                               visible = ctx.environment === ExecutionEnvironment.Development
+              MenuItem.SubMenu(
+                label = "Theme",
+                icon = Icons.Eclipse,
+                visible = ctx.environment === ExecutionEnvironment.Development
               )(
                 MenuItem.Item(
                   label = "Dark",
@@ -142,7 +146,10 @@ object TopBar:
             MenuItem.Separator,
             MenuItem.Item(
               label = "Login with ORCID",
-              icon = Image(src = Resources.OrcidLogo, clazz = ExploreStyles.OrcidIconMenu),
+              icon = Image(
+                src = Resources.OrcidLogo,
+                clazz = ExploreStyles.OrcidIconMenu |+| LoginStyles.LoginOrcidIcon
+              ),
               visible = role === GuestRole,
               command = ctx.sso.switchToORCID.runAsync
             ),
@@ -194,16 +201,24 @@ object TopBar:
               right = React.Fragment(
                 RoleSwitch(props.vault),
                 ConnectionsStatus(),
-                Button(icon = Icons.Bars,
-                       text = true,
-                       severity = Button.Severity.Secondary,
-                       onClickE = menuRef.toggle
+                Button(
+                  icon = Icons.Bars,
+                  text = true,
+                  severity = Button.Severity.Secondary,
+                  onClickE = menuRef.toggle
                 )
               )
             ),
             PopupTieredMenu(model = menuItems).withRef(menuRef.ref),
-            if (isAboutOpen.get.value) About(isAboutOpen.zoom(IsAboutOpen.value))
-            else EmptyVdom,
+            if (isAboutOpen.get.value)
+              About(
+                "Explore".refined,
+                ExploreStyles.LoginTitle,
+                ctx.version,
+                isAboutOpen.as(IsAboutOpen.value)
+              )
+            else
+              EmptyVdom,
             if (isProgramsOpen.value.value)
               ProgramsPopup(
                 props.programId,

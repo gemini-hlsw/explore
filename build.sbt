@@ -12,6 +12,8 @@ ThisBuild / resolvers ++= Resolver.sonatypeOssRepos("snapshots")
 
 ThisBuild / coverageEnabled := false
 
+ThisBuild / lucumaCssExts += "svg"
+
 addCommandAlias(
   "quickTest",
   "modelTestsJVM/test"

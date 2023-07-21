@@ -25,6 +25,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
 import lucuma.core.util.NewType
+import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 
@@ -66,7 +67,7 @@ object ProgramsPopup {
         closable = props.onClose.isDefined,
         dismissableMask = props.onClose.isDefined,
         resizable = false,
-        clazz = ExploreStyles.Dialog.Small |+| ExploreStyles.ProgramsPopup,
+        clazz = LucumaPrimeStyles.Dialog.Small |+| ExploreStyles.ProgramsPopup,
         header = "Programs"
       )(
         <.div(

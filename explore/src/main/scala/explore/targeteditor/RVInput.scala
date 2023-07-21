@@ -23,7 +23,7 @@ import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.EnumDropdownView
 import lucuma.ui.primereact.FormInputTextView
 import lucuma.ui.primereact.FormLabel
-import lucuma.ui.primereact.LucumaStyles
+import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 import react.common.ReactFnProps
@@ -97,7 +97,7 @@ object RVInput {
         React.Fragment(
           FormLabel(htmlFor = "rv-view".refined)(rvView.get.tag.value),
           <.div(
-            ExploreStyles.FlexContainer |+| ExploreStyles.TargetRVControls |+| LucumaStyles.FormField,
+            ExploreStyles.FlexContainer |+| ExploreStyles.TargetRVControls |+| LucumaPrimeStyles.FormField,
             EnumDropdownView(id = "rv-view".refined, value = rvView, disabled = props.disabled),
             input
           )

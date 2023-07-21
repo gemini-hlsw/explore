@@ -8,8 +8,8 @@ import cats.Show
 import cats.derived.*
 import cats.effect.Async
 import cats.syntax.all.*
-import explore.model.enums.ExecutionEnvironment
 import io.circe.*
+import lucuma.ui.enums.ExecutionEnvironment
 import lucuma.ui.sso.SSOConfig
 import org.http4s.Uri
 import org.http4s.circe.*
@@ -26,7 +26,7 @@ case class AppConfig(
   sso:              SSOConfig
 ) derives Eq,
       Show,
-      Decoder {}
+      Decoder
 
 object AppConfig {
   private val configFile = uri"/environments.conf.json"

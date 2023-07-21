@@ -17,7 +17,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.util.NewType
-import lucuma.ui.primereact.LucumaStyles
+import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.given
 
@@ -54,7 +54,7 @@ object SequenceEditorPopup:
               .withMods(^.key := "input-cancel"),
             position = DialogPosition.Top,
             visible = isOpen.get.value,
-            clazz = ExploreStyles.Dialog.Large,
+            clazz = LucumaPrimeStyles.Dialog.Large,
             dismissableMask = true,
             resizable = false,
             onHide = isOpen.set(IsOpen(false)),
@@ -64,10 +64,10 @@ object SequenceEditorPopup:
             )
           )(
             <.div(ExploreStyles.SeqGenParametersForm)(
-              <.div(LucumaStyles.FormColumn)(
+              <.div(LucumaPrimeStyles.FormColumn)(
                 props.dithersControl(changed.set(Pot.pending))
               ),
-              <.div(LucumaStyles.FormColumn)(
+              <.div(LucumaPrimeStyles.FormColumn)(
                 props.offsetsControl(changed.set(Pot.pending))
               )
             ),

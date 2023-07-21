@@ -131,20 +131,8 @@ object Icons {
   val faInfoCircleLight: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-light-svg-icons", "faClipboard")
-  val faClipboard: FAIcon = js.native
-
-  @js.native
-  @JSImport("@fortawesome/pro-light-svg-icons", "faClipboardCheck")
-  val faClipboardCheck: FAIcon = js.native
-
-  @js.native
   @JSImport("@fortawesome/pro-solid-svg-icons", "faXmark")
   val faTimes: FAIcon = js.native
-
-  @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faUserAstronaut")
-  val faUserAstronaut: FAIcon = js.native
 
   @js.native
   @JSImport("@fortawesome/pro-duotone-svg-icons", "faUserGear")
@@ -370,10 +358,7 @@ object Icons {
     faCircle,
     faInfoCircle,
     faInfoCircleLight,
-    faClipboard,
-    faClipboardCheck,
     faTimes,
-    faUserAstronaut,
     faUserGears,
     faExclamationTriangle,
     faExclamationDiamond,
@@ -459,14 +444,11 @@ object Icons {
   val Ban                  = FontAwesomeIcon(faBan)
   val ExclamationTriangle  = FontAwesomeIcon(faExclamationTriangle)
   val ExclamationDiamond   = FontAwesomeIcon(faExclamationDiamond)
-  val UserAstronaut        = FontAwesomeIcon(faUserAstronaut)
   val UserGears            = FontAwesomeIcon(faUserGears)
   val Logout               = FontAwesomeIcon(faSignOutAlt)
   val SkullCrossBones      = FontAwesomeIcon(faSkullCrossbones)
   val Info                 = FontAwesomeIcon(faInfoCircle)
   val InfoLight            = FontAwesomeIcon(faInfoCircleLight)
-  val Clipboard            = FontAwesomeIcon(faClipboard)
-  val ClipboardCheck       = FontAwesomeIcon(faClipboardCheck)
   val Close                = FontAwesomeIcon(faTimes)
   val MousePointer         = FontAwesomeIcon(faMousePointer)
   val Minimize             = FontAwesomeIcon(faCompress)

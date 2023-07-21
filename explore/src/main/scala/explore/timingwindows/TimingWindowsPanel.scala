@@ -300,7 +300,7 @@ object TimingWindowsPanel:
 
                   <.div(
                     <.div(ExploreStyles.TimingWindowRepeatEditor)(
-                      <.div(LucumaStyles.CheckboxWithLabel)(
+                      <.div(LucumaPrimeStyles.CheckboxWithLabel)(
                         Checkbox(
                           id = "repeat-with-period",
                           checked = selectedRepeat.get.isDefined,

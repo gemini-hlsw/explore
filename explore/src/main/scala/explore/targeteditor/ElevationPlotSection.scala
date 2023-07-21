@@ -33,7 +33,7 @@ import lucuma.core.model.TimingWindow
 import lucuma.core.model.User
 import lucuma.core.syntax.display.given
 import lucuma.refined.*
-import lucuma.ui.primereact.LucumaStyles
+import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.primereact.SelectButtonEnumView
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
@@ -170,7 +170,7 @@ object ElevationPlotSection:
                 SelectButtonEnumView(
                   "elevation-plot-site".refined,
                   siteView,
-                  buttonClass = LucumaStyles.Tiny |+| LucumaStyles.VeryCompact
+                  buttonClass = LucumaPrimeStyles.Tiny |+| LucumaPrimeStyles.VeryCompact
                 )
               ),
               <.div(ExploreStyles.ElevationPlotDatePickerControls)(
@@ -211,19 +211,19 @@ object ElevationPlotSection:
               SelectButtonEnumView(
                 "elevation-plot-range".refined,
                 rangeView,
-                buttonClass = LucumaStyles.Tiny |+| LucumaStyles.VeryCompact
+                buttonClass = LucumaPrimeStyles.Tiny |+| LucumaPrimeStyles.VeryCompact
               ),
               SelectButtonEnumView(
                 "elevation-plot-time".refined,
                 timeDisplayView,
-                buttonClass = LucumaStyles.Tiny |+| LucumaStyles.VeryCompact
+                buttonClass = LucumaPrimeStyles.Tiny |+| LucumaPrimeStyles.VeryCompact
               )(^.visibility.hidden.when(rangeView.contains(PlotRange.Semester))),
               ToggleButton(
                 onLabel = "Scheduling: On",
                 offLabel = "Scheduling: Off",
                 checked = showSchedulingView.get.getOrElse(Visible.Shown).isVisible,
                 onChange = showSchedulingView.set.compose(Visible.value.reverseGet),
-                clazz = LucumaStyles.Tiny |+| LucumaStyles.VeryCompact
+                clazz = LucumaPrimeStyles.Tiny |+| LucumaPrimeStyles.VeryCompact
               )
             )
           )
