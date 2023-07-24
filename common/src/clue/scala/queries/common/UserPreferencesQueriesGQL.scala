@@ -6,9 +6,7 @@ package queries.common
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import queries.schemas.UserPreferencesDB
-import explore.model.enums.PlotRange
-import explore.model.enums.TimeDisplay
-import io.circe.Decoder
+import explore.model.GlobalPreferences
 // gql: import queries.schemas.UserPreferencesDB.given
 
 object UserPreferencesQueriesGQL {
@@ -132,17 +130,6 @@ object UserPreferencesQueriesGQL {
     """
   }
 
-  case class LucumaUserPreferences(
-    val aladinMouseScroll:  Option[Boolean],
-    val showCatalog:        Option[Boolean],
-    val fullScreen:         Option[Boolean],
-    val agsOverlay:         Option[Boolean],
-    val scienceOffsets:     Option[Boolean],
-    val acquisitionOffsets: Option[Boolean],
-    val elevationPlotRange: Option[PlotRange],
-    val elevationPlotTime:  Option[TimeDisplay]
-  ) derives Decoder
-
   @GraphQL
   trait UserPreferencesQuery extends GraphQLOperation[UserPreferencesDB] {
     val document = """
@@ -161,7 +148,7 @@ object UserPreferencesQueriesGQL {
     """
 
     object Data:
-      type LucumaUserPreferencesByPk = LucumaUserPreferences
+      type LucumaUserPreferencesByPk = GlobalPreferences
   }
 
   @GraphQL
@@ -182,7 +169,7 @@ object UserPreferencesQueriesGQL {
     """
 
     object Data:
-      type LucumaUserPreferencesByPk = LucumaUserPreferences
+      type LucumaUserPreferencesByPk = GlobalPreferences
   }
 
   @GraphQL

@@ -42,7 +42,6 @@ import lucuma.ui.table.TableStateStore
 import org.typelevel.log4cats.Logger
 import queries.common.UserPreferencesQueriesGQL.UserGridLayoutUpdates.Data.LucumaGridLayoutPositions
 import queries.common.UserPreferencesQueriesGQL.UserPreferencesQuery
-import queries.common.UserPreferencesQueriesGQL.UserPreferencesQuery.Data.LucumaUserPreferencesByPk
 import queries.common.UserPreferencesQueriesGQL.UserTargetPreferencesQuery.Data.ExploreTargetPreferencesByPk
 import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.UserPreferencesDB
@@ -65,7 +64,7 @@ object UserPreferencesQueries:
     )(using FetchClient[F, UserPreferencesDB]): F[GlobalPreferences] =
       UserPreferencesQuery[F]
         .query(userId.show)
-        .map(_.lucumaUserPreferencesByPk.flatMap(a => toGlobalPreferences(a.some)))
+        .map(_.lucumaUserPreferencesByPk)
         .handleError(_ => none)
         .map(_.getOrElse(GlobalPreferences.Default))
 
@@ -93,29 +92,6 @@ object UserPreferencesQueries:
         )
         .attempt
         .void
-
-    def toGlobalPreferences(
-      lucumaUserPreferencesByPk: Option[LucumaUserPreferencesByPk]
-    ): Option[GlobalPreferences] =
-      lucumaUserPreferencesByPk.flatMap { userPrefsResult =>
-        val mouseScroll        = userPrefsResult.aladinMouseScroll.map(AladinMouseScroll(_))
-        val fullScreen         = userPrefsResult.fullScreen.map(AladinFullScreen(_))
-        val showCatalog        = userPrefsResult.showCatalog.map(Visible.value.reverseGet)
-        val agsOverlay         = userPrefsResult.agsOverlay.map(Visible.value.reverseGet)
-        val scienceOffsets     = userPrefsResult.scienceOffsets.map(Visible.value.reverseGet)
-        val acquisitionOffsets = userPrefsResult.acquisitionOffsets.map(Visible.value.reverseGet)
-        val plotRange          = userPrefsResult.elevationPlotRange
-        val timeRange          = userPrefsResult.elevationPlotTime
-        (mouseScroll,
-         fullScreen,
-         showCatalog,
-         agsOverlay,
-         scienceOffsets,
-         acquisitionOffsets,
-         plotRange,
-         timeRange
-        ).mapN(GlobalPreferences.apply)
-      }
 
   end GlobalUserPreferences
 

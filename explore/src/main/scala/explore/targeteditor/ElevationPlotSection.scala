@@ -67,8 +67,8 @@ object ElevationPlotSection:
         ElevationPlotOptions
           .default(props.site, props.visualizationTime, props.coords)
           .copy(
-            range = props.globalPreferences.plotRange,
-            timeDisplay = props.globalPreferences.timeDisplay
+            range = props.globalPreferences.elevationPlotRange,
+            timeDisplay = props.globalPreferences.elevationPlotTime
           )
       )
       // If predefined site changes, switch to it.

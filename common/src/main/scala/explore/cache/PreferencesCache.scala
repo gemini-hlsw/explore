@@ -74,11 +74,7 @@ object PreferencesCache extends CacheComponent[UserPreferences, PreferencesCache
         .map(
           _.map(data =>
             UserPreferences.globalPreferences
-              .modify(_ =>
-                GlobalUserPreferences
-                  .toGlobalPreferences(data.lucumaUserPreferencesByPk)
-                  .getOrElse(GlobalPreferences.Default)
-              )
+              .modify(_ => data.lucumaUserPreferencesByPk.getOrElse(GlobalPreferences.Default))
           )
         )
 

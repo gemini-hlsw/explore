@@ -155,7 +155,7 @@ object AladinContainer extends AladinCommon {
           gs
         ) =>
           val candidatesVisibilityCss =
-            ExploreStyles.GuideStarCandidateVisible.when_(userPrefs.aladinAgsOverlay.isVisible)
+            ExploreStyles.GuideStarCandidateVisible.when_(userPrefs.agsOverlay.isVisible)
 
           GmosGeometry.gmosGeometry(
             allCoordinates.value._1.value,
@@ -171,7 +171,7 @@ object AladinContainer extends AladinCommon {
       // memoized catalog targets with their proper motions corrected
       .useMemoBy((props, allCoordinates, _, _, _, _) =>
         (props.guideStarCandidates,
-         props.globalPreferences.aladinShowCatalog.isVisible,
+         props.globalPreferences.showCatalog,
          props.globalPreferences.fullScreen,
          props.options.fovRA,
          props.vizTime,
@@ -199,7 +199,7 @@ object AladinContainer extends AladinCommon {
               def calcSize(size: Double): Double = size.max(size * (225 / fov))
 
               val candidatesVisibility =
-                ExploreStyles.GuideStarCandidateVisible.when_(visible)
+                ExploreStyles.GuideStarCandidateVisible.when_(visible.isVisible)
 
               candidates
                 // TODO This should be done in AGS proper
@@ -354,14 +354,14 @@ object AladinContainer extends AladinCommon {
             offsetIndicators(_.scienceOffsets,
                              SequenceType.Science,
                              ExploreStyles.ScienceOffsetPosition,
-                             props.globalPreferences.aladinScienceOffsets
+                             props.globalPreferences.scienceOffsets
             )
 
           val acquisitionOffsetIndicators =
             offsetIndicators(_.acquisitionOffsets,
                              SequenceType.Acquisition,
                              ExploreStyles.AcquisitionOffsetPosition,
-                             props.globalPreferences.aladinAcquisitionOffsets
+                             props.globalPreferences.acquisitionOffsets
             )
 
           val offsetTargets =
@@ -372,7 +372,7 @@ object AladinContainer extends AladinCommon {
             currentPos.value.map(_.diff(baseCoordinates.value).offset).getOrElse(Offset.Zero)
 
           val key =
-            s"aladin-${resize.width}-${resize.height}-${props.globalPreferences.aladinShowCatalog}"
+            s"aladin-${resize.width}-${resize.height}-${props.globalPreferences.showCatalog}"
 
           <.div(
             ExploreStyles.AladinContainerBody,

@@ -1567,6 +1567,8 @@ enum LucumaGridLayoutIdConstraint {
 enum LucumaGridLayoutIdEnum {
   CONSTRAINTS
   OBSERVATIONS
+  OVERVIEW
+  PROGRAMS
   SCHEDULING
   TARGETS
 }
@@ -3496,20 +3498,20 @@ input LucumaUserPkColumnsInput {
 columns and relationships of "lucumaUserPreferences"
 """
 type LucumaUserPreferences {
-  acquisitionOffsets: Boolean
-  agsOverlay: Boolean
-  aladinMouseScroll: Boolean
+  acquisitionOffsets: Boolean!
+  agsOverlay: Boolean!
+  aladinMouseScroll: Boolean!
   createdAt: timestamptz
-  elevationPlotRange: ExplorePlotRangeEnum
-  elevationPlotTime: ExplorePlotTimeEnum
-  fullScreen: Boolean
+  elevationPlotRange: ExplorePlotRangeEnum!
+  elevationPlotTime: ExplorePlotTimeEnum!
+  fullScreen: Boolean!
 
   """
   An object relationship
   """
   lucuma_user: LucumaUser!
-  scienceOffsets: Boolean
-  showCatalog: Boolean
+  scienceOffsets: Boolean!
+  showCatalog: Boolean!
   updatedAt: timestamptz
   userId: String!
 }
