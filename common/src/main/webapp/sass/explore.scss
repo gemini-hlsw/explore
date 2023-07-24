@@ -1,4 +1,5 @@
-@use 'common.scss' as common;
+@use '/lucuma-css/lucuma-ui-common.scss' as lucumaUICommon;
+@use 'explore-common.scss' as exploreCommon;
 
 $tree-section-width: 300px;
 
@@ -153,7 +154,7 @@ a:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: common.$tile-title-height;
+  height: exploreCommon.$tile-title-height;
 
   & .tabular.menu .item {
     color: var(--tile-title-color);
@@ -162,7 +163,7 @@ a:hover {
 }
 
 .explore-tile-title-menu {
-  @include common.text-ellipsis;
+  @include lucumaUICommon.text-ellipsis;
 
   cursor: move;
   padding: 0.5em;
@@ -321,14 +322,14 @@ a:hover {
   }
 
   label {
-    @include common.text-ellipsis;
+    @include lucumaUICommon.text-ellipsis;
   }
 
   span {
-    @include common.text-ellipsis;
+    @include lucumaUICommon.text-ellipsis;
   }
 
-  @media (min-width: common.$mobile-responsive-cutoff) {
+  @media (min-width: lucumaUICommon.$mobile-responsive-cutoff) {
     @include small-tile-title;
 
     display: grid;
@@ -372,7 +373,7 @@ a:hover {
   font-size: smaller;
 
   label:first-child {
-    @include common.text-ellipsis;
+    @include lucumaUICommon.text-ellipsis;
 
     max-width: 5ch;
   }
@@ -389,7 +390,7 @@ a:hover {
     display: none;
   }
 
-  @media (min-width: common.$tablet-responsive-cutoff) {
+  @media (min-width: lucumaUICommon.$tablet-responsive-cutoff) {
     label:first-child {
       max-width: unset;
     }
@@ -407,7 +408,7 @@ a:hover {
     }
   }
 
-  @media (min-width: common.$mobile-responsive-cutoff) {
+  @media (min-width: lucumaUICommon.$mobile-responsive-cutoff) {
     label:first-child {
       display: unset;
     }
@@ -720,7 +721,7 @@ $search-preview-margin: 5px;
     margin-bottom: 0.2em;
   }
 
-  @media (min-width: common.$tablet-responsive-cutoff) {
+  @media (min-width: lucumaUICommon.$tablet-responsive-cutoff) {
     min-height: calc($search-preview-width + 2 * $search-preview-margin);
     padding-right: calc($search-preview-width + 3 * $search-preview-margin) !important;
     padding-bottom: $search-preview-margin;
@@ -729,7 +730,7 @@ $search-preview-margin: 5px;
 }
 
 .explore-target-search-top {
-  @media (min-width: common.$tablet-responsive-cutoff) {
+  @media (min-width: lucumaUICommon.$tablet-responsive-cutoff) {
     gap: 0.3em;
   }
 }
@@ -742,7 +743,7 @@ $search-preview-margin: 5px;
   min-width: $search-preview-width;
   min-height: $search-preview-height-mobile;
 
-  @media (min-width: common.$tablet-responsive-cutoff) {
+  @media (min-width: lucumaUICommon.$tablet-responsive-cutoff) {
     position: absolute;
     right: 0;
     margin-right: $search-preview-margin;
@@ -801,7 +802,7 @@ table.pl-react-table.explore-sequence-table {
       font-size: medium;
 
       span {
-        @include common.text-ellipsis;
+        @include lucumaUICommon.text-ellipsis;
 
         &:not(:last-child) {
           width: 23%;
@@ -887,14 +888,14 @@ table.pl-react-table.explore-sequence-table {
   display: none;
   margin-left: 0.5em;
 
-  @media (min-width: common.$mobile-responsive-cutoff) {
+  @media (min-width: lucumaUICommon.$mobile-responsive-cutoff) {
     display: flex;
   }
 }
 
 .aladin-status-gs {
   @include aladin-gs-status;
-  @include common.text-ellipsis;
+  @include lucumaUICommon.text-ellipsis;
 
   grid-area: guidestar;
   font-size: smaller;
@@ -1009,7 +1010,7 @@ table.pl-react-table.explore-sequence-table {
   }
 
   .obs-badge-description {
-    @include common.text-ellipsis;
+    @include lucumaUICommon.text-ellipsis;
 
     display: flex;
     justify-content: space-between;
@@ -1256,7 +1257,7 @@ table.pl-react-table.explore-sequence-table {
 // ------
 .explore-attachments-table {
   .explore-attachment-name {
-    @include common.text-ellipsis;
+    @include lucumaUICommon.text-ellipsis;
 
     width: 100%;
   }
@@ -1281,7 +1282,7 @@ table.pl-react-table.explore-sequence-table {
   }
 
   .program-name {
-    @include common.text-ellipsis;
+    @include lucumaUICommon.text-ellipsis;
 
     width: 100%;
   }
@@ -1332,7 +1333,7 @@ table.pl-react-table.explore-sequence-table {
 
   .new-api-key-label,
   .new-api-key {
-    @include common.text-ellipsis;
+    @include lucumaUICommon.text-ellipsis;
 
     font-size: smaller;
     max-width: 100%;
@@ -1384,7 +1385,7 @@ table.pl-react-table.explore-sequence-table {
   margin-right: 0.5em;
   letter-spacing: 0.1em;
 
-  @include common.text-ellipsis;
+  @include lucumaUICommon.text-ellipsis;
 }
 
 .main-header.p-toolbar {
@@ -1693,7 +1694,7 @@ input[type='file'].explore-fileupload {
     )
     'sidebar' #{$top-bottom-space} / 1fr;
 
-  @media (min-width: common.$tablet-responsive-cutoff) {
+  @media (min-width: lucumaUICommon.$tablet-responsive-cutoff) {
     // prettier-ignore
     grid-template:
       'header header' $top-bottom-space 'sidebar body' minmax(
@@ -1742,7 +1743,7 @@ input[type='file'].explore-fileupload {
 .tree-body {
   width: 100vw;
 
-  @media (min-width: common.$mobile-responsive-cutoff) {
+  @media (min-width: lucumaUICommon.$mobile-responsive-cutoff) {
     width: $tree-section-width;
 
     border: {
@@ -1778,7 +1779,7 @@ input[type='file'].explore-fileupload {
 .obs-hide-show-button {
   display: none;
 
-  @media (min-width: common.$mobile-responsive-cutoff) {
+  @media (min-width: lucumaUICommon.$mobile-responsive-cutoff) {
     display: flex;
     justify-self: start;
   }
@@ -2185,7 +2186,7 @@ $help-title-height: 40px;
 .explore-modes-table-count {
   flex-shrink: 1;
 
-  @include common.text-ellipsis;
+  @include lucumaUICommon.text-ellipsis;
 }
 
 .explore-modes-table-info {
@@ -2437,7 +2438,7 @@ div.spectroscopy-table-emptymessage {
 .sidetabs-divider {
   display: none;
 
-  @media (min-width: common.$tablet-responsive-cutoff) {
+  @media (min-width: lucumaUICommon.$tablet-responsive-cutoff) {
     display: block;
   }
 }
@@ -2445,7 +2446,7 @@ div.spectroscopy-table-emptymessage {
 .sidetabs-body {
   display: flex;
 
-  @media (min-width: common.$tablet-responsive-cutoff) {
+  @media (min-width: lucumaUICommon.$tablet-responsive-cutoff) {
     height: 100%;
     display: block;
     overflow: hidden;
@@ -2456,7 +2457,7 @@ div.spectroscopy-table-emptymessage {
   height: 100%;
   display: none;
 
-  @media (min-width: common.$tablet-responsive-cutoff) {
+  @media (min-width: lucumaUICommon.$tablet-responsive-cutoff) {
     display: inherit;
   }
 }
@@ -2573,7 +2574,7 @@ a.explore-upgrade-link {
 
 .obs-group-title {
   @include obs-group-title-mixin;
-  @include common.text-ellipsis;
+  @include lucumaUICommon.text-ellipsis;
 }
 
 .obs-group-title-with-wrap {
